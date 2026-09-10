@@ -14,7 +14,8 @@ namespace Grove.Unity
         private static Font? _font;
         private static Shader? _spriteShader;
 
-        public static readonly Color GardenClear = new Color(0.12f, 0.18f, 0.10f, 1f);
+        /// <summary>Warm maple fill if a pixel of camera clear ever shows — never the old grey/green grid.</summary>
+        public static readonly Color GardenClear = new Color(0.89f, 0.84f, 0.72f, 1f);
 
         public static Font Font
         {
@@ -113,6 +114,38 @@ namespace Grove.Unity
                 var max = Mathf.Max(size.x, size.y);
                 target.localScale = new Vector3(worldSize / max, worldSize / max, 1f);
             }
+        }
+
+        /// <summary>Non-uniform scale so the sprite fills a world rectangle (BoardSurface under the 7×5).</summary>
+        public static void StretchToRect(Transform target, Sprite? sprite, Vector3 center, float worldW, float worldH)
+        {
+            if (target == null || sprite == null)
+            {
+                return;
+            }
+
+            target.position = new Vector3(center.x, center.y, target.position.z);
+            var size = sprite.bounds.size;
+            target.localScale = new Vector3(
+                worldW / Mathf.Max(0.001f, size.x),
+                worldH / Mathf.Max(0.001f, size.y),
+                1f);
+        }
+
+        /// <summary>Uniform scale to cover a world rectangle (backdrop over the camera frustum).</summary>
+        public static void CoverRect(Transform target, Sprite? sprite, Vector3 center, float worldW, float worldH)
+        {
+            if (target == null || sprite == null)
+            {
+                return;
+            }
+
+            target.position = new Vector3(center.x, center.y, target.position.z);
+            var size = sprite.bounds.size;
+            var s = Mathf.Max(
+                worldW / Mathf.Max(0.001f, size.x),
+                worldH / Mathf.Max(0.001f, size.y));
+            target.localScale = new Vector3(s, s, 1f);
         }
 
         public static void FrameBoard(BoardView view)

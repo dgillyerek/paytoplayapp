@@ -7,7 +7,7 @@ Area 1 Play Mode binds **DES-001/002** from `Assets/Grove/Art/Area1/` (`manifest
 | Bucket | P0 | Notes |
 | --- | --- | --- |
 | Board pieces | WF T1–6, Herb T1–3, Tools T1–3 | Sprite 2D+UI, PPU 100, center pivot |
-| Board chrome | Backdrop, tray, cream cells, crate states | Hero backdrop ≤2048 |
+| Board chrome | Backdrop covering the camera, wood BoardSurface under the 7×5, overlapping cream cells | Composite so no grey/green grid can show |
 | HUD | Energy pill, coins (gems hidden), order tray, primary button | Maya Neutral + Happy |
 | Splashes | Boot / area start / milestone (DEV-018) | Plus order-complete / tier-up / sparkle |
 | Snap-back | Ease / squash | Code tween |

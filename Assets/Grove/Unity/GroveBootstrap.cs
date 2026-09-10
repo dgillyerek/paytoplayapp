@@ -121,9 +121,10 @@ namespace Grove.Unity
             GroveArt.EnsureLoaded();
             Hud.Host = this;
             Hud.Build();
-            if (!GroveArt.Ready)
+            if (!GroveArt.HasBoardComposite)
             {
-                GroveVisuals.ShowDiagnostic("Area 1 art pack failed to load. Expected Assets/Grove/Art/Area1/.");
+                GroveVisuals.ShowDiagnostic(
+                    "Area 1 board composite missing (backdrop + BoardSurface + cells).\nExpected Assets/Grove/Art/Area1/.");
             }
         }
 

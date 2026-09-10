@@ -14,7 +14,7 @@
 
 - Full-screen splash **Project Grove** (tap).
 - Then splash **Front Garden** (tap).
-- Board: garden backdrop, wooden tray, cream cell tiles, illustrated pieces (Seed / Sprout / …) — **not** a green grid or pink letter tokens.
+- Board: garden **backdrop** covering the camera, wood **BoardSurface** filling the 7×5 tray, overlapping cream **cells** — **not** a green/grey grid, pink letter tokens, or camera clear leaking around the board.
 - Goal banner: **Restore the Front Garden**.
 - HUD: energy bolt + count, **coin** count. Gems stay hidden.
 - Maya 2D portrait + up to **3** order cards (Maya lines, item art, coin/XP).

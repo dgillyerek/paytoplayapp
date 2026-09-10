@@ -24,6 +24,24 @@ public sealed class ArtManifestTests
         Assert.True(manifest.TryGet("Splash_Milestone_FrontGardenRestored", out _));
         Assert.True(manifest.TryGet("MAYA_Portrait_Neutral", out _));
         Assert.True(manifest.TryGet("TL_T02_Stick", out _));
+        Assert.True(manifest.TryGet("ENV_FG_Backdrop", out _));
+        Assert.True(manifest.TryGet("ENV_FG_BoardSurface", out _));
+        Assert.True(manifest.TryGet("ENV_FG_CellEmpty", out _));
+        Assert.True(manifest.TryGet("ENV_FG_CellHighlight", out _));
+    }
+
+    [Fact]
+    public void Board_composite_pngs_exist_so_play_mode_cannot_fall_back_to_a_bare_grid()
+    {
+        var manifest = ArtManifest.LoadDefault();
+        var dir = ArtManifest.ResolveDirectory();
+        var stubs = new[] { "ENV_FG_Backdrop", "ENV_FG_BoardSurface", "ENV_FG_CellEmpty" };
+        foreach (var stub in stubs)
+        {
+            Assert.True(manifest.TryGet(stub, out var asset), stub);
+            var path = Path.Combine(dir, asset.Filename.Replace('/', Path.DirectorySeparatorChar));
+            Assert.True(File.Exists(path), path);
+        }
     }
 
     [Fact]

@@ -36,6 +36,10 @@ namespace Grove.Unity
 
         public static int LoadedCount { get; private set; }
 
+        /// <summary>Backdrop + wood tray + cream cells must all load or Derek sees a bare grid.</summary>
+        public static bool HasBoardComposite =>
+            Get(StubBackdrop) != null && Get(StubBoardSurface) != null && Get(StubCellEmpty) != null;
+
         public static void EnsureLoaded()
         {
             if (_byStub != null)

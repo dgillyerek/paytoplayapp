@@ -12,6 +12,10 @@ namespace Grove.Unity
 
         private Transform? _cellsRoot;
         private Transform? _piecesRoot;
+        private Transform? _backdrop;
+        private Transform? _surface;
+        private Sprite? _backdropSprite;
+        private Sprite? _surfaceSprite;
         private GameObject? _ghost;
         private TextMesh? _ghostLabel;
         private SpriteRenderer? _ghostRenderer;
@@ -37,6 +41,15 @@ namespace Grove.Unity
             BuildGrid();
             Refresh();
             GroveVisuals.FrameBoard(this);
+            CoverPlayfield();
+        }
+
+        private void LateUpdate()
+        {
+            if (_backdrop != null || _surface != null)
+            {
+                CoverPlayfield();
+            }
         }
 
         public Vector3 CellToWorld(GridPos pos) =>
@@ -156,70 +169,125 @@ namespace Grove.Unity
             _cellsRoot = root.transform;
             var center = BoardCenter;
             var size = BoardWorldSize;
+            var pad = cellSize * 0.85f;
 
-            var backdrop = GroveArt.Get(GroveArt.StubBackdrop);
-            if (backdrop != null)
+            _backdropSprite = GroveArt.Get(GroveArt.StubBackdrop);
+            if (_backdropSprite != null)
             {
-                GroveVisuals.SpriteObject(
+                _backdrop = GroveVisuals.SpriteObject(
                     "Backdrop",
                     _cellsRoot,
-                    center + new Vector3(0f, 0.4f, 0.2f),
-                    Mathf.Max(size.x * 2.4f, size.y * 2.8f),
+                    center + new Vector3(0f, 0f, 0.35f),
+                    Mathf.Max(size.x, size.y),
                     Color.white,
-                    backdrop,
-                    -5);
+                    _backdropSprite,
+                    -20).transform;
             }
 
-            var surface = GroveArt.Get(GroveArt.StubBoardSurface);
-            if (surface != null)
+            _surfaceSprite = GroveArt.Get(GroveArt.StubBoardSurface);
+            var cellSprite = GroveArt.Get(GroveArt.StubCellEmpty);
+            if (_surfaceSprite == null)
             {
-                GroveVisuals.SpriteObject(
+                _surfaceSprite = cellSprite;
+            }
+
+            if (_surfaceSprite != null)
+            {
+                _surface = GroveVisuals.SpriteObject(
                     "BoardSurface",
                     _cellsRoot,
-                    center + new Vector3(0f, 0f, 0.08f),
+                    center + new Vector3(0f, 0f, 0.12f),
                     1f,
                     Color.white,
-                    surface,
-                    -1);
-                var surfaceGo = _cellsRoot.Find("BoardSurface");
-                if (surfaceGo != null)
-                {
-                    var bounds = surface.bounds.size;
-                    surfaceGo.localScale = new Vector3(
-                        (size.x + 0.55f) / Mathf.Max(0.001f, bounds.x),
-                        (size.y + 0.55f) / Mathf.Max(0.001f, bounds.y),
-                        1f);
-                }
+                    _surfaceSprite,
+                    -8).transform;
+                GroveVisuals.StretchToRect(
+                    _surface,
+                    _surfaceSprite,
+                    center + new Vector3(0f, 0f, 0.12f),
+                    size.x + pad,
+                    size.y + pad);
             }
 
-            var cellSprite = GroveArt.Require(GroveArt.StubCellEmpty);
-            var tile = cellSize * 0.94f;
-            for (var x = 0; x < BoardGrid.Columns; x++)
+            if (cellSprite != null)
             {
-                for (var y = 0; y < BoardGrid.Rows; y++)
+                for (var x = 0; x < BoardGrid.Columns; x++)
                 {
-                    var pos = new GridPos(x, y);
-                    GroveVisuals.SpriteObject(
-                        $"Cell_{x}_{y}",
-                        _cellsRoot,
-                        CellToWorld(pos),
-                        tile,
-                        Color.white,
-                        cellSprite,
-                        0);
+                    for (var y = 0; y < BoardGrid.Rows; y++)
+                    {
+                        var pos = new GridPos(x, y);
+                        var cell = GroveVisuals.SpriteObject(
+                            $"Cell_{x}_{y}",
+                            _cellsRoot,
+                            CellToWorld(pos) + new Vector3(0f, 0f, 0.02f),
+                            cellSize,
+                            Color.white,
+                            cellSprite,
+                            0);
+                        GroveVisuals.CoverRect(
+                            cell.transform,
+                            cellSprite,
+                            CellToWorld(pos) + new Vector3(0f, 0f, 0.02f),
+                            cellSize * 1.06f,
+                            cellSize * 1.06f);
+                    }
                 }
             }
 
             var highlight = GroveArt.Get(GroveArt.StubCellHighlight) ?? cellSprite;
-            _hover = GroveVisuals.SpriteObject(
-                "Hover",
-                _cellsRoot,
-                Vector3.zero,
-                cellSize * 0.98f,
-                Color.white,
-                highlight,
-                2);
-            _hover.SetActive(false);
+            if (highlight != null)
+            {
+                _hover = GroveVisuals.SpriteObject(
+                    "Hover",
+                    _cellsRoot,
+                    Vector3.zero,
+                    cellSize,
+                    Color.white,
+                    highlight,
+                    2);
+                GroveVisuals.CoverRect(_hover.transform, highlight, Vector3.zero, cellSize * 1.08f, cellSize * 1.08f);
+                _hover.SetActive(false);
+            }
+        }
+
+        /// <summary>
+        /// Backdrop covers the camera; wood BoardSurface fills the 7×5; cream cells overlap so no
+        /// grey/green programmer grid can show between tiles or around the tray.
+        /// </summary>
+        public void CoverPlayfield()
+        {
+            var cam = Camera.main ?? UnityEngine.Object.FindFirstObjectByType<Camera>();
+            var center = BoardCenter;
+            var size = BoardWorldSize;
+            var pad = cellSize * 0.85f;
+
+            if (_surface != null && _surfaceSprite != null)
+            {
+                GroveVisuals.StretchToRect(
+                    _surface,
+                    _surfaceSprite,
+                    center + new Vector3(0f, 0f, 0.12f),
+                    size.x + pad,
+                    size.y + pad);
+            }
+
+            if (_backdrop != null && _backdropSprite != null && cam != null && cam.orthographic)
+            {
+                var aspect = Screen.height > 0 ? Screen.width / (float)Screen.height : 16f / 9f;
+                var viewH = cam.orthographicSize * 2f;
+                var viewW = viewH * Mathf.Max(0.01f, aspect);
+                var camCenter = new Vector3(cam.transform.position.x, cam.transform.position.y, 0.35f);
+                GroveVisuals.CoverRect(_backdrop, _backdropSprite, camCenter, viewW * 1.35f, viewH * 1.35f);
+            }
+            else if (_backdrop != null && _backdropSprite != null)
+            {
+                GroveVisuals.CoverRect(
+                    _backdrop,
+                    _backdropSprite,
+                    center + new Vector3(0f, 0f, 0.35f),
+                    size.x * 3f,
+                    size.y * 3.4f);
+            }
         }
 
         private GameObject CreatePiece(GridPos pos, PieceStack stack)
