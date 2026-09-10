@@ -59,12 +59,20 @@ public sealed class ArtManifestTests
     {
         var manifest = ArtManifest.LoadDefault();
         var dir = ArtManifest.ResolveDirectory();
-        var stubs = new[] { "ENV_FG_Backdrop", "ENV_FG_BoardSurface", "ENV_FG_CellEmpty" };
-        foreach (var stub in stubs)
+        // 7dc144a polish: BoardSurface ~1.6MB (old ~25KB), CellEmpty ~39KB (old ~0.6KB).
+        var minBytes = new Dictionary<string, long>(StringComparer.Ordinal)
         {
-            Assert.True(manifest.TryGet(stub, out var asset), stub);
+            ["ENV_FG_Backdrop"] = 100000,
+            ["ENV_FG_BoardSurface"] = 100000,
+            ["ENV_FG_CellEmpty"] = 10000,
+            ["ENV_FG_CellHighlight"] = 10000
+        };
+        foreach (var pair in minBytes)
+        {
+            Assert.True(manifest.TryGet(pair.Key, out var asset), pair.Key);
             var path = Path.Combine(dir, asset.Filename.Replace('/', Path.DirectorySeparatorChar));
-            Assert.True(File.Exists(path), path);
+            var length = new FileInfo(path).Length;
+            Assert.True(length >= pair.Value, $"{pair.Key} is {length} bytes — expected Design board polish, not a stub that would show a bare grid.");
         }
     }
 
