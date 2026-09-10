@@ -160,6 +160,45 @@ public sealed class ArtManifestTests
     }
 
     [Fact]
+    public void Stick_has_no_leftover_cream_studio_plate()
+    {
+        var manifest = ArtManifest.LoadDefault();
+        var dir = ArtManifest.ResolveDirectory();
+        Assert.True(manifest.TryGet("TL_T02_Stick", out var asset));
+        var path = Path.Combine(dir, asset.Filename.Replace('/', Path.DirectorySeparatorChar));
+        PngInspect.DecodeRgba(path, out var width, out var height, out var rgba);
+        Assert.True(StudioPlatePunch.CornersTransparent(rgba, width, height));
+        var cream = 0;
+        var opaque = 0;
+        for (var i = 0; i < width * height; i++)
+        {
+            var a = rgba[i * 4 + 3];
+            if (a > 32)
+            {
+                opaque++;
+            }
+
+            if (a < 8)
+            {
+                continue;
+            }
+
+            var r = rgba[i * 4];
+            var g = rgba[i * 4 + 1];
+            var b = rgba[i * 4 + 2];
+            var l = (r + g + b) / 3;
+            var sat = Math.Max(r, Math.Max(g, b)) - Math.Min(r, Math.Min(g, b));
+            if (l >= 170 && sat <= 55)
+            {
+                cream++;
+            }
+        }
+
+        Assert.True(opaque > width * height / 40, "Stick object was punched away");
+        Assert.True(cream < width * height / 200, "Stick still has a cream plate (" + cream + " px)");
+    }
+
+    [Fact]
     public void Production_deliver_teach_starter_chrome_is_rgba_with_transparent_corners()
     {
         var manifest = ArtManifest.LoadDefault();
