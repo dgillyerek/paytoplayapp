@@ -69,6 +69,22 @@ public sealed class PlayLayoutTests
         Assert.Equal(0.10f, PlayLayout.DesignBoardTop);
         Assert.Equal(0.66f, PlayLayout.DesignBoardBottom);
         Assert.Equal(0.70f, PlayLayout.DesignDockTop);
+        Assert.True(PlayLayout.TeachHudCaption.YMax - PlayLayout.TeachHudCaption.YMin >= 0.05f);
+    }
+
+    [Fact]
+    public void Portrait_type_scale_is_arm_length_readable()
+    {
+        Assert.True(PlayLayout.TypeMinReadable >= 28);
+        foreach (var size in new[]
+                 {
+                     PlayLayout.TypeOrderBody, PlayLayout.TypeOrderActive, PlayLayout.TypeButton,
+                     PlayLayout.TypeHud, PlayLayout.TypeGoal, PlayLayout.TypeTeach, PlayLayout.TypeTeachRing,
+                     PlayLayout.TypeCrate, PlayLayout.TypeSplash, PlayLayout.TypeToast, PlayLayout.TypeCoin
+                 })
+        {
+            Assert.True(size >= PlayLayout.TypeMinReadable, size.ToString());
+        }
     }
 
     [Fact]
