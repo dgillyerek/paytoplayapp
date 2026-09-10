@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Grove.Unity
 {
-    /// <summary>Renders the 7×5 greybox board and piece stacks. Call <see cref="Refresh"/> after every domain mutation.</summary>
+    /// <summary>Renders the 7×5 Front Garden board with DES-001 sprites. Call <see cref="Refresh"/> after every domain mutation.</summary>
     public sealed class BoardView : MonoBehaviour
     {
         [SerializeField] private float cellSize = 1.15f;
@@ -22,11 +22,21 @@ namespace Grove.Unity
         public float CellSize => cellSize;
         public GridPos? HiddenCell { get; set; }
 
+        public Vector3 BoardCenter =>
+            new(origin.x + (BoardGrid.Columns - 1) * cellSize * 0.5f,
+                origin.y + (BoardGrid.Rows - 1) * cellSize * 0.5f,
+                0f);
+
+        public Vector2 BoardWorldSize =>
+            new(BoardGrid.Columns * cellSize, BoardGrid.Rows * cellSize);
+
         public void Bind(BoardGrid board)
         {
+            GroveArt.EnsureLoaded();
             Board = board;
             BuildGrid();
             Refresh();
+            GroveVisuals.FrameBoard(this);
         }
 
         public Vector3 CellToWorld(GridPos pos) =>
@@ -63,7 +73,7 @@ namespace Grove.Unity
             EnsureGhost();
             _ghost!.SetActive(true);
             _ghost.transform.position = world + new Vector3(0f, 0f, -0.2f);
-            ApplyPieceVisual(_ghostRenderer!, _ghostLabel!, stack);
+            ApplyPieceVisual(_ghostRenderer!, _ghostLabel!, stack, cellSize * 0.86f);
         }
 
         public void MoveGhost(Vector3 world)
@@ -144,61 +154,96 @@ namespace Grove.Unity
             var root = new GameObject("Cells");
             root.transform.SetParent(transform, false);
             _cellsRoot = root.transform;
-            var boardColor = new Color(0.18f, 0.32f, 0.2f);
-            var alt = new Color(0.22f, 0.38f, 0.24f);
-            var size = cellSize * 0.92f;
+            var center = BoardCenter;
+            var size = BoardWorldSize;
+
+            var backdrop = GroveArt.Get(GroveArt.StubBackdrop);
+            if (backdrop != null)
+            {
+                GroveVisuals.SpriteObject(
+                    "Backdrop",
+                    _cellsRoot,
+                    center + new Vector3(0f, 0.4f, 0.2f),
+                    Mathf.Max(size.x * 2.4f, size.y * 2.8f),
+                    Color.white,
+                    backdrop,
+                    -5);
+            }
+
+            var surface = GroveArt.Get(GroveArt.StubBoardSurface);
+            if (surface != null)
+            {
+                GroveVisuals.SpriteObject(
+                    "BoardSurface",
+                    _cellsRoot,
+                    center + new Vector3(0f, 0f, 0.08f),
+                    1f,
+                    Color.white,
+                    surface,
+                    -1);
+                var surfaceGo = _cellsRoot.Find("BoardSurface");
+                if (surfaceGo != null)
+                {
+                    var bounds = surface.bounds.size;
+                    surfaceGo.localScale = new Vector3(
+                        (size.x + 0.55f) / Mathf.Max(0.001f, bounds.x),
+                        (size.y + 0.55f) / Mathf.Max(0.001f, bounds.y),
+                        1f);
+                }
+            }
+
+            var cellSprite = GroveArt.Require(GroveArt.StubCellEmpty);
+            var tile = cellSize * 0.94f;
             for (var x = 0; x < BoardGrid.Columns; x++)
             {
                 for (var y = 0; y < BoardGrid.Rows; y++)
                 {
                     var pos = new GridPos(x, y);
-                    var color = (x + y) % 2 == 0 ? boardColor : alt;
-                    GroveVisuals.SpriteObject($"Cell_{x}_{y}", _cellsRoot, CellToWorld(pos), size, color, GroveVisuals.CellSprite, 0);
+                    GroveVisuals.SpriteObject(
+                        $"Cell_{x}_{y}",
+                        _cellsRoot,
+                        CellToWorld(pos),
+                        tile,
+                        Color.white,
+                        cellSprite,
+                        0);
                 }
             }
 
-            var frame = GroveVisuals.SpriteObject(
-                "BoardFrame",
-                _cellsRoot,
-                new Vector3(origin.x + 3 * cellSize, origin.y + 2 * cellSize, 0.05f),
-                1f,
-                new Color(0.08f, 0.14f, 0.09f),
-                GroveVisuals.CellSprite,
-                -1);
-            var frameBounds = GroveVisuals.CellSprite.bounds.size;
-            frame.transform.localScale = new Vector3(
-                (BoardGrid.Columns * cellSize + 0.3f) / Mathf.Max(0.001f, frameBounds.x),
-                (BoardGrid.Rows * cellSize + 0.3f) / Mathf.Max(0.001f, frameBounds.y),
-                1f);
-
+            var highlight = GroveArt.Get(GroveArt.StubCellHighlight) ?? cellSprite;
             _hover = GroveVisuals.SpriteObject(
                 "Hover",
                 _cellsRoot,
                 Vector3.zero,
-                cellSize * 0.96f,
-                new Color(1f, 0.95f, 0.4f, 0.45f),
-                GroveVisuals.CellSprite,
+                cellSize * 0.98f,
+                Color.white,
+                highlight,
                 2);
             _hover.SetActive(false);
         }
 
         private GameObject CreatePiece(GridPos pos, PieceStack stack)
         {
+            var sprite = GroveArt.SpriteForItem(stack.Id.Value);
             var go = GroveVisuals.SpriteObject(
                 $"Piece_{pos.X}_{pos.Y}",
                 _piecesRoot!,
                 CellToWorld(pos) + new Vector3(0f, 0f, -0.05f),
-                cellSize * 0.78f,
-                GroveVisuals.PieceColor(stack.Id.Value),
-                GroveVisuals.PieceSprite,
+                cellSize * 0.82f,
+                Color.white,
+                sprite,
                 5);
-            GroveVisuals.Label(
-                "Label",
-                go.transform,
-                new Vector3(0f, 0f, -0.02f),
-                GroveVisuals.ShortLabel(stack.Id.Value, stack.Count),
-                42,
-                Color.white);
+            if (stack.Count > 1)
+            {
+                GroveVisuals.Label(
+                    "Count",
+                    go.transform,
+                    new Vector3(0.28f, -0.28f, -0.02f),
+                    "×" + stack.Count,
+                    28,
+                    Color.white);
+            }
+
             return go;
         }
 
@@ -213,25 +258,27 @@ namespace Grove.Unity
                 "Ghost",
                 transform,
                 Vector3.zero,
-                cellSize * 0.82f,
+                cellSize * 0.86f,
                 Color.white,
-                GroveVisuals.PieceSprite,
+                GroveArt.Require(GroveArt.StubCellEmpty),
                 12);
             _ghostRenderer = _ghost.GetComponent<SpriteRenderer>();
-            _ghostLabel = GroveVisuals.Label("Label", _ghost.transform, new Vector3(0f, 0f, -0.02f), "", 42, Color.white);
+            _ghostLabel = GroveVisuals.Label("Count", _ghost.transform, new Vector3(0.28f, -0.28f, -0.02f), "", 28, Color.white);
             _ghost.SetActive(false);
         }
 
-        private static void ApplyPieceVisual(SpriteRenderer renderer, TextMesh label, PieceStack stack)
+        private static void ApplyPieceVisual(SpriteRenderer renderer, TextMesh label, PieceStack stack, float worldSize)
         {
-            var color = GroveVisuals.PieceColor(stack.Id.Value);
-            renderer.color = color;
+            var sprite = GroveArt.SpriteForItem(stack.Id.Value);
+            renderer.sprite = sprite;
+            renderer.color = Color.white;
+            GroveVisuals.FitSprite(renderer.transform, sprite, worldSize);
             if (renderer.sharedMaterial != null)
             {
-                GroveVisuals.ApplyColor(renderer.material, color);
+                GroveVisuals.ApplyColor(renderer.material, Color.white);
             }
 
-            label.text = GroveVisuals.ShortLabel(stack.Id.Value, stack.Count);
+            label.text = stack.Count > 1 ? "×" + stack.Count : "";
         }
 
         private System.Collections.IEnumerator PunchRoutine(Transform target)

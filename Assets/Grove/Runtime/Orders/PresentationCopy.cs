@@ -2,7 +2,7 @@ namespace Grove.Domain.Orders
 {
     /// <summary>
     /// Boot / area / goal / milestone strings plus NPC + order-slot policy.
-    /// Unity binds this for DEV-018 splash later; domain only stores the copy.
+    /// Unity plays DEV-018 splashes from this copy plus DES-002 PNGs.
     /// </summary>
     public sealed record PresentationCopy(
         string BootTitle,

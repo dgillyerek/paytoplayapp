@@ -27,6 +27,15 @@ namespace Grove.Unity
         public SplashStub Splash { get; private set; } = null!;
         public IClock Clock { get; private set; } = null!;
         public PrototypeHud Hud { get; private set; } = null!;
+        public int Coins { get; private set; }
+
+        public void GrantCoins(int amount)
+        {
+            if (amount > 0)
+            {
+                Coins += amount;
+            }
+        }
 
         public BoardView BoardView => boardView;
         public DragMergeController Drag => dragController;
@@ -109,9 +118,13 @@ namespace Grove.Unity
                 dragController.Bind(Session, boardView);
             }
 
+            GroveArt.EnsureLoaded();
             Hud.Host = this;
             Hud.Build();
-            Hud.Toast("QA: CRATE → merge to Sprout (WF T2) → DELIVER Order 1.");
+            if (!GroveArt.Ready)
+            {
+                GroveVisuals.ShowDiagnostic("Area 1 art pack failed to load. Expected Assets/Grove/Art/Area1/.");
+            }
         }
 
         internal static LoadedCatalog LoadCatalog()

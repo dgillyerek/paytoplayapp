@@ -37,7 +37,7 @@
     },
     {
       "id": "wildflower_t1",
-      "displayName": "Wildflower T1",
+      "displayName": "Seed",
       "chain": "wildflower",
       "tier": 1,
       "mergeable": true
@@ -58,7 +58,7 @@
     },
     {
       "id": "wildflower_t4",
-      "displayName": "Wildflower T4",
+      "displayName": "Wildflower",
       "chain": "wildflower",
       "tier": 4,
       "mergeable": true
@@ -72,7 +72,7 @@
     },
     {
       "id": "wildflower_t6",
-      "displayName": "Wildflower T6",
+      "displayName": "Flower Box",
       "chain": "wildflower",
       "tier": 6,
       "mergeable": true
@@ -93,7 +93,7 @@
     },
     {
       "id": "herb_t1",
-      "displayName": "Herb T1",
+      "displayName": "Herb Sprig",
       "chain": "herb",
       "tier": 1,
       "mergeable": true
@@ -107,7 +107,7 @@
     },
     {
       "id": "herb_t3",
-      "displayName": "Herb T3",
+      "displayName": "Herb Basket",
       "chain": "herb",
       "tier": 3,
       "mergeable": true
@@ -149,7 +149,7 @@
     },
     {
       "id": "tool_t3",
-      "displayName": "Hand Pruners",
+      "displayName": "Hand Rake",
       "chain": "tools",
       "tier": 3,
       "mergeable": true

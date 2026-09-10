@@ -73,6 +73,7 @@ public sealed class OrderBoardTests
         var splash = new SplashStub(catalog.Copy);
         Assert.Equal("Project Grove", splash.BootTitle);
         Assert.Equal("Front Garden", splash.AreaName);
+        Assert.Equal("Restore the Front Garden", splash.Goal);
         Assert.Null(splash.TryConsumeMilestone(false));
         Assert.Equal("Front Garden Restored", splash.TryConsumeMilestone(true));
         Assert.Null(splash.TryConsumeMilestone(true));
