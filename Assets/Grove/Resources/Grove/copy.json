@@ -7,5 +7,8 @@
   "npcDisplayName": "Maya",
   "npcPortrait": "2d-ui-only",
   "orderSlotsMax": 3,
-  "orderQueue": "scripted"
+  "orderQueue": "scripted",
+  "coachCrate": "Tap the crate for Seeds.",
+  "coachMerge": "Drag matching pieces together.",
+  "coachDeliver": "Deliver to Maya — restore the Front Garden."
 }

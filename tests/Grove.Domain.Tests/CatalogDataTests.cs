@@ -90,6 +90,7 @@ public sealed class CatalogDataTests
         Assert.Equal("2d-ui-only", catalog.Copy.NpcPortrait);
         Assert.Equal(3, catalog.Copy.OrderSlotsMax);
         Assert.Equal("scripted", catalog.Copy.OrderQueue);
+        Assert.Equal("Tap the crate for Seeds.", catalog.Copy.CoachCrate);
 
         Assert.Equal(6, catalog.Orders.Count);
         Assert.Equal(new[] { 10, 15, 15, 35, 20, 40 }, catalog.Orders.Select(o => o.CoinReward).ToArray());

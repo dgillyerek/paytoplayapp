@@ -10,15 +10,30 @@
 2. Double-click **`Assets/Grove/Scenes/Board.unity`**.
 3. Click **Play**.
 
-**On Play:**
+**On Play (portrait Game view 1080×1920):**
 
 - Full-screen splash **Project Grove** (tap).
 - Then splash **Front Garden** (tap).
+- **First-run coach marks** (3 steps, tap “Got it” or do the action): crate → merge → deliver. Not full FTUE.
 - Board: garden **backdrop** covering the camera, wood **BoardSurface** filling the 7×5 tray, overlapping cream **cells** — **not** a green/grey grid, pink letter tokens, or camera clear leaking around the board.
-- Goal banner: **Restore the Front Garden**.
-- HUD: energy bolt + count, **coin** count. Gems stay hidden.
-- Maya 2D portrait + up to **3** order cards (Maya lines, item art, coin/XP).
-- Wooden **garden crate** at the bottom (tap to produce).
+- The **full 7×5 is in the mid band** (about 24–70% up the screen). HUD never covers tiles.
+- Goal banner at the top: **Restore the Front Garden**.
+- HUD under the goal: energy bolt + count (left), **coin** count (right). Gems stay hidden.
+- Maya 2D portrait (top-left) + **3 order cards in a horizontal row** (Maya lines live on the cards as item/progress; Deliver on the active card).
+- Wooden **garden crate** at the bottom center (tap to produce). **STARTER** bottom-left.
+
+### Expected Play layout (Design sign-off)
+
+Normalized Y = 0 at the bottom of the Game view:
+
+| Band | Y (bottom–top) | Contents |
+| --- | --- | --- |
+| Top chrome | 0.85–0.95 | Goal, energy, coins |
+| Order row | 0.72–0.84 | Maya + 3 order cards across |
+| **Playfield** | **0.24–0.70** | **Entire 7×5 grid, tappable** |
+| Bottom chrome | 0.05–0.22 | Crate + charges + STARTER |
+
+If the order tray or Maya overlaps any cell, that is a FAIL. Splash art stays full-screen and unchanged.
 
 **Scripted path:** crate → 3-merge → deliver Orders 1–6 (Maya). Order 6 (Bouquet) completes the area → splash **Front Garden Restored**.
 

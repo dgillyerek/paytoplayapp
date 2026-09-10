@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Grove.Domain.Board;
+using Grove.Domain.Layout;
 using UnityEngine;
 
 namespace Grove.Unity
@@ -7,8 +8,8 @@ namespace Grove.Unity
     /// <summary>Renders the 7×5 Front Garden board with DES-001 sprites. Call <see cref="Refresh"/> after every domain mutation.</summary>
     public sealed class BoardView : MonoBehaviour
     {
-        [SerializeField] private float cellSize = 1.15f;
-        [SerializeField] private Vector2 origin = new(-3.45f, -2.1f);
+        [SerializeField] private float cellSize = PlayLayout.CellSize;
+        [SerializeField] private Vector2 origin = new(PlayLayout.OriginX, PlayLayout.OriginY);
 
         private Transform? _cellsRoot;
         private Transform? _piecesRoot;
@@ -36,6 +37,8 @@ namespace Grove.Unity
 
         public void Bind(BoardGrid board)
         {
+            cellSize = PlayLayout.CellSize;
+            origin = new Vector2(PlayLayout.OriginX, PlayLayout.OriginY);
             GroveArt.EnsureLoaded();
             Board = board;
             BuildGrid();
@@ -44,8 +47,12 @@ namespace Grove.Unity
             CoverPlayfield();
         }
 
+        public void GetWorldBounds(out float minX, out float minY, out float maxX, out float maxY) =>
+            PlayLayout.BoardWorldBounds(cellSize, origin.x, origin.y, out minX, out minY, out maxX, out maxY);
+
         private void LateUpdate()
         {
+            GroveVisuals.FrameBoard(this);
             if (_backdrop != null || _surface != null)
             {
                 CoverPlayfield();
