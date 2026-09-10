@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using Grove.Domain.Art;
@@ -170,7 +169,7 @@ namespace Grove.Unity
             var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
             if (!tex.LoadImage(bytes, markNonReadable: false))
             {
-                Object.Destroy(tex);
+                UnityEngine.Object.Destroy(tex);
                 return null;
             }
 
@@ -239,7 +238,7 @@ namespace Grove.Unity
                 yield return Path.GetFullPath(Path.Combine(data, "..", DesignDropRelative));
             }
 
-            yield return Path.Combine(Environment.CurrentDirectory, DesignDropRelative);
+            yield return Path.Combine(System.Environment.CurrentDirectory, DesignDropRelative);
         }
 
         private static string? StubForDropFile(string name)
