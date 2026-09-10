@@ -31,6 +31,30 @@ public sealed class ArtManifestTests
     }
 
     [Fact]
+    public void Wildflower_t1_to_t5_and_maya_happy_are_production_pngs_not_tiny_stubs()
+    {
+        var manifest = ArtManifest.LoadDefault();
+        var dir = ArtManifest.ResolveDirectory();
+        // 9e84a1a refresh: Seed ~41KB (old stub ~2.8KB), Maya Happy ~348KB (old ~5KB).
+        var minBytes = new Dictionary<string, long>(StringComparer.Ordinal)
+        {
+            ["WF_T01_Seed"] = 20000,
+            ["WF_T02_Sprout"] = 20000,
+            ["WF_T03_Bud"] = 20000,
+            ["WF_T04_Wildflower"] = 20000,
+            ["WF_T05_Bouquet"] = 20000,
+            ["MAYA_Portrait_Happy"] = 100000
+        };
+        foreach (var pair in minBytes)
+        {
+            Assert.True(manifest.TryGet(pair.Key, out var asset), pair.Key);
+            var path = Path.Combine(dir, asset.Filename.Replace('/', Path.DirectorySeparatorChar));
+            var length = new FileInfo(path).Length;
+            Assert.True(length >= pair.Value, $"{pair.Key} is {length} bytes — expected production pack, not the old stub.");
+        }
+    }
+
+    [Fact]
     public void Board_composite_pngs_exist_so_play_mode_cannot_fall_back_to_a_bare_grid()
     {
         var manifest = ArtManifest.LoadDefault();
