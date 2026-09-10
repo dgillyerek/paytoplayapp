@@ -1,3 +1,4 @@
+using System;
 using Grove.Domain.Board;
 using Grove.Domain.Commerce;
 using Grove.Domain.Energy;
@@ -29,9 +30,55 @@ namespace Grove.Unity
         public BoardView BoardView => boardView;
         public DragMergeController Drag => dragController;
 
-        private void Awake()
+        private bool _booted;
+
+        private void Awake() => TryBoot();
+
+        private void OnEnable() => TryBoot();
+
+        private void Start() => TryBoot();
+
+        private void Update()
+        {
+            if (!_booted)
+            {
+                TryBoot();
+            }
+        }
+
+        private void TryBoot()
         {
             GroveVisuals.EnsurePlayCamera();
+            if (_booted || !Application.isPlaying)
+            {
+                return;
+            }
+
+            try
+            {
+                Boot();
+                _booted = true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                GroveVisuals.ShowDiagnostic("Grove bootstrap failed (not an empty-blue camera).\n" + ex.Message);
+                _booted = true;
+            }
+        }
+
+        private void Boot()
+        {
+            if (boardView == null)
+            {
+                boardView = GetComponent<BoardView>();
+            }
+
+            if (dragController == null)
+            {
+                dragController = GetComponent<DragMergeController>();
+            }
+
             Clock = new SystemClock();
             Catalog = catalogAsset != null ? catalogAsset.Load() : LoadCatalog();
             var board = new BoardGrid();
@@ -39,9 +86,9 @@ namespace Grove.Unity
             Store = new FakeStore();
             Hud = GetComponent<PrototypeHud>() ?? gameObject.AddComponent<PrototypeHud>();
             Energy = new EnergyWallet(Catalog.Energy, Clock, Hud);
-            if (Catalog.GardenCrate is { } crateDef)
+            if (Catalog.GardenCrate != null)
             {
-                Crate = new GardenCrate(crateDef, new RandomAdapter(), ftueFreeTapRemaining: true);
+                Crate = new GardenCrate(Catalog.GardenCrate, new RandomAdapter(), ftueFreeTapRemaining: true);
                 CrateTap = new CrateTapService(Crate, board, Energy, Clock);
             }
 
@@ -79,7 +126,7 @@ namespace Grove.Unity
                         Resources.Load<TextAsset>("Grove/orders")?.text);
                 }
             }
-            catch (System.Exception)
+            catch (Exception)
             {
                 // Fall through to in-memory catalog so Play Mode never hard-fails.
             }
