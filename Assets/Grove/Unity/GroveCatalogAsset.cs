@@ -22,7 +22,8 @@ namespace Grove.Unity
             var crate = TryResolve(gardenCrateJson, "Grove/garden_crate");
             var energy = TryResolve(energyJson, "Grove/energy");
             var orders = TryResolve(null, "Grove/orders");
-            return CatalogLoader.FromJson(items, recipes, crate, energy, orders);
+            var copy = TryResolve(null, "Grove/copy");
+            return CatalogLoader.FromJson(items, recipes, crate, energy, orders, copy);
         }
 
         internal static string Resolve(TextAsset? assigned, string resourcesPath)

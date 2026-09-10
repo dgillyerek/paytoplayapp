@@ -44,14 +44,14 @@
     },
     {
       "id": "wildflower_t2",
-      "displayName": "Wildflower T2",
+      "displayName": "Sprout",
       "chain": "wildflower",
       "tier": 2,
       "mergeable": true
     },
     {
       "id": "wildflower_t3",
-      "displayName": "Wildflower T3",
+      "displayName": "Bud",
       "chain": "wildflower",
       "tier": 3,
       "mergeable": true
@@ -65,7 +65,7 @@
     },
     {
       "id": "wildflower_t5",
-      "displayName": "Wildflower T5",
+      "displayName": "Bouquet",
       "chain": "wildflower",
       "tier": 5,
       "mergeable": true
@@ -100,7 +100,7 @@
     },
     {
       "id": "herb_t2",
-      "displayName": "Herb T2",
+      "displayName": "Herb Pot",
       "chain": "herb",
       "tier": 2,
       "mergeable": true
@@ -135,14 +135,14 @@
     },
     {
       "id": "tool_t1",
-      "displayName": "Watering Can",
+      "displayName": "Twig",
       "chain": "tools",
       "tier": 1,
       "mergeable": true
     },
     {
       "id": "tool_t2",
-      "displayName": "Garden Trowel",
+      "displayName": "Stick",
       "chain": "tools",
       "tier": 2,
       "mergeable": true
@@ -166,13 +166,6 @@
       "displayName": "Sprinkler",
       "chain": "tools",
       "tier": 5,
-      "mergeable": true
-    },
-    {
-      "id": "twig_t1",
-      "displayName": "Twig T1",
-      "chain": "twig",
-      "tier": 1,
       "mergeable": true
     },
     {

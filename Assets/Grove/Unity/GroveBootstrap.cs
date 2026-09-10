@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace Grove.Unity
 {
-    /// <summary>Playable prototype: 7×5 drag-merge, garden crate, energy HUD, orders 1–3.</summary>
+    /// <summary>Playable prototype: 7×5 drag-merge, garden crate, energy HUD, scripted orders 1–6.</summary>
     public sealed class GroveBootstrap : MonoBehaviour
     {
         [SerializeField] private BoardView boardView = null!;
@@ -23,6 +23,7 @@ namespace Grove.Unity
         public GardenCrate Crate { get; private set; } = null!;
         public CrateTapService CrateTap { get; private set; } = null!;
         public OrderBoard Orders { get; private set; } = null!;
+        public SplashStub Splash { get; private set; } = null!;
         public IClock Clock { get; private set; } = null!;
         public PrototypeHud Hud { get; private set; } = null!;
 
@@ -45,7 +46,10 @@ namespace Grove.Unity
                 CrateTap = new CrateTapService(Crate, board, Energy, Clock);
             }
 
-            Orders = new OrderBoard(Catalog.Orders.Count > 0 ? Catalog.Orders : GroveCatalog.CreateFallback().Orders);
+            Orders = new OrderBoard(
+                Catalog.Orders.Count > 0 ? Catalog.Orders : GroveCatalog.CreateFallback().Orders,
+                Catalog.Copy.OrderSlotsMax);
+            Splash = new SplashStub(Catalog.Copy);
             SeedDemoBoard(board);
 
             if (boardView != null)
@@ -60,7 +64,7 @@ namespace Grove.Unity
 
             Hud.Host = this;
             Hud.Build();
-            Hud.Toast("QA: CRATE → merge to WF T3 → DELIVER Order 1.");
+            Hud.Toast("QA: CRATE → merge to Sprout (WF T2) → DELIVER Order 1.");
         }
 
         internal static LoadedCatalog LoadCatalog()
@@ -76,7 +80,8 @@ namespace Grove.Unity
                         recipes.text,
                         Resources.Load<TextAsset>("Grove/garden_crate")?.text,
                         Resources.Load<TextAsset>("Grove/energy")?.text,
-                        Resources.Load<TextAsset>("Grove/orders")?.text);
+                        Resources.Load<TextAsset>("Grove/orders")?.text,
+                        Resources.Load<TextAsset>("Grove/copy")?.text);
                 }
             }
             catch (System.Exception)

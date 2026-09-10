@@ -1,9 +1,33 @@
 {
+  "queue": "scripted",
+  "maxSlots": 3,
+  "npcId": "maya",
   "orders": [
     {
       "id": "order_1",
-      "title": "Order 1 — First Bloom",
-      "hint": "Merge wildflowers up to T3, then Deliver.",
+      "title": "Order 1",
+      "hint": "Maya wants this — tap to deliver.",
+      "mayaLine": "Maya wants this — tap to deliver.",
+      "rewards": {
+        "coins": 10,
+        "xp": 5
+      },
+      "requirements": [
+        {
+          "itemId": "wildflower_t2",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "order_2",
+      "title": "Order 2",
+      "hint": "A little bigger — keep stacking matches.",
+      "mayaLine": "A little bigger — keep stacking matches.",
+      "rewards": {
+        "coins": 15,
+        "xp": 8
+      },
       "requirements": [
         {
           "itemId": "wildflower_t3",
@@ -12,20 +36,67 @@
       ]
     },
     {
-      "id": "order_2",
-      "title": "Order 2 — Fuller Bouquet",
-      "hint": "Keep merging. Deliver one Wildflower T4.",
+      "id": "order_3",
+      "title": "Order 3",
+      "hint": "Herbs next — different chain, same idea.",
+      "mayaLine": "Herbs next — different chain, same idea.",
+      "rewards": {
+        "coins": 15,
+        "xp": 8
+      },
       "requirements": [
         {
-          "itemId": "wildflower_t4",
+          "itemId": "herb_t2",
           "count": 1
         }
       ]
     },
     {
-      "id": "order_3",
-      "title": "Order 3 — Garden Show",
-      "hint": "Deliver one Wildflower T5.",
+      "id": "order_4",
+      "title": "Order 4",
+      "hint": "Two things at once — you’ve got this.",
+      "mayaLine": "Two things at once — you’ve got this.",
+      "rewards": {
+        "coins": 35,
+        "xp": 15
+      },
+      "requirements": [
+        {
+          "itemId": "wildflower_t4",
+          "count": 1
+        },
+        {
+          "itemId": "herb_t2",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "order_5",
+      "title": "Order 5",
+      "hint": "Grab a sturdy stick from the tools chain.",
+      "mayaLine": "Grab a sturdy stick from the tools chain.",
+      "rewards": {
+        "coins": 20,
+        "xp": 10
+      },
+      "requirements": [
+        {
+          "itemId": "tool_t2",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "order_6",
+      "title": "Order 6",
+      "hint": "One bouquet and the garden’s looking alive!",
+      "mayaLine": "One bouquet and the garden’s looking alive!",
+      "rewards": {
+        "coins": 40,
+        "xp": 20
+      },
+      "completesMilestone": true,
       "requirements": [
         {
           "itemId": "wildflower_t5",
