@@ -25,7 +25,6 @@ namespace Grove.Unity
         public bool IsDragging => _dragging;
         public bool IsBusy => _busy;
         public DragResult? LastResult { get; private set; }
-        public string LastFeedback { get; private set; } = "";
 
         public void Bind(MergeSession session, BoardView view)
         {
@@ -96,7 +95,6 @@ namespace Grove.Unity
             View.HiddenCell = cell;
             View.Refresh();
             View.ShowGhost(stack, world);
-            LastFeedback = "";
         }
 
         private IEnumerator EndDrag()
@@ -111,9 +109,8 @@ namespace Grove.Unity
                 : new DragResult.SnapBack("out-of-bounds");
             LastResult = result;
 
-            if (result is DragResult.SnapBack snap)
+            if (result is DragResult.SnapBack)
             {
-                LastFeedback = SnapMessage(snap.Reason);
                 var fromWorld = PointerWorld();
                 var dest = View.CellToWorld(_from);
                 var t = 0f;
@@ -126,7 +123,7 @@ namespace Grove.Unity
                     yield return null;
                 }
             }
-            else if (result is DragResult.Applied applied)
+            else if (result is DragResult.Applied)
             {
                 var dest = View.CellToWorld(hasCell ? to : _from);
                 var fromWorld = PointerWorld();
@@ -139,9 +136,6 @@ namespace Grove.Unity
                     yield return null;
                 }
 
-                LastFeedback = applied.Merge is { } merge
-                    ? $"Merged {merge.Consumed} → {merge.Produced}!"
-                    : "";
             }
 
             View.HideGhost();
@@ -154,17 +148,6 @@ namespace Grove.Unity
 
             _busy = false;
         }
-
-        private static string SnapMessage(string reason) => reason switch
-        {
-            "type-mismatch" => "Snap back — those pieces don't match.",
-            "no-recipe" => "Snap back — this tier doesn't merge further.",
-            "overstack" => "Snap back — too many on that cell.",
-            "same-cell" => "Snap back — drop on another cell.",
-            "empty-source" => "Snap back — nothing to drag.",
-            "out-of-bounds" => "Snap back — drop on the board.",
-            _ => "Snap back — " + reason
-        };
 
         private Vector3 PointerWorld()
         {

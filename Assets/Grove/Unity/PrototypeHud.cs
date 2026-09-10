@@ -22,6 +22,7 @@ namespace Grove.Unity
     {
         private Text _energyText = null!;
         private Text _coinText = null!;
+        private Text _crateText = null!;
         private Text _toastText = null!;
         private Text _goalText = null!;
         private Button _crateButton = null!;
@@ -191,6 +192,16 @@ namespace Grove.Unity
             Place(_crateButton.GetComponent<RectTransform>(), PlayLayout.Crate);
             _crateImage = _crateButton.targetGraphic as Image ?? _crateButton.GetComponent<Image>();
             _crateButton.onClick.AddListener(OnCrate);
+            _crateText = GroveVisuals.UiText(
+                root,
+                "CrateCharges",
+                "Charges 30/30",
+                PlayLayout.TypeCrate,
+                TextAnchor.MiddleCenter,
+                Color.white,
+                contrastOnDark: true,
+                oneLine: true);
+            Place(_crateText.rectTransform, PlayLayout.CrateLabel);
 
             var store = GroveVisuals.UiButton(
                 root,
@@ -275,6 +286,11 @@ namespace Grove.Unity
             if (Host.Crate != null)
             {
                 var charges = Host.Crate.Charges(Host.Clock);
+                if (_crateText != null)
+                {
+                    _crateText.text = $"Charges {charges}/{Host.Crate.MaxCharges}";
+                }
+
                 var energyOk = Host.Crate.FtueFreeTapRemaining || Host.Energy == null || !Host.Energy.IsEmpty;
                 _crateButton.interactable = !SplashBlocking && charges > 0 && energyOk;
                 var crateSprite = GroveArt.PlayCrateSprite(charges > 0);

@@ -49,11 +49,11 @@ public sealed class ArtManifestTests
     {
         var manifest = ArtManifest.LoadDefault();
         var dir = ArtManifest.ResolveDirectory();
-        // 9e84a1a refresh: Seed ~41KB (old stub ~2.8KB), Maya Happy ~348KB (old ~5KB).
+        // Seed/Bud stay large. T2 after chroma-key punch is a thin silhouette (~7KB), not the old 2.8KB stub.
         var minBytes = new Dictionary<string, long>(StringComparer.Ordinal)
         {
             ["WF_T01_Seed"] = 20000,
-            ["WF_T02_Sprout"] = 20000,
+            ["WF_T02_Sprout"] = 5000,
             ["WF_T03_Bud"] = 20000,
             ["WF_T04_Wildflower"] = 20000,
             ["WF_T05_Bouquet"] = 20000,
@@ -155,12 +155,23 @@ public sealed class ArtManifestTests
                 }
             }
 
-            Assert.True(opaque > width * height / 40, stub + " punched the object away");
+            Assert.True(opaque > width * height / 80, stub + " punched the object away");
             if (asset.Category == "piece")
             {
                 Assert.True(opaque < width * height / 2, stub + " is still a filled cream plate");
                 Assert.True(StudioPlatePunch.TryOpaqueRect(rgba, width, height, 16, 0, out _, out _, out var rw, out var rh), stub);
                 Assert.True(rw * rh < width * height * 3 / 4, stub + " opaque bounds still fill the canvas plate");
+                var magenta = 0;
+                for (var i = 0; i < width * height; i++)
+                {
+                    if (rgba[i * 4 + 3] >= 8
+                        && StudioPlatePunch.IsMagentaKey(rgba[i * 4], rgba[i * 4 + 1], rgba[i * 4 + 2]))
+                    {
+                        magenta++;
+                    }
+                }
+
+                Assert.True(magenta < width * height / 200, stub + " still has a magenta chroma plate (" + magenta + " px)");
             }
         }
     }

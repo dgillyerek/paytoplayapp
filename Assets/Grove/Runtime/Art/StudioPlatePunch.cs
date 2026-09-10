@@ -171,8 +171,9 @@ namespace Grove.Domain.Art
 
             if (CornersTransparent(rgba, width, height))
             {
+                var leftover = PunchMagentaKey(rgba, width, height);
                 ClearTransparentRgb(rgba, width, height);
-                return 0;
+                return leftover;
             }
 
             var plates = CornerPlates(rgba, width, height);
@@ -218,7 +219,42 @@ namespace Grove.Domain.Art
                 punched += PunchCreamHalo(rgba, width, height);
             }
 
+            punched += PunchMagentaKey(rgba, width, height);
             ClearTransparentRgb(rgba, width, height);
+            return punched;
+        }
+
+        /// <summary>
+        /// Design chroma-key leftovers: hot magenta islands that survive a corner punch.
+        /// Does not match orange seeds or pink buds.
+        /// </summary>
+        public static bool IsMagentaKey(byte r, byte g, byte b) =>
+            r >= 160 && b >= 110 && g <= 90 && r >= g + 50 && b >= g + 30;
+
+        public static int PunchMagentaKey(byte[] rgba, int width, int height)
+        {
+            if (!Valid(rgba, width, height))
+            {
+                return 0;
+            }
+
+            var punched = 0;
+            var n = width * height;
+            for (var i = 0; i < n; i++)
+            {
+                var o = i * 4;
+                if (rgba[o + 3] < 8 || !IsMagentaKey(rgba[o], rgba[o + 1], rgba[o + 2]))
+                {
+                    continue;
+                }
+
+                rgba[o] = 0;
+                rgba[o + 1] = 0;
+                rgba[o + 2] = 0;
+                rgba[o + 3] = 0;
+                punched++;
+            }
+
             return punched;
         }
 

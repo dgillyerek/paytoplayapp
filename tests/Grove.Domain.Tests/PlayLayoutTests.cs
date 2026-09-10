@@ -91,23 +91,23 @@ public sealed class PlayLayoutTests
     }
 
     [Fact]
-    public void Energy_readout_fits_100_100_on_one_line_at_1080_and_crate_charges_are_off_play()
+    public void Energy_and_charges_readouts_fit_one_line_at_1080()
     {
         var energyW = (PlayLayout.EnergyLabel.XMax - PlayLayout.EnergyLabel.XMin) * PlayLayout.ReferenceWidth;
-        Assert.True(energyW >= 220f, energyW.ToString("0.0"));
+        var crateW = (PlayLayout.CrateLabel.XMax - PlayLayout.CrateLabel.XMin) * PlayLayout.ReferenceWidth;
+        Assert.True(energyW >= PlayLayout.HudNumberMinWidthPx, energyW.ToString("0.0"));
+        Assert.True(crateW >= PlayLayout.CrateChargesMinWidthPx, crateW.ToString("0.0"));
         Assert.True(PlayLayout.EnergyLabel.XMin >= PlayLayout.EnergyBar.XMin - 0.0001f);
         Assert.True(PlayLayout.EnergyLabel.XMax <= PlayLayout.EnergyBar.XMax + 0.0001f);
         Assert.True(PlayLayout.EnergyLabel.XMax <= PlayLayout.CoinIcon.XMin + 0.0001f);
         Assert.False(PlayLayout.EnergyLabel.Overlaps(PlayLayout.CoinIcon));
         Assert.True(PlayLayout.EnergyLabel.XMax < 0.50f);
-        foreach (var rect in PlayLayout.OccludingHud())
-        {
-            Assert.False(
-                Math.Abs(rect.XMin - PlayLayout.CrateLabel.XMin) < 0.0001f
-                && Math.Abs(rect.YMin - PlayLayout.CrateLabel.YMin) < 0.0001f
-                && Math.Abs(rect.XMax - PlayLayout.CrateLabel.XMax) < 0.0001f
-                && Math.Abs(rect.YMax - PlayLayout.CrateLabel.YMax) < 0.0001f);
-        }
+        Assert.False(PlayLayout.CrateLabel.OverlapsPlayfield());
+        Assert.True(PlayLayout.MeetsMinHudGap(PlayLayout.CrateLabel));
+        Assert.False(PlayLayout.CrateLabel.Overlaps(PlayLayout.OrderTray));
+        Assert.Contains(PlayLayout.OccludingHud(), r =>
+            Math.Abs(r.XMin - PlayLayout.CrateLabel.XMin) < 0.0001f
+            && Math.Abs(r.YMin - PlayLayout.CrateLabel.YMin) < 0.0001f);
     }
 
     [Fact]

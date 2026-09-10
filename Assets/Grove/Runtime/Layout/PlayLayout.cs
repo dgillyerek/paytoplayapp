@@ -85,6 +85,9 @@ namespace Grove.Domain.Layout
         public const int TypeTeach = 30;
         public const int TypeTeachRing = 24;
         public const int TypeCrate = 28;
+        /// <summary>"Charges 30/30" at TypeCrate Bold needs ~240px @1080 to stay one line.</summary>
+        public const float HudNumberMinWidthPx = 220f;
+        public const float CrateChargesMinWidthPx = 240f;
         public const int TypeSplash = 36;
         public const int TypeToast = 28;
         public const int TypeCoin = 34;
@@ -148,8 +151,11 @@ namespace Grove.Domain.Layout
         public static readonly NormRect Store = new NormRect(0.04f, 0.012f, 0.20f, 0.108f);
 
         public static readonly NormRect Crate = new NormRect(0.025f, 0.48f, 0.165f, 0.655f);
-        /// <summary>Unused on Play — charge copy wrapped mid-word in this sliver.</summary>
-        public static readonly NormRect CrateLabel = new NormRect(0.025f, 0.658f, 0.165f, 0.715f);
+        /// <summary>
+        /// One-line "Charges 30/30" in the dock–board gap (left). Wider than the crate
+        /// sliver so TypeCrate cannot wrap mid-word as "Charge / s".
+        /// </summary>
+        public static readonly NormRect CrateLabel = new NormRect(0.02f, 0.304f, 0.30f, 0.356f);
 
         public static readonly NormRect TeachCrateRing = Crate.Inflate(0.008f, 0.008f);
         /// <summary>Teach banner between dock and board. Overlay — not in <see cref="OccludingHud"/>.</summary>
@@ -194,7 +200,7 @@ namespace Grove.Domain.Layout
             new[]
             {
                 Goal, EnergyPill, EnergyBar, EnergyLabel, CoinIcon, CoinLabel, Toast,
-                DockPlate, Maya, MayaBubble, OrderTray, InventoryBar, Crate, Store
+                DockPlate, Maya, MayaBubble, OrderTray, InventoryBar, Crate, CrateLabel, Store
             };
 
         public static bool MeetsMinHudGap(NormRect chrome)
