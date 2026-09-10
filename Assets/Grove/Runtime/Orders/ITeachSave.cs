@@ -1,6 +1,6 @@
 namespace Grove.Domain.Orders
 {
-    /// <summary>Persists DEV-020 thin teach so T1–T3 run once per save until Order 1 completes.</summary>
+    /// <summary>Persists DEV-020 thin teach once per save (<c>ftue_play_teach_done</c>) until Order 1 completes.</summary>
     public interface ITeachSave
     {
         bool IsOrder1TeachDone { get; set; }

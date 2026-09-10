@@ -29,8 +29,11 @@ namespace Grove.Unity
         public const string StubButton = "UI_Btn_Primary";
         public const string StubEnergyEmpty = "UI_Modal_EnergyEmpty";
         public const string StubMergeSparkle = "VFX_MergeSparkle";
-        public const string StubTeachRing = "UI_TeachRing";
-        public const string StubHudDock = "UI_OrderTray_Dock";
+        public const string StubTeachRing = "UI_Teach_Ring";
+        public const string StubTeachHand = "UI_Teach_Hand";
+        public const string StubHudDock = "UI_OrderDock_Panel";
+        public const string StubGoalPill = "UI_GoalPill";
+        public const string StubInventorySlot = "UI_Inventory_Slot";
         public const string StubMayaBubble = "UI_Maya_Bubble";
 
         /// <summary>DES-003/004 drop folder (optional). Bottom dock + teach rings overlay the pack.</summary>
@@ -99,8 +102,14 @@ namespace Grove.Unity
         public static Sprite? TeachRingSprite =>
             Get(StubTeachRing) ?? Get(StubCellHighlight);
 
+        public static Sprite? TeachHandSprite =>
+            Get(StubTeachHand);
+
         public static Sprite? HudDockSprite =>
             Get(StubHudDock) ?? Get(StubOrderCard);
+
+        public static Sprite? GoalPillSprite =>
+            Get(StubGoalPill) ?? Get(StubOrderCard);
 
         public static Sprite? MayaBubbleSprite =>
             Get(StubMayaBubble) ?? Get(StubOrderCard);
@@ -241,10 +250,21 @@ namespace Grove.Unity
             }
 
             var n = name.Replace('-', '_');
+            if (ContainsInsensitive(n, "Teach_Hand") || ContainsInsensitive(n, "TeachHand") ||
+                ContainsInsensitive(n, "Hand_Teach"))
+            {
+                return StubTeachHand;
+            }
+
             if (ContainsInsensitive(n, "TeachRing") || ContainsInsensitive(n, "DES_004") ||
                 ContainsInsensitive(n, "Ring_Teach") || ContainsInsensitive(n, "Teach_Ring"))
             {
                 return StubTeachRing;
+            }
+
+            if (ContainsInsensitive(n, "GoalPill") || ContainsInsensitive(n, "Goal_Pill"))
+            {
+                return StubGoalPill;
             }
 
             if (ContainsInsensitive(n, "Bubble") || ContainsInsensitive(n, "Maya_Speech"))
@@ -252,7 +272,8 @@ namespace Grove.Unity
                 return StubMayaBubble;
             }
 
-            if (ContainsInsensitive(n, "Dock") || ContainsInsensitive(n, "DES_003") ||
+            if (ContainsInsensitive(n, "OrderDock") || ContainsInsensitive(n, "Dock_Panel") ||
+                ContainsInsensitive(n, "Dock") || ContainsInsensitive(n, "DES_003") ||
                 ContainsInsensitive(n, "SideRail") || ContainsInsensitive(n, "Side_Rail") ||
                 ContainsInsensitive(n, "OrderTray_Dock"))
             {

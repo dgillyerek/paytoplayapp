@@ -26,6 +26,35 @@ public sealed class PlayLayoutTests
     }
 
     [Fact]
+    public void Design_v1_bands_keep_orders_in_the_dock_and_crate_off_cells()
+    {
+        Assert.Equal(0.90f, PlayLayout.FromDesignTop(0.10f), 3);
+        Assert.Equal(0.32f, PlayLayout.FromDesignTop(0.68f), 3);
+        Assert.Equal(0.00f, PlayLayout.FromDesignTop(1f), 3);
+
+        Assert.True(PlayLayout.TopBarBand.Contains(PlayLayout.EnergyLabel));
+        Assert.True(PlayLayout.TopBarBand.Contains(PlayLayout.Goal));
+        Assert.True(PlayLayout.TopBarBand.Contains(PlayLayout.CoinLabel));
+        Assert.True(PlayLayout.TopBarBand.Contains(PlayLayout.Maya));
+
+        Assert.True(PlayLayout.BoardBand.Contains(PlayLayout.BoardSafeRect));
+        Assert.True(PlayLayout.BoardBand.Contains(PlayLayout.Crate));
+        Assert.False(PlayLayout.Crate.Overlaps(PlayLayout.DockBand));
+        Assert.False(PlayLayout.Crate.Overlaps(PlayLayout.BoardSafeRect));
+        Assert.True(PlayLayout.BoardSafeRect.XMin - PlayLayout.Crate.XMax >= PlayLayout.MinGapNormX - 0.0001f);
+
+        Assert.True(PlayLayout.DockBand.Contains(PlayLayout.OrderTray));
+        Assert.True(PlayLayout.DockBand.Contains(PlayLayout.InventoryBar));
+        Assert.True(PlayLayout.DockBand.Contains(PlayLayout.Store));
+        Assert.True(PlayLayout.DockBand.Contains(PlayLayout.DockPlate));
+        Assert.False(PlayLayout.OrderTray.Overlaps(PlayLayout.BoardBand));
+        Assert.False(PlayLayout.OrderTray.Overlaps(PlayLayout.BoardSafeRect));
+        Assert.True(PlayLayout.DockBand.YMax <= PlayLayout.BoardBand.YMin);
+        Assert.True(PlayLayout.BoardBand.YMin - PlayLayout.DockBand.YMax >= PlayLayout.MinGapNormY - 0.0001f);
+        Assert.Equal(5, PlayLayout.InventorySlotCount);
+    }
+
+    [Fact]
     public void Legacy_vertical_tray_would_cover_the_playfield()
     {
         var legacyTray = new NormRect(0.20f, 0.62f, 0.99f, 0.84f);
@@ -74,6 +103,10 @@ public sealed class ThinTeachTests
         Assert.Equal(TeachBeat.Crate, teach.Beat);
         Assert.False(teach.CanSkip(board, orders));
         Assert.Equal("Tap the crate to grow supplies.", teach.Caption);
+        Assert.Equal(ThinTeach.RingLabelCrate, teach.RingLabel);
+        Assert.Equal("UI_Teach_Ring", ThinTeach.RingStub);
+        Assert.Equal("UI_Teach_Hand", ThinTeach.HandStub);
+        Assert.Equal("ftue_play_teach_done", ThinTeach.PersistKey);
 
         board.Place(new GridPos(1, 0), new PieceStack(GroveCatalog.WildflowerT1, 1));
         teach.NotifyCrateTapped(board, orders);
@@ -81,6 +114,7 @@ public sealed class ThinTeachTests
         Assert.True(teach.HighlightA.HasValue);
         Assert.True(teach.HighlightB.HasValue);
         Assert.Equal("Drag two matches together.", teach.Caption);
+        Assert.Equal(ThinTeach.RingLabelMerge, teach.RingLabel);
         Assert.False(teach.CanSkip(board, orders));
 
         teach.NotifyMatchesCombined(board, orders);
@@ -91,6 +125,7 @@ public sealed class ThinTeachTests
         teach.Sync(board, orders);
         Assert.Equal(TeachBeat.Deliver, teach.Beat);
         Assert.Equal("Deliver to Maya.", teach.Caption);
+        Assert.Equal(ThinTeach.RingLabelDeliver, teach.RingLabel);
 
         orders.TryDeliver(board);
         teach.NotifyOrderDelivered(orders);

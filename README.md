@@ -16,23 +16,23 @@
 - Then splash **Front Garden** (tap).
 - **First-run teach T1–T3** (once per save until Order 1; skippable after T1 if already acted): crate → two matches → deliver. Not full FTUE.
 - Board: garden **backdrop** covering the camera, wood **BoardSurface** filling the 7×5 tray, overlapping cream **cells** — **not** a green/grey grid, pink letter tokens, or camera clear leaking around the board.
-- The **full 7×5 is in the mid board-safe band** (~26–86% up the screen) with **≥16dp** gap to HUD. Tray/Maya/crate never cover tiles.
-- Goal banner at the top: **Restore the Front Garden**.
-- HUD top: energy bolt + count (left), **coin** count (right). Gems stay hidden.
-- **Bottom dock:** Maya 2D portrait + one-line bubble + **3 order cards**. Wooden **garden crate** under the dock. **STARTER** bottom-left.
+- The **full 7×5 is in the board band** (Design Y 12–68% from the top) with **≥16dp** gap to HUD. Order cards never cover tiles.
+- Goal pill at the top center: **Restore the Front Garden**.
+- HUD top (0–10%): energy left, Goal pill center, **coins** right. Maya small top-right. Gems stay hidden.
+- Garden **crate** left of the 7×5 (on the board, not in the dock).
+- **Bottom dock (70–100%):** cream `UI_OrderDock_Panel`, **3 order cards**, visual 5-slot inventory bar, **STARTER**.
 
 ### Expected Play layout (Design sign-off)
 
-Normalized Y = 0 at the bottom of the Game view:
+Design Y% is from the **top** of 1080×1920. Unity Y = 0 at the bottom of the Game view:
 
-| Band | Y (bottom–top) | Contents |
-| --- | --- | --- |
-| Top chrome | 0.87–0.98 | Goal, energy, coins |
-| **Board safe** | **0.26–0.86** | **Entire 7×5, tappable** |
-| Bottom dock | 0.15–0.25 | Maya + one-line bubble + 3 order cards |
-| Producers | 0.01–0.14 | Crate + STARTER |
+| Band | Design Y (from top) | Unity Y (bottom=0) | Contents |
+| --- | --- | --- | --- |
+| Top bar | 0–10% | 0.90–1.00 | Energy L, Goal pill C, coins R, Maya far R |
+| **Board** | **12–68%** | **0.32–0.88** | **7×5 inset + crate left. No order cards.** |
+| Bottom dock | 70–100% | 0.00–0.30 | Order dock ×3 + inventory ×5 + STARTER |
 
-If the order tray, Maya, or crate overlaps any cell, that is a FAIL. Splash art stays full-screen and unchanged.
+If any order card overlaps any playable cell, that is a FAIL. Splash art stays full-screen and unchanged. Teach uses `UI_Teach_Ring` + `UI_Teach_Hand` over the board (once per save, `ftue_play_teach_done`).
 
 **Scripted path:** crate → 3-merge → deliver Orders 1–6 (Maya). Order 6 (Bouquet) completes the area → splash **Front Garden Restored**.
 

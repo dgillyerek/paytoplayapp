@@ -24,6 +24,12 @@ namespace Grove.Domain.Layout
 
         public bool OverlapsPlayfield() => Overlaps(PlayLayout.BoardSafeRect);
 
+        public bool Contains(NormRect inner) =>
+            inner.XMin >= XMin - 0.0001f
+            && inner.XMax <= XMax + 0.0001f
+            && inner.YMin >= YMin - 0.0001f
+            && inner.YMax <= YMax + 0.0001f;
+
         public NormRect Inflate(float padX, float padY) =>
             new NormRect(XMin - padX, YMin - padY, XMax + padX, YMax + padY);
     }
@@ -53,8 +59,10 @@ namespace Grove.Domain.Layout
     }
 
     /// <summary>
-    /// DEV-019 Play layout. HUD Place() and BoardView camera framing share these bands so
-    /// order tray / Maya / teach captions never cover playable cells. Gap ≥ 16dp.
+    /// DEV-019 Play layout per <c>Docs/Design/play-hud-layout-v1.md</c>.
+    /// Design Y% is from the TOP of 1080×1920; Unity / this type use Y = 0 at the bottom.
+    /// Orders live only in the dock (Design 70–100%). Cells live in the board band (12–68%).
+    /// Gap ≥ 16dp.
     /// </summary>
     public static class PlayLayout
     {
@@ -63,11 +71,20 @@ namespace Grove.Domain.Layout
         public const float PortraitAspect = ReferenceWidth / ReferenceHeight;
         public const float MinOrthographicSize = 5.2f;
         public const float MinHudGapDp = 16f;
+        public const int InventorySlotCount = 5;
 
         /// <summary>Must match <c>Board.unity</c> BoardView serialization.</summary>
         public const float CellSize = 1f;
         public const float OriginX = -3f;
         public const float OriginY = -2f;
+
+        /// <summary>Design top-bar / board / dock edges, Y from the TOP of the 1080×1920 frame.</summary>
+        public const float DesignTopBarTop = 0f;
+        public const float DesignTopBarBottom = 0.10f;
+        public const float DesignBoardTop = 0.12f;
+        public const float DesignBoardBottom = 0.68f;
+        public const float DesignDockTop = 0.70f;
+        public const float DesignDockBottom = 1f;
 
         /// <summary>Prefer bottom dock until DES-003 drops a side-rail PNG.</summary>
         public static HudDockKind DockKind => HudDockKind.Bottom;
@@ -75,31 +92,42 @@ namespace Grove.Domain.Layout
         public static float MinGapNormX => MinHudGapDp / ReferenceWidth;
         public static float MinGapNormY => MinHudGapDp / ReferenceHeight;
 
-        /// <summary>Clear mid band reserved for the 7×5. World board is framed into this rect.</summary>
-        public static readonly NormRect BoardSafeRect = new NormRect(0.04f, 0.259f, 0.96f, 0.859f);
+        /// <summary>Design Y from the top (0–1) → Unity Y from the bottom.</summary>
+        public static float FromDesignTop(float designTop01) => 1f - designTop01;
+
+        public static readonly NormRect TopBarBand = BandFromDesign(0f, DesignTopBarTop, 1f, DesignTopBarBottom);
+        public static readonly NormRect BoardBand = BandFromDesign(0f, DesignBoardTop, 1f, DesignBoardBottom);
+        public static readonly NormRect DockBand = BandFromDesign(0f, DesignDockTop, 1f, DesignDockBottom);
+
+        /// <summary>
+        /// 7×5 cell rect inside the board band. Inset from the left so the Garden Crate
+        /// can sit left/center on the board without covering cells.
+        /// </summary>
+        public static readonly NormRect BoardSafeRect = new NormRect(0.24f, 0.34f, 0.98f, 0.86f);
 
         public static readonly NormRect Playfield = BoardSafeRect;
 
-        public static readonly NormRect Goal = new NormRect(0.08f, 0.928f, 0.92f, 0.982f);
-        public static readonly NormRect EnergyPill = new NormRect(0.02f, 0.868f, 0.13f, 0.922f);
-        public static readonly NormRect EnergyBar = new NormRect(0.13f, 0.880f, 0.40f, 0.910f);
-        public static readonly NormRect EnergyLabel = new NormRect(0.135f, 0.868f, 0.42f, 0.922f);
-        public static readonly NormRect CoinIcon = new NormRect(0.72f, 0.868f, 0.84f, 0.922f);
-        public static readonly NormRect CoinLabel = new NormRect(0.84f, 0.868f, 0.98f, 0.922f);
-        public static readonly NormRect Toast = new NormRect(0.43f, 0.868f, 0.70f, 0.922f);
+        public static readonly NormRect EnergyPill = new NormRect(0.02f, 0.920f, 0.11f, 0.985f);
+        public static readonly NormRect EnergyBar = new NormRect(0.11f, 0.935f, 0.26f, 0.970f);
+        public static readonly NormRect EnergyLabel = new NormRect(0.115f, 0.920f, 0.28f, 0.985f);
+        public static readonly NormRect Goal = new NormRect(0.30f, 0.915f, 0.66f, 0.985f);
+        public static readonly NormRect CoinIcon = new NormRect(0.67f, 0.920f, 0.78f, 0.985f);
+        public static readonly NormRect CoinLabel = new NormRect(0.78f, 0.920f, 0.88f, 0.985f);
+        public static readonly NormRect Maya = new NormRect(0.88f, 0.905f, 0.995f, 0.995f);
+        public static readonly NormRect Toast = new NormRect(0.30f, 0.882f, 0.66f, 0.908f);
+        public static readonly NormRect MayaBubble = new NormRect(0.55f, 0.882f, 0.87f, 0.908f);
 
-        public static readonly NormRect DockPlate = new NormRect(0.01f, 0.148f, 0.99f, 0.250f);
-        public static readonly NormRect Maya = new NormRect(0.012f, 0.148f, 0.155f, 0.248f);
-        public static readonly NormRect MayaBubble = new NormRect(0.160f, 0.210f, 0.985f, 0.248f);
-        public static readonly NormRect OrderTray = new NormRect(0.160f, 0.148f, 0.985f, 0.208f);
-        public static readonly NormRect Crate = new NormRect(0.34f, 0.012f, 0.66f, 0.118f);
-        public static readonly NormRect CrateLabel = new NormRect(0.34f, 0.118f, 0.66f, 0.140f);
-        public static readonly NormRect Store = new NormRect(0.02f, 0.022f, 0.20f, 0.085f);
+        public static readonly NormRect DockPlate = new NormRect(0.005f, 0.000f, 0.995f, 0.300f);
+        public static readonly NormRect OrderTray = new NormRect(0.03f, 0.118f, 0.97f, 0.288f);
+        public static readonly NormRect InventoryBar = new NormRect(0.18f, 0.014f, 0.78f, 0.108f);
+        public static readonly NormRect Store = new NormRect(0.02f, 0.018f, 0.16f, 0.108f);
 
-        public static readonly NormRect TeachCrateRing = Crate.Inflate(0.012f, 0.008f);
-        public static readonly NormRect TeachCrateCaption = new NormRect(0.67f, 0.018f, 0.98f, 0.118f);
-        public static readonly NormRect TeachHudCaption = MayaBubble;
-        public static readonly NormRect TeachSkip = new NormRect(0.78f, 0.152f, 0.97f, 0.205f);
+        public static readonly NormRect Crate = new NormRect(0.02f, 0.40f, 0.215f, 0.60f);
+        public static readonly NormRect CrateLabel = new NormRect(0.02f, 0.605f, 0.215f, 0.655f);
+
+        public static readonly NormRect TeachCrateRing = Crate.Inflate(0.008f, 0.008f);
+        public static readonly NormRect TeachHudCaption = new NormRect(0.18f, 0.882f, 0.82f, 0.908f);
+        public static readonly NormRect TeachSkip = new NormRect(0.80f, 0.018f, 0.97f, 0.108f);
 
         public static NormRect ActiveOrderCard
         {
@@ -110,12 +138,19 @@ namespace Grove.Domain.Layout
             }
         }
 
-        /// <summary>HUD chrome that must never cover playable cells (world teach rings sit on targets, not here).</summary>
+        public static NormRect InventorySlotLocal(int index)
+        {
+            var i = index < 0 ? 0 : (index >= InventorySlotCount ? InventorySlotCount - 1 : index);
+            var w = 1f / InventorySlotCount;
+            return new NormRect(i * w + 0.03f, 0.06f, (i + 1) * w - 0.03f, 0.94f);
+        }
+
+        /// <summary>Permanent HUD chrome that must never cover playable cells.</summary>
         public static NormRect[] OccludingHud() =>
             new[]
             {
                 Goal, EnergyPill, EnergyBar, EnergyLabel, CoinIcon, CoinLabel, Toast,
-                DockPlate, Maya, MayaBubble, OrderTray, Crate, CrateLabel, Store, TeachCrateCaption
+                DockPlate, Maya, MayaBubble, OrderTray, InventoryBar, Crate, CrateLabel, Store
             };
 
         public static bool MeetsMinHudGap(NormRect chrome)
@@ -126,22 +161,35 @@ namespace Grove.Domain.Layout
             }
 
             var xOverlap = chrome.XMin < BoardSafeRect.XMax && chrome.XMax > BoardSafeRect.XMin;
-            if (!xOverlap)
+            var yOverlap = chrome.YMin < BoardSafeRect.YMax && chrome.YMax > BoardSafeRect.YMin;
+
+            if (xOverlap)
             {
-                return true;
+                if (chrome.YMax <= BoardSafeRect.YMin)
+                {
+                    return BoardSafeRect.YMin - chrome.YMax >= MinGapNormY - 0.0001f;
+                }
+
+                if (chrome.YMin >= BoardSafeRect.YMax)
+                {
+                    return chrome.YMin - BoardSafeRect.YMax >= MinGapNormY - 0.0001f;
+                }
             }
 
-            if (chrome.YMax <= BoardSafeRect.YMin)
+            if (yOverlap)
             {
-                return BoardSafeRect.YMin - chrome.YMax >= MinGapNormY - 0.0001f;
+                if (chrome.XMax <= BoardSafeRect.XMin)
+                {
+                    return BoardSafeRect.XMin - chrome.XMax >= MinGapNormX - 0.0001f;
+                }
+
+                if (chrome.XMin >= BoardSafeRect.XMax)
+                {
+                    return chrome.XMin - BoardSafeRect.XMax >= MinGapNormX - 0.0001f;
+                }
             }
 
-            if (chrome.YMin >= BoardSafeRect.YMax)
-            {
-                return chrome.YMin - BoardSafeRect.YMax >= MinGapNormY - 0.0001f;
-            }
-
-            return false;
+            return true;
         }
 
         public static void BoardWorldBounds(out float minX, out float minY, out float maxX, out float maxY) =>
@@ -220,5 +268,8 @@ namespace Grove.Domain.Layout
                    && y0 >= BoardSafeRect.YMin - eps
                    && y1 <= BoardSafeRect.YMax + eps;
         }
+
+        private static NormRect BandFromDesign(float xMin, float designTop, float xMax, float designBottom) =>
+            new NormRect(xMin, FromDesignTop(designBottom), xMax, FromDesignTop(designTop));
     }
 }

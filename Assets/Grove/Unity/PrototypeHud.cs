@@ -13,9 +13,10 @@ using UnityEngine.UI;
 namespace Grove.Unity
 {
     /// <summary>
-    /// Production-feel HUD: energy + coins on top, Maya + 3-card order tray in a bottom
-    /// dock (DEV-019), crate in the same reserved HUD band, DEV-018 splashes, then DEV-020
-    /// T1–T3 teach. Place() rects come from <see cref="Grove.Domain.Layout.PlayLayout"/>.
+    /// Production-feel HUD per DES-003: energy + Goal pill + coins on the top 0–10%,
+    /// Garden Crate left of the 7×5 in the board band (12–68%), orders only in the
+    /// bottom dock (70–100%). DEV-020 T1–T3 teach after DEV-018 splashes.
+    /// Place() rects come from <see cref="Grove.Domain.Layout.PlayLayout"/>.
     /// </summary>
     public sealed class PrototypeHud : MonoBehaviour, IEnergyListener
     {
@@ -45,6 +46,7 @@ namespace Grove.Unity
         private RectTransform _teachCaptionRect = null!;
         private Image _teachRing = null!;
         private Text _teachText = null!;
+        private Text _teachRingLabel = null!;
         private GameObject _teachSkip = null!;
         private DragResult? _teachSeenDrag;
         private float _teachMergeShownAt = -1f;
@@ -71,9 +73,9 @@ namespace Grove.Unity
             var root = canvasGo.GetComponent<RectTransform>();
 
             var goal = Host != null ? Host.Catalog.Copy.Goal : "Restore the Front Garden";
-            var goalCard = GroveVisuals.UiImage(root, "GoalBanner", Color.white, GroveArt.Get(GroveArt.StubOrderCard), true);
+            var goalCard = GroveVisuals.UiImage(root, "GoalPill", Color.white, GroveArt.GoalPillSprite, true);
             Place(goalCard.rectTransform, PlayLayout.Goal);
-            _goalText = GroveVisuals.UiText(goalCard.transform, "Goal", goal, 32, TextAnchor.MiddleCenter, new Color(0.18f, 0.32f, 0.16f));
+            _goalText = GroveVisuals.UiText(goalCard.transform, "Goal", goal, 28, TextAnchor.MiddleCenter, new Color(0.18f, 0.32f, 0.16f));
             Stretch(_goalText.rectTransform);
 
             var energyPill = GroveVisuals.UiImage(root, "EnergyPill", Color.white, GroveArt.Get(GroveArt.StubEnergyPill), true);
@@ -97,7 +99,7 @@ namespace Grove.Unity
             Place(_coinText.rectTransform, PlayLayout.CoinLabel);
 
             var gem = GroveVisuals.UiImage(root, "GemIcon", Color.white, GroveArt.Get(GroveArt.StubGem), true);
-            Place(gem.rectTransform, new Vector2(0.86f, 0.84f), new Vector2(0.98f, 0.91f));
+            Place(gem.rectTransform, new Vector2(0.88f, 0.92f), new Vector2(0.98f, 0.98f));
             gem.gameObject.SetActive(false);
 
             var dock = GroveVisuals.UiImage(root, "OrderDock", Color.white, GroveArt.HudDockSprite, false);
@@ -123,6 +125,21 @@ namespace Grove.Unity
             tray.transform.SetParent(root, false);
             _trayRoot = tray.AddComponent<RectTransform>();
             Place(_trayRoot, PlayLayout.OrderTray);
+
+            var inventory = new GameObject("InventoryBar");
+            inventory.transform.SetParent(root, false);
+            var inventoryRect = inventory.AddComponent<RectTransform>();
+            Place(inventoryRect, PlayLayout.InventoryBar);
+            for (var i = 0; i < PlayLayout.InventorySlotCount; i++)
+            {
+                var slot = GroveVisuals.UiImage(
+                    inventory.transform,
+                    "Slot" + i,
+                    Color.white,
+                    GroveArt.Get(GroveArt.StubInventorySlot) ?? GroveArt.Get(GroveArt.StubOrderCard),
+                    true);
+                Place(slot.rectTransform, PlayLayout.InventorySlotLocal(i));
+            }
 
             _toastText = GroveVisuals.UiText(root, "Toast", "", 22, TextAnchor.MiddleCenter, new Color(1f, 0.95f, 0.7f));
             Place(_toastText.rectTransform, PlayLayout.Toast);
@@ -376,6 +393,14 @@ namespace Grove.Unity
                 true);
             _teachRingRect = _teachRing.rectTransform;
             Place(_teachRingRect, PlayLayout.TeachCrateRing);
+            _teachRingLabel = GroveVisuals.UiText(
+                _teachRing.transform,
+                "RingLabel",
+                "",
+                16,
+                TextAnchor.MiddleCenter,
+                new Color(0.18f, 0.32f, 0.16f));
+            Stretch(_teachRingLabel.rectTransform);
 
             var caption = GroveVisuals.UiImage(
                 _teachRoot.transform,
@@ -384,7 +409,7 @@ namespace Grove.Unity
                 GroveArt.MayaBubbleSprite,
                 false);
             _teachCaptionRect = caption.rectTransform;
-            Place(_teachCaptionRect, PlayLayout.TeachCrateCaption);
+            Place(_teachCaptionRect, PlayLayout.TeachHudCaption);
             _teachText = GroveVisuals.UiText(
                 caption.transform,
                 "Label",
@@ -436,6 +461,7 @@ namespace Grove.Unity
             {
                 _teachRoot.SetActive(false);
                 Host?.BoardView?.SetTeachCells(null, null);
+                Host?.BoardView?.SetTeachHand(null, null);
                 return;
             }
 
@@ -490,10 +516,14 @@ namespace Grove.Unity
             {
                 _teachRoot.SetActive(false);
                 Host.BoardView?.SetTeachCells(null, null);
+                Host.BoardView?.SetTeachHand(null, null);
                 return;
             }
 
             _teachText.text = _teach.Caption;
+            _teachRingLabel.text = _teach.RingLabel;
+            Place(_teachCaptionRect, PlayLayout.TeachHudCaption);
+            _teachCaptionRect.gameObject.SetActive(true);
             var ring = GroveArt.TeachRingSprite;
             if (ring != null)
             {
@@ -506,18 +536,17 @@ namespace Grove.Unity
             {
                 case TeachBeat.Crate:
                     _teachRing.gameObject.SetActive(true);
-                    _teachCaptionRect.gameObject.SetActive(true);
                     Place(_teachRingRect, PlayLayout.TeachCrateRing);
-                    Place(_teachCaptionRect, PlayLayout.TeachCrateCaption);
+                    Host.BoardView?.SetTeachHand(null, null);
                     break;
                 case TeachBeat.Merge:
                     _teachRing.gameObject.SetActive(false);
-                    _teachCaptionRect.gameObject.SetActive(false);
+                    Host.BoardView?.SetTeachHand(_teach.HighlightA, _teach.HighlightB);
                     break;
                 default:
                     _teachRing.gameObject.SetActive(true);
-                    _teachCaptionRect.gameObject.SetActive(false);
                     Place(_teachRingRect, PlayLayout.ActiveOrderCard);
+                    Host.BoardView?.SetTeachHand(null, null);
                     break;
             }
 
@@ -668,12 +697,18 @@ namespace Grove.Unity
                 return;
             }
 
-            if (_teach != null && _teach.OverlayVisible &&
-                (_teach.Beat == TeachBeat.Merge || _teach.Beat == TeachBeat.Deliver))
+            var bubbleRoot = _mayaBubbleText.transform.parent != null
+                ? _mayaBubbleText.transform.parent.gameObject
+                : _mayaBubbleText.gameObject;
+
+            if (_teach != null && _teach.OverlayVisible)
             {
-                _mayaBubbleText.text = _teach.Caption;
+                _mayaBubbleText.text = "";
+                bubbleRoot.SetActive(false);
                 return;
             }
+
+            bubbleRoot.SetActive(true);
 
             var line = Host.Orders.Active?.SpokenLine ?? "";
             if (line.Length > 64)

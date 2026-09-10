@@ -14,7 +14,7 @@ public sealed class ArtManifestTests
         Assert.True(manifest.Des001Ready);
         Assert.True(manifest.Des002Ready);
         Assert.Equal("Project Grove", manifest.Title);
-        Assert.Equal(38, manifest.Assets.Count);
+        Assert.Equal(42, manifest.Assets.Count);
         Assert.True(manifest.TryGet("WF_T05_Bouquet", out var bouquet));
         Assert.Equal("Items/Wildflower/WF_T05_Bouquet.png", bouquet.Filename);
         Assert.Equal(100f, bouquet.PixelsPerUnit);
@@ -28,6 +28,16 @@ public sealed class ArtManifestTests
         Assert.True(manifest.TryGet("ENV_FG_BoardSurface", out _));
         Assert.True(manifest.TryGet("ENV_FG_CellEmpty", out _));
         Assert.True(manifest.TryGet("ENV_FG_CellHighlight", out _));
+        Assert.True(manifest.TryGet("UI_OrderDock_Panel", out _));
+        Assert.True(manifest.TryGet("UI_GoalPill", out _));
+        Assert.True(manifest.TryGet("UI_Teach_Ring", out _));
+        Assert.True(manifest.TryGet("UI_Teach_Hand", out _));
+        foreach (var stub in new[] { "UI_OrderDock_Panel", "UI_GoalPill", "UI_Teach_Ring", "UI_Teach_Hand" })
+        {
+            Assert.True(manifest.TryGet(stub, out var asset), stub);
+            var path = Path.Combine(ArtManifest.ResolveDirectory(), asset.Filename.Replace('/', Path.DirectorySeparatorChar));
+            Assert.True(File.Exists(path), path);
+        }
     }
 
     [Fact]

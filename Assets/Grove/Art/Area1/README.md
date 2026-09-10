@@ -19,4 +19,7 @@ WF T1–6, Herb T1–3, Tools T1–3, crate states, board cells, backdrop, HUD, 
 - Splash_Milestone_FrontGardenRestored
 (+ OrderComplete, TierUp, MergeSparkle)
 
-Asset count: 38
+## DES-003 / DES-004 covered
+- UI_OrderDock_Panel, UI_GoalPill, UI_Teach_Ring, UI_Teach_Hand
+
+Asset count: 42

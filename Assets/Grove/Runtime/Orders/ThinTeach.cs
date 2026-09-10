@@ -20,7 +20,13 @@ namespace Grove.Domain.Orders
     public sealed class ThinTeach
     {
         public const float MergeIdleHintSeconds = 4f;
-        public const string RingStub = "UI_TeachRing";
+        public const string RingStub = "UI_Teach_Ring";
+        public const string HandStub = "UI_Teach_Hand";
+        public const string PersistKey = "ftue_play_teach_done";
+        public const string LegacyPersistKey = "grove.teach.order1.done";
+        public const string RingLabelCrate = "Tap to grow";
+        public const string RingLabelMerge = "Stack matches";
+        public const string RingLabelDeliver = "Deliver here";
 
         private readonly PresentationCopy _copy;
         private readonly ITeachSave _save;
@@ -53,6 +59,16 @@ namespace Grove.Domain.Orders
                 TeachBeat.Crate => _copy.CoachCrate,
                 TeachBeat.Merge => _copy.CoachMerge,
                 TeachBeat.Deliver => _copy.CoachDeliver,
+                _ => ""
+            };
+
+        /// <summary>Design on-ring shorts. Product owns <see cref="Caption"/>.</summary>
+        public string RingLabel =>
+            Beat switch
+            {
+                TeachBeat.Crate => RingLabelCrate,
+                TeachBeat.Merge => RingLabelMerge,
+                TeachBeat.Deliver => RingLabelDeliver,
                 _ => ""
             };
 
