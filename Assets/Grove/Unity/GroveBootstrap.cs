@@ -31,6 +31,7 @@ namespace Grove.Unity
 
         private void Awake()
         {
+            GroveVisuals.EnsurePlayCamera();
             Clock = new SystemClock();
             Catalog = catalogAsset != null ? catalogAsset.Load() : LoadCatalog();
             var board = new BoardGrid();

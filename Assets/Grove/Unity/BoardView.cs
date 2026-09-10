@@ -14,7 +14,7 @@ namespace Grove.Unity
         private Transform? _piecesRoot;
         private GameObject? _ghost;
         private TextMesh? _ghostLabel;
-        private MeshRenderer? _ghostRenderer;
+        private SpriteRenderer? _ghostRenderer;
         private GameObject? _hover;
         private readonly Dictionary<GridPos, GameObject> _pieceViews = new();
 
@@ -146,50 +146,59 @@ namespace Grove.Unity
             _cellsRoot = root.transform;
             var boardColor = new Color(0.18f, 0.32f, 0.2f);
             var alt = new Color(0.22f, 0.38f, 0.24f);
-            var size = new Vector3(cellSize * 0.92f, cellSize * 0.92f, 1f);
+            var size = cellSize * 0.92f;
             for (var x = 0; x < BoardGrid.Columns; x++)
             {
                 for (var y = 0; y < BoardGrid.Rows; y++)
                 {
                     var pos = new GridPos(x, y);
                     var color = (x + y) % 2 == 0 ? boardColor : alt;
-                    GroveVisuals.QuadObject($"Cell_{x}_{y}", _cellsRoot, CellToWorld(pos), size, color);
+                    GroveVisuals.SpriteObject($"Cell_{x}_{y}", _cellsRoot, CellToWorld(pos), size, color, GroveVisuals.CellSprite, 0);
                 }
             }
 
-            var frame = GroveVisuals.QuadObject(
+            var frame = GroveVisuals.SpriteObject(
                 "BoardFrame",
                 _cellsRoot,
                 new Vector3(origin.x + 3 * cellSize, origin.y + 2 * cellSize, 0.05f),
-                new Vector3(BoardGrid.Columns * cellSize + 0.25f, BoardGrid.Rows * cellSize + 0.25f, 1f),
-                new Color(0.08f, 0.14f, 0.09f));
-            frame.transform.SetAsFirstSibling();
+                1f,
+                new Color(0.08f, 0.14f, 0.09f),
+                GroveVisuals.CellSprite,
+                -1);
+            var frameBounds = GroveVisuals.CellSprite.bounds.size;
+            frame.transform.localScale = new Vector3(
+                (BoardGrid.Columns * cellSize + 0.3f) / Mathf.Max(0.001f, frameBounds.x),
+                (BoardGrid.Rows * cellSize + 0.3f) / Mathf.Max(0.001f, frameBounds.y),
+                1f);
 
-            _hover = GroveVisuals.QuadObject(
+            _hover = GroveVisuals.SpriteObject(
                 "Hover",
                 _cellsRoot,
                 Vector3.zero,
-                new Vector3(cellSize * 0.96f, cellSize * 0.96f, 1f),
-                new Color(1f, 0.95f, 0.4f, 0.35f));
+                cellSize * 0.96f,
+                new Color(1f, 0.95f, 0.4f, 0.45f),
+                GroveVisuals.CellSprite,
+                2);
             _hover.SetActive(false);
         }
 
         private GameObject CreatePiece(GridPos pos, PieceStack stack)
         {
-            var go = GroveVisuals.QuadObject(
+            var go = GroveVisuals.SpriteObject(
                 $"Piece_{pos.X}_{pos.Y}",
                 _piecesRoot!,
                 CellToWorld(pos) + new Vector3(0f, 0f, -0.05f),
-                new Vector3(cellSize * 0.72f, cellSize * 0.72f, 1f),
-                GroveVisuals.PieceColor(stack.Id.Value));
-            var label = GroveVisuals.Label(
+                cellSize * 0.78f,
+                GroveVisuals.PieceColor(stack.Id.Value),
+                GroveVisuals.PieceSprite,
+                5);
+            GroveVisuals.Label(
                 "Label",
                 go.transform,
                 new Vector3(0f, 0f, -0.02f),
                 GroveVisuals.ShortLabel(stack.Id.Value, stack.Count),
                 42,
                 Color.white);
-            label.gameObject.transform.localScale = new Vector3(1f / 0.72f, 1f / 0.72f, 1f);
             return go;
         }
 
@@ -200,25 +209,26 @@ namespace Grove.Unity
                 return;
             }
 
-            _ghost = GroveVisuals.QuadObject(
+            _ghost = GroveVisuals.SpriteObject(
                 "Ghost",
                 transform,
                 Vector3.zero,
-                new Vector3(cellSize * 0.78f, cellSize * 0.78f, 1f),
-                Color.white);
-            _ghostRenderer = _ghost.GetComponent<MeshRenderer>();
+                cellSize * 0.82f,
+                Color.white,
+                GroveVisuals.PieceSprite,
+                12);
+            _ghostRenderer = _ghost.GetComponent<SpriteRenderer>();
             _ghostLabel = GroveVisuals.Label("Label", _ghost.transform, new Vector3(0f, 0f, -0.02f), "", 42, Color.white);
             _ghost.SetActive(false);
         }
 
-        private static void ApplyPieceVisual(MeshRenderer renderer, TextMesh label, PieceStack stack)
+        private static void ApplyPieceVisual(SpriteRenderer renderer, TextMesh label, PieceStack stack)
         {
             var color = GroveVisuals.PieceColor(stack.Id.Value);
-            var mat = renderer.material;
-            mat.color = color;
-            if (mat.HasProperty("_BaseColor"))
+            renderer.color = color;
+            if (renderer.sharedMaterial != null)
             {
-                mat.SetColor("_BaseColor", color);
+                GroveVisuals.ApplyColor(renderer.material, color);
             }
 
             label.text = GroveVisuals.ShortLabel(stack.Id.Value, stack.Count);

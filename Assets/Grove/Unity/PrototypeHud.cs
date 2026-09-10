@@ -48,6 +48,7 @@ namespace Grove.Unity
             var fillRect = fillGo.AddComponent<RectTransform>();
             Stretch(fillRect);
             _energyFill = fillGo.AddComponent<Image>();
+            _energyFill.sprite = GroveVisuals.WhiteSprite;
             _energyFill.color = new Color(0.35f, 0.85f, 0.45f);
             _energyFill.type = Image.Type.Filled;
             _energyFill.fillMethod = Image.FillMethod.Horizontal;
@@ -235,10 +236,7 @@ namespace Grove.Unity
 
         private static Image Bar(RectTransform parent, string name, Vector2 min, Vector2 max, Color bg)
         {
-            var go = new GameObject(name);
-            go.transform.SetParent(parent, false);
-            var image = go.AddComponent<Image>();
-            image.color = bg;
+            var image = GroveVisuals.UiImage(parent, name, bg);
             Place(image.rectTransform, min, max);
             return image;
         }
