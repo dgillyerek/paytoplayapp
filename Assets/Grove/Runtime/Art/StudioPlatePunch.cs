@@ -53,11 +53,125 @@ namespace Grove.Domain.Art
                    && Alpha(rgba, width - 1, height - 1, width) < 16;
         }
 
+        /// <summary>
+        /// Tight content rect (Unity / PNG bottom-left if <paramref name="rgba"/> is bottom-up).
+        /// Used to crop FullRect piece sprites so cream RGB outside the object cannot draw a plate.
+        /// </summary>
+        public static bool TryOpaqueRect(
+            byte[] rgba,
+            int width,
+            int height,
+            int alphaMin,
+            int pad,
+            out int x,
+            out int y,
+            out int w,
+            out int h)
+        {
+            x = 0;
+            y = 0;
+            w = 0;
+            h = 0;
+            if (!Valid(rgba, width, height))
+            {
+                return false;
+            }
+
+            var minX = width;
+            var minY = height;
+            var maxX = -1;
+            var maxY = -1;
+            for (var py = 0; py < height; py++)
+            {
+                for (var px = 0; px < width; px++)
+                {
+                    if (rgba[(py * width + px) * 4 + 3] < alphaMin)
+                    {
+                        continue;
+                    }
+
+                    if (px < minX)
+                    {
+                        minX = px;
+                    }
+
+                    if (py < minY)
+                    {
+                        minY = py;
+                    }
+
+                    if (px > maxX)
+                    {
+                        maxX = px;
+                    }
+
+                    if (py > maxY)
+                    {
+                        maxY = py;
+                    }
+                }
+            }
+
+            if (maxX < 0)
+            {
+                return false;
+            }
+
+            x = Math.Max(0, minX - pad);
+            y = Math.Max(0, minY - pad);
+            var x1 = Math.Min(width - 1, maxX + pad);
+            var y1 = Math.Min(height - 1, maxY + pad);
+            w = x1 - x + 1;
+            h = y1 - y + 1;
+            return w >= 2 && h >= 2;
+        }
+
+        /// <summary>
+        /// Zero RGB on fully transparent pixels so a FullRect / broken URP material cannot
+        /// reconstruct the studio cream plate from leftover color.
+        /// </summary>
+        public static int ClearTransparentRgb(byte[] rgba, int width, int height)
+        {
+            if (!Valid(rgba, width, height))
+            {
+                return 0;
+            }
+
+            var n = 0;
+            var count = width * height;
+            for (var i = 0; i < count; i++)
+            {
+                var o = i * 4;
+                if (rgba[o + 3] >= 8)
+                {
+                    continue;
+                }
+
+                if (rgba[o] == 0 && rgba[o + 1] == 0 && rgba[o + 2] == 0)
+                {
+                    continue;
+                }
+
+                rgba[o] = 0;
+                rgba[o + 1] = 0;
+                rgba[o + 2] = 0;
+                n++;
+            }
+
+            return n;
+        }
+
         /// <summary>In-place RGBA punch. Returns pixels set to alpha 0.</summary>
         public static int Punch(byte[] rgba, int width, int height)
         {
-            if (!Valid(rgba, width, height) || CornersTransparent(rgba, width, height))
+            if (!Valid(rgba, width, height))
             {
+                return 0;
+            }
+
+            if (CornersTransparent(rgba, width, height))
+            {
+                ClearTransparentRgb(rgba, width, height);
                 return 0;
             }
 
@@ -104,6 +218,7 @@ namespace Grove.Domain.Art
                 punched += PunchCreamHalo(rgba, width, height);
             }
 
+            ClearTransparentRgb(rgba, width, height);
             return punched;
         }
 

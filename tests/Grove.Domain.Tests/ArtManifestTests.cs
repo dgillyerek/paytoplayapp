@@ -156,6 +156,12 @@ public sealed class ArtManifestTests
             }
 
             Assert.True(opaque > width * height / 40, stub + " punched the object away");
+            if (asset.Category == "piece")
+            {
+                Assert.True(opaque < width * height / 2, stub + " is still a filled cream plate");
+                Assert.True(StudioPlatePunch.TryOpaqueRect(rgba, width, height, 16, 0, out _, out _, out var rw, out var rh), stub);
+                Assert.True(rw * rh < width * height * 3 / 4, stub + " opaque bounds still fill the canvas plate");
+            }
         }
     }
 

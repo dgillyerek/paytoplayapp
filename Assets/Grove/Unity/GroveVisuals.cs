@@ -89,8 +89,8 @@ namespace Grove.Unity
                 return _spriteShader;
             }
 
-            _spriteShader = Shader.Find("Sprites/Default")
-                            ?? Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default")
+            _spriteShader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default")
+                            ?? Shader.Find("Sprites/Default")
                             ?? Shader.Find("Universal Render Pipeline/Unlit")
                             ?? Shader.Find("Unlit/Transparent")
                             ?? Shader.Find("Unlit/Color");
@@ -127,7 +127,9 @@ namespace Grove.Unity
             sr.sprite = sprite;
             sr.color = color;
             sr.sortingOrder = sortingOrder;
-            sr.sharedMaterial = MakeMaterial(color, sprite != null ? sprite.texture : null);
+            // Default SpriteRenderer material (URP 2D unlit) keeps PNG alpha.
+            // A custom Sprites/Default material in URP often ignores a=0 and
+            // draws the FullRect quad as a cream plate (punched pixels keep RGB).
             FitSprite(go.transform, sprite, worldSize);
             return go;
         }
@@ -437,7 +439,8 @@ namespace Grove.Unity
             int size,
             TextAnchor anchor,
             Color color,
-            bool contrastOnDark = false)
+            bool contrastOnDark = false,
+            bool oneLine = false)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -452,7 +455,7 @@ namespace Grove.Unity
             text.fontStyle = FontStyle.Bold;
             text.alignment = anchor;
             text.color = color;
-            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.horizontalOverflow = oneLine ? HorizontalWrapMode.Overflow : HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Overflow;
             text.raycastTarget = false;
             if (contrastOnDark)
