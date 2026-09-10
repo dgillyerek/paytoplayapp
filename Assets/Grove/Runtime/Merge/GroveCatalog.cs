@@ -83,21 +83,21 @@ namespace Grove.Domain.Merge
                 MaxCharges: 30,
                 RechargeSeconds: 2,
                 EnergyPerTap: 1,
-                Outputs:
-                [
+                Outputs: new WeightedOutput[]
+                {
                     new WeightedOutput("wildflower_t1", 90, false),
                     new WeightedOutput("herb_t1", 7, false),
                     new WeightedOutput("twig_t1", 3, false)
-                ]);
+                });
 
             var orders = new OrderSpec[]
             {
                 new("order_1", "Order 1 — First Bloom", "Merge wildflowers up to T3, then Deliver.",
-                    [new OrderRequirement(WildflowerT3, 1)]),
+                    new OrderRequirement[] { new OrderRequirement(WildflowerT3, 1) }),
                 new("order_2", "Order 2 — Fuller Bouquet", "Deliver one Wildflower T4.",
-                    [new OrderRequirement(WildflowerT4, 1)]),
+                    new OrderRequirement[] { new OrderRequirement(WildflowerT4, 1) }),
                 new("order_3", "Order 3 — Garden Show", "Deliver one Wildflower T5.",
-                    [new OrderRequirement(WildflowerT5, 1)]),
+                    new OrderRequirement[] { new OrderRequirement(WildflowerT5, 1) }),
             };
 
             return new LoadedCatalog(

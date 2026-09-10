@@ -185,7 +185,7 @@ namespace Grove.Unity
         private static int ParseTier(string id)
         {
             var idx = id.LastIndexOf('t');
-            if (idx >= 0 && int.TryParse(id[(idx + 1)..], out var tier))
+            if (idx >= 0 && idx + 1 < id.Length && int.TryParse(id.Substring(idx + 1), out var tier))
             {
                 return Mathf.Max(1, tier);
             }

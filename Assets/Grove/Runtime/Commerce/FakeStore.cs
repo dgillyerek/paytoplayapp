@@ -36,10 +36,13 @@ namespace Grove.Domain.Commerce
             return Task.FromResult<PurchaseResult>(success);
         }
 
-        public static IEnumerable<StoreProduct> DefaultProducts() =>
-        [
-            new StoreProduct("com.grove.remove_ads", "Remove Ads", "USD 2.99"),
-            new StoreProduct("com.grove.starter_pack", "Starter Pack", "USD 4.99")
-        ];
+        public static IEnumerable<StoreProduct> DefaultProducts()
+        {
+            return new[]
+            {
+                new StoreProduct("com.grove.remove_ads", "Remove Ads", "USD 2.99"),
+                new StoreProduct("com.grove.starter_pack", "Starter Pack", "USD 4.99")
+            };
+        }
     }
 }
