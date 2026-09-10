@@ -177,10 +177,15 @@ namespace Grove.Unity
                 "grove" => "Grove",
                 "coin" => "Coin",
                 "puff" => "Puff",
+                "wildflower_t2" => "Sprout",
+                "wildflower_t3" => "Bud",
+                "wildflower_t5" => "Bouquet",
+                "herb_t2" => "Herb Pot",
+                "tool_t1" => "Twig",
+                "tool_t2" => "Stick",
                 _ when id.StartsWith("wildflower_t") => "WF T" + ParseTier(id),
                 _ when id.StartsWith("herb_t") => "Herb T" + ParseTier(id),
-                _ when id.StartsWith("tool_t") => id == "tool_t1" ? "Can" : "Tool T" + ParseTier(id),
-                _ when id.StartsWith("twig") => "Twig",
+                _ when id.StartsWith("tool_t") => "Tool T" + ParseTier(id),
                 _ => id
             };
             return count > 1 ? $"{label} ×{count}" : label;

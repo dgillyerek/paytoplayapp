@@ -16,7 +16,15 @@ public sealed class CatalogDataTests
         Assert.Equal(GroveCatalog.WildflowerT2, t1.Output);
         Assert.True(catalog.Recipes.TryGet(GroveCatalog.WildflowerT4, out var t4));
         Assert.Equal(GroveCatalog.WildflowerT5, t4.Output);
-        Assert.True(catalog.Items.TryGet(GroveCatalog.WildflowerT5, out _));
+        Assert.True(catalog.Items.TryGet(GroveCatalog.WildflowerT5, out var bouquet));
+        Assert.Equal("Bouquet", bouquet.DisplayName);
+        Assert.Equal("Sprout", catalog.Items.Require(GroveCatalog.WildflowerT2).DisplayName);
+        Assert.Equal("Bud", catalog.Items.Require(GroveCatalog.WildflowerT3).DisplayName);
+        Assert.Equal("Herb Pot", catalog.Items.Require(GroveCatalog.HerbT2).DisplayName);
+        Assert.Equal("Twig", catalog.Items.Require(GroveCatalog.ToolT1).DisplayName);
+        Assert.Equal("Stick", catalog.Items.Require(GroveCatalog.ToolT2).DisplayName);
+        Assert.True(catalog.Recipes.TryGet(GroveCatalog.ToolT1, out var twig));
+        Assert.Equal(GroveCatalog.ToolT2, twig.Output);
         Assert.True(catalog.Recipes.TryGet(new PieceId("wildflower_t7"), out var t7));
         Assert.Equal(new PieceId("wildflower_t8"), t7.Output);
     }
@@ -67,5 +75,27 @@ public sealed class CatalogDataTests
         var catalog = GroveCatalog.CreateDefault();
         Assert.True(catalog.TryGet(GroveCatalog.Pebble, out var recipe));
         Assert.Equal(GroveCatalog.Sprout, recipe.Output);
+    }
+
+    [Fact]
+    public void Production_copy_and_orders_match_product_area1()
+    {
+        var catalog = CatalogLoader.LoadDefault();
+        Assert.Equal("Project Grove", catalog.Copy.BootTitle);
+        Assert.Equal("Front Garden", catalog.Copy.AreaName);
+        Assert.Equal("Restore the Front Garden", catalog.Copy.Goal);
+        Assert.Equal("Front Garden Restored", catalog.Copy.MilestoneSplash);
+        Assert.Equal("maya", catalog.Copy.NpcId);
+        Assert.Equal("Maya", catalog.Copy.NpcDisplayName);
+        Assert.Equal("2d-ui-only", catalog.Copy.NpcPortrait);
+        Assert.Equal(3, catalog.Copy.OrderSlotsMax);
+        Assert.Equal("scripted", catalog.Copy.OrderQueue);
+
+        Assert.Equal(6, catalog.Orders.Count);
+        Assert.Equal(new[] { 10, 15, 15, 35, 20, 40 }, catalog.Orders.Select(o => o.CoinReward).ToArray());
+        Assert.Equal(new[] { 5, 8, 8, 15, 10, 20 }, catalog.Orders.Select(o => o.XpReward).ToArray());
+        Assert.False(catalog.Items.TryGet(new PieceId("twig_t1"), out _));
+        Assert.True(catalog.Orders[5].CompletesMilestone);
+        Assert.Equal(2, catalog.Orders[3].Requirements.Count);
     }
 }
