@@ -22,6 +22,8 @@ namespace Grove.Unity
 
         public MergeSession? Session { get; private set; }
         public BoardView? View { get; private set; }
+        public bool IsDragging => _dragging;
+        public bool IsBusy => _busy;
         public DragResult? LastResult { get; private set; }
         public string LastFeedback { get; private set; } = "";
 

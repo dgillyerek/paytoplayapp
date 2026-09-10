@@ -36,4 +36,16 @@ public sealed class BoardGridTests
         var board = new BoardGrid();
         Assert.False(board.InBounds(new GridPos(x, y)));
     }
+
+    [Fact]
+    public void Finds_two_matching_pieces_even_when_a_third_type_is_first()
+    {
+        var board = new BoardGrid();
+        board.Place(new GridPos(0, 0), new PieceStack(new PieceId("herb_t1"), 1));
+        board.Place(new GridPos(1, 0), new PieceStack(new PieceId("wildflower_t1"), 1));
+        board.Place(new GridPos(2, 0), new PieceStack(new PieceId("wildflower_t1"), 1));
+        Assert.True(board.TryFindTwoMatching(out var a, out var b));
+        Assert.Equal(new GridPos(1, 0), a);
+        Assert.Equal(new GridPos(2, 0), b);
+    }
 }

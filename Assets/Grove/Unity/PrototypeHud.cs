@@ -13,10 +13,9 @@ using UnityEngine.UI;
 namespace Grove.Unity
 {
     /// <summary>
-    /// Production-feel HUD: energy + coins (gems hidden), Maya 2D portrait, 3-slot order tray
-    /// in a top row, crate at the bottom, DEV-018 splash sequence, then crate→merge→deliver
-    /// coach marks. Place() rects come from <see cref="Grove.Domain.Layout.PlayLayout"/> so
-    /// chrome cannot cover the 7×5.
+    /// Production-feel HUD: energy + coins on top, Maya + 3-card order tray in a bottom
+    /// dock (DEV-019), crate in the same reserved HUD band, DEV-018 splashes, then DEV-020
+    /// T1–T3 teach. Place() rects come from <see cref="Grove.Domain.Layout.PlayLayout"/>.
     /// </summary>
     public sealed class PrototypeHud : MonoBehaviour, IEnergyListener
     {
@@ -29,6 +28,7 @@ namespace Grove.Unity
         private Image _crateImage = null!;
         private Image _energyFill = null!;
         private Image _mayaImage = null!;
+        private Text _mayaBubbleText = null!;
         private Image _splashImage = null!;
         private Text _splashCaption = null!;
         private GameObject _splashRoot = null!;
@@ -39,13 +39,15 @@ namespace Grove.Unity
         private int _trayCompleted = -1;
         private float _toastUntil;
         private bool _introFinished;
-        private FirstRunCoach _coach = null!;
-        private GameObject _coachRoot = null!;
-        private RectTransform _coachPointerRect = null!;
-        private RectTransform _coachCaptionRect = null!;
-        private Image _coachPointer = null!;
-        private Text _coachText = null!;
-        private DragResult? _coachSeenDrag;
+        private ThinTeach _teach = null!;
+        private GameObject _teachRoot = null!;
+        private RectTransform _teachRingRect = null!;
+        private RectTransform _teachCaptionRect = null!;
+        private Image _teachRing = null!;
+        private Text _teachText = null!;
+        private GameObject _teachSkip = null!;
+        private DragResult? _teachSeenDrag;
+        private float _teachMergeShownAt = -1f;
 
         public GroveBootstrap? Host { get; set; }
 
@@ -98,8 +100,24 @@ namespace Grove.Unity
             Place(gem.rectTransform, new Vector2(0.86f, 0.84f), new Vector2(0.98f, 0.91f));
             gem.gameObject.SetActive(false);
 
+            var dock = GroveVisuals.UiImage(root, "OrderDock", Color.white, GroveArt.HudDockSprite, false);
+            Place(dock.rectTransform, PlayLayout.DockPlate);
+
             _mayaImage = GroveVisuals.UiImage(root, "Maya", Color.white, GroveArt.Get(GroveArt.StubMayaNeutral), true);
             Place(_mayaImage.rectTransform, PlayLayout.Maya);
+
+            var bubble = GroveVisuals.UiImage(root, "MayaBubble", Color.white, GroveArt.MayaBubbleSprite, false);
+            Place(bubble.rectTransform, PlayLayout.MayaBubble);
+            _mayaBubbleText = GroveVisuals.UiText(
+                bubble.transform,
+                "Line",
+                "",
+                20,
+                TextAnchor.MiddleLeft,
+                new Color(0.16f, 0.28f, 0.14f));
+            Stretch(_mayaBubbleText.rectTransform);
+            _mayaBubbleText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _mayaBubbleText.verticalOverflow = VerticalWrapMode.Truncate;
 
             var tray = new GameObject("OrderTray");
             tray.transform.SetParent(root, false);
@@ -133,7 +151,7 @@ namespace Grove.Unity
             store.onClick.AddListener(OnStarterPack);
 
             BuildEnergyEmpty(root);
-            BuildCoach(root);
+            BuildTeach(root);
             BuildSplash(root);
             QueueIntroSplashes();
             RebuildTray();
@@ -223,7 +241,7 @@ namespace Grove.Unity
             }
 
             RefreshTrayBodies();
-            TickCoach();
+            TickTeach();
         }
 
         private void QueueIntroSplashes()
@@ -312,11 +330,11 @@ namespace Grove.Unity
                 if (!_introFinished && Host != null)
                 {
                     _introFinished = true;
-                    StartCoach();
+                    StartTeach();
                 }
                 else
                 {
-                    RefreshCoach();
+                    RefreshTeach();
                 }
 
                 return;
@@ -340,142 +358,182 @@ namespace Grove.Unity
 
         private void DismissSplash() => ShowNextSplash();
 
-        private void BuildCoach(RectTransform root)
+        private void BuildTeach(RectTransform root)
         {
             var copy = Host != null ? Host.Catalog.Copy : PresentationCopy.Default;
-            _coach = new FirstRunCoach(copy);
-            _coachRoot = new GameObject("CoachMarks");
-            _coachRoot.transform.SetParent(root, false);
-            var coachRect = _coachRoot.AddComponent<RectTransform>();
-            Stretch(coachRect);
+            ITeachSave save = new PlayerPrefsTeachSave();
+            _teach = new ThinTeach(copy, save);
+            _teachRoot = new GameObject("TeachChrome");
+            _teachRoot.transform.SetParent(root, false);
+            var teachRect = _teachRoot.AddComponent<RectTransform>();
+            Stretch(teachRect);
 
-            _coachPointer = GroveVisuals.UiImage(
-                _coachRoot.transform,
-                "Pointer",
+            _teachRing = GroveVisuals.UiImage(
+                _teachRoot.transform,
+                "Ring",
                 Color.white,
-                GroveArt.Get(GroveArt.StubMergeSparkle) ?? GroveArt.Get(GroveArt.StubCellHighlight),
+                GroveArt.TeachRingSprite,
                 true);
-            _coachPointerRect = _coachPointer.rectTransform;
-            Place(_coachPointerRect, PlayLayout.CoachCratePointer);
+            _teachRingRect = _teachRing.rectTransform;
+            Place(_teachRingRect, PlayLayout.TeachCrateRing);
 
             var caption = GroveVisuals.UiImage(
-                _coachRoot.transform,
+                _teachRoot.transform,
                 "Caption",
                 Color.white,
-                GroveArt.Get(GroveArt.StubOrderCard),
-                false,
-                raycastTarget: true);
-            _coachCaptionRect = caption.rectTransform;
-            Place(_coachCaptionRect, PlayLayout.CoachCrateCaption);
-            var skip = caption.gameObject.AddComponent<Button>();
-            skip.targetGraphic = caption;
-            skip.onClick.AddListener(SkipCoach);
-
-            _coachText = GroveVisuals.UiText(
+                GroveArt.MayaBubbleSprite,
+                false);
+            _teachCaptionRect = caption.rectTransform;
+            Place(_teachCaptionRect, PlayLayout.TeachCrateCaption);
+            _teachText = GroveVisuals.UiText(
                 caption.transform,
                 "Label",
                 "",
                 20,
                 TextAnchor.MiddleCenter,
                 new Color(0.16f, 0.28f, 0.14f));
-            Stretch(_coachText.rectTransform);
-            _coachText.raycastTarget = false;
-            _coachRoot.SetActive(false);
+            Stretch(_teachText.rectTransform);
+
+            var skip = GroveVisuals.UiButton(
+                _teachRoot.transform,
+                "Skip",
+                "Got it",
+                Color.white,
+                new Vector2(140, 48),
+                GroveArt.Get(GroveArt.StubButton));
+            Place(skip.GetComponent<RectTransform>(), PlayLayout.TeachSkip);
+            skip.onClick.AddListener(SkipTeach);
+            _teachSkip = skip.gameObject;
+            _teachRoot.SetActive(false);
         }
 
-        private void StartCoach()
+        private void StartTeach()
         {
-            if (_coach == null)
+            if (_teach == null || Host == null)
             {
                 return;
             }
 
-            _coach.Start();
-            RefreshCoach();
-            if (_coach.Current != null)
-            {
-                Toast(Host != null ? Host.Catalog.Copy.Goal : PresentationCopy.Default.Goal);
-            }
+            _teach.StartAfterSplash(Host.Session.Board, Host.Orders);
+            _teachMergeShownAt = -1f;
+            RefreshTeach();
         }
 
-        private void SkipCoach()
+        private void SkipTeach()
         {
-            _coach?.TryAdvance(CoachAdvance.Skip);
-            RefreshCoach();
-        }
-
-        private void TickCoach()
-        {
-            if (_coachRoot != null && SplashBlocking)
-            {
-                _coachRoot.SetActive(false);
-                return;
-            }
-
-            if (_coach == null || !_coach.Started || _coach.IsComplete)
+            if (Host == null || _teach == null)
             {
                 return;
             }
 
-            var last = Host?.Drag?.LastResult;
-            if (last != null && !ReferenceEquals(last, _coachSeenDrag))
+            _teach.TrySkip(Host.Session.Board, Host.Orders);
+            RefreshTeach();
+        }
+
+        private void TickTeach()
+        {
+            if (_teachRoot != null && SplashBlocking)
             {
-                _coachSeenDrag = last;
-                if (last is DragResult.Applied applied && applied.Merge != null &&
-                    _coach.TryAdvance(CoachAdvance.Merge))
+                _teachRoot.SetActive(false);
+                Host?.BoardView?.SetTeachCells(null, null);
+                return;
+            }
+
+            if (_teach == null || !_teach.Started || _teach.IsComplete || Host == null)
+            {
+                return;
+            }
+
+            _teach.Sync(Host.Session.Board, Host.Orders);
+
+            var last = Host.Drag?.LastResult;
+            if (last != null && !ReferenceEquals(last, _teachSeenDrag))
+            {
+                _teachSeenDrag = last;
+                if (last is DragResult.Applied applied && applied.DraggedMatchesTogether)
                 {
-                    RefreshCoach();
+                    _teach.NotifyMatchesCombined(Host.Session.Board, Host.Orders);
                 }
             }
 
-            if (_coachRoot != null && _coachRoot.activeSelf && _coachPointerRect != null)
+            if (_teach.Beat == TeachBeat.Merge)
             {
-                var k = 1f + Mathf.Sin(Time.unscaledTime * 3.2f) * 0.08f;
-                _coachPointerRect.localScale = new Vector3(k, k, 1f);
+                if (_teachMergeShownAt < 0f)
+                {
+                    _teachMergeShownAt = Time.unscaledTime;
+                }
+                else if (Time.unscaledTime - _teachMergeShownAt >= ThinTeach.MergeIdleHintSeconds &&
+                         Host.Drag is { IsDragging: false, IsBusy: false } &&
+                         _teach.HighlightA is { } from &&
+                         _teach.HighlightB is { } to)
+                {
+                    Host.BoardView?.PlayMagnetHint(from, to);
+                    _teachMergeShownAt = Time.unscaledTime;
+                }
             }
+            else
+            {
+                _teachMergeShownAt = -1f;
+            }
+
+            RefreshTeach();
         }
 
-        private void RefreshCoach()
+        private void RefreshTeach()
         {
-            if (_coachRoot == null || _coach == null)
+            if (_teachRoot == null || _teach == null || Host == null)
             {
                 return;
             }
 
-            if (SplashBlocking || !_coach.Started || _coach.IsComplete || _coach.Current == null)
+            if (SplashBlocking || !_teach.OverlayVisible)
             {
-                _coachRoot.SetActive(false);
+                _teachRoot.SetActive(false);
+                Host.BoardView?.SetTeachCells(null, null);
                 return;
             }
 
-            var mark = _coach.Current;
-            _coachText.text = mark.Caption + "\n(Got it)";
-            var art = GroveArt.Get(mark.ArtStub) ?? GroveArt.Get(GroveArt.StubMergeSparkle);
-            if (art != null)
+            _teachText.text = _teach.Caption;
+            var ring = GroveArt.TeachRingSprite;
+            if (ring != null)
             {
-                _coachPointer.sprite = art;
-                _coachPointer.preserveAspect = true;
+                _teachRing.sprite = ring;
+                _teachRing.preserveAspect = true;
             }
 
-            switch (mark.AdvanceOn)
+            Host.BoardView?.SetTeachCells(_teach.HighlightA, _teach.HighlightB);
+            switch (_teach.Beat)
             {
-                case CoachAdvance.Crate:
-                    Place(_coachPointerRect, PlayLayout.CoachCratePointer);
-                    Place(_coachCaptionRect, PlayLayout.CoachCrateCaption);
+                case TeachBeat.Crate:
+                    _teachRing.gameObject.SetActive(true);
+                    _teachCaptionRect.gameObject.SetActive(true);
+                    Place(_teachRingRect, PlayLayout.TeachCrateRing);
+                    Place(_teachCaptionRect, PlayLayout.TeachCrateCaption);
                     break;
-                case CoachAdvance.Merge:
-                    Place(_coachPointerRect, PlayLayout.CoachMergePointer);
-                    Place(_coachCaptionRect, PlayLayout.CoachMergeCaption);
+                case TeachBeat.Merge:
+                    _teachRing.gameObject.SetActive(false);
+                    _teachCaptionRect.gameObject.SetActive(false);
                     break;
                 default:
-                    Place(_coachPointerRect, PlayLayout.CoachDeliverPointer);
-                    Place(_coachCaptionRect, PlayLayout.CoachDeliverCaption);
+                    _teachRing.gameObject.SetActive(true);
+                    _teachCaptionRect.gameObject.SetActive(false);
+                    Place(_teachRingRect, PlayLayout.ActiveOrderCard);
                     break;
             }
 
-            _coachRoot.SetActive(true);
-            _coachPointerRect.localScale = Vector3.one;
-            _coachRoot.transform.SetAsLastSibling();
+            RefreshMayaBubble();
+
+            var canSkip = _teach.CanSkip(Host.Session.Board, Host.Orders);
+            _teachSkip.SetActive(canSkip);
+            _teachRoot.SetActive(true);
+            _teachRingRect.localScale = Vector3.one;
+            if (_teachRing.gameObject.activeSelf)
+            {
+                var k = 1f + Mathf.Sin(Time.unscaledTime * 3.2f) * 0.06f;
+                _teachRingRect.localScale = new Vector3(k, k, 1f);
+            }
+
+            _teachRoot.transform.SetAsLastSibling();
             if (_energyEmptyRoot != null)
             {
                 _energyEmptyRoot.transform.SetAsLastSibling();
@@ -516,6 +574,8 @@ namespace Grove.Unity
                     _mayaImage.sprite = happy;
                 }
             }
+
+            RefreshMayaBubble();
         }
 
         private OrderCardUi BuildCard(OrderSpec order, int index, int total, bool active)
@@ -597,6 +657,31 @@ namespace Grove.Unity
                     card.Deliver.interactable = !SplashBlocking && card.IsActive && Host.Orders.CanDeliver(Host.Session.Board);
                 }
             }
+
+            RefreshMayaBubble();
+        }
+
+        private void RefreshMayaBubble()
+        {
+            if (_mayaBubbleText == null || Host?.Orders == null)
+            {
+                return;
+            }
+
+            if (_teach != null && _teach.OverlayVisible &&
+                (_teach.Beat == TeachBeat.Merge || _teach.Beat == TeachBeat.Deliver))
+            {
+                _mayaBubbleText.text = _teach.Caption;
+                return;
+            }
+
+            var line = Host.Orders.Active?.SpokenLine ?? "";
+            if (line.Length > 64)
+            {
+                line = line.Substring(0, 61) + "…";
+            }
+
+            _mayaBubbleText.text = line;
         }
 
         private string FormatOrder(OrderSpec order, bool active)
@@ -676,8 +761,8 @@ namespace Grove.Unity
                 case SpitResult.Ok ok:
                     var name = Host.Catalog.Items.TryGet(ok.Item, out var def) ? def.DisplayName : ok.Item.Value;
                     Toast($"Crate produced {name}.");
-                    _coach?.TryAdvance(CoachAdvance.Crate);
-                    RefreshCoach();
+                    _teach?.NotifyCrateTapped(Host.Session.Board, Host.Orders);
+                    RefreshTeach();
                     break;
                 case SpitResult.Failed failed:
                     Toast(failed.Reason switch
@@ -713,8 +798,8 @@ namespace Grove.Unity
             Host.GrantCoins(delivered.CoinReward);
             Host.BoardView?.Refresh();
             RebuildTray();
-            _coach?.TryAdvance(CoachAdvance.Deliver);
-            RefreshCoach();
+            _teach?.NotifyOrderDelivered(Host.Orders);
+            RefreshTeach();
 
             if (Host.Splash != null)
             {

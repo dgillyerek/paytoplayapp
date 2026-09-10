@@ -8,7 +8,7 @@
   "npcPortrait": "2d-ui-only",
   "orderSlotsMax": 3,
   "orderQueue": "scripted",
-  "coachCrate": "Tap the crate for Seeds.",
-  "coachMerge": "Drag matching pieces together to merge.",
-  "coachDeliver": "Deliver to Maya — restore the Front Garden."
+  "coachCrate": "Tap the crate to grow supplies.",
+  "coachMerge": "Drag two matches together.",
+  "coachDeliver": "Deliver to Maya."
 }

@@ -62,13 +62,13 @@ namespace Grove.Domain.Merge
             {
                 Board.Clear(from);
                 Board[to] = destination.WithCount(combined);
-                return new DragResult.Applied(Merge: null);
+                return new DragResult.Applied(Merge: null) { Combined = true };
             }
 
             // combined == recipe.InputCount → 3→1 merge
             Board.Clear(from);
             Board[to] = new PieceStack(recipe.Output, recipe.OutputCount);
-            return new DragResult.Applied(new MergeOutcome(source.Id, recipe.Output, to));
+            return new DragResult.Applied(new MergeOutcome(source.Id, recipe.Output, to)) { Combined = true };
         }
     }
 }

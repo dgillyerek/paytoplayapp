@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Grove.Domain.Art;
@@ -28,6 +29,12 @@ namespace Grove.Unity
         public const string StubButton = "UI_Btn_Primary";
         public const string StubEnergyEmpty = "UI_Modal_EnergyEmpty";
         public const string StubMergeSparkle = "VFX_MergeSparkle";
+        public const string StubTeachRing = "UI_TeachRing";
+        public const string StubHudDock = "UI_OrderTray_Dock";
+        public const string StubMayaBubble = "UI_Maya_Bubble";
+
+        /// <summary>DES-003/004 drop folder (optional). Bottom dock + teach rings overlay the pack.</summary>
+        public const string DesignDropRelative = "design/unity-drop";
 
         private static Dictionary<string, Sprite>? _byStub;
         private static Sprite? _white;
@@ -77,6 +84,8 @@ namespace Grove.Unity
                 Debug.LogWarning("Grove art pack failed to load: " + ex.Message);
                 Ready = false;
             }
+
+            OverlayDesignDrop();
         }
 
         public static Sprite? Get(string stub)
@@ -86,6 +95,15 @@ namespace Grove.Unity
         }
 
         public static Sprite Require(string stub) => Get(stub) ?? WhiteSprite();
+
+        public static Sprite? TeachRingSprite =>
+            Get(StubTeachRing) ?? Get(StubCellHighlight);
+
+        public static Sprite? HudDockSprite =>
+            Get(StubHudDock) ?? Get(StubOrderCard);
+
+        public static Sprite? MayaBubbleSprite =>
+            Get(StubMayaBubble) ?? Get(StubOrderCard);
 
         public static Sprite SpriteForItem(string itemId)
         {
@@ -160,5 +178,91 @@ namespace Grove.Unity
                 0,
                 SpriteMeshType.FullRect);
         }
+
+        private static void OverlayDesignDrop()
+        {
+            if (_byStub == null)
+            {
+                return;
+            }
+
+            foreach (var dir in DesignDropDirectories())
+            {
+                if (!Directory.Exists(dir))
+                {
+                    continue;
+                }
+
+                string[] files;
+                try
+                {
+                    files = Directory.GetFiles(dir, "*.png", SearchOption.AllDirectories);
+                }
+                catch (System.Exception)
+                {
+                    continue;
+                }
+
+                for (var i = 0; i < files.Length; i++)
+                {
+                    var stub = StubForDropFile(Path.GetFileNameWithoutExtension(files[i]));
+                    if (stub == null)
+                    {
+                        continue;
+                    }
+
+                    var asset = new ArtAsset(stub, Path.GetFileName(files[i]), "hud", 100f, 0.5f, 0.5f);
+                    var sprite = LoadPng(files[i], asset);
+                    if (sprite != null)
+                    {
+                        _byStub[stub] = sprite;
+                    }
+                }
+            }
+        }
+
+        private static IEnumerable<string> DesignDropDirectories()
+        {
+            yield return Path.Combine("/workspace", "design", "unity-drop");
+            var data = Application.dataPath;
+            if (!string.IsNullOrEmpty(data))
+            {
+                yield return Path.GetFullPath(Path.Combine(data, "..", DesignDropRelative));
+            }
+
+            yield return Path.Combine(Environment.CurrentDirectory, DesignDropRelative);
+        }
+
+        private static string? StubForDropFile(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return null;
+            }
+
+            var n = name.Replace('-', '_');
+            if (ContainsInsensitive(n, "TeachRing") || ContainsInsensitive(n, "DES_004") ||
+                ContainsInsensitive(n, "Ring_Teach") || ContainsInsensitive(n, "Teach_Ring"))
+            {
+                return StubTeachRing;
+            }
+
+            if (ContainsInsensitive(n, "Bubble") || ContainsInsensitive(n, "Maya_Speech"))
+            {
+                return StubMayaBubble;
+            }
+
+            if (ContainsInsensitive(n, "Dock") || ContainsInsensitive(n, "DES_003") ||
+                ContainsInsensitive(n, "SideRail") || ContainsInsensitive(n, "Side_Rail") ||
+                ContainsInsensitive(n, "OrderTray_Dock"))
+            {
+                return StubHudDock;
+            }
+
+            return null;
+        }
+
+        private static bool ContainsInsensitive(string haystack, string needle) =>
+            haystack.IndexOf(needle, System.StringComparison.OrdinalIgnoreCase) >= 0;
     }
 }

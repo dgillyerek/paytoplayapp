@@ -21,6 +21,9 @@ namespace Grove.Unity
         private TextMesh? _ghostLabel;
         private SpriteRenderer? _ghostRenderer;
         private GameObject? _hover;
+        private GameObject? _teachRingA;
+        private GameObject? _teachRingB;
+        private bool _magnetPlaying;
         private readonly Dictionary<GridPos, GameObject> _pieceViews = new();
 
         public BoardGrid? Board { get; private set; }
@@ -86,6 +89,22 @@ namespace Grove.Unity
             {
                 _hover.SetActive(false);
             }
+        }
+
+        public void SetTeachCells(GridPos? a, GridPos? b)
+        {
+            PlaceTeachRing(ref _teachRingA, a, "TeachRingA");
+            PlaceTeachRing(ref _teachRingB, b, "TeachRingB");
+        }
+
+        public void PlayMagnetHint(GridPos from, GridPos to)
+        {
+            if (_magnetPlaying || Board == null || !Board.TryGet(from, out var stack))
+            {
+                return;
+            }
+
+            StartCoroutine(MagnetRoutine(from, to, stack));
         }
 
         public void ShowGhost(PieceStack stack, Vector3 world)
@@ -257,6 +276,40 @@ namespace Grove.Unity
             }
         }
 
+        private void PlaceTeachRing(ref GameObject? ring, GridPos? pos, string name)
+        {
+            if (pos is not { } cell || Board == null || !Board.InBounds(cell))
+            {
+                if (ring != null)
+                {
+                    ring.SetActive(false);
+                }
+
+                return;
+            }
+
+            var sprite = GroveArt.TeachRingSprite;
+            if (sprite == null)
+            {
+                return;
+            }
+
+            if (ring == null)
+            {
+                ring = GroveVisuals.SpriteObject(
+                    name,
+                    transform,
+                    Vector3.zero,
+                    cellSize,
+                    Color.white,
+                    sprite,
+                    8);
+            }
+
+            ring.SetActive(true);
+            GroveVisuals.CoverRect(ring.transform, sprite, CellToWorld(cell) + new Vector3(0f, 0f, -0.03f), cellSize * 1.18f, cellSize * 1.18f);
+        }
+
         /// <summary>
         /// Backdrop covers the camera; wood BoardSurface fills the 7×5; cream cells overlap so no
         /// grey/green programmer grid can show between tiles or around the tray.
@@ -280,7 +333,7 @@ namespace Grove.Unity
 
             if (_backdrop != null && _backdropSprite != null && cam != null && cam.orthographic)
             {
-                var aspect = Screen.height > 0 ? Screen.width / (float)Screen.height : 16f / 9f;
+                var aspect = Screen.height > 0 ? Screen.width / (float)Screen.height : PlayLayout.PortraitAspect;
                 var viewH = cam.orthographicSize * 2f;
                 var viewW = viewH * Mathf.Max(0.01f, aspect);
                 var camCenter = new Vector3(cam.transform.position.x, cam.transform.position.y, 0.35f);
@@ -372,6 +425,28 @@ namespace Grove.Unity
             {
                 target.localScale = original;
             }
+        }
+
+        private System.Collections.IEnumerator MagnetRoutine(GridPos from, GridPos to, PieceStack stack)
+        {
+            _magnetPlaying = true;
+            EnsureGhost();
+            var start = CellToWorld(from) + new Vector3(0f, 0f, -0.2f);
+            var dest = CellToWorld(to) + new Vector3(0f, 0f, -0.2f);
+            ShowGhost(stack, start);
+            var t = 0f;
+            const float duration = 0.7f;
+            while (t < duration && _ghost != null && _ghost.activeSelf)
+            {
+                t += Time.deltaTime;
+                var u = Mathf.Clamp01(t / duration);
+                u = u * u * (3f - 2f * u);
+                MoveGhost(Vector3.Lerp(start, dest, u));
+                yield return null;
+            }
+
+            HideGhost();
+            _magnetPlaying = false;
         }
     }
 }

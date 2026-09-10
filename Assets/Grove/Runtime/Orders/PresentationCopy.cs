@@ -15,9 +15,9 @@ namespace Grove.Domain.Orders
         int OrderSlotsMax,
         string OrderQueue)
     {
-        public const string DefaultCoachCrate = "Tap the crate for Seeds.";
-        public const string DefaultCoachMerge = "Drag matching pieces together to merge.";
-        public const string DefaultCoachDeliver = "Deliver to Maya — restore the Front Garden.";
+        public const string DefaultCoachCrate = "Tap the crate to grow supplies.";
+        public const string DefaultCoachMerge = "Drag two matches together.";
+        public const string DefaultCoachDeliver = "Deliver to Maya.";
 
         public string CoachCrate { get; init; } = DefaultCoachCrate;
         public string CoachMerge { get; init; } = DefaultCoachMerge;
