@@ -10,15 +10,29 @@
 2. Double-click **`Assets/Grove/Scenes/Board.unity`**.
 3. Click **Play**.
 
-**On Play:**
+**On Play (portrait Game view 1080×1920):**
 
 - Full-screen splash **Project Grove** (tap).
 - Then splash **Front Garden** (tap).
+- **First-run teach T1–T3** (once per save until Order 1; skippable after T1 if already acted): crate → two matches → deliver. Not full FTUE.
 - Board: garden **backdrop** covering the camera, wood **BoardSurface** filling the 7×5 tray, overlapping cream **cells** — **not** a green/grey grid, pink letter tokens, or camera clear leaking around the board.
-- Goal banner: **Restore the Front Garden**.
-- HUD: energy bolt + count, **coin** count. Gems stay hidden.
-- Maya 2D portrait + up to **3** order cards (Maya lines, item art, coin/XP).
-- Wooden **garden crate** at the bottom (tap to produce).
+- The **full 7×5 is in the board band** (Design Y ~10–66% from the top) with **≥16dp** gap to HUD. Order cards never cover tiles.
+- Mock stack (DES-003): **energy + coins left**, **Maya top-right**, small **Goal pill** (“Restore the Front Garden”) centered under that row, then the board, then the order dock.
+- Garden **crate** left of the 7×5 (on the board, not in the dock).
+- **Bottom dock (70–100%):** cream `UI_OrderDock_Panel`, **3 order cards**, visual 5-slot inventory bar, **STARTER**.
+
+### Expected Play layout (Design sign-off)
+
+Design Y% is from the **top** of 1080×1920. Unity Y = 0 at the bottom of the Game view:
+
+| Band | Design Y (from top) | Unity Y (bottom=0) | Contents |
+| --- | --- | --- | --- |
+| Top HUD | 0–8% energy / Maya to ~10% | 0.90–1.00 | Energy + coins L, Maya R |
+| Goal pill | under the bar | ~0.87–0.92 | “Restore the Front Garden”, centered |
+| **Board** | **~10–66%** | **0.34–0.90** | **7×5 inset + crate left. No order cards.** |
+| Bottom dock | 70–100% | 0.00–0.30 | Order dock ×3 + inventory ×5 + STARTER |
+
+If any order card overlaps any playable cell, that is a FAIL. Splash art stays full-screen and unchanged. Teach uses `UI_Teach_Ring` + `UI_Teach_Hand` over the board (once per save, `ftue_play_teach_done`).
 
 **Scripted path:** crate → 3-merge → deliver Orders 1–6 (Maya). Order 6 (Bouquet) completes the area → splash **Front Garden Restored**.
 

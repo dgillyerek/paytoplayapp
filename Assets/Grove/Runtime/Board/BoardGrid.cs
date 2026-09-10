@@ -146,6 +146,35 @@ namespace Grove.Domain.Board
             return true;
         }
 
+        public bool TryFindTwoMatching(out GridPos a, out GridPos b)
+        {
+            var seen = new Dictionary<string, GridPos>();
+            for (var x = 0; x < Columns; x++)
+            {
+                for (var y = 0; y < Rows; y++)
+                {
+                    if (_cells[x, y] is not { } occupant)
+                    {
+                        continue;
+                    }
+
+                    var key = occupant.Id.Value;
+                    if (seen.TryGetValue(key, out var prev))
+                    {
+                        a = prev;
+                        b = new GridPos(x, y);
+                        return true;
+                    }
+
+                    seen[key] = new GridPos(x, y);
+                }
+            }
+
+            a = default;
+            b = default;
+            return false;
+        }
+
         public int OccupiedCount
         {
             get

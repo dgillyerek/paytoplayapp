@@ -9,7 +9,13 @@ namespace Grove.Domain.Merge
         }
 
         /// <summary>Move (and optional merge) was committed.</summary>
-        public sealed record Applied(MergeOutcome? Merge) : DragResult;
+        public sealed record Applied(MergeOutcome? Merge) : DragResult
+        {
+            /// <summary>True when two matching stacks were combined (stack or 3→1 merge).</summary>
+            public bool Combined { get; init; }
+
+            public bool DraggedMatchesTogether => Combined || Merge != null;
+        }
 
         /// <summary>Illegal drop: board is unchanged and the piece must snap back.</summary>
         public sealed record SnapBack(string Reason) : DragResult;

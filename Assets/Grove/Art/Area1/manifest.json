@@ -1,7 +1,7 @@
 {
   "pack": "Area1_DES001_DES002",
   "title": "Project Grove",
-  "version": "0.1.0",
+  "version": "0.2.0-hud-failfix",
   "unityImportHint": {
     "textureType": "Sprite (2D and UI)",
     "pixelsPerUnit": 100,
@@ -390,6 +390,46 @@
       "stub": "VFX_MergeSparkle",
       "filename": "VFX/Splashes/VFX_MergeSparkle.png",
       "category": "splash",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "UI_OrderDock_Panel",
+      "filename": "UI/UI_OrderDock_Panel.png",
+      "category": "hud",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "UI_GoalPill",
+      "filename": "UI/UI_GoalPill.png",
+      "category": "hud",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "UI_Teach_Ring",
+      "filename": "UI/UI_Teach_Ring.png",
+      "category": "hud",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "UI_Teach_Hand",
+      "filename": "UI/UI_Teach_Hand.png",
+      "category": "hud",
       "pivot": [
         0.5,
         0.5

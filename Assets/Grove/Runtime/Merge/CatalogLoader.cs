@@ -197,7 +197,12 @@ namespace Grove.Domain.Merge
                 OptString(root, "npcDisplayName", fallback.NpcDisplayName),
                 OptString(root, "npcPortrait", fallback.NpcPortrait),
                 slots,
-                OptString(root, "orderQueue", fallback.OrderQueue));
+                OptString(root, "orderQueue", fallback.OrderQueue))
+            {
+                CoachCrate = NonEmpty(root, "coachCrate", fallback.CoachCrate),
+                CoachMerge = NonEmpty(root, "coachMerge", fallback.CoachMerge),
+                CoachDeliver = NonEmpty(root, "coachDeliver", fallback.CoachDeliver)
+            };
         }
 
         private static IReadOnlyList<OrderSpec> ParseOrders(string json, ItemCatalog items)
@@ -309,6 +314,12 @@ namespace Grove.Domain.Merge
             }
 
             return str.Value;
+        }
+
+        private static string NonEmpty(JsonNode.Obj obj, string key, string defaultValue)
+        {
+            var value = OptString(obj, key, defaultValue);
+            return string.IsNullOrWhiteSpace(value) ? defaultValue : value;
         }
 
         private static int ReqInt(JsonNode.Obj obj, string key)

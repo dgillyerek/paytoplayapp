@@ -1,4 +1,5 @@
 using System;
+using Grove.Domain.Layout;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -157,14 +158,11 @@ namespace Grove.Unity
                 return;
             }
 
-            var center = view.BoardCenter;
-            cam.transform.position = new Vector3(center.x, center.y + 0.15f, -10f);
-            var needW = view.BoardWorldSize.x + 1.4f;
-            var needH = view.BoardWorldSize.y + 3.4f;
-            var aspect = Screen.height > 0 ? Screen.width / (float)Screen.height : 16f / 9f;
-            var sizeForH = needH * 0.5f;
-            var sizeForW = aspect > 0.01f ? needW * 0.5f / aspect : sizeForH;
-            cam.orthographicSize = Mathf.Max(5.2f, sizeForH, sizeForW);
+            view.GetWorldBounds(out var minX, out var minY, out var maxX, out var maxY);
+            var aspect = Screen.height > 0 ? Screen.width / (float)Screen.height : PlayLayout.PortraitAspect;
+            var frame = PlayLayout.FitBoard(minX, minY, maxX, maxY, aspect);
+            cam.transform.position = new Vector3(frame.CenterX, frame.CenterY, -10f);
+            cam.orthographicSize = frame.OrthographicSize;
         }
 
         public static TextMesh Label(string name, Transform parent, Vector3 localPos, string text, int fontSize, Color color)
@@ -421,7 +419,13 @@ namespace Grove.Unity
             return text;
         }
 
-        public static Image UiImage(Transform parent, string name, Color color, Sprite? sprite = null, bool preserveAspect = false)
+        public static Image UiImage(
+            Transform parent,
+            string name,
+            Color color,
+            Sprite? sprite = null,
+            bool preserveAspect = false,
+            bool raycastTarget = false)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -430,12 +434,13 @@ namespace Grove.Unity
             image.type = Image.Type.Simple;
             image.color = color;
             image.preserveAspect = preserveAspect && sprite != null;
+            image.raycastTarget = raycastTarget;
             return image;
         }
 
         public static Button UiButton(Transform parent, string name, string label, Color bg, Vector2 size, Sprite? sprite = null)
         {
-            var image = UiImage(parent, name, bg, sprite, preserveAspect: sprite != null);
+            var image = UiImage(parent, name, bg, sprite, preserveAspect: sprite != null, raycastTarget: true);
             var rect = image.rectTransform;
             rect.sizeDelta = size;
             var button = image.gameObject.AddComponent<Button>();
