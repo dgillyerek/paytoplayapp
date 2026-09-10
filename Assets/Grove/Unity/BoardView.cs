@@ -358,7 +358,7 @@ namespace Grove.Unity
                     transform,
                     Vector3.zero,
                     ThinTeach.RingLabelMerge,
-                    22,
+                    PlayLayout.TypeTeachRing,
                     new Color(0.16f, 0.28f, 0.14f));
             }
 

@@ -74,6 +74,20 @@ namespace Grove.Domain.Layout
         public const float MinHudGapDp = 16f;
         public const int InventorySlotCount = 5;
 
+        /// <summary>Portrait 1080×1920 reference type. Minimum arm's-length readable size.</summary>
+        public const int TypeMinReadable = 28;
+        public const int TypeOrderBody = 30;
+        public const int TypeOrderActive = 34;
+        public const int TypeButton = 38;
+        public const int TypeHud = 40;
+        public const int TypeGoal = 36;
+        public const int TypeTeach = 36;
+        public const int TypeTeachRing = 30;
+        public const int TypeCrate = 32;
+        public const int TypeSplash = 44;
+        public const int TypeToast = 34;
+        public const int TypeCoin = 42;
+
         /// <summary>Must match <c>Board.unity</c> BoardView serialization.</summary>
         public const float CellSize = 1f;
         public const float OriginX = -3f;
@@ -118,8 +132,8 @@ namespace Grove.Domain.Layout
         public static readonly NormRect EnergyLabel = new NormRect(0.50f, 0.928f, 0.64f, 0.988f);
         public static readonly NormRect Maya = new NormRect(0.80f, 0.905f, 0.975f, 0.995f);
         public static readonly NormRect Goal = new NormRect(0.34f, 0.872f, 0.66f, 0.918f);
-        public static readonly NormRect Toast = new NormRect(0.22f, 0.848f, 0.76f, 0.868f);
-        public static readonly NormRect MayaBubble = new NormRect(0.78f, 0.850f, 0.975f, 0.900f);
+        public static readonly NormRect Toast = new NormRect(0.14f, 0.840f, 0.76f, 0.868f);
+        public static readonly NormRect MayaBubble = new NormRect(0.76f, 0.840f, 0.975f, 0.900f);
 
         /// <summary>
         /// Cream dock fill behind orders + inventory. Not <c>UI_OrderDock_Panel</c> —
@@ -131,10 +145,11 @@ namespace Grove.Domain.Layout
         public static readonly NormRect Store = new NormRect(0.04f, 0.012f, 0.20f, 0.108f);
 
         public static readonly NormRect Crate = new NormRect(0.025f, 0.48f, 0.165f, 0.655f);
-        public static readonly NormRect CrateLabel = new NormRect(0.025f, 0.655f, 0.165f, 0.700f);
+        public static readonly NormRect CrateLabel = new NormRect(0.025f, 0.658f, 0.165f, 0.715f);
 
         public static readonly NormRect TeachCrateRing = Crate.Inflate(0.008f, 0.008f);
-        public static readonly NormRect TeachHudCaption = new NormRect(0.18f, 0.848f, 0.76f, 0.868f);
+        /// <summary>Readable teach line between dock and board — not a 38px sliver.</summary>
+        public static readonly NormRect TeachHudCaption = new NormRect(0.08f, 0.305f, 0.92f, 0.358f);
         public static readonly NormRect TeachSkip = new NormRect(0.78f, 0.012f, 0.96f, 0.108f);
 
         public static NormRect ActiveOrderCard

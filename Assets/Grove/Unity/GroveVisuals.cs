@@ -21,15 +21,30 @@ namespace Grove.Unity
         /// <summary>DES-003 dock cream — solid plate so the 5-slot PNG is not stretched over orders.</summary>
         public static readonly Color DockCream = new Color(0.976f, 0.953f, 0.886f, 1f);
 
+        public static readonly Color Ink = new Color(0.10f, 0.18f, 0.10f, 1f);
+        public static readonly Color InkOnGreen = new Color(0.96f, 0.97f, 0.90f, 1f);
+        public static readonly Color Gold = new Color(1f, 0.92f, 0.55f, 1f);
+
         public static Font Font
         {
             get
             {
                 if (_font == null)
                 {
-                    _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf")
-                            ?? Resources.GetBuiltinResource<Font>("Arial.ttf")
-                            ?? Font.CreateDynamicFontFromOSFont(new[] { "Arial", "Helvetica", "Liberation Sans", "DejaVu Sans" }, 16);
+                    _font = Font.CreateDynamicFontFromOSFont(
+                                new[]
+                                {
+                                    "Liberation Sans Bold",
+                                    "DejaVu Sans Bold",
+                                    "Arial Bold",
+                                    "Liberation Sans",
+                                    "DejaVu Sans",
+                                    "Arial",
+                                    "Helvetica"
+                                },
+                                32)
+                            ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf")
+                            ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
                 }
 
                 return _font;
@@ -52,6 +67,12 @@ namespace Grove.Unity
                 }
             }
 
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            mat.SetInt("_ZWrite", 0);
+            mat.DisableKeyword("_ALPHATEST_ON");
+            mat.EnableKeyword("_ALPHABLEND_ON");
+            mat.renderQueue = 3000;
             return mat;
         }
 
@@ -403,7 +424,14 @@ namespace Grove.Unity
             return null;
         }
 
-        public static Text UiText(Transform parent, string name, string content, int size, TextAnchor anchor, Color color)
+        public static Text UiText(
+            Transform parent,
+            string name,
+            string content,
+            int size,
+            TextAnchor anchor,
+            Color color,
+            bool contrastOnDark = false)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -412,13 +440,25 @@ namespace Grove.Unity
             {
                 text.font = Font;
             }
+
             text.text = content;
-            text.fontSize = size;
+            text.fontSize = Mathf.Max(PlayLayout.TypeMinReadable, size);
+            text.fontStyle = FontStyle.Bold;
             text.alignment = anchor;
             text.color = color;
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Overflow;
             text.raycastTarget = false;
+            if (contrastOnDark)
+            {
+                var outline = go.AddComponent<Outline>();
+                outline.effectColor = new Color(0.04f, 0.08f, 0.04f, 0.88f);
+                outline.effectDistance = new Vector2(2.2f, -2.2f);
+                var shadow = go.AddComponent<Shadow>();
+                shadow.effectColor = new Color(0f, 0f, 0f, 0.45f);
+                shadow.effectDistance = new Vector2(1.5f, -1.5f);
+            }
+
             return text;
         }
 
@@ -434,16 +474,16 @@ namespace Grove.Unity
             go.transform.SetParent(parent, false);
             var image = go.AddComponent<Image>();
             image.sprite = sprite != null ? sprite : WhiteSprite;
-            image.type = Image.Type.Simple;
+            image.type = sprite != null && sprite.border.sqrMagnitude > 1f ? Image.Type.Sliced : Image.Type.Simple;
             image.color = color;
-            image.preserveAspect = preserveAspect && sprite != null;
+            image.preserveAspect = preserveAspect && sprite != null && image.type == Image.Type.Simple;
             image.raycastTarget = raycastTarget;
             return image;
         }
 
         public static Button UiButton(Transform parent, string name, string label, Color bg, Vector2 size, Sprite? sprite = null)
         {
-            var image = UiImage(parent, name, bg, sprite, preserveAspect: sprite != null, raycastTarget: true);
+            var image = UiImage(parent, name, bg, sprite, preserveAspect: false, raycastTarget: true);
             var rect = image.rectTransform;
             rect.sizeDelta = size;
             var button = image.gameObject.AddComponent<Button>();
@@ -454,12 +494,19 @@ namespace Grove.Unity
             button.colors = colors;
             if (!string.IsNullOrEmpty(label))
             {
-                var text = UiText(image.transform, "Label", label, 26, TextAnchor.MiddleCenter, Color.white);
+                var text = UiText(
+                    image.transform,
+                    "Label",
+                    label,
+                    PlayLayout.TypeButton,
+                    TextAnchor.MiddleCenter,
+                    InkOnGreen,
+                    contrastOnDark: true);
                 var textRect = text.GetComponent<RectTransform>();
                 textRect.anchorMin = Vector2.zero;
                 textRect.anchorMax = Vector2.one;
-                textRect.offsetMin = Vector2.zero;
-                textRect.offsetMax = Vector2.zero;
+                textRect.offsetMin = new Vector2(8f, 4f);
+                textRect.offsetMax = new Vector2(-8f, -4f);
                 text.raycastTarget = false;
             }
 

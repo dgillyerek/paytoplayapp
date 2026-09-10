@@ -45,6 +45,7 @@ namespace Grove.Unity
         private static HashSet<string>? _tinyStubs;
         private static Sprite? _white;
         private static Sprite? _glowRing;
+        private static Sprite? _goalChip;
 
         public static bool Ready { get; private set; }
 
@@ -147,7 +148,7 @@ namespace Grove.Unity
             _tinyStubs != null && _tinyStubs.Contains(stub);
 
         public static Sprite? GoalPillSprite =>
-            Get(StubGoalPill) ?? Get(StubOrderCard);
+            GoalChipSprite() ?? Get(StubGoalPill) ?? Get(StubOrderCard);
 
         public static Sprite? MayaBubbleSprite =>
             Get(StubMayaBubble) ?? Get(StubOrderCard);
@@ -216,15 +217,18 @@ namespace Grove.Unity
             tex.wrapMode = TextureWrapMode.Clamp;
             tex.name = asset.Stub;
             KnockOutBakedBackdrop(tex, asset.Stub);
+            PunchStudioPlate(tex, asset.Stub, asset.Category);
             var ppu = asset.PixelsPerUnit > 0.01f ? asset.PixelsPerUnit : 100f;
             var pivot = new Vector2(asset.PivotX, asset.PivotY);
+            var border = asset.Stub == StubButton ? new Vector4(48f, 36f, 48f, 36f) : Vector4.zero;
             return Sprite.Create(
                 tex,
                 new Rect(0f, 0f, tex.width, tex.height),
                 pivot,
                 ppu,
                 0,
-                SpriteMeshType.FullRect);
+                SpriteMeshType.FullRect,
+                border);
         }
 
         private static void OverlayDesignDrop()
@@ -349,10 +353,44 @@ namespace Grove.Unity
             {
                 KnockOutLightCheckerboard(tex);
             }
-            else if (stub == StubCrateIdle)
+        }
+
+        private static void PunchStudioPlate(Texture2D tex, string stub, string category)
+        {
+            if (tex == null || !StudioPlatePunch.ShouldPunch(stub, category))
             {
-                KnockOutStudioCream(tex);
+                return;
             }
+
+            var colors = tex.GetPixels();
+            var width = tex.width;
+            var height = tex.height;
+            var rgba = new byte[width * height * 4];
+            for (var i = 0; i < colors.Length; i++)
+            {
+                var c = colors[i];
+                rgba[i * 4] = (byte)Mathf.Clamp(Mathf.RoundToInt(c.r * 255f), 0, 255);
+                rgba[i * 4 + 1] = (byte)Mathf.Clamp(Mathf.RoundToInt(c.g * 255f), 0, 255);
+                rgba[i * 4 + 2] = (byte)Mathf.Clamp(Mathf.RoundToInt(c.b * 255f), 0, 255);
+                rgba[i * 4 + 3] = (byte)Mathf.Clamp(Mathf.RoundToInt(c.a * 255f), 0, 255);
+            }
+
+            if (StudioPlatePunch.Punch(rgba, width, height) <= 0)
+            {
+                return;
+            }
+
+            for (var i = 0; i < colors.Length; i++)
+            {
+                colors[i] = new Color(
+                    rgba[i * 4] / 255f,
+                    rgba[i * 4 + 1] / 255f,
+                    rgba[i * 4 + 2] / 255f,
+                    rgba[i * 4 + 3] / 255f);
+            }
+
+            tex.SetPixels(colors);
+            tex.Apply(false, false);
         }
 
         private static void KnockOutDarkCheckerboard(Texture2D tex)
@@ -423,28 +461,51 @@ namespace Grove.Unity
             tex.Apply(false, false);
         }
 
-        private static void KnockOutStudioCream(Texture2D tex)
+        /// <summary>Wide Grove-green chip for the Goal line — not the thin studio plate PNG.</summary>
+        public static Sprite GoalChipSprite()
         {
-            var pixels = tex.GetPixels();
-            for (var i = 0; i < pixels.Length; i++)
+            if (_goalChip != null)
             {
-                var c = pixels[i];
-                if (c.a < 0.02f)
-                {
-                    continue;
-                }
+                return _goalChip;
+            }
 
-                var L = (c.r + c.g + c.b) / 3f;
-                var sat = Mathf.Max(c.r, Mathf.Max(c.g, c.b)) - Mathf.Min(c.r, Mathf.Min(c.g, c.b));
-                if ((L >= 188f / 255f && sat <= 48f / 255f) || (L >= 170f / 255f && sat <= 28f / 255f))
+            const int w = 512;
+            const int h = 128;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            var pixels = new Color[w * h];
+            var radius = 52f;
+            var fill = new Color(0.18f, 0.34f, 0.20f, 1f);
+            var hi = new Color(0.26f, 0.46f, 0.28f, 1f);
+            for (var y = 0; y < h; y++)
+            {
+                for (var x = 0; x < w; x++)
                 {
-                    c.a = 0f;
-                    pixels[i] = c;
+                    var dx = x < radius ? radius - x : (x > w - 1 - radius ? x - (w - 1 - radius) : 0f);
+                    var dy = y < radius ? radius - y : (y > h - 1 - radius ? y - (h - 1 - radius) : 0f);
+                    var outside = dx * dx + dy * dy > radius * radius && (x < radius || x > w - 1 - radius);
+                    if (outside && (y < radius || y > h - 1 - radius))
+                    {
+                        pixels[y * w + x] = Color.clear;
+                        continue;
+                    }
+
+                    var t = y / (float)(h - 1);
+                    pixels[y * w + x] = Color.Lerp(fill, hi, t * 0.45f);
                 }
             }
 
             tex.SetPixels(pixels);
             tex.Apply(false, false);
+            tex.name = "grove_goal_chip";
+            _goalChip = Sprite.Create(
+                tex,
+                new Rect(0f, 0f, w, h),
+                new Vector2(0.5f, 0.5f),
+                100f,
+                0,
+                SpriteMeshType.FullRect,
+                new Vector4(56f, 40f, 56f, 40f));
+            return _goalChip;
         }
 
         private static Sprite GlowRingSprite()

@@ -121,6 +121,41 @@ public sealed class ArtManifestTests
     }
 
     [Fact]
+    public void Piece_and_hud_icons_are_rgba_with_transparent_corners()
+    {
+        var manifest = ArtManifest.LoadDefault();
+        var dir = ArtManifest.ResolveDirectory();
+        var stubs = new[]
+        {
+            "WF_T01_Seed", "WF_T02_Sprout", "WF_T03_Bud", "WF_T04_Wildflower", "WF_T05_Bouquet", "WF_T06_FlowerBox",
+            "HB_T01_HerbSprig", "HB_T02_HerbPot", "HB_T03_HerbBasket",
+            "TL_T01_Twig", "TL_T02_Stick", "TL_T03_HandRake",
+            "ENV_FG_GardenCrate_Idle", "HUD_EnergyPill", "HUD_Wallet_Coin", "UI_GoalPill",
+            "MAYA_Portrait_Happy", "MAYA_Portrait_Neutral"
+        };
+        foreach (var stub in stubs)
+        {
+            Assert.True(manifest.TryGet(stub, out var asset), stub);
+            Assert.True(StudioPlatePunch.ShouldPunch(stub, asset.Category), stub);
+            var path = Path.Combine(dir, asset.Filename.Replace('/', Path.DirectorySeparatorChar));
+            PngInspect.Header(path, out var width, out var height, out var colorType);
+            Assert.Equal(6, colorType);
+            PngInspect.DecodeRgba(path, out _, out _, out var rgba);
+            Assert.True(StudioPlatePunch.CornersTransparent(rgba, width, height), stub + " still has an opaque plate in the corners");
+            var opaque = 0;
+            for (var i = 3; i < rgba.Length; i += 4)
+            {
+                if (rgba[i] > 32)
+                {
+                    opaque++;
+                }
+            }
+
+            Assert.True(opaque > width * height / 40, stub + " punched the object away");
+        }
+    }
+
+    [Fact]
     public void Order_dock_panel_is_a_wide_inventory_bar_not_a_tall_overlay()
     {
         var manifest = ArtManifest.LoadDefault();
