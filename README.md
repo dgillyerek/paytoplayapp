@@ -8,31 +8,36 @@ Canonical Origin repo: [`derek-gilbert/paytoplayapp`](https://origin.cursor.com/
 | --- | --- |
 | Engine | **Unity 6.3 LTS** (`6000.3.6f1`) |
 | Render pipeline | **URP 17.3.0** |
-| Board | **7×5** |
-| Core loop (DEV-001) | Data-driven **3→1** drag merge with snap-back |
-| IAP | `IPurchaseService` + `FakeStore` stub |
-| Art | 2D UI / sprites only (no 3D Maya runtime) |
+| Board | **7×5** greybox |
+| Prototype loop | **Crate → 3-merge wildflowers → Order 1 (WF T3)** |
+| Art | Solid-color placeholders (2D UI / quads only) |
 
-## Open in Unity
+## Play in Unity (Derek)
 
-1. Install **Unity 6.3 LTS** (6000.3.x).
-2. Open this folder as a Unity project (URP is already in `Packages/manifest.json` and assigned in Graphics / Quality).
-3. Play `Assets/Grove/Scenes/Board.unity`.
+Exit criteria: **produce → merge to Wildflower T3 → complete Order 1**, no crash for a couple of minutes.
 
-First open will generate `Library/` (gitignored).
+1. Install **Unity 6.3 LTS** (`6000.3.6f1` or any 6000.3.x).
+2. Unity Hub → **Open** → select **this repo folder** (the folder that contains `Assets/` and `ProjectSettings/`). Do not nest another project.
+3. Wait for the first import (`Library/` is gitignored; URP shaders may compile for a minute).
+4. Double-click `Assets/Grove/Scenes/Board.unity`.
+5. Set the **Game** view to a portrait-ish size if you can (free aspect is fine). Click **Play** (Ctrl/Cmd+P).
+6. You should see a **7×5 green grid**, one pink **WF T1**, an **Energy** bar, **Order 1**, and a big **CRATE** button.
+7. Click **CRATE** (bottom). A new piece appears on the board (usually Wildflower T1).
+8. **Drag** a piece onto another of the **same type**. Two stack (`×2`). A third matching drop **merges to the next tier** with a scale punch. Illegal drops **snap back**.
+9. Keep producing and merging until you have **Wildflower T3**. Click **DELIVER** (Order 1). Toast should say Order 1 complete.
+10. Optional: **STARTER PACK** (FakeStore) dumps 3× WF T1 onto empty cells.
 
-## DEV-001 merge loop
+If the Game view is empty: select **Main Camera**, confirm Orthographic, and click Play again. Graphics settings should already point at `Assets/Settings/URP/GroveURP.asset`.
 
-Domain lives in `Assets/Grove/Runtime` with **no UnityEngine references** (`Grove.Domain.asmdef`, `noEngineReferences: true`).
+## Prototype scope (IN)
 
-- Drag a stack onto an empty cell → move.
-- Drag onto the **same piece id** → stack.
-- Stack count reaching the recipe input (**3**) → **1** next-tier piece at the drop cell.
-- Illegal drop → `DragResult.SnapBack` and the board is unchanged (view snaps the piece back).
+1. **DEV-001** — 7×5 board, 3→1 drag-merge, visible snap-back / merge punch.
+2. **DEV-002** — Wildflower T1–5 (JSON; T6–8 also in data). Herb/Tools are stubs.
+3. **DEV-003** — Garden Crate (30 charges, 2s recharge, ~70% WF T1).
+4. **DEV-004** — Energy 100 cap, 1 per crate tap, HUD bar.
+5. **DEV-005** — Orders 1–3 only (T3 / T4 / T5).
 
-Default chain (data-driven, not hardcoded in the loop):
-
-`pebble ×3 → sprout ×3 → sapling ×3 → tree ×3 → grove`
+**OUT:** vines/debris, inventory, map, real IAP, FTUE, analytics, daily, settings, all P1.
 
 ## Tests (no Unity license / no paid CI)
 
@@ -40,26 +45,27 @@ Default chain (data-driven, not hardcoded in the loop):
 dotnet test tests/Grove.Domain.Tests/Grove.Domain.Tests.csproj
 ```
 
-The test project compiles the same Runtime `.cs` files. Keep merge rules here so CI can stay free.
+Headless coverage includes the prototype loop: crate spit → merge to WF T3 → Order 1.
 
 ## Layout
 
 ```
-Assets/Grove/Runtime/     # board, merge, FakeStore (pure C#)
-Assets/Grove/Unity/       # MonoBehaviours: bootstrap, board view, drag controller
-Assets/Grove/Scenes/      # Board.unity
-Assets/Settings/URP/      # URP asset, renderer, global settings
-Docs/                     # tech notes, QA matrix, P0 order, art budget, migrate
-ProjectSettings/          # Unity 6.3 LTS player (Android 26 / iOS 15)
-Packages/                 # URP 17.3.0 + UGUI + Input System
-tests/Grove.Domain.Tests/ # xUnit
+Assets/Grove/Resources/Grove/  # items, recipes, crate, energy, orders JSON
+Assets/Grove/Runtime/          # board, merge, crate, energy, orders (pure C#)
+Assets/Grove/Unity/            # Play Mode visuals + HUD
+Assets/Grove/Scenes/Board.unity
+Docs/
+tests/Grove.Domain.Tests/
 ```
+
+QA can change tiers/recipes/weights in the JSON files without editing merge logic.
 
 ## Docs
 
-- [DEV-001](Docs/DEV-001.md)
+- [DEV-001](Docs/DEV-001.md) merge loop
+- [DEV-002](Docs/DEV-002.md) item/recipe data
+- [DEV-003](Docs/DEV-003.md) garden crate
+- [DEV-004](Docs/DEV-004.md) energy
+- [DEV-005](Docs/DEV-005.md) orders 1–3
 - [Tech notes](Docs/TECH_NOTES.md)
-- [QA device matrix](Docs/QA_DEVICE_MATRIX.md)
 - [P0 build order](Docs/P0_BUILD_ORDER.md)
-- [Art budget](Docs/ART_BUDGET.md)
-- [Migrate / open notes](Docs/MIGRATE.md)

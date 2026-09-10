@@ -1,0 +1,124 @@
+{
+  "recipes": [
+    {
+      "input": "pebble",
+      "inputCount": 3,
+      "output": "sprout",
+      "outputCount": 1
+    },
+    {
+      "input": "sprout",
+      "inputCount": 3,
+      "output": "sapling",
+      "outputCount": 1
+    },
+    {
+      "input": "sapling",
+      "inputCount": 3,
+      "output": "tree",
+      "outputCount": 1
+    },
+    {
+      "input": "tree",
+      "inputCount": 3,
+      "output": "grove",
+      "outputCount": 1
+    },
+    {
+      "input": "wildflower_t1",
+      "inputCount": 3,
+      "output": "wildflower_t2",
+      "outputCount": 1
+    },
+    {
+      "input": "wildflower_t2",
+      "inputCount": 3,
+      "output": "wildflower_t3",
+      "outputCount": 1
+    },
+    {
+      "input": "wildflower_t3",
+      "inputCount": 3,
+      "output": "wildflower_t4",
+      "outputCount": 1
+    },
+    {
+      "input": "wildflower_t4",
+      "inputCount": 3,
+      "output": "wildflower_t5",
+      "outputCount": 1
+    },
+    {
+      "input": "wildflower_t5",
+      "inputCount": 3,
+      "output": "wildflower_t6",
+      "outputCount": 1
+    },
+    {
+      "input": "wildflower_t6",
+      "inputCount": 3,
+      "output": "wildflower_t7",
+      "outputCount": 1
+    },
+    {
+      "input": "wildflower_t7",
+      "inputCount": 3,
+      "output": "wildflower_t8",
+      "outputCount": 1
+    },
+    {
+      "input": "herb_t1",
+      "inputCount": 3,
+      "output": "herb_t2",
+      "outputCount": 1
+    },
+    {
+      "input": "herb_t2",
+      "inputCount": 3,
+      "output": "herb_t3",
+      "outputCount": 1
+    },
+    {
+      "input": "herb_t3",
+      "inputCount": 3,
+      "output": "herb_t4",
+      "outputCount": 1
+    },
+    {
+      "input": "herb_t4",
+      "inputCount": 3,
+      "output": "herb_t5",
+      "outputCount": 1
+    },
+    {
+      "input": "herb_t5",
+      "inputCount": 3,
+      "output": "herb_t6",
+      "outputCount": 1
+    },
+    {
+      "input": "tool_t1",
+      "inputCount": 3,
+      "output": "tool_t2",
+      "outputCount": 1
+    },
+    {
+      "input": "tool_t2",
+      "inputCount": 3,
+      "output": "tool_t3",
+      "outputCount": 1
+    },
+    {
+      "input": "tool_t3",
+      "inputCount": 3,
+      "output": "tool_t4",
+      "outputCount": 1
+    },
+    {
+      "input": "tool_t4",
+      "inputCount": 3,
+      "output": "tool_t5",
+      "outputCount": 1
+    }
+  ]
+}

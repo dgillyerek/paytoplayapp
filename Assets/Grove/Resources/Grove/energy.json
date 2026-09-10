@@ -1,0 +1,7 @@
+{
+  "cap": 100,
+  "regenSecondsPerPoint": 120,
+  "produceCost": 1,
+  "digCost": 1,
+  "ftueTopUpToCap": true
+}

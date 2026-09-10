@@ -1,0 +1,37 @@
+{
+  "orders": [
+    {
+      "id": "order_1",
+      "title": "Order 1 — First Bloom",
+      "hint": "Merge wildflowers up to T3, then Deliver.",
+      "requirements": [
+        {
+          "itemId": "wildflower_t3",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "order_2",
+      "title": "Order 2 — Fuller Bouquet",
+      "hint": "Keep merging. Deliver one Wildflower T4.",
+      "requirements": [
+        {
+          "itemId": "wildflower_t4",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "order_3",
+      "title": "Order 3 — Garden Show",
+      "hint": "Deliver one Wildflower T5.",
+      "requirements": [
+        {
+          "itemId": "wildflower_t5",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

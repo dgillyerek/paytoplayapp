@@ -2,7 +2,8 @@
     "name": "Grove.Unity",
     "rootNamespace": "Grove.Unity",
     "references": [
-        "Grove.Domain"
+        "Grove.Domain",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

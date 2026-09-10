@@ -6,17 +6,19 @@
 - **URP 17.3.0** (`Packages/manifest.json`), pipeline asset `Assets/Settings/URP/GroveURP.asset`
 - Color space: Linear (inherited from the 6.3 URP baseline)
 - Scripting: IL2CPP on iOS; Android min API **26** (8.0); iOS **15.0**
-- Input: Input System package present; old Input Manager kept for editor convenience (`activeInputHandler` can be switched to Both)
+- Input: **Both** Input Manager + Input System (`activeInputHandler: 2`) so Editor Play mouse-drag works
 
 ## Architecture
 
 ```
 Unity MonoBehaviours  →  Grove.Domain (no engine refs)
-BoardView / DragMergeController     MergeSession / BoardGrid / MergeCatalog
-GroveBootstrap                      FakeStore : IPurchaseService
+BoardView / DragMergeController / PrototypeHud
+MergeSession / BoardGrid / CatalogLoader / GardenCrate / EnergyWallet / OrderBoard
 ```
 
-Keep **all merge math** in `Grove.Domain`. Unity code may animate, spawn views, and call `TryDrag`. If a rule needs a `#if UNITY_EDITOR`, it is in the wrong assembly.
+Keep **all merge / crate / energy / order math** in `Grove.Domain`. Unity code animates, draws greybox quads, and calls `TryDrag` / `TryTap` / `TryDeliver`.
+
+Play Mode builds the HUD at runtime (no extra scene wiring). Input Manager + Input System are both enabled (`activeInputHandler: 2`) so Editor mouse drag works.
 
 ## Tests
 
