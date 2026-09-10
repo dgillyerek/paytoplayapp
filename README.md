@@ -16,9 +16,8 @@
 - Then splash **Front Garden** (tap).
 - **First-run teach T1–T3** (once per save until Order 1; skippable after T1 if already acted): crate → two matches → deliver. Not full FTUE.
 - Board: garden **backdrop** covering the camera, wood **BoardSurface** filling the 7×5 tray, overlapping cream **cells** — **not** a green/grey grid, pink letter tokens, or camera clear leaking around the board.
-- The **full 7×5 is in the board band** (Design Y 12–68% from the top) with **≥16dp** gap to HUD. Order cards never cover tiles.
-- Goal pill at the top center: **Restore the Front Garden**.
-- HUD top (0–10%): energy left, Goal pill center, **coins** right. Maya small top-right. Gems stay hidden.
+- The **full 7×5 is in the board band** (Design Y ~10–66% from the top) with **≥16dp** gap to HUD. Order cards never cover tiles.
+- Mock stack (DES-003): **energy + coins left**, **Maya top-right**, small **Goal pill** (“Restore the Front Garden”) centered under that row, then the board, then the order dock.
 - Garden **crate** left of the 7×5 (on the board, not in the dock).
 - **Bottom dock (70–100%):** cream `UI_OrderDock_Panel`, **3 order cards**, visual 5-slot inventory bar, **STARTER**.
 
@@ -28,8 +27,9 @@ Design Y% is from the **top** of 1080×1920. Unity Y = 0 at the bottom of the Ga
 
 | Band | Design Y (from top) | Unity Y (bottom=0) | Contents |
 | --- | --- | --- | --- |
-| Top bar | 0–10% | 0.90–1.00 | Energy L, Goal pill C, coins R, Maya far R |
-| **Board** | **12–68%** | **0.32–0.88** | **7×5 inset + crate left. No order cards.** |
+| Top HUD | 0–8% energy / Maya to ~10% | 0.90–1.00 | Energy + coins L, Maya R |
+| Goal pill | under the bar | ~0.87–0.92 | “Restore the Front Garden”, centered |
+| **Board** | **~10–66%** | **0.34–0.90** | **7×5 inset + crate left. No order cards.** |
 | Bottom dock | 70–100% | 0.00–0.30 | Order dock ×3 + inventory ×5 + STARTER |
 
 If any order card overlaps any playable cell, that is a FAIL. Splash art stays full-screen and unchanged. Teach uses `UI_Teach_Ring` + `UI_Teach_Hand` over the board (once per save, `ftue_play_teach_done`).

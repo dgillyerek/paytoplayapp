@@ -59,9 +59,10 @@ namespace Grove.Domain.Layout
     }
 
     /// <summary>
-    /// DEV-019 Play layout per <c>Docs/Design/play-hud-layout-v1.md</c>.
+    /// DEV-019 Play layout per DES-003 mock + handoff.
     /// Design Y% is from the TOP of 1080×1920; Unity / this type use Y = 0 at the bottom.
-    /// Orders live only in the dock (Design 70–100%). Cells live in the board band (12–68%).
+    /// Mock stack: energy L + Maya R, small Goal pill under that row, board, then order dock.
+    /// Orders live only in the dock (Design 70–100%). Cells live in the board band (~10–66%).
     /// Gap ≥ 16dp.
     /// </summary>
     public static class PlayLayout
@@ -80,9 +81,10 @@ namespace Grove.Domain.Layout
 
         /// <summary>Design top-bar / board / dock edges, Y from the TOP of the 1080×1920 frame.</summary>
         public const float DesignTopBarTop = 0f;
+        public const float DesignEnergyBottom = 0.08f;
         public const float DesignTopBarBottom = 0.10f;
-        public const float DesignBoardTop = 0.12f;
-        public const float DesignBoardBottom = 0.68f;
+        public const float DesignBoardTop = 0.10f;
+        public const float DesignBoardBottom = 0.66f;
         public const float DesignDockTop = 0.70f;
         public const float DesignDockBottom = 1f;
 
@@ -96,38 +98,40 @@ namespace Grove.Domain.Layout
         public static float FromDesignTop(float designTop01) => 1f - designTop01;
 
         public static readonly NormRect TopBarBand = BandFromDesign(0f, DesignTopBarTop, 1f, DesignTopBarBottom);
+        public static readonly NormRect EnergyBand = BandFromDesign(0f, DesignTopBarTop, 1f, DesignEnergyBottom);
         public static readonly NormRect BoardBand = BandFromDesign(0f, DesignBoardTop, 1f, DesignBoardBottom);
         public static readonly NormRect DockBand = BandFromDesign(0f, DesignDockTop, 1f, DesignDockBottom);
 
         /// <summary>
         /// 7×5 cell rect inside the board band. Inset from the left so the Garden Crate
-        /// can sit left/center on the board without covering cells.
+        /// can sit left/center on the board without covering cells. Centered under the Goal pill
+        /// like DES003_PlayHud_LayoutMock.
         /// </summary>
-        public static readonly NormRect BoardSafeRect = new NormRect(0.24f, 0.34f, 0.98f, 0.86f);
+        public static readonly NormRect BoardSafeRect = new NormRect(0.18f, 0.365f, 0.84f, 0.830f);
 
         public static readonly NormRect Playfield = BoardSafeRect;
 
-        public static readonly NormRect EnergyPill = new NormRect(0.02f, 0.920f, 0.11f, 0.985f);
-        public static readonly NormRect EnergyBar = new NormRect(0.11f, 0.935f, 0.26f, 0.970f);
-        public static readonly NormRect EnergyLabel = new NormRect(0.115f, 0.920f, 0.28f, 0.985f);
-        public static readonly NormRect Goal = new NormRect(0.30f, 0.915f, 0.66f, 0.985f);
-        public static readonly NormRect CoinIcon = new NormRect(0.67f, 0.920f, 0.78f, 0.985f);
-        public static readonly NormRect CoinLabel = new NormRect(0.78f, 0.920f, 0.88f, 0.985f);
-        public static readonly NormRect Maya = new NormRect(0.88f, 0.905f, 0.995f, 0.995f);
-        public static readonly NormRect Toast = new NormRect(0.30f, 0.882f, 0.66f, 0.908f);
-        public static readonly NormRect MayaBubble = new NormRect(0.55f, 0.882f, 0.87f, 0.908f);
+        public static readonly NormRect EnergyPill = new NormRect(0.06f, 0.928f, 0.145f, 0.988f);
+        public static readonly NormRect EnergyBar = new NormRect(0.145f, 0.942f, 0.30f, 0.974f);
+        public static readonly NormRect CoinIcon = new NormRect(0.30f, 0.930f, 0.385f, 0.986f);
+        public static readonly NormRect CoinLabel = new NormRect(0.385f, 0.928f, 0.50f, 0.988f);
+        public static readonly NormRect EnergyLabel = new NormRect(0.50f, 0.928f, 0.64f, 0.988f);
+        public static readonly NormRect Maya = new NormRect(0.80f, 0.905f, 0.975f, 0.995f);
+        public static readonly NormRect Goal = new NormRect(0.34f, 0.872f, 0.66f, 0.918f);
+        public static readonly NormRect Toast = new NormRect(0.22f, 0.848f, 0.76f, 0.868f);
+        public static readonly NormRect MayaBubble = new NormRect(0.78f, 0.850f, 0.975f, 0.900f);
 
-        public static readonly NormRect DockPlate = new NormRect(0.005f, 0.000f, 0.995f, 0.300f);
-        public static readonly NormRect OrderTray = new NormRect(0.03f, 0.118f, 0.97f, 0.288f);
-        public static readonly NormRect InventoryBar = new NormRect(0.18f, 0.014f, 0.78f, 0.108f);
-        public static readonly NormRect Store = new NormRect(0.02f, 0.018f, 0.16f, 0.108f);
+        public static readonly NormRect DockPlate = new NormRect(0.05f, 0.000f, 0.95f, 0.300f);
+        public static readonly NormRect OrderTray = new NormRect(0.08f, 0.108f, 0.92f, 0.285f);
+        public static readonly NormRect InventoryBar = new NormRect(0.22f, 0.016f, 0.74f, 0.098f);
+        public static readonly NormRect Store = new NormRect(0.06f, 0.016f, 0.20f, 0.098f);
 
-        public static readonly NormRect Crate = new NormRect(0.02f, 0.40f, 0.215f, 0.60f);
-        public static readonly NormRect CrateLabel = new NormRect(0.02f, 0.605f, 0.215f, 0.655f);
+        public static readonly NormRect Crate = new NormRect(0.025f, 0.48f, 0.165f, 0.655f);
+        public static readonly NormRect CrateLabel = new NormRect(0.025f, 0.655f, 0.165f, 0.700f);
 
         public static readonly NormRect TeachCrateRing = Crate.Inflate(0.008f, 0.008f);
-        public static readonly NormRect TeachHudCaption = new NormRect(0.18f, 0.882f, 0.82f, 0.908f);
-        public static readonly NormRect TeachSkip = new NormRect(0.80f, 0.018f, 0.97f, 0.108f);
+        public static readonly NormRect TeachHudCaption = new NormRect(0.18f, 0.848f, 0.76f, 0.868f);
+        public static readonly NormRect TeachSkip = new NormRect(0.76f, 0.016f, 0.94f, 0.098f);
 
         public static NormRect ActiveOrderCard
         {

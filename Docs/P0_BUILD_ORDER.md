@@ -9,7 +9,7 @@ Prototype slice (current): **Play `Board.unity` → DEV-018 splashes → DEV-019
 5. DEV-004 energy HUD.
 6. DEV-005 orders 1–6.
 7. DEV-018 boot / area / milestone splashes + DES-001 art bind.
-8. DEV-019 Play layout (Design Y% bands: top 0–10, board 12–68, dock 70–100; 16dp gap).
+8. DEV-019 Play layout (DES-003 mock: energy L + Maya R, Goal under bar, board ~10–66, dock 70–100; 16dp gap).
 9. DEV-020 thin teach T1–T3 (crate → two matches → deliver Order 1).
 10. QA pass on office devices. No paid CI.
 

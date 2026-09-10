@@ -28,14 +28,21 @@ public sealed class PlayLayoutTests
     [Fact]
     public void Design_v1_bands_keep_orders_in_the_dock_and_crate_off_cells()
     {
+        Assert.Equal(0.92f, PlayLayout.FromDesignTop(0.08f), 3);
         Assert.Equal(0.90f, PlayLayout.FromDesignTop(0.10f), 3);
-        Assert.Equal(0.32f, PlayLayout.FromDesignTop(0.68f), 3);
+        Assert.Equal(0.34f, PlayLayout.FromDesignTop(0.66f), 3);
         Assert.Equal(0.00f, PlayLayout.FromDesignTop(1f), 3);
 
-        Assert.True(PlayLayout.TopBarBand.Contains(PlayLayout.EnergyLabel));
-        Assert.True(PlayLayout.TopBarBand.Contains(PlayLayout.Goal));
-        Assert.True(PlayLayout.TopBarBand.Contains(PlayLayout.CoinLabel));
+        Assert.True(PlayLayout.EnergyBand.Contains(PlayLayout.EnergyLabel));
+        Assert.True(PlayLayout.EnergyBand.Contains(PlayLayout.CoinLabel));
         Assert.True(PlayLayout.TopBarBand.Contains(PlayLayout.Maya));
+        Assert.True(PlayLayout.EnergyLabel.YMin > PlayLayout.Goal.YMax);
+        Assert.True(PlayLayout.Goal.YMin > PlayLayout.BoardSafeRect.YMax);
+        Assert.InRange((PlayLayout.Goal.XMin + PlayLayout.Goal.XMax) * 0.5f, 0.48f, 0.52f);
+        Assert.True(PlayLayout.Maya.XMin > PlayLayout.Goal.XMax);
+        Assert.True(PlayLayout.Maya.XMin > PlayLayout.EnergyLabel.XMax);
+        Assert.False(PlayLayout.Goal.Overlaps(PlayLayout.EnergyPill));
+        Assert.False(PlayLayout.Goal.Overlaps(PlayLayout.Maya));
 
         Assert.True(PlayLayout.BoardBand.Contains(PlayLayout.BoardSafeRect));
         Assert.True(PlayLayout.BoardBand.Contains(PlayLayout.Crate));
@@ -52,6 +59,9 @@ public sealed class PlayLayoutTests
         Assert.True(PlayLayout.DockBand.YMax <= PlayLayout.BoardBand.YMin);
         Assert.True(PlayLayout.BoardBand.YMin - PlayLayout.DockBand.YMax >= PlayLayout.MinGapNormY - 0.0001f);
         Assert.Equal(5, PlayLayout.InventorySlotCount);
+        Assert.Equal(0.10f, PlayLayout.DesignBoardTop);
+        Assert.Equal(0.66f, PlayLayout.DesignBoardBottom);
+        Assert.Equal(0.70f, PlayLayout.DesignDockTop);
     }
 
     [Fact]

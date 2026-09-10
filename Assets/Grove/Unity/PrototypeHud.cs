@@ -13,9 +13,9 @@ using UnityEngine.UI;
 namespace Grove.Unity
 {
     /// <summary>
-    /// Production-feel HUD per DES-003: energy + Goal pill + coins on the top 0–10%,
-    /// Garden Crate left of the 7×5 in the board band (12–68%), orders only in the
-    /// bottom dock (70–100%). DEV-020 T1–T3 teach after DEV-018 splashes.
+    /// Production-feel HUD per DES-003 mock: energy + coins left, Maya top-right,
+    /// small Goal pill under that row, Garden Crate left of the 7×5 in the board band
+    /// (~10–66%), orders only in the bottom dock (70–100%). DEV-020 T1–T3 after splashes.
     /// Place() rects come from <see cref="Grove.Domain.Layout.PlayLayout"/>.
     /// </summary>
     public sealed class PrototypeHud : MonoBehaviour, IEnergyListener
@@ -75,7 +75,7 @@ namespace Grove.Unity
             var goal = Host != null ? Host.Catalog.Copy.Goal : "Restore the Front Garden";
             var goalCard = GroveVisuals.UiImage(root, "GoalPill", Color.white, GroveArt.GoalPillSprite, true);
             Place(goalCard.rectTransform, PlayLayout.Goal);
-            _goalText = GroveVisuals.UiText(goalCard.transform, "Goal", goal, 28, TextAnchor.MiddleCenter, new Color(0.18f, 0.32f, 0.16f));
+            _goalText = GroveVisuals.UiText(goalCard.transform, "Goal", goal, 20, TextAnchor.MiddleCenter, new Color(0.18f, 0.32f, 0.16f));
             Stretch(_goalText.rectTransform);
 
             var energyPill = GroveVisuals.UiImage(root, "EnergyPill", Color.white, GroveArt.Get(GroveArt.StubEnergyPill), true);
@@ -99,7 +99,7 @@ namespace Grove.Unity
             Place(_coinText.rectTransform, PlayLayout.CoinLabel);
 
             var gem = GroveVisuals.UiImage(root, "GemIcon", Color.white, GroveArt.Get(GroveArt.StubGem), true);
-            Place(gem.rectTransform, new Vector2(0.88f, 0.92f), new Vector2(0.98f, 0.98f));
+            Place(gem.rectTransform, new Vector2(0.64f, 0.928f), new Vector2(0.74f, 0.988f));
             gem.gameObject.SetActive(false);
 
             var dock = GroveVisuals.UiImage(root, "OrderDock", Color.white, GroveArt.HudDockSprite, false);
