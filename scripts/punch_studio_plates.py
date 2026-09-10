@@ -31,6 +31,9 @@ TARGETS = [
     "UI/HUD_EnergyPill.png",
     "UI/HUD_Wallet_Coin.png",
     "UI/UI_GoalPill.png",
+    "UI/UI_Btn_Deliver.png",
+    "UI/UI_Teach_Banner.png",
+    "UI/UI_Badge_Starter.png",
 ]
 
 

@@ -22,4 +22,9 @@ WF T1–6, Herb T1–3, Tools T1–3, crate states, board cells, backdrop, HUD, 
 ## DES-003 / DES-004 covered
 - UI_OrderDock_Panel, UI_GoalPill, UI_Teach_Ring, UI_Teach_Hand
 
-Asset count: 42
+## DES-005 covered
+- True-alpha piece re-exports (WF/HB/TL)
+- UI_Btn_Deliver, UI_Teach_Banner, UI_Badge_Starter, refreshed UI_OrderTray_Card
+- Sprite import: Texture Type Sprite, Alpha Is Transparency ON, mip maps off
+
+Asset count: 45

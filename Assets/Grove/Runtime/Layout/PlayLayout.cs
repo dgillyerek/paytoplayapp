@@ -72,21 +72,22 @@ namespace Grove.Domain.Layout
         public const float PortraitAspect = ReferenceWidth / ReferenceHeight;
         public const float MinOrthographicSize = 5.2f;
         public const float MinHudGapDp = 16f;
+        public const float MinDockGutterDp = 12f;
         public const int InventorySlotCount = 5;
 
-        /// <summary>Portrait 1080×1920 reference type. Minimum arm's-length readable size.</summary>
-        public const int TypeMinReadable = 28;
+        /// <summary>DES-005: tiny chrome never below 22px @1080p. Role targets sit above this floor.</summary>
+        public const int TypeMinReadable = 22;
         public const int TypeOrderBody = 30;
-        public const int TypeOrderActive = 34;
-        public const int TypeButton = 38;
-        public const int TypeHud = 40;
-        public const int TypeGoal = 36;
-        public const int TypeTeach = 36;
-        public const int TypeTeachRing = 30;
-        public const int TypeCrate = 32;
-        public const int TypeSplash = 44;
-        public const int TypeToast = 34;
-        public const int TypeCoin = 42;
+        public const int TypeOrderActive = 32;
+        public const int TypeButton = 34;
+        public const int TypeHud = 34;
+        public const int TypeGoal = 30;
+        public const int TypeTeach = 30;
+        public const int TypeTeachRing = 24;
+        public const int TypeCrate = 28;
+        public const int TypeSplash = 36;
+        public const int TypeToast = 28;
+        public const int TypeCoin = 34;
 
         /// <summary>Must match <c>Board.unity</c> BoardView serialization.</summary>
         public const float CellSize = 1f;
@@ -107,6 +108,7 @@ namespace Grove.Domain.Layout
 
         public static float MinGapNormX => MinHudGapDp / ReferenceWidth;
         public static float MinGapNormY => MinHudGapDp / ReferenceHeight;
+        public static float MinDockGutterNorm => MinDockGutterDp / ReferenceWidth;
 
         /// <summary>Design Y from the top (0–1) → Unity Y from the bottom.</summary>
         public static float FromDesignTop(float designTop01) => 1f - designTop01;
@@ -148,17 +150,34 @@ namespace Grove.Domain.Layout
         public static readonly NormRect CrateLabel = new NormRect(0.025f, 0.658f, 0.165f, 0.715f);
 
         public static readonly NormRect TeachCrateRing = Crate.Inflate(0.008f, 0.008f);
-        /// <summary>Readable teach line between dock and board — not a 38px sliver.</summary>
-        public static readonly NormRect TeachHudCaption = new NormRect(0.08f, 0.305f, 0.92f, 0.358f);
+        /// <summary>Teach banner between dock and board. Overlay — not in <see cref="OccludingHud"/>.</summary>
+        public static readonly NormRect TeachHudCaption = new NormRect(0.08f, 0.302f, 0.92f, 0.368f);
         public static readonly NormRect TeachSkip = new NormRect(0.78f, 0.012f, 0.96f, 0.108f);
 
         public static NormRect ActiveOrderCard
         {
             get
             {
-                var w = (OrderTray.XMax - OrderTray.XMin) / 3f;
-                return new NormRect(OrderTray.XMin, OrderTray.YMin, OrderTray.XMin + w, OrderTray.YMax);
+                var local = OrderCardLocal(0, 3);
+                var tw = OrderTray.XMax - OrderTray.XMin;
+                var th = OrderTray.YMax - OrderTray.YMin;
+                return new NormRect(
+                    OrderTray.XMin + local.XMin * tw,
+                    OrderTray.YMin + local.YMin * th,
+                    OrderTray.XMin + local.XMax * tw,
+                    OrderTray.YMin + local.YMax * th);
             }
+        }
+
+        /// <summary>Order card in tray-local 0–1 space with ≥12dp gutters on each side.</summary>
+        public static NormRect OrderCardLocal(int index, int total)
+        {
+            var n = total < 1 ? 1 : total;
+            var i = index < 0 ? 0 : (index >= n ? n - 1 : index);
+            var w = 1f / n;
+            var trayW = OrderTray.XMax - OrderTray.XMin;
+            var gutter = trayW > 0.0001f ? MinDockGutterNorm / trayW : 0.02f;
+            return new NormRect(i * w + gutter, 0.04f, (i + 1) * w - gutter, 0.96f);
         }
 
         public static NormRect InventorySlotLocal(int index)

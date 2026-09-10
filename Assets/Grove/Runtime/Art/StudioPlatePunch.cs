@@ -31,6 +31,9 @@ namespace Grove.Domain.Art
                 "HUD_EnergyPill" => true,
                 "HUD_Wallet_Coin" => true,
                 "UI_GoalPill" => true,
+                "UI_Btn_Deliver" => true,
+                "UI_Teach_Banner" => true,
+                "UI_Badge_Starter" => true,
                 "MAYA_Portrait_Happy" => true,
                 "MAYA_Portrait_Neutral" => true,
                 _ => false
