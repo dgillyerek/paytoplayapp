@@ -392,7 +392,12 @@ namespace Grove.Unity
                 return;
             }
 
-            var sprite = GroveArt.TeachHandSprite ?? GroveArt.WhiteSprite();
+            var sprite = GroveArt.TeachHandSprite;
+            if (sprite == null)
+            {
+                return;
+            }
+
             _teachHand = GroveVisuals.SpriteObject(
                 "TeachHand",
                 transform,

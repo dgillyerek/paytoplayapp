@@ -18,6 +18,9 @@ namespace Grove.Unity
         /// <summary>Warm maple fill if a pixel of camera clear ever shows — never the old grey/green grid.</summary>
         public static readonly Color GardenClear = new Color(0.89f, 0.84f, 0.72f, 1f);
 
+        /// <summary>DES-003 dock cream — solid plate so the 5-slot PNG is not stretched over orders.</summary>
+        public static readonly Color DockCream = new Color(0.976f, 0.953f, 0.886f, 1f);
+
         public static Font Font
         {
             get
