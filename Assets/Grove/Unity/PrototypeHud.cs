@@ -241,14 +241,26 @@ namespace Grove.Unity
             _splashRoot.transform.SetParent(root, false);
             var overlay = _splashRoot.AddComponent<RectTransform>();
             Stretch(overlay);
-            var dim = GroveVisuals.UiImage(_splashRoot.transform, "Dim", new Color(0f, 0f, 0f, 0.88f));
+            _splashRoot.AddComponent<RectMask2D>();
+
+            var dim = GroveVisuals.UiImage(_splashRoot.transform, "Dim", new Color(0.05f, 0.04f, 0.02f, 1f));
             Stretch(dim.rectTransform);
             var hit = dim.gameObject.AddComponent<Button>();
             hit.transition = Selectable.Transition.None;
             hit.onClick.AddListener(DismissSplash);
 
             _splashImage = GroveVisuals.UiImage(_splashRoot.transform, "Art", Color.white, null, true);
-            Place(_splashImage.rectTransform, new Vector2(0.02f, 0.18f), new Vector2(0.98f, 0.92f));
+            var artRect = _splashImage.rectTransform;
+            artRect.anchorMin = new Vector2(0.5f, 0.5f);
+            artRect.anchorMax = new Vector2(0.5f, 0.5f);
+            artRect.pivot = new Vector2(0.5f, 0.5f);
+            artRect.anchoredPosition = Vector2.zero;
+            artRect.sizeDelta = new Vector2(1920f, 1080f);
+            _splashImage.raycastTarget = false;
+            var fitter = _splashImage.gameObject.AddComponent<AspectRatioFitter>();
+            fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            fitter.aspectRatio = 16f / 9f;
+
             _splashCaption = GroveVisuals.UiText(
                 _splashRoot.transform,
                 "Caption",
@@ -256,7 +268,7 @@ namespace Grove.Unity
                 28,
                 TextAnchor.MiddleCenter,
                 Color.white);
-            Place(_splashCaption.rectTransform, new Vector2(0.08f, 0.06f), new Vector2(0.92f, 0.16f));
+            Place(_splashCaption.rectTransform, new Vector2(0.06f, 0.03f), new Vector2(0.94f, 0.12f));
             _splashRoot.SetActive(false);
         }
 
@@ -299,6 +311,12 @@ namespace Grove.Unity
             _splashImage.sprite = art;
             _splashImage.preserveAspect = true;
             _splashImage.color = Color.white;
+            var fitter = _splashImage.GetComponent<AspectRatioFitter>();
+            if (fitter != null && art != null && art.rect.height > 0.01f)
+            {
+                fitter.aspectRatio = art.rect.width / art.rect.height;
+            }
+
             _splashCaption.text = beat.Caption + "\nTap to continue";
             _splashRoot.SetActive(true);
         }
