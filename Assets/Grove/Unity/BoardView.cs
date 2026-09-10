@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Grove.Domain.Board;
 using Grove.Domain.Layout;
-using Grove.Domain.Orders;
 using UnityEngine;
 
 namespace Grove.Unity
@@ -25,7 +24,6 @@ namespace Grove.Unity
         private GameObject? _teachRingA;
         private GameObject? _teachRingB;
         private GameObject? _teachHand;
-        private TextMesh? _teachPairLabel;
         private GridPos? _handFrom;
         private GridPos? _handTo;
         private bool _handLooping;
@@ -102,7 +100,6 @@ namespace Grove.Unity
         {
             PlaceTeachRing(ref _teachRingA, a, "TeachRingA");
             PlaceTeachRing(ref _teachRingB, b, "TeachRingB");
-            PlaceMergeLabel(a, b);
         }
 
         public void SetTeachHand(GridPos? from, GridPos? to)
@@ -339,35 +336,6 @@ namespace Grove.Unity
             GroveVisuals.CoverRect(ring.transform, sprite, CellToWorld(cell) + new Vector3(0f, 0f, -0.03f), cellSize * 1.18f, cellSize * 1.18f);
         }
 
-        private void PlaceMergeLabel(GridPos? a, GridPos? b)
-        {
-            if (a is not { } from || b is not { } to)
-            {
-                if (_teachPairLabel != null)
-                {
-                    _teachPairLabel.gameObject.SetActive(false);
-                }
-
-                return;
-            }
-
-            if (_teachPairLabel == null)
-            {
-                _teachPairLabel = GroveVisuals.Label(
-                    "TeachRingLabel",
-                    transform,
-                    Vector3.zero,
-                    ThinTeach.RingLabelMerge,
-                    22,
-                    new Color(0.16f, 0.28f, 0.14f));
-            }
-
-            var mid = (CellToWorld(from) + CellToWorld(to)) * 0.5f + new Vector3(0f, cellSize * 0.55f, -0.04f);
-            _teachPairLabel.transform.position = mid;
-            _teachPairLabel.text = ThinTeach.RingLabelMerge;
-            _teachPairLabel.gameObject.SetActive(true);
-        }
-
         private void StopTeachHand()
         {
             _handLooping = false;
@@ -392,7 +360,12 @@ namespace Grove.Unity
                 return;
             }
 
-            var sprite = GroveArt.TeachHandSprite ?? GroveArt.WhiteSprite();
+            var sprite = GroveArt.TeachHandSprite;
+            if (sprite == null)
+            {
+                return;
+            }
+
             _teachHand = GroveVisuals.SpriteObject(
                 "TeachHand",
                 transform,
@@ -538,10 +511,6 @@ namespace Grove.Unity
             renderer.sprite = sprite;
             renderer.color = Color.white;
             GroveVisuals.FitSprite(renderer.transform, sprite, worldSize);
-            if (renderer.sharedMaterial != null)
-            {
-                GroveVisuals.ApplyColor(renderer.material, Color.white);
-            }
 
             label.text = stack.Count > 1 ? "×" + stack.Count : "";
         }

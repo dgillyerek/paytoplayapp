@@ -19,7 +19,7 @@
 - The **full 7×5 is in the board band** (Design Y ~10–66% from the top) with **≥16dp** gap to HUD. Order cards never cover tiles.
 - Mock stack (DES-003): **energy + coins left**, **Maya top-right**, small **Goal pill** (“Restore the Front Garden”) centered under that row, then the board, then the order dock.
 - Garden **crate** left of the 7×5 (on the board, not in the dock).
-- **Bottom dock (70–100%):** cream `UI_OrderDock_Panel`, **3 order cards**, visual 5-slot inventory bar, **STARTER**.
+- **Bottom dock (70–100%):** 3 compact order cards, then Design `UI_OrderDock_Panel` as a **thin** 5-slot inventory strip (not stretched over the board), **Starter** chip.
 
 ### Expected Play layout (Design sign-off)
 
@@ -30,7 +30,7 @@ Design Y% is from the **top** of 1080×1920. Unity Y = 0 at the bottom of the Ga
 | Top HUD | 0–8% energy / Maya to ~10% | 0.90–1.00 | Energy + coins L, Maya R |
 | Goal pill | under the bar | ~0.87–0.92 | “Restore the Front Garden”, centered |
 | **Board** | **~10–66%** | **0.34–0.90** | **7×5 inset + crate left. No order cards.** |
-| Bottom dock | 70–100% | 0.00–0.30 | Order dock ×3 + inventory ×5 + STARTER |
+| Bottom dock | 70–100% | 0.00–0.30 | 3 compact order cards, then thin inventory strip + Starter |
 
 If any order card overlaps any playable cell, that is a FAIL. Splash art stays full-screen and unchanged. Teach uses `UI_Teach_Ring` + `UI_Teach_Hand` over the board (once per save, `ftue_play_teach_done`).
 
@@ -47,9 +47,9 @@ If any order card overlaps any playable cell, that is a FAIL. Splash art stays f
 
 Crate is ~90% Seed (WF T1), plus herbs and **Twigs** (tools T1). Merge 3 Twigs → Stick. First crate tap is free; then 1 energy each (bar starts at 100).
 
-**FAIL** if you still see a green checkerboard, pink letter tokens, or `Resources/Grove/Art` programmer circles.
+**FAIL** if you still see a green checkerboard, pink letter tokens, a debug toast (“Snap back”, “Moved.”), a stretched inventory bar covering cells, or `Resources/Grove/Art` programmer circles.
 
-**Unstuck:** **STARTER** (bottom left) adds 3× Seed. If the board is full, merge first.
+**Unstuck:** **Starter** (bottom left) adds 3× Seed. If the board is full, merge first.
 
 ## Headless
 

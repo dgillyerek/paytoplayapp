@@ -123,8 +123,8 @@ namespace Grove.Unity
             Hud.Build();
             if (!GroveArt.HasBoardComposite)
             {
-                GroveVisuals.ShowDiagnostic(
-                    "Area 1 board composite missing (backdrop + BoardSurface + cells).\nExpected Assets/Grove/Art/Area1/.");
+                Debug.LogError(
+                    "Area 1 board composite missing (backdrop + BoardSurface + cells). Expected Assets/Grove/Art/Area1/.");
             }
         }
 

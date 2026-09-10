@@ -97,7 +97,6 @@ namespace Grove.Unity
             sr.sprite = sprite;
             sr.color = color;
             sr.sortingOrder = sortingOrder;
-            sr.sharedMaterial = MakeMaterial(color, sprite != null ? sprite.texture : null);
             FitSprite(go.transform, sprite, worldSize);
             return go;
         }
@@ -323,34 +322,12 @@ namespace Grove.Unity
             EnsureUrpCameraData(cam);
         }
 
-        public static void ShowDiagnostic(string message)
-        {
-            EnsureEventSystem();
-            var canvasGo = new GameObject("GroveDiagnosticCanvas");
-            var canvas = canvasGo.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 1000;
-            canvasGo.AddComponent<CanvasScaler>();
-            canvasGo.AddComponent<GraphicRaycaster>();
-            var panel = UiImage(canvasGo.transform, "Panel", new Color(0.05f, 0.08f, 0.06f, 0.92f));
-            var panelRect = panel.rectTransform;
-            panelRect.anchorMin = new Vector2(0.06f, 0.35f);
-            panelRect.anchorMax = new Vector2(0.94f, 0.65f);
-            panelRect.offsetMin = Vector2.zero;
-            panelRect.offsetMax = Vector2.zero;
-            var text = UiText(
-                panel.transform,
-                "Message",
-                message,
-                28,
-                TextAnchor.MiddleCenter,
-                new Color(1f, 0.92f, 0.55f));
-            var textRect = text.rectTransform;
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = new Vector2(24f, 24f);
-            textRect.offsetMax = new Vector2(-24f, -24f);
-        }
+        /// <summary>
+        /// Log-only. Never spawn an on-screen diagnostic overlay — that canvas was a
+        /// Play-mode P0 (debug chrome on the scripted path).
+        /// </summary>
+        public static void ShowDiagnostic(string message) =>
+            Debug.LogError(message);
 
         private static void EnsureUrpCameraData(Camera cam)
         {

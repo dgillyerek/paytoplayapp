@@ -75,7 +75,8 @@ public sealed class ArtManifestTests
             ["ENV_FG_Backdrop"] = 100000,
             ["ENV_FG_BoardSurface"] = 100000,
             ["ENV_FG_CellEmpty"] = 10000,
-            ["ENV_FG_CellHighlight"] = 10000
+            ["ENV_FG_CellHighlight"] = 10000,
+            ["ENV_FG_GardenCrate_Idle"] = 100000
         };
         foreach (var pair in minBytes)
         {

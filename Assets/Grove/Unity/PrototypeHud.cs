@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Text;
 using Grove.Domain.Board;
 using Grove.Domain.Commerce;
 using Grove.Domain.Energy;
@@ -80,13 +79,13 @@ namespace Grove.Unity
 
             var energyPill = GroveVisuals.UiImage(root, "EnergyPill", Color.white, GroveArt.Get(GroveArt.StubEnergyPill), true);
             Place(energyPill.rectTransform, PlayLayout.EnergyPill);
-            _energyFill = Bar(root, "EnergyBar", PlayLayout.EnergyBar, new Color(0.12f, 0.16f, 0.12f, 0.85f));
+            _energyFill = Bar(root, "EnergyBar", PlayLayout.EnergyBar, new Color(0.93f, 0.88f, 0.72f, 0.9f));
             var fillGo = new GameObject("Fill");
             fillGo.transform.SetParent(_energyFill.transform, false);
             Stretch(fillGo.AddComponent<RectTransform>());
             _energyFill = fillGo.AddComponent<Image>();
             _energyFill.sprite = GroveVisuals.WhiteSprite;
-            _energyFill.color = new Color(0.35f, 0.85f, 0.55f);
+            _energyFill.color = new Color(0.42f, 0.72f, 0.48f, 0.95f);
             _energyFill.type = Image.Type.Filled;
             _energyFill.fillMethod = Image.FillMethod.Horizontal;
             _energyFill.raycastTarget = false;
@@ -102,14 +101,21 @@ namespace Grove.Unity
             Place(gem.rectTransform, new Vector2(0.64f, 0.928f), new Vector2(0.74f, 0.988f));
             gem.gameObject.SetActive(false);
 
-            var dock = GroveVisuals.UiImage(root, "OrderDock", Color.white, GroveArt.HudDockSprite, false);
-            Place(dock.rectTransform, PlayLayout.DockPlate);
+            var dockRootGo = new GameObject("OrderDockRoot");
+            dockRootGo.transform.SetParent(root, false);
+            var dockRoot = dockRootGo.AddComponent<RectTransform>();
+            Place(dockRoot, PlayLayout.DockBand);
+            dockRootGo.AddComponent<RectMask2D>();
+
+            var dock = GroveVisuals.UiImage(dockRoot, "OrderDock", Color.white, GroveArt.HudDockSprite, true);
+            Place(dock.rectTransform, PlayLayout.RelativeTo(PlayLayout.DockBand, PlayLayout.DockPlate));
 
             _mayaImage = GroveVisuals.UiImage(root, "Maya", Color.white, GroveArt.Get(GroveArt.StubMayaNeutral), true);
             Place(_mayaImage.rectTransform, PlayLayout.Maya);
 
             var bubble = GroveVisuals.UiImage(root, "MayaBubble", Color.white, GroveArt.MayaBubbleSprite, false);
             Place(bubble.rectTransform, PlayLayout.MayaBubble);
+            bubble.gameObject.SetActive(false);
             _mayaBubbleText = GroveVisuals.UiText(
                 bubble.transform,
                 "Line",
@@ -118,30 +124,16 @@ namespace Grove.Unity
                 TextAnchor.MiddleLeft,
                 new Color(0.16f, 0.28f, 0.14f));
             Stretch(_mayaBubbleText.rectTransform);
-            _mayaBubbleText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _mayaBubbleText.horizontalOverflow = HorizontalWrapMode.Wrap;
             _mayaBubbleText.verticalOverflow = VerticalWrapMode.Truncate;
 
             var tray = new GameObject("OrderTray");
-            tray.transform.SetParent(root, false);
+            tray.transform.SetParent(dockRoot, false);
             _trayRoot = tray.AddComponent<RectTransform>();
-            Place(_trayRoot, PlayLayout.OrderTray);
+            Place(_trayRoot, PlayLayout.RelativeTo(PlayLayout.DockBand, PlayLayout.OrderTray));
+            tray.AddComponent<RectMask2D>();
 
-            var inventory = new GameObject("InventoryBar");
-            inventory.transform.SetParent(root, false);
-            var inventoryRect = inventory.AddComponent<RectTransform>();
-            Place(inventoryRect, PlayLayout.InventoryBar);
-            for (var i = 0; i < PlayLayout.InventorySlotCount; i++)
-            {
-                var slot = GroveVisuals.UiImage(
-                    inventory.transform,
-                    "Slot" + i,
-                    Color.white,
-                    GroveArt.Get(GroveArt.StubInventorySlot) ?? GroveArt.Get(GroveArt.StubOrderCard),
-                    true);
-                Place(slot.rectTransform, PlayLayout.InventorySlotLocal(i));
-            }
-
-            _toastText = GroveVisuals.UiText(root, "Toast", "", 22, TextAnchor.MiddleCenter, new Color(1f, 0.95f, 0.7f));
+            _toastText = GroveVisuals.UiText(root, "Toast", "", 22, TextAnchor.MiddleCenter, new Color(0.22f, 0.36f, 0.2f));
             Place(_toastText.rectTransform, PlayLayout.Toast);
 
             _crateButton = GroveVisuals.UiButton(
@@ -150,21 +142,34 @@ namespace Grove.Unity
                 "",
                 Color.white,
                 new Vector2(280, 220),
-                GroveArt.Get(GroveArt.StubCrateCharged) ?? GroveArt.Get(GroveArt.StubCrateIdle));
+                GroveArt.CrateSprite(true));
             Place(_crateButton.GetComponent<RectTransform>(), PlayLayout.Crate);
             _crateImage = _crateButton.targetGraphic as Image ?? _crateButton.GetComponent<Image>();
+            if (_crateImage != null)
+            {
+                _crateImage.preserveAspect = true;
+            }
+
             _crateButton.onClick.AddListener(OnCrate);
-            _crateText = GroveVisuals.UiText(root, "CrateCharges", "Charges 30/30", 20, TextAnchor.MiddleCenter, Color.white);
+            _crateText = GroveVisuals.UiText(root, "CrateCharges", "", 20, TextAnchor.MiddleCenter, Color.white);
             Place(_crateText.rectTransform, PlayLayout.CrateLabel);
+            _crateText.gameObject.SetActive(false);
 
             var store = GroveVisuals.UiButton(
-                root,
+                dockRoot,
                 "StoreButton",
-                "STARTER",
+                "Starter",
                 Color.white,
                 new Vector2(200, 64),
-                GroveArt.Get(GroveArt.StubButton));
-            Place(store.GetComponent<RectTransform>(), PlayLayout.Store);
+                GroveArt.GoalPillSprite ?? GroveArt.Get(GroveArt.StubButton));
+            Place(store.GetComponent<RectTransform>(), PlayLayout.RelativeTo(PlayLayout.DockBand, PlayLayout.Store));
+            var storeLabel = store.GetComponentInChildren<Text>();
+            if (storeLabel != null)
+            {
+                storeLabel.fontSize = 18;
+                storeLabel.color = new Color(0.93f, 0.95f, 0.88f);
+            }
+
             store.onClick.AddListener(OnStarterPack);
 
             BuildEnergyEmpty(root);
@@ -217,11 +222,8 @@ namespace Grove.Unity
 
             if (_toastUntil > 0f && Time.unscaledTime > _toastUntil)
             {
-                _toastText.text = !SplashBlocking && Host.Drag != null ? Host.Drag.LastFeedback : "";
-            }
-            else if (_toastUntil <= 0f && !SplashBlocking && Host.Drag != null && _toastText.text != Host.Drag.LastFeedback)
-            {
-                _toastText.text = Host.Drag.LastFeedback;
+                _toastText.text = "";
+                _toastUntil = 0f;
             }
 
             if (Host.Energy != null)
@@ -238,17 +240,14 @@ namespace Grove.Unity
             if (Host.Crate != null)
             {
                 var charges = Host.Crate.Charges(Host.Clock);
-                _crateText.text = $"Charges {charges}/{Host.Crate.MaxCharges}";
                 var energyOk = Host.Crate.FtueFreeTapRemaining || Host.Energy == null || !Host.Energy.IsEmpty;
                 _crateButton.interactable = !SplashBlocking && charges > 0 && energyOk;
-                var crateStub = charges <= 0
-                    ? GroveArt.StubCrateEmpty
-                    : GroveArt.StubCrateCharged;
-                var crateSprite = GroveArt.Get(crateStub) ?? GroveArt.Get(GroveArt.StubCrateIdle);
+                var crateSprite = GroveArt.CrateSprite(charges > 0);
                 if (crateSprite != null && _crateImage != null)
                 {
                     _crateImage.sprite = crateSprite;
                     _crateImage.preserveAspect = true;
+                    _crateImage.color = charges > 0 ? Color.white : new Color(1f, 1f, 1f, 0.55f);
                 }
             }
 
@@ -425,7 +424,7 @@ namespace Grove.Unity
                 "Got it",
                 Color.white,
                 new Vector2(140, 48),
-                GroveArt.Get(GroveArt.StubButton));
+                GroveArt.GoalPillSprite ?? GroveArt.Get(GroveArt.StubButton));
             Place(skip.GetComponent<RectTransform>(), PlayLayout.TeachSkip);
             skip.onClick.AddListener(SkipTeach);
             _teachSkip = skip.gameObject;
@@ -457,16 +456,20 @@ namespace Grove.Unity
 
         private void TickTeach()
         {
-            if (_teachRoot != null && SplashBlocking)
+            if (_teach == null || Host == null)
             {
-                _teachRoot.SetActive(false);
-                Host?.BoardView?.SetTeachCells(null, null);
-                Host?.BoardView?.SetTeachHand(null, null);
                 return;
             }
 
-            if (_teach == null || !_teach.Started || _teach.IsComplete || Host == null)
+            if (!_teach.Started || _teach.IsComplete)
             {
+                HideTeachChrome();
+                return;
+            }
+
+            if (_teachRoot != null && SplashBlocking)
+            {
+                HideTeachChrome();
                 return;
             }
 
@@ -514,14 +517,14 @@ namespace Grove.Unity
 
             if (SplashBlocking || !_teach.OverlayVisible)
             {
-                _teachRoot.SetActive(false);
-                Host.BoardView?.SetTeachCells(null, null);
-                Host.BoardView?.SetTeachHand(null, null);
+                HideTeachChrome();
                 return;
             }
 
             _teachText.text = _teach.Caption;
+            _teachText.verticalOverflow = VerticalWrapMode.Truncate;
             _teachRingLabel.text = _teach.RingLabel;
+            _teachRingLabel.verticalOverflow = VerticalWrapMode.Truncate;
             Place(_teachCaptionRect, PlayLayout.TeachHudCaption);
             _teachCaptionRect.gameObject.SetActive(true);
             var ring = GroveArt.TeachRingSprite;
@@ -574,6 +577,17 @@ namespace Grove.Unity
             }
         }
 
+        private void HideTeachChrome()
+        {
+            if (_teachRoot != null)
+            {
+                _teachRoot.SetActive(false);
+            }
+
+            Host?.BoardView?.SetTeachCells(null, null);
+            Host?.BoardView?.SetTeachHand(null, null);
+        }
+
         private void RebuildTray()
         {
             if (_trayRoot == null || Host?.Orders == null)
@@ -609,16 +623,21 @@ namespace Grove.Unity
 
         private OrderCardUi BuildCard(OrderSpec order, int index, int total, bool active)
         {
-            var width = 1f / Mathf.Max(1, total);
-            var xmin = index * width;
-            var xmax = (index + 1) * width;
-            var card = GroveVisuals.UiImage(_trayRoot, order.Id, Color.white, GroveArt.Get(GroveArt.StubOrderCard), false);
-            Place(card.rectTransform, new Vector2(xmin + 0.01f, 0.04f), new Vector2(xmax - 0.01f, 0.96f));
+            var card = GroveVisuals.UiImage(
+                _trayRoot,
+                order.Id,
+                Color.white,
+                GroveArt.Get(GroveArt.StubOrderCard),
+                false,
+                raycastTarget: active);
+            Place(card.rectTransform, PlayLayout.OrderCardLocal(index, total));
+            card.gameObject.AddComponent<RectMask2D>();
 
             var iconRow = new GameObject("Icons");
             iconRow.transform.SetParent(card.transform, false);
             var iconRect = iconRow.AddComponent<RectTransform>();
-            Place(iconRect, new Vector2(0.04f, 0.12f), new Vector2(0.28f, 0.88f));
+            Place(iconRect, new Vector2(0.12f, 0.36f), new Vector2(0.88f, 0.92f));
+            var reqCount = Mathf.Max(1, order.Requirements.Count);
             for (var r = 0; r < order.Requirements.Count; r++)
             {
                 var req = order.Requirements[r];
@@ -628,8 +647,9 @@ namespace Grove.Unity
                     Color.white,
                     GroveArt.SpriteForItem(req.Item.Value),
                     true);
-                var t = order.Requirements.Count == 1 ? 0.5f : r / (float)(order.Requirements.Count - 1);
-                Place(icon.rectTransform, new Vector2(t * 0.45f, 0.05f), new Vector2(0.55f + t * 0.45f, 0.95f));
+                var xmin = r / (float)reqCount + 0.04f / reqCount;
+                var xmax = (r + 1) / (float)reqCount - 0.04f / reqCount;
+                Place(icon.rectTransform, new Vector2(xmin, 0.04f), new Vector2(xmax, 0.96f));
             }
 
             var body = GroveVisuals.UiText(
@@ -637,21 +657,18 @@ namespace Grove.Unity
                 "Body",
                 "",
                 active ? 16 : 14,
-                TextAnchor.UpperLeft,
+                TextAnchor.MiddleCenter,
                 new Color(0.18f, 0.28f, 0.16f));
-            Place(body.rectTransform, new Vector2(0.30f, 0.08f), new Vector2(active ? 0.68f : 0.96f, 0.92f));
+            Place(body.rectTransform, new Vector2(0.06f, 0.04f), new Vector2(0.94f, 0.36f));
+            body.verticalOverflow = VerticalWrapMode.Truncate;
+            body.horizontalOverflow = HorizontalWrapMode.Wrap;
 
             Button? deliver = null;
             if (active)
             {
-                deliver = GroveVisuals.UiButton(
-                    card.transform,
-                    "Deliver",
-                    "DELIVER",
-                    Color.white,
-                    new Vector2(120, 40),
-                    GroveArt.Get(GroveArt.StubButton));
-                Place(deliver.GetComponent<RectTransform>(), new Vector2(0.68f, 0.18f), new Vector2(0.97f, 0.82f));
+                deliver = card.gameObject.AddComponent<Button>();
+                deliver.targetGraphic = card;
+                deliver.transition = Selectable.Transition.None;
                 deliver.onClick.AddListener(OnDeliver);
             }
 
@@ -683,7 +700,7 @@ namespace Grove.Unity
 
                 if (card.Deliver != null)
                 {
-                    card.Deliver.interactable = !SplashBlocking && card.IsActive && Host.Orders.CanDeliver(Host.Session.Board);
+                    card.Deliver.interactable = !SplashBlocking;
                 }
             }
 
@@ -708,9 +725,15 @@ namespace Grove.Unity
                 return;
             }
 
+            var line = Host.Orders.Active?.SpokenLine ?? "";
+            if (string.IsNullOrEmpty(line))
+            {
+                bubbleRoot.SetActive(false);
+                return;
+            }
+
             bubbleRoot.SetActive(true);
 
-            var line = Host.Orders.Active?.SpokenLine ?? "";
             if (line.Length > 64)
             {
                 line = line.Substring(0, 61) + "…";
@@ -721,59 +744,16 @@ namespace Grove.Unity
 
         private string FormatOrder(OrderSpec order, bool active)
         {
-            var text = new StringBuilder();
+            var have = new int[order.Requirements.Count];
             if (Host != null)
             {
-                var number = active ? Host.Orders.CompletedCount + 1 : IndexOf(order) + 1;
-                text.Append(number);
-                text.Append('/');
-                text.Append(Host.Orders.TotalCount);
-                text.Append(' ');
-            }
-
-            text.Append(order.Title);
-            foreach (var req in order.Requirements)
-            {
-                var name = Host != null && Host.Catalog.Items.TryGet(req.Item, out var def)
-                    ? def.DisplayName
-                    : req.Item.Value;
-                var have = Host != null ? Host.Session.Board.CountItem(req.Item) : 0;
-                text.Append('\n');
-                text.Append(have);
-                text.Append('/');
-                text.Append(req.Count);
-                text.Append(' ');
-                text.Append(name);
-            }
-
-            if (order.CoinReward > 0)
-            {
-                text.Append('\n');
-                text.Append('+');
-                text.Append(order.CoinReward);
-                text.Append('c');
-            }
-
-            return text.ToString();
-        }
-
-        private int IndexOf(OrderSpec order)
-        {
-            if (Host?.Orders == null)
-            {
-                return 0;
-            }
-
-            var all = Host.Orders.All;
-            for (var i = 0; i < all.Count; i++)
-            {
-                if (all[i].Id == order.Id)
+                for (var i = 0; i < order.Requirements.Count; i++)
                 {
-                    return i;
+                    have[i] = Host.Session.Board.CountItem(order.Requirements[i].Item);
                 }
             }
 
-            return Host.Orders.CompletedCount;
+            return OrderCardCopy.Compact(order, active, have);
         }
 
         private void OnCrate()

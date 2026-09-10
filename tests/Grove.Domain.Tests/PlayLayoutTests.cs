@@ -65,6 +65,50 @@ public sealed class PlayLayoutTests
     }
 
     [Fact]
+    public void Dock_plate_is_a_thin_inventory_strip_and_cards_do_not_overlap()
+    {
+        var plateH = PlayLayout.DockPlate.YMax - PlayLayout.DockPlate.YMin;
+        Assert.True(plateH <= PlayLayout.MaxDockPlateNormHeight, $"dock plate height {plateH}");
+        Assert.True(PlayLayout.DockPlate.YMax < PlayLayout.OrderTray.YMin);
+        Assert.False(PlayLayout.OrderTray.Overlaps(PlayLayout.DockPlate));
+        Assert.False(PlayLayout.OrderTray.Overlaps(PlayLayout.InventoryBar));
+        Assert.False(PlayLayout.Store.Overlaps(PlayLayout.OrderTray));
+        Assert.False(PlayLayout.Store.Overlaps(PlayLayout.DockPlate));
+        Assert.True(PlayLayout.DockPlate.Contains(PlayLayout.InventoryBar));
+        Assert.True(PlayLayout.DockBand.Contains(PlayLayout.TeachSkip));
+
+        for (var i = 0; i < 3; i++)
+        {
+            var a = PlayLayout.OrderCardOnScreen(i, 3);
+            Assert.True(PlayLayout.OrderTray.Contains(a), $"card {i} outside tray");
+            Assert.False(a.OverlapsPlayfield());
+            Assert.False(a.Overlaps(PlayLayout.DockPlate));
+            for (var j = i + 1; j < 3; j++)
+            {
+                var b = PlayLayout.OrderCardOnScreen(j, 3);
+                Assert.False(a.Overlaps(b), $"card {i} overlaps card {j}");
+            }
+        }
+
+        var local = PlayLayout.RelativeTo(PlayLayout.DockBand, PlayLayout.OrderTray);
+        Assert.InRange(local.XMin, 0f, 1f);
+        Assert.InRange(local.YMin, 0f, 1f);
+        Assert.InRange(local.XMax, 0f, 1f);
+        Assert.InRange(local.YMax, 0f, 1f);
+    }
+
+    [Fact]
+    public void Order_card_copy_stays_compact_so_text_cannot_cover_the_board()
+    {
+        var catalog = CatalogLoader.LoadDefault();
+        var order1 = catalog.Orders[0];
+        var compact = OrderCardCopy.Compact(order1, active: true, new[] { 0 });
+        Assert.Equal("Order 1\n0/1", compact);
+        Assert.Equal("Order 1", OrderCardCopy.Compact(order1, active: false));
+        Assert.True(compact.Split('\n').Length <= 3);
+    }
+
+    [Fact]
     public void Legacy_vertical_tray_would_cover_the_playfield()
     {
         var legacyTray = new NormRect(0.20f, 0.62f, 0.99f, 0.84f);

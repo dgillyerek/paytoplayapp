@@ -113,6 +113,23 @@ namespace Grove.Unity
         public static Sprite? MayaBubbleSprite =>
             Get(StubMayaBubble) ?? Get(StubOrderCard);
 
+        /// <summary>
+        /// Charged/Empty PNGs are leftover cartoon stubs. Play always prefers the
+        /// production Idle crate so the scripted path never shows programmer art.
+        /// </summary>
+        public static Sprite? CrateSprite(bool hasCharges)
+        {
+            var idle = Get(StubCrateIdle);
+            if (idle != null)
+            {
+                return idle;
+            }
+
+            return hasCharges
+                ? Get(StubCrateCharged) ?? Get(StubCrateEmpty)
+                : Get(StubCrateEmpty) ?? Get(StubCrateCharged);
+        }
+
         public static Sprite SpriteForItem(string itemId)
         {
             if (ArtManifest.TryStubForItem(itemId, out var stub))

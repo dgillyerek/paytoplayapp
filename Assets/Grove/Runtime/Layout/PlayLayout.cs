@@ -73,6 +73,8 @@ namespace Grove.Domain.Layout
         public const float MinOrthographicSize = 5.2f;
         public const float MinHudGapDp = 16f;
         public const int InventorySlotCount = 5;
+        /// <summary>Dock plate is the Design inventory strip, never the full 30% dock band.</summary>
+        public const float MaxDockPlateNormHeight = 0.12f;
 
         /// <summary>Must match <c>Board.unity</c> BoardView serialization.</summary>
         public const float CellSize = 1f;
@@ -121,26 +123,23 @@ namespace Grove.Domain.Layout
         public static readonly NormRect Toast = new NormRect(0.22f, 0.848f, 0.76f, 0.868f);
         public static readonly NormRect MayaBubble = new NormRect(0.78f, 0.850f, 0.975f, 0.900f);
 
-        public static readonly NormRect DockPlate = new NormRect(0.05f, 0.000f, 0.95f, 0.300f);
-        public static readonly NormRect OrderTray = new NormRect(0.08f, 0.108f, 0.92f, 0.285f);
-        public static readonly NormRect InventoryBar = new NormRect(0.22f, 0.016f, 0.74f, 0.098f);
-        public static readonly NormRect Store = new NormRect(0.06f, 0.016f, 0.20f, 0.098f);
+        /// <summary>
+        /// Thin Design inventory strip (<c>UI_OrderDock_Panel</c>). Must stay a short bar —
+        /// stretching this PNG to the full dock band is what covered the board.
+        /// </summary>
+        public static readonly NormRect DockPlate = new NormRect(0.18f, 0.010f, 0.96f, 0.100f);
+        public static readonly NormRect OrderTray = new NormRect(0.05f, 0.118f, 0.95f, 0.286f);
+        public static readonly NormRect InventoryBar = new NormRect(0.20f, 0.018f, 0.94f, 0.092f);
+        public static readonly NormRect Store = new NormRect(0.03f, 0.018f, 0.165f, 0.092f);
 
         public static readonly NormRect Crate = new NormRect(0.025f, 0.48f, 0.165f, 0.655f);
         public static readonly NormRect CrateLabel = new NormRect(0.025f, 0.655f, 0.165f, 0.700f);
 
         public static readonly NormRect TeachCrateRing = Crate.Inflate(0.008f, 0.008f);
         public static readonly NormRect TeachHudCaption = new NormRect(0.18f, 0.848f, 0.76f, 0.868f);
-        public static readonly NormRect TeachSkip = new NormRect(0.76f, 0.016f, 0.94f, 0.098f);
+        public static readonly NormRect TeachSkip = new NormRect(0.80f, 0.018f, 0.97f, 0.092f);
 
-        public static NormRect ActiveOrderCard
-        {
-            get
-            {
-                var w = (OrderTray.XMax - OrderTray.XMin) / 3f;
-                return new NormRect(OrderTray.XMin, OrderTray.YMin, OrderTray.XMin + w, OrderTray.YMax);
-            }
-        }
+        public static NormRect ActiveOrderCard => OrderCardOnScreen(0, 3);
 
         public static NormRect InventorySlotLocal(int index)
         {
@@ -149,12 +148,50 @@ namespace Grove.Domain.Layout
             return new NormRect(i * w + 0.03f, 0.06f, (i + 1) * w - 0.03f, 0.94f);
         }
 
+        /// <summary>Non-overlapping card slots inside <see cref="OrderTray"/> (local 0–1).</summary>
+        public static NormRect OrderCardLocal(int index, int total)
+        {
+            var n = total < 1 ? 1 : total;
+            var i = index < 0 ? 0 : (index >= n ? n - 1 : index);
+            const float gap = 0.018f;
+            var w = (1f - gap * (n + 1)) / n;
+            var x = gap + i * (w + gap);
+            return new NormRect(x, 0.04f, x + w, 0.96f);
+        }
+
+        public static NormRect OrderCardOnScreen(int index, int total) =>
+            MapLocal(OrderTray, OrderCardLocal(index, total));
+
+        /// <summary>Map a child rect from parent-local 0–1 into the parent's screen band.</summary>
+        public static NormRect MapLocal(NormRect parent, NormRect local)
+        {
+            var w = parent.XMax - parent.XMin;
+            var h = parent.YMax - parent.YMin;
+            return new NormRect(
+                parent.XMin + local.XMin * w,
+                parent.YMin + local.YMin * h,
+                parent.XMin + local.XMax * w,
+                parent.YMin + local.YMax * h);
+        }
+
+        /// <summary>Screen-normalized child → 0–1 anchors inside <paramref name="parent"/>.</summary>
+        public static NormRect RelativeTo(NormRect parent, NormRect child)
+        {
+            var w = Math.Max(0.0001f, parent.XMax - parent.XMin);
+            var h = Math.Max(0.0001f, parent.YMax - parent.YMin);
+            return new NormRect(
+                (child.XMin - parent.XMin) / w,
+                (child.YMin - parent.YMin) / h,
+                (child.XMax - parent.XMin) / w,
+                (child.YMax - parent.YMin) / h);
+        }
+
         /// <summary>Permanent HUD chrome that must never cover playable cells.</summary>
         public static NormRect[] OccludingHud() =>
             new[]
             {
                 Goal, EnergyPill, EnergyBar, EnergyLabel, CoinIcon, CoinLabel, Toast,
-                DockPlate, Maya, MayaBubble, OrderTray, InventoryBar, Crate, CrateLabel, Store
+                DockPlate, Maya, MayaBubble, OrderTray, InventoryBar, Crate, Store
             };
 
         public static bool MeetsMinHudGap(NormRect chrome)
