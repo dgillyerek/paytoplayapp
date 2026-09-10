@@ -60,7 +60,7 @@ namespace Grove.Unity
 
             Hud.Host = this;
             Hud.Build();
-            Hud.Toast("Tap CRATE, then drag-merge matching flowers.");
+            Hud.Toast("QA: CRATE → merge to WF T3 → DELIVER Order 1.");
         }
 
         internal static LoadedCatalog LoadCatalog()

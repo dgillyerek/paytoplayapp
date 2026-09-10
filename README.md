@@ -1,28 +1,34 @@
-# Project Grove
+# Project Grove — prototype QA
 
-**QA pass / fail (prototype):** produce from the crate → merge to **Wildflower T3** → **Deliver Order 1**. Stay in Play ≥2 minutes with no softlock or crash. Placeholders are shipping art until Design swaps them.
+**Scene:** `Assets/Grove/Scenes/Board.unity`  
+**Engine:** Unity **6.3 LTS** (`6000.3.x`)  
+**Placeholders are expected.** Do not fail on temp circles / solid UI.
 
-## Play in Unity (2 minutes)
-
-1. Install **Unity 6.3 LTS** (`6000.3.6f1` or any 6000.3.x).
-2. Hub → **Open** → this repo folder (the one with `Assets/` and `ProjectSettings/`).
-3. Wait for first import (`Library/` is gitignored).
-4. Open `Assets/Grove/Scenes/Board.unity` → **Play**.
-5. Click **CRATE** (bottom). A token appears on the **7×5** board.
-6. **Drag** matching tokens together. 2 stack (`×2`); the 3rd **merges to the next tier**. Illegal drops **snap back**.
-7. Repeat until you have **WF T3**. Click **DELIVER**. Toast: Order 1 complete.
-8. Optional: **STARTER PACK** adds 3× WF T1.
-
-Temp sprites/UI are generated in Play Mode (tinted circles + solid buttons). Final art can replace `Resources/Grove/Art/` later — do not block on Design.
+## Pass / fail
 
 | | |
 | --- | --- |
-| Engine | Unity **6.3 LTS** + **URP 17.3** |
-| Loop | Crate → 3-merge wildflowers → Order 1 (T3) |
-| Energy | 100 cap, HUD bar, 1/tap after first free tap |
-| Orders | 1 = WF T3, 2 = T4, 3 = T5 |
+| **PASS** | Produce from **CRATE** → merge to **Wildflower T3** (`WF T3`) → **DELIVER** Order 1, then stay in Play **≥ 2 minutes** with no crash and no stuck board (you can still crate/merge). |
+| **FAIL** | Cannot produce, cannot 3-merge, cannot deliver Order 1, crash, or hard-stuck (no empty cell and no legal merge) within 2 minutes. |
 
-**Not in this slice:** vines, inventory, map, real IAP, FTUE, analytics, dailies, settings.
+You need **9× WF T1** → three T2 merges → **one T3**. Crate is ~90% WF T1. First crate tap is free; then 1 energy each (bar starts at 100).
+
+## Editor play steps
+
+1. Unity Hub → **Open** → this repo folder (contains `Assets/` + `ProjectSettings/`). First import may take a minute (`Library/` is gitignored).
+2. Double-click **`Assets/Grove/Scenes/Board.unity`**.
+3. Click **Play**. You should see a **7×5** green grid, one pink **WF T1**, **Energy**, **Order 1**, and **CRATE**.
+4. Click **CRATE** (bottom center). A new token lands on an empty cell.
+5. **Drag** a WF onto another WF. Two become `WF T1 ×2`. Drag a third WF onto that stack → **WF T2** (piece punches). Wrong-type drops **snap back**.
+6. Repeat crate + merge until a token reads **WF T3**.
+7. Click **DELIVER** (right). Toast: Order 1 complete.
+8. Keep clicking CRATE / merging for **two more minutes**. Pass if nothing crashes or dead-ends.
+
+**Unstuck:** **STARTER PACK** (bottom left) adds 3× WF T1. If the board is full, merge first.
+
+## Not this test
+
+Orders 2–3, real IAP, inventory, map, vines, FTUE, analytics. Headless check (optional):
 
 ```bash
 dotnet test tests/Grove.Domain.Tests/Grove.Domain.Tests.csproj

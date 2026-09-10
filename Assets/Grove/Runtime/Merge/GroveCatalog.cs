@@ -85,9 +85,9 @@ namespace Grove.Domain.Merge
                 EnergyPerTap: 1,
                 Outputs:
                 [
-                    new WeightedOutput("wildflower_t1", 70, false),
-                    new WeightedOutput("herb_t1", 20, false),
-                    new WeightedOutput("twig_t1", 10, false)
+                    new WeightedOutput("wildflower_t1", 90, false),
+                    new WeightedOutput("herb_t1", 7, false),
+                    new WeightedOutput("twig_t1", 3, false)
                 ]);
 
             var orders = new OrderSpec[]

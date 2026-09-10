@@ -6,15 +6,15 @@
   "outputs": [
     {
       "itemId": "wildflower_t1",
-      "weight": 70
+      "weight": 90
     },
     {
       "itemId": "herb_t1",
-      "weight": 20
+      "weight": 7
     },
     {
       "itemId": "twig_t1",
-      "weight": 10
+      "weight": 3
     }
   ]
 }

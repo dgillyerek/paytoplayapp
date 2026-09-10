@@ -65,7 +65,7 @@ namespace Grove.Unity
             _hintText = GroveVisuals.UiText(
                 root,
                 "Hint",
-                "Tap CRATE → drag 3 matching flowers together → Deliver Order 1 (Wildflower T3).",
+                "CRATE → merge 3 matching WF (9× T1 = one T3) → DELIVER Order 1. Then play 2 min.",
                 22,
                 TextAnchor.LowerCenter,
                 new Color(0.9f, 0.92f, 0.85f));
@@ -195,7 +195,9 @@ namespace Grove.Unity
             if (Host.Orders.TryDeliver(Host.Session.Board))
             {
                 Host.BoardView?.Refresh();
-                Toast($"{title} complete!");
+                Toast(Host.Orders.CompletedCount == 1
+                    ? "ORDER 1 COMPLETE — keep playing 2 minutes (no crash)."
+                    : $"{title} complete!");
             }
             else
             {
