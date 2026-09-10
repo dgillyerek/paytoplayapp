@@ -2,16 +2,16 @@
 
 **Maya is 2D UI / sprite source only.** Nothing 3D ships in the player for P0.
 
-Prototype ships **temp sprites** (`Resources/Grove/Art/` plus runtime tints). Swap those PNGs later; do not block Play Mode on final art.
+Area 1 Play Mode binds **DES-001/002** from `Assets/Grove/Art/Area1/` (`manifest.json` stub → PNG). Programmer `Resources/Grove/Art` circles are removed.
 
 | Bucket | P0 | Notes |
 | --- | --- | --- |
-| Board pieces | 5 silhouettes (pebble→grove) | Flat shapes + palette; 256² max |
-| Board chrome | Frame, cell, grab highlight | 9-slice |
-| Snap-back | Ease / squash | Code tween, not a cinematic |
-| VFX | One merge pop | Sprite flipbook or UI scale |
-| Audio | Merge + error + drop | Tiny SFX pack |
-| Font | One UI font | TMP |
-| 3D / Maya runtime | **None** | Maya only if a contractor prefers it to author 2D renders |
+| Board pieces | WF T1–6, Herb T1–3, Tools T1–3 | Sprite 2D+UI, PPU 100, center pivot |
+| Board chrome | Backdrop covering the camera, wood BoardSurface under the 7×5, overlapping cream cells | Composite so no grey/green grid can show |
+| HUD | Energy pill, coins (gems hidden), order tray, primary button | Maya Neutral + Happy |
+| Splashes | Boot / area start / milestone (DEV-018) | Plus order-complete / tier-up / sparkle |
+| Snap-back | Ease / squash | Code tween |
+| Font | Built-in UI font | LegacyRuntime / Arial |
+| 3D / Maya runtime | **None** | 2D portrait only |
 
-If an asset needs a custom shader beyond URP 2D / UI, it is over budget. Prefer uGUI or UI Toolkit; no HDRP, no filmic volumes on device.
+If an asset needs a custom shader beyond URP 2D / UI, it is over budget.

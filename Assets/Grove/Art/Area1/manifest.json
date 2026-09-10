@@ -1,0 +1,400 @@
+{
+  "pack": "Area1_DES001_DES002",
+  "title": "Project Grove",
+  "version": "0.1.0",
+  "unityImportHint": {
+    "textureType": "Sprite (2D and UI)",
+    "pixelsPerUnit": 100,
+    "pivot": "Center",
+    "repoTarget": "Assets/Grove/Art/Area1/",
+    "atlases": [
+      "Atlas_Area1_Items (<=1024)",
+      "Atlas_Area1_UI",
+      "hero backdrop <=2048"
+    ]
+  },
+  "des001_ready": true,
+  "des002_ready": true,
+  "assets": [
+    {
+      "stub": "ENV_FG_Backdrop",
+      "filename": "Env/ENV_FG_Backdrop.png",
+      "category": "env",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "ENV_FG_BoardSurface",
+      "filename": "Env/ENV_FG_BoardSurface.png",
+      "category": "board",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "ENV_FG_CellEmpty",
+      "filename": "Env/ENV_FG_CellEmpty.png",
+      "category": "board",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "ENV_FG_CellHighlight",
+      "filename": "Env/ENV_FG_CellHighlight.png",
+      "category": "board",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "ENV_FG_Debris_A",
+      "filename": "Env/ENV_FG_Debris_A.png",
+      "category": "board",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "ENV_FG_GardenCrate_Charged",
+      "filename": "Env/ENV_FG_GardenCrate_Charged.png",
+      "category": "crate",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "ENV_FG_GardenCrate_Empty",
+      "filename": "Env/ENV_FG_GardenCrate_Empty.png",
+      "category": "crate",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "ENV_FG_GardenCrate_Idle",
+      "filename": "Env/ENV_FG_GardenCrate_Idle.png",
+      "category": "crate",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "ENV_FG_VineLock",
+      "filename": "Env/ENV_FG_VineLock.png",
+      "category": "board",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "HB_T01_HerbSprig",
+      "filename": "Items/Herb/HB_T01_HerbSprig.png",
+      "category": "piece",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "HB_T02_HerbPot",
+      "filename": "Items/Herb/HB_T02_HerbPot.png",
+      "category": "piece",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "HB_T03_HerbBasket",
+      "filename": "Items/Herb/HB_T03_HerbBasket.png",
+      "category": "piece",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "FX_CoinPouch_Tiny",
+      "filename": "Items/Spit/FX_CoinPouch_Tiny.png",
+      "category": "piece",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "TL_WC_T01_WateringCan",
+      "filename": "Items/Spit/TL_WC_T01_WateringCan.png",
+      "category": "piece",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "TL_T01_Twig",
+      "filename": "Items/Tools/TL_T01_Twig.png",
+      "category": "piece",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "TL_T02_Stick",
+      "filename": "Items/Tools/TL_T02_Stick.png",
+      "category": "piece",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "TL_T03_HandRake",
+      "filename": "Items/Tools/TL_T03_HandRake.png",
+      "category": "piece",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "WF_T01_Seed",
+      "filename": "Items/Wildflower/WF_T01_Seed.png",
+      "category": "piece",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "WF_T02_Sprout",
+      "filename": "Items/Wildflower/WF_T02_Sprout.png",
+      "category": "piece",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "WF_T03_Bud",
+      "filename": "Items/Wildflower/WF_T03_Bud.png",
+      "category": "piece",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "WF_T04_Wildflower",
+      "filename": "Items/Wildflower/WF_T04_Wildflower.png",
+      "category": "piece",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "WF_T05_Bouquet",
+      "filename": "Items/Wildflower/WF_T05_Bouquet.png",
+      "category": "piece",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "WF_T06_FlowerBox",
+      "filename": "Items/Wildflower/WF_T06_FlowerBox.png",
+      "category": "piece",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "MAYA_Portrait_Happy",
+      "filename": "Maya/MAYA_Portrait_Happy.png",
+      "category": "maya",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "MAYA_Portrait_Neutral",
+      "filename": "Maya/MAYA_Portrait_Neutral.png",
+      "category": "maya",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "HUD_EnergyPill",
+      "filename": "UI/HUD_EnergyPill.png",
+      "category": "hud",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "HUD_Wallet_Coin",
+      "filename": "UI/HUD_Wallet_Coin.png",
+      "category": "hud",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "HUD_Wallet_Gem",
+      "filename": "UI/HUD_Wallet_Gem.png",
+      "category": "hud",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "UI_Btn_Primary",
+      "filename": "UI/UI_Btn_Primary.png",
+      "category": "hud",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "UI_Inventory_Slot",
+      "filename": "UI/UI_Inventory_Slot.png",
+      "category": "hud",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "UI_Modal_EnergyEmpty",
+      "filename": "UI/UI_Modal_EnergyEmpty.png",
+      "category": "hud",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "UI_OrderTray_Card",
+      "filename": "UI/UI_OrderTray_Card.png",
+      "category": "hud",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "Splash_AreaStart_FrontGarden",
+      "filename": "VFX/Splashes/Splash_AreaStart_FrontGarden.png",
+      "category": "splash",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "Splash_Boot_ProjectGrove",
+      "filename": "VFX/Splashes/Splash_Boot_ProjectGrove.png",
+      "category": "splash",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "Splash_Milestone_FrontGardenRestored",
+      "filename": "VFX/Splashes/Splash_Milestone_FrontGardenRestored.png",
+      "category": "splash",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "Splash_OrderComplete",
+      "filename": "VFX/Splashes/Splash_OrderComplete.png",
+      "category": "splash",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "Splash_TierUp",
+      "filename": "VFX/Splashes/Splash_TierUp.png",
+      "category": "splash",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "VFX_MergeSparkle",
+      "filename": "VFX/Splashes/VFX_MergeSparkle.png",
+      "category": "splash",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    }
+  ]
+}

@@ -6,18 +6,16 @@ using UnityEngine.UI;
 namespace Grove.Unity
 {
     /// <summary>
-    /// Temp sprites + greybox UI. Generated at runtime so Play Mode works before any art import.
-    /// Drop replacement PNGs at Resources/Grove/Art/{ui_white,cell,piece} later; code tints them.
+    /// Shared Play Mode helpers. World sprites come from <see cref="GroveArt"/> (DES-001/002).
+    /// UI white is a generated 8×8 — not the old Resources/Grove/Art programmer pack.
     /// </summary>
     internal static class GroveVisuals
     {
         private static Font? _font;
-        private static Shader? _unlit;
-        private static Sprite? _white;
-        private static Sprite? _cell;
-        private static Sprite? _piece;
+        private static Shader? _spriteShader;
 
-        public static readonly Color GardenClear = new Color(0.086f, 0.145f, 0.102f, 1f);
+        /// <summary>Warm maple fill if a pixel of camera clear ever shows — never the old grey/green grid.</summary>
+        public static readonly Color GardenClear = new Color(0.89f, 0.84f, 0.72f, 1f);
 
         public static Font Font
         {
@@ -34,18 +32,12 @@ namespace Grove.Unity
             }
         }
 
-        public static Sprite WhiteSprite => _white ??= LoadOrMake("Grove/Art/ui_white", MakeWhiteTex, 4f);
-
-        public static Sprite CellSprite => _cell ??= LoadOrMake("Grove/Art/cell", () => MakeRectTex(64, 6), 64f);
-
-        public static Sprite PieceSprite => _piece ??= LoadOrMake("Grove/Art/piece", () => MakeCircleTex(64), 64f);
+        public static Sprite WhiteSprite => GroveArt.WhiteSprite();
 
         public static Material MakeMaterial(Color color, Texture? texture = null)
         {
-            _unlit ??= Shader.Find("Universal Render Pipeline/Unlit")
-                       ?? Shader.Find("Sprites/Default")
-                       ?? Shader.Find("Unlit/Color");
-            var mat = _unlit != null ? new Material(_unlit) : new Material(Shader.Find("Hidden/InternalErrorShader"));
+            var shader = SpriteShader();
+            var mat = shader != null ? new Material(shader) : new Material(Shader.Find("Hidden/InternalErrorShader"));
             ApplyColor(mat, color);
             if (texture != null)
             {
@@ -57,6 +49,21 @@ namespace Grove.Unity
             }
 
             return mat;
+        }
+
+        private static Shader? SpriteShader()
+        {
+            if (_spriteShader != null)
+            {
+                return _spriteShader;
+            }
+
+            _spriteShader = Shader.Find("Sprites/Default")
+                            ?? Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default")
+                            ?? Shader.Find("Universal Render Pipeline/Unlit")
+                            ?? Shader.Find("Unlit/Transparent")
+                            ?? Shader.Find("Unlit/Color");
+            return _spriteShader;
         }
 
         public static void ApplyColor(Material mat, Color color)
@@ -89,14 +96,75 @@ namespace Grove.Unity
             sr.sprite = sprite;
             sr.color = color;
             sr.sortingOrder = sortingOrder;
-            sr.sharedMaterial = MakeMaterial(color, sprite.texture);
+            sr.sharedMaterial = MakeMaterial(color, sprite != null ? sprite.texture : null);
+            FitSprite(go.transform, sprite, worldSize);
+            return go;
+        }
+
+        public static void FitSprite(Transform target, Sprite? sprite, float worldSize)
+        {
+            if (sprite == null)
+            {
+                return;
+            }
+
             var size = sprite.bounds.size;
             if (size.x > 0.0001f && size.y > 0.0001f)
             {
-                go.transform.localScale = new Vector3(worldSize / size.x, worldSize / size.y, 1f);
+                var max = Mathf.Max(size.x, size.y);
+                target.localScale = new Vector3(worldSize / max, worldSize / max, 1f);
+            }
+        }
+
+        /// <summary>Non-uniform scale so the sprite fills a world rectangle (BoardSurface under the 7×5).</summary>
+        public static void StretchToRect(Transform target, Sprite? sprite, Vector3 center, float worldW, float worldH)
+        {
+            if (target == null || sprite == null)
+            {
+                return;
             }
 
-            return go;
+            target.position = new Vector3(center.x, center.y, target.position.z);
+            var size = sprite.bounds.size;
+            target.localScale = new Vector3(
+                worldW / Mathf.Max(0.001f, size.x),
+                worldH / Mathf.Max(0.001f, size.y),
+                1f);
+        }
+
+        /// <summary>Uniform scale to cover a world rectangle (backdrop over the camera frustum).</summary>
+        public static void CoverRect(Transform target, Sprite? sprite, Vector3 center, float worldW, float worldH)
+        {
+            if (target == null || sprite == null)
+            {
+                return;
+            }
+
+            target.position = new Vector3(center.x, center.y, target.position.z);
+            var size = sprite.bounds.size;
+            var s = Mathf.Max(
+                worldW / Mathf.Max(0.001f, size.x),
+                worldH / Mathf.Max(0.001f, size.y));
+            target.localScale = new Vector3(s, s, 1f);
+        }
+
+        public static void FrameBoard(BoardView view)
+        {
+            EnsurePlayCamera();
+            var cam = Camera.main ?? UnityEngine.Object.FindFirstObjectByType<Camera>();
+            if (cam == null || view == null)
+            {
+                return;
+            }
+
+            var center = view.BoardCenter;
+            cam.transform.position = new Vector3(center.x, center.y + 0.15f, -10f);
+            var needW = view.BoardWorldSize.x + 1.4f;
+            var needH = view.BoardWorldSize.y + 3.4f;
+            var aspect = Screen.height > 0 ? Screen.width / (float)Screen.height : 16f / 9f;
+            var sizeForH = needH * 0.5f;
+            var sizeForW = aspect > 0.01f ? needW * 0.5f / aspect : sizeForH;
+            cam.orthographicSize = Mathf.Max(5.2f, sizeForH, sizeForW);
         }
 
         public static TextMesh Label(string name, Transform parent, Vector3 localPos, string text, int fontSize, Color color)
@@ -353,20 +421,21 @@ namespace Grove.Unity
             return text;
         }
 
-        public static Image UiImage(Transform parent, string name, Color color)
+        public static Image UiImage(Transform parent, string name, Color color, Sprite? sprite = null, bool preserveAspect = false)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             var image = go.AddComponent<Image>();
-            image.sprite = WhiteSprite;
+            image.sprite = sprite != null ? sprite : WhiteSprite;
             image.type = Image.Type.Simple;
             image.color = color;
+            image.preserveAspect = preserveAspect && sprite != null;
             return image;
         }
 
-        public static Button UiButton(Transform parent, string name, string label, Color bg, Vector2 size)
+        public static Button UiButton(Transform parent, string name, string label, Color bg, Vector2 size, Sprite? sprite = null)
         {
-            var image = UiImage(parent, name, bg);
+            var image = UiImage(parent, name, bg, sprite, preserveAspect: sprite != null);
             var rect = image.rectTransform;
             rect.sizeDelta = size;
             var button = image.gameObject.AddComponent<Button>();
@@ -375,90 +444,18 @@ namespace Grove.Unity
             colors.highlightedColor = Color.Lerp(bg, Color.white, 0.2f);
             colors.pressedColor = Color.Lerp(bg, Color.black, 0.2f);
             button.colors = colors;
-            var text = UiText(image.transform, "Label", label, 28, TextAnchor.MiddleCenter, Color.white);
-            var textRect = text.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = Vector2.zero;
-            textRect.offsetMax = Vector2.zero;
-            text.raycastTarget = false;
-            return button;
-        }
-
-        private static Sprite LoadOrMake(string resourcesPath, System.Func<Texture2D> factory, float pixelsPerUnit)
-        {
-            var tex = Resources.Load<Texture2D>(resourcesPath) ?? factory();
-            tex.filterMode = FilterMode.Bilinear;
-            tex.wrapMode = TextureWrapMode.Clamp;
-            return Sprite.Create(
-                tex,
-                new Rect(0f, 0f, tex.width, tex.height),
-                new Vector2(0.5f, 0.5f),
-                pixelsPerUnit,
-                0,
-                SpriteMeshType.FullRect);
-        }
-
-        private static Texture2D MakeWhiteTex()
-        {
-            var tex = new Texture2D(8, 8, TextureFormat.RGBA32, false);
-            var fill = EnumerablePixels(8, 8, (_, _) => Color.white);
-            tex.SetPixels(fill);
-            tex.Apply();
-            tex.name = "grove_ui_white";
-            return tex;
-        }
-
-        private static Texture2D MakeRectTex(int size, int inset)
-        {
-            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            var fill = EnumerablePixels(size, size, (x, y) =>
+            if (!string.IsNullOrEmpty(label))
             {
-                var edge = x < inset || y < inset || x >= size - inset || y >= size - inset;
-                return edge ? new Color(1f, 1f, 1f, 0.35f) : Color.white;
-            });
-            tex.SetPixels(fill);
-            tex.Apply();
-            tex.name = "grove_cell";
-            return tex;
-        }
-
-        private static Texture2D MakeCircleTex(int size)
-        {
-            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            var r = (size - 2) * 0.5f;
-            var cx = (size - 1) * 0.5f;
-            var fill = EnumerablePixels(size, size, (x, y) =>
-            {
-                var dx = x - cx;
-                var dy = y - cx;
-                var d = Mathf.Sqrt(dx * dx + dy * dy);
-                if (d > r)
-                {
-                    return Color.clear;
-                }
-
-                var rim = d > r - 3f;
-                return rim ? new Color(1f, 1f, 1f, 0.85f) : Color.white;
-            });
-            tex.SetPixels(fill);
-            tex.Apply();
-            tex.name = "grove_piece";
-            return tex;
-        }
-
-        private static Color[] EnumerablePixels(int w, int h, System.Func<int, int, Color> at)
-        {
-            var colors = new Color[w * h];
-            for (var y = 0; y < h; y++)
-            {
-                for (var x = 0; x < w; x++)
-                {
-                    colors[y * w + x] = at(x, y);
-                }
+                var text = UiText(image.transform, "Label", label, 26, TextAnchor.MiddleCenter, Color.white);
+                var textRect = text.GetComponent<RectTransform>();
+                textRect.anchorMin = Vector2.zero;
+                textRect.anchorMax = Vector2.one;
+                textRect.offsetMin = Vector2.zero;
+                textRect.offsetMax = Vector2.zero;
+                text.raycastTarget = false;
             }
 
-            return colors;
+            return button;
         }
     }
 }

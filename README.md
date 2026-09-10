@@ -1,34 +1,43 @@
-# Project Grove — prototype QA
+# Project Grove — production-feel slice (Area 1)
 
 **Scene:** `Assets/Grove/Scenes/Board.unity`  
 **Engine:** Unity **6.3 LTS** (`6000.3.x`)  
-**Placeholders are expected.** Do not fail on temp circles / solid UI.
+**Art:** DES-001/002 pack at `Assets/Grove/Art/Area1/` (do not regenerate).
 
-## Pass / fail
+## Derek / CEO — what you should see
 
-| | |
-| --- | --- |
-| **PASS** | Produce from **CRATE** → merge to **Sprout** (`WF T2`) → **DELIVER** Order 1, then stay in Play **≥ 2 minutes** with no crash and no stuck board (you can still crate/merge). |
-| **FAIL** | Cannot produce, cannot 3-merge, cannot deliver Order 1, crash, or hard-stuck (no empty cell and no legal merge) within 2 minutes. |
-
-You need **3× WF T1** → **one T2 Sprout**. Crate is ~90% WF T1 (also herbs and twigs for later orders). First crate tap is free; then 1 energy each (bar starts at 100).
-
-## Editor play steps
-
-1. Unity Hub → **Open** → this repo folder (contains `Assets/` + `ProjectSettings/`). First import may take a minute (`Library/` is gitignored).
+1. Pull this branch. Unity Hub → **Open** this repo folder (`Assets/` + `ProjectSettings/`). First import may take a minute.
 2. Double-click **`Assets/Grove/Scenes/Board.unity`**.
-3. Click **Play**. You should see a **7×5** green grid, one pink **WF T1**, **Energy**, **Order 1**, and **CRATE**.
-4. Click **CRATE** (bottom center). A new token lands on an empty cell.
-5. **Drag** a WF onto another WF. Two become `WF T1 ×2`. Drag a third WF onto that stack → **Sprout** (WF T2, piece punches). Wrong-type drops **snap back**.
-6. Repeat crate + merge until a token reads **Sprout**.
-7. Click **DELIVER** (right). Toast: Order 1 complete.
-8. Keep clicking CRATE / merging for **two more minutes**. Pass if nothing crashes or dead-ends.
+3. Click **Play**.
 
-**Unstuck:** **STARTER PACK** (bottom left) adds 3× WF T1. If the board is full, merge first.
+**On Play:**
 
-## Not this test
+- Full-screen splash **Project Grove** (tap).
+- Then splash **Front Garden** (tap).
+- Board: garden **backdrop** covering the camera, wood **BoardSurface** filling the 7×5 tray, overlapping cream **cells** — **not** a green/grey grid, pink letter tokens, or camera clear leaking around the board.
+- Goal banner: **Restore the Front Garden**.
+- HUD: energy bolt + count, **coin** count. Gems stay hidden.
+- Maya 2D portrait + up to **3** order cards (Maya lines, item art, coin/XP).
+- Wooden **garden crate** at the bottom (tap to produce).
 
-Orders 2–6, real IAP, inventory, map, vines, FTUE, analytics. Headless check (optional):
+**Scripted path:** crate → 3-merge → deliver Orders 1–6 (Maya). Order 6 (Bouquet) completes the area → splash **Front Garden Restored**.
+
+| Order | Need | Reward |
+| --- | --- | --- |
+| 1 | Sprout (WF T2) ×1 | 10c / 5 XP |
+| 2 | Bud (WF T3) ×1 | 15c / 8 XP |
+| 3 | Herb Pot ×1 | 15c / 8 XP |
+| 4 | Wildflower T4 ×1 + Herb Pot ×1 | 35c / 15 XP |
+| 5 | Stick (Tools T2) ×1 | 20c / 10 XP |
+| 6 | Bouquet (WF T5) ×1 | 40c / 20 XP → milestone |
+
+Crate is ~90% Seed (WF T1), plus herbs and **Twigs** (tools T1). Merge 3 Twigs → Stick. First crate tap is free; then 1 energy each (bar starts at 100).
+
+**FAIL** if you still see a green checkerboard, pink letter tokens, or `Resources/Grove/Art` programmer circles.
+
+**Unstuck:** **STARTER** (bottom left) adds 3× Seed. If the board is full, merge first.
+
+## Headless
 
 ```bash
 dotnet test tests/Grove.Domain.Tests/Grove.Domain.Tests.csproj
