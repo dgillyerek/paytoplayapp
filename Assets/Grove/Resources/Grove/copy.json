@@ -1,0 +1,11 @@
+{
+  "bootTitle": "Project Grove",
+  "areaName": "Front Garden",
+  "goal": "Restore the Front Garden",
+  "milestoneSplash": "Front Garden Restored",
+  "npcId": "maya",
+  "npcDisplayName": "Maya",
+  "npcPortrait": "2d-ui-only",
+  "orderSlotsMax": 3,
+  "orderQueue": "scripted"
+}

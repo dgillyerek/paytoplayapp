@@ -9,5 +9,13 @@ namespace Grove.Domain.Orders
         string Id,
         string Title,
         string Hint,
-        IReadOnlyList<OrderRequirement> Requirements);
+        IReadOnlyList<OrderRequirement> Requirements,
+        int CoinReward = 0,
+        int XpReward = 0,
+        string MayaLine = "",
+        bool CompletesMilestone = false)
+    {
+        public string SpokenLine =>
+            string.IsNullOrEmpty(MayaLine) ? Hint : MayaLine;
+    }
 }

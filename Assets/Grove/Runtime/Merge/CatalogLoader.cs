@@ -33,10 +33,12 @@ namespace Grove.Domain.Merge
             var cratePath = Path.Combine(directory, CatalogLocator.GardenCrateFileName);
             var energyPath = Path.Combine(directory, CatalogLocator.EnergyFileName);
             var ordersPath = Path.Combine(directory, CatalogLocator.OrdersFileName);
+            var copyPath = Path.Combine(directory, CatalogLocator.CopyFileName);
             var crate = File.Exists(cratePath) ? File.ReadAllText(cratePath) : null;
             var energy = File.Exists(energyPath) ? File.ReadAllText(energyPath) : null;
             var orders = File.Exists(ordersPath) ? File.ReadAllText(ordersPath) : null;
-            return FromJson(items, recipes, crate, energy, orders);
+            var copy = File.Exists(copyPath) ? File.ReadAllText(copyPath) : null;
+            return FromJson(items, recipes, crate, energy, orders, copy);
         }
 
         public static LoadedCatalog FromJson(
@@ -44,14 +46,16 @@ namespace Grove.Domain.Merge
             string recipesJson,
             string? gardenCrateJson = null,
             string? energyJson = null,
-            string? ordersJson = null)
+            string? ordersJson = null,
+            string? copyJson = null)
         {
             var items = ParseItems(itemsJson);
             var recipes = ParseRecipes(recipesJson, items);
             var crate = gardenCrateJson is null ? null : ParseProducer(gardenCrateJson, items);
             var energy = energyJson is null ? EnergyConfig.Default : ParseEnergy(energyJson);
+            var copy = copyJson is null ? PresentationCopy.Default : ParseCopy(copyJson);
             var orders = ordersJson is null ? Array.Empty<OrderSpec>() : ParseOrders(ordersJson, items);
-            return new LoadedCatalog(items, recipes, crate, energy, orders);
+            return new LoadedCatalog(items, recipes, crate, energy, orders, copy);
         }
 
         private static ItemCatalog ParseItems(string json)
@@ -174,6 +178,28 @@ namespace Grove.Domain.Merge
             return new EnergyConfig(cap, regen, produce, dig, ftue);
         }
 
+        private static PresentationCopy ParseCopy(string json)
+        {
+            var root = RequireObject(JsonRead.Parse(json), "copy root");
+            var fallback = PresentationCopy.Default;
+            var slots = OptInt(root, "orderSlotsMax", fallback.OrderSlotsMax);
+            if (slots < 1)
+            {
+                throw new FormatException("orderSlotsMax must be >= 1.");
+            }
+
+            return new PresentationCopy(
+                OptString(root, "bootTitle", fallback.BootTitle),
+                OptString(root, "areaName", fallback.AreaName),
+                OptString(root, "goal", fallback.Goal),
+                OptString(root, "milestoneSplash", fallback.MilestoneSplash),
+                OptString(root, "npcId", fallback.NpcId),
+                OptString(root, "npcDisplayName", fallback.NpcDisplayName),
+                OptString(root, "npcPortrait", fallback.NpcPortrait),
+                slots,
+                OptString(root, "orderQueue", fallback.OrderQueue));
+        }
+
         private static IReadOnlyList<OrderSpec> ParseOrders(string json, ItemCatalog items)
         {
             var root = RequireObject(JsonRead.Parse(json), "orders root");
@@ -185,6 +211,9 @@ namespace Grove.Domain.Merge
                 var id = ReqString(obj, "id");
                 var title = ReqString(obj, "title");
                 var hint = OptString(obj, "hint", "");
+                var mayaLine = OptString(obj, "mayaLine", hint);
+                ParseRewards(obj, out var coins, out var xp);
+                var completesMilestone = OptBool(obj, "completesMilestone", defaultValue: false);
                 var reqNode = RequireArray(obj, "requirements");
                 var requirements = new List<OrderRequirement>(reqNode.Items.Count);
                 foreach (var req in reqNode.Items)
@@ -210,10 +239,36 @@ namespace Grove.Domain.Merge
                     throw new FormatException($"Order '{id}' needs at least one requirement.");
                 }
 
-                orders.Add(new OrderSpec(id, title, hint, requirements));
+                if (coins < 0 || xp < 0)
+                {
+                    throw new FormatException($"Order '{id}' rewards must be >= 0.");
+                }
+
+                orders.Add(new OrderSpec(
+                    id,
+                    title,
+                    hint,
+                    requirements,
+                    coins,
+                    xp,
+                    mayaLine,
+                    completesMilestone));
             }
 
             return orders;
+        }
+
+        private static void ParseRewards(JsonNode.Obj obj, out int coins, out int xp)
+        {
+            if (obj.TryGet("rewards", out var node) && node is JsonNode.Obj rewards)
+            {
+                coins = OptInt(rewards, "coins", 0);
+                xp = OptInt(rewards, "xp", 0);
+                return;
+            }
+
+            coins = OptInt(obj, "coins", 0);
+            xp = OptInt(obj, "xp", 0);
         }
 
         private static JsonNode.Obj RequireObject(JsonNode node, string what)

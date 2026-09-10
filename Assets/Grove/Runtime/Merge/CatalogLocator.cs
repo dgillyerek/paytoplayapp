@@ -16,6 +16,7 @@ namespace Grove.Domain.Merge
         public const string GardenCrateFileName = "garden_crate.json";
         public const string EnergyFileName = "energy.json";
         public const string OrdersFileName = "orders.json";
+        public const string CopyFileName = "copy.json";
 
         /// <summary>When set, <see cref="ResolveDataDirectory"/> uses this path first.</summary>
         public static string? DataDirectoryOverride { get; set; }

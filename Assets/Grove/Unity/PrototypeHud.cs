@@ -1,3 +1,4 @@
+using System.Text;
 using Grove.Domain.Board;
 using Grove.Domain.Commerce;
 using Grove.Domain.Energy;
@@ -10,7 +11,7 @@ using UnityEngine.UI;
 
 namespace Grove.Unity
 {
-    /// <summary>Playable HUD: energy, crate tap, orders 1–3, toast, optional FakeStore starter pack.</summary>
+    /// <summary>Playable HUD: energy, crate tap, scripted orders 1–6, toast, optional FakeStore starter pack.</summary>
     public sealed class PrototypeHud : MonoBehaviour, IEnergyListener
     {
         private Text _energyText = null!;
@@ -62,10 +63,11 @@ namespace Grove.Unity
             _toastText = GroveVisuals.UiText(root, "Toast", "", 28, TextAnchor.MiddleCenter, new Color(1f, 0.95f, 0.6f));
             Place(_toastText.rectTransform, new Vector2(0.08f, 0.74f), new Vector2(0.92f, 0.82f));
 
+            var goal = Host != null ? Host.Catalog.Copy.Goal : "Restore the Front Garden";
             _hintText = GroveVisuals.UiText(
                 root,
                 "Hint",
-                "CRATE → merge 3 matching WF (9× T1 = one T3) → DELIVER Order 1. Then play 2 min.",
+                goal + " — CRATE → merge 3 matching pieces → DELIVER. Maya, 2D portrait later.",
                 22,
                 TextAnchor.LowerCenter,
                 new Color(0.9f, 0.92f, 0.85f));
@@ -144,14 +146,14 @@ namespace Grove.Unity
             var order = Host.Orders?.Active;
             if (order == null)
             {
-                _orderText.text = "All orders complete. Nice.";
+                _orderText.text = Host.Orders != null && Host.Orders.MilestoneReached
+                    ? Host.Catalog.Copy.MilestoneSplash
+                    : "All orders complete. Nice.";
                 _deliverButton.interactable = false;
             }
             else
             {
-                var req = order.Requirements[0];
-                var have = Host.Session.Board.CountItem(req.Item);
-                _orderText.text = $"{order.Title}\nNeed {req.Count}× {req.Item.Value}\nHave {have}\n{order.Hint}";
+                _orderText.text = FormatActiveOrder(order);
                 _deliverButton.interactable = Host.Orders.CanDeliver(Host.Session.Board);
             }
         }
@@ -195,9 +197,10 @@ namespace Grove.Unity
             if (Host.Orders.TryDeliver(Host.Session.Board))
             {
                 Host.BoardView?.Refresh();
-                Toast(Host.Orders.CompletedCount == 1
-                    ? "ORDER 1 COMPLETE — keep playing 2 minutes (no crash)."
-                    : $"{title} complete!");
+                var splash = Host.Splash != null
+                    ? Host.Splash.TryConsumeMilestone(Host.Orders.MilestoneReached)
+                    : null;
+                Toast(!string.IsNullOrEmpty(splash) ? splash : $"{title} complete!");
             }
             else
             {
@@ -234,6 +237,51 @@ namespace Grove.Unity
             Host.Energy?.TryGrantFtueTopUp();
             Host.BoardView?.Refresh();
             Toast($"Starter pack: {granted}× Wildflower T1 on the board.");
+        }
+
+        private string FormatActiveOrder(OrderSpec order)
+        {
+            var text = new StringBuilder();
+            var copy = Host!.Catalog.Copy;
+            text.Append(copy.Goal);
+            text.Append('\n');
+            text.Append(order.Title);
+            text.Append(" · ");
+            text.Append(Host.Orders.CompletedCount + 1);
+            text.Append('/');
+            text.Append(Host.Orders.TotalCount);
+            foreach (var req in order.Requirements)
+            {
+                var name = Host.Catalog.Items.TryGet(req.Item, out var def) ? def.DisplayName : req.Item.Value;
+                var have = Host.Session.Board.CountItem(req.Item);
+                text.Append('\n');
+                text.Append(have);
+                text.Append('/');
+                text.Append(req.Count);
+                text.Append(' ');
+                text.Append(name);
+            }
+
+            if (order.CoinReward > 0 || order.XpReward > 0)
+            {
+                text.Append('\n');
+                text.Append('+');
+                text.Append(order.CoinReward);
+                text.Append(" coins, +");
+                text.Append(order.XpReward);
+                text.Append(" XP");
+            }
+
+            var line = order.SpokenLine;
+            if (!string.IsNullOrEmpty(line))
+            {
+                text.Append('\n');
+                text.Append(copy.NpcDisplayName);
+                text.Append(": ");
+                text.Append(line);
+            }
+
+            return text.ToString();
         }
 
         private static Image Bar(RectTransform parent, string name, Vector2 min, Vector2 max, Color bg)
