@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Grove.Domain.Orders;
 
 namespace Grove.Domain.Board
 {
@@ -55,6 +57,93 @@ namespace Grove.Domain.Board
             }
 
             this[pos] = stack;
+        }
+
+        /// <summary>First empty cell in column-major order (x then y). Used by the garden crate spit.</summary>
+        public bool TryFindEmpty(out GridPos pos)
+        {
+            for (var x = 0; x < Columns; x++)
+            {
+                for (var y = 0; y < Rows; y++)
+                {
+                    if (_cells[x, y] is null)
+                    {
+                        pos = new GridPos(x, y);
+                        return true;
+                    }
+                }
+            }
+
+            pos = default;
+            return false;
+        }
+
+        public int CountItem(PieceId id)
+        {
+            var count = 0;
+            for (var x = 0; x < Columns; x++)
+            {
+                for (var y = 0; y < Rows; y++)
+                {
+                    var stack = _cells[x, y];
+                    if (stack is { } occupant && occupant.Id.Equals(id))
+                    {
+                        count += occupant.Count;
+                    }
+                }
+            }
+
+            return count;
+        }
+
+        public bool Has(IReadOnlyList<OrderRequirement> requirements)
+        {
+            foreach (var req in requirements)
+            {
+                if (CountItem(req.Item) < req.Count)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public bool TryConsume(IReadOnlyList<OrderRequirement> requirements)
+        {
+            if (!Has(requirements))
+            {
+                return false;
+            }
+
+            foreach (var req in requirements)
+            {
+                var remaining = req.Count;
+                for (var x = 0; x < Columns && remaining > 0; x++)
+                {
+                    for (var y = 0; y < Rows && remaining > 0; y++)
+                    {
+                        var stack = _cells[x, y];
+                        if (stack is not { } occupant || !occupant.Id.Equals(req.Item))
+                        {
+                            continue;
+                        }
+
+                        if (occupant.Count <= remaining)
+                        {
+                            remaining -= occupant.Count;
+                            _cells[x, y] = null;
+                        }
+                        else
+                        {
+                            _cells[x, y] = occupant.WithCount(occupant.Count - remaining);
+                            remaining = 0;
+                        }
+                    }
+                }
+            }
+
+            return true;
         }
 
         public int OccupiedCount

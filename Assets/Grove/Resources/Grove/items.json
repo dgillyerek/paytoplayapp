@@ -1,0 +1,193 @@
+{
+  "items": [
+    {
+      "id": "pebble",
+      "displayName": "Pebble",
+      "chain": "grove_demo",
+      "tier": 1,
+      "mergeable": true
+    },
+    {
+      "id": "sprout",
+      "displayName": "Sprout",
+      "chain": "grove_demo",
+      "tier": 2,
+      "mergeable": true
+    },
+    {
+      "id": "sapling",
+      "displayName": "Sapling",
+      "chain": "grove_demo",
+      "tier": 3,
+      "mergeable": true
+    },
+    {
+      "id": "tree",
+      "displayName": "Tree",
+      "chain": "grove_demo",
+      "tier": 4,
+      "mergeable": true
+    },
+    {
+      "id": "grove",
+      "displayName": "Grove",
+      "chain": "grove_demo",
+      "tier": 5,
+      "mergeable": true
+    },
+    {
+      "id": "wildflower_t1",
+      "displayName": "Wildflower T1",
+      "chain": "wildflower",
+      "tier": 1,
+      "mergeable": true
+    },
+    {
+      "id": "wildflower_t2",
+      "displayName": "Wildflower T2",
+      "chain": "wildflower",
+      "tier": 2,
+      "mergeable": true
+    },
+    {
+      "id": "wildflower_t3",
+      "displayName": "Wildflower T3",
+      "chain": "wildflower",
+      "tier": 3,
+      "mergeable": true
+    },
+    {
+      "id": "wildflower_t4",
+      "displayName": "Wildflower T4",
+      "chain": "wildflower",
+      "tier": 4,
+      "mergeable": true
+    },
+    {
+      "id": "wildflower_t5",
+      "displayName": "Wildflower T5",
+      "chain": "wildflower",
+      "tier": 5,
+      "mergeable": true
+    },
+    {
+      "id": "wildflower_t6",
+      "displayName": "Wildflower T6",
+      "chain": "wildflower",
+      "tier": 6,
+      "mergeable": true
+    },
+    {
+      "id": "wildflower_t7",
+      "displayName": "Wildflower T7",
+      "chain": "wildflower",
+      "tier": 7,
+      "mergeable": true
+    },
+    {
+      "id": "wildflower_t8",
+      "displayName": "Wildflower T8",
+      "chain": "wildflower",
+      "tier": 8,
+      "mergeable": true
+    },
+    {
+      "id": "herb_t1",
+      "displayName": "Herb T1",
+      "chain": "herb",
+      "tier": 1,
+      "mergeable": true
+    },
+    {
+      "id": "herb_t2",
+      "displayName": "Herb T2",
+      "chain": "herb",
+      "tier": 2,
+      "mergeable": true
+    },
+    {
+      "id": "herb_t3",
+      "displayName": "Herb T3",
+      "chain": "herb",
+      "tier": 3,
+      "mergeable": true
+    },
+    {
+      "id": "herb_t4",
+      "displayName": "Herb T4",
+      "chain": "herb",
+      "tier": 4,
+      "mergeable": true
+    },
+    {
+      "id": "herb_t5",
+      "displayName": "Herb T5",
+      "chain": "herb",
+      "tier": 5,
+      "mergeable": true
+    },
+    {
+      "id": "herb_t6",
+      "displayName": "Herb T6",
+      "chain": "herb",
+      "tier": 6,
+      "mergeable": true
+    },
+    {
+      "id": "tool_t1",
+      "displayName": "Watering Can",
+      "chain": "tools",
+      "tier": 1,
+      "mergeable": true
+    },
+    {
+      "id": "tool_t2",
+      "displayName": "Garden Trowel",
+      "chain": "tools",
+      "tier": 2,
+      "mergeable": true
+    },
+    {
+      "id": "tool_t3",
+      "displayName": "Hand Pruners",
+      "chain": "tools",
+      "tier": 3,
+      "mergeable": true
+    },
+    {
+      "id": "tool_t4",
+      "displayName": "Garden Hose",
+      "chain": "tools",
+      "tier": 4,
+      "mergeable": true
+    },
+    {
+      "id": "tool_t5",
+      "displayName": "Sprinkler",
+      "chain": "tools",
+      "tier": 5,
+      "mergeable": true
+    },
+    {
+      "id": "twig_t1",
+      "displayName": "Twig T1",
+      "chain": "twig",
+      "tier": 1,
+      "mergeable": true
+    },
+    {
+      "id": "coin",
+      "displayName": "Coin",
+      "chain": "currency",
+      "tier": 1,
+      "mergeable": false
+    },
+    {
+      "id": "puff",
+      "displayName": "Puff",
+      "chain": "puff",
+      "tier": 1,
+      "mergeable": false
+    }
+  ]
+}

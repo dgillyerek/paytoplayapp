@@ -1,65 +1,35 @@
-# Project Grove
+# Project Grove — prototype QA
 
-F2P merge + progression game for **Android 8+** and **iOS 15+**.
+**Scene:** `Assets/Grove/Scenes/Board.unity`  
+**Engine:** Unity **6.3 LTS** (`6000.3.x`)  
+**Placeholders are expected.** Do not fail on temp circles / solid UI.
 
-Canonical Origin repo: [`derek-gilbert/paytoplayapp`](https://origin.cursor.com/derek-gilbert/paytoplayapp).
+## Pass / fail
 
 | | |
 | --- | --- |
-| Engine | **Unity 6.3 LTS** (`6000.3.6f1`) |
-| Render pipeline | **URP 17.3.0** |
-| Board | **7×5** |
-| Core loop (DEV-001) | Data-driven **3→1** drag merge with snap-back |
-| IAP | `IPurchaseService` + `FakeStore` stub |
-| Art | 2D UI / sprites only (no 3D Maya runtime) |
+| **PASS** | Produce from **CRATE** → merge to **Wildflower T3** (`WF T3`) → **DELIVER** Order 1, then stay in Play **≥ 2 minutes** with no crash and no stuck board (you can still crate/merge). |
+| **FAIL** | Cannot produce, cannot 3-merge, cannot deliver Order 1, crash, or hard-stuck (no empty cell and no legal merge) within 2 minutes. |
 
-## Open in Unity
+You need **9× WF T1** → three T2 merges → **one T3**. Crate is ~90% WF T1. First crate tap is free; then 1 energy each (bar starts at 100).
 
-1. Install **Unity 6.3 LTS** (6000.3.x).
-2. Open this folder as a Unity project (URP is already in `Packages/manifest.json` and assigned in Graphics / Quality).
-3. Play `Assets/Grove/Scenes/Board.unity`.
+## Editor play steps
 
-First open will generate `Library/` (gitignored).
+1. Unity Hub → **Open** → this repo folder (contains `Assets/` + `ProjectSettings/`). First import may take a minute (`Library/` is gitignored).
+2. Double-click **`Assets/Grove/Scenes/Board.unity`**.
+3. Click **Play**. You should see a **7×5** green grid, one pink **WF T1**, **Energy**, **Order 1**, and **CRATE**.
+4. Click **CRATE** (bottom center). A new token lands on an empty cell.
+5. **Drag** a WF onto another WF. Two become `WF T1 ×2`. Drag a third WF onto that stack → **WF T2** (piece punches). Wrong-type drops **snap back**.
+6. Repeat crate + merge until a token reads **WF T3**.
+7. Click **DELIVER** (right). Toast: Order 1 complete.
+8. Keep clicking CRATE / merging for **two more minutes**. Pass if nothing crashes or dead-ends.
 
-## DEV-001 merge loop
+**Unstuck:** **STARTER PACK** (bottom left) adds 3× WF T1. If the board is full, merge first.
 
-Domain lives in `Assets/Grove/Runtime` with **no UnityEngine references** (`Grove.Domain.asmdef`, `noEngineReferences: true`).
+## Not this test
 
-- Drag a stack onto an empty cell → move.
-- Drag onto the **same piece id** → stack.
-- Stack count reaching the recipe input (**3**) → **1** next-tier piece at the drop cell.
-- Illegal drop → `DragResult.SnapBack` and the board is unchanged (view snaps the piece back).
-
-Default chain (data-driven, not hardcoded in the loop):
-
-`pebble ×3 → sprout ×3 → sapling ×3 → tree ×3 → grove`
-
-## Tests (no Unity license / no paid CI)
+Orders 2–3, real IAP, inventory, map, vines, FTUE, analytics. Headless check (optional):
 
 ```bash
 dotnet test tests/Grove.Domain.Tests/Grove.Domain.Tests.csproj
 ```
-
-The test project compiles the same Runtime `.cs` files. Keep merge rules here so CI can stay free.
-
-## Layout
-
-```
-Assets/Grove/Runtime/     # board, merge, FakeStore (pure C#)
-Assets/Grove/Unity/       # MonoBehaviours: bootstrap, board view, drag controller
-Assets/Grove/Scenes/      # Board.unity
-Assets/Settings/URP/      # URP asset, renderer, global settings
-Docs/                     # tech notes, QA matrix, P0 order, art budget, migrate
-ProjectSettings/          # Unity 6.3 LTS player (Android 26 / iOS 15)
-Packages/                 # URP 17.3.0 + UGUI + Input System
-tests/Grove.Domain.Tests/ # xUnit
-```
-
-## Docs
-
-- [DEV-001](Docs/DEV-001.md)
-- [Tech notes](Docs/TECH_NOTES.md)
-- [QA device matrix](Docs/QA_DEVICE_MATRIX.md)
-- [P0 build order](Docs/P0_BUILD_ORDER.md)
-- [Art budget](Docs/ART_BUDGET.md)
-- [Migrate / open notes](Docs/MIGRATE.md)

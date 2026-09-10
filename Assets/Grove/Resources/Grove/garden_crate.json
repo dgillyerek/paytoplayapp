@@ -1,0 +1,20 @@
+{
+  "id": "garden_crate",
+  "maxCharges": 30,
+  "rechargeSeconds": 2,
+  "energyPerTap": 1,
+  "outputs": [
+    {
+      "itemId": "wildflower_t1",
+      "weight": 90
+    },
+    {
+      "itemId": "herb_t1",
+      "weight": 7
+    },
+    {
+      "itemId": "twig_t1",
+      "weight": 3
+    }
+  ]
+}

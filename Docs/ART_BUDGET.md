@@ -2,6 +2,8 @@
 
 **Maya is 2D UI / sprite source only.** Nothing 3D ships in the player for P0.
 
+Prototype ships **temp sprites** (`Resources/Grove/Art/` plus runtime tints). Swap those PNGs later; do not block Play Mode on final art.
+
 | Bucket | P0 | Notes |
 | --- | --- | --- |
 | Board pieces | 5 silhouettes (pebble→grove) | Flat shapes + palette; 256² max |
