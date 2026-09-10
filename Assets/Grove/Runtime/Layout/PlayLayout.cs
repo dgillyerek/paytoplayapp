@@ -127,11 +127,12 @@ namespace Grove.Domain.Layout
 
         public static readonly NormRect Playfield = BoardSafeRect;
 
-        public static readonly NormRect EnergyPill = new NormRect(0.06f, 0.928f, 0.145f, 0.988f);
-        public static readonly NormRect EnergyBar = new NormRect(0.145f, 0.942f, 0.30f, 0.974f);
-        public static readonly NormRect CoinIcon = new NormRect(0.30f, 0.930f, 0.385f, 0.986f);
-        public static readonly NormRect CoinLabel = new NormRect(0.385f, 0.928f, 0.50f, 0.988f);
-        public static readonly NormRect EnergyLabel = new NormRect(0.50f, 0.928f, 0.64f, 0.988f);
+        public static readonly NormRect EnergyPill = new NormRect(0.02f, 0.928f, 0.095f, 0.988f);
+        public static readonly NormRect EnergyBar = new NormRect(0.100f, 0.942f, 0.355f, 0.974f);
+        /// <summary>On the energy bar. ≥220px @1080 so "100/100" at TypeHud stays one line.</summary>
+        public static readonly NormRect EnergyLabel = new NormRect(0.108f, 0.928f, 0.355f, 0.988f);
+        public static readonly NormRect CoinIcon = new NormRect(0.370f, 0.930f, 0.435f, 0.986f);
+        public static readonly NormRect CoinLabel = new NormRect(0.435f, 0.928f, 0.58f, 0.988f);
         public static readonly NormRect Maya = new NormRect(0.80f, 0.905f, 0.975f, 0.995f);
         public static readonly NormRect Goal = new NormRect(0.34f, 0.872f, 0.66f, 0.918f);
         public static readonly NormRect Toast = new NormRect(0.14f, 0.840f, 0.76f, 0.868f);
@@ -147,6 +148,7 @@ namespace Grove.Domain.Layout
         public static readonly NormRect Store = new NormRect(0.04f, 0.012f, 0.20f, 0.108f);
 
         public static readonly NormRect Crate = new NormRect(0.025f, 0.48f, 0.165f, 0.655f);
+        /// <summary>Unused on Play — charge copy wrapped mid-word in this sliver.</summary>
         public static readonly NormRect CrateLabel = new NormRect(0.025f, 0.658f, 0.165f, 0.715f);
 
         public static readonly NormRect TeachCrateRing = Crate.Inflate(0.008f, 0.008f);
@@ -192,7 +194,7 @@ namespace Grove.Domain.Layout
             new[]
             {
                 Goal, EnergyPill, EnergyBar, EnergyLabel, CoinIcon, CoinLabel, Toast,
-                DockPlate, Maya, MayaBubble, OrderTray, InventoryBar, Crate, CrateLabel, Store
+                DockPlate, Maya, MayaBubble, OrderTray, InventoryBar, Crate, Store
             };
 
         public static bool MeetsMinHudGap(NormRect chrome)

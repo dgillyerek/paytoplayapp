@@ -22,7 +22,6 @@ namespace Grove.Unity
     {
         private Text _energyText = null!;
         private Text _coinText = null!;
-        private Text _crateText = null!;
         private Text _toastText = null!;
         private Text _goalText = null!;
         private Button _crateButton = null!;
@@ -102,9 +101,10 @@ namespace Grove.Unity
                 "EnergyLabel",
                 "100/100",
                 PlayLayout.TypeHud,
-                TextAnchor.MiddleLeft,
+                TextAnchor.MiddleCenter,
                 Color.white,
-                contrastOnDark: true);
+                contrastOnDark: true,
+                oneLine: true);
             Place(_energyText.rectTransform, PlayLayout.EnergyLabel);
 
             var coinIcon = GroveVisuals.UiImage(root, "CoinIcon", Color.white, GroveArt.Get(GroveArt.StubCoin), true);
@@ -116,7 +116,8 @@ namespace Grove.Unity
                 PlayLayout.TypeCoin,
                 TextAnchor.MiddleLeft,
                 GroveVisuals.Gold,
-                contrastOnDark: true);
+                contrastOnDark: true,
+                oneLine: true);
             Place(_coinText.rectTransform, PlayLayout.CoinLabel);
 
             var gem = GroveVisuals.UiImage(root, "GemIcon", Color.white, GroveArt.Get(GroveArt.StubGem), true);
@@ -190,15 +191,6 @@ namespace Grove.Unity
             Place(_crateButton.GetComponent<RectTransform>(), PlayLayout.Crate);
             _crateImage = _crateButton.targetGraphic as Image ?? _crateButton.GetComponent<Image>();
             _crateButton.onClick.AddListener(OnCrate);
-            _crateText = GroveVisuals.UiText(
-                root,
-                "CrateCharges",
-                "Charges 30/30",
-                PlayLayout.TypeCrate,
-                TextAnchor.MiddleCenter,
-                Color.white,
-                contrastOnDark: true);
-            Place(_crateText.rectTransform, PlayLayout.CrateLabel);
 
             var store = GroveVisuals.UiButton(
                 root,
@@ -265,11 +257,8 @@ namespace Grove.Unity
 
             if (_toastUntil > 0f && Time.unscaledTime > _toastUntil)
             {
-                _toastText.text = !SplashBlocking && Host.Drag != null ? Host.Drag.LastFeedback : "";
-            }
-            else if (_toastUntil <= 0f && !SplashBlocking && Host.Drag != null && _toastText.text != Host.Drag.LastFeedback)
-            {
-                _toastText.text = Host.Drag.LastFeedback;
+                _toastText.text = "";
+                _toastUntil = 0f;
             }
 
             if (Host.Energy != null)
@@ -286,7 +275,6 @@ namespace Grove.Unity
             if (Host.Crate != null)
             {
                 var charges = Host.Crate.Charges(Host.Clock);
-                _crateText.text = $"Charges {charges}/{Host.Crate.MaxCharges}";
                 var energyOk = Host.Crate.FtueFreeTapRemaining || Host.Energy == null || !Host.Energy.IsEmpty;
                 _crateButton.interactable = !SplashBlocking && charges > 0 && energyOk;
                 var crateSprite = GroveArt.PlayCrateSprite(charges > 0);

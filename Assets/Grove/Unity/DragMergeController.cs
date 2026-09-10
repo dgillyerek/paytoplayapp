@@ -96,7 +96,7 @@ namespace Grove.Unity
             View.HiddenCell = cell;
             View.Refresh();
             View.ShowGhost(stack, world);
-            LastFeedback = "Drag onto a match (3 → next tier) or an empty cell.";
+            LastFeedback = "";
         }
 
         private IEnumerator EndDrag()
@@ -141,7 +141,7 @@ namespace Grove.Unity
 
                 LastFeedback = applied.Merge is { } merge
                     ? $"Merged {merge.Consumed} → {merge.Produced}!"
-                    : "Moved.";
+                    : "";
             }
 
             View.HideGhost();

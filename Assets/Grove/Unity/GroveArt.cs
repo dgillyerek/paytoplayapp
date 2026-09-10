@@ -230,15 +230,17 @@ namespace Grove.Unity
 
             tex.filterMode = FilterMode.Bilinear;
             tex.wrapMode = TextureWrapMode.Clamp;
+            tex.alphaIsTransparency = true;
             tex.name = asset.Stub;
             KnockOutBakedBackdrop(tex, asset.Stub);
             PunchStudioPlate(tex, asset.Stub, asset.Category);
             var ppu = asset.PixelsPerUnit > 0.01f ? asset.PixelsPerUnit : 100f;
             var pivot = new Vector2(asset.PivotX, asset.PivotY);
             var border = BorderForStub(asset.Stub);
+            var rect = SpriteRect(tex, asset.Category);
             return Sprite.Create(
                 tex,
-                new Rect(0f, 0f, tex.width, tex.height),
+                rect,
                 pivot,
                 ppu,
                 0,
@@ -400,6 +402,35 @@ namespace Grove.Unity
             }
         }
 
+        private static Rect SpriteRect(Texture2D tex, string category)
+        {
+            var full = new Rect(0f, 0f, tex.width, tex.height);
+            if (tex == null || !string.Equals(category, "piece", System.StringComparison.Ordinal))
+            {
+                return full;
+            }
+
+            var colors = tex.GetPixels();
+            var width = tex.width;
+            var height = tex.height;
+            var rgba = new byte[width * height * 4];
+            for (var i = 0; i < colors.Length; i++)
+            {
+                var c = colors[i];
+                rgba[i * 4] = (byte)Mathf.Clamp(Mathf.RoundToInt(c.r * 255f), 0, 255);
+                rgba[i * 4 + 1] = (byte)Mathf.Clamp(Mathf.RoundToInt(c.g * 255f), 0, 255);
+                rgba[i * 4 + 2] = (byte)Mathf.Clamp(Mathf.RoundToInt(c.b * 255f), 0, 255);
+                rgba[i * 4 + 3] = (byte)Mathf.Clamp(Mathf.RoundToInt(c.a * 255f), 0, 255);
+            }
+
+            if (!StudioPlatePunch.TryOpaqueRect(rgba, width, height, 16, 3, out var x, out var y, out var w, out var h))
+            {
+                return full;
+            }
+
+            return new Rect(x, y, w, h);
+        }
+
         private static void PunchStudioPlate(Texture2D tex, string stub, string category)
         {
             if (tex == null || !StudioPlatePunch.ShouldPunch(stub, category))
@@ -420,10 +451,8 @@ namespace Grove.Unity
                 rgba[i * 4 + 3] = (byte)Mathf.Clamp(Mathf.RoundToInt(c.a * 255f), 0, 255);
             }
 
-            if (StudioPlatePunch.Punch(rgba, width, height) <= 0)
-            {
-                return;
-            }
+            StudioPlatePunch.Punch(rgba, width, height);
+            StudioPlatePunch.ClearTransparentRgb(rgba, width, height);
 
             for (var i = 0; i < colors.Length; i++)
             {

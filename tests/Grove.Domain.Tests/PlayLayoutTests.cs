@@ -1,3 +1,4 @@
+using System;
 using Grove.Domain.Board;
 using Grove.Domain.Layout;
 using Grove.Domain.Merge;
@@ -87,6 +88,26 @@ public sealed class PlayLayoutTests
         Assert.True((c.XMin - b.XMax) * trayW >= PlayLayout.MinDockGutterNorm - 0.0001f);
         Assert.False(PlayLayout.ActiveOrderCard.OverlapsPlayfield());
         Assert.True(PlayLayout.OrderTray.Contains(PlayLayout.ActiveOrderCard));
+    }
+
+    [Fact]
+    public void Energy_readout_fits_100_100_on_one_line_at_1080_and_crate_charges_are_off_play()
+    {
+        var energyW = (PlayLayout.EnergyLabel.XMax - PlayLayout.EnergyLabel.XMin) * PlayLayout.ReferenceWidth;
+        Assert.True(energyW >= 220f, energyW.ToString("0.0"));
+        Assert.True(PlayLayout.EnergyLabel.XMin >= PlayLayout.EnergyBar.XMin - 0.0001f);
+        Assert.True(PlayLayout.EnergyLabel.XMax <= PlayLayout.EnergyBar.XMax + 0.0001f);
+        Assert.True(PlayLayout.EnergyLabel.XMax <= PlayLayout.CoinIcon.XMin + 0.0001f);
+        Assert.False(PlayLayout.EnergyLabel.Overlaps(PlayLayout.CoinIcon));
+        Assert.True(PlayLayout.EnergyLabel.XMax < 0.50f);
+        foreach (var rect in PlayLayout.OccludingHud())
+        {
+            Assert.False(
+                Math.Abs(rect.XMin - PlayLayout.CrateLabel.XMin) < 0.0001f
+                && Math.Abs(rect.YMin - PlayLayout.CrateLabel.YMin) < 0.0001f
+                && Math.Abs(rect.XMax - PlayLayout.CrateLabel.XMax) < 0.0001f
+                && Math.Abs(rect.YMax - PlayLayout.CrateLabel.YMax) < 0.0001f);
+        }
     }
 
     [Fact]
