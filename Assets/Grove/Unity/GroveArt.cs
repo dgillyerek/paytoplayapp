@@ -26,6 +26,9 @@ namespace Grove.Unity
         public const string StubGem = "HUD_Wallet_Gem";
         public const string StubOrderCard = "UI_OrderTray_Card";
         public const string StubButton = "UI_Btn_Primary";
+        public const string StubDeliver = "UI_Btn_Deliver";
+        public const string StubTeachBanner = "UI_Teach_Banner";
+        public const string StubStarterBadge = "UI_Badge_Starter";
         public const string StubEnergyEmpty = "UI_Modal_EnergyEmpty";
         public const string StubMergeSparkle = "VFX_MergeSparkle";
         public const string StubTeachRing = "UI_Teach_Ring";
@@ -119,6 +122,18 @@ namespace Grove.Unity
 
         public static Sprite? TeachHandSprite =>
             Get(StubTeachHand);
+
+        public static Sprite? TeachBannerSprite =>
+            Get(StubTeachBanner) ?? MayaBubbleSprite;
+
+        public static Sprite? DeliverSprite =>
+            Get(StubDeliver) ?? Get(StubButton);
+
+        public static Sprite? StarterBadgeSprite =>
+            Get(StubStarterBadge) ?? Get(StubButton);
+
+        public static Sprite? OrderCardSprite =>
+            Get(StubOrderCard);
 
         /// <summary>5-slot inventory chrome. Do not stretch this over the order tray.</summary>
         public static Sprite? HudDockSprite =>
@@ -220,7 +235,7 @@ namespace Grove.Unity
             PunchStudioPlate(tex, asset.Stub, asset.Category);
             var ppu = asset.PixelsPerUnit > 0.01f ? asset.PixelsPerUnit : 100f;
             var pivot = new Vector2(asset.PivotX, asset.PivotY);
-            var border = asset.Stub == StubButton ? new Vector4(48f, 36f, 48f, 36f) : Vector4.zero;
+            var border = BorderForStub(asset.Stub);
             return Sprite.Create(
                 tex,
                 new Rect(0f, 0f, tex.width, tex.height),
@@ -305,10 +320,30 @@ namespace Grove.Unity
                 return StubTeachHand;
             }
 
+            if (ContainsInsensitive(n, "Teach_Banner") || ContainsInsensitive(n, "TeachBanner"))
+            {
+                return StubTeachBanner;
+            }
+
             if (ContainsInsensitive(n, "TeachRing") || ContainsInsensitive(n, "Teach_Ring") ||
                 ContainsInsensitive(n, "Ring_Teach") || ContainsInsensitive(n, "UI_Teach_Ring"))
             {
                 return StubTeachRing;
+            }
+
+            if (ContainsInsensitive(n, "Btn_Deliver") || ContainsInsensitive(n, "Deliver_Btn"))
+            {
+                return StubDeliver;
+            }
+
+            if (ContainsInsensitive(n, "Badge_Starter") || ContainsInsensitive(n, "Starter_Badge"))
+            {
+                return StubStarterBadge;
+            }
+
+            if (ContainsInsensitive(n, "OrderTray_Card") || ContainsInsensitive(n, "Order_Card"))
+            {
+                return StubOrderCard;
             }
 
             if (ContainsInsensitive(n, "GoalPill") || ContainsInsensitive(n, "Goal_Pill"))
@@ -330,6 +365,16 @@ namespace Grove.Unity
 
             return null;
         }
+
+        private static Vector4 BorderForStub(string stub) =>
+            stub switch
+            {
+                StubDeliver => new Vector4(180f, 80f, 180f, 80f),
+                StubTeachBanner => new Vector4(96f, 64f, 96f, 64f),
+                StubButton => new Vector4(48f, 36f, 48f, 36f),
+                StubOrderCard => new Vector4(72f, 56f, 72f, 56f),
+                _ => Vector4.zero
+            };
 
         private static bool ContainsInsensitive(string haystack, string needle) =>
             haystack.IndexOf(needle, System.StringComparison.OrdinalIgnoreCase) >= 0;

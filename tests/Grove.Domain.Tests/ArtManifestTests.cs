@@ -14,7 +14,7 @@ public sealed class ArtManifestTests
         Assert.True(manifest.Des001Ready);
         Assert.True(manifest.Des002Ready);
         Assert.Equal("Project Grove", manifest.Title);
-        Assert.Equal(42, manifest.Assets.Count);
+        Assert.Equal(45, manifest.Assets.Count);
         Assert.True(manifest.TryGet("WF_T05_Bouquet", out var bouquet));
         Assert.Equal("Items/Wildflower/WF_T05_Bouquet.png", bouquet.Filename);
         Assert.Equal(100f, bouquet.PixelsPerUnit);
@@ -32,7 +32,11 @@ public sealed class ArtManifestTests
         Assert.True(manifest.TryGet("UI_GoalPill", out _));
         Assert.True(manifest.TryGet("UI_Teach_Ring", out _));
         Assert.True(manifest.TryGet("UI_Teach_Hand", out _));
-        foreach (var stub in new[] { "UI_OrderDock_Panel", "UI_GoalPill", "UI_Teach_Ring", "UI_Teach_Hand" })
+        foreach (var stub in new[]
+                 {
+                     "UI_OrderDock_Panel", "UI_GoalPill", "UI_Teach_Ring", "UI_Teach_Hand",
+                     "UI_Btn_Deliver", "UI_Teach_Banner", "UI_Badge_Starter"
+                 })
         {
             Assert.True(manifest.TryGet(stub, out var asset), stub);
             var path = Path.Combine(ArtManifest.ResolveDirectory(), asset.Filename.Replace('/', Path.DirectorySeparatorChar));
@@ -152,6 +156,34 @@ public sealed class ArtManifestTests
             }
 
             Assert.True(opaque > width * height / 40, stub + " punched the object away");
+        }
+    }
+
+    [Fact]
+    public void Production_deliver_teach_starter_chrome_is_rgba_with_transparent_corners()
+    {
+        var manifest = ArtManifest.LoadDefault();
+        var dir = ArtManifest.ResolveDirectory();
+        var stubs = new[] { "UI_Btn_Deliver", "UI_Teach_Banner", "UI_Badge_Starter", "UI_OrderTray_Card" };
+        foreach (var stub in stubs)
+        {
+            Assert.True(manifest.TryGet(stub, out var asset), stub);
+            var path = Path.Combine(dir, asset.Filename.Replace('/', Path.DirectorySeparatorChar));
+            PngInspect.Header(path, out var width, out var height, out var colorType);
+            Assert.Equal(6, colorType);
+            Assert.True(width >= 256 && height >= 96, stub);
+            PngInspect.DecodeRgba(path, out _, out _, out var rgba);
+            Assert.True(StudioPlatePunch.CornersTransparent(rgba, width, height), stub + " still has an opaque plate in the corners");
+            var opaque = 0;
+            for (var i = 3; i < rgba.Length; i += 4)
+            {
+                if (rgba[i] > 32)
+                {
+                    opaque++;
+                }
+            }
+
+            Assert.True(opaque > width * height / 8, stub + " punched the chrome away");
         }
     }
 

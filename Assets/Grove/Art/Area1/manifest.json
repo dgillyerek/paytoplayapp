@@ -1,7 +1,7 @@
 {
   "pack": "Area1_DES001_DES002",
   "title": "Project Grove",
-  "version": "0.2.0-hud-failfix",
+  "version": "0.3.0-des005",
   "unityImportHint": {
     "textureType": "Sprite (2D and UI)",
     "pixelsPerUnit": 100,
@@ -299,6 +299,36 @@
     {
       "stub": "UI_Btn_Primary",
       "filename": "UI/UI_Btn_Primary.png",
+      "category": "hud",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "UI_Btn_Deliver",
+      "filename": "UI/UI_Btn_Deliver.png",
+      "category": "hud",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "UI_Teach_Banner",
+      "filename": "UI/UI_Teach_Banner.png",
+      "category": "hud",
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "suggestedPPU": 100
+    },
+    {
+      "stub": "UI_Badge_Starter",
+      "filename": "UI/UI_Badge_Starter.png",
       "category": "hud",
       "pivot": [
         0.5,

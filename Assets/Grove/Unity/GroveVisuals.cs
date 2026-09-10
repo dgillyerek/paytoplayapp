@@ -21,8 +21,14 @@ namespace Grove.Unity
         /// <summary>DES-003 dock cream — solid plate so the 5-slot PNG is not stretched over orders.</summary>
         public static readonly Color DockCream = new Color(0.976f, 0.953f, 0.886f, 1f);
 
-        public static readonly Color Ink = new Color(0.10f, 0.18f, 0.10f, 1f);
-        public static readonly Color InkOnGreen = new Color(0.96f, 0.97f, 0.90f, 1f);
+        /// <summary>DES-005 Ink Soft #2A2E2C — body on cream banners and cards.</summary>
+        public static readonly Color InkSoft = new Color(42f / 255f, 46f / 255f, 44f / 255f, 1f);
+
+        /// <summary>Sun Cream on Grove Green (DELIVER, goal chip, HUD on foliage).</summary>
+        public static readonly Color SunCream = new Color(0.976f, 0.953f, 0.886f, 1f);
+
+        public static readonly Color Ink = InkSoft;
+        public static readonly Color InkOnGreen = SunCream;
         public static readonly Color Gold = new Color(1f, 0.92f, 0.55f, 1f);
 
         public static Font Font
@@ -481,9 +487,20 @@ namespace Grove.Unity
             return image;
         }
 
-        public static Button UiButton(Transform parent, string name, string label, Color bg, Vector2 size, Sprite? sprite = null)
+        public static Button UiButton(
+            Transform parent,
+            string name,
+            string label,
+            Color bg,
+            Vector2 size,
+            Sprite? sprite = null,
+            Color? labelColor = null,
+            bool contrastOnDark = true,
+            bool preserveAspect = false,
+            float padX = 8f,
+            float padY = 4f)
         {
-            var image = UiImage(parent, name, bg, sprite, preserveAspect: false, raycastTarget: true);
+            var image = UiImage(parent, name, bg, sprite, preserveAspect, raycastTarget: true);
             var rect = image.rectTransform;
             rect.sizeDelta = size;
             var button = image.gameObject.AddComponent<Button>();
@@ -500,13 +517,13 @@ namespace Grove.Unity
                     label,
                     PlayLayout.TypeButton,
                     TextAnchor.MiddleCenter,
-                    InkOnGreen,
-                    contrastOnDark: true);
+                    labelColor ?? InkOnGreen,
+                    contrastOnDark);
                 var textRect = text.GetComponent<RectTransform>();
                 textRect.anchorMin = Vector2.zero;
                 textRect.anchorMax = Vector2.one;
-                textRect.offsetMin = new Vector2(8f, 4f);
-                textRect.offsetMax = new Vector2(-8f, -4f);
+                textRect.offsetMin = new Vector2(padX, padY);
+                textRect.offsetMax = new Vector2(-padX, -padY);
                 text.raycastTarget = false;
             }
 

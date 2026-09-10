@@ -70,12 +70,39 @@ public sealed class PlayLayoutTests
         Assert.Equal(0.66f, PlayLayout.DesignBoardBottom);
         Assert.Equal(0.70f, PlayLayout.DesignDockTop);
         Assert.True(PlayLayout.TeachHudCaption.YMax - PlayLayout.TeachHudCaption.YMin >= 0.05f);
+        Assert.True(PlayLayout.TeachHudCaption.YMin >= PlayLayout.DockPlate.YMax - 0.0001f);
     }
 
     [Fact]
-    public void Portrait_type_scale_is_arm_length_readable()
+    public void Dock_order_cards_keep_12dp_gutters()
     {
-        Assert.True(PlayLayout.TypeMinReadable >= 28);
+        Assert.True(PlayLayout.MinDockGutterDp >= 12f);
+        var trayW = PlayLayout.OrderTray.XMax - PlayLayout.OrderTray.XMin;
+        var a = PlayLayout.OrderCardLocal(0, 3);
+        var b = PlayLayout.OrderCardLocal(1, 3);
+        var c = PlayLayout.OrderCardLocal(2, 3);
+        Assert.True(a.XMin * trayW >= PlayLayout.MinDockGutterNorm - 0.0001f);
+        Assert.True((1f - c.XMax) * trayW >= PlayLayout.MinDockGutterNorm - 0.0001f);
+        Assert.True((b.XMin - a.XMax) * trayW >= PlayLayout.MinDockGutterNorm - 0.0001f);
+        Assert.True((c.XMin - b.XMax) * trayW >= PlayLayout.MinDockGutterNorm - 0.0001f);
+        Assert.False(PlayLayout.ActiveOrderCard.OverlapsPlayfield());
+        Assert.True(PlayLayout.OrderTray.Contains(PlayLayout.ActiveOrderCard));
+    }
+
+    [Fact]
+    public void Portrait_type_scale_matches_des005_phone_floors()
+    {
+        Assert.True(PlayLayout.TypeMinReadable >= 22);
+        Assert.InRange(PlayLayout.TypeHud, 32, 36);
+        Assert.InRange(PlayLayout.TypeCoin, 32, 36);
+        Assert.InRange(PlayLayout.TypeGoal, 28, 32);
+        Assert.InRange(PlayLayout.TypeTeach, 28, 32);
+        Assert.InRange(PlayLayout.TypeOrderBody, 30, 34);
+        Assert.InRange(PlayLayout.TypeOrderActive, 30, 34);
+        Assert.InRange(PlayLayout.TypeButton, 30, 34);
+        Assert.True(PlayLayout.TypeCrate >= 24);
+        Assert.True(PlayLayout.TypeToast >= 24);
+        Assert.True(PlayLayout.TypeTeachRing >= PlayLayout.TypeMinReadable);
         foreach (var size in new[]
                  {
                      PlayLayout.TypeOrderBody, PlayLayout.TypeOrderActive, PlayLayout.TypeButton,

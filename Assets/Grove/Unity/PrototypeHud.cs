@@ -185,7 +185,8 @@ namespace Grove.Unity
                 "",
                 Color.white,
                 new Vector2(280, 220),
-                GroveArt.PlayCrateSprite(true));
+                GroveArt.PlayCrateSprite(true),
+                preserveAspect: true);
             Place(_crateButton.GetComponent<RectTransform>(), PlayLayout.Crate);
             _crateImage = _crateButton.targetGraphic as Image ?? _crateButton.GetComponent<Image>();
             _crateButton.onClick.AddListener(OnCrate);
@@ -205,7 +206,12 @@ namespace Grove.Unity
                 "STARTER",
                 Color.white,
                 new Vector2(200, 64),
-                GroveArt.Get(GroveArt.StubButton));
+                GroveArt.StarterBadgeSprite,
+                GroveVisuals.Ink,
+                contrastOnDark: false,
+                preserveAspect: true,
+                padX: 20f,
+                padY: 26f);
             Place(store.GetComponent<RectTransform>(), PlayLayout.Store);
             store.onClick.AddListener(OnStarterPack);
 
@@ -448,7 +454,7 @@ namespace Grove.Unity
                 _teachRoot.transform,
                 "Caption",
                 Color.white,
-                GroveArt.MayaBubbleSprite,
+                GroveArt.TeachBannerSprite,
                 false);
             _teachCaptionRect = caption.rectTransform;
             Place(_teachCaptionRect, PlayLayout.TeachHudCaption);
@@ -651,16 +657,13 @@ namespace Grove.Unity
 
         private OrderCardUi BuildCard(OrderSpec order, int index, int total, bool active)
         {
-            var width = 1f / Mathf.Max(1, total);
-            var xmin = index * width;
-            var xmax = (index + 1) * width;
-            var card = GroveVisuals.UiImage(_trayRoot, order.Id, Color.white, GroveArt.Get(GroveArt.StubOrderCard), false);
-            Place(card.rectTransform, new Vector2(xmin + 0.01f, 0.04f), new Vector2(xmax - 0.01f, 0.96f));
+            var card = GroveVisuals.UiImage(_trayRoot, order.Id, Color.white, GroveArt.OrderCardSprite, false);
+            Place(card.rectTransform, PlayLayout.OrderCardLocal(index, total));
 
             var iconRow = new GameObject("Icons");
             iconRow.transform.SetParent(card.transform, false);
             var iconRect = iconRow.AddComponent<RectTransform>();
-            Place(iconRect, new Vector2(0.03f, 0.10f), new Vector2(0.34f, 0.90f));
+            Place(iconRect, new Vector2(0.04f, active ? 0.40f : 0.10f), new Vector2(0.30f, 0.94f));
             for (var r = 0; r < order.Requirements.Count; r++)
             {
                 var req = order.Requirements[r];
@@ -681,7 +684,7 @@ namespace Grove.Unity
                 active ? PlayLayout.TypeOrderActive : PlayLayout.TypeOrderBody,
                 TextAnchor.UpperLeft,
                 GroveVisuals.Ink);
-            Place(body.rectTransform, new Vector2(0.36f, 0.10f), new Vector2(active ? 0.64f : 0.96f, 0.90f));
+            Place(body.rectTransform, new Vector2(0.32f, active ? 0.40f : 0.10f), new Vector2(0.96f, 0.94f));
 
             Button? deliver = null;
             if (active)
@@ -692,8 +695,10 @@ namespace Grove.Unity
                     "DELIVER",
                     Color.white,
                     new Vector2(200, 72),
-                    GroveArt.Get(GroveArt.StubButton));
-                Place(deliver.GetComponent<RectTransform>(), new Vector2(0.65f, 0.16f), new Vector2(0.97f, 0.84f));
+                    GroveArt.DeliverSprite,
+                    GroveVisuals.InkOnGreen,
+                    contrastOnDark: true);
+                Place(deliver.GetComponent<RectTransform>(), new Vector2(0.08f, 0.06f), new Vector2(0.92f, 0.36f));
                 deliver.onClick.AddListener(OnDeliver);
             }
 
