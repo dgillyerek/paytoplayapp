@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -16,6 +17,8 @@ namespace Grove.Unity
         private static Sprite? _cell;
         private static Sprite? _piece;
 
+        public static readonly Color GardenClear = new Color(0.086f, 0.145f, 0.102f, 1f);
+
         public static Font Font
         {
             get
@@ -23,7 +26,8 @@ namespace Grove.Unity
                 if (_font == null)
                 {
                     _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf")
-                            ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
+                            ?? Resources.GetBuiltinResource<Font>("Arial.ttf")
+                            ?? Font.CreateDynamicFontFromOSFont(new[] { "Arial", "Helvetica", "Liberation Sans", "DejaVu Sans" }, 16);
                 }
 
                 return _font;
@@ -205,26 +209,124 @@ namespace Grove.Unity
             go.AddComponent<StandaloneInputModule>();
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void AfterSceneLoad()
+        {
+            EnsurePlayCamera();
+        }
+
         public static void EnsurePlayCamera()
         {
-            var cam = Camera.main;
+            var cam = Camera.main ?? UnityEngine.Object.FindFirstObjectByType<Camera>();
             if (cam == null)
             {
-                return;
+                var go = new GameObject("Main Camera");
+                cam = go.AddComponent<Camera>();
+                go.AddComponent<AudioListener>();
             }
 
+            if (!cam.CompareTag("MainCamera"))
+            {
+                cam.tag = "MainCamera";
+            }
+
+            cam.enabled = true;
             cam.orthographic = true;
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = GardenClear;
+            cam.cullingMask = ~0;
+            cam.depth = -1;
+            cam.nearClipPlane = 0.3f;
+            cam.farClipPlane = 1000f;
             if (cam.orthographicSize < 5.2f)
             {
                 cam.orthographicSize = 5.5f;
             }
 
-            var urpType = System.Type.GetType(
-                "UnityEngine.Rendering.Universal.UniversalAdditionalCameraData, Unity.RenderPipelines.Universal.Runtime");
-            if (urpType != null && cam.GetComponent(urpType) == null)
+            var pos = cam.transform.position;
+            if (Mathf.Abs(pos.z) < 0.01f)
             {
-                cam.gameObject.AddComponent(urpType);
+                cam.transform.position = new Vector3(pos.x, pos.y, -10f);
             }
+
+            EnsureUrpCameraData(cam);
+        }
+
+        public static void ShowDiagnostic(string message)
+        {
+            EnsureEventSystem();
+            var canvasGo = new GameObject("GroveDiagnosticCanvas");
+            var canvas = canvasGo.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 1000;
+            canvasGo.AddComponent<CanvasScaler>();
+            canvasGo.AddComponent<GraphicRaycaster>();
+            var panel = UiImage(canvasGo.transform, "Panel", new Color(0.05f, 0.08f, 0.06f, 0.92f));
+            var panelRect = panel.rectTransform;
+            panelRect.anchorMin = new Vector2(0.06f, 0.35f);
+            panelRect.anchorMax = new Vector2(0.94f, 0.65f);
+            panelRect.offsetMin = Vector2.zero;
+            panelRect.offsetMax = Vector2.zero;
+            var text = UiText(
+                panel.transform,
+                "Message",
+                message,
+                28,
+                TextAnchor.MiddleCenter,
+                new Color(1f, 0.92f, 0.55f));
+            var textRect = text.rectTransform;
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = new Vector2(24f, 24f);
+            textRect.offsetMax = new Vector2(-24f, -24f);
+        }
+
+        private static void EnsureUrpCameraData(Camera cam)
+        {
+            const string dataTypeName = "UnityEngine.Rendering.Universal.UniversalAdditionalCameraData";
+            const string extTypeName = "UnityEngine.Rendering.Universal.CameraExtensions";
+
+            var dataType = FindLoadedType(dataTypeName);
+            if (dataType != null && cam.GetComponent(dataType) != null)
+            {
+                return;
+            }
+
+            var extType = FindLoadedType(extTypeName);
+            var getter = extType != null
+                ? extType.GetMethod("GetUniversalAdditionalCameraData", new[] { typeof(Camera) })
+                : null;
+            if (getter != null)
+            {
+                getter.Invoke(null, new object[] { cam });
+                return;
+            }
+
+            if (dataType != null)
+            {
+                cam.gameObject.AddComponent(dataType);
+            }
+        }
+
+        private static Type? FindLoadedType(string fullName)
+        {
+            var qualified = Type.GetType(fullName + ", Unity.RenderPipelines.Universal.Runtime");
+            if (qualified != null)
+            {
+                return qualified;
+            }
+
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            for (var i = 0; i < assemblies.Length; i++)
+            {
+                var type = assemblies[i].GetType(fullName);
+                if (type != null)
+                {
+                    return type;
+                }
+            }
+
+            return null;
         }
 
         public static Text UiText(Transform parent, string name, string content, int size, TextAnchor anchor, Color color)
@@ -232,7 +334,10 @@ namespace Grove.Unity
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             var text = go.AddComponent<Text>();
-            text.font = Font;
+            if (Font != null)
+            {
+                text.font = Font;
+            }
             text.text = content;
             text.fontSize = size;
             text.alignment = anchor;
