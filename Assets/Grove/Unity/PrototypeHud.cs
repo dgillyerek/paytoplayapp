@@ -102,7 +102,7 @@ namespace Grove.Unity
             Place(gem.rectTransform, new Vector2(0.64f, 0.928f), new Vector2(0.74f, 0.988f));
             gem.gameObject.SetActive(false);
 
-            var dock = GroveVisuals.UiImage(root, "OrderDock", Color.white, GroveArt.HudDockSprite, false);
+            var dock = GroveVisuals.UiImage(root, "OrderDock", GroveVisuals.DockCream, GroveArt.WhiteSprite(), false);
             Place(dock.rectTransform, PlayLayout.DockPlate);
 
             _mayaImage = GroveVisuals.UiImage(root, "Maya", Color.white, GroveArt.Get(GroveArt.StubMayaNeutral), true);
@@ -130,13 +130,20 @@ namespace Grove.Unity
             inventory.transform.SetParent(root, false);
             var inventoryRect = inventory.AddComponent<RectTransform>();
             Place(inventoryRect, PlayLayout.InventoryBar);
+            var inventoryPlate = GroveArt.HudDockSprite;
+            if (inventoryPlate != null)
+            {
+                var plate = GroveVisuals.UiImage(inventory.transform, "InventoryPlate", Color.white, inventoryPlate, true);
+                Stretch(plate.rectTransform);
+            }
+
             for (var i = 0; i < PlayLayout.InventorySlotCount; i++)
             {
                 var slot = GroveVisuals.UiImage(
                     inventory.transform,
                     "Slot" + i,
                     Color.white,
-                    GroveArt.Get(GroveArt.StubInventorySlot) ?? GroveArt.Get(GroveArt.StubOrderCard),
+                    GroveArt.Get(GroveArt.StubInventorySlot),
                     true);
                 Place(slot.rectTransform, PlayLayout.InventorySlotLocal(i));
             }
@@ -150,7 +157,7 @@ namespace Grove.Unity
                 "",
                 Color.white,
                 new Vector2(280, 220),
-                GroveArt.Get(GroveArt.StubCrateCharged) ?? GroveArt.Get(GroveArt.StubCrateIdle));
+                GroveArt.PlayCrateSprite(true));
             Place(_crateButton.GetComponent<RectTransform>(), PlayLayout.Crate);
             _crateImage = _crateButton.targetGraphic as Image ?? _crateButton.GetComponent<Image>();
             _crateButton.onClick.AddListener(OnCrate);
@@ -241,14 +248,12 @@ namespace Grove.Unity
                 _crateText.text = $"Charges {charges}/{Host.Crate.MaxCharges}";
                 var energyOk = Host.Crate.FtueFreeTapRemaining || Host.Energy == null || !Host.Energy.IsEmpty;
                 _crateButton.interactable = !SplashBlocking && charges > 0 && energyOk;
-                var crateStub = charges <= 0
-                    ? GroveArt.StubCrateEmpty
-                    : GroveArt.StubCrateCharged;
-                var crateSprite = GroveArt.Get(crateStub) ?? GroveArt.Get(GroveArt.StubCrateIdle);
+                var crateSprite = GroveArt.PlayCrateSprite(charges > 0);
                 if (crateSprite != null && _crateImage != null)
                 {
                     _crateImage.sprite = crateSprite;
                     _crateImage.preserveAspect = true;
+                    _crateImage.color = Color.white;
                 }
             }
 

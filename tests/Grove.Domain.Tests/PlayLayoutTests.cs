@@ -23,6 +23,10 @@ public sealed class PlayLayoutTests
         Assert.True(PlayLayout.EnergyLabel.YMin >= PlayLayout.BoardSafeRect.YMax);
         Assert.False(PlayLayout.EnergyLabel.Overlaps(PlayLayout.OrderTray));
         Assert.True(PlayLayout.EnergyLabel.YMin > PlayLayout.OrderTray.YMax);
+        Assert.False(PlayLayout.OrderTray.Overlaps(PlayLayout.InventoryBar));
+        Assert.False(PlayLayout.OrderTray.Overlaps(PlayLayout.Store));
+        Assert.True(PlayLayout.OrderTray.YMin - PlayLayout.InventoryBar.YMax >= PlayLayout.MinGapNormY - 0.0001f);
+        Assert.True(PlayLayout.OrderTray.YMin - PlayLayout.Store.YMax >= PlayLayout.MinGapNormY - 0.0001f);
     }
 
     [Fact]
@@ -56,6 +60,9 @@ public sealed class PlayLayoutTests
         Assert.True(PlayLayout.DockBand.Contains(PlayLayout.DockPlate));
         Assert.False(PlayLayout.OrderTray.Overlaps(PlayLayout.BoardBand));
         Assert.False(PlayLayout.OrderTray.Overlaps(PlayLayout.BoardSafeRect));
+        Assert.False(PlayLayout.InventoryBar.Overlaps(PlayLayout.OrderTray));
+        Assert.False(PlayLayout.Store.Overlaps(PlayLayout.OrderTray));
+        Assert.True(PlayLayout.InventoryBar.YMax <= PlayLayout.OrderTray.YMin);
         Assert.True(PlayLayout.DockBand.YMax <= PlayLayout.BoardBand.YMin);
         Assert.True(PlayLayout.BoardBand.YMin - PlayLayout.DockBand.YMax >= PlayLayout.MinGapNormY - 0.0001f);
         Assert.Equal(5, PlayLayout.InventorySlotCount);

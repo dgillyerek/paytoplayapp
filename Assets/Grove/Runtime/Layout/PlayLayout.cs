@@ -121,17 +121,21 @@ namespace Grove.Domain.Layout
         public static readonly NormRect Toast = new NormRect(0.22f, 0.848f, 0.76f, 0.868f);
         public static readonly NormRect MayaBubble = new NormRect(0.78f, 0.850f, 0.975f, 0.900f);
 
-        public static readonly NormRect DockPlate = new NormRect(0.05f, 0.000f, 0.95f, 0.300f);
-        public static readonly NormRect OrderTray = new NormRect(0.08f, 0.108f, 0.92f, 0.285f);
-        public static readonly NormRect InventoryBar = new NormRect(0.22f, 0.016f, 0.74f, 0.098f);
-        public static readonly NormRect Store = new NormRect(0.06f, 0.016f, 0.20f, 0.098f);
+        /// <summary>
+        /// Cream dock fill behind orders + inventory. Not <c>UI_OrderDock_Panel</c> —
+        /// that PNG is a 5-slot inventory bar and must not be stretched over the order cards.
+        /// </summary>
+        public static readonly NormRect DockPlate = new NormRect(0.04f, 0.000f, 0.96f, 0.300f);
+        public static readonly NormRect OrderTray = new NormRect(0.08f, 0.125f, 0.92f, 0.288f);
+        public static readonly NormRect InventoryBar = new NormRect(0.22f, 0.012f, 0.76f, 0.108f);
+        public static readonly NormRect Store = new NormRect(0.04f, 0.012f, 0.20f, 0.108f);
 
         public static readonly NormRect Crate = new NormRect(0.025f, 0.48f, 0.165f, 0.655f);
         public static readonly NormRect CrateLabel = new NormRect(0.025f, 0.655f, 0.165f, 0.700f);
 
         public static readonly NormRect TeachCrateRing = Crate.Inflate(0.008f, 0.008f);
         public static readonly NormRect TeachHudCaption = new NormRect(0.18f, 0.848f, 0.76f, 0.868f);
-        public static readonly NormRect TeachSkip = new NormRect(0.76f, 0.016f, 0.94f, 0.098f);
+        public static readonly NormRect TeachSkip = new NormRect(0.78f, 0.012f, 0.96f, 0.108f);
 
         public static NormRect ActiveOrderCard
         {
