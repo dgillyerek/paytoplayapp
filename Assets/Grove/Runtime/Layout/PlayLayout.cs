@@ -89,6 +89,20 @@ namespace Grove.Domain.Layout
         public const int TypeToast = 28;
         public const int TypeCoin = 34;
 
+        /// <summary>Production <c>UI_Badge_Starter</c> is landscape 1071×648. Store rect must match.</summary>
+        public const float StarterBadgeAspect = 1071f / 648f;
+        public const float StarterPadXPx = 36f;
+        public const float StarterPadYPx = 22f;
+        public const float MayaBubblePadXPx = 16f;
+        public const float MayaBubblePadYPx = 8f;
+
+        /// <summary>
+        /// Wood-recessed wells (not cream CellEmpty plates). Pieces fill the pocket
+        /// instead of sitting as stickers on white tiles.
+        /// </summary>
+        public const float CellWellFill = 0.92f;
+        public const float PieceFill = 0.90f;
+
         /// <summary>Must match <c>Board.unity</c> BoardView serialization.</summary>
         public const float CellSize = 1f;
         public const float OriginX = -3f;
@@ -127,25 +141,33 @@ namespace Grove.Domain.Layout
 
         public static readonly NormRect Playfield = BoardSafeRect;
 
+        /// <summary>Portrait inset so Maya copy / STARTER cannot clip the 1080×1920 edge.</summary>
+        public static readonly NormRect ScreenSafe = new NormRect(0.015f, 0.000f, 0.985f, 0.995f);
+
         public static readonly NormRect EnergyPill = new NormRect(0.02f, 0.928f, 0.095f, 0.988f);
         public static readonly NormRect EnergyBar = new NormRect(0.100f, 0.942f, 0.355f, 0.974f);
         /// <summary>On the energy bar. ≥220px @1080 so "100/100" at TypeHud stays one line.</summary>
         public static readonly NormRect EnergyLabel = new NormRect(0.108f, 0.928f, 0.355f, 0.988f);
         public static readonly NormRect CoinIcon = new NormRect(0.370f, 0.930f, 0.435f, 0.986f);
-        public static readonly NormRect CoinLabel = new NormRect(0.435f, 0.928f, 0.58f, 0.988f);
-        public static readonly NormRect Maya = new NormRect(0.80f, 0.905f, 0.975f, 0.995f);
+        public static readonly NormRect CoinLabel = new NormRect(0.435f, 0.928f, 0.510f, 0.988f);
+        public static readonly NormRect Maya = new NormRect(0.865f, 0.900f, 0.975f, 0.995f);
         public static readonly NormRect Goal = new NormRect(0.34f, 0.872f, 0.66f, 0.918f);
         public static readonly NormRect Toast = new NormRect(0.14f, 0.840f, 0.76f, 0.868f);
-        public static readonly NormRect MayaBubble = new NormRect(0.76f, 0.840f, 0.975f, 0.900f);
+        /// <summary>
+        /// Maya spoken line in the top bar, left of the portrait — not a sliver under Maya
+        /// that clips “A little bigger…” off the right edge.
+        /// </summary>
+        public static readonly NormRect MayaBubble = new NormRect(0.525f, 0.922f, 0.850f, 0.988f);
 
         /// <summary>
         /// Cream dock fill behind orders + inventory. Not <c>UI_OrderDock_Panel</c> —
         /// that PNG is a 5-slot inventory bar and must not be stretched over the order cards.
         /// </summary>
         public static readonly NormRect DockPlate = new NormRect(0.04f, 0.000f, 0.96f, 0.300f);
-        public static readonly NormRect OrderTray = new NormRect(0.08f, 0.125f, 0.92f, 0.288f);
-        public static readonly NormRect InventoryBar = new NormRect(0.22f, 0.012f, 0.76f, 0.108f);
-        public static readonly NormRect Store = new NormRect(0.04f, 0.012f, 0.20f, 0.108f);
+        public static readonly NormRect OrderTray = new NormRect(0.05f, 0.110f, 0.95f, 0.298f);
+        public static readonly NormRect InventoryBar = new NormRect(0.268f, 0.012f, 0.76f, 0.100f);
+        /// <summary>Landscape to match <c>UI_Badge_Starter</c> so STARTER stays one line.</summary>
+        public static readonly NormRect Store = new NormRect(0.016f, 0.016f, 0.250f, 0.096f);
 
         public static readonly NormRect Crate = new NormRect(0.025f, 0.48f, 0.165f, 0.655f);
         /// <summary>Unused on Play — charge copy wrapped mid-word in this sliver.</summary>
@@ -160,14 +182,7 @@ namespace Grove.Domain.Layout
         {
             get
             {
-                var local = OrderCardLocal(0, 3);
-                var tw = OrderTray.XMax - OrderTray.XMin;
-                var th = OrderTray.YMax - OrderTray.YMin;
-                return new NormRect(
-                    OrderTray.XMin + local.XMin * tw,
-                    OrderTray.YMin + local.YMin * th,
-                    OrderTray.XMin + local.XMax * tw,
-                    OrderTray.YMin + local.YMax * th);
+                return MapLocal(OrderTray, OrderCardLocal(0, 3));
             }
         }
 
@@ -188,6 +203,50 @@ namespace Grove.Domain.Layout
             var w = 1f / InventorySlotCount;
             return new NormRect(i * w + 0.03f, 0.06f, (i + 1) * w - 0.03f, 0.94f);
         }
+
+        /// <summary>Icons sit in a top cluster so they cannot overlap order copy.</summary>
+        public static NormRect OrderCardIcons(bool active) =>
+            active
+                ? new NormRect(0.16f, 0.70f, 0.84f, 0.94f)
+                : new NormRect(0.16f, 0.66f, 0.84f, 0.94f);
+
+        /// <summary>Full card width minus vine inset — long tokens like Wildflower stay one word.</summary>
+        public static NormRect OrderCardBody(bool active) =>
+            active
+                ? new NormRect(0.10f, 0.32f, 0.90f, 0.68f)
+                : new NormRect(0.10f, 0.08f, 0.90f, 0.64f);
+
+        public static readonly NormRect OrderCardDeliverBand = new NormRect(0.10f, 0.05f, 0.90f, 0.30f);
+
+        public static NormRect OrderCardReqIcon(int index, int count)
+        {
+            var n = count < 1 ? 1 : count;
+            var i = index < 0 ? 0 : (index >= n ? n - 1 : index);
+            var w = 1f / n;
+            return new NormRect(i * w + 0.08f, 0.06f, (i + 1) * w - 0.08f, 0.94f);
+        }
+
+        public static NormRect MapLocal(NormRect parent, NormRect local)
+        {
+            var w = parent.XMax - parent.XMin;
+            var h = parent.YMax - parent.YMin;
+            return new NormRect(
+                parent.XMin + local.XMin * w,
+                parent.YMin + local.YMin * h,
+                parent.XMin + local.XMax * w,
+                parent.YMin + local.YMax * h);
+        }
+
+        public static float WidthPx(NormRect r) => (r.XMax - r.XMin) * ReferenceWidth;
+
+        public static float HeightPx(NormRect r) => (r.YMax - r.YMin) * ReferenceHeight;
+
+        public static NormRect InsetPx(NormRect r, float padX, float padY) =>
+            new NormRect(
+                r.XMin + padX / ReferenceWidth,
+                r.YMin + padY / ReferenceHeight,
+                r.XMax - padX / ReferenceWidth,
+                r.YMax - padY / ReferenceHeight);
 
         /// <summary>Permanent HUD chrome that must never cover playable cells.</summary>
         public static NormRect[] OccludingHud() =>

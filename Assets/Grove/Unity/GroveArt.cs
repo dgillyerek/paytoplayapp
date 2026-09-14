@@ -49,6 +49,7 @@ namespace Grove.Unity
         private static Sprite? _white;
         private static Sprite? _glowRing;
         private static Sprite? _goalChip;
+        private static Sprite? _cellWell;
 
         public static bool Ready { get; private set; }
 
@@ -167,6 +168,72 @@ namespace Grove.Unity
 
         public static Sprite? MayaBubbleSprite =>
             Get(StubMayaBubble) ?? Get(StubOrderCard);
+
+        /// <summary>
+        /// Carved maple well for the 7×5. <c>ENV_FG_CellEmpty</c> is a cream plate and
+        /// reads as amateur tiles on the wood tray — do not draw it as the cell.
+        /// </summary>
+        public static Sprite CellWellSprite()
+        {
+            if (_cellWell != null)
+            {
+                return _cellWell;
+            }
+
+            const int size = 128;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            var pixels = new Color[size * size];
+            var radius = 28f;
+            var lip = 10f;
+            var wood = new Color(0.72f, 0.58f, 0.40f, 1f);
+            var recess = new Color(0.58f, 0.44f, 0.28f, 1f);
+            var lipColor = new Color(0.50f, 0.38f, 0.24f, 1f);
+            for (var y = 0; y < size; y++)
+            {
+                for (var x = 0; x < size; x++)
+                {
+                    var dx = x < radius ? radius - x : (x > size - 1 - radius ? x - (size - 1 - radius) : 0f);
+                    var dy = y < radius ? radius - y : (y > size - 1 - radius ? y - (size - 1 - radius) : 0f);
+                    var outsideCorner = (x < radius || x > size - 1 - radius) && (y < radius || y > size - 1 - radius);
+                    if (outsideCorner && dx * dx + dy * dy > radius * radius)
+                    {
+                        pixels[y * size + x] = Color.clear;
+                        continue;
+                    }
+
+                    var inner = radius - lip;
+                    var idx = x < inner ? inner - x : (x > size - 1 - inner ? x - (size - 1 - inner) : 0f);
+                    var idy = y < inner ? inner - y : (y > size - 1 - inner ? y - (size - 1 - inner) : 0f);
+                    var innerCorner = (x < inner || x > size - 1 - inner) && (y < inner || y > size - 1 - inner);
+                    var inLip = x < lip || x > size - 1 - lip || y < lip || y > size - 1 - lip
+                                || (innerCorner && idx * idx + idy * idy > inner * inner);
+                    var nx = x / (float)(size - 1);
+                    var ny = y / (float)(size - 1);
+                    var vignette = Mathf.Clamp01(Mathf.Min(nx, 1f - nx) * 4f) * Mathf.Clamp01(Mathf.Min(ny, 1f - ny) * 4f);
+                    if (inLip)
+                    {
+                        pixels[y * size + x] = Color.Lerp(lipColor, wood, ny * 0.25f);
+                    }
+                    else
+                    {
+                        var fill = Color.Lerp(recess, wood, vignette * 0.55f + ny * 0.2f);
+                        pixels[y * size + x] = fill;
+                    }
+                }
+            }
+
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+            tex.name = "grove_cell_well";
+            _cellWell = Sprite.Create(
+                tex,
+                new Rect(0f, 0f, size, size),
+                new Vector2(0.5f, 0.5f),
+                100f,
+                0,
+                SpriteMeshType.FullRect);
+            return _cellWell;
+        }
 
         public static Sprite SpriteForItem(string itemId)
         {

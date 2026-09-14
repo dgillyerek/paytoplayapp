@@ -26,6 +26,9 @@ public sealed class PlayLayoutTests
         Assert.True(PlayLayout.EnergyLabel.YMin > PlayLayout.OrderTray.YMax);
         Assert.False(PlayLayout.OrderTray.Overlaps(PlayLayout.InventoryBar));
         Assert.False(PlayLayout.OrderTray.Overlaps(PlayLayout.Store));
+        Assert.False(PlayLayout.Store.Overlaps(PlayLayout.InventoryBar));
+        Assert.False(PlayLayout.Store.Overlaps(PlayLayout.TeachSkip));
+        Assert.True(PlayLayout.InventoryBar.XMin - PlayLayout.Store.XMax >= PlayLayout.MinGapNormX - 0.0001f);
         Assert.True(PlayLayout.OrderTray.YMin - PlayLayout.InventoryBar.YMax >= PlayLayout.MinGapNormY - 0.0001f);
         Assert.True(PlayLayout.OrderTray.YMin - PlayLayout.Store.YMax >= PlayLayout.MinGapNormY - 0.0001f);
     }
@@ -41,6 +44,7 @@ public sealed class PlayLayoutTests
         Assert.True(PlayLayout.EnergyBand.Contains(PlayLayout.EnergyLabel));
         Assert.True(PlayLayout.EnergyBand.Contains(PlayLayout.CoinLabel));
         Assert.True(PlayLayout.TopBarBand.Contains(PlayLayout.Maya));
+        Assert.True(PlayLayout.TopBarBand.Contains(PlayLayout.MayaBubble));
         Assert.True(PlayLayout.EnergyLabel.YMin > PlayLayout.Goal.YMax);
         Assert.True(PlayLayout.Goal.YMin > PlayLayout.BoardSafeRect.YMax);
         Assert.InRange((PlayLayout.Goal.XMin + PlayLayout.Goal.XMax) * 0.5f, 0.48f, 0.52f);
@@ -165,6 +169,116 @@ public sealed class PlayLayoutTests
         Assert.Equal("Drag two matches together.", catalog.Copy.CoachMerge);
         Assert.Equal("Deliver to Maya.", catalog.Copy.CoachDeliver);
         Assert.Equal(3, catalog.Copy.OrderSlotsMax);
+    }
+
+    [Fact]
+    public void Maya_spoken_line_stays_inside_the_safe_area_at_1080()
+    {
+        Assert.True(PlayLayout.ScreenSafe.Contains(PlayLayout.MayaBubble));
+        Assert.True(PlayLayout.ScreenSafe.Contains(PlayLayout.Maya));
+        Assert.False(PlayLayout.MayaBubble.Overlaps(PlayLayout.Maya));
+        Assert.False(PlayLayout.MayaBubble.Overlaps(PlayLayout.Goal));
+        Assert.False(PlayLayout.MayaBubble.Overlaps(PlayLayout.EnergyLabel));
+        Assert.False(PlayLayout.MayaBubble.Overlaps(PlayLayout.CoinLabel));
+        Assert.False(PlayLayout.MayaBubble.OverlapsPlayfield());
+        Assert.True(PlayLayout.MayaBubble.XMax <= PlayLayout.Maya.XMin + 0.0001f);
+
+        var inner = PlayLayout.InsetPx(
+            PlayLayout.MayaBubble,
+            PlayLayout.MayaBubblePadXPx,
+            PlayLayout.MayaBubblePadYPx);
+        var width = PlayLayout.WidthPx(inner);
+        var height = PlayLayout.HeightPx(inner);
+        Assert.True(width >= 280f, width.ToString("0.0"));
+
+        var catalog = CatalogLoader.LoadDefault();
+        foreach (var order in catalog.Orders)
+        {
+            Assert.True(
+                PlayCopy.FitsWrapped(order.SpokenLine, width, height, PlayLayout.TypeTeach),
+                order.Id + ": " + order.SpokenLine);
+        }
+
+        Assert.True(
+            PlayCopy.FitsWrapped(
+                "A little bigger — keep stacking matches.",
+                width,
+                height,
+                PlayLayout.TypeTeach));
+        var wrapped = PlayCopy.WrapWords(
+            "A little bigger — keep stacking matches.",
+            width,
+            PlayLayout.TypeTeach);
+        Assert.DoesNotContain(wrapped, line => line.Contains("bigge") && !line.Contains("bigger"));
+    }
+
+    [Fact]
+    public void Starter_badge_keeps_STARTER_on_one_line()
+    {
+        Assert.True(PlayLayout.ScreenSafe.Contains(PlayLayout.Store));
+        var aspect = PlayLayout.WidthPx(PlayLayout.Store) / PlayLayout.HeightPx(PlayLayout.Store);
+        Assert.InRange(aspect, PlayLayout.StarterBadgeAspect - 0.12f, PlayLayout.StarterBadgeAspect + 0.12f);
+        var inner = PlayLayout.WidthPx(PlayLayout.Store) - 2f * PlayLayout.StarterPadXPx;
+        Assert.True(PlayCopy.TokenFits("STARTER", PlayLayout.TypeButton, inner), inner.ToString("0.0"));
+        Assert.False(PlayCopy.WrapWords("STARTER", inner, PlayLayout.TypeButton).Count > 1);
+    }
+
+    [Fact]
+    public void Order_card_does_not_wrap_Wildflower_or_overlap_icons()
+    {
+        foreach (var active in new[] { true, false })
+        {
+            Assert.False(PlayLayout.OrderCardIcons(active).Overlaps(PlayLayout.OrderCardBody(active)));
+            if (active)
+            {
+                Assert.False(PlayLayout.OrderCardBody(true).Overlaps(PlayLayout.OrderCardDeliverBand));
+                Assert.False(PlayLayout.OrderCardIcons(true).Overlaps(PlayLayout.OrderCardDeliverBand));
+            }
+        }
+
+        var a = PlayLayout.OrderCardReqIcon(0, 2);
+        var b = PlayLayout.OrderCardReqIcon(1, 2);
+        Assert.False(a.Overlaps(b));
+
+        var catalog = CatalogLoader.LoadDefault();
+        var longest = "Wildflower";
+        foreach (var order in catalog.Orders)
+        {
+            foreach (var req in order.Requirements)
+            {
+                if (!catalog.Items.TryGet(req.Item, out var def))
+                {
+                    continue;
+                }
+
+                foreach (var token in def.DisplayName.Split(' '))
+                {
+                    if (token.Length > longest.Length)
+                    {
+                        longest = token;
+                    }
+                }
+            }
+        }
+
+        foreach (var active in new[] { true, false })
+        {
+            var card = PlayLayout.MapLocal(PlayLayout.OrderTray, PlayLayout.OrderCardLocal(active ? 0 : 2, 3));
+            var body = PlayLayout.MapLocal(card, PlayLayout.OrderCardBody(active));
+            var width = PlayLayout.WidthPx(body);
+            Assert.True(PlayCopy.TokenFits(longest, PlayLayout.TypeOrderBody, width), longest + " @ " + width.ToString("0.0"));
+            Assert.True(PlayCopy.TokenFits("Wildflower", PlayLayout.TypeOrderActive, width));
+        }
+    }
+
+    [Fact]
+    public void Board_cells_are_recessed_wells_not_cream_plates()
+    {
+        Assert.InRange(PlayLayout.CellWellFill, 0.84f, 0.96f);
+        Assert.InRange(PlayLayout.PieceFill, 0.86f, 0.96f);
+        Assert.True(PlayLayout.PieceFill >= 0.88f);
+        Assert.True(PlayLayout.CellWellFill < 1f);
+        Assert.True(PlayLayout.PieceFill > 0.82f);
     }
 }
 
