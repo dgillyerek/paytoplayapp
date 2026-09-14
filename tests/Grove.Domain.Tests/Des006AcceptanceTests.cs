@@ -58,7 +58,7 @@ public sealed class Des006AcceptanceTests
         var starterInner = PlayLayout.WidthPx(PlayLayout.Store) - 2f * PlayLayout.StarterPadXPx;
         Assert.Equal("STARTER", PlayCopy.Ellipsize("STARTER", starterInner, PlayLayout.TypeButton));
         Assert.True(PlayCopy.TokenFits("STARTER", PlayLayout.TypeButton, starterInner));
-        Assert.Equal(1, PlayCopy.WrapWords("STARTER", starterInner, PlayLayout.TypeButton).Count);
+        Assert.Single(PlayCopy.WrapWords("STARTER", starterInner, PlayLayout.TypeButton));
         Assert.DoesNotContain("\n", PlayCopy.Ellipsize("STARTER", 40f, PlayLayout.TypeButton));
         Assert.Contains("…", PlayCopy.Ellipsize("STARTER", 40f, PlayLayout.TypeButton));
 
@@ -73,7 +73,7 @@ public sealed class Des006AcceptanceTests
             {
                 var fit = PlayCopy.Ellipsize(token, width, type);
                 Assert.DoesNotContain("\n", fit);
-                Assert.Equal(1, PlayCopy.WrapWords(fit, width, type).Count);
+                Assert.Single(PlayCopy.WrapWords(fit, width, type));
             }
 
             Assert.Equal("Wildflower", PlayCopy.Ellipsize("Wildflower", width, type));
@@ -98,7 +98,7 @@ public sealed class Des006AcceptanceTests
                     var card = PlayLayout.MapLocal(PlayLayout.OrderTray, PlayLayout.OrderCardLocal(0, 3));
                     var width = PlayLayout.WidthPx(PlayLayout.MapLocal(card, PlayLayout.OrderCardBody(true)));
                     Assert.True(PlayCopy.TokenFits(token, PlayLayout.TypeOrderBody, width), token);
-                    Assert.Equal(1, PlayCopy.WrapWords(token, width, PlayLayout.TypeOrderBody).Count);
+                    Assert.Single(PlayCopy.WrapWords(token, width, PlayLayout.TypeOrderBody));
                 }
             }
         }
@@ -190,7 +190,7 @@ public sealed class Des006AcceptanceTests
         Assert.True(energyW >= 220f, energyW.ToString("0.0"));
         Assert.Equal("100/100", PlayCopy.Ellipsize("100/100", energyW, PlayLayout.TypeHud));
         Assert.True(PlayCopy.TokenFits("100/100", PlayLayout.TypeHud, energyW));
-        Assert.Equal(1, PlayCopy.WrapWords("100/100", energyW, PlayLayout.TypeHud).Count);
+        Assert.Single(PlayCopy.WrapWords("100/100", energyW, PlayLayout.TypeHud));
 
         var hud = ReadRepoFile("Assets", "Grove", "Unity", "PrototypeHud.cs");
         Assert.DoesNotContain("LastFeedback", hud, StringComparison.Ordinal);
