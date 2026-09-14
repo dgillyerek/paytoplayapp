@@ -113,13 +113,11 @@ public sealed class ArtManifestTests
         }
 
         PngInspect.DecodeRgba(path, out width, out height, out var rgba);
-        var punched = new byte[rgba.Length];
-        Array.Copy(rgba, punched, rgba.Length);
-        StudioPlatePunch.Punch(punched, width, height);
+        Assert.True(StudioPlatePunch.CornersTransparent(rgba, width, height), "DES-006 CellEmpty must have transparent corners");
+        StudioPlatePunch.PunchMagentaKey(rgba, width, height);
         Assert.True(
-            StudioPlatePunch.LooksLikeTrueAlphaWell(rgba, width, height) ||
-            StudioPlatePunch.LooksLikeTrueAlphaWell(punched, width, height),
-            "DES-006 CellEmpty recut must be an RGBA rim well (transparent corners)");
+            StudioPlatePunch.LooksLikeTrueAlphaWell(rgba, width, height),
+            "DES-006 CellEmpty recut must be a true-alpha well (no outer cream plate)");
     }
 
     [Fact]

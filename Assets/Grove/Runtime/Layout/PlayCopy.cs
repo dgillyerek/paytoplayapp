@@ -61,6 +61,31 @@ namespace Grove.Domain.Layout
         public static bool TokenFits(string token, int typePx, float widthPx) =>
             LineWidthPx(token ?? "", typePx) <= widthPx + 0.01f;
 
+        /// <summary>DES-006: STARTER / item names stay one line; ellipsis instead of mid-word wrap.</summary>
+        public static string Ellipsize(string text, float widthPx, int typePx)
+        {
+            var value = text ?? "";
+            if (TokenFits(value, typePx, widthPx))
+            {
+                return value;
+            }
+
+            const string ellipsis = "…";
+            var budget = widthPx - LineWidthPx(ellipsis, typePx);
+            if (budget <= 0f || value.Length == 0)
+            {
+                return ellipsis;
+            }
+
+            var n = value.Length;
+            while (n > 0 && LineWidthPx(value.Substring(0, n), typePx) > budget)
+            {
+                n--;
+            }
+
+            return n <= 0 ? ellipsis : value.Substring(0, n) + ellipsis;
+        }
+
         public static bool FitsWrapped(string text, float widthPx, float heightPx, int typePx)
         {
             var lines = WrapWords(text, widthPx, typePx);

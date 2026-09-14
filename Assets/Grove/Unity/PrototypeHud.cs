@@ -677,7 +677,7 @@ namespace Grove.Unity
                 TextAnchor.UpperCenter,
                 GroveVisuals.Ink);
             Place(body.rectTransform, PlayLayout.OrderCardBody(active));
-            body.horizontalOverflow = HorizontalWrapMode.Wrap;
+            body.horizontalOverflow = HorizontalWrapMode.Overflow;
             body.verticalOverflow = VerticalWrapMode.Overflow;
 
             Button? deliver = null;
@@ -757,17 +757,22 @@ namespace Grove.Unity
 
         private string FormatOrder(OrderSpec order, bool active)
         {
+            var type = active ? PlayLayout.TypeOrderActive : PlayLayout.TypeOrderBody;
+            var width = PlayLayout.WidthPx(
+                PlayLayout.MapLocal(
+                    PlayLayout.MapLocal(PlayLayout.OrderTray, PlayLayout.OrderCardLocal(0, 3)),
+                    PlayLayout.OrderCardBody(active)));
             var text = new StringBuilder();
             if (Host != null)
             {
                 var number = active ? Host.Orders.CompletedCount + 1 : IndexOf(order) + 1;
-                text.Append(number);
-                text.Append('/');
-                text.Append(Host.Orders.TotalCount);
-                text.Append(' ');
+                text.Append(PlayCopy.Ellipsize(number + "/" + Host.Orders.TotalCount + " " + order.Title, width, type));
+            }
+            else
+            {
+                text.Append(PlayCopy.Ellipsize(order.Title, width, type));
             }
 
-            text.Append(order.Title);
             foreach (var req in order.Requirements)
             {
                 var name = Host != null && Host.Catalog.Items.TryGet(req.Item, out var def)
@@ -775,19 +780,13 @@ namespace Grove.Unity
                     : req.Item.Value;
                 var have = Host != null ? Host.Session.Board.CountItem(req.Item) : 0;
                 text.Append('\n');
-                text.Append(have);
-                text.Append('/');
-                text.Append(req.Count);
-                text.Append(' ');
-                text.Append(name);
+                text.Append(PlayCopy.Ellipsize(have + "/" + req.Count + " " + name, width, type));
             }
 
             if (order.CoinReward > 0)
             {
                 text.Append('\n');
-                text.Append('+');
-                text.Append(order.CoinReward);
-                text.Append('c');
+                text.Append(PlayCopy.Ellipsize("+" + order.CoinReward + "c", width, type));
             }
 
             return text.ToString();

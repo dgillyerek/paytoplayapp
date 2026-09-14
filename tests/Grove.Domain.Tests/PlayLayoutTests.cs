@@ -39,6 +39,8 @@ public sealed class PlayLayoutTests
         Assert.Equal(0.92f, PlayLayout.FromDesignTop(0.08f), 3);
         Assert.Equal(0.90f, PlayLayout.FromDesignTop(0.10f), 3);
         Assert.Equal(0.34f, PlayLayout.FromDesignTop(0.66f), 3);
+        Assert.Equal(0.30f, PlayLayout.FromDesignTop(0.70f), 3);
+        Assert.Equal(0.28f, PlayLayout.FromDesignTop(0.72f), 3);
         Assert.Equal(0.00f, PlayLayout.FromDesignTop(1f), 3);
 
         Assert.True(PlayLayout.EnergyBand.Contains(PlayLayout.EnergyLabel));
@@ -72,8 +74,8 @@ public sealed class PlayLayoutTests
         Assert.True(PlayLayout.BoardBand.YMin - PlayLayout.DockBand.YMax >= PlayLayout.MinGapNormY - 0.0001f);
         Assert.Equal(5, PlayLayout.InventorySlotCount);
         Assert.Equal(0.10f, PlayLayout.DesignBoardTop);
-        Assert.Equal(0.66f, PlayLayout.DesignBoardBottom);
-        Assert.Equal(0.675f, PlayLayout.DesignDockTop);
+        Assert.Equal(0.70f, PlayLayout.DesignBoardBottom);
+        Assert.Equal(0.72f, PlayLayout.DesignDockTop);
         Assert.True(PlayLayout.TeachHudCaption.YMax - PlayLayout.TeachHudCaption.YMin >= 0.05f);
         Assert.True(PlayLayout.TeachHudCaption.YMin >= PlayLayout.DockPlate.YMax - 0.0001f);
     }
@@ -240,6 +242,15 @@ public sealed class PlayLayoutTests
         var b = PlayLayout.OrderCardReqIcon(1, 2);
         Assert.False(a.Overlaps(b));
 
+        var innerW = 1f - 2f * PlayLayout.OrderCardInnerPad;
+        foreach (var active in new[] { true, false })
+        {
+            var icons = PlayLayout.OrderCardIcons(active);
+            Assert.True(
+                icons.XMax - icons.XMin <= innerW * PlayLayout.OrderIconMaxOfInner + 0.0001f,
+                "icon cluster wider than 70% of card inner");
+        }
+
         var catalog = CatalogLoader.LoadDefault();
         var longest = "Wildflower";
         foreach (var order in catalog.Orders)
@@ -268,6 +279,11 @@ public sealed class PlayLayoutTests
             var width = PlayLayout.WidthPx(body);
             Assert.True(PlayCopy.TokenFits(longest, PlayLayout.TypeOrderBody, width), longest + " @ " + width.ToString("0.0"));
             Assert.True(PlayCopy.TokenFits("Wildflower", PlayLayout.TypeOrderActive, width));
+            Assert.Equal("Wildflower", PlayCopy.Ellipsize("Wildflower", width, PlayLayout.TypeOrderBody));
+            Assert.Equal("0/1 Wildflower", PlayCopy.Ellipsize("0/1 Wildflower", width, PlayLayout.TypeOrderBody));
+            var squeezed = PlayCopy.Ellipsize("0/1 Wildflower", 80f, PlayLayout.TypeOrderBody);
+            Assert.DoesNotContain("\n", squeezed);
+            Assert.True(squeezed.IndexOf('…') >= 0 || squeezed == "0/1 Wildflower");
         }
     }
 
