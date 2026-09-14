@@ -73,15 +73,15 @@ public sealed class PlayLayoutTests
         Assert.Equal(5, PlayLayout.InventorySlotCount);
         Assert.Equal(0.10f, PlayLayout.DesignBoardTop);
         Assert.Equal(0.66f, PlayLayout.DesignBoardBottom);
-        Assert.Equal(0.70f, PlayLayout.DesignDockTop);
+        Assert.Equal(0.675f, PlayLayout.DesignDockTop);
         Assert.True(PlayLayout.TeachHudCaption.YMax - PlayLayout.TeachHudCaption.YMin >= 0.05f);
         Assert.True(PlayLayout.TeachHudCaption.YMin >= PlayLayout.DockPlate.YMax - 0.0001f);
     }
 
     [Fact]
-    public void Dock_order_cards_keep_12dp_gutters()
+    public void Dock_order_cards_keep_16dp_gutters()
     {
-        Assert.True(PlayLayout.MinDockGutterDp >= 12f);
+        Assert.True(PlayLayout.MinDockGutterDp >= 16f);
         var trayW = PlayLayout.OrderTray.XMax - PlayLayout.OrderTray.XMin;
         var a = PlayLayout.OrderCardLocal(0, 3);
         var b = PlayLayout.OrderCardLocal(1, 3);

@@ -72,7 +72,8 @@ namespace Grove.Domain.Layout
         public const float PortraitAspect = ReferenceWidth / ReferenceHeight;
         public const float MinOrthographicSize = 5.2f;
         public const float MinHudGapDp = 16f;
-        public const float MinDockGutterDp = 12f;
+        /// <summary>DES-006: order card gutters ≥16dp so copy/icons are not packed edge-to-edge.</summary>
+        public const float MinDockGutterDp = 16f;
         public const int InventorySlotCount = 5;
 
         /// <summary>DES-005: tiny chrome never below 22px @1080p. Role targets sit above this floor.</summary>
@@ -114,7 +115,8 @@ namespace Grove.Domain.Layout
         public const float DesignTopBarBottom = 0.10f;
         public const float DesignBoardTop = 0.10f;
         public const float DesignBoardBottom = 0.66f;
-        public const float DesignDockTop = 0.70f;
+        /// <summary>DES-006: dock raised vs 0.70 so the board–dock gap is not a dead band.</summary>
+        public const float DesignDockTop = 0.675f;
         public const float DesignDockBottom = 1f;
 
         /// <summary>Prefer bottom dock until DES-003 drops a side-rail PNG.</summary>
@@ -137,7 +139,7 @@ namespace Grove.Domain.Layout
         /// can sit left/center on the board without covering cells. Centered under the Goal pill
         /// like DES003_PlayHud_LayoutMock.
         /// </summary>
-        public static readonly NormRect BoardSafeRect = new NormRect(0.18f, 0.365f, 0.84f, 0.830f);
+        public static readonly NormRect BoardSafeRect = new NormRect(0.18f, 0.342f, 0.88f, 0.852f);
 
         public static readonly NormRect Playfield = BoardSafeRect;
 
@@ -152,7 +154,7 @@ namespace Grove.Domain.Layout
         public static readonly NormRect CoinLabel = new NormRect(0.435f, 0.928f, 0.510f, 0.988f);
         public static readonly NormRect Maya = new NormRect(0.865f, 0.900f, 0.975f, 0.995f);
         public static readonly NormRect Goal = new NormRect(0.34f, 0.872f, 0.66f, 0.918f);
-        public static readonly NormRect Toast = new NormRect(0.14f, 0.840f, 0.76f, 0.868f);
+        public static readonly NormRect Toast = new NormRect(0.20f, 0.872f, 0.72f, 0.918f);
         /// <summary>
         /// Maya spoken line in the top bar, left of the portrait — not a sliver under Maya
         /// that clips “A little bigger…” off the right edge.
@@ -163,8 +165,8 @@ namespace Grove.Domain.Layout
         /// Cream dock fill behind orders + inventory. Not <c>UI_OrderDock_Panel</c> —
         /// that PNG is a 5-slot inventory bar and must not be stretched over the order cards.
         /// </summary>
-        public static readonly NormRect DockPlate = new NormRect(0.04f, 0.000f, 0.96f, 0.300f);
-        public static readonly NormRect OrderTray = new NormRect(0.05f, 0.110f, 0.95f, 0.298f);
+        public static readonly NormRect DockPlate = new NormRect(0.04f, 0.000f, 0.96f, 0.325f);
+        public static readonly NormRect OrderTray = new NormRect(0.04f, 0.110f, 0.96f, 0.322f);
         public static readonly NormRect InventoryBar = new NormRect(0.268f, 0.012f, 0.76f, 0.100f);
         /// <summary>Landscape to match <c>UI_Badge_Starter</c> so STARTER stays one line.</summary>
         public static readonly NormRect Store = new NormRect(0.016f, 0.016f, 0.250f, 0.096f);
@@ -175,7 +177,7 @@ namespace Grove.Domain.Layout
 
         public static readonly NormRect TeachCrateRing = Crate.Inflate(0.008f, 0.008f);
         /// <summary>Teach banner between dock and board. Overlay — not in <see cref="OccludingHud"/>.</summary>
-        public static readonly NormRect TeachHudCaption = new NormRect(0.08f, 0.302f, 0.92f, 0.368f);
+        public static readonly NormRect TeachHudCaption = new NormRect(0.08f, 0.326f, 0.92f, 0.378f);
         public static readonly NormRect TeachSkip = new NormRect(0.78f, 0.012f, 0.96f, 0.108f);
 
         public static NormRect ActiveOrderCard

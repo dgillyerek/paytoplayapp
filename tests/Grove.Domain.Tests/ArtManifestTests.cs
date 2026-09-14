@@ -96,6 +96,33 @@ public sealed class ArtManifestTests
     }
 
     [Fact]
+    public void CellEmpty_true_alpha_well_when_des006_recut_is_dropped()
+    {
+        var manifest = ArtManifest.LoadDefault();
+        var dir = ArtManifest.ResolveDirectory();
+        Assert.True(manifest.TryGet("ENV_FG_CellEmpty", out var asset));
+        Assert.True(StudioPlatePunch.ShouldPunch(asset.Stub, asset.Category));
+        var path = Path.Combine(dir, asset.Filename.Replace('/', Path.DirectorySeparatorChar));
+        PngInspect.Header(path, out var width, out var height, out var colorType);
+        Assert.True(width >= 64 && height >= 64);
+
+        if (colorType != 6)
+        {
+            Assert.Equal(2, colorType);
+            return;
+        }
+
+        PngInspect.DecodeRgba(path, out width, out height, out var rgba);
+        var punched = new byte[rgba.Length];
+        Array.Copy(rgba, punched, rgba.Length);
+        StudioPlatePunch.Punch(punched, width, height);
+        Assert.True(
+            StudioPlatePunch.LooksLikeTrueAlphaWell(rgba, width, height) ||
+            StudioPlatePunch.LooksLikeTrueAlphaWell(punched, width, height),
+            "DES-006 CellEmpty recut must be an RGBA rim well (transparent corners)");
+    }
+
+    [Fact]
     public void Teach_ring_and_hand_are_rgba_with_transparent_corners()
     {
         var manifest = ArtManifest.LoadDefault();
