@@ -42,6 +42,7 @@ public sealed class StudioPlatePunchTests
         Assert.Equal(196, rgba[center]);
         Assert.False(StudioPlatePunch.ShouldPunch("UI_OrderTray_Card", "hud"));
         Assert.True(StudioPlatePunch.ShouldPunch("WF_T02_Sprout", "piece"));
+        Assert.True(StudioPlatePunch.ShouldPunch("ENV_FG_CellEmpty", "board"));
     }
 
     [Fact]

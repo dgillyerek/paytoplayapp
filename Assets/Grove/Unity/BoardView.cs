@@ -240,7 +240,7 @@ namespace Grove.Unity
             }
 
             _surfaceSprite = GroveArt.Get(GroveArt.StubBoardSurface);
-            var cellSprite = GroveArt.CellWellSprite();
+            var cellSprite = GroveArt.PlayCellSprite();
             if (_surfaceSprite == null)
             {
                 _surfaceSprite = GroveArt.Get(GroveArt.StubCellEmpty);
