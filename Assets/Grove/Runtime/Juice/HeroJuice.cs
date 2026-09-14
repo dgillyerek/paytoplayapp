@@ -6,6 +6,8 @@ namespace Grove.Domain.Juice
     /// Style bible §5 hero-loop motion: crate tap, merge pop, deliver.
     /// Unity samples these curves; headless tests lock premium-casual feel
     /// (not linear lerp / instant swap). Design owns visual PASS.
+    /// Product scope: existing Front Garden Orders 1–6 and WF/Herb/Tools spit only —
+    /// mock props (gnomes, lanterns, etc.) are not new item chains.
     /// </summary>
     public static class HeroJuice
     {

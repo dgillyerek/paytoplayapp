@@ -168,10 +168,60 @@ public sealed class HeroJuiceTests
         Assert.DoesNotContain("ParticleSystem", fx, StringComparison.Ordinal);
     }
 
-    private static string ReadUnity(string file)
+    [Fact]
+    public void Hero_loop_uses_existing_area1_pieces_and_orders_1_through_6()
+    {
+        var catalog = CatalogLoader.LoadDefault();
+        Assert.Equal(6, catalog.Orders.Count);
+        Assert.Equal(
+            new[] { "order_1", "order_2", "order_3", "order_4", "order_5", "order_6" },
+            catalog.Orders.Select(o => o.Id).ToArray());
+
+        var allowedOrderItems = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "wildflower_t2", "wildflower_t3", "wildflower_t4", "wildflower_t5",
+            "herb_t2", "tool_t2"
+        };
+        foreach (var order in catalog.Orders)
+        {
+            foreach (var req in order.Requirements)
+            {
+                Assert.Contains(req.Item.Value, allowedOrderItems);
+            }
+        }
+
+        Assert.NotNull(catalog.GardenCrate);
+        Assert.Equal(
+            new[] { "wildflower_t1", "herb_t1", "tool_t1" },
+            catalog.GardenCrate!.Outputs.Select(o => o.ItemId).ToArray());
+
+        var hud = ReadUnity("PrototypeHud.cs");
+        var board = ReadUnity("BoardView.cs");
+        var fx = ReadUnity("HeroJuiceFx.cs");
+        var juice = File.ReadAllText(Path.Combine(RepoRoot(), "Assets", "Grove", "Runtime", "Juice", "HeroJuice.cs"));
+        foreach (var src in new[] { hud, board, fx, juice })
+        {
+            Assert.DoesNotContain("gnome", src, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("lantern", src, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("wheelbarrow", src, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("birdhouse", src, StringComparison.OrdinalIgnoreCase);
+        }
+
+        Assert.Contains("PlaySpitArc(ok.Item.Value", hud, StringComparison.Ordinal);
+        Assert.Contains("SpriteForItem(itemId)", board, StringComparison.Ordinal);
+        Assert.Contains("StubCoin", hud, StringComparison.Ordinal);
+        Assert.Contains("StubMergeSparkle", board, StringComparison.Ordinal);
+        Assert.Contains("Orders 1–6", juice, StringComparison.Ordinal);
+    }
+
+    private static string RepoRoot()
     {
         var art = Grove.Domain.Art.ArtManifest.ResolveDirectory();
-        var root = Path.GetFullPath(Path.Combine(art, "..", "..", "..", ".."));
-        return File.ReadAllText(Path.Combine(root, "Assets", "Grove", "Unity", file));
+        return Path.GetFullPath(Path.Combine(art, "..", "..", "..", ".."));
+    }
+
+    private static string ReadUnity(string file)
+    {
+        return File.ReadAllText(Path.Combine(RepoRoot(), "Assets", "Grove", "Unity", file));
     }
 }
