@@ -99,6 +99,8 @@ namespace Grove.Domain.Layout
         public const float OrderCardInnerPad = 0.10f;
         /// <summary>DES-006: item icons ≤70% of the card inner box so they cannot overlap neighbors.</summary>
         public const float OrderIconMaxOfInner = 0.70f;
+        /// <summary>DES-006: item icons inset ≥12px from the card edge @1080.</summary>
+        public const float OrderIconInsetPx = 12f;
 
         /// <summary>
         /// Wood-recessed wells (not cream CellEmpty plates). Pieces fill the pocket
@@ -210,24 +212,29 @@ namespace Grove.Domain.Layout
             return new NormRect(i * w + 0.03f, 0.06f, (i + 1) * w - 0.03f, 0.94f);
         }
 
-        /// <summary>Icons ≤70% of card inner, centered in a top cluster.</summary>
+        /// <summary>Icons ≤70% of card inner, centered in a top cluster, ≥12px from the card edge.</summary>
         public static NormRect OrderCardIcons(bool active)
         {
-            var innerW = 1f - 2f * OrderCardInnerPad;
-            var w = innerW * OrderIconMaxOfInner;
+            var padX = Math.Max(OrderCardInnerPad, OrderIconInsetLocalX());
+            var padY = Math.Max(0.06f, OrderIconInsetLocalY());
+            var innerW = 1f - 2f * padX;
+            var w = Math.Min(innerW * OrderIconMaxOfInner, 1f - 2f * padX);
             var x0 = 0.5f - w * 0.5f;
             var x1 = 0.5f + w * 0.5f;
             var h = Math.Min(0.22f, innerW * OrderIconMaxOfInner);
-            var y1 = 0.94f;
-            var y0 = active ? y1 - h : y1 - h;
+            var y1 = 1f - padY;
+            var y0 = y1 - h;
             return new NormRect(x0, y0, x1, y1);
         }
 
         /// <summary>Full card width minus vine inset — long tokens like Wildflower stay one word.</summary>
-        public static NormRect OrderCardBody(bool active) =>
-            active
-                ? new NormRect(0.06f, 0.32f, 0.94f, 0.68f)
-                : new NormRect(0.06f, 0.08f, 0.94f, 0.64f);
+        public static NormRect OrderCardBody(bool active)
+        {
+            var padX = Math.Max(0.06f, OrderIconInsetLocalX());
+            return active
+                ? new NormRect(padX, 0.32f, 1f - padX, 0.68f)
+                : new NormRect(padX, 0.08f, 1f - padX, 0.64f);
+        }
 
         public static readonly NormRect OrderCardDeliverBand = new NormRect(0.10f, 0.05f, 0.90f, 0.30f);
 
@@ -383,6 +390,20 @@ namespace Grove.Domain.Layout
                    && x1 <= BoardSafeRect.XMax + eps
                    && y0 >= BoardSafeRect.YMin - eps
                    && y1 <= BoardSafeRect.YMax + eps;
+        }
+
+        public static float OrderIconInsetLocalX()
+        {
+            var card = MapLocal(OrderTray, OrderCardLocal(0, 3));
+            var w = card.XMax - card.XMin;
+            return w > 0.0001f ? OrderIconInsetPx / ReferenceWidth / w : OrderCardInnerPad;
+        }
+
+        public static float OrderIconInsetLocalY()
+        {
+            var card = MapLocal(OrderTray, OrderCardLocal(0, 3));
+            var h = card.YMax - card.YMin;
+            return h > 0.0001f ? OrderIconInsetPx / ReferenceHeight / h : 0.06f;
         }
 
         private static NormRect BandFromDesign(float xMin, float designTop, float xMax, float designBottom) =>

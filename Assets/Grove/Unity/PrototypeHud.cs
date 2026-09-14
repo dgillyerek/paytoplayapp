@@ -99,7 +99,7 @@ namespace Grove.Unity
             _energyText = GroveVisuals.UiText(
                 root,
                 "EnergyLabel",
-                "100/100",
+                PlayCopy.Ellipsize("100/100", PlayLayout.WidthPx(PlayLayout.EnergyLabel), PlayLayout.TypeHud),
                 PlayLayout.TypeHud,
                 TextAnchor.MiddleCenter,
                 Color.white,
@@ -210,6 +210,15 @@ namespace Grove.Unity
                 padY: PlayLayout.StarterPadYPx,
                 oneLine: true);
             Place(store.GetComponent<RectTransform>(), PlayLayout.Store);
+            var storeLabel = store.GetComponentInChildren<Text>();
+            if (storeLabel != null)
+            {
+                storeLabel.text = PlayCopy.Ellipsize(
+                    "STARTER",
+                    PlayLayout.WidthPx(PlayLayout.Store) - 2f * PlayLayout.StarterPadXPx,
+                    PlayLayout.TypeButton);
+            }
+
             store.onClick.AddListener(OnStarterPack);
 
             BuildEnergyEmpty(root);
@@ -234,7 +243,10 @@ namespace Grove.Unity
         {
             if (_energyText != null)
             {
-                _energyText.text = $"{current}/{cap}";
+                _energyText.text = PlayCopy.Ellipsize(
+                    current + "/" + cap,
+                    PlayLayout.WidthPx(PlayLayout.EnergyLabel),
+                    PlayLayout.TypeHud);
             }
 
             if (_energyFill != null && cap > 0)
