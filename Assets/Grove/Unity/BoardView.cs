@@ -141,7 +141,7 @@ namespace Grove.Unity
             EnsureGhost();
             _ghost!.SetActive(true);
             _ghost.transform.position = world + new Vector3(0f, 0f, -0.2f);
-            ApplyPieceVisual(_ghostRenderer!, _ghostLabel!, stack, cellSize * 0.86f);
+            ApplyPieceVisual(_ghostRenderer!, _ghostLabel!, stack, cellSize * PlayLayout.PieceFill);
         }
 
         public void MoveGhost(Vector3 world)
@@ -240,10 +240,10 @@ namespace Grove.Unity
             }
 
             _surfaceSprite = GroveArt.Get(GroveArt.StubBoardSurface);
-            var cellSprite = GroveArt.Get(GroveArt.StubCellEmpty);
+            var cellSprite = GroveArt.CellWellSprite();
             if (_surfaceSprite == null)
             {
-                _surfaceSprite = cellSprite;
+                _surfaceSprite = GroveArt.Get(GroveArt.StubCellEmpty);
             }
 
             if (_surfaceSprite != null)
@@ -283,8 +283,8 @@ namespace Grove.Unity
                             cell.transform,
                             cellSprite,
                             CellToWorld(pos) + new Vector3(0f, 0f, 0.02f),
-                            cellSize * 1.06f,
-                            cellSize * 1.06f);
+                            cellSize * PlayLayout.CellWellFill,
+                            cellSize * PlayLayout.CellWellFill);
                     }
                 }
             }
@@ -300,7 +300,12 @@ namespace Grove.Unity
                     Color.white,
                     highlight,
                     2);
-                GroveVisuals.CoverRect(_hover.transform, highlight, Vector3.zero, cellSize * 1.08f, cellSize * 1.08f);
+                GroveVisuals.CoverRect(
+                    _hover.transform,
+                    highlight,
+                    Vector3.zero,
+                    cellSize * PlayLayout.CellWellFill * 1.06f,
+                    cellSize * PlayLayout.CellWellFill * 1.06f);
                 _hover.SetActive(false);
             }
         }
@@ -453,8 +458,8 @@ namespace Grove.Unity
         }
 
         /// <summary>
-        /// Backdrop covers the camera; wood BoardSurface fills the 7×5; cream cells overlap so no
-        /// grey/green programmer grid can show between tiles or around the tray.
+        /// Backdrop covers the camera; wood BoardSurface fills the 7×5; maple wells mark
+        /// each cell (not cream CellEmpty plates). Pieces fill the pocket.
         /// </summary>
         public void CoverPlayfield()
         {
@@ -499,7 +504,7 @@ namespace Grove.Unity
                 $"Piece_{pos.X}_{pos.Y}",
                 _piecesRoot!,
                 CellToWorld(pos) + new Vector3(0f, 0f, -0.05f),
-                cellSize * 0.82f,
+                cellSize * PlayLayout.PieceFill,
                 Color.white,
                 sprite,
                 5);
@@ -528,7 +533,7 @@ namespace Grove.Unity
                 "Ghost",
                 transform,
                 Vector3.zero,
-                cellSize * 0.86f,
+                cellSize * PlayLayout.PieceFill,
                 Color.white,
                 GroveArt.Require(GroveArt.StubCellEmpty),
                 12);

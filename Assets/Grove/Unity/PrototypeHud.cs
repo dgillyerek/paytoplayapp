@@ -137,11 +137,15 @@ namespace Grove.Unity
                 "Line",
                 "",
                 PlayLayout.TypeTeach,
-                TextAnchor.MiddleLeft,
+                TextAnchor.MiddleCenter,
                 GroveVisuals.Ink);
-            Stretch(_mayaBubbleText.rectTransform);
-            _mayaBubbleText.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _mayaBubbleText.verticalOverflow = VerticalWrapMode.Truncate;
+            var bubbleText = _mayaBubbleText.rectTransform;
+            bubbleText.anchorMin = Vector2.zero;
+            bubbleText.anchorMax = Vector2.one;
+            bubbleText.offsetMin = new Vector2(PlayLayout.MayaBubblePadXPx, PlayLayout.MayaBubblePadYPx);
+            bubbleText.offsetMax = new Vector2(-PlayLayout.MayaBubblePadXPx, -PlayLayout.MayaBubblePadYPx);
+            _mayaBubbleText.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _mayaBubbleText.verticalOverflow = VerticalWrapMode.Overflow;
 
             var tray = new GameObject("OrderTray");
             tray.transform.SetParent(root, false);
@@ -202,8 +206,9 @@ namespace Grove.Unity
                 GroveVisuals.Ink,
                 contrastOnDark: false,
                 preserveAspect: true,
-                padX: 20f,
-                padY: 26f);
+                padX: PlayLayout.StarterPadXPx,
+                padY: PlayLayout.StarterPadYPx,
+                oneLine: true);
             Place(store.GetComponent<RectTransform>(), PlayLayout.Store);
             store.onClick.AddListener(OnStarterPack);
 
@@ -651,7 +656,7 @@ namespace Grove.Unity
             var iconRow = new GameObject("Icons");
             iconRow.transform.SetParent(card.transform, false);
             var iconRect = iconRow.AddComponent<RectTransform>();
-            Place(iconRect, new Vector2(0.04f, active ? 0.40f : 0.10f), new Vector2(0.30f, 0.94f));
+            Place(iconRect, PlayLayout.OrderCardIcons(active));
             for (var r = 0; r < order.Requirements.Count; r++)
             {
                 var req = order.Requirements[r];
@@ -661,8 +666,7 @@ namespace Grove.Unity
                     Color.white,
                     GroveArt.SpriteForItem(req.Item.Value),
                     true);
-                var t = order.Requirements.Count == 1 ? 0.5f : r / (float)(order.Requirements.Count - 1);
-                Place(icon.rectTransform, new Vector2(t * 0.40f, 0.04f), new Vector2(0.60f + t * 0.40f, 0.96f));
+                Place(icon.rectTransform, PlayLayout.OrderCardReqIcon(r, order.Requirements.Count));
             }
 
             var body = GroveVisuals.UiText(
@@ -670,9 +674,11 @@ namespace Grove.Unity
                 "Body",
                 "",
                 active ? PlayLayout.TypeOrderActive : PlayLayout.TypeOrderBody,
-                TextAnchor.UpperLeft,
+                TextAnchor.UpperCenter,
                 GroveVisuals.Ink);
-            Place(body.rectTransform, new Vector2(0.32f, active ? 0.40f : 0.10f), new Vector2(0.96f, 0.94f));
+            Place(body.rectTransform, PlayLayout.OrderCardBody(active));
+            body.horizontalOverflow = HorizontalWrapMode.Wrap;
+            body.verticalOverflow = VerticalWrapMode.Overflow;
 
             Button? deliver = null;
             if (active)
@@ -686,7 +692,7 @@ namespace Grove.Unity
                     GroveArt.DeliverSprite,
                     GroveVisuals.InkOnGreen,
                     contrastOnDark: true);
-                Place(deliver.GetComponent<RectTransform>(), new Vector2(0.08f, 0.06f), new Vector2(0.92f, 0.36f));
+                Place(deliver.GetComponent<RectTransform>(), PlayLayout.OrderCardDeliverBand);
                 deliver.onClick.AddListener(OnDeliver);
             }
 
@@ -746,11 +752,6 @@ namespace Grove.Unity
             bubbleRoot.SetActive(true);
 
             var line = Host.Orders.Active?.SpokenLine ?? "";
-            if (line.Length > 64)
-            {
-                line = line.Substring(0, 61) + "…";
-            }
-
             _mayaBubbleText.text = line;
         }
 

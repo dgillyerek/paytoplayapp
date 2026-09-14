@@ -501,7 +501,8 @@ namespace Grove.Unity
             bool contrastOnDark = true,
             bool preserveAspect = false,
             float padX = 8f,
-            float padY = 4f)
+            float padY = 4f,
+            bool oneLine = false)
         {
             var image = UiImage(parent, name, bg, sprite, preserveAspect, raycastTarget: true);
             var rect = image.rectTransform;
@@ -521,7 +522,8 @@ namespace Grove.Unity
                     PlayLayout.TypeButton,
                     TextAnchor.MiddleCenter,
                     labelColor ?? InkOnGreen,
-                    contrastOnDark);
+                    contrastOnDark,
+                    oneLine);
                 var textRect = text.GetComponent<RectTransform>();
                 textRect.anchorMin = Vector2.zero;
                 textRect.anchorMax = Vector2.one;
