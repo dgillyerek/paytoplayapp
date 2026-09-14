@@ -198,8 +198,10 @@ public sealed class HeroJuiceTests
         var hud = ReadUnity("PrototypeHud.cs");
         var board = ReadUnity("BoardView.cs");
         var fx = ReadUnity("HeroJuiceFx.cs");
-        var juice = File.ReadAllText(Path.Combine(RepoRoot(), "Assets", "Grove", "Runtime", "Juice", "HeroJuice.cs"));
-        foreach (var src in new[] { hud, board, fx, juice })
+        var itemsJson = File.ReadAllText(Path.Combine(RepoRoot(), "Assets", "Grove", "Resources", "Grove", "items.json"));
+        var ordersJson = File.ReadAllText(Path.Combine(RepoRoot(), "Assets", "Grove", "Resources", "Grove", "orders.json"));
+        var crateJson = File.ReadAllText(Path.Combine(RepoRoot(), "Assets", "Grove", "Resources", "Grove", "garden_crate.json"));
+        foreach (var src in new[] { hud, board, fx, itemsJson, ordersJson, crateJson })
         {
             Assert.DoesNotContain("gnome", src, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("lantern", src, StringComparison.OrdinalIgnoreCase);
@@ -211,6 +213,7 @@ public sealed class HeroJuiceTests
         Assert.Contains("SpriteForItem(itemId)", board, StringComparison.Ordinal);
         Assert.Contains("StubCoin", hud, StringComparison.Ordinal);
         Assert.Contains("StubMergeSparkle", board, StringComparison.Ordinal);
+        var juice = File.ReadAllText(Path.Combine(RepoRoot(), "Assets", "Grove", "Runtime", "Juice", "HeroJuice.cs"));
         Assert.Contains("Orders 1–6", juice, StringComparison.Ordinal);
     }
 

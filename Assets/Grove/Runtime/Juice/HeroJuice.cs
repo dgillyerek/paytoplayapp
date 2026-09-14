@@ -7,7 +7,7 @@ namespace Grove.Domain.Juice
     /// Unity samples these curves; headless tests lock premium-casual feel
     /// (not linear lerp / instant swap). Design owns visual PASS.
     /// Product scope: existing Front Garden Orders 1–6 and WF/Herb/Tools spit only —
-    /// mock props (gnomes, lanterns, etc.) are not new item chains.
+    /// mock props beyond Area 1 lists are not new item chains.
     /// </summary>
     public static class HeroJuice
     {
