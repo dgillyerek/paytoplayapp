@@ -55,7 +55,8 @@ namespace Grove.Domain.Art
         }
 
         /// <summary>
-        /// DES-006 CellEmpty recut: transparent corners, rim/object only — not a filled cream plate.
+        /// DES-006 CellEmpty recut: transparent outside (no outer cream plate). Interior may
+        /// be a framed wood well (~95% opaque) or a rim-only pocket.
         /// </summary>
         public static bool LooksLikeTrueAlphaWell(byte[] rgba, int width, int height)
         {
@@ -75,7 +76,38 @@ namespace Grove.Domain.Art
             }
 
             var frac = n == 0 ? 0f : opaque / (float)n;
-            return frac > 0.02f && frac < 0.55f;
+            return frac > 0.02f && frac < 0.98f;
+        }
+
+        /// <summary>Design magenta key (#ff00ff fringe) → true alpha.</summary>
+        public static int PunchMagentaKey(byte[] rgba, int width, int height)
+        {
+            if (!Valid(rgba, width, height))
+            {
+                return 0;
+            }
+
+            var n = 0;
+            var count = width * height;
+            for (var i = 0; i < count; i++)
+            {
+                var o = i * 4;
+                var r = rgba[o];
+                var g = rgba[o + 1];
+                var b = rgba[o + 2];
+                if (r < 180 || b < 180 || g > 90)
+                {
+                    continue;
+                }
+
+                rgba[o] = 0;
+                rgba[o + 1] = 0;
+                rgba[o + 2] = 0;
+                rgba[o + 3] = 0;
+                n++;
+            }
+
+            return n;
         }
 
         /// <summary>

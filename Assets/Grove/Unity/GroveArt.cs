@@ -571,6 +571,11 @@ namespace Grove.Unity
                 rgba[i * 4 + 3] = (byte)Mathf.Clamp(Mathf.RoundToInt(c.a * 255f), 0, 255);
             }
 
+            if (stub == StubCellEmpty)
+            {
+                StudioPlatePunch.PunchMagentaKey(rgba, width, height);
+            }
+
             StudioPlatePunch.Punch(rgba, width, height);
             StudioPlatePunch.ClearTransparentRgb(rgba, width, height);
 

@@ -62,7 +62,7 @@ namespace Grove.Domain.Layout
     /// DEV-019 Play layout per DES-003 mock + handoff.
     /// Design Y% is from the TOP of 1080×1920; Unity / this type use Y = 0 at the bottom.
     /// Mock stack: energy L + Maya R, small Goal pill under that row, board, then order dock.
-    /// Orders live only in the dock (Design 70–100%). Cells live in the board band (~10–66%).
+    /// Orders live only in the dock (Design 72–100%). Cells live in the board band (~10–70%).
     /// Gap ≥ 16dp.
     /// </summary>
     public static class PlayLayout
@@ -72,14 +72,14 @@ namespace Grove.Domain.Layout
         public const float PortraitAspect = ReferenceWidth / ReferenceHeight;
         public const float MinOrthographicSize = 5.2f;
         public const float MinHudGapDp = 16f;
-        /// <summary>DES-006: order card gutters ≥16dp so copy/icons are not packed edge-to-edge.</summary>
+        /// <summary>DES-006: order card gutters ≥12dp (we keep 16).</summary>
         public const float MinDockGutterDp = 16f;
         public const int InventorySlotCount = 5;
 
         /// <summary>DES-005: tiny chrome never below 22px @1080p. Role targets sit above this floor.</summary>
         public const int TypeMinReadable = 22;
         public const int TypeOrderBody = 30;
-        public const int TypeOrderActive = 32;
+        public const int TypeOrderActive = 30;
         public const int TypeButton = 34;
         public const int TypeHud = 34;
         public const int TypeGoal = 30;
@@ -96,6 +96,9 @@ namespace Grove.Domain.Layout
         public const float StarterPadYPx = 22f;
         public const float MayaBubblePadXPx = 16f;
         public const float MayaBubblePadYPx = 8f;
+        public const float OrderCardInnerPad = 0.10f;
+        /// <summary>DES-006: item icons ≤70% of the card inner box so they cannot overlap neighbors.</summary>
+        public const float OrderIconMaxOfInner = 0.70f;
 
         /// <summary>
         /// Wood-recessed wells (not cream CellEmpty plates). Pieces fill the pocket
@@ -114,9 +117,10 @@ namespace Grove.Domain.Layout
         public const float DesignEnergyBottom = 0.08f;
         public const float DesignTopBarBottom = 0.10f;
         public const float DesignBoardTop = 0.10f;
-        public const float DesignBoardBottom = 0.66f;
-        /// <summary>DES-006: dock raised vs 0.70 so the board–dock gap is not a dead band.</summary>
-        public const float DesignDockTop = 0.675f;
+        /// <summary>DES-006: board band down to ~0.68–0.70 so the mid gap is not dead space.</summary>
+        public const float DesignBoardBottom = 0.70f;
+        /// <summary>DES-006 dock top ~0.72; ≥16dp above the board band.</summary>
+        public const float DesignDockTop = 0.72f;
         public const float DesignDockBottom = 1f;
 
         /// <summary>Prefer bottom dock until DES-003 drops a side-rail PNG.</summary>
@@ -139,7 +143,7 @@ namespace Grove.Domain.Layout
         /// can sit left/center on the board without covering cells. Centered under the Goal pill
         /// like DES003_PlayHud_LayoutMock.
         /// </summary>
-        public static readonly NormRect BoardSafeRect = new NormRect(0.18f, 0.342f, 0.88f, 0.852f);
+        public static readonly NormRect BoardSafeRect = new NormRect(0.18f, 0.300f, 0.88f, 0.852f);
 
         public static readonly NormRect Playfield = BoardSafeRect;
 
@@ -165,20 +169,20 @@ namespace Grove.Domain.Layout
         /// Cream dock fill behind orders + inventory. Not <c>UI_OrderDock_Panel</c> —
         /// that PNG is a 5-slot inventory bar and must not be stretched over the order cards.
         /// </summary>
-        public static readonly NormRect DockPlate = new NormRect(0.04f, 0.000f, 0.96f, 0.325f);
-        public static readonly NormRect OrderTray = new NormRect(0.04f, 0.110f, 0.96f, 0.322f);
-        public static readonly NormRect InventoryBar = new NormRect(0.268f, 0.012f, 0.76f, 0.100f);
+        public static readonly NormRect DockPlate = new NormRect(0.04f, 0.000f, 0.96f, 0.280f);
+        public static readonly NormRect OrderTray = new NormRect(0.03f, 0.100f, 0.97f, 0.272f);
+        public static readonly NormRect InventoryBar = new NormRect(0.268f, 0.012f, 0.76f, 0.088f);
         /// <summary>Landscape to match <c>UI_Badge_Starter</c> so STARTER stays one line.</summary>
-        public static readonly NormRect Store = new NormRect(0.016f, 0.016f, 0.250f, 0.096f);
+        public static readonly NormRect Store = new NormRect(0.016f, 0.012f, 0.250f, 0.0915f);
 
-        public static readonly NormRect Crate = new NormRect(0.025f, 0.48f, 0.165f, 0.655f);
+        public static readonly NormRect Crate = new NormRect(0.018f, 0.455f, 0.165f, 0.640f);
         /// <summary>Unused on Play — charge copy wrapped mid-word in this sliver.</summary>
         public static readonly NormRect CrateLabel = new NormRect(0.025f, 0.658f, 0.165f, 0.715f);
 
         public static readonly NormRect TeachCrateRing = Crate.Inflate(0.008f, 0.008f);
         /// <summary>Teach banner between dock and board. Overlay — not in <see cref="OccludingHud"/>.</summary>
-        public static readonly NormRect TeachHudCaption = new NormRect(0.08f, 0.326f, 0.92f, 0.378f);
-        public static readonly NormRect TeachSkip = new NormRect(0.78f, 0.012f, 0.96f, 0.108f);
+        public static readonly NormRect TeachHudCaption = new NormRect(0.08f, 0.282f, 0.92f, 0.338f);
+        public static readonly NormRect TeachSkip = new NormRect(0.78f, 0.012f, 0.96f, 0.088f);
 
         public static NormRect ActiveOrderCard
         {
@@ -206,17 +210,24 @@ namespace Grove.Domain.Layout
             return new NormRect(i * w + 0.03f, 0.06f, (i + 1) * w - 0.03f, 0.94f);
         }
 
-        /// <summary>Icons sit in a top cluster so they cannot overlap order copy.</summary>
-        public static NormRect OrderCardIcons(bool active) =>
-            active
-                ? new NormRect(0.16f, 0.70f, 0.84f, 0.94f)
-                : new NormRect(0.16f, 0.66f, 0.84f, 0.94f);
+        /// <summary>Icons ≤70% of card inner, centered in a top cluster.</summary>
+        public static NormRect OrderCardIcons(bool active)
+        {
+            var innerW = 1f - 2f * OrderCardInnerPad;
+            var w = innerW * OrderIconMaxOfInner;
+            var x0 = 0.5f - w * 0.5f;
+            var x1 = 0.5f + w * 0.5f;
+            var h = Math.Min(0.22f, innerW * OrderIconMaxOfInner);
+            var y1 = 0.94f;
+            var y0 = active ? y1 - h : y1 - h;
+            return new NormRect(x0, y0, x1, y1);
+        }
 
         /// <summary>Full card width minus vine inset — long tokens like Wildflower stay one word.</summary>
         public static NormRect OrderCardBody(bool active) =>
             active
-                ? new NormRect(0.10f, 0.32f, 0.90f, 0.68f)
-                : new NormRect(0.10f, 0.08f, 0.90f, 0.64f);
+                ? new NormRect(0.06f, 0.32f, 0.94f, 0.68f)
+                : new NormRect(0.06f, 0.08f, 0.94f, 0.64f);
 
         public static readonly NormRect OrderCardDeliverBand = new NormRect(0.10f, 0.05f, 0.90f, 0.30f);
 
@@ -225,7 +236,7 @@ namespace Grove.Domain.Layout
             var n = count < 1 ? 1 : count;
             var i = index < 0 ? 0 : (index >= n ? n - 1 : index);
             var w = 1f / n;
-            return new NormRect(i * w + 0.08f, 0.06f, (i + 1) * w - 0.08f, 0.94f);
+            return new NormRect(i * w + 0.12f, 0.08f, (i + 1) * w - 0.12f, 0.92f);
         }
 
         public static NormRect MapLocal(NormRect parent, NormRect local)
