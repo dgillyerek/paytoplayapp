@@ -65,8 +65,9 @@ public sealed class HeroJuiceTests
     public void Spit_arc_is_not_a_straight_line()
     {
         HeroJuice.ArcPoint(0.5f, 0f, 0f, 4f, 0f, 2f, out var x, out var y);
-        Assert.InRange(x, 1.2f, 3.2f);
+        Assert.InRange(x, 0.2f, 3.95f);
         Assert.True(y > 0.35f, "arc must loft above the chord");
+        Assert.True(x > 2.4f, "ease-out must pass the chord midpoint before t=0.5");
         HeroJuice.ArcPoint(0f, 0f, 0f, 4f, 0f, 2f, out var x0, out var y0);
         HeroJuice.ArcPoint(1f, 0f, 0f, 4f, 0f, 2f, out var x1, out var y1);
         Assert.InRange(x0, -0.02f, 0.02f);
