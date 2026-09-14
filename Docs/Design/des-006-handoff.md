@@ -10,10 +10,11 @@
 
 | Rule | Implementation |
 |------|----------------|
-| Maya unclipped | Top-bar bubble left of portrait, inside `ScreenSafe`, word wrap |
-| STARTER / item names one line | Overflow + `PlayCopy.Ellipsize` — never STA/RTER or Wildflo/wer wrap |
+| Maya unclipped | Top-bar bubble left of portrait, inside `ScreenSafe` + `TopBarBand` |
+| STARTER / item names one line | `PlayCopy.Ellipsize` — never STA/RTER or Wildflo/wer wrap |
 | Order gutters | 16dp (≥12dp) |
-| Icon scale | ≤70% of card inner; two-req icons do not overlap |
+| Icon scale + inset | ≤70% of card inner; ≥12px from card edge @1080 |
 | Mid empty | `DesignBoardBottom` 0.70, `DesignDockTop` 0.72, ≥16dp gap |
+| CellEmpty | `cursor/des-006-cellempty` @ `abcf378` true-alpha well — no cream plates |
 | Crate | Left of 7×5 on the board band, 16dp from cells |
-| Energy / Moved | `100/100` one line; no Moved toast |
+| Energy / Moved | `100/100` one line; no Moved toast; no Charges wrap |

@@ -55,7 +55,7 @@ namespace Grove.Unity
 
         public static int LoadedCount { get; private set; }
 
-        /// <summary>Backdrop + wood tray + cream cells must all load or Derek sees a bare grid.</summary>
+        /// <summary>Backdrop + wood tray + CellEmpty wells must all load or Derek sees a bare grid.</summary>
         public static bool HasBoardComposite =>
             Get(StubBackdrop) != null && Get(StubBoardSurface) != null && Get(StubCellEmpty) != null;
 
@@ -170,9 +170,10 @@ namespace Grove.Unity
             Get(StubMayaBubble) ?? Get(StubOrderCard);
 
         /// <summary>
-        /// Carved maple well for the 7×5. Packed <c>ENV_FG_CellEmpty</c> is a cream plate until
-        /// DES-006 true-alpha recut lands in the art pack or <c>design/unity-drop</c>.
-        /// Prefer the recut when corners are punched; otherwise generate a wood pocket.
+        /// Carved maple well for the 7×5. Packed <c>ENV_FG_CellEmpty</c> is the DES-006 recut
+        /// (<c>cursor/des-006-cellempty</c> @ <c>abcf378</c>): true-alpha sage frame + wood well.
+        /// Use that sprite when corners are transparent; otherwise generate a wood pocket so
+        /// cream plates never show.
         /// </summary>
         public static Sprite PlayCellSprite()
         {

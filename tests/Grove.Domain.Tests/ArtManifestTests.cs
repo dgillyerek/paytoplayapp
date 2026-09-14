@@ -105,12 +105,7 @@ public sealed class ArtManifestTests
         var path = Path.Combine(dir, asset.Filename.Replace('/', Path.DirectorySeparatorChar));
         PngInspect.Header(path, out var width, out var height, out var colorType);
         Assert.True(width >= 64 && height >= 64);
-
-        if (colorType != 6)
-        {
-            Assert.Equal(2, colorType);
-            return;
-        }
+        Assert.Equal(6, colorType);
 
         PngInspect.DecodeRgba(path, out width, out height, out var rgba);
         Assert.True(StudioPlatePunch.CornersTransparent(rgba, width, height), "DES-006 CellEmpty must have transparent corners");
