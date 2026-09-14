@@ -36,6 +36,7 @@ namespace Grove.Domain.Art
                 "UI_Badge_Starter" => true,
                 "MAYA_Portrait_Happy" => true,
                 "MAYA_Portrait_Neutral" => true,
+                "ENV_FG_CellEmpty" => true,
                 _ => false
             };
         }
@@ -51,6 +52,30 @@ namespace Grove.Domain.Art
                    && Alpha(rgba, width - 1, 0, width) < 16
                    && Alpha(rgba, 0, height - 1, width) < 16
                    && Alpha(rgba, width - 1, height - 1, width) < 16;
+        }
+
+        /// <summary>
+        /// DES-006 CellEmpty recut: transparent corners, rim/object only — not a filled cream plate.
+        /// </summary>
+        public static bool LooksLikeTrueAlphaWell(byte[] rgba, int width, int height)
+        {
+            if (!CornersTransparent(rgba, width, height))
+            {
+                return false;
+            }
+
+            var opaque = 0;
+            var n = width * height;
+            for (var i = 0; i < n; i++)
+            {
+                if (rgba[i * 4 + 3] > 32)
+                {
+                    opaque++;
+                }
+            }
+
+            var frac = n == 0 ? 0f : opaque / (float)n;
+            return frac > 0.02f && frac < 0.55f;
         }
 
         /// <summary>

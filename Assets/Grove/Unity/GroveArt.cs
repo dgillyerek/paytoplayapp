@@ -170,9 +170,50 @@ namespace Grove.Unity
             Get(StubMayaBubble) ?? Get(StubOrderCard);
 
         /// <summary>
-        /// Carved maple well for the 7×5. <c>ENV_FG_CellEmpty</c> is a cream plate and
-        /// reads as amateur tiles on the wood tray — do not draw it as the cell.
+        /// Carved maple well for the 7×5. Packed <c>ENV_FG_CellEmpty</c> is a cream plate until
+        /// DES-006 true-alpha recut lands in the art pack or <c>design/unity-drop</c>.
+        /// Prefer the recut when corners are punched; otherwise generate a wood pocket.
         /// </summary>
+        public static Sprite PlayCellSprite()
+        {
+            var cell = Get(StubCellEmpty);
+            if (cell != null && SpriteHasTrueAlphaWell(cell))
+            {
+                return cell;
+            }
+
+            return CellWellSprite();
+        }
+
+        private static bool SpriteHasTrueAlphaWell(Sprite sprite)
+        {
+            var tex = sprite != null ? sprite.texture : null;
+            if (tex == null)
+            {
+                return false;
+            }
+
+            var colors = tex.GetPixels();
+            var width = tex.width;
+            var height = tex.height;
+            if (colors == null || colors.Length < width * height)
+            {
+                return false;
+            }
+
+            var rgba = new byte[width * height * 4];
+            for (var i = 0; i < colors.Length; i++)
+            {
+                var c = colors[i];
+                rgba[i * 4] = (byte)Mathf.Clamp(Mathf.RoundToInt(c.r * 255f), 0, 255);
+                rgba[i * 4 + 1] = (byte)Mathf.Clamp(Mathf.RoundToInt(c.g * 255f), 0, 255);
+                rgba[i * 4 + 2] = (byte)Mathf.Clamp(Mathf.RoundToInt(c.b * 255f), 0, 255);
+                rgba[i * 4 + 3] = (byte)Mathf.Clamp(Mathf.RoundToInt(c.a * 255f), 0, 255);
+            }
+
+            return StudioPlatePunch.LooksLikeTrueAlphaWell(rgba, width, height);
+        }
+
         public static Sprite CellWellSprite()
         {
             if (_cellWell != null)
@@ -347,7 +388,8 @@ namespace Grove.Unity
                         continue;
                     }
 
-                    var asset = new ArtAsset(stub, Path.GetFileName(files[i]), "hud", 100f, 0.5f, 0.5f);
+                    var category = stub.StartsWith("ENV_", System.StringComparison.Ordinal) ? "board" : "hud";
+                    var asset = new ArtAsset(stub, Path.GetFileName(files[i]), category, 100f, 0.5f, 0.5f);
                     var sprite = LoadPng(files[i], asset);
                     if (sprite != null)
                     {
@@ -424,6 +466,17 @@ namespace Grove.Unity
                 ContainsInsensitive(n, "UI_Maya_Bubble"))
             {
                 return StubMayaBubble;
+            }
+
+            if (ContainsInsensitive(n, "CellEmpty") || ContainsInsensitive(n, "Cell_Empty") ||
+                ContainsInsensitive(n, "ENV_FG_CellEmpty"))
+            {
+                return StubCellEmpty;
+            }
+
+            if (ContainsInsensitive(n, "CellHighlight") || ContainsInsensitive(n, "Cell_Highlight"))
+            {
+                return StubCellHighlight;
             }
 
             if (ContainsInsensitive(n, "OrderDock") || ContainsInsensitive(n, "Dock_Panel") ||
