@@ -1,0 +1,61 @@
+{
+  "map": "world.map.campaign",
+  "actions": [
+    "world.action.march",
+    "world.action.scout",
+    "world.action.gather"
+  ],
+  "fog": "world.fog",
+  "node_types": [
+    {
+      "id": "world.node_type.home",
+      "design_role": "HOME"
+    },
+    {
+      "id": "world.node_type.gather",
+      "design_role": "GATHER"
+    },
+    {
+      "id": "world.node_type.build",
+      "design_role": "BUILD"
+    },
+    {
+      "id": "world.node_type.guild",
+      "design_role": "GUILD"
+    },
+    {
+      "id": "world.node_type.fight",
+      "design_role": "FIGHT"
+    },
+    {
+      "id": "world.node_type.explore",
+      "design_role": "EXPLORE"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "world.node.home_01",
+      "type": "world.node_type.home"
+    },
+    {
+      "id": "world.node.gather_01",
+      "type": "world.node_type.gather"
+    },
+    {
+      "id": "world.node.build_01",
+      "type": "world.node_type.build"
+    },
+    {
+      "id": "world.node.guild_01",
+      "type": "world.node_type.guild"
+    },
+    {
+      "id": "world.node.fight_01",
+      "type": "world.node_type.fight"
+    },
+    {
+      "id": "world.node.explore_01",
+      "type": "world.node_type.explore"
+    }
+  ]
+}

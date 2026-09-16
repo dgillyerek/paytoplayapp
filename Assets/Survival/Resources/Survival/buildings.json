@@ -1,0 +1,52 @@
+{
+  "buildings": [
+    {
+      "id": "building.hq",
+      "requires": []
+    },
+    {
+      "id": "building.barracks",
+      "requires": [
+        "building.hq"
+      ]
+    },
+    {
+      "id": "building.economy",
+      "requires": [
+        "building.hq"
+      ]
+    },
+    {
+      "id": "building.research",
+      "requires": [
+        "building.hq"
+      ]
+    },
+    {
+      "id": "building.hero_hall",
+      "requires": [
+        "building.hq"
+      ]
+    },
+    {
+      "id": "building.wall",
+      "requires": [
+        "building.hq"
+      ]
+    },
+    {
+      "id": "building.alliance",
+      "requires": [
+        "building.hq"
+      ]
+    },
+    {
+      "id": "building.warehouse",
+      "requires": []
+    },
+    {
+      "id": "building.workshop",
+      "requires": []
+    }
+  ]
+}

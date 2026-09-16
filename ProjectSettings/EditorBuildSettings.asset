@@ -6,6 +6,12 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Survival/Scenes/Splash.unity
+    guid: 55762138b6eb561ca7918620a1cd20f2
+  - enabled: 1
+    path: Assets/Survival/Scenes/Play.unity
+    guid: 182bc60cd53b52ca9784280961db2b27
+  - enabled: 1
     path: Assets/Grove/Scenes/Board.unity
     guid: b65522f703b44f9799e3eee95f2f36d0
   m_configObjects: {}

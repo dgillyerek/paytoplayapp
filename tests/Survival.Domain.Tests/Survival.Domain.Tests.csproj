@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Survival.Domain.Tests</RootNamespace>
+    <LangVersion>12.0</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\Assets\Survival\Runtime\**\*.cs" Link="Domain\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\Assets\Survival\Resources\Survival\*.json" Link="Data\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Assets\ThemePack\fantasy_kingdom_a\pack.json" Link="Pack\pack.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Assets\ThemePack\fantasy_kingdom_a\strings\en.json" Link="Pack\strings\en.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Assets\ThemePack\fantasy_kingdom_a\map\node_pins.json" Link="Pack\map\node_pins.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Assets\ThemePack\fantasy_kingdom_a\ui\hud_layout.json" Link="Pack\ui\hud_layout.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Assets\AppFlavor\fantasy_kingdom_a\flavor.json" Link="Flavor\flavor.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>

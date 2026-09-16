@@ -1,0 +1,15 @@
+{
+  "modules": [
+    "sys.base",
+    "sys.research",
+    "sys.heroes",
+    "sys.alliance",
+    "sys.world",
+    "sys.battles",
+    "sys.energy",
+    "sys.events",
+    "sys.iap",
+    "sys.ftue",
+    "sys.meta"
+  ]
+}
