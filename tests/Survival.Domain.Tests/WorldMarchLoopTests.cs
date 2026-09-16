@@ -18,6 +18,12 @@ public sealed class WorldMarchLoopTests
         Assert.Equal(840, gather.YieldPerAction);
         Assert.Equal(132, gather.MarchSeconds);
         Assert.Equal("2m 12s", WorldMarchLoop.FormatClock(132));
+        Assert.Equal(132, WorldMarchLoop.RemainingSeconds(132, 0f));
+        Assert.Equal(132, WorldMarchLoop.RemainingSeconds(132, 0.9f));
+        Assert.Equal(131, WorldMarchLoop.RemainingSeconds(132, 1f));
+        Assert.Equal(0, WorldMarchLoop.RemainingSeconds(132, 132f));
+        Assert.False(WorldMarchLoop.TimedLegComplete(132, 1.45f));
+        Assert.True(WorldMarchLoop.TimedLegComplete(132, 132f));
     }
 
     [Fact]

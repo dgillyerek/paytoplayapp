@@ -429,7 +429,21 @@ namespace Survival.Unity
             glow.rectTransform.offsetMin = new Vector2(-10f, -10f);
             glow.rectTransform.offsetMax = new Vector2(10f, 10f);
 
-            yield return March(marker.rectTransform, from, to, 1.45f);
+            var clockHost = SurvivalVisuals.Image(_fx, "MarchClock", SurvivalVisuals.Panel);
+            var clock = SurvivalVisuals.Text(
+                clockHost.transform,
+                "T",
+                WorldMarchLoop.FormatClock(loop.MarchSeconds),
+                20,
+                TextAnchor.MiddleCenter,
+                markerCol);
+            SurvivalVisuals.Stretch(clock.rectTransform);
+            clock.rectTransform.offsetMin = new Vector2(6f, 2f);
+            clock.rectTransform.offsetMax = new Vector2(-6f, -2f);
+
+            yield return March(marker.rectTransform, from, to, loop.MarchSeconds, clockHost.rectTransform, clock);
+
+            Destroy(clockHost.gameObject);
 
             var result = loop.CompleteArrive();
             if (result.Ok)
@@ -445,7 +459,7 @@ namespace Survival.Unity
                 yield return RewardPop(to, result.Yield, InspectPrefix(loop.NodeTypeId), LoopAccent(loop.NodeTypeId));
             }
 
-            yield return March(marker.rectTransform, to, from, 0.95f);
+            yield return March(marker.rectTransform, to, from, 0.95f, null, null);
             Destroy(marker.gameObject);
             _busy = false;
         }
@@ -532,17 +546,31 @@ namespace Survival.Unity
             Destroy(spark.gameObject);
         }
 
-        private IEnumerator March(RectTransform marker, Vector2 from, Vector2 to, float seconds)
+        private IEnumerator March(
+            RectTransform marker,
+            Vector2 from,
+            Vector2 to,
+            float seconds,
+            RectTransform? clockHost,
+            Text? clock)
         {
+            var duration = Mathf.Max(0.01f, seconds);
+            var total = Mathf.Max(0, Mathf.RoundToInt(seconds));
             var elapsed = 0f;
-            while (elapsed < seconds)
+            while (elapsed < duration)
             {
-                elapsed += Time.deltaTime;
-                var t = Mathf.Clamp01(elapsed / seconds);
+                elapsed += Time.unscaledDeltaTime;
+                var t = Mathf.Clamp01(elapsed / duration);
                 var ease = t * t * (3f - 2f * t);
                 var p = Vector2.Lerp(from, to, ease);
                 SurvivalVisuals.AnchorBox(marker, p.x, p.y + 0.012f, 0.038f, 0.022f);
                 marker.localScale = Vector3.one * (0.9f + 0.12f * Mathf.Sin(elapsed * 10f));
+                if (clockHost != null && clock != null)
+                {
+                    SurvivalVisuals.AnchorBox(clockHost, p.x, p.y + 0.042f, 0.20f, 0.032f);
+                    clock.text = WorldMarchLoop.FormatClock(WorldMarchLoop.RemainingSeconds(total, elapsed));
+                }
+
                 yield return null;
             }
 

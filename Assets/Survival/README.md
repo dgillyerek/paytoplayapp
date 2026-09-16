@@ -18,7 +18,7 @@
 2. Double-click **`Assets/Survival/Scenes/Splash.unity`**.
 3. Game view **1080×1920 portrait** (also check a wider/taller size — splash must fill edges, no letterbox bars). Click **Play**.
 4. Splash keep fills the screen for **~5 seconds** with animated `Loading.` / `Loading..` / `Loading...`, then Play crusade world (no tap to skip).
-5. Tap **GATHER · Quarry** → Stone Quarry inspect → **Mine** → march → **+840 Stone** → return HOME.
+5. Tap **GATHER · Quarry** → Stone Quarry inspect → **Mine** → march for the listed time (e.g. 2m 12s, live countdown) → **+840 Stone** → short return HOME.
 6. Tap **FIGHT · Dark Keep** → Dark Keep inspect (Threat · Darkness · March + battle · **Attack**) → march → purple pulse / **+1,200 Gold** → return HOME.
 7. Tap **EXPLORE · Ruins** → Ruins inspect (Relics · March + scout · **Explore**) → march → **+600 Gold** → return HOME.
 

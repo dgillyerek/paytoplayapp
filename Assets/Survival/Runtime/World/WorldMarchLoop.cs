@@ -171,6 +171,25 @@ namespace Survival.Domain.World
             return m.ToString(CultureInfo.InvariantCulture) + "m " + s.ToString(CultureInfo.InvariantCulture) + "s";
         }
 
+        public static int RemainingSeconds(int marchSeconds, float elapsedSeconds)
+        {
+            if (marchSeconds < 0)
+            {
+                marchSeconds = 0;
+            }
+
+            if (elapsedSeconds < 0f)
+            {
+                elapsedSeconds = 0f;
+            }
+
+            var left = marchSeconds - (int)Math.Floor(elapsedSeconds);
+            return left > 0 ? left : 0;
+        }
+
+        public static bool TimedLegComplete(int marchSeconds, float elapsedSeconds) =>
+            elapsedSeconds + 0.0001f >= marchSeconds;
+
         private MarchResolveResult Snapshot(int availableAfter) =>
             new(
                 true,
