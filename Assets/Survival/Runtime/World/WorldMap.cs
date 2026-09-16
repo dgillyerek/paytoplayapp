@@ -25,6 +25,7 @@ namespace Survival.Domain.World
     {
         private readonly Dictionary<string, WorldNodeState> _byId;
         private readonly List<WorldNodeState> _nodes;
+        private readonly Dictionary<string, WorldMarchLoop> _marches = new(StringComparer.Ordinal);
 
         public WorldMap(SurvivalCatalog catalog, ThemePackBinder pack)
         {
@@ -62,9 +63,18 @@ namespace Survival.Domain.World
                 var state = new WorldNodeState(def, pin);
                 _nodes.Add(state);
                 _byId[def.Id] = state;
-                if (string.Equals(def.NodeTypeId, SurvIds.WorldNodeTypeGather, StringComparison.Ordinal))
+                var loop = WorldMarchLoop.TryCreate(def);
+                if (loop != null)
                 {
-                    Gather = new GatherLoop(def);
+                    _marches[def.Id] = loop;
+                    if (string.Equals(def.NodeTypeId, SurvIds.WorldNodeTypeGather, StringComparison.Ordinal))
+                    {
+                        Gather = loop;
+                    }
+                    else if (string.Equals(def.NodeTypeId, SurvIds.WorldNodeTypeFight, StringComparison.Ordinal))
+                    {
+                        Fight = loop;
+                    }
                 }
             }
 
@@ -78,9 +88,13 @@ namespace Survival.Domain.World
 
         public IReadOnlyList<WorldNodeState> Nodes => _nodes;
 
-        public GatherLoop? Gather { get; private set; }
+        public WorldMarchLoop? Gather { get; private set; }
+
+        public WorldMarchLoop? Fight { get; private set; }
 
         public string? SelectedNodeId { get; private set; }
+
+        public bool TryGetMarch(string nodeId, out WorldMarchLoop loop) => _marches.TryGetValue(nodeId, out loop!);
 
         public bool TryGet(string nodeId, out WorldNodeState node) => _byId.TryGetValue(nodeId, out node!);
 

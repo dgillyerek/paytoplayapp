@@ -24,6 +24,9 @@ namespace Survival.Unity
         public static readonly Color MineFill = new Color(0.74f, 0.58f, 0.20f, 1f);
         public static readonly Color GoldLine = new Color(0.78f, 0.62f, 0.24f, 1f);
         public static readonly Color Reward = new Color(0.93f, 0.84f, 0.45f, 1f);
+        public static readonly Color ThreatLine = new Color(0.62f, 0.36f, 0.88f, 1f);
+        public static readonly Color AttackFill = new Color(0.28f, 0.12f, 0.40f, 1f);
+        public static readonly Color ThreatSpark = new Color(0.78f, 0.42f, 1f, 0.95f);
 
         private static Font? _font;
 

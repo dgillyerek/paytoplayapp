@@ -38,7 +38,7 @@
       "content_key": "theme_a.node.fight_dark_keep",
       "pin_x": 0.735,
       "pin_y_from_top": 0.56,
-      "sprite_size": 0
+      "sprite_size": 0.20
     },
     {
       "node_id": "world.node.explore_01",

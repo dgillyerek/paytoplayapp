@@ -54,7 +54,10 @@
     },
     {
       "id": "world.node.fight_01",
-      "type": "world.node_type.fight"
+      "type": "world.node_type.fight",
+      "available": 3,
+      "yield": 1200,
+      "march_seconds": 108
     },
     {
       "id": "world.node.explore_01",
