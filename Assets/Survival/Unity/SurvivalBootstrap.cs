@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.IO;
 using Survival.Domain.Catalog;
 using Survival.Domain.Flavor;
@@ -10,7 +11,7 @@ using UnityEngine.UI;
 
 namespace Survival.Unity
 {
-    /// <summary>Theme A flavor entry: splash keep still, then Play world-map shell.</summary>
+    /// <summary>Theme A flavor entry: splash keep still (fill + ~5s dwell), then Play world-map shell.</summary>
     public sealed class SurvivalBootstrap : MonoBehaviour
     {
         [SerializeField] private bool skipSplash;
@@ -19,6 +20,9 @@ namespace Survival.Unity
 
         private bool _booted;
         private GameObject? _splashRoot;
+        private Text? _loadingText;
+        private string _loadingStem = "Loading";
+        private float _splashStart;
 
         private void Awake() => TryBoot();
 
@@ -31,6 +35,11 @@ namespace Survival.Unity
             if (!_booted)
             {
                 TryBoot();
+            }
+
+            if (_loadingText != null)
+            {
+                _loadingText.text = SplashDwell.FormatLoading(_loadingStem, Time.realtimeSinceStartup - _splashStart);
             }
         }
 
@@ -56,43 +65,113 @@ namespace Survival.Unity
 
         private void Boot()
         {
-            var flavor = AppFlavorConfig.FantasyKingdomA;
-            var packRoot = SurvivalArt.ResolvePackRoot(flavor);
-            var pack = ThemePackBinder.Parse(
-                File.ReadAllText(Path.Combine(packRoot, "pack.json")),
-                File.ReadAllText(Path.Combine(packRoot, "strings", "en.json")),
-                File.ReadAllText(Path.Combine(packRoot, "map", "node_pins.json")),
-                File.ReadAllText(Path.Combine(packRoot, "ui", "hud_layout.json")));
-            var catalogDir = ResolveCatalogDir();
-            var catalog = CatalogLoader.LoadFromDirectory(catalogDir);
-            Session = new SurvivalSession(flavor, pack, catalog);
-            SurvivalArt.EnsureLoaded(flavor, pack);
-
             if (skipSplash)
             {
+                LoadSession();
                 ShowPlay();
                 return;
             }
 
-            ShowSplash();
+            StartCoroutine(SplashThenPlay());
         }
 
-        private void ShowSplash()
+        private IEnumerator SplashThenPlay()
+        {
+            var flavor = AppFlavorConfig.FantasyKingdomA;
+            var pack = LoadPack(flavor);
+            ShowSplash(pack);
+            _splashStart = Time.realtimeSinceStartup;
+            try
+            {
+                LoadSession(flavor, pack);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+
+            while (!SplashDwell.CanAdvance(Time.realtimeSinceStartup - _splashStart, contentReady: true))
+            {
+                yield return null;
+            }
+
+            AdvanceFromSplash();
+        }
+
+        private void LoadSession() =>
+            LoadSession(AppFlavorConfig.FantasyKingdomA, LoadPack(AppFlavorConfig.FantasyKingdomA));
+
+        private void LoadSession(AppFlavorConfig flavor, ThemePackBinder pack)
+        {
+            SurvivalArt.EnsureLoaded(flavor, pack);
+            var catalog = CatalogLoader.LoadFromDirectory(ResolveCatalogDir());
+            Session = new SurvivalSession(flavor, pack, catalog);
+        }
+
+        private static ThemePackBinder LoadPack(AppFlavorConfig flavor)
+        {
+            var packRoot = SurvivalArt.ResolvePackRoot(flavor);
+            return ThemePackBinder.Parse(
+                File.ReadAllText(Path.Combine(packRoot, "pack.json")),
+                File.ReadAllText(Path.Combine(packRoot, "strings", "en.json")),
+                File.ReadAllText(Path.Combine(packRoot, "map", "node_pins.json")),
+                File.ReadAllText(Path.Combine(packRoot, "ui", "hud_layout.json")));
+        }
+
+        private void ShowSplash(ThemePackBinder pack)
         {
             SurvivalVisuals.EnsureEventSystem();
             var root = SurvivalVisuals.Canvas(transform, "SurvivalSplashCanvas", 80);
             _splashRoot = root.gameObject;
-            var img = SurvivalVisuals.Image(root, "Splash", Color.white, SurvivalArt.Get("splash") ?? SurvivalArt.Get("flavor.splash"));
+            _loadingStem = pack.StringOr("flavor.splash.loading", "Loading");
+
+            SurvivalArt.EnsureLoaded(AppFlavorConfig.FantasyKingdomA, pack);
+            var keepSprite = SurvivalArt.Get("splash") ?? SurvivalArt.Get("flavor.splash");
+            var bleed = SurvivalVisuals.Image(root, "Bleed", Color.white, SurvivalArt.EdgeBleed(keepSprite));
+            SurvivalVisuals.Stretch(bleed.rectTransform);
+            bleed.preserveAspect = false;
+            bleed.raycastTarget = false;
+
+            var sky = keepSprite != null ? keepSprite.texture.GetPixel(keepSprite.texture.width / 2, keepSprite.texture.height - 1) : new Color(0.09f, 0.39f, 0.70f);
+            if (Camera.main != null)
+            {
+                Camera.main.backgroundColor = sky;
+            }
+
+            var img = SurvivalVisuals.Image(root, "Splash", Color.white, keepSprite);
             SurvivalVisuals.Stretch(img.rectTransform);
             img.preserveAspect = true;
-            img.raycastTarget = true;
-            var btn = img.gameObject.AddComponent<Button>();
-            btn.targetGraphic = img;
-            btn.onClick.AddListener(AdvanceFromSplash);
+            img.raycastTarget = false;
+            var fitter = img.gameObject.AddComponent<AspectRatioFitter>();
+            fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+            if (keepSprite != null && keepSprite.rect.height > 1f)
+            {
+                fitter.aspectRatio = keepSprite.rect.width / keepSprite.rect.height;
+            }
+            else
+            {
+                fitter.aspectRatio = 1080f / 1920f;
+            }
+
+            var cover = SurvivalVisuals.Image(img.transform, "LoadingCover", new Color(47f / 255f, 34f / 255f, 25f / 255f, 1f));
+            var crt = cover.rectTransform;
+            crt.anchorMin = new Vector2(0.20f, 0.076f);
+            crt.anchorMax = new Vector2(0.80f, 0.112f);
+            crt.offsetMin = Vector2.zero;
+            crt.offsetMax = Vector2.zero;
+            _loadingText = SurvivalVisuals.Text(
+                cover.transform,
+                "Loading",
+                SplashDwell.FormatLoading(_loadingStem, 0f),
+                26,
+                TextAnchor.MiddleCenter,
+                new Color(0.64f, 0.60f, 0.54f, 1f));
+            SurvivalVisuals.Stretch(_loadingText.rectTransform);
         }
 
         private void AdvanceFromSplash()
         {
+            _loadingText = null;
             if (_splashRoot != null)
             {
                 Destroy(_splashRoot);

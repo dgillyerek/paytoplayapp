@@ -19,6 +19,7 @@ namespace Survival.Unity
         private static Sprite? _white;
         private static Sprite? _circle;
         private static Sprite? _ring;
+        private static Sprite? _bleed;
 
         public static void EnsureLoaded(AppFlavorConfig flavor, ThemePackBinder pack)
         {
@@ -101,6 +102,44 @@ namespace Survival.Unity
             });
             _ring.name = "survival_ui_ring";
             return _ring;
+        }
+
+        public static Sprite EdgeBleed(Sprite? source)
+        {
+            if (_bleed != null)
+            {
+                return _bleed;
+            }
+
+            if (source == null || source.texture == null)
+            {
+                return White();
+            }
+
+            var src = source.texture;
+            const int bw = 32;
+            const int bh = 64;
+            var tex = new Texture2D(bw, bh, TextureFormat.RGB24, false);
+            tex.filterMode = FilterMode.Bilinear;
+            tex.wrapMode = TextureWrapMode.Clamp;
+            tex.name = "survival_splash_bleed";
+            var sw = src.width;
+            var sh = src.height;
+            for (var y = 0; y < bh; y++)
+            {
+                var sy = Mathf.Clamp(Mathf.RoundToInt(y / (float)(bh - 1) * (sh - 1)), 0, sh - 1);
+                var left = src.GetPixel(0, sy);
+                var right = src.GetPixel(sw - 1, sy);
+                for (var x = 0; x < bw; x++)
+                {
+                    var t = x / (float)(bw - 1);
+                    tex.SetPixel(x, y, Color.Lerp(left, right, t));
+                }
+            }
+
+            tex.Apply();
+            _bleed = Sprite.Create(tex, new Rect(0f, 0f, bw, bh), new Vector2(0.5f, 0.5f), 32f, 0, SpriteMeshType.FullRect);
+            return _bleed;
         }
 
         private static Sprite MakeRadial(int n, Func<float, float, float> alphaAt)

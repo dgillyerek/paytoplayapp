@@ -103,6 +103,32 @@ public sealed class CatalogAndPackTests
     }
 }
 
+public sealed class SplashDwellTests
+{
+    [Fact]
+    public void Advance_only_when_ready_and_five_seconds_elapsed()
+    {
+        Assert.False(SplashDwell.CanAdvance(0f, true));
+        Assert.False(SplashDwell.CanAdvance(4.9f, true));
+        Assert.False(SplashDwell.CanAdvance(10f, false));
+        Assert.True(SplashDwell.CanAdvance(5f, true));
+        Assert.True(SplashDwell.CanAdvance(6.2f, true));
+        Assert.Equal(3.8f, SplashDwell.WaitRemaining(1.2f, true), 3);
+        Assert.Equal(0f, SplashDwell.WaitRemaining(5f, true));
+        Assert.Equal(SplashDwell.MinSeconds, SplashDwell.WaitRemaining(4f, false));
+    }
+
+    [Fact]
+    public void Loading_copy_cycles_one_to_three_dots()
+    {
+        Assert.Equal("Loading.", SplashDwell.FormatLoading("Loading", 0f));
+        Assert.Equal("Loading..", SplashDwell.FormatLoading("Loading", 0.4f));
+        Assert.Equal("Loading...", SplashDwell.FormatLoading("Loading", 0.8f));
+        Assert.Equal("Loading.", SplashDwell.FormatLoading("Loading", 1.2f));
+        Assert.Equal("Loading", TestPaths.LoadPack().StringOr("flavor.splash.loading", ""));
+    }
+}
+
 internal static class TestPaths
 {
     public static string CatalogDir => Path.Combine(AppContext.BaseDirectory, "Data");

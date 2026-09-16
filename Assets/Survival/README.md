@@ -16,8 +16,8 @@
 
 1. Open this repo folder.
 2. Double-click **`Assets/Survival/Scenes/Splash.unity`**.
-3. Game view **1080×1920 portrait**. Click **Play**.
-4. Tap the keep splash (PASS — do not regress) → Play crusade world.
+3. Game view **1080×1920 portrait** (also check a wider/taller size — splash must fill edges, no letterbox bars). Click **Play**.
+4. Splash keep fills the screen for **~5 seconds** with animated `Loading.` / `Loading..` / `Loading...`, then Play crusade world (no tap to skip).
 5. Tap **GATHER · Quarry** (map-size quarry under the pin) → Stone Quarry inspect.
 6. Tap **Mine** → march from HOME, arrive, **+840 Stone**, then return toward HOME.
 

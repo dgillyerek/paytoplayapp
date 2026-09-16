@@ -38,5 +38,6 @@
   "pin.world.node.guild_01": "GUILD \u00b7 Fort",
   "pin.world.node.fight_01": "FIGHT \u00b7 Dark Keep",
   "pin.world.node.explore_01": "EXPLORE \u00b7 Ruins",
-  "flavor.splash.caption": "KINGDOM DEFENSE"
+  "flavor.splash.caption": "KINGDOM DEFENSE",
+  "flavor.splash.loading": "Loading"
 }
