@@ -39,7 +39,10 @@
     },
     {
       "id": "world.node.gather_01",
-      "type": "world.node_type.gather"
+      "type": "world.node_type.gather",
+      "available": 8400,
+      "yield": 840,
+      "march_seconds": 132
     },
     {
       "id": "world.node.build_01",

@@ -62,6 +62,10 @@ namespace Survival.Domain.World
                 var state = new WorldNodeState(def, pin);
                 _nodes.Add(state);
                 _byId[def.Id] = state;
+                if (string.Equals(def.NodeTypeId, SurvIds.WorldNodeTypeGather, StringComparison.Ordinal))
+                {
+                    Gather = new GatherLoop(def);
+                }
             }
 
             if (_nodes.Count != SurvIds.WorldNodeInstances.Count)
@@ -73,6 +77,8 @@ namespace Survival.Domain.World
         public string MapId { get; }
 
         public IReadOnlyList<WorldNodeState> Nodes => _nodes;
+
+        public GatherLoop? Gather { get; private set; }
 
         public string? SelectedNodeId { get; private set; }
 

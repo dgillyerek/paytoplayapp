@@ -17,6 +17,8 @@ namespace Survival.Unity
 
         private static Dictionary<string, Sprite>? _sprites;
         private static Sprite? _white;
+        private static Sprite? _circle;
+        private static Sprite? _ring;
 
         public static void EnsureLoaded(AppFlavorConfig flavor, ThemePackBinder pack)
         {
@@ -68,6 +70,62 @@ namespace Survival.Unity
             tex.name = "survival_ui_white";
             _white = Sprite.Create(tex, new Rect(0f, 0f, 8f, 8f), new Vector2(0.5f, 0.5f), 4f, 0, SpriteMeshType.FullRect);
             return _white;
+        }
+
+        public static Sprite Circle()
+        {
+            if (_circle != null)
+            {
+                return _circle;
+            }
+
+            _circle = MakeRadial(64, (d, r) => Mathf.Clamp01(r - d + 0.75f));
+            _circle.name = "survival_ui_circle";
+            return _circle;
+        }
+
+        public static Sprite Ring()
+        {
+            if (_ring != null)
+            {
+                return _ring;
+            }
+
+            _ring = MakeRadial(96, (d, r) =>
+            {
+                var outer = r;
+                var inner = r * 0.62f;
+                var o = Mathf.Clamp01(outer - d + 0.8f);
+                var i = Mathf.Clamp01(d - inner + 0.8f);
+                return o * i;
+            });
+            _ring.name = "survival_ui_ring";
+            return _ring;
+        }
+
+        private static Sprite MakeRadial(int n, Func<float, float, float> alphaAt)
+        {
+            var tex = new Texture2D(n, n, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Bilinear;
+            tex.wrapMode = TextureWrapMode.Clamp;
+            var pixels = new Color[n * n];
+            var c = (n - 1) * 0.5f;
+            var r = c - 1.2f;
+            for (var y = 0; y < n; y++)
+            {
+                for (var x = 0; x < n; x++)
+                {
+                    var dx = x - c;
+                    var dy = y - c;
+                    var d = Mathf.Sqrt(dx * dx + dy * dy);
+                    var a = alphaAt(d, r);
+                    pixels[y * n + x] = new Color(1f, 1f, 1f, a);
+                }
+            }
+
+            tex.SetPixels(pixels);
+            tex.Apply();
+            return Sprite.Create(tex, new Rect(0f, 0f, n, n), new Vector2(0.5f, 0.5f), n, 0, SpriteMeshType.FullRect);
         }
 
         public static string ResolvePackRoot(AppFlavorConfig flavor)

@@ -158,6 +158,7 @@ namespace Survival.Domain.Ids
         public const string ThemeAMapLabel = "theme_a.map.label";
         public const string ThemeANodeHomeCottage = "theme_a.node.home_cottage";
         public const string ThemeANodeGatherQuarry = "theme_a.node.gather_quarry";
+        public const string ThemeANodeGatherQuarryMap = "theme_a.node.gather_quarry_map";
         public const string ThemeANodeBuildOutpost = "theme_a.node.build_outpost";
         public const string ThemeANodeGuildFort = "theme_a.node.guild_fort";
         public const string ThemeANodeFightDarkKeep = "theme_a.node.fight_dark_keep";

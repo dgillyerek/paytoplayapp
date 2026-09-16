@@ -19,6 +19,11 @@ namespace Survival.Unity
         public static readonly Color PinGuild = new Color(0.40f, 0.62f, 0.95f, 1f);
         public static readonly Color PinFight = new Color(0.72f, 0.38f, 0.95f, 1f);
         public static readonly Color PinExplore = new Color(0.35f, 0.85f, 0.90f, 1f);
+        public static readonly Color InspectFill = new Color(0.055f, 0.06f, 0.075f, 0.97f);
+        public static readonly Color RowFill = new Color(0.09f, 0.105f, 0.14f, 0.96f);
+        public static readonly Color MineFill = new Color(0.74f, 0.58f, 0.20f, 1f);
+        public static readonly Color GoldLine = new Color(0.78f, 0.62f, 0.24f, 1f);
+        public static readonly Color Reward = new Color(0.93f, 0.84f, 0.45f, 1f);
 
         private static Font? _font;
 
@@ -101,6 +106,38 @@ namespace Survival.Unity
             img.color = color;
             img.raycastTarget = false;
             return img;
+        }
+
+        public static Image Circle(Transform parent, string name, Color color)
+        {
+            var img = Image(parent, name, color, SurvivalArt.Circle());
+            img.preserveAspect = true;
+            return img;
+        }
+
+        public static Image Ring(Transform parent, string name, Color color)
+        {
+            var img = Image(parent, name, color, SurvivalArt.Ring());
+            img.preserveAspect = true;
+            return img;
+        }
+
+        public static Image Framed(Transform parent, string name, Color fill, Color frame, float pad)
+        {
+            var outer = Image(parent, name, frame);
+            var inner = Image(outer.transform, "Fill", fill);
+            Stretch(inner.rectTransform);
+            inner.rectTransform.offsetMin = new Vector2(pad, pad);
+            inner.rectTransform.offsetMax = new Vector2(-pad, -pad);
+            return outer;
+        }
+
+        public static void AnchorBox(RectTransform rt, float x, float y, float w, float h)
+        {
+            rt.anchorMin = new Vector2(x - w * 0.5f, y - h * 0.5f);
+            rt.anchorMax = new Vector2(x + w * 0.5f, y + h * 0.5f);
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
         }
 
         public static Text Text(Transform parent, string name, string value, int size, TextAnchor anchor, Color color)

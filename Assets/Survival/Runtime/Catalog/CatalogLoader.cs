@@ -213,7 +213,12 @@ namespace Survival.Domain.Catalog
             foreach (var item in nodeArr.Items)
             {
                 var obj = RequireObj(item, "node");
-                nodes.Add(new WorldNodeDef(ReqId(obj, "id"), ReqId(obj, "type")));
+                nodes.Add(new WorldNodeDef(
+                    ReqId(obj, "id"),
+                    ReqId(obj, "type"),
+                    OptInt(obj, "available"),
+                    OptInt(obj, "yield"),
+                    OptInt(obj, "march_seconds")));
             }
 
             if (types.Count != SurvIds.WorldNodeTypes.Count)
@@ -383,6 +388,16 @@ namespace Survival.Domain.Catalog
             }
 
             return id;
+        }
+
+        private static int OptInt(JsonNode.Obj obj, string key)
+        {
+            if (!obj.TryGet(key, out var node) || node is JsonNode.Null)
+            {
+                return 0;
+            }
+
+            return AsInt(node, key);
         }
 
         private static int ReqInt(JsonNode.Obj obj, string key)

@@ -13,6 +13,7 @@
     "theme_a.store.icon": "art/splash/THEME_A_SPLASH_KEEP_1080x1920.png",
     "theme_a.node.home_cottage": "art/world-nodes/01_home_cottage.png",
     "theme_a.node.gather_quarry": "art/world-nodes/02_gather_quarry.png",
+    "theme_a.node.gather_quarry_map": "art/world-nodes/02_gather_quarry_map.png",
     "theme_a.node.build_outpost": "art/world-nodes/03_build_outpost.png",
     "theme_a.node.guild_fort": "art/world-nodes/04_guild_fort.png",
     "theme_a.node.fight_dark_keep": "art/world-nodes/05_fight_dark_keep.png",

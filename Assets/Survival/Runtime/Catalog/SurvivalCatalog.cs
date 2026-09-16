@@ -16,7 +16,12 @@ namespace Survival.Domain.Catalog
 
     public sealed record WorldNodeTypeDef(string Id, string DesignRole);
 
-    public sealed record WorldNodeDef(string Id, string NodeTypeId);
+    public sealed record WorldNodeDef(
+        string Id,
+        string NodeTypeId,
+        int Available = 0,
+        int YieldPerAction = 0,
+        int MarchSeconds = 0);
 
     public sealed record QueueRow(string QueueId, string ActionId, string TargetNodeId, int RemainingSeconds);
 
