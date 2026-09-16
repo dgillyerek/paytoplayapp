@@ -75,6 +75,10 @@ namespace Survival.Domain.World
                     {
                         Fight = loop;
                     }
+                    else if (string.Equals(def.NodeTypeId, SurvIds.WorldNodeTypeExplore, StringComparison.Ordinal))
+                    {
+                        Explore = loop;
+                    }
                 }
             }
 
@@ -91,6 +95,8 @@ namespace Survival.Domain.World
         public WorldMarchLoop? Gather { get; private set; }
 
         public WorldMarchLoop? Fight { get; private set; }
+
+        public WorldMarchLoop? Explore { get; private set; }
 
         public string? SelectedNodeId { get; private set; }
 

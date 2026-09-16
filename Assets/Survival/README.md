@@ -20,6 +20,7 @@
 4. Splash keep fills the screen for **~5 seconds** with animated `Loading.` / `Loading..` / `Loading...`, then Play crusade world (no tap to skip).
 5. Tap **GATHER · Quarry** → Stone Quarry inspect → **Mine** → march → **+840 Stone** → return HOME.
 6. Tap **FIGHT · Dark Keep** → Dark Keep inspect (Threat · Darkness · March + battle · **Attack**) → march → purple pulse / **+1,200 Gold** → return HOME.
+7. Tap **EXPLORE · Ruins** → Ruins inspect (Relics · March + scout · **Explore**) → march → **+600 Gold** → return HOME.
 
 Direct Play shell (skips splash): `Assets/Survival/Scenes/Play.unity`.
 
@@ -29,6 +30,6 @@ Visual / playable: Design phone Game-view re-gate before merge. Do not self-merg
 
 ## IDs
 
-Logic uses SURV-P0 stable IDs only (`sys.*`, `building.*`, `world.node_type.*`, `world.node.gather_01` / `world.node.fight_01`, `world.action.gather` / `world.action.march`, `battle.action.start`, `energy.action.gather` / `energy.action.battle`). Stone/Gold are Theme A HUD chips (`res_stone` / `res_soft`), not new `res.*` ids. Theme A copy/art is `theme_a.*` inside the pack. Do not add `grove.*` / merge-board IDs.
+Logic uses SURV-P0 stable IDs only (`sys.*`, `building.*`, `world.node_type.*`, `world.node.gather_01` / `fight_01` / `explore_01`, `world.action.gather` / `scout` / `march`, `battle.action.start`, `energy.action.gather` / `battle` / `march`). Stone/Gold are Theme A HUD chips (`res_stone` / `res_soft`), not new `res.*` ids. Theme A copy/art is `theme_a.*` inside the pack. Do not add `grove.*` / merge-board IDs.
 
 Headless: `dotnet test tests/Survival.Domain.Tests/Survival.Domain.Tests.csproj`

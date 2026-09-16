@@ -10,7 +10,7 @@ using UnityEngine.UI;
 
 namespace Survival.Unity
 {
-    /// <summary>Play shell: crusade map + Gather/Quarry and Fight/Dark Keep loops.</summary>
+    /// <summary>Play shell: crusade map + Gather, Fight, and Explore march loops.</summary>
     public sealed class SurvivalPlayView : MonoBehaviour
     {
         public SurvivalSession? Session { get; set; }
@@ -200,8 +200,8 @@ namespace Survival.Unity
         {
             if (_pinCenters.TryGetValue(nodeId, out var center))
             {
-                var threat = string.Equals(nodeId, SurvIds.WorldNodeFight01, System.StringComparison.Ordinal);
-                StartCoroutine(PressRing(center, threat ? SurvivalVisuals.ThreatSpark : new Color(1f, 0.84f, 0.28f, 0.95f)));
+                var typeId = Session != null && Session.World.TryGet(nodeId, out var n) ? n.NodeTypeId : "";
+                StartCoroutine(PressRing(center, LoopAccent(typeId)));
             }
 
             yield return Punch(nodeGo.transform, 0.14f, 8);
@@ -244,11 +244,11 @@ namespace Survival.Unity
 
             CloseInspect();
             var pack = Session.Pack;
-            var fight = string.Equals(loop.NodeTypeId, SurvIds.WorldNodeTypeFight, System.StringComparison.Ordinal);
-            var prefix = fight ? "inspect.fight" : "inspect.gather";
-            var frame = fight ? SurvivalVisuals.ThreatLine : SurvivalVisuals.GoldLine;
-            var ctaFill = fight ? SurvivalVisuals.AttackFill : SurvivalVisuals.MineFill;
-            var blocker = SurvivalVisuals.Image(_root, fight ? "FightInspect" : "GatherInspect", new Color(0f, 0f, 0f, 0.12f));
+            var prefix = InspectPrefix(loop.NodeTypeId);
+            var frame = LoopFrame(loop.NodeTypeId);
+            var ctaFill = LoopCtaFill(loop.NodeTypeId);
+            var accent = LoopAccent(loop.NodeTypeId);
+            var blocker = SurvivalVisuals.Image(_root, loop.NodeId + "_inspect", new Color(0f, 0f, 0f, 0.12f));
             SurvivalVisuals.Stretch(blocker.rectTransform);
             blocker.raycastTarget = true;
             _inspect = blocker.gameObject;
@@ -275,14 +275,10 @@ namespace Survival.Unity
             close.raycastTarget = true;
             var closeBtn = close.gameObject.AddComponent<Button>();
             closeBtn.targetGraphic = close;
-            SurvivalVisuals.Text(close.transform, "X", "×", 28, TextAnchor.MiddleCenter, fight ? SurvivalVisuals.ThreatSpark : SurvivalVisuals.Gold);
+            SurvivalVisuals.Text(close.transform, "X", "×", 28, TextAnchor.MiddleCenter, accent);
             closeBtn.onClick.AddListener(CloseInspect);
 
-            var rowLeft = pack.StringOr(prefix + (fight ? ".threat" : ".available"), "");
-            var rowRight = fight
-                ? pack.StringOr(prefix + ".enemy", "") + "  " + ChipWallet.FormatGrouped(loop.Available)
-                : pack.StringOr(prefix + ".resource", "") + " " + ChipWallet.FormatGrouped(loop.Available);
-            InspectRow(panel.transform, "Stat", 0.52f, 0.74f, rowLeft, rowRight);
+            InspectRow(panel.transform, "Stat", 0.52f, 0.74f, InspectStatLeft(pack, prefix, loop.NodeTypeId), InspectStatRight(pack, prefix, loop));
             InspectRow(
                 panel.transform,
                 "March",
@@ -316,8 +312,62 @@ namespace Survival.Unity
                 pack.StringOr(prefix + ".action", ""),
                 32,
                 TextAnchor.MiddleCenter,
-                fight ? SurvivalVisuals.ThreatSpark : SurvivalVisuals.Gold);
+                accent);
             ctaBtn.onClick.AddListener(() => OnConfirmMarch(loop, cta.gameObject));
+        }
+
+        private static string InspectPrefix(string nodeTypeId) => nodeTypeId switch
+        {
+            SurvIds.WorldNodeTypeFight => "inspect.fight",
+            SurvIds.WorldNodeTypeExplore => "inspect.explore",
+            _ => "inspect.gather"
+        };
+
+        private static Color LoopAccent(string nodeTypeId) => nodeTypeId switch
+        {
+            SurvIds.WorldNodeTypeFight => SurvivalVisuals.ThreatSpark,
+            SurvIds.WorldNodeTypeExplore => SurvivalVisuals.PinExplore,
+            _ => new Color(1f, 0.84f, 0.28f, 0.95f)
+        };
+
+        private static Color LoopFrame(string nodeTypeId) => nodeTypeId switch
+        {
+            SurvIds.WorldNodeTypeFight => SurvivalVisuals.ThreatLine,
+            SurvIds.WorldNodeTypeExplore => SurvivalVisuals.ScoutLine,
+            _ => SurvivalVisuals.GoldLine
+        };
+
+        private static Color LoopCtaFill(string nodeTypeId) => nodeTypeId switch
+        {
+            SurvIds.WorldNodeTypeFight => SurvivalVisuals.AttackFill,
+            SurvIds.WorldNodeTypeExplore => SurvivalVisuals.ScoutFill,
+            _ => SurvivalVisuals.MineFill
+        };
+
+        private static string InspectStatLeft(ThemePackBinder pack, string prefix, string nodeTypeId)
+        {
+            var key = nodeTypeId switch
+            {
+                SurvIds.WorldNodeTypeFight => ".threat",
+                SurvIds.WorldNodeTypeExplore => ".relics",
+                _ => ".available"
+            };
+            return pack.StringOr(prefix + key, "");
+        }
+
+        private static string InspectStatRight(ThemePackBinder pack, string prefix, WorldMarchLoop loop)
+        {
+            if (string.Equals(loop.NodeTypeId, SurvIds.WorldNodeTypeFight, System.StringComparison.Ordinal))
+            {
+                return pack.StringOr(prefix + ".enemy", "") + "  " + ChipWallet.FormatGrouped(loop.Available);
+            }
+
+            if (string.Equals(loop.NodeTypeId, SurvIds.WorldNodeTypeExplore, System.StringComparison.Ordinal))
+            {
+                return ChipWallet.FormatGrouped(loop.Available);
+            }
+
+            return pack.StringOr(prefix + ".resource", "") + " " + ChipWallet.FormatGrouped(loop.Available);
         }
 
         private static void InspectRow(Transform panel, string name, float yMin, float yMax, string left, string right)
@@ -370,8 +420,9 @@ namespace Survival.Unity
             var fight = string.Equals(loop.NodeTypeId, SurvIds.WorldNodeTypeFight, System.StringComparison.Ordinal);
             var from = PinOf(SurvIds.WorldNodeHome01);
             var to = PinOf(loop.NodeId);
-            var markerCol = fight ? SurvivalVisuals.ThreatSpark : new Color(1f, 0.82f, 0.28f, 1f);
-            var glowCol = fight ? new Color(0.62f, 0.28f, 0.95f, 0.8f) : new Color(1f, 0.78f, 0.22f, 0.75f);
+            var markerCol = LoopAccent(loop.NodeTypeId);
+            var glowCol = markerCol;
+            glowCol.a = 0.75f;
             var marker = SurvivalVisuals.Circle(_fx, "MarchMarker", markerCol);
             var glow = SurvivalVisuals.Ring(marker.transform, "Glow", glowCol);
             SurvivalVisuals.Stretch(glow.rectTransform);
@@ -391,8 +442,7 @@ namespace Survival.Unity
 
                 Session.Chips.Add(result.ChipKey, result.Yield);
                 RefreshChip(result.ChipKey);
-                var prefix = fight ? "inspect.fight" : "inspect.gather";
-                yield return RewardPop(to, result.Yield, prefix, fight);
+                yield return RewardPop(to, result.Yield, InspectPrefix(loop.NodeTypeId), LoopAccent(loop.NodeTypeId));
             }
 
             yield return March(marker.rectTransform, to, from, 0.95f);
@@ -422,7 +472,7 @@ namespace Survival.Unity
             Destroy(ring.gameObject);
         }
 
-        private IEnumerator RewardPop(Vector2 at, int yield, string prefix, bool fight)
+        private IEnumerator RewardPop(Vector2 at, int yield, string prefix, Color sparkColor)
         {
             if (_fx == null || Session == null)
             {
@@ -436,9 +486,7 @@ namespace Survival.Unity
                 label,
                 ChipWallet.FormatGrouped(yield),
                 pack.StringOr(prefix + ".resource", ""));
-            var popColor = fight ? SurvivalVisuals.ThreatSpark : SurvivalVisuals.Reward;
-            var sparkColor = fight ? SurvivalVisuals.ThreatSpark : new Color(1f, 0.86f, 0.35f, 0.95f);
-            var pop = SurvivalVisuals.Text(_fx, "RewardPop", copy, 44, TextAnchor.MiddleCenter, popColor);
+            var pop = SurvivalVisuals.Text(_fx, "RewardPop", copy, 44, TextAnchor.MiddleCenter, sparkColor);
             SurvivalVisuals.AnchorBox(pop.rectTransform, at.x, at.y + 0.04f, 0.48f, 0.06f);
             pop.rectTransform.localScale = Vector3.one * 0.7f;
 

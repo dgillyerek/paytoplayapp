@@ -41,7 +41,7 @@ namespace Survival.Domain.World
     }
 
     /// <summary>
-    /// Shared World march → resolve for playable nodes (Gather stock, Fight attempts).
+    /// Shared World march → resolve for playable nodes (Gather stock, Fight/Explore attempts).
     /// March is always <see cref="SurvIds.WorldActionMarch"/>.
     /// </summary>
     public sealed class WorldMarchLoop
@@ -82,6 +82,16 @@ namespace Survival.Domain.World
                     def,
                     SurvIds.BattleActionStart,
                     SurvIds.EnergyActionBattle,
+                    ChipWallet.SoftChip,
+                    consumeYieldFromStock: false);
+            }
+
+            if (string.Equals(def.NodeTypeId, SurvIds.WorldNodeTypeExplore, StringComparison.Ordinal))
+            {
+                return new WorldMarchLoop(
+                    def,
+                    SurvIds.WorldActionScout,
+                    SurvIds.EnergyActionMarch,
                     ChipWallet.SoftChip,
                     consumeYieldFromStock: false);
             }

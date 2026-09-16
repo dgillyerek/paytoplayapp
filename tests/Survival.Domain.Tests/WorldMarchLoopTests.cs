@@ -164,4 +164,78 @@ public sealed class WorldMarchLoopTests
         Assert.False(result.Ok);
         Assert.Equal(MarchResolveResult.Fail, session.World.Fight.CompleteArrive());
     }
+
+    [Fact]
+    public void Catalog_explore_node_has_relics_and_scout_march()
+    {
+        var catalog = CatalogLoader.LoadFromDirectory(TestPaths.CatalogDir);
+        var explore = Assert.Single(catalog.WorldNodes, n => n.Id == SurvIds.WorldNodeExplore01);
+        Assert.Equal(SurvIds.WorldNodeTypeExplore, explore.NodeTypeId);
+        Assert.Equal(5, explore.Available);
+        Assert.Equal(600, explore.YieldPerAction);
+        Assert.Equal(84, explore.MarchSeconds);
+        Assert.Equal("1m 24s", WorldMarchLoop.FormatClock(84));
+    }
+
+    [Fact]
+    public void Theme_pack_explore_pin_uses_ruins_and_inspect_copy()
+    {
+        var pack = TestPaths.LoadPack();
+        var pin = Assert.Single(pack.Pins, p => p.NodeId == SurvIds.WorldNodeExplore01);
+        Assert.Equal(SurvIds.WorldNodeTypeExplore, pin.NodeTypeId);
+        Assert.Equal(SurvIds.ThemeANodeExploreRuins, pin.ContentKey);
+        Assert.InRange(pin.SpriteSize, 0.16f, 0.20f);
+        Assert.Equal("Ruins", pack.StringOr("inspect.explore.title", ""));
+        Assert.Equal("Relics", pack.StringOr("inspect.explore.relics", ""));
+        Assert.Equal("March + scout", pack.StringOr("inspect.explore.march", ""));
+        Assert.Equal("Explore", pack.StringOr("inspect.explore.action", ""));
+        Assert.Equal("Gold", pack.StringOr("inspect.explore.resource", ""));
+        Assert.True(pack.TryArt(SurvIds.ThemeANodeExploreRuins, out var art));
+        Assert.Contains("06_explore_ruins", art, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Scout_spends_march_energy_then_arrive_credits_gold()
+    {
+        var session = new SurvivalSession(
+            AppFlavorConfig.FantasyKingdomA,
+            TestPaths.LoadPack(),
+            CatalogLoader.LoadFromDirectory(TestPaths.CatalogDir));
+        var loop = session.World.Explore;
+        Assert.NotNull(loop);
+        Assert.True(session.World.TryGetMarch(SurvIds.WorldNodeExplore01, out var byId));
+        Assert.Same(loop, byId);
+        var energyBefore = session.Energy.Current;
+        Assert.True(loop!.TryBegin(session.Energy, SurvIds.WorldNodeHome01, out var begin));
+        Assert.Equal(SurvIds.WorldNodeExplore01, begin.NodeId);
+        Assert.Equal(SurvIds.WorldActionMarch, begin.MarchActionId);
+        Assert.Equal(SurvIds.WorldActionScout, begin.ResolveActionId);
+        Assert.Equal(SurvIds.EnergyActionMarch, begin.EnergyActionId);
+        Assert.Equal(ChipWallet.SoftChip, begin.ChipKey);
+        Assert.Equal(600, begin.Yield);
+        Assert.Equal(5, energyBefore - session.Energy.Current);
+        Assert.False(loop.TryBegin(session.Energy, SurvIds.WorldNodeHome01, out _));
+
+        var arrive = loop.CompleteArrive();
+        Assert.True(arrive.Ok);
+        Assert.Equal(4, arrive.AvailableAfter);
+        Assert.Equal(246200, session.Chips.Add(ChipWallet.SoftChip, arrive.Yield));
+        Assert.Equal("246.2K", ChipWallet.FormatCompact(246200));
+    }
+
+    [Fact]
+    public void Scout_fails_without_energy()
+    {
+        var session = new SurvivalSession(
+            AppFlavorConfig.FantasyKingdomA,
+            TestPaths.LoadPack(),
+            CatalogLoader.LoadFromDirectory(TestPaths.CatalogDir));
+        while (session.Energy.TrySpend(SurvIds.EnergyActionMarch))
+        {
+        }
+
+        Assert.False(session.World.Explore!.TryBegin(session.Energy, SurvIds.WorldNodeHome01, out var result));
+        Assert.False(result.Ok);
+        Assert.Equal(MarchResolveResult.Fail, session.World.Explore.CompleteArrive());
+    }
 }

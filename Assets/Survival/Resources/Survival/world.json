@@ -61,7 +61,10 @@
     },
     {
       "id": "world.node.explore_01",
-      "type": "world.node_type.explore"
+      "type": "world.node_type.explore",
+      "available": 5,
+      "yield": 600,
+      "march_seconds": 84
     }
   ]
 }
