@@ -91,7 +91,8 @@ namespace Survival.Unity
                          ?? SurvivalArt.Get(SurvIds.ThemeAHeroSirAldricRear512)
                          ?? SirAldricView.LoadMasterPng(ResolveMasterPaths(flavor));
 
-            _view = gameObject.AddComponent<SirAldricView>();
+            var body = new GameObject("SirAldric", typeof(RectTransform), typeof(CanvasRenderer));
+            _view = body.AddComponent<SirAldricView>();
             _view.Build(canvas, master);
 
             var caption = pack?.StringOr("theme_a.hero.sir_aldric.demo_caption", "SIR ALDRIC  ·  walk → attack TOP")
@@ -113,7 +114,7 @@ namespace Survival.Unity
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "LOCKED rear master  ·  faces TOP  ·  no AI frames",
+                "LOCKED rear master  ·  mesh warp  ·  no AI frames",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);

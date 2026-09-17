@@ -1,32 +1,39 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using Survival.Domain.Heroes;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Survival.Unity
 {
     /// <summary>
-    /// Paper-doll from ONE locked rear master: torso + legs + sword crops.
-    /// Rest pose composites back to the painted sprite; walk/attack are bone deltas.
+    /// One locked rear master as a single skinned UV mesh. Vertices bend; the silhouette stays connected.
     /// </summary>
-    public sealed class SirAldricView : MonoBehaviour
+    public sealed class SirAldricView : MaskableGraphic
     {
         public const float CharacterHeight = 760f;
 
-        private RectTransform? _root;
-        private RectTransform? _torso;
-        private RectTransform? _legL;
-        private RectTransform? _legR;
-        private RectTransform? _sword;
-        private Vector2 _torsoRest;
-        private Vector2 _legLRest;
-        private Vector2 _legRRest;
-        private Vector2 _swordRest;
+        private Texture? _tex;
+        private SirAldricMotion.Pose _pose;
+        private int _bx;
+        private int _by;
+        private int _bw;
+        private int _bh;
+        private int _tw = 1;
+        private int _th = 1;
         private float _height = CharacterHeight;
 
-        public bool Built => _root != null;
+        public bool Built => _tex != null;
+
+        public override Texture mainTexture => _tex != null ? _tex : s_WhiteTexture;
 
         public void Build(RectTransform parent, Sprite? master)
         {
+            raycastTarget = false;
+            color = Color.white;
+            transform.SetParent(parent, false);
+
             if (master == null || master.texture == null)
             {
                 var missing = SurvivalVisuals.Text(
@@ -37,105 +44,113 @@ namespace Survival.Unity
                     TextAnchor.MiddleCenter,
                     SurvivalVisuals.Cream);
                 SurvivalVisuals.Stretch(missing.rectTransform);
+                _tex = null;
                 return;
             }
 
             var tex = master.texture;
-            if (!TryOpaqueBounds(tex, out var bx, out var by, out var bw, out var bh))
+            tex.wrapMode = TextureWrapMode.Clamp;
+            tex.filterMode = FilterMode.Bilinear;
+            _tex = tex;
+            _tw = tex.width;
+            _th = tex.height;
+
+            var tr = master.textureRect;
+            if (!TryOpaqueBounds(tex, (int)tr.x, (int)tr.y, (int)tr.width, (int)tr.height, out _bx, out _by, out _bw, out _bh))
             {
-                bx = 0;
-                by = 0;
-                bw = tex.width;
-                bh = tex.height;
+                _bx = (int)tr.x;
+                _by = (int)tr.y;
+                _bw = Mathf.Max(1, (int)tr.width);
+                _bh = Mathf.Max(1, (int)tr.height);
             }
 
-            var body = CopyTexture(tex);
-            Punch(body, bx, by, bw, bh, SirAldricMotion.Layout.Sword);
-            body.Apply();
-
-            _root = MakeNode(parent, "SirAldric");
-            _root.anchorMin = new Vector2(0.5f, 0.22f);
-            _root.anchorMax = new Vector2(0.5f, 0.22f);
-            _root.pivot = new Vector2(0.5f, 0.08f);
-            _root.sizeDelta = new Vector2(_height * (bw / (float)bh), _height);
-
-            var rootW = _root.sizeDelta.x;
-            var rootH = _root.sizeDelta.y;
-            _torso = MakePart(_root, "Torso", body, bx, by, bw, bh, SirAldricMotion.Layout.Torso, new Vector2(0.5f, 0.18f), rootW, rootH, out _torsoRest);
-            _legL = MakePart(_root, "LegL", body, bx, by, bw, bh, SirAldricMotion.Layout.LegL, new Vector2(0.5f, 0.90f), rootW, rootH, out _legLRest);
-            _legR = MakePart(_root, "LegR", body, bx, by, bw, bh, SirAldricMotion.Layout.LegR, new Vector2(0.5f, 0.90f), rootW, rootH, out _legRRest);
-            _sword = MakePart(_root, "Sword", tex, bx, by, bw, bh, SirAldricMotion.Layout.Sword, new Vector2(0.28f, 0.90f), rootW, rootH, out _swordRest);
-            _legL.SetSiblingIndex(0);
-            _legR.SetSiblingIndex(1);
-            _torso.SetAsLastSibling();
-            _sword.SetAsLastSibling();
+            var rt = rectTransform;
+            rt.anchorMin = new Vector2(0.5f, 0.22f);
+            rt.anchorMax = new Vector2(0.5f, 0.22f);
+            rt.pivot = new Vector2(0.5f, 0.08f);
+            rt.sizeDelta = new Vector2(_height * (_bw / (float)_bh), _height);
+            SetMaterialDirty();
+            SetVerticesDirty();
         }
 
         public void Apply(SirAldricMotion.Pose pose)
         {
-            if (_root == null)
+            if (_tex == null)
             {
                 return;
             }
 
-            _root.anchorMin = new Vector2(0.5f, pose.MarchY);
-            _root.anchorMax = new Vector2(0.5f, pose.MarchY);
-            _root.anchoredPosition = new Vector2(pose.Root.X * _height, pose.Root.Y * _height);
-            _root.localEulerAngles = new Vector3(0f, 0f, pose.Root.RotZ);
-            _root.localScale = new Vector3(pose.Root.ScaleX, pose.Root.ScaleY, 1f);
-            ApplyBone(_torso, _torsoRest, pose.Torso);
-            ApplyBone(_legL, _legLRest, pose.LegL);
-            ApplyBone(_legR, _legRRest, pose.LegR);
-            ApplyBone(_sword, _swordRest, pose.Sword);
+            _pose = pose;
+            var rt = rectTransform;
+            rt.anchorMin = new Vector2(0.5f, pose.MarchY);
+            rt.anchorMax = new Vector2(0.5f, pose.MarchY);
+            rt.anchoredPosition = new Vector2(pose.Root.X * _height, pose.Root.Y * _height);
+            rt.localEulerAngles = new Vector3(0f, 0f, pose.Root.RotZ);
+            rt.localScale = new Vector3(pose.Root.ScaleX, pose.Root.ScaleY, 1f);
+            SetVerticesDirty();
         }
 
-        private void ApplyBone(RectTransform? part, Vector2 rest, SirAldricMotion.Bone bone)
+        protected override void OnPopulateMesh(VertexHelper vh)
         {
-            if (part == null)
+            vh.Clear();
+            if (_tex == null || _bw < 1 || _bh < 1)
             {
                 return;
             }
 
-            part.anchoredPosition = rest + new Vector2(bone.X, bone.Y) * _height;
-            part.localEulerAngles = new Vector3(0f, 0f, bone.RotZ);
-            part.localScale = new Vector3(bone.ScaleX, bone.ScaleY, 1f);
-        }
+            var r = rectTransform.rect;
+            var cols = SirAldricWarp.GridCols;
+            var rows = SirAldricWarp.GridRows;
+            var color32 = (Color32)color;
+            for (var j = 0; j <= rows; j++)
+            {
+                var v = j / (float)rows;
+                for (var i = 0; i <= cols; i++)
+                {
+                    var u = i / (float)cols;
+                    SirAldricWarp.Displace(u, v, _pose, out var nu, out var nv);
+                    var px = r.xMin + nu * r.width;
+                    var py = r.yMin + nv * r.height;
+                    var tu = (_bx + u * _bw) / _tw;
+                    var tv = (_by + v * _bh) / _th;
+                    vh.AddVert(new Vector3(px, py, 0f), color32, new Vector2(tu, tv));
+                }
+            }
 
-        private static RectTransform MakePart(
-            RectTransform parent,
-            string name,
-            Texture2D src,
-            int bx,
-            int by,
-            int bw,
-            int bh,
-            SirAldricMotion.NRect uv,
-            Vector2 pivot,
-            float parentW,
-            float parentH,
-            out Vector2 rest)
-        {
-            var sprite = Crop(src, bx, by, bw, bh, uv);
-            var img = SurvivalVisuals.Image(parent, name, Color.white, sprite);
-            img.preserveAspect = true;
-            img.raycastTarget = false;
-            var rt = img.rectTransform;
-            rt.pivot = pivot;
-            var w = uv.Width * parentW;
-            var h = uv.Height * parentH;
-            rt.sizeDelta = new Vector2(w, h);
-            var cx = (uv.XMin + uv.Width * pivot.x - 0.5f) * parentW;
-            var cy = (uv.YMin + uv.Height * pivot.y - 0.5f) * parentH;
-            rest = new Vector2(cx, cy);
-            rt.anchoredPosition = rest;
-            return rt;
-        }
+            var stride = cols + 1;
+            var tris = new List<(int a, int b, int c, float score)>();
+            for (var j = 0; j < rows; j++)
+            {
+                for (var i = 0; i < cols; i++)
+                {
+                    var i0 = j * stride + i;
+                    var i1 = i0 + 1;
+                    var i2 = i0 + stride;
+                    var i3 = i2 + 1;
+                    var s0 = Score(i0);
+                    var s1 = Score(i1);
+                    var s2 = Score(i2);
+                    var s3 = Score(i3);
+                    tris.Add((i0, i2, i3, Math.Max(s0, Math.Max(s2, s3))));
+                    tris.Add((i0, i3, i1, Math.Max(s0, Math.Max(s3, s1))));
+                }
+            }
 
-        private static RectTransform MakeNode(RectTransform parent, string name)
-        {
-            var go = new GameObject(name, typeof(RectTransform));
-            go.transform.SetParent(parent, false);
-            return go.GetComponent<RectTransform>();
+            tris.Sort((p, q) => p.score.CompareTo(q.score));
+            for (var t = 0; t < tris.Count; t++)
+            {
+                vh.AddTriangle(tris[t].a, tris[t].b, tris[t].c);
+            }
+
+            float Score(int idx)
+            {
+                var u = (idx % stride) / (float)cols;
+                var v = (idx / stride) / (float)rows;
+                SirAldricWarp.Displace(u, v, _pose, out var nu, out var nv);
+                var du = nu - u;
+                var dv = nv - v;
+                return du * du + dv * dv;
+            }
         }
 
         public static Sprite? LoadMasterPng(params string[] paths)
@@ -165,54 +180,16 @@ namespace Survival.Unity
             return null;
         }
 
-        private static Texture2D CopyTexture(Texture2D src)
-        {
-            var dst = new Texture2D(src.width, src.height, TextureFormat.RGBA32, false);
-            dst.filterMode = FilterMode.Bilinear;
-            dst.wrapMode = TextureWrapMode.Clamp;
-            dst.alphaIsTransparency = true;
-            dst.SetPixels(src.GetPixels());
-            return dst;
-        }
-
-        private static void Punch(Texture2D tex, int bx, int by, int bw, int bh, SirAldricMotion.NRect uv)
-        {
-            var x0 = Mathf.Clamp(bx + Mathf.FloorToInt(uv.XMin * bw) - 1, 0, tex.width - 1);
-            var y0 = Mathf.Clamp(by + Mathf.FloorToInt(uv.YMin * bh) - 1, 0, tex.height - 1);
-            var x1 = Mathf.Clamp(bx + Mathf.CeilToInt(uv.XMax * bw) + 1, 0, tex.width);
-            var y1 = Mathf.Clamp(by + Mathf.CeilToInt(uv.YMax * bh) + 1, 0, tex.height);
-            for (var y = y0; y < y1; y++)
-            {
-                for (var x = x0; x < x1; x++)
-                {
-                    var c = tex.GetPixel(x, y);
-                    if (c.a < 0.08f)
-                    {
-                        continue;
-                    }
-
-                    c.a = 0f;
-                    tex.SetPixel(x, y, c);
-                }
-            }
-        }
-
-        private static Sprite Crop(Texture2D src, int bx, int by, int bw, int bh, SirAldricMotion.NRect uv)
-        {
-            var x = Mathf.Clamp(bx + Mathf.FloorToInt(uv.XMin * bw), 0, src.width - 1);
-            var y = Mathf.Clamp(by + Mathf.FloorToInt(uv.YMin * bh), 0, src.height - 1);
-            var w = Mathf.Clamp(Mathf.CeilToInt(uv.Width * bw), 1, src.width - x);
-            var h = Mathf.Clamp(Mathf.CeilToInt(uv.Height * bh), 1, src.height - y);
-            var dst = new Texture2D(w, h, TextureFormat.RGBA32, false);
-            dst.filterMode = FilterMode.Bilinear;
-            dst.wrapMode = TextureWrapMode.Clamp;
-            dst.alphaIsTransparency = true;
-            dst.SetPixels(src.GetPixels(x, y, w, h));
-            dst.Apply();
-            return Sprite.Create(dst, new Rect(0f, 0f, w, h), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect);
-        }
-
-        private static bool TryOpaqueBounds(Texture2D tex, out int x, out int y, out int w, out int h)
+        private static bool TryOpaqueBounds(
+            Texture2D tex,
+            int x0,
+            int y0,
+            int rw,
+            int rh,
+            out int x,
+            out int y,
+            out int w,
+            out int h)
         {
             var pixels = tex.GetPixels();
             var tw = tex.width;
@@ -221,19 +198,23 @@ namespace Survival.Unity
             var minY = th;
             var maxX = 0;
             var maxY = 0;
-            for (var i = 0; i < pixels.Length; i++)
+            var x1 = Mathf.Min(tw, x0 + rw);
+            var y1 = Mathf.Min(th, y0 + rh);
+            for (var py = Mathf.Max(0, y0); py < y1; py++)
             {
-                if (pixels[i].a < 0.08f)
+                var row = py * tw;
+                for (var px = Mathf.Max(0, x0); px < x1; px++)
                 {
-                    continue;
-                }
+                    if (pixels[row + px].a < 0.08f)
+                    {
+                        continue;
+                    }
 
-                var px = i % tw;
-                var py = i / tw;
-                if (px < minX) minX = px;
-                if (py < minY) minY = py;
-                if (px > maxX) maxX = px;
-                if (py > maxY) maxY = py;
+                    if (px < minX) minX = px;
+                    if (py < minY) minY = py;
+                    if (px > maxX) maxX = px;
+                    if (py > maxY) maxY = py;
+                }
             }
 
             if (maxX < minX)

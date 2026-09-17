@@ -51,6 +51,63 @@ public sealed class SirAldricMotionTests
     }
 
     [Fact]
+    public void Warp_rest_is_identity_and_limbs_stay_connected()
+    {
+        var rest = SirAldricMotion.Evaluate(0f);
+        SirAldricWarp.Displace(0.5f, 0.5f, rest, out var mu, out var mv);
+        Assert.InRange(mu, 0.5f - 1e-4f, 0.5f + 1e-4f);
+        Assert.InRange(mv, 0.5f - 1e-4f, 0.5f + 1e-4f);
+
+        var walk = SirAldricMotion.Evaluate(SirAldricMotion.WalkPeriodSeconds * 0.25f);
+        SirAldricWarp.Displace(SirAldricMotion.Layout.HipL.X, SirAldricMotion.Layout.HipL.Y, walk, out var hu, out var hv);
+        SirAldricWarp.Displace(SirAldricMotion.Layout.FootL.X, SirAldricMotion.Layout.FootL.Y, walk, out var fu, out var fv);
+        var hipMove = Math.Sqrt(
+            (hu - SirAldricMotion.Layout.HipL.X) * (hu - SirAldricMotion.Layout.HipL.X)
+            + (hv - SirAldricMotion.Layout.HipL.Y) * (hv - SirAldricMotion.Layout.HipL.Y));
+        var footMove = Math.Sqrt(
+            (fu - SirAldricMotion.Layout.FootL.X) * (fu - SirAldricMotion.Layout.FootL.X)
+            + (fv - SirAldricMotion.Layout.FootL.Y) * (fv - SirAldricMotion.Layout.FootL.Y));
+        Assert.True(hipMove < 0.04f);
+        Assert.True(footMove > 0.05f);
+        Assert.True(footMove > hipMove * 2f);
+
+        var cols = SirAldricWarp.GridCols;
+        var rows = SirAldricWarp.GridRows;
+        var restSpacing = 1f / cols;
+        for (var j = 0; j < rows; j++)
+        {
+            for (var i = 0; i < cols; i++)
+            {
+                var u0 = i / (float)cols;
+                var v0 = j / (float)rows;
+                var u1 = (i + 1) / (float)cols;
+                var v1 = (j + 1) / (float)rows;
+                SirAldricWarp.Displace(u0, v0, walk, out var x00, out var y00);
+                SirAldricWarp.Displace(u1, v0, walk, out var x10, out var y10);
+                SirAldricWarp.Displace(u0, v1, walk, out var x01, out var y01);
+                var dx = Math.Sqrt((x10 - x00) * (x10 - x00) + (y10 - y00) * (y10 - y00));
+                var dy = Math.Sqrt((x01 - x00) * (x01 - x00) + (y01 - y00) * (y01 - y00));
+                Assert.True(dx < Math.Max(restSpacing * 6.0, 0.22));
+                Assert.True(dy < Math.Max((1.0 / rows) * 6.0, 0.22));
+            }
+        }
+    }
+
+    [Fact]
+    public void Warp_attack_bends_sword_tip_toward_top_hilt_stays_attached()
+    {
+        var strike = SirAldricMotion.Evaluate(SirAldricMotion.WalkBlockSeconds + SirAldricMotion.AttackSeconds * 0.50f);
+        SirAldricWarp.Displace(SirAldricMotion.Layout.Hilt.X, SirAldricMotion.Layout.Hilt.Y, strike, out var hu, out var hv);
+        SirAldricWarp.Displace(SirAldricMotion.Layout.Tip.X, SirAldricMotion.Layout.Tip.Y, strike, out var tu, out var tv);
+        var hiltMove = Math.Sqrt(
+            (hu - SirAldricMotion.Layout.Hilt.X) * (hu - SirAldricMotion.Layout.Hilt.X)
+            + (hv - SirAldricMotion.Layout.Hilt.Y) * (hv - SirAldricMotion.Layout.Hilt.Y));
+        Assert.True(hiltMove < 0.05f);
+        Assert.True(tv > SirAldricMotion.Layout.Tip.Y + 0.12f);
+        Assert.True(tv > hv);
+    }
+
+    [Fact]
     public void Attack_recovers_to_sheathed_viewer_right()
     {
         var end = SirAldricMotion.Evaluate(SirAldricMotion.WalkBlockSeconds + SirAldricMotion.AttackSeconds - 0.01f);

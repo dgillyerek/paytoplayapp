@@ -1,1 +1,1 @@
-max |Δ| excluding UI captions: walk opposite-step 255/255 (mean 7.1); walk vs strike 255/255 (mean 6.7). Limb/sword pixels move; labels are not the only diff.
+max |Δ| excluding UI: walk opposite-step 241/255 (mean 5.6); walk vs strike 242/255 (mean 5.7). silhouette components rest/walk/strike=1/1/1 (connected mesh warp; no hard-cut limbs).

@@ -6,7 +6,8 @@ namespace Survival.Domain.Heroes
     /// Deterministic rear-view pose from ONE locked master.
     /// Canvas +Y / bone +Y = TOP of screen = walk and attack direction.
     /// Sword rest is viewer-RIGHT hip. Attack draws, strikes TOP, then re-sheaths.
-    /// Bones are deltas from the painted rest pose (identity = pixel-identical to the master).
+    /// Bones drive a connected mesh warp (<see cref="SirAldricWarp"/>), not cutout limbs.
+    /// Identity = pixel-identical to the painted master.
     /// </summary>
     public static class SirAldricMotion
     {
@@ -18,7 +19,7 @@ namespace Survival.Domain.Heroes
 
         public static float LoopSeconds => WalkBlockSeconds + AttackSeconds;
 
-        /// <summary>Opaque-bbox UV (origin bottom-left) for runtime crops of the locked rear master.</summary>
+        /// <summary>Opaque-bbox UV (origin bottom-left) for the locked rear master warp.</summary>
         public static class Layout
         {
             public static readonly NRect Torso = new(0.10f, 0.34f, 0.86f, 1.00f);
@@ -26,9 +27,25 @@ namespace Survival.Domain.Heroes
             public static readonly NRect LegR = new(0.42f, 0.00f, 0.86f, 0.46f);
             public static readonly NRect Sword = new(0.64f, 0.00f, 0.98f, 0.54f);
 
-            public static readonly NRect SwordPivot = new(0.30f, 0.86f, 0.30f, 0.86f);
-            public static readonly NRect LegPivot = new(0.50f, 0.90f, 0.50f, 0.90f);
-            public static readonly NRect TorsoPivot = new(0.50f, 0.18f, 0.50f, 0.18f);
+            public static readonly NPoint HipL = new(0.36f, 0.41f);
+            public static readonly NPoint HipR = new(0.64f, 0.41f);
+            public static readonly NPoint FootL = new(0.33f, 0.03f);
+            public static readonly NPoint FootR = new(0.67f, 0.03f);
+            public static readonly NPoint Hilt = new(0.76f, 0.50f);
+            public static readonly NPoint Tip = new(0.92f, 0.13f);
+            public static readonly NPoint Spine = new(0.50f, 0.50f);
+        }
+
+        public readonly struct NPoint
+        {
+            public NPoint(float x, float y)
+            {
+                X = x;
+                Y = y;
+            }
+
+            public float X { get; }
+            public float Y { get; }
         }
 
         public readonly struct NRect
@@ -155,7 +172,7 @@ namespace Survival.Domain.Heroes
             {
                 var k = Smooth01(u / 0.16f);
                 swordRot = Lerp(0f, 42f, k);
-                swordY = Lerp(0f, 0.07f, k);
+                swordY = 0f;
                 lunge = 0f;
                 torsoRot = Lerp(0f, -7f, k);
             }
@@ -163,8 +180,8 @@ namespace Survival.Domain.Heroes
             {
                 var k = Smooth01((u - 0.16f) / 0.20f);
                 swordRot = Lerp(42f, 118f, k);
-                swordY = Lerp(0.07f, 0.16f, k);
-                swordX = Lerp(0f, -0.03f, k);
+                swordY = 0f;
+                swordX = 0f;
                 lunge = Lerp(0f, 0.035f, k);
                 torsoRot = Lerp(-7f, -11f, k);
             }
@@ -172,8 +189,8 @@ namespace Survival.Domain.Heroes
             {
                 var k = Smooth01((u - 0.36f) / 0.16f);
                 swordRot = Lerp(118f, 178f, k);
-                swordY = Lerp(0.16f, 0.30f, k);
-                swordX = Lerp(-0.03f, 0.01f, k);
+                swordY = 0f;
+                swordX = 0f;
                 lunge = Lerp(0.035f, 0.08f, k);
                 torsoRot = Lerp(-11f, 8f, k);
             }
@@ -181,8 +198,8 @@ namespace Survival.Domain.Heroes
             {
                 var k = Smooth01((u - 0.52f) / 0.26f);
                 swordRot = Lerp(178f, 58f, k);
-                swordY = Lerp(0.30f, 0.08f, k);
-                swordX = Lerp(0.01f, 0.02f, k);
+                swordY = 0f;
+                swordX = 0f;
                 lunge = Lerp(0.08f, 0.015f, k);
                 torsoRot = Lerp(8f, -3f, k);
             }
@@ -190,8 +207,8 @@ namespace Survival.Domain.Heroes
             {
                 var k = Smooth01((u - 0.78f) / 0.22f);
                 swordRot = Lerp(58f, 0f, k);
-                swordY = Lerp(0.08f, 0f, k);
-                swordX = Lerp(0.02f, 0f, k);
+                swordY = 0f;
+                swordX = 0f;
                 lunge = Lerp(0.015f, 0f, k);
                 torsoRot = Lerp(-3f, 0f, k);
             }
