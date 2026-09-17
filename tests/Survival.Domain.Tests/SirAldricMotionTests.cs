@@ -74,4 +74,39 @@ public sealed class SirAldricMotionTests
         Assert.True(pack.TryArt(SurvIds.ThemeAHeroKnight01, out var portrait));
         Assert.Contains("theme_a_hero_knight_01", portrait, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void Locked_rear_master_png_bytes_are_in_themepack_and_design_drop()
+    {
+        var root = FindRepoRoot();
+        var packPng = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "SIR_ALDRIC_REAR_MASTER_LOCKED.png");
+        var pack512 = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "SIR_ALDRIC_REAR_MASTER_LOCKED_512.png");
+        var dropPng = Path.Combine(root, "design", "survival-theme-a-fantasy", "heroes", "anim", "sir_aldric", "UNITY_DROP_LOCKED", "SIR_ALDRIC_REAR_MASTER_LOCKED.png");
+        var drop512 = Path.Combine(root, "design", "survival-theme-a-fantasy", "heroes", "anim", "sir_aldric", "UNITY_DROP_LOCKED", "SIR_ALDRIC_REAR_MASTER_LOCKED_512.png");
+        Assert.True(File.Exists(packPng));
+        Assert.True(File.Exists(pack512));
+        Assert.True(File.Exists(dropPng));
+        Assert.True(File.Exists(drop512));
+        Assert.Equal(File.ReadAllBytes(dropPng), File.ReadAllBytes(packPng));
+        Assert.Equal(File.ReadAllBytes(drop512), File.ReadAllBytes(pack512));
+        Assert.True(new FileInfo(packPng).Length > 100_000);
+        Assert.True(new FileInfo(pack512).Length > 50_000);
+        Assert.False(packPng.Contains("theme_a_hero_knight_01", StringComparison.Ordinal));
+    }
+
+    private static string FindRepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "Assets", "ThemePack", "fantasy_kingdom_a", "pack.json")))
+            {
+                return dir.FullName;
+            }
+
+            dir = dir.Parent;
+        }
+
+        throw new DirectoryNotFoundException("repo root");
+    }
 }
