@@ -11,8 +11,8 @@ namespace Survival.Domain.Heroes
     public static class SirAldricMotion
     {
         public const float WalkPeriodSeconds = 0.70f;
-        public const int WalkCyclesBeforeAttack = 4;
-        public const float AttackSeconds = 1.20f;
+        public const int WalkCyclesBeforeAttack = 2;
+        public const float AttackSeconds = 1.35f;
 
         public static float WalkBlockSeconds => WalkPeriodSeconds * WalkCyclesBeforeAttack;
 
@@ -24,7 +24,7 @@ namespace Survival.Domain.Heroes
             public static readonly NRect Torso = new(0.10f, 0.34f, 0.86f, 1.00f);
             public static readonly NRect LegL = new(0.12f, 0.00f, 0.54f, 0.46f);
             public static readonly NRect LegR = new(0.42f, 0.00f, 0.86f, 0.46f);
-            public static readonly NRect Sword = new(0.54f, 0.02f, 0.97f, 0.58f);
+            public static readonly NRect Sword = new(0.64f, 0.00f, 0.98f, 0.54f);
 
             public static readonly NRect SwordPivot = new(0.30f, 0.86f, 0.30f, 0.86f);
             public static readonly NRect LegPivot = new(0.50f, 0.90f, 0.50f, 0.90f);
@@ -129,18 +129,18 @@ namespace Survival.Domain.Heroes
         {
             var phase = (float)(loopT / WalkPeriodSeconds * (Math.PI * 2.0));
             var step = MathF.Sin(phase);
-            var bob = 0.016f * Math.Abs(MathF.Sin(phase));
-            var squash = 1f - 0.025f * Math.Abs(MathF.Sin(phase));
-            var sway = 3.2f * step;
+            var bob = 0.034f * Math.Abs(MathF.Sin(phase));
+            var squash = 1f - 0.045f * Math.Abs(MathF.Sin(phase));
+            var sway = 6.5f * step;
             return new Pose(
                 attacking: false,
                 swordDrawn: false,
                 marchY,
-                root: new Bone(0f, bob, sway * 0.15f, 1f, squash),
-                torso: new Bone(0f, bob * 0.35f, sway, 1f, 1f),
-                legL: new Bone(-0.006f * step, 0.042f * step, 7.5f * step),
-                legR: new Bone(0.006f * step, -0.042f * step, -7.5f * step),
-                sword: new Bone(0f, 0.002f * step, 2.4f * step));
+                root: new Bone(0f, bob, sway * 0.12f, 1f, squash),
+                torso: new Bone(0f, bob * 0.40f, sway, 1f, 1f),
+                legL: new Bone(-0.024f * step, 0.125f * step, 20f * step),
+                legR: new Bone(0.024f * step, -0.125f * step, -20f * step),
+                sword: new Bone(0.004f * step, 0.010f * step, 5f * step));
         }
 
         private static Pose AttackPose(float attackT, float marchY)
@@ -154,46 +154,46 @@ namespace Survival.Domain.Heroes
             if (u < 0.16f)
             {
                 var k = Smooth01(u / 0.16f);
-                swordRot = Lerp(0f, 28f, k);
-                swordY = Lerp(0f, 0.04f, k);
+                swordRot = Lerp(0f, 42f, k);
+                swordY = Lerp(0f, 0.07f, k);
                 lunge = 0f;
-                torsoRot = Lerp(0f, -4f, k);
+                torsoRot = Lerp(0f, -7f, k);
             }
             else if (u < 0.36f)
             {
                 var k = Smooth01((u - 0.16f) / 0.20f);
-                swordRot = Lerp(28f, 108f, k);
-                swordY = Lerp(0.04f, 0.11f, k);
-                swordX = Lerp(0f, -0.02f, k);
-                lunge = Lerp(0f, 0.02f, k);
-                torsoRot = Lerp(-4f, -8f, k);
+                swordRot = Lerp(42f, 118f, k);
+                swordY = Lerp(0.07f, 0.16f, k);
+                swordX = Lerp(0f, -0.03f, k);
+                lunge = Lerp(0f, 0.035f, k);
+                torsoRot = Lerp(-7f, -11f, k);
             }
             else if (u < 0.52f)
             {
                 var k = Smooth01((u - 0.36f) / 0.16f);
-                swordRot = Lerp(108f, 168f, k);
-                swordY = Lerp(0.11f, 0.18f, k);
-                swordX = Lerp(-0.02f, 0.01f, k);
-                lunge = Lerp(0.02f, 0.055f, k);
-                torsoRot = Lerp(-8f, 6f, k);
+                swordRot = Lerp(118f, 178f, k);
+                swordY = Lerp(0.16f, 0.30f, k);
+                swordX = Lerp(-0.03f, 0.01f, k);
+                lunge = Lerp(0.035f, 0.08f, k);
+                torsoRot = Lerp(-11f, 8f, k);
             }
             else if (u < 0.78f)
             {
                 var k = Smooth01((u - 0.52f) / 0.26f);
-                swordRot = Lerp(168f, 52f, k);
-                swordY = Lerp(0.18f, 0.06f, k);
+                swordRot = Lerp(178f, 58f, k);
+                swordY = Lerp(0.30f, 0.08f, k);
                 swordX = Lerp(0.01f, 0.02f, k);
-                lunge = Lerp(0.055f, 0.01f, k);
-                torsoRot = Lerp(6f, -2f, k);
+                lunge = Lerp(0.08f, 0.015f, k);
+                torsoRot = Lerp(8f, -3f, k);
             }
             else
             {
                 var k = Smooth01((u - 0.78f) / 0.22f);
-                swordRot = Lerp(52f, 0f, k);
-                swordY = Lerp(0.06f, 0f, k);
+                swordRot = Lerp(58f, 0f, k);
+                swordY = Lerp(0.08f, 0f, k);
                 swordX = Lerp(0.02f, 0f, k);
-                lunge = Lerp(0.01f, 0f, k);
-                torsoRot = Lerp(-2f, 0f, k);
+                lunge = Lerp(0.015f, 0f, k);
+                torsoRot = Lerp(-3f, 0f, k);
             }
 
             var drawn = swordRot > 22f;

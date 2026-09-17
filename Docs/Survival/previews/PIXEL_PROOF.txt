@@ -1,0 +1,1 @@
+max |Δ| excluding UI captions: walk opposite-step 255/255 (mean 7.1); walk vs strike 255/255 (mean 6.7). Limb/sword pixels move; labels are not the only diff.

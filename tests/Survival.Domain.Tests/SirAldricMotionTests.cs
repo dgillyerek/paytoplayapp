@@ -17,7 +17,7 @@ public sealed class SirAldricMotionTests
     [Fact]
     public void Walk_keeps_sword_sheathed_on_viewer_right_and_faces_top()
     {
-        for (var i = 0; i < 12; i++)
+        for (var i = 0; i < 8; i++)
         {
             var pose = SirAldricMotion.Evaluate(i * SirAldricMotion.WalkPeriodSeconds * 0.25f);
             Assert.False(pose.Attacking);
@@ -28,6 +28,13 @@ public sealed class SirAldricMotionTests
         }
 
         Assert.True(SirAldricMotion.Layout.Sword.CenterX > 0.5f);
+        var maxStep = SirAldricMotion.Evaluate(SirAldricMotion.WalkPeriodSeconds * 0.25f);
+        Assert.True(maxStep.LegL.Y > 0.08f);
+        Assert.True(maxStep.LegR.Y < -0.08f);
+        Assert.True(Math.Abs(maxStep.LegL.RotZ) > 12f);
+        var opposite = SirAldricMotion.Evaluate(SirAldricMotion.WalkPeriodSeconds * 0.75f);
+        Assert.True(opposite.LegL.Y < -0.08f);
+        Assert.True(opposite.LegR.Y > 0.08f);
     }
 
     [Fact]

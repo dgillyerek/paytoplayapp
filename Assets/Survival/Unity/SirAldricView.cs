@@ -64,7 +64,7 @@ namespace Survival.Unity
             _torso = MakePart(_root, "Torso", body, bx, by, bw, bh, SirAldricMotion.Layout.Torso, new Vector2(0.5f, 0.18f), rootW, rootH, out _torsoRest);
             _legL = MakePart(_root, "LegL", body, bx, by, bw, bh, SirAldricMotion.Layout.LegL, new Vector2(0.5f, 0.90f), rootW, rootH, out _legLRest);
             _legR = MakePart(_root, "LegR", body, bx, by, bw, bh, SirAldricMotion.Layout.LegR, new Vector2(0.5f, 0.90f), rootW, rootH, out _legRRest);
-            _sword = MakePart(_root, "Sword", tex, bx, by, bw, bh, SirAldricMotion.Layout.Sword, new Vector2(0.30f, 0.86f), rootW, rootH, out _swordRest);
+            _sword = MakePart(_root, "Sword", tex, bx, by, bw, bh, SirAldricMotion.Layout.Sword, new Vector2(0.28f, 0.90f), rootW, rootH, out _swordRest);
             _legL.SetSiblingIndex(0);
             _legR.SetSiblingIndex(1);
             _torso.SetAsLastSibling();
@@ -177,16 +177,16 @@ namespace Survival.Unity
 
         private static void Punch(Texture2D tex, int bx, int by, int bw, int bh, SirAldricMotion.NRect uv)
         {
-            var x0 = Mathf.Clamp(bx + Mathf.FloorToInt(uv.XMin * bw) - 2, 0, tex.width - 1);
-            var y0 = Mathf.Clamp(by + Mathf.FloorToInt(uv.YMin * bh) - 2, 0, tex.height - 1);
-            var x1 = Mathf.Clamp(bx + Mathf.CeilToInt(uv.XMax * bw) + 2, 0, tex.width);
-            var y1 = Mathf.Clamp(by + Mathf.CeilToInt(uv.YMax * bh) + 2, 0, tex.height);
+            var x0 = Mathf.Clamp(bx + Mathf.FloorToInt(uv.XMin * bw) - 1, 0, tex.width - 1);
+            var y0 = Mathf.Clamp(by + Mathf.FloorToInt(uv.YMin * bh) - 1, 0, tex.height - 1);
+            var x1 = Mathf.Clamp(bx + Mathf.CeilToInt(uv.XMax * bw) + 1, 0, tex.width);
+            var y1 = Mathf.Clamp(by + Mathf.CeilToInt(uv.YMax * bh) + 1, 0, tex.height);
             for (var y = y0; y < y1; y++)
             {
                 for (var x = x0; x < x1; x++)
                 {
                     var c = tex.GetPixel(x, y);
-                    if (!IsScabbardPixel(c))
+                    if (c.a < 0.08f)
                     {
                         continue;
                     }
@@ -195,19 +195,6 @@ namespace Survival.Unity
                     tex.SetPixel(x, y, c);
                 }
             }
-        }
-
-        private static bool IsScabbardPixel(Color c)
-        {
-            if (c.a < 0.08f)
-            {
-                return false;
-            }
-
-            Color.RGBToHSV(c, out var h, out var s, out var v);
-            var leather = s > 0.22f && v > 0.10f && v < 0.62f && h > 0.02f && h < 0.13f;
-            var gold = s > 0.32f && v > 0.42f && h > 0.07f && h < 0.17f;
-            return leather || gold;
         }
 
         private static Sprite Crop(Texture2D src, int bx, int by, int bw, int bh, SirAldricMotion.NRect uv)
