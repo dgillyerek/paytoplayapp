@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Survival/Scenes/Play.unity
     guid: 182bc60cd53b52ca9784280961db2b27
   - enabled: 1
+    path: Assets/Survival/Scenes/SirAldric.unity
+    guid: 03bb3684417840e5b7abf7c910015f4d
+  - enabled: 1
     path: Assets/Grove/Scenes/Board.unity
     guid: b65522f703b44f9799e3eee95f2f36d0
   m_configObjects: {}

@@ -24,6 +24,8 @@
 
 Direct Play shell (skips splash): `Assets/Survival/Scenes/Play.unity`.
 
+Sir Aldric (ONE locked rear master, no AI frames): drop the squared-up `SIR_ALDRIC_REAR_MASTER_LOCKED.png` (+ `_512`) into `design/survival-theme-a-fantasy/heroes/anim/sir_aldric/UNITY_DROP_LOCKED/`, then **Survival → Import locked Sir Aldric rear master**. Open **`Assets/Survival/Scenes/SirAldric.unity`**, Game view **1080×1920**, Play. Walk toward TOP, then attack toward TOP. Do not use the HUD portrait (`theme_a_hero_knight_01`) or any 3/4 sideways master.
+
 Menu **Survival → Use Theme A Flavor (fantasy_kingdom_a)** puts Splash then Play first in Editor Build Settings (Grove `Board` stays listed).
 
 Visual / playable: Design phone Game-view re-gate before merge. Do not self-merge.

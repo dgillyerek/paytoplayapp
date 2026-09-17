@@ -8,6 +8,8 @@
     "map.terrain": "art/map/THEME_A_WORLD_TERRAIN_PLAIN_1080x1920.png",
     "theme_a.building.hq.keep": "art/splash/THEME_A_SPLASH_KEEP_1080x1920.png",
     "theme_a.hero.knight_01": "art/heroes/theme_a_hero_knight_01.png",
+    "theme_a.hero.sir_aldric_rear": "art/heroes/SIR_ALDRIC_REAR_MASTER_LOCKED.png",
+    "theme_a.hero.sir_aldric_rear_512": "art/heroes/SIR_ALDRIC_REAR_MASTER_LOCKED_512.png",
     "theme_a.threat.darkness_01": "art/world-nodes/05_fight_dark_keep.png",
     "theme_a.world.chip.dark_keep": "art/world-nodes/05_fight_dark_keep.png",
     "theme_a.store.icon": "art/splash/THEME_A_SPLASH_KEEP_1080x1920.png",

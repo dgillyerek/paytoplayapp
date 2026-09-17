@@ -151,6 +151,8 @@ namespace Survival.Domain.Ids
 
         public const string ThemeABuildingHqKeep = "theme_a.building.hq.keep";
         public const string ThemeAHeroKnight01 = "theme_a.hero.knight_01";
+        public const string ThemeAHeroSirAldricRear = "theme_a.hero.sir_aldric_rear";
+        public const string ThemeAHeroSirAldricRear512 = "theme_a.hero.sir_aldric_rear_512";
         public const string ThemeAThreatDarkness01 = "theme_a.threat.darkness_01";
         public const string ThemeAWorldChipDarkKeep = "theme_a.world.chip.dark_keep";
         public const string ThemeAStoreIcon = "theme_a.store.icon";
