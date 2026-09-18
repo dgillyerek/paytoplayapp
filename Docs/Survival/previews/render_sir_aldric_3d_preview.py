@@ -638,16 +638,22 @@ def main():
     strike = render_pose(evaluate(WALK_BLOCK + ATTACK * 0.48))
     recover = render_pose(evaluate(WALK_BLOCK + ATTACK * 0.92))
 
-    def spine_brown_count(im):
+    def scabbard_brown(im):
         arr = np.array(im)
         r, g, b = (arr[:, :, 0].astype(np.int16), arr[:, :, 1].astype(np.int16), arr[:, :, 2].astype(np.int16))
-        brown = (r > 50) & (r < 170) & (g < (r * 0.88).astype(np.int16)) & (b < 80) & (r > b + 20)
-        return int(brown[int(H * 0.30) : int(H * 0.52), int(W * 0.46) : int(W * 0.54)].sum())
+        return (r > 70) & (r < 120) & (g > 30) & (g < 80) & (b < 50) & (r > g + 15) & (g > b)
+
+    if any(bone == "cape" for bone, _, _, _ in PARTS):
+        raise SystemExit("FAIL cape mesh still present (was the back sheath)")
 
     for im, name in ((walk_a, "walk"), (strike, "strike")):
-        n = spine_brown_count(im)
-        if n > 80:
-            raise SystemExit(f"FAIL back sheath still visible on {name}: spine-brown px={n}")
+        mask = scabbard_brown(im)
+        left_upper = int(mask[int(H * 0.24) : int(H * 0.36), int(W * 0.28) : int(W * 0.42)].sum())
+        right_hip = int(mask[int(H * 0.42) : int(H * 0.65), int(W * 0.55) : int(W * 0.72)].sum())
+        if right_hip < 800:
+            raise SystemExit(f"FAIL missing character-right scabbard on {name}: right-hip brown px={right_hip}")
+        if left_upper > 200:
+            raise SystemExit(f"FAIL back/left sheath on {name}: left-upper brown px={left_upper}")
     d_walk = max_delta(body_crop(walk_a), body_crop(walk_b))
     d_strike = max_delta(body_crop(walk_a), body_crop(strike))
     m_walk = mean_delta(body_crop(walk_a), body_crop(walk_b))
