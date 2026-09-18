@@ -1,1 +1,1 @@
-3D Animator (capsule+look-target albedo, not cubes/PNG warp). Hips screen-Y 1130→987 (toward TOP). max |Δ| excluding UI: walk opposite-step 221/255 (mean 13.3); walk vs strike 230/255 (mean 17.9). Scabbard character-right; high-angle rear march +Z = TOP.
+3D Animator (capsule+look-target albedo, not cubes/PNG warp). Hips screen-Y 1130→987 (toward TOP). Arms/sword on far/+Z side (not toward camera). max |Δ| excluding UI: walk opposite-step 214/255 (mean 11.6); walk vs strike 220/255 (mean 15.3). Scabbard character-right; high-angle rear march +Z = TOP.
