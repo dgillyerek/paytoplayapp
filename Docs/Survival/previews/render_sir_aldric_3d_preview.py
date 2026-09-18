@@ -312,7 +312,7 @@ def build_parts():
     PARTS.clear()
     add_part("head", capsule_tris((0, 0.02, 0.02), (0, 0.26, 0.02), 0.13), True)
     add_part("head", sphere_tris((0, 0.30, 0), 0.035), False, GOLD)
-    add_part("head", capsule_tris((-0.07, 0.12, 0.12), (0.07, 0.12, 0.12), 0.03), False, DARK)
+    add_part("head", capsule_tris((0, 0.08, -0.13), (0, 0.28, -0.13), 0.022), False, GOLD)
     add_part("neck", capsule_tris((0, -0.04, 0), (0, 0.10, 0), 0.07), True)
     add_part("chest", capsule_tris((0, -0.12, 0), (0, 0.16, 0), 0.20), True)
     add_part("chest", sphere_tris((-0.22, 0.12, 0), 0.10), False, SILVER)

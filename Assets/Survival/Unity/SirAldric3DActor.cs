@@ -146,7 +146,7 @@ namespace Survival.Unity
 
             BodyCap("Head", new Vector3(0f, 0.02f, 0.02f), new Vector3(0f, 0.26f, 0.02f), 0.13f);
             TrimSph("Head", new Vector3(0f, 0.30f, 0f), 0.035f, gold);
-            TrimCap("Head", new Vector3(-0.07f, 0.12f, 0.12f), new Vector3(0.07f, 0.12f, 0.12f), 0.03f, dark);
+            TrimCap("Head", new Vector3(0f, 0.08f, -0.13f), new Vector3(0f, 0.28f, -0.13f), 0.022f, gold);
             BodyCap("Neck", new Vector3(0f, -0.04f, 0f), new Vector3(0f, 0.10f, 0f), 0.07f);
             BodyCap("Chest", new Vector3(0f, -0.12f, 0f), new Vector3(0f, 0.16f, 0f), 0.20f);
             TrimSph("Chest", new Vector3(-0.22f, 0.12f, 0f), 0.10f, silver);
