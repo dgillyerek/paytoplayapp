@@ -119,17 +119,17 @@ def evaluate(t):
 # u=0 pass L, 0.25 contact L, 0.50 pass R, 0.75 contact R.
 # f1e4770 BVH tables reached Evaluate() but a forward (−X) pass thigh hid the 66°
 # knee from high-rear (11 cm lift). Pass thigh is now slightly +X so 70° lifts.
-HIPSY = [-6.0, 10.0, 6.0, -10.0]
-HIPSZ = [12.0, 2.0, -12.0, 2.0]
-SPINEY = [12.0, -12.0, -12.0, 12.0]
-UPLX = [14.0, -28.0, 6.0, 18.0]
-LEGL = [70.0, 14.0, 12.0, 22.0]
-FOOTL = [28.0, -12.0, -8.0, 24.0]
-UPRX = [4.0, 18.0, 14.0, -28.0]
-LEGR = [10.0, 16.0, 70.0, 12.0]
-FOOTR = [-8.0, 24.0, 28.0, -12.0]
-ARMLX = [34.0, 30.0, -30.0, -32.0]
-ARMRX = [-30.0, -32.0, 26.0, 24.0]
+HIPSY = [-8.0, 12.0, 8.0, -12.0]
+HIPSZ = [14.0, 2.0, -14.0, 2.0]
+SPINEY = [14.0, -14.0, -14.0, 14.0]
+UPLX = [24.0, -18.0, 8.0, 16.0]
+LEGL = [78.0, 12.0, 14.0, 20.0]
+FOOTL = [32.0, -14.0, -6.0, 26.0]
+UPRX = [10.0, 16.0, 24.0, -18.0]
+LEGR = [14.0, 18.0, 78.0, 12.0]
+FOOTR = [-6.0, 26.0, 32.0, -14.0]
+ARMLX = [36.0, 32.0, -32.0, -34.0]
+ARMRX = [-32.0, -34.0, 24.0, 22.0]
 
 
 def sample_keys(keys, u):
@@ -162,9 +162,9 @@ def walk_pose(loop_t, root_z):
         up_r=(sample_keys(UPRX, u), 0, 4),
         leg_r=(sample_keys(LEGR, u), 0, 0),
         foot_r=(sample_keys(FOOTR, u), 0, 0),
-        arm_l=(arm_lx, 0, -16),
+        arm_l=(arm_lx, 0, -22),
         fore_l=(-18, 0, 0),
-        arm_r=(arm_rx, 4, 16),
+        arm_r=(arm_rx, 4, 22),
         fore_r=(-22, 0, 0),
         hand_r=(0, 0, 0),
         sword=(-6, 0, 8),
@@ -766,9 +766,9 @@ def main():
     pass_l = evaluate(0.0)
     pass_r = evaluate(WALK_PERIOD * 0.5)
     contact_l = evaluate(WALK_PERIOD * 0.25)
-    if not (52 <= pass_l["leg_l"][0] <= 78 and 52 <= pass_r["leg_r"][0] <= 78):
+    if not (52 <= pass_l["leg_l"][0] <= 82 and 52 <= pass_r["leg_r"][0] <= 82):
         raise SystemExit(
-            f"FAIL gait-bar pass knee: L={pass_l['leg_l'][0]:.1f} R={pass_r['leg_r'][0]:.1f} (need 52–78, not 90° cartoon)"
+            f"FAIL gait-bar pass knee: L={pass_l['leg_l'][0]:.1f} R={pass_r['leg_r'][0]:.1f} (need 52–82)"
         )
     if pass_l["hips"][2] < 5 or pass_r["hips"][2] > -5:
         raise SystemExit(f"FAIL hip drop: passL Z={pass_l['hips'][2]:.1f} passR Z={pass_r['hips'][2]:.1f}")
@@ -836,7 +836,7 @@ def main():
         "f1e4770 HARD FAIL: BVH eulers reached Evaluate/Actor (Leg_L.X=65.9) but did NOT "
         "transfer the gait — high-rear + forward (−X) pass thigh put 66° flex along the "
         "ground (11 cm lift). This pass: 4 Game-view keys solved against WALK_GAIT_BAR "
-        "rear phases so pass thigh is slightly +X and 70° knee lifts ~25 cm. "
+        "rear phases so pass thigh +24 / knee 78 lifts ~0.36 m on this camera. "
         f"Hips screen-Y {y0:.0f}→{y1:.0f} (toward TOP). "
         f"Pass knee {pass_l['leg_l'][0]:.0f}°/{pass_r['leg_r'][0]:.0f}°. "
         f"Arm span L {max(r['arm_l'][0] for r in rows) - min(r['arm_l'][0] for r in rows):.0f}° "

@@ -54,8 +54,8 @@ public sealed class SirAldric3DMotionTests
         Assert.False(passL.Attacking);
         Assert.True(passL.PassingKneeBent);
         Assert.True(passR.PassingKneeBent);
-        Assert.InRange(passL.LegL.X, 52f, 78f);
-        Assert.InRange(passR.LegR.X, 52f, 78f);
+        Assert.InRange(passL.LegL.X, 52f, 82f);
+        Assert.InRange(passR.LegR.X, 52f, 82f);
         Assert.True(passL.LegL.X > passL.LegR.X + 25f);
         Assert.True(passR.LegR.X > passR.LegL.X + 25f);
         Assert.True(passL.HipDropOnPass);

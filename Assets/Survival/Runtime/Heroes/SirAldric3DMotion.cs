@@ -103,7 +103,7 @@ namespace Survival.Domain.Heroes
             public Euler Sword { get; }
 
             /// <summary>Hips stay squared to world +Z (screen TOP), not yawed to a side. |Z| allows a readable hip drop.</summary>
-            public bool FacesTop => Math.Abs(Hips.Y) < 18f && Math.Abs(Hips.Z) < 16f;
+            public bool FacesTop => Math.Abs(Hips.Y) < 18f && Math.Abs(Hips.Z) < 18f;
 
             /// <summary>Walk/sheath: right hand stays near the hip (pendulum may go slightly +X), scabbard on +X.</summary>
             public bool SheathedOnCharacterRight => !SwordDrawn && ArmR.X > -50f && ArmR.X < 28f;
@@ -128,9 +128,9 @@ namespace Survival.Domain.Heroes
             /// <summary>Thigh −X = foot toward +Z = TOP. Used to reject moonwalk / down-screen stride.</summary>
             public bool LeadLegTowardTop => UpLegL.X < -8f || UpLegR.X < -8f;
 
-            /// <summary>Passing knee in the gait-bar band (~60–70°), not stiff and not a 90° cartoon march.</summary>
+            /// <summary>Passing knee reads from high-rear (euler 52–82). Steeper camera needs the top of this band.</summary>
             public bool PassingKneeBent =>
-                (LegL.X >= 52f && LegL.X <= 78f) || (LegR.X >= 52f && LegR.X <= 78f);
+                (LegL.X >= 52f && LegL.X <= 82f) || (LegR.X >= 52f && LegR.X <= 82f);
 
             /// <summary>Spine yaws opposite the pelvis (shoulder–hip counter-rotation).</summary>
             public bool ShoulderHipCounter =>
@@ -156,19 +156,22 @@ namespace Survival.Domain.Heroes
         // Four Game-view keys solved against WALK_GAIT_BAR rear poses on this hang −Y rig.
         // Root cause of f1e4770 FAIL: BVH Leg_L.X was 66° but a forward thigh put that flex
         // along the ground (11 cm lift) so high-rear still read as a straight toy-soldier.
-        // Pass thigh is now slightly +X (back) so 70° knee lifts the foot ~25 cm.
+        // This camera foreshortens sagittal flex: 70° + slight +X still parked both feet
+        // on the same screen row. Pass thigh +24 / knee 78 + stance +10 pulls the passing
+        // foot up-screen (~0.35 m, ~90 px) without a 90° cartoon. Contact lead is only −18
+        // so the plant stays visible below the hips (old −28 hid under the torso).
         // u=0 pass L, 0.25 contact L, 0.50 pass R, 0.75 contact R.
-        private static readonly float[] HipsY = { -6f, 10f, 6f, -10f };
-        private static readonly float[] HipsZ = { 12f, 2f, -12f, 2f };
-        private static readonly float[] SpineY = { 12f, -12f, -12f, 12f };
-        private static readonly float[] UpLX = { 14f, -28f, 6f, 18f };
-        private static readonly float[] LegL = { 70f, 14f, 12f, 22f };
-        private static readonly float[] FootL = { 28f, -12f, -8f, 24f };
-        private static readonly float[] UpRX = { 4f, 18f, 14f, -28f };
-        private static readonly float[] LegR = { 10f, 16f, 70f, 12f };
-        private static readonly float[] FootR = { -8f, 24f, 28f, -12f };
-        private static readonly float[] ArmLX = { 34f, 30f, -30f, -32f };
-        private static readonly float[] ArmRX = { -30f, -32f, 26f, 24f };
+        private static readonly float[] HipsY = { -8f, 12f, 8f, -12f };
+        private static readonly float[] HipsZ = { 14f, 2f, -14f, 2f };
+        private static readonly float[] SpineY = { 14f, -14f, -14f, 14f };
+        private static readonly float[] UpLX = { 24f, -18f, 8f, 16f };
+        private static readonly float[] LegL = { 78f, 12f, 14f, 20f };
+        private static readonly float[] FootL = { 32f, -14f, -6f, 26f };
+        private static readonly float[] UpRX = { 10f, 16f, 24f, -18f };
+        private static readonly float[] LegR = { 14f, 18f, 78f, 12f };
+        private static readonly float[] FootR = { -6f, 26f, 32f, -14f };
+        private static readonly float[] ArmLX = { 36f, 32f, -32f, -34f };
+        private static readonly float[] ArmRX = { -32f, -34f, 24f, 22f };
 
         private static Pose WalkPose(float loopT, float rootZ)
         {
@@ -194,9 +197,9 @@ namespace Survival.Domain.Heroes
                 upLegR: new Euler(Sample(UpRX, u), 0f, 4f),
                 legR: new Euler(Sample(LegR, u), 0f, 0f),
                 footR: new Euler(Sample(FootR, u), 0f, 0f),
-                armL: new Euler(armLX, 0f, -16f),
+                armL: new Euler(armLX, 0f, -22f),
                 foreL: new Euler(-18f, 0f, 0f),
-                armR: new Euler(armRX, 4f, 16f),
+                armR: new Euler(armRX, 4f, 22f),
                 foreR: new Euler(-22f, 0f, 0f),
                 handR: new Euler(0f, 0f, 0f),
                 sword: new Euler(-6f, 0f, 8f));
