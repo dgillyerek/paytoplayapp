@@ -4,11 +4,11 @@
   "motion": "3D_model_plus_Unity_Animator",
   "pilot": "Sir Aldric",
   "stopped": ["AI_multi_frame", "paper_doll", "mesh_warp_png"],
-  "look_targets": [
-    "look_targets/00_fullbody_LOCKED.png",
-    "look_targets/01_rear_LOCKED.png",
-    "look_targets/02_aldric_turnaround_orthos.png"
-  ],
+  "look_targets": {
+    "00_fullbody_LOCKED.png": "roster fullbody",
+    "01_rear_LOCKED.png": "squared rear SoT + Play placeholder bytes",
+    "02_aldric_turnaround_orthos.png": "front/left/right/rear orthos (rear panel may mirror scabbard)"
+  },
   "pipeline": "HERO_3D_PIPELINE.md",
   "note": "Sword/scabbard must land on CHARACTER-RIGHT hip to match rear LOCKED SoT (fix turnaround if mirrored).",
   "runtime": {

@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.IO;
+using Survival.Domain.Flavor;
 using Survival.Domain.Heroes;
 using UnityEngine;
 using UnityEngine.Animations;
@@ -7,8 +9,8 @@ using UnityEngine.Playables;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Runtime 3D Aldric proxy: skinned blockout + Animator PlayableGraph clips.
-    /// Painted mid-poly replaces this mesh later; clips / camera stay.
+    /// Runtime 3D Aldric: capsule-sculpted skinned mesh + rear look-target albedo,
+    /// Animator PlayableGraph walk/attack toward TOP. Not cubes / not PNG warp.
     /// </summary>
     public sealed class SirAldric3DActor : MonoBehaviour
     {
@@ -81,6 +83,7 @@ namespace Survival.Unity
             Bone("Foot_R", loR, new Vector3(0f, -0.40f, 0.05f));
             var scabbard = Bone("Scabbard", hips, new Vector3(0.20f, -0.04f, -0.02f));
             scabbard.localRotation = Quaternion.Euler(18f, 0f, 22f);
+            Bone("Cape", chest, new Vector3(0f, 0.08f, -0.12f));
         }
 
         private Transform Bone(string name, Transform parent, Vector3 local)
@@ -104,14 +107,16 @@ namespace Survival.Unity
             var verts = new List<Vector3>();
             var norms = new List<Vector3>();
             var cols = new List<Color>();
+            var uvs = new List<Vector2>();
             var weights = new List<BoneWeight>();
-            var tris = new List<int>();
+            var bodyTris = new List<int>();
+            var trimTris = new List<int>();
             var boneList = new List<Transform>();
             var names = new[]
             {
                 "Root", "Hips", "Spine", "Chest", "Neck", "Head",
                 "Arm_L", "Fore_L", "Hand_L", "Arm_R", "Fore_R", "Hand_R", "Sword",
-                "UpLeg_L", "Leg_L", "Foot_L", "UpLeg_R", "Leg_R", "Foot_R", "Scabbard"
+                "UpLeg_L", "Leg_L", "Foot_L", "UpLeg_R", "Leg_R", "Foot_R", "Scabbard", "Cape"
             };
             foreach (var n in names)
             {
@@ -124,49 +129,61 @@ namespace Survival.Unity
                 index[names[i]] = i;
             }
 
-            void Box(string bone, Vector3 center, Vector3 size, Color color)
+            void BodyCap(string bone, Vector3 a, Vector3 b, float r)
             {
-                AddBox(verts, norms, cols, weights, tris, index[bone], center, size, color);
+                AddCapsule(verts, norms, cols, uvs, weights, bodyTris, _bones[bone], index[bone], a, b, r, Color.white, true);
             }
 
-            Box("Head", new Vector3(0f, 0.14f, 0.02f), new Vector3(0.24f, 0.28f, 0.26f), silver);
-            Box("Head", new Vector3(0f, 0.30f, 0f), new Vector3(0.04f, 0.10f, 0.04f), gold);
-            Box("Head", new Vector3(0f, 0.10f, 0.14f), new Vector3(0.16f, 0.08f, 0.04f), dark);
-            Box("Neck", new Vector3(0f, 0.02f, 0f), new Vector3(0.16f, 0.18f, 0.16f), silver);
-            Box("Chest", new Vector3(0f, 0.02f, 0f), new Vector3(0.40f, 0.36f, 0.22f), silver);
-            Box("Chest", new Vector3(0f, -0.02f, -0.12f), new Vector3(0.28f, 0.28f, 0.04f), blue);
-            Box("Chest", new Vector3(0f, 0.02f, -0.135f), new Vector3(0.10f, 0.14f, 0.02f), gold);
-            Box("Chest", new Vector3(-0.22f, 0.12f, 0f), new Vector3(0.16f, 0.14f, 0.16f), silver);
-            Box("Chest", new Vector3(0.22f, 0.12f, 0f), new Vector3(0.16f, 0.14f, 0.16f), silver);
-            Box("Chest", new Vector3(-0.22f, 0.18f, 0f), new Vector3(0.10f, 0.04f, 0.10f), gold);
-            Box("Chest", new Vector3(0.22f, 0.18f, 0f), new Vector3(0.10f, 0.04f, 0.10f), gold);
-            Box("Spine", new Vector3(0f, 0.02f, 0f), new Vector3(0.30f, 0.16f, 0.18f), silver);
-            Box("Hips", new Vector3(0f, -0.06f, 0f), new Vector3(0.36f, 0.22f, 0.20f), blue);
-            Box("Hips", new Vector3(0f, -0.16f, 0f), new Vector3(0.38f, 0.05f, 0.18f), gold);
-            Box("Arm_L", new Vector3(0f, -0.14f, 0f), new Vector3(0.12f, 0.30f, 0.12f), silver);
-            Box("Fore_L", new Vector3(0f, -0.12f, 0f), new Vector3(0.10f, 0.26f, 0.10f), silver);
-            Box("Hand_L", new Vector3(0f, -0.04f, 0f), new Vector3(0.10f, 0.10f, 0.10f), silver);
-            Box("Arm_R", new Vector3(0f, -0.14f, 0f), new Vector3(0.12f, 0.30f, 0.12f), silver);
-            Box("Fore_R", new Vector3(0f, -0.12f, 0f), new Vector3(0.10f, 0.26f, 0.10f), silver);
-            Box("Hand_R", new Vector3(0f, -0.04f, 0f), new Vector3(0.10f, 0.10f, 0.10f), silver);
-            Box("Sword", new Vector3(0.01f, -0.28f, 0.02f), new Vector3(0.035f, 0.62f, 0.045f), silver);
-            Box("Sword", new Vector3(0.01f, 0.04f, 0.02f), new Vector3(0.12f, 0.04f, 0.08f), gold);
-            Box("UpLeg_L", new Vector3(0f, -0.20f, 0f), new Vector3(0.15f, 0.44f, 0.16f), silver);
-            Box("Leg_L", new Vector3(0f, -0.18f, 0f), new Vector3(0.14f, 0.42f, 0.15f), silver);
-            Box("Foot_L", new Vector3(0f, -0.02f, 0.06f), new Vector3(0.13f, 0.08f, 0.24f), silver);
-            Box("Foot_L", new Vector3(0f, 0.02f, 0.04f), new Vector3(0.10f, 0.03f, 0.10f), gold);
-            Box("UpLeg_R", new Vector3(0f, -0.20f, 0f), new Vector3(0.15f, 0.44f, 0.16f), silver);
-            Box("Leg_R", new Vector3(0f, -0.18f, 0f), new Vector3(0.14f, 0.42f, 0.15f), silver);
-            Box("Foot_R", new Vector3(0f, -0.02f, 0.06f), new Vector3(0.13f, 0.08f, 0.24f), silver);
-            Box("Foot_R", new Vector3(0f, 0.02f, 0.04f), new Vector3(0.10f, 0.03f, 0.10f), gold);
-            Box("Scabbard", new Vector3(0.02f, -0.22f, 0f), new Vector3(0.055f, 0.52f, 0.055f), brown);
-            Box("Scabbard", new Vector3(0.02f, 0.06f, 0f), new Vector3(0.08f, 0.05f, 0.08f), gold);
+            void TrimCap(string bone, Vector3 a, Vector3 b, float r, Color color)
+            {
+                AddCapsule(verts, norms, cols, uvs, weights, trimTris, _bones[bone], index[bone], a, b, r, color, false);
+            }
 
-            var mesh = new Mesh { name = "SirAldricProxy" };
+            void TrimSph(string bone, Vector3 c, float r, Color color)
+            {
+                AddSphere(verts, norms, cols, uvs, weights, trimTris, _bones[bone], index[bone], c, r, color, false);
+            }
+
+            BodyCap("Head", new Vector3(0f, 0.02f, 0.02f), new Vector3(0f, 0.26f, 0.02f), 0.13f);
+            TrimSph("Head", new Vector3(0f, 0.30f, 0f), 0.035f, gold);
+            TrimCap("Head", new Vector3(-0.07f, 0.12f, 0.12f), new Vector3(0.07f, 0.12f, 0.12f), 0.03f, dark);
+            BodyCap("Neck", new Vector3(0f, -0.04f, 0f), new Vector3(0f, 0.10f, 0f), 0.07f);
+            BodyCap("Chest", new Vector3(0f, -0.12f, 0f), new Vector3(0f, 0.16f, 0f), 0.20f);
+            TrimSph("Chest", new Vector3(-0.22f, 0.12f, 0f), 0.10f, silver);
+            TrimSph("Chest", new Vector3(0.22f, 0.12f, 0f), 0.10f, silver);
+            TrimSph("Chest", new Vector3(-0.22f, 0.18f, 0f), 0.045f, gold);
+            TrimSph("Chest", new Vector3(0.22f, 0.18f, 0f), 0.045f, gold);
+            BodyCap("Spine", new Vector3(0f, -0.04f, 0f), new Vector3(0f, 0.10f, 0f), 0.16f);
+            BodyCap("Hips", new Vector3(0f, -0.16f, 0f), new Vector3(0f, 0.06f, 0f), 0.18f);
+            TrimCap("Hips", new Vector3(-0.16f, -0.18f, 0f), new Vector3(0.16f, -0.18f, 0f), 0.03f, gold);
+            BodyCap("Arm_L", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.26f, 0f), 0.065f);
+            BodyCap("Fore_L", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.22f, 0f), 0.055f);
+            BodyCap("Hand_L", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.08f, 0f), 0.05f);
+            BodyCap("Arm_R", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.26f, 0f), 0.065f);
+            BodyCap("Fore_R", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.22f, 0f), 0.055f);
+            BodyCap("Hand_R", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.08f, 0f), 0.05f);
+            TrimCap("Sword", new Vector3(0.01f, 0.02f, 0.02f), new Vector3(0.01f, -0.58f, 0.04f), 0.022f, silver);
+            TrimCap("Sword", new Vector3(-0.06f, 0.04f, 0.02f), new Vector3(0.08f, 0.04f, 0.02f), 0.018f, gold);
+            BodyCap("UpLeg_L", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.40f, 0f), 0.085f);
+            BodyCap("Leg_L", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.36f, 0f), 0.07f);
+            BodyCap("Foot_L", new Vector3(0f, -0.02f, -0.02f), new Vector3(0f, -0.02f, 0.16f), 0.055f);
+            TrimSph("Foot_L", new Vector3(0f, 0.02f, 0.04f), 0.03f, gold);
+            BodyCap("UpLeg_R", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.40f, 0f), 0.085f);
+            BodyCap("Leg_R", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.36f, 0f), 0.07f);
+            BodyCap("Foot_R", new Vector3(0f, -0.02f, -0.02f), new Vector3(0f, -0.02f, 0.16f), 0.055f);
+            TrimSph("Foot_R", new Vector3(0f, 0.02f, 0.04f), 0.03f, gold);
+            TrimCap("Scabbard", new Vector3(0.02f, 0.08f, 0f), new Vector3(0.02f, -0.48f, 0f), 0.032f, brown);
+            TrimSph("Scabbard", new Vector3(0.02f, 0.10f, 0f), 0.04f, gold);
+            BodyCap("Cape", new Vector3(-0.16f, 0.04f, 0f), new Vector3(0.16f, -0.42f, -0.06f), 0.08f);
+
+            var mesh = new Mesh { name = "SirAldricSculpt" };
             mesh.SetVertices(verts);
             mesh.SetNormals(norms);
             mesh.SetColors(cols);
-            mesh.SetTriangles(tris, 0);
+            mesh.SetUVs(0, uvs);
+            mesh.subMeshCount = 2;
+            mesh.SetTriangles(bodyTris, 0);
+            mesh.SetTriangles(trimTris, 1);
             mesh.boneWeights = weights.ToArray();
             var bind = new Matrix4x4[boneList.Count];
             for (var i = 0; i < boneList.Count; i++)
@@ -181,82 +198,222 @@ namespace Survival.Unity
             smr.sharedMesh = mesh;
             smr.bones = boneList.ToArray();
             smr.rootBone = _bones["Hips"];
-            smr.material = MakeLit(Color.white);
             smr.quality = SkinQuality.Bone1;
+            var tex = TryLoadRearAlbedo();
+            smr.sharedMaterials = new[]
+            {
+                MakeBody(tex),
+                MakeTrim()
+            };
         }
 
-        private static void AddBox(
+        private static void AddCapsule(
             List<Vector3> verts,
             List<Vector3> norms,
             List<Color> cols,
+            List<Vector2> uvs,
             List<BoneWeight> weights,
             List<int> tris,
-            int bone,
-            Vector3 center,
-            Vector3 size,
-            Color color)
+            Transform bone,
+            int boneIndex,
+            Vector3 a,
+            Vector3 b,
+            float radius,
+            Color color,
+            bool bodyTex)
         {
-            var e = size * 0.5f;
-            var corners = new[]
+            var axis = b - a;
+            var height = axis.magnitude;
+            if (height < 1e-5f)
             {
-                center + new Vector3(-e.x, -e.y, -e.z),
-                center + new Vector3(e.x, -e.y, -e.z),
-                center + new Vector3(e.x, e.y, -e.z),
-                center + new Vector3(-e.x, e.y, -e.z),
-                center + new Vector3(-e.x, -e.y, e.z),
-                center + new Vector3(e.x, -e.y, e.z),
-                center + new Vector3(e.x, e.y, e.z),
-                center + new Vector3(-e.x, e.y, e.z)
-            };
-            var faces = new[]
+                AddSphere(verts, norms, cols, uvs, weights, tris, bone, boneIndex, a, radius, color, bodyTex);
+                return;
+            }
+
+            var nY = axis / height;
+            var nX = Vector3.Cross(Mathf.Abs(nY.y) < 0.9f ? Vector3.up : Vector3.right, nY).normalized;
+            var nZ = Vector3.Cross(nY, nX);
+            const int rings = 6;
+            const int segs = 8;
+            var bw = new BoneWeight { boneIndex0 = boneIndex, weight0 = 1f };
+            var ring0 = verts.Count;
+            for (var i = 0; i <= rings; i++)
             {
-                (0, 1, 2, 3, new Vector3(0, 0, -1)),
-                (5, 4, 7, 6, new Vector3(0, 0, 1)),
-                (4, 0, 3, 7, new Vector3(-1, 0, 0)),
-                (1, 5, 6, 2, new Vector3(1, 0, 0)),
-                (3, 2, 6, 7, new Vector3(0, 1, 0)),
-                (4, 5, 1, 0, new Vector3(0, -1, 0))
-            };
-            var bw = new BoneWeight { boneIndex0 = bone, weight0 = 1f };
-            foreach (var (a, b, c, d, n) in faces)
-            {
-                var i0 = verts.Count;
-                verts.Add(corners[a]);
-                verts.Add(corners[b]);
-                verts.Add(corners[c]);
-                verts.Add(corners[d]);
-                for (var i = 0; i < 4; i++)
+                var t = i / (float)rings;
+                var p = Vector3.Lerp(a, b, t);
+                for (var s = 0; s < segs; s++)
                 {
-                    norms.Add(n);
+                    var ang = s / (float)segs * Mathf.PI * 2f;
+                    var radial = (Mathf.Cos(ang) * nX) + (Mathf.Sin(ang) * nZ);
+                    var local = p + radial * radius;
+                    verts.Add(local);
+                    norms.Add(radial);
                     cols.Add(color);
+                    uvs.Add(bodyTex ? UvOf(bone.TransformPoint(local)) : new Vector2(0.5f, 0.5f));
                     weights.Add(bw);
                 }
+            }
 
-                tris.Add(i0);
-                tris.Add(i0 + 1);
-                tris.Add(i0 + 2);
-                tris.Add(i0);
-                tris.Add(i0 + 2);
-                tris.Add(i0 + 3);
+            for (var i = 0; i < rings; i++)
+            {
+                for (var s = 0; s < segs; s++)
+                {
+                    var s1 = (s + 1) % segs;
+                    var i0 = ring0 + i * segs + s;
+                    var i1 = ring0 + i * segs + s1;
+                    var i2 = ring0 + (i + 1) * segs + s;
+                    var i3 = ring0 + (i + 1) * segs + s1;
+                    tris.Add(i0);
+                    tris.Add(i2);
+                    tris.Add(i1);
+                    tris.Add(i1);
+                    tris.Add(i2);
+                    tris.Add(i3);
+                }
+            }
+
+            AddSphere(verts, norms, cols, uvs, weights, tris, bone, boneIndex, a, radius, color, bodyTex);
+            AddSphere(verts, norms, cols, uvs, weights, tris, bone, boneIndex, b, radius, color, bodyTex);
+        }
+
+        private static void AddSphere(
+            List<Vector3> verts,
+            List<Vector3> norms,
+            List<Color> cols,
+            List<Vector2> uvs,
+            List<BoneWeight> weights,
+            List<int> tris,
+            Transform bone,
+            int boneIndex,
+            Vector3 center,
+            float radius,
+            Color color,
+            bool bodyTex)
+        {
+            const int slices = 6;
+            const int stacks = 5;
+            var bw = new BoneWeight { boneIndex0 = boneIndex, weight0 = 1f };
+            var start = verts.Count;
+            for (var y = 0; y <= stacks; y++)
+            {
+                var v = y / (float)stacks;
+                var phi = v * Mathf.PI;
+                for (var x = 0; x <= slices; x++)
+                {
+                    var u = x / (float)slices;
+                    var th = u * Mathf.PI * 2f;
+                    var n = new Vector3(Mathf.Sin(phi) * Mathf.Cos(th), Mathf.Cos(phi), Mathf.Sin(phi) * Mathf.Sin(th));
+                    var local = center + n * radius;
+                    verts.Add(local);
+                    norms.Add(n);
+                    cols.Add(color);
+                    uvs.Add(bodyTex ? UvOf(bone.TransformPoint(local)) : new Vector2(0.5f, 0.5f));
+                    weights.Add(bw);
+                }
+            }
+
+            for (var y = 0; y < stacks; y++)
+            {
+                for (var x = 0; x < slices; x++)
+                {
+                    var i0 = start + y * (slices + 1) + x;
+                    var i1 = i0 + 1;
+                    var i2 = i0 + slices + 1;
+                    var i3 = i2 + 1;
+                    tris.Add(i0);
+                    tris.Add(i2);
+                    tris.Add(i1);
+                    tris.Add(i1);
+                    tris.Add(i2);
+                    tris.Add(i3);
+                }
             }
         }
 
-        private static Material MakeLit(Color tint)
+        private static Vector2 UvOf(Vector3 bindWorld)
         {
-            var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit")
-                         ?? Shader.Find("Universal Render Pipeline/Lit")
-                         ?? Shader.Find("Standard")
+            var u = Mathf.InverseLerp(-0.32f, 0.32f, bindWorld.x);
+            var v = Mathf.InverseLerp(0.00f, 1.86f, bindWorld.y);
+            return new Vector2(Mathf.Clamp01(u), Mathf.Clamp01(v));
+        }
+
+        private static Texture2D? TryLoadRearAlbedo()
+        {
+            try
+            {
+                foreach (var path in SirAldricDemo.ResolveMasterPaths(AppFlavorConfig.FantasyKingdomA))
+                {
+                    if (!File.Exists(path))
+                    {
+                        continue;
+                    }
+
+                    var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                    if (tex.LoadImage(File.ReadAllBytes(path)))
+                    {
+                        tex.wrapMode = TextureWrapMode.Clamp;
+                        tex.filterMode = FilterMode.Bilinear;
+                        return tex;
+                    }
+                }
+            }
+            catch (IOException)
+            {
+            }
+
+            return null;
+        }
+
+        private static Material MakeBody(Texture2D? tex)
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Unlit")
+                         ?? Shader.Find("Universal Render Pipeline/Particles/Unlit")
+                         ?? Shader.Find("Unlit/Texture")
                          ?? Shader.Find("Unlit/Color")
                          ?? Shader.Find("Sprites/Default");
-            var mat = new Material(shader) { color = tint };
+            var mat = new Material(shader);
+            if (tex != null)
+            {
+                if (mat.HasProperty("_BaseMap"))
+                {
+                    mat.SetTexture("_BaseMap", tex);
+                }
+
+                if (mat.HasProperty("_MainTex"))
+                {
+                    mat.SetTexture("_MainTex", tex);
+                }
+            }
+
+            var white = Color.white;
             if (mat.HasProperty("_BaseColor"))
             {
-                mat.SetColor("_BaseColor", tint);
+                mat.SetColor("_BaseColor", white);
             }
 
             if (mat.HasProperty("_Color"))
             {
-                mat.SetColor("_Color", tint);
+                mat.SetColor("_Color", white);
+            }
+
+            return mat;
+        }
+
+        private static Material MakeTrim()
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit")
+                         ?? Shader.Find("Universal Render Pipeline/Unlit")
+                         ?? Shader.Find("Unlit/Color")
+                         ?? Shader.Find("Sprites/Default");
+            var mat = new Material(shader);
+            if (mat.HasProperty("_BaseColor"))
+            {
+                mat.SetColor("_BaseColor", Color.white);
+            }
+
+            if (mat.HasProperty("_Color"))
+            {
+                mat.SetColor("_Color", Color.white);
             }
 
             return mat;
@@ -274,7 +431,7 @@ namespace Survival.Unity
             light.type = LightType.Directional;
             light.color = new Color(1f, 0.96f, 0.88f);
             light.intensity = 1.15f;
-            sun.transform.rotation = Quaternion.Euler(42f, -20f, 0f);
+            sun.transform.rotation = Quaternion.Euler(48f, -18f, 0f);
         }
 
         private AnimationClip BuildLoopClip()

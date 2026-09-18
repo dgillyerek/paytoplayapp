@@ -1,1 +1,1 @@
-3D Animator proxy (not PNG warp). max |Δ| excluding UI: walk opposite-step 181/255 (mean 10.6); walk vs strike 174/255 (mean 10.2). Connected 3D blockout; sword on character-right hip; high-angle rear toward TOP.
+3D Animator (capsule+look-target albedo, not cubes/PNG warp). Hips screen-Y 1130→987 (toward TOP). max |Δ| excluding UI: walk opposite-step 221/255 (mean 13.1); walk vs strike 230/255 (mean 18.0). Scabbard character-right; high-angle rear march +Z = TOP.

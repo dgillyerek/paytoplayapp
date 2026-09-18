@@ -44,14 +44,6 @@ namespace Survival.Unity
             {
                 _phase.text = _actor.PhaseLabel(t);
             }
-
-            var pose = SirAldric3DMotion.Evaluate(t);
-            if (Camera.main != null)
-            {
-                var z = pose.RootZ;
-                Camera.main.transform.position = new Vector3(0f, 2.45f, z - 5.50f);
-                Camera.main.transform.LookAt(new Vector3(0f, 1.00f, z + 0.20f));
-            }
         }
 
         private void Boot()
@@ -66,11 +58,13 @@ namespace Survival.Unity
             if (cam != null)
             {
                 cam.orthographic = false;
-                cam.fieldOfView = 28f;
+                cam.fieldOfView = 30f;
                 cam.nearClipPlane = 0.08f;
                 cam.farClipPlane = 40f;
                 cam.backgroundColor = new Color(0.08f, 0.09f, 0.07f, 1f);
                 cam.clearFlags = CameraClearFlags.SolidColor;
+                cam.transform.position = new Vector3(0f, 2.70f, -4.60f);
+                cam.transform.LookAt(new Vector3(0f, 0.95f, 0.85f));
             }
 
             SurvivalVisuals.EnsureEventSystem();
@@ -89,8 +83,8 @@ namespace Survival.Unity
             ground.name = "Ground";
             ground.transform.SetParent(transform, false);
             ground.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-            ground.transform.localScale = new Vector3(8f, 8f, 1f);
-            ground.transform.position = new Vector3(0f, 0f, 1.2f);
+            ground.transform.localScale = new Vector3(6f, 10f, 1f);
+            ground.transform.position = new Vector3(0f, 0f, 1.6f);
             var gr = ground.GetComponent<Renderer>();
             if (gr != null)
             {
@@ -108,6 +102,38 @@ namespace Survival.Unity
             }
 
             Object.Destroy(ground.GetComponent<Collider>());
+
+            for (var i = 0; i < 6; i++)
+            {
+                var z = 0.15f + i * 0.45f;
+                var chev = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                chev.name = "Chevron" + i;
+                chev.transform.SetParent(transform, false);
+                chev.transform.position = new Vector3(0f, 0.02f, z);
+                chev.transform.localScale = new Vector3(0.55f - i * 0.04f, 0.02f, 0.10f);
+                Object.Destroy(chev.GetComponent<Collider>());
+                var cr = chev.GetComponent<Renderer>();
+                if (cr != null)
+                {
+                    var cm = new Material(Shader.Find("Unlit/Color") ?? Shader.Find("Standard"));
+                    cm.color = new Color(0.83f, 0.69f, 0.32f, 1f);
+                    cr.sharedMaterial = cm;
+                }
+            }
+
+            var enemy = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            enemy.name = "EnemyTop";
+            enemy.transform.SetParent(transform, false);
+            enemy.transform.position = new Vector3(0f, 0.28f, 2.15f);
+            enemy.transform.localScale = new Vector3(0.38f, 0.55f, 0.38f);
+            Object.Destroy(enemy.GetComponent<Collider>());
+            var er = enemy.GetComponent<Renderer>();
+            if (er != null)
+            {
+                var em = new Material(Shader.Find("Unlit/Color") ?? Shader.Find("Standard"));
+                em.color = new Color(0.22f, 0.07f, 0.12f, 1f);
+                er.sharedMaterial = em;
+            }
 
             var actorGo = new GameObject("SirAldric3D");
             actorGo.transform.SetParent(transform, false);
@@ -131,10 +157,17 @@ namespace Survival.Unity
             pr.offsetMin = Vector2.zero;
             pr.offsetMax = Vector2.zero;
 
+            var top = SurvivalVisuals.Text(canvas, "TopMark", "▲  TOP  ·  ENEMY", 18, TextAnchor.MiddleCenter, SurvivalVisuals.Gold);
+            var topr = top.rectTransform;
+            topr.anchorMin = new Vector2(0.20f, 0.825f);
+            topr.anchorMax = new Vector2(0.80f, 0.868f);
+            topr.offsetMin = Vector2.zero;
+            topr.offsetMax = Vector2.zero;
+
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "3D Animator proxy  ·  high-angle rear  ·  PNG still Play placeholder",
+                "3D Animator  ·  high-angle rear  ·  march TOP  ·  PNG still Play placeholder",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);

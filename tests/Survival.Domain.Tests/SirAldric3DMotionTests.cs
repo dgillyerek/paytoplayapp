@@ -28,12 +28,26 @@ public sealed class SirAldric3DMotionTests
 
         var a = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkPeriodSeconds * 0.25f);
         var b = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkPeriodSeconds * 0.75f);
-        Assert.True(a.UpLegL.X > 20f);
-        Assert.True(a.UpLegR.X < -20f);
-        Assert.True(b.UpLegL.X < -20f);
-        Assert.True(b.UpLegR.X > 20f);
-        Assert.True(a.LegL.X > 8f);
-        Assert.True(b.LegR.X > 8f);
+        // −X thigh = toward world +Z = TOP. At ¼ cycle left leads TOP; at ¾ right leads TOP.
+        Assert.True(a.UpLegL.X < -20f);
+        Assert.True(a.UpLegR.X > 20f);
+        Assert.True(b.UpLegL.X > 20f);
+        Assert.True(b.UpLegR.X < -20f);
+        Assert.True(a.LegR.X > 8f);
+        Assert.True(b.LegL.X > 8f);
+        Assert.True(a.LeadLegTowardTop);
+        Assert.True(b.LeadLegTowardTop);
+    }
+
+    [Fact]
+    public void RootZ_increases_during_the_loop_toward_top()
+    {
+        var a = SirAldric3DMotion.Evaluate(0.05f);
+        var b = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkBlockSeconds - 0.05f);
+        var c = SirAldric3DMotion.Evaluate(SirAldric3DMotion.LoopSeconds - 0.05f);
+        Assert.True(b.RootZ > a.RootZ + 0.3f);
+        Assert.True(c.RootZ > b.RootZ);
+        Assert.InRange(c.RootZ, 0.8f, 2.0f);
     }
 
     [Fact]
@@ -50,6 +64,24 @@ public sealed class SirAldric3DMotionTests
         Assert.True(end.Attacking);
         Assert.False(end.SwordDrawn);
         Assert.True(end.SheathedOnCharacterRight);
+    }
+
+    [Fact]
+    public void Look_targets_00_01_02_are_on_disk()
+    {
+        var root = FindRepoRoot();
+        var dir = Path.Combine(
+            root,
+            "design",
+            "survival-theme-a-fantasy",
+            "heroes",
+            "anim",
+            "sir_aldric",
+            "UNITY_3D_HANDOFF",
+            "look_targets");
+        Assert.True(new FileInfo(Path.Combine(dir, "00_fullbody_LOCKED.png")).Length > 100_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "01_rear_LOCKED.png")).Length > 100_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "02_aldric_turnaround_orthos.png")).Length > 100_000);
     }
 
     [Fact]

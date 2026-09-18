@@ -53,16 +53,18 @@ Placeholder: keep showing locked rear PNG in Play until 3D clip PASSes.
 
 ---
 
-## This PR (first milestone)
+## This PR (orientation + look)
 
-Runtime: `SirAldric3DActor` builds a **skinned blockout proxy** (silver / gold / royal-blue boxes on a humanoid bone set) and plays `Aldric_WalkAttackLoop` through **Animator + PlayableGraph** (not PNG warp).
+Runtime: `SirAldric3DActor` builds a **capsule-sculpted skinned mesh** (not cubes) with `01_rear_LOCKED` projective albedo and plays `Aldric_WalkAttackLoop` through **Animator + PlayableGraph**.
 
 - Scene: `Assets/Survival/Scenes/SirAldric.unity` — Game view **1080×1920** → Play
-- Motion SoT: `SirAldric3DMotion` (domain eulers → AnimationClip curves)
+- Camera is **fixed** high-angle rear; RootZ marches toward **TOP** (+Z). Thigh −X = toward TOP (rejects moonwalk).
+- Motion SoT: `SirAldric3DMotion`
 - Play hub still uses `SIR_ALDRIC_REAR_MASTER_LOCKED.png` until Design PASS
 - 2D warp (`SirAldricView` / `SirAldricWarp`) is **quarantined / unused**
+- Look targets on disk: `UNITY_3D_HANDOFF/look_targets/00_fullbody_LOCKED.png`, `01_rear_LOCKED.png`, `02_aldric_turnaround_orthos.png`
 
-See `ART_UPGRADE.md` for replacing the proxy with a painted mid-poly.
+See `ART_UPGRADE.md` for the remaining DCC painted-mesh gap.
 
 ---
 

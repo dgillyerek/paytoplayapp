@@ -1,6 +1,9 @@
-Look targets for the 3D pipeline.
+Look targets for the 3D pipeline (Design files, 2026-09-18).
 
-- `01_rear_LOCKED.png` — squared high-angle rear (Derek PASS still). Same bytes as ThemePack `SIR_ALDRIC_REAR_MASTER_LOCKED.png` (Play placeholder until 3D PASSes).
-- `00_fullbody_LOCKED.png` / `02_aldric_turnaround_orthos.png` — Design-attached in the 2026-09-18 handoff. They did not persist on this VM from the image channel; drop them here from the Design pack. Do not invent replacements.
+| File | Role |
+| --- | --- |
+| `00_fullbody_LOCKED.png` | Roster fullbody (cape, lion, silver/gold plate). |
+| `01_rear_LOCKED.png` | Squared high-angle rear **SoT**. Same bytes as ThemePack `SIR_ALDRIC_REAR_MASTER_LOCKED.png` (Play placeholder until 3D PASSes). |
+| `02_aldric_turnaround_orthos.png` | Front / left / right / rear orthos. Rear panel can **mirror** the scabbard; do not follow that. |
 
-Turnaround rear can mirror the scabbard. SoT = **character-right hip** as in `01_rear_LOCKED` (viewer-right from behind).
+**Scabbard SoT = character-right hip** as in `01_rear_LOCKED` (viewer-right from behind).

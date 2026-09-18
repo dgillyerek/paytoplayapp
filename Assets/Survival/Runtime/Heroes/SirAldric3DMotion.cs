@@ -4,15 +4,17 @@ namespace Survival.Domain.Heroes
 {
     /// <summary>
     /// Animator-ready 3D bone eulers for Sir Aldric.
-    /// Unity Y-up, character forward = +Z = TOP of the high-angle rear Game view.
-    /// Character-right = +X = viewer-right when seen from behind (matches locked rear SoT scabbard).
-    /// Identity eulers = T-ish hang; walk/attack are local Euler (deg) consumed by AnimationClips.
+    /// Unity Y-up. Character forward / march = world +Z = TOP of the high-angle rear Game view
+    /// (camera sits at −Z, looking toward +Z; enemy is up-screen).
+    /// Thigh −X swings the foot toward +Z (TOP); +X swings toward the camera (down-screen).
+    /// Character-right = +X = viewer-right from behind (locked rear SoT scabbard).
     /// </summary>
     public static class SirAldric3DMotion
     {
         public const float WalkPeriodSeconds = 0.80f;
         public const int WalkCyclesBeforeAttack = 2;
         public const float AttackSeconds = 1.40f;
+        public const float MarchMetersPerSecond = 0.42f;
 
         public static float WalkBlockSeconds => WalkPeriodSeconds * WalkCyclesBeforeAttack;
 
@@ -99,19 +101,23 @@ namespace Survival.Domain.Heroes
             public Euler HandR { get; }
             public Euler Sword { get; }
 
+            /// <summary>Hips stay squared to world +Z (screen TOP), not yawed to a side.</summary>
             public bool FacesTop => Math.Abs(Hips.Y) < 18f && Math.Abs(Hips.Z) < 12f;
 
             public bool SheathedOnCharacterRight => !SwordDrawn && ArmR.X > -20f;
 
             /// <summary>Right arm / blade swinging toward world +Z (TOP of rear camera).</summary>
             public bool StrikeTowardTop => SwordDrawn && ArmR.X <= -80f && ArmR.X >= -175f;
+
+            /// <summary>Thigh −X = foot toward +Z = TOP. Used to reject moonwalk / down-screen stride.</summary>
+            public bool LeadLegTowardTop => UpLegL.X < -8f || UpLegR.X < -8f;
         }
 
         public static Pose Evaluate(float timeSeconds)
         {
             var loopT = Repeat(timeSeconds, LoopSeconds);
             var attacking = loopT >= WalkBlockSeconds;
-            var rootZ = Repeat(timeSeconds * 0.22f, 0.85f);
+            var rootZ = loopT * MarchMetersPerSecond;
             return attacking
                 ? AttackPose(loopT - WalkBlockSeconds, rootZ)
                 : WalkPose(loopT, rootZ);
@@ -126,8 +132,9 @@ namespace Survival.Domain.Heroes
             var step = MathF.Sin(phase);
             var bob = 0.028f * Math.Abs(MathF.Sin(phase));
             var sway = 5.5f * step;
-            var leftX = 38f * step;
-            var rightX = -38f * step;
+            // −X thigh = toward world +Z = TOP of Game view (not toward camera).
+            var leftX = -38f * step;
+            var rightX = 38f * step;
             var kneeL = 10f + 48f * Math.Max(0f, -step);
             var kneeR = 10f + 48f * Math.Max(0f, step);
             return new Pose(
@@ -141,12 +148,12 @@ namespace Survival.Domain.Heroes
                 head: new Euler(-6f, 0f, 0f),
                 upLegL: new Euler(leftX, 0f, 0f),
                 legL: new Euler(kneeL, 0f, 0f),
-                footL: new Euler(-8f - 10f * Math.Max(0f, step), 0f, 0f),
+                footL: new Euler(-8f - 10f * Math.Max(0f, -step), 0f, 0f),
                 upLegR: new Euler(rightX, 0f, 0f),
                 legR: new Euler(kneeR, 0f, 0f),
-                footR: new Euler(-8f - 10f * Math.Max(0f, -step), 0f, 0f),
-                armL: new Euler(12f - 22f * step, 0f, 8f),
-                foreL: new Euler(18f + 12f * Math.Max(0f, step), 0f, 0f),
+                footR: new Euler(-8f - 10f * Math.Max(0f, step), 0f, 0f),
+                armL: new Euler(12f + 22f * step, 0f, 8f),
+                foreL: new Euler(18f + 12f * Math.Max(0f, -step), 0f, 0f),
                 armR: new Euler(18f + 6f * step, 12f, -10f),
                 foreR: new Euler(28f, 0f, 0f),
                 handR: new Euler(0f, 0f, 0f),
