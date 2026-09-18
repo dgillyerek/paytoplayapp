@@ -1,15 +1,16 @@
-f1e4770 HARD FAIL: BVH eulers reached Evaluate/Actor (Leg_L.X=65.9) but did NOT transfer the gait — high-rear + forward (−X) pass thigh put 66° flex along the ground (11 cm lift). This pass: 4 Game-view keys solved against WALK_GAIT_BAR rear phases. Pass foot tucked under pelvis (not a side kick); contact step matched to march 0.40 m so both plants read. Hips screen-Y 995→756 (toward TOP). Pass knee 80°/80°. Arm span L 70° R 58°. step 0.40m vs march-step 0.40m. max |Δ| walk 190/255; pass vs contact 199/255; walk vs strike 226/255. Single brown scabbard character-right. High-angle rear +Z = TOP.
+f1e4770 HARD FAIL: BVH eulers reached Evaluate/Actor (Leg_L.X=65.9) but did NOT transfer the gait — high-rear + forward (−X) pass thigh put 66° flex along the ground (11 cm lift). This pass: 4 Game-view keys solved against WALK_GAIT_BAR rear phases. Pass tucked; contact step 0.40 m. Lateral weave stripped: spine Z counters hip roll so COM stays on +Z (root X = 0). Hips screen-Y 995→756 (toward TOP). Pass knee 80°/80°. Arm span L 70° R 58°. step 0.39m vs march-step 0.40m. max |Δ| walk 212/255; pass vs contact 192/255; walk vs strike 201/255. Single brown scabbard character-right. High-angle rear +Z = TOP.
 PIXEL Δ does not override the eye test. Design eye gate is NOT claimed here.
 BONE DRIVE DUMP — SirAldric3DMotion.Evaluate == Actor BuildLoopClip source
 (PlayableGraph samples Evaluate() → localRotation xyzw; not a missing-clip miss.)
-phase      | Hips.Y | Hips.Z | Spine.Y | UpL.X | LegL.X | wKneeL | UpR.X | LegR.X | wKneeR | ArmL.X | ArmR.X | footL.X | footR.X | footL.Y | footR.Y | stepZ | dFootY
----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-PASS L     |   -6.0 |    8.0 |    12.0 |  22.0 |   80.0 |   72.9 |  20.0 |   14.0 |    6.9 |   36.0 |  -32.0 |   0.005 |   0.139 |   0.583 |   0.210 | 0.251 |  0.373
-CONTACT L  |   10.0 |    2.0 |   -12.0 | -12.0 |   12.0 |    4.9 |  12.0 |   16.0 |    8.9 |   32.0 |  -34.0 |  -0.055 |   0.097 |   0.118 |   0.149 | 0.401 |  0.031
-PASS R     |    6.0 |   -8.0 |   -12.0 |  20.0 |   14.0 |    6.9 |  22.0 |   80.0 |   72.9 |  -32.0 |   24.0 |  -0.139 |  -0.005 |   0.210 |   0.583 | 0.251 |  0.373
-CONTACT R  |  -10.0 |    2.0 |    12.0 |  12.0 |   18.0 |   10.9 | -12.0 |   12.0 |    4.9 |  -34.0 |   22.0 |  -0.038 |   0.114 |   0.146 |   0.126 | 0.414 |  0.021
+phase      | Hips.Y | Hips.Z | Spine.Y | hip.X | chest.X | head.X | UpL.X | LegL.X | wKneeL | UpR.X | LegR.X | ArmL.X | ArmR.X | footL.X | dFootY | stepZ
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+PASS L     |   -3.0 |    5.5 |     8.0 | 0.000 |  -0.010 | -0.002 |  22.0 |   80.0 |   72.9 |  20.0 |   14.0 |   36.0 |  -32.0 |  -0.042 |  0.380 | 0.243
+CONTACT L  |    5.0 |    1.5 |    -8.0 | 0.000 |  -0.004 | -0.009 | -12.0 |   12.0 |    4.9 |  12.0 |   16.0 |   32.0 |  -34.0 |  -0.075 |  0.029 | 0.386
+PASS R     |    3.0 |   -5.5 |    -8.0 | 0.000 |   0.010 |  0.002 |  20.0 |   14.0 |    6.9 |  22.0 |   80.0 |  -32.0 |   24.0 |  -0.088 |  0.380 | 0.243
+CONTACT R  |   -5.0 |    1.5 |     8.0 | 0.000 |  -0.002 |  0.003 |  12.0 |   18.0 |   10.9 | -12.0 |   12.0 |  -34.0 |   22.0 |  -0.067 |  0.023 | 0.399
 GATE knee pass L/R euler 80.0/80.0 (need ≥50). world flex 72.9/72.9.
 GATE arm span L=70.0° R=58.0° peak|X|=36.0° (near-zero span = remap miss).
-GATE pass foot lift dY L=0.373 R=0.373 (f1e4770 was 0.11m — hidden; need ≳0.20m to read from high-rear).
-GATE pass foot under pelvis |X| L=0.005 R=0.005 (need <0.12; a6d4703 stance was 0.39 side-kick).
-GATE contact stepZ=0.401 vs march-step 0.400 (need |Δ|<0.10).
+GATE pass foot lift dY L=0.380 R=0.380 (f1e4770 was 0.11m — hidden; need ≳0.20m to read from high-rear).
+GATE pass foot under pelvis |X| L=0.042 R=0.042 (need <0.12; a6d4703 stance was 0.39 side-kick).
+GATE contact stepZ=0.386 vs march-step 0.400 (need |Δ|<0.10).
+GATE lateral COM |X| peak (40-sample walk) hip=0.000 chest=0.010 head=0.009 (need chest/head <0.04; ff81201 weaved ~0.11). Root X = 0.
