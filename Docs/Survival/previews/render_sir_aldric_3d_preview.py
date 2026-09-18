@@ -901,14 +901,18 @@ def main():
     def fit_aldric(im):
         arr = np.array(im)
         rgb = arr.astype(np.int16)
-        dark = arr.max(axis=2) < 32
+        # Titles/footer and yellow track ticks must not set the bbox or the knight shrinks.
+        ignore = np.zeros(arr.shape[:2], dtype=bool)
+        ignore[:150, :] = True
+        ignore[-90:, :] = True
+        dark = arr.max(axis=2) < 48
         yellow = (rgb[:, :, 0] > 150) & (rgb[:, :, 1] > 130) & (rgb[:, :, 2] < 130)
-        vis = ~dark & ~yellow
+        vis = ~dark & ~yellow & ~ignore
         ys, xs = np.where(vis)
         if len(xs) == 0:
-            crop = im.crop((80, 200, W - 80, H - 80))
+            crop = im.crop((220, 280, W - 220, H - 200))
         else:
-            pad = 28
+            pad = 36
             crop = im.crop(
                 (
                     max(0, int(xs.min()) - pad),
