@@ -30,7 +30,7 @@ namespace Survival.Editor
             Debug.Log("Survival flavor " + SurvIds.FlavorIdFantasyKingdomA + " → Splash then Play. Pack " + SurvIds.ThemeIdFantasyKingdomA);
         }
 
-        [MenuItem("Survival/Sir Aldric Demo (locked rear master)")]
+        [MenuItem("Survival/Sir Aldric Demo (3D Animator, high-angle rear)")]
         public static void OpenSirAldricDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SirAldric);

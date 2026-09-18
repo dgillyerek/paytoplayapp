@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace Survival.Unity
 {
     /// <summary>
-    /// One locked rear master as a single skinned UV mesh. Vertices bend; the silhouette stays connected.
+    /// QUARANTINED 2D UI warp graphic. Demo uses <see cref="SirAldric3DActor"/>.
     /// </summary>
     public sealed class SirAldricView : MaskableGraphic
     {

@@ -24,7 +24,7 @@
 
 Direct Play shell (skips splash): `Assets/Survival/Scenes/Play.unity`.
 
-Sir Aldric (ONE locked rear master, no AI frames): open **`Assets/Survival/Scenes/SirAldric.unity`**, Game view **1080×1920**, Play. Connected mesh warp (not paper-doll cutouts) walks toward TOP, then attacks toward TOP, from `SIR_ALDRIC_REAR_MASTER_LOCKED.png` only. HUD portrait stays `theme_a_hero_knight_01`.
+Sir Aldric **3D Animator** (high-angle rear, walk+attack toward TOP): open **`Assets/Survival/Scenes/SirAldric.unity`**, Game view **1080×1920**, Play. Skinned blockout proxy (`SirAldric3DActor`). Painted mid-poly upgrade: `Docs/Survival/previews/ART_UPGRADE.md`. Play hub still uses locked rear PNG `SIR_ALDRIC_REAR_MASTER_LOCKED.png` until Design PASS. HUD portrait stays `theme_a_hero_knight_01`.
 
 Menu **Survival → Use Theme A Flavor (fantasy_kingdom_a)** puts Splash then Play first in Editor Build Settings (Grove `Board` stays listed).
 

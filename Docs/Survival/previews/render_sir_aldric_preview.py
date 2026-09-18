@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Honest Sir Aldric mesh-warp preview from the locked rear master.
+"""QUARANTINED 2D PNG mesh-warp preview. Hero system is 3D Animator — see render_sir_aldric_3d_preview.py."""
 
 Ports SirAldricMotion.Evaluate + SirAldricWarp.Displace. One connected sprite;
 no hard-cut floating limbs. Output: 1080x1920 stills + gif + mp4.

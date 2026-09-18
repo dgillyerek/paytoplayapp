@@ -1,1 +1,1 @@
-max |Δ| excluding UI: walk opposite-step 241/255 (mean 5.6); walk vs strike 242/255 (mean 5.7). silhouette components rest/walk/strike=1/1/1 (connected mesh warp; no hard-cut limbs).
+3D Animator proxy (not PNG warp). max |Δ| excluding UI: walk opposite-step 181/255 (mean 10.6); walk vs strike 174/255 (mean 10.2). Connected 3D blockout; sword on character-right hip; high-angle rear toward TOP.

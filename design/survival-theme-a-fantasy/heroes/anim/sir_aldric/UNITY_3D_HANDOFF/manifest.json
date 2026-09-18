@@ -1,0 +1,20 @@
+{
+  "path": "UNITY_3D_HANDOFF",
+  "derek_lock": "2026-09-18",
+  "motion": "3D_model_plus_Unity_Animator",
+  "pilot": "Sir Aldric",
+  "stopped": ["AI_multi_frame", "paper_doll", "mesh_warp_png"],
+  "look_targets": [
+    "look_targets/00_fullbody_LOCKED.png",
+    "look_targets/01_rear_LOCKED.png",
+    "look_targets/02_aldric_turnaround_orthos.png"
+  ],
+  "pipeline": "HERO_3D_PIPELINE.md",
+  "note": "Sword/scabbard must land on CHARACTER-RIGHT hip to match rear LOCKED SoT (fix turnaround if mirrored).",
+  "runtime": {
+    "scene": "Assets/Survival/Scenes/SirAldric.unity",
+    "actor": "SirAldric3DActor",
+    "motion": "SirAldric3DMotion",
+    "play_placeholder": "SIR_ALDRIC_REAR_MASTER_LOCKED.png"
+  }
+}

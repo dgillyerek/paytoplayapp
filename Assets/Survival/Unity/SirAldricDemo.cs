@@ -9,8 +9,8 @@ using UnityEngine.UI;
 namespace Survival.Unity
 {
     /// <summary>
-    /// 1080×1920 Game-view demo: locked rear master only. Walk toward TOP, then attack TOP.
-    /// No AI multi-frame packs. Plain dark ground, no rocks.
+    /// 1080×1920 Game-view demo: 3D Animator-driven Aldric, high-angle rear, walk+attack toward TOP.
+    /// Locked rear PNG remains the Play-hub placeholder until Design PASSes this clip.
     /// </summary>
     public sealed class SirAldricDemo : MonoBehaviour
     {
@@ -18,7 +18,7 @@ namespace Survival.Unity
         public const string DropFileName512 = "SIR_ALDRIC_REAR_MASTER_LOCKED_512.png";
 
         private bool _booted;
-        private SirAldricView? _view;
+        private SirAldric3DActor? _actor;
         private Text? _phase;
 
         private void Awake() => Boot();
@@ -34,18 +34,23 @@ namespace Survival.Unity
                 Boot();
             }
 
-            if (_view == null || !_view.Built)
+            if (_actor == null || !_actor.Built)
             {
                 return;
             }
 
-            var pose = SirAldricMotion.Evaluate(Time.unscaledTime);
-            _view.Apply(pose);
+            var t = Time.unscaledTime;
             if (_phase != null)
             {
-                _phase.text = pose.Attacking
-                    ? (pose.StrikeTowardTop ? "ATTACK  ·  strike TOP" : "ATTACK  ·  draw / recover")
-                    : "WALK  ·  toward TOP";
+                _phase.text = _actor.PhaseLabel(t);
+            }
+
+            var pose = SirAldric3DMotion.Evaluate(t);
+            if (Camera.main != null)
+            {
+                var z = pose.RootZ;
+                Camera.main.transform.position = new Vector3(0f, 2.45f, z - 5.50f);
+                Camera.main.transform.LookAt(new Vector3(0f, 1.00f, z + 0.20f));
             }
         }
 
@@ -57,44 +62,59 @@ namespace Survival.Unity
             }
 
             SurvivalVisuals.EnsurePlayCamera();
-            if (Camera.main != null)
+            var cam = Camera.main;
+            if (cam != null)
             {
-                Camera.main.backgroundColor = new Color(0.08f, 0.09f, 0.07f, 1f);
+                cam.orthographic = false;
+                cam.fieldOfView = 28f;
+                cam.nearClipPlane = 0.08f;
+                cam.farClipPlane = 40f;
+                cam.backgroundColor = new Color(0.08f, 0.09f, 0.07f, 1f);
+                cam.clearFlags = CameraClearFlags.SolidColor;
             }
 
             SurvivalVisuals.EnsureEventSystem();
-            var flavor = AppFlavorConfig.FantasyKingdomA;
             ThemePackBinder? pack = null;
             try
             {
+                var flavor = AppFlavorConfig.FantasyKingdomA;
                 pack = LoadPack(flavor);
-                SurvivalArt.EnsureLoaded(flavor, pack);
             }
             catch (System.Exception ex)
             {
                 Debug.LogException(ex);
             }
 
-            var canvas = SurvivalVisuals.Canvas(transform, "SirAldricCanvas", 50);
-            var ground = SurvivalVisuals.Image(canvas, "Ground", new Color(0.10f, 0.12f, 0.09f, 1f));
-            SurvivalVisuals.Stretch(ground.rectTransform);
-            ground.raycastTarget = false;
+            var ground = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            ground.name = "Ground";
+            ground.transform.SetParent(transform, false);
+            ground.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            ground.transform.localScale = new Vector3(8f, 8f, 1f);
+            ground.transform.position = new Vector3(0f, 0f, 1.2f);
+            var gr = ground.GetComponent<Renderer>();
+            if (gr != null)
+            {
+                var mat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard") ?? Shader.Find("Unlit/Color"));
+                if (mat.HasProperty("_BaseColor"))
+                {
+                    mat.SetColor("_BaseColor", new Color(0.10f, 0.12f, 0.09f));
+                }
+                else
+                {
+                    mat.color = new Color(0.10f, 0.12f, 0.09f);
+                }
 
-            var shade = SurvivalVisuals.Image(canvas, "Shade", new Color(0.05f, 0.06f, 0.05f, 0.35f));
-            var srt = shade.rectTransform;
-            srt.anchorMin = new Vector2(0f, 0f);
-            srt.anchorMax = new Vector2(1f, 0.22f);
-            srt.offsetMin = Vector2.zero;
-            srt.offsetMax = Vector2.zero;
+                gr.sharedMaterial = mat;
+            }
 
-            var master = SurvivalArt.Get(SurvIds.ThemeAHeroSirAldricRear)
-                         ?? SurvivalArt.Get(SurvIds.ThemeAHeroSirAldricRear512)
-                         ?? SirAldricView.LoadMasterPng(ResolveMasterPaths(flavor));
+            Object.Destroy(ground.GetComponent<Collider>());
 
-            var body = new GameObject("SirAldric", typeof(RectTransform), typeof(CanvasRenderer));
-            _view = body.AddComponent<SirAldricView>();
-            _view.Build(canvas, master);
+            var actorGo = new GameObject("SirAldric3D");
+            actorGo.transform.SetParent(transform, false);
+            _actor = actorGo.AddComponent<SirAldric3DActor>();
+            _actor.Build();
 
+            var canvas = SurvivalVisuals.Canvas(transform, "SirAldricHud", 80);
             var caption = pack?.StringOr("theme_a.hero.sir_aldric.demo_caption", "SIR ALDRIC  ·  walk → attack TOP")
                           ?? "SIR ALDRIC  ·  walk → attack TOP";
             var title = SurvivalVisuals.Text(canvas, "Caption", caption, 26, TextAnchor.MiddleCenter, SurvivalVisuals.Cream);
@@ -114,13 +134,13 @@ namespace Survival.Unity
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "LOCKED rear master  ·  mesh warp  ·  no AI frames",
+                "3D Animator proxy  ·  high-angle rear  ·  PNG still Play placeholder",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);
             var nr = note.rectTransform;
-            nr.anchorMin = new Vector2(0.08f, 0.03f);
-            nr.anchorMax = new Vector2(0.92f, 0.07f);
+            nr.anchorMin = new Vector2(0.04f, 0.03f);
+            nr.anchorMax = new Vector2(0.96f, 0.07f);
             nr.offsetMin = Vector2.zero;
             nr.offsetMax = Vector2.zero;
 
@@ -137,9 +157,7 @@ namespace Survival.Unity
             {
                 Path.Combine(packRoot, "art", "heroes", DropFileName),
                 Path.Combine(packRoot, "art", "heroes", DropFileName512),
-                Path.Combine(repo, "design", "survival-theme-a-fantasy", "heroes", "anim", "sir_aldric", "UNITY_DROP_LOCKED", DropFileName),
-                Path.Combine(repo, "design", "survival-theme-a-fantasy", "heroes", "anim", "sir_aldric", "UNITY_DROP_LOCKED", DropFileName512),
-                Path.Combine(cwd, "design", "survival-theme-a-fantasy", "heroes", "anim", "sir_aldric", "UNITY_DROP_LOCKED", DropFileName)
+                Path.Combine(repo, "design", "survival-theme-a-fantasy", "heroes", "anim", "sir_aldric", "UNITY_DROP_LOCKED", DropFileName)
             };
         }
 

@@ -3,8 +3,8 @@ using System;
 namespace Survival.Domain.Heroes
 {
     /// <summary>
-    /// Connected vertex bend of the ONE locked rear sprite.
-    /// Weights fall off to zero at hip/hilt so the silhouette never splits into floating limbs.
+    /// QUARANTINED: 2D PNG mesh-warp is not the hero system.
+    /// Derek lock 2026-09-18: 3D model + Unity Animator. Kept so existing domain tests stay green.
     /// </summary>
     public static class SirAldricWarp
     {

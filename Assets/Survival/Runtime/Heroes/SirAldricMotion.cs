@@ -3,11 +3,8 @@ using System;
 namespace Survival.Domain.Heroes
 {
     /// <summary>
-    /// Deterministic rear-view pose from ONE locked master.
-    /// Canvas +Y / bone +Y = TOP of screen = walk and attack direction.
-    /// Sword rest is viewer-RIGHT hip. Attack draws, strikes TOP, then re-sheaths.
-    /// Bones drive a connected mesh warp (<see cref="SirAldricWarp"/>), not cutout limbs.
-    /// Identity = pixel-identical to the painted master.
+    /// QUARANTINED 2D pose (PNG warp). Hero motion SoT is <see cref="SirAldric3DMotion"/>.
+    /// Kept for domain tests; do not wire to Play/SirAldric demo.
     /// </summary>
     public static class SirAldricMotion
     {
