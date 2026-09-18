@@ -58,7 +58,8 @@ Placeholder: keep showing locked rear PNG in Play until 3D clip PASSes.
 Runtime: `SirAldric3DActor` builds a **capsule-sculpted skinned mesh** (not cubes) with `01_rear_LOCKED` projective albedo and plays `Aldric_WalkAttackLoop` through **Animator + PlayableGraph**.
 
 - Scene: `Assets/Survival/Scenes/SirAldric.unity` — Game view **1080×1920** → Play
-- Camera is **fixed** high-angle rear; RootZ marches toward **TOP** (+Z). Thigh −X = toward TOP (rejects moonwalk). Arm/forearm −X = hands and blade on the far / TOP side (rejects hang-toward-camera).
+- Camera is **fixed** high-angle rear; RootZ marches toward **TOP** (+Z). Thigh −X = toward TOP (rejects moonwalk). Sword / right hand stay on the far / TOP side; **walk** uses a loose contralateral pendulum (trailing arm may swing +X toward camera — that is the sample, not a FAIL).
+- Walk clip source: `refs/walk_cycle_mixamo_style.bvh` retargeted into `SirAldric3DMotion` keys. Eye target: `refs/WALK_GAIT_BAR_skeleton_sample.mp4`.
 - Motion SoT: `SirAldric3DMotion`
 - Play hub still uses `SIR_ALDRIC_REAR_MASTER_LOCKED.png` until Design PASS
 - 2D warp (`SirAldricView` / `SirAldricWarp`) is **quarantined / unused**

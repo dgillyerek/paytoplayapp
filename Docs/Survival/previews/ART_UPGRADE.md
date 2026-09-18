@@ -2,7 +2,7 @@
 
 ## This pass (orientation + look)
 
-- **Motion:** capsule-sculpted skinned mesh, Animator PlayableGraph, high-angle rear camera **fixed** so RootZ travel reads as march toward **TOP**. Walk rematched to `UNITY_3D_HANDOFF/refs/WALK_GAIT_BAR_skeleton_sample.mp4`: ~65° pass knee, hip drop, shoulder–hip counter-rotate, heel→toe, contralateral arms (always −X / TOP). Single character-right scabbard.
+- **Motion:** capsule-sculpted skinned mesh, Animator PlayableGraph, high-angle rear camera **fixed** so RootZ travel reads as march toward **TOP**. Walk is **imported/retargeted**, not a sine march: `UNITY_3D_HANDOFF/refs/walk_cycle_mixamo_style.bvh` (CreativeInquiry BVH-Examples `walk-cycle.bvh`, Mixamo-style humanoid, 42 frames @ 24fps — https://github.com/CreativeInquiry/BVH-Examples) baked to 20 keys on Aldric hang −Y, time-warped 1.75s → 1.00s to match `WALK_GAIT_BAR` 120 spm. Eye-match: loose contralateral arm pendulum (left crosses hang; trailing +X / leading −X), ~65° pass knee, hip drop, shoulder–hip counter-rotate, heel→toe. Right-arm backswing capped for the character-right scabbard. Attack clip unchanged.
 - **Look:** not cubes. Capsules/spheres with **01_rear_LOCKED** projective albedo on the body (painted right-hip sheath stripped so it does not double the 3D scabbard). Gold/silver/brown solids for trim, **one** character-right `Scabbard`, blade.
 - **Still not a DCC hero:** no painted mid-poly FBX, no unique unwrap, no back-mounted sheath mesh (short surcoat is the body albedo, not a diagonal cape tube). Turnaround `02` is reference only (rear panel may mirror — scabbard SoT is `01` character-right).
 

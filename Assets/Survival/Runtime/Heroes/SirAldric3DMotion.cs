@@ -105,11 +105,22 @@ namespace Survival.Domain.Heroes
             /// <summary>Hips stay squared to world +Z (screen TOP), not yawed to a side.</summary>
             public bool FacesTop => Math.Abs(Hips.Y) < 18f && Math.Abs(Hips.Z) < 12f;
 
-            /// <summary>Walk/sheath: right hand stays near the hip, not overhead, scabbard on +X.</summary>
-            public bool SheathedOnCharacterRight => !SwordDrawn && ArmR.X > -50f && ArmR.X < 5f;
+            /// <summary>Walk/sheath: right hand stays near the hip (pendulum may go slightly +X), scabbard on +X.</summary>
+            public bool SheathedOnCharacterRight => !SwordDrawn && ArmR.X > -50f && ArmR.X < 18f;
 
-            /// <summary>Hands/blade on the far side (world +Z / TOP), not toward the camera (−Z).</summary>
-            public bool ArmsTowardTop => ArmL.X < 0f && ArmR.X < 0f && ForeL.X <= 0f && ForeR.X < 0f;
+            /// <summary>
+            /// Sword / right arm stay on the far / TOP side as a rest — not a dual hang toward camera.
+            /// Walk allows the trailing arm to swing +X (contralateral pendulum); attack keeps both −X.
+            /// </summary>
+            public bool ArmsTowardTop =>
+                SwordDrawn
+                    ? ArmL.X < 0f && ArmR.X < 0f && ForeL.X <= 0f && ForeR.X < 0f
+                    : ArmR.X < 18f && ForeR.X < 5f;
+
+            /// <summary>Loose contralateral pendulum: one arm back (+X / camera), the other forward (−X / TOP).</summary>
+            public bool WalkArmPendulum =>
+                !Attacking
+                && ((ArmL.X > 8f && ArmR.X < -4f) || (ArmL.X < -6f && ArmR.X > 4f));
 
             /// <summary>Right arm / blade swinging toward world +Z (TOP of rear camera).</summary>
             public bool StrikeTowardTop => SwordDrawn && ArmR.X <= -80f && ArmR.X >= -175f;
@@ -142,55 +153,71 @@ namespace Survival.Domain.Heroes
         public static bool IsAttacking(float timeSeconds) =>
             Repeat(timeSeconds, LoopSeconds) >= WalkBlockSeconds;
 
+        // Retargeted from CreativeInquiry BVH-Examples walk-cycle.bvh (Mixamo-style humanoid,
+        // 42 frames @ 24fps, 1.75s), time-warped to 1.00s / 120 spm to match WALK_GAIT_BAR.
+        // u=0 pass L, 0.25 contact L, 0.50 pass R, 0.75 contact R. Hang −Y; −X = TOP.
+        // https://github.com/CreativeInquiry/BVH-Examples
+        private static readonly float[] Bob = { 0.028f, 0.027f, 0.025f, 0.021f, 0.017f, 0.012f, 0.017f, 0.021f, 0.025f, 0.027f, 0.028f, 0.027f, 0.025f, 0.021f, 0.017f, 0.012f, 0.017f, 0.021f, 0.025f, 0.027f };
+        private static readonly float[] HipsY = { -3.665f, -1.170f, 1.550f, 4.850f, 7.731f, 9.164f, 9.392f, 8.572f, 7.086f, 5.240f, 2.659f, -0.522f, -3.597f, -6.627f, -8.674f, -9.366f, -9.106f, -8.336f, -7.545f, -5.778f };
+        private static readonly float[] HipsZ = { 7.345f, 7.048f, 5.486f, 2.888f, 0.446f, -0.526f, -0.665f, -1.376f, -3.347f, -5.206f, -5.968f, -4.838f, -2.639f, 0.291f, 1.477f, 1.844f, 2.331f, 2.318f, 3.372f, 5.976f };
+        private static readonly float[] SpineY = { 4.444f, -6.727f, -7.459f, -7.612f, -7.441f, -7.486f, -7.299f, -6.440f, -5.116f, -2.872f, -1.460f, 6.016f, 8.442f, 10.170f, 11.111f, 10.850f, 9.181f, 5.798f, 2.590f, 1.342f };
+        private static readonly float[] UpLX = { -16.208f, -22.635f, -25.264f, -25.288f, -23.607f, -22.233f, -21.451f, -20.034f, -16.924f, -12.922f, -8.011f, -3.490f, -0.194f, 2.962f, 6.640f, 9.814f, 10.664f, 8.028f, 3.749f, -6.587f };
+        private static readonly float[] UpLZ = { -1.297f, -0.041f, 1.052f, 1.541f, 1.272f, 0.900f, 0.895f, 1.408f, 1.774f, 1.720f, 1.419f, 1.181f, 1.265f, 1.621f, 1.769f, 1.334f, 0.267f, -0.975f, -1.549f, -1.779f };
+        private static readonly float[] LegL = { 65.911f, 61.733f, 48.831f, 29.206f, 11.845f, 7.064f, 12.270f, 20.857f, 23.986f, 22.512f, 18.937f, 16.014f, 15.030f, 15.685f, 17.177f, 19.957f, 25.565f, 33.527f, 41.852f, 57.840f };
+        private static readonly float[] FootL = { 19.829f, 13.055f, 3.219f, -5.095f, -7.766f, -9.555f, -10.000f, -10.000f, -10.000f, -10.000f, -10.000f, -10.000f, -10.000f, -10.000f, -10.000f, -6.900f, -0.866f, 4.484f, 9.512f, 18.075f };
+        private static readonly float[] UpRX = { -4.809f, -1.322f, 1.570f, 4.466f, 7.772f, 11.137f, 12.977f, 10.104f, 2.175f, -6.861f, -15.696f, -21.134f, -22.681f, -21.194f, -18.048f, -16.379f, -16.331f, -16.116f, -13.880f, -8.698f };
+        private static readonly float[] UpRZ = { -1.595f, -1.260f, -1.068f, -1.299f, -1.936f, -2.526f, -2.599f, -1.215f, 1.007f, 2.407f, 2.719f, 2.233f, 1.756f, 1.557f, 1.507f, 1.397f, 1.056f, 0.153f, -0.796f, -1.575f };
+        private static readonly float[] LegR = { 10.327f, 8.395f, 7.317f, 7.349f, 8.468f, 11.042f, 17.306f, 31.267f, 49.313f, 61.905f, 64.097f, 52.625f, 34.998f, 13.484f, 6.000f, 6.000f, 7.923f, 15.984f, 16.332f, 12.620f };
+        private static readonly float[] FootR = { -10.000f, -10.000f, -10.000f, -10.000f, -10.000f, -9.206f, -4.301f, 2.262f, 8.900f, 13.019f, 10.753f, 2.167f, -4.875f, -8.293f, -9.210f, -10.000f, -10.000f, -10.000f, -10.000f, -10.000f };
+        private static readonly float[] ArmLX = { 20.657f, 24.257f, 26.699f, 28.858f, 29.993f, 29.188f, 26.195f, 20.307f, 12.112f, 3.149f, -7.229f, -16.407f, -22.463f, -26.352f, -26.130f, -21.625f, -13.907f, -3.901f, 5.321f, 15.909f };
+        private static readonly float[] ArmLZ = { 17.657f, 15.379f, 13.094f, 11.070f, 9.980f, 9.721f, 9.780f, 9.755f, 10.307f, 11.893f, 14.229f, 16.140f, 17.129f, 17.156f, 16.450f, 16.320f, 16.752f, 17.107f, 17.758f, 18.588f };
+        private static readonly float[] ForeL = { -15.196f, -13.767f, -12.808f, -12.564f, -12.848f, -13.178f, -12.839f, -12.078f, -11.634f, -11.330f, -11.354f, -12.041f, -13.600f, -15.944f, -18.272f, -19.348f, -18.602f, -16.949f, -16.340f, -16.232f };
+        private static readonly float[] ArmRX = { -9.906f, -14.138f, -16.869f, -18.876f, -19.356f, -17.604f, -13.548f, -7.220f, -0.291f, 6.120f, 12.772f, 16.000f, 16.000f, 16.000f, 16.000f, 16.000f, 16.000f, 11.073f, 4.560f, -4.311f };
+        private static readonly float[] ArmRZ = { -11.216f, -13.244f, -14.717f, -15.443f, -15.351f, -15.261f, -15.680f, -16.429f, -16.982f, -17.481f, -18.128f, -18.688f, -19.027f, -18.804f, -18.245f, -17.300f, -14.905f, -11.624f, -9.797f, -9.497f };
+        private static readonly float[] ForeR = { -21.387f, -26.717f, -31.035f, -32.000f, -32.000f, -32.000f, -30.582f, -26.622f, -24.302f, -23.984f, -23.729f, -23.241f, -23.176f, -23.164f, -22.902f, -22.393f, -21.284f, -19.746f, -18.477f, -18.084f };
+
         private static Pose WalkPose(float loopT, float rootZ)
         {
-            // Gait bar (WALK_GAIT_BAR_skeleton_sample): 1.0s cycle, 120 spm.
-            // phase 0 = pass L; π/2 = contact L (left toward TOP); π = pass R; 3π/2 = contact R.
-            var phase = (float)(loopT / WalkPeriodSeconds * (Math.PI * 2.0));
-            var s = MathF.Sin(phase);
-            var c = MathF.Cos(phase);
-            var swingL = Math.Max(0f, c);
-            var swingR = Math.Max(0f, -c);
-            var contactL = Math.Max(0f, s);
-            var contactR = Math.Max(0f, -s);
-            // Sample: lowest at double-support / contact, highest vaulting over the plant.
-            var bob = 0.010f + 0.018f * Math.Abs(c);
-            var hipsY = 8f * s;
-            var hipsZ = 7.5f * c;
-            var leftX = -18f * s - 8f * swingL;
-            var rightX = 18f * s - 8f * swingR;
-            // Soft plant ~12°, pass ~66°, trail / push-off ~20° — gait-bar, not a 90° cartoon.
-            var kneeL = 12f + 54f * swingL + 8f * contactR;
-            var kneeR = 12f + 54f * swingR + 8f * contactL;
-            // Heel strike (−X) → flat → heel-up toe-off (+X), readable from high rear.
-            var footL = -12f * contactL + 20f * contactR - 6f * swingL;
-            var footR = -12f * contactR + 20f * contactL - 6f * swingR;
-            // Contralateral pendulum; both −X (far / TOP). Right swing smaller (scabbard). Elbow flare.
-            var armL = -20f + 10f * s;
-            var armR = -18f - 6f * s;
-            var foreL = -12f - 10f * Math.Max(0f, -s);
-            var foreR = -20f - 4f * Math.Max(0f, s);
+            var u = Repeat(loopT / WalkPeriodSeconds, 1f);
+            var hipsY = Sample(HipsY, u);
+            var hipsZ = Sample(HipsZ, u);
+            var spineY = Sample(SpineY, u);
             return new Pose(
                 attacking: false,
                 swordDrawn: false,
                 rootZ,
-                bob,
+                Sample(Bob, u),
                 hips: new Euler(0f, hipsY, hipsZ),
-                spine: new Euler(5f, -11f * s, -hipsZ * 0.25f),
-                chest: new Euler(2f, -7f * s, 0f),
-                head: new Euler(6f, -3f * s, 0f),
-                upLegL: new Euler(leftX, 0f, -7f * swingL),
-                legL: new Euler(kneeL, 0f, 0f),
-                footL: new Euler(footL, 0f, 0f),
-                upLegR: new Euler(rightX, 0f, 7f * swingR),
-                legR: new Euler(kneeR, 0f, 0f),
-                footR: new Euler(footR, 0f, 0f),
-                armL: new Euler(armL, 0f, 12f),
-                foreL: new Euler(foreL, 0f, 0f),
-                armR: new Euler(armR, 4f, -12f),
-                foreR: new Euler(foreR, 0f, 0f),
+                spine: new Euler(5f, spineY, -hipsZ * 0.25f),
+                chest: new Euler(2f, spineY * 0.55f, 0f),
+                head: new Euler(6f, spineY * 0.22f, 0f),
+                upLegL: new Euler(Sample(UpLX, u), 0f, Sample(UpLZ, u)),
+                legL: new Euler(Sample(LegL, u), 0f, 0f),
+                footL: new Euler(Sample(FootL, u), 0f, 0f),
+                upLegR: new Euler(Sample(UpRX, u), 0f, Sample(UpRZ, u)),
+                legR: new Euler(Sample(LegR, u), 0f, 0f),
+                footR: new Euler(Sample(FootR, u), 0f, 0f),
+                armL: new Euler(Sample(ArmLX, u), 0f, Sample(ArmLZ, u)),
+                foreL: new Euler(Sample(ForeL, u), 0f, 0f),
+                armR: new Euler(Sample(ArmRX, u), 4f, Sample(ArmRZ, u)),
+                foreR: new Euler(Sample(ForeR, u), 0f, 0f),
                 handR: new Euler(0f, 0f, 0f),
                 sword: new Euler(-6f, 0f, 8f));
+        }
+
+        private static float Sample(float[] keys, float u)
+        {
+            var n = keys.Length;
+            var x = Repeat(u, 1f) * n;
+            var i0 = (int)MathF.Floor(x) % n;
+            if (i0 < 0)
+            {
+                i0 += n;
+            }
+
+            var i1 = (i0 + 1) % n;
+            var t = x - MathF.Floor(x);
+            return Lerp(keys[i0], keys[i1], t);
         }
 
         private static Pose AttackPose(float attackT, float rootZ)

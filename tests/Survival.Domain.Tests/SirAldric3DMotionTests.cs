@@ -30,15 +30,15 @@ public sealed class SirAldric3DMotionTests
         var b = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkPeriodSeconds * 0.75f);
         // −X thigh = toward world +Z = TOP. At ¼ cycle left leads TOP; at ¾ right leads TOP.
         Assert.True(a.UpLegL.X < -16f);
-        Assert.True(a.UpLegR.X > 16f);
-        Assert.True(b.UpLegL.X > 16f);
+        Assert.True(a.UpLegR.X > 7f);
+        Assert.True(b.UpLegL.X > 7f);
         Assert.True(b.UpLegR.X < -16f);
         Assert.True(a.LegR.X > 8f);
         Assert.True(b.LegL.X > 8f);
         Assert.True(a.LeadLegTowardTop);
         Assert.True(b.LeadLegTowardTop);
-        Assert.True(a.ArmsTowardTop);
-        Assert.True(b.ArmsTowardTop);
+        Assert.True(a.WalkArmPendulum);
+        Assert.True(b.WalkArmPendulum);
         Assert.True(a.ShoulderHipCounter);
         Assert.True(b.ShoulderHipCounter);
     }
@@ -69,14 +69,15 @@ public sealed class SirAldric3DMotionTests
         Assert.True(contactL.Spine.Y < -4f);
         Assert.True(contactR.Hips.Y < -4f);
         Assert.True(contactR.Spine.Y > 4f);
-        // Soft plant, not locked; trailing heel lifts (foot +X).
-        Assert.InRange(contactL.LegL.X, 8f, 28f);
-        Assert.True(contactL.FootR.X > 10f);
-        Assert.True(contactR.FootL.X > 10f);
+        // Soft plant, not locked. Passing-foot heel lifts (foot +X) — gait-bar, not contact lock.
+        Assert.InRange(contactL.LegL.X, 6f, 28f);
+        Assert.True(passL.FootL.X > 10f);
+        Assert.True(passR.FootR.X > 8f);
 
-        Assert.True(passL.ArmsTowardTop);
+        Assert.True(passL.WalkArmPendulum);
+        Assert.True(contactL.WalkArmPendulum);
         Assert.True(passL.SheathedOnCharacterRight);
-        Assert.True(contactL.ArmsTowardTop);
+        Assert.True(contactL.SheathedOnCharacterRight);
     }
 
     [Fact]
@@ -94,19 +95,42 @@ public sealed class SirAldric3DMotionTests
             "refs");
         Assert.True(new FileInfo(Path.Combine(dir, "WALK_GAIT_BAR.md")).Length > 400);
         Assert.True(new FileInfo(Path.Combine(dir, "WALK_GAIT_BAR_skeleton_sample.mp4")).Length > 100_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "walk_cycle_mixamo_style.bvh")).Length > 10_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "gait_bar_phases", "pass_l_rear.png")).Length > 10_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "gait_bar_phases", "contact_l_rear.png")).Length > 10_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "gait_bar_phases", "pass_r_rear.png")).Length > 10_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "gait_bar_phases", "contact_r_rear.png")).Length > 10_000);
     }
 
     [Fact]
-    public void Walk_arms_and_sword_hang_toward_top_not_camera()
+    public void Walk_has_loose_contralateral_arm_pendulum_not_pinned()
     {
-        for (var i = 0; i < 8; i++)
+        float minL = 999f, maxL = -999f, minR = 999f, maxR = -999f;
+        for (var i = 0; i < 20; i++)
         {
-            var pose = SirAldric3DMotion.Evaluate(i * SirAldric3DMotion.WalkPeriodSeconds * 0.25f);
-            Assert.True(pose.ArmsTowardTop);
-            Assert.True(pose.ArmR.X < 0f);
-            Assert.True(pose.ArmL.X < 0f);
+            var pose = SirAldric3DMotion.Evaluate(i * SirAldric3DMotion.WalkPeriodSeconds / 20f);
+            Assert.True(pose.SheathedOnCharacterRight);
             Assert.True(pose.ForeR.X < 0f);
+            minL = Math.Min(minL, pose.ArmL.X);
+            maxL = Math.Max(maxL, pose.ArmL.X);
+            minR = Math.Min(minR, pose.ArmR.X);
+            maxR = Math.Max(maxR, pose.ArmR.X);
         }
+
+        // Left arm must cross hang (0): back toward camera AND forward toward TOP.
+        Assert.True(minL < -8f);
+        Assert.True(maxL > 8f);
+        Assert.True(minR < -8f);
+        Assert.True(maxR > 4f);
+
+        var contactL = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkPeriodSeconds * 0.25f);
+        var contactR = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkPeriodSeconds * 0.75f);
+        Assert.True(contactL.ArmL.X > 8f);
+        Assert.True(contactL.ArmR.X < -8f);
+        Assert.True(contactR.ArmL.X < -8f);
+        Assert.True(contactR.ArmR.X > 4f);
+        Assert.True(contactL.WalkArmPendulum);
+        Assert.True(contactR.WalkArmPendulum);
     }
 
     [Fact]

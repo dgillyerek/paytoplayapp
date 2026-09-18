@@ -26,5 +26,9 @@ Most visible from behind / looking down:
 - 3D Animator only (no PNG warp)
 - Look: knight from `look_targets/` (`01_rear_LOCKED` SoT)
 
+## Walk clip landed (this pass)
+
+Not another sine march. Runtime Walk keys are retargeted from `walk_cycle_mixamo_style.bvh` (CreativeInquiry BVH-Examples `walk-cycle.bvh`, Mixamo-style humanoid — https://github.com/CreativeInquiry/BVH-Examples), skinned as the knight, 1.75s → 1.00s to match this bar’s 120 spm. Side-by-side phases live in `gait_bar_phases/`.
+
 ## Deliverable
-Walk GIF + sheet + walk→attack mp4 for Design/Derek re-gate.
+Side-by-side sample-vs-Aldric sheet + walk GIF + walk→attack mp4 for Design/Derek re-gate.

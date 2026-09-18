@@ -12,7 +12,10 @@
   "pipeline": "HERO_3D_PIPELINE.md",
   "gait_bar": {
     "brief": "refs/WALK_GAIT_BAR.md",
-    "sample": "refs/WALK_GAIT_BAR_skeleton_sample.mp4"
+    "sample": "refs/WALK_GAIT_BAR_skeleton_sample.mp4",
+    "walk_clip": "refs/walk_cycle_mixamo_style.bvh",
+    "walk_clip_source": "https://github.com/CreativeInquiry/BVH-Examples (walk-cycle.bvh, Mixamo-style humanoid)",
+    "phases": "refs/gait_bar_phases/"
   },
   "note": "Sword/scabbard must land on CHARACTER-RIGHT hip to match rear LOCKED SoT (fix turnaround if mirrored).",
   "runtime": {

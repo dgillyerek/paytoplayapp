@@ -17,6 +17,8 @@ ROOT = Path(__file__).resolve().parents[3]
 OUT = Path(__file__).resolve().parent
 ART = Path("/opt/cursor/artifacts")
 LOOK = ROOT / "design/survival-theme-a-fantasy/heroes/anim/sir_aldric/UNITY_3D_HANDOFF/look_targets"
+REFS = ROOT / "design/survival-theme-a-fantasy/heroes/anim/sir_aldric/UNITY_3D_HANDOFF/refs"
+PHASES = REFS / "gait_bar_phases"
 W, H = 1080, 1920
 WALK_PERIOD = 1.00
 WALK_CYCLES = 2
@@ -112,39 +114,60 @@ def evaluate(t):
     return walk_pose(loop_t, root_z)
 
 
+# Retargeted CreativeInquiry walk-cycle.bvh (Mixamo-style), 20 keys, u=0 pass L.
+# Same tables as SirAldric3DMotion.cs — do not drift.
+BOB = [0.028, 0.027, 0.025, 0.021, 0.017, 0.012, 0.017, 0.021, 0.025, 0.027, 0.028, 0.027, 0.025, 0.021, 0.017, 0.012, 0.017, 0.021, 0.025, 0.027]
+HIPSY = [-3.665, -1.170, 1.550, 4.850, 7.731, 9.164, 9.392, 8.572, 7.086, 5.240, 2.659, -0.522, -3.597, -6.627, -8.674, -9.366, -9.106, -8.336, -7.545, -5.778]
+HIPSZ = [7.345, 7.048, 5.486, 2.888, 0.446, -0.526, -0.665, -1.376, -3.347, -5.206, -5.968, -4.838, -2.639, 0.291, 1.477, 1.844, 2.331, 2.318, 3.372, 5.976]
+SPINEY = [4.444, -6.727, -7.459, -7.612, -7.441, -7.486, -7.299, -6.440, -5.116, -2.872, -1.460, 6.016, 8.442, 10.170, 11.111, 10.850, 9.181, 5.798, 2.590, 1.342]
+UPLX = [-16.208, -22.635, -25.264, -25.288, -23.607, -22.233, -21.451, -20.034, -16.924, -12.922, -8.011, -3.490, -0.194, 2.962, 6.640, 9.814, 10.664, 8.028, 3.749, -6.587]
+UPLZ = [-1.297, -0.041, 1.052, 1.541, 1.272, 0.900, 0.895, 1.408, 1.774, 1.720, 1.419, 1.181, 1.265, 1.621, 1.769, 1.334, 0.267, -0.975, -1.549, -1.779]
+LEGL = [65.911, 61.733, 48.831, 29.206, 11.845, 7.064, 12.270, 20.857, 23.986, 22.512, 18.937, 16.014, 15.030, 15.685, 17.177, 19.957, 25.565, 33.527, 41.852, 57.840]
+FOOTL = [19.829, 13.055, 3.219, -5.095, -7.766, -9.555, -10.000, -10.000, -10.000, -10.000, -10.000, -10.000, -10.000, -10.000, -10.000, -6.900, -0.866, 4.484, 9.512, 18.075]
+UPRX = [-4.809, -1.322, 1.570, 4.466, 7.772, 11.137, 12.977, 10.104, 2.175, -6.861, -15.696, -21.134, -22.681, -21.194, -18.048, -16.379, -16.331, -16.116, -13.880, -8.698]
+UPRZ = [-1.595, -1.260, -1.068, -1.299, -1.936, -2.526, -2.599, -1.215, 1.007, 2.407, 2.719, 2.233, 1.756, 1.557, 1.507, 1.397, 1.056, 0.153, -0.796, -1.575]
+LEGR = [10.327, 8.395, 7.317, 7.349, 8.468, 11.042, 17.306, 31.267, 49.313, 61.905, 64.097, 52.625, 34.998, 13.484, 6.000, 6.000, 7.923, 15.984, 16.332, 12.620]
+FOOTR = [-10.000, -10.000, -10.000, -10.000, -10.000, -9.206, -4.301, 2.262, 8.900, 13.019, 10.753, 2.167, -4.875, -8.293, -9.210, -10.000, -10.000, -10.000, -10.000, -10.000]
+ARMLX = [20.657, 24.257, 26.699, 28.858, 29.993, 29.188, 26.195, 20.307, 12.112, 3.149, -7.229, -16.407, -22.463, -26.352, -26.130, -21.625, -13.907, -3.901, 5.321, 15.909]
+ARMLZ = [17.657, 15.379, 13.094, 11.070, 9.980, 9.721, 9.780, 9.755, 10.307, 11.893, 14.229, 16.140, 17.129, 17.156, 16.450, 16.320, 16.752, 17.107, 17.758, 18.588]
+FOREL = [-15.196, -13.767, -12.808, -12.564, -12.848, -13.178, -12.839, -12.078, -11.634, -11.330, -11.354, -12.041, -13.600, -15.944, -18.272, -19.348, -18.602, -16.949, -16.340, -16.232]
+ARMRX = [-9.906, -14.138, -16.869, -18.876, -19.356, -17.604, -13.548, -7.220, -0.291, 6.120, 12.772, 16.000, 16.000, 16.000, 16.000, 16.000, 16.000, 11.073, 4.560, -4.311]
+ARMRZ = [-11.216, -13.244, -14.717, -15.443, -15.351, -15.261, -15.680, -16.429, -16.982, -17.481, -18.128, -18.688, -19.027, -18.804, -18.245, -17.300, -14.905, -11.624, -9.797, -9.497]
+FORER = [-21.387, -26.717, -31.035, -32.000, -32.000, -32.000, -30.582, -26.622, -24.302, -23.984, -23.729, -23.241, -23.176, -23.164, -22.902, -22.393, -21.284, -19.746, -18.477, -18.084]
+
+
+def sample_keys(keys, u):
+    n = len(keys)
+    x = repeat(u, 1.0) * n
+    i0 = int(math.floor(x)) % n
+    i1 = (i0 + 1) % n
+    t = x - math.floor(x)
+    return lerp(keys[i0], keys[i1], t)
+
+
 def walk_pose(loop_t, root_z):
-    phase = loop_t / WALK_PERIOD * math.tau
-    s = math.sin(phase)
-    c = math.cos(phase)
-    swing_l, swing_r = max(0.0, c), max(0.0, -c)
-    contact_l, contact_r = max(0.0, s), max(0.0, -s)
-    bob = 0.010 + 0.018 * abs(c)
-    hips_y, hips_z = 8 * s, 7.5 * c
-    left_x = -18 * s - 8 * swing_l
-    right_x = 18 * s - 8 * swing_r
-    knee_l = 12 + 54 * swing_l + 8 * contact_r
-    knee_r = 12 + 54 * swing_r + 8 * contact_l
-    foot_l = -12 * contact_l + 20 * contact_r - 6 * swing_l
-    foot_r = -12 * contact_r + 20 * contact_l - 6 * swing_r
+    u = repeat(loop_t / WALK_PERIOD, 1.0)
+    hips_y, hips_z = sample_keys(HIPSY, u), sample_keys(HIPSZ, u)
+    spine_y = sample_keys(SPINEY, u)
     return dict(
         attacking=False,
         drawn=False,
         root_z=root_z,
-        root_y=bob,
+        root_y=sample_keys(BOB, u),
         hips=(0, hips_y, hips_z),
-        spine=(5, -11 * s, -hips_z * 0.25),
-        chest=(2, -7 * s, 0),
-        head=(6, -3 * s, 0),
-        up_l=(left_x, 0, -7 * swing_l),
-        leg_l=(knee_l, 0, 0),
-        foot_l=(foot_l, 0, 0),
-        up_r=(right_x, 0, 7 * swing_r),
-        leg_r=(knee_r, 0, 0),
-        foot_r=(foot_r, 0, 0),
-        arm_l=(-20 + 10 * s, 0, 12),
-        fore_l=(-12 - 10 * max(0.0, -s), 0, 0),
-        arm_r=(-18 - 6 * s, 4, -12),
-        fore_r=(-20 - 4 * max(0.0, s), 0, 0),
+        spine=(5, spine_y, -hips_z * 0.25),
+        chest=(2, spine_y * 0.55, 0),
+        head=(6, spine_y * 0.22, 0),
+        up_l=(sample_keys(UPLX, u), 0, sample_keys(UPLZ, u)),
+        leg_l=(sample_keys(LEGL, u), 0, 0),
+        foot_l=(sample_keys(FOOTL, u), 0, 0),
+        up_r=(sample_keys(UPRX, u), 0, sample_keys(UPRZ, u)),
+        leg_r=(sample_keys(LEGR, u), 0, 0),
+        foot_r=(sample_keys(FOOTR, u), 0, 0),
+        arm_l=(sample_keys(ARMLX, u), 0, sample_keys(ARMLZ, u)),
+        fore_l=(sample_keys(FOREL, u), 0, 0),
+        arm_r=(sample_keys(ARMRX, u), 4, sample_keys(ARMRZ, u)),
+        fore_r=(sample_keys(FORER, u), 0, 0),
         hand_r=(0, 0, 0),
         sword=(-6, 0, 8),
         label="WALK  ·  toward TOP",
@@ -655,11 +678,19 @@ def main():
         raise SystemExit(f"FAIL hip drop: passL Z={pass_l['hips'][2]:.1f} passR Z={pass_r['hips'][2]:.1f}")
     if contact_l["hips"][1] <= 4 or contact_l["spine"][1] >= -4:
         raise SystemExit("FAIL shoulder–hip counter-rotation at contact L")
-    bones_c = fk(contact_l)
-    heel_r = xform_p(bones_c["foot_r"], (0, 0, 0))
-    heel_l = xform_p(bones_c["foot_l"], (0, 0, 0))
-    if heel_r[1] < heel_l[1] + 0.04:
-        raise SystemExit(f"FAIL trailing heel lift at contact L: L={heel_l[1]:.3f} R={heel_r[1]:.3f}")
+    bones_pass = fk(pass_l)
+    heel_r = xform_p(bones_pass["foot_r"], (0, 0, 0))
+    heel_l = xform_p(bones_pass["foot_l"], (0, 0, 0))
+    if heel_l[1] < heel_r[1] + 0.04:
+        raise SystemExit(f"FAIL passing-L heel lift: L={heel_l[1]:.3f} R={heel_r[1]:.3f}")
+    if pass_l["arm_l"][0] <= 8 or pass_l["arm_r"][0] >= -4:
+        raise SystemExit(
+            f"FAIL pinned/missing pendulum at pass L: armL={pass_l['arm_l'][0]:.1f} armR={pass_l['arm_r'][0]:.1f}"
+        )
+    if contact_l["arm_l"][0] <= 8 or contact_l["arm_r"][0] >= -8:
+        raise SystemExit(
+            f"FAIL contralateral at contact L: armL={contact_l['arm_l'][0]:.1f} armR={contact_l['arm_r'][0]:.1f}"
+        )
     step_len = abs(heel_l[2] - heel_r[2])
     expected = MARCH * WALK_PERIOD * 0.5
     if abs(step_len - expected) > 0.26:
@@ -687,10 +718,12 @@ def main():
     m_walk = mean_delta(body_crop(walk_contact_l), body_crop(walk_contact_r))
     m_strike = mean_delta(body_crop(walk_contact_l), body_crop(strike))
     proof = (
-        f"3D Animator rematched to WALK_GAIT_BAR skeleton sample. "
+        f"3D Animator Walk retargeted from CreativeInquiry walk-cycle.bvh (Mixamo-style humanoid) "
+        f"onto Aldric hang −Y, time-warped to 1.00s to match WALK_GAIT_BAR. "
         f"Hips screen-Y {y0:.0f}→{y1:.0f} (toward TOP). "
-        f"Pass knee {pass_l['leg_l'][0]:.0f}°/{pass_r['leg_r'][0]:.0f}° (gait-bar ~65°, not 90° cartoon). "
-        f"Hip drop + counter-rotate; heel lift; contralateral arms far/TOP. "
+        f"Pass knee {pass_l['leg_l'][0]:.0f}°/{pass_r['leg_r'][0]:.0f}° (~65°). "
+        f"Loose contralateral pendulum armL {pass_l['arm_l'][0]:.0f}°/{contact_l['arm_l'][0]:.0f}° "
+        f"(crosses hang, not pinned). Hip drop + counter-rotate; heel→toe. "
         f"step {step_len:.2f}m vs march-step {expected:.2f}m. "
         f"max |Δ| walk {d_walk:.0f}/255; pass vs contact {d_pass:.0f}/255; "
         f"walk vs strike {d_strike:.0f}/255. "
@@ -700,20 +733,59 @@ def main():
     if d_walk < 18 or d_strike < 18 or d_pass < 18:
         raise SystemExit("FAIL: 3D motion too weak: " + proof)
 
-    cell_w, cell_h = 540, 960
+    def fit_sample(path):
+        src = Image.open(path).convert("RGB")
+        arr = np.array(src)
+        ink = arr.min(axis=2) < 240
+        ys, xs = np.where(ink)
+        if len(xs) == 0:
+            return src
+        pad = 18
+        crop = src.crop(
+            (
+                max(0, int(xs.min()) - pad),
+                max(0, int(ys.min()) - pad),
+                min(src.width, int(xs.max()) + pad),
+                min(src.height, int(ys.max()) + pad),
+            )
+        )
+        cell = Image.new("RGB", (540, 480), (248, 248, 246))
+        scale = min((540 - 32) / crop.width, (480 - 72) / crop.height)
+        nw, nh = int(crop.width * scale), int(crop.height * scale)
+        placed = crop.resize((nw, nh), Image.BILINEAR)
+        cell.paste(placed, ((540 - nw) // 2, 56 + (480 - 72 - nh) // 2))
+        return cell
+
+    def fit_aldric(im):
+        crop = im.crop((180, 220, W - 180, H - 220))
+        return crop.resize((540, 480), Image.BILINEAR)
+
+    sample_cells = [
+        (fit_sample(PHASES / "pass_l_rear.png"), "SAMPLE  ·  PASS L"),
+        (fit_sample(PHASES / "contact_l_rear.png"), "SAMPLE  ·  CONTACT L"),
+        (fit_sample(PHASES / "pass_r_rear.png"), "SAMPLE  ·  PASS R"),
+        (fit_sample(PHASES / "contact_r_rear.png"), "SAMPLE  ·  CONTACT R"),
+    ]
+    aldric_cells = [
+        (fit_aldric(walk_pass_l), "ALDRIC  ·  PASS L"),
+        (fit_aldric(walk_contact_l), "ALDRIC  ·  CONTACT L"),
+        (fit_aldric(walk_pass_r), "ALDRIC  ·  PASS R"),
+        (fit_aldric(walk_contact_r), "ALDRIC  ·  CONTACT R"),
+    ]
     sheet = Image.new("RGB", (W, H), (18, 20, 16))
-    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22)
-    for i, (im, lab) in enumerate(
-        [
-            (walk_pass_l, "WALK PASS L"),
-            (walk_contact_l, "WALK CONTACT L"),
-            (walk_pass_r, "WALK PASS R"),
-            (walk_contact_r, "WALK CONTACT R"),
-        ]
-    ):
-        x, y = (i % 2) * cell_w, (i // 2) * cell_h
-        sheet.paste(im.resize((cell_w, cell_h), Image.BILINEAR), (x, y))
-        ImageDraw.Draw(sheet).text((x + 16, y + 16), lab, fill=(237, 230, 209), font=font)
+    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
+    # 4 rows × 2 cols: each phase is sample | aldric side-by-side, stacked passL / contactL / passR / contactR.
+    order = [
+        (sample_cells[0], aldric_cells[0]),
+        (sample_cells[1], aldric_cells[1]),
+        (sample_cells[2], aldric_cells[2]),
+        (sample_cells[3], aldric_cells[3]),
+    ]
+    for row, (samp, ald) in enumerate(order):
+        for col, (im, lab) in enumerate((samp, ald)):
+            x, y = col * 540, row * 480
+            sheet.paste(im, (x, y))
+            ImageDraw.Draw(sheet).text((x + 14, y + 12), lab, fill=(237, 230, 209) if col else (40, 40, 38), font=font)
 
     still = OUT / "sir_aldric_locked_rear_gameview_1080x1920.png"
     walk_pass_l.save(still, optimize=True)
