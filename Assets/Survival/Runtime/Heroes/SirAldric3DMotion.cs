@@ -116,6 +116,9 @@ namespace Survival.Domain.Heroes
 
             /// <summary>Thigh −X = foot toward +Z = TOP. Used to reject moonwalk / down-screen stride.</summary>
             public bool LeadLegTowardTop => UpLegL.X < -8f || UpLegR.X < -8f;
+
+            /// <summary>Passing / lifted leg shows a deep knee (not a straight-leg pivot).</summary>
+            public bool PassingKneeBent => LegL.X >= 55f || LegR.X >= 55f;
         }
 
         public static Pose Evaluate(float timeSeconds)
@@ -135,13 +138,19 @@ namespace Survival.Domain.Heroes
         {
             var phase = (float)(loopT / WalkPeriodSeconds * (Math.PI * 2.0));
             var step = MathF.Sin(phase);
-            var bob = 0.028f * Math.Abs(MathF.Sin(phase));
+            var cos = MathF.Cos(phase);
+            var bob = 0.030f * Math.Abs(step);
             var sway = 5.5f * step;
             // −X thigh = toward world +Z = TOP of Game view (not toward camera).
-            var leftX = -38f * step;
-            var rightX = 38f * step;
-            var kneeL = 10f + 48f * Math.Max(0f, -step);
-            var kneeR = 10f + 48f * Math.Max(0f, step);
+            // Swing/pass (cos) lifts the moving leg; trail (sin) keeps some flex on the back leg.
+            var swingL = Math.Max(0f, cos);
+            var swingR = Math.Max(0f, -cos);
+            var trailL = Math.Max(0f, -step);
+            var trailR = Math.Max(0f, step);
+            var leftX = -38f * step - 32f * swingL;
+            var rightX = 38f * step - 32f * swingR;
+            var kneeL = 16f + 74f * swingL + 36f * trailL;
+            var kneeR = 16f + 74f * swingR + 36f * trailR;
             return new Pose(
                 attacking: false,
                 swordDrawn: false,
@@ -151,12 +160,12 @@ namespace Survival.Domain.Heroes
                 spine: new Euler(4f, sway, 0f),
                 chest: new Euler(0f, sway * 0.4f, 0f),
                 head: new Euler(6f, 0f, 0f),
-                upLegL: new Euler(leftX, 0f, 0f),
+                upLegL: new Euler(leftX, 0f, -18f * swingL),
                 legL: new Euler(kneeL, 0f, 0f),
-                footL: new Euler(-8f - 10f * Math.Max(0f, -step), 0f, 0f),
-                upLegR: new Euler(rightX, 0f, 0f),
+                footL: new Euler(-6f - 18f * swingL - 8f * trailL, 0f, 0f),
+                upLegR: new Euler(rightX, 0f, 18f * swingR),
                 legR: new Euler(kneeR, 0f, 0f),
-                footR: new Euler(-8f - 10f * Math.Max(0f, step), 0f, 0f),
+                footR: new Euler(-6f - 18f * swingR - 8f * trailR, 0f, 0f),
                 // Arm −X = in front toward TOP. Never +X (that hangs toward the camera).
                 armL: new Euler(-20f - 14f * step, 0f, 8f),
                 foreL: new Euler(-18f - 10f * Math.Max(0f, step), 0f, 0f),

@@ -73,7 +73,7 @@ See `ART_UPGRADE.md` for the remaining DCC painted-mesh gap.
 **PASS when all true:**
 1. Same look as locked targets every frame (no redesign mid-clip)
 2. Silhouette stays connected (no detached legs/arms)
-3. Walk reads at phone size (clear stride, not shuffle)
+3. Walk reads at phone size (clear stride, **bent passing knee**, not stiff-leg pivots)
 4. Attack strikes toward TOP; draw + recover visible
 5. Orientation: squared rear / toward TOP (not sideways 3/4 drift)
 6. Arms and held sword sit on the **far / TOP** side of the body (toward the enemy), not hanging toward the camera

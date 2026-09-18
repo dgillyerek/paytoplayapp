@@ -115,12 +115,17 @@ def evaluate(t):
 def walk_pose(loop_t, root_z):
     phase = loop_t / WALK_PERIOD * math.tau
     step = math.sin(phase)
-    bob = 0.028 * abs(math.sin(phase))
+    cos = math.cos(phase)
+    bob = 0.030 * abs(step)
     sway = 5.5 * step
     # −X thigh = toward world +Z = TOP of Game view.
-    left_x, right_x = -38 * step, 38 * step
-    knee_l = 10 + 48 * max(0.0, -step)
-    knee_r = 10 + 48 * max(0.0, step)
+    # Swing/pass (cos) lifts the moving leg; trail (sin) keeps flex on the back leg.
+    swing_l, swing_r = max(0.0, cos), max(0.0, -cos)
+    trail_l, trail_r = max(0.0, -step), max(0.0, step)
+    left_x = -38 * step - 32 * swing_l
+    right_x = 38 * step - 32 * swing_r
+    knee_l = 16 + 74 * swing_l + 36 * trail_l
+    knee_r = 16 + 74 * swing_r + 36 * trail_r
     return dict(
         attacking=False,
         drawn=False,
@@ -130,12 +135,12 @@ def walk_pose(loop_t, root_z):
         spine=(4, sway, 0),
         chest=(0, sway * 0.4, 0),
         head=(6, 0, 0),
-        up_l=(left_x, 0, 0),
+        up_l=(left_x, 0, -18 * swing_l),
         leg_l=(knee_l, 0, 0),
-        foot_l=(-8 - 10 * max(0.0, -step), 0, 0),
-        up_r=(right_x, 0, 0),
+        foot_l=(-6 - 18 * swing_l - 8 * trail_l, 0, 0),
+        up_r=(right_x, 0, 18 * swing_r),
         leg_r=(knee_r, 0, 0),
-        foot_r=(-8 - 10 * max(0.0, step), 0, 0),
+        foot_r=(-6 - 18 * swing_r - 8 * trail_r, 0, 0),
         arm_l=(-20 - 14 * step, 0, 8),
         fore_l=(-18 - 10 * max(0.0, step), 0, 0),
         arm_r=(-16 - 8 * step, 6, -8),
@@ -633,10 +638,19 @@ def main():
         frames.append(im)
         print(f"{i + 1}/{n}", flush=True)
 
-    walk_a = render_pose(evaluate(WALK_PERIOD * 0.25))
-    walk_b = render_pose(evaluate(WALK_PERIOD * 0.75))
+    walk_pass_l = render_pose(evaluate(0.0))
+    walk_stride_l = render_pose(evaluate(WALK_PERIOD * 0.25))
+    walk_pass_r = render_pose(evaluate(WALK_PERIOD * 0.5))
+    walk_stride_r = render_pose(evaluate(WALK_PERIOD * 0.75))
     strike = render_pose(evaluate(WALK_BLOCK + ATTACK * 0.48))
     recover = render_pose(evaluate(WALK_BLOCK + ATTACK * 0.92))
+
+    pass_l = evaluate(0.0)
+    pass_r = evaluate(WALK_PERIOD * 0.5)
+    if pass_l["leg_l"][0] < 80 or pass_r["leg_r"][0] < 80:
+        raise SystemExit(
+            f"FAIL stiff passing knee: L={pass_l['leg_l'][0]:.1f} R={pass_r['leg_r'][0]:.1f} (need >=80 on lift/pass)"
+        )
 
     def scabbard_brown(im):
         arr = np.array(im)
@@ -646,7 +660,7 @@ def main():
     if any(bone == "cape" for bone, _, _, _ in PARTS):
         raise SystemExit("FAIL cape mesh still present (was the back sheath)")
 
-    for im, name in ((walk_a, "walk"), (strike, "strike")):
+    for im, name in ((walk_stride_l, "walk"), (strike, "strike")):
         mask = scabbard_brown(im)
         left_upper = int(mask[int(H * 0.24) : int(H * 0.36), int(W * 0.28) : int(W * 0.42)].sum())
         right_hip = int(mask[int(H * 0.42) : int(H * 0.65), int(W * 0.55) : int(W * 0.72)].sum())
@@ -654,35 +668,43 @@ def main():
             raise SystemExit(f"FAIL missing character-right scabbard on {name}: right-hip brown px={right_hip}")
         if left_upper > 200:
             raise SystemExit(f"FAIL back/left sheath on {name}: left-upper brown px={left_upper}")
-    d_walk = max_delta(body_crop(walk_a), body_crop(walk_b))
-    d_strike = max_delta(body_crop(walk_a), body_crop(strike))
-    m_walk = mean_delta(body_crop(walk_a), body_crop(walk_b))
-    m_strike = mean_delta(body_crop(walk_a), body_crop(strike))
+    d_walk = max_delta(body_crop(walk_stride_l), body_crop(walk_stride_r))
+    d_pass = max_delta(body_crop(walk_pass_l), body_crop(walk_stride_l))
+    d_strike = max_delta(body_crop(walk_stride_l), body_crop(strike))
+    m_walk = mean_delta(body_crop(walk_stride_l), body_crop(walk_stride_r))
+    m_strike = mean_delta(body_crop(walk_stride_l), body_crop(strike))
     proof = (
         f"3D Animator (capsule+look-target albedo, not cubes/PNG warp). "
         f"Hips screen-Y {y0:.0f}→{y1:.0f} (toward TOP). "
         f"Arms/sword on far/+Z side (not toward camera). "
+        f"Passing knee {pass_l['leg_l'][0]:.0f}° / {pass_r['leg_r'][0]:.0f}° (bent lift, not stiff-leg). "
         f"max |Δ| excluding UI: walk opposite-step {d_walk:.0f}/255 (mean {m_walk:.1f}); "
+        f"pass vs stride {d_pass:.0f}/255; "
         f"walk vs strike {d_strike:.0f}/255 (mean {m_strike:.1f}). "
         "Single brown scabbard on character-right hip (no back sheath). "
         "High-angle rear march +Z = TOP."
     )
     print(proof)
-    if d_walk < 18 or d_strike < 18:
+    if d_walk < 18 or d_strike < 18 or d_pass < 18:
         raise SystemExit("FAIL: 3D motion too weak: " + proof)
 
     cell_w, cell_h = 540, 960
     sheet = Image.new("RGB", (W, H), (18, 20, 16))
     font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22)
     for i, (im, lab) in enumerate(
-        [(walk_a, "WALK L"), (walk_b, "WALK R"), (strike, "STRIKE TOP"), (recover, "RECOVER")]
+        [
+            (walk_pass_l, "WALK PASS L"),
+            (walk_stride_l, "WALK STRIDE L"),
+            (walk_pass_r, "WALK PASS R"),
+            (walk_stride_r, "WALK STRIDE R"),
+        ]
     ):
         x, y = (i % 2) * cell_w, (i // 2) * cell_h
         sheet.paste(im.resize((cell_w, cell_h), Image.BILINEAR), (x, y))
         ImageDraw.Draw(sheet).text((x + 16, y + 16), lab, fill=(237, 230, 209), font=font)
 
     still = OUT / "sir_aldric_locked_rear_gameview_1080x1920.png"
-    walk_a.save(still, optimize=True)
+    walk_pass_l.save(still, optimize=True)
     sheet_path = OUT / "sir_aldric_walk_draw_strike_recover_sheet.png"
     sheet.save(sheet_path, optimize=True)
     gif_full = OUT / "sir_aldric_walk_attack_toward_top.gif"
@@ -714,7 +736,7 @@ def main():
     (OUT / "PIXEL_PROOF.txt").write_text(proof + "\n")
     ART.mkdir(parents=True, exist_ok=True)
     for p in (still, sheet_path, gif_full, gif_walk, mp4, OUT / "PIXEL_PROOF.txt"):
-        dest = ART / f"aldric_one_scabbard_{p.name}"
+        dest = ART / f"aldric_knee_walk_{p.name}"
         shutil.copy2(p, dest)
         print("wrote", p, p.stat().st_size)
 

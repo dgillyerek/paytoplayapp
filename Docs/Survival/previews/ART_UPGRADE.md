@@ -2,7 +2,7 @@
 
 ## This pass (orientation + look)
 
-- **Motion:** capsule-sculpted skinned mesh, Animator PlayableGraph, high-angle rear camera **fixed** so RootZ travel reads as march toward **TOP** of 1080×1920 Game view. Thigh −X = toward world +Z (not toward camera). Arm/forearm −X = hands and blade in front toward TOP / enemy (never +X toward the camera). Chevrons + enemy keep mark TOP.
+- **Motion:** capsule-sculpted skinned mesh, Animator PlayableGraph, high-angle rear camera **fixed** so RootZ travel reads as march toward **TOP** of 1080×1920 Game view. Thigh −X = toward world +Z (not toward camera). Arm/forearm −X = hands and blade in front toward TOP / enemy (never +X toward the camera). Walk passing/lifted knee ~90° with a little abduct so the flex reads from rear (not stiff-leg). Chevrons + enemy keep mark TOP.
 - **Look:** not cubes. Capsules/spheres with **01_rear_LOCKED** projective albedo on the body (painted right-hip sheath stripped so it does not double the 3D scabbard). Gold/silver/brown solids for trim, **one** character-right `Scabbard`, blade.
 - **Still not a DCC hero:** no painted mid-poly FBX, no unique unwrap, no back-mounted sheath mesh (short surcoat is the body albedo, not a diagonal cape tube). Turnaround `02` is reference only (rear panel may mirror — scabbard SoT is `01` character-right).
 

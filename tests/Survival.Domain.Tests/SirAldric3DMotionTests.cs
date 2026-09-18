@@ -42,6 +42,23 @@ public sealed class SirAldric3DMotionTests
     }
 
     [Fact]
+    public void Walk_passing_leg_has_deep_knee_bend()
+    {
+        var passL = SirAldric3DMotion.Evaluate(0f);
+        var passR = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkPeriodSeconds * 0.5f);
+        Assert.False(passL.Attacking);
+        Assert.False(passR.Attacking);
+        Assert.True(passL.PassingKneeBent);
+        Assert.True(passR.PassingKneeBent);
+        Assert.True(passL.LegL.X > 80f);
+        Assert.True(passL.LegL.X > passL.LegR.X + 40f);
+        Assert.True(passR.LegR.X > 80f);
+        Assert.True(passR.LegR.X > passR.LegL.X + 40f);
+        Assert.True(passL.ArmsTowardTop);
+        Assert.True(passL.SheathedOnCharacterRight);
+    }
+
+    [Fact]
     public void Walk_arms_and_sword_hang_toward_top_not_camera()
     {
         for (var i = 0; i < 8; i++)
