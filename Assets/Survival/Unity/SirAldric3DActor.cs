@@ -74,7 +74,7 @@ namespace Survival.Unity
             var armR = Bone("Arm_R", chest, new Vector3(0.22f, 0.10f, 0f));
             var foreR = Bone("Fore_R", armR, new Vector3(0f, -0.28f, 0f));
             var handR = Bone("Hand_R", foreR, new Vector3(0f, -0.24f, 0f));
-            Bone("Sword", handR, new Vector3(0.02f, -0.08f, 0.02f));
+            Bone("Sword", handR, new Vector3(0.02f, -0.08f, 0.06f));
             var upL = Bone("UpLeg_L", hips, new Vector3(-0.11f, -0.04f, 0f));
             var loL = Bone("Leg_L", upL, new Vector3(0f, -0.42f, 0f));
             Bone("Foot_L", loL, new Vector3(0f, -0.40f, 0.05f));

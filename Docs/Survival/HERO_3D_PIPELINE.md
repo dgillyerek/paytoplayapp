@@ -58,7 +58,7 @@ Placeholder: keep showing locked rear PNG in Play until 3D clip PASSes.
 Runtime: `SirAldric3DActor` builds a **capsule-sculpted skinned mesh** (not cubes) with `01_rear_LOCKED` projective albedo and plays `Aldric_WalkAttackLoop` through **Animator + PlayableGraph**.
 
 - Scene: `Assets/Survival/Scenes/SirAldric.unity` — Game view **1080×1920** → Play
-- Camera is **fixed** high-angle rear; RootZ marches toward **TOP** (+Z). Thigh −X = toward TOP (rejects moonwalk).
+- Camera is **fixed** high-angle rear; RootZ marches toward **TOP** (+Z). Thigh −X = toward TOP (rejects moonwalk). Arm/forearm −X = hands and blade on the far / TOP side (rejects hang-toward-camera).
 - Motion SoT: `SirAldric3DMotion`
 - Play hub still uses `SIR_ALDRIC_REAR_MASTER_LOCKED.png` until Design PASS
 - 2D warp (`SirAldricView` / `SirAldricWarp`) is **quarantined / unused**
@@ -76,6 +76,7 @@ See `ART_UPGRADE.md` for the remaining DCC painted-mesh gap.
 3. Walk reads at phone size (clear stride, not shuffle)
 4. Attack strikes toward TOP; draw + recover visible
 5. Orientation: squared rear / toward TOP (not sideways 3/4 drift)
+6. Arms and held sword sit on the **far / TOP** side of the body (toward the enemy), not hanging toward the camera
 
 **FAIL if:** limb pop, rubber melt, look drift, attack toward camera, or still/placeholder labeled as motion.
 

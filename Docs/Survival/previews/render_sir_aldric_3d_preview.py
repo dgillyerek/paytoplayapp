@@ -88,19 +88,19 @@ def walk_pose(loop_t, root_z):
         hips=(0, sway * 0.15, 0),
         spine=(4, sway, 0),
         chest=(0, sway * 0.4, 0),
-        head=(-6, 0, 0),
+        head=(6, 0, 0),
         up_l=(left_x, 0, 0),
         leg_l=(knee_l, 0, 0),
         foot_l=(-8 - 10 * max(0.0, -step), 0, 0),
         up_r=(right_x, 0, 0),
         leg_r=(knee_r, 0, 0),
         foot_r=(-8 - 10 * max(0.0, step), 0, 0),
-        arm_l=(12 + 22 * step, 0, 8),
-        fore_l=(18 + 12 * max(0.0, -step), 0, 0),
-        arm_r=(18 + 6 * step, 12, -10),
-        fore_r=(28, 0, 0),
+        arm_l=(-20 - 14 * step, 0, 8),
+        fore_l=(-18 - 10 * max(0.0, step), 0, 0),
+        arm_r=(-16 - 8 * step, 6, -8),
+        fore_r=(-22, 0, 0),
         hand_r=(0, 0, 0),
-        sword=(8, 0, 18),
+        sword=(-6, 0, 8),
         label="WALK  ·  toward TOP",
     )
 
@@ -109,24 +109,24 @@ def attack_pose(attack_t, root_z):
     u = clamp01(attack_t / ATTACK)
     if u < 0.18:
         k = smooth01(u / 0.18)
-        arm_x, arm_y, fore_x = lerp(18, -70, k), lerp(12, 6, k), lerp(28, 8, k)
-        lunge, spine_x, drawn_k = 0.0, lerp(4, -8, k), k
+        arm_x, arm_y, fore_x = lerp(-16, -85, k), lerp(6, 2, k), lerp(-22, -8, k)
+        lunge, spine_x, drawn_k = 0.0, lerp(4, 10, k), k
     elif u < 0.40:
         k = smooth01((u - 0.18) / 0.22)
-        arm_x, arm_y, fore_x = lerp(-70, -150, k), lerp(6, 2, k), lerp(8, -12, k)
-        lunge, spine_x, drawn_k = lerp(0, 0.04, k), lerp(-8, -14, k), 1.0
+        arm_x, arm_y, fore_x = lerp(-85, -155, k), lerp(2, 0, k), lerp(-8, -28, k)
+        lunge, spine_x, drawn_k = lerp(0, 0.04, k), lerp(10, 14, k), 1.0
     elif u < 0.56:
         k = smooth01((u - 0.40) / 0.16)
-        arm_x, arm_y, fore_x = lerp(-150, -118, k), lerp(2, 0, k), lerp(-12, 18, k)
-        lunge, spine_x, drawn_k = lerp(0.04, 0.10, k), lerp(-14, 8, k), 1.0
+        arm_x, arm_y, fore_x = lerp(-155, -118, k), lerp(0, 0, k), lerp(-28, -6, k)
+        lunge, spine_x, drawn_k = lerp(0.04, 0.10, k), lerp(14, 6, k), 1.0
     elif u < 0.78:
         k = smooth01((u - 0.56) / 0.22)
-        arm_x, arm_y, fore_x = lerp(-118, -40, k), lerp(0, 8, k), lerp(22, 20, k)
-        lunge, spine_x, drawn_k = lerp(0.10, 0.02, k), lerp(8, 0, k), 1.0 - k * 0.35
+        arm_x, arm_y, fore_x = lerp(-118, -48, k), lerp(0, 4, k), lerp(-6, -16, k)
+        lunge, spine_x, drawn_k = lerp(0.10, 0.02, k), lerp(6, 2, k), 1.0 - k * 0.35
     else:
         k = smooth01((u - 0.78) / 0.22)
-        arm_x, arm_y, fore_x = lerp(-40, 18, k), lerp(8, 12, k), lerp(20, 28, k)
-        lunge, spine_x, drawn_k = lerp(0.02, 0, k), lerp(0, 4, k), 1.0 - k
+        arm_x, arm_y, fore_x = lerp(-48, -16, k), lerp(4, 6, k), lerp(-16, -22, k)
+        lunge, spine_x, drawn_k = lerp(0.02, 0, k), lerp(2, 4, k), 1.0 - k
     drawn = drawn_k > 0.22
     strike = drawn and -175 <= arm_x <= -80
     return dict(
@@ -137,19 +137,19 @@ def attack_pose(attack_t, root_z):
         hips=(lunge * 20, 0, 0),
         spine=(spine_x, 0, 0),
         chest=(spine_x * 0.4, 0, 0),
-        head=(-8, 0, 0),
+        head=(8, 0, 0),
         up_l=(8, 0, 0),
         leg_l=(12, 0, 0),
         foot_l=(-6, 0, 0),
         up_r=(-6, 0, 0),
         leg_r=(16, 0, 0),
         foot_r=(-4, 0, 0),
-        arm_l=(16, 0, 10),
-        fore_l=(20, 0, 0),
+        arm_l=(-22, 0, 10),
+        fore_l=(-18, 0, 0),
         arm_r=(arm_x, arm_y, -8),
         fore_r=(fore_x, 0, 0),
-        hand_r=(-15 if drawn else 0, 0, 0),
-        sword=(-8 if drawn else 8, 0, 0 if drawn else 18),
+        hand_r=(-12 if drawn else 0, 0, 0),
+        sword=(-10 if drawn else -6, 0, 0 if drawn else 8),
         label="ATTACK  ·  strike TOP" if strike else "ATTACK  ·  draw / recover",
     )
 
@@ -191,7 +191,7 @@ def fk(pose):
     arm_r = chest @ local_of((0.22, 0.10, 0), pose["arm_r"])
     fore_r = arm_r @ local_of((0, -0.28, 0), pose["fore_r"])
     hand_r = fore_r @ local_of((0, -0.24, 0), pose["hand_r"])
-    sword = hand_r @ local_of((0.02, -0.08, 0.02), pose["sword"])
+    sword = hand_r @ local_of((0.02, -0.08, 0.06), pose["sword"])
     up_l = hips @ local_of((-0.11, -0.04, 0), pose["up_l"])
     leg_l = up_l @ local_of((0, -0.42, 0), pose["leg_l"])
     foot_l = leg_l @ local_of((0, -0.40, 0.05), pose["foot_l"])
@@ -557,6 +557,25 @@ def main():
     if y0 is None or y1 is None or y1 >= y0 - 8:
         raise SystemExit(f"FAIL orientation: hips must move toward TOP (smaller sy). sy0={y0} sy1={y1}")
 
+    def sword_vs_hip_z(t):
+        pose = evaluate(t)
+        bones = fk(pose)
+        hip = xform_p(bones["hips"], (0, 0, 0))
+        tip = xform_p(bones["sword"], (0.01, -0.58, 0.04))
+        hand = xform_p(bones["hand_r"], (0, -0.04, 0))
+        return hip[2], hand[2], tip[2]
+
+    for t, name in [(WALK_PERIOD * 0.25, "walk"), (WALK_BLOCK + ATTACK * 0.48, "strike")]:
+        hz, handz, tipz = sword_vs_hip_z(t)
+        if handz < hz - 0.02 or tipz < hz - 0.05:
+            raise SystemExit(
+                f"FAIL arms/sword toward camera: {name} hipZ={hz:.3f} handZ={handz:.3f} tipZ={tipz:.3f} "
+                "(need hand/tip further +Z / TOP than hips)"
+            )
+        scab = xform_p(fk(evaluate(t))["scabbard"], (0.02, -0.24, 0))
+        if scab[0] < 0.12:
+            raise SystemExit(f"FAIL scabbard not character-right: {name} scabX={scab[0]:.3f}")
+
     fps = 16
     n = int(LOOP * fps)
     raw = Path("/tmp/aldric-3d")
@@ -581,6 +600,7 @@ def main():
     proof = (
         f"3D Animator (capsule+look-target albedo, not cubes/PNG warp). "
         f"Hips screen-Y {y0:.0f}→{y1:.0f} (toward TOP). "
+        f"Arms/sword on far/+Z side (not toward camera). "
         f"max |Δ| excluding UI: walk opposite-step {d_walk:.0f}/255 (mean {m_walk:.1f}); "
         f"walk vs strike {d_strike:.0f}/255 (mean {m_strike:.1f}). "
         "Scabbard character-right; high-angle rear march +Z = TOP."
@@ -632,7 +652,7 @@ def main():
     (OUT / "PIXEL_PROOF.txt").write_text(proof + "\n")
     ART.mkdir(parents=True, exist_ok=True)
     for p in (still, sheet_path, gif_full, gif_walk, mp4, OUT / "PIXEL_PROOF.txt"):
-        dest = ART / f"aldric_top_{p.name}"
+        dest = ART / f"aldric_arms_top_{p.name}"
         shutil.copy2(p, dest)
         print("wrote", p, p.stat().st_size)
 

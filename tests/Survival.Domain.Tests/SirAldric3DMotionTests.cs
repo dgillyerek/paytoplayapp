@@ -37,6 +37,21 @@ public sealed class SirAldric3DMotionTests
         Assert.True(b.LegL.X > 8f);
         Assert.True(a.LeadLegTowardTop);
         Assert.True(b.LeadLegTowardTop);
+        Assert.True(a.ArmsTowardTop);
+        Assert.True(b.ArmsTowardTop);
+    }
+
+    [Fact]
+    public void Walk_arms_and_sword_hang_toward_top_not_camera()
+    {
+        for (var i = 0; i < 8; i++)
+        {
+            var pose = SirAldric3DMotion.Evaluate(i * SirAldric3DMotion.WalkPeriodSeconds * 0.25f);
+            Assert.True(pose.ArmsTowardTop);
+            Assert.True(pose.ArmR.X < 0f);
+            Assert.True(pose.ArmL.X < 0f);
+            Assert.True(pose.ForeR.X < 0f);
+        }
     }
 
     [Fact]
@@ -58,6 +73,7 @@ public sealed class SirAldric3DMotionTests
         Assert.True(strike.SwordDrawn);
         Assert.True(strike.FacesTop);
         Assert.True(strike.StrikeTowardTop);
+        Assert.True(strike.ArmsTowardTop);
         Assert.InRange(strike.ArmR.X, -175f, -80f);
 
         var end = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkBlockSeconds + SirAldric3DMotion.AttackSeconds - 0.02f);

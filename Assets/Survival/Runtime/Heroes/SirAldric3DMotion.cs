@@ -7,7 +7,8 @@ namespace Survival.Domain.Heroes
     /// Unity Y-up. Character forward / march = world +Z = TOP of the high-angle rear Game view
     /// (camera sits at −Z, looking toward +Z; enemy is up-screen).
     /// Thigh −X swings the foot toward +Z (TOP); +X swings toward the camera (down-screen).
-    /// Character-right = +X = viewer-right from behind (locked rear SoT scabbard).
+    /// Arm/forearm −X swings the hand/blade in front of the body toward +Z (TOP / enemy);
+    /// +X hangs them toward the camera (FAIL). Character-right = +X = viewer-right from behind.
     /// </summary>
     public static class SirAldric3DMotion
     {
@@ -104,7 +105,11 @@ namespace Survival.Domain.Heroes
             /// <summary>Hips stay squared to world +Z (screen TOP), not yawed to a side.</summary>
             public bool FacesTop => Math.Abs(Hips.Y) < 18f && Math.Abs(Hips.Z) < 12f;
 
-            public bool SheathedOnCharacterRight => !SwordDrawn && ArmR.X > -20f;
+            /// <summary>Walk/sheath: right hand stays near the hip, not overhead, scabbard on +X.</summary>
+            public bool SheathedOnCharacterRight => !SwordDrawn && ArmR.X > -50f && ArmR.X < 5f;
+
+            /// <summary>Hands/blade on the far side (world +Z / TOP), not toward the camera (−Z).</summary>
+            public bool ArmsTowardTop => ArmL.X < 0f && ArmR.X < 0f && ForeL.X <= 0f && ForeR.X < 0f;
 
             /// <summary>Right arm / blade swinging toward world +Z (TOP of rear camera).</summary>
             public bool StrikeTowardTop => SwordDrawn && ArmR.X <= -80f && ArmR.X >= -175f;
@@ -145,19 +150,20 @@ namespace Survival.Domain.Heroes
                 hips: new Euler(0f, sway * 0.15f, 0f),
                 spine: new Euler(4f, sway, 0f),
                 chest: new Euler(0f, sway * 0.4f, 0f),
-                head: new Euler(-6f, 0f, 0f),
+                head: new Euler(6f, 0f, 0f),
                 upLegL: new Euler(leftX, 0f, 0f),
                 legL: new Euler(kneeL, 0f, 0f),
                 footL: new Euler(-8f - 10f * Math.Max(0f, -step), 0f, 0f),
                 upLegR: new Euler(rightX, 0f, 0f),
                 legR: new Euler(kneeR, 0f, 0f),
                 footR: new Euler(-8f - 10f * Math.Max(0f, step), 0f, 0f),
-                armL: new Euler(12f + 22f * step, 0f, 8f),
-                foreL: new Euler(18f + 12f * Math.Max(0f, -step), 0f, 0f),
-                armR: new Euler(18f + 6f * step, 12f, -10f),
-                foreR: new Euler(28f, 0f, 0f),
+                // Arm −X = in front toward TOP. Never +X (that hangs toward the camera).
+                armL: new Euler(-20f - 14f * step, 0f, 8f),
+                foreL: new Euler(-18f - 10f * Math.Max(0f, step), 0f, 0f),
+                armR: new Euler(-16f - 8f * step, 6f, -8f),
+                foreR: new Euler(-22f, 0f, 0f),
                 handR: new Euler(0f, 0f, 0f),
-                sword: new Euler(8f, 0f, 18f));
+                sword: new Euler(-6f, 0f, 8f));
         }
 
         private static Pose AttackPose(float attackT, float rootZ)
@@ -172,51 +178,51 @@ namespace Survival.Domain.Heroes
             if (u < 0.18f)
             {
                 var k = Smooth01(u / 0.18f);
-                armX = Lerp(18f, -70f, k);
-                armY = Lerp(12f, 6f, k);
-                foreX = Lerp(28f, 8f, k);
+                armX = Lerp(-16f, -85f, k);
+                armY = Lerp(6f, 2f, k);
+                foreX = Lerp(-22f, -8f, k);
                 lunge = 0f;
-                spineX = Lerp(4f, -8f, k);
+                spineX = Lerp(4f, 10f, k);
                 drawnK = k;
             }
             else if (u < 0.40f)
             {
                 var k = Smooth01((u - 0.18f) / 0.22f);
-                armX = Lerp(-70f, -150f, k);
-                armY = Lerp(6f, 2f, k);
-                foreX = Lerp(8f, -12f, k);
+                armX = Lerp(-85f, -155f, k);
+                armY = Lerp(2f, 0f, k);
+                foreX = Lerp(-8f, -28f, k);
                 lunge = Lerp(0f, 0.04f, k);
-                spineX = Lerp(-8f, -14f, k);
+                spineX = Lerp(10f, 14f, k);
                 drawnK = 1f;
             }
             else if (u < 0.56f)
             {
                 var k = Smooth01((u - 0.40f) / 0.16f);
-                armX = Lerp(-150f, -118f, k);
-                armY = Lerp(2f, 0f, k);
-                foreX = Lerp(-12f, 18f, k);
+                armX = Lerp(-155f, -118f, k);
+                armY = Lerp(0f, 0f, k);
+                foreX = Lerp(-28f, -6f, k);
                 lunge = Lerp(0.04f, 0.10f, k);
-                spineX = Lerp(-14f, 8f, k);
+                spineX = Lerp(14f, 6f, k);
                 drawnK = 1f;
             }
             else if (u < 0.78f)
             {
                 var k = Smooth01((u - 0.56f) / 0.22f);
-                armX = Lerp(-118f, -40f, k);
-                armY = Lerp(0f, 8f, k);
-                foreX = Lerp(22f, 20f, k);
+                armX = Lerp(-118f, -48f, k);
+                armY = Lerp(0f, 4f, k);
+                foreX = Lerp(-6f, -16f, k);
                 lunge = Lerp(0.10f, 0.02f, k);
-                spineX = Lerp(8f, 0f, k);
+                spineX = Lerp(6f, 2f, k);
                 drawnK = 1f - k * 0.35f;
             }
             else
             {
                 var k = Smooth01((u - 0.78f) / 0.22f);
-                armX = Lerp(-40f, 18f, k);
-                armY = Lerp(8f, 12f, k);
-                foreX = Lerp(20f, 28f, k);
+                armX = Lerp(-48f, -16f, k);
+                armY = Lerp(4f, 6f, k);
+                foreX = Lerp(-16f, -22f, k);
                 lunge = Lerp(0.02f, 0f, k);
-                spineX = Lerp(0f, 4f, k);
+                spineX = Lerp(2f, 4f, k);
                 drawnK = 1f - k;
             }
 
@@ -229,19 +235,19 @@ namespace Survival.Domain.Heroes
                 hips: new Euler(lunge * 20f, 0f, 0f),
                 spine: new Euler(spineX, 0f, 0f),
                 chest: new Euler(spineX * 0.4f, 0f, 0f),
-                head: new Euler(-8f, 0f, 0f),
+                head: new Euler(8f, 0f, 0f),
                 upLegL: new Euler(8f, 0f, 0f),
                 legL: new Euler(12f, 0f, 0f),
                 footL: new Euler(-6f, 0f, 0f),
                 upLegR: new Euler(-6f, 0f, 0f),
                 legR: new Euler(16f, 0f, 0f),
                 footR: new Euler(-4f, 0f, 0f),
-                armL: new Euler(16f, 0f, 10f),
-                foreL: new Euler(20f, 0f, 0f),
+                armL: new Euler(-22f, 0f, 10f),
+                foreL: new Euler(-18f, 0f, 0f),
                 armR: new Euler(armX, armY, -8f),
                 foreR: new Euler(foreX, 0f, 0f),
-                handR: new Euler(drawn ? -15f : 0f, 0f, 0f),
-                sword: new Euler(drawn ? -8f : 8f, 0f, drawn ? 0f : 18f));
+                handR: new Euler(drawn ? -12f : 0f, 0f, 0f),
+                sword: new Euler(drawn ? -10f : -6f, 0f, drawn ? 0f : 8f));
         }
 
         public static float Repeat(float t, float length)
