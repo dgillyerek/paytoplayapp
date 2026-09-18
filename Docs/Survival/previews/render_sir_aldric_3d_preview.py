@@ -149,6 +149,20 @@ def walk_pose(loop_t, root_z):
     u = repeat(loop_t / WALK_PERIOD, 1.0)
     hips_y, hips_z = sample_keys(HIPSY, u), sample_keys(HIPSZ, u)
     spine_y = sample_keys(SPINEY, u)
+    knee_l, knee_r = sample_keys(LEGL, u), sample_keys(LEGR, u)
+    up_lx, up_rx = sample_keys(UPLX, u), sample_keys(UPRX, u)
+    foot_l, foot_r = sample_keys(FOOTL, u), sample_keys(FOOTR, u)
+    if knee_l > 48:
+        k = (knee_l - 48) / 20
+        up_lx *= 1 - 0.45 * k
+        foot_l += 8 * k
+    if knee_r > 48:
+        k = (knee_r - 48) / 20
+        up_rx *= 1 - 0.45 * k
+        foot_r += 8 * k
+    arm_lx, arm_rx = sample_keys(ARMLX, u), sample_keys(ARMRX, u)
+    arm_lz = -18.0 if arm_lx > 0 else -14.0
+    arm_rz = 18.0 if arm_rx < 0 else 14.0
     return dict(
         attacking=False,
         drawn=False,
@@ -158,15 +172,15 @@ def walk_pose(loop_t, root_z):
         spine=(5, spine_y, -hips_z * 0.25),
         chest=(2, spine_y * 0.55, 0),
         head=(6, spine_y * 0.22, 0),
-        up_l=(sample_keys(UPLX, u), 0, sample_keys(UPLZ, u)),
-        leg_l=(sample_keys(LEGL, u), 0, 0),
-        foot_l=(sample_keys(FOOTL, u), 0, 0),
-        up_r=(sample_keys(UPRX, u), 0, sample_keys(UPRZ, u)),
-        leg_r=(sample_keys(LEGR, u), 0, 0),
-        foot_r=(sample_keys(FOOTR, u), 0, 0),
-        arm_l=(sample_keys(ARMLX, u), 0, sample_keys(ARMLZ, u)),
+        up_l=(up_lx, 0, sample_keys(UPLZ, u)),
+        leg_l=(knee_l, 0, 0),
+        foot_l=(foot_l, 0, 0),
+        up_r=(up_rx, 0, sample_keys(UPRZ, u)),
+        leg_r=(knee_r, 0, 0),
+        foot_r=(foot_r, 0, 0),
+        arm_l=(arm_lx, 0, arm_lz),
         fore_l=(sample_keys(FOREL, u), 0, 0),
-        arm_r=(sample_keys(ARMRX, u), 4, sample_keys(ARMRZ, u)),
+        arm_r=(arm_rx, 4, arm_rz),
         fore_r=(sample_keys(FORER, u), 0, 0),
         hand_r=(0, 0, 0),
         sword=(-6, 0, 8),
@@ -683,6 +697,10 @@ def main():
     heel_l = xform_p(bones_pass["foot_l"], (0, 0, 0))
     if heel_l[1] < heel_r[1] + 0.04:
         raise SystemExit(f"FAIL passing-L heel lift: L={heel_l[1]:.3f} R={heel_r[1]:.3f}")
+    bones_c = fk(contact_l)
+    step_l = xform_p(bones_c["foot_l"], (0, 0, 0))
+    step_r = xform_p(bones_c["foot_r"], (0, 0, 0))
+    step_len = abs(step_l[2] - step_r[2])
     if pass_l["arm_l"][0] <= 8 or pass_l["arm_r"][0] >= -4:
         raise SystemExit(
             f"FAIL pinned/missing pendulum at pass L: armL={pass_l['arm_l'][0]:.1f} armR={pass_l['arm_r'][0]:.1f}"
@@ -691,7 +709,6 @@ def main():
         raise SystemExit(
             f"FAIL contralateral at contact L: armL={contact_l['arm_l'][0]:.1f} armR={contact_l['arm_r'][0]:.1f}"
         )
-    step_len = abs(heel_l[2] - heel_r[2])
     expected = MARCH * WALK_PERIOD * 0.5
     if abs(step_len - expected) > 0.26:
         raise SystemExit(f"FAIL stride/speed slide: step={step_len:.3f} vs march-step={expected:.3f}")
@@ -757,7 +774,7 @@ def main():
         return cell
 
     def fit_aldric(im):
-        crop = im.crop((180, 220, W - 180, H - 220))
+        crop = im.crop((80, 200, W - 80, H - 80))
         return crop.resize((540, 480), Image.BILINEAR)
 
     sample_cells = [

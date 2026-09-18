@@ -182,6 +182,32 @@ namespace Survival.Domain.Heroes
             var hipsY = Sample(HipsY, u);
             var hipsZ = Sample(HipsZ, u);
             var spineY = Sample(SpineY, u);
+            var kneeL = Sample(LegL, u);
+            var kneeR = Sample(LegR, u);
+            var upLX = Sample(UpLX, u);
+            var upRX = Sample(UpRX, u);
+            var footL = Sample(FootL, u);
+            var footR = Sample(FootR, u);
+            // High-rear: passing thigh nearer vertical so the 65° knee actually lifts the foot.
+            if (kneeL > 48f)
+            {
+                var k = (kneeL - 48f) / 20f;
+                upLX *= 1f - 0.45f * k;
+                footL += 8f * k;
+            }
+
+            if (kneeR > 48f)
+            {
+                var k = (kneeR - 48f) / 20f;
+                upRX *= 1f - 0.45f * k;
+                footR += 8f * k;
+            }
+
+            var armLX = Sample(ArmLX, u);
+            var armRX = Sample(ArmRX, u);
+            // −Z left / +Z right = off the ribs. Keep it a hang-and-swing, not a T-pose.
+            var armLZ = armLX > 0f ? -18f : -14f;
+            var armRZ = armRX < 0f ? 18f : 14f;
             return new Pose(
                 attacking: false,
                 swordDrawn: false,
@@ -191,15 +217,15 @@ namespace Survival.Domain.Heroes
                 spine: new Euler(5f, spineY, -hipsZ * 0.25f),
                 chest: new Euler(2f, spineY * 0.55f, 0f),
                 head: new Euler(6f, spineY * 0.22f, 0f),
-                upLegL: new Euler(Sample(UpLX, u), 0f, Sample(UpLZ, u)),
-                legL: new Euler(Sample(LegL, u), 0f, 0f),
-                footL: new Euler(Sample(FootL, u), 0f, 0f),
-                upLegR: new Euler(Sample(UpRX, u), 0f, Sample(UpRZ, u)),
-                legR: new Euler(Sample(LegR, u), 0f, 0f),
-                footR: new Euler(Sample(FootR, u), 0f, 0f),
-                armL: new Euler(Sample(ArmLX, u), 0f, Sample(ArmLZ, u)),
+                upLegL: new Euler(upLX, 0f, Sample(UpLZ, u)),
+                legL: new Euler(kneeL, 0f, 0f),
+                footL: new Euler(footL, 0f, 0f),
+                upLegR: new Euler(upRX, 0f, Sample(UpRZ, u)),
+                legR: new Euler(kneeR, 0f, 0f),
+                footR: new Euler(footR, 0f, 0f),
+                armL: new Euler(armLX, 0f, armLZ),
                 foreL: new Euler(Sample(ForeL, u), 0f, 0f),
-                armR: new Euler(Sample(ArmRX, u), 4f, Sample(ArmRZ, u)),
+                armR: new Euler(armRX, 4f, armRZ),
                 foreR: new Euler(Sample(ForeR, u), 0f, 0f),
                 handR: new Euler(0f, 0f, 0f),
                 sword: new Euler(-6f, 0f, 8f));
