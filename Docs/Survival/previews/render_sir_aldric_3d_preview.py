@@ -18,12 +18,12 @@ OUT = Path(__file__).resolve().parent
 ART = Path("/opt/cursor/artifacts")
 LOOK = ROOT / "design/survival-theme-a-fantasy/heroes/anim/sir_aldric/UNITY_3D_HANDOFF/look_targets"
 W, H = 1080, 1920
-WALK_PERIOD = 0.80
+WALK_PERIOD = 1.00
 WALK_CYCLES = 2
 ATTACK = 1.40
 WALK_BLOCK = WALK_PERIOD * WALK_CYCLES
 LOOP = WALK_BLOCK + ATTACK
-MARCH = 0.42
+MARCH = 0.80
 
 SILVER = (186, 194, 204)
 GOLD = (211, 176, 82)
@@ -114,37 +114,37 @@ def evaluate(t):
 
 def walk_pose(loop_t, root_z):
     phase = loop_t / WALK_PERIOD * math.tau
-    step = math.sin(phase)
-    cos = math.cos(phase)
-    bob = 0.030 * abs(step)
-    sway = 5.5 * step
-    # −X thigh = toward world +Z = TOP of Game view.
-    # Swing/pass (cos) lifts the moving leg; trail (sin) keeps flex on the back leg.
-    swing_l, swing_r = max(0.0, cos), max(0.0, -cos)
-    trail_l, trail_r = max(0.0, -step), max(0.0, step)
-    left_x = -38 * step - 32 * swing_l
-    right_x = 38 * step - 32 * swing_r
-    knee_l = 16 + 74 * swing_l + 36 * trail_l
-    knee_r = 16 + 74 * swing_r + 36 * trail_r
+    s = math.sin(phase)
+    c = math.cos(phase)
+    swing_l, swing_r = max(0.0, c), max(0.0, -c)
+    contact_l, contact_r = max(0.0, s), max(0.0, -s)
+    bob = 0.010 + 0.018 * abs(c)
+    hips_y, hips_z = 8 * s, 7.5 * c
+    left_x = -18 * s - 8 * swing_l
+    right_x = 18 * s - 8 * swing_r
+    knee_l = 12 + 54 * swing_l + 8 * contact_r
+    knee_r = 12 + 54 * swing_r + 8 * contact_l
+    foot_l = -12 * contact_l + 20 * contact_r - 6 * swing_l
+    foot_r = -12 * contact_r + 20 * contact_l - 6 * swing_r
     return dict(
         attacking=False,
         drawn=False,
         root_z=root_z,
         root_y=bob,
-        hips=(0, sway * 0.15, 0),
-        spine=(4, sway, 0),
-        chest=(0, sway * 0.4, 0),
-        head=(6, 0, 0),
-        up_l=(left_x, 0, -18 * swing_l),
+        hips=(0, hips_y, hips_z),
+        spine=(5, -11 * s, -hips_z * 0.25),
+        chest=(2, -7 * s, 0),
+        head=(6, -3 * s, 0),
+        up_l=(left_x, 0, -7 * swing_l),
         leg_l=(knee_l, 0, 0),
-        foot_l=(-6 - 18 * swing_l - 8 * trail_l, 0, 0),
-        up_r=(right_x, 0, 18 * swing_r),
+        foot_l=(foot_l, 0, 0),
+        up_r=(right_x, 0, 7 * swing_r),
         leg_r=(knee_r, 0, 0),
-        foot_r=(-6 - 18 * swing_r - 8 * trail_r, 0, 0),
-        arm_l=(-20 - 14 * step, 0, 8),
-        fore_l=(-18 - 10 * max(0.0, step), 0, 0),
-        arm_r=(-16 - 8 * step, 6, -8),
-        fore_r=(-22, 0, 0),
+        foot_r=(foot_r, 0, 0),
+        arm_l=(-20 + 10 * s, 0, 12),
+        fore_l=(-12 - 10 * max(0.0, -s), 0, 0),
+        arm_r=(-18 - 6 * s, 4, -12),
+        fore_r=(-20 - 4 * max(0.0, s), 0, 0),
         hand_r=(0, 0, 0),
         sword=(-6, 0, 8),
         label="WALK  ·  toward TOP",
@@ -639,18 +639,31 @@ def main():
         print(f"{i + 1}/{n}", flush=True)
 
     walk_pass_l = render_pose(evaluate(0.0))
-    walk_stride_l = render_pose(evaluate(WALK_PERIOD * 0.25))
+    walk_contact_l = render_pose(evaluate(WALK_PERIOD * 0.25))
     walk_pass_r = render_pose(evaluate(WALK_PERIOD * 0.5))
-    walk_stride_r = render_pose(evaluate(WALK_PERIOD * 0.75))
+    walk_contact_r = render_pose(evaluate(WALK_PERIOD * 0.75))
     strike = render_pose(evaluate(WALK_BLOCK + ATTACK * 0.48))
-    recover = render_pose(evaluate(WALK_BLOCK + ATTACK * 0.92))
 
     pass_l = evaluate(0.0)
     pass_r = evaluate(WALK_PERIOD * 0.5)
-    if pass_l["leg_l"][0] < 80 or pass_r["leg_r"][0] < 80:
+    contact_l = evaluate(WALK_PERIOD * 0.25)
+    if not (52 <= pass_l["leg_l"][0] <= 78 and 52 <= pass_r["leg_r"][0] <= 78):
         raise SystemExit(
-            f"FAIL stiff passing knee: L={pass_l['leg_l'][0]:.1f} R={pass_r['leg_r'][0]:.1f} (need >=80 on lift/pass)"
+            f"FAIL gait-bar pass knee: L={pass_l['leg_l'][0]:.1f} R={pass_r['leg_r'][0]:.1f} (need 52–78, not 90° cartoon)"
         )
+    if pass_l["hips"][2] < 5 or pass_r["hips"][2] > -5:
+        raise SystemExit(f"FAIL hip drop: passL Z={pass_l['hips'][2]:.1f} passR Z={pass_r['hips'][2]:.1f}")
+    if contact_l["hips"][1] <= 4 or contact_l["spine"][1] >= -4:
+        raise SystemExit("FAIL shoulder–hip counter-rotation at contact L")
+    bones_c = fk(contact_l)
+    heel_r = xform_p(bones_c["foot_r"], (0, 0, 0))
+    heel_l = xform_p(bones_c["foot_l"], (0, 0, 0))
+    if heel_r[1] < heel_l[1] + 0.04:
+        raise SystemExit(f"FAIL trailing heel lift at contact L: L={heel_l[1]:.3f} R={heel_r[1]:.3f}")
+    step_len = abs(heel_l[2] - heel_r[2])
+    expected = MARCH * WALK_PERIOD * 0.5
+    if abs(step_len - expected) > 0.26:
+        raise SystemExit(f"FAIL stride/speed slide: step={step_len:.3f} vs march-step={expected:.3f}")
 
     def scabbard_brown(im):
         arr = np.array(im)
@@ -660,7 +673,7 @@ def main():
     if any(bone == "cape" for bone, _, _, _ in PARTS):
         raise SystemExit("FAIL cape mesh still present (was the back sheath)")
 
-    for im, name in ((walk_stride_l, "walk"), (strike, "strike")):
+    for im, name in ((walk_contact_l, "walk"), (strike, "strike")):
         mask = scabbard_brown(im)
         left_upper = int(mask[int(H * 0.24) : int(H * 0.36), int(W * 0.28) : int(W * 0.42)].sum())
         right_hip = int(mask[int(H * 0.42) : int(H * 0.65), int(W * 0.55) : int(W * 0.72)].sum())
@@ -668,21 +681,20 @@ def main():
             raise SystemExit(f"FAIL missing character-right scabbard on {name}: right-hip brown px={right_hip}")
         if left_upper > 200:
             raise SystemExit(f"FAIL back/left sheath on {name}: left-upper brown px={left_upper}")
-    d_walk = max_delta(body_crop(walk_stride_l), body_crop(walk_stride_r))
-    d_pass = max_delta(body_crop(walk_pass_l), body_crop(walk_stride_l))
-    d_strike = max_delta(body_crop(walk_stride_l), body_crop(strike))
-    m_walk = mean_delta(body_crop(walk_stride_l), body_crop(walk_stride_r))
-    m_strike = mean_delta(body_crop(walk_stride_l), body_crop(strike))
+    d_walk = max_delta(body_crop(walk_contact_l), body_crop(walk_contact_r))
+    d_pass = max_delta(body_crop(walk_pass_l), body_crop(walk_contact_l))
+    d_strike = max_delta(body_crop(walk_contact_l), body_crop(strike))
+    m_walk = mean_delta(body_crop(walk_contact_l), body_crop(walk_contact_r))
+    m_strike = mean_delta(body_crop(walk_contact_l), body_crop(strike))
     proof = (
-        f"3D Animator (capsule+look-target albedo, not cubes/PNG warp). "
+        f"3D Animator rematched to WALK_GAIT_BAR skeleton sample. "
         f"Hips screen-Y {y0:.0f}→{y1:.0f} (toward TOP). "
-        f"Arms/sword on far/+Z side (not toward camera). "
-        f"Passing knee {pass_l['leg_l'][0]:.0f}° / {pass_r['leg_r'][0]:.0f}° (bent lift, not stiff-leg). "
-        f"max |Δ| excluding UI: walk opposite-step {d_walk:.0f}/255 (mean {m_walk:.1f}); "
-        f"pass vs stride {d_pass:.0f}/255; "
-        f"walk vs strike {d_strike:.0f}/255 (mean {m_strike:.1f}). "
-        "Single brown scabbard on character-right hip (no back sheath). "
-        "High-angle rear march +Z = TOP."
+        f"Pass knee {pass_l['leg_l'][0]:.0f}°/{pass_r['leg_r'][0]:.0f}° (gait-bar ~65°, not 90° cartoon). "
+        f"Hip drop + counter-rotate; heel lift; contralateral arms far/TOP. "
+        f"step {step_len:.2f}m vs march-step {expected:.2f}m. "
+        f"max |Δ| walk {d_walk:.0f}/255; pass vs contact {d_pass:.0f}/255; "
+        f"walk vs strike {d_strike:.0f}/255. "
+        "Single brown scabbard character-right. High-angle rear +Z = TOP."
     )
     print(proof)
     if d_walk < 18 or d_strike < 18 or d_pass < 18:
@@ -694,9 +706,9 @@ def main():
     for i, (im, lab) in enumerate(
         [
             (walk_pass_l, "WALK PASS L"),
-            (walk_stride_l, "WALK STRIDE L"),
+            (walk_contact_l, "WALK CONTACT L"),
             (walk_pass_r, "WALK PASS R"),
-            (walk_stride_r, "WALK STRIDE R"),
+            (walk_contact_r, "WALK CONTACT R"),
         ]
     ):
         x, y = (i % 2) * cell_w, (i // 2) * cell_h
@@ -736,7 +748,7 @@ def main():
     (OUT / "PIXEL_PROOF.txt").write_text(proof + "\n")
     ART.mkdir(parents=True, exist_ok=True)
     for p in (still, sheet_path, gif_full, gif_walk, mp4, OUT / "PIXEL_PROOF.txt"):
-        dest = ART / f"aldric_knee_walk_{p.name}"
+        dest = ART / f"aldric_gait_{p.name}"
         shutil.copy2(p, dest)
         print("wrote", p, p.stat().st_size)
 

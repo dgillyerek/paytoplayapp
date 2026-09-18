@@ -10,6 +10,10 @@
     "02_aldric_turnaround_orthos.png": "front/left/right/rear orthos (rear panel may mirror scabbard)"
   },
   "pipeline": "HERO_3D_PIPELINE.md",
+  "gait_bar": {
+    "brief": "refs/WALK_GAIT_BAR.md",
+    "sample": "refs/WALK_GAIT_BAR_skeleton_sample.mp4"
+  },
   "note": "Sword/scabbard must land on CHARACTER-RIGHT hip to match rear LOCKED SoT (fix turnaround if mirrored).",
   "runtime": {
     "scene": "Assets/Survival/Scenes/SirAldric.unity",

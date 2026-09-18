@@ -12,10 +12,10 @@ namespace Survival.Domain.Heroes
     /// </summary>
     public static class SirAldric3DMotion
     {
-        public const float WalkPeriodSeconds = 0.80f;
+        public const float WalkPeriodSeconds = 1.00f;
         public const int WalkCyclesBeforeAttack = 2;
         public const float AttackSeconds = 1.40f;
-        public const float MarchMetersPerSecond = 0.42f;
+        public const float MarchMetersPerSecond = 0.80f;
 
         public static float WalkBlockSeconds => WalkPeriodSeconds * WalkCyclesBeforeAttack;
 
@@ -117,8 +117,16 @@ namespace Survival.Domain.Heroes
             /// <summary>Thigh −X = foot toward +Z = TOP. Used to reject moonwalk / down-screen stride.</summary>
             public bool LeadLegTowardTop => UpLegL.X < -8f || UpLegR.X < -8f;
 
-            /// <summary>Passing / lifted leg shows a deep knee (not a straight-leg pivot).</summary>
-            public bool PassingKneeBent => LegL.X >= 55f || LegR.X >= 55f;
+            /// <summary>Passing knee in the gait-bar band (~60–70°), not stiff and not a 90° cartoon march.</summary>
+            public bool PassingKneeBent =>
+                (LegL.X >= 52f && LegL.X <= 78f) || (LegR.X >= 52f && LegR.X <= 78f);
+
+            /// <summary>Spine yaws opposite the pelvis (shoulder–hip counter-rotation).</summary>
+            public bool ShoulderHipCounter =>
+                Math.Abs(Hips.Y) < 2f || Math.Sign(Spine.Y) == -Math.Sign(Hips.Y);
+
+            /// <summary>Pelvis rolls so the unweighted / passing hip drops.</summary>
+            public bool HipDropOnPass => Math.Abs(Hips.Z) >= 5f;
         }
 
         public static Pose Evaluate(float timeSeconds)
@@ -136,41 +144,51 @@ namespace Survival.Domain.Heroes
 
         private static Pose WalkPose(float loopT, float rootZ)
         {
+            // Gait bar (WALK_GAIT_BAR_skeleton_sample): 1.0s cycle, 120 spm.
+            // phase 0 = pass L; π/2 = contact L (left toward TOP); π = pass R; 3π/2 = contact R.
             var phase = (float)(loopT / WalkPeriodSeconds * (Math.PI * 2.0));
-            var step = MathF.Sin(phase);
-            var cos = MathF.Cos(phase);
-            var bob = 0.030f * Math.Abs(step);
-            var sway = 5.5f * step;
-            // −X thigh = toward world +Z = TOP of Game view (not toward camera).
-            // Swing/pass (cos) lifts the moving leg; trail (sin) keeps some flex on the back leg.
-            var swingL = Math.Max(0f, cos);
-            var swingR = Math.Max(0f, -cos);
-            var trailL = Math.Max(0f, -step);
-            var trailR = Math.Max(0f, step);
-            var leftX = -38f * step - 32f * swingL;
-            var rightX = 38f * step - 32f * swingR;
-            var kneeL = 16f + 74f * swingL + 36f * trailL;
-            var kneeR = 16f + 74f * swingR + 36f * trailR;
+            var s = MathF.Sin(phase);
+            var c = MathF.Cos(phase);
+            var swingL = Math.Max(0f, c);
+            var swingR = Math.Max(0f, -c);
+            var contactL = Math.Max(0f, s);
+            var contactR = Math.Max(0f, -s);
+            // Sample: lowest at double-support / contact, highest vaulting over the plant.
+            var bob = 0.010f + 0.018f * Math.Abs(c);
+            var hipsY = 8f * s;
+            var hipsZ = 7.5f * c;
+            var leftX = -18f * s - 8f * swingL;
+            var rightX = 18f * s - 8f * swingR;
+            // Soft plant ~12°, pass ~66°, trail / push-off ~20° — gait-bar, not a 90° cartoon.
+            var kneeL = 12f + 54f * swingL + 8f * contactR;
+            var kneeR = 12f + 54f * swingR + 8f * contactL;
+            // Heel strike (−X) → flat → heel-up toe-off (+X), readable from high rear.
+            var footL = -12f * contactL + 20f * contactR - 6f * swingL;
+            var footR = -12f * contactR + 20f * contactL - 6f * swingR;
+            // Contralateral pendulum; both −X (far / TOP). Right swing smaller (scabbard). Elbow flare.
+            var armL = -20f + 10f * s;
+            var armR = -18f - 6f * s;
+            var foreL = -12f - 10f * Math.Max(0f, -s);
+            var foreR = -20f - 4f * Math.Max(0f, s);
             return new Pose(
                 attacking: false,
                 swordDrawn: false,
                 rootZ,
                 bob,
-                hips: new Euler(0f, sway * 0.15f, 0f),
-                spine: new Euler(4f, sway, 0f),
-                chest: new Euler(0f, sway * 0.4f, 0f),
-                head: new Euler(6f, 0f, 0f),
-                upLegL: new Euler(leftX, 0f, -18f * swingL),
+                hips: new Euler(0f, hipsY, hipsZ),
+                spine: new Euler(5f, -11f * s, -hipsZ * 0.25f),
+                chest: new Euler(2f, -7f * s, 0f),
+                head: new Euler(6f, -3f * s, 0f),
+                upLegL: new Euler(leftX, 0f, -7f * swingL),
                 legL: new Euler(kneeL, 0f, 0f),
-                footL: new Euler(-6f - 18f * swingL - 8f * trailL, 0f, 0f),
-                upLegR: new Euler(rightX, 0f, 18f * swingR),
+                footL: new Euler(footL, 0f, 0f),
+                upLegR: new Euler(rightX, 0f, 7f * swingR),
                 legR: new Euler(kneeR, 0f, 0f),
-                footR: new Euler(-6f - 18f * swingR - 8f * trailR, 0f, 0f),
-                // Arm −X = in front toward TOP. Never +X (that hangs toward the camera).
-                armL: new Euler(-20f - 14f * step, 0f, 8f),
-                foreL: new Euler(-18f - 10f * Math.Max(0f, step), 0f, 0f),
-                armR: new Euler(-16f - 8f * step, 6f, -8f),
-                foreR: new Euler(-22f, 0f, 0f),
+                footR: new Euler(footR, 0f, 0f),
+                armL: new Euler(armL, 0f, 12f),
+                foreL: new Euler(foreL, 0f, 0f),
+                armR: new Euler(armR, 4f, -12f),
+                foreR: new Euler(foreR, 0f, 0f),
                 handR: new Euler(0f, 0f, 0f),
                 sword: new Euler(-6f, 0f, 8f));
         }

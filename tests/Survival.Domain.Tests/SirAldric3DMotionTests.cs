@@ -29,33 +29,71 @@ public sealed class SirAldric3DMotionTests
         var a = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkPeriodSeconds * 0.25f);
         var b = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkPeriodSeconds * 0.75f);
         // −X thigh = toward world +Z = TOP. At ¼ cycle left leads TOP; at ¾ right leads TOP.
-        Assert.True(a.UpLegL.X < -20f);
-        Assert.True(a.UpLegR.X > 20f);
-        Assert.True(b.UpLegL.X > 20f);
-        Assert.True(b.UpLegR.X < -20f);
+        Assert.True(a.UpLegL.X < -16f);
+        Assert.True(a.UpLegR.X > 16f);
+        Assert.True(b.UpLegL.X > 16f);
+        Assert.True(b.UpLegR.X < -16f);
         Assert.True(a.LegR.X > 8f);
         Assert.True(b.LegL.X > 8f);
         Assert.True(a.LeadLegTowardTop);
         Assert.True(b.LeadLegTowardTop);
         Assert.True(a.ArmsTowardTop);
         Assert.True(b.ArmsTowardTop);
+        Assert.True(a.ShoulderHipCounter);
+        Assert.True(b.ShoulderHipCounter);
     }
 
     [Fact]
-    public void Walk_passing_leg_has_deep_knee_bend()
+    public void Walk_matches_gait_bar_pass_knee_hip_drop_and_counter_rotate()
     {
         var passL = SirAldric3DMotion.Evaluate(0f);
         var passR = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkPeriodSeconds * 0.5f);
+        var contactL = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkPeriodSeconds * 0.25f);
+        var contactR = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkPeriodSeconds * 0.75f);
+
         Assert.False(passL.Attacking);
-        Assert.False(passR.Attacking);
         Assert.True(passL.PassingKneeBent);
         Assert.True(passR.PassingKneeBent);
-        Assert.True(passL.LegL.X > 80f);
-        Assert.True(passL.LegL.X > passL.LegR.X + 40f);
-        Assert.True(passR.LegR.X > 80f);
-        Assert.True(passR.LegR.X > passR.LegL.X + 40f);
+        Assert.InRange(passL.LegL.X, 52f, 78f);
+        Assert.InRange(passR.LegR.X, 52f, 78f);
+        Assert.True(passL.LegL.X > passL.LegR.X + 25f);
+        Assert.True(passR.LegR.X > passR.LegL.X + 25f);
+        Assert.True(passL.HipDropOnPass);
+        Assert.True(passR.HipDropOnPass);
+        Assert.True(passL.Hips.Z > 5f);
+        Assert.True(passR.Hips.Z < -5f);
+
+        Assert.True(contactL.ShoulderHipCounter);
+        Assert.True(contactR.ShoulderHipCounter);
+        Assert.True(contactL.Hips.Y > 4f);
+        Assert.True(contactL.Spine.Y < -4f);
+        Assert.True(contactR.Hips.Y < -4f);
+        Assert.True(contactR.Spine.Y > 4f);
+        // Soft plant, not locked; trailing heel lifts (foot +X).
+        Assert.InRange(contactL.LegL.X, 8f, 28f);
+        Assert.True(contactL.FootR.X > 10f);
+        Assert.True(contactR.FootL.X > 10f);
+
         Assert.True(passL.ArmsTowardTop);
         Assert.True(passL.SheathedOnCharacterRight);
+        Assert.True(contactL.ArmsTowardTop);
+    }
+
+    [Fact]
+    public void Gait_bar_refs_are_on_disk()
+    {
+        var root = FindRepoRoot();
+        var dir = Path.Combine(
+            root,
+            "design",
+            "survival-theme-a-fantasy",
+            "heroes",
+            "anim",
+            "sir_aldric",
+            "UNITY_3D_HANDOFF",
+            "refs");
+        Assert.True(new FileInfo(Path.Combine(dir, "WALK_GAIT_BAR.md")).Length > 400);
+        Assert.True(new FileInfo(Path.Combine(dir, "WALK_GAIT_BAR_skeleton_sample.mp4")).Length > 100_000);
     }
 
     [Fact]
@@ -79,7 +117,7 @@ public sealed class SirAldric3DMotionTests
         var c = SirAldric3DMotion.Evaluate(SirAldric3DMotion.LoopSeconds - 0.05f);
         Assert.True(b.RootZ > a.RootZ + 0.3f);
         Assert.True(c.RootZ > b.RootZ);
-        Assert.InRange(c.RootZ, 0.8f, 2.0f);
+        Assert.InRange(c.RootZ, 0.8f, 3.2f);
     }
 
     [Fact]
