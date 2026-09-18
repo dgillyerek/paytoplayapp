@@ -1,16 +1,19 @@
-f1e4770 HARD FAIL: BVH eulers reached Evaluate/Actor (Leg_L.X=65.9) but did NOT transfer the gait — high-rear + forward (−X) pass thigh put 66° flex along the ground (11 cm lift). This pass: 4 Game-view keys solved against WALK_GAIT_BAR rear phases. Pass tucked; contact step 0.40 m. Lateral weave stripped: spine Z counters hip roll so COM stays on +Z (root X = 0). Hips screen-Y 995→756 (toward TOP). Pass knee 80°/80°. Arm span L 70° R 58°. step 0.39m vs march-step 0.40m. max |Δ| walk 212/255; pass vs contact 192/255; walk vs strike 201/255. Single brown scabbard character-right. High-angle rear +Z = TOP.
+14d9c17 FAIL: pass thigh +22 + knee +X sent the swing foot world −Z (calves kicked toward the camera). Pass thigh is now −X so the tucked foot travels +Z / TOP; trail keeps a small +X toe-off. Weave lock held (root X = 0, spine Z counters hip roll). Hips screen-Y 995→756 (toward TOP). Pass knee 80°/80°. Arm span L 70° R 58°. step 0.39m vs march-step 0.40m. pass-foot world ΔZ L +0.795 (min +0.027) R +0.790 (min +0.026). max |Δ| walk 193/255; pass vs contact 198/255; walk vs strike 203/255. Single brown scabbard character-right. High-angle rear +Z = TOP.
+EYE: pass foot tucks under the pelvis then steps toward TOP; calves/feet do not kick toward the camera.
 PIXEL Δ does not override the eye test. Design eye gate is NOT claimed here.
 BONE DRIVE DUMP — SirAldric3DMotion.Evaluate == Actor BuildLoopClip source
 (PlayableGraph samples Evaluate() → localRotation xyzw; not a missing-clip miss.)
 phase      | Hips.Y | Hips.Z | Spine.Y | hip.X | chest.X | head.X | UpL.X | LegL.X | wKneeL | UpR.X | LegR.X | ArmL.X | ArmR.X | footL.X | dFootY | stepZ
 ---------------------------------------------------------------------------------------------------------------------------------------------------------
-PASS L     |   -3.0 |    5.5 |     8.0 | 0.000 |  -0.010 | -0.002 |  22.0 |   80.0 |   72.9 |  20.0 |   14.0 |   36.0 |  -32.0 |  -0.042 |  0.380 | 0.243
+PASS L     |   -3.0 |    5.5 |     8.0 | 0.000 |  -0.010 | -0.002 | -18.0 |   80.0 |   72.9 |   8.0 |   14.0 |   36.0 |  -32.0 |  -0.035 |  0.155 | 0.045
 CONTACT L  |    5.0 |    1.5 |    -8.0 | 0.000 |  -0.004 | -0.009 | -12.0 |   12.0 |    4.9 |  12.0 |   16.0 |   32.0 |  -34.0 |  -0.075 |  0.029 | 0.386
-PASS R     |    3.0 |   -5.5 |    -8.0 | 0.000 |   0.010 |  0.002 |  20.0 |   14.0 |    6.9 |  22.0 |   80.0 |  -32.0 |   24.0 |  -0.088 |  0.380 | 0.243
+PASS R     |    3.0 |   -5.5 |    -8.0 | 0.000 |   0.010 |  0.002 |   8.0 |   14.0 |    6.9 | -18.0 |   80.0 |  -32.0 |   24.0 |  -0.084 |  0.155 | 0.045
 CONTACT R  |   -5.0 |    1.5 |     8.0 | 0.000 |  -0.002 |  0.003 |  12.0 |   18.0 |   10.9 | -12.0 |   12.0 |  -34.0 |   22.0 |  -0.067 |  0.023 | 0.399
 GATE knee pass L/R euler 80.0/80.0 (need ≥50). world flex 72.9/72.9.
 GATE arm span L=70.0° R=58.0° peak|X|=36.0° (near-zero span = remap miss).
-GATE pass foot lift dY L=0.380 R=0.380 (f1e4770 was 0.11m — hidden; need ≳0.20m to read from high-rear).
-GATE pass foot under pelvis |X| L=0.042 R=0.042 (need <0.12; a6d4703 stance was 0.39 side-kick).
+GATE pass foot lift dY L=0.155 R=0.155 (need ≳0.12 tucked under pelvis; 14d9c17 0.38m was the back-kick).
+GATE pass foot under pelvis |X| L=0.035 R=0.035 (need <0.12; a6d4703 stance was 0.39 side-kick).
 GATE contact stepZ=0.386 vs march-step 0.400 (need |Δ|<0.10).
 GATE lateral COM |X| peak (40-sample walk) hip=0.000 chest=0.010 head=0.009 (need chest/head <0.04; ff81201 weaved ~0.11). Root X = 0.
+GATE pass-foot world ΔZ L-swing=+0.795 (min step +0.027) R-swing=+0.790 (min step +0.026) — must be + toward TOP; 14d9c17 min step was −0.039 (back-kick / −Z).
+EYE: pass foot tucks under the pelvis then steps toward TOP; calves/feet do not kick toward the camera.
