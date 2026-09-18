@@ -138,6 +138,9 @@ namespace Survival.Domain.Heroes
 
             /// <summary>Pelvis rolls so the unweighted / passing hip drops.</summary>
             public bool HipDropOnPass => Math.Abs(Hips.Z) >= 5f;
+
+            /// <summary>No whole-body left↔right weave. Small hip drop / yaw is OK; torso stays on +Z.</summary>
+            public bool StraightTrack => Math.Abs(Hips.Y) <= 8f && Math.Abs(Hips.Z) <= 6f;
         }
 
         public static Pose Evaluate(float timeSeconds)
@@ -158,10 +161,13 @@ namespace Survival.Domain.Heroes
         // silhouette into a side-kick. Pass now tucks under the pelvis (Up*.Z ~ 0) while
         // the stance sits +X toward camera so the lifted foot reads mid-calf, not as the
         // bottom plant. Contact lead/trail ±12 keeps step ≈ 0.40 m so both plants stay
-        // visible. u=0 pass L, 0.25 contact L, 0.50 pass R, 0.75 contact R.
-        private static readonly float[] HipsY = { -6f, 10f, 6f, -10f };
-        private static readonly float[] HipsZ = { 8f, 2f, -8f, 2f };
-        private static readonly float[] SpineY = { 12f, -12f, -12f, 12f };
+        // visible. ff81201 weaved left↔right: Hips.Z ±8 plus only 28% spine counter
+        // tipped the torso ~11 cm each side. Hip drop stays small (±5.5); spine Z
+        // fully counters the roll so COM stays on world +Z. Yaw damped. Root X = 0.
+        // u=0 pass L, 0.25 contact L, 0.50 pass R, 0.75 contact R.
+        private static readonly float[] HipsY = { -3f, 5f, 3f, -5f };
+        private static readonly float[] HipsZ = { 5.5f, 1.5f, -5.5f, 1.5f };
+        private static readonly float[] SpineY = { 8f, -8f, -8f, 8f };
         private static readonly float[] UpLX = { 22f, -12f, 20f, 12f };
         private static readonly float[] UpLZ = { 0f, 0f, 8f, 0f };
         private static readonly float[] LegL = { 80f, 12f, 14f, 18f };
@@ -188,8 +194,8 @@ namespace Survival.Domain.Heroes
                 rootZ,
                 bob,
                 hips: new Euler(0f, hipsY, hipsZ),
-                spine: new Euler(5f, spineY, -hipsZ * 0.28f),
-                chest: new Euler(2f, spineY * 0.6f, 0f),
+                spine: new Euler(5f, spineY, -hipsZ),
+                chest: new Euler(2f, spineY * 0.5f, 0f),
                 head: new Euler(6f, spineY * 0.25f, 0f),
                 upLegL: new Euler(Sample(UpLX, u), 0f, Sample(UpLZ, u)),
                 legL: new Euler(Sample(LegL, u), 0f, 0f),

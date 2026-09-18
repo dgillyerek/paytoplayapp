@@ -119,9 +119,9 @@ def evaluate(t):
 # u=0 pass L, 0.25 contact L, 0.50 pass R, 0.75 contact R.
 # f1e4770 BVH tables reached Evaluate() but a forward (−X) pass thigh hid the 66°
 # knee from high-rear (11 cm lift). Pass thigh is now slightly +X so 70° lifts.
-HIPSY = [-6.0, 10.0, 6.0, -10.0]
-HIPSZ = [8.0, 2.0, -8.0, 2.0]
-SPINEY = [12.0, -12.0, -12.0, 12.0]
+HIPSY = [-3.0, 5.0, 3.0, -5.0]
+HIPSZ = [5.5, 1.5, -5.5, 1.5]
+SPINEY = [8.0, -8.0, -8.0, 8.0]
 UPLX = [22.0, -12.0, 20.0, 12.0]
 UPLZ = [0.0, 0.0, 8.0, 0.0]
 LEGL = [80.0, 12.0, 14.0, 18.0]
@@ -155,8 +155,8 @@ def walk_pose(loop_t, root_z):
         root_z=root_z,
         root_y=bob,
         hips=(0, hips_y, hips_z),
-        spine=(5, spine_y, -hips_z * 0.28),
-        chest=(2, spine_y * 0.6, 0),
+        spine=(5, spine_y, -hips_z),
+        chest=(2, spine_y * 0.5, 0),
         head=(6, spine_y * 0.25, 0),
         up_l=(sample_keys(UPLX, u), 0, sample_keys(UPLZ, u)),
         leg_l=(sample_keys(LEGL, u), 0, 0),
@@ -304,6 +304,8 @@ def phase_snapshot(name, t):
     hand_l = xform_p(bones["hand_l"], (0, -0.04, 0))
     hand_r = xform_p(bones["hand_r"], (0, -0.04, 0))
     hip = xform_p(bones["hips"], (0, 0, 0))
+    chest = xform_p(bones["chest"], (0, 0, 0))
+    head = xform_p(bones["head"], (0, 0.12, 0))
     return {
         "name": name,
         "t": t,
@@ -320,6 +322,8 @@ def phase_snapshot(name, t):
         "hand_l": hand_l,
         "hand_r": hand_r,
         "hip": hip,
+        "chest": chest,
+        "head": head,
         "knee_flex_l": world_knee_flex(bones, "l"),
         "knee_flex_r": world_knee_flex(bones, "r"),
     }
@@ -336,9 +340,9 @@ def bone_drive_rows():
 
 def format_bone_drive_table(rows):
     header = (
-        "phase      | Hips.Y | Hips.Z | Spine.Y | UpL.X | LegL.X | wKneeL | "
-        "UpR.X | LegR.X | wKneeR | ArmL.X | ArmR.X | footL.X | footR.X | "
-        "footL.Y | footR.Y | stepZ | dFootY"
+        "phase      | Hips.Y | Hips.Z | Spine.Y | hip.X | chest.X | head.X | "
+        "UpL.X | LegL.X | wKneeL | UpR.X | LegR.X | ArmL.X | ArmR.X | "
+        "footL.X | dFootY | stepZ"
     )
     lines = [
         "BONE DRIVE DUMP — SirAldric3DMotion.Evaluate == Actor BuildLoopClip source",
@@ -351,11 +355,10 @@ def format_bone_drive_table(rows):
         step_z = abs(r["foot_l"][2] - r["foot_r"][2])
         lines.append(
             f"{r['name']:<10} | {r['hips'][1]:6.1f} | {r['hips'][2]:6.1f} | {r['spine'][1]:7.1f} | "
+            f"{r['hip'][0]:5.3f} | {r['chest'][0]:7.3f} | {r['head'][0]:6.3f} | "
             f"{r['up_l'][0]:5.1f} | {r['leg_l'][0]:6.1f} | {r['knee_flex_l']:6.1f} | "
-            f"{r['up_r'][0]:5.1f} | {r['leg_r'][0]:6.1f} | {r['knee_flex_r']:6.1f} | "
-            f"{r['arm_l'][0]:6.1f} | {r['arm_r'][0]:6.1f} | {r['foot_l'][0]:7.3f} | "
-            f"{r['foot_r'][0]:7.3f} | {r['foot_l'][1]:7.3f} | {r['foot_r'][1]:7.3f} | "
-            f"{step_z:5.3f} | {d_y:6.3f}"
+            f"{r['up_r'][0]:5.1f} | {r['leg_r'][0]:6.1f} | {r['arm_l'][0]:6.1f} | "
+            f"{r['arm_r'][0]:6.1f} | {r['foot_l'][0]:7.3f} | {d_y:6.3f} | {step_z:5.3f}"
         )
     pass_l, contact_l, pass_r, contact_r = rows
     arm_amp_l = max(abs(pass_l["arm_l"][0]), abs(contact_l["arm_l"][0]), abs(pass_r["arm_l"][0]), abs(contact_r["arm_l"][0]))
@@ -382,6 +385,17 @@ def format_bone_drive_table(rows):
     lines.append(
         f"GATE contact stepZ={c_step:.3f} vs march-step {MARCH * WALK_PERIOD * 0.5:.3f} "
         f"(need |Δ|<0.10)."
+    )
+    peak_hip = peak_chest = peak_head = 0.0
+    for i in range(40):
+        snap = phase_snapshot("t", i * WALK_PERIOD / 40.0)
+        peak_hip = max(peak_hip, abs(snap["hip"][0]))
+        peak_chest = max(peak_chest, abs(snap["chest"][0]))
+        peak_head = max(peak_head, abs(snap["head"][0]))
+    lines.append(
+        f"GATE lateral COM |X| peak (40-sample walk) hip={peak_hip:.3f} "
+        f"chest={peak_chest:.3f} head={peak_head:.3f} "
+        f"(need chest/head <0.04; ff81201 weaved ~0.11). Root X = 0."
     )
     return "\n".join(lines)
 
@@ -784,6 +798,19 @@ def main():
         )
     if pass_l["hips"][2] < 5 or pass_r["hips"][2] > -5:
         raise SystemExit(f"FAIL hip drop: passL Z={pass_l['hips'][2]:.1f} passR Z={pass_r['hips'][2]:.1f}")
+    peak_chest = 0.0
+    peak_head = 0.0
+    peak_hip = 0.0
+    for i in range(40):
+        snap = phase_snapshot("t", i * WALK_PERIOD / 40.0)
+        peak_chest = max(peak_chest, abs(snap["chest"][0]))
+        peak_head = max(peak_head, abs(snap["head"][0]))
+        peak_hip = max(peak_hip, abs(snap["hip"][0]))
+    if peak_chest > 0.04 or peak_head > 0.04:
+        raise SystemExit(
+            f"FAIL lateral weave: peak |chest.X|={peak_chest:.3f} |head.X|={peak_head:.3f} "
+            "(need <0.04 m — body must stay on the +Z line)"
+        )
     if contact_l["hips"][1] <= 4 or contact_l["spine"][1] >= -4:
         raise SystemExit("FAIL shoulder–hip counter-rotation at contact L")
     pass_l_row, _, pass_r_row, _ = rows
@@ -858,8 +885,8 @@ def main():
         "f1e4770 HARD FAIL: BVH eulers reached Evaluate/Actor (Leg_L.X=65.9) but did NOT "
         "transfer the gait — high-rear + forward (−X) pass thigh put 66° flex along the "
         "ground (11 cm lift). This pass: 4 Game-view keys solved against WALK_GAIT_BAR "
-        "rear phases. Pass foot tucked under pelvis (not a side kick); contact "
-        "step matched to march 0.40 m so both plants read. "
+        "rear phases. Pass tucked; contact step 0.40 m. Lateral weave stripped: "
+        "spine Z counters hip roll so COM stays on +Z (root X = 0). "
         f"Hips screen-Y {y0:.0f}→{y1:.0f} (toward TOP). "
         f"Pass knee {pass_l['leg_l'][0]:.0f}°/{pass_r['leg_r'][0]:.0f}°. "
         f"Arm span L {max(r['arm_l'][0] for r in rows) - min(r['arm_l'][0] for r in rows):.0f}° "

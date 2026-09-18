@@ -61,8 +61,12 @@ public sealed class SirAldric3DMotionTests
         Assert.True(passR.LegR.X > passR.LegL.X + 25f);
         Assert.True(passL.HipDropOnPass);
         Assert.True(passR.HipDropOnPass);
-        Assert.True(passL.Hips.Z > 5f);
-        Assert.True(passR.Hips.Z < -5f);
+        Assert.True(passL.Hips.Z >= 5f);
+        Assert.True(passR.Hips.Z <= -5f);
+        Assert.True(passL.StraightTrack);
+        Assert.True(passR.StraightTrack);
+        Assert.True(contactL.StraightTrack);
+        Assert.True(contactR.StraightTrack);
 
         Assert.True(contactL.ShoulderHipCounter);
         Assert.True(contactR.ShoulderHipCounter);
@@ -144,6 +148,18 @@ public sealed class SirAldric3DMotionTests
         Assert.True(contactR.WalkArmPendulum);
         Assert.True(maxL - minL > 40f);
         Assert.True(maxR - minR > 40f);
+    }
+
+    [Fact]
+    public void Walk_stays_on_a_straight_forward_track()
+    {
+        for (var i = 0; i < 20; i++)
+        {
+            var pose = SirAldric3DMotion.Evaluate(i * SirAldric3DMotion.WalkPeriodSeconds / 20f);
+            Assert.True(pose.StraightTrack);
+            Assert.InRange(pose.Hips.Y, -8f, 8f);
+            Assert.InRange(pose.Hips.Z, -6f, 6f);
+        }
     }
 
     [Fact]
