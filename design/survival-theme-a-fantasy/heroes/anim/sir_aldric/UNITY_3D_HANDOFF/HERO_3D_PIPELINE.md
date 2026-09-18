@@ -58,14 +58,14 @@ Placeholder: keep showing locked rear PNG in Play until 3D clip PASSes.
 Runtime: `SirAldric3DActor` builds a **capsule-sculpted skinned mesh** (not cubes) with `01_rear_LOCKED` projective albedo and plays `Aldric_WalkAttackLoop` through **Animator + PlayableGraph**.
 
 - Scene: `Assets/Survival/Scenes/SirAldric.unity` — Game view **1080×1920** → Play
-- Camera is **fixed** high-angle rear; RootZ marches toward **TOP** (+Z). Thigh −X = toward TOP (rejects moonwalk). Sword / right hand stay on the far / TOP side; **walk** uses a loose contralateral pendulum (trailing arm may swing +X toward camera — that is the sample, not a FAIL).
-- Walk clip source: `refs/walk_cycle_mixamo_style.bvh` retargeted into `SirAldric3DMotion` keys. Eye target: `refs/WALK_GAIT_BAR_skeleton_sample.mp4`.
-- Motion SoT: `SirAldric3DMotion`
+- Camera is **fixed** high-angle rear; RootZ marches toward **TOP** (+Z). Stance / contact thigh −X = toward TOP (rejects moonwalk). **Passing** thigh is slightly +X so the bent knee lifts off the ground — f1e4770 BVH import put 66° on a forward thigh and the eye still read a stiff march.
+- Walk is **4 Game-view keys** in `SirAldric3DMotion` solved against `refs/WALK_GAIT_BAR_skeleton_sample.mp4` rear phases. BVH eulers reached the Actor but did **not** transfer the gait; do not re-claim a BVH eye-match. Sword / right hand stay on the far / TOP side as a rest; **walk** uses a loose contralateral pendulum (trailing arm may swing +X toward camera — that is the sample, not a FAIL).
+- Motion SoT: `SirAldric3DMotion` (`Evaluate` is what `BuildLoopClip` samples)
 - Play hub still uses `SIR_ALDRIC_REAR_MASTER_LOCKED.png` until Design PASS
 - 2D warp (`SirAldricView` / `SirAldricWarp`) is **quarantined / unused**
 - Look targets on disk: `UNITY_3D_HANDOFF/look_targets/00_fullbody_LOCKED.png`, `01_rear_LOCKED.png`, `02_aldric_turnaround_orthos.png`
 
-See `ART_UPGRADE.md` for the remaining DCC painted-mesh gap.
+See `ART_UPGRADE.md` for the remaining DCC painted-mesh gap. **Do not claim Design eye PASS** unless Derek can scrub sample and Aldric and recognize the same gait.
 
 ---
 

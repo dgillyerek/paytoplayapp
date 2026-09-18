@@ -78,6 +78,13 @@ public sealed class SirAldric3DMotionTests
         Assert.True(contactL.WalkArmPendulum);
         Assert.True(passL.SheathedOnCharacterRight);
         Assert.True(contactL.SheathedOnCharacterRight);
+
+        // f1e4770: 66° knee on a forward (−X) thigh hid the flex from high-rear.
+        // Passing thigh must sit slightly +X (back / camera) so the foot lifts.
+        Assert.True(passL.UpLegL.X > 8f);
+        Assert.True(passR.UpLegR.X > 8f);
+        Assert.True(passL.UpLegL.X > passL.UpLegR.X);
+        Assert.True(passR.UpLegR.X > passR.UpLegL.X);
     }
 
     [Fact]
@@ -131,6 +138,8 @@ public sealed class SirAldric3DMotionTests
         Assert.True(contactR.ArmR.X > 4f);
         Assert.True(contactL.WalkArmPendulum);
         Assert.True(contactR.WalkArmPendulum);
+        Assert.True(maxL - minL > 40f);
+        Assert.True(maxR - minR > 40f);
     }
 
     [Fact]

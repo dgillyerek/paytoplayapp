@@ -8,6 +8,7 @@ from __future__ import annotations
 import math
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -114,26 +115,21 @@ def evaluate(t):
     return walk_pose(loop_t, root_z)
 
 
-# Retargeted CreativeInquiry walk-cycle.bvh (Mixamo-style), 20 keys, u=0 pass L.
-# Same tables as SirAldric3DMotion.cs — do not drift.
-BOB = [0.028, 0.027, 0.025, 0.021, 0.017, 0.012, 0.017, 0.021, 0.025, 0.027, 0.028, 0.027, 0.025, 0.021, 0.017, 0.012, 0.017, 0.021, 0.025, 0.027]
-HIPSY = [-3.665, -1.170, 1.550, 4.850, 7.731, 9.164, 9.392, 8.572, 7.086, 5.240, 2.659, -0.522, -3.597, -6.627, -8.674, -9.366, -9.106, -8.336, -7.545, -5.778]
-HIPSZ = [7.345, 7.048, 5.486, 2.888, 0.446, -0.526, -0.665, -1.376, -3.347, -5.206, -5.968, -4.838, -2.639, 0.291, 1.477, 1.844, 2.331, 2.318, 3.372, 5.976]
-SPINEY = [4.444, -6.727, -7.459, -7.612, -7.441, -7.486, -7.299, -6.440, -5.116, -2.872, -1.460, 6.016, 8.442, 10.170, 11.111, 10.850, 9.181, 5.798, 2.590, 1.342]
-UPLX = [-16.208, -22.635, -25.264, -25.288, -23.607, -22.233, -21.451, -20.034, -16.924, -12.922, -8.011, -3.490, -0.194, 2.962, 6.640, 9.814, 10.664, 8.028, 3.749, -6.587]
-UPLZ = [-1.297, -0.041, 1.052, 1.541, 1.272, 0.900, 0.895, 1.408, 1.774, 1.720, 1.419, 1.181, 1.265, 1.621, 1.769, 1.334, 0.267, -0.975, -1.549, -1.779]
-LEGL = [65.911, 61.733, 48.831, 29.206, 11.845, 7.064, 12.270, 20.857, 23.986, 22.512, 18.937, 16.014, 15.030, 15.685, 17.177, 19.957, 25.565, 33.527, 41.852, 57.840]
-FOOTL = [19.829, 13.055, 3.219, -5.095, -7.766, -9.555, -10.000, -10.000, -10.000, -10.000, -10.000, -10.000, -10.000, -10.000, -10.000, -6.900, -0.866, 4.484, 9.512, 18.075]
-UPRX = [-4.809, -1.322, 1.570, 4.466, 7.772, 11.137, 12.977, 10.104, 2.175, -6.861, -15.696, -21.134, -22.681, -21.194, -18.048, -16.379, -16.331, -16.116, -13.880, -8.698]
-UPRZ = [-1.595, -1.260, -1.068, -1.299, -1.936, -2.526, -2.599, -1.215, 1.007, 2.407, 2.719, 2.233, 1.756, 1.557, 1.507, 1.397, 1.056, 0.153, -0.796, -1.575]
-LEGR = [10.327, 8.395, 7.317, 7.349, 8.468, 11.042, 17.306, 31.267, 49.313, 61.905, 64.097, 52.625, 34.998, 13.484, 6.000, 6.000, 7.923, 15.984, 16.332, 12.620]
-FOOTR = [-10.000, -10.000, -10.000, -10.000, -10.000, -9.206, -4.301, 2.262, 8.900, 13.019, 10.753, 2.167, -4.875, -8.293, -9.210, -10.000, -10.000, -10.000, -10.000, -10.000]
-ARMLX = [20.657, 24.257, 26.699, 28.858, 29.993, 29.188, 26.195, 20.307, 12.112, 3.149, -7.229, -16.407, -22.463, -26.352, -26.130, -21.625, -13.907, -3.901, 5.321, 15.909]
-ARMLZ = [17.657, 15.379, 13.094, 11.070, 9.980, 9.721, 9.780, 9.755, 10.307, 11.893, 14.229, 16.140, 17.129, 17.156, 16.450, 16.320, 16.752, 17.107, 17.758, 18.588]
-FOREL = [-15.196, -13.767, -12.808, -12.564, -12.848, -13.178, -12.839, -12.078, -11.634, -11.330, -11.354, -12.041, -13.600, -15.944, -18.272, -19.348, -18.602, -16.949, -16.340, -16.232]
-ARMRX = [-9.906, -14.138, -16.869, -18.876, -19.356, -17.604, -13.548, -7.220, -0.291, 6.120, 12.772, 16.000, 16.000, 16.000, 16.000, 16.000, 16.000, 11.073, 4.560, -4.311]
-ARMRZ = [-11.216, -13.244, -14.717, -15.443, -15.351, -15.261, -15.680, -16.429, -16.982, -17.481, -18.128, -18.688, -19.027, -18.804, -18.245, -17.300, -14.905, -11.624, -9.797, -9.497]
-FORER = [-21.387, -26.717, -31.035, -32.000, -32.000, -32.000, -30.582, -26.622, -24.302, -23.984, -23.729, -23.241, -23.176, -23.164, -22.902, -22.393, -21.284, -19.746, -18.477, -18.084]
+# Four Game-view keys — same tables as SirAldric3DMotion.WalkPose. Do not drift.
+# u=0 pass L, 0.25 contact L, 0.50 pass R, 0.75 contact R.
+# f1e4770 BVH tables reached Evaluate() but a forward (−X) pass thigh hid the 66°
+# knee from high-rear (11 cm lift). Pass thigh is now slightly +X so 70° lifts.
+HIPSY = [-6.0, 10.0, 6.0, -10.0]
+HIPSZ = [12.0, 2.0, -12.0, 2.0]
+SPINEY = [12.0, -12.0, -12.0, 12.0]
+UPLX = [14.0, -28.0, 6.0, 18.0]
+LEGL = [70.0, 14.0, 12.0, 22.0]
+FOOTL = [28.0, -12.0, -8.0, 24.0]
+UPRX = [4.0, 18.0, 14.0, -28.0]
+LEGR = [10.0, 16.0, 70.0, 12.0]
+FOOTR = [-8.0, 24.0, 28.0, -12.0]
+ARMLX = [34.0, 30.0, -30.0, -32.0]
+ARMRX = [-30.0, -32.0, 26.0, 24.0]
 
 
 def sample_keys(keys, u):
@@ -149,39 +145,27 @@ def walk_pose(loop_t, root_z):
     u = repeat(loop_t / WALK_PERIOD, 1.0)
     hips_y, hips_z = sample_keys(HIPSY, u), sample_keys(HIPSZ, u)
     spine_y = sample_keys(SPINEY, u)
-    knee_l, knee_r = sample_keys(LEGL, u), sample_keys(LEGR, u)
-    up_lx, up_rx = sample_keys(UPLX, u), sample_keys(UPRX, u)
-    foot_l, foot_r = sample_keys(FOOTL, u), sample_keys(FOOTR, u)
-    if knee_l > 48:
-        k = (knee_l - 48) / 20
-        up_lx *= 1 - 0.45 * k
-        foot_l += 8 * k
-    if knee_r > 48:
-        k = (knee_r - 48) / 20
-        up_rx *= 1 - 0.45 * k
-        foot_r += 8 * k
     arm_lx, arm_rx = sample_keys(ARMLX, u), sample_keys(ARMRX, u)
-    arm_lz = -18.0 if arm_lx > 0 else -14.0
-    arm_rz = 18.0 if arm_rx < 0 else 14.0
+    bob = 0.012 + 0.018 * abs(math.cos(u * math.pi * 2.0))
     return dict(
         attacking=False,
         drawn=False,
         root_z=root_z,
-        root_y=sample_keys(BOB, u),
+        root_y=bob,
         hips=(0, hips_y, hips_z),
-        spine=(5, spine_y, -hips_z * 0.25),
-        chest=(2, spine_y * 0.55, 0),
-        head=(6, spine_y * 0.22, 0),
-        up_l=(up_lx, 0, sample_keys(UPLZ, u)),
-        leg_l=(knee_l, 0, 0),
-        foot_l=(foot_l, 0, 0),
-        up_r=(up_rx, 0, sample_keys(UPRZ, u)),
-        leg_r=(knee_r, 0, 0),
-        foot_r=(foot_r, 0, 0),
-        arm_l=(arm_lx, 0, arm_lz),
-        fore_l=(sample_keys(FOREL, u), 0, 0),
-        arm_r=(arm_rx, 4, arm_rz),
-        fore_r=(sample_keys(FORER, u), 0, 0),
+        spine=(5, spine_y, -hips_z * 0.28),
+        chest=(2, spine_y * 0.6, 0),
+        head=(6, spine_y * 0.25, 0),
+        up_l=(sample_keys(UPLX, u), 0, -4),
+        leg_l=(sample_keys(LEGL, u), 0, 0),
+        foot_l=(sample_keys(FOOTL, u), 0, 0),
+        up_r=(sample_keys(UPRX, u), 0, 4),
+        leg_r=(sample_keys(LEGR, u), 0, 0),
+        foot_r=(sample_keys(FOOTR, u), 0, 0),
+        arm_l=(arm_lx, 0, -16),
+        fore_l=(-18, 0, 0),
+        arm_r=(arm_rx, 4, 16),
+        fore_r=(-22, 0, 0),
         hand_r=(0, 0, 0),
         sword=(-6, 0, 8),
         label="WALK  ·  toward TOP",
@@ -296,6 +280,98 @@ def fk(pose):
 def xform_p(m, p):
     h = m @ np.array([p[0], p[1], p[2], 1.0])
     return h[:3]
+
+
+def world_knee_flex(bones, side):
+    hip = xform_p(bones[f"up_{side}"], (0, 0, 0))
+    knee = xform_p(bones[f"leg_{side}"], (0, 0, 0))
+    ankle = xform_p(bones[f"foot_{side}"], (0, 0, 0))
+    thigh = knee - hip
+    shin = ankle - knee
+    t = thigh / (np.linalg.norm(thigh) + 1e-8)
+    s = shin / (np.linalg.norm(shin) + 1e-8)
+    # Angle between thigh and shin *directions* (0 = straight, ~70 = pass flex).
+    return math.degrees(math.acos(float(np.clip(np.dot(t, s), -1.0, 1.0))))
+
+
+def phase_snapshot(name, t):
+    pose = evaluate(t)
+    bones = fk(pose)
+    foot_l = xform_p(bones["foot_l"], (0, 0, 0))
+    foot_r = xform_p(bones["foot_r"], (0, 0, 0))
+    hand_l = xform_p(bones["hand_l"], (0, -0.04, 0))
+    hand_r = xform_p(bones["hand_r"], (0, -0.04, 0))
+    hip = xform_p(bones["hips"], (0, 0, 0))
+    return {
+        "name": name,
+        "t": t,
+        "hips": pose["hips"],
+        "spine": pose["spine"],
+        "up_l": pose["up_l"],
+        "leg_l": pose["leg_l"],
+        "up_r": pose["up_r"],
+        "leg_r": pose["leg_r"],
+        "arm_l": pose["arm_l"],
+        "arm_r": pose["arm_r"],
+        "foot_l": foot_l,
+        "foot_r": foot_r,
+        "hand_l": hand_l,
+        "hand_r": hand_r,
+        "hip": hip,
+        "knee_flex_l": world_knee_flex(bones, "l"),
+        "knee_flex_r": world_knee_flex(bones, "r"),
+    }
+
+
+def bone_drive_rows():
+    return [
+        phase_snapshot("PASS L", 0.0),
+        phase_snapshot("CONTACT L", WALK_PERIOD * 0.25),
+        phase_snapshot("PASS R", WALK_PERIOD * 0.5),
+        phase_snapshot("CONTACT R", WALK_PERIOD * 0.75),
+    ]
+
+
+def format_bone_drive_table(rows):
+    header = (
+        "phase      | Hips.Y | Hips.Z | Spine.Y | UpL.X | LegL.X | wKneeL | "
+        "UpR.X | LegR.X | wKneeR | ArmL.X | ArmR.X | footL.Y | footR.Y | "
+        "handL.Z | handR.Z | dFootY"
+    )
+    lines = [
+        "BONE DRIVE DUMP — SirAldric3DMotion.Evaluate == Actor BuildLoopClip source",
+        "(PlayableGraph samples Evaluate() → localRotation xyzw; not a missing-clip miss.)",
+        header,
+        "-" * len(header),
+    ]
+    for r in rows:
+        d_y = abs(r["foot_l"][1] - r["foot_r"][1])
+        lines.append(
+            f"{r['name']:<10} | {r['hips'][1]:6.1f} | {r['hips'][2]:6.1f} | {r['spine'][1]:7.1f} | "
+            f"{r['up_l'][0]:5.1f} | {r['leg_l'][0]:6.1f} | {r['knee_flex_l']:6.1f} | "
+            f"{r['up_r'][0]:5.1f} | {r['leg_r'][0]:6.1f} | {r['knee_flex_r']:6.1f} | "
+            f"{r['arm_l'][0]:6.1f} | {r['arm_r'][0]:6.1f} | {r['foot_l'][1]:7.3f} | "
+            f"{r['foot_r'][1]:7.3f} | {r['hand_l'][2] - r['hip'][2]:7.3f} | "
+            f"{r['hand_r'][2] - r['hip'][2]:7.3f} | {d_y:6.3f}"
+        )
+    pass_l, contact_l, pass_r, contact_r = rows
+    arm_amp_l = max(abs(pass_l["arm_l"][0]), abs(contact_l["arm_l"][0]), abs(pass_r["arm_l"][0]), abs(contact_r["arm_l"][0]))
+    arm_span_l = max(r["arm_l"][0] for r in rows) - min(r["arm_l"][0] for r in rows)
+    arm_span_r = max(r["arm_r"][0] for r in rows) - min(r["arm_r"][0] for r in rows)
+    lines.append(
+        f"GATE knee pass L/R euler {pass_l['leg_l'][0]:.1f}/{pass_r['leg_r'][0]:.1f} "
+        f"(need ≥50). world flex {pass_l['knee_flex_l']:.1f}/{pass_r['knee_flex_r']:.1f}."
+    )
+    lines.append(
+        f"GATE arm span L={arm_span_l:.1f}° R={arm_span_r:.1f}° peak|X|={arm_amp_l:.1f}° "
+        f"(near-zero span = remap miss)."
+    )
+    lines.append(
+        f"GATE pass foot lift dY L={abs(pass_l['foot_l'][1] - pass_l['foot_r'][1]):.3f} "
+        f"R={abs(pass_r['foot_r'][1] - pass_r['foot_l'][1]):.3f} "
+        f"(f1e4770 was 0.11m — hidden; need ≳0.20m to read from high-rear)."
+    )
+    return "\n".join(lines)
 
 
 def xform_n(m, n):
@@ -662,6 +738,12 @@ def main():
     if brown_bones != {"scabbard"}:
         raise SystemExit(f"FAIL extra brown sheath mesh: {sorted(brown_bones)}")
 
+    rows = bone_drive_rows()
+    dump = format_bone_drive_table(rows)
+    print(dump, flush=True)
+    if "--dump" in sys.argv:
+        return
+
     fps = 16
     n = int(LOOP * fps)
     raw = Path("/tmp/aldric-3d")
@@ -692,11 +774,27 @@ def main():
         raise SystemExit(f"FAIL hip drop: passL Z={pass_l['hips'][2]:.1f} passR Z={pass_r['hips'][2]:.1f}")
     if contact_l["hips"][1] <= 4 or contact_l["spine"][1] >= -4:
         raise SystemExit("FAIL shoulder–hip counter-rotation at contact L")
-    bones_pass = fk(pass_l)
-    heel_r = xform_p(bones_pass["foot_r"], (0, 0, 0))
-    heel_l = xform_p(bones_pass["foot_l"], (0, 0, 0))
-    if heel_l[1] < heel_r[1] + 0.04:
-        raise SystemExit(f"FAIL passing-L heel lift: L={heel_l[1]:.3f} R={heel_r[1]:.3f}")
+    pass_l_row, _, pass_r_row, _ = rows
+    if pass_l["up_l"][0] <= 8:
+        raise SystemExit(
+            f"FAIL pass-L thigh still forward (−X): {pass_l['up_l'][0]:.1f} "
+            "(f1e4770 hid 66° knee; need +X so the foot lifts)"
+        )
+    if pass_r["up_r"][0] <= 8:
+        raise SystemExit(
+            f"FAIL pass-R thigh still forward (−X): {pass_r['up_r'][0]:.1f}"
+        )
+    if abs(pass_l_row["foot_l"][1] - pass_l_row["foot_r"][1]) < 0.20:
+        raise SystemExit(
+            f"FAIL passing-L foot lift hidden from high-rear: "
+            f"L={pass_l_row['foot_l'][1]:.3f} R={pass_l_row['foot_r'][1]:.3f} "
+            "(need dY≳0.20; f1e4770 was 0.11)"
+        )
+    if abs(pass_r_row["foot_r"][1] - pass_r_row["foot_l"][1]) < 0.20:
+        raise SystemExit(
+            f"FAIL passing-R foot lift hidden from high-rear: "
+            f"L={pass_r_row['foot_l'][1]:.3f} R={pass_r_row['foot_r'][1]:.3f}"
+        )
     bones_c = fk(contact_l)
     step_l = xform_p(bones_c["foot_l"], (0, 0, 0))
     step_r = xform_p(bones_c["foot_r"], (0, 0, 0))
@@ -735,16 +833,20 @@ def main():
     m_walk = mean_delta(body_crop(walk_contact_l), body_crop(walk_contact_r))
     m_strike = mean_delta(body_crop(walk_contact_l), body_crop(strike))
     proof = (
-        f"3D Animator Walk retargeted from CreativeInquiry walk-cycle.bvh (Mixamo-style humanoid) "
-        f"onto Aldric hang −Y, time-warped to 1.00s to match WALK_GAIT_BAR. "
+        "f1e4770 HARD FAIL: BVH eulers reached Evaluate/Actor (Leg_L.X=65.9) but did NOT "
+        "transfer the gait — high-rear + forward (−X) pass thigh put 66° flex along the "
+        "ground (11 cm lift). This pass: 4 Game-view keys solved against WALK_GAIT_BAR "
+        "rear phases so pass thigh is slightly +X and 70° knee lifts ~25 cm. "
         f"Hips screen-Y {y0:.0f}→{y1:.0f} (toward TOP). "
-        f"Pass knee {pass_l['leg_l'][0]:.0f}°/{pass_r['leg_r'][0]:.0f}° (~65°). "
-        f"Loose contralateral pendulum armL {pass_l['arm_l'][0]:.0f}°/{contact_l['arm_l'][0]:.0f}° "
-        f"(crosses hang, not pinned). Hip drop + counter-rotate; heel→toe. "
+        f"Pass knee {pass_l['leg_l'][0]:.0f}°/{pass_r['leg_r'][0]:.0f}°. "
+        f"Arm span L {max(r['arm_l'][0] for r in rows) - min(r['arm_l'][0] for r in rows):.0f}° "
+        f"R {max(r['arm_r'][0] for r in rows) - min(r['arm_r'][0] for r in rows):.0f}°. "
         f"step {step_len:.2f}m vs march-step {expected:.2f}m. "
         f"max |Δ| walk {d_walk:.0f}/255; pass vs contact {d_pass:.0f}/255; "
         f"walk vs strike {d_strike:.0f}/255. "
-        "Single brown scabbard character-right. High-angle rear +Z = TOP."
+        "Single brown scabbard character-right. High-angle rear +Z = TOP.\n"
+        "PIXEL Δ does not override the eye test. Design eye gate is NOT claimed here.\n"
+        + dump
     )
     print(proof)
     if d_walk < 18 or d_strike < 18 or d_pass < 18:
