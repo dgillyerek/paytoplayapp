@@ -1,1 +1,13 @@
-3D Animator Walk retargeted from CreativeInquiry walk-cycle.bvh (Mixamo-style humanoid) onto Aldric hang −Y, time-warped to 1.00s to match WALK_GAIT_BAR. Hips screen-Y 1114→819 (toward TOP). Pass knee 66°/64° (~65°). Loose contralateral pendulum armL 21°/29° (crosses hang, not pinned). Hip drop + counter-rotate; heel→toe. step 0.52m vs march-step 0.40m. max |Δ| walk 190/255; pass vs contact 202/255; walk vs strike 190/255. Single brown scabbard character-right. High-angle rear +Z = TOP.
+f1e4770 HARD FAIL: BVH eulers reached Evaluate/Actor (Leg_L.X=65.9) but did NOT transfer the gait — high-rear + forward (−X) pass thigh put 66° flex along the ground (11 cm lift). This pass: 4 Game-view keys solved against WALK_GAIT_BAR rear phases so pass thigh +24 / knee 78 lifts ~0.36 m on this camera. Hips screen-Y 1113→817 (toward TOP). Pass knee 78°/78°. Arm span L 70° R 58°. step 0.58m vs march-step 0.40m. max |Δ| walk 192/255; pass vs contact 202/255; walk vs strike 190/255. Single brown scabbard character-right. High-angle rear +Z = TOP.
+PIXEL Δ does not override the eye test. Design eye gate is NOT claimed here.
+BONE DRIVE DUMP — SirAldric3DMotion.Evaluate == Actor BuildLoopClip source
+(PlayableGraph samples Evaluate() → localRotation xyzw; not a missing-clip miss.)
+phase      | Hips.Y | Hips.Z | Spine.Y | UpL.X | LegL.X | wKneeL | UpR.X | LegR.X | wKneeR | ArmL.X | ArmR.X | footL.Y | footR.Y | handL.Z | handR.Z | dFootY
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+PASS L     |   -8.0 |   14.0 |    14.0 |  24.0 |   78.0 |   70.9 |  10.0 |   14.0 |    6.9 |   36.0 |  -32.0 |   0.577 |   0.218 |  -0.135 |   0.195 |  0.359
+CONTACT L  |   12.0 |    2.0 |   -14.0 | -18.0 |   12.0 |    4.9 |  16.0 |   18.0 |   10.9 |   32.0 |  -34.0 |   0.137 |   0.177 |  -0.297 |   0.408 |  0.040
+PASS R     |    8.0 |  -14.0 |   -14.0 |   8.0 |   14.0 |    6.9 |  24.0 |   78.0 |   70.9 |  -32.0 |   24.0 |   0.212 |   0.577 |   0.202 |  -0.039 |  0.365
+CONTACT R  |  -12.0 |    2.0 |    14.0 |  16.0 |   20.0 |   12.9 | -18.0 |   12.0 |    4.9 |  -34.0 |   22.0 |   0.172 |   0.148 |   0.406 |  -0.209 |  0.024
+GATE knee pass L/R euler 78.0/78.0 (need ≥50). world flex 70.9/70.9.
+GATE arm span L=70.0° R=58.0° peak|X|=36.0° (near-zero span = remap miss).
+GATE pass foot lift dY L=0.359 R=0.365 (f1e4770 was 0.11m — hidden; need ≳0.20m to read from high-rear).
