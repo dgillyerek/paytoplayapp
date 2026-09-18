@@ -117,19 +117,20 @@ def evaluate(t):
 
 # Four Game-view keys — same tables as SirAldric3DMotion.WalkPose. Do not drift.
 # u=0 pass L, 0.25 contact L, 0.50 pass R, 0.75 contact R.
-# f1e4770 BVH tables reached Evaluate() but a forward (−X) pass thigh hid the 66°
-# knee from high-rear (11 cm lift). Pass thigh is now slightly +X so 70° lifts.
+# 14d9c17 pass thigh +22 stacked on knee +X and the swing foot's world Z went
+# negative (calves read as kicking toward the camera). Pass thigh is −X so the
+# tucked foot travels world +Z / TOP. Small +X trail = toe-off, not a back-kick.
 HIPSY = [-3.0, 5.0, 3.0, -5.0]
 HIPSZ = [5.5, 1.5, -5.5, 1.5]
 SPINEY = [8.0, -8.0, -8.0, 8.0]
-UPLX = [22.0, -12.0, 20.0, 12.0]
+UPLX = [-18.0, -12.0, 8.0, 12.0]
 UPLZ = [0.0, 0.0, 8.0, 0.0]
 LEGL = [80.0, 12.0, 14.0, 18.0]
-FOOTL = [28.0, -12.0, -6.0, 22.0]
-UPRX = [20.0, 12.0, 22.0, -12.0]
+FOOTL = [16.0, -12.0, -6.0, 14.0]
+UPRX = [8.0, 12.0, -18.0, -12.0]
 UPRZ = [-8.0, 0.0, 0.0, 0.0]
 LEGR = [14.0, 16.0, 80.0, 12.0]
-FOOTR = [-6.0, 22.0, 28.0, -12.0]
+FOOTR = [-6.0, 14.0, 16.0, -12.0]
 ARMLX = [36.0, 32.0, -32.0, -34.0]
 ARMRX = [-32.0, -34.0, 24.0, 22.0]
 
@@ -375,7 +376,7 @@ def format_bone_drive_table(rows):
     lines.append(
         f"GATE pass foot lift dY L={abs(pass_l['foot_l'][1] - pass_l['foot_r'][1]):.3f} "
         f"R={abs(pass_r['foot_r'][1] - pass_r['foot_l'][1]):.3f} "
-        f"(f1e4770 was 0.11m — hidden; need ≳0.20m to read from high-rear)."
+        f"(need ≳0.12 tucked under pelvis; 14d9c17 0.38m was the back-kick)."
     )
     lines.append(
         f"GATE pass foot under pelvis |X| L={abs(pass_l['foot_l'][0]):.3f} "
@@ -397,7 +398,38 @@ def format_bone_drive_table(rows):
         f"chest={peak_chest:.3f} head={peak_head:.3f} "
         f"(need chest/head <0.04; ff81201 weaved ~0.11). Root X = 0."
     )
+    dz_l = swing_foot_world_dz("l", 0.75)
+    dz_r = swing_foot_world_dz("r", 0.25)
+    lines.append(
+        f"GATE pass-foot world ΔZ L-swing={dz_l['net']:+.3f} "
+        f"(min step {dz_l['min_step']:+.3f}) R-swing={dz_r['net']:+.3f} "
+        f"(min step {dz_r['min_step']:+.3f}) — must be + toward TOP; "
+        f"14d9c17 min step was −0.039 (back-kick / −Z)."
+    )
+    lines.append(
+        "EYE: pass foot tucks under the pelvis then steps toward TOP; "
+        "calves/feet do not kick toward the camera."
+    )
     return "\n".join(lines)
+
+
+def foot_world_z(t, side):
+    pose = evaluate(t)
+    bones = fk(pose)
+    return float(xform_p(bones[f"foot_{side}"], (0, 0, 0))[2])
+
+
+def swing_foot_world_dz(side, start_u, samples=16):
+    """World Z of the swing foot from opposite-contact through pass to lead-contact."""
+    zs = [foot_world_z((start_u + i * 0.50 / samples) * WALK_PERIOD, side) for i in range(samples + 1)]
+    steps = [zs[i + 1] - zs[i] for i in range(len(zs) - 1)]
+    return {
+        "net": zs[-1] - zs[0],
+        "min_step": min(steps),
+        "trail": zs[0],
+        "pass": zs[samples // 2],
+        "lead": zs[-1],
+    }
 
 
 def xform_n(m, n):
@@ -814,24 +846,33 @@ def main():
     if contact_l["hips"][1] <= 4 or contact_l["spine"][1] >= -4:
         raise SystemExit("FAIL shoulder–hip counter-rotation at contact L")
     pass_l_row, _, pass_r_row, _ = rows
-    if pass_l["up_l"][0] <= 8:
+    if pass_l["up_l"][0] >= 0:
         raise SystemExit(
-            f"FAIL pass-L thigh still forward (−X): {pass_l['up_l'][0]:.1f} "
-            "(f1e4770 hid 66° knee; need +X so the foot lifts)"
+            f"FAIL pass-L thigh still +X (back-kick toward camera): {pass_l['up_l'][0]:.1f} "
+            "(14d9c17; need −X so the swing foot travels +Z / TOP)"
         )
-    if pass_r["up_r"][0] <= 8:
+    if pass_r["up_r"][0] >= 0:
         raise SystemExit(
-            f"FAIL pass-R thigh still forward (−X): {pass_r['up_r'][0]:.1f}"
+            f"FAIL pass-R thigh still +X (back-kick toward camera): {pass_r['up_r'][0]:.1f}"
         )
-    if abs(pass_l_row["foot_l"][1] - pass_l_row["foot_r"][1]) < 0.20:
+    dz_l = swing_foot_world_dz("l", 0.75)
+    dz_r = swing_foot_world_dz("r", 0.25)
+    if dz_l["min_step"] < 0 or dz_r["min_step"] < 0:
         raise SystemExit(
-            f"FAIL passing-L foot lift hidden from high-rear: "
+            f"FAIL swing foot world ΔZ not toward TOP: "
+            f"L min={dz_l['min_step']:+.3f} net={dz_l['net']:+.3f} "
+            f"R min={dz_r['min_step']:+.3f} net={dz_r['net']:+.3f} "
+            "(must stay + during swing; 14d9c17 kicked −Z toward camera)"
+        )
+    if abs(pass_l_row["foot_l"][1] - pass_l_row["foot_r"][1]) < 0.12:
+        raise SystemExit(
+            f"FAIL passing-L foot tuck/lift missing: "
             f"L={pass_l_row['foot_l'][1]:.3f} R={pass_l_row['foot_r'][1]:.3f} "
-            "(need dY≳0.20; f1e4770 was 0.11)"
+            "(need dY≳0.12 under the pelvis; 14d9c17 0.38m lift was the back-kick)"
         )
-    if abs(pass_r_row["foot_r"][1] - pass_r_row["foot_l"][1]) < 0.20:
+    if abs(pass_r_row["foot_r"][1] - pass_r_row["foot_l"][1]) < 0.12:
         raise SystemExit(
-            f"FAIL passing-R foot lift hidden from high-rear: "
+            f"FAIL passing-R foot tuck/lift missing: "
             f"L={pass_r_row['foot_l'][1]:.3f} R={pass_r_row['foot_r'][1]:.3f}"
         )
     if abs(pass_l_row["foot_l"][0]) > 0.12 or abs(pass_l_row["foot_r"][0]) > 0.22:
@@ -882,19 +923,22 @@ def main():
     m_walk = mean_delta(body_crop(walk_contact_l), body_crop(walk_contact_r))
     m_strike = mean_delta(body_crop(walk_contact_l), body_crop(strike))
     proof = (
-        "f1e4770 HARD FAIL: BVH eulers reached Evaluate/Actor (Leg_L.X=65.9) but did NOT "
-        "transfer the gait — high-rear + forward (−X) pass thigh put 66° flex along the "
-        "ground (11 cm lift). This pass: 4 Game-view keys solved against WALK_GAIT_BAR "
-        "rear phases. Pass tucked; contact step 0.40 m. Lateral weave stripped: "
-        "spine Z counters hip roll so COM stays on +Z (root X = 0). "
+        "14d9c17 FAIL: pass thigh +22 + knee +X sent the swing foot world −Z "
+        "(calves kicked toward the camera). Pass thigh is now −X so the tucked foot "
+        "travels +Z / TOP; trail keeps a small +X toe-off. Weave lock held "
+        "(root X = 0, spine Z counters hip roll). "
         f"Hips screen-Y {y0:.0f}→{y1:.0f} (toward TOP). "
         f"Pass knee {pass_l['leg_l'][0]:.0f}°/{pass_r['leg_r'][0]:.0f}°. "
         f"Arm span L {max(r['arm_l'][0] for r in rows) - min(r['arm_l'][0] for r in rows):.0f}° "
         f"R {max(r['arm_r'][0] for r in rows) - min(r['arm_r'][0] for r in rows):.0f}°. "
         f"step {step_len:.2f}m vs march-step {expected:.2f}m. "
+        f"pass-foot world ΔZ L {dz_l['net']:+.3f} (min {dz_l['min_step']:+.3f}) "
+        f"R {dz_r['net']:+.3f} (min {dz_r['min_step']:+.3f}). "
         f"max |Δ| walk {d_walk:.0f}/255; pass vs contact {d_pass:.0f}/255; "
         f"walk vs strike {d_strike:.0f}/255. "
         "Single brown scabbard character-right. High-angle rear +Z = TOP.\n"
+        "EYE: pass foot tucks under the pelvis then steps toward TOP; "
+        "calves/feet do not kick toward the camera.\n"
         "PIXEL Δ does not override the eye test. Design eye gate is NOT claimed here.\n"
         + dump
     )

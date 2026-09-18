@@ -84,15 +84,51 @@ public sealed class SirAldric3DMotionTests
         Assert.True(passL.SheathedOnCharacterRight);
         Assert.True(contactL.SheathedOnCharacterRight);
 
-        // f1e4770: 66° knee on a forward (−X) thigh hid the flex from high-rear.
-        // Passing thigh must sit slightly +X (back / camera) so the foot lifts.
-        Assert.True(passL.UpLegL.X > 8f);
-        Assert.True(passR.UpLegR.X > 8f);
-        Assert.True(passL.UpLegL.X > passL.UpLegR.X);
-        Assert.True(passR.UpLegR.X > passR.UpLegL.X);
+        // 14d9c17: pass thigh +X stacked on knee +X and the shin read as a back-kick
+        // toward the camera. Passing thigh must be −X (toward TOP / +Z) so the tucked
+        // foot steps forward, not further +X than the trail.
+        Assert.True(passL.UpLegL.X < -8f);
+        Assert.True(passR.UpLegR.X < -8f);
+        Assert.True(passL.UpLegL.X < passL.UpLegR.X);
+        Assert.True(passR.UpLegR.X < passR.UpLegL.X);
+        Assert.True(passL.UpLegL.X < contactR.UpLegL.X);
+        Assert.True(passR.UpLegR.X < contactL.UpLegR.X);
         // Passing thigh not abducted — foot tucks under the pelvis, not a side kick.
         Assert.True(passL.UpLegL.Z >= -2f);
         Assert.True(passR.UpLegR.Z <= 2f);
+    }
+
+    [Fact]
+    public void Walk_swing_thigh_travels_toward_top_not_back()
+    {
+        // Left swing: contact R (trail +X) → pass L (−X) → contact L (lead −X).
+        var trail = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkPeriodSeconds * 0.75f);
+        var pass = SirAldric3DMotion.Evaluate(0f);
+        var lead = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkPeriodSeconds * 0.25f);
+        Assert.True(trail.UpLegL.X > 7f);
+        Assert.True(pass.UpLegL.X < -8f);
+        Assert.True(lead.UpLegL.X < -8f);
+        Assert.True(pass.UpLegL.X < trail.UpLegL.X);
+        for (var i = 0; i <= 16; i++)
+        {
+            var u = 0.75f + i * 0.50f / 16f;
+            if (u >= 1f)
+            {
+                u -= 1f;
+            }
+
+            var pose = SirAldric3DMotion.Evaluate(u * SirAldric3DMotion.WalkPeriodSeconds);
+            Assert.True(pose.UpLegL.X < trail.UpLegL.X + 0.5f);
+        }
+
+        // Right swing: contact L → pass R → contact R.
+        trail = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkPeriodSeconds * 0.25f);
+        pass = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkPeriodSeconds * 0.5f);
+        lead = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkPeriodSeconds * 0.75f);
+        Assert.True(trail.UpLegR.X > 7f);
+        Assert.True(pass.UpLegR.X < -8f);
+        Assert.True(lead.UpLegR.X < -8f);
+        Assert.True(pass.UpLegR.X < trail.UpLegR.X);
     }
 
     [Fact]

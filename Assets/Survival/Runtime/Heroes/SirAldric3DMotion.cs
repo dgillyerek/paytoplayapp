@@ -157,25 +157,27 @@ namespace Survival.Domain.Heroes
             Repeat(timeSeconds, LoopSeconds) >= WalkBlockSeconds;
 
         // Four Game-view keys solved against WALK_GAIT_BAR rear poses on this hang −Y rig.
+        // 14d9c17 kicked the calves toward the camera: pass thigh +22 stacked on knee +X
+        // so the swing foot's world Z went negative (back-kick / −Z). Pass thigh is now
+        // −X (toward TOP) so the tucked foot travels +Z; trail stays a small +X toe-off.
         // a6d4703 still kicked the pass foot out: stance abduct + Hips.Z=14 leaned the
-        // silhouette into a side-kick. Pass now tucks under the pelvis (Up*.Z ~ 0) while
-        // the stance sits +X toward camera so the lifted foot reads mid-calf, not as the
-        // bottom plant. Contact lead/trail ±12 keeps step ≈ 0.40 m so both plants stay
-        // visible. ff81201 weaved left↔right: Hips.Z ±8 plus only 28% spine counter
-        // tipped the torso ~11 cm each side. Hip drop stays small (±5.5); spine Z
-        // fully counters the roll so COM stays on world +Z. Yaw damped. Root X = 0.
+        // silhouette into a side-kick. Pass tucks under the pelvis (Up*.Z ~ 0).
+        // Contact lead/trail ±12 keeps step ≈ 0.40 m so both plants stay visible.
+        // ff81201 weaved left↔right: Hips.Z ±8 plus only 28% spine counter tipped the
+        // torso ~11 cm each side. Hip drop stays small (±5.5); spine Z fully counters
+        // the roll so COM stays on world +Z. Yaw damped. Root X = 0.
         // u=0 pass L, 0.25 contact L, 0.50 pass R, 0.75 contact R.
         private static readonly float[] HipsY = { -3f, 5f, 3f, -5f };
         private static readonly float[] HipsZ = { 5.5f, 1.5f, -5.5f, 1.5f };
         private static readonly float[] SpineY = { 8f, -8f, -8f, 8f };
-        private static readonly float[] UpLX = { 22f, -12f, 20f, 12f };
+        private static readonly float[] UpLX = { -18f, -12f, 8f, 12f };
         private static readonly float[] UpLZ = { 0f, 0f, 8f, 0f };
         private static readonly float[] LegL = { 80f, 12f, 14f, 18f };
-        private static readonly float[] FootL = { 28f, -12f, -6f, 22f };
-        private static readonly float[] UpRX = { 20f, 12f, 22f, -12f };
+        private static readonly float[] FootL = { 16f, -12f, -6f, 14f };
+        private static readonly float[] UpRX = { 8f, 12f, -18f, -12f };
         private static readonly float[] UpRZ = { -8f, 0f, 0f, 0f };
         private static readonly float[] LegR = { 14f, 16f, 80f, 12f };
-        private static readonly float[] FootR = { -6f, 22f, 28f, -12f };
+        private static readonly float[] FootR = { -6f, 14f, 16f, -12f };
         private static readonly float[] ArmLX = { 36f, 32f, -32f, -34f };
         private static readonly float[] ArmRX = { -32f, -34f, 24f, 22f };
 
