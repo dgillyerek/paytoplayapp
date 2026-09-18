@@ -63,8 +63,8 @@ namespace Survival.Unity
                 cam.farClipPlane = 40f;
                 cam.backgroundColor = new Color(0.08f, 0.09f, 0.07f, 1f);
                 cam.clearFlags = CameraClearFlags.SolidColor;
-                cam.transform.position = new Vector3(0f, 2.70f, -4.60f);
-                cam.transform.LookAt(new Vector3(0f, 0.95f, 0.85f));
+                cam.transform.position = new Vector3(0f, 2.80f, -5.40f);
+                cam.transform.LookAt(new Vector3(0f, 0.90f, 0.50f));
             }
 
             SurvivalVisuals.EnsureEventSystem();

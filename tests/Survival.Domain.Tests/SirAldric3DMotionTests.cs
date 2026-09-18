@@ -29,10 +29,11 @@ public sealed class SirAldric3DMotionTests
         var a = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkPeriodSeconds * 0.25f);
         var b = SirAldric3DMotion.Evaluate(SirAldric3DMotion.WalkPeriodSeconds * 0.75f);
         // −X thigh = toward world +Z = TOP. At ¼ cycle left leads TOP; at ¾ right leads TOP.
-        Assert.True(a.UpLegL.X < -16f);
+        // Lead is modest (−12) so the plant stays visible and step ≈ march 0.40 m.
+        Assert.True(a.UpLegL.X < -10f);
         Assert.True(a.UpLegR.X > 7f);
         Assert.True(b.UpLegL.X > 7f);
-        Assert.True(b.UpLegR.X < -16f);
+        Assert.True(b.UpLegR.X < -10f);
         Assert.True(a.LegR.X > 8f);
         Assert.True(b.LegL.X > 8f);
         Assert.True(a.LeadLegTowardTop);
@@ -85,6 +86,9 @@ public sealed class SirAldric3DMotionTests
         Assert.True(passR.UpLegR.X > 8f);
         Assert.True(passL.UpLegL.X > passL.UpLegR.X);
         Assert.True(passR.UpLegR.X > passR.UpLegL.X);
+        // Passing thigh not abducted — foot tucks under the pelvis, not a side kick.
+        Assert.True(passL.UpLegL.Z >= -2f);
+        Assert.True(passR.UpLegR.Z <= 2f);
     }
 
     [Fact]

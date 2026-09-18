@@ -58,7 +58,7 @@ Placeholder: keep showing locked rear PNG in Play until 3D clip PASSes.
 Runtime: `SirAldric3DActor` builds a **capsule-sculpted skinned mesh** (not cubes) with `01_rear_LOCKED` projective albedo and plays `Aldric_WalkAttackLoop` through **Animator + PlayableGraph**.
 
 - Scene: `Assets/Survival/Scenes/SirAldric.unity` — Game view **1080×1920** → Play
-- Camera is **fixed** high-angle rear; RootZ marches toward **TOP** (+Z). Stance / contact thigh −X = toward TOP (rejects moonwalk). **Passing** thigh is +X / knee ~78° so the foot reads above the plant from this camera — f1e4770 BVH import put 66° on a forward thigh and the eye still read a stiff march.
+- Camera is **fixed** high-angle rear `(0, 2.80, −5.40)` look-at `(0, 0.90, 0.50)`; RootZ marches toward **TOP** (+Z). Stance / contact thigh −X = toward TOP (rejects moonwalk). **Passing** foot tucks under the pelvis (not a side kick); stance sits slightly +X so the lift reads mid-calf. Contact step matches march 0.40 m so both plants stay visible.
 - Walk is **4 Game-view keys** in `SirAldric3DMotion` solved against `refs/WALK_GAIT_BAR_skeleton_sample.mp4` rear phases. BVH eulers reached the Actor but did **not** transfer the gait; do not re-claim a BVH eye-match. Sword / right hand stay on the far / TOP side as a rest; **walk** uses a loose contralateral pendulum (trailing arm may swing +X toward camera — that is the sample, not a FAIL).
 - Motion SoT: `SirAldric3DMotion` (`Evaluate` is what `BuildLoopClip` samples)
 - Play hub still uses `SIR_ALDRIC_REAR_MASTER_LOCKED.png` until Design PASS

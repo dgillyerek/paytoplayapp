@@ -35,8 +35,8 @@ BROWN = (92, 56, 33)
 DARK = (46, 51, 56)
 GROUND = (28, 32, 24)
 
-CAM_EYE = np.array([0.0, 2.70, -4.60])
-CAM_TARGET = np.array([0.0, 0.95, 0.85])
+CAM_EYE = np.array([0.0, 2.80, -5.40])
+CAM_TARGET = np.array([0.0, 0.90, 0.50])
 CAM_FOV = 30.0
 
 REAR_IMG = Image.open(LOOK / "01_rear_LOCKED.png").convert("RGBA")
@@ -119,15 +119,17 @@ def evaluate(t):
 # u=0 pass L, 0.25 contact L, 0.50 pass R, 0.75 contact R.
 # f1e4770 BVH tables reached Evaluate() but a forward (−X) pass thigh hid the 66°
 # knee from high-rear (11 cm lift). Pass thigh is now slightly +X so 70° lifts.
-HIPSY = [-8.0, 12.0, 8.0, -12.0]
-HIPSZ = [14.0, 2.0, -14.0, 2.0]
-SPINEY = [14.0, -14.0, -14.0, 14.0]
-UPLX = [24.0, -18.0, 8.0, 16.0]
-LEGL = [78.0, 12.0, 14.0, 20.0]
-FOOTL = [32.0, -14.0, -6.0, 26.0]
-UPRX = [10.0, 16.0, 24.0, -18.0]
-LEGR = [14.0, 18.0, 78.0, 12.0]
-FOOTR = [-6.0, 26.0, 32.0, -14.0]
+HIPSY = [-6.0, 10.0, 6.0, -10.0]
+HIPSZ = [8.0, 2.0, -8.0, 2.0]
+SPINEY = [12.0, -12.0, -12.0, 12.0]
+UPLX = [22.0, -12.0, 20.0, 12.0]
+UPLZ = [0.0, 0.0, 8.0, 0.0]
+LEGL = [80.0, 12.0, 14.0, 18.0]
+FOOTL = [28.0, -12.0, -6.0, 22.0]
+UPRX = [20.0, 12.0, 22.0, -12.0]
+UPRZ = [-8.0, 0.0, 0.0, 0.0]
+LEGR = [14.0, 16.0, 80.0, 12.0]
+FOOTR = [-6.0, 22.0, 28.0, -12.0]
 ARMLX = [36.0, 32.0, -32.0, -34.0]
 ARMRX = [-32.0, -34.0, 24.0, 22.0]
 
@@ -156,10 +158,10 @@ def walk_pose(loop_t, root_z):
         spine=(5, spine_y, -hips_z * 0.28),
         chest=(2, spine_y * 0.6, 0),
         head=(6, spine_y * 0.25, 0),
-        up_l=(sample_keys(UPLX, u), 0, -4),
+        up_l=(sample_keys(UPLX, u), 0, sample_keys(UPLZ, u)),
         leg_l=(sample_keys(LEGL, u), 0, 0),
         foot_l=(sample_keys(FOOTL, u), 0, 0),
-        up_r=(sample_keys(UPRX, u), 0, 4),
+        up_r=(sample_keys(UPRX, u), 0, sample_keys(UPRZ, u)),
         leg_r=(sample_keys(LEGR, u), 0, 0),
         foot_r=(sample_keys(FOOTR, u), 0, 0),
         arm_l=(arm_lx, 0, -22),
@@ -335,8 +337,8 @@ def bone_drive_rows():
 def format_bone_drive_table(rows):
     header = (
         "phase      | Hips.Y | Hips.Z | Spine.Y | UpL.X | LegL.X | wKneeL | "
-        "UpR.X | LegR.X | wKneeR | ArmL.X | ArmR.X | footL.Y | footR.Y | "
-        "handL.Z | handR.Z | dFootY"
+        "UpR.X | LegR.X | wKneeR | ArmL.X | ArmR.X | footL.X | footR.X | "
+        "footL.Y | footR.Y | stepZ | dFootY"
     )
     lines = [
         "BONE DRIVE DUMP — SirAldric3DMotion.Evaluate == Actor BuildLoopClip source",
@@ -346,13 +348,14 @@ def format_bone_drive_table(rows):
     ]
     for r in rows:
         d_y = abs(r["foot_l"][1] - r["foot_r"][1])
+        step_z = abs(r["foot_l"][2] - r["foot_r"][2])
         lines.append(
             f"{r['name']:<10} | {r['hips'][1]:6.1f} | {r['hips'][2]:6.1f} | {r['spine'][1]:7.1f} | "
             f"{r['up_l'][0]:5.1f} | {r['leg_l'][0]:6.1f} | {r['knee_flex_l']:6.1f} | "
             f"{r['up_r'][0]:5.1f} | {r['leg_r'][0]:6.1f} | {r['knee_flex_r']:6.1f} | "
-            f"{r['arm_l'][0]:6.1f} | {r['arm_r'][0]:6.1f} | {r['foot_l'][1]:7.3f} | "
-            f"{r['foot_r'][1]:7.3f} | {r['hand_l'][2] - r['hip'][2]:7.3f} | "
-            f"{r['hand_r'][2] - r['hip'][2]:7.3f} | {d_y:6.3f}"
+            f"{r['arm_l'][0]:6.1f} | {r['arm_r'][0]:6.1f} | {r['foot_l'][0]:7.3f} | "
+            f"{r['foot_r'][0]:7.3f} | {r['foot_l'][1]:7.3f} | {r['foot_r'][1]:7.3f} | "
+            f"{step_z:5.3f} | {d_y:6.3f}"
         )
     pass_l, contact_l, pass_r, contact_r = rows
     arm_amp_l = max(abs(pass_l["arm_l"][0]), abs(contact_l["arm_l"][0]), abs(pass_r["arm_l"][0]), abs(contact_r["arm_l"][0]))
@@ -370,6 +373,15 @@ def format_bone_drive_table(rows):
         f"GATE pass foot lift dY L={abs(pass_l['foot_l'][1] - pass_l['foot_r'][1]):.3f} "
         f"R={abs(pass_r['foot_r'][1] - pass_r['foot_l'][1]):.3f} "
         f"(f1e4770 was 0.11m — hidden; need ≳0.20m to read from high-rear)."
+    )
+    lines.append(
+        f"GATE pass foot under pelvis |X| L={abs(pass_l['foot_l'][0]):.3f} "
+        f"R={abs(pass_r['foot_r'][0]):.3f} (need <0.12; a6d4703 stance was 0.39 side-kick)."
+    )
+    c_step = abs(contact_l["foot_l"][2] - contact_l["foot_r"][2])
+    lines.append(
+        f"GATE contact stepZ={c_step:.3f} vs march-step {MARCH * WALK_PERIOD * 0.5:.3f} "
+        f"(need |Δ|<0.10)."
     )
     return "\n".join(lines)
 
@@ -795,6 +807,16 @@ def main():
             f"FAIL passing-R foot lift hidden from high-rear: "
             f"L={pass_r_row['foot_l'][1]:.3f} R={pass_r_row['foot_r'][1]:.3f}"
         )
+    if abs(pass_l_row["foot_l"][0]) > 0.12 or abs(pass_l_row["foot_r"][0]) > 0.22:
+        raise SystemExit(
+            f"FAIL pass-L side kick: footL.x={pass_l_row['foot_l'][0]:.3f} "
+            f"footR.x={pass_l_row['foot_r'][0]:.3f} (pass under pelvis, stance <0.22)"
+        )
+    if abs(pass_r_row["foot_r"][0]) > 0.12 or abs(pass_r_row["foot_l"][0]) > 0.22:
+        raise SystemExit(
+            f"FAIL pass-R side kick: footL.x={pass_r_row['foot_l'][0]:.3f} "
+            f"footR.x={pass_r_row['foot_r'][0]:.3f}"
+        )
     bones_c = fk(contact_l)
     step_l = xform_p(bones_c["foot_l"], (0, 0, 0))
     step_r = xform_p(bones_c["foot_r"], (0, 0, 0))
@@ -808,7 +830,7 @@ def main():
             f"FAIL contralateral at contact L: armL={contact_l['arm_l'][0]:.1f} armR={contact_l['arm_r'][0]:.1f}"
         )
     expected = MARCH * WALK_PERIOD * 0.5
-    if abs(step_len - expected) > 0.26:
+    if abs(step_len - expected) > 0.10:
         raise SystemExit(f"FAIL stride/speed slide: step={step_len:.3f} vs march-step={expected:.3f}")
 
     def scabbard_brown(im):
@@ -836,7 +858,8 @@ def main():
         "f1e4770 HARD FAIL: BVH eulers reached Evaluate/Actor (Leg_L.X=65.9) but did NOT "
         "transfer the gait — high-rear + forward (−X) pass thigh put 66° flex along the "
         "ground (11 cm lift). This pass: 4 Game-view keys solved against WALK_GAIT_BAR "
-        "rear phases so pass thigh +24 / knee 78 lifts ~0.36 m on this camera. "
+        "rear phases. Pass foot tucked under pelvis (not a side kick); contact "
+        "step matched to march 0.40 m so both plants read. "
         f"Hips screen-Y {y0:.0f}→{y1:.0f} (toward TOP). "
         f"Pass knee {pass_l['leg_l'][0]:.0f}°/{pass_r['leg_r'][0]:.0f}°. "
         f"Arm span L {max(r['arm_l'][0] for r in rows) - min(r['arm_l'][0] for r in rows):.0f}° "
@@ -876,8 +899,30 @@ def main():
         return cell
 
     def fit_aldric(im):
-        crop = im.crop((80, 200, W - 80, H - 80))
-        return crop.resize((540, 480), Image.BILINEAR)
+        arr = np.array(im)
+        rgb = arr.astype(np.int16)
+        dark = arr.max(axis=2) < 32
+        yellow = (rgb[:, :, 0] > 150) & (rgb[:, :, 1] > 130) & (rgb[:, :, 2] < 130)
+        vis = ~dark & ~yellow
+        ys, xs = np.where(vis)
+        if len(xs) == 0:
+            crop = im.crop((80, 200, W - 80, H - 80))
+        else:
+            pad = 28
+            crop = im.crop(
+                (
+                    max(0, int(xs.min()) - pad),
+                    max(0, int(ys.min()) - pad),
+                    min(im.width, int(xs.max()) + pad),
+                    min(im.height, int(ys.max()) + pad),
+                )
+            )
+        cell = Image.new("RGB", (540, 480), (18, 20, 16))
+        scale = min((540 - 28) / crop.width, (480 - 64) / crop.height)
+        nw, nh = max(1, int(crop.width * scale)), max(1, int(crop.height * scale))
+        placed = crop.resize((nw, nh), Image.BILINEAR)
+        cell.paste(placed, ((540 - nw) // 2, 48 + (480 - 64 - nh) // 2))
+        return cell
 
     sample_cells = [
         (fit_sample(PHASES / "pass_l_rear.png"), "SAMPLE  ·  PASS L"),

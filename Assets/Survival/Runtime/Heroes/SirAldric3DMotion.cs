@@ -154,22 +154,22 @@ namespace Survival.Domain.Heroes
             Repeat(timeSeconds, LoopSeconds) >= WalkBlockSeconds;
 
         // Four Game-view keys solved against WALK_GAIT_BAR rear poses on this hang −Y rig.
-        // Root cause of f1e4770 FAIL: BVH Leg_L.X was 66° but a forward thigh put that flex
-        // along the ground (11 cm lift) so high-rear still read as a straight toy-soldier.
-        // This camera foreshortens sagittal flex: 70° + slight +X still parked both feet
-        // on the same screen row. Pass thigh +24 / knee 78 + stance +10 pulls the passing
-        // foot up-screen (~0.35 m, ~90 px) without a 90° cartoon. Contact lead is only −18
-        // so the plant stays visible below the hips (old −28 hid under the torso).
-        // u=0 pass L, 0.25 contact L, 0.50 pass R, 0.75 contact R.
-        private static readonly float[] HipsY = { -8f, 12f, 8f, -12f };
-        private static readonly float[] HipsZ = { 14f, 2f, -14f, 2f };
-        private static readonly float[] SpineY = { 14f, -14f, -14f, 14f };
-        private static readonly float[] UpLX = { 24f, -18f, 8f, 16f };
-        private static readonly float[] LegL = { 78f, 12f, 14f, 20f };
-        private static readonly float[] FootL = { 32f, -14f, -6f, 26f };
-        private static readonly float[] UpRX = { 10f, 16f, 24f, -18f };
-        private static readonly float[] LegR = { 14f, 18f, 78f, 12f };
-        private static readonly float[] FootR = { -6f, 26f, 32f, -14f };
+        // a6d4703 still kicked the pass foot out: stance abduct + Hips.Z=14 leaned the
+        // silhouette into a side-kick. Pass now tucks under the pelvis (Up*.Z ~ 0) while
+        // the stance sits +X toward camera so the lifted foot reads mid-calf, not as the
+        // bottom plant. Contact lead/trail ±12 keeps step ≈ 0.40 m so both plants stay
+        // visible. u=0 pass L, 0.25 contact L, 0.50 pass R, 0.75 contact R.
+        private static readonly float[] HipsY = { -6f, 10f, 6f, -10f };
+        private static readonly float[] HipsZ = { 8f, 2f, -8f, 2f };
+        private static readonly float[] SpineY = { 12f, -12f, -12f, 12f };
+        private static readonly float[] UpLX = { 22f, -12f, 20f, 12f };
+        private static readonly float[] UpLZ = { 0f, 0f, 8f, 0f };
+        private static readonly float[] LegL = { 80f, 12f, 14f, 18f };
+        private static readonly float[] FootL = { 28f, -12f, -6f, 22f };
+        private static readonly float[] UpRX = { 20f, 12f, 22f, -12f };
+        private static readonly float[] UpRZ = { -8f, 0f, 0f, 0f };
+        private static readonly float[] LegR = { 14f, 16f, 80f, 12f };
+        private static readonly float[] FootR = { -6f, 22f, 28f, -12f };
         private static readonly float[] ArmLX = { 36f, 32f, -32f, -34f };
         private static readonly float[] ArmRX = { -32f, -34f, 24f, 22f };
 
@@ -191,10 +191,10 @@ namespace Survival.Domain.Heroes
                 spine: new Euler(5f, spineY, -hipsZ * 0.28f),
                 chest: new Euler(2f, spineY * 0.6f, 0f),
                 head: new Euler(6f, spineY * 0.25f, 0f),
-                upLegL: new Euler(Sample(UpLX, u), 0f, -4f),
+                upLegL: new Euler(Sample(UpLX, u), 0f, Sample(UpLZ, u)),
                 legL: new Euler(Sample(LegL, u), 0f, 0f),
                 footL: new Euler(Sample(FootL, u), 0f, 0f),
-                upLegR: new Euler(Sample(UpRX, u), 0f, 4f),
+                upLegR: new Euler(Sample(UpRX, u), 0f, Sample(UpRZ, u)),
                 legR: new Euler(Sample(LegR, u), 0f, 0f),
                 footR: new Euler(Sample(FootR, u), 0f, 0f),
                 armL: new Euler(armLX, 0f, -22f),
