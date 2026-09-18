@@ -44,6 +44,47 @@ REAR_A = REAR[:, :, 3].astype(np.float32) / 255.0
 BX0, BY0, BX1, BY1 = 274, 40, 749, 983
 
 
+def _strip_painted_scabbard(rgb, alpha):
+    """Drop the look-target's painted right-hip sheath so only the 3D Scabbard remains."""
+    out = rgb.copy()
+    h, w = alpha.shape
+    xs = np.arange(w)
+    ys = np.arange(h)[:, None]
+    mid = 0.5 * (BX0 + BX1)
+    right = xs[None, :] > mid + 8
+    visible = alpha > 0.12
+    shift = max(8, w // 16)
+    src = np.roll(out, shift, axis=1)
+    for _ in range(3):
+        r, g, b = out[..., 0], out[..., 1], out[..., 2]
+        brown = (
+            visible
+            & right
+            & (r > 38)
+            & (r > b + 18)
+            & (g < r * 0.92)
+            & (b < 95)
+            & ((r + g + b) < 440)
+        )
+        below_lion = ys > BY0 + 0.40 * (BY1 - BY0)
+        gold = (
+            visible
+            & right
+            & below_lion
+            & (r > 130)
+            & (g > 90)
+            & (b < 130)
+            & (r > b + 30)
+        )
+        mask = brown | gold
+        out[mask] = src[mask]
+        src = np.roll(out, shift, axis=1)
+    return out
+
+
+REAR_RGB = _strip_painted_scabbard(REAR_RGB, REAR_A)
+
+
 def clamp01(x):
     return 0.0 if x < 0 else 1.0 if x > 1 else x
 
@@ -340,7 +381,6 @@ def build_parts():
     add_part("foot_r", sphere_tris((0, 0.02, 0.04), 0.03), False, GOLD)
     add_part("scabbard", capsule_tris((0.02, 0.08, 0), (0.02, -0.48, 0), 0.032), False, BROWN)
     add_part("scabbard", sphere_tris((0.02, 0.10, 0), 0.04), False, GOLD)
-    add_part("cape", capsule_tris((-0.16, 0.04, 0), (0.16, -0.42, -0.06), 0.08), True)
 
 
 REST_FK = None
@@ -576,6 +616,10 @@ def main():
         if scab[0] < 0.12:
             raise SystemExit(f"FAIL scabbard not character-right: {name} scabX={scab[0]:.3f}")
 
+    brown_bones = {bone for bone, _, _, color in PARTS if tuple(int(c) for c in color) == BROWN}
+    if brown_bones != {"scabbard"}:
+        raise SystemExit(f"FAIL extra brown sheath mesh: {sorted(brown_bones)}")
+
     fps = 16
     n = int(LOOP * fps)
     raw = Path("/tmp/aldric-3d")
@@ -593,6 +637,17 @@ def main():
     walk_b = render_pose(evaluate(WALK_PERIOD * 0.75))
     strike = render_pose(evaluate(WALK_BLOCK + ATTACK * 0.48))
     recover = render_pose(evaluate(WALK_BLOCK + ATTACK * 0.92))
+
+    def spine_brown_count(im):
+        arr = np.array(im)
+        r, g, b = (arr[:, :, 0].astype(np.int16), arr[:, :, 1].astype(np.int16), arr[:, :, 2].astype(np.int16))
+        brown = (r > 50) & (r < 170) & (g < (r * 0.88).astype(np.int16)) & (b < 80) & (r > b + 20)
+        return int(brown[int(H * 0.30) : int(H * 0.52), int(W * 0.46) : int(W * 0.54)].sum())
+
+    for im, name in ((walk_a, "walk"), (strike, "strike")):
+        n = spine_brown_count(im)
+        if n > 80:
+            raise SystemExit(f"FAIL back sheath still visible on {name}: spine-brown px={n}")
     d_walk = max_delta(body_crop(walk_a), body_crop(walk_b))
     d_strike = max_delta(body_crop(walk_a), body_crop(strike))
     m_walk = mean_delta(body_crop(walk_a), body_crop(walk_b))
@@ -603,7 +658,8 @@ def main():
         f"Arms/sword on far/+Z side (not toward camera). "
         f"max |Δ| excluding UI: walk opposite-step {d_walk:.0f}/255 (mean {m_walk:.1f}); "
         f"walk vs strike {d_strike:.0f}/255 (mean {m_strike:.1f}). "
-        "Scabbard character-right; high-angle rear march +Z = TOP."
+        "Single brown scabbard on character-right hip (no back sheath). "
+        "High-angle rear march +Z = TOP."
     )
     print(proof)
     if d_walk < 18 or d_strike < 18:
@@ -652,7 +708,7 @@ def main():
     (OUT / "PIXEL_PROOF.txt").write_text(proof + "\n")
     ART.mkdir(parents=True, exist_ok=True)
     for p in (still, sheet_path, gif_full, gif_walk, mp4, OUT / "PIXEL_PROOF.txt"):
-        dest = ART / f"aldric_arms_top_{p.name}"
+        dest = ART / f"aldric_one_scabbard_{p.name}"
         shutil.copy2(p, dest)
         print("wrote", p, p.stat().st_size)
 

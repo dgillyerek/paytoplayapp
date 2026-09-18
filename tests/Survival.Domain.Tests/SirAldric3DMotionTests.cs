@@ -101,6 +101,16 @@ public sealed class SirAldric3DMotionTests
     }
 
     [Fact]
+    public void Actor_has_single_character_right_scabbard_and_no_back_sheath_mesh()
+    {
+        var path = Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "SirAldric3DActor.cs");
+        var src = File.ReadAllText(path);
+        Assert.Contains("TrimCap(\"Scabbard\"", src, StringComparison.Ordinal);
+        Assert.DoesNotContain("BodyCap(\"Cape\"", src, StringComparison.Ordinal);
+        Assert.DoesNotContain("(-0.16f, 0.04f, 0f)", src, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Play_placeholder_locked_rear_png_still_exists()
     {
         var root = FindRepoRoot();

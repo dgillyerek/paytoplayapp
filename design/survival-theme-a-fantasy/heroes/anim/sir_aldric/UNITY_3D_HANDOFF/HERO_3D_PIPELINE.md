@@ -77,6 +77,7 @@ See `ART_UPGRADE.md` for the remaining DCC painted-mesh gap.
 4. Attack strikes toward TOP; draw + recover visible
 5. Orientation: squared rear / toward TOP (not sideways 3/4 drift)
 6. Arms and held sword sit on the **far / TOP** side of the body (toward the enemy), not hanging toward the camera
+7. **One** brown scabbard on the **character-right hip** only — no back-mounted sheath / second sword tube
 
 **FAIL if:** limb pop, rubber melt, look drift, attack toward camera, or still/placeholder labeled as motion.
 

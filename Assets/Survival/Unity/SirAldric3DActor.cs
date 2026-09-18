@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Survival.Domain.Flavor;
@@ -100,9 +101,7 @@ namespace Survival.Unity
         {
             var silver = new Color(0.73f, 0.76f, 0.80f);
             var gold = new Color(0.83f, 0.69f, 0.32f);
-            var blue = new Color(0.16f, 0.30f, 0.58f);
             var brown = new Color(0.36f, 0.22f, 0.13f);
-            var dark = new Color(0.18f, 0.20f, 0.22f);
 
             var verts = new List<Vector3>();
             var norms = new List<Vector3>();
@@ -172,9 +171,10 @@ namespace Survival.Unity
             BodyCap("Leg_R", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.36f, 0f), 0.07f);
             BodyCap("Foot_R", new Vector3(0f, -0.02f, -0.02f), new Vector3(0f, -0.02f, 0.16f), 0.055f);
             TrimSph("Foot_R", new Vector3(0f, 0.02f, 0.04f), 0.03f, gold);
+            // Single sheath: character-right hip only. No back-mounted tube / second scabbard.
+            // Cape bone stays for the rig; cloth is the short surcoat in the body albedo (not a diagonal capsule).
             TrimCap("Scabbard", new Vector3(0.02f, 0.08f, 0f), new Vector3(0.02f, -0.48f, 0f), 0.032f, brown);
             TrimSph("Scabbard", new Vector3(0.02f, 0.10f, 0f), 0.04f, gold);
-            BodyCap("Cape", new Vector3(-0.16f, 0.04f, 0f), new Vector3(0.16f, -0.42f, -0.06f), 0.08f);
 
             var mesh = new Mesh { name = "SirAldricSculpt" };
             mesh.SetVertices(verts);
@@ -353,6 +353,7 @@ namespace Survival.Unity
                     {
                         tex.wrapMode = TextureWrapMode.Clamp;
                         tex.filterMode = FilterMode.Bilinear;
+                        StripPaintedScabbard(tex);
                         return tex;
                     }
                 }
@@ -362,6 +363,50 @@ namespace Survival.Unity
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Look-target PNG paints a right-hip scabbard. The 3D Scabbard mesh is the SoT sheath,
+        /// so wipe that painted tube off the body albedo (right half only; left pouch stays).
+        /// </summary>
+        private static void StripPaintedScabbard(Texture2D tex)
+        {
+            var pixels = tex.GetPixels32();
+            var w = tex.width;
+            var h = tex.height;
+            var mid = w / 2;
+            var shift = Math.Max(8, w / 16);
+            for (var pass = 0; pass < 3; pass++)
+            {
+                var src = (Color32[])pixels.Clone();
+                for (var i = 0; i < pixels.Length; i++)
+                {
+                    var x = i % w;
+                    var y = i / w;
+                    if (x < mid + 8)
+                    {
+                        continue;
+                    }
+
+                    var c = src[i];
+                    if (c.a < 30)
+                    {
+                        continue;
+                    }
+
+                    var brown = c.r > 38 && c.r > c.b + 18 && c.g < (int)(c.r * 0.92f) && c.b < 95 && c.r + c.g + c.b < 440;
+                    var goldFitting = y < h * 0.48f && c.r > 130 && c.g > 90 && c.b < 130 && c.r > c.b + 30;
+                    if (!brown && !goldFitting)
+                    {
+                        continue;
+                    }
+
+                    pixels[i] = src[i - shift];
+                }
+            }
+
+            tex.SetPixels32(pixels);
+            tex.Apply(false, false);
         }
 
         private static Material MakeBody(Texture2D? tex)
