@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using Survival.Domain.Flavor;
 using Survival.Domain.Heroes;
@@ -10,8 +11,8 @@ using UnityEngine.Playables;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Runtime 3D Aldric: capsule-sculpted skinned mesh + rear look-target albedo,
-    /// Animator PlayableGraph walk/attack toward TOP. Not cubes / not PNG warp.
+    /// Runtime 3D Aldric: mid-poly plate/surcoat mesh + look_targets atlas,
+    /// Animator PlayableGraph walk/attack toward TOP. Motion SoT is Evaluate().
     /// </summary>
     public sealed class SirAldric3DActor : MonoBehaviour
     {
@@ -99,17 +100,11 @@ namespace Survival.Unity
 
         private void BuildSkinnedMesh()
         {
-            var silver = new Color(0.73f, 0.76f, 0.80f);
-            var gold = new Color(0.83f, 0.69f, 0.32f);
-            var brown = new Color(0.36f, 0.22f, 0.13f);
-
             var verts = new List<Vector3>();
             var norms = new List<Vector3>();
-            var cols = new List<Color>();
             var uvs = new List<Vector2>();
             var weights = new List<BoneWeight>();
-            var bodyTris = new List<int>();
-            var trimTris = new List<int>();
+            var tris = new List<int>();
             var boneList = new List<Transform>();
             var names = new[]
             {
@@ -122,68 +117,22 @@ namespace Survival.Unity
                 boneList.Add(_bones[n]);
             }
 
-            var index = new Dictionary<string, int>();
+            var index = new Dictionary<string, int>(StringComparer.Ordinal);
             for (var i = 0; i < names.Length; i++)
             {
                 index[names[i]] = i;
             }
 
-            void BodyCap(string bone, Vector3 a, Vector3 b, float r)
-            {
-                AddCapsule(verts, norms, cols, uvs, weights, bodyTris, _bones[bone], index[bone], a, b, r, Color.white, true);
-            }
+            LoadMidPoly(verts, norms, uvs, weights, tris, index);
+            // Character-right Scabbard is in sir_aldric_midpoly.mesh.txt (bone Scabbard).
+            // No Cape mesh — short royal-blue surcoat is chest/hips. 02 turnaround is ref only.
 
-            void TrimCap(string bone, Vector3 a, Vector3 b, float r, Color color)
-            {
-                AddCapsule(verts, norms, cols, uvs, weights, trimTris, _bones[bone], index[bone], a, b, r, color, false);
-            }
-
-            void TrimSph(string bone, Vector3 c, float r, Color color)
-            {
-                AddSphere(verts, norms, cols, uvs, weights, trimTris, _bones[bone], index[bone], c, r, color, false);
-            }
-
-            BodyCap("Head", new Vector3(0f, 0.02f, 0.02f), new Vector3(0f, 0.26f, 0.02f), 0.13f);
-            TrimSph("Head", new Vector3(0f, 0.30f, 0f), 0.035f, gold);
-            TrimCap("Head", new Vector3(0f, 0.08f, -0.13f), new Vector3(0f, 0.28f, -0.13f), 0.022f, gold);
-            BodyCap("Neck", new Vector3(0f, -0.04f, 0f), new Vector3(0f, 0.10f, 0f), 0.07f);
-            BodyCap("Chest", new Vector3(0f, -0.12f, 0f), new Vector3(0f, 0.16f, 0f), 0.20f);
-            TrimSph("Chest", new Vector3(-0.22f, 0.12f, 0f), 0.10f, silver);
-            TrimSph("Chest", new Vector3(0.22f, 0.12f, 0f), 0.10f, silver);
-            TrimSph("Chest", new Vector3(-0.22f, 0.18f, 0f), 0.045f, gold);
-            TrimSph("Chest", new Vector3(0.22f, 0.18f, 0f), 0.045f, gold);
-            BodyCap("Spine", new Vector3(0f, -0.04f, 0f), new Vector3(0f, 0.10f, 0f), 0.16f);
-            BodyCap("Hips", new Vector3(0f, -0.16f, 0f), new Vector3(0f, 0.06f, 0f), 0.18f);
-            TrimCap("Hips", new Vector3(-0.16f, -0.18f, 0f), new Vector3(0.16f, -0.18f, 0f), 0.03f, gold);
-            BodyCap("Arm_L", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.26f, 0f), 0.065f);
-            BodyCap("Fore_L", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.22f, 0f), 0.055f);
-            BodyCap("Hand_L", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.08f, 0f), 0.05f);
-            BodyCap("Arm_R", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.26f, 0f), 0.065f);
-            BodyCap("Fore_R", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.22f, 0f), 0.055f);
-            BodyCap("Hand_R", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.08f, 0f), 0.05f);
-            TrimCap("Sword", new Vector3(0.01f, 0.02f, 0.02f), new Vector3(0.01f, -0.58f, 0.04f), 0.022f, silver);
-            TrimCap("Sword", new Vector3(-0.06f, 0.04f, 0.02f), new Vector3(0.08f, 0.04f, 0.02f), 0.018f, gold);
-            BodyCap("UpLeg_L", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.40f, 0f), 0.085f);
-            BodyCap("Leg_L", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.36f, 0f), 0.07f);
-            BodyCap("Foot_L", new Vector3(0f, -0.02f, -0.02f), new Vector3(0f, -0.02f, 0.16f), 0.055f);
-            TrimSph("Foot_L", new Vector3(0f, 0.02f, 0.04f), 0.03f, gold);
-            BodyCap("UpLeg_R", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.40f, 0f), 0.085f);
-            BodyCap("Leg_R", new Vector3(0f, -0.02f, 0f), new Vector3(0f, -0.36f, 0f), 0.07f);
-            BodyCap("Foot_R", new Vector3(0f, -0.02f, -0.02f), new Vector3(0f, -0.02f, 0.16f), 0.055f);
-            TrimSph("Foot_R", new Vector3(0f, 0.02f, 0.04f), 0.03f, gold);
-            // Single sheath: character-right hip only. No back-mounted tube / second scabbard.
-            // Cape bone stays for the rig; cloth is the short surcoat in the body albedo (not a diagonal capsule).
-            TrimCap("Scabbard", new Vector3(0.02f, 0.08f, 0f), new Vector3(0.02f, -0.48f, 0f), 0.032f, brown);
-            TrimSph("Scabbard", new Vector3(0.02f, 0.10f, 0f), 0.04f, gold);
-
-            var mesh = new Mesh { name = "SirAldricSculpt" };
+            var mesh = new Mesh { name = "SirAldricMidPoly" };
             mesh.SetVertices(verts);
             mesh.SetNormals(norms);
-            mesh.SetColors(cols);
             mesh.SetUVs(0, uvs);
-            mesh.subMeshCount = 2;
-            mesh.SetTriangles(bodyTris, 0);
-            mesh.SetTriangles(trimTris, 1);
+            mesh.subMeshCount = 1;
+            mesh.SetTriangles(tris, 0);
             mesh.boneWeights = weights.ToArray();
             var bind = new Matrix4x4[boneList.Count];
             for (var i = 0; i < boneList.Count; i++)
@@ -199,163 +148,100 @@ namespace Survival.Unity
             smr.bones = boneList.ToArray();
             smr.rootBone = _bones["Hips"];
             smr.quality = SkinQuality.Bone1;
-            var tex = TryLoadRearAlbedo();
-            smr.sharedMaterials = new[]
-            {
-                MakeBody(tex),
-                MakeTrim()
-            };
+            smr.sharedMaterial = MakeAtlas(TryLoadAtlas());
         }
 
-        private static void AddCapsule(
+        private void LoadMidPoly(
             List<Vector3> verts,
             List<Vector3> norms,
-            List<Color> cols,
             List<Vector2> uvs,
             List<BoneWeight> weights,
             List<int> tris,
-            Transform bone,
-            int boneIndex,
-            Vector3 a,
-            Vector3 b,
-            float radius,
-            Color color,
-            bool bodyTex)
+            Dictionary<string, int> index)
         {
-            var axis = b - a;
-            var height = axis.magnitude;
-            if (height < 1e-5f)
+            var path = ResolveHero3D("sir_aldric_midpoly.mesh.txt");
+            if (path == null || !File.Exists(path))
             {
-                AddSphere(verts, norms, cols, uvs, weights, tris, bone, boneIndex, a, radius, color, bodyTex);
-                return;
+                throw new FileNotFoundException("Sir Aldric mid-poly mesh missing under ThemePack art/heroes/3d/");
             }
 
-            var nY = axis / height;
-            var nX = Vector3.Cross(Mathf.Abs(nY.y) < 0.9f ? Vector3.up : Vector3.right, nY).normalized;
-            var nZ = Vector3.Cross(nY, nX);
-            const int rings = 6;
-            const int segs = 8;
-            var bw = new BoneWeight { boneIndex0 = boneIndex, weight0 = 1f };
-            var ring0 = verts.Count;
-            for (var i = 0; i <= rings; i++)
+            var bone = "Hips";
+            var pending = new List<int>();
+            foreach (var raw in File.ReadLines(path))
             {
-                var t = i / (float)rings;
-                var p = Vector3.Lerp(a, b, t);
-                for (var s = 0; s < segs; s++)
+                if (raw.Length == 0 || raw[0] == '#')
                 {
-                    var ang = s / (float)segs * Mathf.PI * 2f;
-                    var radial = (Mathf.Cos(ang) * nX) + (Mathf.Sin(ang) * nZ);
-                    var local = p + radial * radius;
-                    verts.Add(local);
-                    norms.Add(radial);
-                    cols.Add(color);
-                    uvs.Add(bodyTex ? UvOf(bone.TransformPoint(local)) : new Vector2(0.5f, 0.5f));
-                    weights.Add(bw);
+                    continue;
                 }
-            }
 
-            for (var i = 0; i < rings; i++)
-            {
-                for (var s = 0; s < segs; s++)
+                if (raw.StartsWith("BONE ", StringComparison.Ordinal))
                 {
-                    var s1 = (s + 1) % segs;
-                    var i0 = ring0 + i * segs + s;
-                    var i1 = ring0 + i * segs + s1;
-                    var i2 = ring0 + (i + 1) * segs + s;
-                    var i3 = ring0 + (i + 1) * segs + s1;
+                    bone = raw.Substring(5).Trim();
+                    continue;
+                }
+
+                if (raw.StartsWith("V ", StringComparison.Ordinal))
+                {
+                    var p = raw.Substring(2).Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    var ic = CultureInfo.InvariantCulture;
+                    verts.Add(new Vector3(float.Parse(p[0], ic), float.Parse(p[1], ic), float.Parse(p[2], ic)));
+                    norms.Add(new Vector3(float.Parse(p[3], ic), float.Parse(p[4], ic), float.Parse(p[5], ic)));
+                    uvs.Add(new Vector2(float.Parse(p[6], ic), float.Parse(p[7], ic)));
+                    var bi = index.TryGetValue(bone, out var b) ? b : index["Hips"];
+                    weights.Add(new BoneWeight { boneIndex0 = bi, weight0 = 1f });
+                    pending.Add(verts.Count - 1);
+                    continue;
+                }
+
+                if (raw == "T" && pending.Count >= 3)
+                {
+                    var i0 = pending[pending.Count - 3];
+                    var i1 = pending[pending.Count - 2];
+                    var i2 = pending[pending.Count - 1];
                     tris.Add(i0);
-                    tris.Add(i2);
-                    tris.Add(i1);
                     tris.Add(i1);
                     tris.Add(i2);
-                    tris.Add(i3);
                 }
             }
-
-            AddSphere(verts, norms, cols, uvs, weights, tris, bone, boneIndex, a, radius, color, bodyTex);
-            AddSphere(verts, norms, cols, uvs, weights, tris, bone, boneIndex, b, radius, color, bodyTex);
         }
 
-        private static void AddSphere(
-            List<Vector3> verts,
-            List<Vector3> norms,
-            List<Color> cols,
-            List<Vector2> uvs,
-            List<BoneWeight> weights,
-            List<int> tris,
-            Transform bone,
-            int boneIndex,
-            Vector3 center,
-            float radius,
-            Color color,
-            bool bodyTex)
+        private static string? ResolveHero3D(string fileName)
         {
-            const int slices = 6;
-            const int stacks = 5;
-            var bw = new BoneWeight { boneIndex0 = boneIndex, weight0 = 1f };
-            var start = verts.Count;
-            for (var y = 0; y <= stacks; y++)
+            var packRoot = SurvivalArt.ResolvePackRoot(AppFlavorConfig.FantasyKingdomA);
+            var cwd = Directory.GetCurrentDirectory();
+            var data = Application.dataPath ?? Path.Combine(cwd, "Assets");
+            var repo = Directory.GetParent(data)?.FullName ?? cwd;
+            foreach (var path in new[]
+                     {
+                         Path.Combine(packRoot, "art", "heroes", "3d", fileName),
+                         Path.Combine(repo, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", fileName)
+                     })
             {
-                var v = y / (float)stacks;
-                var phi = v * Mathf.PI;
-                for (var x = 0; x <= slices; x++)
+                if (File.Exists(path))
                 {
-                    var u = x / (float)slices;
-                    var th = u * Mathf.PI * 2f;
-                    var n = new Vector3(Mathf.Sin(phi) * Mathf.Cos(th), Mathf.Cos(phi), Mathf.Sin(phi) * Mathf.Sin(th));
-                    var local = center + n * radius;
-                    verts.Add(local);
-                    norms.Add(n);
-                    cols.Add(color);
-                    uvs.Add(bodyTex ? UvOf(bone.TransformPoint(local)) : new Vector2(0.5f, 0.5f));
-                    weights.Add(bw);
+                    return path;
                 }
             }
 
-            for (var y = 0; y < stacks; y++)
-            {
-                for (var x = 0; x < slices; x++)
-                {
-                    var i0 = start + y * (slices + 1) + x;
-                    var i1 = i0 + 1;
-                    var i2 = i0 + slices + 1;
-                    var i3 = i2 + 1;
-                    tris.Add(i0);
-                    tris.Add(i2);
-                    tris.Add(i1);
-                    tris.Add(i1);
-                    tris.Add(i2);
-                    tris.Add(i3);
-                }
-            }
+            return null;
         }
 
-        private static Vector2 UvOf(Vector3 bindWorld)
-        {
-            var u = Mathf.InverseLerp(-0.32f, 0.32f, bindWorld.x);
-            var v = Mathf.InverseLerp(0.00f, 1.86f, bindWorld.y);
-            return new Vector2(Mathf.Clamp01(u), Mathf.Clamp01(v));
-        }
-
-        private static Texture2D? TryLoadRearAlbedo()
+        private static Texture2D? TryLoadAtlas()
         {
             try
             {
-                foreach (var path in SirAldricDemo.ResolveMasterPaths(AppFlavorConfig.FantasyKingdomA))
+                var path = ResolveHero3D("sir_aldric_atlas.png");
+                if (path == null)
                 {
-                    if (!File.Exists(path))
-                    {
-                        continue;
-                    }
+                    return null;
+                }
 
-                    var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-                    if (tex.LoadImage(File.ReadAllBytes(path)))
-                    {
-                        tex.wrapMode = TextureWrapMode.Clamp;
-                        tex.filterMode = FilterMode.Bilinear;
-                        StripPaintedScabbard(tex);
-                        return tex;
-                    }
+                var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                if (tex.LoadImage(File.ReadAllBytes(path)))
+                {
+                    tex.wrapMode = TextureWrapMode.Clamp;
+                    tex.filterMode = FilterMode.Bilinear;
+                    return tex;
                 }
             }
             catch (IOException)
@@ -365,51 +251,7 @@ namespace Survival.Unity
             return null;
         }
 
-        /// <summary>
-        /// Look-target PNG paints a right-hip scabbard. The 3D Scabbard mesh is the SoT sheath,
-        /// so wipe that painted tube off the body albedo (right half only; left pouch stays).
-        /// </summary>
-        private static void StripPaintedScabbard(Texture2D tex)
-        {
-            var pixels = tex.GetPixels32();
-            var w = tex.width;
-            var h = tex.height;
-            var mid = w / 2;
-            var shift = Math.Max(8, w / 16);
-            for (var pass = 0; pass < 3; pass++)
-            {
-                var src = (Color32[])pixels.Clone();
-                for (var i = 0; i < pixels.Length; i++)
-                {
-                    var x = i % w;
-                    var y = i / w;
-                    if (x < mid + 8)
-                    {
-                        continue;
-                    }
-
-                    var c = src[i];
-                    if (c.a < 30)
-                    {
-                        continue;
-                    }
-
-                    var brown = c.r > 38 && c.r > c.b + 18 && c.g < (int)(c.r * 0.92f) && c.b < 95 && c.r + c.g + c.b < 440;
-                    var goldFitting = y < h * 0.48f && c.r > 130 && c.g > 90 && c.b < 130 && c.r > c.b + 30;
-                    if (!brown && !goldFitting)
-                    {
-                        continue;
-                    }
-
-                    pixels[i] = src[i - shift];
-                }
-            }
-
-            tex.SetPixels32(pixels);
-            tex.Apply(false, false);
-        }
-
-        private static Material MakeBody(Texture2D? tex)
+        private static Material MakeAtlas(Texture2D? tex)
         {
             var shader = Shader.Find("Universal Render Pipeline/Unlit")
                          ?? Shader.Find("Universal Render Pipeline/Particles/Unlit")
@@ -430,27 +272,6 @@ namespace Survival.Unity
                 }
             }
 
-            var white = Color.white;
-            if (mat.HasProperty("_BaseColor"))
-            {
-                mat.SetColor("_BaseColor", white);
-            }
-
-            if (mat.HasProperty("_Color"))
-            {
-                mat.SetColor("_Color", white);
-            }
-
-            return mat;
-        }
-
-        private static Material MakeTrim()
-        {
-            var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit")
-                         ?? Shader.Find("Universal Render Pipeline/Unlit")
-                         ?? Shader.Find("Unlit/Color")
-                         ?? Shader.Find("Sprites/Default");
-            var mat = new Material(shader);
             if (mat.HasProperty("_BaseColor"))
             {
                 mat.SetColor("_BaseColor", Color.white);

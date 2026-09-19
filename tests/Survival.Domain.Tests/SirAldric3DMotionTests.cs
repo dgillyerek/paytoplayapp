@@ -249,9 +249,15 @@ public sealed class SirAldric3DMotionTests
     {
         var path = Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "SirAldric3DActor.cs");
         var src = File.ReadAllText(path);
-        Assert.Contains("TrimCap(\"Scabbard\"", src, StringComparison.Ordinal);
+        Assert.Contains("sir_aldric_midpoly.mesh.txt", src, StringComparison.Ordinal);
+        Assert.Contains("Scabbard", src, StringComparison.Ordinal);
         Assert.DoesNotContain("BodyCap(\"Cape\"", src, StringComparison.Ordinal);
         Assert.DoesNotContain("(-0.16f, 0.04f, 0f)", src, StringComparison.Ordinal);
+        var mesh = Path.Combine(FindRepoRoot(), "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_midpoly.mesh.txt");
+        var atlas = Path.Combine(FindRepoRoot(), "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_atlas.png");
+        Assert.True(new FileInfo(mesh).Length > 10_000);
+        Assert.True(new FileInfo(atlas).Length > 50_000);
+        Assert.Contains("BONE Scabbard", File.ReadAllText(mesh), StringComparison.Ordinal);
     }
 
     [Fact]

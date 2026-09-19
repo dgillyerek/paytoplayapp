@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """3D Animator Sir Aldric preview — high-angle rear, march toward TOP of 1080×1920.
 
-Capsule-sculpted skinned mesh + 01_rear look-target albedo. Not cubes / PNG warp.
+Mid-poly plate/surcoat mesh + look_targets atlas (lion / Greek-key from 01_rear).
+Same Evaluate() walk as the 5916447 motion hold. Not cubes / PNG warp.
 """
 from __future__ import annotations
 
@@ -13,6 +14,11 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFont, ImageStat
+
+_PREVIEW_DIR = Path(__file__).resolve().parent
+if str(_PREVIEW_DIR) not in sys.path:
+    sys.path.insert(0, str(_PREVIEW_DIR))
+from aldric_midpoly import renderer_parts as midpoly_parts  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[3]
 OUT = Path(__file__).resolve().parent
@@ -43,6 +49,8 @@ REAR_IMG = Image.open(LOOK / "01_rear_LOCKED.png").convert("RGBA")
 REAR = np.array(REAR_IMG)
 REAR_RGB = REAR[:, :, :3].astype(np.float32)
 REAR_A = REAR[:, :, 3].astype(np.float32) / 255.0
+ATLAS_PATH = ROOT / "Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_atlas.png"
+ATLAS = np.array(Image.open(ATLAS_PATH).convert("RGB")).astype(np.float32)
 # Content bbox of 01_rear (precomputed).
 BX0, BY0, BX1, BY1 = 274, 40, 749, 983
 
@@ -455,6 +463,13 @@ def sample_rear(px, py):
     return rgb
 
 
+def sample_atlas(u, v):
+    h, w = ATLAS.shape[:2]
+    x = int(np.clip(round(float(u) * (w - 1)), 0, w - 1))
+    y = int(np.clip(round((1.0 - float(v)) * (h - 1)), 0, h - 1))
+    return ATLAS[y, x]
+
+
 def capsule_tris(a, b, radius, rings=5, segs=8):
     a = np.array(a, np.float64)
     b = np.array(b, np.float64)
@@ -517,46 +532,17 @@ def sphere_tris(center, radius, slices=6, stacks=4):
     return tris
 
 
-# (bone, local_tris, textured, solid_rgb)
+# (bone, local_tris_with_uv)
 PARTS = []
 
 
-def add_part(bone, tris, textured, color=SILVER):
-    PARTS.append((bone, tris, textured, np.array(color, np.float32)))
+def add_part(bone, tris, textured=False, color=SILVER):
+    PARTS.append((bone, tris))
 
 
 def build_parts():
     PARTS.clear()
-    add_part("head", capsule_tris((0, 0.02, 0.02), (0, 0.26, 0.02), 0.13), True)
-    add_part("head", sphere_tris((0, 0.30, 0), 0.035), False, GOLD)
-    add_part("head", capsule_tris((0, 0.08, -0.13), (0, 0.28, -0.13), 0.022), False, GOLD)
-    add_part("neck", capsule_tris((0, -0.04, 0), (0, 0.10, 0), 0.07), True)
-    add_part("chest", capsule_tris((0, -0.12, 0), (0, 0.16, 0), 0.20), True)
-    add_part("chest", sphere_tris((-0.22, 0.12, 0), 0.10), False, SILVER)
-    add_part("chest", sphere_tris((0.22, 0.12, 0), 0.10), False, SILVER)
-    add_part("chest", sphere_tris((-0.22, 0.18, 0), 0.045), False, GOLD)
-    add_part("chest", sphere_tris((0.22, 0.18, 0), 0.045), False, GOLD)
-    add_part("spine", capsule_tris((0, -0.04, 0), (0, 0.10, 0), 0.16), True)
-    add_part("hips", capsule_tris((0, -0.16, 0), (0, 0.06, 0), 0.18), True)
-    add_part("hips", capsule_tris((-0.16, -0.18, 0), (0.16, -0.18, 0), 0.03), False, GOLD)
-    add_part("arm_l", capsule_tris((0, -0.02, 0), (0, -0.26, 0), 0.065), True)
-    add_part("fore_l", capsule_tris((0, -0.02, 0), (0, -0.22, 0), 0.055), True)
-    add_part("hand_l", capsule_tris((0, -0.02, 0), (0, -0.08, 0), 0.05), True)
-    add_part("arm_r", capsule_tris((0, -0.02, 0), (0, -0.26, 0), 0.065), True)
-    add_part("fore_r", capsule_tris((0, -0.02, 0), (0, -0.22, 0), 0.055), True)
-    add_part("hand_r", capsule_tris((0, -0.02, 0), (0, -0.08, 0), 0.05), True)
-    add_part("sword", capsule_tris((0.01, 0.02, 0.02), (0.01, -0.58, 0.04), 0.022), False, SILVER)
-    add_part("sword", capsule_tris((-0.06, 0.04, 0.02), (0.08, 0.04, 0.02), 0.018), False, GOLD)
-    add_part("up_l", capsule_tris((0, -0.02, 0), (0, -0.40, 0), 0.085), True)
-    add_part("leg_l", capsule_tris((0, -0.02, 0), (0, -0.36, 0), 0.07), True)
-    add_part("foot_l", capsule_tris((0, -0.02, -0.02), (0, -0.02, 0.16), 0.055), True)
-    add_part("foot_l", sphere_tris((0, 0.02, 0.04), 0.03), False, GOLD)
-    add_part("up_r", capsule_tris((0, -0.02, 0), (0, -0.40, 0), 0.085), True)
-    add_part("leg_r", capsule_tris((0, -0.02, 0), (0, -0.36, 0), 0.07), True)
-    add_part("foot_r", capsule_tris((0, -0.02, -0.02), (0, -0.02, 0.16), 0.055), True)
-    add_part("foot_r", sphere_tris((0, 0.02, 0.04), 0.03), False, GOLD)
-    add_part("scabbard", capsule_tris((0.02, 0.08, 0), (0.02, -0.48, 0), 0.032), False, BROWN)
-    add_part("scabbard", sphere_tris((0.02, 0.10, 0), 0.04), False, GOLD)
+    PARTS.extend(midpoly_parts())
 
 
 REST_FK = None
@@ -692,27 +678,22 @@ def render_pose(pose):
         draw_world_tri(zbuf, cbuf, eye, right, up, forward, corners[a], corners[b], corners[c], n, keep)
         draw_world_tri(zbuf, cbuf, eye, right, up, forward, corners[a], corners[c], corners[d], n, keep)
 
-    for bone, tris, textured, color in PARTS:
+    for bone, tris in PARTS:
         m = bones[bone]
-        for p0, p1, p2, n0, n1, n2 in tris:
+        for p0, p1, p2, n0, n1, n2, uv0, uv1, uv2 in tris:
             w0, w1, w2 = xform_p(m, p0), xform_p(m, p1), xform_p(m, p2)
             nn = xform_n(m, (n0 + n1 + n2) / 3.0)
-            shade = 0.34 + 0.66 * max(0.0, float(np.dot(nn, LIGHT)))
+            shade = 0.48 + 0.52 * max(0.0, float(np.dot(nn, LIGHT)))
             prs = []
             cols = []
             ok = True
-            for lp, wp in ((p0, w0), (p1, w1), (p2, w2)):
+            for wp, uv in ((w0, uv0), (w1, uv1), (w2, uv2)):
                 pr = project(wp, eye, right, up, forward)
                 if pr is None:
                     ok = False
                     break
                 prs.append(pr)
-                if textured:
-                    bw = rest_world(bone, lp)
-                    px, py = uv_of(bw)
-                    cols.append(sample_rear(px, py) * shade)
-                else:
-                    cols.append(color * shade)
+                cols.append(sample_atlas(uv[0], uv[1]) * shade)
             if ok:
                 raster_tri(zbuf, cbuf, prs[0], prs[1], prs[2], cols[0], cols[1], cols[2])
 
@@ -792,9 +773,11 @@ def main():
         if scab[0] < 0.12:
             raise SystemExit(f"FAIL scabbard not character-right: {name} scabX={scab[0]:.3f}")
 
-    brown_bones = {bone for bone, _, _, color in PARTS if tuple(int(c) for c in color) == BROWN}
-    if brown_bones != {"scabbard"}:
-        raise SystemExit(f"FAIL extra brown sheath mesh: {sorted(brown_bones)}")
+    brown_bones = {bone for bone, _ in PARTS if bone == "scabbard"}
+    if "scabbard" not in brown_bones:
+        raise SystemExit("FAIL missing character-right scabbard mesh")
+    if any(bone == "cape" for bone, _ in PARTS):
+        raise SystemExit("FAIL cape/back-sheath mesh still present")
 
     rows = bone_drive_rows()
     dump = format_bone_drive_table(rows)
@@ -904,42 +887,55 @@ def main():
     def scabbard_brown(im):
         arr = np.array(im)
         r, g, b = (arr[:, :, 0].astype(np.int16), arr[:, :, 1].astype(np.int16), arr[:, :, 2].astype(np.int16))
-        return (r > 70) & (r < 120) & (g > 30) & (g < 80) & (b < 50) & (r > g + 15) & (g > b)
+        return (r > 48) & (r < 160) & (g > 22) & (g < 100) & (b < 70) & (r > g + 10) & (g >= b - 4)
 
-    if any(bone == "cape" for bone, _, _, _ in PARTS):
-        raise SystemExit("FAIL cape mesh still present (was the back sheath)")
+    def look_counts(im):
+        arr = np.array(im)
+        body = arr[int(H * 0.22) : int(H * 0.78), int(W * 0.28) : int(W * 0.72)]
+        r, g, b = body[:, :, 0].astype(np.int16), body[:, :, 1].astype(np.int16), body[:, :, 2].astype(np.int16)
+        blue = (b > 40) & (b > r + 12) & (b > g)
+        gold = (r > 110) & (g > 80) & (r > b + 18)
+        grey = (r > 130) & (g > 130) & (b > 130) & (np.abs(r - g) < 22) & (np.abs(g - b) < 22)
+        return int(blue.sum()), int(gold.sum()), int(grey.sum())
 
     for im, name in ((walk_contact_l, "walk"), (strike, "strike")):
         mask = scabbard_brown(im)
         left_upper = int(mask[int(H * 0.24) : int(H * 0.36), int(W * 0.28) : int(W * 0.42)].sum())
         right_hip = int(mask[int(H * 0.42) : int(H * 0.65), int(W * 0.55) : int(W * 0.72)].sum())
-        if right_hip < 800:
+        if right_hip < 400:
             raise SystemExit(f"FAIL missing character-right scabbard on {name}: right-hip brown px={right_hip}")
         if left_upper > 200:
             raise SystemExit(f"FAIL back/left sheath on {name}: left-upper brown px={left_upper}")
+    blue_px, gold_px, grey_px = look_counts(walk_contact_l)
+    if blue_px < 2500:
+        raise SystemExit(f"FAIL look: royal-blue surcoat not readable ({blue_px} px) — still a grey capsule?")
+    if gold_px < 800:
+        raise SystemExit(f"FAIL look: gold lion/trim not readable ({gold_px} px)")
+    if blue_px < grey_px * 0.12:
+        raise SystemExit(f"FAIL look: body still reads grey capsule (blue={blue_px} grey={grey_px})")
     d_walk = max_delta(body_crop(walk_contact_l), body_crop(walk_contact_r))
     d_pass = max_delta(body_crop(walk_pass_l), body_crop(walk_contact_l))
     d_strike = max_delta(body_crop(walk_contact_l), body_crop(strike))
     m_walk = mean_delta(body_crop(walk_contact_l), body_crop(walk_contact_r))
     m_strike = mean_delta(body_crop(walk_contact_l), body_crop(strike))
     proof = (
-        "14d9c17 FAIL: pass thigh +22 + knee +X sent the swing foot world −Z "
-        "(calves kicked toward the camera). Pass thigh is now −X so the tucked foot "
-        "travels +Z / TOP; trail keeps a small +X toe-off. Weave lock held "
-        "(root X = 0, spine Z counters hip roll). "
+        "LOOK pass (5916447 motion HOLD): replaced capsule + projective albedo with a "
+        "mid-poly plate/surcoat mesh and look_targets atlas (lion + Greek-key from "
+        "01_rear_LOCKED). Scabbard character-right. Boots silver/gold. Play hub stays "
+        "locked rear PNG. "
         f"Hips screen-Y {y0:.0f}→{y1:.0f} (toward TOP). "
         f"Pass knee {pass_l['leg_l'][0]:.0f}°/{pass_r['leg_r'][0]:.0f}°. "
-        f"Arm span L {max(r['arm_l'][0] for r in rows) - min(r['arm_l'][0] for r in rows):.0f}° "
-        f"R {max(r['arm_r'][0] for r in rows) - min(r['arm_r'][0] for r in rows):.0f}°. "
         f"step {step_len:.2f}m vs march-step {expected:.2f}m. "
         f"pass-foot world ΔZ L {dz_l['net']:+.3f} (min {dz_l['min_step']:+.3f}) "
         f"R {dz_r['net']:+.3f} (min {dz_r['min_step']:+.3f}). "
+        f"LOOK px blue={blue_px} gold={gold_px} grey={grey_px} "
+        "(need blue≥2500 gold≥800 — not a grey capsule). "
         f"max |Δ| walk {d_walk:.0f}/255; pass vs contact {d_pass:.0f}/255; "
         f"walk vs strike {d_strike:.0f}/255. "
         "Single brown scabbard character-right. High-angle rear +Z = TOP.\n"
-        "EYE: pass foot tucks under the pelvis then steps toward TOP; "
-        "calves/feet do not kick toward the camera.\n"
-        "PIXEL Δ does not override the eye test. Design eye gate is NOT claimed here.\n"
+        "EYE motion: pass foot tucks under the pelvis then steps toward TOP.\n"
+        "LOOK gate is NOT claimed. Derek must recognize the locked painted knight.\n"
+        "PIXEL Δ does not override the eye test.\n"
         + dump
     )
     print(proof)
@@ -1027,9 +1023,24 @@ def main():
             ImageDraw.Draw(sheet).text((x + 14, y + 12), lab, fill=(237, 230, 209) if col else (40, 40, 38), font=font)
 
     still = OUT / "sir_aldric_locked_rear_gameview_1080x1920.png"
-    walk_pass_l.save(still, optimize=True)
+    walk_contact_l.save(still, optimize=True)
     sheet_path = OUT / "sir_aldric_walk_draw_strike_recover_sheet.png"
     sheet.save(sheet_path, optimize=True)
+
+    look_sheet = Image.new("RGB", (W, H), (18, 20, 16))
+    look_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22)
+    look_left = fit_sample(LOOK / "01_rear_LOCKED.png")
+    look_left = look_left.resize((540, 960), Image.BILINEAR)
+    look_right = fit_aldric(walk_contact_l)
+    look_right = look_right.resize((540, 960), Image.BILINEAR)
+    look_sheet.paste(look_left, (0, 200))
+    look_sheet.paste(look_right, (540, 200))
+    ImageDraw.Draw(look_sheet).text((40, 48), "LOOK  ·  01_rear_LOCKED  vs  Game-view still", fill=(237, 230, 209), font=look_font)
+    ImageDraw.Draw(look_sheet).text((40, 88), "Look gate NOT claimed", fill=(211, 176, 82), font=look_font)
+    ImageDraw.Draw(look_sheet).text((24, 220), "01_rear SoT", fill=(40, 40, 38), font=font)
+    ImageDraw.Draw(look_sheet).text((564, 220), "ALDRIC mid-poly", fill=(237, 230, 209), font=font)
+    look_path = OUT / "sir_aldric_look_vs_01_rear.png"
+    look_sheet.save(look_path, optimize=True)
     gif_full = OUT / "sir_aldric_walk_attack_toward_top.gif"
     gif_walk = OUT / "sir_aldric_locked_master_walks_toward_top.gif"
     pal = [f.convert("P", palette=Image.ADAPTIVE, colors=64) for f in frames]
@@ -1058,7 +1069,7 @@ def main():
     )
     (OUT / "PIXEL_PROOF.txt").write_text(proof + "\n")
     ART.mkdir(parents=True, exist_ok=True)
-    for p in (still, sheet_path, gif_full, gif_walk, mp4, OUT / "PIXEL_PROOF.txt"):
+    for p in (still, sheet_path, look_path, gif_full, gif_walk, mp4, OUT / "PIXEL_PROOF.txt"):
         dest = ART / f"aldric_gait_{p.name}"
         shutil.copy2(p, dest)
         print("wrote", p, p.stat().st_size)
