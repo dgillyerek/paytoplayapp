@@ -1,0 +1,11 @@
+{
+  "flavor.id": "flavor.id.fantasy_kingdom_a",
+  "theme.id": "theme.id.fantasy_kingdom_a",
+  "pack.systems_api": "survival_core_v1",
+  "pack.path": "ThemePack/fantasy_kingdom_a",
+  "flavor.bundle_id": "com.paytoplay.fantasykingdoma",
+  "flavor.app_name": "Kingdom Defense",
+  "flavor.icon": "art/store/flavor_icon.png",
+  "flavor.splash": "art/splash/THEME_A_SPLASH_KEEP_1080x1920.png",
+  "flavor.theme_id": "fantasy_kingdom_a"
+}

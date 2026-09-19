@@ -1,0 +1,15 @@
+{
+  "alliance": [
+    "alliance.org",
+    "alliance.rank.leader",
+    "alliance.rank.officer",
+    "alliance.rank.member",
+    "alliance.action.create",
+    "alliance.action.join",
+    "alliance.action.leave",
+    "alliance.action.kick",
+    "alliance.chat",
+    "alliance.gift",
+    "alliance.war"
+  ]
+}

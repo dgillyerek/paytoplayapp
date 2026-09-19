@@ -1,0 +1,15 @@
+{
+  "heroes": [
+    {
+      "slot": "hero.slot_01",
+      "archetype": "hero.archetype.tank",
+      "rarity": "hero.rarity.rare",
+      "stats": {
+        "hero.stat.atk": 120,
+        "hero.stat.hp": 1800,
+        "hero.stat.def": 90,
+        "hero.stat.power": 128540
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "resources": [
+    "res.energy",
+    "res.soft",
+    "res.hard",
+    "res.speedup_m",
+    "res.hero_xp",
+    "res.alliance_gift",
+    "res.event_score"
+  ]
+}

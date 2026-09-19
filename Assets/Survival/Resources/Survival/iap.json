@@ -1,0 +1,14 @@
+{
+  "skus": [
+    "sku.energy_s",
+    "sku.energy_m",
+    "sku.energy_l",
+    "sku.hard_s",
+    "sku.hard_m",
+    "sku.hard_l",
+    "sku.hard_xl",
+    "sku.speedup_bundle",
+    "sku.starter_pack",
+    "sku.pass_season"
+  ]
+}
