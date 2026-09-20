@@ -11,8 +11,10 @@ using UnityEngine.Playables;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Runtime 3D Aldric: mid-poly plate/surcoat mesh + look_targets atlas,
+    /// Runtime 3D Aldric: Blender mid-poly (path B) + look_targets atlas,
     /// Animator PlayableGraph walk/attack toward TOP. Motion SoT is Evaluate().
+    /// DCC source is ThemePack art/heroes/3d/sir_aldric.fbx — mesh.txt is the
+    /// Editor-less bind of that same Blender mesh. Do not regress bone names.
     /// </summary>
     public sealed class SirAldric3DActor : MonoBehaviour
     {
@@ -124,10 +126,10 @@ namespace Survival.Unity
             }
 
             LoadMidPoly(verts, norms, uvs, weights, tris, index);
-            // Character-right Scabbard is in sir_aldric_midpoly.mesh.txt (bone Scabbard).
+            // Character-right Scabbard is in the Blender mesh.txt (bone Scabbard).
             // No Cape mesh — short royal-blue surcoat is chest/hips. 02 turnaround is ref only.
 
-            var mesh = new Mesh { name = "SirAldricMidPoly" };
+            var mesh = new Mesh { name = "SirAldricBlender" };
             mesh.SetVertices(verts);
             mesh.SetNormals(norms);
             mesh.SetUVs(0, uvs);

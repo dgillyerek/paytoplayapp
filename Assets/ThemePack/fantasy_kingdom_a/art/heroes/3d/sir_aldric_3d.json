@@ -1,8 +1,11 @@
 {
   "name": "SirAldric",
+  "track": "blender-fbx",
   "soT": "look_targets/01_rear_LOCKED.png",
   "scabbard": "character-right",
   "atlas": "sir_aldric_atlas.png",
   "mesh": "sir_aldric_midpoly.mesh.txt",
+  "fbx": "sir_aldric.fbx",
+  "blend": "sir_aldric.blend",
   "lookPassClaimed": false
 }

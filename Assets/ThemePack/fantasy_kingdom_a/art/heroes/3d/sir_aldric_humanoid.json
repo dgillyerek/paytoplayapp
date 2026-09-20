@@ -1,0 +1,31 @@
+{
+  "avatar": "Humanoid",
+  "rest": "Actor hang (arms local \u2212Y) \u2014 do not retarget to T-pose or Evaluate() regresses",
+  "map": {
+    "Hips": "Hips",
+    "Spine": "Spine",
+    "Chest": "Chest",
+    "Neck": "Neck",
+    "Head": "Head",
+    "LeftUpperArm": "Arm_L",
+    "LeftLowerArm": "Fore_L",
+    "LeftHand": "Hand_L",
+    "RightUpperArm": "Arm_R",
+    "RightLowerArm": "Fore_R",
+    "RightHand": "Hand_R",
+    "LeftUpperLeg": "UpLeg_L",
+    "LeftLowerLeg": "Leg_L",
+    "LeftFoot": "Foot_L",
+    "RightUpperLeg": "UpLeg_R",
+    "RightLowerLeg": "Leg_R",
+    "RightFoot": "Foot_R"
+  },
+  "extras": {
+    "Sword": "Sword",
+    "Scabbard": "Scabbard",
+    "Cape": "Cape (bone only, no mesh)"
+  },
+  "forward": "+Z",
+  "up": "+Y",
+  "characterRight": "+X"
+}

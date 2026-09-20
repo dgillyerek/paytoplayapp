@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """3D Animator Sir Aldric preview — high-angle rear, march toward TOP of 1080×1920.
 
-Mid-poly plate/surcoat mesh + look_targets atlas (lion / Greek-key from 01_rear).
-Same Evaluate() walk as the 5916447 motion hold. Not cubes / PNG warp.
+Blender mid-poly + look_targets atlas (path B). Same Evaluate() walk as the
+5916447 motion hold. Not a box atlas / capsule / PNG warp.
 """
 from __future__ import annotations
 
@@ -10,15 +10,11 @@ import math
 import shutil
 import subprocess
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFont, ImageStat
-
-_PREVIEW_DIR = Path(__file__).resolve().parent
-if str(_PREVIEW_DIR) not in sys.path:
-    sys.path.insert(0, str(_PREVIEW_DIR))
-from aldric_midpoly import renderer_parts as midpoly_parts  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[3]
 OUT = Path(__file__).resolve().parent
@@ -50,7 +46,60 @@ REAR = np.array(REAR_IMG)
 REAR_RGB = REAR[:, :, :3].astype(np.float32)
 REAR_A = REAR[:, :, 3].astype(np.float32) / 255.0
 ATLAS_PATH = ROOT / "Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_atlas.png"
+MESH_PATH = ROOT / "Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_midpoly.mesh.txt"
 ATLAS = np.array(Image.open(ATLAS_PATH).convert("RGB")).astype(np.float32)
+BONE_PY = {
+    "Head": "head",
+    "Neck": "neck",
+    "Chest": "chest",
+    "Spine": "spine",
+    "Hips": "hips",
+    "Arm_L": "arm_l",
+    "Fore_L": "fore_l",
+    "Hand_L": "hand_l",
+    "Arm_R": "arm_r",
+    "Fore_R": "fore_r",
+    "Hand_R": "hand_r",
+    "Sword": "sword",
+    "UpLeg_L": "up_l",
+    "Leg_L": "leg_l",
+    "Foot_L": "foot_l",
+    "UpLeg_R": "up_r",
+    "Leg_R": "leg_r",
+    "Foot_R": "foot_r",
+    "Scabbard": "scabbard",
+}
+
+
+def load_blender_parts(path: Path):
+    """Bone-local tris from the Blender mesh.txt (same file the Actor binds)."""
+    groups = defaultdict(list)
+    bone = "Hips"
+    pending = []
+    for raw in path.read_text().splitlines():
+        if not raw or raw[0] == "#":
+            continue
+        if raw.startswith("FMT") or raw.startswith("BONE "):
+            if raw.startswith("BONE "):
+                bone = raw[5:].strip()
+                pending = []
+            continue
+        if raw.startswith("V "):
+            p = raw[2:].split()
+            v = np.array([float(p[0]), float(p[1]), float(p[2])], np.float64)
+            n = np.array([float(p[3]), float(p[4]), float(p[5])], np.float64)
+            uv = np.array([float(p[6]), float(p[7])], np.float64)
+            pending.append((v, n, uv))
+            continue
+        if raw == "T" and len(pending) >= 3:
+            (p0, n0, uv0), (p1, n1, uv1), (p2, n2, uv2) = pending[-3:]
+            groups[bone].append((p0, p1, p2, n0, n1, n2, uv0, uv1, uv2))
+    out = []
+    for name, tris in groups.items():
+        py = BONE_PY.get(name)
+        if py:
+            out.append((py, tris))
+    return out
 # Content bbox of 01_rear (precomputed).
 BX0, BY0, BX1, BY1 = 274, 40, 749, 983
 
@@ -542,7 +591,7 @@ def add_part(bone, tris, textured=False, color=SILVER):
 
 def build_parts():
     PARTS.clear()
-    PARTS.extend(midpoly_parts())
+    PARTS.extend(load_blender_parts(MESH_PATH))
 
 
 REST_FK = None
@@ -919,10 +968,10 @@ def main():
     m_walk = mean_delta(body_crop(walk_contact_l), body_crop(walk_contact_r))
     m_strike = mean_delta(body_crop(walk_contact_l), body_crop(strike))
     proof = (
-        "LOOK pass (5916447 motion HOLD): replaced capsule + projective albedo with a "
-        "mid-poly plate/surcoat mesh and look_targets atlas (lion + Greek-key from "
-        "01_rear_LOCKED). Scabbard character-right. Boots silver/gold. Play hub stays "
-        "locked rear PNG. "
+        "PATH B Blender/FBX (5916447 motion HOLD): box-atlas stopped. Sir Aldric is a "
+        "Blender mid-poly (sir_aldric.fbx + mesh.txt) with look_targets atlas (lion + "
+        "Greek-key from 01_rear_LOCKED). Scabbard character-right. Boots silver/gold. "
+        "Play hub stays locked rear PNG. "
         f"Hips screen-Y {y0:.0f}→{y1:.0f} (toward TOP). "
         f"Pass knee {pass_l['leg_l'][0]:.0f}°/{pass_r['leg_r'][0]:.0f}°. "
         f"step {step_len:.2f}m vs march-step {expected:.2f}m. "
@@ -1038,7 +1087,7 @@ def main():
     ImageDraw.Draw(look_sheet).text((40, 48), "LOOK  ·  01_rear_LOCKED  vs  Game-view still", fill=(237, 230, 209), font=look_font)
     ImageDraw.Draw(look_sheet).text((40, 88), "Look gate NOT claimed", fill=(211, 176, 82), font=look_font)
     ImageDraw.Draw(look_sheet).text((24, 220), "01_rear SoT", fill=(40, 40, 38), font=font)
-    ImageDraw.Draw(look_sheet).text((564, 220), "ALDRIC mid-poly", fill=(237, 230, 209), font=font)
+    ImageDraw.Draw(look_sheet).text((564, 220), "ALDRIC Blender / FBX", fill=(237, 230, 209), font=font)
     look_path = OUT / "sir_aldric_look_vs_01_rear.png"
     look_sheet.save(look_path, optimize=True)
     gif_full = OUT / "sir_aldric_walk_attack_toward_top.gif"

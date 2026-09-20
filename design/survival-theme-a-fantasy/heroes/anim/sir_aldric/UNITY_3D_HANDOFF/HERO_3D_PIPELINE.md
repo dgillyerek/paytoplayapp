@@ -55,11 +55,11 @@ Placeholder: keep showing locked rear PNG in Play until 3D clip PASSes.
 
 ## This PR (orientation + look)
 
-Runtime: `SirAldric3DActor` builds a **capsule-sculpted skinned mesh** (not cubes) with `01_rear_LOCKED` projective albedo and plays `Aldric_WalkAttackLoop` through **Animator + PlayableGraph**.
+Runtime: `SirAldric3DActor` binds a **Blender mid-poly** (`sir_aldric.fbx` / `sir_aldric_midpoly.mesh.txt`) with the look_targets atlas and plays `Aldric_WalkAttackLoop` through **Animator + PlayableGraph**. Box-atlas iteration is stopped (path B).
 
 - Scene: `Assets/Survival/Scenes/SirAldric.unity` — Game view **1080×1920** → Play
 - Camera is **fixed** high-angle rear `(0, 2.80, −5.40)` look-at `(0, 0.90, 0.50)`; RootZ marches toward **TOP** (+Z). Root X = 0. Spine Z counters hip roll so the torso stays in one vertical plane (Derek CLOSE on ff81201: no left↔right weave). Small hip drop + shoulder–hip counter-rotate stay. **Passing** foot tucks under the pelvis then steps **+Z / TOP** (14d9c17 pass thigh +X read as a back-kick toward camera). Contact step matches march 0.40 m. **5916447 motion HOLD.**
-- **Look:** mid-poly plate/surcoat + `art/heroes/3d/sir_aldric_atlas.png` (lion / Greek-key from `01_rear_LOCKED`). Not a grey capsule. Scabbard character-right. **Look gate not claimed.**
+- **Look:** Blender plate/surcoat + `art/heroes/3d/sir_aldric_atlas.png` (lion / Greek-key from `01_rear_LOCKED`). Not a grey capsule or box atlas. Scabbard character-right. **Look gate not claimed.**
 - Walk is **4 Game-view keys** in `SirAldric3DMotion` solved against `refs/WALK_GAIT_BAR_skeleton_sample.mp4` rear phases. BVH eulers reached the Actor but did **not** transfer the gait; do not re-claim a BVH eye-match. Sword / right hand stay on the far / TOP side as a rest; **walk** uses a loose contralateral pendulum (trailing arm may swing +X toward camera — that is the sample, not a FAIL).
 - Motion SoT: `SirAldric3DMotion` (`Evaluate` is what `BuildLoopClip` samples)
 - Play hub still uses `SIR_ALDRIC_REAR_MASTER_LOCKED.png` until Design PASS

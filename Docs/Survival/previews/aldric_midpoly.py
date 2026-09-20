@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Mid-poly Sir Aldric: atlas + bone-local mesh matching look_targets SoT.
+"""STOPPED — path B Blender track.
 
-Not a DCC sculpt. Plate/surcoat volumes + locked lion / Greek-key crops so the
-high-angle rear Game view reads as the painted knight, not a grey capsule.
-Scabbard = character-right (+X) per 01_rear_LOCKED. 02 turnaround is ref only.
+Do not iterate this box-atlas generator. Runtime mesh / atlas / FBX are written
+by scripts/blender/build_sir_aldric.py from look_targets SoT.
+Kept only so git history can show what Design kicked.
 """
 from __future__ import annotations
 
