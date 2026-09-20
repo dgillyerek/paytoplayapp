@@ -311,6 +311,8 @@ def build_parts():
     add_taper(bm, (0.0, 1.62, 0.11), (0.0, 1.58, 0.13), 0.055, 0.04, segs=12)
     add_ellipsoid(bm, (0.0, 1.84, 0.0), (0.03, 0.035, 0.03), segs=10, rings=6)  # crest knob
     add_taper(bm, (0.0, 1.68, 0.0), (0.0, 1.84, 0.0), 0.012, 0.018, segs=8)  # crest ridge
+    add_capsule(bm, (-0.09, 1.60, -0.10), (0.09, 1.60, -0.10), 0.014, segs=8)  # nape gold
+    add_capsule(bm, (-0.10, 1.66, 0.02), (0.10, 1.66, 0.02), 0.012, segs=8)  # brow gold
     objs.append((mesh_from_bm("Helm", bm, "helm"), "Head"))
 
     bm = bmesh.new()
@@ -332,6 +334,53 @@ def build_parts():
     ]
     add_loft(bm, rings)
     objs.append((mesh_from_bm("Surcoat", bm, "surcoat"), "Chest"))
+
+    # Camera-facing lion badge — high-rear SoT (01). Pulled toward −Z and
+    # subdivided so the locked rampant reads (not a 2-tri smear / z-fight).
+    bm = bmesh.new()
+    nu, nv = 12, 16
+    grid = []
+    for j in range(nv + 1):
+        ty = j / nv
+        row = []
+        y = 1.06 + 0.36 * ty
+        z = -0.20 - 0.04 * ty  # tilt: top closer to camera
+        for i in range(nu + 1):
+            tx = i / nu
+            x = -0.145 + 0.29 * tx
+            row.append(bm.verts.new(Vector((x, y, z))))
+        grid.append(row)
+    bm.verts.ensure_lookup_table()
+    for j in range(nv):
+        for i in range(nu):
+            # winding so normal faces −Z (camera)
+            bm.faces.new((grid[j][i], grid[j][i + 1], grid[j + 1][i + 1], grid[j + 1][i]))
+    uv = bm.loops.layers.uv.new("UVMap")
+    # Tight rampant on the atlas (skip crop's top swords / bottom fade).
+    u0, v0, u1, v1 = 0.08, 0.24, 0.42, 0.64
+    bm.faces.ensure_lookup_table()
+    for face in bm.faces:
+        for loop in face.loops:
+            co = loop.vert.co
+            tx = _sat((co.x + 0.145) / 0.29)
+            ty = _sat((co.y - 1.06) / 0.36)
+            loop[uv].uv = Vector((u0 + (u1 - u0) * tx, v0 + (v1 - v0) * ty))
+    me = bpy.data.meshes.new("LionBadge")
+    bm.to_mesh(me)
+    bm.free()
+    obj = bpy.data.objects.new("LionBadge", me)
+    bpy.context.collection.objects.link(obj)
+    objs.append((obj, "Chest"))
+
+    # Greek-key hem band (gold on cream from 01 crop)
+    bm = bmesh.new()
+    segs_h = 22
+    outer = oval_ring(0.845, 0.255, 0.150, 0.025, segs_h)
+    inner = oval_ring(0.845, 0.215, 0.118, 0.010, segs_h)
+    outer_top = oval_ring(0.905, 0.248, 0.146, 0.022, segs_h)
+    inner_top = oval_ring(0.905, 0.210, 0.116, 0.008, segs_h)
+    add_loft(bm, [inner, outer, outer_top, inner_top, inner])
+    objs.append((mesh_from_bm("HemKey", bm, "hem"), "Hips"))
 
     # breast / back plate peeking at collar
     bm = bmesh.new()
@@ -390,13 +439,13 @@ def build_parts():
         add_ellipsoid(bm, (x, 0.08, 0.02), (0.05, 0.018, 0.05), segs=8, rings=5)  # gold cuff
         objs.append((mesh_from_bm(f"Boot_{side}", bm, "boot"), f"Foot_{side}"))
 
-    # --- Scabbard character-RIGHT hip only (01 SoT) ---
+    # --- Scabbard character-RIGHT hip only (01 SoT) — flat sheath, not a back pole ---
     bm = bmesh.new()
-    # world approx of scabbard bone: (0.20, 0.92, -0.02) then local down -Y rotated
-    add_taper(bm, (0.22, 0.98, 0.00), (0.28, 0.48, -0.06), 0.028, 0.020, segs=12)
-    add_ellipsoid(bm, (0.22, 1.00, 0.00), (0.032, 0.022, 0.028), segs=8, rings=5)
-    add_ellipsoid(bm, (0.25, 0.72, -0.03), (0.026, 0.016, 0.022), segs=8, rings=5)
-    add_ellipsoid(bm, (0.28, 0.48, -0.06), (0.024, 0.020, 0.020), segs=8, rings=5)
+    add_taper(bm, (0.22, 0.94, 0.03), (0.30, 0.62, -0.01), 0.026, 0.018, segs=12)
+    # flatten: scale X after is hard here; extra gold fittings read the hip
+    add_ellipsoid(bm, (0.22, 0.95, 0.03), (0.034, 0.020, 0.028), segs=8, rings=5)
+    add_ellipsoid(bm, (0.26, 0.78, 0.01), (0.028, 0.014, 0.022), segs=8, rings=5)
+    add_ellipsoid(bm, (0.30, 0.62, -0.01), (0.022, 0.016, 0.018), segs=8, rings=5)
     objs.append((mesh_from_bm("ScabbardMesh", bm, "scabbard"), "Scabbard"))
 
     return objs

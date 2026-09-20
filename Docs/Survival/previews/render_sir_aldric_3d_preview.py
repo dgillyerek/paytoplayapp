@@ -620,7 +620,7 @@ def project(p, eye, r, u, f):
     return sx, sy, cam[2]
 
 
-def raster_tri(zbuf, cbuf, p0, p1, p2, c0, c1, c2):
+def _tri_coverage(zbuf, p0, p1, p2):
     xs = (p0[0], p1[0], p2[0])
     ys = (p0[1], p1[1], p2[1])
     minx = max(0, int(math.floor(min(xs))))
@@ -628,24 +628,50 @@ def raster_tri(zbuf, cbuf, p0, p1, p2, c0, c1, c2):
     miny = max(0, int(math.floor(min(ys))))
     maxy = min(H - 1, int(math.ceil(max(ys))))
     if maxx < minx or maxy < miny:
-        return
+        return None
     denom = (p1[1] - p2[1]) * (p0[0] - p2[0]) + (p2[0] - p1[0]) * (p0[1] - p2[1])
     if abs(denom) < 1e-8:
-        return
+        return None
     yy, xx = np.mgrid[miny : maxy + 1, minx : maxx + 1]
     a = ((p1[1] - p2[1]) * (xx - p2[0]) + (p2[0] - p1[0]) * (yy - p2[1])) / denom
     b = ((p2[1] - p0[1]) * (xx - p2[0]) + (p0[0] - p2[0]) * (yy - p2[1])) / denom
     c = 1.0 - a - b
     mask = (a >= 0) & (b >= 0) & (c >= 0)
     if not np.any(mask):
-        return
+        return None
     z = a * p0[2] + b * p1[2] + c * p2[2]
     subz = zbuf[miny : maxy + 1, minx : maxx + 1]
     nearer = mask & (z < subz)
     if not np.any(nearer):
+        return None
+    return minx, maxx, miny, maxy, a, b, c, z, nearer, subz
+
+
+def raster_tri(zbuf, cbuf, p0, p1, p2, c0, c1, c2):
+    cov = _tri_coverage(zbuf, p0, p1, p2)
+    if cov is None:
         return
+    minx, maxx, miny, maxy, a, b, c, z, nearer, subz = cov
     subz[nearer] = z[nearer]
     col = a[..., None] * c0 + b[..., None] * c1 + c[..., None] * c2
+    col = np.clip(col, 0, 255).astype(np.uint8)
+    dest = cbuf[miny : maxy + 1, minx : maxx + 1]
+    dest[nearer] = col[nearer]
+
+
+def raster_tri_uv(zbuf, cbuf, p0, p1, p2, uv0, uv1, uv2, shade):
+    """Per-pixel atlas sample so the lion / Greek-key stay readable."""
+    cov = _tri_coverage(zbuf, p0, p1, p2)
+    if cov is None:
+        return
+    minx, maxx, miny, maxy, a, b, c, z, nearer, subz = cov
+    subz[nearer] = z[nearer]
+    u = a * float(uv0[0]) + b * float(uv1[0]) + c * float(uv2[0])
+    v = a * float(uv0[1]) + b * float(uv1[1]) + c * float(uv2[1])
+    ah, aw = ATLAS.shape[0], ATLAS.shape[1]
+    xs = np.clip(np.round(u * (aw - 1)).astype(np.int32), 0, aw - 1)
+    ys = np.clip(np.round((1.0 - v) * (ah - 1)).astype(np.int32), 0, ah - 1)
+    col = ATLAS[ys, xs] * shade
     col = np.clip(col, 0, 255).astype(np.uint8)
     dest = cbuf[miny : maxy + 1, minx : maxx + 1]
     dest[nearer] = col[nearer]
@@ -734,7 +760,7 @@ def render_pose(pose):
             nn = xform_n(m, (n0 + n1 + n2) / 3.0)
             shade = 0.48 + 0.52 * max(0.0, float(np.dot(nn, LIGHT)))
             prs = []
-            cols = []
+            uvs = []
             ok = True
             for wp, uv in ((w0, uv0), (w1, uv1), (w2, uv2)):
                 pr = project(wp, eye, right, up, forward)
@@ -742,9 +768,9 @@ def render_pose(pose):
                     ok = False
                     break
                 prs.append(pr)
-                cols.append(sample_atlas(uv[0], uv[1]) * shade)
+                uvs.append(uv)
             if ok:
-                raster_tri(zbuf, cbuf, prs[0], prs[1], prs[2], cols[0], cols[1], cols[2])
+                raster_tri_uv(zbuf, cbuf, prs[0], prs[1], prs[2], uvs[0], uvs[1], uvs[2], shade)
 
     im = Image.fromarray(cbuf, "RGB")
     d = ImageDraw.Draw(im)
@@ -936,7 +962,8 @@ def main():
     def scabbard_brown(im):
         arr = np.array(im)
         r, g, b = (arr[:, :, 0].astype(np.int16), arr[:, :, 1].astype(np.int16), arr[:, :, 2].astype(np.int16))
-        return (r > 48) & (r < 160) & (g > 22) & (g < 100) & (b < 70) & (r > g + 10) & (g >= b - 4)
+        # Leather only — exclude shaded gold lion/trim (g stays high vs r).
+        return (r > 55) & (r < 140) & (g > 28) & (g < 78) & (b < 58) & (r > g + 16) & (g > b)
 
     def look_counts(im):
         arr = np.array(im)
@@ -949,9 +976,10 @@ def main():
 
     for im, name in ((walk_contact_l, "walk"), (strike, "strike")):
         mask = scabbard_brown(im)
-        left_upper = int(mask[int(H * 0.24) : int(H * 0.36), int(W * 0.28) : int(W * 0.42)].sum())
-        right_hip = int(mask[int(H * 0.42) : int(H * 0.65), int(W * 0.55) : int(W * 0.72)].sum())
-        if right_hip < 400:
+        # Window is tall: RootZ march moves the hip toward TOP (smaller sy) on strike.
+        left_upper = int(mask[int(H * 0.18) : int(H * 0.34), int(W * 0.26) : int(W * 0.42)].sum())
+        right_hip = int(mask[int(H * 0.28) : int(H * 0.70), int(W * 0.52) : int(W * 0.80)].sum())
+        if right_hip < 250:
             raise SystemExit(f"FAIL missing character-right scabbard on {name}: right-hip brown px={right_hip}")
         if left_upper > 200:
             raise SystemExit(f"FAIL back/left sheath on {name}: left-upper brown px={left_upper}")
