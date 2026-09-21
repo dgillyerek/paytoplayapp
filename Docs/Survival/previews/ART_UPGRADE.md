@@ -1,5 +1,9 @@
 # Aldric 3D art upgrade
 
+## Gate 2 HOLD (blockout only)
+
+Look law Gate 1 is LOCKED. Texture polish, walk clips, and Play hub swap are **paused** until Derek PASSes the grey-clay silhouette vs `TURNAROUND_GATE1/LOCKED/`. See `Docs/Survival/previews/blockout/GATE2_BLOCKOUT.md`. **Gate 2 not claimed.**
+
 ## This pass (PATH B — Blender / FBX)
 
 - **Motion HOLD:** Walk/Attack `Evaluate()` keys from 5916447 / 1cd3320 stay. Pass thigh −X, pass-foot world ΔZ +, no L↔R weave, ~80° pass knee, tuck, ~0.40 m step, arm pendulum, TOP march. Play hub stays locked rear PNG until Derek PASS on **look**.

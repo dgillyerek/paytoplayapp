@@ -7,3 +7,9 @@ Look targets for the 3D pipeline (Design files, 2026-09-18).
 | `02_aldric_turnaround_orthos.png` | Front / left / right / rear orthos. Rear panel can **mirror** the scabbard; do not follow that. |
 
 **Scabbard SoT = character-right hip** as in `01_rear_LOCKED` (viewer-right from behind).
+## Gate 1 LOCKED (2026-09-21)
+
+- `00_portrait_COMPLETE_LOCKED.png` — face law (oval bust). Land Design bytes when present.
+- `03_turnaround_front_LOCKED.png` / `03_turnaround_side_r_LOCKED.png` / `03_turnaround_back_LOCKED.png` — mirrors of Gate 1 turnaround.
+- `03_turnaround_sheet_LOCKED.png` — working four-up. **02 rear is not SoT** if mirrored.
+- Scabbard SoT remains **character-right**.

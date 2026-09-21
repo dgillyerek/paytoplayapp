@@ -71,6 +71,15 @@ See `ART_UPGRADE.md` for the remaining painted-unwrap gap. **Do not claim Design
 
 ---
 
+## Gate 2 BLOCKOUT (this pass)
+
+Look law Gate 1 is **LOCKED** (`TURNAROUND_GATE1/LOCKED/`, portrait = face law).  
+Grey-clay blockout only: `sir_aldric_blockout.blend` + stills vs turnaround.  
+**Paused:** texture polish, walk clips, Play hub swap. Motion 5916447 holds until Design PASS on silhouette.  
+**Gate 2 not claimed.**
+
+---
+
 ## PASS / FAIL (Design gate)
 
 **PASS when all true:**
