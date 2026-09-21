@@ -137,13 +137,120 @@ def _wrap_fade(y: float) -> float:
     return 1.0
 
 
-def wrap_hang_arm_plates(ob, theta_span_deg=200.0) -> dict:
-    """Curl Arm_* XY cards around the hang-arm axis. Same verts / UVs / faces.
+def _arm_face_islands(me, arm_vert):
+    """Connected Arm_* face groups (stacked Meshy lames are separate islands)."""
+    adj = [[] for _ in range(len(me.polygons))]
+    vert_faces = defaultdict(list)
+    for fi, p in enumerate(me.polygons):
+        if not all(arm_vert[i] for i in p.vertices):
+            continue
+        for vi in p.vertices:
+            vert_faces[vi].append(fi)
+    arm_faces = [fi for fi, p in enumerate(me.polygons) if all(arm_vert[i] for i in p.vertices)]
+    for faces in vert_faces.values():
+        for a in faces:
+            for b in faces:
+                if a != b:
+                    adj[a].append(b)
+    seen = set()
+    out = []
+    for fi in arm_faces:
+        if fi in seen:
+            continue
+        q = deque([fi])
+        seen.add(fi)
+        ids = [fi]
+        while q:
+            cur = q.popleft()
+            for w in adj[cur]:
+                if w not in seen:
+                    seen.add(w)
+                    q.append(w)
+                    ids.append(w)
+        out.append(ids)
+    out.sort(key=len, reverse=True)
+    return out
 
-    Census (cc77d8a): solidify rims read as gold slats mid-swing; puff did
-    nothing because plates already sat outside r=0.046. Cards stay cards
-    unless the across-plate width is mapped onto θ. Gap faces the ribs so
-    Play-cam (rear / side swing) hits painted surface, not an edge.
+
+def drop_stacked_arm_cards(ob) -> dict:
+    """Keep the outer painted hang-arm plate per side. Delete inner slat islands.
+
+    Mid-swing gold bands are stacked Meshy lames (not capture). Hands / pauldrons
+    stay. Same atlas UVs on the kept plate.
+    """
+    me = ob.data
+    vg_names = {g.index: g.name for g in ob.vertex_groups}
+    arm_vert = [False] * len(me.vertices)
+    side_of = [0] * len(me.vertices)
+    for i, v in enumerate(me.vertices):
+        names = {vg_names.get(g.group, "") for g in v.groups if g.weight > 0.5}
+        if "Arm_R" in names:
+            arm_vert[i] = True
+            side_of[i] = 1
+        elif "Arm_L" in names:
+            arm_vert[i] = True
+            side_of[i] = -1
+    islands = _arm_face_islands(me, arm_vert)
+    print("arm face islands", [len(x) for x in islands[:12]], "of", len(islands))
+
+    def island_meta(ids):
+        cs = [me.polygons[i].center for i in ids]
+        ys = [c.y for c in cs]
+        xs = [c.x for c in cs]
+        cy = sum(ys) / len(ys)
+        cx = sum(xs) / len(xs)
+        side = 1 if cx > 0 else -1
+        a, b = (_ARM_R_A, _ARM_R_B) if side > 0 else (_ARM_L_A, _ARM_L_B)
+        rs = [dist_seg(c, a, b) for c in cs]
+        return {
+            "ids": ids,
+            "n": len(ids),
+            "y": cy,
+            "x": cx,
+            "side": side,
+            "r": sum(rs) / len(rs),
+            "hand": cy < 0.80,
+            "pauldron": cy > 1.26,
+        }
+
+    metas = [island_meta(ids) for ids in islands if ids]
+    kill = []
+    kept = {"Arm_R": 0, "Arm_L": 0, "hand": 0, "pauldron": 0, "drop": 0}
+    for side in (1, -1):
+        mid = [m for m in metas if m["side"] == side and not m["hand"] and not m["pauldron"] and m["n"] >= 8]
+        mid.sort(key=lambda m: (-m["r"], -m["n"]))
+        for i, m in enumerate(mid):
+            key = "Arm_R" if side > 0 else "Arm_L"
+            if i == 0:
+                kept[key] = m["n"]
+                continue
+            # inner / stacked lame
+            kill.extend(m["ids"])
+            kept["drop"] += m["n"]
+        for m in metas:
+            if m["side"] != side:
+                continue
+            if m["hand"]:
+                kept["hand"] += m["n"]
+            elif m["pauldron"]:
+                kept["pauldron"] += m["n"]
+    print("drop stacked arm cards", kept, "kill faces", len(kill))
+    if kill:
+        bm = bmesh.new()
+        bm.from_mesh(me)
+        bm.faces.ensure_lookup_table()
+        bmesh.ops.delete(bm, geom=[bm.faces[i] for i in kill if i < len(bm.faces)], context="FACES")
+        bm.to_mesh(me)
+        bm.free()
+        me.update()
+    return {"islands": len(islands), "killFaces": len(kill), **kept}
+
+
+def wrap_hang_arm_plates(ob, theta_span_deg=240.0) -> dict:
+    """Curl the kept Arm_* plate around the hang-arm axis. Same verts / UVs.
+
+    Stacked lames are dropped first. Across-plate width → θ. Constant r so
+    leftover stack cannot read as gold slats. Gap faces the ribs.
     """
     me = ob.data
     vg_names = {g.index: g.name for g in ob.vertex_groups}
@@ -175,7 +282,6 @@ def wrap_hang_arm_plates(ob, theta_span_deg=200.0) -> dict:
         if len(rows) < 12:
             print("wrap skip", gname, "n", len(rows))
             continue
-        # Height bands so the wrist stays thinner than the biceps.
         bands = defaultdict(list)
         for row in rows:
             bands[int(row[0].co.y * 25.0)].append(row)
@@ -189,16 +295,13 @@ def wrap_hang_arm_plates(ob, theta_span_deg=200.0) -> dict:
         for band in bands.values():
             bu = [r[3] for r in band]
             u_lo, u_hi = min(bu), max(bu)
-            span = max(0.020, u_hi - u_lo)
-            r_tube = max(0.034, min(0.056, 0.52 * span))
+            span = max(0.018, u_hi - u_lo)
+            r_tube = max(0.036, min(0.052, 0.50 * span))
             for v, fade, c, u, w, r0 in band:
                 u_n = (2.0 * (u - u_lo) / span) - 1.0
                 u_n = max(-1.0, min(1.0, u_n))
                 theta = u_n * half
-                # Keep a little original Z as shell thickness so the tube
-                # is not a single paper cylinder.
-                r = r_tube + max(-0.008, min(0.010, w * 0.35))
-                target = c + r * (math.cos(theta) * outward + math.sin(theta) * back)
+                target = c + r_tube * (math.cos(theta) * outward + math.sin(theta) * back)
                 v.co = v.co.lerp(target, fade)
                 moved[gname] += 1
 
@@ -497,7 +600,9 @@ def main():
     sheath2 = delete_extra_sheath(mesh_ob)
     shards = delete_armpit_elbow_shards(mesh_ob)
     counts = assign_exclusive(mesh_ob)
+    stacked = drop_stacked_arm_cards(mesh_ob)
     wrap = wrap_hang_arm_plates(mesh_ob)
+    wrap["stacked"] = stacked
     repair_arm_groups(mesh_ob)
     counts = recount_groups(mesh_ob)
     if counts.get("Scabbard", 0) < 40:
