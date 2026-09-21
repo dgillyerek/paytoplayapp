@@ -22,7 +22,8 @@ def font(size: int):
 
 def main() -> None:
     ART.mkdir(parents=True, exist_ok=True)
-    left = Image.open(PROOF / "world_rear.png").convert("RGB")
+    frozen = PROOF / "look_e5b132f" / "world_rear.png"
+    left = Image.open(frozen if frozen.exists() else PROOF / "world_rear.png").convert("RGB")
     right = Image.open(PROOF / "world_meshy_hang_rest.png").convert("RGB")
     w, h = left.size
     right = right.resize((w, h), Image.LANCZOS)
@@ -32,7 +33,7 @@ def main() -> None:
     d.text((24, 18), "GATE 3  |  Meshy-look hang rest vs e5b132f paint PASS  |  bind NOT claimed", fill=(236, 230, 210), font=f_lg)
     d.text(
         (24, 56),
-        "LEFT e5b132f world_rear  |  RIGHT this tip hang rest  |  UVs/Image_0+lion kept  |  no remesh/capsule  |  walk NOT claimed",
+        "LEFT e5b132f world_rear  |  RIGHT Path A retopo+project  |  no tube/capsule/paper hacks  |  bind NOT claimed",
         fill=(180, 176, 160),
         font=f_sm,
     )

@@ -82,10 +82,10 @@ def main() -> None:
     header = 140
     sheet = Image.new("RGB", (cw * 2, header + ch * len(pairs)), DARK)
     d = ImageDraw.Draw(sheet)
-    d.text((24, 16), "GATE 3  ·  PATH 2 paint iterate  ·  World-cam Play march angle", fill=(236, 230, 210), font=font(24))
+    d.text((24, 16), "PATH A  ·  clean retopo + Meshy project  ·  World-cam Play march angle", fill=(236, 230, 210), font=font(24))
     d.text((24, 52), "FOV 30  ·  1080×1920  ·  TOP = +Z = away  ·  NOT beauty portrait cam", fill=(180, 180, 176), font=font(16))
-    d.text((24, 78), "UV island bleed + SoT lion planar unwrap  ·  look NOT claimed", fill=(210, 176, 82), font=font(16))
-    d.text((24, 104), "Walk / Animator / Play hub HOLD  ·  8babba7 was UV cracks + lion smear", fill=(160, 160, 156), font=font(16))
+    d.text((24, 78), "QuadriFlow mid-poly + e5b132f albedo project  ·  bind NOT claimed", fill=(210, 176, 82), font=font(16))
+    d.text((24, 104), "Hub PNG HOLD  ·  no tube / capsule / paper-weight hacks", fill=(160, 160, 156), font=font(16))
     y0 = header
     lab = font(15)
     for left, ll, right, rl in pairs:
