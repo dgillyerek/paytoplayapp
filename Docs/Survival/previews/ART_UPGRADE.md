@@ -1,15 +1,21 @@
 # Aldric 3D art upgrade
 
-## Gate 3 Path 2 Meshy (LOOK stills)
+## Gate 3 Path 2 Meshy (LOOK stills — paint iterate)
 
 Design Meshy Flagship Image-to-3D from locked rear SoT, Decimate ~50k (original 1.77M faces / 57MB exceeded upload). **Not** the scripted loft.
 
+8babba7 World-cam FAIL: UV island cracks (shoulders/neck/joints) + smeared gold lion. This iterate:
+
+- UV occupancy bleed + dark-border inpaint + split-normals cleared
+- Dedicated planar SoT lion cards (`01_rear_LOCKED` / `01_FRONT`) on upper-torso cloth
+- Hang **not** applied (A-pose). Motion / Play hub HOLD.
+
 - GLB: `ThemePack/.../3d/sir_aldric_meshy_retopo.glb` + `design/.../AI_MESH_PATH2/out/`
 - Unity-oriented `.blend` for Play-cam stills (Y-up, +Z face, scabbard +X)
-- Proof: `Docs/Survival/previews/gate3/` front / rear / side R / ¾ + vs-SoT sheet
+- Proof: `Docs/Survival/previews/gate3/` front / rear / side R / ¾ + vs-SoT sheet + `gate3_uv_lion_delta.png`
 - Actor walk bind **unchanged**. Play hub PNG locked. Motion HOLD 5916447.
 
-**Look gate is not claimed.** Honest gaps: UV cracks, lion smear, A-pose vs hang.
+**Look gate is not claimed.** Neck groove / leftover gold specks / A-pose remain.
 
 ## Gate 3 FAIL iterate (segmented plate / helm / heraldry)
 

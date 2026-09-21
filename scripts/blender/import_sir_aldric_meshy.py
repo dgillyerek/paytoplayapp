@@ -124,6 +124,15 @@ def import_and_orient():
             me.update()
     for p in me.polygons:
         p.use_smooth = True
+    bpy.ops.object.select_all(action="DESELECT")
+    ob.select_set(True)
+    bpy.context.view_layer.objects.active = ob
+    bpy.ops.object.mode_set(mode="EDIT")
+    try:
+        bpy.ops.mesh.customdata_custom_splitnormals_clear()
+    except Exception:
+        pass
+    bpy.ops.object.mode_set(mode="OBJECT")
     return ob
 
 
@@ -241,7 +250,7 @@ def export_look(ob):
         "track": "meshy-path2",
         "gate": 3,
         "source": "AI_MESH_PATH2/out/aldric_meshy_retopo.glb",
-        "note": "Path 2 Meshy Flagship Image-to-3D (locked rear SoT), Blender Decimate ~50k. LOOK stills only. Not scripted loft.",
+        "note": "Path 2 Meshy + UV bleed + SoT lion cards. LOOK stills only. lookPassClaimed false. Not scripted loft.",
         "soT": "look_targets/01_rear_LOCKED.png",
         "turnaround": "TURNAROUND_GATE1/LOCKED/",
         "scabbard": "character-right",

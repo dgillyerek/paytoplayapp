@@ -1,6 +1,6 @@
 # Sir Aldric 3D (Theme A) — Gate 3
 
-**Look (Path 2):** Meshy Flagship Image-to-3D Decimate ~50k — `sir_aldric_meshy_retopo.glb` + `sir_aldric_meshy.blend`. Not scripted loft. World-cam stills in `Docs/Survival/previews/gate3/`. Look **not claimed**.
+**Look (Path 2):** Meshy Flagship Image-to-3D Decimate ~50k + UV-bleed / SoT lion-card iterate — `sir_aldric_meshy_retopo.glb` + `sir_aldric_meshy.blend`. Not scripted loft. World-cam stills in `Docs/Survival/previews/gate3/`. Look **not claimed**.
 
 **Motion bind (HOLD):** `sir_aldric_midpoly.mesh.txt` + `sir_aldric.fbx` on `SirAldric3DActor` / `Evaluate()`. Walk / Animator / Play hub paused.
 

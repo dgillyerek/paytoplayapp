@@ -57,11 +57,11 @@ def main() -> None:
     ART.mkdir(parents=True, exist_ok=True)
 
     shots = {
-        "world_rear": "PATH 2 Meshy  ·  World-cam Play rear  ·  TOP = away  ·  look NOT claimed",
-        "world_rear_34": "PATH 2 Meshy  ·  World-cam Play rear ¾  ·  scabbard character-RIGHT",
-        "world_front": "PATH 2 Meshy  ·  World-cam Play front  ·  FOV 30  ·  look NOT claimed",
-        "world_side_r": "PATH 2 Meshy  ·  World-cam Play side R  ·  scabbard character-RIGHT",
-        "world_34_front": "PATH 2 Meshy  ·  World-cam Play front ¾  ·  look NOT claimed",
+        "world_rear": "PATH 2 paint iterate  ·  UV bleed + SoT lion  ·  look NOT claimed",
+        "world_rear_34": "PATH 2 paint iterate  ·  rear ¾  ·  scabbard character-RIGHT",
+        "world_front": "PATH 2 paint iterate  ·  World-cam Play front  ·  look NOT claimed",
+        "world_side_r": "PATH 2 paint iterate  ·  side R  ·  scabbard character-RIGHT",
+        "world_34_front": "PATH 2 paint iterate  ·  front ¾  ·  look NOT claimed",
     }
     caps = {}
     for name, text in shots.items():
@@ -82,10 +82,10 @@ def main() -> None:
     header = 140
     sheet = Image.new("RGB", (cw * 2, header + ch * len(pairs)), DARK)
     d = ImageDraw.Draw(sheet)
-    d.text((24, 16), "GATE 3  ·  PATH 2 Meshy retopo  ·  World-cam Play march angle", fill=(236, 230, 210), font=font(24))
+    d.text((24, 16), "GATE 3  ·  PATH 2 paint iterate  ·  World-cam Play march angle", fill=(236, 230, 210), font=font(24))
     d.text((24, 52), "FOV 30  ·  1080×1920  ·  TOP = +Z = away  ·  NOT beauty portrait cam", fill=(180, 180, 176), font=font(16))
-    d.text((24, 78), "Meshy Flagship Image-to-3D (locked rear SoT)  ·  Decimate ~50k  ·  look NOT claimed", fill=(210, 176, 82), font=font(16))
-    d.text((24, 104), "A-pose vs Play hang is an honest pose gap  ·  walk / Play hub HOLD", fill=(160, 160, 156), font=font(16))
+    d.text((24, 78), "UV island bleed + SoT lion planar unwrap  ·  look NOT claimed", fill=(210, 176, 82), font=font(16))
+    d.text((24, 104), "Walk / Animator / Play hub HOLD  ·  8babba7 was UV cracks + lion smear", fill=(160, 160, 156), font=font(16))
     y0 = header
     lab = font(15)
     for left, ll, right, rl in pairs:
