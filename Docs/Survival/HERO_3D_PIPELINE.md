@@ -73,8 +73,9 @@ See `ART_UPGRADE.md` for the remaining painted-unwrap gap. **Do not claim Design
 
 ## Gate 2 BLOCKOUT (this pass)
 
-Look law Gate 1 is **LOCKED** (`TURNAROUND_GATE1/LOCKED/`, portrait = face law).  
-Grey-clay blockout only: `sir_aldric_blockout.blend` + stills vs turnaround.  
+Look law Gate 1 is **LOCKED** (`TURNAROUND_GATE1/LOCKED/` 01–05 + sheet; `look_targets/00_portrait_COMPLETE_LOCKED.png` = face law).  
+Grey-clay blockout only: `sir_aldric_blockout.blend` + stills vs turnaround (front + rear + ¾ + side_R).  
+Hard locks: scabbard character-RIGHT; plate / royal-blue surcoat volumes; lion space on the back.  
 **Paused:** texture polish, walk clips, Play hub swap. Motion 5916447 holds until Design PASS on silhouette.  
 **Gate 2 not claimed.**
 
