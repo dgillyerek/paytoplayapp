@@ -68,7 +68,7 @@ Runtime: `SirAldric3DActor` binds **Path 2 Meshy** (`sir_aldric_meshy.mesh.txt` 
 
 See `ART_UPGRADE.md` for the remaining DCC painted-mesh gap. **Do not claim Design eye PASS** unless Derek can scrub sample and Aldric and recognize the same gait.
 
-Gate 2 blockout is in `Docs/Survival/previews/blockout/`. CEO Gate 2 was a soft-PASS on volume (`5de0e16`). Gate 3 Path 2 Meshy look PASSed on `e5b132f`. Walk FAIL on `89481e5` and `71f0c4a` (Bone1 corridor). Hang-heat clip: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4`. Play hub stays paused. **Walk-with-look NOT claimed.**
+Gate 2 blockout is in `Docs/Survival/previews/blockout/`. CEO Gate 2 was a soft-PASS on volume (`5de0e16`). Gate 3 Path 2 Meshy look PASSed on `e5b132f`. Walk FAIL on `89481e5` / `71f0c4a` / `e56aeb1` (shatter weights). Retopo+skin clip: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4`. Play hub stays paused. **Walk-with-look NOT claimed.**
 
 ---
 

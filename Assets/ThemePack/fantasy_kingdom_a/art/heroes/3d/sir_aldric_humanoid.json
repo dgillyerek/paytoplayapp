@@ -1,7 +1,7 @@
 {
   "avatar": "Humanoid",
   "rest": "Actor hang (arms local −Y) — do not retarget to T-pose or Evaluate() regresses",
-  "bindPose": "Path 2 hang-heat FMT v4. Dup sheath deleted at GEO. Multi-bone heat on hang spans. Evaluate() keys unchanged.",
+  "bindPose": "Path 2 remesh mid-poly + hang skin FMT v4. One solid scabbard. Evaluate() keys unchanged.",
   "map": {
     "Hips": "Hips",
     "Spine": "Spine",

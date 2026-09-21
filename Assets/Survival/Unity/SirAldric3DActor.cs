@@ -11,11 +11,13 @@ using UnityEngine.Playables;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Runtime 3D Aldric: Path 2 Meshy look, hang-heat multi-bone (FMT v4).
+    /// Runtime 3D Aldric: Path 2 remesh mid-poly + hang skin (FMT v4).
+    /// Shatter-weight binds (89481e5 / 71f0c4a / e56aeb1) abandoned.
     /// Animator PlayableGraph walk/attack toward TOP. Motion SoT is Evaluate()
     /// (5916447 gait HOLD — do not edit keys). Editor-less bind is
-    /// sir_aldric_meshy.mesh.txt. Loft midpoly remains as archive.
-    /// Do not regress bone names. Play hub PNG stays locked.
+    /// sir_aldric_meshy.mesh.txt. DCC: sir_aldric_path2_clean.fbx.
+    /// Loft midpoly remains as archive. Do not regress bone names.
+    /// Play hub PNG stays locked. Walk-with-look is NOT claimed.
     /// </summary>
     public sealed class SirAldric3DActor : MonoBehaviour
     {

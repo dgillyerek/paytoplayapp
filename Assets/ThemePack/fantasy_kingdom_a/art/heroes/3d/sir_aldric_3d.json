@@ -11,6 +11,7 @@
   "archiveMesh": "sir_aldric_midpoly.mesh.txt",
   "archiveAtlas": "sir_aldric_atlas.png",
   "fbx": "sir_aldric.fbx",
+  "cleanFbx": "sir_aldric_path2_clean.fbx",
   "blend": "sir_aldric_meshy_skinned.blend",
   "lookBlend": "sir_aldric_meshy.blend",
   "lookGlb": "sir_aldric_meshy_retopo.glb",
