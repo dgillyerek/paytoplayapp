@@ -54,6 +54,8 @@ DCC: `sir_aldric_path2_clean.fbx` (Meshy, not capsules) + `sir_aldric_meshy_skin
 
 Source tip **`e5b132f`**. UVs/albedo preserved (GLB UVs + Image_0/lion atlas). Retopo was weld + extra-sheath GEO-delete + limited arm-face solidify — **not** voxel remesh, **not** capsule arms in the hero Game-view.
 
-`fd9d6f8` LOOK PASS / BIND FAIL: mid-swing arm sheets + mid/leg tear bands (scabbard one). This iterate: isolated `Arm_*` solidify+prune; full hang-leg tubes so hem cannot Y-cut the shin. LOOK path unchanged. **Do not claim bind PASS. Do not claim walk PASS.** Hub PNG locked.
+`fd9d6f8` LOOK PASS / BIND FAIL: mid-swing arm sheets + mid/leg tear bands (scabbard one). `cc77d8a` isolated `Arm_*` solidify+prune; full hang-leg tubes so hem cannot Y-cut the shin. LOOK path unchanged. Design FAIL bind again — MP4 mid-swing still sheets.
+
+**Mesh-vs-capture (mandatory):** same mid-swing t=0.625. A = Actor LBS still (Unity skin path, no encoder). B = offline Blender EEVEE. C = FAIL MP4 n=10. Eyed: A+B+C all tear → **MESH**, not capture. Sheet `gate3_mesh_vs_capture_mid_swing.png`. Next: hang-arm plate wrap (same verts/UVs), not another weight iterate. **Do not claim bind PASS. Do not claim walk PASS.** Hub PNG locked.
 
 vs-fd9: `gate3_path2_vs_fd9d6f8.png` + frozen `fail_fd9d6f8/`.

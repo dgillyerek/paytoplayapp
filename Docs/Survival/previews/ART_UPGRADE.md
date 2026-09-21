@@ -1,12 +1,24 @@
 # Aldric 3D art upgrade
 
+## Gate 3 mesh-vs-capture (cc77d8a FAIL — VERDICT: MESH)
+
+Design **FAIL** bind on `cc77d8a` (LOOK PASS holds). Mandatory proof before another bind claim:
+
+- **A** Actor LBS still PNG — same `mesh.txt` + bindposes + `Evaluate()` as `SirAldric3DActor` (Editor Game-view is not on this VM; no video encoder).
+- **B** offline Blender EEVEE `world_walk_mid_swing.png` (same pose, no Unity recorder).
+- **C** `cc77d8a` FAIL MP4 frame n=10 (t=0.625).
+
+**Eyed:** A, B, and C all show the same left navy arm sheet/smear, right stacked gold plates, and fuzzy hands. Encoder does not invent tears. Offline ALSO tears → **MESH/geo** (thin XY hang-arm cards + solidify rims), not capture/AA/post. Sheet: `gate3_mesh_vs_capture_mid_swing.png`. **Bind NOT claimed.**
+
+Next mesh actor (not another exclusive-weight iterate): curl hang-arm plates around the bone axis. Same verts/UVs. No remesh/capsule.
+
 ## Gate 3 Path 2 bind iterate (LOOK PASS fd9d6f8 / BIND FAIL)
 
 Design **LOOK PASS** on `fd9d6f8` Game-view (Meshy/`e5b132f` knight). **BIND FAIL:** MP4 arm sheets mid-swing + horizontal mid/leg tear bands. Scabbard one.
 
-This tip keeps the same GLB UVs / Image_0+lion atlas (do not touch the LOOK path). Bind iterate: isolated `Arm_*` solidify + prune; hem no longer Y-cuts leg tubes (full UpLeg/Leg/Foot); hairline armpit slivers only. `Evaluate()` `5916447` reused.
+`cc77d8a` kept the same GLB UVs / Image_0+lion atlas. Isolated `Arm_*` solidify + prune; hem no longer Y-cuts leg tubes. Stills vs fd9 improved — not enough; MP4 still FAIL. Census proved that fail is MESH. `Evaluate()` `5916447` reused.
 
-Proof: `sir_aldric_path2_walk_toward_top.mp4` + `gate3_path2_vs_fd9d6f8.png`. **Bind NOT claimed. Walk-with-look NOT claimed.** Hub PNG locked.
+Proof: `sir_aldric_path2_walk_toward_top.mp4` + `gate3_path2_vs_fd9d6f8.png` + `gate3_mesh_vs_capture_mid_swing.png`. **Bind NOT claimed. Walk-with-look NOT claimed.** Hub PNG locked.
 
 ## Gate 3 Path 2 (Meshy-look e5b132f hang-skin — Derek STOP remesh/capsule)
 
