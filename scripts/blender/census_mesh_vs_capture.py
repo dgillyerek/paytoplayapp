@@ -18,6 +18,7 @@ import json
 import subprocess
 import sys
 from collections import defaultdict
+import os
 from pathlib import Path
 
 import numpy as np
@@ -284,7 +285,7 @@ def compose(actor_p, blender_p, mp4_p, dest: Path):
     for p, label in (
         (actor_p, "A  Actor LBS  |  Unity skin path  |  still PNG (no encoder)"),
         (blender_p, "B  Blender EEVEE  |  same Evaluate() pose  |  offline still"),
-        (mp4_p, "C  FAIL MP4 frame  |  cc77d8a video encoder  |  n=10 t=0.625"),
+        (mp4_p, "C  MP4 frame  |  video encoder  |  n=10 t=0.625"),
     ):
         im = Image.open(p).convert("RGB")
         tw = 420
@@ -308,12 +309,19 @@ def compose(actor_p, blender_p, mp4_p, dest: Path):
 def main():
     WALK.mkdir(parents=True, exist_ok=True)
     ART.mkdir(parents=True, exist_ok=True)
-    actor_p = WALK / "census_actor_lbs_mid_swing.png"
-    blender_p = WALK / "census_blender_mid_swing.png"
-    if not blender_p.exists():
+    tag = os.environ.get("CENSUS_TAG", "").strip()
+    if tag:
+        actor_p = WALK / f"census_{tag}_actor_lbs_mid_swing.png"
         blender_p = WALK / "world_walk_mid_swing.png"
-    mp4_p = WALK / "census_mp4_mid_swing.png"
-    sheet_p = PROOF / "gate3_mesh_vs_capture_mid_swing.png"
+        mp4_p = WALK / f"census_{tag}_mp4_mid_swing.png"
+        sheet_p = PROOF / f"gate3_mesh_vs_capture_{tag}_mid_swing.png"
+    else:
+        actor_p = WALK / "census_actor_lbs_mid_swing.png"
+        blender_p = WALK / "census_blender_mid_swing.png"
+        if not blender_p.exists():
+            blender_p = WALK / "world_walk_mid_swing.png"
+        mp4_p = WALK / "census_mp4_mid_swing.png"
+        sheet_p = PROOF / "gate3_mesh_vs_capture_mid_swing.png"
 
     if "--compose-only" in sys.argv:
         compose(actor_p, blender_p, mp4_p, sheet_p)
@@ -358,8 +366,9 @@ def main():
             "mp4Png": str(mp4_p.relative_to(ROOT)),
             "sheet": str(sheet_p.relative_to(ROOT)),
         }
-        (PACK3D / "sir_aldric_mesh_vs_capture.json").write_text(json.dumps(note, indent=2) + "\n")
-        print("census json written — eye the sheet before a bind verdict")
+        json_name = "sir_aldric_mesh_vs_capture_wrap.json" if os.environ.get("CENSUS_TAG") else "sir_aldric_mesh_vs_capture.json"
+        (PACK3D / json_name).write_text(json.dumps(note, indent=2) + "\n")
+        print("census json written", json_name, "— eye the sheet before a bind verdict")
         return
 
     data = np.load("/tmp/actor_lbs_mid.npz")

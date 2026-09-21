@@ -321,11 +321,18 @@ def wrap_hang_arm_plates(ob, theta_span_deg=300.0) -> dict:
                 moved[gname] += 1
 
     me.update()
+    vg_names = {g.index: g.name for g in ob.vertex_groups}
     bm = bmesh.new()
     bm.from_mesh(me)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     bm.to_mesh(me)
     bm.free()
+    for p in me.polygons:
+        names = set()
+        for vi in p.vertices:
+            names |= {vg_names.get(g.group, "") for g in me.vertices[vi].groups if g.weight > 0.5}
+        if names & {"Arm_L", "Arm_R"}:
+            p.use_smooth = True
     me.update()
     print("wrap hang-arm", moved, "span", theta_span_deg, "stats", stats)
     return {"moved": moved, "thetaSpanDeg": theta_span_deg, "stats": stats, "vertsAfter": len(me.vertices)}
