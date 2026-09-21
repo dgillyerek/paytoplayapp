@@ -4,11 +4,11 @@
   "walkPassClaimed": false,
   "frames": [0, 5, 10, 15],
   "unityEditor": false,
-  "failTip": "110443d",
-  "failCause": "one rigid Arm_* spear read as sideways sheets + tear bands across the walk MP4. 1010678 colinear segments still silhouetted as a spear at n=0/15.",
-  "premise": "pre-bent fat Arm/Fore/Hand closed tubes + steel-only e5b132f UV (no navy/gold wrap)",
-  "eyed": "A LBS, B EEVEE, and C new MP4 at n=0,5,10,15 show thicker bent hang-arm volumes with fist ends. n=0/15 swung arm is still a long diagonal but has visible thickness + hand, not the 110443d paper needle. Tear-band navy/gold wrap gone (steel mottling remains). Scabbard one. Bind NOT claimed.",
+  "failTip": "76eab9d",
+  "failCause": "triple-arm ghost: leftover Meshy hang paper (Chest/Spine/Hips) + 3 unjoined Arm/Fore/Hand tubes",
+  "premise": "ONE connected loft per side; leftover hang paper deleted; compact steel UV",
+  "eyed": "A/B/C n=0,5,10,15: one closed hang-arm volume per side. No second/third ghost limb. n=0/15 swung arm is a short thick volume with a fist, not a paper diagonal. Body/tabard/lion/scabbard still Meshy. Bind NOT claimed.",
   "sheet": "Docs/Survival/previews/gate3/gate3_mesh_vs_capture_cycle.png",
-  "vsFail": "Docs/Survival/previews/gate3/gate3_path2_vs_110443d.png",
+  "vsFail": "Docs/Survival/previews/gate3/gate3_path2_vs_76eab9d.png",
   "walkClip": "Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4"
 }

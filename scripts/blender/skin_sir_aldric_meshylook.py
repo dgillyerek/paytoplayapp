@@ -248,7 +248,7 @@ def _collect_arm_donors(ob):
 
 
 def _project_tube_uvs(tube_ob, donors, a, b):
-    """Wrap the Meshy plate UV island around the closed tube (reproject, not curl)."""
+    """Stamp a compact steel Image_0 patch. Full-island wrap = stretch bands."""
     me = tube_ob.data
     if me.uv_layers.active is None:
         me.uv_layers.new(name="UVMap")
@@ -257,12 +257,12 @@ def _project_tube_uvs(tube_ob, donors, a, b):
         for li in range(len(uv_layer.data)):
             uv_layer.data[li].uv = (0.5, 0.5)
         return
-    us = [d[1][0] for d in donors]
-    vs = [d[1][1] for d in donors]
-    u_lo, u_hi = min(us), max(us)
-    v_lo, v_hi = min(vs), max(vs)
-    ys = [d[2] for d in donors]
-    y_lo, y_hi = min(ys), max(ys)
+    us = sorted(d[1][0] for d in donors)
+    vs = sorted(d[1][1] for d in donors)
+    u_m = us[len(us) // 2]
+    v_m = vs[len(vs) // 2]
+    # Tiny plate window — θ/length stay inside steel, no navy/gold wrap.
+    half = 0.016
     an, x, z = _tube_frame(a, b)
     me.calc_loop_triangles()
     for poly in me.polygons:
@@ -272,36 +272,45 @@ def _project_tube_uvs(tube_ob, donors, a, b):
             off = p - (a + t * (b - a))
             theta = math.atan2(off.dot(z), off.dot(x))
             u_n = (theta + math.pi) / (2.0 * math.pi)
-            # v follows donor plate along the hang (y), not a raw 0-1 stretch
-            v_n = (p.y - y_lo) / max(1e-6, y_hi - y_lo)
-            v_n = max(0.0, min(1.0, v_n))
             uv_layer.data[li].uv = (
-                u_lo + u_n * (u_hi - u_lo),
-                v_lo + v_n * (v_hi - v_lo),
+                u_m + (u_n - 0.5) * 2.0 * half,
+                v_m + (t - 0.5) * 2.0 * half,
             )
 
 
-def _delete_paper_arm_faces(ob) -> int:
-    """Remove Arm_* paper islands (mid + hand). Pauldrons on Chest stay."""
+def _delete_hang_corridor_ghosts(ob) -> int:
+    """Delete Arm/Fore/Hand geo AND leftover Meshy paper in the hang corridor.
+
+    76eab9d census: 6 unjoined tubes + leftover Chest/Spine/Hips paper outboard
+    = triple-arm ghost. Pauldrons y>1.30 and scabbard stay.
+    """
     me = ob.data
     vg_names = {g.index: g.name for g in ob.vertex_groups}
+    arm_bones = {"Arm_L", "Arm_R", "Fore_L", "Fore_R", "Hand_L", "Hand_R"}
     kill = []
     for fi, p in enumerate(me.polygons):
         names = set()
         for vi in p.vertices:
             names |= {vg_names.get(g.group, "") for g in me.vertices[vi].groups if g.weight > 0.5}
-        if not (names & {"Arm_L", "Arm_R"}):
+        c = p.center
+        if names & arm_bones:
+            kill.append(fi)
             continue
-        if p.center.y > 1.30:
+        if "Scabbard" in names:
             continue
-        kill.append(fi)
-    print("delete paper arm faces", len(kill), "of", len(me.polygons))
+        if c.y > 1.30:
+            continue
+        if dist_seg(c, _SCAB_A, _SCAB_B) < 0.070:
+            continue
+        # leftover Meshy hang-arm plates (Chest/Spine/Hips) — outboard of tabard
+        if 0.60 < c.y < 1.30 and abs(c.x) > 0.255 and abs(c.z) < 0.24:
+            kill.append(fi)
+    print("delete hang-corridor ghosts", len(kill), "of", len(me.polygons))
     if kill:
         bm = bmesh.new()
         bm.from_mesh(me)
         bm.faces.ensure_lookup_table()
         bmesh.ops.delete(bm, geom=[bm.faces[i] for i in kill if i < len(bm.faces)], context="FACES")
-        # drop leftover loose verts
         bm.verts.ensure_lookup_table()
         loose = [v for v in bm.verts if not v.link_faces]
         if loose:
@@ -321,36 +330,94 @@ def _is_plate_steel(rgb: tuple[int, int, int]) -> bool:
     return 70 < (r + g + b) / 3 < 210
 
 
-def replace_hang_arms_closed_tubes(ob) -> dict:
-    """Closed hang-arm volumes that stay closed ACROSS the walk cycle.
+def _closed_bent_arm_object(name, pts, radii, segs=16, rings_per=5, wall=0.024):
+    """ONE watertight loft along a polyline. Not three separate tubes."""
+    samples = []
+    for seg in range(len(pts) - 1):
+        a, b = pts[seg], pts[seg + 1]
+        r0, r1 = radii[seg], radii[seg + 1]
+        for i in range(rings_per):
+            if seg > 0 and i == 0:
+                continue
+            t = i / (rings_per - 1)
+            samples.append((a.lerp(b, t), r0 * (1.0 - t) + r1 * t))
+    bm = bmesh.new()
+    outer, inner = [], []
+    for i, (c, r) in enumerate(samples):
+        nxt = samples[min(i + 1, len(samples) - 1)][0]
+        prv = samples[max(i - 1, 0)][0]
+        an, x, z = _tube_frame(prv, nxt)
+        ri = max(0.010, r - wall)
+        ring_o, ring_i = [], []
+        for k in range(segs):
+            ang = 2.0 * math.pi * k / segs
+            radial = math.cos(ang) * x + math.sin(ang) * z
+            ring_o.append(bm.verts.new(c + radial * r))
+            ring_i.append(bm.verts.new(c + radial * ri))
+        outer.append(ring_o)
+        inner.append(ring_i)
+    bm.verts.ensure_lookup_table()
 
-    110443d FAIL: one rigid Arm_* spear. 1010678 FAIL risk: three colinear
-    tubes still silhouette as a 70 cm spear at swing extremes (n=0/15).
-    Rest tubes are PRE-BENT (fore/hand forward +Z, outboard) and fatter so
-    the MP4 reads as an L-volume, not a sideways sheet. Steel-only UV
-    reproject (no navy/gold wrap). Body/tabard/lion/scabbard not remeshed.
+    def quad(vs):
+        try:
+            bm.faces.new(vs)
+        except ValueError:
+            pass
+
+    for i in range(len(samples) - 1):
+        for k in range(segs):
+            k2 = (k + 1) % segs
+            quad((outer[i][k], outer[i][k2], outer[i + 1][k2], outer[i + 1][k]))
+            quad((inner[i][k2], inner[i][k], inner[i + 1][k], inner[i + 1][k2]))
+    for k in range(segs):
+        k2 = (k + 1) % segs
+        quad((outer[0][k2], outer[0][k], inner[0][k], inner[0][k2]))
+        quad((outer[-1][k], outer[-1][k2], inner[-1][k2], inner[-1][k]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    me = bpy.data.meshes.new(name)
+    bm.to_mesh(me)
+    bm.free()
+    me.update()
+    for p in me.polygons:
+        p.use_smooth = False
+    ob = bpy.data.objects.new(name, me)
+    bpy.context.collection.objects.link(ob)
+    return ob
+
+
+def replace_hang_arms_closed_tubes(ob) -> dict:
+    """ONE closed hang-arm loft per side. 76eab9d ghost = leftover paper + 3 tubes.
+
+    Delete leftover Meshy hang paper. Loft one bent volume shoulder→fist.
+    Arm/Fore/Hand weights along that single mesh. Compact steel UV.
+    Body/tabard/lion/scabbard not remeshed. Not unpainted capsules.
     """
     donors, mat_idx = _collect_arm_donors(ob)
-    killed = _delete_paper_arm_faces(ob)
-    # Pre-bent hang: elbow/wrist step forward (+Z) so rear-cam swing is an L.
-    # Overlap joints so Fore rotation cannot open a paper gap.
+    killed = _delete_hang_corridor_ghosts(ob)
+    # One polyline per side. Moderate +Z — not three sticks, not a 70cm spear.
     specs = [
-        ("Arm_R", Vector((0.26, 1.32, 0.02)), Vector((0.34, 1.10, 0.08)), 0.082, 0.072),
-        ("Fore_R", Vector((0.34, 1.12, 0.08)), Vector((0.40, 0.88, 0.18)), 0.070, 0.056),
-        ("Hand_R", Vector((0.40, 0.90, 0.18)), Vector((0.42, 0.74, 0.20)), 0.052, 0.044),
-        ("Arm_L", Vector((-0.26, 1.32, 0.02)), Vector((-0.34, 1.10, 0.08)), 0.082, 0.072),
-        ("Fore_L", Vector((-0.34, 1.12, 0.08)), Vector((-0.40, 0.88, 0.18)), 0.070, 0.056),
-        ("Hand_L", Vector((-0.40, 0.90, 0.18)), Vector((-0.42, 0.74, 0.20)), 0.052, 0.044),
+        (
+            "R",
+            [Vector((0.25, 1.30, 0.02)), Vector((0.30, 1.12, 0.06)),
+             Vector((0.32, 0.96, 0.10)), Vector((0.33, 0.88, 0.12))],
+            [0.090, 0.080, 0.068, 0.056],
+        ),
+        (
+            "L",
+            [Vector((-0.25, 1.30, 0.02)), Vector((-0.30, 1.12, 0.06)),
+             Vector((-0.32, 0.96, 0.10)), Vector((-0.33, 0.88, 0.12))],
+            [0.090, 0.080, 0.068, 0.056],
+        ),
     ]
     groups = {g.name: g for g in ob.vertex_groups}
     for name in ("Arm_L", "Arm_R", "Fore_L", "Fore_R", "Hand_L", "Hand_R"):
         if name not in groups:
             groups[name] = ob.vertex_groups.new(name=name)
     added = {}
-    for gname, a, b, r0, r1 in specs:
-        side = "Arm_R" if gname.endswith("_R") else "Arm_L"
-        tube = _closed_tube_object(f"HangTube_{gname}", a, b, r_top=r0, r_bot=r1, segs=16, rings=8, wall=0.022)
-        _project_tube_uvs(tube, donors.get(side, []), a, b)
+    for suffix, pts, radii in specs:
+        side = f"Arm_{suffix}"
+        tube = _closed_bent_arm_object(f"HangArm_{suffix}", pts, radii, segs=16, rings_per=5, wall=0.024)
+        _project_tube_uvs(tube, donors.get(side, []), pts[0], pts[-1])
         if ob.data.materials:
             for mat in ob.data.materials:
                 tube.data.materials.append(mat)
@@ -364,18 +431,22 @@ def replace_hang_arms_closed_tubes(ob) -> dict:
         bpy.ops.object.join()
         n_new = len(ob.data.vertices) - before
         for i in range(before, len(ob.data.vertices)):
-            groups[gname].add([i], 1.0, "REPLACE")
-        added[gname] = n_new
-        print("joined closed tube", gname, "new verts", n_new)
+            p = ob.data.vertices[i].co
+            bone = f"Hand_{suffix}" if p.y < 0.96 else (
+                f"Fore_{suffix}" if p.y < 1.12 else f"Arm_{suffix}"
+            )
+            groups[bone].add([i], 1.0, "REPLACE")
+        added[f"HangArm_{suffix}"] = n_new
+        print("joined ONE bent arm", suffix, "new verts", n_new)
     note = {
-        "premise": "pre-bent fat Arm/Fore/Hand closed tubes + steel-only e5b132f UV",
-        "killedPaperFaces": killed,
+        "premise": "ONE connected loft per side; leftover paper deleted — vs 76eab9d triple-arm",
+        "killedGhostFaces": killed,
         "donors": {k: len(v) for k, v in donors.items()},
         "added": added,
         "vertsAfter": len(ob.data.vertices),
         "facesAfter": len(ob.data.polygons),
     }
-    print("closed hang-arm tubes", note)
+    print("one hang-arm loft per side", note)
     return note
 
 
@@ -556,12 +627,12 @@ def repair_arm_groups(ob):
         if names & set(MESH_BONES):
             continue
         p = v.co
-        if p.x > 0.18 and 0.68 < p.y < 1.38 and (dist_seg(p, _ARM_R_A, _ARM_R_B) < 0.18 or p.z > 0.04):
-            bone = "Hand_R" if p.y < 0.90 else ("Fore_R" if p.y < 1.12 else "Arm_R")
+        if p.x > 0.16 and 0.80 < p.y < 1.38 and (dist_seg(p, _ARM_R_A, _ARM_R_B) < 0.20 or p.z > 0.03):
+            bone = "Hand_R" if p.y < 0.96 else ("Fore_R" if p.y < 1.12 else "Arm_R")
             groups[bone].add([i], 1.0, "REPLACE")
             n += 1
-        elif p.x < -0.18 and 0.68 < p.y < 1.38 and (dist_seg(p, _ARM_L_A, _ARM_L_B) < 0.18 or p.z > 0.04):
-            bone = "Hand_L" if p.y < 0.90 else ("Fore_L" if p.y < 1.12 else "Arm_L")
+        elif p.x < -0.16 and 0.80 < p.y < 1.38 and (dist_seg(p, _ARM_L_A, _ARM_L_B) < 0.20 or p.z > 0.03):
+            bone = "Hand_L" if p.y < 0.96 else ("Fore_L" if p.y < 1.12 else "Arm_L")
             groups[bone].add([i], 1.0, "REPLACE")
             n += 1
     print("repair arm verts", n)
@@ -739,7 +810,7 @@ def main():
         "tubes": tubes,
         "shards": shards,
         "vsFail": "fd9d6f8",
-        "oldPremise": "110443d rigid spear + 1010678 colinear segments still read as n=0/15 sideways sheets. Pre-bent fat tubes.",
+        "oldPremise": "76eab9d triple-arm ghost: leftover Meshy paper + 3 unjoined Arm/Fore/Hand tubes",
         "motion": "5916447 Evaluate() keys reused",
         "scabbard": "character-right",
         "playHubLocked": True,

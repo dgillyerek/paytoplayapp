@@ -436,9 +436,9 @@ def cycle_main():
         "frames": list(CYCLE_NS),
         "unityEditor": False,
         "sheet": "Docs/Survival/previews/gate3/gate3_mesh_vs_capture_cycle.png",
-        "failTip": "110443d",
-        "premise": "pre-bent fat Arm/Fore/Hand closed tubes + steel-only e5b132f UV — cycle A/B/C",
-        "vsFail": "Docs/Survival/previews/gate3/gate3_path2_vs_110443d.png",
+        "failTip": "76eab9d",
+        "premise": "ONE connected loft per side; leftover paper deleted — cycle A/B/C",
+        "vsFail": "Docs/Survival/previews/gate3/gate3_path2_vs_76eab9d.png",
         "walkClip": "Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4",
     }
     (PACK3D / "sir_aldric_mesh_vs_capture_cycle.json").write_text(json.dumps(note, indent=2) + "\n")

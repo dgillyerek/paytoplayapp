@@ -59,6 +59,6 @@ Source tip **`e5b132f`**. UVs/albedo preserved (GLB UVs + Image_0/lion atlas). R
 **Mesh-vs-capture (mandatory):** same mid-swing t=0.625. A = Actor LBS still (Unity skin path, no encoder). B = offline Blender EEVEE. C = MP4 n=10.
 
 - `cc77d8a` FAIL: A+B+C all tear → **MESH**. Sheet `gate3_mesh_vs_capture_mid_swing.png`.
-- `110443d` retract: MP4 cycle FAIL (rigid Arm_* spear). `1010678` colinear segments still silhouetted as a spear at n=0/15. This tip: **pre-bent fat** Arm/Fore/Hand closed tubes + steel-only UV. Cycle sheet `gate3_mesh_vs_capture_cycle.png` + `gate3_path2_vs_110443d.png` (MP4 vs MP4). **Do not claim bind PASS. Do not claim walk PASS.** Hub PNG locked.
+- `76eab9d` FAIL: triple-arm ghost (leftover Meshy paper + 3 unjoined tubes). This tip: delete leftover hang paper; **ONE loft per side**. Cycle sheet + `gate3_path2_vs_76eab9d.png`. **Do not claim bind PASS.** Hub PNG locked.
 
 vs-fd9: `gate3_path2_vs_fd9d6f8.png` + frozen `fail_fd9d6f8/`.
