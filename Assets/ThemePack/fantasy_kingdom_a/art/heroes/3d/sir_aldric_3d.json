@@ -15,9 +15,10 @@
   "blend": "sir_aldric_meshy_skinned.blend",
   "lookBlend": "sir_aldric_meshy.blend",
   "lookGlb": "sir_aldric_meshy_retopo.glb",
-  "verts": 17240,
-  "tris": 35270,
+  "verts": 32424,
+  "tris": 53044,
   "lookPassClaimed": true,
+  "bindPassClaimed": false,
   "walkPassClaimed": false,
   "playHubLocked": true,
   "motion": "5916447 Evaluate() HOLD"

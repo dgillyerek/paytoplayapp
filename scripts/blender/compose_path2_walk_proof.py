@@ -24,7 +24,7 @@ def font(size: int):
 def main() -> None:
     ART.mkdir(parents=True, exist_ok=True)
     caps = {
-        "pass_l": "PASS L  |  arm-islands  |  bind NOT claimed",
+        "pass_l": "PASS L  |  Meshy-look e5b132f  |  bind NOT claimed",
         "contact_l": "CONTACT L  |  one scabbard character-RIGHT  |  TOP away",
         "pass_r": "PASS R  |  Evaluate() 5916447 reused",
         "contact_r": "CONTACT R  |  Play hub PNG still locked",
@@ -44,7 +44,7 @@ def main() -> None:
     w, h = cells[0].size
     sheet = Image.new("RGB", (w * 2, h * 2 + 110), (16, 16, 14))
     d = ImageDraw.Draw(sheet)
-    d.text((24, 18), "GATE 3  |  PATH 2 arm-islands  |  Game-view rear  |  bind NOT claimed", fill=(236, 230, 210), font=f_lg)
+    d.text((24, 18), "GATE 3  |  PATH 2 Meshy-look e5b132f  |  Game-view rear  |  bind NOT claimed", fill=(236, 230, 210), font=f_lg)
     d.text(
         (24, 56),
         "Play cam (0, 2.80, -5.40)  |  FOV 30  |  TOP = +Z  |  Evaluate() HOLD  |  walk NOT claimed",

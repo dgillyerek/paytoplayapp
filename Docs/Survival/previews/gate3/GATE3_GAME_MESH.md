@@ -1,6 +1,6 @@
-# Gate 3 — Path 2 retopo + hang-skin FBX (shatter weights abandoned)
+# Gate 3 — Path 2 Meshy-look hang-skin (e5b132f)
 
-Design **FAIL** walk-with-look on `89481e5`, `71f0c4a`, and `e56aeb1` — same three hard FAILs (arm slabs / stacked scabbard / tear bands). Look PASS on paint stills `e5b132f` still stands. **Walk-with-look is NOT claimed.** Play hub PNG locked.
+Design **FAIL** walk-with-look on `89481e5`, `71f0c4a`, `e56aeb1` (shatter weights) then remesh/capsule Game-view (`61e023d` / `c840b73`). Derek STOP: remesh/capsule threw away paint PASS `e5b132f`. Look PASS on paint stills still stands. **Walk-with-look is NOT claimed.** Play hub PNG locked.
 
 ## Census (why weights-on-shatter is dead)
 
@@ -24,15 +24,16 @@ Three binds on that shell all shredded under `Evaluate()`:
 
 ## New premise (this tip)
 
-**Retopo / remesh Path 2 look into a clean mid-poly, then proper Blender hang skin → FBX + FMT v4.**
+**Hero look = Meshy GLB / `e5b132f`. Clean for skin without destroying albedo. Then hang-skin + Evaluate().**
 
-- Voxel remesh after deleting sheath shards; arms pushed out so hang tubes stay solid volumes (not tabard sheets).
-- **One** solid scabbard capsule on character-RIGHT (not stacked Meshy hem/sheath shells).
-- Look albedo transferred from the look-PASS Path 2 source (`e5b132f` Image_0 + lion cards).
-- Hang armature: upper + fore + hand, up-leg + shin + foot. Actor `Bone4`.
+- Source: `aldric_meshy_retopo.glb` + paint-PASS Image_0 / SoT lion cards.
+- UV / albedo: original GLB UVs kept. Atlas = Image_0 + lion-card strip (`combine_atlas_and_remap`). Game-view renders original mats before remap.
+- Clean: GEO-delete extra sheath islands + 1mm weld (11283 → 12 islands). No voxel remesh. No capsule arms in Game-view.
+- Arm volume: small same-side hang-arm faces solidified ~5cm (UVs kept on the Meshy shell); huge leftover faces deleted.
+- Exclusive hang-volume weights; cloth/hem locked before `Arm_*`. One remaining sheath → Scabbard.
 - `Evaluate()` keys from `5916447` **reused**. No gait rewrite.
 
-Rebuild: `blender --background --python scripts/blender/skin_sir_aldric_retopo.py` then `python3 scripts/blender/compose_path2_walk_proof.py` and `python3 scripts/blender/compose_vs_e56_fail.py`
+Rebuild: `blender --background --python scripts/blender/skin_sir_aldric_meshylook.py` then `python3 scripts/blender/compose_path2_walk_proof.py` and `python3 scripts/blender/compose_vs_e5b132f.py`
 
 ## KEEP
 
@@ -44,14 +45,13 @@ Play World-cam `(0, 2.80, −5.40)` look-at `(0, 0.90, 0.50)` FOV 30, 1080×1920
 
 - `sir_aldric_path2_walk_toward_top.mp4`
 - `gate3_path2_walk_phases.png`
-- `gate3_path2_vs_e56aeb1.png` (Design-asked side-by-side vs e56 FAIL)
-- `walk/world_walk_{pass,contact}_{l,r}.png`
-- `fail_e56aeb1/` — frozen e56 stills
+- `gate3_meshy_hang_vs_e5b132f.png` (hang rest vs e5b132f `world_rear`)
+- `walk/world_walk_{pass,contact}_{l,r}.png` + `walk/world_walk_mid_swing.png`
 
-DCC: `sir_aldric_path2_clean.fbx` + `sir_aldric_meshy_skinned.blend`. Runtime still `sir_aldric_meshy.mesh.txt` (FMT v4).
+DCC: `sir_aldric_path2_clean.fbx` (Meshy, not capsules) + `sir_aldric_meshy_skinned.blend`. Runtime `sir_aldric_meshy.mesh.txt` (FMT v4).
 
 ## Honest ART
 
-`61e023d` remesh stills looked cleaner than the **Game-view MP4**. Design retracted bind PASS: MP4 still FAILed arm slab/sheets + mid/leg tear bands (scabbard = one, progress).
+Source tip **`e5b132f`**. UVs/albedo preserved (GLB UVs + Image_0/lion atlas). Retopo was weld + extra-sheath GEO-delete + limited arm-face solidify — **not** voxel remesh, **not** capsule arms in the hero Game-view.
 
-This iterate: **detach hang-arm islands** from the body, inflate them to solid tubes, exclusive 1-bone weights (no heat smear, no Fore/Hand split). Hem/tabard locked to Hips/Spine/Chest. Look transfer unchanged — bind first. **Do not claim bind PASS. Do not claim walk PASS.** Hub PNG locked.
+Meshy hang-arm plates can still flatten in some swing phases. **Do not claim bind PASS. Do not claim walk PASS.** Hub PNG locked.

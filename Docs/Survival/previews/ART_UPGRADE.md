@@ -1,17 +1,17 @@
 # Aldric 3D art upgrade
 
-## Gate 3 Path 2 (look PASS → remesh + hang-skin FBX)
+## Gate 3 Path 2 (Meshy-look e5b132f hang-skin — Derek STOP remesh/capsule)
 
-Design **PASS** look on `e5b132f`. Walk-with-look **FAIL** on `89481e5`, `71f0c4a`, and `e56aeb1` (same three hard FAILs: arm slabs / stacked scabbard / tear bands).
+Design **PASS** look on `e5b132f`. Derek STOP: voxel-remesh / capsule-arm Game-view (`61e023d` / `c840b73`) threw away that paint PASS.
 
-- Census: 11283 islands. Mesh already hang (~8°). See `CENSUS_BIND.txt`.
-- **Old premise (abandoned):** Bone1 or hang-heat **weights on Meshy shatter**. Design STOP after e56aeb1.
-- **New premise:** voxel-remesh Path 2 into a clean mid-poly + **one** solid scabbard capsule + proper hang armature skin. FBX `sir_aldric_path2_clean.fbx`. FMT v4. Actor `Bone4`. Look bake from e5b132f source.
+- **Source look:** `e5b132f` Path 2 Meshy GLB (`aldric_meshy_retopo.glb`) + paint iterate (Image_0 UV bleed + SoT lion cards).
+- **UV / albedo:** original GLB UVs kept. Actor atlas = Image_0 + lion-card top strip (`combine_atlas_and_remap`, same method as e5b132f). Game-view EEVEE renders original GLB materials **before** atlas remap.
+- **Retopo / clean:** no voxel remesh; no capsule arms in Game-view. GEO-delete extra sheath islands + 1mm weld (11283 → 12 islands). Small same-side hang-arm faces get 5cm bmesh solidify; huge leftover faces deleted. Exclusive hang-volume weights; cloth/hem locked before `Arm_*`.
 - Motion: `Evaluate()` keys from `5916447` **reused**.
-- Proof: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4` + `gate3_path2_walk_phases.png` + `gate3_path2_vs_61e023d.png`.
+- Proof: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4` + `gate3_path2_walk_phases.png` + `gate3_meshy_hang_vs_e5b132f.png`.
 - Play hub PNG **locked**.
 
-`61e023d` MP4: Design retracted bind PASS (arm sheets + hem tears). This tip detaches hang-arm islands + exclusive weights. **Bind NOT claimed.** **Walk-with-look NOT claimed.**
+**Look PASS claimed** (Design, paint stills `e5b132f`). **Bind NOT claimed.** **Walk-with-look NOT claimed.**
 
 ## Gate 3 Path 2 Meshy (LOOK stills — paint iterate) — archived
 

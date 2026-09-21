@@ -59,7 +59,7 @@ Runtime: `SirAldric3DActor` binds **Path 2 Meshy** (`sir_aldric_meshy.mesh.txt` 
 
 - Scene: `Assets/Survival/Scenes/SirAldric.unity` — Game view **1080×1920** → Play
 - Camera is **fixed** high-angle rear `(0, 2.80, −5.40)` look-at `(0, 0.90, 0.50)`; RootZ marches toward **TOP** (+Z). Root X = 0. Spine Z counters hip roll so the torso stays in one vertical plane (Derek CLOSE on ff81201: no left↔right weave). Small hip drop + shoulder–hip counter-rotate stay. **Passing** foot tucks under the pelvis then steps **+Z / TOP** (14d9c17 pass thigh +X read as a back-kick toward camera). Contact step matches march 0.40 m. **5916447 motion HOLD.**
-- **Look:** Path 2 remesh bake (source look PASS `e5b132f` Image_0 + lion cards). Scabbard character-right. **Look PASS claimed** (Design, paint stills). **Walk-with-look NOT claimed.**
+- **Look:** Path 2 Meshy GLB / `e5b132f` paint PASS (Image_0 + lion cards). UVs kept; no remesh/capsule Game-view. Scabbard character-right. **Look PASS claimed** (Design, paint stills). **Walk-with-look NOT claimed.**
 - Walk is **4 Game-view keys** in `SirAldric3DMotion` solved against `refs/WALK_GAIT_BAR_skeleton_sample.mp4` rear phases. BVH eulers reached the Actor but did **not** transfer the gait; do not re-claim a BVH eye-match. Sword / right hand stay on the far / TOP side as a rest; **walk** uses a loose contralateral pendulum (trailing arm may swing +X toward camera — that is the sample, not a FAIL).
 - Motion SoT: `SirAldric3DMotion` (`Evaluate` is what `BuildLoopClip` samples)
 - Play hub still uses `SIR_ALDRIC_REAR_MASTER_LOCKED.png` until Design PASS
@@ -81,9 +81,9 @@ Grey-clay blockout: `sir_aldric_blockout.blend` + stills vs turnaround. Volume l
 
 ## Gate 3 GAME MESH (this pass)
 
-**Path 2 Meshy** look PASSed on `e5b132f`. Walk FAIL on `89481e5` / `71f0c4a` / `e56aeb1` (weights on shatter).  
-Runtime: remesh+skin FMT v4 `sir_aldric_meshy.mesh.txt` + DCC `sir_aldric_path2_clean.fbx`. Actor `Bone4`.  
-World-cam clip: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4`. Compare: `gate3_path2_vs_61e023d.png`.  
+**Path 2 Meshy** look PASSed on `e5b132f`. Remesh/capsule Game-view (`61e023d` / `c840b73`) STOP'd — threw away paint PASS.  
+Runtime: Meshy-look hang-skin FMT v4 `sir_aldric_meshy.mesh.txt` + DCC `sir_aldric_path2_clean.fbx` (Meshy mesh, not capsules). Actor `Bone4`.  
+World-cam clip: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4`. vs paint PASS: `gate3_meshy_hang_vs_e5b132f.png`.  
 Hard lock: scabbard character-RIGHT. Motion `5916447` holds.  
 **Paused:** Play hub swap. **Bind NOT claimed. Walk-with-look NOT claimed.**
 
