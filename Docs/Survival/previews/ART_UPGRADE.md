@@ -10,7 +10,7 @@ Design **FAIL** bind on `cc77d8a` (LOOK PASS holds). Mandatory proof before anot
 
 **Eyed:** A, B, and C all show the same left navy arm sheet/smear, right stacked gold plates, and fuzzy hands. Encoder does not invent tears. Offline ALSO tears → **MESH/geo** (thin hang-arm cards + stacked lames), not capture/AA/post. FAIL sheet: `gate3_mesh_vs_capture_mid_swing.png`. Frozen: `fail_cc77d8a/`.
 
-`6232d5e` curl FAIL (Design): mid-swing still navy/gold sheets + tear stretch. New premise: delete paper `Arm_*` islands; **closed thick-walled hang-arm tubes**; reproject `e5b132f` Image_0 UVs. Body/tabard/lion/scabbard not remeshed. No unpainted capsule Game-view. Tube proof: `gate3_mesh_vs_capture_tubes_mid_swing.png`. **Bind NOT claimed.**
+`110443d` retract: mid-swing A/B/C looked closed; **walk MP4** still FAIL (sideways sheets + tear bands). Cause: one rigid `Arm_*` spear. This tip: fat **Arm/Fore/Hand** closed tubes so the limb bends across the cycle. Cycle A/B/C n=0,5,10,15 + vs-110443d. **Bind NOT claimed.**
 
 ## Gate 3 Path 2 bind iterate (LOOK PASS fd9d6f8 / BIND FAIL)
 

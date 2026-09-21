@@ -6,25 +6,29 @@
   "albedoPreserved": "original GLB UVs kept; atlas = Image_0 + lion-card strip (combine_atlas_and_remap, same as e5b132f)",
   "retopo": "LOOK path: e5b132f body/tabard/lion/scabbard untouched. 6232d5e curl FAIL. New premise: delete paper Arm_* islands; closed thick-walled hang-arm tubes; reproject Image_0 UVs. No whole-body remesh. No unpainted capsule Game-view.",
   "tubes": {
-    "premise": "closed thick-walled hang-arm tubes + e5b132f UV reproject",
+    "premise": "fat segmented Arm/Fore/Hand closed tubes + e5b132f plate UV reproject",
     "killedPaperFaces": 4734,
     "donors": {
-      "Arm_R": 7512,
-      "Arm_L": 6738
+      "Arm_R": 7434,
+      "Arm_L": 6425
     },
     "added": {
-      "Arm_R": 384,
-      "Arm_L": 384
+      "Arm_R": 224,
+      "Fore_R": 224,
+      "Hand_R": 224,
+      "Arm_L": 224,
+      "Fore_L": 224,
+      "Hand_L": 224
     },
-    "vertsAfter": 29127,
-    "facesAfter": 45590
+    "vertsAfter": 29703,
+    "facesAfter": 46166
   },
   "shards": {
     "shardFaces": 10,
     "vertsAfter": 31155
   },
   "vsFail": "fd9d6f8",
-  "oldPremise": "6232d5e planar/curl paper Arm_* plates (~300\u00b0) \u2014 Design FAIL, still navy/gold sheets",
+  "oldPremise": "110443d one rigid Arm_* spear \u2014 Design FAIL: sideways sheets + tear bands across the walk MP4",
   "motion": "5916447 Evaluate() keys reused",
   "scabbard": "character-right",
   "playHubLocked": true,
@@ -47,7 +51,7 @@
     "Scabbard": 748,
     "Spine": 3733,
     "Chest": 4890,
-    "Arm_R": 389,
+    "Arm_R": 229,
     "Head": 1978,
     "Foot_R": 127,
     "Leg_R": 287,
@@ -56,25 +60,33 @@
     "UpLeg_L": 173,
     "Leg_L": 274,
     "Foot_L": 140,
-    "Arm_L": 386
+    "Arm_L": 226,
+    "Fore_R": 224,
+    "Hand_R": 224,
+    "Fore_L": 224,
+    "Hand_L": 224
   },
-  "verts": 29127,
-  "tris": 46358,
+  "verts": 29703,
+  "tris": 47510,
   "boneTris": {
-    "Hips": 23458,
+    "Hips": 23445,
     "Scabbard": 1049,
     "Spine": 5781,
-    "Chest": 7990,
-    "Arm_R": 770,
+    "Chest": 8000,
+    "Arm_R": 450,
     "Head": 3335,
-    "Foot_R": 218,
-    "Leg_R": 434,
-    "Neck": 1310,
+    "Foot_R": 220,
+    "Leg_R": 435,
+    "Neck": 1300,
     "UpLeg_R": 320,
     "UpLeg_L": 279,
-    "Leg_L": 424,
+    "Leg_L": 434,
     "Foot_L": 222,
-    "Arm_L": 768
+    "Fore_R": 448,
+    "Hand_R": 448,
+    "Arm_L": 448,
+    "Fore_L": 448,
+    "Hand_L": 448
   },
   "atlas": "sir_aldric_meshy_atlas.png",
   "mesh": "sir_aldric_meshy.mesh.txt",
