@@ -16,15 +16,16 @@
       "HangArm_R": 416,
       "HangArm_L": 416
     },
-    "vertsAfter": 26736,
-    "facesAfter": 41741
+    "vertsAfter": 26449,
+    "facesAfter": 40821,
+    "killedLegGhostFaces": 920
   },
   "shards": {
     "shardFaces": 10,
     "vertsAfter": 31155
   },
   "vsFail": "fd9d6f8",
-  "oldPremise": "80c42d1 one-loft PASSed ghost; FAIL horizontal tear (\u03b8-wrap UV + exclusive Y-cut shear)",
+  "oldPremise": "2820e53 HARD FAIL float + 4-leg ghost. Hips paper in greave tube + unplanted root. KEEP one-loft + steel texel. Banding deferred.",
   "motion": "5916447 Evaluate() keys reused",
   "scabbard": "character-right",
   "playHubLocked": true,
@@ -43,7 +44,7 @@
     }
   },
   "vertsPrimary": {
-    "Hips": 13971,
+    "Hips": 13684,
     "Scabbard": 748,
     "Chest": 4769,
     "Head": 1978,
@@ -62,20 +63,20 @@
     "Fore_L": 114,
     "Hand_L": 184
   },
-  "verts": 26736,
-  "tris": 42573,
+  "verts": 26449,
+  "tris": 41653,
   "boneTris": {
-    "Hips": 21859,
+    "Hips": 20923,
     "Scabbard": 1049,
     "Chest": 7769,
     "Head": 3345,
     "Spine": 3690,
     "Foot_R": 218,
-    "Leg_R": 434,
+    "Leg_R": 440,
     "Neck": 1300,
     "UpLeg_R": 320,
     "UpLeg_L": 279,
-    "Leg_L": 424,
+    "Leg_L": 434,
     "Foot_L": 222,
     "Arm_R": 236,
     "Fore_R": 228,

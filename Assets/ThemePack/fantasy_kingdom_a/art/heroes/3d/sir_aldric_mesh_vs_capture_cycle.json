@@ -2,13 +2,16 @@
   "lookPassClaimed": true,
   "bindPassClaimed": false,
   "walkPassClaimed": false,
-  "frames": [0, 5, 10, 15],
+  "frames": [
+    0,
+    5,
+    10,
+    15
+  ],
   "unityEditor": false,
-  "failTip": "80c42d1",
-  "failCause": "one loft/side PASSed ghost; remaining FAIL = horizontal tear stretch (θ-wrap UV + exclusive Y-cut shear)",
-  "premise": "KEEP one loft/side; steel texel UV; blended Arm/Fore/Hand weights",
-  "eyed": "A/B/C n=0,5,10,15: one closed arm per side (ghost fix holds). Arms read as uniform steel volumes without navy/gold wrap bands or a flat horizontal shear crease. Lion/tabard/scabbard Meshy. Bind NOT claimed.",
   "sheet": "Docs/Survival/previews/gate3/gate3_mesh_vs_capture_cycle.png",
-  "vsFail": "Docs/Survival/previews/gate3/gate3_path2_vs_80c42d1.png",
+  "failTip": "2820e53",
+  "premise": "delete Hips greave-tube paper; plant soles on Y=0; KEEP one-loft + steel texel. Bind NOT claimed.",
+  "vsFail": "Docs/Survival/previews/gate3/gate3_path2_vs_2820e53_float.png",
   "walkClip": "Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4"
 }

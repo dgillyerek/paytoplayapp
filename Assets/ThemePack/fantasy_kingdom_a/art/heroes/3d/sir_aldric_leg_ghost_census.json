@@ -267,5 +267,12 @@
     "float": "unplanted root + bob 0.012-0.030 + stance lift; Foot ymin 0.026 vs ground Y=0",
     "cause": "Main greaves are already one volume per side. Extra legs = leftover Hips paper in the greave tube. Float = Evaluate bob/root never plants soles on Y=0.",
     "fix": "delete Hips paper in the greave tube; keep ONE connected L + ONE connected R Meshy greave; snap root so lowest sole kisses Y=0. Do not rewrite Evaluate() keys. Do not remesh body."
+  },
+  "postFix": {
+    "killedLegGhostFaces": 920,
+    "verts": 26449,
+    "tris": 41653,
+    "tightHipsInTubeUniqueMmAfter": 281,
+    "note": "920 Hips faces deleted by vertex-in-tube hit. Main L+R greaves unchanged (576/599). Residual 281 unique are tabard-hem overlap on the Hips island, not a second welded greave. Plant is root snap after Evaluate(). Bind NOT claimed."
   }
 }
