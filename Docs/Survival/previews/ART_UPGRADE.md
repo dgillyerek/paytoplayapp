@@ -8,9 +8,9 @@ Design **FAIL** bind on `cc77d8a` (LOOK PASS holds). Mandatory proof before anot
 - **B** offline Blender EEVEE `world_walk_mid_swing.png` (same pose, no Unity recorder).
 - **C** `cc77d8a` FAIL MP4 frame n=10 (t=0.625).
 
-**Eyed:** A, B, and C all show the same left navy arm sheet/smear, right stacked gold plates, and fuzzy hands. Encoder does not invent tears. Offline ALSO tears → **MESH/geo** (thin XY hang-arm cards + solidify rims), not capture/AA/post. Sheet: `gate3_mesh_vs_capture_mid_swing.png`. **Bind NOT claimed.**
+**Eyed:** A, B, and C all show the same left navy arm sheet/smear, right stacked gold plates, and fuzzy hands. Encoder does not invent tears. Offline ALSO tears → **MESH/geo** (thin hang-arm cards + stacked lames), not capture/AA/post. FAIL sheet: `gate3_mesh_vs_capture_mid_swing.png`. Frozen: `fail_cc77d8a/`.
 
-Next mesh actor (not another exclusive-weight iterate): curl hang-arm plates around the bone axis. Same verts/UVs. No remesh/capsule.
+Mesh actor (not a weight iterate): curl `Arm_*` plates around the hang-arm axis (same verts/UVs, 300°). No remesh/capsule. After wrap, A/B/C at t=0.625 are closed volumes in the stills **and** in `sir_aldric_path2_walk_toward_top.mp4` n=10 (left navy tube, right gold-banded volume, solid hands). Right gold lame stripes are `e5b132f` albedo. Wrap sheet: `gate3_mesh_vs_capture_wrap_mid_swing.png`. **Bind NOT claimed.**
 
 ## Gate 3 Path 2 bind iterate (LOOK PASS fd9d6f8 / BIND FAIL)
 
