@@ -5,9 +5,9 @@
   "frames": [0, 5, 10, 15],
   "unityEditor": false,
   "failTip": "110443d",
-  "failCause": "one rigid Arm_* spear (y=1.28 to 0.54) read as sideways sheets + tear bands across the walk MP4. One mid-swing still was insufficient.",
-  "premise": "fat segmented Arm/Fore/Hand closed tubes + e5b132f plate UV reproject",
-  "eyed": "A LBS, B EEVEE, and C new MP4 at n=0,5,10,15 show closed hang-arm volumes (bent limb, not a 74cm smear). n=0 right arm is still a long diagonal volume but thick/closed, not the 110443d paper spear. Scabbard one. Bind NOT claimed.",
+  "failCause": "one rigid Arm_* spear read as sideways sheets + tear bands across the walk MP4. 1010678 colinear segments still silhouetted as a spear at n=0/15.",
+  "premise": "pre-bent fat Arm/Fore/Hand closed tubes + steel-only e5b132f UV (no navy/gold wrap)",
+  "eyed": "A LBS, B EEVEE, and C new MP4 at n=0,5,10,15 show thicker bent hang-arm volumes with fist ends. n=0/15 swung arm is still a long diagonal but has visible thickness + hand, not the 110443d paper needle. Tear-band navy/gold wrap gone (steel mottling remains). Scabbard one. Bind NOT claimed.",
   "sheet": "Docs/Survival/previews/gate3/gate3_mesh_vs_capture_cycle.png",
   "vsFail": "Docs/Survival/previews/gate3/gate3_path2_vs_110443d.png",
   "walkClip": "Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4"

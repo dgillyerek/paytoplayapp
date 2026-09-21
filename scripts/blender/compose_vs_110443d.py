@@ -35,21 +35,23 @@ def main() -> None:
     cells = []
     for n, label in frames:
         fail_p = FAIL / f"n_{n}.png"
-        now_p = WALK / f"world_walk_n{n:02d}.png"
+        now_p = WALK / f"census_cycle_mp4_n{n:02d}.png"
+        if not now_p.exists():
+            now_p = WALK / f"world_walk_n{n:02d}.png"
         if not fail_p.exists() or not now_p.exists():
             print("skip", n, fail_p.exists(), now_p.exists())
             continue
-        fail = cap(Image.open(fail_p).convert("RGB").resize((400, 711), Image.LANCZOS), f"110443d FAIL  |  {label}")
-        now = cap(Image.open(now_p).convert("RGB").resize((400, 711), Image.LANCZOS), f"segmented tubes  |  {label}  |  bind NOT claimed")
+        fail = cap(Image.open(fail_p).convert("RGB").resize((400, 711), Image.LANCZOS), f"110443d FAIL MP4  |  {label}")
+        now = cap(Image.open(now_p).convert("RGB").resize((400, 711), Image.LANCZOS), f"this MP4  |  {label}  |  bind NOT claimed")
         cells.append((fail, now))
     if not cells:
         raise SystemExit("no vs-110443d pairs")
     w, h = cells[0][0].size
     sheet = Image.new("RGB", (w * 2, 110 + h * len(cells)), (16, 16, 14))
     d = ImageDraw.Draw(sheet)
-    d.text((16, 12), "GATE 3  |  110443d FAIL MP4  vs  segmented closed hang-arms  |  bind NOT claimed", fill=(236, 230, 210), font=font(22))
-    d.text((16, 48), "LEFT = 110443d (rigid Arm_* spear = sideways sheets + tear bands).  RIGHT = this tip.  Look path e5b132f.", fill=(180, 176, 160), font=font(15))
-    d.text((16, 74), "Eye the MP4 cycle, not one mid-swing still.", fill=(180, 176, 160), font=font(15))
+    d.text((16, 12), "GATE 3  |  110443d FAIL MP4 frames  vs  this walk MP4  |  bind NOT claimed", fill=(236, 230, 210), font=font(22))
+    d.text((16, 48), "LEFT = 110443d FAIL MP4 (rigid Arm_* spear).  RIGHT = this MP4 (segmented Arm/Fore/Hand).  Look path e5b132f.", fill=(180, 176, 160), font=font(15))
+    d.text((16, 74), "Both columns are MP4 frames. Eye the cycle, not one mid-swing still.", fill=(180, 176, 160), font=font(15))
     for i, (fail, now) in enumerate(cells):
         sheet.paste(fail, (0, 110 + i * h))
         sheet.paste(now, (w, 110 + i * h))

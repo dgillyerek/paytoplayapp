@@ -236,8 +236,8 @@ def _collect_arm_donors(ob):
             continue
         mat_count[poly.material_index] += 1
         for li, vi in zip(poly.loop_indices, poly.vertices):
-            # Skip tabard-navy / lion so tubes don't wrap cloth into tear bands.
-            if lion[vi] or old._is_blue(rgb_of[vi]):
+            # Steel plate only. Navy / gold / lion wrap = horizontal tear bands.
+            if lion[vi] or not _is_plate_steel(rgb_of[vi]):
                 continue
             uv = uv_layer.data[li].uv
             p = me.vertices[vi].co
@@ -312,25 +312,35 @@ def _delete_paper_arm_faces(ob) -> int:
     return len(kill)
 
 
+def _is_plate_steel(rgb: tuple[int, int, int]) -> bool:
+    """Keep gray plate. Drop navy tabard + gold trim (those wrap into tear bands)."""
+    r, g, b = rgb
+    mx, mn = max(r, g, b), min(r, g, b)
+    if mx - mn > 45:
+        return False
+    return 70 < (r + g + b) / 3 < 210
+
+
 def replace_hang_arms_closed_tubes(ob) -> dict:
     """Closed hang-arm volumes that stay closed ACROSS the walk cycle.
 
-    110443d FAIL: one rigid Arm_* spear (y=1.28→0.54) reads as a sideways
-    sheet once Evaluate() swings it. Split into fat upper / fore / hand
-    tubes on Arm_* / Fore_* / Hand_* so the MP4 is two bent volumes, not
-    a 74 cm smear. e5b132f Image_0 reproject (plate UVs, not tabard navy).
-    Body / tabard / lion / scabbard not remeshed. Not unpainted capsules.
+    110443d FAIL: one rigid Arm_* spear. 1010678 FAIL risk: three colinear
+    tubes still silhouette as a 70 cm spear at swing extremes (n=0/15).
+    Rest tubes are PRE-BENT (fore/hand forward +Z, outboard) and fatter so
+    the MP4 reads as an L-volume, not a sideways sheet. Steel-only UV
+    reproject (no navy/gold wrap). Body/tabard/lion/scabbard not remeshed.
     """
     donors, mat_idx = _collect_arm_donors(ob)
     killed = _delete_paper_arm_faces(ob)
-    # Overlap joints so elbow/wrist cannot open a paper gap when Fore bends.
+    # Pre-bent hang: elbow/wrist step forward (+Z) so rear-cam swing is an L.
+    # Overlap joints so Fore rotation cannot open a paper gap.
     specs = [
-        ("Arm_R", Vector((0.26, 1.30, 0.00)), Vector((0.28, 1.08, 0.01)), 0.066, 0.058),
-        ("Fore_R", Vector((0.28, 1.10, 0.01)), Vector((0.30, 0.82, 0.02)), 0.058, 0.048),
-        ("Hand_R", Vector((0.30, 0.84, 0.02)), Vector((0.31, 0.60, 0.03)), 0.046, 0.038),
-        ("Arm_L", Vector((-0.26, 1.30, 0.00)), Vector((-0.28, 1.08, 0.01)), 0.066, 0.058),
-        ("Fore_L", Vector((-0.28, 1.10, 0.01)), Vector((-0.30, 0.82, 0.02)), 0.058, 0.048),
-        ("Hand_L", Vector((-0.30, 0.84, 0.02)), Vector((-0.31, 0.60, 0.03)), 0.046, 0.038),
+        ("Arm_R", Vector((0.26, 1.32, 0.02)), Vector((0.34, 1.10, 0.08)), 0.082, 0.072),
+        ("Fore_R", Vector((0.34, 1.12, 0.08)), Vector((0.40, 0.88, 0.18)), 0.070, 0.056),
+        ("Hand_R", Vector((0.40, 0.90, 0.18)), Vector((0.42, 0.74, 0.20)), 0.052, 0.044),
+        ("Arm_L", Vector((-0.26, 1.32, 0.02)), Vector((-0.34, 1.10, 0.08)), 0.082, 0.072),
+        ("Fore_L", Vector((-0.34, 1.12, 0.08)), Vector((-0.40, 0.88, 0.18)), 0.070, 0.056),
+        ("Hand_L", Vector((-0.40, 0.90, 0.18)), Vector((-0.42, 0.74, 0.20)), 0.052, 0.044),
     ]
     groups = {g.name: g for g in ob.vertex_groups}
     for name in ("Arm_L", "Arm_R", "Fore_L", "Fore_R", "Hand_L", "Hand_R"):
@@ -339,7 +349,7 @@ def replace_hang_arms_closed_tubes(ob) -> dict:
     added = {}
     for gname, a, b, r0, r1 in specs:
         side = "Arm_R" if gname.endswith("_R") else "Arm_L"
-        tube = _closed_tube_object(f"HangTube_{gname}", a, b, r_top=r0, r_bot=r1, segs=14, rings=8, wall=0.018)
+        tube = _closed_tube_object(f"HangTube_{gname}", a, b, r_top=r0, r_bot=r1, segs=16, rings=8, wall=0.022)
         _project_tube_uvs(tube, donors.get(side, []), a, b)
         if ob.data.materials:
             for mat in ob.data.materials:
@@ -358,7 +368,7 @@ def replace_hang_arms_closed_tubes(ob) -> dict:
         added[gname] = n_new
         print("joined closed tube", gname, "new verts", n_new)
     note = {
-        "premise": "fat segmented Arm/Fore/Hand closed tubes + e5b132f plate UV reproject",
+        "premise": "pre-bent fat Arm/Fore/Hand closed tubes + steel-only e5b132f UV",
         "killedPaperFaces": killed,
         "donors": {k: len(v) for k, v in donors.items()},
         "added": added,
@@ -546,12 +556,12 @@ def repair_arm_groups(ob):
         if names & set(MESH_BONES):
             continue
         p = v.co
-        if p.x > 0.18 and 0.50 < p.y < 1.36 and dist_seg(p, _ARM_R_A, _ARM_R_B) < 0.14:
-            bone = "Hand_R" if p.y < 0.84 else ("Fore_R" if p.y < 1.10 else "Arm_R")
+        if p.x > 0.18 and 0.68 < p.y < 1.38 and (dist_seg(p, _ARM_R_A, _ARM_R_B) < 0.18 or p.z > 0.04):
+            bone = "Hand_R" if p.y < 0.90 else ("Fore_R" if p.y < 1.12 else "Arm_R")
             groups[bone].add([i], 1.0, "REPLACE")
             n += 1
-        elif p.x < -0.18 and 0.50 < p.y < 1.36 and dist_seg(p, _ARM_L_A, _ARM_L_B) < 0.14:
-            bone = "Hand_L" if p.y < 0.84 else ("Fore_L" if p.y < 1.10 else "Arm_L")
+        elif p.x < -0.18 and 0.68 < p.y < 1.38 and (dist_seg(p, _ARM_L_A, _ARM_L_B) < 0.18 or p.z > 0.04):
+            bone = "Hand_L" if p.y < 0.90 else ("Fore_L" if p.y < 1.12 else "Arm_L")
             groups[bone].add([i], 1.0, "REPLACE")
             n += 1
     print("repair arm verts", n)
@@ -729,7 +739,7 @@ def main():
         "tubes": tubes,
         "shards": shards,
         "vsFail": "fd9d6f8",
-        "oldPremise": "110443d one rigid Arm_* spear — Design FAIL: sideways sheets + tear bands across the walk MP4",
+        "oldPremise": "110443d rigid spear + 1010678 colinear segments still read as n=0/15 sideways sheets. Pre-bent fat tubes.",
         "motion": "5916447 Evaluate() keys reused",
         "scabbard": "character-right",
         "playHubLocked": True,
