@@ -2,9 +2,7 @@
 """Recompose Gate 2 blockout vs Gate 1 turnaround (SoT columns only).
 
 Does NOT remesh or re-render clay. Blockout stills stay the 5de0e16 bytes.
-SoT is composited onto light-gray so a transparent rear cutout cannot
-become a black void. Mirrors look_targets/03_turnaround_*_LOCKED.png and
-03_TURNAROUND_SHEET_LOCKED.png.
+Reads Design LOCKED SoT as-is (do not rewrite those bytes).
 """
 from __future__ import annotations
 
@@ -47,25 +45,6 @@ def fit(im: Image.Image, box: tuple[int, int], bg=STUDIO) -> Image.Image:
     return cell
 
 
-def rebuild_gate_sheet(panels: list[Image.Image], labels: list[str]) -> Image.Image:
-    ch, cw = 820, 360
-    sheet = Image.new("RGB", (cw * len(panels), ch + 90), STUDIO)
-    d = ImageDraw.Draw(sheet)
-    d.text(
-        (16, 10),
-        "Sir Aldric — TURNAROUND Gate 1  (full figure · light gray · scabbard character-RIGHT)",
-        fill=(40, 40, 38),
-        font=font(18),
-    )
-    for i, (cell, lab) in enumerate(zip(panels, labels)):
-        scale = min((cw - 24) / cell.width, (ch - 24) / cell.height)
-        nw, nh = max(1, int(cell.width * scale)), max(1, int(cell.height * scale))
-        placed = cell.resize((nw, nh), Image.LANCZOS)
-        sheet.paste(placed, (i * cw + (cw - nw) // 2, 48 + (ch - 24 - nh) // 2))
-        d.text((i * cw + 16, ch + 56), lab, fill=(40, 40, 38), font=font(16))
-    return sheet
-
-
 def main() -> None:
     pairs = [
         ("01_FRONT.png", "blockout_front.png", "FRONT", "sot_front.png"),
@@ -77,32 +56,10 @@ def main() -> None:
     for sot_name, _blk, _label, _col in pairs:
         sot_rgb.append(load_sot(GATE / sot_name))
 
-    # Per-view SoT columns (light-gray, full figure) + look_targets mirrors
-    LOOK.mkdir(parents=True, exist_ok=True)
-    mirror = {
-        "01_FRONT.png": "03_turnaround_front_LOCKED.png",
-        "02_SIDE_R.png": "03_turnaround_side_r_LOCKED.png",
-        "03_BACK.png": "03_turnaround_back_LOCKED.png",
-    }
-    for (sot_name, _blk, _label, col_name), rgb in zip(pairs, sot_rgb):
+    # Per-view SoT columns for the compare sheet only.
+    # Do not rewrite GATE Design bytes or the official TURNAROUND_SHEET.
+    for (_sot_name, _blk, _label, col_name), rgb in zip(pairs, sot_rgb):
         rgb.save(PROOF / col_name, optimize=True)
-        dest = GATE / sot_name
-        # Keep Design bytes if they are already RGB studio; rewrite only when
-        # the on-disk file had alpha that would black-void the overlay.
-        raw = Image.open(dest)
-        if raw.mode in ("RGBA", "LA") or (raw.mode == "P" and "transparency" in raw.info):
-            rgb.save(dest, optimize=True)
-        key = mirror.get(sot_name)
-        if key:
-            rgb.save(LOOK / key, optimize=True)
-
-    sheet4 = rebuild_gate_sheet(
-        sot_rgb,
-        ["01_FRONT", "02_SIDE_R", "03_BACK", "04_THREE_QUARTER"],
-    )
-    sheet4.save(GATE / "TURNAROUND_SHEET.png", optimize=True)
-    sheet4.save(LOOK / "03_turnaround_sheet_LOCKED.png", optimize=True)
-    sheet4.save(LOOK / "03_TURNAROUND_SHEET_LOCKED.png", optimize=True)
 
     cw, ch = 420, 780
     sheet = Image.new("RGB", (cw * 2, ch * len(pairs) + 120), (24, 24, 22))
@@ -135,13 +92,13 @@ def main() -> None:
     out = PROOF / "blockout_vs_turnaround_sheet.png"
     sheet.save(out, optimize=True)
     ART.mkdir(parents=True, exist_ok=True)
-    sheet.save(ART / "aldric_gate2_v3_blockout_vs_turnaround.png")
+    sheet.save(ART / "aldric_gate2_v4_blockout_vs_turnaround.png")
     for name in ("blockout_front.png", "blockout_back.png", "blockout_side_r.png", "blockout_three_quarter.png"):
-        (ART / f"aldric_gate2_v3_{name}").write_bytes((PROOF / name).read_bytes())
+        (ART / f"aldric_gate2_v4_{name}").write_bytes((PROOF / name).read_bytes())
     for name in ("sot_front.png", "sot_side_r.png", "sot_back.png", "sot_three_quarter.png"):
         src = PROOF / name
         if src.exists():
-            (ART / f"aldric_gate2_v3_{name}").write_bytes(src.read_bytes())
+            (ART / f"aldric_gate2_v4_{name}").write_bytes(src.read_bytes())
     print("sheet", out, out.stat().st_size)
 
 

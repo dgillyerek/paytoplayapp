@@ -21,6 +21,5 @@ Motion from 5916447 **holds** until Design PASS on this silhouette.
 ## Honest
 
 Grey clay. Overlay and judge **silhouette / proportions only**. Gate 2 is **not claimed**.
-Clay mesh / stills are **unchanged from `5de0e16`**. This follow-up only recomposes SoT columns onto light gray so a transparent rear cutout cannot become a black void. Per-view SoT: `sot_front.png` / `sot_side_r.png` / `sot_back.png` / `sot_three_quarter.png`.
-Mirrors: `look_targets/03_turnaround_*_LOCKED.png` and `03_TURNAROUND_SHEET_LOCKED.png`.
-Design's 2026-09-21 re-lock studio panels (wider A-pose + hand-on-hip ¾) were attached in chat but **did not overwrite** `LOCKED/` on this VM. ¾ column is still the placeholder; cape `00_fullbody` is **not** ¾.
+Clay mesh / stills are **unchanged from `5de0e16`**. SoT columns are the Design re-lock full-figure light-gray panels (bottom-band meanL > 200). Per-view SoT: `sot_front.png` / `sot_side_r.png` / `sot_back.png` / `sot_three_quarter.png`.
+Mirrors: `look_targets/03_turnaround_FRONT|SIDE_R|BACK|THREE_QUARTER_LOCKED.png` and `03_TURNAROUND_SHEET_LOCKED.png`.

@@ -2,7 +2,7 @@
 
 ## Gate 2 HOLD (blockout only)
 
-Look law Gate 1 is LOCKED (helmeted turnaround + complete portrait as face law). Compare sheet SoT columns are full-figure on light gray (no black-void alpha). Clay stills unchanged from `5de0e16`. Texture polish, walk clips, and Play hub swap are **paused** until Derek PASSes the grey-clay silhouette vs `TURNAROUND_GATE1/LOCKED/`. Clay must read as the knight (helm / surcoat / plate / scabbard-RIGHT), not a mannequin or box stack. See `Docs/Survival/previews/blockout/GATE2_BLOCKOUT.md`. **Gate 2 not claimed.**
+Look law Gate 1 is LOCKED (helmeted turnaround + complete portrait as face law). Compare sheet SoT columns are the Design re-lock full-figure light-gray panels (bottom-band meanL > 200). Clay stills unchanged from `5de0e16`. Texture polish, walk clips, and Play hub swap are **paused** until Derek PASSes the grey-clay silhouette vs `TURNAROUND_GATE1/LOCKED/`. Clay must read as the knight (helm / surcoat / plate / scabbard-RIGHT), not a mannequin or box stack. See `Docs/Survival/previews/blockout/GATE2_BLOCKOUT.md`. **Gate 2 not claimed.**
 
 ## This pass (PATH B — Blender / FBX)
 
