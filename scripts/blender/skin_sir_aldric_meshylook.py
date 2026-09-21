@@ -476,11 +476,16 @@ def _delete_leg_corridor_ghosts(ob) -> int:
             names |= {vg_names.get(g.group, "") for g in me.vertices[vi].groups if g.weight > 0.5}
         if names & keep:
             continue
-        c = p.center
-        if c.y > 0.72 or abs(c.x) < 0.07 or abs(c.z) > 0.12:
-            continue
-        a, b = (old._LEG_R_A, old._LEG_R_B) if c.x > 0 else (old._LEG_L_A, old._LEG_L_B)
-        if dist_seg(c, a, b) < 0.088:
+        hit = False
+        for vi in p.vertices:
+            c = me.vertices[vi].co
+            if c.y > 0.74 or abs(c.x) < 0.068 or abs(c.z) > 0.13:
+                continue
+            a, b = (old._LEG_R_A, old._LEG_R_B) if c.x > 0 else (old._LEG_L_A, old._LEG_L_B)
+            if dist_seg(c, a, b) < 0.095:
+                hit = True
+                break
+        if hit:
             kill.append(fi)
     print("delete leg-corridor ghosts", len(kill), "of", len(me.polygons))
     if kill:
