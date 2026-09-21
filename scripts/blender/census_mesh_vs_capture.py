@@ -294,10 +294,17 @@ def compose(actor_p, blender_p, mp4_p, dest: Path):
     w, h = cells[0].size
     sheet = Image.new("RGB", (w * 3, 130 + h), (16, 16, 14))
     d = ImageDraw.Draw(sheet)
-    d.text((18, 16), "GATE 3  |  mesh-vs-capture  |  mid-swing t=0.625  |  VERDICT: MESH  |  bind NOT claimed", fill=(236, 230, 210), font=font(24))
-    d.text((18, 52), "A = SirAldric3DActor LBS (mesh.txt + bindposes + Evaluate).  Editor Game-view not on this VM.", fill=(180, 176, 160), font=font(16))
-    d.text((18, 80), "B = offline Blender (Design-eyed clip source).  C = same clip after ffmpeg/yuv420p.", fill=(180, 176, 160), font=font(16))
-    d.text((18, 104), "EYED: A+B+C all tear (left navy sheet, right gold slats). Offline ALSO tears → MESH, not capture.", fill=(220, 160, 120), font=font(16))
+    tag = os.environ.get("CENSUS_TAG", "").strip()
+    if tag == "tubes":
+        d.text((18, 16), "GATE 3  |  mesh-vs-capture  |  mid-swing t=0.625  |  closed hang-arm tubes  |  bind NOT claimed", fill=(236, 230, 210), font=font(24))
+        d.text((18, 52), "A = SirAldric3DActor LBS (mesh.txt + bindposes + Evaluate).  Editor Game-view not on this VM.", fill=(180, 176, 160), font=font(16))
+        d.text((18, 80), "B = offline Blender EEVEE.  C = walk MP4 n=10 after ffmpeg/yuv420p.", fill=(180, 176, 160), font=font(16))
+        d.text((18, 104), "Premise: delete paper Arm_* ; closed thick-walled tubes ; e5b132f UV reproject. Eye A+B+C for closed volumes.", fill=(180, 176, 160), font=font(16))
+    else:
+        d.text((18, 16), "GATE 3  |  mesh-vs-capture  |  mid-swing t=0.625  |  VERDICT: MESH  |  bind NOT claimed", fill=(236, 230, 210), font=font(24))
+        d.text((18, 52), "A = SirAldric3DActor LBS (mesh.txt + bindposes + Evaluate).  Editor Game-view not on this VM.", fill=(180, 176, 160), font=font(16))
+        d.text((18, 80), "B = offline Blender (Design-eyed clip source).  C = same clip after ffmpeg/yuv420p.", fill=(180, 176, 160), font=font(16))
+        d.text((18, 104), "EYED: A+B+C all tear (left navy sheet, right gold slats). Offline ALSO tears → MESH, not capture.", fill=(220, 160, 120), font=font(16))
     for i, im in enumerate(cells):
         sheet.paste(im, (i * w, 130))
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -366,7 +373,8 @@ def main():
             "mp4Png": str(mp4_p.relative_to(ROOT)),
             "sheet": str(sheet_p.relative_to(ROOT)),
         }
-        json_name = "sir_aldric_mesh_vs_capture_wrap.json" if os.environ.get("CENSUS_TAG") else "sir_aldric_mesh_vs_capture.json"
+        tag = os.environ.get("CENSUS_TAG", "").strip()
+        json_name = f"sir_aldric_mesh_vs_capture_{tag}.json" if tag else "sir_aldric_mesh_vs_capture.json"
         (PACK3D / json_name).write_text(json.dumps(note, indent=2) + "\n")
         print("census json written", json_name, "— eye the sheet before a bind verdict")
         return

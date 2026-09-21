@@ -2,11 +2,11 @@
 """Hero look = e5b132f Meshy paint PASS. No voxel remesh. No capsule arms.
 
 Derek STOP: remesh/capsule Game-view threw away the painted knight.
-cc77d8a mesh-vs-capture: A Actor LBS + B Blender + C MP4 n=10 all tear
-at mid-swing → MESH (thin XY hang-arm cards + solidify rims), not capture.
-This bind keeps Path 2 GLB verts/UVs/albedo and curls Arm_* plates around
-the hang-arm axis so mid-swing is a tube, not a card. No exclusive-weight
-iterate. Evaluate() 5916447 reused. Bind/walk NOT claimed.
+6232d5e FAIL: curling paper Arm_* plates (~300°) still read as navy/gold
+sheets + tear stretch. New premise: DELETE paper Arm_* islands, build
+CLOSED thick-walled hang-arm tubes, reproject e5b132f Image_0 UVs onto
+them. Body/tabard/lion/scabbard untouched. Evaluate() 5916447 reused.
+Bind/walk NOT claimed.
 """
 from __future__ import annotations
 
@@ -126,17 +126,6 @@ def delete_armpit_elbow_shards(ob) -> dict:
     return {"shardFaces": len(kill), "vertsAfter": len(me.vertices)}
 
 
-def _wrap_fade(y: float) -> float:
-    """Full curl on the hanging tube; none at pauldron / hand."""
-    if y >= 1.32 or y <= 0.68:
-        return 0.0
-    if y > 1.24:
-        return (1.32 - y) / 0.08
-    if y < 0.78:
-        return (y - 0.68) / 0.10
-    return 1.0
-
-
 def _arm_face_islands(me, arm_vert):
     """Connected Arm_* face groups (stacked Meshy lames are separate islands)."""
     adj = [[] for _ in range(len(me.polygons))]
@@ -172,170 +161,206 @@ def _arm_face_islands(me, arm_vert):
     return out
 
 
-def drop_stacked_arm_cards(ob) -> dict:
-    """Keep the outer painted hang-arm plate per side. Delete inner slat islands.
+def _tube_frame(a, b):
+    an = (b - a).normalized()
+    tmp = Vector((0.0, 0.0, 1.0)) if abs(an.dot(Vector((0.0, 0.0, 1.0)))) < 0.85 else Vector((1.0, 0.0, 0.0))
+    x = an.cross(tmp).normalized()
+    z = x.cross(an).normalized()
+    return an, x, z
 
-    Mid-swing gold bands are stacked Meshy lames (not capture). Hands / pauldrons
-    stay. Same atlas UVs on the kept plate.
-    """
+
+def _closed_tube_object(name, a, b, r_top=0.050, r_bot=0.034, segs=16, rings=12, wall=0.016):
+    """Watertight thick-walled tube. Not a paper shell, not an unpainted capsule."""
+    an, x, z = _tube_frame(a, b)
+    bm = bmesh.new()
+    outer, inner = [], []
+    for i in range(rings):
+        t = i / (rings - 1)
+        c = a.lerp(b, t)
+        r = r_top * (1.0 - t) + r_bot * t
+        ri = max(0.010, r - wall)
+        ring_o, ring_i = [], []
+        for k in range(segs):
+            ang = 2.0 * math.pi * k / segs
+            radial = math.cos(ang) * x + math.sin(ang) * z
+            ring_o.append(bm.verts.new(c + radial * r))
+            ring_i.append(bm.verts.new(c + radial * ri))
+        outer.append(ring_o)
+        inner.append(ring_i)
+    bm.verts.ensure_lookup_table()
+
+    def quad(vs):
+        try:
+            bm.faces.new(vs)
+        except ValueError:
+            pass
+
+    for i in range(rings - 1):
+        for k in range(segs):
+            k2 = (k + 1) % segs
+            quad((outer[i][k], outer[i][k2], outer[i + 1][k2], outer[i + 1][k]))
+            quad((inner[i][k2], inner[i][k], inner[i + 1][k], inner[i + 1][k2]))
+    for k in range(segs):
+        k2 = (k + 1) % segs
+        quad((outer[0][k2], outer[0][k], inner[0][k], inner[0][k2]))
+        quad((outer[-1][k], outer[-1][k2], inner[-1][k2], inner[-1][k]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    me = bpy.data.meshes.new(name)
+    bm.to_mesh(me)
+    bm.free()
+    me.update()
+    for p in me.polygons:
+        p.use_smooth = True
+    ob = bpy.data.objects.new(name, me)
+    bpy.context.collection.objects.link(ob)
+    return ob
+
+
+def _collect_arm_donors(ob):
+    """Per-side Image_0 UVs from the paper Arm_* plates (e5b132f albedo)."""
+    me = ob.data
+    uv_layer = me.uv_layers.active
+    vg_names = {g.index: g.name for g in ob.vertex_groups}
+    donors = {"Arm_R": [], "Arm_L": []}
+    mat_count = defaultdict(int)
+    if uv_layer is None:
+        return donors, 0
+    for poly in me.polygons:
+        names = set()
+        for vi in poly.vertices:
+            names |= {vg_names.get(g.group, "") for g in me.vertices[vi].groups if g.weight > 0.5}
+        gname = "Arm_R" if "Arm_R" in names else ("Arm_L" if "Arm_L" in names else None)
+        if not gname:
+            continue
+        mat_count[poly.material_index] += 1
+        for li, vi in zip(poly.loop_indices, poly.vertices):
+            uv = uv_layer.data[li].uv
+            p = me.vertices[vi].co
+            donors[gname].append((p.copy(), (float(uv.x), float(uv.y)), float(p.y)))
+    mat_idx = max(mat_count, key=mat_count.get) if mat_count else 0
+    print("arm donors", {k: len(v) for k, v in donors.items()}, "mat", mat_idx)
+    return donors, mat_idx
+
+
+def _project_tube_uvs(tube_ob, donors, a, b):
+    """Wrap the Meshy plate UV island around the closed tube (reproject, not curl)."""
+    me = tube_ob.data
+    if me.uv_layers.active is None:
+        me.uv_layers.new(name="UVMap")
+    uv_layer = me.uv_layers.active
+    if len(donors) < 8:
+        for li in range(len(uv_layer.data)):
+            uv_layer.data[li].uv = (0.5, 0.5)
+        return
+    us = [d[1][0] for d in donors]
+    vs = [d[1][1] for d in donors]
+    u_lo, u_hi = min(us), max(us)
+    v_lo, v_hi = min(vs), max(vs)
+    ys = [d[2] for d in donors]
+    y_lo, y_hi = min(ys), max(ys)
+    an, x, z = _tube_frame(a, b)
+    me.calc_loop_triangles()
+    for poly in me.polygons:
+        for li, vi in zip(poly.loop_indices, poly.vertices):
+            p = me.vertices[vi].co
+            t = max(0.0, min(1.0, (p - a).dot(b - a) / max(1e-9, (b - a).length_squared)))
+            off = p - (a + t * (b - a))
+            theta = math.atan2(off.dot(z), off.dot(x))
+            u_n = (theta + math.pi) / (2.0 * math.pi)
+            # v follows donor plate along the hang (y), not a raw 0-1 stretch
+            v_n = (p.y - y_lo) / max(1e-6, y_hi - y_lo)
+            v_n = max(0.0, min(1.0, v_n))
+            uv_layer.data[li].uv = (
+                u_lo + u_n * (u_hi - u_lo),
+                v_lo + v_n * (v_hi - v_lo),
+            )
+
+
+def _delete_paper_arm_faces(ob) -> int:
+    """Remove Arm_* paper islands (mid + hand). Pauldrons on Chest stay."""
     me = ob.data
     vg_names = {g.index: g.name for g in ob.vertex_groups}
-    arm_vert = [False] * len(me.vertices)
-    side_of = [0] * len(me.vertices)
-    for i, v in enumerate(me.vertices):
-        names = {vg_names.get(g.group, "") for g in v.groups if g.weight > 0.5}
-        if "Arm_R" in names:
-            arm_vert[i] = True
-            side_of[i] = 1
-        elif "Arm_L" in names:
-            arm_vert[i] = True
-            side_of[i] = -1
-    islands = _arm_face_islands(me, arm_vert)
-    print("arm face islands", [len(x) for x in islands[:12]], "of", len(islands))
-
-    def island_meta(ids):
-        cs = [me.polygons[i].center for i in ids]
-        ys = [c.y for c in cs]
-        xs = [c.x for c in cs]
-        cy = sum(ys) / len(ys)
-        cx = sum(xs) / len(xs)
-        votes = 0
-        for fi in ids:
-            for vi in me.polygons[fi].vertices:
-                votes += side_of[vi]
-        side = 1 if votes >= 0 else -1
-        a, b = (_ARM_R_A, _ARM_R_B) if side > 0 else (_ARM_L_A, _ARM_L_B)
-        rs = [dist_seg(c, a, b) for c in cs]
-        return {
-            "ids": ids,
-            "n": len(ids),
-            "y": cy,
-            "x": cx,
-            "votes": votes,
-            "side": side,
-            "r": sum(rs) / len(rs),
-            "hand": cy < 0.80,
-            "pauldron": cy > 1.26,
-        }
-
-    metas = [island_meta(ids) for ids in islands if ids]
-    for m in metas:
-        print(
-            "arm island n", m["n"], "side", m["side"], "y", round(m["y"], 3),
-            "x", round(m["x"], 3), "r", round(m["r"], 3), "votes", m["votes"],
-            "hand" if m["hand"] else ("pauldron" if m["pauldron"] else "mid"),
-        )
     kill = []
-    kept = {"Arm_R": 0, "Arm_L": 0, "hand": 0, "pauldron": 0, "drop": 0}
-    for side in (1, -1):
-        mid = [m for m in metas if m["side"] == side and not m["hand"] and not m["pauldron"] and m["n"] >= 8]
-        mid.sort(key=lambda m: -m["n"])
-        primary_n = mid[0]["n"] if mid else 0
-        for i, m in enumerate(mid):
-            key = "Arm_R" if side > 0 else "Arm_L"
-            # Never delete a near-primary island (that ate the other arm once).
-            # Only drop small inner slats.
-            if i == 0 or m["n"] >= max(80, 0.25 * primary_n):
-                kept[key] += m["n"]
-                continue
-            kill.extend(m["ids"])
-            kept["drop"] += m["n"]
-        for m in metas:
-            if m["side"] != side:
-                continue
-            if m["hand"]:
-                kept["hand"] += m["n"]
-            elif m["pauldron"]:
-                kept["pauldron"] += m["n"]
-    print("drop stacked arm cards", kept, "kill faces", len(kill))
+    for fi, p in enumerate(me.polygons):
+        names = set()
+        for vi in p.vertices:
+            names |= {vg_names.get(g.group, "") for g in me.vertices[vi].groups if g.weight > 0.5}
+        if not (names & {"Arm_L", "Arm_R"}):
+            continue
+        if p.center.y > 1.30:
+            continue
+        kill.append(fi)
+    print("delete paper arm faces", len(kill), "of", len(me.polygons))
     if kill:
         bm = bmesh.new()
         bm.from_mesh(me)
         bm.faces.ensure_lookup_table()
         bmesh.ops.delete(bm, geom=[bm.faces[i] for i in kill if i < len(bm.faces)], context="FACES")
+        # drop leftover loose verts
+        bm.verts.ensure_lookup_table()
+        loose = [v for v in bm.verts if not v.link_faces]
+        if loose:
+            bmesh.ops.delete(bm, geom=loose, context="VERTS")
         bm.to_mesh(me)
         bm.free()
         me.update()
-    return {"islands": len(islands), "killFaces": len(kill), **kept}
+    return len(kill)
 
 
-def wrap_hang_arm_plates(ob, theta_span_deg=300.0) -> dict:
-    """Curl the kept Arm_* plate around the hang-arm axis. Same verts / UVs.
+def replace_hang_arms_closed_tubes(ob) -> dict:
+    """New premise: closed thick-walled hang-arm tubes + e5b132f UV reproject.
 
-    Stacked lames are dropped first. Across-plate width → θ. Constant r so
-    leftover stack cannot read as gold slats. Gap faces the ribs.
+    6232d5e curled paper cards and still read as sheets. This deletes those
+    islands and replaces them with watertight painted volumes. Body / tabard /
+    lion / scabbard are not remeshed. Not an unpainted capsule Game-view.
     """
-    me = ob.data
-    vg_names = {g.index: g.name for g in ob.vertex_groups}
-    sides = {
-        "Arm_R": (_ARM_R_A, _ARM_R_B, Vector((1.0, 0.0, 0.0))),
-        "Arm_L": (_ARM_L_A, _ARM_L_B, Vector((-1.0, 0.0, 0.0))),
+    donors, mat_idx = _collect_arm_donors(ob)
+    killed = _delete_paper_arm_faces(ob)
+    # Tube sits under the pauldron and past the wrist so mid-swing has no paper.
+    specs = {
+        "Arm_R": (
+            Vector((0.27, 1.28, 0.00)),
+            Vector((0.31, 0.54, 0.02)),
+        ),
+        "Arm_L": (
+            Vector((-0.27, 1.28, 0.00)),
+            Vector((-0.31, 0.54, 0.02)),
+        ),
     }
-    back = Vector((0.0, 0.0, -1.0))
-    half = math.radians(theta_span_deg) * 0.5
-    moved = {"Arm_R": 0, "Arm_L": 0}
-    stats = {}
-
-    for gname, (a, b, outward) in sides.items():
-        rows = []
-        for v in me.vertices:
-            names = {vg_names.get(g.group, "") for g in v.groups if g.weight > 0.5}
-            if gname not in names:
-                continue
-            fade = _wrap_fade(v.co.y)
-            if fade <= 1e-4:
-                continue
-            ab = b - a
-            t = max(0.0, min(1.0, (v.co - a).dot(ab) / max(1e-9, ab.length_squared)))
-            c = a + t * ab
-            off = v.co - c
-            u = off.dot(outward)
-            w = off.dot(back)
-            rows.append((v, fade, c, u, w, off.length))
-        if len(rows) < 12:
-            print("wrap skip", gname, "n", len(rows))
-            continue
-        bands = defaultdict(list)
-        for row in rows:
-            bands[int(row[0].co.y * 25.0)].append(row)
-        us = [r[3] for r in rows]
-        rs = [r[5] for r in rows]
-        stats[gname] = {
-            "n": len(rows),
-            "u": (round(min(us), 3), round(max(us), 3)),
-            "r": (round(min(rs), 3), round(max(rs), 3)),
-        }
-        for band in bands.values():
-            bu = [r[3] for r in band]
-            u_lo, u_hi = min(bu), max(bu)
-            span = max(0.018, u_hi - u_lo)
-            # Size r so the plate width covers the arc — a shallow 200°
-            # card still reads as slats when the swing turns the gap to camera.
-            r_tube = max(0.034, min(0.050, span / max(1e-3, 2.0 * half)))
-            for v, fade, c, u, w, r0 in band:
-                u_n = (2.0 * (u - u_lo) / span) - 1.0
-                u_n = max(-1.0, min(1.0, u_n))
-                theta = u_n * half
-                target = c + r_tube * (math.cos(theta) * outward + math.sin(theta) * back)
-                v.co = v.co.lerp(target, fade)
-                moved[gname] += 1
-
-    me.update()
-    vg_names = {g.index: g.name for g in ob.vertex_groups}
-    bm = bmesh.new()
-    bm.from_mesh(me)
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    bm.to_mesh(me)
-    bm.free()
-    for p in me.polygons:
-        names = set()
-        for vi in p.vertices:
-            names |= {vg_names.get(g.group, "") for g in me.vertices[vi].groups if g.weight > 0.5}
-        if names & {"Arm_L", "Arm_R"}:
-            p.use_smooth = True
-    me.update()
-    print("wrap hang-arm", moved, "span", theta_span_deg, "stats", stats)
-    return {"moved": moved, "thetaSpanDeg": theta_span_deg, "stats": stats, "vertsAfter": len(me.vertices)}
+    groups = {g.name: g for g in ob.vertex_groups}
+    for name in ("Arm_L", "Arm_R"):
+        if name not in groups:
+            groups[name] = ob.vertex_groups.new(name=name)
+    added = {}
+    for gname, (a, b) in specs.items():
+        tube = _closed_tube_object(f"HangTube_{gname}", a, b)
+        _project_tube_uvs(tube, donors.get(gname, []), a, b)
+        if ob.data.materials:
+            for mat in ob.data.materials:
+                tube.data.materials.append(mat)
+            for p in tube.data.polygons:
+                p.material_index = min(mat_idx, len(tube.data.materials) - 1)
+        bpy.ops.object.select_all(action="DESELECT")
+        ob.select_set(True)
+        tube.select_set(True)
+        bpy.context.view_layer.objects.active = ob
+        before = len(ob.data.vertices)
+        bpy.ops.object.join()
+        n_new = len(ob.data.vertices) - before
+        for i in range(before, len(ob.data.vertices)):
+            groups[gname].add([i], 1.0, "REPLACE")
+        added[gname] = n_new
+        print("joined closed tube", gname, "new verts", n_new)
+    note = {
+        "premise": "closed thick-walled hang-arm tubes + e5b132f UV reproject",
+        "killedPaperFaces": killed,
+        "donors": {k: len(v) for k, v in donors.items()},
+        "added": added,
+        "vertsAfter": len(ob.data.vertices),
+        "facesAfter": len(ob.data.polygons),
+    }
+    print("closed hang-arm tubes", note)
+    return note
 
 
 def _in_leg_tube(p):
@@ -515,10 +540,10 @@ def repair_arm_groups(ob):
         if names & set(MESH_BONES):
             continue
         p = v.co
-        if p.x > 0.22 and 0.70 < p.y < 1.38 and dist_seg(p, _ARM_R_A, _ARM_R_B) < 0.088:
+        if p.x > 0.20 and 0.50 < p.y < 1.34 and dist_seg(p, _ARM_R_A, _ARM_R_B) < 0.12:
             groups["Arm_R"].add([i], 1.0, "REPLACE")
             n += 1
-        elif p.x < -0.22 and 0.70 < p.y < 1.38 and dist_seg(p, _ARM_L_A, _ARM_L_B) < 0.088:
+        elif p.x < -0.20 and 0.50 < p.y < 1.34 and dist_seg(p, _ARM_L_A, _ARM_L_B) < 0.12:
             groups["Arm_L"].add([i], 1.0, "REPLACE")
             n += 1
     print("repair arm verts", n)
@@ -622,14 +647,12 @@ def main():
     sheath2 = delete_extra_sheath(mesh_ob)
     shards = delete_armpit_elbow_shards(mesh_ob)
     counts = assign_exclusive(mesh_ob)
-    stacked = drop_stacked_arm_cards(mesh_ob)
-    wrap = wrap_hang_arm_plates(mesh_ob)
-    wrap["stacked"] = stacked
+    tubes = replace_hang_arms_closed_tubes(mesh_ob)
     repair_arm_groups(mesh_ob)
     counts = recount_groups(mesh_ob)
     if counts.get("Scabbard", 0) < 40:
         raise SystemExit(f"scabbard too few: {counts.get('Scabbard')}")
-    if counts.get("Arm_R", 0) < 80 or counts.get("Arm_L", 0) < 80:
+    if counts.get("Arm_R", 0) < 60 or counts.get("Arm_L", 0) < 60:
         raise SystemExit(f"arm empty: R={counts.get('Arm_R')} L={counts.get('Arm_L')}")
     if counts.get("Arm_R", 0) > 8000 or counts.get("Arm_L", 0) > 8000:
         raise SystemExit(f"arm stole tabard: R={counts.get('Arm_R')} L={counts.get('Arm_L')}")
@@ -680,11 +703,11 @@ def main():
         "bindPassClaimed": False,
         "sourceLook": "e5b132f Meshy GLB + paint iterate (Image_0 bleed + SoT lion cards)",
         "albedoPreserved": "original GLB UVs kept; atlas = Image_0 + lion-card strip (combine_atlas_and_remap, same as e5b132f)",
-        "retopo": "LOOK path unchanged (e5b132f GLB UVs + Image_0/lion). Mesh-vs-capture cc77d8a = MESH. Bind: curl Arm_* plates around hang-arm axis (same verts/UVs). No solidify rims. No remesh/capsule. Hem does not Y-cut leg tubes.",
-        "wrap": wrap,
+        "retopo": "LOOK path: e5b132f body/tabard/lion/scabbard untouched. 6232d5e curl FAIL. New premise: delete paper Arm_* islands; closed thick-walled hang-arm tubes; reproject Image_0 UVs. No whole-body remesh. No unpainted capsule Game-view.",
+        "tubes": tubes,
         "shards": shards,
         "vsFail": "fd9d6f8",
-        "oldPremise": "voxel remesh / capsule-arm Game-view (61e023d / c840b73) — Derek STOP, threw away paint PASS",
+        "oldPremise": "6232d5e planar/curl paper Arm_* plates (~300°) — Design FAIL, still navy/gold sheets",
         "motion": "5916447 Evaluate() keys reused",
         "scabbard": "character-right",
         "playHubLocked": True,
