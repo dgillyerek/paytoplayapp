@@ -37,9 +37,12 @@ PROOF = old.PROOF
 MESH_BONES = old.MESH_BONES
 PARENT = old.PARENT
 
-VOXEL = float(os.environ.get("RETOPO_VOXEL", "0.011"))
+VOXEL = float(os.environ.get("RETOPO_VOXEL", "0.014"))
 ATLAS_SIZE = 2048
-ARM_PUSH = 0.028
+ARM_PUSH = 0.022
+WELD = 0.002
+SOLIDIFY = 0.010
+TARGET_FACES = 16000
 
 _SCAB_A = hh._SCAB_A
 _SCAB_B = hh._SCAB_B
@@ -154,6 +157,42 @@ def delete_small_islands(ob, keep_min=40):
         me.update()
     print("islands keep", sorted(kept, reverse=True)[:8], "drop", len(drop))
     return kept
+
+
+def fill_holes(ob):
+    bm = bmesh.new()
+    bm.from_mesh(ob.data)
+    bmesh.ops.holes_fill(bm, edges=[e for e in bm.edges if e.is_boundary], sides=8)
+    bm.to_mesh(ob.data)
+    bm.free()
+    ob.data.update()
+    print("holes", len(ob.data.vertices), "faces", len(ob.data.polygons), "islands", n_islands(ob.data))
+
+
+def apply_solidify(ob, thick):
+    bpy.ops.object.select_all(action="DESELECT")
+    ob.select_set(True)
+    bpy.context.view_layer.objects.active = ob
+    m = ob.modifiers.new("sol", "SOLIDIFY")
+    m.thickness = thick
+    m.offset = 0.0
+    bpy.ops.object.modifier_apply(modifier="sol")
+    print("solidify", thick, "v", len(ob.data.vertices), "f", len(ob.data.polygons))
+
+
+def decimate_to(ob, target_faces):
+    n = max(1, len(ob.data.polygons))
+    if n <= target_faces:
+        return
+    bpy.ops.object.select_all(action="DESELECT")
+    ob.select_set(True)
+    bpy.context.view_layer.objects.active = ob
+    m = ob.modifiers.new("dec", "DECIMATE")
+    m.ratio = target_faces / n
+    bpy.ops.object.modifier_apply(modifier="dec")
+    for p in ob.data.polygons:
+        p.use_smooth = True
+    print("decimate", n, "->", len(ob.data.polygons), "v", len(ob.data.vertices), "islands", n_islands(ob.data))
 
 
 def apply_voxel(ob, size):
@@ -720,9 +759,13 @@ def main():
     tgt.name = "SirAldricRetopo"
     dropped = delete_verts(tgt, is_sheath)
     print("deleted sheath shards", dropped)
+    hh.weld(tgt, WELD)
+    fill_holes(tgt)
+    apply_solidify(tgt, SOLIDIFY)
     push_arms(tgt, ARM_PUSH)
     apply_voxel(tgt, VOXEL)
-    delete_small_islands(tgt, keep_min=60)
+    delete_small_islands(tgt, keep_min=80)
+    decimate_to(tgt, TARGET_FACES)
     # leave arms pushed — readable solid hang volumes, not fused to tabard
 
     scab = make_scabbard()
