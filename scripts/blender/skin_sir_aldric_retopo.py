@@ -96,12 +96,13 @@ def is_sheath(p: Vector) -> bool:
 
 
 def in_arm(p: Vector, side: float, push: float = ARM_PUSH) -> bool:
+    """Tight hang tube only — not the tabard / sleeve sheet."""
     a, b = arm_axis(side, push)
-    if p.x * side < 0.17:
+    if p.x * side < 0.22:
         return False
     if not (0.58 < p.y < 1.52):
         return False
-    return dist_seg(p, a, b) < 0.090
+    return dist_seg(p, a, b) < 0.080
 
 
 def delete_verts(ob, pred) -> int:
@@ -206,6 +207,131 @@ def apply_voxel(ob, size):
     for p in ob.data.polygons:
         p.use_smooth = True
     print("voxel", size, "v", len(ob.data.vertices), "f", len(ob.data.polygons), "islands", n_islands(ob.data))
+
+
+def separate_selected(ob, pred, name):
+    """Cut verts matching pred onto their own object. No weld back."""
+    bpy.ops.object.select_all(action="DESELECT")
+    ob.select_set(True)
+    bpy.context.view_layer.objects.active = ob
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_mode(type="VERT")
+    bpy.ops.mesh.select_all(action="DESELECT")
+    bpy.ops.object.mode_set(mode="OBJECT")
+    n = 0
+    for v in ob.data.vertices:
+        hit = bool(pred(v.co))
+        v.select = hit
+        if hit:
+            n += 1
+    if n < 24:
+        print("separate skip", name, n)
+        return None
+    before = set(bpy.data.objects)
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.separate(type="SELECTED")
+    bpy.ops.object.mode_set(mode="OBJECT")
+    added = [o for o in (set(bpy.data.objects) - before) if o.type == "MESH"]
+    new = added[0] if added else None
+    if new:
+        new.name = name
+        print("separate", name, "verts", len(new.data.vertices), "from", n)
+    return new
+
+
+def inflate_tube(ob, side, radius=0.058):
+    """Force a solid hang-arm radius so Evaluate() cannot pancake a plate."""
+    a, b = arm_axis(side, ARM_PUSH)
+    ab = b - a
+    an = ab.normalized()
+    n = 0
+    for v in ob.data.vertices:
+        t = max(0.0, min(1.0, (v.co - a).dot(ab) / max(1e-9, ab.length_squared)))
+        axis_p = a + t * ab
+        off = v.co - axis_p
+        off = off - an * off.dot(an)
+        r = off.length
+        if r < 1e-5:
+            off = Vector((side * 0.04, 0.0, 0.02))
+            r = off.length
+        if r < radius:
+            v.co = axis_p + off.normalized() * radius
+            n += 1
+    ob.data.update()
+    print("inflate", ob.name, n, "r", radius)
+
+
+def assign_exclusive(mesh_ob):
+    """One bone per vert. No heat smear. Skirt never on legs. Arms = Arm_* only."""
+    for g in list(mesh_ob.vertex_groups):
+        if g.name in MESH_BONES:
+            mesh_ob.vertex_groups.remove(g)
+    groups = {n: mesh_ob.vertex_groups.new(name=n) for n in MESH_BONES}
+    scab = mesh_ob.vertex_groups.get("_ScabGeo")
+    me = mesh_ob.data
+    ar_a, ar_b = arm_axis(1.0, ARM_PUSH)
+    al_a, al_b = arm_axis(-1.0, ARM_PUSH)
+    bone_of = []
+    for i, v in enumerate(me.vertices):
+        p = v.co
+        on_scab = False
+        if scab:
+            for vg in v.groups:
+                if vg.group == scab.index and vg.weight > 0.5:
+                    on_scab = True
+                    break
+        if on_scab or (is_sheath(p) and dist_seg(p, _SCAB_A, _SCAB_B) < 0.060):
+            bone_of.append("Scabbard")
+            continue
+        if p.x > 0.22 and 0.56 < p.y < 1.52 and dist_seg(p, ar_a, ar_b) < 0.11:
+            bone_of.append("Arm_R")
+            continue
+        if p.x < -0.22 and 0.56 < p.y < 1.52 and dist_seg(p, al_a, al_b) < 0.11:
+            bone_of.append("Arm_L")
+            continue
+        leg_r = (
+            p.x > 0.085
+            and p.y < 0.66
+            and dist_seg(p, old._LEG_R_A, old._LEG_R_B) < 0.078
+        )
+        leg_l = (
+            p.x < -0.085
+            and p.y < 0.66
+            and dist_seg(p, old._LEG_L_A, old._LEG_L_B) < 0.078
+        )
+        in_skirt = abs(p.x) < 0.28 and 0.40 < p.y < 1.32 and abs(p.z) < 0.30
+        if in_skirt and not (leg_r or leg_l):
+            if p.y > 1.18:
+                bone_of.append("Chest")
+            elif p.y > 1.06:
+                bone_of.append("Spine")
+            else:
+                bone_of.append("Hips")
+            continue
+        if leg_r:
+            bone_of.append("Foot_R" if p.y < 0.20 else ("Leg_R" if p.y < 0.46 else "UpLeg_R"))
+            continue
+        if leg_l:
+            bone_of.append("Foot_L" if p.y < 0.20 else ("Leg_L" if p.y < 0.46 else "UpLeg_L"))
+            continue
+        if p.y > 1.52:
+            bone_of.append("Head")
+        elif p.y > 1.42:
+            bone_of.append("Neck")
+        elif p.y > 1.24:
+            bone_of.append("Chest")
+        elif p.y > 1.08:
+            bone_of.append("Spine")
+        else:
+            bone_of.append("Hips")
+    counts = defaultdict(int)
+    for i, bone in enumerate(bone_of):
+        groups[bone].add([i], 1.0, "REPLACE")
+        counts[bone] += 1
+    if scab:
+        mesh_ob.vertex_groups.remove(scab)
+    print("exclusive", dict(counts))
+    return dict(counts)
 
 
 def push_arms(ob, delta):
@@ -907,59 +1033,63 @@ def main():
     apply_voxel(tgt, VOXEL)
     delete_small_islands(tgt, keep_min=80)
     decimate_to(tgt, TARGET_FACES)
-    # leave arms pushed — readable solid hang volumes, not fused to tabard
+    # Cut hang-arm tubes off the body so tabard cannot ride Arm_* as a sheet.
+    arm_r = separate_selected(tgt, lambda p: in_arm(p, 1.0), "HangArm_R")
+    arm_l = separate_selected(tgt, lambda p: in_arm(p, -1.0), "HangArm_L")
+    fill_holes(tgt)
+    if arm_r:
+        inflate_tube(arm_r, 1.0)
+    if arm_l:
+        inflate_tube(arm_l, -1.0)
 
     scab = make_scabbard()
     tag_scabbard_group(tgt, scab)
-    mesh_ob = join_meshes([tgt, scab], "SirAldricRetopo")
+    parts = [tgt]
+    if arm_r:
+        parts.append(arm_r)
+    if arm_l:
+        parts.append(arm_l)
+    parts.append(scab)
+    mesh_ob = join_meshes(parts, "SirAldricRetopo")
     print("joined", len(mesh_ob.data.vertices), "faces", len(mesh_ob.data.polygons), "islands", n_islands(mesh_ob.data))
 
     smart_uv(mesh_ob)
     scale_uvs(mesh_ob, 0.74)
     atlas_path = PACK3D / "sir_aldric_meshy_atlas.png"
-    baked = cycles_bake(src, mesh_ob, atlas_path)
-    bake_ok = baked is not None and atlas_path.exists()
-    if bake_ok:
-        preview = np.array(Image.open(atlas_path).convert("RGB"))
-        bake_ok = float(preview.mean()) > 18
-        print("bake mean", round(float(preview.mean()), 2))
-    if not bake_ok:
-        colors = transfer_albedo(src, mesh_ob)
-        paint_scabbard_colors(mesh_ob, colors, "_ScabGeo")
-        rasterize_atlas(mesh_ob, colors, atlas_path)
+    # Light look only — bind first. Cycles bake failed last tip; keep transfer+lion.
+    colors = transfer_albedo(src, mesh_ob)
+    paint_scabbard_colors(mesh_ob, colors, "_ScabGeo")
+    rasterize_atlas(mesh_ob, colors, atlas_path)
     atlas = np.array(Image.open(atlas_path).convert("RGB"))
     stamp_lion(mesh_ob, atlas)
     paint_scabbard_atlas(mesh_ob, atlas)
     Image.fromarray(atlas, "RGB").save(atlas_path)
     assign_baked_material(mesh_ob, atlas_path)
 
-    # hide / remove source so the walk render is the clean mesh only
     src.hide_render = True
     src.hide_set(True)
 
-    heat_ob = hh.build_heat_armature()
-    hh.heat_bind(mesh_ob, heat_ob)
-    split_limb_chains(mesh_ob)
-    n_cloth, n_scab = lock_cloth_and_scabbard(mesh_ob)
-    counts = hh.primary_counts(mesh_ob)
+    # No heat: heat smear + Fore/Hand splits pancake tubes and shear the hem.
+    counts = assign_exclusive(mesh_ob)
     if counts.get("Scabbard", 0) < 40:
         raise SystemExit(f"scabbard too few: {counts.get('Scabbard')} primary={counts}")
-    if counts.get("Fore_R", 0) < 8 or counts.get("Fore_L", 0) < 8:
-        raise SystemExit(f"elbow empty: Fore_R={counts.get('Fore_R')} Fore_L={counts.get('Fore_L')}")
-    if counts.get("Arm_R", 0) < 20 or counts.get("Arm_L", 0) < 20:
+    if counts.get("Arm_R", 0) < 40 or counts.get("Arm_L", 0) < 40:
         raise SystemExit(f"arm empty: R={counts.get('Arm_R')} L={counts.get('Arm_L')}")
 
     actor_ob, world = hh.build_actor_armature()
     hh.attach_actor(mesh_ob, actor_ob)
-    # drop heat armature from view
-    heat_ob.hide_render = True
-    heat_ob.hide_set(True)
 
     fbx = export_fbx(mesh_ob, actor_ob)
     ntris, buckets = export_mesh_txt_v4(mesh_ob)
 
     old.setup_render()
     mp4 = old.render_walk(actor_ob)
+    # 61e023d MP4 FAIL peaked mid-swing (~t=0.625) — keep that still for the vs sheet.
+    old.apply_pose(actor_ob, old.walk_pose(0.625))
+    mid = old.WALK / "world_walk_mid_swing.png"
+    bpy.context.scene.render.filepath = str(mid)
+    bpy.ops.render.render(write_still=True)
+    print("still mid_swing", mid.stat().st_size)
 
     blend = PACK3D / "sir_aldric_meshy_skinned.blend"
     bpy.ops.wm.save_as_mainfile(filepath=str(blend))
@@ -967,15 +1097,15 @@ def main():
     note = {
         "lookPassClaimed": True,
         "walkPassClaimed": False,
-        "oldPremise": "weights on Meshy shatter (11283 islands) — Bone1 89481e5/71f0c4a then hang-heat e56aeb1. Abandoned.",
-        "newPremise": "retopo/remesh Path 2 look into clean mid-poly (voxel) + one solid scabbard capsule + hang armature skin FBX. Look bake from e5b132f source.",
+        "bindPassClaimed": False,
+        "oldPremise": "heat + Fore/Hand split on remesh — 61e023d MP4 FAIL (arm sheets + hem tear bands).",
+        "newPremise": "detach hang-arm islands, inflate tubes, exclusive 1-bone weights, hem locked to Hips. One scabbard. Look transfer unchanged (bind first).",
         "voxel": VOXEL,
         "armPush": ARM_PUSH,
         "islands": islands,
         "islandSizes": sizes,
         "sheathShardsDeleted": dropped,
-        "clothLocked": n_cloth,
-        "scabbardVerts": n_scab,
+        "scabbardVerts": counts.get("Scabbard", 0),
         "motion": "5916447 Evaluate() keys reused — gait/weave/forward-swing not edited",
         "scabbard": "character-right",
         "playHubLocked": True,

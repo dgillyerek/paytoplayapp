@@ -8,10 +8,10 @@ Design **PASS** look on `e5b132f`. Walk-with-look **FAIL** on `89481e5`, `71f0c4
 - **Old premise (abandoned):** Bone1 or hang-heat **weights on Meshy shatter**. Design STOP after e56aeb1.
 - **New premise:** voxel-remesh Path 2 into a clean mid-poly + **one** solid scabbard capsule + proper hang armature skin. FBX `sir_aldric_path2_clean.fbx`. FMT v4. Actor `Bone4`. Look bake from e5b132f source.
 - Motion: `Evaluate()` keys from `5916447` **reused**.
-- Proof: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4` + `gate3_path2_walk_phases.png` + `gate3_path2_vs_e56aeb1.png`.
+- Proof: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4` + `gate3_path2_walk_phases.png` + `gate3_path2_vs_61e023d.png`.
 - Play hub PNG **locked**.
 
-**Look PASS claimed.** **Walk-with-look NOT claimed.**
+`61e023d` MP4: Design retracted bind PASS (arm sheets + hem tears). This tip detaches hang-arm islands + exclusive weights. **Bind NOT claimed.** **Walk-with-look NOT claimed.**
 
 ## Gate 3 Path 2 Meshy (LOOK stills — paint iterate) — archived
 

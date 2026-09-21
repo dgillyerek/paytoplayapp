@@ -52,4 +52,6 @@ DCC: `sir_aldric_path2_clean.fbx` + `sir_aldric_meshy_skinned.blend`. Runtime st
 
 ## Honest ART
 
-This clip is a **different mesh path** than `e56aeb1` / `71f0c4a` / `89481e5`. Old premise abandoned. Bake is a remesh transfer — plate/lion will not match paint stills texel-for-texel. **Do not claim walk PASS.** Hub PNG swap only after Design PASS.
+`61e023d` remesh stills looked cleaner than the **Game-view MP4**. Design retracted bind PASS: MP4 still FAILed arm slab/sheets + mid/leg tear bands (scabbard = one, progress).
+
+This iterate: **detach hang-arm islands** from the body, inflate them to solid tubes, exclusive 1-bone weights (no heat smear, no Fore/Hand split). Hem/tabard locked to Hips/Spine/Chest. Look transfer unchanged — bind first. **Do not claim bind PASS. Do not claim walk PASS.** Hub PNG locked.
