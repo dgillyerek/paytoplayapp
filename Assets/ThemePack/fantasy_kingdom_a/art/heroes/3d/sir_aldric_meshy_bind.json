@@ -4,54 +4,27 @@
   "bindPassClaimed": false,
   "sourceLook": "e5b132f Meshy GLB + paint iterate (Image_0 bleed + SoT lion cards)",
   "albedoPreserved": "original GLB UVs kept; atlas = Image_0 + lion-card strip (combine_atlas_and_remap, same as e5b132f)",
-  "retopo": "LOOK path unchanged (e5b132f GLB UVs + Image_0/lion). Mesh-vs-capture cc77d8a = MESH. Bind: curl Arm_* plates around hang-arm axis (same verts/UVs). No solidify rims. No remesh/capsule. Hem does not Y-cut leg tubes.",
-  "wrap": {
-    "moved": {
-      "Arm_R": 1386,
-      "Arm_L": 1240
+  "retopo": "LOOK path: e5b132f body/tabard/lion/scabbard untouched. 6232d5e curl FAIL. New premise: delete paper Arm_* islands; closed thick-walled hang-arm tubes; reproject Image_0 UVs. No whole-body remesh. No unpainted capsule Game-view.",
+  "tubes": {
+    "premise": "closed thick-walled hang-arm tubes + e5b132f UV reproject",
+    "killedPaperFaces": 4734,
+    "donors": {
+      "Arm_R": 7512,
+      "Arm_L": 6738
     },
-    "thetaSpanDeg": 300.0,
-    "stats": {
-      "Arm_R": {
-        "n": 1386,
-        "u": [
-          -0.036,
-          0.165
-        ],
-        "r": [
-          0.019,
-          0.17
-        ]
-      },
-      "Arm_L": {
-        "n": 1240,
-        "u": [
-          -0.035,
-          0.162
-        ],
-        "r": [
-          0.007,
-          0.169
-        ]
-      }
+    "added": {
+      "Arm_R": 384,
+      "Arm_L": 384
     },
-    "vertsAfter": 31138,
-    "stacked": {
-      "islands": 13,
-      "killFaces": 32,
-      "Arm_R": 1690,
-      "Arm_L": 1553,
-      "hand": 474,
-      "pauldron": 1,
-      "drop": 32
-    }
+    "vertsAfter": 29127,
+    "facesAfter": 45590
   },
   "shards": {
     "shardFaces": 10,
     "vertsAfter": 31155
   },
   "vsFail": "fd9d6f8",
-  "oldPremise": "voxel remesh / capsule-arm Game-view (61e023d / c840b73) \u2014 Derek STOP, threw away paint PASS",
+  "oldPremise": "6232d5e planar/curl paper Arm_* plates (~300\u00b0) \u2014 Design FAIL, still navy/gold sheets",
   "motion": "5916447 Evaluate() keys reused",
   "scabbard": "character-right",
   "playHubLocked": true,
@@ -70,11 +43,11 @@
     }
   },
   "vertsPrimary": {
-    "Arm_R": 1467,
-    "Hips": 15016,
-    "Scabbard": 751,
-    "Spine": 3742,
-    "Chest": 4893,
+    "Hips": 14989,
+    "Scabbard": 748,
+    "Spine": 3733,
+    "Chest": 4890,
+    "Arm_R": 389,
     "Head": 1978,
     "Foot_R": 127,
     "Leg_R": 287,
@@ -83,25 +56,25 @@
     "UpLeg_L": 173,
     "Leg_L": 274,
     "Foot_L": 140,
-    "Arm_L": 1277
+    "Arm_L": 386
   },
-  "verts": 31138,
-  "tris": 49524,
+  "verts": 29127,
+  "tris": 46358,
   "boneTris": {
-    "Arm_R": 2218,
-    "Hips": 23734,
-    "Scabbard": 1102,
-    "Spine": 5903,
-    "Chest": 8029,
+    "Hips": 23458,
+    "Scabbard": 1049,
+    "Spine": 5781,
+    "Chest": 7990,
+    "Arm_R": 770,
     "Head": 3335,
     "Foot_R": 218,
-    "Leg_R": 440,
-    "Neck": 1301,
+    "Leg_R": 434,
+    "Neck": 1310,
     "UpLeg_R": 320,
-    "UpLeg_L": 283,
-    "Leg_L": 430,
+    "UpLeg_L": 279,
+    "Leg_L": 424,
     "Foot_L": 222,
-    "Arm_L": 1989
+    "Arm_L": 768
   },
   "atlas": "sir_aldric_meshy_atlas.png",
   "mesh": "sir_aldric_meshy.mesh.txt",

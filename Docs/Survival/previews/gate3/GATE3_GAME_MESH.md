@@ -59,6 +59,6 @@ Source tip **`e5b132f`**. UVs/albedo preserved (GLB UVs + Image_0/lion atlas). R
 **Mesh-vs-capture (mandatory):** same mid-swing t=0.625. A = Actor LBS still (Unity skin path, no encoder). B = offline Blender EEVEE. C = MP4 n=10.
 
 - `cc77d8a` FAIL: A+B+C all tear → **MESH**. Sheet `gate3_mesh_vs_capture_mid_swing.png`.
-- After hang-arm wrap: A+B+C closed volumes in the stills and in the re-dropped MP4. Wrap sheet `gate3_mesh_vs_capture_wrap_mid_swing.png`. Gold lame albedo on the right still reads as bands. **Do not claim bind PASS. Do not claim walk PASS.** Hub PNG locked.
+- `6232d5e` curl FAIL: mid-swing still sheets. New premise: delete paper `Arm_*`; closed thick-walled tubes; reproject Image_0. Tube sheet `gate3_mesh_vs_capture_tubes_mid_swing.png`. **Do not claim bind PASS. Do not claim walk PASS.** Hub PNG locked.
 
 vs-fd9: `gate3_path2_vs_fd9d6f8.png` + frozen `fail_fd9d6f8/`.

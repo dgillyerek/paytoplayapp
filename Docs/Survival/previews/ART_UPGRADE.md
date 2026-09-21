@@ -10,7 +10,7 @@ Design **FAIL** bind on `cc77d8a` (LOOK PASS holds). Mandatory proof before anot
 
 **Eyed:** A, B, and C all show the same left navy arm sheet/smear, right stacked gold plates, and fuzzy hands. Encoder does not invent tears. Offline ALSO tears → **MESH/geo** (thin hang-arm cards + stacked lames), not capture/AA/post. FAIL sheet: `gate3_mesh_vs_capture_mid_swing.png`. Frozen: `fail_cc77d8a/`.
 
-Mesh actor (not a weight iterate): curl `Arm_*` plates around the hang-arm axis (same verts/UVs, 300°). No remesh/capsule. After wrap, A/B/C at t=0.625 are closed volumes in the stills **and** in `sir_aldric_path2_walk_toward_top.mp4` n=10 (left navy tube, right gold-banded volume, solid hands). Right gold lame stripes are `e5b132f` albedo. Wrap sheet: `gate3_mesh_vs_capture_wrap_mid_swing.png`. **Bind NOT claimed.**
+`6232d5e` curl FAIL (Design): mid-swing still navy/gold sheets + tear stretch. New premise: delete paper `Arm_*` islands; **closed thick-walled hang-arm tubes**; reproject `e5b132f` Image_0 UVs. Body/tabard/lion/scabbard not remeshed. No unpainted capsule Game-view. Tube proof: `gate3_mesh_vs_capture_tubes_mid_swing.png`. **Bind NOT claimed.**
 
 ## Gate 3 Path 2 bind iterate (LOOK PASS fd9d6f8 / BIND FAIL)
 

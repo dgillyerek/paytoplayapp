@@ -2,7 +2,7 @@
 
 **Look (Path 2):** Meshy Flagship Image-to-3D Decimate ~50k + UV-bleed / SoT lion-card iterate — Design **PASS** on paint stills `e5b132f`. `sir_aldric_meshy_retopo.glb` + `sir_aldric_meshy.blend`. Not scripted loft.
 
-**Motion bind:** Meshy GLB / `e5b132f` UVs kept (LOOK PASS `fd9d6f8`). Mesh-vs-capture: `cc77d8a` A+B+C tear → **MESH**. Hang-arm wrap (same verts/UVs) makes mid-swing closed volumes in Actor LBS, Blender, and the re-dropped MP4. No remesh/capsule Game-view. `Evaluate()` `5916447` reused. **Bind NOT claimed.**
+**Motion bind:** Meshy GLB / `e5b132f` look kept (LOOK PASS). `6232d5e` curl FAIL. Closed thick-walled hang-arm tubes + Image_0 reproject (no whole-body remesh, no unpainted capsule). `Evaluate()` `5916447` reused. **Bind NOT claimed.**
 
 **Walk-with-look is NOT claimed.** Clip for Design re-gate: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4`. Play hub stays `SIR_ALDRIC_REAR_MASTER_LOCKED.png`.
 
