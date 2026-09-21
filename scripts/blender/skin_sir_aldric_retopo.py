@@ -261,17 +261,9 @@ def make_scabbard():
     bpy.context.view_layer.objects.active = body
     bpy.ops.object.join()
     ob = bpy.context.active_object
-    me = ob.data
-    bm = bmesh.new()
-    bm.from_mesh(me)
-    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.004)
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    bm.to_mesh(me)
-    bm.free()
-    me.update()
-    for p in me.polygons:
-        p.use_smooth = True
-    print("scabbard solid", len(me.vertices), "faces", len(me.polygons), "islands", n_islands(me))
+    apply_voxel(ob, 0.008)
+    delete_small_islands(ob, keep_min=8)
+    print("scabbard solid", len(ob.data.vertices), "faces", len(ob.data.polygons), "islands", n_islands(ob.data))
     return ob
 
 
@@ -644,6 +636,8 @@ def lock_cloth_and_scabbard(mesh_ob):
                 groups["Hips"].add([i], 1.0, "ADD")
             n_cloth += 1
     print("lock cloth", n_cloth, "scabbard", n_scab)
+    if scab_g:
+        mesh_ob.vertex_groups.remove(scab_g)
     return n_cloth, n_scab
 
 
@@ -790,7 +784,7 @@ def main():
     n_cloth, n_scab = lock_cloth_and_scabbard(mesh_ob)
     counts = hh.primary_counts(mesh_ob)
     if counts.get("Scabbard", 0) < 40:
-        raise SystemExit(f"scabbard too few: {counts.get('Scabbard')}")
+        raise SystemExit(f"scabbard too few: {counts.get('Scabbard')} primary={counts}")
     if counts.get("Fore_R", 0) < 8 or counts.get("Fore_L", 0) < 8:
         raise SystemExit(f"elbow empty: Fore_R={counts.get('Fore_R')} Fore_L={counts.get('Fore_L')}")
     if counts.get("Arm_R", 0) < 20 or counts.get("Arm_L", 0) < 20:
