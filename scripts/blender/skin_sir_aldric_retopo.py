@@ -239,6 +239,34 @@ def separate_selected(ob, pred, name):
     return new
 
 
+def in_arm_delete(p: Vector, side: float) -> bool:
+    """Wider than in_arm — strip fused tabard-arm bridges off the body."""
+    a, b = arm_axis(side, ARM_PUSH)
+    if p.x * side < 0.175:
+        return False
+    if not (0.54 < p.y < 1.54):
+        return False
+    return dist_seg(p, a, b) < 0.125
+
+
+def make_arm_solid(side: float):
+    """Solid hang-arm capsule. Remesh arm plates stay sheets under Evaluate()."""
+    a, b = arm_axis(side, ARM_PUSH)
+    axis = b - a
+    mid = (a + b) * 0.5
+    bpy.ops.mesh.primitive_cylinder_add(
+        radius=0.056, depth=axis.length + 0.06, vertices=16, location=mid
+    )
+    ob = bpy.context.active_object
+    ob.name = "HangArm_R" if side > 0 else "HangArm_L"
+    ob.rotation_euler = axis.to_track_quat("Z", "X").to_euler()
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    apply_voxel(ob, 0.014)
+    delete_small_islands(ob, keep_min=8)
+    print("arm solid", ob.name, len(ob.data.vertices), "islands", n_islands(ob.data))
+    return ob
+
+
 def inflate_tube(ob, side, radius=0.058):
     """Force a solid hang-arm radius so Evaluate() cannot pancake a plate."""
     a, b = arm_axis(side, ARM_PUSH)
@@ -1033,23 +1061,18 @@ def main():
     apply_voxel(tgt, VOXEL)
     delete_small_islands(tgt, keep_min=80)
     decimate_to(tgt, TARGET_FACES)
-    # Cut hang-arm tubes off the body so tabard cannot ride Arm_* as a sheet.
-    arm_r = separate_selected(tgt, lambda p: in_arm(p, 1.0), "HangArm_R")
-    arm_l = separate_selected(tgt, lambda p: in_arm(p, -1.0), "HangArm_L")
+    # Remesh "arms" are still fused plates. Delete the corridor and put
+    # solid capsules there so Evaluate() cannot smear a tabard sheet.
+    n_del = delete_verts(tgt, lambda p: in_arm_delete(p, 1.0) or in_arm_delete(p, -1.0))
+    print("deleted remesh arm plates", n_del)
     fill_holes(tgt)
-    if arm_r:
-        inflate_tube(arm_r, 1.0)
-    if arm_l:
-        inflate_tube(arm_l, -1.0)
+    delete_small_islands(tgt, keep_min=80)
+    arm_r = make_arm_solid(1.0)
+    arm_l = make_arm_solid(-1.0)
 
     scab = make_scabbard()
     tag_scabbard_group(tgt, scab)
-    parts = [tgt]
-    if arm_r:
-        parts.append(arm_r)
-    if arm_l:
-        parts.append(arm_l)
-    parts.append(scab)
+    parts = [tgt, arm_r, arm_l, scab]
     mesh_ob = join_meshes(parts, "SirAldricRetopo")
     print("joined", len(mesh_ob.data.vertices), "faces", len(mesh_ob.data.polygons), "islands", n_islands(mesh_ob.data))
 
@@ -1099,7 +1122,7 @@ def main():
         "walkPassClaimed": False,
         "bindPassClaimed": False,
         "oldPremise": "heat + Fore/Hand split on remesh — 61e023d MP4 FAIL (arm sheets + hem tear bands).",
-        "newPremise": "detach hang-arm islands, inflate tubes, exclusive 1-bone weights, hem locked to Hips. One scabbard. Look transfer unchanged (bind first).",
+        "newPremise": "delete remesh arm plates; solid hang-arm capsules; exclusive 1-bone; hem on Hips. One scabbard. Look transfer unchanged (bind first).",
         "voxel": VOXEL,
         "armPush": ARM_PUSH,
         "islands": islands,
