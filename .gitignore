@@ -10,6 +10,8 @@
 *.log
 *.blend1
 *.blend1.meta
+Docs/Survival/previews/gate3/walk/f_*.png
+scripts/blender/__pycache__/
 /[Mm]emoryCaptures/
 /[Rr]ecordings/
 /[Aa]ssets/Plugins/Editor/JetBrains*

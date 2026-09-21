@@ -55,11 +55,11 @@ Placeholder: keep showing locked rear PNG in Play until 3D clip PASSes.
 
 ## This PR (orientation + look)
 
-Runtime: `SirAldric3DActor` binds a **Blender mid-poly** (`sir_aldric.fbx` / `sir_aldric_midpoly.mesh.txt`) with the look_targets atlas and plays `Aldric_WalkAttackLoop` through **Animator + PlayableGraph**. Box-atlas iteration is stopped (path B).
+Runtime: `SirAldric3DActor` binds **Path 2 Meshy** (`sir_aldric_meshy.mesh.txt` + `sir_aldric_meshy_atlas.png`) and plays `Aldric_WalkAttackLoop` through **Animator + PlayableGraph**. Loft mid-poly is archive. `Evaluate()` keys from `5916447` are unchanged.
 
 - Scene: `Assets/Survival/Scenes/SirAldric.unity` — Game view **1080×1920** → Play
 - Camera is **fixed** high-angle rear `(0, 2.80, −5.40)` look-at `(0, 0.90, 0.50)`; RootZ marches toward **TOP** (+Z). Root X = 0. Spine Z counters hip roll so the torso stays in one vertical plane (Derek CLOSE on ff81201: no left↔right weave). Small hip drop + shoulder–hip counter-rotate stay. **Passing** foot tucks under the pelvis then steps **+Z / TOP** (14d9c17 pass thigh +X read as a back-kick toward camera). Contact step matches march 0.40 m. **5916447 motion HOLD.**
-- **Look:** Blender plate/surcoat + `art/heroes/3d/sir_aldric_atlas.png` (lion / Greek-key from `01_rear_LOCKED`). Not a grey capsule or box atlas. Scabbard character-right. **Look gate not claimed.**
+- **Look:** Path 2 Meshy + `sir_aldric_meshy_atlas.png` (lion cards from `01_rear_LOCKED` / `01_FRONT`). Scabbard character-right. **Look PASS claimed** (Design, paint stills). **Walk-with-look NOT claimed.**
 - Walk is **4 Game-view keys** in `SirAldric3DMotion` solved against `refs/WALK_GAIT_BAR_skeleton_sample.mp4` rear phases. BVH eulers reached the Actor but did **not** transfer the gait; do not re-claim a BVH eye-match. Sword / right hand stay on the far / TOP side as a rest; **walk** uses a loose contralateral pendulum (trailing arm may swing +X toward camera — that is the sample, not a FAIL).
 - Motion SoT: `SirAldric3DMotion` (`Evaluate` is what `BuildLoopClip` samples)
 - Play hub still uses `SIR_ALDRIC_REAR_MASTER_LOCKED.png` until Design PASS
@@ -68,7 +68,7 @@ Runtime: `SirAldric3DActor` binds a **Blender mid-poly** (`sir_aldric.fbx` / `si
 
 See `ART_UPGRADE.md` for the remaining DCC painted-mesh gap. **Do not claim Design eye PASS** unless Derek can scrub sample and Aldric and recognize the same gait.
 
-Gate 2 blockout (grey clay vs locked helmeted turnaround; portrait = face law) is in `Docs/Survival/previews/blockout/`. CEO Gate 2 was a soft-PASS on volume (`5de0e16`). Gate 3 Path 2 Meshy LOOK stills are in `Docs/Survival/previews/gate3/`. Walk / Play hub stay paused. **Look gate not claimed.**
+Gate 2 blockout (grey clay vs locked helmeted turnaround; portrait = face law) is in `Docs/Survival/previews/blockout/`. CEO Gate 2 was a soft-PASS on volume (`5de0e16`). Gate 3 Path 2 Meshy look PASSed on paint stills `e5b132f` and is now skinned to the held walk — clip in `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4`. Play hub stays paused. **Walk-with-look NOT claimed.**
 
 ---
 

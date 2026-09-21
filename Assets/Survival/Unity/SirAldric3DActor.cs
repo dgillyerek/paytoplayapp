@@ -11,10 +11,11 @@ using UnityEngine.Playables;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Runtime 3D Aldric: Gate 3 Blender segmented mid-poly (clay volume law) + atlas,
-    /// Animator PlayableGraph walk/attack toward TOP. Motion SoT is Evaluate().
-    /// DCC source is ThemePack art/heroes/3d/sir_aldric.fbx — mesh.txt is the
-    /// Editor-less bind of that same Blender mesh. Do not regress bone names.
+    /// Runtime 3D Aldric: Path 2 Meshy look mesh skinned to held Actor bones,
+    /// Animator PlayableGraph walk/attack toward TOP. Motion SoT is Evaluate()
+    /// (5916447 gait HOLD — do not edit keys). Editor-less bind is
+    /// sir_aldric_meshy.mesh.txt. Loft midpoly remains as archive.
+    /// Do not regress bone names. Play hub PNG stays locked.
     /// </summary>
     public sealed class SirAldric3DActor : MonoBehaviour
     {
@@ -161,10 +162,11 @@ namespace Survival.Unity
             List<int> tris,
             Dictionary<string, int> index)
         {
-            var path = ResolveHero3D("sir_aldric_midpoly.mesh.txt");
+            var path = ResolveHero3D("sir_aldric_meshy.mesh.txt")
+                       ?? ResolveHero3D("sir_aldric_midpoly.mesh.txt");
             if (path == null || !File.Exists(path))
             {
-                throw new FileNotFoundException("Sir Aldric mid-poly mesh missing under ThemePack art/heroes/3d/");
+                throw new FileNotFoundException("Sir Aldric Meshy mesh.txt missing under ThemePack art/heroes/3d/");
             }
 
             var bone = "Hips";
@@ -232,7 +234,8 @@ namespace Survival.Unity
         {
             try
             {
-                var path = ResolveHero3D("sir_aldric_atlas.png");
+                var path = ResolveHero3D("sir_aldric_meshy_atlas.png")
+                           ?? ResolveHero3D("sir_aldric_atlas.png");
                 if (path == null)
                 {
                     return null;

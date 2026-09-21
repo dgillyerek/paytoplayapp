@@ -1,21 +1,29 @@
 # Aldric 3D art upgrade
 
-## Gate 3 Path 2 Meshy (LOOK stills — paint iterate)
+## Gate 3 Path 2 Meshy (look PASS → skin-to-walk clip)
+
+Design **PASS** look on paint tip `e5b132f` (UV bleed + SoT lion cards). This pass skins that mesh to the held walk.
+
+- Bind: A-pose Meshy on hang Actor bones, rigid Bone1. `sir_aldric_meshy.mesh.txt` + `sir_aldric_meshy_atlas.png`.
+- Motion: `Evaluate()` keys from `5916447` **reused** — gait / weave / forward-swing not edited.
+- Proof: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4` + `gate3_path2_walk_phases.png` at Play World-cam.
+- Play hub PNG **locked**. Hub swap only after this clip PASS.
+
+**Look PASS claimed** (Design, paint stills). **Walk-with-look NOT claimed.** Arms read as A-pose slabs because the mesh is A-pose and hang vertex-rotate was skipped (explode). Tabard is a hip plate. Neck groove / gold edge specks remain (polish, not blockers).
+
+## Gate 3 Path 2 Meshy (LOOK stills — paint iterate) — archived
 
 Design Meshy Flagship Image-to-3D from locked rear SoT, Decimate ~50k (original 1.77M faces / 57MB exceeded upload). **Not** the scripted loft.
 
-8babba7 World-cam FAIL: UV island cracks (shoulders/neck/joints) + smeared gold lion. This iterate:
+8babba7 World-cam FAIL: UV island cracks (shoulders/neck/joints) + smeared gold lion. Paint iterate `e5b132f`:
 
 - UV occupancy bleed + dark-border inpaint + split-normals cleared
 - Dedicated planar SoT lion cards (`01_rear_LOCKED` / `01_FRONT`) on upper-torso cloth
-- Hang **not** applied (A-pose). Motion / Play hub HOLD.
+- Hang **not** applied (A-pose).
 
 - GLB: `ThemePack/.../3d/sir_aldric_meshy_retopo.glb` + `design/.../AI_MESH_PATH2/out/`
 - Unity-oriented `.blend` for Play-cam stills (Y-up, +Z face, scabbard +X)
-- Proof: `Docs/Survival/previews/gate3/` front / rear / side R / ¾ + vs-SoT sheet + `gate3_uv_lion_delta.png`
-- Actor walk bind **unchanged**. Play hub PNG locked. Motion HOLD 5916447.
-
-**Look gate is not claimed.** Neck groove / leftover gold specks / A-pose remain.
+- Still proof: `Docs/Survival/previews/gate3/` front / rear / side R / ¾ + vs-SoT sheet + `gate3_uv_lion_delta.png`
 
 ## Gate 3 FAIL iterate (segmented plate / helm / heraldry)
 
@@ -36,9 +44,9 @@ CEO Gate 2 was a **soft-PASS** (Derek moved on without FAIL). Volume law = clay 
 - **Game mesh:** segmented mid-poly (~13192 tris) with joint loops + gold plate rims. No voxel remesh. `sir_aldric.fbx` + `sir_aldric_midpoly.mesh.txt` + atlas.
 - **Look:** silver/gold plate, royal-blue surcoat, gold lion rampant + Greek-key hem, brown scabbard **character-RIGHT** only, silver/gold boots. Helm BACK vs `01_rear_LOCKED` / turnaround (World-cam is rear; face law not visible).
 - **Proof:** Play march-angle World-cam stills `(0, 2.80, −5.40)` look-at `(0, 0.90, 0.50)` FOV 30, 1080×1920, TOP = +Z = away — **not** a beauty portrait cam. See `Docs/Survival/previews/gate3/`.
-- **Walk / Animator / Play hub stay paused** until Derek look PASS. Motion HOLD 5916447 / 1cd3320. `Evaluate()` untouched.
+- **Walk / Animator** now have a Path 2 skin clip for Design re-gate. Play hub stays paused. Motion HOLD 5916447 / 1cd3320. `Evaluate()` untouched.
 
-**Look gate is not claimed.**
+**Look PASS claimed** (Design, paint stills). **Walk-with-look NOT claimed.**
 
 ## Gate 2 HOLD (blockout only)
 
@@ -46,17 +54,16 @@ Look law Gate 1 is LOCKED (helmeted turnaround + complete portrait as face law).
 
 ## This pass (PATH B — Blender / FBX)
 
-- **Motion HOLD:** Walk/Attack `Evaluate()` keys from 5916447 / 1cd3320 stay. Pass thigh −X, pass-foot world ΔZ +, no L↔R weave, ~80° pass knee, tuck, ~0.40 m step, arm pendulum, TOP march. Play hub stays locked rear PNG until Derek PASS on **look**.
-- **Look now:** box-atlas / procedural mid-poly iteration is **stopped**. Gate 3 game mesh is lofted in Blender from clay volumes + Gate 1 LOCKED turnaround / `01_rear_LOCKED`.
-  - `sir_aldric.fbx` + `sir_aldric.blend` under `ThemePack/.../art/heroes/3d/`
-  - Runtime bind (Editor-less): `sir_aldric_midpoly.mesh.txt` + `sir_aldric_atlas.png` on the existing Actor bones / PlayableGraph
-  - Humanoid slot map: `sir_aldric_humanoid.json` (rest = Actor hang, not T-pose)
+- **Motion HOLD:** Walk/Attack `Evaluate()` keys from 5916447 / 1cd3320 stay. Pass thigh −X, pass-foot world ΔZ +, no L↔R weave, ~80° pass knee, tuck, ~0.40 m step, arm pendulum, TOP march. Play hub stays locked rear PNG until Design PASS on the **walk-with-look clip**.
+- **Look now:** Path 2 Meshy (Design look PASS `e5b132f`) is the Actor bind. Loft mid-poly is archive.
+  - Runtime bind (Editor-less): `sir_aldric_meshy.mesh.txt` + `sir_aldric_meshy_atlas.png` on the existing Actor bones / PlayableGraph
+  - Humanoid slot map: `sir_aldric_humanoid.json` (rest = Actor hang, not T-pose; mesh is A-pose)
   - Silver plate + gold trim (helm crest, pauldrons, gauntlets, greaves, sabatons)
   - Royal-blue short surcoat with **gold lion rampant** + **gold Greek-key hem** from `01_rear_LOCKED`
   - Brown scabbard + gold fittings on **character-right** hip only
   - Boots silver+gold (not brown leather)
 - **PIXEL_PROOF** has motion ΔZ gates **and** Gate 3 World-cam look pixel counts (blue/gold vs grey). Pixel Δ does **not** override the eye test.
-- **Look gate is not claimed.** Derek must recognize the locked painted knight in the World-cam stills.
+- **Look PASS claimed** (Design, paint stills). **Walk-with-look NOT claimed.** Derek must recognize the locked painted knight **walking** in the Game-view clip.
 
 ## Remaining gap
 
@@ -73,4 +80,4 @@ Look law Gate 1 is LOCKED (helmeted turnaround + complete portrait as face law).
 
 ## Play placeholder
 
-Do not swap Play hub off `SIR_ALDRIC_REAR_MASTER_LOCKED.png` until Derek PASS on the 3D Game-view clip.
+Do not swap Play hub off `SIR_ALDRIC_REAR_MASTER_LOCKED.png` until Design PASS on this 3D Game-view walk clip.

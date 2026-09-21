@@ -7,6 +7,7 @@ because the original (~57MB / 1.77M faces) exceeded upload cap.
 - ThemePack copy: `Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_retopo.glb`
 - Unity-oriented DCC: `sir_aldric_meshy.blend` (Y-up, +Z face, scabbard +X)
 
-Rebuild: `blender --background --python scripts/blender/repair_path2_paint.py` then `import_sir_aldric_meshy.py`
+Rebuild look: `blender --background --python scripts/blender/repair_path2_paint.py` then `import_sir_aldric_meshy.py`  
+Skin to held walk: `blender --background --python scripts/blender/skin_sir_aldric_meshy.py`
 
-**LOOK stills only.** Walk / Animator / Play hub are HOLD. Look gate is **not claimed**.
+**Look PASS** claimed by Design on paint tip `e5b132f`. **Walk-with-look NOT claimed.** Play hub PNG stays locked. A-pose mesh on hang Actor bones (rigid Bone1).

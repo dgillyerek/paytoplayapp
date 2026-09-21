@@ -249,16 +249,18 @@ public sealed class SirAldric3DMotionTests
     {
         var path = Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "SirAldric3DActor.cs");
         var src = File.ReadAllText(path);
-        Assert.Contains("sir_aldric_midpoly.mesh.txt", src, StringComparison.Ordinal);
+        Assert.Contains("sir_aldric_meshy.mesh.txt", src, StringComparison.Ordinal);
         Assert.Contains("Scabbard", src, StringComparison.Ordinal);
         Assert.DoesNotContain("BodyCap(\"Cape\"", src, StringComparison.Ordinal);
         Assert.DoesNotContain("(-0.16f, 0.04f, 0f)", src, StringComparison.Ordinal);
         var dir = Path.Combine(FindRepoRoot(), "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d");
-        var mesh = Path.Combine(dir, "sir_aldric_midpoly.mesh.txt");
-        var atlas = Path.Combine(dir, "sir_aldric_atlas.png");
+        var mesh = Path.Combine(dir, "sir_aldric_meshy.mesh.txt");
+        var atlas = Path.Combine(dir, "sir_aldric_meshy_atlas.png");
+        var loft = Path.Combine(dir, "sir_aldric_midpoly.mesh.txt");
         var fbx = Path.Combine(dir, "sir_aldric.fbx");
         Assert.True(new FileInfo(mesh).Length > 10_000);
         Assert.True(new FileInfo(atlas).Length > 50_000);
+        Assert.True(new FileInfo(loft).Length > 10_000);
         Assert.True(new FileInfo(fbx).Length > 50_000);
         var meshText = File.ReadAllText(mesh);
         Assert.Contains("BONE Scabbard", meshText, StringComparison.Ordinal);
