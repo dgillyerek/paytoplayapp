@@ -231,7 +231,7 @@ def make_scabbard():
     mid = (a + b) * 0.5
     length = axis.length
     bpy.ops.mesh.primitive_cylinder_add(
-        radius=0.030, depth=length, vertices=16, location=mid
+        radius=0.020, depth=length, vertices=14, location=mid
     )
     body = bpy.context.active_object
     body.name = "ScabbardSolid"
@@ -261,7 +261,7 @@ def make_scabbard():
     bpy.context.view_layer.objects.active = body
     bpy.ops.object.join()
     ob = bpy.context.active_object
-    apply_voxel(ob, 0.008)
+    apply_voxel(ob, 0.012)
     delete_small_islands(ob, keep_min=8)
     print("scabbard solid", len(ob.data.vertices), "faces", len(ob.data.polygons), "islands", n_islands(ob.data))
     return ob
@@ -475,6 +475,153 @@ def raster_tri(arr, weight, pts, cols):
             col = w0 * cols[0] + w1 * cols[1] + w2 * cols[2]
             arr[y, x] = np.clip(col, 0, 255).astype(np.uint8)
             weight[y, x] = 1.0
+
+
+LOOK = ROOT / "design/survival-theme-a-fantasy/heroes/anim/sir_aldric/UNITY_3D_HANDOFF/look_targets"
+LION_REAR_BOX = (448, 258, 588, 400)
+
+
+def scale_uvs(ob, v_max=0.74):
+    uv = ob.data.uv_layers.active.data
+    for loop in uv:
+        loop.uv = Vector((float(loop.uv.x), float(loop.uv.y) * v_max))
+
+
+def cycles_bake(src, tgt, path: Path):
+    img = bpy.data.images.new("RetopoBake", ATLAS_SIZE, ATLAS_SIZE, alpha=False)
+    mat = bpy.data.materials.new("RetopoBakeMat")
+    mat.use_nodes = True
+    nt = mat.node_tree
+    bsdf = nt.nodes.get("Principled BSDF")
+    tex = nt.nodes.new("ShaderNodeTexImage")
+    tex.image = img
+    if bsdf:
+        nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    tgt.data.materials.clear()
+    tgt.data.materials.append(mat)
+    nt.nodes.active = tex
+    tex.select = True
+
+    sc = bpy.context.scene
+    sc.render.engine = "CYCLES"
+    sc.cycles.device = "CPU"
+    sc.cycles.samples = 4
+    sc.cycles.bake_type = "DIFFUSE"
+    bake = sc.render.bake
+    bake.use_pass_direct = False
+    bake.use_pass_indirect = False
+    bake.use_pass_color = True
+    bake.use_selected_to_active = True
+    bake.cage_extrusion = 0.07
+    bake.margin = 8
+    bake.use_clear = True
+
+    src.hide_set(False)
+    src.hide_render = False
+    bpy.ops.object.select_all(action="DESELECT")
+    src.select_set(True)
+    tgt.select_set(True)
+    bpy.context.view_layer.objects.active = tgt
+    try:
+        bpy.ops.object.bake(type="DIFFUSE", pass_filter={"COLOR"})
+    except Exception as exc:
+        print("cycles bake failed", exc)
+        return None
+    img.filepath_raw = str(path)
+    img.file_format = "PNG"
+    img.save()
+    print("cycles bake", path, path.stat().st_size)
+    return path
+
+
+def make_lion_card() -> Image.Image:
+    rear = Image.open(LOOK / "01_rear_LOCKED.png").convert("RGB")
+    x0, y0, x1, y1 = LION_REAR_BOX
+    spr = rear.crop((x0, y0, x1, y1))
+    card = Image.new("RGB", (512, 480), (36, 58, 118))
+    sw, sh = spr.size
+    scale = min(card.size[0] * 0.90 / sw, card.size[1] * 0.90 / sh)
+    nw, nh = max(1, int(sw * scale)), max(1, int(sh * scale))
+    spr = spr.resize((nw, nh), Image.LANCZOS)
+    card.paste(spr, ((card.size[0] - nw) // 2, (card.size[1] - nh) // 2))
+    return card
+
+
+def stamp_lion(ob, atlas: np.ndarray):
+    """Planar-remap upper-back faces onto a reserved top strip; paste SoT lion."""
+    me = ob.data
+    uv = me.uv_layers.active.data
+    back = []
+    for poly in me.polygons:
+        c = poly.center
+        n = poly.normal
+        if n.z < -0.25 and 1.06 < c.y < 1.42 and abs(c.x) < 0.16:
+            back.append(poly)
+    print("lion back faces", len(back))
+    if len(back) < 6:
+        return 0
+    # reserved strip: blender v 0.76..0.99, u 0.04..0.30
+    u0, u1, v0, v1 = 0.04, 0.30, 0.76, 0.99
+    xs, ys = [], []
+    for poly in back:
+        for vi in poly.vertices:
+            p = me.vertices[vi].co
+            xs.append(p.x)
+            ys.append(p.y)
+    xmin, xmax = min(xs), max(xs)
+    ymin, ymax = min(ys), max(ys)
+    for poly in back:
+        for li, vi in zip(poly.loop_indices, poly.vertices):
+            p = me.vertices[vi].co
+            u = u0 + (p.x - xmin) / max(1e-6, xmax - xmin) * (u1 - u0)
+            v = v0 + (p.y - ymin) / max(1e-6, ymax - ymin) * (v1 - v0)
+            uv[li].uv = Vector((u, v))
+    card = make_lion_card()
+    s = atlas.shape[0]
+    # blender v=0 bottom → PNG y = (1-v)*s
+    y_top = int((1.0 - v1) * s)
+    y_bot = int((1.0 - v0) * s)
+    x_l = int(u0 * s)
+    x_r = int(u1 * s)
+    slot = card.resize((max(1, x_r - x_l), max(1, y_bot - y_top)), Image.LANCZOS)
+    atlas[y_top:y_bot, x_l:x_r] = np.array(slot)
+    print("lion stamp", x_l, y_top, x_r, y_bot)
+    return len(back)
+
+
+def paint_scabbard_atlas(ob, atlas: np.ndarray, scab_group="_ScabGeo"):
+    me = ob.data
+    g = ob.vertex_groups.get(scab_group) or ob.vertex_groups.get("Scabbard")
+    if g is None or me.uv_layers.active is None:
+        return 0
+    me.calc_loop_triangles()
+    uv = me.uv_layers.active
+    s = atlas.shape[0]
+    n = 0
+    for tri in me.loop_triangles:
+        ids = list(tri.vertices)
+        ok = 0
+        for vi in ids:
+            for vg in me.vertices[vi].groups:
+                if vg.group == g.index and vg.weight > 0.4:
+                    ok += 1
+                    break
+        if ok < 2:
+            continue
+        pts, cols = [], []
+        for vi, li in zip(ids, tri.loops):
+            u, v = uv.data[li].uv
+            pts.append((float(u) * (s - 1), (1.0 - float(v)) * (s - 1)))
+            t = (me.vertices[vi].co.y - 0.34) / 0.70
+            if t > 0.88 or t < 0.10:
+                cols.append(np.array([198, 156, 62], np.float32))
+            else:
+                cols.append(np.array([92, 54, 28], np.float32))
+        w = np.zeros((s, s), np.float32)
+        raster_tri(atlas, w, pts, cols)
+        n += 1
+    print("scabbard atlas tris", n)
+    return n
 
 
 def assign_baked_material(ob, atlas_path: Path):
@@ -767,11 +914,23 @@ def main():
     mesh_ob = join_meshes([tgt, scab], "SirAldricRetopo")
     print("joined", len(mesh_ob.data.vertices), "faces", len(mesh_ob.data.polygons), "islands", n_islands(mesh_ob.data))
 
-    colors = transfer_albedo(src, mesh_ob)
-    paint_scabbard_colors(mesh_ob, colors, "_ScabGeo")
     smart_uv(mesh_ob)
+    scale_uvs(mesh_ob, 0.74)
     atlas_path = PACK3D / "sir_aldric_meshy_atlas.png"
-    rasterize_atlas(mesh_ob, colors, atlas_path)
+    baked = cycles_bake(src, mesh_ob, atlas_path)
+    bake_ok = baked is not None and atlas_path.exists()
+    if bake_ok:
+        preview = np.array(Image.open(atlas_path).convert("RGB"))
+        bake_ok = float(preview.mean()) > 18
+        print("bake mean", round(float(preview.mean()), 2))
+    if not bake_ok:
+        colors = transfer_albedo(src, mesh_ob)
+        paint_scabbard_colors(mesh_ob, colors, "_ScabGeo")
+        rasterize_atlas(mesh_ob, colors, atlas_path)
+    atlas = np.array(Image.open(atlas_path).convert("RGB"))
+    stamp_lion(mesh_ob, atlas)
+    paint_scabbard_atlas(mesh_ob, atlas)
+    Image.fromarray(atlas, "RGB").save(atlas_path)
     assign_baked_material(mesh_ob, atlas_path)
 
     # hide / remove source so the walk render is the clean mesh only
