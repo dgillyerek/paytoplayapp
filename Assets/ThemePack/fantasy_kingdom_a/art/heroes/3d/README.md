@@ -1,7 +1,7 @@
 # Sir Aldric 3D (Theme A) — Gate 3 game mesh
 
 **Volume law:** Gate 2 clay `5de0e16` (do not redesign proportions).
-Clean loft topology with joint loops at shoulders / elbows / hips / knees. Mid-poly mobile. No voxel remesh.
+FAIL iterate: segmented plate + gold rims, closed helm/crest, lion on cloth, sabaton/gauntlet shapes. Joint loops. Mid-poly mobile. No voxel remesh.
 
 World-cam stills: Play march angle `(0, 2.80, −5.40)` look-at `(0, 0.90, 0.50)` FOV 30, 1080×1920, TOP = +Z = away. **Not** a beauty portrait cam.
 

@@ -34,8 +34,10 @@ UV_SILVER = (0.125, 0.875)
 UV_GOLD = (0.375, 0.875)
 UV_BLUE = (0.625, 0.875)
 UV_BROWN = (0.875, 0.875)
-LION = (0.08, 0.24, 0.42, 0.64)
+LION = (0.05, 0.14, 0.45, 0.68)
 HEM = (0.52, 0.62, 0.98, 0.78)
+PLATE = (0.54, 0.34, 0.96, 0.57)
+TRIM = (0.54, 0.08, 0.96, 0.26)
 
 # Actor rest — do not drift Evaluate().
 BONE_REST = {
@@ -177,6 +179,13 @@ def _frame(axis):
     return ihat, jhat
 
 
+def _ring(center, ihat, jhat, r, segs):
+    return [
+        center + (ihat * math.cos(k / segs * math.tau) + jhat * math.sin(k / segs * math.tau)) * r
+        for k in range(segs)
+    ]
+
+
 def limb_tube(bm, p0, p1, r0, r1, segs=12):
     """Quad loft with packed rings at both joints (shoulder/elbow or hip/knee)."""
     a, b = Vector(p0), Vector(p1)
@@ -184,17 +193,86 @@ def limb_tube(bm, p0, p1, r0, r1, segs=12):
     if axis.length < 1e-6:
         return
     ihat, jhat = _frame(axis)
-    # Extra loops at 0 / 1 = deformation rings at the joints.
     ts = (0.00, 0.03, 0.08, 0.18, 0.32, 0.50, 0.68, 0.82, 0.92, 0.97, 1.00)
     rings = []
     for t in ts:
         r = r0 * (1.0 - t) + r1 * t
-        c = a.lerp(b, t)
-        rings.append([
-            c + (ihat * math.cos(k / segs * math.tau) + jhat * math.sin(k / segs * math.tau)) * r
-            for k in range(segs)
-        ])
+        rings.append(_ring(a.lerp(b, t), ihat, jhat, r, segs))
     add_loft(bm, rings)
+
+
+def add_lame(bm, p0, p1, r0, r1, segs=12):
+    """One overlapping armor lame (short frustum with caps)."""
+    a, b = Vector(p0), Vector(p1)
+    axis = b - a
+    if axis.length < 1e-6:
+        return
+    ihat, jhat = _frame(axis)
+    add_loft(bm, [_ring(a, ihat, jhat, r0, segs), _ring(b, ihat, jhat, r1, segs)])
+
+
+def add_gold_rim(bm, center, axis, r, segs=12, h=0.011, flare=1.14):
+    """Raised gold edge at a plate rim — chunky enough to read at Play 1080."""
+    c = Vector(center)
+    n = Vector(axis).normalized()
+    ihat, jhat = _frame(n)
+    add_loft(
+        bm,
+        [
+            _ring(c - n * h, ihat, jhat, r * 0.90, segs),
+            _ring(c - n * h, ihat, jhat, r * flare, segs),
+            _ring(c + n * h, ihat, jhat, r * flare, segs),
+            _ring(c + n * h, ihat, jhat, r * 0.90, segs),
+        ],
+    )
+
+
+def lame_column(p0, p1, r0, r1, n=5, segs=12, overlap=0.28):
+    """Yield (p_a, p_b, ra, rb) for overlapping lames along a hang limb."""
+    a, b = Vector(p0), Vector(p1)
+    out = []
+    span = 1.0 / n
+    for i in range(n):
+        t0 = max(0.0, i * span - overlap * span)
+        t1 = min(1.0, (i + 1) * span + overlap * span)
+        pa, pb = a.lerp(b, t0), a.lerp(b, t1)
+        ra = (r0 * (1.0 - t0) + r1 * t0) * (1.04 if i % 2 == 0 else 1.00)
+        rb = (r0 * (1.0 - t1) + r1 * t1) * (1.04 if i % 2 == 0 else 1.00)
+        out.append((pa, pb, ra, rb))
+    return out
+
+
+def add_ring_band(bm, y, rx, rz, thick=0.014, h=0.018, segs=16, z_off=0.0):
+    """Toroidal gold collar (visor / gorget / hem rails)."""
+    add_loft(
+        bm,
+        [
+            oval_ring(y - h * 0.5, rx, rz, z_off, segs),
+            oval_ring(y - h * 0.5, rx + thick, rz + thick, z_off, segs),
+            oval_ring(y + h * 0.5, rx + thick, rz + thick, z_off, segs),
+            oval_ring(y + h * 0.5, rx, rz, z_off, segs),
+        ],
+    )
+
+
+def lame_limb(bm_plate, bm_gold, p0, p1, r0, r1, n=4, segs=12):
+    """Overlapping plate lames + gold rims (not a smooth cone/tube)."""
+    a, b = Vector(p0), Vector(p1)
+    axis = b - a
+    if axis.length < 1e-6:
+        return
+    for pa, pb, ra, rb in lame_column(p0, p1, r0, r1, n=n, segs=segs, overlap=0.36):
+        add_lame(bm_plate, pa, pb, ra, rb, segs)
+        add_gold_rim(bm_gold, pa, axis, ra * 1.04, segs=segs, h=0.011, flare=1.16)
+    add_gold_rim(bm_gold, b, axis, r1 * 1.04, segs=segs, h=0.011, flare=1.16)
+
+
+def add_box(bm, center, half):
+    ret = bmesh.ops.create_cube(bm, size=2.0)
+    c = Vector(center)
+    hx, hy, hz = half
+    for v in ret["verts"]:
+        v.co = Vector((v.co.x * hx, v.co.y * hy, v.co.z * hz)) + c
 
 
 def add_ellipsoid(bm, center, radii, segs=14, rings=8):
@@ -236,51 +314,75 @@ def _uv_for(kind, co, n):
     if kind == "brown":
         return UV_BROWN
     if kind == "surcoat":
-        if n.z < -0.18 and 1.00 <= co.y <= 1.42:
-            return _lion_uv(co)
-        return UV_BLUE
+        return _surcoat_uv(co)
     if kind == "hem":
         return _hem_uv(co)
+    if kind == "plate":
+        return _plate_uv(co)
+    if kind == "trim":
+        return _trim_uv(co)
     if kind == "boot":
-        if co.y > 0.07 or abs(co.z) > 0.10:
-            return UV_GOLD
-        return UV_SILVER
+        if co.y > 0.06 or abs(co.z) > 0.11:
+            return _trim_uv(co)
+        return _plate_uv(co)
     if kind == "helm":
-        if co.y > 1.80:
+        if co.y > 1.78:
             return UV_GOLD
-        if abs(co.x) < 0.016 and co.y > 1.72 and n.z < -0.15:
+        if abs(co.x) < 0.030 and n.z < -0.16:
             return UV_GOLD
-        return UV_SILVER
+        if 1.58 <= co.y <= 1.68:
+            return _trim_uv(co)
+        return _plate_uv(co)
     if kind == "pauldron":
-        if co.y < 1.37 and abs(n.y) > 0.25:
-            return UV_GOLD
-        return UV_SILVER
+        if abs(n.y) > 0.35 or co.y < 1.36:
+            return _trim_uv(co)
+        return _plate_uv(co)
     if kind == "gauntlet":
-        if co.y > 0.86:
-            return UV_GOLD
-        return UV_SILVER
+        if co.y > 0.855:
+            return _trim_uv(co)
+        return _plate_uv(co)
     if kind == "cop":
-        if abs(co.y - 1.14) < 0.04 or abs(co.y - 0.50) < 0.04:
-            return UV_GOLD
-        return UV_SILVER
+        return _plate_uv(co)
     if kind == "scabbard":
-        if co.y > 0.98 or co.y < 0.50:
+        if co.y > 0.98 or co.y < 0.48:
             return UV_GOLD
         return UV_BROWN
-    return UV_SILVER
+    return _plate_uv(co)
 
 
 def _lion_uv(co):
+    return _surcoat_uv(co)
+
+
+def _surcoat_uv(co):
+    """Cylindrical cloth unwrap. Lion sits at the back (ang 0 = −Z); no plaque island."""
     u0, v0, u1, v1 = LION
-    u = u0 + (u1 - u0) * _sat((co.x + 0.145) / 0.29)
-    v = v0 + (v1 - v0) * _sat((co.y - 1.04) / 0.36)
+    ang = math.atan2(co.x, -co.z)
+    u = u0 + (u1 - u0) * _sat((ang + 0.62) / 1.24)
+    v = v0 + (v1 - v0) * _sat((co.y - 1.06) / 0.34)
     return (u, v)
 
 
 def _hem_uv(co):
+    """Cylindrical unwrap so Greek-key tiles around the hem, not a planar smear."""
     u0, v0, u1, v1 = HEM
-    u = u0 + (u1 - u0) * _sat((co.x + 0.26) / 0.52)
-    v = v0 + (v1 - v0) * _sat((co.y - 0.72) / 0.14)
+    ang = math.atan2(co.x, -co.z)
+    u = u0 + (u1 - u0) * _sat((ang + math.pi) / math.tau)
+    v = v0 + (v1 - v0) * _sat((co.y - 0.70) / 0.12)
+    return (u, v)
+
+
+def _plate_uv(co):
+    u0, v0, u1, v1 = PLATE
+    u = u0 + (u1 - u0) * _sat((co.x * 2.4 + 0.5) % 1.0)
+    v = v0 + (v1 - v0) * _sat((co.y * 7.0) % 1.0)
+    return (u, v)
+
+
+def _trim_uv(co):
+    u0, v0, u1, v1 = TRIM
+    u = u0 + (u1 - u0) * _sat((co.x * 3.0 + 0.5) % 1.0)
+    v = v0 + (v1 - v0) * _sat((co.y * 10.0) % 1.0)
     return (u, v)
 
 
@@ -308,40 +410,52 @@ def mesh_from_bm(name, bm, kind):
 
 
 def build_parts():
-    """Grow plates from clay 5de0e16 volumes. Hang arms for Play World-cam."""
-    objs = []
-    segs = 16
+    """Segmented plate grown from clay 5de0e16. Hang arms for Play World-cam.
 
-    # --- Closed armet (clay helm @ 1.68, visor plane, pointed crown) ---
+    FAIL iterate: no smooth cones/tubes, no sphere hands. Gold rims chunky at 1080.
+    """
+    objs = []
+    segs = 24
+
+    # --- Closed armet (01_rear: rounded bowl + gold comb, NOT a white cone) ---
     bm = bmesh.new()
     add_loft(
         bm,
         [
-            oval_ring(1.52, 0.088, 0.100, 0.00, segs),  # gorget
-            oval_ring(1.56, 0.100, 0.118, 0.02, segs),
-            oval_ring(1.62, 0.108, 0.140, 0.04, segs),  # visor height
-            oval_ring(1.68, 0.112, 0.155, 0.04, segs),  # clay equator
-            oval_ring(1.74, 0.100, 0.138, 0.02, segs),
-            oval_ring(1.80, 0.070, 0.090, 0.01, segs),
-            oval_ring(1.86, 0.018, 0.018, 0.00, segs),  # crest knob
+            oval_ring(1.51, 0.086, 0.098, 0.00, segs),
+            oval_ring(1.55, 0.102, 0.124, 0.02, segs),
+            oval_ring(1.60, 0.114, 0.150, 0.04, segs),
+            oval_ring(1.66, 0.120, 0.160, 0.04, segs),  # equator
+            oval_ring(1.72, 0.112, 0.150, 0.03, segs),
+            oval_ring(1.77, 0.090, 0.114, 0.02, segs),  # dome still round
+            oval_ring(1.81, 0.050, 0.060, 0.01, segs),
+            oval_ring(1.834, 0.018, 0.020, 0.00, segs),  # small crown, not a spike
         ],
     )
     flatten_fwd(bm, 0.16, 0.55, 1.56, 1.74)
-    # Thin gold crest / nape (01_rear) — not a visor T from behind.
-    add_taper(bm, (0.0, 1.56, -0.12), (0.0, 1.84, -0.04), 0.008, 0.006, 8)
-    add_taper(bm, (0.0, 1.78, 0.00), (0.0, 1.86, 0.00), 0.010, 0.016, 8)
     objs.append((mesh_from_bm("Helm", bm, "helm"), "Head"))
 
     bm = bmesh.new()
+    # Gold comb / nape ridge + crest knob (locked rear)
+    add_taper(bm, (0.0, 1.53, -0.138), (0.0, 1.80, -0.042), 0.018, 0.012, 8)
+    add_taper(bm, (0.0, 1.76, -0.04), (0.0, 1.838, 0.00), 0.014, 0.018, 8)
+    add_ellipsoid(bm, (0.0, 1.842, 0.00), (0.020, 0.022, 0.020), 10, 6)
+    add_ring_band(bm, 1.62, 0.112, 0.148, thick=0.012, h=0.016, segs=segs, z_off=0.035)
+    add_ellipsoid(bm, (0.108, 1.64, 0.04), (0.016, 0.022, 0.016), 8, 5)
+    add_ellipsoid(bm, (-0.108, 1.64, 0.04), (0.016, 0.022, 0.016), 8, 5)
+    objs.append((mesh_from_bm("HelmGold", bm, "gold"), "Head"))
+
+    bm = bmesh.new()
+    add_ring_band(bm, 1.525, 0.086, 0.098, thick=0.016, h=0.022, segs=16, z_off=0.00)
     add_loft(
         bm,
         [
             oval_ring(1.48, 0.062, 0.070, 0.00, 12),
-            oval_ring(1.52, 0.088, 0.100, 0.00, 12),
-            oval_ring(1.56, 0.070, 0.080, 0.01, 12),
+            oval_ring(1.525, 0.090, 0.102, 0.00, 12),
+            oval_ring(1.56, 0.072, 0.082, 0.01, 12),
         ],
     )
-    objs.append((mesh_from_bm("Gorget", bm, "silver"), "Neck"))
+    objs.append((mesh_from_bm("Gorget", bm, "gold"), "Neck"))
 
     # --- A-line royal-blue surcoat (clay loft 1.48 → 0.74) + hip loops ---
     bm = bmesh.new()
@@ -354,8 +468,8 @@ def build_parts():
             oval_ring(1.26, 0.184, 0.112, 0.015, segs),
             oval_ring(1.18, 0.178, 0.110, 0.01, segs),
             oval_ring(1.10, 0.174, 0.108, 0.01, segs),
-            oval_ring(1.04, 0.172, 0.108, 0.01, segs),  # hip loop
-            oval_ring(0.99, 0.186, 0.116, 0.015, segs),  # hip loop
+            oval_ring(1.04, 0.172, 0.108, 0.01, segs),
+            oval_ring(0.99, 0.186, 0.116, 0.015, segs),
             oval_ring(0.96, 0.198, 0.122, 0.02, segs),
             oval_ring(0.90, 0.214, 0.130, 0.025, segs),
             oval_ring(0.86, 0.228, 0.138, 0.03, segs),
@@ -365,62 +479,32 @@ def build_parts():
     )
     objs.append((mesh_from_bm("Surcoat", bm, "surcoat"), "Chest"))
 
-    # Lion plaque — clay back (0, −0.12, 1.22). Subdivided so rampant reads.
-    bm = bmesh.new()
-    nu, nv = 12, 16
-    grid = []
-    for j in range(nv + 1):
-        ty = j / nv
-        y = 1.04 + 0.36 * ty
-        z = -0.12 - 0.02 * ty
-        row = []
-        for i in range(nu + 1):
-            tx = i / nu
-            x = -0.145 + 0.29 * tx
-            row.append(bm.verts.new(Vector((x, y, z))))
-        grid.append(row)
-    bm.verts.ensure_lookup_table()
-    for j in range(nv):
-        for i in range(nu):
-            # Winding so normal faces −Z (World-cam / 01_rear).
-            bm.faces.new((grid[j][i], grid[j + 1][i], grid[j + 1][i + 1], grid[j][i + 1]))
-    uv = bm.loops.layers.uv.new("UVMap")
-    u0, v0, u1, v1 = LION
-    bm.faces.ensure_lookup_table()
-    for face in bm.faces:
-        for loop in face.loops:
-            co = loop.vert.co
-            tx = _sat((co.x + 0.145) / 0.29)
-            ty = _sat((co.y - 1.04) / 0.36)
-            loop[uv].uv = Vector((u0 + (u1 - u0) * tx, v0 + (v1 - v0) * ty))
-    me = bpy.data.meshes.new("LionBadge")
-    bm.to_mesh(me)
-    bm.free()
-    obj = bpy.data.objects.new("LionBadge", me)
-    bpy.context.collection.objects.link(obj)
-    for p in me.polygons:
-        p.use_smooth = True
-    objs.append((obj, "Chest"))
-
-    # Greek-key hem band (clay 0.72–0.80)
+    # Greek-key hem band + gold rails (clay 0.72–0.80)
     bm = bmesh.new()
     add_loft(
         bm,
         [
             oval_ring(0.72, 0.215, 0.118, 0.02, segs),
-            oval_ring(0.72, 0.252, 0.150, 0.03, segs),
-            oval_ring(0.80, 0.250, 0.148, 0.03, segs),
+            oval_ring(0.72, 0.254, 0.152, 0.03, segs),
+            oval_ring(0.80, 0.252, 0.150, 0.03, segs),
             oval_ring(0.80, 0.214, 0.116, 0.02, segs),
         ],
         cap=True,
     )
     objs.append((mesh_from_bm("HemKey", bm, "hem"), "Hips"))
+    bm = bmesh.new()
+    add_ring_band(bm, 0.808, 0.250, 0.148, thick=0.010, h=0.012, segs=segs, z_off=0.03)
+    add_ring_band(bm, 0.712, 0.252, 0.150, thick=0.010, h=0.012, segs=segs, z_off=0.03)
+    objs.append((mesh_from_bm("HemRails", bm, "gold"), "Hips"))
 
-    # Breastplate mass under collar (clay 1.34)
+    # Breastplate mass under collar (clay 1.34) + gold rim
     bm = bmesh.new()
     add_ellipsoid(bm, clay_to_unity(0.0, 0.06, 1.34), clay_radii(0.155, 0.095, 0.110), 14, 8)
     flatten_fwd(bm, 0.10, 0.50, 1.22, 1.46)
-    objs.append((mesh_from_bm("Breast", bm, "silver"), "Chest"))
+    objs.append((mesh_from_bm("Breast", bm, "plate"), "Chest"))
+    bm = bmesh.new()
+    add_gold_rim(bm, clay_to_unity(0.0, 0.10, 1.28), (0.0, 0.0, 1.0), 0.14, segs=14, h=0.010, flare=1.08)
+    objs.append((mesh_from_bm("BreastGold", bm, "gold"), "Chest"))
 
     # Belt + character-LEFT pouch (clay)
     bm = bmesh.new()
@@ -439,47 +523,91 @@ def build_parts():
     add_ellipsoid(bm, clay_to_unity(-0.16, 0.06, 0.96), clay_radii(0.042, 0.030, 0.038), 10, 6)
     objs.append((mesh_from_bm("Pouch", bm, "brown"), "Hips"))
 
-    # Pauldrons (clay ±0.22, z=1.44)
+    # Pauldrons — spaulder cap + stacked lames + gold rims (not smooth ellipsoids)
     for bone, s in (("Arm_L", -1.0), ("Arm_R", 1.0)):
-        bm = bmesh.new()
-        add_ellipsoid(bm, clay_to_unity(s * 0.22, 0.02, 1.44), clay_radii(0.115, 0.078, 0.080), 14, 8)
-        add_ellipsoid(bm, clay_to_unity(s * 0.23, 0.02, 1.37), clay_radii(0.118, 0.085, 0.028), 12, 6)
-        objs.append((mesh_from_bm(f"Pauldron_{bone}", bm, "pauldron"), bone))
+        bm_p = bmesh.new()
+        bm_g = bmesh.new()
+        cx, cy, cz = s * 0.22, 1.44, 0.02
+        add_ellipsoid(bm_p, (cx, cy, cz), (0.115, 0.078, 0.080), 14, 8)
+        add_ellipsoid(bm_p, (cx, 1.37, cz), (0.118, 0.050, 0.086), 12, 6)
+        add_gold_rim(bm_g, (cx, 1.40, cz), (0.0, -1.0, 0.0), 0.118, segs=12, h=0.012, flare=1.12)
+        add_gold_rim(bm_g, (cx, 1.34, cz), (0.0, -1.0, 0.0), 0.110, segs=12, h=0.011, flare=1.12)
+        lame_limb(bm_p, bm_g, (cx, 1.40, 0.02), (cx, 1.26, 0.02), 0.092, 0.070, n=3, segs=12)
+        objs.append((mesh_from_bm(f"Pauldron_{bone}", bm_p, "pauldron"), bone))
+        objs.append((mesh_from_bm(f"PauldronGold_{bone}", bm_g, "gold"), bone))
 
-    # --- Hang plate arms (clay radii, Actor hang positions) + elbow loops ---
+    # --- Hang plate arms: overlapping lames, not tubes ---
     for side, s in (("L", -1.0), ("R", 1.0)):
         x = s * 0.22
+        bm_p = bmesh.new()
+        bm_g = bmesh.new()
+        lame_limb(bm_p, bm_g, (x, 1.28, 0.02), (x, 1.14, 0.02), 0.062, 0.056, n=3, segs=12)
+        objs.append((mesh_from_bm(f"UpperArm_{side}", bm_p, "plate"), f"Arm_{side}"))
+        objs.append((mesh_from_bm(f"UpperArmGold_{side}", bm_g, "gold"), f"Arm_{side}"))
+
         bm = bmesh.new()
-        limb_tube(bm, (x, 1.40, 0.02), (x, 1.14, 0.02), 0.062, 0.056, 12)
-        objs.append((mesh_from_bm(f"UpperArm_{side}", bm, "silver"), f"Arm_{side}"))
-        bm = bmesh.new()
-        add_ellipsoid(bm, (x, 1.14, 0.02), (0.066, 0.050, 0.060), 12, 8)
+        add_ellipsoid(bm, (x, 1.14, 0.02), (0.066, 0.042, 0.060), 12, 8)
         objs.append((mesh_from_bm(f"Elbow_{side}", bm, "cop"), f"Fore_{side}"))
         bm = bmesh.new()
-        limb_tube(bm, (x, 1.14, 0.02), (x, 0.88, 0.02), 0.054, 0.048, 12)
-        objs.append((mesh_from_bm(f"Fore_{side}", bm, "silver"), f"Fore_{side}"))
-        bm = bmesh.new()
-        add_ellipsoid(bm, (x, 0.82, 0.02), (0.050, 0.060, 0.042), 10, 6)
-        add_ellipsoid(bm, (x, 0.88, 0.02), (0.054, 0.022, 0.044), 8, 5)
-        objs.append((mesh_from_bm(f"Hand_{side}", bm, "gauntlet"), f"Hand_{side}"))
+        add_gold_rim(bm, (x, 1.14, 0.02), (0.0, -1.0, 0.0), 0.068, segs=12, h=0.010, flare=1.12)
+        objs.append((mesh_from_bm(f"ElbowGold_{side}", bm, "gold"), f"Fore_{side}"))
 
-    # --- Legs + knee loops + pointed sabatons (clay fused ankles) ---
+        bm_p = bmesh.new()
+        bm_g = bmesh.new()
+        lame_limb(bm_p, bm_g, (x, 1.14, 0.02), (x, 0.90, 0.02), 0.054, 0.048, n=4, segs=12)
+        objs.append((mesh_from_bm(f"Fore_{side}", bm_p, "plate"), f"Fore_{side}"))
+        objs.append((mesh_from_bm(f"ForeGold_{side}", bm_g, "gold"), f"Fore_{side}"))
+
+        # Gauntlet: cuff + flat metacarpal + fingers (no sphere hands)
+        bm_p = bmesh.new()
+        bm_g = bmesh.new()
+        add_lame(bm_p, (x, 0.90, 0.02), (x, 0.855, 0.02), 0.052, 0.050, 10)
+        add_gold_rim(bm_g, (x, 0.90, 0.02), (0.0, -1.0, 0.0), 0.054, segs=10, h=0.010, flare=1.14)
+        add_gold_rim(bm_g, (x, 0.855, 0.02), (0.0, -1.0, 0.0), 0.052, segs=10, h=0.009, flare=1.12)
+        add_box(bm_p, (x, 0.82, 0.02), (0.048, 0.032, 0.028))
+        add_box(bm_g, (x, 0.835, 0.02), (0.046, 0.006, 0.030))  # knuckle gold strip
+        for k, dx in enumerate((-0.027, -0.009, 0.009, 0.027)):
+            add_taper(bm_p, (x + dx, 0.79, 0.02), (x + dx, 0.705, 0.03), 0.011, 0.007, 8)
+            add_gold_rim(bm_g, (x + dx, 0.79, 0.02), (0.0, -1.0, 0.0), 0.012, segs=8, h=0.006, flare=1.20)
+        add_taper(bm_p, (x + s * 0.040, 0.81, 0.045), (x + s * 0.055, 0.74, 0.062), 0.012, 0.008, 8)
+        objs.append((mesh_from_bm(f"Hand_{side}", bm_p, "gauntlet"), f"Hand_{side}"))
+        objs.append((mesh_from_bm(f"HandGold_{side}", bm_g, "gold"), f"Hand_{side}"))
+
+    # --- Legs: cuisse / greave lames + poleyn + sabaton segments ---
     for side, s in (("L", -1.0), ("R", 1.0)):
         x = s * 0.105
+        bm_p = bmesh.new()
+        bm_g = bmesh.new()
+        lame_limb(bm_p, bm_g, (x, 0.92, 0.02), (x, 0.52, 0.03), 0.080, 0.066, n=4, segs=12)
+        objs.append((mesh_from_bm(f"Thigh_{side}", bm_p, "plate"), f"UpLeg_{side}"))
+        objs.append((mesh_from_bm(f"ThighGold_{side}", bm_g, "gold"), f"UpLeg_{side}"))
+
         bm = bmesh.new()
-        limb_tube(bm, (x, 0.92, 0.02), (x, 0.52, 0.03), 0.080, 0.066, 12)
-        objs.append((mesh_from_bm(f"Thigh_{side}", bm, "silver"), f"UpLeg_{side}"))
-        bm = bmesh.new()
-        add_ellipsoid(bm, (x, 0.50, 0.04), (0.074, 0.048, 0.070), 12, 8)
+        add_ellipsoid(bm, (x, 0.50, 0.04), (0.074, 0.042, 0.070), 12, 8)
         objs.append((mesh_from_bm(f"Knee_{side}", bm, "cop"), f"Leg_{side}"))
         bm = bmesh.new()
-        limb_tube(bm, (x, 0.50, 0.03), (x, 0.08, 0.06), 0.062, 0.050, 12)
-        objs.append((mesh_from_bm(f"Shin_{side}", bm, "silver"), f"Leg_{side}"))
-        bm = bmesh.new()
-        add_ellipsoid(bm, (x, 0.045, 0.10), (0.054, 0.038, 0.095), 12, 7)
-        add_taper(bm, (x, 0.038, 0.14), (x, 0.028, 0.24), 0.040, 0.018, 10)
-        add_ellipsoid(bm, (x, 0.08, 0.04), (0.048, 0.016, 0.048), 8, 5)
-        objs.append((mesh_from_bm(f"Boot_{side}", bm, "boot"), f"Foot_{side}"))
+        add_gold_rim(bm, (x, 0.50, 0.04), (0.0, -1.0, 0.0), 0.076, segs=12, h=0.011, flare=1.12)
+        objs.append((mesh_from_bm(f"KneeGold_{side}", bm, "gold"), f"Leg_{side}"))
+
+        bm_p = bmesh.new()
+        bm_g = bmesh.new()
+        lame_limb(bm_p, bm_g, (x, 0.50, 0.03), (x, 0.10, 0.05), 0.062, 0.050, n=4, segs=12)
+        objs.append((mesh_from_bm(f"Shin_{side}", bm_p, "plate"), f"Leg_{side}"))
+        objs.append((mesh_from_bm(f"ShinGold_{side}", bm_g, "gold"), f"Leg_{side}"))
+
+        # Sabaton: ankle cop + overlapping toe lames + gold (not a smooth ellipsoid)
+        bm_p = bmesh.new()
+        bm_g = bmesh.new()
+        add_ellipsoid(bm_p, (x, 0.08, 0.04), (0.050, 0.018, 0.050), 10, 6)
+        add_gold_rim(bm_g, (x, 0.085, 0.04), (0.0, 1.0, 0.0), 0.052, segs=10, h=0.010, flare=1.14)
+        add_lame(bm_p, (x, 0.048, 0.06), (x, 0.042, 0.12), 0.048, 0.044, 10)
+        add_gold_rim(bm_g, (x, 0.045, 0.09), (0.0, 0.0, 1.0), 0.046, segs=10, h=0.009, flare=1.12)
+        add_lame(bm_p, (x, 0.042, 0.11), (x, 0.036, 0.17), 0.042, 0.034, 10)
+        add_gold_rim(bm_g, (x, 0.039, 0.14), (0.0, 0.0, 1.0), 0.038, segs=10, h=0.008, flare=1.12)
+        add_lame(bm_p, (x, 0.036, 0.16), (x, 0.030, 0.21), 0.032, 0.022, 10)
+        add_taper(bm_p, (x, 0.030, 0.20), (x, 0.026, 0.24), 0.020, 0.012, 8)
+        objs.append((mesh_from_bm(f"Boot_{side}", bm_p, "boot"), f"Foot_{side}"))
+        objs.append((mesh_from_bm(f"BootGold_{side}", bm_g, "gold"), f"Foot_{side}"))
 
     # --- Character-RIGHT sheathed scabbard (clay 0.20,−0.04,1.02 → 0.28,−0.10,0.42) ---
     bm = bmesh.new()
@@ -491,7 +619,6 @@ def build_parts():
     objs.append((mesh_from_bm("ScabbardMesh", bm, "scabbard"), "Scabbard"))
 
     return objs
-
 
 def make_armature(mats):
     arm_data = bpy.data.armatures.new("SirAldricArmature")
@@ -884,8 +1011,8 @@ def write_sidecars(ntris: int, nverts: int, nfaces: int):
     (PACK3D / "README.md").write_text(
         "# Sir Aldric 3D (Theme A) — Gate 3 game mesh\n\n"
         "**Volume law:** Gate 2 clay `5de0e16` (do not redesign proportions).\n"
-        "Clean loft topology with joint loops at shoulders / elbows / hips / knees. "
-        "Mid-poly mobile. No voxel remesh.\n\n"
+        "FAIL iterate: segmented plate + gold rims, closed helm/crest, lion on cloth, "
+        "sabaton/gauntlet shapes. Joint loops. Mid-poly mobile. No voxel remesh.\n\n"
         "World-cam stills: Play march angle `(0, 2.80, −5.40)` look-at `(0, 0.90, 0.50)` "
         "FOV 30, 1080×1920, TOP = +Z = away. **Not** a beauty portrait cam.\n\n"
         "Runtime bind: `sir_aldric_midpoly.mesh.txt` + `sir_aldric_atlas.png` on "
@@ -904,8 +1031,7 @@ def write_sidecars(ntris: int, nverts: int, nfaces: int):
 
 def main():
     PACK3D.mkdir(parents=True, exist_ok=True)
-    if not ATLAS.exists():
-        subprocess.check_call(["python3", str(ROOT / "scripts/blender/build_sir_aldric_atlas.py")])
+    subprocess.check_call(["python3", str(ROOT / "scripts/blender/build_sir_aldric_atlas.py")])
     reset_scene()
     mats = rest_world()
     parts = build_parts()
@@ -917,7 +1043,8 @@ def main():
     nfaces = len(body.data.polygons)
     print("mesh verts", nverts, "faces", nfaces)
 
-    render_world_cams(arm, body)
+    # Play-cam raster (render_gate3_playcam.py) is the Derek SoT.
+    # EEVEE track-to flips laterality — do not drop eevee_rear as a look still.
 
     # Drop render-only ground/lights from the DCC file (keep game mesh + armature).
     for ob in list(bpy.data.objects):

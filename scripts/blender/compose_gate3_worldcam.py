@@ -66,7 +66,7 @@ def main() -> None:
     )
     d.text(
         (24, 78),
-        "Volume law 5de0e16  ·  scabbard character-RIGHT  ·  look + walk NOT claimed",
+        "FAIL iterate: segmented plate/helm/heraldry/sabatons  ·  look + walk NOT claimed",
         fill=(210, 176, 82),
         font=lab,
     )

@@ -10,9 +10,9 @@
   "mesh": "sir_aldric_midpoly.mesh.txt",
   "fbx": "sir_aldric.fbx",
   "blend": "sir_aldric.blend",
-  "verts": 3287,
-  "faces": 3258,
-  "tris": 6352,
+  "verts": 6926,
+  "faces": 5710,
+  "tris": 13192,
   "lookPassClaimed": false,
   "walkPaused": true,
   "playHubLocked": true

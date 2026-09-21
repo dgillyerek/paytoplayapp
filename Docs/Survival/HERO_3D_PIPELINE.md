@@ -81,11 +81,11 @@ Grey-clay blockout: `sir_aldric_blockout.blend` + stills vs turnaround. Volume l
 
 ## Gate 3 GAME MESH (this pass)
 
-Mid-poly grown from clay volumes: joint loops, ~6352 tris, atlas materials vs Gate 1 LOCKED + `01_rear_LOCKED`.  
+FAIL iterate: segmented plate + gold rims, closed helm/crest, lion on cloth, sabaton/gauntlet shapes. ~13192 tris.  
 World-cam stills at Play march angle (high rear, TOP = away) in `Docs/Survival/previews/gate3/`.  
 Hard lock: scabbard character-RIGHT. Sheathed only.  
 **Paused:** walk / Animator / Play hub swap. Motion 5916447 holds.  
-**Look gate not claimed.**
+**Look gate not claimed.** Derek FAIL on first stills (flat white plate); this pass is closer, not PASS.
 
 ---
 

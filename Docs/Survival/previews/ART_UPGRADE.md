@@ -1,10 +1,22 @@
 # Aldric 3D art upgrade
 
+## Gate 3 FAIL iterate (segmented plate / helm / heraldry)
+
+Derek FAIL: portrait-level detail missing; first Gate 3 stills read as flat white tubes + cone helm + plaque lion. Surcoat volume kept. This iterate:
+
+- Segmented pauldrons / arms / legs with chunky gold rims (readable at 1080×1920 Play cam)
+- Closed armet + gold comb / visor band (not a white cone)
+- Lion embroidered on royal-blue cloth (cylindrical UV, no navy plaque); Greek-key hem
+- Sabaton lames + gold; gauntlet cuffs / fingers (no sphere hands)
+- ~13192 tris. Scabbard character-RIGHT. Same Play World-cam angle. Motion HOLD. Play hub locked.
+
+**Look gate is not claimed.** Filigree still short of the portrait.
+
 ## Gate 3 HOLD (game mesh + World-cam stills)
 
 CEO Gate 2 was a **soft-PASS** (Derek moved on without FAIL). Volume law = clay `5de0e16` / compare `6ef0919` — this mesh is **grown from that clay**, not a new proportion.
 
-- **Game mesh:** lofted mid-poly (~6352 tris) with joint loops at shoulders / elbows / hips / knees. No voxel remesh. `sir_aldric.fbx` + `sir_aldric_midpoly.mesh.txt` + atlas.
+- **Game mesh:** segmented mid-poly (~13192 tris) with joint loops + gold plate rims. No voxel remesh. `sir_aldric.fbx` + `sir_aldric_midpoly.mesh.txt` + atlas.
 - **Look:** silver/gold plate, royal-blue surcoat, gold lion rampant + Greek-key hem, brown scabbard **character-RIGHT** only, silver/gold boots. Helm BACK vs `01_rear_LOCKED` / turnaround (World-cam is rear; face law not visible).
 - **Proof:** Play march-angle World-cam stills `(0, 2.80, −5.40)` look-at `(0, 0.90, 0.50)` FOV 30, 1080×1920, TOP = +Z = away — **not** a beauty portrait cam. See `Docs/Survival/previews/gate3/`.
 - **Walk / Animator / Play hub stay paused** until Derek look PASS. Motion HOLD 5916447 / 1cd3320. `Evaluate()` untouched.
