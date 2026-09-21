@@ -108,29 +108,77 @@ def shrinkwrap_to_source(tgt, src):
 
 
 def project_albedo(src, tgt, atlas_path: Path):
+    """Project Meshy Image_0 / lion onto retopo UVs. Cycles bake is fallback."""
     rt.smart_uv(tgt)
-    baked = rt.cycles_bake(src, tgt, atlas_path)
-    if baked is None or not atlas_path.exists() or atlas_path.stat().st_size < 20_000:
-        print("cycles bake miss — BVH project Image_0 / lion")
-        colors = rt.transfer_albedo(src, tgt)
-        rt.rasterize_atlas(tgt, colors, atlas_path)
+    colors = rt.transfer_albedo(src, tgt)
+    rt.rasterize_atlas(tgt, colors, atlas_path)
+    if atlas_path.stat().st_size < 80_000:
+        print("transfer atlas thin — try Cycles bake")
+        rt.cycles_bake(src, tgt, atlas_path)
     atlas = Image.open(atlas_path).convert("RGB")
     arr = __import__("numpy").array(atlas)
     rt.stamp_lion(tgt, arr)
-    Image.fromarray(arr, "RGB").save(atlas_path)  # noqa: ALB001
+    Image.fromarray(arr, "RGB").save(atlas_path)
     rt.assign_baked_material(tgt, atlas_path)
     print("projected atlas", atlas_path, atlas_path.stat().st_size)
     return atlas_path
 
 
-def auto_bind(mesh_ob, actor_ob):
-    """Armature automatic weights. Not exclusive paper-island corridors."""
-    bpy.ops.object.select_all(action="DESELECT")
-    mesh_ob.select_set(True)
-    actor_ob.select_set(True)
-    bpy.context.view_layer.objects.active = actor_ob
-    bpy.ops.object.parent_set(type="ARMATURE_AUTO")
-    print("auto weights", [g.name for g in mesh_ob.vertex_groups])
+def _seg_dist(p: Vector, a: Vector, b: Vector) -> float:
+    ab = b - a
+    denom = max(1e-9, ab.length_squared)
+    t = max(0.0, min(1.0, (p - a).dot(ab) / denom))
+    return (p - (a + t * ab)).length
+
+
+def spatial_bind(mesh_ob):
+    """Nearest rest-bone-segment weights on the retopo volume.
+
+    Not exclusive paper-island corridors. Not heat on shatter.
+    """
+    rest = {}
+    for name in old.ORDER if hasattr(old, "ORDER") else list(old.BONE_REST):
+        loc, eul = old.BONE_REST[name]
+        parent = old.PARENT[name]
+        local = Vector(loc)
+        if parent is None:
+            rest[name] = local
+        else:
+            rest[name] = rest[parent] + local
+    # Longer limb spans: bone head → child head (or +Y 0.12).
+    child_of = {p: [] for p in old.PARENT}
+    for n, p in old.PARENT.items():
+        if p:
+            child_of.setdefault(p, []).append(n)
+    segs = {}
+    for name in MESH_BONES:
+        head = rest[name]
+        kids = [c for c in child_of.get(name, []) if c in rest]
+        if kids:
+            tail = rest[kids[0]]
+            if (tail - head).length < 0.06:
+                tail = head + Vector((0.0, -0.16, 0.0))
+        else:
+            tail = head + Vector((0.0, -0.12, 0.0))
+        segs[name] = (head, tail)
+    for g in list(mesh_ob.vertex_groups):
+        mesh_ob.vertex_groups.remove(g)
+    groups = {n: mesh_ob.vertex_groups.new(name=n) for n in MESH_BONES}
+    for i, v in enumerate(mesh_ob.data.vertices):
+        p = v.co
+        dists = []
+        for name, (a, b) in segs.items():
+            if name == "Scabbard":
+                continue
+            dists.append((_seg_dist(p, a, b), name))
+        dists.sort()
+        near = dists[0][0]
+        take = [(d, n) for d, n in dists[:4] if d <= max(0.10, near * 2.6)]
+        ws = [(n, 1.0 / max(d, 0.012) ** 2) for d, n in take]
+        s = sum(w for _, w in ws) or 1.0
+        for n, w in ws:
+            groups[n].add([i], w / s, "REPLACE")
+    print("spatial bind segs", {n: (round(a.y, 2), round(b.y, 2)) for n, (a, b) in segs.items()})
 
 
 def lock_scabbard(mesh_ob) -> int:
@@ -217,26 +265,35 @@ def main():
 
     tgt = duplicate_mesh(src, "SirAldricPathA")
     rt.fill_holes(tgt)
-    # Scaffold only if shatter is still many islands — QuadriFlow needs manifold.
+    # Paper shells do not voxel-fuse. Thicken, then one scaffold volume.
+    rt.apply_solidify(tgt, 0.012)
+    scaffold_watertight(tgt, max(SCAFFOLD_VOXEL, 0.016))
+    rt.delete_small_islands(tgt, keep_min=150)
     islands, sizes = n_islands(tgt.data)
-    if islands > 2:
-        scaffold_watertight(tgt, SCAFFOLD_VOXEL)
+    if islands > 4:
+        print("still shattered, coarser scaffold")
+        scaffold_watertight(tgt, 0.022)
+        rt.delete_small_islands(tgt, keep_min=200)
+        islands, sizes = n_islands(tgt.data)
     ok = quadriflow(tgt, TARGET_FACES)
     if not ok:
-        raise SystemExit("QuadriFlow produced no usable mesh")
-    # Recover Meshy silhouette. Hero geo is shrinkwrapped Meshy, not the scaffold.
-    src.hide_set(False)
-    shrinkwrap_to_source(tgt, src)
+        print("QuadriFlow no-op — keep scaffold volume")
+    # Do NOT shrinkwrap onto paper Meshy (collapses volume; heat fails).
+    # Silhouette is the mid-poly volume; LOOK comes from Meshy project.
     islands, sizes = n_islands(tgt.data)
-    print("retopo islands", islands, "top", sizes)
+    print("retopo islands", islands, "top", sizes, "v", len(tgt.data.vertices), "f", len(tgt.data.polygons))
+    if islands > 8:
+        raise SystemExit(f"retopo still shattered: {islands} {sizes}")
 
     atlas_path = PACK3D / "sir_aldric_meshy_atlas.png"
+    src.hide_set(False)
     project_albedo(src, tgt, atlas_path)
     src.hide_set(True)
     src.hide_render = True
 
     actor_ob, _world = hh.build_actor_armature()
-    auto_bind(tgt, actor_ob)
+    hh.attach_actor(tgt, actor_ob)
+    spatial_bind(tgt)
     scab_n = lock_scabbard(tgt)
     counts = recount(tgt)
     if scab_n < 20 or counts.get("Scabbard", 0) < 20:
