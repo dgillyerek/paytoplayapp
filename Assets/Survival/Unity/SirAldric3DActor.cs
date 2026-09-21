@@ -11,7 +11,7 @@ using UnityEngine.Playables;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Runtime 3D Aldric: Path 2 Meshy look mesh skinned to held Actor bones,
+    /// Runtime 3D Aldric: Path 2 Meshy look, hang-heat multi-bone (FMT v4).
     /// Animator PlayableGraph walk/attack toward TOP. Motion SoT is Evaluate()
     /// (5916447 gait HOLD — do not edit keys). Editor-less bind is
     /// sir_aldric_meshy.mesh.txt. Loft midpoly remains as archive.
@@ -150,7 +150,7 @@ namespace Survival.Unity
             smr.sharedMesh = mesh;
             smr.bones = boneList.ToArray();
             smr.rootBone = _bones["Hips"];
-            smr.quality = SkinQuality.Bone1;
+            smr.quality = SkinQuality.Bone4;
             smr.sharedMaterial = MakeAtlas(TryLoadAtlas());
         }
 
@@ -191,8 +191,7 @@ namespace Survival.Unity
                     verts.Add(new Vector3(float.Parse(p[0], ic), float.Parse(p[1], ic), float.Parse(p[2], ic)));
                     norms.Add(new Vector3(float.Parse(p[3], ic), float.Parse(p[4], ic), float.Parse(p[5], ic)));
                     uvs.Add(new Vector2(float.Parse(p[6], ic), float.Parse(p[7], ic)));
-                    var bi = index.TryGetValue(bone, out var b) ? b : index["Hips"];
-                    weights.Add(new BoneWeight { boneIndex0 = bi, weight0 = 1f });
+                    weights.Add(ParseBoneWeight(p, bone, index));
                     pending.Add(verts.Count - 1);
                     continue;
                 }
@@ -207,6 +206,80 @@ namespace Survival.Unity
                     tris.Add(i2);
                 }
             }
+        }
+
+        private static BoneWeight ParseBoneWeight(
+            string[] p,
+            string fallbackBone,
+            Dictionary<string, int> index)
+        {
+            var ic = CultureInfo.InvariantCulture;
+            var names = new string[4];
+            var ws = new float[4];
+            var n = 0;
+            for (var k = 8; k < p.Length && n < 4; k++)
+            {
+                var pair = p[k];
+                var colon = pair.IndexOf(':');
+                if (colon <= 0)
+                {
+                    continue;
+                }
+
+                var name = pair.Substring(0, colon);
+                if (!index.TryGetValue(name, out _))
+                {
+                    continue;
+                }
+
+                names[n] = name;
+                ws[n] = float.Parse(pair.Substring(colon + 1), ic);
+                n++;
+            }
+
+            if (n == 0)
+            {
+                var bi = index.TryGetValue(fallbackBone, out var b) ? b : index["Hips"];
+                return new BoneWeight { boneIndex0 = bi, weight0 = 1f };
+            }
+
+            var sum = 0f;
+            for (var i = 0; i < n; i++)
+            {
+                sum += ws[i];
+            }
+
+            if (sum <= 1e-6f)
+            {
+                sum = 1f;
+            }
+
+            var bw = new BoneWeight();
+            if (n > 0)
+            {
+                bw.boneIndex0 = index[names[0]];
+                bw.weight0 = ws[0] / sum;
+            }
+
+            if (n > 1)
+            {
+                bw.boneIndex1 = index[names[1]];
+                bw.weight1 = ws[1] / sum;
+            }
+
+            if (n > 2)
+            {
+                bw.boneIndex2 = index[names[2]];
+                bw.weight2 = ws[2] / sum;
+            }
+
+            if (n > 3)
+            {
+                bw.boneIndex3 = index[names[3]];
+                bw.weight3 = ws[3] / sum;
+            }
+
+            return bw;
         }
 
         private static string? ResolveHero3D(string fileName)

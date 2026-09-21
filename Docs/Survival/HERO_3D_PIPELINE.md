@@ -81,10 +81,10 @@ Grey-clay blockout: `sir_aldric_blockout.blend` + stills vs turnaround. Volume l
 
 ## Gate 3 GAME MESH (this pass)
 
-**Path 2 Meshy** look PASSed by Design on paint tip `e5b132f`. Skin tip `89481e5` FAILed walk-with-look; this tip rebinds.  
-Runtime: welded `sir_aldric_meshy.mesh.txt` — cloth on torso, one scabbard, one Bone1 hang-arm volume per side.  
-World-cam walk clip at Play march angle: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4`.  
-Hard lock: scabbard character-RIGHT. Sheathed only. Motion `5916447` holds.  
+**Path 2 Meshy** look PASSed on `e5b132f`. Walk FAIL on `89481e5` and `71f0c4a` (Bone1 corridor premise).  
+Runtime: hang-heat FMT v4 `sir_aldric_meshy.mesh.txt` — GEO-deleted dup sheath, multi-bone heat, Actor `Bone4`.  
+World-cam clip: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4`.  
+Hard lock: scabbard character-RIGHT. Motion `5916447` holds.  
 **Paused:** Play hub swap. **Walk-with-look NOT claimed.**
 
 ---

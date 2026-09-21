@@ -8,6 +8,8 @@ because the original (~57MB / 1.77M faces) exceeded upload cap.
 - Unity-oriented DCC: `sir_aldric_meshy.blend` (Y-up, +Z face, scabbard +X)
 
 Rebuild look: `blender --background --python scripts/blender/repair_path2_paint.py` then `import_sir_aldric_meshy.py`  
-Skin to held walk: `blender --background --python scripts/blender/skin_sir_aldric_meshy.py`
+Skin (old Bone1, failed twice): `scripts/blender/skin_sir_aldric_meshy.py`  
+Skin (premise B hang-heat): `blender --background --python scripts/blender/skin_sir_aldric_hangheat.py`  
+Census: `blender --background --python scripts/blender/census_path2_bind.py`
 
-**Look PASS** claimed by Design on paint tip `e5b132f`. Skin tip `89481e5` FAILed walk-with-look (arm slabs / stacked scabbard / hem tears). Rebind: weld + cloth lock + one scabbard + one hang-arm volume per side. **Walk-with-look NOT claimed.** Play hub PNG stays locked.
+**Look PASS** on `e5b132f`. Walk FAIL on `89481e5` and `71f0c4a`. **Walk-with-look NOT claimed.** Play hub PNG stays locked.

@@ -250,6 +250,7 @@ public sealed class SirAldric3DMotionTests
         var path = Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "SirAldric3DActor.cs");
         var src = File.ReadAllText(path);
         Assert.Contains("sir_aldric_meshy.mesh.txt", src, StringComparison.Ordinal);
+        Assert.Contains("SkinQuality.Bone4", src, StringComparison.Ordinal);
         Assert.Contains("Scabbard", src, StringComparison.Ordinal);
         Assert.DoesNotContain("BodyCap(\"Cape\"", src, StringComparison.Ordinal);
         Assert.DoesNotContain("(-0.16f, 0.04f, 0f)", src, StringComparison.Ordinal);
@@ -264,6 +265,7 @@ public sealed class SirAldric3DMotionTests
         Assert.True(new FileInfo(fbx).Length > 50_000);
         var meshText = File.ReadAllText(mesh);
         Assert.Contains("BONE Scabbard", meshText, StringComparison.Ordinal);
+        Assert.Contains("FMT v4", meshText, StringComparison.Ordinal);
         Assert.Contains("blender", meshText, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("BONE Cape", meshText, StringComparison.Ordinal);
     }
