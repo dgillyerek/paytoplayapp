@@ -308,13 +308,14 @@ def assign_exclusive(mesh_ob):
                 if vg.group == scab.index and vg.weight > 0.5:
                     on_scab = True
                     break
-        if on_scab or (is_sheath(p) and dist_seg(p, _SCAB_A, _SCAB_B) < 0.060):
+        if on_scab:
             bone_of.append("Scabbard")
             continue
-        if p.x > 0.22 and 0.56 < p.y < 1.52 and dist_seg(p, ar_a, ar_b) < 0.11:
+        # Arm capsules first — do not let the sheath AABB steal the right tube.
+        if p.x > 0.18 and 0.54 < p.y < 1.54 and dist_seg(p, ar_a, ar_b) < 0.12:
             bone_of.append("Arm_R")
             continue
-        if p.x < -0.22 and 0.56 < p.y < 1.52 and dist_seg(p, al_a, al_b) < 0.11:
+        if p.x < -0.18 and 0.54 < p.y < 1.54 and dist_seg(p, al_a, al_b) < 0.12:
             bone_of.append("Arm_L")
             continue
         leg_r = (
