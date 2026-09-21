@@ -628,17 +628,8 @@ def setup_render():
     bpy.context.collection.objects.link(fill_o)
     fill_o.location = (-2.2, 2.4, -1.5)
     fill_o.rotation_euler = (math.radians(70), 0.0, math.radians(-25))
-    bpy.ops.mesh.primitive_plane_add(size=12.0, location=(0.0, 0.0, 0.0))
-    ground = bpy.context.active_object
-    ground.rotation_euler = (math.radians(90.0), 0.0, 0.0)
-    ground.name = "Ground"
-    mat = bpy.data.materials.new("GroundMat")
-    mat.use_nodes = True
-    bsdf = mat.node_tree.nodes.get("Principled BSDF")
-    if bsdf:
-        bsdf.inputs["Base Color"].default_value = (0.10, 0.11, 0.09, 1)
-        bsdf.inputs["Roughness"].default_value = 0.9
-    ground.data.materials.append(mat)
+    # No lit ground plane. A lit floor vs world bg reads as frame-wide
+    # horizontal banding (2820e53 residual). Scene artifact, not bind.
     cam_data = bpy.data.cameras.new("WorldPlay")
     cam_data.lens_unit = "FOV"
     cam_data.angle = math.radians(CAM_FOV)

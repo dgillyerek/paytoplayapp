@@ -55,7 +55,7 @@ def main() -> None:
     d = ImageDraw.Draw(sheet)
     d.text((14, 10), "GATE 3  |  cycle A/B/C  |  n=0,5,10,15  |  bind NOT claimed", fill=(236, 230, 210), font=font(22))
     d.text((14, 44), "A = Actor LBS (no encoder).  B = Blender EEVEE.  C = walk MP4.  All must be closed hang-arm volumes — not one t=0.625 still.", fill=(180, 176, 160), font=font(14))
-    d.text((14, 70), "LOOK e5b132f.  80c42d1 FAIL = loft tear stretch.  One loft + blended wts.  Bind NOT claimed.", fill=(180, 176, 160), font=font(14))
+    d.text((14, 70), "LOOK e5b132f.  One loft + steel texel.  SCENE/GROUND flatten (no lit floor).  Bind NOT claimed.", fill=(180, 176, 160), font=font(14))
     for ri, cells in enumerate(rows):
         for ci, im in enumerate(cells):
             sheet.paste(im, (ci * w, 100 + ri * h))

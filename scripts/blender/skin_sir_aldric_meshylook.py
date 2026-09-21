@@ -810,7 +810,7 @@ def main():
         "tubes": tubes,
         "shards": shards,
         "vsFail": "fd9d6f8",
-        "oldPremise": "80c42d1 one-loft PASSed ghost; FAIL horizontal tear (θ-wrap UV + exclusive Y-cut shear)",
+        "oldPremise": "2820e53 one-loft + steel texel PASSed arm UV tear; residual lower-half bands = SCENE/GROUND (lit floor), not bind",
         "motion": "5916447 Evaluate() keys reused",
         "scabbard": "character-right",
         "playHubLocked": True,
