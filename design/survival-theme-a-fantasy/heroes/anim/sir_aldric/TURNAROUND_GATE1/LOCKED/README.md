@@ -6,7 +6,7 @@ Look law is **LOCKED**. Do not redesign.
 | --- | --- |
 | `01_FRONT.png` | Ortho front; hip flipped so scabbard is **character-RIGHT** |
 | `02_SIDE_R.png` | Character-right profile |
-| `03_BACK.png` | Ortho back from `01_rear_LOCKED` — scabbard viewer-right |
+| `03_BACK.png` | Ortho back — full figure on light gray; scabbard viewer-right |
 | `04_THREE_QUARTER.png` | Helmeted A-pose ¾ (Design panel). Cape `00_fullbody` is **not** ¾ |
 | `05_PORTRAIT_COMPLETE_fullbody.png` | Face + ornate armor; oval bust = **face law** |
 | `TURNAROUND_SHEET.png` | Four-up Gate 1 working sheet |

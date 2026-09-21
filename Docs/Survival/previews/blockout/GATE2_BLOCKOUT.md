@@ -21,5 +21,6 @@ Motion from 5916447 **holds** until Design PASS on this silhouette.
 ## Honest
 
 Grey clay. Overlay and judge **silhouette / proportions only**. Gate 2 is **not claimed**.
-The first clay pass remesh-melted into a mannequin — this revision keeps helm / hem / scabbard / sabaton readable.
-Design ¾ panel bytes were not on this VM; cape `00_fullbody` is **not** used as ¾. Compare ¾ clay against 01–03 proportions.
+Clay mesh / stills are **unchanged from `5de0e16`**. This follow-up only recomposes SoT columns onto light gray so a transparent rear cutout cannot become a black void. Per-view SoT: `sot_front.png` / `sot_side_r.png` / `sot_back.png` / `sot_three_quarter.png`.
+Mirrors: `look_targets/03_turnaround_*_LOCKED.png` and `03_TURNAROUND_SHEET_LOCKED.png`.
+Design's 2026-09-21 re-lock studio panels (wider A-pose + hand-on-hip ¾) were attached in chat but **did not overwrite** `LOCKED/` on this VM. ¾ column is still the placeholder; cape `00_fullbody` is **not** ¾.

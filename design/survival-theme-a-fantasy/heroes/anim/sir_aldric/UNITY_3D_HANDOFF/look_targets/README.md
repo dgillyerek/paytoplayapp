@@ -11,6 +11,6 @@ Look targets for the 3D pipeline (Design files, 2026-09-18).
 
 - `00_portrait_COMPLETE_LOCKED.png` — face law (oval bust). Same still as `TURNAROUND_GATE1/LOCKED/05_PORTRAIT_COMPLETE_fullbody.png`. Do not invent a face; helmeted `00_fullbody_LOCKED` is **not** face law.
 - `03_turnaround_front_LOCKED.png` — 02 front **flipped** so scabbard is character-RIGHT.
-- `03_turnaround_side_r_LOCKED.png` / `03_turnaround_back_LOCKED.png` — mirrors of Gate 1.
-- `03_turnaround_sheet_LOCKED.png` — working four-up. **02 rear is not SoT** if mirrored.
+- `03_turnaround_side_r_LOCKED.png` / `03_turnaround_back_LOCKED.png` — mirrors of Gate 1 (back composited on light gray so overlay is not a black void).
+- `03_turnaround_sheet_LOCKED.png` and `03_TURNAROUND_SHEET_LOCKED.png` — working four-up. **02 rear is not SoT** if mirrored.
 - Scabbard SoT remains **character-right**.
