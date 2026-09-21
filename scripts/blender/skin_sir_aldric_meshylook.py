@@ -100,63 +100,127 @@ def delete_extra_sheath(ob) -> dict:
     return {"sheathKeep": len(keep), "sheathDrop": len(drop), "sheathN": len(sheath), "meshIslands": len(isls)}
 
 
-def _face_ok_arm(f, arm_side):
-    xs = [v.co.x for v in f.verts]
-    if arm_side > 0 and min(xs) < 0.24:
-        return False
-    if arm_side < 0 and max(xs) > -0.24:
-        return False
-    if f.calc_area() > 0.006:
-        return False
-    for e in f.edges:
-        if e.calc_length() > 0.11:
-            return False
-    return True
-
-
-def thicken_hang_arms(ob) -> dict:
-    """Thickness on small same-side hang-arm faces only. Body UVs untouched."""
+def delete_armpit_elbow_shards(ob) -> dict:
+    """Only hairline slivers in the pit/elbow — never the Meshy gauntlet/plate."""
     me = ob.data
-    side_of = [0] * len(me.vertices)
-    for i, v in enumerate(me.vertices):
-        p = v.co
-        if not (0.74 < p.y < 1.40):
-            continue
-        d_r = dist_seg(p, _ARM_R_A, _ARM_R_B)
-        d_l = dist_seg(p, _ARM_L_A, _ARM_L_B)
-        if p.x > 0.24 and d_r < 0.070:
-            side_of[i] = 1
-        elif p.x < -0.24 and d_l < 0.070:
-            side_of[i] = -1
-    n_arm = sum(1 for s in side_of if s)
     bm = bmesh.new()
     bm.from_mesh(me)
-    bm.verts.ensure_lookup_table()
     bm.faces.ensure_lookup_table()
-    faces_r = [f for f in bm.faces if all(side_of[v.index] == 1 for v in f.verts) and _face_ok_arm(f, 1)]
-    faces_l = [f for f in bm.faces if all(side_of[v.index] == -1 for v in f.verts) and _face_ok_arm(f, -1)]
-    print("thicken candidates", n_arm, "faces R/L", len(faces_r), len(faces_l))
-    if faces_r:
-        bmesh.ops.solidify(bm, geom=faces_r, thickness=0.050)
-    if faces_l:
-        bmesh.ops.solidify(bm, geom=faces_l, thickness=0.050)
-    bm.faces.ensure_lookup_table()
-    huge = [f for f in bm.faces if f.calc_area() > 0.025 or max((e.calc_length() for e in f.edges), default=0) > 0.28]
-    print("drop huge after solidify", len(huge))
-    if huge:
-        bmesh.ops.delete(bm, geom=huge, context="FACES")
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    kill = []
+    for f in bm.faces:
+        c = f.calc_center_median()
+        area = f.calc_area()
+        edges = [e.calc_length() for e in f.edges]
+        aspect = max(edges) / max(min(edges), 1e-6)
+        pit = 1.22 < c.y < 1.40 and 0.16 < abs(c.x) < 0.24 and abs(c.z) < 0.08
+        if pit and area < 0.00025 and aspect > 12:
+            kill.append(f)
+    print("shard faces", len(kill), "of", len(bm.faces))
+    if kill:
+        bmesh.ops.delete(bm, geom=kill, context="FACES")
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     bm.to_mesh(me)
     bm.free()
     me.update()
+    return {"shardFaces": len(kill), "vertsAfter": len(me.vertices)}
+
+
+def thicken_weighted_arms(ob) -> dict:
+    """Solidify ONLY Arm_* faces (isolated), then prune shards. UVs copied on the shell."""
+    me = ob.data
+    vg_names = {g.index: g.name for g in ob.vertex_groups}
+    arm_vert = [False] * len(me.vertices)
+    for i, v in enumerate(me.vertices):
+        for g in v.groups:
+            if vg_names.get(g.group, "") in ("Arm_L", "Arm_R") and g.weight > 0.5:
+                arm_vert[i] = True
+                break
+    bpy.ops.object.select_all(action="DESELECT")
+    ob.select_set(True)
+    bpy.context.view_layer.objects.active = ob
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_all(action="DESELECT")
+    bpy.ops.mesh.select_mode(type="FACE")
+    bpy.ops.object.mode_set(mode="OBJECT")
+    nsel = 0
     for p in me.polygons:
+        p.select = all(arm_vert[i] for i in p.vertices)
+        if p.select:
+            nsel += 1
+    print("arm faces to thicken", nsel)
+    if nsel < 20:
+        return {"armFaces": nsel, "pruned": 0}
+    before = set(bpy.data.objects)
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.separate(type="SELECTED")
+    bpy.ops.object.mode_set(mode="OBJECT")
+    arm_ob = next((o for o in bpy.data.objects if o not in before and o.type == "MESH"), None)
+    if arm_ob is None:
+        arm_ob = next((o for o in bpy.context.selected_objects if o != ob and o.type == "MESH"), None)
+    if arm_ob is None:
+        print("thicken: separate failed")
+        return {"armFaces": nsel, "pruned": 0}
+
+    bpy.ops.object.select_all(action="DESELECT")
+    arm_ob.select_set(True)
+    bpy.context.view_layer.objects.active = arm_ob
+    mod = arm_ob.modifiers.new("HangArmSolid", "SOLIDIFY")
+    mod.thickness = 0.070
+    mod.offset = 0.0
+    try:
+        mod.use_even_offset = True
+        mod.use_quality_normals = True
+    except Exception:
+        pass
+    bpy.ops.object.modifier_apply(modifier="HangArmSolid")
+
+    me2 = arm_ob.data
+    bm = bmesh.new()
+    bm.from_mesh(me2)
+    bm.faces.ensure_lookup_table()
+    kill = []
+    for f in bm.faces:
+        c = f.calc_center_median()
+        d_r = dist_seg(c, _ARM_R_A, _ARM_R_B)
+        d_l = dist_seg(c, _ARM_L_A, _ARM_L_B)
+        mx = max((e.calc_length() for e in f.edges), default=0)
+        area = f.calc_area()
+        in_r = c.x > 0.16 and 0.54 < c.y < 1.46 and d_r < 0.14
+        in_l = c.x < -0.16 and 0.54 < c.y < 1.46 and d_l < 0.14
+        hand_spike = c.y < 0.76 and (area > 0.003 or mx > 0.085)
+        giant = area > 0.018 or mx > 0.20
+        inward_pit = abs(c.x) < 0.15 and c.y > 1.22
+        if (not (in_r or in_l)) or hand_spike or giant or inward_pit:
+            kill.append(f)
+    print("arm prune", len(kill), "of", len(bm.faces))
+    if kill:
+        bmesh.ops.delete(bm, geom=kill, context="FACES")
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(me2)
+    bm.free()
+    me2.update()
+    for p in me2.polygons:
         p.use_smooth = True
-    print("thicken ->", len(me.vertices), "faces", len(me.polygons))
-    return {"armSolidVerts": n_arm, "vertsAfter": len(me.vertices), "facesR": len(faces_r), "facesL": len(faces_l)}
+
+    bpy.ops.object.select_all(action="DESELECT")
+    ob.select_set(True)
+    arm_ob.select_set(True)
+    bpy.context.view_layer.objects.active = ob
+    bpy.ops.object.join()
+    print("thicken join verts", len(ob.data.vertices), "faces", len(ob.data.polygons))
+    return {"armFaces": nsel, "pruned": len(kill), "vertsAfter": len(ob.data.vertices)}
+
+
+def _in_leg_tube(p):
+    if p.y > 0.96 or abs(p.x) < 0.08:
+        return False
+    if p.x > 0:
+        return dist_seg(p, old._LEG_R_A, old._LEG_R_B) < 0.078
+    return dist_seg(p, old._LEG_L_A, old._LEG_L_B) < 0.078
 
 
 def assign_exclusive(mesh_ob):
-    """Cloth/hem first. Distal Meshy hang-arm plates → Arm_*. One scabbard."""
+    """Cloth/hem first (never steals leg tubes). Distal hang-arms → Arm_*. One scabbard."""
     me = mesh_ob.data
     n = len(me.vertices)
     rgb_of, lion = old._sample_albedo(me)
@@ -169,17 +233,16 @@ def assign_exclusive(mesh_ob):
     cloth = [False] * n
     for i, v in enumerate(me.vertices):
         p = v.co
+        if _in_leg_tube(p):
+            continue
         d_r = dist_seg(p, _ARM_R_A, _ARM_R_B)
         d_l = dist_seg(p, _ARM_L_A, _ARM_L_B)
-        # only the distal hang tube may skip cloth — never the tabard AABB
-        distal = ((d_r < 0.048 and p.x > 0.27) or (d_l < 0.048 and p.x < -0.27)) and p.y < 1.20
+        distal = ((d_r < 0.048 and p.x > 0.27) or (d_l < 0.048 and p.x < -0.27)) and p.y < 1.18
         if (lion[i] or old._is_blue(rgb_of[i])) and not distal:
             cloth[i] = True
-        # tabard / lion panel — no limb exception
         if 0.42 <= p.y <= 1.30 and abs(p.x) < 0.23 and abs(p.z) < 0.28:
             cloth[i] = True
-        # hem / skirt corners — do not ride Arm_* (gold-key sheets)
-        if 0.38 <= p.y <= 0.78 and abs(p.x) < 0.36 and abs(p.z) < 0.32:
+        if 0.38 <= p.y <= 0.78 and abs(p.x) < 0.26 and abs(p.z) < 0.32:
             cloth[i] = True
 
     def flood(seeds, pred):
@@ -220,32 +283,32 @@ def assign_exclusive(mesh_ob):
             if i in scab or cloth[i]:
                 return False
             p = me.vertices[i].co
-            if p.x * side < 0.24:
+            if p.x * side < 0.26:
                 return False
-            # above hem, below pauldron — hanging plate only
-            if not (0.76 < p.y < 1.36):
+            # hanging tube only — below armpit/pauldron, above hem
+            if not (0.62 < p.y < 1.30):
                 return False
-            return dist_seg(p, a, b) < 0.068
+            return dist_seg(p, a, b) < 0.066
 
         return pred
 
     arm_r = flood(
         [i for i, v in enumerate(me.vertices)
-         if v.co.x > 0.28 and 0.76 < v.co.y < 0.96 and i not in scab and not cloth[i]],
+         if v.co.x > 0.28 and 0.62 < v.co.y < 0.94 and i not in scab and not cloth[i]],
         arm_pred(1.0),
     )
     arm_l = flood(
         [i for i, v in enumerate(me.vertices)
-         if v.co.x < -0.28 and 0.76 < v.co.y < 0.96 and not cloth[i]],
+         if v.co.x < -0.28 and 0.62 < v.co.y < 0.94 and not cloth[i]],
         arm_pred(-1.0),
     )
     for i, v in enumerate(me.vertices):
         if i in scab or cloth[i]:
             continue
         p = v.co
-        if p.x > 0.24 and 0.76 < p.y < 1.36 and dist_seg(p, _ARM_R_A, _ARM_R_B) < 0.068:
+        if p.x > 0.26 and 0.62 < p.y < 1.30 and dist_seg(p, _ARM_R_A, _ARM_R_B) < 0.070:
             arm_r.add(i)
-        elif p.x < -0.24 and 0.76 < p.y < 1.36 and dist_seg(p, _ARM_L_A, _ARM_L_B) < 0.068:
+        elif p.x < -0.26 and 0.62 < p.y < 1.30 and dist_seg(p, _ARM_L_A, _ARM_L_B) < 0.070:
             arm_l.add(i)
 
     bone_of = ["Hips"] * n
@@ -263,16 +326,13 @@ def assign_exclusive(mesh_ob):
         if cloth[i]:
             bone_of[i] = "Chest" if p.y > 1.16 else ("Spine" if p.y > 1.04 else "Hips")
             continue
-        # tight leg tubes only — below hem, outside tabard
-        if p.y < 0.68 and abs(p.x) > 0.08:
-            d_r = dist_seg(p, old._LEG_R_A, old._LEG_R_B)
-            d_l = dist_seg(p, old._LEG_L_A, old._LEG_L_B)
-            if p.x > 0 and d_r < 0.080:
-                bone_of[i] = "Foot_R" if p.y < 0.20 else ("Leg_R" if p.y < 0.46 else "UpLeg_R")
-                continue
-            if p.x < 0 and d_l < 0.080:
-                bone_of[i] = "Foot_L" if p.y < 0.20 else ("Leg_L" if p.y < 0.46 else "UpLeg_L")
-                continue
+        # full hang-leg tubes hip→foot — hem lock must not Y-cut the shin
+        if _in_leg_tube(p):
+            if p.x > 0:
+                bone_of[i] = "Foot_R" if p.y < 0.20 else ("Leg_R" if p.y < 0.50 else "UpLeg_R")
+            else:
+                bone_of[i] = "Foot_L" if p.y < 0.20 else ("Leg_L" if p.y < 0.50 else "UpLeg_L")
+            continue
         if p.y > 1.52:
             bone_of[i] = "Head"
         elif p.y > 1.42 and abs(p.x) < 0.18:
@@ -298,6 +358,76 @@ def assign_exclusive(mesh_ob):
         "armR", len(arm_r), "armL", len(arm_l),
     )
     return dict(counts)
+
+
+def recount_groups(ob):
+    me = ob.data
+    vg_names = {g.index: g.name for g in ob.vertex_groups}
+    counts = defaultdict(int)
+    for v in me.vertices:
+        best, bw = "Hips", -1.0
+        for g in v.groups:
+            name = vg_names.get(g.group, "")
+            if name in MESH_BONES and g.weight > bw:
+                best, bw = name, g.weight
+        counts[best] += 1
+    print("recount", dict(counts))
+    return dict(counts)
+
+
+def repair_arm_groups(ob):
+    """Solidify verts in the hang-arm tubes get Arm_* if they lost groups."""
+    groups = {g.name: g for g in ob.vertex_groups}
+    for name in ("Arm_L", "Arm_R"):
+        if name not in groups:
+            groups[name] = ob.vertex_groups.new(name=name)
+    vg_names = {g.index: g.name for g in ob.vertex_groups}
+    n = 0
+    for i, v in enumerate(ob.data.vertices):
+        names = {vg_names.get(g.group, "") for g in v.groups if g.weight > 0.5}
+        if names & set(MESH_BONES):
+            continue
+        p = v.co
+        if p.x > 0.22 and 0.70 < p.y < 1.38 and dist_seg(p, _ARM_R_A, _ARM_R_B) < 0.088:
+            groups["Arm_R"].add([i], 1.0, "REPLACE")
+            n += 1
+        elif p.x < -0.22 and 0.70 < p.y < 1.38 and dist_seg(p, _ARM_L_A, _ARM_L_B) < 0.088:
+            groups["Arm_L"].add([i], 1.0, "REPLACE")
+            n += 1
+    print("repair arm verts", n)
+    return n
+
+
+def puff_mid_arms(ob, radius=0.046):
+    """Push mid-arm verts out to a hang tube so mid-swing is a volume, not a card."""
+    me = ob.data
+    vg_names = {g.index: g.name for g in ob.vertex_groups}
+    n = 0
+    for v in me.vertices:
+        names = {vg_names.get(g.group, "") for g in v.groups if g.weight > 0.5}
+        p = v.co
+        if p.y < 0.80 or p.y > 1.28:
+            continue
+        if "Arm_R" in names:
+            a, b = _ARM_R_A, _ARM_R_B
+        elif "Arm_L" in names:
+            a, b = _ARM_L_A, _ARM_L_B
+        else:
+            continue
+        ab = b - a
+        t = max(0.0, min(1.0, (p - a).dot(ab) / max(1e-9, ab.length_squared)))
+        c = a + t * ab
+        radial = p - c
+        d = radial.length
+        if d < 1e-4:
+            radial = Vector((0.0, 0.0, 0.04))
+            d = 0.04
+        if d < radius:
+            v.co = c + radial.normalized() * radius
+            n += 1
+    me.update()
+    print("puff mid-arm", n, "radius", radius)
+    return n
 
 
 def export_mesh_txt_v4(mesh_ob):
@@ -395,8 +525,13 @@ def main():
     hh.weld(mesh_ob, 0.001)
     # weld can merge remaining sheath shards — re-delete extras
     sheath2 = delete_extra_sheath(mesh_ob)
-    thicken = thicken_hang_arms(mesh_ob)
+    shards = delete_armpit_elbow_shards(mesh_ob)
     counts = assign_exclusive(mesh_ob)
+    thicken = thicken_weighted_arms(mesh_ob)
+    repair_arm_groups(mesh_ob)
+    puff_n = puff_mid_arms(mesh_ob)
+    thicken["puff"] = puff_n
+    counts = recount_groups(mesh_ob)
     if counts.get("Scabbard", 0) < 40:
         raise SystemExit(f"scabbard too few: {counts.get('Scabbard')}")
     if counts.get("Arm_R", 0) < 80 or counts.get("Arm_L", 0) < 80:
@@ -450,8 +585,10 @@ def main():
         "bindPassClaimed": False,
         "sourceLook": "e5b132f Meshy GLB + paint iterate (Image_0 bleed + SoT lion cards)",
         "albedoPreserved": "original GLB UVs kept; atlas = Image_0 + lion-card strip (combine_atlas_and_remap, same as e5b132f)",
-        "retopo": "no voxel remesh; no capsule arms in Game-view. GEO-delete extra sheath islands + 1mm weld (11283→12 islands). Solidify hang-arm plates only (UV kept on Meshy shell). Exclusive hang-volume weights; cloth/hem locked before Arm_*.",
+        "retopo": "LOOK path unchanged (e5b132f GLB UVs + Image_0/lion). Bind iterate: GEO-delete armpit/elbow slivers; isolated Arm_* solidify + prune; hem no longer Y-cuts leg tubes (full UpLeg/Leg/Foot).",
         "thicken": thicken,
+        "shards": shards,
+        "vsFail": "fd9d6f8",
         "oldPremise": "voxel remesh / capsule-arm Game-view (61e023d / c840b73) — Derek STOP, threw away paint PASS",
         "motion": "5916447 Evaluate() keys reused",
         "scabbard": "character-right",

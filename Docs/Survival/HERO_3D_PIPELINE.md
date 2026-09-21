@@ -83,7 +83,7 @@ Grey-clay blockout: `sir_aldric_blockout.blend` + stills vs turnaround. Volume l
 
 **Path 2 Meshy** look PASSed on `e5b132f`. Remesh/capsule Game-view (`61e023d` / `c840b73`) STOP'd — threw away paint PASS.  
 Runtime: Meshy-look hang-skin FMT v4 `sir_aldric_meshy.mesh.txt` + DCC `sir_aldric_path2_clean.fbx` (Meshy mesh, not capsules). Actor `Bone4`.  
-World-cam clip: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4`. vs paint PASS: `gate3_meshy_hang_vs_e5b132f.png`.  
+World-cam clip: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4`. vs paint PASS: `gate3_meshy_hang_vs_e5b132f.png`. vs `fd9d6f8` BIND FAIL: `gate3_path2_vs_fd9d6f8.png`.  
 Hard lock: scabbard character-RIGHT. Motion `5916447` holds.  
 **Paused:** Play hub swap. **Bind NOT claimed. Walk-with-look NOT claimed.**
 

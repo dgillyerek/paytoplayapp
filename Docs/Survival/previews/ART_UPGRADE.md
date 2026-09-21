@@ -1,5 +1,13 @@
 # Aldric 3D art upgrade
 
+## Gate 3 Path 2 bind iterate (LOOK PASS fd9d6f8 / BIND FAIL)
+
+Design **LOOK PASS** on `fd9d6f8` Game-view (Meshy/`e5b132f` knight). **BIND FAIL:** MP4 arm sheets mid-swing + horizontal mid/leg tear bands. Scabbard one.
+
+This tip keeps the same GLB UVs / Image_0+lion atlas (do not touch the LOOK path). Bind iterate: isolated `Arm_*` solidify + prune; hem no longer Y-cuts leg tubes (full UpLeg/Leg/Foot); hairline armpit slivers only. `Evaluate()` `5916447` reused.
+
+Proof: `sir_aldric_path2_walk_toward_top.mp4` + `gate3_path2_vs_fd9d6f8.png`. **Bind NOT claimed. Walk-with-look NOT claimed.** Hub PNG locked.
+
 ## Gate 3 Path 2 (Meshy-look e5b132f hang-skin — Derek STOP remesh/capsule)
 
 Design **PASS** look on `e5b132f`. Derek STOP: voxel-remesh / capsule-arm Game-view (`61e023d` / `c840b73`) threw away that paint PASS.

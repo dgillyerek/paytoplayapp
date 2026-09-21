@@ -2,7 +2,7 @@
 
 **Look (Path 2):** Meshy Flagship Image-to-3D Decimate ~50k + UV-bleed / SoT lion-card iterate — Design **PASS** on paint stills `e5b132f`. `sir_aldric_meshy_retopo.glb` + `sir_aldric_meshy.blend`. Not scripted loft.
 
-**Motion bind (Derek STOP remesh/capsule):** Meshy GLB / `e5b132f` UVs kept + hang-skin FMT v4. Extra sheath GEO-delete + 1mm weld. No capsule arms in Game-view. `sir_aldric_path2_clean.fbx` is the Meshy mesh. `Evaluate()` `5916447` reused. **Bind NOT claimed.**
+**Motion bind:** Meshy GLB / `e5b132f` UVs kept (LOOK PASS `fd9d6f8`). Isolated hang-arm solidify + full leg tubes after fd9 BIND FAIL. No remesh/capsule Game-view. `Evaluate()` `5916447` reused. **Bind NOT claimed.**
 
 **Walk-with-look is NOT claimed.** Clip for Design re-gate: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4`. Play hub stays `SIR_ALDRIC_REAR_MASTER_LOCKED.png`.
 

@@ -14,4 +14,4 @@ Skin (escalation remesh+FBX, Derek STOP as hero look): `scripts/blender/skin_sir
 Skin (Meshy-look e5b132f hang-skin): `blender --background --python scripts/blender/skin_sir_aldric_meshylook.py`  
 Census: `blender --background --python scripts/blender/census_path2_bind.py`
 
-**Look PASS** on `e5b132f`. Remesh/capsule Game-view STOP'd. **Bind NOT claimed. Walk-with-look NOT claimed.** Play hub PNG stays locked.
+**Look PASS** on `e5b132f` / `fd9d6f8` Game-view. Bind iterate after fd9 FAIL (arm sheets + mid/leg tears). **Bind NOT claimed. Walk-with-look NOT claimed.** Play hub PNG stays locked.
