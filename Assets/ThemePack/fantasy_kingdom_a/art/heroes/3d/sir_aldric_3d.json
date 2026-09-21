@@ -15,5 +15,9 @@
   "tris": 13192,
   "lookPassClaimed": false,
   "walkPaused": true,
-  "playHubLocked": true
+  "playHubLocked": true,
+  "lookTrack": "meshy-path2",
+  "lookGlb": "sir_aldric_meshy_retopo.glb",
+  "lookBlend": "sir_aldric_meshy.blend",
+  "lookTris": 49999
 }

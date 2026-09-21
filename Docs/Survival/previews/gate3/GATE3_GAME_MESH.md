@@ -1,30 +1,31 @@
-# Gate 3 — Sir Aldric game mesh (FAIL iterate)
+# Gate 3 — Path 2 Meshy look stills
 
-Derek FAIL: "The cape isn't terrible but everywhere else lacks the detail of the portrait."
-This pass keeps surcoat volume and **adds readable plate / helm / heraldry / sabaton detail** at Play World-cam (1080×1920). It does **not** claim look PASS.
+Design dropped a Meshy Flagship Image-to-3D remesh (locked rear SoT). Original ~57MB / 1.77M faces exceeded upload; this is the Blender Decimate handoff (~11MB, ~50k faces, UVMap, textures embedded).
+
+This pass is **LOOK stills only**. It does **not** claim look PASS. Walk / Animator / Play hub are **HOLD**.
 
 ## In
 
-- `sir_aldric.blend` / `.fbx` / `sir_aldric_midpoly.mesh.txt` — segmented mid-poly (~13192 tris, ~6926 verts) grown from clay `5de0e16`. Gold rims on pauldrons / arms / legs. Closed armet + crest (not a cone). Gauntlet fingers (not spheres). Sabaton lames + gold. No voxel remesh.
-- Atlas `sir_aldric_atlas.png` — darker silver + gold lame grooves; lion keyed onto exact surcoat blue (no navy plaque); chunky Greek-key.
+- Source: `design/.../AI_MESH_PATH2/out/aldric_meshy_retopo.glb`
+- ThemePack: `sir_aldric_meshy_retopo.glb` (drop bytes) + `sir_aldric_meshy.blend` (Unity Y-up, +Z face, scabbard +X)
 - World-cam stills at **Play march angle** `(0, 2.80, −5.40)` look-at `(0, 0.90, 0.50)` FOV 30, 1080×1920, TOP = +Z = away:
-  - `world_rear.png` — high rear (front-of-march)
-  - `world_rear_34.png` — high rear ¾ (+X)
-  - `gate3_worldcam_vs_sot.png` — side-by-side vs `01_rear_LOCKED` and turnaround `03_BACK`
-- Hard lock: brown scabbard **character-RIGHT** only (viewer-right from World-cam rear). Sheathed only — no drawn second sword. No cape mesh.
+  - `world_rear.png` / `world_rear_34.png` / `world_front.png` / `world_side_r.png` / `world_34_front.png`
+  - `gate3_worldcam_vs_sot.png` vs `01_rear_LOCKED` + turnaround 01–04
+- Hard lock: brown scabbard **character-RIGHT** (viewer-right from World-cam rear). Sheathed.
+
+Actor motion bind is **unchanged** (`sir_aldric_midpoly.mesh.txt` + `Evaluate()`). Path 2 is not skinned to the walk clip this pass.
 
 ## Out (paused until look PASS)
 
 - Walk / Animator clip swap
 - Play hub PNG swap (`SIR_ALDRIC_REAR_MASTER_LOCKED.png` stays)
 
-Motion from 5916447 **holds**. `Evaluate()` untouched.
+Motion from 5916447 **holds**.
 
 ## Honest gaps (look NOT claimed)
 
-- Scripted loft mid-poly, not a painted unique unwrap. Filigree density is still short of the portrait / `01_rear_LOCKED` (gold rims + tiled plate, not unique scrollwork).
-- Lion is embroidered on the cloth (cylindrical UV, no floating plaque) but smaller / simpler than the locked rampant.
-- Bind pose is hang (Play / `01_rear`); Gate 1 turnaround is A-pose. Arm pose will not overlay the turnaround sheet.
-- World-cam is high rear — **face law is not visible**. Helm BACK is judged vs `01_rear_LOCKED` / `03_BACK`. Portrait attachments were not on disk this pass; do not invent a face.
+- **Path 2 Meshy-based mid-poly, not a scripted loft.** Decimate from Flagship still has UV island cracks, gold-lion smear, and A-pose (turnaround) vs Play hang.
+- Not a painted unique unwrap; Meshy bake + 50k remesh.
+- World-cam is high Play angle — not a beauty portrait cam.
 
-**Look gate is not claimed.** Derek must scrub these World-cam stills (not a beauty portrait cam) against the locked rear / portrait.
+**Look gate is not claimed.** Design can eye these World-cam stills vs the locked turnaround for re-gate.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Gate 3 World-cam stills vs 01_rear_LOCKED + turnaround BACK.
+"""Path 2 Meshy World-cam stills vs locked turnaround / 01_rear.
 
-Play march angle (high rear, TOP = away). Look gate is NOT claimed.
+Play march angle. Look gate is NOT claimed.
 """
 from __future__ import annotations
 
@@ -37,50 +37,57 @@ def load_rgb(path: Path, bg=STUDIO) -> Image.Image:
 
 def fit(im: Image.Image, box: tuple[int, int], bg) -> Image.Image:
     cell = Image.new("RGB", box, bg)
-    scale = min((box[0] - 20) / im.width, (box[1] - 20) / im.height)
+    scale = min((box[0] - 16) / im.width, (box[1] - 16) / im.height)
     nw, nh = max(1, int(im.width * scale)), max(1, int(im.height * scale))
     placed = im.resize((nw, nh), Image.LANCZOS)
     cell.paste(placed, ((box[0] - nw) // 2, (box[1] - nh) // 2))
     return cell
 
 
+def caption(im: Image.Image, text: str) -> Image.Image:
+    out = im.copy()
+    d = ImageDraw.Draw(out)
+    d.rectangle((0, 0, out.width, 64), fill=(16, 16, 14))
+    d.text((24, 18), text, fill=(236, 230, 210), font=font(22))
+    return out
+
+
 def main() -> None:
     PROOF.mkdir(parents=True, exist_ok=True)
     ART.mkdir(parents=True, exist_ok=True)
-    rear = load_rgb(PROOF / "world_rear.png", DARK)
-    q = load_rgb(PROOF / "world_rear_34.png", DARK)
-    sot = load_rgb(LOOK / "01_rear_LOCKED.png", (8, 8, 8))
-    back = load_rgb(GATE / "03_BACK.png", STUDIO)
 
-    cw, ch = 480, 850
-    sheet = Image.new("RGB", (cw * 2, ch * 2 + 130), DARK)
-    d = ImageDraw.Draw(sheet)
-    title = font(26)
-    lab = font(16)
-    d.text((24, 16), "GATE 3 GAME MESH  ·  World-cam Play march angle", fill=(236, 230, 210), font=title)
-    d.text(
-        (24, 52),
-        "high rear  ·  TOP = away  ·  FOV 30  ·  1080×1920  ·  NOT beauty portrait cam",
-        fill=(180, 180, 176),
-        font=lab,
-    )
-    d.text(
-        (24, 78),
-        "FAIL iterate: segmented plate/helm/heraldry/sabatons  ·  look + walk NOT claimed",
-        fill=(210, 176, 82),
-        font=lab,
-    )
-    d.text(
-        (24, 104),
-        "Hang pose vs 01_rear  ·  turnaround BACK is A-pose (honest pose gap on arms)",
-        fill=(160, 160, 156),
-        font=lab,
-    )
+    shots = {
+        "world_rear": "PATH 2 Meshy  ·  World-cam Play rear  ·  TOP = away  ·  look NOT claimed",
+        "world_rear_34": "PATH 2 Meshy  ·  World-cam Play rear ¾  ·  scabbard character-RIGHT",
+        "world_front": "PATH 2 Meshy  ·  World-cam Play front  ·  FOV 30  ·  look NOT claimed",
+        "world_side_r": "PATH 2 Meshy  ·  World-cam Play side R  ·  scabbard character-RIGHT",
+        "world_34_front": "PATH 2 Meshy  ·  World-cam Play front ¾  ·  look NOT claimed",
+    }
+    caps = {}
+    for name, text in shots.items():
+        im = caption(load_rgb(PROOF / f"{name}.png", DARK), text)
+        im.save(PROOF / f"{name}.png", optimize=True)
+        im.save(ART / f"gate3_{name}.png")
+        caps[name] = im
+
     pairs = [
-        (rear, "WORLD REAR  (Play cam)", sot, "SoT  01_rear_LOCKED"),
-        (q, "WORLD REAR ¾  (Play cam +X)", back, "SoT  turnaround 03_BACK"),
+        (caps["world_rear"], "WORLD REAR  (Play cam)", load_rgb(LOOK / "01_rear_LOCKED.png", (8, 8, 8)), "SoT  01_rear_LOCKED"),
+        (caps["world_rear_34"], "WORLD REAR ¾  (Play cam +X)", load_rgb(GATE / "03_BACK.png", STUDIO), "SoT  turnaround 03_BACK"),
+        (caps["world_front"], "WORLD FRONT  (Play cam)", load_rgb(GATE / "01_FRONT.png", STUDIO), "SoT  turnaround 01_FRONT"),
+        (caps["world_side_r"], "WORLD SIDE R  (Play cam)", load_rgb(GATE / "02_SIDE_R.png", STUDIO), "SoT  turnaround 02_SIDE_R"),
+        (caps["world_34_front"], "WORLD FRONT ¾  (Play cam)", load_rgb(GATE / "04_THREE_QUARTER.png", STUDIO), "SoT  turnaround 04_THREE_QUARTER"),
     ]
-    y0 = 130
+
+    cw, ch = 480, 820
+    header = 140
+    sheet = Image.new("RGB", (cw * 2, header + ch * len(pairs)), DARK)
+    d = ImageDraw.Draw(sheet)
+    d.text((24, 16), "GATE 3  ·  PATH 2 Meshy retopo  ·  World-cam Play march angle", fill=(236, 230, 210), font=font(24))
+    d.text((24, 52), "FOV 30  ·  1080×1920  ·  TOP = +Z = away  ·  NOT beauty portrait cam", fill=(180, 180, 176), font=font(16))
+    d.text((24, 78), "Meshy Flagship Image-to-3D (locked rear SoT)  ·  Decimate ~50k  ·  look NOT claimed", fill=(210, 176, 82), font=font(16))
+    d.text((24, 104), "A-pose vs Play hang is an honest pose gap  ·  walk / Play hub HOLD", fill=(160, 160, 156), font=font(16))
+    y0 = header
+    lab = font(15)
     for left, ll, right, rl in pairs:
         sheet.paste(fit(left, (cw, ch), DARK), (0, y0))
         sheet.paste(fit(right, (cw, ch), (18, 18, 16)), (cw, y0))
@@ -90,8 +97,6 @@ def main() -> None:
     out = PROOF / "gate3_worldcam_vs_sot.png"
     sheet.save(out, optimize=True)
     sheet.save(ART / "gate3_worldcam_vs_sot.png", optimize=True)
-    rear.save(ART / "gate3_world_rear.png")
-    q.save(ART / "gate3_world_rear_34.png")
     print("sheet", out, out.stat().st_size)
 
 

@@ -81,11 +81,11 @@ Grey-clay blockout: `sir_aldric_blockout.blend` + stills vs turnaround. Volume l
 
 ## Gate 3 GAME MESH (this pass)
 
-FAIL iterate: segmented plate + gold rims, closed helm/crest, lion on cloth, sabaton/gauntlet shapes. ~13192 tris.  
+**Path 2 Meshy** LOOK stills: Flagship Image-to-3D Decimate ~50k in `sir_aldric_meshy_retopo.glb`. Not scripted loft.  
 World-cam stills at Play march angle (high rear, TOP = away) in `Docs/Survival/previews/gate3/`.  
 Hard lock: scabbard character-RIGHT. Sheathed only.  
-**Paused:** walk / Animator / Play hub swap. Motion 5916447 holds.  
-**Look gate not claimed.** Derek FAIL on first stills (flat white plate); this pass is closer, not PASS.
+**Paused:** walk / Animator / Play hub swap. Motion 5916447 holds. Actor loft bind unchanged.  
+**Look gate not claimed.** Design can re-gate from these stills vs locked turnaround.
 
 ---
 

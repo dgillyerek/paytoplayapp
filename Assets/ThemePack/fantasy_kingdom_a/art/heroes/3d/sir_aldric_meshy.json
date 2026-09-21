@@ -1,0 +1,18 @@
+{
+  "name": "SirAldric",
+  "track": "meshy-path2",
+  "gate": 3,
+  "source": "AI_MESH_PATH2/out/aldric_meshy_retopo.glb",
+  "note": "Path 2 Meshy Flagship Image-to-3D (locked rear SoT), Blender Decimate ~50k. LOOK stills only. Not scripted loft.",
+  "soT": "look_targets/01_rear_LOCKED.png",
+  "turnaround": "TURNAROUND_GATE1/LOCKED/",
+  "scabbard": "character-right",
+  "glb": "sir_aldric_meshy_retopo.glb",
+  "blend": "sir_aldric_meshy.blend",
+  "verts": 42751,
+  "tris": 49999,
+  "lookPassClaimed": false,
+  "walkPaused": true,
+  "playHubLocked": true,
+  "motionBindUnchanged": "sir_aldric_midpoly.mesh.txt + Evaluate() HOLD"
+}

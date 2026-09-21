@@ -1,18 +1,15 @@
-# Sir Aldric 3D (Theme A) — Gate 3 game mesh
+# Sir Aldric 3D (Theme A) — Gate 3
 
-**Volume law:** Gate 2 clay `5de0e16` (do not redesign proportions).
-FAIL iterate: segmented plate + gold rims, closed helm/crest, lion on cloth, sabaton/gauntlet shapes. Joint loops. Mid-poly mobile. No voxel remesh.
+**Look (Path 2):** Meshy Flagship Image-to-3D Decimate ~50k — `sir_aldric_meshy_retopo.glb` + `sir_aldric_meshy.blend`. Not scripted loft. World-cam stills in `Docs/Survival/previews/gate3/`. Look **not claimed**.
 
-World-cam stills: Play march angle `(0, 2.80, −5.40)` look-at `(0, 0.90, 0.50)` FOV 30, 1080×1920, TOP = +Z = away. **Not** a beauty portrait cam.
+**Motion bind (HOLD):** `sir_aldric_midpoly.mesh.txt` + `sir_aldric.fbx` on `SirAldric3DActor` / `Evaluate()`. Walk / Animator / Play hub paused.
 
-Runtime bind: `sir_aldric_midpoly.mesh.txt` + `sir_aldric_atlas.png` on `SirAldric3DActor` (same bones / `Evaluate()`). Walk / Animator / Play hub stay paused until Derek look PASS.
+World-cam: Play march angle `(0, 2.80, −5.40)` look-at `(0, 0.90, 0.50)` FOV 30, 1080×1920, TOP = +Z = away. **Not** a beauty portrait cam.
 
 Must-match:
-- Silver plate + gold trim (helm crest, pauldrons, gauntlets, greaves, boots)
+- Silver plate + gold trim
 - Royal-blue short surcoat: gold lion rampant + gold Greek-key hem
 - Brown scabbard + gold fittings on **character-RIGHT** hip only
 - Boots silver+gold (not brown leather)
-- Helm BACK vs `01_rear_LOCKED` / turnaround (World-cam is rear; face law not visible)
 
-Look gate is **not claimed**.
 Play hub stays `SIR_ALDRIC_REAR_MASTER_LOCKED.png`.

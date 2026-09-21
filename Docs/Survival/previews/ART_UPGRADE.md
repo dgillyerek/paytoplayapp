@@ -1,5 +1,16 @@
 # Aldric 3D art upgrade
 
+## Gate 3 Path 2 Meshy (LOOK stills)
+
+Design Meshy Flagship Image-to-3D from locked rear SoT, Decimate ~50k (original 1.77M faces / 57MB exceeded upload). **Not** the scripted loft.
+
+- GLB: `ThemePack/.../3d/sir_aldric_meshy_retopo.glb` + `design/.../AI_MESH_PATH2/out/`
+- Unity-oriented `.blend` for Play-cam stills (Y-up, +Z face, scabbard +X)
+- Proof: `Docs/Survival/previews/gate3/` front / rear / side R / ¾ + vs-SoT sheet
+- Actor walk bind **unchanged**. Play hub PNG locked. Motion HOLD 5916447.
+
+**Look gate is not claimed.** Honest gaps: UV cracks, lion smear, A-pose vs hang.
+
 ## Gate 3 FAIL iterate (segmented plate / helm / heraldry)
 
 Derek FAIL: portrait-level detail missing; first Gate 3 stills read as flat white tubes + cone helm + plaque lion. Surcoat volume kept. This iterate:
