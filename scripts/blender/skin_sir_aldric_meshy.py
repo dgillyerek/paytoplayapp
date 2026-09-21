@@ -628,8 +628,19 @@ def setup_render():
     bpy.context.collection.objects.link(fill_o)
     fill_o.location = (-2.2, 2.4, -1.5)
     fill_o.rotation_euler = (math.radians(70), 0.0, math.radians(-25))
-    # No lit ground plane. A lit floor vs world bg reads as frame-wide
-    # horizontal banding (2820e53 residual). Scene artifact, not bind.
+    # Ground plane back: Design HARD FAIL 2820e53 = float + 4-leg.
+    # Contact proof needs soles ON this plane. Banding census is deferred.
+    bpy.ops.mesh.primitive_plane_add(size=12.0, location=(0.0, 0.0, 0.0))
+    ground = bpy.context.active_object
+    ground.rotation_euler = (math.radians(90.0), 0.0, 0.0)
+    ground.name = "Ground"
+    mat = bpy.data.materials.new("GroundMat")
+    mat.use_nodes = True
+    bsdf = mat.node_tree.nodes.get("Principled BSDF")
+    if bsdf:
+        bsdf.inputs["Base Color"].default_value = (0.10, 0.11, 0.09, 1)
+        bsdf.inputs["Roughness"].default_value = 0.9
+    ground.data.materials.append(mat)
     cam_data = bpy.data.cameras.new("WorldPlay")
     cam_data.lens_unit = "FOV"
     cam_data.angle = math.radians(CAM_FOV)
@@ -643,7 +654,8 @@ def setup_render():
     return cam
 
 
-def apply_pose(arm_ob, pose):
+def apply_pose(arm_ob, pose, mesh_ob=None):
+    """Evaluate() keys, then optional sole plant. Does not rewrite gait locks."""
     arm_ob.location = (0.0, pose["root_y"], pose["root_z"])
     for bname, key in POSE_BONE.items():
         pb = arm_ob.pose.bones.get(bname)
@@ -651,9 +663,40 @@ def apply_pose(arm_ob, pose):
             continue
         pb.rotation_mode = "QUATERNION"
         pb.rotation_quaternion = unity_q(pose[key])
+    if mesh_ob is not None:
+        plant_soles(arm_ob, mesh_ob)
 
 
-def render_walk(arm_ob):
+def plant_soles(arm_ob, mesh_ob):
+    """Snap root Y so the lowest Foot_* sole kisses ground Y=0.
+
+    2820e53 float: rest Foot ymin~0.026 + bob 0.012–0.030 + stance-knee
+    lift. Gait keys stay; this is a root bind offset after Evaluate().
+    """
+    bpy.context.view_layer.update()
+    deps = bpy.context.evaluated_depsgraph_get()
+    ev = mesh_ob.evaluated_get(deps)
+    me = ev.to_mesh()
+    mw = ev.matrix_world
+    vg = {g.index: g.name for g in mesh_ob.vertex_groups}
+    foot = {"Foot_L", "Foot_R"}
+    ys = []
+    src = mesh_ob.data
+    n = min(len(me.vertices), len(src.vertices))
+    for i in range(n):
+        names = {vg.get(g.group, "") for g in src.vertices[i].groups if g.weight > 0.45}
+        if names & foot:
+            ys.append((mw @ me.vertices[i].co).y)
+    ev.to_mesh_clear()
+    if not ys:
+        return 0.0
+    dy = min(ys) - 0.002
+    arm_ob.location.y -= dy
+    bpy.context.view_layer.update()
+    return dy
+
+
+def render_walk(arm_ob, mesh_ob=None):
     WALK.mkdir(parents=True, exist_ok=True)
     ART.mkdir(parents=True, exist_ok=True)
     fps = 16
@@ -663,7 +706,7 @@ def render_walk(arm_ob):
         n = int(duration * fps)
         for i in range(n):
             t = i / fps
-            apply_pose(arm_ob, walk_pose(t))
+            apply_pose(arm_ob, walk_pose(t), mesh_ob)
             path = WALK / f"f_{i:03d}.png"
             bpy.context.scene.render.filepath = str(path)
             bpy.ops.render.render(write_still=True)
@@ -676,7 +719,7 @@ def render_walk(arm_ob):
         "contact_r": WALK_PERIOD * 0.75,
     }
     for name, t in stills.items():
-        apply_pose(arm_ob, walk_pose(t))
+        apply_pose(arm_ob, walk_pose(t), mesh_ob)
         path = WALK / f"world_walk_{name}.png"
         bpy.context.scene.render.filepath = str(path)
         bpy.ops.render.render(write_still=True)

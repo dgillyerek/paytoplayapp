@@ -458,6 +458,46 @@ def _in_leg_tube(p):
     return dist_seg(p, old._LEG_L_A, old._LEG_L_B) < 0.078
 
 
+def _delete_leg_corridor_ghosts(ob) -> int:
+    """Delete leftover Hips paper in the greave tube.
+
+    Census on 2820e53: L+R Meshy greaves are already ONE welded volume
+    each. 341 unique Hips verts sit in the same tube (ymin~0.02) and stay
+    with Hips while greaves swing → 4-leg ghost (same class as 3-arm).
+    Tabard / lion / scabbard / exclusive UpLeg/Leg/Foot stay.
+    """
+    me = ob.data
+    vg_names = {g.index: g.name for g in ob.vertex_groups}
+    keep = {"UpLeg_L", "Leg_L", "Foot_L", "UpLeg_R", "Leg_R", "Foot_R", "Scabbard"}
+    kill = []
+    for fi, p in enumerate(me.polygons):
+        names = set()
+        for vi in p.vertices:
+            names |= {vg_names.get(g.group, "") for g in me.vertices[vi].groups if g.weight > 0.5}
+        if names & keep:
+            continue
+        c = p.center
+        if c.y > 0.72 or abs(c.x) < 0.07 or abs(c.z) > 0.12:
+            continue
+        a, b = (old._LEG_R_A, old._LEG_R_B) if c.x > 0 else (old._LEG_L_A, old._LEG_L_B)
+        if dist_seg(c, a, b) < 0.088:
+            kill.append(fi)
+    print("delete leg-corridor ghosts", len(kill), "of", len(me.polygons))
+    if kill:
+        bm = bmesh.new()
+        bm.from_mesh(me)
+        bm.faces.ensure_lookup_table()
+        bmesh.ops.delete(bm, geom=[bm.faces[i] for i in kill if i < len(bm.faces)], context="FACES")
+        bm.verts.ensure_lookup_table()
+        loose = [v for v in bm.verts if not v.link_faces]
+        if loose:
+            bmesh.ops.delete(bm, geom=loose, context="VERTS")
+        bm.to_mesh(me)
+        bm.free()
+        me.update()
+    return len(kill)
+
+
 def assign_exclusive(mesh_ob):
     """Cloth/hem first (never steals leg tubes). Distal hang-arms → Arm_*. One scabbard."""
     me = mesh_ob.data
@@ -736,7 +776,9 @@ def main():
     sheath2 = delete_extra_sheath(mesh_ob)
     shards = delete_armpit_elbow_shards(mesh_ob)
     counts = assign_exclusive(mesh_ob)
+    leg_killed = _delete_leg_corridor_ghosts(mesh_ob)
     tubes = replace_hang_arms_closed_tubes(mesh_ob)
+    tubes["killedLegGhostFaces"] = leg_killed
     repair_arm_groups(mesh_ob)
     counts = recount_groups(mesh_ob)
     if counts.get("Scabbard", 0) < 40:
@@ -749,6 +791,12 @@ def main():
         raise SystemExit(f"fore empty — 110443d spear relapse: {dict(counts)}")
     if counts.get("Arm_R", 0) > 8000 or counts.get("Arm_L", 0) > 8000:
         raise SystemExit(f"arm stole tabard: R={counts.get('Arm_R')} L={counts.get('Arm_L')}")
+    if counts.get("Foot_R", 0) < 40 or counts.get("Foot_L", 0) < 40:
+        raise SystemExit(f"foot empty after leg-ghost delete: {dict(counts)}")
+    if (counts.get("UpLeg_R", 0) + counts.get("Leg_R", 0) + counts.get("Foot_R", 0)) < 200:
+        raise SystemExit(f"right leg too thin after ghost delete: {dict(counts)}")
+    if (counts.get("UpLeg_L", 0) + counts.get("Leg_L", 0) + counts.get("Foot_L", 0)) < 200:
+        raise SystemExit(f"left leg too thin after ghost delete: {dict(counts)}")
 
     actor_ob, _world = hh.build_actor_armature()
     hh.attach_actor(mesh_ob, actor_ob)
@@ -765,7 +813,7 @@ def main():
         "arm_l": (0, 0, 0), "fore_l": (0, 0, 0),
         "arm_r": (0, 0, 0), "fore_r": (0, 0, 0),
         "hand_r": (0, 0, 0), "sword": (0, 0, 0),
-    })
+    }, mesh_ob)
     rest = old.WALK
     rest.mkdir(parents=True, exist_ok=True)
     rest_p = PROOF / "world_meshy_hang_rest.png"
@@ -773,16 +821,16 @@ def main():
     bpy.ops.render.render(write_still=True)
     print("hang rest", rest_p, rest_p.stat().st_size)
 
-    mp4 = old.render_walk(actor_ob)
+    mp4 = old.render_walk(actor_ob, mesh_ob)
     # mid-swing was the tell on 61e / c840 MP4 FAILs
-    old.apply_pose(actor_ob, old.walk_pose(old.WALK_PERIOD * 0.625))
+    old.apply_pose(actor_ob, old.walk_pose(old.WALK_PERIOD * 0.625), mesh_ob)
     mid_p = old.WALK / "world_walk_mid_swing.png"
     bpy.context.scene.render.filepath = str(mid_p)
     bpy.ops.render.render(write_still=True)
     print("mid swing", mid_p, mid_p.stat().st_size)
     # Cycle samples Design asked for (n=0,5,10,15 at 16fps) — not one mid-swing still.
     for n in (0, 5, 10, 15):
-        old.apply_pose(actor_ob, old.walk_pose(n / 16.0))
+        old.apply_pose(actor_ob, old.walk_pose(n / 16.0), mesh_ob)
         npng = old.WALK / f"world_walk_n{n:02d}.png"
         bpy.context.scene.render.filepath = str(npng)
         bpy.ops.render.render(write_still=True)
@@ -810,7 +858,7 @@ def main():
         "tubes": tubes,
         "shards": shards,
         "vsFail": "fd9d6f8",
-        "oldPremise": "2820e53 one-loft + steel texel PASSed arm UV tear; residual lower-half bands = SCENE/GROUND (lit floor), not bind",
+        "oldPremise": "2820e53 HARD FAIL float + 4-leg ghost. Hips paper in greave tube + unplanted root. KEEP one-loft + steel texel. Banding deferred.",
         "motion": "5916447 Evaluate() keys reused",
         "scabbard": "character-right",
         "playHubLocked": True,
