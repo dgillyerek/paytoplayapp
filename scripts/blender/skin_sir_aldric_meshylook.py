@@ -199,7 +199,11 @@ def drop_stacked_arm_cards(ob) -> dict:
         xs = [c.x for c in cs]
         cy = sum(ys) / len(ys)
         cx = sum(xs) / len(xs)
-        side = 1 if cx > 0 else -1
+        votes = 0
+        for fi in ids:
+            for vi in me.polygons[fi].vertices:
+                votes += side_of[vi]
+        side = 1 if votes >= 0 else -1
         a, b = (_ARM_R_A, _ARM_R_B) if side > 0 else (_ARM_L_A, _ARM_L_B)
         rs = [dist_seg(c, a, b) for c in cs]
         return {
@@ -207,6 +211,7 @@ def drop_stacked_arm_cards(ob) -> dict:
             "n": len(ids),
             "y": cy,
             "x": cx,
+            "votes": votes,
             "side": side,
             "r": sum(rs) / len(rs),
             "hand": cy < 0.80,
@@ -214,17 +219,25 @@ def drop_stacked_arm_cards(ob) -> dict:
         }
 
     metas = [island_meta(ids) for ids in islands if ids]
+    for m in metas:
+        print(
+            "arm island n", m["n"], "side", m["side"], "y", round(m["y"], 3),
+            "x", round(m["x"], 3), "r", round(m["r"], 3), "votes", m["votes"],
+            "hand" if m["hand"] else ("pauldron" if m["pauldron"] else "mid"),
+        )
     kill = []
     kept = {"Arm_R": 0, "Arm_L": 0, "hand": 0, "pauldron": 0, "drop": 0}
     for side in (1, -1):
         mid = [m for m in metas if m["side"] == side and not m["hand"] and not m["pauldron"] and m["n"] >= 8]
-        mid.sort(key=lambda m: (-m["r"], -m["n"]))
+        mid.sort(key=lambda m: -m["n"])
+        primary_n = mid[0]["n"] if mid else 0
         for i, m in enumerate(mid):
             key = "Arm_R" if side > 0 else "Arm_L"
-            if i == 0:
-                kept[key] = m["n"]
+            # Never delete a near-primary island (that ate the other arm once).
+            # Only drop small inner slats.
+            if i == 0 or m["n"] >= max(80, 0.25 * primary_n):
+                kept[key] += m["n"]
                 continue
-            # inner / stacked lame
             kill.extend(m["ids"])
             kept["drop"] += m["n"]
         for m in metas:
@@ -246,7 +259,7 @@ def drop_stacked_arm_cards(ob) -> dict:
     return {"islands": len(islands), "killFaces": len(kill), **kept}
 
 
-def wrap_hang_arm_plates(ob, theta_span_deg=240.0) -> dict:
+def wrap_hang_arm_plates(ob, theta_span_deg=300.0) -> dict:
     """Curl the kept Arm_* plate around the hang-arm axis. Same verts / UVs.
 
     Stacked lames are dropped first. Across-plate width → θ. Constant r so
@@ -296,7 +309,9 @@ def wrap_hang_arm_plates(ob, theta_span_deg=240.0) -> dict:
             bu = [r[3] for r in band]
             u_lo, u_hi = min(bu), max(bu)
             span = max(0.018, u_hi - u_lo)
-            r_tube = max(0.036, min(0.052, 0.50 * span))
+            # Size r so the plate width covers the arc — a shallow 200°
+            # card still reads as slats when the swing turns the gap to camera.
+            r_tube = max(0.034, min(0.050, span / max(1e-3, 2.0 * half)))
             for v, fade, c, u, w, r0 in band:
                 u_n = (2.0 * (u - u_lo) / span) - 1.0
                 u_n = max(-1.0, min(1.0, u_n))
