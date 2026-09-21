@@ -2,16 +2,17 @@
 """Hero look = e5b132f Meshy paint PASS. No voxel remesh. No capsule arms.
 
 Derek STOP: remesh/capsule Game-view threw away the painted knight.
-This bind keeps the Path 2 GLB verts/UVs/materials, deletes extra sheath
-islands at GEO, assigns exclusive hang-volume weights (cloth first),
-rebuilds the e5b132f Image_0 + lion-card atlas, and walks that mesh.
-
-Capsule volumes are used only as spatial weight regions (no cage mesh
-in the render). Evaluate() 5916447 reused. Walk-with-look NOT claimed.
+cc77d8a mesh-vs-capture: A Actor LBS + B Blender + C MP4 n=10 all tear
+at mid-swing → MESH (thin XY hang-arm cards + solidify rims), not capture.
+This bind keeps Path 2 GLB verts/UVs/albedo and curls Arm_* plates around
+the hang-arm axis so mid-swing is a tube, not a card. No exclusive-weight
+iterate. Evaluate() 5916447 reused. Bind/walk NOT claimed.
 """
 from __future__ import annotations
 
 import json
+import math
+import os
 import sys
 from collections import defaultdict, deque
 from pathlib import Path
@@ -125,90 +126,91 @@ def delete_armpit_elbow_shards(ob) -> dict:
     return {"shardFaces": len(kill), "vertsAfter": len(me.vertices)}
 
 
-def thicken_weighted_arms(ob) -> dict:
-    """Solidify ONLY Arm_* faces (isolated), then prune shards. UVs copied on the shell."""
+def _wrap_fade(y: float) -> float:
+    """Full curl on the hanging tube; none at pauldron / hand."""
+    if y >= 1.32 or y <= 0.68:
+        return 0.0
+    if y > 1.24:
+        return (1.32 - y) / 0.08
+    if y < 0.78:
+        return (y - 0.68) / 0.10
+    return 1.0
+
+
+def wrap_hang_arm_plates(ob, theta_span_deg=200.0) -> dict:
+    """Curl Arm_* XY cards around the hang-arm axis. Same verts / UVs / faces.
+
+    Census (cc77d8a): solidify rims read as gold slats mid-swing; puff did
+    nothing because plates already sat outside r=0.046. Cards stay cards
+    unless the across-plate width is mapped onto θ. Gap faces the ribs so
+    Play-cam (rear / side swing) hits painted surface, not an edge.
+    """
     me = ob.data
     vg_names = {g.index: g.name for g in ob.vertex_groups}
-    arm_vert = [False] * len(me.vertices)
-    for i, v in enumerate(me.vertices):
-        for g in v.groups:
-            if vg_names.get(g.group, "") in ("Arm_L", "Arm_R") and g.weight > 0.5:
-                arm_vert[i] = True
-                break
-    bpy.ops.object.select_all(action="DESELECT")
-    ob.select_set(True)
-    bpy.context.view_layer.objects.active = ob
-    bpy.ops.object.mode_set(mode="EDIT")
-    bpy.ops.mesh.select_all(action="DESELECT")
-    bpy.ops.mesh.select_mode(type="FACE")
-    bpy.ops.object.mode_set(mode="OBJECT")
-    nsel = 0
-    for p in me.polygons:
-        p.select = all(arm_vert[i] for i in p.vertices)
-        if p.select:
-            nsel += 1
-    print("arm faces to thicken", nsel)
-    if nsel < 20:
-        return {"armFaces": nsel, "pruned": 0}
-    before = set(bpy.data.objects)
-    bpy.ops.object.mode_set(mode="EDIT")
-    bpy.ops.mesh.separate(type="SELECTED")
-    bpy.ops.object.mode_set(mode="OBJECT")
-    arm_ob = next((o for o in bpy.data.objects if o not in before and o.type == "MESH"), None)
-    if arm_ob is None:
-        arm_ob = next((o for o in bpy.context.selected_objects if o != ob and o.type == "MESH"), None)
-    if arm_ob is None:
-        print("thicken: separate failed")
-        return {"armFaces": nsel, "pruned": 0}
+    sides = {
+        "Arm_R": (_ARM_R_A, _ARM_R_B, Vector((1.0, 0.0, 0.0))),
+        "Arm_L": (_ARM_L_A, _ARM_L_B, Vector((-1.0, 0.0, 0.0))),
+    }
+    back = Vector((0.0, 0.0, -1.0))
+    half = math.radians(theta_span_deg) * 0.5
+    moved = {"Arm_R": 0, "Arm_L": 0}
+    stats = {}
 
-    bpy.ops.object.select_all(action="DESELECT")
-    arm_ob.select_set(True)
-    bpy.context.view_layer.objects.active = arm_ob
-    mod = arm_ob.modifiers.new("HangArmSolid", "SOLIDIFY")
-    mod.thickness = 0.070
-    mod.offset = 0.0
-    try:
-        mod.use_even_offset = True
-        mod.use_quality_normals = True
-    except Exception:
-        pass
-    bpy.ops.object.modifier_apply(modifier="HangArmSolid")
+    for gname, (a, b, outward) in sides.items():
+        rows = []
+        for v in me.vertices:
+            names = {vg_names.get(g.group, "") for g in v.groups if g.weight > 0.5}
+            if gname not in names:
+                continue
+            fade = _wrap_fade(v.co.y)
+            if fade <= 1e-4:
+                continue
+            ab = b - a
+            t = max(0.0, min(1.0, (v.co - a).dot(ab) / max(1e-9, ab.length_squared)))
+            c = a + t * ab
+            off = v.co - c
+            u = off.dot(outward)
+            w = off.dot(back)
+            rows.append((v, fade, c, u, w, off.length))
+        if len(rows) < 12:
+            print("wrap skip", gname, "n", len(rows))
+            continue
+        # Height bands so the wrist stays thinner than the biceps.
+        bands = defaultdict(list)
+        for row in rows:
+            bands[int(row[0].co.y * 25.0)].append(row)
+        us = [r[3] for r in rows]
+        rs = [r[5] for r in rows]
+        stats[gname] = {
+            "n": len(rows),
+            "u": (round(min(us), 3), round(max(us), 3)),
+            "r": (round(min(rs), 3), round(max(rs), 3)),
+        }
+        for band in bands.values():
+            bu = [r[3] for r in band]
+            u_lo, u_hi = min(bu), max(bu)
+            span = max(0.020, u_hi - u_lo)
+            r_tube = max(0.034, min(0.056, 0.52 * span))
+            for v, fade, c, u, w, r0 in band:
+                u_n = (2.0 * (u - u_lo) / span) - 1.0
+                u_n = max(-1.0, min(1.0, u_n))
+                theta = u_n * half
+                # Keep a little original Z as shell thickness so the tube
+                # is not a single paper cylinder.
+                r = r_tube + max(-0.008, min(0.010, w * 0.35))
+                target = c + r * (math.cos(theta) * outward + math.sin(theta) * back)
+                v.co = v.co.lerp(target, fade)
+                moved[gname] += 1
 
-    me2 = arm_ob.data
+    me.update()
     bm = bmesh.new()
-    bm.from_mesh(me2)
-    bm.faces.ensure_lookup_table()
-    kill = []
-    for f in bm.faces:
-        c = f.calc_center_median()
-        d_r = dist_seg(c, _ARM_R_A, _ARM_R_B)
-        d_l = dist_seg(c, _ARM_L_A, _ARM_L_B)
-        mx = max((e.calc_length() for e in f.edges), default=0)
-        area = f.calc_area()
-        in_r = c.x > 0.16 and 0.54 < c.y < 1.46 and d_r < 0.14
-        in_l = c.x < -0.16 and 0.54 < c.y < 1.46 and d_l < 0.14
-        hand_spike = c.y < 0.76 and (area > 0.003 or mx > 0.085)
-        giant = area > 0.018 or mx > 0.20
-        inward_pit = abs(c.x) < 0.15 and c.y > 1.22
-        if (not (in_r or in_l)) or hand_spike or giant or inward_pit:
-            kill.append(f)
-    print("arm prune", len(kill), "of", len(bm.faces))
-    if kill:
-        bmesh.ops.delete(bm, geom=kill, context="FACES")
+    bm.from_mesh(me)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    bm.to_mesh(me2)
+    bm.to_mesh(me)
     bm.free()
-    me2.update()
-    for p in me2.polygons:
-        p.use_smooth = True
-
-    bpy.ops.object.select_all(action="DESELECT")
-    ob.select_set(True)
-    arm_ob.select_set(True)
-    bpy.context.view_layer.objects.active = ob
-    bpy.ops.object.join()
-    print("thicken join verts", len(ob.data.vertices), "faces", len(ob.data.polygons))
-    return {"armFaces": nsel, "pruned": len(kill), "vertsAfter": len(ob.data.vertices)}
+    me.update()
+    print("wrap hang-arm", moved, "span", theta_span_deg, "stats", stats)
+    return {"moved": moved, "thetaSpanDeg": theta_span_deg, "stats": stats, "vertsAfter": len(me.vertices)}
 
 
 def _in_leg_tube(p):
@@ -398,38 +400,6 @@ def repair_arm_groups(ob):
     return n
 
 
-def puff_mid_arms(ob, radius=0.046):
-    """Push mid-arm verts out to a hang tube so mid-swing is a volume, not a card."""
-    me = ob.data
-    vg_names = {g.index: g.name for g in ob.vertex_groups}
-    n = 0
-    for v in me.vertices:
-        names = {vg_names.get(g.group, "") for g in v.groups if g.weight > 0.5}
-        p = v.co
-        if p.y < 0.80 or p.y > 1.28:
-            continue
-        if "Arm_R" in names:
-            a, b = _ARM_R_A, _ARM_R_B
-        elif "Arm_L" in names:
-            a, b = _ARM_L_A, _ARM_L_B
-        else:
-            continue
-        ab = b - a
-        t = max(0.0, min(1.0, (p - a).dot(ab) / max(1e-9, ab.length_squared)))
-        c = a + t * ab
-        radial = p - c
-        d = radial.length
-        if d < 1e-4:
-            radial = Vector((0.0, 0.0, 0.04))
-            d = 0.04
-        if d < radius:
-            v.co = c + radial.normalized() * radius
-            n += 1
-    me.update()
-    print("puff mid-arm", n, "radius", radius)
-    return n
-
-
 def export_mesh_txt_v4(mesh_ob):
     me = mesh_ob.data
     me.calc_loop_triangles()
@@ -527,10 +497,8 @@ def main():
     sheath2 = delete_extra_sheath(mesh_ob)
     shards = delete_armpit_elbow_shards(mesh_ob)
     counts = assign_exclusive(mesh_ob)
-    thicken = thicken_weighted_arms(mesh_ob)
+    wrap = wrap_hang_arm_plates(mesh_ob)
     repair_arm_groups(mesh_ob)
-    puff_n = puff_mid_arms(mesh_ob)
-    thicken["puff"] = puff_n
     counts = recount_groups(mesh_ob)
     if counts.get("Scabbard", 0) < 40:
         raise SystemExit(f"scabbard too few: {counts.get('Scabbard')}")
@@ -585,8 +553,8 @@ def main():
         "bindPassClaimed": False,
         "sourceLook": "e5b132f Meshy GLB + paint iterate (Image_0 bleed + SoT lion cards)",
         "albedoPreserved": "original GLB UVs kept; atlas = Image_0 + lion-card strip (combine_atlas_and_remap, same as e5b132f)",
-        "retopo": "LOOK path unchanged (e5b132f GLB UVs + Image_0/lion). Bind iterate: GEO-delete armpit/elbow slivers; isolated Arm_* solidify + prune; hem no longer Y-cuts leg tubes (full UpLeg/Leg/Foot).",
-        "thicken": thicken,
+        "retopo": "LOOK path unchanged (e5b132f GLB UVs + Image_0/lion). Mesh-vs-capture cc77d8a = MESH. Bind: curl Arm_* plates around hang-arm axis (same verts/UVs). No solidify rims. No remesh/capsule. Hem does not Y-cut leg tubes.",
+        "wrap": wrap,
         "shards": shards,
         "vsFail": "fd9d6f8",
         "oldPremise": "voxel remesh / capsule-arm Game-view (61e023d / c840b73) — Derek STOP, threw away paint PASS",
