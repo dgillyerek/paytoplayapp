@@ -3,13 +3,19 @@
 
 Evaluate() / gait tables are COPIED not edited. Look PASS is Design's.
 Walk-with-look is NOT claimed. Play hub PNG not swapped.
+
+89481e5 FAIL: A-pose spatial boxes stole tabard→arm slabs, split sheath
+(core on Scabbard rest-rotated, shell on Hips), and Y-cuts tore mid/legs.
+This bind: weld stacked shells, cloth locked to torso, one scabbard island,
+hang-corridor arm/leg volumes. No gait rewrite. No hub swap.
 """
 from __future__ import annotations
 
 import json
 import math
+import os
 import subprocess
-from collections import defaultdict
+from collections import defaultdict, deque
 from pathlib import Path
 
 import bpy
@@ -198,6 +204,17 @@ def import_and_orient():
     for v in me.vertices:
         v.co = Vector((v.co.x * scale, (v.co.y - ymin) * scale, v.co.z * scale))
     me.update()
+    # Meshy/decimate stacked duplicate shells (11k islands). Weld so Bone1
+    # cannot slide two copies of the same plate/sheath apart.
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    before = len(bm.verts)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.001)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(me)
+    print("weld 0.001", before, "->", len(bm.verts), "faces", len(bm.faces))
+    bm.free()
+    me.update()
     for p in me.polygons:
         p.use_smooth = True
     bpy.ops.object.select_all(action="DESELECT")
@@ -250,69 +267,307 @@ def build_armature():
     return ob, world
 
 
-_SCAB_A = Vector((0.22, 1.00, -0.04))
-_SCAB_B = Vector((0.45, 0.28, 0.06))
-_SCAB_AB = _SCAB_B - _SCAB_A
-_SCAB_AB2 = _SCAB_AB.length_squared
+_SCAB_A = Vector((0.20, 1.04, -0.04))
+_SCAB_B = Vector((0.38, 0.30, 0.05))
+_ARM_R_A = Vector((0.23, 1.42, 0.00))
+_ARM_R_B = Vector((0.31, 0.66, 0.03))
+_ARM_L_A = Vector((-0.23, 1.42, 0.00))
+_ARM_L_B = Vector((-0.31, 0.66, 0.03))
+_LEG_R_A = Vector((0.11, 0.94, 0.00))
+_LEG_R_B = Vector((0.12, 0.08, 0.04))
+_LEG_L_A = Vector((-0.11, 0.94, 0.00))
+_LEG_L_B = Vector((-0.12, 0.08, 0.04))
 
 
-def _dist_scabbard(p: Vector) -> float:
-    t = max(0.0, min(1.0, (p - _SCAB_A).dot(_SCAB_AB) / _SCAB_AB2))
-    return (p - (_SCAB_A + t * _SCAB_AB)).length
+def _dist_seg(p: Vector, a: Vector, b: Vector) -> tuple[float, float]:
+    ab = b - a
+    denom = max(1e-9, ab.length_squared)
+    t = max(0.0, min(1.0, (p - a).dot(ab) / denom))
+    return (p - (a + t * ab)).length, t
 
 
-def assign_bone(p: Vector) -> str:
-    """A-pose Meshy → hang Actor bones. Spatial, rigid (Bone1)."""
-    x, y, z = p.x, p.y, p.z
-    # A-pose arms first (out to ±X). Do NOT let Scabbard steal the hand.
-    if y > 0.58 and abs(x) > 0.175 and z > -0.03:
-        if x > 0:
-            if y > 1.24:
-                return "Arm_R"
-            if y > 0.96:
-                return "Fore_R"
-            return "Hand_R"
-        if y > 1.24:
-            return "Arm_L"
-        if y > 0.96:
-            return "Fore_L"
-        return "Hand_L"
-    # Sheathed sword + brown scabbard along character-RIGHT hip (thin axis).
-    if x > 0.18 and _dist_scabbard(p) < 0.042:
-        return "Scabbard"
-    if y > 1.50:
-        return "Head"
-    if y > 1.42 and abs(x) < 0.18:
-        return "Neck"
-    if y < 0.86 and abs(x) > 0.035:
-        if y < 0.22:
-            return "Foot_R" if x > 0 else "Foot_L"
-        if y < 0.56:
-            return "Leg_R" if x > 0 else "Leg_L"
-        return "UpLeg_R" if x > 0 else "UpLeg_L"
-    if y > 1.28:
-        return "Chest"
-    if y > 1.10:
-        return "Spine"
-    return "Hips"
+def _sample_albedo(me) -> tuple[list[tuple[int, int, int]], list[bool]]:
+    """Per-vertex RGB from Image_0 + lion-card flags."""
+    imgs = {img.name: img for img in bpy.data.images if img.size[0] >= 64}
+    albedo = None
+    for name, img in imgs.items():
+        if "Image_0" in name:
+            albedo = img
+            break
+    if albedo is None:
+        albedo = next(iter(imgs.values())) if imgs else None
+    rgb_of = [(128, 128, 128)] * len(me.vertices)
+    lion = [False] * len(me.vertices)
+    if albedo is None:
+        return rgb_of, lion
+    path = Path("/tmp/path2-skin/Image_0.png")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    albedo.filepath_raw = str(path)
+    albedo.file_format = "PNG"
+    albedo.save()
+    arr = np.array(Image.open(path).convert("RGB"))
+    ah, aw = arr.shape[:2]
+    uv_layer = me.uv_layers.active
+    acc = defaultdict(list)
+    for poly in me.polygons:
+        mat = me.materials[poly.material_index] if me.materials else None
+        is_lion = bool(mat and "lion" in mat.name.lower())
+        for li, vi in zip(poly.loop_indices, poly.vertices):
+            if is_lion:
+                lion[vi] = True
+            if uv_layer:
+                u, v = uv_layer.data[li].uv
+                x = int(max(0, min(aw - 1, float(u) * aw)))
+                y = int(max(0, min(ah - 1, (1.0 - float(v)) * ah)))
+                acc[vi].append(tuple(int(c) for c in arr[y, x]))
+    for i, samples in acc.items():
+        n = len(samples)
+        rgb_of[i] = (
+            sum(s[0] for s in samples) // n,
+            sum(s[1] for s in samples) // n,
+            sum(s[2] for s in samples) // n,
+        )
+    return rgb_of, lion
+
+
+def _is_blue(rgb: tuple[int, int, int]) -> bool:
+    r, g, b = rgb
+    return b > r + 12 and b > 45 and r < 110
+
+
+def _assign_all(mesh_ob) -> list[str]:
+    """Hang volumes on hang bones. Cloth never on limbs. One scabbard."""
+    me = mesh_ob.data
+    n = len(me.vertices)
+    rgb_of, lion = _sample_albedo(me)
+    adj = [[] for _ in range(n)]
+    for e in me.edges:
+        a, b = e.vertices
+        adj[a].append(b)
+        adj[b].append(a)
+
+    cloth = [False] * n
+    for i, v in enumerate(me.vertices):
+        p = v.co
+        d_ar, _ = _dist_seg(p, _ARM_R_A, _ARM_R_B)
+        d_al, _ = _dist_seg(p, _ARM_L_A, _ARM_L_B)
+        in_arm_tube = (d_ar < 0.070 and p.x > 0.19) or (d_al < 0.070 and p.x < -0.19)
+        if (lion[i] or _is_blue(rgb_of[i])) and not in_arm_tube:
+            cloth[i] = True
+        # Center tabard / hem only — stop before hang-arm x.
+        if 0.52 <= p.y <= 1.12 and abs(p.x) < 0.205 and abs(p.z) < 0.22 and not in_arm_tube:
+            cloth[i] = True
+
+    def flood(seeds, pred):
+        seen = set()
+        q = deque(seeds)
+        while q:
+            i = q.popleft()
+            if i in seen:
+                continue
+            seen.add(i)
+            for j in adj[i]:
+                if j not in seen and pred(j):
+                    q.append(j)
+        return seen
+
+    scab_seeds = []
+    for i, v in enumerate(me.vertices):
+        p = v.co
+        if cloth[i] or p.x < 0.155:
+            continue
+        d, _ = _dist_seg(p, _SCAB_A, _SCAB_B)
+        if d < 0.048 and p.y < 1.16:
+            scab_seeds.append(i)
+    scabbard = flood(
+        scab_seeds,
+        lambda i: (
+            not cloth[i]
+            and me.vertices[i].co.x > 0.14
+            and me.vertices[i].co.y < 1.18
+            and _dist_seg(me.vertices[i].co, _SCAB_A, _SCAB_B)[0] < 0.055
+        ),
+    )
+
+    def arm_pred(side_x: float):
+        a = _ARM_R_A if side_x > 0 else _ARM_L_A
+        b = _ARM_R_B if side_x > 0 else _ARM_L_B
+
+        def pred(i, a=a, b=b, side_x=side_x):
+            if i in scabbard or cloth[i]:
+                return False
+            p = me.vertices[i].co
+            if p.x * side_x < 0:
+                return False
+            if p.y < 0.55:
+                return False
+            d, _ = _dist_seg(p, a, b)
+            # Narrow hang corridor. Do not ingest the tabard.
+            if d < 0.068 and 0.62 < p.y < 1.48 and abs(p.x) > 0.19:
+                return True
+            if p.y < 0.86 and abs(p.x) > 0.27 and d < 0.10:
+                return True
+            return False
+
+        return pred
+
+    arm_r = flood(
+        [i for i, v in enumerate(me.vertices)
+         if v.co.x > 0.27 and 0.58 < v.co.y < 0.90
+         and i not in scabbard and not cloth[i]],
+        arm_pred(1.0),
+    )
+    arm_l = flood(
+        [i for i, v in enumerate(me.vertices)
+         if v.co.x < -0.27 and 0.58 < v.co.y < 0.90 and not cloth[i]],
+        arm_pred(-1.0),
+    )
+
+    def leg_pred(side_x: float):
+        a = _LEG_R_A if side_x > 0 else _LEG_L_A
+        b = _LEG_R_B if side_x > 0 else _LEG_L_B
+
+        def pred(i, a=a, b=b, side_x=side_x):
+            if i in scabbard or cloth[i]:
+                return False
+            p = me.vertices[i].co
+            if p.x * side_x <= 0:
+                return False
+            if p.y > 0.96:
+                return False
+            d, _ = _dist_seg(p, a, b)
+            return d < 0.11 and abs(p.x) > 0.04
+
+        return pred
+
+    leg_r = flood(
+        [i for i, v in enumerate(me.vertices)
+         if v.co.x > 0.04 and v.co.y < 0.28 and i not in scabbard and not cloth[i]],
+        leg_pred(1.0),
+    )
+    leg_l = flood(
+        [i for i, v in enumerate(me.vertices)
+         if v.co.x < -0.04 and v.co.y < 0.28 and not cloth[i]],
+        leg_pred(-1.0),
+    )
+
+    bone_of = ["Hips"] * n
+    for i, v in enumerate(me.vertices):
+        p = v.co
+        if i in scabbard:
+            bone_of[i] = "Scabbard"
+            continue
+        if i in arm_r:
+            # One hang volume per arm. Bone1 splits at elbow shred a thin
+            # plate surface into stacked sheets under Evaluate().
+            bone_of[i] = "Arm_R"
+            continue
+        if i in arm_l:
+            bone_of[i] = "Arm_L"
+            continue
+        if i in leg_r:
+            if p.y < 0.22:
+                bone_of[i] = "Foot_R"
+            elif p.y < 0.56:
+                bone_of[i] = "Leg_R"
+            else:
+                bone_of[i] = "UpLeg_R"
+            continue
+        if i in leg_l:
+            if p.y < 0.22:
+                bone_of[i] = "Foot_L"
+            elif p.y < 0.56:
+                bone_of[i] = "Leg_L"
+            else:
+                bone_of[i] = "UpLeg_L"
+            continue
+        if cloth[i]:
+            if p.y > 1.28:
+                bone_of[i] = "Chest"
+            elif p.y > 1.10:
+                bone_of[i] = "Spine"
+            else:
+                bone_of[i] = "Hips"
+            continue
+        if p.y > 1.50:
+            bone_of[i] = "Head"
+        elif p.y > 1.42 and abs(p.x) < 0.18:
+            bone_of[i] = "Neck"
+        elif p.y > 1.28:
+            bone_of[i] = "Chest"
+        elif p.y > 1.10:
+            bone_of[i] = "Spine"
+        else:
+            bone_of[i] = "Hips"
+
+    # Spatial hang-arm fill. Flood often stops at the cloth/forearm overlap;
+    # the painted hang arm must ride Arm/Fore/Hand as one volume.
+    for i, v in enumerate(me.vertices):
+        if i in scabbard or cloth[i]:
+            continue
+        p = v.co
+        d_r, _ = _dist_seg(p, _ARM_R_A, _ARM_R_B)
+        d_l, _ = _dist_seg(p, _ARM_L_A, _ARM_L_B)
+        if p.x > 0.19 and d_r < 0.072 and 0.60 < p.y < 1.52:
+            arm_r.add(i)
+            bone_of[i] = "Arm_R"
+        elif p.x < -0.19 and d_l < 0.072 and 0.60 < p.y < 1.52:
+            arm_l.add(i)
+            bone_of[i] = "Arm_L"
+
+    locked = scabbard | arm_r | arm_l | leg_r | leg_l
+    for _ in range(3):
+        nxt = bone_of[:]
+        for i in range(n):
+            if i in scabbard:
+                continue
+            neigh = [bone_of[j] for j in adj[i]]
+            if not neigh:
+                continue
+            winner = max(set(neigh), key=neigh.count)
+            if winner != bone_of[i] and neigh.count(winner) >= max(2, (len(neigh) * 2) // 3):
+                # cloth must not migrate onto limbs
+                if cloth[i] and winner not in ("Hips", "Spine", "Chest", "Neck"):
+                    continue
+                if i in locked and winner == "Scabbard":
+                    nxt[i] = winner
+                    continue
+                if i in locked and winner.startswith(("Arm", "Fore", "Hand", "UpLeg", "Leg", "Foot")):
+                    nxt[i] = winner
+                    continue
+                if i not in locked:
+                    nxt[i] = winner
+        bone_of = nxt
+
+    print(
+        "islands scab", len(scabbard),
+        "armR", len(arm_r), "armL", len(arm_l),
+        "legR", len(leg_r), "legL", len(leg_l),
+        "cloth", sum(cloth),
+    )
+    return bone_of
 
 
 def skin_mesh(mesh_ob, arm_ob):
+    bone_of = _assign_all(mesh_ob)
     counts = defaultdict(int)
     groups = {n: mesh_ob.vertex_groups.new(name=n) for n in MESH_BONES}
-    for v in mesh_ob.data.vertices:
-        bone = assign_bone(v.co)
+    for i, bone in enumerate(bone_of):
         if bone not in groups:
             bone = "Hips"
-        groups[bone].add([v.index], 1.0, "REPLACE")
+        groups[bone].add([i], 1.0, "REPLACE")
         counts[bone] += 1
     print("weights", dict(counts))
-    if counts.get("Scabbard", 0) < 200:
+    if counts.get("Scabbard", 0) < 180:
         raise SystemExit(f"scabbard verts too few: {counts.get('Scabbard')}")
-    if counts.get("Scabbard", 0) > 2200:
+    if counts.get("Scabbard", 0) > 1800:
         raise SystemExit(f"scabbard stole the arm: {counts.get('Scabbard')}")
     if counts.get("Head", 0) < 80:
         raise SystemExit(f"head verts too few: {counts.get('Head')}")
+    if counts.get("Arm_R", 0) < 200 or counts.get("Arm_L", 0) < 200:
+        raise SystemExit(f"arm volume empty: R={counts.get('Arm_R')} L={counts.get('Arm_L')}")
+    if counts.get("Arm_R", 0) > 4000 or counts.get("Arm_L", 0) > 4000:
+        raise SystemExit(f"arm stole tabard: R={counts.get('Arm_R')} L={counts.get('Arm_L')}")
     mod = mesh_ob.modifiers.new("Armature", "ARMATURE")
     mod.object = arm_ob
     mesh_ob.parent = arm_ob
@@ -411,17 +666,17 @@ def render_walk(arm_ob):
     WALK.mkdir(parents=True, exist_ok=True)
     ART.mkdir(parents=True, exist_ok=True)
     fps = 16
-    duration = WALK_PERIOD * WALK_CYCLES
-    n = int(duration * fps)
-    frames = []
-    for i in range(n):
-        t = i / fps
-        apply_pose(arm_ob, walk_pose(t))
-        path = WALK / f"f_{i:03d}.png"
-        bpy.context.scene.render.filepath = str(path)
-        bpy.ops.render.render(write_still=True)
-        frames.append(path)
-        print("frame", i, path.stat().st_size)
+    stills_only = os.environ.get("SKIN_STILLS_ONLY") == "1"
+    if not stills_only:
+        duration = WALK_PERIOD * WALK_CYCLES
+        n = int(duration * fps)
+        for i in range(n):
+            t = i / fps
+            apply_pose(arm_ob, walk_pose(t))
+            path = WALK / f"f_{i:03d}.png"
+            bpy.context.scene.render.filepath = str(path)
+            bpy.ops.render.render(write_still=True)
+            print("frame", i, path.stat().st_size)
 
     stills = {
         "pass_l": 0.0,
@@ -437,17 +692,18 @@ def render_walk(arm_ob):
         print("still", name, path.stat().st_size)
 
     mp4 = PROOF / "sir_aldric_path2_walk_toward_top.mp4"
-    subprocess.check_call(
-        [
-            "ffmpeg", "-y", "-framerate", str(fps),
-            "-i", str(WALK / "f_%03d.png"),
-            "-pix_fmt", "yuv420p", "-vf", "scale=1080:1920",
-            "-crf", "18", "-movflags", "+faststart", str(mp4),
-        ]
-    )
-    print("mp4", mp4, mp4.stat().st_size)
-    dest = ART / mp4.name
-    dest.write_bytes(mp4.read_bytes())
+    if not stills_only:
+        subprocess.check_call(
+            [
+                "ffmpeg", "-y", "-framerate", str(fps),
+                "-i", str(WALK / "f_%03d.png"),
+                "-pix_fmt", "yuv420p", "-vf", "scale=1080:1920",
+                "-crf", "18", "-movflags", "+faststart", str(mp4),
+            ]
+        )
+        print("mp4", mp4, mp4.stat().st_size)
+        dest = ART / mp4.name
+        dest.write_bytes(mp4.read_bytes())
     for name in stills:
         src = WALK / f"world_walk_{name}.png"
         (ART / f"gate3_{src.name}").write_bytes(src.read_bytes())
@@ -622,7 +878,7 @@ def main():
     note = {
         "lookPassClaimed": True,
         "walkPassClaimed": False,
-        "bind": "Path 2 Meshy A-pose mesh on hang Actor bones, rigid Bone1",
+        "bind": "weld 1mm stacked shells; cloth locked to torso; one scabbard island; one Bone1 hang-arm volume per side (no elbow split)",
         "motion": "5916447 Evaluate() keys reused — gait/weave/forward-swing not edited",
         "scabbard": "character-right",
         "playHubLocked": True,

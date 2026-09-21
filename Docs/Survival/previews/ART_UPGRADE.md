@@ -1,15 +1,15 @@
 # Aldric 3D art upgrade
 
-## Gate 3 Path 2 Meshy (look PASS → skin-to-walk clip)
+## Gate 3 Path 2 Meshy (look PASS → rebind after walk FAIL)
 
-Design **PASS** look on paint tip `e5b132f` (UV bleed + SoT lion cards). This pass skins that mesh to the held walk.
+Design **PASS** look on paint tip `e5b132f`. Skin tip `89481e5` was a **walk-with-look FAIL** (arm slabs, stacked scabbard, mid/leg tear bands). This pass rebinds only.
 
-- Bind: A-pose Meshy on hang Actor bones, rigid Bone1. `sir_aldric_meshy.mesh.txt` + `sir_aldric_meshy_atlas.png`.
+- Bind: weld 1 mm stacked shells; cloth locked to torso; one scabbard island; one Bone1 hang-arm volume per side (no elbow split).
 - Motion: `Evaluate()` keys from `5916447` **reused** — gait / weave / forward-swing not edited.
-- Proof: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4` + `gate3_path2_walk_phases.png` at Play World-cam.
-- Play hub PNG **locked**. Hub swap only after this clip PASS.
+- Proof: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4` + `gate3_path2_walk_phases.png`.
+- Play hub PNG **locked**.
 
-**Look PASS claimed** (Design, paint stills). **Walk-with-look NOT claimed.** Arms read as A-pose slabs because the mesh is A-pose and hang vertex-rotate was skipped (explode). Tabard is a hip plate. Neck groove / gold edge specks remain (polish, not blockers).
+**Look PASS claimed** (Design, paint stills). **Walk-with-look NOT claimed.** Rigid shoulder-swing arms can still read flat at extreme pass from this rear cam. Tabard is a hip plate. Neck groove / gold edge specks remain (polish, not blockers).
 
 ## Gate 3 Path 2 Meshy (LOOK stills — paint iterate) — archived
 

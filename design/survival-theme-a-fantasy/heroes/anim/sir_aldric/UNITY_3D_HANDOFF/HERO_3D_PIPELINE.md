@@ -68,7 +68,7 @@ Runtime: `SirAldric3DActor` binds **Path 2 Meshy** (`sir_aldric_meshy.mesh.txt` 
 
 See `ART_UPGRADE.md` for the remaining DCC painted-mesh gap. **Do not claim Design eye PASS** unless Derek can scrub sample and Aldric and recognize the same gait.
 
-Gate 2 blockout (grey clay vs locked helmeted turnaround; portrait = face law) is in `Docs/Survival/previews/blockout/`. CEO Gate 2 was a soft-PASS on volume (`5de0e16`). Gate 3 Path 2 Meshy look PASSed on paint stills `e5b132f` and is now skinned to the held walk — clip in `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4`. Play hub stays paused. **Walk-with-look NOT claimed.**
+Gate 2 blockout (grey clay vs locked helmeted turnaround; portrait = face law) is in `Docs/Survival/previews/blockout/`. CEO Gate 2 was a soft-PASS on volume (`5de0e16`). Gate 3 Path 2 Meshy look PASSed on paint stills `e5b132f`. Skin tip `89481e5` FAILed walk-with-look; rebind clip is `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4`. Play hub stays paused. **Walk-with-look NOT claimed.**
 
 ---
 

@@ -10,4 +10,4 @@ because the original (~57MB / 1.77M faces) exceeded upload cap.
 Rebuild look: `blender --background --python scripts/blender/repair_path2_paint.py` then `import_sir_aldric_meshy.py`  
 Skin to held walk: `blender --background --python scripts/blender/skin_sir_aldric_meshy.py`
 
-**Look PASS** claimed by Design on paint tip `e5b132f`. **Walk-with-look NOT claimed.** Play hub PNG stays locked. A-pose mesh on hang Actor bones (rigid Bone1).
+**Look PASS** claimed by Design on paint tip `e5b132f`. Skin tip `89481e5` FAILed walk-with-look (arm slabs / stacked scabbard / hem tears). Rebind: weld + cloth lock + one scabbard + one hang-arm volume per side. **Walk-with-look NOT claimed.** Play hub PNG stays locked.

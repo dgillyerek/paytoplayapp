@@ -1,7 +1,7 @@
 {
   "avatar": "Humanoid",
   "rest": "Actor hang (arms local −Y) — do not retarget to T-pose or Evaluate() regresses",
-  "bindPose": "Path 2 Meshy A-pose mesh on hang Actor bones, rigid Bone1. Joint loops at shoulder/elbow/hip/knee. Hang vertex-rotate not applied.",
+  "bindPose": "Path 2 Meshy welded hang mesh. Cloth on torso. One scabbard. One Bone1 arm volume per side (no elbow split). Evaluate() keys unchanged.",
   "map": {
     "Hips": "Hips",
     "Spine": "Spine",
@@ -29,7 +29,7 @@
   "forward": "+Z",
   "up": "+Y",
   "characterRight": "+X",
-  "tris": 49999,
+  "tris": 49954,
   "lookPassClaimed": true,
   "walkPassClaimed": false
 }

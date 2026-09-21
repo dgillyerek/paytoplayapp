@@ -81,9 +81,9 @@ Grey-clay blockout: `sir_aldric_blockout.blend` + stills vs turnaround. Volume l
 
 ## Gate 3 GAME MESH (this pass)
 
-**Path 2 Meshy** look PASSed by Design on paint tip `e5b132f`, then skinned to held walk.  
-Runtime: `sir_aldric_meshy.mesh.txt` on Actor hang bones, rigid Bone1. A-pose mesh — hang vertex-rotate skipped.  
-World-cam walk clip at Play march angle (high rear, TOP = away): `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4`.  
+**Path 2 Meshy** look PASSed by Design on paint tip `e5b132f`. Skin tip `89481e5` FAILed walk-with-look; this tip rebinds.  
+Runtime: welded `sir_aldric_meshy.mesh.txt` — cloth on torso, one scabbard, one Bone1 hang-arm volume per side.  
+World-cam walk clip at Play march angle: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4`.  
 Hard lock: scabbard character-RIGHT. Sheathed only. Motion `5916447` holds.  
 **Paused:** Play hub swap. **Walk-with-look NOT claimed.**
 
