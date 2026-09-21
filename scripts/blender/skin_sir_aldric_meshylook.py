@@ -708,8 +708,11 @@ def main():
         print("cycle still n", n, npng.stat().st_size)
     art = Path("/opt/cursor/artifacts")
     art.mkdir(parents=True, exist_ok=True)
-    (art / "gate3_world_walk_mid_swing.png").write_bytes(mid_p.read_bytes())
-    (art / "world_meshy_hang_rest.png").write_bytes(rest_p.read_bytes())
+    try:
+        (art / "gate3_world_walk_mid_swing.png").write_bytes(mid_p.read_bytes())
+        (art / "world_meshy_hang_rest.png").write_bytes(rest_p.read_bytes())
+    except OSError as exc:
+        print("artifact copy skip", exc)
 
     atlas = old.combine_atlas_and_remap(mesh_ob)
     ntris, buckets = export_mesh_txt_v4(mesh_ob)
