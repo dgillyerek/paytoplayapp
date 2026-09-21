@@ -259,10 +259,12 @@ public sealed class SirAldric3DMotionTests
         var atlas = Path.Combine(dir, "sir_aldric_meshy_atlas.png");
         var loft = Path.Combine(dir, "sir_aldric_midpoly.mesh.txt");
         var fbx = Path.Combine(dir, "sir_aldric.fbx");
+        var clean = Path.Combine(dir, "sir_aldric_path2_clean.fbx");
         Assert.True(new FileInfo(mesh).Length > 10_000);
         Assert.True(new FileInfo(atlas).Length > 50_000);
         Assert.True(new FileInfo(loft).Length > 10_000);
         Assert.True(new FileInfo(fbx).Length > 50_000);
+        Assert.True(new FileInfo(clean).Length > 50_000);
         var meshText = File.ReadAllText(mesh);
         Assert.Contains("BONE Scabbard", meshText, StringComparison.Ordinal);
         Assert.Contains("FMT v4", meshText, StringComparison.Ordinal);
