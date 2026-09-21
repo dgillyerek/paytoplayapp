@@ -384,5 +384,66 @@ def main():
     (ART / actor_p.name).write_bytes(actor_p.read_bytes())
 
 
+CYCLE_NS = (0, 5, 10, 15)
+
+
+def cycle_main():
+    """A/B/C at n=0,5,10,15 so Design can eye the whole walk, not t=0.625 only."""
+    WALK.mkdir(parents=True, exist_ok=True)
+    ART.mkdir(parents=True, exist_ok=True)
+    try:
+        import bpy  # noqa: F401
+        in_blender = True
+    except ImportError:
+        in_blender = False
+
+    if in_blender:
+        for n in CYCLE_NS:
+            data = np.load(f"/tmp/actor_lbs_n{n:02d}.npz")
+            dest = WALK / f"census_cycle_actor_n{n:02d}.png"
+            render_actor_lbs_blender(data["v"], data["uv"], data["t"], dest)
+            (ART / dest.name).write_bytes(dest.read_bytes())
+        return
+
+    verts, uvs, widx, ww, tris = load_mesh(MESH)
+    for n in CYCLE_NS:
+        t = n / float(FPS)
+        pose = walk_pose(t)
+        skinned = skin_verts(verts, widx, ww, bone_worlds(pose))
+        np.savez(f"/tmp/actor_lbs_n{n:02d}.npz", v=skinned, uv=uvs, t=tris)
+        dest = WALK / f"census_cycle_mp4_n{n:02d}.png"
+        subprocess.check_call(
+            [
+                "ffmpeg", "-y", "-i", str(MP4),
+                "-vf", f"select=eq(n\\,{n})",
+                "-vframes", "1", str(dest),
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        print("cycle mp4", n, dest.stat().st_size)
+    env = dict(**os.environ)
+    env["CENSUS_TAG"] = "cycle"
+    subprocess.check_call(
+        ["blender", "--background", "--python", str(Path(__file__).resolve())],
+        env=env,
+    )
+    subprocess.check_call(["python3", str(ROOT / "scripts/blender/compose_cycle_abc.py")])
+    note = {
+        "lookPassClaimed": True,
+        "bindPassClaimed": False,
+        "walkPassClaimed": False,
+        "frames": list(CYCLE_NS),
+        "unityEditor": False,
+        "sheet": "Docs/Survival/previews/gate3/gate3_mesh_vs_capture_cycle.png",
+        "premise": "segmented Arm/Fore/Hand closed tubes — cycle A/B/C, not one still",
+    }
+    (PACK3D / "sir_aldric_mesh_vs_capture_cycle.json").write_text(json.dumps(note, indent=2) + "\n")
+    print("cycle census done")
+
+
 if __name__ == "__main__":
-    main()
+    if os.environ.get("CENSUS_TAG") == "cycle":
+        cycle_main()
+    else:
+        main()

@@ -210,7 +210,8 @@ def _closed_tube_object(name, a, b, r_top=0.050, r_bot=0.034, segs=16, rings=12,
     bm.free()
     me.update()
     for p in me.polygons:
-        p.use_smooth = True
+        # Faceted: a smooth spear reads as a smear/sheet in the walk MP4.
+        p.use_smooth = False
     ob = bpy.data.objects.new(name, me)
     bpy.context.collection.objects.link(ob)
     return ob
@@ -223,6 +224,7 @@ def _collect_arm_donors(ob):
     vg_names = {g.index: g.name for g in ob.vertex_groups}
     donors = {"Arm_R": [], "Arm_L": []}
     mat_count = defaultdict(int)
+    rgb_of, lion = old._sample_albedo(me)
     if uv_layer is None:
         return donors, 0
     for poly in me.polygons:
@@ -234,6 +236,9 @@ def _collect_arm_donors(ob):
             continue
         mat_count[poly.material_index] += 1
         for li, vi in zip(poly.loop_indices, poly.vertices):
+            # Skip tabard-navy / lion so tubes don't wrap cloth into tear bands.
+            if lion[vi] or old._is_blue(rgb_of[vi]):
+                continue
             uv = uv_layer.data[li].uv
             p = me.vertices[vi].co
             donors[gname].append((p.copy(), (float(uv.x), float(uv.y)), float(p.y)))
@@ -308,33 +313,34 @@ def _delete_paper_arm_faces(ob) -> int:
 
 
 def replace_hang_arms_closed_tubes(ob) -> dict:
-    """New premise: closed thick-walled hang-arm tubes + e5b132f UV reproject.
+    """Closed hang-arm volumes that stay closed ACROSS the walk cycle.
 
-    6232d5e curled paper cards and still read as sheets. This deletes those
-    islands and replaces them with watertight painted volumes. Body / tabard /
-    lion / scabbard are not remeshed. Not an unpainted capsule Game-view.
+    110443d FAIL: one rigid Arm_* spear (y=1.28→0.54) reads as a sideways
+    sheet once Evaluate() swings it. Split into fat upper / fore / hand
+    tubes on Arm_* / Fore_* / Hand_* so the MP4 is two bent volumes, not
+    a 74 cm smear. e5b132f Image_0 reproject (plate UVs, not tabard navy).
+    Body / tabard / lion / scabbard not remeshed. Not unpainted capsules.
     """
     donors, mat_idx = _collect_arm_donors(ob)
     killed = _delete_paper_arm_faces(ob)
-    # Tube sits under the pauldron and past the wrist so mid-swing has no paper.
-    specs = {
-        "Arm_R": (
-            Vector((0.27, 1.28, 0.00)),
-            Vector((0.31, 0.54, 0.02)),
-        ),
-        "Arm_L": (
-            Vector((-0.27, 1.28, 0.00)),
-            Vector((-0.31, 0.54, 0.02)),
-        ),
-    }
+    # Overlap joints so elbow/wrist cannot open a paper gap when Fore bends.
+    specs = [
+        ("Arm_R", Vector((0.26, 1.30, 0.00)), Vector((0.28, 1.08, 0.01)), 0.066, 0.058),
+        ("Fore_R", Vector((0.28, 1.10, 0.01)), Vector((0.30, 0.82, 0.02)), 0.058, 0.048),
+        ("Hand_R", Vector((0.30, 0.84, 0.02)), Vector((0.31, 0.60, 0.03)), 0.046, 0.038),
+        ("Arm_L", Vector((-0.26, 1.30, 0.00)), Vector((-0.28, 1.08, 0.01)), 0.066, 0.058),
+        ("Fore_L", Vector((-0.28, 1.10, 0.01)), Vector((-0.30, 0.82, 0.02)), 0.058, 0.048),
+        ("Hand_L", Vector((-0.30, 0.84, 0.02)), Vector((-0.31, 0.60, 0.03)), 0.046, 0.038),
+    ]
     groups = {g.name: g for g in ob.vertex_groups}
-    for name in ("Arm_L", "Arm_R"):
+    for name in ("Arm_L", "Arm_R", "Fore_L", "Fore_R", "Hand_L", "Hand_R"):
         if name not in groups:
             groups[name] = ob.vertex_groups.new(name=name)
     added = {}
-    for gname, (a, b) in specs.items():
-        tube = _closed_tube_object(f"HangTube_{gname}", a, b)
-        _project_tube_uvs(tube, donors.get(gname, []), a, b)
+    for gname, a, b, r0, r1 in specs:
+        side = "Arm_R" if gname.endswith("_R") else "Arm_L"
+        tube = _closed_tube_object(f"HangTube_{gname}", a, b, r_top=r0, r_bot=r1, segs=14, rings=8, wall=0.018)
+        _project_tube_uvs(tube, donors.get(side, []), a, b)
         if ob.data.materials:
             for mat in ob.data.materials:
                 tube.data.materials.append(mat)
@@ -352,7 +358,7 @@ def replace_hang_arms_closed_tubes(ob) -> dict:
         added[gname] = n_new
         print("joined closed tube", gname, "new verts", n_new)
     note = {
-        "premise": "closed thick-walled hang-arm tubes + e5b132f UV reproject",
+        "premise": "fat segmented Arm/Fore/Hand closed tubes + e5b132f plate UV reproject",
         "killedPaperFaces": killed,
         "donors": {k: len(v) for k, v in donors.items()},
         "added": added,
@@ -528,9 +534,9 @@ def recount_groups(ob):
 
 
 def repair_arm_groups(ob):
-    """Solidify verts in the hang-arm tubes get Arm_* if they lost groups."""
+    """Tube verts that lost groups get Arm_ / Fore_ / Hand_ by hang height."""
     groups = {g.name: g for g in ob.vertex_groups}
-    for name in ("Arm_L", "Arm_R"):
+    for name in ("Arm_L", "Arm_R", "Fore_L", "Fore_R", "Hand_L", "Hand_R"):
         if name not in groups:
             groups[name] = ob.vertex_groups.new(name=name)
     vg_names = {g.index: g.name for g in ob.vertex_groups}
@@ -540,11 +546,13 @@ def repair_arm_groups(ob):
         if names & set(MESH_BONES):
             continue
         p = v.co
-        if p.x > 0.20 and 0.50 < p.y < 1.34 and dist_seg(p, _ARM_R_A, _ARM_R_B) < 0.12:
-            groups["Arm_R"].add([i], 1.0, "REPLACE")
+        if p.x > 0.18 and 0.50 < p.y < 1.36 and dist_seg(p, _ARM_R_A, _ARM_R_B) < 0.14:
+            bone = "Hand_R" if p.y < 0.84 else ("Fore_R" if p.y < 1.10 else "Arm_R")
+            groups[bone].add([i], 1.0, "REPLACE")
             n += 1
-        elif p.x < -0.20 and 0.50 < p.y < 1.34 and dist_seg(p, _ARM_L_A, _ARM_L_B) < 0.12:
-            groups["Arm_L"].add([i], 1.0, "REPLACE")
+        elif p.x < -0.18 and 0.50 < p.y < 1.36 and dist_seg(p, _ARM_L_A, _ARM_L_B) < 0.14:
+            bone = "Hand_L" if p.y < 0.84 else ("Fore_L" if p.y < 1.10 else "Arm_L")
+            groups[bone].add([i], 1.0, "REPLACE")
             n += 1
     print("repair arm verts", n)
     return n
@@ -652,8 +660,12 @@ def main():
     counts = recount_groups(mesh_ob)
     if counts.get("Scabbard", 0) < 40:
         raise SystemExit(f"scabbard too few: {counts.get('Scabbard')}")
-    if counts.get("Arm_R", 0) < 60 or counts.get("Arm_L", 0) < 60:
-        raise SystemExit(f"arm empty: R={counts.get('Arm_R')} L={counts.get('Arm_L')}")
+    arm_r = counts.get("Arm_R", 0) + counts.get("Fore_R", 0) + counts.get("Hand_R", 0)
+    arm_l = counts.get("Arm_L", 0) + counts.get("Fore_L", 0) + counts.get("Hand_L", 0)
+    if arm_r < 80 or arm_l < 80:
+        raise SystemExit(f"arm empty: R={arm_r} L={arm_l} {dict(counts)}")
+    if counts.get("Fore_R", 0) < 20 or counts.get("Fore_L", 0) < 20:
+        raise SystemExit(f"fore empty — 110443d spear relapse: {dict(counts)}")
     if counts.get("Arm_R", 0) > 8000 or counts.get("Arm_L", 0) > 8000:
         raise SystemExit(f"arm stole tabard: R={counts.get('Arm_R')} L={counts.get('Arm_L')}")
 
@@ -687,6 +699,13 @@ def main():
     bpy.context.scene.render.filepath = str(mid_p)
     bpy.ops.render.render(write_still=True)
     print("mid swing", mid_p, mid_p.stat().st_size)
+    # Cycle samples Design asked for (n=0,5,10,15 at 16fps) — not one mid-swing still.
+    for n in (0, 5, 10, 15):
+        old.apply_pose(actor_ob, old.walk_pose(n / 16.0))
+        npng = old.WALK / f"world_walk_n{n:02d}.png"
+        bpy.context.scene.render.filepath = str(npng)
+        bpy.ops.render.render(write_still=True)
+        print("cycle still n", n, npng.stat().st_size)
     art = Path("/opt/cursor/artifacts")
     art.mkdir(parents=True, exist_ok=True)
     (art / "gate3_world_walk_mid_swing.png").write_bytes(mid_p.read_bytes())
@@ -707,7 +726,7 @@ def main():
         "tubes": tubes,
         "shards": shards,
         "vsFail": "fd9d6f8",
-        "oldPremise": "6232d5e planar/curl paper Arm_* plates (~300°) — Design FAIL, still navy/gold sheets",
+        "oldPremise": "110443d one rigid Arm_* spear — Design FAIL: sideways sheets + tear bands across the walk MP4",
         "motion": "5916447 Evaluate() keys reused",
         "scabbard": "character-right",
         "playHubLocked": True,
