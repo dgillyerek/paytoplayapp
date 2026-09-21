@@ -248,34 +248,19 @@ def _collect_arm_donors(ob):
 
 
 def _project_tube_uvs(tube_ob, donors, a, b):
-    """Stamp a compact steel Image_0 patch. Full-island wrap = stretch bands."""
+    """One steel Image_0 texel. θ-wrap on 80c42d1 = horizontal tear bands."""
     me = tube_ob.data
     if me.uv_layers.active is None:
         me.uv_layers.new(name="UVMap")
     uv_layer = me.uv_layers.active
     if len(donors) < 8:
-        for li in range(len(uv_layer.data)):
-            uv_layer.data[li].uv = (0.5, 0.5)
-        return
-    us = sorted(d[1][0] for d in donors)
-    vs = sorted(d[1][1] for d in donors)
-    u_m = us[len(us) // 2]
-    v_m = vs[len(vs) // 2]
-    # Tiny plate window — θ/length stay inside steel, no navy/gold wrap.
-    half = 0.016
-    an, x, z = _tube_frame(a, b)
-    me.calc_loop_triangles()
-    for poly in me.polygons:
-        for li, vi in zip(poly.loop_indices, poly.vertices):
-            p = me.vertices[vi].co
-            t = max(0.0, min(1.0, (p - a).dot(b - a) / max(1e-9, (b - a).length_squared)))
-            off = p - (a + t * (b - a))
-            theta = math.atan2(off.dot(z), off.dot(x))
-            u_n = (theta + math.pi) / (2.0 * math.pi)
-            uv_layer.data[li].uv = (
-                u_m + (u_n - 0.5) * 2.0 * half,
-                v_m + (t - 0.5) * 2.0 * half,
-            )
+        u_m, v_m = 0.5, 0.5
+    else:
+        us = sorted(d[1][0] for d in donors)
+        vs = sorted(d[1][1] for d in donors)
+        u_m, v_m = us[len(us) // 2], vs[len(vs) // 2]
+    for li in range(len(uv_layer.data)):
+        uv_layer.data[li].uv = (u_m, v_m)
 
 
 def _delete_hang_corridor_ghosts(ob) -> int:
@@ -432,14 +417,29 @@ def replace_hang_arms_closed_tubes(ob) -> dict:
         n_new = len(ob.data.vertices) - before
         for i in range(before, len(ob.data.vertices)):
             p = ob.data.vertices[i].co
-            bone = f"Hand_{suffix}" if p.y < 0.96 else (
-                f"Fore_{suffix}" if p.y < 1.12 else f"Arm_{suffix}"
-            )
-            groups[bone].add([i], 1.0, "REPLACE")
+            t = max(0.0, min(1.0, (1.30 - p.y) / 0.42))
+            # Blend across elbow/wrist — exclusive Y-cuts sheared into tear bands.
+            if t < 0.28:
+                pairs = [(f"Arm_{suffix}", 1.0)]
+            elif t < 0.42:
+                u = (t - 0.28) / 0.14
+                pairs = [(f"Arm_{suffix}", 1.0 - u), (f"Fore_{suffix}", u)]
+            elif t < 0.62:
+                pairs = [(f"Fore_{suffix}", 1.0)]
+            elif t < 0.76:
+                u = (t - 0.62) / 0.14
+                pairs = [(f"Fore_{suffix}", 1.0 - u), (f"Hand_{suffix}", u)]
+            else:
+                pairs = [(f"Hand_{suffix}", 1.0)]
+            for bone in (f"Arm_{suffix}", f"Fore_{suffix}", f"Hand_{suffix}"):
+                groups[bone].remove([i])
+            for bone, w in pairs:
+                if w > 0.02:
+                    groups[bone].add([i], w, "REPLACE")
         added[f"HangArm_{suffix}"] = n_new
         print("joined ONE bent arm", suffix, "new verts", n_new)
     note = {
-        "premise": "ONE connected loft per side; leftover paper deleted — vs 76eab9d triple-arm",
+        "premise": "ONE loft/side; steel texel UV; blended Arm/Fore/Hand — vs 80c42d1 tear",
         "killedGhostFaces": killed,
         "donors": {k: len(v) for k, v in donors.items()},
         "added": added,
@@ -810,7 +810,7 @@ def main():
         "tubes": tubes,
         "shards": shards,
         "vsFail": "fd9d6f8",
-        "oldPremise": "76eab9d triple-arm ghost: leftover Meshy paper + 3 unjoined Arm/Fore/Hand tubes",
+        "oldPremise": "80c42d1 one-loft PASSed ghost; FAIL horizontal tear (θ-wrap UV + exclusive Y-cut shear)",
         "motion": "5916447 Evaluate() keys reused",
         "scabbard": "character-right",
         "playHubLocked": True,

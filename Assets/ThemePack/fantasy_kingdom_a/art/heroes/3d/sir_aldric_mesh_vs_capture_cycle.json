@@ -4,11 +4,11 @@
   "walkPassClaimed": false,
   "frames": [0, 5, 10, 15],
   "unityEditor": false,
-  "failTip": "76eab9d",
-  "failCause": "triple-arm ghost: leftover Meshy hang paper (Chest/Spine/Hips) + 3 unjoined Arm/Fore/Hand tubes",
-  "premise": "ONE connected loft per side; leftover hang paper deleted; compact steel UV",
-  "eyed": "A/B/C n=0,5,10,15: one closed hang-arm volume per side. No second/third ghost limb. n=0/15 swung arm is a short thick volume with a fist, not a paper diagonal. Body/tabard/lion/scabbard still Meshy. Bind NOT claimed.",
+  "failTip": "80c42d1",
+  "failCause": "one loft/side PASSed ghost; remaining FAIL = horizontal tear stretch (θ-wrap UV + exclusive Y-cut shear)",
+  "premise": "KEEP one loft/side; steel texel UV; blended Arm/Fore/Hand weights",
+  "eyed": "A/B/C n=0,5,10,15: one closed arm per side (ghost fix holds). Arms read as uniform steel volumes without navy/gold wrap bands or a flat horizontal shear crease. Lion/tabard/scabbard Meshy. Bind NOT claimed.",
   "sheet": "Docs/Survival/previews/gate3/gate3_mesh_vs_capture_cycle.png",
-  "vsFail": "Docs/Survival/previews/gate3/gate3_path2_vs_76eab9d.png",
+  "vsFail": "Docs/Survival/previews/gate3/gate3_path2_vs_80c42d1.png",
   "walkClip": "Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4"
 }

@@ -1,0 +1,17 @@
+{
+  "failTip": "80c42d1",
+  "bindPassClaimed": false,
+  "census80c42d1": {
+    "loftUV": "theta wrap uSpan~0.079 vSpan~0.157 — cylinder bands",
+    "loftWeights": "0 multi-bone; exclusive Y-cuts 68 tris per Arm/Fore and Fore/Hand joint",
+    "hemMixedHipsLegTris": 474,
+    "cause": "MESH. Loft UV θ-wrap + exclusive Y-cut shear under Evaluate(). Not 3-arm. Hem secondary."
+  },
+  "thisTip": {
+    "oneLoftPerSide": true,
+    "armBoneComponents": 2,
+    "multiBoneArmCorners": 948,
+    "gameViewUV": "single Image_0 steel texel (no θ wrap) before atlas remap",
+    "weights": "blended Arm/Fore/Hand along loft Y"
+  }
+}

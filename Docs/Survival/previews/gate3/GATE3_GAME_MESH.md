@@ -59,6 +59,6 @@ Source tip **`e5b132f`**. UVs/albedo preserved (GLB UVs + Image_0/lion atlas). R
 **Mesh-vs-capture (mandatory):** same mid-swing t=0.625. A = Actor LBS still (Unity skin path, no encoder). B = offline Blender EEVEE. C = MP4 n=10.
 
 - `cc77d8a` FAIL: A+B+C all tear → **MESH**. Sheet `gate3_mesh_vs_capture_mid_swing.png`.
-- `76eab9d` FAIL: triple-arm ghost (leftover Meshy paper + 3 unjoined tubes). This tip: delete leftover hang paper; **ONE loft per side**. Cycle sheet + `gate3_path2_vs_76eab9d.png`. **Do not claim bind PASS.** Hub PNG locked.
+- `80c42d1` split: one loft/side PASSed ghost. FAIL remaining = horizontal tear stretch (θ-wrap UV + exclusive Y-cut shear). This tip: **steel texel + blended loft weights**. vs `gate3_path2_vs_80c42d1.png`. **Do not claim bind PASS.** Hub PNG locked.
 
 vs-fd9: `gate3_path2_vs_fd9d6f8.png` + frozen `fail_fd9d6f8/`.

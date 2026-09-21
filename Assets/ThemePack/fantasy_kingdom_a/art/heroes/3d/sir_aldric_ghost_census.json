@@ -1,17 +1,7 @@
 {
   "failTip": "76eab9d",
-  "thisMesh": "one loft per side after leftover-paper delete",
+  "thisMesh": "one loft per side (ghost PASS holds on 80c42d1+)",
   "bindPassClaimed": false,
-  "census76eab9d": {
-    "armBoneComponents": 11,
-    "sixTubes": true,
-    "leftoverOutboardPaper": true,
-    "cause": "leftover Meshy hang paper on Chest/Spine/Hips + 3 unjoined Arm/Fore/Hand tubes per side = triple-arm ghost"
-  },
-  "thisTip": {
-    "armBoneComponents": 2,
-    "oneLoftPerSide": true,
-    "killedGhostFaces": 8647,
-    "leftoverNow": "pauldron/hip tabard edge only (y>1.14 Chest/Spine, |x|<0.29 hips) — not a second hang arm"
-  }
+  "armBoneComponents": 2,
+  "oneLoftPerSide": true
 }
