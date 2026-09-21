@@ -11,7 +11,7 @@ using UnityEngine.Playables;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Runtime 3D Aldric: Blender mid-poly (path B) + look_targets atlas,
+    /// Runtime 3D Aldric: Gate 3 Blender mid-poly (clay volume law) + atlas,
     /// Animator PlayableGraph walk/attack toward TOP. Motion SoT is Evaluate().
     /// DCC source is ThemePack art/heroes/3d/sir_aldric.fbx — mesh.txt is the
     /// Editor-less bind of that same Blender mesh. Do not regress bone names.

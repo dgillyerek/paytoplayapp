@@ -1,11 +1,19 @@
 {
   "name": "SirAldric",
   "track": "blender-fbx",
+  "gate": 3,
+  "volumeLaw": "5de0e16",
   "soT": "look_targets/01_rear_LOCKED.png",
+  "turnaround": "TURNAROUND_GATE1/LOCKED/",
   "scabbard": "character-right",
   "atlas": "sir_aldric_atlas.png",
   "mesh": "sir_aldric_midpoly.mesh.txt",
   "fbx": "sir_aldric.fbx",
   "blend": "sir_aldric.blend",
-  "lookPassClaimed": false
+  "verts": 3287,
+  "faces": 3258,
+  "tris": 6352,
+  "lookPassClaimed": false,
+  "walkPaused": true,
+  "playHubLocked": true
 }

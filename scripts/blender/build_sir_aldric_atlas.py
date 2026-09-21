@@ -88,7 +88,8 @@ def build_atlas():
     _fill_swatch(d, (528, 16, 752, 240), BLUE)
     _fill_swatch(d, (784, 16, 1008, 240), BROWN)
     rear = Image.open(LOOK / "01_rear_LOCKED.png").convert("RGBA")
-    lion = _clean_on_blue(rear, (380, 190, 640, 500))
+    # Tight rampant only — skip pauldron swords that sat in the old 380–640 crop.
+    lion = _clean_on_blue(rear, (418, 248, 618, 472))
     lion = lion.resize((460, 640), Image.LANCZOS)
     img.paste(lion.convert("RGB"), (24, 286))
     _draw_greek_key(img, (532, 224, 1000, 388))

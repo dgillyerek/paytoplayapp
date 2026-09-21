@@ -9,7 +9,7 @@ Look targets for the 3D pipeline (Design files, 2026-09-18).
 **Scabbard SoT = character-right hip** as in `01_rear_LOCKED` (viewer-right from behind).
 ## Gate 1 LOCKED (2026-09-21)
 
-- `00_portrait_COMPLETE_LOCKED.png` — face law (oval bust). Same still as `TURNAROUND_GATE1/LOCKED/05_PORTRAIT_COMPLETE_fullbody.png`. Do not invent a face; helmeted `00_fullbody_LOCKED` is **not** face law.
+- `00_portrait_COMPLETE_LOCKED.png` — face law (oval bust). Same still as `TURNAROUND_GATE1/LOCKED/05_PORTRAIT_COMPLETE_fullbody.png`. Do not invent a face; helmeted `00_fullbody_LOCKED` is **not** face law. If missing on disk, Design bytes did not land; World-cam is rear so face is not the Gate 3 look test.
 - `03_turnaround_FRONT_LOCKED.png` / `03_turnaround_SIDE_R_LOCKED.png` / `03_turnaround_BACK_LOCKED.png` / `03_turnaround_THREE_QUARTER_LOCKED.png` — exact mirrors of `TURNAROUND_GATE1/LOCKED/` Design re-lock (full figure, light gray).
 - `03_TURNAROUND_SHEET_LOCKED.png` — exact mirror of `TURNAROUND_SHEET.png`.
 - Lowercase `03_turnaround_front|side_r|back|sheet_LOCKED.png` aliases keep the same bytes.

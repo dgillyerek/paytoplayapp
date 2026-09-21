@@ -68,7 +68,7 @@ Runtime: `SirAldric3DActor` binds a **Blender mid-poly** (`sir_aldric.fbx` / `si
 
 See `ART_UPGRADE.md` for the remaining DCC painted-mesh gap. **Do not claim Design eye PASS** unless Derek can scrub sample and Aldric and recognize the same gait.
 
-Gate 2 blockout (grey clay vs locked helmeted turnaround; portrait = face law) is in `Docs/Survival/previews/blockout/`. Texture / walk / Play hub stay paused. **Gate 2 not claimed.**
+Gate 2 blockout (grey clay vs locked helmeted turnaround; portrait = face law) is in `Docs/Survival/previews/blockout/`. CEO Gate 2 was a soft-PASS on volume (`5de0e16`). Gate 3 game mesh + Play-angle World-cam stills are in `Docs/Survival/previews/gate3/`. Walk / Play hub stay paused. **Look gate not claimed.**
 
 ---
 

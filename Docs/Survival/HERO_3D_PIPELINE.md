@@ -65,19 +65,27 @@ Runtime: `SirAldric3DActor` binds a **Blender mid-poly** (`sir_aldric.fbx` / `si
 - Play hub still uses `SIR_ALDRIC_REAR_MASTER_LOCKED.png` until Design PASS
 - 2D warp (`SirAldricView` / `SirAldricWarp`) is **quarantined / unused**
 - Look targets on disk: `UNITY_3D_HANDOFF/look_targets/00_fullbody_LOCKED.png`, `01_rear_LOCKED.png`, `02_aldric_turnaround_orthos.png`
-- Rebuild: `blender --background --python scripts/blender/build_sir_aldric.py`
+- Rebuild Gate 3 game mesh: `blender --background --python scripts/blender/build_sir_aldric_gate3.py`
+- World-cam stills: `python3 scripts/blender/render_gate3_playcam.py`
 
 See `ART_UPGRADE.md` for the remaining painted-unwrap gap. **Do not claim Design eye PASS** unless Derek can scrub sample and Aldric and recognize the same gait.
 
 ---
 
-## Gate 2 BLOCKOUT (this pass)
+## Gate 2 BLOCKOUT
 
 Look law Gate 1 is **LOCKED** (`TURNAROUND_GATE1/LOCKED/` 01–05 + sheet; `look_targets/00_portrait_COMPLETE_LOCKED.png` = face law).  
-Grey-clay blockout only: `sir_aldric_blockout.blend` + stills vs turnaround (front + rear + ¾ + side_R).  
-Hard locks: scabbard character-RIGHT; plate / royal-blue surcoat volumes; lion space on the back.  
-**Paused:** texture polish, walk clips, Play hub swap. Motion 5916447 holds until Design PASS on silhouette.  
-**Gate 2 not claimed.**
+Grey-clay blockout: `sir_aldric_blockout.blend` + stills vs turnaround. Volume law = `5de0e16`. CEO Gate 2 was a **soft-PASS** on silhouette (Derek moved on without FAIL).
+
+---
+
+## Gate 3 GAME MESH (this pass)
+
+Mid-poly grown from clay volumes: joint loops, ~6352 tris, atlas materials vs Gate 1 LOCKED + `01_rear_LOCKED`.  
+World-cam stills at Play march angle (high rear, TOP = away) in `Docs/Survival/previews/gate3/`.  
+Hard lock: scabbard character-RIGHT. Sheathed only.  
+**Paused:** walk / Animator / Play hub swap. Motion 5916447 holds.  
+**Look gate not claimed.**
 
 ---
 

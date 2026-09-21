@@ -1,6 +1,7 @@
 {
   "avatar": "Humanoid",
   "rest": "Actor hang (arms local \u2212Y) \u2014 do not retarget to T-pose or Evaluate() regresses",
+  "bindPose": "Gate 3 clay-volume hang (World-cam vs 01_rear). Joint loops at shoulder/elbow/hip/knee.",
   "map": {
     "Hips": "Hips",
     "Spine": "Spine",
@@ -21,11 +22,13 @@
     "RightFoot": "Foot_R"
   },
   "extras": {
-    "Sword": "Sword",
+    "Sword": "Sword (no drawn mesh \u2014 sheathed only)",
     "Scabbard": "Scabbard",
     "Cape": "Cape (bone only, no mesh)"
   },
   "forward": "+Z",
   "up": "+Y",
-  "characterRight": "+X"
+  "characterRight": "+X",
+  "tris": 6352,
+  "lookPassClaimed": false
 }
