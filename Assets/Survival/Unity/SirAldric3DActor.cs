@@ -11,8 +11,8 @@ using UnityEngine.Playables;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Runtime 3D Aldric: Path 2 remesh mid-poly + hang skin (FMT v4).
-    /// Shatter-weight binds (89481e5 / 71f0c4a / e56aeb1) abandoned.
+    /// Runtime 3D Aldric: Path 2 remesh body + solid hang-arm capsules (FMT v4).
+    /// Shatter-weight binds abandoned. 61e023d remesh-arm MP4 FAIL: capsules.
     /// Animator PlayableGraph walk/attack toward TOP. Motion SoT is Evaluate()
     /// (5916447 gait HOLD — do not edit keys). Editor-less bind is
     /// sir_aldric_meshy.mesh.txt. DCC: sir_aldric_path2_clean.fbx.

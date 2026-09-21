@@ -83,9 +83,9 @@ Grey-clay blockout: `sir_aldric_blockout.blend` + stills vs turnaround. Volume l
 
 **Path 2 Meshy** look PASSed on `e5b132f`. Walk FAIL on `89481e5` / `71f0c4a` / `e56aeb1` (weights on shatter).  
 Runtime: remesh+skin FMT v4 `sir_aldric_meshy.mesh.txt` + DCC `sir_aldric_path2_clean.fbx`. Actor `Bone4`.  
-World-cam clip: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4`. Compare: `gate3_path2_vs_e56aeb1.png`.  
+World-cam clip: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4`. Compare: `gate3_path2_vs_61e023d.png`.  
 Hard lock: scabbard character-RIGHT. Motion `5916447` holds.  
-**Paused:** Play hub swap. **Walk-with-look NOT claimed.**
+**Paused:** Play hub swap. **Bind NOT claimed. Walk-with-look NOT claimed.**
 
 ---
 

@@ -2,7 +2,7 @@
 
 **Look (Path 2):** Meshy Flagship Image-to-3D Decimate ~50k + UV-bleed / SoT lion-card iterate — Design **PASS** on paint stills `e5b132f`. `sir_aldric_meshy_retopo.glb` + `sir_aldric_meshy.blend`. Not scripted loft.
 
-**Motion bind (retopo+skin after `e56aeb1` FAIL):** shatter-weight binds abandoned. Voxel-remesh Path 2 + one solid scabbard + hang armature. FMT v4 `sir_aldric_meshy.mesh.txt` + `sir_aldric_path2_clean.fbx`. Actor `Bone4`. Gait keys from `5916447` **reused**.
+**Motion bind (after `61e023d` MP4 FAIL):** remesh body + **solid hang-arm capsules** (remesh arm plates deleted) + one scabbard + exclusive 1-bone. FMT v4 + `sir_aldric_path2_clean.fbx`. `Evaluate()` `5916447` reused. **Bind NOT claimed.**
 
 **Walk-with-look is NOT claimed.** Clip for Design re-gate: `Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4`. Play hub stays `SIR_ALDRIC_REAR_MASTER_LOCKED.png`.
 
