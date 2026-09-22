@@ -69,9 +69,25 @@ def main():
     if stills_only:
         # Front lion strip remaps dest UVs — ThemePack mesh must match the atlas.
         rt.export_fbx(tgt, actor)
-        ntris, _buckets = look.export_mesh_txt_v4(tgt)
+        ntris, buckets = look.export_mesh_txt_v4(tgt)
         path_a.patch_mesh_header()
         bpy.ops.wm.save_as_mainfile(filepath=str(BLEND))
+        counts = path_a.recount(tgt)
+        islands, sizes = path_a.n_islands(tgt.data)
+        note = {
+            "lookPassClaimed": False,
+            "walkPassClaimed": False,
+            "bindPassClaimed": False,
+            "pathA": True,
+            "tris": ntris,
+            "verts": len(tgt.data.vertices),
+            "islands": islands,
+            "islandSizes": sizes,
+            "vertsPrimary": counts,
+            "boneTris": buckets,
+            "stillsOnly": True,
+        }
+        path_a.write_drop(note)
         print("stills-only — walk clip left as-is; mesh", ntris)
         return
 

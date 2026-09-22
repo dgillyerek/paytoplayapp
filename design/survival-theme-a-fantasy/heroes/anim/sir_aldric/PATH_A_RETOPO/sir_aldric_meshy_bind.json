@@ -3,8 +3,8 @@
   "walkPassClaimed": false,
   "bindPassClaimed": false,
   "pathA": true,
-  "stillsIterate": "cdc9bf0-holes-and-lion-scale",
-  "honestArt": "Front tabard dest holes filled: all front-torso cloth remapped to one strip, Image_0 dest\u2192source navy (shred gold dropped). Cropped lion_card_front blit smaller than cdc9bf0 full-tabard stamp. Steel PBR kept. Rear/side left close. Walk as-is. Do NOT claim Design / bind / walk PASS.",
+  "stillsIterate": "479a493-opaque-navy-larger-lion",
+  "honestArt": "Front tabard tan shred killed: front-half torso (inner remesh included) parked on solid Image_0 navy. Dest-planar cropped lion_card_front on a larger e5b132f chest window. Steel PBR kept. Rear/side left close. Walk as-is. Do NOT claim Design / bind / walk PASS.",
   "sourceLook": "e5b132f Meshy GLB + Image_0 / SoT lion",
   "atlas": "sir_aldric_meshy_atlas.png"
 }

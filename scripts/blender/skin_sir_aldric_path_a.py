@@ -532,13 +532,12 @@ def assign_projected_material(ob, atlas_path: Path):
     def load_img(path: Path, name: str, noncolor: bool):
         path = path.resolve()
         for old in list(bpy.data.images):
-            try:
-                fp = Path(bpy.path.abspath(old.filepath)).resolve() if old.filepath else None
-            except Exception:
-                fp = None
-            if old.name == name or old.name.startswith(name + ".") or fp == path:
+            if old.name == name or old.name.startswith(name + "."):
                 bpy.data.images.remove(old)
-        img = bpy.data.images.load(str(path))
+        # Unique path so Blender cannot reuse the packed/open-time cache.
+        live = Path(f"/tmp/patha_{name}.png")
+        live.write_bytes(path.read_bytes())
+        img = bpy.data.images.load(str(live), check_existing=False)
         img.name = name
         try:
             img.reload()
@@ -610,8 +609,8 @@ def _sample_card_xy(arr, u, v):
 
 # Front-half torso AABB — includes inner remesh shells that peek tan through cloth.
 TABARD_FRONT_WIN = (-0.165, 0.165, 1.045, 1.455)
-# e5b132f rampant: larger than 479a493 undershoot, smaller than cdc9bf0 full-tabard.
-LION_FRONT_WIN = (-0.080, 0.080, 1.172, 1.358)
+# e5b132f rampant dest box — card fills this, not a cluster of center faces.
+LION_FRONT_WIN = (-0.076, 0.076, 1.178, 1.355)
 
 
 def dest_in_front_lion(p: Vector, n: Vector) -> bool:
@@ -755,60 +754,73 @@ def stamp_front_lion_dest(tgt, atlas_path: Path, card, src=None) -> int:
     atlas = np.array(Image.open(atlas_path).convert("RGB"))
     s = atlas.shape[0]
     navy = _pick_image0_navy(src, np.array(card[8, 8], np.uint8))
-    lx0, lx1, ly0, ly1 = LION_FRONT_WIN
     tx0, tx1, ty0, ty1 = TABARD_FRONT_WIN
     u0, u1, v0, v1 = 0.68, 0.94, 0.62, 0.97
     nu0, nu1, nv0, nv1 = 0.955, 0.995, 0.84, 0.98
-    cloth, lion = [], []
+    cloth, outer, stray = [], [], []
     for poly in me.polygons:
         c = poly.center
         n = poly.normal
-        in_tabard = tx0 <= c.x <= tx1 and ty0 <= c.y <= ty1 and c.z > -0.01
+        on_strip = 0
         tan_n = 0
         for li in poly.loop_indices:
+            uu, vv = uv.data[li].uv
+            if 0.66 < uu < 0.96 and 0.60 < vv < 0.99:
+                on_strip += 1
             if _atlas_tan(atlas, uv.data[li], s):
                 tan_n += 1
-        loose = (
-            0.96 < c.y < 1.48
-            and abs(c.x) < 0.20
-            and c.z > -0.02
-            and tan_n >= 1
-        )
-        if not (in_tabard or loose):
-            continue
-        cloth.append(poly.index)
-        if n.z > 0.30 and dest_in_front_lion(c, n) and c.z > 0.08:
-            lion.append(poly.index)
-    print("front tabard cloth", len(cloth), "lion", len(lion), flush=True)
+        in_tabard = tx0 <= c.x <= tx1 and ty0 <= c.y <= ty1 and c.z > -0.01
+        torso = 0.96 < c.y < 1.48 and abs(c.x) < 0.20 and c.z > -0.02
+        loose = torso and (tan_n >= 1 or on_strip >= 1)
+        if in_tabard or loose:
+            cloth.append(poly.index)
+        elif on_strip >= 2:
+            stray.append(poly.index)
+        if in_tabard or loose:
+            outer.append(poly.index)
+    print("front tabard cloth", len(cloth), "outer", len(outer), "stray", len(stray), flush=True)
     if len(cloth) < 8:
         return 0
-    # Solid navy pad — every chest / inner-shell face, no dest-planar shred.
     atlas[int((1.0 - nv1) * s):int((1.0 - nv0) * s), int(nu0 * s):int(nu1 * s)] = navy
     for fi in cloth:
         poly = me.polygons[fi]
         for li in poly.loop_indices:
             uv.data[li].uv = Vector(((nu0 + nu1) * 0.5, (nv0 + nv1) * 0.5))
-    # Lion strip: navy then cropped card filling the whole strip.
+    for fi in stray:
+        poly = me.polygons[fi]
+        for li in poly.loop_indices:
+            uv.data[li].uv = Vector((0.02, 0.02))
     y_top = int((1.0 - v1) * s)
     y_bot = int((1.0 - v0) * s)
     x_l = int(u0 * s)
     x_r = int(u1 * s)
     atlas[y_top:y_bot, x_l:x_r] = navy
     sprite = _crop_lion_sprite(card)
-    if x_r > x_l and y_bot > y_top:
-        slot = Image.fromarray(sprite).resize((x_r - x_l, y_bot - y_top), Image.LANCZOS)
-        atlas[y_top:y_bot, x_l:x_r] = np.array(slot)
-    for fi in lion:
+    sr, sg, sb = sprite[:, :, 0], sprite[:, :, 1], sprite[:, :, 2]
+    sprite_navy = (sb > sr + 8) & (sb > 40) & (sr < 110)
+    sprite = sprite.copy()
+    sprite[sprite_navy] = navy
+    su0, su1, sv0, sv1 = u0, u1, v0, v1
+    ly_top = int((1.0 - sv1) * s)
+    ly_bot = int((1.0 - sv0) * s)
+    lx_l = int(su0 * s)
+    lx_r = int(su1 * s)
+    if lx_r > lx_l and ly_bot > ly_top:
+        slot = Image.fromarray(sprite).resize((lx_r - lx_l, ly_bot - ly_top), Image.LANCZOS)
+        atlas[ly_top:ly_bot, lx_l:lx_r] = np.array(slot)
+    mx0, mx1, my0, my1 = -0.132, 0.132, 1.122, 1.390
+    for fi in outer:
         poly = me.polygons[fi]
         for li, vi in zip(poly.loop_indices, poly.vertices):
             p = me.vertices[vi].co
-            tu = max(0.0, min(1.0, (p.x - lx0) / max(1e-6, lx1 - lx0)))
-            tv = max(0.0, min(1.0, (p.y - ly0) / max(1e-6, ly1 - ly0)))
+            tu = max(0.0, min(1.0, (p.x - mx0) / max(1e-6, mx1 - mx0)))
+            tv = max(0.0, min(1.0, (p.y - my0) / max(1e-6, my1 - my0)))
             uv.data[li].uv = Vector((u0 + tu * (u1 - u0), v0 + tv * (v1 - v0)))
     Image.fromarray(atlas).save(atlas_path)
     print(
         "front tabard navy+lion", x_l, y_top, x_r, y_bot,
-        "cloth", len(cloth), "lion", len(lion), "sprite", sprite.shape, flush=True,
+        "cloth", len(cloth), "outer", len(outer),
+        "lionBlit", lx_l, ly_top, lx_r, ly_bot, "sprite", sprite.shape, flush=True,
     )
     return len(cloth)
 
@@ -1129,8 +1141,8 @@ def write_drop(note: dict):
         "- SOURCE: Path 2 Meshy GLB + e5b132f Image_0 / SoT lion. LOOK = Meshy knight.\n"
         "- RETOPO: mid-poly manifold (voxel scaffold only, then shrinkwrap to Meshy). "
         "Not remesh-melt hero, not capsules, not paper-island weights.\n"
-        "- TEXTURE: dest→source Image_0 navy fill on the whole front tabard + "
-        "cropped lion_card_front blit (smaller e5b132f chest window). "
+        "- TEXTURE: front-half torso parked on solid Image_0 navy (kills tan "
+        "show-through). Dest-planar lion_card_front on the e5b132f chest window. "
         "Steel metallic/roughness kept. No frozen Game still compositing. "
         "Do NOT claim Design PASS.\n"
         "- FBX: ThemePack `sir_aldric_path2_clean.fbx` — Y-up, face +Z, one scabbard-R.\n"
