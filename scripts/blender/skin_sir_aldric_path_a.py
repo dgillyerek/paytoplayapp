@@ -248,7 +248,7 @@ def camera_project_colors(tgt, fill_colors):
     colors = list(fill_colors)
     hit = miss = 0
     me = tgt.data
-    me.calc_normals()
+    me.update()
     for i, v in enumerate(me.vertices):
         rgb, w = _sample_cams(v.co, v.normal, cams)
         if rgb is None:
@@ -504,11 +504,13 @@ def main():
     if not ok:
         print("QuadriFlow no-op or failed — keep decimated scaffold, then wrap")
     wrapped = shrinkwrap_to_source(tgt, src, WRAP_OFFSET)
+    rt.delete_small_islands(tgt, keep_min=20)
     # Mid-poly budget after wrap: Design ACK ~20–60k tris.
     if len(tgt.data.polygons) > 30000:
         rt.decimate_to(tgt, 24000)
         if wrapped:
             shrinkwrap_to_source(tgt, src, WRAP_OFFSET)
+            rt.delete_small_islands(tgt, keep_min=20)
     islands, sizes = n_islands(tgt.data)
     ext = mesh_extent(tgt)
     print(
