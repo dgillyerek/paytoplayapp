@@ -596,8 +596,9 @@ def _sample_card_xy(arr, u, v):
     return tuple(int(c) for c in arr[y, x])
 
 
-# Dest-space tabard window. Matches e5b132f rampant lion on the navy chest.
-LION_FRONT_WIN = (-0.100, 0.100, 1.120, 1.365)
+# Whole front tabard (hole-fill). Lion is a smaller e5b132f-matched window inside it.
+TABARD_FRONT_WIN = (-0.145, 0.145, 1.040, 1.415)
+LION_FRONT_WIN = (-0.058, 0.058, 1.205, 1.348)
 
 
 def dest_in_front_lion(p: Vector, n: Vector) -> bool:
@@ -649,13 +650,57 @@ def _atlas_cloth(atlas, uv_loop, s: int) -> bool:
     return (b > r + 8 and b > 40 and r < 130) or (r > 110 and g > 80 and r > b + 8)
 
 
-def stamp_front_lion_dest(tgt, atlas_path: Path, card) -> int:
-    """Dest-space planar lion_card_front on a reserved UV strip.
+def _image0_navy_sampler(src, navy):
+    """Dest→source Image_0 for tabard navy. Drops shredded gold, not Game stills."""
+    import bmesh
+    from mathutils.bvhtree import BVHTree
 
-    Existing dest chest UVs are tiny smart-UV slivers, so writing into them
-    cannot land a readable rampant lion. Remap front-tabard faces to one
-    dest (x,y) strip and paste the Meshy front card. Not a frozen Game still.
-    Rear lion / plate islands stay on their current UVs.
+    if src is None:
+        return lambda _p, _n: tuple(int(c) for c in navy), lambda: None
+    albedo, _lions, _imgs = rt.source_textures()[:3]
+    bm = bmesh.new()
+    bm.from_mesh(src.data)
+    bm.faces.ensure_lookup_table()
+    uv_lay = bm.loops.layers.uv.active
+    bvh = BVHTree.FromBMesh(bm)
+    mats = list(src.data.materials)
+
+    def sample(p: Vector, n: Vector):
+        loc, _sn, idx, dist = bvh.find_nearest(p)
+        if loc is None or idx is None or dist > 0.06:
+            return tuple(int(c) for c in navy)
+        face = bm.faces[idx]
+        mat = mats[face.material_index] if face.material_index < len(mats) else None
+        mname = (mat.name if mat else "").lower()
+        iname = (rt.mat_image_name(mat) or "").lower()
+        if "lion" in mname or "lion" in iname:
+            return tuple(int(c) for c in navy)
+        verts = [loop.vert.co for loop in face.loops]
+        uvs = [loop[uv_lay].uv.copy() if uv_lay else Vector((0.5, 0.5)) for loop in face.loops]
+        wts = rt.mathutils_bary(loc, verts)
+        uvw = Vector((0.0, 0.0))
+        for wt, u in zip(wts, uvs):
+            uvw += u * wt
+        rgb = _sample_src_image(albedo, uvw)
+        if rgb is None:
+            return tuple(int(c) for c in navy)
+        r, g, b = rgb
+        if r > 118 and g > 80 and r > b + 10:
+            return tuple(int(c) for c in navy)
+        return rgb
+
+    def close():
+        bm.free()
+
+    return sample, close
+
+
+def stamp_front_lion_dest(tgt, atlas_path: Path, card, src=None) -> int:
+    """Remap the whole front tabard to one strip: Image_0 navy + smaller lion.
+
+    Gray holes were dest faces that failed a cloth check (they sampled gray).
+    Collect by dest volume, fill Image_0 navy, dest-space stamp lion_card_front
+    in the e5b132f chest window. Not frozen Game stills. Rear/plate UVs stay.
     """
     if card is None or not atlas_path.exists():
         print("front lion stamp skipped — no card/atlas")
@@ -667,60 +712,90 @@ def stamp_front_lion_dest(tgt, atlas_path: Path, card) -> int:
     atlas = np.array(Image.open(atlas_path).convert("RGB"))
     s = atlas.shape[0]
     navy = np.array(card[8, 8], np.uint8)
-    atlas[8:64, s - 64 : s - 8] = navy
     faces = []
-    xs, ys = [], []
     for poly in me.polygons:
         c = poly.center
         n = poly.normal
-        cloth_n = parked = 0
+        parked = False
         for li in poly.loop_indices:
             u, v = uv.data[li].uv
-            if _atlas_cloth(atlas, uv.data[li], s):
-                cloth_n += 1
-            if u > 0.95 and v > 0.95:
-                parked += 1
-            if 0.66 < u < 0.96 and 0.62 < v < 0.98:
-                parked += 1
-        cloth = cloth_n >= max(1, len(poly.loop_indices) // 2)
-        if parked:
-            if n.z < 0.10 or not (1.00 < c.y < 1.45) or abs(c.x) > 0.18 or c.z < 0.0:
-                continue
-        elif cloth:
-            if n.z < 0.30 or not (1.08 < c.y < 1.40) or abs(c.x) > 0.13 or c.z < 0.04:
-                continue
-        else:
+            if (u > 0.95 and v > 0.95) or (0.66 < u < 0.96 and 0.62 < v < 0.98):
+                parked = True
+                break
+        in_vol = n.z > 0.12 and 1.03 < c.y < 1.43 and abs(c.x) < 0.155 and c.z > 0.03
+        parked_ok = parked and n.z > 0.08 and 1.00 < c.y < 1.45 and abs(c.x) < 0.18 and c.z > 0.0
+        if not (in_vol or parked_ok):
             continue
         faces.append(poly.index)
-        for vi in poly.vertices:
-            p = me.vertices[vi].co
-            xs.append(p.x)
-            ys.append(p.y)
-    print("front lion faces", len(faces), flush=True)
+    print("front tabard faces", len(faces), flush=True)
     if len(faces) < 8:
         return 0
-    xmin, xmax = min(xs), max(xs)
-    ymin, ymax = min(ys), max(ys)
-    xpad = (xmax - xmin) * 0.08
-    ypad = (ymax - ymin) * 0.08
-    xmin, xmax = xmin - xpad, xmax + xpad
-    ymin, ymax = ymin - ypad, ymax + ypad
+    tx0, tx1, ty0, ty1 = TABARD_FRONT_WIN
+    lx0, lx1, ly0, ly1 = LION_FRONT_WIN
     u0, u1, v0, v1 = 0.68, 0.94, 0.64, 0.96
+    face_set = set(faces)
     for fi in faces:
         poly = me.polygons[fi]
         for li, vi in zip(poly.loop_indices, poly.vertices):
             p = me.vertices[vi].co
-            tx = (p.x - xmin) / max(1e-6, xmax - xmin)
-            ty = (p.y - ymin) / max(1e-6, ymax - ymin)
-            uv.data[li].uv = Vector((u0 + tx * (u1 - u0), v0 + ty * (v1 - v0)))
+            tu = max(0.0, min(1.0, (p.x - tx0) / max(1e-6, tx1 - tx0)))
+            tv = max(0.0, min(1.0, (p.y - ty0) / max(1e-6, ty1 - ty0)))
+            uv.data[li].uv = Vector((u0 + tu * (u1 - u0), v0 + tv * (v1 - v0)))
     y_top = int((1.0 - v1) * s)
     y_bot = int((1.0 - v0) * s)
     x_l = int(u0 * s)
     x_r = int(u1 * s)
-    slot = Image.fromarray(card).resize((max(1, x_r - x_l), max(1, y_bot - y_top)), Image.LANCZOS)
-    atlas[y_top:y_bot, x_l:x_r] = np.array(slot)
+    atlas[y_top:y_bot, x_l:x_r] = navy
+    sample_navy, close_navy = _image0_navy_sampler(src, navy)
+    me.calc_loop_triangles()
+    lion_px = navy_px = 0
+    for tri in me.loop_triangles:
+        if tri.polygon_index not in face_set:
+            continue
+        n = Vector(tri.normal)
+        if n.length < 1e-8:
+            continue
+        n.normalize()
+        pts, pos = [], []
+        for vi, li in zip(tri.vertices, tri.loops):
+            uu, vv = uv.data[li].uv
+            pts.append((float(uu) * (s - 1), (1.0 - float(vv)) * (s - 1)))
+            pos.append(me.vertices[vi].co.copy())
+        (x0, y0), (x1, y1), (x2, y2) = pts
+        minx = max(0, int(math.floor(min(x0, x1, x2))))
+        maxx = min(s - 1, int(math.ceil(max(x0, x1, x2))))
+        miny = max(0, int(math.floor(min(y0, y1, y2))))
+        maxy = min(s - 1, int(math.ceil(max(y0, y1, y2))))
+        denom = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2)
+        if abs(denom) < 1e-8:
+            continue
+        for y in range(miny, maxy + 1):
+            py = y + 0.5
+            for x in range(minx, maxx + 1):
+                px = x + 0.5
+                w0 = ((y1 - y2) * (px - x2) + (x2 - x1) * (py - y2)) / denom
+                w1 = ((y2 - y0) * (px - x2) + (x0 - x2) * (py - y2)) / denom
+                w2 = 1.0 - w0 - w1
+                if w0 < -0.01 or w1 < -0.01 or w2 < -0.01:
+                    continue
+                p = pos[0] * w0 + pos[1] * w1 + pos[2] * w2
+                if dest_in_front_lion(p, n):
+                    lu = (p.x - lx0) / max(1e-6, lx1 - lx0)
+                    lv = (p.y - ly0) / max(1e-6, ly1 - ly0)
+                    rgb = _sample_card_xy(card, lu, lv)
+                    if rgb is None:
+                        rgb = tuple(int(c) for c in navy)
+                    lion_px += 1
+                else:
+                    rgb = sample_navy(p, n)
+                    navy_px += 1
+                atlas[y, x] = np.array(rgb, np.uint8)
+    close_navy()
     Image.fromarray(atlas).save(atlas_path)
-    print("front lion strip", x_l, y_top, x_r, y_bot, "faces", len(faces), flush=True)
+    print(
+        "front tabard strip", x_l, y_top, x_r, y_bot,
+        "faces", len(faces), "lionPx", lion_px, "navyPx", navy_px, flush=True,
+    )
     return len(faces)
 
 
@@ -894,7 +969,7 @@ def project_albedo(src, tgt, atlas_path: Path):
         if pix < 2000:
             raise SystemExit(f"Image_0 bake did not stick: pix={pix}")
     _albedo, _lions, _imgs, lion_front, _lion_back = load_lion_cards()
-    stamped = stamp_front_lion_dest(tgt, atlas_path, lion_front)
+    stamped = stamp_front_lion_dest(tgt, atlas_path, lion_front, src)
     write_pbr_maps(atlas_path)
     assign_projected_material(tgt, atlas_path)
     print("baked atlas", atlas_path, atlas_path.stat().st_size, "pix", pix, "frontLion", stamped)
