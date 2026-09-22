@@ -666,18 +666,30 @@ def stamp_front_lion_dest(tgt, atlas_path: Path, card) -> int:
         return 0
     atlas = np.array(Image.open(atlas_path).convert("RGB"))
     s = atlas.shape[0]
+    navy = np.array(card[8, 8], np.uint8)
+    atlas[8:64, s - 64 : s - 8] = navy
     faces = []
     xs, ys = [], []
     for poly in me.polygons:
         c = poly.center
         n = poly.normal
-        if n.z < 0.30 or not (1.08 < c.y < 1.40) or abs(c.x) > 0.13 or c.z < 0.04:
-            continue
-        cloth_n = 0
+        cloth_n = parked = 0
         for li in poly.loop_indices:
+            u, v = uv.data[li].uv
             if _atlas_cloth(atlas, uv.data[li], s):
                 cloth_n += 1
-        if cloth_n < max(1, len(poly.loop_indices) // 2):
+            if u > 0.95 and v > 0.95:
+                parked += 1
+            if 0.66 < u < 0.96 and 0.62 < v < 0.98:
+                parked += 1
+        cloth = cloth_n >= max(1, len(poly.loop_indices) // 2)
+        if parked:
+            if n.z < 0.10 or not (1.00 < c.y < 1.45) or abs(c.x) > 0.18 or c.z < 0.0:
+                continue
+        elif cloth:
+            if n.z < 0.30 or not (1.08 < c.y < 1.40) or abs(c.x) > 0.13 or c.z < 0.04:
+                continue
+        else:
             continue
         faces.append(poly.index)
         for vi in poly.vertices:
@@ -689,11 +701,10 @@ def stamp_front_lion_dest(tgt, atlas_path: Path, card) -> int:
         return 0
     xmin, xmax = min(xs), max(xs)
     ymin, ymax = min(ys), max(ys)
-    xpad = (xmax - xmin) * 0.10
-    ypad = (ymax - ymin) * 0.10
+    xpad = (xmax - xmin) * 0.08
+    ypad = (ymax - ymin) * 0.08
     xmin, xmax = xmin - xpad, xmax + xpad
     ymin, ymax = ymin - ypad, ymax + ypad
-    # Reserved strip (top-right). Aspect matches lion_card 512×640.
     u0, u1, v0, v1 = 0.68, 0.94, 0.64, 0.96
     for fi in faces:
         poly = me.polygons[fi]

@@ -1,7 +1,10 @@
-# Path A — Image_0 bake (stills-first)
+# Path A — clean retopo + Meshy project
 
-Same Path A. No bind hacks. No tubes. **Do not claim bind/walk PASS.** Hub PNG HOLD. PR #21 HOLD.
+Derek Path A LOCKED. Design ACK folded. Stills-first after 03a616c FAIL.
 
-World stills: Meshy Image_0 + lion cards baked onto retopo UVs (dest→source BVH). Not Play-cam still compositing. Silver plate / lion / navy tabard / Greek-key hem read.
+- SOURCE: Path 2 Meshy GLB + e5b132f Image_0 / lion cards. LOOK = Meshy knight.
+- TEXTURE: dest→source Image_0 kept; dest-space lion_card_front on chest UV strip; steel metallic/roughness split. No frozen Game still compositing.
+- RE-GATE: World stills only. Walk clip left as-is.
+- **Bind NOT claimed. Walk NOT claimed. Stills NOT claimed PASS.** Hub PNG HOLD. PR #21 HOLD.
 
-Silhouette still slightly remesh vs e5b132f. Walk clip left as-is.
+tris=29500 verts=14648
