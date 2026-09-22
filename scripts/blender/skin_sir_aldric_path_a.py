@@ -2144,8 +2144,10 @@ def assert_one_pair_soles(mesh_ob, label: str):
     print("posed soles", label, primaries, "extra", extra)
     if extra:
         raise SystemExit(f"third limb at {label}: sole primaries={primaries}")
-    if primaries.get("Foot_L", 0) < 8 or primaries.get("Foot_R", 0) < 8:
-        raise SystemExit(f"missing planted sole at {label}: {primaries}")
+    planted = primaries.get("Foot_L", 0) + primaries.get("Foot_R", 0)
+    if planted < 20:
+        raise SystemExit(f"no planted sole at {label}: {primaries}")
+    # Pass frames lift one foot — do not require both clusters on the ground.
     return primaries
 
 
