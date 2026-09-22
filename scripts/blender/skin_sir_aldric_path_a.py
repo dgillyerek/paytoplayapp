@@ -478,10 +478,68 @@ def camera_project_atlas(tgt, fill_colors, atlas_path: Path):
     return tris_hit
 
 
+def _pbr_paths(atlas_path: Path):
+    stem = atlas_path.with_suffix("")
+    return Path(str(stem) + "_metallic.png"), Path(str(stem) + "_roughness.png")
+
+
+def write_pbr_maps(atlas_path: Path):
+    """Steel vs navy/gold/leather so EEVEE key light reads specular silver, not plastic gray."""
+    rgb = np.array(Image.open(atlas_path).convert("RGB"), np.float32)
+    r, g, b = rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2]
+    lum = 0.30 * r + 0.59 * g + 0.11 * b
+    chroma = np.maximum(np.maximum(r, g), b) - np.minimum(np.minimum(r, g), b)
+    navy = (b > r + 8) & (b > 40) & (r < 110)
+    gold = (r > 118) & (g > 80) & (r > b + 10)
+    leather = (~gold) & (r > g + 10) & (r > b + 15) & (r < 170) & (g < 110) & (b < 90)
+    steel = (~navy) & (~gold) & (~leather) & (chroma < 38) & (lum > 68)
+    metallic = np.zeros(lum.shape, np.float32)
+    roughness = np.full(lum.shape, 0.62, np.float32)
+    metallic[steel] = 0.84
+    roughness[steel] = 0.28
+    metallic[gold] = 0.78
+    roughness[gold] = 0.38
+    metallic[navy] = 0.0
+    roughness[navy] = 0.64
+    metallic[leather] = 0.04
+    roughness[leather] = 0.72
+    met_p, rgh_p = _pbr_paths(atlas_path)
+    Image.fromarray(np.clip(metallic * 255.0, 0, 255).astype(np.uint8), "L").save(met_p)
+    Image.fromarray(np.clip(roughness * 255.0, 0, 255).astype(np.uint8), "L").save(rgh_p)
+    print("pbr maps steel", int(steel.sum()), "navy", int(navy.sum()), "gold", int(gold.sum()), flush=True)
+    return met_p, rgh_p
+
+
+def enable_eevee_spec():
+    sc = bpy.context.scene
+    try:
+        sc.eevee.use_ssr = True
+        sc.eevee.ssr_quality = 0.75
+    except Exception:
+        pass
+    try:
+        sc.eevee.use_raytracing = True
+    except Exception:
+        pass
+    try:
+        sc.eevee.taa_render_samples = 32
+    except Exception:
+        pass
+
+
 def assign_projected_material(ob, atlas_path: Path):
-    """Principled Image_0/lion bake — same lighting model as e5b132f World stills."""
-    img = bpy.data.images.load(str(atlas_path))
-    img.name = "PathAAtlas"
+    """Image_0/lion albedo + steel metallic. Not global 0.12/0.55 plastic gray."""
+    def load_img(path: Path, name: str, noncolor: bool):
+        img = bpy.data.images.load(str(path))
+        img.name = name
+        if noncolor:
+            try:
+                img.colorspace_settings.name = "Non-Color"
+            except Exception:
+                pass
+        return img
+
+    img = load_img(atlas_path, "PathAAtlas", False)
     mat = bpy.data.materials.new("PathALook")
     mat.use_nodes = True
     nt = mat.node_tree
@@ -491,14 +549,33 @@ def assign_projected_material(ob, atlas_path: Path):
     tex = nt.nodes.new("ShaderNodeTexImage")
     tex.image = img
     try:
-        bsdf.inputs["Roughness"].default_value = 0.55
-        bsdf.inputs["Metallic"].default_value = 0.12
+        bsdf.inputs["Roughness"].default_value = 0.32
+        bsdf.inputs["Metallic"].default_value = 0.80
+    except Exception:
+        pass
+    try:
+        if "Specular IOR Level" in bsdf.inputs:
+            bsdf.inputs["Specular IOR Level"].default_value = 0.55
+        elif "Specular" in bsdf.inputs:
+            bsdf.inputs["Specular"].default_value = 0.55
     except Exception:
         pass
     nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    met_p, rgh_p = _pbr_paths(atlas_path)
+    if not met_p.exists() or not rgh_p.exists():
+        write_pbr_maps(atlas_path)
+    if met_p.exists():
+        met = nt.nodes.new("ShaderNodeTexImage")
+        met.image = load_img(met_p, "PathAMetallic", True)
+        nt.links.new(met.outputs["Color"], bsdf.inputs["Metallic"])
+    if rgh_p.exists():
+        rgh = nt.nodes.new("ShaderNodeTexImage")
+        rgh.image = load_img(rgh_p, "PathARoughness", True)
+        nt.links.new(rgh.outputs["Color"], bsdf.inputs["Roughness"])
     nt.links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
     ob.data.materials.clear()
     ob.data.materials.append(mat)
+    enable_eevee_spec()
 
 
 def _sample_src_image(arr, uv):
@@ -508,6 +585,132 @@ def _sample_src_image(arr, uv):
     x = int(max(0, min(aw - 1, float(uv.x) * aw)))
     y = int(max(0, min(ah - 1, (1.0 - float(uv.y)) * ah)))
     return tuple(int(c) for c in arr[y, x])
+
+
+def _sample_card_xy(arr, u, v):
+    if arr is None:
+        return None
+    ah, aw = arr.shape[:2]
+    x = int(max(0, min(aw - 1, float(u) * (aw - 1))))
+    y = int(max(0, min(ah - 1, (1.0 - float(v)) * (ah - 1))))
+    return tuple(int(c) for c in arr[y, x])
+
+
+# Dest-space tabard window. Matches e5b132f rampant lion on the navy chest.
+LION_FRONT_WIN = (-0.100, 0.100, 1.120, 1.365)
+
+
+def dest_in_front_lion(p: Vector, n: Vector) -> bool:
+    return (
+        n.z > 0.28
+        and LION_FRONT_WIN[0] <= p.x <= LION_FRONT_WIN[1]
+        and LION_FRONT_WIN[2] <= p.y <= LION_FRONT_WIN[3]
+        and p.z > 0.02
+    )
+
+
+def load_lion_cards():
+    """Prefer Meshy GLB lion_card_front/back. Rebuild the same cards if missing."""
+    albedo, lions, imgs = rt.source_textures()
+    front = back = None
+    for n, a in lions.items():
+        ln = n.lower()
+        if "front" in ln:
+            front = a
+        elif "back" in ln:
+            back = a
+    if front is None or back is None:
+        try:
+            import repair_path2_paint as repair
+            navy = np.array([36, 58, 118], np.uint8)
+            if front is None and (repair.GATE / "01_FRONT.png").exists():
+                spr = repair.extract_lion_sprite(repair.GATE / "01_FRONT.png", repair.LION_FRONT_BOX)
+                front = np.array(repair.compose_lion_card(spr, navy).convert("RGB"))
+                print("lion card front rebuilt from SoT box")
+            if back is None and (repair.LOOK / "01_rear_LOCKED.png").exists():
+                spr = repair.extract_lion_sprite(repair.LOOK / "01_rear_LOCKED.png", repair.LION_REAR_BOX)
+                back = np.array(repair.compose_lion_card(spr, navy).convert("RGB"))
+                print("lion card back rebuilt from SoT box")
+        except Exception as exc:
+            print("lion card fallback", exc)
+    print(
+        "lion cards front", None if front is None else front.shape,
+        "back", None if back is None else back.shape,
+        "glb", list(lions),
+    )
+    return albedo, lions, imgs, front, back
+
+
+def stamp_front_lion_dest(tgt, atlas_path: Path, card) -> int:
+    """Dest→source planar stamp of lion_card_front onto chest texels.
+
+    Samples the card by dest (x,y), writes existing dest UVs. Does not
+    composite frozen Game stills. Leaves rear lion and plate islands alone.
+    """
+    if card is None or not atlas_path.exists():
+        print("front lion stamp skipped — no card/atlas")
+        return 0
+    me = tgt.data
+    me.calc_loop_triangles()
+    uv = me.uv_layers.active
+    if uv is None:
+        return 0
+    atlas = np.array(Image.open(atlas_path).convert("RGB"))
+    s = atlas.shape[0]
+    xmin, xmax, ymin, ymax = LION_FRONT_WIN
+    pix = 0
+    for tri in me.loop_triangles:
+        n = Vector(tri.normal)
+        if n.length < 1e-8:
+            continue
+        n.normalize()
+        if n.z < 0.22:
+            continue
+        c = (me.vertices[tri.vertices[0]].co + me.vertices[tri.vertices[1]].co + me.vertices[tri.vertices[2]].co) / 3.0
+        if c.y < ymin - 0.04 or c.y > ymax + 0.04 or abs(c.x) > 0.16 or c.z < 0.0:
+            continue
+        pts, pos = [], []
+        for vi, li in zip(tri.vertices, tri.loops):
+            u, v = uv.data[li].uv
+            pts.append((float(u) * (s - 1), (1.0 - float(v)) * (s - 1)))
+            pos.append(me.vertices[vi].co.copy())
+        (x0, y0), (x1, y1), (x2, y2) = pts
+        minx = max(0, int(math.floor(min(x0, x1, x2))))
+        maxx = min(s - 1, int(math.ceil(max(x0, x1, x2))))
+        miny = max(0, int(math.floor(min(y0, y1, y2))))
+        maxy = min(s - 1, int(math.ceil(max(y0, y1, y2))))
+        denom = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2)
+        if abs(denom) < 1e-8:
+            continue
+        for y in range(miny, maxy + 1):
+            py = y + 0.5
+            for x in range(minx, maxx + 1):
+                px = x + 0.5
+                w0 = ((y1 - y2) * (px - x2) + (x2 - x1) * (py - y2)) / denom
+                w1 = ((y2 - y0) * (px - x2) + (x0 - x2) * (py - y2)) / denom
+                w2 = 1.0 - w0 - w1
+                if w0 < -0.01 or w1 < -0.01 or w2 < -0.01:
+                    continue
+                p = pos[0] * w0 + pos[1] * w1 + pos[2] * w2
+                if not dest_in_front_lion(p, n):
+                    continue
+                cur = atlas[y, x]
+                cr, cg, cb = int(cur[0]), int(cur[1]), int(cur[2])
+                cloth = (cb > cr + 8 and cb > 40 and cr < 120) or (cr > 110 and cg > 80 and cr > cb + 8)
+                if not cloth:
+                    continue
+                u = (p.x - xmin) / max(1e-6, xmax - xmin)
+                v = (p.y - ymin) / max(1e-6, ymax - ymin)
+                if u < -0.02 or u > 1.02 or v < -0.02 or v > 1.02:
+                    continue
+                rgb = _sample_card_xy(card, u, v)
+                if rgb is None:
+                    continue
+                atlas[y, x] = np.array(rgb, np.uint8)
+                pix += 1
+    Image.fromarray(atlas).save(atlas_path)
+    print("front lion dest stamp pix", pix, flush=True)
+    return pix
 
 
 def bake_image0_texels(src, tgt, atlas_path: Path) -> int:
@@ -523,11 +726,11 @@ def bake_image0_texels(src, tgt, atlas_path: Path) -> int:
 
     if src is None or src == tgt:
         return 0
-    albedo, lions, imgs = rt.source_textures()
+    albedo, lions, imgs, lion_front, lion_back = load_lion_cards()
     if albedo is None:
         print("bake_image0: no Image_0")
         return 0
-    lion_arr = next(iter(lions.values()), None)
+    lion_arr = lion_back if lion_back is not None else lion_front
 
     src_me = src.data
     bm = bmesh.new()
@@ -537,7 +740,8 @@ def bake_image0_texels(src, tgt, atlas_path: Path) -> int:
     bvh = BVHTree.FromBMesh(bm)
     mats = list(src_me.materials)
 
-    rt.smart_uv(tgt)
+    if tgt.data.uv_layers.active is None:
+        rt.smart_uv(tgt)
     me = tgt.data
     me.calc_loop_triangles()
     uv = me.uv_layers.active
@@ -559,6 +763,10 @@ def bake_image0_texels(src, tgt, atlas_path: Path) -> int:
         mname = (mat.name if mat else "").lower()
         iname = (rt.mat_image_name(mat) or "").lower()
         if "lion" in mname or "lion" in iname:
+            if "front" in mname or "front" in iname:
+                return "lion_front"
+            if "back" in mname or "back" in iname:
+                return "lion_back"
             return "lion"
         if "image_0" in iname:
             return "albedo"
@@ -583,7 +791,7 @@ def bake_image0_texels(src, tgt, atlas_path: Path) -> int:
         def score(c):
             dist, align, idx, _loc = c
             kind = face_kind(bm.faces[idx])
-            pen = 0.018 if kind == "trim" else (-0.012 if kind == "lion" else -0.006)
+            pen = 0.018 if kind == "trim" else (-0.012 if kind.startswith("lion") else -0.006)
             return dist - 0.028 * align + pen
         return min(cands, key=score)
 
@@ -616,6 +824,15 @@ def bake_image0_texels(src, tgt, atlas_path: Path) -> int:
                 if w0 < -0.01 or w1 < -0.01 or w2 < -0.01:
                     continue
                 p = pos[0] * w0 + pos[1] * w1 + pos[2] * w2
+                if dest_in_front_lion(p, n) and lion_front is not None:
+                    u = (p.x - LION_FRONT_WIN[0]) / max(1e-6, LION_FRONT_WIN[1] - LION_FRONT_WIN[0])
+                    v = (p.y - LION_FRONT_WIN[2]) / max(1e-6, LION_FRONT_WIN[3] - LION_FRONT_WIN[2])
+                    rgb = _sample_card_xy(lion_front, u, v)
+                    if rgb is not None:
+                        acc[y, x] = np.array(rgb, np.float32)
+                        wgt[y, x] = 1.0
+                        pix += 1
+                    continue
                 got = pick(p, n)
                 if got is None:
                     continue
@@ -623,8 +840,13 @@ def bake_image0_texels(src, tgt, atlas_path: Path) -> int:
                 face = bm.faces[idx]
                 kind = face_kind(face)
                 uvw = src_uv(face, loc)
-                if kind == "lion":
-                    rgb = _sample_src_image(lion_arr if lion_arr is not None else albedo, uvw)
+                if kind == "lion_front":
+                    rgb = _sample_src_image(lion_front if lion_front is not None else lion_arr, uvw)
+                elif kind == "lion_back":
+                    rgb = _sample_src_image(lion_back if lion_back is not None else lion_arr, uvw)
+                elif kind == "lion":
+                    pick_arr = lion_front if n.z > 0.0 and lion_front is not None else (lion_back if lion_back is not None else lion_arr)
+                    rgb = _sample_src_image(pick_arr if pick_arr is not None else albedo, uvw)
                 else:
                     rgb = _sample_src_image(albedo, uvw)
                 if rgb is None:
@@ -651,12 +873,20 @@ def bake_image0_texels(src, tgt, atlas_path: Path) -> int:
 
 
 def project_albedo(src, tgt, atlas_path: Path):
-    """Image_0 + lion onto retopo UVs. No frozen Play-cam still compositing."""
-    pix = bake_image0_texels(src, tgt, atlas_path)
-    if pix < 2000:
-        raise SystemExit(f"Image_0 bake did not stick: pix={pix}")
+    """Image_0 + dest-space lion cards onto retopo UVs. No frozen Game stills."""
+    keep = os.environ.get("PATHA_KEEP_ATLAS") == "1" and atlas_path.exists() and atlas_path.stat().st_size > 80_000
+    pix = 0
+    if keep:
+        print("keep existing Image_0 atlas — dest lion stamp + PBR only")
+    else:
+        pix = bake_image0_texels(src, tgt, atlas_path)
+        if pix < 2000:
+            raise SystemExit(f"Image_0 bake did not stick: pix={pix}")
+    _albedo, _lions, _imgs, lion_front, _lion_back = load_lion_cards()
+    stamped = stamp_front_lion_dest(tgt, atlas_path, lion_front)
+    write_pbr_maps(atlas_path)
     assign_projected_material(tgt, atlas_path)
-    print("baked atlas", atlas_path, atlas_path.stat().st_size, "pix", pix)
+    print("baked atlas", atlas_path, atlas_path.stat().st_size, "pix", pix, "frontLion", stamped)
     return atlas_path
 
 
@@ -754,6 +984,7 @@ def recount(mesh_ob):
 
 def render_world_shots():
     """front / rear / side / ¾ + rear Play angle. Design eyes these FIRST."""
+    enable_eevee_spec()
     cam = bpy.context.scene.camera
     if cam is None:
         raise SystemExit("no camera")
@@ -798,8 +1029,8 @@ def write_drop(note: dict):
         "- SOURCE: Path 2 Meshy GLB + e5b132f Image_0 / SoT lion. LOOK = Meshy knight.\n"
         "- RETOPO: mid-poly manifold (voxel scaffold only, then shrinkwrap to Meshy). "
         "Not remesh-melt hero, not capsules, not paper-island weights.\n"
-        "- TEXTURE: frozen e5b132f World stills camera-projected onto retopo UVs; "
-        "Image_0 transfer fills occluded verts.\n"
+        "- TEXTURE: dest→source Image_0 bake + dest-space lion_card_front on chest; "
+        "steel metallic/roughness split. No frozen Game still compositing.\n"
         "- FBX: ThemePack `sir_aldric_path2_clean.fbx` — Y-up, face +Z, one scabbard-R.\n"
         "- RE-GATE: World stills first, then one Evaluate() walk. "
         "**Bind NOT claimed. Walk NOT claimed.** Hub PNG HOLD. PR #21 HOLD.\n\n"

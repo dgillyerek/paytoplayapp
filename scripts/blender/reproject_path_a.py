@@ -52,8 +52,9 @@ def main():
     if not walk_only:
         src.hide_set(False)
         src.hide_render = True
-        # Hug Meshy a bit tighter so plate silhouette reads less melt.
-        path_a.shrinkwrap_to_source(tgt, src, 0.001)
+        # Stills-first: do not re-wrap (rear/side already close; helm not the blocker).
+        if not stills_only:
+            path_a.shrinkwrap_to_source(tgt, src, 0.001)
         path_a.project_albedo(src, tgt, atlas_path)
         src.hide_set(True)
         src.hide_render = True
