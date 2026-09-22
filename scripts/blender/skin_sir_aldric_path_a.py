@@ -1488,14 +1488,9 @@ def _tabard_half(y: float) -> float:
     return half
 
 
-def _is_tabard_cloth(p: Vector) -> bool:
-    """Front + rear surcoat inside the fitted silhouette. Not the +X sheath."""
+def _in_tabard_xy(p: Vector) -> bool:
     half = _tabard_half(p.y)
-    if half <= 0.0 or abs(p.x) > half + 0.022:
-        return False
-    if p.x > 0.175 and hh.dist_seg(p, hh._SCAB_A, hh._SCAB_B) < 0.050:
-        return False
-    return True
+    return half > 0.0 and abs(p.x) <= half + 0.024
 
 
 def _is_gauntlet_r(p: Vector) -> bool:
@@ -1507,12 +1502,35 @@ def _is_gauntlet_r(p: Vector) -> bool:
 
 
 def _is_sheath(p: Vector) -> bool:
-    """Character-RIGHT hip sheath / hanging blade. Not tabard, not gauntlet."""
-    if p.x < 0.165 or not (0.26 < p.y < 1.14):
+    """Thin character-RIGHT sheath + hanging blade. Not belt, not tabard.
+
+    Upper hanger is a tight tube so the belt/hip cannot fan into a slab.
+    Lower blade stays wide enough to steal the Hand_R-bound sword.
+    """
+    if _is_gauntlet_r(p):
         return False
-    if _is_tabard_cloth(p) or _is_gauntlet_r(p):
+    d = hh.dist_seg(p, hh._SCAB_A, hh._SCAB_B)
+    if p.y >= 0.88:
+        return p.x > 0.205 and d < 0.046 and -0.055 < p.z < 0.075
+    if 0.26 < p.y < 0.88:
+        return p.x > 0.185 and d < 0.085 and abs(p.z) < 0.090
+    return False
+
+
+def _is_tabard_cloth(p: Vector) -> bool:
+    """Front + rear surcoat inside the fitted silhouette. Not the +X sheath."""
+    if not _in_tabard_xy(p):
         return False
-    return hh.dist_seg(p, hh._SCAB_A, hh._SCAB_B) < 0.090
+    if _is_sheath(p):
+        return False
+    return True
+
+
+def _is_right_hip_belt(p: Vector) -> bool:
+    """Belt / pouch / hip plate next to the sheath — stays on Hips."""
+    if _is_sheath(p) or _is_tabard_cloth(p):
+        return False
+    return 0.06 < p.x < 0.24 and 0.86 < p.y < 1.14 and p.z < 0.04
 
 
 def _clear_and_set(mesh_ob, i, bone: str, groups):
@@ -1591,6 +1609,21 @@ def lock_sheath_not_hand(mesh_ob) -> int:
             _clear_and_set(mesh_ob, i, "Scabbard", groups)
             n += 1
     print("sheath steal from hand", n)
+    return n
+
+
+def lock_right_hip_belt(mesh_ob) -> int:
+    """Belt/hip beside the sheath cannot ride Scabbard (walk fan/slab)."""
+    groups = {g.name: g for g in mesh_ob.vertex_groups}
+    if "Hips" not in groups:
+        groups["Hips"] = mesh_ob.vertex_groups.new(name="Hips")
+    n = 0
+    for i, v in enumerate(mesh_ob.data.vertices):
+        if not _is_right_hip_belt(v.co):
+            continue
+        _clear_and_set(mesh_ob, i, "Hips", groups)
+        n += 1
+    print("right hip belt lock", n)
     return n
 
 
@@ -1706,6 +1739,7 @@ def rebind_locked(mesh_ob, actor_ob):
     spatial_bind(mesh_ob)
     lock_scabbard(mesh_ob)
     lock_sheath_not_hand(mesh_ob)
+    lock_right_hip_belt(mesh_ob)
     lock_front_tabard(mesh_ob)
     drop_cross_limb(mesh_ob)
     counts = recount(mesh_ob)
