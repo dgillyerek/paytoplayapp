@@ -608,10 +608,10 @@ def _sample_card_xy(arr, u, v):
     return tuple(int(c) for c in arr[y, x])
 
 
-# Whole front tabard (hole-fill). Lion is a smaller e5b132f-matched window inside it.
-TABARD_FRONT_WIN = (-0.145, 0.145, 1.040, 1.415)
-# e5b132f chest: compact rampant (~60% of the too-big cdc9bf0 stamp).
-LION_FRONT_WIN = (-0.072, 0.072, 1.188, 1.348)
+# Front-half torso AABB — includes inner remesh shells that peek tan through cloth.
+TABARD_FRONT_WIN = (-0.165, 0.165, 1.045, 1.455)
+# e5b132f rampant: larger than 479a493 undershoot, smaller than cdc9bf0 full-tabard.
+LION_FRONT_WIN = (-0.080, 0.080, 1.172, 1.358)
 
 
 def dest_in_front_lion(p: Vector, n: Vector) -> bool:
@@ -720,12 +720,30 @@ def _image0_navy_sampler(src, navy):
     return sample, close
 
 
-def stamp_front_lion_dest(tgt, atlas_path: Path, card, src=None) -> int:
-    """Remap the whole front tabard to one strip: Image_0 navy + smaller lion.
+def _pick_image0_navy(src, fallback):
+    """One dest→source Image_0 navy at chest center. Solid fill, not a noisy bake."""
+    sample, close = _image0_navy_sampler(src, fallback)
+    rgb = sample(Vector((0.0, 1.24, 0.16)), Vector((0.0, 0.0, 1.0)))
+    close()
+    return np.array(rgb, np.uint8)
 
-    Gray holes were dest faces that failed a cloth check (they sampled gray).
-    Collect by dest volume, fill Image_0 navy, dest-space stamp lion_card_front
-    in the e5b132f chest window. Not frozen Game stills. Rear/plate UVs stay.
+
+def _atlas_tan(atlas, uv_loop, s: int) -> bool:
+    u, v = uv_loop.uv
+    x = int(max(0, min(s - 1, float(u) * (s - 1))))
+    y = int(max(0, min(s - 1, (1.0 - float(v)) * (s - 1))))
+    r, g, b = (int(c) for c in atlas[y, x])
+    chroma = max(r, g, b) - min(r, g, b)
+    lum = 0.30 * r + 0.59 * g + 0.11 * b
+    return chroma < 42 and 70 < lum < 185
+
+
+def stamp_front_lion_dest(tgt, atlas_path: Path, card, src=None) -> int:
+    """Opaque front tabard: solid Image_0 navy on every chest face, then lion.
+
+    Tan shred was inner remesh + dest-planar folds still sampling old islands.
+    Park the whole front-half torso on a navy pad, dest-planar only the clean
+    front faces onto a lion strip that is the e5b132f window. Not Game stills.
     """
     if card is None or not atlas_path.exists():
         print("front lion stamp skipped — no card/atlas")
@@ -736,103 +754,63 @@ def stamp_front_lion_dest(tgt, atlas_path: Path, card, src=None) -> int:
         return 0
     atlas = np.array(Image.open(atlas_path).convert("RGB"))
     s = atlas.shape[0]
-    navy = np.array(card[8, 8], np.uint8)
-    faces = []
+    navy = _pick_image0_navy(src, np.array(card[8, 8], np.uint8))
+    lx0, lx1, ly0, ly1 = LION_FRONT_WIN
+    tx0, tx1, ty0, ty1 = TABARD_FRONT_WIN
+    u0, u1, v0, v1 = 0.68, 0.94, 0.62, 0.97
+    nu0, nu1, nv0, nv1 = 0.955, 0.995, 0.84, 0.98
+    cloth, lion = [], []
     for poly in me.polygons:
         c = poly.center
         n = poly.normal
-        front_torso = n.z > -0.08 and 0.97 < c.y < 1.48 and abs(c.x) < 0.18 and c.z > -0.02
-        if not front_torso:
-            continue
-        parked = cloth_n = 0
+        in_tabard = tx0 <= c.x <= tx1 and ty0 <= c.y <= ty1 and c.z > -0.01
+        tan_n = 0
         for li in poly.loop_indices:
-            u, v = uv.data[li].uv
-            if (u > 0.95 and v > 0.95) or (0.66 < u < 0.96 and 0.62 < v < 0.98):
-                parked += 1
-            if _atlas_cloth(atlas, uv.data[li], s):
-                cloth_n += 1
-        in_vol = n.z > 0.05 and 1.00 < c.y < 1.44 and abs(c.x) < 0.16 and c.z > 0.02
-        cloth = cloth_n >= max(1, len(poly.loop_indices) // 2)
-        if not (parked or in_vol or cloth):
+            if _atlas_tan(atlas, uv.data[li], s):
+                tan_n += 1
+        loose = (
+            0.96 < c.y < 1.48
+            and abs(c.x) < 0.20
+            and c.z > -0.02
+            and tan_n >= 1
+        )
+        if not (in_tabard or loose):
             continue
-        faces.append(poly.index)
-    print("front tabard faces", len(faces), flush=True)
-    if len(faces) < 8:
+        cloth.append(poly.index)
+        if n.z > 0.30 and dest_in_front_lion(c, n) and c.z > 0.08:
+            lion.append(poly.index)
+    print("front tabard cloth", len(cloth), "lion", len(lion), flush=True)
+    if len(cloth) < 8:
         return 0
-    tx0, tx1, ty0, ty1 = TABARD_FRONT_WIN
-    lx0, lx1, ly0, ly1 = LION_FRONT_WIN
-    u0, u1, v0, v1 = 0.68, 0.94, 0.64, 0.96
-    face_set = set(faces)
-    for fi in faces:
+    # Solid navy pad — every chest / inner-shell face, no dest-planar shred.
+    atlas[int((1.0 - nv1) * s):int((1.0 - nv0) * s), int(nu0 * s):int(nu1 * s)] = navy
+    for fi in cloth:
         poly = me.polygons[fi]
-        for li, vi in zip(poly.loop_indices, poly.vertices):
-            p = me.vertices[vi].co
-            tu = max(0.0, min(1.0, (p.x - tx0) / max(1e-6, tx1 - tx0)))
-            tv = max(0.0, min(1.0, (p.y - ty0) / max(1e-6, ty1 - ty0)))
-            uv.data[li].uv = Vector((u0 + tu * (u1 - u0), v0 + tv * (v1 - v0)))
+        for li in poly.loop_indices:
+            uv.data[li].uv = Vector(((nu0 + nu1) * 0.5, (nv0 + nv1) * 0.5))
+    # Lion strip: navy then cropped card filling the whole strip.
     y_top = int((1.0 - v1) * s)
     y_bot = int((1.0 - v0) * s)
     x_l = int(u0 * s)
     x_r = int(u1 * s)
     atlas[y_top:y_bot, x_l:x_r] = navy
-    sample_navy, close_navy = _image0_navy_sampler(src, navy)
-    me.calc_loop_triangles()
-    navy_px = 0
-    for tri in me.loop_triangles:
-        if tri.polygon_index not in face_set:
-            continue
-        n = Vector(tri.normal)
-        if n.length < 1e-8:
-            continue
-        n.normalize()
-        pts, pos = [], []
-        for vi, li in zip(tri.vertices, tri.loops):
-            uu, vv = uv.data[li].uv
-            pts.append((float(uu) * (s - 1), (1.0 - float(vv)) * (s - 1)))
-            pos.append(me.vertices[vi].co.copy())
-        (xa, ya), (xb, yb), (xc, yc) = pts
-        minx = max(0, int(math.floor(min(xa, xb, xc))))
-        maxx = min(s - 1, int(math.ceil(max(xa, xb, xc))))
-        miny = max(0, int(math.floor(min(ya, yb, yc))))
-        maxy = min(s - 1, int(math.ceil(max(ya, yb, yc))))
-        denom = (yb - yc) * (xa - xc) + (xc - xb) * (ya - yc)
-        if abs(denom) < 1e-8:
-            continue
-        for y in range(miny, maxy + 1):
-            py = y + 0.5
-            for x in range(minx, maxx + 1):
-                px = x + 0.5
-                w0 = ((yb - yc) * (px - xc) + (xc - xb) * (py - yc)) / denom
-                w1 = ((yc - ya) * (px - xc) + (xa - xc) * (py - ya)) / denom
-                w2 = 1.0 - w0 - w1
-                if w0 < -0.01 or w1 < -0.01 or w2 < -0.01:
-                    continue
-                p = pos[0] * w0 + pos[1] * w1 + pos[2] * w2
-                atlas[y, x] = np.array(sample_navy(p, n), np.uint8)
-                navy_px += 1
-    close_navy()
-    # Blit cropped rampant into the upper-center of the strip.
-    # Dest-fraction of LION_FRONT_WIN/TABARD read tiny in World stills (chest
-    # UVs only cover the strip center). Use strip fractions that match e5b132f.
     sprite = _crop_lion_sprite(card)
-    su0 = u0 + 0.12 * (u1 - u0)
-    su1 = u0 + 0.88 * (u1 - u0)
-    sv0 = v0 + 0.22 * (v1 - v0)
-    sv1 = v0 + 0.84 * (v1 - v0)
-    ly_top = int((1.0 - sv1) * s)
-    ly_bot = int((1.0 - sv0) * s)
-    lx_l = int(su0 * s)
-    lx_r = int(su1 * s)
-    if lx_r > lx_l and ly_bot > ly_top:
-        slot = Image.fromarray(sprite).resize((lx_r - lx_l, ly_bot - ly_top), Image.LANCZOS)
-        atlas[ly_top:ly_bot, lx_l:lx_r] = np.array(slot)
+    if x_r > x_l and y_bot > y_top:
+        slot = Image.fromarray(sprite).resize((x_r - x_l, y_bot - y_top), Image.LANCZOS)
+        atlas[y_top:y_bot, x_l:x_r] = np.array(slot)
+    for fi in lion:
+        poly = me.polygons[fi]
+        for li, vi in zip(poly.loop_indices, poly.vertices):
+            p = me.vertices[vi].co
+            tu = max(0.0, min(1.0, (p.x - lx0) / max(1e-6, lx1 - lx0)))
+            tv = max(0.0, min(1.0, (p.y - ly0) / max(1e-6, ly1 - ly0)))
+            uv.data[li].uv = Vector((u0 + tu * (u1 - u0), v0 + tv * (v1 - v0)))
     Image.fromarray(atlas).save(atlas_path)
     print(
-        "front tabard strip", x_l, y_top, x_r, y_bot,
-        "faces", len(faces), "navyPx", navy_px,
-        "lionBlit", lx_l, ly_top, lx_r, ly_bot, "sprite", sprite.shape, flush=True,
+        "front tabard navy+lion", x_l, y_top, x_r, y_bot,
+        "cloth", len(cloth), "lion", len(lion), "sprite", sprite.shape, flush=True,
     )
-    return len(faces)
+    return len(cloth)
 
 
 def bake_image0_texels(src, tgt, atlas_path: Path) -> int:
