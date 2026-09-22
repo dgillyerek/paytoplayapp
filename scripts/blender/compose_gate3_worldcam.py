@@ -57,16 +57,16 @@ def main() -> None:
     ART.mkdir(parents=True, exist_ok=True)
 
     shots = {
-        "world_rear": "PATH 2 paint iterate  ·  UV bleed + SoT lion  ·  look NOT claimed",
-        "world_rear_34": "PATH 2 paint iterate  ·  rear ¾  ·  scabbard character-RIGHT",
-        "world_front": "PATH 2 paint iterate  ·  World-cam Play front  ·  look NOT claimed",
-        "world_side_r": "PATH 2 paint iterate  ·  side R  ·  scabbard character-RIGHT",
-        "world_34_front": "PATH 2 paint iterate  ·  front ¾  ·  look NOT claimed",
+        "world_rear": "PATH A  ·  retopo+project  ·  rear Play  ·  bind NOT claimed",
+        "world_rear_34": "PATH A  ·  retopo+project  ·  rear ¾  ·  scabbard character-RIGHT",
+        "world_front": "PATH A  ·  retopo+project  ·  World-cam front  ·  bind NOT claimed",
+        "world_side_r": "PATH A  ·  retopo+project  ·  side R  ·  scabbard character-RIGHT",
+        "world_34_front": "PATH A  ·  retopo+project  ·  front ¾  ·  bind NOT claimed",
     }
     caps = {}
     for name, text in shots.items():
         im = caption(load_rgb(PROOF / f"{name}.png", DARK), text)
-        im.save(PROOF / f"{name}.png", optimize=True)
+        # Do not overwrite clean World stills — Design eyes those raw.
         im.save(ART / f"gate3_{name}.png")
         caps[name] = im
 

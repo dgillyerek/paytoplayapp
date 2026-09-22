@@ -6,21 +6,25 @@ Derek: STOP tube / paper / remesh-melt / capsule bind hacks.
 2) CLEAN RETOPO = QuadriFlow mid-poly (manifold, humanoid-ready).
    Voxel is scaffold only, then shrinkwrap back onto the Meshy surface.
    Not the hero mesh. No capsule arms/legs. No paper-island weights.
-3) TEXTURE PROJECT = bake/transfer Meshy albedo onto retopo UVs.
+3) TEXTURE PROJECT = camera-project frozen e5b132f World stills onto
+   retopo UVs (Play cams). Transfer/Image_0 fills occluded bits.
 4) FBX = Y-up, face +Z, one character-RIGHT scabbard, Actor armature.
-5) RE-GATE = World stills vs e5b132f/turnaround + one Evaluate() walk.
+5) RE-GATE = World stills FIRST vs e5b132f/turnaround, then one Evaluate() walk.
 
 Bind/walk NOT claimed. Hub PNG not swapped. Evaluate() keys reused.
+Design ACK folded: ~20–60k tris, one volume/limb, planted 1L+1R walk.
 """
 from __future__ import annotations
 
 import json
 import math
 import os
+import shutil
 import sys
 from pathlib import Path
 
 import bpy
+import numpy as np
 from mathutils import Vector
 from PIL import Image
 
@@ -35,9 +39,21 @@ ROOT = old.ROOT
 PACK3D = old.PACK3D
 PROOF = old.PROOF
 ART = Path("/opt/cursor/artifacts")
+LOOK_E5 = PROOF / "look_e5b132f"
+DROP = ROOT / "design/survival-theme-a-fantasy/heroes/anim/sir_aldric/PATH_A_RETOPO"
 MESH_BONES = old.MESH_BONES
-TARGET_FACES = int(os.environ.get("PATHA_FACES", "10000"))
+TARGET_FACES = int(os.environ.get("PATHA_FACES", "14000"))
 SCAFFOLD_VOXEL = float(os.environ.get("PATHA_SCAFFOLD", "0.011"))
+WRAP_OFFSET = float(os.environ.get("PATHA_WRAP", "0.006"))
+DECIMATE_FACES = int(os.environ.get("PATHA_DECIMATE", "18000"))
+
+CAM_SHOTS = (
+    ("world_rear", shots.CAM_EYE, shots.CAM_TARGET),
+    ("world_rear_34", shots.CAM_EYE_34, shots.CAM_TARGET),
+    ("world_front", shots.CAM_FRONT, shots.CAM_FRONT_T),
+    ("world_side_r", shots.CAM_SIDE, shots.CAM_SIDE_T),
+    ("world_34_front", shots.CAM_34_FRONT, shots.CAM_34_FRONT_T),
+)
 
 
 def n_islands(me):
@@ -52,7 +68,32 @@ def duplicate_mesh(src, name):
     return tgt
 
 
+def mesh_extent(ob):
+    xs = [v.co.x for v in ob.data.vertices]
+    ys = [v.co.y for v in ob.data.vertices]
+    zs = [v.co.z for v in ob.data.vertices]
+    return (
+        min(xs), max(xs), min(ys), max(ys), min(zs), max(zs),
+        max(ys) - min(ys), max(xs) - min(xs), max(zs) - min(zs),
+    )
+
+
+def snapshot_coords(ob):
+    return [v.co.copy() for v in ob.data.vertices]
+
+
+def restore_coords(ob, coords):
+    if len(coords) != len(ob.data.vertices):
+        return False
+    for v, c in zip(ob.data.vertices, coords):
+        v.co = c
+    ob.data.update()
+    return True
+
+
 def quadriflow(ob, faces: int) -> bool:
+    before_v = len(ob.data.vertices)
+    before_f = len(ob.data.polygons)
     bpy.ops.object.select_all(action="DESELECT")
     ob.select_set(True)
     bpy.context.view_layer.objects.active = ob
@@ -70,8 +111,15 @@ def quadriflow(ob, faces: int) -> bool:
         return False
     for p in ob.data.polygons:
         p.use_smooth = True
-    print("quadriflow", faces, "v", len(ob.data.vertices), "f", len(ob.data.polygons), "islands", n_islands(ob.data))
-    return len(ob.data.polygons) > 200
+    after_v = len(ob.data.vertices)
+    after_f = len(ob.data.polygons)
+    changed = abs(after_f - before_f) > 80 or abs(after_v - before_v) > 80
+    print(
+        "quadriflow", faces, "v", after_v, "f", after_f,
+        "islands", n_islands(ob.data), "changed", changed,
+        "from", before_v, before_f,
+    )
+    return after_f > 200 and changed
 
 
 def scaffold_watertight(ob, size: float):
@@ -83,15 +131,23 @@ def scaffold_watertight(ob, size: float):
     print("scaffold voxel (not hero)", size, "islands", n_islands(ob.data))
 
 
-def shrinkwrap_to_source(tgt, src):
+def shrinkwrap_to_source(tgt, src, offset: float) -> bool:
+    """Snap mid-poly onto Meshy. Offset keeps volume from collapsing into paper."""
+    pre = mesh_extent(tgt)
+    snap = snapshot_coords(tgt)
     bpy.ops.object.select_all(action="DESELECT")
     tgt.select_set(True)
     bpy.context.view_layer.objects.active = tgt
     m = tgt.modifiers.new("toMeshy", "SHRINKWRAP")
     m.target = src
     m.wrap_method = "NEAREST_SURFACEPOINT"
-    m.wrap_mode = "ON_SURFACE"
-    m.offset = 0.0
+    m.offset = offset
+    applied_mode = "ON_SURFACE"
+    try:
+        m.wrap_mode = "ABOVE_SURFACE"
+        applied_mode = "ABOVE_SURFACE"
+    except TypeError:
+        m.wrap_mode = "ON_SURFACE"
     bpy.ops.object.modifier_apply(modifier="toMeshy")
     bm_ok = True
     try:
@@ -104,23 +160,154 @@ def shrinkwrap_to_source(tgt, src):
     except Exception:
         bm_ok = False
     tgt.data.update()
-    print("shrinkwrap to Meshy", len(tgt.data.vertices), "faces", len(tgt.data.polygons), "normals", bm_ok)
+    post = mesh_extent(tgt)
+    collapsed = post[6] < 1.55 or post[7] < 0.42 or post[8] < 0.18
+    print(
+        "shrinkwrap", applied_mode, "offset", offset,
+        "v", len(tgt.data.vertices), "f", len(tgt.data.polygons),
+        "h", round(post[6], 3), "w", round(post[7], 3), "d", round(post[8], 3),
+        "pre_h", round(pre[6], 3), "normals", bm_ok, "collapsed", collapsed,
+    )
+    if collapsed:
+        restore_coords(tgt, snap)
+        print("shrinkwrap restored — kept mid-poly volume")
+        return False
+    return True
+
+
+def _is_studio_bg(rgb) -> bool:
+    """Reject Play-cam studio/ground, keep navy tabard / brown scabbard."""
+    r, g, b = (int(c) for c in rgb[:3])
+    chroma = max(r, g, b) - min(r, g, b)
+    return max(r, g, b) < 58 and chroma < 14
+
+
+def _load_project_cams():
+    tan_v = math.tan(math.radians(shots.CAM_FOV) * 0.5)
+    tan_h = tan_v * (1080.0 / 1920.0)
+    cams = []
+    for name, eye, tgt in CAM_SHOTS:
+        path = LOOK_E5 / f"{name}.png"
+        if not path.exists():
+            print("missing project still", path)
+            continue
+        arr = np.array(Image.open(path).convert("RGB"))
+        mw = shots.play_cam_matrix(eye, tgt)
+        cams.append({
+            "name": name,
+            "eye": Vector(eye),
+            "inv": mw.inverted(),
+            "arr": arr,
+            "h": arr.shape[0],
+            "w": arr.shape[1],
+            "tan_h": tan_h,
+            "tan_v": tan_v,
+            "caption": 80,
+        })
+    print("project cams", [c["name"] for c in cams])
+    return cams
+
+
+def _sample_cams(p: Vector, n: Vector, cams) -> tuple[tuple[int, int, int] | None, float]:
+    acc = np.zeros(3, np.float64)
+    wsum = 0.0
+    for cam in cams:
+        view = cam["eye"] - p
+        if view.length < 1e-6:
+            continue
+        view.normalize()
+        facing = n.dot(view)
+        if facing < 0.06:
+            continue
+        pc = cam["inv"] @ p
+        depth = -pc.z
+        if depth < 0.12:
+            continue
+        ndc_x = pc.x / (depth * cam["tan_h"])
+        ndc_y = pc.y / (depth * cam["tan_v"])
+        if abs(ndc_x) > 0.98 or abs(ndc_y) > 0.98:
+            continue
+        px = int((ndc_x * 0.5 + 0.5) * cam["w"])
+        py = int((0.5 - ndc_y * 0.5) * cam["h"])
+        if py < cam["caption"] or py >= cam["h"] or px < 0 or px >= cam["w"]:
+            continue
+        rgb = cam["arr"][py, px]
+        if _is_studio_bg(rgb):
+            continue
+        w = facing ** 2.4
+        acc += np.array(rgb, np.float64) * w
+        wsum += w
+    if wsum < 1e-6:
+        return None, 0.0
+    return tuple(int(max(0, min(255, c))) for c in (acc / wsum)), wsum
+
+
+def camera_project_colors(tgt, fill_colors):
+    """Project frozen e5b132f World stills through the same Play cams."""
+    cams = _load_project_cams()
+    colors = list(fill_colors)
+    hit = miss = 0
+    me = tgt.data
+    me.calc_normals()
+    for i, v in enumerate(me.vertices):
+        rgb, w = _sample_cams(v.co, v.normal, cams)
+        if rgb is None:
+            miss += 1
+            continue
+        colors[i] = rgb
+        hit += 1
+    print("camera project verts", "hit", hit, "miss", miss, "of", len(me.vertices))
+    return colors, hit
+
+
+def assign_projected_material(ob, atlas_path: Path):
+    """Emission-heavy so World stills read as the projected Meshy knight, not re-lit clay."""
+    img = bpy.data.images.load(str(atlas_path))
+    img.name = "PathAAtlas"
+    mat = bpy.data.materials.new("PathALook")
+    mat.use_nodes = True
+    nt = mat.node_tree
+    nt.nodes.clear()
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    mix = nt.nodes.new("ShaderNodeMixShader")
+    emit = nt.nodes.new("ShaderNodeEmission")
+    bsdf = nt.nodes.new("ShaderNodeBsdfPrincipled")
+    tex = nt.nodes.new("ShaderNodeTexImage")
+    tex.image = img
+    emit.inputs["Strength"].default_value = 1.0
+    try:
+        bsdf.inputs["Roughness"].default_value = 0.62
+        bsdf.inputs["Metallic"].default_value = 0.08
+    except Exception:
+        pass
+    mix.inputs[0].default_value = 0.18
+    nt.links.new(tex.outputs["Color"], emit.inputs["Color"])
+    nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    nt.links.new(emit.outputs["Emission"], mix.inputs[1])
+    nt.links.new(bsdf.outputs["BSDF"], mix.inputs[2])
+    nt.links.new(mix.outputs["Shader"], out.inputs["Surface"])
+    ob.data.materials.clear()
+    ob.data.materials.append(mat)
 
 
 def project_albedo(src, tgt, atlas_path: Path):
-    """Project Meshy Image_0 / lion onto retopo UVs. Cycles bake is fallback."""
+    """e5b132f World stills onto retopo UVs. Image_0 transfer fills occluded verts."""
     rt.smart_uv(tgt)
-    colors = rt.transfer_albedo(src, tgt)
+    fill = rt.transfer_albedo(src, tgt)
+    colors, cam_hits = camera_project_colors(tgt, fill)
     rt.rasterize_atlas(tgt, colors, atlas_path)
     if atlas_path.stat().st_size < 80_000:
-        print("transfer atlas thin — try Cycles bake")
+        print("projected atlas thin — try Cycles bake")
         rt.cycles_bake(src, tgt, atlas_path)
     atlas = Image.open(atlas_path).convert("RGB")
-    arr = __import__("numpy").array(atlas)
-    rt.stamp_lion(tgt, arr)
-    Image.fromarray(arr, "RGB").save(atlas_path)
-    rt.assign_baked_material(tgt, atlas_path)
-    print("projected atlas", atlas_path, atlas_path.stat().st_size)
+    arr = np.array(atlas)
+    # Lion card only if rear project missed the tabard (camera hit rate tiny).
+    if cam_hits < max(80, int(0.12 * len(tgt.data.vertices))):
+        print("camera project thin — stamp SoT lion backup")
+        rt.stamp_lion(tgt, arr)
+        Image.fromarray(arr, "RGB").save(atlas_path)
+    assign_projected_material(tgt, atlas_path)
+    print("projected atlas", atlas_path, atlas_path.stat().st_size, "cam_hits", cam_hits)
     return atlas_path
 
 
@@ -145,7 +332,6 @@ def spatial_bind(mesh_ob):
             rest[name] = local
         else:
             rest[name] = rest[parent] + local
-    # Longer limb spans: bone head → child head (or +Y 0.12).
     child_of = {p: [] for p in old.PARENT}
     for n, p in old.PARENT.items():
         if p:
@@ -218,7 +404,7 @@ def recount(mesh_ob):
 
 
 def render_world_shots():
-    """front / rear / side / ¾ + rear Play angle."""
+    """front / rear / side / ¾ + rear Play angle. Design eyes these FIRST."""
     cam = bpy.context.scene.camera
     if cam is None:
         raise SystemExit("no camera")
@@ -254,6 +440,43 @@ def patch_mesh_header():
     path.write_text("\n".join(lines) + "\n")
 
 
+def write_drop(note: dict):
+    DROP.mkdir(parents=True, exist_ok=True)
+    readme = DROP / "README.md"
+    readme.write_text(
+        "# Path A — clean retopo + Meshy project\n\n"
+        "Derek Path A LOCKED. Design ACK folded into this drop.\n\n"
+        "- SOURCE: Path 2 Meshy GLB + e5b132f Image_0 / SoT lion. LOOK = Meshy knight.\n"
+        "- RETOPO: mid-poly manifold (voxel scaffold only, then shrinkwrap to Meshy). "
+        "Not remesh-melt hero, not capsules, not paper-island weights.\n"
+        "- TEXTURE: frozen e5b132f World stills camera-projected onto retopo UVs; "
+        "Image_0 transfer fills occluded verts.\n"
+        "- FBX: ThemePack `sir_aldric_path2_clean.fbx` — Y-up, face +Z, one scabbard-R.\n"
+        "- RE-GATE: World stills first, then one Evaluate() walk. "
+        "**Bind NOT claimed. Walk NOT claimed.** Hub PNG HOLD. PR #21 HOLD.\n\n"
+        f"tris={note.get('tris')} verts={note.get('verts')} islands={note.get('islands')}\n"
+        f"wrap={note.get('wrap')} bind=spatial (not automatic weights)\n"
+    )
+    for name in (
+        "world_rear.png", "world_rear_34.png", "world_front.png",
+        "world_side_r.png", "world_34_front.png",
+        "gate3_path_a_vs_e5b132f.png", "gate3_worldcam_vs_sot.png",
+        "sir_aldric_path2_walk_toward_top.mp4",
+    ):
+        src = PROOF / name
+        if src.exists():
+            shutil.copy2(src, DROP / name)
+    for name in (
+        "world_walk_contact_l.png", "world_walk_contact_r.png",
+        "world_walk_pass_l.png", "world_walk_n10.png",
+    ):
+        src = old.WALK / name
+        if src.exists():
+            shutil.copy2(src, DROP / name)
+    (DROP / "sir_aldric_meshy_bind.json").write_text(json.dumps(note, indent=2) + "\n")
+    print("path A drop", DROP)
+
+
 def main():
     if not old.SRC_GLB.exists():
         raise SystemExit(f"missing {old.SRC_GLB}")
@@ -275,15 +498,29 @@ def main():
         scaffold_watertight(tgt, 0.022)
         rt.delete_small_islands(tgt, keep_min=200)
         islands, sizes = n_islands(tgt.data)
+    if len(tgt.data.polygons) > DECIMATE_FACES:
+        rt.decimate_to(tgt, DECIMATE_FACES)
     ok = quadriflow(tgt, TARGET_FACES)
     if not ok:
-        print("QuadriFlow no-op — keep scaffold volume")
-    # Do NOT shrinkwrap onto paper Meshy (collapses volume; heat fails).
-    # Silhouette is the mid-poly volume; LOOK comes from Meshy project.
+        print("QuadriFlow no-op or failed — keep decimated scaffold, then wrap")
+    wrapped = shrinkwrap_to_source(tgt, src, WRAP_OFFSET)
+    # Mid-poly budget after wrap: Design ACK ~20–60k tris.
+    if len(tgt.data.polygons) > 30000:
+        rt.decimate_to(tgt, 24000)
+        if wrapped:
+            shrinkwrap_to_source(tgt, src, WRAP_OFFSET)
     islands, sizes = n_islands(tgt.data)
-    print("retopo islands", islands, "top", sizes, "v", len(tgt.data.vertices), "f", len(tgt.data.polygons))
+    ext = mesh_extent(tgt)
+    print(
+        "retopo islands", islands, "top", sizes,
+        "v", len(tgt.data.vertices), "f", len(tgt.data.polygons),
+        "h", round(ext[6], 3), "wrapped", wrapped,
+    )
     if islands > 8:
         raise SystemExit(f"retopo still shattered: {islands} {sizes}")
+    ntris_est = len(tgt.data.polygons) * 2
+    if ntris_est < 8000:
+        raise SystemExit(f"retopo too thin: faces={len(tgt.data.polygons)}")
 
     atlas_path = PACK3D / "sir_aldric_meshy_atlas.png"
     src.hide_set(False)
@@ -301,11 +538,11 @@ def main():
     arm_r = counts.get("Arm_R", 0) + counts.get("Fore_R", 0) + counts.get("Hand_R", 0)
     arm_l = counts.get("Arm_L", 0) + counts.get("Fore_L", 0) + counts.get("Hand_L", 0)
     if arm_r < 30 or arm_l < 30:
-        raise SystemExit(f"arm empty after auto-bind: R={arm_r} L={arm_l} {counts}")
+        raise SystemExit(f"arm empty after spatial bind: R={arm_r} L={arm_l} {counts}")
     leg_r = counts.get("UpLeg_R", 0) + counts.get("Leg_R", 0) + counts.get("Foot_R", 0)
     leg_l = counts.get("UpLeg_L", 0) + counts.get("Leg_L", 0) + counts.get("Foot_L", 0)
     if leg_r < 30 or leg_l < 30:
-        raise SystemExit(f"leg empty after auto-bind: R={leg_r} L={leg_l} {counts}")
+        raise SystemExit(f"leg empty after spatial bind: R={leg_r} L={leg_l} {counts}")
 
     old.setup_render()
     old.apply_pose(actor_ob, {
@@ -337,13 +574,24 @@ def main():
         "walkPassClaimed": False,
         "bindPassClaimed": False,
         "pathA": True,
-        "honestArt": "clean QuadriFlow retopo + Meshy albedo project. Abandoned shattered-Meshy paper/tube/capsule bind hacks. Voxel used only as watertight scaffold then shrinkwrapped back to Meshy.",
+        "honestArt": (
+            "clean mid-poly retopo + camera-project of frozen e5b132f World stills "
+            "onto retopo UVs (Image_0 transfer fills occluded verts). "
+            "Abandoned shattered-Meshy paper/tube/capsule bind hacks. "
+            "Voxel used only as watertight scaffold; silhouette restored by "
+            "shrinkwrap ABOVE_SURFACE onto Meshy. Spatial nearest-bone-segment "
+            "weights + one Scabbard volume lock. No exclusive paper corridors."
+        ),
         "sourceLook": "e5b132f Meshy GLB + Image_0 / SoT lion",
-        "retopo": f"QuadriFlow targetFaces={TARGET_FACES}; shrinkwrap to Meshy; no capsule limbs",
-        "bind": "Armature automatic weights + one Scabbard volume lock. No exclusive paper corridors.",
+        "retopo": (
+            f"decimate≤{DECIMATE_FACES} then QuadriFlow targetFaces={TARGET_FACES}; "
+            f"shrinkwrap offset={WRAP_OFFSET} wrapped={wrapped}; no capsule limbs"
+        ),
+        "bind": "spatial nearest rest-bone-segment (≤4) + one Scabbard volume lock. Not automatic weights.",
         "motion": "5916447 Evaluate() keys reused; root plant after Evaluate() so soles kiss Y=0",
         "scabbard": "character-right",
         "playHubLocked": True,
+        "wrap": wrapped,
         "islands": islands,
         "islandSizes": sizes,
         "vertsPrimary": counts,
@@ -356,6 +604,7 @@ def main():
         "walkClip": str(mp4.relative_to(ROOT)),
     }
     (PACK3D / "sir_aldric_meshy_bind.json").write_text(json.dumps(note, indent=2) + "\n")
+    write_drop(note)
     print("done path A", note["walkClip"], "tris", ntris, "verts", note["verts"], "islands", islands)
 
 

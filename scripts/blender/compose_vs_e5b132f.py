@@ -43,7 +43,7 @@ def main() -> None:
     cap_l.rectangle((0, 110, w, 174), fill=(16, 16, 14))
     cap_l.text((24, 128), "e5b132f paint PASS  |  world_rear", fill=(236, 230, 210), font=f_sm)
     cap_l.rectangle((w, 110, w * 2, 174), fill=(16, 16, 14))
-    cap_l.text((w + 24, 128), "this tip  |  Meshy hang rest  |  same GLB UVs", fill=(236, 230, 210), font=f_sm)
+    cap_l.text((w + 24, 128), "this tip  |  Path A retopo+project  |  bind NOT claimed", fill=(236, 230, 210), font=f_sm)
     out = PROOF / "gate3_meshy_hang_vs_e5b132f.png"
     sheet.save(out)
     (ART / out.name).write_bytes(out.read_bytes())
