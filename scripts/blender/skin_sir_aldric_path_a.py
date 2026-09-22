@@ -244,11 +244,19 @@ def _vg_fill_new(ob, dump):
 
 
 def _front_torso_p(c: Vector) -> bool:
-    # Include waist / mid-tabard. Stop above the skirt hem and inside the arms.
-    return 0.86 < c.y < 1.48 and abs(c.x) < 0.195 and c.z > -0.01
+    # Waist + chest + side-tabard. Stop above the skirt hem and inside the arms.
+    return 0.80 < c.y < 1.50 and abs(c.x) < 0.21 and c.z > -0.04
 
 
-def peel_front_torso_inner(tgt, src=None) -> int:
+def _is_src_cloth(src, face) -> bool:
+    mats = src.data.materials
+    mat = mats[face.material_index] if face.material_index < len(mats) else None
+    mname = (mat.name if mat else "").lower()
+    iname = (rt.mat_image_name(mat) or "").lower()
+    return "lion" in mname or "lion" in iname or "image_0" in iname
+
+
+def peel_front_torso_inner(tgt, src=None, wrap: bool = True) -> int:
     """Delete the inner remesh wall on the front tabard.
 
     Solidify+voxel left a connected double shell (one island, ~half the
@@ -307,10 +315,172 @@ def peel_front_torso_inner(tgt, src=None) -> int:
         print("peel pass", _pass, "deleted", nkill, "f", len(me.polygons), flush=True)
     rt.delete_small_islands(tgt, keep_min=24)
     filled = _vg_fill_new(tgt, dump)
-    if src is not None and killed:
+    if wrap and src is not None and killed:
         _shrinkwrap_front_torso(tgt, src, 0.002)
     print("peel front torso killed", killed, "newWts", filled, "v", len(me.vertices), "f", len(me.polygons))
     return killed
+
+
+def replace_front_cloth_shell(tgt, src) -> int:
+    """One dest-planar cloth patch snapped to Meshy Image_0 / lion.
+
+    8a4c611 census: peel left 1047 inner faces, 162 plate/tan first-hits,
+    522 hole edges. Alpha already opaque. Delete remesh double-wall +
+    poke-through under a single outer cloth. Helm/gauntlets/rear stay.
+    Not a paint stamp. Not a rebind.
+    """
+    import bmesh
+    from mathutils.bvhtree import BVHTree
+    from mathutils.kdtree import KDTree
+
+    if src is None:
+        print("cloth patch skipped — no Meshy source")
+        return 0
+    dump = _vg_dump(tgt)
+
+    src_bm = bmesh.new()
+    src_bm.from_mesh(src.data)
+    src_bm.faces.ensure_lookup_table()
+    kill_src = []
+    for face in src_bm.faces:
+        c = face.calc_center_median()
+        vol = 0.78 < c.y < 1.50 and abs(c.x) < 0.22 and c.z > -0.08
+        if not (vol and face.normal.z > 0.04 and _is_src_cloth(src, face)):
+            kill_src.append(face)
+    if kill_src:
+        bmesh.ops.delete(src_bm, geom=kill_src, context="FACES")
+    src_bm.faces.ensure_lookup_table()
+    src_bvh = BVHTree.FromBMesh(src_bm)
+    # Keep only +Z first-hit cloth so the snap target is one outer surface.
+    inner = []
+    for face in src_bm.faces:
+        c = face.calc_center_median()
+        hit, _sn, idx, _d = src_bvh.ray_cast(Vector((c.x, c.y, 0.70)), Vector((0.0, 0.0, -1.0)))
+        if hit is not None and idx is not None and idx != face.index and hit.z > c.z + 0.001:
+            inner.append(face)
+        elif face.normal.z < -0.2:
+            inner.append(face)
+    if inner:
+        bmesh.ops.delete(src_bm, geom=inner, context="FACES")
+        src_bm.faces.ensure_lookup_table()
+        src_bvh = BVHTree.FromBMesh(src_bm)
+    print("cloth snap target f", len(src_bm.faces), "innerDel", len(inner), flush=True)
+
+    nx, ny = 20, 34
+    x0, x1 = -0.168, 0.168
+    y0, y1 = 0.86, 1.448
+    grid = {}
+    for iy in range(ny + 1):
+        for ix in range(nx + 1):
+            x = x0 + (x1 - x0) * ix / nx
+            y = y0 + (y1 - y0) * iy / ny
+            hit, sn, idx, _d = src_bvh.ray_cast(Vector((x, y, 0.62)), Vector((0.0, 0.0, -1.0)), 0.80)
+            if hit is None or idx is None:
+                loc, sn, idx, dist = src_bvh.find_nearest(Vector((x, y, 0.16)))
+                if loc is None or dist > 0.055:
+                    continue
+                hit = Vector(loc)
+            n = Vector(sn) if sn is not None else Vector((0.0, 0.0, 1.0))
+            if n.length < 1e-8:
+                n = Vector((0.0, 0.0, 1.0))
+            else:
+                n.normalize()
+            if n.z < 0.06:
+                continue
+            grid[(ix, iy)] = hit + n * 0.0030
+    src_bm.free()
+
+    verts = []
+    vmap = {}
+    for key, p in grid.items():
+        vmap[key] = len(verts)
+        verts.append((p.x, p.y, p.z))
+    faces = []
+    for iy in range(ny):
+        for ix in range(nx):
+            a, b = (ix, iy), (ix + 1, iy)
+            c, d = (ix + 1, iy + 1), (ix, iy + 1)
+            if a in vmap and b in vmap and c in vmap and d in vmap:
+                faces.append((vmap[a], vmap[b], vmap[c], vmap[d]))
+    print("cloth patch verts", len(verts), "quads", len(faces), flush=True)
+    if len(faces) < 40:
+        print("cloth patch too thin — abort")
+        return 0
+
+    patch_me = bpy.data.meshes.new("PathAClothPatch")
+    patch_me.from_pydata(verts, [], faces)
+    patch_me.update()
+    if patch_me.uv_layers.active is None:
+        patch_me.uv_layers.new(name="UVMap")
+    patch_ob = bpy.data.objects.new("PathAClothPatch", patch_me)
+    bpy.context.collection.objects.link(patch_ob)
+
+    # Delete remesh faces under the new cloth + remaining inner / plate poke.
+    pverts = [Vector(v) for v in verts]
+    kd2 = KDTree(len(pverts))
+    for i, p in enumerate(pverts):
+        kd2.insert((p.x, p.y, 0.0), i)
+    kd2.balance()
+    me = tgt.data
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bm.faces.ensure_lookup_table()
+    bvh = BVHTree.FromBMesh(bm)
+    kill = []
+    under = inner_n = 0
+    for face in bm.faces:
+        c = face.calc_center_median()
+        n = face.normal
+        vol = 0.80 < c.y < 1.50 and abs(c.x) < 0.21 and c.z > -0.05
+        if not vol:
+            continue
+        _co, idx, dist = kd2.find((c.x, c.y, 0.0))
+        covered = idx is not None and dist < 0.016 and c.z < pverts[idx].z + 0.006
+        hit, _sn, hidx, _d = bvh.ray_cast(Vector((c.x, c.y, 0.92)), Vector((0.0, 0.0, -1.0)))
+        behind = (
+            hit is not None and hidx is not None and hidx != face.index and hit.z > c.z + 0.0010
+        ) or n.z < -0.30
+        if covered:
+            kill.append(face)
+            under += 1
+        elif behind:
+            kill.append(face)
+            inner_n += 1
+    if kill:
+        bmesh.ops.delete(bm, geom=kill, context="FACES")
+        loose = [v for v in bm.verts if not v.link_faces]
+        if loose:
+            bmesh.ops.delete(bm, geom=loose, context="VERTS")
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        bm.to_mesh(me)
+    bm.free()
+    me.update()
+    print("cloth delete under", under, "inner", inner_n, "leftF", len(me.polygons), flush=True)
+
+    bpy.ops.object.select_all(action="DESELECT")
+    tgt.select_set(True)
+    patch_ob.select_set(True)
+    bpy.context.view_layer.objects.active = tgt
+    bpy.ops.object.join()
+
+    # Weld only verts that actually meet at the patch rim. Do not recap a cavity.
+    bm = bmesh.new()
+    bm.from_mesh(tgt.data)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0035)
+    loose = [v for v in bm.verts if not v.link_faces]
+    if loose:
+        bmesh.ops.delete(bm, geom=loose, context="VERTS")
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(tgt.data)
+    bm.free()
+    tgt.data.update()
+    rt.delete_small_islands(tgt, keep_min=24)
+    filled = _vg_fill_new(tgt, dump)
+    print(
+        "cloth shell joined v", len(tgt.data.vertices), "f", len(tgt.data.polygons),
+        "newWts", filled, flush=True,
+    )
+    return len(faces)
 
 
 def _shrinkwrap_front_torso(tgt, src, offset: float):
@@ -726,6 +896,19 @@ def assign_projected_material(ob, atlas_path: Path):
         rgh.image = load_img(rgh_p, "PathARoughness", True)
         nt.links.new(rgh.outputs["Color"], bsdf.inputs["Roughness"])
     nt.links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
+    try:
+        mat.blend_method = "OPAQUE"
+        mat.shadow_method = "OPAQUE"
+        mat.use_backface_culling = True
+    except Exception:
+        pass
+    try:
+        if "Alpha" in bsdf.inputs:
+            bsdf.inputs["Alpha"].default_value = 1.0
+        if "Transmission Weight" in bsdf.inputs:
+            bsdf.inputs["Transmission Weight"].default_value = 0.0
+    except Exception:
+        pass
     ob.data.materials.clear()
     ob.data.materials.append(mat)
     enable_eevee_spec()
@@ -749,8 +932,8 @@ def _sample_card_xy(arr, u, v):
     return tuple(int(c) for c in arr[y, x])
 
 
-# Front-half torso AABB — includes inner remesh shells that peek tan through cloth.
-TABARD_FRONT_WIN = (-0.165, 0.165, 1.045, 1.455)
+# Front tabard AABB including waist. Cloth faces here get solid Image_0 navy.
+TABARD_FRONT_WIN = (-0.175, 0.175, 0.86, 1.455)
 # e5b132f rampant dest box — card fills this, not a cluster of center faces.
 LION_FRONT_WIN = (-0.076, 0.076, 1.178, 1.355)
 
@@ -899,10 +1082,12 @@ def stamp_front_lion_dest(tgt, atlas_path: Path, card, src=None) -> int:
     tx0, tx1, ty0, ty1 = TABARD_FRONT_WIN
     u0, u1, v0, v1 = 0.68, 0.94, 0.62, 0.97
     nu0, nu1, nv0, nv1 = 0.955, 0.995, 0.84, 0.98
-    cloth, outer, stray = [], [], []
+    # Dest-planar lion window. Faces outside this stay on the navy pad —
+    # clamp-to-edge of the card was painting tan/gold shards into the cloth.
+    mx0, mx1, my0, my1 = -0.132, 0.132, 1.122, 1.390
+    cloth, lion_faces, stray = [], [], []
     for poly in me.polygons:
         c = poly.center
-        n = poly.normal
         on_strip = 0
         tan_n = 0
         for li in poly.loop_indices:
@@ -911,16 +1096,16 @@ def stamp_front_lion_dest(tgt, atlas_path: Path, card, src=None) -> int:
                 on_strip += 1
             if _atlas_tan(atlas, uv.data[li], s):
                 tan_n += 1
-        in_tabard = tx0 <= c.x <= tx1 and ty0 <= c.y <= ty1 and c.z > -0.01
-        torso = 0.96 < c.y < 1.48 and abs(c.x) < 0.20 and c.z > -0.02
+        in_tabard = tx0 <= c.x <= tx1 and ty0 <= c.y <= ty1 and c.z > -0.02
+        torso = 0.84 < c.y < 1.48 and abs(c.x) < 0.20 and c.z > -0.03
         loose = torso and (tan_n >= 1 or on_strip >= 1)
         if in_tabard or loose:
             cloth.append(poly.index)
+            if mx0 <= c.x <= mx1 and my0 <= c.y <= my1 and c.z > 0.02:
+                lion_faces.append(poly.index)
         elif on_strip >= 2:
             stray.append(poly.index)
-        if in_tabard or loose:
-            outer.append(poly.index)
-    print("front tabard cloth", len(cloth), "outer", len(outer), "stray", len(stray), flush=True)
+    print("front tabard cloth", len(cloth), "lion", len(lion_faces), "stray", len(stray), flush=True)
     if len(cloth) < 8:
         return 0
     atlas[int((1.0 - nv1) * s):int((1.0 - nv0) * s), int(nu0 * s):int(nu1 * s)] = navy
@@ -950,8 +1135,7 @@ def stamp_front_lion_dest(tgt, atlas_path: Path, card, src=None) -> int:
     if lx_r > lx_l and ly_bot > ly_top:
         slot = Image.fromarray(sprite).resize((lx_r - lx_l, ly_bot - ly_top), Image.LANCZOS)
         atlas[ly_top:ly_bot, lx_l:lx_r] = np.array(slot)
-    mx0, mx1, my0, my1 = -0.132, 0.132, 1.122, 1.390
-    for fi in outer:
+    for fi in lion_faces:
         poly = me.polygons[fi]
         for li, vi in zip(poly.loop_indices, poly.vertices):
             p = me.vertices[vi].co
@@ -961,7 +1145,7 @@ def stamp_front_lion_dest(tgt, atlas_path: Path, card, src=None) -> int:
     Image.fromarray(atlas).save(atlas_path)
     print(
         "front tabard navy+lion", x_l, y_top, x_r, y_bot,
-        "cloth", len(cloth), "outer", len(outer),
+        "cloth", len(cloth), "lion", len(lion_faces),
         "lionBlit", lx_l, ly_top, lx_r, ly_bot, "sprite", sprite.shape, flush=True,
     )
     return len(cloth)
@@ -1283,11 +1467,12 @@ def write_drop(note: dict):
         "- SOURCE: Path 2 Meshy GLB + e5b132f Image_0 / SoT lion. LOOK = Meshy knight.\n"
         "- RETOPO: mid-poly manifold (voxel scaffold only, then shrinkwrap to Meshy). "
         "Not remesh-melt hero, not capsules, not paper-island weights.\n"
-        "- GEO: peel inner remesh wall on the front tabard (solidify double-shell). "
-        "One outer cloth surface. Helm/gauntlets/rear untouched.\n"
+        "- GEO: census then delete remaining front-tabard double walls / plate "
+        "poke-through; weld on one dest-planar cloth shell snapped to Meshy "
+        "Image_0/lion. Helm/gauntlets/rear untouched. Alpha already opaque.\n"
         "- TEXTURE: solid Image_0 navy on that outer cloth + dest-planar "
-        "lion_card_front. Steel PBR kept. No frozen Game still compositing. "
-        "Do NOT claim Design PASS.\n"
+        "lion_card_front on the chest window only. Steel PBR kept. No frozen "
+        "Game still compositing. Do NOT claim Design PASS.\n"
         "- FBX: ThemePack `sir_aldric_path2_clean.fbx` — Y-up, face +Z, one scabbard-R.\n"
         "- RE-GATE: World stills first, then one Evaluate() walk. "
         "**Bind NOT claimed. Walk NOT claimed.** Hub PNG HOLD. PR #21 HOLD.\n\n"

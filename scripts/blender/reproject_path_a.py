@@ -52,10 +52,14 @@ def main():
     if not walk_only:
         src.hide_set(False)
         src.hide_render = True
-        # Inner remesh wall on the front tabard pokes tan through cloth.
-        # Peel that shell. Helm/gauntlets/rear stay. Not a paint stamp.
+        # Census (8a4c611): peel left inner walls + plate poke + hole edges.
+        # Peel remaining inner, then replace the front tabard with one cloth
+        # shell snapped to Meshy Image_0/lion. No peel-wrap (that pulled
+        # remesh back into the under-armor). Helm/gauntlets/rear stay.
         if os.environ.get("PATHA_PEEL", "1") == "1":
-            path_a.peel_front_torso_inner(tgt, src)
+            path_a.peel_front_torso_inner(tgt, src, wrap=False)
+        if os.environ.get("PATHA_CLOTH_PATCH", "1") == "1":
+            path_a.replace_front_cloth_shell(tgt, src)
         # Stills-first: do not full-body re-wrap (rear/side already close).
         if not stills_only:
             path_a.shrinkwrap_to_source(tgt, src, 0.001)
@@ -83,6 +87,16 @@ def main():
             "walkPassClaimed": False,
             "bindPassClaimed": False,
             "pathA": True,
+            "stillsIterate": "8a4c611-one-outer-cloth-shell",
+            "honestArt": (
+                "Census then mesh-first: deleted remaining front-tabard double "
+                "walls / plate poke-through and welded one dest-planar cloth "
+                "shell snapped to Meshy Image_0/lion. Solid Image_0 navy on "
+                "that surface; lion dest-planar on the chest window only. "
+                "Alpha already opaque. Walk as-is. Do NOT claim Design / bind / walk PASS."
+            ),
+            "sourceLook": "e5b132f Meshy GLB + Image_0 / SoT lion",
+            "atlas": atlas_path.name,
             "tris": ntris,
             "verts": len(tgt.data.vertices),
             "islands": islands,
