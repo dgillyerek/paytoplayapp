@@ -52,9 +52,9 @@ def main():
     if not walk_only:
         src.hide_set(False)
         src.hide_render = True
-        # d557344 card was a dest-planar rectangle. Peel remaining inner,
-        # then drape a tabard only where Meshy cloth is the +Z first hit.
-        # Helm/gauntlets/rear stay. No peel-wrap into under-armor.
+        # 8436248 Meshy-face copy shredded (holes / plate poke). Peel
+        # remaining inner, then one continuous cloth shell above the plate
+        # inside the fitted e5 silhouette. Not a planar card.
         if os.environ.get("PATHA_PEEL", "1") == "1":
             path_a.peel_front_torso_inner(tgt, src, wrap=False)
         if os.environ.get("PATHA_CLOTH_PATCH", "1") == "1":
@@ -86,12 +86,12 @@ def main():
             "walkPassClaimed": False,
             "bindPassClaimed": False,
             "pathA": True,
-            "stillsIterate": "d557344-draped-tabard-not-card",
+            "stillsIterate": "8436248-opaque-cloth-shell",
             "honestArt": (
-                "Killed the dest-planar rectangular card. Draped one tabard "
-                "where Meshy Image_0/lion is the +Z first hit (plate first-hit "
-                "stays plate). Solid SoT navy + larger dest-planar lion. "
-                "Walk as-is. Do NOT claim Design / bind / walk PASS."
+                "Continuous opaque front tabard shell: fitted e5b132f "
+                "silhouette, snapped to Meshy outer hit, offset above plate "
+                "so it does not intersect. Solid SoT navy + larger lion. "
+                "Not a planar card. Walk as-is. Do NOT claim PASS."
             ),
             "sourceLook": "e5b132f Meshy GLB + Image_0 / SoT lion",
             "atlas": atlas_path.name,
