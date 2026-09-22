@@ -60,7 +60,8 @@ def main():
     if bpy.context.scene.camera is None:
         old.setup_render()
     old.apply_pose(actor, rest, tgt)
-    path_a.render_world_shots()
+    if not walk_only:
+        path_a.render_world_shots()
 
     mp4 = old.render_walk(actor, tgt)
     for n in (0, 5, 10, 15):
