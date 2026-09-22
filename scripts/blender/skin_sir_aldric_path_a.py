@@ -1650,6 +1650,28 @@ def lock_no_arm_on_sheath(mesh_ob) -> int:
     return n
 
 
+def lock_closer_to_sheath(mesh_ob) -> int:
+    """Right-hip verts nearer the sheath than the hand follow Scabbard."""
+    groups = {g.name: g for g in mesh_ob.vertex_groups}
+    if "Scabbard" not in groups:
+        groups["Scabbard"] = mesh_ob.vertex_groups.new(name="Scabbard")
+    hand_a, hand_b = Vector((0.28, 0.84, 0.02)), Vector((0.32, 0.68, 0.03))
+    n = 0
+    for i, v in enumerate(mesh_ob.data.vertices):
+        p = v.co
+        if p.x < 0.15 or not (0.25 < p.y < 1.06) or _is_gauntlet_r(p):
+            continue
+        if _is_tabard_cloth(p):
+            continue
+        d_scab = hh.dist_seg(p, hh._SCAB_A, hh._SCAB_B)
+        d_hand = _seg_dist(p, hand_a, hand_b)
+        if d_scab <= d_hand and d_scab < 0.14:
+            _clear_and_set(mesh_ob, i, "Scabbard", groups)
+            n += 1
+    print("closer-to-sheath lock", n)
+    return n
+
+
 def drop_cross_limb(mesh_ob) -> int:
     """A vert may not carry both L and R limb weights (ghost 4-leg / 4-arm)."""
     pairs = (
@@ -1763,6 +1785,7 @@ def rebind_locked(mesh_ob, actor_ob):
     lock_scabbard(mesh_ob)
     lock_sheath_not_hand(mesh_ob)
     lock_no_arm_on_sheath(mesh_ob)
+    lock_closer_to_sheath(mesh_ob)
     lock_right_hip_belt(mesh_ob)
     lock_front_tabard(mesh_ob)
     drop_cross_limb(mesh_ob)
