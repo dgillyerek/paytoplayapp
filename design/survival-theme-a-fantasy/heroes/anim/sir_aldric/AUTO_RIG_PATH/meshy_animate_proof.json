@@ -1,0 +1,17 @@
+{
+  "lookPassClaimed": false,
+  "walkPassClaimed": false,
+  "bindPassClaimed": false,
+  "pathAWeightPaint": "CANCELLED",
+  "source": "meshy-animate-walk-fbx-20260922",
+  "fbx": "design/survival-theme-a-fantasy/heroes/anim/sir_aldric/AUTO_RIG_PATH/out/sir_aldric_meshy_animate_walk.fbx",
+  "clip": "target_character|target_character|target_character|target_chara",
+  "clipFrames": [
+    1.0,
+    26.0
+  ],
+  "verts": 5173,
+  "faces": 10362,
+  "honestArt": "Meshy Animate skinned walk FBX wired as-is (Mixamo humanoid). No Path A weight paint. World stills + planted walk toward TOP. Do NOT claim Design PASS. Hub HOLD. PR #21 HOLD.",
+  "walkClip": "Docs/Survival/previews/gate3/sir_aldric_meshy_animate_walk_toward_top.mp4"
+}

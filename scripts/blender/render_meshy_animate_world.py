@@ -186,23 +186,33 @@ def import_fbx():
     arm = next(o for o in bpy.data.objects if o.type == "ARMATURE")
     mesh = next(o for o in bpy.data.objects if o.type == "MESH")
     assign_albedo(mesh)
-    root = bpy.data.objects.new("AldricWorldRoot", None)
-    bpy.context.collection.objects.link(root)
-    # Mixamo after Blender FBX import: Z-up, face −Y, +X = character-LEFT.
-    # Unity World: Y-up, face +Z, character-RIGHT +X. (x,y,z) → (−x, z, −y)
-    root.matrix_world = Matrix((
-        (-1.0, 0.0, 0.0, 0.0),
-        (0.0, 0.0, 1.0, 0.0),
-        (0.0, -1.0, 0.0, 0.0),
-        (0.0, 0.0, 0.0, 1.0),
-    ))
-    arm.parent = root
+    # Mixamo after Blender FBX import: Z-up, face −Y, +X = Mixamo left.
+    # X−90 → Y-up, face +Z. Negative X scale → Mixamo right on +X so the
+    # rear Play cam (viewer-right) shows the character-RIGHT scabbard.
+    bpy.ops.object.select_all(action="DESELECT")
+    arm.select_set(True)
+    bpy.context.view_layer.objects.active = arm
+    arm.rotation_mode = "XYZ"
+    arm.rotation_euler = (-math.pi / 2.0, 0.0, 0.0)
+    bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
     bpy.context.view_layer.update()
     ys = mesh_world_ys(mesh)
     h = max(ys) - min(ys)
-    if h > 0.4:
-        root.scale = (TARGET_H / h,) * 3
-        bpy.context.view_layer.update()
+    sx = -1.0
+    syz = TARGET_H / h if h > 0.4 else 1.0
+    arm.scale = (sx * syz, syz, syz)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    try:
+        import bmesh
+        bm = bmesh.new()
+        bm.from_mesh(mesh.data)
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        bm.to_mesh(mesh.data)
+        bm.free()
+    except Exception:
+        pass
+    mesh.data.update()
+    root = arm
     plant(root, mesh)
     acts = sorted(bpy.data.actions, key=lambda a: a.frame_range[1] - a.frame_range[0], reverse=True)
     walk = acts[0]
@@ -210,7 +220,7 @@ def import_fbx():
     print(
         "imported", mesh.name, "v", len(mesh.data.vertices), "f", len(mesh.data.polygons),
         "walk", walk.name, "range", tuple(walk.frame_range),
-        "fps", bpy.context.scene.render.fps,
+        "fps", bpy.context.scene.render.fps, "bboxY", tuple(round(v, 3) for v in (min(ys), max(ys))),
     )
     return root, arm, mesh, walk
 
@@ -291,10 +301,7 @@ def main():
     WALK.mkdir(parents=True, exist_ok=True)
     ART.mkdir(parents=True, exist_ok=True)
 
-    rest_act = min(bpy.data.actions, key=lambda a: a.frame_range[1] - a.frame_range[0])
-    if rest_act == walk:
-        rest_act = None
-    rest_pose(root, arm, mesh, rest_act)
+    rest_pose(root, arm, mesh, None)
     for name, eye, tgt in (
         ("world_front", CAM_FRONT, CAM_FRONT_T),
         ("world_34_front", CAM_34_FRONT, CAM_34_FRONT_T),
