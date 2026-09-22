@@ -1,27 +1,10 @@
 {
-  "lookPassClaimed": true,
+  "lookPassClaimed": false,
   "walkPassClaimed": false,
   "bindPassClaimed": false,
-  "stillsPassClaimed": false,
   "pathA": true,
-  "designAckFolded": true,
-  "honestArt": "Stills-first after Design FAIL 03a616c. Dest-space lion_card_front on a reserved UV strip (Meshy GLB card, not frozen Game stills). Steel vs navy/gold Principled split for specular silver plate. Continuous Image_0 albedo kept. Rear/side left close. A few dest holes remain. Walk clip as-is. Do not claim Design / bind / walk PASS. Hub PNG HOLD. PR #21 HOLD.",
-  "sourceLook": "e5b132f Meshy GLB + Image_0 / lion cards",
-  "albedo": "Image_0 dest->source kept; front lion dest-space lion_card_front strip; steel PBR maps",
-  "retopo": "mid-poly 29500 tris / 1 island; no new wrap this stills pass",
-  "scabbard": "character-right",
-  "playHubLocked": true,
-  "criteria": {
-    "1_worldStillsMatchE5": "re-gate \u2014 Design eye; front lion dest-space card; plate spec; not PASS",
-    "2_midpolyOneVolume": true,
-    "3_albedoLionArmorReadable": "front lion readable vs 03a616c shred; not claimed PASS",
-    "4_fbxSkinned": true,
-    "5_walkPlantedClaimed": false
-  },
-  "verts": 14648,
-  "tris": 29500,
-  "atlas": "sir_aldric_meshy_atlas.png",
-  "mesh": "sir_aldric_meshy.mesh.txt",
-  "fbx": "sir_aldric_path2_clean.fbx",
-  "walkClip": "Docs/Survival/previews/gate3/sir_aldric_path2_walk_toward_top.mp4"
+  "stillsIterate": "cdc9bf0-holes-and-lion-scale",
+  "honestArt": "Front tabard dest holes filled: all front-torso cloth remapped to one strip, Image_0 dest\u2192source navy (shred gold dropped). Cropped lion_card_front blit smaller than cdc9bf0 full-tabard stamp. Steel PBR kept. Rear/side left close. Walk as-is. Do NOT claim Design / bind / walk PASS.",
+  "sourceLook": "e5b132f Meshy GLB + Image_0 / SoT lion",
+  "atlas": "sir_aldric_meshy_atlas.png"
 }

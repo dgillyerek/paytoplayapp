@@ -530,8 +530,20 @@ def enable_eevee_spec():
 def assign_projected_material(ob, atlas_path: Path):
     """Image_0/lion albedo + steel metallic. Not global 0.12/0.55 plastic gray."""
     def load_img(path: Path, name: str, noncolor: bool):
+        path = path.resolve()
+        for old in list(bpy.data.images):
+            try:
+                fp = Path(bpy.path.abspath(old.filepath)).resolve() if old.filepath else None
+            except Exception:
+                fp = None
+            if old.name == name or old.name.startswith(name + ".") or fp == path:
+                bpy.data.images.remove(old)
         img = bpy.data.images.load(str(path))
         img.name = name
+        try:
+            img.reload()
+        except Exception:
+            pass
         if noncolor:
             try:
                 img.colorspace_settings.name = "Non-Color"
@@ -598,13 +610,13 @@ def _sample_card_xy(arr, u, v):
 
 # Whole front tabard (hole-fill). Lion is a smaller e5b132f-matched window inside it.
 TABARD_FRONT_WIN = (-0.145, 0.145, 1.040, 1.415)
-LION_FRONT_WIN = (-0.058, 0.058, 1.205, 1.348)
+# e5b132f chest: compact rampant (~60% of the too-big cdc9bf0 stamp).
+LION_FRONT_WIN = (-0.072, 0.072, 1.188, 1.348)
 
 
 def dest_in_front_lion(p: Vector, n: Vector) -> bool:
     return (
-        n.z > 0.28
-        and LION_FRONT_WIN[0] <= p.x <= LION_FRONT_WIN[1]
+        LION_FRONT_WIN[0] <= p.x <= LION_FRONT_WIN[1]
         and LION_FRONT_WIN[2] <= p.y <= LION_FRONT_WIN[3]
         and p.z > 0.02
     )
@@ -650,6 +662,18 @@ def _atlas_cloth(atlas, uv_loop, s: int) -> bool:
     return (b > r + 8 and b > 40 and r < 130) or (r > 110 and g > 80 and r > b + 8)
 
 
+def _crop_lion_sprite(card: np.ndarray) -> np.ndarray:
+    """Tight gold rampant + navy fringe. Drops the card's empty navy padding."""
+    r, g, b = card[:, :, 0], card[:, :, 1], card[:, :, 2]
+    gold = (r > 118) & (g > 80) & (r > b + 10)
+    if not gold.any():
+        return card
+    ys, xs = np.where(gold)
+    y0, y1 = max(0, int(ys.min()) - 6), min(card.shape[0], int(ys.max()) + 7)
+    x0, x1 = max(0, int(xs.min()) - 6), min(card.shape[1], int(xs.max()) + 7)
+    return card[y0:y1, x0:x1]
+
+
 def _image0_navy_sampler(src, navy):
     """Dest→source Image_0 for tabard navy. Drops shredded gold, not Game stills."""
     import bmesh
@@ -685,7 +709,8 @@ def _image0_navy_sampler(src, navy):
         if rgb is None:
             return tuple(int(c) for c in navy)
         r, g, b = rgb
-        if r > 118 and g > 80 and r > b + 10:
+        navy_ok = b > r + 8 and b > 40 and r < 110
+        if not navy_ok:
             return tuple(int(c) for c in navy)
         return rgb
 
@@ -716,15 +741,19 @@ def stamp_front_lion_dest(tgt, atlas_path: Path, card, src=None) -> int:
     for poly in me.polygons:
         c = poly.center
         n = poly.normal
-        parked = False
+        front_torso = n.z > -0.08 and 0.97 < c.y < 1.48 and abs(c.x) < 0.18 and c.z > -0.02
+        if not front_torso:
+            continue
+        parked = cloth_n = 0
         for li in poly.loop_indices:
             u, v = uv.data[li].uv
             if (u > 0.95 and v > 0.95) or (0.66 < u < 0.96 and 0.62 < v < 0.98):
-                parked = True
-                break
-        in_vol = n.z > 0.12 and 1.03 < c.y < 1.43 and abs(c.x) < 0.155 and c.z > 0.03
-        parked_ok = parked and n.z > 0.08 and 1.00 < c.y < 1.45 and abs(c.x) < 0.18 and c.z > 0.0
-        if not (in_vol or parked_ok):
+                parked += 1
+            if _atlas_cloth(atlas, uv.data[li], s):
+                cloth_n += 1
+        in_vol = n.z > 0.05 and 1.00 < c.y < 1.44 and abs(c.x) < 0.16 and c.z > 0.02
+        cloth = cloth_n >= max(1, len(poly.loop_indices) // 2)
+        if not (parked or in_vol or cloth):
             continue
         faces.append(poly.index)
     print("front tabard faces", len(faces), flush=True)
@@ -748,7 +777,7 @@ def stamp_front_lion_dest(tgt, atlas_path: Path, card, src=None) -> int:
     atlas[y_top:y_bot, x_l:x_r] = navy
     sample_navy, close_navy = _image0_navy_sampler(src, navy)
     me.calc_loop_triangles()
-    lion_px = navy_px = 0
+    navy_px = 0
     for tri in me.loop_triangles:
         if tri.polygon_index not in face_set:
             continue
@@ -761,40 +790,47 @@ def stamp_front_lion_dest(tgt, atlas_path: Path, card, src=None) -> int:
             uu, vv = uv.data[li].uv
             pts.append((float(uu) * (s - 1), (1.0 - float(vv)) * (s - 1)))
             pos.append(me.vertices[vi].co.copy())
-        (x0, y0), (x1, y1), (x2, y2) = pts
-        minx = max(0, int(math.floor(min(x0, x1, x2))))
-        maxx = min(s - 1, int(math.ceil(max(x0, x1, x2))))
-        miny = max(0, int(math.floor(min(y0, y1, y2))))
-        maxy = min(s - 1, int(math.ceil(max(y0, y1, y2))))
-        denom = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2)
+        (xa, ya), (xb, yb), (xc, yc) = pts
+        minx = max(0, int(math.floor(min(xa, xb, xc))))
+        maxx = min(s - 1, int(math.ceil(max(xa, xb, xc))))
+        miny = max(0, int(math.floor(min(ya, yb, yc))))
+        maxy = min(s - 1, int(math.ceil(max(ya, yb, yc))))
+        denom = (yb - yc) * (xa - xc) + (xc - xb) * (ya - yc)
         if abs(denom) < 1e-8:
             continue
         for y in range(miny, maxy + 1):
             py = y + 0.5
             for x in range(minx, maxx + 1):
                 px = x + 0.5
-                w0 = ((y1 - y2) * (px - x2) + (x2 - x1) * (py - y2)) / denom
-                w1 = ((y2 - y0) * (px - x2) + (x0 - x2) * (py - y2)) / denom
+                w0 = ((yb - yc) * (px - xc) + (xc - xb) * (py - yc)) / denom
+                w1 = ((yc - ya) * (px - xc) + (xa - xc) * (py - ya)) / denom
                 w2 = 1.0 - w0 - w1
                 if w0 < -0.01 or w1 < -0.01 or w2 < -0.01:
                     continue
                 p = pos[0] * w0 + pos[1] * w1 + pos[2] * w2
-                if dest_in_front_lion(p, n):
-                    lu = (p.x - lx0) / max(1e-6, lx1 - lx0)
-                    lv = (p.y - ly0) / max(1e-6, ly1 - ly0)
-                    rgb = _sample_card_xy(card, lu, lv)
-                    if rgb is None:
-                        rgb = tuple(int(c) for c in navy)
-                    lion_px += 1
-                else:
-                    rgb = sample_navy(p, n)
-                    navy_px += 1
-                atlas[y, x] = np.array(rgb, np.uint8)
+                atlas[y, x] = np.array(sample_navy(p, n), np.uint8)
+                navy_px += 1
     close_navy()
+    # Blit cropped rampant into the upper-center of the strip.
+    # Dest-fraction of LION_FRONT_WIN/TABARD read tiny in World stills (chest
+    # UVs only cover the strip center). Use strip fractions that match e5b132f.
+    sprite = _crop_lion_sprite(card)
+    su0 = u0 + 0.12 * (u1 - u0)
+    su1 = u0 + 0.88 * (u1 - u0)
+    sv0 = v0 + 0.22 * (v1 - v0)
+    sv1 = v0 + 0.84 * (v1 - v0)
+    ly_top = int((1.0 - sv1) * s)
+    ly_bot = int((1.0 - sv0) * s)
+    lx_l = int(su0 * s)
+    lx_r = int(su1 * s)
+    if lx_r > lx_l and ly_bot > ly_top:
+        slot = Image.fromarray(sprite).resize((lx_r - lx_l, ly_bot - ly_top), Image.LANCZOS)
+        atlas[ly_top:ly_bot, lx_l:lx_r] = np.array(slot)
     Image.fromarray(atlas).save(atlas_path)
     print(
         "front tabard strip", x_l, y_top, x_r, y_bot,
-        "faces", len(faces), "lionPx", lion_px, "navyPx", navy_px, flush=True,
+        "faces", len(faces), "navyPx", navy_px,
+        "lionBlit", lx_l, ly_top, lx_r, ly_bot, "sprite", sprite.shape, flush=True,
     )
     return len(faces)
 
@@ -1115,8 +1151,10 @@ def write_drop(note: dict):
         "- SOURCE: Path 2 Meshy GLB + e5b132f Image_0 / SoT lion. LOOK = Meshy knight.\n"
         "- RETOPO: mid-poly manifold (voxel scaffold only, then shrinkwrap to Meshy). "
         "Not remesh-melt hero, not capsules, not paper-island weights.\n"
-        "- TEXTURE: dest→source Image_0 bake + dest-space lion_card_front on chest; "
-        "steel metallic/roughness split. No frozen Game still compositing.\n"
+        "- TEXTURE: dest→source Image_0 navy fill on the whole front tabard + "
+        "cropped lion_card_front blit (smaller e5b132f chest window). "
+        "Steel metallic/roughness kept. No frozen Game still compositing. "
+        "Do NOT claim Design PASS.\n"
         "- FBX: ThemePack `sir_aldric_path2_clean.fbx` — Y-up, face +Z, one scabbard-R.\n"
         "- RE-GATE: World stills first, then one Evaluate() walk. "
         "**Bind NOT claimed. Walk NOT claimed.** Hub PNG HOLD. PR #21 HOLD.\n\n"
