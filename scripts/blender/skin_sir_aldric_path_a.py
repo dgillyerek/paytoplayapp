@@ -212,15 +212,9 @@ def shrinkwrap_to_source(tgt, src, offset: float) -> bool:
 
 def _vg_dump(ob):
     dump = []
+    groups = ob.vertex_groups
     for v in ob.data.vertices:
-        wts = []
-        for g in ob.vertex_groups:
-            try:
-                w = g.weight(v.index)
-            except RuntimeError:
-                continue
-            if w > 1e-6:
-                wts.append((g.name, w))
+        wts = [(groups[g.group].name, g.weight) for g in v.groups if g.weight > 1e-6]
         dump.append((v.co.copy(), wts))
     return dump
 
@@ -258,7 +252,8 @@ def _vg_fill_new(ob, dump):
 
 
 def _front_torso_p(c: Vector) -> bool:
-    return 0.99 < c.y < 1.47 and abs(c.x) < 0.185 and c.z > 0.00
+    # Include waist / mid-tabard. Stop above the skirt hem and inside the arms.
+    return 0.86 < c.y < 1.48 and abs(c.x) < 0.195 and c.z > -0.01
 
 
 def peel_front_torso_inner(tgt, src=None) -> int:
@@ -275,7 +270,7 @@ def peel_front_torso_inner(tgt, src=None) -> int:
     me = tgt.data
     dump = _vg_dump(tgt)
     killed = 0
-    for _pass in range(2):
+    for _pass in range(4):
         bm = bmesh.new()
         bm.from_mesh(me)
         bm.faces.ensure_lookup_table()
@@ -287,38 +282,38 @@ def peel_front_torso_inner(tgt, src=None) -> int:
                 continue
             n = face.normal
             hit, _sn, idx, _dist = bvh.ray_cast(
-                Vector((c.x, c.y, 0.85)), Vector((0.0, 0.0, -1.0))
+                Vector((c.x, c.y, 0.90)), Vector((0.0, 0.0, -1.0))
             )
             if hit is None or idx is None:
-                if n.z < -0.45:
+                if n.z < -0.35:
                     kill.append(face)
                 continue
             if idx == face.index:
                 continue
             other = bm.faces[idx] if idx < len(bm.faces) else None
             other_z = other.normal.z if other is not None else 0.0
-            if hit.z > c.z + 0.0015:
+            if hit.z > c.z + 0.0012:
                 kill.append(face)
-            elif abs(hit.z - c.z) < 0.0035 and n.z < other_z - 0.04:
+            elif abs(hit.z - c.z) < 0.004 and n.z < other_z - 0.02:
                 kill.append(face)
-            elif n.z < -0.45 and idx != face.index:
+            elif n.z < -0.35 and idx != face.index:
                 kill.append(face)
         nkill = len(kill)
-        if nkill < 6:
+        if nkill < 4:
             bm.free()
             break
+        # Do NOT holes_fill — that recaps the cavity and brings the inner wall back.
         bmesh.ops.delete(bm, geom=kill, context="FACES")
-        boundary = [e for e in bm.edges if e.is_boundary]
-        try:
-            bmesh.ops.holes_fill(bm, edges=boundary, sides=16)
-        except Exception as exc:
-            print("peel holes_fill", exc)
+        loose = [v for v in bm.verts if not v.link_faces]
+        if loose:
+            bmesh.ops.delete(bm, geom=loose, context="VERTS")
         bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
         bm.to_mesh(me)
         bm.free()
         me.update()
         killed += nkill
         print("peel pass", _pass, "deleted", nkill, "f", len(me.polygons), flush=True)
+    rt.delete_small_islands(tgt, keep_min=24)
     filled = _vg_fill_new(tgt, dump)
     if src is not None and killed:
         _shrinkwrap_front_torso(tgt, src, 0.002)
