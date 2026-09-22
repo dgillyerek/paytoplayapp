@@ -153,19 +153,19 @@ def main():
         "bindPassClaimed": False,
         "pathA": True,
         "stillsIterate": "552b099-opaque-cloth-shell",
-        "bindIterate": "spatial-hang-segs+tabard-torso+scabbard",
+        "bindIterate": "tabard-torso-sheet+sheath-not-hand",
         "honestArt": (
-            "552b099 stills look LOCKED. Bind-only on that retopo: spatial "
-            "nearest hang-bone-segment weights, front-tabard torso lock, one "
-            "Scabbard volume lock. No peel/shell/atlas. No Path-2 ghost/tear/"
-            "tube/capsule remesh. Planted Evaluate() walk toward TOP for "
-            "Design re-gate. Do NOT claim Design / bind / walk PASS."
+            "552b099 stills look LOCKED. Re-skin only: tabard shell stays a "
+            "torso sheet (hem = Hips), hip sheath = Scabbard never Hand_R. "
+            "Fixes rest plate-poke from mixed limb weights and walk hem/"
+            "scabbard spikes. No peel/shell/atlas. Motion gate kept. "
+            "Do NOT claim Design / bind / walk PASS."
         ),
         "sourceLook": "e5b132f Meshy GLB + Image_0 / SoT lion",
         "retopo": "QuadriFlow mid-poly + shrinkwrap ABOVE_SURFACE; no capsule limbs",
         "bind": (
-            "spatial nearest hang-bone-segment (≤4) + front-tabard torso lock "
-            "+ one Scabbard volume lock. Not automatic weights."
+            "spatial hang-segs + tabard torso sheet (hem=Hips) + sheath "
+            "Scabbard (never Hand_R). Not automatic weights."
         ),
         "motion": "5916447 Evaluate() keys reused; root plant after Evaluate() so soles kiss Y=0",
         "scabbard": "character-right",

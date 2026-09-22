@@ -1478,11 +1478,56 @@ def spatial_bind(mesh_ob):
     print("spatial bind segs", {n: (round(a.y, 2), round(b.y, 2)) for n, (a, b) in segs.items()})
 
 
-def lock_front_tabard(mesh_ob) -> int:
-    """Keep the constructed front tabard on torso bones.
+def _tabard_half(y: float) -> float:
+    """Cloth-sheet half-width. Hem stays a sheet, not a taper that leaks plate."""
+    half = _e5_tabard_half_w(y)
+    if 0.68 < y < 0.92:
+        half = max(half, 0.168)
+    elif half > 0.0:
+        half = max(half, 0.122)
+    return half
 
-    Same fitted e5 silhouette as the cloth shell. Stops the skirt from
-    splitting onto both legs (4-leg / shred). Not a paper-island corridor.
+
+def _is_tabard_cloth(p: Vector) -> bool:
+    """Front + rear surcoat inside the fitted silhouette. Not the +X sheath."""
+    half = _tabard_half(p.y)
+    if half <= 0.0 or abs(p.x) > half + 0.022:
+        return False
+    if p.x > 0.175 and hh.dist_seg(p, hh._SCAB_A, hh._SCAB_B) < 0.050:
+        return False
+    return True
+
+
+def _is_gauntlet_r(p: Vector) -> bool:
+    """True right gauntlet — nearer Hand_R than the hip sheath."""
+    hand_a, hand_b = Vector((0.28, 0.84, 0.02)), Vector((0.32, 0.68, 0.03))
+    d_hand = _seg_dist(p, hand_a, hand_b)
+    d_scab = hh.dist_seg(p, hh._SCAB_A, hh._SCAB_B)
+    return p.y > 0.64 and d_hand < 0.10 and d_hand < d_scab - 0.012
+
+
+def _is_sheath(p: Vector) -> bool:
+    """Character-RIGHT hip sheath / hanging blade. Not tabard, not gauntlet."""
+    if p.x < 0.165 or not (0.26 < p.y < 1.14):
+        return False
+    if _is_tabard_cloth(p) or _is_gauntlet_r(p):
+        return False
+    return hh.dist_seg(p, hh._SCAB_A, hh._SCAB_B) < 0.090
+
+
+def _clear_and_set(mesh_ob, i, bone: str, groups):
+    assigned = {g.group for g in mesh_ob.data.vertices[i].groups}
+    for g in groups.values():
+        if g.index in assigned:
+            g.remove([i])
+    groups[bone].add([i], 1.0, "REPLACE")
+
+
+def lock_front_tabard(mesh_ob) -> int:
+    """Keep the constructed tabard shell on torso bones.
+
+    Front and rear cloth, hem exclusive Hips so it cannot spike onto
+    the swinging hand or either leg. Not a paper-island corridor.
     """
     limb = {
         "Arm_L", "Fore_L", "Hand_L", "Arm_R", "Fore_R", "Hand_R",
@@ -1496,34 +1541,56 @@ def lock_front_tabard(mesh_ob) -> int:
     n = 0
     for i, v in enumerate(mesh_ob.data.vertices):
         p = v.co
-        half = _e5_tabard_half_w(p.y)
-        if half <= 0.0 or abs(p.x) > half + 0.012 or p.z < 0.02:
+        if not _is_tabard_cloth(p):
             continue
         assigned = {g.group for g in v.groups}
         for name in limb:
             g = groups.get(name)
             if g is not None and g.index in assigned:
                 g.remove([i])
-        kept = []
-        for name in torso:
-            try:
-                kept.append((name, groups[name].weight(i)))
-            except RuntimeError:
-                pass
-        if not kept:
-            # Height-split so the hem hangs from hips, badge from chest.
-            if p.y >= 1.26:
-                groups["Chest"].add([i], 1.0, "REPLACE")
-            elif p.y >= 1.02:
-                groups["Spine"].add([i], 1.0, "REPLACE")
-            else:
-                groups["Hips"].add([i], 1.0, "REPLACE")
+        # Hem is one Hips sheet. Badge follows chest/spine.
+        if p.y < 0.96:
+            _clear_and_set(mesh_ob, i, "Hips", groups)
         else:
-            s = sum(w for _, w in kept) or 1.0
-            for name, w in kept:
-                groups[name].add([i], w / s, "REPLACE")
+            kept = []
+            for name in torso:
+                try:
+                    kept.append((name, groups[name].weight(i)))
+                except RuntimeError:
+                    pass
+            if not kept:
+                if p.y >= 1.26:
+                    groups["Chest"].add([i], 1.0, "REPLACE")
+                elif p.y >= 1.02:
+                    groups["Spine"].add([i], 1.0, "REPLACE")
+                else:
+                    groups["Hips"].add([i], 1.0, "REPLACE")
+            else:
+                s = sum(w for _, w in kept) or 1.0
+                for name, w in kept:
+                    groups[name].add([i], w / s, "REPLACE")
         n += 1
     print("tabard torso lock", n)
+    return n
+
+
+def lock_sheath_not_hand(mesh_ob) -> int:
+    """Hip sheath follows Scabbard, never Hand_R / Fore_R (walk spikes)."""
+    groups = {g.name: g for g in mesh_ob.vertex_groups}
+    if "Scabbard" not in groups:
+        groups["Scabbard"] = mesh_ob.vertex_groups.new(name="Scabbard")
+    steal = {"Hand_R", "Fore_R", "Arm_R", "Hand_L", "Fore_L"}
+    vg = {g.index: g.name for g in mesh_ob.vertex_groups}
+    n = 0
+    for i, v in enumerate(mesh_ob.data.vertices):
+        p = v.co
+        if not _is_sheath(p):
+            continue
+        names = {vg.get(g.group, "") for g in v.groups}
+        if names & steal or "Scabbard" not in names:
+            _clear_and_set(mesh_ob, i, "Scabbard", groups)
+            n += 1
+    print("sheath steal from hand", n)
     return n
 
 
@@ -1637,8 +1704,9 @@ def rebind_locked(mesh_ob, actor_ob):
     rt.delete_small_islands(mesh_ob, keep_min=50)
     ensure_armature(mesh_ob, actor_ob)
     spatial_bind(mesh_ob)
-    lock_front_tabard(mesh_ob)
     lock_scabbard(mesh_ob)
+    lock_sheath_not_hand(mesh_ob)
+    lock_front_tabard(mesh_ob)
     drop_cross_limb(mesh_ob)
     counts = recount(mesh_ob)
     scab_n = counts.get("Scabbard", 0)
@@ -1652,6 +1720,19 @@ def rebind_locked(mesh_ob, actor_ob):
     leg_l = counts.get("UpLeg_L", 0) + counts.get("Leg_L", 0) + counts.get("Foot_L", 0)
     if leg_r < 30 or leg_l < 30:
         raise SystemExit(f"leg empty after rebind: R={leg_r} L={leg_l} {counts}")
+    vg = {g.index: g.name for g in mesh_ob.vertex_groups}
+    hand_on_sheath = 0
+    for v in mesh_ob.data.vertices:
+        if not _is_sheath(v.co):
+            continue
+        best, bw = "", 0.0
+        for g in v.groups:
+            if g.weight > bw:
+                best, bw = vg.get(g.group, ""), g.weight
+        if best in ("Hand_R", "Fore_R", "Arm_R"):
+            hand_on_sheath += 1
+    if hand_on_sheath:
+        raise SystemExit(f"sheath still on swinging arm: {hand_on_sheath}")
     return counts
 
 
@@ -1664,12 +1745,8 @@ def lock_scabbard(mesh_ob) -> int:
     n = 0
     for i, v in enumerate(me.vertices):
         p = v.co
-        if p.x > 0.14 and 0.22 < p.y < 1.18 and hh.dist_seg(p, hh._SCAB_A, hh._SCAB_B) < 0.058:
-            assigned = {g.group for g in v.groups}
-            for g in groups.values():
-                if g.index in assigned:
-                    g.remove([i])
-            groups["Scabbard"].add([i], 1.0, "REPLACE")
+        if _is_sheath(p):
+            _clear_and_set(mesh_ob, i, "Scabbard", groups)
             n += 1
     print("scabbard lock", n)
     return n
