@@ -444,7 +444,7 @@ def camera_project_atlas(tgt, fill_colors, atlas_path: Path):
 
 
 def assign_projected_material(ob, atlas_path: Path):
-    """Principled + baked/projected albedo — same lighting model as e5b132f, not emit-stencil."""
+    """Emit the projected/baked atlas. Principled+lights turned the stills into dark clay."""
     img = bpy.data.images.load(str(atlas_path))
     img.name = "PathAAtlas"
     mat = bpy.data.materials.new("PathALook")
@@ -452,16 +452,12 @@ def assign_projected_material(ob, atlas_path: Path):
     nt = mat.node_tree
     nt.nodes.clear()
     out = nt.nodes.new("ShaderNodeOutputMaterial")
-    bsdf = nt.nodes.new("ShaderNodeBsdfPrincipled")
+    emit = nt.nodes.new("ShaderNodeEmission")
     tex = nt.nodes.new("ShaderNodeTexImage")
     tex.image = img
-    try:
-        bsdf.inputs["Roughness"].default_value = 0.55
-        bsdf.inputs["Metallic"].default_value = 0.12
-    except Exception:
-        pass
-    nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
-    nt.links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
+    emit.inputs["Strength"].default_value = 1.0
+    nt.links.new(tex.outputs["Color"], emit.inputs["Color"])
+    nt.links.new(emit.outputs["Emission"], out.inputs["Surface"])
     ob.data.materials.clear()
     ob.data.materials.append(mat)
 
