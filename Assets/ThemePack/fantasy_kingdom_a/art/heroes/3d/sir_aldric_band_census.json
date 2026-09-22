@@ -1,0 +1,18 @@
+{
+  "tipEyed": "2820e53",
+  "pose": "n=10 t=0.625 mid-swing",
+  "lookPassClaimed": true,
+  "bindPassClaimed": false,
+  "walkPassClaimed": false,
+  "keep": "one-loft + steel texel; ghost PASS; arm UV tear PASS lean",
+  "captureA": "Actor LBS still PNG — mesh.txt + bindposes + Evaluate(); no encoder",
+  "captureB": "offline Blender EEVEE world_walk_n10.png; no Unity Game-view",
+  "captureC": "2820e53 walk MP4 frame n=10",
+  "eyedCharacter": "tabard navy + gold hem + greaves clean on A, B, and C — no cloth/leg tear sheet",
+  "eyedFloor": "frame-wide horizontal bands on floor/world in A+B+C (lit ground plane vs world bg + 8-bit ramp)",
+  "verdict": "SCENE/GROUND — banding is only floor/background in all three; not character bind, not capture-only.",
+  "oneSentence": "A+B+C tabard/legs are clean; the frame-wide lower-half bands are the lit Ground plane vs world bg, so flatten the backdrop and re-drop the MP4 — do not touch loft/weights.",
+  "sheet": "Docs/Survival/previews/gate3/gate3_mesh_vs_capture_band_n10.png",
+  "frozen": "Docs/Survival/previews/gate3/fail_2820e53_band/",
+  "fix": "remove Ground plane from setup_render(); full meshylook Game-view re-drop; KEEP one-loft + steel texel"
+}

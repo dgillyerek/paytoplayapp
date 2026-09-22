@@ -1,0 +1,52 @@
+{
+  "pins": [
+    {
+      "node_id": "world.node.home_01",
+      "node_type": "world.node_type.home",
+      "content_key": "theme_a.node.home_cottage",
+      "pin_x": 0.31,
+      "pin_y_from_top": 0.268,
+      "sprite_size": 0
+    },
+    {
+      "node_id": "world.node.gather_01",
+      "node_type": "world.node_type.gather",
+      "content_key": "theme_a.node.gather_quarry_map",
+      "pin_x": 0.481,
+      "pin_y_from_top": 0.284,
+      "sprite_size": 0.129
+    },
+    {
+      "node_id": "world.node.build_01",
+      "node_type": "world.node_type.build",
+      "content_key": "theme_a.node.build_outpost",
+      "pin_x": 0.62,
+      "pin_y_from_top": 0.248,
+      "sprite_size": 0
+    },
+    {
+      "node_id": "world.node.guild_01",
+      "node_type": "world.node_type.guild",
+      "content_key": "theme_a.node.guild_fort",
+      "pin_x": 0.705,
+      "pin_y_from_top": 0.368,
+      "sprite_size": 0
+    },
+    {
+      "node_id": "world.node.fight_01",
+      "node_type": "world.node_type.fight",
+      "content_key": "theme_a.node.fight_dark_keep",
+      "pin_x": 0.735,
+      "pin_y_from_top": 0.56,
+      "sprite_size": 0.20
+    },
+    {
+      "node_id": "world.node.explore_01",
+      "node_type": "world.node_type.explore",
+      "content_key": "theme_a.node.explore_ruins",
+      "pin_x": 0.255,
+      "pin_y_from_top": 0.615,
+      "sprite_size": 0.18
+    }
+  ]
+}

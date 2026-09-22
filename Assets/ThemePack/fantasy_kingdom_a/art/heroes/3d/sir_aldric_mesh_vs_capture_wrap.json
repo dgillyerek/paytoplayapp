@@ -1,0 +1,20 @@
+{
+  "lookPassClaimed": true,
+  "bindPassClaimed": false,
+  "walkPassClaimed": false,
+  "midSwingT": 0.625,
+  "mp4Frame": 10,
+  "unityEditor": false,
+  "failTip": "cc77d8a",
+  "failVerdict": "MESH — see sir_aldric_mesh_vs_capture.json / gate3_mesh_vs_capture_mid_swing.png",
+  "verdict": "MESH_FIXED_CLOSED_VOLUMES",
+  "eyed": "After hang-arm wrap: A Actor LBS, B Blender EEVEE, and C new MP4 n=10 all agree. Left mid-swing is a closed navy volume (no shred/sheet). Right is a closed gold-banded volume with a solid gold hand (no shatter). Gold lame stripes are e5b132f albedo, not capture tears. Encoder matches offline. Bind NOT claimed.",
+  "captureA": "Actor LBS still PNG — same mesh.txt/bindposes/Evaluate() as SirAldric3DActor (no Editor Game-view on this VM, no video encoder)",
+  "captureB": "offline Blender EEVEE world_walk_mid_swing.png after wrap (same pose, no Unity recorder)",
+  "captureC": "wrap MP4 decoded frame n=10",
+  "lookPath": "unchanged e5b132f UVs/albedo",
+  "actorPng": "Docs/Survival/previews/gate3/walk/census_wrap_actor_lbs_mid_swing.png",
+  "blenderPng": "Docs/Survival/previews/gate3/walk/world_walk_mid_swing.png",
+  "mp4Png": "Docs/Survival/previews/gate3/walk/census_wrap_mp4_mid_swing.png",
+  "sheet": "Docs/Survival/previews/gate3/gate3_mesh_vs_capture_wrap_mid_swing.png"
+}

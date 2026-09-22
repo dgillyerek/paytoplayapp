@@ -1,0 +1,27 @@
+{
+  "path": "UNITY_3D_HANDOFF",
+  "derek_lock": "2026-09-18",
+  "motion": "3D_model_plus_Unity_Animator",
+  "pilot": "Sir Aldric",
+  "stopped": ["AI_multi_frame", "paper_doll", "mesh_warp_png"],
+  "look_targets": {
+    "00_fullbody_LOCKED.png": "roster fullbody",
+    "01_rear_LOCKED.png": "squared rear SoT + Play placeholder bytes",
+    "02_aldric_turnaround_orthos.png": "front/left/right/rear orthos (rear panel may mirror scabbard)"
+  },
+  "pipeline": "HERO_3D_PIPELINE.md",
+  "gait_bar": {
+    "brief": "refs/WALK_GAIT_BAR.md",
+    "sample": "refs/WALK_GAIT_BAR_skeleton_sample.mp4",
+    "walk_clip": "refs/walk_cycle_mixamo_style.bvh",
+    "walk_clip_source": "https://github.com/CreativeInquiry/BVH-Examples (walk-cycle.bvh, Mixamo-style humanoid)",
+    "phases": "refs/gait_bar_phases/"
+  },
+  "note": "Sword/scabbard must land on CHARACTER-RIGHT hip to match rear LOCKED SoT (fix turnaround if mirrored).",
+  "runtime": {
+    "scene": "Assets/Survival/Scenes/SirAldric.unity",
+    "actor": "SirAldric3DActor",
+    "motion": "SirAldric3DMotion",
+    "play_placeholder": "SIR_ALDRIC_REAR_MASTER_LOCKED.png"
+  }
+}

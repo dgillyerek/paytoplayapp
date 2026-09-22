@@ -1,0 +1,36 @@
+{
+  "avatar": "Humanoid",
+  "rest": "Actor hang (arms local −Y) — do not retarget to T-pose or Evaluate() regresses",
+  "bindPose": "Path 2 Meshy e5b132f + hang skin FMT v4. UVs kept. One scabbard. Evaluate() keys unchanged.",
+  "map": {
+    "Hips": "Hips",
+    "Spine": "Spine",
+    "Chest": "Chest",
+    "Neck": "Neck",
+    "Head": "Head",
+    "LeftUpperArm": "Arm_L",
+    "LeftLowerArm": "Fore_L",
+    "LeftHand": "Hand_L",
+    "RightUpperArm": "Arm_R",
+    "RightLowerArm": "Fore_R",
+    "RightHand": "Hand_R",
+    "LeftUpperLeg": "UpLeg_L",
+    "LeftLowerLeg": "Leg_L",
+    "LeftFoot": "Foot_L",
+    "RightUpperLeg": "UpLeg_R",
+    "RightLowerLeg": "Leg_R",
+    "RightFoot": "Foot_R"
+  },
+  "extras": {
+    "Sword": "Sword (no drawn mesh — sheathed only)",
+    "Scabbard": "Scabbard",
+    "Cape": "Cape (bone only, no mesh)"
+  },
+  "forward": "+Z",
+  "up": "+Y",
+  "characterRight": "+X",
+  "tris": 55316,
+  "lookPassClaimed": true,
+  "bindPassClaimed": false,
+  "walkPassClaimed": false
+}

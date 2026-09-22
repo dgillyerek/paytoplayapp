@@ -1,0 +1,278 @@
+{
+  "tipEyed": "2820e53",
+  "weldVerts": 26717,
+  "rawCorners": 127719,
+  "legBoneComponents": 5,
+  "legL": 2,
+  "legR": 3,
+  "legBoneTop": [
+    {
+      "n": 599,
+      "prims": {
+        "Foot_R": 127,
+        "Leg_R": 287,
+        "UpLeg_R": 185
+      },
+      "ymin": 0.026,
+      "ymax": 0.633,
+      "xmin": 0.08,
+      "xmax": 0.194,
+      "zmin": -0.06,
+      "zmax": 0.094,
+      "thin": false
+    },
+    {
+      "n": 576,
+      "prims": {
+        "UpLeg_L": 164,
+        "Leg_L": 272,
+        "Foot_L": 140
+      },
+      "ymin": 0.027,
+      "ymax": 0.634,
+      "xmin": -0.197,
+      "xmax": -0.08,
+      "zmin": -0.059,
+      "zmax": 0.093,
+      "thin": false
+    },
+    {
+      "n": 17,
+      "prims": {
+        "UpLeg_R": 17
+      },
+      "ymin": 0.555,
+      "ymax": 0.573,
+      "xmin": 0.143,
+      "xmax": 0.153,
+      "zmin": 0.081,
+      "zmax": 0.087,
+      "thin": false
+    },
+    {
+      "n": 9,
+      "prims": {
+        "UpLeg_L": 9
+      },
+      "ymin": 0.554,
+      "ymax": 0.557,
+      "xmin": -0.167,
+      "xmax": -0.154,
+      "zmin": 0.074,
+      "zmax": 0.081,
+      "thin": false
+    },
+    {
+      "n": 1,
+      "prims": {
+        "UpLeg_R": 1
+      },
+      "ymin": 0.643,
+      "ymax": 0.643,
+      "xmin": 0.081,
+      "xmax": 0.081,
+      "zmin": 0.082,
+      "zmax": 0.082,
+      "thin": false
+    }
+  ],
+  "legLTop": [
+    {
+      "n": 576,
+      "prims": {
+        "UpLeg_L": 164,
+        "Leg_L": 272,
+        "Foot_L": 140
+      },
+      "ymin": 0.027,
+      "ymax": 0.634,
+      "xmin": -0.197,
+      "xmax": -0.08,
+      "zmin": -0.059,
+      "zmax": 0.093,
+      "thin": false
+    },
+    {
+      "n": 9,
+      "prims": {
+        "UpLeg_L": 9
+      },
+      "ymin": 0.554,
+      "ymax": 0.557,
+      "xmin": -0.167,
+      "xmax": -0.154,
+      "zmin": 0.074,
+      "zmax": 0.081,
+      "thin": false
+    }
+  ],
+  "legRTop": [
+    {
+      "n": 599,
+      "prims": {
+        "Foot_R": 127,
+        "Leg_R": 287,
+        "UpLeg_R": 185
+      },
+      "ymin": 0.026,
+      "ymax": 0.633,
+      "xmin": 0.08,
+      "xmax": 0.194,
+      "zmin": -0.06,
+      "zmax": 0.094,
+      "thin": false
+    },
+    {
+      "n": 17,
+      "prims": {
+        "UpLeg_R": 17
+      },
+      "ymin": 0.555,
+      "ymax": 0.573,
+      "xmin": 0.143,
+      "xmax": 0.153,
+      "zmin": 0.081,
+      "zmax": 0.087,
+      "thin": false
+    },
+    {
+      "n": 1,
+      "prims": {
+        "UpLeg_R": 1
+      },
+      "ymin": 0.643,
+      "ymax": 0.643,
+      "xmin": 0.081,
+      "xmax": 0.081,
+      "zmin": 0.082,
+      "zmax": 0.082,
+      "thin": false
+    }
+  ],
+  "leftoverCorridor": 33,
+  "leftoverTop": [
+    {
+      "n": 5741,
+      "prims": {
+        "Hips": 5741
+      },
+      "ymin": 0.0,
+      "ymax": 0.98,
+      "xmin": -0.345,
+      "xmax": -0.07,
+      "zmin": -0.233,
+      "zmax": 0.22,
+      "thin": false
+    },
+    {
+      "n": 5384,
+      "prims": {
+        "Hips": 5384
+      },
+      "ymin": 0.0,
+      "ymax": 0.98,
+      "xmin": 0.07,
+      "xmax": 0.341,
+      "zmin": -0.215,
+      "zmax": 0.225,
+      "thin": false
+    },
+    {
+      "n": 160,
+      "prims": {
+        "Hand_L": 160
+      },
+      "ymin": 0.865,
+      "ymax": 0.978,
+      "xmin": -0.387,
+      "xmax": -0.253,
+      "zmin": 0.034,
+      "zmax": 0.174,
+      "thin": false
+    },
+    {
+      "n": 160,
+      "prims": {
+        "Hand_R": 160
+      },
+      "ymin": 0.865,
+      "ymax": 0.978,
+      "xmin": 0.253,
+      "xmax": 0.387,
+      "zmin": 0.034,
+      "zmax": 0.174,
+      "thin": false
+    },
+    {
+      "n": 76,
+      "prims": {
+        "Hips": 76
+      },
+      "ymin": 0.253,
+      "ymax": 0.617,
+      "xmin": 0.321,
+      "xmax": 0.457,
+      "zmin": -0.065,
+      "zmax": 0.081,
+      "thin": false
+    },
+    {
+      "n": 16,
+      "prims": {
+        "Hips": 16
+      },
+      "ymin": 0.549,
+      "ymax": 0.565,
+      "xmin": -0.08,
+      "xmax": -0.072,
+      "zmin": -0.004,
+      "zmax": 0.04,
+      "thin": false
+    },
+    {
+      "n": 12,
+      "prims": {
+        "Hips": 12
+      },
+      "ymin": 0.549,
+      "ymax": 0.562,
+      "xmin": 0.072,
+      "xmax": 0.08,
+      "zmin": 0.001,
+      "zmax": 0.026,
+      "thin": false
+    },
+    {
+      "n": 11,
+      "prims": {
+        "Hips": 11
+      },
+      "ymin": 0.565,
+      "ymax": 0.571,
+      "xmin": -0.17,
+      "xmax": -0.159,
+      "zmin": 0.091,
+      "zmax": 0.094,
+      "thin": false
+    }
+  ],
+  "paperish": 23,
+  "footYmin": 0.0263,
+  "footYmax": 0.1985,
+  "hipsPaperInGreaveTubeUniqueMm": 341,
+  "verdict": {
+    "expectOneVolumePerSide": 2,
+    "legBoneMain": "L=1 R=1 connected Meshy greaves (keep)",
+    "ghost": "341 unique Hips verts in the greave tube stay with Hips while greaves swing = 4-leg, same class as 3-arm leftover paper",
+    "float": "unplanted root + bob 0.012-0.030 + stance lift; Foot ymin 0.026 vs ground Y=0",
+    "cause": "Main greaves are already one volume per side. Extra legs = leftover Hips paper in the greave tube. Float = Evaluate bob/root never plants soles on Y=0.",
+    "fix": "delete Hips paper in the greave tube; keep ONE connected L + ONE connected R Meshy greave; snap root so lowest sole kisses Y=0. Do not rewrite Evaluate() keys. Do not remesh body."
+  },
+  "postFix": {
+    "killedLegGhostFaces": 920,
+    "verts": 26449,
+    "tris": 41653,
+    "tightHipsInTubeUniqueMmAfter": 281,
+    "note": "920 Hips faces deleted by vertex-in-tube hit. Main L+R greaves unchanged (576/599). Residual 281 unique are tabard-hem overlap on the Hips island, not a second welded greave. Plant is root snap after Evaluate(). Bind NOT claimed."
+  }
+}

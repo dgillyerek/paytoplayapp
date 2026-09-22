@@ -1,0 +1,20 @@
+{
+  "lookPassClaimed": true,
+  "bindPassClaimed": false,
+  "walkPassClaimed": false,
+  "midSwingT": 0.625,
+  "mp4Frame": 10,
+  "unityEditor": false,
+  "failTip": "cc77d8a",
+  "verdict": "MESH",
+  "eyed": "A Actor LBS, B Blender EEVEE, and C FAIL MP4 n=10 ALL show the same left navy arm sheet/smear, right stacked gold plates, and fuzzy hands. Encoder does not invent tears. Offline ALSO tears → mesh/geo (thin XY hang-arm cards + solidify rims), not capture/AA/transparent/post/sort.",
+  "captureA": "Actor LBS still PNG — same mesh.txt/bindposes/Evaluate() as SirAldric3DActor (no Editor Game-view on this VM, no video encoder)",
+  "captureB": "offline Blender EEVEE world_walk_mid_swing.png (same pose, no Unity recorder)",
+  "captureC": "cc77d8a FAIL MP4 decoded frame n=10",
+  "lookPath": "unchanged e5b132f UVs/albedo",
+  "actorPng": "Docs/Survival/previews/gate3/walk/census_actor_lbs_mid_swing.png",
+  "blenderPng": "Docs/Survival/previews/gate3/walk/census_blender_mid_swing.png",
+  "mp4Png": "Docs/Survival/previews/gate3/walk/census_mp4_mid_swing.png",
+  "sheet": "Docs/Survival/previews/gate3/gate3_mesh_vs_capture_mid_swing.png",
+  "nextActor": "mesh volume — curl hang-arm plates around the bone axis (same verts/UVs). Not another exclusive-weight iterate. Not remesh/capsule."
+}

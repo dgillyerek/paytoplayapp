@@ -1,0 +1,29 @@
+{
+  "research": [
+    {
+      "id": "research.offense_1",
+      "branch": "offense",
+      "requires": []
+    },
+    {
+      "id": "research.defense_1",
+      "branch": "defense",
+      "requires": []
+    },
+    {
+      "id": "research.economy_1",
+      "branch": "economy",
+      "requires": []
+    },
+    {
+      "id": "research.march_1",
+      "branch": "march",
+      "requires": []
+    },
+    {
+      "id": "research.hero_1",
+      "branch": "hero",
+      "requires": []
+    }
+  ]
+}

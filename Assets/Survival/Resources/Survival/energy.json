@@ -1,0 +1,11 @@
+{
+  "meter": "energy.meter.main",
+  "cap": 120,
+  "regen_seconds_per_point": 90,
+  "action_costs": {
+    "energy.action.march": 5,
+    "energy.action.battle": 10,
+    "energy.action.gather": 4,
+    "energy.action.build_rush": 8
+  }
+}

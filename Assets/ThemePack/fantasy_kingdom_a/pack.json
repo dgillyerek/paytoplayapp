@@ -1,0 +1,24 @@
+{
+  "id": "fantasy_kingdom_a",
+  "theme_id": "theme.id.fantasy_kingdom_a",
+  "display_name": "Kingdom Defense",
+  "systems_api": "survival_core_v1",
+  "art": {
+    "flavor.splash": "art/splash/THEME_A_SPLASH_KEEP_1080x1920.png",
+    "map.terrain": "art/map/THEME_A_WORLD_TERRAIN_PLAIN_1080x1920.png",
+    "theme_a.building.hq.keep": "art/splash/THEME_A_SPLASH_KEEP_1080x1920.png",
+    "theme_a.hero.knight_01": "art/heroes/theme_a_hero_knight_01.png",
+    "theme_a.hero.sir_aldric_rear": "art/heroes/SIR_ALDRIC_REAR_MASTER_LOCKED.png",
+    "theme_a.hero.sir_aldric_rear_512": "art/heroes/SIR_ALDRIC_REAR_MASTER_LOCKED_512.png",
+    "theme_a.threat.darkness_01": "art/world-nodes/05_fight_dark_keep.png",
+    "theme_a.world.chip.dark_keep": "art/world-nodes/05_fight_dark_keep.png",
+    "theme_a.store.icon": "art/splash/THEME_A_SPLASH_KEEP_1080x1920.png",
+    "theme_a.node.home_cottage": "art/world-nodes/01_home_cottage.png",
+    "theme_a.node.gather_quarry": "art/world-nodes/02_gather_quarry.png",
+    "theme_a.node.gather_quarry_map": "art/world-nodes/02_gather_quarry_map.png",
+    "theme_a.node.build_outpost": "art/world-nodes/03_build_outpost.png",
+    "theme_a.node.guild_fort": "art/world-nodes/04_guild_fort.png",
+    "theme_a.node.fight_dark_keep": "art/world-nodes/05_fight_dark_keep.png",
+    "theme_a.node.explore_ruins": "art/world-nodes/06_explore_ruins.png"
+  }
+}

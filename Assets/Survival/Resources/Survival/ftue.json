@@ -1,0 +1,11 @@
+{
+  "steps": [
+    "ftue.step.boot",
+    "ftue.step.place_hq",
+    "ftue.step.first_build",
+    "ftue.step.first_march",
+    "ftue.step.first_battle",
+    "ftue.step.alliance_intro",
+    "ftue.flag.complete"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "battles": [
+    "battle.mode.pve",
+    "battle.mode.pvp",
+    "battle.formation.front",
+    "battle.formation.mid",
+    "battle.formation.back",
+    "battle.result.win",
+    "battle.result.lose",
+    "battle.result.flee",
+    "battle.action.start",
+    "battle.action.auto",
+    "battle.action.skip"
+  ]
+}

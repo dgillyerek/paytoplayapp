@@ -1,0 +1,32 @@
+PATH 2 BIND CENSUS (raw import, no weld, no skin)
+verts=72090 faces=49999 islands=11283
+top island sizes: [127, 102, 101, 91, 91, 73, 72, 70, 70, 70, 68, 67, 66, 65, 65, 63, 62, 62, 62, 61]
+sheath-like islands: 6
+  sheath[0] n=66 c=[0.15, 1.173, 0.078] span=[0.145, 0.207, 0.129]
+  sheath[1] n=43 c=[0.244, 0.284, -0.103] span=[0.067, 0.195, 0.078]
+  sheath[2] n=42 c=[0.134, 0.315, -0.1] span=[0.089, 0.188, 0.119]
+  sheath[3] n=39 c=[0.227, 0.331, -0.117] span=[0.109, 0.203, 0.09]
+  sheath[4] n=33 c=[0.119, 0.704, 0.191] span=[0.035, 0.188, 0.077]
+  sheath[5] n=30 c=[0.123, 1.188, 0.115] span=[0.104, 0.186, 0.084]
+duplicate sheath groups: 2
+  group n=[66, 30] keep=66
+  group n=[43, 42, 39] keep=43
+Actor hang Arm_R chain: [0.0, -1.0, 0.0]  bone local +Y: [0.0, 1.0, 0.0]
+Mesh Arm_R PCA [0.0053, -0.9901, 0.1403]  HANG-ISH (−Y)  angle_to_hang=8.07 deg  n=17786
+Mesh Arm_L PCA [0.0219, -0.9905, 0.1358]  HANG-ISH (−Y)  angle_to_hang=7.9 deg  n=16113
+MISMATCH (need pose-to-hang before bind): {'Arm_R_deg': 8.07, 'Arm_L_deg': 7.9, 'failedPremise': False}
+current mesh.txt bone verts:
+  Hips       65673
+  Chest      15408
+  Spine      14385
+  Head       11349
+  Arm_R      9615
+  Arm_L      8925
+  Foot_R     6195
+  Foot_L     6099
+  Scabbard   4104
+  Neck       2910
+  Leg_R      2622
+  Leg_L      2577
+OLD PREMISE (failed 89481e5 + 71f0c4a): Bone1 corridor on A-pose shell + hang Evaluate().
+NEW PREMISE (next): A) apply mesh into hang rest, then heat/multi-bone weights; delete dup sheath at GEO.

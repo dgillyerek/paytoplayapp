@@ -1,0 +1,13 @@
+{
+  "events": [
+    {
+      "type": "event.type.siege"
+    },
+    {
+      "type": "event.type.guild_crusade"
+    },
+    {
+      "type": "event.type.banner"
+    }
+  ]
+}
