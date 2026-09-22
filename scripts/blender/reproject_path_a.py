@@ -52,7 +52,11 @@ def main():
     if not walk_only:
         src.hide_set(False)
         src.hide_render = True
-        # Stills-first: do not re-wrap (rear/side already close; helm not the blocker).
+        # Inner remesh wall on the front tabard pokes tan through cloth.
+        # Peel that shell. Helm/gauntlets/rear stay. Not a paint stamp.
+        if os.environ.get("PATHA_PEEL", "1") == "1":
+            path_a.peel_front_torso_inner(tgt, src)
+        # Stills-first: do not full-body re-wrap (rear/side already close).
         if not stills_only:
             path_a.shrinkwrap_to_source(tgt, src, 0.001)
         path_a.project_albedo(src, tgt, atlas_path)

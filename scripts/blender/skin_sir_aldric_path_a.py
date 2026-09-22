@@ -210,6 +210,161 @@ def shrinkwrap_to_source(tgt, src, offset: float) -> bool:
     return True
 
 
+def _vg_dump(ob):
+    dump = []
+    for v in ob.data.vertices:
+        wts = []
+        for g in ob.vertex_groups:
+            try:
+                w = g.weight(v.index)
+            except RuntimeError:
+                continue
+            if w > 1e-6:
+                wts.append((g.name, w))
+        dump.append((v.co.copy(), wts))
+    return dump
+
+
+def _vg_fill_new(ob, dump):
+    """Hole-fill verts have no groups. Copy from nearest pre-peel vert. Not a rebind."""
+    from mathutils.kdtree import KDTree
+
+    if not dump:
+        return 0
+    kd = KDTree(len(dump))
+    for i, (co, _w) in enumerate(dump):
+        kd.insert(co, i)
+    kd.balance()
+    names = {g.name: g for g in ob.vertex_groups}
+    n = 0
+    for v in ob.data.vertices:
+        has = False
+        for g in ob.vertex_groups:
+            try:
+                if g.weight(v.index) > 1e-8:
+                    has = True
+                    break
+            except RuntimeError:
+                continue
+        if has:
+            continue
+        _co, idx, _d = kd.find(v.co)
+        for name, w in dump[idx][1]:
+            g = names.get(name)
+            if g is not None:
+                g.add([v.index], w, "REPLACE")
+        n += 1
+    return n
+
+
+def _front_torso_p(c: Vector) -> bool:
+    return 0.99 < c.y < 1.47 and abs(c.x) < 0.185 and c.z > 0.00
+
+
+def peel_front_torso_inner(tgt, src=None) -> int:
+    """Delete the inner remesh wall on the front tabard.
+
+    Solidify+voxel left a connected double shell (one island, ~half the
+    torso faces sit behind the +Z first hit). Those poke through cloth as
+    tan/under-mesh. Keep one outer surface. Helm/gauntlets/rear untouched.
+    Surviving verts keep their weights — not a bind iterate.
+    """
+    import bmesh
+    from mathutils.bvhtree import BVHTree
+
+    me = tgt.data
+    dump = _vg_dump(tgt)
+    killed = 0
+    for _pass in range(2):
+        bm = bmesh.new()
+        bm.from_mesh(me)
+        bm.faces.ensure_lookup_table()
+        bvh = BVHTree.FromBMesh(bm)
+        kill = []
+        for face in bm.faces:
+            c = face.calc_center_median()
+            if not _front_torso_p(c):
+                continue
+            n = face.normal
+            hit, _sn, idx, _dist = bvh.ray_cast(
+                Vector((c.x, c.y, 0.85)), Vector((0.0, 0.0, -1.0))
+            )
+            if hit is None or idx is None:
+                if n.z < -0.45:
+                    kill.append(face)
+                continue
+            if idx == face.index:
+                continue
+            other = bm.faces[idx] if idx < len(bm.faces) else None
+            other_z = other.normal.z if other is not None else 0.0
+            if hit.z > c.z + 0.0015:
+                kill.append(face)
+            elif abs(hit.z - c.z) < 0.0035 and n.z < other_z - 0.04:
+                kill.append(face)
+            elif n.z < -0.45 and idx != face.index:
+                kill.append(face)
+        nkill = len(kill)
+        if nkill < 6:
+            bm.free()
+            break
+        bmesh.ops.delete(bm, geom=kill, context="FACES")
+        boundary = [e for e in bm.edges if e.is_boundary]
+        try:
+            bmesh.ops.holes_fill(bm, edges=boundary, sides=16)
+        except Exception as exc:
+            print("peel holes_fill", exc)
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        bm.to_mesh(me)
+        bm.free()
+        me.update()
+        killed += nkill
+        print("peel pass", _pass, "deleted", nkill, "f", len(me.polygons), flush=True)
+    filled = _vg_fill_new(tgt, dump)
+    if src is not None and killed:
+        _shrinkwrap_front_torso(tgt, src, 0.002)
+    print("peel front torso killed", killed, "newWts", filled, "v", len(me.vertices), "f", len(me.polygons))
+    return killed
+
+
+def _shrinkwrap_front_torso(tgt, src, offset: float):
+    """Snap only the front tabard onto Meshy after peeling the inner wall."""
+    vg_name = "PathAFrontPeel"
+    if vg_name in tgt.vertex_groups:
+        tgt.vertex_groups.remove(tgt.vertex_groups[vg_name])
+    vg = tgt.vertex_groups.new(name=vg_name)
+    n = 0
+    for v in tgt.data.vertices:
+        if _front_torso_p(v.co):
+            vg.add([v.index], 1.0, "REPLACE")
+            n += 1
+    if n < 12:
+        return
+    bpy.ops.object.select_all(action="DESELECT")
+    tgt.select_set(True)
+    bpy.context.view_layer.objects.active = tgt
+    m = tgt.modifiers.new("peelWrap", "SHRINKWRAP")
+    m.target = src
+    m.vertex_group = vg_name
+    m.wrap_method = "NEAREST_SURFACEPOINT"
+    m.offset = offset
+    try:
+        m.wrap_mode = "ABOVE_SURFACE"
+    except TypeError:
+        m.wrap_mode = "ON_SURFACE"
+    bpy.ops.object.modifier_apply(modifier="peelWrap")
+    try:
+        import bmesh
+        bm = bmesh.new()
+        bm.from_mesh(tgt.data)
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        bm.to_mesh(tgt.data)
+        bm.free()
+    except Exception:
+        pass
+    tgt.data.update()
+    print("peel wrap front verts", n, "offset", offset)
+
+
 def _is_studio_bg(rgb) -> bool:
     """Reject Play-cam studio/ground, keep navy tabard / brown scabbard."""
     r, g, b = (int(c) for c in rgb[:3])
@@ -1141,9 +1296,10 @@ def write_drop(note: dict):
         "- SOURCE: Path 2 Meshy GLB + e5b132f Image_0 / SoT lion. LOOK = Meshy knight.\n"
         "- RETOPO: mid-poly manifold (voxel scaffold only, then shrinkwrap to Meshy). "
         "Not remesh-melt hero, not capsules, not paper-island weights.\n"
-        "- TEXTURE: front-half torso parked on solid Image_0 navy (kills tan "
-        "show-through). Dest-planar lion_card_front on the e5b132f chest window. "
-        "Steel metallic/roughness kept. No frozen Game still compositing. "
+        "- GEO: peel inner remesh wall on the front tabard (solidify double-shell). "
+        "One outer cloth surface. Helm/gauntlets/rear untouched.\n"
+        "- TEXTURE: solid Image_0 navy on that outer cloth + dest-planar "
+        "lion_card_front. Steel PBR kept. No frozen Game still compositing. "
         "Do NOT claim Design PASS.\n"
         "- FBX: ThemePack `sir_aldric_path2_clean.fbx` — Y-up, face +Z, one scabbard-R.\n"
         "- RE-GATE: World stills first, then one Evaluate() walk. "
