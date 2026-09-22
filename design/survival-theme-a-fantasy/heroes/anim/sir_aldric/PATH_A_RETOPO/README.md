@@ -1,26 +1,15 @@
-# Path A — clean retopo + Meshy project
+# Path A — Design ACK folded (do not claim PASS)
 
-Derek Path A LOCKED. Design ACK folded into this drop (World stills first, then walk).
+Derek Path A LOCKED. Design ACK folded into this same retopo run. **No parallel path. No bind hacks.**
 
-**Bind NOT claimed. Walk NOT claimed.** Hub PNG HOLD. PR #21 HOLD.
+**PR #21 HOLD. Bind NOT claimed. Walk NOT claimed. Hub PNG HOLD. Do not claim PASS.**
 
-## What this is
+## Criteria (honest)
 
-1. **SOURCE** — Path 2 Meshy GLB + e5b132f Image_0 / SoT lion. LOOK = Meshy knight.
-2. **CLEAN RETOPO** — QuadriFlow mid-poly, 1 island, ~26k tris. Voxel is scaffold only, then shrinkwrap ABOVE_SURFACE onto Meshy. Not capsules. Not paper-island weights. Not a new tube.
-3. **TEXTURE PROJECT** — frozen e5b132f World stills camera-projected through Play cams onto retopo UVs (back→rear, front→front). Structured steel/navy fill + neighbor dilate for occluded texels. Not paper-Meshy BVH transfer (that smeared gold).
-4. **FBX** — `Assets/ThemePack/.../sir_aldric_path2_clean.fbx` — Y-up, face +Z, one character-RIGHT scabbard, spatial nearest-bone-segment weights.
-5. **RE-GATE** — World-cam stills vs `look_e5b132f/` + locked turnaround, then one planted Evaluate() walk toward TOP.
+1. World-cam stills vs e5b132f / locked turnaround — **not met.** Lion / navy / hem read on the remesh. Plate is not the even Meshy silver. Not loft tubes; still remesh-lumpy vs the export.
+2. Mid-poly — **29,500 tris / 14,648 verts / 1 island.** One volume per limb (spatial bind). Not tidy game loops.
+3. Albedo — Play-cam project of frozen e5b132f stills. Cycles Image_0 bake did not stick. Lion + armor readable, not paint-PASS.
+4. FBX — `sir_aldric_path2_clean.fbx` Y-up +Z, Actor skeleton, spatial weights, one scabbard-R.
+5. Walk — one planted Evaluate() clip toward TOP. 1L+1R, one arm/side, one scabbard-R. Bind/walk not claimed.
 
-## Honest ART
-
-This is clean retopo + project. Abandoned shattered-Meshy paper / tube / capsule bind hacks.
-
-The mid-poly is still a remesh (lumpy vs the e5b132f export). Paint reads lion / navy tabard / Greek-key hem / scabbard-R from the locked stills. Plate is not the even Meshy silver. **Do not treat as bind or walk PASS.**
-
-## Numbers
-
-- tris=26048 verts=12795 islands=1
-- bind=spatial (not automatic weights)
-- one Arm L/R, one UpLeg/Leg/Foot L/R, one Scabbard
-- motion: 5916447 Evaluate() keys + root plant after Evaluate()
+Re-gate order: World stills first, then walk. Sheet: `gate3_path_a_vs_e5b132f.png`.
