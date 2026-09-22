@@ -248,6 +248,38 @@ def _front_torso_p(c: Vector) -> bool:
     return 0.80 < c.y < 1.50 and abs(c.x) < 0.21 and c.z > -0.04
 
 
+def _e5_tabard_half_w(y: float) -> float:
+    """e5b132f front-tabard half-width vs height. Fitted cloth, not a card.
+
+    Keys from the locked left-column silhouette: narrow neck under the
+    gorget, chest wider, slight waist cinch, skirt with a center point.
+    """
+    keys = (
+        (1.475, 0.00),
+        (1.448, 0.072),
+        (1.415, 0.118),
+        (1.355, 0.145),
+        (1.270, 0.155),
+        (1.180, 0.150),
+        (1.080, 0.130),
+        (0.980, 0.148),
+        (0.880, 0.160),
+        (0.800, 0.162),
+        (0.755, 0.118),
+        (0.720, 0.042),
+        (0.695, 0.00),
+    )
+    if y >= keys[0][0] or y <= keys[-1][0]:
+        return 0.0
+    for i in range(len(keys) - 1):
+        y0, w0 = keys[i]
+        y1, w1 = keys[i + 1]
+        if y1 <= y <= y0:
+            t = (y - y1) / max(1e-6, y0 - y1)
+            return w1 + t * (w0 - w1)
+    return 0.0
+
+
 def _is_src_cloth(src, face) -> bool:
     mats = src.data.materials
     mat = mats[face.material_index] if face.material_index < len(mats) else None
@@ -360,6 +392,9 @@ def replace_front_cloth_shell(tgt, src) -> int:
                 continue
             face = src_bm.faces[idx]
             if not _is_src_cloth(src, face):
+                plate_n += 1
+                continue
+            if abs(x) > _e5_tabard_half_w(y) + 0.006:
                 plate_n += 1
                 continue
             n = Vector(sn) if sn is not None else face.normal.copy()
@@ -1115,9 +1150,10 @@ def stamp_front_lion_dest(tgt, atlas_path: Path, card, src=None) -> int:
                 on_strip += 1
             if _atlas_tan(atlas, uv.data[li], s):
                 tan_n += 1
-        in_tabard = tx0 <= c.x <= tx1 and ty0 <= c.y <= ty1 and c.z > -0.03
-        torso = 0.80 < c.y < 1.48 and abs(c.x) < 0.21 and c.z > -0.04
-        loose = torso and (tan_n >= 1 or on_strip >= 1)
+        hw = _e5_tabard_half_w(c.y)
+        in_tabard = hw > 1e-4 and abs(c.x) <= hw + 0.010 and c.z > -0.02
+        torso = 0.70 < c.y < 1.48 and abs(c.x) < 0.18 and c.z > 0.00
+        loose = torso and (tan_n >= 1 or on_strip >= 1) and abs(c.x) <= hw + 0.012
         if in_tabard or loose:
             cloth.append(poly.index)
         elif on_strip >= 2:
