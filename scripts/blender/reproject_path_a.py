@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -45,13 +46,15 @@ def main():
     bpy.context.view_layer.update()
 
     atlas_path = old.PACK3D / "sir_aldric_meshy_atlas.png"
-    if src is not None:
-        src.hide_set(False)
-        src.hide_render = True
-    path_a.project_albedo(src or tgt, tgt, atlas_path)
-    if src is not None:
-        src.hide_set(True)
-        src.hide_render = True
+    walk_only = os.environ.get("PATHA_WALK_ONLY") == "1"
+    if not walk_only:
+        if src is not None:
+            src.hide_set(False)
+            src.hide_render = True
+        path_a.project_albedo(src or tgt, tgt, atlas_path)
+        if src is not None:
+            src.hide_set(True)
+            src.hide_render = True
 
     # Scene already has WorldPlay / lights / ground from the saved blend.
     if bpy.context.scene.camera is None:
