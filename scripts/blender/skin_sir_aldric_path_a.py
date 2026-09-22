@@ -373,61 +373,57 @@ def replace_front_cloth_shell(tgt, src) -> int:
     src_bm = bmesh.new()
     src_bm.from_mesh(src.data)
     src_bm.faces.ensure_lookup_table()
+    src_bm.verts.ensure_lookup_table()
     full_bvh = BVHTree.FromBMesh(src_bm)
 
-    nx, ny = 36, 64
-    x0, x1 = -0.210, 0.210
-    y0, y1 = 0.68, 1.505
-    grid = {}
-    cloth_n = plate_n = miss_n = 0
-    for iy in range(ny + 1):
-        for ix in range(nx + 1):
-            x = x0 + (x1 - x0) * ix / nx
-            y = y0 + (y1 - y0) * iy / ny
-            hit, sn, idx, _d = full_bvh.ray_cast(
-                Vector((x, y, 0.72)), Vector((0.0, 0.0, -1.0)), 0.90
-            )
-            if hit is None or idx is None or idx >= len(src_bm.faces):
-                miss_n += 1
-                continue
-            face = src_bm.faces[idx]
-            if not _is_src_cloth(src, face):
-                plate_n += 1
-                continue
-            if abs(x) > _e5_tabard_half_w(y) + 0.006:
-                plate_n += 1
-                continue
-            n = Vector(sn) if sn is not None else face.normal.copy()
-            if n.length < 1e-8:
-                n = Vector((0.0, 0.0, 1.0))
-            else:
-                n.normalize()
-            if n.z < 0.08:
-                continue
-            cloth_n += 1
-            grid[(ix, iy)] = Vector(hit) + n * 0.0009
-    src_bm.free()
+    keep_f = []
+    plate_n = inner_n = 0
+    for face in src_bm.faces:
+        c = face.calc_center_median()
+        if face.normal.z < 0.08:
+            continue
+        if not _is_src_cloth(src, face):
+            continue
+        if abs(c.x) > _e5_tabard_half_w(c.y) + 0.008:
+            plate_n += 1
+            continue
+        hit, _sn, idx, _d = full_bvh.ray_cast(
+            Vector((c.x, c.y, 0.72)), Vector((0.0, 0.0, -1.0)), 0.90
+        )
+        if hit is not None and idx is not None and idx != face.index and hit.z > c.z + 0.0012:
+            inner_n += 1
+            continue
+        keep_f.append(face.index)
     print(
-        "cloth drape hits", cloth_n, "plateSkip", plate_n, "miss", miss_n,
-        "kept", len(grid), flush=True,
+        "cloth retopo keep", len(keep_f), "silSkip", plate_n, "inner", inner_n,
+        flush=True,
     )
-
-    verts = []
-    vmap = {}
-    for key, p in grid.items():
-        vmap[key] = len(verts)
-        verts.append((p.x, p.y, p.z))
-    faces = []
-    for iy in range(ny):
-        for ix in range(nx):
-            a, b = (ix, iy), (ix + 1, iy)
-            c, d = (ix + 1, iy + 1), (ix, iy + 1)
-            if a in vmap and b in vmap and c in vmap and d in vmap:
-                faces.append((vmap[a], vmap[b], vmap[c], vmap[d]))
-    print("cloth drape verts", len(verts), "quads", len(faces), flush=True)
-    if len(faces) < 40:
-        print("cloth drape too thin — abort")
+    if len(keep_f) < 40:
+        src_bm.free()
+        print("cloth retopo too thin — abort")
         return 0
+
+    vmap = {}
+    verts = []
+    faces = []
+    for fi in keep_f:
+        face = src_bm.faces[fi]
+        n = face.normal
+        if n.length < 1e-8:
+            n = Vector((0.0, 0.0, 1.0))
+        else:
+            n = n.normalized()
+        ids = []
+        for v in face.verts:
+            if v.index not in vmap:
+                p = v.co + n * 0.0008
+                vmap[v.index] = len(verts)
+                verts.append((p.x, p.y, p.z))
+            ids.append(vmap[v.index])
+        if len(ids) >= 3:
+            faces.append(tuple(ids))
+    src_bm.free()
+    print("cloth retopo verts", len(verts), "faces", len(faces), flush=True)
 
     patch_me = bpy.data.meshes.new("PathAClothDrape")
     patch_me.from_pydata(verts, [], faces)
@@ -438,6 +434,8 @@ def replace_front_cloth_shell(tgt, src) -> int:
         p.use_smooth = True
     patch_ob = bpy.data.objects.new("PathAClothDrape", patch_me)
     bpy.context.collection.objects.link(patch_ob)
+    if len(patch_me.polygons) > 2200:
+        rt.decimate_to(patch_ob, 1800)
 
     # Delete remesh under the draped tabard + leftover inner / edge shred.
     pverts = [Vector(v) for v in verts]
@@ -1138,7 +1136,7 @@ def stamp_front_lion_dest(tgt, atlas_path: Path, card, src=None) -> int:
     u0, u1, v0, v1 = 0.68, 0.94, 0.62, 0.97
     # Lion world box inside the tabard. Blit into the matching strip sub-rect
     # so the whole cloth is one dest-planar UV (no card-edge rectangle).
-    mx0, mx1, my0, my1 = -0.168, 0.168, 1.088, 1.418
+    mx0, mx1, my0, my1 = -0.176, 0.176, 1.078, 1.428
     cloth, stray = [], []
     for poly in me.polygons:
         c = poly.center
