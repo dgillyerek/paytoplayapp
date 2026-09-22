@@ -21,6 +21,7 @@ import math
 import os
 import shutil
 import sys
+from collections import deque
 from pathlib import Path
 
 import bpy
@@ -1494,29 +1495,71 @@ def _in_tabard_xy(p: Vector) -> bool:
 
 
 def _is_gauntlet_r(p: Vector) -> bool:
-    """True right gauntlet — nearer Hand_R than the hip sheath."""
+    """True right gauntlet only — tight, so the hanging blade cannot hide here."""
     hand_a, hand_b = Vector((0.28, 0.84, 0.02)), Vector((0.32, 0.68, 0.03))
     d_hand = _seg_dist(p, hand_a, hand_b)
     d_scab = hh.dist_seg(p, hh._SCAB_A, hh._SCAB_B)
-    return p.y > 0.64 and d_hand < 0.10 and d_hand < d_scab - 0.012
+    return p.y > 0.72 and p.x > 0.26 and d_hand < 0.055 and d_hand < d_scab - 0.030
 
 
 def _is_sheath(p: Vector) -> bool:
     """Thin character-RIGHT sheath + hanging blade. Not belt, not tabard.
 
     Upper hanger is a tight tube so the belt/hip cannot fan into a slab.
-    Lower blade stays wide enough to steal the Hand_R-bound sword.
+    Mid blade is wide enough to steal the Hand_R-bound sword.
+    Blade tip (y~0.30) is a narrow +X cone — never a right boot/sole.
     """
     if _is_gauntlet_r(p):
         return False
     d = hh.dist_seg(p, hh._SCAB_A, hh._SCAB_B)
     if p.y >= 0.88:
-        return p.x > 0.205 and d < 0.046 and -0.055 < p.z < 0.075
-    if 0.26 < p.y < 0.88:
-        # Include the rear hanging blade (z ~ -0.12) that spatial bind
-        # handed to Hand_R — that was the mid-cycle slab.
+        return p.x > 0.205 and d < 0.050 and -0.055 < p.z < 0.075
+    if 0.36 <= p.y < 0.88:
         return p.x > 0.175 and d < 0.12 and -0.16 < p.z < 0.10
+    if 0.30 <= p.y < 0.36:
+        return p.x > 0.26 and d < 0.085 and -0.12 < p.z < 0.10
     return False
+
+
+def _leg_segs():
+    return {
+        "UpLeg_L": (Vector((-0.11, 0.92, 0.0)), Vector((-0.11, 0.50, 0.0))),
+        "Leg_L": (Vector((-0.11, 0.50, 0.0)), Vector((-0.11, 0.20, 0.03))),
+        "Foot_L": (Vector((-0.11, 0.20, 0.03)), Vector((-0.11, 0.02, 0.10))),
+        "UpLeg_R": (Vector((0.11, 0.92, 0.0)), Vector((0.11, 0.50, 0.0))),
+        "Leg_R": (Vector((0.11, 0.50, 0.0)), Vector((0.11, 0.20, 0.03))),
+        "Foot_R": (Vector((0.11, 0.20, 0.03)), Vector((0.11, 0.02, 0.10))),
+    }
+
+
+def _nearest_leg_bone(p: Vector) -> str:
+    side = "R" if p.x >= 0.0 else "L"
+    best, bd = f"Foot_{side}", 1e9
+    for name, (a, b) in _leg_segs().items():
+        if not name.endswith(f"_{side}"):
+            continue
+        d = _seg_dist(p, a, b)
+        if d < bd:
+            best, bd = name, d
+    return best
+
+
+def _sheath_flood_volume(p: Vector) -> bool:
+    """Hanging-blade volume for island flood. Not thigh, not gauntlet, not sole."""
+    if _is_gauntlet_r(p) or _is_tabard_cloth(p):
+        return False
+    d_scab = hh.dist_seg(p, hh._SCAB_A, hh._SCAB_B)
+    d_leg = min(_seg_dist(p, a, b) for a, b in _leg_segs().values())
+    if d_leg + 0.018 < d_scab:
+        return False
+    if p.y < 0.36:
+        return p.x > 0.26 and d_scab < 0.085 and -0.12 < p.z < 0.10
+    return (
+        p.x > 0.175
+        and 0.36 <= p.y <= 1.12
+        and -0.18 < p.z < 0.11
+        and d_scab < 0.12
+    )
 
 
 def _is_tabard_cloth(p: Vector) -> bool:
@@ -1630,7 +1673,10 @@ def lock_right_hip_belt(mesh_ob) -> int:
 
 
 def lock_no_arm_on_sheath(mesh_ob) -> int:
-    """Any swinging-arm weight in the hanging-blade box → Scabbard."""
+    """Any swinging-arm weight on the hanging blade → Scabbard.
+
+    Floor y>0.42 so a right calf cannot be stolen (ghost third sole).
+    """
     groups = {g.name: g for g in mesh_ob.vertex_groups}
     if "Scabbard" not in groups:
         groups["Scabbard"] = mesh_ob.vertex_groups.new(name="Scabbard")
@@ -1638,11 +1684,11 @@ def lock_no_arm_on_sheath(mesh_ob) -> int:
     n = 0
     for i, v in enumerate(mesh_ob.data.vertices):
         p = v.co
-        if _is_gauntlet_r(p):
+        if _is_gauntlet_r(p) or _is_tabard_cloth(p):
             continue
-        if not (p.x > 0.175 and 0.26 < p.y < 0.80 and p.z < 0.08):
+        if not _sheath_flood_volume(p):
             continue
-        names = {vg.get(g.group, "") for g in v.groups if g.weight > 0.05}
+        names = {vg.get(g.group, "") for g in v.groups if g.weight > 0.01}
         if names & {"Hand_R", "Fore_R", "Arm_R"}:
             _clear_and_set(mesh_ob, i, "Scabbard", groups)
             n += 1
@@ -1651,7 +1697,11 @@ def lock_no_arm_on_sheath(mesh_ob) -> int:
 
 
 def lock_closer_to_sheath(mesh_ob) -> int:
-    """Right-hip verts nearer the sheath than the hand follow Scabbard."""
+    """Right-hip verts nearer the sheath than the hand follow Scabbard.
+
+    Knee/calf/foot are off-limits (y>0.50). The old y>0.25 floor stole
+    the right leg onto Scabbard — Design's ghost third sole.
+    """
     groups = {g.name: g for g in mesh_ob.vertex_groups}
     if "Scabbard" not in groups:
         groups["Scabbard"] = mesh_ob.vertex_groups.new(name="Scabbard")
@@ -1659,17 +1709,219 @@ def lock_closer_to_sheath(mesh_ob) -> int:
     n = 0
     for i, v in enumerate(mesh_ob.data.vertices):
         p = v.co
-        if p.x < 0.15 or not (0.25 < p.y < 1.06) or _is_gauntlet_r(p):
+        if p.x < 0.18 or not (0.50 < p.y < 1.06) or _is_gauntlet_r(p):
             continue
         if _is_tabard_cloth(p):
             continue
         d_scab = hh.dist_seg(p, hh._SCAB_A, hh._SCAB_B)
         d_hand = _seg_dist(p, hand_a, hand_b)
-        if d_scab <= d_hand and d_scab < 0.14:
+        d_leg = min(_seg_dist(p, a, b) for a, b in _leg_segs().values())
+        if d_leg + 0.018 < d_scab:
+            continue
+        if d_scab <= d_hand and d_scab < 0.11:
             _clear_and_set(mesh_ob, i, "Scabbard", groups)
             n += 1
     print("closer-to-sheath lock", n)
     return n
+
+
+def lock_sheath_island(mesh_ob) -> set[int]:
+    """Flood the hanging-blade island onto Scabbard 1.0.
+
+    Seeds = _is_sheath. Walk faces only through _sheath_flood_volume so
+    the one-body mesh cannot drain the right thigh into the scabbard.
+    """
+    me = mesh_ob.data
+    seeds = [i for i, v in enumerate(me.vertices) if _is_sheath(v.co)]
+    adj = [[] for _ in me.vertices]
+    for e in me.edges:
+        a, b = e.vertices
+        adj[a].append(b)
+        adj[b].append(a)
+    island: set[int] = set()
+    q = deque(seeds)
+    for s in seeds:
+        island.add(s)
+    while q:
+        i = q.popleft()
+        for j in adj[i]:
+            if j in island:
+                continue
+            if _sheath_flood_volume(me.vertices[j].co) or _is_sheath(me.vertices[j].co):
+                island.add(j)
+                q.append(j)
+    groups = {g.name: g for g in mesh_ob.vertex_groups}
+    if "Scabbard" not in groups:
+        groups["Scabbard"] = mesh_ob.vertex_groups.new(name="Scabbard")
+    for i in island:
+        _clear_and_set(mesh_ob, i, "Scabbard", groups)
+    print("sheath island", len(island), "seeds", len(seeds))
+    return island
+
+
+def restore_low_scabbard_to_legs(mesh_ob) -> int:
+    """Scabbard must not own calf/foot verts (ghost sole at hip)."""
+    groups = {g.name: g for g in mesh_ob.vertex_groups}
+    for name in ("UpLeg_L", "Leg_L", "Foot_L", "UpLeg_R", "Leg_R", "Foot_R"):
+        if name not in groups:
+            groups[name] = mesh_ob.vertex_groups.new(name=name)
+    vg = {g.index: g.name for g in mesh_ob.vertex_groups}
+    n = 0
+    for i, v in enumerate(mesh_ob.data.vertices):
+        p = v.co
+        if p.y >= 0.42:
+            continue
+        if _is_sheath(p):
+            continue
+        names = {vg.get(g.group, "") for g in v.groups if g.weight > 1e-6}
+        if "Scabbard" not in names:
+            continue
+        _clear_and_set(mesh_ob, i, _nearest_leg_bone(p), groups)
+        n += 1
+    print("restore low scabbard to legs", n)
+    return n
+
+
+def lock_exclusive_feet(mesh_ob) -> int:
+    """y<0.20 is a sole — exclusive Foot_L / Foot_R. Never Scabbard."""
+    groups = {g.name: g for g in mesh_ob.vertex_groups}
+    for name in ("Foot_L", "Foot_R"):
+        if name not in groups:
+            groups[name] = mesh_ob.vertex_groups.new(name=name)
+    n = 0
+    for i, v in enumerate(mesh_ob.data.vertices):
+        p = v.co
+        if p.y >= 0.20:
+            continue
+        if _is_sheath(p):
+            continue
+        _clear_and_set(mesh_ob, i, "Foot_R" if p.x >= 0.0 else "Foot_L", groups)
+        n += 1
+    print("exclusive feet", n)
+    return n
+
+
+def zero_arm_on_sheath_island(mesh_ob, island: set[int]) -> int:
+    """ZERO Hand_R / Fore_R / Arm_R on sheath verts — residual weight sheets."""
+    groups = {g.name: g for g in mesh_ob.vertex_groups}
+    if "Scabbard" not in groups:
+        groups["Scabbard"] = mesh_ob.vertex_groups.new(name="Scabbard")
+    steal = ("Hand_R", "Fore_R", "Arm_R", "Hand_L", "Fore_L")
+    n = 0
+    for i, v in enumerate(mesh_ob.data.vertices):
+        if i not in island and not _is_sheath(v.co):
+            continue
+        if v.co.y < 0.42 and not _is_sheath(v.co):
+            continue
+        assigned = {g.group for g in v.groups}
+        stripped = False
+        for name in steal:
+            g = groups.get(name)
+            if g is not None and g.index in assigned:
+                g.remove([i])
+                stripped = True
+        if stripped:
+            groups["Scabbard"].add([i], 1.0, "REPLACE")
+            n += 1
+    print("zero arm on sheath island", n)
+    return n
+
+
+def strip_arm_from_legs(mesh_ob) -> int:
+    """Spatial leftover Arm/Fore/Hand on a leg cannot ride the swing."""
+    groups = {g.name: g for g in mesh_ob.vertex_groups}
+    vg = {g.index: g.name for g in mesh_ob.vertex_groups}
+    steal = ("Hand_R", "Fore_R", "Arm_R", "Hand_L", "Fore_L", "Arm_L")
+    legs = {
+        "UpLeg_L", "Leg_L", "Foot_L", "UpLeg_R", "Leg_R", "Foot_R",
+        "Hips", "Spine",
+    }
+    n = 0
+    for i, v in enumerate(mesh_ob.data.vertices):
+        best, bw = "", 0.0
+        for g in v.groups:
+            name = vg.get(g.group, "")
+            if g.weight > bw:
+                best, bw = name, g.weight
+        if best not in legs:
+            continue
+        assigned = {g.group for g in v.groups}
+        stripped = False
+        for name in steal:
+            g = groups.get(name)
+            if g is not None and g.index in assigned:
+                g.remove([i])
+                stripped = True
+        if stripped:
+            n += 1
+    print("strip arm from legs", n)
+    return n
+
+
+def _primaries(mesh_ob):
+    vg = {g.index: g.name for g in mesh_ob.vertex_groups}
+    out = []
+    for v in mesh_ob.data.vertices:
+        best, bw = "", 0.0
+        for g in v.groups:
+            name = vg.get(g.group, "")
+            if g.weight > bw:
+                best, bw = name, g.weight
+        out.append(best)
+    return out
+
+
+def delete_sheet_faces(mesh_ob) -> int:
+    """Delete faces that span Scabbard and the swinging arm.
+
+    Hang rest welds the gauntlet onto the hanging blade. Those shared
+    faces are the hip→wrist sheet. Deleting them keeps Hand_R on the
+    gauntlet and Scabbard on the sheath; rest verts stay put. Soft
+    leftover: a seam at the weld (blocky sheath).
+    """
+    import bmesh
+    me = mesh_ob.data
+    prim = _primaries(mesh_ob)
+    steal = {"Hand_R", "Fore_R", "Arm_R"}
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bm.faces.ensure_lookup_table()
+    kill = []
+    for f in bm.faces:
+        names = {prim[v.index] for v in f.verts}
+        if "Scabbard" in names and names & steal:
+            kill.append(f)
+    n = len(kill)
+    if kill:
+        bmesh.ops.delete(bm, geom=kill, context="FACES")
+    bm.to_mesh(me)
+    bm.free()
+    me.update()
+    print("deleted sheet faces", n, "faces", len(me.polygons), "verts", len(me.vertices))
+    return n
+
+
+def qa_no_sheet_faces(mesh_ob) -> None:
+    """Refuse a Scabbard↔Hand_R/Fore_R face (the hip→wrist sheet)."""
+    me = mesh_ob.data
+    vg = {g.index: g.name for g in mesh_ob.vertex_groups}
+    steal = {"Hand_R", "Fore_R"}
+    prim = []
+    for v in me.vertices:
+        best, bw = "", 0.0
+        for g in v.groups:
+            name = vg.get(g.group, "")
+            if g.weight > bw:
+                best, bw = name, g.weight
+        prim.append(best)
+    mixed = 0
+    for poly in me.polygons:
+        ids = list(poly.vertices)
+        if any(prim[i] == "Scabbard" for i in ids) and any(prim[i] in steal for i in ids):
+            mixed += 1
+    print("qa sheet faces", mixed)
+    if mixed:
+        raise SystemExit(f"scabbard still shares {mixed} faces with Hand_R/Fore_R")
 
 
 def drop_cross_limb(mesh_ob) -> int:
@@ -1783,12 +2035,24 @@ def rebind_locked(mesh_ob, actor_ob):
     ensure_armature(mesh_ob, actor_ob)
     spatial_bind(mesh_ob)
     lock_scabbard(mesh_ob)
+    island = lock_sheath_island(mesh_ob)
     lock_sheath_not_hand(mesh_ob)
     lock_no_arm_on_sheath(mesh_ob)
     lock_closer_to_sheath(mesh_ob)
+    restore_low_scabbard_to_legs(mesh_ob)
+    lock_exclusive_feet(mesh_ob)
     lock_right_hip_belt(mesh_ob)
     lock_front_tabard(mesh_ob)
     drop_cross_limb(mesh_ob)
+    strip_arm_from_legs(mesh_ob)
+    restore_low_scabbard_to_legs(mesh_ob)
+    lock_exclusive_feet(mesh_ob)
+    zero_arm_on_sheath_island(mesh_ob, island)
+    # Re-assert after later locks: hem stays Hips; sheath stays Scabbard.
+    lock_front_tabard(mesh_ob)
+    zero_arm_on_sheath_island(mesh_ob, island)
+    strip_arm_from_legs(mesh_ob)
+    delete_sheet_faces(mesh_ob)
     counts = recount(mesh_ob)
     scab_n = counts.get("Scabbard", 0)
     if scab_n < 20:
@@ -1797,24 +2061,134 @@ def rebind_locked(mesh_ob, actor_ob):
     arm_l = counts.get("Arm_L", 0) + counts.get("Fore_L", 0) + counts.get("Hand_L", 0)
     if arm_r < 30 or arm_l < 30:
         raise SystemExit(f"arm empty after rebind: R={arm_r} L={arm_l} {counts}")
+    if counts.get("Hand_R", 0) < 80 or counts.get("Fore_R", 0) < 80:
+        raise SystemExit(f"gauntlet eaten by sheath: {counts}")
     leg_r = counts.get("UpLeg_R", 0) + counts.get("Leg_R", 0) + counts.get("Foot_R", 0)
     leg_l = counts.get("UpLeg_L", 0) + counts.get("Leg_L", 0) + counts.get("Foot_L", 0)
     if leg_r < 30 or leg_l < 30:
         raise SystemExit(f"leg empty after rebind: R={leg_r} L={leg_l} {counts}")
+    qa_zero_hand_on_sheath(mesh_ob, set())
+    qa_no_ghost_sole(mesh_ob)
+    qa_no_sheet_faces(mesh_ob)
+    return counts
+
+
+def qa_zero_hand_on_sheath(mesh_ob, island: set[int]) -> None:
+    """Any Hand_R/Fore_R/Arm_R weight on sheath verts is a hip→wrist sheet."""
     vg = {g.index: g.name for g in mesh_ob.vertex_groups}
-    hand_on_sheath = 0
+    steal = {"Hand_R", "Fore_R", "Arm_R"}
+    n = 0
+    for i, v in enumerate(mesh_ob.data.vertices):
+        if not (_is_sheath(v.co) or _sheath_flood_volume(v.co) or i in island):
+            continue
+        for g in v.groups:
+            if vg.get(g.group, "") in steal and g.weight > 1e-6:
+                n += 1
+                break
+    if n:
+        raise SystemExit(f"sheath still has swinging-arm weight: {n}")
+    print("qa zero Hand_R on sheath ok")
+
+
+def qa_no_ghost_sole(mesh_ob) -> None:
+    """Scabbard must not own a third sole (y<0.28 boot hanging at the hip)."""
+    vg = {g.index: g.name for g in mesh_ob.vertex_groups}
+    ghost = 0
+    low_scab_w = 0
     for v in mesh_ob.data.vertices:
-        if not _is_sheath(v.co):
+        if v.co.y >= 0.28:
             continue
         best, bw = "", 0.0
+        scab_w = 0.0
         for g in v.groups:
+            name = vg.get(g.group, "")
+            if name == "Scabbard":
+                scab_w = g.weight
             if g.weight > bw:
-                best, bw = vg.get(g.group, ""), g.weight
-        if best in ("Hand_R", "Fore_R", "Arm_R"):
-            hand_on_sheath += 1
-    if hand_on_sheath:
-        raise SystemExit(f"sheath still on swinging arm: {hand_on_sheath}")
-    return counts
+                best, bw = name, g.weight
+        if best == "Scabbard":
+            ghost += 1
+        if scab_w > 1e-6 and not _is_sheath(v.co):
+            low_scab_w += 1
+    if ghost:
+        raise SystemExit(f"ghost sole: {ghost} Scabbard primaries at y<0.28")
+    if low_scab_w:
+        raise SystemExit(f"scabbard weight on non-blade low verts: {low_scab_w}")
+    print("qa no ghost sole ok")
+
+
+def assert_one_pair_soles(mesh_ob, label: str):
+    """Posed soles (world y<0.12) are Foot_L + Foot_R only — no third limb."""
+    bpy.context.view_layer.update()
+    deps = bpy.context.evaluated_depsgraph_get()
+    ev = mesh_ob.evaluated_get(deps)
+    me = ev.to_mesh()
+    mw = ev.matrix_world
+    vg = {g.index: g.name for g in mesh_ob.vertex_groups}
+    primaries = {}
+    xs, zs = [], []
+    for i, v in enumerate(me.vertices):
+        wp = mw @ v.co
+        if wp.y >= 0.12:
+            continue
+        best, bw = "", 0.0
+        for g in mesh_ob.data.vertices[i].groups:
+            name = vg.get(g.group, "")
+            if g.weight > bw:
+                best, bw = name, g.weight
+        primaries[best] = primaries.get(best, 0) + 1
+        xs.append(wp.x)
+        zs.append(wp.z)
+    ev.to_mesh_clear()
+    extra = {k: n for k, n in primaries.items() if k not in ("Foot_L", "Foot_R")}
+    print("posed soles", label, primaries, "extra", extra)
+    if extra:
+        raise SystemExit(f"third limb at {label}: sole primaries={primaries}")
+    if primaries.get("Foot_L", 0) < 8 or primaries.get("Foot_R", 0) < 8:
+        raise SystemExit(f"missing planted sole at {label}: {primaries}")
+    return primaries
+
+
+def assert_scabbard_hip_locked(mesh_ob, label: str):
+    """Posed Scabbard verts stay at the hip — no wrist sheet."""
+    bpy.context.view_layer.update()
+    deps = bpy.context.evaluated_depsgraph_get()
+    ev = mesh_ob.evaluated_get(deps)
+    me = ev.to_mesh()
+    mw = ev.matrix_world
+    vg = {g.index: g.name for g in mesh_ob.vertex_groups}
+    hips = ev.matrix_world @ Vector((0.22, 0.92, 0.0))
+    # Prefer posed Hips bone if present.
+    actor = bpy.data.objects.get("AldricArm")
+    if actor is not None and "Hips" in actor.pose.bones:
+        hips = actor.matrix_world @ actor.pose.bones["Hips"].head
+    far = 0
+    n = 0
+    max_d = 0.0
+    for i, v in enumerate(me.vertices):
+        best, bw = "", 0.0
+        for g in mesh_ob.data.vertices[i].groups:
+            name = vg.get(g.group, "")
+            if g.weight > bw:
+                best, bw = name, g.weight
+        if best != "Scabbard":
+            continue
+        wp = mw @ v.co
+        d = (wp - hips).length
+        max_d = max(max_d, d)
+        n += 1
+        if d > 0.95:
+            far += 1
+    ev.to_mesh_clear()
+    print("posed scabbard", label, "n", n, "maxHipDist", round(max_d, 3), "far", far)
+    if n < 20:
+        raise SystemExit(f"scabbard vanished at {label}: n={n}")
+    if far:
+        raise SystemExit(
+            f"scabbard sheet at {label}: {far} verts >0.95 from hips "
+            f"(max={max_d:.3f})"
+        )
+    return n
 
 
 def lock_scabbard(mesh_ob) -> int:
@@ -1926,7 +2300,9 @@ def write_drop(note: dict):
     if note.get("walkFramesClean"):
         for name in (
             "world_walk_contact_l.png", "world_walk_contact_r.png",
-            "world_walk_pass_l.png", "world_walk_n10.png",
+            "world_walk_pass_l.png", "world_walk_pass_r.png",
+            "world_walk_mid_swing.png", "world_walk_n10.png",
+            "f_001.png", "f_004.png", "f_008.png",
         ):
             src = old.WALK / name
             if src.exists():

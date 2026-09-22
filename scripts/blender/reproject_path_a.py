@@ -123,9 +123,15 @@ def main():
 
     path_a.purge_shred_walk_previews()
     path_a.set_play_cam()
-    for n in (0, 4, 8, 12):
+    for n in (0, 1, 4, 8, 12):
         old.apply_pose(actor, old.walk_pose(n / 16.0), tgt)
         path_a.assert_pose_not_shred(tgt, f"walk_n{n:02d}")
+        path_a.assert_one_pair_soles(tgt, f"walk_n{n:02d}")
+        path_a.assert_scabbard_hip_locked(tgt, f"walk_n{n:02d}")
+    old.apply_pose(actor, old.walk_pose(0.40), tgt)
+    path_a.assert_pose_not_shred(tgt, "mid_swing")
+    path_a.assert_one_pair_soles(tgt, "mid_swing")
+    path_a.assert_scabbard_hip_locked(tgt, "mid_swing")
     old.apply_pose(actor, rest, tgt)
     path_a.set_play_cam()
     mp4 = old.render_walk(actor, tgt)
@@ -135,6 +141,28 @@ def main():
         bpy.context.scene.render.filepath = str(npng)
         bpy.ops.render.render(write_still=True)
         print("cycle n", n, npng.stat().st_size)
+    old.apply_pose(actor, old.walk_pose(0.40), tgt)
+    mid = old.WALK / "world_walk_mid_swing.png"
+    bpy.context.scene.render.filepath = str(mid)
+    bpy.ops.render.render(write_still=True)
+    print("mid swing", mid.stat().st_size)
+    try:
+        (path_a.ART / "path_a_walk_mid_swing.png").write_bytes(mid.read_bytes())
+        contact = old.WALK / "world_walk_contact_l.png"
+        if contact.exists():
+            (path_a.ART / "path_a_walk_contact_l.png").write_bytes(contact.read_bytes())
+        for src_name, dst_name in (
+            ("f_001.png", "path_a_walk_f001.png"),
+            ("f_004.png", "path_a_walk_f004.png"),
+            ("f_008.png", "path_a_walk_f008.png"),
+            ("world_front.png", "path_a_world_front.png"),
+            ("world_34_front.png", "path_a_world_34_front.png"),
+        ):
+            src = (old.WALK / src_name) if src_name.startswith("f_") else (old.PROOF / src_name)
+            if src.exists():
+                (path_a.ART / dst_name).write_bytes(src.read_bytes())
+    except OSError as exc:
+        print("artifact skip", exc)
 
     old.apply_pose(actor, rest, tgt)
     fbx = rt.export_fbx(tgt, actor)
@@ -153,19 +181,21 @@ def main():
         "bindPassClaimed": False,
         "pathA": True,
         "stillsIterate": "552b099-opaque-cloth-shell",
-        "bindIterate": "tabard-torso-sheet+sheath-not-hand",
+        "bindIterate": "ghost-sole-restore+sheath-island-zero-Hand_R",
         "honestArt": (
-            "552b099 stills look LOCKED. Re-skin only: tabard shell stays a "
-            "torso sheet (hem = Hips), hip sheath = Scabbard never Hand_R. "
-            "Fixes rest plate-poke from mixed limb weights and walk hem/"
-            "scabbard spikes. No peel/shell/atlas. Motion gate kept. "
-            "Do NOT claim Design / bind / walk PASS."
+            "552b099 stills look LOCKED. Hem = Hips held. Ghost third sole "
+            "cleared: Scabbard cannot own y<0.42 calf/foot. Hanging blade is "
+            "a Scabbard-only island — ZERO Hand_R/Fore_R/Arm_R on sheath verts "
+            "(kills hip→wrist sheet). Soft leftovers (stepped hem, lion scale, "
+            "blocky sheath) still OK. Hub HOLD. Do NOT claim Design / bind / "
+            "walk PASS."
         ),
         "sourceLook": "e5b132f Meshy GLB + Image_0 / SoT lion",
         "retopo": "QuadriFlow mid-poly + shrinkwrap ABOVE_SURFACE; no capsule limbs",
         "bind": (
             "spatial hang-segs + tabard torso sheet (hem=Hips) + sheath "
-            "Scabbard (never Hand_R). Not automatic weights."
+            "island flood on Scabbard + restore low Scabbard→legs + "
+            "ZERO Hand_R on sheath. Not automatic weights."
         ),
         "motion": "5916447 Evaluate() keys reused; root plant after Evaluate() so soles kiss Y=0",
         "scabbard": "character-right",
