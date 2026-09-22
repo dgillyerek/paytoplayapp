@@ -256,17 +256,17 @@ def _e5_tabard_half_w(y: float) -> float:
     """
     keys = (
         (1.475, 0.00),
-        (1.448, 0.072),
-        (1.415, 0.118),
-        (1.355, 0.145),
-        (1.270, 0.155),
-        (1.180, 0.150),
-        (1.080, 0.130),
-        (0.980, 0.148),
-        (0.880, 0.160),
-        (0.800, 0.162),
-        (0.755, 0.118),
-        (0.720, 0.042),
+        (1.452, 0.088),
+        (1.418, 0.128),
+        (1.355, 0.150),
+        (1.270, 0.158),
+        (1.180, 0.152),
+        (1.080, 0.136),
+        (0.980, 0.152),
+        (0.880, 0.164),
+        (0.800, 0.166),
+        (0.755, 0.128),
+        (0.720, 0.050),
         (0.695, 0.00),
     )
     if y >= keys[0][0] or y <= keys[-1][0]:
@@ -434,8 +434,6 @@ def replace_front_cloth_shell(tgt, src) -> int:
         p.use_smooth = True
     patch_ob = bpy.data.objects.new("PathAClothDrape", patch_me)
     bpy.context.collection.objects.link(patch_ob)
-    if len(patch_me.polygons) > 2200:
-        rt.decimate_to(patch_ob, 1800)
 
     # Delete remesh under the draped tabard + leftover inner / edge shred.
     pverts = [Vector(v) for v in verts]
