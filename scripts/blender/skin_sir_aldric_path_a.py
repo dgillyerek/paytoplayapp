@@ -1513,7 +1513,9 @@ def _is_sheath(p: Vector) -> bool:
     if p.y >= 0.88:
         return p.x > 0.205 and d < 0.046 and -0.055 < p.z < 0.075
     if 0.26 < p.y < 0.88:
-        return p.x > 0.185 and d < 0.085 and abs(p.z) < 0.090
+        # Include the rear hanging blade (z ~ -0.12) that spatial bind
+        # handed to Hand_R — that was the mid-cycle slab.
+        return p.x > 0.175 and d < 0.12 and -0.16 < p.z < 0.10
     return False
 
 
@@ -1624,6 +1626,27 @@ def lock_right_hip_belt(mesh_ob) -> int:
         _clear_and_set(mesh_ob, i, "Hips", groups)
         n += 1
     print("right hip belt lock", n)
+    return n
+
+
+def lock_no_arm_on_sheath(mesh_ob) -> int:
+    """Any swinging-arm weight in the hanging-blade box → Scabbard."""
+    groups = {g.name: g for g in mesh_ob.vertex_groups}
+    if "Scabbard" not in groups:
+        groups["Scabbard"] = mesh_ob.vertex_groups.new(name="Scabbard")
+    vg = {g.index: g.name for g in mesh_ob.vertex_groups}
+    n = 0
+    for i, v in enumerate(mesh_ob.data.vertices):
+        p = v.co
+        if _is_gauntlet_r(p):
+            continue
+        if not (p.x > 0.175 and 0.26 < p.y < 0.80 and p.z < 0.08):
+            continue
+        names = {vg.get(g.group, "") for g in v.groups if g.weight > 0.05}
+        if names & {"Hand_R", "Fore_R", "Arm_R"}:
+            _clear_and_set(mesh_ob, i, "Scabbard", groups)
+            n += 1
+    print("arm-on-sheath steal", n)
     return n
 
 
@@ -1739,6 +1762,7 @@ def rebind_locked(mesh_ob, actor_ob):
     spatial_bind(mesh_ob)
     lock_scabbard(mesh_ob)
     lock_sheath_not_hand(mesh_ob)
+    lock_no_arm_on_sheath(mesh_ob)
     lock_right_hip_belt(mesh_ob)
     lock_front_tabard(mesh_ob)
     drop_cross_limb(mesh_ob)
