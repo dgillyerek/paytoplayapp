@@ -208,7 +208,35 @@ def _load_project_cams():
     return cams
 
 
-def _sample_cams(p: Vector, n: Vector, cams) -> tuple[tuple[int, int, int] | None, float]:
+def _face_normals(me):
+    """Area-weighted vertex normals from faces. Do not trust stale v.normal."""
+    acc = [Vector((0.0, 0.0, 0.0)) for _ in range(len(me.vertices))]
+    for poly in me.polygons:
+        n = poly.normal
+        a = max(poly.area, 1e-8)
+        for vi in poly.vertices:
+            acc[vi] = acc[vi] + n * a
+    out = []
+    for n in acc:
+        if n.length < 1e-8:
+            out.append(Vector((0.0, 1.0, 0.0)))
+        else:
+            out.append(n.normalized())
+    return out
+
+
+def _visible(bvh, eye: Vector, p: Vector) -> bool:
+    direction = p - eye
+    dist = direction.length
+    if dist < 1e-5:
+        return False
+    hit, _n, _idx, hdist = bvh.ray_cast(eye, direction / dist, dist + 0.02)
+    if hit is None:
+        return True
+    return hdist >= dist - 0.025
+
+
+def _sample_cams(p: Vector, n: Vector, cams, bvh) -> tuple[tuple[int, int, int] | None, float]:
     acc = np.zeros(3, np.float64)
     wsum = 0.0
     for cam in cams:
@@ -217,7 +245,10 @@ def _sample_cams(p: Vector, n: Vector, cams) -> tuple[tuple[int, int, int] | Non
             continue
         view.normalize()
         facing = n.dot(view)
-        if facing < 0.06:
+        # Vertex normals on a remesh can be weak; allow grazing + rely on ray vis.
+        if facing < -0.15:
+            continue
+        if not _visible(bvh, cam["eye"], p):
             continue
         pc = cam["inv"] @ p
         depth = -pc.z
@@ -234,7 +265,7 @@ def _sample_cams(p: Vector, n: Vector, cams) -> tuple[tuple[int, int, int] | Non
         rgb = cam["arr"][py, px]
         if _is_studio_bg(rgb):
             continue
-        w = facing ** 2.4
+        w = max(0.12, facing) ** 1.6
         acc += np.array(rgb, np.float64) * w
         wsum += w
     if wsum < 1e-6:
@@ -242,21 +273,44 @@ def _sample_cams(p: Vector, n: Vector, cams) -> tuple[tuple[int, int, int] | Non
     return tuple(int(max(0, min(255, c))) for c in (acc / wsum)), wsum
 
 
+def structured_fill(tgt):
+    """Steel / navy / scabbard fallback. Do not use paper-Meshy transfer as base."""
+    colors = []
+    for v in tgt.data.vertices:
+        p = v.co
+        if p.x > 0.14 and 0.22 < p.y < 1.18 and hh.dist_seg(p, hh._SCAB_A, hh._SCAB_B) < 0.070:
+            colors.append((88, 50, 26))
+        elif abs(p.x) < 0.20 and 0.70 < p.y < 1.40 and abs(p.z) < 0.18:
+            colors.append((26, 46, 108))
+        elif p.y > 1.50:
+            colors.append((168, 170, 174))
+        else:
+            colors.append((156, 158, 160))
+    return colors
+
+
 def camera_project_colors(tgt, fill_colors):
     """Project frozen e5b132f World stills through the same Play cams."""
+    from mathutils.bvhtree import BVHTree
+    import bmesh
     cams = _load_project_cams()
     colors = list(fill_colors)
     hit = miss = 0
     me = tgt.data
     me.update()
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bvh = BVHTree.FromBMesh(bm)
+    bm.free()
+    norms = _face_normals(me)
     for i, v in enumerate(me.vertices):
-        rgb, w = _sample_cams(v.co, v.normal, cams)
+        rgb, w = _sample_cams(v.co, norms[i], cams, bvh)
         if rgb is None:
             miss += 1
             continue
         colors[i] = rgb
         hit += 1
-    print("camera project verts", "hit", hit, "miss", miss, "of", len(me.vertices))
+    print("camera project verts", "hit", hit, "miss", miss, "of", len(me.vertices), flush=True)
     return colors, hit
 
 
@@ -291,9 +345,9 @@ def assign_projected_material(ob, atlas_path: Path):
 
 
 def project_albedo(src, tgt, atlas_path: Path):
-    """e5b132f World stills onto retopo UVs. Image_0 transfer fills occluded verts."""
+    """e5b132f World stills onto retopo UVs. Structured fill, not paper transfer."""
     rt.smart_uv(tgt)
-    fill = rt.transfer_albedo(src, tgt)
+    fill = structured_fill(tgt)
     colors, cam_hits = camera_project_colors(tgt, fill)
     rt.rasterize_atlas(tgt, colors, atlas_path)
     if atlas_path.stat().st_size < 80_000:
