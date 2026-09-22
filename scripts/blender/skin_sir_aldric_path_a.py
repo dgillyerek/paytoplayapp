@@ -42,10 +42,10 @@ ART = Path("/opt/cursor/artifacts")
 LOOK_E5 = PROOF / "look_e5b132f"
 DROP = ROOT / "design/survival-theme-a-fantasy/heroes/anim/sir_aldric/PATH_A_RETOPO"
 MESH_BONES = old.MESH_BONES
-TARGET_FACES = int(os.environ.get("PATHA_FACES", "14000"))
-SCAFFOLD_VOXEL = float(os.environ.get("PATHA_SCAFFOLD", "0.011"))
-WRAP_OFFSET = float(os.environ.get("PATHA_WRAP", "0.006"))
-DECIMATE_FACES = int(os.environ.get("PATHA_DECIMATE", "18000"))
+TARGET_FACES = int(os.environ.get("PATHA_FACES", "22000"))
+SCAFFOLD_VOXEL = float(os.environ.get("PATHA_SCAFFOLD", "0.009"))
+WRAP_OFFSET = float(os.environ.get("PATHA_WRAP", "0.003"))
+DECIMATE_FACES = int(os.environ.get("PATHA_DECIMATE", "36000"))
 
 CAM_SHOTS = (
     ("world_rear", shots.CAM_EYE, shots.CAM_TARGET),
@@ -377,9 +377,12 @@ def camera_project_atlas(tgt, fill_colors, atlas_path: Path):
     s = rt.ATLAS_SIZE
     acc = np.zeros((s, s, 3), np.float32)
     wgt = np.zeros((s, s), np.float32)
-    # Structured fill first so occluded texels are steel/navy, not paper smear.
-    rt.rasterize_atlas(tgt, fill_colors, atlas_path)
-    acc[:] = np.array(Image.open(atlas_path).convert("RGB"), np.float32)
+    # Keep a Cycles bake if present; else structured steel/navy (not paper smear).
+    if atlas_path.exists() and atlas_path.stat().st_size > 80_000:
+        acc[:] = np.array(Image.open(atlas_path).convert("RGB").resize((s, s)), np.float32)
+    else:
+        rt.rasterize_atlas(tgt, fill_colors, atlas_path)
+        acc[:] = np.array(Image.open(atlas_path).convert("RGB"), np.float32)
     wgt[:] = 0.15
     tris_hit = pix_hit = 0
     for tri in me.loop_triangles:
@@ -441,7 +444,7 @@ def camera_project_atlas(tgt, fill_colors, atlas_path: Path):
 
 
 def assign_projected_material(ob, atlas_path: Path):
-    """Emission-heavy so World stills read as the projected Meshy knight, not re-lit clay."""
+    """Principled + baked/projected albedo — same lighting model as e5b132f, not emit-stencil."""
     img = bpy.data.images.load(str(atlas_path))
     img.name = "PathAAtlas"
     mat = bpy.data.materials.new("PathALook")
@@ -449,44 +452,92 @@ def assign_projected_material(ob, atlas_path: Path):
     nt = mat.node_tree
     nt.nodes.clear()
     out = nt.nodes.new("ShaderNodeOutputMaterial")
-    mix = nt.nodes.new("ShaderNodeMixShader")
-    emit = nt.nodes.new("ShaderNodeEmission")
     bsdf = nt.nodes.new("ShaderNodeBsdfPrincipled")
     tex = nt.nodes.new("ShaderNodeTexImage")
     tex.image = img
-    emit.inputs["Strength"].default_value = 1.0
     try:
-        bsdf.inputs["Roughness"].default_value = 0.62
-        bsdf.inputs["Metallic"].default_value = 0.08
+        bsdf.inputs["Roughness"].default_value = 0.55
+        bsdf.inputs["Metallic"].default_value = 0.12
     except Exception:
         pass
-    mix.inputs[0].default_value = 0.0
-    emit.inputs["Strength"].default_value = 1.0
-    nt.links.new(tex.outputs["Color"], emit.inputs["Color"])
     nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
-    nt.links.new(emit.outputs["Emission"], mix.inputs[1])
-    nt.links.new(bsdf.outputs["BSDF"], mix.inputs[2])
-    nt.links.new(mix.outputs["Shader"], out.inputs["Surface"])
+    nt.links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
     ob.data.materials.clear()
     ob.data.materials.append(mat)
 
 
-def project_albedo(src, tgt, atlas_path: Path):
-    """e5b132f World stills onto retopo UVs. Structured fill, not paper transfer."""
+def bake_meshy_albedo(src, tgt, atlas_path: Path) -> bool:
+    """Selected-to-active Cycles color bake from Meshy Image_0 onto retopo UVs."""
+    if src is None or src == tgt:
+        return False
     rt.smart_uv(tgt)
+    img = bpy.data.images.new("PathABake", rt.ATLAS_SIZE, rt.ATLAS_SIZE, alpha=False)
+    mat = bpy.data.materials.new("PathABakeMat")
+    mat.use_nodes = True
+    nt = mat.node_tree
+    bsdf = nt.nodes.get("Principled BSDF")
+    tex = nt.nodes.new("ShaderNodeTexImage")
+    tex.image = img
+    nt.nodes.active = tex
+    tex.select = True
+    # Do not feed the bake image back into the shader Cycles samples.
+    tgt.data.materials.clear()
+    tgt.data.materials.append(mat)
+
+    sc = bpy.context.scene
+    prev_engine = sc.render.engine
+    sc.render.engine = "CYCLES"
+    sc.cycles.device = "CPU"
+    sc.cycles.samples = 8
+    sc.cycles.bake_type = "DIFFUSE"
+    bake = sc.render.bake
+    bake.use_pass_direct = False
+    bake.use_pass_indirect = False
+    bake.use_pass_color = True
+    bake.use_selected_to_active = True
+    bake.cage_extrusion = 0.05
+    bake.margin = 8
+    bake.use_clear = True
+    try:
+        bake.max_ray_distance = 0.12
+    except Exception:
+        pass
+
+    src.hide_set(False)
+    src.hide_render = False
+    bpy.ops.object.select_all(action="DESELECT")
+    src.select_set(True)
+    tgt.select_set(True)
+    bpy.context.view_layer.objects.active = tgt
+    ok = False
+    try:
+        bpy.ops.object.bake(type="DIFFUSE", pass_filter={"COLOR"})
+        img.filepath_raw = str(atlas_path)
+        img.file_format = "PNG"
+        img.save()
+        ok = atlas_path.exists() and atlas_path.stat().st_size > 80_000
+        print("cycles bake", atlas_path, atlas_path.stat().st_size if atlas_path.exists() else 0, "ok", ok)
+    except Exception as exc:
+        print("cycles bake failed", exc)
+        ok = False
+    sc.render.engine = prev_engine
+    return ok
+
+
+def project_albedo(src, tgt, atlas_path: Path):
+    """Meshy Image_0 bake onto retopo UVs; Play-cam stills reinforce lion/hem."""
+    rt.smart_uv(tgt)
+    baked = bake_meshy_albedo(src, tgt, atlas_path)
+    if not baked:
+        rt.rasterize_atlas(tgt, structured_fill(tgt), atlas_path)
+        print("bake missed — structured fill then camera project")
     fill = structured_fill(tgt)
     cam_hits = camera_project_atlas(tgt, fill, atlas_path)
-    if atlas_path.stat().st_size < 80_000:
-        print("projected atlas thin — try Cycles bake")
+    if atlas_path.stat().st_size < 80_000 and src is not None:
+        print("projected atlas thin — try Cycles bake again")
         rt.cycles_bake(src, tgt, atlas_path)
-    atlas = Image.open(atlas_path).convert("RGB")
-    arr = np.array(atlas)
-    if cam_hits < 200:
-        print("camera project thin — stamp SoT lion backup")
-        rt.stamp_lion(tgt, arr)
-        Image.fromarray(arr, "RGB").save(atlas_path)
     assign_projected_material(tgt, atlas_path)
-    print("projected atlas", atlas_path, atlas_path.stat().st_size, "cam_tris", cam_hits)
+    print("projected atlas", atlas_path, atlas_path.stat().st_size, "cam_tris", cam_hits, "baked", baked)
     return atlas_path
 
 
@@ -667,14 +718,20 @@ def main():
 
     tgt = duplicate_mesh(src, "SirAldricPathA")
     rt.fill_holes(tgt)
-    # Paper shells do not voxel-fuse. Thicken, then one scaffold volume.
-    rt.apply_solidify(tgt, 0.012)
-    scaffold_watertight(tgt, max(SCAFFOLD_VOXEL, 0.016))
+    # Paper shells do not voxel-fuse. Thicken, then the finest scaffold that holds.
+    # Do NOT floor voxel at 0.016 — that was the remesh-melt hero.
+    rt.apply_solidify(tgt, 0.010)
+    scaffold_watertight(tgt, SCAFFOLD_VOXEL)
     rt.delete_small_islands(tgt, keep_min=150)
     islands, sizes = n_islands(tgt.data)
     if islands > 4:
-        print("still shattered, coarser scaffold")
-        scaffold_watertight(tgt, 0.022)
+        print("still shattered, step scaffold 0.013")
+        scaffold_watertight(tgt, 0.013)
+        rt.delete_small_islands(tgt, keep_min=180)
+        islands, sizes = n_islands(tgt.data)
+    if islands > 4:
+        print("still shattered, step scaffold 0.016")
+        scaffold_watertight(tgt, 0.016)
         rt.delete_small_islands(tgt, keep_min=200)
         islands, sizes = n_islands(tgt.data)
     if len(tgt.data.polygons) > DECIMATE_FACES:
@@ -684,9 +741,9 @@ def main():
         print("QuadriFlow no-op or failed — keep decimated scaffold, then wrap")
     wrapped = shrinkwrap_to_source(tgt, src, WRAP_OFFSET)
     rt.delete_small_islands(tgt, keep_min=20)
-    # Mid-poly budget after wrap: Design ACK ~20–60k tris.
-    if len(tgt.data.polygons) > 30000:
-        rt.decimate_to(tgt, 24000)
+    # Mid-poly budget after wrap: Design ACK ~20–60k tris (keep detail).
+    if len(tgt.data.polygons) > 32000:
+        rt.decimate_to(tgt, 28000)
         if wrapped:
             shrinkwrap_to_source(tgt, src, WRAP_OFFSET)
             rt.delete_small_islands(tgt, keep_min=20)
@@ -726,6 +783,17 @@ def main():
         raise SystemExit(f"leg empty after spatial bind: R={leg_r} L={leg_l} {counts}")
 
     old.setup_render()
+    try:
+        bpy.context.scene.eevee.taa_render_samples = 32
+    except AttributeError:
+        pass
+    if bpy.data.objects.get("Rim") is None:
+        rim = bpy.data.lights.new("Rim", "SUN")
+        rim.energy = 2.4
+        rim_o = bpy.data.objects.new("Rim", rim)
+        bpy.context.collection.objects.link(rim_o)
+        rim_o.location = (0.0, 2.2, 3.4)
+        rim_o.rotation_euler = (math.radians(40), math.radians(180), 0.0)
     old.apply_pose(actor_ob, {
         "root_z": 0.0, "root_y": 0.0,
         "hips": (0, 0, 0), "spine": (0, 0, 0), "chest": (0, 0, 0), "head": (0, 0, 0),
@@ -755,13 +823,13 @@ def main():
         "walkPassClaimed": False,
         "bindPassClaimed": False,
         "pathA": True,
+        "designAckFolded": True,
         "honestArt": (
-            "clean mid-poly retopo + camera-project of frozen e5b132f World stills "
-            "onto retopo UVs (Image_0 transfer fills occluded verts). "
-            "Abandoned shattered-Meshy paper/tube/capsule bind hacks. "
-            "Voxel used only as watertight scaffold; silhouette restored by "
-            "shrinkwrap ABOVE_SURFACE onto Meshy. Spatial nearest-bone-segment "
-            "weights + one Scabbard volume lock. No exclusive paper corridors."
+            "Design ACK folded into this Path A run (no parallel path, no bind hacks). "
+            "Finer voxel scaffold + QuadriFlow mid-poly, shrinkwrap to Meshy, "
+            "Cycles bake of Image_0 plus Play-cam project of e5b132f stills. "
+            "Principled look (not emit-stencil). Abandoned paper/tube/capsule hacks. "
+            "Do not claim this drop as bind, walk, or retopo PASS."
         ),
         "sourceLook": "e5b132f Meshy GLB + Image_0 / SoT lion",
         "retopo": (
