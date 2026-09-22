@@ -290,7 +290,7 @@ def structured_fill(tgt):
 
 
 def camera_project_colors(tgt, fill_colors):
-    """Project frozen e5b132f World stills through the same Play cams."""
+    """Per-vert fallback. Prefer camera_project_atlas for look."""
     from mathutils.bvhtree import BVHTree
     import bmesh
     cams = _load_project_cams()
@@ -312,6 +312,99 @@ def camera_project_colors(tgt, fill_colors):
         hit += 1
     print("camera project verts", "hit", hit, "miss", miss, "of", len(me.vertices), flush=True)
     return colors, hit
+
+
+def _best_cam(centroid: Vector, n: Vector, cams):
+    best = None
+    best_f = 0.08
+    for cam in cams:
+        view = cam["eye"] - centroid
+        if view.length < 1e-6:
+            continue
+        view.normalize()
+        f = n.dot(view)
+        if f > best_f:
+            best_f = f
+            best = cam
+    return best, best_f
+
+
+def _sample_one_cam(p: Vector, cam):
+    pc = cam["inv"] @ p
+    depth = -pc.z
+    if depth < 0.12:
+        return None
+    ndc_x = pc.x / (depth * cam["tan_h"])
+    ndc_y = pc.y / (depth * cam["tan_v"])
+    if abs(ndc_x) > 0.98 or abs(ndc_y) > 0.98:
+        return None
+    px = int((ndc_x * 0.5 + 0.5) * cam["w"])
+    py = int((0.5 - ndc_y * 0.5) * cam["h"])
+    if py < cam["caption"] or py >= cam["h"] or px < 0 or px >= cam["w"]:
+        return None
+    rgb = cam["arr"][py, px]
+    if _is_studio_bg(rgb):
+        return None
+    return rgb
+
+
+def camera_project_atlas(tgt, fill_colors, atlas_path: Path):
+    """Per-texel Play-cam project. Keeps lion/hem coherent (not per-vert shred)."""
+    cams = _load_project_cams()
+    me = tgt.data
+    me.calc_loop_triangles()
+    uv = me.uv_layers.active
+    s = rt.ATLAS_SIZE
+    acc = np.zeros((s, s, 3), np.float32)
+    wgt = np.zeros((s, s), np.float32)
+    # Structured fill first so occluded texels are steel/navy, not paper smear.
+    rt.rasterize_atlas(tgt, fill_colors, atlas_path)
+    acc[:] = np.array(Image.open(atlas_path).convert("RGB"), np.float32)
+    wgt[:] = 0.15
+    tris_hit = pix_hit = 0
+    for tri in me.loop_triangles:
+        n = Vector(tri.normal)
+        pts = []
+        pos = []
+        for vi, li in zip(tri.vertices, tri.loops):
+            u, v = uv.data[li].uv
+            pts.append((float(u) * (s - 1), (1.0 - float(v)) * (s - 1)))
+            pos.append(me.vertices[vi].co.copy())
+        centroid = (pos[0] + pos[1] + pos[2]) / 3.0
+        cam, facing = _best_cam(centroid, n, cams)
+        if cam is None:
+            continue
+        (x0, y0), (x1, y1), (x2, y2) = pts
+        minx = max(0, int(math.floor(min(x0, x1, x2))))
+        maxx = min(s - 1, int(math.ceil(max(x0, x1, x2))))
+        miny = max(0, int(math.floor(min(y0, y1, y2))))
+        maxy = min(s - 1, int(math.ceil(max(y0, y1, y2))))
+        denom = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2)
+        if abs(denom) < 1e-8:
+            continue
+        wrote = False
+        for y in range(miny, maxy + 1):
+            py = y + 0.5
+            for x in range(minx, maxx + 1):
+                px = x + 0.5
+                w0 = ((y1 - y2) * (px - x2) + (x2 - x1) * (py - y2)) / denom
+                w1 = ((y2 - y0) * (px - x2) + (x0 - x2) * (py - y2)) / denom
+                w2 = 1.0 - w0 - w1
+                if w0 < -0.01 or w1 < -0.01 or w2 < -0.01:
+                    continue
+                p = pos[0] * w0 + pos[1] * w1 + pos[2] * w2
+                rgb = _sample_one_cam(p, cam)
+                if rgb is None:
+                    continue
+                acc[y, x] = np.array(rgb, np.float32)
+                wgt[y, x] = facing
+                pix_hit += 1
+                wrote = True
+        if wrote:
+            tris_hit += 1
+    Image.fromarray(np.clip(acc, 0, 255).astype(np.uint8), "RGB").save(atlas_path)
+    print("camera project atlas tris", tris_hit, "pix", pix_hit, "size", atlas_path.stat().st_size, flush=True)
+    return tris_hit
 
 
 def assign_projected_material(ob, atlas_path: Path):
@@ -348,20 +441,18 @@ def project_albedo(src, tgt, atlas_path: Path):
     """e5b132f World stills onto retopo UVs. Structured fill, not paper transfer."""
     rt.smart_uv(tgt)
     fill = structured_fill(tgt)
-    colors, cam_hits = camera_project_colors(tgt, fill)
-    rt.rasterize_atlas(tgt, colors, atlas_path)
+    cam_hits = camera_project_atlas(tgt, fill, atlas_path)
     if atlas_path.stat().st_size < 80_000:
         print("projected atlas thin — try Cycles bake")
         rt.cycles_bake(src, tgt, atlas_path)
     atlas = Image.open(atlas_path).convert("RGB")
     arr = np.array(atlas)
-    # Lion card only if rear project missed the tabard (camera hit rate tiny).
-    if cam_hits < max(80, int(0.12 * len(tgt.data.vertices))):
+    if cam_hits < 200:
         print("camera project thin — stamp SoT lion backup")
         rt.stamp_lion(tgt, arr)
         Image.fromarray(arr, "RGB").save(atlas_path)
     assign_projected_material(tgt, atlas_path)
-    print("projected atlas", atlas_path, atlas_path.stat().st_size, "cam_hits", cam_hits)
+    print("projected atlas", atlas_path, atlas_path.stat().st_size, "cam_tris", cam_hits)
     return atlas_path
 
 
