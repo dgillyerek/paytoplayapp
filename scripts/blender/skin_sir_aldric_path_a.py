@@ -1499,13 +1499,11 @@ def lock_front_tabard(mesh_ob) -> int:
         half = _e5_tabard_half_w(p.y)
         if half <= 0.0 or abs(p.x) > half + 0.012 or p.z < 0.02:
             continue
+        assigned = {g.group for g in v.groups}
         for name in limb:
             g = groups.get(name)
-            if g is not None:
-                try:
-                    g.remove([i])
-                except RuntimeError:
-                    pass
+            if g is not None and g.index in assigned:
+                g.remove([i])
         kept = []
         for name in torso:
             try:
@@ -1608,7 +1606,9 @@ def assert_pose_not_shred(mesh_ob, label: str):
         "z", round(zmin, 3), round(zmax, 3),
         "span", round(dx, 3), round(dy, 3), round(dz, 3),
     )
-    if dx > 1.35 or dy > 2.55 or dz > 2.40 or ymin < -0.12 or ymax > 2.35:
+    # Rest knight ~0.91×1.86×0.46. Walk arm-swing can reach ~1.4 wide.
+    # Exploded Path-2 remesh filled metres. Do not treat stride as shred.
+    if dx > 1.85 or dy > 2.55 or dz > 1.90 or ymin < -0.15 or ymax > 2.40:
         raise SystemExit(
             f"bind shred at {label}: span=({dx:.3f},{dy:.3f},{dz:.3f}) "
             f"y=[{ymin:.3f},{ymax:.3f}] — refuse walk strip"
@@ -1665,11 +1665,10 @@ def lock_scabbard(mesh_ob) -> int:
     for i, v in enumerate(me.vertices):
         p = v.co
         if p.x > 0.14 and 0.22 < p.y < 1.18 and hh.dist_seg(p, hh._SCAB_A, hh._SCAB_B) < 0.058:
+            assigned = {g.group for g in v.groups}
             for g in groups.values():
-                try:
+                if g.index in assigned:
                     g.remove([i])
-                except RuntimeError:
-                    pass
             groups["Scabbard"].add([i], 1.0, "REPLACE")
             n += 1
     print("scabbard lock", n)

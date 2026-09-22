@@ -83,7 +83,8 @@ def main():
         old.apply_pose(actor, rest, tgt)
         path_a.assert_pose_not_shred(tgt, "rest")
 
-    if not walk_only:
+    skip_stills = os.environ.get("PATHA_SKIP_STILLS") == "1"
+    if not walk_only and not skip_stills:
         path_a.render_world_shots()
 
     if stills_only and not bind_only:
