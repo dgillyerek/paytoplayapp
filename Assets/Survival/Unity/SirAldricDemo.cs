@@ -9,8 +9,9 @@ using UnityEngine.UI;
 namespace Survival.Unity
 {
     /// <summary>
-    /// 1080×1920 Game-view demo: 3D Animator-driven Aldric, high-angle rear, walk+attack toward TOP.
-    /// Locked rear PNG remains the Play-hub placeholder until Design PASSes this clip.
+    /// 1080×1920 Game-view demo: Meshy Animate humanoid FBX + Walking clip AS-IS.
+    /// Path A weight-paint CANCELLED. Locked rear PNG remains the Play-hub placeholder.
+    /// Design PASS not claimed.
     /// </summary>
     public sealed class SirAldricDemo : MonoBehaviour
     {
@@ -18,7 +19,7 @@ namespace Survival.Unity
         public const string DropFileName512 = "SIR_ALDRIC_REAR_MASTER_LOCKED_512.png";
 
         private bool _booted;
-        private SirAldric3DActor? _actor;
+        private SirAldricMeshyAnimateActor? _actor;
         private Text? _phase;
 
         private void Awake() => Boot();
@@ -135,9 +136,9 @@ namespace Survival.Unity
                 er.sharedMaterial = em;
             }
 
-            var actorGo = new GameObject("SirAldric3D");
+            var actorGo = new GameObject("SirAldricMeshyAnimate");
             actorGo.transform.SetParent(transform, false);
-            _actor = actorGo.AddComponent<SirAldric3DActor>();
+            _actor = actorGo.AddComponent<SirAldricMeshyAnimateActor>();
             _actor.Build();
 
             var canvas = SurvivalVisuals.Canvas(transform, "SirAldricHud", 80);
@@ -167,7 +168,7 @@ namespace Survival.Unity
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "3D Animator  ·  high-angle rear  ·  march TOP  ·  PNG still Play placeholder",
+                "Meshy Animate Walking  ·  Humanoid AS-IS  ·  HOLD  ·  no Design PASS",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);
