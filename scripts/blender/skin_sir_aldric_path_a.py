@@ -641,76 +641,76 @@ def load_lion_cards():
     return albedo, lions, imgs, front, back
 
 
-def stamp_front_lion_dest(tgt, atlas_path: Path, card) -> int:
-    """Dest→source planar stamp of lion_card_front onto chest texels.
+def _atlas_cloth(atlas, uv_loop, s: int) -> bool:
+    u, v = uv_loop.uv
+    x = int(max(0, min(s - 1, float(u) * (s - 1))))
+    y = int(max(0, min(s - 1, (1.0 - float(v)) * (s - 1))))
+    r, g, b = (int(c) for c in atlas[y, x])
+    return (b > r + 8 and b > 40 and r < 130) or (r > 110 and g > 80 and r > b + 8)
 
-    Samples the card by dest (x,y), writes existing dest UVs. Does not
-    composite frozen Game stills. Leaves rear lion and plate islands alone.
+
+def stamp_front_lion_dest(tgt, atlas_path: Path, card) -> int:
+    """Dest-space planar lion_card_front on a reserved UV strip.
+
+    Existing dest chest UVs are tiny smart-UV slivers, so writing into them
+    cannot land a readable rampant lion. Remap front-tabard faces to one
+    dest (x,y) strip and paste the Meshy front card. Not a frozen Game still.
+    Rear lion / plate islands stay on their current UVs.
     """
     if card is None or not atlas_path.exists():
         print("front lion stamp skipped — no card/atlas")
         return 0
     me = tgt.data
-    me.calc_loop_triangles()
     uv = me.uv_layers.active
     if uv is None:
         return 0
     atlas = np.array(Image.open(atlas_path).convert("RGB"))
     s = atlas.shape[0]
-    xmin, xmax, ymin, ymax = LION_FRONT_WIN
-    pix = 0
-    for tri in me.loop_triangles:
-        n = Vector(tri.normal)
-        if n.length < 1e-8:
+    faces = []
+    xs, ys = [], []
+    for poly in me.polygons:
+        c = poly.center
+        n = poly.normal
+        if n.z < 0.30 or not (1.08 < c.y < 1.40) or abs(c.x) > 0.13 or c.z < 0.04:
             continue
-        n.normalize()
-        if n.z < 0.22:
+        cloth_n = 0
+        for li in poly.loop_indices:
+            if _atlas_cloth(atlas, uv.data[li], s):
+                cloth_n += 1
+        if cloth_n < max(1, len(poly.loop_indices) // 2):
             continue
-        c = (me.vertices[tri.vertices[0]].co + me.vertices[tri.vertices[1]].co + me.vertices[tri.vertices[2]].co) / 3.0
-        if c.y < ymin - 0.04 or c.y > ymax + 0.04 or abs(c.x) > 0.16 or c.z < 0.0:
-            continue
-        pts, pos = [], []
-        for vi, li in zip(tri.vertices, tri.loops):
-            u, v = uv.data[li].uv
-            pts.append((float(u) * (s - 1), (1.0 - float(v)) * (s - 1)))
-            pos.append(me.vertices[vi].co.copy())
-        (x0, y0), (x1, y1), (x2, y2) = pts
-        minx = max(0, int(math.floor(min(x0, x1, x2))))
-        maxx = min(s - 1, int(math.ceil(max(x0, x1, x2))))
-        miny = max(0, int(math.floor(min(y0, y1, y2))))
-        maxy = min(s - 1, int(math.ceil(max(y0, y1, y2))))
-        denom = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2)
-        if abs(denom) < 1e-8:
-            continue
-        for y in range(miny, maxy + 1):
-            py = y + 0.5
-            for x in range(minx, maxx + 1):
-                px = x + 0.5
-                w0 = ((y1 - y2) * (px - x2) + (x2 - x1) * (py - y2)) / denom
-                w1 = ((y2 - y0) * (px - x2) + (x0 - x2) * (py - y2)) / denom
-                w2 = 1.0 - w0 - w1
-                if w0 < -0.01 or w1 < -0.01 or w2 < -0.01:
-                    continue
-                p = pos[0] * w0 + pos[1] * w1 + pos[2] * w2
-                if not dest_in_front_lion(p, n):
-                    continue
-                cur = atlas[y, x]
-                cr, cg, cb = int(cur[0]), int(cur[1]), int(cur[2])
-                cloth = (cb > cr + 8 and cb > 40 and cr < 120) or (cr > 110 and cg > 80 and cr > cb + 8)
-                if not cloth:
-                    continue
-                u = (p.x - xmin) / max(1e-6, xmax - xmin)
-                v = (p.y - ymin) / max(1e-6, ymax - ymin)
-                if u < -0.02 or u > 1.02 or v < -0.02 or v > 1.02:
-                    continue
-                rgb = _sample_card_xy(card, u, v)
-                if rgb is None:
-                    continue
-                atlas[y, x] = np.array(rgb, np.uint8)
-                pix += 1
+        faces.append(poly.index)
+        for vi in poly.vertices:
+            p = me.vertices[vi].co
+            xs.append(p.x)
+            ys.append(p.y)
+    print("front lion faces", len(faces), flush=True)
+    if len(faces) < 8:
+        return 0
+    xmin, xmax = min(xs), max(xs)
+    ymin, ymax = min(ys), max(ys)
+    xpad = (xmax - xmin) * 0.10
+    ypad = (ymax - ymin) * 0.10
+    xmin, xmax = xmin - xpad, xmax + xpad
+    ymin, ymax = ymin - ypad, ymax + ypad
+    # Reserved strip (top-right). Aspect matches lion_card 512×640.
+    u0, u1, v0, v1 = 0.68, 0.94, 0.64, 0.96
+    for fi in faces:
+        poly = me.polygons[fi]
+        for li, vi in zip(poly.loop_indices, poly.vertices):
+            p = me.vertices[vi].co
+            tx = (p.x - xmin) / max(1e-6, xmax - xmin)
+            ty = (p.y - ymin) / max(1e-6, ymax - ymin)
+            uv.data[li].uv = Vector((u0 + tx * (u1 - u0), v0 + ty * (v1 - v0)))
+    y_top = int((1.0 - v1) * s)
+    y_bot = int((1.0 - v0) * s)
+    x_l = int(u0 * s)
+    x_r = int(u1 * s)
+    slot = Image.fromarray(card).resize((max(1, x_r - x_l), max(1, y_bot - y_top)), Image.LANCZOS)
+    atlas[y_top:y_bot, x_l:x_r] = np.array(slot)
     Image.fromarray(atlas).save(atlas_path)
-    print("front lion dest stamp pix", pix, flush=True)
-    return pix
+    print("front lion strip", x_l, y_top, x_r, y_bot, "faces", len(faces), flush=True)
+    return len(faces)
 
 
 def bake_image0_texels(src, tgt, atlas_path: Path) -> int:

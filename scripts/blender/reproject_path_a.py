@@ -67,8 +67,12 @@ def main():
         path_a.render_world_shots()
 
     if stills_only:
+        # Front lion strip remaps dest UVs — ThemePack mesh must match the atlas.
+        rt.export_fbx(tgt, actor)
+        ntris, _buckets = look.export_mesh_txt_v4(tgt)
+        path_a.patch_mesh_header()
         bpy.ops.wm.save_as_mainfile(filepath=str(BLEND))
-        print("stills-only — walk clip left as-is")
+        print("stills-only — walk clip left as-is; mesh", ntris)
         return
 
     mp4 = old.render_walk(actor, tgt)
