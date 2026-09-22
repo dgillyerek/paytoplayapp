@@ -1421,25 +1421,24 @@ def _seg_dist(p: Vector, a: Vector, b: Vector) -> float:
     return (p - (a + t * ab)).length
 
 
-def spatial_bind(mesh_ob):
-    """Nearest rest-bone-segment weights on the retopo volume.
-
-    Not exclusive paper-island corridors. Not heat on shatter.
-    """
+def _hang_bind_segs():
+    """Hang rest-bone segments. Prefer hangheat spans; else BONE_REST chain."""
+    segs = {}
+    if hasattr(hh, "HEAT_SPAN"):
+        for name in MESH_BONES:
+            a, b = hh.HEAT_SPAN[name]
+            segs[name] = (Vector(a), Vector(b))
+        return segs
     rest = {}
     for name in old.ORDER if hasattr(old, "ORDER") else list(old.BONE_REST):
-        loc, eul = old.BONE_REST[name]
+        loc, _eul = old.BONE_REST[name]
         parent = old.PARENT[name]
         local = Vector(loc)
-        if parent is None:
-            rest[name] = local
-        else:
-            rest[name] = rest[parent] + local
-    child_of = {p: [] for p in old.PARENT}
+        rest[name] = local if parent is None else rest[parent] + local
+    child_of = {}
     for n, p in old.PARENT.items():
         if p:
             child_of.setdefault(p, []).append(n)
-    segs = {}
     for name in MESH_BONES:
         head = rest[name]
         kids = [c for c in child_of.get(name, []) if c in rest]
@@ -1450,6 +1449,15 @@ def spatial_bind(mesh_ob):
         else:
             tail = head + Vector((0.0, -0.12, 0.0))
         segs[name] = (head, tail)
+    return segs
+
+
+def spatial_bind(mesh_ob):
+    """Nearest rest-bone-segment weights on the retopo volume.
+
+    Not exclusive paper-island corridors. Not heat on shatter.
+    """
+    segs = _hang_bind_segs()
     for g in list(mesh_ob.vertex_groups):
         mesh_ob.vertex_groups.remove(g)
     groups = {n: mesh_ob.vertex_groups.new(name=n) for n in MESH_BONES}
@@ -1468,6 +1476,183 @@ def spatial_bind(mesh_ob):
         for n, w in ws:
             groups[n].add([i], w / s, "REPLACE")
     print("spatial bind segs", {n: (round(a.y, 2), round(b.y, 2)) for n, (a, b) in segs.items()})
+
+
+def lock_front_tabard(mesh_ob) -> int:
+    """Keep the constructed front tabard on torso bones.
+
+    Same fitted e5 silhouette as the cloth shell. Stops the skirt from
+    splitting onto both legs (4-leg / shred). Not a paper-island corridor.
+    """
+    limb = {
+        "Arm_L", "Fore_L", "Hand_L", "Arm_R", "Fore_R", "Hand_R",
+        "UpLeg_L", "Leg_L", "Foot_L", "UpLeg_R", "Leg_R", "Foot_R", "Scabbard",
+    }
+    torso = ("Hips", "Spine", "Chest")
+    groups = {g.name: g for g in mesh_ob.vertex_groups}
+    for n in torso:
+        if n not in groups:
+            groups[n] = mesh_ob.vertex_groups.new(name=n)
+    n = 0
+    for i, v in enumerate(mesh_ob.data.vertices):
+        p = v.co
+        half = _e5_tabard_half_w(p.y)
+        if half <= 0.0 or abs(p.x) > half + 0.012 or p.z < 0.02:
+            continue
+        for name in limb:
+            g = groups.get(name)
+            if g is not None:
+                try:
+                    g.remove([i])
+                except RuntimeError:
+                    pass
+        kept = []
+        for name in torso:
+            try:
+                kept.append((name, groups[name].weight(i)))
+            except RuntimeError:
+                pass
+        if not kept:
+            # Height-split so the hem hangs from hips, badge from chest.
+            if p.y >= 1.26:
+                groups["Chest"].add([i], 1.0, "REPLACE")
+            elif p.y >= 1.02:
+                groups["Spine"].add([i], 1.0, "REPLACE")
+            else:
+                groups["Hips"].add([i], 1.0, "REPLACE")
+        else:
+            s = sum(w for _, w in kept) or 1.0
+            for name, w in kept:
+                groups[name].add([i], w / s, "REPLACE")
+        n += 1
+    print("tabard torso lock", n)
+    return n
+
+
+def drop_cross_limb(mesh_ob) -> int:
+    """A vert may not carry both L and R limb weights (ghost 4-leg / 4-arm)."""
+    pairs = (
+        ("Arm_L", "Arm_R"), ("Fore_L", "Fore_R"), ("Hand_L", "Hand_R"),
+        ("UpLeg_L", "UpLeg_R"), ("Leg_L", "Leg_R"), ("Foot_L", "Foot_R"),
+    )
+    groups = {g.name: g for g in mesh_ob.vertex_groups}
+    n = 0
+    for i, _v in enumerate(mesh_ob.data.vertices):
+        for left, right in pairs:
+            gl, gr = groups.get(left), groups.get(right)
+            if gl is None or gr is None:
+                continue
+            try:
+                wl = gl.weight(i)
+            except RuntimeError:
+                wl = 0.0
+            try:
+                wr = gr.weight(i)
+            except RuntimeError:
+                wr = 0.0
+            if wl > 1e-6 and wr > 1e-6:
+                loser = gr if wl >= wr else gl
+                try:
+                    loser.remove([i])
+                except RuntimeError:
+                    pass
+                n += 1
+    print("cross-limb drop", n)
+    return n
+
+
+def ensure_armature(mesh_ob, actor_ob):
+    """One Armature modifier. Strip leftover shrinkwrap / peel deformers."""
+    mesh_ob.parent = None
+    for m in list(mesh_ob.modifiers):
+        mesh_ob.modifiers.remove(m)
+    return hh.attach_actor(mesh_ob, actor_ob)
+
+
+def set_play_cam():
+    """Game-view Play cam: walk +Z toward TOP of frame."""
+    cam = bpy.context.scene.camera
+    if cam is None:
+        old.setup_render()
+        cam = bpy.context.scene.camera
+    cam.matrix_world = shots.play_cam_matrix(shots.CAM_EYE, shots.CAM_TARGET)
+    return cam
+
+
+def posed_world_extent(mesh_ob):
+    bpy.context.view_layer.update()
+    deps = bpy.context.evaluated_depsgraph_get()
+    ev = mesh_ob.evaluated_get(deps)
+    me = ev.to_mesh()
+    mw = ev.matrix_world
+    xs, ys, zs = [], [], []
+    for v in me.vertices:
+        p = mw @ v.co
+        xs.append(p.x)
+        ys.append(p.y)
+        zs.append(p.z)
+    ev.to_mesh_clear()
+    return (
+        min(xs), max(xs), min(ys), max(ys), min(zs), max(zs),
+        max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs),
+    )
+
+
+def assert_pose_not_shred(mesh_ob, label: str):
+    """Refuse exploded bind before we write a walk strip."""
+    xmin, xmax, ymin, ymax, zmin, zmax, dx, dy, dz = posed_world_extent(mesh_ob)
+    print(
+        "pose extent", label,
+        "x", round(xmin, 3), round(xmax, 3),
+        "y", round(ymin, 3), round(ymax, 3),
+        "z", round(zmin, 3), round(zmax, 3),
+        "span", round(dx, 3), round(dy, 3), round(dz, 3),
+    )
+    if dx > 1.35 or dy > 2.55 or dz > 2.40 or ymin < -0.12 or ymax > 2.35:
+        raise SystemExit(
+            f"bind shred at {label}: span=({dx:.3f},{dy:.3f},{dz:.3f}) "
+            f"y=[{ymin:.3f},{ymax:.3f}] — refuse walk strip"
+        )
+    return (xmin, xmax, ymin, ymax, zmin, zmax, dx, dy, dz)
+
+
+def purge_shred_walk_previews():
+    """Never leave the exploded Path-2 bind strip in drop / walk folders."""
+    names = (
+        "world_walk_contact_l.png", "world_walk_contact_r.png",
+        "world_walk_pass_l.png", "world_walk_pass_r.png",
+        "world_walk_n00.png", "world_walk_n05.png",
+        "world_walk_n10.png", "world_walk_n15.png",
+    )
+    for folder in (old.WALK, DROP, PROOF):
+        for name in names:
+            p = folder / name
+            if p.exists():
+                p.unlink()
+                print("purged shred walk", p)
+
+
+def rebind_locked(mesh_ob, actor_ob):
+    """Spatial bind on the locked stills mesh. No peel / shell / atlas."""
+    rt.delete_small_islands(mesh_ob, keep_min=50)
+    ensure_armature(mesh_ob, actor_ob)
+    spatial_bind(mesh_ob)
+    lock_front_tabard(mesh_ob)
+    lock_scabbard(mesh_ob)
+    drop_cross_limb(mesh_ob)
+    counts = recount(mesh_ob)
+    scab_n = counts.get("Scabbard", 0)
+    if scab_n < 20:
+        raise SystemExit(f"scabbard empty after rebind: {scab_n}")
+    arm_r = counts.get("Arm_R", 0) + counts.get("Fore_R", 0) + counts.get("Hand_R", 0)
+    arm_l = counts.get("Arm_L", 0) + counts.get("Fore_L", 0) + counts.get("Hand_L", 0)
+    if arm_r < 30 or arm_l < 30:
+        raise SystemExit(f"arm empty after rebind: R={arm_r} L={arm_l} {counts}")
+    leg_r = counts.get("UpLeg_R", 0) + counts.get("Leg_R", 0) + counts.get("Foot_R", 0)
+    leg_l = counts.get("UpLeg_L", 0) + counts.get("Leg_L", 0) + counts.get("Foot_L", 0)
+    if leg_r < 30 or leg_l < 30:
+        raise SystemExit(f"leg empty after rebind: R={leg_r} L={leg_l} {counts}")
+    return counts
 
 
 def lock_scabbard(mesh_ob) -> int:
@@ -1560,8 +1745,13 @@ def write_drop(note: dict):
         "lion_card_front scaled toward e5b132f. Steel PBR kept. No frozen "
         "Game still compositing. Do NOT claim Design PASS.\n"
         "- FBX: ThemePack `sir_aldric_path2_clean.fbx` — Y-up, face +Z, one scabbard-R.\n"
-        "- RE-GATE: World stills first, then one Evaluate() walk. "
-        "**Bind NOT claimed. Walk NOT claimed.** Hub PNG HOLD. PR #21 HOLD.\n\n"
+        "- STILLS: 552b099 look LOCKED (opaque tabard). Soft leftovers are not "
+        "stills blockers. Do not reopen stills paint/shell unless bind breaks look.\n"
+        "- BIND: spatial nearest hang-bone-segment (≤4) + tabard torso lock + "
+        "one Scabbard volume lock. Not automatic weights, not Path-2 ghost/tear/tube.\n"
+        "- RE-GATE: planted Evaluate() walk toward TOP for Design. "
+        "**Bind NOT claimed. Walk NOT claimed. Do NOT claim Design PASS.** "
+        "Hub PNG HOLD. PR #21 HOLD.\n\n"
         f"tris={note.get('tris')} verts={note.get('verts')} islands={note.get('islands')}\n"
         f"wrap={note.get('wrap')} bind=spatial (not automatic weights)\n"
     )
@@ -1574,13 +1764,25 @@ def write_drop(note: dict):
         src = PROOF / name
         if src.exists():
             shutil.copy2(src, DROP / name)
-    for name in (
-        "world_walk_contact_l.png", "world_walk_contact_r.png",
-        "world_walk_pass_l.png", "world_walk_n10.png",
-    ):
-        src = old.WALK / name
-        if src.exists():
-            shutil.copy2(src, DROP / name)
+    # Walk stills only if they exist *after* a clean bind render. Never
+    # recopy the exploded Path-2 chrome strip.
+    if note.get("walkFramesClean"):
+        for name in (
+            "world_walk_contact_l.png", "world_walk_contact_r.png",
+            "world_walk_pass_l.png", "world_walk_n10.png",
+        ):
+            src = old.WALK / name
+            if src.exists():
+                shutil.copy2(src, DROP / name)
+    else:
+        for name in (
+            "world_walk_contact_l.png", "world_walk_contact_r.png",
+            "world_walk_pass_l.png", "world_walk_pass_r.png",
+            "world_walk_n10.png",
+        ):
+            leftover = DROP / name
+            if leftover.exists():
+                leftover.unlink()
     (DROP / "sir_aldric_meshy_bind.json").write_text(json.dumps(note, indent=2) + "\n")
     print("path A drop", DROP)
 

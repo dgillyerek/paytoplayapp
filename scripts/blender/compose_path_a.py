@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
-"""Path A re-gate: World stills vs e5b132f / turnaround + walk contact. Bind NOT claimed."""
+"""Path A re-gate: World stills vs e5b132f. Bind NOT claimed.
+
+Walk/bind row is omitted unless mid-walk frames pass a shred check.
+Never paste the exploded Path-2 chrome strip again.
+"""
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 Image.MAX_IMAGE_PIXELS = None
@@ -15,6 +21,7 @@ LOOK = ROOT / "design/survival-theme-a-fantasy/heroes/anim/sir_aldric/UNITY_3D_H
 GATE = ROOT / "design/survival-theme-a-fantasy/heroes/anim/sir_aldric/TURNAROUND_GATE1/LOCKED"
 WALK = PROOF / "walk"
 ART = Path("/opt/cursor/artifacts")
+DROP = ROOT / "design/survival-theme-a-fantasy/heroes/anim/sir_aldric/PATH_A_RETOPO"
 
 
 def font(size: int):
@@ -38,6 +45,33 @@ def load(p: Path) -> Image.Image:
     return im
 
 
+def walk_frame_clean(path: Path) -> tuple[bool, str]:
+    """Refuse exploded chrome / blob frames. Knight must stay tall + navy."""
+    arr = np.array(load(path))
+    h, w = arr.shape[:2]
+    r, g, b = arr[:, :, 0].astype(np.int16), arr[:, :, 1].astype(np.int16), arr[:, :, 2].astype(np.int16)
+    # Two-tone gray studio bg — foreground is anything off that band.
+    bg = (np.abs(r.astype(np.int16) - g) < 18) & (np.abs(g - b) < 18) & (r >= 28) & (r <= 95)
+    fg = ~bg
+    if int(fg.sum()) < 8000:
+        return False, f"too-empty fg={int(fg.sum())}"
+    ys, xs = np.where(fg)
+    fh = int(ys.max() - ys.min()) + 1
+    fw = int(xs.max() - xs.min()) + 1
+    aspect = fw / max(1, fh)
+    width_frac = fw / w
+    navy = (b > r + 12) & (r < 110) & (b > 45) & fg
+    navy_n = int(navy.sum())
+    # Exploded Path-2 remesh filled the frame and lost the navy tabard.
+    if aspect > 0.72 or width_frac > 0.78:
+        return False, f"blob aspect={aspect:.2f} width_frac={width_frac:.2f}"
+    if navy_n < 2500:
+        return False, f"navy-missing n={navy_n}"
+    if fh / h < 0.42:
+        return False, f"short fh={fh}/{h}"
+    return True, f"ok aspect={aspect:.2f} navy={navy_n}"
+
+
 def main() -> None:
     ART.mkdir(parents=True, exist_ok=True)
     tw, th = 320, 568
@@ -58,6 +92,7 @@ def main() -> None:
             cap(load(b).resize((tw, th), Image.LANCZOS), f"{bl}  |  {lab}"),
         ))
     walk_row = []
+    want_walk = os.environ.get("PATHA_WALK_ROW") == "1"
     for name, lab in (
         ("world_walk_contact_l.png", "contact L"),
         ("world_walk_contact_r.png", "contact R"),
@@ -65,17 +100,24 @@ def main() -> None:
         ("world_walk_n10.png", "n=10"),
     ):
         p = WALK / name
-        if p.exists():
+        if not p.exists() or not want_walk:
+            continue
+        ok, reason = walk_frame_clean(p)
+        print("walk frame", name, "clean" if ok else "SHRED", reason)
+        if ok:
             walk_row.append(cap(load(p).resize((tw, th), Image.LANCZOS), f"walk  |  {lab}  |  bind NOT claimed"))
+        else:
+            walk_row = []
+            break
     if not cells:
         raise SystemExit("no Path A still pairs")
     w, h = cells[0][0].size
     rows = len(cells) + (1 if walk_row else 0)
     sheet = Image.new("RGB", (w * 2 if not walk_row else max(w * 2, w * max(len(walk_row), 2)), 130 + h * rows), (16, 16, 14))
     d = ImageDraw.Draw(sheet)
-    d.text((14, 10), "PATH A  |  clean retopo + Meshy project  |  bind NOT claimed", fill=(236, 230, 210), font=font(22))
-    d.text((14, 44), "QuadriFlow mid-poly. Albedo projected from e5b132f Meshy. No tube / capsule / paper-weight hacks.", fill=(236, 200, 120), font=font(15))
-    d.text((14, 72), "LOOK Meshy knight. Hub PNG HOLD. Walk NOT claimed. Eye: lion / plate / tabard, 1 arm/side, 1L+1R, planted.", fill=(180, 176, 160), font=font(14))
+    d.text((14, 10), "PATH A  |  552b099 stills LOCKED  |  bind NOT claimed", fill=(236, 230, 210), font=font(22))
+    d.text((14, 44), "Stills look held. Bind/walk for Design re-gate. No shredded bind strip.", fill=(236, 200, 120), font=font(15))
+    d.text((14, 72), "LOOK Meshy knight. Hub PNG HOLD. Walk NOT claimed. Do NOT claim Design PASS.", fill=(180, 176, 160), font=font(14))
     d.text((14, 100), "LEFT = locked e5b132f / SoT.  RIGHT = this Path A World-cam.", fill=(180, 176, 160), font=font(14))
     for i, (a, b) in enumerate(cells):
         sheet.paste(a, (0, 130 + i * h))
@@ -90,7 +132,9 @@ def main() -> None:
         (ART / out.name).write_bytes(out.read_bytes())
     except OSError as exc:
         print("artifact skip", exc)
-    print("path A sheet", out, out.stat().st_size)
+    DROP.mkdir(parents=True, exist_ok=True)
+    (DROP / out.name).write_bytes(out.read_bytes())
+    print("path A sheet", out, out.stat().st_size, "walk_row", bool(walk_row))
 
 
 if __name__ == "__main__":

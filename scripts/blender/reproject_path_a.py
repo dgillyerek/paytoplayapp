@@ -47,9 +47,12 @@ def main():
 
     atlas_path = old.PACK3D / "sir_aldric_meshy_atlas.png"
     walk_only = os.environ.get("PATHA_WALK_ONLY") == "1"
+    bind_only = os.environ.get("PATHA_BIND_ONLY") == "1"
     stills_only = os.environ.get("PATHA_STILLS_ONLY") == "1" or os.environ.get("SKIN_STILLS_ONLY") == "1"
     src = path_a.ensure_meshy_source(src)
-    if not walk_only:
+    # Bind-only / walk-only: do NOT peel, shell, or re-atlas the locked
+    # 552b099 stills mesh. Stills look stays locked.
+    if not walk_only and not bind_only:
         src.hide_set(False)
         src.hide_render = True
         # 8436248 Meshy-face copy shredded (holes / plate poke). Peel
@@ -65,15 +68,25 @@ def main():
         path_a.project_albedo(src, tgt, atlas_path)
         src.hide_set(True)
         src.hide_render = True
+    elif src is not None:
+        src.hide_set(True)
+        src.hide_render = True
 
     # Scene already has WorldPlay / lights / ground from the saved blend.
     if bpy.context.scene.camera is None:
         old.setup_render()
     old.apply_pose(actor, rest, tgt)
+
+    counts = None
+    if bind_only or (not stills_only and not walk_only):
+        counts = path_a.rebind_locked(tgt, actor)
+        old.apply_pose(actor, rest, tgt)
+        path_a.assert_pose_not_shred(tgt, "rest")
+
     if not walk_only:
         path_a.render_world_shots()
 
-    if stills_only:
+    if stills_only and not bind_only:
         # Front lion strip remaps dest UVs — ThemePack mesh must match the atlas.
         rt.export_fbx(tgt, actor)
         ntris, buckets = look.export_mesh_txt_v4(tgt)
@@ -107,6 +120,13 @@ def main():
         print("stills-only — walk clip left as-is; mesh", ntris)
         return
 
+    path_a.purge_shred_walk_previews()
+    path_a.set_play_cam()
+    for n in (0, 4, 8, 12):
+        old.apply_pose(actor, old.walk_pose(n / 16.0), tgt)
+        path_a.assert_pose_not_shred(tgt, f"walk_n{n:02d}")
+    old.apply_pose(actor, rest, tgt)
+    path_a.set_play_cam()
     mp4 = old.render_walk(actor, tgt)
     for n in (0, 5, 10, 15):
         old.apply_pose(actor, old.walk_pose(n / 16.0), tgt)
@@ -115,31 +135,42 @@ def main():
         bpy.ops.render.render(write_still=True)
         print("cycle n", n, npng.stat().st_size)
 
+    old.apply_pose(actor, rest, tgt)
     fbx = rt.export_fbx(tgt, actor)
     ntris, buckets = look.export_mesh_txt_v4(tgt)
     path_a.patch_mesh_header()
     bpy.ops.wm.save_as_mainfile(filepath=str(BLEND))
 
-    counts = path_a.recount(tgt)
+    if counts is None:
+        counts = path_a.recount(tgt)
+    else:
+        counts = path_a.recount(tgt)
     islands, sizes = path_a.n_islands(tgt.data)
     note = {
-        "lookPassClaimed": True,
+        "lookPassClaimed": False,
         "walkPassClaimed": False,
         "bindPassClaimed": False,
         "pathA": True,
+        "stillsIterate": "552b099-opaque-cloth-shell",
+        "bindIterate": "spatial-hang-segs+tabard-torso+scabbard",
         "honestArt": (
-            "clean mid-poly retopo + camera-project of frozen e5b132f World stills "
-            "onto retopo UVs (structured steel/navy fill for occluded verts). "
-            "Abandoned shattered-Meshy paper/tube/capsule bind hacks. "
-            "Voxel used only as watertight scaffold; silhouette restored by "
-            "shrinkwrap ABOVE_SURFACE onto Meshy. Spatial nearest-bone-segment "
-            "weights + one Scabbard volume lock. No exclusive paper corridors."
+            "552b099 stills look LOCKED. Bind-only on that retopo: spatial "
+            "nearest hang-bone-segment weights, front-tabard torso lock, one "
+            "Scabbard volume lock. No peel/shell/atlas. No Path-2 ghost/tear/"
+            "tube/capsule remesh. Planted Evaluate() walk toward TOP for "
+            "Design re-gate. Do NOT claim Design / bind / walk PASS."
         ),
         "sourceLook": "e5b132f Meshy GLB + Image_0 / SoT lion",
         "retopo": "QuadriFlow mid-poly + shrinkwrap ABOVE_SURFACE; no capsule limbs",
-        "bind": "spatial nearest rest-bone-segment (≤4) + one Scabbard volume lock. Not automatic weights.",
+        "bind": (
+            "spatial nearest hang-bone-segment (≤4) + front-tabard torso lock "
+            "+ one Scabbard volume lock. Not automatic weights."
+        ),
         "motion": "5916447 Evaluate() keys reused; root plant after Evaluate() so soles kiss Y=0",
         "scabbard": "character-right",
+        "stillsOnly": False,
+        "bindOnly": bind_only,
+        "walkFramesClean": True,
         "playHubLocked": True,
         "islands": islands,
         "islandSizes": sizes,
