@@ -366,28 +366,31 @@ def replace_front_cloth_shell(tgt, src) -> int:
         src_bvh = BVHTree.FromBMesh(src_bm)
     print("cloth snap target f", len(src_bm.faces), "innerDel", len(inner), flush=True)
 
-    nx, ny = 20, 34
-    x0, x1 = -0.168, 0.168
-    y0, y1 = 0.86, 1.448
+    nx, ny = 22, 38
+    x0, x1 = -0.188, 0.188
+    y0, y1 = 0.82, 1.452
     grid = {}
     for iy in range(ny + 1):
         for ix in range(nx + 1):
             x = x0 + (x1 - x0) * ix / nx
             y = y0 + (y1 - y0) * iy / ny
-            hit, sn, idx, _d = src_bvh.ray_cast(Vector((x, y, 0.62)), Vector((0.0, 0.0, -1.0)), 0.80)
-            if hit is None or idx is None:
-                loc, sn, idx, dist = src_bvh.find_nearest(Vector((x, y, 0.16)))
-                if loc is None or dist > 0.055:
+            loc, sn, idx, dist = src_bvh.find_nearest(Vector((x, y, 0.16)))
+            if loc is None or dist > 0.075:
+                hit, sn, idx, _d = src_bvh.ray_cast(Vector((x, y, 0.62)), Vector((0.0, 0.0, -1.0)), 0.80)
+                if hit is None or idx is None:
                     continue
-                hit = Vector(loc)
+                loc = hit
+            hit = Vector(loc)
+            if hit.z < -0.04:
+                continue
             n = Vector(sn) if sn is not None else Vector((0.0, 0.0, 1.0))
             if n.length < 1e-8:
                 n = Vector((0.0, 0.0, 1.0))
             else:
                 n.normalize()
-            if n.z < 0.06:
+            if n.z < 0.015:
                 continue
-            grid[(ix, iy)] = hit + n * 0.0030
+            grid[(ix, iy)] = hit + n * 0.0016
     src_bm.free()
 
     verts = []
@@ -933,7 +936,7 @@ def _sample_card_xy(arr, u, v):
 
 
 # Front tabard AABB including waist. Cloth faces here get solid Image_0 navy.
-TABARD_FRONT_WIN = (-0.175, 0.175, 0.86, 1.455)
+TABARD_FRONT_WIN = (-0.190, 0.190, 0.82, 1.455)
 # e5b132f rampant dest box — card fills this, not a cluster of center faces.
 LION_FRONT_WIN = (-0.076, 0.076, 1.178, 1.355)
 
@@ -1045,11 +1048,33 @@ def _image0_navy_sampler(src, navy):
 
 
 def _pick_image0_navy(src, fallback):
-    """One dest→source Image_0 navy at chest center. Solid fill, not a noisy bake."""
-    sample, close = _image0_navy_sampler(src, fallback)
-    rgb = sample(Vector((0.0, 1.24, 0.16)), Vector((0.0, 0.0, 1.0)))
+    """Solid Image_0 / SoT navy. Median of dest→source samples, not a crease texel."""
+    sot = np.array((36, 58, 118), np.uint8)
+    sample, close = _image0_navy_sampler(src, tuple(int(c) for c in sot))
+    pts = (
+        Vector((0.0, 1.24, 0.16)),
+        Vector((0.0, 1.10, 0.14)),
+        Vector((0.05, 1.18, 0.14)),
+        Vector((-0.05, 1.18, 0.14)),
+        Vector((0.0, 0.98, 0.13)),
+    )
+    got = []
+    for p in pts:
+        rgb = sample(p, Vector((0.0, 0.0, 1.0)))
+        r, g, b = (int(c) for c in rgb)
+        if b > r + 8 and b > 50 and r < 110:
+            got.append(rgb)
     close()
-    return np.array(rgb, np.uint8)
+    if not got:
+        print("image0 navy fallback SoT", tuple(int(c) for c in sot), flush=True)
+        return sot
+    med = np.median(np.array(got, np.float32), axis=0)
+    # Crushed dest samples read as black steel, not cloth. Use locked SoT navy.
+    if med[2] < 70:
+        print("image0 navy crushed", med, "→ SoT", flush=True)
+        return sot
+    print("image0 navy", tuple(int(c) for c in med), "n", len(got), flush=True)
+    return med.astype(np.uint8)
 
 
 def _atlas_tan(atlas, uv_loop, s: int) -> bool:
@@ -1081,11 +1106,10 @@ def stamp_front_lion_dest(tgt, atlas_path: Path, card, src=None) -> int:
     navy = _pick_image0_navy(src, np.array(card[8, 8], np.uint8))
     tx0, tx1, ty0, ty1 = TABARD_FRONT_WIN
     u0, u1, v0, v1 = 0.68, 0.94, 0.62, 0.97
-    nu0, nu1, nv0, nv1 = 0.955, 0.995, 0.84, 0.98
-    # Dest-planar lion window. Faces outside this stay on the navy pad —
-    # clamp-to-edge of the card was painting tan/gold shards into the cloth.
+    # Lion world box inside the tabard. Blit into the matching strip sub-rect
+    # so the whole cloth is one dest-planar UV (no card-edge rectangle).
     mx0, mx1, my0, my1 = -0.132, 0.132, 1.122, 1.390
-    cloth, lion_faces, stray = [], [], []
+    cloth, stray = [], []
     for poly in me.polygons:
         c = poly.center
         on_strip = 0
@@ -1096,23 +1120,16 @@ def stamp_front_lion_dest(tgt, atlas_path: Path, card, src=None) -> int:
                 on_strip += 1
             if _atlas_tan(atlas, uv.data[li], s):
                 tan_n += 1
-        in_tabard = tx0 <= c.x <= tx1 and ty0 <= c.y <= ty1 and c.z > -0.02
-        torso = 0.84 < c.y < 1.48 and abs(c.x) < 0.20 and c.z > -0.03
+        in_tabard = tx0 <= c.x <= tx1 and ty0 <= c.y <= ty1 and c.z > -0.03
+        torso = 0.80 < c.y < 1.48 and abs(c.x) < 0.21 and c.z > -0.04
         loose = torso and (tan_n >= 1 or on_strip >= 1)
         if in_tabard or loose:
             cloth.append(poly.index)
-            if mx0 <= c.x <= mx1 and my0 <= c.y <= my1 and c.z > 0.02:
-                lion_faces.append(poly.index)
         elif on_strip >= 2:
             stray.append(poly.index)
-    print("front tabard cloth", len(cloth), "lion", len(lion_faces), "stray", len(stray), flush=True)
+    print("front tabard cloth", len(cloth), "stray", len(stray), flush=True)
     if len(cloth) < 8:
         return 0
-    atlas[int((1.0 - nv1) * s):int((1.0 - nv0) * s), int(nu0 * s):int(nu1 * s)] = navy
-    for fi in cloth:
-        poly = me.polygons[fi]
-        for li in poly.loop_indices:
-            uv.data[li].uv = Vector(((nu0 + nu1) * 0.5, (nv0 + nv1) * 0.5))
     for fi in stray:
         poly = me.polygons[fi]
         for li in poly.loop_indices:
@@ -1127,7 +1144,12 @@ def stamp_front_lion_dest(tgt, atlas_path: Path, card, src=None) -> int:
     sprite_navy = (sb > sr + 8) & (sb > 40) & (sr < 110)
     sprite = sprite.copy()
     sprite[sprite_navy] = navy
-    su0, su1, sv0, sv1 = u0, u1, v0, v1
+    tw = max(1e-6, tx1 - tx0)
+    th = max(1e-6, ty1 - ty0)
+    su0 = u0 + (mx0 - tx0) / tw * (u1 - u0)
+    su1 = u0 + (mx1 - tx0) / tw * (u1 - u0)
+    sv0 = v0 + (my0 - ty0) / th * (v1 - v0)
+    sv1 = v0 + (my1 - ty0) / th * (v1 - v0)
     ly_top = int((1.0 - sv1) * s)
     ly_bot = int((1.0 - sv0) * s)
     lx_l = int(su0 * s)
@@ -1135,17 +1157,17 @@ def stamp_front_lion_dest(tgt, atlas_path: Path, card, src=None) -> int:
     if lx_r > lx_l and ly_bot > ly_top:
         slot = Image.fromarray(sprite).resize((lx_r - lx_l, ly_bot - ly_top), Image.LANCZOS)
         atlas[ly_top:ly_bot, lx_l:lx_r] = np.array(slot)
-    for fi in lion_faces:
+    for fi in cloth:
         poly = me.polygons[fi]
         for li, vi in zip(poly.loop_indices, poly.vertices):
             p = me.vertices[vi].co
-            tu = max(0.0, min(1.0, (p.x - mx0) / max(1e-6, mx1 - mx0)))
-            tv = max(0.0, min(1.0, (p.y - my0) / max(1e-6, my1 - my0)))
+            tu = max(0.0, min(1.0, (p.x - tx0) / tw))
+            tv = max(0.0, min(1.0, (p.y - ty0) / th))
             uv.data[li].uv = Vector((u0 + tu * (u1 - u0), v0 + tv * (v1 - v0)))
     Image.fromarray(atlas).save(atlas_path)
     print(
         "front tabard navy+lion", x_l, y_top, x_r, y_bot,
-        "cloth", len(cloth), "lion", len(lion_faces),
+        "cloth", len(cloth),
         "lionBlit", lx_l, ly_top, lx_r, ly_bot, "sprite", sprite.shape, flush=True,
     )
     return len(cloth)
