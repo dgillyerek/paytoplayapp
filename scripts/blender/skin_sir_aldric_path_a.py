@@ -422,6 +422,19 @@ def camera_project_atlas(tgt, fill_colors, atlas_path: Path):
                 wrote = True
         if wrote:
             tris_hit += 1
+    # Grow projected stills into steel-fill holes (copy neighbor, not max — max blows white).
+    hit = wgt > 0.16
+    for _ in range(8):
+        grown = acc.copy()
+        new_hit = hit.copy()
+        for dy, dx in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            shifted = np.roll(acc, (dy, dx), (0, 1))
+            shift_hit = np.roll(hit, (dy, dx), (0, 1))
+            take = (~hit) & shift_hit
+            grown[take] = shifted[take]
+            new_hit |= take
+        acc = grown
+        hit = new_hit
     Image.fromarray(np.clip(acc, 0, 255).astype(np.uint8), "RGB").save(atlas_path)
     print("camera project atlas tris", tris_hit, "pix", pix_hit, "size", atlas_path.stat().st_size, flush=True)
     return tris_hit
