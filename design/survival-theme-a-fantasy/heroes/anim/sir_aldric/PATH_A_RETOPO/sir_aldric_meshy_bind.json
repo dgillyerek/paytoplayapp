@@ -3,8 +3,8 @@
   "walkPassClaimed": false,
   "bindPassClaimed": false,
   "pathA": true,
-  "stillsIterate": "479a493-opaque-navy-larger-lion",
-  "honestArt": "Front tabard tan shred killed: front-half torso (inner remesh included) parked on solid Image_0 navy. Dest-planar cropped lion_card_front on a larger e5b132f chest window. Steel PBR kept. Rear/side left close. Walk as-is. Do NOT claim Design / bind / walk PASS.",
+  "stillsIterate": "37701e6-peel-front-torso-inner",
+  "honestArt": "Peeled inner remesh wall on the front tabard (solidify+voxel double-shell). One outer cloth surface + Image_0 navy. Lion/steel kept. Walk as-is. Do NOT claim Design / bind / walk PASS.",
   "sourceLook": "e5b132f Meshy GLB + Image_0 / SoT lion",
   "atlas": "sir_aldric_meshy_atlas.png"
 }

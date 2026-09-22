@@ -232,15 +232,7 @@ def _vg_fill_new(ob, dump):
     names = {g.name: g for g in ob.vertex_groups}
     n = 0
     for v in ob.data.vertices:
-        has = False
-        for g in ob.vertex_groups:
-            try:
-                if g.weight(v.index) > 1e-8:
-                    has = True
-                    break
-            except RuntimeError:
-                continue
-        if has:
+        if any(g.weight > 1e-8 for g in v.groups):
             continue
         _co, idx, _d = kd.find(v.co)
         for name, w in dump[idx][1]:
