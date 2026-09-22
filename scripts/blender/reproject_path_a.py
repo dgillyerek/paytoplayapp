@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Re-project e5b132f stills onto the saved Path A mid-poly. No retopo, no new geo."""
+"""Image_0 bake onto the saved Path A mid-poly. Stills-first. No new tubes."""
 from __future__ import annotations
 
 import json
@@ -47,14 +47,16 @@ def main():
 
     atlas_path = old.PACK3D / "sir_aldric_meshy_atlas.png"
     walk_only = os.environ.get("PATHA_WALK_ONLY") == "1"
+    stills_only = os.environ.get("PATHA_STILLS_ONLY") == "1" or os.environ.get("SKIN_STILLS_ONLY") == "1"
+    src = path_a.ensure_meshy_source(src)
     if not walk_only:
-        if src is not None:
-            src.hide_set(False)
-            src.hide_render = True
-        path_a.project_albedo(src or tgt, tgt, atlas_path)
-        if src is not None:
-            src.hide_set(True)
-            src.hide_render = True
+        src.hide_set(False)
+        src.hide_render = True
+        # Hug Meshy a bit tighter so plate silhouette reads less melt.
+        path_a.shrinkwrap_to_source(tgt, src, 0.001)
+        path_a.project_albedo(src, tgt, atlas_path)
+        src.hide_set(True)
+        src.hide_render = True
 
     # Scene already has WorldPlay / lights / ground from the saved blend.
     if bpy.context.scene.camera is None:
@@ -62,6 +64,11 @@ def main():
     old.apply_pose(actor, rest, tgt)
     if not walk_only:
         path_a.render_world_shots()
+
+    if stills_only:
+        bpy.ops.wm.save_as_mainfile(filepath=str(BLEND))
+        print("stills-only — walk clip left as-is")
+        return
 
     mp4 = old.render_walk(actor, tgt)
     for n in (0, 5, 10, 15):

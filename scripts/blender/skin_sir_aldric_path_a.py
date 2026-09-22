@@ -6,8 +6,8 @@ Derek: STOP tube / paper / remesh-melt / capsule bind hacks.
 2) CLEAN RETOPO = QuadriFlow mid-poly (manifold, humanoid-ready).
    Voxel is scaffold only, then shrinkwrap back onto the Meshy surface.
    Not the hero mesh. No capsule arms/legs. No paper-island weights.
-3) TEXTURE PROJECT = camera-project frozen e5b132f World stills onto
-   retopo UVs (Play cams). Transfer/Image_0 fills occluded bits.
+3) TEXTURE PROJECT = Image_0 / lion bake from the Meshy GLB onto retopo UVs.
+   Not Play-cam still compositing.
 4) FBX = Y-up, face +Z, one character-RIGHT scabbard, Actor armature.
 5) RE-GATE = World stills FIRST vs e5b132f/turnaround, then one Evaluate() walk.
 
@@ -129,6 +129,41 @@ def scaffold_watertight(ob, size: float):
     """
     rt.apply_voxel(ob, size)
     print("scaffold voxel (not hero)", size, "islands", n_islands(ob.data))
+
+
+def ensure_meshy_source(existing):
+    """Use hidden MeshySource, or re-import the GLB without wiping the scene."""
+    if existing is not None and existing.data.materials:
+        existing.hide_set(False)
+        existing.hide_render = True
+        return existing
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=str(old.SRC_GLB))
+    added = [o for o in bpy.data.objects if o not in before and o.type == "MESH"]
+    if not added:
+        raise SystemExit("GLB import produced no mesh")
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in added:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = added[0]
+    if len(added) > 1:
+        bpy.ops.object.join()
+    ob = bpy.context.view_layer.objects.active
+    ob.name = "MeshySource"
+    me = ob.data
+    for v in me.vertices:
+        x, y, z = v.co
+        v.co = Vector((-x, z, -y))
+    ys = [v.co.y for v in me.vertices]
+    ymin, ymax = min(ys), max(ys)
+    scale = old.TARGET_H / max(1e-6, ymax - ymin)
+    for v in me.vertices:
+        v.co = Vector((v.co.x * scale, (v.co.y - ymin) * scale, v.co.z * scale))
+    me.update()
+    look.delete_extra_sheath(ob)
+    hh.weld(ob, 0.001)
+    print("imported bake source", len(ob.data.vertices), "f", len(ob.data.polygons))
+    return ob
 
 
 def shrinkwrap_to_source(tgt, src, offset: float) -> bool:
@@ -444,7 +479,7 @@ def camera_project_atlas(tgt, fill_colors, atlas_path: Path):
 
 
 def assign_projected_material(ob, atlas_path: Path):
-    """Emit the projected/baked atlas. Principled+lights turned the stills into dark clay."""
+    """Principled Image_0/lion bake — same lighting model as e5b132f World stills."""
     img = bpy.data.images.load(str(atlas_path))
     img.name = "PathAAtlas"
     mat = bpy.data.materials.new("PathALook")
@@ -452,88 +487,176 @@ def assign_projected_material(ob, atlas_path: Path):
     nt = mat.node_tree
     nt.nodes.clear()
     out = nt.nodes.new("ShaderNodeOutputMaterial")
-    emit = nt.nodes.new("ShaderNodeEmission")
+    bsdf = nt.nodes.new("ShaderNodeBsdfPrincipled")
     tex = nt.nodes.new("ShaderNodeTexImage")
     tex.image = img
-    emit.inputs["Strength"].default_value = 1.0
-    nt.links.new(tex.outputs["Color"], emit.inputs["Color"])
-    nt.links.new(emit.outputs["Emission"], out.inputs["Surface"])
+    try:
+        bsdf.inputs["Roughness"].default_value = 0.55
+        bsdf.inputs["Metallic"].default_value = 0.12
+    except Exception:
+        pass
+    nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    nt.links.new(bsdf.outputs["BSDF"], out.inputs["Surface"])
     ob.data.materials.clear()
     ob.data.materials.append(mat)
 
 
-def bake_meshy_albedo(src, tgt, atlas_path: Path) -> bool:
-    """Selected-to-active Cycles color bake from Meshy Image_0 onto retopo UVs."""
+def _sample_src_image(arr, uv):
+    if arr is None:
+        return None
+    ah, aw = arr.shape[:2]
+    x = int(max(0, min(aw - 1, float(uv.x) * aw)))
+    y = int(max(0, min(ah - 1, (1.0 - float(uv.y)) * ah)))
+    return tuple(int(c) for c in arr[y, x])
+
+
+def bake_image0_texels(src, tgt, atlas_path: Path) -> int:
+    """Per-texel bake from Meshy Image_0 + lion cards onto retopo UVs.
+
+    Cycles selected-to-active misses: source paper sits *inside* the
+    shrinkwrapped retopo, so cage rays hit the target first (55KB black).
+    This shoots dest→source via BVH. Prefer Image_0 / lion; penalize
+    Image_1/2 trim slivers that smeared gold on earlier transfers.
+    """
+    import bmesh
+    from mathutils.bvhtree import BVHTree
+
     if src is None or src == tgt:
-        return False
+        return 0
+    albedo, lions, imgs = rt.source_textures()
+    if albedo is None:
+        print("bake_image0: no Image_0")
+        return 0
+    lion_arr = next(iter(lions.values()), None)
+
+    src_me = src.data
+    bm = bmesh.new()
+    bm.from_mesh(src_me)
+    bm.faces.ensure_lookup_table()
+    uv_lay = bm.loops.layers.uv.active
+    bvh = BVHTree.FromBMesh(bm)
+    mats = list(src_me.materials)
+
     rt.smart_uv(tgt)
-    img = bpy.data.images.new("PathABake", rt.ATLAS_SIZE, rt.ATLAS_SIZE, alpha=False)
-    mat = bpy.data.materials.new("PathABakeMat")
-    mat.use_nodes = True
-    nt = mat.node_tree
-    bsdf = nt.nodes.get("Principled BSDF")
-    tex = nt.nodes.new("ShaderNodeTexImage")
-    tex.image = img
-    nt.nodes.active = tex
-    tex.select = True
-    # Do not feed the bake image back into the shader Cycles samples.
-    tgt.data.materials.clear()
-    tgt.data.materials.append(mat)
+    me = tgt.data
+    me.calc_loop_triangles()
+    uv = me.uv_layers.active
+    s = rt.ATLAS_SIZE
+    acc = np.full((s, s, 3), 150, np.float32)
+    wgt = np.zeros((s, s), np.float32)
 
-    sc = bpy.context.scene
-    prev_engine = sc.render.engine
-    sc.render.engine = "CYCLES"
-    sc.cycles.device = "CPU"
-    sc.cycles.samples = 8
-    sc.cycles.bake_type = "DIFFUSE"
-    bake = sc.render.bake
-    bake.use_pass_direct = False
-    bake.use_pass_indirect = False
-    bake.use_pass_color = True
-    bake.use_selected_to_active = True
-    bake.cage_extrusion = 0.05
-    bake.margin = 8
-    bake.use_clear = True
-    try:
-        bake.max_ray_distance = 0.12
-    except Exception:
-        pass
+    def src_uv(face, loc):
+        verts = [loop.vert.co for loop in face.loops]
+        uvs = [loop[uv_lay].uv.copy() if uv_lay else Vector((0.5, 0.5)) for loop in face.loops]
+        wts = rt.mathutils_bary(loc, verts)
+        uvw = Vector((0.0, 0.0))
+        for wt, u in zip(wts, uvs):
+            uvw += u * wt
+        return uvw
 
-    src.hide_set(False)
-    src.hide_render = False
-    bpy.ops.object.select_all(action="DESELECT")
-    src.select_set(True)
-    tgt.select_set(True)
-    bpy.context.view_layer.objects.active = tgt
-    ok = False
-    try:
-        bpy.ops.object.bake(type="DIFFUSE", pass_filter={"COLOR"})
-        img.filepath_raw = str(atlas_path)
-        img.file_format = "PNG"
-        img.save()
-        ok = atlas_path.exists() and atlas_path.stat().st_size > 80_000
-        print("cycles bake", atlas_path, atlas_path.stat().st_size if atlas_path.exists() else 0, "ok", ok)
-    except Exception as exc:
-        print("cycles bake failed", exc)
-        ok = False
-    sc.render.engine = prev_engine
-    return ok
+    def face_kind(face):
+        mat = mats[face.material_index] if face.material_index < len(mats) else None
+        mname = (mat.name if mat else "").lower()
+        iname = (rt.mat_image_name(mat) or "").lower()
+        if "lion" in mname or "lion" in iname:
+            return "lion"
+        if "image_0" in iname:
+            return "albedo"
+        if "image_1" in iname or "image_2" in iname:
+            return "trim"
+        return "albedo"
+
+    def pick(p: Vector, n: Vector):
+        cands = []
+        loc, sn, idx, dist = bvh.find_nearest(p)
+        if loc is not None and idx is not None and dist < 0.055:
+            align = abs(Vector(sn).dot(n)) if sn is not None else 0.0
+            cands.append((dist, align, idx, Vector(loc)))
+        for sign in (-1.0, 1.0):
+            origin = p + n * (0.002 * sign)
+            hit, hsn, hidx, hdist = bvh.ray_cast(origin, n * sign, 0.055)
+            if hit is not None and hidx is not None:
+                align = abs(Vector(hsn).dot(n)) if hsn is not None else 0.0
+                cands.append((hdist, align, hidx, Vector(hit)))
+        if not cands:
+            return None
+        def score(c):
+            dist, align, idx, _loc = c
+            kind = face_kind(bm.faces[idx])
+            pen = 0.018 if kind == "trim" else (-0.012 if kind == "lion" else -0.006)
+            return dist - 0.028 * align + pen
+        return min(cands, key=score)
+
+    pix = 0
+    for tri in me.loop_triangles:
+        n = Vector(tri.normal)
+        if n.length < 1e-8:
+            continue
+        n.normalize()
+        pts, pos = [], []
+        for vi, li in zip(tri.vertices, tri.loops):
+            u, v = uv.data[li].uv
+            pts.append((float(u) * (s - 1), (1.0 - float(v)) * (s - 1)))
+            pos.append(me.vertices[vi].co.copy())
+        (x0, y0), (x1, y1), (x2, y2) = pts
+        minx = max(0, int(math.floor(min(x0, x1, x2))))
+        maxx = min(s - 1, int(math.ceil(max(x0, x1, x2))))
+        miny = max(0, int(math.floor(min(y0, y1, y2))))
+        maxy = min(s - 1, int(math.ceil(max(y0, y1, y2))))
+        denom = (y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2)
+        if abs(denom) < 1e-8:
+            continue
+        for y in range(miny, maxy + 1):
+            py = y + 0.5
+            for x in range(minx, maxx + 1):
+                px = x + 0.5
+                w0 = ((y1 - y2) * (px - x2) + (x2 - x1) * (py - y2)) / denom
+                w1 = ((y2 - y0) * (px - x2) + (x0 - x2) * (py - y2)) / denom
+                w2 = 1.0 - w0 - w1
+                if w0 < -0.01 or w1 < -0.01 or w2 < -0.01:
+                    continue
+                p = pos[0] * w0 + pos[1] * w1 + pos[2] * w2
+                got = pick(p, n)
+                if got is None:
+                    continue
+                _d, _a, idx, loc = got
+                face = bm.faces[idx]
+                kind = face_kind(face)
+                uvw = src_uv(face, loc)
+                if kind == "lion":
+                    rgb = _sample_src_image(lion_arr if lion_arr is not None else albedo, uvw)
+                else:
+                    rgb = _sample_src_image(albedo, uvw)
+                if rgb is None:
+                    continue
+                acc[y, x] = np.array(rgb, np.float32)
+                wgt[y, x] = 1.0
+                pix += 1
+    bm.free()
+    hit = wgt > 0.5
+    for _ in range(10):
+        grown = acc.copy()
+        new_hit = hit.copy()
+        for dy, dx in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            shifted = np.roll(acc, (dy, dx), (0, 1))
+            shift_hit = np.roll(hit, (dy, dx), (0, 1))
+            take = (~hit) & shift_hit
+            grown[take] = shifted[take]
+            new_hit |= take
+        acc = grown
+        hit = new_hit
+    Image.fromarray(np.clip(acc, 0, 255).astype(np.uint8), "RGB").save(atlas_path)
+    print("image0 texel bake pix", pix, "size", atlas_path.stat().st_size, flush=True)
+    return pix
 
 
 def project_albedo(src, tgt, atlas_path: Path):
-    """Meshy Image_0 bake onto retopo UVs; Play-cam stills reinforce lion/hem."""
-    rt.smart_uv(tgt)
-    baked = bake_meshy_albedo(src, tgt, atlas_path)
-    if not baked:
-        rt.rasterize_atlas(tgt, structured_fill(tgt), atlas_path)
-        print("bake missed — structured fill then camera project")
-    fill = structured_fill(tgt)
-    cam_hits = camera_project_atlas(tgt, fill, atlas_path)
-    if atlas_path.stat().st_size < 80_000 and src is not None:
-        print("projected atlas thin — try Cycles bake again")
-        rt.cycles_bake(src, tgt, atlas_path)
+    """Image_0 + lion onto retopo UVs. No frozen Play-cam still compositing."""
+    pix = bake_image0_texels(src, tgt, atlas_path)
+    if pix < 2000:
+        raise SystemExit(f"Image_0 bake did not stick: pix={pix}")
     assign_projected_material(tgt, atlas_path)
-    print("projected atlas", atlas_path, atlas_path.stat().st_size, "cam_tris", cam_hits, "baked", baked)
+    print("baked atlas", atlas_path, atlas_path.stat().st_size, "pix", pix)
     return atlas_path
 
 
