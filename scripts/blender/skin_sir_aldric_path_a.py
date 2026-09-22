@@ -315,6 +315,20 @@ def camera_project_colors(tgt, fill_colors):
 
 
 def _best_cam(centroid: Vector, n: Vector, cams):
+    byname = {c["name"]: c for c in cams}
+    # Lock the big painted cards to the matching Play still so lion/hem stay put.
+    if n.z < -0.28 and "world_rear" in byname:
+        cam = byname["world_rear"]
+        view = (cam["eye"] - centroid).normalized()
+        return cam, max(0.20, n.dot(view))
+    if n.z > 0.28 and "world_front" in byname:
+        cam = byname["world_front"]
+        view = (cam["eye"] - centroid).normalized()
+        return cam, max(0.20, n.dot(view))
+    if n.x > 0.45 and "world_side_r" in byname:
+        cam = byname["world_side_r"]
+        view = (cam["eye"] - centroid).normalized()
+        return cam, max(0.20, n.dot(view))
     best = None
     best_f = 0.08
     for cam in cams:
@@ -338,14 +352,20 @@ def _sample_one_cam(p: Vector, cam):
     ndc_y = pc.y / (depth * cam["tan_v"])
     if abs(ndc_x) > 0.98 or abs(ndc_y) > 0.98:
         return None
-    px = int((ndc_x * 0.5 + 0.5) * cam["w"])
-    py = int((0.5 - ndc_y * 0.5) * cam["h"])
-    if py < cam["caption"] or py >= cam["h"] or px < 0 or px >= cam["w"]:
+    fx = (ndc_x * 0.5 + 0.5) * (cam["w"] - 1)
+    fy = (0.5 - ndc_y * 0.5) * (cam["h"] - 1)
+    if fy < cam["caption"] or fy >= cam["h"] - 1 or fx < 0 or fx >= cam["w"] - 1:
         return None
-    rgb = cam["arr"][py, px]
+    x0, y0 = int(fx), int(fy)
+    tx, ty = fx - x0, fy - y0
+    c00 = cam["arr"][y0, x0].astype(np.float32)
+    c10 = cam["arr"][y0, min(x0 + 1, cam["w"] - 1)].astype(np.float32)
+    c01 = cam["arr"][min(y0 + 1, cam["h"] - 1), x0].astype(np.float32)
+    c11 = cam["arr"][min(y0 + 1, cam["h"] - 1), min(x0 + 1, cam["w"] - 1)].astype(np.float32)
+    rgb = (c00 * (1 - tx) * (1 - ty) + c10 * tx * (1 - ty) + c01 * (1 - tx) * ty + c11 * tx * ty)
     if _is_studio_bg(rgb):
         return None
-    return rgb
+    return tuple(int(max(0, min(255, c))) for c in rgb)
 
 
 def camera_project_atlas(tgt, fill_colors, atlas_path: Path):
@@ -427,7 +447,8 @@ def assign_projected_material(ob, atlas_path: Path):
         bsdf.inputs["Metallic"].default_value = 0.08
     except Exception:
         pass
-    mix.inputs[0].default_value = 0.18
+    mix.inputs[0].default_value = 0.0
+    emit.inputs["Strength"].default_value = 1.0
     nt.links.new(tex.outputs["Color"], emit.inputs["Color"])
     nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
     nt.links.new(emit.outputs["Emission"], mix.inputs[1])
