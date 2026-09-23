@@ -98,37 +98,57 @@ def setup_world():
     try:
         sc.view_settings.view_transform = "Standard"
         sc.view_settings.look = "None"
-        sc.view_settings.exposure = 0.28
+        sc.view_settings.exposure = 0.22
         sc.view_settings.gamma = 1.0
     except Exception:
         pass
     world = bpy.data.worlds.new("WorldPunch")
     sc.world = world
     world.use_nodes = True
-    bg = world.node_tree.nodes.get("Background")
-    if bg:
-        # Slightly lifted studio, still grey — not a white wash.
-        bg.inputs[0].default_value = (0.16, 0.17, 0.15, 1.0)
-        bg.inputs[1].default_value = 1.65
+    nt = world.node_tree
+    nt.nodes.clear()
+    wout = nt.nodes.new("ShaderNodeOutputWorld")
+    # Camera rays keep the mute studio grey. Glossy/diffuse rays get a warm
+    # HDRI-like punch so gold/plate can chrome without washing the plate.
+    studio = nt.nodes.new("ShaderNodeBackground")
+    studio.inputs[0].default_value = (0.12, 0.13, 0.11, 1.0)
+    studio.inputs[1].default_value = 1.15
+    env = nt.nodes.new("ShaderNodeBackground")
+    env.inputs[0].default_value = (1.15, 1.08, 0.96, 1.0)
+    env.inputs[1].default_value = 3.4
+    lp = nt.nodes.new("ShaderNodeLightPath")
+    wmix = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(lp.outputs["Is Camera Ray"], wmix.inputs["Fac"])
+    nt.links.new(env.outputs["Background"], wmix.inputs[1])
+    nt.links.new(studio.outputs["Background"], wmix.inputs[2])
+    nt.links.new(wmix.outputs["Shader"], wout.inputs["Surface"])
     key = bpy.data.lights.new("Key", "SUN")
-    key.energy = 11.0
-    key.angle = 0.10
+    key.energy = 12.5
+    key.angle = 0.12
     key.color = (1.0, 0.97, 0.90)
     key_o = bpy.data.objects.new("Key", key)
     bpy.context.collection.objects.link(key_o)
     key_o.location = (1.4, 3.6, -4.2)
     key_o.rotation_euler = (math.radians(55), 0.0, math.radians(18))
     fill = bpy.data.lights.new("Fill", "AREA")
-    fill.energy = 520.0
-    fill.size = 5.5
-    fill.color = (0.86, 0.90, 1.0)
+    fill.energy = 720.0
+    fill.size = 6.0
+    fill.color = (0.90, 0.93, 1.0)
     fill_o = bpy.data.objects.new("Fill", fill)
     bpy.context.collection.objects.link(fill_o)
     fill_o.location = (-2.2, 2.4, -1.5)
     fill_o.rotation_euler = (math.radians(70), 0.0, math.radians(-25))
+    wrap = bpy.data.lights.new("Wrap", "AREA")
+    wrap.energy = 640.0
+    wrap.size = 7.0
+    wrap.color = (1.0, 0.97, 0.92)
+    wrap_o = bpy.data.objects.new("Wrap", wrap)
+    bpy.context.collection.objects.link(wrap_o)
+    wrap_o.location = (0.0, 2.6, 4.8)
+    wrap_o.rotation_euler = (math.radians(110), 0.0, 0.0)
     rim = bpy.data.lights.new("Rim", "SUN")
-    rim.energy = 3.4
-    rim.angle = 0.18
+    rim.energy = 2.6
+    rim.angle = 0.20
     rim.color = (1.0, 0.95, 0.86)
     rim_o = bpy.data.objects.new("Rim", rim)
     bpy.context.collection.objects.link(rim_o)
@@ -268,9 +288,17 @@ def assign_albedo(mesh_ob):
     mf, ma, mb, mout = _mix_sockets(mul)
     mf.default_value = 1.0
     nt.links.new(tex.outputs["Color"], ma)
-    mb.default_value = (1.48, 1.42, 1.55, 1.0)
+    mb.default_value = (1.65, 1.55, 1.80, 1.0)
     nt.links.new(mout, lb)
-    nt.links.new(lout, bsdf.inputs["Base Color"])
+    # Mild overall value lift so plate/navy don't sit under the mute floor.
+    gain = nt.nodes.new("ShaderNodeMix")
+    gain.data_type = "RGBA"
+    gain.blend_type = "MULTIPLY"
+    gf, ga, gb, gout = _mix_sockets(gain)
+    gf.default_value = 1.0
+    nt.links.new(lout, ga)
+    gb.default_value = (1.18, 1.16, 1.14, 1.0)
+    nt.links.new(gout, bsdf.inputs["Base Color"])
 
     # Gold / plate metal+smooth. Prefer FBX maps, then boost gold.
     r_gt_b = nt.nodes.new("ShaderNodeMath")
@@ -298,13 +326,20 @@ def assign_albedo(mesh_ob):
             metallic.colorspace_settings.name = "Non-Color"
         except Exception:
             pass
-    met_max = nt.nodes.new("ShaderNodeMath")
-    met_max.operation = "MAXIMUM"
-    nt.links.new(met_tex.outputs["Color"], met_max.inputs[0])
+    # Full metallic-map on steel goes black under studio (no Meshy HDRI).
+    # Use the map as a hint; gold gets chrome; plate stays mostly dielectric
+    # so silver albedo still reads.
+    met_hint = nt.nodes.new("ShaderNodeMath")
+    met_hint.operation = "MULTIPLY"
+    nt.links.new(met_tex.outputs["Color"], met_hint.inputs[0])
+    met_hint.inputs[1].default_value = 0.22
     gold_met = nt.nodes.new("ShaderNodeMath")
     gold_met.operation = "MULTIPLY"
     nt.links.new(gold.outputs["Value"], gold_met.inputs[0])
-    gold_met.inputs[1].default_value = 0.92
+    gold_met.inputs[1].default_value = 0.88
+    met_max = nt.nodes.new("ShaderNodeMath")
+    met_max.operation = "MAXIMUM"
+    nt.links.new(met_hint.outputs["Value"], met_max.inputs[0])
     nt.links.new(gold_met.outputs["Value"], met_max.inputs[1])
     _link_or_value(nt, bsdf, "Metallic", met_max.outputs["Value"])
 
@@ -316,14 +351,19 @@ def assign_albedo(mesh_ob):
             rough.colorspace_settings.name = "Non-Color"
         except Exception:
             pass
-    # Gold: pull roughness toward 0.18 (chrome highlight, not blown white).
+    # Gold: pull roughness toward 0.16 (chrome highlight, not blown white).
+    # Plate: slightly smoother than mute matte so rims read, albedo still shows.
+    rgh_scale = nt.nodes.new("ShaderNodeMath")
+    rgh_scale.operation = "MULTIPLY"
+    nt.links.new(rgh_tex.outputs["Color"], rgh_scale.inputs[0])
+    rgh_scale.inputs[1].default_value = 0.72
     rgh_mix = nt.nodes.new("ShaderNodeMix")
     rgh_mix.data_type = "FLOAT"
     rf, ra, rb, rout = _mix_sockets(rgh_mix)
     nt.links.new(gold.outputs["Value"], rf)
-    nt.links.new(rgh_tex.outputs["Color"], ra)
-    rb.default_value = 0.18
-    _link_or_value(nt, bsdf, "Roughness", rout, value=0.42)
+    nt.links.new(rgh_scale.outputs["Value"], ra)
+    rb.default_value = 0.16
+    _link_or_value(nt, bsdf, "Roughness", rout, value=0.38)
 
     if normal is not None:
         ntex = nt.nodes.new("ShaderNodeTexImage")
@@ -532,7 +572,11 @@ def main():
         nclip = int(f1 - f0) + 1
         fps = 24
         bpy.context.scene.render.fps = fps
-        cycles = 2
+        try:
+            bpy.context.scene.eevee.taa_render_samples = 16
+        except AttributeError:
+            pass
+        cycles = 1
         frames = []
         for _c in range(cycles):
             for i in range(nclip):
@@ -596,12 +640,14 @@ def main():
         "verts": len(mesh.data.vertices),
         "faces": len(mesh.data.polygons),
         "punch": {
-            "keyEnergy": 11.0,
-            "exposure": 0.28,
+            "keyEnergy": 12.5,
+            "exposure": 0.22,
             "albedoRebaked": False,
             "navyValueLift": True,
             "goldMetalSmooth": True,
             "fbxMetallicRoughnessWired": True,
+            "metallicMapScale": 0.22,
+            "lightPathHdrI": True,
         },
         "honestArt": (
             "World LIGHT + MATERIAL punch on Meshy Animate FBX as-is. "

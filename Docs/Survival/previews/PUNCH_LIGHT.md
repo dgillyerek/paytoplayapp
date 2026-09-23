@@ -6,10 +6,11 @@ Unlocked hub from `52baf60` is **held**. These are labeled punch candidates for 
 
 ## What changed
 
-- Stronger key + fill + rim, exposure +0.28, studio world lift (not white wash)
-- Same FBX albedo — **no rebake**. Wire `texture_0_metallic` / `texture_0_roughness` / normal
+- Stronger key + wrap fill + rim. Camera rays keep mute studio grey; glossy/diffuse rays get warm HDRI-like punch
+- Exposure +0.22. Same FBX albedo — **no rebake**. Metallic map scaled (full metal crushed plate under studio)
 - Navy: keep hue, lift value so it does not crush to near-black
-- Gold / plate: raise metal + smoothness (chrome highlight; soft toe specular leftover already accepted)
+- Gold: high metal + low roughness. Plate: albedo silver still reads, rims smoother
+- Eye vs mute `world_rear.png`: meanL 64.9 → 95.2 (~+47%). Navy 18.6 → 60. Soft toe specular leftover already accepted.
 
 ## Candidates
 
