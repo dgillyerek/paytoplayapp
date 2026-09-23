@@ -1,5 +1,6 @@
 using System.Collections;
 using Grove.Domain.Board;
+using Grove.Domain.Juice;
 using Grove.Domain.Merge;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -120,36 +121,33 @@ namespace Grove.Unity
                 while (t < snapBackSeconds)
                 {
                     t += Time.deltaTime;
-                    var u = Mathf.Clamp01(t / snapBackSeconds);
-                    u = 1f - (1f - u) * (1f - u);
+                    var u = HeroJuice.EaseOutCubic(Mathf.Clamp01(t / snapBackSeconds));
                     View.MoveGhost(Vector3.Lerp(fromWorld, dest, u));
                     yield return null;
                 }
+
+                View.HideGhost();
+                View.HiddenCell = null;
+                View.Refresh();
             }
             else if (result is DragResult.Applied applied)
             {
-                var dest = View.CellToWorld(hasCell ? to : _from);
-                var fromWorld = PointerWorld();
-                var t = 0f;
-                var fly = 0.08f;
-                while (t < fly)
-                {
-                    t += Time.deltaTime;
-                    View.MoveGhost(Vector3.Lerp(fromWorld, dest, Mathf.Clamp01(t / fly)));
-                    yield return null;
-                }
-
                 LastFeedback = applied.Merge is { } merge
                     ? $"Merged {merge.Consumed} → {merge.Produced}!"
                     : "";
+                View.HideGhost();
+                View.HiddenCell = null;
+                View.Refresh();
+                if (applied.Merge is { } merged)
+                {
+                    yield return View.PlayMergePop(merged.At);
+                }
             }
-
-            View.HideGhost();
-            View.HiddenCell = null;
-            View.Refresh();
-            if (result is DragResult.Applied { Merge: not null } merged)
+            else
             {
-                View.Punch(merged.Merge!.At);
+                View.HideGhost();
+                View.HiddenCell = null;
+                View.Refresh();
             }
 
             _busy = false;

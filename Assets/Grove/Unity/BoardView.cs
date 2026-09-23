@@ -1,5 +1,7 @@
+using System.Collections;
 using System.Collections.Generic;
 using Grove.Domain.Board;
+using Grove.Domain.Juice;
 using Grove.Domain.Layout;
 using Grove.Domain.Orders;
 using UnityEngine;
@@ -14,6 +16,7 @@ namespace Grove.Unity
 
         private Transform? _cellsRoot;
         private Transform? _piecesRoot;
+        private Transform? _vfxRoot;
         private Transform? _backdrop;
         private Transform? _surface;
         private Sprite? _backdropSprite;
@@ -162,9 +165,50 @@ namespace Grove.Unity
 
         public void Punch(GridPos pos)
         {
-            if (_pieceViews.TryGetValue(pos, out var go))
+            StartCoroutine(PlayMergePop(pos));
+        }
+
+        /// <summary>Style bible merge beat: scale overshoot + soft gold sparkle quads.</summary>
+        public IEnumerator PlayMergePop(GridPos pos)
+        {
+            EnsureVfxRoot();
+            if (_pieceViews.TryGetValue(pos, out var go) && go != null)
             {
-                StartCoroutine(PunchRoutine(go.transform));
+                StartCoroutine(HeroJuiceFx.WorldSparkle(
+                    _vfxRoot!,
+                    CellToWorld(pos) + new Vector3(0f, 0f, -0.1f),
+                    GroveArt.Get(GroveArt.StubMergeSparkle),
+                    GroveVisuals.WhiteSprite,
+                    cellSize,
+                    HeroJuice.SparkleSeconds));
+                yield return HeroJuiceFx.MergePop(go.transform, HeroJuice.MergePopSeconds);
+            }
+        }
+
+        /// <summary>Style bible crate spit: arc from the crate into the landing cell.</summary>
+        public IEnumerator PlaySpitArc(string itemId, Vector3 fromWorld, GridPos land)
+        {
+            EnsureVfxRoot();
+            var dest = CellToWorld(land) + new Vector3(0f, 0f, -0.18f);
+            var start = new Vector3(fromWorld.x, fromWorld.y, -0.18f);
+            var sprite = GroveArt.SpriteForItem(itemId);
+            var flyer = GroveVisuals.SpriteObject(
+                "SpitFlyer",
+                _vfxRoot!,
+                start,
+                cellSize * PlayLayout.PieceFill,
+                Color.white,
+                sprite,
+                18);
+            yield return HeroJuiceFx.WorldArc(
+                flyer.transform,
+                start,
+                dest,
+                cellSize * 0.95f,
+                HeroJuice.CrateSpitSeconds);
+            if (flyer != null)
+            {
+                Destroy(flyer);
             }
         }
 
@@ -181,6 +225,8 @@ namespace Grove.Unity
                 pieces.transform.SetParent(transform, false);
                 _piecesRoot = pieces.transform;
             }
+
+            EnsureVfxRoot();
 
             foreach (var kv in _pieceViews)
             {
@@ -414,7 +460,7 @@ namespace Grove.Unity
             _teachHand.SetActive(false);
         }
 
-        private System.Collections.IEnumerator HandLoopRoutine(GridPos from, GridPos to)
+        private IEnumerator HandLoopRoutine(GridPos from, GridPos to)
         {
             EnsureTeachHand();
             var sprite = GroveArt.TeachHandSprite;
@@ -497,6 +543,18 @@ namespace Grove.Unity
             }
         }
 
+        private void EnsureVfxRoot()
+        {
+            if (_vfxRoot != null)
+            {
+                return;
+            }
+
+            var vfx = new GameObject("JuiceVfx");
+            vfx.transform.SetParent(transform, false);
+            _vfxRoot = vfx.transform;
+        }
+
         private GameObject CreatePiece(GridPos pos, PieceStack stack)
         {
             var sprite = GroveArt.SpriteForItem(stack.Id.Value);
@@ -556,25 +614,7 @@ namespace Grove.Unity
             label.text = stack.Count > 1 ? "×" + stack.Count : "";
         }
 
-        private System.Collections.IEnumerator PunchRoutine(Transform target)
-        {
-            var original = target.localScale;
-            var t = 0f;
-            while (t < 0.22f && target != null)
-            {
-                t += Time.deltaTime;
-                var k = 1f + Mathf.Sin(Mathf.PI * Mathf.Clamp01(t / 0.22f)) * 0.35f;
-                target.localScale = original * k;
-                yield return null;
-            }
-
-            if (target != null)
-            {
-                target.localScale = original;
-            }
-        }
-
-        private System.Collections.IEnumerator MagnetRoutine(GridPos from, GridPos to, PieceStack stack)
+        private IEnumerator MagnetRoutine(GridPos from, GridPos to, PieceStack stack)
         {
             _magnetPlaying = true;
             EnsureGhost();
