@@ -2,7 +2,7 @@
 
 Derek GO via Design: mute hub vs Meshy HDRI punch. Path A weight-paint **CANCELLED**.
 
-Unlocked hub from `52baf60` is **held**. These are labeled punch candidates for Design re-gate. Do **not** claim PASS. Do not overwrite ThemePack / UNITY_DROP locked masters until Design PASSes.
+Design **PASS** punch tip `f15ec6e` (light+material only). Hub PNG **UNLOCKED** punch iterate — ThemePack / UNITY_DROP rear masters promoted from punch rear. Soft toe specular leftover OK. Path A cancelled. No further Design claims.
 
 ## What changed
 
@@ -19,4 +19,4 @@ Unlocked hub from `52baf60` is **held**. These are labeled punch candidates for 
 - `sir_aldric_punch_walks_toward_top.gif`
 - `gate3/sir_aldric_meshy_animate_walk_punch_toward_top.mp4`
 
-Mute SoT (do not replace): `sir_aldric_locked_rear_gameview_1080x1920.png`, `gate3/world_rear.png`.
+Hub live (same bytes as punch rear): `sir_aldric_locked_rear_gameview_1080x1920.png` + ThemePack / UNITY_DROP `SIR_ALDRIC_REAR_MASTER_LOCKED.png` (+ `_512`). Mute pre-punch still kept as `gate3/world_rear.png`.

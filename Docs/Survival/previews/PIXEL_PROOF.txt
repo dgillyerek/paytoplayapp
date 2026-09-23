@@ -1,3 +1,4 @@
+Hub PNG UNLOCKED punch iterate — Design PASS f15ec6e light+material (2026-09-22); soft toe specular leftover; silhouette held.
 World LIGHT + MATERIAL punch candidates (2026-09-23) — Design re-gate. Stronger key + exposure; FBX metallic/roughness wired (same albedo, no rebake); navy value lift; gold metal/smooth. Target ~40% meanL vs mute 52baf60. Unlocked hub PNG held. Path A cancelled. Do NOT claim PASS.
 Hub PNG UNLOCKED — Meshy Animate PASS lean (Design 2026-09-22); soft leftover toe specular; Play-cam accepted.
 GATE 3 Path 2 bind iterate after fd9d6f8 LOOK PASS / BIND FAIL (bind NOT claimed / walk NOT claimed): LOOK path unchanged (e5b132f GLB UVs + Image_0/lion). Isolated Arm_* solidify+prune; hem does not Y-cut leg tubes (UpLeg/Leg/Foot). Hairline armpit slivers only. No remesh/capsule Game-view. Evaluate() 5916447 reused. Clip sir_aldric_path2_walk_toward_top.mp4. vs fd9: gate3_path2_vs_fd9d6f8.png. Hub PNG locked.
