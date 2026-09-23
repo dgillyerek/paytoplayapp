@@ -1,0 +1,28 @@
+{
+  "lookPassClaimed": false,
+  "walkPassClaimed": false,
+  "bindPassClaimed": false,
+  "pathAWeightPaint": "CANCELLED",
+  "hubOverwrite": false,
+  "source": "meshy-animate-walk-fbx-20260922",
+  "fbx": "design/survival-theme-a-fantasy/heroes/anim/sir_aldric/AUTO_RIG_PATH/out/sir_aldric_meshy_animate_walk.fbx",
+  "clip": "target_character|target_character|target_character|target_chara",
+  "clipFrames": [
+    1.0,
+    26.0
+  ],
+  "verts": 5173,
+  "faces": 10362,
+  "punch": {
+    "keyEnergy": 12.5,
+    "exposure": 0.22,
+    "albedoRebaked": false,
+    "navyValueLift": true,
+    "goldMetalSmooth": true,
+    "fbxMetallicRoughnessWired": true,
+    "metallicMapScale": 0.22,
+    "lightPathHdrI": true
+  },
+  "honestArt": "World LIGHT + MATERIAL punch on Meshy Animate FBX as-is. Same albedo (no rebake). Path A cancelled. Punch candidates only \u2014 unlocked hub PNG held. Do NOT claim Design PASS.",
+  "walkClip": "Docs/Survival/previews/gate3/sir_aldric_meshy_animate_walk_punch_toward_top.mp4"
+}
