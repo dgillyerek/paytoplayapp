@@ -12,7 +12,8 @@ namespace Survival.Unity
     /// <summary>
     /// Aldric World proof actor: Meshy Animate FBX humanoid + Walking clip AS-IS.
     /// Path A weight-paint is CANCELLED. Do not remap sheath / Hand_R / ghost legs.
-    /// World LIGHT + MATERIAL punch (same FBX albedo, no rebake). Design PASS not claimed.
+    /// World LIGHT + MATERIAL punch. Binds Meshy albedo from the FBX pack
+    /// (Humanoid import often drops texture links). Design PASS not claimed.
     /// </summary>
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
     {
@@ -287,56 +288,362 @@ namespace Survival.Unity
 #endif
         }
 
+        private static Texture2D? _cachedAlbedo;
+        private static Texture2D? _cachedMetallic;
+        private static Texture2D? _cachedRoughness;
+
         private static void PunchMaterials(GameObject root)
         {
+            var albedo = LoadMeshyAlbedo();
+            var metallic = LoadMeshyPackedMap(grayIndex: 0);
+            var roughness = LoadMeshyPackedMap(grayIndex: 1);
             foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
             {
                 var shared = rend.sharedMaterials;
                 if (shared == null || shared.Length == 0)
                 {
+                    var lone = NewLit();
+                    BindMapsAndPunch(lone, albedo, metallic, roughness);
+                    rend.material = lone;
                     continue;
                 }
 
                 var copies = new Material[shared.Length];
                 for (var i = 0; i < shared.Length; i++)
                 {
-                    var src = shared[i];
-                    if (src == null)
-                    {
-                        continue;
-                    }
-
+                    var src = shared[i] != null ? shared[i] : NewLit();
                     var mat = new Material(src);
-                    // Same albedo map — lift value slightly so navy does not crush
-                    // under World light. Do not replace the FBX base map.
-                    if (mat.HasProperty("_BaseColor"))
-                    {
-                        var c = mat.GetColor("_BaseColor");
-                        mat.SetColor("_BaseColor", new Color(
-                            Mathf.Clamp01(c.r * 1.12f),
-                            Mathf.Clamp01(c.g * 1.10f),
-                            Mathf.Clamp01(c.b * 1.16f),
-                            c.a));
-                    }
-
-                    var hasMetMap = mat.HasProperty("_MetallicGlossMap")
-                        && mat.GetTexture("_MetallicGlossMap") != null;
-                    if (mat.HasProperty("_Metallic") && hasMetMap)
-                    {
-                        mat.SetFloat("_Metallic", Mathf.Max(mat.GetFloat("_Metallic"), 0.55f));
-                    }
-
-                    if (mat.HasProperty("_Smoothness"))
-                    {
-                        var floor = hasMetMap ? 0.68f : 0.52f;
-                        mat.SetFloat("_Smoothness", Mathf.Max(mat.GetFloat("_Smoothness"), floor));
-                    }
-
+                    BindMapsAndPunch(mat, albedo, metallic, roughness);
                     copies[i] = mat;
                 }
 
                 rend.materials = copies;
             }
+        }
+
+        private static void BindMapsAndPunch(
+            Material mat,
+            Texture2D? albedo,
+            Texture2D? metallic,
+            Texture2D? roughness)
+        {
+            if (albedo != null)
+            {
+                if (mat.HasProperty("_BaseMap"))
+                {
+                    mat.SetTexture("_BaseMap", albedo);
+                }
+
+                if (mat.HasProperty("_MainTex"))
+                {
+                    mat.SetTexture("_MainTex", albedo);
+                }
+            }
+
+            if (metallic != null && mat.HasProperty("_MetallicGlossMap"))
+            {
+                mat.SetTexture("_MetallicGlossMap", metallic);
+            }
+
+            if (roughness != null && mat.HasProperty("_SpecGlossMap"))
+            {
+                mat.SetTexture("_SpecGlossMap", roughness);
+            }
+
+            if (mat.HasProperty("_BaseColor"))
+            {
+                var c = mat.GetColor("_BaseColor");
+                if (c.maxColorComponent < 0.08f)
+                {
+                    c = Color.white;
+                }
+
+                mat.SetColor("_BaseColor", new Color(
+                    Mathf.Clamp01(c.r * 1.12f),
+                    Mathf.Clamp01(c.g * 1.10f),
+                    Mathf.Clamp01(c.b * 1.16f),
+                    c.a));
+            }
+
+            var hasMetMap = mat.HasProperty("_MetallicGlossMap")
+                && mat.GetTexture("_MetallicGlossMap") != null;
+            if (mat.HasProperty("_Metallic") && hasMetMap)
+            {
+                mat.SetFloat("_Metallic", Mathf.Max(mat.GetFloat("_Metallic"), 0.55f));
+            }
+
+            if (mat.HasProperty("_Smoothness"))
+            {
+                var floor = hasMetMap ? 0.68f : 0.52f;
+                mat.SetFloat("_Smoothness", Mathf.Max(mat.GetFloat("_Smoothness"), floor));
+            }
+        }
+
+        private static Material NewLit()
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Lit")
+                         ?? Shader.Find("Universal Render Pipeline/Unlit")
+                         ?? Shader.Find("Standard")
+                         ?? Shader.Find("Unlit/Texture")
+                         ?? Shader.Find("Sprites/Default");
+            return new Material(shader);
+        }
+
+        private static Texture2D? LoadMeshyAlbedo()
+        {
+            if (_cachedAlbedo != null)
+            {
+                return _cachedAlbedo;
+            }
+
+#if UNITY_EDITOR
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(FbxAssetPath))
+            {
+                if (obj is not Texture2D tex || tex.width < 256)
+                {
+                    continue;
+                }
+
+                var n = tex.name.ToLowerInvariant();
+                if (n.Contains("texture_0")
+                    && !n.Contains("metallic")
+                    && !n.Contains("rough")
+                    && !n.Contains("normal"))
+                {
+                    _cachedAlbedo = tex;
+                    return tex;
+                }
+            }
+#endif
+            _cachedAlbedo = ExtractFbxPng(color: true, grayIndex: -1)
+                            ?? LoadSiblingPng("sir_aldric_meshy_atlas.png");
+            return _cachedAlbedo;
+        }
+
+        private static Texture2D? LoadMeshyPackedMap(int grayIndex)
+        {
+            var cache = grayIndex == 0 ? _cachedMetallic : _cachedRoughness;
+            if (cache != null)
+            {
+                return cache;
+            }
+
+            var extracted = ExtractFbxPng(color: false, grayIndex: grayIndex);
+            if (grayIndex == 0)
+            {
+                _cachedMetallic = extracted ?? LoadSiblingPng("sir_aldric_meshy_atlas_metallic.png");
+                return _cachedMetallic;
+            }
+
+            _cachedRoughness = extracted ?? LoadSiblingPng("sir_aldric_meshy_atlas_roughness.png");
+            return _cachedRoughness;
+        }
+
+        private static Texture2D? LoadSiblingPng(string fileName)
+        {
+            var path = ResolveHero3D(fileName);
+            if (path == null)
+            {
+                return null;
+            }
+
+#if UNITY_EDITOR
+            var rel = "Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/" + fileName;
+            var asset = AssetDatabase.LoadAssetAtPath<Texture2D>(rel);
+            if (asset != null)
+            {
+                return asset;
+            }
+#endif
+            try
+            {
+                var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                if (tex.LoadImage(File.ReadAllBytes(path)))
+                {
+                    tex.wrapMode = TextureWrapMode.Clamp;
+                    tex.filterMode = FilterMode.Bilinear;
+                    tex.name = Path.GetFileNameWithoutExtension(fileName);
+                    return tex;
+                }
+            }
+            catch (IOException)
+            {
+            }
+
+            return null;
+        }
+
+        private static string? ResolveHero3D(string fileName)
+        {
+            var cwd = Directory.GetCurrentDirectory();
+            var data = Application.dataPath ?? Path.Combine(cwd, "Assets");
+            var repo = Directory.GetParent(data)?.FullName ?? cwd;
+            foreach (var path in new[]
+                     {
+                         Path.Combine(data, ThemePackFbx.Replace("sir_aldric_meshy_animate_walk.fbx", fileName)),
+                         Path.Combine(repo, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", fileName),
+                     })
+            {
+                if (File.Exists(path))
+                {
+                    return path;
+                }
+            }
+
+            return null;
+        }
+
+        private static string? ResolveFbxPath()
+        {
+            var cwd = Directory.GetCurrentDirectory();
+            var data = Application.dataPath ?? Path.Combine(cwd, "Assets");
+            var repo = Directory.GetParent(data)?.FullName ?? cwd;
+            var rel = ThemePackFbx.Replace('\\', '/');
+            foreach (var path in new[]
+                     {
+                         Path.Combine(data, rel),
+                         Path.Combine(repo, "Assets", rel),
+                     })
+            {
+                if (File.Exists(path))
+                {
+                    return path;
+                }
+            }
+
+            return null;
+        }
+
+        private static Texture2D? ExtractFbxPng(bool color, int grayIndex)
+        {
+            var fbx = ResolveFbxPath();
+            if (fbx == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                var bytes = File.ReadAllBytes(fbx);
+                var sig = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+                var iend = new byte[] { 0x49, 0x45, 0x4E, 0x44 };
+                var graySeen = 0;
+                var start = 0;
+                while (start < bytes.Length)
+                {
+                    var i = IndexOf(bytes, sig, start);
+                    if (i < 0)
+                    {
+                        break;
+                    }
+
+                    var j = IndexOf(bytes, iend, i + 8);
+                    if (j < 0)
+                    {
+                        break;
+                    }
+
+                    var end = Math.Min(bytes.Length, j + 8);
+                    var png = new byte[end - i];
+                    Buffer.BlockCopy(bytes, i, png, 0, png.Length);
+                    var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                    if (tex.LoadImage(png) && tex.width >= 256)
+                    {
+                        var isGray = tex.format == TextureFormat.Alpha8
+                                     || tex.format == TextureFormat.R8
+                                     || LooksGrayscale(tex);
+                        var isNormal = LooksLikeNormalMap(tex);
+                        if (color && !isGray && !isNormal)
+                        {
+                            tex.wrapMode = TextureWrapMode.Clamp;
+                            tex.filterMode = FilterMode.Bilinear;
+                            tex.name = "meshy_animate_albedo";
+                            return tex;
+                        }
+
+                        if (!color && isGray)
+                        {
+                            if (graySeen == grayIndex)
+                            {
+                                tex.wrapMode = TextureWrapMode.Clamp;
+                                tex.filterMode = FilterMode.Bilinear;
+                                tex.name = grayIndex == 0 ? "meshy_animate_metallic" : "meshy_animate_roughness";
+                                return tex;
+                            }
+
+                            graySeen++;
+                        }
+                    }
+
+                    start = i + 8;
+                }
+            }
+            catch (IOException)
+            {
+            }
+
+            return null;
+        }
+
+        private static bool LooksGrayscale(Texture2D tex)
+        {
+            var px = tex.GetPixels(tex.width / 4, tex.height / 4, 1, 1);
+            if (px.Length == 0)
+            {
+                return false;
+            }
+
+            var c = px[0];
+            return Mathf.Abs(c.r - c.g) < 0.02f && Mathf.Abs(c.g - c.b) < 0.02f;
+        }
+
+        private static bool LooksLikeNormalMap(Texture2D tex)
+        {
+            var px = tex.GetPixels(tex.width / 2, tex.height / 2, 8, 8);
+            if (px.Length == 0)
+            {
+                return false;
+            }
+
+            var r = 0f;
+            var g = 0f;
+            var b = 0f;
+            foreach (var c in px)
+            {
+                r += c.r;
+                g += c.g;
+                b += c.b;
+            }
+
+            var n = px.Length;
+            r /= n;
+            g /= n;
+            b /= n;
+            return b > 0.75f && r > 0.35f && r < 0.65f && g > 0.35f && g < 0.65f;
+        }
+
+        private static int IndexOf(byte[] hay, byte[] needle, int start)
+        {
+            var last = hay.Length - needle.Length;
+            for (var i = start; i <= last; i++)
+            {
+                var ok = true;
+                for (var j = 0; j < needle.Length; j++)
+                {
+                    if (hay[i + j] != needle[j])
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+
+                if (ok)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         private static void BuildLights()

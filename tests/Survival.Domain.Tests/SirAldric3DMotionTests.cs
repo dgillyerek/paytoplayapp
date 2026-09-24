@@ -273,6 +273,35 @@ public sealed class SirAldric3DMotionTests
     }
 
     [Fact]
+    public void Meshy_animate_actor_binds_albedo_and_keeps_walking_clip()
+    {
+        var root = FindRepoRoot();
+        var actor = Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs");
+        var src = File.ReadAllText(actor);
+        Assert.Contains("SetTexture(\"_BaseMap\"", src, StringComparison.Ordinal);
+        Assert.Contains("SetTexture(\"_MainTex\"", src, StringComparison.Ordinal);
+        Assert.Contains("ExtractFbxPng", src, StringComparison.Ordinal);
+        Assert.Contains("RepairWalkingTake", src, StringComparison.Ordinal);
+        Assert.Contains("takeName", src, StringComparison.Ordinal);
+        var fbx = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_animate_walk.fbx");
+        var atlas = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_atlas.png");
+        Assert.True(new FileInfo(fbx).Length > 1_000_000);
+        Assert.True(new FileInfo(atlas).Length > 100_000);
+        var bytes = File.ReadAllBytes(fbx);
+        var png = false;
+        for (var i = 0; i < bytes.Length - 3; i++)
+        {
+            if (bytes[i] == 0x89 && bytes[i + 1] == 0x50 && bytes[i + 2] == 0x4E && bytes[i + 3] == 0x47)
+            {
+                png = true;
+                break;
+            }
+        }
+
+        Assert.True(png);
+    }
+
+    [Fact]
     public void Play_placeholder_locked_rear_png_still_exists()
     {
         var root = FindRepoRoot();
