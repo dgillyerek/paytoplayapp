@@ -21,6 +21,8 @@ namespace Survival.Unity
 
         private Animator? _animator;
         private PlayableGraph _graph;
+        private AnimationClipPlayable _clipPlayable;
+        private float _clipLength;
         private bool _graphReady;
         private GameObject? _instance;
 
@@ -50,6 +52,11 @@ namespace Survival.Unity
                 _animator = _instance.AddComponent<Animator>();
             }
 
+            if (_animator.avatar == null)
+            {
+                _animator.avatar = LoadHumanoidAvatar();
+            }
+
             var clip = LoadWalkingClip();
             if (clip == null)
             {
@@ -58,14 +65,36 @@ namespace Survival.Unity
             }
 
             clip.wrapMode = WrapMode.Loop;
+            _clipLength = clip.length;
             _graph = PlayableGraph.Create("SirAldricMeshyAnimate");
-            _graph.SetTimeUpdateMode(DirectorUpdateMode.UnscaledGameTime);
+            _graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
             var output = AnimationPlayableOutput.Create(_graph, "Aldric", _animator);
-            var playable = AnimationClipPlayable.Create(_graph, clip);
-            playable.SetDuration(clip.length);
-            output.SetSourcePlayable(playable);
+            _clipPlayable = AnimationClipPlayable.Create(_graph, clip);
+            output.SetSourcePlayable(_clipPlayable);
             _graph.Play();
             _graphReady = true;
+            SampleWalk(0f);
+        }
+
+        private void Update()
+        {
+            if (!_graphReady || _clipLength <= 0f)
+            {
+                return;
+            }
+
+            SampleWalk(Time.unscaledTime % _clipLength);
+        }
+
+        private void SampleWalk(float time)
+        {
+            if (!_graph.IsValid())
+            {
+                return;
+            }
+
+            _clipPlayable.SetTime(time);
+            _graph.Evaluate();
         }
 
         public string PhaseLabel(float timeSeconds)
@@ -121,10 +150,48 @@ namespace Survival.Unity
             return Resources.Load<GameObject>("sir_aldric_meshy_animate_walk");
         }
 
+        private static string FbxAssetPath => "Assets/" + ThemePackFbx.Replace('\\', '/');
+
         private static AnimationClip? LoadWalkingClip()
         {
 #if UNITY_EDITOR
-            var rel = "Assets/" + ThemePackFbx.Replace('\\', '/');
+            var clip = PickWalkingClip(FbxAssetPath);
+            if (clip != null)
+            {
+                return clip;
+            }
+
+            // clipAnimations.takeName must match the FBX stack. A short name like
+            // "Walking" drops every clip on Humanoid import (mesh stays, clip list empty).
+            if (RepairWalkingTake(FbxAssetPath))
+            {
+                return PickWalkingClip(FbxAssetPath);
+            }
+
+            return null;
+#else
+            return null;
+#endif
+        }
+
+        private static Avatar? LoadHumanoidAvatar()
+        {
+#if UNITY_EDITOR
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(FbxAssetPath))
+            {
+                if (obj is Avatar avatar)
+                {
+                    return avatar;
+                }
+            }
+#endif
+            return null;
+        }
+
+        private static AnimationClip? PickWalkingClip(string rel)
+        {
+#if UNITY_EDITOR
+            AnimationClip? exact = null;
             AnimationClip? walk = null;
             AnimationClip? longest = null;
             foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
@@ -134,22 +201,89 @@ namespace Survival.Unity
                     continue;
                 }
 
-                if (clip.name.IndexOf(ClipHint, StringComparison.OrdinalIgnoreCase) >= 0
-                    || clip.name.IndexOf("Walk", StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    walk = clip;
-                    break;
-                }
-
                 if (longest == null || clip.length > longest.length)
                 {
                     longest = clip;
                 }
+
+                var isWalk = clip.name.IndexOf(ClipHint, StringComparison.OrdinalIgnoreCase) >= 0
+                    || clip.name.IndexOf("Walk", StringComparison.OrdinalIgnoreCase) >= 0;
+                if (!isWalk)
+                {
+                    continue;
+                }
+
+                if (string.Equals(clip.name, ClipHint, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (exact == null || clip.length > exact.length)
+                    {
+                        exact = clip;
+                    }
+
+                    continue;
+                }
+
+                // Walking.001 is a 2-frame stub. Keep the longer cycle.
+                if (walk == null || clip.length > walk.length)
+                {
+                    walk = clip;
+                }
             }
 
-            return walk ?? longest;
+            return exact ?? walk ?? longest;
 #else
             return null;
+#endif
+        }
+
+        private static bool RepairWalkingTake(string rel)
+        {
+#if UNITY_EDITOR
+            if (AssetImporter.GetAtPath(rel) is not ModelImporter importer || !importer.importAnimation)
+            {
+                return false;
+            }
+
+            var defaults = importer.defaultClipAnimations;
+            if (defaults == null || defaults.Length == 0)
+            {
+                return false;
+            }
+
+            ModelImporterClipAnimation? best = null;
+            var bestSpan = -1f;
+            foreach (var candidate in defaults)
+            {
+                var label = (candidate.takeName ?? "") + "\n" + (candidate.name ?? "");
+                if (label.IndexOf("Walk", StringComparison.OrdinalIgnoreCase) < 0)
+                {
+                    continue;
+                }
+
+                var span = candidate.lastFrame - candidate.firstFrame;
+                if (best == null || span > bestSpan)
+                {
+                    best = candidate;
+                    bestSpan = span;
+                }
+            }
+
+            if (best == null || bestSpan <= 0f)
+            {
+                return false;
+            }
+
+            best.name = ClipHint;
+            best.loopTime = true;
+            best.loop = true;
+            best.keepOriginalOrientation = true;
+            best.keepOriginalPositionY = true;
+            best.keepOriginalPositionXZ = true;
+            importer.clipAnimations = new[] { best };
+            importer.SaveAndReimport();
+            return true;
+#else
+            return false;
 #endif
         }
 

@@ -33,10 +33,10 @@ ModelImporter:
     clipAnimations:
     - serializedVersion: 16
       name: Walking
-      takeName: Walking
+      takeName: target_character|target_character|target_character|Walking
       internalID: 0
       firstFrame: 0
-      lastFrame: 26
+      lastFrame: 25
       wrapMode: 2
       orientationOffsetY: 0
       level: 0
