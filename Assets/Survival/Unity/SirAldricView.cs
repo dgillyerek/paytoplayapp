@@ -166,7 +166,7 @@ namespace Survival.Unity
                 var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
                 if (!tex.LoadImage(bytes, markNonReadable: false))
                 {
-                    Object.Destroy(tex);
+                    UnityEngine.Object.Destroy(tex);
                     continue;
                 }
 
