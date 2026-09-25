@@ -128,6 +128,9 @@ namespace Survival.Unity
             {
                 _walkPlayable.SetTime(t % _walkLength);
                 _walkGraph.Evaluate();
+                // Walk must not show ClipSword. The painted hip blade is mesh-bound
+                // (no Scabbard bone / no separate sword object) — cannot reparent.
+                // See Docs/Survival/previews/facing_20260925/WALK_RH_SWORD_GLUE_STOP.md.
                 if (_clipSword != null)
                 {
                     _clipSword.SetActive(false);

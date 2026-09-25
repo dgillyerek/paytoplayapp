@@ -403,6 +403,59 @@ public sealed class SirAldric3DMotionTests
     }
 
     [Fact]
+    public void Walk_clipsword_stays_off_and_walk_fbx_has_no_scabbard_to_reparent()
+    {
+        var root = FindRepoRoot();
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
+        Assert.Contains("Path A weight-paint is CANCELLED", actor, StringComparison.Ordinal);
+        Assert.Contains("WALK_RH_SWORD_GLUE_STOP.md", actor, StringComparison.Ordinal);
+        Assert.Contains("_clipSword.SetActive(false)", actor, StringComparison.Ordinal);
+        Assert.Contains("_clipSword.SetActive(sample.SwordDrawn)", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("weight-paint", actor.Replace("Path A weight-paint is CANCELLED", ""), StringComparison.Ordinal);
+
+        var walkBytes = File.ReadAllBytes(Path.Combine(
+            root,
+            "Assets",
+            "ThemePack",
+            "fantasy_kingdom_a",
+            "art",
+            "heroes",
+            "3d",
+            "sir_aldric_meshy_animate_walk.fbx"));
+        Assert.True(IndexOfAscii(walkBytes, "mixamorig:RightHand") >= 0);
+        Assert.True(IndexOfAscii(walkBytes, "RightHandMiddle4") >= 0);
+        Assert.True(IndexOfAscii(walkBytes, "Scabbard") < 0);
+        Assert.True(IndexOfAscii(walkBytes, "Sheath") < 0);
+
+        var stop = File.ReadAllText(Path.Combine(
+            root,
+            "Docs",
+            "Survival",
+            "previews",
+            "facing_20260925",
+            "WALK_RH_SWORD_GLUE_STOP.md"));
+        Assert.Contains("Path B", stop, StringComparison.Ordinal);
+        Assert.Contains("no separate sword object", stop, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("RightHandMiddle4", stop, StringComparison.Ordinal);
+        Assert.Contains("Design re-export", stop, StringComparison.Ordinal);
+        Assert.Contains("No fake bind", stop, StringComparison.Ordinal);
+        Assert.True(new FileInfo(Path.Combine(
+            root,
+            "Docs",
+            "Survival",
+            "previews",
+            "facing_20260925",
+            "walk_rh_on_painted_scabbard_crop.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(
+            root,
+            "Docs",
+            "Survival",
+            "previews",
+            "facing_20260925",
+            "rest_rh_clear_of_scabbard_crop.png")).Length > 50_000);
+    }
+
+    [Fact]
     public void Facing_20260925_rear_proofs_are_on_disk()
     {
         var dir = Path.Combine(FindRepoRoot(), "Docs", "Survival", "previews", "facing_20260925");

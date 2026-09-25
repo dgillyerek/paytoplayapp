@@ -39,4 +39,6 @@ Unity Y-up. After yaw 180: character-RIGHT = world +X = viewer-right from behind
 
 Walk stills / walk MP4 are the existing World punch rear proofs (same Play cam). Attack stills + MP4 are Blender-rendered from the Design attack FBX with Play cam remapped Unity→Blender Z-up and **yaw 180** (verified: yaw 0 is frontal FAIL). Unity Game-view is not on this VM; Play actor uses the same 180° yaw.
 
+Walk RH-on-hilt FAIL is **path B** (clip/mesh, not runtime parent). See `WALK_RH_SWORD_GLUE_STOP.md`.
+
 Soft toe specular leftover OK. `#25` takeName `target_character|…|Walking` and `#26` FBX albedo-before-punch stay.

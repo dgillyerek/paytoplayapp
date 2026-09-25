@@ -19,6 +19,10 @@ Leftover Design attack FBX (`sir_aldric_meshy_animate_attack.fbx`, Rigify `Hips/
 
 Still clip-authored wide (rest 0.396 m, Walking take max 0.719 m @ f8). Import `heightFromFeet` / `addHumanoidExtraRoot` unchanged. **Wait Design walk iterate.** Secondary to attack.
 
+## Walk RH / painted sword — STOP (path B, 2026-09-25)
+
+Derek Play FAIL: during WALK, RH fingers look glued to the sword. **Not a runtime parent miss.** `ClipSword` is already `SetActive(false)` for the walk block. Walk FBX has **no** `Scabbard` / `Sword` bone and no separate sword object — the blade is painted into `output_unwrapped` (hip-right weights on `RightUpLeg`). Walking take drives `mixamorig:RightHand` onto that hilt; `RightHandMiddle4` is static identity. Preferred reparent / open-hand override cannot apply. **No fake bind. Path A cancelled.** Design re-export ask: walk RH must clear the painted scabbard (prefer a separate sword + Scabbard bone). Evidence: `WALK_RH_SWORD_GLUE_STOP.md`. HOLD merge. No Design PASS.
+
 ## Proof
 
 Unity Game-view is `Camera.Render` 1080×1920 from the SirAldricDemo Play cam `(0, 2.80, −5.40)` LookAt `(0, 0.90, 0.50)` FOV 30.
