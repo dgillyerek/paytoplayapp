@@ -27,33 +27,47 @@ namespace Survival.Unity
         /// <summary>Design / Meshy package label. Discovery uses Attack / Slash / Sword / clip0 / this take.</summary>
         public const string AttackClipDiscovery = "Meshy Lionguard Knight · Standing Sword Slash Attack";
         /// <summary>
+        /// Derek FAIL: playing the Rigify-named attack clip on the Mixamo walk Humanoid
+        /// squashes limbs. Attack plays on its own FBX instance until Design re-exports
+        /// on the walk Mixamo rig (mixamorig:*). Do not invent bones. Path A cancelled.
+        /// </summary>
+        public const string AttackNativeInstanceReason =
+            "Attack FBX bones are Rigify-named (Hips/Spine02); walk is mixamorig. Same bind lengths, different names/hierarchy — Humanoid retarget across them is the squash. Native instance until same-rig drop.";
+        /// <summary>
         /// Yaw so imported Mixamo forward (−Z, face to Play cam) becomes world +Z.
         /// Camera SoT: SirAldricDemo (0, 2.80, −5.40) LookAt (0, 0.90, 0.50) → view +Z.
         /// SirAldric3DMotion: march / character forward = +Z = screen TOP; rear view = back to camera.
         /// </summary>
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
 
-        private Animator? _animator;
-        private PlayableGraph _graph;
-        private AnimationMixerPlayable _mixer;
+        private Animator? _walkAnimator;
+        private Animator? _attackAnimator;
+        private PlayableGraph _walkGraph;
+        private PlayableGraph _attackGraph;
         private AnimationClipPlayable _walkPlayable;
         private AnimationClipPlayable _attackPlayable;
         private float _walkLength;
         private float _attackLength;
         private bool _hasAttack;
-        private bool _graphReady;
-        private GameObject? _instance;
+        private bool _attackOnNativeInstance;
+        private bool _walkGraphReady;
+        private bool _attackGraphReady;
+        private GameObject? _walkInstance;
+        private GameObject? _attackInstance;
 
-        public bool Built => _graphReady;
+        public bool Built => _walkGraphReady;
 
-        /// <summary>True only when Design has dropped an Attack clip at the convention path (or a named take on the walk FBX). Never a hand-baked fake.</summary>
+        /// <summary>True only when Design has dropped an Attack clip. Never a hand-baked fake.</summary>
         public bool HasAttackClip => _hasAttack;
+
+        /// <summary>True when attack plays on the attack FBX instance (incompatible Mixamo↔Rigify retarget avoided).</summary>
+        public bool AttackOnNativeInstance => _attackOnNativeInstance;
 
         public void Build()
         {
             BuildLights();
-            var prefab = LoadFbxPrefab();
-            if (prefab == null)
+            var walkPrefab = LoadFbxPrefab(ThemePackFbx, "sir_aldric_meshy_animate_walk");
+            if (walkPrefab == null)
             {
                 Debug.LogError(
                     "Meshy Animate FBX not imported yet. Open the project in Unity so " +
@@ -61,22 +75,11 @@ namespace Survival.Unity
                 return;
             }
 
-            _instance = Instantiate(prefab, transform);
-            _instance.name = "SirAldricMeshyAnimate";
-            HideJunk(_instance);
-            FaceWorldTop(_instance);
-            PunchMaterials(_instance);
-
-            _animator = _instance.GetComponent<Animator>();
-            if (_animator == null)
-            {
-                _animator = _instance.AddComponent<Animator>();
-            }
-
-            if (_animator.avatar == null)
-            {
-                _animator.avatar = LoadHumanoidAvatar();
-            }
+            _walkInstance = Instantiate(walkPrefab, transform);
+            _walkInstance.name = "SirAldricMeshyAnimateWalk";
+            HideJunk(_walkInstance);
+            FaceWorldTop(_walkInstance);
+            PunchMaterials(_walkInstance, ThemePackFbx);
 
             var walk = LoadWalkingClip();
             if (walk == null)
@@ -87,35 +90,68 @@ namespace Survival.Unity
 
             walk.wrapMode = WrapMode.Loop;
             _walkLength = walk.length;
-            var attack = LoadAttackClip();
-            _hasAttack = attack != null && attack.length > 0.05f;
-            if (_hasAttack)
-            {
-                attack!.wrapMode = WrapMode.Once;
-                _attackLength = attack.length;
-            }
+            _walkAnimator = EnsureAnimator(_walkInstance, FbxAssetPath);
+            _walkGraph = PlayableGraph.Create("SirAldricMeshyWalk");
+            _walkGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
+            var walkOut = AnimationPlayableOutput.Create(_walkGraph, "AldricWalk", _walkAnimator);
+            _walkPlayable = AnimationClipPlayable.Create(_walkGraph, walk);
+            walkOut.SetSourcePlayable(_walkPlayable);
+            _walkGraph.Play();
+            _walkGraphReady = true;
 
-            _graph = PlayableGraph.Create("SirAldricMeshyAnimate");
-            _graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
-            var output = AnimationPlayableOutput.Create(_graph, "Aldric", _animator);
-            _mixer = AnimationMixerPlayable.Create(_graph, 2);
-            _walkPlayable = AnimationClipPlayable.Create(_graph, walk);
-            _mixer.ConnectInput(0, _walkPlayable, 0, 1f);
-            if (_hasAttack)
-            {
-                _attackPlayable = AnimationClipPlayable.Create(_graph, attack);
-                _mixer.ConnectInput(1, _attackPlayable, 0, 0f);
-            }
-
-            output.SetSourcePlayable(_mixer);
-            _graph.Play();
-            _graphReady = true;
+            TryBuildAttack();
             SampleLoop(0f);
+        }
+
+        private void TryBuildAttack()
+        {
+            var attackRel = FirstExistingAttackRel();
+            if (attackRel == null)
+            {
+                return;
+            }
+
+            var clip = LoadAttackClipFrom(attackRel);
+            if (clip == null || clip.length <= 0.05f)
+            {
+                return;
+            }
+
+            clip.wrapMode = WrapMode.Once;
+            _attackLength = clip.length;
+            _hasAttack = true;
+
+            // Always play attack on the attack FBX instance + its own avatar.
+            // Rigify-named clip on mixamorig walk Humanoid was the squash (Derek FAIL).
+            // When Design re-exports on the walk Mixamo rig, this still works (clip+mesh same file).
+            var attackPrefab = LoadFbxPrefab(ThemePackAttackFbx, "sir_aldric_meshy_animate_attack");
+            if (attackPrefab == null)
+            {
+                Debug.LogWarning(AttackNativeInstanceReason + " Attack prefab missing after import.");
+                _hasAttack = false;
+                return;
+            }
+
+            _attackInstance = Instantiate(attackPrefab, transform);
+            _attackInstance.name = "SirAldricMeshyAnimateAttack";
+            HideJunk(_attackInstance);
+            FaceWorldTop(_attackInstance);
+            PunchMaterials(_attackInstance, ThemePackAttackFbx);
+            _attackInstance.SetActive(false);
+            _attackAnimator = EnsureAnimator(_attackInstance, attackRel);
+            _attackGraph = PlayableGraph.Create("SirAldricMeshyAttack");
+            _attackGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
+            var atkOut = AnimationPlayableOutput.Create(_attackGraph, "AldricAttack", _attackAnimator);
+            _attackPlayable = AnimationClipPlayable.Create(_attackGraph, clip);
+            atkOut.SetSourcePlayable(_attackPlayable);
+            _attackGraph.Play();
+            _attackGraphReady = true;
+            _attackOnNativeInstance = true;
         }
 
         private void Update()
         {
-            if (!_graphReady || _walkLength <= 0f)
+            if (!_walkGraphReady || _walkLength <= 0f)
             {
                 return;
             }
@@ -125,11 +161,6 @@ namespace Survival.Unity
 
         private void SampleLoop(float timeSeconds)
         {
-            if (!_graph.IsValid())
-            {
-                return;
-            }
-
             var walkBlock = _walkLength * SirAldric3DMotion.WalkCyclesBeforeAttack;
             var loop = walkBlock + (_hasAttack ? _attackLength : 0f);
             if (loop <= 0f)
@@ -138,33 +169,34 @@ namespace Survival.Unity
             }
 
             var t = timeSeconds % loop;
-            const float fade = 0.12f;
-            if (!_hasAttack || t < walkBlock)
+            var attacking = _hasAttack && t >= walkBlock;
+            if (_walkInstance != null)
             {
-                _mixer.SetInputWeight(0, 1f);
-                if (_hasAttack)
-                {
-                    _mixer.SetInputWeight(1, 0f);
-                }
-
-                _walkPlayable.SetTime(t % _walkLength);
-            }
-            else
-            {
-                var at = t - walkBlock;
-                var wAttack = at < fade ? at / fade : 1f;
-                if (at > _attackLength - fade && _attackLength > fade)
-                {
-                    wAttack = Mathf.Clamp01((_attackLength - at) / fade);
-                }
-
-                _mixer.SetInputWeight(0, 1f - wAttack);
-                _mixer.SetInputWeight(1, wAttack);
-                _walkPlayable.SetTime(walkBlock % _walkLength);
-                _attackPlayable.SetTime(Mathf.Clamp(at, 0f, _attackLength));
+                _walkInstance.SetActive(!attacking);
             }
 
-            _graph.Evaluate();
+            if (_attackInstance != null)
+            {
+                _attackInstance.SetActive(attacking);
+            }
+
+            if (!attacking)
+            {
+                if (_walkGraphReady && _walkGraph.IsValid())
+                {
+                    _walkPlayable.SetTime(t % _walkLength);
+                    _walkGraph.Evaluate();
+                }
+
+                return;
+            }
+
+            var at = Mathf.Clamp(t - walkBlock, 0f, _attackLength);
+            if (_attackGraphReady && _attackGraph.IsValid())
+            {
+                _attackPlayable.SetTime(at);
+                _attackGraph.Evaluate();
+            }
         }
 
         public string PhaseLabel(float timeSeconds)
@@ -184,10 +216,31 @@ namespace Survival.Unity
 
         private void OnDestroy()
         {
-            if (_graphReady && _graph.IsValid())
+            if (_walkGraphReady && _walkGraph.IsValid())
             {
-                _graph.Destroy();
+                _walkGraph.Destroy();
             }
+
+            if (_attackGraphReady && _attackGraph.IsValid())
+            {
+                _attackGraph.Destroy();
+            }
+        }
+
+        private static Animator EnsureAnimator(GameObject root, string avatarRel)
+        {
+            var animator = root.GetComponent<Animator>();
+            if (animator == null)
+            {
+                animator = root.AddComponent<Animator>();
+            }
+
+            if (animator.avatar == null)
+            {
+                animator.avatar = LoadHumanoidAvatar(avatarRel);
+            }
+
+            return animator;
         }
 
         private static void HideJunk(GameObject root)
@@ -213,11 +266,11 @@ namespace Survival.Unity
             root.transform.localRotation = Quaternion.Euler(0f, RearYawDegrees, 0f);
         }
 
-        private static GameObject? LoadFbxPrefab()
+        private static GameObject? LoadFbxPrefab(string themePackRel, string resourcesName)
         {
 #if UNITY_EDITOR
             var data = Application.dataPath;
-            var rel = "Assets/" + ThemePackFbx.Replace('\\', '/');
+            var rel = "Assets/" + themePackRel.Replace('\\', '/');
             var go = AssetDatabase.LoadAssetAtPath<GameObject>(rel);
             if (go != null)
             {
@@ -231,41 +284,95 @@ namespace Survival.Unity
                 return AssetDatabase.LoadAssetAtPath<GameObject>(rel);
             }
 #endif
-            return Resources.Load<GameObject>("sir_aldric_meshy_animate_walk");
+            return Resources.Load<GameObject>(resourcesName);
         }
 
         private static string FbxAssetPath => "Assets/" + ThemePackFbx.Replace('\\', '/');
 
-        private static AnimationClip? LoadAttackClip()
+        private static string? FirstExistingAttackRel()
         {
-#if UNITY_EDITOR
             foreach (var rel in AttackFbxAssetPaths())
             {
-                if (AssetImporter.GetAtPath(rel) == null && !File.Exists(Path.Combine(Directory.GetParent(Application.dataPath)!.FullName, rel)))
+                if (ThemePackFileExists(rel))
                 {
-                    continue;
-                }
-
-                var clip = PickAttackClip(rel);
-                if (clip != null)
-                {
-                    return clip;
-                }
-
-                if (RepairAttackTake(rel))
-                {
-                    clip = PickAttackClip(rel);
-                    if (clip != null)
-                    {
-                        return clip;
-                    }
+                    return rel;
                 }
             }
 
-            return PickAttackClip(FbxAssetPath);
-#else
             return null;
+        }
+
+        private static bool ThemePackFileExists(string assetsRel)
+        {
+            var cwd = Directory.GetCurrentDirectory();
+            var data = Application.dataPath ?? Path.Combine(cwd, "Assets");
+            var repo = Directory.GetParent(data)?.FullName ?? cwd;
+            var trimmed = assetsRel.Replace('\\', '/');
+            if (trimmed.StartsWith("Assets/", StringComparison.Ordinal))
+            {
+                trimmed = trimmed.Substring("Assets/".Length);
+            }
+
+            return File.Exists(Path.Combine(data, trimmed)) || File.Exists(Path.Combine(repo, "Assets", trimmed));
+        }
+
+        /// <summary>Walk Mixamo uses mixamorig:*. Design same-rig re-export will too. Current attack does not.</summary>
+        public static bool FbxLooksMixamo(string assetsRel)
+        {
+#if UNITY_EDITOR
+            var go = AssetDatabase.LoadAssetAtPath<GameObject>(assetsRel);
+            if (go != null)
+            {
+                foreach (var t in go.GetComponentsInChildren<Transform>(true))
+                {
+                    if (t.name.IndexOf("mixamorig", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
 #endif
+            var path = ResolveFbxPath(assetsRel.Replace("Assets/", "").Replace("Assets\\", ""));
+            if (path == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                var bytes = File.ReadAllBytes(path);
+                var needle = System.Text.Encoding.ASCII.GetBytes("mixamorig");
+                return IndexOf(bytes, needle, 0) >= 0;
+            }
+            catch (IOException)
+            {
+                return false;
+            }
+        }
+
+        private static AnimationClip? LoadAttackClipFrom(string rel)
+        {
+#if UNITY_EDITOR
+            var clip = PickAttackClip(rel);
+            if (clip != null)
+            {
+                return clip;
+            }
+
+            if (RepairAttackTake(rel))
+            {
+                return PickAttackClip(rel);
+            }
+#endif
+            return null;
+        }
+
+        private static AnimationClip? LoadAttackClip()
+        {
+            var rel = FirstExistingAttackRel();
+            return rel == null ? null : LoadAttackClipFrom(rel);
         }
 
         private static string[] AttackFbxAssetPaths()
@@ -300,10 +407,10 @@ namespace Survival.Unity
 #endif
         }
 
-        private static Avatar? LoadHumanoidAvatar()
+        private static Avatar? LoadHumanoidAvatar(string rel)
         {
 #if UNITY_EDITOR
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(FbxAssetPath))
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
             {
                 if (obj is Avatar avatar)
                 {
@@ -555,11 +662,11 @@ namespace Survival.Unity
         private static Texture2D? _cachedMetallic;
         private static Texture2D? _cachedRoughness;
 
-        private static void PunchMaterials(GameObject root)
+        private static void PunchMaterials(GameObject root, string themePackRel)
         {
-            var albedo = LoadMeshyAlbedo();
-            var metallic = LoadMeshyPackedMap(grayIndex: 0);
-            var roughness = LoadMeshyPackedMap(grayIndex: 1);
+            var albedo = LoadMeshyAlbedo(themePackRel);
+            var metallic = LoadMeshyPackedMap(themePackRel, grayIndex: 0);
+            var roughness = LoadMeshyPackedMap(themePackRel, grayIndex: 1);
             foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
             {
                 var shared = rend.sharedMaterials;
@@ -652,15 +759,17 @@ namespace Survival.Unity
             return new Material(shader);
         }
 
-        private static Texture2D? LoadMeshyAlbedo()
+        private static Texture2D? LoadMeshyAlbedo(string themePackRel)
         {
-            if (_cachedAlbedo != null)
+            var useCache = string.Equals(themePackRel, ThemePackFbx, StringComparison.Ordinal);
+            if (useCache && _cachedAlbedo != null)
             {
                 return _cachedAlbedo;
             }
 
 #if UNITY_EDITOR
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(FbxAssetPath))
+            var rel = "Assets/" + themePackRel.Replace('\\', '/');
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
             {
                 if (obj is not Texture2D tex || tex.width < 256)
                 {
@@ -668,30 +777,45 @@ namespace Survival.Unity
                 }
 
                 var n = tex.name.ToLowerInvariant();
-                if (n.Contains("texture_0")
+                if ((n.Contains("texture_0") || n.Contains("basecolor") || n.Contains("albedo"))
                     && !n.Contains("metallic")
                     && !n.Contains("rough")
                     && !n.Contains("normal"))
                 {
-                    _cachedAlbedo = tex;
+                    if (useCache)
+                    {
+                        _cachedAlbedo = tex;
+                    }
+
                     return tex;
                 }
             }
 #endif
-            _cachedAlbedo = ExtractFbxPng(color: true, grayIndex: -1)
-                            ?? LoadSiblingPng("sir_aldric_meshy_atlas.png");
-            return _cachedAlbedo;
+            var extracted = ExtractFbxPng(themePackRel, color: true, grayIndex: -1)
+                            ?? (useCache ? LoadSiblingPng("sir_aldric_meshy_atlas.png") : null);
+            if (useCache)
+            {
+                _cachedAlbedo = extracted;
+            }
+
+            return extracted;
         }
 
-        private static Texture2D? LoadMeshyPackedMap(int grayIndex)
+        private static Texture2D? LoadMeshyPackedMap(string themePackRel, int grayIndex)
         {
+            var useCache = string.Equals(themePackRel, ThemePackFbx, StringComparison.Ordinal);
             var cache = grayIndex == 0 ? _cachedMetallic : _cachedRoughness;
-            if (cache != null)
+            if (useCache && cache != null)
             {
                 return cache;
             }
 
-            var extracted = ExtractFbxPng(color: false, grayIndex: grayIndex);
+            var extracted = ExtractFbxPng(themePackRel, color: false, grayIndex: grayIndex);
+            if (!useCache)
+            {
+                return extracted;
+            }
+
             if (grayIndex == 0)
             {
                 _cachedMetallic = extracted ?? LoadSiblingPng("sir_aldric_meshy_atlas_metallic.png");
@@ -756,12 +880,16 @@ namespace Survival.Unity
             return null;
         }
 
-        private static string? ResolveFbxPath()
+        private static string? ResolveFbxPath(string? themePackRel = null)
         {
             var cwd = Directory.GetCurrentDirectory();
             var data = Application.dataPath ?? Path.Combine(cwd, "Assets");
             var repo = Directory.GetParent(data)?.FullName ?? cwd;
-            var rel = ThemePackFbx.Replace('\\', '/');
+            var rel = (themePackRel ?? ThemePackFbx).Replace('\\', '/');
+            if (rel.StartsWith("Assets/", StringComparison.Ordinal))
+            {
+                rel = rel.Substring("Assets/".Length);
+            }
             foreach (var path in new[]
                      {
                          Path.Combine(data, rel),
@@ -777,9 +905,9 @@ namespace Survival.Unity
             return null;
         }
 
-        private static Texture2D? ExtractFbxPng(bool color, int grayIndex)
+        private static Texture2D? ExtractFbxPng(string themePackRel, bool color, int grayIndex)
         {
-            var fbx = ResolveFbxPath();
+            var fbx = ResolveFbxPath(themePackRel);
             if (fbx == null)
             {
                 return null;

@@ -297,19 +297,44 @@ public sealed class SirAldric3DMotionTests
         var src = File.ReadAllText(actor);
         Assert.Contains("ThemePackAttackFbx", src, StringComparison.Ordinal);
         Assert.Contains("sir_aldric_meshy_animate_attack.fbx", src, StringComparison.Ordinal);
-        Assert.Contains("LoadAttackClip", src, StringComparison.Ordinal);
+        Assert.Contains("LoadAttackClipFrom", src, StringComparison.Ordinal);
         Assert.Contains("PickAttackClip", src, StringComparison.Ordinal);
         Assert.Contains("RepairAttackTake", src, StringComparison.Ordinal);
-        Assert.Contains("AnimationMixerPlayable", src, StringComparison.Ordinal);
+        Assert.Contains("AttackOnNativeInstance", src, StringComparison.Ordinal);
+        Assert.Contains("SirAldricMeshyAnimateAttack", src, StringComparison.Ordinal);
+        Assert.Contains("FbxLooksMixamo", src, StringComparison.Ordinal);
         Assert.Contains("WalkCyclesBeforeAttack", src, StringComparison.Ordinal);
         Assert.Contains("target_character|rigify_clip|BaseLayer", src, StringComparison.Ordinal);
         Assert.Contains("Meshy Lionguard Knight", src, StringComparison.Ordinal);
+        Assert.DoesNotContain("_mixer.ConnectInput(1", src, StringComparison.Ordinal);
         var attack = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_animate_attack.fbx");
         Assert.True(new FileInfo(attack).Length > 1_000_000);
         var meta = File.ReadAllText(attack + ".meta");
         Assert.Contains("takeName: target_character|rigify_clip|BaseLayer", meta, StringComparison.Ordinal);
         Assert.Contains("name: Attack", meta, StringComparison.Ordinal);
         Assert.Contains("animationType: 3", meta, StringComparison.Ordinal);
+        var walkBytes = File.ReadAllBytes(Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_animate_walk.fbx"));
+        var atkBytes = File.ReadAllBytes(attack);
+        Assert.True(IndexOfAscii(walkBytes, "mixamorig") >= 0);
+        Assert.True(IndexOfAscii(atkBytes, "mixamorig") < 0);
+        Assert.True(IndexOfAscii(atkBytes, "Spine02") >= 0);
+    }
+
+    [Fact]
+    public void Walk_wide_stance_is_authored_in_the_mixamo_clip_not_import_ik()
+    {
+        var root = FindRepoRoot();
+        var hold = File.ReadAllText(Path.Combine(root, "Docs", "Survival", "previews", "facing_20260925", "MOTION_HOLD.md"));
+        Assert.Contains("0.396", hold, StringComparison.Ordinal);
+        Assert.Contains("0.719", hold, StringComparison.Ordinal);
+        Assert.Contains("Wait Design walk iterate", hold, StringComparison.Ordinal);
+        Assert.Contains("HOLD merge", hold, StringComparison.Ordinal);
+        var meta = File.ReadAllText(Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_animate_walk.fbx.meta"));
+        Assert.Contains("heightFromFeet: 1", meta, StringComparison.Ordinal);
+        Assert.Contains("addHumanoidExtraRoot: 1", meta, StringComparison.Ordinal);
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
+        Assert.Contains("AttackNativeInstanceReason", actor, StringComparison.Ordinal);
+        Assert.Contains("Path A weight-paint is CANCELLED", actor, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -363,6 +388,31 @@ public sealed class SirAldric3DMotionTests
         var packPng = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "SIR_ALDRIC_REAR_MASTER_LOCKED.png");
         Assert.True(File.Exists(packPng));
         Assert.True(new FileInfo(packPng).Length > 100_000);
+    }
+
+    private static int IndexOfAscii(byte[] hay, string needle)
+    {
+        var n = System.Text.Encoding.ASCII.GetBytes(needle);
+        var last = hay.Length - n.Length;
+        for (var i = 0; i <= last; i++)
+        {
+            var ok = true;
+            for (var j = 0; j < n.Length; j++)
+            {
+                if (hay[i + j] != n[j])
+                {
+                    ok = false;
+                    break;
+                }
+            }
+
+            if (ok)
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     private static string FindRepoRoot()

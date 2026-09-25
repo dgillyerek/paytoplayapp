@@ -1,4 +1,8 @@
-# Design attack FBX — LANDED (2026-09-25)
+# Design attack FBX — HOLD for same-rig re-export (2026-09-25)
+
+**Derek FAIL:** current drop is Rigify-named (`Hips` / `Spine02`), not Mixamo. Playing it on the walk Humanoid squashed. Actor now uses a **native attack instance**. Design is re-exporting on the **walk Mixamo rig**, draw → strike forward, rear / TOP.
+
+# Design attack FBX — first drop (superseded)
 
 **Status: WIRED.** Design drop extracted from `sir_aldric_meshy_animate_attack.fbx.tar.gz`.
 

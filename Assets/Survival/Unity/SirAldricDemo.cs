@@ -168,7 +168,7 @@ namespace Survival.Unity
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "Meshy Animate  ·  rear +Z / TOP  ·  Walking + Sword Slash  ·  no Design PASS",
+                "Meshy Animate  ·  rear +Z / TOP  ·  HOLD motion  ·  no Design PASS",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);
