@@ -12,6 +12,7 @@ namespace Survival.Editor
         private const string Splash = "Assets/Survival/Scenes/Splash.unity";
         private const string Play = "Assets/Survival/Scenes/Play.unity";
         private const string SirAldric = "Assets/Survival/Scenes/SirAldric.unity";
+        private const string Bonequill = "Assets/Survival/Scenes/Bonequill.unity";
         private const string GroveBoard = "Assets/Grove/Scenes/Board.unity";
 
         [MenuItem("Survival/Use Theme A Flavor (fantasy_kingdom_a)")]
@@ -25,6 +26,7 @@ namespace Survival.Editor
                 new EditorBuildSettingsScene(Splash, true),
                 new EditorBuildSettingsScene(Play, true),
                 new EditorBuildSettingsScene(SirAldric, true),
+                new EditorBuildSettingsScene(Bonequill, true),
                 new EditorBuildSettingsScene(GroveBoard, true)
             };
             Debug.Log("Survival flavor " + SurvIds.FlavorIdFantasyKingdomA + " → Splash then Play. Pack " + SurvIds.ThemeIdFantasyKingdomA);
@@ -34,6 +36,12 @@ namespace Survival.Editor
         public static void OpenSirAldricDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SirAldric);
+        }
+
+        [MenuItem("Survival/Bonequill Demo (Meshy Animate Walking, high-angle rear)")]
+        public static void OpenBonequillDemo()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Bonequill);
         }
 
         [MenuItem("Survival/Import locked Sir Aldric rear master")]
