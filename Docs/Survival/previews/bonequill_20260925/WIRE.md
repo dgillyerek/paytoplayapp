@@ -37,4 +37,4 @@ Play cam SoT: `(0, 2.80, −5.40)` LookAt `(0, 0.90, 0.50)` FOV 30.
 | `bonequill_v2_walk_toward_top_rear.mp4` | Walk toward TOP, rear Play cam |
 | `bonequill_accurig_continuous_v2_{front,34,rear}.png` | Design Body SoT stills (copied) |
 
-Do not treat World stills/MP4 as Unity Game-view. This VM has no Unity Editor; stills/MP4 are Blender Play-cam remaps of the same FBX+atlas (yaw 180). Design re-gates PASS/FAIL.
+Do not treat World stills/MP4 as Unity Game-view. This VM has no Unity Editor; stills/MP4 are Blender Play-cam remaps of the same FBX+atlas (Unity Y-up, X−90, −X laterality so bow is character-RIGHT). Design re-gates PASS/FAIL.

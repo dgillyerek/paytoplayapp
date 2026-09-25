@@ -32,19 +32,17 @@ CAM_FOV = 30.0
 FOOT = {
     "LeftFoot", "RightFoot",
     "LeftToe", "RightToe",
+    "LeftToeBase", "RightToeBase",
+    "LeftToe_end", "RightToe_end",
     "LeftToe_End", "RightToe_End",
 }
 
 
-def unity_to_blender(p):
-    return (p[0], p[2], p[1])
-
-
 def play_cam_matrix(eye, target) -> Matrix:
-    eye_v = Vector(unity_to_blender(eye))
-    tgt_v = Vector(unity_to_blender(target))
-    fwd = (tgt_v - eye_v).normalized()
-    world_up = Vector((0.0, 0.0, 1.0))
+    # Unity Y-up Play cam, same basis as Aldric Meshy Animate remaps.
+    eye_v = Vector(eye)
+    fwd = (Vector(target) - eye_v).normalized()
+    world_up = Vector((0.0, 1.0, 0.0))
     right = world_up.cross(fwd).normalized()
     up = fwd.cross(right).normalized()
     return Matrix(
@@ -82,9 +80,22 @@ def setup_world():
     key.color = (1.0, 0.96, 0.88)
     key_o = bpy.data.objects.new("Key", key)
     bpy.context.collection.objects.link(key_o)
-    key_o.rotation_euler = (math.radians(52), 0.0, math.radians(-16))
+    key_o.rotation_euler = (math.radians(52), math.radians(-16), 0.0)
+    fill = bpy.data.lights.new("Fill", "SUN")
+    fill.energy = 5.5
+    fill.color = (0.82, 0.88, 1.0)
+    fill_o = bpy.data.objects.new("Fill", fill)
+    bpy.context.collection.objects.link(fill_o)
+    fill_o.rotation_euler = (math.radians(70), math.radians(180), 0.0)
+    rim = bpy.data.lights.new("Rim", "SUN")
+    rim.energy = 7.5
+    rim.color = (1.0, 0.96, 0.90)
+    rim_o = bpy.data.objects.new("Rim", rim)
+    bpy.context.collection.objects.link(rim_o)
+    rim_o.rotation_euler = (math.radians(48), 0.0, 0.0)
     bpy.ops.mesh.primitive_plane_add(size=12.0, location=(0, 0, 0))
     ground = bpy.context.active_object
+    ground.rotation_euler = (math.radians(90), 0.0, 0.0)
     gmat = bpy.data.materials.new("G")
     gmat.use_nodes = True
     bsdf = gmat.node_tree.nodes.get("Principled BSDF")
@@ -92,9 +103,9 @@ def setup_world():
         bsdf.inputs["Base Color"].default_value = (0.11, 0.12, 0.10, 1)
     ground.data.materials.append(gmat)
     cam_data = bpy.data.cameras.new("Play")
+    cam_data.sensor_fit = "VERTICAL"
     cam_data.lens_unit = "FOV"
     cam_data.angle = math.radians(CAM_FOV)
-    cam_data.sensor_fit = "VERTICAL"
     cam_data.clip_start = 0.08
     cam_data.clip_end = 40.0
     cam = bpy.data.objects.new("Play", cam_data)
@@ -127,7 +138,7 @@ def plant(root, mesh_ob):
     pts = mesh_world_pts(mesh_ob, FOOT) or mesh_world_pts(mesh_ob)
     if not pts:
         return
-    root.location.z -= min(p.z for p in pts) - 0.002
+    root.location.y -= min(p.y for p in pts) - 0.002
     bpy.context.view_layer.update()
 
 
@@ -176,17 +187,31 @@ def import_fbx():
     arm.select_set(True)
     bpy.context.view_layer.objects.active = arm
     arm.rotation_mode = "XYZ"
+    # Bake importer rot, then X−90 → Unity Y-up face +Z (Aldric remap).
+    # Unity actor still applies RearYaw 180 on the Mixamo/AccuRIG −Z import;
+    # the Blender remap must not add a second 180 or front/rear swap.
     bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
-    arm.rotation_euler = (0.0, 0.0, math.radians(YAW))
+    arm.rotation_euler = (-math.pi / 2.0, 0.0, 0.0)
     bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
     pts = mesh_world_pts(mesh)
-    h = max(p.z for p in pts) - min(p.z for p in pts)
+    h = max(p.y for p in pts) - min(p.y for p in pts)
     s = TARGET_H / h if h > 0.4 else 1.0
-    arm.scale = (s, s, s)
+    # Negative X: AccuRIG import laterality → bow character-RIGHT / quiver LEFT.
+    arm.scale = (-s, s, s)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    try:
+        import bmesh
+        bm = bmesh.new()
+        bm.from_mesh(mesh.data)
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        bm.to_mesh(mesh.data)
+        bm.free()
+        mesh.data.update()
+    except Exception:
+        pass
     pts = mesh_world_pts(mesh)
     arm.location.x -= sum(p.x for p in pts) / len(pts)
-    arm.location.y -= sum(p.y for p in pts) / len(pts)
+    arm.location.z -= sum(p.z for p in pts) / len(pts)
     bpy.ops.object.transform_apply(location=True, rotation=False, scale=False)
     plant(arm, mesh)
     acts = sorted(bpy.data.actions, key=lambda a: a.frame_range[1] - a.frame_range[0], reverse=True)
