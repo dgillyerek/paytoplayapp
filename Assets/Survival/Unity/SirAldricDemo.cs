@@ -168,7 +168,7 @@ namespace Survival.Unity
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "Meshy Animate Walking  ·  Humanoid AS-IS  ·  HOLD  ·  no Design PASS",
+                "Meshy Animate  ·  rear +Z / TOP  ·  attack FBX pending Design  ·  no Design PASS",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);

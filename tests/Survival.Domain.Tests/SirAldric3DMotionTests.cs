@@ -273,6 +273,41 @@ public sealed class SirAldric3DMotionTests
     }
 
     [Fact]
+    public void Mixamo_import_rear_yaw_faces_world_plus_z_not_the_camera()
+    {
+        Assert.Equal(180f, SirAldric3DMotion.MixamoImportRearYawDegrees);
+        var actor = Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs");
+        var demo = Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "SirAldricDemo.cs");
+        var actorSrc = File.ReadAllText(actor);
+        var demoSrc = File.ReadAllText(demo);
+        Assert.Contains("RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees", actorSrc, StringComparison.Ordinal);
+        Assert.Contains("FaceWorldTop", actorSrc, StringComparison.Ordinal);
+        Assert.Contains("Quaternion.Euler(0f, RearYawDegrees, 0f)", actorSrc, StringComparison.Ordinal);
+        Assert.Contains("new Vector3(0f, 2.80f, -5.40f)", demoSrc, StringComparison.Ordinal);
+        Assert.Contains("new Vector3(0f, 0.90f, 0.50f)", demoSrc, StringComparison.Ordinal);
+        Assert.Contains("EnemyTop", demoSrc, StringComparison.Ordinal);
+        Assert.DoesNotContain("_clipPlayable", actorSrc, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Meshy_animate_actor_scaffolds_attack_fbx_without_inventing_a_clip()
+    {
+        var root = FindRepoRoot();
+        var actor = Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs");
+        var src = File.ReadAllText(actor);
+        Assert.Contains("ThemePackAttackFbx", src, StringComparison.Ordinal);
+        Assert.Contains("sir_aldric_meshy_animate_attack.fbx", src, StringComparison.Ordinal);
+        Assert.Contains("LoadAttackClip", src, StringComparison.Ordinal);
+        Assert.Contains("PickNamedClip", src, StringComparison.Ordinal);
+        Assert.Contains("AnimationMixerPlayable", src, StringComparison.Ordinal);
+        Assert.Contains("WalkCyclesBeforeAttack", src, StringComparison.Ordinal);
+        var attack = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_animate_attack.fbx");
+        Assert.False(File.Exists(attack));
+        var todo = Path.Combine(root, "Docs", "Survival", "previews", "facing_20260925", "ATTACK_FBX_TODO.md");
+        Assert.True(new FileInfo(todo).Length > 200);
+    }
+
+    [Fact]
     public void Meshy_animate_actor_binds_albedo_and_keeps_walking_clip()
     {
         var root = FindRepoRoot();
@@ -285,6 +320,9 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("takeName", src, StringComparison.Ordinal);
         var fbx = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_animate_walk.fbx");
         var atlas = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_atlas.png");
+        var meta = File.ReadAllText(fbx + ".meta");
+        Assert.Contains("takeName: target_character|target_character|target_character|Walking", meta, StringComparison.Ordinal);
+        Assert.Contains("name: Walking", meta, StringComparison.Ordinal);
         Assert.True(new FileInfo(fbx).Length > 1_000_000);
         Assert.True(new FileInfo(atlas).Length > 100_000);
         var bytes = File.ReadAllBytes(fbx);
@@ -299,6 +337,17 @@ public sealed class SirAldric3DMotionTests
         }
 
         Assert.True(png);
+    }
+
+    [Fact]
+    public void Facing_20260925_rear_proofs_are_on_disk()
+    {
+        var dir = Path.Combine(FindRepoRoot(), "Docs", "Survival", "previews", "facing_20260925");
+        Assert.True(new FileInfo(Path.Combine(dir, "FACING.md")).Length > 400);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_rear_still_back_to_camera.png")).Length > 100_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_rear_walk_pose.png")).Length > 100_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_walk_toward_top_rear.mp4")).Length > 100_000);
+        Assert.False(File.Exists(Path.Combine(dir, "sir_aldric_attack_toward_top_rear.mp4")));
     }
 
     [Fact]

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Survival.Domain.Heroes;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
@@ -18,16 +19,31 @@ namespace Survival.Unity
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
     {
         public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_walk.fbx";
+        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_attack.fbx";
         public const string ClipHint = "Walking";
+        public const string AttackClipHint = "Attack";
+        /// <summary>
+        /// Yaw so imported Mixamo forward (−Z, face to Play cam) becomes world +Z.
+        /// Camera SoT: SirAldricDemo (0, 2.80, −5.40) LookAt (0, 0.90, 0.50) → view +Z.
+        /// SirAldric3DMotion: march / character forward = +Z = screen TOP; rear view = back to camera.
+        /// </summary>
+        public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
 
         private Animator? _animator;
         private PlayableGraph _graph;
-        private AnimationClipPlayable _clipPlayable;
-        private float _clipLength;
+        private AnimationMixerPlayable _mixer;
+        private AnimationClipPlayable _walkPlayable;
+        private AnimationClipPlayable _attackPlayable;
+        private float _walkLength;
+        private float _attackLength;
+        private bool _hasAttack;
         private bool _graphReady;
         private GameObject? _instance;
 
         public bool Built => _graphReady;
+
+        /// <summary>True only when Design has dropped an Attack clip at the convention path (or a named take on the walk FBX). Never a hand-baked fake.</summary>
+        public bool HasAttackClip => _hasAttack;
 
         public void Build()
         {
@@ -58,48 +74,107 @@ namespace Survival.Unity
                 _animator.avatar = LoadHumanoidAvatar();
             }
 
-            var clip = LoadWalkingClip();
-            if (clip == null)
+            var walk = LoadWalkingClip();
+            if (walk == null)
             {
                 Debug.LogError("Meshy Animate FBX has no Walking clip after Humanoid import.");
                 return;
             }
 
-            clip.wrapMode = WrapMode.Loop;
-            _clipLength = clip.length;
+            walk.wrapMode = WrapMode.Loop;
+            _walkLength = walk.length;
+            var attack = LoadAttackClip();
+            _hasAttack = attack != null && attack.length > 0.05f;
+            if (_hasAttack)
+            {
+                attack!.wrapMode = WrapMode.Once;
+                _attackLength = attack.length;
+            }
+
             _graph = PlayableGraph.Create("SirAldricMeshyAnimate");
             _graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
             var output = AnimationPlayableOutput.Create(_graph, "Aldric", _animator);
-            _clipPlayable = AnimationClipPlayable.Create(_graph, clip);
-            output.SetSourcePlayable(_clipPlayable);
+            _mixer = AnimationMixerPlayable.Create(_graph, 2);
+            _walkPlayable = AnimationClipPlayable.Create(_graph, walk);
+            _mixer.ConnectInput(0, _walkPlayable, 0, 1f);
+            if (_hasAttack)
+            {
+                _attackPlayable = AnimationClipPlayable.Create(_graph, attack);
+                _mixer.ConnectInput(1, _attackPlayable, 0, 0f);
+            }
+
+            output.SetSourcePlayable(_mixer);
             _graph.Play();
             _graphReady = true;
-            SampleWalk(0f);
+            SampleLoop(0f);
         }
 
         private void Update()
         {
-            if (!_graphReady || _clipLength <= 0f)
+            if (!_graphReady || _walkLength <= 0f)
             {
                 return;
             }
 
-            SampleWalk(Time.unscaledTime % _clipLength);
+            SampleLoop(Time.unscaledTime);
         }
 
-        private void SampleWalk(float time)
+        private void SampleLoop(float timeSeconds)
         {
             if (!_graph.IsValid())
             {
                 return;
             }
 
-            _clipPlayable.SetTime(time);
+            var walkBlock = _walkLength * SirAldric3DMotion.WalkCyclesBeforeAttack;
+            var loop = walkBlock + (_hasAttack ? _attackLength : 0f);
+            if (loop <= 0f)
+            {
+                return;
+            }
+
+            var t = timeSeconds % loop;
+            const float fade = 0.12f;
+            if (!_hasAttack || t < walkBlock)
+            {
+                _mixer.SetInputWeight(0, 1f);
+                if (_hasAttack)
+                {
+                    _mixer.SetInputWeight(1, 0f);
+                }
+
+                _walkPlayable.SetTime(t % _walkLength);
+            }
+            else
+            {
+                var at = t - walkBlock;
+                var wAttack = at < fade ? at / fade : 1f;
+                if (at > _attackLength - fade && _attackLength > fade)
+                {
+                    wAttack = Mathf.Clamp01((_attackLength - at) / fade);
+                }
+
+                _mixer.SetInputWeight(0, 1f - wAttack);
+                _mixer.SetInputWeight(1, wAttack);
+                _walkPlayable.SetTime(walkBlock % _walkLength);
+                _attackPlayable.SetTime(Mathf.Clamp(at, 0f, _attackLength));
+            }
+
             _graph.Evaluate();
         }
 
         public string PhaseLabel(float timeSeconds)
         {
+            if (_hasAttack && _walkLength > 0f)
+            {
+                var walkBlock = _walkLength * SirAldric3DMotion.WalkCyclesBeforeAttack;
+                var loop = walkBlock + _attackLength;
+                if (loop > 0f && (timeSeconds % loop) >= walkBlock)
+                {
+                    return "ATTACK  ·  toward TOP  ·  Meshy Animate";
+                }
+            }
+
             return "WALK  ·  toward TOP  ·  Meshy Animate";
         }
 
@@ -124,10 +199,14 @@ namespace Survival.Unity
 
         private static void FaceWorldTop(GameObject root)
         {
-            // Mixamo FBX is typically Y-up / Z-forward after Unity import.
-            // World gate: walk toward TOP = +Z. Leave identity if already facing +Z.
+            // Verified (not guessed):
+            // - Play cam: SirAldricDemo sets (0, 2.80, −5.40) LookAt (0, 0.90, 0.50) → view +Z.
+            // - SirAldric3DMotion: character forward / march = world +Z = screen TOP; enemy +Z.
+            // - Chevrons / EnemyTop sit at +Z. WorldMarchLoop is a node timer, not a heading.
+            // - Humanoid Mixamo on this FBX instantiates face-to-camera (−Z) = frontal FAIL.
+            // Yaw 180° so transform.forward = +Z: back to camera, walk toward TOP.
             root.transform.localPosition = Vector3.zero;
-            root.transform.localRotation = Quaternion.identity;
+            root.transform.localRotation = Quaternion.Euler(0f, RearYawDegrees, 0f);
         }
 
         private static GameObject? LoadFbxPrefab()
@@ -152,6 +231,39 @@ namespace Survival.Unity
         }
 
         private static string FbxAssetPath => "Assets/" + ThemePackFbx.Replace('\\', '/');
+
+        private static AnimationClip? LoadAttackClip()
+        {
+#if UNITY_EDITOR
+            foreach (var rel in AttackFbxAssetPaths())
+            {
+                if (AssetImporter.GetAtPath(rel) == null && !File.Exists(Path.Combine(Directory.GetParent(Application.dataPath)!.FullName, rel)))
+                {
+                    continue;
+                }
+
+                var clip = PickNamedClip(rel, AttackClipHint, "Slash", "Strike", "Punch");
+                if (clip != null)
+                {
+                    return clip;
+                }
+            }
+
+            return PickNamedClip(FbxAssetPath, AttackClipHint, "Slash", "Strike", "Punch");
+#else
+            return null;
+#endif
+        }
+
+        private static string[] AttackFbxAssetPaths()
+        {
+            return new[]
+            {
+                "Assets/" + ThemePackAttackFbx.Replace('\\', '/'),
+                "Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_attack.fbx",
+                "Assets/Survival/Art/sir_aldric_meshy_animate_attack.fbx",
+            };
+        }
 
         private static AnimationClip? LoadWalkingClip()
         {
@@ -232,6 +344,44 @@ namespace Survival.Unity
             }
 
             return exact ?? walk ?? longest;
+#else
+            return null;
+#endif
+        }
+
+        private static AnimationClip? PickNamedClip(string rel, params string[] hints)
+        {
+#if UNITY_EDITOR
+            AnimationClip? best = null;
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
+            {
+                if (obj is not AnimationClip clip || clip.name.StartsWith("__preview", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var hit = false;
+                foreach (var hint in hints)
+                {
+                    if (clip.name.IndexOf(hint, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        hit = true;
+                        break;
+                    }
+                }
+
+                if (!hit)
+                {
+                    continue;
+                }
+
+                if (best == null || clip.length > best.length)
+                {
+                    best = clip;
+                }
+            }
+
+            return best;
 #else
             return null;
 #endif

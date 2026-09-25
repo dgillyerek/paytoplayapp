@@ -8,6 +8,8 @@
 
 World-cam: Play march angle `(0, 2.80, −5.40)` look-at `(0, 0.90, 0.50)` FOV 30, 1080×1920, TOP = +Z = away. **Not** a beauty portrait cam.
 
+**Animate walk FBX:** `sir_aldric_meshy_animate_walk.fbx` (Humanoid, `#25` takeName `target_character|…|Walking`). Actor yaws 180° so the imported Mixamo face (−Z / frontal) becomes +Z / back-to-camera. **Attack FBX:** Design drop `sir_aldric_meshy_animate_attack.fbx` (not present). Dev loads that convention path only — see `Docs/Survival/previews/facing_20260925/ATTACK_FBX_TODO.md`.
+
 Must-match:
 - Silver plate + gold trim
 - Royal-blue short surcoat: gold lion rampant + gold Greek-key hem
