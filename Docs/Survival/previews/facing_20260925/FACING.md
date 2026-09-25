@@ -21,9 +21,8 @@ Unity Y-up. After yaw 180: character-RIGHT = world +X = viewer-right from behind
 `SirAldricMeshyAnimateActor`:
 
 1. Instantiate walk FBX → `FaceWorldTop` (yaw 180) → `#26` atlas-before-punch → `#25` Walking take-name repair if needed.
-2. `AnimationMixerPlayable` input 0 = Walking (loop). Input 1 = Attack when Design drops a clip.
+2. `AnimationMixerPlayable` input 0 = Walking (loop). Input 1 = Design Attack take `target_character|rigify_clip|BaseLayer`.
 3. After `WalkCyclesBeforeAttack` walk cycles, 0.12s crossfade Walking → Attack → back. Same Humanoid, same rear yaw.
-4. Attack clip is **never** hand-baked. See `ATTACK_FBX_TODO.md`.
 
 ## Proof (PRIMARY = rear / back-to-camera)
 
@@ -34,8 +33,10 @@ Unity Y-up. After yaw 180: character-RIGHT = world +X = viewer-right from behind
 | `sir_aldric_rear_still_34.png` | Optional ¾ rear. |
 | `sir_aldric_walk_toward_top_rear.mp4` | Walk toward TOP, backside to camera. |
 | `sir_aldric_walk_toward_top_rear.gif` | Same loop, gif. |
-| `sir_aldric_attack_toward_top_rear.mp4` | **Waiting on Design attack FBX.** Do not use the old capsule `sir_aldric_walk_attack_toward_top.*` as the Animate attack. |
+| `sir_aldric_attack_rear_still.png` | Attack start, back to camera. |
+| `sir_aldric_attack_slash_rear.png` | Mid slash, back to camera / toward TOP. |
+| `sir_aldric_attack_toward_top_rear.mp4` | Design take `target_character\|rigify_clip\|BaseLayer` (Standing Sword Slash Attack). |
 
-Stills / walk clip are the existing World punch rear proofs (same Play cam). Unity Game-view on this VM is not available; blender is not on PATH. Facing fix is the 180° actor yaw so Play matches these rear stills instead of the frontal instantiate.
+Walk stills / walk MP4 are the existing World punch rear proofs (same Play cam). Attack stills + MP4 are Blender-rendered from the Design attack FBX with Play cam remapped Unity→Blender Z-up and **yaw 180** (verified: yaw 0 is frontal FAIL). Unity Game-view is not on this VM; Play actor uses the same 180° yaw.
 
 Soft toe specular leftover OK. `#25` takeName `target_character|…|Walking` and `#26` FBX albedo-before-punch stay.

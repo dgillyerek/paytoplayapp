@@ -11,6 +11,8 @@
 *.blend1
 *.blend1.meta
 Docs/Survival/previews/gate3/walk/f_*.png
+Docs/Survival/previews/facing_20260925/_probe_*.png
+Docs/Survival/previews/facing_20260925/_attack_frames/
 scripts/blender/__pycache__/
 /[Mm]emoryCaptures/
 /[Rr]ecordings/

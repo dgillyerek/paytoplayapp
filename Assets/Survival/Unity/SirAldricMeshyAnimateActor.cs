@@ -22,6 +22,10 @@ namespace Survival.Unity
         public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_attack.fbx";
         public const string ClipHint = "Walking";
         public const string AttackClipHint = "Attack";
+        /// <summary>FBX stack take on the Design drop. clipAnimations.takeName must match (#25). Short name "Attack" is the imported clip.</summary>
+        public const string AttackTakeName = "target_character|rigify_clip|BaseLayer";
+        /// <summary>Design / Meshy package label. Discovery uses Attack / Slash / Sword / clip0 / this take.</summary>
+        public const string AttackClipDiscovery = "Meshy Lionguard Knight · Standing Sword Slash Attack";
         /// <summary>
         /// Yaw so imported Mixamo forward (−Z, face to Play cam) becomes world +Z.
         /// Camera SoT: SirAldricDemo (0, 2.80, −5.40) LookAt (0, 0.90, 0.50) → view +Z.
@@ -242,14 +246,23 @@ namespace Survival.Unity
                     continue;
                 }
 
-                var clip = PickNamedClip(rel, AttackClipHint, "Slash", "Strike", "Punch");
+                var clip = PickAttackClip(rel);
                 if (clip != null)
                 {
                     return clip;
                 }
+
+                if (RepairAttackTake(rel))
+                {
+                    clip = PickAttackClip(rel);
+                    if (clip != null)
+                    {
+                        return clip;
+                    }
+                }
             }
 
-            return PickNamedClip(FbxAssetPath, AttackClipHint, "Slash", "Strike", "Punch");
+            return PickAttackClip(FbxAssetPath);
 #else
             return null;
 #endif
@@ -346,6 +359,106 @@ namespace Survival.Unity
             return exact ?? walk ?? longest;
 #else
             return null;
+#endif
+        }
+
+        private static AnimationClip? PickAttackClip(string rel)
+        {
+            return PickNamedClip(rel, AttackClipHint, "Slash", "Strike", "Punch", "Sword", "rigify", "clip0", "baselayer", "Lionguard")
+                   ?? PickLongestClip(rel);
+        }
+
+        private static AnimationClip? PickLongestClip(string rel)
+        {
+#if UNITY_EDITOR
+            AnimationClip? longest = null;
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
+            {
+                if (obj is not AnimationClip clip || clip.name.StartsWith("__preview", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (longest == null || clip.length > longest.length)
+                {
+                    longest = clip;
+                }
+            }
+
+            return longest;
+#else
+            return null;
+#endif
+        }
+
+        private static bool RepairAttackTake(string rel)
+        {
+#if UNITY_EDITOR
+            if (AssetImporter.GetAtPath(rel) is not ModelImporter importer || !importer.importAnimation)
+            {
+                return false;
+            }
+
+            var defaults = importer.defaultClipAnimations;
+            if (defaults == null || defaults.Length == 0)
+            {
+                return false;
+            }
+
+            ModelImporterClipAnimation? best = null;
+            var bestSpan = -1f;
+            foreach (var candidate in defaults)
+            {
+                var label = (candidate.takeName ?? "") + "\n" + (candidate.name ?? "");
+                var hit = label.IndexOf("rigify", StringComparison.OrdinalIgnoreCase) >= 0
+                          || label.IndexOf("clip0", StringComparison.OrdinalIgnoreCase) >= 0
+                          || label.IndexOf("baselayer", StringComparison.OrdinalIgnoreCase) >= 0
+                          || label.IndexOf("Attack", StringComparison.OrdinalIgnoreCase) >= 0
+                          || label.IndexOf("Slash", StringComparison.OrdinalIgnoreCase) >= 0
+                          || label.IndexOf("Sword", StringComparison.OrdinalIgnoreCase) >= 0
+                          || string.Equals(candidate.takeName, AttackTakeName, StringComparison.Ordinal);
+                if (!hit)
+                {
+                    continue;
+                }
+
+                var span = candidate.lastFrame - candidate.firstFrame;
+                if (best == null || span > bestSpan)
+                {
+                    best = candidate;
+                    bestSpan = span;
+                }
+            }
+
+            if (best == null)
+            {
+                foreach (var candidate in defaults)
+                {
+                    var span = candidate.lastFrame - candidate.firstFrame;
+                    if (best == null || span > bestSpan)
+                    {
+                        best = candidate;
+                        bestSpan = span;
+                    }
+                }
+            }
+
+            if (best == null || bestSpan <= 0f)
+            {
+                return false;
+            }
+
+            best.name = AttackClipHint;
+            best.loopTime = false;
+            best.loop = false;
+            best.keepOriginalOrientation = true;
+            best.keepOriginalPositionY = true;
+            best.keepOriginalPositionXZ = true;
+            importer.clipAnimations = new[] { best };
+            importer.SaveAndReimport();
+            return true;
+#else
+            return false;
 #endif
         }
 

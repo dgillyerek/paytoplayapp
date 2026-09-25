@@ -1,5 +1,0 @@
-Design drop: sir_aldric_meshy_animate_attack.fbx
-Sibling of sir_aldric_meshy_animate_walk.fbx.
-Mixamo / AccuRIG Animate Humanoid. Take name must match the FBX stack (#25).
-Dev already loads this path (SirAldricMeshyAnimateActor.ThemePackAttackFbx).
-Do not invent a clip here. See Docs/Survival/previews/facing_20260925/ATTACK_FBX_TODO.md.

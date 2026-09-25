@@ -290,7 +290,7 @@ public sealed class SirAldric3DMotionTests
     }
 
     [Fact]
-    public void Meshy_animate_actor_scaffolds_attack_fbx_without_inventing_a_clip()
+    public void Meshy_animate_actor_plays_design_attack_fbx_on_humanoid()
     {
         var root = FindRepoRoot();
         var actor = Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs");
@@ -298,13 +298,18 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("ThemePackAttackFbx", src, StringComparison.Ordinal);
         Assert.Contains("sir_aldric_meshy_animate_attack.fbx", src, StringComparison.Ordinal);
         Assert.Contains("LoadAttackClip", src, StringComparison.Ordinal);
-        Assert.Contains("PickNamedClip", src, StringComparison.Ordinal);
+        Assert.Contains("PickAttackClip", src, StringComparison.Ordinal);
+        Assert.Contains("RepairAttackTake", src, StringComparison.Ordinal);
         Assert.Contains("AnimationMixerPlayable", src, StringComparison.Ordinal);
         Assert.Contains("WalkCyclesBeforeAttack", src, StringComparison.Ordinal);
+        Assert.Contains("target_character|rigify_clip|BaseLayer", src, StringComparison.Ordinal);
+        Assert.Contains("Meshy Lionguard Knight", src, StringComparison.Ordinal);
         var attack = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_animate_attack.fbx");
-        Assert.False(File.Exists(attack));
-        var todo = Path.Combine(root, "Docs", "Survival", "previews", "facing_20260925", "ATTACK_FBX_TODO.md");
-        Assert.True(new FileInfo(todo).Length > 200);
+        Assert.True(new FileInfo(attack).Length > 1_000_000);
+        var meta = File.ReadAllText(attack + ".meta");
+        Assert.Contains("takeName: target_character|rigify_clip|BaseLayer", meta, StringComparison.Ordinal);
+        Assert.Contains("name: Attack", meta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 3", meta, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -347,7 +352,8 @@ public sealed class SirAldric3DMotionTests
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_rear_still_back_to_camera.png")).Length > 100_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_rear_walk_pose.png")).Length > 100_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_walk_toward_top_rear.mp4")).Length > 100_000);
-        Assert.False(File.Exists(Path.Combine(dir, "sir_aldric_attack_toward_top_rear.mp4")));
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_attack_toward_top_rear.mp4")).Length > 100_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_attack_slash_rear.png")).Length > 50_000);
     }
 
     [Fact]
