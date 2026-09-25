@@ -1,41 +1,35 @@
-# Derek FAIL — motion HOLD (2026-09-25)
+# Derek OVERRIDE — Humanoid draw→strike (2026-09-25)
 
-**HOLD merge on PR #27. Do not claim Design PASS.** Path A cancelled. No bone invent / weight-paint.
+**HOLD merge on PR #27 until Derek eyes.** Do not claim Design PASS. Path A weight-paint CANCELLED.
 
-Derek: rear stills OK. Walk legs too far apart. Attack stretched/squashed — unusable. Want **draw sword → strike forward**, rear / World TOP.
+Derek OVERRIDE: do **not** wait on Design attack FBX re-export. Use the **existing** Meshy Animate walk Humanoid (same mesh / atlas / Walking clip). Author **draw sword → strike forward** toward World TOP (RearYaw 180). No new Design mesh.
 
-## Attack squash — PROVEN Humanoid retarget mismatch
+## How the clip is authored
 
-Walk FBX and this attack FBX share **bind lengths** (Hips 0.137, LeftUpLeg 0.367, LeftArm 0.243) but **not names or hierarchy**.
+`SirAldricHumanoidAttack` + `SirAldricMeshyAnimateActor.ApplyDrawStrike`:
 
-| | Walk | Attack (current drop) |
-| --- | --- | --- |
-| Prefix | `mixamorig:*` (32 bones) | none (28 bones, Rigify-style) |
-| Spine chain | Hips → Spine → Spine1 → Spine2 → Neck | Hips → **Spine02 → Spine01 → Spine** → neck |
-| Mixamo string in file | yes | **no** |
-| Rest foot sep | 0.396 m | 0.396 m |
+1. Play the Design walk clip AS-IS on the Mixamo Humanoid (`mixamorig:*`, same Avatar).
+2. After `WalkCyclesBeforeAttack` cycles, **plant** the last walk frame (wide stance stays Design walk iterate).
+3. Aim the **RightUpperArm → RightLowerArm → RightHand** chain at hips-local targets: scabbard → guard → **+Z thrust** → recover. `Quaternion.FromToRotation` only — **never writes `localScale`** (stretch spikes = FAIL).
+4. Clip-only `ClipSword` cube parented to `RightHand` while drawn. Walk mesh scabbard is painted; no Path A rebind.
 
-`SirAldricMeshyAnimateActor` **was** instantiating the walk Mixamo Humanoid and mixer-playing the attack clip onto that avatar. Unity Humanoid maps by role; Spine02 vs Spine1 + missing `mixamorig` is a classic squash.
+Leftover Design attack FBX (`sir_aldric_meshy_animate_attack.fbx`, Rigify `Hips/Spine02`) stays on disk and is **not played**. Playing it on this Avatar was the squash.
 
-**Dev wire fix (this tip):** attack plays on **its own FBX instance + its own avatar**. Walk instance stays Mixamo + Walking. Visibility swap after `WalkCyclesBeforeAttack`. No cross-avatar mixer. No invented bones.
+## Walk stance
 
-When Design re-exports attack on the **walk Mixamo rig** (`mixamorig:*`, draw → strike forward): drop over `sir_aldric_meshy_animate_attack.fbx`. `FbxLooksMixamo` becomes true. Native instance still correct (clip+mesh same file). Then retake FULL rear/TOP proof.
+Still clip-authored wide (rest 0.396 m, Walking take max 0.719 m @ f8). Import `heightFromFeet` / `addHumanoidExtraRoot` unchanged. **Wait Design walk iterate.** Secondary to attack.
 
-Current take `target_character|rigify_clip|BaseLayer` is **Standing Sword Slash** (sword already up) — not draw-then-strike. Content wait is Design.
+## Proof
 
-## Walk wide stance — PROVEN clip-authored, not import
+Unity Game-view is `Camera.Render` 1080×1920 from the SirAldricDemo Play cam `(0, 2.80, −5.40)` LookAt `(0, 0.90, 0.50)` FOV 30.
 
-Measured on the walk FBX **in Blender, no Humanoid, no extra root, no foot IK**:
-
-| | Foot separation |
+| File | What |
 | --- | --- |
-| Rest / bind | 0.396 m |
-| Walking take min | 0.231 m @ frame 2 |
-| Walking take max | **0.719 m @ frame 8** |
-| Walking take median | 0.547 m |
+| `sir_aldric_humanoid_draw_strike_gameview.mp4` | Game-view draw → forward strike, rear / TOP |
+| `sir_aldric_humanoid_mid_strike_gameview.png` | Game-view mid-strike still |
+| Menu | Survival → Capture Sir Aldric Humanoid Attack (Game view) |
+| Batch | Play with `-aldric-capture` or `ALDRIC_CAPTURE=1` |
 
-That is the Mixamo `Walking` take. `heightFromFeet` / `addHumanoidExtraRoot` were **not** the source (native clip already wide). Tightening stance here would mean editing the take (not a Dev wire). **Wait Design walk iterate.** Import settings left as `#25` / `#26`.
+This cloud VM has no Unity Editor binary. Capturer ships with the actor; Derek Play produces the MP4/still. Do not treat leftover Blender standing-slash frames as this OVERRIDE.
 
-## Proof status
-
-Rear stills remain valid. Walk MP4 still shows the authored wide stride. Attack MP4 is the old standing-slash native render — **not** a motion PASS. New attack + walk proofs when Design drops.
+No Design PASS.

@@ -290,34 +290,67 @@ public sealed class SirAldric3DMotionTests
     }
 
     [Fact]
-    public void Meshy_animate_actor_plays_design_attack_fbx_on_humanoid()
+    public void Humanoid_attack_draws_then_strikes_toward_world_top()
+    {
+        Assert.Equal(SirAldric3DMotion.AttackSeconds, SirAldricHumanoidAttack.Seconds);
+        var draw = SirAldricHumanoidAttack.Evaluate(0.10f);
+        var guard = SirAldricHumanoidAttack.Evaluate(SirAldricHumanoidAttack.Seconds * 0.30f);
+        var strike = SirAldricHumanoidAttack.Evaluate(SirAldricHumanoidAttack.StrikePeakSeconds);
+        var recover = SirAldricHumanoidAttack.Evaluate(SirAldricHumanoidAttack.Seconds - 0.02f);
+
+        Assert.Equal(SirAldricHumanoidAttack.PhaseKind.Draw, draw.Phase);
+        Assert.Equal(SirAldricHumanoidAttack.PhaseKind.Guard, guard.Phase);
+        Assert.Equal(SirAldricHumanoidAttack.PhaseKind.Strike, strike.Phase);
+        Assert.Equal(SirAldricHumanoidAttack.PhaseKind.Recover, recover.Phase);
+
+        Assert.True(strike.SwordDrawn);
+        Assert.True(strike.StrikeTowardTop);
+        Assert.True(strike.HandZ > draw.HandZ + 0.45f);
+        Assert.True(strike.HandZ > 0.50f);
+        Assert.True(draw.HandZ < 0.10f);
+        Assert.True(recover.HandZ < strike.HandZ);
+        Assert.False(recover.StrikeTowardTop);
+        Assert.Contains("GetBoneTransform", SirAldricHumanoidAttack.Authorship, StringComparison.Ordinal);
+        Assert.Contains("FromToRotation", SirAldricHumanoidAttack.Authorship, StringComparison.Ordinal);
+        Assert.DoesNotContain("Design PASS", SirAldricHumanoidAttack.Authorship, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Meshy_animate_actor_authors_attack_on_walk_humanoid_not_design_fbx()
     {
         var root = FindRepoRoot();
         var actor = Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs");
         var src = File.ReadAllText(actor);
-        Assert.Contains("ThemePackAttackFbx", src, StringComparison.Ordinal);
-        Assert.Contains("sir_aldric_meshy_animate_attack.fbx", src, StringComparison.Ordinal);
-        Assert.Contains("LoadAttackClipFrom", src, StringComparison.Ordinal);
-        Assert.Contains("PickAttackClip", src, StringComparison.Ordinal);
-        Assert.Contains("RepairAttackTake", src, StringComparison.Ordinal);
-        Assert.Contains("AttackOnNativeInstance", src, StringComparison.Ordinal);
-        Assert.Contains("SirAldricMeshyAnimateAttack", src, StringComparison.Ordinal);
-        Assert.Contains("FbxLooksMixamo", src, StringComparison.Ordinal);
+        Assert.Contains("AttackAuthoredReason", src, StringComparison.Ordinal);
+        Assert.Contains("SirAldricHumanoidAttack", src, StringComparison.Ordinal);
+        Assert.Contains("GetBoneTransform(HumanBodyBones.RightUpperArm)", src, StringComparison.Ordinal);
+        Assert.Contains("AimChain", src, StringComparison.Ordinal);
+        Assert.Contains("FromToRotation", src, StringComparison.Ordinal);
+        Assert.Contains("ClipSword", src, StringComparison.Ordinal);
+        Assert.Contains("AttackOnWalkHumanoid", src, StringComparison.Ordinal);
         Assert.Contains("WalkCyclesBeforeAttack", src, StringComparison.Ordinal);
-        Assert.Contains("target_character|rigify_clip|BaseLayer", src, StringComparison.Ordinal);
-        Assert.Contains("Meshy Lionguard Knight", src, StringComparison.Ordinal);
+        Assert.Contains("RearYawDegrees", src, StringComparison.Ordinal);
         Assert.DoesNotContain("_mixer.ConnectInput(1", src, StringComparison.Ordinal);
+        Assert.DoesNotContain("SirAldricMeshyAnimateAttack", src, StringComparison.Ordinal);
+        Assert.DoesNotContain("LoadAttackClipFrom", src, StringComparison.Ordinal);
+        Assert.Contains("Path A weight-paint is CANCELLED", src, StringComparison.Ordinal);
+
+        // Leftover Design Rigify file stays on disk and must not be Mixamo (do not play it).
         var attack = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_animate_attack.fbx");
         Assert.True(new FileInfo(attack).Length > 1_000_000);
-        var meta = File.ReadAllText(attack + ".meta");
-        Assert.Contains("takeName: target_character|rigify_clip|BaseLayer", meta, StringComparison.Ordinal);
-        Assert.Contains("name: Attack", meta, StringComparison.Ordinal);
-        Assert.Contains("animationType: 3", meta, StringComparison.Ordinal);
         var walkBytes = File.ReadAllBytes(Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_animate_walk.fbx"));
         var atkBytes = File.ReadAllBytes(attack);
         Assert.True(IndexOfAscii(walkBytes, "mixamorig") >= 0);
         Assert.True(IndexOfAscii(atkBytes, "mixamorig") < 0);
         Assert.True(IndexOfAscii(atkBytes, "Spine02") >= 0);
+        Assert.Contains("ThemePackAttackFbx", src, StringComparison.Ordinal);
+        Assert.Contains("NOT played", src, StringComparison.Ordinal);
+
+        var capture = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricGameViewCapture.cs"));
+        Assert.Contains("Camera.Render", capture, StringComparison.Ordinal);
+        Assert.Contains("1080", capture, StringComparison.Ordinal);
+        Assert.Contains("sir_aldric_humanoid_draw_strike_gameview.mp4", capture, StringComparison.Ordinal);
+        Assert.Contains("sir_aldric_humanoid_mid_strike_gameview.png", capture, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -333,7 +366,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("heightFromFeet: 1", meta, StringComparison.Ordinal);
         Assert.Contains("addHumanoidExtraRoot: 1", meta, StringComparison.Ordinal);
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
-        Assert.Contains("AttackNativeInstanceReason", actor, StringComparison.Ordinal);
+        Assert.Contains("AttackAuthoredReason", actor, StringComparison.Ordinal);
         Assert.Contains("Path A weight-paint is CANCELLED", actor, StringComparison.Ordinal);
     }
 

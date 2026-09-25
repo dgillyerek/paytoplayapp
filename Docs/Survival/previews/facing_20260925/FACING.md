@@ -18,11 +18,11 @@ Unity Y-up. After yaw 180: character-RIGHT = world +X = viewer-right from behind
 
 ## Actor wire
 
-`SirAldricMeshyAnimateActor`:
+`SirAldricMeshyAnimateActor` (Derek OVERRIDE):
 
 1. Instantiate walk FBX → `FaceWorldTop` (yaw 180) → `#26` atlas-before-punch → `#25` Walking take-name repair if needed.
-2. `AnimationMixerPlayable` input 0 = Walking (loop). Input 1 = Design Attack take `target_character|rigify_clip|BaseLayer`.
-3. After `WalkCyclesBeforeAttack` walk cycles, 0.12s crossfade Walking → Attack → back. Same Humanoid, same rear yaw.
+2. Walking clip loops on the Mixamo Humanoid. After `WalkCyclesBeforeAttack`, plant last walk frame.
+3. Authored `SirAldricHumanoidAttack` AimChain (GetBoneTransform + FromToRotation, no scale): hand to scabbard → draw → forward thrust toward +Z / TOP. Clip-only sword on RightHand. Design Rigify attack FBX is **not** played.
 
 ## Proof (PRIMARY = rear / back-to-camera)
 

@@ -19,20 +19,15 @@ namespace Survival.Unity
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
     {
         public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_walk.fbx";
+        /// <summary>Leftover Design Rigify drop. On disk only — NOT played (squash / standing slash).</summary>
         public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_attack.fbx";
         public const string ClipHint = "Walking";
-        public const string AttackClipHint = "Attack";
-        /// <summary>FBX stack take on the Design drop. clipAnimations.takeName must match (#25). Short name "Attack" is the imported clip.</summary>
-        public const string AttackTakeName = "target_character|rigify_clip|BaseLayer";
-        /// <summary>Design / Meshy package label. Discovery uses Attack / Slash / Sword / clip0 / this take.</summary>
-        public const string AttackClipDiscovery = "Meshy Lionguard Knight · Standing Sword Slash Attack";
         /// <summary>
-        /// Derek FAIL: playing the Rigify-named attack clip on the Mixamo walk Humanoid
-        /// squashes limbs. Attack plays on its own FBX instance until Design re-exports
-        /// on the walk Mixamo rig (mixamorig:*). Do not invent bones. Path A cancelled.
+        /// Derek OVERRIDE: draw→strike is authored on this walk Mixamo Humanoid
+        /// (GetBoneTransform + FromToRotation AimChain, no scale). Same mesh/atlas/Avatar
+        /// as the walk FBX. Design attack FBX is not played. Path A cancelled. No Design PASS.
         /// </summary>
-        public const string AttackNativeInstanceReason =
-            "Attack FBX bones are Rigify-named (Hips/Spine02); walk is mixamorig. Same bind lengths, different names/hierarchy — Humanoid retarget across them is the squash. Native instance until same-rig drop.";
+        public const string AttackAuthoredReason = SirAldricHumanoidAttack.Authorship;
         /// <summary>
         /// Yaw so imported Mixamo forward (−Z, face to Play cam) becomes world +Z.
         /// Camera SoT: SirAldricDemo (0, 2.80, −5.40) LookAt (0, 0.90, 0.50) → view +Z.
@@ -41,27 +36,27 @@ namespace Survival.Unity
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
 
         private Animator? _walkAnimator;
-        private Animator? _attackAnimator;
         private PlayableGraph _walkGraph;
-        private PlayableGraph _attackGraph;
         private AnimationClipPlayable _walkPlayable;
-        private AnimationClipPlayable _attackPlayable;
         private float _walkLength;
-        private float _attackLength;
-        private bool _hasAttack;
-        private bool _attackOnNativeInstance;
         private bool _walkGraphReady;
-        private bool _attackGraphReady;
         private GameObject? _walkInstance;
-        private GameObject? _attackInstance;
+        private GameObject? _clipSword;
 
         public bool Built => _walkGraphReady;
 
-        /// <summary>True only when Design has dropped an Attack clip. Never a hand-baked fake.</summary>
-        public bool HasAttackClip => _hasAttack;
+        /// <summary>Always true: draw→strike is authored on the walk Humanoid (OVERRIDE).</summary>
+        public bool HasAttackClip => _walkGraphReady;
 
-        /// <summary>True when attack plays on the attack FBX instance (incompatible Mixamo↔Rigify retarget avoided).</summary>
-        public bool AttackOnNativeInstance => _attackOnNativeInstance;
+        /// <summary>False: leftover Design Rigify FBX is not instantiated.</summary>
+        public bool AttackOnNativeInstance => false;
+
+        /// <summary>True: attack drives the walk Mixamo Avatar only.</summary>
+        public bool AttackOnWalkHumanoid => _walkGraphReady;
+
+        public float WalkLength => _walkLength;
+
+        public float AttackLength => SirAldricHumanoidAttack.Seconds;
 
         public void Build()
         {
@@ -99,54 +94,8 @@ namespace Survival.Unity
             _walkGraph.Play();
             _walkGraphReady = true;
 
-            TryBuildAttack();
-            SampleLoop(0f);
-        }
-
-        private void TryBuildAttack()
-        {
-            var attackRel = FirstExistingAttackRel();
-            if (attackRel == null)
-            {
-                return;
-            }
-
-            var clip = LoadAttackClipFrom(attackRel);
-            if (clip == null || clip.length <= 0.05f)
-            {
-                return;
-            }
-
-            clip.wrapMode = WrapMode.Once;
-            _attackLength = clip.length;
-            _hasAttack = true;
-
-            // Always play attack on the attack FBX instance + its own avatar.
-            // Rigify-named clip on mixamorig walk Humanoid was the squash (Derek FAIL).
-            // When Design re-exports on the walk Mixamo rig, this still works (clip+mesh same file).
-            var attackPrefab = LoadFbxPrefab(ThemePackAttackFbx, "sir_aldric_meshy_animate_attack");
-            if (attackPrefab == null)
-            {
-                Debug.LogWarning(AttackNativeInstanceReason + " Attack prefab missing after import.");
-                _hasAttack = false;
-                return;
-            }
-
-            _attackInstance = Instantiate(attackPrefab, transform);
-            _attackInstance.name = "SirAldricMeshyAnimateAttack";
-            HideJunk(_attackInstance);
-            FaceWorldTop(_attackInstance);
-            PunchMaterials(_attackInstance, ThemePackAttackFbx);
-            _attackInstance.SetActive(false);
-            _attackAnimator = EnsureAnimator(_attackInstance, attackRel);
-            _attackGraph = PlayableGraph.Create("SirAldricMeshyAttack");
-            _attackGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
-            var atkOut = AnimationPlayableOutput.Create(_attackGraph, "AldricAttack", _attackAnimator);
-            _attackPlayable = AnimationClipPlayable.Create(_attackGraph, clip);
-            atkOut.SetSourcePlayable(_attackPlayable);
-            _attackGraph.Play();
-            _attackGraphReady = true;
-            _attackOnNativeInstance = true;
+            SampleAt(0f);
+            EnsureClipSword();
         }
 
         private void Update()
@@ -156,62 +105,209 @@ namespace Survival.Unity
                 return;
             }
 
-            SampleLoop(Time.unscaledTime);
+            SampleAt(Time.unscaledTime);
         }
 
-        private void SampleLoop(float timeSeconds)
+        /// <summary>Drive the walk Humanoid to a loop time (walk plant, then authored draw→strike).</summary>
+        public void SampleAt(float timeSeconds)
         {
-            var walkBlock = _walkLength * SirAldric3DMotion.WalkCyclesBeforeAttack;
-            var loop = walkBlock + (_hasAttack ? _attackLength : 0f);
-            if (loop <= 0f)
+            if (!_walkGraphReady || !_walkGraph.IsValid() || _walkLength <= 0f)
             {
                 return;
             }
 
+            var walkBlock = _walkLength * SirAldric3DMotion.WalkCyclesBeforeAttack;
+            var loop = walkBlock + SirAldricHumanoidAttack.Seconds;
             var t = timeSeconds % loop;
-            var attacking = _hasAttack && t >= walkBlock;
-            if (_walkInstance != null)
+            if (t < 0f)
             {
-                _walkInstance.SetActive(!attacking);
+                t += loop;
             }
 
-            if (_attackInstance != null)
+            if (t < walkBlock)
             {
-                _attackInstance.SetActive(attacking);
-            }
-
-            if (!attacking)
-            {
-                if (_walkGraphReady && _walkGraph.IsValid())
+                _walkPlayable.SetTime(t % _walkLength);
+                _walkGraph.Evaluate();
+                if (_clipSword != null)
                 {
-                    _walkPlayable.SetTime(t % _walkLength);
-                    _walkGraph.Evaluate();
+                    _clipSword.SetActive(false);
                 }
 
                 return;
             }
 
-            var at = Mathf.Clamp(t - walkBlock, 0f, _attackLength);
-            if (_attackGraphReady && _attackGraph.IsValid())
-            {
-                _attackPlayable.SetTime(at);
-                _attackGraph.Evaluate();
-            }
+            // Plant the last authored walk frame (Design PASS lean stance), then aim the right arm.
+            _walkPlayable.SetTime(Mathf.Max(_walkLength - 0.001f, 0f));
+            _walkGraph.Evaluate();
+            ApplyDrawStrike(t - walkBlock);
         }
 
         public string PhaseLabel(float timeSeconds)
         {
-            if (_hasAttack && _walkLength > 0f)
+            if (_walkLength > 0f)
             {
                 var walkBlock = _walkLength * SirAldric3DMotion.WalkCyclesBeforeAttack;
-                var loop = walkBlock + _attackLength;
-                if (loop > 0f && (timeSeconds % loop) >= walkBlock)
+                var loop = walkBlock + SirAldricHumanoidAttack.Seconds;
+                var t = loop > 0f ? timeSeconds % loop : 0f;
+                if (t < 0f)
                 {
-                    return "ATTACK  ·  toward TOP  ·  Meshy Animate";
+                    t += loop;
+                }
+
+                if (t >= walkBlock)
+                {
+                    var sample = SirAldricHumanoidAttack.Evaluate(t - walkBlock);
+                    return sample.Phase == SirAldricHumanoidAttack.PhaseKind.Strike
+                        ? "ATTACK  ·  STRIKE TOP  ·  Humanoid clip"
+                        : "ATTACK  ·  " + sample.Phase.ToString().ToUpperInvariant() + "  ·  Humanoid clip";
                 }
             }
 
             return "WALK  ·  toward TOP  ·  Meshy Animate";
+        }
+
+        private void ApplyDrawStrike(float attackT)
+        {
+            if (_walkAnimator == null)
+            {
+                return;
+            }
+
+            var hips = _walkAnimator.GetBoneTransform(HumanBodyBones.Hips);
+            var upper = _walkAnimator.GetBoneTransform(HumanBodyBones.RightUpperArm);
+            var lower = _walkAnimator.GetBoneTransform(HumanBodyBones.RightLowerArm);
+            var hand = _walkAnimator.GetBoneTransform(HumanBodyBones.RightHand);
+            if (hips == null || upper == null || lower == null || hand == null)
+            {
+                return;
+            }
+
+            var sample = SirAldricHumanoidAttack.Evaluate(attackT);
+            var worldTarget = hips.TransformPoint(new Vector3(sample.HandX, sample.HandY, sample.HandZ));
+            AimChain(upper, lower, hand, worldTarget);
+            LeanSpineTowardTop(sample.SpineLeanDegrees);
+
+            if (_clipSword == null)
+            {
+                EnsureClipSword();
+            }
+
+            if (_clipSword != null)
+            {
+                if (_clipSword.transform.parent != hand)
+                {
+                    _clipSword.transform.SetParent(hand, false);
+                    PlaceClipSwordInHand();
+                }
+
+                _clipSword.SetActive(sample.SwordDrawn);
+            }
+        }
+
+        /// <summary>
+        /// Rotate the arm chain so the hand aims at worldTarget. FromToRotation only —
+        /// never writes localScale (stretch spikes = FAIL).
+        /// </summary>
+        private static void AimChain(Transform upper, Transform lower, Transform hand, Vector3 worldTarget)
+        {
+            var from = hand.position - upper.position;
+            var to = worldTarget - upper.position;
+            if (from.sqrMagnitude > 1e-8f && to.sqrMagnitude > 1e-8f)
+            {
+                upper.rotation = Quaternion.FromToRotation(from.normalized, to.normalized) * upper.rotation;
+            }
+
+            from = hand.position - lower.position;
+            to = worldTarget - lower.position;
+            if (from.sqrMagnitude > 1e-8f && to.sqrMagnitude > 1e-8f)
+            {
+                lower.rotation = Quaternion.FromToRotation(from.normalized, to.normalized) * lower.rotation;
+            }
+        }
+
+        private void LeanSpineTowardTop(float degrees)
+        {
+            if (_walkAnimator == null || _walkInstance == null || Mathf.Abs(degrees) < 0.05f)
+            {
+                return;
+            }
+
+            var spine = _walkAnimator.GetBoneTransform(HumanBodyBones.Spine)
+                        ?? _walkAnimator.GetBoneTransform(HumanBodyBones.Chest);
+            if (spine == null)
+            {
+                return;
+            }
+
+            // Cross(forward, up) = character-left of +Z lean axis so +deg pitches toward TOP.
+            var axis = Vector3.Cross(_walkInstance.transform.forward, Vector3.up);
+            if (axis.sqrMagnitude < 1e-6f)
+            {
+                return;
+            }
+
+            spine.rotation = Quaternion.AngleAxis(degrees, axis.normalized) * spine.rotation;
+        }
+
+        private void EnsureClipSword()
+        {
+            if (_clipSword != null || _walkAnimator == null)
+            {
+                return;
+            }
+
+            var hand = _walkAnimator.GetBoneTransform(HumanBodyBones.RightHand);
+            if (hand == null)
+            {
+                return;
+            }
+
+            var blade = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            blade.name = "ClipSword";
+            UnityEngine.Object.Destroy(blade.GetComponent<Collider>());
+            var rend = blade.GetComponent<Renderer>();
+            if (rend != null)
+            {
+                var mat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard") ?? Shader.Find("Unlit/Color"));
+                if (mat.HasProperty("_BaseColor"))
+                {
+                    mat.SetColor("_BaseColor", new Color(0.72f, 0.74f, 0.78f));
+                }
+                else
+                {
+                    mat.color = new Color(0.72f, 0.74f, 0.78f);
+                }
+
+                if (mat.HasProperty("_Metallic"))
+                {
+                    mat.SetFloat("_Metallic", 0.85f);
+                }
+
+                if (mat.HasProperty("_Smoothness"))
+                {
+                    mat.SetFloat("_Smoothness", 0.78f);
+                }
+
+                rend.sharedMaterial = mat;
+            }
+
+            blade.transform.SetParent(hand, false);
+            _clipSword = blade;
+            PlaceClipSwordInHand();
+            blade.SetActive(false);
+        }
+
+        private void PlaceClipSwordInHand()
+        {
+            if (_clipSword == null)
+            {
+                return;
+            }
+
+            // Mixamo RightHand bone runs toward the fingers. Blade along local Y.
+            _clipSword.transform.localPosition = new Vector3(0f, 0.28f, 0f);
+            _clipSword.transform.localRotation = Quaternion.identity;
+            _clipSword.transform.localScale = new Vector3(0.035f, 0.55f, 0.022f);
         }
 
         private void OnDestroy()
@@ -219,11 +315,6 @@ namespace Survival.Unity
             if (_walkGraphReady && _walkGraph.IsValid())
             {
                 _walkGraph.Destroy();
-            }
-
-            if (_attackGraphReady && _attackGraph.IsValid())
-            {
-                _attackGraph.Destroy();
             }
         }
 
@@ -289,34 +380,7 @@ namespace Survival.Unity
 
         private static string FbxAssetPath => "Assets/" + ThemePackFbx.Replace('\\', '/');
 
-        private static string? FirstExistingAttackRel()
-        {
-            foreach (var rel in AttackFbxAssetPaths())
-            {
-                if (ThemePackFileExists(rel))
-                {
-                    return rel;
-                }
-            }
-
-            return null;
-        }
-
-        private static bool ThemePackFileExists(string assetsRel)
-        {
-            var cwd = Directory.GetCurrentDirectory();
-            var data = Application.dataPath ?? Path.Combine(cwd, "Assets");
-            var repo = Directory.GetParent(data)?.FullName ?? cwd;
-            var trimmed = assetsRel.Replace('\\', '/');
-            if (trimmed.StartsWith("Assets/", StringComparison.Ordinal))
-            {
-                trimmed = trimmed.Substring("Assets/".Length);
-            }
-
-            return File.Exists(Path.Combine(data, trimmed)) || File.Exists(Path.Combine(repo, "Assets", trimmed));
-        }
-
-        /// <summary>Walk Mixamo uses mixamorig:*. Design same-rig re-export will too. Current attack does not.</summary>
+        /// <summary>Walk Mixamo uses mixamorig:*. Leftover Design attack FBX does not — do not play it on this Avatar.</summary>
         public static bool FbxLooksMixamo(string assetsRel)
         {
 #if UNITY_EDITOR
@@ -350,39 +414,6 @@ namespace Survival.Unity
             {
                 return false;
             }
-        }
-
-        private static AnimationClip? LoadAttackClipFrom(string rel)
-        {
-#if UNITY_EDITOR
-            var clip = PickAttackClip(rel);
-            if (clip != null)
-            {
-                return clip;
-            }
-
-            if (RepairAttackTake(rel))
-            {
-                return PickAttackClip(rel);
-            }
-#endif
-            return null;
-        }
-
-        private static AnimationClip? LoadAttackClip()
-        {
-            var rel = FirstExistingAttackRel();
-            return rel == null ? null : LoadAttackClipFrom(rel);
-        }
-
-        private static string[] AttackFbxAssetPaths()
-        {
-            return new[]
-            {
-                "Assets/" + ThemePackAttackFbx.Replace('\\', '/'),
-                "Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_attack.fbx",
-                "Assets/Survival/Art/sir_aldric_meshy_animate_attack.fbx",
-            };
         }
 
         private static AnimationClip? LoadWalkingClip()
@@ -464,144 +495,6 @@ namespace Survival.Unity
             }
 
             return exact ?? walk ?? longest;
-#else
-            return null;
-#endif
-        }
-
-        private static AnimationClip? PickAttackClip(string rel)
-        {
-            return PickNamedClip(rel, AttackClipHint, "Slash", "Strike", "Punch", "Sword", "rigify", "clip0", "baselayer", "Lionguard")
-                   ?? PickLongestClip(rel);
-        }
-
-        private static AnimationClip? PickLongestClip(string rel)
-        {
-#if UNITY_EDITOR
-            AnimationClip? longest = null;
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
-            {
-                if (obj is not AnimationClip clip || clip.name.StartsWith("__preview", StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                if (longest == null || clip.length > longest.length)
-                {
-                    longest = clip;
-                }
-            }
-
-            return longest;
-#else
-            return null;
-#endif
-        }
-
-        private static bool RepairAttackTake(string rel)
-        {
-#if UNITY_EDITOR
-            if (AssetImporter.GetAtPath(rel) is not ModelImporter importer || !importer.importAnimation)
-            {
-                return false;
-            }
-
-            var defaults = importer.defaultClipAnimations;
-            if (defaults == null || defaults.Length == 0)
-            {
-                return false;
-            }
-
-            ModelImporterClipAnimation? best = null;
-            var bestSpan = -1f;
-            foreach (var candidate in defaults)
-            {
-                var label = (candidate.takeName ?? "") + "\n" + (candidate.name ?? "");
-                var hit = label.IndexOf("rigify", StringComparison.OrdinalIgnoreCase) >= 0
-                          || label.IndexOf("clip0", StringComparison.OrdinalIgnoreCase) >= 0
-                          || label.IndexOf("baselayer", StringComparison.OrdinalIgnoreCase) >= 0
-                          || label.IndexOf("Attack", StringComparison.OrdinalIgnoreCase) >= 0
-                          || label.IndexOf("Slash", StringComparison.OrdinalIgnoreCase) >= 0
-                          || label.IndexOf("Sword", StringComparison.OrdinalIgnoreCase) >= 0
-                          || string.Equals(candidate.takeName, AttackTakeName, StringComparison.Ordinal);
-                if (!hit)
-                {
-                    continue;
-                }
-
-                var span = candidate.lastFrame - candidate.firstFrame;
-                if (best == null || span > bestSpan)
-                {
-                    best = candidate;
-                    bestSpan = span;
-                }
-            }
-
-            if (best == null)
-            {
-                foreach (var candidate in defaults)
-                {
-                    var span = candidate.lastFrame - candidate.firstFrame;
-                    if (best == null || span > bestSpan)
-                    {
-                        best = candidate;
-                        bestSpan = span;
-                    }
-                }
-            }
-
-            if (best == null || bestSpan <= 0f)
-            {
-                return false;
-            }
-
-            best.name = AttackClipHint;
-            best.loopTime = false;
-            best.loop = false;
-            best.keepOriginalOrientation = true;
-            best.keepOriginalPositionY = true;
-            best.keepOriginalPositionXZ = true;
-            importer.clipAnimations = new[] { best };
-            importer.SaveAndReimport();
-            return true;
-#else
-            return false;
-#endif
-        }
-
-        private static AnimationClip? PickNamedClip(string rel, params string[] hints)
-        {
-#if UNITY_EDITOR
-            AnimationClip? best = null;
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
-            {
-                if (obj is not AnimationClip clip || clip.name.StartsWith("__preview", StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                var hit = false;
-                foreach (var hint in hints)
-                {
-                    if (clip.name.IndexOf(hint, StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        hit = true;
-                        break;
-                    }
-                }
-
-                if (!hit)
-                {
-                    continue;
-                }
-
-                if (best == null || clip.length > best.length)
-                {
-                    best = clip;
-                }
-            }
-
-            return best;
 #else
             return null;
 #endif
