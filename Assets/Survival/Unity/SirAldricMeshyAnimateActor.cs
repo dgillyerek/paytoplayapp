@@ -183,7 +183,12 @@ namespace Survival.Unity
             }
 
             var sample = SirAldricHumanoidAttack.Evaluate(attackT);
-            var worldTarget = hips.TransformPoint(new Vector3(sample.HandX, sample.HandY, sample.HandZ));
+            // Hips bone +Z is up the spine on Mixamo — do not TransformPoint.
+            // After RearYaw 180, character forward / TOP = world +Z, right = +X, up = +Y.
+            var worldTarget = new Vector3(
+                hips.position.x + sample.HandX,
+                hips.position.y + sample.HandY,
+                hips.position.z + sample.HandZ);
             AimChain(upper, lower, hand, worldTarget);
             LeanSpineTowardTop(sample.SpineLeanDegrees);
 
@@ -239,8 +244,8 @@ namespace Survival.Unity
                 return;
             }
 
-            // Cross(forward, up) = character-left of +Z lean axis so +deg pitches toward TOP.
-            var axis = Vector3.Cross(_walkInstance.transform.forward, Vector3.up);
+            // Pitch toward world +Z (TOP). Cross(+Z, +Y) = −X.
+            var axis = Vector3.Cross(Vector3.forward, Vector3.up);
             if (axis.sqrMagnitude < 1e-6f)
             {
                 return;

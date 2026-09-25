@@ -10,7 +10,7 @@ Derek OVERRIDE: do **not** wait on Design attack FBX re-export. Use the **existi
 
 1. Play the Design walk clip AS-IS on the Mixamo Humanoid (`mixamorig:*`, same Avatar).
 2. After `WalkCyclesBeforeAttack` cycles, **plant** the last walk frame (wide stance stays Design walk iterate).
-3. Aim the **RightUpperArm → RightLowerArm → RightHand** chain at hips-local targets: scabbard → guard → **+Z thrust** → recover. `Quaternion.FromToRotation` only — **never writes `localScale`** (stretch spikes = FAIL).
+3. Aim the **RightUpperArm → RightLowerArm → RightHand** chain at world character-space offsets from hips (`+X` right, `+Y` up, `+Z` TOP) — not hips-bone `TransformPoint` (Mixamo hips +Z is up the spine). Scabbard → guard → **+Z thrust** → recover. `Quaternion.FromToRotation` only — **never writes `localScale`** (stretch spikes = FAIL).
 4. Clip-only `ClipSword` cube parented to `RightHand` while drawn. Walk mesh scabbard is painted; no Path A rebind.
 
 Leftover Design attack FBX (`sir_aldric_meshy_animate_attack.fbx`, Rigify `Hips/Spine02`) stays on disk and is **not played**. Playing it on this Avatar was the squash.
