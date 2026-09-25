@@ -13,7 +13,7 @@ namespace Survival.Unity
     /// <summary>
     /// Bonequill World proof actor: Meshy Animate FBX humanoid + Walking clip AS-IS.
     /// Path A weight-paint is CANCELLED. Atlas albedo + normal bound so Lit is not white.
-    /// Walk-only. Soft leftover: body-only (no bow/quiver). Design PASS not claimed.
+    /// Walk-only v2 continuous AccuRIG body (props kept). Design PASS not claimed.
     /// </summary>
     public sealed class BonequillMeshyAnimateActor : MonoBehaviour
     {
@@ -146,7 +146,7 @@ namespace Survival.Unity
                 return AssetDatabase.LoadAssetAtPath<GameObject>(rel);
             }
 #endif
-            return Resources.Load<GameObject>("bonequill_meshy_animate_walk");
+            return Resources.Load<GameObject>("bonequill_meshy_animate_walk_v2");
         }
 
         private static string FbxAssetPath => "Assets/" + ThemePackFbx.Replace('\\', '/');
@@ -392,7 +392,7 @@ namespace Survival.Unity
                 return sibling;
             }
 #endif
-            _cachedAlbedo = LoadSiblingPng("bonequill_meshy_animate_walk_atlas.png")
+            _cachedAlbedo = LoadSiblingPng("bonequill_meshy_animate_walk_v2_atlas.png")
                             ?? ExtractFbxPng(color: true);
             return _cachedAlbedo;
         }
@@ -412,7 +412,7 @@ namespace Survival.Unity
                 return sibling;
             }
 #endif
-            _cachedNormal = LoadSiblingPng("bonequill_meshy_animate_walk_normal.png")
+            _cachedNormal = LoadSiblingPng("bonequill_meshy_animate_walk_v2_normal.png")
                            ?? ExtractFbxPng(color: false);
             return _cachedNormal;
         }

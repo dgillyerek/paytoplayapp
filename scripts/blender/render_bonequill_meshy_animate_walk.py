@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Bonequill Meshy Animate walk → World stills + rear walk MP4.
+"""Bonequill Meshy Animate walk v2 → World stills + rear walk MP4.
 
-Same Play cam as Aldric. Path A cancelled. Do NOT claim Design PASS.
+Continuous AccuRIG body (Hips/Spine02). Same Play cam as Aldric.
+Path A cancelled. Do NOT claim Design PASS.
 """
 from __future__ import annotations
 
@@ -14,8 +15,8 @@ import bpy
 from mathutils import Matrix, Vector
 
 ROOT = Path(__file__).resolve().parents[2]
-FBX = ROOT / "Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/bonequill_meshy_animate_walk.fbx"
-ATLAS = ROOT / "Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/bonequill_meshy_animate_walk_atlas.png"
+FBX = ROOT / "Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/bonequill_meshy_animate_walk_v2.fbx"
+ATLAS = ROOT / "Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/bonequill_meshy_animate_walk_v2_atlas.png"
 PROOF = ROOT / "Docs/Survival/previews/bonequill_20260925"
 ART = Path("/opt/cursor/artifacts")
 TARGET_H = 1.86
@@ -29,8 +30,9 @@ CAM_34_FRONT = (-1.20, 2.80, 5.15)
 CAM_34_FRONT_T = (0.0, 0.90, 0.0)
 CAM_FOV = 30.0
 FOOT = {
-    "mixamorig:LeftFoot", "mixamorig:RightFoot",
-    "mixamorig:LeftToeBase", "mixamorig:RightToeBase",
+    "LeftFoot", "RightFoot",
+    "LeftToe", "RightToe",
+    "LeftToe_End", "RightToe_End",
 }
 
 
@@ -228,10 +230,10 @@ def main():
     f0, f1 = walk.frame_range
     pose(arm, mesh, walk, f0)
     stills = (
-        ("bonequill_world_front.png", CAM_FRONT, CAM_FRONT_T),
-        ("bonequill_world_34_front.png", CAM_34_FRONT, CAM_34_FRONT_T),
-        ("bonequill_world_rear.png", CAM_EYE, CAM_TARGET),
-        ("bonequill_world_rear_34.png", CAM_EYE_34, CAM_TARGET),
+        ("bonequill_v2_world_front.png", CAM_FRONT, CAM_FRONT_T),
+        ("bonequill_v2_world_34_front.png", CAM_34_FRONT, CAM_34_FRONT_T),
+        ("bonequill_v2_world_rear.png", CAM_EYE, CAM_TARGET),
+        ("bonequill_v2_world_rear_34.png", CAM_EYE_34, CAM_TARGET),
     )
     for name, eye, tgt in stills:
         set_cam(cam, eye, tgt)
@@ -242,7 +244,7 @@ def main():
     for i in range(n):
         pose(arm, mesh, walk, f0 + i)
         render_to(frames_dir / f"f_{i:03d}.png")
-    mp4 = PROOF / "bonequill_walk_toward_top_rear.mp4"
+    mp4 = PROOF / "bonequill_v2_walk_toward_top_rear.mp4"
     subprocess.check_call(
         [
             "ffmpeg", "-y", "-framerate", "24",
@@ -253,7 +255,7 @@ def main():
     )
     print("mp4", mp4, mp4.stat().st_size)
     (ART / mp4.name).write_bytes(mp4.read_bytes())
-    print("done bonequill walk wire proofs (no Design PASS)")
+    print("done bonequill walk v2 wire proofs (no Design PASS)")
 
 
 if __name__ == "__main__":

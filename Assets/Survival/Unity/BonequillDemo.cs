@@ -5,8 +5,8 @@ using UnityEngine.UI;
 namespace Survival.Unity
 {
     /// <summary>
-    /// 1080×1920 Game-view demo: Bonequill Meshy Animate walk AS-IS.
-    /// Path A cancelled. Body-only leftover noted. No hub unlock. No Design PASS.
+    /// 1080×1920 Game-view demo: Bonequill Meshy Animate walk v2 AS-IS.
+    /// Path A cancelled. Continuous AccuRIG body. No hub unlock. No Design PASS.
     /// </summary>
     public sealed class BonequillDemo : MonoBehaviour
     {
@@ -133,7 +133,7 @@ namespace Survival.Unity
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "walk-only  ·  body-only leftover  ·  HOLD  ·  no Design PASS",
+                "walk-only v2  ·  continuous body  ·  HOLD  ·  no Design PASS",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);
