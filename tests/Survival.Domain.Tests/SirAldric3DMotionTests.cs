@@ -363,9 +363,9 @@ public sealed class SirAldric3DMotionTests
         var capture = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricGameViewCapture.cs"));
         Assert.Contains("Camera.Render", capture, StringComparison.Ordinal);
         Assert.Contains("1080", capture, StringComparison.Ordinal);
-        Assert.Contains("aldric_sep_20260925", capture, StringComparison.Ordinal);
-        Assert.Contains("sir_aldric_sep_walk_juice_gameview.mp4", capture, StringComparison.Ordinal);
-        Assert.Contains("sir_aldric_sep_attack_juice_gameview.mp4", capture, StringComparison.Ordinal);
+        Assert.Contains("aldric_sep_paint_20260925", capture, StringComparison.Ordinal);
+        Assert.Contains("sir_aldric_sep_paint_walk_juice_gameview.mp4", capture, StringComparison.Ordinal);
+        Assert.Contains("sir_aldric_sep_paint_attack_juice_gameview.mp4", capture, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -386,16 +386,29 @@ public sealed class SirAldric3DMotionTests
     }
 
     [Fact]
-    public void Sep_meshy_clips_have_no_embedded_atlas_and_actor_does_not_invent_one()
+    public void Sep_paint_look_binds_on_accurig_and_does_not_use_fused_walk_atlas()
     {
         var root = FindRepoRoot();
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
-        Assert.Contains("ExtractFbxPng", actor, StringComparison.Ordinal);
         Assert.Contains("RepairWalkingTake", actor, StringComparison.Ordinal);
-        Assert.Contains("RepairAttackTake", actor, StringComparison.Ordinal);
-        Assert.Contains("Atlas may be missing", actor, StringComparison.Ordinal);
+        Assert.Contains("BindPaintedLook", actor, StringComparison.Ordinal);
+        Assert.Contains("EnsureLookScabbard", actor, StringComparison.Ordinal);
+        Assert.Contains("sep_body_basecolor.jpg", actor, StringComparison.Ordinal);
+        Assert.Contains("LookSwordScabbard", actor, StringComparison.Ordinal);
+        Assert.Contains("character-RIGHT", actor, StringComparison.Ordinal);
         Assert.Contains("Do not bind the old fused-walk atlas", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("LoadSiblingPng(\"sir_aldric_meshy_atlas.png\")", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("EnsureClipSword", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static void AimChain", actor, StringComparison.Ordinal);
+
+        var paint = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sep_paint", "sep_body_basecolor.jpg");
+        var sword = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "SirAldric_SEP_sword_scabbard_PAINTED_mid.fbx");
+        var body = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "SirAldric_SEP_body_nosword_PAINTED_mid200k.fbx");
+        var uv = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sep_paint", "sir_aldric_sep_walk_look_uv.bin");
+        Assert.True(new FileInfo(paint).Length > 50_000);
+        Assert.True(new FileInfo(sword).Length > 100_000);
+        Assert.True(new FileInfo(body).Length > 100_000);
+        Assert.True(new FileInfo(uv).Length > 100_000);
 
         var walk = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "SirAldric_SEP_meshy_animate_walk.fbx");
         var bytes = File.ReadAllBytes(walk);
@@ -413,12 +426,12 @@ public sealed class SirAldric3DMotionTests
     }
 
     [Fact]
-    public void Sep_walk_is_body_only_no_scabbard_and_clipsword_is_not_sot()
+    public void Sep_walk_motion_fbx_stays_body_only_and_clipsword_is_not_sot()
     {
         var root = FindRepoRoot();
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
         Assert.Contains("Path A weight-paint is CANCELLED", actor, StringComparison.Ordinal);
-        Assert.Contains("Body-only AccuRIG", actor, StringComparison.Ordinal);
+        Assert.Contains("Walk motion SoT", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("EnsureClipSword", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("weight-paint", actor.Replace("Path A weight-paint is CANCELLED", ""), StringComparison.Ordinal);
 
@@ -436,6 +449,26 @@ public sealed class SirAldric3DMotionTests
         Assert.True(IndexOfAscii(walkBytes, "Scabbard") < 0);
         Assert.True(IndexOfAscii(walkBytes, "Sheath") < 0);
         Assert.True(IndexOfAscii(walkBytes, "SirAldric_SEP_body_nosword") >= 0);
+    }
+
+    [Fact]
+    public void Aldric_sep_paint_20260925_playcam_proofs_are_on_disk()
+    {
+        var dir = Path.Combine(FindRepoRoot(), "Docs", "Survival", "previews", "aldric_sep_paint_20260925");
+        Assert.True(new FileInfo(Path.Combine(dir, "PAINT_HOLD.md")).Length > 400);
+        Assert.True(new FileInfo(Path.Combine(dir, "PAINT_MIDPOLY_HANDOFF.md")).Length > 200);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_paint_rear_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_paint_front_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_paint_34_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_paint_walk_juice_playcam.mp4")).Length > 50_000);
+        var hold = File.ReadAllText(Path.Combine(dir, "PAINT_HOLD.md"));
+        Assert.Contains("HOLD merge", hold, StringComparison.Ordinal);
+        Assert.Contains("Not Meshy website stills", hold, StringComparison.Ordinal);
+        Assert.Contains("Not Unity Game-view", hold, StringComparison.Ordinal);
+        Assert.Contains("Attack", hold, StringComparison.Ordinal);
+        Assert.Contains("not SoT", hold, StringComparison.Ordinal);
+        Assert.Contains("No Design PASS", hold, StringComparison.Ordinal);
+        Assert.DoesNotContain("attack fixed", hold, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

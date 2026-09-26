@@ -31,7 +31,7 @@ Both import as Humanoid (`animationType: 3`). Actor instantiates the **walk** FB
 
 Play-cam remap (Unity Y-up SoT: eye `(0, 2.80, −5.40)` LookAt `(0, 0.90, 0.50)` FOV 30, 1080×1920). **Not Meshy website stills. Not Unity Game-view** (no Editor on this VM).
 
-Unity Game-view capturer writes the same filenames when Derek Plays (`Survival → Capture Sir Aldric SEP walk+attack` or `-aldric-capture`).
+Unity Game-view capturer now writes painted-look proofs under `../aldric_sep_paint_20260925/` (`Survival → Capture Sir Aldric SEP painted walk` or `-aldric-capture`). This clay folder stays as the `c88ea55` motion PASS archive.
 
 ## Unity Play repro
 

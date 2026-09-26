@@ -11,16 +11,19 @@ using UnityEditor;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Aldric World proof actor: Design SEP Meshy Animate walk + attack on one Humanoid.
-    /// SoT = authored clips only. ClipSword / AimChain / procedural sword are not SoT.
-    /// Path A weight-paint is CANCELLED. Old fused walk + Standing Sword Slash stay on
-    /// disk and are not played. Body-only AccuRIG (no sword prop). Atlas may be missing.
-    /// Design PASS not claimed.
+    /// Aldric World proof actor: Design SEP Meshy Animate walk on one Humanoid.
+    /// Walk motion SoT = SEP Walking clip (Derek Play PASS). Look = painted midpoly
+    /// atlas stamped onto that AccuRIG + scabbard parented at character-RIGHT hip.
+    /// Attack clip is left loaded but is NOT SoT (native spin FAIL). ClipSword / AimChain
+    /// are not SoT. Path A weight-paint is CANCELLED. No Design PASS on this look wire.
     /// </summary>
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
     {
         public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_walk.fbx";
         public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack.fbx";
+        public const string PaintedBodyFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_body_nosword_PAINTED_mid200k.fbx";
+        public const string PaintedSwordFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_sword_scabbard_PAINTED_mid.fbx";
+        public const string PaintedLookDir = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sep_paint";
         /// <summary>Old fused Meshy walk. On disk only — not SoT.</summary>
         public const string LeftoverFusedWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_walk.fbx";
         /// <summary>Old Standing Sword Slash. On disk only — not SoT.</summary>
@@ -28,12 +31,11 @@ namespace Survival.Unity
         public const string ClipHint = "Walking";
         public const string AttackClipHint = "Attack";
         /// <summary>
-        /// SEP Meshy clips only: Walking + Draw Slash Forward on the walk Humanoid Avatar.
-        /// ClipSword / AimChain are not SoT. Path A cancelled. Body-only AccuRIG.
-        /// Atlas may be missing. No Design PASS.
+        /// Walk motion SoT = SEP Walking. Attack clip is leftover / not SoT.
+        /// Look = painted atlas on AccuRIG + hip scabbard. Path A cancelled.
         /// </summary>
         public const string AttackAuthoredReason =
-            "SEP Meshy Animate clips only: Walking + Draw Slash Forward on the same Humanoid Avatar. ClipSword / AimChain are not SoT. Path A cancelled. Body-only AccuRIG (no sword prop). Atlas may be missing. No Design PASS.";
+            "SEP Walking is motion SoT (Derek Play PASS). Attack FBX left loaded but not SoT (native spin FAIL). Look rewire: painted midpoly atlas on AccuRIG + scabbard parented character-RIGHT hip. ClipSword / AimChain are not SoT. Path A cancelled. No Design PASS.";
         /// <summary>
         /// Yaw so imported Mixamo forward (−Z, face to Play cam) becomes world +Z.
         /// Camera SoT: SirAldricDemo (0, 2.80, −5.40) LookAt (0, 0.90, 0.50) → view +Z.
@@ -83,7 +85,7 @@ namespace Survival.Unity
             _walkInstance.name = "SirAldricSepMeshyAnimate";
             HideJunk(_walkInstance);
             FaceWorldTop(_walkInstance);
-            PunchMaterials(_walkInstance, ThemePackFbx);
+            BindPaintedLook(_walkInstance);
 
             var walk = LoadWalkingClip();
             if (walk == null)
@@ -117,6 +119,7 @@ namespace Survival.Unity
             _walkGraphReady = true;
 
             SampleAt(0f);
+            EnsureLookScabbard();
         }
 
         private void Update()
@@ -560,6 +563,322 @@ namespace Survival.Unity
         private static Texture2D? _cachedAlbedo;
         private static Texture2D? _cachedMetallic;
         private static Texture2D? _cachedRoughness;
+
+        private void BindPaintedLook(GameObject root)
+        {
+            StampLookUvsFromPaintedBody(root);
+            var albedo = LoadSepPaintMap("sep_body_basecolor.jpg", sRgb: true);
+            var metallic = LoadSepPaintMap("sep_body_metallic.jpg", sRgb: false);
+            var roughness = LoadSepPaintMap("sep_body_roughness.jpg", sRgb: false);
+            var normal = LoadSepPaintMap("sep_body_normal.jpg", sRgb: false);
+            foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
+            {
+                if (rend.name.IndexOf("Ico", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    continue;
+                }
+
+                ApplyLookMaterial(rend, albedo, metallic, roughness, normal);
+            }
+        }
+
+        private void EnsureLookScabbard()
+        {
+            if (_walkAnimator == null || _walkInstance == null)
+            {
+                return;
+            }
+
+            var hips = _walkAnimator.GetBoneTransform(HumanBodyBones.Hips);
+            if (hips == null)
+            {
+                return;
+            }
+
+            var prefab = LoadFbxPrefab(PaintedSwordFbx, "SirAldric_SEP_sword_scabbard_PAINTED_mid");
+            GameObject prop;
+            if (prefab != null)
+            {
+                prop = Instantiate(prefab, _walkInstance.transform);
+            }
+            else
+            {
+                return;
+            }
+
+            prop.name = "LookSwordScabbard";
+            var albedo = LoadSepPaintMap("sword_basecolor.jpg", sRgb: true);
+            var metallic = LoadSepPaintMap("sword_metallic.jpg", sRgb: false);
+            var roughness = LoadSepPaintMap("sword_roughness.jpg", sRgb: false);
+            var normal = LoadSepPaintMap("sword_normal.jpg", sRgb: false);
+            foreach (var rend in prop.GetComponentsInChildren<Renderer>(true))
+            {
+                ApplyLookMaterial(rend, albedo, metallic, roughness, normal);
+            }
+
+            // World after RearYaw 180: character-right = root.right = +X = viewer-right from behind.
+            // Look prop only — not parented to RightHand. Walk RH stays clear.
+            var pos = hips.position
+                      + _walkInstance.transform.right * 0.16f
+                      + Vector3.up * -0.10f
+                      + _walkInstance.transform.forward * -0.04f;
+            prop.transform.SetPositionAndRotation(
+                pos,
+                _walkInstance.transform.rotation * Quaternion.Euler(6f, 0f, 90f));
+            prop.transform.localScale = Vector3.one * 0.30f;
+            prop.transform.SetParent(hips, true);
+        }
+
+        private static void ApplyLookMaterial(
+            Renderer rend,
+            Texture2D? albedo,
+            Texture2D? metallic,
+            Texture2D? roughness,
+            Texture2D? normal)
+        {
+            var mat = NewLit();
+            BindMapsAndPunch(mat, albedo, metallic, roughness);
+            if (normal != null && mat.HasProperty("_BumpMap"))
+            {
+                mat.SetTexture("_BumpMap", normal);
+                if (mat.HasProperty("_BumpScale"))
+                {
+                    mat.SetFloat("_BumpScale", 1f);
+                }
+            }
+
+            rend.material = mat;
+        }
+
+        private static void StampLookUvsFromPaintedBody(GameObject walkRoot)
+        {
+            var walkFilter = walkRoot.GetComponentInChildren<MeshFilter>();
+            var walkSkin = walkRoot.GetComponentInChildren<SkinnedMeshRenderer>();
+            Mesh? walkMesh = walkSkin != null ? walkSkin.sharedMesh : walkFilter != null ? walkFilter.sharedMesh : null;
+            if (walkMesh == null)
+            {
+                return;
+            }
+
+            var sidecar = LoadLookUvSidecar(walkMesh.vertexCount);
+            if (sidecar != null)
+            {
+                ApplyWalkUv(walkSkin, walkFilter, walkMesh, sidecar);
+                return;
+            }
+
+            var paintPrefab = LoadFbxPrefab(PaintedBodyFbx, "SirAldric_SEP_body_nosword_PAINTED_mid200k");
+            if (paintPrefab == null)
+            {
+                return;
+            }
+
+            var paintFilter = paintPrefab.GetComponentInChildren<MeshFilter>();
+            var paintSkin = paintPrefab.GetComponentInChildren<SkinnedMeshRenderer>();
+            var paintMesh = paintSkin != null ? paintSkin.sharedMesh : paintFilter != null ? paintFilter.sharedMesh : null;
+            if (paintMesh == null || paintMesh.vertexCount < 8 || paintMesh.uv == null || paintMesh.uv.Length == 0)
+            {
+                return;
+            }
+
+            var stamped = StampUvsNearest(walkMesh.vertices, paintMesh.vertices, paintMesh.uv);
+            if (stamped != null)
+            {
+                ApplyWalkUv(walkSkin, walkFilter, walkMesh, stamped);
+            }
+        }
+
+        private static void ApplyWalkUv(
+            SkinnedMeshRenderer? walkSkin,
+            MeshFilter? walkFilter,
+            Mesh walkMesh,
+            Vector2[] uvs)
+        {
+            var copy = UnityEngine.Object.Instantiate(walkMesh);
+            copy.name = walkMesh.name + "_LookUV";
+            copy.uv = uvs;
+            if (walkSkin != null)
+            {
+                walkSkin.sharedMesh = copy;
+            }
+            else if (walkFilter != null)
+            {
+                walkFilter.sharedMesh = copy;
+            }
+        }
+
+        private static Vector2[]? LoadLookUvSidecar(int vertexCount)
+        {
+            var path = ResolveHero3D("sep_paint/sir_aldric_sep_walk_look_uv.bin")
+                       ?? ResolveHero3D("sir_aldric_sep_walk_look_uv.bin");
+            if (path == null || !File.Exists(path))
+            {
+                return null;
+            }
+
+            try
+            {
+                var bytes = File.ReadAllBytes(path);
+                if (bytes.Length < 8)
+                {
+                    return null;
+                }
+
+                var count = BitConverter.ToInt32(bytes, 0);
+                if (count != vertexCount || bytes.Length < 4 + count * 8)
+                {
+                    return null;
+                }
+
+                var uvs = new Vector2[count];
+                for (var i = 0; i < count; i++)
+                {
+                    var o = 4 + i * 8;
+                    uvs[i] = new Vector2(BitConverter.ToSingle(bytes, o), BitConverter.ToSingle(bytes, o + 4));
+                }
+
+                return uvs;
+            }
+            catch (IOException)
+            {
+                return null;
+            }
+        }
+
+        private static Vector2[]? StampUvsNearest(Vector3[] walk, Vector3[] paint, Vector2[] paintUv)
+        {
+            if (walk.Length == 0 || paint.Length == 0 || paintUv.Length != paint.Length)
+            {
+                return null;
+            }
+
+            var wMin = walk[0];
+            var wMax = walk[0];
+            var pMin = paint[0];
+            var pMax = paint[0];
+            for (var i = 1; i < walk.Length; i++)
+            {
+                wMin = Vector3.Min(wMin, walk[i]);
+                wMax = Vector3.Max(wMax, walk[i]);
+            }
+
+            for (var i = 1; i < paint.Length; i++)
+            {
+                pMin = Vector3.Min(pMin, paint[i]);
+                pMax = Vector3.Max(pMax, paint[i]);
+            }
+
+            var wSize = wMax - wMin;
+            var pSize = pMax - pMin;
+            if (pSize.x < 1e-5f || pSize.y < 1e-5f || pSize.z < 1e-5f)
+            {
+                return null;
+            }
+
+            const int cells = 24;
+            var buckets = new System.Collections.Generic.List<int>[cells * cells * cells];
+            for (var i = 0; i < paint.Length; i++)
+            {
+                var n = new Vector3(
+                    (paint[i].x - pMin.x) / pSize.x,
+                    (paint[i].y - pMin.y) / pSize.y,
+                    (paint[i].z - pMin.z) / pSize.z);
+                var xi = Mathf.Clamp(Mathf.FloorToInt(n.x * cells), 0, cells - 1);
+                var yi = Mathf.Clamp(Mathf.FloorToInt(n.y * cells), 0, cells - 1);
+                var zi = Mathf.Clamp(Mathf.FloorToInt(n.z * cells), 0, cells - 1);
+                var key = xi + cells * (yi + cells * zi);
+                buckets[key] ??= new System.Collections.Generic.List<int>(8);
+                buckets[key].Add(i);
+            }
+
+            var outUv = new Vector2[walk.Length];
+            for (var i = 0; i < walk.Length; i++)
+            {
+                var n = new Vector3(
+                    wSize.x > 1e-5f ? (walk[i].x - wMin.x) / wSize.x : 0.5f,
+                    wSize.y > 1e-5f ? (walk[i].y - wMin.y) / wSize.y : 0.5f,
+                    wSize.z > 1e-5f ? (walk[i].z - wMin.z) / wSize.z : 0.5f);
+                var xi = Mathf.Clamp(Mathf.FloorToInt(n.x * cells), 0, cells - 1);
+                var yi = Mathf.Clamp(Mathf.FloorToInt(n.y * cells), 0, cells - 1);
+                var zi = Mathf.Clamp(Mathf.FloorToInt(n.z * cells), 0, cells - 1);
+                var best = 0;
+                var bestD = float.MaxValue;
+                for (var dx = -1; dx <= 1; dx++)
+                {
+                    for (var dy = -1; dy <= 1; dy++)
+                    {
+                        for (var dz = -1; dz <= 1; dz++)
+                        {
+                            var xx = xi + dx;
+                            var yy = yi + dy;
+                            var zz = zi + dz;
+                            if (xx < 0 || yy < 0 || zz < 0 || xx >= cells || yy >= cells || zz >= cells)
+                            {
+                                continue;
+                            }
+
+                            var list = buckets[xx + cells * (yy + cells * zz)];
+                            if (list == null)
+                            {
+                                continue;
+                            }
+
+                            var mapped = new Vector3(
+                                pMin.x + n.x * pSize.x,
+                                pMin.y + n.y * pSize.y,
+                                pMin.z + n.z * pSize.z);
+                            foreach (var pi in list)
+                            {
+                                var d = (paint[pi] - mapped).sqrMagnitude;
+                                if (d < bestD)
+                                {
+                                    bestD = d;
+                                    best = pi;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                outUv[i] = paintUv[best];
+            }
+
+            return outUv;
+        }
+
+        private static Texture2D? LoadSepPaintMap(string fileName, bool sRgb)
+        {
+#if UNITY_EDITOR
+            var rel = "Assets/" + PaintedLookDir.Replace('\\', '/') + "/" + fileName;
+            var asset = AssetDatabase.LoadAssetAtPath<Texture2D>(rel);
+            if (asset != null)
+            {
+                return asset;
+            }
+#endif
+            var path = ResolveHero3D("sep_paint/" + fileName);
+            if (path == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                var tex = new Texture2D(2, 2, sRgb ? TextureFormat.RGBA32 : TextureFormat.RGB24, false);
+                if (tex.LoadImage(File.ReadAllBytes(path)))
+                {
+                    tex.wrapMode = TextureWrapMode.Clamp;
+                    tex.filterMode = FilterMode.Bilinear;
+                    tex.name = Path.GetFileNameWithoutExtension(fileName);
+                    return tex;
+                }
+            }
+            catch (IOException)
+            {
+            }
+
+            return null;
+        }
 
         private static void PunchMaterials(GameObject root, string themePackRel)
         {

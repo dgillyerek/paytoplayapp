@@ -11,7 +11,7 @@ namespace Survival.Editor
     {
         private const string Scene = "Assets/Survival/Scenes/SirAldric.unity";
 
-        [MenuItem("Survival/Capture Sir Aldric SEP walk+attack (Game view)")]
+        [MenuItem("Survival/Capture Sir Aldric SEP painted walk (Game view)")]
         public static void Capture()
         {
             if (!EditorApplication.isPlaying)
