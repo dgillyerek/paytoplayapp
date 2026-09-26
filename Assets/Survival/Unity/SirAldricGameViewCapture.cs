@@ -8,22 +8,22 @@ namespace Survival.Unity
 {
     /// <summary>
     /// Unity Game-view proof: Camera.Render 1080×1920 from the SirAldricDemo Play cam
-    /// plus front / 3-4 stills. Writes painted look + yawlock attack juice.
+    /// plus front / 3-4 stills. Writes mid450k look + 2H yawlock attack juice.
     /// Not a Blender stand-in.
     /// </summary>
     public static class SirAldricGameViewCapture
     {
         public const int Width = 1080;
         public const int Height = 1920;
-        public const string RelDir = "Docs/Survival/previews/aldric_sep_attack_yawlock_20260926";
-        public const string WalkMp4Name = "sir_aldric_sep_yawlock_walk_juice_gameview.mp4";
-        public const string AttackMp4Name = "sir_aldric_sep_yawlock_attack_juice_gameview.mp4";
-        public const string RearWalkName = "sir_aldric_sep_yawlock_rear_walk_gameview.png";
-        public const string FrontWalkName = "sir_aldric_sep_yawlock_front_walk_gameview.png";
-        public const string ThreeQuarterWalkName = "sir_aldric_sep_yawlock_34_walk_gameview.png";
-        public const string RearAttackName = "sir_aldric_sep_yawlock_rear_attack_gameview.png";
-        public const string FrontAttackName = "sir_aldric_sep_yawlock_front_attack_gameview.png";
-        public const string ThreeQuarterAttackName = "sir_aldric_sep_yawlock_34_attack_gameview.png";
+        public const string RelDir = "Docs/Survival/previews/aldric_sep_2h_yawlock_20260926";
+        public const string WalkMp4Name = "sir_aldric_sep_2h_walk_juice_gameview.mp4";
+        public const string AttackMp4Name = "sir_aldric_sep_2h_attack_juice_gameview.mp4";
+        public const string RearWalkName = "sir_aldric_sep_2h_rear_walk_gameview.png";
+        public const string FrontWalkName = "sir_aldric_sep_2h_front_walk_gameview.png";
+        public const string ThreeQuarterWalkName = "sir_aldric_sep_2h_34_walk_gameview.png";
+        public const string RearAttackName = "sir_aldric_sep_2h_rear_strike_gameview.png";
+        public const string FrontAttackName = "sir_aldric_sep_2h_front_strike_gameview.png";
+        public const string ThreeQuarterAttackName = "sir_aldric_sep_2h_34_strike_gameview.png";
 
         public static string ResolveDir()
         {

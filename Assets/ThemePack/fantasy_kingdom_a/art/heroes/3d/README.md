@@ -8,7 +8,7 @@
 
 World-cam: Play march angle `(0, 2.80, −5.40)` look-at `(0, 0.90, 0.50)` FOV 30, 1080×1920, TOP = +Z = away. **Not** a beauty portrait cam.
 
-**SEP Animate (SoT, PR #27):** `SirAldric_SEP_meshy_animate_walk.fbx` (Humanoid, take `target_character|target_character|Walking`) + yawlock attack `SirAldric_SEP_meshy_animate_attack_yawlock.fbx`. Walk motion SoT (Derek Play PASS on clay). Look SoT: mid450k body + mid80k sword GLB, `sep_paint/` atlas (same UV) stamped onto that AccuRIG + `LookSwordScabbard` at character-RIGHT hip. mid200k / mid50k leftover. 2H attack still pending Design. ClipSword / AimChain are not SoT. Path A cancelled. No Design PASS claimed.
+**SEP Animate (SoT, PR #27):** `SirAldric_SEP_meshy_animate_walk.fbx` (Humanoid Walking) + attack `SirAldric_SEP_meshy_animate_attack_2h_downstrike_yawlock.fbx`. Look SoT: mid450k body + mid80k sword GLB, `sep_paint/` atlas, `LookSwordScabbard` at character-LEFT hip. 1H yawlock / raw 2H / mid200k leftover. ClipSword / AimChain are not SoT. Path A cancelled. No Design PASS claimed.
 
 Must-match:
 - Silver plate + gold trim

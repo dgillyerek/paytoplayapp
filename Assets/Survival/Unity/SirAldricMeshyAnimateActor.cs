@@ -13,15 +13,15 @@ namespace Survival.Unity
     /// <summary>
     /// Aldric World proof actor: Design SEP Meshy Animate walk on one Humanoid.
     /// Walk motion SoT = SEP Walking clip (Derek Play PASS). Look = painted mid450k
-    /// atlas-stamped AccuRIG + mid80k scabbard parented at character-RIGHT hip.
-    /// Attack SoT = yawlock Draw Slash Forward (Hips yaw locked, slash toward TOP).
-    /// Old spin / nospin attack FBX, ClipSword / AimChain are not SoT.
+    /// atlas-stamped AccuRIG + mid80k scabbard parented at character-LEFT hip.
+    /// Attack SoT = 2H LEFT-hip draw → overhead → two-hand downstrike yawlock.
+    /// Old 1H yawlock / nospin / spin / raw 2H, ClipSword / AimChain are not SoT.
     /// Path A weight-paint is CANCELLED.
     /// </summary>
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
     {
         public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_walk.fbx";
-        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack_yawlock.fbx";
+        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack_2h_downstrike_yawlock.fbx";
         public const string PaintedBodyGlb = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_body_nosword_PAINTED_mid450k.glb";
         public const string PaintedSwordGlb = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_sword_scabbard_PAINTED_mid80k.glb";
         /// <summary>mid200k body leftover. On disk only — not look SoT.</summary>
@@ -37,14 +37,18 @@ namespace Survival.Unity
         public const string LeftoverSpinAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack.fbx";
         /// <summary>SEP NoSpin re-author that still spun ~180°. Not imported as SoT.</summary>
         public const string LeftoverNospinAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack_nospin.fbx";
+        /// <summary>1H yawlock leftover. On disk only — not attack SoT.</summary>
+        public const string LeftoverOneHandYawlockFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack_yawlock.fbx";
+        /// <summary>Raw Meshy 2H that spins ~177°. Not imported as SoT.</summary>
+        public const string LeftoverRawTwoHandAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack_2h_downstrike.fbx";
         public const string ClipHint = "Walking";
         public const string AttackClipHint = "Attack";
         /// <summary>
-        /// Walk motion SoT = SEP Walking. Attack SoT = yawlock clip.
-        /// Look = mid450k body + mid80k sword GLB, same UV atlas. Path A cancelled.
+        /// Walk motion SoT = SEP Walking. Attack SoT = 2H yawlock clip.
+        /// Look = mid450k body + mid80k sword GLB on character-LEFT hip. Path A cancelled.
         /// </summary>
         public const string AttackAuthoredReason =
-            "SEP Walking is motion SoT (Derek Play PASS). Attack SoT = SirAldric_SEP_meshy_animate_attack_yawlock (Hips yaw locked, slash toward TOP). 2H attack still pending Design. Old spin / nospin attack FBX not SoT. Look: mid450k body + mid80k sword GLB, sep_paint atlas, LookSwordScabbard character-RIGHT hip, RH clear. mid200k / mid50k leftover. ClipSword / AimChain are not SoT. Path A cancelled.";
+            "SEP Walking is motion SoT (Derek Play PASS). Attack SoT = SirAldric_SEP_meshy_animate_attack_2h_downstrike_yawlock (LEFT-hip RH draw → overhead → 2H downstrike, ground yaw locked). Raw 2H / 1H yawlock / nospin / spin not SoT. Look: mid450k body + mid80k sword GLB, sep_paint atlas, LookSwordScabbard character-LEFT hip. ClipSword / AimChain are not SoT. Path A cancelled.";
         /// <summary>
         /// Yaw so imported Mixamo forward (−Z, face to Play cam) becomes world +Z.
         /// Camera SoT: SirAldricDemo (0, 2.80, −5.40) LookAt (0, 0.90, 0.50) → view +Z.
@@ -120,7 +124,7 @@ namespace Survival.Unity
             }
             else
             {
-                Debug.LogError("SEP yawlock attack FBX has no Attack clip after Humanoid import.");
+                Debug.LogError("SEP 2H yawlock attack FBX has no Attack clip after Humanoid import.");
             }
 
             _walkOutput.SetSourcePlayable(_walkPlayable);
@@ -186,17 +190,22 @@ namespace Survival.Unity
                 if (t >= walkBlock && _attackPlayableReady)
                 {
                     var u = _attackLength > 0f ? (t - walkBlock) / _attackLength : 0f;
-                    if (u < 0.22f)
+                    if (u < 0.16f)
                     {
-                        return "ATTACK  ·  DRAW  ·  YAWLOCK clip";
+                        return "ATTACK  ·  DRAW LEFT  ·  2H YAWLOCK";
                     }
 
-                    if (u < 0.62f)
+                    if (u < 0.38f)
                     {
-                        return "ATTACK  ·  STRIKE TOP  ·  YAWLOCK clip";
+                        return "ATTACK  ·  OVERHEAD  ·  2H YAWLOCK";
                     }
 
-                    return "ATTACK  ·  RECOVER  ·  YAWLOCK clip";
+                    if (u < 0.55f)
+                    {
+                        return "ATTACK  ·  DOWNSTRIKE TOP  ·  2H YAWLOCK";
+                    }
+
+                    return "ATTACK  ·  RECOVER  ·  2H YAWLOCK";
                 }
             }
 
@@ -388,7 +397,9 @@ namespace Survival.Unity
                     || label.IndexOf("rigify_clip", StringComparison.OrdinalIgnoreCase) >= 0
                     || label.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0
                     || label.IndexOf("Scene", StringComparison.OrdinalIgnoreCase) >= 0
-                    || label.IndexOf("yawlock", StringComparison.OrdinalIgnoreCase) >= 0)
+                    || label.IndexOf("yawlock", StringComparison.OrdinalIgnoreCase) >= 0
+                    || label.IndexOf("downstrike", StringComparison.OrdinalIgnoreCase) >= 0
+                    || label.IndexOf("2h", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     if (named == null || clip.length > named.length)
                     {
@@ -427,6 +438,8 @@ namespace Survival.Unity
                             || label.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0
                             || label.IndexOf("Scene", StringComparison.OrdinalIgnoreCase) >= 0
                             || label.IndexOf("yawlock", StringComparison.OrdinalIgnoreCase) >= 0
+                            || label.IndexOf("downstrike", StringComparison.OrdinalIgnoreCase) >= 0
+                            || label.IndexOf("2h", StringComparison.OrdinalIgnoreCase) >= 0
                             || label.IndexOf("Attack", StringComparison.OrdinalIgnoreCase) >= 0
                             || label.IndexOf("Slash", StringComparison.OrdinalIgnoreCase) >= 0;
                 if (!named && span < 20f)
@@ -603,7 +616,7 @@ namespace Survival.Unity
             }
 
             var hips = _walkAnimator.GetBoneTransform(HumanBodyBones.Hips);
-            var thigh = _walkAnimator.GetBoneTransform(HumanBodyBones.RightUpperLeg) ?? hips;
+            var thigh = _walkAnimator.GetBoneTransform(HumanBodyBones.LeftUpperLeg) ?? hips;
             if (thigh == null)
             {
                 return;
@@ -630,16 +643,15 @@ namespace Survival.Unity
                 ApplyLookMaterial(rend, albedo, metallic, roughness, normal);
             }
 
-            // World after RearYaw 180: character-right = root.right = +X = viewer-right from behind.
-            // Thin-lateral hang (pair-width along forward, not into the RH pendulum).
-            // Parent RightUpperLeg so it stays on the thigh. Not RightHand. Walk RH empty.
-            // Play-cam remap measured min RH–prop gap > 0.10 m across Walking 1–26.
+            // World after RearYaw 180: character-left = −root.right = −X = viewer-left from behind.
+            // Thin-lateral hang mirrored from the 1ac345a RIGHT-hip pose. Parent LeftUpperLeg.
+            // Derek SoT: RH draws from LEFT sheath. Not RightHand. Walk RH empty.
             var pos = thigh.position
-                      + _walkInstance.transform.right * 0.06f
+                      + _walkInstance.transform.right * -0.06f
                       + Vector3.up * -0.12f;
             prop.transform.SetPositionAndRotation(
                 pos,
-                _walkInstance.transform.rotation * Quaternion.Euler(0f, -90f, -90f));
+                _walkInstance.transform.rotation * Quaternion.Euler(0f, 90f, -90f));
             prop.transform.localScale = Vector3.one * 0.28f;
             prop.transform.SetParent(thigh, true);
         }
