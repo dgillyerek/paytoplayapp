@@ -1,0 +1,53 @@
+Attack 2H downstrike yawlock verification — 2026-09-26
+Input: assets/SirAldric_SEP_meshy_animate_attack_2h_downstrike.fbx
+Output FBX: assets/SirAldric_SEP_meshy_animate_attack_2h_downstrike_yawlock.fbx
+Output GLB: assets/SirAldric_SEP_meshy_animate_attack_2h_downstrike_yawlock.glb
+Action frames 3-92 (export verify 4-93)
+
+SoT motion intent (Derek): LEFT-hip draw with RH → overhead → TWO hands → violent
+downward strike slightly across body; rear→TOP; no face-camera spin.
+
+Method (same intent as prior ATTACK_YAWLOCK; robust for this clip):
+  Prior 1H pass rewrote Hips world Euler XYZ Z to start yaw. On this 2H clip that
+  hits a gimbal singularity (~f55: eulX crosses ±90 with eulY ±180 flip) and would
+  leave Euler-Z locked while ground-forward flips ~180° (face-camera). This pass
+  instead cancels world yaw about world +Z each frame so Hips ground-forward matches
+  start (1.7606 deg; facing ≈ −Y). Pitch/roll (swing about axes ⊥ up)
+  and location/scale kept; arm/spine/hand keys untouched. Armature object rotation
+  keys: none.
+
+BEFORE (raw Meshy 2h — FAIL spin):
+  start ground-yaw=1.76 deg  end=178.19 deg
+  max|delta ground-yaw|=177.08 deg (frame 61)
+  max|delta EulerXYZ.Z|=175.34 deg (frame 53)
+  max quat angle from start=177.08 deg
+
+AFTER (in-memory post-lock):
+  max|delta ground-yaw|=0.00 deg
+  max|delta EulerXYZ.Z|=2.57 deg
+  max quat angle from start=18.77 deg
+
+VERIFY (re-import exported FBX):
+  max|delta ground-yaw|=0.00 deg
+  max|delta EulerXYZ.Z|=2.57 deg
+  start ground-yaw=1.76 end=1.76
+  RightHand relative travel=1.149 m
+  RightHand overhead peak z=1.779 @f32; drop after peak=1.091 m
+  strike_frame=39 forward_dot_away_from_rear=0.980
+  end_frame=93 forward_dot_away_from_rear=1.000
+
+Stills (Blender EEVEE):
+  stills/attack_2h_yawlock_draw.png (f6)
+  stills/attack_2h_yawlock_overhead.png (f30)
+  stills/attack_2h_yawlock_strike.png (f39)
+  stills/attack_2h_yawlock_front.png (f39, cam -Y)
+  stills/attack_2h_yawlock_34.png (f39)
+  stills/attack_2h_yawlock_rear.png (f39, cam +Y behind back; strike reads toward TOP/-Y)
+
+Threshold: max|delta ground-yaw| < 15 deg — YES
+Rear away-from-camera (strike + end) — YES
+Slash motion retained (draw→overhead→down) — YES
+RESULT: PASS
+
+NOTE: Raw Meshy 2h deliverable remains FAIL spin (~177° ground-yaw).
+Do NOT ship unfixed 2h FBX to Dev. Yawlock FBX is the Design SoT candidate for Dev.

@@ -17,6 +17,14 @@ namespace Survival.Domain.Heroes
         public const float AttackSeconds = 1.40f;
         public const float MarchMetersPerSecond = 0.80f;
 
+        /// <summary>
+        /// Play-cam SoT (SirAldricDemo): eye (0, 2.80, −5.40) LookAt (0, 0.90, 0.50).
+        /// View = +Z = screen TOP = march / enemy. WorldMarchLoop is a node timer, not a heading.
+        /// Mixamo Humanoid import of the Animate walk FBX instantiates face-to-camera (−Z) = frontal FAIL.
+        /// Actor yaws this many degrees so transform.forward = +Z (back to camera, walk toward TOP).
+        /// </summary>
+        public const float MixamoImportRearYawDegrees = 180f;
+
         public static float WalkBlockSeconds => WalkPeriodSeconds * WalkCyclesBeforeAttack;
 
         public static float LoopSeconds => WalkBlockSeconds + AttackSeconds;

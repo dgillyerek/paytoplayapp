@@ -9,9 +9,9 @@ using UnityEngine.UI;
 namespace Survival.Unity
 {
     /// <summary>
-    /// 1080×1920 Game-view demo: Meshy Animate humanoid FBX + Walking clip AS-IS.
-    /// Path A weight-paint CANCELLED. Locked rear PNG remains the Play-hub placeholder.
-    /// Design PASS not claimed.
+    /// 1080×1920 Game-view demo: SEP Meshy Animate walk + attack on one Humanoid.
+    /// Authored clips only. ClipSword / AimChain not SoT. Path A cancelled.
+    /// Locked rear PNG remains the Play-hub placeholder. Design PASS not claimed.
     /// </summary>
     public sealed class SirAldricDemo : MonoBehaviour
     {
@@ -168,7 +168,7 @@ namespace Survival.Unity
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "Meshy Animate Walking  ·  Humanoid AS-IS  ·  HOLD  ·  no Design PASS",
+                "SEP Meshy  ·  rear +Z / TOP  ·  walk+attack clips  ·  HOLD merge  ·  no Design PASS",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);
@@ -179,6 +179,26 @@ namespace Survival.Unity
             nr.offsetMax = Vector2.zero;
 
             _booted = true;
+
+            if (SirAldricGameViewCapture.ShouldRunFromCommandLine())
+            {
+                StartCoroutine(CaptureThenQuit());
+            }
+        }
+
+        private System.Collections.IEnumerator CaptureThenQuit()
+        {
+            yield return null;
+            yield return null;
+            if (_actor != null && _actor.Built && Camera.main != null)
+            {
+                SirAldricGameViewCapture.CaptureAttack(_actor, Camera.main);
+            }
+
+            if (Application.isBatchMode)
+            {
+                Application.Quit(0);
+            }
         }
 
         internal static string[] ResolveMasterPaths(AppFlavorConfig flavor)

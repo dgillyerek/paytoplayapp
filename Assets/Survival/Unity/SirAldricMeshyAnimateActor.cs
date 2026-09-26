@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using Survival.Domain.Heroes;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
@@ -10,30 +12,93 @@ using UnityEditor;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Aldric World proof actor: Meshy Animate FBX humanoid + Walking clip AS-IS.
-    /// Path A weight-paint is CANCELLED. Do not remap sheath / Hand_R / ghost legs.
-    /// World LIGHT + MATERIAL punch. Binds Meshy albedo from the FBX pack
-    /// (Humanoid import often drops texture links). Design PASS not claimed.
+    /// Aldric World proof actor: Design SEP Meshy Animate walk on one Humanoid.
+    /// Walk motion SoT = SEP Walking clip (Derek Play PASS). Look = painted mid450k
+    /// atlas-stamped AccuRIG + mid80k sword GLB split: empty LookScabbard on
+    /// character-LEFT hip, LookSword (blade+hilt) sheathed until draw then parented
+    /// to RightHand (2H midpoint on overhead→strike).
+    /// Attack SoT = 2H LEFT-hip draw → overhead → two-hand downstrike yawlock.
+    /// Old 1H yawlock / nospin / spin / raw 2H, ClipSword / AimChain are not SoT.
+    /// Path A weight-paint is CANCELLED.
     /// </summary>
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
     {
-        public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_walk.fbx";
+        public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_walk.fbx";
+        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack_2h_downstrike_yawlock.fbx";
+        public const string PaintedBodyGlb = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_body_nosword_PAINTED_mid450k.glb";
+        public const string PaintedSwordGlb = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_sword_scabbard_PAINTED_mid80k.glb";
+        /// <summary>mid200k body leftover. On disk only — not look SoT.</summary>
+        public const string LeftoverPaintedBodyMid200k = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_body_nosword_PAINTED_mid200k.fbx";
+        /// <summary>mid50k sword leftover. On disk only — not look SoT.</summary>
+        public const string LeftoverPaintedSwordMid50k = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_sword_scabbard_PAINTED_mid.fbx";
+        public const string PaintedLookDir = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sep_paint";
+        /// <summary>Old fused Meshy walk. On disk only — not SoT.</summary>
+        public const string LeftoverFusedWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_walk.fbx";
+        /// <summary>Old Standing Sword Slash. On disk only — not SoT.</summary>
+        public const string LeftoverStandingSlashFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_attack.fbx";
+        /// <summary>SEP attack that spins ~180°. On disk only — not SoT.</summary>
+        public const string LeftoverSpinAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack.fbx";
+        /// <summary>SEP NoSpin re-author that still spun ~180°. Not imported as SoT.</summary>
+        public const string LeftoverNospinAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack_nospin.fbx";
+        /// <summary>1H yawlock leftover. On disk only — not attack SoT.</summary>
+        public const string LeftoverOneHandYawlockFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack_yawlock.fbx";
+        /// <summary>Raw Meshy 2H that spins ~177°. Not imported as SoT.</summary>
+        public const string LeftoverRawTwoHandAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack_2h_downstrike.fbx";
         public const string ClipHint = "Walking";
+        public const string AttackClipHint = "Attack";
+        /// <summary>
+        /// Walk motion SoT = SEP Walking. Attack SoT = 2H yawlock clip.
+        /// Look = mid450k body + mid80k sword GLB split (empty LEFT-hip scabbard,
+        /// blade+hilt parents to RightHand on draw). Path A cancelled.
+        /// </summary>
+        public const string AttackAuthoredReason =
+            "SEP Walking is motion SoT (Derek Play PASS). Attack SoT = SirAldric_SEP_meshy_animate_attack_2h_downstrike_yawlock (LEFT-hip RH draw → overhead → 2H downstrike, ground yaw locked). Raw 2H / 1H yawlock / nospin / spin not SoT. Look: mid450k body + mid80k sword GLB, sep_paint atlas. LookScabbard empty sheath stays character-LEFT hip; LookSword blade+hilt parents to RightHand on draw and follows 2H grip. Combined LookSwordScabbard is not glued for the whole clip. ClipSword / AimChain are not SoT. Path A cancelled.";
+        /// <summary>Attack clip normalized time when LookSword leaves the LEFT sheath.</summary>
+        public const float LookSwordDrawParentU = 0.05f;
+        /// <summary>Overhead onward: blade sits in both hands (RH-biased midpoint).</summary>
+        public const float LookSwordTwoHandU = 0.16f;
+        /// <summary>
+        /// Yaw so imported Mixamo forward (−Z, face to Play cam) becomes world +Z.
+        /// Camera SoT: SirAldricDemo (0, 2.80, −5.40) LookAt (0, 0.90, 0.50) → view +Z.
+        /// SirAldric3DMotion: march / character forward = +Z = screen TOP; rear view = back to camera.
+        /// </summary>
+        public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
 
-        private Animator? _animator;
-        private PlayableGraph _graph;
-        private AnimationClipPlayable _clipPlayable;
-        private float _clipLength;
-        private bool _graphReady;
-        private GameObject? _instance;
+        private Animator? _walkAnimator;
+        private PlayableGraph _walkGraph;
+        private AnimationPlayableOutput _walkOutput;
+        private AnimationClipPlayable _walkPlayable;
+        private AnimationClipPlayable _attackPlayable;
+        private float _walkLength;
+        private float _attackLength;
+        private bool _walkGraphReady;
+        private bool _attackPlayableReady;
+        private GameObject? _walkInstance;
+        private Transform? _lookScabbard;
+        private Transform? _lookSword;
+        private Vector3 _swordHiltLocal;
+        private Vector3 _swordTipLocal;
 
-        public bool Built => _graphReady;
+        public bool Built => _walkGraphReady;
+
+        /// <summary>True when the SEP Draw Slash Forward clip is loaded onto the walk Humanoid.</summary>
+        public bool HasAttackClip => _attackPlayableReady;
+
+        /// <summary>False: attack clip is Humanoid-retargeted onto the walk instance, not a second mesh.</summary>
+        public bool AttackOnNativeInstance => false;
+
+        /// <summary>True: both SEP clips play on the walk Mixamo Humanoid Avatar.</summary>
+        public bool AttackOnWalkHumanoid => _walkGraphReady && _attackPlayableReady;
+
+        public float WalkLength => _walkLength;
+
+        public float AttackLength => _attackLength > 0.05f ? _attackLength : 0f;
 
         public void Build()
         {
             BuildLights();
-            var prefab = LoadFbxPrefab();
-            if (prefab == null)
+            var walkPrefab = LoadFbxPrefab(ThemePackFbx, "sir_aldric_meshy_animate_walk");
+            if (walkPrefab == null)
             {
                 Debug.LogError(
                     "Meshy Animate FBX not imported yet. Open the project in Unity so " +
@@ -41,74 +106,149 @@ namespace Survival.Unity
                 return;
             }
 
-            _instance = Instantiate(prefab, transform);
-            _instance.name = "SirAldricMeshyAnimate";
-            HideJunk(_instance);
-            FaceWorldTop(_instance);
-            PunchMaterials(_instance);
+            _walkInstance = Instantiate(walkPrefab, transform);
+            _walkInstance.name = "SirAldricSepMeshyAnimate";
+            HideJunk(_walkInstance);
+            FaceWorldTop(_walkInstance);
+            BindPaintedLook(_walkInstance);
 
-            _animator = _instance.GetComponent<Animator>();
-            if (_animator == null)
+            var walk = LoadWalkingClip();
+            if (walk == null)
             {
-                _animator = _instance.AddComponent<Animator>();
-            }
-
-            if (_animator.avatar == null)
-            {
-                _animator.avatar = LoadHumanoidAvatar();
-            }
-
-            var clip = LoadWalkingClip();
-            if (clip == null)
-            {
-                Debug.LogError("Meshy Animate FBX has no Walking clip after Humanoid import.");
+                Debug.LogError("SEP walk FBX has no Walking clip after Humanoid import.");
                 return;
             }
 
-            clip.wrapMode = WrapMode.Loop;
-            _clipLength = clip.length;
-            _graph = PlayableGraph.Create("SirAldricMeshyAnimate");
-            _graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
-            var output = AnimationPlayableOutput.Create(_graph, "Aldric", _animator);
-            _clipPlayable = AnimationClipPlayable.Create(_graph, clip);
-            output.SetSourcePlayable(_clipPlayable);
-            _graph.Play();
-            _graphReady = true;
-            SampleWalk(0f);
+            walk.wrapMode = WrapMode.Loop;
+            _walkLength = walk.length;
+            _walkAnimator = EnsureAnimator(_walkInstance, FbxAssetPath);
+            _walkGraph = PlayableGraph.Create("SirAldricSepMeshy");
+            _walkGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
+            _walkOutput = AnimationPlayableOutput.Create(_walkGraph, "AldricSep", _walkAnimator);
+            _walkPlayable = AnimationClipPlayable.Create(_walkGraph, walk);
+            var attack = LoadAttackClip();
+            if (attack != null)
+            {
+                attack.wrapMode = WrapMode.Once;
+                _attackLength = attack.length;
+                _attackPlayable = AnimationClipPlayable.Create(_walkGraph, attack);
+                _attackPlayableReady = true;
+            }
+            else
+            {
+                Debug.LogError("SEP 2H yawlock attack FBX has no Attack clip after Humanoid import.");
+            }
+
+            _walkOutput.SetSourcePlayable(_walkPlayable);
+            _walkGraph.Play();
+            _walkGraphReady = true;
+
+            SampleAt(0f);
+            EnsureLookScabbard();
         }
 
         private void Update()
         {
-            if (!_graphReady || _clipLength <= 0f)
+            if (!_walkGraphReady || _walkLength <= 0f)
             {
                 return;
             }
 
-            SampleWalk(Time.unscaledTime % _clipLength);
+            SampleAt(Time.unscaledTime);
         }
 
-        private void SampleWalk(float time)
+        /// <summary>Drive the walk Humanoid to a loop time (walk plant, then authored draw→strike).</summary>
+        public void SampleAt(float timeSeconds)
         {
-            if (!_graph.IsValid())
+            if (!_walkGraphReady || !_walkGraph.IsValid() || _walkLength <= 0f)
             {
                 return;
             }
 
-            _clipPlayable.SetTime(time);
-            _graph.Evaluate();
+            var walkBlock = _walkLength * SirAldric3DMotion.WalkCyclesBeforeAttack;
+            var attackLen = _attackPlayableReady ? _attackLength : 0f;
+            var loop = walkBlock + Mathf.Max(attackLen, 0.01f);
+            var t = timeSeconds % loop;
+            if (t < 0f)
+            {
+                t += loop;
+            }
+
+            if (t < walkBlock || !_attackPlayableReady)
+            {
+                _walkOutput.SetSourcePlayable(_walkPlayable);
+                _walkPlayable.SetTime(t % _walkLength);
+                _walkGraph.Evaluate();
+                ParentLookSwordOnDraw(attacking: false, attackU: 0f);
+                return;
+            }
+
+            var attackT = Mathf.Clamp(t - walkBlock, 0f, _attackLength);
+            _walkOutput.SetSourcePlayable(_attackPlayable);
+            _attackPlayable.SetTime(attackT);
+            _walkGraph.Evaluate();
+            ParentLookSwordOnDraw(attacking: true, attackU: _attackLength > 0f ? attackT / _attackLength : 0f);
         }
 
         public string PhaseLabel(float timeSeconds)
         {
-            return "WALK  ·  toward TOP  ·  Meshy Animate";
+            if (_walkLength > 0f)
+            {
+                var walkBlock = _walkLength * SirAldric3DMotion.WalkCyclesBeforeAttack;
+                var loop = walkBlock + Mathf.Max(_attackLength, 0.01f);
+                var t = loop > 0f ? timeSeconds % loop : 0f;
+                if (t < 0f)
+                {
+                    t += loop;
+                }
+
+                if (t >= walkBlock && _attackPlayableReady)
+                {
+                    var u = _attackLength > 0f ? (t - walkBlock) / _attackLength : 0f;
+                    if (u < 0.16f)
+                    {
+                        return "ATTACK  ·  DRAW LEFT  ·  2H YAWLOCK";
+                    }
+
+                    if (u < 0.38f)
+                    {
+                        return "ATTACK  ·  OVERHEAD  ·  2H YAWLOCK";
+                    }
+
+                    if (u < 0.55f)
+                    {
+                        return "ATTACK  ·  DOWNSTRIKE TOP  ·  2H YAWLOCK";
+                    }
+
+                    return "ATTACK  ·  RECOVER  ·  2H YAWLOCK";
+                }
+            }
+
+            return "WALK  ·  toward TOP  ·  SEP Meshy Animate";
         }
 
         private void OnDestroy()
         {
-            if (_graphReady && _graph.IsValid())
+            if (_walkGraphReady && _walkGraph.IsValid())
             {
-                _graph.Destroy();
+                _walkGraph.Destroy();
             }
+        }
+
+        private static Animator EnsureAnimator(GameObject root, string avatarRel)
+        {
+            var animator = root.GetComponent<Animator>();
+            if (animator == null)
+            {
+                animator = root.AddComponent<Animator>();
+            }
+
+            if (animator.avatar == null)
+            {
+                animator.avatar = LoadHumanoidAvatar(avatarRel);
+            }
+
+            return animator;
         }
 
         private static void HideJunk(GameObject root)
@@ -124,17 +264,21 @@ namespace Survival.Unity
 
         private static void FaceWorldTop(GameObject root)
         {
-            // Mixamo FBX is typically Y-up / Z-forward after Unity import.
-            // World gate: walk toward TOP = +Z. Leave identity if already facing +Z.
+            // Verified (not guessed):
+            // - Play cam: SirAldricDemo sets (0, 2.80, −5.40) LookAt (0, 0.90, 0.50) → view +Z.
+            // - SirAldric3DMotion: character forward / march = world +Z = screen TOP; enemy +Z.
+            // - Chevrons / EnemyTop sit at +Z. WorldMarchLoop is a node timer, not a heading.
+            // - Humanoid Mixamo on this FBX instantiates face-to-camera (−Z) = frontal FAIL.
+            // Yaw 180° so transform.forward = +Z: back to camera, walk toward TOP.
             root.transform.localPosition = Vector3.zero;
-            root.transform.localRotation = Quaternion.identity;
+            root.transform.localRotation = Quaternion.Euler(0f, RearYawDegrees, 0f);
         }
 
-        private static GameObject? LoadFbxPrefab()
+        private static GameObject? LoadFbxPrefab(string themePackRel, string resourcesName)
         {
 #if UNITY_EDITOR
             var data = Application.dataPath;
-            var rel = "Assets/" + ThemePackFbx.Replace('\\', '/');
+            var rel = "Assets/" + themePackRel.Replace('\\', '/');
             var go = AssetDatabase.LoadAssetAtPath<GameObject>(rel);
             if (go != null)
             {
@@ -148,10 +292,46 @@ namespace Survival.Unity
                 return AssetDatabase.LoadAssetAtPath<GameObject>(rel);
             }
 #endif
-            return Resources.Load<GameObject>("sir_aldric_meshy_animate_walk");
+            return Resources.Load<GameObject>(resourcesName);
         }
 
         private static string FbxAssetPath => "Assets/" + ThemePackFbx.Replace('\\', '/');
+
+        /// <summary>SEP walk is mixamorig:*. SEP attack is MeshyRig (Hips/Spine02) Humanoid-retargeted onto this Avatar.</summary>
+        public static bool FbxLooksMixamo(string assetsRel)
+        {
+#if UNITY_EDITOR
+            var go = AssetDatabase.LoadAssetAtPath<GameObject>(assetsRel);
+            if (go != null)
+            {
+                foreach (var t in go.GetComponentsInChildren<Transform>(true))
+                {
+                    if (t.name.IndexOf("mixamorig", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+#endif
+            var path = ResolveFbxPath(assetsRel.Replace("Assets/", "").Replace("Assets\\", ""));
+            if (path == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                var bytes = File.ReadAllBytes(path);
+                var needle = System.Text.Encoding.ASCII.GetBytes("mixamorig");
+                return IndexOf(bytes, needle, 0) >= 0;
+            }
+            catch (IOException)
+            {
+                return false;
+            }
+        }
 
         private static AnimationClip? LoadWalkingClip()
         {
@@ -175,10 +355,143 @@ namespace Survival.Unity
 #endif
         }
 
-        private static Avatar? LoadHumanoidAvatar()
+        private static AnimationClip? LoadAttackClip()
         {
 #if UNITY_EDITOR
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(FbxAssetPath))
+            var rel = AttackFbxAssetPath;
+            var clip = PickAttackClip(rel);
+            if (clip != null)
+            {
+                return clip;
+            }
+
+            if (RepairAttackTake(rel))
+            {
+                return PickAttackClip(rel);
+            }
+
+            return null;
+#else
+            return null;
+#endif
+        }
+
+        private static string AttackFbxAssetPath => "Assets/" + ThemePackAttackFbx.Replace('\\', '/');
+
+        private static AnimationClip? PickAttackClip(string rel)
+        {
+#if UNITY_EDITOR
+            AnimationClip? exact = null;
+            AnimationClip? named = null;
+            AnimationClip? longest = null;
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
+            {
+                if (obj is not AnimationClip clip || clip.name.StartsWith("__preview", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (longest == null || clip.length > longest.length)
+                {
+                    longest = clip;
+                }
+
+                if (string.Equals(clip.name, AttackClipHint, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (exact == null || clip.length > exact.length)
+                    {
+                        exact = clip;
+                    }
+
+                    continue;
+                }
+
+                var label = clip.name;
+                if (label.IndexOf("Attack", StringComparison.OrdinalIgnoreCase) >= 0
+                    || label.IndexOf("Slash", StringComparison.OrdinalIgnoreCase) >= 0
+                    || label.IndexOf("rigify_clip", StringComparison.OrdinalIgnoreCase) >= 0
+                    || label.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0
+                    || label.IndexOf("Scene", StringComparison.OrdinalIgnoreCase) >= 0
+                    || label.IndexOf("yawlock", StringComparison.OrdinalIgnoreCase) >= 0
+                    || label.IndexOf("downstrike", StringComparison.OrdinalIgnoreCase) >= 0
+                    || label.IndexOf("2h", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    if (named == null || clip.length > named.length)
+                    {
+                        named = clip;
+                    }
+                }
+            }
+
+            return exact ?? named ?? longest;
+#else
+            return null;
+#endif
+        }
+
+        private static bool RepairAttackTake(string rel)
+        {
+#if UNITY_EDITOR
+            if (AssetImporter.GetAtPath(rel) is not ModelImporter importer || !importer.importAnimation)
+            {
+                return false;
+            }
+
+            var defaults = importer.defaultClipAnimations;
+            if (defaults == null || defaults.Length == 0)
+            {
+                return false;
+            }
+
+            ModelImporterClipAnimation? best = null;
+            var bestSpan = -1f;
+            foreach (var candidate in defaults)
+            {
+                var label = (candidate.takeName ?? "") + "\n" + (candidate.name ?? "");
+                var span = candidate.lastFrame - candidate.firstFrame;
+                var named = label.IndexOf("rigify_clip", StringComparison.OrdinalIgnoreCase) >= 0
+                            || label.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0
+                            || label.IndexOf("Scene", StringComparison.OrdinalIgnoreCase) >= 0
+                            || label.IndexOf("yawlock", StringComparison.OrdinalIgnoreCase) >= 0
+                            || label.IndexOf("downstrike", StringComparison.OrdinalIgnoreCase) >= 0
+                            || label.IndexOf("2h", StringComparison.OrdinalIgnoreCase) >= 0
+                            || label.IndexOf("Attack", StringComparison.OrdinalIgnoreCase) >= 0
+                            || label.IndexOf("Slash", StringComparison.OrdinalIgnoreCase) >= 0;
+                if (!named && span < 20f)
+                {
+                    continue;
+                }
+
+                if (best == null || span > bestSpan)
+                {
+                    best = candidate;
+                    bestSpan = span;
+                }
+            }
+
+            if (best == null || bestSpan <= 0f)
+            {
+                return false;
+            }
+
+            best.name = AttackClipHint;
+            best.loopTime = false;
+            best.loop = false;
+            best.keepOriginalOrientation = true;
+            best.keepOriginalPositionY = true;
+            best.keepOriginalPositionXZ = true;
+            importer.clipAnimations = new[] { best };
+            importer.SaveAndReimport();
+            return true;
+#else
+            return false;
+#endif
+        }
+
+        private static Avatar? LoadHumanoidAvatar(string rel)
+        {
+#if UNITY_EDITOR
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
             {
                 if (obj is Avatar avatar)
                 {
@@ -292,11 +605,577 @@ namespace Survival.Unity
         private static Texture2D? _cachedMetallic;
         private static Texture2D? _cachedRoughness;
 
-        private static void PunchMaterials(GameObject root)
+        private void BindPaintedLook(GameObject root)
         {
-            var albedo = LoadMeshyAlbedo();
-            var metallic = LoadMeshyPackedMap(grayIndex: 0);
-            var roughness = LoadMeshyPackedMap(grayIndex: 1);
+            StampLookUvsFromPaintedBody(root);
+            var albedo = LoadSepPaintMap("sep_body_basecolor.jpg", sRgb: true);
+            var metallic = LoadSepPaintMap("sep_body_metallic.jpg", sRgb: false);
+            var roughness = LoadSepPaintMap("sep_body_roughness.jpg", sRgb: false);
+            var normal = LoadSepPaintMap("sep_body_normal.jpg", sRgb: false);
+            foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
+            {
+                if (rend.name.IndexOf("Ico", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    continue;
+                }
+
+                ApplyLookMaterial(rend, albedo, metallic, roughness, normal);
+            }
+        }
+
+        private void EnsureLookScabbard()
+        {
+            if (_walkAnimator == null || _walkInstance == null)
+            {
+                return;
+            }
+
+            var hips = _walkAnimator.GetBoneTransform(HumanBodyBones.Hips);
+            var thigh = _walkAnimator.GetBoneTransform(HumanBodyBones.LeftUpperLeg) ?? hips;
+            if (thigh == null)
+            {
+                return;
+            }
+
+            var prefab = LoadFbxPrefab(PaintedSwordGlb, "SirAldric_SEP_sword_scabbard_PAINTED_mid80k");
+            if (prefab == null)
+            {
+                return;
+            }
+
+            var source = Instantiate(prefab, _walkInstance.transform);
+            source.name = "LookSwordScabbard";
+            var srcMesh = FirstMesh(source);
+            if (srcMesh == null)
+            {
+                return;
+            }
+
+            SplitLookSwordAndScabbard(srcMesh, out var swordMesh, out var scabbardMesh);
+            var scabbardGo = Instantiate(source, _walkInstance.transform);
+            scabbardGo.name = "LookScabbard";
+            var swordGo = Instantiate(source, _walkInstance.transform);
+            swordGo.name = "LookSword";
+            source.SetActive(false);
+            AssignMesh(scabbardGo, scabbardMesh);
+            AssignMesh(swordGo, swordMesh);
+
+            var albedo = LoadSepPaintMap("sword_basecolor.jpg", sRgb: true);
+            var metallic = LoadSepPaintMap("sword_metallic.jpg", sRgb: false);
+            var roughness = LoadSepPaintMap("sword_roughness.jpg", sRgb: false);
+            var normal = LoadSepPaintMap("sword_normal.jpg", sRgb: false);
+            foreach (var rend in scabbardGo.GetComponentsInChildren<Renderer>(true))
+            {
+                ApplyLookMaterial(rend, albedo, metallic, roughness, normal);
+            }
+
+            foreach (var rend in swordGo.GetComponentsInChildren<Renderer>(true))
+            {
+                ApplyLookMaterial(rend, albedo, metallic, roughness, normal);
+            }
+
+            // World after RearYaw 180: character-left = −root.right = −X = viewer-left from behind.
+            // Thin-lateral hang mirrored from the 1ac345a RIGHT-hip pose. Parent LeftUpperLeg.
+            // Derek SoT: RH draws from LEFT sheath. Empty scabbard stays LEFT hip.
+            // LookSword (blade+hilt) sheathes here until draw, then parents to RightHand.
+            var pos = thigh.position
+                      + _walkInstance.transform.right * -0.06f
+                      + Vector3.up * -0.12f;
+            var rot = _walkInstance.transform.rotation * Quaternion.Euler(0f, 90f, -90f);
+            scabbardGo.transform.SetPositionAndRotation(pos, rot);
+            scabbardGo.transform.localScale = Vector3.one * 0.28f;
+            scabbardGo.transform.SetParent(thigh, true);
+            _lookScabbard = scabbardGo.transform;
+            _lookSword = swordGo.transform;
+            RememberSwordHiltAndTip(swordMesh);
+            SheathLookSword();
+        }
+
+        private static Mesh? FirstMesh(GameObject root)
+        {
+            var skin = root.GetComponentInChildren<SkinnedMeshRenderer>(true);
+            if (skin != null && skin.sharedMesh != null)
+            {
+                return skin.sharedMesh;
+            }
+
+            var filter = root.GetComponentInChildren<MeshFilter>(true);
+            return filter != null ? filter.sharedMesh : null;
+        }
+
+        private static void AssignMesh(GameObject root, Mesh mesh)
+        {
+            var skin = root.GetComponentInChildren<SkinnedMeshRenderer>(true);
+            if (skin != null)
+            {
+                skin.sharedMesh = mesh;
+                return;
+            }
+
+            var filter = root.GetComponentInChildren<MeshFilter>(true);
+            if (filter != null)
+            {
+                filter.sharedMesh = mesh;
+            }
+        }
+
+        /// <summary>
+        /// Split the combined mid80k sword+scabbard remesh: hilt-end + thin core = blade+hilt;
+        /// the rest is the empty LEFT-hip sheath. Not Path A. Not ClipSword.
+        /// </summary>
+        private static void SplitLookSwordAndScabbard(Mesh src, out Mesh swordMesh, out Mesh scabbardMesh)
+        {
+            var verts = src.vertices;
+            var n = verts.Length;
+            var mn = verts[0];
+            var mx = verts[0];
+            for (var i = 1; i < n; i++)
+            {
+                mn = Vector3.Min(mn, verts[i]);
+                mx = Vector3.Max(mx, verts[i]);
+            }
+
+            var c = (mn + mx) * 0.5f;
+            var axis = mx - mn;
+            axis.y = 0f;
+            if (axis.sqrMagnitude < 1e-8f)
+            {
+                axis = Vector3.right;
+            }
+
+            axis.Normalize();
+            const float tHilt = 0.70f;
+            const float rCore = 0.11f;
+            var isSword = new bool[n];
+            for (var i = 0; i < n; i++)
+            {
+                var d = verts[i] - c;
+                var t = Vector3.Dot(d, axis);
+                var r = (d - axis * t).magnitude;
+                isSword[i] = t > tHilt || r < rCore;
+            }
+
+            swordMesh = ExtractLabeledVerts(src, isSword, wantSword: true);
+            scabbardMesh = ExtractLabeledVerts(src, isSword, wantSword: false);
+        }
+
+        private static Mesh ExtractLabeledVerts(Mesh src, bool[] isSword, bool wantSword)
+        {
+            var srcV = src.vertices;
+            var srcUv = src.uv;
+            var map = new int[srcV.Length];
+            for (var i = 0; i < map.Length; i++)
+            {
+                map[i] = -1;
+            }
+
+            var verts = new List<Vector3>(srcV.Length / 2);
+            var uvs = new List<Vector2>(srcV.Length / 2);
+            for (var i = 0; i < srcV.Length; i++)
+            {
+                if (isSword[i] != wantSword)
+                {
+                    continue;
+                }
+
+                map[i] = verts.Count;
+                verts.Add(srcV[i]);
+                uvs.Add(srcUv != null && i < srcUv.Length ? srcUv[i] : Vector2.zero);
+            }
+
+            var tris = src.triangles;
+            var outTris = new List<int>(tris.Length / 2);
+            for (var i = 0; i < tris.Length; i += 3)
+            {
+                var a = map[tris[i]];
+                var b = map[tris[i + 1]];
+                var c = map[tris[i + 2]];
+                if (a < 0 || b < 0 || c < 0)
+                {
+                    continue;
+                }
+
+                outTris.Add(a);
+                outTris.Add(b);
+                outTris.Add(c);
+            }
+
+            var mesh = new Mesh { name = src.name + (wantSword ? "_LookSword" : "_LookScabbard") };
+            mesh.SetVertices(verts);
+            mesh.SetUVs(0, uvs);
+            mesh.SetTriangles(outTris, 0);
+            mesh.RecalculateBounds();
+            mesh.RecalculateNormals();
+            return mesh;
+        }
+
+        private void RememberSwordHiltAndTip(Mesh swordMesh)
+        {
+            var verts = swordMesh.vertices;
+            if (verts == null || verts.Length == 0)
+            {
+                _swordHiltLocal = Vector3.zero;
+                _swordTipLocal = Vector3.right;
+                return;
+            }
+
+            var mn = verts[0];
+            var mx = verts[0];
+            for (var i = 1; i < verts.Length; i++)
+            {
+                mn = Vector3.Min(mn, verts[i]);
+                mx = Vector3.Max(mx, verts[i]);
+            }
+
+            var c = (mn + mx) * 0.5f;
+            var axis = mx - mn;
+            axis.y = 0f;
+            if (axis.sqrMagnitude < 1e-8f)
+            {
+                axis = Vector3.right;
+            }
+
+            axis.Normalize();
+            var hilt = verts[0];
+            var tip = verts[0];
+            var hiltT = Vector3.Dot(verts[0] - c, axis);
+            var tipT = hiltT;
+            for (var i = 1; i < verts.Length; i++)
+            {
+                var t = Vector3.Dot(verts[i] - c, axis);
+                if (t > hiltT)
+                {
+                    hiltT = t;
+                    hilt = verts[i];
+                }
+
+                if (t < tipT)
+                {
+                    tipT = t;
+                    tip = verts[i];
+                }
+            }
+
+            _swordHiltLocal = hilt;
+            _swordTipLocal = tip;
+        }
+
+        /// <summary>
+        /// Walk / pre-draw: LookSword sits in the LEFT-hip LookScabbard.
+        /// On draw: parent blade+hilt to RightHand. Overhead→strike follows 2H grip
+        /// (RH-biased midpoint of RightHand and LeftHand).
+        /// </summary>
+        private void ParentLookSwordOnDraw(bool attacking, float attackU)
+        {
+            if (_lookSword == null || _lookScabbard == null || _walkAnimator == null)
+            {
+                return;
+            }
+
+            var rh = _walkAnimator.GetBoneTransform(HumanBodyBones.RightHand);
+            if (!attacking || attackU < LookSwordDrawParentU || rh == null)
+            {
+                SheathLookSword();
+                return;
+            }
+
+            var lh = _walkAnimator.GetBoneTransform(HumanBodyBones.LeftHand);
+            var twoHand = attackU >= LookSwordTwoHandU && lh != null;
+            var bladeDir = rh.up.sqrMagnitude > 1e-6f ? rh.up.normalized : rh.forward;
+            if (twoHand)
+            {
+                var across = lh!.position - rh.position;
+                if (across.sqrMagnitude > 0.0025f)
+                {
+                    bladeDir = (bladeDir * 0.55f + across.normalized * 0.45f).normalized;
+                }
+            }
+
+            var tipDirLocal = _swordTipLocal - _swordHiltLocal;
+            if (tipDirLocal.sqrMagnitude < 1e-8f)
+            {
+                tipDirLocal = Vector3.right;
+            }
+
+            tipDirLocal.Normalize();
+            var holdLocal = Vector3.Lerp(_swordHiltLocal, _swordTipLocal, 0.12f);
+            var rot = Quaternion.FromToRotation(tipDirLocal, bladeDir);
+            var holdWorld = rot * (holdLocal * 0.28f);
+            _lookSword.SetParent(null, true);
+            _lookSword.SetPositionAndRotation(rh.position - holdWorld, rot);
+            _lookSword.localScale = Vector3.one * 0.28f;
+            _lookSword.SetParent(rh, true);
+        }
+
+        private void SheathLookSword()
+        {
+            if (_lookSword == null || _lookScabbard == null)
+            {
+                return;
+            }
+
+            _lookSword.SetParent(null, true);
+            _lookSword.SetPositionAndRotation(_lookScabbard.position, _lookScabbard.rotation);
+            _lookSword.localScale = Vector3.one * 0.28f;
+            _lookSword.SetParent(_lookScabbard, true);
+        }
+
+        private static void ApplyLookMaterial(
+            Renderer rend,
+            Texture2D? albedo,
+            Texture2D? metallic,
+            Texture2D? roughness,
+            Texture2D? normal)
+        {
+            var mat = NewLit();
+            BindMapsAndPunch(mat, albedo, metallic, roughness);
+            if (normal != null && mat.HasProperty("_BumpMap"))
+            {
+                mat.SetTexture("_BumpMap", normal);
+                if (mat.HasProperty("_BumpScale"))
+                {
+                    mat.SetFloat("_BumpScale", 1f);
+                }
+            }
+
+            rend.material = mat;
+        }
+
+        private static void StampLookUvsFromPaintedBody(GameObject walkRoot)
+        {
+            var walkFilter = walkRoot.GetComponentInChildren<MeshFilter>();
+            var walkSkin = walkRoot.GetComponentInChildren<SkinnedMeshRenderer>();
+            Mesh? walkMesh = walkSkin != null ? walkSkin.sharedMesh : walkFilter != null ? walkFilter.sharedMesh : null;
+            if (walkMesh == null)
+            {
+                return;
+            }
+
+            var sidecar = LoadLookUvSidecar(walkMesh.vertexCount);
+            if (sidecar != null)
+            {
+                ApplyWalkUv(walkSkin, walkFilter, walkMesh, sidecar);
+                return;
+            }
+
+            var paintPrefab = LoadFbxPrefab(PaintedBodyGlb, "SirAldric_SEP_body_nosword_PAINTED_mid450k");
+            if (paintPrefab == null)
+            {
+                return;
+            }
+
+            var paintFilter = paintPrefab.GetComponentInChildren<MeshFilter>();
+            var paintSkin = paintPrefab.GetComponentInChildren<SkinnedMeshRenderer>();
+            var paintMesh = paintSkin != null ? paintSkin.sharedMesh : paintFilter != null ? paintFilter.sharedMesh : null;
+            if (paintMesh == null || paintMesh.vertexCount < 8 || paintMesh.uv == null || paintMesh.uv.Length == 0)
+            {
+                return;
+            }
+
+            var stamped = StampUvsNearest(walkMesh.vertices, paintMesh.vertices, paintMesh.uv);
+            if (stamped != null)
+            {
+                ApplyWalkUv(walkSkin, walkFilter, walkMesh, stamped);
+            }
+        }
+
+        private static void ApplyWalkUv(
+            SkinnedMeshRenderer? walkSkin,
+            MeshFilter? walkFilter,
+            Mesh walkMesh,
+            Vector2[] uvs)
+        {
+            var copy = UnityEngine.Object.Instantiate(walkMesh);
+            copy.name = walkMesh.name + "_LookUV";
+            copy.uv = uvs;
+            if (walkSkin != null)
+            {
+                walkSkin.sharedMesh = copy;
+            }
+            else if (walkFilter != null)
+            {
+                walkFilter.sharedMesh = copy;
+            }
+        }
+
+        private static Vector2[]? LoadLookUvSidecar(int vertexCount)
+        {
+            var path = ResolveHero3D("sep_paint/sir_aldric_sep_walk_look_uv.bin")
+                       ?? ResolveHero3D("sir_aldric_sep_walk_look_uv.bin");
+            if (path == null || !File.Exists(path))
+            {
+                return null;
+            }
+
+            try
+            {
+                var bytes = File.ReadAllBytes(path);
+                if (bytes.Length < 8)
+                {
+                    return null;
+                }
+
+                var count = BitConverter.ToInt32(bytes, 0);
+                if (count != vertexCount || bytes.Length < 4 + count * 8)
+                {
+                    return null;
+                }
+
+                var uvs = new Vector2[count];
+                for (var i = 0; i < count; i++)
+                {
+                    var o = 4 + i * 8;
+                    uvs[i] = new Vector2(BitConverter.ToSingle(bytes, o), BitConverter.ToSingle(bytes, o + 4));
+                }
+
+                return uvs;
+            }
+            catch (IOException)
+            {
+                return null;
+            }
+        }
+
+        private static Vector2[]? StampUvsNearest(Vector3[] walk, Vector3[] paint, Vector2[] paintUv)
+        {
+            if (walk.Length == 0 || paint.Length == 0 || paintUv.Length != paint.Length)
+            {
+                return null;
+            }
+
+            var wMin = walk[0];
+            var wMax = walk[0];
+            var pMin = paint[0];
+            var pMax = paint[0];
+            for (var i = 1; i < walk.Length; i++)
+            {
+                wMin = Vector3.Min(wMin, walk[i]);
+                wMax = Vector3.Max(wMax, walk[i]);
+            }
+
+            for (var i = 1; i < paint.Length; i++)
+            {
+                pMin = Vector3.Min(pMin, paint[i]);
+                pMax = Vector3.Max(pMax, paint[i]);
+            }
+
+            var wSize = wMax - wMin;
+            var pSize = pMax - pMin;
+            if (pSize.x < 1e-5f || pSize.y < 1e-5f || pSize.z < 1e-5f)
+            {
+                return null;
+            }
+
+            const int cells = 24;
+            var buckets = new System.Collections.Generic.List<int>[cells * cells * cells];
+            for (var i = 0; i < paint.Length; i++)
+            {
+                var n = new Vector3(
+                    (paint[i].x - pMin.x) / pSize.x,
+                    (paint[i].y - pMin.y) / pSize.y,
+                    (paint[i].z - pMin.z) / pSize.z);
+                var xi = Mathf.Clamp(Mathf.FloorToInt(n.x * cells), 0, cells - 1);
+                var yi = Mathf.Clamp(Mathf.FloorToInt(n.y * cells), 0, cells - 1);
+                var zi = Mathf.Clamp(Mathf.FloorToInt(n.z * cells), 0, cells - 1);
+                var key = xi + cells * (yi + cells * zi);
+                buckets[key] ??= new System.Collections.Generic.List<int>(8);
+                buckets[key].Add(i);
+            }
+
+            var outUv = new Vector2[walk.Length];
+            for (var i = 0; i < walk.Length; i++)
+            {
+                var n = new Vector3(
+                    wSize.x > 1e-5f ? (walk[i].x - wMin.x) / wSize.x : 0.5f,
+                    wSize.y > 1e-5f ? (walk[i].y - wMin.y) / wSize.y : 0.5f,
+                    wSize.z > 1e-5f ? (walk[i].z - wMin.z) / wSize.z : 0.5f);
+                var xi = Mathf.Clamp(Mathf.FloorToInt(n.x * cells), 0, cells - 1);
+                var yi = Mathf.Clamp(Mathf.FloorToInt(n.y * cells), 0, cells - 1);
+                var zi = Mathf.Clamp(Mathf.FloorToInt(n.z * cells), 0, cells - 1);
+                var best = 0;
+                var bestD = float.MaxValue;
+                for (var dx = -1; dx <= 1; dx++)
+                {
+                    for (var dy = -1; dy <= 1; dy++)
+                    {
+                        for (var dz = -1; dz <= 1; dz++)
+                        {
+                            var xx = xi + dx;
+                            var yy = yi + dy;
+                            var zz = zi + dz;
+                            if (xx < 0 || yy < 0 || zz < 0 || xx >= cells || yy >= cells || zz >= cells)
+                            {
+                                continue;
+                            }
+
+                            var list = buckets[xx + cells * (yy + cells * zz)];
+                            if (list == null)
+                            {
+                                continue;
+                            }
+
+                            var mapped = new Vector3(
+                                pMin.x + n.x * pSize.x,
+                                pMin.y + n.y * pSize.y,
+                                pMin.z + n.z * pSize.z);
+                            foreach (var pi in list)
+                            {
+                                var d = (paint[pi] - mapped).sqrMagnitude;
+                                if (d < bestD)
+                                {
+                                    bestD = d;
+                                    best = pi;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                outUv[i] = paintUv[best];
+            }
+
+            return outUv;
+        }
+
+        private static Texture2D? LoadSepPaintMap(string fileName, bool sRgb)
+        {
+#if UNITY_EDITOR
+            var rel = "Assets/" + PaintedLookDir.Replace('\\', '/') + "/" + fileName;
+            var asset = AssetDatabase.LoadAssetAtPath<Texture2D>(rel);
+            if (asset != null)
+            {
+                return asset;
+            }
+#endif
+            var path = ResolveHero3D("sep_paint/" + fileName);
+            if (path == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                var tex = new Texture2D(2, 2, sRgb ? TextureFormat.RGBA32 : TextureFormat.RGB24, false);
+                if (tex.LoadImage(File.ReadAllBytes(path)))
+                {
+                    tex.wrapMode = TextureWrapMode.Clamp;
+                    tex.filterMode = FilterMode.Bilinear;
+                    tex.name = Path.GetFileNameWithoutExtension(fileName);
+                    return tex;
+                }
+            }
+            catch (IOException)
+            {
+            }
+
+            return null;
+        }
+
+        private static void PunchMaterials(GameObject root, string themePackRel)
+        {
+            var albedo = LoadMeshyAlbedo(themePackRel);
+            var metallic = LoadMeshyPackedMap(themePackRel, grayIndex: 0);
+            var roughness = LoadMeshyPackedMap(themePackRel, grayIndex: 1);
             foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
             {
                 var shared = rend.sharedMaterials;
@@ -389,15 +1268,17 @@ namespace Survival.Unity
             return new Material(shader);
         }
 
-        private static Texture2D? LoadMeshyAlbedo()
+        private static Texture2D? LoadMeshyAlbedo(string themePackRel)
         {
-            if (_cachedAlbedo != null)
+            var useCache = string.Equals(themePackRel, ThemePackFbx, StringComparison.Ordinal);
+            if (useCache && _cachedAlbedo != null)
             {
                 return _cachedAlbedo;
             }
 
 #if UNITY_EDITOR
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(FbxAssetPath))
+            var rel = "Assets/" + themePackRel.Replace('\\', '/');
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
             {
                 if (obj is not Texture2D tex || tex.width < 256)
                 {
@@ -405,30 +1286,45 @@ namespace Survival.Unity
                 }
 
                 var n = tex.name.ToLowerInvariant();
-                if (n.Contains("texture_0")
+                if ((n.Contains("texture_0") || n.Contains("basecolor") || n.Contains("albedo"))
                     && !n.Contains("metallic")
                     && !n.Contains("rough")
                     && !n.Contains("normal"))
                 {
-                    _cachedAlbedo = tex;
+                    if (useCache)
+                    {
+                        _cachedAlbedo = tex;
+                    }
+
                     return tex;
                 }
             }
 #endif
-            _cachedAlbedo = ExtractFbxPng(color: true, grayIndex: -1)
-                            ?? LoadSiblingPng("sir_aldric_meshy_atlas.png");
-            return _cachedAlbedo;
+            // SEP pack has no embedded atlas (soft leftover). Do not bind the old fused-walk atlas.
+            var extracted = ExtractFbxPng(themePackRel, color: true, grayIndex: -1);
+            if (useCache)
+            {
+                _cachedAlbedo = extracted;
+            }
+
+            return extracted;
         }
 
-        private static Texture2D? LoadMeshyPackedMap(int grayIndex)
+        private static Texture2D? LoadMeshyPackedMap(string themePackRel, int grayIndex)
         {
+            var useCache = string.Equals(themePackRel, ThemePackFbx, StringComparison.Ordinal);
             var cache = grayIndex == 0 ? _cachedMetallic : _cachedRoughness;
-            if (cache != null)
+            if (useCache && cache != null)
             {
                 return cache;
             }
 
-            var extracted = ExtractFbxPng(color: false, grayIndex: grayIndex);
+            var extracted = ExtractFbxPng(themePackRel, color: false, grayIndex: grayIndex);
+            if (!useCache)
+            {
+                return extracted;
+            }
+
             if (grayIndex == 0)
             {
                 _cachedMetallic = extracted ?? LoadSiblingPng("sir_aldric_meshy_atlas_metallic.png");
@@ -493,12 +1389,16 @@ namespace Survival.Unity
             return null;
         }
 
-        private static string? ResolveFbxPath()
+        private static string? ResolveFbxPath(string? themePackRel = null)
         {
             var cwd = Directory.GetCurrentDirectory();
             var data = Application.dataPath ?? Path.Combine(cwd, "Assets");
             var repo = Directory.GetParent(data)?.FullName ?? cwd;
-            var rel = ThemePackFbx.Replace('\\', '/');
+            var rel = (themePackRel ?? ThemePackFbx).Replace('\\', '/');
+            if (rel.StartsWith("Assets/", StringComparison.Ordinal))
+            {
+                rel = rel.Substring("Assets/".Length);
+            }
             foreach (var path in new[]
                      {
                          Path.Combine(data, rel),
@@ -514,9 +1414,9 @@ namespace Survival.Unity
             return null;
         }
 
-        private static Texture2D? ExtractFbxPng(bool color, int grayIndex)
+        private static Texture2D? ExtractFbxPng(string themePackRel, bool color, int grayIndex)
         {
-            var fbx = ResolveFbxPath();
+            var fbx = ResolveFbxPath(themePackRel);
             if (fbx == null)
             {
                 return null;

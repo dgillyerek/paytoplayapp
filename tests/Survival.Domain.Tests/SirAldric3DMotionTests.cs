@@ -273,21 +273,186 @@ public sealed class SirAldric3DMotionTests
     }
 
     [Fact]
-    public void Meshy_animate_actor_binds_albedo_and_keeps_walking_clip()
+    public void Mixamo_import_rear_yaw_faces_world_plus_z_not_the_camera()
+    {
+        Assert.Equal(180f, SirAldric3DMotion.MixamoImportRearYawDegrees);
+        var actor = Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs");
+        var demo = Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "SirAldricDemo.cs");
+        var actorSrc = File.ReadAllText(actor);
+        var demoSrc = File.ReadAllText(demo);
+        Assert.Contains("RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees", actorSrc, StringComparison.Ordinal);
+        Assert.Contains("FaceWorldTop", actorSrc, StringComparison.Ordinal);
+        Assert.Contains("Quaternion.Euler(0f, RearYawDegrees, 0f)", actorSrc, StringComparison.Ordinal);
+        Assert.Contains("new Vector3(0f, 2.80f, -5.40f)", demoSrc, StringComparison.Ordinal);
+        Assert.Contains("new Vector3(0f, 0.90f, 0.50f)", demoSrc, StringComparison.Ordinal);
+        Assert.Contains("EnemyTop", demoSrc, StringComparison.Ordinal);
+        Assert.DoesNotContain("_clipPlayable", actorSrc, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Humanoid_attack_draws_then_strikes_toward_world_top()
+    {
+        Assert.Equal(SirAldric3DMotion.AttackSeconds, SirAldricHumanoidAttack.Seconds);
+        var draw = SirAldricHumanoidAttack.Evaluate(0.10f);
+        var guard = SirAldricHumanoidAttack.Evaluate(SirAldricHumanoidAttack.Seconds * 0.30f);
+        var strike = SirAldricHumanoidAttack.Evaluate(SirAldricHumanoidAttack.StrikePeakSeconds);
+        var recover = SirAldricHumanoidAttack.Evaluate(SirAldricHumanoidAttack.Seconds - 0.02f);
+
+        Assert.Equal(SirAldricHumanoidAttack.PhaseKind.Draw, draw.Phase);
+        Assert.Equal(SirAldricHumanoidAttack.PhaseKind.Guard, guard.Phase);
+        Assert.Equal(SirAldricHumanoidAttack.PhaseKind.Strike, strike.Phase);
+        Assert.Equal(SirAldricHumanoidAttack.PhaseKind.Recover, recover.Phase);
+
+        Assert.True(strike.SwordDrawn);
+        Assert.True(strike.StrikeTowardTop);
+        Assert.True(strike.HandZ > draw.HandZ + 0.45f);
+        Assert.True(strike.HandZ > 0.50f);
+        Assert.True(draw.HandZ < 0.10f);
+        Assert.True(recover.HandZ < strike.HandZ);
+        Assert.False(recover.StrikeTowardTop);
+        Assert.Contains("GetBoneTransform", SirAldricHumanoidAttack.Authorship, StringComparison.Ordinal);
+        Assert.Contains("FromToRotation", SirAldricHumanoidAttack.Authorship, StringComparison.Ordinal);
+        Assert.DoesNotContain("Design PASS", SirAldricHumanoidAttack.Authorship, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Meshy_animate_actor_plays_sep_walk_and_attack_on_same_humanoid()
     {
         var root = FindRepoRoot();
         var actor = Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs");
         var src = File.ReadAllText(actor);
-        Assert.Contains("SetTexture(\"_BaseMap\"", src, StringComparison.Ordinal);
-        Assert.Contains("SetTexture(\"_MainTex\"", src, StringComparison.Ordinal);
-        Assert.Contains("ExtractFbxPng", src, StringComparison.Ordinal);
-        Assert.Contains("RepairWalkingTake", src, StringComparison.Ordinal);
-        Assert.Contains("takeName", src, StringComparison.Ordinal);
-        var fbx = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_animate_walk.fbx");
-        var atlas = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_atlas.png");
-        Assert.True(new FileInfo(fbx).Length > 1_000_000);
-        Assert.True(new FileInfo(atlas).Length > 100_000);
-        var bytes = File.ReadAllBytes(fbx);
+        Assert.Contains("SirAldric_SEP_meshy_animate_walk.fbx", src, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_SEP_meshy_animate_attack_2h_downstrike_yawlock.fbx", src, StringComparison.Ordinal);
+        Assert.Contains("LeftoverFusedWalkFbx", src, StringComparison.Ordinal);
+        Assert.Contains("LeftoverStandingSlashFbx", src, StringComparison.Ordinal);
+        Assert.Contains("LeftoverSpinAttackFbx", src, StringComparison.Ordinal);
+        Assert.Contains("LeftoverNospinAttackFbx", src, StringComparison.Ordinal);
+        Assert.Contains("LeftoverOneHandYawlockFbx", src, StringComparison.Ordinal);
+        Assert.Contains("LeftoverRawTwoHandAttackFbx", src, StringComparison.Ordinal);
+        Assert.Contains("LoadAttackClip", src, StringComparison.Ordinal);
+        Assert.Contains("AttackOnWalkHumanoid", src, StringComparison.Ordinal);
+        Assert.Contains("WalkCyclesBeforeAttack", src, StringComparison.Ordinal);
+        Assert.Contains("RearYawDegrees", src, StringComparison.Ordinal);
+        Assert.Contains("Path A weight-paint is CANCELLED", src, StringComparison.Ordinal);
+        Assert.Contains("not SoT", src, StringComparison.Ordinal);
+        Assert.Contains("2H YAWLOCK", src, StringComparison.Ordinal);
+        Assert.DoesNotContain("EnsureClipSword", src, StringComparison.Ordinal);
+        Assert.DoesNotContain("PlaceClipSwordInHand", src, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static void AimChain", src, StringComparison.Ordinal);
+        Assert.DoesNotContain("_mixer.ConnectInput(1", src, StringComparison.Ordinal);
+        Assert.DoesNotContain("SirAldricMeshyAnimateAttack", src, StringComparison.Ordinal);
+        Assert.DoesNotContain("ThemePackAttackFbx = \"ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack.fbx\"", src, StringComparison.Ordinal);
+        Assert.Contains("ThemePackAttackFbx = \"ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack_2h_downstrike_yawlock.fbx\"", src, StringComparison.Ordinal);
+        Assert.DoesNotContain("ThemePackAttackFbx = \"ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack_yawlock.fbx\"", src, StringComparison.Ordinal);
+
+        var walk = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "SirAldric_SEP_meshy_animate_walk.fbx");
+        var attack = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "SirAldric_SEP_meshy_animate_attack_2h_downstrike_yawlock.fbx");
+        var leftover1h = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "SirAldric_SEP_meshy_animate_attack_yawlock.fbx");
+        var leftoverSpin = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "SirAldric_SEP_meshy_animate_attack.fbx");
+        Assert.True(new FileInfo(walk).Length > 1_000_000);
+        Assert.True(new FileInfo(attack).Length > 1_000_000);
+        Assert.True(new FileInfo(leftoverSpin).Length > 1_000_000);
+        Assert.True(new FileInfo(leftover1h).Length > 1_000_000);
+        var walkBytes = File.ReadAllBytes(walk);
+        var atkBytes = File.ReadAllBytes(attack);
+        Assert.True(IndexOfAscii(walkBytes, "mixamorig") >= 0);
+        Assert.True(IndexOfAscii(atkBytes, "mixamorig") < 0);
+        Assert.True(IndexOfAscii(atkBytes, "Spine02") >= 0);
+        Assert.True(IndexOfAscii(atkBytes, "Hips") >= 0);
+        Assert.True(IndexOfAscii(atkBytes, "RightUpLeg") >= 0);
+        Assert.True(IndexOfAscii(walkBytes, "Scabbard") < 0);
+        Assert.True(IndexOfAscii(atkBytes, "Scabbard") < 0);
+
+        var walkMeta = File.ReadAllText(walk + ".meta");
+        var atkMeta = File.ReadAllText(attack + ".meta");
+        Assert.Contains("takeName: target_character|target_character|Walking", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("name: Walking", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 3", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("takeName: target_character|Scene", atkMeta, StringComparison.Ordinal);
+        Assert.Contains("name: Attack", atkMeta, StringComparison.Ordinal);
+        Assert.Contains("firstFrame: 3", atkMeta, StringComparison.Ordinal);
+        Assert.Contains("lastFrame: 92", atkMeta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 3", atkMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("takeName: target_character|rigify_clip|BaseLayer", atkMeta, StringComparison.Ordinal);
+
+        var leftoverMeta = File.ReadAllText(leftoverSpin + ".meta");
+        Assert.Contains("takeName: target_character|rigify_clip|BaseLayer", leftoverMeta, StringComparison.Ordinal);
+
+        var capture = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricGameViewCapture.cs"));
+        Assert.Contains("Camera.Render", capture, StringComparison.Ordinal);
+        Assert.Contains("1080", capture, StringComparison.Ordinal);
+        Assert.Contains("aldric_sep_2h_drawparent_20260926", capture, StringComparison.Ordinal);
+        Assert.Contains("sir_aldric_sep_2h_dp_walk_juice_gameview.mp4", capture, StringComparison.Ordinal);
+        Assert.Contains("sir_aldric_sep_2h_dp_attack_juice_gameview.mp4", capture, StringComparison.Ordinal);
+        var menu = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricGameViewCaptureMenu.cs"));
+        Assert.Contains("Capture Sir Aldric SEP 2H draw-parent (Game view)", menu, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Walk_wide_stance_is_authored_in_the_mixamo_clip_not_import_ik()
+    {
+        var root = FindRepoRoot();
+        var hold = File.ReadAllText(Path.Combine(root, "Docs", "Survival", "previews", "facing_20260925", "MOTION_HOLD.md"));
+        Assert.Contains("0.396", hold, StringComparison.Ordinal);
+        Assert.Contains("0.719", hold, StringComparison.Ordinal);
+        Assert.Contains("Wait Design walk iterate", hold, StringComparison.Ordinal);
+        Assert.Contains("HOLD merge", hold, StringComparison.Ordinal);
+        var meta = File.ReadAllText(Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_animate_walk.fbx.meta"));
+        Assert.Contains("heightFromFeet: 1", meta, StringComparison.Ordinal);
+        Assert.Contains("addHumanoidExtraRoot: 1", meta, StringComparison.Ordinal);
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
+        Assert.Contains("AttackAuthoredReason", actor, StringComparison.Ordinal);
+        Assert.Contains("Path A weight-paint is CANCELLED", actor, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Sep_paint_look_binds_on_accurig_and_does_not_use_fused_walk_atlas()
+    {
+        var root = FindRepoRoot();
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
+        Assert.Contains("RepairWalkingTake", actor, StringComparison.Ordinal);
+        Assert.Contains("BindPaintedLook", actor, StringComparison.Ordinal);
+        Assert.Contains("EnsureLookScabbard", actor, StringComparison.Ordinal);
+        Assert.Contains("sep_body_basecolor.jpg", actor, StringComparison.Ordinal);
+        Assert.Contains("LookSwordScabbard", actor, StringComparison.Ordinal);
+        Assert.Contains("LookScabbard", actor, StringComparison.Ordinal);
+        Assert.Contains("LookSword", actor, StringComparison.Ordinal);
+        Assert.Contains("SplitLookSwordAndScabbard", actor, StringComparison.Ordinal);
+        Assert.Contains("ParentLookSwordOnDraw", actor, StringComparison.Ordinal);
+        Assert.Contains("LookSwordDrawParentU", actor, StringComparison.Ordinal);
+        Assert.Contains("character-LEFT", actor, StringComparison.Ordinal);
+        Assert.Contains("LeftUpperLeg", actor, StringComparison.Ordinal);
+        Assert.Contains("Quaternion.Euler(0f, 90f, -90f)", actor, StringComparison.Ordinal);
+        Assert.Contains("RH draws from LEFT sheath", actor, StringComparison.Ordinal);
+        Assert.Contains("RightHand", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetParent(hips, true)", actor, StringComparison.Ordinal);
+        Assert.Contains("Do not bind the old fused-walk atlas", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("LoadSiblingPng(\"sir_aldric_meshy_atlas.png\")", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("EnsureClipSword", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static void AimChain", actor, StringComparison.Ordinal);
+
+        Assert.Contains("PaintedBodyGlb", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_SEP_body_nosword_PAINTED_mid450k.glb", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_SEP_sword_scabbard_PAINTED_mid80k.glb", actor, StringComparison.Ordinal);
+        Assert.Contains("LeftoverPaintedBodyMid200k", actor, StringComparison.Ordinal);
+        Assert.Contains("LeftoverPaintedSwordMid50k", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("PaintedBodyGlb = \"ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_body_nosword_PAINTED_mid200k", actor, StringComparison.Ordinal);
+
+        var paint = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sep_paint", "sep_body_basecolor.jpg");
+        var sword = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "SirAldric_SEP_sword_scabbard_PAINTED_mid80k.glb");
+        var body = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "SirAldric_SEP_body_nosword_PAINTED_mid450k.glb");
+        var leftoverBody = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "SirAldric_SEP_body_nosword_PAINTED_mid200k.fbx");
+        var leftoverSword = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "SirAldric_SEP_sword_scabbard_PAINTED_mid.fbx");
+        var uv = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sep_paint", "sir_aldric_sep_walk_look_uv.bin");
+        Assert.True(new FileInfo(paint).Length > 50_000);
+        Assert.True(new FileInfo(sword).Length > 100_000);
+        Assert.True(new FileInfo(body).Length > 1_000_000);
+        Assert.True(new FileInfo(leftoverBody).Length > 100_000);
+        Assert.True(new FileInfo(leftoverSword).Length > 100_000);
+        Assert.True(new FileInfo(uv).Length > 100_000);
+
+        var walk = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "SirAldric_SEP_meshy_animate_walk.fbx");
+        var bytes = File.ReadAllBytes(walk);
         var png = false;
         for (var i = 0; i < bytes.Length - 3; i++)
         {
@@ -298,7 +463,195 @@ public sealed class SirAldric3DMotionTests
             }
         }
 
-        Assert.True(png);
+        Assert.False(png);
+    }
+
+    [Fact]
+    public void Sep_walk_motion_fbx_stays_body_only_and_clipsword_is_not_sot()
+    {
+        var root = FindRepoRoot();
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
+        Assert.Contains("Path A weight-paint is CANCELLED", actor, StringComparison.Ordinal);
+        Assert.Contains("Walk motion SoT", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("EnsureClipSword", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("weight-paint", actor.Replace("Path A weight-paint is CANCELLED", ""), StringComparison.Ordinal);
+
+        var walkBytes = File.ReadAllBytes(Path.Combine(
+            root,
+            "Assets",
+            "ThemePack",
+            "fantasy_kingdom_a",
+            "art",
+            "heroes",
+            "3d",
+            "SirAldric_SEP_meshy_animate_walk.fbx"));
+        Assert.True(IndexOfAscii(walkBytes, "mixamorig:RightHand") >= 0);
+        Assert.True(IndexOfAscii(walkBytes, "RightHandMiddle4") >= 0);
+        Assert.True(IndexOfAscii(walkBytes, "Scabbard") < 0);
+        Assert.True(IndexOfAscii(walkBytes, "Sheath") < 0);
+        Assert.True(IndexOfAscii(walkBytes, "SirAldric_SEP_body_nosword") >= 0);
+    }
+
+    [Fact]
+    public void Aldric_sep_attack_yawlock_20260926_playcam_proofs_are_on_disk()
+    {
+        var dir = Path.Combine(FindRepoRoot(), "Docs", "Survival", "previews", "aldric_sep_attack_yawlock_20260926");
+        Assert.True(new FileInfo(Path.Combine(dir, "YAWLOCK_HOLD.md")).Length > 400);
+        Assert.True(new FileInfo(Path.Combine(dir, "ANIMATE_HANDOFF.md")).Length > 200);
+        Assert.True(new FileInfo(Path.Combine(dir, "ATTACK_YAWLOCK_VERIFY.txt")).Length > 200);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_yawlock_rear_attack_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_yawlock_front_attack_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_yawlock_34_attack_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_yawlock_rear_draw_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_yawlock_attack_juice_playcam.mp4")).Length > 50_000);
+        var hold = File.ReadAllText(Path.Combine(dir, "YAWLOCK_HOLD.md"));
+        Assert.Contains("HOLD merge", hold, StringComparison.Ordinal);
+        Assert.Contains("Not Meshy website stills", hold, StringComparison.Ordinal);
+        Assert.Contains("Not Unity Game-view", hold, StringComparison.Ordinal);
+        Assert.Contains("yawlock", hold, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("not SoT", hold, StringComparison.Ordinal);
+        Assert.Contains("LookSwordScabbard", hold, StringComparison.Ordinal);
+        Assert.Contains("Path A", hold, StringComparison.Ordinal);
+        Assert.Contains("nospin", hold, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("nospin is SoT", hold, StringComparison.OrdinalIgnoreCase);
+        var verify = File.ReadAllText(Path.Combine(dir, "ATTACK_YAWLOCK_VERIFY.txt"));
+        Assert.Contains("max|delta_yaw_Z|=0.00 deg", verify, StringComparison.Ordinal);
+        Assert.Contains("RESULT: PASS", verify, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Aldric_sep_2h_yawlock_20260926_playcam_proofs_are_on_disk()
+    {
+        var dir = Path.Combine(FindRepoRoot(), "Docs", "Survival", "previews", "aldric_sep_2h_yawlock_20260926");
+        Assert.True(new FileInfo(Path.Combine(dir, "TWO_HAND_HOLD.md")).Length > 400);
+        Assert.True(new FileInfo(Path.Combine(dir, "ANIMATE_HANDOFF.md")).Length > 200);
+        Assert.True(new FileInfo(Path.Combine(dir, "ATTACK_2H_YAWLOCK_VERIFY.txt")).Length > 200);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_rear_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_front_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_34_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_walk_juice_playcam.mp4")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_rear_draw_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_rear_overhead_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_rear_strike_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_34_draw_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_34_overhead_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_34_strike_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_attack_juice_playcam.mp4")).Length > 50_000);
+        var hold = File.ReadAllText(Path.Combine(dir, "TWO_HAND_HOLD.md"));
+        Assert.Contains("HOLD merge", hold, StringComparison.Ordinal);
+        Assert.Contains("Not Meshy website stills", hold, StringComparison.Ordinal);
+        Assert.Contains("Not Unity Game-view", hold, StringComparison.Ordinal);
+        Assert.Contains("LEFT", hold, StringComparison.Ordinal);
+        Assert.Contains("2h_downstrike_yawlock", hold, StringComparison.Ordinal);
+        Assert.Contains("Path A", hold, StringComparison.Ordinal);
+        var verify = File.ReadAllText(Path.Combine(dir, "ATTACK_2H_YAWLOCK_VERIFY.txt"));
+        Assert.Contains("max|delta ground-yaw|=0.00 deg", verify, StringComparison.Ordinal);
+        Assert.Contains("RightHand relative travel=1.149 m", verify, StringComparison.Ordinal);
+        Assert.Contains("drop after peak=1.091 m", verify, StringComparison.Ordinal);
+        Assert.Contains("forward_dot_away_from_rear=0.980", verify, StringComparison.Ordinal);
+        Assert.Contains("RESULT: PASS", verify, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Aldric_sep_2h_drawparent_20260926_playcam_proofs_are_on_disk()
+    {
+        var dir = Path.Combine(FindRepoRoot(), "Docs", "Survival", "previews", "aldric_sep_2h_drawparent_20260926");
+        Assert.True(new FileInfo(Path.Combine(dir, "DRAWPARENT_HOLD.md")).Length > 400);
+        Assert.True(new FileInfo(Path.Combine(dir, "ANIMATE_HANDOFF.md")).Length > 200);
+        Assert.True(new FileInfo(Path.Combine(dir, "ATTACK_2H_YAWLOCK_VERIFY.txt")).Length > 200);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_dp_rear_draw_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_dp_rear_overhead_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_dp_rear_strike_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_dp_34_draw_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_dp_34_overhead_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_dp_34_strike_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_dp_attack_juice_playcam.mp4")).Length > 50_000);
+        var hold = File.ReadAllText(Path.Combine(dir, "DRAWPARENT_HOLD.md"));
+        Assert.Contains("HOLD merge", hold, StringComparison.Ordinal);
+        Assert.Contains("Not Meshy website stills", hold, StringComparison.Ordinal);
+        Assert.Contains("Not Unity Game-view", hold, StringComparison.Ordinal);
+        Assert.Contains("LookSword", hold, StringComparison.Ordinal);
+        Assert.Contains("LookScabbard", hold, StringComparison.Ordinal);
+        Assert.Contains("RightHand", hold, StringComparison.Ordinal);
+        Assert.Contains("2h_downstrike_yawlock", hold, StringComparison.Ordinal);
+        Assert.Contains("Path A", hold, StringComparison.Ordinal);
+        Assert.DoesNotContain("Design PASS claimed", hold.Replace("No Design PASS claimed", ""), StringComparison.Ordinal);
+        var verify = File.ReadAllText(Path.Combine(dir, "ATTACK_2H_YAWLOCK_VERIFY.txt"));
+        Assert.Contains("max|delta ground-yaw|=0.00 deg", verify, StringComparison.Ordinal);
+        Assert.Contains("RESULT: PASS", verify, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Aldric_sep_paint_mid450k_20260926_playcam_proofs_are_on_disk()
+    {
+        var dir = Path.Combine(FindRepoRoot(), "Docs", "Survival", "previews", "aldric_sep_paint_mid450k_20260926");
+        Assert.True(new FileInfo(Path.Combine(dir, "CHUNKY_HOLD.md")).Length > 400);
+        Assert.True(new FileInfo(Path.Combine(dir, "CHUNKY_LOOK_HANDOFF.md")).Length > 200);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_paint_mid450k_rear_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_paint_mid450k_front_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_paint_mid450k_34_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_paint_mid450k_walk_juice_playcam.mp4")).Length > 50_000);
+        var hold = File.ReadAllText(Path.Combine(dir, "CHUNKY_HOLD.md"));
+        Assert.Contains("HOLD merge", hold, StringComparison.Ordinal);
+        Assert.Contains("Not Meshy website stills", hold, StringComparison.Ordinal);
+        Assert.Contains("Not Unity Game-view", hold, StringComparison.Ordinal);
+        Assert.Contains("mid450k", hold, StringComparison.Ordinal);
+        Assert.Contains("mid80k", hold, StringComparison.Ordinal);
+        Assert.Contains("2h_yawlock_20260926", hold, StringComparison.Ordinal);
+        Assert.Contains("Path A", hold, StringComparison.Ordinal);
+        Assert.DoesNotContain("attack fixed", hold, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Aldric_sep_paint_20260925_playcam_proofs_are_on_disk()
+    {
+        var dir = Path.Combine(FindRepoRoot(), "Docs", "Survival", "previews", "aldric_sep_paint_20260925");
+        Assert.True(new FileInfo(Path.Combine(dir, "PAINT_HOLD.md")).Length > 400);
+        Assert.True(new FileInfo(Path.Combine(dir, "PAINT_MIDPOLY_HANDOFF.md")).Length > 200);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_paint_rear_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_paint_front_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_paint_34_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_paint_walk_juice_playcam.mp4")).Length > 50_000);
+        var hold = File.ReadAllText(Path.Combine(dir, "PAINT_HOLD.md"));
+        Assert.Contains("HOLD merge", hold, StringComparison.Ordinal);
+        Assert.Contains("Not Meshy website stills", hold, StringComparison.Ordinal);
+        Assert.Contains("Not Unity Game-view", hold, StringComparison.Ordinal);
+        Assert.Contains("Attack", hold, StringComparison.Ordinal);
+        Assert.Contains("not SoT", hold, StringComparison.Ordinal);
+        Assert.Contains("No Design PASS", hold, StringComparison.Ordinal);
+        Assert.DoesNotContain("attack fixed", hold, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Aldric_sep_20260925_playcam_proofs_are_on_disk()
+    {
+        var dir = Path.Combine(FindRepoRoot(), "Docs", "Survival", "previews", "aldric_sep_20260925");
+        Assert.True(new FileInfo(Path.Combine(dir, "SEP_HOLD.md")).Length > 400);
+        Assert.True(new FileInfo(Path.Combine(dir, "ANIMATE_HANDOFF.md")).Length > 200);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_rear_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_front_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_34_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_rear_attack_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_front_attack_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_34_attack_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_walk_juice_playcam.mp4")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_attack_juice_playcam.mp4")).Length > 50_000);
+        var hold = File.ReadAllText(Path.Combine(dir, "SEP_HOLD.md"));
+        Assert.Contains("HOLD merge", hold, StringComparison.Ordinal);
+        Assert.Contains("Not Meshy website stills", hold, StringComparison.Ordinal);
+        Assert.Contains("Not Unity Game-view", hold, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Facing_20260925_rear_proofs_are_on_disk()
+    {
+        var dir = Path.Combine(FindRepoRoot(), "Docs", "Survival", "previews", "facing_20260925");
+        Assert.True(new FileInfo(Path.Combine(dir, "FACING.md")).Length > 400);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_rear_still_back_to_camera.png")).Length > 100_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_rear_walk_pose.png")).Length > 100_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_walk_toward_top_rear.mp4")).Length > 100_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_attack_toward_top_rear.mp4")).Length > 100_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_attack_slash_rear.png")).Length > 50_000);
     }
 
     [Fact]
@@ -308,6 +661,31 @@ public sealed class SirAldric3DMotionTests
         var packPng = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "SIR_ALDRIC_REAR_MASTER_LOCKED.png");
         Assert.True(File.Exists(packPng));
         Assert.True(new FileInfo(packPng).Length > 100_000);
+    }
+
+    private static int IndexOfAscii(byte[] hay, string needle)
+    {
+        var n = System.Text.Encoding.ASCII.GetBytes(needle);
+        var last = hay.Length - n.Length;
+        for (var i = 0; i <= last; i++)
+        {
+            var ok = true;
+            for (var j = 0; j < n.Length; j++)
+            {
+                if (hay[i + j] != n[j])
+                {
+                    ok = false;
+                    break;
+                }
+            }
+
+            if (ok)
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     private static string FindRepoRoot()

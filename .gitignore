@@ -11,6 +11,14 @@
 *.blend1
 *.blend1.meta
 Docs/Survival/previews/gate3/walk/f_*.png
+Docs/Survival/previews/facing_20260925/_probe_*.png
+Docs/Survival/previews/facing_20260925/_attack_frames/
+Docs/Survival/previews/aldric_sep_paint_20260925/_paint_walk_frames/
+Docs/Survival/previews/aldric_sep_attack_yawlock_20260926/_yawlock_attack_frames/
+Docs/Survival/previews/aldric_sep_paint_mid450k_20260926/_paint_mid450k_walk_frames/
+Docs/Survival/previews/aldric_sep_2h_yawlock_20260926/_2h_walk_frames/
+Docs/Survival/previews/aldric_sep_2h_yawlock_20260926/_2h_attack_frames/
+Docs/Survival/previews/aldric_sep_2h_drawparent_20260926/_2h_dp_attack_frames/
 scripts/blender/__pycache__/
 /[Mm]emoryCaptures/
 /[Rr]ecordings/

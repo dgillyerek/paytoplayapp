@@ -1,0 +1,40 @@
+Attack yawlock verification — 2026-09-26
+Input: assets/SirAldric_SEP_meshy_animate_attack_nospin.fbx
+Output FBX: assets/SirAldric_SEP_meshy_animate_attack_yawlock.fbx
+Output GLB: assets/SirAldric_SEP_meshy_animate_attack_yawlock.glb
+Action frames 3-92 (export re-import range ~3-92)
+
+Method:
+  Measured Hips world rotation Euler XYZ; Z (world yaw) carried ~179.9 deg delta.
+  For each frame: take Hips world matrix, convert rotation to Euler XYZ, set Z to START
+  frame yaw (1.8590 deg), keep X/Y (pitch/roll) and location/scale, write back
+  as pose.bones["Hips"].rotation_quaternion keys (LINEAR). Arm/spine/hand keys untouched.
+  Armature object had no rotation keys. Start forward (hips local Z) ~ -Y.
+
+BEFORE (nospin source):
+  start_yaw_Z=1.86 deg
+  end_yaw_Z=-174.18 deg
+  max|delta_yaw_Z|=179.93 deg (frame 73)
+  max quat angle from start=179.64 deg
+
+AFTER (in-memory post-lock):
+  max|delta_yaw_Z|=0.00 deg
+  max ground-forward deviation=0.53 deg
+
+VERIFY (re-import exported FBX):
+  max|delta_yaw_Z|=0.00 deg
+  start_yaw_Z=1.86 end_yaw_Z=1.86
+  RightHand relative travel=1.023 m
+  strike_frame=25 forward_dot_away_from_rear≈0.999
+
+Stills (Blender EEVEE):
+  stills/attack_yawlock_draw.png (f8)
+  stills/attack_yawlock_strike.png (f25)
+  stills/attack_yawlock_front.png (f25, cam -Y)
+  stills/attack_yawlock_34.png (f25)
+  stills/attack_yawlock_rear.png (f25, cam +Y behind back)
+
+Threshold: max|delta_yaw| < 15 deg — YES
+Rear away-from-camera — YES
+Slash motion retained — YES
+RESULT: PASS

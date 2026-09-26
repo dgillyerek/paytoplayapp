@@ -1,0 +1,26 @@
+{
+  "fbx": "Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_attack.fbx",
+  "take": "target_character|rigify_clip|BaseLayer",
+  "discovery": "Meshy Lionguard Knight \u00b7 Standing Sword Slash Attack",
+  "yaw": 180.0,
+  "flip_x": true,
+  "cam": {
+    "eye": [
+      0.0,
+      2.8,
+      -5.4
+    ],
+    "look": [
+      0.0,
+      0.9,
+      0.5
+    ]
+  },
+  "frames": [
+    3,
+    92
+  ],
+  "design_pass_claimed": false,
+  "path_a": false,
+  "stub_take": "target_character|Armature|clip0|baselayer|BaseLayer"
+}

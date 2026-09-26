@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: d8a84a8b746f5735be5c9be387cd1d0f
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 1
+    sRGBTexture: 0
+  isReadable: 1
+  textureType: 0
+  textureShape: 1
+  nPOTScale: 0
+  alphaIsTransparency: 0
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    wrapU: 0
+    wrapV: 0
+  userData: SEP painted look. Path A cancelled.
+  assetBundleName: 
+  assetBundleVariant: 
