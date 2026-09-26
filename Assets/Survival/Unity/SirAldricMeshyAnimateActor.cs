@@ -12,8 +12,8 @@ namespace Survival.Unity
 {
     /// <summary>
     /// Aldric World proof actor: Design SEP Meshy Animate walk on one Humanoid.
-    /// Walk motion SoT = SEP Walking clip (Derek Play PASS). Look = painted midpoly
-    /// atlas stamped onto that AccuRIG + scabbard parented at character-RIGHT hip.
+    /// Walk motion SoT = SEP Walking clip (Derek Play PASS). Look = painted mid450k
+    /// atlas-stamped AccuRIG + mid80k scabbard parented at character-RIGHT hip.
     /// Attack SoT = yawlock Draw Slash Forward (Hips yaw locked, slash toward TOP).
     /// Old spin / nospin attack FBX, ClipSword / AimChain are not SoT.
     /// Path A weight-paint is CANCELLED.
@@ -22,8 +22,12 @@ namespace Survival.Unity
     {
         public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_walk.fbx";
         public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack_yawlock.fbx";
-        public const string PaintedBodyFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_body_nosword_PAINTED_mid200k.fbx";
-        public const string PaintedSwordFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_sword_scabbard_PAINTED_mid.fbx";
+        public const string PaintedBodyGlb = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_body_nosword_PAINTED_mid450k.glb";
+        public const string PaintedSwordGlb = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_sword_scabbard_PAINTED_mid80k.glb";
+        /// <summary>mid200k body leftover. On disk only — not look SoT.</summary>
+        public const string LeftoverPaintedBodyMid200k = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_body_nosword_PAINTED_mid200k.fbx";
+        /// <summary>mid50k sword leftover. On disk only — not look SoT.</summary>
+        public const string LeftoverPaintedSwordMid50k = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_sword_scabbard_PAINTED_mid.fbx";
         public const string PaintedLookDir = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sep_paint";
         /// <summary>Old fused Meshy walk. On disk only — not SoT.</summary>
         public const string LeftoverFusedWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_walk.fbx";
@@ -37,10 +41,10 @@ namespace Survival.Unity
         public const string AttackClipHint = "Attack";
         /// <summary>
         /// Walk motion SoT = SEP Walking. Attack SoT = yawlock clip.
-        /// Look = painted atlas on AccuRIG + hip scabbard. Path A cancelled.
+        /// Look = mid450k body + mid80k sword GLB, same UV atlas. Path A cancelled.
         /// </summary>
         public const string AttackAuthoredReason =
-            "SEP Walking is motion SoT (Derek Play PASS). Attack SoT = SirAldric_SEP_meshy_animate_attack_yawlock (Hips yaw locked, slash toward TOP). Old spin / nospin attack FBX not SoT. Look: painted midpoly atlas + LookSwordScabbard character-RIGHT hip, RH clear. ClipSword / AimChain are not SoT. Path A cancelled.";
+            "SEP Walking is motion SoT (Derek Play PASS). Attack SoT = SirAldric_SEP_meshy_animate_attack_yawlock (Hips yaw locked, slash toward TOP). 2H attack still pending Design. Old spin / nospin attack FBX not SoT. Look: mid450k body + mid80k sword GLB, sep_paint atlas, LookSwordScabbard character-RIGHT hip, RH clear. mid200k / mid50k leftover. ClipSword / AimChain are not SoT. Path A cancelled.";
         /// <summary>
         /// Yaw so imported Mixamo forward (−Z, face to Play cam) becomes world +Z.
         /// Camera SoT: SirAldricDemo (0, 2.80, −5.40) LookAt (0, 0.90, 0.50) → view +Z.
@@ -605,7 +609,7 @@ namespace Survival.Unity
                 return;
             }
 
-            var prefab = LoadFbxPrefab(PaintedSwordFbx, "SirAldric_SEP_sword_scabbard_PAINTED_mid");
+            var prefab = LoadFbxPrefab(PaintedSwordGlb, "SirAldric_SEP_sword_scabbard_PAINTED_mid80k");
             GameObject prop;
             if (prefab != null)
             {
@@ -678,7 +682,7 @@ namespace Survival.Unity
                 return;
             }
 
-            var paintPrefab = LoadFbxPrefab(PaintedBodyFbx, "SirAldric_SEP_body_nosword_PAINTED_mid200k");
+            var paintPrefab = LoadFbxPrefab(PaintedBodyGlb, "SirAldric_SEP_body_nosword_PAINTED_mid450k");
             if (paintPrefab == null)
             {
                 return;
