@@ -309,23 +309,27 @@ def grip_sword(sword, arm, hilt, tip, two_hand: bool):
     mw_rh = arm.matrix_world @ rh.matrix
     rh_w = mw_rh.translation
     lh_w = (arm.matrix_world @ lh.matrix).translation
-    palm = rh_w.lerp(lh_w, 0.35) if two_hand else rh_w
+    # Hold the grip (just below the pommel), not a midpoint that floats in air.
+    hold = hilt.lerp(tip, 0.12)
     hy = (mw_rh.to_3x3() @ Vector((0, 1, 0))).normalized()
+    if two_hand:
+        across = (lh_w - rh_w)
+        if across.length > 0.05:
+            hy = (hy * 0.55 + across.normalized() * 0.45).normalized()
     tip_dir = (tip - hilt)
     if tip_dir.length < 1e-6:
         tip_dir = Vector((-1, 0, 0))
     tip_dir.normalize()
     rot = tip_dir.rotation_difference(hy)
-    hilt_off = rot @ (hilt * 0.28)
+    hold_off = rot @ (hold * 0.28)
     _clear_parent(sword)
     sword.scale = (0.28, 0.28, 0.28)
     sword.rotation_euler = rot.to_euler()
-    sword.location = palm - hilt_off
+    sword.location = rh_w - hold_off
     bpy.context.view_layer.update()
     print(
-        "grip palm", tuple(round(x, 3) for x in palm),
+        "grip RH", tuple(round(x, 3) for x in rh_w),
         "twoH", two_hand,
-        "RH", tuple(round(x, 3) for x in rh_w),
         "LH", tuple(round(x, 3) for x in lh_w),
     )
 
@@ -374,6 +378,10 @@ def juice(cam, arm, sword, scab, hilt, tip, fr0, fr1, frames_dir, mp4):
         shutil.rmtree(frames_dir)
     frames_dir.mkdir(parents=True)
     look(cam, *CAM_REAR)
+    try:
+        bpy.context.scene.eevee.taa_render_samples = 16
+    except Exception:
+        pass
     # Every Scene frame so juice matches stills (f6 / f30 / f39 are in the set).
     idx = 0
     for fr in range(fr0, fr1 + 1):

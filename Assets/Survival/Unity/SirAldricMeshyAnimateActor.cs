@@ -881,8 +881,16 @@ namespace Survival.Unity
 
             var lh = _walkAnimator.GetBoneTransform(HumanBodyBones.LeftHand);
             var twoHand = attackU >= LookSwordTwoHandU && lh != null;
-            var palm = twoHand ? Vector3.Lerp(rh.position, lh!.position, 0.35f) : rh.position;
             var bladeDir = rh.up.sqrMagnitude > 1e-6f ? rh.up.normalized : rh.forward;
+            if (twoHand)
+            {
+                var across = lh!.position - rh.position;
+                if (across.sqrMagnitude > 0.0025f)
+                {
+                    bladeDir = (bladeDir * 0.55f + across.normalized * 0.45f).normalized;
+                }
+            }
+
             var tipDirLocal = _swordTipLocal - _swordHiltLocal;
             if (tipDirLocal.sqrMagnitude < 1e-8f)
             {
@@ -890,10 +898,11 @@ namespace Survival.Unity
             }
 
             tipDirLocal.Normalize();
+            var holdLocal = Vector3.Lerp(_swordHiltLocal, _swordTipLocal, 0.12f);
             var rot = Quaternion.FromToRotation(tipDirLocal, bladeDir);
-            var hiltWorld = rot * (_swordHiltLocal * 0.28f);
+            var holdWorld = rot * (holdLocal * 0.28f);
             _lookSword.SetParent(null, true);
-            _lookSword.SetPositionAndRotation(palm - hiltWorld, rot);
+            _lookSword.SetPositionAndRotation(rh.position - holdWorld, rot);
             _lookSword.localScale = Vector3.one * 0.28f;
             _lookSword.SetParent(rh, true);
         }
