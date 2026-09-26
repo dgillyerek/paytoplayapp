@@ -15,15 +15,15 @@ namespace Survival.Unity
     {
         public const int Width = 1080;
         public const int Height = 1920;
-        public const string RelDir = "Docs/Survival/previews/aldric_sep_2h_yawlock_20260926";
-        public const string WalkMp4Name = "sir_aldric_sep_2h_walk_juice_gameview.mp4";
-        public const string AttackMp4Name = "sir_aldric_sep_2h_attack_juice_gameview.mp4";
-        public const string RearWalkName = "sir_aldric_sep_2h_rear_walk_gameview.png";
-        public const string FrontWalkName = "sir_aldric_sep_2h_front_walk_gameview.png";
-        public const string ThreeQuarterWalkName = "sir_aldric_sep_2h_34_walk_gameview.png";
-        public const string RearAttackName = "sir_aldric_sep_2h_rear_strike_gameview.png";
-        public const string FrontAttackName = "sir_aldric_sep_2h_front_strike_gameview.png";
-        public const string ThreeQuarterAttackName = "sir_aldric_sep_2h_34_strike_gameview.png";
+        public const string RelDir = "Docs/Survival/previews/aldric_sep_2h_drawparent_20260926";
+        public const string WalkMp4Name = "sir_aldric_sep_2h_dp_walk_juice_gameview.mp4";
+        public const string AttackMp4Name = "sir_aldric_sep_2h_dp_attack_juice_gameview.mp4";
+        public const string RearWalkName = "sir_aldric_sep_2h_dp_rear_walk_gameview.png";
+        public const string FrontWalkName = "sir_aldric_sep_2h_dp_front_walk_gameview.png";
+        public const string ThreeQuarterWalkName = "sir_aldric_sep_2h_dp_34_walk_gameview.png";
+        public const string RearAttackName = "sir_aldric_sep_2h_dp_rear_strike_gameview.png";
+        public const string FrontAttackName = "sir_aldric_sep_2h_dp_front_strike_gameview.png";
+        public const string ThreeQuarterAttackName = "sir_aldric_sep_2h_dp_34_strike_gameview.png";
 
         public static string ResolveDir()
         {

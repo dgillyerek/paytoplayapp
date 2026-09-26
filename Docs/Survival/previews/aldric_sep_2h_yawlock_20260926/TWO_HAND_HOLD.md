@@ -2,6 +2,8 @@
 
 **HOLD merge on PR #27 until Design re-gate + Derek Play.** Path A CANCELLED. No Design PASS claimed.
 
+Superseded for attack prop: Design FAIL lean on tip `b715c88` (combined `LookSwordScabbard` glued to LeftUpperLeg; empty hands). Draw-parent iterate is `../aldric_sep_2h_drawparent_20260926/DRAWPARENT_HOLD.md`.
+
 ## SoT
 
 | Item | Status |

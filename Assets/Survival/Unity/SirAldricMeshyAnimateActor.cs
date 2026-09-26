@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Survival.Domain.Heroes;
 using UnityEngine;
@@ -13,7 +14,9 @@ namespace Survival.Unity
     /// <summary>
     /// Aldric World proof actor: Design SEP Meshy Animate walk on one Humanoid.
     /// Walk motion SoT = SEP Walking clip (Derek Play PASS). Look = painted mid450k
-    /// atlas-stamped AccuRIG + mid80k scabbard parented at character-LEFT hip.
+    /// atlas-stamped AccuRIG + mid80k sword GLB split: empty LookScabbard on
+    /// character-LEFT hip, LookSword (blade+hilt) sheathed until draw then parented
+    /// to RightHand (2H midpoint on overhead→strike).
     /// Attack SoT = 2H LEFT-hip draw → overhead → two-hand downstrike yawlock.
     /// Old 1H yawlock / nospin / spin / raw 2H, ClipSword / AimChain are not SoT.
     /// Path A weight-paint is CANCELLED.
@@ -45,10 +48,15 @@ namespace Survival.Unity
         public const string AttackClipHint = "Attack";
         /// <summary>
         /// Walk motion SoT = SEP Walking. Attack SoT = 2H yawlock clip.
-        /// Look = mid450k body + mid80k sword GLB on character-LEFT hip. Path A cancelled.
+        /// Look = mid450k body + mid80k sword GLB split (empty LEFT-hip scabbard,
+        /// blade+hilt parents to RightHand on draw). Path A cancelled.
         /// </summary>
         public const string AttackAuthoredReason =
-            "SEP Walking is motion SoT (Derek Play PASS). Attack SoT = SirAldric_SEP_meshy_animate_attack_2h_downstrike_yawlock (LEFT-hip RH draw → overhead → 2H downstrike, ground yaw locked). Raw 2H / 1H yawlock / nospin / spin not SoT. Look: mid450k body + mid80k sword GLB, sep_paint atlas, LookSwordScabbard character-LEFT hip. ClipSword / AimChain are not SoT. Path A cancelled.";
+            "SEP Walking is motion SoT (Derek Play PASS). Attack SoT = SirAldric_SEP_meshy_animate_attack_2h_downstrike_yawlock (LEFT-hip RH draw → overhead → 2H downstrike, ground yaw locked). Raw 2H / 1H yawlock / nospin / spin not SoT. Look: mid450k body + mid80k sword GLB, sep_paint atlas. LookScabbard empty sheath stays character-LEFT hip; LookSword blade+hilt parents to RightHand on draw and follows 2H grip. Combined LookSwordScabbard is not glued for the whole clip. ClipSword / AimChain are not SoT. Path A cancelled.";
+        /// <summary>Attack clip normalized time when LookSword leaves the LEFT sheath.</summary>
+        public const float LookSwordDrawParentU = 0.05f;
+        /// <summary>Overhead onward: blade sits in both hands (RH-biased midpoint).</summary>
+        public const float LookSwordTwoHandU = 0.16f;
         /// <summary>
         /// Yaw so imported Mixamo forward (−Z, face to Play cam) becomes world +Z.
         /// Camera SoT: SirAldricDemo (0, 2.80, −5.40) LookAt (0, 0.90, 0.50) → view +Z.
@@ -66,6 +74,10 @@ namespace Survival.Unity
         private bool _walkGraphReady;
         private bool _attackPlayableReady;
         private GameObject? _walkInstance;
+        private Transform? _lookScabbard;
+        private Transform? _lookSword;
+        private Vector3 _swordHiltLocal;
+        private Vector3 _swordTipLocal;
 
         public bool Built => _walkGraphReady;
 
@@ -167,12 +179,15 @@ namespace Survival.Unity
                 _walkOutput.SetSourcePlayable(_walkPlayable);
                 _walkPlayable.SetTime(t % _walkLength);
                 _walkGraph.Evaluate();
+                ParentLookSwordOnDraw(attacking: false, attackU: 0f);
                 return;
             }
 
+            var attackT = Mathf.Clamp(t - walkBlock, 0f, _attackLength);
             _walkOutput.SetSourcePlayable(_attackPlayable);
-            _attackPlayable.SetTime(Mathf.Clamp(t - walkBlock, 0f, _attackLength));
+            _attackPlayable.SetTime(attackT);
             _walkGraph.Evaluate();
+            ParentLookSwordOnDraw(attacking: true, attackU: _attackLength > 0f ? attackT / _attackLength : 0f);
         }
 
         public string PhaseLabel(float timeSeconds)
@@ -623,37 +638,277 @@ namespace Survival.Unity
             }
 
             var prefab = LoadFbxPrefab(PaintedSwordGlb, "SirAldric_SEP_sword_scabbard_PAINTED_mid80k");
-            GameObject prop;
-            if (prefab != null)
-            {
-                prop = Instantiate(prefab, _walkInstance.transform);
-            }
-            else
+            if (prefab == null)
             {
                 return;
             }
 
-            prop.name = "LookSwordScabbard";
+            var source = Instantiate(prefab, _walkInstance.transform);
+            source.name = "LookSwordScabbard";
+            var srcMesh = FirstMesh(source);
+            if (srcMesh == null)
+            {
+                return;
+            }
+
+            SplitLookSwordAndScabbard(srcMesh, out var swordMesh, out var scabbardMesh);
+            var scabbardGo = Instantiate(source, _walkInstance.transform);
+            scabbardGo.name = "LookScabbard";
+            var swordGo = Instantiate(source, _walkInstance.transform);
+            swordGo.name = "LookSword";
+            source.SetActive(false);
+            AssignMesh(scabbardGo, scabbardMesh);
+            AssignMesh(swordGo, swordMesh);
+
             var albedo = LoadSepPaintMap("sword_basecolor.jpg", sRgb: true);
             var metallic = LoadSepPaintMap("sword_metallic.jpg", sRgb: false);
             var roughness = LoadSepPaintMap("sword_roughness.jpg", sRgb: false);
             var normal = LoadSepPaintMap("sword_normal.jpg", sRgb: false);
-            foreach (var rend in prop.GetComponentsInChildren<Renderer>(true))
+            foreach (var rend in scabbardGo.GetComponentsInChildren<Renderer>(true))
+            {
+                ApplyLookMaterial(rend, albedo, metallic, roughness, normal);
+            }
+
+            foreach (var rend in swordGo.GetComponentsInChildren<Renderer>(true))
             {
                 ApplyLookMaterial(rend, albedo, metallic, roughness, normal);
             }
 
             // World after RearYaw 180: character-left = −root.right = −X = viewer-left from behind.
             // Thin-lateral hang mirrored from the 1ac345a RIGHT-hip pose. Parent LeftUpperLeg.
-            // Derek SoT: RH draws from LEFT sheath. Not RightHand. Walk RH empty.
+            // Derek SoT: RH draws from LEFT sheath. Empty scabbard stays LEFT hip.
+            // LookSword (blade+hilt) sheathes here until draw, then parents to RightHand.
             var pos = thigh.position
                       + _walkInstance.transform.right * -0.06f
                       + Vector3.up * -0.12f;
-            prop.transform.SetPositionAndRotation(
-                pos,
-                _walkInstance.transform.rotation * Quaternion.Euler(0f, 90f, -90f));
-            prop.transform.localScale = Vector3.one * 0.28f;
-            prop.transform.SetParent(thigh, true);
+            var rot = _walkInstance.transform.rotation * Quaternion.Euler(0f, 90f, -90f);
+            scabbardGo.transform.SetPositionAndRotation(pos, rot);
+            scabbardGo.transform.localScale = Vector3.one * 0.28f;
+            scabbardGo.transform.SetParent(thigh, true);
+            _lookScabbard = scabbardGo.transform;
+            _lookSword = swordGo.transform;
+            RememberSwordHiltAndTip(swordMesh);
+            SheathLookSword();
+        }
+
+        private static Mesh? FirstMesh(GameObject root)
+        {
+            var skin = root.GetComponentInChildren<SkinnedMeshRenderer>(true);
+            if (skin != null && skin.sharedMesh != null)
+            {
+                return skin.sharedMesh;
+            }
+
+            var filter = root.GetComponentInChildren<MeshFilter>(true);
+            return filter != null ? filter.sharedMesh : null;
+        }
+
+        private static void AssignMesh(GameObject root, Mesh mesh)
+        {
+            var skin = root.GetComponentInChildren<SkinnedMeshRenderer>(true);
+            if (skin != null)
+            {
+                skin.sharedMesh = mesh;
+                return;
+            }
+
+            var filter = root.GetComponentInChildren<MeshFilter>(true);
+            if (filter != null)
+            {
+                filter.sharedMesh = mesh;
+            }
+        }
+
+        /// <summary>
+        /// Split the combined mid80k sword+scabbard remesh: hilt-end + thin core = blade+hilt;
+        /// the rest is the empty LEFT-hip sheath. Not Path A. Not ClipSword.
+        /// </summary>
+        private static void SplitLookSwordAndScabbard(Mesh src, out Mesh swordMesh, out Mesh scabbardMesh)
+        {
+            var verts = src.vertices;
+            var n = verts.Length;
+            var mn = verts[0];
+            var mx = verts[0];
+            for (var i = 1; i < n; i++)
+            {
+                mn = Vector3.Min(mn, verts[i]);
+                mx = Vector3.Max(mx, verts[i]);
+            }
+
+            var c = (mn + mx) * 0.5f;
+            var axis = mx - mn;
+            axis.y = 0f;
+            if (axis.sqrMagnitude < 1e-8f)
+            {
+                axis = Vector3.right;
+            }
+
+            axis.Normalize();
+            const float tHilt = 0.70f;
+            const float rCore = 0.11f;
+            var isSword = new bool[n];
+            for (var i = 0; i < n; i++)
+            {
+                var d = verts[i] - c;
+                var t = Vector3.Dot(d, axis);
+                var r = (d - axis * t).magnitude;
+                isSword[i] = t > tHilt || r < rCore;
+            }
+
+            swordMesh = ExtractLabeledVerts(src, isSword, wantSword: true);
+            scabbardMesh = ExtractLabeledVerts(src, isSword, wantSword: false);
+        }
+
+        private static Mesh ExtractLabeledVerts(Mesh src, bool[] isSword, bool wantSword)
+        {
+            var srcV = src.vertices;
+            var srcUv = src.uv;
+            var map = new int[srcV.Length];
+            for (var i = 0; i < map.Length; i++)
+            {
+                map[i] = -1;
+            }
+
+            var verts = new List<Vector3>(srcV.Length / 2);
+            var uvs = new List<Vector2>(srcV.Length / 2);
+            for (var i = 0; i < srcV.Length; i++)
+            {
+                if (isSword[i] != wantSword)
+                {
+                    continue;
+                }
+
+                map[i] = verts.Count;
+                verts.Add(srcV[i]);
+                uvs.Add(srcUv != null && i < srcUv.Length ? srcUv[i] : Vector2.zero);
+            }
+
+            var tris = src.triangles;
+            var outTris = new List<int>(tris.Length / 2);
+            for (var i = 0; i < tris.Length; i += 3)
+            {
+                var a = map[tris[i]];
+                var b = map[tris[i + 1]];
+                var c = map[tris[i + 2]];
+                if (a < 0 || b < 0 || c < 0)
+                {
+                    continue;
+                }
+
+                outTris.Add(a);
+                outTris.Add(b);
+                outTris.Add(c);
+            }
+
+            var mesh = new Mesh { name = src.name + (wantSword ? "_LookSword" : "_LookScabbard") };
+            mesh.SetVertices(verts);
+            mesh.SetUVs(0, uvs);
+            mesh.SetTriangles(outTris, 0);
+            mesh.RecalculateBounds();
+            mesh.RecalculateNormals();
+            return mesh;
+        }
+
+        private void RememberSwordHiltAndTip(Mesh swordMesh)
+        {
+            var verts = swordMesh.vertices;
+            if (verts == null || verts.Length == 0)
+            {
+                _swordHiltLocal = Vector3.zero;
+                _swordTipLocal = Vector3.right;
+                return;
+            }
+
+            var mn = verts[0];
+            var mx = verts[0];
+            for (var i = 1; i < verts.Length; i++)
+            {
+                mn = Vector3.Min(mn, verts[i]);
+                mx = Vector3.Max(mx, verts[i]);
+            }
+
+            var c = (mn + mx) * 0.5f;
+            var axis = mx - mn;
+            axis.y = 0f;
+            if (axis.sqrMagnitude < 1e-8f)
+            {
+                axis = Vector3.right;
+            }
+
+            axis.Normalize();
+            var hilt = verts[0];
+            var tip = verts[0];
+            var hiltT = Vector3.Dot(verts[0] - c, axis);
+            var tipT = hiltT;
+            for (var i = 1; i < verts.Length; i++)
+            {
+                var t = Vector3.Dot(verts[i] - c, axis);
+                if (t > hiltT)
+                {
+                    hiltT = t;
+                    hilt = verts[i];
+                }
+
+                if (t < tipT)
+                {
+                    tipT = t;
+                    tip = verts[i];
+                }
+            }
+
+            _swordHiltLocal = hilt;
+            _swordTipLocal = tip;
+        }
+
+        /// <summary>
+        /// Walk / pre-draw: LookSword sits in the LEFT-hip LookScabbard.
+        /// On draw: parent blade+hilt to RightHand. Overhead→strike follows 2H grip
+        /// (RH-biased midpoint of RightHand and LeftHand).
+        /// </summary>
+        private void ParentLookSwordOnDraw(bool attacking, float attackU)
+        {
+            if (_lookSword == null || _lookScabbard == null || _walkAnimator == null)
+            {
+                return;
+            }
+
+            var rh = _walkAnimator.GetBoneTransform(HumanBodyBones.RightHand);
+            if (!attacking || attackU < LookSwordDrawParentU || rh == null)
+            {
+                SheathLookSword();
+                return;
+            }
+
+            var lh = _walkAnimator.GetBoneTransform(HumanBodyBones.LeftHand);
+            var twoHand = attackU >= LookSwordTwoHandU && lh != null;
+            var palm = twoHand ? Vector3.Lerp(rh.position, lh!.position, 0.35f) : rh.position;
+            var bladeDir = rh.up.sqrMagnitude > 1e-6f ? rh.up.normalized : rh.forward;
+            var tipDirLocal = _swordTipLocal - _swordHiltLocal;
+            if (tipDirLocal.sqrMagnitude < 1e-8f)
+            {
+                tipDirLocal = Vector3.right;
+            }
+
+            tipDirLocal.Normalize();
+            var rot = Quaternion.FromToRotation(tipDirLocal, bladeDir);
+            var hiltWorld = rot * (_swordHiltLocal * 0.28f);
+            _lookSword.SetParent(null, true);
+            _lookSword.SetPositionAndRotation(palm - hiltWorld, rot);
+            _lookSword.localScale = Vector3.one * 0.28f;
+            _lookSword.SetParent(rh, true);
+        }
+
+        private void SheathLookSword()
+        {
+            if (_lookSword == null || _lookScabbard == null)
+            {
+                return;
+            }
+
+            _lookSword.SetParent(null, true);
+            _lookSword.SetPositionAndRotation(_lookScabbard.position, _lookScabbard.rotation);
+            _lookSword.localScale = Vector3.one * 0.28f;
+            _lookSword.SetParent(_lookScabbard, true);
         }
 
         private static void ApplyLookMaterial(

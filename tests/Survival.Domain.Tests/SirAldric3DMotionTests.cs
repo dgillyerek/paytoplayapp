@@ -381,11 +381,11 @@ public sealed class SirAldric3DMotionTests
         var capture = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricGameViewCapture.cs"));
         Assert.Contains("Camera.Render", capture, StringComparison.Ordinal);
         Assert.Contains("1080", capture, StringComparison.Ordinal);
-        Assert.Contains("aldric_sep_2h_yawlock_20260926", capture, StringComparison.Ordinal);
-        Assert.Contains("sir_aldric_sep_2h_walk_juice_gameview.mp4", capture, StringComparison.Ordinal);
-        Assert.Contains("sir_aldric_sep_2h_attack_juice_gameview.mp4", capture, StringComparison.Ordinal);
+        Assert.Contains("aldric_sep_2h_drawparent_20260926", capture, StringComparison.Ordinal);
+        Assert.Contains("sir_aldric_sep_2h_dp_walk_juice_gameview.mp4", capture, StringComparison.Ordinal);
+        Assert.Contains("sir_aldric_sep_2h_dp_attack_juice_gameview.mp4", capture, StringComparison.Ordinal);
         var menu = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricGameViewCaptureMenu.cs"));
-        Assert.Contains("Capture Sir Aldric SEP 2H yawlock (Game view)", menu, StringComparison.Ordinal);
+        Assert.Contains("Capture Sir Aldric SEP 2H draw-parent (Game view)", menu, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -415,10 +415,16 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("EnsureLookScabbard", actor, StringComparison.Ordinal);
         Assert.Contains("sep_body_basecolor.jpg", actor, StringComparison.Ordinal);
         Assert.Contains("LookSwordScabbard", actor, StringComparison.Ordinal);
+        Assert.Contains("LookScabbard", actor, StringComparison.Ordinal);
+        Assert.Contains("LookSword", actor, StringComparison.Ordinal);
+        Assert.Contains("SplitLookSwordAndScabbard", actor, StringComparison.Ordinal);
+        Assert.Contains("ParentLookSwordOnDraw", actor, StringComparison.Ordinal);
+        Assert.Contains("LookSwordDrawParentU", actor, StringComparison.Ordinal);
         Assert.Contains("character-LEFT", actor, StringComparison.Ordinal);
         Assert.Contains("LeftUpperLeg", actor, StringComparison.Ordinal);
         Assert.Contains("Quaternion.Euler(0f, 90f, -90f)", actor, StringComparison.Ordinal);
         Assert.Contains("RH draws from LEFT sheath", actor, StringComparison.Ordinal);
+        Assert.Contains("RightHand", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("SetParent(hips, true)", actor, StringComparison.Ordinal);
         Assert.Contains("Do not bind the old fused-walk atlas", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("LoadSiblingPng(\"sir_aldric_meshy_atlas.png\")", actor, StringComparison.Ordinal);
