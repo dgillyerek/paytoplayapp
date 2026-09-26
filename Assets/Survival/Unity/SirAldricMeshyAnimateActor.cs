@@ -14,13 +14,14 @@ namespace Survival.Unity
     /// Aldric World proof actor: Design SEP Meshy Animate walk on one Humanoid.
     /// Walk motion SoT = SEP Walking clip (Derek Play PASS). Look = painted midpoly
     /// atlas stamped onto that AccuRIG + scabbard parented at character-RIGHT hip.
-    /// Attack clip is left loaded but is NOT SoT (native spin FAIL). ClipSword / AimChain
-    /// are not SoT. Path A weight-paint is CANCELLED. No Design PASS on this look wire.
+    /// Attack SoT = yawlock Draw Slash Forward (Hips yaw locked, slash toward TOP).
+    /// Old spin / nospin attack FBX, ClipSword / AimChain are not SoT.
+    /// Path A weight-paint is CANCELLED.
     /// </summary>
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
     {
         public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_walk.fbx";
-        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack.fbx";
+        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack_yawlock.fbx";
         public const string PaintedBodyFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_body_nosword_PAINTED_mid200k.fbx";
         public const string PaintedSwordFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_sword_scabbard_PAINTED_mid.fbx";
         public const string PaintedLookDir = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sep_paint";
@@ -28,14 +29,18 @@ namespace Survival.Unity
         public const string LeftoverFusedWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_walk.fbx";
         /// <summary>Old Standing Sword Slash. On disk only — not SoT.</summary>
         public const string LeftoverStandingSlashFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_attack.fbx";
+        /// <summary>SEP attack that spins ~180°. On disk only — not SoT.</summary>
+        public const string LeftoverSpinAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack.fbx";
+        /// <summary>SEP NoSpin re-author that still spun ~180°. Not imported as SoT.</summary>
+        public const string LeftoverNospinAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack_nospin.fbx";
         public const string ClipHint = "Walking";
         public const string AttackClipHint = "Attack";
         /// <summary>
-        /// Walk motion SoT = SEP Walking. Attack clip is leftover / not SoT.
+        /// Walk motion SoT = SEP Walking. Attack SoT = yawlock clip.
         /// Look = painted atlas on AccuRIG + hip scabbard. Path A cancelled.
         /// </summary>
         public const string AttackAuthoredReason =
-            "SEP Walking is motion SoT (Derek Play PASS). Attack FBX left loaded but not SoT (native spin FAIL). Look rewire: painted midpoly atlas on AccuRIG + scabbard parented character-RIGHT hip. ClipSword / AimChain are not SoT. Path A cancelled. No Design PASS.";
+            "SEP Walking is motion SoT (Derek Play PASS). Attack SoT = SirAldric_SEP_meshy_animate_attack_yawlock (Hips yaw locked, slash toward TOP). Old spin / nospin attack FBX not SoT. Look: painted midpoly atlas + LookSwordScabbard character-RIGHT hip, RH clear. ClipSword / AimChain are not SoT. Path A cancelled.";
         /// <summary>
         /// Yaw so imported Mixamo forward (−Z, face to Play cam) becomes world +Z.
         /// Camera SoT: SirAldricDemo (0, 2.80, −5.40) LookAt (0, 0.90, 0.50) → view +Z.
@@ -111,7 +116,7 @@ namespace Survival.Unity
             }
             else
             {
-                Debug.LogError("SEP attack FBX has no Draw Slash Forward clip after Humanoid import.");
+                Debug.LogError("SEP yawlock attack FBX has no Attack clip after Humanoid import.");
             }
 
             _walkOutput.SetSourcePlayable(_walkPlayable);
@@ -179,15 +184,15 @@ namespace Survival.Unity
                     var u = _attackLength > 0f ? (t - walkBlock) / _attackLength : 0f;
                     if (u < 0.22f)
                     {
-                        return "ATTACK  ·  DRAW  ·  SEP clip";
+                        return "ATTACK  ·  DRAW  ·  YAWLOCK clip";
                     }
 
                     if (u < 0.62f)
                     {
-                        return "ATTACK  ·  STRIKE TOP  ·  SEP clip";
+                        return "ATTACK  ·  STRIKE TOP  ·  YAWLOCK clip";
                     }
 
-                    return "ATTACK  ·  RECOVER  ·  SEP clip";
+                    return "ATTACK  ·  RECOVER  ·  YAWLOCK clip";
                 }
             }
 
@@ -377,7 +382,9 @@ namespace Survival.Unity
                 if (label.IndexOf("Attack", StringComparison.OrdinalIgnoreCase) >= 0
                     || label.IndexOf("Slash", StringComparison.OrdinalIgnoreCase) >= 0
                     || label.IndexOf("rigify_clip", StringComparison.OrdinalIgnoreCase) >= 0
-                    || label.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0)
+                    || label.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0
+                    || label.IndexOf("Scene", StringComparison.OrdinalIgnoreCase) >= 0
+                    || label.IndexOf("yawlock", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     if (named == null || clip.length > named.length)
                     {
@@ -414,6 +421,8 @@ namespace Survival.Unity
                 var span = candidate.lastFrame - candidate.firstFrame;
                 var named = label.IndexOf("rigify_clip", StringComparison.OrdinalIgnoreCase) >= 0
                             || label.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0
+                            || label.IndexOf("Scene", StringComparison.OrdinalIgnoreCase) >= 0
+                            || label.IndexOf("yawlock", StringComparison.OrdinalIgnoreCase) >= 0
                             || label.IndexOf("Attack", StringComparison.OrdinalIgnoreCase) >= 0
                             || label.IndexOf("Slash", StringComparison.OrdinalIgnoreCase) >= 0;
                 if (!named && span < 20f)

@@ -1,0 +1,38 @@
+fileFormatVersion: 2
+guid: 8d1c5e3a90b24716af04e6c8d2b1f537
+ModelImporter:
+  serializedVersion: 24
+  internalIDToNameTable: []
+  externalObjects: {}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    animationCompression: 3
+    animationWrapMode: 0
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    globalScale: 1
+    addColliders: 0
+    importVisibility: 1
+    importBlendShapes: 0
+    importCameras: 0
+    importLights: 0
+    useFileUnits: 1
+    weldVertices: 1
+    bakeAxisConversion: 1
+    useFileScale: 1
+  importAnimation: 1
+  animationType: 2
+  avatarSetup: 0
+  additionalBone: 0
+  userData: SEP yawlock attack GLB companion. Attack SoT is the FBX Humanoid take.
+  assetBundleName: 
+  assetBundleVariant: 

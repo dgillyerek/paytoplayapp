@@ -21,7 +21,7 @@ Still clip-authored wide (rest 0.396 m, Walking take max 0.719 m @ f8). Import `
 
 ## SEP rewire (2026-09-26)
 
-Design SEP walk is motion SoT (`c88ea55` Derek Play PASS). Look rewire binds painted midpoly + hip scabbard — see `../aldric_sep_paint_20260925/PAINT_HOLD.md`. Attack FBX left loaded, not SoT. ClipSword / AimChain not SoT. HOLD until Derek Play PASS.
+Design SEP walk is motion SoT (`c88ea55` Derek Play PASS). Look rewire binds painted midpoly + hip scabbard — see `../aldric_sep_paint_20260925/PAINT_HOLD.md`. Attack clip iterate 2026-09-26: yawlock SoT in `../aldric_sep_attack_yawlock_20260926/YAWLOCK_HOLD.md`. Old spin / nospin attack FBX, ClipSword / AimChain not SoT. HOLD until Derek Play PASS.
 
 ## Walk RH / painted sword — STOP (path B, 2026-09-25)
 

@@ -1,6 +1,6 @@
 # HOLD — Sir Aldric SEP painted look rewire (2026-09-26)
 
-**HOLD merge on PR #27 until Derek Play + Design re-gate.** No Design PASS on this look wire. Path A CANCELLED. Attack is **not** claimed fixed.
+**HOLD merge on PR #27 until Derek Play + Design re-gate.** No Design PASS on this look wire. Path A CANCELLED. Attack is **not** claimed fixed in this folder. Attack clip iterate 2026-09-26: yawlock SoT lives in `../aldric_sep_attack_yawlock_20260926/`.
 
 ## SoT
 
