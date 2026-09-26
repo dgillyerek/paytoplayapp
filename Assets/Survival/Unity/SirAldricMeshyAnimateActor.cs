@@ -11,23 +11,29 @@ using UnityEditor;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Aldric World proof actor: Meshy Animate FBX humanoid + Walking clip AS-IS.
-    /// Path A weight-paint is CANCELLED. Do not remap sheath / Hand_R / ghost legs.
-    /// World LIGHT + MATERIAL punch. Binds Meshy albedo from the FBX pack
-    /// (Humanoid import often drops texture links). Design PASS not claimed.
+    /// Aldric World proof actor: Design SEP Meshy Animate walk + attack on one Humanoid.
+    /// SoT = authored clips only. ClipSword / AimChain / procedural sword are not SoT.
+    /// Path A weight-paint is CANCELLED. Old fused walk + Standing Sword Slash stay on
+    /// disk and are not played. Body-only AccuRIG (no sword prop). Atlas may be missing.
+    /// Design PASS not claimed.
     /// </summary>
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
     {
-        public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_walk.fbx";
-        /// <summary>Leftover Design Rigify drop. On disk only — NOT played (squash / standing slash).</summary>
-        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_attack.fbx";
+        public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_walk.fbx";
+        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/SirAldric_SEP_meshy_animate_attack.fbx";
+        /// <summary>Old fused Meshy walk. On disk only — not SoT.</summary>
+        public const string LeftoverFusedWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_walk.fbx";
+        /// <summary>Old Standing Sword Slash. On disk only — not SoT.</summary>
+        public const string LeftoverStandingSlashFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_attack.fbx";
         public const string ClipHint = "Walking";
+        public const string AttackClipHint = "Attack";
         /// <summary>
-        /// Derek OVERRIDE: draw→strike is authored on this walk Mixamo Humanoid
-        /// (GetBoneTransform + FromToRotation AimChain, no scale). Same mesh/atlas/Avatar
-        /// as the walk FBX. Design attack FBX is not played. Path A cancelled. No Design PASS.
+        /// SEP Meshy clips only: Walking + Draw Slash Forward on the walk Humanoid Avatar.
+        /// ClipSword / AimChain are not SoT. Path A cancelled. Body-only AccuRIG.
+        /// Atlas may be missing. No Design PASS.
         /// </summary>
-        public const string AttackAuthoredReason = SirAldricHumanoidAttack.Authorship;
+        public const string AttackAuthoredReason =
+            "SEP Meshy Animate clips only: Walking + Draw Slash Forward on the same Humanoid Avatar. ClipSword / AimChain are not SoT. Path A cancelled. Body-only AccuRIG (no sword prop). Atlas may be missing. No Design PASS.";
         /// <summary>
         /// Yaw so imported Mixamo forward (−Z, face to Play cam) becomes world +Z.
         /// Camera SoT: SirAldricDemo (0, 2.80, −5.40) LookAt (0, 0.90, 0.50) → view +Z.
@@ -37,26 +43,29 @@ namespace Survival.Unity
 
         private Animator? _walkAnimator;
         private PlayableGraph _walkGraph;
+        private AnimationPlayableOutput _walkOutput;
         private AnimationClipPlayable _walkPlayable;
+        private AnimationClipPlayable _attackPlayable;
         private float _walkLength;
+        private float _attackLength;
         private bool _walkGraphReady;
+        private bool _attackPlayableReady;
         private GameObject? _walkInstance;
-        private GameObject? _clipSword;
 
         public bool Built => _walkGraphReady;
 
-        /// <summary>Always true: draw→strike is authored on the walk Humanoid (OVERRIDE).</summary>
-        public bool HasAttackClip => _walkGraphReady;
+        /// <summary>True when the SEP Draw Slash Forward clip is loaded onto the walk Humanoid.</summary>
+        public bool HasAttackClip => _attackPlayableReady;
 
-        /// <summary>False: leftover Design Rigify FBX is not instantiated.</summary>
+        /// <summary>False: attack clip is Humanoid-retargeted onto the walk instance, not a second mesh.</summary>
         public bool AttackOnNativeInstance => false;
 
-        /// <summary>True: attack drives the walk Mixamo Avatar only.</summary>
-        public bool AttackOnWalkHumanoid => _walkGraphReady;
+        /// <summary>True: both SEP clips play on the walk Mixamo Humanoid Avatar.</summary>
+        public bool AttackOnWalkHumanoid => _walkGraphReady && _attackPlayableReady;
 
         public float WalkLength => _walkLength;
 
-        public float AttackLength => SirAldricHumanoidAttack.Seconds;
+        public float AttackLength => _attackLength > 0.05f ? _attackLength : 0f;
 
         public void Build()
         {
@@ -71,7 +80,7 @@ namespace Survival.Unity
             }
 
             _walkInstance = Instantiate(walkPrefab, transform);
-            _walkInstance.name = "SirAldricMeshyAnimateWalk";
+            _walkInstance.name = "SirAldricSepMeshyAnimate";
             HideJunk(_walkInstance);
             FaceWorldTop(_walkInstance);
             PunchMaterials(_walkInstance, ThemePackFbx);
@@ -79,23 +88,35 @@ namespace Survival.Unity
             var walk = LoadWalkingClip();
             if (walk == null)
             {
-                Debug.LogError("Meshy Animate FBX has no Walking clip after Humanoid import.");
+                Debug.LogError("SEP walk FBX has no Walking clip after Humanoid import.");
                 return;
             }
 
             walk.wrapMode = WrapMode.Loop;
             _walkLength = walk.length;
             _walkAnimator = EnsureAnimator(_walkInstance, FbxAssetPath);
-            _walkGraph = PlayableGraph.Create("SirAldricMeshyWalk");
+            _walkGraph = PlayableGraph.Create("SirAldricSepMeshy");
             _walkGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
-            var walkOut = AnimationPlayableOutput.Create(_walkGraph, "AldricWalk", _walkAnimator);
+            _walkOutput = AnimationPlayableOutput.Create(_walkGraph, "AldricSep", _walkAnimator);
             _walkPlayable = AnimationClipPlayable.Create(_walkGraph, walk);
-            walkOut.SetSourcePlayable(_walkPlayable);
+            var attack = LoadAttackClip();
+            if (attack != null)
+            {
+                attack.wrapMode = WrapMode.Once;
+                _attackLength = attack.length;
+                _attackPlayable = AnimationClipPlayable.Create(_walkGraph, attack);
+                _attackPlayableReady = true;
+            }
+            else
+            {
+                Debug.LogError("SEP attack FBX has no Draw Slash Forward clip after Humanoid import.");
+            }
+
+            _walkOutput.SetSourcePlayable(_walkPlayable);
             _walkGraph.Play();
             _walkGraphReady = true;
 
             SampleAt(0f);
-            EnsureClipSword();
         }
 
         private void Update()
@@ -117,32 +138,25 @@ namespace Survival.Unity
             }
 
             var walkBlock = _walkLength * SirAldric3DMotion.WalkCyclesBeforeAttack;
-            var loop = walkBlock + SirAldricHumanoidAttack.Seconds;
+            var attackLen = _attackPlayableReady ? _attackLength : 0f;
+            var loop = walkBlock + Mathf.Max(attackLen, 0.01f);
             var t = timeSeconds % loop;
             if (t < 0f)
             {
                 t += loop;
             }
 
-            if (t < walkBlock)
+            if (t < walkBlock || !_attackPlayableReady)
             {
+                _walkOutput.SetSourcePlayable(_walkPlayable);
                 _walkPlayable.SetTime(t % _walkLength);
                 _walkGraph.Evaluate();
-                // Walk must not show ClipSword. The painted hip blade is mesh-bound
-                // (no Scabbard bone / no separate sword object) — cannot reparent.
-                // See Docs/Survival/previews/facing_20260925/WALK_RH_SWORD_GLUE_STOP.md.
-                if (_clipSword != null)
-                {
-                    _clipSword.SetActive(false);
-                }
-
                 return;
             }
 
-            // Plant the last authored walk frame (Design PASS lean stance), then aim the right arm.
-            _walkPlayable.SetTime(Mathf.Max(_walkLength - 0.001f, 0f));
+            _walkOutput.SetSourcePlayable(_attackPlayable);
+            _attackPlayable.SetTime(Mathf.Clamp(t - walkBlock, 0f, _attackLength));
             _walkGraph.Evaluate();
-            ApplyDrawStrike(t - walkBlock);
         }
 
         public string PhaseLabel(float timeSeconds)
@@ -150,172 +164,31 @@ namespace Survival.Unity
             if (_walkLength > 0f)
             {
                 var walkBlock = _walkLength * SirAldric3DMotion.WalkCyclesBeforeAttack;
-                var loop = walkBlock + SirAldricHumanoidAttack.Seconds;
+                var loop = walkBlock + Mathf.Max(_attackLength, 0.01f);
                 var t = loop > 0f ? timeSeconds % loop : 0f;
                 if (t < 0f)
                 {
                     t += loop;
                 }
 
-                if (t >= walkBlock)
+                if (t >= walkBlock && _attackPlayableReady)
                 {
-                    var sample = SirAldricHumanoidAttack.Evaluate(t - walkBlock);
-                    return sample.Phase == SirAldricHumanoidAttack.PhaseKind.Strike
-                        ? "ATTACK  ·  STRIKE TOP  ·  Humanoid clip"
-                        : "ATTACK  ·  " + sample.Phase.ToString().ToUpperInvariant() + "  ·  Humanoid clip";
+                    var u = _attackLength > 0f ? (t - walkBlock) / _attackLength : 0f;
+                    if (u < 0.22f)
+                    {
+                        return "ATTACK  ·  DRAW  ·  SEP clip";
+                    }
+
+                    if (u < 0.62f)
+                    {
+                        return "ATTACK  ·  STRIKE TOP  ·  SEP clip";
+                    }
+
+                    return "ATTACK  ·  RECOVER  ·  SEP clip";
                 }
             }
 
-            return "WALK  ·  toward TOP  ·  Meshy Animate";
-        }
-
-        private void ApplyDrawStrike(float attackT)
-        {
-            if (_walkAnimator == null)
-            {
-                return;
-            }
-
-            var hips = _walkAnimator.GetBoneTransform(HumanBodyBones.Hips);
-            var upper = _walkAnimator.GetBoneTransform(HumanBodyBones.RightUpperArm);
-            var lower = _walkAnimator.GetBoneTransform(HumanBodyBones.RightLowerArm);
-            var hand = _walkAnimator.GetBoneTransform(HumanBodyBones.RightHand);
-            if (hips == null || upper == null || lower == null || hand == null)
-            {
-                return;
-            }
-
-            var sample = SirAldricHumanoidAttack.Evaluate(attackT);
-            // Hips bone +Z is up the spine on Mixamo — do not TransformPoint.
-            // After RearYaw 180, character forward / TOP = world +Z, right = +X, up = +Y.
-            var worldTarget = new Vector3(
-                hips.position.x + sample.HandX,
-                hips.position.y + sample.HandY,
-                hips.position.z + sample.HandZ);
-            AimChain(upper, lower, hand, worldTarget);
-            LeanSpineTowardTop(sample.SpineLeanDegrees);
-
-            if (_clipSword == null)
-            {
-                EnsureClipSword();
-            }
-
-            if (_clipSword != null)
-            {
-                if (_clipSword.transform.parent != hand)
-                {
-                    _clipSword.transform.SetParent(hand, false);
-                    PlaceClipSwordInHand();
-                }
-
-                _clipSword.SetActive(sample.SwordDrawn);
-            }
-        }
-
-        /// <summary>
-        /// Rotate the arm chain so the hand aims at worldTarget. FromToRotation only —
-        /// never writes localScale (stretch spikes = FAIL).
-        /// </summary>
-        private static void AimChain(Transform upper, Transform lower, Transform hand, Vector3 worldTarget)
-        {
-            var from = hand.position - upper.position;
-            var to = worldTarget - upper.position;
-            if (from.sqrMagnitude > 1e-8f && to.sqrMagnitude > 1e-8f)
-            {
-                upper.rotation = Quaternion.FromToRotation(from.normalized, to.normalized) * upper.rotation;
-            }
-
-            from = hand.position - lower.position;
-            to = worldTarget - lower.position;
-            if (from.sqrMagnitude > 1e-8f && to.sqrMagnitude > 1e-8f)
-            {
-                lower.rotation = Quaternion.FromToRotation(from.normalized, to.normalized) * lower.rotation;
-            }
-        }
-
-        private void LeanSpineTowardTop(float degrees)
-        {
-            if (_walkAnimator == null || _walkInstance == null || Mathf.Abs(degrees) < 0.05f)
-            {
-                return;
-            }
-
-            var spine = _walkAnimator.GetBoneTransform(HumanBodyBones.Spine)
-                        ?? _walkAnimator.GetBoneTransform(HumanBodyBones.Chest);
-            if (spine == null)
-            {
-                return;
-            }
-
-            // Pitch toward world +Z (TOP). Cross(+Z, +Y) = −X.
-            var axis = Vector3.Cross(Vector3.forward, Vector3.up);
-            if (axis.sqrMagnitude < 1e-6f)
-            {
-                return;
-            }
-
-            spine.rotation = Quaternion.AngleAxis(degrees, axis.normalized) * spine.rotation;
-        }
-
-        private void EnsureClipSword()
-        {
-            if (_clipSword != null || _walkAnimator == null)
-            {
-                return;
-            }
-
-            var hand = _walkAnimator.GetBoneTransform(HumanBodyBones.RightHand);
-            if (hand == null)
-            {
-                return;
-            }
-
-            var blade = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            blade.name = "ClipSword";
-            UnityEngine.Object.Destroy(blade.GetComponent<Collider>());
-            var rend = blade.GetComponent<Renderer>();
-            if (rend != null)
-            {
-                var mat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard") ?? Shader.Find("Unlit/Color"));
-                if (mat.HasProperty("_BaseColor"))
-                {
-                    mat.SetColor("_BaseColor", new Color(0.72f, 0.74f, 0.78f));
-                }
-                else
-                {
-                    mat.color = new Color(0.72f, 0.74f, 0.78f);
-                }
-
-                if (mat.HasProperty("_Metallic"))
-                {
-                    mat.SetFloat("_Metallic", 0.85f);
-                }
-
-                if (mat.HasProperty("_Smoothness"))
-                {
-                    mat.SetFloat("_Smoothness", 0.78f);
-                }
-
-                rend.sharedMaterial = mat;
-            }
-
-            blade.transform.SetParent(hand, false);
-            _clipSword = blade;
-            PlaceClipSwordInHand();
-            blade.SetActive(false);
-        }
-
-        private void PlaceClipSwordInHand()
-        {
-            if (_clipSword == null)
-            {
-                return;
-            }
-
-            // Mixamo RightHand bone runs toward the fingers. Blade along local Y.
-            _clipSword.transform.localPosition = new Vector3(0f, 0.28f, 0f);
-            _clipSword.transform.localRotation = Quaternion.identity;
-            _clipSword.transform.localScale = new Vector3(0.035f, 0.55f, 0.022f);
+            return "WALK  ·  toward TOP  ·  SEP Meshy Animate";
         }
 
         private void OnDestroy()
@@ -388,7 +261,7 @@ namespace Survival.Unity
 
         private static string FbxAssetPath => "Assets/" + ThemePackFbx.Replace('\\', '/');
 
-        /// <summary>Walk Mixamo uses mixamorig:*. Leftover Design attack FBX does not — do not play it on this Avatar.</summary>
+        /// <summary>SEP walk is mixamorig:*. SEP attack is MeshyRig (Hips/Spine02) Humanoid-retargeted onto this Avatar.</summary>
         public static bool FbxLooksMixamo(string assetsRel)
         {
 #if UNITY_EDITOR
@@ -443,6 +316,131 @@ namespace Survival.Unity
             return null;
 #else
             return null;
+#endif
+        }
+
+        private static AnimationClip? LoadAttackClip()
+        {
+#if UNITY_EDITOR
+            var rel = AttackFbxAssetPath;
+            var clip = PickAttackClip(rel);
+            if (clip != null)
+            {
+                return clip;
+            }
+
+            if (RepairAttackTake(rel))
+            {
+                return PickAttackClip(rel);
+            }
+
+            return null;
+#else
+            return null;
+#endif
+        }
+
+        private static string AttackFbxAssetPath => "Assets/" + ThemePackAttackFbx.Replace('\\', '/');
+
+        private static AnimationClip? PickAttackClip(string rel)
+        {
+#if UNITY_EDITOR
+            AnimationClip? exact = null;
+            AnimationClip? named = null;
+            AnimationClip? longest = null;
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
+            {
+                if (obj is not AnimationClip clip || clip.name.StartsWith("__preview", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (longest == null || clip.length > longest.length)
+                {
+                    longest = clip;
+                }
+
+                if (string.Equals(clip.name, AttackClipHint, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (exact == null || clip.length > exact.length)
+                    {
+                        exact = clip;
+                    }
+
+                    continue;
+                }
+
+                var label = clip.name;
+                if (label.IndexOf("Attack", StringComparison.OrdinalIgnoreCase) >= 0
+                    || label.IndexOf("Slash", StringComparison.OrdinalIgnoreCase) >= 0
+                    || label.IndexOf("rigify_clip", StringComparison.OrdinalIgnoreCase) >= 0
+                    || label.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    if (named == null || clip.length > named.length)
+                    {
+                        named = clip;
+                    }
+                }
+            }
+
+            return exact ?? named ?? longest;
+#else
+            return null;
+#endif
+        }
+
+        private static bool RepairAttackTake(string rel)
+        {
+#if UNITY_EDITOR
+            if (AssetImporter.GetAtPath(rel) is not ModelImporter importer || !importer.importAnimation)
+            {
+                return false;
+            }
+
+            var defaults = importer.defaultClipAnimations;
+            if (defaults == null || defaults.Length == 0)
+            {
+                return false;
+            }
+
+            ModelImporterClipAnimation? best = null;
+            var bestSpan = -1f;
+            foreach (var candidate in defaults)
+            {
+                var label = (candidate.takeName ?? "") + "\n" + (candidate.name ?? "");
+                var span = candidate.lastFrame - candidate.firstFrame;
+                var named = label.IndexOf("rigify_clip", StringComparison.OrdinalIgnoreCase) >= 0
+                            || label.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0
+                            || label.IndexOf("Attack", StringComparison.OrdinalIgnoreCase) >= 0
+                            || label.IndexOf("Slash", StringComparison.OrdinalIgnoreCase) >= 0;
+                if (!named && span < 20f)
+                {
+                    continue;
+                }
+
+                if (best == null || span > bestSpan)
+                {
+                    best = candidate;
+                    bestSpan = span;
+                }
+            }
+
+            if (best == null || bestSpan <= 0f)
+            {
+                return false;
+            }
+
+            best.name = AttackClipHint;
+            best.loopTime = false;
+            best.loop = false;
+            best.keepOriginalOrientation = true;
+            best.keepOriginalPositionY = true;
+            best.keepOriginalPositionXZ = true;
+            importer.clipAnimations = new[] { best };
+            importer.SaveAndReimport();
+            return true;
+#else
+            return false;
 #endif
         }
 
@@ -692,8 +690,8 @@ namespace Survival.Unity
                 }
             }
 #endif
-            var extracted = ExtractFbxPng(themePackRel, color: true, grayIndex: -1)
-                            ?? (useCache ? LoadSiblingPng("sir_aldric_meshy_atlas.png") : null);
+            // SEP pack has no embedded atlas (soft leftover). Do not bind the old fused-walk atlas.
+            var extracted = ExtractFbxPng(themePackRel, color: true, grayIndex: -1);
             if (useCache)
             {
                 _cachedAlbedo = extracted;

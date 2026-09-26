@@ -9,8 +9,8 @@ using UnityEngine.UI;
 namespace Survival.Unity
 {
     /// <summary>
-    /// 1080×1920 Game-view demo: Meshy Animate humanoid FBX + Walking clip AS-IS
-    /// plus authored Humanoid draw→strike (Derek OVERRIDE). Path A cancelled.
+    /// 1080×1920 Game-view demo: SEP Meshy Animate walk + attack on one Humanoid.
+    /// Authored clips only. ClipSword / AimChain not SoT. Path A cancelled.
     /// Locked rear PNG remains the Play-hub placeholder. Design PASS not claimed.
     /// </summary>
     public sealed class SirAldricDemo : MonoBehaviour
@@ -168,7 +168,7 @@ namespace Survival.Unity
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "Meshy Animate  ·  rear +Z / TOP  ·  Humanoid draw→strike  ·  HOLD merge  ·  no Design PASS",
+                "SEP Meshy  ·  rear +Z / TOP  ·  walk+attack clips  ·  HOLD merge  ·  no Design PASS",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);

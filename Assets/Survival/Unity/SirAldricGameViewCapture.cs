@@ -7,17 +7,22 @@ using UnityEngine;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Unity Game-view proof: Camera.Render 1080×1920 from the SirAldricDemo Play cam.
-    /// Writes rear/TOP draw→strike still + MP4. Not a Blender stand-in.
+    /// Unity Game-view proof: Camera.Render 1080×1920 from the SirAldricDemo Play cam
+    /// plus front / 3-4 stills. Writes SEP walk + attack juice. Not a Blender stand-in.
     /// </summary>
     public static class SirAldricGameViewCapture
     {
         public const int Width = 1080;
         public const int Height = 1920;
-        public const string RelDir = "Docs/Survival/previews/facing_20260925";
-        public const string AttackMp4Name = "sir_aldric_humanoid_draw_strike_gameview.mp4";
-        public const string MidStrikeName = "sir_aldric_humanoid_mid_strike_gameview.png";
-        public const string DrawName = "sir_aldric_humanoid_draw_gameview.png";
+        public const string RelDir = "Docs/Survival/previews/aldric_sep_20260925";
+        public const string WalkMp4Name = "sir_aldric_sep_walk_juice_gameview.mp4";
+        public const string AttackMp4Name = "sir_aldric_sep_attack_juice_gameview.mp4";
+        public const string RearWalkName = "sir_aldric_sep_rear_walk_gameview.png";
+        public const string FrontWalkName = "sir_aldric_sep_front_walk_gameview.png";
+        public const string ThreeQuarterWalkName = "sir_aldric_sep_34_walk_gameview.png";
+        public const string RearAttackName = "sir_aldric_sep_rear_attack_gameview.png";
+        public const string FrontAttackName = "sir_aldric_sep_front_attack_gameview.png";
+        public const string ThreeQuarterAttackName = "sir_aldric_sep_34_attack_gameview.png";
 
         public static string ResolveDir()
         {
@@ -50,58 +55,104 @@ namespace Survival.Unity
 
         public static string CaptureAttack(SirAldricMeshyAnimateActor actor, Camera cam)
         {
+            return CaptureSep(actor, cam);
+        }
+
+        public static string CaptureSep(SirAldricMeshyAnimateActor actor, Camera cam)
+        {
             if (actor == null || !actor.Built || cam == null)
             {
-                throw new InvalidOperationException("SirAldric Game-view capture needs a built Meshy Animate actor and Play camera.");
+                throw new InvalidOperationException("SirAldric Game-view capture needs a built SEP Meshy actor and Play camera.");
             }
 
             var dir = ResolveDir();
-            var frames = Path.Combine(dir, "_humanoid_attack_frames");
-            if (Directory.Exists(frames))
-            {
-                Directory.Delete(frames, true);
-            }
-
-            Directory.CreateDirectory(frames);
+            var savedPos = cam.transform.position;
+            var savedRot = cam.transform.rotation;
 
             var walkLen = actor.WalkLength > 0.05f ? actor.WalkLength : 1f;
+            var attackLen = actor.AttackLength > 0.05f ? actor.AttackLength : 1f;
             var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
-            var fps = 30;
-            var n = Mathf.Max(8, Mathf.RoundToInt(SirAldricHumanoidAttack.Seconds * fps));
-            string? midPath = null;
-            var peak = walkBlock + SirAldricHumanoidAttack.StrikePeakSeconds;
-            var peakDist = float.MaxValue;
+            var walkStill = walkLen * 0.35f;
+            var attackStill = walkBlock + attackLen * 0.35f;
 
+            actor.SampleAt(walkStill);
+            PlacePlayCam(cam, Angle.Rear);
+            WriteFrame(cam, Path.Combine(dir, RearWalkName));
+            PlacePlayCam(cam, Angle.Front);
+            WriteFrame(cam, Path.Combine(dir, FrontWalkName));
+            PlacePlayCam(cam, Angle.ThreeQuarter);
+            WriteFrame(cam, Path.Combine(dir, ThreeQuarterWalkName));
+
+            actor.SampleAt(attackStill);
+            PlacePlayCam(cam, Angle.Rear);
+            WriteFrame(cam, Path.Combine(dir, RearAttackName));
+            PlacePlayCam(cam, Angle.Front);
+            WriteFrame(cam, Path.Combine(dir, FrontAttackName));
+            PlacePlayCam(cam, Angle.ThreeQuarter);
+            WriteFrame(cam, Path.Combine(dir, ThreeQuarterAttackName));
+
+            PlacePlayCam(cam, Angle.Rear);
+            WriteJuice(actor, cam, Path.Combine(dir, "_sep_walk_frames"), 0f, walkLen, WalkMp4Name, dir);
+            WriteJuice(actor, cam, Path.Combine(dir, "_sep_attack_frames"), walkBlock, attackLen, AttackMp4Name, dir);
+
+            cam.transform.position = savedPos;
+            cam.transform.rotation = savedRot;
+            UnityEngine.Debug.Log("SirAldric Game-view SEP wrote " + dir + " (" + SirAldricMeshyAnimateActor.AttackAuthoredReason + ")");
+            return dir;
+        }
+
+        private enum Angle
+        {
+            Rear,
+            Front,
+            ThreeQuarter
+        }
+
+        private static void PlacePlayCam(Camera cam, Angle angle)
+        {
+            cam.fieldOfView = 30f;
+            switch (angle)
+            {
+                case Angle.Front:
+                    cam.transform.position = new Vector3(0f, 2.80f, 5.40f);
+                    cam.transform.LookAt(new Vector3(0f, 0.90f, 0.50f));
+                    break;
+                case Angle.ThreeQuarter:
+                    cam.transform.position = new Vector3(3.20f, 2.80f, -4.40f);
+                    cam.transform.LookAt(new Vector3(0f, 0.90f, 0.50f));
+                    break;
+                default:
+                    cam.transform.position = new Vector3(0f, 2.80f, -5.40f);
+                    cam.transform.LookAt(new Vector3(0f, 0.90f, 0.50f));
+                    break;
+            }
+        }
+
+        private static void WriteJuice(
+            SirAldricMeshyAnimateActor actor,
+            Camera cam,
+            string framesDir,
+            float start,
+            float span,
+            string mp4Name,
+            string dir)
+        {
+            if (Directory.Exists(framesDir))
+            {
+                Directory.Delete(framesDir, true);
+            }
+
+            Directory.CreateDirectory(framesDir);
+            var fps = 30;
+            var n = Mathf.Max(8, Mathf.RoundToInt(span * fps));
             for (var i = 0; i < n; i++)
             {
                 var u = i / (float)Mathf.Max(n - 1, 1);
-                var t = walkBlock + u * SirAldricHumanoidAttack.Seconds;
-                actor.SampleAt(t);
-                var png = Path.Combine(frames, "f_" + i.ToString("D3") + ".png");
-                WriteFrame(cam, png);
-                var dist = Mathf.Abs(t - peak);
-                if (dist < peakDist)
-                {
-                    peakDist = dist;
-                    midPath = png;
-                }
-
-                if (i == 2)
-                {
-                    File.Copy(png, Path.Combine(dir, DrawName), overwrite: true);
-                }
+                actor.SampleAt(start + u * span);
+                WriteFrame(cam, Path.Combine(framesDir, "f_" + i.ToString("D3") + ".png"));
             }
 
-            var midOut = Path.Combine(dir, MidStrikeName);
-            if (midPath != null && File.Exists(midPath))
-            {
-                File.Copy(midPath, midOut, overwrite: true);
-            }
-
-            var mp4 = Path.Combine(dir, AttackMp4Name);
-            TryFfmpeg(frames, mp4);
-            UnityEngine.Debug.Log("SirAldric Game-view attack wrote " + dir + " (" + AttackAuthoredReasonNote() + ")");
-            return dir;
+            TryFfmpeg(framesDir, Path.Combine(dir, mp4Name));
         }
 
         public static void WriteFrame(Camera cam, string pngPath)
@@ -121,8 +172,6 @@ namespace Survival.Unity
             cam.targetTexture = prev;
             RenderTexture.ReleaseTemporary(rt);
         }
-
-        private static string AttackAuthoredReasonNote() => SirAldricHumanoidAttack.Authorship;
 
         private static void TryFfmpeg(string framesDir, string mp4Path)
         {

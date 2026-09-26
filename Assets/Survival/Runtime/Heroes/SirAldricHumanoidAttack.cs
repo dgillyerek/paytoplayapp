@@ -10,9 +10,9 @@ namespace Survival.Domain.Heroes
     {
         public const float Seconds = SirAldric3DMotion.AttackSeconds;
 
-        /// <summary>How the clip is authored. Same Avatar as the walk FBX — not a foreign retarget.</summary>
+        /// <summary>Leftover AimChain math. Not SoT — SEP Meshy attack clip is played instead.</summary>
         public const string Authorship =
-            "Humanoid bone-aim clip on the walk Mixamo Avatar: GetBoneTransform + FromToRotation AimChain (no scale). Clip-only sword parented to RightHand. Design Rigify attack FBX is not played.";
+            "LEFTOVER (not SoT): Humanoid bone-aim clip on the walk Mixamo Avatar: GetBoneTransform + FromToRotation AimChain (no scale). Clip-only sword parented to RightHand. Play path is SEP Meshy Draw Slash Forward on the walk Humanoid.";
 
         public enum PhaseKind
         {

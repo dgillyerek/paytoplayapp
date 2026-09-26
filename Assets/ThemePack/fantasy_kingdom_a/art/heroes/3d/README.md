@@ -8,7 +8,7 @@
 
 World-cam: Play march angle `(0, 2.80, −5.40)` look-at `(0, 0.90, 0.50)` FOV 30, 1080×1920, TOP = +Z = away. **Not** a beauty portrait cam.
 
-**Animate walk FBX:** `sir_aldric_meshy_animate_walk.fbx` (Humanoid, `#25` takeName `target_character|…|Walking`). Actor yaws 180° so the imported Mixamo face (−Z / frontal) becomes +Z / back-to-camera. **Attack FBX:** `sir_aldric_meshy_animate_attack.fbx` take `target_character|rigify_clip|BaseLayer` (Meshy Lionguard Knight · Standing Sword Slash Attack). Same Humanoid mixer. No Design PASS claimed.
+**SEP Animate (SoT, PR #27):** `SirAldric_SEP_meshy_animate_walk.fbx` (Humanoid, take `target_character|target_character|Walking`) + `SirAldric_SEP_meshy_animate_attack.fbx` (Humanoid, take `target_character|rigify_clip|BaseLayer` frames 3–92, Draw Slash Forward). Both play on the walk Mixamo Avatar. Actor yaws 180° so Mixamo face (−Z) becomes +Z / back-to-camera. Old fused walk + Standing Sword Slash stay on disk and are **not played**. ClipSword / AimChain are not SoT. Path A cancelled. Body-only AccuRIG (no sword prop). Atlas may be missing. No Design PASS claimed.
 
 Must-match:
 - Silver plate + gold trim
