@@ -396,6 +396,10 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("sep_body_basecolor.jpg", actor, StringComparison.Ordinal);
         Assert.Contains("LookSwordScabbard", actor, StringComparison.Ordinal);
         Assert.Contains("character-RIGHT", actor, StringComparison.Ordinal);
+        Assert.Contains("RightUpperLeg", actor, StringComparison.Ordinal);
+        Assert.Contains("Quaternion.Euler(0f, -90f, -90f)", actor, StringComparison.Ordinal);
+        Assert.Contains("min RH–prop gap > 0.10 m", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetParent(hips, true)", actor, StringComparison.Ordinal);
         Assert.Contains("Do not bind the old fused-walk atlas", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("LoadSiblingPng(\"sir_aldric_meshy_atlas.png\")", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("EnsureClipSword", actor, StringComparison.Ordinal);

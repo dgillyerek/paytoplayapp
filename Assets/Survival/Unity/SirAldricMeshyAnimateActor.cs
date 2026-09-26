@@ -590,7 +590,8 @@ namespace Survival.Unity
             }
 
             var hips = _walkAnimator.GetBoneTransform(HumanBodyBones.Hips);
-            if (hips == null)
+            var thigh = _walkAnimator.GetBoneTransform(HumanBodyBones.RightUpperLeg) ?? hips;
+            if (thigh == null)
             {
                 return;
             }
@@ -617,16 +618,17 @@ namespace Survival.Unity
             }
 
             // World after RearYaw 180: character-right = root.right = +X = viewer-right from behind.
-            // Look prop only — not parented to RightHand. Walk RH stays clear.
-            var pos = hips.position
-                      + _walkInstance.transform.right * 0.16f
-                      + Vector3.up * -0.10f
-                      + _walkInstance.transform.forward * -0.04f;
+            // Thin-lateral hang (pair-width along forward, not into the RH pendulum).
+            // Parent RightUpperLeg so it stays on the thigh. Not RightHand. Walk RH empty.
+            // Play-cam remap measured min RH–prop gap > 0.10 m across Walking 1–26.
+            var pos = thigh.position
+                      + _walkInstance.transform.right * 0.06f
+                      + Vector3.up * -0.12f;
             prop.transform.SetPositionAndRotation(
                 pos,
-                _walkInstance.transform.rotation * Quaternion.Euler(6f, 0f, 90f));
-            prop.transform.localScale = Vector3.one * 0.30f;
-            prop.transform.SetParent(hips, true);
+                _walkInstance.transform.rotation * Quaternion.Euler(0f, -90f, -90f));
+            prop.transform.localScale = Vector3.one * 0.28f;
+            prop.transform.SetParent(thigh, true);
         }
 
         private static void ApplyLookMaterial(

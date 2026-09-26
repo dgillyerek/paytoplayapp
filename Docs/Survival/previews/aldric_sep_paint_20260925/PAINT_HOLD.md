@@ -7,10 +7,10 @@
 | Item | Status |
 | --- | --- |
 | Walk motion | `SirAldric_SEP_meshy_animate_walk.fbx` Walking take on Mixamo Humanoid. Unchanged from `c88ea55` Derek Play PASS. |
-| Look | Painted midpoly atlas (`sep_paint/sep_body_*`) UV-stamped onto that AccuRIG. `LookSwordScabbard` parented at character-RIGHT hip. Walk RH clear. No hip-grip glue. |
+| Look | Painted midpoly atlas (`sep_paint/sep_body_*`) UV-stamped onto that AccuRIG. `LookSwordScabbard` parented at character-RIGHT `RightUpperLeg` (thin-lateral hang). Walk RH empty; measured min gap **> 0.10 m** on Walking 1–26. No hip-grip glue. |
 | Attack | `SirAldric_SEP_meshy_animate_attack.fbx` left loaded. **not SoT.** Native clip still spins toward camera. Do not AimChain / ClipSword. |
 
-Actor (`SirAldricMeshyAnimateActor`) instantiates the walk FBX, yaws **180°** (Mixamo face −Z → world +Z / TOP), binds painted maps, parents the painted sword+scabbard at Hips (not RightHand), then plays the same Walking clip. Attack playable stays leftover.
+Actor (`SirAldricMeshyAnimateActor`) instantiates the walk FBX, yaws **180°** (Mixamo face −Z → world +Z / TOP), binds painted maps, parents the painted sword+scabbard at **RightUpperLeg** (not RightHand, not a hip-grip). Design FAIL on tip `2876356` was RH melt into the wide product-shot pair; clearance iterate rotated the pair-width along forward and dropped the prop onto the thigh. Attack playable stays leftover.
 
 ## Imported look drop (alongside walk FBX)
 
@@ -44,6 +44,6 @@ Attack juice is **not** re-proofed here. Clay native-spin FAIL remains in `../al
 ## Unity Play repro
 
 1. Unity 6.3 LTS. Play **SirAldric**. Rear cam as above. Enemy cube = TOP / +Z.
-2. Walk: painted blue / gold / silver (not clay). Scabbard on character-RIGHT hip. RH clear.
+2. Walk: painted blue / gold / silver (not clay). Scabbard on character-RIGHT hip. **Open air between RH and scabbard** for the full cycle (no melt / no grip).
 3. Attack: leftover SEP clip, still expected to spin. Not a look-rewire bug.
 4. HOLD until Derek Play PASS. Design re-gates after.

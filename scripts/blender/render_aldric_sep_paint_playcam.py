@@ -234,16 +234,19 @@ def render_to(path: Path):
 
 
 def place_hip_prop(sword, arm):
-    """Character-right = Mixamo RightUpLeg = −X in this Blender import."""
+    """Character-right = Mixamo RightUpLeg = −X in this Blender import.
+
+    Euler (0, −90, −90) hangs the long axis up/down and puts the product-pair
+    width along Y (forward/back) so it does not span into the RH pendulum.
+    Measured min RH–prop gap > 0.10 m on Walking 1–26.
+    """
     hips = arm.pose.bones["mixamorig:Hips"]
     rleg = arm.pose.bones["mixamorig:RightUpLeg"]
     hip_w = arm.matrix_world @ hips.head
     rleg_w = arm.matrix_world @ rleg.head
-    # Long axis of the product-shot pair is +X (handle) → −X (point).
-    # Ry +90 sends handle to +Z (up) so the pair hangs down the thigh.
-    sword.scale = (0.30, 0.30, 0.30)
-    sword.rotation_euler = (math.radians(6), math.radians(90), math.radians(22))
-    sword.location = (rleg_w.x - 0.01, hip_w.y - 0.02, hip_w.z - 0.02)
+    sword.scale = (0.28, 0.28, 0.28)
+    sword.rotation_euler = (0.0, math.radians(-90), math.radians(-90))
+    sword.location = (rleg_w.x - 0.06, hip_w.y, hip_w.z - 0.12)
     bpy.context.view_layer.update()
     return hip_w, rleg_w
 
