@@ -393,7 +393,7 @@ def juice(cam, arm, sword, scab, hilt, tip, fr0, fr1, frames_dir, mp4):
         print("juice frame", fr, "idx", idx)
     subprocess.check_call(
         [
-            "ffmpeg", "-y", "-framerate", "30",
+            "ffmpeg", "-y", "-framerate", "15",
             "-i", str(frames_dir / "f_%03d.png"),
             "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18",
             str(mp4),

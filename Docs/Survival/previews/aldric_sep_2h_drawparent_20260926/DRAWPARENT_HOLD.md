@@ -27,7 +27,7 @@ Play-cam remap (Unity Y-up SoT remapped `(x, −z, y)`). **Not Meshy website sti
 
 Attack: `sir_aldric_sep_2h_dp_{rear,34}_{draw,overhead,strike}_playcam.png` + `sir_aldric_sep_2h_dp_attack_juice_playcam.mp4`
 
-Juice plays the same Scene take as the stills (draw f6 → overhead f30 → downstrike f39 → recover). Blade is in hands from draw through strike. Empty scabbard stays LEFT hip.
+Juice is the same Scene take as the stills: every frame 4–92 at 15 fps (~6 s, 89 frames). Draw f6 / overhead f30 / downstrike f39 are in that set (not a different timeline). Blade is in hands from draw through strike. Empty scabbard stays LEFT hip.
 
 Walk proofs unchanged: `../aldric_sep_2h_yawlock_20260926/` + mid450k look folder.
 

@@ -553,6 +553,35 @@ public sealed class SirAldric3DMotionTests
     }
 
     [Fact]
+    public void Aldric_sep_2h_drawparent_20260926_playcam_proofs_are_on_disk()
+    {
+        var dir = Path.Combine(FindRepoRoot(), "Docs", "Survival", "previews", "aldric_sep_2h_drawparent_20260926");
+        Assert.True(new FileInfo(Path.Combine(dir, "DRAWPARENT_HOLD.md")).Length > 400);
+        Assert.True(new FileInfo(Path.Combine(dir, "ANIMATE_HANDOFF.md")).Length > 200);
+        Assert.True(new FileInfo(Path.Combine(dir, "ATTACK_2H_YAWLOCK_VERIFY.txt")).Length > 200);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_dp_rear_draw_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_dp_rear_overhead_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_dp_rear_strike_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_dp_34_draw_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_dp_34_overhead_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_dp_34_strike_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_sep_2h_dp_attack_juice_playcam.mp4")).Length > 50_000);
+        var hold = File.ReadAllText(Path.Combine(dir, "DRAWPARENT_HOLD.md"));
+        Assert.Contains("HOLD merge", hold, StringComparison.Ordinal);
+        Assert.Contains("Not Meshy website stills", hold, StringComparison.Ordinal);
+        Assert.Contains("Not Unity Game-view", hold, StringComparison.Ordinal);
+        Assert.Contains("LookSword", hold, StringComparison.Ordinal);
+        Assert.Contains("LookScabbard", hold, StringComparison.Ordinal);
+        Assert.Contains("RightHand", hold, StringComparison.Ordinal);
+        Assert.Contains("2h_downstrike_yawlock", hold, StringComparison.Ordinal);
+        Assert.Contains("Path A", hold, StringComparison.Ordinal);
+        Assert.DoesNotContain("Design PASS claimed", hold.Replace("No Design PASS claimed", ""), StringComparison.Ordinal);
+        var verify = File.ReadAllText(Path.Combine(dir, "ATTACK_2H_YAWLOCK_VERIFY.txt"));
+        Assert.Contains("max|delta ground-yaw|=0.00 deg", verify, StringComparison.Ordinal);
+        Assert.Contains("RESULT: PASS", verify, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Aldric_sep_paint_mid450k_20260926_playcam_proofs_are_on_disk()
     {
         var dir = Path.Combine(FindRepoRoot(), "Docs", "Survival", "previews", "aldric_sep_paint_mid450k_20260926");
