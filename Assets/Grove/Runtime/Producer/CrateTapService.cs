@@ -33,6 +33,7 @@ namespace Grove.Domain.Producer
             if (result is SpitResult.Ok ok)
             {
                 _board.Place(pos, new PieceStack(ok.Item, 1));
+                return ok with { At = pos };
             }
 
             return result;

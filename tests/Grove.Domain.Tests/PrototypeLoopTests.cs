@@ -23,8 +23,9 @@ public sealed class PrototypeLoopTests
         for (var i = 0; i < 3; i++)
         {
             var spit = tap.TryTap();
-            Assert.IsType<SpitResult.Ok>(spit);
-            Assert.Equal(GroveCatalog.WildflowerT1, ((SpitResult.Ok)spit).Item);
+            var ok = Assert.IsType<SpitResult.Ok>(spit);
+            Assert.Equal(GroveCatalog.WildflowerT1, ok.Item);
+            Assert.True(ok.At.HasValue);
         }
 
         MergeThree(session, new GridPos(0, 0), new GridPos(0, 1), new GridPos(0, 2));
