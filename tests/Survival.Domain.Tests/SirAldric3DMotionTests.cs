@@ -297,7 +297,11 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("SirAldric_PILOT_accurig_humanoid.fbx", actor, StringComparison.Ordinal);
         Assert.Contains("SirAldric_PILOT_walk.fbx", actor, StringComparison.Ordinal);
         Assert.Contains("SirAldric_PILOT_attack.fbx", actor, StringComparison.Ordinal);
-        Assert.Contains("SirAldricPilotWalk", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldricPilotAccurig", actor, StringComparison.Ordinal);
+        Assert.Contains("BuildHumanAvatar", actor, StringComparison.Ordinal);
+        Assert.Contains("visible=AccuRIG", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("SirAldricPilotWalk", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("SirAldricPilotAttack", actor, StringComparison.Ordinal);
         Assert.Contains("applyRootMotion = false", actor, StringComparison.Ordinal);
         Assert.Contains("AlwaysAnimate", actor, StringComparison.Ordinal);
         Assert.Contains("RepairAttackTake", actor, StringComparison.Ordinal);

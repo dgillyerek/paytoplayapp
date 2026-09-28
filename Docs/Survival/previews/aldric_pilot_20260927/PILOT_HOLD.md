@@ -29,5 +29,5 @@ Play-cam rematch (Unity Y-up remapped). **Not Meshy website stills. Not Unity Ga
 ## Unity Play
 
 1. Fresh open. Play **SirAldric**. 1080×1920 Scale 1×.
-2. Walk clip plays on the **walk FBX instance** (not retargeted onto AccuRIG). Attack on its own instance. Cam rear `(0, 1.75, −2.90)` LookAt `(0, 0.85, 0.15)` FOV 34, reapplied every LateUpdate (scene default was ortho 5.5 at z=−10).
+2. **Visible body is AccuRIG Humanoid** (never Animate walk/attack mesh). Walk/Attack clips retarget onto that Avatar (`AvatarBuilder` map Spine02/neck/LeftArm…). Cam rear `(0, 1.75, −2.90)` LookAt `(0, 0.85, 0.15)` FOV 34.
 3. HOLD until Derek PASS.

@@ -13,9 +13,9 @@ using UnityEditor;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Sir Aldric PILOT (2026-09-27): AccuRIG Humanoid look + Walk + Attack clips.
-    /// Sword is fused in the body mesh — no Path A / ClipSword / AimChain / empty-scabbard magic.
-    /// Look SoT = AccuRIG mid280k + AccuRIG metallic/roughness. HOLD merge. No Design/Derek PASS.
+    /// Sir Aldric PILOT (2026-09-27): AccuRIG Humanoid look mesh is SoT.
+    /// Walk + Attack Humanoid clips retarget onto that Avatar. Never swap visible body
+    /// to the Animate walk/attack FBX (1d1b030 cape→sword stretch FAIL).
     /// </summary>
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
     {
@@ -28,19 +28,19 @@ namespace Survival.Unity
         public const string AttackClipHint = "Attack";
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
         public const string AttackAuthoredReason =
-            "PILOT SoT: AccuRIG Humanoid + SirAldric_PILOT_walk + SirAldric_PILOT_attack. " +
-            "Sword fused — no Path A / ClipSword / AimChain. HOLD merge.";
+            "PILOT SoT: AccuRIG Humanoid mesh + retargeted Walk/Attack clips. " +
+            "Never swap visible body to Animate FBX. Sword fused. HOLD merge.";
 
-        private PlayableGraph _walkGraph;
-        private PlayableGraph _attackGraph;
+        private Animator? _animator;
+        private PlayableGraph _graph;
+        private AnimationPlayableOutput _output;
         private AnimationClipPlayable _walkPlayable;
         private AnimationClipPlayable _attackPlayable;
         private float _walkLength;
         private float _attackLength;
         private bool _graphReady;
         private bool _attackReady;
-        private GameObject? _walkInstance;
-        private GameObject? _attackInstance;
+        private GameObject? _instance;
 
         public bool Built => _graphReady;
         public bool HasAttackClip => _attackReady;
@@ -50,14 +50,33 @@ namespace Survival.Unity
         public void Build()
         {
             BuildLights();
-            var walkPrefab = LoadFbxPrefab(ThemePackWalkFbx, "SirAldric_PILOT_walk");
-            if (walkPrefab == null)
+            var prefab = LoadFbxPrefab(ThemePackFbx, "SirAldric_PILOT_accurig_humanoid");
+            if (prefab == null)
             {
                 Debug.LogError(
-                    "PILOT walk FBX not imported yet. Open Unity so " +
-                    ThemePackWalkFbx + " Humanoid-imports, then Play SirAldric.");
+                    "PILOT AccuRIG FBX not imported yet. Open Unity so " +
+                    ThemePackFbx + " Humanoid-imports, then Play SirAldric.");
                 return;
             }
+
+            _instance = Instantiate(prefab, transform);
+            _instance.name = "SirAldricPilotAccurig";
+            HideJunk(_instance);
+            FaceWorldTop(_instance);
+            BindPaintedLook(_instance);
+
+            _animator = _instance.GetComponent<Animator>() ?? _instance.AddComponent<Animator>();
+            var accurigAvatar = BuildAccurigHumanoidAvatar(_instance)
+                                ?? LoadHumanoidAvatar(AssetPath(ThemePackFbx));
+            if (accurigAvatar != null)
+            {
+                _animator.avatar = accurigAvatar;
+            }
+
+            _animator.applyRootMotion = false;
+            _animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            _animator.updateMode = AnimatorUpdateMode.UnscaledTime;
+            _animator.Rebind();
 
             var walk = LoadClip(ThemePackWalkFbx, ClipHint, repairWalk: true);
             if (walk == null)
@@ -68,76 +87,167 @@ namespace Survival.Unity
 
             walk.wrapMode = WrapMode.Loop;
             _walkLength = walk.length;
-            var walkAnimator = BindPlaybackInstance(
-                walkPrefab,
-                "SirAldricPilotWalk",
-                ThemePackWalkFbx,
-                out _walkInstance);
-            _walkGraph = PlayableGraph.Create("SirAldricPilotWalk");
-            _walkGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
-            var walkOut = AnimationPlayableOutput.Create(_walkGraph, "Walk", walkAnimator);
-            _walkPlayable = AnimationClipPlayable.Create(_walkGraph, walk);
-            walkOut.SetSourcePlayable(_walkPlayable);
-            _walkGraph.Play();
+            var avatarOk = _animator.avatar != null && _animator.avatar.isHuman && _animator.avatar.isValid;
+            if (!walk.isHumanMotion)
+            {
+                Debug.LogWarning(
+                    "PILOT walk clip is not Humanoid muscle motion. Driving AccuRIG as Generic via matching bone names. " +
+                    "avatarHuman=" + avatarOk);
+                _animator.avatar = null;
+            }
+            else if (!avatarOk)
+            {
+                Debug.LogError(
+                    "PILOT retarget FAIL: AccuRIG Avatar is not a valid Humanoid (avatar=" +
+                    (_animator.avatar != null) + " isHuman=" +
+                    (_animator.avatar != null && _animator.avatar.isHuman) + " isValid=" +
+                    (_animator.avatar != null && _animator.avatar.isValid) +
+                    "). Need Design re-Animate on AccuRIG skeleton. Visible body stays AccuRIG.");
+            }
+
+            _graph = PlayableGraph.Create("SirAldricPilotAccurig");
+            _graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
+            _output = AnimationPlayableOutput.Create(_graph, "AldricAccurig", _animator);
+            _walkPlayable = AnimationClipPlayable.Create(_graph, walk);
+            _output.SetSourcePlayable(_walkPlayable);
 
             var attack = LoadClip(ThemePackAttackFbx, AttackClipHint, repairWalk: false);
-            var attackPrefab = LoadFbxPrefab(ThemePackAttackFbx, "SirAldric_PILOT_attack");
-            if (attack != null && attackPrefab != null)
+            if (attack != null)
             {
                 attack.wrapMode = WrapMode.Once;
                 _attackLength = attack.length;
-                var attackAnimator = BindPlaybackInstance(
-                    attackPrefab,
-                    "SirAldricPilotAttack",
-                    ThemePackAttackFbx,
-                    out _attackInstance);
-                _attackGraph = PlayableGraph.Create("SirAldricPilotAttack");
-                _attackGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
-                var attackOut = AnimationPlayableOutput.Create(_attackGraph, "Attack", attackAnimator);
-                _attackPlayable = AnimationClipPlayable.Create(_attackGraph, attack);
-                attackOut.SetSourcePlayable(_attackPlayable);
-                _attackGraph.Play();
+                _attackPlayable = AnimationClipPlayable.Create(_graph, attack);
                 _attackReady = true;
-                _attackInstance!.SetActive(false);
-                Debug.Log(
-                    "PILOT clips walkHuman=" + walk.isHumanMotion +
-                    " attackHuman=" + attack.isHumanMotion +
-                    " walkAvatar=" + (walkAnimator.avatar != null && walkAnimator.avatar.isHuman) +
-                    " attackAvatar=" + (attackAnimator.avatar != null && attackAnimator.avatar.isHuman));
             }
             else
             {
-                Debug.LogWarning("PILOT attack clip or FBX missing. Walk-only until reimport.");
-                Debug.Log("PILOT clips walkHuman=" + walk.isHumanMotion);
+                Debug.LogWarning("PILOT attack clip missing after Humanoid import. Walk-only until reimport.");
             }
 
+            _graph.Play();
             _graphReady = true;
             SampleAt(0f);
-            Debug.Log("PILOT actor built walkLen=" + _walkLength + " attackLen=" + _attackLength + " " + AttackAuthoredReason);
+            Debug.Log(
+                "PILOT actor built walkLen=" + _walkLength + " attackLen=" + _attackLength +
+                " walkHuman=" + walk.isHumanMotion +
+                " attackHuman=" + (_attackReady && attack != null && attack.isHumanMotion) +
+                " accurigAvatarHuman=" + (_animator.avatar != null && _animator.avatar.isHuman) +
+                " accurigAvatarValid=" + (_animator.avatar != null && _animator.avatar.isValid) +
+                " visible=AccuRIG " + AttackAuthoredReason);
         }
 
-        private Animator BindPlaybackInstance(
-            GameObject prefab,
-            string name,
-            string themePackRel,
-            out GameObject instance)
+        /// <summary>
+        /// AccuRIG bone names (Hips / Spine02 / neck / LeftArm …) often miss Unity's auto Humanoid map.
+        /// An invalid AccuRIG Avatar is why 2991b19 T-posed even with walkLen&gt;0.
+        /// </summary>
+        private static Avatar? BuildAccurigHumanoidAvatar(GameObject root)
         {
-            instance = Instantiate(prefab, transform);
-            instance.name = name;
-            HideJunk(instance);
-            FaceWorldTop(instance);
-            BindPaintedLook(instance);
-            var animator = instance.GetComponent<Animator>() ?? instance.AddComponent<Animator>();
-            var avatar = LoadHumanoidAvatar(AssetPath(themePackRel));
-            if (avatar != null)
+            var all = root.GetComponentsInChildren<Transform>(true);
+            var byName = new Dictionary<string, Transform>(StringComparer.OrdinalIgnoreCase);
+            foreach (var t in all)
             {
-                animator.avatar = avatar;
+                if (!byName.ContainsKey(t.name))
+                {
+                    byName[t.name] = t;
+                }
             }
 
-            animator.applyRootMotion = false;
-            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-            animator.updateMode = AnimatorUpdateMode.UnscaledTime;
-            return animator;
+            if (!byName.ContainsKey("Hips"))
+            {
+                Debug.LogError("PILOT AccuRIG instance has no Hips bone — cannot BuildHumanAvatar.");
+                return null;
+            }
+
+            var map = new (HumanBodyBones human, string bone)[]
+            {
+                (HumanBodyBones.Hips, "Hips"),
+                (HumanBodyBones.Spine, "Spine02"),
+                (HumanBodyBones.Chest, "Spine01"),
+                (HumanBodyBones.UpperChest, "Spine"),
+                (HumanBodyBones.Neck, "neck"),
+                (HumanBodyBones.Head, "Head"),
+                (HumanBodyBones.LeftShoulder, "LeftShoulder"),
+                (HumanBodyBones.LeftUpperArm, "LeftArm"),
+                (HumanBodyBones.LeftLowerArm, "LeftForeArm"),
+                (HumanBodyBones.LeftHand, "LeftHand"),
+                (HumanBodyBones.RightShoulder, "RightShoulder"),
+                (HumanBodyBones.RightUpperArm, "RightArm"),
+                (HumanBodyBones.RightLowerArm, "RightForeArm"),
+                (HumanBodyBones.RightHand, "RightHand"),
+                (HumanBodyBones.LeftUpperLeg, "LeftUpLeg"),
+                (HumanBodyBones.LeftLowerLeg, "LeftLeg"),
+                (HumanBodyBones.LeftFoot, "LeftFoot"),
+                (HumanBodyBones.LeftToes, "LeftToeBase"),
+                (HumanBodyBones.RightUpperLeg, "RightUpLeg"),
+                (HumanBodyBones.RightLowerLeg, "RightLeg"),
+                (HumanBodyBones.RightFoot, "RightFoot"),
+                (HumanBodyBones.RightToes, "RightToeBase"),
+            };
+
+            var human = new List<HumanBone>();
+            foreach (var (hb, boneName) in map)
+            {
+                if (!byName.ContainsKey(boneName))
+                {
+                    Debug.LogWarning("PILOT AccuRIG missing bone " + boneName + " for " + hb);
+                    continue;
+                }
+
+                var hbBone = new HumanBone
+                {
+                    humanName = HumanTrait.BoneName[(int)hb],
+                    boneName = byName[boneName].name,
+                    limit = new HumanLimit { useDefaultValues = true }
+                };
+                human.Add(hbBone);
+            }
+
+            var skeleton = new SkeletonBone[all.Length];
+            for (var s = 0; s < all.Length; s++)
+            {
+                var t = all[s];
+                skeleton[s] = new SkeletonBone
+                {
+                    name = t.name,
+                    position = t.localPosition,
+                    rotation = t.localRotation,
+                    scale = t.localScale
+                };
+            }
+
+            var desc = new HumanDescription
+            {
+                human = human.ToArray(),
+                skeleton = skeleton,
+                armTwist = 0.5f,
+                foreArmTwist = 0.5f,
+                upperLegTwist = 0.5f,
+                legTwist = 0.5f,
+                armStretch = 0.05f,
+                legStretch = 0.05f,
+                feetSpacing = 0f,
+                hasTranslationDoF = false
+            };
+
+            var avatar = AvatarBuilder.BuildHumanAvatar(root, desc);
+            if (avatar == null)
+            {
+                Debug.LogError("PILOT AvatarBuilder.BuildHumanAvatar returned null.");
+                return null;
+            }
+
+            avatar.name = "SirAldricPilotAccurigAvatar";
+            Debug.Log(
+                "PILOT AccuRIG AvatarBuilder isHuman=" + avatar.isHuman +
+                " isValid=" + avatar.isValid + " mapped=" + human.Count);
+            if (!avatar.isValid)
+            {
+                Debug.LogError(
+                    "PILOT retarget FAIL: AccuRIG AvatarBuilder isValid=false. " +
+                    "Need Design re-Animate on AccuRIG skeleton. Visible body stays AccuRIG.");
+            }
+
+            return avatar;
         }
 
         private void Update()
@@ -152,47 +262,27 @@ namespace Survival.Unity
 
         public void SampleAt(float timeSeconds)
         {
+            if (!_graph.IsValid())
+            {
+                return;
+            }
+
             var walkLen = _walkLength > 0.05f ? _walkLength : 1f;
             var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
             var loop = walkBlock + (_attackReady ? Mathf.Max(_attackLength, 0.01f) : walkBlock);
             var t = timeSeconds % loop;
-            var attacking = _attackReady && t >= walkBlock;
-            if (attacking)
+            if (_attackReady && t >= walkBlock)
             {
-                if (_walkInstance != null)
-                {
-                    _walkInstance.SetActive(false);
-                }
-
-                if (_attackInstance != null)
-                {
-                    _attackInstance.SetActive(true);
-                }
-
-                if (_attackGraph.IsValid())
-                {
-                    _attackPlayable.SetTime(t - walkBlock);
-                    _attackGraph.Evaluate();
-                }
-
-                return;
+                _output.SetSourcePlayable(_attackPlayable);
+                _attackPlayable.SetTime(t - walkBlock);
             }
-
-            if (_attackInstance != null)
+            else
             {
-                _attackInstance.SetActive(false);
-            }
-
-            if (_walkInstance != null)
-            {
-                _walkInstance.SetActive(true);
-            }
-
-            if (_walkGraph.IsValid())
-            {
+                _output.SetSourcePlayable(_walkPlayable);
                 _walkPlayable.SetTime(t % walkLen);
-                _walkGraph.Evaluate();
             }
+
+            _graph.Evaluate();
         }
 
         public string PhaseLabel(float timeSeconds)
@@ -209,14 +299,9 @@ namespace Survival.Unity
 
         private void OnDestroy()
         {
-            if (_walkGraph.IsValid())
+            if (_graph.IsValid())
             {
-                _walkGraph.Destroy();
-            }
-
-            if (_attackGraph.IsValid())
-            {
-                _attackGraph.Destroy();
+                _graph.Destroy();
             }
         }
 
