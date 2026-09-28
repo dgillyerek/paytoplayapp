@@ -295,11 +295,13 @@ public sealed class SirAldric3DMotionTests
         var root = FindRepoRoot();
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
         Assert.Contains("SirAldric_PILOT_accurig_humanoid.fbx", actor, StringComparison.Ordinal);
-        Assert.Contains("SirAldric_PILOT_walk.fbx", actor, StringComparison.Ordinal);
-        Assert.Contains("SirAldric_PILOT_attack.fbx", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_PILOT_walk_accurig.fbx", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_PILOT_attack_accurig.fbx", actor, StringComparison.Ordinal);
         Assert.Contains("SirAldricPilotAccurig", actor, StringComparison.Ordinal);
-        Assert.Contains("BuildHumanAvatar", actor, StringComparison.Ordinal);
+        Assert.Contains("StripEmbeddedClipMeshes", actor, StringComparison.Ordinal);
         Assert.Contains("visible=AccuRIG", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("BuildHumanAvatar", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("AvatarBuilder", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("SirAldricPilotWalk", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("SirAldricPilotAttack", actor, StringComparison.Ordinal);
         Assert.Contains("applyRootMotion = false", actor, StringComparison.Ordinal);
@@ -313,13 +315,13 @@ public sealed class SirAldric3DMotionTests
 
         var pilot = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "pilot");
         Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_PILOT_accurig_humanoid.fbx")).Length > 1_000_000);
-        Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_PILOT_walk.fbx")).Length > 1_000_000);
-        Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_PILOT_attack.fbx")).Length > 1_000_000);
+        Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_PILOT_walk_accurig.fbx")).Length > 1_000_000);
+        Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_PILOT_attack_accurig.fbx")).Length > 1_000_000);
         Assert.True(new FileInfo(Path.Combine(pilot, "Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_metallic.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(pilot, "Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_roughness.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(pilot, "look_front_paint.png")).Length > 50_000);
-        var walkMeta = File.ReadAllText(Path.Combine(pilot, "SirAldric_PILOT_walk.fbx.meta"));
-        var attackMeta = File.ReadAllText(Path.Combine(pilot, "SirAldric_PILOT_attack.fbx.meta"));
+        var walkMeta = File.ReadAllText(Path.Combine(pilot, "SirAldric_PILOT_walk_accurig.fbx.meta"));
+        var attackMeta = File.ReadAllText(Path.Combine(pilot, "SirAldric_PILOT_attack_accurig.fbx.meta"));
         Assert.Contains("takeName: Armature|Armature|Armature|Walking", walkMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("Armature|Armature|Armature|Armature|Walking", walkMeta, StringComparison.Ordinal);
         Assert.Contains("takeName: rigify_clip", attackMeta, StringComparison.Ordinal);
@@ -336,7 +338,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("OnPreprocessModel", post, StringComparison.Ordinal);
         Assert.Contains("CreateFromThisModel", post, StringComparison.Ordinal);
         Assert.Contains("defaultClipAnimations", post, StringComparison.Ordinal);
-        Assert.Contains("SirAldric_PILOT_walk.fbx", post, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_PILOT_walk_accurig.fbx", post, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("legTwist", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("armTwist", actor, StringComparison.Ordinal);
@@ -356,7 +358,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("usePhysicalProperties = false", demo, StringComparison.Ordinal);
         Assert.Contains("LateUpdate", demo, StringComparison.Ordinal);
 
-        var dir = Path.Combine(root, "Docs", "Survival", "previews", "aldric_pilot_20260927");
+        var dir = Path.Combine(root, "Docs", "Survival", "previews", "aldric_pilot_20260928");
         Assert.True(new FileInfo(Path.Combine(dir, "PILOT_HOLD.md")).Length > 400);
         Assert.Contains("HOLD merge", File.ReadAllText(Path.Combine(dir, "PILOT_HOLD.md")), StringComparison.Ordinal);
         Assert.Contains("Not Unity Game-view", File.ReadAllText(Path.Combine(dir, "PILOT_HOLD.md")), StringComparison.Ordinal);
@@ -364,6 +366,7 @@ public sealed class SirAldric3DMotionTests
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_front_walk_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_34_walk_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_rear_strike_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_34_strike_playcam.png")).Length > 50_000);
     }
 
     [Fact]

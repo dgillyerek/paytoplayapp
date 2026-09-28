@@ -13,23 +13,23 @@ using UnityEditor;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Sir Aldric PILOT (2026-09-27): AccuRIG Humanoid look mesh is SoT.
-    /// Walk + Attack Humanoid clips retarget onto that Avatar. Never swap visible body
-    /// to the Animate walk/attack FBX (1d1b030 cape→sword stretch FAIL).
+    /// Sir Aldric PILOT: AccuRIG Character_output is the ONLY visible body.
+    /// Walk/Attack clips from *_accurig.fbx (same AccuRIG bones). Never show Animate mesh.
+    /// No AvatarBuilder retarget. No Path A / ClipSword. HOLD merge.
     /// </summary>
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
     {
         public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_accurig_humanoid.fbx";
-        public const string ThemePackWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_walk.fbx";
-        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_attack.fbx";
+        public const string ThemePackWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_walk_accurig.fbx";
+        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_attack_accurig.fbx";
         public const string PaintedLookDir = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot";
         public const string LeftoverMeshyWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_walk.fbx";
         public const string ClipHint = "Walking";
         public const string AttackClipHint = "Attack";
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
         public const string AttackAuthoredReason =
-            "PILOT SoT: AccuRIG Humanoid mesh + retargeted Walk/Attack clips. " +
-            "Never swap visible body to Animate FBX. Sword fused. HOLD merge.";
+            "PILOT clips-only: AccuRIG body + walk_accurig/attack_accurig clips. " +
+            "Never show Animate mesh. Sword fused. HOLD merge.";
 
         private Animator? _animator;
         private PlayableGraph _graph;
@@ -62,12 +62,12 @@ namespace Survival.Unity
             _instance = Instantiate(prefab, transform);
             _instance.name = "SirAldricPilotAccurig";
             HideJunk(_instance);
+            StripEmbeddedClipMeshes(_instance);
             FaceWorldTop(_instance);
             BindPaintedLook(_instance);
 
             _animator = _instance.GetComponent<Animator>() ?? _instance.AddComponent<Animator>();
-            var accurigAvatar = BuildAccurigHumanoidAvatar(_instance)
-                                ?? LoadHumanoidAvatar(AssetPath(ThemePackFbx));
+            var accurigAvatar = LoadHumanoidAvatar(AssetPath(ThemePackFbx));
             if (accurigAvatar != null)
             {
                 _animator.avatar = accurigAvatar;
@@ -76,7 +76,6 @@ namespace Survival.Unity
             _animator.applyRootMotion = false;
             _animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
             _animator.updateMode = AnimatorUpdateMode.UnscaledTime;
-            _animator.Rebind();
 
             var walk = LoadClip(ThemePackWalkFbx, ClipHint, repairWalk: true);
             if (walk == null)
@@ -87,23 +86,6 @@ namespace Survival.Unity
 
             walk.wrapMode = WrapMode.Loop;
             _walkLength = walk.length;
-            var avatarOk = _animator.avatar != null && _animator.avatar.isHuman && _animator.avatar.isValid;
-            if (!walk.isHumanMotion)
-            {
-                Debug.LogWarning(
-                    "PILOT walk clip is not Humanoid muscle motion. Driving AccuRIG as Generic via matching bone names. " +
-                    "avatarHuman=" + avatarOk);
-                _animator.avatar = null;
-            }
-            else if (!avatarOk)
-            {
-                Debug.LogError(
-                    "PILOT retarget FAIL: AccuRIG Avatar is not a valid Humanoid (avatar=" +
-                    (_animator.avatar != null) + " isHuman=" +
-                    (_animator.avatar != null && _animator.avatar.isHuman) + " isValid=" +
-                    (_animator.avatar != null && _animator.avatar.isValid) +
-                    "). Need Design re-Animate on AccuRIG skeleton. Visible body stays AccuRIG.");
-            }
 
             _graph = PlayableGraph.Create("SirAldricPilotAccurig");
             _graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
@@ -129,117 +111,26 @@ namespace Survival.Unity
             SampleAt(0f);
             Debug.Log(
                 "PILOT actor built walkLen=" + _walkLength + " attackLen=" + _attackLength +
-                " walkHuman=" + walk.isHumanMotion +
-                " attackHuman=" + (_attackReady && attack != null && attack.isHumanMotion) +
-                " accurigAvatarHuman=" + (_animator.avatar != null && _animator.avatar.isHuman) +
-                " accurigAvatarValid=" + (_animator.avatar != null && _animator.avatar.isValid) +
-                " visible=AccuRIG " + AttackAuthoredReason);
+                " visible=AccuRIG walkClip=" + ThemePackWalkFbx +
+                " attackClip=" + ThemePackAttackFbx + " " + AttackAuthoredReason);
         }
 
         /// <summary>
-        /// AccuRIG bone names (Hips / Spine02 / neck / LeftArm …) often miss Unity's auto Humanoid map.
-        /// An invalid AccuRIG Avatar is why 2991b19 T-posed even with walkLen&gt;0.
+        /// Clip FBXs may embed a With-Skin mesh. AccuRIG Character_output is the only visible body.
         /// </summary>
-        private static Avatar? BuildAccurigHumanoidAvatar(GameObject root)
+        private static void StripEmbeddedClipMeshes(GameObject root)
         {
-            var all = root.GetComponentsInChildren<Transform>(true);
-            var byName = new Dictionary<string, Transform>(StringComparer.OrdinalIgnoreCase);
-            foreach (var t in all)
+            foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
             {
-                if (!byName.ContainsKey(t.name))
+                var n = rend.name;
+                if (n.IndexOf("Ico", StringComparison.OrdinalIgnoreCase) >= 0
+                    || n.IndexOf("withSkin", StringComparison.OrdinalIgnoreCase) >= 0
+                    || n.IndexOf("with_skin", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    byName[t.name] = t;
+                    rend.enabled = false;
+                    rend.gameObject.SetActive(false);
                 }
             }
-
-            if (!byName.ContainsKey("Hips"))
-            {
-                Debug.LogError("PILOT AccuRIG instance has no Hips bone — cannot BuildHumanAvatar.");
-                return null;
-            }
-
-            var map = new (HumanBodyBones human, string bone)[]
-            {
-                (HumanBodyBones.Hips, "Hips"),
-                (HumanBodyBones.Spine, "Spine02"),
-                (HumanBodyBones.Chest, "Spine01"),
-                (HumanBodyBones.UpperChest, "Spine"),
-                (HumanBodyBones.Neck, "neck"),
-                (HumanBodyBones.Head, "Head"),
-                (HumanBodyBones.LeftShoulder, "LeftShoulder"),
-                (HumanBodyBones.LeftUpperArm, "LeftArm"),
-                (HumanBodyBones.LeftLowerArm, "LeftForeArm"),
-                (HumanBodyBones.LeftHand, "LeftHand"),
-                (HumanBodyBones.RightShoulder, "RightShoulder"),
-                (HumanBodyBones.RightUpperArm, "RightArm"),
-                (HumanBodyBones.RightLowerArm, "RightForeArm"),
-                (HumanBodyBones.RightHand, "RightHand"),
-                (HumanBodyBones.LeftUpperLeg, "LeftUpLeg"),
-                (HumanBodyBones.LeftLowerLeg, "LeftLeg"),
-                (HumanBodyBones.LeftFoot, "LeftFoot"),
-                (HumanBodyBones.LeftToes, "LeftToeBase"),
-                (HumanBodyBones.RightUpperLeg, "RightUpLeg"),
-                (HumanBodyBones.RightLowerLeg, "RightLeg"),
-                (HumanBodyBones.RightFoot, "RightFoot"),
-                (HumanBodyBones.RightToes, "RightToeBase"),
-            };
-
-            var human = new List<HumanBone>();
-            foreach (var (hb, boneName) in map)
-            {
-                if (!byName.ContainsKey(boneName))
-                {
-                    Debug.LogWarning("PILOT AccuRIG missing bone " + boneName + " for " + hb);
-                    continue;
-                }
-
-                var hbBone = new HumanBone
-                {
-                    humanName = HumanTrait.BoneName[(int)hb],
-                    boneName = byName[boneName].name,
-                    limit = new HumanLimit { useDefaultValues = true }
-                };
-                human.Add(hbBone);
-            }
-
-            var skeleton = new SkeletonBone[all.Length];
-            for (var s = 0; s < all.Length; s++)
-            {
-                var t = all[s];
-                skeleton[s] = new SkeletonBone
-                {
-                    name = t.name,
-                    position = t.localPosition,
-                    rotation = t.localRotation,
-                    scale = t.localScale
-                };
-            }
-
-            var desc = new HumanDescription
-            {
-                human = human.ToArray(),
-                skeleton = skeleton
-            };
-
-            var avatar = AvatarBuilder.BuildHumanAvatar(root, desc);
-            if (avatar == null)
-            {
-                Debug.LogError("PILOT AvatarBuilder.BuildHumanAvatar returned null.");
-                return null;
-            }
-
-            avatar.name = "SirAldricPilotAccurigAvatar";
-            Debug.Log(
-                "PILOT AccuRIG AvatarBuilder isHuman=" + avatar.isHuman +
-                " isValid=" + avatar.isValid + " mapped=" + human.Count);
-            if (!avatar.isValid)
-            {
-                Debug.LogError(
-                    "PILOT retarget FAIL: AccuRIG AvatarBuilder isValid=false. " +
-                    "Need Design re-Animate on AccuRIG skeleton. Visible body stays AccuRIG.");
-            }
-
-            return avatar;
         }
 
         private void Update()

@@ -15,16 +15,18 @@ from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[2]
 PACK = ROOT / "Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot"
-WALK = PACK / "SirAldric_PILOT_walk.fbx"
-ATK = PACK / "SirAldric_PILOT_attack.fbx"
+LOOK = PACK / "SirAldric_PILOT_accurig_humanoid.fbx"
+WALK = PACK / "SirAldric_PILOT_walk_accurig.fbx"
+ATK = PACK / "SirAldric_PILOT_attack_accurig.fbx"
+ALBEDO = PACK / "pilot_albedo.png"
 MET = PACK / "Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_metallic.png"
 ROUGH = PACK / "Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_roughness.png"
-PROOF = ROOT / "Docs/Survival/previews/aldric_pilot_20260927"
+PROOF = ROOT / "Docs/Survival/previews/aldric_pilot_20260928"
 ART = Path("/opt/cursor/artifacts")
 
-CAM_REAR = ((0.0, 2.20, -3.40), (0.0, 1.00, 0.30))
-CAM_FRONT = ((0.0, 2.20, 4.00), (0.0, 1.00, 0.30))
-CAM_34 = ((2.05, 2.20, -2.80), (0.0, 1.00, 0.30))
+CAM_REAR = ((0.0, 1.75, -2.90), (0.0, 0.85, 0.15))
+CAM_FRONT = ((0.0, 1.75, 3.20), (0.0, 0.85, 0.15))
+CAM_34 = ((1.70, 1.75, -2.20), (0.0, 0.85, 0.15))
 CAM_FOV = 34.0
 
 
@@ -40,13 +42,16 @@ def bind_pbr(obj):
     out = nt.nodes.new("ShaderNodeOutputMaterial")
     bsdf = nt.nodes.new("ShaderNodeBsdfPrincipled")
     albedo = None
-    for im in bpy.data.images:
-        n = im.name.lower()
-        if im.size[0] >= 256 and ("texture_0" in n or "basecolor" in n or "image_0" in n):
-            if "metallic" in n or "rough" in n or "normal" in n:
-                continue
-            albedo = im
-            break
+    if ALBEDO.exists():
+        albedo = bpy.data.images.load(str(ALBEDO))
+    if albedo is None:
+        for im in bpy.data.images:
+            n = im.name.lower()
+            if im.size[0] >= 256 and ("texture_0" in n or "basecolor" in n or "image_0" in n):
+                if "metallic" in n or "rough" in n or "normal" in n:
+                    continue
+                albedo = im
+                break
     if albedo is None:
         for im in bpy.data.images:
             if im.size[0] >= 256:
@@ -178,15 +183,71 @@ def render_to(path: Path):
         print("artifact skip", exc)
 
 
-def import_fbx(path: Path):
+def copy_pose_by_bone(src_arm, dst_arm):
+    """Drive AccuRIG look bones from the clip armature (same AccuRIG names)."""
+    copied = 0
+    for bone in dst_arm.pose.bones:
+        if bone.name not in src_arm.pose.bones:
+            continue
+        src = src_arm.pose.bones[bone.name]
+        bone.rotation_mode = src.rotation_mode
+        bone.matrix_basis = src.matrix_basis.copy()
+        bone.location = src.location.copy()
+        if src.rotation_mode == "QUATERNION":
+            bone.rotation_quaternion = src.rotation_quaternion.copy()
+        else:
+            bone.rotation_euler = src.rotation_euler.copy()
+        bone.scale = src.scale.copy()
+        copied += 1
+    hips = dst_arm.pose.bones.get("Hips")
+    lup = dst_arm.pose.bones.get("LeftUpLeg")
+    rarm = dst_arm.pose.bones.get("RightArm")
+    print(
+        "copy_pose",
+        copied,
+        "of",
+        len(dst_arm.pose.bones),
+        "from",
+        src_arm.name,
+        "hips",
+        tuple(round(x, 3) for x in hips.matrix_basis.to_euler()) if hips else None,
+        "LUpLeg",
+        tuple(round(x, 3) for x in lup.matrix_basis.to_euler()) if lup else None,
+        "RArm",
+        tuple(round(x, 3) for x in rarm.matrix_basis.to_euler()) if rarm else None,
+    )
+    return copied
+
+
+def import_look_and_clips(clip_path: Path, *needles):
+    """AccuRIG Character_output mesh + clip FBX action. Clip With-Skin meshes are discarded."""
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    bpy.ops.import_scene.fbx(filepath=str(path))
+    bpy.ops.import_scene.fbx(filepath=str(LOOK))
+    look_meshes = [o for o in bpy.data.objects if o.type == "MESH"]
+    look_arm = next(o for o in bpy.data.objects if o.type == "ARMATURE")
+    before_meshes = set(look_meshes)
+    before_arms = {look_arm}
+    bpy.ops.import_scene.fbx(filepath=str(clip_path))
     for o in list(bpy.data.objects):
-        if o.type == "MESH" and "Ico" in o.name:
+        if o.type != "MESH":
+            continue
+        if o not in before_meshes or "Ico" in o.name:
             bpy.data.objects.remove(o, do_unlink=True)
-    mesh = next(o for o in bpy.data.objects if o.type == "MESH")
-    arm = next(o for o in bpy.data.objects if o.type == "ARMATURE")
-    return mesh, arm
+    clip_arm = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o not in before_arms)
+    act = pick_action(*needles)
+    clip_arm.animation_data_create()
+    clip_arm.animation_data.action = act
+    if look_arm.animation_data:
+        look_arm.animation_data_clear()
+    clip_arm.hide_render = True
+    clip_arm.hide_viewport = False
+    mesh = next(
+        o for o in bpy.data.objects
+        if o.type == "MESH" and o in before_meshes
+    )
+    print("look_mesh", mesh.name, "look_arm", look_arm.name, "clip_arm", clip_arm.name)
+    print("actions", [a.name for a in bpy.data.actions])
+    return mesh, look_arm, clip_arm, act
 
 
 def pick_action(*needles):
@@ -195,18 +256,33 @@ def pick_action(*needles):
     return max(pool, key=lambda a: a.frame_range[1] - a.frame_range[0])
 
 
+def pose_look_from_clip(look_arm, clip_arm, act, frame):
+    if look_arm.animation_data:
+        look_arm.animation_data_clear()
+    look_arm.animation_data_create()
+    look_arm.animation_data.action = act
+    clip_arm.hide_viewport = False
+    clip_arm.hide_render = True
+    bpy.context.scene.frame_set(int(frame))
+    bpy.context.view_layer.update()
+    copied = copy_pose_by_bone(clip_arm, look_arm)
+    bpy.context.view_layer.update()
+    if copied < 8:
+        raise RuntimeError("clip pose did not map onto AccuRIG look bones")
+    hips = look_arm.pose.bones.get("Hips")
+    if hips is not None:
+        e = hips.matrix_basis.to_euler()
+        print("look hips euler after copy", tuple(round(x, 3) for x in e))
+
+
 def render_walk():
-    mesh, arm = import_fbx(WALK)
+    mesh, look_arm, clip_arm, act = import_look_and_clips(WALK, "Walking")
     bind_pbr(mesh)
-    act = pick_action("Walking")
-    arm.animation_data_create()
-    arm.animation_data.action = act
     fr0, fr1 = int(act.frame_range[0]), int(act.frame_range[1])
     still = fr0 + max(1, int(round(0.35 * (fr1 - fr0))))
-    print("walk", act.name, fr0, fr1, "still", still)
+    print("walk", act.name, fr0, fr1, "still", still, "mesh", mesh.name)
     cam = setup_studio()
-    bpy.context.scene.frame_set(still)
-    bpy.context.view_layer.update()
+    pose_look_from_clip(look_arm, clip_arm, act, still)
     look(cam, *CAM_REAR)
     render_to(PROOF / "sir_aldric_pilot_rear_walk_playcam.png")
     look(cam, *CAM_FRONT)
@@ -216,16 +292,14 @@ def render_walk():
 
 
 def render_attack():
-    mesh, arm = import_fbx(ATK)
+    mesh, look_arm, clip_arm, act = import_look_and_clips(ATK, "rigify", "BaseLayer", "Attack", "Scene")
     bind_pbr(mesh)
-    act = pick_action("rigify", "BaseLayer", "Attack", "Scene")
-    arm.animation_data_create()
-    arm.animation_data.action = act
-    print("attack", act.name, tuple(act.frame_range))
+    print("attack", act.name, tuple(act.frame_range), "mesh", mesh.name)
     cam = setup_studio()
-    fr = 39
-    bpy.context.scene.frame_set(fr)
-    bpy.context.view_layer.update()
+    # Peak RightArm windup before hips yaw ~140° walks the body out of Play cam.
+    strike = 27
+    print("attack still frame", strike)
+    pose_look_from_clip(look_arm, clip_arm, act, strike)
     look(cam, *CAM_REAR)
     render_to(PROOF / "sir_aldric_pilot_rear_strike_playcam.png")
     look(cam, *CAM_34)

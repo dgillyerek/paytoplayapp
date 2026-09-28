@@ -13,8 +13,8 @@ namespace Survival.Editor
     /// </summary>
     public sealed class SirAldricPilotFbxImport : AssetPostprocessor
     {
-        private const string PilotWalk = "SirAldric_PILOT_walk.fbx";
-        private const string PilotAttack = "SirAldric_PILOT_attack.fbx";
+        private const string PilotWalk = "SirAldric_PILOT_walk_accurig.fbx";
+        private const string PilotAttack = "SirAldric_PILOT_attack_accurig.fbx";
         private const string PilotHumanoid = "SirAldric_PILOT_accurig_humanoid.fbx";
 
         private void OnPreprocessModel()

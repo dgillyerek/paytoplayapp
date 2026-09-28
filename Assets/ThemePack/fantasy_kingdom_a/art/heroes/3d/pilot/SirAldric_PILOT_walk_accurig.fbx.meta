@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 6a0c2e8f4d314b7a9c1e5f0b3d8a2761
+guid: 1d8e4b2a6c704f9e8b3a5d7c0e2f1948
 ModelImporter:
   serializedVersion: 24
   internalIDToNameTable: []
@@ -19,24 +19,24 @@ ModelImporter:
     animationRotationError: 0.5
     animationPositionError: 0.5
     animationScaleError: 0.5
-    animationWrapMode: 0
+    animationWrapMode: 2
     extraExposedTransformPaths: []
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: Attack
-      takeName: rigify_clip
+      name: Walking
+      takeName: Armature|Armature|Armature|Walking
       internalID: 0
-      firstFrame: 3
-      lastFrame: 92
-      wrapMode: 1
+      firstFrame: 1
+      lastFrame: 25
+      wrapMode: 2
       orientationOffsetY: 0
       level: 0
       cycleOffset: 0
-      loop: 0
+      loop: 1
       hasAdditiveReferencePose: 0
-      loopTime: 0
-      loopBlend: 0
+      loopTime: 1
+      loopBlend: 1
       loopBlendOrientation: 1
       loopBlendPositionY: 1
       loopBlendPositionXZ: 0
@@ -118,6 +118,6 @@ ModelImporter:
   humanoidOversampling: 1
   avatarSetup: 1
   additionalBone: 0
-  userData: PILOT attack. takeName is the FBX stack rigify_clip (3-92). CreateFromThisModel. Path A HOLD.
+  userData: PILOT AccuRIG-skeleton walk clip. CreateFromThisModel. Clips only — never visible body.
   assetBundleName: 
   assetBundleVariant: 
