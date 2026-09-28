@@ -25,7 +25,7 @@ ModelImporter:
     clipAnimations:
     - serializedVersion: 16
       name: Attack
-      takeName: target_character|rigify_clip|BaseLayer
+      takeName: rigify_clip
       internalID: 0
       firstFrame: 3
       lastFrame: 92
@@ -112,13 +112,13 @@ ModelImporter:
     hasTranslationDoF: 0
     hasExtraRoot: 1
     skeletonHasParents: 1
-  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 9f3a1c7e2b584d6e8a0c4f1d3e5b7290, type: 3}
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 3
   humanoidOversampling: 1
-  avatarSetup: 2
+  avatarSetup: 1
   addHumanoidExtraRoot: 1
   additionalBone: 0
-  userData: PILOT attack clip (rigify BaseLayer 3-92). Humanoid retarget onto AccuRIG. Sword fused. Path A / ClipSword HOLD.
+  userData: PILOT attack. takeName is the FBX stack rigify_clip (3-92). CreateFromThisModel. Path A HOLD.
   assetBundleName: 
   assetBundleVariant: 

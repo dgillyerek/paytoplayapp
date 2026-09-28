@@ -25,7 +25,7 @@ ModelImporter:
     clipAnimations:
     - serializedVersion: 16
       name: Walking
-      takeName: Armature|Armature|Armature|Armature|Walking
+      takeName: Armature|Armature|Armature|Walking
       internalID: 0
       firstFrame: 1
       lastFrame: 25
@@ -112,13 +112,13 @@ ModelImporter:
     hasTranslationDoF: 0
     hasExtraRoot: 1
     skeletonHasParents: 1
-  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 9f3a1c7e2b584d6e8a0c4f1d3e5b7290, type: 3}
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 3
   humanoidOversampling: 1
-  avatarSetup: 2
+  avatarSetup: 1
   addHumanoidExtraRoot: 1
   additionalBone: 0
-  userData: PILOT walk clip. Humanoid retarget onto AccuRIG. Path A / ClipSword HOLD.
+  userData: PILOT walk. takeName is the FBX stack Armature|Armature|Armature|Walking. CreateFromThisModel. Path A HOLD.
   assetBundleName: 
   assetBundleVariant: 

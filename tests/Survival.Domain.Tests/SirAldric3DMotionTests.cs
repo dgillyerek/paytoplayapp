@@ -311,10 +311,25 @@ public sealed class SirAldric3DMotionTests
         Assert.True(new FileInfo(Path.Combine(pilot, "Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_metallic.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(pilot, "Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_roughness.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(pilot, "look_front_paint.png")).Length > 50_000);
-        Assert.Contains("takeName: Armature|Armature|Armature|Armature|Walking", File.ReadAllText(Path.Combine(pilot, "SirAldric_PILOT_walk.fbx.meta")), StringComparison.Ordinal);
-        Assert.Contains("takeName: target_character|rigify_clip|BaseLayer", File.ReadAllText(Path.Combine(pilot, "SirAldric_PILOT_attack.fbx.meta")), StringComparison.Ordinal);
+        var walkMeta = File.ReadAllText(Path.Combine(pilot, "SirAldric_PILOT_walk.fbx.meta"));
+        var attackMeta = File.ReadAllText(Path.Combine(pilot, "SirAldric_PILOT_attack.fbx.meta"));
+        Assert.Contains("takeName: Armature|Armature|Armature|Walking", walkMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("Armature|Armature|Armature|Armature|Walking", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("takeName: rigify_clip", attackMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("target_character|rigify_clip|BaseLayer", attackMeta, StringComparison.Ordinal);
+        Assert.Contains("avatarSetup: 1", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("avatarSetup: 1", attackMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("9f3a1c7e2b584d6e8a0c4f1d3e5b7290", walkMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("9f3a1c7e2b584d6e8a0c4f1d3e5b7290", attackMeta, StringComparison.Ordinal);
+        Assert.True(new FileInfo(Path.Combine(pilot, "pilot_albedo.png")).Length > 100_000);
         Assert.Contains("animationType: 3", File.ReadAllText(Path.Combine(pilot, "SirAldric_PILOT_accurig_humanoid.fbx.meta")), StringComparison.Ordinal);
         Assert.Contains("weldVertices: 0", File.ReadAllText(Path.Combine(pilot, "SirAldric_PILOT_accurig_humanoid.fbx.meta")), StringComparison.Ordinal);
+
+        var post = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricPilotFbxImport.cs"));
+        Assert.Contains("OnPreprocessModel", post, StringComparison.Ordinal);
+        Assert.Contains("CreateFromThisModel", post, StringComparison.Ordinal);
+        Assert.Contains("defaultClipAnimations", post, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_PILOT_walk.fbx", post, StringComparison.Ordinal);
 
         var dir = Path.Combine(root, "Docs", "Survival", "previews", "aldric_pilot_20260927");
         Assert.True(new FileInfo(Path.Combine(dir, "PILOT_HOLD.md")).Length > 400);

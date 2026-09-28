@@ -2,33 +2,32 @@
 
 **HOLD merge on PR #27 until Derek Play.** Path A / ClipSword / AimChain are **not SoT** and stay HOLD forever for this ship. No Design / Derek PASS claimed.
 
+## Root cause (Derek Play FAIL `3a306ea`)
+
+`Editor.log`: `PILOT walk FBX has no Walking clip after Humanoid import.` → `Build()` returned before `_graphReady` → T-pose.
+
+1. **takeName mismatch (PR #25 class).** Walk FBX AnimationStack is `Armature|Armature|Armature|Walking`. The hand-written `.meta` used a 4× Armature guess (`Armature|Armature|Armature|Armature|Walking`). Attack used Blender's concatenated `target_character|rigify_clip|BaseLayer`; FBX stacks are `rigify_clip` and `Armature|clip0|baselayer`. Unmatched `clipAnimations.takeName` → Unity imports the mesh and **zero** `AnimationClip`s. `internalID: 0` is fine (working Meshy walk uses it).
+2. **CopyFromOther AccuRIG avatar** (`avatarSetup: 2`) on walk/attack. Walk has 34 bones vs AccuRIG 28 extra-End bones. Remap can drop clips even after takeName is fixed. SoT importer is **CreateFromThisModel** (`avatarSetup: 1`), same as PR #25 Meshy walk.
+3. Play-time `RepairWalkingTake` is not enough: Fresh open must materialize clips. `SirAldricPilotFbxImport` `OnPreprocessModel` copies `defaultClipAnimations` takeNames onto `clipAnimations`.
+
+Albedo: AccuRIG embeds no PNG. Sibling `pilot_albedo.png` is `texture_0` from the walk FBX.
+
 ## SoT
 
 | Item | Status |
 | --- | --- |
-| Look | `SirAldric_PILOT_accurig_humanoid.fbx` AccuRIG Humanoid mid280k. Paint maps: AccuRIG metallic/roughness PNGs + albedo from the walk/AccuRIG pack. Design paint stills `look_{front,34,rear}_paint.png`. |
-| Walk | `SirAldric_PILOT_walk.fbx` take `Armature|Armature|Armature|Armature|Walking` frames 1–25. Retarget onto AccuRIG Humanoid. |
-| Attack | `SirAldric_PILOT_attack.fbx` take `target_character\|rigify_clip\|BaseLayer` frames 3–92. Retarget onto AccuRIG Humanoid. |
-| Sword | **Fused** in the body mesh. No empty-scabbard draw. No Path A / ClipSword / weight-paint. |
-| Facing | Rear yaw 180 so +Z = TOP / enemy. |
-
-## Discarded as SoT
-
-- SEP mid450k / sep_paint UV sidecar / draw-parent palm seat
-- Old fused Meshy walk as motion SoT (`sir_aldric_meshy_animate_walk.fbx` leftover on disk)
-- ClipSword / AimChain / Path A
+| Look | AccuRIG Humanoid mid280k + `pilot_albedo.png` + metallic/roughness PNGs. |
+| Walk | `Armature\|Armature\|Armature\|Walking` 1–25. Humanoid CreateFromThisModel. |
+| Attack | `rigify_clip` 3–92. Humanoid CreateFromThisModel. |
+| Sword | **Fused.** No Path A / ClipSword / empty-scabbard. |
+| Facing | Rear yaw 180 so +Z = TOP. |
 
 ## Proofs in this folder
 
-Play-cam rematch (Unity Y-up SoT remapped `(x, −z, y)`). **Not Meshy website stills. Not Unity Game-view** — this VM has no Unity Editor. `SirAldricGameViewCapture` is the Play-machine `Camera.Render` path.
-
-- `sir_aldric_pilot_{rear,front,34}_walk_playcam.png`
-- `sir_aldric_pilot_{rear,34}_strike_playcam.png`
-
-Design lean stills (`animate_*.png`, `look_*_paint.png`) are reference only — not the hard gate.
+Play-cam rematch (Unity Y-up remapped). **Not Meshy website stills. Not Unity Game-view.** `SirAldricGameViewCapture` is the Play-machine `Camera.Render` path.
 
 ## Unity Play
 
-1. Play **SirAldric**. Game view 1080×1920 Scale 1×. Rear cam `(0, 2.20, −3.40)` LookAt `(0, 1.00, 0.30)` FOV 34.
-2. Painted AccuRIG look. Walk toward TOP, then attack. Sword stays fused.
-3. HOLD until Derek Play. Do not claim Design PASS.
+1. Fresh open so the postprocessor reimports walk/attack. Play **SirAldric**. 1080×1920 Scale 1×.
+2. Log must show `PILOT actor built walkLen=… attackLen=…` with both &gt; 0. Must **not** hit `no Walking clip`.
+3. HOLD until Derek PASS.

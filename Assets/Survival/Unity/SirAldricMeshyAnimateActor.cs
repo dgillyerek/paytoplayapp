@@ -230,19 +230,43 @@ namespace Survival.Unity
                 return clip;
             }
 
-            if (repairWalk && RepairWalkingTake(rel))
+            Debug.LogWarning(
+                "PILOT LoadClip empty for " + rel + " hint=" + hint +
+                " assets=" + DumpAssets(rel) + ". Repairing from defaultClipAnimations.");
+
+            if (RepairClipTake(rel, walk: repairWalk))
             {
-                return PickClip(rel, hint);
+                clip = PickClip(rel, hint);
+                if (clip != null)
+                {
+                    return clip;
+                }
             }
 
-            if (!repairWalk && RepairAttackTake(rel))
-            {
-                return PickClip(rel, hint);
-            }
-
+            Debug.LogError("PILOT LoadClip still empty after repair. " + rel + " assets=" + DumpAssets(rel));
             return PickClip(rel, hint);
 #else
             return null;
+#endif
+        }
+
+        private static string DumpAssets(string rel)
+        {
+#if UNITY_EDITOR
+            var parts = new System.Collections.Generic.List<string>();
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
+            {
+                if (obj == null)
+                {
+                    continue;
+                }
+
+                parts.Add(obj.GetType().Name + ":" + obj.name);
+            }
+
+            return parts.Count == 0 ? "(none)" : string.Join(", ", parts);
+#else
+            return "";
 #endif
         }
 
@@ -293,30 +317,98 @@ namespace Survival.Unity
 #endif
         }
 
-        private static bool RepairWalkingTake(string rel)
+        private static bool RepairWalkingTake(string rel) => RepairClipTake(rel, walk: true);
+
+        private static bool RepairAttackTake(string rel) => RepairClipTake(rel, walk: false);
+
+        private static bool RepairClipTake(string rel, bool walk)
         {
 #if UNITY_EDITOR
-            if (AssetImporter.GetAtPath(rel) is not ModelImporter importer || !importer.importAnimation)
+            if (AssetImporter.GetAtPath(rel) is not ModelImporter importer)
             {
                 return false;
             }
 
+            importer.animationType = ModelImporterAnimationType.Human;
+            importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+            importer.addHumanoidExtraRoot = true;
+            importer.importAnimation = true;
             var defaults = importer.defaultClipAnimations;
             if (defaults == null || defaults.Length == 0)
             {
+                Debug.LogError("PILOT repair " + rel + " defaultClipAnimations empty.");
+                importer.SaveAndReimport();
                 return false;
             }
 
+            var best = PickDefaultTake(defaults, walk);
+            if (best == null)
+            {
+                Debug.LogError("PILOT repair " + rel + " no usable take. " + DumpTakes(defaults));
+                return false;
+            }
+
+            best.name = walk ? ClipHint : AttackClipHint;
+            best.loopTime = walk;
+            best.loop = walk;
+            best.keepOriginalOrientation = true;
+            best.keepOriginalPositionY = true;
+            best.keepOriginalPositionXZ = true;
+            importer.clipAnimations = new[] { best };
+            importer.SaveAndReimport();
+            Debug.Log(
+                "PILOT repair " + rel + " takeName=" + best.takeName +
+                " frames=" + best.firstFrame + "-" + best.lastFrame +
+                " " + DumpTakes(defaults));
+            return true;
+#else
+            return false;
+#endif
+        }
+
+#if UNITY_EDITOR
+        private static ModelImporterClipAnimation? PickDefaultTake(ModelImporterClipAnimation[] defaults, bool walk)
+        {
             ModelImporterClipAnimation? best = null;
             var bestSpan = -1f;
             foreach (var candidate in defaults)
             {
                 var label = (candidate.takeName ?? "") + "\n" + (candidate.name ?? "");
-                if (label.IndexOf("Walk", StringComparison.OrdinalIgnoreCase) < 0)
+                var span = candidate.lastFrame - candidate.firstFrame;
+                if (walk)
                 {
-                    continue;
+                    if (label.IndexOf("Walk", StringComparison.OrdinalIgnoreCase) < 0)
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    var named = label.IndexOf("rigify", StringComparison.OrdinalIgnoreCase) >= 0
+                                || label.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0
+                                || label.IndexOf("Attack", StringComparison.OrdinalIgnoreCase) >= 0
+                                || label.IndexOf("clip0", StringComparison.OrdinalIgnoreCase) >= 0
+                                || label.IndexOf("Scene", StringComparison.OrdinalIgnoreCase) >= 0;
+                    if (!named && span < 8f)
+                    {
+                        continue;
+                    }
                 }
 
+                if (best == null || span > bestSpan)
+                {
+                    best = candidate;
+                    bestSpan = span;
+                }
+            }
+
+            if (best != null)
+            {
+                return best;
+            }
+
+            foreach (var candidate in defaults)
+            {
                 var span = candidate.lastFrame - candidate.firstFrame;
                 if (best == null || span > bestSpan)
                 {
@@ -325,79 +417,21 @@ namespace Survival.Unity
                 }
             }
 
-            if (best == null || bestSpan <= 0f)
-            {
-                return false;
-            }
-
-            best.name = ClipHint;
-            best.loopTime = true;
-            best.loop = true;
-            best.keepOriginalOrientation = true;
-            best.keepOriginalPositionY = true;
-            best.keepOriginalPositionXZ = true;
-            importer.clipAnimations = new[] { best };
-            importer.SaveAndReimport();
-            return true;
-#else
-            return false;
-#endif
+            return best;
         }
 
-        private static bool RepairAttackTake(string rel)
+        private static string DumpTakes(ModelImporterClipAnimation[] defaults)
         {
-#if UNITY_EDITOR
-            if (AssetImporter.GetAtPath(rel) is not ModelImporter importer || !importer.importAnimation)
+            var parts = new string[defaults.Length];
+            for (var i = 0; i < defaults.Length; i++)
             {
-                return false;
+                var c = defaults[i];
+                parts[i] = (c.takeName ?? "?") + "[" + c.firstFrame + "-" + c.lastFrame + "]";
             }
 
-            var defaults = importer.defaultClipAnimations;
-            if (defaults == null || defaults.Length == 0)
-            {
-                return false;
-            }
-
-            ModelImporterClipAnimation? best = null;
-            var bestSpan = -1f;
-            foreach (var candidate in defaults)
-            {
-                var label = (candidate.takeName ?? "") + "\n" + (candidate.name ?? "");
-                var span = candidate.lastFrame - candidate.firstFrame;
-                var named = label.IndexOf("rigify", StringComparison.OrdinalIgnoreCase) >= 0
-                            || label.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0
-                            || label.IndexOf("Attack", StringComparison.OrdinalIgnoreCase) >= 0
-                            || label.IndexOf("Scene", StringComparison.OrdinalIgnoreCase) >= 0;
-                if (!named && span < 8f)
-                {
-                    continue;
-                }
-
-                if (best == null || span > bestSpan)
-                {
-                    best = candidate;
-                    bestSpan = span;
-                }
-            }
-
-            if (best == null || bestSpan <= 1f)
-            {
-                return false;
-            }
-
-            best.name = AttackClipHint;
-            best.loopTime = false;
-            best.loop = false;
-            best.keepOriginalOrientation = true;
-            best.keepOriginalPositionY = true;
-            best.keepOriginalPositionXZ = true;
-            importer.clipAnimations = new[] { best };
-            importer.SaveAndReimport();
-            return true;
-#else
-            return false;
-#endif
+            return string.Join(" | ", parts);
         }
+#endif
 
         private static Texture2D? _cachedAlbedo;
         private static Texture2D? _cachedMetallic;
@@ -581,6 +615,12 @@ namespace Survival.Unity
 
         private static Texture2D? LoadPilotAlbedo()
         {
+            if (_cachedAlbedo != null)
+            {
+                return _cachedAlbedo;
+            }
+
+            _cachedAlbedo = LoadPilotMap("pilot_albedo.png", sRgb: true);
             if (_cachedAlbedo != null)
             {
                 return _cachedAlbedo;
