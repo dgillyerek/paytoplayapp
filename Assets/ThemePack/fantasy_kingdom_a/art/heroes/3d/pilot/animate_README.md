@@ -13,7 +13,7 @@ Clips authored on Meshy **AccuRIG** avatar `SirAldric_PILOT_mid28` / mid280k bip
 ## Files
 
 - `SirAldric_PILOT_walk_accurig.fbx`
-- `SirAldric_PILOT_attack_accurig.fbx`
+- ~~`SirAldric_PILOT_attack_accurig.fbx`~~ **DISCARD** — Play attack is library `SirAldric_PILOT_attack_library.fbx` (Right-hand Sword Slash).
 - `stills/` — Meshy viewport captures (walk front/¾/rear; attack draw / overhead-mid / strike / angles)
 - `BODY_MESH_SOT.txt` — visible body must be AccuRIG Character_output only
 

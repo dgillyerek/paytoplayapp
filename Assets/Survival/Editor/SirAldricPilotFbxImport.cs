@@ -14,7 +14,7 @@ namespace Survival.Editor
     public sealed class SirAldricPilotFbxImport : AssetPostprocessor
     {
         private const string PilotWalk = "SirAldric_PILOT_walk_accurig.fbx";
-        private const string PilotAttack = "SirAldric_PILOT_attack_accurig.fbx";
+        private const string PilotAttack = "SirAldric_PILOT_attack_library.fbx";
         private const string PilotHumanoid = "SirAldric_PILOT_accurig_humanoid.fbx";
 
         private void OnPreprocessModel()
@@ -95,6 +95,8 @@ namespace Survival.Editor
                     var named = label.IndexOf("rigify", StringComparison.OrdinalIgnoreCase) >= 0
                                 || label.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0
                                 || label.IndexOf("Attack", StringComparison.OrdinalIgnoreCase) >= 0
+                                || label.IndexOf("Slash", StringComparison.OrdinalIgnoreCase) >= 0
+                                || label.IndexOf("Sword", StringComparison.OrdinalIgnoreCase) >= 0
                                 || label.IndexOf("clip0", StringComparison.OrdinalIgnoreCase) >= 0
                                 || label.IndexOf("Scene", StringComparison.OrdinalIgnoreCase) >= 0;
                     if (!named && span < 8f)

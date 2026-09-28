@@ -1,11 +1,15 @@
 # Sir Aldric PILOT — Design HANDOFF for HI → Dev wire
 
-**Date:** 2026-09-28 (re-Animate / clips-only GO after tip d85c62c)  
+**Date:** 2026-09-28 (library Right-hand Sword Slash replaces AI Attack_Forward)  
 **Pilot:** Sir Aldric only  
-**Package:** `/workspace/design/survival-theme-a-fantasy/heroes/anim/sir_aldric/PILOT_LOOK_20260926/`  
 **HOLD:** Path A / ClipSword as SoT. No shred/melt/Meshy remesh of the look mesh.
 
-## Status 2026-09-28 — AFTER tip d85c62c (retarget FAIL)
+## Status 2026-09-28 — library attack (Play SoT)
+
+**Attack clip SoT:** `SirAldric_PILOT_attack_library.fbx` — Meshy Preset **Right-hand Sword Slash** (library/mocap, not generative). Discard Meshy AI Attack_Forward / `SirAldric_PILOT_attack_accurig.fbx`.
+
+Keep AccuRIG Character_output as the **ONLY** visible body. Walk stays `SirAldric_PILOT_walk_accurig.fbx`.
+
 
 Derek FAIL tip **1d1b030**: Play used **Animate FBX mesh** (stretch cape/sword, jagged) — not AccuRIG look.  
 Dev Path 1 retarget FAIL tip **d85c62c**: AccuRIG extremely distorted. Dev will **NOT** push another retarget tip.
@@ -17,7 +21,7 @@ Dev Path 1 retarget FAIL tip **d85c62c**: AccuRIG extremely distorted. Dev will 
 1. Import **`accurig/SirAldric_PILOT_accurig_humanoid.fbx`** as the **ONLY** visible body mesh (Meshy AccuRIG Character_output / mid280k biped).
 2. Extract / use **animation clips only** from:
    - `animate_accurig_20260928/SirAldric_PILOT_walk_accurig.fbx`
-   - `animate_accurig_20260928/SirAldric_PILOT_attack_accurig.fbx`
+   - `SirAldric_PILOT_attack_library.fbx` (library Right-hand Sword Slash — **not** AI Attack_Forward)
 3. If With-Skin FBX embeds a mesh: **discard embedded mesh** if Unity duplicates — do **not** ship Animate mesh as body.
 4. Soft fused sword leftover OK (no Path A force-split).
 5. Design will **lean-gate Play-cam** after Dev drops proofs. Do not treat asset drop as PASS.
@@ -32,7 +36,8 @@ Dev Path 1 retarget FAIL tip **d85c62c**: AccuRIG extremely distorted. Dev will 
 | AccuRIG Humanoid FBX (**ONLY visible body**) | `accurig/SirAldric_PILOT_accurig_humanoid.fbx` |
 | AccuRIG stills (silhouette SoT) | `stills_rig/accurig_{front,34,rear}.png` |
 | Walk clip FBX (AccuRIG skeleton, With Skin, 30 FPS, preset Walking) | `animate_accurig_20260928/SirAldric_PILOT_walk_accurig.fbx` |
-| Attack clip FBX (AccuRIG skeleton, With Skin, 30 FPS, Attack_Forward) | `animate_accurig_20260928/SirAldric_PILOT_attack_accurig.fbx` |
+| Attack clip FBX (library/mocap Right-hand Sword Slash, AccuRIG mid280k, 30 FPS) | `SirAldric_PILOT_attack_library.fbx` |
+| DISCARD | Meshy AI Attack_Forward / `SirAldric_PILOT_attack_accurig.fbx` |
 | New stills | `animate_accurig_20260928/stills/` |
 | Export settings | `animate_accurig_20260928/README.md` |
 | Body SoT note | `animate_accurig_20260928/BODY_MESH_SOT.txt` |

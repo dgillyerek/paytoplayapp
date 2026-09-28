@@ -14,21 +14,21 @@ namespace Survival.Unity
 {
     /// <summary>
     /// Sir Aldric PILOT: AccuRIG Character_output is the ONLY visible body.
-    /// Walk/Attack clips from *_accurig.fbx (same AccuRIG bones). Never show Animate mesh.
-    /// No Path 1 retarget. No Path A / ClipSword. HOLD merge.
+    /// Walk from walk_accurig.fbx; Attack from library Right-hand Sword Slash.
+    /// Never show Animate mesh. No Path 1 retarget. No Path A / ClipSword. HOLD merge.
     /// </summary>
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
     {
         public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_accurig_humanoid.fbx";
         public const string ThemePackWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_walk_accurig.fbx";
-        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_attack_accurig.fbx";
+        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_attack_library.fbx";
         public const string PaintedLookDir = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot";
         public const string LeftoverMeshyWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_walk.fbx";
         public const string ClipHint = "Walking";
         public const string AttackClipHint = "Attack";
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
         public const string AttackAuthoredReason =
-            "PILOT clips-only: AccuRIG body + walk_accurig/attack_accurig clips. " +
+            "PILOT clips-only: AccuRIG body + walk_accurig + library Right-hand Sword Slash. " +
             "Never show Animate mesh. Sword fused. HOLD merge.";
 
         private Animator? _animator;
@@ -313,7 +313,9 @@ namespace Survival.Unity
                 }
 
                 var hit = clip.name.IndexOf(hint, StringComparison.OrdinalIgnoreCase) >= 0
-                          || (hint == AttackClipHint && clip.name.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0);
+                          || (hint == AttackClipHint && (clip.name.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0
+                              || clip.name.IndexOf("Slash", StringComparison.OrdinalIgnoreCase) >= 0
+                              || clip.name.IndexOf("Sword", StringComparison.OrdinalIgnoreCase) >= 0));
                 if (!hit)
                 {
                     continue;
@@ -410,6 +412,8 @@ namespace Survival.Unity
                     var named = label.IndexOf("rigify", StringComparison.OrdinalIgnoreCase) >= 0
                                 || label.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0
                                 || label.IndexOf("Attack", StringComparison.OrdinalIgnoreCase) >= 0
+                                || label.IndexOf("Slash", StringComparison.OrdinalIgnoreCase) >= 0
+                                || label.IndexOf("Sword", StringComparison.OrdinalIgnoreCase) >= 0
                                 || label.IndexOf("clip0", StringComparison.OrdinalIgnoreCase) >= 0
                                 || label.IndexOf("Scene", StringComparison.OrdinalIgnoreCase) >= 0;
                     if (!named && span < 8f)

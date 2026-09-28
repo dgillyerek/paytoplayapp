@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PACK = ROOT / "Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot"
 LOOK = PACK / "SirAldric_PILOT_accurig_humanoid.fbx"
 WALK = PACK / "SirAldric_PILOT_walk_accurig.fbx"
-ATK = PACK / "SirAldric_PILOT_attack_accurig.fbx"
+ATK = PACK / "SirAldric_PILOT_attack_library.fbx"
 ALBEDO = PACK / "pilot_albedo.png"
 MET = PACK / "Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_metallic.png"
 ROUGH = PACK / "Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_roughness.png"
@@ -183,13 +183,56 @@ def render_to(path: Path):
         print("artifact skip", exc)
 
 
+LOOK_FROM_MIXAMO = {
+    "Hips": "mixamorig:Hips",
+    "Spine02": "mixamorig:Spine",
+    "Spine01": "mixamorig:Spine1",
+    "Spine": "mixamorig:Spine2",
+    "neck": "mixamorig:Neck",
+    "Head": "mixamorig:Head",
+    "head_end": "mixamorig:HeadTop_End",
+    "LeftShoulder": "mixamorig:LeftShoulder",
+    "LeftArm": "mixamorig:LeftArm",
+    "LeftForeArm": "mixamorig:LeftForeArm",
+    "LeftHand": "mixamorig:LeftHand",
+    "LeftHand_End": "mixamorig:LeftHandMiddle4",
+    "RightShoulder": "mixamorig:RightShoulder",
+    "RightArm": "mixamorig:RightArm",
+    "RightForeArm": "mixamorig:RightForeArm",
+    "RightHand": "mixamorig:RightHand",
+    "RightHand_End": "mixamorig:RightHandMiddle4",
+    "LeftUpLeg": "mixamorig:LeftUpLeg",
+    "LeftLeg": "mixamorig:LeftLeg",
+    "LeftFoot": "mixamorig:LeftFoot",
+    "LeftToeBase": "mixamorig:LeftToeBase",
+    "LeftToe_end": "mixamorig:LeftToe_End",
+    "RightUpLeg": "mixamorig:RightUpLeg",
+    "RightLeg": "mixamorig:RightLeg",
+    "RightFoot": "mixamorig:RightFoot",
+    "RightToeBase": "mixamorig:RightToeBase",
+    "RightToe_end": "mixamorig:RightToe_End",
+}
+
+
+def src_pose_bone(src_arm, look_name):
+    if look_name in src_arm.pose.bones:
+        return src_arm.pose.bones[look_name]
+    mapped = LOOK_FROM_MIXAMO.get(look_name)
+    if mapped and mapped in src_arm.pose.bones:
+        return src_arm.pose.bones[mapped]
+    prefixed = "mixamorig:" + look_name
+    if prefixed in src_arm.pose.bones:
+        return src_arm.pose.bones[prefixed]
+    return None
+
+
 def copy_pose_by_bone(src_arm, dst_arm):
-    """Drive AccuRIG look bones from the clip armature (same AccuRIG names)."""
+    """Drive AccuRIG look bones from the clip armature (AccuRIG names or Mixamo map)."""
     copied = 0
     for bone in dst_arm.pose.bones:
-        if bone.name not in src_arm.pose.bones:
+        src = src_pose_bone(src_arm, bone.name)
+        if src is None:
             continue
-        src = src_arm.pose.bones[bone.name]
         bone.rotation_mode = src.rotation_mode
         bone.matrix_basis = src.matrix_basis.copy()
         bone.location = src.location.copy()
@@ -259,14 +302,13 @@ def pick_action(*needles):
 def pose_look_from_clip(look_arm, clip_arm, act, frame):
     if look_arm.animation_data:
         look_arm.animation_data_clear()
-    look_arm.animation_data_create()
-    look_arm.animation_data.action = act
+    clip_arm.animation_data_create()
+    clip_arm.animation_data.action = act
     clip_arm.hide_viewport = False
     clip_arm.hide_render = True
     bpy.context.scene.frame_set(int(frame))
     bpy.context.view_layer.update()
     copied = copy_pose_by_bone(clip_arm, look_arm)
-    bpy.context.view_layer.update()
     if copied < 8:
         raise RuntimeError("clip pose did not map onto AccuRIG look bones")
     hips = look_arm.pose.bones.get("Hips")
@@ -292,16 +334,18 @@ def render_walk():
 
 
 def render_attack():
-    mesh, look_arm, clip_arm, act = import_look_and_clips(ATK, "rigify", "BaseLayer", "Attack", "Scene")
+    mesh, look_arm, clip_arm, act = import_look_and_clips(ATK, "Slash", "Sword", "Right_Hand")
     bind_pbr(mesh)
     print("attack", act.name, tuple(act.frame_range), "mesh", mesh.name)
     cam = setup_studio()
-    # Peak RightArm windup before hips yaw ~140° walks the body out of Play cam.
-    strike = 27
+    # Library Right-hand Sword Slash: planted peak around frame 15 / 1–38.
+    strike = 15
     print("attack still frame", strike)
     pose_look_from_clip(look_arm, clip_arm, act, strike)
     look(cam, *CAM_REAR)
     render_to(PROOF / "sir_aldric_pilot_rear_strike_playcam.png")
+    look(cam, *CAM_FRONT)
+    render_to(PROOF / "sir_aldric_pilot_front_strike_playcam.png")
     look(cam, *CAM_34)
     render_to(PROOF / "sir_aldric_pilot_34_strike_playcam.png")
 
