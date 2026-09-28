@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: 7c1d3e5f9a204b6c8d0e2f4a6b8c1357
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+  isReadable: 1
+  textureType: 0
+  textureShape: 1
+  nPOTScale: 0
+  alphaIsTransparency: 0
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    wrapU: 0
+    wrapV: 0
+  userData: PILOT look
+  assetBundleName: 
+  assetBundleVariant: 

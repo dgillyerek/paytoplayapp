@@ -17,6 +17,26 @@ namespace Survival.Domain.Heroes
         public const float AttackSeconds = 1.40f;
         public const float MarchMetersPerSecond = 0.80f;
 
+        /// <summary>
+        /// AccuRIG / Mixamo instantiate face-to-camera (−Z). Yaw so forward = +Z (TOP).
+        /// </summary>
+        public const float MixamoImportRearYawDegrees = 180f;
+
+        /// <summary>Play-cam SoT for SirAldricDemo / 1080×1920 Game-view. View +Z = TOP.</summary>
+        public const float PlayCamFovDegrees = 34f;
+        public const float PlayCamRearX = 0f;
+        public const float PlayCamRearY = 2.20f;
+        public const float PlayCamRearZ = -3.40f;
+        public const float PlayCamLookX = 0f;
+        public const float PlayCamLookY = 1.00f;
+        public const float PlayCamLookZ = 0.30f;
+        public const float PlayCamFrontX = 0f;
+        public const float PlayCamFrontY = 2.20f;
+        public const float PlayCamFrontZ = 4.00f;
+        public const float PlayCamThreeQuarterX = 2.05f;
+        public const float PlayCamThreeQuarterY = 2.20f;
+        public const float PlayCamThreeQuarterZ = -2.80f;
+
         public static float WalkBlockSeconds => WalkPeriodSeconds * WalkCyclesBeforeAttack;
 
         public static float LoopSeconds => WalkBlockSeconds + AttackSeconds;

@@ -9,9 +9,8 @@ using UnityEngine.UI;
 namespace Survival.Unity
 {
     /// <summary>
-    /// 1080×1920 Game-view demo: Meshy Animate humanoid FBX + Walking clip AS-IS.
-    /// Path A weight-paint CANCELLED. Locked rear PNG remains the Play-hub placeholder.
-    /// Design PASS not claimed.
+    /// 1080×1920 Game-view demo: PILOT AccuRIG Humanoid + Walk + Attack.
+    /// Path A / ClipSword HOLD. Sword fused. Design / Derek PASS not claimed.
     /// </summary>
     public sealed class SirAldricDemo : MonoBehaviour
     {
@@ -59,13 +58,19 @@ namespace Survival.Unity
             if (cam != null)
             {
                 cam.orthographic = false;
-                cam.fieldOfView = 30f;
+                cam.fieldOfView = SirAldric3DMotion.PlayCamFovDegrees;
                 cam.nearClipPlane = 0.08f;
                 cam.farClipPlane = 40f;
                 cam.backgroundColor = new Color(0.08f, 0.09f, 0.07f, 1f);
                 cam.clearFlags = CameraClearFlags.SolidColor;
-                cam.transform.position = new Vector3(0f, 2.80f, -5.40f);
-                cam.transform.LookAt(new Vector3(0f, 0.90f, 0.50f));
+                cam.transform.position = new Vector3(
+                    SirAldric3DMotion.PlayCamRearX,
+                    SirAldric3DMotion.PlayCamRearY,
+                    SirAldric3DMotion.PlayCamRearZ);
+                cam.transform.LookAt(new Vector3(
+                    SirAldric3DMotion.PlayCamLookX,
+                    SirAldric3DMotion.PlayCamLookY,
+                    SirAldric3DMotion.PlayCamLookZ));
             }
 
             SurvivalVisuals.EnsureEventSystem();
@@ -168,7 +173,7 @@ namespace Survival.Unity
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "Meshy Animate Walking  ·  Humanoid AS-IS  ·  HOLD  ·  no Design PASS",
+                "PILOT AccuRIG  ·  walk+attack  ·  sword fused  ·  HOLD  ·  no Design PASS",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);
@@ -179,6 +184,26 @@ namespace Survival.Unity
             nr.offsetMax = Vector2.zero;
 
             _booted = true;
+
+            if (SirAldricGameViewCapture.ShouldRunFromCommandLine())
+            {
+                StartCoroutine(CaptureThenQuit());
+            }
+        }
+
+        private System.Collections.IEnumerator CaptureThenQuit()
+        {
+            yield return null;
+            yield return null;
+            if (_actor != null && _actor.Built && Camera.main != null)
+            {
+                SirAldricGameViewCapture.CapturePilot(_actor, Camera.main);
+            }
+
+            if (Application.isBatchMode)
+            {
+                Application.Quit(0);
+            }
         }
 
         internal static string[] ResolveMasterPaths(AppFlavorConfig flavor)

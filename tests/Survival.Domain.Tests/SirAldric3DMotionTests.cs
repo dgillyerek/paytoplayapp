@@ -283,22 +283,47 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("ExtractFbxPng", src, StringComparison.Ordinal);
         Assert.Contains("RepairWalkingTake", src, StringComparison.Ordinal);
         Assert.Contains("takeName", src, StringComparison.Ordinal);
-        var fbx = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_animate_walk.fbx");
+        var leftover = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_animate_walk.fbx");
         var atlas = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_atlas.png");
-        Assert.True(new FileInfo(fbx).Length > 1_000_000);
+        Assert.True(new FileInfo(leftover).Length > 1_000_000);
         Assert.True(new FileInfo(atlas).Length > 100_000);
-        var bytes = File.ReadAllBytes(fbx);
-        var png = false;
-        for (var i = 0; i < bytes.Length - 3; i++)
-        {
-            if (bytes[i] == 0x89 && bytes[i + 1] == 0x50 && bytes[i + 2] == 0x4E && bytes[i + 3] == 0x47)
-            {
-                png = true;
-                break;
-            }
-        }
+    }
 
-        Assert.True(png);
+    [Fact]
+    public void Pilot_accurig_walk_attack_are_sot_and_clipsword_is_not()
+    {
+        var root = FindRepoRoot();
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
+        Assert.Contains("SirAldric_PILOT_accurig_humanoid.fbx", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_PILOT_walk.fbx", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_PILOT_attack.fbx", actor, StringComparison.Ordinal);
+        Assert.Contains("RepairAttackTake", actor, StringComparison.Ordinal);
+        Assert.Contains("EnableKeyword(\"_BASEMAP\")", actor, StringComparison.Ordinal);
+        Assert.Contains("sword fused", actor, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("EnsureClipSword", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static void AimChain", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Path A weight-paint", actor.Replace("Path A / ClipSword", ""), StringComparison.Ordinal);
+
+        var pilot = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "pilot");
+        Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_PILOT_accurig_humanoid.fbx")).Length > 1_000_000);
+        Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_PILOT_walk.fbx")).Length > 1_000_000);
+        Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_PILOT_attack.fbx")).Length > 1_000_000);
+        Assert.True(new FileInfo(Path.Combine(pilot, "Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_metallic.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(pilot, "Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_roughness.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(pilot, "look_front_paint.png")).Length > 50_000);
+        Assert.Contains("takeName: Armature|Armature|Armature|Armature|Walking", File.ReadAllText(Path.Combine(pilot, "SirAldric_PILOT_walk.fbx.meta")), StringComparison.Ordinal);
+        Assert.Contains("takeName: target_character|rigify_clip|BaseLayer", File.ReadAllText(Path.Combine(pilot, "SirAldric_PILOT_attack.fbx.meta")), StringComparison.Ordinal);
+        Assert.Contains("animationType: 3", File.ReadAllText(Path.Combine(pilot, "SirAldric_PILOT_accurig_humanoid.fbx.meta")), StringComparison.Ordinal);
+        Assert.Contains("weldVertices: 0", File.ReadAllText(Path.Combine(pilot, "SirAldric_PILOT_accurig_humanoid.fbx.meta")), StringComparison.Ordinal);
+
+        var dir = Path.Combine(root, "Docs", "Survival", "previews", "aldric_pilot_20260927");
+        Assert.True(new FileInfo(Path.Combine(dir, "PILOT_HOLD.md")).Length > 400);
+        Assert.Contains("HOLD merge", File.ReadAllText(Path.Combine(dir, "PILOT_HOLD.md")), StringComparison.Ordinal);
+        Assert.Contains("Not Unity Game-view", File.ReadAllText(Path.Combine(dir, "PILOT_HOLD.md")), StringComparison.Ordinal);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_rear_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_front_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_34_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_rear_strike_playcam.png")).Length > 50_000);
     }
 
     [Fact]

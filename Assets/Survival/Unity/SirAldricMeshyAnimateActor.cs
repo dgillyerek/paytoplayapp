@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using Survival.Domain.Heroes;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
+using UnityEngine.Rendering;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -10,97 +13,147 @@ using UnityEditor;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Aldric World proof actor: Meshy Animate FBX humanoid + Walking clip AS-IS.
-    /// Path A weight-paint is CANCELLED. Do not remap sheath / Hand_R / ghost legs.
-    /// World LIGHT + MATERIAL punch. Binds Meshy albedo from the FBX pack
-    /// (Humanoid import often drops texture links). Design PASS not claimed.
+    /// Sir Aldric PILOT (2026-09-27): AccuRIG Humanoid look + Walk + Attack clips.
+    /// Sword is fused in the body mesh — no Path A / ClipSword / AimChain / empty-scabbard magic.
+    /// Look SoT = AccuRIG mid280k + AccuRIG metallic/roughness. HOLD merge. No Design/Derek PASS.
     /// </summary>
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
     {
-        public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_walk.fbx";
+        public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_accurig_humanoid.fbx";
+        public const string ThemePackWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_walk.fbx";
+        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_attack.fbx";
+        public const string PaintedLookDir = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot";
+        public const string LeftoverMeshyWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_walk.fbx";
         public const string ClipHint = "Walking";
+        public const string AttackClipHint = "Attack";
+        public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
+        public const string AttackAuthoredReason =
+            "PILOT SoT: AccuRIG Humanoid + SirAldric_PILOT_walk + SirAldric_PILOT_attack. " +
+            "Sword fused — no Path A / ClipSword / AimChain. HOLD merge.";
 
         private Animator? _animator;
         private PlayableGraph _graph;
-        private AnimationClipPlayable _clipPlayable;
-        private float _clipLength;
+        private AnimationPlayableOutput _output;
+        private AnimationClipPlayable _walkPlayable;
+        private AnimationClipPlayable _attackPlayable;
+        private float _walkLength;
+        private float _attackLength;
         private bool _graphReady;
+        private bool _attackReady;
         private GameObject? _instance;
 
         public bool Built => _graphReady;
+        public bool HasAttackClip => _attackReady;
+        public float WalkLength => _walkLength;
+        public float AttackLength => _attackLength > 0.05f ? _attackLength : 0f;
 
         public void Build()
         {
             BuildLights();
-            var prefab = LoadFbxPrefab();
+            var prefab = LoadFbxPrefab(ThemePackFbx, "SirAldric_PILOT_accurig_humanoid");
             if (prefab == null)
             {
                 Debug.LogError(
-                    "Meshy Animate FBX not imported yet. Open the project in Unity so " +
+                    "PILOT AccuRIG FBX not imported yet. Open Unity so " +
                     ThemePackFbx + " Humanoid-imports, then Play SirAldric.");
                 return;
             }
 
             _instance = Instantiate(prefab, transform);
-            _instance.name = "SirAldricMeshyAnimate";
+            _instance.name = "SirAldricPilotAccurig";
             HideJunk(_instance);
             FaceWorldTop(_instance);
-            PunchMaterials(_instance);
+            BindPaintedLook(_instance);
 
-            _animator = _instance.GetComponent<Animator>();
-            if (_animator == null)
-            {
-                _animator = _instance.AddComponent<Animator>();
-            }
-
+            _animator = _instance.GetComponent<Animator>() ?? _instance.AddComponent<Animator>();
             if (_animator.avatar == null)
             {
-                _animator.avatar = LoadHumanoidAvatar();
+                _animator.avatar = LoadHumanoidAvatar(AssetPath(ThemePackFbx));
             }
 
-            var clip = LoadWalkingClip();
-            if (clip == null)
+            var walk = LoadClip(ThemePackWalkFbx, ClipHint, repairWalk: true);
+            if (walk == null)
             {
-                Debug.LogError("Meshy Animate FBX has no Walking clip after Humanoid import.");
+                Debug.LogError("PILOT walk FBX has no Walking clip after Humanoid import.");
                 return;
             }
 
-            clip.wrapMode = WrapMode.Loop;
-            _clipLength = clip.length;
-            _graph = PlayableGraph.Create("SirAldricMeshyAnimate");
+            walk.wrapMode = WrapMode.Loop;
+            _walkLength = walk.length;
+            _graph = PlayableGraph.Create("SirAldricPilot");
             _graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
-            var output = AnimationPlayableOutput.Create(_graph, "Aldric", _animator);
-            _clipPlayable = AnimationClipPlayable.Create(_graph, clip);
-            output.SetSourcePlayable(_clipPlayable);
+            _output = AnimationPlayableOutput.Create(_graph, "AldricPilot", _animator);
+            _walkPlayable = AnimationClipPlayable.Create(_graph, walk);
+            _output.SetSourcePlayable(_walkPlayable);
+
+            var attack = LoadClip(ThemePackAttackFbx, AttackClipHint, repairWalk: false);
+            if (attack != null)
+            {
+                attack.wrapMode = WrapMode.Once;
+                _attackLength = attack.length;
+                _attackPlayable = AnimationClipPlayable.Create(_graph, attack);
+                _attackReady = true;
+            }
+            else
+            {
+                Debug.LogWarning("PILOT attack clip missing after Humanoid import. Walk-only until reimport.");
+            }
+
             _graph.Play();
             _graphReady = true;
-            SampleWalk(0f);
+            SampleAt(0f);
+            Debug.Log("PILOT actor built walkLen=" + _walkLength + " attackLen=" + _attackLength + " " + AttackAuthoredReason);
         }
 
         private void Update()
         {
-            if (!_graphReady || _clipLength <= 0f)
+            if (!_graphReady)
             {
                 return;
             }
 
-            SampleWalk(Time.unscaledTime % _clipLength);
+            SampleAt(Time.unscaledTime);
         }
 
-        private void SampleWalk(float time)
+        public void SampleAt(float timeSeconds)
         {
             if (!_graph.IsValid())
             {
                 return;
             }
 
-            _clipPlayable.SetTime(time);
+            var walkLen = _walkLength > 0.05f ? _walkLength : 1f;
+            var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
+            if (_attackReady && timeSeconds >= walkBlock)
+            {
+                var u = timeSeconds - walkBlock;
+                if (u > _attackLength)
+                {
+                    u = _attackLength;
+                }
+
+                _output.SetSourcePlayable(_attackPlayable);
+                _attackPlayable.SetTime(u);
+            }
+            else
+            {
+                _output.SetSourcePlayable(_walkPlayable);
+                _walkPlayable.SetTime(timeSeconds % walkLen);
+            }
+
             _graph.Evaluate();
         }
 
         public string PhaseLabel(float timeSeconds)
         {
-            return "WALK  ·  toward TOP  ·  Meshy Animate";
+            var walkLen = _walkLength > 0.05f ? _walkLength : 1f;
+            var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
+            if (_attackReady && timeSeconds % (walkBlock + Mathf.Max(_attackLength, 0.01f)) >= walkBlock)
+            {
+                return "ATTACK  ·  TOP  ·  PILOT fused sword";
+            }
+
+            return "WALK  ·  toward TOP  ·  PILOT AccuRIG";
         }
 
         private void OnDestroy()
@@ -124,23 +177,25 @@ namespace Survival.Unity
 
         private static void FaceWorldTop(GameObject root)
         {
-            // Mixamo FBX is typically Y-up / Z-forward after Unity import.
-            // World gate: walk toward TOP = +Z. Leave identity if already facing +Z.
+            // AccuRIG / Mixamo instantiate face-to-camera (−Z) = frontal FAIL.
+            // Yaw 180 so transform.forward = +Z: back to camera, walk toward TOP.
             root.transform.localPosition = Vector3.zero;
-            root.transform.localRotation = Quaternion.identity;
+            root.transform.localRotation = Quaternion.Euler(0f, RearYawDegrees, 0f);
         }
 
-        private static GameObject? LoadFbxPrefab()
+        private static string AssetPath(string themePackRel) => "Assets/" + themePackRel.Replace('\\', '/');
+
+        private static GameObject? LoadFbxPrefab(string themePackRel, string resourcesName)
         {
 #if UNITY_EDITOR
-            var data = Application.dataPath;
-            var rel = "Assets/" + ThemePackFbx.Replace('\\', '/');
+            var rel = AssetPath(themePackRel);
             var go = AssetDatabase.LoadAssetAtPath<GameObject>(rel);
             if (go != null)
             {
                 return go;
             }
 
+            var data = Application.dataPath;
             var abs = Path.Combine(Directory.GetParent(data)!.FullName, rel);
             if (File.Exists(abs))
             {
@@ -148,37 +203,13 @@ namespace Survival.Unity
                 return AssetDatabase.LoadAssetAtPath<GameObject>(rel);
             }
 #endif
-            return Resources.Load<GameObject>("sir_aldric_meshy_animate_walk");
+            return Resources.Load<GameObject>(resourcesName);
         }
 
-        private static string FbxAssetPath => "Assets/" + ThemePackFbx.Replace('\\', '/');
-
-        private static AnimationClip? LoadWalkingClip()
+        private static Avatar? LoadHumanoidAvatar(string rel)
         {
 #if UNITY_EDITOR
-            var clip = PickWalkingClip(FbxAssetPath);
-            if (clip != null)
-            {
-                return clip;
-            }
-
-            // clipAnimations.takeName must match the FBX stack. A short name like
-            // "Walking" drops every clip on Humanoid import (mesh stays, clip list empty).
-            if (RepairWalkingTake(FbxAssetPath))
-            {
-                return PickWalkingClip(FbxAssetPath);
-            }
-
-            return null;
-#else
-            return null;
-#endif
-        }
-
-        private static Avatar? LoadHumanoidAvatar()
-        {
-#if UNITY_EDITOR
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(FbxAssetPath))
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
             {
                 if (obj is Avatar avatar)
                 {
@@ -189,11 +220,37 @@ namespace Survival.Unity
             return null;
         }
 
-        private static AnimationClip? PickWalkingClip(string rel)
+        private static AnimationClip? LoadClip(string themePackRel, string hint, bool repairWalk)
+        {
+#if UNITY_EDITOR
+            var rel = AssetPath(themePackRel);
+            var clip = PickClip(rel, hint);
+            if (clip != null)
+            {
+                return clip;
+            }
+
+            if (repairWalk && RepairWalkingTake(rel))
+            {
+                return PickClip(rel, hint);
+            }
+
+            if (!repairWalk && RepairAttackTake(rel))
+            {
+                return PickClip(rel, hint);
+            }
+
+            return PickClip(rel, hint);
+#else
+            return null;
+#endif
+        }
+
+        private static AnimationClip? PickClip(string rel, string hint)
         {
 #if UNITY_EDITOR
             AnimationClip? exact = null;
-            AnimationClip? walk = null;
+            AnimationClip? named = null;
             AnimationClip? longest = null;
             foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
             {
@@ -207,14 +264,14 @@ namespace Survival.Unity
                     longest = clip;
                 }
 
-                var isWalk = clip.name.IndexOf(ClipHint, StringComparison.OrdinalIgnoreCase) >= 0
-                    || clip.name.IndexOf("Walk", StringComparison.OrdinalIgnoreCase) >= 0;
-                if (!isWalk)
+                var hit = clip.name.IndexOf(hint, StringComparison.OrdinalIgnoreCase) >= 0
+                          || (hint == AttackClipHint && clip.name.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0);
+                if (!hit)
                 {
                     continue;
                 }
 
-                if (string.Equals(clip.name, ClipHint, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(clip.name, hint, StringComparison.OrdinalIgnoreCase))
                 {
                     if (exact == null || clip.length > exact.length)
                     {
@@ -224,14 +281,13 @@ namespace Survival.Unity
                     continue;
                 }
 
-                // Walking.001 is a 2-frame stub. Keep the longer cycle.
-                if (walk == null || clip.length > walk.length)
+                if (named == null || clip.length > named.length)
                 {
-                    walk = clip;
+                    named = clip;
                 }
             }
 
-            return exact ?? walk ?? longest;
+            return exact ?? named ?? longest;
 #else
             return null;
 #endif
@@ -288,37 +344,96 @@ namespace Survival.Unity
 #endif
         }
 
-        private static Texture2D? _cachedAlbedo;
-        private static Texture2D? _cachedMetallic;
-        private static Texture2D? _cachedRoughness;
-
-        private static void PunchMaterials(GameObject root)
+        private static bool RepairAttackTake(string rel)
         {
-            var albedo = LoadMeshyAlbedo();
-            var metallic = LoadMeshyPackedMap(grayIndex: 0);
-            var roughness = LoadMeshyPackedMap(grayIndex: 1);
-            foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
+#if UNITY_EDITOR
+            if (AssetImporter.GetAtPath(rel) is not ModelImporter importer || !importer.importAnimation)
             {
-                var shared = rend.sharedMaterials;
-                if (shared == null || shared.Length == 0)
+                return false;
+            }
+
+            var defaults = importer.defaultClipAnimations;
+            if (defaults == null || defaults.Length == 0)
+            {
+                return false;
+            }
+
+            ModelImporterClipAnimation? best = null;
+            var bestSpan = -1f;
+            foreach (var candidate in defaults)
+            {
+                var label = (candidate.takeName ?? "") + "\n" + (candidate.name ?? "");
+                var span = candidate.lastFrame - candidate.firstFrame;
+                var named = label.IndexOf("rigify", StringComparison.OrdinalIgnoreCase) >= 0
+                            || label.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0
+                            || label.IndexOf("Attack", StringComparison.OrdinalIgnoreCase) >= 0
+                            || label.IndexOf("Scene", StringComparison.OrdinalIgnoreCase) >= 0;
+                if (!named && span < 8f)
                 {
-                    var lone = NewLit();
-                    BindMapsAndPunch(lone, albedo, metallic, roughness);
-                    rend.material = lone;
                     continue;
                 }
 
-                var copies = new Material[shared.Length];
-                for (var i = 0; i < shared.Length; i++)
+                if (best == null || span > bestSpan)
                 {
-                    var src = shared[i] != null ? shared[i] : NewLit();
-                    var mat = new Material(src);
-                    BindMapsAndPunch(mat, albedo, metallic, roughness);
-                    copies[i] = mat;
+                    best = candidate;
+                    bestSpan = span;
+                }
+            }
+
+            if (best == null || bestSpan <= 1f)
+            {
+                return false;
+            }
+
+            best.name = AttackClipHint;
+            best.loopTime = false;
+            best.loop = false;
+            best.keepOriginalOrientation = true;
+            best.keepOriginalPositionY = true;
+            best.keepOriginalPositionXZ = true;
+            importer.clipAnimations = new[] { best };
+            importer.SaveAndReimport();
+            return true;
+#else
+            return false;
+#endif
+        }
+
+        private static Texture2D? _cachedAlbedo;
+        private static Texture2D? _cachedMetallic;
+        private static Texture2D? _cachedRoughness;
+        private static readonly Dictionary<int, Texture2D> PackedMetSmoothBySource = new();
+
+        private static void BindPaintedLook(GameObject root)
+        {
+            var albedo = LoadPilotAlbedo();
+            var metallic = LoadPilotMap("Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_metallic.png", sRgb: false)
+                           ?? LoadMeshyPackedMap(0);
+            var roughness = LoadPilotMap("Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_roughness.png", sRgb: false)
+                            ?? LoadMeshyPackedMap(1);
+            if (albedo == null)
+            {
+                Debug.LogError("PILOT albedo missing. Extract from walk FBX or AccuRIG import.");
+            }
+
+            var painted = 0;
+            foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
+            {
+                if (rend.name.IndexOf("Ico", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    continue;
                 }
 
-                rend.materials = copies;
+                var mat = NewLit();
+                BindMapsAndPunch(mat, albedo, metallic, roughness);
+                rend.material = mat;
+                painted++;
             }
+
+            Debug.Log(
+                "PILOT BindPaintedLook renderers=" + painted +
+                " albedo=" + (albedo != null ? albedo.width + "x" + albedo.height : "null") +
+                " packedMetSmooth=" + PackedMetSmoothBySource.Count);
         }
 
         private static void BindMapsAndPunch(
@@ -338,58 +453,133 @@ namespace Survival.Unity
                 {
                     mat.SetTexture("_MainTex", albedo);
                 }
-            }
 
-            if (metallic != null && mat.HasProperty("_MetallicGlossMap"))
-            {
-                mat.SetTexture("_MetallicGlossMap", metallic);
-            }
-
-            if (roughness != null && mat.HasProperty("_SpecGlossMap"))
-            {
-                mat.SetTexture("_SpecGlossMap", roughness);
-            }
-
-            if (mat.HasProperty("_BaseColor"))
-            {
-                var c = mat.GetColor("_BaseColor");
-                if (c.maxColorComponent < 0.08f)
+                if (mat.HasProperty("_BaseColor"))
                 {
-                    c = Color.white;
+                    mat.SetColor("_BaseColor", Color.white);
                 }
 
-                mat.SetColor("_BaseColor", new Color(
-                    Mathf.Clamp01(c.r * 1.12f),
-                    Mathf.Clamp01(c.g * 1.10f),
-                    Mathf.Clamp01(c.b * 1.16f),
-                    c.a));
+                mat.EnableKeyword("_BASEMAP");
+                mat.EnableKeyword("_MAINTEX");
             }
 
-            var hasMetMap = mat.HasProperty("_MetallicGlossMap")
-                && mat.GetTexture("_MetallicGlossMap") != null;
-            if (mat.HasProperty("_Metallic") && hasMetMap)
+            if (mat.HasProperty("_WorkflowMode"))
             {
-                mat.SetFloat("_Metallic", Mathf.Max(mat.GetFloat("_Metallic"), 0.55f));
+                mat.SetFloat("_WorkflowMode", 1f);
             }
 
-            if (mat.HasProperty("_Smoothness"))
+            mat.DisableKeyword("_SPECULAR_SETUP");
+            var packed = PackMetallicSmoothness(metallic, roughness);
+            if (packed != null && mat.HasProperty("_MetallicGlossMap"))
             {
-                var floor = hasMetMap ? 0.68f : 0.52f;
-                mat.SetFloat("_Smoothness", Mathf.Max(mat.GetFloat("_Smoothness"), floor));
+                mat.SetTexture("_MetallicGlossMap", packed);
+                mat.EnableKeyword("_METALLICSPECGLOSSMAP");
+                if (mat.HasProperty("_Metallic"))
+                {
+                    mat.SetFloat("_Metallic", 1f);
+                }
+
+                if (mat.HasProperty("_Smoothness"))
+                {
+                    mat.SetFloat("_Smoothness", 1f);
+                }
+            }
+        }
+
+        private static Texture2D? PackMetallicSmoothness(Texture2D? metallic, Texture2D? roughness)
+        {
+            if (metallic == null)
+            {
+                return null;
+            }
+
+            if (PackedMetSmoothBySource.TryGetValue(metallic.GetInstanceID(), out var hit))
+            {
+                return hit;
+            }
+
+            try
+            {
+                var w = metallic.width;
+                var h = metallic.height;
+                var met = metallic.GetPixels();
+                Color[]? roughPx = null;
+                if (roughness != null && roughness.width == w && roughness.height == h)
+                {
+                    try
+                    {
+                        roughPx = roughness.GetPixels();
+                    }
+                    catch (UnityException)
+                    {
+                    }
+                }
+
+                var packed = new Texture2D(w, h, TextureFormat.RGBA32, false, linear: true);
+                var outp = new Color[met.Length];
+                for (var i = 0; i < met.Length; i++)
+                {
+                    var m = met[i].r;
+                    var sm = roughPx != null ? Mathf.Clamp01(1f - roughPx[i].r) : 0.35f;
+                    outp[i] = new Color(m, m, m, sm);
+                }
+
+                packed.SetPixels(outp);
+                packed.Apply(false, false);
+                packed.wrapMode = TextureWrapMode.Repeat;
+                packed.filterMode = FilterMode.Bilinear;
+                packed.name = metallic.name + "_metallic_smoothness";
+                PackedMetSmoothBySource[metallic.GetInstanceID()] = packed;
+                return packed;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("PILOT metallic pack skipped: " + ex.Message);
+                return null;
             }
         }
 
         private static Material NewLit()
         {
-            var shader = Shader.Find("Universal Render Pipeline/Lit")
-                         ?? Shader.Find("Universal Render Pipeline/Unlit")
-                         ?? Shader.Find("Standard")
-                         ?? Shader.Find("Unlit/Texture")
-                         ?? Shader.Find("Sprites/Default");
+            var shader = ResolveLookShader();
+            if (shader == null)
+            {
+                var quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                var fallback = quad.GetComponent<Renderer>().sharedMaterial;
+                UnityEngine.Object.Destroy(quad);
+                return new Material(fallback);
+            }
+
             return new Material(shader);
         }
 
-        private static Texture2D? LoadMeshyAlbedo()
+        private static Shader? ResolveLookShader()
+        {
+            var rp = GraphicsSettings.currentRenderPipeline;
+            if (rp != null && rp.defaultMaterial != null && rp.defaultMaterial.shader != null)
+            {
+                return rp.defaultMaterial.shader;
+            }
+
+            foreach (var name in new[]
+                     {
+                         "Universal Render Pipeline/Lit",
+                         "Universal Render Pipeline/Simple Lit",
+                         "Standard",
+                         "Unlit/Texture"
+                     })
+            {
+                var found = Shader.Find(name);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+
+            return null;
+        }
+
+        private static Texture2D? LoadPilotAlbedo()
         {
             if (_cachedAlbedo != null)
             {
@@ -397,27 +587,58 @@ namespace Survival.Unity
             }
 
 #if UNITY_EDITOR
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(FbxAssetPath))
+            foreach (var rel in new[] { AssetPath(ThemePackFbx), AssetPath(ThemePackWalkFbx) })
             {
-                if (obj is not Texture2D tex || tex.width < 256)
+                foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
                 {
-                    continue;
-                }
+                    if (obj is not Texture2D tex || tex.width < 256)
+                    {
+                        continue;
+                    }
 
-                var n = tex.name.ToLowerInvariant();
-                if (n.Contains("texture_0")
-                    && !n.Contains("metallic")
-                    && !n.Contains("rough")
-                    && !n.Contains("normal"))
-                {
-                    _cachedAlbedo = tex;
-                    return tex;
+                    var n = tex.name.ToLowerInvariant();
+                    if ((n.Contains("texture_0") || n.Contains("basecolor") || n.Contains("image_0") || n.Contains("albedo"))
+                        && !n.Contains("metallic")
+                        && !n.Contains("rough")
+                        && !n.Contains("normal"))
+                    {
+                        _cachedAlbedo = tex;
+                        return tex;
+                    }
                 }
             }
 #endif
-            _cachedAlbedo = ExtractFbxPng(color: true, grayIndex: -1)
-                            ?? LoadSiblingPng("sir_aldric_meshy_atlas.png");
+            _cachedAlbedo = ExtractFbxPng(ThemePackWalkFbx, color: true, grayIndex: -1)
+                            ?? ExtractFbxPng(ThemePackFbx, color: true, grayIndex: -1);
             return _cachedAlbedo;
+        }
+
+        private static Texture2D? LoadPilotMap(string fileName, bool sRgb)
+        {
+            var path = ResolveHero3D(fileName);
+            if (path == null || !File.Exists(path) || path.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            try
+            {
+                var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false, linear: !sRgb);
+                if (tex.LoadImage(File.ReadAllBytes(path)))
+                {
+                    tex.wrapMode = TextureWrapMode.Repeat;
+                    tex.filterMode = FilterMode.Bilinear;
+                    tex.name = Path.GetFileNameWithoutExtension(fileName);
+                    Debug.Log("PILOT map " + fileName + " " + path);
+                    return tex;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+
+            return null;
         }
 
         private static Texture2D? LoadMeshyPackedMap(int grayIndex)
@@ -428,49 +649,15 @@ namespace Survival.Unity
                 return cache;
             }
 
-            var extracted = ExtractFbxPng(color: false, grayIndex: grayIndex);
+            var extracted = ExtractFbxPng(ThemePackWalkFbx, color: false, grayIndex: grayIndex);
             if (grayIndex == 0)
             {
-                _cachedMetallic = extracted ?? LoadSiblingPng("sir_aldric_meshy_atlas_metallic.png");
+                _cachedMetallic = extracted;
                 return _cachedMetallic;
             }
 
-            _cachedRoughness = extracted ?? LoadSiblingPng("sir_aldric_meshy_atlas_roughness.png");
+            _cachedRoughness = extracted;
             return _cachedRoughness;
-        }
-
-        private static Texture2D? LoadSiblingPng(string fileName)
-        {
-            var path = ResolveHero3D(fileName);
-            if (path == null)
-            {
-                return null;
-            }
-
-#if UNITY_EDITOR
-            var rel = "Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/" + fileName;
-            var asset = AssetDatabase.LoadAssetAtPath<Texture2D>(rel);
-            if (asset != null)
-            {
-                return asset;
-            }
-#endif
-            try
-            {
-                var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-                if (tex.LoadImage(File.ReadAllBytes(path)))
-                {
-                    tex.wrapMode = TextureWrapMode.Clamp;
-                    tex.filterMode = FilterMode.Bilinear;
-                    tex.name = Path.GetFileNameWithoutExtension(fileName);
-                    return tex;
-                }
-            }
-            catch (IOException)
-            {
-            }
-
-            return null;
         }
 
         private static string? ResolveHero3D(string fileName)
@@ -478,13 +665,16 @@ namespace Survival.Unity
             var cwd = Directory.GetCurrentDirectory();
             var data = Application.dataPath ?? Path.Combine(cwd, "Assets");
             var repo = Directory.GetParent(data)?.FullName ?? cwd;
+            var rel = fileName.Replace('\\', '/').TrimStart('/');
             foreach (var path in new[]
                      {
-                         Path.Combine(data, ThemePackFbx.Replace("sir_aldric_meshy_animate_walk.fbx", fileName)),
-                         Path.Combine(repo, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", fileName),
+                         Path.Combine(data, PaintedLookDir, rel),
+                         Path.Combine(repo, "Assets", PaintedLookDir, rel),
+                         Path.Combine(data, "ThemePack/fantasy_kingdom_a/art/heroes/3d", rel),
+                         Path.Combine(repo, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", rel),
                      })
             {
-                if (File.Exists(path))
+                if (File.Exists(path) && path.Replace('\\', '/').EndsWith(rel, StringComparison.OrdinalIgnoreCase))
                 {
                     return path;
                 }
@@ -493,17 +683,13 @@ namespace Survival.Unity
             return null;
         }
 
-        private static string? ResolveFbxPath()
+        private static string? ResolveFbxPath(string themePackRel)
         {
             var cwd = Directory.GetCurrentDirectory();
             var data = Application.dataPath ?? Path.Combine(cwd, "Assets");
             var repo = Directory.GetParent(data)?.FullName ?? cwd;
-            var rel = ThemePackFbx.Replace('\\', '/');
-            foreach (var path in new[]
-                     {
-                         Path.Combine(data, rel),
-                         Path.Combine(repo, "Assets", rel),
-                     })
+            var rel = themePackRel.Replace('\\', '/');
+            foreach (var path in new[] { Path.Combine(data, rel), Path.Combine(repo, "Assets", rel) })
             {
                 if (File.Exists(path))
                 {
@@ -514,9 +700,9 @@ namespace Survival.Unity
             return null;
         }
 
-        private static Texture2D? ExtractFbxPng(bool color, int grayIndex)
+        private static Texture2D? ExtractFbxPng(string themePackRel, bool color, int grayIndex)
         {
-            var fbx = ResolveFbxPath();
+            var fbx = ResolveFbxPath(themePackRel);
             if (fbx == null)
             {
                 return null;
@@ -549,15 +735,13 @@ namespace Survival.Unity
                     var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
                     if (tex.LoadImage(png) && tex.width >= 256)
                     {
-                        var isGray = tex.format == TextureFormat.Alpha8
-                                     || tex.format == TextureFormat.R8
-                                     || LooksGrayscale(tex);
+                        var isGray = LooksGrayscale(tex);
                         var isNormal = LooksLikeNormalMap(tex);
                         if (color && !isGray && !isNormal)
                         {
-                            tex.wrapMode = TextureWrapMode.Clamp;
+                            tex.wrapMode = TextureWrapMode.Repeat;
                             tex.filterMode = FilterMode.Bilinear;
-                            tex.name = "meshy_animate_albedo";
+                            tex.name = "pilot_albedo";
                             return tex;
                         }
 
@@ -565,9 +749,9 @@ namespace Survival.Unity
                         {
                             if (graySeen == grayIndex)
                             {
-                                tex.wrapMode = TextureWrapMode.Clamp;
+                                tex.wrapMode = TextureWrapMode.Repeat;
                                 tex.filterMode = FilterMode.Bilinear;
-                                tex.name = grayIndex == 0 ? "meshy_animate_metallic" : "meshy_animate_roughness";
+                                tex.name = grayIndex == 0 ? "pilot_metallic" : "pilot_roughness";
                                 return tex;
                             }
 
@@ -616,10 +800,7 @@ namespace Survival.Unity
             }
 
             var n = px.Length;
-            r /= n;
-            g /= n;
-            b /= n;
-            return b > 0.75f && r > 0.35f && r < 0.65f && g > 0.35f && g < 0.65f;
+            return b / n > 0.75f && r / n > 0.35f && r / n < 0.65f && g / n > 0.35f && g / n < 0.65f;
         }
 
         private static int IndexOf(byte[] hay, byte[] needle, int start)
@@ -648,14 +829,12 @@ namespace Survival.Unity
 
         private static void BuildLights()
         {
-            // Flat grey World + dim key was the mute Game-view. Punch in place
-            // even if a leftover light already exists.
-            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+            RenderSettings.ambientMode = AmbientMode.Trilight;
             RenderSettings.ambientSkyColor = new Color(0.42f, 0.44f, 0.48f);
             RenderSettings.ambientEquatorColor = new Color(0.28f, 0.29f, 0.30f);
             RenderSettings.ambientGroundColor = new Color(0.14f, 0.13f, 0.11f);
-            RenderSettings.ambientIntensity = 1.25f;
-            RenderSettings.reflectionIntensity = 1.15f;
+            RenderSettings.ambientIntensity = 1.00f;
+            RenderSettings.reflectionIntensity = 0.45f;
 
             var key = UnityEngine.Object.FindFirstObjectByType<Light>();
             if (key == null)
@@ -666,7 +845,7 @@ namespace Survival.Unity
 
             key.type = LightType.Directional;
             key.color = new Color(1f, 0.96f, 0.88f);
-            key.intensity = 1.85f;
+            key.intensity = 1.15f;
             key.transform.rotation = Quaternion.Euler(52f, -16f, 0f);
 
             if (UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None).Length < 2)
@@ -675,7 +854,7 @@ namespace Survival.Unity
                 var fill = fillGo.AddComponent<Light>();
                 fill.type = LightType.Directional;
                 fill.color = new Color(0.82f, 0.88f, 1f);
-                fill.intensity = 0.55f;
+                fill.intensity = 0.35f;
                 fillGo.transform.rotation = Quaternion.Euler(70f, 35f, 0f);
             }
         }
