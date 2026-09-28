@@ -31,16 +31,16 @@ namespace Survival.Unity
             "PILOT SoT: AccuRIG Humanoid + SirAldric_PILOT_walk + SirAldric_PILOT_attack. " +
             "Sword fused — no Path A / ClipSword / AimChain. HOLD merge.";
 
-        private Animator? _animator;
-        private PlayableGraph _graph;
-        private AnimationPlayableOutput _output;
+        private PlayableGraph _walkGraph;
+        private PlayableGraph _attackGraph;
         private AnimationClipPlayable _walkPlayable;
         private AnimationClipPlayable _attackPlayable;
         private float _walkLength;
         private float _attackLength;
         private bool _graphReady;
         private bool _attackReady;
-        private GameObject? _instance;
+        private GameObject? _walkInstance;
+        private GameObject? _attackInstance;
 
         public bool Built => _graphReady;
         public bool HasAttackClip => _attackReady;
@@ -50,25 +50,13 @@ namespace Survival.Unity
         public void Build()
         {
             BuildLights();
-            var prefab = LoadFbxPrefab(ThemePackFbx, "SirAldric_PILOT_accurig_humanoid");
-            if (prefab == null)
+            var walkPrefab = LoadFbxPrefab(ThemePackWalkFbx, "SirAldric_PILOT_walk");
+            if (walkPrefab == null)
             {
                 Debug.LogError(
-                    "PILOT AccuRIG FBX not imported yet. Open Unity so " +
-                    ThemePackFbx + " Humanoid-imports, then Play SirAldric.");
+                    "PILOT walk FBX not imported yet. Open Unity so " +
+                    ThemePackWalkFbx + " Humanoid-imports, then Play SirAldric.");
                 return;
-            }
-
-            _instance = Instantiate(prefab, transform);
-            _instance.name = "SirAldricPilotAccurig";
-            HideJunk(_instance);
-            FaceWorldTop(_instance);
-            BindPaintedLook(_instance);
-
-            _animator = _instance.GetComponent<Animator>() ?? _instance.AddComponent<Animator>();
-            if (_animator.avatar == null)
-            {
-                _animator.avatar = LoadHumanoidAvatar(AssetPath(ThemePackFbx));
             }
 
             var walk = LoadClip(ThemePackWalkFbx, ClipHint, repairWalk: true);
@@ -80,29 +68,76 @@ namespace Survival.Unity
 
             walk.wrapMode = WrapMode.Loop;
             _walkLength = walk.length;
-            _graph = PlayableGraph.Create("SirAldricPilot");
-            _graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
-            _output = AnimationPlayableOutput.Create(_graph, "AldricPilot", _animator);
-            _walkPlayable = AnimationClipPlayable.Create(_graph, walk);
-            _output.SetSourcePlayable(_walkPlayable);
+            var walkAnimator = BindPlaybackInstance(
+                walkPrefab,
+                "SirAldricPilotWalk",
+                ThemePackWalkFbx,
+                out _walkInstance);
+            _walkGraph = PlayableGraph.Create("SirAldricPilotWalk");
+            _walkGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
+            var walkOut = AnimationPlayableOutput.Create(_walkGraph, "Walk", walkAnimator);
+            _walkPlayable = AnimationClipPlayable.Create(_walkGraph, walk);
+            walkOut.SetSourcePlayable(_walkPlayable);
+            _walkGraph.Play();
 
             var attack = LoadClip(ThemePackAttackFbx, AttackClipHint, repairWalk: false);
-            if (attack != null)
+            var attackPrefab = LoadFbxPrefab(ThemePackAttackFbx, "SirAldric_PILOT_attack");
+            if (attack != null && attackPrefab != null)
             {
                 attack.wrapMode = WrapMode.Once;
                 _attackLength = attack.length;
-                _attackPlayable = AnimationClipPlayable.Create(_graph, attack);
+                var attackAnimator = BindPlaybackInstance(
+                    attackPrefab,
+                    "SirAldricPilotAttack",
+                    ThemePackAttackFbx,
+                    out _attackInstance);
+                _attackGraph = PlayableGraph.Create("SirAldricPilotAttack");
+                _attackGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
+                var attackOut = AnimationPlayableOutput.Create(_attackGraph, "Attack", attackAnimator);
+                _attackPlayable = AnimationClipPlayable.Create(_attackGraph, attack);
+                attackOut.SetSourcePlayable(_attackPlayable);
+                _attackGraph.Play();
                 _attackReady = true;
+                _attackInstance!.SetActive(false);
+                Debug.Log(
+                    "PILOT clips walkHuman=" + walk.isHumanMotion +
+                    " attackHuman=" + attack.isHumanMotion +
+                    " walkAvatar=" + (walkAnimator.avatar != null && walkAnimator.avatar.isHuman) +
+                    " attackAvatar=" + (attackAnimator.avatar != null && attackAnimator.avatar.isHuman));
             }
             else
             {
-                Debug.LogWarning("PILOT attack clip missing after Humanoid import. Walk-only until reimport.");
+                Debug.LogWarning("PILOT attack clip or FBX missing. Walk-only until reimport.");
+                Debug.Log("PILOT clips walkHuman=" + walk.isHumanMotion);
             }
 
-            _graph.Play();
             _graphReady = true;
             SampleAt(0f);
             Debug.Log("PILOT actor built walkLen=" + _walkLength + " attackLen=" + _attackLength + " " + AttackAuthoredReason);
+        }
+
+        private Animator BindPlaybackInstance(
+            GameObject prefab,
+            string name,
+            string themePackRel,
+            out GameObject instance)
+        {
+            instance = Instantiate(prefab, transform);
+            instance.name = name;
+            HideJunk(instance);
+            FaceWorldTop(instance);
+            BindPaintedLook(instance);
+            var animator = instance.GetComponent<Animator>() ?? instance.AddComponent<Animator>();
+            var avatar = LoadHumanoidAvatar(AssetPath(themePackRel));
+            if (avatar != null)
+            {
+                animator.avatar = avatar;
+            }
+
+            animator.applyRootMotion = false;
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            animator.updateMode = AnimatorUpdateMode.UnscaledTime;
+            return animator;
         }
 
         private void Update()
@@ -117,31 +152,47 @@ namespace Survival.Unity
 
         public void SampleAt(float timeSeconds)
         {
-            if (!_graph.IsValid())
+            var walkLen = _walkLength > 0.05f ? _walkLength : 1f;
+            var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
+            var loop = walkBlock + (_attackReady ? Mathf.Max(_attackLength, 0.01f) : walkBlock);
+            var t = timeSeconds % loop;
+            var attacking = _attackReady && t >= walkBlock;
+            if (attacking)
             {
+                if (_walkInstance != null)
+                {
+                    _walkInstance.SetActive(false);
+                }
+
+                if (_attackInstance != null)
+                {
+                    _attackInstance.SetActive(true);
+                }
+
+                if (_attackGraph.IsValid())
+                {
+                    _attackPlayable.SetTime(t - walkBlock);
+                    _attackGraph.Evaluate();
+                }
+
                 return;
             }
 
-            var walkLen = _walkLength > 0.05f ? _walkLength : 1f;
-            var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
-            if (_attackReady && timeSeconds >= walkBlock)
+            if (_attackInstance != null)
             {
-                var u = timeSeconds - walkBlock;
-                if (u > _attackLength)
-                {
-                    u = _attackLength;
-                }
-
-                _output.SetSourcePlayable(_attackPlayable);
-                _attackPlayable.SetTime(u);
-            }
-            else
-            {
-                _output.SetSourcePlayable(_walkPlayable);
-                _walkPlayable.SetTime(timeSeconds % walkLen);
+                _attackInstance.SetActive(false);
             }
 
-            _graph.Evaluate();
+            if (_walkInstance != null)
+            {
+                _walkInstance.SetActive(true);
+            }
+
+            if (_walkGraph.IsValid())
+            {
+                _walkPlayable.SetTime(t % walkLen);
+                _walkGraph.Evaluate();
+            }
         }
 
         public string PhaseLabel(float timeSeconds)
@@ -158,9 +209,14 @@ namespace Survival.Unity
 
         private void OnDestroy()
         {
-            if (_graphReady && _graph.IsValid())
+            if (_walkGraph.IsValid())
             {
-                _graph.Destroy();
+                _walkGraph.Destroy();
+            }
+
+            if (_attackGraph.IsValid())
+            {
+                _attackGraph.Destroy();
             }
         }
 

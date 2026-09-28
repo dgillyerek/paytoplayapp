@@ -297,6 +297,9 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("SirAldric_PILOT_accurig_humanoid.fbx", actor, StringComparison.Ordinal);
         Assert.Contains("SirAldric_PILOT_walk.fbx", actor, StringComparison.Ordinal);
         Assert.Contains("SirAldric_PILOT_attack.fbx", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldricPilotWalk", actor, StringComparison.Ordinal);
+        Assert.Contains("applyRootMotion = false", actor, StringComparison.Ordinal);
+        Assert.Contains("AlwaysAnimate", actor, StringComparison.Ordinal);
         Assert.Contains("RepairAttackTake", actor, StringComparison.Ordinal);
         Assert.Contains("EnableKeyword(\"_BASEMAP\")", actor, StringComparison.Ordinal);
         Assert.Contains("sword fused", actor, StringComparison.OrdinalIgnoreCase);
@@ -334,6 +337,14 @@ public sealed class SirAldric3DMotionTests
         Assert.DoesNotContain("addHumanoidExtraRoot", post, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", walkMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", attackMeta, StringComparison.Ordinal);
+        Assert.Equal(1.75f, SirAldric3DMotion.PlayCamRearY);
+        Assert.Equal(-2.90f, SirAldric3DMotion.PlayCamRearZ);
+        Assert.Equal(0.85f, SirAldric3DMotion.PlayCamLookY);
+        Assert.Equal(34f, SirAldric3DMotion.PlayCamFovDegrees);
+        var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricDemo.cs"));
+        Assert.Contains("ApplyPlayCam", demo, StringComparison.Ordinal);
+        Assert.Contains("usePhysicalProperties = false", demo, StringComparison.Ordinal);
+        Assert.Contains("LateUpdate", demo, StringComparison.Ordinal);
 
         var dir = Path.Combine(root, "Docs", "Survival", "previews", "aldric_pilot_20260927");
         Assert.True(new FileInfo(Path.Combine(dir, "PILOT_HOLD.md")).Length > 400);

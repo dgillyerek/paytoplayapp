@@ -46,6 +46,39 @@ namespace Survival.Unity
             }
         }
 
+        private void LateUpdate()
+        {
+            if (_booted)
+            {
+                ApplyPlayCam();
+            }
+        }
+
+        internal static void ApplyPlayCam()
+        {
+            var cam = Camera.main;
+            if (cam == null)
+            {
+                return;
+            }
+
+            cam.orthographic = false;
+            cam.usePhysicalProperties = false;
+            cam.fieldOfView = SirAldric3DMotion.PlayCamFovDegrees;
+            cam.nearClipPlane = 0.08f;
+            cam.farClipPlane = 40f;
+            cam.backgroundColor = new Color(0.08f, 0.09f, 0.07f, 1f);
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.transform.position = new Vector3(
+                SirAldric3DMotion.PlayCamRearX,
+                SirAldric3DMotion.PlayCamRearY,
+                SirAldric3DMotion.PlayCamRearZ);
+            cam.transform.LookAt(new Vector3(
+                SirAldric3DMotion.PlayCamLookX,
+                SirAldric3DMotion.PlayCamLookY,
+                SirAldric3DMotion.PlayCamLookZ));
+        }
+
         private void Boot()
         {
             if (_booted || !Application.isPlaying)
@@ -54,24 +87,7 @@ namespace Survival.Unity
             }
 
             SurvivalVisuals.EnsurePlayCamera();
-            var cam = Camera.main;
-            if (cam != null)
-            {
-                cam.orthographic = false;
-                cam.fieldOfView = SirAldric3DMotion.PlayCamFovDegrees;
-                cam.nearClipPlane = 0.08f;
-                cam.farClipPlane = 40f;
-                cam.backgroundColor = new Color(0.08f, 0.09f, 0.07f, 1f);
-                cam.clearFlags = CameraClearFlags.SolidColor;
-                cam.transform.position = new Vector3(
-                    SirAldric3DMotion.PlayCamRearX,
-                    SirAldric3DMotion.PlayCamRearY,
-                    SirAldric3DMotion.PlayCamRearZ);
-                cam.transform.LookAt(new Vector3(
-                    SirAldric3DMotion.PlayCamLookX,
-                    SirAldric3DMotion.PlayCamLookY,
-                    SirAldric3DMotion.PlayCamLookZ));
-            }
+            ApplyPlayCam();
 
             SurvivalVisuals.EnsureEventSystem();
             ThemePackBinder? pack = null;

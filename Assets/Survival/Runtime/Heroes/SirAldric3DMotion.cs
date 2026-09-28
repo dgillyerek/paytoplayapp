@@ -22,20 +22,23 @@ namespace Survival.Domain.Heroes
         /// </summary>
         public const float MixamoImportRearYawDegrees = 180f;
 
-        /// <summary>Play-cam SoT for SirAldricDemo / 1080×1920 Game-view. View +Z = TOP.</summary>
+        /// <summary>
+        /// Play-cam SoT for SirAldricDemo / 1080×1920 Game-view Scale 1×. View +Z = TOP.
+        /// Closer than (0, 2.20, −3.40) FOV 34 so the 1.7m knight fills most of the phone frame.
+        /// </summary>
         public const float PlayCamFovDegrees = 34f;
         public const float PlayCamRearX = 0f;
-        public const float PlayCamRearY = 2.20f;
-        public const float PlayCamRearZ = -3.40f;
+        public const float PlayCamRearY = 1.75f;
+        public const float PlayCamRearZ = -2.90f;
         public const float PlayCamLookX = 0f;
-        public const float PlayCamLookY = 1.00f;
-        public const float PlayCamLookZ = 0.30f;
+        public const float PlayCamLookY = 0.85f;
+        public const float PlayCamLookZ = 0.15f;
         public const float PlayCamFrontX = 0f;
-        public const float PlayCamFrontY = 2.20f;
-        public const float PlayCamFrontZ = 4.00f;
-        public const float PlayCamThreeQuarterX = 2.05f;
-        public const float PlayCamThreeQuarterY = 2.20f;
-        public const float PlayCamThreeQuarterZ = -2.80f;
+        public const float PlayCamFrontY = 1.75f;
+        public const float PlayCamFrontZ = 3.20f;
+        public const float PlayCamThreeQuarterX = 1.70f;
+        public const float PlayCamThreeQuarterY = 1.75f;
+        public const float PlayCamThreeQuarterZ = -2.20f;
 
         public static float WalkBlockSeconds => WalkPeriodSeconds * WalkCyclesBeforeAttack;
 

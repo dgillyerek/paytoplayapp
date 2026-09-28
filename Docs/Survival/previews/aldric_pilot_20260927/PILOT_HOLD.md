@@ -28,6 +28,6 @@ Play-cam rematch (Unity Y-up remapped). **Not Meshy website stills. Not Unity Ga
 
 ## Unity Play
 
-1. Fresh open so the postprocessor reimports walk/attack. Play **SirAldric**. 1080×1920 Scale 1×.
-2. Log must show `PILOT actor built walkLen=… attackLen=…` with both &gt; 0. Must **not** hit `no Walking clip`.
+1. Fresh open. Play **SirAldric**. 1080×1920 Scale 1×.
+2. Walk clip plays on the **walk FBX instance** (not retargeted onto AccuRIG). Attack on its own instance. Cam rear `(0, 1.75, −2.90)` LookAt `(0, 0.85, 0.15)` FOV 34, reapplied every LateUpdate (scene default was ortho 5.5 at z=−10).
 3. HOLD until Derek PASS.
