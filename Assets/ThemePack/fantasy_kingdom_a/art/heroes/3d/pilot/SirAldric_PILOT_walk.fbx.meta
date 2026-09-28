@@ -117,7 +117,6 @@ ModelImporter:
   animationType: 3
   humanoidOversampling: 1
   avatarSetup: 1
-  addHumanoidExtraRoot: 1
   additionalBone: 0
   userData: PILOT walk. takeName is the FBX stack Armature|Armature|Armature|Walking. CreateFromThisModel. Path A HOLD.
   assetBundleName: 

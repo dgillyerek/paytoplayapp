@@ -330,6 +330,10 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("CreateFromThisModel", post, StringComparison.Ordinal);
         Assert.Contains("defaultClipAnimations", post, StringComparison.Ordinal);
         Assert.Contains("SirAldric_PILOT_walk.fbx", post, StringComparison.Ordinal);
+        Assert.DoesNotContain("addHumanoidExtraRoot", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("addHumanoidExtraRoot", post, StringComparison.Ordinal);
+        Assert.DoesNotContain("addHumanoidExtraRoot", walkMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("addHumanoidExtraRoot", attackMeta, StringComparison.Ordinal);
 
         var dir = Path.Combine(root, "Docs", "Survival", "previews", "aldric_pilot_20260927");
         Assert.True(new FileInfo(Path.Combine(dir, "PILOT_HOLD.md")).Length > 400);

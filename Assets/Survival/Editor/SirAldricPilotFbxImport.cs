@@ -40,7 +40,6 @@ namespace Survival.Editor
 
             importer.animationType = ModelImporterAnimationType.Human;
             importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
-            importer.addHumanoidExtraRoot = true;
 
             if (humanoid)
             {

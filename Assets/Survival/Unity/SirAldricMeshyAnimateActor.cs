@@ -331,7 +331,6 @@ namespace Survival.Unity
 
             importer.animationType = ModelImporterAnimationType.Human;
             importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
-            importer.addHumanoidExtraRoot = true;
             importer.importAnimation = true;
             var defaults = importer.defaultClipAnimations;
             if (defaults == null || defaults.Length == 0)
