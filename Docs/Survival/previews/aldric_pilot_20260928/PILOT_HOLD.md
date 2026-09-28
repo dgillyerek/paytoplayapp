@@ -11,7 +11,7 @@
 | Attack clip | `SirAldric_PILOT_attack_accurig.fbx` take `rigify_clip` 3–92 |
 | Paint | `pilot_albedo.png` + AccuRIG metallic/roughness |
 
-Clip FBX With-Skin meshes are **not instantiated**. `StripEmbeddedClipMeshes` disables Ico / withSkin leftovers. No AvatarBuilder. No `addHumanoidExtraRoot` / `legTwist`.
+Clip FBX With-Skin meshes are **not instantiated**. `StripEmbeddedClipMeshes` disables Ico / withSkin leftovers. No Path 1 retarget. No `addHumanoidExtraRoot` / twist fields.
 
 ## Cam (1080×1920 Scale 1×)
 

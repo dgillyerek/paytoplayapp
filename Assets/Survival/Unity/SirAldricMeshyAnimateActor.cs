@@ -15,7 +15,7 @@ namespace Survival.Unity
     /// <summary>
     /// Sir Aldric PILOT: AccuRIG Character_output is the ONLY visible body.
     /// Walk/Attack clips from *_accurig.fbx (same AccuRIG bones). Never show Animate mesh.
-    /// No AvatarBuilder retarget. No Path A / ClipSword. HOLD merge.
+    /// No Path 1 retarget. No Path A / ClipSword. HOLD merge.
     /// </summary>
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
     {
