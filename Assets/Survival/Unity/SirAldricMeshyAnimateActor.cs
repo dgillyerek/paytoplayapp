@@ -218,15 +218,7 @@ namespace Survival.Unity
             var desc = new HumanDescription
             {
                 human = human.ToArray(),
-                skeleton = skeleton,
-                armTwist = 0.5f,
-                foreArmTwist = 0.5f,
-                upperLegTwist = 0.5f,
-                legTwist = 0.5f,
-                armStretch = 0.05f,
-                legStretch = 0.05f,
-                feetSpacing = 0f,
-                hasTranslationDoF = false
+                skeleton = skeleton
             };
 
             var avatar = AvatarBuilder.BuildHumanAvatar(root, desc);

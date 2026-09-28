@@ -338,6 +338,12 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("defaultClipAnimations", post, StringComparison.Ordinal);
         Assert.Contains("SirAldric_PILOT_walk.fbx", post, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("legTwist", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("armTwist", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("foreArmTwist", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("upperLegTwist", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("feetSpacing", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("hasTranslationDoF", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", post, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", walkMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", attackMeta, StringComparison.Ordinal);
