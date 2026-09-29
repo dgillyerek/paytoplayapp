@@ -37,8 +37,8 @@ namespace Survival.Domain.Heroes
         /// at wind-up, then eases off so Mixamo finishes lower-left.
         /// </summary>
         public const float AttackWindupLiftUp = 1f;
-        public const float AttackWindupLiftRight = 0.40f;
-        public const float AttackWindupLiftMaxDegrees = 70f;
+        public const float AttackWindupLiftRight = 0.22f;
+        public const float AttackWindupLiftMaxDegrees = 80f;
         public const float AttackWindupTipRight = 0.22f;
         public const float AttackWindupEaseEnd = 0.72f;
         public const float HeldSwordRestEulerX = 90f;

@@ -18,7 +18,7 @@ Slash With-Skin mesh is **not instantiated**. `StripEmbeddedClipMeshes` disables
 
 **Sword hand:** always `mixamorig:RightHand`. FaceWorldTop yaws 180 and **Abs** scale (never `scale.x = -1`). Derek FAIL `212c6da` whole-body X-flip put the sword on the left hand — discarded. Local Generic Euler extras (`5f5e375`) swung the opposite way on Play-cam — discarded. Prefer RH parent + world-space tip arc.
 
-Light **attack-only** offset after `Evaluate()` (`ApplyAttackWindupLift`): world-space RH lift toward up + Play-cam right (max 70°), sword blade FromToRotation toward sky + slight right, ease to rest Euler `(90,0,0)` by the lower-left finish. Not AimChain. Not a body X-flip.
+Light **attack-only** offset after `Evaluate()` (`ApplyAttackWindupLift`): world-space RH lift toward up + Play-cam right (max 80°), sword blade FromToRotation toward sky + slight right, ease to rest Euler `(90,0,0)` by the lower-left finish. Not AimChain. Not a body X-flip. Blender rematch maps that lift onto Mixamo’s already-rear character-right (blender −X); it is **not** a raw u2b of Unity +X.
 
 ### takeName note
 

@@ -38,8 +38,8 @@ CAM_FOV = 42.0
 
 # Match Unity ApplyAttackWindupLift (world-space RH lift + sword tip aim).
 WINDUP_LIFT_UP = 1.0
-WINDUP_LIFT_RIGHT = 0.40
-WINDUP_LIFT_MAX_DEG = 70.0
+WINDUP_LIFT_RIGHT = 0.22
+WINDUP_LIFT_MAX_DEG = 80.0
 WINDUP_TIP_RIGHT = 0.22
 WINDUP_EASE_END = 0.72
 SLASH_FIRST = 8
@@ -339,10 +339,16 @@ def dump_hands(arm, sword, tag):
     lh_u = to_unity(lh) if lh is not None else None
     rh_u = to_unity(rh) if rh is not None else None
     head_u = to_unity(head) if head is not None else None
-    rh_right = rh_u is not None and lh_u is not None and rh_u[0] > lh_u[0]
+    # Blender already-rear Mixamo: anatomical right is blender −X (not Unity +X).
+    rh_char_right = rh is not None and lh is not None and rh.x < lh.x
     rh_high = rh_u is not None and head_u is not None and rh_u[1] > head_u[1] - 0.05
     tip_up = tip_u is not None and tip_u[1] > 0.70
-    tip_right = tip_u is not None and tip_u[0] > 0.02
+    tip_b = None
+    if sword is not None:
+        raw = sword.matrix_world.to_3x3() @ Vector((0.0, 0.0, 1.0))
+        if raw.length > 1e-6:
+            tip_b = raw.normalized()
+    tip_char_right = tip_b is not None and tip_b.x < -0.02
     print(
         "dump",
         tag,
@@ -356,14 +362,14 @@ def dump_hands(arm, sword, tag):
         None if head_u is None else tuple(round(x, 3) for x in head_u),
         "tip_u",
         None if tip_u is None else tuple(round(x, 3) for x in tip_u),
-        "RH_right_of_LH",
-        rh_right,
+        "RH_character_right",
+        rh_char_right,
         "RH_high",
         rh_high,
         "tip_up",
         tip_up,
-        "tip_slight_right",
-        tip_right,
+        "tip_character_right",
+        tip_char_right,
     )
     payload = {
         "tag": tag,
@@ -372,10 +378,10 @@ def dump_hands(arm, sword, tag):
         "RH_unity": rh_u,
         "head_unity": head_u,
         "tip_unity": tip_u,
-        "RH_right_of_LH": rh_right,
+        "RH_character_right": rh_char_right,
         "RH_high": rh_high,
         "tip_up": tip_up,
-        "tip_slight_right": tip_right,
+        "tip_character_right": tip_char_right,
         "label": "Play-cam rematch, not Unity Game-view",
     }
     PROOF.mkdir(parents=True, exist_ok=True)
@@ -384,17 +390,28 @@ def dump_hands(arm, sword, tag):
     print("wrote", path)
 
 
+def blender_char_right_up(right, up):
+    """Unity FaceWorldTop yaws Mixamo 180 so character-right = world +X.
+
+    Blender Mixamo already faces rear (no extra yaw): character-right is blender −X.
+    Rematch therefore uses (−right, 0, up) so the lift matches Unity Play's
+    anatomical-right / camera-right, not a raw u2b of Unity +X.
+    """
+    return Vector((-right, 0.0, up)).normalized()
+
+
 def apply_attack_windup(arm, sword, frame):
     """Match Unity ApplyAttackWindupLift: world RH FromToRotation + sword tip aim."""
     k = windup_weight(frame)
     rarm = arm.pose.bones.get("mixamorig:RightArm")
     rhand = arm.pose.bones.get("mixamorig:RightHand")
+    dump_hands(arm, sword, f"slash_f{int(frame)}_native")
     if k > 0.001 and rarm is not None and rhand is not None:
         arm_w = (arm.matrix_world @ rarm.matrix).to_translation()
         hand_w = (arm.matrix_world @ rhand.matrix).to_translation()
         reach = hand_w - arm_w
         if reach.length > 1e-4:
-            desired = uvec((WINDUP_LIFT_RIGHT, WINDUP_LIFT_UP, 0.0)).normalized()
+            desired = blender_char_right_up(WINDUP_LIFT_RIGHT, WINDUP_LIFT_UP)
             q = reach.normalized().rotation_difference(desired)
             ang = math.degrees(q.angle)
             t = min(1.0, (WINDUP_LIFT_MAX_DEG * k) / max(ang, 1e-3))
@@ -417,7 +434,7 @@ def apply_attack_windup(arm, sword, frame):
             sword.rotation_mode = "XYZ"
             sword.rotation_euler = Euler((math.radians(HELD_SWORD_REST_X), 0.0, 0.0), "XYZ")
         else:
-            blade_b = uvec((WINDUP_TIP_RIGHT, 1.0, 0.0)).normalized()
+            blade_b = blender_char_right_up(WINDUP_TIP_RIGHT, 1.0)
             bone_q = Quaternion()
             if sword.parent_type == "BONE" and sword.parent_bone:
                 pb = arm.pose.bones.get(sword.parent_bone)

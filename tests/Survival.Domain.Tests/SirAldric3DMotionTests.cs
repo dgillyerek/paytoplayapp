@@ -393,8 +393,8 @@ public sealed class SirAldric3DMotionTests
         Assert.Equal(1.12f, SirAldric3DMotion.PlayCamLookY);
         Assert.Equal(42f, SirAldric3DMotion.PlayCamFovDegrees);
         Assert.Equal(180f, SirAldric3DMotion.MixamoImportRearYawDegrees);
-        Assert.Equal(70f, SirAldric3DMotion.AttackWindupLiftMaxDegrees);
-        Assert.Equal(0.40f, SirAldric3DMotion.AttackWindupLiftRight);
+        Assert.Equal(80f, SirAldric3DMotion.AttackWindupLiftMaxDegrees);
+        Assert.Equal(0.22f, SirAldric3DMotion.AttackWindupLiftRight);
         Assert.Equal(0.22f, SirAldric3DMotion.AttackWindupTipRight);
         Assert.Equal(90f, SirAldric3DMotion.HeldSwordRestEulerX);
         Assert.Equal(1f, SirAldric3DMotion.AttackWindupWeight(0f), 3);

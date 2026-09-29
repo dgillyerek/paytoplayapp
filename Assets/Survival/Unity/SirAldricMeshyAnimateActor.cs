@@ -252,6 +252,8 @@ namespace Survival.Unity
                 var reach = _rightHand.position - _rightArm.position;
                 if (reach.sqrMagnitude > 1e-6f)
                 {
+                    // After FaceWorldTop yaw 180, Mixamo forward = +Z and
+                    // character-right = world +X = rear Play-cam right.
                     var desired = new Vector3(
                         SirAldric3DMotion.AttackWindupLiftRight,
                         SirAldric3DMotion.AttackWindupLiftUp,

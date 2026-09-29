@@ -1,0 +1,29 @@
+{
+  "tag": "slash_f32_native",
+  "sword_parent": "mixamorig:RightHand",
+  "LH_unity": [
+    -0.23014235496520996,
+    0.884227991104126,
+    -0.19420897960662842
+  ],
+  "RH_unity": [
+    0.17284126579761505,
+    1.2094095945358276,
+    -0.12317675352096558
+  ],
+  "head_unity": [
+    -0.11254661530256271,
+    1.3623855113983154,
+    -0.010258659720420837
+  ],
+  "tip_unity": [
+    0.6933296322822571,
+    0.5672022700309753,
+    -0.4444948136806488
+  ],
+  "RH_character_right": false,
+  "RH_high": false,
+  "tip_up": false,
+  "tip_character_right": false,
+  "label": "Play-cam rematch, not Unity Game-view"
+}
