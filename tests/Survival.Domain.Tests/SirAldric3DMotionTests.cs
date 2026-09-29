@@ -329,6 +329,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("AttackWindupHandX", actor, StringComparison.Ordinal);
         Assert.Contains("AttackWindupSwordZ", actor, StringComparison.Ordinal);
         Assert.Contains("CacheAttackBones", actor, StringComparison.Ordinal);
+        Assert.Contains("MixamoRearMirrorX", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("SetSourcePlayable(_attackPlayable)", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("EnsureClipSword", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("private static void AimChain", actor, StringComparison.Ordinal);
@@ -379,6 +380,8 @@ public sealed class SirAldric3DMotionTests
         Assert.Equal(-3.08f, SirAldric3DMotion.PlayCamRearZ);
         Assert.Equal(1.12f, SirAldric3DMotion.PlayCamLookY);
         Assert.Equal(42f, SirAldric3DMotion.PlayCamFovDegrees);
+        Assert.Equal(-1f, SirAldric3DMotion.MixamoRearMirrorX);
+        Assert.Equal(180f, SirAldric3DMotion.MixamoImportRearYawDegrees);
         Assert.Equal(-28f, SirAldric3DMotion.AttackWindupShoulderX);
         Assert.Equal(-80f, SirAldric3DMotion.AttackWindupArmX);
         Assert.Equal(-40f, SirAldric3DMotion.AttackWindupHandX);
@@ -396,6 +399,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("HOLD merge", File.ReadAllText(Path.Combine(dir, "PILOT_HOLD.md")), StringComparison.Ordinal);
         Assert.Contains("Not Unity Game-view", File.ReadAllText(Path.Combine(dir, "PILOT_HOLD.md")), StringComparison.Ordinal);
         Assert.Contains("Mixamo", File.ReadAllText(Path.Combine(dir, "PILOT_HOLD.md")), StringComparison.Ordinal);
+        Assert.Contains("MixamoRearMirrorX", File.ReadAllText(Path.Combine(dir, "PILOT_HOLD.md")), StringComparison.Ordinal);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_rear_walk_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_front_walk_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_34_walk_playcam.png")).Length > 50_000);

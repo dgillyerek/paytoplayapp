@@ -14,9 +14,11 @@
 | Cape prop | `SirAldric_PILOT_cape.fbx` on disk (optional soft — not auto-parented; scale/bind leftover) |
 | Paint | `pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture*.png` |
 
-Slash With-Skin mesh is **not instantiated**. `StripEmbeddedClipMeshes` disables Ico / withSkin leftovers. **Generic** CreateFromThisModel. Import **`useFileScale: 0`** so FileScale 0.01 does not shrink meter-sized Mixamo verts to ~2 cm (Derek `9075270` then did body ×88). Runtime still flattens leftover Armature **0.01** and FAIL-corrects height to 0.5–5 m. Sword localScale = `1 / hand.lossyScale` then normalize world blade to **1.01 m** (grip at palm; blade +Z). Walk→slash is `AnimationMixerPlayable` crossfade **0.20 s**, not a hard `SetSourcePlayable` swap. `updateWhenOffscreen`. No Path 1 / Path A / ClipSword / AimChain. No `addHumanoidExtraRoot` / twist fields.
+Slash With-Skin mesh is **not instantiated**. `StripEmbeddedClipMeshes` disables Ico / withSkin leftovers. **Generic** CreateFromThisModel. Import **`useFileScale: 0`** so FileScale 0.01 does not shrink meter-sized Mixamo verts to ~2 cm (Derek `9075270` then did body ×88). Runtime still flattens leftover Armature **0.01** and FAIL-corrects height to 0.5–5 m. Sword localScale = `1 / Abs(hand.lossyScale)` then normalize world blade to **1.01 m** (grip at palm; blade +Z). Walk→slash is `AnimationMixerPlayable` crossfade **0.20 s**, not a hard `SetSourcePlayable` swap. `updateWhenOffscreen`. No Path 1 / Path A / ClipSword / AimChain. No `addHumanoidExtraRoot` / twist fields.
 
-Light **attack-only** offset after `Evaluate()` (`ApplyAttackWindupLift`): RightShoulder X−28 / RightArm X−80 / RightHand X−40 at slash start, easing to 0 by the down-left finish; sword local Euler `(90, 0, −35)` at wind-up back to `(90, 0, 0)`. Raises the RH **above the helmet** so the **tip leads up-right**, then Mixamo finishes **down-left**. Not AimChain.
+**Rear L↔R:** Mixamo instantiate faces −Z. `FaceWorldTop` yaws **180** so the back faces the Play-cam and walk goes toward TOP. That yaw also swaps world X, so the Mixamo RH inward slash read **high-LEFT → down-RIGHT** on Derek’s screen (`5f5e375` FAIL). **`MixamoRearMirrorX = −1`** restores **high-RIGHT → down-LEFT** from Derek’s Play-cam without changing clip frames or AimChain.
+
+Light **attack-only** offset after `Evaluate()` (`ApplyAttackWindupLift`): RightShoulder X−28 / RightArm X−80 / RightHand X−40 at slash start, easing to 0 by the down-left finish; sword local Euler `(90, 0, −35)` at wind-up back to `(90, 0, 0)`. Raises the RH **above the helmet** so the **tip leads** the high-right wind-up. Not AimChain.
 
 ### takeName note
 
@@ -30,7 +32,9 @@ The unrigged body FBX has **no skeleton**. Play instantiates the Mixamo-skinned 
 
 **Derek FAIL `9075270`:** `cm-root none (already 1×)` then body scale correct `height=0.020 ×87.9`. Walk silhouette OK. Sword parented with `localScale=1` inherited **lossyScale ~88** → ~88 m blade floating (grip 0.08 m × 88). Hard `SetSourcePlayable` cut walk→slash. Fix: `useFileScale: 0` + sword world-scale compensate + mixer 0.20 s blend.
 
-**Derek Play `063d928`:** direction high-right → down-left OK, but wind-up not overhead / not tip-led, and the arc clipped at FOV 34.
+**Derek Play `063d928`:** direction claimed high-right → down-left, but wind-up not overhead / not tip-led, and the arc clipped at FOV 34.
+
+**Derek FAIL `5f5e375`:** overhead + FOV 42 OK, but Unity yaw 180 left the slash **laterally opposite** on Play-cam (high-left → down-right from Derek’s view). Fix: `MixamoRearMirrorX`.
 
 ## Cam (1080×1920 Scale 1×)
 
@@ -43,5 +47,5 @@ Play-cam rematch: Mixamo holefixed + walk frame 18 / slash **start frame 8** (ha
 ## Unity Play
 
 1. Play **SirAldric**. Walk/slash reimport **Generic** + `useFileScale: 0`. Log: `visible=Mixamo`, `walkLen`/`attackLen` > 0, `PILOT skin` height 0.5–5 m, `PILOT sword` world blade ≈ 1.01 m (hand.lossyScale logged).
-2. Knight-readable walk. Sword in RH, ~1 m, held at palm. Walk **crossfades** ~0.20 s into inward slash: hand **above the head**, tip **up and to the right**, then **down-left**. Full knight + sword arc in Scale 1× phone Game-view.
+2. Knight-readable walk. Sword in RH, ~1 m, held at palm. Walk **crossfades** ~0.20 s into inward slash: from Derek’s screen, hand **high to the RIGHT** (above the head), tip **up-right**, then **down to the LEFT**. Full knight + sword arc in Scale 1× phone Game-view.
 3. HOLD until Derek PASS.

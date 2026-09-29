@@ -3,6 +3,11 @@
 
 Mixamo holefixed mid280k + Standard Walk / Inward Slash. RH sword prop.
 Honest label: Play-cam rematch, not Unity Camera.Render, not Meshy website stills.
+
+Blender Mixamo already faces rear (back to camera). Unity FaceWorldTop yaws 180
+(needed because Unity Mixamo faces −Z) which also mirrors L↔R; Unity then
+applies MixamoRearMirrorX = −1 so Game-view L/R matches this rematch:
+high-RIGHT wind-up → down-LEFT finish from the rear Play-cam.
 """
 from __future__ import annotations
 
@@ -190,7 +195,7 @@ def render_to(path: Path):
     try:
         ART.mkdir(parents=True, exist_ok=True)
         (ART / path.name).write_bytes(path.read_bytes())
-        unique = "sir_aldric_pilot_tip_overhead_" + path.name.replace("sir_aldric_pilot_", "")
+        unique = "sir_aldric_pilot_highright_lr_" + path.name.replace("sir_aldric_pilot_", "")
         (ART / unique).write_bytes(path.read_bytes())
     except OSError as exc:
         print("artifact skip", exc)

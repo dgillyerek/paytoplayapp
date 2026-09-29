@@ -19,8 +19,11 @@ namespace Survival.Domain.Heroes
 
         /// <summary>
         /// AccuRIG / Mixamo instantiate face-to-camera (−Z). Yaw so forward = +Z (TOP).
+        /// Yaw 180 also mirrors L↔R vs a true rear view; MixamoRearMirrorX restores
+        /// Play-cam high-RIGHT as anatomical right (Derek POV).
         /// </summary>
         public const float MixamoImportRearYawDegrees = 180f;
+        public const float MixamoRearMirrorX = -1f;
 
         /// <summary>
         /// Mixamo Stable Sword Inward Slash take window. Frame 1 is a high-left rest;

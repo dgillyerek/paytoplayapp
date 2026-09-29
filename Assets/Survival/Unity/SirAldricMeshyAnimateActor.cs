@@ -33,8 +33,9 @@ namespace Survival.Unity
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
         public const string AttackAuthoredReason =
             "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Inward Slash " +
-            "frames 8–40. AttackWindupLift: hand overhead, tip-led high-right → down-left. " +
-            "RH sword world 1.01m. Mixer 0.20s. Play-cam FOV 42. Never AccuRIG. HOLD merge.";
+            "frames 8–40. Yaw 180 + MixamoRearMirrorX so rear Play reads high-RIGHT → " +
+            "down-LEFT. AttackWindupLift overhead tip-led. RH sword 1.01m. Mixer 0.20s. " +
+            "FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
         public const float SwordBladeMeters = 1.01f;
         private const float BodyHeightMinMeters = 0.5f;
@@ -320,8 +321,15 @@ namespace Survival.Unity
         {
             // Mixamo instantiate face-to-camera (−Z) = frontal FAIL.
             // Yaw 180 so transform.forward = +Z: back to camera, walk toward TOP.
+            // That yaw also swaps world X (anatomical right → screen-left). Derek Play
+            // 5f5e375: slash read the opposite of high-RIGHT → down-LEFT. Mirror X so
+            // the Mixamo RH wind-up sits on Play-cam right. Not AimChain.
             root.transform.localPosition = Vector3.zero;
             root.transform.localRotation = Quaternion.Euler(0f, RearYawDegrees, 0f);
+            var s = root.transform.localScale;
+            var sx = Mathf.Abs(s.x) < 1e-5f ? 1f : Mathf.Abs(s.x);
+            root.transform.localScale = new Vector3(
+                SirAldric3DMotion.MixamoRearMirrorX * sx, s.y, s.z);
         }
 
         /// <summary>
