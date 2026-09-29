@@ -1,6 +1,6 @@
 # HOLD — Sir Aldric PILOT Mixamo separate-portrait (2026-09-28)
 
-**HOLD merge on PR #27 until Derek Play.** Path A / ClipSword / AimChain / Dev weight-paint are not SoT. No Design / Derek PASS. AccuRIG clips-only is **superseded**.
+**HOLD merge on PR #27 until Derek Play AND Design can lean walk sheath rematch.** Path A / ClipSword / AimChain / Dev weight-paint are not SoT. No Design / Derek PASS. AccuRIG clips-only is **superseded**. Rematch ≠ Unity Game-view.
 
 ## Wire
 
@@ -10,15 +10,19 @@
 | Unrigged look mesh (on disk) | `SirAldric_body_holefixed_mid280k.fbx` (no armature — not the Play instance) |
 | Walk clip | same walk FBX · Unity takeName **`mixamo.com`** 1–36 (Mixamo Standard Walk) |
 | Slash clip | `SirAldric_body_holefixed_slash.fbx` · takeName **`mixamo.com`** **8–40** (Stable Sword Inward Slash) |
-| Sword prop | `SirAldric_PILOT_sword.fbx` parented to **`mixamorig:RightHand`** only |
+| Sword prop | `SirAldric_PILOT_sword.fbx` walk parent **`mixamorig:Hips`** (true hip sheath); strike parent **`mixamorig:RightHand`** |
 | Cape prop | `SirAldric_PILOT_cape.fbx` on disk (optional soft — not auto-parented; scale/bind leftover) |
 | Paint | `pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture*.png` |
 
 Slash With-Skin mesh is **not instantiated**. `StripEmbeddedClipMeshes` disables Ico / withSkin leftovers. **Generic** CreateFromThisModel. Import **`useFileScale: 0`**. Sword localScale = `1 / Abs(hand.lossyScale)` then normalize world blade to **1.01 m**. Walk→slash is `AnimationMixerPlayable` **0.20 s**. `updateWhenOffscreen`. No Path 1 / Path A / ClipSword / AimChain. **Not a whole-body X-flip.**
 
-**Sword hand:** always `mixamorig:RightHand`. FaceWorldTop yaws 180 and **Abs** scale (never `scale.x = -1`). Derek FAIL `212c6da` whole-body X-flip put the sword on the left hand — discarded. Local Generic Euler extras (`5f5e375`) swung the opposite way on Play-cam — discarded. Prefer RH parent + world-space tip arc.
+**Sword hand:** walk/idle = `mixamorig:Hips` hip sheath on the **outside of the right hip**, tip down beside the right leg — **not** in `mixamorig:RightHand`, **not** through the mesh. Strike only = transfer to `mixamorig:RightHand`. FaceWorldTop yaws 180 and **Abs** scale (never `scale.x = -1`). Derek FAIL `212c6da` whole-body X-flip put the sword on the left hand — discarded. Local Generic Euler extras (`5f5e375`) swung the opposite way on Play-cam — discarded. Prefer RH parent + world-space tip arc **for strike only**.
 
-Light **attack-only** extras after `Evaluate()`, re-applied on **camera render** so Animator cannot desync the mesh from the prop. Walk: **sheathed** tip down the outside of the right hip (`ApplySheathedSword`) — **no** forearm snap (Derek FAIL `19b16aa` Game-view pierce). Attack: unfold `mixamorig:RightForeArm`, point the RH chain **UR → horizontal front +Z → LL**, snap the sword onto the live **forearm–hand axis**. Not AimChain. Not a body X-flip. Blender rematch maps Unity (right, up, front) onto already-rear Mixamo as `(−right, −front, up)`. **Rematch ≠ Unity Game-view — Derek’s shots are the gate.**
+Light **attack-only** extras after `Evaluate()`, re-applied on **camera render** so Animator cannot desync the mesh from the prop. Walk: **`BindSwordTo(mixamorig:Hips)`** + world place via flattened `(RightUpLeg − Hips)` outboard (`HipSheathOutboard` 0.32 / Up 0.02 / Back 0.06). Blade aim is **out + world-down** (`HeldSwordSheathRight` 0.40, `HeldSwordSheathBack` **0** — no world-back, no thigh-forward). Tip beside the right leg. Arm-lock only when `attackU>0` (not during walk→slash mixer blend). Attack: `BindSwordTo(mixamorig:RightHand)`, unfold `mixamorig:RightForeArm`, point the RH chain **UR → horizontal front +Z → LL**, snap the sword onto the live **forearm–hand axis**. Not AimChain. Not a body X-flip. Blender rematch maps Unity (right, up, front) onto already-rear Mixamo as `(−right, −front, up)`. **Rematch ≠ Unity Game-view — Derek’s shots are the gate.**
+
+**Design lean FAIL `a9f8aff`:** rematch walk still showed the sword in the **right hand**. “Sheath” only changed RH aim while the prop stayed a RightHand child. Strike arm-lock rematch was OK; Design cannot lean PASS without a walk still that clearly shows **true hip sheath** (not RH grip). This tip reparents walk to **Hips**.
+
+**Derek Game-view `a9f8aff`:** walk sheath a little better but the blade still **horizontal behind the neck/shoulders** (across the torso), not **out/down along the outside of the right hip**. Mixer walk→slash blend ran arm-lock while `attackU=0`; RH child + back-aim laid the 1.01 m blade across the back. **Derek’s shot is the walk sheath SoT.** Rematch ≠ Game-view.
 
 ### takeName note
 
@@ -42,16 +46,20 @@ The unrigged body FBX has **no skeleton**. Play instantiates the Mixamo-skinned 
 
 **Derek FAIL `19b16aa`:** Game-view **walk** blade through right thigh/hip; **strike** hand at hip while blade sat upper-right. LateUpdate arm-lock ran in walk (pierce) and strike extras were overwritten before render (hand vs blade desync). Rematch stills did **not** match Game-view. Fix: sheath-only on walk; forearm snap only on attack; re-apply pose on `beginCameraRendering`.
 
+**Design lean FAIL `a9f8aff`:** walk rematch still **RH-held**. Hip sheath must be a Hips (or sheath-socket) parent, not an aimed RightHand child.
+
+**Derek Game-view `a9f8aff`:** blade **across the back / behind the neck**, not out/down the right hip. SoT for this tip’s walk sheath.
+
 ## Cam (1080×1920 Scale 1×)
 
 Rear `(0, 1.92, −3.08)` LookAt `(0, 1.12, 0.15)` FOV **42**. Mesh 1×.
 
 ## Proofs here
 
-Play-cam rematch: walk f18 / slash start f8 (RH max-reach UR) / mid f20 (horizontal front +Z; rear is **foreshortened** toward the enemy cube, not a sky stick) / finish f32 (max-reach LL). Numeric dumps `sir_aldric_pilot_dump_slash_f8.json` / `f20` / `f32`. **Not Meshy website stills. Not Unity Game-view.** Rematch camera `to_track_quat` can disagree with Unity LookAt on screen-right — Unity Play is the gate.
+Play-cam rematch: walk f18 (**hip sheath** on `mixamorig:Hips`, not RH grip; dump `sir_aldric_pilot_dump_walk_f18.json`) / slash start f8 (RH max-reach UR) / mid f20 (horizontal front +Z; rear is **foreshortened** toward the enemy cube, not a sky stick) / finish f32 (max-reach LL). Numeric dumps `sir_aldric_pilot_dump_slash_f8.json` / `f20` / `f32`. **Not Meshy website stills. Not Unity Game-view.** Rematch camera `to_track_quat` can disagree with Unity LookAt on screen-right — Unity Play is the gate.
 
 ## Unity Play
 
-1. Play **SirAldric**. Generic + `useFileScale: 0`. Sword parent `mixamorig:RightHand`. Blade ≈ 1.01 m.
-2. Walk: sword **sheathed down the right hip**, not through the mesh. 0.20 s blend. Strike: blade **collinear with the arm**; **RH** only; **tip fully extended** UR → **straight out forward** (toward ENEMY / TOP, horizontal, not sky) → LL. Full arc in Scale 1×.
-3. HOLD until Derek PASS.
+1. Play **SirAldric**. Generic + `useFileScale: 0`. Walk sword parent `mixamorig:Hips`. Strike parent `mixamorig:RightHand`. Blade ≈ 1.01 m.
+2. Walk: sword **hip-sheathed on the outside of the right hip**, tip down beside the leg, **not in the right hand**, not through the mesh. 0.20 s blend. Strike: blade **collinear with the arm**; **RH** only; **tip fully extended** UR → **straight out forward** (toward ENEMY / TOP, horizontal, not sky) → LL. Full arc in Scale 1×.
+3. HOLD until Derek Game-view PASS **and** Design can lean walk sheath rematch.

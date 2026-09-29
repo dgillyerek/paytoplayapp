@@ -1,6 +1,12 @@
 {
   "tag": "slash_f32",
   "sword_parent": "mixamorig:RightHand",
+  "grip_unity": [
+    0.44217708706855774,
+    1.0574226379394531,
+    0.2776196300983429
+  ],
+  "grip_to_rh": 0.15498614574243438,
   "LH_unity": [
     -0.23014235496520996,
     0.884227991104126,
@@ -23,7 +29,7 @@
   ],
   "elbow_deg": 0.0,
   "hand_radial": 0.6654740534022705,
-  "tip_radial": 1.50059439541172,
+  "tip_radial": 1.6104379029894536,
   "RH_character_right": false,
   "desired_unity": [
     -0.8475561114677064,

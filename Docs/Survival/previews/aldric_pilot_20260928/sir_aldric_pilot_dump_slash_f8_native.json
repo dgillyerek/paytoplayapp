@@ -1,6 +1,12 @@
 {
   "tag": "slash_f8_native",
   "sword_parent": "mixamorig:RightHand",
+  "grip_unity": [
+    -0.5011415481567383,
+    1.0539041757583618,
+    -0.12464209645986557
+  ],
+  "grip_to_rh": 0.15498618630365052,
   "LH_unity": [
     0.13766685128211975,
     0.9916821122169495,
@@ -23,7 +29,7 @@
   ],
   "elbow_deg": 79.02397047053772,
   "hand_radial": 0.5658000793631766,
-  "tip_radial": 1.2520156218392318,
+  "tip_radial": 1.1151726504379011,
   "RH_character_right": true,
   "desired_unity": null,
   "label": "Play-cam rematch, not Unity Game-view. Rear +Z is foreshortened; 3/4 shows the horizontal thrust. Trust Game-view over rematch."

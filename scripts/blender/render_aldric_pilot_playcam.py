@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Sir Aldric PILOT Play-cam rematch (no Unity Editor on this VM).
 
-Mixamo holefixed mid280k + Standard Walk / Inward Slash. RH sword prop.
+Mixamo holefixed mid280k + Standard Walk / Inward Slash.
 Honest label: Play-cam rematch, not Unity Camera.Render, not Meshy website stills.
 
 Blender Mixamo already faces rear (back to camera). Unity FaceWorldTop yaws 180
 (needed because Unity Mixamo faces −Z). Do not scale-X flip the body — that put
-the sword on the left hand. Walk: sheathed down the right hip (no arm-lock —
-Derek FAIL 19b16aa Game-view pierce). Attack: unfold RH UR → horizontal front
-(+Z) → LL; sword snapped to the forearm–hand axis. Not Unity Game-view.
+the sword on the left hand. Walk: true hip sheath on mixamorig:Hips, outside the
+right hip, tip down beside the leg — not a RH child (Design lean FAIL a9f8aff).
+Attack: reparent mixamorig:RightHand, unfold RH UR → horizontal front (+Z) → LL;
+sword snapped to the forearm–hand axis. Not Unity Game-view.
 Derek Game-view shots are the gate; rematch can disagree.
 """
 from __future__ import annotations
@@ -56,9 +57,12 @@ SLASH_FIRST = 8
 SLASH_LAST = 40
 SLASH_MID = 20
 HELD_SWORD_REST_X = 90.0
-SHEATH_RIGHT = 0.18
+HIP_SHEATH_OUTBOARD = 0.32
+HIP_SHEATH_UP = 0.02
+HIP_SHEATH_BACK = 0.06
+SHEATH_RIGHT = 0.40
 SHEATH_DOWN = 1.00
-SHEATH_BACK = 0.12
+SHEATH_BACK = 0.00
 
 
 def u2b(p):
@@ -210,7 +214,7 @@ def render_to(path: Path):
     try:
         ART.mkdir(parents=True, exist_ok=True)
         (ART / path.name).write_bytes(path.read_bytes())
-        unique = "sir_aldric_pilot_rh_sheath_lock_" + path.name.replace("sir_aldric_pilot_", "")
+        unique = "sir_aldric_pilot_hip_sheath_" + path.name.replace("sir_aldric_pilot_", "")
         (ART / unique).write_bytes(path.read_bytes())
     except OSError as exc:
         print("artifact skip", exc)
@@ -222,18 +226,33 @@ def pick_action(*needles):
     return max(pool, key=lambda a: a.frame_range[1] - a.frame_range[0])
 
 
+def bind_sword_to(arm, sword, bone_name, local_loc=(0.0, 0.0, 0.0)):
+    """Walk socket = mixamorig:Hips. Strike socket = mixamorig:RightHand."""
+    if sword is None:
+        return
+    sword.parent = arm
+    sword.parent_type = "BONE"
+    sword.parent_bone = bone_name
+    try:
+        sword.matrix_parent_inverse.identity()
+    except Exception:
+        sword.matrix_parent_inverse = Matrix.Identity(4)
+    sword.rotation_mode = "XYZ"
+    sword.location = local_loc
+    sword.rotation_euler = (math.radians(90.0), 0.0, 0.0)
+    sword.scale = (1.0, 1.0, 1.0)
+    bpy.context.view_layer.update()
+    print("sword parented to", sword.parent_bone, "local", tuple(local_loc))
+
+
 def attach_sword(arm, sword_z=0.0):
     if not SWORD.exists():
         return None
     bpy.ops.import_scene.fbx(filepath=str(SWORD))
     sword = next(o for o in bpy.data.objects if o.type == "MESH" and "sword" in o.name.lower())
-    sword.parent = arm
-    sword.parent_type = "BONE"
-    sword.parent_bone = "mixamorig:RightHand"
-    sword.location = (0.0, 0.08, 0.0)
-    sword.rotation_euler = (math.radians(90.0), 0.0, math.radians(sword_z))
-    sword.scale = (1.0, 1.0, 1.0)
-    print("sword parented to", sword.parent_bone, "eulerZ", sword_z, "blade~1.01m (Unity compensates parent lossyScale)")
+    _ = sword_z
+    bind_sword_to(arm, sword, "mixamorig:Hips", local_loc=(0.0, 0.0, 0.0))
+    print("sword initial parent", sword.parent_bone, "blade~1.01m (Unity compensates parent lossyScale)")
     return sword
 
 
@@ -346,7 +365,11 @@ def dump_hands(arm, sword, tag, desired_unity=None):
     parent = sword.parent_bone if sword is not None else None
     tip_b = None
     tip_u = None
+    grip_b = None
+    grip_u = None
     if sword is not None:
+        grip_b = sword.matrix_world.to_translation()
+        grip_u = to_unity(grip_b)
         raw = sword.matrix_world.to_3x3() @ Vector((0.0, 0.0, 1.0))
         if raw.length > 1e-6:
             tip_b = raw.normalized()
@@ -362,16 +385,20 @@ def dump_hands(arm, sword, tag, desired_unity=None):
         elbow = math.degrees(upper.angle(lower))
     tip_pos = None
     tip_radial = None
-    if rh is not None and tip_b is not None:
-        tip_pos = rh + (tip_b * 1.01)
+    origin = grip_b if grip_b is not None else rh
+    if origin is not None and tip_b is not None:
+        tip_pos = origin + (tip_b * 1.01)
         if hips is not None:
             tip_radial = (tip_pos - hips).length
     hand_radial = (rh - hips).length if rh is not None and hips is not None else None
+    grip_to_rh = (grip_b - rh).length if grip_b is not None and rh is not None else None
     print(
         "dump",
         tag,
         "parent",
         parent,
+        "grip_u",
+        None if grip_u is None else tuple(round(x, 3) for x in grip_u),
         "RH_u",
         None if rh_u is None else tuple(round(x, 3) for x in rh_u),
         "tip_u",
@@ -388,6 +415,8 @@ def dump_hands(arm, sword, tag, desired_unity=None):
     payload = {
         "tag": tag,
         "sword_parent": parent,
+        "grip_unity": grip_u,
+        "grip_to_rh": grip_to_rh,
         "LH_unity": lh_u,
         "RH_unity": rh_u,
         "head_unity": head_u,
@@ -467,33 +496,59 @@ def rotate_pose_bone(arm, pb, q_world):
     pb.matrix = arm.matrix_world.inverted() @ new_mw
 
 
+def hip_outboard_blender(arm):
+    """Flattened (RightUpLeg − Hips) in blender XY (drop up/+Z). Anatomical right hip."""
+    hips = bone_world(arm, "mixamorig:Hips")
+    leg = bone_world(arm, "mixamorig:RightUpLeg")
+    if hips is None:
+        return Vector((-1.0, 0.0, 0.0))
+    if leg is None:
+        return Vector((-1.0, 0.0, 0.0))
+    d = Vector((leg.x - hips.x, leg.y - hips.y, 0.0))
+    if d.length < 1e-5:
+        return Vector((-1.0, 0.0, 0.0))
+    return d.normalized()
+
+
+def set_sword_world(sword, loc, quat):
+    desired = quat.to_matrix().to_4x4()
+    desired.translation = loc
+    sword.matrix_world = desired
+    bpy.context.view_layer.update()
+
+
 def apply_sheathed_sword(arm, sword):
-    """Walk: tip down the outside of the right hip. Not Unity Game-view."""
+    """Walk: mixamorig:Hips parent, grip outside right hip, tip down beside the leg.
+
+    Not a RH child (Design lean FAIL a9f8aff). Not Unity Game-view.
+    """
     if sword is None:
         return
+    bind_sword_to(arm, sword, "mixamorig:Hips", local_loc=(0.0, 0.0, 0.0))
+    hips = bone_world(arm, "mixamorig:Hips")
+    if hips is None:
+        return
+    outboard = hip_outboard_blender(arm)
+    up = Vector((0.0, 0.0, 1.0))
+    back = Vector((0.0, 1.0, 0.0))
+    down = Vector((0.0, 0.0, -1.0))
+    grip = hips + (outboard * HIP_SHEATH_OUTBOARD) + (up * HIP_SHEATH_UP) + (back * HIP_SHEATH_BACK)
+    # Out + world-down beside the right leg. No back-aim (Derek Game-view a9f8aff across the neck).
+    sheath = (outboard * SHEATH_RIGHT) + (down * SHEATH_DOWN) + (back * SHEATH_BACK)
     rest_q = Euler((math.radians(HELD_SWORD_REST_X), 0.0, 0.0), "XYZ").to_quaternion()
-    bone_q = Quaternion()
-    if sword.parent_type == "BONE" and sword.parent_bone:
-        pb = arm.pose.bones.get(sword.parent_bone)
-        if pb is not None:
-            bone_q = (arm.matrix_world @ pb.matrix).to_quaternion()
-    rest_world = bone_q @ rest_q
-    rest_blade = rest_world @ Vector((0.0, 0.0, 1.0))
-    sheath_b = blender_from_unity(SHEATH_RIGHT, -SHEATH_DOWN, -SHEATH_BACK)
-    if rest_blade.length > 1e-6:
-        snap = rest_blade.normalized().rotation_difference(sheath_b)
-        world = snap @ rest_world
+    rest_blade = rest_q @ Vector((0.0, 0.0, 1.0))
+    if rest_blade.length > 1e-6 and sheath.length > 1e-6:
+        snap = rest_blade.normalized().rotation_difference(sheath.normalized())
+        world_q = snap @ rest_q
     else:
-        world = rest_world
-    local = bone_q.inverted() @ world
-    sword.rotation_mode = "QUATERNION"
-    sword.rotation_quaternion = local
-    bpy.context.view_layer.update()
+        world_q = rest_q
+    set_sword_world(sword, grip, world_q)
 
 
 def apply_attack_windup(arm, sword, frame):
     """Match Unity ApplyAttackWindupLift: unfold elbow, arm UR→front→LL, rigid sword."""
     k = windup_weight(frame)
+    bind_sword_to(arm, sword, "mixamorig:RightHand", local_loc=(0.0, 0.08, 0.0))
     rarm = arm.pose.bones.get("mixamorig:RightArm")
     rfore = arm.pose.bones.get("mixamorig:RightForeArm")
     rhand = arm.pose.bones.get("mixamorig:RightHand")
@@ -579,6 +634,7 @@ def render_walk():
     cam = setup_studio()
     pose_at(arm, act, still)
     apply_sheathed_sword(arm, sword)
+    dump_hands(arm, sword, "walk_f18")
     look(cam, *CAM_REAR)
     render_to(PROOF / "sir_aldric_pilot_rear_walk_playcam.png")
     look(cam, *CAM_FRONT)

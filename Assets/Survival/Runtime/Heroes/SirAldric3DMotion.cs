@@ -52,13 +52,17 @@ namespace Survival.Domain.Heroes
         public const float AttackSlashLlU = 0.78f;
         public const float HeldSwordRestEulerX = 90f;
         /// <summary>
-        /// Walk sheath in Unity world after FaceWorldTop: tip down the outside of the
-        /// right hip. Derek FAIL 19b16aa: LateUpdate arm-lock during walk drove the
-        /// blade through the thigh. Not used during attack (forearm–hand snap).
+        /// Walk hip-sheath socket in Unity world after FaceWorldTop. Grip sits on the
+        /// outside of the right hip (not in mixamorig:RightHand). Tip down beside the
+        /// leg. Strike reparents to RightHand. Design lean FAIL a9f8aff: RH-held
+        /// “sheath aim” still read as a hand grip.
         /// </summary>
-        public const float HeldSwordSheathRight = 0.18f;
+        public const float HipSheathOutboard = 0.32f;
+        public const float HipSheathUp = 0.02f;
+        public const float HipSheathBack = 0.06f;
+        public const float HeldSwordSheathRight = 0.40f;
         public const float HeldSwordSheathDown = 1.00f;
-        public const float HeldSwordSheathBack = 0.12f;
+        public const float HeldSwordSheathBack = 0.00f;
 
         /// <summary>
         /// Play-cam SoT for SirAldricDemo / 1080×1920 Game-view Scale 1×. View +Z = TOP.
