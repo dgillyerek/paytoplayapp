@@ -34,7 +34,7 @@ namespace Survival.Unity
         public const string AttackAuthoredReason =
             "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Inward Slash " +
             "frames 8–40. Sword stays mixamorig:RightHand (never a whole-body X-flip). " +
-            "AttackWindupLift: RH high, tip sky+slight-right, sweep UR→LL. " +
+            "AttackWindupLift: RH max-reach sweep UR→front→LL, elbow unfold, tip far. " +
             "RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
         public const float SwordBladeMeters = 1.01f;
@@ -54,6 +54,7 @@ namespace Survival.Unity
         private bool _attackReady;
         private GameObject? _instance;
         private Transform? _rightArm;
+        private Transform? _rightForeArm;
         private Transform? _rightHand;
         private Transform? _heldSword;
 
@@ -240,32 +241,35 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Light attack-only offset after Evaluate. Raises mixamorig:RightHand in world
-        /// space (up + Play-cam right) and aims the RH sword tip skyward / slight-right,
-        /// then eases off for Mixamo's lower-left finish. Not AimChain. Not a body X-flip.
+        /// Attack-only offset after Evaluate. Unfolds mixamorig:RightForeArm, points
+        /// the RH along AttackSlashReach (UR → front +Z → LL), and aims the blade
+        /// the same way so the tip stays at max distance from the body. Not AimChain.
+        /// Not a body X-flip. Sword stays on mixamorig:RightHand.
         /// </summary>
         private void ApplyAttackWindupLift(float attackWeight, float attackNormalized01)
         {
             var k = Mathf.Clamp01(attackWeight) * SirAldric3DMotion.AttackWindupWeight(attackNormalized01);
+            SirAldric3DMotion.AttackSlashReach(attackNormalized01, out var dx, out var dy, out var dz);
+            var desired = new Vector3(dx, dy, dz);
             if (k > 0.001f && _rightArm != null && _rightHand != null)
             {
+                if (_rightForeArm != null)
+                {
+                    var upper = _rightForeArm.position - _rightArm.position;
+                    var lower = _rightHand.position - _rightForeArm.position;
+                    if (upper.sqrMagnitude > 1e-6f && lower.sqrMagnitude > 1e-6f)
+                    {
+                        var unfold = Quaternion.FromToRotation(lower.normalized, upper.normalized);
+                        _rightForeArm.rotation =
+                            Quaternion.Slerp(Quaternion.identity, unfold, k) * _rightForeArm.rotation;
+                    }
+                }
+
                 var reach = _rightHand.position - _rightArm.position;
                 if (reach.sqrMagnitude > 1e-6f)
                 {
-                    // After FaceWorldTop yaw 180, Mixamo forward = +Z and
-                    // character-right = world +X = rear Play-cam right.
-                    var desired = new Vector3(
-                        SirAldric3DMotion.AttackWindupLiftRight,
-                        SirAldric3DMotion.AttackWindupLiftUp,
-                        0f);
-                    var rot = Quaternion.FromToRotation(reach.normalized, desired.normalized);
-                    var ang = Quaternion.Angle(Quaternion.identity, rot);
-                    var maxDeg = SirAldric3DMotion.AttackWindupLiftMaxDegrees * k;
-                    var t = ang > 0.05f ? Mathf.Min(1f, maxDeg / ang) : 0f;
-                    if (t > 0.001f)
-                    {
-                        _rightArm.rotation = Quaternion.Slerp(Quaternion.identity, rot, t) * _rightArm.rotation;
-                    }
+                    var rot = Quaternion.FromToRotation(reach.normalized, desired);
+                    _rightArm.rotation = Quaternion.Slerp(Quaternion.identity, rot, k) * _rightArm.rotation;
                 }
             }
 
@@ -281,15 +285,15 @@ namespace Survival.Unity
                 return;
             }
 
-            var blade = new Vector3(SirAldric3DMotion.AttackWindupTipRight, 1f, 0f).normalized;
             var restWorld = _heldSword.parent.rotation * restLocal;
-            var aimWorld = Quaternion.FromToRotation(Vector3.forward, blade);
+            var aimWorld = Quaternion.FromToRotation(Vector3.forward, desired);
             _heldSword.rotation = Quaternion.Slerp(restWorld, aimWorld, k);
         }
 
         private void CacheAttackBones(GameObject root)
         {
             _rightArm = FindNamedBone(root, "mixamorig:RightArm", "RightArm");
+            _rightForeArm = FindNamedBone(root, "mixamorig:RightForeArm", "RightForeArm");
             _rightHand = FindNamedBone(root, "mixamorig:RightHand", "RightHand");
             _heldSword = FindNamedBone(root, "SirAldricPilotSword");
         }

@@ -6,8 +6,8 @@ Honest label: Play-cam rematch, not Unity Camera.Render, not Meshy website still
 
 Blender Mixamo already faces rear (back to camera). Unity FaceWorldTop yaws 180
 (needed because Unity Mixamo faces −Z). Do not scale-X flip the body — that put
-the sword on the left hand. Rematch applies the same RH world-space lift + tip
-aim as Unity ApplyAttackWindupLift: RH high, tip sky+slight-right, finish LL.
+the sword on the left hand. Rematch applies the same RH max-reach slash as Unity
+ApplyAttackWindupLift: unfold elbow, tip far UR → front → LL. Not Unity Game-view.
 """
 from __future__ import annotations
 
@@ -36,14 +36,20 @@ CAM_FRONT = ((0.0, 1.92, 3.38), (0.0, 1.12, 0.15))
 CAM_34 = ((1.82, 1.92, -2.38), (0.0, 1.12, 0.15))
 CAM_FOV = 42.0
 
-# Match Unity ApplyAttackWindupLift (world-space RH lift + sword tip aim).
-WINDUP_LIFT_UP = 1.0
-WINDUP_LIFT_RIGHT = 0.22
-WINDUP_LIFT_MAX_DEG = 80.0
-WINDUP_TIP_RIGHT = 0.22
-WINDUP_EASE_END = 0.72
+# Match Unity ApplyAttackWindupLift (max-reach RH arc, elbow unfold).
+SLASH_UR_RIGHT = 0.85
+SLASH_UR_UP = 0.70
+SLASH_UR_FRONT = 0.25
+SLASH_FRONT_UP = 0.18
+SLASH_FRONT_Z = 1.00
+SLASH_LL_RIGHT = -0.85
+SLASH_LL_UP = -0.40
+SLASH_LL_FRONT = 0.30
+SLASH_FRONT_U = 0.40
+SLASH_LL_U = 0.75
 SLASH_FIRST = 8
 SLASH_LAST = 40
+SLASH_MID = 20
 HELD_SWORD_REST_X = 90.0
 
 
@@ -196,7 +202,7 @@ def render_to(path: Path):
     try:
         ART.mkdir(parents=True, exist_ok=True)
         (ART / path.name).write_bytes(path.read_bytes())
-        unique = "sir_aldric_pilot_rh_sky_sweep_" + path.name.replace("sir_aldric_pilot_", "")
+        unique = "sir_aldric_pilot_rh_maxreach_" + path.name.replace("sir_aldric_pilot_", "")
         (ART / unique).write_bytes(path.read_bytes())
     except OSError as exc:
         print("artifact skip", exc)
@@ -287,12 +293,8 @@ def pose_at(arm, act, frame):
 
 
 def windup_weight(frame):
-    span = float(SLASH_LAST - SLASH_FIRST)
-    u = 0.0 if span <= 0 else (float(frame) - SLASH_FIRST) / span
-    u = max(0.0, min(1.0, u))
-    x = max(0.0, min(1.0, u / WINDUP_EASE_END)) if WINDUP_EASE_END > 1e-4 else 1.0
-    smooth = x * x * (3.0 - 2.0 * x)
-    return 1.0 - smooth
+    _ = frame
+    return 1.0
 
 
 def freeze_pose(arm, act, frame):
@@ -326,50 +328,54 @@ def bone_world(arm, name):
 
 
 def dump_hands(arm, sword, tag):
-    """Numeric RH-vs-LH + tip proof. Rematch stills are not Unity Game-view."""
+    """Numeric RH-vs-LH + tip reach proof. Rematch stills are not Unity Game-view."""
     lh = bone_world(arm, "mixamorig:LeftHand")
     rh = bone_world(arm, "mixamorig:RightHand")
     head = bone_world(arm, "mixamorig:Head")
+    hips = bone_world(arm, "mixamorig:Hips")
+    rarm = bone_world(arm, "mixamorig:RightArm")
+    rfore = bone_world(arm, "mixamorig:RightForeArm")
     parent = sword.parent_bone if sword is not None else None
-    tip_u = None
-    if sword is not None:
-        blade_b = sword.matrix_world.to_3x3() @ Vector((0.0, 0.0, 1.0))
-        if blade_b.length > 1e-6:
-            tip_u = to_unity(blade_b.normalized())
-    lh_u = to_unity(lh) if lh is not None else None
-    rh_u = to_unity(rh) if rh is not None else None
-    head_u = to_unity(head) if head is not None else None
-    # Blender already-rear Mixamo: anatomical right is blender −X (not Unity +X).
-    rh_char_right = rh is not None and lh is not None and rh.x < lh.x
-    rh_high = rh_u is not None and head_u is not None and rh_u[1] > head_u[1] - 0.05
-    tip_up = tip_u is not None and tip_u[1] > 0.70
     tip_b = None
+    tip_u = None
     if sword is not None:
         raw = sword.matrix_world.to_3x3() @ Vector((0.0, 0.0, 1.0))
         if raw.length > 1e-6:
             tip_b = raw.normalized()
-    tip_char_right = tip_b is not None and tip_b.x < -0.02
+            tip_u = to_unity(tip_b)
+    lh_u = to_unity(lh) if lh is not None else None
+    rh_u = to_unity(rh) if rh is not None else None
+    head_u = to_unity(head) if head is not None else None
+    rh_char_right = rh is not None and lh is not None and rh.x < lh.x
+    elbow = None
+    if rarm is not None and rfore is not None and rh is not None:
+        upper = (rfore - rarm).normalized()
+        lower = (rh - rfore).normalized()
+        elbow = math.degrees(upper.angle(lower))
+    tip_pos = None
+    tip_radial = None
+    if rh is not None and tip_b is not None:
+        tip_pos = rh + (tip_b * 1.01)
+        if hips is not None:
+            tip_radial = (tip_pos - hips).length
+    hand_radial = (rh - hips).length if rh is not None and hips is not None else None
     print(
         "dump",
         tag,
         "parent",
         parent,
-        "LH_u",
-        None if lh_u is None else tuple(round(x, 3) for x in lh_u),
         "RH_u",
         None if rh_u is None else tuple(round(x, 3) for x in rh_u),
-        "head_u",
-        None if head_u is None else tuple(round(x, 3) for x in head_u),
         "tip_u",
         None if tip_u is None else tuple(round(x, 3) for x in tip_u),
+        "elbow_deg",
+        None if elbow is None else round(elbow, 1),
+        "hand_radial",
+        None if hand_radial is None else round(hand_radial, 3),
+        "tip_radial",
+        None if tip_radial is None else round(tip_radial, 3),
         "RH_character_right",
         rh_char_right,
-        "RH_high",
-        rh_high,
-        "tip_up",
-        tip_up,
-        "tip_character_right",
-        tip_char_right,
     )
     payload = {
         "tag": tag,
@@ -378,10 +384,10 @@ def dump_hands(arm, sword, tag):
         "RH_unity": rh_u,
         "head_unity": head_u,
         "tip_unity": tip_u,
+        "elbow_deg": elbow,
+        "hand_radial": hand_radial,
+        "tip_radial": tip_radial,
         "RH_character_right": rh_char_right,
-        "RH_high": rh_high,
-        "tip_up": tip_up,
-        "tip_character_right": tip_char_right,
         "label": "Play-cam rematch, not Unity Game-view",
     }
     PROOF.mkdir(parents=True, exist_ok=True)
@@ -390,43 +396,83 @@ def dump_hands(arm, sword, tag):
     print("wrote", path)
 
 
-def blender_char_right_up(right, up):
-    """Unity FaceWorldTop yaws Mixamo 180 so character-right = world +X.
+def blender_from_unity(right, up, front):
+    """Unity after yaw 180: +X right, +Y up, +Z front.
 
-    Blender Mixamo already faces rear (no extra yaw): character-right is blender −X.
-    Rematch therefore uses (−right, 0, up) so the lift matches Unity Play's
-    anatomical-right / camera-right, not a raw u2b of Unity +X.
+    Blender Mixamo already faces rear: character-right = −X, up = +Z, front = −Y.
     """
-    return Vector((-right, 0.0, up)).normalized()
+    v = Vector((-right, -front, up))
+    if v.length < 1e-6:
+        return Vector((0.0, -1.0, 0.0))
+    return v.normalized()
+
+
+def attack_slash_u(frame):
+    span = float(SLASH_LAST - SLASH_FIRST)
+    if span <= 1e-4:
+        return 0.0
+    return max(0.0, min(1.0, (float(frame) - SLASH_FIRST) / span))
+
+
+def attack_slash_reach_unity(u):
+    u = max(0.0, min(1.0, u))
+
+    def sm(x):
+        x = max(0.0, min(1.0, x))
+        return x * x * (3.0 - 2.0 * x)
+
+    if u <= SLASH_FRONT_U:
+        t = sm(u / SLASH_FRONT_U)
+        a = (SLASH_UR_RIGHT, SLASH_UR_UP, SLASH_UR_FRONT)
+        b = (0.0, SLASH_FRONT_UP, SLASH_FRONT_Z)
+    elif u <= SLASH_LL_U:
+        t = sm((u - SLASH_FRONT_U) / (SLASH_LL_U - SLASH_FRONT_U))
+        a = (0.0, SLASH_FRONT_UP, SLASH_FRONT_Z)
+        b = (SLASH_LL_RIGHT, SLASH_LL_UP, SLASH_LL_FRONT)
+    else:
+        return blender_from_unity(SLASH_LL_RIGHT, SLASH_LL_UP, SLASH_LL_FRONT)
+    x = a[0] + (b[0] - a[0]) * t
+    y = a[1] + (b[1] - a[1]) * t
+    z = a[2] + (b[2] - a[2]) * t
+    return blender_from_unity(x, y, z)
+
+
+def rotate_pose_bone(arm, pb, q_world):
+    mw = arm.matrix_world @ pb.matrix
+    origin = mw.to_translation()
+    R = q_world.to_matrix().to_4x4()
+    new_mw = Matrix.Translation(origin) @ R @ Matrix.Translation(-origin) @ mw
+    pb.matrix = arm.matrix_world.inverted() @ new_mw
 
 
 def apply_attack_windup(arm, sword, frame):
-    """Match Unity ApplyAttackWindupLift: world RH FromToRotation + sword tip aim."""
+    """Match Unity ApplyAttackWindupLift: unfold elbow, max-reach UR→front→LL."""
     k = windup_weight(frame)
     rarm = arm.pose.bones.get("mixamorig:RightArm")
+    rfore = arm.pose.bones.get("mixamorig:RightForeArm")
     rhand = arm.pose.bones.get("mixamorig:RightHand")
     dump_hands(arm, sword, f"slash_f{int(frame)}_native")
+    u = attack_slash_u(frame)
+    desired = attack_slash_reach_unity(u)
     if k > 0.001 and rarm is not None and rhand is not None:
+        if rfore is not None:
+            arm_w = (arm.matrix_world @ rarm.matrix).to_translation()
+            fore_w = (arm.matrix_world @ rfore.matrix).to_translation()
+            hand_w = (arm.matrix_world @ rhand.matrix).to_translation()
+            upper = fore_w - arm_w
+            lower = hand_w - fore_w
+            if upper.length > 1e-4 and lower.length > 1e-4:
+                q = lower.normalized().rotation_difference(upper.normalized())
+                ident = Euler((0, 0, 0), "XYZ").to_quaternion()
+                rotate_pose_bone(arm, rfore, ident.slerp(q, k))
+                bpy.context.view_layer.update()
         arm_w = (arm.matrix_world @ rarm.matrix).to_translation()
         hand_w = (arm.matrix_world @ rhand.matrix).to_translation()
         reach = hand_w - arm_w
         if reach.length > 1e-4:
-            desired = blender_char_right_up(WINDUP_LIFT_RIGHT, WINDUP_LIFT_UP)
             q = reach.normalized().rotation_difference(desired)
-            ang = math.degrees(q.angle)
-            t = min(1.0, (WINDUP_LIFT_MAX_DEG * k) / max(ang, 1e-3))
             ident = Euler((0, 0, 0), "XYZ").to_quaternion()
-            qs = ident.slerp(q, t)
-            mw = arm.matrix_world @ rarm.matrix
-            origin = mw.to_translation()
-            R = qs.to_matrix().to_4x4()
-            new_mw = (
-                Matrix.Translation(origin)
-                @ R
-                @ Matrix.Translation(-origin)
-                @ mw
-            )
-            rarm.matrix = arm.matrix_world.inverted() @ new_mw
+            rotate_pose_bone(arm, rarm, ident.slerp(q, k))
             bpy.context.view_layer.update()
     if sword is not None:
         rest_q = Euler((math.radians(HELD_SWORD_REST_X), 0.0, 0.0), "XYZ").to_quaternion()
@@ -434,20 +480,19 @@ def apply_attack_windup(arm, sword, frame):
             sword.rotation_mode = "XYZ"
             sword.rotation_euler = Euler((math.radians(HELD_SWORD_REST_X), 0.0, 0.0), "XYZ")
         else:
-            blade_b = blender_char_right_up(WINDUP_TIP_RIGHT, 1.0)
             bone_q = Quaternion()
             if sword.parent_type == "BONE" and sword.parent_bone:
                 pb = arm.pose.bones.get(sword.parent_bone)
                 if pb is not None:
                     bone_q = (arm.matrix_world @ pb.matrix).to_quaternion()
             rest_world = bone_q @ rest_q
-            aim_world = Vector((0.0, 0.0, 1.0)).rotation_difference(blade_b)
+            aim_world = Vector((0.0, 0.0, 1.0)).rotation_difference(desired)
             mixed = rest_world.slerp(aim_world, k)
             local = bone_q.inverted() @ mixed
             sword.rotation_mode = "QUATERNION"
             sword.rotation_quaternion = local
     bpy.context.view_layer.update()
-    print("windup", frame, "k", round(k, 3))
+    print("slash_reach", frame, "u", round(u, 3), "k", round(k, 3), "desired_b", tuple(round(c, 3) for c in desired))
     dump_hands(arm, sword, f"slash_f{int(frame)}")
 
 
@@ -475,8 +520,9 @@ def render_attack():
     mesh, arm, act, sword = import_mixamo_body(ATK)
     bind_pbr(mesh)
     start = SLASH_FIRST
+    mid = SLASH_MID
     finish = 32
-    print("slash start", start, "finish", finish, "mesh", mesh.name)
+    print("slash start", start, "mid", mid, "finish", finish, "mesh", mesh.name)
     cam = setup_studio()
     pose_slash(arm, act, sword, start)
     look(cam, *CAM_REAR)
@@ -485,6 +531,13 @@ def render_attack():
     render_to(PROOF / "sir_aldric_pilot_front_strike_start_playcam.png")
     look(cam, *CAM_34)
     render_to(PROOF / "sir_aldric_pilot_34_strike_start_playcam.png")
+    pose_slash(arm, act, sword, mid)
+    look(cam, *CAM_REAR)
+    render_to(PROOF / "sir_aldric_pilot_rear_strike_mid_playcam.png")
+    look(cam, *CAM_FRONT)
+    render_to(PROOF / "sir_aldric_pilot_front_strike_mid_playcam.png")
+    look(cam, *CAM_34)
+    render_to(PROOF / "sir_aldric_pilot_34_strike_mid_playcam.png")
     pose_slash(arm, act, sword, finish)
     look(cam, *CAM_REAR)
     render_to(PROOF / "sir_aldric_pilot_rear_strike_playcam.png")

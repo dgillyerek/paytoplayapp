@@ -18,7 +18,7 @@ Slash With-Skin mesh is **not instantiated**. `StripEmbeddedClipMeshes` disables
 
 **Sword hand:** always `mixamorig:RightHand`. FaceWorldTop yaws 180 and **Abs** scale (never `scale.x = -1`). Derek FAIL `212c6da` whole-body X-flip put the sword on the left hand — discarded. Local Generic Euler extras (`5f5e375`) swung the opposite way on Play-cam — discarded. Prefer RH parent + world-space tip arc.
 
-Light **attack-only** offset after `Evaluate()` (`ApplyAttackWindupLift`): world-space RH lift toward up + Play-cam right (max 80°), sword blade FromToRotation toward sky + slight right, ease to rest Euler `(90,0,0)` by the lower-left finish. Not AimChain. Not a body X-flip. Blender rematch maps that lift onto Mixamo’s already-rear character-right (blender −X); it is **not** a raw u2b of Unity +X.
+Light **attack-only** offset after `Evaluate()` (`ApplyAttackWindupLift`): unfold `mixamorig:RightForeArm` (max arm length), point RH along `AttackSlashReach` **UR → front +Z → LL**, aim blade the same way so the **tip stays far from the body the whole slash**. Weight stays 1 for the clip (mixer ramps walk blend). Not AimChain. Not a body X-flip. Blender rematch maps Unity (right, up, front) onto already-rear Mixamo as `(−right, −front, up)`.
 
 ### takeName note
 
@@ -42,10 +42,10 @@ Rear `(0, 1.92, −3.08)` LookAt `(0, 1.12, 0.15)` FOV **42**. Mesh 1×.
 
 ## Proofs here
 
-Play-cam rematch: walk f18 / slash start f8 (RH high, tip skyward slight-right) / finish f32 (sweep lower-left). Numeric dumps `sir_aldric_pilot_dump_slash_f8.json` / `f32`. **Not Meshy website stills. Not Unity Game-view.** Rematch camera `to_track_quat` can disagree with Unity LookAt on screen-right — Unity Play is the gate.
+Play-cam rematch: walk f18 / slash start f8 (RH max-reach UR) / mid f20 (straight front) / finish f32 (max-reach LL). Numeric dumps `sir_aldric_pilot_dump_slash_f8.json` / `f20` / `f32`. **Not Meshy website stills. Not Unity Game-view.** Rematch camera `to_track_quat` can disagree with Unity LookAt on screen-right — Unity Play is the gate.
 
 ## Unity Play
 
 1. Play **SirAldric**. Generic + `useFileScale: 0`. Sword parent `mixamorig:RightHand`. Blade ≈ 1.01 m.
-2. Walk readable. 0.20 s blend. From Derek’s screen: **RH** raises high; **tip straight up and slightly right**; then a **sweep UR → LL**. Full arc in Scale 1×.
+2. Walk readable. 0.20 s blend. From Derek’s screen: **RH** only; **tip fully extended** UR → straight out front → LL the whole slash. Full arc in Scale 1×.
 3. HOLD until Derek PASS.

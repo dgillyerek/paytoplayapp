@@ -33,14 +33,23 @@ namespace Survival.Domain.Heroes
 
         /// <summary>
         /// Attack-only extras after Evaluate (not AimChain, not a whole-body X-flip).
-        /// World-space RH lift toward up + camera-right; sword blade aims sky + slight right
-        /// at wind-up, then eases off so Mixamo finishes lower-left.
+        /// Full-arm max-reach sweep on mixamorig:RightHand: upper-right → straight
+        /// front (+Z / TOP) → lower-left. Elbow unfolds; blade stays along the arm
+        /// so the tip stays far from the body the whole slash. Mixer attackWeight
+        /// ramps at the walk blend — do not ease extras off mid-clip (Derek bb86074:
+        /// collapsed tip that only opened late).
+        /// Unity after yaw 180: +X = character/camera-right, +Y = up, +Z = front/TOP.
         /// </summary>
-        public const float AttackWindupLiftUp = 1f;
-        public const float AttackWindupLiftRight = 0.22f;
-        public const float AttackWindupLiftMaxDegrees = 80f;
-        public const float AttackWindupTipRight = 0.22f;
-        public const float AttackWindupEaseEnd = 0.72f;
+        public const float AttackSlashUrRight = 0.85f;
+        public const float AttackSlashUrUp = 0.70f;
+        public const float AttackSlashUrFront = 0.25f;
+        public const float AttackSlashFrontUp = 0.18f;
+        public const float AttackSlashFrontZ = 1.00f;
+        public const float AttackSlashLlRight = -0.85f;
+        public const float AttackSlashLlUp = -0.40f;
+        public const float AttackSlashLlFront = 0.30f;
+        public const float AttackSlashFrontU = 0.40f;
+        public const float AttackSlashLlU = 0.75f;
         public const float HeldSwordRestEulerX = 90f;
 
         /// <summary>
@@ -370,12 +379,77 @@ namespace Survival.Domain.Heroes
         }
 
         /// <summary>
-        /// 1 at slash start (overhead tip-right wind-up), 0 by the down-left finish.
+        /// 1 for the whole Mixamo slash. Walk↔slash is the mixer attackWeight only.
         /// </summary>
         public static float AttackWindupWeight(float attackNormalized01)
         {
+            _ = attackNormalized01;
+            return 1f;
+        }
+
+        /// <summary>
+        /// Unit direction of the RH max-reach arc in Unity world after FaceWorldTop.
+        /// u=0 upper-right, u=FrontU straight +Z, u≥LlU lower-left.
+        /// </summary>
+        public static void AttackSlashReach(float attackNormalized01, out float x, out float y, out float z)
+        {
             var u = Clamp01(attackNormalized01);
-            return 1f - Smooth01(Clamp01(u / AttackWindupEaseEnd));
+            float ax;
+            float ay;
+            float az;
+            float bx;
+            float by;
+            float bz;
+            float t;
+            if (u <= AttackSlashFrontU)
+            {
+                t = Smooth01(u / AttackSlashFrontU);
+                ax = AttackSlashUrRight;
+                ay = AttackSlashUrUp;
+                az = AttackSlashUrFront;
+                bx = 0f;
+                by = AttackSlashFrontUp;
+                bz = AttackSlashFrontZ;
+            }
+            else if (u <= AttackSlashLlU)
+            {
+                t = Smooth01((u - AttackSlashFrontU) / (AttackSlashLlU - AttackSlashFrontU));
+                ax = 0f;
+                ay = AttackSlashFrontUp;
+                az = AttackSlashFrontZ;
+                bx = AttackSlashLlRight;
+                by = AttackSlashLlUp;
+                bz = AttackSlashLlFront;
+            }
+            else
+            {
+                x = AttackSlashLlRight;
+                y = AttackSlashLlUp;
+                z = AttackSlashLlFront;
+                Normalize(ref x, ref y, ref z);
+                return;
+            }
+
+            x = Lerp(ax, bx, t);
+            y = Lerp(ay, by, t);
+            z = Lerp(az, bz, t);
+            Normalize(ref x, ref y, ref z);
+        }
+
+        private static void Normalize(ref float x, ref float y, ref float z)
+        {
+            var mag = MathF.Sqrt((x * x) + (y * y) + (z * z));
+            if (mag < 1e-5f)
+            {
+                x = 0f;
+                y = 0f;
+                z = 1f;
+                return;
+            }
+
+            x /= mag;
+            y /= mag;
+            z /= mag;
         }
 
         public static float Clamp01(float x)
