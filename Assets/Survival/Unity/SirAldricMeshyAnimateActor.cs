@@ -60,7 +60,7 @@ namespace Survival.Unity
         private Transform? _heldSword;
         /// <summary>
         /// Mesh-local blade axis. Unity FBX bakeAxisConversion turns Design +Z into
-        /// local +Y — FromToRotation(Vector3.forward, desired) left the visible blade
+        /// local +Y — aiming transform.forward at desired left the visible blade
         /// on world +Y (Derek FAIL b0a9509 Game-view sky). Rematch blender has no bake
         /// so it still aims local +Z.
         /// </summary>

@@ -7,9 +7,9 @@
     -0.19420897960662842
   ],
   "RH_unity": [
-    0.3136711120605469,
-    1.1098437309265137,
-    0.30583125352859497
+    0.30670166015625,
+    1.113207459449768,
+    0.3281683027744293
   ],
   "head_unity": [
     -0.11254661530256271,
@@ -17,13 +17,18 @@
     -0.010258659720420837
   ],
   "tip_unity": [
-    0.8619341850280762,
-    -0.4056164026260376,
-    0.30421194434165955
+    0.8475561141967773,
+    -0.39867696166038513,
+    0.3502931296825409
   ],
   "elbow_deg": 0.0,
-  "hand_radial": 0.661131023477813,
-  "tip_radial": 1.494662872216387,
+  "hand_radial": 0.6654740534022705,
+  "tip_radial": 1.5005943510362612,
   "RH_character_right": false,
-  "label": "Play-cam rematch, not Unity Game-view"
+  "desired_unity": [
+    -0.8475561114677064,
+    -0.39867672031932594,
+    0.3502934635261795
+  ],
+  "label": "Play-cam rematch, not Unity Game-view. Rear +Z is foreshortened; 3/4 shows the horizontal thrust. Trust Game-view over rematch."
 }
