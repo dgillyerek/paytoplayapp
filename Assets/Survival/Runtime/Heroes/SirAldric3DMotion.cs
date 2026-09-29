@@ -19,11 +19,10 @@ namespace Survival.Domain.Heroes
 
         /// <summary>
         /// AccuRIG / Mixamo instantiate face-to-camera (−Z). Yaw so forward = +Z (TOP).
-        /// Yaw 180 also mirrors L↔R vs a true rear view; MixamoRearMirrorX restores
-        /// Play-cam high-RIGHT as anatomical right (Derek POV).
+        /// Do not scale-X mirror: that put the sword on the left hand (Derek 212c6da FAIL).
+        /// RH grip stays mixamorig:RightHand. Play-cam arc is attack-only lift + sword aim.
         /// </summary>
         public const float MixamoImportRearYawDegrees = 180f;
-        public const float MixamoRearMirrorX = -1f;
 
         /// <summary>
         /// Mixamo Stable Sword Inward Slash take window. Frame 1 is a high-left rest;
@@ -33,15 +32,16 @@ namespace Survival.Domain.Heroes
         public const int MixamoSlashLastFrame = 40;
 
         /// <summary>
-        /// Light attack-only local extras after Evaluate (not AimChain). Mixamo f8 hand sits
-        /// at shoulder; these raise it overhead and roll the RH sword so the tip leads
-        /// up-right, then ease to 0 by the down-left finish.
+        /// Attack-only extras after Evaluate (not AimChain, not a whole-body X-flip).
+        /// World-space RH lift toward up + camera-right; sword blade aims sky + slight right
+        /// at wind-up, then eases off so Mixamo finishes lower-left.
         /// </summary>
-        public const float AttackWindupShoulderX = -28f;
-        public const float AttackWindupArmX = -80f;
-        public const float AttackWindupHandX = -40f;
-        public const float AttackWindupSwordZ = -35f;
+        public const float AttackWindupLiftUp = 1f;
+        public const float AttackWindupLiftRight = 0.40f;
+        public const float AttackWindupLiftMaxDegrees = 70f;
+        public const float AttackWindupTipRight = 0.22f;
         public const float AttackWindupEaseEnd = 0.72f;
+        public const float HeldSwordRestEulerX = 90f;
 
         /// <summary>
         /// Play-cam SoT for SirAldricDemo / 1080×1920 Game-view Scale 1×. View +Z = TOP.

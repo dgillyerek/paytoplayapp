@@ -33,9 +33,9 @@ namespace Survival.Unity
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
         public const string AttackAuthoredReason =
             "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Inward Slash " +
-            "frames 8–40. Yaw 180 + MixamoRearMirrorX so rear Play reads high-RIGHT → " +
-            "down-LEFT. AttackWindupLift overhead tip-led. RH sword 1.01m. Mixer 0.20s. " +
-            "FOV 42. Never AccuRIG. HOLD merge.";
+            "frames 8–40. Sword stays mixamorig:RightHand (never a whole-body X-flip). " +
+            "AttackWindupLift: RH high, tip sky+slight-right, sweep UR→LL. " +
+            "RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
         public const float SwordBladeMeters = 1.01f;
         private const float BodyHeightMinMeters = 0.5f;
@@ -53,7 +53,6 @@ namespace Survival.Unity
         private bool _graphReady;
         private bool _attackReady;
         private GameObject? _instance;
-        private Transform? _rightShoulder;
         private Transform? _rightArm;
         private Transform? _rightHand;
         private Transform? _heldSword;
@@ -241,42 +240,53 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Light attack-only local offset after Evaluate. Mixamo f8 is already high-right
-        /// but shoulder-height; this raises the RH above the helmet and rolls the sword so
-        /// the tip leads up-right, then eases off for the Mixamo down-left finish.
-        /// Not AimChain / not Path A.
+        /// Light attack-only offset after Evaluate. Raises mixamorig:RightHand in world
+        /// space (up + Play-cam right) and aims the RH sword tip skyward / slight-right,
+        /// then eases off for Mixamo's lower-left finish. Not AimChain. Not a body X-flip.
         /// </summary>
         private void ApplyAttackWindupLift(float attackWeight, float attackNormalized01)
         {
             var k = Mathf.Clamp01(attackWeight) * SirAldric3DMotion.AttackWindupWeight(attackNormalized01);
-            if (_rightShoulder != null)
+            if (k > 0.001f && _rightArm != null && _rightHand != null)
             {
-                _rightShoulder.localRotation *= Quaternion.Euler(
-                    SirAldric3DMotion.AttackWindupShoulderX * k, 0f, 0f);
+                var reach = _rightHand.position - _rightArm.position;
+                if (reach.sqrMagnitude > 1e-6f)
+                {
+                    var desired = new Vector3(
+                        SirAldric3DMotion.AttackWindupLiftRight,
+                        SirAldric3DMotion.AttackWindupLiftUp,
+                        0f);
+                    var rot = Quaternion.FromToRotation(reach.normalized, desired.normalized);
+                    var ang = Quaternion.Angle(Quaternion.identity, rot);
+                    var maxDeg = SirAldric3DMotion.AttackWindupLiftMaxDegrees * k;
+                    var t = ang > 0.05f ? Mathf.Min(1f, maxDeg / ang) : 0f;
+                    if (t > 0.001f)
+                    {
+                        _rightArm.rotation = Quaternion.Slerp(Quaternion.identity, rot, t) * _rightArm.rotation;
+                    }
+                }
             }
 
-            if (_rightArm != null)
+            if (_heldSword == null)
             {
-                _rightArm.localRotation *= Quaternion.Euler(
-                    SirAldric3DMotion.AttackWindupArmX * k, 0f, 0f);
+                return;
             }
 
-            if (_rightHand != null)
+            var restLocal = Quaternion.Euler(SirAldric3DMotion.HeldSwordRestEulerX, 0f, 0f);
+            if (k < 0.001f || _heldSword.parent == null)
             {
-                _rightHand.localRotation *= Quaternion.Euler(
-                    SirAldric3DMotion.AttackWindupHandX * k, 0f, 0f);
+                _heldSword.localRotation = restLocal;
+                return;
             }
 
-            if (_heldSword != null)
-            {
-                _heldSword.localRotation = Quaternion.Euler(
-                    90f, 0f, SirAldric3DMotion.AttackWindupSwordZ * k);
-            }
+            var blade = new Vector3(SirAldric3DMotion.AttackWindupTipRight, 1f, 0f).normalized;
+            var restWorld = _heldSword.parent.rotation * restLocal;
+            var aimWorld = Quaternion.FromToRotation(Vector3.forward, blade);
+            _heldSword.rotation = Quaternion.Slerp(restWorld, aimWorld, k);
         }
 
         private void CacheAttackBones(GameObject root)
         {
-            _rightShoulder = FindNamedBone(root, "mixamorig:RightShoulder", "RightShoulder");
             _rightArm = FindNamedBone(root, "mixamorig:RightArm", "RightArm");
             _rightHand = FindNamedBone(root, "mixamorig:RightHand", "RightHand");
             _heldSword = FindNamedBone(root, "SirAldricPilotSword");
@@ -321,15 +331,11 @@ namespace Survival.Unity
         {
             // Mixamo instantiate face-to-camera (−Z) = frontal FAIL.
             // Yaw 180 so transform.forward = +Z: back to camera, walk toward TOP.
-            // That yaw also swaps world X (anatomical right → screen-left). Derek Play
-            // 5f5e375: slash read the opposite of high-RIGHT → down-LEFT. Mirror X so
-            // the Mixamo RH wind-up sits on Play-cam right. Not AimChain.
+            // Do not scale.x = -1: Derek 212c6da Play put the sword on the left hand.
             root.transform.localPosition = Vector3.zero;
             root.transform.localRotation = Quaternion.Euler(0f, RearYawDegrees, 0f);
             var s = root.transform.localScale;
-            var sx = Mathf.Abs(s.x) < 1e-5f ? 1f : Mathf.Abs(s.x);
-            root.transform.localScale = new Vector3(
-                SirAldric3DMotion.MixamoRearMirrorX * sx, s.y, s.z);
+            root.transform.localScale = new Vector3(Mathf.Abs(s.x), Mathf.Abs(s.y), Mathf.Abs(s.z));
         }
 
         /// <summary>
@@ -492,7 +498,7 @@ namespace Survival.Unity
             var parent = Mathf.Max(Mathf.Abs(hand.lossyScale.x), 1e-5f);
             var inv = 1f / parent;
             sword.transform.localPosition = new Vector3(0f, 0.08f, 0f) * inv;
-            sword.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            sword.transform.localRotation = Quaternion.Euler(SirAldric3DMotion.HeldSwordRestEulerX, 0f, 0f);
             sword.transform.localScale = Vector3.one * inv;
             NormalizeSwordWorldBlade(sword.transform);
             var world = MeasureRendererWorldSize(sword);
