@@ -37,10 +37,11 @@ CAM_34 = ((1.82, 1.92, -2.38), (0.0, 1.12, 0.15))
 CAM_FOV = 42.0
 
 # Match Unity ApplyAttackWindupLift (max-reach RH arc, elbow unfold).
-SLASH_UR_RIGHT = 0.85
-SLASH_UR_UP = 0.70
-SLASH_UR_FRONT = 0.25
-SLASH_FRONT_UP = 0.18
+SLASH_UR_RIGHT = 0.65
+SLASH_UR_UP = 0.78
+SLASH_UR_FRONT = 0.42
+SLASH_FRONT_RIGHT = 0.18
+SLASH_FRONT_UP = 0.48
 SLASH_FRONT_Z = 1.00
 SLASH_LL_RIGHT = -0.85
 SLASH_LL_UP = -0.40
@@ -424,10 +425,10 @@ def attack_slash_reach_unity(u):
     if u <= SLASH_FRONT_U:
         t = sm(u / SLASH_FRONT_U)
         a = (SLASH_UR_RIGHT, SLASH_UR_UP, SLASH_UR_FRONT)
-        b = (0.0, SLASH_FRONT_UP, SLASH_FRONT_Z)
+        b = (SLASH_FRONT_RIGHT, SLASH_FRONT_UP, SLASH_FRONT_Z)
     elif u <= SLASH_LL_U:
         t = sm((u - SLASH_FRONT_U) / (SLASH_LL_U - SLASH_FRONT_U))
-        a = (0.0, SLASH_FRONT_UP, SLASH_FRONT_Z)
+        a = (SLASH_FRONT_RIGHT, SLASH_FRONT_UP, SLASH_FRONT_Z)
         b = (SLASH_LL_RIGHT, SLASH_LL_UP, SLASH_LL_FRONT)
     else:
         return blender_from_unity(SLASH_LL_RIGHT, SLASH_LL_UP, SLASH_LL_FRONT)

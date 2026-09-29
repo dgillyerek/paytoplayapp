@@ -395,7 +395,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Equal(1.12f, SirAldric3DMotion.PlayCamLookY);
         Assert.Equal(42f, SirAldric3DMotion.PlayCamFovDegrees);
         Assert.Equal(180f, SirAldric3DMotion.MixamoImportRearYawDegrees);
-        Assert.Equal(0.85f, SirAldric3DMotion.AttackSlashUrRight);
+        Assert.Equal(0.65f, SirAldric3DMotion.AttackSlashUrRight);
         Assert.Equal(-0.85f, SirAldric3DMotion.AttackSlashLlRight);
         Assert.Equal(0.40f, SirAldric3DMotion.AttackSlashFrontU);
         Assert.Equal(0.75f, SirAldric3DMotion.AttackSlashLlU);
@@ -404,9 +404,9 @@ public sealed class SirAldric3DMotionTests
         Assert.Equal(1f, SirAldric3DMotion.AttackWindupWeight(0.72f), 3);
         Assert.Equal(1f, SirAldric3DMotion.AttackWindupWeight(1f), 3);
         SirAldric3DMotion.AttackSlashReach(0f, out var urX, out var urY, out var urZ);
-        Assert.True(urX > 0.45f && urY > 0.35f && urZ > 0f);
+        Assert.True(urX > 0.40f && urY > 0.40f && urZ > 0f);
         SirAldric3DMotion.AttackSlashReach(SirAldric3DMotion.AttackSlashFrontU, out var fX, out var fY, out var fZ);
-        Assert.True(fZ > 0.85f && Math.Abs(fX) < 0.15f);
+        Assert.True(fZ > 0.75f && fX > 0f && fY > 0.25f);
         SirAldric3DMotion.AttackSlashReach(1f, out var llX, out var llY, out var llZ);
         Assert.True(llX < -0.45f && llY < 0f);
         _ = urZ;
@@ -428,6 +428,7 @@ public sealed class SirAldric3DMotionTests
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_front_walk_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_34_walk_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_rear_strike_start_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_rear_strike_mid_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_rear_strike_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_front_strike_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_34_strike_playcam.png")).Length > 50_000);

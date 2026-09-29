@@ -21,9 +21,9 @@
     0.5323699712753296,
     -0.6588810086250305
   ],
+  "elbow_deg": 79.02397047053772,
+  "hand_radial": 0.5658000793631766,
+  "tip_radial": 1.2520156218392318,
   "RH_character_right": true,
-  "RH_high": false,
-  "tip_up": false,
-  "tip_character_right": false,
   "label": "Play-cam rematch, not Unity Game-view"
 }

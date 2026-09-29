@@ -40,10 +40,11 @@ namespace Survival.Domain.Heroes
         /// collapsed tip that only opened late).
         /// Unity after yaw 180: +X = character/camera-right, +Y = up, +Z = front/TOP.
         /// </summary>
-        public const float AttackSlashUrRight = 0.85f;
-        public const float AttackSlashUrUp = 0.70f;
-        public const float AttackSlashUrFront = 0.25f;
-        public const float AttackSlashFrontUp = 0.18f;
+        public const float AttackSlashUrRight = 0.65f;
+        public const float AttackSlashUrUp = 0.78f;
+        public const float AttackSlashUrFront = 0.42f;
+        public const float AttackSlashFrontRight = 0.18f;
+        public const float AttackSlashFrontUp = 0.48f;
         public const float AttackSlashFrontZ = 1.00f;
         public const float AttackSlashLlRight = -0.85f;
         public const float AttackSlashLlUp = -0.40f;
@@ -407,14 +408,14 @@ namespace Survival.Domain.Heroes
                 ax = AttackSlashUrRight;
                 ay = AttackSlashUrUp;
                 az = AttackSlashUrFront;
-                bx = 0f;
+                bx = AttackSlashFrontRight;
                 by = AttackSlashFrontUp;
                 bz = AttackSlashFrontZ;
             }
             else if (u <= AttackSlashLlU)
             {
                 t = Smooth01((u - AttackSlashFrontU) / (AttackSlashLlU - AttackSlashFrontU));
-                ax = 0f;
+                ax = AttackSlashFrontRight;
                 ay = AttackSlashFrontUp;
                 az = AttackSlashFrontZ;
                 bx = AttackSlashLlRight;
