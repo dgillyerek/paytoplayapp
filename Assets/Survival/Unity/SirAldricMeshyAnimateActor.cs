@@ -34,7 +34,8 @@ namespace Survival.Unity
         public const string AttackAuthoredReason =
             "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Inward Slash " +
             "frames 8–40. Sword stays mixamorig:RightHand (never a whole-body X-flip). " +
-            "AttackWindupLift: RH max-reach sweep UR→front→LL, elbow unfold, tip far. " +
+            "AttackWindupLift: RH max-reach UR→horizontal front (+Z / enemy)→LL, " +
+            "elbow unfold, tip far. Mid is a thrust, not sky (b0a9509 Game-view FAIL). " +
             "RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
         public const float SwordBladeMeters = 1.01f;
@@ -57,6 +58,13 @@ namespace Survival.Unity
         private Transform? _rightForeArm;
         private Transform? _rightHand;
         private Transform? _heldSword;
+        /// <summary>
+        /// Mesh-local blade axis. Unity FBX bakeAxisConversion turns Design +Z into
+        /// local +Y — FromToRotation(Vector3.forward, desired) left the visible blade
+        /// on world +Y (Derek FAIL b0a9509 Game-view sky). Rematch blender has no bake
+        /// so it still aims local +Z.
+        /// </summary>
+        private Vector3 _swordLocalBlade = Vector3.up;
 
         public bool Built => _graphReady;
         public bool HasAttackClip => _attackReady;
@@ -242,8 +250,9 @@ namespace Survival.Unity
 
         /// <summary>
         /// Attack-only offset after Evaluate. Unfolds mixamorig:RightForeArm, points
-        /// the RH along AttackSlashReach (UR → front +Z → LL), and aims the blade
-        /// the same way so the tip stays at max distance from the body. Not AimChain.
+        /// the RH along AttackSlashReach (UR → horizontal front +Z → LL), and aims
+        /// the rest blade (not transform.forward) onto that reach so the tip stays
+        /// far and mid is a thrust toward the enemy, not sky. Not AimChain.
         /// Not a body X-flip. Sword stays on mixamorig:RightHand.
         /// </summary>
         private void ApplyAttackWindupLift(float attackWeight, float attackNormalized01)
@@ -286,7 +295,13 @@ namespace Survival.Unity
             }
 
             var restWorld = _heldSword.parent.rotation * restLocal;
-            var aimWorld = Quaternion.FromToRotation(Vector3.forward, desired);
+            var restBlade = restWorld * _swordLocalBlade;
+            if (restBlade.sqrMagnitude < 1e-8f)
+            {
+                restBlade = restWorld * Vector3.up;
+            }
+
+            var aimWorld = Quaternion.FromToRotation(restBlade.normalized, desired) * restWorld;
             _heldSword.rotation = Quaternion.Slerp(restWorld, aimWorld, k);
         }
 
@@ -296,6 +311,52 @@ namespace Survival.Unity
             _rightForeArm = FindNamedBone(root, "mixamorig:RightForeArm", "RightForeArm");
             _rightHand = FindNamedBone(root, "mixamorig:RightHand", "RightHand");
             _heldSword = FindNamedBone(root, "SirAldricPilotSword");
+            _swordLocalBlade = MeasureLocalBladeAxis(_heldSword);
+        }
+
+        private static Vector3 MeasureLocalBladeAxis(Transform? sword)
+        {
+            if (sword == null)
+            {
+                return Vector3.up;
+            }
+
+            var bestAxis = Vector3.up;
+            var best = 0f;
+            foreach (var filter in sword.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (filter.sharedMesh == null)
+                {
+                    continue;
+                }
+
+                var s = filter.sharedMesh.bounds.size;
+                Vector3 axis;
+                float len;
+                if (s.y >= s.x && s.y >= s.z)
+                {
+                    axis = Vector3.up;
+                    len = s.y;
+                }
+                else if (s.z >= s.x)
+                {
+                    axis = Vector3.forward;
+                    len = s.z;
+                }
+                else
+                {
+                    axis = Vector3.right;
+                    len = s.x;
+                }
+
+                if (len > best)
+                {
+                    best = len;
+                    bestAxis = axis;
+                }
+            }
+
+            return bestAxis;
         }
 
         public string PhaseLabel(float timeSeconds)

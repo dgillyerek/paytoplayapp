@@ -7,7 +7,9 @@ Honest label: Play-cam rematch, not Unity Camera.Render, not Meshy website still
 Blender Mixamo already faces rear (back to camera). Unity FaceWorldTop yaws 180
 (needed because Unity Mixamo faces −Z). Do not scale-X flip the body — that put
 the sword on the left hand. Rematch applies the same RH max-reach slash as Unity
-ApplyAttackWindupLift: unfold elbow, tip far UR → front → LL. Not Unity Game-view.
+ApplyAttackWindupLift: unfold elbow, tip far UR → horizontal front (+Z) → LL.
+Derek FAIL b0a9509: rematch mid stills are not Unity Game-view — Game-view mid
+was skyward (world +Y). Mid must be a horizontal thrust toward the enemy.
 """
 from __future__ import annotations
 
@@ -37,17 +39,19 @@ CAM_34 = ((1.82, 1.92, -2.38), (0.0, 1.12, 0.15))
 CAM_FOV = 42.0
 
 # Match Unity ApplyAttackWindupLift (max-reach RH arc, elbow unfold).
-SLASH_UR_RIGHT = 0.65
-SLASH_UR_UP = 0.78
-SLASH_UR_FRONT = 0.42
-SLASH_FRONT_RIGHT = 0.18
-SLASH_FRONT_UP = 0.48
+# FrontUp stays near 0: FrontUp 0.48 read as sky in Unity Game-view (b0a9509).
+SLASH_UR_RIGHT = 0.72
+SLASH_UR_UP = 0.48
+SLASH_UR_FRONT = 0.38
+SLASH_FRONT_RIGHT = 0.12
+SLASH_FRONT_UP = 0.06
 SLASH_FRONT_Z = 1.00
 SLASH_LL_RIGHT = -0.85
 SLASH_LL_UP = -0.40
 SLASH_LL_FRONT = 0.30
-SLASH_FRONT_U = 0.40
-SLASH_LL_U = 0.75
+SLASH_FRONT_U = 0.32
+SLASH_FRONT_HOLD_U = 0.55
+SLASH_LL_U = 0.78
 SLASH_FIRST = 8
 SLASH_LAST = 40
 SLASH_MID = 20
@@ -203,7 +207,7 @@ def render_to(path: Path):
     try:
         ART.mkdir(parents=True, exist_ok=True)
         (ART / path.name).write_bytes(path.read_bytes())
-        unique = "sir_aldric_pilot_rh_maxreach_" + path.name.replace("sir_aldric_pilot_", "")
+        unique = "sir_aldric_pilot_rh_front_thrust_" + path.name.replace("sir_aldric_pilot_", "")
         (ART / unique).write_bytes(path.read_bytes())
     except OSError as exc:
         print("artifact skip", exc)
@@ -328,7 +332,7 @@ def bone_world(arm, name):
     return (arm.matrix_world @ pb.matrix).to_translation()
 
 
-def dump_hands(arm, sword, tag):
+def dump_hands(arm, sword, tag, desired_unity=None):
     """Numeric RH-vs-LH + tip reach proof. Rematch stills are not Unity Game-view."""
     lh = bone_world(arm, "mixamorig:LeftHand")
     rh = bone_world(arm, "mixamorig:RightHand")
@@ -389,7 +393,8 @@ def dump_hands(arm, sword, tag):
         "hand_radial": hand_radial,
         "tip_radial": tip_radial,
         "RH_character_right": rh_char_right,
-        "label": "Play-cam rematch, not Unity Game-view",
+        "desired_unity": None if desired_unity is None else list(desired_unity),
+        "label": "Play-cam rematch, not Unity Game-view. Rear +Z is foreshortened; 3/4 shows the horizontal thrust. Trust Game-view over rematch.",
     }
     PROOF.mkdir(parents=True, exist_ok=True)
     path = PROOF / f"sir_aldric_pilot_dump_{tag}.json"
@@ -415,7 +420,8 @@ def attack_slash_u(frame):
     return max(0.0, min(1.0, (float(frame) - SLASH_FIRST) / span))
 
 
-def attack_slash_reach_unity(u):
+def attack_slash_reach_unity_xyz(u):
+    """Unity (right, up, front) before blender_from_unity. Mid hold is +Z, not +Y."""
     u = max(0.0, min(1.0, u))
 
     def sm(x):
@@ -426,15 +432,27 @@ def attack_slash_reach_unity(u):
         t = sm(u / SLASH_FRONT_U)
         a = (SLASH_UR_RIGHT, SLASH_UR_UP, SLASH_UR_FRONT)
         b = (SLASH_FRONT_RIGHT, SLASH_FRONT_UP, SLASH_FRONT_Z)
+    elif u <= SLASH_FRONT_HOLD_U:
+        a = b = (SLASH_FRONT_RIGHT, SLASH_FRONT_UP, SLASH_FRONT_Z)
+        t = 1.0
     elif u <= SLASH_LL_U:
-        t = sm((u - SLASH_FRONT_U) / (SLASH_LL_U - SLASH_FRONT_U))
+        t = sm((u - SLASH_FRONT_HOLD_U) / (SLASH_LL_U - SLASH_FRONT_HOLD_U))
         a = (SLASH_FRONT_RIGHT, SLASH_FRONT_UP, SLASH_FRONT_Z)
         b = (SLASH_LL_RIGHT, SLASH_LL_UP, SLASH_LL_FRONT)
     else:
-        return blender_from_unity(SLASH_LL_RIGHT, SLASH_LL_UP, SLASH_LL_FRONT)
+        a = b = (SLASH_LL_RIGHT, SLASH_LL_UP, SLASH_LL_FRONT)
+        t = 1.0
     x = a[0] + (b[0] - a[0]) * t
     y = a[1] + (b[1] - a[1]) * t
     z = a[2] + (b[2] - a[2]) * t
+    mag = math.sqrt((x * x) + (y * y) + (z * z))
+    if mag < 1e-6:
+        return (0.0, 0.06, 1.0)
+    return (x / mag, y / mag, z / mag)
+
+
+def attack_slash_reach_unity(u):
+    x, y, z = attack_slash_reach_unity_xyz(u)
     return blender_from_unity(x, y, z)
 
 
@@ -487,14 +505,30 @@ def apply_attack_windup(arm, sword, frame):
                 if pb is not None:
                     bone_q = (arm.matrix_world @ pb.matrix).to_quaternion()
             rest_world = bone_q @ rest_q
-            aim_world = Vector((0.0, 0.0, 1.0)).rotation_difference(desired)
+            # Blender mesh blade is local +Z (no Unity bakeAxisConversion).
+            rest_blade = rest_world @ Vector((0.0, 0.0, 1.0))
+            if rest_blade.length < 1e-6:
+                rest_blade = Vector((0.0, 0.0, 1.0))
+            aim_world = rest_blade.normalized().rotation_difference(desired) @ rest_world
             mixed = rest_world.slerp(aim_world, k)
             local = bone_q.inverted() @ mixed
             sword.rotation_mode = "QUATERNION"
             sword.rotation_quaternion = local
     bpy.context.view_layer.update()
-    print("slash_reach", frame, "u", round(u, 3), "k", round(k, 3), "desired_b", tuple(round(c, 3) for c in desired))
-    dump_hands(arm, sword, f"slash_f{int(frame)}")
+    desired_u = attack_slash_reach_unity_xyz(u)
+    print(
+        "slash_reach",
+        frame,
+        "u",
+        round(u, 3),
+        "k",
+        round(k, 3),
+        "desired_u",
+        tuple(round(c, 3) for c in desired_u),
+        "desired_b",
+        tuple(round(c, 3) for c in desired),
+    )
+    dump_hands(arm, sword, f"slash_f{int(frame)}", desired_unity=desired_u)
 
 
 def pose_slash(arm, act, sword, frame):

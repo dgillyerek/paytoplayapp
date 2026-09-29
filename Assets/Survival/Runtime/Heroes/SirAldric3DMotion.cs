@@ -33,24 +33,23 @@ namespace Survival.Domain.Heroes
 
         /// <summary>
         /// Attack-only extras after Evaluate (not AimChain, not a whole-body X-flip).
-        /// Full-arm max-reach sweep on mixamorig:RightHand: upper-right → straight
-        /// front (+Z / TOP) → lower-left. Elbow unfolds; blade stays along the arm
-        /// so the tip stays far from the body the whole slash. Mixer attackWeight
-        /// ramps at the walk blend — do not ease extras off mid-clip (Derek bb86074:
-        /// collapsed tip that only opened late).
-        /// Unity after yaw 180: +X = character/camera-right, +Y = up, +Z = front/TOP.
+        /// Full-arm max-reach sweep: upper-right → horizontal front (+Z / enemy) →
+        /// lower-left. Derek FAIL b0a9509: FrontUp 0.48 read as skyward in Unity
+        /// Game-view (camera-up ≈ world +Y). Rematch screen-up is not Unity +Z —
+        /// mid blade must be +Z with near-zero +Y (horizontal thrust plane).
         /// </summary>
-        public const float AttackSlashUrRight = 0.65f;
-        public const float AttackSlashUrUp = 0.78f;
-        public const float AttackSlashUrFront = 0.42f;
-        public const float AttackSlashFrontRight = 0.18f;
-        public const float AttackSlashFrontUp = 0.48f;
+        public const float AttackSlashUrRight = 0.72f;
+        public const float AttackSlashUrUp = 0.48f;
+        public const float AttackSlashUrFront = 0.38f;
+        public const float AttackSlashFrontRight = 0.12f;
+        public const float AttackSlashFrontUp = 0.06f;
         public const float AttackSlashFrontZ = 1.00f;
         public const float AttackSlashLlRight = -0.85f;
         public const float AttackSlashLlUp = -0.40f;
         public const float AttackSlashLlFront = 0.30f;
-        public const float AttackSlashFrontU = 0.40f;
-        public const float AttackSlashLlU = 0.75f;
+        public const float AttackSlashFrontU = 0.32f;
+        public const float AttackSlashFrontHoldU = 0.55f;
+        public const float AttackSlashLlU = 0.78f;
         public const float HeldSwordRestEulerX = 90f;
 
         /// <summary>
@@ -390,7 +389,8 @@ namespace Survival.Domain.Heroes
 
         /// <summary>
         /// Unit direction of the RH max-reach arc in Unity world after FaceWorldTop.
-        /// u=0 upper-right, u=FrontU straight +Z, u≥LlU lower-left.
+        /// u=0 upper-right, FrontU..FrontHoldU hold straight +Z (horizontal thrust,
+        /// near-zero +Y — not sky), u≥LlU lower-left.
         /// </summary>
         public static void AttackSlashReach(float attackNormalized01, out float x, out float y, out float z)
         {
@@ -412,9 +412,17 @@ namespace Survival.Domain.Heroes
                 by = AttackSlashFrontUp;
                 bz = AttackSlashFrontZ;
             }
+            else if (u <= AttackSlashFrontHoldU)
+            {
+                x = AttackSlashFrontRight;
+                y = AttackSlashFrontUp;
+                z = AttackSlashFrontZ;
+                Normalize(ref x, ref y, ref z);
+                return;
+            }
             else if (u <= AttackSlashLlU)
             {
-                t = Smooth01((u - AttackSlashFrontU) / (AttackSlashLlU - AttackSlashFrontU));
+                t = Smooth01((u - AttackSlashFrontHoldU) / (AttackSlashLlU - AttackSlashFrontHoldU));
                 ax = AttackSlashFrontRight;
                 ay = AttackSlashFrontUp;
                 az = AttackSlashFrontZ;

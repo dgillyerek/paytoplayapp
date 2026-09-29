@@ -1,3 +1,4 @@
+using System.Globalization;
 using Survival.Domain.Heroes;
 using Survival.Domain.Ids;
 
@@ -329,6 +330,11 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("max-reach", actor, StringComparison.Ordinal);
         Assert.Contains("HeldSwordRestEulerX", actor, StringComparison.Ordinal);
         Assert.Contains("FromToRotation", actor, StringComparison.Ordinal);
+        Assert.Contains("restBlade", actor, StringComparison.Ordinal);
+        Assert.Contains("MeasureLocalBladeAxis", actor, StringComparison.Ordinal);
+        Assert.Contains("_swordLocalBlade", actor, StringComparison.Ordinal);
+        Assert.Contains("FromToRotation(restBlade.normalized, desired)", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("FromToRotation(Vector3.forward, desired)", actor, StringComparison.Ordinal);
         Assert.Contains("mixamorig:RightHand", actor, StringComparison.Ordinal);
         Assert.Contains("CacheAttackBones", actor, StringComparison.Ordinal);
         Assert.Contains("never a whole-body X-flip", actor, StringComparison.Ordinal);
@@ -395,35 +401,55 @@ public sealed class SirAldric3DMotionTests
         Assert.Equal(1.12f, SirAldric3DMotion.PlayCamLookY);
         Assert.Equal(42f, SirAldric3DMotion.PlayCamFovDegrees);
         Assert.Equal(180f, SirAldric3DMotion.MixamoImportRearYawDegrees);
-        Assert.Equal(0.65f, SirAldric3DMotion.AttackSlashUrRight);
+        Assert.Equal(0.72f, SirAldric3DMotion.AttackSlashUrRight);
+        Assert.Equal(0.48f, SirAldric3DMotion.AttackSlashUrUp);
+        Assert.Equal(0.06f, SirAldric3DMotion.AttackSlashFrontUp);
+        Assert.Equal(1.00f, SirAldric3DMotion.AttackSlashFrontZ);
         Assert.Equal(-0.85f, SirAldric3DMotion.AttackSlashLlRight);
-        Assert.Equal(0.40f, SirAldric3DMotion.AttackSlashFrontU);
-        Assert.Equal(0.75f, SirAldric3DMotion.AttackSlashLlU);
+        Assert.Equal(0.32f, SirAldric3DMotion.AttackSlashFrontU);
+        Assert.Equal(0.55f, SirAldric3DMotion.AttackSlashFrontHoldU);
+        Assert.Equal(0.78f, SirAldric3DMotion.AttackSlashLlU);
         Assert.Equal(90f, SirAldric3DMotion.HeldSwordRestEulerX);
         Assert.Equal(1f, SirAldric3DMotion.AttackWindupWeight(0f), 3);
         Assert.Equal(1f, SirAldric3DMotion.AttackWindupWeight(0.72f), 3);
         Assert.Equal(1f, SirAldric3DMotion.AttackWindupWeight(1f), 3);
         SirAldric3DMotion.AttackSlashReach(0f, out var urX, out var urY, out var urZ);
-        Assert.True(urX > 0.40f && urY > 0.40f && urZ > 0f);
+        Assert.True(urX > 0.40f && urY > 0.30f && urZ > 0f);
         SirAldric3DMotion.AttackSlashReach(SirAldric3DMotion.AttackSlashFrontU, out var fX, out var fY, out var fZ);
-        Assert.True(fZ > 0.75f && fX > 0f && fY > 0.25f);
+        Assert.True(fZ > 0.90f && fY < 0.20f && fX > 0f);
+        SirAldric3DMotion.AttackSlashReach(0.40f, out var holdX, out var holdY, out var holdZ);
+        Assert.True(holdZ > 0.90f && holdY < 0.20f);
+        SirAldric3DMotion.AttackSlashReach(SirAldric3DMotion.AttackSlashFrontHoldU, out var holdEndX, out var holdEndY, out var holdEndZ);
+        Assert.True(holdEndZ > 0.90f && holdEndY < 0.20f);
         SirAldric3DMotion.AttackSlashReach(1f, out var llX, out var llY, out var llZ);
         Assert.True(llX < -0.45f && llY < 0f);
         _ = urZ;
-        _ = fY;
+        _ = fX;
+        _ = holdX;
+        _ = holdEndX;
         _ = llZ;
+        var blender = File.ReadAllText(Path.Combine(root, "scripts", "blender", "render_aldric_pilot_playcam.py"));
+        Assert.Contains("SLASH_FRONT_UP = 0.06", blender, StringComparison.Ordinal);
+        Assert.Contains("SLASH_FRONT_HOLD_U = 0.55", blender, StringComparison.Ordinal);
+        Assert.Contains("rh_front_thrust_", blender, StringComparison.Ordinal);
+        Assert.Contains("rest_blade", blender, StringComparison.Ordinal);
+        Assert.Contains("not Unity Game-view", blender, StringComparison.Ordinal);
         var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricDemo.cs"));
         Assert.Contains("ApplyPlayCam", demo, StringComparison.Ordinal);
         Assert.Contains("usePhysicalProperties = false", demo, StringComparison.Ordinal);
         Assert.Contains("LateUpdate", demo, StringComparison.Ordinal);
+        Assert.Contains("UR→front→LL", demo, StringComparison.Ordinal);
 
         var dir = Path.Combine(root, "Docs", "Survival", "previews", "aldric_pilot_20260928");
         Assert.True(new FileInfo(Path.Combine(dir, "PILOT_HOLD.md")).Length > 400);
-        Assert.Contains("HOLD merge", File.ReadAllText(Path.Combine(dir, "PILOT_HOLD.md")), StringComparison.Ordinal);
-        Assert.Contains("Not Unity Game-view", File.ReadAllText(Path.Combine(dir, "PILOT_HOLD.md")), StringComparison.Ordinal);
-        Assert.Contains("Mixamo", File.ReadAllText(Path.Combine(dir, "PILOT_HOLD.md")), StringComparison.Ordinal);
-        Assert.Contains("RightHand", File.ReadAllText(Path.Combine(dir, "PILOT_HOLD.md")), StringComparison.Ordinal);
-        Assert.Contains("not a whole-body X-flip", File.ReadAllText(Path.Combine(dir, "PILOT_HOLD.md")), StringComparison.OrdinalIgnoreCase);
+        var hold = File.ReadAllText(Path.Combine(dir, "PILOT_HOLD.md"));
+        Assert.Contains("HOLD merge", hold, StringComparison.Ordinal);
+        Assert.Contains("Not Unity Game-view", hold, StringComparison.Ordinal);
+        Assert.Contains("Mixamo", hold, StringComparison.Ordinal);
+        Assert.Contains("RightHand", hold, StringComparison.Ordinal);
+        Assert.Contains("not a whole-body X-flip", hold, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("b0a9509", hold, StringComparison.Ordinal);
+        Assert.Contains("horizontal thrust", hold, StringComparison.OrdinalIgnoreCase);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_rear_walk_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_front_walk_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_34_walk_playcam.png")).Length > 50_000);
@@ -432,6 +458,16 @@ public sealed class SirAldric3DMotionTests
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_rear_strike_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_front_strike_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_34_strike_playcam.png")).Length > 50_000);
+        var midDump = File.ReadAllText(Path.Combine(dir, "sir_aldric_pilot_dump_slash_f20.json"));
+        Assert.Contains("not Unity Game-view", midDump, StringComparison.Ordinal);
+        var midTip = ReadJsonVec3(midDump, "tip_unity");
+        Assert.True(midTip[2] > 0.85f && Math.Abs(midTip[1]) < 0.25f, $"mid tip_unity=({midTip[0]},{midTip[1]},{midTip[2]}) must be +Z not +Y");
+        var midDesired = ReadJsonVec3(midDump, "desired_unity");
+        Assert.True(midDesired[2] > 0.90f && midDesired[1] < 0.20f, $"mid desired_unity=({midDesired[0]},{midDesired[1]},{midDesired[2]})");
+        var startTip = ReadJsonVec3(File.ReadAllText(Path.Combine(dir, "sir_aldric_pilot_dump_slash_f8.json")), "tip_unity");
+        Assert.True(startTip[1] > 0.25f, $"start tip Y {startTip[1]} should be up");
+        var finishTip = ReadJsonVec3(File.ReadAllText(Path.Combine(dir, "sir_aldric_pilot_dump_slash_f32.json")), "tip_unity");
+        Assert.True(finishTip[1] < 0f, $"finish tip Y {finishTip[1]} should be down");
     }
 
     [Fact]
@@ -457,5 +493,24 @@ public sealed class SirAldric3DMotionTests
         }
 
         throw new DirectoryNotFoundException("repo root");
+    }
+
+    private static float[] ReadJsonVec3(string json, string key)
+    {
+        var needle = "\"" + key + "\"";
+        var i = json.IndexOf(needle, StringComparison.Ordinal);
+        Assert.True(i >= 0, "missing JSON key " + key);
+        var lb = json.IndexOf('[', i);
+        Assert.True(lb > i, "missing JSON array for " + key);
+        var rb = json.IndexOf(']', lb);
+        Assert.True(rb > lb, "unterminated JSON array for " + key);
+        var parts = json.Substring(lb + 1, rb - lb - 1).Split(',');
+        Assert.True(parts.Length >= 3, key + " needs 3 floats");
+        return new[]
+        {
+            float.Parse(parts[0].Trim(), CultureInfo.InvariantCulture),
+            float.Parse(parts[1].Trim(), CultureInfo.InvariantCulture),
+            float.Parse(parts[2].Trim(), CultureInfo.InvariantCulture),
+        };
     }
 }
