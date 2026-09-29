@@ -114,10 +114,10 @@ ModelImporter:
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
   autoGenerateAvatarMappingIfUnspecified: 1
-  animationType: 3
+  animationType: 2
   humanoidOversampling: 1
   avatarSetup: 1
   additionalBone: 0
-  userData: PILOT Mixamo-skinned holefixed body + Standard Walk. takeName mixamo.com. CreateFromThisModel. Clips/body.
+  userData: PILOT Mixamo-skinned holefixed body + Standard Walk. Generic. takeName mixamo.com. CreateFromThisModel. Clips/body.
   assetBundleName: 
   assetBundleVariant: 

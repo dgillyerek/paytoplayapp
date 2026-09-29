@@ -218,6 +218,7 @@ def import_mixamo_body(clip_path: Path):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.fbx(filepath=str(LOOK))
     look_arm = next(o for o in bpy.data.objects if o.type == "ARMATURE")
+    # Mixamo Armature Lcl Scaling is 0.01. Leave it and the knight is ~2 cm (Derek FAIL bf5a5fa).
     look_arm.scale = (1.0, 1.0, 1.0)
     look_meshes = [o for o in bpy.data.objects if o.type == "MESH"]
     before_meshes = set(look_meshes)

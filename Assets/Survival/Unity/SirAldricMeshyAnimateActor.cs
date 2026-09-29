@@ -14,8 +14,9 @@ namespace Survival.Unity
 {
     /// <summary>
     /// Sir Aldric PILOT: Mixamo-skinned holefixed mid280k is the ONLY visible body.
-    /// AccuRIG path superseded. Walk = Mixamo Standard Walk. Slash = Stable Sword Inward Slash.
-    /// Sword prop on Right Hand. No Path 1 / Path A / ClipSword. HOLD merge.
+    /// Generic Mixamo clips (Humanoid Playable collapses this skin). AccuRIG superseded.
+    /// Walk = Standard Walk. Slash = Stable Sword Inward Slash. Sword on Right Hand.
+    /// No Path 1 / Path A / ClipSword. HOLD merge.
     /// </summary>
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
     {
@@ -31,8 +32,11 @@ namespace Survival.Unity
         public const string AttackClipHint = "Attack";
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
         public const string AttackAuthoredReason =
-            "PILOT Mixamo sep: holefixed body + Standard Walk + Inward Slash. " +
+            "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Inward Slash. " +
             "RH sword prop. Never AccuRIG. HOLD merge.";
+        private const float BodyHeightMinMeters = 0.5f;
+        private const float BodyHeightMaxMeters = 5f;
+        private const float BodyHeightTargetMeters = 1.80f;
 
         private Animator? _animator;
         private PlayableGraph _graph;
@@ -58,7 +62,7 @@ namespace Survival.Unity
             {
                 Debug.LogError(
                     "PILOT Mixamo body FBX not imported yet. Open Unity so " +
-                    ThemePackFbx + " Humanoid-imports, then Play SirAldric.");
+                    ThemePackFbx + " Generic-imports, then Play SirAldric.");
                 return;
             }
 
@@ -66,12 +70,21 @@ namespace Survival.Unity
             _instance.name = "SirAldricPilotMixamo";
             HideJunk(_instance);
             StripEmbeddedClipMeshes(_instance);
+            NormalizeMixamoCmRoot(_instance);
             FaceWorldTop(_instance);
             BindPaintedLook(_instance);
-            AttachHeldSword(_instance);
+            EnableSkinAlways(_instance);
 
             _animator = _instance.GetComponent<Animator>() ?? _instance.AddComponent<Animator>();
-            var mixamoAvatar = LoadHumanoidAvatar(AssetPath(ThemePackFbx));
+            var mixamoAvatar = LoadImportedAvatar(AssetPath(ThemePackFbx));
+            if (mixamoAvatar != null && mixamoAvatar.isHuman)
+            {
+                Debug.LogWarning(
+                    "PILOT Mixamo: ignoring Humanoid avatar — Playable retarget collapses holefixed skin " +
+                    "while mixamorig:RightHand still moves (sword-only FAIL). Generic Mixamo bones.");
+                mixamoAvatar = null;
+            }
+
             if (mixamoAvatar != null)
             {
                 _animator.avatar = mixamoAvatar;
@@ -84,7 +97,7 @@ namespace Survival.Unity
             var walk = LoadClip(ThemePackWalkFbx, ClipHint, repairWalk: true);
             if (walk == null)
             {
-                Debug.LogError("PILOT walk FBX has no Walking clip after Humanoid import.");
+                Debug.LogError("PILOT walk FBX has no Walking clip after Generic import.");
                 return;
             }
 
@@ -107,12 +120,16 @@ namespace Survival.Unity
             }
             else
             {
-                Debug.LogWarning("PILOT attack clip missing after Humanoid import. Walk-only until reimport.");
+                Debug.LogWarning("PILOT attack clip missing after Generic import. Walk-only until reimport.");
             }
 
             _graph.Play();
             _graphReady = true;
             SampleAt(0f);
+            CorrectBodyScaleIfNeeded(_instance);
+            SampleAt(0f);
+            AttachHeldSword(_instance);
+            LogSkinAndFailIfBad(_instance);
             Debug.Log(
                 "PILOT actor built walkLen=" + _walkLength + " attackLen=" + _attackLength +
                 " visible=Mixamo walkClip=" + ThemePackWalkFbx +
@@ -211,6 +228,125 @@ namespace Survival.Unity
             root.transform.localRotation = Quaternion.Euler(0f, RearYawDegrees, 0f);
         }
 
+        /// <summary>
+        /// Mixamo With-Skin FBX keeps Armature Lcl Scaling 0.01 (cm). Unity FileScale also
+        /// applies 0.01. Stacked → ~2 cm body. Humanoid then drives bones at 1.8 m so only
+        /// the RH sword is visible. Flatten every 0.01 root to 1×. Do not hide the body.
+        /// </summary>
+        private static void NormalizeMixamoCmRoot(GameObject root)
+        {
+            var n = 0;
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                var s = t.localScale;
+                if (IsMixamoCmScale(s))
+                {
+                    t.localScale = Vector3.one;
+                    n++;
+                    Debug.Log("PILOT Mixamo cm-root " + t.name + " scale 0.01 → 1");
+                }
+            }
+
+            if (n == 0)
+            {
+                Debug.Log("PILOT Mixamo cm-root none (already 1×)");
+            }
+        }
+
+        private static bool IsMixamoCmScale(Vector3 s) =>
+            Mathf.Abs(s.x - 0.01f) < 0.003f
+            && Mathf.Abs(s.y - 0.01f) < 0.003f
+            && Mathf.Abs(s.z - 0.01f) < 0.003f;
+
+        private static void EnableSkinAlways(GameObject root)
+        {
+            foreach (var smr in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                smr.enabled = true;
+                smr.updateWhenOffscreen = true;
+            }
+        }
+
+        private static bool IsBodySkin(SkinnedMeshRenderer smr)
+        {
+            var n = smr.name;
+            return n.IndexOf("sword", StringComparison.OrdinalIgnoreCase) < 0
+                   && n.IndexOf("cape", StringComparison.OrdinalIgnoreCase) < 0
+                   && n.IndexOf("Ico", StringComparison.OrdinalIgnoreCase) < 0;
+        }
+
+        private static float MeasureBodyHeight(GameObject root)
+        {
+            var best = 0f;
+            foreach (var smr in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                if (!IsBodySkin(smr))
+                {
+                    continue;
+                }
+
+                var s = smr.bounds.size;
+                best = Mathf.Max(best, s.x, s.y, s.z);
+            }
+
+            return best;
+        }
+
+        private static void CorrectBodyScaleIfNeeded(GameObject root)
+        {
+            var height = MeasureBodyHeight(root);
+            if (height >= BodyHeightMinMeters && height <= BodyHeightMaxMeters)
+            {
+                return;
+            }
+
+            if (height < 0.0001f)
+            {
+                Debug.LogError("PILOT skin FAIL no measurable Mixamo body bounds before scale correct.");
+                return;
+            }
+
+            var factor = BodyHeightTargetMeters / height;
+            root.transform.localScale *= factor;
+            Debug.Log("PILOT Mixamo body scale correct height=" + height + " ×" + factor);
+        }
+
+        private static void LogSkinAndFailIfBad(GameObject root)
+        {
+            var anyBody = false;
+            foreach (var smr in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                var c = smr.bounds.center;
+                var s = smr.bounds.size;
+                var ls = smr.transform.lossyScale;
+                Debug.Log(
+                    "PILOT skin " + smr.name +
+                    " enabled=" + smr.enabled +
+                    " bounds.center=(" + c.x + "," + c.y + "," + c.z + ")" +
+                    " bounds.size=(" + s.x + "," + s.y + "," + s.z + ")" +
+                    " lossyScale=(" + ls.x + "," + ls.y + "," + ls.z + ")");
+                if (!IsBodySkin(smr))
+                {
+                    continue;
+                }
+
+                anyBody = true;
+                var height = Mathf.Max(s.x, s.y, s.z);
+                if (height < BodyHeightMinMeters || height > BodyHeightMaxMeters)
+                {
+                    Debug.LogError(
+                        "PILOT skin FAIL " + smr.name +
+                        " body height " + height + "m (need 0.5–5m). " +
+                        "Mixamo Armature 0.01 stacked on FileScale, or Humanoid skin collapse.");
+                }
+            }
+
+            if (!anyBody)
+            {
+                Debug.LogError("PILOT skin FAIL no SkinnedMeshRenderer on Mixamo body.");
+            }
+        }
+
         private static Transform? FindNamedBone(GameObject root, params string[] names)
         {
             foreach (var t in root.GetComponentsInChildren<Transform>(true))
@@ -298,7 +434,7 @@ namespace Survival.Unity
             return Resources.Load<GameObject>(resourcesName);
         }
 
-        private static Avatar? LoadHumanoidAvatar(string rel)
+        private static Avatar? LoadImportedAvatar(string rel)
         {
 #if UNITY_EDITOR
             foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
@@ -423,7 +559,7 @@ namespace Survival.Unity
                 return false;
             }
 
-            importer.animationType = ModelImporterAnimationType.Human;
+            importer.animationType = ModelImporterAnimationType.Generic;
             importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
             importer.importAnimation = true;
             var defaults = importer.defaultClipAnimations;
