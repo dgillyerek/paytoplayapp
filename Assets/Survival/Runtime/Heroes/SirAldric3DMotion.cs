@@ -23,6 +23,13 @@ namespace Survival.Domain.Heroes
         public const float MixamoImportRearYawDegrees = 180f;
 
         /// <summary>
+        /// Mixamo Stable Sword Inward Slash take window. Frame 1 is a high-left rest;
+        /// the rear Play-cam strike reads high-right (≈8) then down-left (≈26–32).
+        /// </summary>
+        public const int MixamoSlashFirstFrame = 8;
+        public const int MixamoSlashLastFrame = 40;
+
+        /// <summary>
         /// Play-cam SoT for SirAldricDemo / 1080×1920 Game-view Scale 1×. View +Z = TOP.
         /// Closer than (0, 2.20, −3.40) FOV 34 so the 1.7m knight fills most of the phone frame.
         /// </summary>

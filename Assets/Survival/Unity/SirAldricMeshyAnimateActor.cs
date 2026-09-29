@@ -32,8 +32,9 @@ namespace Survival.Unity
         public const string AttackClipHint = "Attack";
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
         public const string AttackAuthoredReason =
-            "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Inward Slash. " +
-            "RH sword world 1.01m. Mixer crossfade. Never AccuRIG. HOLD merge.";
+            "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Inward Slash " +
+            "frames 8–40 (high-right → down-left). RH sword world 1.01m. Mixer 0.20s. " +
+            "Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
         public const float SwordBladeMeters = 1.01f;
         private const float BodyHeightMinMeters = 0.5f;
@@ -685,6 +686,12 @@ namespace Survival.Unity
             }
 
             best.name = walk ? ClipHint : AttackClipHint;
+            if (!walk)
+            {
+                best.firstFrame = SirAldric3DMotion.MixamoSlashFirstFrame;
+                best.lastFrame = SirAldric3DMotion.MixamoSlashLastFrame;
+            }
+
             best.loopTime = walk;
             best.loop = walk;
             best.keepOriginalOrientation = true;

@@ -9,7 +9,7 @@
 | Playable Mixamo body | `Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx` |
 | Unrigged look mesh (on disk) | `SirAldric_body_holefixed_mid280k.fbx` (no armature — not the Play instance) |
 | Walk clip | same walk FBX · Unity takeName **`mixamo.com`** 1–36 (Mixamo Standard Walk) |
-| Slash clip | `SirAldric_body_holefixed_slash.fbx` · takeName **`mixamo.com`** 1–67 (Stable Sword Inward Slash) |
+| Slash clip | `SirAldric_body_holefixed_slash.fbx` · takeName **`mixamo.com`** **8–40** (Stable Sword Inward Slash; skip f1 high-left rest so rear Play reads high-right → down-left) |
 | Sword prop | `SirAldric_PILOT_sword.fbx` parented to `mixamorig:RightHand` |
 | Cape prop | `SirAldric_PILOT_cape.fbx` on disk (optional soft — not auto-parented; scale/bind leftover) |
 | Paint | `pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture*.png` |
@@ -34,10 +34,10 @@ Rear `(0, 1.75, −2.90)` LookAt `(0, 0.85, 0.15)` FOV 34. Mesh 1×.
 
 ## Proofs here
 
-Play-cam rematch: Mixamo holefixed + walk frame 18 / slash peak frame 32 + RH sword ~1.01 m. Rear = back. Cape not parented. Walk→slash 0.20 s mixer blend is Unity Play only — rematch stills are still poses. **Not Meshy website stills. Not Unity Game-view.**
+Play-cam rematch: Mixamo holefixed + walk frame 18 / slash **start frame 8** (high-right tip) + **finish frame 32** (down-left). RH sword ~1.01 m. Rear = back. Cape not parented. Walk→slash 0.20 s mixer blend is Unity Play only — rematch stills are still poses. **Not Meshy website stills. Not Unity Game-view.**
 
 ## Unity Play
 
 1. Play **SirAldric**. Walk/slash reimport **Generic** + `useFileScale: 0`. Log: `visible=Mixamo`, `walkLen`/`attackLen` > 0, `PILOT skin` height 0.5–5 m, `PILOT sword` world blade ≈ 1.01 m (hand.lossyScale logged).
-2. Knight-readable walk. Sword in RH, ~1 m, held at palm — not an 88 m floater. Walk **crossfades** ~0.20 s into inward slash.
+2. Knight-readable walk. Sword in RH, ~1 m, held at palm. Walk **crossfades** ~0.20 s into inward slash: tip **high-right** then **down-left** (clip window 8–40, not f1 rest).
 3. HOLD until Derek PASS.
