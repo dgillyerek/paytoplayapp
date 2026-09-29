@@ -6,10 +6,10 @@ Honest label: Play-cam rematch, not Unity Camera.Render, not Meshy website still
 
 Blender Mixamo already faces rear (back to camera). Unity FaceWorldTop yaws 180
 (needed because Unity Mixamo faces −Z). Do not scale-X flip the body — that put
-the sword on the left hand. Rematch unfolds the RH and points the arm UR →
-horizontal front (+Z) → LL. Sword is a rigid RightHand child snapped to the
-forearm–hand axis (no AttackSlashReach slerp — Derek FAIL b2ce8f7 drag).
-Not Unity Game-view.
+the sword on the left hand. Walk: sheathed down the right hip (no arm-lock —
+Derek FAIL 19b16aa Game-view pierce). Attack: unfold RH UR → horizontal front
+(+Z) → LL; sword snapped to the forearm–hand axis. Not Unity Game-view.
+Derek Game-view shots are the gate; rematch can disagree.
 """
 from __future__ import annotations
 
@@ -56,6 +56,9 @@ SLASH_FIRST = 8
 SLASH_LAST = 40
 SLASH_MID = 20
 HELD_SWORD_REST_X = 90.0
+SHEATH_RIGHT = 0.18
+SHEATH_DOWN = 1.00
+SHEATH_BACK = 0.12
 
 
 def u2b(p):
@@ -207,7 +210,7 @@ def render_to(path: Path):
     try:
         ART.mkdir(parents=True, exist_ok=True)
         (ART / path.name).write_bytes(path.read_bytes())
-        unique = "sir_aldric_pilot_rh_armlock_" + path.name.replace("sir_aldric_pilot_", "")
+        unique = "sir_aldric_pilot_rh_sheath_lock_" + path.name.replace("sir_aldric_pilot_", "")
         (ART / unique).write_bytes(path.read_bytes())
     except OSError as exc:
         print("artifact skip", exc)
@@ -464,6 +467,30 @@ def rotate_pose_bone(arm, pb, q_world):
     pb.matrix = arm.matrix_world.inverted() @ new_mw
 
 
+def apply_sheathed_sword(arm, sword):
+    """Walk: tip down the outside of the right hip. Not Unity Game-view."""
+    if sword is None:
+        return
+    rest_q = Euler((math.radians(HELD_SWORD_REST_X), 0.0, 0.0), "XYZ").to_quaternion()
+    bone_q = Quaternion()
+    if sword.parent_type == "BONE" and sword.parent_bone:
+        pb = arm.pose.bones.get(sword.parent_bone)
+        if pb is not None:
+            bone_q = (arm.matrix_world @ pb.matrix).to_quaternion()
+    rest_world = bone_q @ rest_q
+    rest_blade = rest_world @ Vector((0.0, 0.0, 1.0))
+    sheath_b = blender_from_unity(SHEATH_RIGHT, -SHEATH_DOWN, -SHEATH_BACK)
+    if rest_blade.length > 1e-6:
+        snap = rest_blade.normalized().rotation_difference(sheath_b)
+        world = snap @ rest_world
+    else:
+        world = rest_world
+    local = bone_q.inverted() @ world
+    sword.rotation_mode = "QUATERNION"
+    sword.rotation_quaternion = local
+    bpy.context.view_layer.update()
+
+
 def apply_attack_windup(arm, sword, frame):
     """Match Unity ApplyAttackWindupLift: unfold elbow, arm UR→front→LL, rigid sword."""
     k = windup_weight(frame)
@@ -545,12 +572,13 @@ def pose_slash(arm, act, sword, frame):
 
 
 def render_walk():
-    mesh, arm, act, _sword = import_mixamo_body(WALK)
+    mesh, arm, act, sword = import_mixamo_body(WALK)
     bind_pbr(mesh)
     still = 18
     print("walk still", still, "mesh", mesh.name)
     cam = setup_studio()
     pose_at(arm, act, still)
+    apply_sheathed_sword(arm, sword)
     look(cam, *CAM_REAR)
     render_to(PROOF / "sir_aldric_pilot_rear_walk_playcam.png")
     look(cam, *CAM_FRONT)

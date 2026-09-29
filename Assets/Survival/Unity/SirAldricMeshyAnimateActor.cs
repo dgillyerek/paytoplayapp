@@ -35,9 +35,9 @@ namespace Survival.Unity
         public const string AttackAuthoredReason =
             "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Inward Slash " +
             "frames 8–40. Sword stays mixamorig:RightHand (never a whole-body X-flip). " +
-            "AttackWindupLift: unfold RH, point arm UR→horizontal front (+Z)→LL. " +
-            "Sword is a rigid mixamorig:RightHand child — blade snapped to the " +
-            "forearm–hand axis every frame, no AttackSlashReach slerp (b2ce8f7 drag FAIL). " +
+            "Walk: sheathed down the right hip (no arm-lock, no mesh pierce). " +
+            "Attack: unfold RH UR→horizontal front (+Z)→LL; sword snaps to the " +
+            "forearm–hand axis and is re-applied on camera render (19b16aa drag/pierce FAIL). " +
             "RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
         public const float SwordBladeMeters = 1.01f;
@@ -67,6 +67,8 @@ namespace Survival.Unity
         /// so it still aims local +Z.
         /// </summary>
         private Vector3 _swordLocalBlade = Vector3.up;
+        private float _poseTime;
+        private bool _poseReady;
 
         public bool Built => _graphReady;
         public bool HasAttackClip => _attackReady;
@@ -155,6 +157,7 @@ namespace Survival.Unity
             AttachHeldSword(_instance);
             CacheAttackBones(_instance);
             LogSkinAndFailIfBad(_instance);
+            BindRenderHook();
             Debug.Log(
                 "PILOT actor built walkLen=" + _walkLength + " attackLen=" + _attackLength +
                 " visible=Mixamo walkClip=" + ThemePackWalkFbx +
@@ -179,6 +182,48 @@ namespace Survival.Unity
             }
         }
 
+        private void OnEnable()
+        {
+            BindRenderHook();
+        }
+
+        private void OnDisable()
+        {
+            UnbindRenderHook();
+        }
+
+        private void BindRenderHook()
+        {
+            UnbindRenderHook();
+            RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+            Camera.onPreRender += OnPreRenderCamera;
+        }
+
+        private void UnbindRenderHook()
+        {
+            RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+            Camera.onPreRender -= OnPreRenderCamera;
+        }
+
+        private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
+        {
+            _ = context;
+            _ = camera;
+            if (_poseReady)
+            {
+                ApplySampledPose();
+            }
+        }
+
+        private void OnPreRenderCamera(Camera camera)
+        {
+            _ = camera;
+            if (_poseReady)
+            {
+                ApplySampledPose();
+            }
+        }
+
         private void LateUpdate()
         {
             if (!_graphReady)
@@ -186,17 +231,24 @@ namespace Survival.Unity
                 return;
             }
 
-            // After Animator: extras + rigid sword must win the rendered pose.
             SampleAt(Time.unscaledTime);
         }
 
         public void SampleAt(float timeSeconds)
+        {
+            _poseTime = timeSeconds;
+            _poseReady = true;
+            ApplySampledPose();
+        }
+
+        private void ApplySampledPose()
         {
             if (!_graph.IsValid() || !_mixer.IsValid())
             {
                 return;
             }
 
+            var timeSeconds = _poseTime;
             var walkLen = _walkLength > 0.05f ? _walkLength : 1f;
             var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
             var attackLen = _attackReady ? Mathf.Max(_attackLength, 0.01f) : walkBlock;
@@ -252,19 +304,24 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Attack-only offset after Evaluate. Unfolds mixamorig:RightForeArm and
-        /// points the RH chain along AttackSlashReach (UR → horizontal front +Z → LL)
-        /// so the slash stays a max-reach sweep. Sword stays a rigid mixamorig:RightHand
-        /// blade to hand +Y, then a per-frame snap puts it on the forearm–hand axis.
-        /// No world-space AttackSlashReach slerp (Derek FAIL b2ce8f7: tip trailed the arm).
-        /// Not AimChain. Not a body X-flip.
+        /// Attack extras after Evaluate. Walk uses a sheathed hip rest (no arm-lock —
+        /// Derek FAIL 19b16aa Game-view pierce). Attack unfolds the RH and points the
+        /// chain UR → horizontal front +Z → LL, then snaps the sword onto the live
+        /// forearm–hand axis. Pose is re-applied on camera render so Animator cannot
+        /// desync the mesh from the prop. Not AimChain. Not a body X-flip.
         /// </summary>
         private void ApplyAttackWindupLift(float attackWeight, float attackNormalized01)
         {
             var k = Mathf.Clamp01(attackWeight) * SirAldric3DMotion.AttackWindupWeight(attackNormalized01);
+            if (k <= 0.001f)
+            {
+                ApplySheathedSword();
+                return;
+            }
+
             SirAldric3DMotion.AttackSlashReach(attackNormalized01, out var dx, out var dy, out var dz);
             var desired = new Vector3(dx, dy, dz);
-            if (k > 0.001f && _rightArm != null && _rightHand != null)
+            if (_rightArm != null && _rightHand != null)
             {
                 if (_rightForeArm != null)
                 {
@@ -290,10 +347,35 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Rigid RH grip: mesh blade || hand +Y, then snap onto the live forearm–hand
-        /// axis. No Slerp, no AttackSlashReach key on the sword.
+        /// Walk / blend-out: tip down the outside of the right hip. Never snap to the
+        /// swinging forearm (that sent the 1.01 m blade through the thigh).
+        /// </summary>
+        private void ApplySheathedSword()
+        {
+            if (_heldSword == null)
+            {
+                return;
+            }
+
+            _heldSword.localRotation = SwordRestLocal();
+            var bladeLocal = BladeLocalAxis();
+            var blade = _heldSword.rotation * bladeLocal;
+            if (blade.sqrMagnitude < 1e-8f)
+            {
+                return;
+            }
+
+            var sheath = new Vector3(
+                SirAldric3DMotion.HeldSwordSheathRight,
+                -SirAldric3DMotion.HeldSwordSheathDown,
+                -SirAldric3DMotion.HeldSwordSheathBack);
+            _heldSword.rotation =
+                Quaternion.FromToRotation(blade.normalized, sheath.normalized) * _heldSword.rotation;
+        }
+
+        /// <summary>
+        /// Attack only: mesh blade onto the live forearm–hand axis. No Slerp.
         /// Blender rematch still uses HeldSwordRestEulerX (mesh +Z, no bakeAxisConversion).
-        /// Unity bake makes Design +Z local +Y, so SwordRestLocal maps blade → hand +Y.
         /// </summary>
         private void SnapHeldSwordToArmAxis()
         {
@@ -303,11 +385,6 @@ namespace Survival.Unity
             }
 
             _heldSword.localRotation = SwordRestLocal();
-            if (_heldSword.parent == null)
-            {
-                return;
-            }
-
             var axis = Vector3.zero;
             if (_rightForeArm != null && _rightHand != null)
             {
@@ -324,8 +401,7 @@ namespace Survival.Unity
                 return;
             }
 
-            var bladeLocal = _swordLocalBlade.sqrMagnitude > 1e-8f ? _swordLocalBlade : Vector3.up;
-            var blade = _heldSword.rotation * bladeLocal;
+            var blade = _heldSword.rotation * BladeLocalAxis();
             if (blade.sqrMagnitude < 1e-8f)
             {
                 return;
@@ -335,9 +411,14 @@ namespace Survival.Unity
                 Quaternion.FromToRotation(blade.normalized, axis.normalized) * _heldSword.rotation;
         }
 
+        private Vector3 BladeLocalAxis()
+        {
+            return _swordLocalBlade.sqrMagnitude > 1e-8f ? _swordLocalBlade : Vector3.up;
+        }
+
         private Quaternion SwordRestLocal()
         {
-            var blade = _swordLocalBlade.sqrMagnitude > 1e-8f ? _swordLocalBlade.normalized : Vector3.up;
+            var blade = BladeLocalAxis().normalized;
             return Quaternion.FromToRotation(blade, Vector3.up);
         }
 
@@ -367,21 +448,22 @@ namespace Survival.Unity
                 }
 
                 var s = filter.sharedMesh.bounds.size;
+                var c = filter.sharedMesh.bounds.center;
                 Vector3 axis;
                 float len;
                 if (s.y >= s.x && s.y >= s.z)
                 {
-                    axis = Vector3.up;
+                    axis = c.y < 0f ? Vector3.down : Vector3.up;
                     len = s.y;
                 }
                 else if (s.z >= s.x)
                 {
-                    axis = Vector3.forward;
+                    axis = c.z < 0f ? Vector3.back : Vector3.forward;
                     len = s.z;
                 }
                 else
                 {
-                    axis = Vector3.right;
+                    axis = c.x < 0f ? Vector3.left : Vector3.right;
                     len = s.x;
                 }
 
@@ -413,6 +495,7 @@ namespace Survival.Unity
 
         private void OnDestroy()
         {
+            UnbindRenderHook();
             if (_graph.IsValid())
             {
                 _graph.Destroy();
@@ -601,7 +684,7 @@ namespace Survival.Unity
             var parent = Mathf.Max(Mathf.Abs(hand.lossyScale.x), 1e-5f);
             var inv = 1f / parent;
             sword.transform.localPosition = new Vector3(0f, 0.08f, 0f) * inv;
-            // Rest is overwritten every LateUpdate by SnapHeldSwordToArmAxis (blade || hand +Y).
+            // Rest overwritten every pose: walk sheath or attack forearm snap.
             sword.transform.localRotation = Quaternion.identity;
             sword.transform.localScale = Vector3.one * inv;
             NormalizeSwordWorldBlade(sword.transform);

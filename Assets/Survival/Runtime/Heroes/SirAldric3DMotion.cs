@@ -51,6 +51,14 @@ namespace Survival.Domain.Heroes
         public const float AttackSlashFrontHoldU = 0.55f;
         public const float AttackSlashLlU = 0.78f;
         public const float HeldSwordRestEulerX = 90f;
+        /// <summary>
+        /// Walk sheath in Unity world after FaceWorldTop: tip down the outside of the
+        /// right hip. Derek FAIL 19b16aa: LateUpdate arm-lock during walk drove the
+        /// blade through the thigh. Not used during attack (forearm–hand snap).
+        /// </summary>
+        public const float HeldSwordSheathRight = 0.18f;
+        public const float HeldSwordSheathDown = 1.00f;
+        public const float HeldSwordSheathBack = 0.12f;
 
         /// <summary>
         /// Play-cam SoT for SirAldricDemo / 1080×1920 Game-view Scale 1×. View +Z = TOP.

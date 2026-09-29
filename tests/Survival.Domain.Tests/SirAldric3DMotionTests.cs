@@ -332,6 +332,8 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("FromToRotation", actor, StringComparison.Ordinal);
         Assert.Contains("SnapHeldSwordToArmAxis", actor, StringComparison.Ordinal);
         Assert.Contains("SwordRestLocal", actor, StringComparison.Ordinal);
+        Assert.Contains("ApplySheathedSword", actor, StringComparison.Ordinal);
+        Assert.Contains("beginCameraRendering", actor, StringComparison.Ordinal);
         Assert.Contains("LateUpdate", actor, StringComparison.Ordinal);
         Assert.Contains("DefaultExecutionOrder(200)", actor, StringComparison.Ordinal);
         Assert.Contains("MeasureLocalBladeAxis", actor, StringComparison.Ordinal);
@@ -414,6 +416,9 @@ public sealed class SirAldric3DMotionTests
         Assert.Equal(0.55f, SirAldric3DMotion.AttackSlashFrontHoldU);
         Assert.Equal(0.78f, SirAldric3DMotion.AttackSlashLlU);
         Assert.Equal(90f, SirAldric3DMotion.HeldSwordRestEulerX);
+        Assert.Equal(0.18f, SirAldric3DMotion.HeldSwordSheathRight);
+        Assert.Equal(1.00f, SirAldric3DMotion.HeldSwordSheathDown);
+        Assert.Equal(0.12f, SirAldric3DMotion.HeldSwordSheathBack);
         Assert.Equal(1f, SirAldric3DMotion.AttackWindupWeight(0f), 3);
         Assert.Equal(1f, SirAldric3DMotion.AttackWindupWeight(0.72f), 3);
         Assert.Equal(1f, SirAldric3DMotion.AttackWindupWeight(1f), 3);
@@ -435,8 +440,8 @@ public sealed class SirAldric3DMotionTests
         var blender = File.ReadAllText(Path.Combine(root, "scripts", "blender", "render_aldric_pilot_playcam.py"));
         Assert.Contains("SLASH_FRONT_UP = 0.06", blender, StringComparison.Ordinal);
         Assert.Contains("SLASH_FRONT_HOLD_U = 0.55", blender, StringComparison.Ordinal);
-        Assert.Contains("rh_armlock_", blender, StringComparison.Ordinal);
-        Assert.Contains("rest_blade", blender, StringComparison.Ordinal);
+        Assert.Contains("rh_sheath_lock_", blender, StringComparison.Ordinal);
+        Assert.Contains("apply_sheathed_sword", blender, StringComparison.Ordinal);
         Assert.Contains("forearm–hand", blender, StringComparison.Ordinal);
         Assert.DoesNotContain("rest_world.slerp", blender, StringComparison.Ordinal);
         Assert.Contains("not Unity Game-view", blender, StringComparison.Ordinal);
@@ -456,6 +461,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("not a whole-body X-flip", hold, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("b0a9509", hold, StringComparison.Ordinal);
         Assert.Contains("b2ce8f7", hold, StringComparison.Ordinal);
+        Assert.Contains("19b16aa", hold, StringComparison.Ordinal);
         Assert.Contains("horizontal thrust", hold, StringComparison.OrdinalIgnoreCase);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_rear_walk_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_front_walk_playcam.png")).Length > 50_000);
