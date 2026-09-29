@@ -372,11 +372,6 @@ namespace Survival.Domain.Heroes
         public static float AttackWindupWeight(float attackNormalized01)
         {
             var u = Clamp01(attackNormalized01);
-            if (AttackWindupEaseEnd <= 1e-4f)
-            {
-                return 0f;
-            }
-
             return 1f - Smooth01(Clamp01(u / AttackWindupEaseEnd));
         }
 
