@@ -189,7 +189,7 @@ namespace Survival.Unity
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "PILOT Mixamo  ·  UR→front→LL slash  ·  RH 1.01m  ·  HOLD",
+                "PILOT Mixamo  ·  UR→front→LL  ·  RH arm-lock  ·  HOLD",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);

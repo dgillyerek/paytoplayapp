@@ -18,6 +18,7 @@ namespace Survival.Unity
     /// Walk = Standard Walk. Slash = Stable Sword Inward Slash. Sword on Right Hand.
     /// No Path 1 / Path A / ClipSword. HOLD merge.
     /// </summary>
+    [DefaultExecutionOrder(200)]
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
     {
         public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx";
@@ -34,8 +35,9 @@ namespace Survival.Unity
         public const string AttackAuthoredReason =
             "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Inward Slash " +
             "frames 8–40. Sword stays mixamorig:RightHand (never a whole-body X-flip). " +
-            "AttackWindupLift: RH max-reach UR→horizontal front (+Z / enemy)→LL, " +
-            "elbow unfold, tip far. Mid is a thrust, not sky (b0a9509 Game-view FAIL). " +
+            "AttackWindupLift: unfold RH, point arm UR→horizontal front (+Z)→LL. " +
+            "Sword is a rigid mixamorig:RightHand child — blade snapped to the " +
+            "forearm–hand axis every frame, no AttackSlashReach slerp (b2ce8f7 drag FAIL). " +
             "RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
         public const float SwordBladeMeters = 1.01f;
@@ -177,13 +179,14 @@ namespace Survival.Unity
             }
         }
 
-        private void Update()
+        private void LateUpdate()
         {
             if (!_graphReady)
             {
                 return;
             }
 
+            // After Animator: extras + rigid sword must win the rendered pose.
             SampleAt(Time.unscaledTime);
         }
 
@@ -249,11 +252,12 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Attack-only offset after Evaluate. Unfolds mixamorig:RightForeArm, points
-        /// the RH along AttackSlashReach (UR → horizontal front +Z → LL), and aims
-        /// the rest blade (not transform.forward) onto that reach so the tip stays
-        /// far and mid is a thrust toward the enemy, not sky. Not AimChain.
-        /// Not a body X-flip. Sword stays on mixamorig:RightHand.
+        /// Attack-only offset after Evaluate. Unfolds mixamorig:RightForeArm and
+        /// points the RH chain along AttackSlashReach (UR → horizontal front +Z → LL)
+        /// so the slash stays a max-reach sweep. Sword stays a rigid mixamorig:RightHand
+        /// blade to hand +Y, then a per-frame snap puts it on the forearm–hand axis.
+        /// No world-space AttackSlashReach slerp (Derek FAIL b2ce8f7: tip trailed the arm).
+        /// Not AimChain. Not a body X-flip.
         /// </summary>
         private void ApplyAttackWindupLift(float attackWeight, float attackNormalized01)
         {
@@ -282,27 +286,57 @@ namespace Survival.Unity
                 }
             }
 
+            SnapHeldSwordToArmAxis();
+        }
+
+        /// <summary>
+        /// Rigid RH grip: mesh blade || hand +Y, then snap onto the live forearm–hand
+        /// axis. No Slerp, no AttackSlashReach key on the sword.
+        /// </summary>
+        private void SnapHeldSwordToArmAxis()
+        {
             if (_heldSword == null)
             {
                 return;
             }
 
-            var restLocal = Quaternion.Euler(SirAldric3DMotion.HeldSwordRestEulerX, 0f, 0f);
-            if (k < 0.001f || _heldSword.parent == null)
+            _heldSword.localRotation = SwordRestLocal();
+            if (_heldSword.parent == null)
             {
-                _heldSword.localRotation = restLocal;
                 return;
             }
 
-            var restWorld = _heldSword.parent.rotation * restLocal;
-            var restBlade = restWorld * _swordLocalBlade;
-            if (restBlade.sqrMagnitude < 1e-8f)
+            var axis = Vector3.zero;
+            if (_rightForeArm != null && _rightHand != null)
             {
-                restBlade = restWorld * Vector3.up;
+                axis = _rightHand.position - _rightForeArm.position;
             }
 
-            var aimWorld = Quaternion.FromToRotation(restBlade.normalized, desired) * restWorld;
-            _heldSword.rotation = Quaternion.Slerp(restWorld, aimWorld, k);
+            if (axis.sqrMagnitude < 1e-8f && _rightArm != null && _rightHand != null)
+            {
+                axis = _rightHand.position - _rightArm.position;
+            }
+
+            if (axis.sqrMagnitude < 1e-8f)
+            {
+                return;
+            }
+
+            var bladeLocal = _swordLocalBlade.sqrMagnitude > 1e-8f ? _swordLocalBlade : Vector3.up;
+            var blade = _heldSword.rotation * bladeLocal;
+            if (blade.sqrMagnitude < 1e-8f)
+            {
+                return;
+            }
+
+            _heldSword.rotation =
+                Quaternion.FromToRotation(blade.normalized, axis.normalized) * _heldSword.rotation;
+        }
+
+        private Quaternion SwordRestLocal()
+        {
+            var blade = _swordLocalBlade.sqrMagnitude > 1e-8f ? _swordLocalBlade.normalized : Vector3.up;
+            return Quaternion.FromToRotation(blade, Vector3.up);
         }
 
         private void CacheAttackBones(GameObject root)
@@ -565,7 +599,8 @@ namespace Survival.Unity
             var parent = Mathf.Max(Mathf.Abs(hand.lossyScale.x), 1e-5f);
             var inv = 1f / parent;
             sword.transform.localPosition = new Vector3(0f, 0.08f, 0f) * inv;
-            sword.transform.localRotation = Quaternion.Euler(SirAldric3DMotion.HeldSwordRestEulerX, 0f, 0f);
+            // Rest is overwritten every LateUpdate by SnapHeldSwordToArmAxis (blade || hand +Y).
+            sword.transform.localRotation = Quaternion.identity;
             sword.transform.localScale = Vector3.one * inv;
             NormalizeSwordWorldBlade(sword.transform);
             var world = MeasureRendererWorldSize(sword);

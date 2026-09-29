@@ -18,7 +18,7 @@ Slash With-Skin mesh is **not instantiated**. `StripEmbeddedClipMeshes` disables
 
 **Sword hand:** always `mixamorig:RightHand`. FaceWorldTop yaws 180 and **Abs** scale (never `scale.x = -1`). Derek FAIL `212c6da` whole-body X-flip put the sword on the left hand — discarded. Local Generic Euler extras (`5f5e375`) swung the opposite way on Play-cam — discarded. Prefer RH parent + world-space tip arc.
 
-Light **attack-only** offset after `Evaluate()` (`ApplyAttackWindupLift`): unfold `mixamorig:RightForeArm` (max arm length), point RH along `AttackSlashReach` **UR → horizontal front +Z (enemy / TOP) → LL**, aim the **rest blade** onto that reach (Unity mesh local +Y after `bakeAxisConversion`; blender rematch local +Z). Weight stays 1 for the clip (mixer ramps walk blend). Not AimChain. Not a body X-flip. Blender rematch maps Unity (right, up, front) onto already-rear Mixamo as `(−right, −front, up)`.
+Light **attack-only** offset after `Evaluate()` (`ApplyAttackWindupLift` in **LateUpdate**): unfold `mixamorig:RightForeArm`, point the RH chain along `AttackSlashReach` **UR → horizontal front +Z (enemy / TOP) → LL**. Sword is a **rigid** `mixamorig:RightHand` child: rest aligns the mesh blade to hand +Y, then a per-frame snap puts it on the **forearm–hand axis**. No world-space `AttackSlashReach` slerp on the sword (Derek FAIL `b2ce8f7` tip trailed the arm). Not AimChain. Not a body X-flip. Blender rematch maps Unity (right, up, front) onto already-rear Mixamo as `(−right, −front, up)`.
 
 ### takeName note
 
@@ -37,6 +37,8 @@ The unrigged body FBX has **no skeleton**. Play instantiates the Mixamo-skinned 
 **Derek FAIL `212c6da`:** whole-body X-flip put the sword on the **left** hand.
 
 **Derek FAIL `b0a9509`:** mid Game-view blade straight **up** (world +Y / HUD TOP). `FrontUp 0.48` plus `FromToRotation(Vector3.forward, desired)` aimed the wrong mesh axis after Unity FBX bake (Design +Z → local +Y). Rematch stills that looked like a forward thrust **are not Unity Game-view** — camera-up ≈ world +Y, so extra +Y made rematch screen-up look like “forward.” Trust Game-view. Fix: `FrontUp 0.06`, `FrontHoldU` plateau, rest-blade `FromToRotation`. Mid is a **horizontal thrust** toward the enemy along the yellow path.
+
+**Derek FAIL `b2ce8f7`:** sword **dragged / trailed** the Mixamo arm. Independent `FromToRotation(restBlade, AttackSlashReach)` + `Slerp` aimed the prop at a slower key path than the hand. Fix: rigid RH parent + snap blade to the live forearm–hand axis every LateUpdate (no sword slerp). Arm extras still provide UR → horizontal front → LL.
 
 ## Cam (1080×1920 Scale 1×)
 

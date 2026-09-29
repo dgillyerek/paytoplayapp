@@ -330,10 +330,14 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("max-reach", actor, StringComparison.Ordinal);
         Assert.Contains("HeldSwordRestEulerX", actor, StringComparison.Ordinal);
         Assert.Contains("FromToRotation", actor, StringComparison.Ordinal);
-        Assert.Contains("restBlade", actor, StringComparison.Ordinal);
+        Assert.Contains("SnapHeldSwordToArmAxis", actor, StringComparison.Ordinal);
+        Assert.Contains("SwordRestLocal", actor, StringComparison.Ordinal);
+        Assert.Contains("LateUpdate", actor, StringComparison.Ordinal);
+        Assert.Contains("DefaultExecutionOrder(200)", actor, StringComparison.Ordinal);
         Assert.Contains("MeasureLocalBladeAxis", actor, StringComparison.Ordinal);
         Assert.Contains("_swordLocalBlade", actor, StringComparison.Ordinal);
-        Assert.Contains("FromToRotation(restBlade.normalized, desired)", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("FromToRotation(restBlade.normalized, desired)", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Slerp(restWorld, aimWorld", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("FromToRotation(Vector3.forward, desired)", actor, StringComparison.Ordinal);
         Assert.Contains("mixamorig:RightHand", actor, StringComparison.Ordinal);
         Assert.Contains("CacheAttackBones", actor, StringComparison.Ordinal);
@@ -431,8 +435,10 @@ public sealed class SirAldric3DMotionTests
         var blender = File.ReadAllText(Path.Combine(root, "scripts", "blender", "render_aldric_pilot_playcam.py"));
         Assert.Contains("SLASH_FRONT_UP = 0.06", blender, StringComparison.Ordinal);
         Assert.Contains("SLASH_FRONT_HOLD_U = 0.55", blender, StringComparison.Ordinal);
-        Assert.Contains("rh_front_thrust_", blender, StringComparison.Ordinal);
+        Assert.Contains("rh_armlock_", blender, StringComparison.Ordinal);
         Assert.Contains("rest_blade", blender, StringComparison.Ordinal);
+        Assert.Contains("forearm–hand", blender, StringComparison.Ordinal);
+        Assert.DoesNotContain("rest_world.slerp", blender, StringComparison.Ordinal);
         Assert.Contains("not Unity Game-view", blender, StringComparison.Ordinal);
         var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricDemo.cs"));
         Assert.Contains("ApplyPlayCam", demo, StringComparison.Ordinal);
@@ -449,6 +455,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("RightHand", hold, StringComparison.Ordinal);
         Assert.Contains("not a whole-body X-flip", hold, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("b0a9509", hold, StringComparison.Ordinal);
+        Assert.Contains("b2ce8f7", hold, StringComparison.Ordinal);
         Assert.Contains("horizontal thrust", hold, StringComparison.OrdinalIgnoreCase);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_rear_walk_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_front_walk_playcam.png")).Length > 50_000);

@@ -6,10 +6,10 @@ Honest label: Play-cam rematch, not Unity Camera.Render, not Meshy website still
 
 Blender Mixamo already faces rear (back to camera). Unity FaceWorldTop yaws 180
 (needed because Unity Mixamo faces −Z). Do not scale-X flip the body — that put
-the sword on the left hand. Rematch applies the same RH max-reach slash as Unity
-ApplyAttackWindupLift: unfold elbow, tip far UR → horizontal front (+Z) → LL.
-Derek FAIL b0a9509: rematch mid stills are not Unity Game-view — Game-view mid
-was skyward (world +Y). Mid must be a horizontal thrust toward the enemy.
+the sword on the left hand. Rematch unfolds the RH and points the arm UR →
+horizontal front (+Z) → LL. Sword is a rigid RightHand child snapped to the
+forearm–hand axis (no AttackSlashReach slerp — Derek FAIL b2ce8f7 drag).
+Not Unity Game-view.
 """
 from __future__ import annotations
 
@@ -207,7 +207,7 @@ def render_to(path: Path):
     try:
         ART.mkdir(parents=True, exist_ok=True)
         (ART / path.name).write_bytes(path.read_bytes())
-        unique = "sir_aldric_pilot_rh_front_thrust_" + path.name.replace("sir_aldric_pilot_", "")
+        unique = "sir_aldric_pilot_rh_armlock_" + path.name.replace("sir_aldric_pilot_", "")
         (ART / unique).write_bytes(path.read_bytes())
     except OSError as exc:
         print("artifact skip", exc)
@@ -465,7 +465,7 @@ def rotate_pose_bone(arm, pb, q_world):
 
 
 def apply_attack_windup(arm, sword, frame):
-    """Match Unity ApplyAttackWindupLift: unfold elbow, max-reach UR→front→LL."""
+    """Match Unity ApplyAttackWindupLift: unfold elbow, arm UR→front→LL, rigid sword."""
     k = windup_weight(frame)
     rarm = arm.pose.bones.get("mixamorig:RightArm")
     rfore = arm.pose.bones.get("mixamorig:RightForeArm")
@@ -495,25 +495,33 @@ def apply_attack_windup(arm, sword, frame):
             bpy.context.view_layer.update()
     if sword is not None:
         rest_q = Euler((math.radians(HELD_SWORD_REST_X), 0.0, 0.0), "XYZ").to_quaternion()
-        if k < 0.001:
-            sword.rotation_mode = "XYZ"
-            sword.rotation_euler = Euler((math.radians(HELD_SWORD_REST_X), 0.0, 0.0), "XYZ")
+        bone_q = Quaternion()
+        if sword.parent_type == "BONE" and sword.parent_bone:
+            pb = arm.pose.bones.get(sword.parent_bone)
+            if pb is not None:
+                bone_q = (arm.matrix_world @ pb.matrix).to_quaternion()
+        rest_world = bone_q @ rest_q
+        # Rigid RH child: snap mesh +Z onto the live forearm–hand axis.
+        # Do not slerp toward AttackSlashReach (Derek FAIL b2ce8f7 drag).
+        axis = None
+        if rfore is not None and rhand is not None:
+            hand_w = (arm.matrix_world @ rhand.matrix).to_translation()
+            fore_w = (arm.matrix_world @ rfore.matrix).to_translation()
+            axis = hand_w - fore_w
+        if axis is None or axis.length < 1e-6:
+            if rarm is not None and rhand is not None:
+                hand_w = (arm.matrix_world @ rhand.matrix).to_translation()
+                arm_w = (arm.matrix_world @ rarm.matrix).to_translation()
+                axis = hand_w - arm_w
+        rest_blade = rest_world @ Vector((0.0, 0.0, 1.0))
+        if axis is not None and axis.length > 1e-6 and rest_blade.length > 1e-6:
+            snap = rest_blade.normalized().rotation_difference(axis.normalized())
+            world = snap @ rest_world
         else:
-            bone_q = Quaternion()
-            if sword.parent_type == "BONE" and sword.parent_bone:
-                pb = arm.pose.bones.get(sword.parent_bone)
-                if pb is not None:
-                    bone_q = (arm.matrix_world @ pb.matrix).to_quaternion()
-            rest_world = bone_q @ rest_q
-            # Blender mesh blade is local +Z (no Unity bakeAxisConversion).
-            rest_blade = rest_world @ Vector((0.0, 0.0, 1.0))
-            if rest_blade.length < 1e-6:
-                rest_blade = Vector((0.0, 0.0, 1.0))
-            aim_world = rest_blade.normalized().rotation_difference(desired) @ rest_world
-            mixed = rest_world.slerp(aim_world, k)
-            local = bone_q.inverted() @ mixed
-            sword.rotation_mode = "QUATERNION"
-            sword.rotation_quaternion = local
+            world = rest_world
+        local = bone_q.inverted() @ world
+        sword.rotation_mode = "QUATERNION"
+        sword.rotation_quaternion = local
     bpy.context.view_layer.update()
     desired_u = attack_slash_reach_unity_xyz(u)
     print(
