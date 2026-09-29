@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using Survival.Domain.Heroes;
 using UnityEditor;
 using UnityEngine;
 
@@ -55,6 +56,12 @@ namespace Survival.Editor
             }
 
             best.name = walk ? "Walking" : "Attack";
+            if (!walk)
+            {
+                best.firstFrame = SirAldric3DMotion.MixamoSlashFirstFrame;
+                best.lastFrame = SirAldric3DMotion.MixamoSlashLastFrame;
+            }
+
             best.loopTime = walk;
             best.loop = walk;
             best.keepOriginalOrientation = true;

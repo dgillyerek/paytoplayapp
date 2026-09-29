@@ -286,10 +286,18 @@ def render_walk():
 def render_attack():
     mesh, arm, act = import_mixamo_body(ATK)
     bind_pbr(mesh)
-    still = 32
-    print("slash still", still, "mesh", mesh.name)
+    start = 8
+    finish = 32
+    print("slash start", start, "finish", finish, "mesh", mesh.name)
     cam = setup_studio()
-    pose_at(arm, act, still)
+    pose_at(arm, act, start)
+    look(cam, *CAM_REAR)
+    render_to(PROOF / "sir_aldric_pilot_rear_strike_start_playcam.png")
+    look(cam, *CAM_FRONT)
+    render_to(PROOF / "sir_aldric_pilot_front_strike_start_playcam.png")
+    look(cam, *CAM_34)
+    render_to(PROOF / "sir_aldric_pilot_34_strike_start_playcam.png")
+    pose_at(arm, act, finish)
     look(cam, *CAM_REAR)
     render_to(PROOF / "sir_aldric_pilot_rear_strike_playcam.png")
     look(cam, *CAM_FRONT)

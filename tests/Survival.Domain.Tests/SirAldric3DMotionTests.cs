@@ -344,6 +344,10 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("animationType: 2", attackMeta, StringComparison.Ordinal);
         Assert.Contains("useFileScale: 0", walkMeta, StringComparison.Ordinal);
         Assert.Contains("useFileScale: 0", attackMeta, StringComparison.Ordinal);
+        Assert.Contains("firstFrame: 8", attackMeta, StringComparison.Ordinal);
+        Assert.Contains("lastFrame: 40", attackMeta, StringComparison.Ordinal);
+        Assert.Equal(8, SirAldric3DMotion.MixamoSlashFirstFrame);
+        Assert.Equal(40, SirAldric3DMotion.MixamoSlashLastFrame);
         Assert.DoesNotContain("animationType: 3", walkMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("animationType: 3", attackMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", actor, StringComparison.Ordinal);
@@ -360,6 +364,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("SirAldric_body_holefixed_slash.fbx", post, StringComparison.Ordinal);
         Assert.Contains("ModelImporterAnimationType.Generic", post, StringComparison.Ordinal);
         Assert.Contains("useFileScale = false", post, StringComparison.Ordinal);
+        Assert.Contains("MixamoSlashFirstFrame", post, StringComparison.Ordinal);
         Assert.DoesNotContain("ModelImporterAnimationType.Human", post, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", post, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", walkMeta, StringComparison.Ordinal);
@@ -381,6 +386,7 @@ public sealed class SirAldric3DMotionTests
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_rear_walk_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_front_walk_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_34_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_rear_strike_start_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_rear_strike_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_front_strike_playcam.png")).Length > 50_000);
         Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_34_strike_playcam.png")).Length > 50_000);
