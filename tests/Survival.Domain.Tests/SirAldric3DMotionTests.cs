@@ -319,6 +319,11 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("RepairAttackTake", actor, StringComparison.Ordinal);
         Assert.Contains("EnableKeyword(\"_BASEMAP\")", actor, StringComparison.Ordinal);
         Assert.Contains("AttachHeldSword", actor, StringComparison.Ordinal);
+        Assert.Contains("AnimationMixerPlayable", actor, StringComparison.Ordinal);
+        Assert.Contains("WalkToAttackBlendSeconds", actor, StringComparison.Ordinal);
+        Assert.Contains("SwordBladeMeters", actor, StringComparison.Ordinal);
+        Assert.Contains("useFileScale = false", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetSourcePlayable(_attackPlayable)", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("EnsureClipSword", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("private static void AimChain", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("Path A weight-paint", actor.Replace("Path A / ClipSword", ""), StringComparison.Ordinal);
@@ -337,6 +342,8 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("avatarSetup: 1", attackMeta, StringComparison.Ordinal);
         Assert.Contains("animationType: 2", walkMeta, StringComparison.Ordinal);
         Assert.Contains("animationType: 2", attackMeta, StringComparison.Ordinal);
+        Assert.Contains("useFileScale: 0", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("useFileScale: 0", attackMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("animationType: 3", walkMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("animationType: 3", attackMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", actor, StringComparison.Ordinal);
@@ -352,6 +359,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("SirAldric_body_holefixed_walk.fbx", post, StringComparison.Ordinal);
         Assert.Contains("SirAldric_body_holefixed_slash.fbx", post, StringComparison.Ordinal);
         Assert.Contains("ModelImporterAnimationType.Generic", post, StringComparison.Ordinal);
+        Assert.Contains("useFileScale = false", post, StringComparison.Ordinal);
         Assert.DoesNotContain("ModelImporterAnimationType.Human", post, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", post, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", walkMeta, StringComparison.Ordinal);
