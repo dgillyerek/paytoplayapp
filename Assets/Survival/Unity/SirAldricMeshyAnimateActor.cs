@@ -292,6 +292,8 @@ namespace Survival.Unity
         /// <summary>
         /// Rigid RH grip: mesh blade || hand +Y, then snap onto the live forearm–hand
         /// axis. No Slerp, no AttackSlashReach key on the sword.
+        /// Blender rematch still uses HeldSwordRestEulerX (mesh +Z, no bakeAxisConversion).
+        /// Unity bake makes Design +Z local +Y, so SwordRestLocal maps blade → hand +Y.
         /// </summary>
         private void SnapHeldSwordToArmAxis()
         {
