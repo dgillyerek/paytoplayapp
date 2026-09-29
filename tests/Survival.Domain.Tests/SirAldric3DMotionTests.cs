@@ -301,6 +301,11 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("SirAldricPilotMixamo", actor, StringComparison.Ordinal);
         Assert.Contains("StripEmbeddedClipMeshes", actor, StringComparison.Ordinal);
         Assert.Contains("visible=Mixamo", actor, StringComparison.Ordinal);
+        Assert.Contains("updateWhenOffscreen", actor, StringComparison.Ordinal);
+        Assert.Contains("NormalizeMixamoCmRoot", actor, StringComparison.Ordinal);
+        Assert.Contains("PILOT skin FAIL", actor, StringComparison.Ordinal);
+        Assert.Contains("ModelImporterAnimationType.Generic", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("ModelImporterAnimationType.Human", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("visible=AccuRIG", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("SirAldric_PILOT_accurig_humanoid.fbx", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("SirAldric_PILOT_walk_accurig.fbx", actor, StringComparison.Ordinal);
@@ -330,6 +335,10 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("takeName: mixamo.com", attackMeta, StringComparison.Ordinal);
         Assert.Contains("avatarSetup: 1", walkMeta, StringComparison.Ordinal);
         Assert.Contains("avatarSetup: 1", attackMeta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 2", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 2", attackMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("animationType: 3", walkMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("animationType: 3", attackMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("legTwist", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("armTwist", actor, StringComparison.Ordinal);
@@ -342,6 +351,8 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("CreateFromThisModel", post, StringComparison.Ordinal);
         Assert.Contains("SirAldric_body_holefixed_walk.fbx", post, StringComparison.Ordinal);
         Assert.Contains("SirAldric_body_holefixed_slash.fbx", post, StringComparison.Ordinal);
+        Assert.Contains("ModelImporterAnimationType.Generic", post, StringComparison.Ordinal);
+        Assert.DoesNotContain("ModelImporterAnimationType.Human", post, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", post, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", walkMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", attackMeta, StringComparison.Ordinal);

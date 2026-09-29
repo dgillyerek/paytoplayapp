@@ -13,6 +13,7 @@ Supersedes AccuRIG clips-only on #27 for this tip.
 
 ## Dev rules
 - Clips on Mixamo body. NEVER ship AccuRIG as playable body for this tip.
+- Generic (not Humanoid): Humanoid Playable + Armature 0.01 × FileScale 0.01 = ~2 cm body / sword-only FAIL on bf5a5fa.
 - Discard embedded mesh from walk/slash FBXs if Unity duplicates — do not use clip FBX mesh as body.
 - Soft: Mixamo skeleton has no fingers. Soft fused leftovers OK elsewhere; HOLD Path A / ClipSword / AimChain / Dev weight-paint.
 - Derek Unity lacks ModelImporter.addHumanoidExtraRoot and HumanDescription.legTwist — do not set them.

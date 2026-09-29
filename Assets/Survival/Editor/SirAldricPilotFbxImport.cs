@@ -6,10 +6,10 @@ using UnityEngine;
 namespace Survival.Editor
 {
     /// <summary>
-    /// Fresh-open Humanoid clip materialization for PILOT walk/attack.
-    /// Hand-written clipAnimations with a guessed takeName (or CopyFromOther AccuRIG)
-    /// produce a mesh and zero AnimationClips — Derek Play T-pose on 3a306ea.
-    /// takeName must be the FBX AnimationStack (PR #25). Avatar is CreateFromThisModel.
+    /// Fresh-open Generic clip materialization for PILOT Mixamo walk/attack.
+    /// Humanoid Playable retarget collapses the Mixamo holefixed skin (Derek FAIL bf5a5fa:
+    /// sword-only). takeName must be the FBX AnimationStack mixamo.com. Avatar is
+    /// CreateFromThisModel Generic — never Humanoid, never AccuRIG.
     /// </summary>
     public sealed class SirAldricPilotFbxImport : AssetPostprocessor
     {
@@ -36,7 +36,7 @@ namespace Survival.Editor
                 return;
             }
 
-            importer.animationType = ModelImporterAnimationType.Human;
+            importer.animationType = ModelImporterAnimationType.Generic;
             importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
             importer.importAnimation = true;
             var defaults = importer.defaultClipAnimations;

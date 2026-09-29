@@ -114,10 +114,10 @@ ModelImporter:
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
   autoGenerateAvatarMappingIfUnspecified: 1
-  animationType: 3
+  animationType: 2
   humanoidOversampling: 1
   avatarSetup: 1
   additionalBone: 0
-  userData: PILOT Mixamo Stable Sword Inward Slash clip. takeName mixamo.com. CreateFromThisModel. Clips only — never visible body.
+  userData: PILOT Mixamo Stable Sword Inward Slash clip. Generic. takeName mixamo.com. CreateFromThisModel. Clips only — never visible body.
   assetBundleName: 
   assetBundleVariant: 
