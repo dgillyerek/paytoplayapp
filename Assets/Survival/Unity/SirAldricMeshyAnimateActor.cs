@@ -36,7 +36,7 @@ namespace Survival.Unity
             "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Inward Slash " +
             "frames 8–40. Sword stays mixamorig:RightHand (never a whole-body X-flip). " +
             "Walk: sheathed down the right hip (no arm-lock, no mesh pierce). " +
-            "Attack: unfold RH UR→horizontal front (+Z)→LL; sword snaps to the " +
+            "Attack: unfold RH max-reach UR→horizontal front (+Z)→LL; sword snaps to the " +
             "forearm–hand axis and is re-applied on camera render (19b16aa drag/pierce FAIL). " +
             "RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
