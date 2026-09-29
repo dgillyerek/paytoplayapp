@@ -11,7 +11,7 @@ import os
 from pathlib import Path
 
 import bpy
-from mathutils import Vector
+from mathutils import Euler, Vector
 
 ROOT = Path(__file__).resolve().parents[2]
 PACK = ROOT / "Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot"
@@ -26,10 +26,19 @@ ROUGH = PACK / "mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture_roughn
 PROOF = ROOT / "Docs/Survival/previews/aldric_pilot_20260928"
 ART = Path("/opt/cursor/artifacts")
 
-CAM_REAR = ((0.0, 1.75, -2.90), (0.0, 0.85, 0.15))
-CAM_FRONT = ((0.0, 1.75, 3.20), (0.0, 0.85, 0.15))
-CAM_34 = ((1.70, 1.75, -2.20), (0.0, 0.85, 0.15))
-CAM_FOV = 34.0
+CAM_REAR = ((0.0, 1.92, -3.08), (0.0, 1.12, 0.15))
+CAM_FRONT = ((0.0, 1.92, 3.38), (0.0, 1.12, 0.15))
+CAM_34 = ((1.82, 1.92, -2.38), (0.0, 1.12, 0.15))
+CAM_FOV = 42.0
+
+# Match Unity ApplyAttackWindupLift (SirAldric3DMotion.AttackWindup*).
+WINDUP_SHOULDER_X = -28.0
+WINDUP_ARM_X = -80.0
+WINDUP_HAND_X = -40.0
+WINDUP_SWORD_Z = -35.0
+WINDUP_EASE_END = 0.72
+SLASH_FIRST = 8
+SLASH_LAST = 40
 
 
 def u2b(p):
@@ -181,6 +190,8 @@ def render_to(path: Path):
     try:
         ART.mkdir(parents=True, exist_ok=True)
         (ART / path.name).write_bytes(path.read_bytes())
+        unique = "sir_aldric_pilot_tip_overhead_" + path.name.replace("sir_aldric_pilot_", "")
+        (ART / unique).write_bytes(path.read_bytes())
     except OSError as exc:
         print("artifact skip", exc)
 
@@ -191,18 +202,19 @@ def pick_action(*needles):
     return max(pool, key=lambda a: a.frame_range[1] - a.frame_range[0])
 
 
-def attach_sword(arm):
+def attach_sword(arm, sword_z=0.0):
     if not SWORD.exists():
-        return
+        return None
     bpy.ops.import_scene.fbx(filepath=str(SWORD))
     sword = next(o for o in bpy.data.objects if o.type == "MESH" and "sword" in o.name.lower())
     sword.parent = arm
     sword.parent_type = "BONE"
     sword.parent_bone = "mixamorig:RightHand"
     sword.location = (0.0, 0.08, 0.0)
-    sword.rotation_euler = (math.radians(90.0), 0.0, 0.0)
+    sword.rotation_euler = (math.radians(90.0), 0.0, math.radians(sword_z))
     sword.scale = (1.0, 1.0, 1.0)
-    print("sword parented to", sword.parent_bone, "blade~1.01m (Unity compensates parent lossyScale)")
+    print("sword parented to", sword.parent_bone, "eulerZ", sword_z, "blade~1.01m (Unity compensates parent lossyScale)")
+    return sword
 
 
 def attach_cape(arm):
@@ -245,10 +257,10 @@ def import_mixamo_body(clip_path: Path):
         look_arm.animation_data_create()
         look_arm.animation_data.action = act
     mesh = next(o for o in bpy.data.objects if o.type == "MESH" and o in before_meshes)
-    attach_sword(look_arm)
+    sword = attach_sword(look_arm)
     print("look_mesh", mesh.name, "arm", look_arm.name, "act", act.name, tuple(act.frame_range))
     print("actions", [a.name for a in bpy.data.actions])
-    return mesh, look_arm, act
+    return mesh, look_arm, act, sword
 
 
 def pose_at(arm, act, frame):
@@ -268,8 +280,54 @@ def pose_at(arm, act, frame):
     )
 
 
+def windup_weight(frame):
+    span = float(SLASH_LAST - SLASH_FIRST)
+    u = 0.0 if span <= 0 else (float(frame) - SLASH_FIRST) / span
+    u = max(0.0, min(1.0, u))
+    x = max(0.0, min(1.0, u / WINDUP_EASE_END)) if WINDUP_EASE_END > 1e-4 else 1.0
+    smooth = x * x * (3.0 - 2.0 * x)
+    return 1.0 - smooth
+
+
+def freeze_pose(arm, act, frame):
+    """Evaluate the Mixamo take then disconnect FCurves so extras stick (Unity after Evaluate)."""
+    arm.animation_data_create()
+    arm.animation_data.action = act
+    bpy.context.scene.frame_set(int(frame))
+    bpy.context.view_layer.update()
+    baked = {pb.name: pb.matrix_basis.copy() for pb in arm.pose.bones}
+    arm.animation_data_clear()
+    for pb in arm.pose.bones:
+        pb.matrix_basis = baked[pb.name]
+    bpy.context.view_layer.update()
+
+
+def apply_attack_windup(arm, sword, frame):
+    k = windup_weight(frame)
+    extras = [
+        ("mixamorig:RightShoulder", (WINDUP_SHOULDER_X * k, 0.0, 0.0)),
+        ("mixamorig:RightArm", (WINDUP_ARM_X * k, 0.0, 0.0)),
+        ("mixamorig:RightHand", (WINDUP_HAND_X * k, 0.0, 0.0)),
+    ]
+    for name, eul in extras:
+        pb = arm.pose.bones.get(name)
+        if pb is None:
+            continue
+        extra = Euler(tuple(math.radians(a) for a in eul), "XYZ").to_matrix().to_4x4()
+        pb.matrix_basis = pb.matrix_basis @ extra
+    if sword is not None:
+        sword.rotation_euler = (math.radians(90.0), 0.0, math.radians(WINDUP_SWORD_Z * k))
+    bpy.context.view_layer.update()
+    print("windup", frame, "k", round(k, 3))
+
+
+def pose_slash(arm, act, sword, frame):
+    freeze_pose(arm, act, frame)
+    apply_attack_windup(arm, sword, frame)
+
+
 def render_walk():
-    mesh, arm, act = import_mixamo_body(WALK)
+    mesh, arm, act, _sword = import_mixamo_body(WALK)
     bind_pbr(mesh)
     still = 18
     print("walk still", still, "mesh", mesh.name)
@@ -284,20 +342,20 @@ def render_walk():
 
 
 def render_attack():
-    mesh, arm, act = import_mixamo_body(ATK)
+    mesh, arm, act, sword = import_mixamo_body(ATK)
     bind_pbr(mesh)
-    start = 8
+    start = SLASH_FIRST
     finish = 32
     print("slash start", start, "finish", finish, "mesh", mesh.name)
     cam = setup_studio()
-    pose_at(arm, act, start)
+    pose_slash(arm, act, sword, start)
     look(cam, *CAM_REAR)
     render_to(PROOF / "sir_aldric_pilot_rear_strike_start_playcam.png")
     look(cam, *CAM_FRONT)
     render_to(PROOF / "sir_aldric_pilot_front_strike_start_playcam.png")
     look(cam, *CAM_34)
     render_to(PROOF / "sir_aldric_pilot_34_strike_start_playcam.png")
-    pose_at(arm, act, finish)
+    pose_slash(arm, act, sword, finish)
     look(cam, *CAM_REAR)
     render_to(PROOF / "sir_aldric_pilot_rear_strike_playcam.png")
     look(cam, *CAM_FRONT)

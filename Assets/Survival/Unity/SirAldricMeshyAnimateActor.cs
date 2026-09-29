@@ -33,8 +33,8 @@ namespace Survival.Unity
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
         public const string AttackAuthoredReason =
             "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Inward Slash " +
-            "frames 8–40 (high-right → down-left). RH sword world 1.01m. Mixer 0.20s. " +
-            "Never AccuRIG. HOLD merge.";
+            "frames 8–40. AttackWindupLift: hand overhead, tip-led high-right → down-left. " +
+            "RH sword world 1.01m. Mixer 0.20s. Play-cam FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
         public const float SwordBladeMeters = 1.01f;
         private const float BodyHeightMinMeters = 0.5f;
@@ -52,6 +52,10 @@ namespace Survival.Unity
         private bool _graphReady;
         private bool _attackReady;
         private GameObject? _instance;
+        private Transform? _rightShoulder;
+        private Transform? _rightArm;
+        private Transform? _rightHand;
+        private Transform? _heldSword;
 
         public bool Built => _graphReady;
         public bool HasAttackClip => _attackReady;
@@ -138,6 +142,7 @@ namespace Survival.Unity
             CorrectBodyScaleIfNeeded(_instance);
             SampleAt(0f);
             AttachHeldSword(_instance);
+            CacheAttackBones(_instance);
             LogSkinAndFailIfBad(_instance);
             Debug.Log(
                 "PILOT actor built walkLen=" + _walkLength + " attackLen=" + _attackLength +
@@ -197,11 +202,13 @@ namespace Survival.Unity
                 _mixer.SetInputWeight(1, 0f);
                 _walkPlayable.SetTime(t % walkLen);
                 _graph.Evaluate();
+                ApplyAttackWindupLift(0f, 0f);
                 return;
             }
 
             float walkW;
             float attackW;
+            float attackU;
             if (t < walkBlock)
             {
                 var into = t >= walkBlock - blend
@@ -209,6 +216,7 @@ namespace Survival.Unity
                     : 0f;
                 walkW = 1f - into;
                 attackW = into;
+                attackU = 0f;
                 _walkPlayable.SetTime(t % walkLen);
                 _attackPlayable.SetTime(0f);
             }
@@ -220,6 +228,7 @@ namespace Survival.Unity
                     : 0f;
                 walkW = back;
                 attackW = 1f - back;
+                attackU = at / attackLen;
                 _attackPlayable.SetTime(at);
                 _walkPlayable.SetTime(0f);
             }
@@ -227,6 +236,49 @@ namespace Survival.Unity
             _mixer.SetInputWeight(0, walkW);
             _mixer.SetInputWeight(1, attackW);
             _graph.Evaluate();
+            ApplyAttackWindupLift(attackW, attackU);
+        }
+
+        /// <summary>
+        /// Light attack-only local offset after Evaluate. Mixamo f8 is already high-right
+        /// but shoulder-height; this raises the RH above the helmet and rolls the sword so
+        /// the tip leads up-right, then eases off for the Mixamo down-left finish.
+        /// Not AimChain / not Path A.
+        /// </summary>
+        private void ApplyAttackWindupLift(float attackWeight, float attackNormalized01)
+        {
+            var k = Mathf.Clamp01(attackWeight) * SirAldric3DMotion.AttackWindupWeight(attackNormalized01);
+            if (_rightShoulder != null)
+            {
+                _rightShoulder.localRotation *= Quaternion.Euler(
+                    SirAldric3DMotion.AttackWindupShoulderX * k, 0f, 0f);
+            }
+
+            if (_rightArm != null)
+            {
+                _rightArm.localRotation *= Quaternion.Euler(
+                    SirAldric3DMotion.AttackWindupArmX * k, 0f, 0f);
+            }
+
+            if (_rightHand != null)
+            {
+                _rightHand.localRotation *= Quaternion.Euler(
+                    SirAldric3DMotion.AttackWindupHandX * k, 0f, 0f);
+            }
+
+            if (_heldSword != null)
+            {
+                _heldSword.localRotation = Quaternion.Euler(
+                    90f, 0f, SirAldric3DMotion.AttackWindupSwordZ * k);
+            }
+        }
+
+        private void CacheAttackBones(GameObject root)
+        {
+            _rightShoulder = FindNamedBone(root, "mixamorig:RightShoulder", "RightShoulder");
+            _rightArm = FindNamedBone(root, "mixamorig:RightArm", "RightArm");
+            _rightHand = FindNamedBone(root, "mixamorig:RightHand", "RightHand");
+            _heldSword = FindNamedBone(root, "SirAldricPilotSword");
         }
 
         public string PhaseLabel(float timeSeconds)

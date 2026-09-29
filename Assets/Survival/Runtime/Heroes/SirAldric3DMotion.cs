@@ -30,22 +30,35 @@ namespace Survival.Domain.Heroes
         public const int MixamoSlashLastFrame = 40;
 
         /// <summary>
-        /// Play-cam SoT for SirAldricDemo / 1080×1920 Game-view Scale 1×. View +Z = TOP.
-        /// Closer than (0, 2.20, −3.40) FOV 34 so the 1.7m knight fills most of the phone frame.
+        /// Light attack-only local extras after Evaluate (not AimChain). Mixamo f8 hand sits
+        /// at shoulder; these raise it overhead and roll the RH sword so the tip leads
+        /// up-right, then ease to 0 by the down-left finish.
         /// </summary>
-        public const float PlayCamFovDegrees = 34f;
+        public const float AttackWindupShoulderX = -28f;
+        public const float AttackWindupArmX = -80f;
+        public const float AttackWindupHandX = -40f;
+        public const float AttackWindupSwordZ = -35f;
+        public const float AttackWindupEaseEnd = 0.72f;
+
+        /// <summary>
+        /// Play-cam SoT for SirAldricDemo / 1080×1920 Game-view Scale 1×. View +Z = TOP.
+        /// Derek 063d928: FOV 34 at (0, 1.75, −2.90) filled the knight but clipped the
+        /// overhead tip and finish. FOV 42 + slight pullback keeps the 1.8 m knight large
+        /// and the full sword arc in frame.
+        /// </summary>
+        public const float PlayCamFovDegrees = 42f;
         public const float PlayCamRearX = 0f;
-        public const float PlayCamRearY = 1.75f;
-        public const float PlayCamRearZ = -2.90f;
+        public const float PlayCamRearY = 1.92f;
+        public const float PlayCamRearZ = -3.08f;
         public const float PlayCamLookX = 0f;
-        public const float PlayCamLookY = 0.85f;
+        public const float PlayCamLookY = 1.12f;
         public const float PlayCamLookZ = 0.15f;
         public const float PlayCamFrontX = 0f;
-        public const float PlayCamFrontY = 1.75f;
-        public const float PlayCamFrontZ = 3.20f;
-        public const float PlayCamThreeQuarterX = 1.70f;
-        public const float PlayCamThreeQuarterY = 1.75f;
-        public const float PlayCamThreeQuarterZ = -2.20f;
+        public const float PlayCamFrontY = 1.92f;
+        public const float PlayCamFrontZ = 3.38f;
+        public const float PlayCamThreeQuarterX = 1.82f;
+        public const float PlayCamThreeQuarterY = 1.92f;
+        public const float PlayCamThreeQuarterZ = -2.38f;
 
         public static float WalkBlockSeconds => WalkPeriodSeconds * WalkCyclesBeforeAttack;
 
@@ -351,6 +364,20 @@ namespace Survival.Domain.Heroes
 
             var r = t % length;
             return r < 0f ? r + length : r;
+        }
+
+        /// <summary>
+        /// 1 at slash start (overhead tip-right wind-up), 0 by the down-left finish.
+        /// </summary>
+        public static float AttackWindupWeight(float attackNormalized01)
+        {
+            var u = Clamp01(attackNormalized01);
+            if (AttackWindupEaseEnd <= 1e-4f)
+            {
+                return 0f;
+            }
+
+            return 1f - Smooth01(Clamp01(u / AttackWindupEaseEnd));
         }
 
         public static float Clamp01(float x)
