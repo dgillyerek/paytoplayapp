@@ -201,7 +201,8 @@ def attach_sword(arm):
     sword.parent_bone = "mixamorig:RightHand"
     sword.location = (0.0, 0.08, 0.0)
     sword.rotation_euler = (math.radians(90.0), 0.0, 0.0)
-    print("sword parented to", sword.parent_bone)
+    sword.scale = (1.0, 1.0, 1.0)
+    print("sword parented to", sword.parent_bone, "blade~1.01m (Unity compensates parent lossyScale)")
 
 
 def attach_cape(arm):

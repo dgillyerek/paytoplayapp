@@ -39,6 +39,7 @@ namespace Survival.Editor
             importer.animationType = ModelImporterAnimationType.Generic;
             importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
             importer.importAnimation = true;
+            importer.useFileScale = false;
             var defaults = importer.defaultClipAnimations;
             if (defaults == null || defaults.Length == 0)
             {

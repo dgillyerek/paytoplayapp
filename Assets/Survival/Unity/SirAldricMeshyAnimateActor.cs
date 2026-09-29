@@ -33,7 +33,9 @@ namespace Survival.Unity
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
         public const string AttackAuthoredReason =
             "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Inward Slash. " +
-            "RH sword prop. Never AccuRIG. HOLD merge.";
+            "RH sword world 1.01m. Mixer crossfade. Never AccuRIG. HOLD merge.";
+        public const float WalkToAttackBlendSeconds = 0.20f;
+        public const float SwordBladeMeters = 1.01f;
         private const float BodyHeightMinMeters = 0.5f;
         private const float BodyHeightMaxMeters = 5f;
         private const float BodyHeightTargetMeters = 1.80f;
@@ -41,6 +43,7 @@ namespace Survival.Unity
         private Animator? _animator;
         private PlayableGraph _graph;
         private AnimationPlayableOutput _output;
+        private AnimationMixerPlayable _mixer;
         private AnimationClipPlayable _walkPlayable;
         private AnimationClipPlayable _attackPlayable;
         private float _walkLength;
@@ -107,8 +110,12 @@ namespace Survival.Unity
             _graph = PlayableGraph.Create("SirAldricPilotMixamo");
             _graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
             _output = AnimationPlayableOutput.Create(_graph, "AldricMixamo", _animator);
+            _mixer = AnimationMixerPlayable.Create(_graph, 2);
             _walkPlayable = AnimationClipPlayable.Create(_graph, walk);
-            _output.SetSourcePlayable(_walkPlayable);
+            _graph.Connect(_walkPlayable, 0, _mixer, 0);
+            _mixer.SetInputWeight(0, 1f);
+            _mixer.SetInputWeight(1, 0f);
+            _output.SetSourcePlayable(_mixer);
 
             var attack = LoadClip(ThemePackAttackFbx, AttackClipHint, repairWalk: false);
             if (attack != null)
@@ -116,6 +123,7 @@ namespace Survival.Unity
                 attack.wrapMode = WrapMode.Once;
                 _attackLength = attack.length;
                 _attackPlayable = AnimationClipPlayable.Create(_graph, attack);
+                _graph.Connect(_attackPlayable, 0, _mixer, 1);
                 _attackReady = true;
             }
             else
@@ -166,26 +174,57 @@ namespace Survival.Unity
 
         public void SampleAt(float timeSeconds)
         {
-            if (!_graph.IsValid())
+            if (!_graph.IsValid() || !_mixer.IsValid())
             {
                 return;
             }
 
             var walkLen = _walkLength > 0.05f ? _walkLength : 1f;
             var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
-            var loop = walkBlock + (_attackReady ? Mathf.Max(_attackLength, 0.01f) : walkBlock);
-            var t = timeSeconds % loop;
-            if (_attackReady && t >= walkBlock)
+            var attackLen = _attackReady ? Mathf.Max(_attackLength, 0.01f) : walkBlock;
+            var loop = walkBlock + (_attackReady ? attackLen : 0f);
+            if (loop < 0.05f)
             {
-                _output.SetSourcePlayable(_attackPlayable);
-                _attackPlayable.SetTime(t - walkBlock);
+                loop = walkLen;
+            }
+
+            var t = timeSeconds % loop;
+            var blend = Mathf.Clamp(WalkToAttackBlendSeconds, 0.15f, 0.25f);
+            if (!_attackReady)
+            {
+                _mixer.SetInputWeight(0, 1f);
+                _mixer.SetInputWeight(1, 0f);
+                _walkPlayable.SetTime(t % walkLen);
+                _graph.Evaluate();
+                return;
+            }
+
+            float walkW;
+            float attackW;
+            if (t < walkBlock)
+            {
+                var into = t >= walkBlock - blend
+                    ? Mathf.InverseLerp(walkBlock - blend, walkBlock, t)
+                    : 0f;
+                walkW = 1f - into;
+                attackW = into;
+                _walkPlayable.SetTime(t % walkLen);
+                _attackPlayable.SetTime(0f);
             }
             else
             {
-                _output.SetSourcePlayable(_walkPlayable);
-                _walkPlayable.SetTime(t % walkLen);
+                var at = t - walkBlock;
+                var back = at >= attackLen - blend
+                    ? Mathf.InverseLerp(attackLen - blend, attackLen, at)
+                    : 0f;
+                walkW = back;
+                attackW = 1f - back;
+                _attackPlayable.SetTime(at);
+                _walkPlayable.SetTime(0f);
             }
 
+            _mixer.SetInputWeight(0, walkW);
+            _mixer.SetInputWeight(1, attackW);
             _graph.Evaluate();
         }
 
@@ -193,7 +232,11 @@ namespace Survival.Unity
         {
             var walkLen = _walkLength > 0.05f ? _walkLength : 1f;
             var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
-            if (_attackReady && timeSeconds % (walkBlock + Mathf.Max(_attackLength, 0.01f)) >= walkBlock)
+            var attackLen = _attackReady ? Mathf.Max(_attackLength, 0.01f) : walkBlock;
+            var loop = walkBlock + (_attackReady ? attackLen : 0f);
+            var t = loop > 0.05f ? timeSeconds % loop : timeSeconds;
+            var blend = Mathf.Clamp(WalkToAttackBlendSeconds, 0.15f, 0.25f);
+            if (_attackReady && t >= walkBlock - blend * 0.5f && t < walkBlock + attackLen - blend * 0.5f)
             {
                 return "SLASH  ·  TOP  ·  PILOT Mixamo RH sword";
             }
@@ -382,11 +425,74 @@ namespace Survival.Unity
 
             var sword = Instantiate(prefab, hand);
             sword.name = "SirAldricPilotSword";
-            // Mixamo hand +Y toward fingers; sword mesh blade is +Z.
-            sword.transform.localPosition = new Vector3(0f, 0.08f, 0f);
+            // Mixamo hand +Y toward fingers; Design origin = grip; blade +Z.
+            // Derek 9075270: body ×88 left hand.lossyScale~88; localScale=1 → ~88 m blade
+            // floating (0.08 m grip × 88). Compensate parent so world blade ≈ 1.01 m.
+            var parent = Mathf.Max(Mathf.Abs(hand.lossyScale.x), 1e-5f);
+            var inv = 1f / parent;
+            sword.transform.localPosition = new Vector3(0f, 0.08f, 0f) * inv;
             sword.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-            sword.transform.localScale = Vector3.one;
-            Debug.Log("PILOT sword parented to " + hand.name);
+            sword.transform.localScale = Vector3.one * inv;
+            NormalizeSwordWorldBlade(sword.transform);
+            var world = MeasureRendererWorldSize(sword);
+            var blade = Mathf.Max(world.x, world.y, world.z);
+            var ls = hand.lossyScale;
+            Debug.Log(
+                "PILOT sword parented to " + hand.name +
+                " worldBounds.size=(" + world.x + "," + world.y + "," + world.z + ")" +
+                " blade=" + blade +
+                " hand.lossyScale=(" + ls.x + "," + ls.y + "," + ls.z + ")");
+        }
+
+        private static void NormalizeSwordWorldBlade(Transform sword)
+        {
+            var blade = MeasureMeshWorldBlade(sword.gameObject);
+            if (blade < 1e-4f)
+            {
+                var world = MeasureRendererWorldSize(sword.gameObject);
+                blade = Mathf.Max(world.x, world.y, world.z);
+            }
+
+            if (blade < 1e-4f)
+            {
+                Debug.LogError("PILOT sword FAIL no measurable world bounds.");
+                return;
+            }
+
+            sword.localScale *= SwordBladeMeters / blade;
+        }
+
+        private static float MeasureMeshWorldBlade(GameObject root)
+        {
+            var best = 0f;
+            foreach (var filter in root.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (filter.sharedMesh == null)
+                {
+                    continue;
+                }
+
+                var s = filter.sharedMesh.bounds.size;
+                var ls = filter.transform.lossyScale;
+                best = Mathf.Max(best, Mathf.Abs(s.x * ls.x), Mathf.Abs(s.y * ls.y), Mathf.Abs(s.z * ls.z));
+            }
+
+            return best;
+        }
+
+        private static Vector3 MeasureRendererWorldSize(GameObject root)
+        {
+            var best = Vector3.zero;
+            foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
+            {
+                var s = rend.bounds.size;
+                if (Mathf.Max(s.x, s.y, s.z) > Mathf.Max(best.x, best.y, best.z))
+                {
+                    best = s;
+                }
+            }
+
+            return best;
         }
 
         private static void AttachSoftCape(GameObject root)
@@ -562,6 +668,7 @@ namespace Survival.Unity
             importer.animationType = ModelImporterAnimationType.Generic;
             importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
             importer.importAnimation = true;
+            importer.useFileScale = false;
             var defaults = importer.defaultClipAnimations;
             if (defaults == null || defaults.Length == 0)
             {
