@@ -13,23 +13,26 @@ using UnityEditor;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Sir Aldric PILOT: AccuRIG Character_output is the ONLY visible body.
-    /// Walk from walk_accurig.fbx; Attack from library Right-hand Sword Slash.
-    /// Never show Animate mesh. No Path 1 retarget. No Path A / ClipSword. HOLD merge.
+    /// Sir Aldric PILOT: Mixamo-skinned holefixed mid280k is the ONLY visible body.
+    /// AccuRIG path superseded. Walk = Mixamo Standard Walk. Slash = Stable Sword Inward Slash.
+    /// Sword prop on Right Hand. No Path 1 / Path A / ClipSword. HOLD merge.
     /// </summary>
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
     {
-        public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_accurig_humanoid.fbx";
-        public const string ThemePackWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_walk_accurig.fbx";
-        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_attack_library.fbx";
+        public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx";
+        public const string ThemePackLookFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_mid280k.fbx";
+        public const string ThemePackWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx";
+        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash.fbx";
+        public const string ThemePackSwordFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_sword.fbx";
+        public const string ThemePackCapeFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_cape.fbx";
         public const string PaintedLookDir = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot";
         public const string LeftoverMeshyWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_walk.fbx";
         public const string ClipHint = "Walking";
         public const string AttackClipHint = "Attack";
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
         public const string AttackAuthoredReason =
-            "PILOT clips-only: AccuRIG body + walk_accurig + library Right-hand Sword Slash. " +
-            "Never show Animate mesh. Sword fused. HOLD merge.";
+            "PILOT Mixamo sep: holefixed body + Standard Walk + Inward Slash. " +
+            "RH sword prop. Never AccuRIG. HOLD merge.";
 
         private Animator? _animator;
         private PlayableGraph _graph;
@@ -50,27 +53,28 @@ namespace Survival.Unity
         public void Build()
         {
             BuildLights();
-            var prefab = LoadFbxPrefab(ThemePackFbx, "SirAldric_PILOT_accurig_humanoid");
+            var prefab = LoadFbxPrefab(ThemePackFbx, "SirAldric_body_holefixed_walk");
             if (prefab == null)
             {
                 Debug.LogError(
-                    "PILOT AccuRIG FBX not imported yet. Open Unity so " +
+                    "PILOT Mixamo body FBX not imported yet. Open Unity so " +
                     ThemePackFbx + " Humanoid-imports, then Play SirAldric.");
                 return;
             }
 
             _instance = Instantiate(prefab, transform);
-            _instance.name = "SirAldricPilotAccurig";
+            _instance.name = "SirAldricPilotMixamo";
             HideJunk(_instance);
             StripEmbeddedClipMeshes(_instance);
             FaceWorldTop(_instance);
             BindPaintedLook(_instance);
+            AttachHeldSword(_instance);
 
             _animator = _instance.GetComponent<Animator>() ?? _instance.AddComponent<Animator>();
-            var accurigAvatar = LoadHumanoidAvatar(AssetPath(ThemePackFbx));
-            if (accurigAvatar != null)
+            var mixamoAvatar = LoadHumanoidAvatar(AssetPath(ThemePackFbx));
+            if (mixamoAvatar != null)
             {
-                _animator.avatar = accurigAvatar;
+                _animator.avatar = mixamoAvatar;
             }
 
             _animator.applyRootMotion = false;
@@ -87,9 +91,9 @@ namespace Survival.Unity
             walk.wrapMode = WrapMode.Loop;
             _walkLength = walk.length;
 
-            _graph = PlayableGraph.Create("SirAldricPilotAccurig");
+            _graph = PlayableGraph.Create("SirAldricPilotMixamo");
             _graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
-            _output = AnimationPlayableOutput.Create(_graph, "AldricAccurig", _animator);
+            _output = AnimationPlayableOutput.Create(_graph, "AldricMixamo", _animator);
             _walkPlayable = AnimationClipPlayable.Create(_graph, walk);
             _output.SetSourcePlayable(_walkPlayable);
 
@@ -111,12 +115,12 @@ namespace Survival.Unity
             SampleAt(0f);
             Debug.Log(
                 "PILOT actor built walkLen=" + _walkLength + " attackLen=" + _attackLength +
-                " visible=AccuRIG walkClip=" + ThemePackWalkFbx +
+                " visible=Mixamo walkClip=" + ThemePackWalkFbx +
                 " attackClip=" + ThemePackAttackFbx + " " + AttackAuthoredReason);
         }
 
         /// <summary>
-        /// Clip FBXs may embed a With-Skin mesh. AccuRIG Character_output is the only visible body.
+        /// Slash FBX may embed a With-Skin mesh. Mixamo holefixed walk instance is the only visible body.
         /// </summary>
         private static void StripEmbeddedClipMeshes(GameObject root)
         {
@@ -174,10 +178,10 @@ namespace Survival.Unity
             var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
             if (_attackReady && timeSeconds % (walkBlock + Mathf.Max(_attackLength, 0.01f)) >= walkBlock)
             {
-                return "ATTACK  ·  TOP  ·  PILOT fused sword";
+                return "SLASH  ·  TOP  ·  PILOT Mixamo RH sword";
             }
 
-            return "WALK  ·  toward TOP  ·  PILOT AccuRIG";
+            return "WALK  ·  toward TOP  ·  PILOT Mixamo";
         }
 
         private void OnDestroy()
@@ -201,10 +205,74 @@ namespace Survival.Unity
 
         private static void FaceWorldTop(GameObject root)
         {
-            // AccuRIG / Mixamo instantiate face-to-camera (−Z) = frontal FAIL.
+            // Mixamo instantiate face-to-camera (−Z) = frontal FAIL.
             // Yaw 180 so transform.forward = +Z: back to camera, walk toward TOP.
             root.transform.localPosition = Vector3.zero;
             root.transform.localRotation = Quaternion.Euler(0f, RearYawDegrees, 0f);
+        }
+
+        private static Transform? FindNamedBone(GameObject root, params string[] names)
+        {
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                foreach (var name in names)
+                {
+                    if (string.Equals(t.name, name, StringComparison.OrdinalIgnoreCase)
+                        || t.name.EndsWith(":" + name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return t;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private static void AttachHeldSword(GameObject root)
+        {
+            var hand = FindNamedBone(root, "mixamorig:RightHand", "RightHand");
+            if (hand == null)
+            {
+                Debug.LogWarning("PILOT Mixamo RightHand missing — sword prop skipped.");
+                return;
+            }
+
+            var prefab = LoadFbxPrefab(ThemePackSwordFbx, "SirAldric_PILOT_sword");
+            if (prefab == null)
+            {
+                Debug.LogWarning("PILOT sword FBX not imported: " + ThemePackSwordFbx);
+                return;
+            }
+
+            var sword = Instantiate(prefab, hand);
+            sword.name = "SirAldricPilotSword";
+            // Mixamo hand +Y toward fingers; sword mesh blade is +Z.
+            sword.transform.localPosition = new Vector3(0f, 0.08f, 0f);
+            sword.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            sword.transform.localScale = Vector3.one;
+            Debug.Log("PILOT sword parented to " + hand.name);
+        }
+
+        private static void AttachSoftCape(GameObject root)
+        {
+            var prefab = LoadFbxPrefab(ThemePackCapeFbx, "SirAldric_PILOT_cape");
+            if (prefab == null)
+            {
+                return;
+            }
+
+            var cape = Instantiate(prefab, root.transform);
+            cape.name = "SirAldricPilotCape";
+            cape.transform.localPosition = Vector3.zero;
+            cape.transform.localRotation = Quaternion.identity;
+            cape.transform.localScale = Vector3.one;
+            var spine = FindNamedBone(root, "mixamorig:Spine2", "Spine2");
+            if (spine != null)
+            {
+                cape.transform.SetParent(spine, true);
+            }
+
+            Debug.Log("PILOT soft cape parented to " + (spine != null ? spine.name : "root"));
         }
 
         private static string AssetPath(string themePackRel) => "Assets/" + themePackRel.Replace('\\', '/');
@@ -402,7 +470,8 @@ namespace Survival.Unity
                 var span = candidate.lastFrame - candidate.firstFrame;
                 if (walk)
                 {
-                    if (label.IndexOf("Walk", StringComparison.OrdinalIgnoreCase) < 0)
+                    if (label.IndexOf("Walk", StringComparison.OrdinalIgnoreCase) < 0
+                        && label.IndexOf("mixamo", StringComparison.OrdinalIgnoreCase) < 0)
                     {
                         continue;
                     }
@@ -414,6 +483,7 @@ namespace Survival.Unity
                                 || label.IndexOf("Attack", StringComparison.OrdinalIgnoreCase) >= 0
                                 || label.IndexOf("Slash", StringComparison.OrdinalIgnoreCase) >= 0
                                 || label.IndexOf("Sword", StringComparison.OrdinalIgnoreCase) >= 0
+                                || label.IndexOf("mixamo", StringComparison.OrdinalIgnoreCase) >= 0
                                 || label.IndexOf("clip0", StringComparison.OrdinalIgnoreCase) >= 0
                                 || label.IndexOf("Scene", StringComparison.OrdinalIgnoreCase) >= 0;
                     if (!named && span < 8f)
@@ -468,13 +538,17 @@ namespace Survival.Unity
         private static void BindPaintedLook(GameObject root)
         {
             var albedo = LoadPilotAlbedo();
-            var metallic = LoadPilotMap("Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_metallic.png", sRgb: false)
+            var metallic = LoadPilotMap("mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture_metallic.png", sRgb: false)
+                           ?? LoadPilotMap("Meshy_AI_Lionheart_Sentinel_0929004215_texture_metallic.png", sRgb: false)
+                           ?? LoadPilotMap("Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_metallic.png", sRgb: false)
                            ?? LoadMeshyPackedMap(0);
-            var roughness = LoadPilotMap("Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_roughness.png", sRgb: false)
+            var roughness = LoadPilotMap("mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture_roughness.png", sRgb: false)
+                            ?? LoadPilotMap("Meshy_AI_Lionheart_Sentinel_0929004215_texture_roughness.png", sRgb: false)
+                            ?? LoadPilotMap("Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_roughness.png", sRgb: false)
                             ?? LoadMeshyPackedMap(1);
             if (albedo == null)
             {
-                Debug.LogError("PILOT albedo missing. Extract from walk FBX or AccuRIG import.");
+                Debug.LogError("PILOT albedo missing. Bind Lionheart mixamo_tex maps or extract from walk FBX.");
             }
 
             var painted = 0;
@@ -647,7 +721,9 @@ namespace Survival.Unity
                 return _cachedAlbedo;
             }
 
-            _cachedAlbedo = LoadPilotMap("pilot_albedo.png", sRgb: true);
+            _cachedAlbedo = LoadPilotMap("mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture.png", sRgb: true)
+                            ?? LoadPilotMap("Meshy_AI_Lionheart_Sentinel_0929004215_texture.png", sRgb: true)
+                            ?? LoadPilotMap("pilot_albedo.png", sRgb: true);
             if (_cachedAlbedo != null)
             {
                 return _cachedAlbedo;

@@ -1,4 +1,12 @@
-# Sir Aldric PILOT — Design HANDOFF for HI → Dev wire
+# SUPERSEDED — AccuRIG clips-only is not Play SoT
+
+**2026-09-28 Mixamo separate-portrait tip supersedes this AccuRIG HANDOFF.**  
+Play body / walk / slash: see `MIXAMO_SEP_MANIFEST.md` + `Docs/Survival/previews/aldric_pilot_20260928/PILOT_HOLD.md`.  
+Do **not** instantiate AccuRIG as the playable body. HOLD merge on PR #27.
+
+---
+
+# Sir Aldric PILOT — Design HANDOFF for HI → Dev wire (archive)
 
 **Date:** 2026-09-28 (library Right-hand Sword Slash replaces AI Attack_Forward)  
 **Pilot:** Sir Aldric only  

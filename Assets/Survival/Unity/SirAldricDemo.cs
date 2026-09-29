@@ -9,8 +9,8 @@ using UnityEngine.UI;
 namespace Survival.Unity
 {
     /// <summary>
-    /// 1080×1920 Game-view demo: PILOT AccuRIG Humanoid + Walk + Attack.
-    /// Path A / ClipSword HOLD. Sword fused. Design / Derek PASS not claimed.
+    /// 1080×1920 Game-view demo: PILOT Mixamo holefixed + Walk + Slash.
+    /// Path A / ClipSword HOLD. RH sword prop. Design / Derek PASS not claimed.
     /// </summary>
     public sealed class SirAldricDemo : MonoBehaviour
     {
@@ -189,7 +189,7 @@ namespace Survival.Unity
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "PILOT AccuRIG  ·  walk+attack  ·  sword fused  ·  HOLD  ·  no Design PASS",
+                "PILOT Mixamo  ·  walk+slash  ·  RH sword  ·  HOLD  ·  no Design PASS",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);

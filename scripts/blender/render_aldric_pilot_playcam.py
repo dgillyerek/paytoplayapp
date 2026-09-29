@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Sir Aldric PILOT Play-cam rematch (no Unity Editor on this VM).
 
-AccuRIG mid280k look + Walk / Attack clips. Sword fused — no Path A / ClipSword.
+Mixamo holefixed mid280k + Standard Walk / Inward Slash. RH sword prop.
 Honest label: Play-cam rematch, not Unity Camera.Render, not Meshy website stills.
 """
 from __future__ import annotations
@@ -15,12 +15,14 @@ from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[2]
 PACK = ROOT / "Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot"
-LOOK = PACK / "SirAldric_PILOT_accurig_humanoid.fbx"
-WALK = PACK / "SirAldric_PILOT_walk_accurig.fbx"
-ATK = PACK / "SirAldric_PILOT_attack_library.fbx"
-ALBEDO = PACK / "pilot_albedo.png"
-MET = PACK / "Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_metallic.png"
-ROUGH = PACK / "Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_roughness.png"
+LOOK = PACK / "SirAldric_body_holefixed_walk.fbx"
+WALK = PACK / "SirAldric_body_holefixed_walk.fbx"
+ATK = PACK / "SirAldric_body_holefixed_slash.fbx"
+SWORD = PACK / "SirAldric_PILOT_sword.fbx"
+CAPE = PACK / "SirAldric_PILOT_cape.fbx"
+ALBEDO = PACK / "mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture.png"
+MET = PACK / "mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture_metallic.png"
+ROUGH = PACK / "mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture_roughness.png"
 PROOF = ROOT / "Docs/Survival/previews/aldric_pilot_20260928"
 ART = Path("/opt/cursor/artifacts")
 
@@ -183,148 +185,94 @@ def render_to(path: Path):
         print("artifact skip", exc)
 
 
-LOOK_FROM_MIXAMO = {
-    "Hips": "mixamorig:Hips",
-    "Spine02": "mixamorig:Spine",
-    "Spine01": "mixamorig:Spine1",
-    "Spine": "mixamorig:Spine2",
-    "neck": "mixamorig:Neck",
-    "Head": "mixamorig:Head",
-    "head_end": "mixamorig:HeadTop_End",
-    "LeftShoulder": "mixamorig:LeftShoulder",
-    "LeftArm": "mixamorig:LeftArm",
-    "LeftForeArm": "mixamorig:LeftForeArm",
-    "LeftHand": "mixamorig:LeftHand",
-    "LeftHand_End": "mixamorig:LeftHandMiddle4",
-    "RightShoulder": "mixamorig:RightShoulder",
-    "RightArm": "mixamorig:RightArm",
-    "RightForeArm": "mixamorig:RightForeArm",
-    "RightHand": "mixamorig:RightHand",
-    "RightHand_End": "mixamorig:RightHandMiddle4",
-    "LeftUpLeg": "mixamorig:LeftUpLeg",
-    "LeftLeg": "mixamorig:LeftLeg",
-    "LeftFoot": "mixamorig:LeftFoot",
-    "LeftToeBase": "mixamorig:LeftToeBase",
-    "LeftToe_end": "mixamorig:LeftToe_End",
-    "RightUpLeg": "mixamorig:RightUpLeg",
-    "RightLeg": "mixamorig:RightLeg",
-    "RightFoot": "mixamorig:RightFoot",
-    "RightToeBase": "mixamorig:RightToeBase",
-    "RightToe_end": "mixamorig:RightToe_End",
-}
-
-
-def src_pose_bone(src_arm, look_name):
-    if look_name in src_arm.pose.bones:
-        return src_arm.pose.bones[look_name]
-    mapped = LOOK_FROM_MIXAMO.get(look_name)
-    if mapped and mapped in src_arm.pose.bones:
-        return src_arm.pose.bones[mapped]
-    prefixed = "mixamorig:" + look_name
-    if prefixed in src_arm.pose.bones:
-        return src_arm.pose.bones[prefixed]
-    return None
-
-
-def copy_pose_by_bone(src_arm, dst_arm):
-    """Drive AccuRIG look bones from the clip armature (AccuRIG names or Mixamo map)."""
-    copied = 0
-    for bone in dst_arm.pose.bones:
-        src = src_pose_bone(src_arm, bone.name)
-        if src is None:
-            continue
-        bone.rotation_mode = src.rotation_mode
-        bone.matrix_basis = src.matrix_basis.copy()
-        bone.location = src.location.copy()
-        if src.rotation_mode == "QUATERNION":
-            bone.rotation_quaternion = src.rotation_quaternion.copy()
-        else:
-            bone.rotation_euler = src.rotation_euler.copy()
-        bone.scale = src.scale.copy()
-        copied += 1
-    hips = dst_arm.pose.bones.get("Hips")
-    lup = dst_arm.pose.bones.get("LeftUpLeg")
-    rarm = dst_arm.pose.bones.get("RightArm")
-    print(
-        "copy_pose",
-        copied,
-        "of",
-        len(dst_arm.pose.bones),
-        "from",
-        src_arm.name,
-        "hips",
-        tuple(round(x, 3) for x in hips.matrix_basis.to_euler()) if hips else None,
-        "LUpLeg",
-        tuple(round(x, 3) for x in lup.matrix_basis.to_euler()) if lup else None,
-        "RArm",
-        tuple(round(x, 3) for x in rarm.matrix_basis.to_euler()) if rarm else None,
-    )
-    return copied
-
-
-def import_look_and_clips(clip_path: Path, *needles):
-    """AccuRIG Character_output mesh + clip FBX action. Clip With-Skin meshes are discarded."""
-    bpy.ops.wm.read_factory_settings(use_empty=True)
-    bpy.ops.import_scene.fbx(filepath=str(LOOK))
-    look_meshes = [o for o in bpy.data.objects if o.type == "MESH"]
-    look_arm = next(o for o in bpy.data.objects if o.type == "ARMATURE")
-    before_meshes = set(look_meshes)
-    before_arms = {look_arm}
-    bpy.ops.import_scene.fbx(filepath=str(clip_path))
-    for o in list(bpy.data.objects):
-        if o.type != "MESH":
-            continue
-        if o not in before_meshes or "Ico" in o.name:
-            bpy.data.objects.remove(o, do_unlink=True)
-    clip_arm = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o not in before_arms)
-    act = pick_action(*needles)
-    clip_arm.animation_data_create()
-    clip_arm.animation_data.action = act
-    if look_arm.animation_data:
-        look_arm.animation_data_clear()
-    clip_arm.hide_render = True
-    clip_arm.hide_viewport = False
-    mesh = next(
-        o for o in bpy.data.objects
-        if o.type == "MESH" and o in before_meshes
-    )
-    print("look_mesh", mesh.name, "look_arm", look_arm.name, "clip_arm", clip_arm.name)
-    print("actions", [a.name for a in bpy.data.actions])
-    return mesh, look_arm, clip_arm, act
-
-
 def pick_action(*needles):
     named = [a for a in bpy.data.actions if any(n.lower() in a.name.lower() for n in needles)]
     pool = named or list(bpy.data.actions)
     return max(pool, key=lambda a: a.frame_range[1] - a.frame_range[0])
 
 
-def pose_look_from_clip(look_arm, clip_arm, act, frame):
-    if look_arm.animation_data:
-        look_arm.animation_data_clear()
-    clip_arm.animation_data_create()
-    clip_arm.animation_data.action = act
-    clip_arm.hide_viewport = False
-    clip_arm.hide_render = True
+def attach_sword(arm):
+    if not SWORD.exists():
+        return
+    bpy.ops.import_scene.fbx(filepath=str(SWORD))
+    sword = next(o for o in bpy.data.objects if o.type == "MESH" and "sword" in o.name.lower())
+    sword.parent = arm
+    sword.parent_type = "BONE"
+    sword.parent_bone = "mixamorig:RightHand"
+    sword.location = (0.0, 0.08, 0.0)
+    sword.rotation_euler = (math.radians(90.0), 0.0, 0.0)
+    print("sword parented to", sword.parent_bone)
+
+
+def attach_cape(arm):
+    if not CAPE.exists():
+        return
+    bpy.ops.import_scene.fbx(filepath=str(CAPE))
+    cape = next(o for o in bpy.data.objects if o.type == "MESH" and "cape" in o.name.lower())
+    cape.parent = arm
+    print("cape parented to armature", arm.name)
+
+
+def import_mixamo_body(clip_path: Path):
+    """Mixamo-skinned holefixed walk mesh. Slash clip mesh discarded."""
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    bpy.ops.import_scene.fbx(filepath=str(LOOK))
+    look_arm = next(o for o in bpy.data.objects if o.type == "ARMATURE")
+    look_arm.scale = (1.0, 1.0, 1.0)
+    look_meshes = [o for o in bpy.data.objects if o.type == "MESH"]
+    before_meshes = set(look_meshes)
+    before_arms = {look_arm}
+    same = clip_path.resolve() == LOOK.resolve()
+    if not same:
+        bpy.ops.import_scene.fbx(filepath=str(clip_path))
+        for o in list(bpy.data.objects):
+            if o.type == "MESH" and o not in before_meshes:
+                bpy.data.objects.remove(o, do_unlink=True)
+        clip_arm = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o not in before_arms)
+        act = max(bpy.data.actions, key=lambda a: a.frame_range[1] - a.frame_range[0])
+        clip_arm.animation_data_create()
+        clip_arm.animation_data.action = act
+        if look_arm.animation_data:
+            look_arm.animation_data_clear()
+        look_arm.animation_data_create()
+        look_arm.animation_data.action = act
+        clip_arm.hide_render = True
+        clip_arm.hide_viewport = True
+    else:
+        act = pick_action("mixamo", "Walk", "Layer")
+        look_arm.animation_data_create()
+        look_arm.animation_data.action = act
+    mesh = next(o for o in bpy.data.objects if o.type == "MESH" and o in before_meshes)
+    attach_sword(look_arm)
+    print("look_mesh", mesh.name, "arm", look_arm.name, "act", act.name, tuple(act.frame_range))
+    print("actions", [a.name for a in bpy.data.actions])
+    return mesh, look_arm, act
+
+
+def pose_at(arm, act, frame):
+    if arm.animation_data:
+        arm.animation_data.action = act
     bpy.context.scene.frame_set(int(frame))
     bpy.context.view_layer.update()
-    copied = copy_pose_by_bone(clip_arm, look_arm)
-    if copied < 8:
-        raise RuntimeError("clip pose did not map onto AccuRIG look bones")
-    hips = look_arm.pose.bones.get("Hips")
-    if hips is not None:
-        e = hips.matrix_basis.to_euler()
-        print("look hips euler after copy", tuple(round(x, 3) for x in e))
+    hips = arm.pose.bones.get("mixamorig:Hips")
+    rarm = arm.pose.bones.get("mixamorig:RightArm")
+    print(
+        "pose",
+        frame,
+        "hips",
+        tuple(round(x, 3) for x in hips.matrix_basis.to_euler()) if hips else None,
+        "RArm",
+        tuple(round(x, 3) for x in rarm.matrix_basis.to_euler()) if rarm else None,
+    )
 
 
 def render_walk():
-    mesh, look_arm, clip_arm, act = import_look_and_clips(WALK, "Walking")
+    mesh, arm, act = import_mixamo_body(WALK)
     bind_pbr(mesh)
-    fr0, fr1 = int(act.frame_range[0]), int(act.frame_range[1])
-    still = fr0 + max(1, int(round(0.35 * (fr1 - fr0))))
-    print("walk", act.name, fr0, fr1, "still", still, "mesh", mesh.name)
+    still = 18
+    print("walk still", still, "mesh", mesh.name)
     cam = setup_studio()
-    pose_look_from_clip(look_arm, clip_arm, act, still)
+    pose_at(arm, act, still)
     look(cam, *CAM_REAR)
     render_to(PROOF / "sir_aldric_pilot_rear_walk_playcam.png")
     look(cam, *CAM_FRONT)
@@ -334,14 +282,12 @@ def render_walk():
 
 
 def render_attack():
-    mesh, look_arm, clip_arm, act = import_look_and_clips(ATK, "Slash", "Sword", "Right_Hand")
+    mesh, arm, act = import_mixamo_body(ATK)
     bind_pbr(mesh)
-    print("attack", act.name, tuple(act.frame_range), "mesh", mesh.name)
+    still = 32
+    print("slash still", still, "mesh", mesh.name)
     cam = setup_studio()
-    # Library Right-hand Sword Slash: planted peak around frame 15 / 1–38.
-    strike = 15
-    print("attack still frame", strike)
-    pose_look_from_clip(look_arm, clip_arm, act, strike)
+    pose_at(arm, act, still)
     look(cam, *CAM_REAR)
     render_to(PROOF / "sir_aldric_pilot_rear_strike_playcam.png")
     look(cam, *CAM_FRONT)

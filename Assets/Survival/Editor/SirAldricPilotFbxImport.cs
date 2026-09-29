@@ -13,9 +13,8 @@ namespace Survival.Editor
     /// </summary>
     public sealed class SirAldricPilotFbxImport : AssetPostprocessor
     {
-        private const string PilotWalk = "SirAldric_PILOT_walk_accurig.fbx";
-        private const string PilotAttack = "SirAldric_PILOT_attack_library.fbx";
-        private const string PilotHumanoid = "SirAldric_PILOT_accurig_humanoid.fbx";
+        private const string PilotWalk = "SirAldric_body_holefixed_walk.fbx";
+        private const string PilotAttack = "SirAldric_body_holefixed_slash.fbx";
 
         private void OnPreprocessModel()
         {
@@ -32,21 +31,13 @@ namespace Survival.Editor
 
             var walk = path.EndsWith(PilotWalk, StringComparison.OrdinalIgnoreCase);
             var attack = path.EndsWith(PilotAttack, StringComparison.OrdinalIgnoreCase);
-            var humanoid = path.EndsWith(PilotHumanoid, StringComparison.OrdinalIgnoreCase);
-            if (!walk && !attack && !humanoid)
+            if (!walk && !attack)
             {
                 return;
             }
 
             importer.animationType = ModelImporterAnimationType.Human;
             importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
-
-            if (humanoid)
-            {
-                importer.importAnimation = false;
-                return;
-            }
-
             importer.importAnimation = true;
             var defaults = importer.defaultClipAnimations;
             if (defaults == null || defaults.Length == 0)
@@ -85,7 +76,8 @@ namespace Survival.Editor
                 var span = candidate.lastFrame - candidate.firstFrame;
                 if (walk)
                 {
-                    if (label.IndexOf("Walk", StringComparison.OrdinalIgnoreCase) < 0)
+                    if (label.IndexOf("Walk", StringComparison.OrdinalIgnoreCase) < 0
+                        && label.IndexOf("mixamo", StringComparison.OrdinalIgnoreCase) < 0)
                     {
                         continue;
                     }
@@ -97,6 +89,7 @@ namespace Survival.Editor
                                 || label.IndexOf("Attack", StringComparison.OrdinalIgnoreCase) >= 0
                                 || label.IndexOf("Slash", StringComparison.OrdinalIgnoreCase) >= 0
                                 || label.IndexOf("Sword", StringComparison.OrdinalIgnoreCase) >= 0
+                                || label.IndexOf("mixamo", StringComparison.OrdinalIgnoreCase) >= 0
                                 || label.IndexOf("clip0", StringComparison.OrdinalIgnoreCase) >= 0
                                 || label.IndexOf("Scene", StringComparison.OrdinalIgnoreCase) >= 0;
                     if (!named && span < 8f)
