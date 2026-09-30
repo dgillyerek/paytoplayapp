@@ -1,6 +1,6 @@
 # HOLD — Sir Aldric PILOT Mixamo separate-portrait (2026-09-28)
 
-**HOLD merge on PR #27 until Derek Game-view PASS.** Path A / ClipSword / AimChain / Dev weight-paint are not SoT. Derek’s `0fc0930` Game-view shots are walk/strike SoT: RH grip walk, UR→low-LL strike. Orbit 1/2/3 stays.
+**HOLD merge on PR #27 until Derek Game-view PASS vs the slash video.** Path A / ClipSword / AimChain / Dev weight-paint are not SoT. Slash SoT is https://www.youtube.com/watch?v=iQ1s3nN1330 (Judith Hamma “Sword Swing - Animation”): sword in the **right hand**, high character-right → sweep down to low character-left. Prior +Z mid-hold / horizontal-thrust arc guesses are overridden. Walk SoT remains Derek `0fc0930` / `98dabbb` RH grip. Orbit 1/2/3 stays. Rematch optional.
 
 ## Wire
 
@@ -10,15 +10,15 @@
 | Unrigged look mesh (on disk) | `SirAldric_body_holefixed_mid280k.fbx` (no armature — not the Play instance) |
 | Walk clip | same walk FBX · Unity takeName **`mixamo.com`** 1–36 (Mixamo Standard Walk) |
 | Slash clip | `SirAldric_body_holefixed_slash.fbx` · takeName **`mixamo.com`** **8–40** (Stable Sword Inward Slash) |
-| Sword prop | `SirAldric_PILOT_sword.fbx` walk **`HipSheathSocket`** on **`mixamorig:Hips`** (character-right after yaw 180); strike **`mixamorig:RightHand`** |
+| Sword prop | `SirAldric_PILOT_sword.fbx` walk + strike **`mixamorig:RightHand`**. Leftover **`HipSheathSocket`** on **`mixamorig:Hips`** is unused. |
 | Cape prop | `SirAldric_PILOT_cape.fbx` on disk (optional soft — not auto-parented; scale/bind leftover) |
 | Paint | `pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture*.png` |
 
 Slash With-Skin mesh is **not instantiated**. `StripEmbeddedClipMeshes` disables Ico / withSkin leftovers. **Generic** CreateFromThisModel. Import **`useFileScale: 0`**. Sword localScale = `1 / Abs(hand.lossyScale)` then normalize world blade to **1.01 m**. Walk→slash is `AnimationMixerPlayable` **0.20 s**. `updateWhenOffscreen`. No Path 1 / Path A / ClipSword / AimChain. **Not a whole-body X-flip.**
 
-**Sword hand:** walk/idle = `mixamorig:Hips` hip sheath on the **outside of the right hip**, tip down beside the right leg — **not** in `mixamorig:RightHand`, **not** through the mesh. Strike only = transfer to `mixamorig:RightHand`. FaceWorldTop yaws 180 and **Abs** scale (never `scale.x = -1`). Derek FAIL `212c6da` whole-body X-flip put the sword on the left hand — discarded. Local Generic Euler extras (`5f5e375`) swung the opposite way on Play-cam — discarded. Prefer RH parent + world-space tip arc **for strike only**.
+**Sword hand:** walk/idle = `mixamorig:RightHand` along-arm grip (Derek `0fc0930` / `98dabbb` Game-view). Hip-sheath socket code is leftover only. Strike = stay on `mixamorig:RightHand`. FaceWorldTop yaws 180 and **Abs** scale (never `scale.x = -1`). Derek FAIL `212c6da` whole-body X-flip put the sword on the left hand — discarded. Local Generic Euler extras (`5f5e375`) swung the opposite way on Play-cam — discarded.
 
-Light **attack-only** extras after `Evaluate()`, re-applied on **camera render**. Walk: **`HipSheathSocket`** child of `mixamorig:Hips`, socket rotation = **instance FaceWorldTop** (yaw 180). Grip / blade in **character space** (`HipSheathGripLocal` / `HipSheathBladeLocal`): +X character-right, +Y up, +Z forward. Unity bake blade = **local +Y**. Do **not** aim with world `Vector3.left/right/back` or Mixamo `hips.right` — that locked the blade **world-left across the neck** (Derek FAIL `cdfbea5`). Arm-lock only when `attackU>0`. Attack: `BindSwordTo(mixamorig:RightHand)`, UR → horizontal front +Z → LL, forearm–hand snap. Not AimChain. Not a body X-flip. **Rematch is not Game-view proof.**
+Light **attack-only** extras after `Evaluate()`, re-applied on **camera render**. Walk: `BindSwordTo(mixamorig:RightHand)` + along-arm snap. `HipSheathSocket` / `HipSheathGripLocal` / `HipSheathBladeLocal` remain on disk (leftover). Unity bake blade = **local +Y**. Do **not** aim with world `Vector3.left/right/back` or Mixamo `hips.right` — that locked the blade **world-left across the neck** (Derek FAIL `cdfbea5`). Arm-lock only when `attackU>0`. Attack: `BindSwordTo(mixamorig:RightHand)`, YouTube iQ1s3nN1330 diagonal (high-right → low-left, **no +Z hold**), forearm–hand snap. Not AimChain. Not a body X-flip. **Rematch is optional and not Game-view proof.**
 
 Play-cam **defaults to rear** `(0, 1.92, −3.08)`. Orbit: **1** rear, **2** 3/4, **3** front, **Q/E** or **RMB** drag. Do not change the default rear frame.
 
@@ -64,7 +64,9 @@ The unrigged body FBX has **no skeleton**. Play instantiates the Mixamo-skinned 
 
 **Derek FAIL `52aba6b`:** worse. Walk sheath **jumped** (RightUpLeg follow). Attack blade **R→L in front** (arm-axis snap). Camera still **no rotation**.
 
-**Derek FAIL `0fc0930` Game-view (SoT shots):** walk sword **floating**, not in the RH. Strike **ends high on the character’s left** instead of **low LL**. Hip sheath superseded. Walk = **RH grip**, along-arm. Strike = drive RH **UR → low LL** (tip-led), `AttackSlashLlUp = -0.90`. Orbit 1/2/3 kept.
+**Derek FAIL `0fc0930` Game-view (walk SoT shots):** walk sword **floating**, not in the RH. Strike **ends high on the character’s left** instead of **low LL**. Hip sheath superseded. Walk = **RH grip**, along-arm (`98dabbb`). Strike path later superseded by the YouTube clip.
+
+**Derek slash SoT (video, overrides prior arc guesses):** https://www.youtube.com/watch?v=iQ1s3nN1330 — RH grip; continuous high character-right → sweep down to low character-left. The `FrontHoldU` +Z plateau / horizontal thrust (`b0a9509` / `0fc0930` mid) was a guess. `FrontHoldU = FrontU = 0.45`. HOLD until Derek Game-view PASS vs this clip.
 
 ## Cam (1080×1920 Scale 1×)
 
@@ -72,11 +74,11 @@ Rear `(0, 1.92, −3.08)` LookAt `(0, 1.12, 0.15)` FOV **42**. Mesh 1×.
 
 ## Proofs here
 
-Play-cam rematch: walk f18 (**hip sheath** on `mixamorig:Hips`, not RH grip; dump `sir_aldric_pilot_dump_walk_f18.json`) / slash start f8 (RH max-reach UR) / mid f20 (horizontal front +Z; rear is **foreshortened** toward the enemy cube, not a sky stick) / finish f32 (max-reach LL). Numeric dumps `sir_aldric_pilot_dump_slash_f8.json` / `f20` / `f32`. **Not Meshy website stills.** Rematch stills are the **visual target**. **Not Unity Game-view** until Derek’s Play matches those stills — Game-view is the gate that must equal rematch.
+Play-cam rematch: walk f18 (older hip-sheath dump `sir_aldric_pilot_dump_walk_f18.json`) / slash start f8 / mid f20 / finish f32. Numeric dumps `sir_aldric_pilot_dump_slash_f8.json` / `f20` / `f32`. **Not Meshy website stills.** **Rematch is optional.** **Not Unity Game-view.** Game-view must match https://www.youtube.com/watch?v=iQ1s3nN1330, not rematch.
 
 ## Unity Play
 
 1. Play **SirAldric** (click the Game view). Default cam = **rear**. **1 / 2 / 3** orbit. HUD `cam <yaw>` must change.
 2. **Walk (Derek 0fc0930 SoT):** sword **in the right hand**, along-arm — not floating at the hip.
-3. **Strike:** start **high on the character’s right**, sweep **down to low on the character’s left** (UR→LL tip-led). Must not finish high-left.
-4. HOLD until Derek Game-view PASS.
+3. **Strike (YouTube iQ1s3nN1330):** start **high on the character’s right**, sweep **down to low on the character’s left**. Must not +Z-thrust mid. Must not finish high-left.
+4. HOLD until Derek Game-view PASS vs that video.

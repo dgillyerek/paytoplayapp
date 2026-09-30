@@ -8,8 +8,9 @@ Blender Mixamo already faces rear (back to camera). Unity FaceWorldTop yaws 180
 (needed because Unity Mixamo faces −Z). Do not scale-X flip the body — that put
 the sword on the left hand. Walk: true hip sheath on mixamorig:Hips, outside the
 right hip, tip down beside the leg — not a RH child (Design lean FAIL a9f8aff).
-Attack: reparent mixamorig:RightHand, unfold RH UR → horizontal front (+Z) → LL;
-sword snapped to the forearm–hand axis. Game-view must equal these stills.
+Attack: reparent mixamorig:RightHand, unfold RH high-right → low-left
+(YouTube iQ1s3nN1330 diagonal; no +Z thrust hold). Sword snapped to the
+forearm–hand axis. Rematch optional. Game-view must match the video.
 """
 from __future__ import annotations
 
@@ -38,20 +39,20 @@ CAM_FRONT = ((0.0, 1.92, 3.38), (0.0, 1.12, 0.15))
 CAM_34 = ((1.82, 1.92, -2.38), (0.0, 1.12, 0.15))
 CAM_FOV = 42.0
 
-# Match Unity ApplyAttackWindupLift (max-reach RH arc, elbow unfold).
-# FrontUp stays near 0: FrontUp 0.48 read as sky in Unity Game-view (b0a9509).
-SLASH_UR_RIGHT = 0.72
-SLASH_UR_UP = 0.48
-SLASH_UR_FRONT = 0.38
-SLASH_FRONT_RIGHT = 0.12
-SLASH_FRONT_UP = 0.06
-SLASH_FRONT_Z = 1.00
-SLASH_LL_RIGHT = -0.85
-SLASH_LL_UP = -0.40
-SLASH_LL_FRONT = 0.30
-SLASH_FRONT_U = 0.32
-SLASH_FRONT_HOLD_U = 0.55
-SLASH_LL_U = 0.78
+# Derek slash SoT: https://www.youtube.com/watch?v=iQ1s3nN1330
+# High character-right → low character-left. No +Z thrust hold.
+SLASH_UR_RIGHT = 0.78
+SLASH_UR_UP = 0.82
+SLASH_UR_FRONT = 0.16
+SLASH_FRONT_RIGHT = 0.06
+SLASH_FRONT_UP = 0.08
+SLASH_FRONT_Z = 0.55
+SLASH_LL_RIGHT = -0.80
+SLASH_LL_UP = -0.88
+SLASH_LL_FRONT = 0.18
+SLASH_FRONT_U = 0.45
+SLASH_FRONT_HOLD_U = 0.45
+SLASH_LL_U = 0.82
 SLASH_FIRST = 8
 SLASH_LAST = 40
 SLASH_MID = 20
@@ -425,7 +426,7 @@ def dump_hands(arm, sword, tag, desired_unity=None):
         "tip_radial": tip_radial,
         "RH_character_right": rh_char_right,
         "desired_unity": None if desired_unity is None else list(desired_unity),
-        "label": "Play-cam rematch, not Unity Game-view. Rear +Z is foreshortened; 3/4 shows the horizontal thrust. Trust Game-view over rematch.",
+        "label": "Play-cam rematch, not Unity Game-view. Slash SoT is YouTube iQ1s3nN1330 (high-right → low-left). Rematch optional. Trust Game-view.",
     }
     PROOF.mkdir(parents=True, exist_ok=True)
     path = PROOF / f"sir_aldric_pilot_dump_{tag}.json"
@@ -452,7 +453,7 @@ def attack_slash_u(frame):
 
 
 def attack_slash_reach_unity_xyz(u):
-    """Unity (right, up, front) before blender_from_unity. Mid hold is +Z, not +Y."""
+    """Unity (right, up, front). YouTube iQ1s3nN1330 diagonal; no +Z hold."""
     u = max(0.0, min(1.0, u))
 
     def sm(x):
@@ -463,11 +464,9 @@ def attack_slash_reach_unity_xyz(u):
         t = sm(u / SLASH_FRONT_U)
         a = (SLASH_UR_RIGHT, SLASH_UR_UP, SLASH_UR_FRONT)
         b = (SLASH_FRONT_RIGHT, SLASH_FRONT_UP, SLASH_FRONT_Z)
-    elif u <= SLASH_FRONT_HOLD_U:
-        a = b = (SLASH_FRONT_RIGHT, SLASH_FRONT_UP, SLASH_FRONT_Z)
-        t = 1.0
     elif u <= SLASH_LL_U:
-        t = sm((u - SLASH_FRONT_HOLD_U) / (SLASH_LL_U - SLASH_FRONT_HOLD_U))
+        span = SLASH_LL_U - SLASH_FRONT_U
+        t = 1.0 if span <= 1e-5 else sm((u - SLASH_FRONT_U) / span)
         a = (SLASH_FRONT_RIGHT, SLASH_FRONT_UP, SLASH_FRONT_Z)
         b = (SLASH_LL_RIGHT, SLASH_LL_UP, SLASH_LL_FRONT)
     else:
@@ -478,7 +477,7 @@ def attack_slash_reach_unity_xyz(u):
     z = a[2] + (b[2] - a[2]) * t
     mag = math.sqrt((x * x) + (y * y) + (z * z))
     if mag < 1e-6:
-        return (0.0, 0.06, 1.0)
+        return (0.0, 0.08, 0.55)
     return (x / mag, y / mag, z / mag)
 
 
@@ -545,7 +544,7 @@ def apply_sheathed_sword(arm, sword):
 
 
 def apply_attack_windup(arm, sword, frame):
-    """Match Unity ApplyAttackWindupLift: unfold elbow, arm UR→front→LL, rigid sword."""
+    """Match Unity ApplyAttackWindupLift: unfold elbow, arm UR→LL (iQ1s3nN1330)."""
     k = windup_weight(frame)
     bind_sword_to(arm, sword, "mixamorig:RightHand", local_loc=(0.0, 0.08, 0.0))
     rarm = arm.pose.bones.get("mixamorig:RightArm")

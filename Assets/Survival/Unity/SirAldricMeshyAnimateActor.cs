@@ -16,7 +16,7 @@ namespace Survival.Unity
     /// Sir Aldric PILOT: Mixamo-skinned holefixed mid280k is the ONLY visible body.
     /// Generic Mixamo clips (Humanoid Playable collapses this skin). AccuRIG superseded.
     /// Walk = Standard Walk. Slash = Stable Sword Inward Slash.
-    /// Walk sword = mixamorig:Hips hip sheath. Strike only = mixamorig:RightHand.
+    /// Walk sword = mixamorig:RightHand grip. Strike = RightHand YouTube iQ1s3nN1330.
     /// No Path 1 / Path A / ClipSword. HOLD merge.
     /// </summary>
     [DefaultExecutionOrder(200)]
@@ -37,7 +37,7 @@ namespace Survival.Unity
             "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Inward Slash " +
             "frames 8–40. Sword never a whole-body X-flip. " +
             "Walk: sword gripped in mixamorig:RightHand (Derek 0fc0930 Game-view; 879a6f3 left-hand FAIL discarded). " +
-            "Strike: mixamorig:RightHand max-reach UR→front→low LL tip-led; " +
+            "Strike: YouTube iQ1s3nN1330 high-right → low-left (max-reach RH); " +
             "sword snaps to the forearm–hand axis. Re-applied on camera render. " +
             "RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
@@ -314,9 +314,8 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Derek 0fc0930 Game-view SoT: walk sword is gripped in mixamorig:RightHand
-        /// (along-arm), not a detached hip float. Strike drives the RH UR → front →
-        /// low LL (tip-led). Hip sheath superseded for walk.
+        /// Walk: RH grip (Derek 0fc0930). Strike: YouTube iQ1s3nN1330 diagonal
+        /// high character-right → low character-left. Orbit 1/2/3 kept.
         /// </summary>
         private void ApplyAttackWindupLift(float attackWeight, float attackNormalized01)
         {

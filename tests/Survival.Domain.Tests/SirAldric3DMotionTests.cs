@@ -350,6 +350,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("BindSwordTo(_rightHand", actor, StringComparison.Ordinal);
         Assert.Contains("Vector3.right", actor, StringComparison.Ordinal);
         Assert.Contains("strike points along AttackSlashReach", actor, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("iQ1s3nN1330", actor, StringComparison.Ordinal);
         Assert.Contains("879a6f3", actor, StringComparison.Ordinal);
         Assert.Contains("beginCameraRendering", actor, StringComparison.Ordinal);
         Assert.Contains("LateUpdate", actor, StringComparison.Ordinal);
@@ -425,14 +426,17 @@ public sealed class SirAldric3DMotionTests
         Assert.Equal(1.12f, SirAldric3DMotion.PlayCamLookY);
         Assert.Equal(42f, SirAldric3DMotion.PlayCamFovDegrees);
         Assert.Equal(180f, SirAldric3DMotion.MixamoImportRearYawDegrees);
-        Assert.Equal(0.72f, SirAldric3DMotion.AttackSlashUrRight);
-        Assert.Equal(0.48f, SirAldric3DMotion.AttackSlashUrUp);
-        Assert.Equal(0.06f, SirAldric3DMotion.AttackSlashFrontUp);
-        Assert.Equal(1.00f, SirAldric3DMotion.AttackSlashFrontZ);
-        Assert.Equal(-0.85f, SirAldric3DMotion.AttackSlashLlRight);
-        Assert.Equal(0.32f, SirAldric3DMotion.AttackSlashFrontU);
-        Assert.Equal(0.55f, SirAldric3DMotion.AttackSlashFrontHoldU);
-        Assert.Equal(0.78f, SirAldric3DMotion.AttackSlashLlU);
+        Assert.Equal(0.78f, SirAldric3DMotion.AttackSlashUrRight);
+        Assert.Equal(0.82f, SirAldric3DMotion.AttackSlashUrUp);
+        Assert.Equal(0.16f, SirAldric3DMotion.AttackSlashUrFront);
+        Assert.Equal(0.08f, SirAldric3DMotion.AttackSlashFrontUp);
+        Assert.Equal(0.55f, SirAldric3DMotion.AttackSlashFrontZ);
+        Assert.Equal(-0.80f, SirAldric3DMotion.AttackSlashLlRight);
+        Assert.Equal(-0.88f, SirAldric3DMotion.AttackSlashLlUp);
+        Assert.Equal(0.45f, SirAldric3DMotion.AttackSlashFrontU);
+        Assert.Equal(0.45f, SirAldric3DMotion.AttackSlashFrontHoldU);
+        Assert.Equal(0.82f, SirAldric3DMotion.AttackSlashLlU);
+        Assert.Equal(SirAldric3DMotion.AttackSlashFrontU, SirAldric3DMotion.AttackSlashFrontHoldU);
         Assert.Equal(90f, SirAldric3DMotion.HeldSwordRestEulerX);
         Assert.Equal(0.32f, SirAldric3DMotion.HipSheathOutboard);
         Assert.Equal(0.02f, SirAldric3DMotion.HipSheathUp);
@@ -451,23 +455,38 @@ public sealed class SirAldric3DMotionTests
         Assert.Equal(1f, SirAldric3DMotion.AttackWindupWeight(0.72f), 3);
         Assert.Equal(1f, SirAldric3DMotion.AttackWindupWeight(1f), 3);
         SirAldric3DMotion.AttackSlashReach(0f, out var urX, out var urY, out var urZ);
-        Assert.True(urX > 0.40f && urY > 0.30f && urZ > 0f);
+        Assert.True(urX > 0.50f && urY > 0.50f && urZ > 0f, $"start ({urX},{urY},{urZ}) must be high character-right");
         SirAldric3DMotion.AttackSlashReach(SirAldric3DMotion.AttackSlashFrontU, out var fX, out var fY, out var fZ);
-        Assert.True(fZ > 0.90f && fY < 0.20f && fX > 0f);
-        SirAldric3DMotion.AttackSlashReach(0.40f, out var holdX, out var holdY, out var holdZ);
-        Assert.True(holdZ > 0.90f && holdY < 0.20f);
+        Assert.True(fX < urX && fY < urY, $"chest-cross ({fX},{fY},{fZ}) must descend from UR, not a +Z hold");
+        SirAldric3DMotion.AttackSlashReach(0.40f, out var midX, out var midY, out var midZ);
+        Assert.True(midX < urX && midY < urY);
         SirAldric3DMotion.AttackSlashReach(SirAldric3DMotion.AttackSlashFrontHoldU, out var holdEndX, out var holdEndY, out var holdEndZ);
-        Assert.True(holdEndZ > 0.90f && holdEndY < 0.20f);
+        Assert.Equal(fX, holdEndX, 3);
+        Assert.Equal(fY, holdEndY, 3);
+        Assert.Equal(fZ, holdEndZ, 3);
         SirAldric3DMotion.AttackSlashReach(1f, out var llX, out var llY, out var llZ);
-        Assert.True(llX < -0.45f && llY < 0f);
+        Assert.True(llX < -0.45f && llY < -0.45f, $"finish ({llX},{llY},{llZ}) must be low character-left");
+        var prevX = urX;
+        var prevY = urY;
+        foreach (var sample in new[] { 0.20f, 0.45f, 0.65f, 0.82f, 1f })
+        {
+            SirAldric3DMotion.AttackSlashReach(sample, out var sx, out var sy, out _);
+            Assert.True(sx <= prevX + 0.02f, $"slash X must keep sweeping right→left at u={sample}");
+            Assert.True(sy <= prevY + 0.02f, $"slash Y must keep sweeping high→low at u={sample}");
+            prevX = sx;
+            prevY = sy;
+        }
         _ = urZ;
-        _ = fX;
-        _ = holdX;
-        _ = holdEndX;
+        _ = midX;
+        _ = midY;
+        _ = midZ;
         _ = llZ;
         var blender = File.ReadAllText(Path.Combine(root, "scripts", "blender", "render_aldric_pilot_playcam.py"));
-        Assert.Contains("SLASH_FRONT_UP = 0.06", blender, StringComparison.Ordinal);
-        Assert.Contains("SLASH_FRONT_HOLD_U = 0.55", blender, StringComparison.Ordinal);
+        Assert.Contains("SLASH_FRONT_UP = 0.08", blender, StringComparison.Ordinal);
+        Assert.Contains("SLASH_FRONT_HOLD_U = 0.45", blender, StringComparison.Ordinal);
+        Assert.Contains("SLASH_FRONT_Z = 0.55", blender, StringComparison.Ordinal);
+        Assert.Contains("SLASH_UR_UP = 0.82", blender, StringComparison.Ordinal);
+        Assert.Contains("iQ1s3nN1330", blender, StringComparison.Ordinal);
         Assert.Contains("hip_sheath_", blender, StringComparison.Ordinal);
         Assert.Contains("apply_sheathed_sword", blender, StringComparison.Ordinal);
         Assert.Contains("mixamorig:Hips", blender, StringComparison.Ordinal);
@@ -481,7 +500,8 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("ApplyPlayCam", demo, StringComparison.Ordinal);
         Assert.Contains("usePhysicalProperties = false", demo, StringComparison.Ordinal);
         Assert.Contains("LateUpdate", demo, StringComparison.Ordinal);
-        Assert.Contains("UR→front→LL", demo, StringComparison.Ordinal);
+        Assert.Contains("UR→LL", demo, StringComparison.Ordinal);
+        Assert.Contains("iQ1s3nN1330", demo, StringComparison.Ordinal);
         Assert.Contains("orbit", demo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("PlayCamOrbitEye", demo, StringComparison.Ordinal);
         Assert.Contains("Alpha1", demo, StringComparison.Ordinal);
@@ -528,6 +548,9 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("7187204", hold, StringComparison.Ordinal);
         Assert.Contains("52aba6b", hold, StringComparison.Ordinal);
         Assert.Contains("0fc0930", hold, StringComparison.Ordinal);
+        Assert.Contains("98dabbb", hold, StringComparison.Ordinal);
+        Assert.Contains("iQ1s3nN1330", hold, StringComparison.Ordinal);
+        Assert.Contains("https://www.youtube.com/watch?v=iQ1s3nN1330", hold, StringComparison.Ordinal);
         Assert.Contains("CS1061", hold, StringComparison.Ordinal);
         Assert.Contains("QuaternionToEuler", hold, StringComparison.Ordinal);
         Assert.Contains("HipSheathSocket", hold, StringComparison.Ordinal);
@@ -562,10 +585,10 @@ public sealed class SirAldric3DMotionTests
         var midDump = File.ReadAllText(Path.Combine(dir, "sir_aldric_pilot_dump_slash_f20.json"));
         Assert.Contains("\"sword_parent\": \"mixamorig:RightHand\"", midDump, StringComparison.Ordinal);
         Assert.Contains("not Unity Game-view", midDump, StringComparison.Ordinal);
-        var midTip = ReadJsonVec3(midDump, "tip_unity");
-        Assert.True(midTip[2] > 0.85f && Math.Abs(midTip[1]) < 0.25f, $"mid tip_unity=({midTip[0]},{midTip[1]},{midTip[2]}) must be +Z not +Y");
-        var midDesired = ReadJsonVec3(midDump, "desired_unity");
-        Assert.True(midDesired[2] > 0.90f && midDesired[1] < 0.20f, $"mid desired_unity=({midDesired[0]},{midDesired[1]},{midDesired[2]})");
+        // Rematch dumps are optional / not slash SoT. Do not lock mid to the
+        // superseded +Z thrust plateau. Game-view must match iQ1s3nN1330.
+        _ = ReadJsonVec3(midDump, "tip_unity");
+        _ = ReadJsonVec3(midDump, "desired_unity");
         var startTip = ReadJsonVec3(File.ReadAllText(Path.Combine(dir, "sir_aldric_pilot_dump_slash_f8.json")), "tip_unity");
         Assert.True(startTip[1] > 0.25f, $"start tip Y {startTip[1]} should be up");
         var finishTip = ReadJsonVec3(File.ReadAllText(Path.Combine(dir, "sir_aldric_pilot_dump_slash_f32.json")), "tip_unity");

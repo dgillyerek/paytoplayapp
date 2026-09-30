@@ -32,24 +32,23 @@ namespace Survival.Domain.Heroes
         public const int MixamoSlashLastFrame = 40;
 
         /// <summary>
-        /// Attack-only extras after Evaluate (not AimChain, not a whole-body X-flip).
-        /// Full-arm max-reach sweep: upper-right → horizontal front (+Z / enemy) →
-        /// lower-left. Derek FAIL b0a9509: FrontUp 0.48 read as skyward in Unity
-        /// Game-view (camera-up ≈ world +Y). Rematch screen-up is not Unity +Z —
-        /// mid blade must be +Z with near-zero +Y (horizontal thrust plane).
+        /// Derek slash SoT: https://www.youtube.com/watch?v=iQ1s3nN1330
+        /// (Judith Hamma “Sword Swing - Animation”). RH grip. Diagonal only:
+        /// high character-right → sweep down to low character-left. No +Z thrust
+        /// plateau (that was a prior arc guess; video overrides).
         /// </summary>
-        public const float AttackSlashUrRight = 0.72f;
-        public const float AttackSlashUrUp = 0.48f;
-        public const float AttackSlashUrFront = 0.38f;
-        public const float AttackSlashFrontRight = 0.12f;
-        public const float AttackSlashFrontUp = 0.06f;
-        public const float AttackSlashFrontZ = 1.00f;
-        public const float AttackSlashLlRight = -0.85f;
-        public const float AttackSlashLlUp = -0.90f;
-        public const float AttackSlashLlFront = 0.22f;
-        public const float AttackSlashFrontU = 0.32f;
-        public const float AttackSlashFrontHoldU = 0.55f;
-        public const float AttackSlashLlU = 0.78f;
+        public const float AttackSlashUrRight = 0.78f;
+        public const float AttackSlashUrUp = 0.82f;
+        public const float AttackSlashUrFront = 0.16f;
+        public const float AttackSlashFrontRight = 0.06f;
+        public const float AttackSlashFrontUp = 0.08f;
+        public const float AttackSlashFrontZ = 0.55f;
+        public const float AttackSlashLlRight = -0.80f;
+        public const float AttackSlashLlUp = -0.88f;
+        public const float AttackSlashLlFront = 0.18f;
+        public const float AttackSlashFrontU = 0.45f;
+        public const float AttackSlashFrontHoldU = 0.45f;
+        public const float AttackSlashLlU = 0.82f;
         public const float HeldSwordRestEulerX = 90f;
         /// <summary>
         /// Walk hip-sheath in character space after FaceWorldTop (yaw 180):
@@ -493,9 +492,9 @@ namespace Survival.Domain.Heroes
         }
 
         /// <summary>
-        /// Unit direction of the RH max-reach arc in Unity world after FaceWorldTop.
-        /// u=0 upper-right, FrontU..FrontHoldU hold straight +Z (horizontal thrust,
-        /// near-zero +Y — not sky), u≥LlU lower-left.
+        /// Unit RH reach for the YouTube sword-swing diagonal (iQ1s3nN1330).
+        /// u=0 high-right, u=FrontU chest-cross, u≥LlU low-left. No +Z hold.
+        /// FrontHoldU equals FrontU so the old thrust plateau is gone.
         /// </summary>
         public static void AttackSlashReach(float attackNormalized01, out float x, out float y, out float z)
         {
@@ -517,17 +516,10 @@ namespace Survival.Domain.Heroes
                 by = AttackSlashFrontUp;
                 bz = AttackSlashFrontZ;
             }
-            else if (u <= AttackSlashFrontHoldU)
-            {
-                x = AttackSlashFrontRight;
-                y = AttackSlashFrontUp;
-                z = AttackSlashFrontZ;
-                Normalize(ref x, ref y, ref z);
-                return;
-            }
             else if (u <= AttackSlashLlU)
             {
-                t = Smooth01((u - AttackSlashFrontHoldU) / (AttackSlashLlU - AttackSlashFrontHoldU));
+                var span = AttackSlashLlU - AttackSlashFrontU;
+                t = span > 1e-5f ? Smooth01((u - AttackSlashFrontU) / span) : 1f;
                 ax = AttackSlashFrontRight;
                 ay = AttackSlashFrontUp;
                 az = AttackSlashFrontZ;
