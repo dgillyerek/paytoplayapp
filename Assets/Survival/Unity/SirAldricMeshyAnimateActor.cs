@@ -16,7 +16,7 @@ namespace Survival.Unity
     /// Sir Aldric PILOT: Mixamo-skinned holefixed mid280k is the ONLY visible body.
     /// Generic Mixamo clips (Humanoid Playable collapses this skin). AccuRIG superseded.
     /// Walk = Standard Walk. Slash = Stable Sword Inward Slash.
-    /// Walk sword = mixamorig:RightHand grip. Strike = video iQ1s3nN1330 backswing.
+    /// Walk sword = mixamorig:RightHand grip. Strike = Design-owned MILD Inward Slash FBX.
     /// No Path 1 / Path A / ClipSword. HOLD merge.
     /// </summary>
     [DefaultExecutionOrder(200)]
@@ -25,7 +25,9 @@ namespace Survival.Unity
         public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx";
         public const string ThemePackLookFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_mid280k.fbx";
         public const string ThemePackWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx";
-        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash.fbx";
+        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_MILD.fbx";
+        /// <summary>Same MILD bytes as ThemePackAttackFbx. Not baseline SirAldric_body_holefixed_slash.fbx md5 4a143441.</summary>
+        public const string ThemePackAttackFbxAlias = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash.fbx";
         public const string ThemePackSwordFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_sword.fbx";
         public const string ThemePackCapeFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_cape.fbx";
         public const string PaintedLookDir = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot";
@@ -34,12 +36,12 @@ namespace Survival.Unity
         public const string AttackClipHint = "Attack";
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
         public const string AttackAuthoredReason =
-            "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Inward Slash " +
-            "frames 8–40. Sword never a whole-body X-flip. " +
+            "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Design-owned " +
+            "MILD Stable Sword Inward Slash frames 0–85 (md5 8d5b78b0; not baseline 4a143441). " +
+            "Sword never a whole-body X-flip. " +
             "Walk: sword gripped in mixamorig:RightHand (Derek 0fc0930 Game-view; 879a6f3 left-hand FAIL discarded). " +
-            "Strike: YouTube iQ1s3nN1330 ready→backswing→high-right→low-left (max-reach RH); " +
-            "sword snaps to the forearm–hand axis. Re-applied on camera render. " +
-            "RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
+            "Strike: Design FBX plays as authored (YouTube iQ1s3nN1330 SoT; ready→backswing→LL). " +
+            "No tip-led AttackSlashReach / arm overwrite. RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
         public const float SwordBladeMeters = 1.01f;
         private const float BodyHeightMinMeters = 0.5f;
@@ -318,81 +320,19 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Walk: RH grip (Derek 0fc0930). Strike: YouTube iQ1s3nN1330 storyboard
-        /// (ready hip → far-back swing → high-right → low-left). Mixamo Inward
-        /// Slash cannot match that silhouette; arms are overwritten onto
-        /// AttackSlashReach. Orbit 1/2/3 kept.
+        /// Design owns slash bones in the MILD FBX. Play/blend/cam only —
+        /// no tip-led arm or clavicle overwrite.
+        /// Sword prop stays on mixamorig:RightHand (Derek 0fc0930 walk grip).
         /// </summary>
         private void ApplyAttackWindupLift(float attackWeight, float attackNormalized01)
         {
-            var k = Mathf.Clamp01(attackWeight) * SirAldric3DMotion.AttackWindupWeight(attackNormalized01);
-            if (k <= 0.001f)
-            {
-                ApplySheathedSword();
-                return;
-            }
-
+            _ = attackWeight;
+            _ = attackNormalized01;
             BindSwordTo(_rightHand, strikeGrip: true);
-            if (_spine != null)
+            if (_heldSword != null)
             {
-                _spine.Rotate(
-                    Vector3.up,
-                    k * SirAldric3DMotion.AttackSlashSpineYawDegrees(attackNormalized01),
-                    Space.World);
+                _heldSword.localRotation = SwordRestLocal();
             }
-
-            SirAldric3DMotion.AttackSlashGuardReach(out var gx, out var gy, out var gz);
-            AimArmAlong(_leftArm, _leftForeArm, _leftHand, new Vector3(gx, gy, gz), k);
-
-            // Strike points along AttackSlashReach (ready → backswing → UR → LL).
-            SirAldric3DMotion.AttackSlashReach(attackNormalized01, out var dx, out var dy, out var dz);
-            var desired = new Vector3(dx, dy, dz);
-            AimArmAlong(_rightArm, _rightForeArm, _rightHand, desired, k);
-            AimArmAlong(_rightArm, _rightForeArm, _rightHand, desired, k);
-            SnapHeldSwordToArmAxis(desired);
-        }
-
-        private static void AimArmAlong(
-            Transform? arm,
-            Transform? forearm,
-            Transform? hand,
-            Vector3 desired,
-            float weight)
-        {
-            if (arm == null || hand == null || desired.sqrMagnitude < 1e-8f || weight <= 1e-4f)
-            {
-                return;
-            }
-
-            if (forearm != null)
-            {
-                var upper = forearm.position - arm.position;
-                var lower = hand.position - forearm.position;
-                if (upper.sqrMagnitude > 1e-6f && lower.sqrMagnitude > 1e-6f)
-                {
-                    var unfold = Quaternion.FromToRotation(lower.normalized, upper.normalized);
-                    if (weight < 0.999f)
-                    {
-                        unfold = Quaternion.Slerp(Quaternion.identity, unfold, weight);
-                    }
-
-                    forearm.rotation = Quaternion.Normalize(unfold * forearm.rotation);
-                }
-            }
-
-            var reach = hand.position - arm.position;
-            if (reach.sqrMagnitude < 1e-6f)
-            {
-                return;
-            }
-
-            var aim = Quaternion.FromToRotation(reach.normalized, desired.normalized);
-            if (weight < 0.999f)
-            {
-                aim = Quaternion.Slerp(Quaternion.identity, aim, weight);
-            }
-
-            arm.rotation = Quaternion.Normalize(aim * arm.rotation);
         }
 
         /// <summary>
@@ -864,10 +804,11 @@ namespace Survival.Unity
 
         private void AttachHeldSword(GameObject root)
         {
+            var hand = FindNamedBone(root, "mixamorig:RightHand", "RightHand");
             var hips = FindNamedBone(root, "mixamorig:Hips", "Hips");
-            if (hips == null)
+            if (hand == null)
             {
-                Debug.LogWarning("PILOT Mixamo Hips missing — sword prop skipped.");
+                Debug.LogWarning("PILOT Mixamo RightHand missing — sword prop skipped.");
                 return;
             }
 
@@ -878,26 +819,27 @@ namespace Survival.Unity
                 return;
             }
 
-            var sword = Instantiate(prefab, hips);
+            var sword = Instantiate(prefab, hand);
             sword.name = "SirAldricPilotSword";
-            // Walk socket is mixamorig:Hips (true hip sheath). Strike BindSwordTo RightHand.
+            // Design wire: RH only. Hip sheath leftover (mixamorig:Hips) unused.
             // Derek 9075270: compensate parent lossyScale so world blade ≈ 1.01 m.
-            var parent = Mathf.Max(Mathf.Abs(hips.lossyScale.x), 1e-5f);
+            var parent = Mathf.Max(Mathf.Abs(hand.lossyScale.x), 1e-5f);
             var inv = 1f / parent;
-            sword.transform.localPosition = Vector3.zero;
+            sword.transform.localPosition = new Vector3(0f, 0.08f, 0f) * inv;
             sword.transform.localRotation = Quaternion.identity;
             sword.transform.localScale = Vector3.one * inv;
             NormalizeSwordWorldBlade(sword.transform);
             _heldSword = sword.transform;
-            _boundSwordParent = hips;
+            _boundSwordParent = hand;
             var world = MeasureRendererWorldSize(sword);
             var blade = Mathf.Max(world.x, world.y, world.z);
-            var ls = hips.lossyScale;
+            var ls = hand.lossyScale;
             Debug.Log(
-                "PILOT sword parented to " + hips.name +
+                "PILOT sword parented to " + hand.name +
                 " worldBounds.size=(" + world.x + "," + world.y + "," + world.z + ")" +
                 " blade=" + blade +
-                " hips.lossyScale=(" + ls.x + "," + ls.y + "," + ls.z + ")");
+                " hand.lossyScale=(" + ls.x + "," + ls.y + "," + ls.z + ")" +
+                (hips != null ? " hipsLeftover=" + hips.name : ""));
         }
 
         private static void NormalizeSwordWorldBlade(Transform sword)

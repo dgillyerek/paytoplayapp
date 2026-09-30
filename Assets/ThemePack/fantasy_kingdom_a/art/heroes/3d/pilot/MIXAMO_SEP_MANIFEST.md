@@ -6,7 +6,7 @@ Supersedes AccuRIG clips-only on #27 for this tip.
 - body/SirAldric_body_holefixed_mid280k.fbx — Mixamo-ready holefixed look mesh (no cape, empty RH; **no armature** — Play instance is the Mixamo-skinned walk FBX, same 139k verts)
 - textures/ — Meshy PBR maps for body bind
 - walk/SirAldric_body_holefixed_walk.fbx — Mixamo Standard Walk (With Skin, 30fps, ~34 frames)
-- slash/SirAldric_body_holefixed_slash.fbx — Mixamo Stable Sword Inward Slash (With Skin, 30fps, ~67 frames)
+- slash/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_MILD.fbx — Design-owned mild Inward Slash (md5 8d5b78b0, 0–85 @ 30fps). Alias `SirAldric_body_holefixed_slash.fbx` same bytes. Not baseline md5 4a143441.
 - props/SirAldric_PILOT_sword.fbx — parent to RH
 - props/SirAldric_PILOT_cape.fbx — optional soft
 - stills/ — Design lean stills (walk stride + slash peak)

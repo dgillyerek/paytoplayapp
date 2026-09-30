@@ -25,11 +25,12 @@ namespace Survival.Domain.Heroes
         public const float MixamoImportRearYawDegrees = 180f;
 
         /// <summary>
-        /// Mixamo Stable Sword Inward Slash take window. Frame 1 is a high-left rest;
-        /// the rear Play-cam strike reads high-right (≈8) then down-left (≈26–32).
+        /// Design-owned MILD Inward Slash take window (EXPORT_MILD.md).
+        /// Full authored clip 0–85 @ 30fps. TOP is frame 60/85. Do not trim 8–40
+        /// (that was the old hot baseline md5 4a143441).
         /// </summary>
-        public const int MixamoSlashFirstFrame = 8;
-        public const int MixamoSlashLastFrame = 40;
+        public const int MixamoSlashFirstFrame = 0;
+        public const int MixamoSlashLastFrame = 85;
 
         /// <summary>
         /// Derek slash SoT: https://www.youtube.com/watch?v=iQ1s3nN1330

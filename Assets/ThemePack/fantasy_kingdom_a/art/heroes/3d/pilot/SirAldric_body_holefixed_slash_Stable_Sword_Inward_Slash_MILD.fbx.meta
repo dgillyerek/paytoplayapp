@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 596425ad52264a51ab0cf5cc10d6ce36
+guid: 4e410d3588374c678fc25207423cc958
 ModelImporter:
   serializedVersion: 24
   internalIDToNameTable: []
@@ -118,6 +118,6 @@ ModelImporter:
   humanoidOversampling: 1
   avatarSetup: 1
   additionalBone: 0
-  userData: PILOT Design-owned MILD Stable Sword Inward Slash (md5 8d5b78b0). Generic. takeName mixamo.com. Frames 0-85. CreateFromThisModel. Clips only — never visible body. Not baseline 4a143441.
+  userData: PILOT Mixamo Stable Sword Inward Slash clip. Generic. takeName mixamo.com. CreateFromThisModel. Clips only — never visible body.
   assetBundleName: 
   assetBundleVariant: 

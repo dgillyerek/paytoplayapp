@@ -16,6 +16,7 @@ namespace Survival.Editor
     {
         private const string PilotWalk = "SirAldric_body_holefixed_walk.fbx";
         private const string PilotAttack = "SirAldric_body_holefixed_slash.fbx";
+        private const string PilotAttackMild = "SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_MILD.fbx";
 
         private void OnPreprocessModel()
         {
@@ -31,7 +32,8 @@ namespace Survival.Editor
             }
 
             var walk = path.EndsWith(PilotWalk, StringComparison.OrdinalIgnoreCase);
-            var attack = path.EndsWith(PilotAttack, StringComparison.OrdinalIgnoreCase);
+            var attack = path.EndsWith(PilotAttack, StringComparison.OrdinalIgnoreCase)
+                         || path.EndsWith(PilotAttackMild, StringComparison.OrdinalIgnoreCase);
             if (!walk && !attack)
             {
                 return;

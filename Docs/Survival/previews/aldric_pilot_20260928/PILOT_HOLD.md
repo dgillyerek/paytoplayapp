@@ -1,6 +1,6 @@
 # HOLD — Sir Aldric PILOT Mixamo separate-portrait (2026-09-28)
 
-**HOLD merge on PR #27 until Derek Game-view PASS vs the slash video.** Path A / ClipSword / AimChain / Dev weight-paint are not SoT. Slash SoT is https://www.youtube.com/watch?v=iQ1s3nN1330 (Judith Hamma “Sword Swing - Animation”, Maya, 20s camera orbit). Storyboard silhouette: **RH ready at the right hip** → **wide backswing far behind the body** → high-right → across the front → **low character-left**. Mixamo Inward Slash cannot match that wide backswing; strike is tip-led onto those keys. Walk SoT remains Derek `0fc0930` / `98dabbb` RH grip. Orbit 1/2/3 stays. Rematch optional.
+**HOLD merge on PR #27 until Derek Game-view PASS vs the slash video.** Path A / ClipSword / AimChain / Dev weight-paint are not SoT. Design motion package is READY. Slash SoT is https://www.youtube.com/watch?v=iQ1s3nN1330. Authoritative clip is **MILD** `SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_MILD.fbx` (md5 `8d5b78b0`) frames **0–85**, TOP @ 60/85. **Not** baseline `…_slash.fbx` md5 `4a143441`. Play/blend/cam only — **no** tip-led `AttackSlashReach` / arm overwrite. Walk SoT remains Derek `0fc0930` / `98dabbb` RH grip. Orbit 1/2/3 stays. Rematch optional.
 
 ## Wire
 
@@ -9,7 +9,7 @@
 | Playable Mixamo body | `Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx` |
 | Unrigged look mesh (on disk) | `SirAldric_body_holefixed_mid280k.fbx` (no armature — not the Play instance) |
 | Walk clip | same walk FBX · Unity takeName **`mixamo.com`** 1–36 (Mixamo Standard Walk) |
-| Slash clip | `SirAldric_body_holefixed_slash.fbx` · takeName **`mixamo.com`** **8–40** (Stable Sword Inward Slash) |
+| Slash clip | **MILD** `SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_MILD.fbx` (md5 `8d5b78b0`) · alias `SirAldric_body_holefixed_slash.fbx` same bytes · takeName **`mixamo.com`** **0–85** |
 | Sword prop | `SirAldric_PILOT_sword.fbx` walk + strike **`mixamorig:RightHand`**. Leftover **`HipSheathSocket`** on **`mixamorig:Hips`** is unused. |
 | Cape prop | `SirAldric_PILOT_cape.fbx` on disk (optional soft — not auto-parented; scale/bind leftover) |
 | Paint | `pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture*.png` |
@@ -18,7 +18,7 @@ Slash With-Skin mesh is **not instantiated**. `StripEmbeddedClipMeshes` disables
 
 **Sword hand:** walk/idle = `mixamorig:RightHand` along-arm grip (Derek `0fc0930` / `98dabbb` Game-view). Hip-sheath socket code is leftover only. Strike = stay on `mixamorig:RightHand`. FaceWorldTop yaws 180 and **Abs** scale (never `scale.x = -1`). Derek FAIL `212c6da` whole-body X-flip put the sword on the left hand — discarded. Local Generic Euler extras (`5f5e375`) swung the opposite way on Play-cam — discarded.
 
-Light **attack-only** extras after `Evaluate()`, re-applied on **camera render**. Walk: `BindSwordTo(mixamorig:RightHand)` + along-arm snap. `HipSheathSocket` / `HipSheathGripLocal` / `HipSheathBladeLocal` remain on disk (leftover). Unity bake blade = **local +Y**. Do **not** aim with world `Vector3.left/right/back` or Mixamo `hips.right` — that locked the blade **world-left across the neck** (Derek FAIL `cdfbea5`). Attack: `BindSwordTo(mixamorig:RightHand)`, overwrite both arms onto `AttackSlashReach` / `AttackSlashGuardReach` (video backswing), spine yaw, forearm–hand snap. Not AimChain. Not a body X-flip. **Rematch is optional and not Game-view proof.**
+After `Evaluate()`, re-apply **sword parent only** on **camera render**: `BindSwordTo(mixamorig:RightHand)`. Design owns slash bones in the MILD FBX. `HipSheathSocket` / `HipSheathGripLocal` / `HipSheathBladeLocal` / leftover `AttackSlashReach` remain on disk (unused). Unity bake blade = **local +Y**. Do **not** aim with world `Vector3.left/right/back` or Mixamo `hips.right` — that locked the blade **world-left across the neck** (Derek FAIL `cdfbea5`). Not AimChain. Not a body X-flip. **Rematch is optional and not Game-view proof.**
 
 Play-cam **defaults to rear** `(0, 1.92, −3.08)`. Orbit: **1** rear, **2** 3/4, **3** front, **Q/E** or **RMB** drag. Do not change the default rear frame.
 
@@ -68,7 +68,9 @@ The unrigged body FBX has **no skeleton**. Play instantiates the Mixamo-skinned 
 
 **Derek slash SoT (video, overrides prior arc guesses):** https://www.youtube.com/watch?v=iQ1s3nN1330 — Judith Hamma, Maya, 20s orbit. Extracted from maxres + YouTube storyboard L2 (1s tiles): t≈0 ready, sword **low at the right hip**; t≈3 high-back wind-up; t≈5 side profile, sword **extended far behind**; then the blade comes around in front and finishes **low left**. Left hand points forward on the 3/4 ready. The `FrontHoldU` +Z plateau / horizontal thrust (`b0a9509` / `3d0efcd` timing tweak) was a guess.
 
-**Derek FAIL `3d0efcd`:** comment/HUD + `FrontHoldU = FrontU` only. Game-view looked unchanged. That is **not** modeling the attack after the video. This tip rebuilds `AttackSlashReach` onto the storyboard keys (ready → **backswing behind the body** → high-right → contact → low-left) and overwrites Mixamo Inward Slash arms. HOLD until Derek Game-view PASS vs this clip.
+**Derek FAIL `3d0efcd`:** comment/HUD + `FrontHoldU = FrontU` only. Game-view looked unchanged.
+
+**Derek FAIL `ee3f7bd`:** tip-led `AttackSlashReach` arm overwrite at TOP pinched the left pauldron and disjointed the raised right shoulder. Design cancelled clavicle-clamp. Design-owned **MILD** FBX is the slash now — Dev wires play/blend/cam only.
 
 ## Cam (1080×1920 Scale 1×)
 
@@ -82,5 +84,5 @@ Play-cam rematch: walk f18 (older hip-sheath dump `sir_aldric_pilot_dump_walk_f1
 
 1. Play **SirAldric** (click the Game view). Default cam = **rear**. **1 / 2 / 3** orbit. HUD `cam <yaw>` must change.
 2. **Walk (Derek 0fc0930 SoT):** sword **in the right hand**, along-arm — not floating at the hip.
-3. **Strike (YouTube iQ1s3nN1330):** ready **low at the right hip**, sword travels **behind the knight** (toward the rear camera), then **high-right**, then **down to low-left**. Must not look like Mixamo inward-slash / last tip. Must not +Z-thrust mid.
+3. **Strike (Design MILD FBX / YouTube iQ1s3nN1330):** play the authored 0–85 clip. Path: ready hip → backswing behind → high-right → low-left. TOP @ ~frame 60 must **not** pinch pauldrons. No runtime arm sculpt.
 4. HOLD until Derek Game-view PASS vs that video.
