@@ -16,7 +16,7 @@ namespace Survival.Unity
     /// Sir Aldric PILOT: Mixamo-skinned holefixed mid280k is the ONLY visible body.
     /// Generic Mixamo clips (Humanoid Playable collapses this skin). AccuRIG superseded.
     /// Walk = Standard Walk. Slash = Stable Sword Inward Slash.
-    /// Walk sword = mixamorig:RightHand grip. Strike = Design-owned MILD Inward Slash FBX.
+    /// Walk sword = mixamorig:RightHand grip. Strike = Design-owned DIAG Inward Slash FBX.
     /// No Path 1 / Path A / ClipSword. HOLD merge.
     /// </summary>
     [DefaultExecutionOrder(200)]
@@ -25,8 +25,8 @@ namespace Survival.Unity
         public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx";
         public const string ThemePackLookFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_mid280k.fbx";
         public const string ThemePackWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx";
-        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_MILD.fbx";
-        /// <summary>Same MILD bytes as ThemePackAttackFbx. Not baseline SirAldric_body_holefixed_slash.fbx md5 4a143441.</summary>
+        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx";
+        /// <summary>Same DIAG bytes as ThemePackAttackFbx. Not MILD 8d5b78b0. Not baseline 4a143441.</summary>
         public const string ThemePackAttackFbxAlias = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash.fbx";
         public const string ThemePackSwordFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_sword.fbx";
         public const string ThemePackCapeFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_cape.fbx";
@@ -37,7 +37,7 @@ namespace Survival.Unity
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
         public const string AttackAuthoredReason =
             "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Design-owned " +
-            "MILD Stable Sword Inward Slash frames 0–85 (md5 8d5b78b0; not baseline 4a143441). " +
+            "DIAG Stable Sword Inward Slash frames 0–85 (md5 72412be4; not MILD 8d5b78b0; not baseline 4a143441). " +
             "Sword never a whole-body X-flip. " +
             "Walk: sword gripped in mixamorig:RightHand (Derek 0fc0930 Game-view; 879a6f3 left-hand FAIL discarded). " +
             "Strike: Design FBX plays as authored (YouTube iQ1s3nN1330 SoT; ready→backswing→LL). " +
@@ -320,7 +320,7 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Design owns slash bones in the MILD FBX. Play/blend/cam only —
+        /// Design owns slash bones in the DIAG FBX. Play/blend/cam only —
         /// no tip-led arm or clavicle overwrite.
         /// Sword prop stays on mixamorig:RightHand (Derek 0fc0930 walk grip).
         /// </summary>

@@ -25,9 +25,9 @@ namespace Survival.Domain.Heroes
         public const float MixamoImportRearYawDegrees = 180f;
 
         /// <summary>
-        /// Design-owned MILD Inward Slash take window (EXPORT_MILD.md).
-        /// Full authored clip 0–85 @ 30fps. TOP is frame 60/85. Do not trim 8–40
-        /// (that was the old hot baseline md5 4a143441).
+        /// Design-owned DIAG Inward Slash take window (EXPORT_DIAG.md).
+        /// Full authored clip 0–85 @ 30fps. TOP is frame 59/85. Do not trim 8–40
+        /// (old hot baseline md5 4a143441). Not MILD md5 8d5b78b0.
         /// </summary>
         public const int MixamoSlashFirstFrame = 0;
         public const int MixamoSlashLastFrame = 85;
