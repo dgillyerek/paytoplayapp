@@ -36,9 +36,8 @@ namespace Survival.Unity
         public const string AttackAuthoredReason =
             "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Inward Slash " +
             "frames 8–40. Sword never a whole-body X-flip. " +
-            "Walk: HipSheathSocket on mixamorig:Hips; RH must sit on +X (screen-right). " +
-            "(879a6f3 Game-view FAIL: blade left from the hand). Not LH. " +
-            "Strike: mixamorig:RightHand + unfold RH max-reach UR→horizontal front (+Z)→LL; " +
+            "Walk: sword gripped in mixamorig:RightHand (Derek 0fc0930 Game-view; 879a6f3 left-hand FAIL discarded). " +
+            "Strike: mixamorig:RightHand max-reach UR→front→low LL tip-led; " +
             "sword snaps to the forearm–hand axis. Re-applied on camera render. " +
             "RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
@@ -315,15 +314,9 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Attack extras after Evaluate. Walk parents the prop to mixamorig:Hips as a
-        /// true hip sheath (a9f8aff Design lean FAIL: RH-held “sheath aim”). No arm-lock
-        /// on walk — Derek FAIL 19b16aa Game-view pierce; Derek Game-view a9f8aff blade
-        /// horizontal behind the neck because walk→slash blend (attackU=0, attackW>0)
-        /// snapped the RH child across the torso. Sheath until attackU>0. Attack reparents
-        /// to mixamorig:RightHand, unfolds the RH, points the chain UR → horizontal front
-        /// +Z → LL, then snaps the sword onto the live forearm–hand axis. Pose is
-        /// re-applied on camera render so Animator cannot desync the mesh from the prop.
-        /// Not AimChain. Not a body X-flip.
+        /// Derek 0fc0930 Game-view SoT: walk sword is gripped in mixamorig:RightHand
+        /// (along-arm), not a detached hip float. Strike drives the RH UR → front →
+        /// low LL (tip-led). Hip sheath superseded for walk.
         /// </summary>
         private void ApplyAttackWindupLift(float attackWeight, float attackNormalized01)
         {
@@ -335,61 +328,47 @@ namespace Survival.Unity
             }
 
             BindSwordTo(_rightHand, strikeGrip: true);
+            // Strike points along AttackSlashReach (UR high-right → low LL).
             SirAldric3DMotion.AttackSlashReach(attackNormalized01, out var dx, out var dy, out var dz);
             var desired = new Vector3(dx, dy, dz);
-            if (desired.sqrMagnitude > 1e-8f && _heldSword != null)
+            if (desired.sqrMagnitude > 1e-8f && _rightArm != null && _rightHand != null)
             {
-                // Derek 52aba6b: arm-axis snap laid the blade R→L in front.
-                // Strike points along AttackSlashReach (mid = look/+Z / yellow path).
-                var blade = BladeLocalAxis().normalized;
-                _heldSword.rotation = Quaternion.Normalize(
-                    Quaternion.FromToRotation(blade, desired.normalized));
+                if (_rightForeArm != null)
+                {
+                    var upper = _rightForeArm.position - _rightArm.position;
+                    var lower = _rightHand.position - _rightForeArm.position;
+                    if (upper.sqrMagnitude > 1e-6f && lower.sqrMagnitude > 1e-6f)
+                    {
+                        var unfold = Quaternion.FromToRotation(lower.normalized, upper.normalized);
+                        _rightForeArm.rotation = Quaternion.Normalize(
+                            unfold * _rightForeArm.rotation);
+                    }
+                }
+
+                var reach = _rightHand.position - _rightArm.position;
+                if (reach.sqrMagnitude > 1e-6f)
+                {
+                    _rightArm.rotation = Quaternion.Normalize(
+                        Quaternion.FromToRotation(reach.normalized, desired.normalized) * _rightArm.rotation);
+                }
             }
 
-            _ = k;
+            SnapHeldSwordToArmAxis(desired);
         }
 
         /// <summary>
-        /// Stable rematch hip sheath. Play-cam +X/+Y/+Z only — never RightUpLeg or
-        /// RH (Derek 52aba6b walk jitter). Tip out/down outside the right hip.
+        /// Walk (Derek 0fc0930): sword in the right hand, tip along the hanging arm.
+        /// HipSheathSocket / HipSheathBladeLocal hip-float superseded.
         /// </summary>
         private void ApplySheathedSword()
         {
-            if (_heldSword == null || _hips == null)
+            if (_heldSword == null || _rightHand == null)
             {
                 return;
             }
 
-            var socket = EnsureHipSheathSocket();
-            if (socket == null)
-            {
-                return;
-            }
-
-            var right = CharacterRight();
-            SirAldric3DMotion.HipSheathGripLocal(out var gx, out var gy, out var gz);
-            socket.position = _hips.position + (right * gx) + (Vector3.up * gy) + (Vector3.forward * gz);
-            socket.rotation = Quaternion.identity;
-            BindSwordTo(socket, strikeGrip: false);
-            SirAldric3DMotion.HipSheathBladeLocal(out var bx, out var by, out var bz);
-            var sheath = (right * bx) + (Vector3.up * by) + (Vector3.forward * bz);
-            if (sheath.sqrMagnitude < 1e-8f)
-            {
-                return;
-            }
-
-            var blade = BladeLocalAxis().normalized;
-            _heldSword.rotation = Quaternion.Normalize(Quaternion.FromToRotation(blade, sheath.normalized));
-            if (!_sheathHiltReady)
-            {
-                SnapSwordHiltTo(socket.position);
-                _sheathHiltLocal = _heldSword.localPosition;
-                _sheathHiltReady = true;
-            }
-            else
-            {
-                _heldSword.localPosition = _sheathHiltLocal;
-            }
+            BindSwordTo(_rightHand, strikeGrip: true);
+            SnapHeldSwordToArmAxis(Vector3.zero);
         }
 
         private Transform? EnsureHipSheathSocket()
@@ -505,10 +484,10 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Attack only: mesh blade onto the live forearm–hand axis. No Slerp.
-        /// Blender rematch still uses HeldSwordRestEulerX (mesh +Z, no bakeAxisConversion).
+        /// Blade along forearm→hand (grip in palm, tip beyond the fingers).
+        /// If prefer is set, keep the tip in that hemisphere (UR→LL).
         /// </summary>
-        private void SnapHeldSwordToArmAxis()
+        private void SnapHeldSwordToArmAxis(Vector3 prefer)
         {
             if (_heldSword == null)
             {
@@ -532,6 +511,11 @@ namespace Survival.Unity
                 return;
             }
 
+            if (prefer.sqrMagnitude > 1e-6f && Vector3.Dot(axis, prefer) < 0f)
+            {
+                axis = -axis;
+            }
+
             var blade = _heldSword.rotation * BladeLocalAxis();
             if (blade.sqrMagnitude < 1e-8f)
             {
@@ -549,6 +533,8 @@ namespace Survival.Unity
 
         private Quaternion SwordRestLocal()
         {
+            // HeldSwordRestEulerX is rematch blender (+Z mesh). Unity uses measured blade.
+            _ = SirAldric3DMotion.HeldSwordRestEulerX;
             var blade = BladeLocalAxis().normalized;
             return Quaternion.Normalize(Quaternion.FromToRotation(blade, Vector3.up));
         }

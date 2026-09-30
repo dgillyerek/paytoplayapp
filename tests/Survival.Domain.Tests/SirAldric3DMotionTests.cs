@@ -346,6 +346,8 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("BladeLocalAxis", actor, StringComparison.Ordinal);
         Assert.Contains("7187204", actor, StringComparison.Ordinal);
         Assert.Contains("52aba6b", actor, StringComparison.Ordinal);
+        Assert.Contains("0fc0930", actor, StringComparison.Ordinal);
+        Assert.Contains("BindSwordTo(_rightHand", actor, StringComparison.Ordinal);
         Assert.Contains("Vector3.right", actor, StringComparison.Ordinal);
         Assert.Contains("strike points along AttackSlashReach", actor, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("879a6f3", actor, StringComparison.Ordinal);
@@ -525,6 +527,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("8098f64", hold, StringComparison.Ordinal);
         Assert.Contains("7187204", hold, StringComparison.Ordinal);
         Assert.Contains("52aba6b", hold, StringComparison.Ordinal);
+        Assert.Contains("0fc0930", hold, StringComparison.Ordinal);
         Assert.Contains("CS1061", hold, StringComparison.Ordinal);
         Assert.Contains("QuaternionToEuler", hold, StringComparison.Ordinal);
         Assert.Contains("HipSheathSocket", hold, StringComparison.Ordinal);

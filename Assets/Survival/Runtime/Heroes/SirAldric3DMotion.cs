@@ -45,8 +45,8 @@ namespace Survival.Domain.Heroes
         public const float AttackSlashFrontUp = 0.06f;
         public const float AttackSlashFrontZ = 1.00f;
         public const float AttackSlashLlRight = -0.85f;
-        public const float AttackSlashLlUp = -0.40f;
-        public const float AttackSlashLlFront = 0.30f;
+        public const float AttackSlashLlUp = -0.90f;
+        public const float AttackSlashLlFront = 0.22f;
         public const float AttackSlashFrontU = 0.32f;
         public const float AttackSlashFrontHoldU = 0.55f;
         public const float AttackSlashLlU = 0.78f;

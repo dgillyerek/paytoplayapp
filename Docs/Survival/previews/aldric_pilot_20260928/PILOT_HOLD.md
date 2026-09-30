@@ -1,6 +1,6 @@
 # HOLD — Sir Aldric PILOT Mixamo separate-portrait (2026-09-28)
 
-**HOLD merge on PR #27 until Derek Game-view matches rematch.** Path A / ClipSword / AimChain / Dev weight-paint are not SoT. No Design / Derek PASS. AccuRIG clips-only is **superseded**. Rematch stills are the **visual target**. Derek’s laptop Game-view is the gate that must equal them.
+**HOLD merge on PR #27 until Derek Game-view PASS.** Path A / ClipSword / AimChain / Dev weight-paint are not SoT. Derek’s `0fc0930` Game-view shots are walk/strike SoT: RH grip walk, UR→low-LL strike. Orbit 1/2/3 stays.
 
 ## Wire
 
@@ -62,7 +62,9 @@ The unrigged body FBX has **no skeleton**. Play instantiates the Mixamo-skinned 
 
 **Derek FAIL `7187204`:** Game-view still **rear-only** (1/2/3 Q/E RMB dead) and sword **R→L across the torso**. Rematch stills are the **visual target**; Game-view must match them (hip sheath tip out/down the right hip; orbit rear / 3/4 / front).
 
-**Derek FAIL `52aba6b`:** worse. Walk sheath **jumped** (RightUpLeg follow). Attack blade **R→L in front** (arm-axis snap). Camera still **no rotation**. Fix: sheath = world +X/+Y/+Z only; strike blade = `AttackSlashReach` (mid +Z / yellow path); orbit = uGUI 1/2/3 + drag pad + InputActionMap + Editor play hook + all cameras.
+**Derek FAIL `52aba6b`:** worse. Walk sheath **jumped** (RightUpLeg follow). Attack blade **R→L in front** (arm-axis snap). Camera still **no rotation**.
+
+**Derek FAIL `0fc0930` Game-view (SoT shots):** walk sword **floating**, not in the RH. Strike **ends high on the character’s left** instead of **low LL**. Hip sheath superseded. Walk = **RH grip**, along-arm. Strike = drive RH **UR → low LL** (tip-led), `AttackSlashLlUp = -0.90`. Orbit 1/2/3 kept.
 
 ## Cam (1080×1920 Scale 1×)
 
@@ -74,6 +76,7 @@ Play-cam rematch: walk f18 (**hip sheath** on `mixamorig:Hips`, not RH grip; dum
 
 ## Unity Play
 
-1. Play **SirAldric** (click the Game view). Generic + `useFileScale: 0`. Default cam = **rear**. On-screen **1 Rear / 2 3/4 / 3 Front**, or **1 / 2 / 3**, **Q/E / A/D / arrows**, drag, **RMB**. HUD `cam <yaw>` must change. Walk sword on **right hip** (tip out/down beside the right leg) matching rematch walk f18. Strike = RightHand.
-2. **Walk Game-view must match rematch:** blade on the **outside of the right hip**, tip **out/down beside the right leg** — not R→L across the torso. Strike: blade on the arm; UR → front → LL.
-3. HOLD until Derek Game-view matches rematch.
+1. Play **SirAldric** (click the Game view). Default cam = **rear**. **1 / 2 / 3** orbit. HUD `cam <yaw>` must change.
+2. **Walk (Derek 0fc0930 SoT):** sword **in the right hand**, along-arm — not floating at the hip.
+3. **Strike:** start **high on the character’s right**, sweep **down to low on the character’s left** (UR→LL tip-led). Must not finish high-left.
+4. HOLD until Derek Game-view PASS.
