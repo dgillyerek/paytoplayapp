@@ -25,11 +25,11 @@ namespace Survival.Domain.Heroes
         public const float MixamoImportRearYawDegrees = 180f;
 
         /// <summary>
-        /// Design-owned DIAG Inward Slash take window (EXPORT_DIAG.md).
-        /// Full authored clip 0–85 @ 30fps. TOP is frame 59/85. Do not trim 8–40
-        /// (old hot baseline md5 4a143441). Not DIAG_MIRR md5 70fd9483
-        /// (Derek reject 19e6efe — whole-clip reverse was the wrong interpretation).
-        /// Not MILD md5 8d5b78b0. Not a Unity scale.x flip.
+        /// Design-owned DIAG_REV Inward Slash take window (EXPORT_DIAG_REV.md).
+        /// Full authored clip 0–85 @ 30fps (md5 0beb3c77). Blender time-reverse of DIAG so
+        /// raise-above-head is first, then down-left. Not Mixamo Mirror
+        /// (DIAG_MIRR 70fd9483 retired, Derek reject 19e6efe). Not a Unity time-reverse or scale.x flip.
+        /// Not DIAG 72412be4 / MILD 8d5b78b0 / baseline 4a143441.
         /// </summary>
         public const int MixamoSlashFirstFrame = 0;
         public const int MixamoSlashLastFrame = 85;

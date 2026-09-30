@@ -17,7 +17,7 @@ namespace Survival.Unity
     /// Path A / ClipSword HOLD. RH sword prop. Design / Derek PASS not claimed.
     /// Play-cam defaults to the rear SoT; 1/2/3 and Q/E or RMB orbit around the knight.
     /// Input System + IMGUI (Keyboard.current is deaf until Game view owns focus).
-    /// Walk RH grip; Design-owned DIAG Inward Slash (YouTube iQ1s3nN1330 SoT). HOLD.
+    /// Walk RH grip; Design-owned DIAG_REV Inward Slash (YouTube iQ1s3nN1330 SoT). HOLD.
     /// </summary>
     [DefaultExecutionOrder(500)]
     public sealed class SirAldricDemo : MonoBehaviour
@@ -579,7 +579,7 @@ namespace Survival.Unity
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "PILOT Mixamo  ·  RH grip walk  ·  Design DIAG slash iQ1s3nN1330  ·  1/2/3 orbit  ·  HOLD",
+                "PILOT Mixamo  ·  RH grip walk  ·  Design DIAG_REV slash iQ1s3nN1330  ·  1/2/3 orbit  ·  HOLD",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);
