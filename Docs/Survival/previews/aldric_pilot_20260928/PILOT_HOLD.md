@@ -56,6 +56,10 @@ The unrigged body FBX has **no skeleton**. Play instantiates the Mixamo-skinned 
 
 **Derek FAIL `879a6f3`:** orbit keys/drag did **not** rotate Play-cam (legacy `Input.GetKey` is dead while Input System owns Play). Blade still **left from the hand**, started on the **left** side. Blind yaw 180 when the FBX already faces +Z puts `mixamorig:RightHand` on world −X. Fix: yaw only if RH is left of LH; sheath on RH/+X; Input System + OnGUI orbit.
 
+**Derek console `8098f64`:** `QuaternionToEuler: Input quaternion was not normalized` from `GUIUtility:ProcessEvent`. Play-cam `LookAt` wrote a denormalized rotation; IMGUI then converted it. Fix: `LookRotation` + `Quaternion.Normalize` (no `.eulerAngles` on a raw LookAt).
+
+**Derek compile FAIL `8098f64`:** `CS1061` `'Event' does not contain a definition for 'repeat'`. OnGUI now keys off `EventType.KeyDown` + `keyCode != None` (no `Event.repeat`). Orbit + RH hip sheath unchanged.
+
 ## Cam (1080×1920 Scale 1×)
 
 Rear `(0, 1.92, −3.08)` LookAt `(0, 1.12, 0.15)` FOV **42**. Mesh 1×.

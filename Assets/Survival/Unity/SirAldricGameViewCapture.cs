@@ -104,7 +104,20 @@ namespace Survival.Unity
                     SirAldric3DMotion.PlayCamFrontZ);
             }
 
-            cam.transform.LookAt(look);
+            var forward = look - cam.transform.position;
+            if (forward.sqrMagnitude < 1e-8f)
+            {
+                forward = Vector3.forward;
+            }
+
+            forward.Normalize();
+            var up = Vector3.up;
+            if (Mathf.Abs(Vector3.Dot(forward, up)) > 0.999f)
+            {
+                up = Vector3.back;
+            }
+
+            cam.transform.rotation = Quaternion.Normalize(Quaternion.LookRotation(forward, up));
         }
 
         public static void WriteFrame(Camera cam, string pngPath)

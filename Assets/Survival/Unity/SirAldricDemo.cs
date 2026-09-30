@@ -55,8 +55,9 @@ namespace Survival.Unity
 
         private void OnGUI()
         {
+            // Unity Event has no `repeat` on this editor (Derek CS1061 on 8098f64).
             var ev = Event.current;
-            if (ev == null || ev.type != EventType.KeyDown || ev.repeat)
+            if (ev == null || ev.type != EventType.KeyDown || ev.keyCode == KeyCode.None)
             {
                 return;
             }
@@ -92,12 +93,39 @@ namespace Survival.Unity
             cam.farClipPlane = 40f;
             cam.backgroundColor = new Color(0.08f, 0.09f, 0.07f, 1f);
             cam.clearFlags = CameraClearFlags.SolidColor;
+            if (float.IsNaN(orbitYawDegrees) || float.IsInfinity(orbitYawDegrees))
+            {
+                orbitYawDegrees = 0f;
+            }
+
+            if (float.IsNaN(orbitPitchDegrees) || float.IsInfinity(orbitPitchDegrees))
+            {
+                orbitPitchDegrees = 0f;
+            }
+
             SirAldric3DMotion.PlayCamOrbitEye(orbitYawDegrees, orbitPitchDegrees, out var x, out var y, out var z);
-            cam.transform.position = new Vector3(x, y, z);
-            cam.transform.LookAt(new Vector3(
+            var eye = new Vector3(x, y, z);
+            var look = new Vector3(
                 SirAldric3DMotion.PlayCamLookX,
                 SirAldric3DMotion.PlayCamLookY,
-                SirAldric3DMotion.PlayCamLookZ));
+                SirAldric3DMotion.PlayCamLookZ);
+            var forward = look - eye;
+            if (forward.sqrMagnitude < 1e-8f)
+            {
+                forward = Vector3.forward;
+            }
+
+            forward.Normalize();
+            var up = Vector3.up;
+            if (Mathf.Abs(Vector3.Dot(forward, up)) > 0.999f)
+            {
+                up = Vector3.back;
+            }
+
+            cam.transform.position = eye;
+            // LookAt can write a denormalized quat; GUIUtility.ProcessEvent then
+            // QuaternionToEuler-warns (Derek 8098f64 console).
+            cam.transform.rotation = Quaternion.Normalize(Quaternion.LookRotation(forward, up));
         }
 
         private void ApplyOrbitKey(KeyCode key)
@@ -190,6 +218,25 @@ namespace Survival.Unity
             {
                 _orbitYaw += Input.GetAxis("Mouse X") * 140f;
                 _orbitPitch -= Input.GetAxis("Mouse Y") * 80f;
+            }
+
+            if (float.IsNaN(_orbitYaw) || float.IsInfinity(_orbitYaw))
+            {
+                _orbitYaw = 0f;
+            }
+
+            if (float.IsNaN(_orbitPitch) || float.IsInfinity(_orbitPitch))
+            {
+                _orbitPitch = 0f;
+            }
+
+            if (_orbitYaw > 180f)
+            {
+                _orbitYaw -= 360f;
+            }
+            else if (_orbitYaw < -180f)
+            {
+                _orbitYaw += 360f;
             }
 
             _orbitPitch = Mathf.Clamp(

@@ -343,8 +343,8 @@ namespace Survival.Unity
                     if (upper.sqrMagnitude > 1e-6f && lower.sqrMagnitude > 1e-6f)
                     {
                         var unfold = Quaternion.FromToRotation(lower.normalized, upper.normalized);
-                        _rightForeArm.rotation =
-                            Quaternion.Slerp(Quaternion.identity, unfold, k) * _rightForeArm.rotation;
+                        _rightForeArm.rotation = Quaternion.Normalize(
+                            Quaternion.Slerp(Quaternion.identity, unfold, k) * _rightForeArm.rotation);
                     }
                 }
 
@@ -352,7 +352,8 @@ namespace Survival.Unity
                 if (reach.sqrMagnitude > 1e-6f)
                 {
                     var rot = Quaternion.FromToRotation(reach.normalized, desired);
-                    _rightArm.rotation = Quaternion.Slerp(Quaternion.identity, rot, k) * _rightArm.rotation;
+                    _rightArm.rotation = Quaternion.Normalize(
+                        Quaternion.Slerp(Quaternion.identity, rot, k) * _rightArm.rotation);
                 }
             }
 
@@ -394,7 +395,8 @@ namespace Survival.Unity
                 return;
             }
 
-            _heldSword.localRotation = Quaternion.FromToRotation(Vector3.up, sheathLocal.normalized);
+            _heldSword.localRotation = Quaternion.Normalize(
+                Quaternion.FromToRotation(Vector3.up, sheathLocal.normalized));
         }
 
         private Transform? EnsureHipSheathSocket()
@@ -512,8 +514,8 @@ namespace Survival.Unity
                 return;
             }
 
-            _heldSword.rotation =
-                Quaternion.FromToRotation(blade.normalized, axis.normalized) * _heldSword.rotation;
+            _heldSword.rotation = Quaternion.Normalize(
+                Quaternion.FromToRotation(blade.normalized, axis.normalized) * _heldSword.rotation);
         }
 
         private Vector3 BladeLocalAxis()
@@ -524,7 +526,7 @@ namespace Survival.Unity
         private Quaternion SwordRestLocal()
         {
             var blade = BladeLocalAxis().normalized;
-            return Quaternion.FromToRotation(blade, Vector3.up);
+            return Quaternion.Normalize(Quaternion.FromToRotation(blade, Vector3.up));
         }
 
         private void CacheAttackBones(GameObject root)

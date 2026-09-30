@@ -338,6 +338,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("mixamorig:RightUpLeg", actor, StringComparison.Ordinal);
         Assert.Contains("attackNormalized01 <= 0.001f", actor, StringComparison.Ordinal);
         Assert.Contains("HipSheathSocket", actor, StringComparison.Ordinal);
+        Assert.Contains("Quaternion.Normalize", actor, StringComparison.Ordinal);
         Assert.Contains("HipSheathBladeLocal", actor, StringComparison.Ordinal);
         Assert.Contains("CharacterRight", actor, StringComparison.Ordinal);
         Assert.Contains("879a6f3", actor, StringComparison.Ordinal);
@@ -479,6 +480,11 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("digit1Key", demo, StringComparison.Ordinal);
         Assert.Contains("OnGUI", demo, StringComparison.Ordinal);
         Assert.Contains("DefaultExecutionOrder(500)", demo, StringComparison.Ordinal);
+        Assert.Contains("Quaternion.Normalize", demo, StringComparison.Ordinal);
+        Assert.Contains("LookRotation", demo, StringComparison.Ordinal);
+        Assert.DoesNotContain("cam.transform.LookAt", demo, StringComparison.Ordinal);
+        Assert.DoesNotContain("ev.repeat", demo, StringComparison.Ordinal);
+        Assert.Contains("ev.keyCode == KeyCode.None", demo, StringComparison.Ordinal);
 
         var dir = Path.Combine(root, "Docs", "Survival", "previews", "aldric_pilot_20260928");
         Assert.True(new FileInfo(Path.Combine(dir, "PILOT_HOLD.md")).Length > 400);
@@ -489,6 +495,9 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("a9f8aff", hold, StringComparison.Ordinal);
         Assert.Contains("cdfbea5", hold, StringComparison.Ordinal);
         Assert.Contains("879a6f3", hold, StringComparison.Ordinal);
+        Assert.Contains("8098f64", hold, StringComparison.Ordinal);
+        Assert.Contains("CS1061", hold, StringComparison.Ordinal);
+        Assert.Contains("QuaternionToEuler", hold, StringComparison.Ordinal);
         Assert.Contains("HipSheathSocket", hold, StringComparison.Ordinal);
         Assert.Contains("orbit", hold, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("mixamorig:Hips", hold, StringComparison.Ordinal);
