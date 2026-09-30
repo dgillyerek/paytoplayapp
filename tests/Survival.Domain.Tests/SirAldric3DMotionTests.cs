@@ -338,10 +338,15 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("SwordBladeMeters", actor, StringComparison.Ordinal);
         Assert.Contains("useFileScale = false", actor, StringComparison.Ordinal);
         Assert.Contains("ApplyAttackWindupLift", actor, StringComparison.Ordinal);
+        Assert.Contains("ThemePackAttackAnim", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_DIAG_InwardSlash.anim", actor, StringComparison.Ordinal);
+        Assert.Contains("EnsureEditableAttackClip", actor, StringComparison.Ordinal);
         Assert.Contains("AttackSlashReach", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("SirAldric3DMotion.AttackSlashReach", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("SirAldric3DMotion.AttackRaiseThenCutReach", actor, StringComparison.Ordinal);
         Assert.Contains("AttackRaiseThenCutReach", actor, StringComparison.Ordinal);
         Assert.Contains("AimArmAlong", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("void AimArmAlong", actor, StringComparison.Ordinal);
         Assert.Contains("RightForeArm", actor, StringComparison.Ordinal);
         Assert.Contains("8d5b78b0", actor, StringComparison.Ordinal);
         Assert.Contains("72412be4", actor, StringComparison.Ordinal);
@@ -405,6 +410,17 @@ public sealed class SirAldric3DMotionTests
         Assert.DoesNotContain("EnsureClipSword", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("private static void AimChain", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("Path A weight-paint", actor.Replace("Path A / ClipSword", ""), StringComparison.Ordinal);
+        var attackAnim = Path.Combine(root, "Assets", "Survival", "Unity", "Anims", "SirAldric_DIAG_InwardSlash.anim");
+        Assert.True(File.Exists(attackAnim), "editable DIAG .anim missing");
+        Assert.Contains("m_Name: Attack", File.ReadAllText(attackAnim), StringComparison.Ordinal);
+        Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldric_AttackEdit.md")));
+        var editNote = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldric_AttackEdit.md"));
+        Assert.Contains("Window → Animation → Animation", editNote, StringComparison.Ordinal);
+        Assert.Contains("mixamorig:RightArm", editNote, StringComparison.Ordinal);
+        Assert.Contains("SirAldricAttackEditKnight", editNote, StringComparison.Ordinal);
+        var extract = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricEditableAttackClip.cs"));
+        Assert.Contains("EnsureEditableAttackClip", extract, StringComparison.Ordinal);
+        Assert.Contains("Spawn knight for Animation-window edit", extract, StringComparison.Ordinal);
 
         var pilot = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "pilot");
         Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_body_holefixed_mid280k.fbx")).Length > 1_000_000);
@@ -578,7 +594,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("ApplyPlayCam", demo, StringComparison.Ordinal);
         Assert.Contains("usePhysicalProperties = false", demo, StringComparison.Ordinal);
         Assert.Contains("LateUpdate", demo, StringComparison.Ordinal);
-        Assert.Contains("Dev DIAG slash", demo, StringComparison.Ordinal);
+        Assert.Contains("editable DIAG", demo, StringComparison.Ordinal);
         Assert.DoesNotContain("Design DIAG_REV slash", demo, StringComparison.Ordinal);
         Assert.DoesNotContain("Design DIAG_MIRR slash", demo, StringComparison.Ordinal);
         Assert.Contains("iQ1s3nN1330", demo, StringComparison.Ordinal);
@@ -633,7 +649,10 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("ee3f7bd", hold, StringComparison.Ordinal);
         Assert.Contains("c5c8469", hold, StringComparison.Ordinal);
         Assert.Contains("e90b654", hold, StringComparison.Ordinal);
+        Assert.Contains("95aba89", hold, StringComparison.Ordinal);
         Assert.Contains("AttackRaiseThenCutReach", hold, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_DIAG_InwardSlash.anim", hold, StringComparison.Ordinal);
+        Assert.Contains("Animation window", hold, StringComparison.Ordinal);
         Assert.Contains("19e6efe", hold, StringComparison.Ordinal);
         Assert.Contains("43b33fb", hold, StringComparison.Ordinal);
         Assert.Contains("8d5b78b0", hold, StringComparison.Ordinal);

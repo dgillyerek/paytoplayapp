@@ -25,12 +25,13 @@ namespace Survival.Domain.Heroes
         public const float MixamoImportRearYawDegrees = 180f;
 
         /// <summary>
-        /// Design-owned DIAG Inward Slash take window (EXPORT_DIAG.md) — the
-        /// last Mixamo clip that actually played in Game-view (tips 95b5a4a /
-        /// 43b33fb, md5 72412be4). DIAG_REV 0beb3c77 time-reverse bake (e90b654) showed no attack.
-        /// Dev shapes strike after Evaluate via AttackRaiseThenCutReach.
-        /// Not Mixamo Mirror (DIAG_MIRR 70fd9483, Derek reject 19e6efe).
-        /// Not MILD 8d5b78b0 / baseline 4a143441. Not a Unity scale.x flip.
+        /// DIAG Inward Slash take window (EXPORT_DIAG.md) — last Mixamo clip
+        /// that actually played in Game-view (tips 95b5a4a / 43b33fb, md5 72412be4).
+        /// PlayableGraph plays the editable project .anim duplicate. Leftover
+        /// AttackRaiseThenCutReach unused after Derek FAIL 95aba89. DIAG_REV
+        /// 0beb3c77 time-reverse bake (e90b654) showed no attack. Not Mixamo
+        /// Mirror (DIAG_MIRR 70fd9483, Derek reject 19e6efe). Not MILD 8d5b78b0
+        /// / baseline 4a143441. Not a Unity scale.x flip.
         /// </summary>
         public const int MixamoSlashFirstFrame = 0;
         public const int MixamoSlashLastFrame = 85;
@@ -70,7 +71,8 @@ namespace Survival.Domain.Heroes
         public const float AttackSlashSpineYawReady = 22f;
         public const float AttackSlashSpineYawFinish = -16f;
         /// <summary>
-        /// Dev GO raise-then-cut (rear cam): RH above head first, then down-left.
+        /// Leftover raise-then-cut keys (Derek FAIL 95aba89 “much worse”).
+        /// Attack plays the editable DIAG .anim; these numbers are unused.
         /// Opposite time order of DIAG backswing-then-cut. Not Mixamo L/R Mirror.
         /// Milder overhead than leftover AttackSlashUrUp 0.82 (ee3f7bd pinch).
         /// </summary>
@@ -582,8 +584,9 @@ namespace Survival.Domain.Heroes
         }
 
         /// <summary>
-        /// Dev-authored RH reach: u=0 overhead (raise first), u=1 low character-left.
-        /// Rear-cam down-left = −X. Leftover AttackSlashReach stays ready→backswing→LL.
+        /// Leftover RH reach after 95aba89 FAIL: u=0 overhead, u=1 low character-left.
+        /// Rear-cam down-left = −X. Unused — PlayableGraph plays the editable DIAG .anim.
+        /// Leftover AttackSlashReach stays ready→backswing→LL.
         /// </summary>
         public static void AttackRaiseThenCutReach(float attackNormalized01, out float x, out float y, out float z)
         {
