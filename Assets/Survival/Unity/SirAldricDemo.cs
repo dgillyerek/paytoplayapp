@@ -30,18 +30,27 @@ namespace Survival.Unity
         private Text? _phase;
         private float _orbitYaw;
         private float _orbitPitch;
+        private InputActionMap? _orbitMap;
+        public static SirAldricDemo? Live;
 
         private void Awake() => Boot();
 
         private void OnEnable()
         {
+            Live = this;
             Boot();
+            BindOrbitActions();
             RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
         }
 
         private void OnDisable()
         {
             RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+            _orbitMap?.Disable();
+            if (Live == this)
+            {
+                Live = null;
+            }
         }
 
         private void Start() => Boot();
@@ -150,19 +159,6 @@ namespace Survival.Unity
 
         internal static void ApplyPlayCam(float orbitYawDegrees, float orbitPitchDegrees)
         {
-            var cam = Camera.main;
-            if (cam == null)
-            {
-                return;
-            }
-
-            cam.orthographic = false;
-            cam.usePhysicalProperties = false;
-            cam.fieldOfView = SirAldric3DMotion.PlayCamFovDegrees;
-            cam.nearClipPlane = 0.08f;
-            cam.farClipPlane = 40f;
-            cam.backgroundColor = new Color(0.08f, 0.09f, 0.07f, 1f);
-            cam.clearFlags = CameraClearFlags.SolidColor;
             if (float.IsNaN(orbitYawDegrees) || float.IsInfinity(orbitYawDegrees))
             {
                 orbitYawDegrees = 0f;
@@ -192,10 +188,64 @@ namespace Survival.Unity
                 up = Vector3.back;
             }
 
+            var rot = Quaternion.Normalize(Quaternion.LookRotation(forward, up));
+            var n = Camera.allCamerasCount;
+            if (n <= 0)
+            {
+                PlaceOneCam(Camera.main, eye, rot);
+                return;
+            }
+
+            var cams = new Camera[n];
+            Camera.GetAllCameras(cams);
+            for (var i = 0; i < n; i++)
+            {
+                PlaceOneCam(cams[i], eye, rot);
+            }
+        }
+
+        private static void PlaceOneCam(Camera? cam, Vector3 eye, Quaternion rot)
+        {
+            if (cam == null)
+            {
+                return;
+            }
+
+            cam.orthographic = false;
+            cam.usePhysicalProperties = false;
+            cam.fieldOfView = SirAldric3DMotion.PlayCamFovDegrees;
+            cam.nearClipPlane = 0.08f;
+            cam.farClipPlane = 40f;
+            cam.backgroundColor = new Color(0.08f, 0.09f, 0.07f, 1f);
+            cam.clearFlags = CameraClearFlags.SolidColor;
             cam.transform.position = eye;
-            // LookAt can write a denormalized quat; GUIUtility.ProcessEvent then
-            // QuaternionToEuler-warns (Derek 8098f64 console).
-            cam.transform.rotation = Quaternion.Normalize(Quaternion.LookRotation(forward, up));
+            cam.transform.rotation = rot;
+        }
+
+        public void ForcePreset(int slot)
+        {
+            if (slot == 2)
+            {
+                ApplyOrbitKey(KeyCode.Alpha2);
+            }
+            else if (slot == 3)
+            {
+                ApplyOrbitKey(KeyCode.Alpha3);
+            }
+            else
+            {
+                ApplyOrbitKey(KeyCode.Alpha1);
+            }
+
+            ApplyPlayCam(_orbitYaw, _orbitPitch);
+        }
+
+        public void AddOrbit(float yaw, float pitch)
+        {
+            _orbitYaw += yaw;
+            _orbitPitch += pitch;
+            WrapOrbit();
+            ApplyPlayCam(_orbitYaw, _orbitPitch);
         }
 
         private void ApplyOrbitKey(KeyCode key)
@@ -277,6 +327,15 @@ namespace Survival.Unity
 
             _orbitYaw += legacyYaw * SirAldric3DMotion.PlayCamOrbitYawSpeed * Time.unscaledDeltaTime;
 
+            if (_orbitMap != null)
+            {
+                var yawAction = _orbitMap.FindAction("Yaw");
+                if (yawAction != null)
+                {
+                    _orbitYaw += yawAction.ReadValue<float>() * SirAldric3DMotion.PlayCamOrbitYawSpeed * Time.unscaledDeltaTime;
+                }
+            }
+
             var mouse = Mouse.current;
             if (mouse != null && mouse.enabled && (mouse.rightButton.isPressed || mouse.middleButton.isPressed))
             {
@@ -321,12 +380,50 @@ namespace Survival.Unity
                 SirAldric3DMotion.PlayCamOrbitPitchMax);
         }
 
+        private void BindOrbitActions()
+        {
+            _orbitMap?.Dispose();
+            var map = new InputActionMap("SirAldricOrbit");
+            var rear = map.AddAction("Rear", InputActionType.Button);
+            rear.AddBinding("<Keyboard>/1");
+            rear.AddBinding("<Keyboard>/numpad1");
+            rear.performed += _ => ForcePreset(1);
+            var tq = map.AddAction("ThreeQuarter", InputActionType.Button);
+            tq.AddBinding("<Keyboard>/2");
+            tq.AddBinding("<Keyboard>/numpad2");
+            tq.performed += _ => ForcePreset(2);
+            var front = map.AddAction("Front", InputActionType.Button);
+            front.AddBinding("<Keyboard>/3");
+            front.AddBinding("<Keyboard>/numpad3");
+            front.performed += _ => ForcePreset(3);
+            var yaw = map.AddAction("Yaw", InputActionType.Value);
+            yaw.AddCompositeBinding("1DAxis")
+                .With("Negative", "<Keyboard>/q")
+                .With("Positive", "<Keyboard>/e");
+            yaw.AddCompositeBinding("1DAxis")
+                .With("Negative", "<Keyboard>/leftArrow")
+                .With("Positive", "<Keyboard>/rightArrow");
+            yaw.AddCompositeBinding("1DAxis")
+                .With("Negative", "<Keyboard>/a")
+                .With("Positive", "<Keyboard>/d");
+            map.Enable();
+            _orbitMap = map;
+        }
+
         private static void EnsurePlayInput()
         {
-            InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInDynamicUpdate;
-            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
-            InputSystem.settings.editorInputBehaviorInPlayMode =
-                InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+            try
+            {
+                InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInDynamicUpdate;
+                InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+                InputSystem.settings.editorInputBehaviorInPlayMode =
+                    InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning("PILOT orbit Input System settings: " + ex.Message);
+            }
+
             SurvivalVisuals.EnsureEventSystem();
             var es = EventSystem.current != null
                 ? EventSystem.current
@@ -336,16 +433,38 @@ namespace Survival.Unity
                 return;
             }
 
-            var standalone = es.GetComponent<StandaloneInputModule>();
-            if (standalone != null)
-            {
-                standalone.enabled = false;
-            }
-
             if (es.GetComponent<InputSystemUIInputModule>() == null)
             {
                 es.gameObject.AddComponent<InputSystemUIInputModule>();
             }
+        }
+
+        private void BuildOrbitHud(RectTransform canvas)
+        {
+            var pad = SurvivalVisuals.Image(canvas, "OrbitPad", new Color(1f, 1f, 1f, 0.01f));
+            pad.raycastTarget = true;
+            SurvivalVisuals.Stretch(pad.rectTransform);
+            pad.rectTransform.offsetMin = new Vector2(0f, 90f);
+            pad.rectTransform.offsetMax = new Vector2(0f, -120f);
+            pad.gameObject.AddComponent<SirAldricOrbitPad>();
+
+            AddOrbitButton(canvas, "BtnRear", "1  REAR", 0.08f, 0.36f, 1);
+            AddOrbitButton(canvas, "BtnTq", "2  3/4", 0.38f, 0.62f, 2);
+            AddOrbitButton(canvas, "BtnFront", "3  FRONT", 0.64f, 0.92f, 3);
+        }
+
+        private void AddOrbitButton(RectTransform canvas, string name, string label, float x0, float x1, int slot)
+        {
+            var btn = SurvivalVisuals.Button(canvas, name, new Color(0.16f, 0.14f, 0.10f, 0.92f));
+            var rt = btn.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(x0, 0.075f);
+            rt.anchorMax = new Vector2(x1, 0.145f);
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+            var text = SurvivalVisuals.Text(btn.transform, "Label", label, 22, TextAnchor.MiddleCenter, SurvivalVisuals.Gold);
+            SurvivalVisuals.Stretch(text.rectTransform);
+            var captured = slot;
+            btn.onClick.AddListener(() => ForcePreset(captured));
         }
 
         private void Boot()
@@ -433,6 +552,7 @@ namespace Survival.Unity
             _actor.Build();
 
             var canvas = SurvivalVisuals.Canvas(transform, "SirAldricHud", 80);
+            BuildOrbitHud(canvas);
             var caption = pack?.StringOr("theme_a.hero.sir_aldric.demo_caption", "SIR ALDRIC  ·  walk → attack TOP")
                           ?? "SIR ALDRIC  ·  walk → attack TOP";
             var title = SurvivalVisuals.Text(canvas, "Caption", caption, 26, TextAnchor.MiddleCenter, SurvivalVisuals.Cream);
@@ -514,6 +634,20 @@ namespace Survival.Unity
                 File.ReadAllText(Path.Combine(packRoot, "strings", "en.json")),
                 File.ReadAllText(Path.Combine(packRoot, "map", "node_pins.json")),
                 File.ReadAllText(Path.Combine(packRoot, "ui", "hud_layout.json")));
+        }
+    }
+
+    /// <summary>uGUI drag on the Game view — Input System pointer, not IMGUI.</summary>
+    public sealed class SirAldricOrbitPad : MonoBehaviour, IDragHandler
+    {
+        public void OnDrag(PointerEventData eventData)
+        {
+            if (SirAldricDemo.Live == null || eventData == null)
+            {
+                return;
+            }
+
+            SirAldricDemo.Live.AddOrbit(eventData.delta.x * 0.28f, -eventData.delta.y * 0.20f);
         }
     }
 }

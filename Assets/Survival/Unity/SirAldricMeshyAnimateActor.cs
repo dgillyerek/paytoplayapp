@@ -74,6 +74,8 @@ namespace Survival.Unity
         /// so it still aims local +Z.
         /// </summary>
         private Vector3 _swordLocalBlade = Vector3.up;
+        private Vector3 _sheathHiltLocal;
+        private bool _sheathHiltReady;
         private float _poseTime;
         private bool _poseReady;
 
@@ -335,37 +337,21 @@ namespace Survival.Unity
             BindSwordTo(_rightHand, strikeGrip: true);
             SirAldric3DMotion.AttackSlashReach(attackNormalized01, out var dx, out var dy, out var dz);
             var desired = new Vector3(dx, dy, dz);
-            if (_rightArm != null && _rightHand != null)
+            if (desired.sqrMagnitude > 1e-8f && _heldSword != null)
             {
-                if (_rightForeArm != null)
-                {
-                    var upper = _rightForeArm.position - _rightArm.position;
-                    var lower = _rightHand.position - _rightForeArm.position;
-                    if (upper.sqrMagnitude > 1e-6f && lower.sqrMagnitude > 1e-6f)
-                    {
-                        var unfold = Quaternion.FromToRotation(lower.normalized, upper.normalized);
-                        _rightForeArm.rotation = Quaternion.Normalize(
-                            Quaternion.Slerp(Quaternion.identity, unfold, k) * _rightForeArm.rotation);
-                    }
-                }
-
-                var reach = _rightHand.position - _rightArm.position;
-                if (reach.sqrMagnitude > 1e-6f)
-                {
-                    var rot = Quaternion.FromToRotation(reach.normalized, desired);
-                    _rightArm.rotation = Quaternion.Normalize(
-                        Quaternion.Slerp(Quaternion.identity, rot, k) * _rightArm.rotation);
-                }
+                // Derek 52aba6b: arm-axis snap laid the blade R→L in front.
+                // Strike points along AttackSlashReach (mid = look/+Z / yellow path).
+                var blade = BladeLocalAxis().normalized;
+                _heldSword.rotation = Quaternion.Normalize(
+                    Quaternion.FromToRotation(blade, desired.normalized));
             }
 
-            SnapHeldSwordToArmAxis();
+            _ = k;
         }
 
         /// <summary>
-        /// Walk sheath = rematch apply_sheathed_sword in Unity Play-cam space.
-        /// After FaceWorldTop, mixamorig:RightHand is on world +X (rear screen-right).
-        /// Grip outside that hip; tip out/down beside the right leg — not R→L across
-        /// the torso (Derek 7187204). Never a swinging-hand child.
+        /// Stable rematch hip sheath. Play-cam +X/+Y/+Z only — never RightUpLeg or
+        /// RH (Derek 52aba6b walk jitter). Tip out/down outside the right hip.
         /// </summary>
         private void ApplySheathedSword()
         {
@@ -380,32 +366,30 @@ namespace Survival.Unity
                 return;
             }
 
-            var outboard = CharacterRight();
-            var up = Vector3.up;
+            var right = CharacterRight();
             SirAldric3DMotion.HipSheathGripLocal(out var gx, out var gy, out var gz);
-            socket.position = _hips.position + (outboard * gx) + (up * gy) + (Vector3.forward * gz);
+            socket.position = _hips.position + (right * gx) + (Vector3.up * gy) + (Vector3.forward * gz);
             socket.rotation = Quaternion.identity;
             BindSwordTo(socket, strikeGrip: false);
             SirAldric3DMotion.HipSheathBladeLocal(out var bx, out var by, out var bz);
-            var sheath = (outboard * bx) + (up * by) + (Vector3.forward * bz);
+            var sheath = (right * bx) + (Vector3.up * by) + (Vector3.forward * bz);
             if (sheath.sqrMagnitude < 1e-8f)
             {
                 return;
             }
 
-            // Rematch: rest Euler X 90 on mesh +Z, then snap blade to sheath.
-            // Unity bakeAxisConversion: mesh +Z → measured BladeLocalAxis (usually +Y).
             var blade = BladeLocalAxis().normalized;
-            var rest = Quaternion.Euler(SirAldric3DMotion.HeldSwordRestEulerX, 0f, 0f);
-            var restBlade = rest * blade;
-            if (restBlade.sqrMagnitude < 1e-8f)
+            _heldSword.rotation = Quaternion.Normalize(Quaternion.FromToRotation(blade, sheath.normalized));
+            if (!_sheathHiltReady)
             {
-                restBlade = blade;
+                SnapSwordHiltTo(socket.position);
+                _sheathHiltLocal = _heldSword.localPosition;
+                _sheathHiltReady = true;
             }
-
-            var world = Quaternion.FromToRotation(restBlade.normalized, sheath.normalized) * rest;
-            _heldSword.rotation = Quaternion.Normalize(world);
-            SnapSwordHiltTo(socket.position);
+            else
+            {
+                _heldSword.localPosition = _sheathHiltLocal;
+            }
         }
 
         private Transform? EnsureHipSheathSocket()
@@ -430,40 +414,10 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Rematch hip_outboard (flatten RightUpLeg − Hips) pinned to the RH / +X
-        /// side after FaceWorldTop. Do not follow the swinging hand — that walked
-        /// the sheath in front of the belly and read as R→L across the torso.
-        /// Rear Play-cam character-right = world +X.
+        /// Rear Play-cam character-right is world +X after FaceWorldTop. Fixed —
+        /// following RightUpLeg/RH during walk made the sheath jump (Derek 52aba6b).
         /// </summary>
-        private Vector3 CharacterRight()
-        {
-            var d = Vector3.right;
-            if (_hips != null && _rightUpLeg != null)
-            {
-                var raw = _rightUpLeg.position - _hips.position;
-                raw.y = 0f;
-                if (raw.sqrMagnitude > 1e-6f)
-                {
-                    d = raw.normalized;
-                }
-            }
-
-            if (_hips != null && _rightHand != null)
-            {
-                var rhx = _rightHand.position.x - _hips.position.x;
-                if (Mathf.Abs(rhx) > 1e-4f && d.x * rhx < 0f)
-                {
-                    d = -d;
-                }
-            }
-
-            if (d.x < 0f)
-            {
-                d = -d;
-            }
-
-            return d;
-        }
+        private static Vector3 CharacterRight() => Vector3.right;
 
         /// <summary>
         /// Rematch set_sword_world puts the hilt at the hip grip. A centered FBX

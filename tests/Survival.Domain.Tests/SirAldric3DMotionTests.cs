@@ -345,6 +345,9 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("HideEmbeddedSwords", actor, StringComparison.Ordinal);
         Assert.Contains("BladeLocalAxis", actor, StringComparison.Ordinal);
         Assert.Contains("7187204", actor, StringComparison.Ordinal);
+        Assert.Contains("52aba6b", actor, StringComparison.Ordinal);
+        Assert.Contains("Vector3.right", actor, StringComparison.Ordinal);
+        Assert.Contains("strike points along AttackSlashReach", actor, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("879a6f3", actor, StringComparison.Ordinal);
         Assert.Contains("beginCameraRendering", actor, StringComparison.Ordinal);
         Assert.Contains("LateUpdate", actor, StringComparison.Ordinal);
@@ -493,6 +496,13 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("IgnoreFocus", demo, StringComparison.Ordinal);
         Assert.Contains("AllDeviceInputAlwaysGoesToGameView", demo, StringComparison.Ordinal);
         Assert.Contains("InputSystemUIInputModule", demo, StringComparison.Ordinal);
+        Assert.Contains("InputActionMap", demo, StringComparison.Ordinal);
+        Assert.Contains("SirAldricOrbitPad", demo, StringComparison.Ordinal);
+        Assert.Contains("ForcePreset", demo, StringComparison.Ordinal);
+        Assert.Contains("GetAllCameras", demo, StringComparison.Ordinal);
+        var orbitHook = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricPlayOrbitHook.cs"));
+        Assert.Contains("EditorApplication.update", orbitHook, StringComparison.Ordinal);
+        Assert.Contains("ForcePreset", orbitHook, StringComparison.Ordinal);
         SirAldric3DMotion.PlayCamOrbitEye(180f, 0f, out var frontX, out var frontY, out var frontZ);
         Assert.True(frontZ > SirAldric3DMotion.PlayCamLookZ, "yaw 180 must sit in front of LookAt");
         Assert.True(Math.Abs(frontZ - eyeZ) > 4f, "front eye must leave the rear socket");
@@ -514,6 +524,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("879a6f3", hold, StringComparison.Ordinal);
         Assert.Contains("8098f64", hold, StringComparison.Ordinal);
         Assert.Contains("7187204", hold, StringComparison.Ordinal);
+        Assert.Contains("52aba6b", hold, StringComparison.Ordinal);
         Assert.Contains("CS1061", hold, StringComparison.Ordinal);
         Assert.Contains("QuaternionToEuler", hold, StringComparison.Ordinal);
         Assert.Contains("HipSheathSocket", hold, StringComparison.Ordinal);

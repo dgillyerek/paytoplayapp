@@ -60,7 +60,9 @@ The unrigged body FBX has **no skeleton**. Play instantiates the Mixamo-skinned 
 
 **Derek compile FAIL `8098f64`:** `CS1061` `'Event' does not contain a definition for 'repeat'`. OnGUI now keys off `EventType.KeyDown` + `keyCode != None` (no `Event.repeat`). Orbit + RH hip sheath unchanged.
 
-**Derek FAIL `7187204`:** Game-view still **rear-only** (1/2/3 Q/E RMB dead) and sword **R→L across the torso**. Rematch stills are the **visual target**; Game-view must match them (hip sheath tip out/down the right hip; orbit rear / 3/4 / front). Fix: IMGUI 1/2/3 + drag on the Game view; Input System `IgnoreFocus` + `AllDeviceInputAlwaysGoesToGameView`; sheath = rematch rest-Euler snap + hilt at hip, outboard pinned to RH/+X, not the swinging hand.
+**Derek FAIL `7187204`:** Game-view still **rear-only** (1/2/3 Q/E RMB dead) and sword **R→L across the torso**. Rematch stills are the **visual target**; Game-view must match them (hip sheath tip out/down the right hip; orbit rear / 3/4 / front).
+
+**Derek FAIL `52aba6b`:** worse. Walk sheath **jumped** (RightUpLeg follow). Attack blade **R→L in front** (arm-axis snap). Camera still **no rotation**. Fix: sheath = world +X/+Y/+Z only; strike blade = `AttackSlashReach` (mid +Z / yellow path); orbit = uGUI 1/2/3 + drag pad + InputActionMap + Editor play hook + all cameras.
 
 ## Cam (1080×1920 Scale 1×)
 
