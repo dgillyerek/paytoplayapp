@@ -297,7 +297,15 @@ public sealed class SirAldric3DMotionTests
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
         Assert.Contains("SirAldric_body_holefixed_walk.fbx", actor, StringComparison.Ordinal);
         Assert.Contains("SirAldric_body_holefixed_slash.fbx", actor, StringComparison.Ordinal);
-        Assert.Contains("SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG_MIRR.fbx", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx", actor, StringComparison.Ordinal);
+        Assert.Contains(
+            "ThemePackAttackFbx = \"ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx\"",
+            actor,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "ThemePackAttackFbx = \"ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG_MIRR.fbx\"",
+            actor,
+            StringComparison.Ordinal);
         Assert.Contains("SirAldric_body_holefixed_mid280k.fbx", actor, StringComparison.Ordinal);
         Assert.Contains("SirAldric_PILOT_sword.fbx", actor, StringComparison.Ordinal);
         Assert.Contains("SirAldricPilotMixamo", actor, StringComparison.Ordinal);
@@ -333,6 +341,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("8d5b78b0", actor, StringComparison.Ordinal);
         Assert.Contains("72412be4", actor, StringComparison.Ordinal);
         Assert.Contains("70fd9483", actor, StringComparison.Ordinal);
+        Assert.Contains("19e6efe", actor, StringComparison.Ordinal);
         Assert.Contains("4a143441", actor, StringComparison.Ordinal);
         Assert.Contains("HeldSwordRestEulerX", actor, StringComparison.Ordinal);
         Assert.Contains("FromToRotation", actor, StringComparison.Ordinal);
@@ -380,6 +389,8 @@ public sealed class SirAldric3DMotionTests
         Assert.DoesNotContain("AttackWindupLiftMaxDegrees", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("AttackWindupTipRight", actor, StringComparison.Ordinal);
         var motionSrc = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Runtime", "Heroes", "SirAldric3DMotion.cs"));
+        Assert.Contains("70fd9483", motionSrc, StringComparison.Ordinal);
+        Assert.Contains("19e6efe", motionSrc, StringComparison.Ordinal);
         Assert.DoesNotContain("MixamoRearMirrorX", motionSrc, StringComparison.Ordinal);
         Assert.DoesNotContain("AttackWindupShoulderX", motionSrc, StringComparison.Ordinal);
         Assert.DoesNotContain("SetSourcePlayable(_attackPlayable)", actor, StringComparison.Ordinal);
@@ -391,17 +402,25 @@ public sealed class SirAldric3DMotionTests
         Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_body_holefixed_mid280k.fbx")).Length > 1_000_000);
         Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_body_holefixed_walk.fbx")).Length > 1_000_000);
         Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_body_holefixed_slash.fbx")).Length > 1_000_000);
-        var diagMirrSlash = Path.Combine(pilot, "SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG_MIRR.fbx");
-        Assert.True(new FileInfo(diagMirrSlash).Length > 1_000_000);
+        var diagSlash = Path.Combine(pilot, "SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx");
+        Assert.True(new FileInfo(diagSlash).Length > 1_000_000);
         Assert.Equal(
-            "70fd94832eb1b09e9b8a7b8dda9d2f45",
-            Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(diagMirrSlash))).ToLowerInvariant());
+            "72412be4405bea372184dd5f5e17e186",
+            Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(diagSlash))).ToLowerInvariant());
         Assert.Equal(
-            "70fd94832eb1b09e9b8a7b8dda9d2f45",
+            "72412be4405bea372184dd5f5e17e186",
             Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(Path.Combine(pilot, "SirAldric_body_holefixed_slash.fbx")))).ToLowerInvariant());
         Assert.Equal(
             "799d851db5ca4ecfbea28a9478fc039e",
             Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(Path.Combine(pilot, "SirAldric_body_holefixed_walk.fbx")))).ToLowerInvariant());
+        var diagMirrSlash = Path.Combine(pilot, "SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG_MIRR.fbx");
+        Assert.True(File.Exists(diagMirrSlash));
+        Assert.Equal(
+            "70fd94832eb1b09e9b8a7b8dda9d2f45",
+            Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(diagMirrSlash))).ToLowerInvariant());
+        Assert.NotEqual(
+            "70fd94832eb1b09e9b8a7b8dda9d2f45",
+            Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(Path.Combine(pilot, "SirAldric_body_holefixed_slash.fbx")))).ToLowerInvariant());
         Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_PILOT_sword.fbx")).Length > 10_000);
         Assert.True(new FileInfo(Path.Combine(pilot, "mixamo_tex", "Meshy_AI_Lionheart_Sentinel_0929004215_texture.png")).Length > 100_000);
         var walkMeta = File.ReadAllText(Path.Combine(pilot, "SirAldric_body_holefixed_walk.fbx.meta"));
@@ -418,11 +437,11 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("lastFrame: 85", attackMeta, StringComparison.Ordinal);
         Assert.Equal(0, SirAldric3DMotion.MixamoSlashFirstFrame);
         Assert.Equal(85, SirAldric3DMotion.MixamoSlashLastFrame);
-        var diagMirrMeta = File.ReadAllText(Path.Combine(pilot, "SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG_MIRR.fbx.meta"));
-        Assert.Contains("firstFrame: 0", diagMirrMeta, StringComparison.Ordinal);
-        Assert.Contains("lastFrame: 85", diagMirrMeta, StringComparison.Ordinal);
-        Assert.Contains("takeName: mixamo.com", diagMirrMeta, StringComparison.Ordinal);
-        Assert.Contains("animationType: 2", diagMirrMeta, StringComparison.Ordinal);
+        var diagMeta = File.ReadAllText(Path.Combine(pilot, "SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx.meta"));
+        Assert.Contains("firstFrame: 0", diagMeta, StringComparison.Ordinal);
+        Assert.Contains("lastFrame: 85", diagMeta, StringComparison.Ordinal);
+        Assert.Contains("takeName: mixamo.com", diagMeta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 2", diagMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("animationType: 3", walkMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("animationType: 3", attackMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", actor, StringComparison.Ordinal);
@@ -437,7 +456,8 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("CreateFromThisModel", post, StringComparison.Ordinal);
         Assert.Contains("SirAldric_body_holefixed_walk.fbx", post, StringComparison.Ordinal);
         Assert.Contains("SirAldric_body_holefixed_slash.fbx", post, StringComparison.Ordinal);
-        Assert.Contains("SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG_MIRR.fbx", post, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx", post, StringComparison.Ordinal);
+        Assert.Contains("PilotAttackDiagMirrRetired", post, StringComparison.Ordinal);
         Assert.Contains("ModelImporterAnimationType.Generic", post, StringComparison.Ordinal);
         Assert.Contains("useFileScale = false", post, StringComparison.Ordinal);
         Assert.Contains("MixamoSlashFirstFrame", post, StringComparison.Ordinal);
@@ -529,7 +549,8 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("ApplyPlayCam", demo, StringComparison.Ordinal);
         Assert.Contains("usePhysicalProperties = false", demo, StringComparison.Ordinal);
         Assert.Contains("LateUpdate", demo, StringComparison.Ordinal);
-        Assert.Contains("Design DIAG_MIRR slash", demo, StringComparison.Ordinal);
+        Assert.Contains("Design DIAG slash", demo, StringComparison.Ordinal);
+        Assert.DoesNotContain("Design DIAG_MIRR slash", demo, StringComparison.Ordinal);
         Assert.Contains("iQ1s3nN1330", demo, StringComparison.Ordinal);
         Assert.Contains("orbit", demo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("PlayCamOrbitEye", demo, StringComparison.Ordinal);
@@ -581,12 +602,14 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("3d0efcd", hold, StringComparison.Ordinal);
         Assert.Contains("ee3f7bd", hold, StringComparison.Ordinal);
         Assert.Contains("c5c8469", hold, StringComparison.Ordinal);
-        Assert.Contains("95b5a4a", hold, StringComparison.Ordinal);
+        Assert.Contains("19e6efe", hold, StringComparison.Ordinal);
         Assert.Contains("8d5b78b0", hold, StringComparison.Ordinal);
         Assert.Contains("72412be4", hold, StringComparison.Ordinal);
         Assert.Contains("70fd9483", hold, StringComparison.Ordinal);
         Assert.Contains("4a143441", hold, StringComparison.Ordinal);
+        Assert.Contains("DIAG", hold, StringComparison.Ordinal);
         Assert.Contains("DIAG_MIRR", hold, StringComparison.Ordinal);
+        Assert.Contains("wrong interpretation", hold, StringComparison.Ordinal);
         Assert.Contains("backswing", hold, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("iQ1s3nN1330", hold, StringComparison.Ordinal);
         Assert.Contains("https://www.youtube.com/watch?v=iQ1s3nN1330", hold, StringComparison.Ordinal);

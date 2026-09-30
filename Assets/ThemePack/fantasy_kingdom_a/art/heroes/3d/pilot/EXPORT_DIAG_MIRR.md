@@ -1,6 +1,12 @@
 # Sir Aldric DIAG_MIRR Mixamo Export
 
+**Retired as Game-view authority.** Derek reject tip `19e6efe` — whole-clip reverse was the wrong interpretation. Do **not** wire this clip. Authoritative slash is DIAG (`72412be4…`). This file stays on disk as a bake record only.
+
 - Clip: **Stable Sword Inward Slash**
+- Character: `SIRALDRIC_BODY_HOLEFIXED_MID280K`
+- Mirror: **ON** (Mixamo authored whole-clip spatial mirror)
+- Sliders: Emphasis **50**, Angle **80**, Overdrive **30**, Character Arm-Space **50**, Trim **0–100**
+- Export: FBX Binary, With Skin, 30 FPS, Keyframe Reduction **none/off**
 - Character: `SIRALDRIC_BODY_HOLEFIXED_MID280K`
 - Mirror: **ON** (Mixamo authored whole-clip spatial mirror)
 - Sliders: Emphasis **50**, Angle **80**, Overdrive **30**, Character Arm-Space **50**, Trim **0–100**
