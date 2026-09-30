@@ -33,22 +33,38 @@ namespace Survival.Domain.Heroes
 
         /// <summary>
         /// Derek slash SoT: https://www.youtube.com/watch?v=iQ1s3nN1330
-        /// (Judith Hamma “Sword Swing - Animation”). RH grip. Diagonal only:
-        /// high character-right → sweep down to low character-left. No +Z thrust
-        /// plateau (that was a prior arc guess; video overrides).
+        /// (Judith Hamma “Sword Swing - Animation”, Maya, 20s orbit).
+        /// Storyboard silhouette, not a prior UR→LL guess:
+        /// ready = RH low at the right hip, slightly back (maxres / t≈0);
+        /// backswing = sword far behind the body (t≈5s side profile);
+        /// high = lift over the right shoulder; contact = in front;
+        /// finish = low character-left. Mixamo Inward Slash cannot do this
+        /// wide backswing — strike is tip-led onto these keys.
         /// </summary>
-        public const float AttackSlashUrRight = 0.78f;
+        public const float AttackSlashReadyRight = 0.42f;
+        public const float AttackSlashReadyUp = -0.48f;
+        public const float AttackSlashReadyFront = -0.22f;
+        public const float AttackSlashBackRight = 0.55f;
+        public const float AttackSlashBackUp = 0.05f;
+        public const float AttackSlashBackFront = -0.78f;
+        public const float AttackSlashBackU = 0.22f;
+        public const float AttackSlashUrRight = 0.68f;
         public const float AttackSlashUrUp = 0.82f;
-        public const float AttackSlashUrFront = 0.16f;
-        public const float AttackSlashFrontRight = 0.06f;
-        public const float AttackSlashFrontUp = 0.08f;
-        public const float AttackSlashFrontZ = 0.55f;
-        public const float AttackSlashLlRight = -0.80f;
-        public const float AttackSlashLlUp = -0.88f;
-        public const float AttackSlashLlFront = 0.18f;
-        public const float AttackSlashFrontU = 0.45f;
-        public const float AttackSlashFrontHoldU = 0.45f;
-        public const float AttackSlashLlU = 0.82f;
+        public const float AttackSlashUrFront = -0.12f;
+        public const float AttackSlashFrontRight = 0.08f;
+        public const float AttackSlashFrontUp = 0.06f;
+        public const float AttackSlashFrontZ = 0.72f;
+        public const float AttackSlashLlRight = -0.76f;
+        public const float AttackSlashLlUp = -0.80f;
+        public const float AttackSlashLlFront = 0.16f;
+        public const float AttackSlashFrontU = 0.40f;
+        public const float AttackSlashFrontHoldU = 0.58f;
+        public const float AttackSlashLlU = 0.84f;
+        public const float AttackSlashGuardRight = 0.12f;
+        public const float AttackSlashGuardUp = 0.22f;
+        public const float AttackSlashGuardFront = 0.90f;
+        public const float AttackSlashSpineYawReady = 22f;
+        public const float AttackSlashSpineYawFinish = -16f;
         public const float HeldSwordRestEulerX = 90f;
         /// <summary>
         /// Walk hip-sheath in character space after FaceWorldTop (yaw 180):
@@ -492,54 +508,90 @@ namespace Survival.Domain.Heroes
         }
 
         /// <summary>
-        /// Unit RH reach for the YouTube sword-swing diagonal (iQ1s3nN1330).
-        /// u=0 high-right, u=FrontU chest-cross, u≥LlU low-left. No +Z hold.
-        /// FrontHoldU equals FrontU so the old thrust plateau is gone.
+        /// Unit RH reach for YouTube iQ1s3nN1330 (storyboard keys).
+        /// u=0 ready low-right-back, u=BackU far behind, u=FrontU high-right,
+        /// u=FrontHoldU contact in front, u≥LlU low-left.
         /// </summary>
         public static void AttackSlashReach(float attackNormalized01, out float x, out float y, out float z)
         {
             var u = Clamp01(attackNormalized01);
-            float ax;
-            float ay;
-            float az;
-            float bx;
-            float by;
-            float bz;
-            float t;
-            if (u <= AttackSlashFrontU)
+            if (u <= AttackSlashBackU)
             {
-                t = Smooth01(u / AttackSlashFrontU);
-                ax = AttackSlashUrRight;
-                ay = AttackSlashUrUp;
-                az = AttackSlashUrFront;
-                bx = AttackSlashFrontRight;
-                by = AttackSlashFrontUp;
-                bz = AttackSlashFrontZ;
+                SampleSlash(
+                    u, 0f, AttackSlashBackU,
+                    AttackSlashReadyRight, AttackSlashReadyUp, AttackSlashReadyFront,
+                    AttackSlashBackRight, AttackSlashBackUp, AttackSlashBackFront,
+                    out x, out y, out z);
+            }
+            else if (u <= AttackSlashFrontU)
+            {
+                SampleSlash(
+                    u, AttackSlashBackU, AttackSlashFrontU,
+                    AttackSlashBackRight, AttackSlashBackUp, AttackSlashBackFront,
+                    AttackSlashUrRight, AttackSlashUrUp, AttackSlashUrFront,
+                    out x, out y, out z);
+            }
+            else if (u <= AttackSlashFrontHoldU)
+            {
+                SampleSlash(
+                    u, AttackSlashFrontU, AttackSlashFrontHoldU,
+                    AttackSlashUrRight, AttackSlashUrUp, AttackSlashUrFront,
+                    AttackSlashFrontRight, AttackSlashFrontUp, AttackSlashFrontZ,
+                    out x, out y, out z);
             }
             else if (u <= AttackSlashLlU)
             {
-                var span = AttackSlashLlU - AttackSlashFrontU;
-                t = span > 1e-5f ? Smooth01((u - AttackSlashFrontU) / span) : 1f;
-                ax = AttackSlashFrontRight;
-                ay = AttackSlashFrontUp;
-                az = AttackSlashFrontZ;
-                bx = AttackSlashLlRight;
-                by = AttackSlashLlUp;
-                bz = AttackSlashLlFront;
+                SampleSlash(
+                    u, AttackSlashFrontHoldU, AttackSlashLlU,
+                    AttackSlashFrontRight, AttackSlashFrontUp, AttackSlashFrontZ,
+                    AttackSlashLlRight, AttackSlashLlUp, AttackSlashLlFront,
+                    out x, out y, out z);
             }
             else
             {
                 x = AttackSlashLlRight;
                 y = AttackSlashLlUp;
                 z = AttackSlashLlFront;
-                Normalize(ref x, ref y, ref z);
-                return;
             }
 
+            Normalize(ref x, ref y, ref z);
+        }
+
+        /// <summary>
+        /// Left-hand point from the video ready / 3/4 maxres (toward the enemy).
+        /// </summary>
+        public static void AttackSlashGuardReach(out float x, out float y, out float z)
+        {
+            x = AttackSlashGuardRight;
+            y = AttackSlashGuardUp;
+            z = AttackSlashGuardFront;
+            Normalize(ref x, ref y, ref z);
+        }
+
+        public static float AttackSlashSpineYawDegrees(float attackNormalized01)
+        {
+            return Lerp(AttackSlashSpineYawReady, AttackSlashSpineYawFinish, Clamp01(attackNormalized01));
+        }
+
+        private static void SampleSlash(
+            float u,
+            float u0,
+            float u1,
+            float ax,
+            float ay,
+            float az,
+            float bx,
+            float by,
+            float bz,
+            out float x,
+            out float y,
+            out float z)
+        {
+            var span = u1 - u0;
+            var t = span > 1e-5f ? Smooth01((u - u0) / span) : 1f;
             x = Lerp(ax, bx, t);
             y = Lerp(ay, by, t);
             z = Lerp(az, bz, t);
-            Normalize(ref x, ref y, ref z);
         }
 
         private static void Normalize(ref float x, ref float y, ref float z)

@@ -16,7 +16,7 @@ namespace Survival.Unity
     /// Sir Aldric PILOT: Mixamo-skinned holefixed mid280k is the ONLY visible body.
     /// Generic Mixamo clips (Humanoid Playable collapses this skin). AccuRIG superseded.
     /// Walk = Standard Walk. Slash = Stable Sword Inward Slash.
-    /// Walk sword = mixamorig:RightHand grip. Strike = RightHand YouTube iQ1s3nN1330.
+    /// Walk sword = mixamorig:RightHand grip. Strike = video iQ1s3nN1330 backswing.
     /// No Path 1 / Path A / ClipSword. HOLD merge.
     /// </summary>
     [DefaultExecutionOrder(200)]
@@ -37,7 +37,7 @@ namespace Survival.Unity
             "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Inward Slash " +
             "frames 8–40. Sword never a whole-body X-flip. " +
             "Walk: sword gripped in mixamorig:RightHand (Derek 0fc0930 Game-view; 879a6f3 left-hand FAIL discarded). " +
-            "Strike: YouTube iQ1s3nN1330 high-right → low-left (max-reach RH); " +
+            "Strike: YouTube iQ1s3nN1330 ready→backswing→high-right→low-left (max-reach RH); " +
             "sword snaps to the forearm–hand axis. Re-applied on camera render. " +
             "RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
@@ -60,6 +60,10 @@ namespace Survival.Unity
         private Transform? _rightArm;
         private Transform? _rightForeArm;
         private Transform? _rightHand;
+        private Transform? _leftArm;
+        private Transform? _leftForeArm;
+        private Transform? _leftHand;
+        private Transform? _spine;
         private Transform? _hips;
         private Transform? _rightUpLeg;
         private Transform? _rightLeg;
@@ -314,45 +318,81 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Walk: RH grip (Derek 0fc0930). Strike: YouTube iQ1s3nN1330 diagonal
-        /// high character-right → low character-left. Orbit 1/2/3 kept.
+        /// Walk: RH grip (Derek 0fc0930). Strike: YouTube iQ1s3nN1330 storyboard
+        /// (ready hip → far-back swing → high-right → low-left). Mixamo Inward
+        /// Slash cannot match that silhouette; arms are overwritten onto
+        /// AttackSlashReach. Orbit 1/2/3 kept.
         /// </summary>
         private void ApplyAttackWindupLift(float attackWeight, float attackNormalized01)
         {
             var k = Mathf.Clamp01(attackWeight) * SirAldric3DMotion.AttackWindupWeight(attackNormalized01);
-            if (k <= 0.001f || attackNormalized01 <= 0.001f)
+            if (k <= 0.001f)
             {
                 ApplySheathedSword();
                 return;
             }
 
             BindSwordTo(_rightHand, strikeGrip: true);
-            // Strike points along AttackSlashReach (UR high-right → low LL).
+            if (_spine != null)
+            {
+                _spine.Rotate(
+                    Vector3.up,
+                    k * SirAldric3DMotion.AttackSlashSpineYawDegrees(attackNormalized01),
+                    Space.World);
+            }
+
+            SirAldric3DMotion.AttackSlashGuardReach(out var gx, out var gy, out var gz);
+            AimArmAlong(_leftArm, _leftForeArm, _leftHand, new Vector3(gx, gy, gz), k);
+
+            // Strike points along AttackSlashReach (ready → backswing → UR → LL).
             SirAldric3DMotion.AttackSlashReach(attackNormalized01, out var dx, out var dy, out var dz);
             var desired = new Vector3(dx, dy, dz);
-            if (desired.sqrMagnitude > 1e-8f && _rightArm != null && _rightHand != null)
-            {
-                if (_rightForeArm != null)
-                {
-                    var upper = _rightForeArm.position - _rightArm.position;
-                    var lower = _rightHand.position - _rightForeArm.position;
-                    if (upper.sqrMagnitude > 1e-6f && lower.sqrMagnitude > 1e-6f)
-                    {
-                        var unfold = Quaternion.FromToRotation(lower.normalized, upper.normalized);
-                        _rightForeArm.rotation = Quaternion.Normalize(
-                            unfold * _rightForeArm.rotation);
-                    }
-                }
+            AimArmAlong(_rightArm, _rightForeArm, _rightHand, desired, k);
+            AimArmAlong(_rightArm, _rightForeArm, _rightHand, desired, k);
+            SnapHeldSwordToArmAxis(desired);
+        }
 
-                var reach = _rightHand.position - _rightArm.position;
-                if (reach.sqrMagnitude > 1e-6f)
+        private static void AimArmAlong(
+            Transform? arm,
+            Transform? forearm,
+            Transform? hand,
+            Vector3 desired,
+            float weight)
+        {
+            if (arm == null || hand == null || desired.sqrMagnitude < 1e-8f || weight <= 1e-4f)
+            {
+                return;
+            }
+
+            if (forearm != null)
+            {
+                var upper = forearm.position - arm.position;
+                var lower = hand.position - forearm.position;
+                if (upper.sqrMagnitude > 1e-6f && lower.sqrMagnitude > 1e-6f)
                 {
-                    _rightArm.rotation = Quaternion.Normalize(
-                        Quaternion.FromToRotation(reach.normalized, desired.normalized) * _rightArm.rotation);
+                    var unfold = Quaternion.FromToRotation(lower.normalized, upper.normalized);
+                    if (weight < 0.999f)
+                    {
+                        unfold = Quaternion.Slerp(Quaternion.identity, unfold, weight);
+                    }
+
+                    forearm.rotation = Quaternion.Normalize(unfold * forearm.rotation);
                 }
             }
 
-            SnapHeldSwordToArmAxis(desired);
+            var reach = hand.position - arm.position;
+            if (reach.sqrMagnitude < 1e-6f)
+            {
+                return;
+            }
+
+            var aim = Quaternion.FromToRotation(reach.normalized, desired.normalized);
+            if (weight < 0.999f)
+            {
+                aim = Quaternion.Slerp(Quaternion.identity, aim, weight);
+            }
+
+            arm.rotation = Quaternion.Normalize(aim * arm.rotation);
         }
 
         /// <summary>
@@ -543,6 +583,10 @@ namespace Survival.Unity
             _rightArm = FindNamedBone(root, "mixamorig:RightArm", "RightArm");
             _rightForeArm = FindNamedBone(root, "mixamorig:RightForeArm", "RightForeArm");
             _rightHand = FindNamedBone(root, "mixamorig:RightHand", "RightHand");
+            _leftArm = FindNamedBone(root, "mixamorig:LeftArm", "LeftArm");
+            _leftForeArm = FindNamedBone(root, "mixamorig:LeftForeArm", "LeftForeArm");
+            _leftHand = FindNamedBone(root, "mixamorig:LeftHand", "LeftHand");
+            _spine = FindNamedBone(root, "mixamorig:Spine2", "Spine2", "Spine1", "Spine");
             _hips = FindNamedBone(root, "mixamorig:Hips", "Hips");
             _rightUpLeg = FindNamedBone(root, "mixamorig:RightUpLeg", "RightUpLeg");
             _rightLeg = FindNamedBone(root, "mixamorig:RightLeg", "RightLeg");

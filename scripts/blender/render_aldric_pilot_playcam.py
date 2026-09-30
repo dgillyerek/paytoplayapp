@@ -40,19 +40,26 @@ CAM_34 = ((1.82, 1.92, -2.38), (0.0, 1.12, 0.15))
 CAM_FOV = 42.0
 
 # Derek slash SoT: https://www.youtube.com/watch?v=iQ1s3nN1330
-# High character-right → low character-left. No +Z thrust hold.
-SLASH_UR_RIGHT = 0.78
+# Storyboard keys: ready hip → far-back swing → high-right → contact → low-left.
+SLASH_READY_RIGHT = 0.42
+SLASH_READY_UP = -0.48
+SLASH_READY_FRONT = -0.22
+SLASH_BACK_RIGHT = 0.55
+SLASH_BACK_UP = 0.05
+SLASH_BACK_FRONT = -0.78
+SLASH_BACK_U = 0.22
+SLASH_UR_RIGHT = 0.68
 SLASH_UR_UP = 0.82
-SLASH_UR_FRONT = 0.16
-SLASH_FRONT_RIGHT = 0.06
-SLASH_FRONT_UP = 0.08
-SLASH_FRONT_Z = 0.55
-SLASH_LL_RIGHT = -0.80
-SLASH_LL_UP = -0.88
-SLASH_LL_FRONT = 0.18
-SLASH_FRONT_U = 0.45
-SLASH_FRONT_HOLD_U = 0.45
-SLASH_LL_U = 0.82
+SLASH_UR_FRONT = -0.12
+SLASH_FRONT_RIGHT = 0.08
+SLASH_FRONT_UP = 0.06
+SLASH_FRONT_Z = 0.72
+SLASH_LL_RIGHT = -0.76
+SLASH_LL_UP = -0.80
+SLASH_LL_FRONT = 0.16
+SLASH_FRONT_U = 0.40
+SLASH_FRONT_HOLD_U = 0.58
+SLASH_LL_U = 0.84
 SLASH_FIRST = 8
 SLASH_LAST = 40
 SLASH_MID = 20
@@ -453,31 +460,40 @@ def attack_slash_u(frame):
 
 
 def attack_slash_reach_unity_xyz(u):
-    """Unity (right, up, front). YouTube iQ1s3nN1330 diagonal; no +Z hold."""
+    """Unity (right, up, front). YouTube iQ1s3nN1330 storyboard keys."""
     u = max(0.0, min(1.0, u))
 
     def sm(x):
         x = max(0.0, min(1.0, x))
         return x * x * (3.0 - 2.0 * x)
 
-    if u <= SLASH_FRONT_U:
-        t = sm(u / SLASH_FRONT_U)
-        a = (SLASH_UR_RIGHT, SLASH_UR_UP, SLASH_UR_FRONT)
-        b = (SLASH_FRONT_RIGHT, SLASH_FRONT_UP, SLASH_FRONT_Z)
+    def seg(u0, u1, a, b):
+        span = u1 - u0
+        t = 1.0 if span <= 1e-5 else sm((u - u0) / span)
+        return (
+            a[0] + (b[0] - a[0]) * t,
+            a[1] + (b[1] - a[1]) * t,
+            a[2] + (b[2] - a[2]) * t,
+        )
+
+    ready = (SLASH_READY_RIGHT, SLASH_READY_UP, SLASH_READY_FRONT)
+    back = (SLASH_BACK_RIGHT, SLASH_BACK_UP, SLASH_BACK_FRONT)
+    high = (SLASH_UR_RIGHT, SLASH_UR_UP, SLASH_UR_FRONT)
+    contact = (SLASH_FRONT_RIGHT, SLASH_FRONT_UP, SLASH_FRONT_Z)
+    finish = (SLASH_LL_RIGHT, SLASH_LL_UP, SLASH_LL_FRONT)
+    if u <= SLASH_BACK_U:
+        x, y, z = seg(0.0, SLASH_BACK_U, ready, back)
+    elif u <= SLASH_FRONT_U:
+        x, y, z = seg(SLASH_BACK_U, SLASH_FRONT_U, back, high)
+    elif u <= SLASH_FRONT_HOLD_U:
+        x, y, z = seg(SLASH_FRONT_U, SLASH_FRONT_HOLD_U, high, contact)
     elif u <= SLASH_LL_U:
-        span = SLASH_LL_U - SLASH_FRONT_U
-        t = 1.0 if span <= 1e-5 else sm((u - SLASH_FRONT_U) / span)
-        a = (SLASH_FRONT_RIGHT, SLASH_FRONT_UP, SLASH_FRONT_Z)
-        b = (SLASH_LL_RIGHT, SLASH_LL_UP, SLASH_LL_FRONT)
+        x, y, z = seg(SLASH_FRONT_HOLD_U, SLASH_LL_U, contact, finish)
     else:
-        a = b = (SLASH_LL_RIGHT, SLASH_LL_UP, SLASH_LL_FRONT)
-        t = 1.0
-    x = a[0] + (b[0] - a[0]) * t
-    y = a[1] + (b[1] - a[1]) * t
-    z = a[2] + (b[2] - a[2]) * t
+        x, y, z = finish
     mag = math.sqrt((x * x) + (y * y) + (z * z))
     if mag < 1e-6:
-        return (0.0, 0.08, 0.55)
+        return (0.42, -0.48, -0.22)
     return (x / mag, y / mag, z / mag)
 
 
@@ -544,7 +560,7 @@ def apply_sheathed_sword(arm, sword):
 
 
 def apply_attack_windup(arm, sword, frame):
-    """Match Unity ApplyAttackWindupLift: unfold elbow, arm UR→LL (iQ1s3nN1330)."""
+    """Match Unity ApplyAttackWindupLift: ready→backswing→LL (iQ1s3nN1330)."""
     k = windup_weight(frame)
     bind_sword_to(arm, sword, "mixamorig:RightHand", local_loc=(0.0, 0.08, 0.0))
     rarm = arm.pose.bones.get("mixamorig:RightArm")
