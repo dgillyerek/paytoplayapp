@@ -118,6 +118,6 @@ ModelImporter:
   humanoidOversampling: 1
   avatarSetup: 1
   additionalBone: 0
-  userData: PILOT Design-owned DIAG_REV Stable Sword Inward Slash (md5 0beb3c77, Blender time-reverse of DIAG). Generic. takeName mixamo.com. Frames 0-85. CreateFromThisModel. Clips only — never visible body. Not DIAG 72412be4. Not DIAG_MIRR 70fd9483. Not MILD 8d5b78b0. Not baseline 4a143441. Not a Unity time-reverse or scale.x flip.
+  userData: PILOT playing DIAG Stable Sword Inward Slash (md5 72412be4). Dev RH raise-then-cut overlay. Generic. takeName mixamo.com. Frames 0-85. CreateFromThisModel. Not DIAG_REV 0beb3c77 (broke play). Not DIAG_MIRR 70fd9483. Not MILD 8d5b78b0. Not baseline 4a143441.
   assetBundleName: 
   assetBundleVariant: 

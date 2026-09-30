@@ -16,8 +16,9 @@ namespace Survival.Unity
     /// Sir Aldric PILOT: Mixamo-skinned holefixed mid280k is the ONLY visible body.
     /// Generic Mixamo clips (Humanoid Playable collapses this skin). AccuRIG superseded.
     /// Walk = Standard Walk. Slash = Stable Sword Inward Slash.
-    /// Walk sword = mixamorig:RightHand grip. Strike = Design-owned DIAG_REV Inward Slash FBX.
-    /// No Path 1 / Path A / ClipSword. HOLD merge.
+    /// Walk sword = mixamorig:RightHand grip. Strike = playing DIAG Mixamo clip
+    /// plus Dev RH raise-then-down-left drive (Derek GO after DIAG_REV e90b654
+    /// showed no attack in Game-view). No Path 1 / Path A / ClipSword. HOLD merge.
     /// </summary>
     [DefaultExecutionOrder(200)]
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
@@ -25,8 +26,8 @@ namespace Survival.Unity
         public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx";
         public const string ThemePackLookFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_mid280k.fbx";
         public const string ThemePackWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx";
-        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG_REV.fbx";
-        /// <summary>Same DIAG_REV bytes as ThemePackAttackFbx. Not DIAG 72412be4. Not DIAG_MIRR 70fd9483. Not MILD 8d5b78b0. Not baseline 4a143441.</summary>
+        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx";
+        /// <summary>Same DIAG bytes as ThemePackAttackFbx (md5 72412be4). Not DIAG_REV 0beb3c77 (broke play). Not DIAG_MIRR 70fd9483. Not MILD 8d5b78b0. Not baseline 4a143441.</summary>
         public const string ThemePackAttackFbxAlias = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash.fbx";
         public const string ThemePackSwordFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_sword.fbx";
         public const string ThemePackCapeFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_cape.fbx";
@@ -36,12 +37,13 @@ namespace Survival.Unity
         public const string AttackClipHint = "Attack";
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
         public const string AttackAuthoredReason =
-            "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Design-owned " +
-            "DIAG_REV Stable Sword Inward Slash frames 0–85 (md5 0beb3c77, Blender time-reverse of DIAG; not DIAG 72412be4; not DIAG_MIRR 70fd9483 Derek reject 19e6efe; not MILD 8d5b78b0; not baseline 4a143441). " +
-            "Sword never a whole-body X-flip. No Unity time-reverse. No Mixamo Mirror. " +
+            "PILOT Mixamo sep Generic: holefixed body + Standard Walk + playing DIAG " +
+            "Stable Sword Inward Slash frames 0–85 (md5 72412be4; not DIAG_REV 0beb3c77 e90b654 no-attack FAIL; not DIAG_MIRR 70fd9483 Derek reject 19e6efe; not MILD 8d5b78b0; not baseline 4a143441). " +
+            "Sword never a whole-body X-flip. No Mixamo Mirror. " +
             "Walk: sword gripped in mixamorig:RightHand (Derek 0fc0930 Game-view; 879a6f3 left-hand FAIL discarded). " +
-            "Strike: Design FBX plays as authored (YouTube iQ1s3nN1330 SoT; raise above head first, then down-left — time-reverse of DIAG backswing-then-cut). " +
-            "No tip-led AttackSlashReach / arm overwrite. RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
+            "Strike: DIAG clip plays on the mixer; Dev AttackRaiseThenCutReach aims RH after Evaluate " +
+            "(YouTube iQ1s3nN1330 / Derek GO: raise above head first, then down-left — opposite time order of DIAG backswing-then-cut). " +
+            "No clavicle overwrite. Leftover AttackSlashReach unused. RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
         public const float SwordBladeMeters = 1.01f;
         private const float BodyHeightMinMeters = 0.5f;
@@ -267,8 +269,10 @@ namespace Survival.Unity
             var timeSeconds = _poseTime;
             var walkLen = _walkLength > 0.05f ? _walkLength : 1f;
             var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
-            var attackLen = _attackReady ? Mathf.Max(_attackLength, 0.01f) : walkBlock;
-            var loop = walkBlock + (_attackReady ? attackLen : 0f);
+            var attackLen = _attackReady
+                ? Mathf.Max(_attackLength, 0.01f)
+                : Mathf.Max(SirAldric3DMotion.AttackSeconds, 0.01f);
+            var loop = walkBlock + attackLen;
             if (loop < 0.05f)
             {
                 loop = walkLen;
@@ -276,16 +280,6 @@ namespace Survival.Unity
 
             var t = timeSeconds % loop;
             var blend = Mathf.Clamp(WalkToAttackBlendSeconds, 0.15f, 0.25f);
-            if (!_attackReady)
-            {
-                _mixer.SetInputWeight(0, 1f);
-                _mixer.SetInputWeight(1, 0f);
-                _walkPlayable.SetTime(t % walkLen);
-                _graph.Evaluate();
-                ApplyAttackWindupLift(0f, 0f);
-                return;
-            }
-
             float walkW;
             float attackW;
             float attackU;
@@ -298,7 +292,10 @@ namespace Survival.Unity
                 attackW = into;
                 attackU = 0f;
                 _walkPlayable.SetTime(t % walkLen);
-                _attackPlayable.SetTime(0f);
+                if (_attackReady)
+                {
+                    _attackPlayable.SetTime(0f);
+                }
             }
             else
             {
@@ -309,30 +306,77 @@ namespace Survival.Unity
                 walkW = back;
                 attackW = 1f - back;
                 attackU = at / attackLen;
-                _attackPlayable.SetTime(at);
+                if (_attackReady)
+                {
+                    _attackPlayable.SetTime(at);
+                }
+
                 _walkPlayable.SetTime(0f);
             }
 
-            _mixer.SetInputWeight(0, walkW);
-            _mixer.SetInputWeight(1, attackW);
+            _mixer.SetInputWeight(0, _attackReady ? walkW : 1f);
+            _mixer.SetInputWeight(1, _attackReady ? attackW : 0f);
             _graph.Evaluate();
             ApplyAttackWindupLift(attackW, attackU);
         }
 
         /// <summary>
-        /// Design owns slash bones in the DIAG_REV FBX. Play/blend/cam only —
-        /// no tip-led arm or clavicle overwrite. No runtime time-reverse.
-        /// Sword prop stays on mixamorig:RightHand (Derek 0fc0930 walk grip).
+        /// Dev owns the strike after Derek GO (e90b654 DIAG_REV showed no attack).
+        /// DIAG Mixamo clip plays on the mixer for body. After Evaluate, aim only
+        /// mixamorig:RightArm along AttackRaiseThenCutReach — raise above head first,
+        /// then down-left. No clavicle / left-arm / leftover AttackSlashReach.
+        /// Sword stays on mixamorig:RightHand (Derek 0fc0930 walk grip).
         /// </summary>
         private void ApplyAttackWindupLift(float attackWeight, float attackNormalized01)
         {
-            _ = attackWeight;
-            _ = attackNormalized01;
+            var k = Mathf.Clamp01(attackWeight) * SirAldric3DMotion.AttackWindupWeight(attackNormalized01);
             BindSwordTo(_rightHand, strikeGrip: true);
-            if (_heldSword != null)
+            if (k <= 0.001f)
             {
-                _heldSword.localRotation = SwordRestLocal();
+                if (_heldSword != null)
+                {
+                    _heldSword.localRotation = SwordRestLocal();
+                }
+
+                return;
             }
+
+            SirAldric3DMotion.AttackRaiseThenCutReach(attackNormalized01, out var dx, out var dy, out var dz);
+            var desired = new Vector3(dx, dy, dz);
+            AimArmAlong(_rightArm, _rightForeArm, _rightHand, desired, k);
+            SnapHeldSwordToArmAxis(desired);
+        }
+
+        /// <summary>
+        /// Rotate only the upper arm so shoulder→hand matches desired. Leave Mixamo
+        /// elbow. Do not touch clavicle / LeftArm (ee3f7bd TOP pinch).
+        /// </summary>
+        private static void AimArmAlong(
+            Transform? arm,
+            Transform? forearm,
+            Transform? hand,
+            Vector3 desired,
+            float weight)
+        {
+            _ = forearm;
+            if (arm == null || hand == null || desired.sqrMagnitude < 1e-8f || weight <= 1e-4f)
+            {
+                return;
+            }
+
+            var reach = hand.position - arm.position;
+            if (reach.sqrMagnitude < 1e-6f)
+            {
+                return;
+            }
+
+            var aim = Quaternion.FromToRotation(reach.normalized, desired.normalized);
+            if (weight < 0.999f)
+            {
+                aim = Quaternion.Slerp(Quaternion.identity, aim, weight);
+            }
+
+            arm.rotation = Quaternion.Normalize(aim * arm.rotation);
         }
 
         /// <summary>

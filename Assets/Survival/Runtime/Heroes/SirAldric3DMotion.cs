@@ -25,11 +25,12 @@ namespace Survival.Domain.Heroes
         public const float MixamoImportRearYawDegrees = 180f;
 
         /// <summary>
-        /// Design-owned DIAG_REV Inward Slash take window (EXPORT_DIAG_REV.md).
-        /// Full authored clip 0–85 @ 30fps (md5 0beb3c77). Blender time-reverse of DIAG so
-        /// raise-above-head is first, then down-left. Not Mixamo Mirror
-        /// (DIAG_MIRR 70fd9483 retired, Derek reject 19e6efe). Not a Unity time-reverse or scale.x flip.
-        /// Not DIAG 72412be4 / MILD 8d5b78b0 / baseline 4a143441.
+        /// Design-owned DIAG Inward Slash take window (EXPORT_DIAG.md) — the
+        /// last Mixamo clip that actually played in Game-view (tips 95b5a4a /
+        /// 43b33fb, md5 72412be4). DIAG_REV 0beb3c77 time-reverse bake (e90b654) showed no attack.
+        /// Dev shapes strike after Evaluate via AttackRaiseThenCutReach.
+        /// Not Mixamo Mirror (DIAG_MIRR 70fd9483, Derek reject 19e6efe).
+        /// Not MILD 8d5b78b0 / baseline 4a143441. Not a Unity scale.x flip.
         /// </summary>
         public const int MixamoSlashFirstFrame = 0;
         public const int MixamoSlashLastFrame = 85;
@@ -68,6 +69,26 @@ namespace Survival.Domain.Heroes
         public const float AttackSlashGuardFront = 0.90f;
         public const float AttackSlashSpineYawReady = 22f;
         public const float AttackSlashSpineYawFinish = -16f;
+        /// <summary>
+        /// Dev GO raise-then-cut (rear cam): RH above head first, then down-left.
+        /// Opposite time order of DIAG backswing-then-cut. Not Mixamo L/R Mirror.
+        /// Milder overhead than leftover AttackSlashUrUp 0.82 (ee3f7bd pinch).
+        /// </summary>
+        public const float AttackRaiseRight = 0.22f;
+        public const float AttackRaiseUp = 0.92f;
+        public const float AttackRaiseFront = -0.12f;
+        public const float AttackPeakRight = 0.16f;
+        public const float AttackPeakUp = 0.96f;
+        public const float AttackPeakFront = 0.08f;
+        public const float AttackPeakU = 0.28f;
+        public const float AttackCutRight = 0.06f;
+        public const float AttackCutUp = 0.18f;
+        public const float AttackCutFront = 0.68f;
+        public const float AttackCutU = 0.52f;
+        public const float AttackAcrossRight = -0.48f;
+        public const float AttackAcrossUp = -0.22f;
+        public const float AttackAcrossFront = 0.42f;
+        public const float AttackAcrossU = 0.74f;
         public const float HeldSwordRestEulerX = 90f;
         /// <summary>
         /// Walk hip-sheath in character space after FaceWorldTop (yaw 180):
@@ -555,6 +576,49 @@ namespace Survival.Domain.Heroes
                 x = AttackSlashLlRight;
                 y = AttackSlashLlUp;
                 z = AttackSlashLlFront;
+            }
+
+            Normalize(ref x, ref y, ref z);
+        }
+
+        /// <summary>
+        /// Dev-authored RH reach: u=0 overhead (raise first), u=1 low character-left.
+        /// Rear-cam down-left = −X. Leftover AttackSlashReach stays ready→backswing→LL.
+        /// </summary>
+        public static void AttackRaiseThenCutReach(float attackNormalized01, out float x, out float y, out float z)
+        {
+            var u = Clamp01(attackNormalized01);
+            if (u <= AttackPeakU)
+            {
+                SampleSlash(
+                    u, 0f, AttackPeakU,
+                    AttackRaiseRight, AttackRaiseUp, AttackRaiseFront,
+                    AttackPeakRight, AttackPeakUp, AttackPeakFront,
+                    out x, out y, out z);
+            }
+            else if (u <= AttackCutU)
+            {
+                SampleSlash(
+                    u, AttackPeakU, AttackCutU,
+                    AttackPeakRight, AttackPeakUp, AttackPeakFront,
+                    AttackCutRight, AttackCutUp, AttackCutFront,
+                    out x, out y, out z);
+            }
+            else if (u <= AttackAcrossU)
+            {
+                SampleSlash(
+                    u, AttackCutU, AttackAcrossU,
+                    AttackCutRight, AttackCutUp, AttackCutFront,
+                    AttackAcrossRight, AttackAcrossUp, AttackAcrossFront,
+                    out x, out y, out z);
+            }
+            else
+            {
+                SampleSlash(
+                    u, AttackAcrossU, 1f,
+                    AttackAcrossRight, AttackAcrossUp, AttackAcrossFront,
+                    AttackSlashLlRight, AttackSlashLlUp, AttackSlashLlFront,
+                    out x, out y, out z);
             }
 
             Normalize(ref x, ref y, ref z);
