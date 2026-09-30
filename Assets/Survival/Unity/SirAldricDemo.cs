@@ -4,6 +4,7 @@ using Survival.Domain.Heroes;
 using Survival.Domain.Ids;
 using Survival.Domain.Theme;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace Survival.Unity
@@ -12,7 +13,9 @@ namespace Survival.Unity
     /// 1080×1920 Game-view demo: PILOT Mixamo holefixed + Walk + Slash.
     /// Path A / ClipSword HOLD. RH sword prop. Design / Derek PASS not claimed.
     /// Play-cam defaults to the rear SoT; 1/2/3 and Q/E or RMB orbit around the knight.
+    /// Input System Keyboard.current (legacy GetKey is dead when the package owns Play).
     /// </summary>
+    [DefaultExecutionOrder(500)]
     public sealed class SirAldricDemo : MonoBehaviour
     {
         public const string DropFileName = "SIR_ALDRIC_REAR_MASTER_LOCKED.png";
@@ -37,17 +40,28 @@ namespace Survival.Unity
                 Boot();
             }
 
+            TickOrbit();
             if (_actor == null || !_actor.Built)
             {
                 return;
             }
 
-            TickOrbit();
             var t = Time.unscaledTime;
             if (_phase != null)
             {
-                _phase.text = _actor.PhaseLabel(t);
+                _phase.text = _actor.PhaseLabel(t) + "  ·  cam " + Mathf.RoundToInt(_orbitYaw);
             }
+        }
+
+        private void OnGUI()
+        {
+            var ev = Event.current;
+            if (ev == null || ev.type != EventType.KeyDown || ev.repeat)
+            {
+                return;
+            }
+
+            ApplyOrbitKey(ev.keyCode);
         }
 
         private void LateUpdate()
@@ -86,37 +100,93 @@ namespace Survival.Unity
                 SirAldric3DMotion.PlayCamLookZ));
         }
 
-        private void TickOrbit()
+        private void ApplyOrbitKey(KeyCode key)
         {
-            if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1))
+            if (key == KeyCode.Alpha1 || key == KeyCode.Keypad1)
             {
                 _orbitYaw = 0f;
                 _orbitPitch = 0f;
             }
-            else if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2))
+            else if (key == KeyCode.Alpha2 || key == KeyCode.Keypad2)
             {
                 _orbitYaw = SirAldric3DMotion.PlayCamThreeQuarterYawDegrees();
                 _orbitPitch = 0f;
             }
-            else if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3))
+            else if (key == KeyCode.Alpha3 || key == KeyCode.Keypad3)
             {
                 _orbitYaw = 180f;
                 _orbitPitch = 0f;
             }
+        }
 
-            var yaw = 0f;
-            if (Input.GetKey(KeyCode.Q) || Input.GetKey(KeyCode.LeftArrow))
+        private void TickOrbit()
+        {
+            var kb = Keyboard.current;
+            if (kb != null)
             {
-                yaw -= 1f;
+                if (kb.digit1Key.wasPressedThisFrame || kb.numpad1Key.wasPressedThisFrame)
+                {
+                    ApplyOrbitKey(KeyCode.Alpha1);
+                }
+                else if (kb.digit2Key.wasPressedThisFrame || kb.numpad2Key.wasPressedThisFrame)
+                {
+                    ApplyOrbitKey(KeyCode.Alpha2);
+                }
+                else if (kb.digit3Key.wasPressedThisFrame || kb.numpad3Key.wasPressedThisFrame)
+                {
+                    ApplyOrbitKey(KeyCode.Alpha3);
+                }
+
+                var yaw = 0f;
+                if (kb.qKey.isPressed || kb.leftArrowKey.isPressed || kb.aKey.isPressed)
+                {
+                    yaw -= 1f;
+                }
+
+                if (kb.eKey.isPressed || kb.rightArrowKey.isPressed || kb.dKey.isPressed)
+                {
+                    yaw += 1f;
+                }
+
+                _orbitYaw += yaw * SirAldric3DMotion.PlayCamOrbitYawSpeed * Time.unscaledDeltaTime;
+            }
+            else
+            {
+                if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1))
+                {
+                    ApplyOrbitKey(KeyCode.Alpha1);
+                }
+                else if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2))
+                {
+                    ApplyOrbitKey(KeyCode.Alpha2);
+                }
+                else if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3))
+                {
+                    ApplyOrbitKey(KeyCode.Alpha3);
+                }
+
+                var yaw = 0f;
+                if (Input.GetKey(KeyCode.Q) || Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
+                {
+                    yaw -= 1f;
+                }
+
+                if (Input.GetKey(KeyCode.E) || Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
+                {
+                    yaw += 1f;
+                }
+
+                _orbitYaw += yaw * SirAldric3DMotion.PlayCamOrbitYawSpeed * Time.unscaledDeltaTime;
             }
 
-            if (Input.GetKey(KeyCode.E) || Input.GetKey(KeyCode.RightArrow))
+            var mouse = Mouse.current;
+            if (mouse != null && (mouse.rightButton.isPressed || mouse.middleButton.isPressed))
             {
-                yaw += 1f;
+                var d = mouse.delta.ReadValue();
+                _orbitYaw += d.x * 0.18f;
+                _orbitPitch -= d.y * 0.18f;
             }
-
-            _orbitYaw += yaw * SirAldric3DMotion.PlayCamOrbitYawSpeed * Time.unscaledDeltaTime;
-            if (Input.GetMouseButton(1) || Input.GetMouseButton(2))
+            else if (mouse == null && (Input.GetMouseButton(1) || Input.GetMouseButton(2)))
             {
                 _orbitYaw += Input.GetAxis("Mouse X") * 140f;
                 _orbitPitch -= Input.GetAxis("Mouse Y") * 80f;

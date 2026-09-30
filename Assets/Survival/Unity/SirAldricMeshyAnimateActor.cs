@@ -36,8 +36,8 @@ namespace Survival.Unity
         public const string AttackAuthoredReason =
             "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Inward Slash " +
             "frames 8–40. Sword never a whole-body X-flip. " +
-            "Walk: HipSheathSocket on mixamorig:Hips, character-right after yaw 180 " +
-            "(cdfbea5 Game-view FAIL: world-left across the neck). Not RH. " +
+            "Walk: HipSheathSocket on mixamorig:Hips; RH must sit on +X (screen-right). " +
+            "(879a6f3 Game-view FAIL: blade left from the hand). Not LH. " +
             "Strike: mixamorig:RightHand + unfold RH max-reach UR→horizontal front (+Z)→LL; " +
             "sword snaps to the forearm–hand axis. Re-applied on camera render. " +
             "RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
@@ -360,10 +360,10 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Walk / blend-out: character-aligned HipSheathSocket on mixamorig:Hips.
-        /// Aim is FaceWorldTop character-right + down — not world ±X (Derek FAIL
-        /// cdfbea5: blade stuck world-left across the neck). Unity bake blade = +Y.
-        /// Never a RH child. Never snap to the swinging forearm.
+        /// Walk / blend-out: HipSheathSocket on mixamorig:Hips. Rear Play-cam
+        /// screen-right = world +X = mixamorig:RightHand after FaceWorldTop.
+        /// Derek FAIL 879a6f3: blade started on the left, pointing left from the hand.
+        /// Unity bake blade = +Y. Never a LH child. Never snap to the swinging forearm.
         /// </summary>
         private void ApplySheathedSword()
         {
@@ -379,11 +379,12 @@ namespace Survival.Unity
             }
 
             var right = CharacterRight();
-            var up = CharacterUp();
-            var forward = CharacterForward();
+            var up = Vector3.up;
+            var back = Vector3.back;
             SirAldric3DMotion.HipSheathGripLocal(out var gx, out var gy, out var gz);
-            socket.position = _hips.position + (right * gx) + (up * gy) + (forward * gz);
-            socket.rotation = CharacterRotation();
+            socket.position = _hips.position + (right * gx) + (up * gy) + (back * (-gz));
+            // World-aligned socket: local +X = screen-right, +Y = up. Independent of hip bone axes.
+            socket.rotation = Quaternion.identity;
             BindSwordTo(socket, strikeGrip: false);
             _heldSword.localPosition = Vector3.zero;
             SirAldric3DMotion.HipSheathBladeLocal(out var bx, out var by, out var bz);
@@ -393,8 +394,6 @@ namespace Survival.Unity
                 return;
             }
 
-            // Unity FBX bakeAxisConversion: visible blade is local +Y, not measured
-            // mesh-forward (that aimed the thin axis and left the blade world-left).
             _heldSword.localRotation = Quaternion.FromToRotation(Vector3.up, sheathLocal.normalized);
         }
 
@@ -419,17 +418,36 @@ namespace Survival.Unity
             return _sheathSocket;
         }
 
-        private Quaternion CharacterRotation() =>
-            _instance != null ? _instance.transform.rotation : Quaternion.identity;
+        /// <summary>
+        /// Rear Play-cam screen-right. Prefer flatten(RightHand − Hips); force +X if
+        /// a leftover yaw put the RH on the left (879a6f3).
+        /// </summary>
+        private Vector3 CharacterRight()
+        {
+            if (_hips != null && _rightHand != null)
+            {
+                var d = _rightHand.position - _hips.position;
+                d.y = 0f;
+                if (d.sqrMagnitude > 1e-6f)
+                {
+                    d.Normalize();
+                    return d.x < 0f ? -d : d;
+                }
+            }
 
-        private Vector3 CharacterRight() =>
-            _instance != null ? _instance.transform.right : Vector3.right;
+            if (_hips != null && _rightUpLeg != null)
+            {
+                var d = _rightUpLeg.position - _hips.position;
+                d.y = 0f;
+                if (d.sqrMagnitude > 1e-6f)
+                {
+                    d.Normalize();
+                    return d.x < 0f ? -d : d;
+                }
+            }
 
-        private Vector3 CharacterUp() =>
-            _instance != null ? _instance.transform.up : Vector3.up;
-
-        private Vector3 CharacterForward() =>
-            _instance != null ? _instance.transform.forward : Vector3.forward;
+            return Vector3.right;
+        }
 
         /// <summary>
         /// Reparent the prop only when the socket changes, then normalize the 1.01 m blade
@@ -609,13 +627,26 @@ namespace Survival.Unity
 
         private static void FaceWorldTop(GameObject root)
         {
-            // Mixamo instantiate face-to-camera (−Z) = frontal FAIL.
-            // Yaw 180 so transform.forward = +Z: back to camera, walk toward TOP.
             // Do not scale.x = -1: Derek 212c6da Play put the sword on the left hand.
+            // Blind yaw 180 when the FBX already faces +Z puts mixamorig:RightHand on
+            // world −X (screen-left). Only yaw if RH is on the left of LH at rest.
             root.transform.localPosition = Vector3.zero;
-            root.transform.localRotation = Quaternion.Euler(0f, RearYawDegrees, 0f);
             var s = root.transform.localScale;
             root.transform.localScale = new Vector3(Mathf.Abs(s.x), Mathf.Abs(s.y), Mathf.Abs(s.z));
+            root.transform.localRotation = Quaternion.identity;
+            var rh = FindNamedBone(root, "mixamorig:RightHand", "RightHand");
+            var lh = FindNamedBone(root, "mixamorig:LeftHand", "LeftHand");
+            var yaw = RearYawDegrees;
+            if (rh != null && lh != null && rh.position.x >= lh.position.x)
+            {
+                yaw = 0f;
+            }
+
+            root.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
+            Debug.Log(
+                "PILOT FaceWorldTop yaw=" + yaw +
+                " RH_x=" + (rh != null ? rh.position.x.ToString("0.000") : "?") +
+                " LH_x=" + (lh != null ? lh.position.x.ToString("0.000") : "?"));
         }
 
         /// <summary>

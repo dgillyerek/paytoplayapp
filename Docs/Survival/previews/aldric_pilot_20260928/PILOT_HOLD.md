@@ -52,7 +52,9 @@ The unrigged body FBX has **no skeleton**. Play instantiates the Mixamo-skinned 
 
 **Derek Game-view `a9f8aff`:** blade **across the back / behind the neck**, not out/down the right hip.
 
-**Derek FAIL `cdfbea5`:** Game-view (laptop) — sword **constantly facing left**, floating horizontal behind neck/upper back, hip sheath empty. Hands at sides. HUD hip sheath walk. Rematch stills did **not** match. Cause: sheath used world axes / Mixamo hip-bone axes and a measured blade local, so after FaceWorldTop yaw 180 the visible blade stayed **world-left**. Fix: character-space socket + local +Y → character-right+down.
+**Derek FAIL `cdfbea5`:** Game-view (laptop) — sword **constantly facing left**, floating horizontal behind neck/upper back, hip sheath empty.
+
+**Derek FAIL `879a6f3`:** orbit keys/drag did **not** rotate Play-cam (legacy `Input.GetKey` is dead while Input System owns Play). Blade still **left from the hand**, started on the **left** side. Blind yaw 180 when the FBX already faces +Z puts `mixamorig:RightHand` on world −X. Fix: yaw only if RH is left of LH; sheath on RH/+X; Input System + OnGUI orbit.
 
 ## Cam (1080×1920 Scale 1×)
 
@@ -64,6 +66,6 @@ Play-cam rematch: walk f18 (**hip sheath** on `mixamorig:Hips`, not RH grip; dum
 
 ## Unity Play
 
-1. Play **SirAldric**. Generic + `useFileScale: 0`. Default cam = **rear Play-cam**. **1 / 2 / 3** = rear / 3/4 / front. **Q/E** or **RMB** orbit. Walk sword = `HipSheathSocket` on Hips. Strike = RightHand. Blade ≈ 1.01 m.
+1. Play **SirAldric** (click the Game view). Generic + `useFileScale: 0`. Default cam = **rear**. **1 / 2 / 3** = rear / 3/4 / front. **Q/E / A/D / arrows** or **RMB** orbit (Input System). HUD shows `cam <yaw>`. Walk sword on **right hip** (`mixamorig:RightHand` side / world +X). Strike = RightHand.
 2. **Walk Game-view (SoT):** blade on the **outside of the right hip**, tip **out/down beside the right leg** — not world-left across the neck, not in the RH, not through the mesh. Strike: blade on the arm; UR → front → LL.
 3. HOLD until Derek Game-view PASS. Rematch is not proof.

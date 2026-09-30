@@ -340,7 +340,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("HipSheathSocket", actor, StringComparison.Ordinal);
         Assert.Contains("HipSheathBladeLocal", actor, StringComparison.Ordinal);
         Assert.Contains("CharacterRight", actor, StringComparison.Ordinal);
-        Assert.Contains("cdfbea5", actor, StringComparison.Ordinal);
+        Assert.Contains("879a6f3", actor, StringComparison.Ordinal);
         Assert.Contains("beginCameraRendering", actor, StringComparison.Ordinal);
         Assert.Contains("LateUpdate", actor, StringComparison.Ordinal);
         Assert.Contains("DefaultExecutionOrder(200)", actor, StringComparison.Ordinal);
@@ -475,6 +475,10 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("orbit", demo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("PlayCamOrbitEye", demo, StringComparison.Ordinal);
         Assert.Contains("Alpha1", demo, StringComparison.Ordinal);
+        Assert.Contains("Keyboard.current", demo, StringComparison.Ordinal);
+        Assert.Contains("digit1Key", demo, StringComparison.Ordinal);
+        Assert.Contains("OnGUI", demo, StringComparison.Ordinal);
+        Assert.Contains("DefaultExecutionOrder(500)", demo, StringComparison.Ordinal);
 
         var dir = Path.Combine(root, "Docs", "Survival", "previews", "aldric_pilot_20260928");
         Assert.True(new FileInfo(Path.Combine(dir, "PILOT_HOLD.md")).Length > 400);
@@ -484,6 +488,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("Mixamo", hold, StringComparison.Ordinal);
         Assert.Contains("a9f8aff", hold, StringComparison.Ordinal);
         Assert.Contains("cdfbea5", hold, StringComparison.Ordinal);
+        Assert.Contains("879a6f3", hold, StringComparison.Ordinal);
         Assert.Contains("HipSheathSocket", hold, StringComparison.Ordinal);
         Assert.Contains("orbit", hold, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("mixamorig:Hips", hold, StringComparison.Ordinal);
