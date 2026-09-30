@@ -4,7 +4,10 @@ using Survival.Domain.Heroes;
 using Survival.Domain.Ids;
 using Survival.Domain.Theme;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 namespace Survival.Unity
@@ -13,7 +16,8 @@ namespace Survival.Unity
     /// 1080×1920 Game-view demo: PILOT Mixamo holefixed + Walk + Slash.
     /// Path A / ClipSword HOLD. RH sword prop. Design / Derek PASS not claimed.
     /// Play-cam defaults to the rear SoT; 1/2/3 and Q/E or RMB orbit around the knight.
-    /// Input System Keyboard.current (legacy GetKey is dead when the package owns Play).
+    /// Input System + IMGUI (Keyboard.current is deaf until Game view owns focus).
+    /// Walk hip sheath; strike UR→front→LL. Game-view must match rematch stills.
     /// </summary>
     [DefaultExecutionOrder(500)]
     public sealed class SirAldricDemo : MonoBehaviour
@@ -29,7 +33,16 @@ namespace Survival.Unity
 
         private void Awake() => Boot();
 
-        private void OnEnable() => Boot();
+        private void OnEnable()
+        {
+            Boot();
+            RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+        }
+
+        private void OnDisable()
+        {
+            RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+        }
 
         private void Start() => Boot();
 
@@ -41,6 +54,7 @@ namespace Survival.Unity
             }
 
             TickOrbit();
+            ApplyPlayCam(_orbitYaw, _orbitPitch);
             if (_actor == null || !_actor.Built)
             {
                 return;
@@ -49,24 +63,80 @@ namespace Survival.Unity
             var t = Time.unscaledTime;
             if (_phase != null)
             {
-                _phase.text = _actor.PhaseLabel(t) + "  ·  cam " + Mathf.RoundToInt(_orbitYaw);
+                var kb = Keyboard.current;
+                var kbMark = kb != null && kb.enabled ? "kb" : "no-kb";
+                _phase.text = _actor.PhaseLabel(t) + "  ·  cam " + Mathf.RoundToInt(_orbitYaw) + "  ·  " + kbMark;
             }
         }
 
         private void OnGUI()
         {
-            // Unity Event has no `repeat` on this editor (Derek CS1061 on 8098f64).
+            // IMGUI lives on the Game view. Derek 7187204: Keyboard.current never
+            // yawed because Editor play routes keys to the focused window (default
+            // PointersAndKeyboardsRespectGameViewFocus). Buttons + drag always work.
+            if (GUI.Button(new Rect(10f, 10f, 96f, 40f), "1 Rear"))
+            {
+                ApplyOrbitKey(KeyCode.Alpha1);
+            }
+
+            if (GUI.Button(new Rect(112f, 10f, 96f, 40f), "2 3/4"))
+            {
+                ApplyOrbitKey(KeyCode.Alpha2);
+            }
+
+            if (GUI.Button(new Rect(214f, 10f, 96f, 40f), "3 Front"))
+            {
+                ApplyOrbitKey(KeyCode.Alpha3);
+            }
+
             var ev = Event.current;
-            if (ev == null || ev.type != EventType.KeyDown || ev.keyCode == KeyCode.None)
+            if (ev == null)
             {
                 return;
             }
 
-            ApplyOrbitKey(ev.keyCode);
+            if (ev.type == EventType.KeyDown && ev.keyCode != KeyCode.None) // skip ev.keyCode == KeyCode.None
+            {
+                ApplyOrbitKey(ev.keyCode);
+                if (ev.keyCode == KeyCode.Q || ev.keyCode == KeyCode.LeftArrow || ev.keyCode == KeyCode.A)
+                {
+                    _orbitYaw -= 12f;
+                    WrapOrbit();
+                }
+                else if (ev.keyCode == KeyCode.E || ev.keyCode == KeyCode.RightArrow || ev.keyCode == KeyCode.D)
+                {
+                    _orbitYaw += 12f;
+                    WrapOrbit();
+                }
+            }
+
+            var overButtons = ev.mousePosition.y <= 54f && ev.mousePosition.x <= 320f;
+            if (!overButtons && ev.type == EventType.MouseDrag && ev.button <= 2)
+            {
+                _orbitYaw += ev.delta.x * 0.35f;
+                _orbitPitch -= ev.delta.y * 0.35f;
+                WrapOrbit();
+            }
+
+            if (ev.type == EventType.ScrollWheel)
+            {
+                _orbitYaw += ev.delta.y * 10f;
+                WrapOrbit();
+            }
         }
 
         private void LateUpdate()
         {
+            if (_booted)
+            {
+                ApplyPlayCam(_orbitYaw, _orbitPitch);
+            }
+        }
+
+        private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
+        {
+            _ = context;
+            _ = camera;
             if (_booted)
             {
                 ApplyPlayCam(_orbitYaw, _orbitPitch);
@@ -149,8 +219,10 @@ namespace Survival.Unity
 
         private void TickOrbit()
         {
+            // Poll every backend. Derek 7187204: Keyboard.current != null skipped
+            // legacy GetKey, then Editor focus left Keyboard.current deaf.
             var kb = Keyboard.current;
-            if (kb != null)
+            if (kb != null && kb.enabled)
             {
                 if (kb.digit1Key.wasPressedThisFrame || kb.numpad1Key.wasPressedThisFrame)
                 {
@@ -178,48 +250,52 @@ namespace Survival.Unity
 
                 _orbitYaw += yaw * SirAldric3DMotion.PlayCamOrbitYawSpeed * Time.unscaledDeltaTime;
             }
-            else
+
+            if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1))
             {
-                if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1))
-                {
-                    ApplyOrbitKey(KeyCode.Alpha1);
-                }
-                else if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2))
-                {
-                    ApplyOrbitKey(KeyCode.Alpha2);
-                }
-                else if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3))
-                {
-                    ApplyOrbitKey(KeyCode.Alpha3);
-                }
-
-                var yaw = 0f;
-                if (Input.GetKey(KeyCode.Q) || Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
-                {
-                    yaw -= 1f;
-                }
-
-                if (Input.GetKey(KeyCode.E) || Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
-                {
-                    yaw += 1f;
-                }
-
-                _orbitYaw += yaw * SirAldric3DMotion.PlayCamOrbitYawSpeed * Time.unscaledDeltaTime;
+                ApplyOrbitKey(KeyCode.Alpha1);
+            }
+            else if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2))
+            {
+                ApplyOrbitKey(KeyCode.Alpha2);
+            }
+            else if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3))
+            {
+                ApplyOrbitKey(KeyCode.Alpha3);
             }
 
+            var legacyYaw = 0f;
+            if (Input.GetKey(KeyCode.Q) || Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
+            {
+                legacyYaw -= 1f;
+            }
+
+            if (Input.GetKey(KeyCode.E) || Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
+            {
+                legacyYaw += 1f;
+            }
+
+            _orbitYaw += legacyYaw * SirAldric3DMotion.PlayCamOrbitYawSpeed * Time.unscaledDeltaTime;
+
             var mouse = Mouse.current;
-            if (mouse != null && (mouse.rightButton.isPressed || mouse.middleButton.isPressed))
+            if (mouse != null && mouse.enabled && (mouse.rightButton.isPressed || mouse.middleButton.isPressed))
             {
                 var d = mouse.delta.ReadValue();
                 _orbitYaw += d.x * 0.18f;
                 _orbitPitch -= d.y * 0.18f;
             }
-            else if (mouse == null && (Input.GetMouseButton(1) || Input.GetMouseButton(2)))
+
+            if (Input.GetMouseButton(1) || Input.GetMouseButton(2))
             {
                 _orbitYaw += Input.GetAxis("Mouse X") * 140f;
                 _orbitPitch -= Input.GetAxis("Mouse Y") * 80f;
             }
 
+            WrapOrbit();
+        }
+
+        private void WrapOrbit()
+        {
             if (float.IsNaN(_orbitYaw) || float.IsInfinity(_orbitYaw))
             {
                 _orbitYaw = 0f;
@@ -245,6 +321,33 @@ namespace Survival.Unity
                 SirAldric3DMotion.PlayCamOrbitPitchMax);
         }
 
+        private static void EnsurePlayInput()
+        {
+            InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInDynamicUpdate;
+            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+            InputSystem.settings.editorInputBehaviorInPlayMode =
+                InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+            SurvivalVisuals.EnsureEventSystem();
+            var es = EventSystem.current != null
+                ? EventSystem.current
+                : Object.FindFirstObjectByType<EventSystem>();
+            if (es == null)
+            {
+                return;
+            }
+
+            var standalone = es.GetComponent<StandaloneInputModule>();
+            if (standalone != null)
+            {
+                standalone.enabled = false;
+            }
+
+            if (es.GetComponent<InputSystemUIInputModule>() == null)
+            {
+                es.gameObject.AddComponent<InputSystemUIInputModule>();
+            }
+        }
+
         private void Boot()
         {
             if (_booted || !Application.isPlaying)
@@ -253,11 +356,10 @@ namespace Survival.Unity
             }
 
             SurvivalVisuals.EnsurePlayCamera();
+            EnsurePlayInput();
             _orbitYaw = 0f;
             _orbitPitch = 0f;
             ApplyPlayCam();
-
-            SurvivalVisuals.EnsureEventSystem();
             ThemePackBinder? pack = null;
             try
             {
@@ -357,7 +459,7 @@ namespace Survival.Unity
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "PILOT Mixamo  ·  hip sheath walk  ·  UR→front→LL  ·  1 rear 2 3/4 3 front  ·  Q/E orbit  ·  HOLD",
+                "PILOT Mixamo  ·  hip sheath walk  ·  1/2/3 or on-screen · drag Game view · Q/E  ·  HOLD",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);

@@ -1,6 +1,6 @@
 # HOLD — Sir Aldric PILOT Mixamo separate-portrait (2026-09-28)
 
-**HOLD merge on PR #27 until Derek Game-view PASS.** Path A / ClipSword / AimChain / Dev weight-paint are not SoT. No Design / Derek PASS. AccuRIG clips-only is **superseded**. **Rematch stills are not proof.** Derek’s laptop Game-view is the walk-sheath SoT.
+**HOLD merge on PR #27 until Derek Game-view matches rematch.** Path A / ClipSword / AimChain / Dev weight-paint are not SoT. No Design / Derek PASS. AccuRIG clips-only is **superseded**. Rematch stills are the **visual target**. Derek’s laptop Game-view is the gate that must equal them.
 
 ## Wire
 
@@ -60,16 +60,18 @@ The unrigged body FBX has **no skeleton**. Play instantiates the Mixamo-skinned 
 
 **Derek compile FAIL `8098f64`:** `CS1061` `'Event' does not contain a definition for 'repeat'`. OnGUI now keys off `EventType.KeyDown` + `keyCode != None` (no `Event.repeat`). Orbit + RH hip sheath unchanged.
 
+**Derek FAIL `7187204`:** Game-view still **rear-only** (1/2/3 Q/E RMB dead) and sword **R→L across the torso**. Rematch stills are the **visual target**; Game-view must match them (hip sheath tip out/down the right hip; orbit rear / 3/4 / front). Fix: IMGUI 1/2/3 + drag on the Game view; Input System `IgnoreFocus` + `AllDeviceInputAlwaysGoesToGameView`; sheath = rematch rest-Euler snap + hilt at hip, outboard pinned to RH/+X, not the swinging hand.
+
 ## Cam (1080×1920 Scale 1×)
 
 Rear `(0, 1.92, −3.08)` LookAt `(0, 1.12, 0.15)` FOV **42**. Mesh 1×.
 
 ## Proofs here
 
-Play-cam rematch: walk f18 (**hip sheath** on `mixamorig:Hips`, not RH grip; dump `sir_aldric_pilot_dump_walk_f18.json`) / slash start f8 (RH max-reach UR) / mid f20 (horizontal front +Z; rear is **foreshortened** toward the enemy cube, not a sky stick) / finish f32 (max-reach LL). Numeric dumps `sir_aldric_pilot_dump_slash_f8.json` / `f20` / `f32`. **Not Meshy website stills. Not Unity Game-view.** Rematch camera `to_track_quat` can disagree with Unity LookAt on screen-right — Unity Play is the gate.
+Play-cam rematch: walk f18 (**hip sheath** on `mixamorig:Hips`, not RH grip; dump `sir_aldric_pilot_dump_walk_f18.json`) / slash start f8 (RH max-reach UR) / mid f20 (horizontal front +Z; rear is **foreshortened** toward the enemy cube, not a sky stick) / finish f32 (max-reach LL). Numeric dumps `sir_aldric_pilot_dump_slash_f8.json` / `f20` / `f32`. **Not Meshy website stills.** Rematch stills are the **visual target**. **Not Unity Game-view** until Derek’s Play matches those stills — Game-view is the gate that must equal rematch.
 
 ## Unity Play
 
-1. Play **SirAldric** (click the Game view). Generic + `useFileScale: 0`. Default cam = **rear**. **1 / 2 / 3** = rear / 3/4 / front. **Q/E / A/D / arrows** or **RMB** orbit (Input System). HUD shows `cam <yaw>`. Walk sword on **right hip** (`mixamorig:RightHand` side / world +X). Strike = RightHand.
-2. **Walk Game-view (SoT):** blade on the **outside of the right hip**, tip **out/down beside the right leg** — not world-left across the neck, not in the RH, not through the mesh. Strike: blade on the arm; UR → front → LL.
-3. HOLD until Derek Game-view PASS. Rematch is not proof.
+1. Play **SirAldric** (click the Game view). Generic + `useFileScale: 0`. Default cam = **rear**. On-screen **1 Rear / 2 3/4 / 3 Front**, or **1 / 2 / 3**, **Q/E / A/D / arrows**, drag, **RMB**. HUD `cam <yaw>` must change. Walk sword on **right hip** (tip out/down beside the right leg) matching rematch walk f18. Strike = RightHand.
+2. **Walk Game-view must match rematch:** blade on the **outside of the right hip**, tip **out/down beside the right leg** — not R→L across the torso. Strike: blade on the arm; UR → front → LL.
+3. HOLD until Derek Game-view matches rematch.

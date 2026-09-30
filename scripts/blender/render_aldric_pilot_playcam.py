@@ -2,15 +2,14 @@
 """Sir Aldric PILOT Play-cam rematch (no Unity Editor on this VM).
 
 Mixamo holefixed mid280k + Standard Walk / Inward Slash.
-Honest label: Play-cam rematch, not Unity Camera.Render, not Meshy website stills.
+Honest label: Play-cam rematch is the visual target. Unity Game-view must match it.
 
 Blender Mixamo already faces rear (back to camera). Unity FaceWorldTop yaws 180
 (needed because Unity Mixamo faces −Z). Do not scale-X flip the body — that put
 the sword on the left hand. Walk: true hip sheath on mixamorig:Hips, outside the
 right hip, tip down beside the leg — not a RH child (Design lean FAIL a9f8aff).
 Attack: reparent mixamorig:RightHand, unfold RH UR → horizontal front (+Z) → LL;
-sword snapped to the forearm–hand axis. Not Unity Game-view.
-Derek Game-view shots are the gate; rematch can disagree.
+sword snapped to the forearm–hand axis. Game-view must equal these stills.
 """
 from __future__ import annotations
 

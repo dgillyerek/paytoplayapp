@@ -341,6 +341,10 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("Quaternion.Normalize", actor, StringComparison.Ordinal);
         Assert.Contains("HipSheathBladeLocal", actor, StringComparison.Ordinal);
         Assert.Contains("CharacterRight", actor, StringComparison.Ordinal);
+        Assert.Contains("SnapSwordHiltTo", actor, StringComparison.Ordinal);
+        Assert.Contains("HideEmbeddedSwords", actor, StringComparison.Ordinal);
+        Assert.Contains("BladeLocalAxis", actor, StringComparison.Ordinal);
+        Assert.Contains("7187204", actor, StringComparison.Ordinal);
         Assert.Contains("879a6f3", actor, StringComparison.Ordinal);
         Assert.Contains("beginCameraRendering", actor, StringComparison.Ordinal);
         Assert.Contains("LateUpdate", actor, StringComparison.Ordinal);
@@ -485,6 +489,19 @@ public sealed class SirAldric3DMotionTests
         Assert.DoesNotContain("cam.transform.LookAt", demo, StringComparison.Ordinal);
         Assert.DoesNotContain("ev.repeat", demo, StringComparison.Ordinal);
         Assert.Contains("ev.keyCode == KeyCode.None", demo, StringComparison.Ordinal);
+        Assert.Contains("GUI.Button", demo, StringComparison.Ordinal);
+        Assert.Contains("IgnoreFocus", demo, StringComparison.Ordinal);
+        Assert.Contains("AllDeviceInputAlwaysGoesToGameView", demo, StringComparison.Ordinal);
+        Assert.Contains("InputSystemUIInputModule", demo, StringComparison.Ordinal);
+        SirAldric3DMotion.PlayCamOrbitEye(180f, 0f, out var frontX, out var frontY, out var frontZ);
+        Assert.True(frontZ > SirAldric3DMotion.PlayCamLookZ, "yaw 180 must sit in front of LookAt");
+        Assert.True(Math.Abs(frontZ - eyeZ) > 4f, "front eye must leave the rear socket");
+        SirAldric3DMotion.PlayCamOrbitEye(SirAldric3DMotion.PlayCamThreeQuarterYawDegrees(), 0f, out var tqX, out var tqY, out var tqZ);
+        Assert.True(Math.Abs(tqX) > 1f, "3/4 yaw must leave the rear X=0 line");
+        _ = frontX;
+        _ = frontY;
+        _ = tqY;
+        _ = tqZ;
 
         var dir = Path.Combine(root, "Docs", "Survival", "previews", "aldric_pilot_20260928");
         Assert.True(new FileInfo(Path.Combine(dir, "PILOT_HOLD.md")).Length > 400);
@@ -496,6 +513,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("cdfbea5", hold, StringComparison.Ordinal);
         Assert.Contains("879a6f3", hold, StringComparison.Ordinal);
         Assert.Contains("8098f64", hold, StringComparison.Ordinal);
+        Assert.Contains("7187204", hold, StringComparison.Ordinal);
         Assert.Contains("CS1061", hold, StringComparison.Ordinal);
         Assert.Contains("QuaternionToEuler", hold, StringComparison.Ordinal);
         Assert.Contains("HipSheathSocket", hold, StringComparison.Ordinal);

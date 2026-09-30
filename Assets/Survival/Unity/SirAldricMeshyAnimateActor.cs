@@ -162,6 +162,7 @@ namespace Survival.Unity
             CorrectBodyScaleIfNeeded(_instance);
             SampleAt(0f);
             AttachHeldSword(_instance);
+            HideEmbeddedSwords(_instance);
             CacheAttackBones(_instance);
             SampleAt(0f);
             LogSkinAndFailIfBad(_instance);
@@ -361,10 +362,10 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Walk / blend-out: HipSheathSocket on mixamorig:Hips. Rear Play-cam
-        /// screen-right = world +X = mixamorig:RightHand after FaceWorldTop.
-        /// Derek FAIL 879a6f3: blade started on the left, pointing left from the hand.
-        /// Unity bake blade = +Y. Never a LH child. Never snap to the swinging forearm.
+        /// Walk sheath = rematch apply_sheathed_sword in Unity Play-cam space.
+        /// After FaceWorldTop, mixamorig:RightHand is on world +X (rear screen-right).
+        /// Grip outside that hip; tip out/down beside the right leg — not R→L across
+        /// the torso (Derek 7187204). Never a swinging-hand child.
         /// </summary>
         private void ApplySheathedSword()
         {
@@ -379,24 +380,32 @@ namespace Survival.Unity
                 return;
             }
 
-            var right = CharacterRight();
+            var outboard = CharacterRight();
             var up = Vector3.up;
-            var back = Vector3.back;
             SirAldric3DMotion.HipSheathGripLocal(out var gx, out var gy, out var gz);
-            socket.position = _hips.position + (right * gx) + (up * gy) + (back * (-gz));
-            // World-aligned socket: local +X = screen-right, +Y = up. Independent of hip bone axes.
+            socket.position = _hips.position + (outboard * gx) + (up * gy) + (Vector3.forward * gz);
             socket.rotation = Quaternion.identity;
             BindSwordTo(socket, strikeGrip: false);
-            _heldSword.localPosition = Vector3.zero;
             SirAldric3DMotion.HipSheathBladeLocal(out var bx, out var by, out var bz);
-            var sheathLocal = new Vector3(bx, by, bz);
-            if (sheathLocal.sqrMagnitude < 1e-8f)
+            var sheath = (outboard * bx) + (up * by) + (Vector3.forward * bz);
+            if (sheath.sqrMagnitude < 1e-8f)
             {
                 return;
             }
 
-            _heldSword.localRotation = Quaternion.Normalize(
-                Quaternion.FromToRotation(Vector3.up, sheathLocal.normalized));
+            // Rematch: rest Euler X 90 on mesh +Z, then snap blade to sheath.
+            // Unity bakeAxisConversion: mesh +Z → measured BladeLocalAxis (usually +Y).
+            var blade = BladeLocalAxis().normalized;
+            var rest = Quaternion.Euler(SirAldric3DMotion.HeldSwordRestEulerX, 0f, 0f);
+            var restBlade = rest * blade;
+            if (restBlade.sqrMagnitude < 1e-8f)
+            {
+                restBlade = blade;
+            }
+
+            var world = Quaternion.FromToRotation(restBlade.normalized, sheath.normalized) * rest;
+            _heldSword.rotation = Quaternion.Normalize(world);
+            SnapSwordHiltTo(socket.position);
         }
 
         private Transform? EnsureHipSheathSocket()
@@ -421,34 +430,95 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Rear Play-cam screen-right. Prefer flatten(RightHand − Hips); force +X if
-        /// a leftover yaw put the RH on the left (879a6f3).
+        /// Rematch hip_outboard (flatten RightUpLeg − Hips) pinned to the RH / +X
+        /// side after FaceWorldTop. Do not follow the swinging hand — that walked
+        /// the sheath in front of the belly and read as R→L across the torso.
+        /// Rear Play-cam character-right = world +X.
         /// </summary>
         private Vector3 CharacterRight()
         {
-            if (_hips != null && _rightHand != null)
-            {
-                var d = _rightHand.position - _hips.position;
-                d.y = 0f;
-                if (d.sqrMagnitude > 1e-6f)
-                {
-                    d.Normalize();
-                    return d.x < 0f ? -d : d;
-                }
-            }
-
+            var d = Vector3.right;
             if (_hips != null && _rightUpLeg != null)
             {
-                var d = _rightUpLeg.position - _hips.position;
-                d.y = 0f;
-                if (d.sqrMagnitude > 1e-6f)
+                var raw = _rightUpLeg.position - _hips.position;
+                raw.y = 0f;
+                if (raw.sqrMagnitude > 1e-6f)
                 {
-                    d.Normalize();
-                    return d.x < 0f ? -d : d;
+                    d = raw.normalized;
                 }
             }
 
-            return Vector3.right;
+            if (_hips != null && _rightHand != null)
+            {
+                var rhx = _rightHand.position.x - _hips.position.x;
+                if (Mathf.Abs(rhx) > 1e-4f && d.x * rhx < 0f)
+                {
+                    d = -d;
+                }
+            }
+
+            if (d.x < 0f)
+            {
+                d = -d;
+            }
+
+            return d;
+        }
+
+        /// <summary>
+        /// Rematch set_sword_world puts the hilt at the hip grip. A centered FBX
+        /// pivot otherwise hangs half the blade across the ribs (Derek 7187204).
+        /// </summary>
+        private void SnapSwordHiltTo(Vector3 worldHilt)
+        {
+            if (_heldSword == null)
+            {
+                return;
+            }
+
+            var blade = (_heldSword.rotation * BladeLocalAxis()).normalized;
+            if (blade.sqrMagnitude < 1e-8f)
+            {
+                return;
+            }
+
+            var minT = float.PositiveInfinity;
+            var hilt = _heldSword.position;
+            var found = false;
+            foreach (var filter in _heldSword.GetComponentsInChildren<MeshFilter>(true))
+            {
+                var mesh = filter.sharedMesh;
+                if (mesh == null)
+                {
+                    continue;
+                }
+
+                var b = mesh.bounds;
+                var c = b.center;
+                var e = b.extents;
+                for (var i = 0; i < 8; i++)
+                {
+                    var local = c + new Vector3(
+                        (i & 1) == 0 ? -e.x : e.x,
+                        (i & 2) == 0 ? -e.y : e.y,
+                        (i & 4) == 0 ? -e.z : e.z);
+                    var w = filter.transform.TransformPoint(local);
+                    var t = Vector3.Dot(w, blade);
+                    if (t < minT)
+                    {
+                        minT = t;
+                        hilt = w;
+                        found = true;
+                    }
+                }
+            }
+
+            if (!found)
+            {
+                return;
+            }
+
+            _heldSword.position += worldHilt - hilt;
         }
 
         /// <summary>
@@ -623,6 +693,28 @@ namespace Survival.Unity
                 if (t.name.IndexOf("Ico", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     t.gameObject.SetActive(false);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Mixamo slash-with-skin can leave a second sword in the RH. Keep only
+        /// SirAldricPilotSword so Game-view matches rematch (one hip sheath).
+        /// </summary>
+        private void HideEmbeddedSwords(GameObject root)
+        {
+            foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
+            {
+                if (_heldSword != null && (rend.transform == _heldSword || rend.transform.IsChildOf(_heldSword)))
+                {
+                    continue;
+                }
+
+                var n = rend.name;
+                if (n.IndexOf("sword", StringComparison.OrdinalIgnoreCase) >= 0
+                    || n.IndexOf("weapon", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    rend.enabled = false;
                 }
             }
         }
