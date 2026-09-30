@@ -337,7 +337,10 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("mixamorig:Hips", actor, StringComparison.Ordinal);
         Assert.Contains("mixamorig:RightUpLeg", actor, StringComparison.Ordinal);
         Assert.Contains("attackNormalized01 <= 0.001f", actor, StringComparison.Ordinal);
-        Assert.Contains("HipSheathDownAlongThigh", actor, StringComparison.Ordinal);
+        Assert.Contains("HipSheathSocket", actor, StringComparison.Ordinal);
+        Assert.Contains("HipSheathBladeLocal", actor, StringComparison.Ordinal);
+        Assert.Contains("CharacterRight", actor, StringComparison.Ordinal);
+        Assert.Contains("cdfbea5", actor, StringComparison.Ordinal);
         Assert.Contains("beginCameraRendering", actor, StringComparison.Ordinal);
         Assert.Contains("LateUpdate", actor, StringComparison.Ordinal);
         Assert.Contains("DefaultExecutionOrder(200)", actor, StringComparison.Ordinal);
@@ -427,6 +430,13 @@ public sealed class SirAldric3DMotionTests
         Assert.Equal(0.40f, SirAldric3DMotion.HeldSwordSheathRight);
         Assert.Equal(1.00f, SirAldric3DMotion.HeldSwordSheathDown);
         Assert.Equal(0.00f, SirAldric3DMotion.HeldSwordSheathBack);
+        SirAldric3DMotion.HipSheathBladeLocal(out var shR, out var shU, out var shF);
+        Assert.True(shR > 0.25f && shU < -0.70f && Math.Abs(shF) < 0.20f, $"sheath local ({shR},{shU},{shF}) must be character-right + down, not world-left");
+        SirAldric3DMotion.PlayCamOrbitEye(0f, 0f, out var eyeX, out var eyeY, out var eyeZ);
+        Assert.Equal(SirAldric3DMotion.PlayCamRearX, eyeX, 3);
+        Assert.Equal(SirAldric3DMotion.PlayCamRearY, eyeY, 3);
+        Assert.Equal(SirAldric3DMotion.PlayCamRearZ, eyeZ, 3);
+        Assert.InRange(SirAldric3DMotion.PlayCamThreeQuarterYawDegrees(), -80f, -20f);
         Assert.Equal(1f, SirAldric3DMotion.AttackWindupWeight(0f), 3);
         Assert.Equal(1f, SirAldric3DMotion.AttackWindupWeight(0.72f), 3);
         Assert.Equal(1f, SirAldric3DMotion.AttackWindupWeight(1f), 3);
@@ -462,6 +472,9 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("usePhysicalProperties = false", demo, StringComparison.Ordinal);
         Assert.Contains("LateUpdate", demo, StringComparison.Ordinal);
         Assert.Contains("UR→front→LL", demo, StringComparison.Ordinal);
+        Assert.Contains("orbit", demo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("PlayCamOrbitEye", demo, StringComparison.Ordinal);
+        Assert.Contains("Alpha1", demo, StringComparison.Ordinal);
 
         var dir = Path.Combine(root, "Docs", "Survival", "previews", "aldric_pilot_20260928");
         Assert.True(new FileInfo(Path.Combine(dir, "PILOT_HOLD.md")).Length > 400);
@@ -470,6 +483,9 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("Not Unity Game-view", hold, StringComparison.Ordinal);
         Assert.Contains("Mixamo", hold, StringComparison.Ordinal);
         Assert.Contains("a9f8aff", hold, StringComparison.Ordinal);
+        Assert.Contains("cdfbea5", hold, StringComparison.Ordinal);
+        Assert.Contains("HipSheathSocket", hold, StringComparison.Ordinal);
+        Assert.Contains("orbit", hold, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("mixamorig:Hips", hold, StringComparison.Ordinal);
         Assert.Contains("RightHand", hold, StringComparison.Ordinal);
         Assert.Contains("not a whole-body X-flip", hold, StringComparison.OrdinalIgnoreCase);

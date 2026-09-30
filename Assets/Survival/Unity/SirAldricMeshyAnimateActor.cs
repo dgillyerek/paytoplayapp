@@ -36,10 +36,10 @@ namespace Survival.Unity
         public const string AttackAuthoredReason =
             "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Inward Slash " +
             "frames 8–40. Sword never a whole-body X-flip. " +
-            "Walk: hip sheath on mixamorig:Hips (not RH). " +
+            "Walk: HipSheathSocket on mixamorig:Hips, character-right after yaw 180 " +
+            "(cdfbea5 Game-view FAIL: world-left across the neck). Not RH. " +
             "Strike: mixamorig:RightHand + unfold RH max-reach UR→horizontal front (+Z)→LL; " +
-            "sword snaps to the forearm–hand axis. Re-applied on camera render " +
-            "(a9f8aff Design lean FAIL: RH-held walk). " +
+            "sword snaps to the forearm–hand axis. Re-applied on camera render. " +
             "RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
         public const float SwordBladeMeters = 1.01f;
@@ -66,6 +66,7 @@ namespace Survival.Unity
         private Transform? _rightLeg;
         private Transform? _heldSword;
         private Transform? _boundSwordParent;
+        private Transform? _sheathSocket;
         /// <summary>
         /// Mesh-local blade axis. Unity FBX bakeAxisConversion turns Design +Z into
         /// local +Y — aiming transform.forward at desired left the visible blade
@@ -359,8 +360,10 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Walk / blend-out: parent mixamorig:Hips, grip outside the right hip, tip down
-        /// beside the right leg. Never a RH child. Never snap to the swinging forearm.
+        /// Walk / blend-out: character-aligned HipSheathSocket on mixamorig:Hips.
+        /// Aim is FaceWorldTop character-right + down — not world ±X (Derek FAIL
+        /// cdfbea5: blade stuck world-left across the neck). Unity bake blade = +Y.
+        /// Never a RH child. Never snap to the swinging forearm.
         /// </summary>
         private void ApplySheathedSword()
         {
@@ -369,31 +372,64 @@ namespace Survival.Unity
                 return;
             }
 
-            BindSwordTo(_hips, strikeGrip: false);
-            var outboard = HipOutboardWorld();
-            _heldSword.position = _hips.position
-                + (outboard * SirAldric3DMotion.HipSheathOutboard)
-                + (Vector3.up * SirAldric3DMotion.HipSheathUp)
-                + (Vector3.back * SirAldric3DMotion.HipSheathBack);
-            // Out + down beside the right leg. No world-back aim — that laid the
-            // blade horizontally behind the neck (Derek Game-view a9f8aff).
-            var down = HipSheathDownAlongThigh();
-            var sheath = (outboard * SirAldric3DMotion.HeldSwordSheathRight)
-                + (down * SirAldric3DMotion.HeldSwordSheathDown)
-                + (Vector3.back * SirAldric3DMotion.HeldSwordSheathBack);
-            if (sheath.sqrMagnitude < 1e-8f)
+            var socket = EnsureHipSheathSocket();
+            if (socket == null)
             {
                 return;
             }
 
-            var bladeLocal = BladeLocalAxis();
-            if (bladeLocal.sqrMagnitude < 1e-8f)
+            var right = CharacterRight();
+            var up = CharacterUp();
+            var forward = CharacterForward();
+            SirAldric3DMotion.HipSheathGripLocal(out var gx, out var gy, out var gz);
+            socket.position = _hips.position + (right * gx) + (up * gy) + (forward * gz);
+            socket.rotation = CharacterRotation();
+            BindSwordTo(socket, strikeGrip: false);
+            _heldSword.localPosition = Vector3.zero;
+            SirAldric3DMotion.HipSheathBladeLocal(out var bx, out var by, out var bz);
+            var sheathLocal = new Vector3(bx, by, bz);
+            if (sheathLocal.sqrMagnitude < 1e-8f)
             {
                 return;
             }
 
-            _heldSword.rotation = Quaternion.FromToRotation(bladeLocal.normalized, sheath.normalized);
+            // Unity FBX bakeAxisConversion: visible blade is local +Y, not measured
+            // mesh-forward (that aimed the thin axis and left the blade world-left).
+            _heldSword.localRotation = Quaternion.FromToRotation(Vector3.up, sheathLocal.normalized);
         }
+
+        private Transform? EnsureHipSheathSocket()
+        {
+            if (_hips == null)
+            {
+                return null;
+            }
+
+            if (_sheathSocket == null)
+            {
+                var go = new GameObject("HipSheathSocket");
+                _sheathSocket = go.transform;
+                _sheathSocket.SetParent(_hips, false);
+            }
+            else if (_sheathSocket.parent != _hips)
+            {
+                _sheathSocket.SetParent(_hips, false);
+            }
+
+            return _sheathSocket;
+        }
+
+        private Quaternion CharacterRotation() =>
+            _instance != null ? _instance.transform.rotation : Quaternion.identity;
+
+        private Vector3 CharacterRight() =>
+            _instance != null ? _instance.transform.right : Vector3.right;
+
+        private Vector3 CharacterUp() =>
+            _instance != null ? _instance.transform.up : Vector3.up;
+
+        private Vector3 CharacterForward() =>
+            _instance != null ? _instance.transform.forward : Vector3.forward;
 
         /// <summary>
         /// Reparent the prop only when the socket changes, then normalize the 1.01 m blade
@@ -422,45 +458,6 @@ namespace Survival.Unity
                 var inv = 1f / parentScale;
                 _heldSword.localPosition = new Vector3(0f, 0.08f, 0f) * inv;
             }
-        }
-
-        /// <summary>
-        /// Flattened (RightUpLeg − Hips) so yaw-sign does not matter. Character-right
-        /// after FaceWorldTop. Fallback hips.right / world +X.
-        /// </summary>
-        private Vector3 HipOutboardWorld()
-        {
-            if (_hips != null && _rightUpLeg != null)
-            {
-                var d = _rightUpLeg.position - _hips.position;
-                d.y = 0f;
-                if (d.sqrMagnitude > 1e-6f)
-                {
-                    return d.normalized;
-                }
-            }
-
-            if (_hips != null)
-            {
-                var r = _hips.right;
-                r.y = 0f;
-                if (r.sqrMagnitude > 1e-6f)
-                {
-                    return r.normalized;
-                }
-            }
-
-            return Vector3.right;
-        }
-
-        /// <summary>
-        /// World down beside the right leg. Do not follow thigh forward (front rematch
-        /// then reads as a held low-guard) and do not aim world-back (Derek Game-view
-        /// a9f8aff laid the blade horizontally behind the neck).
-        /// </summary>
-        private Vector3 HipSheathDownAlongThigh()
-        {
-            return Vector3.down;
         }
 
         /// <summary>

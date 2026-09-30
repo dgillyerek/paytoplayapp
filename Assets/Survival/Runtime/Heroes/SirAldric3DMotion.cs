@@ -52,10 +52,11 @@ namespace Survival.Domain.Heroes
         public const float AttackSlashLlU = 0.78f;
         public const float HeldSwordRestEulerX = 90f;
         /// <summary>
-        /// Walk hip-sheath socket in Unity world after FaceWorldTop. Grip sits on the
-        /// outside of the right hip (not in mixamorig:RightHand). Tip down beside the
-        /// leg. Strike reparents to RightHand. Design lean FAIL a9f8aff: RH-held
-        /// “sheath aim” still read as a hand grip.
+        /// Walk hip-sheath in character space after FaceWorldTop (yaw 180):
+        /// +X = character-right, +Y = up, +Z = forward / enemy. Never raw world
+        /// ±X — that locked the blade world-left across the neck (Derek FAIL
+        /// cdfbea5 Game-view) while rematch hid it. Grip on the outside of the
+        /// right hip; tip out/down beside the right leg. Strike = RightHand only.
         /// </summary>
         public const float HipSheathOutboard = 0.32f;
         public const float HipSheathUp = 0.02f;
@@ -63,6 +64,98 @@ namespace Survival.Domain.Heroes
         public const float HeldSwordSheathRight = 0.40f;
         public const float HeldSwordSheathDown = 1.00f;
         public const float HeldSwordSheathBack = 0.00f;
+        public const float PlayCamOrbitYawSpeed = 90f;
+        public const float PlayCamOrbitPitchMin = -25f;
+        public const float PlayCamOrbitPitchMax = 35f;
+
+        /// <summary>
+        /// Character-space grip offset (right, up, forward) after FaceWorldTop.
+        /// </summary>
+        public static void HipSheathGripLocal(out float right, out float up, out float forward)
+        {
+            right = HipSheathOutboard;
+            up = HipSheathUp;
+            forward = -HipSheathBack;
+        }
+
+        /// <summary>
+        /// Character-space blade aim (right, up, forward). Dominant down + outboard.
+        /// No world-left. No world-back. Unity bake blade is local +Y.
+        /// </summary>
+        public static void HipSheathBladeLocal(out float right, out float up, out float forward)
+        {
+            right = HeldSwordSheathRight;
+            up = -HeldSwordSheathDown;
+            forward = -HeldSwordSheathBack;
+            var mag = MathF.Sqrt((right * right) + (up * up) + (forward * forward));
+            if (mag < 1e-5f)
+            {
+                right = 0.35f;
+                up = -1f;
+                forward = 0f;
+                return;
+            }
+
+            right /= mag;
+            up /= mag;
+            forward /= mag;
+        }
+
+        /// <summary>
+        /// Yaw from the default rear Play-cam to the authored 3/4 eye, around LookAt.
+        /// </summary>
+        public static float PlayCamThreeQuarterYawDegrees()
+        {
+            var rearX = PlayCamRearX - PlayCamLookX;
+            var rearZ = PlayCamRearZ - PlayCamLookZ;
+            var tqX = PlayCamThreeQuarterX - PlayCamLookX;
+            var tqZ = PlayCamThreeQuarterZ - PlayCamLookZ;
+            var deg = (MathF.Atan2(tqX, tqZ) - MathF.Atan2(rearX, rearZ)) * (180f / MathF.PI);
+            if (deg > 180f)
+            {
+                deg -= 360f;
+            }
+
+            if (deg < -180f)
+            {
+                deg += 360f;
+            }
+
+            return deg;
+        }
+
+        /// <summary>
+        /// Orbit the default rear Play-cam around LookAt. yaw/pitch 0 = rear SoT.
+        /// </summary>
+        public static void PlayCamOrbitEye(float yawDegrees, float pitchDegrees, out float x, out float y, out float z)
+        {
+            var lookX = PlayCamLookX;
+            var lookY = PlayCamLookY;
+            var lookZ = PlayCamLookZ;
+            var ox = PlayCamRearX - lookX;
+            var oy = PlayCamRearY - lookY;
+            var oz = PlayCamRearZ - lookZ;
+            var yaw = yawDegrees * (MathF.PI / 180f);
+            var cos = MathF.Cos(yaw);
+            var sin = MathF.Sin(yaw);
+            var rx = (ox * cos) + (oz * sin);
+            var rz = (-ox * sin) + (oz * cos);
+            var pitch = pitchDegrees * (MathF.PI / 180f);
+            var pc = MathF.Cos(pitch);
+            var ps = MathF.Sin(pitch);
+            var horiz = MathF.Sqrt((rx * rx) + (rz * rz));
+            var ny = (oy * pc) - (horiz * ps);
+            var nh = (oy * ps) + (horiz * pc);
+            if (horiz > 1e-5f)
+            {
+                rx *= nh / horiz;
+                rz *= nh / horiz;
+            }
+
+            x = lookX + rx;
+            y = lookY + ny;
+            z = lookZ + rz;
+        }
 
         /// <summary>
         /// Play-cam SoT for SirAldricDemo / 1080×1920 Game-view Scale 1×. View +Z = TOP.

@@ -11,6 +11,7 @@ namespace Survival.Unity
     /// <summary>
     /// 1080×1920 Game-view demo: PILOT Mixamo holefixed + Walk + Slash.
     /// Path A / ClipSword HOLD. RH sword prop. Design / Derek PASS not claimed.
+    /// Play-cam defaults to the rear SoT; 1/2/3 and Q/E or RMB orbit around the knight.
     /// </summary>
     public sealed class SirAldricDemo : MonoBehaviour
     {
@@ -20,6 +21,8 @@ namespace Survival.Unity
         private bool _booted;
         private SirAldricMeshyAnimateActor? _actor;
         private Text? _phase;
+        private float _orbitYaw;
+        private float _orbitPitch;
 
         private void Awake() => Boot();
 
@@ -39,6 +42,7 @@ namespace Survival.Unity
                 return;
             }
 
+            TickOrbit();
             var t = Time.unscaledTime;
             if (_phase != null)
             {
@@ -50,11 +54,16 @@ namespace Survival.Unity
         {
             if (_booted)
             {
-                ApplyPlayCam();
+                ApplyPlayCam(_orbitYaw, _orbitPitch);
             }
         }
 
-        internal static void ApplyPlayCam()
+        /// <summary>
+        /// Default rear Play-cam SoT. yaw/pitch 0 keeps SirAldric3DMotion rear eye.
+        /// </summary>
+        internal static void ApplyPlayCam() => ApplyPlayCam(0f, 0f);
+
+        internal static void ApplyPlayCam(float orbitYawDegrees, float orbitPitchDegrees)
         {
             var cam = Camera.main;
             if (cam == null)
@@ -69,14 +78,54 @@ namespace Survival.Unity
             cam.farClipPlane = 40f;
             cam.backgroundColor = new Color(0.08f, 0.09f, 0.07f, 1f);
             cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.transform.position = new Vector3(
-                SirAldric3DMotion.PlayCamRearX,
-                SirAldric3DMotion.PlayCamRearY,
-                SirAldric3DMotion.PlayCamRearZ);
+            SirAldric3DMotion.PlayCamOrbitEye(orbitYawDegrees, orbitPitchDegrees, out var x, out var y, out var z);
+            cam.transform.position = new Vector3(x, y, z);
             cam.transform.LookAt(new Vector3(
                 SirAldric3DMotion.PlayCamLookX,
                 SirAldric3DMotion.PlayCamLookY,
                 SirAldric3DMotion.PlayCamLookZ));
+        }
+
+        private void TickOrbit()
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1))
+            {
+                _orbitYaw = 0f;
+                _orbitPitch = 0f;
+            }
+            else if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2))
+            {
+                _orbitYaw = SirAldric3DMotion.PlayCamThreeQuarterYawDegrees();
+                _orbitPitch = 0f;
+            }
+            else if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3))
+            {
+                _orbitYaw = 180f;
+                _orbitPitch = 0f;
+            }
+
+            var yaw = 0f;
+            if (Input.GetKey(KeyCode.Q) || Input.GetKey(KeyCode.LeftArrow))
+            {
+                yaw -= 1f;
+            }
+
+            if (Input.GetKey(KeyCode.E) || Input.GetKey(KeyCode.RightArrow))
+            {
+                yaw += 1f;
+            }
+
+            _orbitYaw += yaw * SirAldric3DMotion.PlayCamOrbitYawSpeed * Time.unscaledDeltaTime;
+            if (Input.GetMouseButton(1) || Input.GetMouseButton(2))
+            {
+                _orbitYaw += Input.GetAxis("Mouse X") * 140f;
+                _orbitPitch -= Input.GetAxis("Mouse Y") * 80f;
+            }
+
+            _orbitPitch = Mathf.Clamp(
+                _orbitPitch,
+                SirAldric3DMotion.PlayCamOrbitPitchMin,
+                SirAldric3DMotion.PlayCamOrbitPitchMax);
         }
 
         private void Boot()
@@ -87,6 +136,8 @@ namespace Survival.Unity
             }
 
             SurvivalVisuals.EnsurePlayCamera();
+            _orbitYaw = 0f;
+            _orbitPitch = 0f;
             ApplyPlayCam();
 
             SurvivalVisuals.EnsureEventSystem();
@@ -189,7 +240,7 @@ namespace Survival.Unity
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "PILOT Mixamo  ·  hip sheath walk  ·  UR→front→LL  ·  HOLD",
+                "PILOT Mixamo  ·  hip sheath walk  ·  UR→front→LL  ·  1 rear 2 3/4 3 front  ·  Q/E orbit  ·  HOLD",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);
