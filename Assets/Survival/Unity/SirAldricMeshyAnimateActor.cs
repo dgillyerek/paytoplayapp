@@ -31,6 +31,8 @@ namespace Survival.Unity
         public const string ThemePackAttackFbxAlias = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash.fbx";
         /// <summary>Editable duplicate of the DIAG mixamo.com take. Animation-window SoT after extract.</summary>
         public const string ThemePackAttackAnim = "Survival/Unity/Anims/SirAldric_DIAG_InwardSlash.anim";
+        /// <summary>Editor-only AnimatorController so Animation-window Preview can sample the .anim. Not used by PlayableGraph.</summary>
+        public const string ThemePackAttackController = "Survival/Unity/Anims/SirAldric_DIAG_InwardSlash.controller";
         public const string ThemePackSwordFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_sword.fbx";
         public const string ThemePackCapeFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_cape.fbx";
         public const string PaintedLookDir = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot";
@@ -973,14 +975,15 @@ namespace Survival.Unity
         /// <summary>
         /// Duplicate the imported DIAG mixamo.com take into a project .anim so the
         /// Animation window can key it. Does not overwrite Derek's keys once the
-        /// clip has real curves.
+        /// clip has real curves. Replaces a stub in place so the .anim GUID stays
+        /// stable for the Animation-window AnimatorController.
         /// </summary>
-        public static void EnsureEditableAttackClip()
+        public static void EnsureEditableAttackClip(bool forceReextract = false)
         {
 #if UNITY_EDITOR
             var animRel = AssetPath(ThemePackAttackAnim);
             var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(animRel);
-            if (existing != null && AnimationUtility.GetCurveBindings(existing).Length > 8)
+            if (existing != null && !forceReextract && AnimationUtility.GetCurveBindings(existing).Length > 8)
             {
                 return;
             }
@@ -1009,14 +1012,20 @@ namespace Survival.Unity
                 }
             }
 
+            if (existing != null)
+            {
+                EditorUtility.CopySerialized(src, existing);
+                existing.name = "Attack";
+                existing.wrapMode = WrapMode.Once;
+                EditorUtility.SetDirty(existing);
+                AssetDatabase.SaveAssets();
+                Debug.Log("PILOT refreshed editable DIAG attack clip in place → " + animRel + " len=" + existing.length);
+                return;
+            }
+
             var copy = UnityEngine.Object.Instantiate(src);
             copy.name = "Attack";
             copy.wrapMode = WrapMode.Once;
-            if (AssetDatabase.LoadAssetAtPath<AnimationClip>(animRel) != null)
-            {
-                AssetDatabase.DeleteAsset(animRel);
-            }
-
             AssetDatabase.CreateAsset(copy, animRel);
             AssetDatabase.SaveAssets();
             Debug.Log("PILOT extracted editable DIAG attack clip → " + animRel + " len=" + copy.length);

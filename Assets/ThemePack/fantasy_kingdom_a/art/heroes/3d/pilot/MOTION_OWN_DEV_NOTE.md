@@ -25,7 +25,7 @@ Do **not** wire as the playing clip:
 ## Drive
 1. PlayableGraph mixer: walk FBX → editable DIAG `.anim` (0.20s blend), sword on `mixamorig:RightHand`.
 2. After `Evaluate()`: sword parent only. **No** `AttackRaiseThenCutReach` / `AimArmAlong`.
-3. Derek keys `mixamorig:RightArm` / `RightHand` in Window → Animation → Animation. See `Assets/Survival/Unity/SirAldric_AttackEdit.md`.
+3. Derek keys `mixamorig:RightArm` / `RightHand` in Window → Animation → Animation. Spawn assigns `SirAldric_DIAG_InwardSlash.controller` so Scene Preview can scrub. Select knight → lock Animation → Preview on. See `Assets/Survival/Unity/SirAldric_AttackEdit.md`.
 
 ## HOLD
 Merge HOLD until Derek Game-view PASS once vs video / raise-then-down-left ask.

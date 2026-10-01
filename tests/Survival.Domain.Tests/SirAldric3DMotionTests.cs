@@ -339,7 +339,9 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("useFileScale = false", actor, StringComparison.Ordinal);
         Assert.Contains("ApplyAttackWindupLift", actor, StringComparison.Ordinal);
         Assert.Contains("ThemePackAttackAnim", actor, StringComparison.Ordinal);
+        Assert.Contains("ThemePackAttackController", actor, StringComparison.Ordinal);
         Assert.Contains("SirAldric_DIAG_InwardSlash.anim", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_DIAG_InwardSlash.controller", actor, StringComparison.Ordinal);
         Assert.Contains("EnsureEditableAttackClip", actor, StringComparison.Ordinal);
         Assert.Contains("AttackSlashReach", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("SirAldric3DMotion.AttackSlashReach", actor, StringComparison.Ordinal);
@@ -413,14 +415,25 @@ public sealed class SirAldric3DMotionTests
         var attackAnim = Path.Combine(root, "Assets", "Survival", "Unity", "Anims", "SirAldric_DIAG_InwardSlash.anim");
         Assert.True(File.Exists(attackAnim), "editable DIAG .anim missing");
         Assert.Contains("m_Name: Attack", File.ReadAllText(attackAnim), StringComparison.Ordinal);
+        var attackController = Path.Combine(root, "Assets", "Survival", "Unity", "Anims", "SirAldric_DIAG_InwardSlash.controller");
+        Assert.True(File.Exists(attackController), "Animation-window AnimatorController missing");
+        Assert.Contains("m_Name: Attack", File.ReadAllText(attackController), StringComparison.Ordinal);
+        Assert.Contains("d3e5f7a90b2c4d6e8f1a3c5d7e9f2468", File.ReadAllText(attackController), StringComparison.Ordinal);
         Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldric_AttackEdit.md")));
         var editNote = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldric_AttackEdit.md"));
         Assert.Contains("Window → Animation → Animation", editNote, StringComparison.Ordinal);
         Assert.Contains("mixamorig:RightArm", editNote, StringComparison.Ordinal);
         Assert.Contains("SirAldricAttackEditKnight", editNote, StringComparison.Ordinal);
+        Assert.Contains("Preview", editNote, StringComparison.Ordinal);
+        Assert.Contains("Lock", editNote, StringComparison.Ordinal);
         var extract = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricEditableAttackClip.cs"));
         Assert.Contains("EnsureEditableAttackClip", extract, StringComparison.Ordinal);
         Assert.Contains("Spawn knight for Animation-window edit", extract, StringComparison.Ordinal);
+        Assert.Contains("runtimeAnimatorController", extract, StringComparison.Ordinal);
+        Assert.Contains("EnsureAttackController", extract, StringComparison.Ordinal);
+        Assert.Contains("LoadAllAssetsAtPath", extract, StringComparison.Ordinal);
+        Assert.Contains("applyRootMotion = false", extract, StringComparison.Ordinal);
+        Assert.DoesNotContain("if (avatar != null && !avatar.isHuman)", extract, StringComparison.Ordinal);
 
         var pilot = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "pilot");
         Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_body_holefixed_mid280k.fbx")).Length > 1_000_000);
@@ -652,6 +665,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("95aba89", hold, StringComparison.Ordinal);
         Assert.Contains("AttackRaiseThenCutReach", hold, StringComparison.Ordinal);
         Assert.Contains("SirAldric_DIAG_InwardSlash.anim", hold, StringComparison.Ordinal);
+        Assert.Contains("AnimatorController", hold, StringComparison.Ordinal);
         Assert.Contains("Animation window", hold, StringComparison.Ordinal);
         Assert.Contains("19e6efe", hold, StringComparison.Ordinal);
         Assert.Contains("43b33fb", hold, StringComparison.Ordinal);
