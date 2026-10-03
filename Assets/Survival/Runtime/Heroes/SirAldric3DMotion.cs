@@ -43,6 +43,100 @@ namespace Survival.Domain.Heroes
         public const int MixamoSwordShieldSlashLastFrame = 73;
         public const float MixamoSwordShieldSlashFps = 30f;
         public const string MixamoSwordShieldSlashMd5 = "cc4f97a3ec981d0ece2780aaec49e1a4";
+
+        /// <summary>
+        /// Lite Sword And Shield Pack (17). Same Mixamo auto-rig as Pro
+        /// Sword And Shield Slash (md5 cc4f97a3). Play on the slash avatar,
+        /// not the walk avatar. Lookup key = exact Mixamo catalog name
+        /// (parentheses and capitalization). Do not rename the clips.
+        /// </summary>
+        public const string LiteSwordShieldThemePackDir =
+            "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield";
+        public const int LiteSwordShieldClipCount = 17;
+
+        public readonly struct LiteSwordShieldClip
+        {
+            public LiteSwordShieldClip(string exactName, string fileName, string md5, bool loop)
+            {
+                ExactName = exactName;
+                FileName = fileName;
+                Md5 = md5;
+                Loop = loop;
+            }
+
+            public string ExactName { get; }
+            public string FileName { get; }
+            public string Md5 { get; }
+            public bool Loop { get; }
+            public string ThemePackRel => LiteSwordShieldThemePackDir + "/" + FileName;
+        }
+
+        public static readonly LiteSwordShieldClip[] LiteSwordShieldClips =
+        {
+            new("Draw Sword 1", "draw_sword_1.fbx", "8e72ecbdd39e5a2ef30476687f380f27", false),
+            new("Sheath Sword 1", "sheath_sword_1.fbx", "1efefb69b6461a0d48cf5c8912f7b2d1", false),
+            new("Sword And Shield attack", "sword_and_shield_attack.fbx", "a07b23ac21d3f9821069b518a43cfe43", false),
+            new("Sword And Shield attack (2)", "sword_and_shield_attack_(2).fbx", "ccf7bf077754c28b5476ab619f502864", false),
+            new("Sword And Shield attack (3)", "sword_and_shield_attack_(3).fbx", "fbc9c03fafa4762a2122f8704d7b768d", false),
+            new("Sword And Shield attack (4)", "sword_and_shield_attack_(4).fbx", "2812b491741d1104942e2597334a6cce", false),
+            new("Sword And Shield block", "sword_and_shield_block.fbx", "6ac198628aa941677126071bbc45a207", false),
+            new("Sword And Shield block (2)", "sword_and_shield_block_(2).fbx", "d1ef63c7a51144128cdb02657ea5fbca", false),
+            new("Sword And Shield block idle", "sword_and_shield_block_idle.fbx", "a32eb3a98442b0ef722838af7dedc50a", true),
+            new("Sword And Shield death", "sword_and_shield_death.fbx", "6fdab61142196017047f56547bcdbd3c", false),
+            new("Sword And Shield idle", "sword_and_shield_idle.fbx", "3d4658649d3c0a7723553df64ddc0469", true),
+            new("Sword And Shield run", "sword_and_shield_run.fbx", "5b042626753fec74b1e4d5b5b9a571eb", true),
+            new("Sword And Shield run (2)", "sword_and_shield_run_(2).fbx", "4f2dccb0f8c7e26e4f2dcddace48553c", true),
+            new("Sword And Shield strafe", "sword_and_shield_strafe.fbx", "78e0cfcfa06cd7eaea2b1b0122c17531", true),
+            new("Sword And Shield strafe (2)", "sword_and_shield_strafe_(2).fbx", "b000466170975b7a388b9def9df680fd", true),
+            new("Sword And Shield turn", "sword_and_shield_turn.fbx", "9a44ad26fc7458be8b2100bba9814f4e", false),
+            new("Sword And Shield turn (2)", "sword_and_shield_turn_(2).fbx", "c531ea9ecae863e04819275ed199f373", false),
+        };
+
+        public static bool TryLiteSwordShield(string exactName, out LiteSwordShieldClip clip)
+        {
+            foreach (var candidate in LiteSwordShieldClips)
+            {
+                if (string.Equals(candidate.ExactName, exactName, StringComparison.Ordinal))
+                {
+                    clip = candidate;
+                    return true;
+                }
+            }
+
+            clip = default;
+            return false;
+        }
+
+        public static string? LiteSwordShieldExactNameForFile(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return null;
+            }
+
+            var leaf = fileName;
+            var slash = leaf.LastIndexOf('/');
+            if (slash >= 0)
+            {
+                leaf = leaf[(slash + 1)..];
+            }
+
+            var bslash = leaf.LastIndexOf('\\');
+            if (bslash >= 0)
+            {
+                leaf = leaf[(bslash + 1)..];
+            }
+
+            foreach (var candidate in LiteSwordShieldClips)
+            {
+                if (string.Equals(candidate.FileName, leaf, StringComparison.OrdinalIgnoreCase))
+                {
+                    return candidate.ExactName;
+                }
+            }
+
+            return null;
+        }
         /// <summary>DIAG ready ~f9/85. Sword on LEFT hip until this u, then RH.</summary>
         public const float MixamoDiagDrawEndU = 0.18f;
         /// <summary>

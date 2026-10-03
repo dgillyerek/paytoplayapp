@@ -17,7 +17,8 @@ namespace Survival.Unity
     /// Path A / ClipSword HOLD. RH sword prop. Design / Derek PASS not claimed.
     /// Play-cam defaults to the rear SoT; 1/2/3 and Q/E or RMB orbit around the knight.
     /// Input System + IMGUI (Keyboard.current is deaf until Game view owns focus).
-    /// Walk RH grip, then Sword And Shield Slash on its own avatar. Leftover left-hip draw unused.
+    /// Walk RH grip, then Sword And Shield Slash on its own avatar. Lite pack:
+    /// PlayNamedClip(exact Mixamo name) on that slash avatar. Leftover left-hip draw unused.
     /// YouTube iQ1s3nN1330 is leftover SoT history. HOLD.
     /// </summary>
     [DefaultExecutionOrder(500)]
@@ -99,6 +100,13 @@ namespace Survival.Unity
                 ApplyOrbitKey(KeyCode.Alpha3);
             }
 
+            if (GUI.Button(new Rect(316f, 10f, 200f, 40f), "Walk then Slash"))
+            {
+                PlayDefaultWalkThenSlash();
+            }
+
+            DrawLiteClipButtons();
+
             var ev = Event.current;
             if (ev == null)
             {
@@ -120,7 +128,7 @@ namespace Survival.Unity
                 }
             }
 
-            var overButtons = ev.mousePosition.y <= 54f && ev.mousePosition.x <= 320f;
+            var overButtons = ev.mousePosition.y <= 380f && ev.mousePosition.x <= 560f;
             if (!overButtons && ev.type == EventType.MouseDrag && ev.button <= 2)
             {
                 _orbitYaw += ev.delta.x * 0.35f;
@@ -221,6 +229,41 @@ namespace Survival.Unity
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.transform.position = eye;
             cam.transform.rotation = rot;
+        }
+
+        /// <summary>
+        /// Derek: call a Lite pack clip by its exact Mixamo catalog name.
+        /// Example: PlayNamedClip("Sword And Shield attack (2)").
+        /// </summary>
+        public bool PlayNamedClip(string exactName)
+        {
+            if (_actor == null)
+            {
+                return false;
+            }
+
+            return _actor.PlayNamedClip(exactName);
+        }
+
+        public void PlayDefaultWalkThenSlash()
+        {
+            _actor?.PlayDefaultWalkThenSlash();
+        }
+
+        private void DrawLiteClipButtons()
+        {
+            var clips = SirAldric3DMotion.LiteSwordShieldClips;
+            for (var i = 0; i < clips.Length; i++)
+            {
+                var col = i % 2;
+                var row = i / 2;
+                var x = 10f + (col * 270f);
+                var y = 58f + (row * 34f);
+                if (GUI.Button(new Rect(x, y, 262f, 32f), clips[i].ExactName))
+                {
+                    PlayNamedClip(clips[i].ExactName);
+                }
+            }
         }
 
         public void ForcePreset(int slot)
@@ -580,7 +623,7 @@ namespace Survival.Unity
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "PILOT Mixamo  ·  walk then Sword And Shield Slash (own avatar)  ·  leftover left-hip draw unused  ·  HOLD",
+                "PILOT Mixamo  ·  walk then Sword And Shield Slash (own avatar)  ·  Lite PlayNamedClip exact Mixamo names  ·  leftover left-hip draw unused  ·  HOLD",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);

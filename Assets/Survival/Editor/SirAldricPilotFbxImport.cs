@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.IO;
 using Survival.Domain.Heroes;
 using UnityEditor;
 using UnityEngine;
@@ -32,6 +33,13 @@ namespace Survival.Editor
             var path = assetPath.Replace('\\', '/');
             if (path.IndexOf("/heroes/3d/pilot/", StringComparison.OrdinalIgnoreCase) < 0)
             {
+                return;
+            }
+
+            var lite = path.IndexOf("/lite_sword_shield/", StringComparison.OrdinalIgnoreCase) >= 0;
+            if (lite)
+            {
+                ApplyLiteSwordShield(importer, path);
                 return;
             }
 
@@ -88,6 +96,52 @@ namespace Survival.Editor
                 "PILOT import " + path + " takeName=" + best.takeName +
                 " frames=" + best.firstFrame + "-" + best.lastFrame +
                 " defaults=" + DumpTakes(defaults));
+        }
+
+        /// <summary>
+        /// Lite Sword And Shield Pack: keep the exact Mixamo catalog name.
+        /// Do not rename to Attack. Do not force 0–73 or 0–85.
+        /// </summary>
+        private static void ApplyLiteSwordShield(ModelImporter importer, string path)
+        {
+            importer.animationType = ModelImporterAnimationType.Generic;
+            importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+            importer.importAnimation = true;
+            importer.useFileScale = false;
+            var defaults = importer.defaultClipAnimations;
+            if (defaults == null || defaults.Length == 0)
+            {
+                Debug.LogWarning("PILOT lite import " + path + " has no defaultClipAnimations yet.");
+                return;
+            }
+
+            var best = PickTake(defaults, walk: false);
+            if (best == null)
+            {
+                Debug.LogError("PILOT lite import " + path + " could not pick a take. defaults=" + DumpTakes(defaults));
+                return;
+            }
+
+            var exact = SirAldric3DMotion.LiteSwordShieldExactNameForFile(Path.GetFileName(path));
+            if (string.IsNullOrEmpty(exact))
+            {
+                Debug.LogError("PILOT lite import " + path + " is not in the exact Mixamo name table.");
+                return;
+            }
+
+            best.name = exact;
+            best.mirror = false;
+            var loops = SirAldric3DMotion.TryLiteSwordShield(exact, out var entry) && entry.Loop;
+            best.loopTime = loops;
+            best.loop = loops;
+            best.keepOriginalOrientation = true;
+            best.keepOriginalPositionY = true;
+            best.keepOriginalPositionXZ = true;
+            importer.clipAnimations = new[] { best };
+            Debug.Log(
+                "PILOT lite import " + path + " exactName=" + exact +
+                " takeName=" + best.takeName +
+                " frames=" + best.firstFrame + "-" + best.lastFrame);
         }
 
         internal static ModelImporterClipAnimation? PickTake(ModelImporterClipAnimation[] defaults, bool walk)

@@ -366,6 +366,10 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("SampleStrikePath", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("_attackPlayable.SetTime", actor, StringComparison.Ordinal);
         Assert.Contains("_slashPlayable.SetTime", actor, StringComparison.Ordinal);
+        Assert.Contains("PlayNamedClip", actor, StringComparison.Ordinal);
+        Assert.Contains("PlayDefaultWalkThenSlash", actor, StringComparison.Ordinal);
+        Assert.Contains("ThemePackLiteSwordShieldDir", actor, StringComparison.Ordinal);
+        Assert.Contains("lite_sword_shield", actor, StringComparison.Ordinal);
         Assert.Contains("_attackReady = true", actor, StringComparison.Ordinal);
         Assert.Contains("SirAldricSwordShieldSlash", actor, StringComparison.Ordinal);
         Assert.Contains("own Mixamo auto-rig", actor, StringComparison.Ordinal);
@@ -530,6 +534,10 @@ public sealed class SirAldric3DMotionTests
         Assert.Equal(0, SirAldric3DMotion.MixamoSwordShieldSlashFirstFrame);
         Assert.Equal(73, SirAldric3DMotion.MixamoSwordShieldSlashLastFrame);
         Assert.Equal("cc4f97a3ec981d0ece2780aaec49e1a4", SirAldric3DMotion.MixamoSwordShieldSlashMd5);
+        Assert.Equal(17, SirAldric3DMotion.LiteSwordShieldClips.Length);
+        Assert.Contains("LiteSwordShieldClips", motionSrc, StringComparison.Ordinal);
+        Assert.Contains("Sword And Shield turn (2)", motionSrc, StringComparison.Ordinal);
+        Assert.Contains("8e72ecbdd39e5a2ef30476687f380f27", motionSrc, StringComparison.Ordinal);
         Assert.Equal(59f / 85f, SirAldric3DMotion.MixamoDiagApexClipU, 3);
         Assert.True(SirAldric3DMotion.MixamoDiagRaisePlayEndU < 0.50f);
         Assert.Contains("MixamoDiagPlaybackU", motionSrc, StringComparison.Ordinal);
@@ -571,6 +579,9 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("SirAldric_body_holefixed_slash.fbx", post, StringComparison.Ordinal);
         Assert.Contains("SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx", post, StringComparison.Ordinal);
         Assert.Contains("SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx", post, StringComparison.Ordinal);
+        Assert.Contains("/lite_sword_shield/", post, StringComparison.Ordinal);
+        Assert.Contains("LiteSwordShieldExactNameForFile", post, StringComparison.Ordinal);
+        Assert.Contains("ApplyLiteSwordShield", post, StringComparison.Ordinal);
         Assert.Contains("MixamoSwordShieldSlashLastFrame", post, StringComparison.Ordinal);
         Assert.Contains("PilotAttackDiagRevRetired", post, StringComparison.Ordinal);
         Assert.Contains("PilotAttackDiagMirrRetired", post, StringComparison.Ordinal);
@@ -710,6 +721,9 @@ public sealed class SirAldric3DMotionTests
         Assert.DoesNotContain("ev.repeat", demo, StringComparison.Ordinal);
         Assert.Contains("ev.keyCode == KeyCode.None", demo, StringComparison.Ordinal);
         Assert.Contains("GUI.Button", demo, StringComparison.Ordinal);
+        Assert.Contains("PlayNamedClip", demo, StringComparison.Ordinal);
+        Assert.Contains("Sword And Shield attack (2)", demo, StringComparison.Ordinal);
+        Assert.Contains("Walk then Slash", demo, StringComparison.Ordinal);
         Assert.Contains("IgnoreFocus", demo, StringComparison.Ordinal);
         Assert.Contains("AllDeviceInputAlwaysGoesToGameView", demo, StringComparison.Ordinal);
         Assert.Contains("InputSystemUIInputModule", demo, StringComparison.Ordinal);
@@ -925,6 +939,92 @@ public sealed class SirAldric3DMotionTests
             Assert.True(y < 0f, $"blade Y {y} at u={u} must not go up");
             Assert.True(z > 0f, $"blade Z {z} at u={u} must stay forward");
         }
+    }
+
+    [Fact]
+    public void Lite_sword_shield_pack_is_exact_mixamo_names_on_slash_avatar()
+    {
+        var root = FindRepoRoot();
+        Assert.Equal(17, SirAldric3DMotion.LiteSwordShieldClipCount);
+        Assert.Equal(17, SirAldric3DMotion.LiteSwordShieldClips.Length);
+        Assert.Equal(
+            "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield",
+            SirAldric3DMotion.LiteSwordShieldThemePackDir);
+        Assert.True(SirAldric3DMotion.TryLiteSwordShield("Sword And Shield turn", out var turn));
+        Assert.Equal("9a44ad26fc7458be8b2100bba9814f4e", turn.Md5);
+        Assert.Equal("Sword And Shield turn", turn.ExactName);
+        Assert.True(SirAldric3DMotion.TryLiteSwordShield("Sword And Shield turn (2)", out var turn2));
+        Assert.Equal("c531ea9ecae863e04819275ed199f373", turn2.Md5);
+        Assert.False(SirAldric3DMotion.TryLiteSwordShield("sword and shield turn (2)", out _));
+        Assert.Equal(
+            "Sword And Shield attack (2)",
+            SirAldric3DMotion.LiteSwordShieldExactNameForFile("sword_and_shield_attack_(2).fbx"));
+        Assert.Equal(
+            "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx",
+            SirAldricMeshyAnimateActorPath());
+
+        var dir = Path.Combine(
+            root,
+            "Assets",
+            "ThemePack",
+            "fantasy_kingdom_a",
+            "art",
+            "heroes",
+            "3d",
+            "pilot",
+            "lite_sword_shield");
+        foreach (var clip in SirAldric3DMotion.LiteSwordShieldClips)
+        {
+            var fbx = Path.Combine(dir, clip.FileName);
+            Assert.True(File.Exists(fbx), "missing " + clip.ExactName);
+            Assert.Equal(
+                clip.Md5,
+                Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(fbx))).ToLowerInvariant());
+            var meta = File.ReadAllText(fbx + ".meta");
+            Assert.Contains("name: " + clip.ExactName, meta, StringComparison.Ordinal);
+            Assert.Contains("takeName: mixamo.com", meta, StringComparison.Ordinal);
+            Assert.Contains("animationType: 2", meta, StringComparison.Ordinal);
+            Assert.Contains("useFileScale: 0", meta, StringComparison.Ordinal);
+            Assert.Contains("avatarSetup: 1", meta, StringComparison.Ordinal);
+            Assert.Contains("mirror: 0", meta, StringComparison.Ordinal);
+            Assert.DoesNotContain("name: Attack", meta, StringComparison.Ordinal);
+            Assert.DoesNotContain("lastFrame: 73", meta, StringComparison.Ordinal);
+            Assert.DoesNotContain("lastFrame: 85", meta, StringComparison.Ordinal);
+        }
+
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
+        Assert.Contains("public bool PlayNamedClip(string exactName)", actor, StringComparison.Ordinal);
+        Assert.Contains("TryLiteSwordShield(exactName", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldricSwordShieldSlash", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("ThemePackAttackFbx = \"ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/", actor, StringComparison.Ordinal);
+        var importer = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricPilotFbxImport.cs"));
+        Assert.Contains("ApplyLiteSwordShield", importer, StringComparison.Ordinal);
+        Assert.Contains("best.name = exact", importer, StringComparison.Ordinal);
+        Assert.DoesNotContain("best.name = walk ? \"Walking\" : \"Attack\";\n            if (lite)", importer, StringComparison.Ordinal);
+        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "SirAldric.unity"));
+        var pathIdx = scene.IndexOf("m_Name: SirAldricStrikePath", StringComparison.Ordinal);
+        Assert.True(pathIdx > 0);
+        var activeIdx = scene.IndexOf("m_IsActive:", pathIdx, StringComparison.Ordinal);
+        Assert.Contains("m_IsActive: 0", scene.Substring(activeIdx, 20), StringComparison.Ordinal);
+        var walk = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "pilot", "SirAldric_body_holefixed_walk.fbx");
+        var slash = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "pilot", "SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx");
+        Assert.Equal(
+            "799d851db5ca4ecfbea28a9478fc039e",
+            Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(walk))).ToLowerInvariant());
+        Assert.Equal(
+            "cc4f97a3ec981d0ece2780aaec49e1a4",
+            Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(slash))).ToLowerInvariant());
+    }
+
+    private static string SirAldricMeshyAnimateActorPath()
+    {
+        var actor = File.ReadAllText(Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
+        const string needle = "ThemePackAttackFbx = \"";
+        var i = actor.IndexOf(needle, StringComparison.Ordinal);
+        Assert.True(i >= 0);
+        var start = i + needle.Length;
+        var end = actor.IndexOf('"', start);
+        return actor.Substring(start, end - start);
     }
 
     [Fact]

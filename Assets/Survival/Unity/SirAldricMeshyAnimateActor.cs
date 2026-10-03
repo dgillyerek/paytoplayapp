@@ -18,9 +18,11 @@ namespace Survival.Unity
     /// Walk = Standard Walk (own Mixamo avatar). After walk, Play Design's
     /// Sword And Shield Slash FBX on THAT file's own Mixamo auto-rig — do not
     /// remap onto the walk skeleton. 74 frames / 30 FPS / Mirror off. Not the
-    /// 53-frame Sword And Shield Attack. Leftover DIAG / MILD / DIAG_MIRR /
-    /// DIAG_REV / rebuilt .anim / four Scene markers / blade pitch / leftover
-    /// ReachRightArmToward unused. Leftover 130cec4 walk only. HOLD merge.
+    /// 53-frame Sword And Shield Attack. Lite Sword And Shield Pack (17) plays
+    /// on the same slash avatar via PlayNamedClip(exact Mixamo name). Leftover
+    /// DIAG / MILD / DIAG_MIRR / DIAG_REV / rebuilt .anim / four Scene markers /
+    /// blade pitch / leftover ReachRightArmToward unused. Leftover 130cec4 walk
+    /// only. HOLD merge.
     /// </summary>
     [DefaultExecutionOrder(200)]
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
@@ -29,6 +31,7 @@ namespace Survival.Unity
         public const string ThemePackLookFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_mid280k.fbx";
         public const string ThemePackWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx";
         public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx";
+        public const string ThemePackLiteSwordShieldDir = SirAldric3DMotion.LiteSwordShieldThemePackDir;
         /// <summary>Leftover DIAG (md5 72412be4). Not playing. Not DIAG_REV 0beb3c77. Not DIAG_MIRR 70fd9483. Not MILD 8d5b78b0. Not baseline 4a143441.</summary>
         public const string ThemePackAttackFbxDiagLeftover = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx";
         /// <summary>Same leftover DIAG bytes as ThemePackAttackFbxDiagLeftover.</summary>
@@ -49,7 +52,8 @@ namespace Survival.Unity
         public const string AttackAuthoredReason =
             "PILOT Mixamo sep Generic: holefixed Standard Walk then Design Sword And Shield Slash " +
             "(SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx md5 cc4f97a3, 74 frames 30 FPS Mirror off) " +
-            "on its own Mixamo auto-rig. Do not remap onto the walk skeleton. Not the 53-frame Sword And Shield Attack. " +
+            "on its own Mixamo auto-rig. Lite Sword And Shield Pack (17) PlayNamedClip exact Mixamo names on that slash avatar. " +
+            "Do not remap onto the walk skeleton. Not the 53-frame Sword And Shield Attack. " +
             "Leftover 130cec4 walk only. Leftover Scene markers 1_Draw_LeftHipPocket / 2_Raise_AboveHeadRight / 3_Strike_Forward / 4_Strike_DownToFoot " +
             "under SirAldricStrikePath do not drive motion. Leftover ReachRightArmToward / SampleStrikePath unused. " +
             "SirAldric_DIAG_InwardSlash.anim leftover (name matches the file — Attack as clip.name does not match SirAldric_DIAG_InwardSlash and Unity will not compile). " +
@@ -110,8 +114,14 @@ namespace Survival.Unity
         private bool _sheathHiltReady;
         private float _poseTime;
         private bool _poseReady;
+        private string? _namedClipExactName;
+        private bool _namedClipActive;
+        private bool _namedClipLoop;
+        private float _namedClipLength;
+        private float _namedClipOrigin;
 
         public bool Built => _graphReady;
+        public string? NamedClipExactName => _namedClipExactName;
         public bool HasAttackClip => _attackReady;
         public float WalkLength => _walkLength;
         public float AttackLength => _attackLength > 0.05f ? _attackLength : 0f;
@@ -269,6 +279,85 @@ namespace Survival.Unity
             LogSkinAndFailIfBad(_slashInstance);
             SetAvatarVisible(_slashInstance, false);
             _attackReady = true;
+            _namedClipActive = false;
+            _namedClipExactName = null;
+        }
+
+        /// <summary>
+        /// Play one Lite Sword And Shield Pack clip by its exact Mixamo catalog
+        /// name (parentheses and capitalization). Same slash Mixamo auto-rig as
+        /// Pro Sword And Shield Slash — not the walk avatar. Do not rename clips.
+        /// </summary>
+        public bool PlayNamedClip(string exactName)
+        {
+            if (!_slashGraph.IsValid() || _slashAnimator == null)
+            {
+                Debug.LogWarning("PILOT PlayNamedClip: slash avatar not ready. exactName=" + exactName);
+                return false;
+            }
+
+            if (!SirAldric3DMotion.TryLiteSwordShield(exactName, out var entry))
+            {
+                Debug.LogWarning("PILOT PlayNamedClip: unknown exact Mixamo name '" + exactName + "'");
+                return false;
+            }
+
+            var clip = LoadClip(entry.ThemePackRel, exactName, repairWalk: false);
+            if (clip == null)
+            {
+                Debug.LogWarning("PILOT PlayNamedClip: clip missing after Generic import. " + entry.ThemePackRel);
+                return false;
+            }
+
+            clip.wrapMode = entry.Loop ? WrapMode.Loop : WrapMode.Once;
+            if (_slashPlayable.IsValid())
+            {
+                _slashPlayable.Destroy();
+            }
+
+            _slashPlayable = AnimationClipPlayable.Create(_slashGraph, clip);
+            _slashOutput.SetSourcePlayable(_slashPlayable);
+            _namedClipExactName = exactName;
+            _namedClipActive = true;
+            _namedClipLoop = entry.Loop;
+            _namedClipLength = clip.length > 0.05f ? clip.length : 1f;
+            _namedClipOrigin = Time.unscaledTime;
+            SetAvatarVisible(_instance, false);
+            SetAvatarVisible(_slashInstance, true);
+            Debug.Log(
+                "PILOT PlayNamedClip exactName=" + exactName +
+                " file=" + entry.FileName + " md5=" + entry.Md5 +
+                " slashAvatar=SirAldricSwordShieldSlash");
+            return true;
+        }
+
+        /// <summary>Return to default Play: walk then Pro Sword And Shield Slash.</summary>
+        public void PlayDefaultWalkThenSlash()
+        {
+            _namedClipActive = false;
+            _namedClipExactName = null;
+            if (!_slashGraph.IsValid())
+            {
+                return;
+            }
+
+            var slash = LoadClip(ThemePackAttackFbx, AttackClipHint, repairWalk: false);
+            if (slash == null)
+            {
+                return;
+            }
+
+            slash.wrapMode = WrapMode.Once;
+            if (_slashPlayable.IsValid())
+            {
+                _slashPlayable.Destroy();
+            }
+
+            _slashPlayable = AnimationClipPlayable.Create(_slashGraph, slash);
+            _slashOutput.SetSourcePlayable(_slashPlayable);
+            _attackLength = slash.length > 0.05f
+                ? slash.length
+                : (SirAldric3DMotion.MixamoSwordShieldSlashLastFrame + 1f) / SirAldric3DMotion.MixamoSwordShieldSlashFps;
         }
 
         /// <summary>
@@ -402,6 +491,31 @@ namespace Survival.Unity
             }
 
             var timeSeconds = _poseTime;
+            if (_namedClipActive && _slashGraph.IsValid() && _slashPlayable.IsValid())
+            {
+                SetAvatarVisible(_instance, false);
+                SetAvatarVisible(_slashInstance, true);
+                var namedT = timeSeconds - _namedClipOrigin;
+                if (namedT < 0f)
+                {
+                    namedT = 0f;
+                }
+
+                var namedLen = _namedClipLength > 0.05f ? _namedClipLength : 1f;
+                if (_namedClipLoop)
+                {
+                    namedT %= namedLen;
+                }
+                else if (namedT > namedLen)
+                {
+                    namedT = namedLen;
+                }
+
+                _slashPlayable.SetTime(namedT);
+                _slashGraph.Evaluate();
+                return;
+            }
+
             var walkLen = _walkLength > 0.05f ? _walkLength : 1f;
             var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
             var slashLen = _attackReady ? Mathf.Max(_attackLength, 0.01f) : 0f;
@@ -840,6 +954,11 @@ namespace Survival.Unity
 
         public string PhaseLabel(float timeSeconds)
         {
+            if (_namedClipActive && !string.IsNullOrEmpty(_namedClipExactName))
+            {
+                return "LITE  ·  " + _namedClipExactName + "  ·  slash avatar";
+            }
+
             var walkLen = _walkLength > 0.05f ? _walkLength : 1f;
             var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
             var slashLen = _attackReady ? Mathf.Max(_attackLength, 0.01f) : 0f;
@@ -1395,6 +1514,30 @@ namespace Survival.Unity
             {
                 Debug.LogError("PILOT repair " + rel + " no usable take. " + DumpTakes(defaults));
                 return false;
+            }
+
+            var lite = rel.IndexOf("/lite_sword_shield/", StringComparison.OrdinalIgnoreCase) >= 0;
+            if (lite)
+            {
+                var exact = SirAldric3DMotion.LiteSwordShieldExactNameForFile(Path.GetFileName(rel));
+                if (string.IsNullOrEmpty(exact))
+                {
+                    Debug.LogError("PILOT repair lite " + rel + " is not in the exact Mixamo name table.");
+                    return false;
+                }
+
+                best.name = exact;
+                best.mirror = false;
+                var loops = SirAldric3DMotion.TryLiteSwordShield(exact, out var entry) && entry.Loop;
+                best.loopTime = loops;
+                best.loop = loops;
+                best.keepOriginalOrientation = true;
+                best.keepOriginalPositionY = true;
+                best.keepOriginalPositionXZ = true;
+                importer.clipAnimations = new[] { best };
+                importer.SaveAndReimport();
+                Debug.Log("PILOT repair lite " + rel + " exactName=" + exact + " takeName=" + best.takeName);
+                return true;
             }
 
             best.name = walk ? ClipHint : AttackClipHint;
