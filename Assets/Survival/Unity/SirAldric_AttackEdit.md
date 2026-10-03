@@ -1,21 +1,19 @@
-# Sir Aldric — Mixamo DIAG attack (`SirAldric_DIAG_InwardSlash`)
+# Sir Aldric — Scene-marker strike path
 
-**HOLD.** Game-view is SoT. PlayableGraph plays the Mixamo **DIAG** human take (`Stable Sword Inward Slash`, md5 `72412be4`) as `Assets/Survival/Unity/Anims/SirAldric_DIAG_InwardSlash.anim`.
+**HOLD.** Game-view is SoT. Walk stays the Standard Walk FBX. Attack is **not** Mixamo DIAG playback.
 
-**Compile:** clip **name must be `SirAldric_DIAG_InwardSlash`**, same as the file. Naming it `Attack` does not match.
+Drag these Hierarchy empties in **Scene** view (Gizmos on). Next Play follows the new positions — no code change.
 
-The `7958283` held-pose robot clip is discarded. Arm / shoulder / torso move together from the Mixamo take — no snap between frozen poses, no post-Evaluate AimArmAlong.
+1. `SirAldricStrikePath` / **`1_Draw_LeftHipPocket`** — left hip pocket (draw)
+2. `SirAldricStrikePath` / **`2_Raise_AboveHeadRight`** — above the head, right side
+3. `SirAldricStrikePath` / **`3_Strike_Forward`** — forward strike
+4. `SirAldricStrikePath` / **`4_Strike_DownToFoot`** — down toward his foot
 
-Story (rear cam / Derek POV):
+Colored gizmo spheres + labels. Right hand / sword follows a Catmull arc; shoulder and elbow bend toward each point. No frozen holds. No Mixamo Mirror. Leftover `SirAldric_DIAG_InwardSlash.anim` is unused at Play (clip **name must stay `SirAldric_DIAG_InwardSlash`** if you open it — Attack as clip.name does not match).
 
-1. Walk straight (Walk FBX).
-2. Sword starts at the **LEFT hip** and is drawn (`u < 0.18`).
-3. Mixamo rise **above the head, RIGHT** (DIAG TOP ~f59/85).
-4. Strike **FORWARD**, then **DOWN toward the foot** (`MixamoDiagPlaybackU` + `MixamoDiagStrikeBladeLocal` — Derek `1821c4a` linear DIAG went UPWARDS).
+The `7958283` held-pose robot clip is discarded. Leftover AimArmAlong / MixamoDiagPlaybackU / MixamoDiagStrikeBladeLocal unused.
 
-Walk after draw: `mixamorig:RightHand`. Orbit 1/2/3 unchanged. No DIAG_REV / DIAG_MIRR / MILD / Mixamo Mirror.
-
-## Animation window (optional)
+## Animation window (optional leftover)
 
 1. Open `Assets/Survival/Scenes/SirAldric.unity`.
 2. **Survival → Sir Aldric → Spawn knight for Animation-window edit**.

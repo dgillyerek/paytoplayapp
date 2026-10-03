@@ -15,12 +15,14 @@ namespace Survival.Unity
     /// <summary>
     /// Sir Aldric PILOT: Mixamo-skinned holefixed mid280k is the ONLY visible body.
     /// Generic Mixamo clips (Humanoid Playable collapses this skin). AccuRIG superseded.
-    /// Walk = Standard Walk. Strike = Mixamo DIAG Stable Sword Inward Slash
-    /// (human take, md5 72412be4) — arm/shoulder/torso together. Sword starts
-    /// at LEFT hip then RH. Strike play-head remaps onto DIAG descent (f59–85)
-    /// so the cut goes FORWARD then DOWN toward the foot (Derek 1821c4a FAIL:
-    /// linear DIAG read as UPWARDS). No held-pose robot clip. No post-Evaluate
-    /// arm sculpt. Clip.name must match SirAldric_DIAG_InwardSlash. HOLD merge.
+    /// Walk = Standard Walk. Strike = four Scene markers on SirAldricStrikePath
+    /// (1_Draw_LeftHipPocket → 2_Raise_AboveHeadRight → 3_Strike_Forward →
+    /// 4_Strike_DownToFoot). RH / sword follows a Catmull arc; ReachRightArmToward
+    /// bends shoulder + elbow. Derek rejected another Mixamo DIAG tweak (1821c4a
+    /// UPWARDS leftover MixamoDiagPlaybackU / MixamoDiagStrikeBladeLocal). No
+    /// Mixamo DIAG playback, no Mixamo Mirror, no post-evaluate pitch hack, no
+    /// frozen holds. Leftover AimArmAlong / AttackRaiseThenCutReach unused.
+    /// HOLD merge.
     /// </summary>
     [DefaultExecutionOrder(200)]
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
@@ -45,15 +47,16 @@ namespace Survival.Unity
         public const string AttackClipHint = "Attack";
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
         public const string AttackAuthoredReason =
-            "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Mixamo DIAG " +
-            "Stable Sword Inward Slash (md5 72412be4, human take — arm/shoulder/torso together). " +
-            "SirAldric_DIAG_InwardSlash.anim is that take (name matches the file — Attack as clip.name does not match SirAldric_DIAG_InwardSlash and Unity will not compile). " +
+            "PILOT Mixamo sep Generic: holefixed body + Standard Walk. Strike = Scene markers " +
+            "1_Draw_LeftHipPocket / 2_Raise_AboveHeadRight / 3_Strike_Forward / 4_Strike_DownToFoot " +
+            "under SirAldricStrikePath (drag in Scene; next Play reads transforms). " +
+            "SirAldric_DIAG_InwardSlash.anim leftover (name matches the file — Attack as clip.name does not match SirAldric_DIAG_InwardSlash and Unity will not compile). " +
             "Not the 7958283 held-pose robot clip. Not DIAG_REV 0beb3c77 e90b654 no-attack FAIL; not DIAG_MIRR 70fd9483 Derek reject 19e6efe; not MILD 8d5b78b0; not baseline 4a143441. " +
             "Sword never a whole-body X-flip. No Mixamo Mirror. " +
             "Walk: sword gripped in mixamorig:RightHand after draw (Derek 0fc0930 Game-view; 879a6f3 left-hand FAIL discarded). " +
-            "Dev owns the strike story: sword starts at LEFT hip and is drawn, Mixamo rise above the head on the RIGHT, strike FORWARD, then DOWN toward the foot. " +
-            "Derek 1821c4a: linear DIAG strike went UPWARDS — MixamoDiagPlaybackU puts the strike on EXPORT descent f59–85; MixamoDiagStrikeBladeLocal pitches the prop forward then down (no AimArmAlong). " +
-            "Mixer plays the DIAG clip only (leftover AttackLeftHipDrawReach / AimArmAlong / AttackRaiseThenCutReach unused — 95aba89 FAIL). " +
+            "Dev owns the strike: RH follows the four markers on a smooth arc (ReachRightArmToward). " +
+            "Derek rejected another Mixamo DIAG tweak after 1821c4a UPWARDS — leftover MixamoDiagDrawEndU / MixamoDiagPlaybackU / MixamoDiagRaisePlayEndU / MixamoDiagStrikeBladeLocal unused. " +
+            "No Mixamo DIAG playback. Leftover AttackLeftHipDrawReach / AimArmAlong / AttackRaiseThenCutReach unused — 95aba89 FAIL. " +
             "YouTube iQ1s3nN1330 leftover / backswing history. RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
         public const float SwordBladeMeters = 1.01f;
@@ -87,6 +90,7 @@ namespace Survival.Unity
         private Transform? _boundSwordParent;
         private Transform? _sheathSocket;
         private Transform? _leftHipSocket;
+        private SirAldricStrikePath? _strikePath;
         /// <summary>
         /// Mesh-local blade axis. Unity FBX bakeAxisConversion turns Design +Z into
         /// local +Y — aiming transform.forward at desired left the visible blade
@@ -157,38 +161,20 @@ namespace Survival.Unity
             _graph = PlayableGraph.Create("SirAldricPilotMixamo");
             _graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
             _output = AnimationPlayableOutput.Create(_graph, "AldricMixamo", _animator);
-            _mixer = AnimationMixerPlayable.Create(_graph, 2);
+            _mixer = AnimationMixerPlayable.Create(_graph, 1);
             _walkPlayable = AnimationClipPlayable.Create(_graph, walk);
             _graph.Connect(_walkPlayable, 0, _mixer, 0);
             _mixer.SetInputWeight(0, 1f);
-            _mixer.SetInputWeight(1, 0f);
             _output.SetSourcePlayable(_mixer);
 
             EnsureEditableAttackClip();
-            var attack = LoadClip(ThemePackAttackAnim, AttackClipHint, repairWalk: false);
-#if UNITY_EDITOR
-            if (attack != null && AnimationUtility.GetCurveBindings(attack).Length <= 8)
-            {
-                attack = null;
-            }
-#endif
-            if (attack == null)
-            {
-                attack = LoadClip(ThemePackAttackFbx, AttackClipHint, repairWalk: false);
-            }
-
-            if (attack != null)
-            {
-                attack.wrapMode = WrapMode.Once;
-                _attackLength = attack.length;
-                _attackPlayable = AnimationClipPlayable.Create(_graph, attack);
-                _graph.Connect(_attackPlayable, 0, _mixer, 1);
-                _attackReady = true;
-            }
-            else
-            {
-                Debug.LogWarning("PILOT Mixamo DIAG attack take missing after Generic import.");
-            }
+            // Leftover LoadClip(ThemePackAttackAnim) / LoadClip(ThemePackAttackFbx)
+            // unused at Play — Derek rejected another Mixamo DIAG tweak.
+            _ = ThemePackAttackAnim;
+            _ = ThemePackAttackFbx;
+            _strikePath = SirAldricStrikePath.FindInScene();
+            _attackLength = SirAldric3DMotion.StrikePathSeconds;
+            _attackReady = true;
 
             _graph.Play();
             _graphReady = true;
@@ -204,7 +190,7 @@ namespace Survival.Unity
             Debug.Log(
                 "PILOT actor built walkLen=" + _walkLength + " attackLen=" + _attackLength +
                 " visible=Mixamo walkClip=" + ThemePackWalkFbx +
-                " attackClip=" + ThemePackAttackAnim + " " + AttackAuthoredReason);
+                " strikePath=" + SirAldric3DMotion.StrikePathRootName + " " + AttackAuthoredReason);
         }
 
         /// <summary>
@@ -303,29 +289,24 @@ namespace Survival.Unity
 
             var t = timeSeconds % loop;
             var blend = Mathf.Clamp(WalkToAttackBlendSeconds, 0.15f, 0.25f);
+            _mixer.SetInputWeight(0, 1f);
             if (!_attackReady)
             {
-                _mixer.SetInputWeight(0, 1f);
-                _mixer.SetInputWeight(1, 0f);
                 _walkPlayable.SetTime(t % walkLen);
                 _graph.Evaluate();
                 ApplyAttackWindupLift(0f, 0f);
                 return;
             }
 
-            float walkW;
             float attackW;
             float attackU;
             if (t < walkBlock)
             {
-                var into = t >= walkBlock - blend
+                attackW = t >= walkBlock - blend
                     ? Mathf.InverseLerp(walkBlock - blend, walkBlock, t)
                     : 0f;
-                walkW = 1f - into;
-                attackW = into;
                 attackU = 0f;
                 _walkPlayable.SetTime(t % walkLen);
-                _attackPlayable.SetTime(0f);
             }
             else
             {
@@ -333,27 +314,22 @@ namespace Survival.Unity
                 var back = at >= attackLen - blend
                     ? Mathf.InverseLerp(attackLen - blend, attackLen, at)
                     : 0f;
-                walkW = back;
                 attackW = 1f - back;
                 attackU = at / attackLen;
-                var clipU = SirAldric3DMotion.MixamoDiagPlaybackU(attackU);
-                _attackPlayable.SetTime(clipU * _attackLength);
-                _walkPlayable.SetTime(0f);
+                _walkPlayable.SetTime(walkLen * 0.25f);
             }
 
-            _mixer.SetInputWeight(0, walkW);
-            _mixer.SetInputWeight(1, attackW);
             _graph.Evaluate();
             ApplyAttackWindupLift(attackW, attackU);
         }
 
         /// <summary>
-        /// Mixer plays Mixamo DIAG (human take). After Evaluate, parent the
-        /// sword and pitch the blade on the strike — no AimArmAlong / leftover
+        /// Leftover name. Walk mixer stays on Standard Walk. After Evaluate,
+        /// ReachRightArmToward the Scene-marker Catmull (no Mixamo DIAG
+        /// playback, leftover MixamoDiagPlaybackU unused, leftover
         /// AttackRaiseThenCutReach / leftover AttackSlashReach / leftover
-        /// AttackLeftHipDrawReach. Draw starts at LEFT hip; strike on
-        /// mixamorig:RightHand. Strike blade = MixamoDiagStrikeBladeLocal
-        /// (FORWARD then DOWN toward the foot). Not a body sculpt.
+        /// AttackLeftHipDrawReach unused, no AimArmAlong). Sword on
+        /// mixamorig:RightHand. No MixamoDiagStrikeBladeLocal pitch hack.
         /// </summary>
         private void ApplyAttackWindupLift(float attackWeight, float attackNormalized01)
         {
@@ -368,27 +344,108 @@ namespace Survival.Unity
                 return;
             }
 
-            if (attackNormalized01 < SirAldric3DMotion.MixamoDiagDrawEndU)
+            if (_strikePath == null)
             {
-                BindSwordTo(EnsureLeftHipSocket(), strikeGrip: false);
-                AimHeldSwordWorld(Vector3.down);
-                return;
+                _strikePath = SirAldricStrikePath.FindInScene();
             }
 
+            var target = _strikePath != null
+                ? _strikePath.SampleWorld(attackNormalized01)
+                : DefaultStrikeWorld(attackNormalized01);
+            ReachRightArmToward(target, attackNormalized01);
             BindSwordTo(_rightHand, strikeGrip: true);
-            if (_heldSword == null)
-            {
-                return;
-            }
-
-            if (attackNormalized01 < SirAldric3DMotion.MixamoDiagRaisePlayEndU)
+            if (_heldSword != null)
             {
                 _heldSword.localRotation = SwordRestLocal();
+                SnapHeldSwordToArmAxis(Vector3.zero);
+            }
+        }
+
+        private static Vector3 DefaultStrikeWorld(float attackNormalized01)
+        {
+            SirAldric3DMotion.StrikeMarkerDefaultWorld(0, out var x0, out var y0, out var z0);
+            SirAldric3DMotion.StrikeMarkerDefaultWorld(1, out var x1, out var y1, out var z1);
+            SirAldric3DMotion.StrikeMarkerDefaultWorld(2, out var x2, out var y2, out var z2);
+            SirAldric3DMotion.StrikeMarkerDefaultWorld(3, out var x3, out var y3, out var z3);
+            SirAldric3DMotion.SampleStrikePath(
+                attackNormalized01,
+                x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3,
+                out var x, out var y, out var z);
+            return new Vector3(x, y, z);
+        }
+
+        /// <summary>
+        /// Two-bone reach: mixamorig:RightArm + RightForeArm bend so RightHand
+        /// sits on the marker arc. Not leftover AimArmAlong.
+        /// </summary>
+        private void ReachRightArmToward(Vector3 target, float attackNormalized01)
+        {
+            if (_rightArm == null || _rightForeArm == null || _rightHand == null)
+            {
                 return;
             }
 
-            SirAldric3DMotion.MixamoDiagStrikeBladeLocal(attackNormalized01, out var lx, out var ly, out var lz);
-            AimHeldSwordWorld(transform.TransformDirection(new Vector3(lx, ly, lz)));
+            var shoulder = _rightArm.position;
+            var upperLen = Vector3.Distance(shoulder, _rightForeArm.position);
+            var lowerLen = Vector3.Distance(_rightForeArm.position, _rightHand.position);
+            if (upperLen < 1e-4f || lowerLen < 1e-4f)
+            {
+                return;
+            }
+
+            var total = upperLen + lowerLen;
+            var to = target - shoulder;
+            var dist = Mathf.Clamp(to.magnitude, 0.05f, total * 0.992f);
+            var dir = to.sqrMagnitude > 1e-8f ? to.normalized : Vector3.forward;
+            var right = _instance != null ? _instance.transform.right : CharacterRight();
+            var fwd = _instance != null ? _instance.transform.forward : Vector3.forward;
+            var pole = shoulder + (right * 0.55f) - (fwd * 0.42f) + (Vector3.up * 0.12f);
+            var poleFlat = Vector3.ProjectOnPlane(pole - shoulder, dir);
+            if (poleFlat.sqrMagnitude < 1e-6f)
+            {
+                poleFlat = Vector3.ProjectOnPlane(-fwd, dir);
+            }
+
+            var bend = poleFlat.normalized;
+            var adj = ((upperLen * upperLen) - (lowerLen * lowerLen) + (dist * dist)) / (2f * dist);
+            var heightSq = (upperLen * upperLen) - (adj * adj);
+            var height = heightSq > 0f ? Mathf.Sqrt(heightSq) : 0f;
+            var elbow = shoulder + (dir * adj) + (bend * height);
+            RotateBoneToward(_rightArm, _rightForeArm, elbow);
+            RotateBoneToward(_rightForeArm, _rightHand, target);
+
+            var aheadU = Mathf.Min(1f, attackNormalized01 + 0.04f);
+            var ahead = _strikePath != null ? _strikePath.SampleWorld(aheadU) : DefaultStrikeWorld(aheadU);
+            var look = ahead - target;
+            if (look.sqrMagnitude < 1e-6f)
+            {
+                look = target - _rightForeArm.position;
+            }
+
+            if (look.sqrMagnitude > 1e-6f)
+            {
+                RotateBoneToward(_rightHand, null, _rightHand.position + look.normalized);
+            }
+        }
+
+        private static void RotateBoneToward(Transform bone, Transform? child, Vector3 worldTarget)
+        {
+            var current = child != null
+                ? child.position - bone.position
+                : bone.rotation * Vector3.up;
+            if (current.sqrMagnitude < 1e-8f)
+            {
+                return;
+            }
+
+            var desired = worldTarget - bone.position;
+            if (desired.sqrMagnitude < 1e-8f)
+            {
+                return;
+            }
+
+            bone.rotation = Quaternion.Normalize(
+                Quaternion.FromToRotation(current.normalized, desired.normalized) * bone.rotation);
         }
 
         // Discarded 7958283 held-pose robot bake. Mixer plays Mixamo DIAG.
@@ -701,22 +758,22 @@ namespace Survival.Unity
             if (_attackReady && t >= walkBlock - blend * 0.5f && t < walkBlock + attackLen - blend * 0.5f)
             {
                 var u = Mathf.Clamp01((t - walkBlock) / attackLen);
-                if (u < SirAldric3DMotion.MixamoDiagDrawEndU)
+                if (u < SirAldric3DMotion.StrikeMarkerKnotU(1))
                 {
-                    return "DRAW  ·  LEFT hip  ·  Mixamo DIAG";
+                    return "DRAW  ·  1_Draw_LeftHipPocket";
                 }
 
-                if (u < SirAldric3DMotion.MixamoDiagRaisePlayEndU)
+                if (u < SirAldric3DMotion.StrikeMarkerKnotU(2))
                 {
-                    return "RAISE  ·  overhead RIGHT  ·  Mixamo DIAG";
+                    return "RAISE  ·  2_Raise_AboveHeadRight";
                 }
 
-                if (u < 0.70f)
+                if (u < 0.82f)
                 {
-                    return "STRIKE  ·  FORWARD  ·  Mixamo DIAG";
+                    return "STRIKE  ·  3_Strike_Forward";
                 }
 
-                return "STRIKE  ·  DOWN to foot  ·  Mixamo DIAG";
+                return "STRIKE  ·  4_Strike_DownToFoot";
             }
 
             return "WALK  ·  toward TOP  ·  RH grip";

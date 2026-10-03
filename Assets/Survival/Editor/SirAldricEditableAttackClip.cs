@@ -28,6 +28,23 @@ namespace Survival.Editor
             };
         }
 
+        [MenuItem("Survival/Sir Aldric/Ping strike path markers")]
+        public static void PingStrikePathMarkers()
+        {
+            var path = SirAldricStrikePath.FindInScene();
+            if (path == null)
+            {
+                Debug.LogWarning(
+                    "SirAldricStrikePath missing. Open Assets/Survival/Scenes/SirAldric.unity — " +
+                    "Hierarchy: SirAldricStrikePath / 1_Draw_LeftHipPocket / 2_Raise_AboveHeadRight / " +
+                    "3_Strike_Forward / 4_Strike_DownToFoot.");
+                return;
+            }
+
+            Selection.activeGameObject = path.gameObject;
+            EditorGUIUtility.PingObject(path.gameObject);
+        }
+
         [MenuItem("Survival/Sir Aldric/Extract editable DIAG attack clip")]
         public static void ExtractMenu()
         {

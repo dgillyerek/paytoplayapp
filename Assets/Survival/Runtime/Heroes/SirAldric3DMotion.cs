@@ -95,6 +95,196 @@ namespace Survival.Domain.Heroes
         }
 
         /// <summary>
+        /// Scene-marker strike path (Derek rejected another Mixamo DIAG tweak).
+        /// Four empties in SirAldric.unity — drag in Scene, Play reads transforms.
+        /// No Mixamo DIAG playback. No Mixamo Mirror. No frozen holds.
+        /// </summary>
+        public const int StrikeMarkerCount = 4;
+        public const string StrikePathRootName = "SirAldricStrikePath";
+        public const string StrikeMarkerDrawName = "1_Draw_LeftHipPocket";
+        public const string StrikeMarkerRaiseName = "2_Raise_AboveHeadRight";
+        public const string StrikeMarkerForwardName = "3_Strike_Forward";
+        public const string StrikeMarkerFootName = "4_Strike_DownToFoot";
+        public const float StrikePathSeconds = 2.40f;
+        public const float StrikePathHipY = 0.96f;
+        public const float StrikeMarkerDrawX = -0.22f;
+        public const float StrikeMarkerDrawY = 0.96f;
+        public const float StrikeMarkerDrawZ = 0.05f;
+        public const float StrikeMarkerRaiseX = 0.26f;
+        public const float StrikeMarkerRaiseY = 2.08f;
+        public const float StrikeMarkerRaiseZ = 0.12f;
+        public const float StrikeMarkerForwardX = 0.08f;
+        public const float StrikeMarkerForwardY = 1.30f;
+        public const float StrikeMarkerForwardZ = 0.84f;
+        public const float StrikeMarkerFootX = 0.14f;
+        public const float StrikeMarkerFootY = 0.16f;
+        public const float StrikeMarkerFootZ = 0.32f;
+
+        public static string StrikeMarkerName(int index)
+        {
+            return index switch
+            {
+                0 => StrikeMarkerDrawName,
+                1 => StrikeMarkerRaiseName,
+                2 => StrikeMarkerForwardName,
+                _ => StrikeMarkerFootName,
+            };
+        }
+
+        public static float StrikeMarkerKnotU(int index)
+        {
+            return index switch
+            {
+                0 => 0f,
+                1 => 0.32f,
+                2 => 0.62f,
+                _ => 1f,
+            };
+        }
+
+        public static void StrikeMarkerDefaultWorld(int index, out float x, out float y, out float z)
+        {
+            switch (index)
+            {
+                case 0:
+                    x = StrikeMarkerDrawX;
+                    y = StrikeMarkerDrawY;
+                    z = StrikeMarkerDrawZ;
+                    break;
+                case 1:
+                    x = StrikeMarkerRaiseX;
+                    y = StrikeMarkerRaiseY;
+                    z = StrikeMarkerRaiseZ;
+                    break;
+                case 2:
+                    x = StrikeMarkerForwardX;
+                    y = StrikeMarkerForwardY;
+                    z = StrikeMarkerForwardZ;
+                    break;
+                default:
+                    x = StrikeMarkerFootX;
+                    y = StrikeMarkerFootY;
+                    z = StrikeMarkerFootZ;
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Catmull-Rom through the four Scene markers. Linear in u — no hold
+        /// at a knot (Smooth01 would freeze). Shoulder/elbow IK follows this.
+        /// </summary>
+        public static void SampleStrikePath(
+            float attackNormalized01,
+            float x0,
+            float y0,
+            float z0,
+            float x1,
+            float y1,
+            float z1,
+            float x2,
+            float y2,
+            float z2,
+            float x3,
+            float y3,
+            float z3,
+            out float x,
+            out float y,
+            out float z)
+        {
+            var u = Clamp01(attackNormalized01);
+            var seg = 0;
+            if (u >= StrikeMarkerKnotU(2))
+            {
+                seg = 2;
+            }
+            else if (u >= StrikeMarkerKnotU(1))
+            {
+                seg = 1;
+            }
+
+            var u0 = StrikeMarkerKnotU(seg);
+            var u1 = StrikeMarkerKnotU(seg + 1);
+            var t = u1 - u0 > 1e-5f ? (u - u0) / (u1 - u0) : 1f;
+            StrikePathPoint(seg - 1, x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, out var ax, out var ay, out var az);
+            StrikePathPoint(seg, x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, out var bx, out var by, out var bz);
+            StrikePathPoint(seg + 1, x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, out var cx, out var cy, out var cz);
+            StrikePathPoint(seg + 2, x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, out var dx, out var dy, out var dz);
+            x = CatmullScalar(t, ax, bx, cx, dx);
+            y = CatmullScalar(t, ay, by, cy, dy);
+            z = CatmullScalar(t, az, bz, cz, dz);
+        }
+
+        private static void StrikePathPoint(
+            int index,
+            float x0,
+            float y0,
+            float z0,
+            float x1,
+            float y1,
+            float z1,
+            float x2,
+            float y2,
+            float z2,
+            float x3,
+            float y3,
+            float z3,
+            out float x,
+            out float y,
+            out float z)
+        {
+            if (index <= 0)
+            {
+                if (index == 0)
+                {
+                    x = x0;
+                    y = y0;
+                    z = z0;
+                    return;
+                }
+
+                x = (2f * x0) - x1;
+                y = (2f * y0) - y1;
+                z = (2f * z0) - z1;
+                return;
+            }
+
+            if (index == 1)
+            {
+                x = x1;
+                y = y1;
+                z = z1;
+                return;
+            }
+
+            if (index == 2)
+            {
+                x = x2;
+                y = y2;
+                z = z2;
+                return;
+            }
+
+            if (index == 3)
+            {
+                x = x3;
+                y = y3;
+                z = z3;
+                return;
+            }
+
+            x = (2f * x3) - x2;
+            y = (2f * y3) - y2;
+            z = (2f * z3) - z2;
+        }
+
+        private static float CatmullScalar(float t, float p0, float p1, float p2, float p3)
+        {
+            var t2 = t * t;
+            var t3 = t2 * t;
+            return 0.5f * ((2f * p1) + ((-p0 + p2) * t) + (((2f * p0) - (5f * p1) + (4f * p2) - p3) * t2) + ((-p0 + (3f * p1) - (3f * p2) + p3) * t3));
+        }
+
+        /// <summary>
         /// Derek slash SoT: https://www.youtube.com/watch?v=iQ1s3nN1330
         /// (Judith Hamma “Sword Swing - Animation”, Maya, 20s orbit).
         /// Storyboard silhouette, not a prior UR→LL guess:

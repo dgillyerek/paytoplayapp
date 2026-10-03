@@ -352,6 +352,14 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("MixamoDiagRaisePlayEndU", actor, StringComparison.Ordinal);
         Assert.Contains("MixamoDiagStrikeBladeLocal", actor, StringComparison.Ordinal);
         Assert.Contains("1821c4a", actor, StringComparison.Ordinal);
+        Assert.Contains("ReachRightArmToward", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldricStrikePath", actor, StringComparison.Ordinal);
+        Assert.Contains("1_Draw_LeftHipPocket", actor, StringComparison.Ordinal);
+        Assert.Contains("2_Raise_AboveHeadRight", actor, StringComparison.Ordinal);
+        Assert.Contains("3_Strike_Forward", actor, StringComparison.Ordinal);
+        Assert.Contains("4_Strike_DownToFoot", actor, StringComparison.Ordinal);
+        Assert.Contains("SampleStrikePath", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("_attackPlayable.SetTime", actor, StringComparison.Ordinal);
         Assert.Contains("does not match SirAldric_DIAG_InwardSlash", actor, StringComparison.Ordinal);
         Assert.Contains("EnsureEditableAttackClip", actor, StringComparison.Ordinal);
         Assert.Contains("AttackSlashReach", actor, StringComparison.Ordinal);
@@ -440,6 +448,8 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("Lock", editNote, StringComparison.Ordinal);
         var extract = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricEditableAttackClip.cs"));
         Assert.Contains("EnsureEditableAttackClip", extract, StringComparison.Ordinal);
+        Assert.Contains("Ping strike path markers", extract, StringComparison.Ordinal);
+        Assert.Contains("1_Draw_LeftHipPocket", extract, StringComparison.Ordinal);
         Assert.Contains("Spawn knight for Animation-window edit", extract, StringComparison.Ordinal);
         Assert.Contains("runtimeAnimatorController", extract, StringComparison.Ordinal);
         Assert.Contains("EnsureAttackController", extract, StringComparison.Ordinal);
@@ -499,6 +509,19 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("MixamoDiagPlaybackU", motionSrc, StringComparison.Ordinal);
         Assert.Contains("MixamoDiagStrikeBladeLocal", motionSrc, StringComparison.Ordinal);
         Assert.Contains("1821c4a", motionSrc, StringComparison.Ordinal);
+        Assert.Contains("SampleStrikePath", motionSrc, StringComparison.Ordinal);
+        Assert.Contains("StrikeMarkerDrawName", motionSrc, StringComparison.Ordinal);
+        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "SirAldric.unity"));
+        Assert.Contains("m_Name: SirAldricStrikePath", scene, StringComparison.Ordinal);
+        Assert.Contains("m_Name: 1_Draw_LeftHipPocket", scene, StringComparison.Ordinal);
+        Assert.Contains("m_Name: 2_Raise_AboveHeadRight", scene, StringComparison.Ordinal);
+        Assert.Contains("m_Name: 3_Strike_Forward", scene, StringComparison.Ordinal);
+        Assert.Contains("m_Name: 4_Strike_DownToFoot", scene, StringComparison.Ordinal);
+        Assert.Contains("c8a1d4e27b3f4906a5c8e1d2479b0f33", scene, StringComparison.Ordinal);
+        var pathSrc = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricStrikePath.cs"));
+        Assert.Contains("OnDrawGizmos", pathSrc, StringComparison.Ordinal);
+        Assert.Contains("DrawSphere", pathSrc, StringComparison.Ordinal);
+        Assert.Contains("Handles.Label", pathSrc, StringComparison.Ordinal);
         var diagMeta = File.ReadAllText(Path.Combine(pilot, "SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx.meta"));
         Assert.Contains("firstFrame: 0", diagMeta, StringComparison.Ordinal);
         Assert.Contains("lastFrame: 85", diagMeta, StringComparison.Ordinal);
@@ -716,6 +739,9 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("raise above head", hold, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("1821c4a", hold, StringComparison.Ordinal);
         Assert.Contains("UPWARDS", hold, StringComparison.Ordinal);
+        Assert.Contains("1_Draw_LeftHipPocket", hold, StringComparison.Ordinal);
+        Assert.Contains("4_Strike_DownToFoot", hold, StringComparison.Ordinal);
+        Assert.Contains("ReachRightArmToward", hold, StringComparison.Ordinal);
         Assert.Contains("wrong interpretation", hold, StringComparison.Ordinal);
         Assert.Contains("backswing", hold, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("iQ1s3nN1330", hold, StringComparison.Ordinal);
@@ -762,6 +788,68 @@ public sealed class SirAldric3DMotionTests
         Assert.True(startTip[1] > 0.25f, $"start tip Y {startTip[1]} should be up");
         var finishTip = ReadJsonVec3(File.ReadAllText(Path.Combine(dir, "sir_aldric_pilot_dump_slash_f32.json")), "tip_unity");
         Assert.True(finishTip[1] < 0f, $"finish tip Y {finishTip[1]} should be down");
+    }
+
+    [Fact]
+    public void Strike_path_defaults_match_draw_raise_forward_foot()
+    {
+        Assert.Equal("SirAldricStrikePath", SirAldric3DMotion.StrikePathRootName);
+        Assert.Equal("1_Draw_LeftHipPocket", SirAldric3DMotion.StrikeMarkerName(0));
+        Assert.Equal("2_Raise_AboveHeadRight", SirAldric3DMotion.StrikeMarkerName(1));
+        Assert.Equal("3_Strike_Forward", SirAldric3DMotion.StrikeMarkerName(2));
+        Assert.Equal("4_Strike_DownToFoot", SirAldric3DMotion.StrikeMarkerName(3));
+        SirAldric3DMotion.StrikeMarkerDefaultWorld(0, out var dx, out var dy, out var dz);
+        Assert.True(dx < -0.10f && dy > 0.70f && dy < 1.20f, $"draw ({dx},{dy},{dz}) is left hip pocket");
+        SirAldric3DMotion.StrikeMarkerDefaultWorld(1, out var rx, out var ry, out var rz);
+        Assert.True(rx > 0f && ry > 1.80f, $"raise ({rx},{ry},{rz}) is above the head, right");
+        SirAldric3DMotion.StrikeMarkerDefaultWorld(2, out var fx, out var fy, out var fz);
+        Assert.True(fz > 0.60f && fy > 1.0f, $"forward ({fx},{fy},{fz}) is a forward strike");
+        SirAldric3DMotion.StrikeMarkerDefaultWorld(3, out var tx, out var ty, out var tz);
+        Assert.True(ty < 0.35f && tz > 0f, $"foot ({tx},{ty},{tz}) is down toward the foot");
+        _ = dz;
+        _ = rz;
+        _ = fx;
+        _ = tx;
+    }
+
+    [Fact]
+    public void Strike_path_catmull_visits_markers_without_holds()
+    {
+        SirAldric3DMotion.StrikeMarkerDefaultWorld(0, out var x0, out var y0, out var z0);
+        SirAldric3DMotion.StrikeMarkerDefaultWorld(1, out var x1, out var y1, out var z1);
+        SirAldric3DMotion.StrikeMarkerDefaultWorld(2, out var x2, out var y2, out var z2);
+        SirAldric3DMotion.StrikeMarkerDefaultWorld(3, out var x3, out var y3, out var z3);
+        SirAldric3DMotion.SampleStrikePath(0f, x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, out var sx, out var sy, out var sz);
+        Assert.InRange(sx, x0 - 0.02f, x0 + 0.02f);
+        Assert.InRange(sy, y0 - 0.02f, y0 + 0.02f);
+        SirAldric3DMotion.SampleStrikePath(
+            SirAldric3DMotion.StrikeMarkerKnotU(1),
+            x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3,
+            out var mx, out var my, out var mz);
+        Assert.True(my > 1.70f && mx > 0f, $"mid raise sample ({mx},{my},{mz})");
+        SirAldric3DMotion.SampleStrikePath(1f, x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, out var ex, out var ey, out var ez);
+        Assert.InRange(ex, x3 - 0.02f, x3 + 0.02f);
+        Assert.True(ey < 0.40f, "finish down toward the foot");
+        float prevX = sx, prevY = sy, prevZ = sz;
+        var moved = 0;
+        for (var i = 1; i <= 20; i++)
+        {
+            SirAldric3DMotion.SampleStrikePath(
+                i / 20f, x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3,
+                out var x, out var y, out var z);
+            if (Math.Abs(x - prevX) + Math.Abs(y - prevY) + Math.Abs(z - prevZ) > 0.01f)
+            {
+                moved++;
+            }
+
+            prevX = x;
+            prevY = y;
+            prevZ = z;
+        }
+
+        Assert.True(moved >= 18, "path must keep moving — no frozen holds");
+        _ = sz;
+        _ = ez;
     }
 
     [Fact]
