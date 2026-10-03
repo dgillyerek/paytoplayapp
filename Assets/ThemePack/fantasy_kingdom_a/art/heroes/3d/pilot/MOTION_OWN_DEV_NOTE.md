@@ -6,7 +6,13 @@
 ## Status
 **Dev owns the strike.** Derek is done hand-keying. Playing clip name **must** be `SirAldric_DIAG_InwardSlash` (file + clip.name). `Attack` as clip.name does not match and Unity will not compile.
 
-Sequence (rear cam / Derek POV): left-hip draw → raise overhead right → strike forward → down to the foot. Baked into the mixer clip. **No** post-Evaluate `AimArmAlong` (95aba89 FAIL). **Not** Mixamo Mirror / DIAG_REV / DIAG_MIRR / MILD.
+Rebuilt 3.20s clip with held beats (not the ddda018 smear). Rear cam / Derek POV:
+- left-hip draw **0.32–0.90s**
+- raise overhead right **1.28–1.79s**
+- strike forward **2.18–2.56s**
+- down to the foot **2.88–3.20s**
+
+Hand at hip-relative meters in the mixer clip. **No** post-Evaluate `AimArmAlong` (95aba89 FAIL). **Not** Mixamo Mirror / DIAG_REV / DIAG_MIRR / MILD.
 
 ## Clips
 | Role | File | Notes |

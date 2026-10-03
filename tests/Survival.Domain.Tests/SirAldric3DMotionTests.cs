@@ -575,6 +575,11 @@ public sealed class SirAldric3DMotionTests
         Assert.True(downZ > 0.40f, $"cut ({downX},{downY},{downZ}) must come down in front");
         SirAldric3DMotion.AttackRaiseThenCutReach(1f, out var cutLlX, out var cutLlY, out var cutLlZ);
         Assert.True(cutLlX < -0.45f && cutLlY < -0.45f, $"raise-then-cut finish ({cutLlX},{cutLlY},{cutLlZ}) must be low character-left");
+        Assert.Equal(3.20f, SirAldric3DMotion.AttackClipSeconds);
+        Assert.True(SirAldric3DMotion.AttackDrawLeftHipU > SirAldric3DMotion.AttackDrawArriveU);
+        Assert.True(SirAldric3DMotion.AttackDrawLeftHipU < SirAldric3DMotion.AttackDrawHoldEndU);
+        Assert.True(SirAldric3DMotion.AttackRaiseOverheadRightU > SirAldric3DMotion.AttackRaiseArriveU);
+        Assert.True(SirAldric3DMotion.AttackStrikeForwardU > SirAldric3DMotion.AttackFwdArriveU);
         SirAldric3DMotion.AttackLeftHipDrawReach(SirAldric3DMotion.AttackDrawLeftHipU, out var pocketX, out var pocketY, out var pocketZ);
         Assert.True(pocketX < -0.15f && pocketY < 0.15f, $"left-hip pocket ({pocketX},{pocketY},{pocketZ}) must be character-left and low");
         SirAldric3DMotion.AttackLeftHipDrawReach(SirAldric3DMotion.AttackRaiseOverheadRightU, out var ohX, out var ohY, out var ohZ);

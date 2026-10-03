@@ -71,33 +71,38 @@ namespace Survival.Domain.Heroes
         public const float AttackSlashSpineYawReady = 22f;
         public const float AttackSlashSpineYawFinish = -16f;
         /// <summary>
-        /// Dev-owned attack clip (rear cam / Derek POV). Not raise-then-cut.
-        /// Not down-left. Sequence: left-hip draw, raise overhead right,
-        /// strike forward, then down to the foot.
+        /// Rebuilt attack clip (not a tweak of the ddda018 smear). 3.20s.
+        /// Hip-relative meters, held beats. Rear cam / Derek POV.
+        /// Draw 0.32–0.90s · raise 1.28–1.79s · forward 2.18–2.56s · foot 2.88–3.20s.
         /// </summary>
-        public const float AttackDrawLeftHipU = 0.22f;
-        public const float AttackSwordInHandU = 0.30f;
-        public const float AttackRaiseOverheadRightU = 0.50f;
-        public const float AttackStrikeForwardU = 0.72f;
-        public const float AttackStrikeFootU = 0.92f;
-        public const float AttackHangRight = 0.28f;
-        public const float AttackHangUp = -0.32f;
+        public const float AttackClipSeconds = 3.20f;
+        public const float AttackDrawArriveU = 0.10f;
+        public const float AttackDrawHoldEndU = 0.28f;
+        public const float AttackRaiseArriveU = 0.40f;
+        public const float AttackRaiseHoldEndU = 0.56f;
+        public const float AttackFwdArriveU = 0.68f;
+        public const float AttackFwdHoldEndU = 0.80f;
+        public const float AttackFootArriveU = 0.90f;
+        public const float AttackDrawLeftHipU = 0.20f;
+        public const float AttackSwordInHandU = 0.28f;
+        public const float AttackRaiseOverheadRightU = 0.48f;
+        public const float AttackStrikeForwardU = 0.74f;
+        public const float AttackStrikeFootU = 0.95f;
+        public const float AttackHangRight = 0.16f;
+        public const float AttackHangUp = -0.06f;
         public const float AttackHangFront = 0.06f;
-        public const float AttackPocketRight = -0.30f;
-        public const float AttackPocketUp = -0.10f;
-        public const float AttackPocketFront = -0.04f;
-        public const float AttackDrawnRight = -0.12f;
-        public const float AttackDrawnUp = 0.18f;
-        public const float AttackDrawnFront = 0.16f;
+        public const float AttackPocketRight = -0.24f;
+        public const float AttackPocketUp = 0.00f;
+        public const float AttackPocketFront = 0.02f;
         public const float AttackOverheadRight = 0.22f;
-        public const float AttackOverheadUp = 0.96f;
-        public const float AttackOverheadFront = 0.04f;
+        public const float AttackOverheadUp = 0.90f;
+        public const float AttackOverheadFront = 0.06f;
         public const float AttackForwardRight = 0.10f;
-        public const float AttackForwardUp = 0.36f;
-        public const float AttackForwardFront = 0.84f;
-        public const float AttackFootRight = 0.08f;
-        public const float AttackFootUp = -0.58f;
-        public const float AttackFootFront = 0.20f;
+        public const float AttackForwardUp = 0.40f;
+        public const float AttackForwardFront = 0.78f;
+        public const float AttackFootRight = 0.10f;
+        public const float AttackFootUp = -0.48f;
+        public const float AttackFootFront = 0.24f;
 
         /// <summary>
         /// Leftover raise-then-cut keys (Derek FAIL 95aba89 “much worse”).
@@ -612,54 +617,78 @@ namespace Survival.Domain.Heroes
         }
 
         /// <summary>
-        /// RH reach for the baked attack clip: left-hip pocket → overhead right →
-        /// forward → down to the foot. Character +X right, +Y up, +Z forward.
+        /// Hip-relative RH meters for the rebuilt clip. Held poses, not a smear:
+        /// draw hold, overhead-right hold, forward hold, foot hold.
+        /// +X right, +Y up, +Z forward. Not normalized (bake needs meters).
         /// </summary>
         public static void AttackLeftHipDrawReach(float attackNormalized01, out float x, out float y, out float z)
         {
             var u = Clamp01(attackNormalized01);
-            if (u <= AttackDrawLeftHipU)
+            if (u <= AttackDrawHoldEndU)
             {
-                SampleSlash(
-                    u, 0f, AttackDrawLeftHipU,
-                    AttackHangRight, AttackHangUp, AttackHangFront,
-                    AttackPocketRight, AttackPocketUp, AttackPocketFront,
-                    out x, out y, out z);
+                if (u < AttackDrawArriveU)
+                {
+                    SampleSlash(
+                        u, 0f, AttackDrawArriveU,
+                        AttackHangRight, AttackHangUp, AttackHangFront,
+                        AttackPocketRight, AttackPocketUp, AttackPocketFront,
+                        out x, out y, out z);
+                }
+                else
+                {
+                    x = AttackPocketRight;
+                    y = AttackPocketUp;
+                    z = AttackPocketFront;
+                }
             }
-            else if (u <= AttackSwordInHandU)
+            else if (u <= AttackRaiseHoldEndU)
             {
-                SampleSlash(
-                    u, AttackDrawLeftHipU, AttackSwordInHandU,
-                    AttackPocketRight, AttackPocketUp, AttackPocketFront,
-                    AttackDrawnRight, AttackDrawnUp, AttackDrawnFront,
-                    out x, out y, out z);
+                if (u < AttackRaiseArriveU)
+                {
+                    SampleSlash(
+                        u, AttackDrawHoldEndU, AttackRaiseArriveU,
+                        AttackPocketRight, AttackPocketUp, AttackPocketFront,
+                        AttackOverheadRight, AttackOverheadUp, AttackOverheadFront,
+                        out x, out y, out z);
+                }
+                else
+                {
+                    x = AttackOverheadRight;
+                    y = AttackOverheadUp;
+                    z = AttackOverheadFront;
+                }
             }
-            else if (u <= AttackRaiseOverheadRightU)
+            else if (u <= AttackFwdHoldEndU)
             {
-                SampleSlash(
-                    u, AttackSwordInHandU, AttackRaiseOverheadRightU,
-                    AttackDrawnRight, AttackDrawnUp, AttackDrawnFront,
-                    AttackOverheadRight, AttackOverheadUp, AttackOverheadFront,
-                    out x, out y, out z);
+                if (u < AttackFwdArriveU)
+                {
+                    SampleSlash(
+                        u, AttackRaiseHoldEndU, AttackFwdArriveU,
+                        AttackOverheadRight, AttackOverheadUp, AttackOverheadFront,
+                        AttackForwardRight, AttackForwardUp, AttackForwardFront,
+                        out x, out y, out z);
+                }
+                else
+                {
+                    x = AttackForwardRight;
+                    y = AttackForwardUp;
+                    z = AttackForwardFront;
+                }
             }
-            else if (u <= AttackStrikeForwardU)
+            else if (u < AttackFootArriveU)
             {
                 SampleSlash(
-                    u, AttackRaiseOverheadRightU, AttackStrikeForwardU,
-                    AttackOverheadRight, AttackOverheadUp, AttackOverheadFront,
-                    AttackForwardRight, AttackForwardUp, AttackForwardFront,
-                    out x, out y, out z);
-            }
-            else
-            {
-                SampleSlash(
-                    u, AttackStrikeForwardU, 1f,
+                    u, AttackFwdHoldEndU, AttackFootArriveU,
                     AttackForwardRight, AttackForwardUp, AttackForwardFront,
                     AttackFootRight, AttackFootUp, AttackFootFront,
                     out x, out y, out z);
             }
-
-            Normalize(ref x, ref y, ref z);
+            else
+            {
+                x = AttackFootRight;
+                y = AttackFootUp;
+                z = AttackFootFront;
+            }
         }
 
         /// <summary>

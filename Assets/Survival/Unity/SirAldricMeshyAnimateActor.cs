@@ -48,9 +48,11 @@ namespace Survival.Unity
             "Not DIAG_REV 0beb3c77 e90b654 no-attack FAIL; not DIAG_MIRR 70fd9483 Derek reject 19e6efe; not MILD 8d5b78b0; not baseline 4a143441. " +
             "Sword never a whole-body X-flip. No Mixamo Mirror. " +
             "Walk: sword gripped in mixamorig:RightHand after draw (Derek 0fc0930 Game-view; 879a6f3 left-hand FAIL discarded). " +
-            "Dev owns the strike: left-hip draw, raise overhead right, strike forward then down to the foot " +
+            "Dev owns the strike: rebuilt 3.20s clip with held beats — left-hip draw 0.32–0.90s, " +
+            "raise overhead right 1.28–1.79s, strike forward 2.18–2.56s, down to the foot 2.88–3.20s " +
             "(YouTube iQ1s3nN1330 retired as down-left / backswing SoT — this tip is not that arc). " +
-            "Baked into the mixer clip (not post-Evaluate AimArmAlong / AttackRaiseThenCutReach — 95aba89 FAIL). " +
+            "Hand placed at hip-relative meters in the mixer clip (not the ddda018 unit-sphere smear; " +
+            "not post-Evaluate AimArmAlong / AttackRaiseThenCutReach — 95aba89 FAIL). " +
             "Sheath/draw starts at LEFT hip; strike on mixamorig:RightHand. RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
         public const float SwordBladeMeters = 1.01f;
@@ -373,8 +375,9 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Bake left-hip draw / overhead-right / forward / foot into the clip the
-        /// mixer plays. Aim is bake-only — not applied after Evaluate.
+        /// Rebuild (not a tweak of the ddda018 unit-sphere smear). Held beats:
+        /// hand at left-hip meters, then above-head right, then forward, then foot.
+        /// Two-bone reach is bake-only — not applied after Evaluate.
         /// </summary>
         private AnimationClip? BuildLeftHipDrawAttackClip()
         {
@@ -405,8 +408,8 @@ namespace Survival.Unity
                 wrapMode = WrapMode.Once,
                 legacy = false
             };
-            var frames = 73;
-            var length = 2.40f;
+            var length = SirAldric3DMotion.AttackClipSeconds;
+            var frames = Mathf.RoundToInt(length * 30f) + 1;
             var dt = length / (frames - 1);
             var qx = new AnimationCurve[bones.Count];
             var qy = new AnimationCurve[bones.Count];
@@ -422,18 +425,12 @@ namespace Survival.Unity
                 qw[i] = new AnimationCurve();
             }
 
-            var restFore = _rightForeArm != null ? _rightForeArm.localRotation : Quaternion.identity;
             for (var f = 0; f < frames; f++)
             {
                 var u = f / (float)(frames - 1);
                 for (var i = 0; i < bones.Count; i++)
                 {
                     bones[i].localRotation = rest[i];
-                }
-
-                if (_rightForeArm != null)
-                {
-                    _rightForeArm.localRotation = restFore * Quaternion.Euler(42f, 0f, 0f);
                 }
 
                 BakeAttackPose(u);
@@ -448,10 +445,10 @@ namespace Survival.Unity
                     prev[i] = q;
                     hasPrev[i] = true;
                     var t = f * dt;
-                    qx[i].AddKey(t, q.x);
-                    qy[i].AddKey(t, q.y);
-                    qz[i].AddKey(t, q.z);
-                    qw[i].AddKey(t, q.w);
+                    qx[i].AddKey(new Keyframe(t, q.x, 0f, 0f));
+                    qy[i].AddKey(new Keyframe(t, q.y, 0f, 0f));
+                    qz[i].AddKey(new Keyframe(t, q.z, 0f, 0f));
+                    qw[i].AddKey(new Keyframe(t, q.w, 0f, 0f));
                 }
             }
 
@@ -459,6 +456,10 @@ namespace Survival.Unity
             {
                 bones[i].localRotation = rest[i];
                 var path = RelPath(bones[i], _animator.transform);
+                FlattenHoldTangents(qx[i]);
+                FlattenHoldTangents(qy[i]);
+                FlattenHoldTangents(qz[i]);
+                FlattenHoldTangents(qw[i]);
                 clip.SetCurve(path, typeof(Transform), "m_LocalRotation.x", qx[i]);
                 clip.SetCurve(path, typeof(Transform), "m_LocalRotation.y", qy[i]);
                 clip.SetCurve(path, typeof(Transform), "m_LocalRotation.z", qz[i]);
@@ -469,22 +470,48 @@ namespace Survival.Unity
             return clip;
         }
 
+        private static void FlattenHoldTangents(AnimationCurve curve)
+        {
+            var keys = curve.keys;
+            for (var i = 0; i < keys.Length; i++)
+            {
+                var k = keys[i];
+                k.inTangent = 0f;
+                k.outTangent = 0f;
+                keys[i] = k;
+            }
+
+            curve.keys = keys;
+        }
+
         private void BakeAttackPose(float attackNormalized01)
         {
             SirAldric3DMotion.AttackLeftHipDrawReach(attackNormalized01, out var dx, out var dy, out var dz);
-            var desired = new Vector3(dx, dy, dz);
-            var len = 0.55f;
-            if (_rightArm != null && _rightHand != null)
-            {
-                var reach = _rightHand.position - _rightArm.position;
-                if (reach.sqrMagnitude > 1e-4f)
-                {
-                    len = reach.magnitude;
-                }
-            }
-
             var origin = _hips != null ? _hips.position : Vector3.zero;
-            BakeAimEndToward(_rightArm, _rightHand, origin + desired * len);
+            BakeHandToWorld(origin + new Vector3(dx, dy, dz));
+
+            if (_spine != null)
+            {
+                var extra = Quaternion.identity;
+                if (attackNormalized01 <= SirAldric3DMotion.AttackDrawHoldEndU)
+                {
+                    extra = Quaternion.Euler(8f, 14f, 0f);
+                }
+                else if (attackNormalized01 <= SirAldric3DMotion.AttackRaiseHoldEndU)
+                {
+                    extra = Quaternion.Euler(-6f, -10f, 0f);
+                }
+                else if (attackNormalized01 <= SirAldric3DMotion.AttackFwdHoldEndU)
+                {
+                    extra = Quaternion.Euler(12f, 0f, 0f);
+                }
+                else
+                {
+                    extra = Quaternion.Euler(16f, 4f, 0f);
+                }
+
+                _spine.localRotation = Quaternion.Normalize(_spine.localRotation * extra);
+            }
 
             if (_leftArm == null || _leftHand == null)
             {
@@ -493,16 +520,61 @@ namespace Survival.Unity
 
             if (attackNormalized01 < SirAldric3DMotion.AttackSwordInHandU)
             {
-                BakeAimEndToward(
-                    _leftArm,
-                    _leftHand,
-                    origin + new Vector3(-0.22f, -0.04f, 0.04f));
+                BakeAimEndToward(_leftArm, _leftHand, origin + new Vector3(-0.20f, 0.02f, 0.04f));
             }
-            else
+        }
+
+        /// <summary>
+        /// Bake-only two-bone reach so the hand sits on the beat target (meters),
+        /// not a 0.55 m sphere around the hips. Do not call after Evaluate.
+        /// </summary>
+        private void BakeHandToWorld(Vector3 worldTarget)
+        {
+            if (_rightArm == null || _rightHand == null)
             {
-                SirAldric3DMotion.AttackSlashGuardReach(out var gx, out var gy, out var gz);
-                BakeAimEndToward(_leftArm, _leftHand, origin + new Vector3(gx, gy, gz) * 0.45f);
+                return;
             }
+
+            for (var i = 0; i < 6; i++)
+            {
+                if (_rightForeArm != null)
+                {
+                    BakeAimEndToward(_rightForeArm, _rightHand, worldTarget);
+                }
+
+                BakeAimEndToward(_rightArm, _rightHand, worldTarget);
+            }
+
+            BakePoleRightElbow();
+            if (_rightForeArm != null)
+            {
+                BakeAimEndToward(_rightForeArm, _rightHand, worldTarget);
+            }
+        }
+
+        private void BakePoleRightElbow()
+        {
+            if (_rightArm == null || _rightForeArm == null || _rightHand == null)
+            {
+                return;
+            }
+
+            var axis = _rightHand.position - _rightArm.position;
+            if (axis.sqrMagnitude < 1e-6f)
+            {
+                return;
+            }
+
+            axis.Normalize();
+            var off = Vector3.ProjectOnPlane(_rightForeArm.position - _rightArm.position, axis);
+            var pole = Vector3.ProjectOnPlane(Vector3.right * 0.85f + Vector3.back * 0.35f, axis);
+            if (off.sqrMagnitude < 1e-6f || pole.sqrMagnitude < 1e-6f)
+            {
+                return;
+            }
+
+            var rot = Quaternion.FromToRotation(off.normalized, pole.normalized);
+            _rightArm.rotation = Quaternion.Normalize(rot * _rightArm.rotation);
         }
 
         /// <summary>
@@ -879,10 +951,26 @@ namespace Survival.Unity
             var blend = Mathf.Clamp(WalkToAttackBlendSeconds, 0.15f, 0.25f);
             if (_attackReady && t >= walkBlock - blend * 0.5f && t < walkBlock + attackLen - blend * 0.5f)
             {
-                return "SLASH  ·  TOP  ·  PILOT Mixamo RH sword";
+                var u = Mathf.Clamp01((t - walkBlock) / attackLen);
+                if (u <= SirAldric3DMotion.AttackDrawHoldEndU)
+                {
+                    return "DRAW  ·  LEFT hip pocket  ·  0.32–0.90s";
+                }
+
+                if (u <= SirAldric3DMotion.AttackRaiseHoldEndU)
+                {
+                    return "RAISE  ·  overhead RIGHT  ·  1.28–1.79s";
+                }
+
+                if (u <= SirAldric3DMotion.AttackFwdHoldEndU)
+                {
+                    return "STRIKE  ·  FORWARD  ·  2.18–2.56s";
+                }
+
+                return "STRIKE  ·  DOWN to foot  ·  2.88–3.20s";
             }
 
-            return "WALK  ·  toward TOP  ·  hip sheath";
+            return "WALK  ·  toward TOP  ·  RH grip";
         }
 
         private void OnDestroy()

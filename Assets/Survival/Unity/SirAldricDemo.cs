@@ -580,7 +580,7 @@ namespace Survival.Unity
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "PILOT Mixamo  ·  RH grip walk  ·  left-hip draw · raise overhead R · strike fwd→foot  ·  1/2/3 orbit  ·  HOLD",
+                "PILOT Mixamo  ·  walk  ·  draw 0.3–0.9s · raise R 1.3–1.8s · fwd 2.2–2.6s · foot 2.9–3.2s  ·  HOLD",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);

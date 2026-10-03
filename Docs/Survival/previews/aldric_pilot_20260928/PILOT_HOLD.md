@@ -94,5 +94,5 @@ Play-cam rematch: walk f18 (older hip-sheath dump `sir_aldric_pilot_dump_walk_f1
 
 1. Play **SirAldric** (click the Game view). Default cam = **rear**. **1 / 2 / 3** orbit. HUD `cam <yaw>` must change.
 2. **Walk (Derek 0fc0930 SoT):** sword **in the right hand**, along-arm — not floating at the hip.
-3. **Strike (Dev-authored `SirAldric_DIAG_InwardSlash`):** walk straight, then **reach into the LEFT hip pocket and draw**, **raise above head on the RIGHT**, **strike FORWARD**, then **DOWN toward his foot**. **Not** down-left. **Not** raise-then-cut. **Not** DIAG_REV. Sword draw starts at the left hip; strike / walk-after-draw on `mixamorig:RightHand`.
+3. **Strike (rebuilt 3.20s clip, held beats — not the ddda018 smear):** walk straight, then **LEFT hip draw 0.32–0.90s**, **raise above head on the RIGHT 1.28–1.79s**, **strike FORWARD 2.18–2.56s**, **DOWN toward his foot 2.88–3.20s**. Hand at hip-relative meters. **Not** down-left. **Not** raise-then-cut. **Not** DIAG_REV. Sword draw starts at the left hip; strike / walk-after-draw on `mixamorig:RightHand`.
 4. HOLD until Derek Game-view PASS vs that video.
