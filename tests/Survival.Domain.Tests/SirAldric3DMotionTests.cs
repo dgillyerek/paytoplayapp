@@ -360,6 +360,9 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("4_Strike_DownToFoot", actor, StringComparison.Ordinal);
         Assert.Contains("SampleStrikePath", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("_attackPlayable.SetTime", actor, StringComparison.Ordinal);
+        Assert.Contains("_attackReady = false", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("_attackReady = true", actor, StringComparison.Ordinal);
+        Assert.Contains("walk only", actor, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("does not match SirAldric_DIAG_InwardSlash", actor, StringComparison.Ordinal);
         Assert.Contains("EnsureEditableAttackClip", actor, StringComparison.Ordinal);
         Assert.Contains("AttackSlashReach", actor, StringComparison.Ordinal);

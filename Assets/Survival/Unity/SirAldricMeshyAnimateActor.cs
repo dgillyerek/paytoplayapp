@@ -15,14 +15,13 @@ namespace Survival.Unity
     /// <summary>
     /// Sir Aldric PILOT: Mixamo-skinned holefixed mid280k is the ONLY visible body.
     /// Generic Mixamo clips (Humanoid Playable collapses this skin). AccuRIG superseded.
-    /// Walk = Standard Walk. Strike = four Scene markers on SirAldricStrikePath
-    /// (1_Draw_LeftHipPocket → 2_Raise_AboveHeadRight → 3_Strike_Forward →
-    /// 4_Strike_DownToFoot). RH / sword follows a Catmull arc; ReachRightArmToward
-    /// bends shoulder + elbow. Derek rejected another Mixamo DIAG tweak (1821c4a
-    /// UPWARDS leftover MixamoDiagPlaybackU / MixamoDiagStrikeBladeLocal). No
-    /// Mixamo DIAG playback, no Mixamo Mirror, no post-evaluate pitch hack, no
-    /// frozen holds. Leftover AimArmAlong / AttackRaiseThenCutReach unused.
-    /// HOLD merge.
+    /// Walk = Standard Walk only. Derek: revert ALL attacks. Play loops the
+    /// walk clip. No Mixamo DIAG, no rebuilt clip, no four-marker path, no
+    /// blade pitch, no sword swing. Leftover SirAldricStrikePath markers
+    /// (1_Draw_LeftHipPocket / 2_Raise_AboveHeadRight / 3_Strike_Forward /
+    /// 4_Strike_DownToFoot) and leftover ReachRightArmToward / SampleStrikePath
+    /// / MixamoDiagPlaybackU / MixamoDiagStrikeBladeLocal / AimArmAlong do not
+    /// drive motion. Sword stays the walk RH grip (Derek 0fc0930). HOLD merge.
     /// </summary>
     [DefaultExecutionOrder(200)]
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
@@ -47,15 +46,15 @@ namespace Survival.Unity
         public const string AttackClipHint = "Attack";
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
         public const string AttackAuthoredReason =
-            "PILOT Mixamo sep Generic: holefixed body + Standard Walk. Strike = Scene markers " +
-            "1_Draw_LeftHipPocket / 2_Raise_AboveHeadRight / 3_Strike_Forward / 4_Strike_DownToFoot " +
-            "under SirAldricStrikePath (drag in Scene; next Play reads transforms). " +
+            "PILOT Mixamo sep Generic: holefixed body + Standard Walk only. Derek reverted ALL attacks. " +
+            "Play does not play DIAG / rebuilt clip / four-marker path / blade pitch / sword swing. " +
+            "Leftover Scene markers 1_Draw_LeftHipPocket / 2_Raise_AboveHeadRight / 3_Strike_Forward / 4_Strike_DownToFoot " +
+            "under SirAldricStrikePath do not drive motion. Leftover ReachRightArmToward / SampleStrikePath unused. " +
             "SirAldric_DIAG_InwardSlash.anim leftover (name matches the file — Attack as clip.name does not match SirAldric_DIAG_InwardSlash and Unity will not compile). " +
             "Not the 7958283 held-pose robot clip. Not DIAG_REV 0beb3c77 e90b654 no-attack FAIL; not DIAG_MIRR 70fd9483 Derek reject 19e6efe; not MILD 8d5b78b0; not baseline 4a143441. " +
             "Sword never a whole-body X-flip. No Mixamo Mirror. " +
-            "Walk: sword gripped in mixamorig:RightHand after draw (Derek 0fc0930 Game-view; 879a6f3 left-hand FAIL discarded). " +
-            "Dev owns the strike: RH follows the four markers on a smooth arc (ReachRightArmToward). " +
-            "Derek rejected another Mixamo DIAG tweak after 1821c4a UPWARDS — leftover MixamoDiagDrawEndU / MixamoDiagPlaybackU / MixamoDiagRaisePlayEndU / MixamoDiagStrikeBladeLocal unused. " +
+            "Walk: sword gripped in mixamorig:RightHand (Derek 0fc0930 Game-view; 879a6f3 left-hand FAIL discarded). " +
+            "Dev owns the strike leftover only. Derek rejected another Mixamo DIAG tweak after 1821c4a UPWARDS — leftover MixamoDiagDrawEndU / MixamoDiagPlaybackU / MixamoDiagRaisePlayEndU / MixamoDiagStrikeBladeLocal unused. " +
             "No Mixamo DIAG playback. Leftover AttackLeftHipDrawReach / AimArmAlong / AttackRaiseThenCutReach unused — 95aba89 FAIL. " +
             "YouTube iQ1s3nN1330 leftover / backswing history. RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
@@ -169,12 +168,13 @@ namespace Survival.Unity
 
             EnsureEditableAttackClip();
             // Leftover LoadClip(ThemePackAttackAnim) / LoadClip(ThemePackAttackFbx)
-            // unused at Play — Derek rejected another Mixamo DIAG tweak.
+            // unused at Play — Derek reverted ALL attacks. Walk only.
             _ = ThemePackAttackAnim;
             _ = ThemePackAttackFbx;
-            _strikePath = SirAldricStrikePath.FindInScene();
-            _attackLength = SirAldric3DMotion.StrikePathSeconds;
-            _attackReady = true;
+            _ = SirAldric3DMotion.StrikePathRootName;
+            _strikePath = null;
+            _attackLength = 0f;
+            _attackReady = false;
 
             _graph.Play();
             _graphReady = true;
@@ -190,7 +190,7 @@ namespace Survival.Unity
             Debug.Log(
                 "PILOT actor built walkLen=" + _walkLength + " attackLen=" + _attackLength +
                 " visible=Mixamo walkClip=" + ThemePackWalkFbx +
-                " strikePath=" + SirAldric3DMotion.StrikePathRootName + " " + AttackAuthoredReason);
+                " walk only (no strikePath drive) " + AttackAuthoredReason);
         }
 
         /// <summary>
@@ -279,80 +279,23 @@ namespace Survival.Unity
 
             var timeSeconds = _poseTime;
             var walkLen = _walkLength > 0.05f ? _walkLength : 1f;
-            var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
-            var attackLen = _attackReady ? Mathf.Max(_attackLength, 0.01f) : walkBlock;
-            var loop = walkBlock + (_attackReady ? attackLen : 0f);
-            if (loop < 0.05f)
-            {
-                loop = walkLen;
-            }
-
-            var t = timeSeconds % loop;
-            var blend = Mathf.Clamp(WalkToAttackBlendSeconds, 0.15f, 0.25f);
             _mixer.SetInputWeight(0, 1f);
-            if (!_attackReady)
-            {
-                _walkPlayable.SetTime(t % walkLen);
-                _graph.Evaluate();
-                ApplyAttackWindupLift(0f, 0f);
-                return;
-            }
-
-            float attackW;
-            float attackU;
-            if (t < walkBlock)
-            {
-                attackW = t >= walkBlock - blend
-                    ? Mathf.InverseLerp(walkBlock - blend, walkBlock, t)
-                    : 0f;
-                attackU = 0f;
-                _walkPlayable.SetTime(t % walkLen);
-            }
-            else
-            {
-                var at = t - walkBlock;
-                var back = at >= attackLen - blend
-                    ? Mathf.InverseLerp(attackLen - blend, attackLen, at)
-                    : 0f;
-                attackW = 1f - back;
-                attackU = at / attackLen;
-                _walkPlayable.SetTime(walkLen * 0.25f);
-            }
-
+            _walkPlayable.SetTime(timeSeconds % walkLen);
             _graph.Evaluate();
-            ApplyAttackWindupLift(attackW, attackU);
+            ApplyAttackWindupLift(0f, 0f);
         }
 
         /// <summary>
-        /// Leftover name. Walk mixer stays on Standard Walk. After Evaluate,
-        /// ReachRightArmToward the Scene-marker Catmull (no Mixamo DIAG
-        /// playback, leftover MixamoDiagPlaybackU unused, leftover
+        /// Leftover name. Walk only: RH grip (Derek 0fc0930). Does not call
+        /// leftover ReachRightArmToward / SampleStrikePath / SirAldricStrikePath
+        /// / MixamoDiagPlaybackU / MixamoDiagStrikeBladeLocal / leftover
         /// AttackRaiseThenCutReach / leftover AttackSlashReach / leftover
-        /// AttackLeftHipDrawReach unused, no AimArmAlong). Sword on
-        /// mixamorig:RightHand. No MixamoDiagStrikeBladeLocal pitch hack.
+        /// AttackLeftHipDrawReach / AimArmAlong. No sword swing.
         /// </summary>
         private void ApplyAttackWindupLift(float attackWeight, float attackNormalized01)
         {
-            if (attackWeight < 0.05f)
-            {
-                BindSwordTo(_rightHand, strikeGrip: true);
-                if (_heldSword != null)
-                {
-                    _heldSword.localRotation = SwordRestLocal();
-                }
-
-                return;
-            }
-
-            if (_strikePath == null)
-            {
-                _strikePath = SirAldricStrikePath.FindInScene();
-            }
-
-            var target = _strikePath != null
-                ? _strikePath.SampleWorld(attackNormalized01)
-                : DefaultStrikeWorld(attackNormalized01);
-            ReachRightArmToward(target, attackNormalized01);
+            _ = attackWeight;
+            _ = attackNormalized01;
             BindSwordTo(_rightHand, strikeGrip: true);
             if (_heldSword != null)
             {
@@ -375,8 +318,7 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Two-bone reach: mixamorig:RightArm + RightForeArm bend so RightHand
-        /// sits on the marker arc. Not leftover AimArmAlong.
+        /// Leftover two-bone reach. Unused at Play — walk only. Not leftover AimArmAlong.
         /// </summary>
         private void ReachRightArmToward(Vector3 target, float attackNormalized01)
         {
@@ -749,33 +691,10 @@ namespace Survival.Unity
 
         public string PhaseLabel(float timeSeconds)
         {
-            var walkLen = _walkLength > 0.05f ? _walkLength : 1f;
-            var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
-            var attackLen = _attackReady ? Mathf.Max(_attackLength, 0.01f) : walkBlock;
-            var loop = walkBlock + (_attackReady ? attackLen : 0f);
-            var t = loop > 0.05f ? timeSeconds % loop : timeSeconds;
-            var blend = Mathf.Clamp(WalkToAttackBlendSeconds, 0.15f, 0.25f);
-            if (_attackReady && t >= walkBlock - blend * 0.5f && t < walkBlock + attackLen - blend * 0.5f)
-            {
-                var u = Mathf.Clamp01((t - walkBlock) / attackLen);
-                if (u < SirAldric3DMotion.StrikeMarkerKnotU(1))
-                {
-                    return "DRAW  ·  1_Draw_LeftHipPocket";
-                }
-
-                if (u < SirAldric3DMotion.StrikeMarkerKnotU(2))
-                {
-                    return "RAISE  ·  2_Raise_AboveHeadRight";
-                }
-
-                if (u < 0.82f)
-                {
-                    return "STRIKE  ·  3_Strike_Forward";
-                }
-
-                return "STRIKE  ·  4_Strike_DownToFoot";
-            }
-
+            _ = timeSeconds;
+            _ = WalkToAttackBlendSeconds;
+            // Leftover strike labels unused: 1_Draw_LeftHipPocket /
+            // 2_Raise_AboveHeadRight / 3_Strike_Forward / 4_Strike_DownToFoot.
             return "WALK  ·  toward TOP  ·  RH grip";
         }
 
