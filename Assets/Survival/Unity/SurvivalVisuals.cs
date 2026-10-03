@@ -170,6 +170,101 @@ namespace Survival.Unity
             return btn;
         }
 
+        public static Dropdown Dropdown(Transform parent, string name, Color color)
+        {
+            var img = Image(parent, name, color);
+            img.raycastTarget = true;
+            var dropdown = img.gameObject.AddComponent<Dropdown>();
+            dropdown.targetGraphic = img;
+
+            var caption = Text(img.transform, "Label", string.Empty, 26, TextAnchor.MiddleLeft, Cream);
+            Stretch(caption.rectTransform);
+            caption.rectTransform.offsetMin = new Vector2(16f, 6f);
+            caption.rectTransform.offsetMax = new Vector2(-40f, -6f);
+
+            var arrow = Image(img.transform, "Arrow", Gold);
+            var arrowRt = arrow.rectTransform;
+            arrowRt.anchorMin = new Vector2(1f, 0.28f);
+            arrowRt.anchorMax = new Vector2(1f, 0.72f);
+            arrowRt.pivot = new Vector2(1f, 0.5f);
+            arrowRt.sizeDelta = new Vector2(28f, 0f);
+            arrowRt.anchoredPosition = new Vector2(-12f, 0f);
+
+            var template = Image(img.transform, "Template", new Color(0.10f, 0.09f, 0.07f, 0.98f));
+            template.raycastTarget = true;
+            var templateRt = template.rectTransform;
+            templateRt.anchorMin = new Vector2(0f, 0f);
+            templateRt.anchorMax = new Vector2(1f, 0f);
+            templateRt.pivot = new Vector2(0.5f, 1f);
+            templateRt.anchoredPosition = Vector2.zero;
+            templateRt.sizeDelta = new Vector2(0f, 560f);
+            template.gameObject.SetActive(false);
+
+            var viewport = Image(template.transform, "Viewport", new Color(1f, 1f, 1f, 0.04f));
+            viewport.raycastTarget = true;
+            Stretch(viewport.rectTransform);
+            var mask = viewport.gameObject.AddComponent<Mask>();
+            mask.showMaskGraphic = false;
+
+            var contentGo = new GameObject("Content");
+            contentGo.transform.SetParent(viewport.transform, false);
+            var content = contentGo.AddComponent<RectTransform>();
+            content.anchorMin = new Vector2(0f, 1f);
+            content.anchorMax = new Vector2(1f, 1f);
+            content.pivot = new Vector2(0.5f, 1f);
+            content.sizeDelta = new Vector2(0f, 48f);
+            var layout = contentGo.AddComponent<VerticalLayoutGroup>();
+            layout.childAlignment = TextAnchor.UpperCenter;
+            layout.childControlHeight = true;
+            layout.childForceExpandHeight = false;
+            layout.childControlWidth = true;
+            layout.childForceExpandWidth = true;
+            var fitter = contentGo.AddComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var itemGo = new GameObject("Item");
+            itemGo.transform.SetParent(content, false);
+            var itemRt = itemGo.AddComponent<RectTransform>();
+            itemRt.anchorMin = new Vector2(0f, 0.5f);
+            itemRt.anchorMax = new Vector2(1f, 0.5f);
+            itemRt.sizeDelta = new Vector2(0f, 48f);
+            var itemLayout = itemGo.AddComponent<LayoutElement>();
+            itemLayout.minHeight = 48f;
+            itemLayout.preferredHeight = 48f;
+            var toggle = itemGo.AddComponent<Toggle>();
+
+            var itemBg = Image(itemGo.transform, "Item Background", new Color(0.16f, 0.14f, 0.10f, 0.98f));
+            itemBg.raycastTarget = true;
+            Stretch(itemBg.rectTransform);
+
+            var check = Image(itemGo.transform, "Item Checkmark", Gold);
+            var checkRt = check.rectTransform;
+            checkRt.anchorMin = new Vector2(0f, 0.2f);
+            checkRt.anchorMax = new Vector2(0f, 0.8f);
+            checkRt.offsetMin = new Vector2(8f, 0f);
+            checkRt.offsetMax = new Vector2(32f, 0f);
+
+            var itemLabel = Text(itemGo.transform, "Item Label", string.Empty, 24, TextAnchor.MiddleLeft, Cream);
+            Stretch(itemLabel.rectTransform);
+            itemLabel.rectTransform.offsetMin = new Vector2(40f, 0f);
+            itemLabel.rectTransform.offsetMax = new Vector2(-10f, 0f);
+
+            toggle.targetGraphic = itemBg;
+            toggle.graphic = check;
+
+            var scroll = template.gameObject.AddComponent<ScrollRect>();
+            scroll.content = content;
+            scroll.viewport = viewport.rectTransform;
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+
+            dropdown.captionText = caption;
+            dropdown.itemText = itemLabel;
+            dropdown.template = templateRt;
+            return dropdown;
+        }
+
         public static void Place(RectTransform rt, HudRect rect)
         {
             rt.anchorMin = new Vector2(rect.XMin, rect.YMin);

@@ -3,7 +3,8 @@
     "rootNamespace": "Survival.Unity",
     "references": [
         "Survival.Domain",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

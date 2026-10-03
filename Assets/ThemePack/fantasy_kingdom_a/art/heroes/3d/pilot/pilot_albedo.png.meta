@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: 0b4e6c8a2d315f7b9c1e3a5d7f9b0246
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+  isReadable: 1
+  textureType: 0
+  textureShape: 1
+  nPOTScale: 0
+  alphaIsTransparency: 0
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    wrapU: 0
+    wrapV: 0
+  userData: PILOT albedo extracted from walk FBX texture_0
+  assetBundleName: 
+  assetBundleVariant: 

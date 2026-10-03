@@ -1,0 +1,11 @@
+VISIBLE BODY MESH SoT (ONLY):
+  ../accurig/SirAldric_PILOT_accurig_humanoid.fbx
+  (= Meshy Character_output from AccuRIG mid280k biped SirAldric_PILOT_mid28)
+
+These animate_*_accurig.fbx files are for CLIP EXTRACTION / same-skeleton anim only.
+If Meshy With Skin embeds a mesh, Unity must:
+  1) Import AccuRIG Character_output as the ONLY visible body mesh
+  2) Use animation clips ONLY from these FBX
+  3) Discard / ignore embedded mesh if Unity duplicates it
+
+NEVER ship a separate Meshy "Animate mesh" as the playable body.

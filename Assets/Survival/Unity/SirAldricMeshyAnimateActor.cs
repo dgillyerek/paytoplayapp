@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using Survival.Domain.Heroes;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
+using UnityEngine.Rendering;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -10,104 +13,1111 @@ using UnityEditor;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Aldric World proof actor: Meshy Animate FBX humanoid + Walking clip AS-IS.
-    /// Path A weight-paint is CANCELLED. Do not remap sheath / Hand_R / ghost legs.
-    /// World LIGHT + MATERIAL punch. Binds Meshy albedo from the FBX pack
-    /// (Humanoid import often drops texture links). Design PASS not claimed.
+    /// Sir Aldric PILOT: Mixamo-skinned holefixed mid280k is the ONLY visible body.
+    /// Generic Mixamo clips (Humanoid Playable collapses this skin). AccuRIG superseded.
+    /// Walk = Standard Walk (own Mixamo avatar). After walk, Play Design's
+    /// Sword And Shield Slash FBX on THAT file's own Mixamo auto-rig — do not
+    /// remap onto the walk skeleton. 74 frames / 30 FPS / Mirror off. Not the
+    /// 53-frame Sword And Shield Attack. Lite Sword And Shield Pack (17) plays
+    /// on the same slash avatar via PlayNamedClip(exact Mixamo name). Leftover
+    /// DIAG / MILD / DIAG_MIRR / DIAG_REV / rebuilt .anim / four Scene markers /
+    /// blade pitch / leftover ReachRightArmToward unused. Leftover 130cec4 walk
+    /// only. HOLD merge.
     /// </summary>
+    [DefaultExecutionOrder(200)]
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
     {
-        public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_walk.fbx";
+        public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx";
+        public const string ThemePackLookFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_mid280k.fbx";
+        public const string ThemePackWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx";
+        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx";
+        public const string ThemePackLiteSwordShieldDir = SirAldric3DMotion.LiteSwordShieldThemePackDir;
+        /// <summary>Leftover DIAG (md5 72412be4). Not playing. Not DIAG_REV 0beb3c77. Not DIAG_MIRR 70fd9483. Not MILD 8d5b78b0. Not baseline 4a143441.</summary>
+        public const string ThemePackAttackFbxDiagLeftover = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx";
+        /// <summary>Same leftover DIAG bytes as ThemePackAttackFbxDiagLeftover.</summary>
+        public const string ThemePackAttackFbxAlias = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash.fbx";
+        /// <summary>Dev-authored attack clip. File name and clip.name must both be SirAldric_DIAG_InwardSlash (Unity compile break if they differ).</summary>
+        public const string ThemePackAttackAnim = "Survival/Unity/Anims/SirAldric_DIAG_InwardSlash.anim";
+        /// <summary>Must match the .anim file name. Naming the clip "Attack" does not match SirAldric_DIAG_InwardSlash.</summary>
+        public const string AttackClipAssetName = "SirAldric_DIAG_InwardSlash";
+        /// <summary>Editor-only AnimatorController so Animation-window Preview can sample the .anim. Not used by PlayableGraph.</summary>
+        public const string ThemePackAttackController = "Survival/Unity/Anims/SirAldric_DIAG_InwardSlash.controller";
+        public const string ThemePackSwordFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_sword.fbx";
+        public const string ThemePackCapeFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_cape.fbx";
+        public const string PaintedLookDir = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot";
+        public const string LeftoverMeshyWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/sir_aldric_meshy_animate_walk.fbx";
         public const string ClipHint = "Walking";
+        public const string AttackClipHint = "Attack";
+        public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
+        public const string AttackAuthoredReason =
+            "PILOT Mixamo sep Generic: holefixed Standard Walk then Design Sword And Shield Slash " +
+            "(SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx md5 cc4f97a3, 74 frames 30 FPS Mirror off) " +
+            "on its own Mixamo auto-rig. Lite Sword And Shield Pack (17) PlayNamedClip exact Mixamo names on that slash avatar. " +
+            "Do not remap onto the walk skeleton. Not the 53-frame Sword And Shield Attack. " +
+            "Leftover 130cec4 walk only. Leftover Scene markers 1_Draw_LeftHipPocket / 2_Raise_AboveHeadRight / 3_Strike_Forward / 4_Strike_DownToFoot " +
+            "under SirAldricStrikePath do not drive motion. Leftover ReachRightArmToward / SampleStrikePath unused. " +
+            "SirAldric_DIAG_InwardSlash.anim leftover (name matches the file — Attack as clip.name does not match SirAldric_DIAG_InwardSlash and Unity will not compile). " +
+            "Not the 7958283 held-pose robot clip. Not DIAG_REV 0beb3c77 e90b654 no-attack FAIL; not DIAG_MIRR 70fd9483 Derek reject 19e6efe; not MILD 8d5b78b0; not baseline 4a143441. " +
+            "Sword never a whole-body X-flip. No Mixamo Mirror. " +
+            "Walk: sword gripped in mixamorig:RightHand (Derek 0fc0930 Game-view; 879a6f3 left-hand FAIL discarded). " +
+            "Dev owns the strike: Play this Design FBX unchanged on its own avatar. " +
+            "Slash sword: identity parent on this FBX RightHand — no blade pitch. Leftover MixamoDiagDrawEndU / MixamoDiagPlaybackU / MixamoDiagRaisePlayEndU / MixamoDiagStrikeBladeLocal unused after 1821c4a UPWARDS. " +
+            "No Mixamo DIAG playback. Leftover AttackLeftHipDrawReach / AimArmAlong / AttackRaiseThenCutReach unused — 95aba89 FAIL. " +
+            "YouTube iQ1s3nN1330 leftover / backswing history. RH sword 1.01m. Mixer 0.20s. Leftover FOV 42. Game FOV 50 pullback. Never AccuRIG. HOLD merge.";
+        public const float WalkToAttackBlendSeconds = 0.20f;
+        public const float SwordBladeMeters = 1.01f;
+        private const float BodyHeightMinMeters = 0.5f;
+        private const float BodyHeightMaxMeters = 5f;
+        private const float BodyHeightTargetMeters = 1.80f;
 
         private Animator? _animator;
         private PlayableGraph _graph;
-        private AnimationClipPlayable _clipPlayable;
-        private float _clipLength;
+        private AnimationPlayableOutput _output;
+        private AnimationMixerPlayable _mixer;
+        private AnimationClipPlayable _walkPlayable;
+        private AnimationClipPlayable _attackPlayable;
+        private PlayableGraph _slashGraph;
+        private AnimationPlayableOutput _slashOutput;
+        private AnimationClipPlayable _slashPlayable;
+        private GameObject? _liteInstance;
+        private Animator? _liteAnimator;
+        private PlayableGraph _liteGraph;
+        private AnimationPlayableOutput _liteOutput;
+        private AnimationMixerPlayable _liteMixer;
+        private AnimationClipPlayable _litePlayable;
+        private float _walkLength;
+        private float _attackLength;
         private bool _graphReady;
+        private bool _attackReady;
         private GameObject? _instance;
+        private GameObject? _slashInstance;
+        private Animator? _slashAnimator;
+        private Transform? _slashSword;
+        private Transform? _rightArm;
+        private Transform? _rightForeArm;
+        private Transform? _rightHand;
+        private Transform? _leftArm;
+        private Transform? _leftForeArm;
+        private Transform? _leftHand;
+        private Transform? _spine;
+        private Transform? _hips;
+        private Transform? _rightUpLeg;
+        private Transform? _rightLeg;
+        private Transform? _leftUpLeg;
+        private Transform? _heldSword;
+        private Transform? _boundSwordParent;
+        private Transform? _sheathSocket;
+        private Transform? _leftHipSocket;
+        private SirAldricStrikePath? _strikePath;
+        /// <summary>
+        /// Mesh-local blade axis. Unity FBX bakeAxisConversion turns Design +Z into
+        /// local +Y — aiming transform.forward at desired left the visible blade
+        /// on world +Y (Derek FAIL b0a9509 Game-view sky). Rematch blender has no bake
+        /// so it still aims local +Z.
+        /// </summary>
+        private Vector3 _swordLocalBlade = Vector3.up;
+        private Vector3 _sheathHiltLocal;
+        private bool _sheathHiltReady;
+        private float _poseTime;
+        private bool _poseReady;
+        private string? _namedClipExactName;
+        private bool _namedClipActive;
+        private bool _namedClipLoop;
+        private float _namedClipLength;
+        private float _namedClipOrigin;
+        private readonly Dictionary<string, AnimationClip> _liteClips = new();
 
         public bool Built => _graphReady;
+        public string? NamedClipExactName => _namedClipExactName;
+        public bool HasAttackClip => _attackReady;
+        public float WalkLength => _walkLength;
+        public float AttackLength => _attackLength > 0.05f ? _attackLength : 0f;
 
         public void Build()
         {
             BuildLights();
-            var prefab = LoadFbxPrefab();
+            var prefab = LoadFbxPrefab(ThemePackFbx, "SirAldric_body_holefixed_walk");
             if (prefab == null)
             {
                 Debug.LogError(
-                    "Meshy Animate FBX not imported yet. Open the project in Unity so " +
-                    ThemePackFbx + " Humanoid-imports, then Play SirAldric.");
+                    "PILOT Mixamo body FBX not imported yet. Open Unity so " +
+                    ThemePackFbx + " Generic-imports, then Play SirAldric.");
                 return;
             }
 
             _instance = Instantiate(prefab, transform);
-            _instance.name = "SirAldricMeshyAnimate";
+            _instance.name = "SirAldricPilotMixamo";
             HideJunk(_instance);
+            StripEmbeddedClipMeshes(_instance);
+            NormalizeMixamoCmRoot(_instance);
             FaceWorldTop(_instance);
-            PunchMaterials(_instance);
+            BindPaintedLook(_instance);
+            EnableSkinAlways(_instance);
 
-            _animator = _instance.GetComponent<Animator>();
-            if (_animator == null)
+            _animator = _instance.GetComponent<Animator>() ?? _instance.AddComponent<Animator>();
+            var mixamoAvatar = LoadImportedAvatar(AssetPath(ThemePackFbx));
+            if (mixamoAvatar != null && mixamoAvatar.isHuman)
             {
-                _animator = _instance.AddComponent<Animator>();
+                Debug.LogWarning(
+                    "PILOT Mixamo: ignoring Humanoid avatar — Playable retarget collapses holefixed skin " +
+                    "while mixamorig:RightHand still moves (sword-only FAIL). Generic Mixamo bones.");
+                mixamoAvatar = null;
             }
 
-            if (_animator.avatar == null)
+            if (mixamoAvatar != null)
             {
-                _animator.avatar = LoadHumanoidAvatar();
+                _animator.avatar = mixamoAvatar;
             }
 
-            var clip = LoadWalkingClip();
-            if (clip == null)
+            _animator.applyRootMotion = false;
+            _animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            _animator.updateMode = AnimatorUpdateMode.UnscaledTime;
+
+            var walk = LoadClip(ThemePackWalkFbx, ClipHint, repairWalk: true);
+            if (walk == null)
             {
-                Debug.LogError("Meshy Animate FBX has no Walking clip after Humanoid import.");
+                Debug.LogError("PILOT walk FBX has no Walking clip after Generic import.");
                 return;
             }
 
-            clip.wrapMode = WrapMode.Loop;
-            _clipLength = clip.length;
-            _graph = PlayableGraph.Create("SirAldricMeshyAnimate");
+            walk.wrapMode = WrapMode.Loop;
+            _walkLength = walk.length;
+
+            _graph = PlayableGraph.Create("SirAldricPilotMixamo");
             _graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
-            var output = AnimationPlayableOutput.Create(_graph, "Aldric", _animator);
-            _clipPlayable = AnimationClipPlayable.Create(_graph, clip);
-            output.SetSourcePlayable(_clipPlayable);
+            _output = AnimationPlayableOutput.Create(_graph, "AldricMixamo", _animator);
+            _mixer = AnimationMixerPlayable.Create(_graph, 1);
+            _walkPlayable = AnimationClipPlayable.Create(_graph, walk);
+            _graph.Connect(_walkPlayable, 0, _mixer, 0);
+            _mixer.SetInputWeight(0, 1f);
+            _output.SetSourcePlayable(_mixer);
+
+            EnsureEditableAttackClip();
+            // Leftover LoadClip(ThemePackAttackAnim) unused at Play.
+            _ = ThemePackAttackAnim;
+            _ = ThemePackAttackFbxDiagLeftover;
+            _ = SirAldric3DMotion.StrikePathRootName;
+            _strikePath = null;
+            BuildSwordShieldSlashAvatar();
+
             _graph.Play();
             _graphReady = true;
-            SampleWalk(0f);
+            SampleAt(0f);
+            CorrectBodyScaleIfNeeded(_instance);
+            SampleAt(0f);
+            AttachHeldSword(_instance);
+            HideEmbeddedSwords(_instance);
+            CacheAttackBones(_instance);
+            SampleAt(0f);
+            LogSkinAndFailIfBad(_instance);
+            BindRenderHook();
+            Debug.Log(
+                "PILOT actor built walkLen=" + _walkLength + " attackLen=" + _attackLength +
+                " visible=Mixamo walkClip=" + ThemePackWalkFbx +
+                " slashOwnAvatar=" + ThemePackAttackFbx + " " + AttackAuthoredReason);
         }
 
-        private void Update()
+        /// <summary>
+        /// Instantiate Design's Sword And Shield Slash FBX as its own Mixamo
+        /// auto-rig. Do not play this clip on the walk Animator.
+        /// </summary>
+        private void BuildSwordShieldSlashAvatar()
         {
-            if (!_graphReady || _clipLength <= 0f)
+            var prefab = LoadFbxPrefab(ThemePackAttackFbx, "SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK");
+            if (prefab == null)
+            {
+                Debug.LogWarning(
+                    "PILOT Sword And Shield Slash FBX not imported yet. Open Unity so " +
+                    ThemePackAttackFbx + " Generic-imports.");
+                _attackReady = false;
+                _attackLength = 0f;
+                return;
+            }
+
+            _slashInstance = Instantiate(prefab, transform);
+            _slashInstance.name = "SirAldricSwordShieldSlash";
+            HideJunk(_slashInstance);
+            StripEmbeddedClipMeshes(_slashInstance);
+            NormalizeMixamoCmRoot(_slashInstance);
+            FaceWorldTop(_slashInstance);
+            BindPaintedLook(_slashInstance);
+            EnableSkinAlways(_slashInstance);
+            CorrectBodyScaleIfNeeded(_slashInstance);
+
+            _slashAnimator = _slashInstance.GetComponent<Animator>() ?? _slashInstance.AddComponent<Animator>();
+            var slashAvatar = LoadImportedAvatar(AssetPath(ThemePackAttackFbx));
+            if (slashAvatar != null && slashAvatar.isHuman)
+            {
+                Debug.LogWarning(
+                    "PILOT slash: ignoring Humanoid avatar — play Generic Mixamo bones on this FBX.");
+                slashAvatar = null;
+            }
+
+            if (slashAvatar != null)
+            {
+                _slashAnimator.avatar = slashAvatar;
+            }
+
+            _slashAnimator.applyRootMotion = false;
+            _slashAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            _slashAnimator.updateMode = AnimatorUpdateMode.UnscaledTime;
+
+            var slash = LoadClip(ThemePackAttackFbx, AttackClipHint, repairWalk: false);
+            if (slash == null)
+            {
+                Debug.LogWarning("PILOT Sword And Shield Slash take missing after Generic import.");
+                _attackReady = false;
+                _attackLength = 0f;
+                return;
+            }
+
+            slash.wrapMode = WrapMode.Once;
+            _attackLength = slash.length > 0.05f
+                ? slash.length
+                : (SirAldric3DMotion.MixamoSwordShieldSlashLastFrame + 1f) / SirAldric3DMotion.MixamoSwordShieldSlashFps;
+            _slashGraph = PlayableGraph.Create("SirAldricSwordShieldSlash");
+            _slashGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
+            _slashOutput = AnimationPlayableOutput.Create(_slashGraph, "AldricSlash", _slashAnimator);
+            _slashPlayable = AnimationClipPlayable.Create(_slashGraph, slash);
+            _slashOutput.SetSourcePlayable(_slashPlayable);
+            _slashGraph.Play();
+            AttachSlashSwordIdentity(_slashInstance);
+            HideEmbeddedSwords(_slashInstance);
+            LogSkinAndFailIfBad(_slashInstance);
+            SetAvatarVisible(_slashInstance, false);
+            _attackReady = true;
+            _namedClipActive = false;
+            _namedClipExactName = null;
+            BuildLiteSwordShieldAvatar();
+            CacheLiteSwordShieldClips();
+        }
+
+        /// <summary>
+        /// Lite pack FBXs are the same Mixamo character with an Armature root
+        /// and take Scene. They do not drive the Pro slash Generic paths
+        /// (no Armature, take mixamo.com). Play named clips on this instance
+        /// so the Design take actually binds. Do not Destroy the Pro slash graph.
+        /// </summary>
+        private void BuildLiteSwordShieldAvatar()
+        {
+            var rel = SirAldric3DMotion.LiteSwordShieldThemePackDir + "/" + SirAldric3DMotion.LiteSwordShieldBodyFile;
+            var prefab = LoadFbxPrefab(rel, "sword_and_shield_idle");
+            if (prefab == null)
+            {
+                Debug.LogWarning("PILOT lite body FBX not imported yet. " + rel);
+                return;
+            }
+
+            _liteInstance = Instantiate(prefab, transform);
+            _liteInstance.name = "SirAldricLiteSwordShield";
+            HideJunk(_liteInstance);
+            StripEmbeddedClipMeshes(_liteInstance);
+            NormalizeMixamoCmRoot(_liteInstance);
+            FaceWorldTop(_liteInstance);
+            BindPaintedLook(_liteInstance);
+            EnableSkinAlways(_liteInstance);
+            CorrectBodyScaleIfNeeded(_liteInstance);
+
+            _liteAnimator = _liteInstance.GetComponent<Animator>() ?? _liteInstance.AddComponent<Animator>();
+            var liteAvatar = LoadImportedAvatar(AssetPath(rel));
+            if (liteAvatar != null && liteAvatar.isHuman)
+            {
+                liteAvatar = null;
+            }
+
+            if (liteAvatar != null)
+            {
+                _liteAnimator.avatar = liteAvatar;
+            }
+
+            _liteAnimator.applyRootMotion = false;
+            _liteAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            _liteAnimator.updateMode = AnimatorUpdateMode.UnscaledTime;
+
+            _liteGraph = PlayableGraph.Create("SirAldricLiteSwordShield");
+            _liteGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
+            _liteOutput = AnimationPlayableOutput.Create(_liteGraph, "AldricLite", _liteAnimator);
+            _liteMixer = AnimationMixerPlayable.Create(_liteGraph, 1);
+            _liteOutput.SetSourcePlayable(_liteMixer);
+            _liteGraph.Play();
+            AttachSlashSwordIdentity(_liteInstance);
+            HideEmbeddedSwords(_liteInstance);
+            SetAvatarVisible(_liteInstance, false);
+        }
+
+        private AnimationClip? LoadLiteNamedClip(SirAldric3DMotion.LiteSwordShieldClip entry)
+        {
+            var clip = LoadClip(entry.ThemePackRel, entry.ExactName, repairWalk: false)
+                       ?? LoadClip(entry.ThemePackRel, SirAldric3DMotion.LiteSwordShieldTakeName, repairWalk: false)
+                       ?? LoadClip(entry.ThemePackRel, "mixamo.com", repairWalk: false)
+                       ?? LoadClip(entry.ThemePackRel, "Armature", repairWalk: false);
+            if (clip != null && (clip.empty || clip.length < 0.02f))
+            {
+                Debug.LogWarning(
+                    "PILOT lite clip empty take — expected Scene not mixamo.com. " +
+                    entry.ExactName + " " + entry.ThemePackRel);
+                return null;
+            }
+
+            return clip;
+        }
+
+        private bool BindLiteClip(AnimationClip clip)
+        {
+            if (_liteAnimator == null)
+            {
+                return false;
+            }
+
+            if (!_liteGraph.IsValid() || !_liteMixer.IsValid())
+            {
+                if (_liteGraph.IsValid())
+                {
+                    _liteGraph.Destroy();
+                }
+
+                _liteGraph = PlayableGraph.Create("SirAldricLiteSwordShield");
+                _liteGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
+                _liteOutput = AnimationPlayableOutput.Create(_liteGraph, "AldricLite", _liteAnimator);
+                _liteMixer = AnimationMixerPlayable.Create(_liteGraph, 1);
+                _liteOutput.SetSourcePlayable(_liteMixer);
+            }
+
+            if (_liteMixer.IsValid() && _liteMixer.GetInputCount() > 0 && _liteMixer.GetInput(0).IsValid())
+            {
+                _liteGraph.Disconnect(_liteMixer, 0);
+            }
+
+            if (_litePlayable.IsValid())
+            {
+                _litePlayable.Destroy();
+            }
+
+            _litePlayable = AnimationClipPlayable.Create(_liteGraph, clip);
+            _liteGraph.Connect(_litePlayable, 0, _liteMixer, 0);
+            _liteMixer.SetInputWeight(0, 1f);
+            _litePlayable.SetDuration(clip.length);
+            _litePlayable.SetTime(0);
+            _liteGraph.Play();
+            _liteGraph.Evaluate();
+            return _litePlayable.IsValid();
+        }
+
+        private void CacheLiteSwordShieldClips()
+        {
+            _liteClips.Clear();
+            foreach (var entry in SirAldric3DMotion.LiteSwordShieldClips)
+            {
+                var clip = LoadLiteNamedClip(entry);
+                if (clip == null)
+                {
+                    Debug.LogWarning("PILOT lite clip missing " + entry.ExactName + " " + entry.ThemePackRel);
+                    continue;
+                }
+
+                clip.wrapMode = entry.Loop ? WrapMode.Loop : WrapMode.Once;
+                _liteClips[entry.ExactName] = clip;
+            }
+        }
+
+        /// <summary>
+        /// Play one Lite Sword And Shield Pack clip by its exact Mixamo catalog
+        /// name (parentheses and capitalization). Same slash Mixamo auto-rig as
+        /// Pro Sword And Shield Slash — not the walk avatar. Do not rename clips.
+        /// </summary>
+        public bool PlayNamedClip(string exactName)
+        {
+            if (!SirAldric3DMotion.TryLiteSwordShield(exactName, out var entry))
+            {
+                Debug.LogWarning("PILOT PlayNamedClip: unknown exact Mixamo name '" + exactName + "'");
+                return false;
+            }
+
+            if (_liteAnimator == null || _liteInstance == null)
+            {
+                Debug.LogWarning("PILOT PlayNamedClip: lite Armature avatar not ready. exactName=" + exactName);
+                return false;
+            }
+
+            if (!_liteClips.TryGetValue(exactName, out var clip) || clip == null || clip.empty)
+            {
+                clip = LoadLiteNamedClip(entry);
+                if (clip != null)
+                {
+                    _liteClips[exactName] = clip;
+                }
+            }
+
+            if (clip == null || clip.empty)
+            {
+                Debug.LogWarning("PILOT PlayNamedClip: clip missing or empty (need take Scene). " + entry.ThemePackRel);
+                return false;
+            }
+
+            clip.wrapMode = entry.Loop ? WrapMode.Loop : WrapMode.Once;
+            if (!BindLiteClip(clip))
+            {
+                Debug.LogWarning("PILOT PlayNamedClip: lite graph did not bind. exactName=" + exactName);
+                return false;
+            }
+
+            _namedClipExactName = exactName;
+            _namedClipActive = true;
+            _namedClipLoop = entry.Loop;
+            _namedClipLength = clip.length > 0.05f ? clip.length : 1f;
+            _namedClipOrigin = _poseTime > 0f ? _poseTime : Time.unscaledTime;
+            SetAvatarVisible(_instance, false);
+            SetAvatarVisible(_slashInstance, false);
+            SetAvatarVisible(_liteInstance, true);
+            Debug.Log(
+                "PILOT PlayNamedClip exactName=" + exactName +
+                " file=" + entry.FileName + " md5=" + entry.Md5 +
+                " liteAvatar=SirAldricLiteSwordShield take=" + SirAldric3DMotion.LiteSwordShieldTakeName);
+            return true;
+        }
+
+        /// <summary>Return to default Play: walk then Pro Sword And Shield Slash.</summary>
+        public void PlayDefaultWalkThenSlash()
+        {
+            _namedClipActive = false;
+            _namedClipExactName = null;
+            SetAvatarVisible(_liteInstance, false);
+        }
+
+        /// <summary>
+        /// Sword prop on this FBX RightHand. Identity only — no SwordRestLocal /
+        /// SnapHeldSwordToArmAxis / MixamoDiagStrikeBladeLocal pitch.
+        /// </summary>
+        private void AttachSlashSwordIdentity(GameObject root)
+        {
+            var hand = FindNamedBone(root, "mixamorig:RightHand", "RightHand");
+            if (hand == null)
+            {
+                Debug.LogWarning("PILOT slash RightHand missing — sword prop hidden for this pass.");
+                return;
+            }
+
+            var prefab = LoadFbxPrefab(ThemePackSwordFbx, "SirAldric_PILOT_sword");
+            if (prefab == null)
             {
                 return;
             }
 
-            SampleWalk(Time.unscaledTime % _clipLength);
+            var sword = Instantiate(prefab, hand);
+            sword.name = "SirAldricPilotSword";
+            var parent = Mathf.Max(Mathf.Abs(hand.lossyScale.x), 1e-5f);
+            var inv = 1f / parent;
+            sword.transform.localPosition = Vector3.zero;
+            sword.transform.localRotation = Quaternion.identity;
+            sword.transform.localScale = Vector3.one * inv;
+            NormalizeSwordWorldBlade(sword.transform);
+            _slashSword = sword.transform;
+            _heldSword = sword.transform;
+            HideEmbeddedSwords(root);
+            _heldSword = null;
         }
 
-        private void SampleWalk(float time)
+        private static void SetAvatarVisible(GameObject? root, bool visible)
         {
-            if (!_graph.IsValid())
+            if (root == null)
             {
                 return;
             }
 
-            _clipPlayable.SetTime(time);
-            _graph.Evaluate();
+            foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
+            {
+                rend.enabled = visible;
+            }
+        }
+
+        /// <summary>
+        /// Slash FBX may embed a With-Skin mesh. Mixamo holefixed walk instance is the only visible body.
+        /// </summary>
+        private static void StripEmbeddedClipMeshes(GameObject root)
+        {
+            foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
+            {
+                var n = rend.name;
+                if (n.IndexOf("Ico", StringComparison.OrdinalIgnoreCase) >= 0
+                    || n.IndexOf("withSkin", StringComparison.OrdinalIgnoreCase) >= 0
+                    || n.IndexOf("with_skin", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    rend.enabled = false;
+                    rend.gameObject.SetActive(false);
+                }
+            }
+        }
+
+        private void OnEnable()
+        {
+            BindRenderHook();
+        }
+
+        private void OnDisable()
+        {
+            UnbindRenderHook();
+        }
+
+        private void BindRenderHook()
+        {
+            UnbindRenderHook();
+            RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+            Camera.onPreRender += OnPreRenderCamera;
+        }
+
+        private void UnbindRenderHook()
+        {
+            RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+            Camera.onPreRender -= OnPreRenderCamera;
+        }
+
+        private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
+        {
+            _ = context;
+            _ = camera;
+            if (_poseReady)
+            {
+                ApplySampledPose();
+            }
+        }
+
+        private void OnPreRenderCamera(Camera camera)
+        {
+            _ = camera;
+            if (_poseReady)
+            {
+                ApplySampledPose();
+            }
+        }
+
+        private void LateUpdate()
+        {
+            if (!_graphReady)
+            {
+                return;
+            }
+
+            SampleAt(Time.unscaledTime);
+        }
+
+        public void SampleAt(float timeSeconds)
+        {
+            _poseTime = timeSeconds;
+            _poseReady = true;
+            ApplySampledPose();
+        }
+
+        private void ApplySampledPose()
+        {
+            if (!_graph.IsValid() || !_mixer.IsValid())
+            {
+                return;
+            }
+
+            var timeSeconds = _poseTime;
+            if (_namedClipActive && _liteGraph.IsValid() && _litePlayable.IsValid())
+            {
+                SetAvatarVisible(_instance, false);
+                SetAvatarVisible(_slashInstance, false);
+                SetAvatarVisible(_liteInstance, true);
+                var namedT = timeSeconds - _namedClipOrigin;
+                if (namedT < 0f)
+                {
+                    namedT = 0f;
+                }
+
+                var namedLen = _namedClipLength > 0.05f ? _namedClipLength : 1f;
+                if (_namedClipLoop)
+                {
+                    namedT %= namedLen;
+                }
+                else if (namedT > namedLen)
+                {
+                    namedT = namedLen;
+                }
+
+                _litePlayable.SetTime(namedT);
+                _liteGraph.Evaluate();
+                return;
+            }
+
+            var walkLen = _walkLength > 0.05f ? _walkLength : 1f;
+            var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
+            var slashLen = _attackReady ? Mathf.Max(_attackLength, 0.01f) : 0f;
+            var loop = walkBlock + slashLen;
+            if (loop < 0.05f)
+            {
+                loop = walkLen;
+            }
+
+            var t = timeSeconds % loop;
+            var attacking = _attackReady && t >= walkBlock;
+            _mixer.SetInputWeight(0, 1f);
+            if (!attacking)
+            {
+                SetAvatarVisible(_instance, true);
+                SetAvatarVisible(_slashInstance, false);
+                SetAvatarVisible(_liteInstance, false);
+                _walkPlayable.SetTime(t % walkLen);
+                _graph.Evaluate();
+                ApplyAttackWindupLift(0f, 0f);
+                return;
+            }
+
+            SetAvatarVisible(_instance, false);
+            SetAvatarVisible(_slashInstance, true);
+            SetAvatarVisible(_liteInstance, false);
+            var slashT = t - walkBlock;
+            if (_slashGraph.IsValid() && _slashPlayable.IsValid())
+            {
+                _slashPlayable.SetTime(slashT);
+                _slashGraph.Evaluate();
+            }
+        }
+
+        /// <summary>
+        /// Leftover name. Walk only: RH grip (Derek 0fc0930). Does not call
+        /// leftover ReachRightArmToward / SampleStrikePath / SirAldricStrikePath
+        /// / MixamoDiagPlaybackU / MixamoDiagStrikeBladeLocal / leftover
+        /// AttackRaiseThenCutReach / leftover AttackSlashReach / leftover
+        /// AttackLeftHipDrawReach / AimArmAlong. No sword swing.
+        /// </summary>
+        private void ApplyAttackWindupLift(float attackWeight, float attackNormalized01)
+        {
+            _ = attackWeight;
+            _ = attackNormalized01;
+            BindSwordTo(_rightHand, strikeGrip: true);
+            if (_heldSword != null)
+            {
+                _heldSword.localRotation = SwordRestLocal();
+                SnapHeldSwordToArmAxis(Vector3.zero);
+            }
+        }
+
+        private static Vector3 DefaultStrikeWorld(float attackNormalized01)
+        {
+            SirAldric3DMotion.StrikeMarkerDefaultWorld(0, out var x0, out var y0, out var z0);
+            SirAldric3DMotion.StrikeMarkerDefaultWorld(1, out var x1, out var y1, out var z1);
+            SirAldric3DMotion.StrikeMarkerDefaultWorld(2, out var x2, out var y2, out var z2);
+            SirAldric3DMotion.StrikeMarkerDefaultWorld(3, out var x3, out var y3, out var z3);
+            SirAldric3DMotion.SampleStrikePath(
+                attackNormalized01,
+                x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3,
+                out var x, out var y, out var z);
+            return new Vector3(x, y, z);
+        }
+
+        /// <summary>
+        /// Leftover two-bone reach. Unused at Play — walk only. Not leftover AimArmAlong.
+        /// </summary>
+        private void ReachRightArmToward(Vector3 target, float attackNormalized01)
+        {
+            if (_rightArm == null || _rightForeArm == null || _rightHand == null)
+            {
+                return;
+            }
+
+            var shoulder = _rightArm.position;
+            var upperLen = Vector3.Distance(shoulder, _rightForeArm.position);
+            var lowerLen = Vector3.Distance(_rightForeArm.position, _rightHand.position);
+            if (upperLen < 1e-4f || lowerLen < 1e-4f)
+            {
+                return;
+            }
+
+            var total = upperLen + lowerLen;
+            var to = target - shoulder;
+            var dist = Mathf.Clamp(to.magnitude, 0.05f, total * 0.992f);
+            var dir = to.sqrMagnitude > 1e-8f ? to.normalized : Vector3.forward;
+            var right = _instance != null ? _instance.transform.right : CharacterRight();
+            var fwd = _instance != null ? _instance.transform.forward : Vector3.forward;
+            var pole = shoulder + (right * 0.55f) - (fwd * 0.42f) + (Vector3.up * 0.12f);
+            var poleFlat = Vector3.ProjectOnPlane(pole - shoulder, dir);
+            if (poleFlat.sqrMagnitude < 1e-6f)
+            {
+                poleFlat = Vector3.ProjectOnPlane(-fwd, dir);
+            }
+
+            var bend = poleFlat.normalized;
+            var adj = ((upperLen * upperLen) - (lowerLen * lowerLen) + (dist * dist)) / (2f * dist);
+            var heightSq = (upperLen * upperLen) - (adj * adj);
+            var height = heightSq > 0f ? Mathf.Sqrt(heightSq) : 0f;
+            var elbow = shoulder + (dir * adj) + (bend * height);
+            RotateBoneToward(_rightArm, _rightForeArm, elbow);
+            RotateBoneToward(_rightForeArm, _rightHand, target);
+
+            var aheadU = Mathf.Min(1f, attackNormalized01 + 0.04f);
+            var ahead = _strikePath != null ? _strikePath.SampleWorld(aheadU) : DefaultStrikeWorld(aheadU);
+            var look = ahead - target;
+            if (look.sqrMagnitude < 1e-6f)
+            {
+                look = target - _rightForeArm.position;
+            }
+
+            if (look.sqrMagnitude > 1e-6f)
+            {
+                RotateBoneToward(_rightHand, null, _rightHand.position + look.normalized);
+            }
+        }
+
+        private static void RotateBoneToward(Transform bone, Transform? child, Vector3 worldTarget)
+        {
+            var current = child != null
+                ? child.position - bone.position
+                : bone.rotation * Vector3.up;
+            if (current.sqrMagnitude < 1e-8f)
+            {
+                return;
+            }
+
+            var desired = worldTarget - bone.position;
+            if (desired.sqrMagnitude < 1e-8f)
+            {
+                return;
+            }
+
+            bone.rotation = Quaternion.Normalize(
+                Quaternion.FromToRotation(current.normalized, desired.normalized) * bone.rotation);
+        }
+
+        // Discarded 7958283 held-pose robot bake. Mixer plays Mixamo DIAG.
+
+
+        private Transform? EnsureLeftHipSocket()
+        {
+            if (_hips == null)
+            {
+                return null;
+            }
+
+            if (_leftHipSocket == null)
+            {
+                var go = new GameObject("LeftHipDrawSocket");
+                _leftHipSocket = go.transform;
+            }
+
+            if (_leftHipSocket.parent != _hips)
+            {
+                _leftHipSocket.SetParent(_hips, false);
+            }
+
+            var hip = _leftUpLeg != null ? _leftUpLeg.position : _hips.position;
+            _leftHipSocket.position = hip + CharacterLeft() * 0.10f + Vector3.up * 0.08f + Vector3.back * 0.03f;
+            return _leftHipSocket;
+        }
+
+        private static Vector3 CharacterLeft() => Vector3.left;
+
+        private void AimHeldSwordWorld(Vector3 worldAxis)
+        {
+            if (_heldSword == null || worldAxis.sqrMagnitude < 1e-8f)
+            {
+                return;
+            }
+
+            var blade = _heldSword.rotation * BladeLocalAxis();
+            if (blade.sqrMagnitude < 1e-8f)
+            {
+                return;
+            }
+
+            _heldSword.rotation = Quaternion.Normalize(
+                Quaternion.FromToRotation(blade.normalized, worldAxis.normalized) * _heldSword.rotation);
+        }
+
+        /// <summary>
+        /// Walk (Derek 0fc0930): sword in the right hand, tip along the hanging arm.
+        /// HipSheathSocket / HipSheathBladeLocal hip-float superseded.
+        /// </summary>
+        private void ApplySheathedSword()
+        {
+            if (_heldSword == null || _rightHand == null)
+            {
+                return;
+            }
+
+            BindSwordTo(_rightHand, strikeGrip: true);
+            SnapHeldSwordToArmAxis(Vector3.zero);
+        }
+
+        private Transform? EnsureHipSheathSocket()
+        {
+            if (_hips == null)
+            {
+                return null;
+            }
+
+            if (_sheathSocket == null)
+            {
+                var go = new GameObject("HipSheathSocket");
+                _sheathSocket = go.transform;
+                _sheathSocket.SetParent(_hips, false);
+            }
+            else if (_sheathSocket.parent != _hips)
+            {
+                _sheathSocket.SetParent(_hips, false);
+            }
+
+            return _sheathSocket;
+        }
+
+        /// <summary>
+        /// Rear Play-cam character-right is world +X after FaceWorldTop. Fixed —
+        /// following RightUpLeg/RH during walk made the sheath jump (Derek 52aba6b).
+        /// </summary>
+        private static Vector3 CharacterRight() => Vector3.right;
+
+        /// <summary>
+        /// Rematch set_sword_world puts the hilt at the hip grip. A centered FBX
+        /// pivot otherwise hangs half the blade across the ribs (Derek 7187204).
+        /// </summary>
+        private void SnapSwordHiltTo(Vector3 worldHilt)
+        {
+            if (_heldSword == null)
+            {
+                return;
+            }
+
+            var blade = (_heldSword.rotation * BladeLocalAxis()).normalized;
+            if (blade.sqrMagnitude < 1e-8f)
+            {
+                return;
+            }
+
+            var minT = float.PositiveInfinity;
+            var hilt = _heldSword.position;
+            var found = false;
+            foreach (var filter in _heldSword.GetComponentsInChildren<MeshFilter>(true))
+            {
+                var mesh = filter.sharedMesh;
+                if (mesh == null)
+                {
+                    continue;
+                }
+
+                var b = mesh.bounds;
+                var c = b.center;
+                var e = b.extents;
+                for (var i = 0; i < 8; i++)
+                {
+                    var local = c + new Vector3(
+                        (i & 1) == 0 ? -e.x : e.x,
+                        (i & 2) == 0 ? -e.y : e.y,
+                        (i & 4) == 0 ? -e.z : e.z);
+                    var w = filter.transform.TransformPoint(local);
+                    var t = Vector3.Dot(w, blade);
+                    if (t < minT)
+                    {
+                        minT = t;
+                        hilt = w;
+                        found = true;
+                    }
+                }
+            }
+
+            if (!found)
+            {
+                return;
+            }
+
+            _heldSword.position += worldHilt - hilt;
+        }
+
+        /// <summary>
+        /// Reparent the prop only when the socket changes, then normalize the 1.01 m blade
+        /// against the new parent's lossyScale. Strike grip is Mixamo hand +Y (fingers).
+        /// </summary>
+        private void BindSwordTo(Transform? parent, bool strikeGrip)
+        {
+            if (_heldSword == null || parent == null)
+            {
+                return;
+            }
+
+            if (_boundSwordParent != parent)
+            {
+                _heldSword.SetParent(parent, worldPositionStays: false);
+                _boundSwordParent = parent;
+                var newScale = Mathf.Max(Mathf.Abs(parent.lossyScale.x), 1e-5f);
+                _heldSword.localScale = Vector3.one * (1f / newScale);
+                NormalizeSwordWorldBlade(_heldSword);
+            }
+
+            var parentScale = Mathf.Max(Mathf.Abs(parent.lossyScale.x), 1e-5f);
+            var inv = 1f / parentScale;
+
+            if (strikeGrip)
+            {
+                _heldSword.localPosition = new Vector3(0f, 0.08f, 0f) * inv;
+            }
+            else
+            {
+                _heldSword.localPosition = Vector3.zero;
+            }
+        }
+
+        /// <summary>
+        /// Blade along forearm→hand (grip in palm, tip beyond the fingers).
+        /// If prefer is set, keep the tip in that hemisphere (UR→LL).
+        /// </summary>
+        private void SnapHeldSwordToArmAxis(Vector3 prefer)
+        {
+            if (_heldSword == null)
+            {
+                return;
+            }
+
+            _heldSword.localRotation = SwordRestLocal();
+            var axis = Vector3.zero;
+            if (_rightForeArm != null && _rightHand != null)
+            {
+                axis = _rightHand.position - _rightForeArm.position;
+            }
+
+            if (axis.sqrMagnitude < 1e-8f && _rightArm != null && _rightHand != null)
+            {
+                axis = _rightHand.position - _rightArm.position;
+            }
+
+            if (axis.sqrMagnitude < 1e-8f)
+            {
+                return;
+            }
+
+            if (prefer.sqrMagnitude > 1e-6f && Vector3.Dot(axis, prefer) < 0f)
+            {
+                axis = -axis;
+            }
+
+            var blade = _heldSword.rotation * BladeLocalAxis();
+            if (blade.sqrMagnitude < 1e-8f)
+            {
+                return;
+            }
+
+            _heldSword.rotation = Quaternion.Normalize(
+                Quaternion.FromToRotation(blade.normalized, axis.normalized) * _heldSword.rotation);
+        }
+
+        private Vector3 BladeLocalAxis()
+        {
+            return _swordLocalBlade.sqrMagnitude > 1e-8f ? _swordLocalBlade : Vector3.up;
+        }
+
+        private Quaternion SwordRestLocal()
+        {
+            // HeldSwordRestEulerX is rematch blender (+Z mesh). Unity uses measured blade.
+            _ = SirAldric3DMotion.HeldSwordRestEulerX;
+            var blade = BladeLocalAxis().normalized;
+            return Quaternion.Normalize(Quaternion.FromToRotation(blade, Vector3.up));
+        }
+
+        private void CacheAttackBones(GameObject root)
+        {
+            _rightArm = FindNamedBone(root, "mixamorig:RightArm", "RightArm");
+            _rightForeArm = FindNamedBone(root, "mixamorig:RightForeArm", "RightForeArm");
+            _rightHand = FindNamedBone(root, "mixamorig:RightHand", "RightHand");
+            _leftArm = FindNamedBone(root, "mixamorig:LeftArm", "LeftArm");
+            _leftForeArm = FindNamedBone(root, "mixamorig:LeftForeArm", "LeftForeArm");
+            _leftHand = FindNamedBone(root, "mixamorig:LeftHand", "LeftHand");
+            _spine = FindNamedBone(root, "mixamorig:Spine2", "Spine2", "Spine1", "Spine");
+            _hips = FindNamedBone(root, "mixamorig:Hips", "Hips");
+            _rightUpLeg = FindNamedBone(root, "mixamorig:RightUpLeg", "RightUpLeg");
+            _rightLeg = FindNamedBone(root, "mixamorig:RightLeg", "RightLeg");
+            _leftUpLeg = FindNamedBone(root, "mixamorig:LeftUpLeg", "LeftUpLeg");
+            _heldSword = FindNamedBone(root, "SirAldricPilotSword");
+            _swordLocalBlade = MeasureLocalBladeAxis(_heldSword);
+            if (_heldSword != null)
+            {
+                _boundSwordParent = _heldSword.parent;
+            }
+        }
+
+        private static Vector3 MeasureLocalBladeAxis(Transform? sword)
+        {
+            if (sword == null)
+            {
+                return Vector3.up;
+            }
+
+            var bestAxis = Vector3.up;
+            var best = 0f;
+            foreach (var filter in sword.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (filter.sharedMesh == null)
+                {
+                    continue;
+                }
+
+                var s = filter.sharedMesh.bounds.size;
+                var c = filter.sharedMesh.bounds.center;
+                Vector3 axis;
+                float len;
+                if (s.y >= s.x && s.y >= s.z)
+                {
+                    axis = c.y < 0f ? Vector3.down : Vector3.up;
+                    len = s.y;
+                }
+                else if (s.z >= s.x)
+                {
+                    axis = c.z < 0f ? Vector3.back : Vector3.forward;
+                    len = s.z;
+                }
+                else
+                {
+                    axis = c.x < 0f ? Vector3.left : Vector3.right;
+                    len = s.x;
+                }
+
+                if (len > best)
+                {
+                    best = len;
+                    bestAxis = axis;
+                }
+            }
+
+            return bestAxis;
         }
 
         public string PhaseLabel(float timeSeconds)
         {
-            return "WALK  ·  toward TOP  ·  Meshy Animate";
+            if (_namedClipActive && !string.IsNullOrEmpty(_namedClipExactName))
+            {
+                return "LITE  ·  " + _namedClipExactName + "  ·  slash avatar";
+            }
+
+            var walkLen = _walkLength > 0.05f ? _walkLength : 1f;
+            var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
+            var slashLen = _attackReady ? Mathf.Max(_attackLength, 0.01f) : 0f;
+            var loop = walkBlock + slashLen;
+            var t = loop > 0.05f ? timeSeconds % loop : timeSeconds;
+            _ = WalkToAttackBlendSeconds;
+            // Leftover strike labels unused: 1_Draw_LeftHipPocket /
+            // 2_Raise_AboveHeadRight / 3_Strike_Forward / 4_Strike_DownToFoot.
+            if (_attackReady && t >= walkBlock)
+            {
+                return "SLASH  ·  Sword And Shield Slash  ·  own avatar";
+            }
+
+            return "WALK  ·  toward TOP  ·  RH grip";
         }
 
         private void OnDestroy()
         {
-            if (_graphReady && _graph.IsValid())
+            UnbindRenderHook();
+            if (_graph.IsValid())
             {
                 _graph.Destroy();
+            }
+
+            if (_slashGraph.IsValid())
+            {
+                _slashGraph.Destroy();
+            }
+
+            if (_liteGraph.IsValid())
+            {
+                _liteGraph.Destroy();
             }
         }
 
@@ -122,25 +1132,314 @@ namespace Survival.Unity
             }
         }
 
-        private static void FaceWorldTop(GameObject root)
+        /// <summary>
+        /// Mixamo slash-with-skin can leave a second sword in the RH. Keep only
+        /// SirAldricPilotSword so Game-view matches rematch (one hip sheath).
+        /// </summary>
+        private void HideEmbeddedSwords(GameObject root)
         {
-            // Mixamo FBX is typically Y-up / Z-forward after Unity import.
-            // World gate: walk toward TOP = +Z. Leave identity if already facing +Z.
-            root.transform.localPosition = Vector3.zero;
-            root.transform.localRotation = Quaternion.identity;
+            foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
+            {
+                if (_heldSword != null && (rend.transform == _heldSword || rend.transform.IsChildOf(_heldSword)))
+                {
+                    continue;
+                }
+
+                var n = rend.name;
+                if (n.IndexOf("sword", StringComparison.OrdinalIgnoreCase) >= 0
+                    || n.IndexOf("weapon", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    rend.enabled = false;
+                }
+            }
         }
 
-        private static GameObject? LoadFbxPrefab()
+        private static void FaceWorldTop(GameObject root)
+        {
+            // Do not scale.x = -1: Derek 212c6da Play put the sword on the left hand.
+            // Blind yaw 180 when the FBX already faces +Z puts mixamorig:RightHand on
+            // world −X (screen-left). Only yaw if RH is on the left of LH at rest.
+            root.transform.localPosition = Vector3.zero;
+            var s = root.transform.localScale;
+            root.transform.localScale = new Vector3(Mathf.Abs(s.x), Mathf.Abs(s.y), Mathf.Abs(s.z));
+            root.transform.localRotation = Quaternion.identity;
+            var rh = FindNamedBone(root, "mixamorig:RightHand", "RightHand");
+            var lh = FindNamedBone(root, "mixamorig:LeftHand", "LeftHand");
+            var yaw = RearYawDegrees;
+            if (rh != null && lh != null && rh.position.x >= lh.position.x)
+            {
+                yaw = 0f;
+            }
+
+            root.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
+            Debug.Log(
+                "PILOT FaceWorldTop yaw=" + yaw +
+                " RH_x=" + (rh != null ? rh.position.x.ToString("0.000") : "?") +
+                " LH_x=" + (lh != null ? lh.position.x.ToString("0.000") : "?"));
+        }
+
+        /// <summary>
+        /// Mixamo With-Skin FBX keeps Armature Lcl Scaling 0.01 (cm). Unity FileScale also
+        /// applies 0.01. Stacked → ~2 cm body. Humanoid then drives bones at 1.8 m so only
+        /// the RH sword is visible. Flatten every 0.01 root to 1×. Do not hide the body.
+        /// </summary>
+        private static void NormalizeMixamoCmRoot(GameObject root)
+        {
+            var n = 0;
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                var s = t.localScale;
+                if (IsMixamoCmScale(s))
+                {
+                    t.localScale = Vector3.one;
+                    n++;
+                    Debug.Log("PILOT Mixamo cm-root " + t.name + " scale 0.01 → 1");
+                }
+            }
+
+            if (n == 0)
+            {
+                Debug.Log("PILOT Mixamo cm-root none (already 1×)");
+            }
+        }
+
+        private static bool IsMixamoCmScale(Vector3 s) =>
+            Mathf.Abs(s.x - 0.01f) < 0.003f
+            && Mathf.Abs(s.y - 0.01f) < 0.003f
+            && Mathf.Abs(s.z - 0.01f) < 0.003f;
+
+        private static void EnableSkinAlways(GameObject root)
+        {
+            foreach (var smr in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                smr.enabled = true;
+                smr.updateWhenOffscreen = true;
+            }
+        }
+
+        private static bool IsBodySkin(SkinnedMeshRenderer smr)
+        {
+            var n = smr.name;
+            return n.IndexOf("sword", StringComparison.OrdinalIgnoreCase) < 0
+                   && n.IndexOf("cape", StringComparison.OrdinalIgnoreCase) < 0
+                   && n.IndexOf("Ico", StringComparison.OrdinalIgnoreCase) < 0;
+        }
+
+        private static float MeasureBodyHeight(GameObject root)
+        {
+            var best = 0f;
+            foreach (var smr in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                if (!IsBodySkin(smr))
+                {
+                    continue;
+                }
+
+                var s = smr.bounds.size;
+                best = Mathf.Max(best, s.x, s.y, s.z);
+            }
+
+            return best;
+        }
+
+        private static void CorrectBodyScaleIfNeeded(GameObject root)
+        {
+            var height = MeasureBodyHeight(root);
+            if (height >= BodyHeightMinMeters && height <= BodyHeightMaxMeters)
+            {
+                return;
+            }
+
+            if (height < 0.0001f)
+            {
+                Debug.LogError("PILOT skin FAIL no measurable Mixamo body bounds before scale correct.");
+                return;
+            }
+
+            var factor = BodyHeightTargetMeters / height;
+            root.transform.localScale *= factor;
+            Debug.Log("PILOT Mixamo body scale correct height=" + height + " ×" + factor);
+        }
+
+        private static void LogSkinAndFailIfBad(GameObject root)
+        {
+            var anyBody = false;
+            foreach (var smr in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                var c = smr.bounds.center;
+                var s = smr.bounds.size;
+                var ls = smr.transform.lossyScale;
+                Debug.Log(
+                    "PILOT skin " + smr.name +
+                    " enabled=" + smr.enabled +
+                    " bounds.center=(" + c.x + "," + c.y + "," + c.z + ")" +
+                    " bounds.size=(" + s.x + "," + s.y + "," + s.z + ")" +
+                    " lossyScale=(" + ls.x + "," + ls.y + "," + ls.z + ")");
+                if (!IsBodySkin(smr))
+                {
+                    continue;
+                }
+
+                anyBody = true;
+                var height = Mathf.Max(s.x, s.y, s.z);
+                if (height < BodyHeightMinMeters || height > BodyHeightMaxMeters)
+                {
+                    Debug.LogError(
+                        "PILOT skin FAIL " + smr.name +
+                        " body height " + height + "m (need 0.5–5m). " +
+                        "Mixamo Armature 0.01 stacked on FileScale, or Humanoid skin collapse.");
+                }
+            }
+
+            if (!anyBody)
+            {
+                Debug.LogError("PILOT skin FAIL no SkinnedMeshRenderer on Mixamo body.");
+            }
+        }
+
+        private static Transform? FindNamedBone(GameObject root, params string[] names)
+        {
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                foreach (var name in names)
+                {
+                    if (string.Equals(t.name, name, StringComparison.OrdinalIgnoreCase)
+                        || t.name.EndsWith(":" + name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return t;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private void AttachHeldSword(GameObject root)
+        {
+            var hand = FindNamedBone(root, "mixamorig:RightHand", "RightHand");
+            var hips = FindNamedBone(root, "mixamorig:Hips", "Hips");
+            if (hand == null)
+            {
+                Debug.LogWarning("PILOT Mixamo RightHand missing — sword prop skipped.");
+                return;
+            }
+
+            var prefab = LoadFbxPrefab(ThemePackSwordFbx, "SirAldric_PILOT_sword");
+            if (prefab == null)
+            {
+                Debug.LogWarning("PILOT sword FBX not imported: " + ThemePackSwordFbx);
+                return;
+            }
+
+            var sword = Instantiate(prefab, hand);
+            sword.name = "SirAldricPilotSword";
+            // Design wire: RH only. Hip sheath leftover (mixamorig:Hips) unused.
+            // Derek 9075270: compensate parent lossyScale so world blade ≈ 1.01 m.
+            var parent = Mathf.Max(Mathf.Abs(hand.lossyScale.x), 1e-5f);
+            var inv = 1f / parent;
+            sword.transform.localPosition = new Vector3(0f, 0.08f, 0f) * inv;
+            sword.transform.localRotation = Quaternion.identity;
+            sword.transform.localScale = Vector3.one * inv;
+            NormalizeSwordWorldBlade(sword.transform);
+            _heldSword = sword.transform;
+            _boundSwordParent = hand;
+            var world = MeasureRendererWorldSize(sword);
+            var blade = Mathf.Max(world.x, world.y, world.z);
+            var ls = hand.lossyScale;
+            Debug.Log(
+                "PILOT sword parented to " + hand.name +
+                " worldBounds.size=(" + world.x + "," + world.y + "," + world.z + ")" +
+                " blade=" + blade +
+                " hand.lossyScale=(" + ls.x + "," + ls.y + "," + ls.z + ")" +
+                (hips != null ? " hipsLeftover=" + hips.name : ""));
+        }
+
+        private static void NormalizeSwordWorldBlade(Transform sword)
+        {
+            var blade = MeasureMeshWorldBlade(sword.gameObject);
+            if (blade < 1e-4f)
+            {
+                var world = MeasureRendererWorldSize(sword.gameObject);
+                blade = Mathf.Max(world.x, world.y, world.z);
+            }
+
+            if (blade < 1e-4f)
+            {
+                Debug.LogError("PILOT sword FAIL no measurable world bounds.");
+                return;
+            }
+
+            sword.localScale *= SwordBladeMeters / blade;
+        }
+
+        private static float MeasureMeshWorldBlade(GameObject root)
+        {
+            var best = 0f;
+            foreach (var filter in root.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (filter.sharedMesh == null)
+                {
+                    continue;
+                }
+
+                var s = filter.sharedMesh.bounds.size;
+                var ls = filter.transform.lossyScale;
+                best = Mathf.Max(best, Mathf.Abs(s.x * ls.x), Mathf.Abs(s.y * ls.y), Mathf.Abs(s.z * ls.z));
+            }
+
+            return best;
+        }
+
+        private static Vector3 MeasureRendererWorldSize(GameObject root)
+        {
+            var best = Vector3.zero;
+            foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
+            {
+                var s = rend.bounds.size;
+                if (Mathf.Max(s.x, s.y, s.z) > Mathf.Max(best.x, best.y, best.z))
+                {
+                    best = s;
+                }
+            }
+
+            return best;
+        }
+
+        private static void AttachSoftCape(GameObject root)
+        {
+            var prefab = LoadFbxPrefab(ThemePackCapeFbx, "SirAldric_PILOT_cape");
+            if (prefab == null)
+            {
+                return;
+            }
+
+            var cape = Instantiate(prefab, root.transform);
+            cape.name = "SirAldricPilotCape";
+            cape.transform.localPosition = Vector3.zero;
+            cape.transform.localRotation = Quaternion.identity;
+            cape.transform.localScale = Vector3.one;
+            var spine = FindNamedBone(root, "mixamorig:Spine2", "Spine2");
+            if (spine != null)
+            {
+                cape.transform.SetParent(spine, true);
+            }
+
+            Debug.Log("PILOT soft cape parented to " + (spine != null ? spine.name : "root"));
+        }
+
+        private static string AssetPath(string themePackRel) => "Assets/" + themePackRel.Replace('\\', '/');
+
+        private static GameObject? LoadFbxPrefab(string themePackRel, string resourcesName)
         {
 #if UNITY_EDITOR
-            var data = Application.dataPath;
-            var rel = "Assets/" + ThemePackFbx.Replace('\\', '/');
+            var rel = AssetPath(themePackRel);
             var go = AssetDatabase.LoadAssetAtPath<GameObject>(rel);
             if (go != null)
             {
                 return go;
             }
 
+            var data = Application.dataPath;
             var abs = Path.Combine(Directory.GetParent(data)!.FullName, rel);
             if (File.Exists(abs))
             {
@@ -148,37 +1447,13 @@ namespace Survival.Unity
                 return AssetDatabase.LoadAssetAtPath<GameObject>(rel);
             }
 #endif
-            return Resources.Load<GameObject>("sir_aldric_meshy_animate_walk");
+            return Resources.Load<GameObject>(resourcesName);
         }
 
-        private static string FbxAssetPath => "Assets/" + ThemePackFbx.Replace('\\', '/');
-
-        private static AnimationClip? LoadWalkingClip()
+        private static Avatar? LoadImportedAvatar(string rel)
         {
 #if UNITY_EDITOR
-            var clip = PickWalkingClip(FbxAssetPath);
-            if (clip != null)
-            {
-                return clip;
-            }
-
-            // clipAnimations.takeName must match the FBX stack. A short name like
-            // "Walking" drops every clip on Humanoid import (mesh stays, clip list empty).
-            if (RepairWalkingTake(FbxAssetPath))
-            {
-                return PickWalkingClip(FbxAssetPath);
-            }
-
-            return null;
-#else
-            return null;
-#endif
-        }
-
-        private static Avatar? LoadHumanoidAvatar()
-        {
-#if UNITY_EDITOR
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(FbxAssetPath))
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
             {
                 if (obj is Avatar avatar)
                 {
@@ -189,11 +1464,114 @@ namespace Survival.Unity
             return null;
         }
 
-        private static AnimationClip? PickWalkingClip(string rel)
+        /// <summary>
+        /// Duplicate the Mixamo DIAG take into SirAldric_DIAG_InwardSlash.anim.
+        /// Clip.name must equal the file name (Attack does not match).
+        /// Overwrites the discarded 7958283 held-pose bake.
+        /// </summary>
+        public static void EnsureEditableAttackClip(bool forceReextract = false)
+        {
+            _ = forceReextract;
+#if UNITY_EDITOR
+            var animRel = AssetPath(ThemePackAttackAnim);
+            var srcRel = AssetPath(ThemePackAttackFbx);
+            var src = PickClip(srcRel, AttackClipHint);
+            if (src == null)
+            {
+                RepairAttackTake(srcRel);
+                src = PickClip(srcRel, AttackClipHint);
+            }
+
+            if (src == null)
+            {
+                Debug.LogWarning("PILOT cannot extract Mixamo DIAG take. " + srcRel);
+                return;
+            }
+
+            var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(animRel);
+            if (existing != null)
+            {
+                EditorUtility.CopySerialized(src, existing);
+                existing.name = AttackClipAssetName;
+                existing.wrapMode = WrapMode.Once;
+                EditorUtility.SetDirty(existing);
+                AssetDatabase.SaveAssets();
+                Debug.Log("PILOT extracted Mixamo DIAG → " + animRel + " name=" + AttackClipAssetName);
+                return;
+            }
+
+            var folder = "Assets/Survival/Unity/Anims";
+            if (!AssetDatabase.IsValidFolder(folder))
+            {
+                AssetDatabase.CreateFolder("Assets/Survival/Unity", "Anims");
+            }
+
+            var copy = UnityEngine.Object.Instantiate(src);
+            copy.name = AttackClipAssetName;
+            copy.wrapMode = WrapMode.Once;
+            AssetDatabase.CreateAsset(copy, animRel);
+            AssetDatabase.SaveAssets();
+            Debug.Log("PILOT created Mixamo DIAG .anim " + animRel);
+#else
+            _ = forceReextract;
+#endif
+        }
+
+        private static AnimationClip? LoadClip(string themePackRel, string hint, bool repairWalk)
+        {
+#if UNITY_EDITOR
+            var rel = AssetPath(themePackRel);
+            var clip = PickClip(rel, hint);
+            if (clip != null)
+            {
+                return clip;
+            }
+
+            Debug.LogWarning(
+                "PILOT LoadClip empty for " + rel + " hint=" + hint +
+                " assets=" + DumpAssets(rel) + ". Repairing from defaultClipAnimations.");
+
+            if (RepairClipTake(rel, walk: repairWalk))
+            {
+                clip = PickClip(rel, hint);
+                if (clip != null)
+                {
+                    return clip;
+                }
+            }
+
+            Debug.LogError("PILOT LoadClip still empty after repair. " + rel + " assets=" + DumpAssets(rel));
+            return PickClip(rel, hint);
+#else
+            return null;
+#endif
+        }
+
+        private static string DumpAssets(string rel)
+        {
+#if UNITY_EDITOR
+            var parts = new System.Collections.Generic.List<string>();
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
+            {
+                if (obj == null)
+                {
+                    continue;
+                }
+
+                parts.Add(obj.GetType().Name + ":" + obj.name);
+            }
+
+            return parts.Count == 0 ? "(none)" : string.Join(", ", parts);
+#else
+            return "";
+#endif
+        }
+
+        private static AnimationClip? PickClip(string rel, string hint)
         {
 #if UNITY_EDITOR
             AnimationClip? exact = null;
-            AnimationClip? walk = null;
+            AnimationClip? named = null;
             AnimationClip? longest = null;
             foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
             {
@@ -207,14 +1585,17 @@ namespace Survival.Unity
                     longest = clip;
                 }
 
-                var isWalk = clip.name.IndexOf(ClipHint, StringComparison.OrdinalIgnoreCase) >= 0
-                    || clip.name.IndexOf("Walk", StringComparison.OrdinalIgnoreCase) >= 0;
-                if (!isWalk)
+                var hit = clip.name.IndexOf(hint, StringComparison.OrdinalIgnoreCase) >= 0
+                          || clip.name.IndexOf(AttackClipAssetName, StringComparison.OrdinalIgnoreCase) >= 0
+                          || (hint == AttackClipHint && (clip.name.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0
+                              || clip.name.IndexOf("Slash", StringComparison.OrdinalIgnoreCase) >= 0
+                              || clip.name.IndexOf("Sword", StringComparison.OrdinalIgnoreCase) >= 0));
+                if (!hit)
                 {
                     continue;
                 }
 
-                if (string.Equals(clip.name, ClipHint, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(clip.name, hint, StringComparison.OrdinalIgnoreCase))
                 {
                     if (exact == null || clip.length > exact.length)
                     {
@@ -224,43 +1605,156 @@ namespace Survival.Unity
                     continue;
                 }
 
-                // Walking.001 is a 2-frame stub. Keep the longer cycle.
-                if (walk == null || clip.length > walk.length)
+                if (named == null || clip.length > named.length)
                 {
-                    walk = clip;
+                    named = clip;
                 }
             }
 
-            return exact ?? walk ?? longest;
+            return exact ?? named ?? longest;
 #else
             return null;
 #endif
         }
 
-        private static bool RepairWalkingTake(string rel)
+        private static bool RepairWalkingTake(string rel) => RepairClipTake(rel, walk: true);
+
+        private static bool RepairAttackTake(string rel) => RepairClipTake(rel, walk: false);
+
+        private static bool RepairClipTake(string rel, bool walk)
         {
 #if UNITY_EDITOR
-            if (AssetImporter.GetAtPath(rel) is not ModelImporter importer || !importer.importAnimation)
+            if (AssetImporter.GetAtPath(rel) is not ModelImporter importer)
             {
                 return false;
             }
 
+            importer.animationType = ModelImporterAnimationType.Generic;
+            importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+            importer.importAnimation = true;
+            importer.useFileScale = false;
             var defaults = importer.defaultClipAnimations;
             if (defaults == null || defaults.Length == 0)
             {
+                Debug.LogError("PILOT repair " + rel + " defaultClipAnimations empty.");
+                importer.SaveAndReimport();
                 return false;
             }
 
+            var best = PickDefaultTake(defaults, walk);
+            if (best == null)
+            {
+                Debug.LogError("PILOT repair " + rel + " no usable take. " + DumpTakes(defaults));
+                return false;
+            }
+
+            var lite = rel.IndexOf("/lite_sword_shield/", StringComparison.OrdinalIgnoreCase) >= 0;
+            if (lite)
+            {
+                var exact = SirAldric3DMotion.LiteSwordShieldExactNameForFile(Path.GetFileName(rel));
+                if (string.IsNullOrEmpty(exact))
+                {
+                    Debug.LogError("PILOT repair lite " + rel + " is not in the exact Mixamo name table.");
+                    return false;
+                }
+
+                best.name = exact;
+                if (string.IsNullOrEmpty(best.takeName)
+                    || string.Equals(best.takeName, "mixamo.com", StringComparison.OrdinalIgnoreCase))
+                {
+                    best.takeName = SirAldric3DMotion.LiteSwordShieldTakeName;
+                }
+
+                best.mirror = false;
+                var loops = SirAldric3DMotion.TryLiteSwordShield(exact, out var entry) && entry.Loop;
+                best.loopTime = loops;
+                best.loop = loops;
+                best.keepOriginalOrientation = true;
+                best.keepOriginalPositionY = true;
+                best.keepOriginalPositionXZ = true;
+                importer.clipAnimations = new[] { best };
+                importer.SaveAndReimport();
+                Debug.Log("PILOT repair lite " + rel + " exactName=" + exact + " takeName=" + best.takeName);
+                return true;
+            }
+
+            best.name = walk ? ClipHint : AttackClipHint;
+            if (rel.IndexOf("SWORD_SHIELD_ATTACK", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                best.firstFrame = SirAldric3DMotion.MixamoSwordShieldSlashFirstFrame;
+                best.lastFrame = SirAldric3DMotion.MixamoSwordShieldSlashLastFrame;
+                best.mirror = false;
+            }
+            else if (!walk)
+            {
+                best.firstFrame = SirAldric3DMotion.MixamoSlashFirstFrame;
+                best.lastFrame = SirAldric3DMotion.MixamoSlashLastFrame;
+            }
+
+            best.loopTime = walk;
+            best.loop = walk;
+            best.keepOriginalOrientation = true;
+            best.keepOriginalPositionY = true;
+            best.keepOriginalPositionXZ = true;
+            importer.clipAnimations = new[] { best };
+            importer.SaveAndReimport();
+            Debug.Log(
+                "PILOT repair " + rel + " takeName=" + best.takeName +
+                " frames=" + best.firstFrame + "-" + best.lastFrame +
+                " " + DumpTakes(defaults));
+            return true;
+#else
+            return false;
+#endif
+        }
+
+#if UNITY_EDITOR
+        private static ModelImporterClipAnimation? PickDefaultTake(ModelImporterClipAnimation[] defaults, bool walk)
+        {
             ModelImporterClipAnimation? best = null;
             var bestSpan = -1f;
             foreach (var candidate in defaults)
             {
                 var label = (candidate.takeName ?? "") + "\n" + (candidate.name ?? "");
-                if (label.IndexOf("Walk", StringComparison.OrdinalIgnoreCase) < 0)
+                var span = candidate.lastFrame - candidate.firstFrame;
+                if (walk)
                 {
-                    continue;
+                    if (label.IndexOf("Walk", StringComparison.OrdinalIgnoreCase) < 0
+                        && label.IndexOf("mixamo", StringComparison.OrdinalIgnoreCase) < 0)
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    var named = label.IndexOf("rigify", StringComparison.OrdinalIgnoreCase) >= 0
+                                || label.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0
+                                || label.IndexOf("Attack", StringComparison.OrdinalIgnoreCase) >= 0
+                                || label.IndexOf("Slash", StringComparison.OrdinalIgnoreCase) >= 0
+                                || label.IndexOf("Sword", StringComparison.OrdinalIgnoreCase) >= 0
+                                || label.IndexOf("mixamo", StringComparison.OrdinalIgnoreCase) >= 0
+                                || label.IndexOf("clip0", StringComparison.OrdinalIgnoreCase) >= 0
+                                || label.IndexOf("Scene", StringComparison.OrdinalIgnoreCase) >= 0;
+                    if (!named && span < 8f)
+                    {
+                        continue;
+                    }
                 }
 
+                if (best == null || span > bestSpan)
+                {
+                    best = candidate;
+                    bestSpan = span;
+                }
+            }
+
+            if (best != null)
+            {
+                return best;
+            }
+
+            foreach (var candidate in defaults)
+            {
                 var span = candidate.lastFrame - candidate.firstFrame;
                 if (best == null || span > bestSpan)
                 {
@@ -269,56 +1763,61 @@ namespace Survival.Unity
                 }
             }
 
-            if (best == null || bestSpan <= 0f)
+            return best;
+        }
+
+        private static string DumpTakes(ModelImporterClipAnimation[] defaults)
+        {
+            var parts = new string[defaults.Length];
+            for (var i = 0; i < defaults.Length; i++)
             {
-                return false;
+                var c = defaults[i];
+                parts[i] = (c.takeName ?? "?") + "[" + c.firstFrame + "-" + c.lastFrame + "]";
             }
 
-            best.name = ClipHint;
-            best.loopTime = true;
-            best.loop = true;
-            best.keepOriginalOrientation = true;
-            best.keepOriginalPositionY = true;
-            best.keepOriginalPositionXZ = true;
-            importer.clipAnimations = new[] { best };
-            importer.SaveAndReimport();
-            return true;
-#else
-            return false;
-#endif
+            return string.Join(" | ", parts);
         }
+#endif
 
         private static Texture2D? _cachedAlbedo;
         private static Texture2D? _cachedMetallic;
         private static Texture2D? _cachedRoughness;
+        private static readonly Dictionary<int, Texture2D> PackedMetSmoothBySource = new();
 
-        private static void PunchMaterials(GameObject root)
+        private static void BindPaintedLook(GameObject root)
         {
-            var albedo = LoadMeshyAlbedo();
-            var metallic = LoadMeshyPackedMap(grayIndex: 0);
-            var roughness = LoadMeshyPackedMap(grayIndex: 1);
+            var albedo = LoadPilotAlbedo();
+            var metallic = LoadPilotMap("mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture_metallic.png", sRgb: false)
+                           ?? LoadPilotMap("Meshy_AI_Lionheart_Sentinel_0929004215_texture_metallic.png", sRgb: false)
+                           ?? LoadPilotMap("Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_metallic.png", sRgb: false)
+                           ?? LoadMeshyPackedMap(0);
+            var roughness = LoadPilotMap("mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture_roughness.png", sRgb: false)
+                            ?? LoadPilotMap("Meshy_AI_Lionheart_Sentinel_0929004215_texture_roughness.png", sRgb: false)
+                            ?? LoadPilotMap("Meshy_AI_SirAldric_PILOT_mid28_biped_texture_0_roughness.png", sRgb: false)
+                            ?? LoadMeshyPackedMap(1);
+            if (albedo == null)
+            {
+                Debug.LogError("PILOT albedo missing. Bind Lionheart mixamo_tex maps or extract from walk FBX.");
+            }
+
+            var painted = 0;
             foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
             {
-                var shared = rend.sharedMaterials;
-                if (shared == null || shared.Length == 0)
+                if (rend.name.IndexOf("Ico", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    var lone = NewLit();
-                    BindMapsAndPunch(lone, albedo, metallic, roughness);
-                    rend.material = lone;
                     continue;
                 }
 
-                var copies = new Material[shared.Length];
-                for (var i = 0; i < shared.Length; i++)
-                {
-                    var src = shared[i] != null ? shared[i] : NewLit();
-                    var mat = new Material(src);
-                    BindMapsAndPunch(mat, albedo, metallic, roughness);
-                    copies[i] = mat;
-                }
-
-                rend.materials = copies;
+                var mat = NewLit();
+                BindMapsAndPunch(mat, albedo, metallic, roughness);
+                rend.material = mat;
+                painted++;
             }
+
+            Debug.Log(
+                "PILOT BindPaintedLook renderers=" + painted +
+                " albedo=" + (albedo != null ? albedo.width + "x" + albedo.height : "null") +
+                " packedMetSmooth=" + PackedMetSmoothBySource.Count);
         }
 
         private static void BindMapsAndPunch(
@@ -338,86 +1837,200 @@ namespace Survival.Unity
                 {
                     mat.SetTexture("_MainTex", albedo);
                 }
-            }
 
-            if (metallic != null && mat.HasProperty("_MetallicGlossMap"))
-            {
-                mat.SetTexture("_MetallicGlossMap", metallic);
-            }
-
-            if (roughness != null && mat.HasProperty("_SpecGlossMap"))
-            {
-                mat.SetTexture("_SpecGlossMap", roughness);
-            }
-
-            if (mat.HasProperty("_BaseColor"))
-            {
-                var c = mat.GetColor("_BaseColor");
-                if (c.maxColorComponent < 0.08f)
+                if (mat.HasProperty("_BaseColor"))
                 {
-                    c = Color.white;
+                    mat.SetColor("_BaseColor", Color.white);
                 }
 
-                mat.SetColor("_BaseColor", new Color(
-                    Mathf.Clamp01(c.r * 1.12f),
-                    Mathf.Clamp01(c.g * 1.10f),
-                    Mathf.Clamp01(c.b * 1.16f),
-                    c.a));
+                mat.EnableKeyword("_BASEMAP");
+                mat.EnableKeyword("_MAINTEX");
             }
 
-            var hasMetMap = mat.HasProperty("_MetallicGlossMap")
-                && mat.GetTexture("_MetallicGlossMap") != null;
-            if (mat.HasProperty("_Metallic") && hasMetMap)
+            if (mat.HasProperty("_WorkflowMode"))
             {
-                mat.SetFloat("_Metallic", Mathf.Max(mat.GetFloat("_Metallic"), 0.55f));
+                mat.SetFloat("_WorkflowMode", 1f);
             }
 
-            if (mat.HasProperty("_Smoothness"))
+            mat.DisableKeyword("_SPECULAR_SETUP");
+            var packed = PackMetallicSmoothness(metallic, roughness);
+            if (packed != null && mat.HasProperty("_MetallicGlossMap"))
             {
-                var floor = hasMetMap ? 0.68f : 0.52f;
-                mat.SetFloat("_Smoothness", Mathf.Max(mat.GetFloat("_Smoothness"), floor));
+                mat.SetTexture("_MetallicGlossMap", packed);
+                mat.EnableKeyword("_METALLICSPECGLOSSMAP");
+                if (mat.HasProperty("_Metallic"))
+                {
+                    mat.SetFloat("_Metallic", 1f);
+                }
+
+                if (mat.HasProperty("_Smoothness"))
+                {
+                    mat.SetFloat("_Smoothness", 1f);
+                }
+            }
+        }
+
+        private static Texture2D? PackMetallicSmoothness(Texture2D? metallic, Texture2D? roughness)
+        {
+            if (metallic == null)
+            {
+                return null;
+            }
+
+            if (PackedMetSmoothBySource.TryGetValue(metallic.GetInstanceID(), out var hit))
+            {
+                return hit;
+            }
+
+            try
+            {
+                var w = metallic.width;
+                var h = metallic.height;
+                var met = metallic.GetPixels();
+                Color[]? roughPx = null;
+                if (roughness != null && roughness.width == w && roughness.height == h)
+                {
+                    try
+                    {
+                        roughPx = roughness.GetPixels();
+                    }
+                    catch (UnityException)
+                    {
+                    }
+                }
+
+                var packed = new Texture2D(w, h, TextureFormat.RGBA32, false, linear: true);
+                var outp = new Color[met.Length];
+                for (var i = 0; i < met.Length; i++)
+                {
+                    var m = met[i].r;
+                    var sm = roughPx != null ? Mathf.Clamp01(1f - roughPx[i].r) : 0.35f;
+                    outp[i] = new Color(m, m, m, sm);
+                }
+
+                packed.SetPixels(outp);
+                packed.Apply(false, false);
+                packed.wrapMode = TextureWrapMode.Repeat;
+                packed.filterMode = FilterMode.Bilinear;
+                packed.name = metallic.name + "_metallic_smoothness";
+                PackedMetSmoothBySource[metallic.GetInstanceID()] = packed;
+                return packed;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("PILOT metallic pack skipped: " + ex.Message);
+                return null;
             }
         }
 
         private static Material NewLit()
         {
-            var shader = Shader.Find("Universal Render Pipeline/Lit")
-                         ?? Shader.Find("Universal Render Pipeline/Unlit")
-                         ?? Shader.Find("Standard")
-                         ?? Shader.Find("Unlit/Texture")
-                         ?? Shader.Find("Sprites/Default");
+            var shader = ResolveLookShader();
+            if (shader == null)
+            {
+                var quad = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                var fallback = quad.GetComponent<Renderer>().sharedMaterial;
+                UnityEngine.Object.Destroy(quad);
+                return new Material(fallback);
+            }
+
             return new Material(shader);
         }
 
-        private static Texture2D? LoadMeshyAlbedo()
+        private static Shader? ResolveLookShader()
+        {
+            var rp = GraphicsSettings.currentRenderPipeline;
+            if (rp != null && rp.defaultMaterial != null && rp.defaultMaterial.shader != null)
+            {
+                return rp.defaultMaterial.shader;
+            }
+
+            foreach (var name in new[]
+                     {
+                         "Universal Render Pipeline/Lit",
+                         "Universal Render Pipeline/Simple Lit",
+                         "Standard",
+                         "Unlit/Texture"
+                     })
+            {
+                var found = Shader.Find(name);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+
+            return null;
+        }
+
+        private static Texture2D? LoadPilotAlbedo()
         {
             if (_cachedAlbedo != null)
             {
                 return _cachedAlbedo;
             }
 
-#if UNITY_EDITOR
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(FbxAssetPath))
+            _cachedAlbedo = LoadPilotMap("mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture.png", sRgb: true)
+                            ?? LoadPilotMap("Meshy_AI_Lionheart_Sentinel_0929004215_texture.png", sRgb: true)
+                            ?? LoadPilotMap("pilot_albedo.png", sRgb: true);
+            if (_cachedAlbedo != null)
             {
-                if (obj is not Texture2D tex || tex.width < 256)
-                {
-                    continue;
-                }
+                return _cachedAlbedo;
+            }
 
-                var n = tex.name.ToLowerInvariant();
-                if (n.Contains("texture_0")
-                    && !n.Contains("metallic")
-                    && !n.Contains("rough")
-                    && !n.Contains("normal"))
+#if UNITY_EDITOR
+            foreach (var rel in new[] { AssetPath(ThemePackFbx), AssetPath(ThemePackWalkFbx) })
+            {
+                foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
                 {
-                    _cachedAlbedo = tex;
-                    return tex;
+                    if (obj is not Texture2D tex || tex.width < 256)
+                    {
+                        continue;
+                    }
+
+                    var n = tex.name.ToLowerInvariant();
+                    if ((n.Contains("texture_0") || n.Contains("basecolor") || n.Contains("image_0") || n.Contains("albedo"))
+                        && !n.Contains("metallic")
+                        && !n.Contains("rough")
+                        && !n.Contains("normal"))
+                    {
+                        _cachedAlbedo = tex;
+                        return tex;
+                    }
                 }
             }
 #endif
-            _cachedAlbedo = ExtractFbxPng(color: true, grayIndex: -1)
-                            ?? LoadSiblingPng("sir_aldric_meshy_atlas.png");
+            _cachedAlbedo = ExtractFbxPng(ThemePackWalkFbx, color: true, grayIndex: -1)
+                            ?? ExtractFbxPng(ThemePackFbx, color: true, grayIndex: -1);
             return _cachedAlbedo;
+        }
+
+        private static Texture2D? LoadPilotMap(string fileName, bool sRgb)
+        {
+            var path = ResolveHero3D(fileName);
+            if (path == null || !File.Exists(path) || path.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            try
+            {
+                var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false, linear: !sRgb);
+                if (tex.LoadImage(File.ReadAllBytes(path)))
+                {
+                    tex.wrapMode = TextureWrapMode.Repeat;
+                    tex.filterMode = FilterMode.Bilinear;
+                    tex.name = Path.GetFileNameWithoutExtension(fileName);
+                    Debug.Log("PILOT map " + fileName + " " + path);
+                    return tex;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+
+            return null;
         }
 
         private static Texture2D? LoadMeshyPackedMap(int grayIndex)
@@ -428,49 +2041,15 @@ namespace Survival.Unity
                 return cache;
             }
 
-            var extracted = ExtractFbxPng(color: false, grayIndex: grayIndex);
+            var extracted = ExtractFbxPng(ThemePackWalkFbx, color: false, grayIndex: grayIndex);
             if (grayIndex == 0)
             {
-                _cachedMetallic = extracted ?? LoadSiblingPng("sir_aldric_meshy_atlas_metallic.png");
+                _cachedMetallic = extracted;
                 return _cachedMetallic;
             }
 
-            _cachedRoughness = extracted ?? LoadSiblingPng("sir_aldric_meshy_atlas_roughness.png");
+            _cachedRoughness = extracted;
             return _cachedRoughness;
-        }
-
-        private static Texture2D? LoadSiblingPng(string fileName)
-        {
-            var path = ResolveHero3D(fileName);
-            if (path == null)
-            {
-                return null;
-            }
-
-#if UNITY_EDITOR
-            var rel = "Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/" + fileName;
-            var asset = AssetDatabase.LoadAssetAtPath<Texture2D>(rel);
-            if (asset != null)
-            {
-                return asset;
-            }
-#endif
-            try
-            {
-                var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-                if (tex.LoadImage(File.ReadAllBytes(path)))
-                {
-                    tex.wrapMode = TextureWrapMode.Clamp;
-                    tex.filterMode = FilterMode.Bilinear;
-                    tex.name = Path.GetFileNameWithoutExtension(fileName);
-                    return tex;
-                }
-            }
-            catch (IOException)
-            {
-            }
-
-            return null;
         }
 
         private static string? ResolveHero3D(string fileName)
@@ -478,13 +2057,16 @@ namespace Survival.Unity
             var cwd = Directory.GetCurrentDirectory();
             var data = Application.dataPath ?? Path.Combine(cwd, "Assets");
             var repo = Directory.GetParent(data)?.FullName ?? cwd;
+            var rel = fileName.Replace('\\', '/').TrimStart('/');
             foreach (var path in new[]
                      {
-                         Path.Combine(data, ThemePackFbx.Replace("sir_aldric_meshy_animate_walk.fbx", fileName)),
-                         Path.Combine(repo, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", fileName),
+                         Path.Combine(data, PaintedLookDir, rel),
+                         Path.Combine(repo, "Assets", PaintedLookDir, rel),
+                         Path.Combine(data, "ThemePack/fantasy_kingdom_a/art/heroes/3d", rel),
+                         Path.Combine(repo, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", rel),
                      })
             {
-                if (File.Exists(path))
+                if (File.Exists(path) && path.Replace('\\', '/').EndsWith(rel, StringComparison.OrdinalIgnoreCase))
                 {
                     return path;
                 }
@@ -493,17 +2075,13 @@ namespace Survival.Unity
             return null;
         }
 
-        private static string? ResolveFbxPath()
+        private static string? ResolveFbxPath(string themePackRel)
         {
             var cwd = Directory.GetCurrentDirectory();
             var data = Application.dataPath ?? Path.Combine(cwd, "Assets");
             var repo = Directory.GetParent(data)?.FullName ?? cwd;
-            var rel = ThemePackFbx.Replace('\\', '/');
-            foreach (var path in new[]
-                     {
-                         Path.Combine(data, rel),
-                         Path.Combine(repo, "Assets", rel),
-                     })
+            var rel = themePackRel.Replace('\\', '/');
+            foreach (var path in new[] { Path.Combine(data, rel), Path.Combine(repo, "Assets", rel) })
             {
                 if (File.Exists(path))
                 {
@@ -514,9 +2092,9 @@ namespace Survival.Unity
             return null;
         }
 
-        private static Texture2D? ExtractFbxPng(bool color, int grayIndex)
+        private static Texture2D? ExtractFbxPng(string themePackRel, bool color, int grayIndex)
         {
-            var fbx = ResolveFbxPath();
+            var fbx = ResolveFbxPath(themePackRel);
             if (fbx == null)
             {
                 return null;
@@ -549,15 +2127,13 @@ namespace Survival.Unity
                     var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
                     if (tex.LoadImage(png) && tex.width >= 256)
                     {
-                        var isGray = tex.format == TextureFormat.Alpha8
-                                     || tex.format == TextureFormat.R8
-                                     || LooksGrayscale(tex);
+                        var isGray = LooksGrayscale(tex);
                         var isNormal = LooksLikeNormalMap(tex);
                         if (color && !isGray && !isNormal)
                         {
-                            tex.wrapMode = TextureWrapMode.Clamp;
+                            tex.wrapMode = TextureWrapMode.Repeat;
                             tex.filterMode = FilterMode.Bilinear;
-                            tex.name = "meshy_animate_albedo";
+                            tex.name = "pilot_albedo";
                             return tex;
                         }
 
@@ -565,9 +2141,9 @@ namespace Survival.Unity
                         {
                             if (graySeen == grayIndex)
                             {
-                                tex.wrapMode = TextureWrapMode.Clamp;
+                                tex.wrapMode = TextureWrapMode.Repeat;
                                 tex.filterMode = FilterMode.Bilinear;
-                                tex.name = grayIndex == 0 ? "meshy_animate_metallic" : "meshy_animate_roughness";
+                                tex.name = grayIndex == 0 ? "pilot_metallic" : "pilot_roughness";
                                 return tex;
                             }
 
@@ -616,10 +2192,7 @@ namespace Survival.Unity
             }
 
             var n = px.Length;
-            r /= n;
-            g /= n;
-            b /= n;
-            return b > 0.75f && r > 0.35f && r < 0.65f && g > 0.35f && g < 0.65f;
+            return b / n > 0.75f && r / n > 0.35f && r / n < 0.65f && g / n > 0.35f && g / n < 0.65f;
         }
 
         private static int IndexOf(byte[] hay, byte[] needle, int start)
@@ -648,14 +2221,12 @@ namespace Survival.Unity
 
         private static void BuildLights()
         {
-            // Flat grey World + dim key was the mute Game-view. Punch in place
-            // even if a leftover light already exists.
-            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+            RenderSettings.ambientMode = AmbientMode.Trilight;
             RenderSettings.ambientSkyColor = new Color(0.42f, 0.44f, 0.48f);
             RenderSettings.ambientEquatorColor = new Color(0.28f, 0.29f, 0.30f);
             RenderSettings.ambientGroundColor = new Color(0.14f, 0.13f, 0.11f);
-            RenderSettings.ambientIntensity = 1.25f;
-            RenderSettings.reflectionIntensity = 1.15f;
+            RenderSettings.ambientIntensity = 1.00f;
+            RenderSettings.reflectionIntensity = 0.45f;
 
             var key = UnityEngine.Object.FindFirstObjectByType<Light>();
             if (key == null)
@@ -666,7 +2237,7 @@ namespace Survival.Unity
 
             key.type = LightType.Directional;
             key.color = new Color(1f, 0.96f, 0.88f);
-            key.intensity = 1.85f;
+            key.intensity = 1.15f;
             key.transform.rotation = Quaternion.Euler(52f, -16f, 0f);
 
             if (UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None).Length < 2)
@@ -675,7 +2246,7 @@ namespace Survival.Unity
                 var fill = fillGo.AddComponent<Light>();
                 fill.type = LightType.Directional;
                 fill.color = new Color(0.82f, 0.88f, 1f);
-                fill.intensity = 0.55f;
+                fill.intensity = 0.35f;
                 fillGo.transform.rotation = Quaternion.Euler(70f, 35f, 0f);
             }
         }

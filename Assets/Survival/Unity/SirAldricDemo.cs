@@ -4,15 +4,24 @@ using Survival.Domain.Heroes;
 using Survival.Domain.Ids;
 using Survival.Domain.Theme;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 namespace Survival.Unity
 {
     /// <summary>
-    /// 1080×1920 Game-view demo: Meshy Animate humanoid FBX + Walking clip AS-IS.
-    /// Path A weight-paint CANCELLED. Locked rear PNG remains the Play-hub placeholder.
-    /// Design PASS not claimed.
+    /// 1080×1920 Game-view demo: PILOT Mixamo holefixed + Walk + Slash.
+    /// Path A / ClipSword HOLD. RH sword prop. Design / Derek PASS not claimed.
+    /// Play-cam defaults to the rear SoT; 1/2/3 and Q/E or RMB orbit around the knight.
+    /// Input System + IMGUI (Keyboard.current is deaf until Game view owns focus).
+    /// Walk RH grip, then Sword And Shield Slash on its own avatar. Lite pack:
+    /// PlayNamedClip(exact Mixamo name) on that slash avatar. Leftover left-hip draw unused.
+    /// YouTube iQ1s3nN1330 is leftover SoT history. HOLD.
     /// </summary>
+    [DefaultExecutionOrder(500)]
     public sealed class SirAldricDemo : MonoBehaviour
     {
         public const string DropFileName = "SIR_ALDRIC_REAR_MASTER_LOCKED.png";
@@ -21,10 +30,31 @@ namespace Survival.Unity
         private bool _booted;
         private SirAldricMeshyAnimateActor? _actor;
         private Text? _phase;
+        private Dropdown? _liteDropdown;
+        private float _orbitYaw;
+        private float _orbitPitch;
+        private InputActionMap? _orbitMap;
+        public static SirAldricDemo? Live;
 
         private void Awake() => Boot();
 
-        private void OnEnable() => Boot();
+        private void OnEnable()
+        {
+            Live = this;
+            Boot();
+            BindOrbitActions();
+            RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+        }
+
+        private void OnDisable()
+        {
+            RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+            _orbitMap?.Disable();
+            if (Live == this)
+            {
+                Live = null;
+            }
+        }
 
         private void Start() => Boot();
 
@@ -35,6 +65,8 @@ namespace Survival.Unity
                 Boot();
             }
 
+            TickOrbit();
+            ApplyPlayCam(_orbitYaw, _orbitPitch);
             if (_actor == null || !_actor.Built)
             {
                 return;
@@ -43,8 +75,503 @@ namespace Survival.Unity
             var t = Time.unscaledTime;
             if (_phase != null)
             {
-                _phase.text = _actor.PhaseLabel(t);
+                var kb = Keyboard.current;
+                var kbMark = kb != null && kb.enabled ? "kb" : "no-kb";
+                _phase.text = _actor.PhaseLabel(t) + "  ·  cam " + Mathf.RoundToInt(_orbitYaw) + "  ·  " + kbMark;
             }
+        }
+
+        private void OnGUI()
+        {
+            // IMGUI lives on the Game view. Derek 7187204: Keyboard.current never
+            // yawed because Editor play routes keys to the focused window (default
+            // PointersAndKeyboardsRespectGameViewFocus). Buttons + drag always work.
+            if (GUI.Button(new Rect(10f, 10f, 96f, 40f), "1 Rear"))
+            {
+                ApplyOrbitKey(KeyCode.Alpha1);
+            }
+
+            if (GUI.Button(new Rect(112f, 10f, 96f, 40f), "2 3/4"))
+            {
+                ApplyOrbitKey(KeyCode.Alpha2);
+            }
+
+            if (GUI.Button(new Rect(214f, 10f, 96f, 40f), "3 Front"))
+            {
+                ApplyOrbitKey(KeyCode.Alpha3);
+            }
+
+            if (GUI.Button(new Rect(316f, 10f, 200f, 40f), "Walk then Slash"))
+            {
+                PlayDefaultWalkThenSlash();
+            }
+
+            var ev = Event.current;
+            if (ev == null)
+            {
+                return;
+            }
+
+            if (ev.type == EventType.KeyDown && ev.keyCode != KeyCode.None) // skip ev.keyCode == KeyCode.None
+            {
+                ApplyOrbitKey(ev.keyCode);
+                if (ev.keyCode == KeyCode.Q || ev.keyCode == KeyCode.LeftArrow || ev.keyCode == KeyCode.A)
+                {
+                    _orbitYaw -= 12f;
+                    WrapOrbit();
+                }
+                else if (ev.keyCode == KeyCode.E || ev.keyCode == KeyCode.RightArrow || ev.keyCode == KeyCode.D)
+                {
+                    _orbitYaw += 12f;
+                    WrapOrbit();
+                }
+            }
+
+            var overButtons = ev.mousePosition.y <= 54f && ev.mousePosition.x <= 520f;
+            if (!overButtons && ev.type == EventType.MouseDrag && ev.button <= 2)
+            {
+                _orbitYaw += ev.delta.x * 0.35f;
+                _orbitPitch -= ev.delta.y * 0.35f;
+                WrapOrbit();
+            }
+
+            if (ev.type == EventType.ScrollWheel)
+            {
+                _orbitYaw += ev.delta.y * 10f;
+                WrapOrbit();
+            }
+        }
+
+        private void LateUpdate()
+        {
+            if (_booted)
+            {
+                ApplyPlayCam(_orbitYaw, _orbitPitch);
+            }
+        }
+
+        private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
+        {
+            _ = context;
+            _ = camera;
+            if (_booted)
+            {
+                ApplyPlayCam(_orbitYaw, _orbitPitch);
+            }
+        }
+
+        /// <summary>
+        /// Default rear Play-cam SoT. yaw/pitch 0 keeps SirAldric3DMotion rear eye.
+        /// </summary>
+        internal static void ApplyPlayCam() => ApplyPlayCam(0f, 0f);
+
+        internal static void ApplyPlayCam(float orbitYawDegrees, float orbitPitchDegrees)
+        {
+            if (float.IsNaN(orbitYawDegrees) || float.IsInfinity(orbitYawDegrees))
+            {
+                orbitYawDegrees = 0f;
+            }
+
+            if (float.IsNaN(orbitPitchDegrees) || float.IsInfinity(orbitPitchDegrees))
+            {
+                orbitPitchDegrees = 0f;
+            }
+
+            SirAldric3DMotion.PlayCamOrbitEye(orbitYawDegrees, orbitPitchDegrees, out var x, out var y, out var z);
+            var eye = new Vector3(x, y, z);
+            var look = new Vector3(
+                SirAldric3DMotion.PlayCamLookX,
+                SirAldric3DMotion.PlayCamLookY,
+                SirAldric3DMotion.PlayCamLookZ);
+            var forward = look - eye;
+            if (forward.sqrMagnitude < 1e-8f)
+            {
+                forward = Vector3.forward;
+            }
+
+            forward.Normalize();
+            var up = Vector3.up;
+            if (Mathf.Abs(Vector3.Dot(forward, up)) > 0.999f)
+            {
+                up = Vector3.back;
+            }
+
+            var rot = Quaternion.Normalize(Quaternion.LookRotation(forward, up));
+            var n = Camera.allCamerasCount;
+            if (n <= 0)
+            {
+                PlaceOneCam(Camera.main, eye, rot);
+                return;
+            }
+
+            var cams = new Camera[n];
+            Camera.GetAllCameras(cams);
+            for (var i = 0; i < n; i++)
+            {
+                PlaceOneCam(cams[i], eye, rot);
+            }
+        }
+
+        private static void PlaceOneCam(Camera? cam, Vector3 eye, Quaternion rot)
+        {
+            if (cam == null)
+            {
+                return;
+            }
+
+            cam.orthographic = false;
+            cam.usePhysicalProperties = false;
+            cam.fieldOfView = SirAldric3DMotion.PlayCamFovDegrees;
+            cam.nearClipPlane = 0.08f;
+            cam.farClipPlane = 40f;
+            cam.backgroundColor = new Color(0.08f, 0.09f, 0.07f, 1f);
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.transform.position = eye;
+            cam.transform.rotation = rot;
+        }
+
+        /// <summary>
+        /// Derek: call a Lite pack clip by its exact Mixamo catalog name.
+        /// Example: PlayNamedClip("Sword And Shield attack (2)").
+        /// </summary>
+        public bool PlayNamedClip(string exactName)
+        {
+            var actor = ResolveActor();
+            if (actor == null)
+            {
+                Debug.LogWarning("PILOT PlayNamedClip: no visible SirAldricMeshyAnimateActor. exactName=" + exactName);
+                return false;
+            }
+
+            return actor.PlayNamedClip(exactName);
+        }
+
+        public void PlayDefaultWalkThenSlash()
+        {
+            ResolveActor()?.PlayDefaultWalkThenSlash();
+            if (_liteDropdown != null)
+            {
+                _liteDropdown.SetValueWithoutNotify(0);
+                _liteDropdown.RefreshShownValue();
+            }
+        }
+
+        private SirAldricMeshyAnimateActor? ResolveActor()
+        {
+            if (_actor != null)
+            {
+                return _actor;
+            }
+
+            _actor = FindFirstObjectByType<SirAldricMeshyAnimateActor>();
+            return _actor;
+        }
+
+        public void ForcePreset(int slot)
+        {
+            if (slot == 2)
+            {
+                ApplyOrbitKey(KeyCode.Alpha2);
+            }
+            else if (slot == 3)
+            {
+                ApplyOrbitKey(KeyCode.Alpha3);
+            }
+            else
+            {
+                ApplyOrbitKey(KeyCode.Alpha1);
+            }
+
+            ApplyPlayCam(_orbitYaw, _orbitPitch);
+        }
+
+        public void AddOrbit(float yaw, float pitch)
+        {
+            _orbitYaw += yaw;
+            _orbitPitch += pitch;
+            WrapOrbit();
+            ApplyPlayCam(_orbitYaw, _orbitPitch);
+        }
+
+        private void ApplyOrbitKey(KeyCode key)
+        {
+            if (key == KeyCode.Alpha1 || key == KeyCode.Keypad1)
+            {
+                _orbitYaw = 0f;
+                _orbitPitch = 0f;
+            }
+            else if (key == KeyCode.Alpha2 || key == KeyCode.Keypad2)
+            {
+                _orbitYaw = SirAldric3DMotion.PlayCamThreeQuarterYawDegrees();
+                _orbitPitch = 0f;
+            }
+            else if (key == KeyCode.Alpha3 || key == KeyCode.Keypad3)
+            {
+                _orbitYaw = 180f;
+                _orbitPitch = 0f;
+            }
+        }
+
+        private void TickOrbit()
+        {
+            // Poll every backend. Derek 7187204: Keyboard.current != null skipped
+            // legacy GetKey, then Editor focus left Keyboard.current deaf.
+            var kb = Keyboard.current;
+            if (kb != null && kb.enabled)
+            {
+                if (kb.digit1Key.wasPressedThisFrame || kb.numpad1Key.wasPressedThisFrame)
+                {
+                    ApplyOrbitKey(KeyCode.Alpha1);
+                }
+                else if (kb.digit2Key.wasPressedThisFrame || kb.numpad2Key.wasPressedThisFrame)
+                {
+                    ApplyOrbitKey(KeyCode.Alpha2);
+                }
+                else if (kb.digit3Key.wasPressedThisFrame || kb.numpad3Key.wasPressedThisFrame)
+                {
+                    ApplyOrbitKey(KeyCode.Alpha3);
+                }
+
+                var yaw = 0f;
+                if (kb.qKey.isPressed || kb.leftArrowKey.isPressed || kb.aKey.isPressed)
+                {
+                    yaw -= 1f;
+                }
+
+                if (kb.eKey.isPressed || kb.rightArrowKey.isPressed || kb.dKey.isPressed)
+                {
+                    yaw += 1f;
+                }
+
+                _orbitYaw += yaw * SirAldric3DMotion.PlayCamOrbitYawSpeed * Time.unscaledDeltaTime;
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1))
+            {
+                ApplyOrbitKey(KeyCode.Alpha1);
+            }
+            else if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2))
+            {
+                ApplyOrbitKey(KeyCode.Alpha2);
+            }
+            else if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3))
+            {
+                ApplyOrbitKey(KeyCode.Alpha3);
+            }
+
+            var legacyYaw = 0f;
+            if (Input.GetKey(KeyCode.Q) || Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
+            {
+                legacyYaw -= 1f;
+            }
+
+            if (Input.GetKey(KeyCode.E) || Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
+            {
+                legacyYaw += 1f;
+            }
+
+            _orbitYaw += legacyYaw * SirAldric3DMotion.PlayCamOrbitYawSpeed * Time.unscaledDeltaTime;
+
+            if (_orbitMap != null)
+            {
+                var yawAction = _orbitMap.FindAction("Yaw");
+                if (yawAction != null)
+                {
+                    _orbitYaw += yawAction.ReadValue<float>() * SirAldric3DMotion.PlayCamOrbitYawSpeed * Time.unscaledDeltaTime;
+                }
+            }
+
+            var mouse = Mouse.current;
+            if (mouse != null && mouse.enabled && (mouse.rightButton.isPressed || mouse.middleButton.isPressed))
+            {
+                var d = mouse.delta.ReadValue();
+                _orbitYaw += d.x * 0.18f;
+                _orbitPitch -= d.y * 0.18f;
+            }
+
+            if (Input.GetMouseButton(1) || Input.GetMouseButton(2))
+            {
+                _orbitYaw += Input.GetAxis("Mouse X") * 140f;
+                _orbitPitch -= Input.GetAxis("Mouse Y") * 80f;
+            }
+
+            WrapOrbit();
+        }
+
+        private void WrapOrbit()
+        {
+            if (float.IsNaN(_orbitYaw) || float.IsInfinity(_orbitYaw))
+            {
+                _orbitYaw = 0f;
+            }
+
+            if (float.IsNaN(_orbitPitch) || float.IsInfinity(_orbitPitch))
+            {
+                _orbitPitch = 0f;
+            }
+
+            if (_orbitYaw > 180f)
+            {
+                _orbitYaw -= 360f;
+            }
+            else if (_orbitYaw < -180f)
+            {
+                _orbitYaw += 360f;
+            }
+
+            _orbitPitch = Mathf.Clamp(
+                _orbitPitch,
+                SirAldric3DMotion.PlayCamOrbitPitchMin,
+                SirAldric3DMotion.PlayCamOrbitPitchMax);
+        }
+
+        private void BindOrbitActions()
+        {
+            _orbitMap?.Dispose();
+            var map = new InputActionMap("SirAldricOrbit");
+            var rear = map.AddAction("Rear", InputActionType.Button);
+            rear.AddBinding("<Keyboard>/1");
+            rear.AddBinding("<Keyboard>/numpad1");
+            rear.performed += _ => ForcePreset(1);
+            var tq = map.AddAction("ThreeQuarter", InputActionType.Button);
+            tq.AddBinding("<Keyboard>/2");
+            tq.AddBinding("<Keyboard>/numpad2");
+            tq.performed += _ => ForcePreset(2);
+            var front = map.AddAction("Front", InputActionType.Button);
+            front.AddBinding("<Keyboard>/3");
+            front.AddBinding("<Keyboard>/numpad3");
+            front.performed += _ => ForcePreset(3);
+            var yaw = map.AddAction("Yaw", InputActionType.Value);
+            yaw.AddCompositeBinding("1DAxis")
+                .With("Negative", "<Keyboard>/q")
+                .With("Positive", "<Keyboard>/e");
+            yaw.AddCompositeBinding("1DAxis")
+                .With("Negative", "<Keyboard>/leftArrow")
+                .With("Positive", "<Keyboard>/rightArrow");
+            yaw.AddCompositeBinding("1DAxis")
+                .With("Negative", "<Keyboard>/a")
+                .With("Positive", "<Keyboard>/d");
+            map.Enable();
+            _orbitMap = map;
+        }
+
+        private static void EnsurePlayInput()
+        {
+            try
+            {
+                InputSystem.settings.updateMode = InputSettings.UpdateMode.ProcessEventsInDynamicUpdate;
+                InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+                InputSystem.settings.editorInputBehaviorInPlayMode =
+                    InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning("PILOT orbit Input System settings: " + ex.Message);
+            }
+
+            SurvivalVisuals.EnsureEventSystem();
+            var es = EventSystem.current != null
+                ? EventSystem.current
+                : Object.FindFirstObjectByType<EventSystem>();
+            if (es == null)
+            {
+                return;
+            }
+
+            if (es.GetComponent<InputSystemUIInputModule>() == null)
+            {
+                es.gameObject.AddComponent<InputSystemUIInputModule>();
+            }
+        }
+
+        private void BuildOrbitHud(RectTransform canvas)
+        {
+            var pad = SurvivalVisuals.Image(canvas, "OrbitPad", new Color(1f, 1f, 1f, 0.01f));
+            pad.raycastTarget = true;
+            SurvivalVisuals.Stretch(pad.rectTransform);
+            // Leave the left clip rail and the top/bottom chrome out of the drag pad.
+            // fd5f09c IMGUI clip buttons sat under this pad — Input System ate the clicks.
+            pad.rectTransform.anchorMin = new Vector2(0.44f, 0f);
+            pad.rectTransform.anchorMax = new Vector2(1f, 1f);
+            pad.rectTransform.offsetMin = new Vector2(0f, 160f);
+            pad.rectTransform.offsetMax = new Vector2(0f, -140f);
+            pad.gameObject.AddComponent<SirAldricOrbitPad>();
+
+            AddOrbitButton(canvas, "BtnRear", "1  REAR", 0.08f, 0.36f, 1);
+            AddOrbitButton(canvas, "BtnTq", "2  3/4", 0.38f, 0.62f, 2);
+            AddOrbitButton(canvas, "BtnFront", "3  FRONT", 0.64f, 0.92f, 3);
+            BuildLiteClipHud(canvas);
+        }
+
+        /// <summary>
+        /// One dropdown of exact Mixamo catalog names. Larger type than the
+        /// unreadable d798eb4 name-button wall. Same EventSystem path as 1/2/3.
+        /// </summary>
+        private void BuildLiteClipHud(RectTransform canvas)
+        {
+            var reset = SurvivalVisuals.Button(canvas, "BtnWalkThenSlash", new Color(0.16f, 0.14f, 0.10f, 0.94f));
+            var resetRt = reset.GetComponent<RectTransform>();
+            resetRt.anchorMin = new Vector2(0.02f, 0.778f);
+            resetRt.anchorMax = new Vector2(0.48f, 0.838f);
+            resetRt.offsetMin = Vector2.zero;
+            resetRt.offsetMax = Vector2.zero;
+            var resetText = SurvivalVisuals.Text(reset.transform, "Label", "Walk then Slash", 24, TextAnchor.MiddleCenter, SurvivalVisuals.Gold);
+            SurvivalVisuals.Stretch(resetText.rectTransform);
+            reset.onClick.AddListener(PlayDefaultWalkThenSlash);
+
+            var dropdown = SurvivalVisuals.Dropdown(canvas, "LiteClipDropdown", new Color(0.16f, 0.14f, 0.10f, 0.96f));
+            var ddRt = dropdown.GetComponent<RectTransform>();
+            ddRt.anchorMin = new Vector2(0.02f, 0.688f);
+            ddRt.anchorMax = new Vector2(0.74f, 0.768f);
+            ddRt.offsetMin = Vector2.zero;
+            ddRt.offsetMax = Vector2.zero;
+            dropdown.ClearOptions();
+            var options = new System.Collections.Generic.List<Dropdown.OptionData>
+            {
+                new("Lite clip…")
+            };
+            var clips = SirAldric3DMotion.LiteSwordShieldClips;
+            for (var i = 0; i < clips.Length; i++)
+            {
+                options.Add(new Dropdown.OptionData(clips[i].ExactName));
+            }
+
+            dropdown.AddOptions(options);
+            dropdown.SetValueWithoutNotify(0);
+            dropdown.RefreshShownValue();
+            dropdown.onValueChanged.AddListener(OnLiteClipPicked);
+            _liteDropdown = dropdown;
+        }
+
+        private void OnLiteClipPicked(int index)
+        {
+            if (index <= 0)
+            {
+                return;
+            }
+
+            var clips = SirAldric3DMotion.LiteSwordShieldClips;
+            var i = index - 1;
+            if (i < 0 || i >= clips.Length)
+            {
+                return;
+            }
+
+            PlayNamedClip(clips[i].ExactName);
+        }
+
+        private void AddOrbitButton(RectTransform canvas, string name, string label, float x0, float x1, int slot)
+        {
+            var btn = SurvivalVisuals.Button(canvas, name, new Color(0.16f, 0.14f, 0.10f, 0.92f));
+            var rt = btn.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(x0, 0.075f);
+            rt.anchorMax = new Vector2(x1, 0.145f);
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+            var text = SurvivalVisuals.Text(btn.transform, "Label", label, 22, TextAnchor.MiddleCenter, SurvivalVisuals.Gold);
+            SurvivalVisuals.Stretch(text.rectTransform);
+            var captured = slot;
+            btn.onClick.AddListener(() => ForcePreset(captured));
         }
 
         private void Boot()
@@ -55,20 +582,10 @@ namespace Survival.Unity
             }
 
             SurvivalVisuals.EnsurePlayCamera();
-            var cam = Camera.main;
-            if (cam != null)
-            {
-                cam.orthographic = false;
-                cam.fieldOfView = 30f;
-                cam.nearClipPlane = 0.08f;
-                cam.farClipPlane = 40f;
-                cam.backgroundColor = new Color(0.08f, 0.09f, 0.07f, 1f);
-                cam.clearFlags = CameraClearFlags.SolidColor;
-                cam.transform.position = new Vector3(0f, 2.80f, -5.40f);
-                cam.transform.LookAt(new Vector3(0f, 0.90f, 0.50f));
-            }
-
-            SurvivalVisuals.EnsureEventSystem();
+            EnsurePlayInput();
+            _orbitYaw = 0f;
+            _orbitPitch = 0f;
+            ApplyPlayCam();
             ThemePackBinder? pack = null;
             try
             {
@@ -142,6 +659,7 @@ namespace Survival.Unity
             _actor.Build();
 
             var canvas = SurvivalVisuals.Canvas(transform, "SirAldricHud", 80);
+            BuildOrbitHud(canvas);
             var caption = pack?.StringOr("theme_a.hero.sir_aldric.demo_caption", "SIR ALDRIC  ·  walk → attack TOP")
                           ?? "SIR ALDRIC  ·  walk → attack TOP";
             var title = SurvivalVisuals.Text(canvas, "Caption", caption, 26, TextAnchor.MiddleCenter, SurvivalVisuals.Cream);
@@ -168,7 +686,7 @@ namespace Survival.Unity
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "Meshy Animate Walking  ·  Humanoid AS-IS  ·  HOLD  ·  no Design PASS",
+                "PILOT Mixamo  ·  walk then Sword And Shield Slash (own avatar)  ·  Lite PlayNamedClip exact Mixamo names  ·  leftover left-hip draw unused  ·  HOLD",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);
@@ -179,6 +697,26 @@ namespace Survival.Unity
             nr.offsetMax = Vector2.zero;
 
             _booted = true;
+
+            if (SirAldricGameViewCapture.ShouldRunFromCommandLine())
+            {
+                StartCoroutine(CaptureThenQuit());
+            }
+        }
+
+        private System.Collections.IEnumerator CaptureThenQuit()
+        {
+            yield return null;
+            yield return null;
+            if (_actor != null && _actor.Built && Camera.main != null)
+            {
+                SirAldricGameViewCapture.CapturePilot(_actor, Camera.main);
+            }
+
+            if (Application.isBatchMode)
+            {
+                Application.Quit(0);
+            }
         }
 
         internal static string[] ResolveMasterPaths(AppFlavorConfig flavor)
@@ -203,6 +741,20 @@ namespace Survival.Unity
                 File.ReadAllText(Path.Combine(packRoot, "strings", "en.json")),
                 File.ReadAllText(Path.Combine(packRoot, "map", "node_pins.json")),
                 File.ReadAllText(Path.Combine(packRoot, "ui", "hud_layout.json")));
+        }
+    }
+
+    /// <summary>uGUI drag on the Game view — Input System pointer, not IMGUI.</summary>
+    public sealed class SirAldricOrbitPad : MonoBehaviour, IDragHandler
+    {
+        public void OnDrag(PointerEventData eventData)
+        {
+            if (SirAldricDemo.Live == null || eventData == null)
+            {
+                return;
+            }
+
+            SirAldricDemo.Live.AddOrbit(eventData.delta.x * 0.28f, -eventData.delta.y * 0.20f);
         }
     }
 }

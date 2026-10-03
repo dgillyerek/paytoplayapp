@@ -1,3 +1,4 @@
+using System.Globalization;
 using Survival.Domain.Heroes;
 using Survival.Domain.Ids;
 
@@ -283,22 +284,766 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("ExtractFbxPng", src, StringComparison.Ordinal);
         Assert.Contains("RepairWalkingTake", src, StringComparison.Ordinal);
         Assert.Contains("takeName", src, StringComparison.Ordinal);
-        var fbx = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_animate_walk.fbx");
+        var leftover = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_animate_walk.fbx");
         var atlas = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "sir_aldric_meshy_atlas.png");
-        Assert.True(new FileInfo(fbx).Length > 1_000_000);
+        Assert.True(new FileInfo(leftover).Length > 1_000_000);
         Assert.True(new FileInfo(atlas).Length > 100_000);
-        var bytes = File.ReadAllBytes(fbx);
-        var png = false;
-        for (var i = 0; i < bytes.Length - 3; i++)
+    }
+
+    [Fact]
+    public void Pilot_mixamo_sep_walk_slash_are_sot_and_clipsword_is_not()
+    {
+        var root = FindRepoRoot();
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
+        Assert.Contains("SirAldric_body_holefixed_walk.fbx", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_body_holefixed_slash.fbx", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx", actor, StringComparison.Ordinal);
+        Assert.Contains(
+            "ThemePackAttackFbx = \"ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx\"",
+            actor,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "ThemePackAttackFbx = \"ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx\"",
+            actor,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "ThemePackAttackFbx = \"ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG_REV.fbx\"",
+            actor,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "ThemePackAttackFbx = \"ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG_MIRR.fbx\"",
+            actor,
+            StringComparison.Ordinal);
+        Assert.Contains("SirAldric_body_holefixed_mid280k.fbx", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_PILOT_sword.fbx", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldricPilotMixamo", actor, StringComparison.Ordinal);
+        Assert.Contains("StripEmbeddedClipMeshes", actor, StringComparison.Ordinal);
+        Assert.Contains("visible=Mixamo", actor, StringComparison.Ordinal);
+        Assert.Contains("updateWhenOffscreen", actor, StringComparison.Ordinal);
+        Assert.Contains("NormalizeMixamoCmRoot", actor, StringComparison.Ordinal);
+        Assert.Contains("PILOT skin FAIL", actor, StringComparison.Ordinal);
+        Assert.Contains("ModelImporterAnimationType.Generic", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("ModelImporterAnimationType.Human", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("visible=AccuRIG", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("SirAldric_PILOT_accurig_humanoid.fbx", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("SirAldric_PILOT_walk_accurig.fbx", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("SirAldric_PILOT_attack_library.fbx", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("BuildHumanAvatar", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("AvatarBuilder", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("SirAldricPilotWalk", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("SirAldricPilotAttack", actor, StringComparison.Ordinal);
+        Assert.Contains("applyRootMotion = false", actor, StringComparison.Ordinal);
+        Assert.Contains("AlwaysAnimate", actor, StringComparison.Ordinal);
+        Assert.Contains("RepairAttackTake", actor, StringComparison.Ordinal);
+        Assert.Contains("EnableKeyword(\"_BASEMAP\")", actor, StringComparison.Ordinal);
+        Assert.Contains("AttachHeldSword", actor, StringComparison.Ordinal);
+        Assert.Contains("AnimationMixerPlayable", actor, StringComparison.Ordinal);
+        Assert.Contains("WalkToAttackBlendSeconds", actor, StringComparison.Ordinal);
+        Assert.Contains("SwordBladeMeters", actor, StringComparison.Ordinal);
+        Assert.Contains("useFileScale = false", actor, StringComparison.Ordinal);
+        Assert.Contains("ApplyAttackWindupLift", actor, StringComparison.Ordinal);
+        Assert.Contains("ThemePackAttackAnim", actor, StringComparison.Ordinal);
+        Assert.Contains("ThemePackAttackController", actor, StringComparison.Ordinal);
+        Assert.Contains("AttackClipAssetName", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_DIAG_InwardSlash.anim", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_DIAG_InwardSlash.controller", actor, StringComparison.Ordinal);
+        Assert.Contains("LoadClip(ThemePackAttackAnim", actor, StringComparison.Ordinal);
+        Assert.Contains("LoadClip(ThemePackAttackFbx", actor, StringComparison.Ordinal);
+        Assert.Contains("AttackLeftHipDrawReach", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("BuildLeftHipDrawAttackClip", actor, StringComparison.Ordinal);
+        Assert.Contains("MixamoDiagDrawEndU", actor, StringComparison.Ordinal);
+        Assert.Contains("MixamoDiagPlaybackU", actor, StringComparison.Ordinal);
+        Assert.Contains("MixamoDiagRaisePlayEndU", actor, StringComparison.Ordinal);
+        Assert.Contains("MixamoDiagStrikeBladeLocal", actor, StringComparison.Ordinal);
+        Assert.Contains("1821c4a", actor, StringComparison.Ordinal);
+        Assert.Contains("ReachRightArmToward", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldricStrikePath", actor, StringComparison.Ordinal);
+        Assert.Contains("1_Draw_LeftHipPocket", actor, StringComparison.Ordinal);
+        Assert.Contains("2_Raise_AboveHeadRight", actor, StringComparison.Ordinal);
+        Assert.Contains("3_Strike_Forward", actor, StringComparison.Ordinal);
+        Assert.Contains("4_Strike_DownToFoot", actor, StringComparison.Ordinal);
+        Assert.Contains("SampleStrikePath", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("_attackPlayable.SetTime", actor, StringComparison.Ordinal);
+        Assert.Contains("_slashPlayable.SetTime", actor, StringComparison.Ordinal);
+        Assert.Contains("_litePlayable.SetTime", actor, StringComparison.Ordinal);
+        Assert.Contains("PlayNamedClip", actor, StringComparison.Ordinal);
+        Assert.Contains("PlayDefaultWalkThenSlash", actor, StringComparison.Ordinal);
+        Assert.Contains("CacheLiteSwordShieldClips", actor, StringComparison.Ordinal);
+        Assert.Contains("ThemePackLiteSwordShieldDir", actor, StringComparison.Ordinal);
+        Assert.Contains("lite_sword_shield", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldricLiteSwordShield", actor, StringComparison.Ordinal);
+        Assert.Contains("LiteSwordShieldTakeName", actor, StringComparison.Ordinal);
+        Assert.Contains("_attackReady = true", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldricSwordShieldSlash", actor, StringComparison.Ordinal);
+        Assert.Contains("own Mixamo auto-rig", actor, StringComparison.Ordinal);
+        Assert.Contains("walk only", actor, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("does not match SirAldric_DIAG_InwardSlash", actor, StringComparison.Ordinal);
+        Assert.Contains("EnsureEditableAttackClip", actor, StringComparison.Ordinal);
+        Assert.Contains("AttackSlashReach", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("SirAldric3DMotion.AttackSlashReach", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("SirAldric3DMotion.AttackRaiseThenCutReach", actor, StringComparison.Ordinal);
+        Assert.Contains("AttackRaiseThenCutReach", actor, StringComparison.Ordinal);
+        Assert.Contains("AimArmAlong", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("void AimArmAlong", actor, StringComparison.Ordinal);
+        Assert.Contains("RightForeArm", actor, StringComparison.Ordinal);
+        Assert.Contains("8d5b78b0", actor, StringComparison.Ordinal);
+        Assert.Contains("72412be4", actor, StringComparison.Ordinal);
+        Assert.Contains("70fd9483", actor, StringComparison.Ordinal);
+        Assert.Contains("0beb3c77", actor, StringComparison.Ordinal);
+        Assert.Contains("19e6efe", actor, StringComparison.Ordinal);
+        Assert.Contains("4a143441", actor, StringComparison.Ordinal);
+        Assert.Contains("HeldSwordRestEulerX", actor, StringComparison.Ordinal);
+        Assert.Contains("FromToRotation", actor, StringComparison.Ordinal);
+        Assert.Contains("SnapHeldSwordToArmAxis", actor, StringComparison.Ordinal);
+        Assert.Contains("SwordRestLocal", actor, StringComparison.Ordinal);
+        Assert.Contains("ApplySheathedSword", actor, StringComparison.Ordinal);
+        Assert.Contains("BindSwordTo", actor, StringComparison.Ordinal);
+        Assert.Contains("mixamorig:Hips", actor, StringComparison.Ordinal);
+        Assert.Contains("mixamorig:RightUpLeg", actor, StringComparison.Ordinal);
+        Assert.Contains("Dev owns the strike", actor, StringComparison.Ordinal);
+        Assert.Contains("HipSheathSocket", actor, StringComparison.Ordinal);
+        Assert.Contains("Quaternion.Normalize", actor, StringComparison.Ordinal);
+        Assert.Contains("HipSheathBladeLocal", actor, StringComparison.Ordinal);
+        Assert.Contains("CharacterRight", actor, StringComparison.Ordinal);
+        Assert.Contains("SnapSwordHiltTo", actor, StringComparison.Ordinal);
+        Assert.Contains("HideEmbeddedSwords", actor, StringComparison.Ordinal);
+        Assert.Contains("BladeLocalAxis", actor, StringComparison.Ordinal);
+        Assert.Contains("7187204", actor, StringComparison.Ordinal);
+        Assert.Contains("52aba6b", actor, StringComparison.Ordinal);
+        Assert.Contains("0fc0930", actor, StringComparison.Ordinal);
+        Assert.Contains("BindSwordTo(_rightHand", actor, StringComparison.Ordinal);
+        Assert.Contains("Vector3.right", actor, StringComparison.Ordinal);
+        Assert.Contains("iQ1s3nN1330", actor, StringComparison.Ordinal);
+        Assert.Contains("mixamorig:LeftArm", actor, StringComparison.Ordinal);
+        Assert.Contains("backswing", actor, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("879a6f3", actor, StringComparison.Ordinal);
+        Assert.Contains("beginCameraRendering", actor, StringComparison.Ordinal);
+        Assert.Contains("LateUpdate", actor, StringComparison.Ordinal);
+        Assert.Contains("DefaultExecutionOrder(200)", actor, StringComparison.Ordinal);
+        Assert.Contains("MeasureLocalBladeAxis", actor, StringComparison.Ordinal);
+        Assert.Contains("_swordLocalBlade", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("FromToRotation(restBlade.normalized, desired)", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Slerp(restWorld, aimWorld", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("FromToRotation(Vector3.forward, desired)", actor, StringComparison.Ordinal);
+        Assert.Contains("mixamorig:RightHand", actor, StringComparison.Ordinal);
+        Assert.Contains("CacheAttackBones", actor, StringComparison.Ordinal);
+        Assert.Contains("never a whole-body X-flip", actor, StringComparison.Ordinal);
+        Assert.Contains("Do not scale.x = -1", actor, StringComparison.Ordinal);
+        Assert.Contains("Mathf.Abs(s.x)", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("MixamoRearMirrorX", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("AttackWindupShoulderX", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("AttackWindupArmX", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("AttackWindupHandX", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("AttackWindupSwordZ", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("AttackWindupLiftMaxDegrees", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("AttackWindupTipRight", actor, StringComparison.Ordinal);
+        var motionSrc = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Runtime", "Heroes", "SirAldric3DMotion.cs"));
+        Assert.Contains("0beb3c77", motionSrc, StringComparison.Ordinal);
+        Assert.Contains("70fd9483", motionSrc, StringComparison.Ordinal);
+        Assert.Contains("19e6efe", motionSrc, StringComparison.Ordinal);
+        Assert.Contains("time-reverse", motionSrc, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("MixamoRearMirrorX", motionSrc, StringComparison.Ordinal);
+        Assert.DoesNotContain("AttackWindupShoulderX", motionSrc, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetSourcePlayable(_attackPlayable)", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("EnsureClipSword", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("private static void AimChain", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Path A weight-paint", actor.Replace("Path A / ClipSword", ""), StringComparison.Ordinal);
+        var attackAnim = Path.Combine(root, "Assets", "Survival", "Unity", "Anims", "SirAldric_DIAG_InwardSlash.anim");
+        Assert.True(File.Exists(attackAnim), "editable DIAG .anim missing");
+        Assert.Contains("m_Name: SirAldric_DIAG_InwardSlash", File.ReadAllText(attackAnim), StringComparison.Ordinal);
+        Assert.DoesNotContain("m_Name: Attack", File.ReadAllText(attackAnim), StringComparison.Ordinal);
+        var attackController = Path.Combine(root, "Assets", "Survival", "Unity", "Anims", "SirAldric_DIAG_InwardSlash.controller");
+        Assert.True(File.Exists(attackController), "Animation-window AnimatorController missing");
+        Assert.Contains("m_Name: SirAldric_DIAG_InwardSlash", File.ReadAllText(attackController), StringComparison.Ordinal);
+        Assert.Contains("d3e5f7a90b2c4d6e8f1a3c5d7e9f2468", File.ReadAllText(attackController), StringComparison.Ordinal);
+        Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldric_AttackEdit.md")));
+        var editNote = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldric_AttackEdit.md"));
+        Assert.Contains("Window → Animation → Animation", editNote, StringComparison.Ordinal);
+        Assert.Contains("mixamorig:RightArm", editNote, StringComparison.Ordinal);
+        Assert.Contains("SirAldricAttackEditKnight", editNote, StringComparison.Ordinal);
+        Assert.Contains("Preview", editNote, StringComparison.Ordinal);
+        Assert.Contains("Lock", editNote, StringComparison.Ordinal);
+        var extract = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricEditableAttackClip.cs"));
+        Assert.Contains("EnsureEditableAttackClip", extract, StringComparison.Ordinal);
+        Assert.Contains("Ping strike path markers", extract, StringComparison.Ordinal);
+        Assert.Contains("1_Draw_LeftHipPocket", extract, StringComparison.Ordinal);
+        Assert.Contains("Spawn knight for Animation-window edit", extract, StringComparison.Ordinal);
+        Assert.Contains("runtimeAnimatorController", extract, StringComparison.Ordinal);
+        Assert.Contains("EnsureAttackController", extract, StringComparison.Ordinal);
+        Assert.Contains("LoadAllAssetsAtPath", extract, StringComparison.Ordinal);
+        Assert.Contains("applyRootMotion = false", extract, StringComparison.Ordinal);
+        Assert.DoesNotContain("if (avatar != null && !avatar.isHuman)", extract, StringComparison.Ordinal);
+
+        var pilot = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "pilot");
+        Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_body_holefixed_mid280k.fbx")).Length > 1_000_000);
+        Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_body_holefixed_walk.fbx")).Length > 1_000_000);
+        Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_body_holefixed_slash.fbx")).Length > 1_000_000);
+        var diagSlash = Path.Combine(pilot, "SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx");
+        Assert.True(new FileInfo(diagSlash).Length > 1_000_000);
+        Assert.Equal(
+            "72412be4405bea372184dd5f5e17e186",
+            Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(diagSlash))).ToLowerInvariant());
+        var swordShield = Path.Combine(pilot, "SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx");
+        Assert.True(new FileInfo(swordShield).Length > 1_000_000);
+        Assert.Equal(
+            "cc4f97a3ec981d0ece2780aaec49e1a4",
+            Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(swordShield))).ToLowerInvariant());
+        var swordShieldMeta = File.ReadAllText(swordShield + ".meta");
+        Assert.Contains("firstFrame: 0", swordShieldMeta, StringComparison.Ordinal);
+        Assert.Contains("lastFrame: 73", swordShieldMeta, StringComparison.Ordinal);
+        Assert.Contains("mirror: 0", swordShieldMeta, StringComparison.Ordinal);
+        Assert.Contains("takeName: mixamo.com", swordShieldMeta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 2", swordShieldMeta, StringComparison.Ordinal);
+        Assert.Contains("useFileScale: 0", swordShieldMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("lastFrame: 85", swordShieldMeta, StringComparison.Ordinal);
+        Assert.Equal(
+            "72412be4405bea372184dd5f5e17e186",
+            Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(Path.Combine(pilot, "SirAldric_body_holefixed_slash.fbx")))).ToLowerInvariant());
+        Assert.Equal(
+            "799d851db5ca4ecfbea28a9478fc039e",
+            Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(Path.Combine(pilot, "SirAldric_body_holefixed_walk.fbx")))).ToLowerInvariant());
+        var diagRevSlash = Path.Combine(pilot, "SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG_REV.fbx");
+        Assert.True(File.Exists(diagRevSlash));
+        Assert.Equal(
+            "0beb3c77a1f53c1604dd3c725b1ad789",
+            Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(diagRevSlash))).ToLowerInvariant());
+        Assert.NotEqual(
+            "0beb3c77a1f53c1604dd3c725b1ad789",
+            Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(Path.Combine(pilot, "SirAldric_body_holefixed_slash.fbx")))).ToLowerInvariant());
+        var diagMirrSlash = Path.Combine(pilot, "SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG_MIRR.fbx");
+        Assert.True(File.Exists(diagMirrSlash));
+        Assert.Equal(
+            "70fd94832eb1b09e9b8a7b8dda9d2f45",
+            Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(diagMirrSlash))).ToLowerInvariant());
+        Assert.NotEqual(
+            "70fd94832eb1b09e9b8a7b8dda9d2f45",
+            Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(Path.Combine(pilot, "SirAldric_body_holefixed_slash.fbx")))).ToLowerInvariant());
+        Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_PILOT_sword.fbx")).Length > 10_000);
+        Assert.True(new FileInfo(Path.Combine(pilot, "mixamo_tex", "Meshy_AI_Lionheart_Sentinel_0929004215_texture.png")).Length > 100_000);
+        var walkMeta = File.ReadAllText(Path.Combine(pilot, "SirAldric_body_holefixed_walk.fbx.meta"));
+        var attackMeta = File.ReadAllText(Path.Combine(pilot, "SirAldric_body_holefixed_slash.fbx.meta"));
+        Assert.Contains("takeName: mixamo.com", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("takeName: mixamo.com", attackMeta, StringComparison.Ordinal);
+        Assert.Contains("avatarSetup: 1", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("avatarSetup: 1", attackMeta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 2", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 2", attackMeta, StringComparison.Ordinal);
+        Assert.Contains("useFileScale: 0", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("useFileScale: 0", attackMeta, StringComparison.Ordinal);
+        Assert.Contains("firstFrame: 0", attackMeta, StringComparison.Ordinal);
+        Assert.Contains("lastFrame: 85", attackMeta, StringComparison.Ordinal);
+        Assert.Equal(0, SirAldric3DMotion.MixamoSlashFirstFrame);
+        Assert.Equal(85, SirAldric3DMotion.MixamoSlashLastFrame);
+        Assert.Equal(0, SirAldric3DMotion.MixamoSwordShieldSlashFirstFrame);
+        Assert.Equal(73, SirAldric3DMotion.MixamoSwordShieldSlashLastFrame);
+        Assert.Equal("cc4f97a3ec981d0ece2780aaec49e1a4", SirAldric3DMotion.MixamoSwordShieldSlashMd5);
+        Assert.Equal(17, SirAldric3DMotion.LiteSwordShieldClips.Length);
+        Assert.Contains("LiteSwordShieldClips", motionSrc, StringComparison.Ordinal);
+        Assert.Equal("Scene", SirAldric3DMotion.LiteSwordShieldTakeName);
+        Assert.Contains("Sword And Shield turn (2)", motionSrc, StringComparison.Ordinal);
+        Assert.Contains("8e72ecbdd39e5a2ef30476687f380f27", motionSrc, StringComparison.Ordinal);
+        Assert.Equal(59f / 85f, SirAldric3DMotion.MixamoDiagApexClipU, 3);
+        Assert.True(SirAldric3DMotion.MixamoDiagRaisePlayEndU < 0.50f);
+        Assert.Contains("MixamoDiagPlaybackU", motionSrc, StringComparison.Ordinal);
+        Assert.Contains("MixamoDiagStrikeBladeLocal", motionSrc, StringComparison.Ordinal);
+        Assert.Contains("1821c4a", motionSrc, StringComparison.Ordinal);
+        Assert.Contains("SampleStrikePath", motionSrc, StringComparison.Ordinal);
+        Assert.Contains("StrikeMarkerDrawName", motionSrc, StringComparison.Ordinal);
+        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "SirAldric.unity"));
+        Assert.Contains("m_Name: SirAldricStrikePath", scene, StringComparison.Ordinal);
+        Assert.Contains("m_Name: 1_Draw_LeftHipPocket", scene, StringComparison.Ordinal);
+        Assert.Contains("m_Name: 2_Raise_AboveHeadRight", scene, StringComparison.Ordinal);
+        Assert.Contains("m_Name: 3_Strike_Forward", scene, StringComparison.Ordinal);
+        Assert.Contains("m_Name: 4_Strike_DownToFoot", scene, StringComparison.Ordinal);
+        Assert.Contains("c8a1d4e27b3f4906a5c8e1d2479b0f33", scene, StringComparison.Ordinal);
+        var pathSrc = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricStrikePath.cs"));
+        Assert.Contains("OnDrawGizmos", pathSrc, StringComparison.Ordinal);
+        Assert.Contains("DrawSphere", pathSrc, StringComparison.Ordinal);
+        Assert.Contains("Handles.Label", pathSrc, StringComparison.Ordinal);
+        var diagMeta = File.ReadAllText(Path.Combine(pilot, "SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx.meta"));
+        Assert.Contains("firstFrame: 0", diagMeta, StringComparison.Ordinal);
+        Assert.Contains("lastFrame: 85", diagMeta, StringComparison.Ordinal);
+        Assert.Contains("takeName: mixamo.com", diagMeta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 2", diagMeta, StringComparison.Ordinal);
+        Assert.Contains("useFileScale: 0", diagMeta, StringComparison.Ordinal);
+        Assert.Contains("mirror: 0", diagMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("animationType: 3", walkMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("animationType: 3", attackMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("addHumanoidExtraRoot", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("legTwist", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("armTwist", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("foreArmTwist", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("upperLegTwist", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("feetSpacing", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("hasTranslationDoF", actor, StringComparison.Ordinal);
+        var post = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricPilotFbxImport.cs"));
+        Assert.Contains("OnPreprocessModel", post, StringComparison.Ordinal);
+        Assert.Contains("CreateFromThisModel", post, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_body_holefixed_walk.fbx", post, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_body_holefixed_slash.fbx", post, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx", post, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx", post, StringComparison.Ordinal);
+        Assert.Contains("/lite_sword_shield/", post, StringComparison.Ordinal);
+        Assert.Contains("LiteSwordShieldExactNameForFile", post, StringComparison.Ordinal);
+        Assert.Contains("ApplyLiteSwordShield", post, StringComparison.Ordinal);
+        Assert.Contains("LiteSwordShieldTakeName", post, StringComparison.Ordinal);
+        Assert.Contains("MixamoSwordShieldSlashLastFrame", post, StringComparison.Ordinal);
+        Assert.Contains("PilotAttackDiagRevRetired", post, StringComparison.Ordinal);
+        Assert.Contains("PilotAttackDiagMirrRetired", post, StringComparison.Ordinal);
+        Assert.Contains("ModelImporterAnimationType.Generic", post, StringComparison.Ordinal);
+        Assert.Contains("useFileScale = false", post, StringComparison.Ordinal);
+        Assert.Contains("MixamoSlashFirstFrame", post, StringComparison.Ordinal);
+        Assert.DoesNotContain("ModelImporterAnimationType.Human", post, StringComparison.Ordinal);
+        Assert.DoesNotContain("addHumanoidExtraRoot", post, StringComparison.Ordinal);
+        Assert.DoesNotContain("addHumanoidExtraRoot", walkMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("addHumanoidExtraRoot", attackMeta, StringComparison.Ordinal);
+        Assert.Equal(1.70f, SirAldric3DMotion.PlayCamRearY);
+        Assert.Equal(-5.60f, SirAldric3DMotion.PlayCamRearZ);
+        Assert.Equal(1.35f, SirAldric3DMotion.PlayCamLookY);
+        Assert.Equal(50f, SirAldric3DMotion.PlayCamFovDegrees);
+        Assert.True(SirAldric3DMotion.PlayCamRearZ < -5f, "Game-view must pull back so draw/raise/strike stay in frame");
+        Assert.Equal(180f, SirAldric3DMotion.MixamoImportRearYawDegrees);
+        Assert.Equal(0.42f, SirAldric3DMotion.AttackSlashReadyRight);
+        Assert.Equal(-0.48f, SirAldric3DMotion.AttackSlashReadyUp);
+        Assert.Equal(-0.22f, SirAldric3DMotion.AttackSlashReadyFront);
+        Assert.Equal(0.55f, SirAldric3DMotion.AttackSlashBackRight);
+        Assert.Equal(0.05f, SirAldric3DMotion.AttackSlashBackUp);
+        Assert.Equal(-0.78f, SirAldric3DMotion.AttackSlashBackFront);
+        Assert.Equal(0.22f, SirAldric3DMotion.AttackSlashBackU);
+        Assert.Equal(0.68f, SirAldric3DMotion.AttackSlashUrRight);
+        Assert.Equal(0.82f, SirAldric3DMotion.AttackSlashUrUp);
+        Assert.Equal(-0.12f, SirAldric3DMotion.AttackSlashUrFront);
+        Assert.Equal(0.06f, SirAldric3DMotion.AttackSlashFrontUp);
+        Assert.Equal(0.72f, SirAldric3DMotion.AttackSlashFrontZ);
+        Assert.Equal(-0.76f, SirAldric3DMotion.AttackSlashLlRight);
+        Assert.Equal(-0.80f, SirAldric3DMotion.AttackSlashLlUp);
+        Assert.Equal(0.40f, SirAldric3DMotion.AttackSlashFrontU);
+        Assert.Equal(0.58f, SirAldric3DMotion.AttackSlashFrontHoldU);
+        Assert.Equal(0.84f, SirAldric3DMotion.AttackSlashLlU);
+        Assert.True(SirAldric3DMotion.AttackSlashFrontHoldU > SirAldric3DMotion.AttackSlashFrontU);
+        Assert.True(SirAldric3DMotion.AttackSlashBackFront < 0f);
+        Assert.Equal(90f, SirAldric3DMotion.HeldSwordRestEulerX);
+        Assert.Equal(0.32f, SirAldric3DMotion.HipSheathOutboard);
+        Assert.Equal(0.02f, SirAldric3DMotion.HipSheathUp);
+        Assert.Equal(0.06f, SirAldric3DMotion.HipSheathBack);
+        Assert.Equal(0.40f, SirAldric3DMotion.HeldSwordSheathRight);
+        Assert.Equal(1.00f, SirAldric3DMotion.HeldSwordSheathDown);
+        Assert.Equal(0.00f, SirAldric3DMotion.HeldSwordSheathBack);
+        SirAldric3DMotion.HipSheathBladeLocal(out var shR, out var shU, out var shF);
+        Assert.True(shR > 0.25f && shU < -0.70f && Math.Abs(shF) < 0.20f, $"sheath local ({shR},{shU},{shF}) must be character-right + down, not world-left");
+        SirAldric3DMotion.PlayCamOrbitEye(0f, 0f, out var eyeX, out var eyeY, out var eyeZ);
+        Assert.Equal(SirAldric3DMotion.PlayCamRearX, eyeX, 3);
+        Assert.Equal(SirAldric3DMotion.PlayCamRearY, eyeY, 3);
+        Assert.Equal(SirAldric3DMotion.PlayCamRearZ, eyeZ, 3);
+        Assert.InRange(SirAldric3DMotion.PlayCamThreeQuarterYawDegrees(), -80f, -20f);
+        Assert.Equal(1f, SirAldric3DMotion.AttackWindupWeight(0f), 3);
+        Assert.Equal(1f, SirAldric3DMotion.AttackWindupWeight(0.72f), 3);
+        Assert.Equal(1f, SirAldric3DMotion.AttackWindupWeight(1f), 3);
+        SirAldric3DMotion.AttackSlashReach(0f, out var readyX, out var readyY, out var readyZ);
+        Assert.True(readyX > 0.25f && readyY < 0f && readyZ <= 0f, $"ready ({readyX},{readyY},{readyZ}) must be low character-right / back (video t≈0)");
+        SirAldric3DMotion.AttackSlashReach(SirAldric3DMotion.AttackSlashBackU, out var backX, out var backY, out var backZ);
+        Assert.True(backX > 0.20f && backZ < -0.45f, $"backswing ({backX},{backY},{backZ}) must put the blade behind the body (video t≈5s)");
+        SirAldric3DMotion.AttackSlashReach(SirAldric3DMotion.AttackSlashFrontU, out var urX, out var urY, out var urZ);
+        Assert.True(urX > 0.40f && urY > 0.45f, $"high ({urX},{urY},{urZ}) must be high character-right");
+        SirAldric3DMotion.AttackSlashReach(SirAldric3DMotion.AttackSlashFrontHoldU, out var cutX, out var cutY, out var cutZ);
+        Assert.True(cutZ > 0.40f, $"contact ({cutX},{cutY},{cutZ}) must be in front of the body");
+        SirAldric3DMotion.AttackSlashReach(1f, out var llX, out var llY, out var llZ);
+        Assert.True(llX < -0.45f && llY < -0.45f, $"finish ({llX},{llY},{llZ}) must be low character-left");
+        SirAldric3DMotion.AttackRaiseThenCutReach(0f, out var raiseX, out var raiseY, out var raiseZ);
+        Assert.True(raiseY > 0.70f && raiseX > 0f, $"raise ({raiseX},{raiseY},{raiseZ}) must start above the head, character-right");
+        SirAldric3DMotion.AttackRaiseThenCutReach(SirAldric3DMotion.AttackCutU, out var downX, out var downY, out var downZ);
+        Assert.True(downZ > 0.40f, $"cut ({downX},{downY},{downZ}) must come down in front");
+        SirAldric3DMotion.AttackRaiseThenCutReach(1f, out var cutLlX, out var cutLlY, out var cutLlZ);
+        Assert.True(cutLlX < -0.45f && cutLlY < -0.45f, $"raise-then-cut finish ({cutLlX},{cutLlY},{cutLlZ}) must be low character-left");
+        Assert.Equal(3.20f, SirAldric3DMotion.AttackClipSeconds);
+        Assert.True(SirAldric3DMotion.AttackDrawLeftHipU > SirAldric3DMotion.AttackDrawArriveU);
+        Assert.True(SirAldric3DMotion.AttackDrawLeftHipU < SirAldric3DMotion.AttackDrawHoldEndU);
+        Assert.True(SirAldric3DMotion.AttackRaiseOverheadRightU > SirAldric3DMotion.AttackRaiseArriveU);
+        Assert.True(SirAldric3DMotion.AttackStrikeForwardU > SirAldric3DMotion.AttackFwdArriveU);
+        SirAldric3DMotion.AttackLeftHipDrawReach(SirAldric3DMotion.AttackDrawLeftHipU, out var pocketX, out var pocketY, out var pocketZ);
+        Assert.True(pocketX < -0.15f && pocketY < 0.15f, $"left-hip pocket ({pocketX},{pocketY},{pocketZ}) must be character-left and low");
+        SirAldric3DMotion.AttackLeftHipDrawReach(SirAldric3DMotion.AttackRaiseOverheadRightU, out var ohX, out var ohY, out var ohZ);
+        Assert.True(ohY > 0.70f && ohX > 0f, $"overhead right ({ohX},{ohY},{ohZ}) must be high character-right");
+        SirAldric3DMotion.AttackLeftHipDrawReach(SirAldric3DMotion.AttackStrikeForwardU, out var fwdX, out var fwdY, out var fwdZ);
+        Assert.True(fwdZ > 0.50f, $"forward strike ({fwdX},{fwdY},{fwdZ}) must go toward +Z");
+        SirAldric3DMotion.AttackLeftHipDrawReach(1f, out var footX, out var footY, out var footZ);
+        Assert.True(footY < -0.30f && footX > -0.25f, $"foot finish ({footX},{footY},{footZ}) must be down toward the foot, not a left-across cut");
+        _ = pocketZ;
+        _ = ohZ;
+        _ = fwdX;
+        _ = fwdY;
+        _ = footZ;
+        SirAldric3DMotion.AttackSlashGuardReach(out var gX, out var gY, out var gZ);
+        Assert.True(gZ > 0.70f && gY > 0f, $"guard ({gX},{gY},{gZ}) must point forward");
+        Assert.InRange(SirAldric3DMotion.AttackSlashSpineYawDegrees(0f), 15f, 30f);
+        Assert.InRange(SirAldric3DMotion.AttackSlashSpineYawDegrees(1f), -25f, -8f);
+        _ = readyZ;
+        _ = backY;
+        _ = urZ;
+        _ = cutX;
+        _ = cutY;
+        _ = llZ;
+        _ = gX;
+        _ = raiseZ;
+        _ = downX;
+        _ = downY;
+        _ = cutLlZ;
+        var blender = File.ReadAllText(Path.Combine(root, "scripts", "blender", "render_aldric_pilot_playcam.py"));
+        Assert.Contains("SLASH_READY_UP = -0.48", blender, StringComparison.Ordinal);
+        Assert.Contains("SLASH_BACK_FRONT = -0.78", blender, StringComparison.Ordinal);
+        Assert.Contains("SLASH_BACK_U = 0.22", blender, StringComparison.Ordinal);
+        Assert.Contains("SLASH_FRONT_UP = 0.06", blender, StringComparison.Ordinal);
+        Assert.Contains("SLASH_FRONT_HOLD_U = 0.58", blender, StringComparison.Ordinal);
+        Assert.Contains("SLASH_FRONT_Z = 0.72", blender, StringComparison.Ordinal);
+        Assert.Contains("SLASH_UR_UP = 0.82", blender, StringComparison.Ordinal);
+        Assert.Contains("iQ1s3nN1330", blender, StringComparison.Ordinal);
+        Assert.Contains("hip_sheath_", blender, StringComparison.Ordinal);
+        Assert.Contains("apply_sheathed_sword", blender, StringComparison.Ordinal);
+        Assert.Contains("mixamorig:Hips", blender, StringComparison.Ordinal);
+        Assert.Contains("bind_sword_to", blender, StringComparison.Ordinal);
+        Assert.Contains("SHEATH_BACK = 0.00", blender, StringComparison.Ordinal);
+        Assert.Contains("SHEATH_RIGHT = 0.40", blender, StringComparison.Ordinal);
+        Assert.Contains("forearm–hand", blender, StringComparison.Ordinal);
+        Assert.DoesNotContain("rest_world.slerp", blender, StringComparison.Ordinal);
+        Assert.Contains("not Unity Game-view", blender, StringComparison.Ordinal);
+        var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricDemo.cs"));
+        Assert.Contains("ApplyPlayCam", demo, StringComparison.Ordinal);
+        Assert.Contains("usePhysicalProperties = false", demo, StringComparison.Ordinal);
+        Assert.Contains("LateUpdate", demo, StringComparison.Ordinal);
+        Assert.Contains("left-hip draw", demo, StringComparison.Ordinal);
+        Assert.DoesNotContain("Design DIAG_REV slash", demo, StringComparison.Ordinal);
+        Assert.DoesNotContain("Design DIAG_MIRR slash", demo, StringComparison.Ordinal);
+        Assert.Contains("iQ1s3nN1330", demo, StringComparison.Ordinal);
+        Assert.Contains("orbit", demo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("PlayCamOrbitEye", demo, StringComparison.Ordinal);
+        Assert.Contains("Alpha1", demo, StringComparison.Ordinal);
+        Assert.Contains("Keyboard.current", demo, StringComparison.Ordinal);
+        Assert.Contains("digit1Key", demo, StringComparison.Ordinal);
+        Assert.Contains("OnGUI", demo, StringComparison.Ordinal);
+        Assert.Contains("DefaultExecutionOrder(500)", demo, StringComparison.Ordinal);
+        Assert.Contains("Quaternion.Normalize", demo, StringComparison.Ordinal);
+        Assert.Contains("LookRotation", demo, StringComparison.Ordinal);
+        Assert.DoesNotContain("cam.transform.LookAt", demo, StringComparison.Ordinal);
+        Assert.DoesNotContain("ev.repeat", demo, StringComparison.Ordinal);
+        Assert.Contains("ev.keyCode == KeyCode.None", demo, StringComparison.Ordinal);
+        Assert.Contains("GUI.Button", demo, StringComparison.Ordinal);
+        Assert.Contains("PlayNamedClip", demo, StringComparison.Ordinal);
+        Assert.Contains("Sword And Shield attack (2)", demo, StringComparison.Ordinal);
+        Assert.Contains("Walk then Slash", demo, StringComparison.Ordinal);
+        Assert.Contains("BuildLiteClipHud", demo, StringComparison.Ordinal);
+        Assert.Contains("LiteClipDropdown", demo, StringComparison.Ordinal);
+        Assert.Contains("Dropdown", demo, StringComparison.Ordinal);
+        Assert.DoesNotContain("BtnLite_", demo, StringComparison.Ordinal);
+        Assert.Contains("fd5f09c IMGUI clip buttons sat under this pad", demo, StringComparison.Ordinal);
+        Assert.Contains("IgnoreFocus", demo, StringComparison.Ordinal);
+        Assert.Contains("AllDeviceInputAlwaysGoesToGameView", demo, StringComparison.Ordinal);
+        Assert.Contains("InputSystemUIInputModule", demo, StringComparison.Ordinal);
+        Assert.Contains("InputActionMap", demo, StringComparison.Ordinal);
+        Assert.Contains("SirAldricOrbitPad", demo, StringComparison.Ordinal);
+        Assert.Contains("ForcePreset", demo, StringComparison.Ordinal);
+        Assert.Contains("GetAllCameras", demo, StringComparison.Ordinal);
+        var orbitHook = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricPlayOrbitHook.cs"));
+        Assert.Contains("EditorApplication.update", orbitHook, StringComparison.Ordinal);
+        Assert.Contains("ForcePreset", orbitHook, StringComparison.Ordinal);
+        SirAldric3DMotion.PlayCamOrbitEye(180f, 0f, out var frontX, out var frontY, out var frontZ);
+        Assert.True(frontZ > SirAldric3DMotion.PlayCamLookZ, "yaw 180 must sit in front of LookAt");
+        Assert.True(Math.Abs(frontZ - eyeZ) > 4f, "front eye must leave the rear socket");
+        SirAldric3DMotion.PlayCamOrbitEye(SirAldric3DMotion.PlayCamThreeQuarterYawDegrees(), 0f, out var tqX, out var tqY, out var tqZ);
+        Assert.True(Math.Abs(tqX) > 1f, "3/4 yaw must leave the rear X=0 line");
+        _ = frontX;
+        _ = frontY;
+        _ = tqY;
+        _ = tqZ;
+
+        var dir = Path.Combine(root, "Docs", "Survival", "previews", "aldric_pilot_20260928");
+        Assert.True(new FileInfo(Path.Combine(dir, "PILOT_HOLD.md")).Length > 400);
+        var hold = File.ReadAllText(Path.Combine(dir, "PILOT_HOLD.md"));
+        Assert.Contains("HOLD merge", hold, StringComparison.Ordinal);
+        Assert.Contains("Not Unity Game-view", hold, StringComparison.Ordinal);
+        Assert.Contains("Mixamo", hold, StringComparison.Ordinal);
+        Assert.Contains("a9f8aff", hold, StringComparison.Ordinal);
+        Assert.Contains("cdfbea5", hold, StringComparison.Ordinal);
+        Assert.Contains("879a6f3", hold, StringComparison.Ordinal);
+        Assert.Contains("8098f64", hold, StringComparison.Ordinal);
+        Assert.Contains("7187204", hold, StringComparison.Ordinal);
+        Assert.Contains("52aba6b", hold, StringComparison.Ordinal);
+        Assert.Contains("0fc0930", hold, StringComparison.Ordinal);
+        Assert.Contains("98dabbb", hold, StringComparison.Ordinal);
+        Assert.Contains("3d0efcd", hold, StringComparison.Ordinal);
+        Assert.Contains("ee3f7bd", hold, StringComparison.Ordinal);
+        Assert.Contains("c5c8469", hold, StringComparison.Ordinal);
+        Assert.Contains("e90b654", hold, StringComparison.Ordinal);
+        Assert.Contains("95aba89", hold, StringComparison.Ordinal);
+        Assert.Contains("AttackRaiseThenCutReach", hold, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_DIAG_InwardSlash.anim", hold, StringComparison.Ordinal);
+        Assert.Contains("AnimatorController", hold, StringComparison.Ordinal);
+        Assert.Contains("left-hip", hold, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Animation window", hold, StringComparison.Ordinal);
+        Assert.Contains("19e6efe", hold, StringComparison.Ordinal);
+        Assert.Contains("43b33fb", hold, StringComparison.Ordinal);
+        Assert.Contains("8d5b78b0", hold, StringComparison.Ordinal);
+        Assert.Contains("72412be4", hold, StringComparison.Ordinal);
+        Assert.Contains("70fd9483", hold, StringComparison.Ordinal);
+        Assert.Contains("0beb3c77", hold, StringComparison.Ordinal);
+        Assert.Contains("4a143441", hold, StringComparison.Ordinal);
+        Assert.Contains("DIAG", hold, StringComparison.Ordinal);
+        Assert.Contains("DIAG_MIRR", hold, StringComparison.Ordinal);
+        Assert.Contains("DIAG_REV", hold, StringComparison.Ordinal);
+        Assert.Contains("raise above head", hold, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("1821c4a", hold, StringComparison.Ordinal);
+        Assert.Contains("UPWARDS", hold, StringComparison.Ordinal);
+        Assert.Contains("1_Draw_LeftHipPocket", hold, StringComparison.Ordinal);
+        Assert.Contains("4_Strike_DownToFoot", hold, StringComparison.Ordinal);
+        Assert.Contains("ReachRightArmToward", hold, StringComparison.Ordinal);
+        Assert.Contains("wrong interpretation", hold, StringComparison.Ordinal);
+        Assert.Contains("backswing", hold, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("iQ1s3nN1330", hold, StringComparison.Ordinal);
+        Assert.Contains("https://www.youtube.com/watch?v=iQ1s3nN1330", hold, StringComparison.Ordinal);
+        Assert.Contains("CS1061", hold, StringComparison.Ordinal);
+        Assert.Contains("QuaternionToEuler", hold, StringComparison.Ordinal);
+        Assert.Contains("HipSheathSocket", hold, StringComparison.Ordinal);
+        Assert.Contains("orbit", hold, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("mixamorig:Hips", hold, StringComparison.Ordinal);
+        Assert.Contains("RightHand", hold, StringComparison.Ordinal);
+        Assert.Contains("not a whole-body X-flip", hold, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("b0a9509", hold, StringComparison.Ordinal);
+        Assert.Contains("b2ce8f7", hold, StringComparison.Ordinal);
+        Assert.Contains("19b16aa", hold, StringComparison.Ordinal);
+        Assert.Contains("horizontal thrust", hold, StringComparison.OrdinalIgnoreCase);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_rear_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_front_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_34_walk_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_rear_strike_start_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_rear_strike_mid_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_rear_strike_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_front_strike_playcam.png")).Length > 50_000);
+        Assert.True(new FileInfo(Path.Combine(dir, "sir_aldric_pilot_34_strike_playcam.png")).Length > 50_000);
+        var walkDump = File.ReadAllText(Path.Combine(dir, "sir_aldric_pilot_dump_walk_f18.json"));
+        Assert.Contains("\"sword_parent\": \"mixamorig:Hips\"", walkDump, StringComparison.Ordinal);
+        Assert.Contains("not Unity Game-view", walkDump, StringComparison.Ordinal);
+        var walkTip = ReadJsonVec3(walkDump, "tip_unity");
+        Assert.True(walkTip[1] < -0.70f, $"walk tip_unity=({walkTip[0]},{walkTip[1]},{walkTip[2]}) must point down, not a RH grip");
+        Assert.True(Math.Abs(walkTip[2]) < 0.25f, $"walk tip Z {walkTip[2]} must not aim across the back (Derek a9f8aff Game-view)");
+        var gripToRhIdx = walkDump.IndexOf("\"grip_to_rh\":", StringComparison.Ordinal);
+        Assert.True(gripToRhIdx >= 0, "walk dump missing grip_to_rh");
+        var colon = walkDump.IndexOf(':', gripToRhIdx);
+        var comma = walkDump.IndexOfAny(new[] { ',', '\n' }, colon + 1);
+        var gripToRh = float.Parse(walkDump.Substring(colon + 1, comma - colon - 1).Trim(), CultureInfo.InvariantCulture);
+        Assert.True(gripToRh > 0.05f, $"walk grip_to_rh={gripToRh} must sit outside the RH palm");
+        var midDump = File.ReadAllText(Path.Combine(dir, "sir_aldric_pilot_dump_slash_f20.json"));
+        Assert.Contains("\"sword_parent\": \"mixamorig:RightHand\"", midDump, StringComparison.Ordinal);
+        Assert.Contains("not Unity Game-view", midDump, StringComparison.Ordinal);
+        // Rematch dumps are optional / not slash SoT. Do not lock mid to the
+        // superseded +Z thrust plateau. Game-view must match iQ1s3nN1330.
+        _ = ReadJsonVec3(midDump, "tip_unity");
+        _ = ReadJsonVec3(midDump, "desired_unity");
+        var startTip = ReadJsonVec3(File.ReadAllText(Path.Combine(dir, "sir_aldric_pilot_dump_slash_f8.json")), "tip_unity");
+        Assert.True(startTip[1] > 0.25f, $"start tip Y {startTip[1]} should be up");
+        var finishTip = ReadJsonVec3(File.ReadAllText(Path.Combine(dir, "sir_aldric_pilot_dump_slash_f32.json")), "tip_unity");
+        Assert.True(finishTip[1] < 0f, $"finish tip Y {finishTip[1]} should be down");
+    }
+
+    [Fact]
+    public void Strike_path_defaults_match_draw_raise_forward_foot()
+    {
+        Assert.Equal("SirAldricStrikePath", SirAldric3DMotion.StrikePathRootName);
+        Assert.Equal("1_Draw_LeftHipPocket", SirAldric3DMotion.StrikeMarkerName(0));
+        Assert.Equal("2_Raise_AboveHeadRight", SirAldric3DMotion.StrikeMarkerName(1));
+        Assert.Equal("3_Strike_Forward", SirAldric3DMotion.StrikeMarkerName(2));
+        Assert.Equal("4_Strike_DownToFoot", SirAldric3DMotion.StrikeMarkerName(3));
+        SirAldric3DMotion.StrikeMarkerDefaultWorld(0, out var dx, out var dy, out var dz);
+        Assert.True(dx < -0.10f && dy > 0.70f && dy < 1.20f, $"draw ({dx},{dy},{dz}) is left hip pocket");
+        SirAldric3DMotion.StrikeMarkerDefaultWorld(1, out var rx, out var ry, out var rz);
+        Assert.True(rx > 0f && ry > 1.80f, $"raise ({rx},{ry},{rz}) is above the head, right");
+        SirAldric3DMotion.StrikeMarkerDefaultWorld(2, out var fx, out var fy, out var fz);
+        Assert.True(fz > 0.60f && fy > 1.0f, $"forward ({fx},{fy},{fz}) is a forward strike");
+        SirAldric3DMotion.StrikeMarkerDefaultWorld(3, out var tx, out var ty, out var tz);
+        Assert.True(ty < 0.35f && tz > 0f, $"foot ({tx},{ty},{tz}) is down toward the foot");
+        _ = dz;
+        _ = rz;
+        _ = fx;
+        _ = tx;
+    }
+
+    [Fact]
+    public void Strike_path_catmull_visits_markers_without_holds()
+    {
+        SirAldric3DMotion.StrikeMarkerDefaultWorld(0, out var x0, out var y0, out var z0);
+        SirAldric3DMotion.StrikeMarkerDefaultWorld(1, out var x1, out var y1, out var z1);
+        SirAldric3DMotion.StrikeMarkerDefaultWorld(2, out var x2, out var y2, out var z2);
+        SirAldric3DMotion.StrikeMarkerDefaultWorld(3, out var x3, out var y3, out var z3);
+        SirAldric3DMotion.SampleStrikePath(0f, x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, out var sx, out var sy, out var sz);
+        Assert.InRange(sx, x0 - 0.02f, x0 + 0.02f);
+        Assert.InRange(sy, y0 - 0.02f, y0 + 0.02f);
+        SirAldric3DMotion.SampleStrikePath(
+            SirAldric3DMotion.StrikeMarkerKnotU(1),
+            x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3,
+            out var mx, out var my, out var mz);
+        Assert.True(my > 1.70f && mx > 0f, $"mid raise sample ({mx},{my},{mz})");
+        SirAldric3DMotion.SampleStrikePath(1f, x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3, out var ex, out var ey, out var ez);
+        Assert.InRange(ex, x3 - 0.02f, x3 + 0.02f);
+        Assert.True(ey < 0.40f, "finish down toward the foot");
+        float prevX = sx, prevY = sy, prevZ = sz;
+        var moved = 0;
+        for (var i = 1; i <= 20; i++)
         {
-            if (bytes[i] == 0x89 && bytes[i + 1] == 0x50 && bytes[i + 2] == 0x4E && bytes[i + 3] == 0x47)
+            SirAldric3DMotion.SampleStrikePath(
+                i / 20f, x0, y0, z0, x1, y1, z1, x2, y2, z2, x3, y3, z3,
+                out var x, out var y, out var z);
+            if (Math.Abs(x - prevX) + Math.Abs(y - prevY) + Math.Abs(z - prevZ) > 0.01f)
             {
-                png = true;
-                break;
+                moved++;
             }
+
+            prevX = x;
+            prevY = y;
+            prevZ = z;
         }
 
-        Assert.True(png);
+        Assert.True(moved >= 18, "path must keep moving — no frozen holds");
+        _ = sz;
+        _ = ez;
+    }
+
+    [Fact]
+    public void Mixamo_diag_playback_maps_strike_onto_descent_not_the_rise()
+    {
+        Assert.Equal(0f, SirAldric3DMotion.MixamoDiagPlaybackU(0f), 3);
+        Assert.Equal(
+            SirAldric3DMotion.MixamoDiagDrawEndU,
+            SirAldric3DMotion.MixamoDiagPlaybackU(SirAldric3DMotion.MixamoDiagDrawEndU),
+            3);
+        var midRaise = SirAldric3DMotion.MixamoDiagPlaybackU(
+            (SirAldric3DMotion.MixamoDiagDrawEndU + SirAldric3DMotion.MixamoDiagRaisePlayEndU) * 0.5f);
+        Assert.InRange(midRaise, SirAldric3DMotion.MixamoDiagDrawEndU, SirAldric3DMotion.MixamoDiagApexClipU);
+        Assert.True(
+            SirAldric3DMotion.MixamoDiagPlaybackU(SirAldric3DMotion.MixamoDiagRaisePlayEndU)
+            >= SirAldric3DMotion.MixamoDiagApexClipU - 0.01f);
+        Assert.True(
+            SirAldric3DMotion.MixamoDiagPlaybackU(0.70f) > SirAldric3DMotion.MixamoDiagApexClipU);
+        Assert.Equal(1f, SirAldric3DMotion.MixamoDiagPlaybackU(1f), 3);
+        var prev = -0.01f;
+        for (var i = 0; i <= 20; i++)
+        {
+            var u = SirAldric3DMotion.MixamoDiagPlaybackU(i / 20f);
+            Assert.True(u >= prev - 1e-5f, $"playback must stay monotonic at i={i}");
+            prev = u;
+        }
+    }
+
+    [Fact]
+    public void Mixamo_diag_strike_blade_goes_forward_then_down_never_up()
+    {
+        SirAldric3DMotion.MixamoDiagStrikeBladeLocal(
+            SirAldric3DMotion.MixamoDiagRaisePlayEndU, out _, out var y0, out var z0);
+        Assert.True(z0 > 0.6f, "strike starts FORWARD");
+        Assert.True(y0 < 0f, "strike must not go UPWARDS");
+        SirAldric3DMotion.MixamoDiagStrikeBladeLocal(1f, out _, out var y1, out var z1);
+        Assert.True(y1 < y0, "finish more DOWN toward the foot");
+        Assert.True(z1 > 0f, "finish still has forward");
+        Assert.True(y1 < -0.6f, "finish aims down at the foot");
+        for (var i = 0; i <= 10; i++)
+        {
+            var u = SirAldric3DMotion.MixamoDiagRaisePlayEndU
+                + ((1f - SirAldric3DMotion.MixamoDiagRaisePlayEndU) * i / 10f);
+            SirAldric3DMotion.MixamoDiagStrikeBladeLocal(u, out _, out var y, out var z);
+            Assert.True(y < 0f, $"blade Y {y} at u={u} must not go up");
+            Assert.True(z > 0f, $"blade Z {z} at u={u} must stay forward");
+        }
+    }
+
+    [Fact]
+    public void Lite_sword_shield_pack_is_exact_mixamo_names_on_slash_avatar()
+    {
+        var root = FindRepoRoot();
+        Assert.Equal(17, SirAldric3DMotion.LiteSwordShieldClipCount);
+        Assert.Equal(17, SirAldric3DMotion.LiteSwordShieldClips.Length);
+        Assert.Equal(
+            "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield",
+            SirAldric3DMotion.LiteSwordShieldThemePackDir);
+        Assert.True(SirAldric3DMotion.TryLiteSwordShield("Sword And Shield turn", out var turn));
+        Assert.Equal("9a44ad26fc7458be8b2100bba9814f4e", turn.Md5);
+        Assert.Equal("Sword And Shield turn", turn.ExactName);
+        Assert.True(SirAldric3DMotion.TryLiteSwordShield("Sword And Shield turn (2)", out var turn2));
+        Assert.Equal("c531ea9ecae863e04819275ed199f373", turn2.Md5);
+        Assert.False(SirAldric3DMotion.TryLiteSwordShield("sword and shield turn (2)", out _));
+        Assert.Equal(
+            "Sword And Shield attack (2)",
+            SirAldric3DMotion.LiteSwordShieldExactNameForFile("sword_and_shield_attack_(2).fbx"));
+        Assert.Equal(
+            "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx",
+            SirAldricMeshyAnimateActorPath());
+
+        var dir = Path.Combine(
+            root,
+            "Assets",
+            "ThemePack",
+            "fantasy_kingdom_a",
+            "art",
+            "heroes",
+            "3d",
+            "pilot",
+            "lite_sword_shield");
+        foreach (var clip in SirAldric3DMotion.LiteSwordShieldClips)
+        {
+            var fbx = Path.Combine(dir, clip.FileName);
+            Assert.True(File.Exists(fbx), "missing " + clip.ExactName);
+            Assert.Equal(
+                clip.Md5,
+                Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(fbx))).ToLowerInvariant());
+            var meta = File.ReadAllText(fbx + ".meta");
+            Assert.Contains("name: " + clip.ExactName, meta, StringComparison.Ordinal);
+            Assert.Contains("takeName: Scene", meta, StringComparison.Ordinal);
+            Assert.DoesNotContain("takeName: mixamo.com", meta, StringComparison.Ordinal);
+            Assert.Contains("animationType: 2", meta, StringComparison.Ordinal);
+            Assert.Contains("useFileScale: 0", meta, StringComparison.Ordinal);
+            Assert.Contains("avatarSetup: 1", meta, StringComparison.Ordinal);
+            Assert.Contains("mirror: 0", meta, StringComparison.Ordinal);
+            Assert.DoesNotContain("name: Attack", meta, StringComparison.Ordinal);
+            Assert.DoesNotContain("lastFrame: 73", meta, StringComparison.Ordinal);
+            Assert.DoesNotContain("lastFrame: 85", meta, StringComparison.Ordinal);
+        }
+
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
+        Assert.Contains("public bool PlayNamedClip(string exactName)", actor, StringComparison.Ordinal);
+        Assert.Contains("TryLiteSwordShield(exactName", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldricSwordShieldSlash", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldricLiteSwordShield", actor, StringComparison.Ordinal);
+        Assert.Contains("BindLiteClip", actor, StringComparison.Ordinal);
+        var playNamed = actor[actor.IndexOf("public bool PlayNamedClip(string exactName)", StringComparison.Ordinal)..];
+        playNamed = playNamed[..playNamed.IndexOf("public void PlayDefaultWalkThenSlash", StringComparison.Ordinal)];
+        Assert.DoesNotContain("_slashPlayable.Destroy", playNamed, StringComparison.Ordinal);
+        Assert.Contains("LoadLiteNamedClip", playNamed, StringComparison.Ordinal);
+        Assert.DoesNotContain("ThemePackAttackFbx = \"ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/", actor, StringComparison.Ordinal);
+        var importer = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricPilotFbxImport.cs"));
+        Assert.Contains("ApplyLiteSwordShield", importer, StringComparison.Ordinal);
+        Assert.Contains("best.name = exact", importer, StringComparison.Ordinal);
+        Assert.DoesNotContain("best.name = walk ? \"Walking\" : \"Attack\";\n            if (lite)", importer, StringComparison.Ordinal);
+        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "SirAldric.unity"));
+        var pathIdx = scene.IndexOf("m_Name: SirAldricStrikePath", StringComparison.Ordinal);
+        Assert.True(pathIdx > 0);
+        var activeIdx = scene.IndexOf("m_IsActive:", pathIdx, StringComparison.Ordinal);
+        Assert.Contains("m_IsActive: 0", scene.Substring(activeIdx, 20), StringComparison.Ordinal);
+        var walk = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "pilot", "SirAldric_body_holefixed_walk.fbx");
+        var slash = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "pilot", "SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx");
+        Assert.Equal(
+            "799d851db5ca4ecfbea28a9478fc039e",
+            Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(walk))).ToLowerInvariant());
+        Assert.Equal(
+            "cc4f97a3ec981d0ece2780aaec49e1a4",
+            Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(slash))).ToLowerInvariant());
+    }
+
+    private static string SirAldricMeshyAnimateActorPath()
+    {
+        var actor = File.ReadAllText(Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
+        const string needle = "ThemePackAttackFbx = \"";
+        var i = actor.IndexOf(needle, StringComparison.Ordinal);
+        Assert.True(i >= 0);
+        var start = i + needle.Length;
+        var end = actor.IndexOf('"', start);
+        return actor.Substring(start, end - start);
     }
 
     [Fact]
@@ -324,5 +1069,24 @@ public sealed class SirAldric3DMotionTests
         }
 
         throw new DirectoryNotFoundException("repo root");
+    }
+
+    private static float[] ReadJsonVec3(string json, string key)
+    {
+        var needle = "\"" + key + "\"";
+        var i = json.IndexOf(needle, StringComparison.Ordinal);
+        Assert.True(i >= 0, "missing JSON key " + key);
+        var lb = json.IndexOf('[', i);
+        Assert.True(lb > i, "missing JSON array for " + key);
+        var rb = json.IndexOf(']', lb);
+        Assert.True(rb > lb, "unterminated JSON array for " + key);
+        var parts = json.Substring(lb + 1, rb - lb - 1).Split(',');
+        Assert.True(parts.Length >= 3, key + " needs 3 floats");
+        return new[]
+        {
+            float.Parse(parts[0].Trim(), CultureInfo.InvariantCulture),
+            float.Parse(parts[1].Trim(), CultureInfo.InvariantCulture),
+            float.Parse(parts[2].Trim(), CultureInfo.InvariantCulture),
+        };
     }
 }
