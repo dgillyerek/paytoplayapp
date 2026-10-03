@@ -105,8 +105,6 @@ namespace Survival.Unity
                 PlayDefaultWalkThenSlash();
             }
 
-            DrawLiteClipButtons();
-
             var ev = Event.current;
             if (ev == null)
             {
@@ -128,7 +126,7 @@ namespace Survival.Unity
                 }
             }
 
-            var overButtons = ev.mousePosition.y <= 380f && ev.mousePosition.x <= 560f;
+            var overButtons = ev.mousePosition.y <= 54f && ev.mousePosition.x <= 520f;
             if (!overButtons && ev.type == EventType.MouseDrag && ev.button <= 2)
             {
                 _orbitYaw += ev.delta.x * 0.35f;
@@ -237,33 +235,30 @@ namespace Survival.Unity
         /// </summary>
         public bool PlayNamedClip(string exactName)
         {
-            if (_actor == null)
+            var actor = ResolveActor();
+            if (actor == null)
             {
+                Debug.LogWarning("PILOT PlayNamedClip: no visible SirAldricMeshyAnimateActor. exactName=" + exactName);
                 return false;
             }
 
-            return _actor.PlayNamedClip(exactName);
+            return actor.PlayNamedClip(exactName);
         }
 
         public void PlayDefaultWalkThenSlash()
         {
-            _actor?.PlayDefaultWalkThenSlash();
+            ResolveActor()?.PlayDefaultWalkThenSlash();
         }
 
-        private void DrawLiteClipButtons()
+        private SirAldricMeshyAnimateActor? ResolveActor()
         {
-            var clips = SirAldric3DMotion.LiteSwordShieldClips;
-            for (var i = 0; i < clips.Length; i++)
+            if (_actor != null)
             {
-                var col = i % 2;
-                var row = i / 2;
-                var x = 10f + (col * 270f);
-                var y = 58f + (row * 34f);
-                if (GUI.Button(new Rect(x, y, 262f, 32f), clips[i].ExactName))
-                {
-                    PlayNamedClip(clips[i].ExactName);
-                }
+                return _actor;
             }
+
+            _actor = FindFirstObjectByType<SirAldricMeshyAnimateActor>();
+            return _actor;
         }
 
         public void ForcePreset(int slot)
@@ -488,13 +483,55 @@ namespace Survival.Unity
             var pad = SurvivalVisuals.Image(canvas, "OrbitPad", new Color(1f, 1f, 1f, 0.01f));
             pad.raycastTarget = true;
             SurvivalVisuals.Stretch(pad.rectTransform);
-            pad.rectTransform.offsetMin = new Vector2(0f, 90f);
-            pad.rectTransform.offsetMax = new Vector2(0f, -120f);
+            // Leave the left clip rail and the top/bottom chrome out of the drag pad.
+            // fd5f09c IMGUI clip buttons sat under this pad — Input System ate the clicks.
+            pad.rectTransform.anchorMin = new Vector2(0.44f, 0f);
+            pad.rectTransform.anchorMax = new Vector2(1f, 1f);
+            pad.rectTransform.offsetMin = new Vector2(0f, 160f);
+            pad.rectTransform.offsetMax = new Vector2(0f, -140f);
             pad.gameObject.AddComponent<SirAldricOrbitPad>();
 
             AddOrbitButton(canvas, "BtnRear", "1  REAR", 0.08f, 0.36f, 1);
             AddOrbitButton(canvas, "BtnTq", "2  3/4", 0.38f, 0.62f, 2);
             AddOrbitButton(canvas, "BtnFront", "3  FRONT", 0.64f, 0.92f, 3);
+            BuildLiteClipHud(canvas);
+        }
+
+        /// <summary>
+        /// Exact Mixamo names on uGUI (same EventSystem path as 1/2/3).
+        /// IMGUI clip buttons do not receive Game-view clicks over OrbitPad.
+        /// </summary>
+        private void BuildLiteClipHud(RectTransform canvas)
+        {
+            var reset = SurvivalVisuals.Button(canvas, "BtnWalkThenSlash", new Color(0.16f, 0.14f, 0.10f, 0.94f));
+            var resetRt = reset.GetComponent<RectTransform>();
+            resetRt.anchorMin = new Vector2(0.02f, 0.778f);
+            resetRt.anchorMax = new Vector2(0.42f, 0.818f);
+            resetRt.offsetMin = Vector2.zero;
+            resetRt.offsetMax = Vector2.zero;
+            var resetText = SurvivalVisuals.Text(reset.transform, "Label", "Walk then Slash", 16, TextAnchor.MiddleCenter, SurvivalVisuals.Gold);
+            SurvivalVisuals.Stretch(resetText.rectTransform);
+            reset.onClick.AddListener(PlayDefaultWalkThenSlash);
+
+            var clips = SirAldric3DMotion.LiteSwordShieldClips;
+            const float yTop = 0.772f;
+            const float yBot = 0.155f;
+            var row = (yTop - yBot) / clips.Length;
+            for (var i = 0; i < clips.Length; i++)
+            {
+                var exact = clips[i].ExactName;
+                var yMax = yTop - (i * row);
+                var yMin = yMax - row + 0.003f;
+                var btn = SurvivalVisuals.Button(canvas, "BtnLite_" + i, new Color(0.16f, 0.14f, 0.10f, 0.94f));
+                var rt = btn.GetComponent<RectTransform>();
+                rt.anchorMin = new Vector2(0.02f, yMin);
+                rt.anchorMax = new Vector2(0.42f, yMax);
+                rt.offsetMin = Vector2.zero;
+                rt.offsetMax = Vector2.zero;
+                var text = SurvivalVisuals.Text(btn.transform, "Label", exact, 15, TextAnchor.MiddleCenter, SurvivalVisuals.Cream);
+                SurvivalVisuals.Stretch(text.rectTransform);
+                btn.onClick.AddListener(() => PlayNamedClip(exact));
+            }
         }
 
         private void AddOrbitButton(RectTransform canvas, string name, string label, float x0, float x1, int slot)

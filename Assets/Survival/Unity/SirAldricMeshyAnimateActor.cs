@@ -119,6 +119,7 @@ namespace Survival.Unity
         private bool _namedClipLoop;
         private float _namedClipLength;
         private float _namedClipOrigin;
+        private readonly Dictionary<string, AnimationClip> _liteClips = new();
 
         public bool Built => _graphReady;
         public string? NamedClipExactName => _namedClipExactName;
@@ -281,6 +282,25 @@ namespace Survival.Unity
             _attackReady = true;
             _namedClipActive = false;
             _namedClipExactName = null;
+            CacheLiteSwordShieldClips();
+        }
+
+        private void CacheLiteSwordShieldClips()
+        {
+            _liteClips.Clear();
+            foreach (var entry in SirAldric3DMotion.LiteSwordShieldClips)
+            {
+                var clip = LoadClip(entry.ThemePackRel, entry.ExactName, repairWalk: false)
+                           ?? LoadClip(entry.ThemePackRel, "mixamo.com", repairWalk: false);
+                if (clip == null)
+                {
+                    Debug.LogWarning("PILOT lite clip missing " + entry.ExactName + " " + entry.ThemePackRel);
+                    continue;
+                }
+
+                clip.wrapMode = entry.Loop ? WrapMode.Loop : WrapMode.Once;
+                _liteClips[entry.ExactName] = clip;
+            }
         }
 
         /// <summary>
@@ -302,7 +322,16 @@ namespace Survival.Unity
                 return false;
             }
 
-            var clip = LoadClip(entry.ThemePackRel, exactName, repairWalk: false);
+            if (!_liteClips.TryGetValue(exactName, out var clip) || clip == null)
+            {
+                clip = LoadClip(entry.ThemePackRel, exactName, repairWalk: false)
+                       ?? LoadClip(entry.ThemePackRel, "mixamo.com", repairWalk: false);
+                if (clip != null)
+                {
+                    _liteClips[exactName] = clip;
+                }
+            }
+
             if (clip == null)
             {
                 Debug.LogWarning("PILOT PlayNamedClip: clip missing after Generic import. " + entry.ThemePackRel);

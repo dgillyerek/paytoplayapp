@@ -368,6 +368,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("_slashPlayable.SetTime", actor, StringComparison.Ordinal);
         Assert.Contains("PlayNamedClip", actor, StringComparison.Ordinal);
         Assert.Contains("PlayDefaultWalkThenSlash", actor, StringComparison.Ordinal);
+        Assert.Contains("CacheLiteSwordShieldClips", actor, StringComparison.Ordinal);
         Assert.Contains("ThemePackLiteSwordShieldDir", actor, StringComparison.Ordinal);
         Assert.Contains("lite_sword_shield", actor, StringComparison.Ordinal);
         Assert.Contains("_attackReady = true", actor, StringComparison.Ordinal);
@@ -724,6 +725,9 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("PlayNamedClip", demo, StringComparison.Ordinal);
         Assert.Contains("Sword And Shield attack (2)", demo, StringComparison.Ordinal);
         Assert.Contains("Walk then Slash", demo, StringComparison.Ordinal);
+        Assert.Contains("BuildLiteClipHud", demo, StringComparison.Ordinal);
+        Assert.Contains("BtnLite_", demo, StringComparison.Ordinal);
+        Assert.Contains("fd5f09c IMGUI clip buttons sat under this pad", demo, StringComparison.Ordinal);
         Assert.Contains("IgnoreFocus", demo, StringComparison.Ordinal);
         Assert.Contains("AllDeviceInputAlwaysGoesToGameView", demo, StringComparison.Ordinal);
         Assert.Contains("InputSystemUIInputModule", demo, StringComparison.Ordinal);
