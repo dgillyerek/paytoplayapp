@@ -35,6 +35,14 @@ namespace Survival.Domain.Heroes
         /// </summary>
         public const int MixamoSlashFirstFrame = 0;
         public const int MixamoSlashLastFrame = 85;
+        /// <summary>
+        /// Design Sword And Shield Slash (md5 cc4f97a3). 74 frames @ 30 FPS.
+        /// Not the 53-frame Sword And Shield Attack. Not leftover DIAG 0–85.
+        /// </summary>
+        public const int MixamoSwordShieldSlashFirstFrame = 0;
+        public const int MixamoSwordShieldSlashLastFrame = 73;
+        public const float MixamoSwordShieldSlashFps = 30f;
+        public const string MixamoSwordShieldSlashMd5 = "cc4f97a3ec981d0ece2780aaec49e1a4";
         /// <summary>DIAG ready ~f9/85. Sword on LEFT hip until this u, then RH.</summary>
         public const float MixamoDiagDrawEndU = 0.18f;
         /// <summary>

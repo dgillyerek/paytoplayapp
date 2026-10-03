@@ -20,6 +20,7 @@ namespace Survival.Editor
         private const string PilotAttackDiagRevRetired = "SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG_REV.fbx";
         private const string PilotAttackDiagMirrRetired = "SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG_MIRR.fbx";
         private const string PilotAttackMildRetired = "SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_MILD.fbx";
+        private const string PilotAttackSwordShield = "SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx";
 
         private void OnPreprocessModel()
         {
@@ -35,12 +36,13 @@ namespace Survival.Editor
             }
 
             var walk = path.EndsWith(PilotWalk, StringComparison.OrdinalIgnoreCase);
+            var swordShield = path.EndsWith(PilotAttackSwordShield, StringComparison.OrdinalIgnoreCase);
             var attack = path.EndsWith(PilotAttack, StringComparison.OrdinalIgnoreCase)
                          || path.EndsWith(PilotAttackDiag, StringComparison.OrdinalIgnoreCase)
                          || path.EndsWith(PilotAttackDiagRevRetired, StringComparison.OrdinalIgnoreCase)
                          || path.EndsWith(PilotAttackDiagMirrRetired, StringComparison.OrdinalIgnoreCase)
                          || path.EndsWith(PilotAttackMildRetired, StringComparison.OrdinalIgnoreCase);
-            if (!walk && !attack)
+            if (!walk && !attack && !swordShield)
             {
                 return;
             }
@@ -64,7 +66,13 @@ namespace Survival.Editor
             }
 
             best.name = walk ? "Walking" : "Attack";
-            if (!walk)
+            if (swordShield)
+            {
+                best.firstFrame = SirAldric3DMotion.MixamoSwordShieldSlashFirstFrame;
+                best.lastFrame = SirAldric3DMotion.MixamoSwordShieldSlashLastFrame;
+                best.mirror = false;
+            }
+            else if (!walk)
             {
                 best.firstFrame = SirAldric3DMotion.MixamoSlashFirstFrame;
                 best.lastFrame = SirAldric3DMotion.MixamoSlashLastFrame;

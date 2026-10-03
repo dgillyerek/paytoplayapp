@@ -15,13 +15,12 @@ namespace Survival.Unity
     /// <summary>
     /// Sir Aldric PILOT: Mixamo-skinned holefixed mid280k is the ONLY visible body.
     /// Generic Mixamo clips (Humanoid Playable collapses this skin). AccuRIG superseded.
-    /// Walk = Standard Walk only. Derek: revert ALL attacks. Play loops the
-    /// walk clip. No Mixamo DIAG, no rebuilt clip, no four-marker path, no
-    /// blade pitch, no sword swing. Leftover SirAldricStrikePath markers
-    /// (1_Draw_LeftHipPocket / 2_Raise_AboveHeadRight / 3_Strike_Forward /
-    /// 4_Strike_DownToFoot) and leftover ReachRightArmToward / SampleStrikePath
-    /// / MixamoDiagPlaybackU / MixamoDiagStrikeBladeLocal / AimArmAlong do not
-    /// drive motion. Sword stays the walk RH grip (Derek 0fc0930). HOLD merge.
+    /// Walk = Standard Walk (own Mixamo avatar). After walk, Play Design's
+    /// Sword And Shield Slash FBX on THAT file's own Mixamo auto-rig — do not
+    /// remap onto the walk skeleton. 74 frames / 30 FPS / Mirror off. Not the
+    /// 53-frame Sword And Shield Attack. Leftover DIAG / MILD / DIAG_MIRR /
+    /// DIAG_REV / rebuilt .anim / four Scene markers / blade pitch / leftover
+    /// ReachRightArmToward unused. Leftover 130cec4 walk only. HOLD merge.
     /// </summary>
     [DefaultExecutionOrder(200)]
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
@@ -29,8 +28,10 @@ namespace Survival.Unity
         public const string ThemePackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx";
         public const string ThemePackLookFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_mid280k.fbx";
         public const string ThemePackWalkFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx";
-        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx";
-        /// <summary>Same DIAG bytes as ThemePackAttackFbx (md5 72412be4). Not DIAG_REV 0beb3c77 (broke play). Not DIAG_MIRR 70fd9483. Not MILD 8d5b78b0. Not baseline 4a143441.</summary>
+        public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx";
+        /// <summary>Leftover DIAG (md5 72412be4). Not playing. Not DIAG_REV 0beb3c77. Not DIAG_MIRR 70fd9483. Not MILD 8d5b78b0. Not baseline 4a143441.</summary>
+        public const string ThemePackAttackFbxDiagLeftover = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx";
+        /// <summary>Same leftover DIAG bytes as ThemePackAttackFbxDiagLeftover.</summary>
         public const string ThemePackAttackFbxAlias = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash.fbx";
         /// <summary>Dev-authored attack clip. File name and clip.name must both be SirAldric_DIAG_InwardSlash (Unity compile break if they differ).</summary>
         public const string ThemePackAttackAnim = "Survival/Unity/Anims/SirAldric_DIAG_InwardSlash.anim";
@@ -46,15 +47,17 @@ namespace Survival.Unity
         public const string AttackClipHint = "Attack";
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
         public const string AttackAuthoredReason =
-            "PILOT Mixamo sep Generic: holefixed body + Standard Walk only. Derek reverted ALL attacks. " +
-            "Play does not play DIAG / rebuilt clip / four-marker path / blade pitch / sword swing. " +
-            "Leftover Scene markers 1_Draw_LeftHipPocket / 2_Raise_AboveHeadRight / 3_Strike_Forward / 4_Strike_DownToFoot " +
+            "PILOT Mixamo sep Generic: holefixed Standard Walk then Design Sword And Shield Slash " +
+            "(SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx md5 cc4f97a3, 74 frames 30 FPS Mirror off) " +
+            "on its own Mixamo auto-rig. Do not remap onto the walk skeleton. Not the 53-frame Sword And Shield Attack. " +
+            "Leftover 130cec4 walk only. Leftover Scene markers 1_Draw_LeftHipPocket / 2_Raise_AboveHeadRight / 3_Strike_Forward / 4_Strike_DownToFoot " +
             "under SirAldricStrikePath do not drive motion. Leftover ReachRightArmToward / SampleStrikePath unused. " +
             "SirAldric_DIAG_InwardSlash.anim leftover (name matches the file — Attack as clip.name does not match SirAldric_DIAG_InwardSlash and Unity will not compile). " +
             "Not the 7958283 held-pose robot clip. Not DIAG_REV 0beb3c77 e90b654 no-attack FAIL; not DIAG_MIRR 70fd9483 Derek reject 19e6efe; not MILD 8d5b78b0; not baseline 4a143441. " +
             "Sword never a whole-body X-flip. No Mixamo Mirror. " +
             "Walk: sword gripped in mixamorig:RightHand (Derek 0fc0930 Game-view; 879a6f3 left-hand FAIL discarded). " +
-            "Dev owns the strike leftover only. Derek rejected another Mixamo DIAG tweak after 1821c4a UPWARDS — leftover MixamoDiagDrawEndU / MixamoDiagPlaybackU / MixamoDiagRaisePlayEndU / MixamoDiagStrikeBladeLocal unused. " +
+            "Dev owns the strike: Play this Design FBX unchanged on its own avatar. " +
+            "Slash sword: identity parent on this FBX RightHand — no blade pitch. Leftover MixamoDiagDrawEndU / MixamoDiagPlaybackU / MixamoDiagRaisePlayEndU / MixamoDiagStrikeBladeLocal unused after 1821c4a UPWARDS. " +
             "No Mixamo DIAG playback. Leftover AttackLeftHipDrawReach / AimArmAlong / AttackRaiseThenCutReach unused — 95aba89 FAIL. " +
             "YouTube iQ1s3nN1330 leftover / backswing history. RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
@@ -69,11 +72,17 @@ namespace Survival.Unity
         private AnimationMixerPlayable _mixer;
         private AnimationClipPlayable _walkPlayable;
         private AnimationClipPlayable _attackPlayable;
+        private PlayableGraph _slashGraph;
+        private AnimationPlayableOutput _slashOutput;
+        private AnimationClipPlayable _slashPlayable;
         private float _walkLength;
         private float _attackLength;
         private bool _graphReady;
         private bool _attackReady;
         private GameObject? _instance;
+        private GameObject? _slashInstance;
+        private Animator? _slashAnimator;
+        private Transform? _slashSword;
         private Transform? _rightArm;
         private Transform? _rightForeArm;
         private Transform? _rightHand;
@@ -167,14 +176,12 @@ namespace Survival.Unity
             _output.SetSourcePlayable(_mixer);
 
             EnsureEditableAttackClip();
-            // Leftover LoadClip(ThemePackAttackAnim) / LoadClip(ThemePackAttackFbx)
-            // unused at Play — Derek reverted ALL attacks. Walk only.
+            // Leftover LoadClip(ThemePackAttackAnim) unused at Play.
             _ = ThemePackAttackAnim;
-            _ = ThemePackAttackFbx;
+            _ = ThemePackAttackFbxDiagLeftover;
             _ = SirAldric3DMotion.StrikePathRootName;
             _strikePath = null;
-            _attackLength = 0f;
-            _attackReady = false;
+            BuildSwordShieldSlashAvatar();
 
             _graph.Play();
             _graphReady = true;
@@ -190,7 +197,124 @@ namespace Survival.Unity
             Debug.Log(
                 "PILOT actor built walkLen=" + _walkLength + " attackLen=" + _attackLength +
                 " visible=Mixamo walkClip=" + ThemePackWalkFbx +
-                " walk only (no strikePath drive) " + AttackAuthoredReason);
+                " slashOwnAvatar=" + ThemePackAttackFbx + " " + AttackAuthoredReason);
+        }
+
+        /// <summary>
+        /// Instantiate Design's Sword And Shield Slash FBX as its own Mixamo
+        /// auto-rig. Do not play this clip on the walk Animator.
+        /// </summary>
+        private void BuildSwordShieldSlashAvatar()
+        {
+            var prefab = LoadFbxPrefab(ThemePackAttackFbx, "SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK");
+            if (prefab == null)
+            {
+                Debug.LogWarning(
+                    "PILOT Sword And Shield Slash FBX not imported yet. Open Unity so " +
+                    ThemePackAttackFbx + " Generic-imports.");
+                _attackReady = false;
+                _attackLength = 0f;
+                return;
+            }
+
+            _slashInstance = Instantiate(prefab, transform);
+            _slashInstance.name = "SirAldricSwordShieldSlash";
+            HideJunk(_slashInstance);
+            StripEmbeddedClipMeshes(_slashInstance);
+            NormalizeMixamoCmRoot(_slashInstance);
+            FaceWorldTop(_slashInstance);
+            BindPaintedLook(_slashInstance);
+            EnableSkinAlways(_slashInstance);
+            CorrectBodyScaleIfNeeded(_slashInstance);
+
+            _slashAnimator = _slashInstance.GetComponent<Animator>() ?? _slashInstance.AddComponent<Animator>();
+            var slashAvatar = LoadImportedAvatar(AssetPath(ThemePackAttackFbx));
+            if (slashAvatar != null && slashAvatar.isHuman)
+            {
+                Debug.LogWarning(
+                    "PILOT slash: ignoring Humanoid avatar — play Generic Mixamo bones on this FBX.");
+                slashAvatar = null;
+            }
+
+            if (slashAvatar != null)
+            {
+                _slashAnimator.avatar = slashAvatar;
+            }
+
+            _slashAnimator.applyRootMotion = false;
+            _slashAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            _slashAnimator.updateMode = AnimatorUpdateMode.UnscaledTime;
+
+            var slash = LoadClip(ThemePackAttackFbx, AttackClipHint, repairWalk: false);
+            if (slash == null)
+            {
+                Debug.LogWarning("PILOT Sword And Shield Slash take missing after Generic import.");
+                _attackReady = false;
+                _attackLength = 0f;
+                return;
+            }
+
+            slash.wrapMode = WrapMode.Once;
+            _attackLength = slash.length > 0.05f
+                ? slash.length
+                : (SirAldric3DMotion.MixamoSwordShieldSlashLastFrame + 1f) / SirAldric3DMotion.MixamoSwordShieldSlashFps;
+            _slashGraph = PlayableGraph.Create("SirAldricSwordShieldSlash");
+            _slashGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
+            _slashOutput = AnimationPlayableOutput.Create(_slashGraph, "AldricSlash", _slashAnimator);
+            _slashPlayable = AnimationClipPlayable.Create(_slashGraph, slash);
+            _slashOutput.SetSourcePlayable(_slashPlayable);
+            _slashGraph.Play();
+            AttachSlashSwordIdentity(_slashInstance);
+            HideEmbeddedSwords(_slashInstance);
+            LogSkinAndFailIfBad(_slashInstance);
+            SetAvatarVisible(_slashInstance, false);
+            _attackReady = true;
+        }
+
+        /// <summary>
+        /// Sword prop on this FBX RightHand. Identity only — no SwordRestLocal /
+        /// SnapHeldSwordToArmAxis / MixamoDiagStrikeBladeLocal pitch.
+        /// </summary>
+        private void AttachSlashSwordIdentity(GameObject root)
+        {
+            var hand = FindNamedBone(root, "mixamorig:RightHand", "RightHand");
+            if (hand == null)
+            {
+                Debug.LogWarning("PILOT slash RightHand missing — sword prop hidden for this pass.");
+                return;
+            }
+
+            var prefab = LoadFbxPrefab(ThemePackSwordFbx, "SirAldric_PILOT_sword");
+            if (prefab == null)
+            {
+                return;
+            }
+
+            var sword = Instantiate(prefab, hand);
+            sword.name = "SirAldricPilotSword";
+            var parent = Mathf.Max(Mathf.Abs(hand.lossyScale.x), 1e-5f);
+            var inv = 1f / parent;
+            sword.transform.localPosition = Vector3.zero;
+            sword.transform.localRotation = Quaternion.identity;
+            sword.transform.localScale = Vector3.one * inv;
+            NormalizeSwordWorldBlade(sword.transform);
+            _slashSword = sword.transform;
+            _heldSword = sword.transform;
+            HideEmbeddedSwords(root);
+            _heldSword = null;
+        }
+
+        private static void SetAvatarVisible(GameObject? root, bool visible)
+        {
+            if (root == null)
+            {
+                return;
+            }
+
+            foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
+            {
+                rend.enabled = visible;
+            }
         }
 
         /// <summary>
@@ -279,10 +403,35 @@ namespace Survival.Unity
 
             var timeSeconds = _poseTime;
             var walkLen = _walkLength > 0.05f ? _walkLength : 1f;
+            var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
+            var slashLen = _attackReady ? Mathf.Max(_attackLength, 0.01f) : 0f;
+            var loop = walkBlock + slashLen;
+            if (loop < 0.05f)
+            {
+                loop = walkLen;
+            }
+
+            var t = timeSeconds % loop;
+            var attacking = _attackReady && t >= walkBlock;
             _mixer.SetInputWeight(0, 1f);
-            _walkPlayable.SetTime(timeSeconds % walkLen);
-            _graph.Evaluate();
-            ApplyAttackWindupLift(0f, 0f);
+            if (!attacking)
+            {
+                SetAvatarVisible(_instance, true);
+                SetAvatarVisible(_slashInstance, false);
+                _walkPlayable.SetTime(t % walkLen);
+                _graph.Evaluate();
+                ApplyAttackWindupLift(0f, 0f);
+                return;
+            }
+
+            SetAvatarVisible(_instance, false);
+            SetAvatarVisible(_slashInstance, true);
+            var slashT = t - walkBlock;
+            if (_slashGraph.IsValid() && _slashPlayable.IsValid())
+            {
+                _slashPlayable.SetTime(slashT);
+                _slashGraph.Evaluate();
+            }
         }
 
         /// <summary>
@@ -691,10 +840,19 @@ namespace Survival.Unity
 
         public string PhaseLabel(float timeSeconds)
         {
-            _ = timeSeconds;
+            var walkLen = _walkLength > 0.05f ? _walkLength : 1f;
+            var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
+            var slashLen = _attackReady ? Mathf.Max(_attackLength, 0.01f) : 0f;
+            var loop = walkBlock + slashLen;
+            var t = loop > 0.05f ? timeSeconds % loop : timeSeconds;
             _ = WalkToAttackBlendSeconds;
             // Leftover strike labels unused: 1_Draw_LeftHipPocket /
             // 2_Raise_AboveHeadRight / 3_Strike_Forward / 4_Strike_DownToFoot.
+            if (_attackReady && t >= walkBlock)
+            {
+                return "SLASH  ·  Sword And Shield Slash  ·  own avatar";
+            }
+
             return "WALK  ·  toward TOP  ·  RH grip";
         }
 
@@ -704,6 +862,11 @@ namespace Survival.Unity
             if (_graph.IsValid())
             {
                 _graph.Destroy();
+            }
+
+            if (_slashGraph.IsValid())
+            {
+                _slashGraph.Destroy();
             }
         }
 
@@ -1235,7 +1398,13 @@ namespace Survival.Unity
             }
 
             best.name = walk ? ClipHint : AttackClipHint;
-            if (!walk)
+            if (rel.IndexOf("SWORD_SHIELD_ATTACK", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                best.firstFrame = SirAldric3DMotion.MixamoSwordShieldSlashFirstFrame;
+                best.lastFrame = SirAldric3DMotion.MixamoSwordShieldSlashLastFrame;
+                best.mirror = false;
+            }
+            else if (!walk)
             {
                 best.firstFrame = SirAldric3DMotion.MixamoSlashFirstFrame;
                 best.lastFrame = SirAldric3DMotion.MixamoSlashLastFrame;

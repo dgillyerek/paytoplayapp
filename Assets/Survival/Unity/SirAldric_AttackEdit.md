@@ -1,15 +1,15 @@
-# Sir Aldric — walk only
+# Sir Aldric — Sword And Shield Slash
 
-**HOLD.** Game-view is SoT. Play loops the Standard Walk FBX. **No attack.**
+**HOLD.** Game-view is SoT. Play: Standard Walk, then Design `SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx` on **its own Mixamo auto-rig**.
 
-Derek reverted ALL attacks. Play does not play Mixamo DIAG, the rebuilt clip, the four-marker path, blade pitch, or any sword swing. Leftover Scene empties under `SirAldricStrikePath` are **inactive** and do not drive motion:
+74 frames / 30 FPS / Mirror off. Not the 53-frame Sword And Shield Attack. Do not remap this clip onto the walk skeleton. Leftover Scene empties under `SirAldricStrikePath` are **inactive**:
 
 1. `1_Draw_LeftHipPocket`
 2. `2_Raise_AboveHeadRight`
 3. `3_Strike_Forward`
 4. `4_Strike_DownToFoot`
 
-Sword stays the walk `mixamorig:RightHand` grip. Leftover `SirAldric_DIAG_InwardSlash.anim` unused at Play (clip **name must stay `SirAldric_DIAG_InwardSlash`** if you open it — Attack as clip.name does not match).
+Sword on slash = identity parent on this FBX `mixamorig:RightHand`. No blade pitch. No shield prop. Leftover `SirAldric_DIAG_InwardSlash.anim` unused at Play (clip **name must stay `SirAldric_DIAG_InwardSlash`** if you open it — Attack as clip.name does not match).
 
 The `7958283` held-pose robot clip is discarded. Leftover AimArmAlong / MixamoDiagPlaybackU / MixamoDiagStrikeBladeLocal / ReachRightArmToward unused.
 
