@@ -366,11 +366,14 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("SampleStrikePath", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("_attackPlayable.SetTime", actor, StringComparison.Ordinal);
         Assert.Contains("_slashPlayable.SetTime", actor, StringComparison.Ordinal);
+        Assert.Contains("_litePlayable.SetTime", actor, StringComparison.Ordinal);
         Assert.Contains("PlayNamedClip", actor, StringComparison.Ordinal);
         Assert.Contains("PlayDefaultWalkThenSlash", actor, StringComparison.Ordinal);
         Assert.Contains("CacheLiteSwordShieldClips", actor, StringComparison.Ordinal);
         Assert.Contains("ThemePackLiteSwordShieldDir", actor, StringComparison.Ordinal);
         Assert.Contains("lite_sword_shield", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldricLiteSwordShield", actor, StringComparison.Ordinal);
+        Assert.Contains("LiteSwordShieldTakeName", actor, StringComparison.Ordinal);
         Assert.Contains("_attackReady = true", actor, StringComparison.Ordinal);
         Assert.Contains("SirAldricSwordShieldSlash", actor, StringComparison.Ordinal);
         Assert.Contains("own Mixamo auto-rig", actor, StringComparison.Ordinal);
@@ -537,6 +540,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Equal("cc4f97a3ec981d0ece2780aaec49e1a4", SirAldric3DMotion.MixamoSwordShieldSlashMd5);
         Assert.Equal(17, SirAldric3DMotion.LiteSwordShieldClips.Length);
         Assert.Contains("LiteSwordShieldClips", motionSrc, StringComparison.Ordinal);
+        Assert.Equal("Scene", SirAldric3DMotion.LiteSwordShieldTakeName);
         Assert.Contains("Sword And Shield turn (2)", motionSrc, StringComparison.Ordinal);
         Assert.Contains("8e72ecbdd39e5a2ef30476687f380f27", motionSrc, StringComparison.Ordinal);
         Assert.Equal(59f / 85f, SirAldric3DMotion.MixamoDiagApexClipU, 3);
@@ -583,6 +587,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("/lite_sword_shield/", post, StringComparison.Ordinal);
         Assert.Contains("LiteSwordShieldExactNameForFile", post, StringComparison.Ordinal);
         Assert.Contains("ApplyLiteSwordShield", post, StringComparison.Ordinal);
+        Assert.Contains("LiteSwordShieldTakeName", post, StringComparison.Ordinal);
         Assert.Contains("MixamoSwordShieldSlashLastFrame", post, StringComparison.Ordinal);
         Assert.Contains("PilotAttackDiagRevRetired", post, StringComparison.Ordinal);
         Assert.Contains("PilotAttackDiagMirrRetired", post, StringComparison.Ordinal);
@@ -986,7 +991,8 @@ public sealed class SirAldric3DMotionTests
                 Convert.ToHexString(System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(fbx))).ToLowerInvariant());
             var meta = File.ReadAllText(fbx + ".meta");
             Assert.Contains("name: " + clip.ExactName, meta, StringComparison.Ordinal);
-            Assert.Contains("takeName: mixamo.com", meta, StringComparison.Ordinal);
+            Assert.Contains("takeName: Scene", meta, StringComparison.Ordinal);
+            Assert.DoesNotContain("takeName: mixamo.com", meta, StringComparison.Ordinal);
             Assert.Contains("animationType: 2", meta, StringComparison.Ordinal);
             Assert.Contains("useFileScale: 0", meta, StringComparison.Ordinal);
             Assert.Contains("avatarSetup: 1", meta, StringComparison.Ordinal);
@@ -1000,6 +1006,12 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("public bool PlayNamedClip(string exactName)", actor, StringComparison.Ordinal);
         Assert.Contains("TryLiteSwordShield(exactName", actor, StringComparison.Ordinal);
         Assert.Contains("SirAldricSwordShieldSlash", actor, StringComparison.Ordinal);
+        Assert.Contains("SirAldricLiteSwordShield", actor, StringComparison.Ordinal);
+        Assert.Contains("BindLiteClip", actor, StringComparison.Ordinal);
+        var playNamed = actor[actor.IndexOf("public bool PlayNamedClip(string exactName)", StringComparison.Ordinal)..];
+        playNamed = playNamed[..playNamed.IndexOf("public void PlayDefaultWalkThenSlash", StringComparison.Ordinal)];
+        Assert.DoesNotContain("_slashPlayable.Destroy", playNamed, StringComparison.Ordinal);
+        Assert.Contains("LoadLiteNamedClip", playNamed, StringComparison.Ordinal);
         Assert.DoesNotContain("ThemePackAttackFbx = \"ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/", actor, StringComparison.Ordinal);
         var importer = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricPilotFbxImport.cs"));
         Assert.Contains("ApplyLiteSwordShield", importer, StringComparison.Ordinal);

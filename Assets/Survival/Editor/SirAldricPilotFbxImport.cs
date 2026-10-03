@@ -108,10 +108,26 @@ namespace Survival.Editor
             importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
             importer.importAnimation = true;
             importer.useFileScale = false;
+            var exact = SirAldric3DMotion.LiteSwordShieldExactNameForFile(Path.GetFileName(path));
+            if (string.IsNullOrEmpty(exact))
+            {
+                Debug.LogError("PILOT lite import " + path + " is not in the exact Mixamo name table.");
+                return;
+            }
+
             var defaults = importer.defaultClipAnimations;
             if (defaults == null || defaults.Length == 0)
             {
-                Debug.LogWarning("PILOT lite import " + path + " has no defaultClipAnimations yet.");
+                var existing = importer.clipAnimations;
+                if (existing != null && existing.Length > 0)
+                {
+                    existing[0].name = exact;
+                    existing[0].takeName = SirAldric3DMotion.LiteSwordShieldTakeName;
+                    existing[0].mirror = false;
+                    importer.clipAnimations = existing;
+                }
+
+                Debug.LogWarning("PILOT lite import " + path + " has no defaultClipAnimations yet. takeName=Scene.");
                 return;
             }
 
@@ -122,14 +138,13 @@ namespace Survival.Editor
                 return;
             }
 
-            var exact = SirAldric3DMotion.LiteSwordShieldExactNameForFile(Path.GetFileName(path));
-            if (string.IsNullOrEmpty(exact))
+            best.name = exact;
+            if (string.IsNullOrEmpty(best.takeName)
+                || string.Equals(best.takeName, "mixamo.com", StringComparison.OrdinalIgnoreCase))
             {
-                Debug.LogError("PILOT lite import " + path + " is not in the exact Mixamo name table.");
-                return;
+                best.takeName = SirAldric3DMotion.LiteSwordShieldTakeName;
             }
 
-            best.name = exact;
             best.mirror = false;
             var loops = SirAldric3DMotion.TryLiteSwordShield(exact, out var entry) && entry.Loop;
             best.loopTime = loops;

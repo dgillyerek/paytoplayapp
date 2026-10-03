@@ -25,7 +25,7 @@ ModelImporter:
     clipAnimations:
     - serializedVersion: 16
       name: Sword And Shield attack (3)
-      takeName: mixamo.com
+      takeName: Scene
       internalID: 0
       firstFrame: 0
       lastFrame: 100
@@ -118,6 +118,6 @@ ModelImporter:
   humanoidOversampling: 1
   avatarSetup: 1
   additionalBone: 0
-  userData: Lite Sword And Shield Pack clip 'Sword And Shield attack (3)' (md5 fbc9c03fafa4762a2122f8704d7b768d). Generic. takeName mixamo.com. Exact Mixamo name. Mirror off. CreateFromThisModel. Play on Pro slash Mixamo auto-rig — not the walk skeleton. No shield mesh. HOLD merge.
+  userData: Lite Sword And Shield Pack clip 'Sword And Shield attack (3)' (md5 fbc9c03fafa4762a2122f8704d7b768d). Generic. takeName Scene (not mixamo.com). Exact Mixamo name. Mirror off. CreateFromThisModel. Play on Pro slash Mixamo auto-rig — not the walk skeleton. No shield mesh. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

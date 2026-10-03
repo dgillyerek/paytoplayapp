@@ -53,6 +53,13 @@ namespace Survival.Domain.Heroes
         public const string LiteSwordShieldThemePackDir =
             "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield";
         public const int LiteSwordShieldClipCount = 17;
+        /// <summary>
+        /// Lite FBXs are Blender-wrapped Mixamo. AnimationStack is Scene,
+        /// not mixamo.com. An Armature root sits above mixamorig. Empty
+        /// mixamo.com takes froze Play (af18747).
+        /// </summary>
+        public const string LiteSwordShieldTakeName = "Scene";
+        public const string LiteSwordShieldBodyFile = "sword_and_shield_idle.fbx";
 
         public readonly struct LiteSwordShieldClip
         {

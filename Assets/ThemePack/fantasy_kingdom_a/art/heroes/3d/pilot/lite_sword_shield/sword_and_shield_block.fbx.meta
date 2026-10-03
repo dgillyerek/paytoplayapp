@@ -25,7 +25,7 @@ ModelImporter:
     clipAnimations:
     - serializedVersion: 16
       name: Sword And Shield block
-      takeName: mixamo.com
+      takeName: Scene
       internalID: 0
       firstFrame: 0
       lastFrame: 100
@@ -118,6 +118,6 @@ ModelImporter:
   humanoidOversampling: 1
   avatarSetup: 1
   additionalBone: 0
-  userData: Lite Sword And Shield Pack clip 'Sword And Shield block' (md5 6ac198628aa941677126071bbc45a207). Generic. takeName mixamo.com. Exact Mixamo name. Mirror off. CreateFromThisModel. Play on Pro slash Mixamo auto-rig — not the walk skeleton. No shield mesh. HOLD merge.
+  userData: Lite Sword And Shield Pack clip 'Sword And Shield block' (md5 6ac198628aa941677126071bbc45a207). Generic. takeName Scene (not mixamo.com). Exact Mixamo name. Mirror off. CreateFromThisModel. Play on Pro slash Mixamo auto-rig — not the walk skeleton. No shield mesh. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

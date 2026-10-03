@@ -79,6 +79,12 @@ namespace Survival.Unity
         private PlayableGraph _slashGraph;
         private AnimationPlayableOutput _slashOutput;
         private AnimationClipPlayable _slashPlayable;
+        private GameObject? _liteInstance;
+        private Animator? _liteAnimator;
+        private PlayableGraph _liteGraph;
+        private AnimationPlayableOutput _liteOutput;
+        private AnimationMixerPlayable _liteMixer;
+        private AnimationClipPlayable _litePlayable;
         private float _walkLength;
         private float _attackLength;
         private bool _graphReady;
@@ -282,7 +288,119 @@ namespace Survival.Unity
             _attackReady = true;
             _namedClipActive = false;
             _namedClipExactName = null;
+            BuildLiteSwordShieldAvatar();
             CacheLiteSwordShieldClips();
+        }
+
+        /// <summary>
+        /// Lite pack FBXs are the same Mixamo character with an Armature root
+        /// and take Scene. They do not drive the Pro slash Generic paths
+        /// (no Armature, take mixamo.com). Play named clips on this instance
+        /// so the Design take actually binds. Do not Destroy the Pro slash graph.
+        /// </summary>
+        private void BuildLiteSwordShieldAvatar()
+        {
+            var rel = SirAldric3DMotion.LiteSwordShieldThemePackDir + "/" + SirAldric3DMotion.LiteSwordShieldBodyFile;
+            var prefab = LoadFbxPrefab(rel, "sword_and_shield_idle");
+            if (prefab == null)
+            {
+                Debug.LogWarning("PILOT lite body FBX not imported yet. " + rel);
+                return;
+            }
+
+            _liteInstance = Instantiate(prefab, transform);
+            _liteInstance.name = "SirAldricLiteSwordShield";
+            HideJunk(_liteInstance);
+            StripEmbeddedClipMeshes(_liteInstance);
+            NormalizeMixamoCmRoot(_liteInstance);
+            FaceWorldTop(_liteInstance);
+            BindPaintedLook(_liteInstance);
+            EnableSkinAlways(_liteInstance);
+            CorrectBodyScaleIfNeeded(_liteInstance);
+
+            _liteAnimator = _liteInstance.GetComponent<Animator>() ?? _liteInstance.AddComponent<Animator>();
+            var liteAvatar = LoadImportedAvatar(AssetPath(rel));
+            if (liteAvatar != null && liteAvatar.isHuman)
+            {
+                liteAvatar = null;
+            }
+
+            if (liteAvatar != null)
+            {
+                _liteAnimator.avatar = liteAvatar;
+            }
+
+            _liteAnimator.applyRootMotion = false;
+            _liteAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            _liteAnimator.updateMode = AnimatorUpdateMode.UnscaledTime;
+
+            _liteGraph = PlayableGraph.Create("SirAldricLiteSwordShield");
+            _liteGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
+            _liteOutput = AnimationPlayableOutput.Create(_liteGraph, "AldricLite", _liteAnimator);
+            _liteMixer = AnimationMixerPlayable.Create(_liteGraph, 1);
+            _liteOutput.SetSourcePlayable(_liteMixer);
+            _liteGraph.Play();
+            AttachSlashSwordIdentity(_liteInstance);
+            HideEmbeddedSwords(_liteInstance);
+            SetAvatarVisible(_liteInstance, false);
+        }
+
+        private AnimationClip? LoadLiteNamedClip(SirAldric3DMotion.LiteSwordShieldClip entry)
+        {
+            var clip = LoadClip(entry.ThemePackRel, entry.ExactName, repairWalk: false)
+                       ?? LoadClip(entry.ThemePackRel, SirAldric3DMotion.LiteSwordShieldTakeName, repairWalk: false)
+                       ?? LoadClip(entry.ThemePackRel, "mixamo.com", repairWalk: false)
+                       ?? LoadClip(entry.ThemePackRel, "Armature", repairWalk: false);
+            if (clip != null && (clip.empty || clip.length < 0.02f))
+            {
+                Debug.LogWarning(
+                    "PILOT lite clip empty take — expected Scene not mixamo.com. " +
+                    entry.ExactName + " " + entry.ThemePackRel);
+                return null;
+            }
+
+            return clip;
+        }
+
+        private bool BindLiteClip(AnimationClip clip)
+        {
+            if (_liteAnimator == null)
+            {
+                return false;
+            }
+
+            if (!_liteGraph.IsValid() || !_liteMixer.IsValid())
+            {
+                if (_liteGraph.IsValid())
+                {
+                    _liteGraph.Destroy();
+                }
+
+                _liteGraph = PlayableGraph.Create("SirAldricLiteSwordShield");
+                _liteGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
+                _liteOutput = AnimationPlayableOutput.Create(_liteGraph, "AldricLite", _liteAnimator);
+                _liteMixer = AnimationMixerPlayable.Create(_liteGraph, 1);
+                _liteOutput.SetSourcePlayable(_liteMixer);
+            }
+
+            if (_liteMixer.IsValid() && _liteMixer.GetInputCount() > 0 && _liteMixer.GetInput(0).IsValid())
+            {
+                _liteGraph.Disconnect(_liteMixer, 0);
+            }
+
+            if (_litePlayable.IsValid())
+            {
+                _litePlayable.Destroy();
+            }
+
+            _litePlayable = AnimationClipPlayable.Create(_liteGraph, clip);
+            _liteGraph.Connect(_litePlayable, 0, _liteMixer, 0);
+            _liteMixer.SetInputWeight(0, 1f);
+            _litePlayable.SetDuration(clip.length);
+            _litePlayable.SetTime(0);
+            _liteGraph.Play();
+            _liteGraph.Evaluate();
+            return _litePlayable.IsValid();
         }
 
         private void CacheLiteSwordShieldClips()
@@ -290,8 +408,7 @@ namespace Survival.Unity
             _liteClips.Clear();
             foreach (var entry in SirAldric3DMotion.LiteSwordShieldClips)
             {
-                var clip = LoadClip(entry.ThemePackRel, entry.ExactName, repairWalk: false)
-                           ?? LoadClip(entry.ThemePackRel, "mixamo.com", repairWalk: false);
+                var clip = LoadLiteNamedClip(entry);
                 if (clip == null)
                 {
                     Debug.LogWarning("PILOT lite clip missing " + entry.ExactName + " " + entry.ThemePackRel);
@@ -310,53 +427,52 @@ namespace Survival.Unity
         /// </summary>
         public bool PlayNamedClip(string exactName)
         {
-            if (!_slashGraph.IsValid() || _slashAnimator == null)
-            {
-                Debug.LogWarning("PILOT PlayNamedClip: slash avatar not ready. exactName=" + exactName);
-                return false;
-            }
-
             if (!SirAldric3DMotion.TryLiteSwordShield(exactName, out var entry))
             {
                 Debug.LogWarning("PILOT PlayNamedClip: unknown exact Mixamo name '" + exactName + "'");
                 return false;
             }
 
-            if (!_liteClips.TryGetValue(exactName, out var clip) || clip == null)
+            if (_liteAnimator == null || _liteInstance == null)
             {
-                clip = LoadClip(entry.ThemePackRel, exactName, repairWalk: false)
-                       ?? LoadClip(entry.ThemePackRel, "mixamo.com", repairWalk: false);
+                Debug.LogWarning("PILOT PlayNamedClip: lite Armature avatar not ready. exactName=" + exactName);
+                return false;
+            }
+
+            if (!_liteClips.TryGetValue(exactName, out var clip) || clip == null || clip.empty)
+            {
+                clip = LoadLiteNamedClip(entry);
                 if (clip != null)
                 {
                     _liteClips[exactName] = clip;
                 }
             }
 
-            if (clip == null)
+            if (clip == null || clip.empty)
             {
-                Debug.LogWarning("PILOT PlayNamedClip: clip missing after Generic import. " + entry.ThemePackRel);
+                Debug.LogWarning("PILOT PlayNamedClip: clip missing or empty (need take Scene). " + entry.ThemePackRel);
                 return false;
             }
 
             clip.wrapMode = entry.Loop ? WrapMode.Loop : WrapMode.Once;
-            if (_slashPlayable.IsValid())
+            if (!BindLiteClip(clip))
             {
-                _slashPlayable.Destroy();
+                Debug.LogWarning("PILOT PlayNamedClip: lite graph did not bind. exactName=" + exactName);
+                return false;
             }
 
-            _slashPlayable = AnimationClipPlayable.Create(_slashGraph, clip);
-            _slashOutput.SetSourcePlayable(_slashPlayable);
             _namedClipExactName = exactName;
             _namedClipActive = true;
             _namedClipLoop = entry.Loop;
             _namedClipLength = clip.length > 0.05f ? clip.length : 1f;
-            _namedClipOrigin = Time.unscaledTime;
+            _namedClipOrigin = _poseTime > 0f ? _poseTime : Time.unscaledTime;
             SetAvatarVisible(_instance, false);
-            SetAvatarVisible(_slashInstance, true);
+            SetAvatarVisible(_slashInstance, false);
+            SetAvatarVisible(_liteInstance, true);
             Debug.Log(
                 "PILOT PlayNamedClip exactName=" + exactName +
                 " file=" + entry.FileName + " md5=" + entry.Md5 +
-                " slashAvatar=SirAldricSwordShieldSlash");
+                " liteAvatar=SirAldricLiteSwordShield take=" + SirAldric3DMotion.LiteSwordShieldTakeName);
             return true;
         }
 
@@ -365,28 +481,7 @@ namespace Survival.Unity
         {
             _namedClipActive = false;
             _namedClipExactName = null;
-            if (!_slashGraph.IsValid())
-            {
-                return;
-            }
-
-            var slash = LoadClip(ThemePackAttackFbx, AttackClipHint, repairWalk: false);
-            if (slash == null)
-            {
-                return;
-            }
-
-            slash.wrapMode = WrapMode.Once;
-            if (_slashPlayable.IsValid())
-            {
-                _slashPlayable.Destroy();
-            }
-
-            _slashPlayable = AnimationClipPlayable.Create(_slashGraph, slash);
-            _slashOutput.SetSourcePlayable(_slashPlayable);
-            _attackLength = slash.length > 0.05f
-                ? slash.length
-                : (SirAldric3DMotion.MixamoSwordShieldSlashLastFrame + 1f) / SirAldric3DMotion.MixamoSwordShieldSlashFps;
+            SetAvatarVisible(_liteInstance, false);
         }
 
         /// <summary>
@@ -520,10 +615,11 @@ namespace Survival.Unity
             }
 
             var timeSeconds = _poseTime;
-            if (_namedClipActive && _slashGraph.IsValid() && _slashPlayable.IsValid())
+            if (_namedClipActive && _liteGraph.IsValid() && _litePlayable.IsValid())
             {
                 SetAvatarVisible(_instance, false);
-                SetAvatarVisible(_slashInstance, true);
+                SetAvatarVisible(_slashInstance, false);
+                SetAvatarVisible(_liteInstance, true);
                 var namedT = timeSeconds - _namedClipOrigin;
                 if (namedT < 0f)
                 {
@@ -540,8 +636,8 @@ namespace Survival.Unity
                     namedT = namedLen;
                 }
 
-                _slashPlayable.SetTime(namedT);
-                _slashGraph.Evaluate();
+                _litePlayable.SetTime(namedT);
+                _liteGraph.Evaluate();
                 return;
             }
 
@@ -561,6 +657,7 @@ namespace Survival.Unity
             {
                 SetAvatarVisible(_instance, true);
                 SetAvatarVisible(_slashInstance, false);
+                SetAvatarVisible(_liteInstance, false);
                 _walkPlayable.SetTime(t % walkLen);
                 _graph.Evaluate();
                 ApplyAttackWindupLift(0f, 0f);
@@ -569,6 +666,7 @@ namespace Survival.Unity
 
             SetAvatarVisible(_instance, false);
             SetAvatarVisible(_slashInstance, true);
+            SetAvatarVisible(_liteInstance, false);
             var slashT = t - walkBlock;
             if (_slashGraph.IsValid() && _slashPlayable.IsValid())
             {
@@ -1015,6 +1113,11 @@ namespace Survival.Unity
             if (_slashGraph.IsValid())
             {
                 _slashGraph.Destroy();
+            }
+
+            if (_liteGraph.IsValid())
+            {
+                _liteGraph.Destroy();
             }
         }
 
@@ -1556,6 +1659,12 @@ namespace Survival.Unity
                 }
 
                 best.name = exact;
+                if (string.IsNullOrEmpty(best.takeName)
+                    || string.Equals(best.takeName, "mixamo.com", StringComparison.OrdinalIgnoreCase))
+                {
+                    best.takeName = SirAldric3DMotion.LiteSwordShieldTakeName;
+                }
+
                 best.mirror = false;
                 var loops = SirAldric3DMotion.TryLiteSwordShield(exact, out var entry) && entry.Loop;
                 best.loopTime = loops;
