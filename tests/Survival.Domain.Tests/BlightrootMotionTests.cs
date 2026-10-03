@@ -65,6 +65,9 @@ public sealed class BlightrootMotionTests
         Assert.Equal(1080f, BlightrootMotion.GameViewWidth);
         Assert.Equal(1920f, BlightrootMotion.GameViewHeight);
         Assert.True(BlightrootMotion.PlayCamZ > 8f);
+        Assert.True(
+            BlightrootMotion.MeshMaxY - BlightrootMotion.MeshMinY
+            > BlightrootMotion.MeshMaxX - BlightrootMotion.MeshMinX);
         Assert.True(BlightrootMotion.GameViewFitsEveryClip());
         Assert.True(BlightrootMotion.TryGet("jump attack", out var jump));
         Assert.True(BlightrootMotion.GameViewFitsClip(jump));
@@ -98,6 +101,8 @@ public sealed class BlightrootMotionTests
             Assert.Contains("useFileScale: 0", meta, StringComparison.Ordinal);
             Assert.Contains("animationType: 2", meta, StringComparison.Ordinal);
             Assert.Contains("optimizeBones: 0", meta, StringComparison.Ordinal);
+            Assert.Contains("bakeAxisConversion: 1", meta, StringComparison.Ordinal);
+            Assert.DoesNotContain("bakeAxisConversion: 0", meta, StringComparison.Ordinal);
             Assert.Contains("name: \"" + clip.ExactName + "\"", meta, StringComparison.Ordinal);
             Assert.Contains("lastFrame: " + clip.LastFrame.ToString("0"), meta, StringComparison.Ordinal);
             Assert.DoesNotContain("takeName: Scene", meta, StringComparison.Ordinal);
@@ -108,6 +113,8 @@ public sealed class BlightrootMotionTests
         Assert.Contains("takeName: mixamo.com", bodyMeta, StringComparison.Ordinal);
         Assert.Contains("useFileScale: 0", bodyMeta, StringComparison.Ordinal);
         Assert.Contains("animationType: 2", bodyMeta, StringComparison.Ordinal);
+        Assert.Contains("bakeAxisConversion: 1", bodyMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("bakeAxisConversion: 0", bodyMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("takeName: Scene", bodyMeta, StringComparison.Ordinal);
     }
 
@@ -125,7 +132,10 @@ public sealed class BlightrootMotionTests
         Assert.Contains("RejectedEmptyTakeName", actor, StringComparison.Ordinal);
         Assert.Contains("ModelImporterAnimationType.Generic", actor, StringComparison.Ordinal);
         Assert.Contains("useFileScale = false", actor, StringComparison.Ordinal);
+        Assert.Contains("bakeAxisConversion = true", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("bakeAxisConversion = false", actor, StringComparison.Ordinal);
         Assert.Contains("mirror = false", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("localScale", actor, StringComparison.Ordinal);
         Assert.Contains("keepOriginalPositionY = true", actor, StringComparison.Ordinal);
         Assert.Contains("keepOriginalPositionXZ = true", actor, StringComparison.Ordinal);
         Assert.Contains("isHuman", actor, StringComparison.Ordinal);

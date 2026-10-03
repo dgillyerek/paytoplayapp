@@ -11,9 +11,11 @@ namespace Survival.Unity
 {
     /// <summary>
     /// Plays creature-pack takes on the Dual Weapon Combo skinned body.
-    /// Same mixamorig hierarchy, Generic curves, take mixamo.com. No retarget,
-    /// no bone rewrite, no mirror, no time reverse. Empty takes are rejected.
-    /// HOLD merge until Derek Game-view PASS.
+    /// Same mixamorig hierarchy, Generic curves, take mixamo.com. Axis conversion
+    /// is baked into the mesh and the takes so the root stays at uniform scale.
+    /// A root-only conversion is a negative scale and flattens the skin.
+    /// No retarget, no bone rewrite, no mirror, no time reverse, no corrective scale.
+    /// Empty takes are rejected. HOLD merge until Derek Game-view PASS.
     /// </summary>
     [DefaultExecutionOrder(200)]
     public sealed class BlightrootActor : MonoBehaviour
@@ -237,7 +239,7 @@ namespace Survival.Unity
             importer.useFileScale = false;
             importer.globalScale = 1f;
             importer.optimizeBones = false;
-            importer.bakeAxisConversion = false;
+            importer.bakeAxisConversion = true;
             var defaults = importer.defaultClipAnimations;
             if (defaults == null || defaults.Length == 0)
             {
@@ -328,6 +330,12 @@ namespace Survival.Unity
             if (importer.optimizeBones)
             {
                 importer.optimizeBones = false;
+                dirty = true;
+            }
+
+            if (!importer.bakeAxisConversion)
+            {
+                importer.bakeAxisConversion = true;
                 dirty = true;
             }
 
