@@ -590,23 +590,24 @@ namespace Survival.Domain.Heroes
 
         /// <summary>
         /// Play-cam SoT for SirAldricDemo / 1080×1920 Game-view Scale 1×. View +Z = TOP.
-        /// Derek 063d928: FOV 34 at (0, 1.75, −2.90) filled the knight but clipped the
-        /// overhead tip and finish. FOV 42 + slight pullback keeps the 1.8 m knight large
-        /// and the full sword arc in frame.
+        /// Derek 063d928 leftover: FOV 34 at (0, 1.75, −2.90) filled the knight but
+        /// clipped the overhead tip. Leftover FOV 42 at (0, 1.92, −3.08) still cropped
+        /// Lite pack draw / raise overhead / strike (d798eb4). Pull back + FOV 50 so
+        /// the 1.8 m body and 1.01 m sword stay in Game view. Not Scene view.
         /// </summary>
-        public const float PlayCamFovDegrees = 42f;
+        public const float PlayCamFovDegrees = 50f;
         public const float PlayCamRearX = 0f;
-        public const float PlayCamRearY = 1.92f;
-        public const float PlayCamRearZ = -3.08f;
+        public const float PlayCamRearY = 1.70f;
+        public const float PlayCamRearZ = -5.60f;
         public const float PlayCamLookX = 0f;
-        public const float PlayCamLookY = 1.12f;
+        public const float PlayCamLookY = 1.35f;
         public const float PlayCamLookZ = 0.15f;
         public const float PlayCamFrontX = 0f;
-        public const float PlayCamFrontY = 1.92f;
-        public const float PlayCamFrontZ = 3.38f;
-        public const float PlayCamThreeQuarterX = 1.82f;
-        public const float PlayCamThreeQuarterY = 1.92f;
-        public const float PlayCamThreeQuarterZ = -2.38f;
+        public const float PlayCamFrontY = 1.70f;
+        public const float PlayCamFrontZ = 5.90f;
+        public const float PlayCamThreeQuarterX = 3.24f;
+        public const float PlayCamThreeQuarterY = 1.70f;
+        public const float PlayCamThreeQuarterZ = -4.50f;
 
         public static float WalkBlockSeconds => WalkPeriodSeconds * WalkCyclesBeforeAttack;
 

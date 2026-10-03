@@ -63,7 +63,7 @@ namespace Survival.Unity
             "Dev owns the strike: Play this Design FBX unchanged on its own avatar. " +
             "Slash sword: identity parent on this FBX RightHand — no blade pitch. Leftover MixamoDiagDrawEndU / MixamoDiagPlaybackU / MixamoDiagRaisePlayEndU / MixamoDiagStrikeBladeLocal unused after 1821c4a UPWARDS. " +
             "No Mixamo DIAG playback. Leftover AttackLeftHipDrawReach / AimArmAlong / AttackRaiseThenCutReach unused — 95aba89 FAIL. " +
-            "YouTube iQ1s3nN1330 leftover / backswing history. RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
+            "YouTube iQ1s3nN1330 leftover / backswing history. RH sword 1.01m. Mixer 0.20s. Leftover FOV 42. Game FOV 50 pullback. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
         public const float SwordBladeMeters = 1.01f;
         private const float BodyHeightMinMeters = 0.5f;

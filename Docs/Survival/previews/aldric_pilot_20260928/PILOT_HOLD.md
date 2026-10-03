@@ -20,7 +20,7 @@ Slash With-Skin mesh is **not instantiated**. `StripEmbeddedClipMeshes` disables
 
 Walk Evaluate keeps the sword on walk `mixamorig:RightHand`. Slash Evaluate plays the Design FBX on its own avatar; sword prop is identity-parented to that RightHand (no pitch). Leftover `ReachRightArmToward` unused. Leftover `MixamoDiagDrawEndU` / `MixamoDiagStrikeBladeLocal` / `MixamoDiagPlaybackU` unused (Derek FAIL `1821c4a` — DIAG strike went **UPWARDS**; he then rejected another DIAG tweak; then 130cec4 walk only). Leftover `AimArmAlong` / `AttackRaiseThenCutReach` unused (Derek FAIL `95aba89`). Leftover `AttackLeftHipDrawReach` unused. AnimatorController stays for Animation-window Preview. Unity bake blade = **local +Y**. Do **not** aim with world `Vector3.left/right/back` or Mixamo `hips.right` — that locked the blade **world-left across the neck** (Derek FAIL `cdfbea5`). Not AimChain. Not a body X-flip. **Rematch is optional and not Game-view proof.**
 
-Play-cam **defaults to rear** `(0, 1.92, −3.08)`. Orbit: **1** rear, **2** 3/4, **3** front, **Q/E** or **RMB** drag. Do not change the default rear frame.
+Play-cam **defaults to rear** `(0, 1.70, −5.60)` FOV **50** so draw / raise overhead / strike stay in Game view. Leftover rear `(0, 1.92, −3.08)` FOV **42** cropped Lite pack swings. Orbit: **1** rear, **2** 3/4, **3** front, **Q/E** or **RMB** drag. Game view is SoT, not Scene view.
 
 **Design lean FAIL `a9f8aff`:** rematch walk still showed the sword in the **right hand**. “Sheath” only changed RH aim while the prop stayed a RightHand child. Strike arm-lock rematch was OK; Design cannot lean PASS without a walk still that clearly shows **true hip sheath** (not RH grip). This tip reparents walk to **Hips**.
 
@@ -84,7 +84,7 @@ The unrigged body FBX has **no skeleton**. Play instantiates the Mixamo-skinned 
 
 ## Cam (1080×1920 Scale 1×)
 
-Rear `(0, 1.92, −3.08)` LookAt `(0, 1.12, 0.15)` FOV **42**. Mesh 1×.
+Rear `(0, 1.70, −5.60)` LookAt `(0, 1.35, 0.15)` FOV **50**. Leftover FOV **42** at `(0, 1.92, −3.08)`. Mesh 1×.
 
 ## Proofs here
 

@@ -30,6 +30,7 @@ namespace Survival.Unity
         private bool _booted;
         private SirAldricMeshyAnimateActor? _actor;
         private Text? _phase;
+        private Dropdown? _liteDropdown;
         private float _orbitYaw;
         private float _orbitPitch;
         private InputActionMap? _orbitMap;
@@ -248,6 +249,11 @@ namespace Survival.Unity
         public void PlayDefaultWalkThenSlash()
         {
             ResolveActor()?.PlayDefaultWalkThenSlash();
+            if (_liteDropdown != null)
+            {
+                _liteDropdown.SetValueWithoutNotify(0);
+                _liteDropdown.RefreshShownValue();
+            }
         }
 
         private SirAldricMeshyAnimateActor? ResolveActor()
@@ -498,40 +504,60 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Exact Mixamo names on uGUI (same EventSystem path as 1/2/3).
-        /// IMGUI clip buttons do not receive Game-view clicks over OrbitPad.
+        /// One dropdown of exact Mixamo catalog names. Larger type than the
+        /// unreadable d798eb4 name-button wall. Same EventSystem path as 1/2/3.
         /// </summary>
         private void BuildLiteClipHud(RectTransform canvas)
         {
             var reset = SurvivalVisuals.Button(canvas, "BtnWalkThenSlash", new Color(0.16f, 0.14f, 0.10f, 0.94f));
             var resetRt = reset.GetComponent<RectTransform>();
             resetRt.anchorMin = new Vector2(0.02f, 0.778f);
-            resetRt.anchorMax = new Vector2(0.42f, 0.818f);
+            resetRt.anchorMax = new Vector2(0.48f, 0.838f);
             resetRt.offsetMin = Vector2.zero;
             resetRt.offsetMax = Vector2.zero;
-            var resetText = SurvivalVisuals.Text(reset.transform, "Label", "Walk then Slash", 16, TextAnchor.MiddleCenter, SurvivalVisuals.Gold);
+            var resetText = SurvivalVisuals.Text(reset.transform, "Label", "Walk then Slash", 24, TextAnchor.MiddleCenter, SurvivalVisuals.Gold);
             SurvivalVisuals.Stretch(resetText.rectTransform);
             reset.onClick.AddListener(PlayDefaultWalkThenSlash);
 
+            var dropdown = SurvivalVisuals.Dropdown(canvas, "LiteClipDropdown", new Color(0.16f, 0.14f, 0.10f, 0.96f));
+            var ddRt = dropdown.GetComponent<RectTransform>();
+            ddRt.anchorMin = new Vector2(0.02f, 0.688f);
+            ddRt.anchorMax = new Vector2(0.74f, 0.768f);
+            ddRt.offsetMin = Vector2.zero;
+            ddRt.offsetMax = Vector2.zero;
+            dropdown.ClearOptions();
+            var options = new System.Collections.Generic.List<Dropdown.OptionData>
+            {
+                new("Lite clip…")
+            };
             var clips = SirAldric3DMotion.LiteSwordShieldClips;
-            const float yTop = 0.772f;
-            const float yBot = 0.155f;
-            var row = (yTop - yBot) / clips.Length;
             for (var i = 0; i < clips.Length; i++)
             {
-                var exact = clips[i].ExactName;
-                var yMax = yTop - (i * row);
-                var yMin = yMax - row + 0.003f;
-                var btn = SurvivalVisuals.Button(canvas, "BtnLite_" + i, new Color(0.16f, 0.14f, 0.10f, 0.94f));
-                var rt = btn.GetComponent<RectTransform>();
-                rt.anchorMin = new Vector2(0.02f, yMin);
-                rt.anchorMax = new Vector2(0.42f, yMax);
-                rt.offsetMin = Vector2.zero;
-                rt.offsetMax = Vector2.zero;
-                var text = SurvivalVisuals.Text(btn.transform, "Label", exact, 15, TextAnchor.MiddleCenter, SurvivalVisuals.Cream);
-                SurvivalVisuals.Stretch(text.rectTransform);
-                btn.onClick.AddListener(() => PlayNamedClip(exact));
+                options.Add(new Dropdown.OptionData(clips[i].ExactName));
             }
+
+            dropdown.AddOptions(options);
+            dropdown.SetValueWithoutNotify(0);
+            dropdown.RefreshShownValue();
+            dropdown.onValueChanged.AddListener(OnLiteClipPicked);
+            _liteDropdown = dropdown;
+        }
+
+        private void OnLiteClipPicked(int index)
+        {
+            if (index <= 0)
+            {
+                return;
+            }
+
+            var clips = SirAldric3DMotion.LiteSwordShieldClips;
+            var i = index - 1;
+            if (i < 0 || i >= clips.Length)
+            {
+                return;
+            }
+
+            PlayNamedClip(clips[i].ExactName);
         }
 
         private void AddOrbitButton(RectTransform canvas, string name, string label, float x0, float x1, int slot)

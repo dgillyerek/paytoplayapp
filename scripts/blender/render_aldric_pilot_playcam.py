@@ -34,10 +34,10 @@ ROUGH = PACK / "mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture_roughn
 PROOF = ROOT / "Docs/Survival/previews/aldric_pilot_20260928"
 ART = Path("/opt/cursor/artifacts")
 
-CAM_REAR = ((0.0, 1.92, -3.08), (0.0, 1.12, 0.15))
-CAM_FRONT = ((0.0, 1.92, 3.38), (0.0, 1.12, 0.15))
-CAM_34 = ((1.82, 1.92, -2.38), (0.0, 1.12, 0.15))
-CAM_FOV = 42.0
+CAM_REAR = ((0.0, 1.70, -5.60), (0.0, 1.35, 0.15))
+CAM_FRONT = ((0.0, 1.70, 5.90), (0.0, 1.35, 0.15))
+CAM_34 = ((3.24, 1.70, -4.50), (0.0, 1.35, 0.15))
+CAM_FOV = 50.0
 
 # Derek slash SoT: https://www.youtube.com/watch?v=iQ1s3nN1330
 # Storyboard keys: ready hip → far-back swing → high-right → contact → low-left.

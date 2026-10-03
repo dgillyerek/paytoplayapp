@@ -598,10 +598,11 @@ public sealed class SirAldric3DMotionTests
         Assert.DoesNotContain("addHumanoidExtraRoot", post, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", walkMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("addHumanoidExtraRoot", attackMeta, StringComparison.Ordinal);
-        Assert.Equal(1.92f, SirAldric3DMotion.PlayCamRearY);
-        Assert.Equal(-3.08f, SirAldric3DMotion.PlayCamRearZ);
-        Assert.Equal(1.12f, SirAldric3DMotion.PlayCamLookY);
-        Assert.Equal(42f, SirAldric3DMotion.PlayCamFovDegrees);
+        Assert.Equal(1.70f, SirAldric3DMotion.PlayCamRearY);
+        Assert.Equal(-5.60f, SirAldric3DMotion.PlayCamRearZ);
+        Assert.Equal(1.35f, SirAldric3DMotion.PlayCamLookY);
+        Assert.Equal(50f, SirAldric3DMotion.PlayCamFovDegrees);
+        Assert.True(SirAldric3DMotion.PlayCamRearZ < -5f, "Game-view must pull back so draw/raise/strike stay in frame");
         Assert.Equal(180f, SirAldric3DMotion.MixamoImportRearYawDegrees);
         Assert.Equal(0.42f, SirAldric3DMotion.AttackSlashReadyRight);
         Assert.Equal(-0.48f, SirAldric3DMotion.AttackSlashReadyUp);
@@ -731,7 +732,9 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("Sword And Shield attack (2)", demo, StringComparison.Ordinal);
         Assert.Contains("Walk then Slash", demo, StringComparison.Ordinal);
         Assert.Contains("BuildLiteClipHud", demo, StringComparison.Ordinal);
-        Assert.Contains("BtnLite_", demo, StringComparison.Ordinal);
+        Assert.Contains("LiteClipDropdown", demo, StringComparison.Ordinal);
+        Assert.Contains("Dropdown", demo, StringComparison.Ordinal);
+        Assert.DoesNotContain("BtnLite_", demo, StringComparison.Ordinal);
         Assert.Contains("fd5f09c IMGUI clip buttons sat under this pad", demo, StringComparison.Ordinal);
         Assert.Contains("IgnoreFocus", demo, StringComparison.Ordinal);
         Assert.Contains("AllDeviceInputAlwaysGoesToGameView", demo, StringComparison.Ordinal);
