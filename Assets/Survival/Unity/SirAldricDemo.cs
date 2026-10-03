@@ -17,7 +17,7 @@ namespace Survival.Unity
     /// Path A / ClipSword HOLD. RH sword prop. Design / Derek PASS not claimed.
     /// Play-cam defaults to the rear SoT; 1/2/3 and Q/E or RMB orbit around the knight.
     /// Input System + IMGUI (Keyboard.current is deaf until Game view owns focus).
-    /// Walk RH grip; Mixamo DIAG human slash (left-hip draw then raise / forward / foot).
+    /// Walk RH grip; Mixamo DIAG human slash (left-hip draw then raise / forward then down to foot).
     /// YouTube iQ1s3nN1330 is leftover SoT history. HOLD.
     /// </summary>
     [DefaultExecutionOrder(500)]
@@ -580,7 +580,7 @@ namespace Survival.Unity
             var note = SurvivalVisuals.Text(
                 canvas,
                 "SoT",
-                "PILOT Mixamo  ·  walk  ·  DIAG human slash · left-hip draw then raise/fwd/foot  ·  HOLD",
+                "PILOT Mixamo  ·  walk  ·  DIAG slash · left-hip draw then raise / fwd then down to foot  ·  HOLD",
                 16,
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Mute);

@@ -17,8 +17,10 @@ namespace Survival.Unity
     /// Generic Mixamo clips (Humanoid Playable collapses this skin). AccuRIG superseded.
     /// Walk = Standard Walk. Strike = Mixamo DIAG Stable Sword Inward Slash
     /// (human take, md5 72412be4) — arm/shoulder/torso together. Sword starts
-    /// at LEFT hip then RH. No held-pose robot clip. No post-Evaluate arm sculpt.
-    /// Clip.name must match SirAldric_DIAG_InwardSlash. HOLD merge.
+    /// at LEFT hip then RH. Strike play-head remaps onto DIAG descent (f59–85)
+    /// so the cut goes FORWARD then DOWN toward the foot (Derek 1821c4a FAIL:
+    /// linear DIAG read as UPWARDS). No held-pose robot clip. No post-Evaluate
+    /// arm sculpt. Clip.name must match SirAldric_DIAG_InwardSlash. HOLD merge.
     /// </summary>
     [DefaultExecutionOrder(200)]
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
@@ -50,6 +52,7 @@ namespace Survival.Unity
             "Sword never a whole-body X-flip. No Mixamo Mirror. " +
             "Walk: sword gripped in mixamorig:RightHand after draw (Derek 0fc0930 Game-view; 879a6f3 left-hand FAIL discarded). " +
             "Dev owns the strike story: sword starts at LEFT hip and is drawn, Mixamo rise above the head on the RIGHT, strike FORWARD, then DOWN toward the foot. " +
+            "Derek 1821c4a: linear DIAG strike went UPWARDS — MixamoDiagPlaybackU puts the strike on EXPORT descent f59–85; MixamoDiagStrikeBladeLocal pitches the prop forward then down (no AimArmAlong). " +
             "Mixer plays the DIAG clip only (leftover AttackLeftHipDrawReach / AimArmAlong / AttackRaiseThenCutReach unused — 95aba89 FAIL). " +
             "YouTube iQ1s3nN1330 leftover / backswing history. RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
@@ -333,7 +336,8 @@ namespace Survival.Unity
                 walkW = back;
                 attackW = 1f - back;
                 attackU = at / attackLen;
-                _attackPlayable.SetTime(at);
+                var clipU = SirAldric3DMotion.MixamoDiagPlaybackU(attackU);
+                _attackPlayable.SetTime(clipU * _attackLength);
                 _walkPlayable.SetTime(0f);
             }
 
@@ -345,9 +349,11 @@ namespace Survival.Unity
 
         /// <summary>
         /// Mixer plays Mixamo DIAG (human take). After Evaluate, parent the
-        /// sword only — no AimArmAlong / leftover AttackRaiseThenCutReach /
-        /// leftover AttackSlashReach / leftover AttackLeftHipDrawReach.
-        /// Draw starts at LEFT hip; strike on mixamorig:RightHand.
+        /// sword and pitch the blade on the strike — no AimArmAlong / leftover
+        /// AttackRaiseThenCutReach / leftover AttackSlashReach / leftover
+        /// AttackLeftHipDrawReach. Draw starts at LEFT hip; strike on
+        /// mixamorig:RightHand. Strike blade = MixamoDiagStrikeBladeLocal
+        /// (FORWARD then DOWN toward the foot). Not a body sculpt.
         /// </summary>
         private void ApplyAttackWindupLift(float attackWeight, float attackNormalized01)
         {
@@ -370,10 +376,19 @@ namespace Survival.Unity
             }
 
             BindSwordTo(_rightHand, strikeGrip: true);
-            if (_heldSword != null)
+            if (_heldSword == null)
+            {
+                return;
+            }
+
+            if (attackNormalized01 < SirAldric3DMotion.MixamoDiagRaisePlayEndU)
             {
                 _heldSword.localRotation = SwordRestLocal();
+                return;
             }
+
+            SirAldric3DMotion.MixamoDiagStrikeBladeLocal(attackNormalized01, out var lx, out var ly, out var lz);
+            AimHeldSwordWorld(transform.TransformDirection(new Vector3(lx, ly, lz)));
         }
 
         // Discarded 7958283 held-pose robot bake. Mixer plays Mixamo DIAG.
@@ -691,12 +706,12 @@ namespace Survival.Unity
                     return "DRAW  ·  LEFT hip  ·  Mixamo DIAG";
                 }
 
-                if (u < 0.70f)
+                if (u < SirAldric3DMotion.MixamoDiagRaisePlayEndU)
                 {
                     return "RAISE  ·  overhead RIGHT  ·  Mixamo DIAG";
                 }
 
-                if (u < 0.85f)
+                if (u < 0.70f)
                 {
                     return "STRIKE  ·  FORWARD  ·  Mixamo DIAG";
                 }

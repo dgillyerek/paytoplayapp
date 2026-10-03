@@ -37,6 +37,62 @@ namespace Survival.Domain.Heroes
         public const int MixamoSlashLastFrame = 85;
         /// <summary>DIAG ready ~f9/85. Sword on LEFT hip until this u, then RH.</summary>
         public const float MixamoDiagDrawEndU = 0.18f;
+        /// <summary>
+        /// EXPORT_DIAG.md TOP f59/85 — start of the descending cut. Linear
+        /// clip time before this is the long chamber/rise (Derek 1821c4a:
+        /// strike read as UPWARDS).
+        /// </summary>
+        public const float MixamoDiagApexClipU = 59f / 85f;
+        /// <summary>
+        /// Attack play-head when raise finishes. DIAG rise is ~69% of the
+        /// take; compress it so the strike is the descent (f59–85), not the
+        /// chamber. Not a Mixamo Mirror. Not DIAG_REV.
+        /// </summary>
+        public const float MixamoDiagRaisePlayEndU = 0.38f;
+
+        /// <summary>
+        /// Map attack play-head onto Mixamo DIAG clip time. Draw stays 1:1,
+        /// raise is compressed onto clip 0.18–apex, strike is stretched onto
+        /// the descending frames (apex–1). Monotonic. Never reverses the take.
+        /// </summary>
+        public static float MixamoDiagPlaybackU(float attackNormalized01)
+        {
+            var u = Clamp01(attackNormalized01);
+            if (u <= MixamoDiagDrawEndU)
+            {
+                return u;
+            }
+
+            if (u <= MixamoDiagRaisePlayEndU)
+            {
+                var t = (u - MixamoDiagDrawEndU) / (MixamoDiagRaisePlayEndU - MixamoDiagDrawEndU);
+                return Lerp(MixamoDiagDrawEndU, MixamoDiagApexClipU, t);
+            }
+
+            var s = (u - MixamoDiagRaisePlayEndU) / (1f - MixamoDiagRaisePlayEndU);
+            return Lerp(MixamoDiagApexClipU, 1f, s);
+        }
+
+        /// <summary>
+        /// Character-local blade during the strike: start FORWARD (+Z), finish
+        /// DOWN toward the standing foot (−Y). Never +Y (1821c4a FAIL).
+        /// </summary>
+        public static void MixamoDiagStrikeBladeLocal(float attackNormalized01, out float x, out float y, out float z)
+        {
+            var u = Clamp01(attackNormalized01);
+            var k = 0f;
+            if (u > MixamoDiagRaisePlayEndU)
+            {
+                k = Smooth01((u - MixamoDiagRaisePlayEndU) / (1f - MixamoDiagRaisePlayEndU));
+            }
+
+            var down = Lerp(0.28f, 0.88f, k);
+            var fwd = Lerp(0.90f, 0.35f, k);
+            x = 0f;
+            y = -down;
+            z = fwd;
+            Normalize(ref x, ref y, ref z);
+        }
 
         /// <summary>
         /// Derek slash SoT: https://www.youtube.com/watch?v=iQ1s3nN1330

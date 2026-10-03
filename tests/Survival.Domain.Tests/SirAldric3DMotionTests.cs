@@ -348,6 +348,10 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("AttackLeftHipDrawReach", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("BuildLeftHipDrawAttackClip", actor, StringComparison.Ordinal);
         Assert.Contains("MixamoDiagDrawEndU", actor, StringComparison.Ordinal);
+        Assert.Contains("MixamoDiagPlaybackU", actor, StringComparison.Ordinal);
+        Assert.Contains("MixamoDiagRaisePlayEndU", actor, StringComparison.Ordinal);
+        Assert.Contains("MixamoDiagStrikeBladeLocal", actor, StringComparison.Ordinal);
+        Assert.Contains("1821c4a", actor, StringComparison.Ordinal);
         Assert.Contains("does not match SirAldric_DIAG_InwardSlash", actor, StringComparison.Ordinal);
         Assert.Contains("EnsureEditableAttackClip", actor, StringComparison.Ordinal);
         Assert.Contains("AttackSlashReach", actor, StringComparison.Ordinal);
@@ -490,6 +494,11 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("lastFrame: 85", attackMeta, StringComparison.Ordinal);
         Assert.Equal(0, SirAldric3DMotion.MixamoSlashFirstFrame);
         Assert.Equal(85, SirAldric3DMotion.MixamoSlashLastFrame);
+        Assert.Equal(59f / 85f, SirAldric3DMotion.MixamoDiagApexClipU, 3);
+        Assert.True(SirAldric3DMotion.MixamoDiagRaisePlayEndU < 0.50f);
+        Assert.Contains("MixamoDiagPlaybackU", motionSrc, StringComparison.Ordinal);
+        Assert.Contains("MixamoDiagStrikeBladeLocal", motionSrc, StringComparison.Ordinal);
+        Assert.Contains("1821c4a", motionSrc, StringComparison.Ordinal);
         var diagMeta = File.ReadAllText(Path.Combine(pilot, "SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx.meta"));
         Assert.Contains("firstFrame: 0", diagMeta, StringComparison.Ordinal);
         Assert.Contains("lastFrame: 85", diagMeta, StringComparison.Ordinal);
@@ -705,6 +714,8 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("DIAG_MIRR", hold, StringComparison.Ordinal);
         Assert.Contains("DIAG_REV", hold, StringComparison.Ordinal);
         Assert.Contains("raise above head", hold, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("1821c4a", hold, StringComparison.Ordinal);
+        Assert.Contains("UPWARDS", hold, StringComparison.Ordinal);
         Assert.Contains("wrong interpretation", hold, StringComparison.Ordinal);
         Assert.Contains("backswing", hold, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("iQ1s3nN1330", hold, StringComparison.Ordinal);
@@ -751,6 +762,53 @@ public sealed class SirAldric3DMotionTests
         Assert.True(startTip[1] > 0.25f, $"start tip Y {startTip[1]} should be up");
         var finishTip = ReadJsonVec3(File.ReadAllText(Path.Combine(dir, "sir_aldric_pilot_dump_slash_f32.json")), "tip_unity");
         Assert.True(finishTip[1] < 0f, $"finish tip Y {finishTip[1]} should be down");
+    }
+
+    [Fact]
+    public void Mixamo_diag_playback_maps_strike_onto_descent_not_the_rise()
+    {
+        Assert.Equal(0f, SirAldric3DMotion.MixamoDiagPlaybackU(0f), 3);
+        Assert.Equal(
+            SirAldric3DMotion.MixamoDiagDrawEndU,
+            SirAldric3DMotion.MixamoDiagPlaybackU(SirAldric3DMotion.MixamoDiagDrawEndU),
+            3);
+        var midRaise = SirAldric3DMotion.MixamoDiagPlaybackU(
+            (SirAldric3DMotion.MixamoDiagDrawEndU + SirAldric3DMotion.MixamoDiagRaisePlayEndU) * 0.5f);
+        Assert.InRange(midRaise, SirAldric3DMotion.MixamoDiagDrawEndU, SirAldric3DMotion.MixamoDiagApexClipU);
+        Assert.True(
+            SirAldric3DMotion.MixamoDiagPlaybackU(SirAldric3DMotion.MixamoDiagRaisePlayEndU)
+            >= SirAldric3DMotion.MixamoDiagApexClipU - 0.01f);
+        Assert.True(
+            SirAldric3DMotion.MixamoDiagPlaybackU(0.70f) > SirAldric3DMotion.MixamoDiagApexClipU);
+        Assert.Equal(1f, SirAldric3DMotion.MixamoDiagPlaybackU(1f), 3);
+        var prev = -0.01f;
+        for (var i = 0; i <= 20; i++)
+        {
+            var u = SirAldric3DMotion.MixamoDiagPlaybackU(i / 20f);
+            Assert.True(u >= prev - 1e-5f, $"playback must stay monotonic at i={i}");
+            prev = u;
+        }
+    }
+
+    [Fact]
+    public void Mixamo_diag_strike_blade_goes_forward_then_down_never_up()
+    {
+        SirAldric3DMotion.MixamoDiagStrikeBladeLocal(
+            SirAldric3DMotion.MixamoDiagRaisePlayEndU, out _, out var y0, out var z0);
+        Assert.True(z0 > 0.6f, "strike starts FORWARD");
+        Assert.True(y0 < 0f, "strike must not go UPWARDS");
+        SirAldric3DMotion.MixamoDiagStrikeBladeLocal(1f, out _, out var y1, out var z1);
+        Assert.True(y1 < y0, "finish more DOWN toward the foot");
+        Assert.True(z1 > 0f, "finish still has forward");
+        Assert.True(y1 < -0.6f, "finish aims down at the foot");
+        for (var i = 0; i <= 10; i++)
+        {
+            var u = SirAldric3DMotion.MixamoDiagRaisePlayEndU
+                + ((1f - SirAldric3DMotion.MixamoDiagRaisePlayEndU) * i / 10f);
+            SirAldric3DMotion.MixamoDiagStrikeBladeLocal(u, out _, out var y, out var z);
+            Assert.True(y < 0f, $"blade Y {y} at u={u} must not go up");
+            Assert.True(z > 0f, $"blade Z {z} at u={u} must stay forward");
+        }
     }
 
     [Fact]

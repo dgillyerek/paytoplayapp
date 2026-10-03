@@ -11,7 +11,7 @@ Story (rear cam / Derek POV):
 1. Walk straight (Walk FBX).
 2. Sword starts at the **LEFT hip** and is drawn (`u < 0.18`).
 3. Mixamo rise **above the head, RIGHT** (DIAG TOP ~f59/85).
-4. Strike **FORWARD**, then **DOWN toward the foot**.
+4. Strike **FORWARD**, then **DOWN toward the foot** (`MixamoDiagPlaybackU` + `MixamoDiagStrikeBladeLocal` — Derek `1821c4a` linear DIAG went UPWARDS).
 
 Walk after draw: `mixamorig:RightHand`. Orbit 1/2/3 unchanged. No DIAG_REV / DIAG_MIRR / MILD / Mixamo Mirror.
 
