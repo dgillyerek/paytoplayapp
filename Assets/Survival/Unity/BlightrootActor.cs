@@ -11,11 +11,10 @@ namespace Survival.Unity
 {
     /// <summary>
     /// Plays creature-pack takes on the Dual Weapon Combo skinned body.
-    /// Same mixamorig hierarchy, Generic curves, take mixamo.com. Axis conversion
-    /// is baked so the root is not a negative scale. Body scale matches the Sir Aldric
-    /// scene: uniform 1 while the mesh is in the 0.5–5 m band (holefixed walk is
-    /// 1.90 m), otherwise a uniform scale to 1.80 m. No retarget, no bone rewrite,
-    /// no mirror, no time reverse, no non-uniform scale.
+    /// Same mixamorig hierarchy, Generic curves, take mixamo.com. The FBX is Y-up
+    /// (spine along +Y). Do not bake axis conversion: that compensation lays the
+    /// body flat in Game view. Clear it on the instance root and keep a uniform scale.
+    /// No retarget, no bone rewrite, no mirror, no time reverse.
     /// Empty takes are rejected. HOLD merge until Derek Game-view PASS.
     /// </summary>
     [DefaultExecutionOrder(200)]
@@ -247,7 +246,7 @@ namespace Survival.Unity
             importer.useFileScale = false;
             importer.globalScale = 1f;
             importer.optimizeBones = false;
-            importer.bakeAxisConversion = true;
+            importer.bakeAxisConversion = false;
             var defaults = importer.defaultClipAnimations;
             if (defaults == null || defaults.Length == 0)
             {
@@ -341,9 +340,9 @@ namespace Survival.Unity
                 dirty = true;
             }
 
-            if (!importer.bakeAxisConversion)
+            if (importer.bakeAxisConversion)
             {
-                importer.bakeAxisConversion = true;
+                importer.bakeAxisConversion = false;
                 dirty = true;
             }
 
@@ -368,20 +367,29 @@ namespace Survival.Unity
 #endif
 
         /// <summary>
-        /// Sir Aldric scene scale. Flatten a Mixamo 0.01 cm root, then uniform scale 1
-        /// (holefixed walk mesh, scene roots). If the body is outside 0.5–5 m, uniform-scale
-        /// to 1.80 m the way CorrectBodyScaleIfNeeded does. Never a non-uniform scale.
+        /// FBX mesh is Y-up (about 1.65 m × 1.90 m × 0.77 m). Blender shows that as an
+        /// armature scale of 0.01 only because UnitScaleFactor is centimeters; the file
+        /// has no 0.01 node. Unity's axis conversion, baked or left on the root, turns
+        /// the tall axis into depth and the Game view shows a pancake. Drop that root
+        /// rotation and any 0.01 or negative root scale. Bones are not rewritten.
+        /// Then the Aldric scene rule: uniform 1 inside 0.5–5 m, else uniform 1.80 m.
         /// </summary>
         private static void MatchAldricBodyScale(GameObject root)
         {
-            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            root.transform.localRotation = Quaternion.identity;
+            root.transform.localPosition = Vector3.zero;
+            foreach (var skin in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
-                var s = t.localScale;
-                if (Mathf.Abs(s.x - 0.01f) < 0.003f
-                    && Mathf.Abs(s.y - 0.01f) < 0.003f
-                    && Mathf.Abs(s.z - 0.01f) < 0.003f)
+                var mesh = skin.transform;
+                if (mesh == root.transform || mesh.name.StartsWith("mixamorig:", StringComparison.Ordinal))
                 {
-                    t.localScale = Vector3.one;
+                    continue;
+                }
+
+                mesh.localRotation = Quaternion.identity;
+                if (IsCmOrNegativeScale(mesh.localScale))
+                {
+                    mesh.localScale = Vector3.one;
                 }
             }
 
@@ -408,6 +416,14 @@ namespace Survival.Unity
             root.transform.localScale = Vector3.one * factor;
             Debug.Log("Blightroot uniform scale to Aldric target " + BodyHeightTargetMeters + "m from " + height + "m ×" + factor);
         }
+
+        private static bool IsCmOrNegativeScale(Vector3 s) =>
+            (Mathf.Abs(s.x - 0.01f) < 0.003f
+                && Mathf.Abs(s.y - 0.01f) < 0.003f
+                && Mathf.Abs(s.z - 0.01f) < 0.003f)
+            || s.x < 0f
+            || s.y < 0f
+            || s.z < 0f;
 
         private static void EnableSkin(GameObject root)
         {
