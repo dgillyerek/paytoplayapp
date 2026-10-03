@@ -68,6 +68,8 @@ public sealed class BlightrootMotionTests
         Assert.True(
             BlightrootMotion.MeshMaxY - BlightrootMotion.MeshMinY
             > BlightrootMotion.MeshMaxX - BlightrootMotion.MeshMinX);
+        var bodyHeight = BlightrootMotion.MeshMaxY - BlightrootMotion.MeshMinY;
+        Assert.InRange(bodyHeight, 1.89d, 1.92d);
         Assert.True(BlightrootMotion.GameViewFitsEveryClip());
         Assert.True(BlightrootMotion.TryGet("jump attack", out var jump));
         Assert.True(BlightrootMotion.GameViewFitsClip(jump));
@@ -135,7 +137,16 @@ public sealed class BlightrootMotionTests
         Assert.Contains("bakeAxisConversion = true", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("bakeAxisConversion = false", actor, StringComparison.Ordinal);
         Assert.Contains("mirror = false", actor, StringComparison.Ordinal);
-        Assert.DoesNotContain("localScale", actor, StringComparison.Ordinal);
+        Assert.Contains("localScale = Vector3.one", actor, StringComparison.Ordinal);
+        Assert.Contains("localScale = Vector3.one * factor", actor, StringComparison.Ordinal);
+        Assert.Contains("BodyHeightMinMeters = 0.5f", actor, StringComparison.Ordinal);
+        Assert.Contains("BodyHeightMaxMeters = 5f", actor, StringComparison.Ordinal);
+        Assert.Contains("BodyHeightTargetMeters = 1.80f", actor, StringComparison.Ordinal);
+        var aldric = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
+        Assert.Contains("BodyHeightMinMeters = 0.5f", aldric, StringComparison.Ordinal);
+        Assert.Contains("BodyHeightMaxMeters = 5f", aldric, StringComparison.Ordinal);
+        Assert.Contains("BodyHeightTargetMeters = 1.80f", aldric, StringComparison.Ordinal);
+        Assert.DoesNotContain("new Vector3(", actor, StringComparison.Ordinal);
         Assert.Contains("keepOriginalPositionY = true", actor, StringComparison.Ordinal);
         Assert.Contains("keepOriginalPositionXZ = true", actor, StringComparison.Ordinal);
         Assert.Contains("isHuman", actor, StringComparison.Ordinal);

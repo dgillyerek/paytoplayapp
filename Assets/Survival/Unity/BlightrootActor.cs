@@ -12,15 +12,22 @@ namespace Survival.Unity
     /// <summary>
     /// Plays creature-pack takes on the Dual Weapon Combo skinned body.
     /// Same mixamorig hierarchy, Generic curves, take mixamo.com. Axis conversion
-    /// is baked into the mesh and the takes so the root stays at uniform scale.
-    /// A root-only conversion is a negative scale and flattens the skin.
-    /// No retarget, no bone rewrite, no mirror, no time reverse, no corrective scale.
+    /// is baked so the root is not a negative scale. Body scale matches the Sir Aldric
+    /// scene: uniform 1 while the mesh is in the 0.5–5 m band (holefixed walk is
+    /// 1.90 m), otherwise a uniform scale to 1.80 m. No retarget, no bone rewrite,
+    /// no mirror, no time reverse, no non-uniform scale.
     /// Empty takes are rejected. HOLD merge until Derek Game-view PASS.
     /// </summary>
     [DefaultExecutionOrder(200)]
     public sealed class BlightrootActor : MonoBehaviour
     {
         public const string ThemePackBody = BlightrootMotion.BodyThemePackRel;
+
+        /// <summary>Copied from SirAldricMeshyAnimateActor on the merged Aldric scene. Not a new guess.</summary>
+        private const float BodyHeightMinMeters = 0.5f;
+
+        private const float BodyHeightMaxMeters = 5f;
+        private const float BodyHeightTargetMeters = 1.80f;
 
         private Animator? _animator;
         private PlayableGraph _graph;
@@ -51,6 +58,7 @@ namespace Survival.Unity
             _instance = Instantiate(prefab, transform);
             _instance.name = "BlightrootDualWeaponCombo";
             EnableSkin(_instance);
+            MatchAldricBodyScale(_instance);
             _animator = _instance.GetComponent<Animator>() ?? _instance.AddComponent<Animator>();
             var avatar = LoadAvatar(AssetPath(ThemePackBody));
             if (avatar != null && avatar.isHuman)
@@ -358,6 +366,48 @@ namespace Survival.Unity
             return null;
         }
 #endif
+
+        /// <summary>
+        /// Sir Aldric scene scale. Flatten a Mixamo 0.01 cm root, then uniform scale 1
+        /// (holefixed walk mesh, scene roots). If the body is outside 0.5–5 m, uniform-scale
+        /// to 1.80 m the way CorrectBodyScaleIfNeeded does. Never a non-uniform scale.
+        /// </summary>
+        private static void MatchAldricBodyScale(GameObject root)
+        {
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                var s = t.localScale;
+                if (Mathf.Abs(s.x - 0.01f) < 0.003f
+                    && Mathf.Abs(s.y - 0.01f) < 0.003f
+                    && Mathf.Abs(s.z - 0.01f) < 0.003f)
+                {
+                    t.localScale = Vector3.one;
+                }
+            }
+
+            root.transform.localScale = Vector3.one;
+            var height = 0f;
+            foreach (var skin in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                var size = skin.bounds.size;
+                height = Mathf.Max(height, size.x, size.y, size.z);
+            }
+
+            if (height >= BodyHeightMinMeters && height <= BodyHeightMaxMeters)
+            {
+                return;
+            }
+
+            if (height < 0.0001f)
+            {
+                Debug.LogError("Blightroot body has no measurable height to match the Aldric scene scale.");
+                return;
+            }
+
+            var factor = BodyHeightTargetMeters / height;
+            root.transform.localScale = Vector3.one * factor;
+            Debug.Log("Blightroot uniform scale to Aldric target " + BodyHeightTargetMeters + "m from " + height + "m ×" + factor);
+        }
 
         private static void EnableSkin(GameObject root)
         {
