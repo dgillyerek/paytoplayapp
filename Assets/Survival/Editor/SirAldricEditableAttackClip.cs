@@ -8,10 +8,9 @@ using UnityEngine;
 namespace Survival.Editor
 {
     /// <summary>
-    /// Duplicate the DIAG Mixamo take into SirAldric_DIAG_InwardSlash.anim,
-    /// wire an AnimatorController so Animation-window Preview can sample it
-    /// onto SirAldricAttackEditKnight, and spawn that knight. Does not
-    /// overwrite a keyed clip unless Extract is used.
+    /// Keep SirAldric_DIAG_InwardSlash.anim named to match the file (Unity
+    /// compile: Attack does not match SirAldric_DIAG_InwardSlash). Wire the
+    /// AnimatorController for Animation-window Preview. Play bakes Dev motion.
     /// </summary>
     [InitializeOnLoad]
     public static class SirAldricEditableAttackClip
@@ -118,7 +117,7 @@ namespace Survival.Editor
                 controller = AnimatorController.CreateAnimatorControllerAtPathWithClip(
                     AttackControllerAsset,
                     clip);
-                controller.name = "SirAldric_DIAG_InwardSlash";
+                controller.name = SirAldricMeshyAnimateActor.AttackClipAssetName;
             }
 
             if (controller.layers.Length == 0)
@@ -131,7 +130,8 @@ namespace Survival.Editor
             foreach (var child in sm.states)
             {
                 if (child.state != null
-                    && (child.state.name == "Attack"
+                    && (child.state.name == SirAldricMeshyAnimateActor.AttackClipAssetName
+                        || child.state.name == "Attack"
                         || child.state.motion == clip
                         || child.state.name == clip.name))
                 {
@@ -142,10 +142,10 @@ namespace Survival.Editor
 
             if (attackState == null)
             {
-                attackState = sm.AddState("Attack");
+                attackState = sm.AddState(SirAldricMeshyAnimateActor.AttackClipAssetName);
             }
 
-            attackState.name = "Attack";
+            attackState.name = SirAldricMeshyAnimateActor.AttackClipAssetName;
             attackState.motion = clip;
             sm.defaultState = attackState;
             EditorUtility.SetDirty(controller);

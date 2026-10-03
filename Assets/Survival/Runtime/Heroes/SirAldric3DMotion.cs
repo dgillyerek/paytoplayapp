@@ -71,9 +71,37 @@ namespace Survival.Domain.Heroes
         public const float AttackSlashSpineYawReady = 22f;
         public const float AttackSlashSpineYawFinish = -16f;
         /// <summary>
+        /// Dev-owned attack clip (rear cam / Derek POV). Not raise-then-cut.
+        /// Not down-left. Sequence: left-hip draw, raise overhead right,
+        /// strike forward, then down to the foot.
+        /// </summary>
+        public const float AttackDrawLeftHipU = 0.22f;
+        public const float AttackSwordInHandU = 0.30f;
+        public const float AttackRaiseOverheadRightU = 0.50f;
+        public const float AttackStrikeForwardU = 0.72f;
+        public const float AttackStrikeFootU = 0.92f;
+        public const float AttackHangRight = 0.28f;
+        public const float AttackHangUp = -0.32f;
+        public const float AttackHangFront = 0.06f;
+        public const float AttackPocketRight = -0.30f;
+        public const float AttackPocketUp = -0.10f;
+        public const float AttackPocketFront = -0.04f;
+        public const float AttackDrawnRight = -0.12f;
+        public const float AttackDrawnUp = 0.18f;
+        public const float AttackDrawnFront = 0.16f;
+        public const float AttackOverheadRight = 0.22f;
+        public const float AttackOverheadUp = 0.96f;
+        public const float AttackOverheadFront = 0.04f;
+        public const float AttackForwardRight = 0.10f;
+        public const float AttackForwardUp = 0.36f;
+        public const float AttackForwardFront = 0.84f;
+        public const float AttackFootRight = 0.08f;
+        public const float AttackFootUp = -0.58f;
+        public const float AttackFootFront = 0.20f;
+
+        /// <summary>
         /// Leftover raise-then-cut keys (Derek FAIL 95aba89 “much worse”).
-        /// Attack plays the editable DIAG .anim; these numbers are unused.
-        /// Opposite time order of DIAG backswing-then-cut. Not Mixamo L/R Mirror.
+        /// Unused — mixer plays the left-hip-draw clip. Not Mixamo L/R Mirror.
         /// Milder overhead than leftover AttackSlashUrUp 0.82 (ee3f7bd pinch).
         /// </summary>
         public const float AttackRaiseRight = 0.22f;
@@ -584,8 +612,59 @@ namespace Survival.Domain.Heroes
         }
 
         /// <summary>
+        /// RH reach for the baked attack clip: left-hip pocket → overhead right →
+        /// forward → down to the foot. Character +X right, +Y up, +Z forward.
+        /// </summary>
+        public static void AttackLeftHipDrawReach(float attackNormalized01, out float x, out float y, out float z)
+        {
+            var u = Clamp01(attackNormalized01);
+            if (u <= AttackDrawLeftHipU)
+            {
+                SampleSlash(
+                    u, 0f, AttackDrawLeftHipU,
+                    AttackHangRight, AttackHangUp, AttackHangFront,
+                    AttackPocketRight, AttackPocketUp, AttackPocketFront,
+                    out x, out y, out z);
+            }
+            else if (u <= AttackSwordInHandU)
+            {
+                SampleSlash(
+                    u, AttackDrawLeftHipU, AttackSwordInHandU,
+                    AttackPocketRight, AttackPocketUp, AttackPocketFront,
+                    AttackDrawnRight, AttackDrawnUp, AttackDrawnFront,
+                    out x, out y, out z);
+            }
+            else if (u <= AttackRaiseOverheadRightU)
+            {
+                SampleSlash(
+                    u, AttackSwordInHandU, AttackRaiseOverheadRightU,
+                    AttackDrawnRight, AttackDrawnUp, AttackDrawnFront,
+                    AttackOverheadRight, AttackOverheadUp, AttackOverheadFront,
+                    out x, out y, out z);
+            }
+            else if (u <= AttackStrikeForwardU)
+            {
+                SampleSlash(
+                    u, AttackRaiseOverheadRightU, AttackStrikeForwardU,
+                    AttackOverheadRight, AttackOverheadUp, AttackOverheadFront,
+                    AttackForwardRight, AttackForwardUp, AttackForwardFront,
+                    out x, out y, out z);
+            }
+            else
+            {
+                SampleSlash(
+                    u, AttackStrikeForwardU, 1f,
+                    AttackForwardRight, AttackForwardUp, AttackForwardFront,
+                    AttackFootRight, AttackFootUp, AttackFootFront,
+                    out x, out y, out z);
+            }
+
+            Normalize(ref x, ref y, ref z);
+        }
+
+        /// <summary>
         /// Leftover RH reach after 95aba89 FAIL: u=0 overhead, u=1 low character-left.
-        /// Rear-cam down-left = −X. Unused — PlayableGraph plays the editable DIAG .anim.
+        /// Rear-cam down-left = −X. Unused — mixer plays AttackLeftHipDrawReach.
         /// Leftover AttackSlashReach stays ready→backswing→LL.
         /// </summary>
         public static void AttackRaiseThenCutReach(float attackNormalized01, out float x, out float y, out float z)

@@ -6,7 +6,7 @@ Supersedes AccuRIG clips-only on #27 for this tip.
 - body/SirAldric_body_holefixed_mid280k.fbx — Mixamo-ready holefixed look mesh (no cape, empty RH; **no armature** — Play instance is the Mixamo-skinned walk FBX, same 139k verts)
 - textures/ — Meshy PBR maps for body bind
 - walk/SirAldric_body_holefixed_walk.fbx — Mixamo Standard Walk (With Skin, 30fps, ~34 frames)
-- slash/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx — DIAG Inward Slash source (md5 72412be4, 0–85 @ 30fps). Alias `SirAldric_body_holefixed_slash.fbx` same bytes. Playing clip is the editable project `.anim` `Assets/Survival/Unity/Anims/SirAldric_DIAG_InwardSlash.anim` (extract of this take). No post-Evaluate RH drive (Derek FAIL 95aba89). DIAG_REV 0beb3c77 retired (e90b654 no attack). DIAG_MIRR 70fd9483 retired. MILD 8d5b78b0 retired. Not baseline md5 4a143441.
+- slash/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx — leftover DIAG source (md5 72412be4). Playing clip is Dev-authored `Assets/Survival/Unity/Anims/SirAldric_DIAG_InwardSlash.anim` (clip.name must match the file). Sequence: left-hip draw, raise overhead right, strike forward then down to the foot. No post-Evaluate RH drive (Derek FAIL 95aba89). DIAG_REV 0beb3c77 retired (e90b654 no attack). DIAG_MIRR 70fd9483 retired. MILD 8d5b78b0 retired. Not baseline md5 4a143441.
 - props/SirAldric_PILOT_sword.fbx — parent to RH
 - props/SirAldric_PILOT_cape.fbx — optional soft
 - stills/ — Design lean stills (walk stride + slash peak)

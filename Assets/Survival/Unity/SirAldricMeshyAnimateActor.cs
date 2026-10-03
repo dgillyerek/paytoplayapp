@@ -15,10 +15,10 @@ namespace Survival.Unity
     /// <summary>
     /// Sir Aldric PILOT: Mixamo-skinned holefixed mid280k is the ONLY visible body.
     /// Generic Mixamo clips (Humanoid Playable collapses this skin). AccuRIG superseded.
-    /// Walk = Standard Walk. Slash = Stable Sword Inward Slash.
-    /// Walk sword = mixamorig:RightHand grip. Strike = editable DIAG Mixamo take
-    /// (project .anim duplicate of md5 72412be4). No post-Evaluate arm sculpt.
-    /// No Path 1 / Path A / ClipSword. HOLD merge.
+    /// Walk = Standard Walk. Strike = Dev-authored clip SirAldric_DIAG_InwardSlash
+    /// (left-hip draw, raise overhead right, strike forward then down to the foot).
+    /// Clip name must match the .anim file or Unity will not compile the asset.
+    /// No post-Evaluate arm sculpt. No Path 1 / Path A / ClipSword. HOLD merge.
     /// </summary>
     [DefaultExecutionOrder(200)]
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
@@ -29,8 +29,10 @@ namespace Survival.Unity
         public const string ThemePackAttackFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx";
         /// <summary>Same DIAG bytes as ThemePackAttackFbx (md5 72412be4). Not DIAG_REV 0beb3c77 (broke play). Not DIAG_MIRR 70fd9483. Not MILD 8d5b78b0. Not baseline 4a143441.</summary>
         public const string ThemePackAttackFbxAlias = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash.fbx";
-        /// <summary>Editable duplicate of the DIAG mixamo.com take. Animation-window SoT after extract.</summary>
+        /// <summary>Dev-authored attack clip. File name and clip.name must both be SirAldric_DIAG_InwardSlash (Unity compile break if they differ).</summary>
         public const string ThemePackAttackAnim = "Survival/Unity/Anims/SirAldric_DIAG_InwardSlash.anim";
+        /// <summary>Must match the .anim file name. Naming the clip "Attack" does not match SirAldric_DIAG_InwardSlash.</summary>
+        public const string AttackClipAssetName = "SirAldric_DIAG_InwardSlash";
         /// <summary>Editor-only AnimatorController so Animation-window Preview can sample the .anim. Not used by PlayableGraph.</summary>
         public const string ThemePackAttackController = "Survival/Unity/Anims/SirAldric_DIAG_InwardSlash.controller";
         public const string ThemePackSwordFbx = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_sword.fbx";
@@ -41,14 +43,15 @@ namespace Survival.Unity
         public const string AttackClipHint = "Attack";
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
         public const string AttackAuthoredReason =
-            "PILOT Mixamo sep Generic: holefixed body + Standard Walk + editable DIAG " +
-            "Inward Slash .anim (duplicate of md5 72412be4 mixamo.com 0–85; not DIAG_REV 0beb3c77 e90b654 no-attack FAIL; not DIAG_MIRR 70fd9483 Derek reject 19e6efe; not MILD 8d5b78b0; not baseline 4a143441). " +
+            "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Dev-authored " +
+            "SirAldric_DIAG_InwardSlash clip (name matches the .anim file — Attack as clip.name does not match SirAldric_DIAG_InwardSlash and Unity will not compile). " +
+            "Not DIAG_REV 0beb3c77 e90b654 no-attack FAIL; not DIAG_MIRR 70fd9483 Derek reject 19e6efe; not MILD 8d5b78b0; not baseline 4a143441. " +
             "Sword never a whole-body X-flip. No Mixamo Mirror. " +
-            "Walk: sword gripped in mixamorig:RightHand (Derek 0fc0930 Game-view; 879a6f3 left-hand FAIL discarded). " +
-            "Dev owns the strike via Animation-window keys on SirAldric_DIAG_InwardSlash.anim (YouTube iQ1s3nN1330 SoT). " +
-            "DIAG Mixamo take is backswing-then-cut; Derek keys raise then down-left. " +
-            "Strike: PlayableGraph plays SirAldric_DIAG_InwardSlash.anim only (Derek 95aba89 raise-then-cut FAIL — no AttackRaiseThenCutReach / AimArmAlong / leftover AttackSlashReach). " +
-            "RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
+            "Walk: sword gripped in mixamorig:RightHand after draw (Derek 0fc0930 Game-view; 879a6f3 left-hand FAIL discarded). " +
+            "Dev owns the strike: left-hip draw, raise overhead right, strike forward then down to the foot " +
+            "(YouTube iQ1s3nN1330 retired as down-left / backswing SoT — this tip is not that arc). " +
+            "Baked into the mixer clip (not post-Evaluate AimArmAlong / AttackRaiseThenCutReach — 95aba89 FAIL). " +
+            "Sheath/draw starts at LEFT hip; strike on mixamorig:RightHand. RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
         public const float SwordBladeMeters = 1.01f;
         private const float BodyHeightMinMeters = 0.5f;
@@ -76,9 +79,11 @@ namespace Survival.Unity
         private Transform? _hips;
         private Transform? _rightUpLeg;
         private Transform? _rightLeg;
+        private Transform? _leftUpLeg;
         private Transform? _heldSword;
         private Transform? _boundSwordParent;
         private Transform? _sheathSocket;
+        private Transform? _leftHipSocket;
         /// <summary>
         /// Mesh-local blade axis. Unity FBX bakeAxisConversion turns Design +Z into
         /// local +Y — aiming transform.forward at desired left the visible blade
@@ -157,32 +162,6 @@ namespace Survival.Unity
             _output.SetSourcePlayable(_mixer);
 
             EnsureEditableAttackClip();
-            var attack = LoadClip(ThemePackAttackAnim, AttackClipHint, repairWalk: false);
-#if UNITY_EDITOR
-            if (attack != null && AnimationUtility.GetCurveBindings(attack).Length <= 8)
-            {
-                Debug.LogWarning(
-                    "PILOT attack .anim is still a stub; falling back to DIAG FBX until extract.");
-                attack = null;
-            }
-#endif
-            if (attack == null)
-            {
-                attack = LoadClip(ThemePackAttackFbx, AttackClipHint, repairWalk: false);
-            }
-            if (attack != null)
-            {
-                attack.wrapMode = WrapMode.Once;
-                _attackLength = attack.length;
-                _attackPlayable = AnimationClipPlayable.Create(_graph, attack);
-                _graph.Connect(_attackPlayable, 0, _mixer, 1);
-                _attackReady = true;
-            }
-            else
-            {
-                Debug.LogWarning("PILOT attack clip missing after Generic import. Walk-only until reimport.");
-            }
-
             _graph.Play();
             _graphReady = true;
             SampleAt(0f);
@@ -191,6 +170,7 @@ namespace Survival.Unity
             AttachHeldSword(_instance);
             HideEmbeddedSwords(_instance);
             CacheAttackBones(_instance);
+            ConnectAuthoredAttackClip();
             SampleAt(0f);
             LogSkinAndFailIfBad(_instance);
             BindRenderHook();
@@ -340,19 +320,299 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Attack plays the editable DIAG .anim (or DIAG FBX fallback). Play/blend/cam
-        /// only — no tip-led arm or clavicle overwrite. Leftover AttackSlashReach /
-        /// AttackRaiseThenCutReach unused. Sword stays on mixamorig:RightHand.
+        /// Mixer already plays the baked SirAldric_DIAG_InwardSlash clip (left-hip
+        /// draw → overhead right → forward → foot). After Evaluate, parent the
+        /// sword only — no AimArmAlong / leftover AttackRaiseThenCutReach /
+        /// leftover AttackSlashReach.
+        /// Draw starts at LEFT hip; strike on mixamorig:RightHand.
         /// </summary>
         private void ApplyAttackWindupLift(float attackWeight, float attackNormalized01)
         {
-            _ = attackWeight;
-            _ = attackNormalized01;
+            if (attackWeight < 0.05f)
+            {
+                BindSwordTo(_rightHand, strikeGrip: true);
+                if (_heldSword != null)
+                {
+                    _heldSword.localRotation = SwordRestLocal();
+                }
+
+                return;
+            }
+
+            if (attackNormalized01 < SirAldric3DMotion.AttackSwordInHandU)
+            {
+                BindSwordTo(EnsureLeftHipSocket(), strikeGrip: false);
+                AimHeldSwordWorld(Vector3.down);
+                return;
+            }
+
             BindSwordTo(_rightHand, strikeGrip: true);
             if (_heldSword != null)
             {
                 _heldSword.localRotation = SwordRestLocal();
             }
+        }
+
+        private void ConnectAuthoredAttackClip()
+        {
+            var attack = BuildLeftHipDrawAttackClip();
+            if (attack == null)
+            {
+                Debug.LogWarning("PILOT authored attack clip bake failed. Walk-only.");
+                return;
+            }
+
+            attack.wrapMode = WrapMode.Once;
+            _attackLength = attack.length;
+            _attackPlayable = AnimationClipPlayable.Create(_graph, attack);
+            _graph.Connect(_attackPlayable, 0, _mixer, 1);
+            _attackReady = true;
+#if UNITY_EDITOR
+            SaveAuthoredAttackClip(attack);
+#endif
+        }
+
+        /// <summary>
+        /// Bake left-hip draw / overhead-right / forward / foot into the clip the
+        /// mixer plays. Aim is bake-only — not applied after Evaluate.
+        /// </summary>
+        private AnimationClip? BuildLeftHipDrawAttackClip()
+        {
+            if (_animator == null || _hips == null || _rightArm == null || _rightHand == null)
+            {
+                return null;
+            }
+
+            var bones = new List<Transform>();
+            foreach (var bone in new[] { _rightArm, _rightForeArm, _rightHand, _leftArm, _leftForeArm, _leftHand, _spine })
+            {
+                if (bone != null)
+                {
+                    bones.Add(bone);
+                }
+            }
+
+            var rest = new Quaternion[bones.Count];
+            for (var i = 0; i < bones.Count; i++)
+            {
+                rest[i] = bones[i].localRotation;
+            }
+
+            var clip = new AnimationClip
+            {
+                name = AttackClipAssetName,
+                frameRate = 30f,
+                wrapMode = WrapMode.Once,
+                legacy = false
+            };
+            var frames = 73;
+            var length = 2.40f;
+            var dt = length / (frames - 1);
+            var qx = new AnimationCurve[bones.Count];
+            var qy = new AnimationCurve[bones.Count];
+            var qz = new AnimationCurve[bones.Count];
+            var qw = new AnimationCurve[bones.Count];
+            var prev = new Quaternion[bones.Count];
+            var hasPrev = new bool[bones.Count];
+            for (var i = 0; i < bones.Count; i++)
+            {
+                qx[i] = new AnimationCurve();
+                qy[i] = new AnimationCurve();
+                qz[i] = new AnimationCurve();
+                qw[i] = new AnimationCurve();
+            }
+
+            var restFore = _rightForeArm != null ? _rightForeArm.localRotation : Quaternion.identity;
+            for (var f = 0; f < frames; f++)
+            {
+                var u = f / (float)(frames - 1);
+                for (var i = 0; i < bones.Count; i++)
+                {
+                    bones[i].localRotation = rest[i];
+                }
+
+                if (_rightForeArm != null)
+                {
+                    _rightForeArm.localRotation = restFore * Quaternion.Euler(42f, 0f, 0f);
+                }
+
+                BakeAttackPose(u);
+                for (var i = 0; i < bones.Count; i++)
+                {
+                    var q = bones[i].localRotation;
+                    if (hasPrev[i] && Quaternion.Dot(prev[i], q) < 0f)
+                    {
+                        q = new Quaternion(-q.x, -q.y, -q.z, -q.w);
+                    }
+
+                    prev[i] = q;
+                    hasPrev[i] = true;
+                    var t = f * dt;
+                    qx[i].AddKey(t, q.x);
+                    qy[i].AddKey(t, q.y);
+                    qz[i].AddKey(t, q.z);
+                    qw[i].AddKey(t, q.w);
+                }
+            }
+
+            for (var i = 0; i < bones.Count; i++)
+            {
+                bones[i].localRotation = rest[i];
+                var path = RelPath(bones[i], _animator.transform);
+                clip.SetCurve(path, typeof(Transform), "m_LocalRotation.x", qx[i]);
+                clip.SetCurve(path, typeof(Transform), "m_LocalRotation.y", qy[i]);
+                clip.SetCurve(path, typeof(Transform), "m_LocalRotation.z", qz[i]);
+                clip.SetCurve(path, typeof(Transform), "m_LocalRotation.w", qw[i]);
+            }
+
+            clip.EnsureQuaternionContinuity();
+            return clip;
+        }
+
+        private void BakeAttackPose(float attackNormalized01)
+        {
+            SirAldric3DMotion.AttackLeftHipDrawReach(attackNormalized01, out var dx, out var dy, out var dz);
+            var desired = new Vector3(dx, dy, dz);
+            var len = 0.55f;
+            if (_rightArm != null && _rightHand != null)
+            {
+                var reach = _rightHand.position - _rightArm.position;
+                if (reach.sqrMagnitude > 1e-4f)
+                {
+                    len = reach.magnitude;
+                }
+            }
+
+            var origin = _hips != null ? _hips.position : Vector3.zero;
+            BakeAimEndToward(_rightArm, _rightHand, origin + desired * len);
+
+            if (_leftArm == null || _leftHand == null)
+            {
+                return;
+            }
+
+            if (attackNormalized01 < SirAldric3DMotion.AttackSwordInHandU)
+            {
+                BakeAimEndToward(
+                    _leftArm,
+                    _leftHand,
+                    origin + new Vector3(-0.22f, -0.04f, 0.04f));
+            }
+            else
+            {
+                SirAldric3DMotion.AttackSlashGuardReach(out var gx, out var gy, out var gz);
+                BakeAimEndToward(_leftArm, _leftHand, origin + new Vector3(gx, gy, gz) * 0.45f);
+            }
+        }
+
+        /// <summary>
+        /// Bake-only. Do not call after Evaluate (95aba89 AimArmAlong FAIL).
+        /// </summary>
+        private static void BakeAimEndToward(Transform? bone, Transform? end, Vector3 worldTarget)
+        {
+            if (bone == null || end == null)
+            {
+                return;
+            }
+
+            var from = end.position - bone.position;
+            var to = worldTarget - bone.position;
+            if (from.sqrMagnitude < 1e-6f || to.sqrMagnitude < 1e-6f)
+            {
+                return;
+            }
+
+            var aim = Quaternion.FromToRotation(from.normalized, to.normalized);
+            bone.rotation = Quaternion.Normalize(aim * bone.rotation);
+        }
+
+        private static string RelPath(Transform bone, Transform root)
+        {
+            if (bone == root)
+            {
+                return "";
+            }
+
+            var parts = new List<string>();
+            var t = bone;
+            while (t != null && t != root)
+            {
+                parts.Add(t.name);
+                t = t.parent;
+            }
+
+            parts.Reverse();
+            return string.Join("/", parts);
+        }
+
+        private static void SaveAuthoredAttackClip(AnimationClip clip)
+        {
+#if UNITY_EDITOR
+            var animRel = AssetPath(ThemePackAttackAnim);
+            clip.name = AttackClipAssetName;
+            var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(animRel);
+            if (existing != null)
+            {
+                EditorUtility.CopySerialized(clip, existing);
+                existing.name = AttackClipAssetName;
+                existing.wrapMode = WrapMode.Once;
+                EditorUtility.SetDirty(existing);
+            }
+            else
+            {
+                var folder = "Assets/Survival/Unity/Anims";
+                if (!AssetDatabase.IsValidFolder(folder))
+                {
+                    AssetDatabase.CreateFolder("Assets/Survival/Unity", "Anims");
+                }
+
+                AssetDatabase.CreateAsset(UnityEngine.Object.Instantiate(clip), animRel);
+            }
+
+            AssetDatabase.SaveAssets();
+#endif
+        }
+
+        private Transform? EnsureLeftHipSocket()
+        {
+            if (_hips == null)
+            {
+                return null;
+            }
+
+            if (_leftHipSocket == null)
+            {
+                var go = new GameObject("LeftHipDrawSocket");
+                _leftHipSocket = go.transform;
+            }
+
+            if (_leftHipSocket.parent != _hips)
+            {
+                _leftHipSocket.SetParent(_hips, false);
+            }
+
+            var hip = _leftUpLeg != null ? _leftUpLeg.position : _hips.position;
+            _leftHipSocket.position = hip + CharacterLeft() * 0.10f + Vector3.up * 0.08f + Vector3.back * 0.03f;
+            return _leftHipSocket;
+        }
+
+        private static Vector3 CharacterLeft() => Vector3.left;
+
+        private void AimHeldSwordWorld(Vector3 worldAxis)
+        {
+            if (_heldSword == null || worldAxis.sqrMagnitude < 1e-8f)
+            {
+                return;
+            }
+
+            var blade = _heldSword.rotation * BladeLocalAxis();
+            if (blade.sqrMagnitude < 1e-8f)
+            {
+                return;
+            }
+
+            _heldSword.rotation = Quaternion.Normalize(
+                Quaternion.FromToRotation(blade.normalized, worldAxis.normalized) * _heldSword.rotation);
         }
 
         /// <summary>
@@ -468,17 +728,21 @@ namespace Survival.Unity
             {
                 _heldSword.SetParent(parent, worldPositionStays: false);
                 _boundSwordParent = parent;
-                var parentScale = Mathf.Max(Mathf.Abs(parent.lossyScale.x), 1e-5f);
-                var inv = 1f / parentScale;
-                _heldSword.localScale = Vector3.one * inv;
+                var newScale = Mathf.Max(Mathf.Abs(parent.lossyScale.x), 1e-5f);
+                _heldSword.localScale = Vector3.one * (1f / newScale);
                 NormalizeSwordWorldBlade(_heldSword);
             }
 
+            var parentScale = Mathf.Max(Mathf.Abs(parent.lossyScale.x), 1e-5f);
+            var inv = 1f / parentScale;
+
             if (strikeGrip)
             {
-                var parentScale = Mathf.Max(Mathf.Abs(parent.lossyScale.x), 1e-5f);
-                var inv = 1f / parentScale;
                 _heldSword.localPosition = new Vector3(0f, 0.08f, 0f) * inv;
+            }
+            else
+            {
+                _heldSword.localPosition = Vector3.zero;
             }
         }
 
@@ -550,6 +814,7 @@ namespace Survival.Unity
             _hips = FindNamedBone(root, "mixamorig:Hips", "Hips");
             _rightUpLeg = FindNamedBone(root, "mixamorig:RightUpLeg", "RightUpLeg");
             _rightLeg = FindNamedBone(root, "mixamorig:RightLeg", "RightLeg");
+            _leftUpLeg = FindNamedBone(root, "mixamorig:LeftUpLeg", "LeftUpLeg");
             _heldSword = FindNamedBone(root, "SirAldricPilotSword");
             _swordLocalBlade = MeasureLocalBladeAxis(_heldSword);
             if (_heldSword != null)
@@ -973,62 +1238,45 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Duplicate the imported DIAG mixamo.com take into a project .anim so the
-        /// Animation window can key it. Does not overwrite Derek's keys once the
-        /// clip has real curves. Replaces a stub in place so the .anim GUID stays
-        /// stable for the Animation-window AnimatorController.
+        /// Keep SirAldric_DIAG_InwardSlash.anim importable: clip.name must equal
+        /// the file name. Do not copy DIAG FBX over the Dev-authored clip, and
+        /// never name it Attack (Unity: attack does not match SirAldric_DIAG_InwardSlash).
         /// </summary>
         public static void EnsureEditableAttackClip(bool forceReextract = false)
         {
+            _ = forceReextract;
 #if UNITY_EDITOR
             var animRel = AssetPath(ThemePackAttackAnim);
             var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(animRel);
-            if (existing != null && !forceReextract && AnimationUtility.GetCurveBindings(existing).Length > 8)
-            {
-                return;
-            }
-
-            var srcRel = AssetPath(ThemePackAttackFbx);
-            var src = PickClip(srcRel, AttackClipHint);
-            if (src == null)
-            {
-                RepairAttackTake(srcRel);
-                src = PickClip(srcRel, AttackClipHint);
-            }
-
-            if (src == null)
-            {
-                Debug.LogWarning("PILOT cannot extract editable attack clip; DIAG FBX take missing. " + srcRel);
-                return;
-            }
-
-            var folder = Path.GetDirectoryName(animRel)?.Replace('\\', '/');
-            if (!string.IsNullOrEmpty(folder) && !AssetDatabase.IsValidFolder(folder))
-            {
-                var parent = "Assets/Survival/Unity";
-                if (!AssetDatabase.IsValidFolder(parent + "/Anims"))
-                {
-                    AssetDatabase.CreateFolder("Assets/Survival/Unity", "Anims");
-                }
-            }
-
             if (existing != null)
             {
-                EditorUtility.CopySerialized(src, existing);
-                existing.name = "Attack";
-                existing.wrapMode = WrapMode.Once;
-                EditorUtility.SetDirty(existing);
-                AssetDatabase.SaveAssets();
-                Debug.Log("PILOT refreshed editable DIAG attack clip in place → " + animRel + " len=" + existing.length);
+                if (!string.Equals(existing.name, AttackClipAssetName, StringComparison.Ordinal))
+                {
+                    existing.name = AttackClipAssetName;
+                    existing.wrapMode = WrapMode.Once;
+                    EditorUtility.SetDirty(existing);
+                    AssetDatabase.SaveAssets();
+                    Debug.Log("PILOT renamed attack clip to " + AttackClipAssetName + " so Unity can compile " + animRel);
+                }
+
                 return;
             }
 
-            var copy = UnityEngine.Object.Instantiate(src);
-            copy.name = "Attack";
-            copy.wrapMode = WrapMode.Once;
-            AssetDatabase.CreateAsset(copy, animRel);
+            var folder = "Assets/Survival/Unity/Anims";
+            if (!AssetDatabase.IsValidFolder(folder))
+            {
+                AssetDatabase.CreateFolder("Assets/Survival/Unity", "Anims");
+            }
+
+            var clip = new AnimationClip
+            {
+                name = AttackClipAssetName,
+                wrapMode = WrapMode.Once,
+                frameRate = 30f
+            };
+            AssetDatabase.CreateAsset(clip, animRel);
             AssetDatabase.SaveAssets();
-            Debug.Log("PILOT extracted editable DIAG attack clip → " + animRel + " len=" + copy.length);
+            Debug.Log("PILOT created named attack clip stub " + animRel);
 #endif
         }
 
@@ -1101,6 +1349,7 @@ namespace Survival.Unity
                 }
 
                 var hit = clip.name.IndexOf(hint, StringComparison.OrdinalIgnoreCase) >= 0
+                          || clip.name.IndexOf(AttackClipAssetName, StringComparison.OrdinalIgnoreCase) >= 0
                           || (hint == AttackClipHint && (clip.name.IndexOf("BaseLayer", StringComparison.OrdinalIgnoreCase) >= 0
                               || clip.name.IndexOf("Slash", StringComparison.OrdinalIgnoreCase) >= 0
                               || clip.name.IndexOf("Sword", StringComparison.OrdinalIgnoreCase) >= 0));
