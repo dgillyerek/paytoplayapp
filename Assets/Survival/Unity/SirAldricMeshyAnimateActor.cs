@@ -15,10 +15,10 @@ namespace Survival.Unity
     /// <summary>
     /// Sir Aldric PILOT: Mixamo-skinned holefixed mid280k is the ONLY visible body.
     /// Generic Mixamo clips (Humanoid Playable collapses this skin). AccuRIG superseded.
-    /// Walk = Standard Walk. Strike = Dev-authored clip SirAldric_DIAG_InwardSlash
-    /// (left-hip draw, raise overhead right, strike forward then down to the foot).
-    /// Clip name must match the .anim file or Unity will not compile the asset.
-    /// No post-Evaluate arm sculpt. No Path 1 / Path A / ClipSword. HOLD merge.
+    /// Walk = Standard Walk. Strike = Mixamo DIAG Stable Sword Inward Slash
+    /// (human take, md5 72412be4) — arm/shoulder/torso together. Sword starts
+    /// at LEFT hip then RH. No held-pose robot clip. No post-Evaluate arm sculpt.
+    /// Clip.name must match SirAldric_DIAG_InwardSlash. HOLD merge.
     /// </summary>
     [DefaultExecutionOrder(200)]
     public sealed class SirAldricMeshyAnimateActor : MonoBehaviour
@@ -43,17 +43,15 @@ namespace Survival.Unity
         public const string AttackClipHint = "Attack";
         public const float RearYawDegrees = SirAldric3DMotion.MixamoImportRearYawDegrees;
         public const string AttackAuthoredReason =
-            "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Dev-authored " +
-            "SirAldric_DIAG_InwardSlash clip (name matches the .anim file — Attack as clip.name does not match SirAldric_DIAG_InwardSlash and Unity will not compile). " +
-            "Not DIAG_REV 0beb3c77 e90b654 no-attack FAIL; not DIAG_MIRR 70fd9483 Derek reject 19e6efe; not MILD 8d5b78b0; not baseline 4a143441. " +
+            "PILOT Mixamo sep Generic: holefixed body + Standard Walk + Mixamo DIAG " +
+            "Stable Sword Inward Slash (md5 72412be4, human take — arm/shoulder/torso together). " +
+            "SirAldric_DIAG_InwardSlash.anim is that take (name matches the file — Attack as clip.name does not match SirAldric_DIAG_InwardSlash and Unity will not compile). " +
+            "Not the 7958283 held-pose robot clip. Not DIAG_REV 0beb3c77 e90b654 no-attack FAIL; not DIAG_MIRR 70fd9483 Derek reject 19e6efe; not MILD 8d5b78b0; not baseline 4a143441. " +
             "Sword never a whole-body X-flip. No Mixamo Mirror. " +
             "Walk: sword gripped in mixamorig:RightHand after draw (Derek 0fc0930 Game-view; 879a6f3 left-hand FAIL discarded). " +
-            "Dev owns the strike: rebuilt 3.20s clip with held beats — left-hip draw 0.32–0.90s, " +
-            "raise overhead right 1.28–1.79s, strike forward 2.18–2.56s, down to the foot 2.88–3.20s " +
-            "(YouTube iQ1s3nN1330 retired as down-left / backswing SoT — this tip is not that arc). " +
-            "Hand placed at hip-relative meters in the mixer clip (not the ddda018 unit-sphere smear; " +
-            "not post-Evaluate AimArmAlong / AttackRaiseThenCutReach — 95aba89 FAIL). " +
-            "Sheath/draw starts at LEFT hip; strike on mixamorig:RightHand. RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
+            "Dev owns the strike story: sword starts at LEFT hip and is drawn, Mixamo rise above the head on the RIGHT, strike FORWARD, then DOWN toward the foot. " +
+            "Mixer plays the DIAG clip only (leftover AttackLeftHipDrawReach / AimArmAlong / AttackRaiseThenCutReach unused — 95aba89 FAIL). " +
+            "YouTube iQ1s3nN1330 leftover / backswing history. RH sword 1.01m. Mixer 0.20s. FOV 42. Never AccuRIG. HOLD merge.";
         public const float WalkToAttackBlendSeconds = 0.20f;
         public const float SwordBladeMeters = 1.01f;
         private const float BodyHeightMinMeters = 0.5f;
@@ -164,6 +162,31 @@ namespace Survival.Unity
             _output.SetSourcePlayable(_mixer);
 
             EnsureEditableAttackClip();
+            var attack = LoadClip(ThemePackAttackAnim, AttackClipHint, repairWalk: false);
+#if UNITY_EDITOR
+            if (attack != null && AnimationUtility.GetCurveBindings(attack).Length <= 8)
+            {
+                attack = null;
+            }
+#endif
+            if (attack == null)
+            {
+                attack = LoadClip(ThemePackAttackFbx, AttackClipHint, repairWalk: false);
+            }
+
+            if (attack != null)
+            {
+                attack.wrapMode = WrapMode.Once;
+                _attackLength = attack.length;
+                _attackPlayable = AnimationClipPlayable.Create(_graph, attack);
+                _graph.Connect(_attackPlayable, 0, _mixer, 1);
+                _attackReady = true;
+            }
+            else
+            {
+                Debug.LogWarning("PILOT Mixamo DIAG attack take missing after Generic import.");
+            }
+
             _graph.Play();
             _graphReady = true;
             SampleAt(0f);
@@ -172,7 +195,6 @@ namespace Survival.Unity
             AttachHeldSword(_instance);
             HideEmbeddedSwords(_instance);
             CacheAttackBones(_instance);
-            ConnectAuthoredAttackClip();
             SampleAt(0f);
             LogSkinAndFailIfBad(_instance);
             BindRenderHook();
@@ -322,10 +344,9 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Mixer already plays the baked SirAldric_DIAG_InwardSlash clip (left-hip
-        /// draw → overhead right → forward → foot). After Evaluate, parent the
+        /// Mixer plays Mixamo DIAG (human take). After Evaluate, parent the
         /// sword only — no AimArmAlong / leftover AttackRaiseThenCutReach /
-        /// leftover AttackSlashReach.
+        /// leftover AttackSlashReach / leftover AttackLeftHipDrawReach.
         /// Draw starts at LEFT hip; strike on mixamorig:RightHand.
         /// </summary>
         private void ApplyAttackWindupLift(float attackWeight, float attackNormalized01)
@@ -341,7 +362,7 @@ namespace Survival.Unity
                 return;
             }
 
-            if (attackNormalized01 < SirAldric3DMotion.AttackSwordInHandU)
+            if (attackNormalized01 < SirAldric3DMotion.MixamoDiagDrawEndU)
             {
                 BindSwordTo(EnsureLeftHipSocket(), strikeGrip: false);
                 AimHeldSwordWorld(Vector3.down);
@@ -355,295 +376,8 @@ namespace Survival.Unity
             }
         }
 
-        private void ConnectAuthoredAttackClip()
-        {
-            var attack = BuildLeftHipDrawAttackClip();
-            if (attack == null)
-            {
-                Debug.LogWarning("PILOT authored attack clip bake failed. Walk-only.");
-                return;
-            }
+        // Discarded 7958283 held-pose robot bake. Mixer plays Mixamo DIAG.
 
-            attack.wrapMode = WrapMode.Once;
-            _attackLength = attack.length;
-            _attackPlayable = AnimationClipPlayable.Create(_graph, attack);
-            _graph.Connect(_attackPlayable, 0, _mixer, 1);
-            _attackReady = true;
-#if UNITY_EDITOR
-            SaveAuthoredAttackClip(attack);
-#endif
-        }
-
-        /// <summary>
-        /// Rebuild (not a tweak of the ddda018 unit-sphere smear). Held beats:
-        /// hand at left-hip meters, then above-head right, then forward, then foot.
-        /// Two-bone reach is bake-only — not applied after Evaluate.
-        /// </summary>
-        private AnimationClip? BuildLeftHipDrawAttackClip()
-        {
-            if (_animator == null || _hips == null || _rightArm == null || _rightHand == null)
-            {
-                return null;
-            }
-
-            var bones = new List<Transform>();
-            foreach (var bone in new[] { _rightArm, _rightForeArm, _rightHand, _leftArm, _leftForeArm, _leftHand, _spine })
-            {
-                if (bone != null)
-                {
-                    bones.Add(bone);
-                }
-            }
-
-            var rest = new Quaternion[bones.Count];
-            for (var i = 0; i < bones.Count; i++)
-            {
-                rest[i] = bones[i].localRotation;
-            }
-
-            var clip = new AnimationClip
-            {
-                name = AttackClipAssetName,
-                frameRate = 30f,
-                wrapMode = WrapMode.Once,
-                legacy = false
-            };
-            var length = SirAldric3DMotion.AttackClipSeconds;
-            var frames = Mathf.RoundToInt(length * 30f) + 1;
-            var dt = length / (frames - 1);
-            var qx = new AnimationCurve[bones.Count];
-            var qy = new AnimationCurve[bones.Count];
-            var qz = new AnimationCurve[bones.Count];
-            var qw = new AnimationCurve[bones.Count];
-            var prev = new Quaternion[bones.Count];
-            var hasPrev = new bool[bones.Count];
-            for (var i = 0; i < bones.Count; i++)
-            {
-                qx[i] = new AnimationCurve();
-                qy[i] = new AnimationCurve();
-                qz[i] = new AnimationCurve();
-                qw[i] = new AnimationCurve();
-            }
-
-            for (var f = 0; f < frames; f++)
-            {
-                var u = f / (float)(frames - 1);
-                for (var i = 0; i < bones.Count; i++)
-                {
-                    bones[i].localRotation = rest[i];
-                }
-
-                BakeAttackPose(u);
-                for (var i = 0; i < bones.Count; i++)
-                {
-                    var q = bones[i].localRotation;
-                    if (hasPrev[i] && Quaternion.Dot(prev[i], q) < 0f)
-                    {
-                        q = new Quaternion(-q.x, -q.y, -q.z, -q.w);
-                    }
-
-                    prev[i] = q;
-                    hasPrev[i] = true;
-                    var t = f * dt;
-                    qx[i].AddKey(new Keyframe(t, q.x, 0f, 0f));
-                    qy[i].AddKey(new Keyframe(t, q.y, 0f, 0f));
-                    qz[i].AddKey(new Keyframe(t, q.z, 0f, 0f));
-                    qw[i].AddKey(new Keyframe(t, q.w, 0f, 0f));
-                }
-            }
-
-            for (var i = 0; i < bones.Count; i++)
-            {
-                bones[i].localRotation = rest[i];
-                var path = RelPath(bones[i], _animator.transform);
-                FlattenHoldTangents(qx[i]);
-                FlattenHoldTangents(qy[i]);
-                FlattenHoldTangents(qz[i]);
-                FlattenHoldTangents(qw[i]);
-                clip.SetCurve(path, typeof(Transform), "m_LocalRotation.x", qx[i]);
-                clip.SetCurve(path, typeof(Transform), "m_LocalRotation.y", qy[i]);
-                clip.SetCurve(path, typeof(Transform), "m_LocalRotation.z", qz[i]);
-                clip.SetCurve(path, typeof(Transform), "m_LocalRotation.w", qw[i]);
-            }
-
-            clip.EnsureQuaternionContinuity();
-            return clip;
-        }
-
-        private static void FlattenHoldTangents(AnimationCurve curve)
-        {
-            var keys = curve.keys;
-            for (var i = 0; i < keys.Length; i++)
-            {
-                var k = keys[i];
-                k.inTangent = 0f;
-                k.outTangent = 0f;
-                keys[i] = k;
-            }
-
-            curve.keys = keys;
-        }
-
-        private void BakeAttackPose(float attackNormalized01)
-        {
-            SirAldric3DMotion.AttackLeftHipDrawReach(attackNormalized01, out var dx, out var dy, out var dz);
-            var origin = _hips != null ? _hips.position : Vector3.zero;
-            BakeHandToWorld(origin + new Vector3(dx, dy, dz));
-
-            if (_spine != null)
-            {
-                var extra = Quaternion.identity;
-                if (attackNormalized01 <= SirAldric3DMotion.AttackDrawHoldEndU)
-                {
-                    extra = Quaternion.Euler(8f, 14f, 0f);
-                }
-                else if (attackNormalized01 <= SirAldric3DMotion.AttackRaiseHoldEndU)
-                {
-                    extra = Quaternion.Euler(-6f, -10f, 0f);
-                }
-                else if (attackNormalized01 <= SirAldric3DMotion.AttackFwdHoldEndU)
-                {
-                    extra = Quaternion.Euler(12f, 0f, 0f);
-                }
-                else
-                {
-                    extra = Quaternion.Euler(16f, 4f, 0f);
-                }
-
-                _spine.localRotation = Quaternion.Normalize(_spine.localRotation * extra);
-            }
-
-            if (_leftArm == null || _leftHand == null)
-            {
-                return;
-            }
-
-            if (attackNormalized01 < SirAldric3DMotion.AttackSwordInHandU)
-            {
-                BakeAimEndToward(_leftArm, _leftHand, origin + new Vector3(-0.20f, 0.02f, 0.04f));
-            }
-        }
-
-        /// <summary>
-        /// Bake-only two-bone reach so the hand sits on the beat target (meters),
-        /// not a 0.55 m sphere around the hips. Do not call after Evaluate.
-        /// </summary>
-        private void BakeHandToWorld(Vector3 worldTarget)
-        {
-            if (_rightArm == null || _rightHand == null)
-            {
-                return;
-            }
-
-            for (var i = 0; i < 6; i++)
-            {
-                if (_rightForeArm != null)
-                {
-                    BakeAimEndToward(_rightForeArm, _rightHand, worldTarget);
-                }
-
-                BakeAimEndToward(_rightArm, _rightHand, worldTarget);
-            }
-
-            BakePoleRightElbow();
-            if (_rightForeArm != null)
-            {
-                BakeAimEndToward(_rightForeArm, _rightHand, worldTarget);
-            }
-        }
-
-        private void BakePoleRightElbow()
-        {
-            if (_rightArm == null || _rightForeArm == null || _rightHand == null)
-            {
-                return;
-            }
-
-            var axis = _rightHand.position - _rightArm.position;
-            if (axis.sqrMagnitude < 1e-6f)
-            {
-                return;
-            }
-
-            axis.Normalize();
-            var off = Vector3.ProjectOnPlane(_rightForeArm.position - _rightArm.position, axis);
-            var pole = Vector3.ProjectOnPlane(Vector3.right * 0.85f + Vector3.back * 0.35f, axis);
-            if (off.sqrMagnitude < 1e-6f || pole.sqrMagnitude < 1e-6f)
-            {
-                return;
-            }
-
-            var rot = Quaternion.FromToRotation(off.normalized, pole.normalized);
-            _rightArm.rotation = Quaternion.Normalize(rot * _rightArm.rotation);
-        }
-
-        /// <summary>
-        /// Bake-only. Do not call after Evaluate (95aba89 AimArmAlong FAIL).
-        /// </summary>
-        private static void BakeAimEndToward(Transform? bone, Transform? end, Vector3 worldTarget)
-        {
-            if (bone == null || end == null)
-            {
-                return;
-            }
-
-            var from = end.position - bone.position;
-            var to = worldTarget - bone.position;
-            if (from.sqrMagnitude < 1e-6f || to.sqrMagnitude < 1e-6f)
-            {
-                return;
-            }
-
-            var aim = Quaternion.FromToRotation(from.normalized, to.normalized);
-            bone.rotation = Quaternion.Normalize(aim * bone.rotation);
-        }
-
-        private static string RelPath(Transform bone, Transform root)
-        {
-            if (bone == root)
-            {
-                return "";
-            }
-
-            var parts = new List<string>();
-            var t = bone;
-            while (t != null && t != root)
-            {
-                parts.Add(t.name);
-                t = t.parent;
-            }
-
-            parts.Reverse();
-            return string.Join("/", parts);
-        }
-
-        private static void SaveAuthoredAttackClip(AnimationClip clip)
-        {
-#if UNITY_EDITOR
-            var animRel = AssetPath(ThemePackAttackAnim);
-            clip.name = AttackClipAssetName;
-            var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(animRel);
-            if (existing != null)
-            {
-                EditorUtility.CopySerialized(clip, existing);
-                existing.name = AttackClipAssetName;
-                existing.wrapMode = WrapMode.Once;
-                EditorUtility.SetDirty(existing);
-            }
-            else
-            {
-                var folder = "Assets/Survival/Unity/Anims";
-                if (!AssetDatabase.IsValidFolder(folder))
-                {
-                    AssetDatabase.CreateFolder("Assets/Survival/Unity", "Anims");
-                }
-
-                AssetDatabase.CreateAsset(UnityEngine.Object.Instantiate(clip), animRel);
-            }
-
-            AssetDatabase.SaveAssets();
-#endif
-        }
 
         private Transform? EnsureLeftHipSocket()
         {
@@ -952,22 +686,22 @@ namespace Survival.Unity
             if (_attackReady && t >= walkBlock - blend * 0.5f && t < walkBlock + attackLen - blend * 0.5f)
             {
                 var u = Mathf.Clamp01((t - walkBlock) / attackLen);
-                if (u <= SirAldric3DMotion.AttackDrawHoldEndU)
+                if (u < SirAldric3DMotion.MixamoDiagDrawEndU)
                 {
-                    return "DRAW  ·  LEFT hip pocket  ·  0.32–0.90s";
+                    return "DRAW  ·  LEFT hip  ·  Mixamo DIAG";
                 }
 
-                if (u <= SirAldric3DMotion.AttackRaiseHoldEndU)
+                if (u < 0.70f)
                 {
-                    return "RAISE  ·  overhead RIGHT  ·  1.28–1.79s";
+                    return "RAISE  ·  overhead RIGHT  ·  Mixamo DIAG";
                 }
 
-                if (u <= SirAldric3DMotion.AttackFwdHoldEndU)
+                if (u < 0.85f)
                 {
-                    return "STRIKE  ·  FORWARD  ·  2.18–2.56s";
+                    return "STRIKE  ·  FORWARD  ·  Mixamo DIAG";
                 }
 
-                return "STRIKE  ·  DOWN to foot  ·  2.88–3.20s";
+                return "STRIKE  ·  DOWN to foot  ·  Mixamo DIAG";
             }
 
             return "WALK  ·  toward TOP  ·  RH grip";
@@ -1326,27 +1060,38 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Keep SirAldric_DIAG_InwardSlash.anim importable: clip.name must equal
-        /// the file name. Do not copy DIAG FBX over the Dev-authored clip, and
-        /// never name it Attack (Unity: attack does not match SirAldric_DIAG_InwardSlash).
+        /// Duplicate the Mixamo DIAG take into SirAldric_DIAG_InwardSlash.anim.
+        /// Clip.name must equal the file name (Attack does not match).
+        /// Overwrites the discarded 7958283 held-pose bake.
         /// </summary>
         public static void EnsureEditableAttackClip(bool forceReextract = false)
         {
             _ = forceReextract;
 #if UNITY_EDITOR
             var animRel = AssetPath(ThemePackAttackAnim);
+            var srcRel = AssetPath(ThemePackAttackFbx);
+            var src = PickClip(srcRel, AttackClipHint);
+            if (src == null)
+            {
+                RepairAttackTake(srcRel);
+                src = PickClip(srcRel, AttackClipHint);
+            }
+
+            if (src == null)
+            {
+                Debug.LogWarning("PILOT cannot extract Mixamo DIAG take. " + srcRel);
+                return;
+            }
+
             var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(animRel);
             if (existing != null)
             {
-                if (!string.Equals(existing.name, AttackClipAssetName, StringComparison.Ordinal))
-                {
-                    existing.name = AttackClipAssetName;
-                    existing.wrapMode = WrapMode.Once;
-                    EditorUtility.SetDirty(existing);
-                    AssetDatabase.SaveAssets();
-                    Debug.Log("PILOT renamed attack clip to " + AttackClipAssetName + " so Unity can compile " + animRel);
-                }
-
+                EditorUtility.CopySerialized(src, existing);
+                existing.name = AttackClipAssetName;
+                existing.wrapMode = WrapMode.Once;
+                EditorUtility.SetDirty(existing);
+                AssetDatabase.SaveAssets();
+                Debug.Log("PILOT extracted Mixamo DIAG → " + animRel + " name=" + AttackClipAssetName);
                 return;
             }
 
@@ -1356,15 +1101,14 @@ namespace Survival.Unity
                 AssetDatabase.CreateFolder("Assets/Survival/Unity", "Anims");
             }
 
-            var clip = new AnimationClip
-            {
-                name = AttackClipAssetName,
-                wrapMode = WrapMode.Once,
-                frameRate = 30f
-            };
-            AssetDatabase.CreateAsset(clip, animRel);
+            var copy = UnityEngine.Object.Instantiate(src);
+            copy.name = AttackClipAssetName;
+            copy.wrapMode = WrapMode.Once;
+            AssetDatabase.CreateAsset(copy, animRel);
             AssetDatabase.SaveAssets();
-            Debug.Log("PILOT created named attack clip stub " + animRel);
+            Debug.Log("PILOT created Mixamo DIAG .anim " + animRel);
+#else
+            _ = forceReextract;
 #endif
         }
 

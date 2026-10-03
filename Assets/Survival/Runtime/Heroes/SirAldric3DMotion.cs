@@ -27,14 +27,16 @@ namespace Survival.Domain.Heroes
         /// <summary>
         /// DIAG Inward Slash take window (EXPORT_DIAG.md) — last Mixamo clip
         /// that actually played in Game-view (tips 95b5a4a / 43b33fb, md5 72412be4).
-        /// PlayableGraph plays the editable project .anim duplicate. Leftover
-        /// AttackRaiseThenCutReach unused after Derek FAIL 95aba89. DIAG_REV
+        /// PlayableGraph plays this Mixamo take (human arm/shoulder/torso).
+        /// Leftover AttackRaiseThenCutReach unused after Derek FAIL 95aba89. DIAG_REV
         /// 0beb3c77 time-reverse bake (e90b654) showed no attack. Not Mixamo
         /// Mirror (DIAG_MIRR 70fd9483, Derek reject 19e6efe). Not MILD 8d5b78b0
-        /// / baseline 4a143441. Not a Unity scale.x flip.
+        /// / baseline 4a143441. Not a Unity scale.x flip. Not the 7958283 held-pose clip.
         /// </summary>
         public const int MixamoSlashFirstFrame = 0;
         public const int MixamoSlashLastFrame = 85;
+        /// <summary>DIAG ready ~f9/85. Sword on LEFT hip until this u, then RH.</summary>
+        public const float MixamoDiagDrawEndU = 0.18f;
 
         /// <summary>
         /// Derek slash SoT: https://www.youtube.com/watch?v=iQ1s3nN1330

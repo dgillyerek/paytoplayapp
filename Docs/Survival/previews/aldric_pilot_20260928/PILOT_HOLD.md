@@ -1,6 +1,6 @@
 # HOLD — Sir Aldric PILOT Mixamo separate-portrait (2026-09-28)
 
-**HOLD merge on PR #27 until Derek Game-view PASS vs the slash video.** Path A / ClipSword / AimChain / Dev weight-paint are not SoT. Derek GO: Dev owns the strike in Unity — no more Design FBX re-bakes for this tip loop. Playing clip is **`SirAldric_DIAG_InwardSlash`** (`Assets/Survival/Unity/Anims/SirAldric_DIAG_InwardSlash.anim`). Clip **name must match the file** — naming it `Attack` does not match `SirAldric_DIAG_InwardSlash` and Unity will not compile. Sequence (rear cam / Derek POV): **left-hip draw**, **raise overhead right**, **strike forward then down to the foot**. Baked into the mixer clip. **Not** post-Evaluate `AimArmAlong` (Derek FAIL `95aba89`). **Not** DIAG_REV `0beb3c77` (Derek `e90b654` Game-view **no attack**). **Not** DIAG_MIRR `70fd9483`. **Not** MILD `8d5b78b0`. **Not** baseline `4a143441`. **Not** Mixamo L/R Mirror. Walk SoT remains Derek `0fc0930` / `98dabbb` RH grip after draw. Orbit 1/2/3 stays. Rematch optional.
+**HOLD merge on PR #27 until Derek Game-view PASS vs the slash video.** Path A / ClipSword / AimChain / Dev weight-paint are not SoT. Derek GO: Dev owns the strike in Unity — no more Design FBX re-bakes for this tip loop. Playing clip is Mixamo **DIAG** `Stable Sword Inward Slash` (md5 `72412be4`, human take — arm/shoulder/torso together), stored as `SirAldric_DIAG_InwardSlash.anim` (clip **name must match the file**). **Discarded** the `7958283` held-pose robot clip. Story: **left-hip** draw (sword starts at **LEFT hip**), Mixamo rise **above the head on the RIGHT**, strike **FORWARD**, then **DOWN toward the foot**. **Not** post-Evaluate `AimArmAlong` (Derek FAIL `95aba89`). **Not** DIAG_REV `0beb3c77`. **Not** DIAG_MIRR `70fd9483`. **Not** MILD `8d5b78b0`. **Not** baseline `4a143441`. **Not** Mixamo L/R Mirror. Walk SoT remains Derek `0fc0930` / `98dabbb` RH grip after draw. Orbit 1/2/3 stays. Rematch optional.
 
 ## Wire
 
@@ -9,7 +9,7 @@
 | Playable Mixamo body | `Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx` |
 | Unrigged look mesh (on disk) | `SirAldric_body_holefixed_mid280k.fbx` (no armature — not the Play instance) |
 | Walk clip | same walk FBX · Unity takeName **`mixamo.com`** 1–36 (Mixamo Standard Walk) |
-| Slash clip | **`SirAldric_DIAG_InwardSlash.anim`** — Dev-authored left-hip draw / overhead-right / forward / foot. Clip.name = file name. DIAG FBX `…_DIAG.fbx` md5 `72412be4` leftover on disk (not the playing take). Leftover `AttackRaiseThenCutReach` unused. |
+| Slash clip | Mixamo **DIAG** `…_Slash_DIAG.fbx` md5 `72412be4` (human Inward Slash). Duplicate `.anim` `SirAldric_DIAG_InwardSlash` (name = file). Leftover `AttackRaiseThenCutReach` / held-pose bake unused. |
 | Sword prop | `SirAldric_PILOT_sword.fbx` walk + strike **`mixamorig:RightHand`**. Leftover **`HipSheathSocket`** on **`mixamorig:Hips`** is unused. |
 | Cape prop | `SirAldric_PILOT_cape.fbx` on disk (optional soft — not auto-parented; scale/bind leftover) |
 | Paint | `pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture*.png` |
@@ -18,7 +18,7 @@ Slash With-Skin mesh is **not instantiated**. `StripEmbeddedClipMeshes` disables
 
 **Sword hand:** walk/idle = `mixamorig:RightHand` along-arm grip (Derek `0fc0930` / `98dabbb` Game-view). Hip-sheath socket code is leftover only. Strike = stay on `mixamorig:RightHand`. FaceWorldTop yaws 180 and **Abs** scale (never `scale.x = -1`). Derek FAIL `212c6da` whole-body X-flip put the sword on the left hand — discarded. Local Generic Euler extras (`5f5e375`) swung the opposite way on Play-cam — discarded.
 
-After `Evaluate()`, re-apply **sword parent** only: LEFT hip socket during draw, then `mixamorig:RightHand` for the strike. **No** post-Evaluate arm sculpt (`AimArmAlong` / `AttackRaiseThenCutReach` — Derek FAIL `95aba89`). Motion is **in the clip** the mixer plays (`AttackLeftHipDrawReach` baked at Build). AnimatorController stays for Animation-window Preview. Unity bake blade = **local +Y**. Do **not** aim with world `Vector3.left/right/back` or Mixamo `hips.right` — that locked the blade **world-left across the neck** (Derek FAIL `cdfbea5`). Not AimChain. Not a body X-flip. **Rematch is optional and not Game-view proof.**
+After `Evaluate()`, re-apply **sword parent** only: LEFT hip socket during draw (`MixamoDiagDrawEndU` 0.18), then `mixamorig:RightHand` for the strike. **No** post-Evaluate arm sculpt (`AimArmAlong` / `AttackRaiseThenCutReach` — Derek FAIL `95aba89`). Motion is the Mixamo DIAG take the mixer plays. Leftover `AttackLeftHipDrawReach` unused. AnimatorController stays for Animation-window Preview. Unity bake blade = **local +Y**. Do **not** aim with world `Vector3.left/right/back` or Mixamo `hips.right` — that locked the blade **world-left across the neck** (Derek FAIL `cdfbea5`). Not AimChain. Not a body X-flip. **Rematch is optional and not Game-view proof.**
 
 Play-cam **defaults to rear** `(0, 1.92, −3.08)`. Orbit: **1** rear, **2** 3/4, **3** front, **Q/E** or **RMB** drag. Do not change the default rear frame.
 
@@ -94,5 +94,5 @@ Play-cam rematch: walk f18 (older hip-sheath dump `sir_aldric_pilot_dump_walk_f1
 
 1. Play **SirAldric** (click the Game view). Default cam = **rear**. **1 / 2 / 3** orbit. HUD `cam <yaw>` must change.
 2. **Walk (Derek 0fc0930 SoT):** sword **in the right hand**, along-arm — not floating at the hip.
-3. **Strike (rebuilt 3.20s clip, held beats — not the ddda018 smear):** walk straight, then **LEFT hip draw 0.32–0.90s**, **raise above head on the RIGHT 1.28–1.79s**, **strike FORWARD 2.18–2.56s**, **DOWN toward his foot 2.88–3.20s**. Hand at hip-relative meters. **Not** down-left. **Not** raise-then-cut. **Not** DIAG_REV. Sword draw starts at the left hip; strike / walk-after-draw on `mixamorig:RightHand`.
+3. **Strike (Mixamo DIAG human take):** walk straight. Sword starts at the **LEFT hip** and is drawn. Body plays DIAG so the arm/shoulder/torso **raise above head on the RIGHT**, strike **FORWARD**, then come **DOWN toward his foot**. **Not** frozen held poses (`7958283`). **Not** DIAG_REV. Strike / walk-after-draw on `mixamorig:RightHand`.
 4. HOLD until Derek Game-view PASS vs that video.

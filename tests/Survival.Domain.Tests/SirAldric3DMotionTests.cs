@@ -343,8 +343,11 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("AttackClipAssetName", actor, StringComparison.Ordinal);
         Assert.Contains("SirAldric_DIAG_InwardSlash.anim", actor, StringComparison.Ordinal);
         Assert.Contains("SirAldric_DIAG_InwardSlash.controller", actor, StringComparison.Ordinal);
-        Assert.Contains("ConnectAuthoredAttackClip", actor, StringComparison.Ordinal);
+        Assert.Contains("LoadClip(ThemePackAttackAnim", actor, StringComparison.Ordinal);
+        Assert.Contains("LoadClip(ThemePackAttackFbx", actor, StringComparison.Ordinal);
         Assert.Contains("AttackLeftHipDrawReach", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("BuildLeftHipDrawAttackClip", actor, StringComparison.Ordinal);
+        Assert.Contains("MixamoDiagDrawEndU", actor, StringComparison.Ordinal);
         Assert.Contains("does not match SirAldric_DIAG_InwardSlash", actor, StringComparison.Ordinal);
         Assert.Contains("EnsureEditableAttackClip", actor, StringComparison.Ordinal);
         Assert.Contains("AttackSlashReach", actor, StringComparison.Ordinal);
