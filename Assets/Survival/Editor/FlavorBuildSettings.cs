@@ -12,6 +12,7 @@ namespace Survival.Editor
         private const string Splash = "Assets/Survival/Scenes/Splash.unity";
         private const string Play = "Assets/Survival/Scenes/Play.unity";
         private const string SirAldric = "Assets/Survival/Scenes/SirAldric.unity";
+        private const string Blightroot = "Assets/Survival/Scenes/Blightroot.unity";
         private const string GroveBoard = "Assets/Grove/Scenes/Board.unity";
 
         [MenuItem("Survival/Use Theme A Flavor (fantasy_kingdom_a)")]
@@ -25,6 +26,7 @@ namespace Survival.Editor
                 new EditorBuildSettingsScene(Splash, true),
                 new EditorBuildSettingsScene(Play, true),
                 new EditorBuildSettingsScene(SirAldric, true),
+                new EditorBuildSettingsScene(Blightroot, true),
                 new EditorBuildSettingsScene(GroveBoard, true)
             };
             Debug.Log("Survival flavor " + SurvIds.FlavorIdFantasyKingdomA + " → Splash then Play. Pack " + SurvIds.ThemeIdFantasyKingdomA);
@@ -34,6 +36,12 @@ namespace Survival.Editor
         public static void OpenSirAldricDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SirAldric);
+        }
+
+        [MenuItem("Survival/Blightroot Demo (creature pack, Game view 1080x1920)")]
+        public static void OpenBlightrootDemo()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Blightroot);
         }
 
         [MenuItem("Survival/Import locked Sir Aldric rear master")]
