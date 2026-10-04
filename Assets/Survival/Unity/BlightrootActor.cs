@@ -11,11 +11,13 @@ namespace Survival.Unity
 {
     /// <summary>
     /// Plays creature-pack takes on the Dual Weapon Combo skinned body.
-    /// Same mixamorig hierarchy, Generic curves, take mixamo.com. The FBX is Y-up
-    /// (about 1.65 m wide, 0.77 m deep, 1.90 m tall). Do not bake axis conversion:
-    /// baking turned the tall axis into depth. With baking off, Unity stands the
-    /// spine up with the imported root rotation. Clearing that rotation lays him
-    /// flat. Leave the imported rotation and the bones alone. Uniform scale only.
+    /// Same mixamorig hierarchy, Generic curves, take mixamo.com. The export is
+    /// about 1.65 m wide, 0.77 m deep, and 1.90 m tall once the spine is up.
+    /// Do not bake axis conversion and do not scale him to the Aldric height.
+    /// Do not write the FBX instance root rotation: clearing it and keeping it
+    /// both left the same wide, short Game view. Measure the skinned mesh in
+    /// camera space and turn this actor, which the Animator does not drive,
+    /// so the long axis is world up and the head end is the top.
     /// No retarget, no bone rewrite, no mirror, no time reverse.
     /// Empty takes are rejected. HOLD merge until Derek Game-view PASS.
     /// </summary>
@@ -23,12 +25,6 @@ namespace Survival.Unity
     public sealed class BlightrootActor : MonoBehaviour
     {
         public const string ThemePackBody = BlightrootMotion.BodyThemePackRel;
-
-        /// <summary>Copied from SirAldricMeshyAnimateActor on the merged Aldric scene. Not a new guess.</summary>
-        private const float BodyHeightMinMeters = 0.5f;
-
-        private const float BodyHeightMaxMeters = 5f;
-        private const float BodyHeightTargetMeters = 1.80f;
 
         private Animator? _animator;
         private PlayableGraph _graph;
@@ -40,6 +36,8 @@ namespace Survival.Unity
         private float _length;
         private float _time;
         private string? _exactName;
+        private bool _spineAligned;
+        private bool _feetPlanted;
 
         public bool Built => _ready;
         public string? ExactName => _exactName;
@@ -59,7 +57,7 @@ namespace Survival.Unity
             _instance = Instantiate(prefab, transform);
             _instance.name = "BlightrootDualWeaponCombo";
             EnableSkin(_instance);
-            MatchAldricBodyScale(_instance);
+            LogMeasuredPose("after Build");
             _animator = _instance.GetComponent<Animator>() ?? _instance.AddComponent<Animator>();
             var avatar = LoadAvatar(AssetPath(ThemePackBody));
             if (avatar != null && avatar.isHuman)
@@ -129,7 +127,31 @@ namespace Survival.Unity
             _loop = entry.Loop;
             _exactName = entry.ExactName;
             _graph.Evaluate(0f);
+            AlignVisiblePose();
             return true;
+        }
+
+        private void AlignVisiblePose()
+        {
+            if (_spineAligned || _instance == null)
+            {
+                return;
+            }
+
+            if (!string.Equals(_exactName, "mutant idle", StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            LogMeasuredPose("idle frame 0");
+            if (!StandLongAxisUp())
+            {
+                return;
+            }
+
+            _spineAligned = true;
+            PlantFeetOnGround();
+            LogMeasuredPose("stood up");
         }
 
         private void Update()
@@ -151,6 +173,7 @@ namespace Survival.Unity
 
             _playable.SetTime(_time);
             _graph.Evaluate(0f);
+            AlignVisiblePose();
         }
 
         private void OnDestroy()
@@ -369,61 +392,233 @@ namespace Survival.Unity
 #endif
 
         /// <summary>
-        /// Keep the imported root rotation. It is Unity's unbaked axis conversion
-        /// (bakeAxisConversion is off). The mesh is stored 90° off; that root
-        /// rotation stands the spine on world +Y. Setting the instance or the mesh
-        /// to identity lays the 1.90 m axis down as depth and the Game view shows
-        /// a body about 0.77 m tall. Bones are not rewritten.
-        /// Uniform scale only, same band as the Aldric scene: 1 inside 0.5–5 m,
-        /// otherwise one uniform factor toward 1.80 m. Never scale a single axis.
+        /// The FBX instance root rotation is left alone. Both writing identity and
+        /// keeping the import left the same wide, short body, so that rotation is
+        /// not the axis the camera is seeing. Bake the posed mesh, find the long
+        /// axis, and point the head end at world up by rotating this actor.
+        /// Scale is not written. The Mixamo export size is the size.
         /// </summary>
-        private static void MatchAldricBodyScale(GameObject root)
+        private bool StandLongAxisUp()
         {
-            foreach (var skin in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            if (_instance == null || !TryMeshTowardHead(out var towardHead, out var worldSize))
             {
-                var mesh = skin.transform;
-                if (mesh == root.transform || mesh.name.StartsWith("mixamorig:", StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                if (IsCmOrNegativeScale(mesh.localScale))
-                {
-                    mesh.localScale = Vector3.one;
-                }
+                return false;
             }
 
-            root.transform.localScale = Vector3.one;
-            var height = 0f;
-            foreach (var skin in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            Debug.Log("Blightroot skinned world size " + Fmt(worldSize));
+
+            if (towardHead.sqrMagnitude < 1e-8f)
             {
-                var size = skin.bounds.size;
-                height = Mathf.Max(height, size.x, size.y, size.z);
+                return false;
             }
 
-            if (height >= BodyHeightMinMeters && height <= BodyHeightMaxMeters)
+            var dot = Vector3.Dot(towardHead.normalized, Vector3.up);
+            if (dot >= 0.5f)
             {
-                return;
+                Debug.Log("Blightroot mesh long axis is already up. dot " + dot.ToString("0.00"));
+                return true;
             }
 
-            if (height < 0.0001f)
-            {
-                Debug.LogError("Blightroot body has no measurable height to match the Aldric scene scale.");
-                return;
-            }
-
-            var factor = BodyHeightTargetMeters / height;
-            root.transform.localScale = Vector3.one * factor;
-            Debug.Log("Blightroot uniform scale to Aldric target " + BodyHeightTargetMeters + "m from " + height + "m ×" + factor);
+            var correction = Quaternion.FromToRotation(towardHead, Vector3.up);
+            transform.rotation = correction * transform.rotation;
+            Debug.Log("Blightroot turned the actor so the mesh long axis is up. dot was " + dot.ToString("0.00"));
+            return true;
         }
 
-        private static bool IsCmOrNegativeScale(Vector3 s) =>
-            (Mathf.Abs(s.x - 0.01f) < 0.003f
-                && Mathf.Abs(s.y - 0.01f) < 0.003f
-                && Mathf.Abs(s.z - 0.01f) < 0.003f)
-            || s.x < 0f
-            || s.y < 0f
-            || s.z < 0f;
+        private void PlantFeetOnGround()
+        {
+            if (_feetPlanted || _instance == null || !TryWorldFoot(out var minY))
+            {
+                return;
+            }
+
+            _feetPlanted = true;
+            var lift = BlightrootMotion.GroundY - minY;
+            if (Mathf.Abs(lift) > 0.001f)
+            {
+                transform.position += Vector3.up * lift;
+            }
+        }
+
+        private bool TryMeshTowardHead(out Vector3 towardHead, out Vector3 worldSize)
+        {
+            towardHead = Vector3.up;
+            worldSize = Vector3.zero;
+            if (_instance == null)
+            {
+                return false;
+            }
+
+            var skin = _instance.GetComponentInChildren<SkinnedMeshRenderer>(true);
+            var head = FindNamed(_instance.transform, "mixamorig:Head");
+            if (skin == null)
+            {
+                return false;
+            }
+
+            var baked = new Mesh();
+            skin.BakeMesh(baked);
+            var localBounds = baked.bounds;
+            var size = localBounds.size;
+            Destroy(baked);
+            if (size.sqrMagnitude < 1e-8f)
+            {
+                return FallbackSpine(skin, head, out towardHead, out worldSize);
+            }
+
+            var axis = 0;
+            var longest = size.x;
+            if (size.y > longest)
+            {
+                longest = size.y;
+                axis = 1;
+            }
+
+            if (size.z > longest)
+            {
+                axis = 2;
+            }
+
+            var local = axis == 0 ? Vector3.right : axis == 1 ? Vector3.up : Vector3.forward;
+            if (head != null)
+            {
+                var localHead = skin.transform.InverseTransformPoint(head.position);
+                var along = axis == 0
+                    ? localHead.x - localBounds.center.x
+                    : axis == 1
+                        ? localHead.y - localBounds.center.y
+                        : localHead.z - localBounds.center.z;
+                if (along < 0f)
+                {
+                    local = -local;
+                }
+            }
+
+            towardHead = skin.transform.TransformVector(local);
+            worldSize = WorldSize(skin, localBounds);
+            return true;
+        }
+
+        private bool FallbackSpine(SkinnedMeshRenderer skin, Transform? head, out Vector3 towardHead, out Vector3 worldSize)
+        {
+            worldSize = skin.bounds.size;
+            towardHead = Vector3.up;
+            var left = _instance != null ? FindNamed(_instance.transform, "mixamorig:LeftFoot") : null;
+            var right = _instance != null ? FindNamed(_instance.transform, "mixamorig:RightFoot") : null;
+            if (head == null || left == null || right == null)
+            {
+                return worldSize.sqrMagnitude > 1e-8f;
+            }
+
+            var feet = (left.position + right.position) * 0.5f;
+            towardHead = head.position - feet;
+            return towardHead.sqrMagnitude > 1e-8f;
+        }
+
+        private bool TryWorldFoot(out float minY)
+        {
+            minY = 0f;
+            if (_instance == null)
+            {
+                return false;
+            }
+
+            var skin = _instance.GetComponentInChildren<SkinnedMeshRenderer>(true);
+            if (skin == null)
+            {
+                return false;
+            }
+
+            var baked = new Mesh();
+            skin.BakeMesh(baked);
+            var localBounds = baked.bounds;
+            Destroy(baked);
+            if (localBounds.size.sqrMagnitude < 1e-8f)
+            {
+                minY = skin.bounds.min.y;
+                return skin.bounds.size.sqrMagnitude > 1e-8f;
+            }
+
+            minY = WorldMinY(skin, localBounds);
+            return true;
+        }
+
+        private static Vector3 WorldSize(SkinnedMeshRenderer skin, Bounds localBounds)
+        {
+            var min = Vector3.one * float.PositiveInfinity;
+            var max = Vector3.one * float.NegativeInfinity;
+            EncapsulateWorld(skin, localBounds, ref min, ref max);
+            return max - min;
+        }
+
+        private static float WorldMinY(SkinnedMeshRenderer skin, Bounds localBounds)
+        {
+            var min = Vector3.one * float.PositiveInfinity;
+            var max = Vector3.one * float.NegativeInfinity;
+            EncapsulateWorld(skin, localBounds, ref min, ref max);
+            return min.y;
+        }
+
+        private static void EncapsulateWorld(SkinnedMeshRenderer skin, Bounds localBounds, ref Vector3 min, ref Vector3 max)
+        {
+            var center = localBounds.center;
+            var ext = localBounds.extents;
+            for (var i = 0; i < 8; i++)
+            {
+                var corner = center;
+                corner.x += (i & 1) == 0 ? -ext.x : ext.x;
+                corner.y += (i & 2) == 0 ? -ext.y : ext.y;
+                corner.z += (i & 4) == 0 ? -ext.z : ext.z;
+                var world = skin.transform.TransformPoint(corner);
+                min = Vector3.Min(min, world);
+                max = Vector3.Max(max, world);
+            }
+        }
+
+        private void LogMeasuredPose(string when)
+        {
+            if (_instance == null)
+            {
+                return;
+            }
+
+            var skin = _instance.GetComponentInChildren<SkinnedMeshRenderer>(true);
+            var mesh = skin != null ? skin.transform : null;
+            var hips = FindNamed(_instance.transform, BlightrootMotion.BoneRoot);
+            var bounds = skin != null ? skin.bounds.size : Vector3.zero;
+            Debug.Log(
+                "Blightroot pose " + when +
+                " rendererBounds " + Fmt(bounds) +
+                " instanceRot " + Euler(_instance.transform) +
+                " instanceScale " + Fmt(_instance.transform.localScale) +
+                " meshRot " + (mesh != null ? Euler(mesh) : "none") +
+                " meshScale " + (mesh != null ? Fmt(mesh.localScale) : "none") +
+                " hipsRot " + (hips != null ? Euler(hips) : "none") +
+                " hipsScale " + (hips != null ? Fmt(hips.localScale) : "none"));
+        }
+
+        private static string Euler(Transform t)
+        {
+            var e = t.localEulerAngles;
+            return e.x.ToString("0.0") + "," + e.y.ToString("0.0") + "," + e.z.ToString("0.0");
+        }
+
+        private static string Fmt(Vector3 v) =>
+            v.x.ToString("0.000") + "," + v.y.ToString("0.000") + "," + v.z.ToString("0.000");
+
+        private static Transform? FindNamed(Transform root, string name)
+        {
+            var all = root.GetComponentsInChildren<Transform>(true);
+            for (var i = 0; i < all.Length; i++)
+            {
+                if (string.Equals(all[i].name, name, StringComparison.Ordinal))
+                {
+                    return all[i];
+                }
+            }
+
+            return null;
+        }
 
         private static void EnableSkin(GameObject root)
         {
