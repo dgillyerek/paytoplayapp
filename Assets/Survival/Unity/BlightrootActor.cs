@@ -13,6 +13,8 @@ namespace Survival.Unity
     /// Plays creature-pack takes on the Dual Weapon Combo skinned body.
     /// Same mixamorig hierarchy, Generic curves, take mixamo.com. The export is
     /// about 1.65 m wide, 0.77 m deep, and 1.90 m tall once that long axis is up.
+    /// Paint is the Meshy full-body JPEG set beside this FBX. The base-color
+    /// multiplier is white only when that albedo is bound.
     /// Do not bake axis conversion and do not scale him to the Aldric height.
     /// Do not write the FBX instance root rotation. Bone positions stay Y-up
     /// even when the imported mesh the camera draws is lying down, so the turn
@@ -618,10 +620,22 @@ namespace Survival.Unity
             return null;
         }
 
+        private const string BaseColorFile = "Blightroot_basecolor.jpg";
+        private const string MetallicRoughnessFile = "Blightroot_metallicRoughness.jpg";
+        private const string NormalFile = "Blightroot_normal.jpg";
+
         private static void EnableSkin(GameObject root)
         {
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            var painted = FindPaintedTexture();
+            var albedo = LoadThemeMap(BaseColorFile, asNormal: false, linear: false, readable: false);
+            var normal = LoadThemeMap(NormalFile, asNormal: true, linear: true, readable: false);
+            var metallicRoughness = LoadThemeMap(MetallicRoughnessFile, asNormal: false, linear: true, readable: true);
+            var packedMetal = PackGlTfMetallicRoughness(metallicRoughness);
+            if (albedo == null)
+            {
+                Debug.LogError("Blightroot albedo missing. " + BaseColorFile + " next to the Dual Weapon Combo body.");
+            }
+
             foreach (var skin in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
                 skin.updateWhenOffscreen = true;
@@ -644,38 +658,58 @@ namespace Survival.Unity
                         shared[i] = mat;
                     }
 
-                    var tex = painted ?? ExistingAlbedo(mat);
-                    // Phong diffuse in the FBX is black. A bound paint needs an
-                    // untinted base or the texture is multiplied away. With no
-                    // texture, white is the blown-out body — keep the file black.
-                    var baseColor = tex != null ? Color.white : FilePhongDiffuse;
-                    if (tex != null)
+                    if (albedo == null)
                     {
-                        if (mat.HasProperty("_BaseMap"))
-                        {
-                            mat.SetTexture("_BaseMap", tex);
-                        }
-
-                        if (mat.HasProperty("_MainTex"))
-                        {
-                            mat.SetTexture("_MainTex", tex);
-                        }
+                        continue;
                     }
 
+                    if (mat.HasProperty("_BaseMap"))
+                    {
+                        mat.SetTexture("_BaseMap", albedo);
+                    }
+
+                    if (mat.HasProperty("_MainTex"))
+                    {
+                        mat.SetTexture("_MainTex", albedo);
+                    }
+
+                    mat.EnableKeyword("_BASEMAP");
+                    // White multiplier so the bark and purple map is not tinted black.
                     if (mat.HasProperty("_BaseColor"))
                     {
-                        mat.SetColor("_BaseColor", baseColor);
+                        mat.SetColor("_BaseColor", Color.white);
                     }
 
-                    mat.color = baseColor;
-                    if (mat.HasProperty("_Metallic"))
+                    mat.color = Color.white;
+                    if (mat.HasProperty("_WorkflowMode"))
                     {
-                        mat.SetFloat("_Metallic", 0f);
+                        mat.SetFloat("_WorkflowMode", 1f);
                     }
 
-                    if (mat.HasProperty("_Smoothness"))
+                    mat.DisableKeyword("_SPECULAR_SETUP");
+                    if (packedMetal != null && mat.HasProperty("_MetallicGlossMap"))
                     {
-                        mat.SetFloat("_Smoothness", 0.28f);
+                        mat.SetTexture("_MetallicGlossMap", packedMetal);
+                        mat.EnableKeyword("_METALLICSPECGLOSSMAP");
+                        if (mat.HasProperty("_Metallic"))
+                        {
+                            mat.SetFloat("_Metallic", 1f);
+                        }
+
+                        if (mat.HasProperty("_Smoothness"))
+                        {
+                            mat.SetFloat("_Smoothness", 1f);
+                        }
+                    }
+
+                    if (normal != null && mat.HasProperty("_BumpMap"))
+                    {
+                        mat.SetTexture("_BumpMap", normal);
+                        mat.EnableKeyword("_NORMALMAP");
+                        if (mat.HasProperty("_BumpScale"))
+                        {
+                            mat.SetFloat("_BumpScale", 1f);
+                        }
                     }
 
                     if (mat.HasProperty("_Surface"))
@@ -687,67 +721,102 @@ namespace Survival.Unity
                 skin.sharedMaterials = shared;
             }
 
-            Debug.Log("Blightroot paint " + (painted != null ? painted.name + " " + painted.width + "x" + painted.height : "no painted texture in the repo, file phong diffuse left black"));
+            Debug.Log(
+                "Blightroot paint albedo=" + (albedo != null ? albedo.width + "x" + albedo.height : "missing") +
+                " normal=" + (normal != null ? normal.name : "missing") +
+                " metallicRoughness=" + (packedMetal != null ? "packed" : "missing"));
+        }
+
+        private static Texture2D? LoadThemeMap(string fileName, bool asNormal, bool linear, bool readable)
+        {
+#if UNITY_EDITOR
+            var path = AssetPath(BlightrootMotion.ThemePackDir + "/" + fileName);
+            if (AssetImporter.GetAtPath(path) is TextureImporter importer)
+            {
+                var dirty = false;
+                var wantType = asNormal ? TextureImporterType.NormalMap : TextureImporterType.Default;
+                if (importer.textureType != wantType)
+                {
+                    importer.textureType = wantType;
+                    dirty = true;
+                }
+
+                if (!asNormal && importer.sRGBTexture != !linear)
+                {
+                    importer.sRGBTexture = !linear;
+                    dirty = true;
+                }
+
+                if (readable && !importer.isReadable)
+                {
+                    importer.isReadable = true;
+                    dirty = true;
+                }
+
+                if (dirty)
+                {
+                    importer.SaveAndReimport();
+                }
+            }
+
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+#else
+            return null;
+#endif
         }
 
         /// <summary>
-        /// Material_0mat DiffuseColor in Blightroot_Dual_Weapon_Combo.fbx.
-        /// There is no texture image in that file and none in the theme pack.
+        /// glTF metallic-roughness: G roughness, B metallic. URP Lit reads R metallic
+        /// and A smoothness. Packs the delivered JPEG. Does not paint new pixels.
         /// </summary>
-        private static readonly Color FilePhongDiffuse = new Color(0f, 0f, 0f, 1f);
-
-        private static Texture2D? ExistingAlbedo(Material mat)
+        private static Texture2D? PackGlTfMetallicRoughness(Texture2D? source)
         {
-            var tex = mat.HasProperty("_BaseMap") ? mat.GetTexture("_BaseMap") as Texture2D : null;
-            if (tex != null)
+            if (source == null)
             {
-                return tex;
+                return null;
             }
 
-            return mat.HasProperty("_MainTex") ? mat.GetTexture("_MainTex") as Texture2D : null;
-        }
-
-        private static Texture2D? FindPaintedTexture()
-        {
-#if UNITY_EDITOR
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(AssetPath(ThemePackBody)))
+            try
             {
-                if (obj is Texture2D tex && tex.width > 4 && tex.height > 4)
+                var pixels = source.GetPixels();
+                var packed = new Texture2D(source.width, source.height, TextureFormat.RGBA32, true, true);
+                var output = new Color[pixels.Length];
+                for (var i = 0; i < pixels.Length; i++)
                 {
-                    return tex;
+                    var metallic = pixels[i].b;
+                    var smoothness = 1f - pixels[i].g;
+                    output[i] = new Color(metallic, metallic, metallic, smoothness);
                 }
-            }
 
-            var guids = AssetDatabase.FindAssets("t:Texture2D", new[] { "Assets/" + BlightrootMotion.ThemePackDir });
-            for (var i = 0; i < guids.Length; i++)
-            {
-                var path = AssetDatabase.GUIDToAssetPath(guids[i]);
-                var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-                if (tex != null && tex.width > 4)
-                {
-                    return tex;
-                }
+                packed.SetPixels(output);
+                packed.Apply(true, false);
+                packed.wrapMode = TextureWrapMode.Clamp;
+                packed.name = "Blightroot_metallicSmoothness";
+                return packed;
             }
-#endif
-            return null;
+            catch (Exception ex)
+            {
+                Debug.LogError("Blightroot metallic-roughness pack failed. " + ex.Message);
+                return null;
+            }
         }
 
         private static void BuildLights()
         {
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.55f, 0.52f, 0.48f, 1f);
+            RenderSettings.ambientLight = new Color(0.38f, 0.36f, 0.34f, 1f);
             var key = new GameObject("BlightrootKeyLight");
             var light = key.AddComponent<Light>();
             light.type = LightType.Directional;
-            light.intensity = 2.4f;
-            light.color = new Color(1f, 0.96f, 0.9f, 1f);
+            light.intensity = 1.15f;
+            light.color = new Color(1f, 0.96f, 0.88f, 1f);
             light.shadows = LightShadows.Soft;
             key.transform.rotation = Quaternion.Euler(42f, 170f, 0f);
             var fill = new GameObject("BlightrootFillLight");
             var fillLight = fill.AddComponent<Light>();
             fillLight.type = LightType.Directional;
-            fillLight.intensity = 1.15f;
-            fillLight.color = new Color(0.75f, 0.78f, 0.9f, 1f);
+            fillLight.intensity = 0.4f;
+            fillLight.color = new Color(0.7f, 0.76f, 0.88f, 1f);
             fill.transform.rotation = Quaternion.Euler(18f, -20f, 0f);
         }
     }

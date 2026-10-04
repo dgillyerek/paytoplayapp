@@ -155,9 +155,21 @@ public sealed class BlightrootMotionTests
         Assert.Contains("mixamorig:Head", actor, StringComparison.Ordinal);
         Assert.Contains("mixamorig:LeftFoot", actor, StringComparison.Ordinal);
         Assert.Contains("_BaseColor", actor, StringComparison.Ordinal);
-        Assert.Contains("FilePhongDiffuse", actor, StringComparison.Ordinal);
+        Assert.Contains("Blightroot_basecolor.jpg", actor, StringComparison.Ordinal);
+        Assert.Contains("Blightroot_metallicRoughness.jpg", actor, StringComparison.Ordinal);
+        Assert.Contains("Blightroot_normal.jpg", actor, StringComparison.Ordinal);
+        Assert.Contains("_BumpMap", actor, StringComparison.Ordinal);
+        Assert.Contains("_MetallicGlossMap", actor, StringComparison.Ordinal);
+        Assert.Contains("Color.white", actor, StringComparison.Ordinal);
         Assert.Contains("sharedMesh.bounds", actor, StringComparison.Ordinal);
-        Assert.DoesNotContain("base color white", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("FilePhongDiffuse", actor, StringComparison.Ordinal);
+        var mapsDir = Path.Combine(root, "Assets", BlightrootMotion.ThemePackDir);
+        foreach (var mapName in new[] { "Blightroot_basecolor.jpg", "Blightroot_metallicRoughness.jpg", "Blightroot_normal.jpg" })
+        {
+            var mapPath = Path.Combine(mapsDir, mapName);
+            Assert.True(File.Exists(mapPath), mapPath);
+            Assert.True(new FileInfo(mapPath).Length > 100_000, mapName);
+        }
         Assert.DoesNotContain("localRotation =", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("MatchAldric", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("BodyHeightTargetMeters", actor, StringComparison.Ordinal);

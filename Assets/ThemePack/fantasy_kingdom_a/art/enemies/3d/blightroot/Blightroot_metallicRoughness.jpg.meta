@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: d4db5530a00b479ab0587efa4b78f617
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 1
+    sRGBTexture: 0
+  isReadable: 1
+  textureType: 0
+  textureShape: 1
+  nPOTScale: 0
+  alphaIsTransparency: 0
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    wrapU: 0
+    wrapV: 0
+  userData: Meshy full-body map extracted from Blightroot_fullbody.glb
+  assetBundleName: 
+  assetBundleVariant: 
