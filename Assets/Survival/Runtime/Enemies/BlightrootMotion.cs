@@ -43,6 +43,12 @@ namespace Survival.Domain.Enemies
         public const float PlayCamNear = 0.25f;
         public const float PlayCamFar = 40f;
 
+        /// <summary>Key 2. Same orbit idea as the Aldric 3/4 preset, around this front camera.</summary>
+        public const float PlayCamThreeQuarterYawDegrees = 45f;
+
+        /// <summary>Key 3. Opposite of the default front eye, same as Aldric's 180 preset.</summary>
+        public const float PlayCamOppositeYawDegrees = 180f;
+
         /// <summary>
         /// Floor under the opening mutant-idle pose. Idle hip curves lift the bind
         /// mesh (lowest vertex -0.950 m) so the feet meet this plane.
@@ -172,6 +178,41 @@ namespace Survival.Domain.Enemies
 
         public static bool IsEmptyClip(float lengthSeconds) =>
             float.IsNaN(lengthSeconds) || lengthSeconds < MinClipSeconds;
+
+        /// <summary>
+        /// Orbit the default front Play-cam around its look target.
+        /// Yaw 0 and pitch 0 keep the authored 1080×1920 eye. Same transform as
+        /// SirAldric3DMotion.PlayCamOrbitEye, on this camera.
+        /// </summary>
+        public static void PlayCamOrbitEye(float yawDegrees, float pitchDegrees, out float x, out float y, out float z)
+        {
+            var lookX = PlayCamLookX;
+            var lookY = PlayCamLookY;
+            var lookZ = PlayCamLookZ;
+            var ox = PlayCamX - lookX;
+            var oy = PlayCamY - lookY;
+            var oz = PlayCamZ - lookZ;
+            var yaw = yawDegrees * (System.Math.PI / 180d);
+            var cos = System.Math.Cos(yaw);
+            var sin = System.Math.Sin(yaw);
+            var rx = (ox * cos) + (oz * sin);
+            var rz = (-ox * sin) + (oz * cos);
+            var pitch = pitchDegrees * (System.Math.PI / 180d);
+            var pc = System.Math.Cos(pitch);
+            var ps = System.Math.Sin(pitch);
+            var horiz = System.Math.Sqrt((rx * rx) + (rz * rz));
+            var ny = (oy * pc) - (horiz * ps);
+            var nh = (oy * ps) + (horiz * pc);
+            if (horiz > 1e-5d)
+            {
+                rx *= nh / horiz;
+                rz *= nh / horiz;
+            }
+
+            x = (float)(lookX + rx);
+            y = (float)(lookY + ny);
+            z = (float)(lookZ + rz);
+        }
 
         public static bool GameViewFitsEveryClip()
         {

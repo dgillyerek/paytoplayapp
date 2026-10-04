@@ -65,6 +65,13 @@ public sealed class BlightrootMotionTests
         Assert.Equal(1080f, BlightrootMotion.GameViewWidth);
         Assert.Equal(1920f, BlightrootMotion.GameViewHeight);
         Assert.True(BlightrootMotion.PlayCamZ > 8f);
+        BlightrootMotion.PlayCamOrbitEye(0f, 0f, out var ox, out var oy, out var oz);
+        Assert.Equal(BlightrootMotion.PlayCamX, ox, 3);
+        Assert.Equal(BlightrootMotion.PlayCamY, oy, 3);
+        Assert.Equal(BlightrootMotion.PlayCamZ, oz, 3);
+        BlightrootMotion.PlayCamOrbitEye(BlightrootMotion.PlayCamOppositeYawDegrees, 0f, out var bx, out var by, out var bz);
+        Assert.True(bx * BlightrootMotion.PlayCamX + (bz - BlightrootMotion.PlayCamLookZ) * (BlightrootMotion.PlayCamZ - BlightrootMotion.PlayCamLookZ) < 0d
+                    || System.Math.Abs(bz - BlightrootMotion.PlayCamZ) > 1d);
         Assert.True(
             BlightrootMotion.MeshMaxY - BlightrootMotion.MeshMinY
             > BlightrootMotion.MeshMaxX - BlightrootMotion.MeshMinX);
@@ -145,6 +152,9 @@ public sealed class BlightrootMotionTests
         Assert.DoesNotContain("bakeAxisConversion = true", actor, StringComparison.Ordinal);
         Assert.Contains("Do not write the FBX instance root rotation", actor, StringComparison.Ordinal);
         Assert.Contains("StandLongAxisUp", actor, StringComparison.Ordinal);
+        Assert.Contains("mixamorig:Head", actor, StringComparison.Ordinal);
+        Assert.Contains("mixamorig:LeftFoot", actor, StringComparison.Ordinal);
+        Assert.Contains("_BaseColor", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("localRotation =", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("MatchAldric", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("BodyHeightTargetMeters", actor, StringComparison.Ordinal);
@@ -168,6 +178,11 @@ public sealed class BlightrootMotionTests
         Assert.Contains("ApplyPlayCam", demo, StringComparison.Ordinal);
         Assert.Contains("PlayCamFovDegrees", demo, StringComparison.Ordinal);
         Assert.Contains("BlightrootMotion.GroundY", demo, StringComparison.Ordinal);
+        Assert.Contains("PlayCamOrbitEye", demo, StringComparison.Ordinal);
+        Assert.Contains("TickOrbit", demo, StringComparison.Ordinal);
+        Assert.Contains("1 Front", demo, StringComparison.Ordinal);
+        Assert.Contains("2 3/4", demo, StringComparison.Ordinal);
+        Assert.Contains("3 Rear", demo, StringComparison.Ordinal);
         Assert.DoesNotContain("BtnClip_", demo, StringComparison.Ordinal);
 
         var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "Blightroot.unity"));

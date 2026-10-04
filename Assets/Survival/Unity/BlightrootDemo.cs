@@ -1,13 +1,16 @@
 using Survival.Domain.Enemies;
+using Survival.Domain.Heroes;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 namespace Survival.Unity
 {
     /// <summary>
     /// Blightroot Game view 1080×1920. One dropdown of the exact Mixamo names.
-    /// Picking a name plays that creature-pack clip on the Dual Weapon Combo body.
-    /// HOLD merge until Derek Game-view PASS.
+    /// Orbit matches the Aldric scene: 1 / 2 / 3, Q/E or arrows, RMB drag.
+    /// Yaw 0 is the front Play-cam. HOLD merge until Derek Game-view PASS.
     /// </summary>
     [DefaultExecutionOrder(500)]
     public sealed class BlightrootDemo : MonoBehaviour
@@ -18,8 +21,26 @@ namespace Survival.Unity
         private BlightrootActor? _actor;
         private Dropdown? _dropdown;
         private Text? _phase;
+        private float _orbitYaw;
+        private float _orbitPitch;
+        private InputActionMap? _orbitMap;
 
         private void Awake() => Boot();
+
+        private void OnEnable()
+        {
+            Boot();
+            BindOrbitActions();
+            RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+        }
+
+        private void OnDisable()
+        {
+            RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+            _orbitMap?.Disable();
+            _orbitMap?.Dispose();
+            _orbitMap = null;
+        }
 
         private void Start() => Boot();
 
@@ -30,21 +51,32 @@ namespace Survival.Unity
                 Boot();
             }
 
-            ApplyPlayCam();
+            TickOrbit();
+            ApplyPlayCam(_orbitYaw, _orbitPitch);
             if (_phase == null || _actor == null)
             {
                 return;
             }
 
             var name = _actor.ExactName ?? "—";
-            _phase.text = name + "   ·   " + _actor.ClipLength.ToString("0.00") + "s   ·   " + BlightrootMotion.TakeName;
+            _phase.text = name + "   ·   cam " + Mathf.RoundToInt(_orbitYaw) + "   ·   " + _actor.ClipLength.ToString("0.00") + "s   ·   " + BlightrootMotion.TakeName;
         }
 
         private void LateUpdate()
         {
             if (_booted)
             {
-                ApplyPlayCam();
+                ApplyPlayCam(_orbitYaw, _orbitPitch);
+            }
+        }
+
+        private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
+        {
+            _ = context;
+            _ = camera;
+            if (_booted)
+            {
+                ApplyPlayCam(_orbitYaw, _orbitPitch);
             }
         }
 
@@ -74,9 +106,22 @@ namespace Survival.Unity
             return played;
         }
 
-        internal static void ApplyPlayCam()
+        internal static void ApplyPlayCam() => ApplyPlayCam(0f, 0f);
+
+        internal static void ApplyPlayCam(float orbitYawDegrees, float orbitPitchDegrees)
         {
-            var eye = new Vector3(BlightrootMotion.PlayCamX, BlightrootMotion.PlayCamY, BlightrootMotion.PlayCamZ);
+            if (float.IsNaN(orbitYawDegrees) || float.IsInfinity(orbitYawDegrees))
+            {
+                orbitYawDegrees = 0f;
+            }
+
+            if (float.IsNaN(orbitPitchDegrees) || float.IsInfinity(orbitPitchDegrees))
+            {
+                orbitPitchDegrees = 0f;
+            }
+
+            BlightrootMotion.PlayCamOrbitEye(orbitYawDegrees, orbitPitchDegrees, out var x, out var y, out var z);
+            var eye = new Vector3(x, y, z);
             var look = new Vector3(BlightrootMotion.PlayCamLookX, BlightrootMotion.PlayCamLookY, BlightrootMotion.PlayCamLookZ);
             var forward = look - eye;
             if (forward.sqrMagnitude < 1e-8f)
@@ -84,7 +129,14 @@ namespace Survival.Unity
                 forward = Vector3.back;
             }
 
-            var rot = Quaternion.LookRotation(forward.normalized, Vector3.up);
+            forward.Normalize();
+            var up = Vector3.up;
+            if (Mathf.Abs(Vector3.Dot(forward, up)) > 0.98f)
+            {
+                up = Vector3.forward;
+            }
+
+            var rot = Quaternion.LookRotation(forward, up);
             var n = Camera.allCamerasCount;
             if (n <= 0)
             {
@@ -117,6 +169,210 @@ namespace Survival.Unity
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.transform.position = eye;
             cam.transform.rotation = rot;
+        }
+
+        private void OnGUI()
+        {
+            if (GUI.Button(new Rect(10f, 10f, 110f, 40f), "1 Front"))
+            {
+                ApplyOrbitKey(KeyCode.Alpha1);
+            }
+
+            if (GUI.Button(new Rect(126f, 10f, 110f, 40f), "2 3/4"))
+            {
+                ApplyOrbitKey(KeyCode.Alpha2);
+            }
+
+            if (GUI.Button(new Rect(242f, 10f, 110f, 40f), "3 Rear"))
+            {
+                ApplyOrbitKey(KeyCode.Alpha3);
+            }
+
+            var ev = Event.current;
+            if (ev == null)
+            {
+                return;
+            }
+
+            if (ev.type == EventType.KeyDown && ev.keyCode != KeyCode.None)
+            {
+                ApplyOrbitKey(ev.keyCode);
+                if (ev.keyCode == KeyCode.Q || ev.keyCode == KeyCode.LeftArrow || ev.keyCode == KeyCode.A)
+                {
+                    _orbitYaw -= 12f;
+                    WrapOrbit();
+                }
+                else if (ev.keyCode == KeyCode.E || ev.keyCode == KeyCode.RightArrow || ev.keyCode == KeyCode.D)
+                {
+                    _orbitYaw += 12f;
+                    WrapOrbit();
+                }
+            }
+
+            var overButtons = ev.mousePosition.y <= 54f && ev.mousePosition.x <= 360f;
+            if (!overButtons && ev.type == EventType.MouseDrag && ev.button <= 2)
+            {
+                _orbitYaw += ev.delta.x * 0.35f;
+                _orbitPitch -= ev.delta.y * 0.35f;
+                WrapOrbit();
+            }
+
+            if (ev.type == EventType.ScrollWheel)
+            {
+                _orbitYaw += ev.delta.y * 10f;
+                WrapOrbit();
+            }
+        }
+
+        private void TickOrbit()
+        {
+            var kb = Keyboard.current;
+            if (kb != null && kb.enabled)
+            {
+                if (kb.digit1Key.wasPressedThisFrame || kb.numpad1Key.wasPressedThisFrame)
+                {
+                    ApplyOrbitKey(KeyCode.Alpha1);
+                }
+                else if (kb.digit2Key.wasPressedThisFrame || kb.numpad2Key.wasPressedThisFrame)
+                {
+                    ApplyOrbitKey(KeyCode.Alpha2);
+                }
+                else if (kb.digit3Key.wasPressedThisFrame || kb.numpad3Key.wasPressedThisFrame)
+                {
+                    ApplyOrbitKey(KeyCode.Alpha3);
+                }
+
+                var yaw = 0f;
+                if (kb.qKey.isPressed || kb.leftArrowKey.isPressed || kb.aKey.isPressed)
+                {
+                    yaw -= 1f;
+                }
+
+                if (kb.eKey.isPressed || kb.rightArrowKey.isPressed || kb.dKey.isPressed)
+                {
+                    yaw += 1f;
+                }
+
+                _orbitYaw += yaw * SirAldric3DMotion.PlayCamOrbitYawSpeed * Time.unscaledDeltaTime;
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1))
+            {
+                ApplyOrbitKey(KeyCode.Alpha1);
+            }
+            else if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2))
+            {
+                ApplyOrbitKey(KeyCode.Alpha2);
+            }
+            else if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3))
+            {
+                ApplyOrbitKey(KeyCode.Alpha3);
+            }
+
+            var legacyYaw = 0f;
+            if (Input.GetKey(KeyCode.Q) || Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
+            {
+                legacyYaw -= 1f;
+            }
+
+            if (Input.GetKey(KeyCode.E) || Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
+            {
+                legacyYaw += 1f;
+            }
+
+            _orbitYaw += legacyYaw * SirAldric3DMotion.PlayCamOrbitYawSpeed * Time.unscaledDeltaTime;
+
+            var mouse = Mouse.current;
+            if (mouse != null && mouse.enabled && (mouse.rightButton.isPressed || mouse.middleButton.isPressed))
+            {
+                var d = mouse.delta.ReadValue();
+                _orbitYaw += d.x * 0.18f;
+                _orbitPitch -= d.y * 0.18f;
+            }
+
+            if (Input.GetMouseButton(1) || Input.GetMouseButton(2))
+            {
+                _orbitYaw += Input.GetAxis("Mouse X") * 140f;
+                _orbitPitch -= Input.GetAxis("Mouse Y") * 80f;
+            }
+
+            WrapOrbit();
+        }
+
+        private void ApplyOrbitKey(KeyCode key)
+        {
+            if (key == KeyCode.Alpha1 || key == KeyCode.Keypad1)
+            {
+                _orbitYaw = 0f;
+                _orbitPitch = 0f;
+            }
+            else if (key == KeyCode.Alpha2 || key == KeyCode.Keypad2)
+            {
+                _orbitYaw = BlightrootMotion.PlayCamThreeQuarterYawDegrees;
+                _orbitPitch = 0f;
+            }
+            else if (key == KeyCode.Alpha3 || key == KeyCode.Keypad3)
+            {
+                _orbitYaw = BlightrootMotion.PlayCamOppositeYawDegrees;
+                _orbitPitch = 0f;
+            }
+        }
+
+        private void WrapOrbit()
+        {
+            if (float.IsNaN(_orbitYaw) || float.IsInfinity(_orbitYaw))
+            {
+                _orbitYaw = 0f;
+            }
+
+            if (float.IsNaN(_orbitPitch) || float.IsInfinity(_orbitPitch))
+            {
+                _orbitPitch = 0f;
+            }
+
+            if (_orbitYaw > 180f)
+            {
+                _orbitYaw -= 360f;
+            }
+            else if (_orbitYaw < -180f)
+            {
+                _orbitYaw += 360f;
+            }
+
+            _orbitPitch = Mathf.Clamp(
+                _orbitPitch,
+                SirAldric3DMotion.PlayCamOrbitPitchMin,
+                SirAldric3DMotion.PlayCamOrbitPitchMax);
+        }
+
+        private void BindOrbitActions()
+        {
+            _orbitMap?.Dispose();
+            var map = new InputActionMap("BlightrootOrbit");
+            var front = map.AddAction("Front", InputActionType.Button);
+            front.AddBinding("<Keyboard>/1");
+            front.AddBinding("<Keyboard>/numpad1");
+            front.performed += _ => ApplyOrbitKey(KeyCode.Alpha1);
+            var threeQuarter = map.AddAction("ThreeQuarter", InputActionType.Button);
+            threeQuarter.AddBinding("<Keyboard>/2");
+            threeQuarter.AddBinding("<Keyboard>/numpad2");
+            threeQuarter.performed += _ => ApplyOrbitKey(KeyCode.Alpha2);
+            var rear = map.AddAction("Rear", InputActionType.Button);
+            rear.AddBinding("<Keyboard>/3");
+            rear.AddBinding("<Keyboard>/numpad3");
+            rear.performed += _ => ApplyOrbitKey(KeyCode.Alpha3);
+            var yaw = map.AddAction("Yaw", InputActionType.Value);
+            yaw.AddCompositeBinding("1DAxis")
+                .With("Negative", "<Keyboard>/q")
+                .With("Positive", "<Keyboard>/e");
+            yaw.AddCompositeBinding("1DAxis")
+                .With("Negative", "<Keyboard>/leftArrow")
+                .With("Positive", "<Keyboard>/rightArrow");
+            yaw.AddCompositeBinding("1DAxis")
+                .With("Negative", "<Keyboard>/a")
+                .With("Positive", "<Keyboard>/d");
+            map.Enable();
+            _orbitMap = map;
         }
 
         private void Boot()

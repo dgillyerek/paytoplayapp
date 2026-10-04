@@ -14,10 +14,9 @@ namespace Survival.Unity
     /// Same mixamorig hierarchy, Generic curves, take mixamo.com. The export is
     /// about 1.65 m wide, 0.77 m deep, and 1.90 m tall once the spine is up.
     /// Do not bake axis conversion and do not scale him to the Aldric height.
-    /// Do not write the FBX instance root rotation: clearing it and keeping it
-    /// both left the same wide, short Game view. Measure the skinned mesh in
-    /// camera space and turn this actor, which the Animator does not drive,
-    /// so the long axis is world up and the head end is the top.
+    /// Do not write the FBX instance root rotation. The bind mesh is already
+    /// tall; the posed head-to-feet line is what the camera sees, and this
+    /// actor turns that line to world up.
     /// No retarget, no bone rewrite, no mirror, no time reverse.
     /// Empty takes are rejected. HOLD merge until Derek Game-view PASS.
     /// </summary>
@@ -392,186 +391,79 @@ namespace Survival.Unity
 #endif
 
         /// <summary>
-        /// The FBX instance root rotation is left alone. Both writing identity and
-        /// keeping the import left the same wide, short body, so that rotation is
-        /// not the axis the camera is seeing. Bake the posed mesh, find the long
-        /// axis, and point the head end at world up by rotating this actor.
-        /// Scale is not written. The Mixamo export size is the size.
+        /// Roots hang this far below the foot bones in the Dual Weapon Combo bind.
+        /// </summary>
+        private const float RootsBelowAnkleMeters = 0.31f;
+
+        /// <summary>
+        /// The bind mesh is Y-up, so measuring it reports "already up" and the
+        /// posed body stays flat. After the idle clip evaluates, the head and
+        /// feet are the pose the camera sees. Turn this actor (not the FBX
+        /// instance root) so that spine is world up. Scale is not written.
         /// </summary>
         private bool StandLongAxisUp()
         {
-            if (_instance == null || !TryMeshTowardHead(out var towardHead, out var worldSize))
+            if (_instance == null || !TrySpine(out var spine))
             {
                 return false;
             }
 
-            Debug.Log("Blightroot skinned world size " + Fmt(worldSize));
-
-            if (towardHead.sqrMagnitude < 1e-8f)
+            var dot = Vector3.Dot(spine.normalized, Vector3.up);
+            Debug.Log("Blightroot posed spine dot up " + dot.ToString("0.00") + " len " + spine.magnitude.ToString("0.00"));
+            if (dot >= 0.85f)
             {
-                return false;
-            }
-
-            var dot = Vector3.Dot(towardHead.normalized, Vector3.up);
-            if (dot >= 0.5f)
-            {
-                Debug.Log("Blightroot mesh long axis is already up. dot " + dot.ToString("0.00"));
                 return true;
             }
 
-            var correction = Quaternion.FromToRotation(towardHead, Vector3.up);
+            var correction = Quaternion.FromToRotation(spine, Vector3.up);
             transform.rotation = correction * transform.rotation;
-            Debug.Log("Blightroot turned the actor so the mesh long axis is up. dot was " + dot.ToString("0.00"));
+            Debug.Log("Blightroot turned the actor so the posed spine is up.");
             return true;
+        }
+
+        private bool TrySpine(out Vector3 spine)
+        {
+            spine = Vector3.up;
+            if (_instance == null)
+            {
+                return false;
+            }
+
+            var head = FindNamed(_instance.transform, "mixamorig:HeadTop_End")
+                       ?? FindNamed(_instance.transform, "mixamorig:Head");
+            var left = FindNamed(_instance.transform, "mixamorig:LeftFoot");
+            var right = FindNamed(_instance.transform, "mixamorig:RightFoot");
+            if (head == null || left == null || right == null)
+            {
+                return false;
+            }
+
+            var feet = (left.position + right.position) * 0.5f;
+            spine = head.position - feet;
+            return spine.sqrMagnitude > 1e-6f;
         }
 
         private void PlantFeetOnGround()
         {
-            if (_feetPlanted || _instance == null || !TryWorldFoot(out var minY))
+            if (_feetPlanted || _instance == null)
+            {
+                return;
+            }
+
+            var left = FindNamed(_instance.transform, "mixamorig:LeftFoot");
+            var right = FindNamed(_instance.transform, "mixamorig:RightFoot");
+            if (left == null || right == null)
             {
                 return;
             }
 
             _feetPlanted = true;
-            var lift = BlightrootMotion.GroundY - minY;
+            var ankleY = Mathf.Min(left.position.y, right.position.y);
+            var soleY = ankleY - RootsBelowAnkleMeters;
+            var lift = BlightrootMotion.GroundY - soleY;
             if (Mathf.Abs(lift) > 0.001f)
             {
                 transform.position += Vector3.up * lift;
-            }
-        }
-
-        private bool TryMeshTowardHead(out Vector3 towardHead, out Vector3 worldSize)
-        {
-            towardHead = Vector3.up;
-            worldSize = Vector3.zero;
-            if (_instance == null)
-            {
-                return false;
-            }
-
-            var skin = _instance.GetComponentInChildren<SkinnedMeshRenderer>(true);
-            var head = FindNamed(_instance.transform, "mixamorig:Head");
-            if (skin == null)
-            {
-                return false;
-            }
-
-            var baked = new Mesh();
-            skin.BakeMesh(baked);
-            var localBounds = baked.bounds;
-            var size = localBounds.size;
-            Destroy(baked);
-            if (size.sqrMagnitude < 1e-8f)
-            {
-                return FallbackSpine(skin, head, out towardHead, out worldSize);
-            }
-
-            var axis = 0;
-            var longest = size.x;
-            if (size.y > longest)
-            {
-                longest = size.y;
-                axis = 1;
-            }
-
-            if (size.z > longest)
-            {
-                axis = 2;
-            }
-
-            var local = axis == 0 ? Vector3.right : axis == 1 ? Vector3.up : Vector3.forward;
-            if (head != null)
-            {
-                var localHead = skin.transform.InverseTransformPoint(head.position);
-                var along = axis == 0
-                    ? localHead.x - localBounds.center.x
-                    : axis == 1
-                        ? localHead.y - localBounds.center.y
-                        : localHead.z - localBounds.center.z;
-                if (along < 0f)
-                {
-                    local = -local;
-                }
-            }
-
-            towardHead = skin.transform.TransformVector(local);
-            worldSize = WorldSize(skin, localBounds);
-            return true;
-        }
-
-        private bool FallbackSpine(SkinnedMeshRenderer skin, Transform? head, out Vector3 towardHead, out Vector3 worldSize)
-        {
-            worldSize = skin.bounds.size;
-            towardHead = Vector3.up;
-            var left = _instance != null ? FindNamed(_instance.transform, "mixamorig:LeftFoot") : null;
-            var right = _instance != null ? FindNamed(_instance.transform, "mixamorig:RightFoot") : null;
-            if (head == null || left == null || right == null)
-            {
-                return worldSize.sqrMagnitude > 1e-8f;
-            }
-
-            var feet = (left.position + right.position) * 0.5f;
-            towardHead = head.position - feet;
-            return towardHead.sqrMagnitude > 1e-8f;
-        }
-
-        private bool TryWorldFoot(out float minY)
-        {
-            minY = 0f;
-            if (_instance == null)
-            {
-                return false;
-            }
-
-            var skin = _instance.GetComponentInChildren<SkinnedMeshRenderer>(true);
-            if (skin == null)
-            {
-                return false;
-            }
-
-            var baked = new Mesh();
-            skin.BakeMesh(baked);
-            var localBounds = baked.bounds;
-            Destroy(baked);
-            if (localBounds.size.sqrMagnitude < 1e-8f)
-            {
-                minY = skin.bounds.min.y;
-                return skin.bounds.size.sqrMagnitude > 1e-8f;
-            }
-
-            minY = WorldMinY(skin, localBounds);
-            return true;
-        }
-
-        private static Vector3 WorldSize(SkinnedMeshRenderer skin, Bounds localBounds)
-        {
-            var min = Vector3.one * float.PositiveInfinity;
-            var max = Vector3.one * float.NegativeInfinity;
-            EncapsulateWorld(skin, localBounds, ref min, ref max);
-            return max - min;
-        }
-
-        private static float WorldMinY(SkinnedMeshRenderer skin, Bounds localBounds)
-        {
-            var min = Vector3.one * float.PositiveInfinity;
-            var max = Vector3.one * float.NegativeInfinity;
-            EncapsulateWorld(skin, localBounds, ref min, ref max);
-            return min.y;
-        }
-
-        private static void EncapsulateWorld(SkinnedMeshRenderer skin, Bounds localBounds, ref Vector3 min, ref Vector3 max)
-        {
-            var center = localBounds.center;
-            var ext = localBounds.extents;
-            for (var i = 0; i < 8; i++)
-            {
-                var corner = center;
-                corner.x += (i & 1) == 0 ? -ext.x : ext.x;
-                corner.y += (i & 2) == 0 ? -ext.y : ext.y;
-                corner.z += (i & 4) == 0 ? -ext.z : ext.z;
-                var world = skin.transform.TransformPoint(corner);
-                min = Vector3.Min(min, world);
-                max = Vector3.Max(max, world);
             }
         }
 
@@ -623,53 +515,129 @@ namespace Survival.Unity
         private static void EnableSkin(GameObject root)
         {
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            var painted = FindPaintedTexture();
             foreach (var skin in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
                 skin.updateWhenOffscreen = true;
                 skin.enabled = true;
-                if (shader == null)
-                {
-                    continue;
-                }
-
                 var shared = skin.sharedMaterials;
                 for (var i = 0; i < shared.Length; i++)
                 {
                     var mat = shared[i];
-                    if (mat != null && mat.shader != null && mat.shader.name.IndexOf("InternalError", StringComparison.Ordinal) < 0
-                        && mat.shader.name.IndexOf("Universal", StringComparison.Ordinal) >= 0)
+                    if (mat == null || shader == null)
                     {
                         continue;
                     }
 
-                    var next = new Material(shader);
-                    if (next.HasProperty("_BaseColor"))
+                    if (mat.shader == null || mat.shader.name.IndexOf("InternalError", StringComparison.Ordinal) >= 0
+                        || mat.shader.name.IndexOf("Universal", StringComparison.Ordinal) < 0)
                     {
-                        next.SetColor("_BaseColor", new Color(0.42f, 0.48f, 0.28f, 1f));
+                        var next = new Material(shader);
+                        next.name = mat.name;
+                        mat = next;
+                        shared[i] = mat;
                     }
 
-                    next.color = new Color(0.42f, 0.48f, 0.28f, 1f);
-                    shared[i] = next;
+                    var tex = painted ?? ExistingAlbedo(mat);
+                    if (tex != null)
+                    {
+                        if (mat.HasProperty("_BaseMap"))
+                        {
+                            mat.SetTexture("_BaseMap", tex);
+                        }
+
+                        if (mat.HasProperty("_MainTex"))
+                        {
+                            mat.SetTexture("_MainTex", tex);
+                        }
+                    }
+
+                    // The FBX phong diffuse is 0,0,0 and there is no image in the
+                    // file. A black base color stays black no matter how bright
+                    // the lights are. White lets a bound texture, or the lit
+                    // sculpt, read in Game view. Do not repaint a texture.
+                    var white = Color.white;
+                    if (mat.HasProperty("_BaseColor"))
+                    {
+                        mat.SetColor("_BaseColor", white);
+                    }
+
+                    mat.color = white;
+                    if (mat.HasProperty("_Metallic"))
+                    {
+                        mat.SetFloat("_Metallic", 0f);
+                    }
+
+                    if (mat.HasProperty("_Smoothness"))
+                    {
+                        mat.SetFloat("_Smoothness", 0.28f);
+                    }
+
+                    if (mat.HasProperty("_Surface"))
+                    {
+                        mat.SetFloat("_Surface", 0f);
+                    }
                 }
 
                 skin.sharedMaterials = shared;
             }
+
+            Debug.Log("Blightroot paint " + (painted != null ? painted.name + " " + painted.width + "x" + painted.height : "no texture in the FBX, base color white"));
+        }
+
+        private static Texture2D? ExistingAlbedo(Material mat)
+        {
+            var tex = mat.HasProperty("_BaseMap") ? mat.GetTexture("_BaseMap") as Texture2D : null;
+            if (tex != null)
+            {
+                return tex;
+            }
+
+            return mat.HasProperty("_MainTex") ? mat.GetTexture("_MainTex") as Texture2D : null;
+        }
+
+        private static Texture2D? FindPaintedTexture()
+        {
+#if UNITY_EDITOR
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(AssetPath(ThemePackBody)))
+            {
+                if (obj is Texture2D tex && tex.width > 4 && tex.height > 4)
+                {
+                    return tex;
+                }
+            }
+
+            var guids = AssetDatabase.FindAssets("t:Texture2D", new[] { "Assets/" + BlightrootMotion.ThemePackDir });
+            for (var i = 0; i < guids.Length; i++)
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                if (tex != null && tex.width > 4)
+                {
+                    return tex;
+                }
+            }
+#endif
+            return null;
         }
 
         private static void BuildLights()
         {
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+            RenderSettings.ambientLight = new Color(0.55f, 0.52f, 0.48f, 1f);
             var key = new GameObject("BlightrootKeyLight");
             var light = key.AddComponent<Light>();
             light.type = LightType.Directional;
-            light.intensity = 1.15f;
-            light.color = new Color(1f, 0.96f, 0.88f, 1f);
-            key.transform.rotation = Quaternion.Euler(48f, -28f, 0f);
+            light.intensity = 2.4f;
+            light.color = new Color(1f, 0.96f, 0.9f, 1f);
+            light.shadows = LightShadows.Soft;
+            key.transform.rotation = Quaternion.Euler(42f, 170f, 0f);
             var fill = new GameObject("BlightrootFillLight");
             var fillLight = fill.AddComponent<Light>();
             fillLight.type = LightType.Directional;
-            fillLight.intensity = 0.35f;
-            fillLight.color = new Color(0.65f, 0.75f, 0.85f, 1f);
-            fill.transform.rotation = Quaternion.Euler(20f, 150f, 0f);
+            fillLight.intensity = 1.15f;
+            fillLight.color = new Color(0.75f, 0.78f, 0.9f, 1f);
+            fill.transform.rotation = Quaternion.Euler(18f, -20f, 0f);
         }
     }
 }
