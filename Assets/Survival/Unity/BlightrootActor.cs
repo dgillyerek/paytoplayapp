@@ -12,11 +12,11 @@ namespace Survival.Unity
     /// <summary>
     /// Plays creature-pack takes on the Dual Weapon Combo skinned body.
     /// Same mixamorig hierarchy, Generic curves, take mixamo.com. The export is
-    /// about 1.65 m wide, 0.77 m deep, and 1.90 m tall once the spine is up.
+    /// about 1.65 m wide, 0.77 m deep, and 1.90 m tall once that long axis is up.
     /// Do not bake axis conversion and do not scale him to the Aldric height.
-    /// Do not write the FBX instance root rotation. The bind mesh is already
-    /// tall; the posed head-to-feet line is what the camera sees, and this
-    /// actor turns that line to world up.
+    /// Do not write the FBX instance root rotation. Bone positions stay Y-up
+    /// even when the imported mesh the camera draws is lying down, so the turn
+    /// uses the mesh bounds, not the posed head-to-feet line.
     /// No retarget, no bone rewrite, no mirror, no time reverse.
     /// Empty takes are rejected. HOLD merge until Derek Game-view PASS.
     /// </summary>
@@ -396,29 +396,135 @@ namespace Survival.Unity
         private const float RootsBelowAnkleMeters = 0.31f;
 
         /// <summary>
-        /// The bind mesh is Y-up, so measuring it reports "already up" and the
-        /// posed body stays flat. After the idle clip evaluates, the head and
-        /// feet are the pose the camera sees. Turn this actor (not the FBX
-        /// instance root) so that spine is world up. Scale is not written.
+        /// Turn this actor (not the FBX instance root) so the mesh axis the
+        /// camera draws is world up. Head-to-feet stays near world up on this
+        /// file, and that early-out left the imported mesh lying down. Scale
+        /// is not written.
         /// </summary>
         private bool StandLongAxisUp()
         {
-            if (_instance == null || !TrySpine(out var spine))
+            if (_instance == null)
             {
                 return false;
             }
 
-            var dot = Vector3.Dot(spine.normalized, Vector3.up);
-            Debug.Log("Blightroot posed spine dot up " + dot.ToString("0.00") + " len " + spine.magnitude.ToString("0.00"));
-            if (dot >= 0.85f)
+            var skin = _instance.GetComponentInChildren<SkinnedMeshRenderer>(true);
+            if (skin == null || skin.sharedMesh == null)
+            {
+                return false;
+            }
+
+            var bindSize = OrientedBindSize(skin.transform, skin.sharedMesh.bounds);
+            var size = FlatterSize(bindSize, skin.bounds.size);
+            var towardAntlers = MeshAxisTowardAntlers(size);
+            var dot = Vector3.Dot(towardAntlers, Vector3.up);
+            Debug.Log(
+                "Blightroot visible size " + Fmt(size) +
+                " antler axis dot up " + dot.ToString("0.00"));
+            if (dot >= 0.85f && size.y >= size.x && size.y >= size.z)
             {
                 return true;
             }
 
-            var correction = Quaternion.FromToRotation(spine, Vector3.up);
+            var correction = Quaternion.FromToRotation(towardAntlers, Vector3.up);
             transform.rotation = correction * transform.rotation;
-            Debug.Log("Blightroot turned the actor so the posed spine is up.");
+            Debug.Log("Blightroot turned the actor so the mesh the camera sees is up.");
             return true;
+        }
+
+        /// <summary>
+        /// Bind-mesh AABB after the renderer transform. This is the orientation
+        /// Game view draws; it is not the mixamorig head-to-feet line.
+        /// </summary>
+        private static Vector3 OrientedBindSize(Transform space, Bounds local)
+        {
+            var center = local.center;
+            var extents = local.extents;
+            var px = Vector3.right * extents.x;
+            var py = Vector3.up * extents.y;
+            var pz = Vector3.forward * extents.z;
+            var seeded = false;
+            var min = Vector3.zero;
+            var max = Vector3.zero;
+            for (var i = 0; i < 8; i++)
+            {
+                var corner = center;
+                corner += (i & 1) == 0 ? px : -px;
+                corner += (i & 2) == 0 ? py : -py;
+                corner += (i & 4) == 0 ? pz : -pz;
+                var world = space.TransformPoint(corner);
+                if (!seeded)
+                {
+                    min = world;
+                    max = world;
+                    seeded = true;
+                }
+                else
+                {
+                    min = Vector3.Min(min, world);
+                    max = Vector3.Max(max, world);
+                }
+            }
+
+            return max - min;
+        }
+
+        /// <summary>
+        /// File antlers sit at +Y. An unbaked X=+90 leaves that end on world -Z
+        /// and the camera sees a wide short back. Prefer the bone spine when it
+        /// actually lies along the long mesh axis.
+        /// </summary>
+        private Vector3 MeshAxisTowardAntlers(Vector3 worldSize)
+        {
+            var unsigned = Vector3.up;
+            var longest = worldSize.y;
+            if (worldSize.x >= longest && worldSize.x >= worldSize.z)
+            {
+                unsigned = Vector3.right;
+                longest = worldSize.x;
+            }
+
+            if (worldSize.z > longest)
+            {
+                unsigned = Vector3.forward;
+            }
+
+            if (TrySpine(out var spine) && spine.sqrMagnitude > 1e-6f)
+            {
+                var spineDot = Vector3.Dot(spine.normalized, unsigned);
+                if (Mathf.Abs(spineDot) >= 0.5f)
+                {
+                    return spineDot >= 0f ? unsigned : -unsigned;
+                }
+            }
+
+            if (unsigned == Vector3.forward)
+            {
+                return Vector3.back;
+            }
+
+            if (unsigned == Vector3.right)
+            {
+                return Vector3.left;
+            }
+
+            return unsigned;
+        }
+
+        /// <summary>
+        /// Prefer the box whose up axis is the short one. That is the silhouette
+        /// the camera showed when the bone line was already upright.
+        /// </summary>
+        private static Vector3 FlatterSize(Vector3 bindSize, Vector3 drawnSize)
+        {
+            if (drawnSize.sqrMagnitude < 1e-8f)
+            {
+                return bindSize;
+            }
+
+            var bindUp = bindSize.y / Mathf.Max(0.001f, Mathf.Max(bindSize.x, bindSize.z));
+            var drawnUp = drawnSize.y / Mathf.Max(0.001f, Mathf.Max(drawnSize.x, drawnSize.z));
+            return drawnUp < bindUp ? drawnSize : bindSize;
         }
 
         private bool TrySpine(out Vector3 spine)
@@ -539,6 +645,10 @@ namespace Survival.Unity
                     }
 
                     var tex = painted ?? ExistingAlbedo(mat);
+                    // Phong diffuse in the FBX is black. A bound paint needs an
+                    // untinted base or the texture is multiplied away. With no
+                    // texture, white is the blown-out body — keep the file black.
+                    var baseColor = tex != null ? Color.white : FilePhongDiffuse;
                     if (tex != null)
                     {
                         if (mat.HasProperty("_BaseMap"))
@@ -552,17 +662,12 @@ namespace Survival.Unity
                         }
                     }
 
-                    // The FBX phong diffuse is 0,0,0 and there is no image in the
-                    // file. A black base color stays black no matter how bright
-                    // the lights are. White lets a bound texture, or the lit
-                    // sculpt, read in Game view. Do not repaint a texture.
-                    var white = Color.white;
                     if (mat.HasProperty("_BaseColor"))
                     {
-                        mat.SetColor("_BaseColor", white);
+                        mat.SetColor("_BaseColor", baseColor);
                     }
 
-                    mat.color = white;
+                    mat.color = baseColor;
                     if (mat.HasProperty("_Metallic"))
                     {
                         mat.SetFloat("_Metallic", 0f);
@@ -582,8 +687,14 @@ namespace Survival.Unity
                 skin.sharedMaterials = shared;
             }
 
-            Debug.Log("Blightroot paint " + (painted != null ? painted.name + " " + painted.width + "x" + painted.height : "no texture in the FBX, base color white"));
+            Debug.Log("Blightroot paint " + (painted != null ? painted.name + " " + painted.width + "x" + painted.height : "no painted texture in the repo, file phong diffuse left black"));
         }
+
+        /// <summary>
+        /// Material_0mat DiffuseColor in Blightroot_Dual_Weapon_Combo.fbx.
+        /// There is no texture image in that file and none in the theme pack.
+        /// </summary>
+        private static readonly Color FilePhongDiffuse = new Color(0f, 0f, 0f, 1f);
 
         private static Texture2D? ExistingAlbedo(Material mat)
         {

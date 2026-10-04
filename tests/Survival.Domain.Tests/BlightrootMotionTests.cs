@@ -155,6 +155,9 @@ public sealed class BlightrootMotionTests
         Assert.Contains("mixamorig:Head", actor, StringComparison.Ordinal);
         Assert.Contains("mixamorig:LeftFoot", actor, StringComparison.Ordinal);
         Assert.Contains("_BaseColor", actor, StringComparison.Ordinal);
+        Assert.Contains("FilePhongDiffuse", actor, StringComparison.Ordinal);
+        Assert.Contains("sharedMesh.bounds", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("base color white", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("localRotation =", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("MatchAldric", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("BodyHeightTargetMeters", actor, StringComparison.Ordinal);
