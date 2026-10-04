@@ -225,7 +225,7 @@ namespace Survival.Unity
             ground.name = "Ground";
             ground.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
             ground.transform.localScale = new Vector3(16f, 16f, 1f);
-            ground.transform.position = new Vector3(0f, -0.2f, 0.4f);
+            ground.transform.position = new Vector3(0f, BlightrootMotion.GroundY, 0.4f);
             Object.Destroy(ground.GetComponent<Collider>());
             var renderer = ground.GetComponent<Renderer>();
             if (renderer != null)

@@ -69,7 +69,14 @@ public sealed class BlightrootMotionTests
             BlightrootMotion.MeshMaxY - BlightrootMotion.MeshMinY
             > BlightrootMotion.MeshMaxX - BlightrootMotion.MeshMinX);
         var bodyHeight = BlightrootMotion.MeshMaxY - BlightrootMotion.MeshMinY;
+        var bodyWidth = BlightrootMotion.MeshMaxX - BlightrootMotion.MeshMinX;
+        var bodyDepth = BlightrootMotion.MeshMaxZ - BlightrootMotion.MeshMinZ;
         Assert.InRange(bodyHeight, 1.89d, 1.92d);
+        Assert.InRange(bodyWidth, 1.64d, 1.67d);
+        Assert.InRange(bodyDepth, 0.75d, 0.79d);
+        Assert.True(BlightrootMotion.TryGet("mutant idle", out var planted));
+        var idleFoot = BlightrootMotion.MeshMinY + (planted.HipYMin - BlightrootMotion.BindHipY);
+        Assert.InRange(idleFoot, BlightrootMotion.GroundY - 0.02d, BlightrootMotion.GroundY + 0.02d);
         Assert.True(BlightrootMotion.GameViewFitsEveryClip());
         Assert.True(BlightrootMotion.TryGet("jump attack", out var jump));
         Assert.True(BlightrootMotion.GameViewFitsClip(jump));
@@ -136,7 +143,9 @@ public sealed class BlightrootMotionTests
         Assert.Contains("useFileScale = false", actor, StringComparison.Ordinal);
         Assert.Contains("bakeAxisConversion = false", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("bakeAxisConversion = true", actor, StringComparison.Ordinal);
-        Assert.Contains("localRotation = Quaternion.identity", actor, StringComparison.Ordinal);
+        Assert.Contains("Keep the imported root rotation", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("localRotation = Quaternion.identity", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("localRotation = Quaternion.Euler", actor, StringComparison.Ordinal);
         Assert.Contains("mirror = false", actor, StringComparison.Ordinal);
         Assert.Contains("localScale = Vector3.one", actor, StringComparison.Ordinal);
         Assert.Contains("localScale = Vector3.one * factor", actor, StringComparison.Ordinal);
@@ -162,6 +171,7 @@ public sealed class BlightrootMotionTests
         Assert.Contains("ExactName", demo, StringComparison.Ordinal);
         Assert.Contains("ApplyPlayCam", demo, StringComparison.Ordinal);
         Assert.Contains("PlayCamFovDegrees", demo, StringComparison.Ordinal);
+        Assert.Contains("BlightrootMotion.GroundY", demo, StringComparison.Ordinal);
         Assert.DoesNotContain("BtnClip_", demo, StringComparison.Ordinal);
 
         var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "Blightroot.unity"));

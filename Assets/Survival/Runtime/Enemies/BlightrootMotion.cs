@@ -43,6 +43,12 @@ namespace Survival.Domain.Enemies
         public const float PlayCamNear = 0.25f;
         public const float PlayCamFar = 40f;
 
+        /// <summary>
+        /// Floor under the opening mutant-idle pose. Idle hip curves lift the bind
+        /// mesh (lowest vertex -0.950 m) so the feet meet this plane.
+        /// </summary>
+        public const float GroundY = -0.135f;
+
         public const double MeshMinX = -0.826026;
         public const double MeshMinY = -0.950091;
         public const double MeshMinZ = -0.390553;

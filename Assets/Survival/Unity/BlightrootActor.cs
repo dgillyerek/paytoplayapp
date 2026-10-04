@@ -12,8 +12,10 @@ namespace Survival.Unity
     /// <summary>
     /// Plays creature-pack takes on the Dual Weapon Combo skinned body.
     /// Same mixamorig hierarchy, Generic curves, take mixamo.com. The FBX is Y-up
-    /// (spine along +Y). Do not bake axis conversion: that compensation lays the
-    /// body flat in Game view. Clear it on the instance root and keep a uniform scale.
+    /// (about 1.65 m wide, 0.77 m deep, 1.90 m tall). Do not bake axis conversion:
+    /// baking turned the tall axis into depth. With baking off, Unity stands the
+    /// spine up with the imported root rotation. Clearing that rotation lays him
+    /// flat. Leave the imported rotation and the bones alone. Uniform scale only.
     /// No retarget, no bone rewrite, no mirror, no time reverse.
     /// Empty takes are rejected. HOLD merge until Derek Game-view PASS.
     /// </summary>
@@ -367,17 +369,16 @@ namespace Survival.Unity
 #endif
 
         /// <summary>
-        /// FBX mesh is Y-up (about 1.65 m × 1.90 m × 0.77 m). Blender shows that as an
-        /// armature scale of 0.01 only because UnitScaleFactor is centimeters; the file
-        /// has no 0.01 node. Unity's axis conversion, baked or left on the root, turns
-        /// the tall axis into depth and the Game view shows a pancake. Drop that root
-        /// rotation and any 0.01 or negative root scale. Bones are not rewritten.
-        /// Then the Aldric scene rule: uniform 1 inside 0.5–5 m, else uniform 1.80 m.
+        /// Keep the imported root rotation. It is Unity's unbaked axis conversion
+        /// (bakeAxisConversion is off). The mesh is stored 90° off; that root
+        /// rotation stands the spine on world +Y. Setting the instance or the mesh
+        /// to identity lays the 1.90 m axis down as depth and the Game view shows
+        /// a body about 0.77 m tall. Bones are not rewritten.
+        /// Uniform scale only, same band as the Aldric scene: 1 inside 0.5–5 m,
+        /// otherwise one uniform factor toward 1.80 m. Never scale a single axis.
         /// </summary>
         private static void MatchAldricBodyScale(GameObject root)
         {
-            root.transform.localRotation = Quaternion.identity;
-            root.transform.localPosition = Vector3.zero;
             foreach (var skin in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
                 var mesh = skin.transform;
@@ -386,7 +387,6 @@ namespace Survival.Unity
                     continue;
                 }
 
-                mesh.localRotation = Quaternion.identity;
                 if (IsCmOrNegativeScale(mesh.localScale))
                 {
                     mesh.localScale = Vector3.one;
