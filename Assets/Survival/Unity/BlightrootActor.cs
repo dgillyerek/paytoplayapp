@@ -16,9 +16,9 @@ namespace Survival.Unity
     /// Paint is the Meshy full-body JPEG set beside this FBX. The base-color
     /// multiplier is white only when that albedo is bound.
     /// Do not bake axis conversion and do not scale him to the Aldric height.
-    /// Do not write the FBX instance root rotation. Bone positions stay Y-up
-    /// even when the imported mesh the camera draws is lying down, so the turn
-    /// uses the mesh bounds, not the posed head-to-feet line.
+    /// Do not write the FBX instance root rotation. Bounds taken through the
+    /// unbaked X=+90 wrapper report the long axis as height, so that test never
+    /// turns him. This actor parent rotates so mixamorig:Spine +Y is world up.
     /// No retarget, no bone rewrite, no mirror, no time reverse.
     /// Empty takes are rejected. HOLD merge until Derek Game-view PASS.
     /// </summary>
@@ -398,10 +398,12 @@ namespace Survival.Unity
         private const float RootsBelowAnkleMeters = 0.31f;
 
         /// <summary>
-        /// Turn this actor (not the FBX instance root) so the mesh axis the
-        /// camera draws is world up. Head-to-feet stays near world up on this
-        /// file, and that early-out left the imported mesh lying down. Scale
-        /// is not written.
+        /// One turn on this actor, not on the FBX instance root. Mixamo's unbaked
+        /// X=+90 wrapper stays on the instance. Measuring through that wrapper
+        /// reports the long axis as height and the turn never runs. Spine +Y in
+        /// the file is the up axis; when the wrapper-inclusive reading is already
+        /// "up", the actor takes the opposite X turn so that axis is world up.
+        /// Scale is not written.
         /// </summary>
         private bool StandLongAxisUp()
         {
@@ -410,145 +412,36 @@ namespace Survival.Unity
                 return false;
             }
 
-            var skin = _instance.GetComponentInChildren<SkinnedMeshRenderer>(true);
-            if (skin == null || skin.sharedMesh == null)
+            var spine = FindNamed(_instance.transform, "mixamorig:Spine")
+                        ?? FindNamed(_instance.transform, BlightrootMotion.BoneRoot);
+            var head = FindNamed(_instance.transform, "mixamorig:Head");
+            if (spine == null)
             {
                 return false;
             }
 
-            var bindSize = OrientedBindSize(skin.transform, skin.sharedMesh.bounds);
-            var size = FlatterSize(bindSize, skin.bounds.size);
-            var towardAntlers = MeshAxisTowardAntlers(size);
-            var dot = Vector3.Dot(towardAntlers, Vector3.up);
-            Debug.Log(
-                "Blightroot visible size " + Fmt(size) +
-                " antler axis dot up " + dot.ToString("0.00"));
-            if (dot >= 0.85f && size.y >= size.x && size.y >= size.z)
+            var spineAxis = spine.TransformDirection(Vector3.up);
+            if (spineAxis.sqrMagnitude < 1e-8f)
             {
+                return false;
+            }
+
+            spineAxis.Normalize();
+            var dot = Vector3.Dot(spineAxis, Vector3.up);
+            Debug.Log(
+                "Blightroot spine +Y dot up " + dot.ToString("0.00") +
+                " instanceEuler " + Euler(_instance.transform) +
+                " head " + (head != null ? "mixamorig:Head" : "missing"));
+            if (dot >= 0.85f)
+            {
+                transform.rotation = Quaternion.Euler(-90f, 0f, 0f) * transform.rotation;
+                Debug.Log("Blightroot actor parent X=-90. Wrapper-inclusive spine +Y was already up.");
                 return true;
             }
 
-            var correction = Quaternion.FromToRotation(towardAntlers, Vector3.up);
-            transform.rotation = correction * transform.rotation;
-            Debug.Log("Blightroot turned the actor so the mesh the camera sees is up.");
+            transform.rotation = Quaternion.FromToRotation(spineAxis, Vector3.up) * transform.rotation;
+            Debug.Log("Blightroot actor turned spine +Y to world up.");
             return true;
-        }
-
-        /// <summary>
-        /// Bind-mesh AABB after the renderer transform. This is the orientation
-        /// Game view draws; it is not the mixamorig head-to-feet line.
-        /// </summary>
-        private static Vector3 OrientedBindSize(Transform space, Bounds local)
-        {
-            var center = local.center;
-            var extents = local.extents;
-            var px = Vector3.right * extents.x;
-            var py = Vector3.up * extents.y;
-            var pz = Vector3.forward * extents.z;
-            var seeded = false;
-            var min = Vector3.zero;
-            var max = Vector3.zero;
-            for (var i = 0; i < 8; i++)
-            {
-                var corner = center;
-                corner += (i & 1) == 0 ? px : -px;
-                corner += (i & 2) == 0 ? py : -py;
-                corner += (i & 4) == 0 ? pz : -pz;
-                var world = space.TransformPoint(corner);
-                if (!seeded)
-                {
-                    min = world;
-                    max = world;
-                    seeded = true;
-                }
-                else
-                {
-                    min = Vector3.Min(min, world);
-                    max = Vector3.Max(max, world);
-                }
-            }
-
-            return max - min;
-        }
-
-        /// <summary>
-        /// File antlers sit at +Y. An unbaked X=+90 leaves that end on world -Z
-        /// and the camera sees a wide short back. Prefer the bone spine when it
-        /// actually lies along the long mesh axis.
-        /// </summary>
-        private Vector3 MeshAxisTowardAntlers(Vector3 worldSize)
-        {
-            var unsigned = Vector3.up;
-            var longest = worldSize.y;
-            if (worldSize.x >= longest && worldSize.x >= worldSize.z)
-            {
-                unsigned = Vector3.right;
-                longest = worldSize.x;
-            }
-
-            if (worldSize.z > longest)
-            {
-                unsigned = Vector3.forward;
-            }
-
-            if (TrySpine(out var spine) && spine.sqrMagnitude > 1e-6f)
-            {
-                var spineDot = Vector3.Dot(spine.normalized, unsigned);
-                if (Mathf.Abs(spineDot) >= 0.5f)
-                {
-                    return spineDot >= 0f ? unsigned : -unsigned;
-                }
-            }
-
-            if (unsigned == Vector3.forward)
-            {
-                return Vector3.back;
-            }
-
-            if (unsigned == Vector3.right)
-            {
-                return Vector3.left;
-            }
-
-            return unsigned;
-        }
-
-        /// <summary>
-        /// Prefer the box whose up axis is the short one. That is the silhouette
-        /// the camera showed when the bone line was already upright.
-        /// </summary>
-        private static Vector3 FlatterSize(Vector3 bindSize, Vector3 drawnSize)
-        {
-            if (drawnSize.sqrMagnitude < 1e-8f)
-            {
-                return bindSize;
-            }
-
-            var bindUp = bindSize.y / Mathf.Max(0.001f, Mathf.Max(bindSize.x, bindSize.z));
-            var drawnUp = drawnSize.y / Mathf.Max(0.001f, Mathf.Max(drawnSize.x, drawnSize.z));
-            return drawnUp < bindUp ? drawnSize : bindSize;
-        }
-
-        private bool TrySpine(out Vector3 spine)
-        {
-            spine = Vector3.up;
-            if (_instance == null)
-            {
-                return false;
-            }
-
-            var head = FindNamed(_instance.transform, "mixamorig:HeadTop_End")
-                       ?? FindNamed(_instance.transform, "mixamorig:Head");
-            var left = FindNamed(_instance.transform, "mixamorig:LeftFoot");
-            var right = FindNamed(_instance.transform, "mixamorig:RightFoot");
-            if (head == null || left == null || right == null)
-            {
-                return false;
-            }
-
-            var feet = (left.position + right.position) * 0.5f;
-            spine = head.position - feet;
-            return spine.sqrMagnitude > 1e-6f;
         }
 
         private void PlantFeetOnGround()

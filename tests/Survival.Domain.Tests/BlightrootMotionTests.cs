@@ -153,7 +153,9 @@ public sealed class BlightrootMotionTests
         Assert.Contains("Do not write the FBX instance root rotation", actor, StringComparison.Ordinal);
         Assert.Contains("StandLongAxisUp", actor, StringComparison.Ordinal);
         Assert.Contains("mixamorig:Head", actor, StringComparison.Ordinal);
+        Assert.Contains("mixamorig:Spine", actor, StringComparison.Ordinal);
         Assert.Contains("mixamorig:LeftFoot", actor, StringComparison.Ordinal);
+        Assert.Contains("Quaternion.Euler(-90f, 0f, 0f)", actor, StringComparison.Ordinal);
         Assert.Contains("_BaseColor", actor, StringComparison.Ordinal);
         Assert.Contains("Blightroot_basecolor.jpg", actor, StringComparison.Ordinal);
         Assert.Contains("Blightroot_metallicRoughness.jpg", actor, StringComparison.Ordinal);
@@ -161,7 +163,7 @@ public sealed class BlightrootMotionTests
         Assert.Contains("_BumpMap", actor, StringComparison.Ordinal);
         Assert.Contains("_MetallicGlossMap", actor, StringComparison.Ordinal);
         Assert.Contains("Color.white", actor, StringComparison.Ordinal);
-        Assert.Contains("sharedMesh.bounds", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("sharedMesh.bounds", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("FilePhongDiffuse", actor, StringComparison.Ordinal);
         var mapsDir = Path.Combine(root, "Assets", BlightrootMotion.ThemePackDir);
         foreach (var mapName in new[] { "Blightroot_basecolor.jpg", "Blightroot_metallicRoughness.jpg", "Blightroot_normal.jpg" })
