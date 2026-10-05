@@ -153,9 +153,11 @@ public sealed class BlightrootMotionTests
         Assert.Contains("Do not write the FBX instance root rotation", actor, StringComparison.Ordinal);
         Assert.Contains("StandLongAxisUp", actor, StringComparison.Ordinal);
         Assert.Contains("mixamorig:Head", actor, StringComparison.Ordinal);
-        Assert.Contains("mixamorig:Spine", actor, StringComparison.Ordinal);
         Assert.Contains("mixamorig:LeftFoot", actor, StringComparison.Ordinal);
-        Assert.Contains("Quaternion.Euler(-90f, 0f, 0f)", actor, StringComparison.Ordinal);
+        Assert.Contains("already upright", actor, StringComparison.Ordinal);
+        Assert.Contains("TransformDirection", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Quaternion.Euler(-90f, 0f, 0f)", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("mixamorig:Spine", actor, StringComparison.Ordinal);
         Assert.Contains("_BaseColor", actor, StringComparison.Ordinal);
         Assert.Contains("Blightroot_basecolor.jpg", actor, StringComparison.Ordinal);
         Assert.Contains("Blightroot_metallicRoughness.jpg", actor, StringComparison.Ordinal);

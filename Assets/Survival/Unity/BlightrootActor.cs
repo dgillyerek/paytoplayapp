@@ -16,10 +16,10 @@ namespace Survival.Unity
     /// Paint is the Meshy full-body JPEG set beside this FBX. The base-color
     /// multiplier is white only when that albedo is bound.
     /// Do not bake axis conversion and do not scale him to the Aldric height.
-    /// Do not write the FBX instance root rotation. Bounds taken through the
-    /// unbaked X=+90 wrapper report the long axis as height, so that test never
-    /// turns him. This actor parent rotates so mixamorig:Spine +Y is world up.
-    /// No retarget, no bone rewrite, no mirror, no time reverse.
+    /// Do not write the FBX instance root rotation. The Mixamo stills remove the
+    /// unbaked X=+90 wrapper so the mesh's +Y is up. If that axis is already
+    /// world up, the parent turn is discarded. Otherwise one parent rotation
+    /// undoes the wrapper. No retarget, no bone rewrite, no mirror, no time reverse.
     /// Empty takes are rejected. HOLD merge until Derek Game-view PASS.
     /// </summary>
     [DefaultExecutionOrder(200)]
@@ -398,12 +398,10 @@ namespace Survival.Unity
         private const float RootsBelowAnkleMeters = 0.31f;
 
         /// <summary>
-        /// One turn on this actor, not on the FBX instance root. Mixamo's unbaked
-        /// X=+90 wrapper stays on the instance. Measuring through that wrapper
-        /// reports the long axis as height and the turn never runs. Spine +Y in
-        /// the file is the up axis; when the wrapper-inclusive reading is already
-        /// "up", the actor takes the opposite X turn so that axis is world up.
-        /// Scale is not written.
+        /// One turn on this actor, not on the FBX instance root. The Dual Weapon
+        /// Combo stills stand the body by taking Mixamo's X=+90 wrapper off, so
+        /// the mesh's +Y is world up. If that axis is already upright, discard
+        /// the turn. Scale is not written.
         /// </summary>
         private bool StandLongAxisUp()
         {
@@ -412,35 +410,34 @@ namespace Survival.Unity
                 return false;
             }
 
-            var spine = FindNamed(_instance.transform, "mixamorig:Spine")
-                        ?? FindNamed(_instance.transform, BlightrootMotion.BoneRoot);
+            var skin = _instance.GetComponentInChildren<SkinnedMeshRenderer>(true);
             var head = FindNamed(_instance.transform, "mixamorig:Head");
-            if (spine == null)
+            if (skin == null)
             {
                 return false;
             }
 
-            var spineAxis = spine.TransformDirection(Vector3.up);
-            if (spineAxis.sqrMagnitude < 1e-8f)
+            var meshUp = skin.transform.TransformDirection(Vector3.up);
+            if (meshUp.sqrMagnitude < 1e-8f)
             {
                 return false;
             }
 
-            spineAxis.Normalize();
-            var dot = Vector3.Dot(spineAxis, Vector3.up);
+            meshUp.Normalize();
+            var dot = Vector3.Dot(meshUp, Vector3.up);
             Debug.Log(
-                "Blightroot spine +Y dot up " + dot.ToString("0.00") +
+                "Blightroot mesh +Y dot up " + dot.ToString("0.00") +
                 " instanceEuler " + Euler(_instance.transform) +
+                " meshEuler " + Euler(skin.transform) +
                 " head " + (head != null ? "mixamorig:Head" : "missing"));
             if (dot >= 0.85f)
             {
-                transform.rotation = Quaternion.Euler(-90f, 0f, 0f) * transform.rotation;
-                Debug.Log("Blightroot actor parent X=-90. Wrapper-inclusive spine +Y was already up.");
+                Debug.Log("Blightroot mesh is already upright. Parent turn discarded.");
                 return true;
             }
 
-            transform.rotation = Quaternion.FromToRotation(spineAxis, Vector3.up) * transform.rotation;
-            Debug.Log("Blightroot actor turned spine +Y to world up.");
+            transform.rotation = Quaternion.FromToRotation(meshUp, Vector3.up) * transform.rotation;
+            Debug.Log("Blightroot actor parent undid the X=+90 wrapper so mesh +Y is world up.");
             return true;
         }
 
