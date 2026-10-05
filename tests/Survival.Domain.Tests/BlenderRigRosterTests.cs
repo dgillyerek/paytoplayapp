@@ -1,0 +1,181 @@
+using System.Text;
+using Survival.Domain.Heroes;
+using Survival.Domain.Roster;
+
+namespace Survival.Domain.Tests;
+
+public sealed class BlenderRigRosterTests
+{
+    [Fact]
+    public void Mixamo_rig_exports_are_rejected_and_blenderig_files_are_kept()
+    {
+        Assert.True(BlenderRigSpec.IsRejectedMixamoRigFile("ROWAN_rig.fbx"));
+        Assert.True(BlenderRigSpec.IsRejectedMixamoRigFile("Assets/ThemePack/EMBERFANG_rig.fbx"));
+        Assert.False(BlenderRigSpec.IsRejectedMixamoRigFile("ROWAN_blenderig.fbx"));
+        Assert.False(BlenderRigSpec.IsRejectedMixamoRigFile("ROWAN_blenderig_walk.fbx"));
+        Assert.False(BlenderRigSpec.IsRejectedMixamoRigFile("NIGHTFANG_blenderig_trot.fbx"));
+    }
+
+    [Fact]
+    public void Rowan_is_a_22_bone_mixamorig_with_rest_and_walk()
+    {
+        Assert.Equal(22, MixamoHumanoidBones.Count);
+        Assert.Equal(22, MixamoHumanoidBones.Names.Length);
+        Assert.Equal(MixamoHumanoidBones.Names.Length, MixamoHumanoidBones.Names.Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal("mixamorig:Hips", MixamoHumanoidBones.Root);
+        Assert.Equal(22, RowanMotion.BoneCount);
+        Assert.Equal(RowanMotion.BoneNames, MixamoHumanoidBones.Names);
+        Assert.Equal("rest", RowanMotion.PoseNames[0]);
+        Assert.Equal("walk", RowanMotion.PoseNames[1]);
+        Assert.Equal("Scene", RowanMotion.WalkTakeName);
+        Assert.NotEqual("mixamo.com", RowanMotion.WalkTakeName);
+        Assert.Equal(1f, RowanMotion.WalkSeconds);
+        Assert.Equal(30f, RowanMotion.WalkFrameRate);
+        Assert.Equal(30, RowanMotion.WalkLastFrame);
+        Assert.Equal("ROWAN_rig.fbx", RowanMotion.RejectedMixamoFileName);
+        Assert.Equal("ROWAN_basecolor_0.jpg", RowanMotion.BaseColorFile);
+        Assert.Equal("ROWAN_normal_2.jpg", RowanMotion.NormalFile);
+        Assert.Equal("", RowanMotion.Spec.MetallicRoughnessFile);
+        Assert.True(RowanMotion.Spec.PreferHumanoid);
+        Assert.Equal("RowanClipDropdown", RowanMotion.Spec.DropdownObjectName);
+        Assert.Contains(RowanMotion.Spec, BlenderRigRoster.All);
+    }
+
+    [Fact]
+    public void Rowan_fbx_pair_embeds_the_maps_and_skips_the_mixamo_rig()
+    {
+        var root = FindRepoRoot();
+        var rest = Path.Combine(root, "Assets", RowanMotion.RestThemePackRel);
+        var walk = Path.Combine(root, "Assets", RowanMotion.WalkThemePackRel);
+        var rejected = Path.Combine(root, "Assets", RowanMotion.ThemePackDir, RowanMotion.RejectedMixamoFileName);
+        var albedo = Path.Combine(root, "Assets", RowanMotion.Spec.BaseColorThemePackRel);
+        var normal = Path.Combine(root, "Assets", RowanMotion.Spec.NormalThemePackRel);
+        Assert.True(File.Exists(rest));
+        Assert.True(File.Exists(walk));
+        Assert.False(File.Exists(rejected));
+        Assert.True(File.Exists(albedo));
+        Assert.True(File.Exists(normal));
+
+        var restBytes = File.ReadAllBytes(rest);
+        var walkBytes = File.ReadAllBytes(walk);
+        Assert.True(ContainsAscii(restBytes, "mixamorig:Hips"));
+        Assert.True(ContainsAscii(restBytes, "mixamorig:LeftToeBase"));
+        Assert.True(ContainsAscii(restBytes, "ROWAN_basecolor_0"));
+        Assert.True(ContainsAscii(restBytes, "ROWAN_normal_2"));
+        Assert.True(ContainsAscii(walkBytes, "mixamorig:Hips"));
+        Assert.True(ContainsAscii(walkBytes, "Scene"));
+        Assert.False(ContainsAscii(walkBytes, "mixamo.com"));
+
+        var albedoBytes = File.ReadAllBytes(albedo);
+        var normalBytes = File.ReadAllBytes(normal);
+        Assert.Equal(0xFF, albedoBytes[0]);
+        Assert.Equal(0xD8, albedoBytes[1]);
+        Assert.Equal(0xFF, normalBytes[0]);
+        Assert.Equal(0xD8, normalBytes[1]);
+        Assert.True(ContainsBytes(restBytes, albedoBytes));
+        Assert.True(ContainsBytes(restBytes, normalBytes));
+
+        var restMeta = File.ReadAllText(rest + ".meta");
+        Assert.Contains("clipAnimations: []", restMeta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 3", restMeta, StringComparison.Ordinal);
+        Assert.Contains("autoGenerateAvatarMappingIfUnspecified: 1", restMeta, StringComparison.Ordinal);
+        Assert.Contains("bakeAxisConversion: 0", restMeta, StringComparison.Ordinal);
+        Assert.Contains("useFileScale: 0", restMeta, StringComparison.Ordinal);
+        Assert.Contains("materialImportMode: 2", restMeta, StringComparison.Ordinal);
+
+        var walkMeta = File.ReadAllText(walk + ".meta");
+        Assert.Contains("name: \"walk\"", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("takeName: Scene", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("lastFrame: 30", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("mirror: 0", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("bakeAxisConversion: 0", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 3", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("materialImportMode: 2", walkMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("mixamo.com", walkMeta, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Player_binds_embedded_maps_and_does_not_rewrite_the_rig()
+    {
+        var root = FindRepoRoot();
+        var player = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigPlayer.cs"));
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "RowanActor.cs"));
+        var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "RowanDemo.cs"));
+        var shared = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigDemo.cs"));
+        Assert.Contains("bakeAxisConversion = false", player, StringComparison.Ordinal);
+        Assert.DoesNotContain("bakeAxisConversion = true", player, StringComparison.Ordinal);
+        Assert.DoesNotContain("localRotation =", player, StringComparison.Ordinal);
+        Assert.DoesNotContain("localScale =", player, StringComparison.Ordinal);
+        Assert.Contains("ImportViaMaterialDescription", player, StringComparison.Ordinal);
+        Assert.Contains("ModelImporterAnimationType.Human", player, StringComparison.Ordinal);
+        Assert.Contains("ModelImporterAnimationType.Generic", player, StringComparison.Ordinal);
+        Assert.Contains("isHuman", player, StringComparison.Ordinal);
+        Assert.Contains("_BaseMap", player, StringComparison.Ordinal);
+        Assert.Contains("_BumpMap", player, StringComparison.Ordinal);
+        Assert.Contains("IsRejectedMixamoRigFile", player, StringComparison.Ordinal);
+        Assert.Contains("PlayPose", actor, StringComparison.Ordinal);
+        Assert.Contains("RowanMotion.Spec", actor, StringComparison.Ordinal);
+        Assert.Contains("RowanClipDropdown", demo, StringComparison.Ordinal);
+        Assert.Contains("RowanMotion.Spec", demo, StringComparison.Ordinal);
+        Assert.Contains("SetValueWithoutNotify(0)", shared, StringComparison.Ordinal);
+        Assert.Contains("DropdownObjectName", shared, StringComparison.Ordinal);
+
+        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "Rowan.unity"));
+        Assert.Contains("RowanRoot", scene, StringComparison.Ordinal);
+        Assert.Contains("834d72d2cb424b758ab79f8936200656", scene, StringComparison.Ordinal);
+        Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
+
+        var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
+        Assert.Contains("Survival/Rowan Demo (rest + walk, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.Contains("Rowan.unity", editor, StringComparison.Ordinal);
+    }
+
+    private static bool ContainsAscii(byte[] bytes, string needle)
+    {
+        return ContainsBytes(bytes, Encoding.ASCII.GetBytes(needle));
+    }
+
+    private static bool ContainsBytes(byte[] haystack, byte[] needle)
+    {
+        if (needle.Length == 0 || haystack.Length < needle.Length)
+        {
+            return false;
+        }
+
+        for (var i = 0; i <= haystack.Length - needle.Length; i++)
+        {
+            var hit = true;
+            for (var j = 0; j < needle.Length; j++)
+            {
+                if (haystack[i + j] != needle[j])
+                {
+                    hit = false;
+                    break;
+                }
+            }
+
+            if (hit)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static string FindRepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "Assets", "ThemePack", "fantasy_kingdom_a", "pack.json")))
+            {
+                return dir.FullName;
+            }
+
+            dir = dir.Parent;
+        }
+
+        throw new DirectoryNotFoundException("repo root");
+    }
+}
