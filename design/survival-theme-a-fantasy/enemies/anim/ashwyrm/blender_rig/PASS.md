@@ -20,3 +20,24 @@ bones=46 faces=199999 unw=0 clip_max=0.40079324682490325
 - Preview: `handoffs/anim_previews_20261005/rebake/ASHWYRM_wingflap_preview.mp4`
 
 **Dev tip-swap:** replace **both** `ASHWYRM_blenderig.fbx` (rest+weights) and `ASHWYRM_blenderig_wingflap.fbx` (clip+weights). Clip-only tip-swap is insufficient if Unity uses rest pack mesh. Backups: `broken_clips_backup/*_pre_wingweight.fbx`.
+
+## DEREK EDIT 2026-10-05 — Derek's hand-placed wing bones adopted as source of truth
+
+Input: `derek_edit/ASHWYRM_blenderig_derek_20261005.blend`. It was saved in **Blender 5.2**, so Blender 4.3 can't open it. Bones were read with portable 5.2.2 (`/workspace/tools/blender-5.2.2-linux-x64`), then rebuilt exactly (head/tail/roll/parent/connect, <1e-5 m) in 4.3 on the previous blend, which keeps the main `.blend` openable by the pipeline. Mesh, UVs, materials and transforms are byte-identical to before (vert max diff 0.0).
+
+**What Derek changed:** deleted all 46 auto bones and drew a new 25-bone skeleton, all named `Bone`…`Bone.024`. Each wing is a root → arm bone up to the wrist, a fan of 4 fingers along the membrane spars, and 1 inner bone down the trailing membrane. Each leg is 2 bones. One chain runs chest → hips → 3 tail bones. The wings now follow the mesh's raised wings; the old auto bones lay flat at z≈0.85. He removed the old "arm" bones that were stealing wing weights. He left no head, neck, jaw or feet bones. 5 chains were unparented and there was no root bone. Bone.011 and Bone.016 had zero length and Bone.014 was a 3.7 cm accidental stub. He did **not** re-skin: the mesh still carried 45 vertex groups for the deleted bones, so his rig moved nothing.
+
+**Cleanup (no bones moved):** renamed `wing_root/wing_arm/wing_f1..f4/wing_inner.{L,R}` (fingers numbered top to bottom, so f1 is the leading edge), `thigh/shin.{L,R}`, `spine`, `tail_01..03`. Added non-deform `root` (same spot as before). Parented spine→root and wings and thighs→spine. Deleted the 3 degenerate bones. All bones deform except root. Result: 23 bones (22 deform).
+
+**Re-skin:** removed the stale groups and ran ARMATURE_AUTO heat. Outer wing was already 1.00 wing, but heat bled wing bones into the body (head 0.14, chest 0.27, torso 0.31, legs 0.17 wing). Fixes: wing bones fenced out of the centre/legs (smoothstep |x| 0.12→0.26, z 0.48→0.58) with that weight moved to the nearest body bone; the PASS outer-membrane anti-stealer (|x|>0.35 wing-dominant → wing bones only); L/R midline suppress; 4 influences; normalize. Script: `work/derek_edit_qc/`.
+
+**Clip:** `ASHWYRM_clip`, 0..30 @30fps, linear + cyclic, keyed from identity rest. Per side (mirrored): wing_root −15+30cos (+15° up … −45° down), wing_arm −8+16cos(φ−0.5), wing_f1..4 −4+10cos(φ−1.0), wing_inner 6cos(φ−0.5). Also root bob 2.5 cm, spine pitch ±3°, tail yaw ±5° wave, thighs ±4°.
+
+**QC (re-imported FBX):** 23 bones, 199,999 faces, 0 unweighted, 2 embedded 2K textures, 31 frames, loop error 0.0.
+- Outer `|x|>0.35` mean wing 1.00 / non-wing 0.00, frac wing-dom 1.00; tip `|x|>0.7` wing 0.99
+- Wing share: head 0.00, neck/chest 0.00, torso 0.005, legs 0.001
+- Tip-vert mean travel **0.72 m** (per-vert 0.88 m; earlier good ~0.76); wing_z_mean range 0.36 m; head 0.05 m, feet 0.09 m
+- Preview: `handoffs/anim_previews_20261005/rebake/ASHWYRM_wingflap_preview_derekedit.mp4`; bones still: `stills/derek_edit_bones.jpg`
+
+**Dev tip-swap:** replace **both** FBXs. The skeleton changed from 46 to 23 bones with new names, so Unity avatars, prefabs and any clips bound to old bone paths (`hips`, `chest`, `wing_forearm`, `upperarm`…) must be re-bound or re-imported. Backups: `broken_clips_backup/*_pre_derekedit.*`.
+**Known limits:** head, neck and jaw ride the `spine` bone rigidly (no head bones). Feet follow `shin`.
