@@ -161,8 +161,7 @@ namespace Survival.Domain.Roster
     }
 
     /// <summary>
-    /// Characters whose rest and clip FBX are in ThemePack.
-    /// Grows as Design batches land. HOLD merge until Derek Game-view PASS.
+    /// All eight Design Blender rigs. HOLD merge until Derek Game-view PASS.
     /// </summary>
     public static class BlenderRigRoster
     {
@@ -174,7 +173,8 @@ namespace Survival.Domain.Roster
             OakenshieldMotion.Spec,
             VesperaMotion.Spec,
             BonequillMotion.Spec,
-            NightfangMotion.Spec
+            NightfangMotion.Spec,
+            AshwyrmMotion.Spec
         };
     }
 }

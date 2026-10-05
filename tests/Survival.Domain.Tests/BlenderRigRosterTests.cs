@@ -197,33 +197,28 @@ public sealed class BlenderRigRosterTests
     }
 
     [Fact]
-    public void Ashwyrm_rest_is_a_generic_dragon_until_wingflap_is_wired()
+    public void Ashwyrm_is_a_46_bone_generic_dragon_with_rest_and_wing_flap()
     {
-        var root = FindRepoRoot();
-        var dir = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "enemies", "3d", "ashwyrm");
-        var rest = Path.Combine(dir, "ASHWYRM_blenderig.fbx");
-        var rejected = Path.Combine(dir, "ASHWYRM_rig.fbx");
-        var albedo = Path.Combine(dir, "ASHWYRM_blenderig.fbm", "ASHWYRM_basecolor_0.jpg");
-        var normal = Path.Combine(dir, "ASHWYRM_blenderig.fbm", "ASHWYRM_normal_2.jpg");
-        Assert.True(File.Exists(rest));
-        Assert.False(File.Exists(rejected));
-        Assert.True(File.Exists(albedo));
-        Assert.True(File.Exists(normal));
-        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Ashwyrm.unity")));
-        var restBytes = File.ReadAllBytes(rest);
-        Assert.True(ContainsAscii(restBytes, "wing_root.L"));
-        Assert.True(ContainsAscii(restBytes, "ASHWYRM_body"));
-        Assert.False(ContainsAscii(restBytes, "mixamorig"));
-        Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(albedo)));
-        Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(normal)));
-        var restMeta = File.ReadAllText(rest + ".meta");
-        Assert.Contains("animationType: 2", restMeta, StringComparison.Ordinal);
-        Assert.Contains("autoGenerateAvatarMappingIfUnspecified: 0", restMeta, StringComparison.Ordinal);
-        Assert.Contains("clipAnimations: []", restMeta, StringComparison.Ordinal);
-        Assert.Contains("bakeAxisConversion: 0", restMeta, StringComparison.Ordinal);
-        Assert.Contains("useFileScale: 0", restMeta, StringComparison.Ordinal);
-        Assert.Contains("materialImportMode: 2", restMeta, StringComparison.Ordinal);
-        Assert.DoesNotContain("animationType: 3", restMeta, StringComparison.Ordinal);
+        Assert.Equal(8, BlenderRigRoster.All.Count);
+        Assert.Equal(46, AshwyrmMotion.BoneCount);
+        Assert.Equal(46, AshwyrmMotion.BoneNames.Length);
+        Assert.Equal("root", AshwyrmMotion.BoneRoot);
+        Assert.Equal("wing_root.L", AshwyrmMotion.BoneNames[16]);
+        Assert.Equal("rest", AshwyrmMotion.PoseNames[0]);
+        Assert.Equal("wing flap", AshwyrmMotion.PoseNames[1]);
+        Assert.Equal("Scene", AshwyrmMotion.FlapTakeName);
+        Assert.Equal(1f, AshwyrmMotion.FlapSeconds);
+        Assert.Equal(30, AshwyrmMotion.FlapLastFrame);
+        Assert.Equal(BlenderRigAvatar.CustomGeneric, AshwyrmMotion.Spec.Avatar);
+        Assert.False(AshwyrmMotion.Spec.PreferHumanoid);
+        Assert.Equal("ASHWYRM_rig.fbx", AshwyrmMotion.RejectedMixamoFileName);
+        AssertGenericDemo(
+            AshwyrmMotion.Spec,
+            "ASHWYRM_basecolor_0",
+            "ASHWYRM_normal_2",
+            "wing_root.L",
+            "11f3e71f3fc54d8baee7d5ea145bd473",
+            "Survival/Ashwyrm Demo (rest + wing flap, Game view 1080x1920)");
     }
 
     private static void AssertHumanoidDemo(BlenderRigSpec spec, string albedoStem, string normalStem, string demoGuid, string menu)
