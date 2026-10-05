@@ -151,6 +151,17 @@ public sealed class BlenderRigRosterTests
     }
 
     [Fact]
+    public void Oakenshield_is_a_22_bone_mixamorig_with_rest_and_walk()
+    {
+        AssertHumanoidDemo(
+            OakenshieldMotion.Spec,
+            "OAKENSHIELD_basecolor_0",
+            "OAKENSHIELD_normal_2",
+            "b3654b0602e44b2790cc360faf2a7562",
+            "Survival/Oakenshield Demo (rest + walk, Game view 1080x1920)");
+    }
+
+    [Fact]
     public void Bonequill_is_a_22_bone_mixamorig_with_rest_and_walk()
     {
         AssertHumanoidDemo(
