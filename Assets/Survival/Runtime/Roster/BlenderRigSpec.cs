@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Survival.Domain.Enemies;
 using Survival.Domain.Heroes;
 
 namespace Survival.Domain.Roster
@@ -168,7 +169,9 @@ namespace Survival.Domain.Roster
         public static IReadOnlyList<BlenderRigSpec> All { get; } = new[]
         {
             RowanMotion.Spec,
-            LyraMotion.Spec
+            LyraMotion.Spec,
+            VesperaMotion.Spec,
+            BonequillMotion.Spec
         };
     }
 }

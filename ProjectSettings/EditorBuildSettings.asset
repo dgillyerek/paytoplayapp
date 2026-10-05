@@ -30,6 +30,12 @@ EditorBuildSettings:
     path: Assets/Survival/Scenes/Lyra.unity
     guid: 014d0009292d4d5196a86178924cf6da
   - enabled: 1
+    path: Assets/Survival/Scenes/Vespera.unity
+    guid: 309f3b25407344d3a07ab86aa7776092
+  - enabled: 1
+    path: Assets/Survival/Scenes/Bonequill.unity
+    guid: f46793b9c2844a87ab5cdd7758cd610f
+  - enabled: 1
     path: Assets/Grove/Scenes/Board.unity
     guid: b65522f703b44f9799e3eee95f2f36d0
   m_configObjects: {}

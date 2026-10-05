@@ -1,4 +1,5 @@
 using System.Text;
+using Survival.Domain.Enemies;
 using Survival.Domain.Heroes;
 using Survival.Domain.Roster;
 
@@ -128,30 +129,54 @@ public sealed class BlenderRigRosterTests
     }
 
     [Fact]
-    public void Vespera_rest_is_in_themepack_until_the_walk_clip_arrives()
+    public void Vespera_is_a_22_bone_mixamorig_with_rest_and_walk()
     {
+        AssertHumanoidDemo(
+            VesperaMotion.Spec,
+            "VESPERA_basecolor_0",
+            "VESPERA_normal_2",
+            "202447e53edf4ca4a70c7de7ffd9cf1e",
+            "Survival/Vespera Demo (rest + walk, Game view 1080x1920)");
+    }
+
+    [Fact]
+    public void Bonequill_is_a_22_bone_mixamorig_with_rest_and_walk()
+    {
+        AssertHumanoidDemo(
+            BonequillMotion.Spec,
+            "BONEQUILL_basecolor_0",
+            "BONEQUILL_normal_2",
+            "e5bda4227e47499985f4e0ecd1e4eb3c",
+            "Survival/Bonequill Demo (rest + walk, Game view 1080x1920)");
+    }
+
+    private static void AssertHumanoidDemo(BlenderRigSpec spec, string albedoStem, string normalStem, string demoGuid, string menu)
+    {
+        Assert.Equal(22, spec.BoneCount);
+        Assert.Equal(MixamoHumanoidBones.Names, spec.BoneNames);
+        Assert.Equal("rest", spec.PoseNames[0]);
+        Assert.Equal("walk", spec.PoseNames[1]);
+        Assert.Equal("Scene", spec.ClipTakeName);
+        Assert.Equal(1f, spec.ClipSeconds);
+        Assert.Equal(30, spec.ClipLastFrame);
+        Assert.Equal("", spec.MetallicRoughnessFile);
+        Assert.True(spec.PreferHumanoid);
+        Assert.True(BlenderRigSpec.IsRejectedMixamoRigFile(spec.RejectedMixamoFileName));
+        Assert.Contains(spec, BlenderRigRoster.All);
+        AssertMixamoPair(spec, albedoStem, normalStem);
+
         var root = FindRepoRoot();
-        var dir = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "enemies", "3d", "vespera");
-        var rest = Path.Combine(dir, "VESPERA_blenderig.fbx");
-        var albedo = Path.Combine(dir, "VESPERA_blenderig.fbm", "VESPERA_basecolor_0.jpg");
-        var normal = Path.Combine(dir, "VESPERA_blenderig.fbm", "VESPERA_normal_2.jpg");
-        Assert.True(File.Exists(rest));
-        Assert.False(File.Exists(Path.Combine(dir, "VESPERA_rig.fbx")));
-        Assert.True(File.Exists(albedo));
-        Assert.True(File.Exists(normal));
-        var restBytes = File.ReadAllBytes(rest);
-        Assert.True(ContainsAscii(restBytes, "mixamorig:Hips"));
-        Assert.True(ContainsAscii(restBytes, "VESPERA_basecolor_0"));
-        Assert.True(ContainsAscii(restBytes, "VESPERA_normal_2"));
-        Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(albedo)));
-        Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(normal)));
-        var meta = File.ReadAllText(rest + ".meta");
-        Assert.Contains("animationType: 3", meta, StringComparison.Ordinal);
-        Assert.Contains("bakeAxisConversion: 0", meta, StringComparison.Ordinal);
-        Assert.Contains("useFileScale: 0", meta, StringComparison.Ordinal);
-        Assert.Contains("materialImportMode: 2", meta, StringComparison.Ordinal);
-        Assert.Contains("clipAnimations: []", meta, StringComparison.Ordinal);
-        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Vespera.unity")));
+        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", spec.SceneFileName));
+        Assert.Contains(spec.Name + "Root", scene, StringComparison.Ordinal);
+        Assert.Contains(demoGuid, scene, StringComparison.Ordinal);
+        Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", spec.Name + "Actor.cs"));
+        var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", spec.Name + "Demo.cs"));
+        Assert.Contains(spec.Name + "Motion.Spec", actor, StringComparison.Ordinal);
+        Assert.Contains("PlayPose", actor, StringComparison.Ordinal);
+        Assert.Contains(spec.DropdownObjectName, demo, StringComparison.Ordinal);
+        var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
+        Assert.Contains(menu, editor, StringComparison.Ordinal);
     }
 
     private static void AssertMixamoPair(BlenderRigSpec spec, string albedoStem, string normalStem)
