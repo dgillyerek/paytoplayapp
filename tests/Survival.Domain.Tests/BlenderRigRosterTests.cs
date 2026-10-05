@@ -197,13 +197,20 @@ public sealed class BlenderRigRosterTests
     }
 
     [Fact]
-    public void Ashwyrm_is_a_46_bone_generic_dragon_with_rest_and_wing_flap()
+    public void Ashwyrm_is_a_23_bone_generic_dragon_with_rest_and_wing_flap()
     {
         Assert.Equal(8, BlenderRigRoster.All.Count);
-        Assert.Equal(46, AshwyrmMotion.BoneCount);
-        Assert.Equal(46, AshwyrmMotion.BoneNames.Length);
+        Assert.Equal(23, AshwyrmMotion.BoneCount);
+        Assert.Equal(23, AshwyrmMotion.BoneNames.Length);
+        Assert.Equal(AshwyrmMotion.BoneNames.Length, AshwyrmMotion.BoneNames.Distinct(StringComparer.Ordinal).Count());
         Assert.Equal("root", AshwyrmMotion.BoneRoot);
-        Assert.Equal("wing_root.L", AshwyrmMotion.BoneNames[16]);
+        Assert.Equal("spine", AshwyrmMotion.BoneNames[1]);
+        Assert.Equal("wing_root.L", AshwyrmMotion.BoneNames[9]);
+        Assert.Equal("wing_inner.L", AshwyrmMotion.BoneNames[15]);
+        Assert.Equal("tail_03", AshwyrmMotion.BoneNames[22]);
+        Assert.DoesNotContain("hips", AshwyrmMotion.BoneNames);
+        Assert.DoesNotContain("wing_forearm.L", AshwyrmMotion.BoneNames);
+        Assert.DoesNotContain("upperarm.L", AshwyrmMotion.BoneNames);
         Assert.Equal("rest", AshwyrmMotion.PoseNames[0]);
         Assert.Equal("wing flap", AshwyrmMotion.PoseNames[1]);
         Assert.Equal("Scene", AshwyrmMotion.FlapTakeName);
@@ -216,9 +223,26 @@ public sealed class BlenderRigRosterTests
             AshwyrmMotion.Spec,
             "ASHWYRM_basecolor_0",
             "ASHWYRM_normal_2",
-            "wing_root.L",
+            "wing_inner.L",
             "11f3e71f3fc54d8baee7d5ea145bd473",
             "Survival/Ashwyrm Demo (rest + wing flap, Game view 1080x1920)");
+
+        var root = FindRepoRoot();
+        var rest = File.ReadAllBytes(Path.Combine(root, "Assets", AshwyrmMotion.RestThemePackRel));
+        var flap = File.ReadAllBytes(Path.Combine(root, "Assets", AshwyrmMotion.FlapThemePackRel));
+        foreach (var bone in AshwyrmMotion.BoneNames)
+        {
+            Assert.True(ContainsAscii(rest, bone));
+            Assert.True(ContainsAscii(flap, bone));
+        }
+
+        Assert.False(ContainsAscii(rest, "wing_forearm"));
+        Assert.False(ContainsAscii(flap, "wing_forearm"));
+        Assert.False(ContainsAscii(rest, "spine_01"));
+        Assert.False(ContainsAscii(flap, "spine_01"));
+        var motion = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Runtime", "Enemies", "AshwyrmMotion.cs"));
+        Assert.DoesNotContain("wing_forearm", motion, StringComparison.Ordinal);
+        Assert.DoesNotContain("upperarm", motion, StringComparison.Ordinal);
     }
 
     private static void AssertHumanoidDemo(BlenderRigSpec spec, string albedoStem, string normalStem, string demoGuid, string menu)

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Ashwyrm rest bind pose and wing flap clip. Custom 46-bone dragon, Generic only.
+    /// Ashwyrm rest bind pose and wing flap clip. Derek 23-bone dragon, Generic only.
     /// Rejects ASHWYRM_rig.fbx. Does not bake axis conversion or rewrite the imported root.
     /// </summary>
     [DefaultExecutionOrder(200)]

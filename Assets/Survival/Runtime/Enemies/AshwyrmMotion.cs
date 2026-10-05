@@ -3,7 +3,7 @@ using Survival.Domain.Roster;
 namespace Survival.Domain.Enemies
 {
     /// <summary>
-    /// Ashwyrm Design Blender dragon. Custom 46-bone rig, Generic only.
+    /// Ashwyrm Design Blender dragon. Derek hand-placed 23-bone rig, Generic only.
     /// Rest is the bind pose. Wing flap is a 1 second Scene take at 30 fps
     /// (FBX LocalStop 46186158000 ticks). Reject ASHWYRM_rig.fbx.
     /// Basecolor and normal are embedded. No metal/roughness map.
@@ -23,7 +23,7 @@ namespace Survival.Domain.Enemies
         public const float FlapSeconds = 1f;
         public const float FlapFrameRate = 30f;
         public const int FlapLastFrame = 30;
-        public const int BoneCount = 46;
+        public const int BoneCount = 23;
 
         public const string TextureFolder = "ASHWYRM_blenderig.fbm";
         public const string BaseColorFile = "ASHWYRM_basecolor_0.jpg";
@@ -35,15 +35,11 @@ namespace Survival.Domain.Enemies
 
         public static readonly string[] BoneNames =
         {
-            "root", "hips", "spine_01", "spine_02", "spine_03", "chest",
-            "neck_01", "neck_02", "head", "jaw",
-            "upperarm.L", "forearm.L", "hand.L",
-            "upperarm.R", "forearm.R", "hand.R",
-            "wing_root.L", "wing_arm.L", "wing_forearm.L", "wing_f1.L", "wing_f2.L", "wing_f3.L", "wing_f4.L",
-            "wing_root.R", "wing_arm.R", "wing_forearm.R", "wing_f1.R", "wing_f2.R", "wing_f3.R", "wing_f4.R",
-            "tail_01", "tail_02", "tail_03", "tail_04", "tail_05", "tail_06", "tail_07", "tail_08",
-            "thigh.L", "shin.L", "foot.L", "toe.L",
-            "thigh.R", "shin.R", "foot.R", "toe.R"
+            "root", "spine",
+            "wing_root.R", "wing_arm.R", "wing_f1.R", "wing_f2.R", "wing_f3.R", "wing_f4.R", "wing_inner.R",
+            "wing_root.L", "wing_arm.L", "wing_f2.L", "wing_f3.L", "wing_f4.L", "wing_f1.L", "wing_inner.L",
+            "thigh.R", "shin.R", "thigh.L", "shin.L",
+            "tail_01", "tail_02", "tail_03"
         };
 
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(
