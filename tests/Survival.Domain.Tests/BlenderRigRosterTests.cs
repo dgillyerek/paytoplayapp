@@ -140,6 +140,17 @@ public sealed class BlenderRigRosterTests
     }
 
     [Fact]
+    public void Stormcrest_is_a_22_bone_mixamorig_with_rest_and_walk()
+    {
+        AssertHumanoidDemo(
+            StormcrestMotion.Spec,
+            "STORMCREST_basecolor_0",
+            "STORMCREST_normal_2",
+            "cd5dad8493e64f1bad48ecb1bf8586ed",
+            "Survival/Stormcrest Demo (rest + walk, Game view 1080x1920)");
+    }
+
+    [Fact]
     public void Bonequill_is_a_22_bone_mixamorig_with_rest_and_walk()
     {
         AssertHumanoidDemo(

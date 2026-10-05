@@ -170,6 +170,7 @@ namespace Survival.Domain.Roster
         {
             RowanMotion.Spec,
             LyraMotion.Spec,
+            StormcrestMotion.Spec,
             VesperaMotion.Spec,
             BonequillMotion.Spec
         };
