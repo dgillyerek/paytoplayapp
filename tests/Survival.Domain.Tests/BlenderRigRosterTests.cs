@@ -95,6 +95,103 @@ public sealed class BlenderRigRosterTests
     }
 
     [Fact]
+    public void Lyra_is_a_22_bone_mixamorig_with_rest_and_walk()
+    {
+        Assert.Equal(22, LyraMotion.BoneCount);
+        Assert.Equal(LyraMotion.BoneNames, MixamoHumanoidBones.Names);
+        Assert.Equal("rest", LyraMotion.PoseNames[0]);
+        Assert.Equal("walk", LyraMotion.PoseNames[1]);
+        Assert.Equal("Scene", LyraMotion.WalkTakeName);
+        Assert.Equal(1f, LyraMotion.WalkSeconds);
+        Assert.Equal(30, LyraMotion.WalkLastFrame);
+        Assert.Equal("LYRA_rig.fbx", LyraMotion.RejectedMixamoFileName);
+        Assert.Equal("LYRA_basecolor_0.jpg", LyraMotion.BaseColorFile);
+        Assert.Equal("LYRA_normal_2.jpg", LyraMotion.NormalFile);
+        Assert.Equal("", LyraMotion.Spec.MetallicRoughnessFile);
+        Assert.True(LyraMotion.Spec.PreferHumanoid);
+        Assert.Equal("LyraClipDropdown", LyraMotion.Spec.DropdownObjectName);
+        Assert.Contains(LyraMotion.Spec, BlenderRigRoster.All);
+        AssertMixamoPair(LyraMotion.Spec, "LYRA_basecolor_0", "LYRA_normal_2");
+
+        var root = FindRepoRoot();
+        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "Lyra.unity"));
+        Assert.Contains("LyraRoot", scene, StringComparison.Ordinal);
+        Assert.Contains("ce82c9521cb54da4bf669276f7f7c7cb", scene, StringComparison.Ordinal);
+        Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "LyraActor.cs"));
+        var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "LyraDemo.cs"));
+        Assert.Contains("LyraMotion.Spec", actor, StringComparison.Ordinal);
+        Assert.Contains("PlayPose", actor, StringComparison.Ordinal);
+        Assert.Contains("LyraClipDropdown", demo, StringComparison.Ordinal);
+        var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
+        Assert.Contains("Survival/Lyra Demo (rest + walk, Game view 1080x1920)", editor, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Vespera_rest_is_in_themepack_until_the_walk_clip_arrives()
+    {
+        var root = FindRepoRoot();
+        var dir = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "enemies", "3d", "vespera");
+        var rest = Path.Combine(dir, "VESPERA_blenderig.fbx");
+        var albedo = Path.Combine(dir, "VESPERA_blenderig.fbm", "VESPERA_basecolor_0.jpg");
+        var normal = Path.Combine(dir, "VESPERA_blenderig.fbm", "VESPERA_normal_2.jpg");
+        Assert.True(File.Exists(rest));
+        Assert.False(File.Exists(Path.Combine(dir, "VESPERA_rig.fbx")));
+        Assert.True(File.Exists(albedo));
+        Assert.True(File.Exists(normal));
+        var restBytes = File.ReadAllBytes(rest);
+        Assert.True(ContainsAscii(restBytes, "mixamorig:Hips"));
+        Assert.True(ContainsAscii(restBytes, "VESPERA_basecolor_0"));
+        Assert.True(ContainsAscii(restBytes, "VESPERA_normal_2"));
+        Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(albedo)));
+        Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(normal)));
+        var meta = File.ReadAllText(rest + ".meta");
+        Assert.Contains("animationType: 3", meta, StringComparison.Ordinal);
+        Assert.Contains("bakeAxisConversion: 0", meta, StringComparison.Ordinal);
+        Assert.Contains("useFileScale: 0", meta, StringComparison.Ordinal);
+        Assert.Contains("materialImportMode: 2", meta, StringComparison.Ordinal);
+        Assert.Contains("clipAnimations: []", meta, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Vespera.unity")));
+    }
+
+    private static void AssertMixamoPair(BlenderRigSpec spec, string albedoStem, string normalStem)
+    {
+        var root = FindRepoRoot();
+        var rest = Path.Combine(root, "Assets", spec.RestThemePackRel);
+        var walk = Path.Combine(root, "Assets", spec.ClipThemePackRel);
+        var rejected = Path.Combine(root, "Assets", spec.ThemePackDir, spec.RejectedMixamoFileName);
+        var albedo = Path.Combine(root, "Assets", spec.BaseColorThemePackRel);
+        var normal = Path.Combine(root, "Assets", spec.NormalThemePackRel);
+        Assert.True(File.Exists(rest));
+        Assert.True(File.Exists(walk));
+        Assert.False(File.Exists(rejected));
+        Assert.True(File.Exists(albedo));
+        Assert.True(File.Exists(normal));
+        var restBytes = File.ReadAllBytes(rest);
+        var walkBytes = File.ReadAllBytes(walk);
+        Assert.True(ContainsAscii(restBytes, "mixamorig:Hips"));
+        Assert.True(ContainsAscii(restBytes, albedoStem));
+        Assert.True(ContainsAscii(restBytes, normalStem));
+        Assert.True(ContainsAscii(walkBytes, "mixamorig:Hips"));
+        Assert.True(ContainsAscii(walkBytes, "Scene"));
+        Assert.False(ContainsAscii(walkBytes, "mixamo.com"));
+        Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(albedo)));
+        Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(normal)));
+        var restMeta = File.ReadAllText(rest + ".meta");
+        Assert.Contains("animationType: 3", restMeta, StringComparison.Ordinal);
+        Assert.Contains("bakeAxisConversion: 0", restMeta, StringComparison.Ordinal);
+        Assert.Contains("useFileScale: 0", restMeta, StringComparison.Ordinal);
+        Assert.Contains("materialImportMode: 2", restMeta, StringComparison.Ordinal);
+        var walkMeta = File.ReadAllText(walk + ".meta");
+        Assert.Contains("name: \"" + spec.ClipPoseName + "\"", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("takeName: " + spec.ClipTakeName, walkMeta, StringComparison.Ordinal);
+        Assert.Contains("lastFrame: " + spec.ClipLastFrame, walkMeta, StringComparison.Ordinal);
+        Assert.Contains("bakeAxisConversion: 0", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 3", walkMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("mixamo.com", walkMeta, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Player_binds_embedded_maps_and_does_not_rewrite_the_rig()
     {
         var root = FindRepoRoot();

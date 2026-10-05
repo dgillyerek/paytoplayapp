@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: ef6f6a54c38a48c3bfd5c828eb7b6a9c
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 1
+    sRGBTexture: 1
+  isReadable: 0
+  textureType: 0
+  textureShape: 1
+  nPOTScale: 0
+  alphaIsTransparency: 0
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    wrapU: 0
+    wrapV: 0
+  userData: Embedded LYRA_basecolor_0 from LYRA_blenderig.fbx. Not an invented map.
+  assetBundleName: 
+  assetBundleVariant: 

@@ -167,7 +167,8 @@ namespace Survival.Domain.Roster
     {
         public static IReadOnlyList<BlenderRigSpec> All { get; } = new[]
         {
-            RowanMotion.Spec
+            RowanMotion.Spec,
+            LyraMotion.Spec
         };
     }
 }
