@@ -157,6 +157,74 @@ public sealed class ThemeARosterTests
         }
     }
 
+    [Fact]
+    public void Design_paint_maps_bind_without_a_packed_orm()
+    {
+        var root = FindRepoRoot();
+        var ironDir = Path.Combine(root, "Assets", IronhowlMotion.ThemePackDir);
+        var fangDir = Path.Combine(root, "Assets", EmberfangMotion.ThemePackDir);
+        foreach (var file in new[]
+        {
+            "ironhowl_basecolor.png",
+            "ironhowl_normal.png",
+            "ironhowl_metallic.png",
+            "ironhowl_roughness.png"
+        })
+        {
+            Assert.True(File.Exists(Path.Combine(ironDir, file)), file);
+        }
+
+        foreach (var file in new[]
+        {
+            "emberfang_basecolor.png",
+            "emberfang_normal.png",
+            "emberfang_metallic.png",
+            "emberfang_roughness.png"
+        })
+        {
+            Assert.True(File.Exists(Path.Combine(fangDir, file)), file);
+        }
+
+        Assert.False(File.Exists(Path.Combine(ironDir, "ironhowl_metal_rough.png")));
+        Assert.False(File.Exists(Path.Combine(fangDir, "emberfang_metal_rough.png")));
+
+        var iron = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "IronhowlActor.cs"));
+        var fang = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "EmberfangActor.cs"));
+        var paint = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "RosterPaint.cs"));
+        Assert.Contains("ironhowl_basecolor.png", iron, StringComparison.Ordinal);
+        Assert.Contains("ironhowl_normal.png", iron, StringComparison.Ordinal);
+        Assert.Contains("ironhowl_metallic.png", iron, StringComparison.Ordinal);
+        Assert.Contains("ironhowl_roughness.png", iron, StringComparison.Ordinal);
+        Assert.Contains("preferEmbeddedBaseAndNormal: false", iron, StringComparison.Ordinal);
+        Assert.Contains("emberfang_basecolor.png", fang, StringComparison.Ordinal);
+        Assert.Contains("emberfang_normal.png", fang, StringComparison.Ordinal);
+        Assert.Contains("emberfang_metallic.png", fang, StringComparison.Ordinal);
+        Assert.Contains("emberfang_roughness.png", fang, StringComparison.Ordinal);
+        Assert.Contains("preferEmbeddedBaseAndNormal: true", fang, StringComparison.Ordinal);
+        Assert.Contains("Universal Render Pipeline/Lit", paint, StringComparison.Ordinal);
+        Assert.Contains("1f - roughness", paint, StringComparison.Ordinal);
+        Assert.Contains("_MetallicGlossMap", paint, StringComparison.Ordinal);
+        Assert.DoesNotContain("metal_rough", paint, StringComparison.Ordinal);
+        Assert.DoesNotContain("_MaskMap", paint, StringComparison.Ordinal);
+
+        AssertMapMeta(Path.Combine(ironDir, "ironhowl_basecolor.png.meta"), srgb: "1", textureType: "0", readable: "0");
+        AssertMapMeta(Path.Combine(ironDir, "ironhowl_normal.png.meta"), srgb: "0", textureType: "1", readable: "0");
+        AssertMapMeta(Path.Combine(ironDir, "ironhowl_metallic.png.meta"), srgb: "0", textureType: "0", readable: "1");
+        AssertMapMeta(Path.Combine(ironDir, "ironhowl_roughness.png.meta"), srgb: "0", textureType: "0", readable: "1");
+        AssertMapMeta(Path.Combine(fangDir, "emberfang_basecolor.png.meta"), srgb: "1", textureType: "0", readable: "0");
+        AssertMapMeta(Path.Combine(fangDir, "emberfang_normal.png.meta"), srgb: "0", textureType: "1", readable: "0");
+        AssertMapMeta(Path.Combine(fangDir, "emberfang_metallic.png.meta"), srgb: "0", textureType: "0", readable: "1");
+        AssertMapMeta(Path.Combine(fangDir, "emberfang_roughness.png.meta"), srgb: "0", textureType: "0", readable: "1");
+    }
+
+    private static void AssertMapMeta(string path, string srgb, string textureType, string readable)
+    {
+        var meta = File.ReadAllText(path);
+        Assert.Contains("sRGBTexture: " + srgb, meta, StringComparison.Ordinal);
+        Assert.Contains("textureType: " + textureType, meta, StringComparison.Ordinal);
+        Assert.Contains("isReadable: " + readable, meta, StringComparison.Ordinal);
+    }
+
     private static string MotionPath(string folder, string file)
     {
         return Path.Combine(FindRepoRoot(), "Assets", "Survival", "Runtime", folder, file);

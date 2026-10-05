@@ -7,8 +7,8 @@ using UnityEditor;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Stands the Ironhowl Mixamo T-pose. No clips. No texture is invented.
-    /// The look JPEG is a Design reference and is not bound.
+    /// Stands the Ironhowl Mixamo T-pose. No clips.
+    /// Design loose maps bind on the skinned material. The look JPEG is a QC reference and is not bound.
     /// Do not bake axis conversion, do not scale one axis, do not retarget,
     /// and do not write the imported root rotation.
     /// </summary>
@@ -102,20 +102,15 @@ namespace Survival.Unity
 
         private static void EnableLit(GameObject root)
         {
-            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            var color = new Color(0.45f, 0.44f, 0.46f, 1f);
-            foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
-            {
-                rend.enabled = true;
-                var mat = new Material(shader);
-                if (mat.HasProperty("_BaseColor"))
-                {
-                    mat.SetColor("_BaseColor", color);
-                }
-
-                mat.color = color;
-                rend.sharedMaterial = mat;
-            }
+            RosterPaint.Bind(
+                root,
+                IronhowlMotion.ThemePackDir,
+                "ironhowl_basecolor.png",
+                "ironhowl_normal.png",
+                "ironhowl_metallic.png",
+                "ironhowl_roughness.png",
+                "Ironhowl",
+                preferEmbeddedBaseAndNormal: false);
         }
 
         private static Bounds Encapsulate(GameObject root)
