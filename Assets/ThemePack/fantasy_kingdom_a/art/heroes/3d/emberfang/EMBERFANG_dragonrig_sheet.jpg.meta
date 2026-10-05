@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: 44d3b0f67e8041920d1e3f4051627383
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 1
+    sRGBTexture: 1
+  isReadable: 0
+  textureType: 0
+  textureShape: 1
+  nPOTScale: 0
+  alphaIsTransparency: 0
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    wrapU: 0
+    wrapV: 0
+  userData: Design contact sheet. Not a UV map. Do not bind as albedo.
+  assetBundleName: 
+  assetBundleVariant: 
