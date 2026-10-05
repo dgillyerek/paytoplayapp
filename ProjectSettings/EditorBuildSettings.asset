@@ -15,6 +15,15 @@ EditorBuildSettings:
     path: Assets/Survival/Scenes/SirAldric.unity
     guid: 03bb3684417840e5b7abf7c910015f4d
   - enabled: 1
+    path: Assets/Survival/Scenes/Blightroot.unity
+    guid: f3a8c1d27e5b4a09b6c4e2d80f1a7b35
+  - enabled: 1
+    path: Assets/Survival/Scenes/Ironhowl.unity
+    guid: 9e301c46d8fa4b2c105e7d93f4ca6b28
+  - enabled: 1
+    path: Assets/Survival/Scenes/Emberfang.unity
+    guid: af412d57e90b4c3d216f8ea405db7c39
+  - enabled: 1
     path: Assets/Grove/Scenes/Board.unity
     guid: b65522f703b44f9799e3eee95f2f36d0
   m_configObjects: {}
