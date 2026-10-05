@@ -173,7 +173,8 @@ namespace Survival.Domain.Roster
             StormcrestMotion.Spec,
             OakenshieldMotion.Spec,
             VesperaMotion.Spec,
-            BonequillMotion.Spec
+            BonequillMotion.Spec,
+            NightfangMotion.Spec
         };
     }
 }

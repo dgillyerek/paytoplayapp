@@ -172,6 +172,60 @@ public sealed class BlenderRigRosterTests
             "Survival/Bonequill Demo (rest + walk, Game view 1080x1920)");
     }
 
+    [Fact]
+    public void Nightfang_is_a_33_bone_generic_quadruped_with_rest_and_trot()
+    {
+        Assert.Equal(33, NightfangMotion.BoneCount);
+        Assert.Equal(33, NightfangMotion.BoneNames.Length);
+        Assert.Equal("root", NightfangMotion.BoneRoot);
+        Assert.Equal("toe_h.L", NightfangMotion.BoneNames[28]);
+        Assert.Equal("rest", NightfangMotion.PoseNames[0]);
+        Assert.Equal("trot", NightfangMotion.PoseNames[1]);
+        Assert.Equal("Scene", NightfangMotion.TrotTakeName);
+        Assert.Equal(1f, NightfangMotion.TrotSeconds);
+        Assert.Equal(30, NightfangMotion.TrotLastFrame);
+        Assert.Equal(BlenderRigAvatar.CustomGeneric, NightfangMotion.Spec.Avatar);
+        Assert.False(NightfangMotion.Spec.PreferHumanoid);
+        Assert.Equal("NIGHTFANG_rig.fbx", NightfangMotion.RejectedMixamoFileName);
+        AssertGenericDemo(
+            NightfangMotion.Spec,
+            "NIGHTFANG_basecolor_0",
+            "NIGHTFANG_normal_2",
+            "toe_h.L",
+            "5a612f20bf58466c8634f45803244d4f",
+            "Survival/Nightfang Demo (rest + trot, Game view 1080x1920)");
+    }
+
+    [Fact]
+    public void Ashwyrm_rest_is_a_generic_dragon_until_wingflap_is_wired()
+    {
+        var root = FindRepoRoot();
+        var dir = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "enemies", "3d", "ashwyrm");
+        var rest = Path.Combine(dir, "ASHWYRM_blenderig.fbx");
+        var rejected = Path.Combine(dir, "ASHWYRM_rig.fbx");
+        var albedo = Path.Combine(dir, "ASHWYRM_blenderig.fbm", "ASHWYRM_basecolor_0.jpg");
+        var normal = Path.Combine(dir, "ASHWYRM_blenderig.fbm", "ASHWYRM_normal_2.jpg");
+        Assert.True(File.Exists(rest));
+        Assert.False(File.Exists(rejected));
+        Assert.True(File.Exists(albedo));
+        Assert.True(File.Exists(normal));
+        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Ashwyrm.unity")));
+        var restBytes = File.ReadAllBytes(rest);
+        Assert.True(ContainsAscii(restBytes, "wing_root.L"));
+        Assert.True(ContainsAscii(restBytes, "ASHWYRM_body"));
+        Assert.False(ContainsAscii(restBytes, "mixamorig"));
+        Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(albedo)));
+        Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(normal)));
+        var restMeta = File.ReadAllText(rest + ".meta");
+        Assert.Contains("animationType: 2", restMeta, StringComparison.Ordinal);
+        Assert.Contains("autoGenerateAvatarMappingIfUnspecified: 0", restMeta, StringComparison.Ordinal);
+        Assert.Contains("clipAnimations: []", restMeta, StringComparison.Ordinal);
+        Assert.Contains("bakeAxisConversion: 0", restMeta, StringComparison.Ordinal);
+        Assert.Contains("useFileScale: 0", restMeta, StringComparison.Ordinal);
+        Assert.Contains("materialImportMode: 2", restMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("animationType: 3", restMeta, StringComparison.Ordinal);
+    }
+
     private static void AssertHumanoidDemo(BlenderRigSpec spec, string albedoStem, string normalStem, string demoGuid, string menu)
     {
         Assert.Equal(22, spec.BoneCount);
@@ -236,6 +290,78 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("bakeAxisConversion: 0", walkMeta, StringComparison.Ordinal);
         Assert.Contains("animationType: 3", walkMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("mixamo.com", walkMeta, StringComparison.Ordinal);
+    }
+
+    private static void AssertGenericDemo(
+        BlenderRigSpec spec,
+        string albedoStem,
+        string normalStem,
+        string distinctiveBone,
+        string demoGuid,
+        string menu)
+    {
+        Assert.Equal("rest", spec.PoseNames[0]);
+        Assert.Equal("", spec.MetallicRoughnessFile);
+        Assert.False(spec.PreferHumanoid);
+        Assert.Equal(BlenderRigAvatar.CustomGeneric, spec.Avatar);
+        Assert.True(BlenderRigSpec.IsRejectedMixamoRigFile(spec.RejectedMixamoFileName));
+        Assert.Contains(spec, BlenderRigRoster.All);
+        Assert.Contains(distinctiveBone, spec.BoneNames);
+
+        var root = FindRepoRoot();
+        var rest = Path.Combine(root, "Assets", spec.RestThemePackRel);
+        var clip = Path.Combine(root, "Assets", spec.ClipThemePackRel);
+        var rejected = Path.Combine(root, "Assets", spec.ThemePackDir, spec.RejectedMixamoFileName);
+        var albedo = Path.Combine(root, "Assets", spec.BaseColorThemePackRel);
+        var normal = Path.Combine(root, "Assets", spec.NormalThemePackRel);
+        Assert.True(File.Exists(rest));
+        Assert.True(File.Exists(clip));
+        Assert.False(File.Exists(rejected));
+        Assert.True(File.Exists(albedo));
+        Assert.True(File.Exists(normal));
+        var restBytes = File.ReadAllBytes(rest);
+        var clipBytes = File.ReadAllBytes(clip);
+        Assert.True(ContainsAscii(restBytes, spec.BoneRoot));
+        Assert.True(ContainsAscii(restBytes, distinctiveBone));
+        Assert.True(ContainsAscii(restBytes, albedoStem));
+        Assert.True(ContainsAscii(restBytes, normalStem));
+        Assert.False(ContainsAscii(restBytes, "mixamorig"));
+        Assert.False(ContainsAscii(clipBytes, "mixamorig"));
+        Assert.True(ContainsAscii(clipBytes, "Scene"));
+        Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(albedo)));
+        Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(normal)));
+        var restMeta = File.ReadAllText(rest + ".meta");
+        Assert.Contains("animationType: 2", restMeta, StringComparison.Ordinal);
+        Assert.Contains("autoGenerateAvatarMappingIfUnspecified: 0", restMeta, StringComparison.Ordinal);
+        Assert.Contains("clipAnimations: []", restMeta, StringComparison.Ordinal);
+        Assert.Contains("bakeAxisConversion: 0", restMeta, StringComparison.Ordinal);
+        Assert.Contains("useFileScale: 0", restMeta, StringComparison.Ordinal);
+        Assert.Contains("materialImportMode: 2", restMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("animationType: 3", restMeta, StringComparison.Ordinal);
+        var clipMeta = File.ReadAllText(clip + ".meta");
+        Assert.Contains("name: \"" + spec.ClipPoseName + "\"", clipMeta, StringComparison.Ordinal);
+        Assert.Contains("takeName: " + spec.ClipTakeName, clipMeta, StringComparison.Ordinal);
+        Assert.Contains("lastFrame: " + spec.ClipLastFrame, clipMeta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 2", clipMeta, StringComparison.Ordinal);
+        Assert.Contains("bakeAxisConversion: 0", clipMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("animationType: 3", clipMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("mixamo.com", clipMeta, StringComparison.Ordinal);
+
+        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", spec.SceneFileName));
+        Assert.Contains(spec.Name + "Root", scene, StringComparison.Ordinal);
+        Assert.Contains(demoGuid, scene, StringComparison.Ordinal);
+        Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", spec.Name + "Actor.cs"));
+        var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", spec.Name + "Demo.cs"));
+        Assert.Contains("Survival.Domain.Enemies", actor, StringComparison.Ordinal);
+        Assert.Contains(spec.Name + "Motion.Spec", actor, StringComparison.Ordinal);
+        Assert.Contains("PlayPose", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Mixamorig", actor, StringComparison.Ordinal);
+        Assert.Contains(spec.DropdownObjectName, demo, StringComparison.Ordinal);
+        var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
+        Assert.Contains(menu, editor, StringComparison.Ordinal);
+        var build = File.ReadAllText(Path.Combine(root, "ProjectSettings", "EditorBuildSettings.asset"));
+        Assert.Contains(spec.SceneFileName, build, StringComparison.Ordinal);
     }
 
     [Fact]

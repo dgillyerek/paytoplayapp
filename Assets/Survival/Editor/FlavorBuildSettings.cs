@@ -21,6 +21,7 @@ namespace Survival.Editor
         private const string Bonequill = "Assets/Survival/Scenes/Bonequill.unity";
         private const string Stormcrest = "Assets/Survival/Scenes/Stormcrest.unity";
         private const string Oakenshield = "Assets/Survival/Scenes/Oakenshield.unity";
+        private const string Nightfang = "Assets/Survival/Scenes/Nightfang.unity";
         private const string GroveBoard = "Assets/Grove/Scenes/Board.unity";
 
         [MenuItem("Survival/Use Theme A Flavor (fantasy_kingdom_a)")]
@@ -43,6 +44,7 @@ namespace Survival.Editor
                 new EditorBuildSettingsScene(Bonequill, true),
                 new EditorBuildSettingsScene(Stormcrest, true),
                 new EditorBuildSettingsScene(Oakenshield, true),
+                new EditorBuildSettingsScene(Nightfang, true),
                 new EditorBuildSettingsScene(GroveBoard, true)
             };
             Debug.Log("Survival flavor " + SurvIds.FlavorIdFantasyKingdomA + " → Splash then Play. Pack " + SurvIds.ThemeIdFantasyKingdomA);
@@ -106,6 +108,12 @@ namespace Survival.Editor
         public static void OpenOakenshieldDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Oakenshield);
+        }
+
+        [MenuItem("Survival/Nightfang Demo (rest + trot, Game view 1080x1920)")]
+        public static void OpenNightfangDemo()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Nightfang);
         }
 
         [MenuItem("Survival/Import locked Sir Aldric rear master")]
