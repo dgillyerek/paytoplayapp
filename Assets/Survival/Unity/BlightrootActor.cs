@@ -16,10 +16,11 @@ namespace Survival.Unity
     /// Paint is the Meshy full-body JPEG set beside this FBX. The base-color
     /// multiplier is white only when that albedo is bound.
     /// Do not bake axis conversion and do not scale him to the Aldric height.
-    /// Do not write the FBX instance root rotation. The Mixamo stills remove the
-    /// unbaked X=+90 wrapper so the mesh's +Y is up. If that axis is already
-    /// world up, the parent turn is discarded. Otherwise one parent rotation
-    /// undoes the wrapper. No retarget, no bone rewrite, no mirror, no time reverse.
+    /// Do not write the FBX instance root rotation. The Mixamo stills stand the
+    /// antler end up by taking the X=+90 wrapper off. The mesh node's +Y can
+    /// read as world up while the posed silhouette stays horizontal, so that
+    /// reading is not success. One parent rotation puts the posed antler end up.
+    /// No retarget, no bone rewrite, no mirror, no time reverse.
     /// Empty takes are rejected. HOLD merge until Derek Game-view PASS.
     /// </summary>
     [DefaultExecutionOrder(200)]
@@ -372,6 +373,12 @@ namespace Survival.Unity
                 dirty = true;
             }
 
+            if (!importer.isReadable)
+            {
+                importer.isReadable = true;
+                dirty = true;
+            }
+
             if (dirty)
             {
                 importer.SaveAndReimport();
@@ -398,10 +405,10 @@ namespace Survival.Unity
         private const float RootsBelowAnkleMeters = 0.31f;
 
         /// <summary>
-        /// One turn on this actor, not on the FBX instance root. The Dual Weapon
-        /// Combo stills stand the body by taking Mixamo's X=+90 wrapper off, so
-        /// the mesh's +Y is world up. If that axis is already upright, discard
-        /// the turn. Scale is not written.
+        /// One turn on this actor, not on the FBX instance root. File +Y is the
+        /// antler end. After mutant idle, that vertex is posed with the wrapper
+        /// still on, so it lies horizontal while the mesh node +Y still points up.
+        /// Turn the parent so the posed antler end is world up. Scale is not written.
         /// </summary>
         private bool StandLongAxisUp()
         {
@@ -417,28 +424,120 @@ namespace Survival.Unity
                 return false;
             }
 
-            var meshUp = skin.transform.TransformDirection(Vector3.up);
-            if (meshUp.sqrMagnitude < 1e-8f)
+            if (!TryPosedAntler(skin, out var axis, out var antlerWorld, out var center, out var size))
+            {
+                Debug.LogWarning(
+                    "Blightroot posed antler end unavailable. head " +
+                    (head != null ? "mixamorig:Head" : "missing"));
+                return false;
+            }
+
+            if (axis.sqrMagnitude < 1e-8f)
             {
                 return false;
             }
 
-            meshUp.Normalize();
-            var dot = Vector3.Dot(meshUp, Vector3.up);
+            axis.Normalize();
+            var dot = Vector3.Dot(axis, Vector3.up);
+            var silhouetteTall = size.y >= size.x && size.y >= size.z;
             Debug.Log(
-                "Blightroot mesh +Y dot up " + dot.ToString("0.00") +
-                " instanceEuler " + Euler(_instance.transform) +
-                " meshEuler " + Euler(skin.transform) +
+                "Blightroot antler dot up " + dot.ToString("0.00") +
+                " posedSize " + Fmt(size) +
+                " silhouetteTall " + silhouetteTall +
                 " head " + (head != null ? "mixamorig:Head" : "missing"));
-            if (dot >= 0.85f)
+            if (dot >= 0.85f && silhouetteTall)
             {
-                Debug.Log("Blightroot mesh is already upright. Parent turn discarded.");
+                Debug.Log("Blightroot posed antler end is up and the silhouette is tall.");
                 return true;
             }
 
-            transform.rotation = Quaternion.FromToRotation(meshUp, Vector3.up) * transform.rotation;
-            Debug.Log("Blightroot actor parent undid the X=+90 wrapper so mesh +Y is world up.");
+            if (dot < 0.85f)
+            {
+                transform.rotation = Quaternion.FromToRotation(axis, Vector3.up) * transform.rotation;
+                Debug.Log("Blightroot actor parent put the antler end up.");
+                return true;
+            }
+
+            var horizontal = size.x >= size.z ? Vector3.right : Vector3.forward;
+            if (Vector3.Dot(antlerWorld - center, horizontal) < 0f)
+            {
+                horizontal = -horizontal;
+            }
+
+            transform.rotation = Quaternion.FromToRotation(horizontal, Vector3.up) * transform.rotation;
+            Debug.Log("Blightroot actor parent stood the horizontal silhouette up. Node +Y was not the antler end.");
             return true;
+        }
+
+        /// <summary>
+        /// Bind +Y is the antler tip. BakeMesh is the pose the camera draws, not the
+        /// mesh node's +Y and not the bone line.
+        /// </summary>
+        private static bool TryPosedAntler(
+            SkinnedMeshRenderer skin,
+            out Vector3 axis,
+            out Vector3 antlerWorld,
+            out Vector3 center,
+            out Vector3 size)
+        {
+            axis = Vector3.up;
+            antlerWorld = Vector3.zero;
+            center = Vector3.zero;
+            size = Vector3.zero;
+            var bind = skin.sharedMesh;
+            if (bind == null || !bind.isReadable || bind.vertexCount < 3)
+            {
+                return false;
+            }
+
+            var bindVerts = bind.vertices;
+            var antler = 0;
+            var roots = 0;
+            var maxY = float.NegativeInfinity;
+            var minY = float.PositiveInfinity;
+            for (var i = 0; i < bindVerts.Length; i++)
+            {
+                var y = bindVerts[i].y;
+                if (y > maxY)
+                {
+                    maxY = y;
+                    antler = i;
+                }
+
+                if (y < minY)
+                {
+                    minY = y;
+                    roots = i;
+                }
+            }
+
+            var posed = new Mesh();
+            skin.BakeMesh(posed, true);
+            var posedVerts = posed.vertices;
+            if (posedVerts == null || posedVerts.Length != bindVerts.Length)
+            {
+                Destroy(posed);
+                return false;
+            }
+
+            var space = skin.transform;
+            antlerWorld = space.TransformPoint(posedVerts[antler]);
+            var rootWorld = space.TransformPoint(posedVerts[roots]);
+            var min = antlerWorld;
+            var max = antlerWorld;
+            var step = posedVerts.Length > 8000 ? posedVerts.Length / 8000 : 1;
+            for (var i = 0; i < posedVerts.Length; i += step)
+            {
+                var world = space.TransformPoint(posedVerts[i]);
+                min = Vector3.Min(min, world);
+                max = Vector3.Max(max, world);
+            }
+
+            Destroy(posed);
+            center = (min + max) * 0.5f;
+            size = max - min;
+            axis = antlerWorld - rootWorld;
+            return axis.sqrMagnitude > 1e-8f;
         }
 
         private void PlantFeetOnGround()

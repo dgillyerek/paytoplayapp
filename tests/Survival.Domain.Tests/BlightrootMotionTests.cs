@@ -154,8 +154,11 @@ public sealed class BlightrootMotionTests
         Assert.Contains("StandLongAxisUp", actor, StringComparison.Ordinal);
         Assert.Contains("mixamorig:Head", actor, StringComparison.Ordinal);
         Assert.Contains("mixamorig:LeftFoot", actor, StringComparison.Ordinal);
-        Assert.Contains("already upright", actor, StringComparison.Ordinal);
-        Assert.Contains("TransformDirection", actor, StringComparison.Ordinal);
+        Assert.Contains("BakeMesh", actor, StringComparison.Ordinal);
+        Assert.Contains("antler", actor, StringComparison.Ordinal);
+        Assert.Contains("isReadable = true", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("already upright", actor, StringComparison.Ordinal);
+        Assert.DoesNotContain("TransformDirection", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("Quaternion.Euler(-90f, 0f, 0f)", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("mixamorig:Spine", actor, StringComparison.Ordinal);
         Assert.Contains("_BaseColor", actor, StringComparison.Ordinal);
