@@ -41,3 +41,22 @@ Input: `derek_edit/ASHWYRM_blenderig_derek_20261005.blend`. It was saved in **Bl
 
 **Dev tip-swap:** replace **both** FBXs. The skeleton changed from 46 to 23 bones with new names, so Unity avatars, prefabs and any clips bound to old bone paths (`hips`, `chest`, `wing_forearm`, `upperarm`…) must be re-bound or re-imported. Backups: `broken_clips_backup/*_pre_derekedit.*`.
 **Known limits:** head, neck and jaw ride the `spine` bone rigidly (no head bones). Feet follow `shin`.
+
+## FIX 2026-10-06 — soft arm bounce on wingflap (Derek tip 24fbc94 / PR #32 HOLD)
+
+**Root cause:** Ashwyrm has separate bipedal front-limb mesh (arms+claws) distinct from wings, but Derek's 23-bone rig has **no arm bones**. Heat weights put those verts mainly on `thigh`/`shin` (hands/forearms) and `spine` (shoulders). The derek-edit clip keyed thighs ±4°, spine ±3°, and root bob 2.5 cm, so the arms rode the body motion and looked like a soft bounce next to the flap.
+
+**Fix (Path A — clip only; weights unchanged):** Rebaked `ASHWYRM_clip` with **ZERO** motion on `root` / `spine` / `thigh.*` / `shin.*`. Wings kept identical amps (`wing_root` −15+30cos, `wing_arm` −8+16cos(φ−0.5), fingers −4+10cos(φ−1.0), `wing_inner` 6cos(φ−0.5)). Light tail ±5° wave kept. Identity rest. Did **not** restore old auto arm bones.
+
+**QC (blend eval):**
+- Front-limb mean per-vert travel **0.056 m → 0.0035 m** (centroid 0.053 → 0.0008); head 0.050 → 0.0
+- Wing tip mean travel **0.875 → 0.917 m** (still clear flap); outer-wing centroid ~0.60 m
+- Path B (rebind) not needed — residual front travel ≪ 3 cm after zeroing thigh/spine keys
+
+**Artifacts:**
+- Preview: `handoffs/anim_previews_20261005/rebake/ASHWYRM_wingflap_preview_noarmbounce.mp4`
+- Labeled still: `stills/arms_labeled_rest.jpg` (red=front limbs, blue=wing tips)
+- Backups: `broken_clips_backup/*_pre_noarmbounce.*`
+- QC json: `work/derek_edit_qc/noarmbounce_qc.json`
+
+**Dev tip-swap:** **clip-only** — replace `ASHWYRM_blenderig_wingflap.fbx`. Rest FBX weights/skeleton unchanged (same 23 bones); optional rest FBX refresh is harmless but not required. HOLD merge until Derek re-checks.
