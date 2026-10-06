@@ -6,7 +6,7 @@ namespace Survival.Unity
 {
     /// <summary>
     /// Ironhowl Game view 1080×1920. Dropdown plays rest, walk, and attack.
-    /// A missing clip holds the Mixamo T-pose. The look JPEG is not bound.
+    /// The look JPEG and the atlas are QC stills and are not bound.
     /// HOLD merge until Derek Game-view PASS.
     /// </summary>
     [DefaultExecutionOrder(500)]
@@ -37,11 +37,7 @@ namespace Survival.Unity
                 return;
             }
 
-            if (_actor.ClipMissing)
-            {
-                _phase.text = _actor.Pose + "   ·   clip missing · T-pose";
-            }
-            else if (_actor.ClipLength > 0.05f)
+            if (_actor.ClipLength > 0f)
             {
                 _phase.text = _actor.Pose + "   ·   " + _actor.ClipLength.ToString("0.00") + "s";
             }

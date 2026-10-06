@@ -333,6 +333,12 @@ namespace Survival.Unity
                 dirty = true;
             }
 
+            if (importer.animationCompression != ModelImporterAnimationCompression.Off)
+            {
+                importer.animationCompression = ModelImporterAnimationCompression.Off;
+                dirty = true;
+            }
+
             return dirty;
         }
 
@@ -374,6 +380,12 @@ namespace Survival.Unity
             }
 
             var takeName = best.takeName;
+            if (string.Equals(takeName, IronhowlMotion.TakeName, System.StringComparison.OrdinalIgnoreCase))
+            {
+                takeName = IronhowlMotion.TakeName;
+                best.takeName = takeName;
+            }
+
             var first = best.firstFrame;
             var last = best.lastFrame;
             var already = importer.clipAnimations;
