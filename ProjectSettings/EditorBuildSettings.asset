@@ -24,6 +24,9 @@ EditorBuildSettings:
     path: Assets/Survival/Scenes/Emberfang.unity
     guid: af412d57e90b4c3d216f8ea405db7c39
   - enabled: 1
+    path: Assets/Survival/Scenes/Oakenshield.unity
+    guid: 94bb0f702b8f4f74a91e00fc682ded1b
+  - enabled: 1
     path: Assets/Grove/Scenes/Board.unity
     guid: b65522f703b44f9799e3eee95f2f36d0
   m_configObjects: {}
