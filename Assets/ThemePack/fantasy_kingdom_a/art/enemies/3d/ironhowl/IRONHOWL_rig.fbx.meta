@@ -89,6 +89,6 @@ ModelImporter:
   humanoidOversampling: 1
   avatarSetup: 1
   additionalBone: 0
-  userData: Ironhowl Mixamo humanoid T-pose. No clips. Generic. bakeAxisConversion 0. useFileScale 0. Do not retarget. Do not invent a texture. HOLD merge.
+  userData: Ironhowl Mixamo body. Generic. bakeAxisConversion 0. useFileScale 0. mixamorig:Hips. No humanoid retarget. Loose paint maps. Look JPEG is QC only. Rest walk attack are separate FBX. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

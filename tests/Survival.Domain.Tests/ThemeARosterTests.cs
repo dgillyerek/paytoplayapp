@@ -46,14 +46,48 @@ public sealed class ThemeARosterTests
     }
 
     [Fact]
-    public void Ironhowl_is_a_tpose_with_no_clip_list()
+    public void Ironhowl_names_rest_walk_and_attack_without_an_invented_frame_range()
     {
         Assert.Equal("IRONHOWL_rig.fbx", IronhowlMotion.BodyFileName);
+        Assert.Equal("IRONHOWL_rig_rest.fbx", IronhowlMotion.RestFileName);
+        Assert.Equal("IRONHOWL_rig_walk.fbx", IronhowlMotion.WalkFileName);
+        Assert.Equal("IRONHOWL_rig_attack.fbx", IronhowlMotion.AttackFileName);
+        Assert.Equal("IRONHOWL_rig_atlas.png", IronhowlMotion.AtlasFileName);
         Assert.Equal("Ironhowl_meshy_look.jpg", IronhowlMotion.LookReferenceFileName);
         Assert.Equal("mixamorig:Hips", IronhowlMotion.BoneRoot);
+        Assert.Equal("mixamo.com", IronhowlMotion.TakeName);
+        Assert.Equal(new[] { "rest", "walk", "attack" }, IronhowlMotion.PoseNames);
+        Assert.Equal("ironhowl_basecolor.png", IronhowlMotion.BaseColorFileName);
+        Assert.Equal("ironhowl_normal.png", IronhowlMotion.NormalFileName);
+        Assert.Equal("ironhowl_metallic.png", IronhowlMotion.MetallicFileName);
+        Assert.Equal("ironhowl_roughness.png", IronhowlMotion.RoughnessFileName);
         var source = File.ReadAllText(MotionPath("Enemies", "IronhowlMotion.cs"));
         Assert.DoesNotContain("ExactName", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("Clips", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("LastFrame", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("Seconds", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("BlenderRigSpec", source, StringComparison.Ordinal);
+
+        var root = FindRepoRoot();
+        var body = Path.Combine(root, "Assets", IronhowlMotion.BodyThemePackRel);
+        Assert.True(ContainsAscii(body, "mixamo.com"));
+        Assert.True(Directory.Exists(Path.Combine(root, IronhowlMotion.DesignMixamoDir)));
+        foreach (var fileName in new[] { IronhowlMotion.RestFileName, IronhowlMotion.WalkFileName, IronhowlMotion.AttackFileName })
+        {
+            foreach (var dir in new[]
+            {
+                Path.Combine(root, "Assets", IronhowlMotion.ThemePackDir),
+                Path.Combine(root, IronhowlMotion.DesignMixamoDir)
+            })
+            {
+                var path = Path.Combine(dir, fileName);
+                if (!File.Exists(path))
+                {
+                    continue;
+                }
+
+                Assert.True(ContainsAscii(path, "mixamorig:Hips"), path);
+            }
+        }
     }
 
     [Fact]
@@ -102,7 +136,14 @@ public sealed class ThemeARosterTests
         Assert.DoesNotContain("localScale =", iron, StringComparison.Ordinal);
         Assert.DoesNotContain("bakeAxisConversion = true", iron, StringComparison.Ordinal);
         Assert.Contains("bakeAxisConversion = false", iron, StringComparison.Ordinal);
-        Assert.Contains("No clips", iron, StringComparison.Ordinal);
+        Assert.Contains("PlayPose", iron, StringComparison.Ordinal);
+        Assert.Contains("AnimationClipPlayable.Create", iron, StringComparison.Ordinal);
+        Assert.Contains("RosterPaint.Bind", iron, StringComparison.Ordinal);
+        Assert.Contains("preferEmbeddedBaseAndNormal: false", iron, StringComparison.Ordinal);
+        Assert.Contains("keepOriginalOrientation = true", iron, StringComparison.Ordinal);
+        Assert.DoesNotContain("IRONHOWL_rig_atlas", iron, StringComparison.Ordinal);
+        Assert.DoesNotContain("lastFrame =", iron, StringComparison.Ordinal);
+        Assert.DoesNotContain("animationType = ModelImporterAnimationType.Human", iron, StringComparison.Ordinal);
         Assert.DoesNotContain("EMBERFANG_dragonrig_sheet", fang, StringComparison.Ordinal);
         Assert.DoesNotContain("mixamorig", fang, StringComparison.Ordinal);
         Assert.DoesNotContain("localRotation =", fang, StringComparison.Ordinal);
@@ -138,8 +179,14 @@ public sealed class ThemeARosterTests
         var ironDemo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "IronhowlDemo.cs"));
         var fangDemo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "EmberfangDemo.cs"));
         Assert.Contains("IRONHOWL", ironDemo, StringComparison.Ordinal);
-        Assert.Contains("T-pose · no clips", ironDemo, StringComparison.Ordinal);
-        Assert.DoesNotContain("Dropdown", ironDemo, StringComparison.Ordinal);
+        Assert.Contains("IronhowlClipDropdown", ironDemo, StringComparison.Ordinal);
+        Assert.Contains("RestPoseName", ironDemo, StringComparison.Ordinal);
+        Assert.Contains("WalkPoseName", ironDemo, StringComparison.Ordinal);
+        Assert.Contains("AttackPoseName", ironDemo, StringComparison.Ordinal);
+        Assert.Contains("SetValueWithoutNotify(0)", ironDemo, StringComparison.Ordinal);
+        Assert.Contains("clip missing · T-pose", ironDemo, StringComparison.Ordinal);
+        Assert.DoesNotContain("T-pose · no clips", ironDemo, StringComparison.Ordinal);
+        Assert.Contains("Survival/Ironhowl Demo (rest / walk / attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         Assert.Contains("EmberfangClipDropdown", fangDemo, StringComparison.Ordinal);
         Assert.Contains("RestPoseName", fangDemo, StringComparison.Ordinal);
         Assert.Contains("SetValueWithoutNotify(0)", fangDemo, StringComparison.Ordinal);
@@ -155,6 +202,52 @@ public sealed class ThemeARosterTests
             Assert.Empty(Directory.GetFiles(scenes, "*" + name + "*", SearchOption.AllDirectories));
             Assert.Empty(Directory.GetFiles(pack, "*" + name + "*", SearchOption.AllDirectories));
         }
+    }
+
+    [Fact]
+    public void Ironhowl_paint_maps_bind_without_a_packed_orm_or_the_look_jpeg()
+    {
+        var root = FindRepoRoot();
+        var ironDir = Path.Combine(root, "Assets", IronhowlMotion.ThemePackDir);
+        foreach (var file in new[]
+        {
+            IronhowlMotion.BaseColorFileName,
+            IronhowlMotion.NormalFileName,
+            IronhowlMotion.MetallicFileName,
+            IronhowlMotion.RoughnessFileName
+        })
+        {
+            Assert.True(File.Exists(Path.Combine(ironDir, file)), file);
+        }
+
+        Assert.False(File.Exists(Path.Combine(ironDir, "ironhowl_metal_rough.png")));
+        Assert.True(File.Exists(Path.Combine(ironDir, IronhowlMotion.LookReferenceFileName)));
+
+        var iron = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "IronhowlActor.cs"));
+        var paint = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "RosterPaint.cs"));
+        Assert.Contains("BaseColorFileName", iron, StringComparison.Ordinal);
+        Assert.Contains("NormalFileName", iron, StringComparison.Ordinal);
+        Assert.Contains("MetallicFileName", iron, StringComparison.Ordinal);
+        Assert.Contains("RoughnessFileName", iron, StringComparison.Ordinal);
+        Assert.DoesNotContain("LookReferenceFileName", iron, StringComparison.Ordinal);
+        Assert.Contains("Universal Render Pipeline/Lit", paint, StringComparison.Ordinal);
+        Assert.Contains("1f - roughness", paint, StringComparison.Ordinal);
+        Assert.Contains("_MetallicGlossMap", paint, StringComparison.Ordinal);
+        Assert.DoesNotContain("metal_rough", paint, StringComparison.Ordinal);
+        Assert.DoesNotContain("_MaskMap", paint, StringComparison.Ordinal);
+
+        AssertMapMeta(Path.Combine(ironDir, "ironhowl_basecolor.png.meta"), srgb: "1", textureType: "0", readable: "0");
+        AssertMapMeta(Path.Combine(ironDir, "ironhowl_normal.png.meta"), srgb: "0", textureType: "1", readable: "0");
+        AssertMapMeta(Path.Combine(ironDir, "ironhowl_metallic.png.meta"), srgb: "0", textureType: "0", readable: "1");
+        AssertMapMeta(Path.Combine(ironDir, "ironhowl_roughness.png.meta"), srgb: "0", textureType: "0", readable: "1");
+    }
+
+    private static void AssertMapMeta(string path, string srgb, string textureType, string readable)
+    {
+        var meta = File.ReadAllText(path);
+        Assert.Contains("sRGBTexture: " + srgb, meta, StringComparison.Ordinal);
+        Assert.Contains("textureType: " + textureType, meta, StringComparison.Ordinal);
+        Assert.Contains("isReadable: " + readable, meta, StringComparison.Ordinal);
     }
 
     private static string MotionPath(string folder, string file)
