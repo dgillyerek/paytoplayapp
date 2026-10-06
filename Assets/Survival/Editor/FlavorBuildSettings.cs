@@ -15,6 +15,7 @@ namespace Survival.Editor
         private const string Blightroot = "Assets/Survival/Scenes/Blightroot.unity";
         private const string Ironhowl = "Assets/Survival/Scenes/Ironhowl.unity";
         private const string Emberfang = "Assets/Survival/Scenes/Emberfang.unity";
+        private const string Vespera = "Assets/Survival/Scenes/Vespera.unity";
         private const string GroveBoard = "Assets/Grove/Scenes/Board.unity";
 
         [MenuItem("Survival/Use Theme A Flavor (fantasy_kingdom_a)")]
@@ -31,6 +32,7 @@ namespace Survival.Editor
                 new EditorBuildSettingsScene(Blightroot, true),
                 new EditorBuildSettingsScene(Ironhowl, true),
                 new EditorBuildSettingsScene(Emberfang, true),
+                new EditorBuildSettingsScene(Vespera, true),
                 new EditorBuildSettingsScene(GroveBoard, true)
             };
             Debug.Log("Survival flavor " + SurvIds.FlavorIdFantasyKingdomA + " → Splash then Play. Pack " + SurvIds.ThemeIdFantasyKingdomA);
@@ -58,6 +60,12 @@ namespace Survival.Editor
         public static void OpenEmberfangDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Emberfang);
+        }
+
+        [MenuItem("Survival/Vespera Demo (rest + walk, Game view 1080x1920)")]
+        public static void OpenVesperaDemo()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Vespera);
         }
 
         [MenuItem("Survival/Import locked Sir Aldric rear master")]
