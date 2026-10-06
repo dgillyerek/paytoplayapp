@@ -35,3 +35,25 @@ Input: Derek hand-edit `EMBERFANG_dragonrig_derek_20261006.blend` (Blender **5.2
 - Work: `/workspace/emberfang_derek_20261006/` (scripts adapted from ashwyrm_small)
 
 **Dev tip-swap:** replace blend + rest + wingflap FBXs; **add** walk FBX. HOLD merge messaging for parent/Derek re-check.
+
+## FIX 2026-10-06 — Derek Game-view FAIL on tip 8db30e1
+
+Wing-tip motion on the flap was not enough. The body stayed still, and the walk left the wings at identity.
+
+**Verified on the 4.2 SoT before the edit:** `EMBERFANG_wingflap` keyed wings, a tiny neck/head, and the tail. `hips`, `spine_01..03`, and `chest` were flat. Arms were already locked. `EMBERFANG_walk` keyed thighs, shins, arms, a small spine, and the tail. Every `wing_*` channel was flat.
+
+**Edit (same blend, no reskin, rest pose untouched):**
+- Wing flap: hips / spine_01..03 / chest pitch with the wing phase (about 4.2° at the hips down to 1.4° at spine_03, chest 1.8°) plus a ±1.8 cm hip bob. Wing tip keys kept. Arm and thigh local channels stay identity.
+- Walk: wing_root ±10°, wing_arm ±5°, forearm ±3°, finger a ±4°, finger b ±6°, sine with the gait and opposite the left thigh. Not a second flap. Leg and arm keys kept.
+
+**Posed QC (Blender 4.2.23):**
+- Flap chest travel 0.187 m, head 0.322 m, tip bone 1.066 m. Body mesh mean 0.196 m. Tip mesh mean 0.872 m. Thigh local amp 0. Upper arm local amp 0.
+- Walk tip bone 0.322 m, tip mesh mean 0.253 m (was ~0.06 m). Thigh local amp still 0.37. Hips local amp 0.
+
+**MD5s after this fix:**
+- blend `0c0c7e631edbdc9af09e515d2030d24a` (still Blender 4.2)
+- rest `91336af931c3a67dcf8754c8901e5fd3` (unchanged bind)
+- wingflap `e8dba1177daa684cee71a0fa965efefe`
+- walk `35c6a70d6941a7a6d11838eed6622a65`
+
+HOLD merge until Derek Game-view PASS.
