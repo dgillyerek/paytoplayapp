@@ -119,7 +119,7 @@ public sealed class ThemeARosterTests
         var root = FindRepoRoot();
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
         var build = File.ReadAllText(Path.Combine(root, "ProjectSettings", "EditorBuildSettings.asset"));
-        foreach (var scene in new[] { "SirAldric.unity", "Blightroot.unity", "Ironhowl.unity", "Emberfang.unity" })
+        foreach (var scene in new[] { "SirAldric.unity", "Blightroot.unity", "Ironhowl.unity", "Emberfang.unity", "Ashwyrm.unity" })
         {
             Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", scene)));
             Assert.Contains(scene, editor, StringComparison.Ordinal);
@@ -146,7 +146,7 @@ public sealed class ThemeARosterTests
 
         var excluded = new[]
         {
-            "Rowan", "Lyra", "Stormcrest", "Oakenshield", "Vespera", "Ashwyrm", "Nightfang", "Bonequill"
+            "Rowan", "Lyra", "Stormcrest", "Oakenshield", "Vespera", "Nightfang", "Bonequill"
         };
         var scenes = Path.Combine(root, "Assets", "Survival", "Scenes");
         var pack = Path.Combine(root, "Assets", "ThemePack");
