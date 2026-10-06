@@ -1,6 +1,6 @@
 # PASS ASHWYRM
 
-bones=46 faces=199999 unw=0 clip_max=0.40079324682490325
+bones=30 faces=199999 unw=0 clip_max=0.924
 - Kind: winged dragon custom skeleton
 - Weighting: ARMATURE_AUTO; L/R suppress; 4-infl; **wing membrane rebind 2026-10-05**
 - Caveat: auto wing placement; soft fold leftovers OK on extreme poses
@@ -60,3 +60,36 @@ Input: `derek_edit/ASHWYRM_blenderig_derek_20261005.blend`. It was saved in **Bl
 - QC json: `work/derek_edit_qc/noarmbounce_qc.json`
 
 **Dev tip-swap:** **clip-only** — replace `ASHWYRM_blenderig_wingflap.fbx`. Rest FBX weights/skeleton unchanged (same 23 bones); optional rest FBX refresh is harmless but not required. HOLD merge until Derek re-checks.
+
+## DEREK EDIT 2026-10-06 — arm bones + tail tip (armsrebuild; NOT clip-only)
+
+Input: `derek_edit/ASHWYRM_blenderig_derek_arms_20261006.blend` (Blender 5.2 SoT, ~32.8 MB, ~11:07 ET). Read with portable 5.2.2; rebuilt exactly (head/tail/roll/parent/connect, delta **0 m**) in 4.3 on the prior cleaned mesh so the main `.blend` stays pipeline-openable (4.2/4.3). Backups: `broken_clips_backup/*_pre_armsrebuild.*`.
+
+**What Derek added (on top of cleaned 23-bone names):**
+- Front limbs as `wing_root.{L,R}.001/.002` (2-bone chains parented to `spine`) — renamed `upperarm.{L,R}` / `forearm.{L,R}` (no hand bone).
+- Tail tip extension `tail_03.001/.002/.003` → `tail_04`/`tail_05`/`tail_06`.
+- Repositioned thigh heads slightly (kept HIS placements). Wings/spine/tail_01..03 unchanged from prior Derek edit.
+- No zero-length accidents. No root in his file (we re-added non-deform `root`). Stale vertex groups were still the prior 22 (no arm groups) — he did not re-skin.
+
+**Cleanup:** 30 bones total (29 deform + root). Parenting: spine→root; wings/arms/thighs→spine (Derek); forearm→upperarm; shin→thigh; tail chain connected. No bones moved.
+
+**Re-skin:** cleared groups → ARMATURE_AUTO heat → cleanup:
+1. Fence wing bones out of head/torso/legs (smoothstep |x| 0.12→0.26, z 0.48→0.58).
+2. Outer-membrane anti-stealer + **anti-arm-stealer for wings** (`|x|>0.35` wing-dom → wing only; strip arm from outer/mid-wing).
+3. **Anti-thigh-stealer for arms** (verts near arm bones, not outer wing → upperarm/forearm; strip leg/spine steal).
+4. L/R midline suppress; max 4 influences; normalize.
+Scripts: `work/derek_edit_qc/armsrebuild_*.py`.
+
+**Clip:** `ASHWYRM_clip` 0..30 @30fps, linear+cyclic, identity rest. Wings same amps as derek-edit (`wing_root` −15+30cos, `wing_arm` −8+16cos(φ−0.5), f1..4 −4+10cos(φ−1.0), inner 6cos(φ−0.5)). Subtle arm idle: upperarm ±2.5° / forearm ±3° sin. Spine ±1° only (no root bob / thigh keys — arms have own bones). Tail ±5° wave through tail_01..06.
+
+**QC:**
+- FBX: 30 bones, 199,999 faces, 0 unweighted, 31 frames, loop err 0.0
+- Outer `|x|>0.35` mean wing **0.996** / arm **0.000**, frac wing-dom 0.996; tip wing 1.00
+- Front-limb mean arm **0.959** / leg 0.001 / wing 0.008 / spine 0.031
+- Tip-vert mean travel **0.92 m** (centroid 0.84; tip bone ~1.02–1.06 m); outer centroid ~0.60 m; wing_z_mean range 0.61 m
+- Front-limb mean travel **0.016 m** (subtle idle, not bounce); head 0.005 m
+- Preview: `handoffs/anim_previews_20261005/rebake/ASHWYRM_wingflap_preview_arms.mp4`
+- Stills: `stills/derek_arms_bones.jpg` / `stills/arms_vs_wings_labeled.jpg` (orange=wing, red=arm, green=leg, cyan=spine/tail)
+
+**Dev tip-swap:** replace **BOTH** `ASHWYRM_blenderig.fbx` (rest+weights) **and** `ASHWYRM_blenderig_wingflap.fbx` (clip). Skeleton changed 23→30 bones (new upperarm/forearm + tail_04..06); Unity avatars/prefabs/clips bound to old paths must re-bind. **HOLD merge** for Derek Game-view check.
+**Known limits:** no hand/neck/head/jaw/feet bones — head rides spine; claws follow forearm; feet follow shin.
