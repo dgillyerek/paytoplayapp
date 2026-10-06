@@ -181,8 +181,7 @@ public sealed class ThemeARosterTests
         Assert.Contains("IRONHOWL", ironDemo, StringComparison.Ordinal);
         Assert.Contains("IronhowlClipDropdown", ironDemo, StringComparison.Ordinal);
         Assert.Contains("RestPoseName", ironDemo, StringComparison.Ordinal);
-        Assert.Contains("WalkPoseName", ironDemo, StringComparison.Ordinal);
-        Assert.Contains("AttackPoseName", ironDemo, StringComparison.Ordinal);
+        Assert.Contains("IronhowlMotion.PoseNames", ironDemo, StringComparison.Ordinal);
         Assert.Contains("SetValueWithoutNotify(0)", ironDemo, StringComparison.Ordinal);
         Assert.Contains("clip missing · T-pose", ironDemo, StringComparison.Ordinal);
         Assert.DoesNotContain("T-pose · no clips", ironDemo, StringComparison.Ordinal);
