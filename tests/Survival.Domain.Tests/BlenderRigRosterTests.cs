@@ -197,20 +197,21 @@ public sealed class BlenderRigRosterTests
     }
 
     [Fact]
-    public void Ashwyrm_is_a_23_bone_generic_dragon_with_rest_and_wing_flap()
+    public void Ashwyrm_is_a_30_bone_generic_dragon_with_rest_and_wing_flap()
     {
         Assert.Equal(8, BlenderRigRoster.All.Count);
-        Assert.Equal(23, AshwyrmMotion.BoneCount);
-        Assert.Equal(23, AshwyrmMotion.BoneNames.Length);
+        Assert.Equal(30, AshwyrmMotion.BoneCount);
+        Assert.Equal(30, AshwyrmMotion.BoneNames.Length);
         Assert.Equal(AshwyrmMotion.BoneNames.Length, AshwyrmMotion.BoneNames.Distinct(StringComparer.Ordinal).Count());
         Assert.Equal("root", AshwyrmMotion.BoneRoot);
         Assert.Equal("spine", AshwyrmMotion.BoneNames[1]);
         Assert.Equal("wing_root.L", AshwyrmMotion.BoneNames[9]);
         Assert.Equal("wing_inner.L", AshwyrmMotion.BoneNames[15]);
-        Assert.Equal("tail_03", AshwyrmMotion.BoneNames[22]);
+        Assert.Equal("tail_06", AshwyrmMotion.BoneNames[25]);
+        Assert.Equal("upperarm.L", AshwyrmMotion.BoneNames[26]);
+        Assert.Equal("forearm.R", AshwyrmMotion.BoneNames[29]);
         Assert.DoesNotContain("hips", AshwyrmMotion.BoneNames);
         Assert.DoesNotContain("wing_forearm.L", AshwyrmMotion.BoneNames);
-        Assert.DoesNotContain("upperarm.L", AshwyrmMotion.BoneNames);
         Assert.Equal("rest", AshwyrmMotion.PoseNames[0]);
         Assert.Equal("wing flap", AshwyrmMotion.PoseNames[1]);
         Assert.Equal("Scene", AshwyrmMotion.FlapTakeName);
@@ -242,7 +243,9 @@ public sealed class BlenderRigRosterTests
         Assert.False(ContainsAscii(flap, "spine_01"));
         var motion = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Runtime", "Enemies", "AshwyrmMotion.cs"));
         Assert.DoesNotContain("wing_forearm", motion, StringComparison.Ordinal);
-        Assert.DoesNotContain("upperarm", motion, StringComparison.Ordinal);
+        Assert.Contains("upperarm.L", motion, StringComparison.Ordinal);
+        Assert.Contains("forearm.L", motion, StringComparison.Ordinal);
+        Assert.Contains("tail_06", motion, StringComparison.Ordinal);
     }
 
     private static void AssertHumanoidDemo(BlenderRigSpec spec, string albedoStem, string normalStem, string demoGuid, string menu)
