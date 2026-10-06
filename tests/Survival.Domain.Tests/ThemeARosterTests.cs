@@ -119,7 +119,7 @@ public sealed class ThemeARosterTests
         var root = FindRepoRoot();
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
         var build = File.ReadAllText(Path.Combine(root, "ProjectSettings", "EditorBuildSettings.asset"));
-        foreach (var scene in new[] { "SirAldric.unity", "Blightroot.unity", "Ironhowl.unity", "Emberfang.unity", "Rowan.unity", "Lyra.unity", "Vespera.unity", "Bonequill.unity", "Stormcrest.unity", "Oakenshield.unity", "Nightfang.unity", "Ashwyrm.unity" })
+        foreach (var scene in new[] { "SirAldric.unity", "Blightroot.unity", "Ironhowl.unity", "Emberfang.unity", "Ashwyrm.unity" })
         {
             Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", scene)));
             Assert.Contains(scene, editor, StringComparison.Ordinal);
@@ -143,6 +143,18 @@ public sealed class ThemeARosterTests
         Assert.Contains("EmberfangClipDropdown", fangDemo, StringComparison.Ordinal);
         Assert.Contains("RestPoseName", fangDemo, StringComparison.Ordinal);
         Assert.Contains("SetValueWithoutNotify(0)", fangDemo, StringComparison.Ordinal);
+
+        var excluded = new[]
+        {
+            "Rowan", "Lyra", "Stormcrest", "Oakenshield", "Vespera", "Nightfang", "Bonequill"
+        };
+        var scenes = Path.Combine(root, "Assets", "Survival", "Scenes");
+        var pack = Path.Combine(root, "Assets", "ThemePack");
+        foreach (var name in excluded)
+        {
+            Assert.Empty(Directory.GetFiles(scenes, "*" + name + "*", SearchOption.AllDirectories));
+            Assert.Empty(Directory.GetFiles(pack, "*" + name + "*", SearchOption.AllDirectories));
+        }
     }
 
     private static string MotionPath(string folder, string file)

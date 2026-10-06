@@ -15,13 +15,6 @@ namespace Survival.Editor
         private const string Blightroot = "Assets/Survival/Scenes/Blightroot.unity";
         private const string Ironhowl = "Assets/Survival/Scenes/Ironhowl.unity";
         private const string Emberfang = "Assets/Survival/Scenes/Emberfang.unity";
-        private const string Rowan = "Assets/Survival/Scenes/Rowan.unity";
-        private const string Lyra = "Assets/Survival/Scenes/Lyra.unity";
-        private const string Vespera = "Assets/Survival/Scenes/Vespera.unity";
-        private const string Bonequill = "Assets/Survival/Scenes/Bonequill.unity";
-        private const string Stormcrest = "Assets/Survival/Scenes/Stormcrest.unity";
-        private const string Oakenshield = "Assets/Survival/Scenes/Oakenshield.unity";
-        private const string Nightfang = "Assets/Survival/Scenes/Nightfang.unity";
         private const string Ashwyrm = "Assets/Survival/Scenes/Ashwyrm.unity";
         private const string GroveBoard = "Assets/Grove/Scenes/Board.unity";
 
@@ -39,13 +32,6 @@ namespace Survival.Editor
                 new EditorBuildSettingsScene(Blightroot, true),
                 new EditorBuildSettingsScene(Ironhowl, true),
                 new EditorBuildSettingsScene(Emberfang, true),
-                new EditorBuildSettingsScene(Rowan, true),
-                new EditorBuildSettingsScene(Lyra, true),
-                new EditorBuildSettingsScene(Vespera, true),
-                new EditorBuildSettingsScene(Bonequill, true),
-                new EditorBuildSettingsScene(Stormcrest, true),
-                new EditorBuildSettingsScene(Oakenshield, true),
-                new EditorBuildSettingsScene(Nightfang, true),
                 new EditorBuildSettingsScene(Ashwyrm, true),
                 new EditorBuildSettingsScene(GroveBoard, true)
             };
@@ -74,48 +60,6 @@ namespace Survival.Editor
         public static void OpenEmberfangDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Emberfang);
-        }
-
-        [MenuItem("Survival/Rowan Demo (rest + walk, Game view 1080x1920)")]
-        public static void OpenRowanDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Rowan);
-        }
-
-        [MenuItem("Survival/Lyra Demo (rest + walk, Game view 1080x1920)")]
-        public static void OpenLyraDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Lyra);
-        }
-
-        [MenuItem("Survival/Vespera Demo (rest + walk, Game view 1080x1920)")]
-        public static void OpenVesperaDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Vespera);
-        }
-
-        [MenuItem("Survival/Bonequill Demo (rest + walk, Game view 1080x1920)")]
-        public static void OpenBonequillDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Bonequill);
-        }
-
-        [MenuItem("Survival/Stormcrest Demo (rest + walk, Game view 1080x1920)")]
-        public static void OpenStormcrestDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Stormcrest);
-        }
-
-        [MenuItem("Survival/Oakenshield Demo (rest + walk, Game view 1080x1920)")]
-        public static void OpenOakenshieldDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Oakenshield);
-        }
-
-        [MenuItem("Survival/Nightfang Demo (rest + trot, Game view 1080x1920)")]
-        public static void OpenNightfangDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Nightfang);
         }
 
         [MenuItem("Survival/Ashwyrm Demo (rest + wing flap, Game view 1080x1920)")]

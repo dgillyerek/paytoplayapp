@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Survival.Domain.Enemies;
-using Survival.Domain.Heroes;
 
 namespace Survival.Domain.Roster
 {
@@ -161,19 +160,13 @@ namespace Survival.Domain.Roster
     }
 
     /// <summary>
-    /// All eight Design Blender rigs. HOLD merge until Derek Game-view PASS.
+    /// Ashwyrm Design Blender rig. This branch registers only Ashwyrm.
+    /// HOLD merge until Derek Game-view PASS.
     /// </summary>
     public static class BlenderRigRoster
     {
         public static IReadOnlyList<BlenderRigSpec> All { get; } = new[]
         {
-            RowanMotion.Spec,
-            LyraMotion.Spec,
-            StormcrestMotion.Spec,
-            OakenshieldMotion.Spec,
-            VesperaMotion.Spec,
-            BonequillMotion.Spec,
-            NightfangMotion.Spec,
             AshwyrmMotion.Spec
         };
     }
