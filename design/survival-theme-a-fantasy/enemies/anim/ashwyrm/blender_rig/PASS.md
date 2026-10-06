@@ -93,3 +93,28 @@ Scripts: `work/derek_edit_qc/armsrebuild_*.py`.
 
 **Dev tip-swap:** replace **BOTH** `ASHWYRM_blenderig.fbx` (rest+weights) **and** `ASHWYRM_blenderig_wingflap.fbx` (clip). Skeleton changed 23→30 bones (new upperarm/forearm + tail_04..06); Unity avatars/prefabs/clips bound to old paths must re-bind. **HOLD merge** for Derek Game-view check.
 **Known limits:** no hand/neck/head/jaw/feet bones — head rides spine; claws follow forearm; feet follow shin.
+
+## DEREK EDIT 2026-10-06b — small placement tweaks + walk
+
+Input: `derek_edit/ASHWYRM_blenderig_derek_small_20261006.blend` (Blender 5.2 SoT, MD5 `934e9cd0ff57d6b5112c852784e9aa7a`, 32835718 B, mtime 2026-10-06 11:34:55 ET). Copied from derekdesktop `D:\Development\paytoplayapp\design\...\ASHWYRM_blenderig.blend`. Read with portable 5.2.2; rebuilt exactly (head/tail/roll/parent/connect, rebuild delta **0 m**) in 4.2/4.3 on the prior cleaned mesh so the main `.blend` stays pipeline-openable. Backups: `broken_clips_backup/*_pre_small_20261006.*`.
+
+**What Derek changed vs armsrebuild (`d84e2817…`):** bone placement tweaks only (same 29-bone naming / mesh size). 12 bones moved (max tip ~0.11 m on `wing_f3.L` / `wing_f4.L`; wing wrist/arm joints ~3–4 cm; `tail_03.003` tip ~7.8 cm). Arms/legs/spine/tail_01..05 placements unchanged.
+
+**Cleanup (same renames as armsrebuild):** `wing_root.{L,R}.001/.002` → `upperarm/forearm.{L,R}`; `tail_03.001/.002/.003` → `tail_04/05/06`; add non-deform `root`; spine→root. Result: **30 bones** (29 deform + root). Mesh/UVs/materials from prior cleaned base (vert-identical).
+
+**Re-skin:** cleared groups → ARMATURE_AUTO heat → same cleanup as armsrebuild (wing fence, outer anti-stealer + anti-arm-stealer, anti-thigh-stealer for front arms, L/R suppress, top-4, normalize). Scripts: `/workspace/ashwyrm_small_20261006/`.
+
+**Clips (identity rest base):**
+- `ASHWYRM_clip` wingflap 0..30 @30fps linear+cyclic — same wing amps as armsrebuild; **NO** root/spine/thigh/shin/arm motion; light tail ±5° wave only.
+- `ASHWYRM_walk` (**NEW**) 0..30 @30fps linear+cyclic — procedural biped/dragon: thigh ±22° opposing X, shin ~half follow, upperarm ±10° counter, forearm ±5° follow, spine pitch/yaw ±2.5/±2°, tail_01..06 lateral ±4°, **root locked**, all `wing_*` identity.
+
+**QC:**
+- FBX: 30 bones, 199,999 faces, 0 unweighted, 31 frames, loop err 0.0 (rest + wingflap + walk)
+- Outer `|x|>0.35` mean wing **0.996** / arm **0.000**, frac wing-dom 0.996; tip wing 1.00
+- Front-limb mean arm **0.959** / leg 0.001 / wing 0.007 / spine 0.030
+- Wingflap tip-vert mean travel **0.93 m** (tip bone ~1.06 m); wing_z_mean range 0.61 m; front 0.0006 m
+- Walk tip-vert mean travel **0.057 m** (wings near-rest); front-limb ~0.042 m
+- Previews: `handoffs/anim_previews_20261005/rebake/ASHWYRM_wingflap_preview_small.mp4`, `.../ASHWYRM_walk_preview.mp4`
+- Stills: `stills/derek_small_bones.jpg` / `stills/arms_vs_wings_labeled_small.jpg`
+
+**Dev tip-swap:** replace **BOTH** rest+wingflap **and NEW** `ASHWYRM_blenderig_walk.fbx`. Skeleton still **30 bones** with same names as armsrebuild — Unity BoneNames likely unchanged unless names drifted. **HOLD merge** until Derek Game-view PASS. Context: PR #32 demo + PR #33 SoT.
