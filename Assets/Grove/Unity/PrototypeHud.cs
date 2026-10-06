@@ -1,8 +1,10 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using Grove.Domain.Board;
 using Grove.Domain.Commerce;
 using Grove.Domain.Energy;
+using Grove.Domain.Juice;
 using Grove.Domain.Layout;
 using Grove.Domain.Merge;
 using Grove.Domain.Orders;
@@ -26,8 +28,12 @@ namespace Grove.Unity
         private Text _goalText = null!;
         private Button _crateButton = null!;
         private Image _crateImage = null!;
+        private Text _cratePipText = null!;
+        private RectTransform _cratePipRoot = null!;
         private Image _energyFill = null!;
         private Image _mayaImage = null!;
+        private Image _coinIcon = null!;
+        private RectTransform _juiceLayer = null!;
         private Text _mayaBubbleText = null!;
         private Image _splashImage = null!;
         private Text _splashCaption = null!;
@@ -37,6 +43,8 @@ namespace Grove.Unity
         private readonly List<OrderCardUi> _cards = new List<OrderCardUi>();
         private readonly List<SplashBeat> _splashes = new List<SplashBeat>();
         private int _trayCompleted = -1;
+        private int _shownCharges = -1;
+        private bool _heroJuiceBusy;
         private float _toastUntil;
         private bool _introFinished;
         private ThinTeach _teach = null!;
@@ -109,6 +117,7 @@ namespace Grove.Unity
 
             var coinIcon = GroveVisuals.UiImage(root, "CoinIcon", Color.white, GroveArt.Get(GroveArt.StubCoin), true);
             Place(coinIcon.rectTransform, PlayLayout.CoinIcon);
+            _coinIcon = coinIcon;
             _coinText = GroveVisuals.UiText(
                 root,
                 "Coins",
@@ -195,6 +204,13 @@ namespace Grove.Unity
             Place(_crateButton.GetComponent<RectTransform>(), PlayLayout.Crate);
             _crateImage = _crateButton.targetGraphic as Image ?? _crateButton.GetComponent<Image>();
             _crateButton.onClick.AddListener(OnCrate);
+            BuildCratePip(_crateButton.transform);
+
+            var juice = new GameObject("HeroJuiceLayer");
+            juice.transform.SetParent(root, false);
+            _juiceLayer = juice.AddComponent<RectTransform>();
+            Stretch(_juiceLayer);
+            _juiceLayer.SetAsLastSibling();
 
             var store = GroveVisuals.UiButton(
                 root,
@@ -293,7 +309,7 @@ namespace Grove.Unity
             {
                 var charges = Host.Crate.Charges(Host.Clock);
                 var energyOk = Host.Crate.FtueFreeTapRemaining || Host.Energy == null || !Host.Energy.IsEmpty;
-                _crateButton.interactable = !SplashBlocking && charges > 0 && energyOk;
+                _crateButton.interactable = !SplashBlocking && !_heroJuiceBusy && charges > 0 && energyOk;
                 var crateSprite = GroveArt.PlayCrateSprite(charges > 0);
                 if (crateSprite != null && _crateImage != null)
                 {
@@ -301,6 +317,8 @@ namespace Grove.Unity
                     _crateImage.preserveAspect = true;
                     _crateImage.color = Color.white;
                 }
+
+                RefreshCratePip(charges);
             }
 
             if (Host.Orders != null && Host.Orders.CompletedCount != _trayCompleted)
@@ -422,6 +440,7 @@ namespace Grove.Unity
             }
 
             _splashCaption.text = beat.Caption + "\nTap to continue";
+            _splashRoot.transform.SetAsLastSibling();
             _splashRoot.SetActive(true);
         }
 
@@ -711,6 +730,7 @@ namespace Grove.Unity
             var ui = new OrderCardUi
             {
                 Spec = order,
+                Root = card.rectTransform,
                 Body = body,
                 Deliver = deliver,
                 IsActive = active
@@ -736,7 +756,7 @@ namespace Grove.Unity
 
                 if (card.Deliver != null)
                 {
-                    card.Deliver.interactable = !SplashBlocking && card.IsActive && Host.Orders.CanDeliver(Host.Session.Board);
+                    card.Deliver.interactable = !SplashBlocking && !_heroJuiceBusy && card.IsActive && Host.Orders.CanDeliver(Host.Session.Board);
                 }
             }
 
@@ -825,7 +845,7 @@ namespace Grove.Unity
 
         private void OnCrate()
         {
-            if (SplashBlocking)
+            if (SplashBlocking || _heroJuiceBusy)
             {
                 return;
             }
@@ -837,7 +857,6 @@ namespace Grove.Unity
             }
 
             var result = Host.CrateTap.TryTap();
-            Host.BoardView?.Refresh();
             switch (result)
             {
                 case SpitResult.Ok ok:
@@ -845,8 +864,10 @@ namespace Grove.Unity
                     Toast($"Crate produced {name}.");
                     _teach?.NotifyCrateTapped(Host.Session.Board, Host.Orders);
                     RefreshTeach();
+                    StartCoroutine(CrateTapJuice(ok));
                     break;
                 case SpitResult.Failed failed:
+                    Host.BoardView?.Refresh();
                     Toast(failed.Reason switch
                     {
                         "no-charges" => "Crate recharging…",
@@ -858,9 +879,52 @@ namespace Grove.Unity
             }
         }
 
+        private IEnumerator CrateTapJuice(SpitResult.Ok ok)
+        {
+            _heroJuiceBusy = true;
+            if (_juiceLayer != null)
+            {
+                _juiceLayer.SetAsLastSibling();
+            }
+
+            var crateXf = _crateButton != null ? _crateButton.transform : null;
+            if (crateXf != null)
+            {
+                StartCoroutine(HeroJuiceFx.SquashUi(crateXf, HeroJuice.CrateTapSeconds));
+            }
+
+            if (_cratePipRoot != null)
+            {
+                StartCoroutine(HeroJuiceFx.TickScale(_cratePipRoot, HeroJuice.ChargePipTickSeconds));
+            }
+
+            var land = ok.At;
+            var view = Host != null ? Host.BoardView : null;
+            if (land.HasValue && view != null)
+            {
+                view.HiddenCell = land;
+                view.Refresh();
+                var cam = Camera.main;
+                var crateRect = _crateButton != null ? _crateButton.GetComponent<RectTransform>() : null;
+                var from = crateRect != null && cam != null
+                    ? HeroJuiceFx.OverlayToWorld(crateRect, cam)
+                    : view.CellToWorld(land.Value) + new Vector3(-1.2f, 0.2f, 0f);
+                yield return view.PlaySpitArc(ok.Item.Value, from, land.Value);
+                view.HiddenCell = null;
+                view.Refresh();
+            }
+            else
+            {
+                view?.Refresh();
+                yield return HeroJuiceFx.SquashUi(crateXf, HeroJuice.CrateTapSeconds);
+            }
+
+            _heroJuiceBusy = false;
+        }
+
         private void OnDeliver()
         {
-            if (SplashBlocking || Host?.Orders == null)
+            if (SplashBlocking || _heroJuiceBusy || Host?.Orders == null)
             {
                 return;
             }
@@ -871,17 +935,50 @@ namespace Grove.Unity
                 return;
             }
 
-            if (!Host.Orders.TryDeliver(Host.Session.Board))
+            if (!Host.Orders.CanDeliver(Host.Session.Board))
             {
                 Toast("Need the required piece on the board.");
                 return;
             }
 
-            Host.GrantCoins(delivered.CoinReward);
+            StartCoroutine(DeliverJuice(delivered));
+        }
+
+        private IEnumerator DeliverJuice(OrderSpec delivered)
+        {
+            _heroJuiceBusy = true;
+            if (_juiceLayer != null)
+            {
+                _juiceLayer.SetAsLastSibling();
+            }
+
+            var card = ActiveCard();
+            var cardRect = card?.Root;
+            if (!Host!.Orders.TryDeliver(Host.Session.Board))
+            {
+                _heroJuiceBusy = false;
+                Toast("Need the required piece on the board.");
+                yield break;
+            }
+
             Host.BoardView?.Refresh();
-            RebuildTray();
             _teach?.NotifyOrderDelivered(Host.Orders);
             RefreshTeach();
+
+            if (cardRect != null)
+            {
+                StartCoroutine(HeroJuiceFx.CardSettle(cardRect, HeroJuice.DeliverSeconds, 22f));
+            }
+
+            if (_mayaImage != null)
+            {
+                StartCoroutine(HeroJuiceFx.FlashImage(_mayaImage, HeroJuiceFx.SparkleTint, HeroJuice.MayaFlashSeconds));
+            }
+
+            yield return RewardFly(delivered, cardRect);
+
+            Host.GrantCoins(delivered.CoinReward);
+            RebuildTray();
 
             if (Host.Splash != null)
             {
@@ -891,7 +988,8 @@ namespace Grove.Unity
                     _splashes.Add(milestone);
                     ShowNextSplash();
                     Toast(milestone.Caption);
-                    return;
+                    _heroJuiceBusy = false;
+                    yield break;
                 }
             }
 
@@ -899,6 +997,109 @@ namespace Grove.Unity
             _splashes.Add(complete);
             ShowNextSplash();
             Toast(delivered.Title + " complete!");
+            _heroJuiceBusy = false;
+        }
+
+        private IEnumerator RewardFly(OrderSpec delivered, RectTransform? fromCard)
+        {
+            if (_juiceLayer == null || delivered.CoinReward <= 0)
+            {
+                var wait = 0f;
+                while (wait < HeroJuice.DeliverSeconds)
+                {
+                    wait += Time.unscaledDeltaTime;
+                    yield return null;
+                }
+
+                yield break;
+            }
+
+            var start = fromCard != null ? fromCard.position : _juiceLayer.position;
+            var coinTarget = _coinIcon != null ? _coinIcon.rectTransform.position : start + new Vector3(0f, 220f, 0f);
+            var mayaTarget = _mayaImage != null ? _mayaImage.rectTransform.position : coinTarget;
+            var sprite = GroveArt.Get(GroveArt.StubCoin) ?? GroveVisuals.WhiteSprite;
+            var loft = 140f;
+            var flies = Mathf.Clamp(delivered.CoinReward >= 30 ? 3 : 2, 2, 3);
+            for (var i = 0; i < flies; i++)
+            {
+                var flyer = GroveVisuals.UiImage(_juiceLayer, "RewardFly" + i, Color.white, sprite, true);
+                var rt = flyer.rectTransform;
+                rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+                rt.sizeDelta = new Vector2(72f, 72f);
+                rt.position = start + new Vector3((i - 1) * 18f, 8f, 0f);
+                var dest = i == 0 ? mayaTarget : coinTarget + new Vector3((i - 1) * 12f, 0f, 0f);
+                StartCoroutine(HeroJuiceFx.UiArc(rt, rt.position, dest, loft + i * 24f, HeroJuice.DeliverSeconds));
+            }
+
+            var elapsed = 0f;
+            while (elapsed < HeroJuice.DeliverSeconds)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            for (var i = _juiceLayer.childCount - 1; i >= 0; i--)
+            {
+                var child = _juiceLayer.GetChild(i);
+                if (child != null && child.name.StartsWith("RewardFly"))
+                {
+                    Destroy(child.gameObject);
+                }
+            }
+        }
+
+        private OrderCardUi? ActiveCard()
+        {
+            for (var i = 0; i < _cards.Count; i++)
+            {
+                if (_cards[i].IsActive)
+                {
+                    return _cards[i];
+                }
+            }
+
+            return _cards.Count > 0 ? _cards[0] : null;
+        }
+
+        private void BuildCratePip(Transform crate)
+        {
+            var pip = GroveVisuals.UiImage(crate, "Pip", new Color(0.18f, 0.22f, 0.16f, 0.92f));
+            _cratePipRoot = pip.rectTransform;
+            _cratePipRoot.anchorMin = new Vector2(0.62f, 0.02f);
+            _cratePipRoot.anchorMax = new Vector2(0.98f, 0.36f);
+            _cratePipRoot.offsetMin = Vector2.zero;
+            _cratePipRoot.offsetMax = Vector2.zero;
+            _cratePipText = GroveVisuals.UiText(
+                pip.transform,
+                "PipValue",
+                "0",
+                PlayLayout.TypeCrate,
+                TextAnchor.MiddleCenter,
+                GroveVisuals.Gold,
+                contrastOnDark: true,
+                oneLine: true);
+            Stretch(_cratePipText.rectTransform);
+        }
+
+        private void RefreshCratePip(int charges)
+        {
+            if (_cratePipText == null)
+            {
+                return;
+            }
+
+            var label = charges.ToString();
+            if (_cratePipText.text != label)
+            {
+                _cratePipText.text = label;
+            }
+
+            if (_shownCharges >= 0 && charges < _shownCharges && _cratePipRoot != null && !_heroJuiceBusy)
+            {
+                StartCoroutine(HeroJuiceFx.TickScale(_cratePipRoot, HeroJuice.ChargePipTickSeconds));
+            }
+
+            _shownCharges = charges;
         }
 
         private async void OnStarterPack()
@@ -961,6 +1162,7 @@ namespace Grove.Unity
         private sealed class OrderCardUi
         {
             public OrderSpec Spec = null!;
+            public RectTransform Root = null!;
             public Text Body = null!;
             public Button? Deliver;
             public bool IsActive;
