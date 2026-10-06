@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: a6c16271ea4a416a98644a775193c155
+guid: a557146671e84cd69205d1333e87fea3
 ModelImporter:
   serializedVersion: 24
   internalIDToNameTable: []
@@ -32,7 +32,7 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: "wing flap"
+      name: "walk"
       takeName: Scene
       internalID: 0
       firstFrame: 0
@@ -127,6 +127,6 @@ ModelImporter:
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Ashwyrm wing flap on the Derek 30-bone rig with arms. Small-edit tip. 1s at 30fps. Take Scene. Generic. bakeAxisConversion 0. HOLD merge.
+  userData: Ashwyrm walk on the Derek 30-bone rig with arms. 1s at 30fps. Take Scene. Generic. bakeAxisConversion 0. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

@@ -4,7 +4,7 @@ namespace Survival.Domain.Enemies
 {
     /// <summary>
     /// Ashwyrm Design Blender dragon. Derek 30-bone rig with arms, Generic only.
-    /// Rest is the bind pose. Wing flap is a 1 second Scene take at 30 fps
+    /// Rest is the bind pose. Wing flap and walk are 1 second Scene takes at 30 fps
     /// (FBX LocalStop 46186158000 ticks). Reject ASHWYRM_rig.fbx.
     /// Basecolor and normal are embedded. No metal/roughness map.
     /// </summary>
@@ -13,8 +13,10 @@ namespace Survival.Domain.Enemies
         public const string ThemePackDir = "ThemePack/fantasy_kingdom_a/art/enemies/3d/ashwyrm";
         public const string RestFileName = "ASHWYRM_blenderig.fbx";
         public const string FlapFileName = "ASHWYRM_blenderig_wingflap.fbx";
+        public const string WalkFileName = "ASHWYRM_blenderig_walk.fbx";
         public const string RestThemePackRel = ThemePackDir + "/" + RestFileName;
         public const string FlapThemePackRel = ThemePackDir + "/" + FlapFileName;
+        public const string WalkThemePackRel = ThemePackDir + "/" + WalkFileName;
         public const string RejectedMixamoFileName = "ASHWYRM_rig.fbx";
 
         public const string RestPoseName = BlenderRigSpec.RestPoseName;
@@ -23,6 +25,11 @@ namespace Survival.Domain.Enemies
         public const float FlapSeconds = 1f;
         public const float FlapFrameRate = 30f;
         public const int FlapLastFrame = 30;
+        public const string WalkPoseName = "walk";
+        public const string WalkTakeName = "Scene";
+        public const float WalkSeconds = 1f;
+        public const float WalkFrameRate = 30f;
+        public const int WalkLastFrame = 30;
         public const int BoneCount = 30;
 
         public const string TextureFolder = "ASHWYRM_blenderig.fbm";
@@ -31,7 +38,7 @@ namespace Survival.Domain.Enemies
 
         public const string BoneRoot = "root";
 
-        public static readonly string[] PoseNames = { RestPoseName, FlapPoseName };
+        public static readonly string[] PoseNames = { RestPoseName, FlapPoseName, WalkPoseName };
 
         public static readonly string[] BoneNames =
         {
@@ -61,6 +68,16 @@ namespace Survival.Domain.Enemies
             TextureFolder,
             BaseColorFile,
             NormalFile,
-            "");
+            "",
+            new[]
+            {
+                new BlenderRigClip(
+                    WalkPoseName,
+                    WalkFileName,
+                    WalkTakeName,
+                    WalkSeconds,
+                    WalkFrameRate,
+                    WalkLastFrame)
+            });
     }
 }

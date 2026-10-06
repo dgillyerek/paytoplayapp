@@ -6,7 +6,7 @@ namespace Survival.Unity
 {
     /// <summary>
     /// Portrait Game view shared by Design Blender rigs.
-    /// Opens on the rest bind pose. Dropdown plays rest and the action clip.
+    /// Opens on the rest bind pose. Dropdown plays rest and each action clip on the spec.
     /// HOLD merge until Derek Game-view PASS.
     /// </summary>
     [DefaultExecutionOrder(500)]

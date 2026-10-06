@@ -9,7 +9,7 @@ using UnityEditor;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Plays a Design Blender rig: rest bind pose, then one action clip.
+    /// Plays a Design Blender rig: rest bind pose, then each action clip on the spec.
     /// Humanoid when the mixamorig avatar validates, otherwise Generic.
     /// Custom creatures stay Generic. Does not bake axis conversion, scale one axis,
     /// retarget by hand, or rewrite the imported root. Binds embedded basecolor and
@@ -119,7 +119,15 @@ namespace Survival.Unity
 
             if (string.Equals(poseName, _spec.ClipPoseName, System.StringComparison.Ordinal))
             {
-                return PlayClip();
+                return PlayClip(_spec.ClipFileName, _spec.ClipPoseName, _spec.ClipTakeName, _spec.ClipLastFrame);
+            }
+
+            foreach (var extra in _spec.ExtraClips)
+            {
+                if (string.Equals(poseName, extra.PoseName, System.StringComparison.Ordinal))
+                {
+                    return PlayClip(extra.FileName, extra.PoseName, extra.TakeName, extra.LastFrame);
+                }
             }
 
             Debug.LogWarning(_spec.Name + " unknown pose. " + poseName);
@@ -166,15 +174,15 @@ namespace Survival.Unity
             _time = 0f;
         }
 
-        private bool PlayClip()
+        private bool PlayClip(string fileName, string poseName, string takeName, int lastFrame)
         {
 #if UNITY_EDITOR
-            var clip = LoadClip();
+            var clip = LoadClip(fileName, poseName, takeName, lastFrame);
             if (clip == null || clip.empty || clip.length < 0.2f)
             {
                 Debug.LogError(
-                    _spec.Name + " clip missing. take=" + _spec.ClipTakeName +
-                    " file=" + _spec.ClipFileName);
+                    _spec.Name + " clip missing. take=" + takeName +
+                    " file=" + fileName);
                 return false;
             }
 
@@ -191,7 +199,7 @@ namespace Survival.Unity
             _length = clip.length;
             _time = 0f;
             _loop = true;
-            _pose = _spec.ClipPoseName;
+            _pose = poseName;
             _graph.Evaluate(0f);
             return true;
 #else
@@ -200,10 +208,10 @@ namespace Survival.Unity
         }
 
 #if UNITY_EDITOR
-        private AnimationClip? LoadClip()
+        private AnimationClip? LoadClip(string fileName, string poseName, string takeName, int lastFrame)
         {
-            var path = "Assets/" + _spec.ClipThemePackRel;
-            EnsureImport(path, _humanoid, clip: true);
+            var path = "Assets/" + _spec.ThemePackDir + "/" + fileName;
+            EnsureImport(path, _humanoid, true, poseName, takeName, lastFrame);
             AnimationClip? named = null;
             AnimationClip? fallback = null;
             foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
@@ -213,7 +221,7 @@ namespace Survival.Unity
                     continue;
                 }
 
-                if (string.Equals(clip.name, _spec.ClipPoseName, System.StringComparison.Ordinal))
+                if (string.Equals(clip.name, poseName, System.StringComparison.Ordinal))
                 {
                     named = clip;
                     continue;
@@ -262,7 +270,13 @@ namespace Survival.Unity
             return null;
         }
 
-        private void EnsureImport(string path, bool humanoid, bool clip)
+        private void EnsureImport(
+            string path,
+            bool humanoid,
+            bool clip,
+            string poseName = "",
+            string takeName = "",
+            int lastFrame = 0)
         {
             if (AssetImporter.GetAtPath(path) is not ModelImporter importer)
             {
@@ -328,7 +342,7 @@ namespace Survival.Unity
 
             if (clip)
             {
-                dirty |= PinClip(importer);
+                dirty |= PinClip(importer, poseName, takeName, lastFrame);
             }
 
             if (dirty)
@@ -337,12 +351,12 @@ namespace Survival.Unity
             }
         }
 
-        private bool PinClip(ModelImporter importer)
+        private bool PinClip(ModelImporter importer, string poseName, string takeName, int lastFrame)
         {
             var defaults = importer.defaultClipAnimations;
             if (defaults == null || defaults.Length == 0)
             {
-                Debug.LogError(_spec.Name + " clip has no take. Wanted " + _spec.ClipTakeName);
+                Debug.LogError(_spec.Name + " clip has no take. Wanted " + takeName);
                 return false;
             }
 
@@ -357,7 +371,7 @@ namespace Survival.Unity
                 }
 
                 var span = candidate.lastFrame - candidate.firstFrame;
-                if (string.Equals(take, _spec.ClipTakeName, System.StringComparison.Ordinal) && span >= 1f)
+                if (string.Equals(take, takeName, System.StringComparison.Ordinal) && span >= 1f)
                 {
                     best = candidate;
                     break;
@@ -377,19 +391,19 @@ namespace Survival.Unity
 
             var already = importer.clipAnimations;
             if (already != null && already.Length == 1
-                && string.Equals(already[0].name, _spec.ClipPoseName, System.StringComparison.Ordinal)
-                && string.Equals(already[0].takeName, _spec.ClipTakeName, System.StringComparison.Ordinal)
+                && string.Equals(already[0].name, poseName, System.StringComparison.Ordinal)
+                && string.Equals(already[0].takeName, takeName, System.StringComparison.Ordinal)
                 && already[0].loopTime
-                && Mathf.Abs(already[0].lastFrame - _spec.ClipLastFrame) < 0.01f
+                && Mathf.Abs(already[0].lastFrame - lastFrame) < 0.01f
                 && !already[0].mirror)
             {
                 return false;
             }
 
-            best.name = _spec.ClipPoseName;
-            best.takeName = _spec.ClipTakeName;
+            best.name = poseName;
+            best.takeName = takeName;
             best.firstFrame = 0f;
-            best.lastFrame = _spec.ClipLastFrame;
+            best.lastFrame = lastFrame;
             best.mirror = false;
             best.loopTime = true;
             best.loop = true;

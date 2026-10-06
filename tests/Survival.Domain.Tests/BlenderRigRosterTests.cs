@@ -37,6 +37,13 @@ public sealed class BlenderRigRosterTests
         Assert.DoesNotContain("wing_forearm.L", AshwyrmMotion.BoneNames);
         Assert.Equal("rest", AshwyrmMotion.PoseNames[0]);
         Assert.Equal("wing flap", AshwyrmMotion.PoseNames[1]);
+        Assert.Equal("walk", AshwyrmMotion.PoseNames[2]);
+        Assert.Equal(AshwyrmMotion.PoseNames, AshwyrmMotion.Spec.PoseNames);
+        Assert.Equal("walk", AshwyrmMotion.Spec.ExtraClips[0].PoseName);
+        Assert.Equal("ASHWYRM_blenderig_walk.fbx", AshwyrmMotion.Spec.ExtraClips[0].FileName);
+        Assert.Equal("Scene", AshwyrmMotion.WalkTakeName);
+        Assert.Equal(1f, AshwyrmMotion.WalkSeconds);
+        Assert.Equal(30, AshwyrmMotion.WalkLastFrame);
         Assert.Equal("Scene", AshwyrmMotion.FlapTakeName);
         Assert.Equal(1f, AshwyrmMotion.FlapSeconds);
         Assert.Equal(30, AshwyrmMotion.FlapLastFrame);
@@ -69,6 +76,31 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("upperarm.L", motion, StringComparison.Ordinal);
         Assert.Contains("forearm.L", motion, StringComparison.Ordinal);
         Assert.Contains("tail_06", motion, StringComparison.Ordinal);
+
+        var walk = File.ReadAllBytes(Path.Combine(root, "Assets", AshwyrmMotion.WalkThemePackRel));
+        foreach (var bone in AshwyrmMotion.BoneNames)
+        {
+            Assert.True(ContainsAscii(walk, bone));
+        }
+
+        Assert.False(ContainsAscii(walk, "wing_forearm"));
+        Assert.False(ContainsAscii(walk, "mixamorig"));
+        Assert.True(ContainsAscii(walk, "Scene"));
+        var walkMeta = File.ReadAllText(Path.Combine(root, "Assets", AshwyrmMotion.WalkThemePackRel) + ".meta");
+        Assert.Contains("name: \"walk\"", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("takeName: Scene", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("lastFrame: 30", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 2", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("bakeAxisConversion: 0", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("useFileScale: 0", walkMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("animationType: 3", walkMeta, StringComparison.Ordinal);
+        Assert.DoesNotContain("mixamo.com", walkMeta, StringComparison.Ordinal);
+        var player = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigPlayer.cs"));
+        Assert.Contains("ExtraClips", player, StringComparison.Ordinal);
+        Assert.Contains("AnimationClipPlayable.Create", player, StringComparison.Ordinal);
+        var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigDemo.cs"));
+        Assert.Contains("spec.PoseNames", demo, StringComparison.Ordinal);
+        Assert.Contains("PlayNamedPose", demo, StringComparison.Ordinal);
     }
 
     [Fact]
