@@ -11,6 +11,8 @@ namespace Survival.Unity
     /// <summary>
     /// Plays the Design Blender dragon: rest bind pose, then the 1s wing flap.
     /// Custom bone names. Rejects a Mixamo EMBERFANG_rig.fbx.
+    /// Metallic and roughness always bind. Base and normal stay embedded when import keeps them;
+    /// otherwise the loose PNGs bind.
     /// Do not bake axis conversion, do not scale one axis, do not retarget,
     /// and do not write the imported root rotation or edit bones.
     /// </summary>
@@ -343,20 +345,15 @@ namespace Survival.Unity
 
         private static void EnableLit(GameObject root)
         {
-            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            var color = new Color(0.22f, 0.28f, 0.42f, 1f);
-            foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
-            {
-                rend.enabled = true;
-                var mat = new Material(shader);
-                if (mat.HasProperty("_BaseColor"))
-                {
-                    mat.SetColor("_BaseColor", color);
-                }
-
-                mat.color = color;
-                rend.sharedMaterial = mat;
-            }
+            RosterPaint.Bind(
+                root,
+                EmberfangMotion.ThemePackDir,
+                "emberfang_basecolor.png",
+                "emberfang_normal.png",
+                "emberfang_metallic.png",
+                "emberfang_roughness.png",
+                "Emberfang",
+                preferEmbeddedBaseAndNormal: true);
         }
 
         private static Bounds Encapsulate(GameObject root)
