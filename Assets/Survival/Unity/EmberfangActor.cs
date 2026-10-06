@@ -9,7 +9,7 @@ using UnityEditor;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Plays the Design Blender dragon: rest bind pose, then the 1s wing flap.
+    /// Plays the Design Blender dragon: rest bind pose, the 1s wing flap, and the walk ExtraClip.
     /// Custom bone names. Rejects a Mixamo EMBERFANG_rig.fbx.
     /// Metallic and roughness always bind. Base and normal stay embedded when import keeps them;
     /// otherwise the loose PNGs bind.
@@ -46,7 +46,7 @@ namespace Survival.Unity
                 return;
             }
 
-            EnsureImport(path, flap: false);
+            EnsureImport(path, poseName: null, takeName: null);
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
             if (prefab == null)
             {
@@ -103,7 +103,19 @@ namespace Survival.Unity
 
             if (string.Equals(poseName, EmberfangMotion.FlapPoseName, System.StringComparison.Ordinal))
             {
-                return PlayFlap();
+                return PlayClip(
+                    EmberfangMotion.FlapFileName,
+                    EmberfangMotion.FlapPoseName,
+                    EmberfangMotion.FlapTakeName,
+                    EmberfangMotion.FlapLastFrame);
+            }
+
+            foreach (var extra in EmberfangMotion.ExtraClips)
+            {
+                if (string.Equals(poseName, extra.PoseName, System.StringComparison.Ordinal))
+                {
+                    return PlayClip(extra.FileName, extra.PoseName, extra.TakeName, extra.LastFrame);
+                }
             }
 
             Debug.LogWarning("Emberfang unknown pose. " + poseName);
@@ -125,15 +137,15 @@ namespace Survival.Unity
             _time = 0f;
         }
 
-        private bool PlayFlap()
+        private bool PlayClip(string fileName, string poseName, string takeName, int lastFrame)
         {
 #if UNITY_EDITOR
-            var clip = LoadFlap();
+            var clip = LoadClip(fileName, poseName, takeName, lastFrame);
             if (clip == null || clip.empty || clip.length < 0.2f)
             {
                 Debug.LogError(
-                    "Emberfang wing flap missing. take=" + EmberfangMotion.FlapTakeName +
-                    " file=" + EmberfangMotion.FlapFileName);
+                    "Emberfang clip missing. take=" + takeName +
+                    " file=" + fileName);
                 return false;
             }
 
@@ -150,7 +162,7 @@ namespace Survival.Unity
             _length = clip.length;
             _time = 0f;
             _loop = true;
-            _pose = EmberfangMotion.FlapPoseName;
+            _pose = poseName;
             _graph.Evaluate(0f);
             return true;
 #else
@@ -184,10 +196,11 @@ namespace Survival.Unity
         }
 
 #if UNITY_EDITOR
-        private static AnimationClip? LoadFlap()
+        private static AnimationClip? LoadClip(string fileName, string poseName, string takeName, int lastFrame)
         {
-            var path = "Assets/" + EmberfangMotion.FlapThemePackRel;
-            EnsureImport(path, flap: true);
+            var path = "Assets/" + EmberfangMotion.ThemePackDir + "/" + fileName;
+            EnsureImport(path, poseName, takeName, lastFrame);
+            AnimationClip? named = null;
             AnimationClip? fallback = null;
             foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
             {
@@ -196,15 +209,21 @@ namespace Survival.Unity
                     continue;
                 }
 
-                if (string.Equals(clip.name, EmberfangMotion.FlapPoseName, System.StringComparison.Ordinal))
+                if (string.Equals(clip.name, poseName, System.StringComparison.Ordinal))
                 {
-                    return clip;
+                    named = clip;
+                    continue;
+                }
+
+                if (string.Equals(clip.name, "mixamo.com", System.StringComparison.Ordinal))
+                {
+                    continue;
                 }
 
                 fallback ??= clip;
             }
 
-            return fallback;
+            return named ?? fallback;
         }
 
         private static Avatar? LoadGenericAvatar(string path)
@@ -220,7 +239,7 @@ namespace Survival.Unity
             return null;
         }
 
-        private static void EnsureImport(string path, bool flap)
+        private static void EnsureImport(string path, string? poseName, string? takeName = null, int lastFrame = 0)
         {
             if (AssetImporter.GetAtPath(path) is not ModelImporter importer)
             {
@@ -259,9 +278,9 @@ namespace Survival.Unity
                 dirty = true;
             }
 
-            if (flap)
+            if (!string.IsNullOrEmpty(poseName))
             {
-                dirty |= PinFlapClip(importer);
+                dirty |= PinClip(importer, poseName, takeName ?? string.Empty, lastFrame);
             }
 
             if (dirty)
@@ -270,12 +289,12 @@ namespace Survival.Unity
             }
         }
 
-        private static bool PinFlapClip(ModelImporter importer)
+        private static bool PinClip(ModelImporter importer, string poseName, string takeName, int lastFrame)
         {
             var defaults = importer.defaultClipAnimations;
             if (defaults == null || defaults.Length == 0)
             {
-                Debug.LogError("Emberfang wing flap has no take. Wanted " + EmberfangMotion.FlapTakeName);
+                Debug.LogError("Emberfang clip has no take. Wanted " + takeName + " pose=" + poseName);
                 return false;
             }
 
@@ -285,7 +304,7 @@ namespace Survival.Unity
             {
                 var span = candidate.lastFrame - candidate.firstFrame;
                 var take = candidate.takeName ?? string.Empty;
-                if (string.Equals(take, EmberfangMotion.FlapTakeName, System.StringComparison.Ordinal) && span >= 1f)
+                if (string.Equals(take, takeName, System.StringComparison.Ordinal) && span >= 1f)
                 {
                     best = candidate;
                     break;
@@ -305,15 +324,20 @@ namespace Survival.Unity
 
             var already = importer.clipAnimations;
             if (already != null && already.Length == 1
-                && string.Equals(already[0].name, EmberfangMotion.FlapPoseName, System.StringComparison.Ordinal)
-                && string.Equals(already[0].takeName, EmberfangMotion.FlapTakeName, System.StringComparison.Ordinal)
-                && already[0].loopTime)
+                && string.Equals(already[0].name, poseName, System.StringComparison.Ordinal)
+                && string.Equals(already[0].takeName, takeName, System.StringComparison.Ordinal)
+                && already[0].loopTime
+                && (lastFrame <= 0 || System.Math.Abs(already[0].lastFrame - lastFrame) < 0.01f))
             {
                 return false;
             }
 
-            best.name = EmberfangMotion.FlapPoseName;
-            best.takeName = EmberfangMotion.FlapTakeName;
+            best.name = poseName;
+            best.takeName = takeName;
+            if (lastFrame > 0)
+            {
+                best.lastFrame = lastFrame;
+            }
             best.mirror = false;
             best.loopTime = true;
             best.loop = true;

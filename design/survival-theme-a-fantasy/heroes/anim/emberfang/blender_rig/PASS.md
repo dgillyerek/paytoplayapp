@@ -1,0 +1,37 @@
+# PASS EMBERFANG
+
+bones=55 faces=200000 unw=0
+- Kind: winged dragon custom skeleton (hero)
+- Weighting: ARMATURE_AUTO + wing membrane anti-stealer; L/R suppress; 4-infl
+
+## DEREK EDIT 2026-10-06 — tip bones + walk
+
+Input: Derek hand-edit `EMBERFANG_dragonrig_derek_20261006.blend` (Blender **5.2**, MD5 `722e98ed04ea7e794c3f09a44909e794`). Read with portable 5.2.2; rebuilt exactly (head/tail/roll/parent/connect, assert <1e-5 m) in **Blender 4.2** on the prior mesh/mats host so the SoT `.blend` stays pipeline-openable (4.2/4.3). Backups: `broken_clips_backup/*_pre_derek_20261006.*`.
+
+**What Derek changed (15 bones vs prior):**
+- Wing tip segments `wing_f*_b.{L,R}` heads moved ~0.05–0.20 m (largest: `wing_f3_b.L` 0.20 m); corresponding `wing_f*_a` tails updated.
+- `head` tip moved ~0.057 m + roll change (~0.79 rad).
+- Removed non-deform `root` (prior had it; Unity BoneNames requires 55 including root).
+
+**Cleanup:** Re-created non-deform `root` from prior placement; parented `hips` → `root`. Kept Derek names for all 54 bones. Result: **BoneCount=55**, BoneNames order matches Unity (`root, hips, spine_01…toe.R`).
+
+**Re-skin (needed — tip placement change):** Cleared vertex groups → ARMATURE_AUTO heat → wing membrane anti-stealer (outer |x| wing-dominant → wing_* only; fence wing out of head/torso/legs) + L/R midline suppress + max 4 influences + normalize. Unweighted verts: **0**.
+- Outer wing mean **1.0**, arm **0.0**, frac wing-dom **1.0**
+- Body wing leak: head 0.0, chest 0.0026, legs 0.0194
+
+**Clips** (procedural 0..30 @30fps, LINEAR + CYCLES, identity rest):
+- `EMBERFANG_wingflap`: animlib-style flap — wing_root/arm/forearm primary + a-segment lag + **b-tip lag ~6° cos(p−1.4)**. Arms locked (no soft bounce). Light tail wave + tiny neck/head. Tip-vert mean travel **0.89729 m**; tip bone L travel **1.01621 m**; wing_z range **0.39598 m**.
+- `EMBERFANG_walk` **NEW**: biped walk thigh ±22°, shin follow, arm counter-swing, spine tiny pitch/yaw, tail gentle wave; **ALL wing_* identity**. Root locked. Thigh L travel **0.05474 m**; wing tip pervert **0.06048 m** (near-zero vs flap); wing_z range **0.00159 m**.
+
+**QC (re-imported FBXs):** bones=55, faces=200000, unw=0, root restored, BoneNames set match. Clips 31 keys, loop_err 0.0.
+
+**Artifacts / MD5s (uncompressed):**
+- blend `9a0a8385997963b7af71d11789539e4f` → `heroes/anim/emberfang/blender_rig/EMBERFANG_dragonrig.blend`
+- rest FBX `91336af931c3a67dcf8754c8901e5fd3` → `EMBERFANG_dragonrig.fbx`
+- wingflap FBX `405acb84ea35fbfd0358419483e05e54` → `EMBERFANG_dragonrig_wingflap.fbx`
+- walk FBX `ac678a652c7d2158769eb35ec8fddace` → `EMBERFANG_dragonrig_walk.fbx` (**NEW**)
+- Previews: `handoffs/anim_previews_20261005/rebake/EMBERFANG_wingflap_preview_derek20261006.mp4`, `EMBERFANG_walk_preview_derek20261006.mp4`
+- Still: `stills/derek_tip_bones_20261006.jpg`
+- Work: `/workspace/emberfang_derek_20261006/` (scripts adapted from ashwyrm_small)
+
+**Dev tip-swap:** replace blend + rest + wingflap FBXs; **add** walk FBX. HOLD merge messaging for parent/Derek re-check.
