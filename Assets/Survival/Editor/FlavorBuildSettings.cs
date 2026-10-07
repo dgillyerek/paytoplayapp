@@ -16,6 +16,7 @@ namespace Survival.Editor
         private const string Ironhowl = "Assets/Survival/Scenes/Ironhowl.unity";
         private const string Emberfang = "Assets/Survival/Scenes/Emberfang.unity";
         private const string Rowan = "Assets/Survival/Scenes/Rowan.unity";
+        private const string RowanWalk = "Assets/Survival/Scenes/RowanWalk.unity";
         private const string GroveBoard = "Assets/Grove/Scenes/Board.unity";
 
         [MenuItem("Survival/Use Theme A Flavor (fantasy_kingdom_a)")]
@@ -66,6 +67,12 @@ namespace Survival.Editor
         public static void OpenRowanDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Rowan);
+        }
+
+        [MenuItem("Survival/Rowan Walk Demo (walk, Game view 1080x1920)")]
+        public static void OpenRowanWalkDemo()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(RowanWalk);
         }
 
         [MenuItem("Survival/Import locked Sir Aldric rear master")]

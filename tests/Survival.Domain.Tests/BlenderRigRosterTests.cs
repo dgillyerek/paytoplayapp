@@ -68,6 +68,31 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("Rowan.unity", editor, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Rowan_walk_scene_opens_on_walk_and_leaves_the_rest_demo()
+    {
+        var root = FindRepoRoot();
+        var restScene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "Rowan.unity"));
+        var walkScene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "RowanWalk.unity"));
+        var walkDemo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "RowanWalkDemo.cs"));
+        var shared = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigDemo.cs"));
+        var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
+
+        Assert.Contains("834d72d2cb424b758ab79f8936200656", restScene, StringComparison.Ordinal);
+        Assert.Contains("Survival.Unity.RowanDemo", restScene, StringComparison.Ordinal);
+        Assert.DoesNotContain("RowanWalkDemo", restScene, StringComparison.Ordinal);
+        Assert.Contains("RowanRoot", walkScene, StringComparison.Ordinal);
+        Assert.Contains("field of view: 54", walkScene, StringComparison.Ordinal);
+        Assert.Contains("c3e91a04b7d64f18a2e5c6b8d0f14a27", walkScene, StringComparison.Ordinal);
+        Assert.Contains("Survival.Unity.RowanWalkDemo", walkScene, StringComparison.Ordinal);
+        Assert.Contains("RowanMotion.WalkPoseName", walkDemo, StringComparison.Ordinal);
+        Assert.Contains("PlayNamedPose(OpeningPose)", shared, StringComparison.Ordinal);
+        Assert.Contains("SetValueWithoutNotify(0)", shared, StringComparison.Ordinal);
+        Assert.Contains("Survival/Rowan Walk Demo (walk, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.Contains("RowanWalk.unity", editor, StringComparison.Ordinal);
+        Assert.Contains("Survival/Rowan Demo (rest + walk, Game view 1080x1920)", editor, StringComparison.Ordinal);
+    }
+
 
     private static void AssertHumanoidDemo(BlenderRigSpec spec, string albedoStem, string normalStem, string demoGuid, string menu)
     {

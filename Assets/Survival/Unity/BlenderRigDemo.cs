@@ -22,6 +22,9 @@ namespace Survival.Unity
 
         protected abstract MonoBehaviour CreateActor(GameObject host);
 
+        /// <summary>Pose played when the scene starts. The rest demo stays on the bind pose.</summary>
+        protected virtual string OpeningPose => BlenderRigSpec.RestPoseName;
+
         private void Awake() => Boot();
 
         private void OnEnable() => Boot();
@@ -150,7 +153,7 @@ namespace Survival.Unity
             _booted = true;
             if (_playback != null && _playback.Built)
             {
-                _playback.PlayPose(BlenderRigSpec.RestPoseName);
+                PlayNamedPose(OpeningPose);
             }
         }
 
