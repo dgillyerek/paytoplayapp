@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 11a0e7c34b5d4e6f8a9b0c1d2e3f4a50
+guid: a7c3e91b4d6f4802b1e05a9c3d7f2e18
 ModelImporter:
   serializedVersion: 24
   internalIDToNameTable: []
@@ -22,7 +22,36 @@ ModelImporter:
     animationWrapMode: 0
     extraExposedTransformPaths: []
     extraUserProperties: []
-    clipAnimations: []
+    clipAnimations:
+    - serializedVersion: 16
+      name: "rest"
+      takeName: mixamo.com
+      internalID: 0
+      firstFrame: 0
+      lastFrame: 1
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 1
+      hasAdditiveReferencePose: 0
+      loopTime: 1
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 1
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 1
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
     isReadable: 0
   meshes:
     lODScreenPercentages: []
@@ -89,6 +118,6 @@ ModelImporter:
   humanoidOversampling: 1
   avatarSetup: 1
   additionalBone: 0
-  userData: Ironhowl Mixamo body. Generic. bakeAxisConversion 0. useFileScale 0. mixamorig:Hips. No humanoid retarget. Loose paint maps. Look JPEG is QC only. Rest walk attack are separate FBX. HOLD merge.
+  userData: Ironhowl Mixamo rest. Same bytes as the T-pose body. Generic. take mixamo.com. Frame 0 to 1 at 30 fps. No mirror. No humanoid retarget. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

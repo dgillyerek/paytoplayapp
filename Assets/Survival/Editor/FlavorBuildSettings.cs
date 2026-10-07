@@ -50,7 +50,7 @@ namespace Survival.Editor
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Blightroot);
         }
 
-        [MenuItem("Survival/Ironhowl Demo (T-pose, Game view 1080x1920)")]
+        [MenuItem("Survival/Ironhowl Demo (rest / walk / attack, Game view 1080x1920)")]
         public static void OpenIronhowlDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Ironhowl);
