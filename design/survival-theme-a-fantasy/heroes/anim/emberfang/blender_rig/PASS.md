@@ -57,3 +57,26 @@ Wing-tip motion on the flap was not enough. The body stayed still, and the walk 
 - walk `35c6a70d6941a7a6d11838eed6622a65`
 
 HOLD merge until Derek Game-view PASS.
+
+## POLISH 2026-10-07 — Derek Game-view notes on tip ca85a86
+
+Same 4.2 SoT blend. No reskin, no new mesh, rest bind untouched. Arms stay locked on the flap. BoneCount stays 55.
+
+**Walk**
+- Neck and head are no longer identity. Pitch lags the chest dip (neck_01 ~4° peaking ~3 frames after the spine, then neck_02 / neck_03), and the head yaw leads the spine yaw by ~3 frames. Local peaks: neck_01 4.1°, head 3.5°.
+- Wings keep the small gait sway (wing_root ±10°). Outer feathers add a downstroke-only droop (forearm 4°, finger a 6°, finger b 9°). Finger bend is ~25° while the wing is coming down and ~16° at the top of the sway.
+
+**Wing flap**
+- Hips, spine_01..03, and chest local channels are back to identity (no pitch, no hip bob). Chest world Z travel is 0. The front stays planted. Wing tip Z travel is still 0.70 m.
+- Legs pedal. Thigh ±6°, knee folds the other way (shin ±12°, knee angle span 24°), ankle ±12° (span 24°), toe ±5°. Left and right are opposite. Toe travel is 9.3 cm, not a second walk.
+- Same downstroke feather droop as the walk, a little stronger (forearm 6°, finger a 10°, finger b 14°). Finger bend peaks at ~28° mid-downstroke versus ~19° at the up pose.
+
+**Rest:** `EMBERFANG_dragonrig.fbx` MD5 unchanged.
+
+**MD5s after this polish (uncompressed):**
+- blend `24e11c02d65178f95f919ecfacabcaf1` (Blender 4.2.23)
+- rest `91336af931c3a67dcf8754c8901e5fd3` (unchanged bind)
+- wingflap `c437cc09e8807d46418616e00ba1eca7`
+- walk `1e1b02ba8dc5d9d333f7f879b37e9114`
+
+HOLD merge until Derek Game-view PASS. Unity Game view was not run in this bake.

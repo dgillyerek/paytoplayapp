@@ -112,10 +112,10 @@ public sealed class ThemeARosterTests
         Assert.Contains("useFileScale: 0", walkMeta, StringComparison.Ordinal);
 
         var sot = Path.Combine(root, "design", "survival-theme-a-fantasy", "heroes", "anim", "emberfang", "blender_rig");
-        Assert.Equal("0c0c7e631edbdc9af09e515d2030d24a", Md5(Path.Combine(sot, "EMBERFANG_dragonrig.blend")));
+        Assert.Equal("24e11c02d65178f95f919ecfacabcaf1", Md5(Path.Combine(sot, "EMBERFANG_dragonrig.blend")));
         Assert.Equal("91336af931c3a67dcf8754c8901e5fd3", Md5(rest));
-        Assert.Equal("e8dba1177daa684cee71a0fa965efefe", Md5(flap));
-        Assert.Equal("35c6a70d6941a7a6d11838eed6622a65", Md5(walk));
+        Assert.Equal("c437cc09e8807d46418616e00ba1eca7", Md5(flap));
+        Assert.Equal("1e1b02ba8dc5d9d333f7f879b37e9114", Md5(walk));
         Assert.Equal(Md5(rest), Md5(Path.Combine(sot, "EMBERFANG_dragonrig.fbx")));
         Assert.Equal(Md5(flap), Md5(Path.Combine(sot, "EMBERFANG_dragonrig_wingflap.fbx")));
         Assert.Equal(Md5(walk), Md5(Path.Combine(sot, "EMBERFANG_dragonrig_walk.fbx")));
