@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using Survival.Domain.Heroes;
 using Survival.Domain.Roster;
@@ -91,6 +92,52 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("Survival/Rowan Walk Demo (walk, Game view 1080x1920)", editor, StringComparison.Ordinal);
         Assert.Contains("RowanWalk.unity", editor, StringComparison.Ordinal);
         Assert.Contains("Survival/Rowan Demo (rest + walk, Game view 1080x1920)", editor, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Rowan_remesh_demo_plays_the_uploaded_rest_and_walk()
+    {
+        var root = FindRepoRoot();
+        var rest = Path.Combine(root, "Assets", RowanRemeshMotion.RestThemePackRel);
+        var walk = Path.Combine(root, "Assets", RowanRemeshMotion.WalkThemePackRel);
+        var albedo = Path.Combine(root, "Assets", RowanRemeshMotion.Spec.BaseColorThemePackRel);
+        var normal = Path.Combine(root, "Assets", RowanRemeshMotion.Spec.NormalThemePackRel);
+        Assert.Equal("e1f38c54af17e181abda2df8cdc46492", Md5(rest));
+        Assert.Equal("b1b5aa6b587cbfa1e83729157605fd96", Md5(walk));
+        var restBytes = File.ReadAllBytes(rest);
+        var walkBytes = File.ReadAllBytes(walk);
+        Assert.True(ContainsAscii(restBytes, "mixamorig:Hips"));
+        Assert.True(ContainsAscii(restBytes, "ROWAN_remesh_basecolor_0"));
+        Assert.True(ContainsAscii(restBytes, "ROWAN_remesh_normal_2"));
+        Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(albedo)));
+        Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(normal)));
+        Assert.True(ContainsAscii(walkBytes, "Scene"));
+        Assert.False(ContainsAscii(walkBytes, "mixamo.com"));
+        Assert.Equal("rest", RowanRemeshMotion.PoseNames[0]);
+        Assert.Equal("walk", RowanRemeshMotion.PoseNames[1]);
+        Assert.Equal(1, BlenderRigRoster.All.Count);
+        Assert.DoesNotContain(RowanRemeshMotion.Spec, BlenderRigRoster.All);
+
+        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "RowanRemesh.unity"));
+        var tip = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "Rowan.unity"));
+        var walkScene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "RowanWalk.unity"));
+        Assert.Contains("RowanRemeshRoot", scene, StringComparison.Ordinal);
+        Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
+        Assert.Contains("4e7b2c91a6d84f0e8b3a5c1d9f246073", scene, StringComparison.Ordinal);
+        Assert.Contains("Survival.Unity.RowanRemeshDemo", scene, StringComparison.Ordinal);
+        Assert.DoesNotContain("RowanRemeshDemo", tip, StringComparison.Ordinal);
+        Assert.DoesNotContain("RowanRemeshDemo", walkScene, StringComparison.Ordinal);
+        var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "RowanRemeshDemo.cs"));
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "RowanRemeshActor.cs"));
+        Assert.Contains("RowanRemeshClipDropdown", demo, StringComparison.Ordinal);
+        Assert.Contains("RowanRemeshMotion.Spec", demo, StringComparison.Ordinal);
+        Assert.DoesNotContain("OpeningPose", demo, StringComparison.Ordinal);
+        Assert.Contains("PlayPose", actor, StringComparison.Ordinal);
+        var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
+        Assert.Contains("Survival/Rowan Remesh Demo (rest + walk, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.Contains("RowanRemesh.unity", editor, StringComparison.Ordinal);
+        Assert.Contains("Survival/Rowan Demo (rest + walk, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.Contains("Survival/Rowan Walk Demo (walk, Game view 1080x1920)", editor, StringComparison.Ordinal);
     }
 
 
@@ -232,6 +279,13 @@ public sealed class BlenderRigRosterTests
         Assert.Contains(menu, editor, StringComparison.Ordinal);
         var build = File.ReadAllText(Path.Combine(root, "ProjectSettings", "EditorBuildSettings.asset"));
         Assert.Contains(spec.SceneFileName, build, StringComparison.Ordinal);
+    }
+
+    private static string Md5(string path)
+    {
+        using var md5 = MD5.Create();
+        using var stream = File.OpenRead(path);
+        return Convert.ToHexString(md5.ComputeHash(stream)).ToLowerInvariant();
     }
 
     private static bool ContainsAscii(byte[] bytes, string needle)
