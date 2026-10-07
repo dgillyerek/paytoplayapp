@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Rowan remesh rest bind and walk clip. Same player path as the tip Rowan actor.
+    /// Male Rowan remesh rest bind and walk clip. Same player path as the tip Rowan actor.
     /// </summary>
     [DefaultExecutionOrder(200)]
     public sealed class RowanRemeshActor : MonoBehaviour, IBlenderRigPlayback

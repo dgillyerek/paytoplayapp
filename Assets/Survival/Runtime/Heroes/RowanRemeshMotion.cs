@@ -3,17 +3,20 @@ using Survival.Domain.Roster;
 namespace Survival.Domain.Heroes
 {
     /// <summary>
-    /// Rowan remesh compare. Same mixamorig contract as the tip blenderig:
-    /// rest bind, 1 second Scene walk at 30 fps. Does not replace ROWAN_blenderig.
+    /// Male Rowan remesh compare (Meshy to hum_pipeline, 2026-10-07).
+    /// Same mixamorig contract as the tip blenderig: rest bind, 1 second Scene walk
+    /// at 30 fps (Blender frames 1–31, Unity last frame 30). Does not replace
+    /// ROWAN_blenderig or the earlier feminine ROWAN_remesh files.
+    /// Armpit webbing is a tight A-pose heat caveat for twist/walk QC, not a Demo wire blocker.
     /// </summary>
     public static class RowanRemeshMotion
     {
-        public const string ThemePackDir = "ThemePack/fantasy_kingdom_a/art/heroes/3d/rowan_remesh";
-        public const string RestFileName = "ROWAN_remesh_blenderig.fbx";
-        public const string WalkFileName = "ROWAN_remesh_blenderig_walk.fbx";
+        public const string ThemePackDir = "ThemePack/fantasy_kingdom_a/art/heroes/3d/rowan_remesh_male";
+        public const string RestFileName = "ROWAN_male_blenderig.fbx";
+        public const string WalkFileName = "ROWAN_male_blenderig_walk.fbx";
         public const string RestThemePackRel = ThemePackDir + "/" + RestFileName;
         public const string WalkThemePackRel = ThemePackDir + "/" + WalkFileName;
-        public const string RejectedMixamoFileName = "ROWAN_remesh_rig.fbx";
+        public const string RejectedMixamoFileName = "ROWAN_male_rig.fbx";
 
         public const string RestPoseName = BlenderRigSpec.RestPoseName;
         public const string WalkPoseName = "walk";
@@ -23,9 +26,9 @@ namespace Survival.Domain.Heroes
         public const int WalkLastFrame = 30;
         public const int BoneCount = MixamoHumanoidBones.Count;
 
-        public const string TextureFolder = "ROWAN_remesh_blenderig.fbm";
-        public const string BaseColorFile = "ROWAN_remesh_basecolor_0.jpg";
-        public const string NormalFile = "ROWAN_remesh_normal_2.jpg";
+        public const string TextureFolder = "ROWAN_male_blenderig.fbm";
+        public const string BaseColorFile = "ROWAN_male_basecolor_0.jpg";
+        public const string NormalFile = "ROWAN_male_normal_2.jpg";
 
         public const string BoneRoot = MixamoHumanoidBones.Root;
 

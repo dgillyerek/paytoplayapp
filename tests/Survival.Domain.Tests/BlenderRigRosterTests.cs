@@ -102,15 +102,50 @@ public sealed class BlenderRigRosterTests
         var walk = Path.Combine(root, "Assets", RowanRemeshMotion.WalkThemePackRel);
         var albedo = Path.Combine(root, "Assets", RowanRemeshMotion.Spec.BaseColorThemePackRel);
         var normal = Path.Combine(root, "Assets", RowanRemeshMotion.Spec.NormalThemePackRel);
-        Assert.Equal("e1f38c54af17e181abda2df8cdc46492", Md5(rest));
-        Assert.Equal("b1b5aa6b587cbfa1e83729157605fd96", Md5(walk));
+        Assert.Equal("486d9cf097f6d0fc0dd8ae6713b5f726", Md5(rest));
+        Assert.Equal("ab148b67d09b4f39f2923f4db8549d66", Md5(walk));
+        Assert.Equal("ROWAN_male_blenderig.fbx", RowanRemeshMotion.RestFileName);
+        Assert.Equal("ROWAN_male_blenderig_walk.fbx", RowanRemeshMotion.WalkFileName);
+        Assert.Equal(30, RowanRemeshMotion.WalkLastFrame);
+        var designDir = Path.Combine(
+            root,
+            "design",
+            "survival-theme-a-fantasy",
+            "heroes",
+            "anim",
+            "rowan",
+            "blender_rig_male_20261007");
+        Assert.Equal("486d9cf097f6d0fc0dd8ae6713b5f726", Md5(Path.Combine(designDir, "ROWAN_male_blenderig.fbx")));
+        Assert.Equal("ab148b67d09b4f39f2923f4db8549d66", Md5(Path.Combine(designDir, "ROWAN_male_blenderig_walk.fbx")));
+        Assert.Equal("2104c645a29ff97cafdaaaa145fe96ea", Md5(Path.Combine(designDir, "ROWAN_male_blenderig_sheet.jpg")));
+        Assert.Equal("feb555f5d48ed4c2f950c948fb57b85f", Md5(Path.Combine(root, "Assets", RowanMotion.RestThemePackRel)));
+        Assert.Equal("1653b1bd3e15819d073e030e803fe203", Md5(Path.Combine(root, "Assets", RowanMotion.WalkThemePackRel)));
+        var femaleRig = Path.Combine(root, "design", "survival-theme-a-fantasy", "heroes", "anim", "rowan", "blender_rig");
+        Assert.Equal("feb555f5d48ed4c2f950c948fb57b85f", Md5(Path.Combine(femaleRig, "ROWAN_blenderig.fbx")));
+        Assert.Equal("1653b1bd3e15819d073e030e803fe203", Md5(Path.Combine(femaleRig, "ROWAN_blenderig_walk.fbx")));
+        Assert.Equal("e831cbb7dedc8b4f5f8cf104e56bd2d5", Md5(Path.Combine(femaleRig, "ROWAN_blenderig.blend")));
+        var oldRemesh = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "rowan_remesh");
+        Assert.Equal("e1f38c54af17e181abda2df8cdc46492", Md5(Path.Combine(oldRemesh, "ROWAN_remesh_blenderig.fbx")));
+        Assert.Equal("b1b5aa6b587cbfa1e83729157605fd96", Md5(Path.Combine(oldRemesh, "ROWAN_remesh_blenderig_walk.fbx")));
         var restBytes = File.ReadAllBytes(rest);
         var walkBytes = File.ReadAllBytes(walk);
         Assert.True(ContainsAscii(restBytes, "mixamorig:Hips"));
-        Assert.True(ContainsAscii(restBytes, "ROWAN_remesh_basecolor_0"));
-        Assert.True(ContainsAscii(restBytes, "ROWAN_remesh_normal_2"));
+        Assert.True(ContainsAscii(restBytes, "ROWAN_male_basecolor_0"));
+        Assert.True(ContainsAscii(restBytes, "ROWAN_male_normal_2"));
         Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(albedo)));
         Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(normal)));
+        var restMeta = File.ReadAllText(rest + ".meta");
+        Assert.Contains("animationType: 3", restMeta, StringComparison.Ordinal);
+        Assert.Contains("bakeAxisConversion: 0", restMeta, StringComparison.Ordinal);
+        Assert.Contains("useFileScale: 0", restMeta, StringComparison.Ordinal);
+        Assert.Contains("materialImportMode: 2", restMeta, StringComparison.Ordinal);
+        var walkMeta = File.ReadAllText(walk + ".meta");
+        Assert.Contains("name: \"walk\"", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("takeName: Scene", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("firstFrame: 0", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("lastFrame: 30", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("bakeAxisConversion: 0", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 3", walkMeta, StringComparison.Ordinal);
         Assert.True(ContainsAscii(walkBytes, "Scene"));
         Assert.False(ContainsAscii(walkBytes, "mixamo.com"));
         Assert.Equal("rest", RowanRemeshMotion.PoseNames[0]);
