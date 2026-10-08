@@ -20,7 +20,7 @@ namespace Survival.Unity
 
         public void Build()
         {
-            _player = new BlenderRigPlayer(VesperaMotion.Spec, transform);
+            _player = new BlenderRigPlayer(VesperaMotion.Spec, transform, VesperaAttack.Spec);
             _player.Build();
         }
 

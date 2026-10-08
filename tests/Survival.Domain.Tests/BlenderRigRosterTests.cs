@@ -28,7 +28,7 @@ public sealed class BlenderRigRosterTests
             "VESPERA_basecolor_0",
             "VESPERA_normal_2",
             "202447e53edf4ca4a70c7de7ffd9cf1e",
-            "Survival/Vespera Demo (rest + walk, Game view 1080x1920)");
+            "Survival/Vespera Demo (rest + walk + attack, Game view 1080x1920)");
     }
 
 
@@ -64,7 +64,7 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
 
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains("Survival/Vespera Demo (rest + walk, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.Contains("Survival/Vespera Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         Assert.Contains("Vespera.unity", editor, StringComparison.Ordinal);
     }
 

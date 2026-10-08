@@ -62,7 +62,7 @@ namespace Survival.Editor
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Emberfang);
         }
 
-        [MenuItem("Survival/Vespera Demo (rest + walk, Game view 1080x1920)")]
+        [MenuItem("Survival/Vespera Demo (rest + walk + attack, Game view 1080x1920)")]
         public static void OpenVesperaDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Vespera);
