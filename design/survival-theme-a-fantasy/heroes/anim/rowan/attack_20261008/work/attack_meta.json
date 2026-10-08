@@ -1,0 +1,252 @@
+{
+ "name": "ROWAN_nocape",
+ "frames": [
+  0,
+  30
+ ],
+ "fps": 30,
+ "forward": "-Y (Blender) = top of screen in rear battle cam",
+ "LH_offset_note": "LeftHand grip offset built from mirrored RightHand fist axis, forearm along bow-space (-0.15,-1,0)",
+ "keys": {
+  "transfer_RH_to_LH": "f3-f4",
+  "anticipation_nock": 8,
+  "full_draw": 13,
+  "release": 14,
+  "follow": 20,
+  "transfer_LH_to_RH": "f22-f23",
+  "rest": 30
+ },
+ "props": {
+  "bow": {
+   "object": "ROWAN_bow (mesh) + ROWAN_bow_rig (bones bow_grip root, bow_nock child)",
+   "parent_windows": {
+    "RightHand": "f0-f3 and f23-f30 (f23-f26 hand slides 10cm up the lower limb back to the grip)",
+    "LeftHand": "f4-f22 (f4-f7 hand slides 10cm down the upper limb onto the grip)"
+   },
+   "offset_RightHand": [
+    [
+     -0.9764782190322876,
+     -0.21470075845718384,
+     -0.01983562856912613,
+     -0.014865179546177387
+    ],
+    [
+     0.16441652178764343,
+     -0.6819378733634949,
+     -0.7126907110214233,
+     0.1329282820224762
+    ],
+    [
+     0.13948850333690643,
+     -0.6991884708404541,
+     0.7011979222297668,
+     0.018766436725854874
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "offset_LeftHand": [
+    [
+     -0.9885408878326416,
+     0.14828114211559296,
+     0.028276892378926277,
+     0.014865174889564514
+    ],
+    [
+     -0.14834046363830566,
+     -0.9889363050460815,
+     -0.0,
+     0.1329282820224762
+    ],
+    [
+     0.027964046224951744,
+     -0.004194607026875019,
+     0.9996001124382019,
+     0.018766434863209724
+    ],
+    [
+     -0.0,
+     0.0,
+     -0.0,
+     1.0
+    ]
+   ],
+   "baked_track": "ROWAN_bow_attack.fbx: bow_grip carries the full per-frame character-space transform; bow_nock local +Y = string draw (m)",
+   "draw_m": {
+    "0": 0.0,
+    "1": 0.0,
+    "2": 0.0,
+    "3": 0.0,
+    "4": 0.0,
+    "5": 0.0,
+    "6": 0.0,
+    "7": 0.0,
+    "8": 0.0417,
+    "9": 0.0748,
+    "10": 0.1967,
+    "11": 0.3532,
+    "12": 0.4376,
+    "13": 0.4686,
+    "14": 0.4686,
+    "15": -0.012,
+    "16": 0.005,
+    "17": 0.0,
+    "18": 0.0,
+    "19": 0.0,
+    "20": 0.0,
+    "21": 0.0,
+    "22": 0.0,
+    "23": 0.0,
+    "24": 0.0,
+    "25": 0.0,
+    "26": 0.0,
+    "27": 0.0,
+    "28": 0.0,
+    "29": 0.0,
+    "30": 0.0
+   },
+   "world_y_check_release": [
+    7.072955554576765e-08,
+    -1.0,
+    9.44713534067887e-08
+   ]
+  },
+  "arrow": {
+   "object": "ROWAN_arrow_blue_fletch",
+   "held": "f5-f7 in RightHand (scale-in), f8-f14 nocked on the string (origin at nock)",
+   "offset_RightHand_f8": [
+    [
+     -0.9285926818847656,
+     -0.3700246214866638,
+     -0.028246581554412842,
+     -0.020058266818523407
+    ],
+    [
+     0.37099120020866394,
+     -0.9274781346321106,
+     -0.0463741198182106,
+     0.1349484920501709
+    ],
+    [
+     -0.009038569405674934,
+     -0.05354177951812744,
+     0.9985250234603882,
+     0.019660156220197678
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ]
+  },
+  "arrow_inflight": {
+   "release": 14,
+   "speed_mps": 14.0,
+   "spawn_world": [
+    [
+     1.0000001192092896,
+     -7.072958396747708e-08,
+     -1.1175870895385742e-08,
+     0.020000096410512924
+    ],
+    [
+     4.5671185944229364e-08,
+     1.0000003576278687,
+     -9.918585419654846e-08,
+     -0.15000009536743164
+    ],
+    [
+     2.7715522321614117e-08,
+     -9.447138893392548e-08,
+     1.0000003576278687,
+     1.5700002908706665
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "dir": [
+    7.072955554576765e-08,
+    -1.0,
+    9.44713534067887e-08
+   ]
+  },
+  "trail": {
+   "object": "ROWAN_arrow_trail_vfx",
+   "release": 14,
+   "speed_mps": 14.0,
+   "note": "same spawn as arrow, trails on +Y"
+  }
+ },
+ "release": 14,
+ "attack_fbx": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261008/ROWAN_nocape_blenderig_attack.fbx",
+ "prop_fbx": [
+  "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261008/ROWAN_bow_attack.fbx",
+  "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261008/ROWAN_arrow_blue_fletch.fbx",
+  "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261008/ROWAN_arrow_trail_vfx.fbx"
+ ],
+ "sheet_frames": [
+  0,
+  4,
+  8,
+  11,
+  13,
+  14,
+  16,
+  18,
+  20,
+  23,
+  26,
+  30
+ ],
+ "views": {
+  "rear": [
+   [
+    -0.05646893382072449,
+    2.9411129853539255,
+    3.043676372551633
+   ],
+   [
+    -0.05646893382072449,
+    -1.3961258365281928,
+    0.532643370409354
+   ]
+  ],
+  "side": [
+   [
+    3.7481265239706074,
+    -0.8634824724374064,
+    1.141378643655967
+   ],
+   [
+    -0.05646893382072449,
+    -0.8634824724374064,
+    0.913102916188487
+   ]
+  ],
+  "q34front": [
+   [
+    -2.24411132205074,
+    -2.7657802013330723,
+    1.5218381894351003
+   ],
+   [
+    -0.05646893382072449,
+    -0.3879080402134899,
+    0.913102916188487
+   ]
+  ]
+ },
+ "props_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261008/ROWAN_nocape_attack_props.blend",
+ "work_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261008/ROWAN_nocape_attack_work.blend",
+ "rear_cam_note": "rear battle cam re-rendered wider so the arrow/bolt stays in frame"
+}

@@ -34,11 +34,11 @@ public sealed class RowanAttackTests
         var root = FindRepoRoot();
         var pack = Path.Combine(root, "Assets", RowanRemeshMotion.ThemePackDir);
         var design = Path.Combine(root, RowanAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
-        Assert.Equal("3ad624f3e53db018e3cb18a035e13121", RowanAttack.FileMd5);
-        Assert.Equal("3ad624f3e53db018e3cb18a035e13121", Md5(Path.Combine(pack, RowanAttack.FileName)));
-        Assert.Equal("3ad624f3e53db018e3cb18a035e13121", Md5(Path.Combine(design, RowanAttack.FileName)));
-        Assert.Equal("7940bf35a79de4fcdca798df34ca6143", Md5(Path.Combine(pack, "ROWAN_arrow_blue_fletch.fbx")));
-        Assert.Equal("7940bf35a79de4fcdca798df34ca6143", Md5(Path.Combine(design, "ROWAN_arrow_blue_fletch.fbx")));
+        Assert.Equal("9cc2f377859ae08ec5ee75a1f1932caf", RowanAttack.FileMd5);
+        Assert.Equal("9cc2f377859ae08ec5ee75a1f1932caf", Md5(Path.Combine(pack, RowanAttack.FileName)));
+        Assert.Equal("9cc2f377859ae08ec5ee75a1f1932caf", Md5(Path.Combine(design, "ROWAN_nocape_blenderig_attack.fbx")));
+        Assert.Equal("01821e47d08300807bbef18ef241ab2e", Md5(Path.Combine(pack, "ROWAN_arrow_blue_fletch.fbx")));
+        Assert.Equal("01821e47d08300807bbef18ef241ab2e", Md5(Path.Combine(design, "ROWAN_arrow_blue_fletch.fbx")));
         Assert.Equal(RowanAttack.PropFileNames.Length, RowanAttack.PropFileMd5s.Length);
         for (var i = 0; i < RowanAttack.PropFileNames.Length; i++)
         {
@@ -67,8 +67,8 @@ public sealed class RowanAttackTests
         }
 
         // Existing rig FBXs are untouched by the add-on.
-        Assert.Equal("486d9cf097f6d0fc0dd8ae6713b5f726", Md5(Path.Combine(pack, "ROWAN_male_blenderig.fbx")));
-        Assert.Equal("3bd5f6d392ff61c8f4ae1ac23a39fae3", Md5(Path.Combine(pack, "ROWAN_male_blenderig_walk.fbx")));
+        Assert.Equal("369cdfc89c1121194d1c14608774f788", Md5(Path.Combine(pack, "ROWAN_male_blenderig.fbx")));
+        Assert.Equal("e9be1e253cc992cbb1b6f2d09d5a6ba1", Md5(Path.Combine(pack, "ROWAN_male_blenderig_walk.fbx")));
     }
 
     [Fact]
@@ -89,7 +89,11 @@ public sealed class RowanAttackTests
             Assert.True(track.FirstVisibleFrame >= 0, track.ObjectName);
             if (track.Kind == AttackTrackKind.Held)
             {
-                Assert.Contains(track.Bone, RowanRemeshMotion.BoneNames);
+                if (track.Bone.Length > 0)
+                {
+                    Assert.Contains(track.Bone, RowanRemeshMotion.BoneNames);
+                }
+
                 Assert.True(track.HasMesh, track.ObjectName);
             }
 

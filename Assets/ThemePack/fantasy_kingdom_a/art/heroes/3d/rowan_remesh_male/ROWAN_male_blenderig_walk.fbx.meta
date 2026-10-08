@@ -127,6 +127,6 @@ ModelImporter:
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Male Rowan remesh walk. 1s at 30fps. Blender frames 1-31. Take Scene. Humanoid if the avatar validates, else Generic. bakeAxisConversion 0. HOLD merge.
+  userData: Rowan nocape walk (Design 2026-10-08). MD5 e9be1e253cc992cbb1b6f2d09d5a6ba1. Replaces walkfix_male_20261007. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

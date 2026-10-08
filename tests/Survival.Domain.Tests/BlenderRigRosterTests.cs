@@ -95,19 +95,19 @@ public sealed class BlenderRigRosterTests
     }
 
     [Fact]
-    public void Rowan_remesh_demo_plays_the_uploaded_rest_and_fixed_walk()
+    public void Rowan_remesh_demo_plays_the_nocape_rest_and_walk()
     {
         var root = FindRepoRoot();
         var rest = Path.Combine(root, "Assets", RowanRemeshMotion.RestThemePackRel);
         var walk = Path.Combine(root, "Assets", RowanRemeshMotion.WalkThemePackRel);
         var albedo = Path.Combine(root, "Assets", RowanRemeshMotion.Spec.BaseColorThemePackRel);
         var normal = Path.Combine(root, "Assets", RowanRemeshMotion.Spec.NormalThemePackRel);
-        Assert.Equal("486d9cf097f6d0fc0dd8ae6713b5f726", Md5(rest));
-        // Design walkfix_male_20261007 replaces the folded ab148b67 walk in the ThemePack (Game-view walk fix).
-        Assert.Equal("3bd5f6d392ff61c8f4ae1ac23a39fae3", Md5(walk));
-        var walkFixDir = Path.Combine(root, "design", "survival-theme-a-fantasy", "heroes", "anim", "rowan", "walkfix_male_20261007");
-        Assert.Equal("3bd5f6d392ff61c8f4ae1ac23a39fae3", Md5(Path.Combine(walkFixDir, "ROWAN_male_blenderig_walk.fbx")));
-        Assert.Contains("3bd5f6d392ff61c8f4ae1ac23a39fae3  ./ROWAN_male_blenderig_walk.fbx", File.ReadAllText(Path.Combine(walkFixDir, "CHECKSUMS.md5")));
+        Assert.Equal("369cdfc89c1121194d1c14608774f788", Md5(rest));
+        // Design blender_rig_nocape_20261008 replaces the male remesh + walkfix pack (look PASS 2026-10-08).
+        Assert.Equal("e9be1e253cc992cbb1b6f2d09d5a6ba1", Md5(walk));
+        var walkFixDir = Path.Combine(root, "design", "survival-theme-a-fantasy", "heroes", "anim", "rowan", "blender_rig_nocape_20261008");
+        Assert.Equal("e9be1e253cc992cbb1b6f2d09d5a6ba1", Md5(Path.Combine(walkFixDir, "ROWAN_nocape_blenderig_walk.fbx")));
+        Assert.Contains("e9be1e253cc992cbb1b6f2d09d5a6ba1  ROWAN_nocape_blenderig_walk.fbx", File.ReadAllText(Path.Combine(walkFixDir, "CHECKSUMS.md5")));
         Assert.Equal("ROWAN_male_blenderig.fbx", RowanRemeshMotion.RestFileName);
         Assert.Equal("ROWAN_male_blenderig_walk.fbx", RowanRemeshMotion.WalkFileName);
         Assert.Equal(30, RowanRemeshMotion.WalkLastFrame);
@@ -118,10 +118,10 @@ public sealed class BlenderRigRosterTests
             "heroes",
             "anim",
             "rowan",
-            "blender_rig_male_20261007");
-        Assert.Equal("486d9cf097f6d0fc0dd8ae6713b5f726", Md5(Path.Combine(designDir, "ROWAN_male_blenderig.fbx")));
-        Assert.Equal("ab148b67d09b4f39f2923f4db8549d66", Md5(Path.Combine(designDir, "ROWAN_male_blenderig_walk.fbx")));
-        Assert.Equal("2104c645a29ff97cafdaaaa145fe96ea", Md5(Path.Combine(designDir, "ROWAN_male_blenderig_sheet.jpg")));
+            "blender_rig_nocape_20261008");
+        Assert.Equal("369cdfc89c1121194d1c14608774f788", Md5(Path.Combine(designDir, "ROWAN_nocape_blenderig.fbx")));
+        Assert.Equal("e9be1e253cc992cbb1b6f2d09d5a6ba1", Md5(Path.Combine(designDir, "ROWAN_nocape_blenderig_walk.fbx")));
+        Assert.Equal("8bedbd26c03bbd75475573874cffc527", Md5(Path.Combine(designDir, "ROWAN_nocape_blenderig.blend")));
         Assert.Equal("feb555f5d48ed4c2f950c948fb57b85f", Md5(Path.Combine(root, "Assets", RowanMotion.RestThemePackRel)));
         Assert.Equal("1653b1bd3e15819d073e030e803fe203", Md5(Path.Combine(root, "Assets", RowanMotion.WalkThemePackRel)));
         var femaleRig = Path.Combine(root, "design", "survival-theme-a-fantasy", "heroes", "anim", "rowan", "blender_rig");
@@ -134,8 +134,8 @@ public sealed class BlenderRigRosterTests
         var restBytes = File.ReadAllBytes(rest);
         var walkBytes = File.ReadAllBytes(walk);
         Assert.True(ContainsAscii(restBytes, "mixamorig:Hips"));
-        Assert.True(ContainsAscii(restBytes, "ROWAN_male_basecolor_0"));
-        Assert.True(ContainsAscii(restBytes, "ROWAN_male_normal_2"));
+        Assert.True(ContainsAscii(restBytes, "ROWAN_nocape_basecolor_0"));
+        Assert.True(ContainsAscii(restBytes, "ROWAN_nocape_normal_2"));
         Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(albedo)));
         Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(normal)));
         var restMeta = File.ReadAllText(rest + ".meta");
