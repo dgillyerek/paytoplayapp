@@ -155,3 +155,30 @@ Same 4.2 SoT blend. No reskin, no new mesh, rest bind untouched. BoneCount stays
 - walk `e9b4e462defb0672ba02b72517269903`
 
 HOLD merge until Derek Game-view PASS. Unity Game view was not run in this bake.
+
+## POLISH 2026-10-08 — Derek Game-view on tip 13aaa25, wing flap only
+
+Walk is Derek PASS and locked. `EMBERFANG_dragonrig_walk.fbx` stays `e9b4e462defb0672ba02b72517269903`. Rest bind stays `91336af931c3a67dcf8754c8901e5fd3`. Neck, head, body, and the leg pedal on the flap are the same keys.
+
+The flap wings were a height-blend of the old stroke, and the tip speed spiked (max frame-to-frame acceleration 0.073 m). They now follow one cosine ease from the raised bind down to the knee and back. Frame 0 matches frame 30, including the speed. A headless reimport of the FBX shows 31 quaternion keys on all 55 bones, loop error 0, and no second-difference hitch on any wing bone.
+
+**Before / after (long tip, left)**
+
+| measure | tip 13aaa25 | this bake |
+|---|---:|---:|
+| top height | 0.826 m | 0.939 m |
+| bottom height | 0.492 m | 0.266 m |
+| knee joint | 0.269 m | 0.269 m |
+| closest to centerline | 0.674 m | 0.640 m |
+| path | 1.244 m | 1.777 m |
+| max speed change per frame | 0.073 m | 0.019 m |
+
+The top sits just beside the head (skull is only ±0.13 m wide; the tip stays at X 0.64 m). The bottom is the knee. Reimported tip path is 1.802 m, Z 0.256–0.938 m, loop error 0.
+
+**MD5s after this bake (uncompressed):**
+- blend `7a6034dc7ab6e0c2449bae744b94cb09` (Blender 4.2.23)
+- rest `91336af931c3a67dcf8754c8901e5fd3` (unchanged bind)
+- wingflap `bfde6f54c3cb6f5563ce94d19290ae3a`
+- walk `e9b4e462defb0672ba02b72517269903` (locked, byte-identical)
+
+HOLD merge until Derek Game-view PASS on the wing flap. Unity Game view was not run in this bake.
