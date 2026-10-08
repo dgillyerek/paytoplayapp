@@ -21,8 +21,7 @@ public sealed class BlenderRigRosterTests
     [Fact]
     public void Ashwyrm_is_a_30_bone_generic_dragon_with_rest_and_wing_flap()
     {
-        var only = Assert.Single(BlenderRigRoster.All);
-        Assert.Equal(AshwyrmMotion.Spec, only);
+        Assert.Equal(new[] { AshwyrmMotion.Spec, NightfangMotion.Spec }, BlenderRigRoster.All);
         Assert.Equal(30, AshwyrmMotion.BoneCount);
         Assert.Equal(30, AshwyrmMotion.BoneNames.Length);
         Assert.Equal(AshwyrmMotion.BoneNames.Length, AshwyrmMotion.BoneNames.Distinct(StringComparer.Ordinal).Count());
@@ -138,7 +137,64 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("Survival/Ashwyrm Demo (rest + wing flap, Game view 1080x1920)", editor, StringComparison.Ordinal);
         Assert.Contains("Ashwyrm.unity", editor, StringComparison.Ordinal);
         Assert.DoesNotContain("Rowan.unity", editor, StringComparison.Ordinal);
-        Assert.DoesNotContain("Nightfang.unity", editor, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Nightfang_is_a_30_bone_generic_quadruped_with_rest_and_trot()
+    {
+        Assert.Equal(30, NightfangMotion.BoneCount);
+        Assert.Equal(30, NightfangMotion.BoneNames.Length);
+        Assert.Equal("root", NightfangMotion.BoneRoot);
+        Assert.Equal("toe_h.L", NightfangMotion.BoneNames[6]);
+        Assert.Equal("snout", NightfangMotion.BoneNames[29]);
+        Assert.Equal("trot", NightfangMotion.PoseNames[1]);
+        Assert.Equal("Scene", NightfangMotion.TrotTakeName);
+        Assert.Equal(1f, NightfangMotion.TrotSeconds);
+        Assert.Equal(30, NightfangMotion.TrotLastFrame);
+        Assert.Equal(BlenderRigAvatar.CustomGeneric, NightfangMotion.Spec.Avatar);
+        AssertGenericDemo(
+            NightfangMotion.Spec,
+            "NIGHTFANG_basecolor_0",
+            "NIGHTFANG_normal_2",
+            "toe_h.L",
+            "5a612f20bf58466c8634f45803244d4f",
+            "Survival/Nightfang Demo (rest + trot + attack, Game view 1080x1920)");
+    }
+
+    [Fact]
+    public void Nightfang_player_binds_embedded_maps_and_does_not_rewrite_the_rig()
+    {
+        var root = FindRepoRoot();
+        var player = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigPlayer.cs"));
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "NightfangActor.cs"));
+        var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "NightfangDemo.cs"));
+        var shared = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigDemo.cs"));
+        Assert.Contains("bakeAxisConversion = false", player, StringComparison.Ordinal);
+        Assert.DoesNotContain("bakeAxisConversion = true", player, StringComparison.Ordinal);
+        Assert.DoesNotContain("localRotation =", player, StringComparison.Ordinal);
+        Assert.DoesNotContain("localScale =", player, StringComparison.Ordinal);
+        Assert.Contains("ImportViaMaterialDescription", player, StringComparison.Ordinal);
+        Assert.Contains("ModelImporterAnimationType.Human", player, StringComparison.Ordinal);
+        Assert.Contains("ModelImporterAnimationType.Generic", player, StringComparison.Ordinal);
+        Assert.Contains("isHuman", player, StringComparison.Ordinal);
+        Assert.Contains("_BaseMap", player, StringComparison.Ordinal);
+        Assert.Contains("_BumpMap", player, StringComparison.Ordinal);
+        Assert.Contains("IsRejectedMixamoRigFile", player, StringComparison.Ordinal);
+        Assert.Contains("PlayPose", actor, StringComparison.Ordinal);
+        Assert.Contains("NightfangMotion.Spec", actor, StringComparison.Ordinal);
+        Assert.Contains("NightfangClipDropdown", demo, StringComparison.Ordinal);
+        Assert.Contains("NightfangMotion.Spec", demo, StringComparison.Ordinal);
+        Assert.Contains("SetValueWithoutNotify(0)", shared, StringComparison.Ordinal);
+        Assert.Contains("DropdownObjectName", shared, StringComparison.Ordinal);
+
+        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "Nightfang.unity"));
+        Assert.Contains("NightfangRoot", scene, StringComparison.Ordinal);
+        Assert.Contains("5a612f20bf58466c8634f45803244d4f", scene, StringComparison.Ordinal);
+        Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
+
+        var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
+        Assert.Contains("Survival/Nightfang Demo (rest + trot + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.Contains("Nightfang.unity", editor, StringComparison.Ordinal);
     }
 
     private static void AssertGenericDemo(

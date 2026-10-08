@@ -207,14 +207,14 @@ namespace Survival.Domain.Roster
     }
 
     /// <summary>
-    /// Ashwyrm Design Blender rig. This branch registers only Ashwyrm.
-    /// HOLD merge until Derek Game-view PASS.
+    /// Design Blender rigs that passed Derek's Game view: Ashwyrm and Nightfang.
     /// </summary>
     public static class BlenderRigRoster
     {
         public static IReadOnlyList<BlenderRigSpec> All { get; } = new[]
         {
-            AshwyrmMotion.Spec
+            AshwyrmMotion.Spec,
+            NightfangMotion.Spec
         };
     }
 }
