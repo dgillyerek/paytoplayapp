@@ -3,10 +3,10 @@ using Survival.Domain.Roster;
 namespace Survival.Domain.Enemies
 {
     /// <summary>
-    /// Nightfang Design Blender quadruped. Custom 33-bone rig, Generic only.
+    /// Nightfang Design Blender quadruped. Derek's hand-placed 30-bone rig, Generic only.
     /// Rest is the bind pose. Trot is a 1 second Scene take at 30 fps
     /// (FBX LocalStop 46186158000 ticks). Reject NIGHTFANG_rig.fbx.
-    /// Basecolor and normal are embedded. No metal/roughness map.
+    /// Basecolor and normal are embedded. No metal/roughness map. No cloth.
     /// </summary>
     public static class NightfangMotion
     {
@@ -25,7 +25,7 @@ namespace Survival.Domain.Enemies
         public const float TrotSeconds = 1f;
         public const float TrotFrameRate = 30f;
         public const int TrotLastFrame = 30;
-        public const int BoneCount = 33;
+        public const int BoneCount = 30;
 
         public const string TextureFolder = "NIGHTFANG_blenderig.fbm";
         public const string BaseColorFile = "NIGHTFANG_basecolor_0.jpg";
@@ -37,13 +37,13 @@ namespace Survival.Domain.Enemies
 
         public static readonly string[] BoneNames =
         {
-            "root", "hips", "spine_01", "spine_02", "chest",
-            "neck_01", "neck_02", "head", "jaw",
-            "upperarm.L", "forearm.L", "hand.L", "toe.L",
-            "upperarm.R", "forearm.R", "hand.R", "toe.R",
-            "tail_01", "tail_02", "tail_03", "tail_04", "tail_05", "tail_06", "tail_07", "tail_08",
+            "root", "chest", "hips",
             "thigh.L", "shin.L", "foot.L", "toe_h.L",
-            "thigh.R", "shin.R", "foot.R", "toe_h.R"
+            "thigh.R", "shin.R", "foot.R", "toe_h.R",
+            "tail_01", "tail_02", "tail_03", "tail_04", "tail_05",
+            "shoulder.L", "upperarm.L", "forearm.L", "hand.L", "toe.L",
+            "shoulder.R", "upperarm.R", "forearm.R", "hand.R", "toe.R",
+            "neck", "head", "jaw", "snout"
         };
 
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(

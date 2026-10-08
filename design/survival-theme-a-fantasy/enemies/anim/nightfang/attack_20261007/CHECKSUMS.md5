@@ -3,9 +3,9 @@ d3c6c3fee16532c8ef65d4b6f3b7d2d5  NIGHTFANG_attack_looksheet.png
 b18d59220fcf6fd4895acd64b485fdca  NIGHTFANG_attack_preview_rear.mp4
 b1db416a2e94ae866545a3f8fd4d8142  NIGHTFANG_attack_props.blend
 f4c58e3a3eeda394f25a371173506927  NIGHTFANG_attack_work.blend
-389229e0dd405ebf18a8c2aa38ec4577  NIGHTFANG_blenderig_attack.fbx
+3e1d6cfa12e353f207a4e610804f9a3b  NIGHTFANG_blenderig_attack.fbx
 539dda574663d1bda0dba276dbb05e94  NIGHTFANG_clawslash_vfx.fbx
-d4722a5fc9801d14c7c9efcbfe911863  NOTE.md
+7ac93cf9accc2a492486e52a3b468ac3  NOTE.md
 c4479f6c20833915e347b1776e502d38  stills/look_slash_0.png
 06ca7e763d717c73a9fed16cf2f1b5e6  stills/look_slash_1.png
 e7480ac4755e1d0f94e336f714d16f2f  stills/qc_anticipation_f09_rear.png
@@ -22,7 +22,7 @@ f2695ef135cac2beac1c84552d822ce7  stills/qc_release_f14_side.png
 ffeb927e21da3cac8aa26ce1736e0240  stills/qc_strike_f14_side.png
 2f5f980f3c935eff8fde007b3a0b0c2b  work/attack_meta.json
 d977df9ff81ee31c24ec96770c2751e1  work/verify_fbx.json
-# built on (unchanged, verified before/after)
-8d0d7a876ec69f65e0db3a58ebba1f9b  enemies/anim/nightfang/blender_rig/NIGHTFANG_blenderig.blend
-dce842f9cd7605dae24808075c33db0a  enemies/anim/nightfang/blender_rig/NIGHTFANG_blenderig.fbx
-227458a450746f3ed10316dd5d7d4165  enemies/anim/nightfang/blender_rig/NIGHTFANG_blenderig_trot.fbx
+# built on Derek's blend (unchanged) plus the rebaked rest and trot FBXs
+ebb0c6f9b0d5ef55df95dd785938d11f  enemies/anim/nightfang/blender_rig/NIGHTFANG_blenderig.blend
+09bd9ceb6fdfa9c39a6e09673b585f4b  enemies/anim/nightfang/blender_rig/NIGHTFANG_blenderig.fbx
+438a490c45576fa928f9eaa7a8d65630  enemies/anim/nightfang/blender_rig/NIGHTFANG_blenderig_trot.fbx

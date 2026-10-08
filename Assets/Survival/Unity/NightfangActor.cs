@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Nightfang rest bind pose and trot clip. Custom 33-bone quadruped, Generic only.
+        /// Nightfang rest bind pose and trot clip. Derek's 30-bone quadruped, Generic only.
     /// Rejects NIGHTFANG_rig.fbx. Does not bake axis conversion or rewrite the imported root.
     /// </summary>
     [DefaultExecutionOrder(200)]

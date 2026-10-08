@@ -17,12 +17,13 @@ public sealed class BlenderRigRosterTests
     }
 
     [Fact]
-    public void Nightfang_is_a_33_bone_generic_quadruped_with_rest_and_trot()
+    public void Nightfang_is_a_30_bone_generic_quadruped_with_rest_and_trot()
     {
-        Assert.Equal(33, NightfangMotion.BoneCount);
-        Assert.Equal(33, NightfangMotion.BoneNames.Length);
+        Assert.Equal(30, NightfangMotion.BoneCount);
+        Assert.Equal(30, NightfangMotion.BoneNames.Length);
         Assert.Equal("root", NightfangMotion.BoneRoot);
-        Assert.Equal("toe_h.L", NightfangMotion.BoneNames[28]);
+        Assert.Equal("toe_h.L", NightfangMotion.BoneNames[6]);
+        Assert.Equal("snout", NightfangMotion.BoneNames[29]);
         Assert.Equal("trot", NightfangMotion.PoseNames[1]);
         Assert.Equal("Scene", NightfangMotion.TrotTakeName);
         Assert.Equal(1f, NightfangMotion.TrotSeconds);

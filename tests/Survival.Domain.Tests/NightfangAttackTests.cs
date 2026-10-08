@@ -34,9 +34,9 @@ public sealed class NightfangAttackTests
         var root = FindRepoRoot();
         var pack = Path.Combine(root, "Assets", NightfangMotion.ThemePackDir);
         var design = Path.Combine(root, NightfangAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
-        Assert.Equal("389229e0dd405ebf18a8c2aa38ec4577", NightfangAttack.FileMd5);
-        Assert.Equal("389229e0dd405ebf18a8c2aa38ec4577", Md5(Path.Combine(pack, NightfangAttack.FileName)));
-        Assert.Equal("389229e0dd405ebf18a8c2aa38ec4577", Md5(Path.Combine(design, NightfangAttack.FileName)));
+        Assert.Equal("3e1d6cfa12e353f207a4e610804f9a3b", NightfangAttack.FileMd5);
+        Assert.Equal("3e1d6cfa12e353f207a4e610804f9a3b", Md5(Path.Combine(pack, NightfangAttack.FileName)));
+        Assert.Equal("3e1d6cfa12e353f207a4e610804f9a3b", Md5(Path.Combine(design, NightfangAttack.FileName)));
 
         Assert.Equal(NightfangAttack.PropFileNames.Length, NightfangAttack.PropFileMd5s.Length);
         for (var i = 0; i < NightfangAttack.PropFileNames.Length; i++)
@@ -65,9 +65,14 @@ public sealed class NightfangAttackTests
             }
         }
 
-        // Existing rig FBXs are untouched by the add-on.
-        Assert.Equal("dce842f9cd7605dae24808075c33db0a", Md5(Path.Combine(pack, "NIGHTFANG_blenderig.fbx")));
-        Assert.Equal("227458a450746f3ed10316dd5d7d4165", Md5(Path.Combine(pack, "NIGHTFANG_blenderig_trot.fbx")));
+        Assert.Equal("09bd9ceb6fdfa9c39a6e09673b585f4b", Md5(Path.Combine(pack, "NIGHTFANG_blenderig.fbx")));
+        Assert.Equal("438a490c45576fa928f9eaa7a8d65630", Md5(Path.Combine(pack, "NIGHTFANG_blenderig_trot.fbx")));
+        Assert.Equal(
+            "09bd9ceb6fdfa9c39a6e09673b585f4b",
+            Md5(Path.Combine(root, "design", "survival-theme-a-fantasy", "enemies", "anim", "nightfang", "blender_rig", "NIGHTFANG_blenderig.fbx")));
+        Assert.Equal(
+            "438a490c45576fa928f9eaa7a8d65630",
+            Md5(Path.Combine(root, "design", "survival-theme-a-fantasy", "enemies", "anim", "nightfang", "blender_rig", "NIGHTFANG_blenderig_trot.fbx")));
     }
 
     [Fact]
