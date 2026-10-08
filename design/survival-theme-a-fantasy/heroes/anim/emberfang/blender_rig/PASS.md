@@ -80,3 +80,37 @@ Same 4.2 SoT blend. No reskin, no new mesh, rest bind untouched. Arms stay locke
 - walk `1e1b02ba8dc5d9d333f7f879b37e9114`
 
 HOLD merge until Derek Game-view PASS. Unity Game view was not run in this bake.
+
+## POLISH 2026-10-08 — Derek Game-view FAIL on tip 70d8c90
+
+Same 4.2 SoT blend. No reskin, no new mesh, rest bind untouched. BoneCount stays 55. Wing curves were not rewritten. The planted flap front stays planted.
+
+**Wing flap**
+- Rear pedal cut from 9.3 cm of toe travel to 3.2 cm. Knee angle span stays 24°. Ankle span is 12.0° (was 23.9°), still a hinge rather than a stiff stick. Thigh ±3.5°, shin ±12°, foot ±6°, toe ±2°, left/right opposite.
+- Front legs (upperarm / forearm / hand) now pedal. Hand travel 3.0 cm (was 0). Elbow span 15.6°, wrist span 11.8°. This replaces the earlier arm-lock on the flap.
+- Downstroke wing droop and the identity hips/spine/chest are unchanged.
+
+**Walk**
+- Neck and head rotations scaled to 0.40 of tip 70d8c90. Head amplitude 3.45° → 1.38°. Neck_01 4.06° → 1.63°. Head-tip vertical travel 16.2 cm → 4.1 cm.
+- Spine pitch that hopped the chest is removed (spine_02 identity, spine_01 keeps only its small yaw). Chest vertical travel 3.69 cm → 0.08 cm. Hip vertical bob 0.00 cm → 0.05 cm.
+- Hips ride the stride: 4.0 cm forward at each step extreme, ±2.4 cm lateral weight shift, ±4° roll onto the forward leg. The rear stride and the wing droop are unchanged.
+
+**Before / after**
+
+| measure | tip 70d8c90 | this bake |
+|---|---:|---:|
+| flap rear toe travel | 9.27 cm | 3.20 cm |
+| flap front hand travel | 0.00 cm | 3.04 cm |
+| walk head rotation amplitude | 3.45° | 1.38° |
+| walk hip vertical bob | 0.00 cm | 0.05 cm |
+| walk chest vertical (the hop) | 3.69 cm | 0.08 cm |
+
+**Rest:** `EMBERFANG_dragonrig.fbx` MD5 still `91336af931c3a67dcf8754c8901e5fd3`.
+
+**MD5s after this bake (uncompressed):**
+- blend `0286f1670ae2cb2a3bd5431e361605ba` (Blender 4.2.23)
+- rest `91336af931c3a67dcf8754c8901e5fd3` (unchanged bind)
+- wingflap `65f4a039ac82839fdb42bf7c23b120e5`
+- walk `49ad72ed7a6bf4ecfb6af2b7cf9052cd`
+
+HOLD merge until Derek Game-view PASS. Unity Game view was not run in this bake.

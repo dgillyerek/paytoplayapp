@@ -1,12 +1,12 @@
-# EMBERFANG tip_pack CHECKSUMS — derek 2026-10-07
+# EMBERFANG tip_pack CHECKSUMS — derek 2026-10-08
 
 MD5 of **uncompressed** SoT artifacts:
 
 | file | MD5 |
 |------|-----|
-| EMBERFANG_dragonrig.blend | 24e11c02d65178f95f919ecfacabcaf1 |
+| EMBERFANG_dragonrig.blend | 0286f1670ae2cb2a3bd5431e361605ba |
 | EMBERFANG_dragonrig.fbx | 91336af931c3a67dcf8754c8901e5fd3 |
-| EMBERFANG_dragonrig_wingflap.fbx | c437cc09e8807d46418616e00ba1eca7 |
-| EMBERFANG_dragonrig_walk.fbx | 1e1b02ba8dc5d9d333f7f879b37e9114 |
+| EMBERFANG_dragonrig_wingflap.fbx | 65f4a039ac82839fdb42bf7c23b120e5 |
+| EMBERFANG_dragonrig_walk.fbx | 49ad72ed7a6bf4ecfb6af2b7cf9052cd |
 
-BoneCount=55. Rest bind unchanged. Flap front planted; walk neck/head leads and lags the gait. Wing feathers droop on the downstroke in both clips.
+BoneCount=55. Rest bind unchanged. Flap rear pedal 3.2 cm, front legs pedal 3.0 cm. Walk head rotation 1.38°. Walk hip vertical bob 0.05 cm.
