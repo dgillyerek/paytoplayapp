@@ -28,7 +28,7 @@ public sealed class BlenderRigRosterTests
             "STORMCREST_basecolor_0",
             "STORMCREST_normal_2",
             "cd5dad8493e64f1bad48ecb1bf8586ed",
-            "Survival/Stormcrest Demo (rest + walk, Game view 1080x1920)");
+            "Survival/Stormcrest Demo (rest + walk + attack, Game view 1080x1920)");
     }
 
 
@@ -64,7 +64,7 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
 
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains("Survival/Stormcrest Demo (rest + walk, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.Contains("Survival/Stormcrest Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         Assert.Contains("Stormcrest.unity", editor, StringComparison.Ordinal);
     }
 

@@ -20,7 +20,7 @@ namespace Survival.Unity
 
         public void Build()
         {
-            _player = new BlenderRigPlayer(StormcrestMotion.Spec, transform);
+            _player = new BlenderRigPlayer(StormcrestMotion.Spec, transform, StormcrestAttack.Spec);
             _player.Build();
         }
 

@@ -1,0 +1,28 @@
+{
+  "same_bone_names_and_order": true,
+  "bone_count": [
+    22,
+    22
+  ],
+  "max_rest_head_delta_m": 0.0,
+  "faces": [
+    200000,
+    200000
+  ],
+  "same_vgroups": true,
+  "attack_action": "STORMCREST_rig|Scene",
+  "attack_frames": [
+    1.0,
+    31.0
+  ],
+  "attack_endpose_deg": {
+    "1": 0,
+    "31": 0
+  },
+  "attack_max_bone_travel_m": 0.3421436461905316,
+  "walk_same_bones": true,
+  "walk_frames": [
+    1.0,
+    31.0
+  ]
+}
