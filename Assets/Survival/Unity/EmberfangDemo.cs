@@ -6,7 +6,7 @@ namespace Survival.Unity
 {
     /// <summary>
     /// Emberfang Game view 1080×1920. Opens on the rest bind pose.
-    /// Dropdown plays rest and the 1s wing flap. HOLD merge until Derek Game-view PASS.
+    /// Dropdown plays rest, wing flap, and walk. HOLD merge until Derek Game-view PASS.
     /// </summary>
     [DefaultExecutionOrder(500)]
     public sealed class EmberfangDemo : MonoBehaviour

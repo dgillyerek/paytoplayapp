@@ -34,8 +34,17 @@ public sealed class ThemeARosterTests
         Assert.Equal("root", EmberfangMotion.BoneNames[0]);
         Assert.Contains("spine_01", EmberfangMotion.BoneNames);
         Assert.Contains("wing_root.L", EmberfangMotion.BoneNames);
+        Assert.Equal(4, EmberfangMotion.PoseNames.Length);
         Assert.Equal("rest", EmberfangMotion.PoseNames[0]);
         Assert.Equal("wing flap", EmberfangMotion.PoseNames[1]);
+        Assert.Equal("walk", EmberfangMotion.PoseNames[2]);
+        Assert.Equal("attack", EmberfangMotion.PoseNames[3]);
+        Assert.Equal(2, EmberfangMotion.ExtraClips.Length);
+        Assert.Equal("attack", EmberfangMotion.ExtraClips[1].PoseName);
+        Assert.Equal("walk", EmberfangMotion.ExtraClips[0].PoseName);
+        Assert.Equal("EMBERFANG_dragonrig_walk.fbx", EmberfangMotion.ExtraClips[0].FileName);
+        Assert.Equal("Scene", EmberfangMotion.ExtraClips[0].TakeName);
+        Assert.Equal(30, EmberfangMotion.ExtraClips[0].LastFrame);
         Assert.Equal("Scene", EmberfangMotion.FlapTakeName);
         Assert.NotEqual("mixamo.com", EmberfangMotion.FlapTakeName);
         Assert.Equal(1f, EmberfangMotion.FlapSeconds);
@@ -126,10 +135,12 @@ public sealed class ThemeARosterTests
         var iron = Path.Combine(root, "Assets", IronhowlMotion.BodyThemePackRel);
         var rest = Path.Combine(root, "Assets", EmberfangMotion.RestThemePackRel);
         var flap = Path.Combine(root, "Assets", EmberfangMotion.FlapThemePackRel);
+        var walk = Path.Combine(root, "Assets", EmberfangMotion.WalkThemePackRel);
         var rejected = Path.Combine(root, "Assets", EmberfangMotion.ThemePackDir, EmberfangMotion.RejectedMixamoFileName);
         Assert.True(File.Exists(iron));
         Assert.True(File.Exists(rest));
         Assert.True(File.Exists(flap));
+        Assert.True(File.Exists(walk));
         Assert.False(File.Exists(rejected));
         Assert.True(ContainsAscii(iron, "mixamorig:Hips"));
         Assert.True(ContainsAscii(rest, "wing_root.L"));
@@ -138,6 +149,9 @@ public sealed class ThemeARosterTests
         Assert.True(ContainsAscii(flap, "wing_root.L"));
         Assert.True(ContainsAscii(flap, "Scene"));
         Assert.False(ContainsAscii(flap, "mixamorig"));
+        Assert.True(ContainsAscii(walk, "wing_root.L"));
+        Assert.True(ContainsAscii(walk, "Scene"));
+        Assert.False(ContainsAscii(walk, "mixamorig"));
 
         var ironMeta = File.ReadAllText(iron + ".meta");
         Assert.Contains("clipAnimations: []", ironMeta, StringComparison.Ordinal);
@@ -152,6 +166,24 @@ public sealed class ThemeARosterTests
         Assert.Contains("mirror: 0", flapMeta, StringComparison.Ordinal);
         Assert.Contains("bakeAxisConversion: 0", flapMeta, StringComparison.Ordinal);
         Assert.Contains("animationType: 2", flapMeta, StringComparison.Ordinal);
+
+        var walkMeta = File.ReadAllText(walk + ".meta");
+        Assert.Contains("name: \"walk\"", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("takeName: Scene", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("lastFrame: 30", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("mirror: 0", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("bakeAxisConversion: 0", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 2", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("useFileScale: 0", walkMeta, StringComparison.Ordinal);
+
+        var sot = Path.Combine(root, "design", "survival-theme-a-fantasy", "heroes", "anim", "emberfang", "blender_rig");
+        Assert.Equal("7a6034dc7ab6e0c2449bae744b94cb09", Md5(Path.Combine(sot, "EMBERFANG_dragonrig.blend")));
+        Assert.Equal("91336af931c3a67dcf8754c8901e5fd3", Md5(rest));
+        Assert.Equal("bfde6f54c3cb6f5563ce94d19290ae3a", Md5(flap));
+        Assert.Equal("e9b4e462defb0672ba02b72517269903", Md5(walk));
+        Assert.Equal(Md5(rest), Md5(Path.Combine(sot, "EMBERFANG_dragonrig.fbx")));
+        Assert.Equal(Md5(flap), Md5(Path.Combine(sot, "EMBERFANG_dragonrig_wingflap.fbx")));
+        Assert.Equal(Md5(walk), Md5(Path.Combine(sot, "EMBERFANG_dragonrig_walk.fbx")));
     }
 
     [Fact]
@@ -181,6 +213,8 @@ public sealed class ThemeARosterTests
         Assert.Contains("bakeAxisConversion = false", fang, StringComparison.Ordinal);
         Assert.Contains("RejectedMixamoFileName", fang, StringComparison.Ordinal);
         Assert.Contains("PlayPose", fang, StringComparison.Ordinal);
+        Assert.Contains("ExtraClips", fang, StringComparison.Ordinal);
+        Assert.Contains("preferEmbeddedBaseAndNormal: true", fang, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -219,7 +253,9 @@ public sealed class ThemeARosterTests
         Assert.Contains("Survival/Ironhowl Demo (rest / walk / attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         Assert.Contains("EmberfangClipDropdown", fangDemo, StringComparison.Ordinal);
         Assert.Contains("RestPoseName", fangDemo, StringComparison.Ordinal);
+        Assert.Contains("PoseNames", fangDemo, StringComparison.Ordinal);
         Assert.Contains("SetValueWithoutNotify(0)", fangDemo, StringComparison.Ordinal);
+        Assert.Contains("Survival/Emberfang Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
 
         var excluded = new[]
         {
@@ -270,6 +306,37 @@ public sealed class ThemeARosterTests
         AssertMapMeta(Path.Combine(ironDir, "ironhowl_normal.png.meta"), srgb: "0", textureType: "1", readable: "0");
         AssertMapMeta(Path.Combine(ironDir, "ironhowl_metallic.png.meta"), srgb: "0", textureType: "0", readable: "1");
         AssertMapMeta(Path.Combine(ironDir, "ironhowl_roughness.png.meta"), srgb: "0", textureType: "0", readable: "1");
+    }
+
+    [Fact]
+    public void Emberfang_paint_maps_bind_without_a_packed_orm()
+    {
+        var root = FindRepoRoot();
+        var fangDir = Path.Combine(root, "Assets", EmberfangMotion.ThemePackDir);
+        foreach (var file in new[]
+        {
+            "emberfang_basecolor.png",
+            "emberfang_normal.png",
+            "emberfang_metallic.png",
+            "emberfang_roughness.png"
+        })
+        {
+            Assert.True(File.Exists(Path.Combine(fangDir, file)), file);
+        }
+
+        Assert.False(File.Exists(Path.Combine(fangDir, "emberfang_metal_rough.png")));
+
+        var fang = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "EmberfangActor.cs"));
+        Assert.Contains("emberfang_basecolor.png", fang, StringComparison.Ordinal);
+        Assert.Contains("emberfang_normal.png", fang, StringComparison.Ordinal);
+        Assert.Contains("emberfang_metallic.png", fang, StringComparison.Ordinal);
+        Assert.Contains("emberfang_roughness.png", fang, StringComparison.Ordinal);
+        Assert.Contains("preferEmbeddedBaseAndNormal: true", fang, StringComparison.Ordinal);
+
+        AssertMapMeta(Path.Combine(fangDir, "emberfang_basecolor.png.meta"), srgb: "1", textureType: "0", readable: "0");
+        AssertMapMeta(Path.Combine(fangDir, "emberfang_normal.png.meta"), srgb: "0", textureType: "1", readable: "0");
+        AssertMapMeta(Path.Combine(fangDir, "emberfang_metallic.png.meta"), srgb: "0", textureType: "0", readable: "1");
+        AssertMapMeta(Path.Combine(fangDir, "emberfang_roughness.png.meta"), srgb: "0", textureType: "0", readable: "1");
     }
 
     private static void AssertMapMeta(string path, string srgb, string textureType, string readable)

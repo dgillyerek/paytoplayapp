@@ -1,4 +1,5 @@
 using Survival.Domain.Heroes;
+using Survival.Domain.Roster;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
@@ -9,8 +10,12 @@ using UnityEditor;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Plays the Design Blender dragon: rest bind pose, then the 1s wing flap.
+    /// Plays the Design Blender dragon: rest bind pose, the 1s wing flap, the walk ExtraClip,
+    /// and the Theme A attack (EmberfangAttack.Spec: frames 0–30, then 0.5 s rest, repeat) with the
+    /// fireball and breath-flare particles driven by <see cref="BlenderRigAttackDriver"/>.
     /// Custom bone names. Rejects a Mixamo EMBERFANG_rig.fbx.
+    /// Metallic and roughness always bind. Base and normal stay embedded when import keeps them;
+    /// otherwise the loose PNGs bind.
     /// Do not bake axis conversion, do not scale one axis, do not retarget,
     /// and do not write the imported root rotation or edit bones.
     /// </summary>
@@ -27,6 +32,8 @@ namespace Survival.Unity
         private float _length;
         private float _time;
         private string _pose = EmberfangMotion.RestPoseName;
+        private BlenderRigAttackDriver? _attack;
+        private bool _attackMode;
 
         public bool Built => _ready;
         public string Pose => _pose;
@@ -44,7 +51,7 @@ namespace Survival.Unity
                 return;
             }
 
-            EnsureImport(path, flap: false);
+            EnsureImport(path, poseName: null, takeName: null);
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
             if (prefab == null)
             {
@@ -54,6 +61,8 @@ namespace Survival.Unity
 
             _instance = Instantiate(prefab, transform);
             _instance.name = "EmberfangDragonRig";
+            _attack = new BlenderRigAttackDriver(EmberfangAttack.Spec, EmberfangMotion.ThemePackDir, transform);
+            _attack.Calibrate(_instance);
             _animator = _instance.GetComponent<Animator>() ?? _instance.AddComponent<Animator>();
             var avatar = LoadGenericAvatar(path);
             if (avatar != null && avatar.isHuman)
@@ -93,6 +102,12 @@ namespace Survival.Unity
                 return false;
             }
 
+            if (string.Equals(poseName, EmberfangMotion.AttackPoseName, System.StringComparison.Ordinal))
+            {
+                return PlayAttack();
+            }
+
+            StopAttack();
             if (string.Equals(poseName, EmberfangMotion.RestPoseName, System.StringComparison.Ordinal))
             {
                 ShowRest();
@@ -101,15 +116,91 @@ namespace Survival.Unity
 
             if (string.Equals(poseName, EmberfangMotion.FlapPoseName, System.StringComparison.Ordinal))
             {
-                return PlayFlap();
+                return PlayClip(
+                    EmberfangMotion.FlapFileName,
+                    EmberfangMotion.FlapPoseName,
+                    EmberfangMotion.FlapTakeName,
+                    EmberfangMotion.FlapLastFrame);
+            }
+
+            foreach (var extra in EmberfangMotion.ExtraClips)
+            {
+                if (string.Equals(poseName, extra.PoseName, System.StringComparison.Ordinal))
+                {
+                    return PlayClip(extra.FileName, extra.PoseName, extra.TakeName, extra.LastFrame);
+                }
             }
 
             Debug.LogWarning("Emberfang unknown pose. " + poseName);
             return false;
         }
 
+        private bool PlayAttack()
+        {
+            if (_attack == null)
+            {
+                return false;
+            }
+
+            StopAttack();
+            if (!PlayClip(EmberfangAttack.FileName, BlenderRigAttackSpec.PoseName, BlenderRigAttackSpec.TakeName, BlenderRigAttackSpec.LastFrame))
+            {
+                return false;
+            }
+
+            _loop = false;
+            _attackMode = true;
+            _time = 0f;
+            _attack.Activate(SampleAttackFrame);
+            SampleAttackFrame(BlenderRigAttackSpec.FirstFrame);
+            _attack.Tick(BlenderRigAttackSpec.FirstFrame, true, 0);
+            return true;
+        }
+
+        private void TickAttack()
+        {
+            if (!_playable.IsValid() || _attack == null)
+            {
+                return;
+            }
+
+            _time += Time.unscaledDeltaTime;
+            var frame = BlenderRigAttackSpec.CycleFrame(_time, out var inClip, out var cycle);
+            SampleAttackFrame(frame);
+            _attack.Tick(frame, inClip, cycle);
+        }
+
+        private void SampleAttackFrame(float frame)
+        {
+            if (!_playable.IsValid())
+            {
+                return;
+            }
+
+            var seconds = frame / BlenderRigAttackSpec.FrameRate;
+            if (_length > 0.05f)
+            {
+                seconds = Mathf.Min(seconds, _length - 0.0005f);
+            }
+
+            _playable.SetTime(seconds);
+            _graph.Evaluate(0f);
+        }
+
+        private void StopAttack()
+        {
+            if (!_attackMode)
+            {
+                return;
+            }
+
+            _attackMode = false;
+            _attack?.Deactivate();
+        }
+
         private void ShowRest()
         {
+            StopAttack();
             if (_playable.IsValid())
             {
                 _playable.Destroy();
@@ -123,15 +214,15 @@ namespace Survival.Unity
             _time = 0f;
         }
 
-        private bool PlayFlap()
+        private bool PlayClip(string fileName, string poseName, string takeName, int lastFrame)
         {
 #if UNITY_EDITOR
-            var clip = LoadFlap();
+            var clip = LoadClip(fileName, poseName, takeName, lastFrame);
             if (clip == null || clip.empty || clip.length < 0.2f)
             {
                 Debug.LogError(
-                    "Emberfang wing flap missing. take=" + EmberfangMotion.FlapTakeName +
-                    " file=" + EmberfangMotion.FlapFileName);
+                    "Emberfang clip missing. take=" + takeName +
+                    " file=" + fileName);
                 return false;
             }
 
@@ -148,7 +239,7 @@ namespace Survival.Unity
             _length = clip.length;
             _time = 0f;
             _loop = true;
-            _pose = EmberfangMotion.FlapPoseName;
+            _pose = poseName;
             _graph.Evaluate(0f);
             return true;
 #else
@@ -158,6 +249,12 @@ namespace Survival.Unity
 
         private void Update()
         {
+            if (_attackMode)
+            {
+                TickAttack();
+                return;
+            }
+
             if (!_ready || !_loop || !_playable.IsValid())
             {
                 return;
@@ -175,6 +272,7 @@ namespace Survival.Unity
 
         private void OnDestroy()
         {
+            _attack?.Dispose();
             if (_graph.IsValid())
             {
                 _graph.Destroy();
@@ -182,10 +280,11 @@ namespace Survival.Unity
         }
 
 #if UNITY_EDITOR
-        private static AnimationClip? LoadFlap()
+        private static AnimationClip? LoadClip(string fileName, string poseName, string takeName, int lastFrame)
         {
-            var path = "Assets/" + EmberfangMotion.FlapThemePackRel;
-            EnsureImport(path, flap: true);
+            var path = "Assets/" + EmberfangMotion.ThemePackDir + "/" + fileName;
+            EnsureImport(path, poseName, takeName, lastFrame);
+            AnimationClip? named = null;
             AnimationClip? fallback = null;
             foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
             {
@@ -194,15 +293,21 @@ namespace Survival.Unity
                     continue;
                 }
 
-                if (string.Equals(clip.name, EmberfangMotion.FlapPoseName, System.StringComparison.Ordinal))
+                if (string.Equals(clip.name, poseName, System.StringComparison.Ordinal))
                 {
-                    return clip;
+                    named = clip;
+                    continue;
+                }
+
+                if (string.Equals(clip.name, "mixamo.com", System.StringComparison.Ordinal))
+                {
+                    continue;
                 }
 
                 fallback ??= clip;
             }
 
-            return fallback;
+            return named ?? fallback;
         }
 
         private static Avatar? LoadGenericAvatar(string path)
@@ -218,7 +323,7 @@ namespace Survival.Unity
             return null;
         }
 
-        private static void EnsureImport(string path, bool flap)
+        private static void EnsureImport(string path, string? poseName, string? takeName = null, int lastFrame = 0)
         {
             if (AssetImporter.GetAtPath(path) is not ModelImporter importer)
             {
@@ -257,9 +362,9 @@ namespace Survival.Unity
                 dirty = true;
             }
 
-            if (flap)
+            if (!string.IsNullOrEmpty(poseName))
             {
-                dirty |= PinFlapClip(importer);
+                dirty |= PinClip(importer, poseName, takeName ?? string.Empty, lastFrame);
             }
 
             if (dirty)
@@ -268,12 +373,12 @@ namespace Survival.Unity
             }
         }
 
-        private static bool PinFlapClip(ModelImporter importer)
+        private static bool PinClip(ModelImporter importer, string poseName, string takeName, int lastFrame)
         {
             var defaults = importer.defaultClipAnimations;
             if (defaults == null || defaults.Length == 0)
             {
-                Debug.LogError("Emberfang wing flap has no take. Wanted " + EmberfangMotion.FlapTakeName);
+                Debug.LogError("Emberfang clip has no take. Wanted " + takeName + " pose=" + poseName);
                 return false;
             }
 
@@ -283,7 +388,7 @@ namespace Survival.Unity
             {
                 var span = candidate.lastFrame - candidate.firstFrame;
                 var take = candidate.takeName ?? string.Empty;
-                if (string.Equals(take, EmberfangMotion.FlapTakeName, System.StringComparison.Ordinal) && span >= 1f)
+                if (string.Equals(take, takeName, System.StringComparison.Ordinal) && span >= 1f)
                 {
                     best = candidate;
                     break;
@@ -303,15 +408,20 @@ namespace Survival.Unity
 
             var already = importer.clipAnimations;
             if (already != null && already.Length == 1
-                && string.Equals(already[0].name, EmberfangMotion.FlapPoseName, System.StringComparison.Ordinal)
-                && string.Equals(already[0].takeName, EmberfangMotion.FlapTakeName, System.StringComparison.Ordinal)
-                && already[0].loopTime)
+                && string.Equals(already[0].name, poseName, System.StringComparison.Ordinal)
+                && string.Equals(already[0].takeName, takeName, System.StringComparison.Ordinal)
+                && already[0].loopTime
+                && (lastFrame <= 0 || System.Math.Abs(already[0].lastFrame - lastFrame) < 0.01f))
             {
                 return false;
             }
 
-            best.name = EmberfangMotion.FlapPoseName;
-            best.takeName = EmberfangMotion.FlapTakeName;
+            best.name = poseName;
+            best.takeName = takeName;
+            if (lastFrame > 0)
+            {
+                best.lastFrame = lastFrame;
+            }
             best.mirror = false;
             best.loopTime = true;
             best.loop = true;
@@ -343,20 +453,15 @@ namespace Survival.Unity
 
         private static void EnableLit(GameObject root)
         {
-            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            var color = new Color(0.22f, 0.28f, 0.42f, 1f);
-            foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
-            {
-                rend.enabled = true;
-                var mat = new Material(shader);
-                if (mat.HasProperty("_BaseColor"))
-                {
-                    mat.SetColor("_BaseColor", color);
-                }
-
-                mat.color = color;
-                rend.sharedMaterial = mat;
-            }
+            RosterPaint.Bind(
+                root,
+                EmberfangMotion.ThemePackDir,
+                "emberfang_basecolor.png",
+                "emberfang_normal.png",
+                "emberfang_metallic.png",
+                "emberfang_roughness.png",
+                "Emberfang",
+                preferEmbeddedBaseAndNormal: true);
         }
 
         private static Bounds Encapsulate(GameObject root)
