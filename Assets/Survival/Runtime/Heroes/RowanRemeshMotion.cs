@@ -60,6 +60,21 @@ namespace Survival.Domain.Heroes
             "mixamorig:RightToeBase"
         };
 
+
+
+        /// <summary>Rest/walk bow: Design props/ROWAN_bow.fbx on RightHand (NOTE names RightHand for rest and walk). Hidden while the attack plays (attack switches to the baked bow_grip track).</summary>
+        public static readonly BlenderRigIdlePropSpec[] IdleProps =
+        {
+            new BlenderRigIdlePropSpec(
+                "ROWAN_bow_rest",
+                "ROWAN_bow.fbx",
+                "80758fce88e2a9313a34d171e334ae00",
+                "mixamorig:RightHand",
+                new[] { 0.50543f, 0.89572f, 0.09054f, 0.11469f, 0.51484f, -0.02885f, 0.84909f },
+                new[] { 0.32532f, 1.48009f, 0.28893f },
+                "Design props/ROWAN_bow.fbx on RightHand at rest and in the walk (NOTE; rest_world from ROWAN_bow_meta.json). Hidden during attack.")
+        };
+
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(
             "RowanRemesh",
             ThemePackDir,

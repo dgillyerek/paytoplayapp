@@ -18,7 +18,7 @@ namespace Survival.Unity
 
         public void Build()
         {
-            _player = new BlenderRigPlayer(RowanRemeshMotion.Spec, transform, RowanAttack.Spec);
+            _player = new BlenderRigPlayer(RowanRemeshMotion.Spec, transform, RowanAttack.Spec, RowanRemeshMotion.IdleProps);
             _player.Build();
         }
 

@@ -23,6 +23,7 @@ namespace Survival.Unity
         private readonly string _themePackDir;
         private readonly Transform _actor;
         private readonly List<TrackView> _views = new List<TrackView>();
+        private readonly List<TrackView> _idleViews = new List<TrackView>();
         private readonly Dictionary<string, Transform> _bones = new Dictionary<string, Transform>(System.StringComparer.Ordinal);
         private Material? _additive;
         private Texture2D? _dot;
@@ -229,6 +230,84 @@ namespace Survival.Unity
             _cycle = -1;
         }
 
+
+        /// <summary>
+        /// Builds rest/walk held props on named bones (Design NOTE). They stay visible until
+        /// <see cref="SetIdlePropsVisible"/> hides them for the attack add-on.
+        /// </summary>
+        public void BindIdleProps(BlenderRigIdlePropSpec[] props)
+        {
+            if (props == null || props.Length == 0)
+            {
+                return;
+            }
+
+            if (!_calibrated)
+            {
+                Debug.LogWarning(_spec.Character + " idle props need attack calibration first.");
+            }
+
+            foreach (var prop in props)
+            {
+                if (_idleViews.Exists(v => v.Track.ObjectName == prop.ObjectName))
+                {
+                    continue;
+                }
+
+                var track = prop.ToTrack();
+                var root = new GameObject(_spec.Character + "Idle_" + prop.ObjectName);
+                root.transform.SetParent(_actor, false);
+                var view = new TrackView(track, root);
+                if (prop.Bone.Length > 0)
+                {
+                    if (_bones.TryGetValue(prop.Bone, out var bone))
+                    {
+                        view.Bone = bone;
+                    }
+                    else
+                    {
+                        Debug.LogError(_spec.Character + " idle attach bone missing. " + prop.Bone);
+                    }
+                }
+
+                if (track.HasMesh)
+                {
+                    view.Mesh = LoadProp(track, root);
+                }
+
+                if (view.Bone != null)
+                {
+                    var key = track.Frames[0];
+                    var worldPos = WorldPoint(key);
+                    var worldRot = WorldRotation(key);
+                    view.BoneLocalPos = view.Bone.InverseTransformPoint(worldPos);
+                    view.BoneLocalRot = Quaternion.Inverse(view.Bone.rotation) * worldRot;
+                    view.BoneBound = true;
+                    Place(view, key);
+                    // Ride the bone directly so rest and walk carry the prop with no per-frame update.
+                    root.transform.SetParent(view.Bone, true);
+                }
+
+                _idleViews.Add(view);
+                root.SetActive(true);
+                SetShown(view, true, true);
+            }
+        }
+
+        /// <summary>Shows or hides rest/walk props. Call false before the attack plays so nothing doubles.</summary>
+        public void SetIdlePropsVisible(bool visible)
+        {
+            foreach (var view in _idleViews)
+            {
+                if (view.Root != null)
+                {
+                    view.Root.SetActive(visible);
+                }
+
+                SetShown(view, visible, !visible);
+            }
+        }
+
         public void Dispose()
         {
             foreach (var view in _views)
@@ -240,6 +319,15 @@ namespace Survival.Unity
             }
 
             _views.Clear();
+            foreach (var view in _idleViews)
+            {
+                if (view.Root != null)
+                {
+                    Object.Destroy(view.Root);
+                }
+            }
+
+            _idleViews.Clear();
             if (_additive != null)
             {
                 Object.Destroy(_additive);
