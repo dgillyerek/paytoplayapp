@@ -3,6 +3,8 @@ using Survival.Domain.Roster;
 namespace Survival.Domain.Enemies
 {
     /// <summary>
+    /// ThemePack rest/walk/attack are the Design cloth split (clothsplit_20261007, 50 bones): BoneNames are the 22
+    /// body bones, bound by name; the cloth chains are in VesperaClothSplit and move only via ClothSpringRig.
     /// Vespera Design Blender rig. Mixamo-compatible mixamorig, 22 bones.
     /// Rest is the bind pose. Walk is a 1 second Scene take at 30 fps
     /// (FBX LocalStop 46186158000 ticks). Reject VESPERA_rig.fbx.

@@ -11,7 +11,10 @@ namespace Survival.Domain.Enemies
     public static class VesperaAttack
     {
         public const string FileName = "VESPERA_blenderig_attack.fbx";
-        public const string FileMd5 = "082b741eae52d9144a612566380766bc";
+        /// <summary>ThemePack attack FBX: Design clothsplit_20261007 VESPERA_clothsplit_attack.fbx (body bones only, cloth at rest).</summary>
+        public const string FileMd5 = "c0abe43d57027edef1879a283efcd8f7";
+        /// <summary>Original attack FBX in VesperaAttack.DesignDir (attack_20261007), unchanged.</summary>
+        public const string DesignFileMd5 = "082b741eae52d9144a612566380766bc";
         public const string DesignDir = "design/survival-theme-a-fantasy/enemies/anim/vespera/attack_20261007";
         public const int ReleaseFrame = 13;
         public const bool InPlace = false;
