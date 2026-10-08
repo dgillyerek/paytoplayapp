@@ -4,6 +4,7 @@ using UnityEngine;
 namespace Survival.Unity
 {
     /// <summary>
+    /// Design cloth split (clothsplit_20261007): cloth chains driven by ClothSpringRig springs + leg colliders, bound by name.
     /// Oakenshield rest bind pose and walk clip. Mixamorig humanoid when the avatar
     /// validates, otherwise Generic. Rejects OAKENSHIELD_rig.fbx. Does not bake axis
     /// conversion or rewrite the imported root.
@@ -20,7 +21,7 @@ namespace Survival.Unity
 
         public void Build()
         {
-            _player = new BlenderRigPlayer(OakenshieldMotion.Spec, transform, OakenshieldAttack.Spec);
+            _player = new BlenderRigPlayer(OakenshieldMotion.Spec, transform, OakenshieldAttack.Spec, OakenshieldClothSplit.Spec);
             _player.Build();
         }
 

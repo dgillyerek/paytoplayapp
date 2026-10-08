@@ -98,6 +98,6 @@ ModelImporter:
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Oakenshield Design Blender mixamorig. 22 bones. Rest pose. Humanoid if the avatar validates, else Generic. bakeAxisConversion 0. useFileScale 0. Embedded basecolor+normal. HOLD merge.
+  userData: Oakenshield Design clothsplit_20261007 rest (OAKENSHIELD_clothsplit.fbx, MD5 6d754014dd09a23ad616378a70826b14). 36 bones: 22 mixamorig body + cloth chains on Spine, bound by name. Cloth never keyed; ClothSpringRig drives it. Humanoid only if mapped by name, else Generic. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

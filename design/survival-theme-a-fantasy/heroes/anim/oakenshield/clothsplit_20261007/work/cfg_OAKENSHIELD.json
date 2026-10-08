@@ -1,0 +1,3 @@
+{"name":"OAKENSHIELD","anim_dir":"heroes/anim/oakenshield","rig_blend":"heroes/anim/oakenshield/blender_rig/OAKENSHIELD_blenderig.blend",
+ "attack_blend":"heroes/anim/oakenshield/attack_20261007/OAKENSHIELD_attack_work.blend",
+ "prefix":{"F":"leaf_F","FL":"vine_FL","L":"vine_L","FR":"vine_FR","R":"vine_R","BL":"leaf_BL","B":"leaf_B","BR":"leaf_BR"}}

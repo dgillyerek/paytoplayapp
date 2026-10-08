@@ -11,7 +11,10 @@ namespace Survival.Domain.Heroes
     public static class OakenshieldAttack
     {
         public const string FileName = "OAKENSHIELD_blenderig_attack.fbx";
-        public const string FileMd5 = "3fe681bc07658c519dbc1e903614c766";
+        /// <summary>ThemePack attack FBX: Design clothsplit_20261007 OAKENSHIELD_clothsplit_attack.fbx (body bones only, cloth at rest).</summary>
+        public const string FileMd5 = "769543a3e39321857dc50e734aadffd2";
+        /// <summary>Original attack FBX in OakenshieldAttack.DesignDir (attack_20261007), unchanged.</summary>
+        public const string DesignFileMd5 = "3fe681bc07658c519dbc1e903614c766";
         public const string DesignDir = "design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007";
         public const int ReleaseFrame = 14;
         public const bool InPlace = false;
