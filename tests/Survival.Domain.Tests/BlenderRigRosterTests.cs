@@ -34,7 +34,7 @@ public sealed class BlenderRigRosterTests
             "NIGHTFANG_normal_2",
             "toe_h.L",
             "5a612f20bf58466c8634f45803244d4f",
-            "Survival/Nightfang Demo (rest + trot, Game view 1080x1920)");
+            "Survival/Nightfang Demo (rest + trot + attack, Game view 1080x1920)");
     }
 
 
@@ -70,7 +70,7 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
 
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains("Survival/Nightfang Demo (rest + trot, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.Contains("Survival/Nightfang Demo (rest + trot + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         Assert.Contains("Nightfang.unity", editor, StringComparison.Ordinal);
     }
 

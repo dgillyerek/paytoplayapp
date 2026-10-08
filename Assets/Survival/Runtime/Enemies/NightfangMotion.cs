@@ -15,6 +15,8 @@ namespace Survival.Domain.Enemies
         public const string TrotFileName = "NIGHTFANG_blenderig_trot.fbx";
         public const string RestThemePackRel = ThemePackDir + "/" + RestFileName;
         public const string TrotThemePackRel = ThemePackDir + "/" + TrotFileName;
+        public const string AttackPoseName = BlenderRigAttackSpec.PoseName;
+        public const string AttackFileName = NightfangAttack.FileName;
         public const string RejectedMixamoFileName = "NIGHTFANG_rig.fbx";
 
         public const string RestPoseName = BlenderRigSpec.RestPoseName;
@@ -31,7 +33,7 @@ namespace Survival.Domain.Enemies
 
         public const string BoneRoot = "root";
 
-        public static readonly string[] PoseNames = { RestPoseName, TrotPoseName };
+        public static readonly string[] PoseNames = { RestPoseName, TrotPoseName, AttackPoseName };
 
         public static readonly string[] BoneNames =
         {
@@ -62,6 +64,16 @@ namespace Survival.Domain.Enemies
             TextureFolder,
             BaseColorFile,
             NormalFile,
-            "");
+            "",
+            new[]
+            {
+                new BlenderRigClip(
+                    AttackPoseName,
+                    AttackFileName,
+                    BlenderRigAttackSpec.TakeName,
+                    BlenderRigAttackSpec.ClipSeconds,
+                    BlenderRigAttackSpec.FrameRate,
+                    BlenderRigAttackSpec.LastFrame)
+            });
     }
 }

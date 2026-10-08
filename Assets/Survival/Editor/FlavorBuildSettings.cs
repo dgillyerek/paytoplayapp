@@ -62,7 +62,7 @@ namespace Survival.Editor
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Emberfang);
         }
 
-        [MenuItem("Survival/Nightfang Demo (rest + trot, Game view 1080x1920)")]
+        [MenuItem("Survival/Nightfang Demo (rest + trot + attack, Game view 1080x1920)")]
         public static void OpenNightfangDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Nightfang);

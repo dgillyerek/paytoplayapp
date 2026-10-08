@@ -19,7 +19,7 @@ namespace Survival.Unity
 
         public void Build()
         {
-            _player = new BlenderRigPlayer(NightfangMotion.Spec, transform);
+            _player = new BlenderRigPlayer(NightfangMotion.Spec, transform, NightfangAttack.Spec);
             _player.Build();
         }
 
