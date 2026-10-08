@@ -221,3 +221,15 @@ Derek: walk wings should swing opposite each other, like the arms, with the stri
 **Unchanged files.** Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Mesh still 99649 verts / 199427 faces. Export `FBX_SCALE_NONE`, `UnitScaleFactor` 1, rig scale 100. Unity was not run.
 
 MD5: blend `d7d38f857c4317fe98529e07e264f743`, flap `29380f058b6c70b228a8d15b438937ca`, walk `490e574a13f505202af9c468a9f38a0e`. **HOLD merge.**
+
+## Derek Game-view on 9a860fb — flap plane at 45°
+
+Derek: the flap is too parallel to the ground. Set the wing plane to about 45° (mean `wing_f1` ~45° above horizontal) and give it a bigger eased stroke, raised at the top and below the shoulders at the bottom, without crossing over the head. Walk, rest, attack, and the mesh stay.
+
+The stroke is one eased beat. It crests at 67.4° (wingtips stay outboard of the skull, about 0.55 m above the shoulder) and eases down to −8.6° (tips about 9 cm below the shoulder in the reimport), then eases back up. Both sides match.
+
+**Reimport** (Blender 4.2.3, frames 1–30): `wing_f1` **−8.63° to 67.38° above horizontal, mean 45.00°**, left and right. Tip vertical travel 0.646 m (left) and 0.744 m (right). Leg, arm, spine, and tail curves match 9a860fb exactly (max abs 0). `FBX_SCALE_NONE`, `UnitScaleFactor` 1, rig scale 100.
+
+**Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
+
+MD5: blend `bd32eeb99fbde2aad3faa71f8b1c40f1`, flap `a63f63b4ca464bbe8a110e58eb2671b1`. **HOLD merge.**

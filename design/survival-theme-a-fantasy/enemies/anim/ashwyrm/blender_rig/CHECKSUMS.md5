@@ -1,9 +1,10 @@
-d7d38f857c4317fe98529e07e264f743  ASHWYRM_blenderig.blend
+bd32eeb99fbde2aad3faa71f8b1c40f1  ASHWYRM_blenderig.blend
 f1f9f937f2961ce185eb2d942d91d595  ASHWYRM_blenderig.fbx
-29380f058b6c70b228a8d15b438937ca  ASHWYRM_blenderig_wingflap.fbx
+a63f63b4ca464bbe8a110e58eb2671b1  ASHWYRM_blenderig_wingflap.fbx
 490e574a13f505202af9c468a9f38a0e  ASHWYRM_blenderig_walk.fbx
 # 2026-10-08 Derek Game-view on b391b49: tail-tip spike removed, so rest/flap/walk/attack all re-exported from this mesh.
 # Attack animation curves match b0d240cc17cf79af0af3ed22be5f07ef within 5e-5. New attack file MD5 9dc8b9a2d2083290b6a369129a6469b3.
 # Export FBX_SCALE_NONE (UnitScaleFactor 1, ASHWYRM_rig scale 100). HOLD merge.
 # 2026-10-08 Derek on 44b9044: walk wings counter-swing; flap wings ~15 deg off horizontal.
 # Rest f1f9f937f2961ce185eb2d942d91d595 and attack 9dc8b9a2d2083290b6a369129a6469b3 byte-identical.
+# 2026-10-08 Derek on 9a860fb: flap only, mean wing_f1 45 deg. Walk 490e574a13f505202af9c468a9f38a0e byte-identical.
