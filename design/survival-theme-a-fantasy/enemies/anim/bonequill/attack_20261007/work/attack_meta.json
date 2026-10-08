@@ -1,0 +1,175 @@
+{
+  "name": "BONEQUILL",
+  "blender": "4.3.2",
+  "blend": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/blender_rig/BONEQUILL_blenderig.blend",
+  "action": "BONEQUILL_attack",
+  "frames": [
+    0,
+    30
+  ],
+  "fps": 30,
+  "export_mode": "rebake",
+  "attack_fbx": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/BONEQUILL_blenderig_attack.fbx",
+  "props": {
+    "bow": {
+      "object": "BONEQUILL_bow",
+      "fbx": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/BONEQUILL_bow.fbx",
+      "faces": 350
+    },
+    "arrow": {
+      "object": "BONEQUILL_bonearrow_purple_fletch",
+      "fbx": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/BONEQUILL_bonearrow_purple_fletch.fbx",
+      "faces": 67
+    },
+    "trail": {
+      "object": "BONEQUILL_arrow_trail_vfx",
+      "fbx": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/BONEQUILL_arrow_trail_vfx.fbx",
+      "faces": 100
+    }
+  },
+  "props_blend": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/BONEQUILL_attack_props.blend",
+  "drivers": [
+    {
+      "kind": "held",
+      "bone": "mixamorig:RightHand",
+      "ref_frame": 14,
+      "note": "bow grip in RightHand; vertical at strike frame",
+      "object": "BONEQUILL_bow",
+      "offset_bone_local": {
+        "loc": [
+          -5.960464477539063e-08,
+          0.08297872543334961,
+          2.2351741790771484e-08
+        ],
+        "quat_wxyz": [
+          0.6102697253227234,
+          0.03460327908396721,
+          -0.18233247101306915,
+          -0.7701482772827148
+        ],
+        "scale": [
+          1.0000003576278687,
+          1.0000001192092896,
+          0.9999998807907104
+        ]
+      }
+    },
+    {
+      "kind": "held",
+      "bone": "mixamorig:RightHand",
+      "ref_frame": 14,
+      "show": [
+        5,
+        13
+      ],
+      "note": "cursed bone arrow materialises nocked on the bow f5-9 (no draw hand: left hand is skinned to LeftUpLeg on this rig)",
+      "object": "BONEQUILL_bonearrow_purple_fletch",
+      "offset_bone_local": {
+        "loc": [
+          0.5699193477630615,
+          -0.05303744971752167,
+          0.20369499921798706
+        ],
+        "quat_wxyz": [
+          0.6102697253227234,
+          0.03460327908396721,
+          -0.18233247101306915,
+          -0.7701482772827148
+        ],
+        "scale": [
+          1.0000003576278687,
+          1.0000001192092896,
+          0.9999998807907104
+        ]
+      }
+    },
+    {
+      "kind": "proj",
+      "release": 14,
+      "speed": 14.0,
+      "note": "bone arrow flies character-forward from nock pose",
+      "object": "BONEQUILL_bonearrow_purple_fletch_inflight",
+      "spawn_world_at_release": {
+        "loc": [
+          -0.4681490361690521,
+          0.4059726595878601,
+          1.0258686542510986
+        ],
+        "quat_wxyz": [
+          1.0,
+          -5.587935447692871e-09,
+          3.7252894102834944e-09,
+          2.7939677238464355e-09
+        ]
+      }
+    },
+    {
+      "kind": "proj",
+      "release": 14,
+      "speed": 14.0,
+      "note": "purple trail follows arrow nock",
+      "object": "BONEQUILL_arrow_trail_vfx",
+      "spawn_world_at_release": {
+        "loc": [
+          -0.4681490361690521,
+          0.4059726595878601,
+          1.0258686542510986
+        ],
+        "quat_wxyz": [
+          1.0,
+          -5.587935447692871e-09,
+          3.7252894102834944e-09,
+          2.7939677238464355e-09
+        ]
+      }
+    }
+  ],
+  "look_renders": [
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/stills/look_bow_0.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/stills/look_bow_1.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/stills/look_arrow_0.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/stills/look_arrow_1.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/stills/look_trail_0.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/stills/look_trail_1.png"
+  ],
+  "qc": {
+    "anticipation_rear": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/stills/qc_anticipation_f09_rear.png",
+    "anticipation_side": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/stills/qc_anticipation_f09_side.png",
+    "strike_rear": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/stills/qc_strike_f14_rear.png",
+    "strike_side": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/stills/qc_strike_f14_side.png",
+    "strike_q34front": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/stills/qc_strike_f14_q34front.png",
+    "release_rear": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/stills/qc_release_f14_rear.png",
+    "release_side": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/stills/qc_release_f14_side.png",
+    "inflight_rear": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/stills/qc_inflight_f17_rear.png",
+    "inflight_side": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/stills/qc_inflight_f17_side.png",
+    "inflight_q34front": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/stills/qc_inflight_f17_q34front.png",
+    "follow_rear": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/stills/qc_follow_f20_rear.png",
+    "follow_side": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/stills/qc_follow_f20_side.png"
+  },
+  "contact_frames": [
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f00_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f00_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f03_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f03_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f06_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f06_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f09_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f09_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f12_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f12_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f15_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f15_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f18_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f18_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f21_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f21_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f24_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f24_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f27_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f27_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f30_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames/c_f30_side.png"
+  ],
+  "vframes": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/work_frames",
+  "work_blend": "/workspace/design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007/BONEQUILL_attack_work.blend"
+}

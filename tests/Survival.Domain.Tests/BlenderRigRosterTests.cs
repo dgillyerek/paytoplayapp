@@ -28,7 +28,7 @@ public sealed class BlenderRigRosterTests
             "BONEQUILL_basecolor_0",
             "BONEQUILL_normal_2",
             "e5bda4227e47499985f4e0ecd1e4eb3c",
-            "Survival/Bonequill Demo (rest + walk, Game view 1080x1920)");
+            "Survival/Bonequill Demo (rest + walk + attack, Game view 1080x1920)");
     }
 
 
@@ -64,7 +64,7 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
 
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains("Survival/Bonequill Demo (rest + walk, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.Contains("Survival/Bonequill Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         Assert.Contains("Bonequill.unity", editor, StringComparison.Ordinal);
     }
 

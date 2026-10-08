@@ -62,7 +62,7 @@ namespace Survival.Editor
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Emberfang);
         }
 
-        [MenuItem("Survival/Bonequill Demo (rest + walk, Game view 1080x1920)")]
+        [MenuItem("Survival/Bonequill Demo (rest + walk + attack, Game view 1080x1920)")]
         public static void OpenBonequillDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Bonequill);

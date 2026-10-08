@@ -20,7 +20,7 @@ namespace Survival.Unity
 
         public void Build()
         {
-            _player = new BlenderRigPlayer(BonequillMotion.Spec, transform);
+            _player = new BlenderRigPlayer(BonequillMotion.Spec, transform, BonequillAttack.Spec);
             _player.Build();
         }
 
