@@ -180,3 +180,32 @@ Wing flap, bone-head peak-to-peak: wing tips dZ 0.342 / 0.396 m (f4e4ead was 0.3
 Walk, bone-head peak-to-peak: tail_06 dX 0.210 m (f4e4ead 0.066). thigh/shin stride kept (shin.L dY 0.208 m, was 0.184). Spine euler spans X 4.30° / Y 5.07° / Z 10.16° (f4e4ead 4.92° / 0.78° / 4.00°). Root still locked. Wing bones stay at identity; their small head travel is the spine carrying them.
 
 MD5: flap `139c1d3e11622aa5eeaf6436c23ce660`, walk `52b6a4b53ace591cafd19ad8a7c70c50`. Blend unchanged `d26062494346447bebf68fd1bab28d4c`. Rest still `a432672643153588f2e50cb4e24927b8`. Attack still `b0d240cc17cf79af0af3ed22be5f07ef`. **HOLD merge.**
+
+## Derek Game-view on b391b49 (2026-10-08) — looser upper body, flatter flap, tail tip
+
+Derek: the walk upper body (spine, wings, head) rotated as one block. Reduce that a little and offset head, spine, and wings so they follow each other. Wings may sway a little instead of staying at identity. Arms, legs, and tail stay as passed. Wing flap should read more horizontal through the downstroke, keeping the slight leg, arm, and head motion. A stray tail-tip spike that juts back and up comes off the mesh. Attack motion stays the passed clip. Export `FBX_SCALE_NONE`.
+
+There is no neck bone. The snout rides `spine`. Overlap is spine yaw leading, roll two frames later, pitch (the snout) four frames later, each at 0.86 of the b391b49 amplitude. Wing roots lag that spine by six frames at half strength (about 6° local). The arm and the fingers take a smaller, later share of that drag so the membrane is not one rigid panel. Arm, leg, and tail world aim is restored onto the new spine; their bends stay within 0.03° of b391b49. The hip and the tail socket still shift with the spine (max 1.44 cm at the thigh, 1.25 cm along the tail) because those bones are parented to it.
+
+**Mesh.** 272 verts past `tail_06`, continuing back and up from the tip, deleted. The 32-edge hole is one cap face with a borrowed boundary UV. Body is 99649 verts / 199427 faces (was 99921 / 199999). Packed images are byte-identical (`ASHWYRM_basecolor_0` `541ffa273bde961e96d87f0123fe84f9`, metal-rough `ef784e788ac96566aa84e14a6bd0a1c7`, normal `ddf337b3dda03151b34feff3b7a96db4`).
+
+**Wing flap.** `wing_f1.L` direction Z was +0.65 to −0.89 (steep downstroke). It is now +0.38 to −0.28, with X staying 0.92–0.99, so the spread stays outward and the downstroke stays near level. Non-wing keys are unchanged (max delta 0). Reimport bone-head travel of thighs, shins, arms, spine, and tail matches b391b49 within 0.03°. Wing-tip head dZ is 0.150 / 0.173 m (was 0.342 / 0.396).
+
+**Walk** (Blender 4.2.3 reimport, frames 1–31, bone-head travel vs b391b49):
+
+| | b391b49 | this export |
+|---|---|---|
+| shin.L forward span / peak | 0.208 m / f8 | 0.192 m / f9 |
+| shin.L aim vs b391b49 | — | 0.03° |
+| tail_06 lateral / forward span | 0.210 / 0.330 m, peaks f23 / f12 | 0.208 / 0.335 m, same peaks |
+| tail_06 aim vs b391b49 | — | 0.03° |
+| forearm.L path | 0.030 m forward | 0.030 m, aim 0.03° |
+| snout X / Z peak | f18 / f8 | f16 / f12 |
+| wing_root.L local | identity | 6.0° |
+| wing_f1.L direction vs rigid pose | — | 9.1° |
+
+**Attack.** Same mesh. 93 rotation channels, 2883 samples, max abs error vs `b0d240cc17cf79af0af3ed22be5f07ef` is 4.6e-5 on `wing_inner.R` Lcl Rotation Z. Translation max 2.4e-7, scale max 4.6e-6. Same 31 keys, take Scene.
+
+**Scale.** `FBX_SCALE_NONE`, `apply_unit_scale` on, scene in meters. All four FBXs: `UnitScaleFactor` 1, `ASHWYRM_rig` and `ASHWYRM_body` Lcl Scaling 100, 100, 100. Rest has no animation curves. Flap, walk, and attack keep a scale curve of 100 on the rig. Unity was not run; this is the same headless reimport as the scale fix, not a Game-view pass.
+
+MD5: blend `01bef02707494e480f3c04e09ba111bc`, rest `f1f9f937f2961ce185eb2d942d91d595`, flap `d0def08faa525437f8d27bcb52d139e3`, walk `b7137b2d687efb4ad7408cf7d94b6492`, attack `9dc8b9a2d2083290b6a369129a6469b3`. Theme Pack matches the design FBXs. **HOLD merge.**

@@ -7,12 +7,12 @@ namespace Survival.Domain.Enemies
     /// New 0–30 frame Scene take at 30 fps on the existing blenderig (same bones, no rebind; rest and walk unchanged).
     /// Frames below are baked from Design attack_meta drivers in Unity convention (character forward = +Z).
     /// Prop VFX meshes are look reference only; Unity draws its own particles.
-    /// Attack is Derek Game-view PASS (2026-10-07). Wing flap and walk still await Game-view.
+    /// Attack motion is Derek Game-view PASS (2026-10-07). The 2026-10-08 tail-tip mesh fix re-exported this FBX; animation curves match that pass. Wing flap and walk still await Game-view.
     /// </summary>
     public static class AshwyrmAttack
     {
         public const string FileName = "ASHWYRM_blenderig_attack.fbx";
-        public const string FileMd5 = "b0d240cc17cf79af0af3ed22be5f07ef";
+        public const string FileMd5 = "9dc8b9a2d2083290b6a369129a6469b3";
         public const string DesignDir = "design/survival-theme-a-fantasy/enemies/anim/ashwyrm/attack_20261007";
         public const int ReleaseFrame = 14;
         public const bool InPlace = false;

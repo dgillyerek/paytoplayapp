@@ -35,9 +35,9 @@ public sealed class AshwyrmAttackTests
         var root = FindRepoRoot();
         var pack = Path.Combine(root, "Assets", AshwyrmMotion.ThemePackDir);
         var design = Path.Combine(root, AshwyrmAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
-        Assert.Equal("b0d240cc17cf79af0af3ed22be5f07ef", AshwyrmAttack.FileMd5);
-        Assert.Equal("b0d240cc17cf79af0af3ed22be5f07ef", Md5(Path.Combine(pack, AshwyrmAttack.FileName)));
-        Assert.Equal("b0d240cc17cf79af0af3ed22be5f07ef", Md5(Path.Combine(design, AshwyrmAttack.FileName)));
+        Assert.Equal("9dc8b9a2d2083290b6a369129a6469b3", AshwyrmAttack.FileMd5);
+        Assert.Equal("9dc8b9a2d2083290b6a369129a6469b3", Md5(Path.Combine(pack, AshwyrmAttack.FileName)));
+        Assert.Equal("9dc8b9a2d2083290b6a369129a6469b3", Md5(Path.Combine(design, AshwyrmAttack.FileName)));
 
         Assert.Equal(AshwyrmAttack.PropFileNames.Length, AshwyrmAttack.PropFileMd5s.Length);
         for (var i = 0; i < AshwyrmAttack.PropFileNames.Length; i++)
@@ -66,10 +66,10 @@ public sealed class AshwyrmAttackTests
             }
         }
 
-        // Rest and attack stay byte-identical. Flap and walk are the 2026-10-08 re-export.
-        Assert.Equal("a432672643153588f2e50cb4e24927b8", Md5(Path.Combine(pack, "ASHWYRM_blenderig.fbx")));
-        Assert.Equal("52b6a4b53ace591cafd19ad8a7c70c50", Md5(Path.Combine(pack, "ASHWYRM_blenderig_walk.fbx")));
-        Assert.Equal("139c1d3e11622aa5eeaf6436c23ce660", Md5(Path.Combine(pack, "ASHWYRM_blenderig_wingflap.fbx")));
+        // 2026-10-08 tail-tip mesh fix re-exported rest, flap, and walk with the attack.
+        Assert.Equal("f1f9f937f2961ce185eb2d942d91d595", Md5(Path.Combine(pack, "ASHWYRM_blenderig.fbx")));
+        Assert.Equal("b7137b2d687efb4ad7408cf7d94b6492", Md5(Path.Combine(pack, "ASHWYRM_blenderig_walk.fbx")));
+        Assert.Equal("d0def08faa525437f8d27bcb52d139e3", Md5(Path.Combine(pack, "ASHWYRM_blenderig_wingflap.fbx")));
     }
 
     [Fact]

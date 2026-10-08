@@ -1,6 +1,7 @@
-d26062494346447bebf68fd1bab28d4c  ASHWYRM_blenderig.blend
-a432672643153588f2e50cb4e24927b8  ASHWYRM_blenderig.fbx
-139c1d3e11622aa5eeaf6436c23ce660  ASHWYRM_blenderig_wingflap.fbx
-52b6a4b53ace591cafd19ad8a7c70c50  ASHWYRM_blenderig_walk.fbx
-# rest FBX unchanged. attack FBX b0d240cc17cf79af0af3ed22be5f07ef unchanged (Derek Game-view PASS 2026-10-07).
-# flap and walk re-exported 2026-10-08 (FBX_SCALE_NONE, armature scale 100) so Unity drives the rest rig. Awaiting Game-view.
+01bef02707494e480f3c04e09ba111bc  ASHWYRM_blenderig.blend
+f1f9f937f2961ce185eb2d942d91d595  ASHWYRM_blenderig.fbx
+d0def08faa525437f8d27bcb52d139e3  ASHWYRM_blenderig_wingflap.fbx
+b7137b2d687efb4ad7408cf7d94b6492  ASHWYRM_blenderig_walk.fbx
+# 2026-10-08 Derek Game-view on b391b49: tail-tip spike removed, so rest/flap/walk/attack all re-exported from this mesh.
+# Attack animation curves match b0d240cc17cf79af0af3ed22be5f07ef within 5e-5. New attack file MD5 9dc8b9a2d2083290b6a369129a6469b3.
+# Export FBX_SCALE_NONE (UnitScaleFactor 1, ASHWYRM_rig scale 100). HOLD merge.
