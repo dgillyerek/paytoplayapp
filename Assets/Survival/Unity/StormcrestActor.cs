@@ -4,8 +4,8 @@ using UnityEngine;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Stormcrest rest bind pose and walk clip. Mixamorig humanoid when the avatar
-    /// validates, otherwise Generic. Rejects STORMCREST_rig.fbx. Does not bake axis
+    /// Stormcrest rest bind pose plus wing flap, walk, and attack. Custom Generic
+    /// on Derek's skeleton. Rejects STORMCREST_rig.fbx. Does not bake axis
     /// conversion or rewrite the imported root.
     /// </summary>
     [DefaultExecutionOrder(200)]

@@ -1,28 +1,50 @@
 {
+  "blender": "5.2.2",
+  "ignore_leaf_bones": false,
+  "unit_scale_factor": 100.0,
+  "armature_scale_every_frame": [1.0, 1.0, 1.0],
+  "bone_count": 45,
   "same_bone_names_and_order": true,
-  "bone_count": [
-    22,
-    22
-  ],
-  "max_rest_head_delta_m": 0.0,
-  "faces": [
-    200000,
-    200000
-  ],
-  "same_vgroups": true,
-  "attack_action": "STORMCREST_rig|Scene",
-  "attack_frames": [
-    1.0,
-    31.0
-  ],
-  "attack_endpose_deg": {
-    "1": 0,
-    "31": 0
+  "rest": {
+    "action": null,
+    "travel_m": 0.0,
+    "loop_m": 0.0,
+    "wing_tip_z_m": [0.355, 0.961]
   },
-  "attack_max_bone_travel_m": 0.3421436461905316,
-  "walk_same_bones": true,
-  "walk_frames": [
-    1.0,
-    31.0
-  ]
+  "walk": {
+    "action": "STORMCREST_rig|Scene",
+    "frames": [1, 31],
+    "loop_m": 0.0,
+    "wing_tip_z_m": [0.274, 0.828],
+    "wing_feather_b_y_corr": -0.9992,
+    "wing_feather_b_L_dy_m": [-0.096, 0.098],
+    "wing_feather_b_R_dy_m": [-0.089, 0.074],
+    "spine_travel_m": 0.022,
+    "spine_z_m": [0.556, 0.559],
+    "toe_L_z_m": [0.041, 0.101],
+    "toe_R_z_m": [0.069, 0.129],
+    "tail_04_travel_m": 0.247
+  },
+  "wingflap": {
+    "action": "STORMCREST_rig|Scene",
+    "frames": [1, 31],
+    "loop_m": 0.0,
+    "wing_tip_z_m": [0.178, 1.045],
+    "wing_feather_b_y_corr": 0.9999,
+    "spine_travel_m": 0.010,
+    "toe_L_z_m": [0.038, 0.045]
+  },
+  "attack": {
+    "action": "STORMCREST_rig|Scene",
+    "frames": [1, 31],
+    "loop_m": 0.0,
+    "end_pose_matches_rest": true,
+    "wing_tip_z_m": [0.233, 1.175],
+    "wing_feather_b_y_corr": 0.9969,
+    "wing_feather_b_L_dy_m": [-0.244, 0.183],
+    "wing_feather_b_R_dy_m": [-0.259, 0.150],
+    "head_travel_m": 0.131,
+    "spine_travel_m": 0.040,
+    "max_listed_bone_head_travel_m": 0.323
+  }
 }

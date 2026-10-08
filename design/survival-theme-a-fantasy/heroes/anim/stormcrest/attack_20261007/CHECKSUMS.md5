@@ -1,10 +1,10 @@
-67733b4fb599d10ff272bc61f8893bf8  NOTE.md
+f5ca30f09ad4300a1196e5e902a23d73  NOTE.md
 b91d76d093668bb028560905167c676b  STORMCREST_attack_contact.jpg
 baa73ee9fea27ca60adc648a40788ed2  STORMCREST_attack_looksheet.png
 645e167e5256b17bc37bc585048ee7b0  STORMCREST_attack_preview_rear.mp4
 8abe14989e039fa3e48615e4cdf3bcbc  STORMCREST_attack_props.blend
 6f4167de6148dcad4a4d68557a181177  STORMCREST_attack_work.blend
-48acf6540852f78175b2cda1a89b4ceb  STORMCREST_blenderig_attack.fbx
+9bae7b662f48a1c1eec33fafc0fed6d2  STORMCREST_blenderig_attack.fbx
 2ab650e8aaf130d1e86e76a5dc0fc5b4  STORMCREST_stormbolt_vfx.fbx
 768afbe75f652a8f18b7b2fed3612093  stills/look_bolt_0.png
 1de99715dbd427a525e77e70d945a473  stills/look_bolt_1.png
@@ -20,9 +20,10 @@ e0803737c14dbd70a93d218c87a74eb9  stills/qc_follow_f21_rear.png
 6158eca06ce14a36e52277f6c54cde18  stills/qc_strike_f14_q34front.png
 addd8c4a7a7ec057597fe886edf86e1a  stills/qc_strike_f14_rear.png
 bef6b53bfd6534b89b951260f6306dfd  stills/qc_strike_f14_side.png
-fca1169b8689584661954e409ab82d1f  work/attack_meta.json
-a85d8044de299621f9a3a1b6d6e57a1b  work/verify_fbx.json
-# built on (unchanged, verified before/after)
-54e082c1da274aadbcfb1691607450ce  heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig.blend
-f883e552eb1fdfd69dae953bb506e94b  heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig.fbx
-bab9c62ff5d60edb9e9b109c0edffa1f  heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig_walk.fbx
+9d0e9b638fca43198b6b03fe97df2edd  work/attack_meta.json
+4912057d27b374d67e4a3b70cb53d0d9  work/verify_fbx.json
+# built on Derek's rig (copies live in blender_rig/, not in this folder)
+afea32f84fb33d1e13a339abea29f774  heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig.blend
+35dc5e9c396281225ca4734646bdd964  heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig.fbx
+f5efc9d99a8eef90755511748ed8c0a2  heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig_walk.fbx
+8abcc49e79a36eb73cbd1c7dd8d9c5a0  heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig_wingflap.fbx

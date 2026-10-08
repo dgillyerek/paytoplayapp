@@ -3,15 +3,16 @@ using Survival.Domain.Roster;
 namespace Survival.Domain.Heroes
 {
     /// <summary>
-    /// Stormcrest Theme A attack add-on (Design 2026-10-07). Storm Bolt — jagged blue-white lightning from the beak (2.6 m reach, f14–20) with gold sparks.
-    /// New 0–30 frame Scene take at 30 fps on the existing blenderig (same bones, no rebind; rest and walk unchanged).
-    /// Frames below are baked from Design attack_meta drivers in Unity convention (character forward = +Z).
-    /// Prop VFX meshes are look reference only; Unity draws its own particles. HOLD merge until Derek Game-view PASS.
+    /// Stormcrest Theme A attack (Design 2026-10-07 concept, retargeted onto Derek's rig).
+    /// Wing Buffet / Storm Bolt — jagged blue-white lightning from the beak (2.76 m, visible f14–19).
+    /// Fresh 0–30 Scene take at 30 fps. Starts and ends at rest. Body bones only. No cloth.
+    /// Frames are Unity convention (character forward = +Z). Prop meshes are look reference; Unity draws particles.
+    /// HOLD merge until Derek Game-view PASS.
     /// </summary>
     public static class StormcrestAttack
     {
         public const string FileName = "STORMCREST_blenderig_attack.fbx";
-        public const string FileMd5 = "48acf6540852f78175b2cda1a89b4ceb";
+        public const string FileMd5 = "9bae7b662f48a1c1eec33fafc0fed6d2";
         public const string DesignDir = "design/survival-theme-a-fantasy/heroes/anim/stormcrest/attack_20261007";
         public const int ReleaseFrame = 14;
         public const bool InPlace = false;
@@ -34,8 +35,14 @@ namespace Survival.Domain.Heroes
             DesignDir,
             ReleaseFrame,
             InPlace,
-            new[] { "mixamorig:Hips", "mixamorig:Head", "mixamorig:LeftHand", "mixamorig:RightHand" },
-            new[] { -0.0234f, 0.62743f, 0.60981f, 0f, 0.99541f, 0.74974f, -0.84536f, 0.81137f, -0.05129f, 0.80947f, 0.73399f, 0.61217f },
+            new[] { "hips", "head", "toe.L", "toe.R" },
+            new[]
+            {
+                -0.15729f, 0.56257f, 0.69701f,
+                -0.18242f, 0.79596f, 0.69561f,
+                0.00011f, 0.04356f, 0.70101f,
+                -0.3467f, 0.07142f, 0.65785f
+            },
             new[]
             {
                 new AttackTrack(
@@ -55,39 +62,39 @@ namespace Survival.Domain.Heroes
                     new[] { 0.55285f, 0.53753f, 2.76231f },
                     new[]
                     {
-                        new AttackFrame(-0.0598f, 0.88144f, 0.75444f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 0.75444f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 0.75444f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 0.75444f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 0.75444f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 0.75444f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 0.75444f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 0.75444f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 0.75444f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 0.75444f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 0.75444f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 0.75444f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 0.75444f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 0.75444f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 0.75444f, 0f, 0f, 0f, 1f, 0.35f, true),
-                        new AttackFrame(-0.0598f, 0.88144f, 0.88777f, 0f, 0f, 0f, 1f, 0.56667f, true),
-                        new AttackFrame(-0.0598f, 0.88144f, 1.02111f, 0f, 0f, 0f, 1f, 0.78333f, true),
-                        new AttackFrame(-0.0598f, 0.88144f, 1.15444f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.0598f, 0.88144f, 1.28777f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.0598f, 0.88144f, 1.42111f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.0598f, 0.88144f, 1.55444f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.0598f, 0.88144f, 1.68777f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 1.82111f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 1.95444f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 2.08777f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 2.22111f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 2.35444f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 2.48777f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 2.62111f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 2.75444f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(-0.0598f, 0.88144f, 2.88777f, 0f, 0f, 0f, 1f, 1f, false)
+                        new AttackFrame(-0.17318f, 0.64927f, 0.9018f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 0.9018f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 0.9018f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 0.9018f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 0.9018f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 0.9018f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 0.9018f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 0.9018f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 0.9018f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 0.9018f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 0.9018f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 0.9018f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 0.9018f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 0.9018f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 0.9018f, 0f, 0f, 0f, 1f, 0.35f, true),
+                        new AttackFrame(-0.17318f, 0.64927f, 1.03513f, 0f, 0f, 0f, 1f, 0.56667f, true),
+                        new AttackFrame(-0.17318f, 0.64927f, 1.16847f, 0f, 0f, 0f, 1f, 0.78333f, true),
+                        new AttackFrame(-0.17318f, 0.64927f, 1.3018f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(-0.17318f, 0.64927f, 1.43513f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(-0.17318f, 0.64927f, 1.56847f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(-0.17318f, 0.64927f, 1.7018f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 1.83513f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 1.96847f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 2.1018f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 2.23513f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 2.36847f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 2.5018f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 2.63513f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 2.76847f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 2.9018f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(-0.17318f, 0.64927f, 3.03513f, 0f, 0f, 0f, 1f, 1f, false)
                     },
-                    "storm bolt anchored at beak vertex #35320; lightning strikes forward (2.6m reach), visible ~6 frames")
+                    "storm bolt from the beak at release f14; lightning flies character-forward at 4 m/s, visible frames 14-19")
             });
     }
 }

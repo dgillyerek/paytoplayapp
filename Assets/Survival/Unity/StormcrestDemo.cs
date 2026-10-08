@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Stormcrest Game view 1080×1920. Dropdown plays rest and walk.
+    /// Stormcrest Game view 1080×1920. Dropdown plays rest, wing flap, walk, and attack.
     /// HOLD merge until Derek Game-view PASS.
     /// </summary>
     public sealed class StormcrestDemo : BlenderRigDemo

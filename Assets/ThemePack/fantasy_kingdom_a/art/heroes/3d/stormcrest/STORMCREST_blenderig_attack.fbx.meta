@@ -121,12 +121,12 @@ ModelImporter:
     hasExtraRoot: 0
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
-  autoGenerateAvatarMappingIfUnspecified: 1
-  animationType: 3
+  autoGenerateAvatarMappingIfUnspecified: 0
+  animationType: 2
   humanoidOversampling: 1
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Stormcrest attack add-on (Design 2026-10-07). 0-30 Scene take at 30fps on the existing blenderig. MD5 48acf6540852f78175b2cda1a89b4ceb. HOLD merge.
+  userData: Stormcrest attack. Design 2026-10-07 Wing Buffet retargeted onto Derek's rig. 0-30 Scene take at 30fps. Generic, not Mixamo. MD5 9bae7b662f48a1c1eec33fafc0fed6d2. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

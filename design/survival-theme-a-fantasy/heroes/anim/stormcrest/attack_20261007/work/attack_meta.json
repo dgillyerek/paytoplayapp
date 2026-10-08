@@ -1,6 +1,6 @@
 {
   "name": "STORMCREST",
-  "blender": "4.3.2",
+  "blender": "5.2.2",
   "blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig.blend",
   "action": "STORMCREST_attack",
   "frames": [
@@ -24,13 +24,13 @@
       "release": 14,
       "speed": 4.0,
       "until": 20,
-      "note": "storm bolt anchored at beak vertex #35320; lightning strikes forward (2.6m reach), visible ~6 frames",
+      "note": "storm bolt from the beak at release f14 on Derek's rig; lightning flies character-forward at 4 m/s (2.76m), visible frames 14-19",
       "object": "STORMCREST_stormbolt_vfx",
       "spawn_world_at_release": {
         "loc": [
-          0.05979837104678154,
-          -0.7544392347335815,
-          0.8814367651939392
+          0.17318,
+          -0.9018,
+          0.64927
         ],
         "quat_wxyz": [
           1.0,

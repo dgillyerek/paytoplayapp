@@ -11,11 +11,13 @@ public sealed class StormcrestAttackTests
     public void Stormcrest_attack_is_a_new_scene_take_after_the_existing_clips()
     {
         var poses = StormcrestMotion.PoseNames;
-        Assert.Equal(3, poses.Length);
+        Assert.Equal(4, poses.Length);
         Assert.Equal("rest", poses[0]);
-        Assert.Equal("walk", poses[1]);
-        Assert.Equal("attack", poses[2]);
+        Assert.Equal("wing flap", poses[1]);
+        Assert.Equal("walk", poses[2]);
+        Assert.Equal("attack", poses[3]);
         Assert.Equal(StormcrestMotion.PoseNames, StormcrestMotion.Spec.PoseNames);
+        Assert.Equal("wing flap", StormcrestMotion.Spec.ClipPoseName);
         var clip = StormcrestMotion.Spec.ExtraClips[StormcrestMotion.Spec.ExtraClips.Length - 1];
         Assert.Equal("attack", clip.PoseName);
         Assert.Equal("STORMCREST_blenderig_attack.fbx", clip.FileName);
@@ -34,9 +36,9 @@ public sealed class StormcrestAttackTests
         var root = FindRepoRoot();
         var pack = Path.Combine(root, "Assets", StormcrestMotion.ThemePackDir);
         var design = Path.Combine(root, StormcrestAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
-        Assert.Equal("48acf6540852f78175b2cda1a89b4ceb", StormcrestAttack.FileMd5);
-        Assert.Equal("48acf6540852f78175b2cda1a89b4ceb", Md5(Path.Combine(pack, StormcrestAttack.FileName)));
-        Assert.Equal("48acf6540852f78175b2cda1a89b4ceb", Md5(Path.Combine(design, StormcrestAttack.FileName)));
+        Assert.Equal("9bae7b662f48a1c1eec33fafc0fed6d2", StormcrestAttack.FileMd5);
+        Assert.Equal("9bae7b662f48a1c1eec33fafc0fed6d2", Md5(Path.Combine(pack, StormcrestAttack.FileName)));
+        Assert.Equal("9bae7b662f48a1c1eec33fafc0fed6d2", Md5(Path.Combine(design, StormcrestAttack.FileName)));
 
         Assert.Equal(StormcrestAttack.PropFileNames.Length, StormcrestAttack.PropFileMd5s.Length);
         for (var i = 0; i < StormcrestAttack.PropFileNames.Length; i++)
@@ -65,9 +67,14 @@ public sealed class StormcrestAttackTests
             }
         }
 
-        // Existing rig FBXs are untouched by the add-on.
-        Assert.Equal("f883e552eb1fdfd69dae953bb506e94b", Md5(Path.Combine(pack, "STORMCREST_blenderig.fbx")));
-        Assert.Equal("bab9c62ff5d60edb9e9b109c0edffa1f", Md5(Path.Combine(pack, "STORMCREST_blenderig_walk.fbx")));
+        var rig = Path.Combine(root, StormcrestMotion.DesignRigDir.Replace('/', Path.DirectorySeparatorChar));
+        Assert.Equal(StormcrestMotion.BlendMd5, Md5(Path.Combine(rig, StormcrestMotion.BlendFileName)));
+        Assert.Equal(StormcrestMotion.RestMd5, Md5(Path.Combine(pack, StormcrestMotion.RestFileName)));
+        Assert.Equal(StormcrestMotion.RestMd5, Md5(Path.Combine(rig, StormcrestMotion.RestFileName)));
+        Assert.Equal(StormcrestMotion.WalkMd5, Md5(Path.Combine(pack, StormcrestMotion.WalkFileName)));
+        Assert.Equal(StormcrestMotion.WalkMd5, Md5(Path.Combine(rig, StormcrestMotion.WalkFileName)));
+        Assert.Equal(StormcrestMotion.WingFlapMd5, Md5(Path.Combine(pack, StormcrestMotion.WingFlapFileName)));
+        Assert.Equal(StormcrestMotion.WingFlapMd5, Md5(Path.Combine(rig, StormcrestMotion.WingFlapFileName)));
     }
 
     [Fact]
@@ -143,7 +150,7 @@ public sealed class StormcrestAttackTests
     {
         var root = FindRepoRoot();
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains("Survival/Stormcrest Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.Contains("Survival/Stormcrest Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "StormcrestActor.cs"));
         Assert.Contains("StormcrestAttack.Spec", actor, StringComparison.Ordinal);
         var driver = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigAttackDriver.cs"));
