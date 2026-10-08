@@ -28,7 +28,7 @@ public sealed class BlenderRigRosterTests
             "LYRA_basecolor_0",
             "LYRA_normal_2",
             "ce82c9521cb54da4bf669276f7f7c7cb",
-            "Survival/Lyra Demo (rest + walk, Game view 1080x1920)");
+            "Survival/Lyra Demo (rest + walk + attack, Game view 1080x1920)");
     }
 
 
@@ -64,7 +64,7 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
 
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains("Survival/Lyra Demo (rest + walk, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.Contains("Survival/Lyra Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         Assert.Contains("Lyra.unity", editor, StringComparison.Ordinal);
     }
 

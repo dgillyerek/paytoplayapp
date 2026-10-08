@@ -1,0 +1,119 @@
+{
+  "name": "LYRA",
+  "blender": "4.3.2",
+  "blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/blender_rig/LYRA_blenderig.blend",
+  "action": "LYRA_attack",
+  "frames": [
+    0,
+    30
+  ],
+  "fps": 30,
+  "export_mode": "rebake",
+  "attack_fbx": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/LYRA_blenderig_attack.fbx",
+  "props": {
+    "staff": {
+      "object": "LYRA_staff_goldcrystal",
+      "fbx": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/LYRA_staff_goldcrystal.fbx",
+      "faces": 1188
+    },
+    "bolt": {
+      "object": "LYRA_arcane_bolt_vfx",
+      "fbx": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/LYRA_arcane_bolt_vfx.fbx",
+      "faces": 2040
+    }
+  },
+  "props_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/LYRA_attack_props.blend",
+  "drivers": [
+    {
+      "kind": "held",
+      "bone": "mixamorig:RightHand",
+      "ref_frame": 0,
+      "note": "staff grip in RightHand",
+      "object": "LYRA_staff_goldcrystal",
+      "offset_bone_local": {
+        "loc": [
+          -2.876073779134458e-08,
+          0.04041055962443352,
+          1.862645149230957e-08
+        ],
+        "quat_wxyz": [
+          0.9207989573478699,
+          0.3713057041168213,
+          0.044661328196525574,
+          -0.11075527966022491
+        ],
+        "scale": [
+          1.000000238418579,
+          1.0000001192092896,
+          1.0000003576278687
+        ]
+      }
+    },
+    {
+      "kind": "proj",
+      "release": 12,
+      "speed": 9.0,
+      "note": "arcane bolt spawns at staff crystal, travels character-forward (-Y Blender)",
+      "object": "LYRA_arcane_bolt_vfx",
+      "spawn_world_at_release": {
+        "loc": [
+          -0.27945196628570557,
+          -0.9159947633743286,
+          2.076202392578125
+        ],
+        "quat_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  ],
+  "look_renders": [
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/stills/look_staff_0.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/stills/look_staff_1.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/stills/look_bolt_0.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/stills/look_bolt_1.png"
+  ],
+  "qc": {
+    "anticipation_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/stills/qc_anticipation_f08_rear.png",
+    "anticipation_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/stills/qc_anticipation_f08_side.png",
+    "strike_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/stills/qc_strike_f12_rear.png",
+    "strike_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/stills/qc_strike_f12_side.png",
+    "strike_q34front": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/stills/qc_strike_f12_q34front.png",
+    "release_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/stills/qc_release_f12_rear.png",
+    "release_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/stills/qc_release_f12_side.png",
+    "inflight_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/stills/qc_inflight_f15_rear.png",
+    "inflight_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/stills/qc_inflight_f15_side.png",
+    "inflight_q34front": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/stills/qc_inflight_f15_q34front.png",
+    "follow_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/stills/qc_follow_f19_rear.png",
+    "follow_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/stills/qc_follow_f19_side.png"
+  },
+  "contact_frames": [
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f00_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f00_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f03_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f03_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f06_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f06_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f09_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f09_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f12_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f12_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f15_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f15_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f18_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f18_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f21_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f21_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f24_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f24_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f27_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f27_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f30_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames/c_f30_side.png"
+  ],
+  "vframes": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/work_frames",
+  "work_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261007/LYRA_attack_work.blend"
+}

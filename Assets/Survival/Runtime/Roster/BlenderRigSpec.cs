@@ -15,7 +15,37 @@ namespace Survival.Domain.Roster
     }
 
     /// <summary>
-    /// One Design Blender-rigged character: rest FBX plus one action clip.
+    /// One extra action clip beyond the primary clip on a Design Blender rig.
+    /// </summary>
+    public readonly struct BlenderRigClip
+    {
+        public BlenderRigClip(
+            string poseName,
+            string fileName,
+            string takeName,
+            float seconds,
+            float frameRate,
+            int lastFrame)
+        {
+            PoseName = poseName;
+            FileName = fileName;
+            TakeName = takeName;
+            Seconds = seconds;
+            FrameRate = frameRate;
+            LastFrame = lastFrame;
+        }
+
+        public string PoseName { get; }
+        public string FileName { get; }
+        public string TakeName { get; }
+        public float Seconds { get; }
+        public float FrameRate { get; }
+        public int LastFrame { get; }
+    }
+
+    /// <summary>
+    /// One Design Blender-rigged character: rest FBX plus one or more action clips.
+    /// The first clip stays on the original fields. Further clips are ExtraClips.
     /// Metal/roughness is optional and stays empty unless the FBX embedded it.
     /// </summary>
     public readonly struct BlenderRigSpec
@@ -38,7 +68,8 @@ namespace Survival.Domain.Roster
             string textureFolder,
             string baseColorFile,
             string normalFile,
-            string metallicRoughnessFile)
+            string metallicRoughnessFile,
+            BlenderRigClip[]? extraClips = null)
         {
             Name = name;
             ThemePackDir = themePackDir;
@@ -58,6 +89,7 @@ namespace Survival.Domain.Roster
             BaseColorFile = baseColorFile;
             NormalFile = normalFile;
             MetallicRoughnessFile = metallicRoughnessFile;
+            ExtraClips = extraClips ?? Array.Empty<BlenderRigClip>();
         }
 
         public string Name { get; }
@@ -78,6 +110,7 @@ namespace Survival.Domain.Roster
         public string BaseColorFile { get; }
         public string NormalFile { get; }
         public string MetallicRoughnessFile { get; }
+        public BlenderRigClip[] ExtraClips { get; }
 
         public const string RestPoseName = "rest";
 
@@ -99,7 +132,21 @@ namespace Survival.Domain.Roster
         public string NormalThemePackRel =>
             ThemePackDir + "/" + TextureFolder + "/" + NormalFile;
 
-        public string[] PoseNames => new[] { RestPoseName, ClipPoseName };
+        public string[] PoseNames
+        {
+            get
+            {
+                var names = new string[2 + ExtraClips.Length];
+                names[0] = RestPoseName;
+                names[1] = ClipPoseName;
+                for (var i = 0; i < ExtraClips.Length; i++)
+                {
+                    names[i + 2] = ExtraClips[i].PoseName;
+                }
+
+                return names;
+            }
+        }
 
         /// <summary>Mixamo export named *_rig.fbx. Design replacements are *_blenderig*.fbx.</summary>
         public static bool IsRejectedMixamoRigFile(string fileName)
