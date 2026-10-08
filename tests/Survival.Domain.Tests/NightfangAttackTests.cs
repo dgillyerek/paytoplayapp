@@ -34,9 +34,9 @@ public sealed class NightfangAttackTests
         var root = FindRepoRoot();
         var pack = Path.Combine(root, "Assets", NightfangMotion.ThemePackDir);
         var design = Path.Combine(root, NightfangAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
-        Assert.Equal("9fa7adc7882ad46ca28265947b081f19", NightfangAttack.FileMd5);
-        Assert.Equal("9fa7adc7882ad46ca28265947b081f19", Md5(Path.Combine(pack, NightfangAttack.FileName)));
-        Assert.Equal("9fa7adc7882ad46ca28265947b081f19", Md5(Path.Combine(design, NightfangAttack.FileName)));
+        Assert.Equal("f87f9b0b05cd8a8f229491b88a2fb5b4", NightfangAttack.FileMd5);
+        Assert.Equal("f87f9b0b05cd8a8f229491b88a2fb5b4", Md5(Path.Combine(pack, NightfangAttack.FileName)));
+        Assert.Equal("f87f9b0b05cd8a8f229491b88a2fb5b4", Md5(Path.Combine(design, NightfangAttack.FileName)));
 
         Assert.Equal(NightfangAttack.PropFileNames.Length, NightfangAttack.PropFileMd5s.Length);
         for (var i = 0; i < NightfangAttack.PropFileNames.Length; i++)
@@ -66,12 +66,12 @@ public sealed class NightfangAttackTests
         }
 
         Assert.Equal("9bad5fd2559b9a7efb27cc206767ed54", Md5(Path.Combine(pack, "NIGHTFANG_blenderig.fbx")));
-        Assert.Equal("405bd319ffe75abcfe24cfa3024b96f4", Md5(Path.Combine(pack, "NIGHTFANG_blenderig_trot.fbx")));
+        Assert.Equal("379bb90b630c33723bf4fbc0032467c0", Md5(Path.Combine(pack, "NIGHTFANG_blenderig_trot.fbx")));
         Assert.Equal(
             "9bad5fd2559b9a7efb27cc206767ed54",
             Md5(Path.Combine(root, "design", "survival-theme-a-fantasy", "enemies", "anim", "nightfang", "blender_rig", "NIGHTFANG_blenderig.fbx")));
         Assert.Equal(
-            "405bd319ffe75abcfe24cfa3024b96f4",
+            "379bb90b630c33723bf4fbc0032467c0",
             Md5(Path.Combine(root, "design", "survival-theme-a-fantasy", "enemies", "anim", "nightfang", "blender_rig", "NIGHTFANG_blenderig_trot.fbx")));
     }
 

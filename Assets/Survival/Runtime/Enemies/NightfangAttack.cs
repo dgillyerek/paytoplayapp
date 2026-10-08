@@ -12,7 +12,7 @@ namespace Survival.Domain.Enemies
     public static class NightfangAttack
     {
         public const string FileName = "NIGHTFANG_blenderig_attack.fbx";
-        public const string FileMd5 = "9fa7adc7882ad46ca28265947b081f19";
+        public const string FileMd5 = "f87f9b0b05cd8a8f229491b88a2fb5b4";
         public const string DesignDir = "design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007";
         public const int ReleaseFrame = 14;
         public const bool InPlace = true;
