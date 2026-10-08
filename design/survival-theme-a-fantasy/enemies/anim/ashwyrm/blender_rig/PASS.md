@@ -153,3 +153,30 @@ Derek Game-view: the wing flap itself is fine and the body is too still; the wal
 MD5: flap `a2aef92b8d0c0e8d8287693e1583b39e`, walk `8e29ae51ff9898157c57ea9716631af7`, blend `d26062494346447bebf68fd1bab28d4c`. Rest FBX still `a432672643153588f2e50cb4e24927b8`. Attack FBX still `b0d240cc17cf79af0af3ed22be5f07ef`.
 
 **Attack is Derek Game-view PASS (2026-10-07).** Wing flap and walk await Game-view. **HOLD merge.** Menu: **Survival/Ashwyrm Demo (rest + wing flap + attack, Game view 1080x1920)**. Dropdown already lists **rest, wing flap, walk, attack**.
+
+## FIX 2026-10-08 — Game-view saw no motion (ebe6533)
+
+Derek: wing flap and walk were completely still. Import had no errors. Files matched `a2aef92b…` / `8e29ae51…`. Blender reimport of those files still showed the polish, so the curves existed.
+
+**Diff vs f4e4ead (the export Unity did play), both clips:**
+
+| | f4e4ead (moved) | ebe6533 (still in Unity) | this re-export |
+|---|---|---|---|
+| Take | Scene | Scene | Scene |
+| Keys / bone channel | 31 | 31 | 31 |
+| Curve targets | 30 LimbNodes + `ASHWYRM_rig`, `Lcl Rotation` / `Translation` / `Scaling` | same | same |
+| Bone paths | `ASHWYRM_rig/root/…` (30 bones) | same | same |
+| `UnitScaleFactor` | 1 | 100 | 1 |
+| `ASHWYRM_rig` scale curve | 100, 100, 100 | 1, 1, 1 | 100, 100, 100 |
+
+The demo instantiates the **rest** FBX (armature scale 100, `useFileScale` 0) and plays the clip on that hierarchy. ebe6533 was exported with `FBX_SCALE_ALL`, so the clip's scale curves set `ASHWYRM_rig` to 1 and collapsed the skeleton. f4e4ead used the bake that leaves UnitScaleFactor at 1 and the armature scale at 100 (`FBX_SCALE_NONE`). Bone paths and the Scene take were already the same.
+
+Re-exported both clips from the polished blend with `FBX_SCALE_NONE`, same axis, leaf-bone, and bake settings as the working clips. Actions were not rebaked. Rest FBX and attack FBX were not rewritten.
+
+**QC** (Blender 4.2.3 reimport, frames 1–31, armature-local bone-head travel). Pose copied onto the rest armature (`ASHWYRM_rig|Scene` → rest pose bones) matches these numbers, so the clip drives the rest hierarchy.
+
+Wing flap, bone-head peak-to-peak: wing tips dZ 0.342 / 0.396 m (f4e4ead was 0.333 / 0.386). shin.L dY 0.045 m (was 0). forearm.L path 0.067 m (was 0). Spine pivot stays put; spine euler X now spans 4.35°, which is the snout follow. Root still locked.
+
+Walk, bone-head peak-to-peak: tail_06 dX 0.210 m (f4e4ead 0.066). thigh/shin stride kept (shin.L dY 0.208 m, was 0.184). Spine euler spans X 4.30° / Y 5.07° / Z 10.16° (f4e4ead 4.92° / 0.78° / 4.00°). Root still locked. Wing bones stay at identity; their small head travel is the spine carrying them.
+
+MD5: flap `139c1d3e11622aa5eeaf6436c23ce660`, walk `52b6a4b53ace591cafd19ad8a7c70c50`. Blend unchanged `d26062494346447bebf68fd1bab28d4c`. Rest still `a432672643153588f2e50cb4e24927b8`. Attack still `b0d240cc17cf79af0af3ed22be5f07ef`. **HOLD merge.**

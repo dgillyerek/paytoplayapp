@@ -66,10 +66,10 @@ public sealed class AshwyrmAttackTests
             }
         }
 
-        // Rest and attack stay byte-identical. Flap and walk are the 2026-10-08 polish.
+        // Rest and attack stay byte-identical. Flap and walk are the 2026-10-08 re-export.
         Assert.Equal("a432672643153588f2e50cb4e24927b8", Md5(Path.Combine(pack, "ASHWYRM_blenderig.fbx")));
-        Assert.Equal("8e29ae51ff9898157c57ea9716631af7", Md5(Path.Combine(pack, "ASHWYRM_blenderig_walk.fbx")));
-        Assert.Equal("a2aef92b8d0c0e8d8287693e1583b39e", Md5(Path.Combine(pack, "ASHWYRM_blenderig_wingflap.fbx")));
+        Assert.Equal("52b6a4b53ace591cafd19ad8a7c70c50", Md5(Path.Combine(pack, "ASHWYRM_blenderig_walk.fbx")));
+        Assert.Equal("139c1d3e11622aa5eeaf6436c23ce660", Md5(Path.Combine(pack, "ASHWYRM_blenderig_wingflap.fbx")));
     }
 
     [Fact]

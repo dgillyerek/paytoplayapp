@@ -1,6 +1,6 @@
 d26062494346447bebf68fd1bab28d4c  ASHWYRM_blenderig.blend
 a432672643153588f2e50cb4e24927b8  ASHWYRM_blenderig.fbx
-a2aef92b8d0c0e8d8287693e1583b39e  ASHWYRM_blenderig_wingflap.fbx
-8e29ae51ff9898157c57ea9716631af7  ASHWYRM_blenderig_walk.fbx
+139c1d3e11622aa5eeaf6436c23ce660  ASHWYRM_blenderig_wingflap.fbx
+52b6a4b53ace591cafd19ad8a7c70c50  ASHWYRM_blenderig_walk.fbx
 # rest FBX unchanged. attack FBX b0d240cc17cf79af0af3ed22be5f07ef unchanged (Derek Game-view PASS 2026-10-07).
-# flap and walk polished 2026-10-08, awaiting Game-view.
+# flap and walk re-exported 2026-10-08 (FBX_SCALE_NONE, armature scale 100) so Unity drives the rest rig. Awaiting Game-view.
