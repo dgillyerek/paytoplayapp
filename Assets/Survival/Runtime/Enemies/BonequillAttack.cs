@@ -11,7 +11,10 @@ namespace Survival.Domain.Enemies
     public static class BonequillAttack
     {
         public const string FileName = "BONEQUILL_blenderig_attack.fbx";
-        public const string FileMd5 = "16cfb8a07ffe13e6ac1f48b31791523c";
+        /// <summary>ThemePack attack FBX: Design clothsplit_20261007 BONEQUILL_clothsplit_attack.fbx (body bones only, cloth at rest).</summary>
+        public const string FileMd5 = "bbdf2f41a9a6bfe48a4bed2c422472a9";
+        /// <summary>Original attack FBX in BonequillAttack.DesignDir (attack_20261007), unchanged.</summary>
+        public const string DesignFileMd5 = "16cfb8a07ffe13e6ac1f48b31791523c";
         public const string DesignDir = "design/survival-theme-a-fantasy/enemies/anim/bonequill/attack_20261007";
         public const int ReleaseFrame = 14;
         public const bool InPlace = false;
