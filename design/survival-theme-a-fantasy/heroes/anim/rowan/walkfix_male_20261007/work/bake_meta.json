@@ -1,0 +1,13 @@
+{
+ "limb_travels": {
+  "mixamorig:LeftFoot": 0.7740454268746995,
+  "mixamorig:RightFoot": 0.7740624939398413,
+  "mixamorig:LeftHand": 0.03999338692161554,
+  "mixamorig:RightHand": 0.1681886726131285,
+  "mixamorig:LeftUpLeg": 0.029170043137435604,
+  "mixamorig:RightUpLeg": 0.029059353905456876
+ },
+ "mean_limb_travel": 0.30241989623202953,
+ "vert_mean_travel": 0.37471944482815744,
+ "blender": "4.3.2"
+}

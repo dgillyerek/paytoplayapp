@@ -9,7 +9,9 @@ using UnityEditor;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Plays a Design Blender rig: rest bind pose, then one action clip.
+    /// Plays a Design Blender rig: rest bind pose, then each action clip on the spec.
+    /// An optional Theme A attack add-on plays 0–30 once, holds rest for a short gap, and repeats,
+    /// with its held props and projectile effects driven by <see cref="BlenderRigAttackDriver"/>.
     /// Humanoid when the mixamorig avatar validates, otherwise Generic.
     /// Custom creatures stay Generic. Does not bake axis conversion, scale one axis,
     /// retarget by hand, or rewrite the imported root. Binds embedded basecolor and
@@ -26,12 +28,16 @@ namespace Survival.Unity
         private bool _humanoid;
         private bool _ready;
         private bool _loop;
+        private readonly BlenderRigAttackSpec? _attackSpec;
+        private BlenderRigAttackDriver? _attack;
+        private bool _attackMode;
         private float _length;
         private float _time;
         private string _pose;
 
-        public BlenderRigPlayer(BlenderRigSpec spec, Transform parent)
+        public BlenderRigPlayer(BlenderRigSpec spec, Transform parent, BlenderRigAttackSpec? attack = null)
         {
+            _attackSpec = attack;
             _spec = spec;
             _parent = parent;
             _pose = BlenderRigSpec.RestPoseName;
@@ -79,6 +85,12 @@ namespace Survival.Unity
 
             var instance = Object.Instantiate(prefab, _parent);
             instance.name = _spec.Name + "BlenderRig";
+            if (_attackSpec != null)
+            {
+                _attack = new BlenderRigAttackDriver(_attackSpec, _spec.ThemePackDir, _parent);
+                _attack.Calibrate(instance);
+            }
+
             _animator = instance.GetComponent<Animator>() ?? instance.AddComponent<Animator>();
             var avatar = _humanoid ? LoadHumanAvatar(path) : LoadGenericAvatar(path);
             if (avatar != null)
@@ -111,6 +123,13 @@ namespace Survival.Unity
                 return false;
             }
 
+            if (_attackSpec != null && string.Equals(poseName, BlenderRigAttackSpec.PoseName, System.StringComparison.Ordinal))
+            {
+                return PlayAttack();
+            }
+
+            StopAttack();
+
             if (string.Equals(poseName, BlenderRigSpec.RestPoseName, System.StringComparison.Ordinal))
             {
                 ShowRest();
@@ -119,7 +138,15 @@ namespace Survival.Unity
 
             if (string.Equals(poseName, _spec.ClipPoseName, System.StringComparison.Ordinal))
             {
-                return PlayClip();
+                return PlayClip(_spec.ClipFileName, _spec.ClipPoseName, _spec.ClipTakeName, _spec.ClipLastFrame);
+            }
+
+            foreach (var extra in _spec.ExtraClips)
+            {
+                if (string.Equals(poseName, extra.PoseName, System.StringComparison.Ordinal))
+                {
+                    return PlayClip(extra.FileName, extra.PoseName, extra.TakeName, extra.LastFrame);
+                }
             }
 
             Debug.LogWarning(_spec.Name + " unknown pose. " + poseName);
@@ -128,6 +155,12 @@ namespace Survival.Unity
 
         public void Tick()
         {
+            if (_attackMode)
+            {
+                TickAttack();
+                return;
+            }
+
             if (!_ready || !_loop || !_playable.IsValid())
             {
                 return;
@@ -145,14 +178,79 @@ namespace Survival.Unity
 
         public void Dispose()
         {
+            _attack?.Dispose();
             if (_graph.IsValid())
             {
                 _graph.Destroy();
             }
         }
 
+        private bool PlayAttack()
+        {
+            if (_attackSpec == null || _attack == null)
+            {
+                return false;
+            }
+
+            StopAttack();
+            if (!PlayClip(_attackSpec.FileName, BlenderRigAttackSpec.PoseName, BlenderRigAttackSpec.TakeName, BlenderRigAttackSpec.LastFrame))
+            {
+                return false;
+            }
+
+            _loop = false;
+            _attackMode = true;
+            _time = 0f;
+            _attack.Activate(SampleAttackFrame);
+            SampleAttackFrame(BlenderRigAttackSpec.FirstFrame);
+            _attack.Tick(BlenderRigAttackSpec.FirstFrame, true, 0);
+            return true;
+        }
+
+        private void TickAttack()
+        {
+            if (!_playable.IsValid() || _attack == null)
+            {
+                return;
+            }
+
+            _time += Time.unscaledDeltaTime;
+            var frame = BlenderRigAttackSpec.CycleFrame(_time, out var inClip, out var cycle);
+            SampleAttackFrame(frame);
+            _attack.Tick(frame, inClip, cycle);
+        }
+
+        private void SampleAttackFrame(float frame)
+        {
+            if (!_playable.IsValid())
+            {
+                return;
+            }
+
+            var seconds = frame / BlenderRigAttackSpec.FrameRate;
+            if (_length > 0.05f)
+            {
+                seconds = Mathf.Min(seconds, _length - 0.0005f);
+            }
+
+            _playable.SetTime(seconds);
+            _graph.Evaluate(0f);
+        }
+
+        private void StopAttack()
+        {
+            if (!_attackMode)
+            {
+                return;
+            }
+
+            _attackMode = false;
+            _attack?.Deactivate();
+        }
+
         private void ShowRest()
         {
+            StopAttack();
             if (_playable.IsValid())
             {
                 _playable.Destroy();
@@ -166,15 +264,15 @@ namespace Survival.Unity
             _time = 0f;
         }
 
-        private bool PlayClip()
+        private bool PlayClip(string fileName, string poseName, string takeName, int lastFrame)
         {
 #if UNITY_EDITOR
-            var clip = LoadClip();
+            var clip = LoadClip(fileName, poseName, takeName, lastFrame);
             if (clip == null || clip.empty || clip.length < 0.2f)
             {
                 Debug.LogError(
-                    _spec.Name + " clip missing. take=" + _spec.ClipTakeName +
-                    " file=" + _spec.ClipFileName);
+                    _spec.Name + " clip missing. take=" + takeName +
+                    " file=" + fileName);
                 return false;
             }
 
@@ -191,7 +289,7 @@ namespace Survival.Unity
             _length = clip.length;
             _time = 0f;
             _loop = true;
-            _pose = _spec.ClipPoseName;
+            _pose = poseName;
             _graph.Evaluate(0f);
             return true;
 #else
@@ -200,10 +298,10 @@ namespace Survival.Unity
         }
 
 #if UNITY_EDITOR
-        private AnimationClip? LoadClip()
+        private AnimationClip? LoadClip(string fileName, string poseName, string takeName, int lastFrame)
         {
-            var path = "Assets/" + _spec.ClipThemePackRel;
-            EnsureImport(path, _humanoid, clip: true);
+            var path = "Assets/" + _spec.ThemePackDir + "/" + fileName;
+            EnsureImport(path, _humanoid, true, poseName, takeName, lastFrame);
             AnimationClip? named = null;
             AnimationClip? fallback = null;
             foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
@@ -213,7 +311,7 @@ namespace Survival.Unity
                     continue;
                 }
 
-                if (string.Equals(clip.name, _spec.ClipPoseName, System.StringComparison.Ordinal))
+                if (string.Equals(clip.name, poseName, System.StringComparison.Ordinal))
                 {
                     named = clip;
                     continue;
@@ -262,7 +360,13 @@ namespace Survival.Unity
             return null;
         }
 
-        private void EnsureImport(string path, bool humanoid, bool clip)
+        private void EnsureImport(
+            string path,
+            bool humanoid,
+            bool clip,
+            string poseName = "",
+            string takeName = "",
+            int lastFrame = 0)
         {
             if (AssetImporter.GetAtPath(path) is not ModelImporter importer)
             {
@@ -328,7 +432,7 @@ namespace Survival.Unity
 
             if (clip)
             {
-                dirty |= PinClip(importer);
+                dirty |= PinClip(importer, poseName, takeName, lastFrame);
             }
 
             if (dirty)
@@ -337,12 +441,12 @@ namespace Survival.Unity
             }
         }
 
-        private bool PinClip(ModelImporter importer)
+        private bool PinClip(ModelImporter importer, string poseName, string takeName, int lastFrame)
         {
             var defaults = importer.defaultClipAnimations;
             if (defaults == null || defaults.Length == 0)
             {
-                Debug.LogError(_spec.Name + " clip has no take. Wanted " + _spec.ClipTakeName);
+                Debug.LogError(_spec.Name + " clip has no take. Wanted " + takeName);
                 return false;
             }
 
@@ -357,7 +461,7 @@ namespace Survival.Unity
                 }
 
                 var span = candidate.lastFrame - candidate.firstFrame;
-                if (string.Equals(take, _spec.ClipTakeName, System.StringComparison.Ordinal) && span >= 1f)
+                if (string.Equals(take, takeName, System.StringComparison.Ordinal) && span >= 1f)
                 {
                     best = candidate;
                     break;
@@ -377,19 +481,19 @@ namespace Survival.Unity
 
             var already = importer.clipAnimations;
             if (already != null && already.Length == 1
-                && string.Equals(already[0].name, _spec.ClipPoseName, System.StringComparison.Ordinal)
-                && string.Equals(already[0].takeName, _spec.ClipTakeName, System.StringComparison.Ordinal)
+                && string.Equals(already[0].name, poseName, System.StringComparison.Ordinal)
+                && string.Equals(already[0].takeName, takeName, System.StringComparison.Ordinal)
                 && already[0].loopTime
-                && Mathf.Abs(already[0].lastFrame - _spec.ClipLastFrame) < 0.01f
+                && Mathf.Abs(already[0].lastFrame - lastFrame) < 0.01f
                 && !already[0].mirror)
             {
                 return false;
             }
 
-            best.name = _spec.ClipPoseName;
-            best.takeName = _spec.ClipTakeName;
+            best.name = poseName;
+            best.takeName = takeName;
             best.firstFrame = 0f;
-            best.lastFrame = _spec.ClipLastFrame;
+            best.lastFrame = lastFrame;
             best.mirror = false;
             best.loopTime = true;
             best.loop = true;
