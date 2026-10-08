@@ -2,12 +2,12 @@ using Survival.Domain.Roster;
 
 namespace Survival.Domain.Heroes
 {
-    /// <summary>
-    /// Lyra Design Blender rig. Mixamo-compatible mixamorig, 22 bones.
-    /// Rest is the bind pose. Walk is a 1 second Scene take at 30 fps
-    /// (FBX LocalStop 46186158000 ticks). Reject LYRA_rig.fbx.
-    /// Basecolor and normal are embedded. No metal/roughness map.
-    /// </summary>
+/// <summary>
+/// Lyra fitted/tighten (Design blender_rig_tighten_20261008, look PASS 2026-10-08).
+/// Mixamo-compatible mixamorig, 22 bones. Rest bind, 1 s Scene walk at 30 fps,
+/// attack add-on (attack_20261008). Replaces prior blenderig + attack_20261007.
+/// Bones bound by name. Staff stays in RightHand.
+/// </summary>
     public static class LyraMotion
     {
         public const string ThemePackDir = "ThemePack/fantasy_kingdom_a/art/heroes/3d/lyra";
@@ -28,13 +28,37 @@ namespace Survival.Domain.Heroes
         public const int BoneCount = MixamoHumanoidBones.Count;
 
         public const string TextureFolder = "LYRA_blenderig.fbm";
-        public const string BaseColorFile = "LYRA_basecolor_0.jpg";
-        public const string NormalFile = "LYRA_normal_2.jpg";
+        public const string BaseColorFile = "LYRA_tighten_basecolor_0.jpg";
+        public const string NormalFile = "LYRA_tighten_normal_2.jpg";
 
         public const string BoneRoot = MixamoHumanoidBones.Root;
 
         public static readonly string[] PoseNames = { RestPoseName, WalkPoseName, AttackPoseName };
-        public static readonly string[] BoneNames = MixamoHumanoidBones.Names;
+        public static readonly string[] BoneNames =
+        {
+            "mixamorig:Hips",
+            "mixamorig:Spine",
+            "mixamorig:Spine1",
+            "mixamorig:Spine2",
+            "mixamorig:Neck",
+            "mixamorig:Head",
+            "mixamorig:LeftShoulder",
+            "mixamorig:LeftArm",
+            "mixamorig:LeftForeArm",
+            "mixamorig:LeftHand",
+            "mixamorig:RightShoulder",
+            "mixamorig:RightArm",
+            "mixamorig:RightForeArm",
+            "mixamorig:RightHand",
+            "mixamorig:LeftUpLeg",
+            "mixamorig:LeftLeg",
+            "mixamorig:LeftFoot",
+            "mixamorig:LeftToeBase",
+            "mixamorig:RightUpLeg",
+            "mixamorig:RightLeg",
+            "mixamorig:RightFoot",
+            "mixamorig:RightToeBase"
+        };
 
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(
             "Lyra",
@@ -54,7 +78,7 @@ namespace Survival.Domain.Heroes
             TextureFolder,
             BaseColorFile,
             NormalFile,
-            "",
+            "LYRA_tighten_metal_rough_1.png",
             new[]
             {
                 new BlenderRigClip(

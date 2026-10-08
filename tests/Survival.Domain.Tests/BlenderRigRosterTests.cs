@@ -25,10 +25,13 @@ public sealed class BlenderRigRosterTests
         Assert.Equal("mixamorig:Hips", MixamoHumanoidBones.Root);
         AssertHumanoidDemo(
             LyraMotion.Spec,
-            "LYRA_basecolor_0",
-            "LYRA_normal_2",
+            "LYRA_tighten_basecolor_0",
+            "LYRA_tighten_normal_2",
             "ce82c9521cb54da4bf669276f7f7c7cb",
             "Survival/Lyra Demo (rest + walk + attack, Game view 1080x1920)");
+        Assert.Equal("LYRA_tighten_metal_rough_1.png", LyraMotion.Spec.MetallicRoughnessFile);
+        Assert.Equal(22, LyraMotion.BoneNames.Length);
+        Assert.Equal(MixamoHumanoidBones.Names, LyraMotion.BoneNames);
     }
 
 
@@ -78,7 +81,6 @@ public sealed class BlenderRigRosterTests
         Assert.Equal("Scene", spec.ClipTakeName);
         Assert.Equal(1f, spec.ClipSeconds);
         Assert.Equal(30, spec.ClipLastFrame);
-        Assert.Equal("", spec.MetallicRoughnessFile);
         Assert.True(spec.PreferHumanoid);
         Assert.True(BlenderRigSpec.IsRejectedMixamoRigFile(spec.RejectedMixamoFileName));
         Assert.Contains(spec, BlenderRigRoster.All);

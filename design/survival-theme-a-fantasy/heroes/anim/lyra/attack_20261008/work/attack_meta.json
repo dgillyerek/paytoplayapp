@@ -1,0 +1,128 @@
+{
+ "name": "LYRA_tighten",
+ "frames": [
+  0,
+  30
+ ],
+ "fps": 30,
+ "forward": "-Y (Blender) = top of screen in rear battle cam",
+ "keys": {
+  "anticipation": 8,
+  "strike_release": 12,
+  "follow": 19,
+  "rest": 30
+ },
+ "props": {
+  "staff": {
+   "object": "LYRA_staff",
+   "parent": "RightHand f0-f30 (constant offset)",
+   "offset_RightHand": [
+    [
+     -0.3700212240219116,
+     0.92902010679245,
+     0.002442808821797371,
+     -0.02237587422132492
+    ],
+    [
+     -0.9290236234664917,
+     -0.370019793510437,
+     -0.001075982116162777,
+     0.1087605357170105
+    ],
+    [
+     -9.568780660629272e-05,
+     -0.0026672284584492445,
+     0.9999962449073792,
+     0.02847805805504322
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "crystal_local": [
+    0.0027701875660568476,
+    0.007639163173735142,
+    0.5250147581100464
+   ]
+  },
+  "bolt": {
+   "object": "LYRA_arcane_bolt_vfx",
+   "release": 12,
+   "speed_mps": 9.0,
+   "dir": [
+    0,
+    -1,
+    0
+   ],
+   "spawn_world": [
+    -0.3422810733318329,
+    -0.6455825567245483,
+    1.862177848815918
+   ],
+   "note": "spawns at staff crystal, grows 40%->100% over 3 frames, travels -Y"
+  }
+ },
+ "release": 12,
+ "attack_fbx": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261008/LYRA_tighten_blenderig_attack.fbx",
+ "prop_fbx": [
+  "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261008/LYRA_staff.fbx",
+  "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261008/LYRA_arcane_bolt_vfx.fbx"
+ ],
+ "sheet_frames": [
+  0,
+  4,
+  8,
+  10,
+  12,
+  14,
+  16,
+  19,
+  23,
+  26,
+  30
+ ],
+ "views": {
+  "rear": [
+   [
+    -0.12194687128067017,
+    2.9350319814003263,
+    3.032177548689871
+   ],
+   [
+    -0.12194687128067017,
+    -1.3858210374758595,
+    0.5306310640773426
+   ]
+  ],
+  "side": [
+   [
+    3.668275075101949,
+    -0.8551899649822929,
+    1.1370665754985616
+   ],
+   [
+    -0.12194687128067017,
+    -0.8551899649822929,
+    0.9096532587156044
+   ]
+  ],
+  "q34front": [
+   [
+    -2.301324490450676,
+    -2.7503009381736025,
+    1.5160887701368235
+   ],
+   [
+    -0.12194687128067017,
+    -0.38141222168446554,
+    0.9096532587156044
+   ]
+  ]
+ },
+ "props_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261008/LYRA_tighten_attack_props.blend",
+ "work_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261008/LYRA_tighten_attack_work.blend",
+ "rear_cam_note": "rear battle cam re-rendered wider so the arrow/bolt stays in frame"
+}
