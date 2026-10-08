@@ -30,6 +30,9 @@ EditorBuildSettings:
     path: Assets/Survival/Scenes/Nightfang.unity
     guid: 6727d767bb06405daacef645c6b142c9
   - enabled: 1
+    path: Assets/Survival/Scenes/Stormcrest.unity
+    guid: a9e20b95311f4b358ad0d8293ba40ba9
+  - enabled: 1
     path: Assets/Grove/Scenes/Board.unity
     guid: b65522f703b44f9799e3eee95f2f36d0
   m_configObjects: {}

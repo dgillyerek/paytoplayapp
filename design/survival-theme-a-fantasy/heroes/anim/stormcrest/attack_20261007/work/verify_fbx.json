@@ -1,0 +1,55 @@
+{
+  "blender": "5.2.2",
+  "ignore_leaf_bones": false,
+  "unit_scale_factor": 100.0,
+  "armature_scale_every_frame": [1.0, 1.0, 1.0],
+  "bone_count": 45,
+  "same_bone_names_and_order": true,
+  "rest": {
+    "action": null,
+    "travel_m": 0.0,
+    "loop_m": 0.0,
+    "wing_tip_z_m": [0.355, 0.961]
+  },
+  "walk": {
+    "action": "STORMCREST_rig|Scene",
+    "frames": [1, 31],
+    "loop_m": 0.0,
+    "beak_z_p2p_m_before": 0.03871,
+    "beak_z_p2p_m_after": 0.01916,
+    "head_joint_z_p2p_m_before": 0.0048,
+    "head_joint_z_p2p_m_after": 0.00423,
+    "wing_feather_b_y_corr": -0.9991,
+    "wing_feather_b_L_dy_m": [-0.091, 0.093],
+    "wing_feather_b_R_dy_m": [-0.102, 0.085],
+    "spine_z_p2p_m": 0.00297,
+    "toe_L_z_m": [0.041, 0.101]
+  },
+  "wingflap": {
+    "action": "STORMCREST_rig|Scene",
+    "frames": [1, 31],
+    "loop_m": 0.0,
+    "stroke_plane_from_horizontal_deg_before": 86.9,
+    "stroke_plane_from_horizontal_deg_after": 68.3,
+    "tip_lag_frames": 4,
+    "forearm_lag_frames": 2,
+    "hand_lag_frames": 3,
+    "midstroke_tip_curl_deg": 10.1,
+    "wing_feather_b_L_z_m": [0.748, 1.022],
+    "wing_feather_c_L_z_m": [0.268, 0.614],
+    "wing_feather_b_y_corr": 0.9992
+  },
+  "attack": {
+    "action": "STORMCREST_rig|Scene",
+    "frames": [1, 31],
+    "loop_m": 0.0,
+    "end_pose_matches_rest": true,
+    "wing_tip_z_m": [0.233, 1.175],
+    "wing_feather_b_y_corr": 0.9969,
+    "wing_feather_b_L_dy_m": [-0.244, 0.183],
+    "wing_feather_b_R_dy_m": [-0.259, 0.150],
+    "head_travel_m": 0.131,
+    "spine_travel_m": 0.040,
+    "max_listed_bone_head_travel_m": 0.323
+  }
+}
