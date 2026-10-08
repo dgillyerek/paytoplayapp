@@ -12,7 +12,9 @@ namespace Survival.Unity
     /// Drives the Design Theme A attack add-on props and effects next to a Blender rig.
     /// Held props ride their attach bone with the attack_meta offset. Projectiles spawn at the
     /// release frame at the Design spawn point and fly character-forward (+Z, top of the screen
-    /// in the rear camera) at the Design speed, then despawn at the end of the clip. Design VFX
+    /// in the rear camera) at the Design speed, then despawn at the end of the clip. A slash
+    /// leaves a muzzle at the Design mouth point and shoots along the actor root forward
+    /// (the same axis as the lunge), not along a head or jaw bone axis. Design VFX
     /// meshes are look reference only, so effects are procedural URP particles, trails, and lines
     /// in the looksheet colours. Design space is mapped onto the imported rig from rest bone
     /// heads, so FBX unit scale and axis import settings do not matter.
@@ -599,11 +601,14 @@ namespace Survival.Unity
                     view.LineLength = length;
                     break;
                 case AttackVfxShape.Slash:
+                    var muzzle = new GameObject("Muzzle");
+                    muzzle.transform.SetParent(view.Root.transform, false);
+                    view.Muzzle = muzzle.transform;
                     var tips = new List<Transform>();
-                    for (var i = 0; i < 3; i++)
+                    for (var i = 0; i < AttackEmission.SlashClawCount; i++)
                     {
                         var tip = new GameObject("Claw" + i);
-                        tip.transform.SetParent(view.Root.transform, false);
+                        tip.transform.SetParent(muzzle.transform, false);
                         trails.Add(AddTrail(tip, "Trail", 0.16f, 0.035f * s, core, glow));
                         tips.Add(tip.transform);
                     }
@@ -611,7 +616,28 @@ namespace Survival.Unity
                     view.SlashTips = tips.ToArray();
                     view.SlashWidth = Mathf.Max(track.PropExtent[0], 0.2f) * s;
                     view.SlashHeight = Mathf.Max(track.PropExtent[1], 0.1f) * s;
-                    particles.Add(AddParticles(view.Root, "Sparks", true, 60f, 0.25f, 0.6f * s, 0.02f * s, 0.05f * s, core, glow, edge, ParticleSystemShapeType.Sphere, view.SlashWidth * 0.3f, 0f, 0.2f));
+                    var sparks = AddParticles(
+                        muzzle,
+                        "Sparks",
+                        true,
+                        60f,
+                        0.25f,
+                        0.6f * s,
+                        0.02f * s,
+                        0.05f * s,
+                        core,
+                        glow,
+                        edge,
+                        ParticleSystemShapeType.Cone,
+                        0.04f * s,
+                        AttackEmission.SlashConeHalfAngleDegrees,
+                        0.2f);
+                    var sparkShape = sparks.shape;
+                    sparkShape.randomDirectionAmount = 0f;
+                    sparkShape.sphericalDirectionAmount = 0f;
+                    var sparkMain = sparks.main;
+                    sparkMain.gravityModifier = 0f;
+                    particles.Add(sparks);
                     break;
             }
 
@@ -639,26 +665,30 @@ namespace Survival.Unity
             }
         }
 
+        /// <summary>
+        /// Claw trails and the spark cone leave the mouth along the actor root forward.
+        /// World positions ignore the effect root's scale keys and the calibration frame,
+        /// so a yawed head−hips mapping or a growing lane cannot shove the shot sideways.
+        /// </summary>
         private void SweepSlash(TrackView view, float frame)
         {
-            if (view.SlashTips.Length == 0)
+            if (view.Muzzle == null || view.SlashTips.Length == 0)
             {
                 return;
             }
 
-            var first = view.Track.FirstVisibleFrame;
-            var last = view.Track.LastVisibleFrame;
-            var span = Mathf.Max(1f, last - first);
-            var p = Mathf.Clamp01((frame - first) / (span * 0.75f));
-            var w = view.SlashWidth;
-            var h = view.SlashHeight;
+            var mouth = view.Root.transform.position;
+            view.Muzzle.SetPositionAndRotation(mouth, _actor.rotation);
+            var p = AttackEmission.Progress(frame, view.Track.FirstVisibleFrame, view.Track.LastVisibleFrame);
+            var reach = view.SlashWidth;
+            var lane = view.SlashHeight * AttackEmission.SlashLaneFraction;
+            var right = _actor.right;
+            var up = _actor.up;
+            var forward = _actor.forward;
             for (var i = 0; i < view.SlashTips.Length; i++)
             {
-                var lane = (i - 1) * h * 0.22f;
-                var x = Mathf.Lerp(w * 0.5f, -w * 0.5f, p);
-                var y = (h * 0.35f * Mathf.Cos(p * Mathf.PI)) + lane;
-                var z = Mathf.Sin(p * Mathf.PI) * h * 0.25f;
-                view.SlashTips[i].localPosition = new Vector3(x, y, z);
+                AttackEmission.StraightAheadTip(i, view.SlashTips.Length, p, reach, lane, out var x, out var y, out var z);
+                view.SlashTips[i].position = mouth + (right * x) + (up * y) + (forward * z);
             }
         }
 
@@ -864,6 +894,7 @@ namespace Survival.Unity
             public ParticleSystem[] Particles { get; set; } = System.Array.Empty<ParticleSystem>();
             public TrailRenderer[] Trails { get; set; } = System.Array.Empty<TrailRenderer>();
             public LineRenderer[] Lines { get; set; } = System.Array.Empty<LineRenderer>();
+            public Transform? Muzzle { get; set; }
             public Transform[] SlashTips { get; set; } = System.Array.Empty<Transform>();
             public float LineLength { get; set; }
             public float SlashWidth { get; set; }

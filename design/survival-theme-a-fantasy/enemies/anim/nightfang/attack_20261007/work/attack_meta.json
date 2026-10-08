@@ -1,0 +1,76 @@
+{
+  "name": "NIGHTFANG",
+  "blender": "4.3.2",
+  "blend": "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/blender_rig/NIGHTFANG_blenderig.blend",
+  "action": "NIGHTFANG_attack",
+  "frames": [
+    0,
+    30
+  ],
+  "fps": 30,
+  "export_mode": "rebake",
+  "attack_fbx": "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/NIGHTFANG_blenderig_attack.fbx",
+  "props": {
+    "slash": {
+      "object": "NIGHTFANG_clawslash_vfx",
+      "fbx": "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/NIGHTFANG_clawslash_vfx.fbx",
+      "faces": 1092
+    }
+  },
+  "props_blend": "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/NIGHTFANG_attack_props.blend",
+  "drivers": [
+    {
+      "kind": "fixed",
+      "show": [
+        13,
+        18
+      ],
+      "note": "claw-rake slash arcs in front of the jaw at bite/strike frame",
+      "object": "NIGHTFANG_clawslash_vfx"
+    }
+  ],
+  "look_renders": [
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/stills/look_slash_0.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/stills/look_slash_1.png"
+  ],
+  "qc": {
+    "anticipation_rear": "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/stills/qc_anticipation_f09_rear.png",
+    "anticipation_side": "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/stills/qc_anticipation_f09_side.png",
+    "strike_rear": "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/stills/qc_strike_f14_rear.png",
+    "strike_side": "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/stills/qc_strike_f14_side.png",
+    "strike_q34front": "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/stills/qc_strike_f14_q34front.png",
+    "release_rear": "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/stills/qc_release_f14_rear.png",
+    "release_side": "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/stills/qc_release_f14_side.png",
+    "inflight_rear": "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/stills/qc_inflight_f17_rear.png",
+    "inflight_side": "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/stills/qc_inflight_f17_side.png",
+    "inflight_q34front": "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/stills/qc_inflight_f17_q34front.png",
+    "follow_rear": "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/stills/qc_follow_f20_rear.png",
+    "follow_side": "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/stills/qc_follow_f20_side.png"
+  },
+  "contact_frames": [
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f00_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f00_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f03_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f03_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f06_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f06_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f09_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f09_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f12_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f12_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f15_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f15_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f18_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f18_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f21_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f21_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f24_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f24_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f27_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f27_side.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f30_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames/c_f30_side.png"
+  ],
+  "vframes": "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/work_frames",
+  "work_blend": "/workspace/design/survival-theme-a-fantasy/enemies/anim/nightfang/attack_20261007/NIGHTFANG_attack_work.blend"
+}
