@@ -23,6 +23,15 @@ namespace Survival.Unity
             Apply();
         }
 
+        /// <summary>Sets the opening orbit (yaw 180 = rear). Keys 1/2/3 and dragging still work after.</summary>
+        public void SetView(float yawDegrees, float pitchDegrees)
+        {
+            _yaw = yawDegrees;
+            _pitch = pitchDegrees;
+            Wrap();
+            Apply();
+        }
+
         private void OnEnable()
         {
             BindOrbit();

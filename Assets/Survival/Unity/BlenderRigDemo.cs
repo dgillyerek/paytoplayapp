@@ -22,6 +22,15 @@ namespace Survival.Unity
 
         protected abstract MonoBehaviour CreateActor(GameObject host);
 
+        /// <summary>Caption text. Defaults to the spec title.</summary>
+        protected virtual string Title => Spec.Title;
+
+        /// <summary>Opening camera yaw (0 = front, 180 = rear). Existing demos keep the front view.</summary>
+        protected virtual float StartYawDegrees => 0f;
+
+        /// <summary>Opening camera pitch (negative = camera higher). Existing demos keep 0.</summary>
+        protected virtual float StartPitchDegrees => 0f;
+
         private void Awake() => Boot();
 
         private void OnEnable() => Boot();
@@ -96,13 +105,18 @@ namespace Survival.Unity
                 var span = Mathf.Max(bounds.size.x, Mathf.Max(bounds.size.y, bounds.size.z));
                 stage.BuildGround(bounds.min.y, span * 2f);
             }
+
+            if (StartYawDegrees != 0f || StartPitchDegrees != 0f)
+            {
+                stage.SetView(StartYawDegrees, StartPitchDegrees);
+            }
             else
             {
                 stage.BuildGround(0f, 8f);
             }
 
             var canvas = SurvivalVisuals.Canvas(transform, spec.Name + "Hud", 80);
-            var title = SurvivalVisuals.Text(canvas, "Caption", spec.Title, 30, TextAnchor.MiddleCenter, SurvivalVisuals.Cream);
+            var title = SurvivalVisuals.Text(canvas, "Caption", Title, 30, TextAnchor.MiddleCenter, SurvivalVisuals.Cream);
             var tr = title.rectTransform;
             tr.anchorMin = new Vector2(0.06f, 0.952f);
             tr.anchorMax = new Vector2(0.94f, 0.992f);
