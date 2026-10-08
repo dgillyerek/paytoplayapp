@@ -66,10 +66,10 @@ public sealed class AshwyrmAttackTests
             }
         }
 
-        // Rest, attack, and walk stay byte-identical. Flap is the shoulder-only rigid re-export.
+        // Rest, attack, and walk stay byte-identical. Flap is the level shoulder beat re-export.
         Assert.Equal("f1f9f937f2961ce185eb2d942d91d595", Md5(Path.Combine(pack, "ASHWYRM_blenderig.fbx")));
         Assert.Equal("490e574a13f505202af9c468a9f38a0e", Md5(Path.Combine(pack, "ASHWYRM_blenderig_walk.fbx")));
-        Assert.Equal("ca88e019bcb1744f73907001f80d12d1", Md5(Path.Combine(pack, "ASHWYRM_blenderig_wingflap.fbx")));
+        Assert.Equal("b7ef0b307f3be6326d54afd98cb34fdc", Md5(Path.Combine(pack, "ASHWYRM_blenderig_wingflap.fbx")));
     }
 
     [Fact]

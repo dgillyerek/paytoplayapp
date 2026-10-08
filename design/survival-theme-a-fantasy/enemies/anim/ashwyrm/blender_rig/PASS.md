@@ -278,3 +278,15 @@ Frame 0 and frame 30 match (loop error 0). Non-wing FBX curves match df54a63 exa
 **Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
 
 MD5: blend `2e3e338d5b8ec67c5cc876b9da297dc8`, flap `ca88e019bcb1744f73907001f80d12d1`. **HOLD merge.**
+
+## Derek Game-view on 1c64ab9 — level wings, larger beat
+
+Derek: the wings look full again. Keep that standing shape. Take off the backward yaw so the wings face forward like the standing pose, pitch them about 20° forward/down so they sit nearer level, and make the beat much bigger.
+
+Bones past `wing_root` still hold the standing local rotation (max difference **0.000°**). Membrane area ratio flap/rest is **1.000**. Left fan **87.71°**, right fan **92.59°**.
+
+`wing_root` has no rearward yaw. Its local pitch at the level pose (frame 0 and frame 30) is **−20.00°** on the left and **+20.00°** on the right, the mirror. That drops the left wing-centroid elevation from **+2.25°** at standing to **−17.1°**. Around that pose the shoulder beats **±28°** (sampled frames **−47.85° to +7.85°** versus standing, **55.7°** peak to peak). The sine crests at frame 7. Leading tip Z is **0.724..1.396**. Left centroid azimuth stays **−0.2° to +17.0°**, with the standing heading, instead of the old 50° sweep. Frame 0 and frame 30 match (loop error 0). Non-wing FBX curves match 1c64ab9 exactly (max abs 0). `FBX_SCALE_NONE`, `UnitScaleFactor` 1, rig scale 100. Mesh still 99649 verts / 199427 faces.
+
+**Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
+
+MD5: blend `7d147011df8ae4f08a8203b4deb0aee2`, flap `b7ef0b307f3be6326d54afd98cb34fdc`. **HOLD merge.**
