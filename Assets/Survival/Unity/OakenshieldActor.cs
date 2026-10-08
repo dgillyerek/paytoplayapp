@@ -20,7 +20,7 @@ namespace Survival.Unity
 
         public void Build()
         {
-            _player = new BlenderRigPlayer(OakenshieldMotion.Spec, transform);
+            _player = new BlenderRigPlayer(OakenshieldMotion.Spec, transform, OakenshieldAttack.Spec);
             _player.Build();
         }
 

@@ -28,7 +28,7 @@ public sealed class BlenderRigRosterTests
             "OAKENSHIELD_basecolor_0",
             "OAKENSHIELD_normal_2",
             "b3654b0602e44b2790cc360faf2a7562",
-            "Survival/Oakenshield Demo (rest + walk, Game view 1080x1920)");
+            "Survival/Oakenshield Demo (rest + walk + attack, Game view 1080x1920)");
     }
 
 
@@ -64,7 +64,7 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
 
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains("Survival/Oakenshield Demo (rest + walk, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.Contains("Survival/Oakenshield Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         Assert.Contains("Oakenshield.unity", editor, StringComparison.Ordinal);
     }
 

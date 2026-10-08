@@ -15,6 +15,8 @@ namespace Survival.Domain.Heroes
         public const string WalkFileName = "OAKENSHIELD_blenderig_walk.fbx";
         public const string RestThemePackRel = ThemePackDir + "/" + RestFileName;
         public const string WalkThemePackRel = ThemePackDir + "/" + WalkFileName;
+        public const string AttackPoseName = BlenderRigAttackSpec.PoseName;
+        public const string AttackFileName = OakenshieldAttack.FileName;
         public const string RejectedMixamoFileName = "OAKENSHIELD_rig.fbx";
 
         public const string RestPoseName = BlenderRigSpec.RestPoseName;
@@ -31,7 +33,7 @@ namespace Survival.Domain.Heroes
 
         public const string BoneRoot = MixamoHumanoidBones.Root;
 
-        public static readonly string[] PoseNames = { RestPoseName, WalkPoseName };
+        public static readonly string[] PoseNames = { RestPoseName, WalkPoseName, AttackPoseName };
         public static readonly string[] BoneNames = MixamoHumanoidBones.Names;
 
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(
@@ -52,6 +54,16 @@ namespace Survival.Domain.Heroes
             TextureFolder,
             BaseColorFile,
             NormalFile,
-            "");
+            "",
+            new[]
+            {
+                new BlenderRigClip(
+                    AttackPoseName,
+                    AttackFileName,
+                    BlenderRigAttackSpec.TakeName,
+                    BlenderRigAttackSpec.ClipSeconds,
+                    BlenderRigAttackSpec.FrameRate,
+                    BlenderRigAttackSpec.LastFrame)
+            });
     }
 }

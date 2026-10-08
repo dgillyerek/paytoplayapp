@@ -1,0 +1,116 @@
+{
+  "name": "OAKENSHIELD",
+  "blender": "4.3.2",
+  "blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/blender_rig/OAKENSHIELD_blenderig.blend",
+  "action": "OAKENSHIELD_attack",
+  "frames": [
+    0,
+    30
+  ],
+  "fps": 30,
+  "export_mode": "rebake",
+  "attack_fbx": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/OAKENSHIELD_blenderig_attack.fbx",
+  "props": {
+    "spear": {
+      "object": "OAKENSHIELD_thornspear",
+      "fbx": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/OAKENSHIELD_thornspear.fbx",
+      "faces": 553
+    }
+  },
+  "props_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/OAKENSHIELD_attack_props.blend",
+  "drivers": [
+    {
+      "kind": "held",
+      "bone": "mixamorig:RightHand",
+      "ref_frame": 10,
+      "show": [
+        3,
+        13
+      ],
+      "note": "thorn spear conjured f3-8 in RightHand, thrown at release",
+      "object": "OAKENSHIELD_thornspear",
+      "offset_bone_local": {
+        "loc": [
+          1.4901161193847656e-08,
+          0.05229518935084343,
+          -1.30385160446167e-07
+        ],
+        "quat_wxyz": [
+          0.782524824142456,
+          0.1704314947128296,
+          -0.07393455505371094,
+          -0.5942572951316833
+        ],
+        "scale": [
+          0.9999995827674866,
+          0.9999998807907104,
+          1.0000001192092896
+        ]
+      }
+    },
+    {
+      "kind": "proj",
+      "release": 14,
+      "speed": 11.0,
+      "note": "thrown thorn spear, travels character-forward",
+      "object": "OAKENSHIELD_thornspear_inflight",
+      "spawn_world_at_release": {
+        "loc": [
+          -0.5546298623085022,
+          -0.4572894275188446,
+          1.3455524444580078
+        ],
+        "quat_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  ],
+  "look_renders": [
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/stills/look_spear_0.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/stills/look_spear_1.png"
+  ],
+  "qc": {
+    "anticipation_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/stills/qc_anticipation_f10_rear.png",
+    "anticipation_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/stills/qc_anticipation_f10_side.png",
+    "strike_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/stills/qc_strike_f14_rear.png",
+    "strike_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/stills/qc_strike_f14_side.png",
+    "strike_q34front": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/stills/qc_strike_f14_q34front.png",
+    "release_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/stills/qc_release_f14_rear.png",
+    "release_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/stills/qc_release_f14_side.png",
+    "inflight_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/stills/qc_inflight_f17_rear.png",
+    "inflight_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/stills/qc_inflight_f17_side.png",
+    "inflight_q34front": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/stills/qc_inflight_f17_q34front.png",
+    "follow_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/stills/qc_follow_f20_rear.png",
+    "follow_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/stills/qc_follow_f20_side.png"
+  },
+  "contact_frames": [
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f00_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f00_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f03_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f03_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f06_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f06_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f09_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f09_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f12_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f12_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f15_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f15_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f18_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f18_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f21_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f21_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f24_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f24_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f27_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f27_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f30_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames/c_f30_side.png"
+  ],
+  "vframes": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/work_frames",
+  "work_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/OAKENSHIELD_attack_work.blend"
+}
