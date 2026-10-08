@@ -95,7 +95,7 @@ public sealed class BlenderRigRosterTests
     }
 
     [Fact]
-    public void Rowan_remesh_demo_plays_the_uploaded_rest_and_walk()
+    public void Rowan_remesh_demo_plays_the_uploaded_rest_and_fixed_walk()
     {
         var root = FindRepoRoot();
         var rest = Path.Combine(root, "Assets", RowanRemeshMotion.RestThemePackRel);
@@ -103,7 +103,11 @@ public sealed class BlenderRigRosterTests
         var albedo = Path.Combine(root, "Assets", RowanRemeshMotion.Spec.BaseColorThemePackRel);
         var normal = Path.Combine(root, "Assets", RowanRemeshMotion.Spec.NormalThemePackRel);
         Assert.Equal("486d9cf097f6d0fc0dd8ae6713b5f726", Md5(rest));
-        Assert.Equal("ab148b67d09b4f39f2923f4db8549d66", Md5(walk));
+        // Design walkfix_male_20261007 replaces the folded ab148b67 walk in the ThemePack (Game-view walk fix).
+        Assert.Equal("3bd5f6d392ff61c8f4ae1ac23a39fae3", Md5(walk));
+        var walkFixDir = Path.Combine(root, "design", "survival-theme-a-fantasy", "heroes", "anim", "rowan", "walkfix_male_20261007");
+        Assert.Equal("3bd5f6d392ff61c8f4ae1ac23a39fae3", Md5(Path.Combine(walkFixDir, "ROWAN_male_blenderig_walk.fbx")));
+        Assert.Contains("3bd5f6d392ff61c8f4ae1ac23a39fae3  ./ROWAN_male_blenderig_walk.fbx", File.ReadAllText(Path.Combine(walkFixDir, "CHECKSUMS.md5")));
         Assert.Equal("ROWAN_male_blenderig.fbx", RowanRemeshMotion.RestFileName);
         Assert.Equal("ROWAN_male_blenderig_walk.fbx", RowanRemeshMotion.WalkFileName);
         Assert.Equal(30, RowanRemeshMotion.WalkLastFrame);
@@ -169,7 +173,7 @@ public sealed class BlenderRigRosterTests
         Assert.DoesNotContain("OpeningPose", demo, StringComparison.Ordinal);
         Assert.Contains("PlayPose", actor, StringComparison.Ordinal);
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains("Survival/Rowan Remesh Demo (rest + walk, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.Contains("Survival/Rowan Remesh Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         Assert.Contains("RowanRemesh.unity", editor, StringComparison.Ordinal);
         Assert.Contains("Survival/Rowan Demo (rest + walk, Game view 1080x1920)", editor, StringComparison.Ordinal);
         Assert.Contains("Survival/Rowan Walk Demo (walk, Game view 1080x1920)", editor, StringComparison.Ordinal);

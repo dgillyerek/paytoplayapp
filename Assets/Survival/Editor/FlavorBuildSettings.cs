@@ -76,7 +76,7 @@ namespace Survival.Editor
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(RowanWalk);
         }
 
-        [MenuItem("Survival/Rowan Remesh Demo (rest + walk, Game view 1080x1920)")]
+        [MenuItem("Survival/Rowan Remesh Demo (rest + walk + attack, Game view 1080x1920)")]
         public static void OpenRowanRemeshDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(RowanRemesh);

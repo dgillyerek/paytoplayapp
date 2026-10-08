@@ -1,0 +1,143 @@
+{
+  "name": "ROWAN_male",
+  "blender": "4.3.2",
+  "blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/blender_rig_male_20261007/ROWAN_male_blenderig.blend",
+  "action": "ROWAN_male_attack",
+  "frames": [
+    0,
+    30
+  ],
+  "fps": 30,
+  "export_mode": "hum",
+  "attack_fbx": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/ROWAN_male_blenderig_attack.fbx",
+  "props": {
+    "arrow": {
+      "object": "ROWAN_arrow_blue_fletch",
+      "fbx": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/ROWAN_arrow_blue_fletch.fbx",
+      "faces": 67
+    },
+    "trail": {
+      "object": "ROWAN_arrow_trail_vfx",
+      "fbx": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/ROWAN_arrow_trail_vfx.fbx",
+      "faces": 100
+    }
+  },
+  "props_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/ROWAN_male_attack_props.blend",
+  "drivers": [
+    {
+      "kind": "held",
+      "bone": "mixamorig:RightForeArm",
+      "ref_frame": 14,
+      "show": [
+        5,
+        13
+      ],
+      "note": "blue-fletched arrow nocked on the mesh bow (grip vertex) f5-13; no draw hand: male rig left hand is skinned to LeftUpLeg",
+      "object": "ROWAN_arrow_blue_fletch",
+      "offset_bone_local": {
+        "loc": [
+          0.42210808396339417,
+          -0.14454752206802368,
+          -0.4317002296447754
+        ],
+        "quat_wxyz": [
+          0.6685086488723755,
+          -0.6212129592895508,
+          -0.320325642824173,
+          -0.25412991642951965
+        ],
+        "scale": [
+          0.9999995231628418,
+          0.9999995827674866,
+          0.9999996423721313
+        ]
+      }
+    },
+    {
+      "kind": "proj",
+      "release": 14,
+      "speed": 14.0,
+      "note": "arrow flies character-forward from nock pose",
+      "object": "ROWAN_arrow_blue_fletch_inflight",
+      "spawn_world_at_release": {
+        "loc": [
+          -0.4004616439342499,
+          0.08178460597991943,
+          1.1442965269088745
+        ],
+        "quat_wxyz": [
+          1.0,
+          6.984920419839113e-10,
+          3.725290742551124e-09,
+          -1.6647392797608518e-08
+        ]
+      }
+    },
+    {
+      "kind": "proj",
+      "release": 14,
+      "speed": 14.0,
+      "note": "pale-blue trail behind arrow",
+      "object": "ROWAN_arrow_trail_vfx",
+      "spawn_world_at_release": {
+        "loc": [
+          -0.4004616439342499,
+          0.08178460597991943,
+          1.1442965269088745
+        ],
+        "quat_wxyz": [
+          1.0,
+          6.984920419839113e-10,
+          3.725290742551124e-09,
+          -1.6647392797608518e-08
+        ]
+      }
+    }
+  ],
+  "look_renders": [
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/stills/look_arrow_0.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/stills/look_arrow_1.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/stills/look_trail_0.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/stills/look_trail_1.png"
+  ],
+  "qc": {
+    "anticipation_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/stills/qc_anticipation_f09_rear.png",
+    "anticipation_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/stills/qc_anticipation_f09_side.png",
+    "strike_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/stills/qc_strike_f14_rear.png",
+    "strike_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/stills/qc_strike_f14_side.png",
+    "strike_q34front": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/stills/qc_strike_f14_q34front.png",
+    "release_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/stills/qc_release_f14_rear.png",
+    "release_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/stills/qc_release_f14_side.png",
+    "inflight_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/stills/qc_inflight_f17_rear.png",
+    "inflight_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/stills/qc_inflight_f17_side.png",
+    "inflight_q34front": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/stills/qc_inflight_f17_q34front.png",
+    "follow_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/stills/qc_follow_f20_rear.png",
+    "follow_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/stills/qc_follow_f20_side.png"
+  },
+  "contact_frames": [
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f00_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f00_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f03_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f03_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f06_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f06_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f09_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f09_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f12_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f12_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f15_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f15_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f18_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f18_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f21_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f21_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f24_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f24_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f27_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f27_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f30_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames/c_f30_side.png"
+  ],
+  "vframes": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/work_frames",
+  "work_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/rowan/attack_20261007/ROWAN_male_attack_work.blend"
+}
