@@ -34,8 +34,10 @@ public sealed class BonequillAttackTests
         var root = FindRepoRoot();
         var pack = Path.Combine(root, "Assets", BonequillMotion.ThemePackDir);
         var design = Path.Combine(root, BonequillAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
-        Assert.Equal("16cfb8a07ffe13e6ac1f48b31791523c", BonequillAttack.FileMd5);
-        Assert.Equal("16cfb8a07ffe13e6ac1f48b31791523c", Md5(Path.Combine(pack, BonequillAttack.FileName)));
+        // ThemePack attack is the Design cloth split; attack_20261007 keeps the original.
+        Assert.Equal("bbdf2f41a9a6bfe48a4bed2c422472a9", BonequillAttack.FileMd5);
+        Assert.Equal("bbdf2f41a9a6bfe48a4bed2c422472a9", Md5(Path.Combine(pack, BonequillAttack.FileName)));
+        Assert.Equal("16cfb8a07ffe13e6ac1f48b31791523c", BonequillAttack.DesignFileMd5);
         Assert.Equal("16cfb8a07ffe13e6ac1f48b31791523c", Md5(Path.Combine(design, BonequillAttack.FileName)));
         Assert.Equal("9d8abdd529785dae22fcc01149e50dd3", Md5(Path.Combine(pack, "BONEQUILL_bonearrow_purple_fletch.fbx")));
         Assert.Equal("9d8abdd529785dae22fcc01149e50dd3", Md5(Path.Combine(design, "BONEQUILL_bonearrow_purple_fletch.fbx")));
@@ -68,9 +70,9 @@ public sealed class BonequillAttackTests
             }
         }
 
-        // Existing rig FBXs are untouched by the add-on.
-        Assert.Equal("301d285e17d06fe17a6bf76184131a4b", Md5(Path.Combine(pack, "BONEQUILL_blenderig.fbx")));
-        Assert.Equal("f9f8bb27a40bcf6faf8ef0615a6cd645", Md5(Path.Combine(pack, "BONEQUILL_blenderig_walk.fbx")));
+        // Rest/walk are now the Design cloth split (clothsplit_20261007).
+        Assert.Equal("fffd8059f34c0b0af1dfe7a0daf52135", Md5(Path.Combine(pack, "BONEQUILL_blenderig.fbx")));
+        Assert.Equal("4c0b25ec1d5f7bc0646a234f59a965f0", Md5(Path.Combine(pack, "BONEQUILL_blenderig_walk.fbx")));
     }
 
     [Fact]

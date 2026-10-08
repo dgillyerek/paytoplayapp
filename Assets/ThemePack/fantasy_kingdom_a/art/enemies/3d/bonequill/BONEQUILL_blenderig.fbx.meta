@@ -98,6 +98,6 @@ ModelImporter:
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Bonequill Design Blender mixamorig. 22 bones. Rest pose. Humanoid if the avatar validates, else Generic. bakeAxisConversion 0. useFileScale 0. Embedded basecolor+normal. HOLD merge.
+  userData: Bonequill Design clothsplit_20261007 rest (BONEQUILL_clothsplit.fbx, MD5 fffd8059f34c0b0af1dfe7a0daf52135). 49 bones: 22 mixamorig body + cloth chains on Spine, bound by name. Cloth never keyed; ClothSpringRig drives it. Humanoid only if mapped by name, else Generic. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

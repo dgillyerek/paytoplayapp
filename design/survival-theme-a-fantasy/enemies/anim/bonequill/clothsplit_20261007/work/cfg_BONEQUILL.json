@@ -1,0 +1,3 @@
+{"name":"BONEQUILL","anim_dir":"enemies/anim/bonequill","rig_blend":"enemies/anim/bonequill/blender_rig/BONEQUILL_blenderig.blend",
+ "attack_blend":"enemies/anim/bonequill/attack_20261007/BONEQUILL_attack_work.blend",
+ "prefix":{"F":"skirt_F","FL":"skirt_FL","L":"skirt_L","FR":"skirt_FR","R":"skirt_R","BL":"robe_BL","B":"robe_B","BR":"robe_BR"}}

@@ -127,6 +127,6 @@ ModelImporter:
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Bonequill attack add-on (Design 2026-10-07). 0-30 Scene take at 30fps on the existing blenderig. MD5 16cfb8a07ffe13e6ac1f48b31791523c. HOLD merge.
+  userData: Bonequill Design clothsplit_20261007 attack (BONEQUILL_clothsplit_attack.fbx, MD5 bbdf2f41a9a6bfe48a4bed2c422472a9). 49 bones: 22 mixamorig body + cloth chains on Spine, bound by name. Cloth never keyed; ClothSpringRig drives it. Humanoid only if mapped by name, else Generic. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 
