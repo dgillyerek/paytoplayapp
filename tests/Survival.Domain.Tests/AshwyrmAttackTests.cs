@@ -4,7 +4,7 @@ using Survival.Domain.Roster;
 
 namespace Survival.Domain.Tests;
 
-/// <summary>Ashwyrm Theme A attack add-on (Design 2026-10-07). HOLD merge until Derek Game-view PASS.</summary>
+/// <summary>Ashwyrm Theme A attack add-on (Design 2026-10-07). Attack is Derek Game-view PASS. Wing flap and walk still await Game-view.</summary>
 public sealed class AshwyrmAttackTests
 {
     [Fact]
@@ -66,10 +66,10 @@ public sealed class AshwyrmAttackTests
             }
         }
 
-        // Existing rig FBXs are untouched by the add-on.
+        // Rest and attack stay byte-identical. Flap and walk are the 2026-10-08 polish.
         Assert.Equal("a432672643153588f2e50cb4e24927b8", Md5(Path.Combine(pack, "ASHWYRM_blenderig.fbx")));
-        Assert.Equal("c2dd2641005770612ffb8b448731ca4f", Md5(Path.Combine(pack, "ASHWYRM_blenderig_walk.fbx")));
-        Assert.Equal("6cbf7c4a001d800d9eeaa3c064956fcd", Md5(Path.Combine(pack, "ASHWYRM_blenderig_wingflap.fbx")));
+        Assert.Equal("8e29ae51ff9898157c57ea9716631af7", Md5(Path.Combine(pack, "ASHWYRM_blenderig_walk.fbx")));
+        Assert.Equal("a2aef92b8d0c0e8d8287693e1583b39e", Md5(Path.Combine(pack, "ASHWYRM_blenderig_wingflap.fbx")));
     }
 
     [Fact]

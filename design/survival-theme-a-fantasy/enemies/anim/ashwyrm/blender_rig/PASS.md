@@ -118,3 +118,38 @@ Input: `derek_edit/ASHWYRM_blenderig_derek_small_20261006.blend` (Blender 5.2 So
 - Stills: `stills/derek_small_bones.jpg` / `stills/arms_vs_wings_labeled_small.jpg`
 
 **Dev tip-swap:** replace **BOTH** rest+wingflap **and NEW** `ASHWYRM_blenderig_walk.fbx`. Skeleton still **30 bones** with same names as armsrebuild — Unity BoneNames likely unchanged unless names drifted. **HOLD merge** until Derek Game-view PASS. Context: PR #32 demo + PR #33 SoT.
+
+## POLISH 2026-10-08 — wing-flap body follow + walk tail / hip sway
+
+Derek Game-view: the wing flap itself is fine and the body is too still; the walk tail should swing side to side with follow-through, and the body needs a subtle step-tied yaw and roll without a hop. Rebaked from `ASHWYRM_blenderig.blend` in Blender 4.2.3 LTS. **Rest pose, weights, materials, and bone count (30) unchanged.** Rest FBX not re-exported. Attack FBX, props, and VFX not opened.
+
+**Wing flap** (`ASHWYRM_clip`, 0..30 @30fps, linear + cyclic). Wing curves and the existing tail wave were not rewritten.
+- Legs: opposing pedal, thigh ±2.6° and shin ±2.2° on world X (sign flexes the hock).
+- Arms: both sides rise with the wings. Upperarm world Y, ±3.2° × cos(φ) (L sign −1, R sign +1). Forearm world X, ±3.6° × cos(φ−0.45), sign −1.
+- Head/neck: spine pitch ±2.2° × cos(φ), symmetric, no upward bias. Root stays locked. There is no neck bone, so this is a small snout follow, not a chest lunge.
+
+**Walk** (`ASHWYRM_walk`). Thigh, shin, and forearm curves were not rewritten (stride kept). Wings stay identity.
+- Tail yaw around world up, lagging the step. Degrees `[7, 14, 4, 3.5, 3, 2.5]` on `tail_01..06`, each bone 1.40 rad (~6.7 frames) after the previous. `tail_01` leads; `tail_02` carries the curl.
+- Spine yaw ±4.2° and roll ±2.2° on the existing pitch, phase-locked to the stride (`sin(φ+0.31)`).
+- Shoulders counter that: both upperarms yaw ∓3.0° and roll ∓1.8°. No root translation.
+
+**QC** (re-imported FBX, same measure as the pre-polish clips). Bind matches the rest FBX: 30 bones, same head/tail, 199999 faces, vertex-coordinate sum identical, both 2K textures embedded. Loop error 0.
+
+| | before | after |
+|---|---|---|
+| Flap leg mean travel | 0.00046 m | 0.0562 m |
+| Flap arm mean travel | 0.00180 m | 0.0295 m |
+| Flap head mean travel | 0.00038 m | 0.0223 m |
+| Flap head vertical | 0.00014 m | 0.0019 m |
+| Flap wing-tip mean travel | 0.847 m | 0.861 m |
+| Walk tail-tip lateral (X peak-to-peak) | 0.070 m | 0.226 m |
+| Walk tail zero-cross, `tail_01` → `tail_06` | (small wave) | +1.9 frames |
+| Walk spine yaw peak-to-peak | 0.89° | 4.20° |
+| Walk spine roll peak-to-peak | 3.97° | 10.54° |
+| Walk spine pitch peak-to-peak | 4.95° | 4.98° |
+| Walk spine-tail vertical | 0.0022 m | 0.0029 m |
+| Walk thigh.L forward stride | 0.184 m | 0.208 m |
+
+MD5: flap `a2aef92b8d0c0e8d8287693e1583b39e`, walk `8e29ae51ff9898157c57ea9716631af7`, blend `d26062494346447bebf68fd1bab28d4c`. Rest FBX still `a432672643153588f2e50cb4e24927b8`. Attack FBX still `b0d240cc17cf79af0af3ed22be5f07ef`.
+
+**Attack is Derek Game-view PASS (2026-10-07).** Wing flap and walk await Game-view. **HOLD merge.** Menu: **Survival/Ashwyrm Demo (rest + wing flap + attack, Game view 1080x1920)**. Dropdown already lists **rest, wing flap, walk, attack**.

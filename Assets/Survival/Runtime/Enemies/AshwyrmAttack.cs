@@ -6,7 +6,8 @@ namespace Survival.Domain.Enemies
     /// Ashwyrm Theme A attack add-on (Design 2026-10-07). Void-fire Breath + Fireball — purple breath flare at the snout f13–19, void-fire fireball released at f14.
     /// New 0–30 frame Scene take at 30 fps on the existing blenderig (same bones, no rebind; rest and walk unchanged).
     /// Frames below are baked from Design attack_meta drivers in Unity convention (character forward = +Z).
-    /// Prop VFX meshes are look reference only; Unity draws its own particles. HOLD merge until Derek Game-view PASS.
+    /// Prop VFX meshes are look reference only; Unity draws its own particles.
+    /// Attack is Derek Game-view PASS (2026-10-07). Wing flap and walk still await Game-view.
     /// </summary>
     public static class AshwyrmAttack
     {
