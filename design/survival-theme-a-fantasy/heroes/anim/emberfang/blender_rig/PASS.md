@@ -114,3 +114,44 @@ Same 4.2 SoT blend. No reskin, no new mesh, rest bind untouched. BoneCount stays
 - walk `49ad72ed7a6bf4ecfb6af2b7cf9052cd`
 
 HOLD merge until Derek Game-view PASS. Unity Game view was not run in this bake.
+
+## POLISH 2026-10-08 — Derek Game-view notes on tip 137fbeb
+
+Same 4.2 SoT blend. No reskin, no new mesh, rest bind untouched. BoneCount stays 55. The planted flap front and the small rear/front pedals stay as they were.
+
+**Wing flap**
+- Upstroke compressed with a height blend (0.75 of the way toward the frame-14 pose, and only on the upper part of the stroke). Frame 14 itself is unchanged, so the downstroke and the soft droop stay. Finger bend at the bottom is still 23.6°.
+- Long wing tips no longer meet over the skull. Peak tip height 1.195 m → 0.826 m. Clearance over the head +0.548 m → +0.174 m. The closest a long tip comes to the centerline while it is high is 0.67 m (was 0.9 cm, which crossed the midline).
+- A small extra nod on `neck_01` (+2°) and `head` (+0.6°), in the same phase as the existing wingbeat. Snout travel 1.6 cm forward → 3.1 cm, vertical 0.4 cm → 1.6 cm.
+
+**Walk**
+- Leg stride and the arm swing are unchanged.
+- Hip lateral shift, forward surge, and roll scaled to 0.25. Lateral 4.77 cm → 1.19 cm. Forward 3.99 cm → 1.00 cm. Roll ±3.98° → ±0.99°. Hip vertical bob stays 0.01 cm. Chest vertical stays 0.02 cm.
+- Wing sway scaled to 0.18 of the previous rotation, so the wings stay folded. Long tip path 1.021 m → 0.193 m (right tip 1.582 m → 0.335 m).
+- Neck and head scaled to 0.65 of tip 137fbeb. Head amplitude 1.38° → 0.90°. Neck_01 1.63° → 1.06°.
+
+**Before / after**
+
+| measure | tip 137fbeb | this bake |
+|---|---:|---:|
+| flap wing tip peak height | 1.195 m | 0.826 m |
+| flap head top | 0.648 m | 0.652 m |
+| flap tip clearance over the head | +0.548 m | +0.174 m |
+| flap tip closest to centerline while high | 0.009 m | 0.674 m |
+| flap snout forward travel | 1.64 cm | 3.11 cm |
+| flap snout vertical travel | 0.41 cm | 1.55 cm |
+| walk hip lateral shift | 4.77 cm | 1.19 cm |
+| walk hip roll | ±3.98° | ±0.99° |
+| walk hip forward surge | 3.99 cm | 1.00 cm |
+| walk wing tip path (L) | 1.021 m | 0.193 m |
+| walk head rotation amplitude | 1.38° | 0.90° |
+
+**Rest:** `EMBERFANG_dragonrig.fbx` MD5 still `91336af931c3a67dcf8754c8901e5fd3`.
+
+**MD5s after this bake (uncompressed):**
+- blend `582720cbad35a136eef3aa97a4826190` (Blender 4.2.23)
+- rest `91336af931c3a67dcf8754c8901e5fd3` (unchanged bind)
+- wingflap `3b464c5782ae5f4552aeabb384b0a97f`
+- walk `e9b4e462defb0672ba02b72517269903`
+
+HOLD merge until Derek Game-view PASS. Unity Game view was not run in this bake.
