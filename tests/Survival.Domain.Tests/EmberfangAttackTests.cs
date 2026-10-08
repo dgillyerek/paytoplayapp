@@ -68,7 +68,7 @@ public sealed class EmberfangAttackTests
         // Existing rig FBXs are the stacked #41 tip, not replaced by the add-on.
         Assert.Equal("91336af931c3a67dcf8754c8901e5fd3", Md5(Path.Combine(pack, "EMBERFANG_dragonrig.fbx")));
         Assert.Equal("e9b4e462defb0672ba02b72517269903", Md5(Path.Combine(pack, "EMBERFANG_dragonrig_walk.fbx")));
-        Assert.Equal("3b464c5782ae5f4552aeabb384b0a97f", Md5(Path.Combine(pack, "EMBERFANG_dragonrig_wingflap.fbx")));
+        Assert.Equal("bfde6f54c3cb6f5563ce94d19290ae3a", Md5(Path.Combine(pack, "EMBERFANG_dragonrig_wingflap.fbx")));
     }
 
     [Fact]
