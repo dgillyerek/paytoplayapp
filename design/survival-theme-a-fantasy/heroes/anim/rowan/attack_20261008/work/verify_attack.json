@@ -1,0 +1,58 @@
+{
+ "bones": 22,
+ "same_names_order": true,
+ "faces": 199999,
+ "rest_faces": 199999,
+ "frame_range": [
+  1,
+  31
+ ],
+ "action": "ROWAN_nocape_rig|Scene",
+ "hips_first_vs_rest_deg": 0.0,
+ "hips_first_vs_rest_m": 0.0,
+ "end_pose_dev_deg": {
+  "1": 0.0,
+  "31": 0.0
+ },
+ "hips_max_dev_deg_all_frames": 0,
+ "max_bone_travel_m": 0.8329673256376214,
+ "ROWAN_bow_attack.fbx": {
+  "armatures": [
+   [
+    "ROWAN_bow_rig",
+    [
+     "bow_grip",
+     "bow_nock"
+    ]
+   ]
+  ],
+  "meshes": [
+   [
+    "ROWAN_bow",
+    16284
+   ]
+  ],
+  "frames": [
+   1.0,
+   31.0
+  ]
+ },
+ "ROWAN_arrow_blue_fletch.fbx": {
+  "armatures": [],
+  "meshes": [
+   [
+    "ROWAN_arrow_blue_fletch",
+    67
+   ]
+  ]
+ },
+ "ROWAN_arrow_trail_vfx.fbx": {
+  "armatures": [],
+  "meshes": [
+   [
+    "ROWAN_arrow_trail_vfx",
+    100
+   ]
+  ]
+ }
+}

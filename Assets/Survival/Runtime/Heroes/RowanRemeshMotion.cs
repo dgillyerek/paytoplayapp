@@ -2,13 +2,12 @@ using Survival.Domain.Roster;
 
 namespace Survival.Domain.Heroes
 {
-    /// <summary>
-    /// Male Rowan remesh compare (Meshy to hum_pipeline, 2026-10-07).
-    /// Same mixamorig contract as the tip blenderig: rest bind, 1 second Scene walk
-    /// at 30 fps (Blender frames 1–31, Unity last frame 30). Does not replace
-    /// ROWAN_blenderig or the earlier feminine ROWAN_remesh files.
-    /// Armpit webbing is a tight A-pose heat caveat for twist/walk QC, not a Demo wire blocker.
-    /// </summary>
+/// <summary>
+/// Rowan no-cape (Design blender_rig_nocape_20261008, look PASS 2026-10-08).
+/// Mixamo-compatible mixamorig, 22 bones. Rest bind, 1 s Scene walk at 30 fps,
+/// attack add-on (attack_20261008). Replaces the male remesh + walkfix_male_20261007
+/// ThemePack contents (file names kept). Bones bound by name.
+/// </summary>
     public static class RowanRemeshMotion
     {
         public const string ThemePackDir = "ThemePack/fantasy_kingdom_a/art/heroes/3d/rowan_remesh_male";
@@ -29,13 +28,37 @@ namespace Survival.Domain.Heroes
         public const int BoneCount = MixamoHumanoidBones.Count;
 
         public const string TextureFolder = "ROWAN_male_blenderig.fbm";
-        public const string BaseColorFile = "ROWAN_male_basecolor_0.jpg";
-        public const string NormalFile = "ROWAN_male_normal_2.jpg";
+        public const string BaseColorFile = "ROWAN_nocape_basecolor_0.jpg";
+        public const string NormalFile = "ROWAN_nocape_normal_2.jpg";
 
         public const string BoneRoot = MixamoHumanoidBones.Root;
 
         public static readonly string[] PoseNames = { RestPoseName, WalkPoseName, AttackPoseName };
-        public static readonly string[] BoneNames = MixamoHumanoidBones.Names;
+        public static readonly string[] BoneNames =
+        {
+            "mixamorig:Hips",
+            "mixamorig:Spine",
+            "mixamorig:Spine1",
+            "mixamorig:Spine2",
+            "mixamorig:Neck",
+            "mixamorig:Head",
+            "mixamorig:LeftShoulder",
+            "mixamorig:LeftArm",
+            "mixamorig:LeftForeArm",
+            "mixamorig:LeftHand",
+            "mixamorig:RightShoulder",
+            "mixamorig:RightArm",
+            "mixamorig:RightForeArm",
+            "mixamorig:RightHand",
+            "mixamorig:LeftUpLeg",
+            "mixamorig:LeftLeg",
+            "mixamorig:LeftFoot",
+            "mixamorig:LeftToeBase",
+            "mixamorig:RightUpLeg",
+            "mixamorig:RightLeg",
+            "mixamorig:RightFoot",
+            "mixamorig:RightToeBase"
+        };
 
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(
             "RowanRemesh",
@@ -55,7 +78,7 @@ namespace Survival.Domain.Heroes
             TextureFolder,
             BaseColorFile,
             NormalFile,
-            "",
+            "ROWAN_nocape_metal_rough_1.png",
             new[]
             {
                 new BlenderRigClip(
