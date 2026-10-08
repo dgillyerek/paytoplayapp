@@ -1,0 +1,103 @@
+{
+  "name": "EMBERFANG",
+  "blender": "4.2.3 LTS",
+  "blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/blender_rig/EMBERFANG_dragonrig.blend",
+  "action": "EMBERFANG_attack",
+  "frames": [
+    0,
+    30
+  ],
+  "fps": 30,
+  "export_mode": "dragon",
+  "attack_fbx": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/EMBERFANG_blenderig_attack.fbx",
+  "props": {
+    "fireball": {
+      "object": "EMBERFANG_fireball_vfx",
+      "fbx": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/EMBERFANG_fireball_vfx.fbx",
+      "faces": 2260
+    },
+    "flare": {
+      "object": "EMBERFANG_breathflare_vfx",
+      "fbx": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/EMBERFANG_breathflare_vfx.fbx",
+      "faces": 736
+    }
+  },
+  "props_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/EMBERFANG_attack_props.blend",
+  "drivers": [
+    {
+      "kind": "fixed",
+      "show": [
+        13,
+        19
+      ],
+      "note": "breath flare at mouth (head/jaw tips) around release",
+      "object": "EMBERFANG_breathflare_vfx"
+    },
+    {
+      "kind": "proj",
+      "release": 14,
+      "speed": 9.0,
+      "note": "fireball spawns 8cm ahead of mouth, travels character-forward",
+      "object": "EMBERFANG_fireball_vfx",
+      "spawn_world_at_release": {
+        "loc": [
+          -0.006679893471300602,
+          -1.041900634765625,
+          0.3407188653945923
+        ],
+        "quat_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  ],
+  "look_renders": [
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/stills/look_fireball_0.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/stills/look_fireball_1.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/stills/look_flare_0.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/stills/look_flare_1.png"
+  ],
+  "qc": {
+    "anticipation_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/stills/qc_anticipation_f09_rear.png",
+    "anticipation_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/stills/qc_anticipation_f09_side.png",
+    "strike_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/stills/qc_strike_f14_rear.png",
+    "strike_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/stills/qc_strike_f14_side.png",
+    "strike_q34front": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/stills/qc_strike_f14_q34front.png",
+    "release_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/stills/qc_release_f14_rear.png",
+    "release_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/stills/qc_release_f14_side.png",
+    "inflight_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/stills/qc_inflight_f17_rear.png",
+    "inflight_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/stills/qc_inflight_f17_side.png",
+    "inflight_q34front": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/stills/qc_inflight_f17_q34front.png",
+    "follow_rear": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/stills/qc_follow_f21_rear.png",
+    "follow_side": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/stills/qc_follow_f21_side.png"
+  },
+  "contact_frames": [
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f00_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f00_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f03_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f03_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f06_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f06_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f09_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f09_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f12_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f12_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f15_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f15_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f18_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f18_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f21_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f21_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f24_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f24_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f27_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f27_side.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f30_rear.png",
+    "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames/c_f30_side.png"
+  ],
+  "vframes": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/work_frames",
+  "work_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/emberfang/attack_20261007/EMBERFANG_attack_work.blend"
+}
