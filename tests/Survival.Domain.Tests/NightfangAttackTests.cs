@@ -130,6 +130,47 @@ public sealed class NightfangAttackTests
     }
 
     [Fact]
+    public void Nightfang_slash_shoots_straight_along_actor_forward_for_its_whole_lifetime()
+    {
+        var track = Assert.Single(NightfangAttack.Spec.Tracks);
+        Assert.Equal(AttackVfxShape.Slash, track.Shape);
+        Assert.Equal(13, track.FirstVisibleFrame);
+        Assert.Equal(18, track.LastVisibleFrame);
+        var reach = Math.Max(track.PropExtent[0], 0.2f);
+        var lane = Math.Max(track.PropExtent[1], 0.1f) * AttackEmission.SlashLaneFraction;
+        var angle = AttackEmission.MaxSlashTravelAngleDegrees(
+            track.FirstVisibleFrame,
+            track.LastVisibleFrame,
+            reach,
+            lane,
+            AttackEmission.SlashClawCount,
+            37f,
+            80);
+        Assert.True(
+            angle < AttackEmission.MaxTravelAngleDegrees,
+            "slash travel is " + angle.ToString("0.###") + "° off actor forward across frames " +
+            track.FirstVisibleFrame + "–" + track.LastVisibleFrame +
+            " (limit " + AttackEmission.MaxTravelAngleDegrees.ToString("0") + "°).");
+        Assert.True(AttackEmission.SlashConeHalfAngleDegrees < AttackEmission.MaxTravelAngleDegrees);
+
+        AttackEmission.StraightAheadTip(0, AttackEmission.SlashClawCount, 0f, reach, lane, out var x0, out _, out var z0);
+        AttackEmission.StraightAheadTip(0, AttackEmission.SlashClawCount, 1f, reach, lane, out var x1, out _, out var z1);
+        Assert.Equal(x0, x1);
+        Assert.True(z1 > z0 + 0.5f, "the claws must leave the mouth along forward.");
+        AttackEmission.StraightAheadTip(1, AttackEmission.SlashClawCount, 1f, reach, lane, out var midX, out var midY, out _);
+        Assert.Equal(0f, midX);
+        Assert.Equal(0f, midY);
+
+        var root = FindRepoRoot();
+        var driver = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigAttackDriver.cs"));
+        Assert.Contains("AttackEmission.StraightAheadTip", driver, StringComparison.Ordinal);
+        Assert.Contains("_actor.rotation", driver, StringComparison.Ordinal);
+        Assert.Contains("AttackEmission.SlashConeHalfAngleDegrees", driver, StringComparison.Ordinal);
+        Assert.Contains("ParticleSystemShapeType.Cone", driver, StringComparison.Ordinal);
+        Assert.DoesNotContain("Mathf.Lerp(w * 0.5f, -w * 0.5f, p)", driver, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Nightfang_attack_plays_once_then_rests_then_repeats()
     {
         var f0 = BlenderRigAttackSpec.CycleFrame(0f, out var in0, out var c0);

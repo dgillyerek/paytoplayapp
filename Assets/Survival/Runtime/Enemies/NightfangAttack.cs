@@ -4,7 +4,7 @@ namespace Survival.Domain.Enemies
 {
     /// <summary>
     /// Nightfang Theme A attack add-on, rebaked 2026-10-08 on Derek's hand-edited rig.
-    /// Lunge bite + claw rake — in-place lunge (root forward ≤32 cm and back by f30) with a three-claw violet slash in front of the jaw, visible f13–18.
+    /// Lunge bite + claw rake — in-place lunge (root forward ≤32 cm and back by f30) with a three-claw violet slash that shoots straight out from the mouth along actor forward, visible f13–18.
     /// 0–30 frame Scene take at 30 fps. Forelegs reach and rake. Starts and ends at rest. No cloth.
     /// Frames below are Unity convention (character forward = +Z).
     /// Prop VFX meshes are look reference only; Unity draws its own particles. HOLD merge until Derek Game-view PASS.
@@ -88,7 +88,7 @@ namespace Survival.Domain.Enemies
                         new AttackFrame(0f, 0.38074f, 1.07031f, 0f, 0f, 0f, 1f, 1f, false),
                         new AttackFrame(0f, 0.38074f, 1.07031f, 0f, 0f, 0f, 1f, 1f, false)
                     },
-                    "claw-rake slash arcs in front of the jaw at bite/strike frame")
+                    "claw slash shoots straight ahead from the mouth along actor forward at bite/strike")
             });
     }
 }

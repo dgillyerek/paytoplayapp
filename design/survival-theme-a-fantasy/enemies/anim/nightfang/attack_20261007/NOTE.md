@@ -28,7 +28,7 @@
 - `NIGHTFANG_clawslash_vfx.fbx` MD5 `539dda574663d1bda0dba276dbb05e94` (1092 faces) — role `slash`
 - All props in one blend: `NIGHTFANG_attack_props.blend` MD5 `b1db416a2e94ae866545a3f8fd4d8142`
 - Attach / spawn (bone-local offsets + spawn transforms in `work/attack_meta.json`):
-  - `NIGHTFANG_clawslash_vfx` — fixed — claw-rake slash arcs in front of the jaw at bite/strike frame
+  - `NIGHTFANG_clawslash_vfx` — fixed — three claw trails and a narrow spark cone leave the mouth along the actor root forward (+Z, the same axis as the lunge), frames 13–18. The previous sweep ran on local X (about 70–90° off forward). The muzzle is aligned to the actor, not to the head or jaw bone axis. Head at release is not turned sideways (neck yaw about −2°, head bone yaw about −8°, mostly the downward bite), so this pass did not re-export the attack clip.
 - Prop axes: held weapons have origin at the grip (staff/bow long axis +Z; arrows/spear tip −Y, origin at nock/centre); projectiles/VFX travel along local −Y with the trail on +Y.
 
 ## QC
@@ -39,7 +39,7 @@
 - Work copy with action + props: `NIGHTFANG_attack_work.blend` (compressed copy for review; **not** the rig SoT).
 
 ## Caveats
-- Natural weapons only (no prop, no cloth). Body bones only. The lunge is a non-deform root translate (28 cm forward, back to 0 by f30). Claw-slash VFX is still a fixed effect on frames 13–18, now in front of the new snout. Unity keeps `applyRootMotion` off.
+- Natural weapons only (no prop, no cloth). Body bones only. The lunge is a non-deform root translate (28 cm forward, back to 0 by f30). Claw-slash VFX is a fixed effect on frames 13–18 in front of the snout, and it travels along actor forward. Unity keeps `applyRootMotion` off.
 - Stills, contact sheet, look sheet, preview mp4, and `NIGHTFANG_attack_work.blend` are the 2026-10-07 pass on the old auto rig. The FBXs above are the rebake.
 
 HOLD: do not merge until Derek Game-view PASS.
