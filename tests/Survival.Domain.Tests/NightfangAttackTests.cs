@@ -34,9 +34,9 @@ public sealed class NightfangAttackTests
         var root = FindRepoRoot();
         var pack = Path.Combine(root, "Assets", NightfangMotion.ThemePackDir);
         var design = Path.Combine(root, NightfangAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
-        Assert.Equal("3e1d6cfa12e353f207a4e610804f9a3b", NightfangAttack.FileMd5);
-        Assert.Equal("3e1d6cfa12e353f207a4e610804f9a3b", Md5(Path.Combine(pack, NightfangAttack.FileName)));
-        Assert.Equal("3e1d6cfa12e353f207a4e610804f9a3b", Md5(Path.Combine(design, NightfangAttack.FileName)));
+        Assert.Equal("9fa7adc7882ad46ca28265947b081f19", NightfangAttack.FileMd5);
+        Assert.Equal("9fa7adc7882ad46ca28265947b081f19", Md5(Path.Combine(pack, NightfangAttack.FileName)));
+        Assert.Equal("9fa7adc7882ad46ca28265947b081f19", Md5(Path.Combine(design, NightfangAttack.FileName)));
 
         Assert.Equal(NightfangAttack.PropFileNames.Length, NightfangAttack.PropFileMd5s.Length);
         for (var i = 0; i < NightfangAttack.PropFileNames.Length; i++)
@@ -65,13 +65,13 @@ public sealed class NightfangAttackTests
             }
         }
 
-        Assert.Equal("09bd9ceb6fdfa9c39a6e09673b585f4b", Md5(Path.Combine(pack, "NIGHTFANG_blenderig.fbx")));
-        Assert.Equal("438a490c45576fa928f9eaa7a8d65630", Md5(Path.Combine(pack, "NIGHTFANG_blenderig_trot.fbx")));
+        Assert.Equal("9bad5fd2559b9a7efb27cc206767ed54", Md5(Path.Combine(pack, "NIGHTFANG_blenderig.fbx")));
+        Assert.Equal("405bd319ffe75abcfe24cfa3024b96f4", Md5(Path.Combine(pack, "NIGHTFANG_blenderig_trot.fbx")));
         Assert.Equal(
-            "09bd9ceb6fdfa9c39a6e09673b585f4b",
+            "9bad5fd2559b9a7efb27cc206767ed54",
             Md5(Path.Combine(root, "design", "survival-theme-a-fantasy", "enemies", "anim", "nightfang", "blender_rig", "NIGHTFANG_blenderig.fbx")));
         Assert.Equal(
-            "438a490c45576fa928f9eaa7a8d65630",
+            "405bd319ffe75abcfe24cfa3024b96f4",
             Md5(Path.Combine(root, "design", "survival-theme-a-fantasy", "enemies", "anim", "nightfang", "blender_rig", "NIGHTFANG_blenderig_trot.fbx")));
     }
 

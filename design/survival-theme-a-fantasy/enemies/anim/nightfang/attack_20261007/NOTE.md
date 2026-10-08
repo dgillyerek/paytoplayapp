@@ -5,13 +5,13 @@
 
 ## Built on Derek's hand-edited rig (bone placement kept)
 - Rig blend (SoT, not overwritten): `enemies/anim/nightfang/blender_rig/NIGHTFANG_blenderig.blend` MD5 `ebb0c6f9b0d5ef55df95dd785938d11f` (Blender 5.2). His head/tail/roll were not moved.
-- Rest FBX: `enemies/anim/nightfang/blender_rig/NIGHTFANG_blenderig.fbx` MD5 `09bd9ceb6fdfa9c39a6e09673b585f4b`
-- Trot FBX: `enemies/anim/nightfang/blender_rig/NIGHTFANG_blenderig_trot.fbx` MD5 `438a490c45576fa928f9eaa7a8d65630`
+- Rest FBX: `enemies/anim/nightfang/blender_rig/NIGHTFANG_blenderig.fbx` MD5 `9bad5fd2559b9a7efb27cc206767ed54`
+- Trot FBX: `enemies/anim/nightfang/blender_rig/NIGHTFANG_blenderig_trot.fbx` MD5 `405bd319ffe75abcfe24cfa3024b96f4`
 - What he changed vs the old 33-bone auto rig (`dce842f9…`): deleted that skeleton and drew 29 deform bones (`Bone`…`Bone.028`), four unparented chains. Forelegs are 5-bone chains from the withers down to the paws (the old right foreleg was splayed out through the torso). Spine runs withers → hips (2 bones). Hind legs are 4 bones. Tail is 5 bones. Neck/head/jaw/snout is 4 bones. No root in his file.
-- Bind fix only: renamed those bones (shoulder/upperarm/forearm/hand/toe, chest/hips, thigh/shin/foot/toe_h, tail_01..05, neck/head/jaw/snout), added a `root` with no vertex group (it parents the rig and does not skin the mesh), and parented the loose foreleg and neck chains to the chest without moving heads, tails, or rolls (reimport: every joint matches his blend, roll delta 0). The mesh still wore the old vertex groups (`hips`, `upperarm.R`, …), and `upperarm.R` had been dominating ~25k verts because of the splay, so the body was not bound to his bones. Cleared those groups and rebound with automatic heat weights, L/R suppress, 4 influences. Unweighted 0. Each bone's weight centroid sits on the bone (worst 8.6 cm, `shoulder.L`).
+- Bind fix only: renamed those bones (shoulder/upperarm/forearm/hand/toe, chest/hips, thigh/shin/foot/toe_h, tail_01..05, neck/head/jaw/snout), added a `root` with no vertex group (it parents the rig and does not skin the mesh), and parented the loose foreleg and neck chains to the chest without moving heads, tails, or rolls (reimport: every joint matches his blend, roll delta 0). The mesh still wore the old vertex groups, so it was rebound with automatic weights. Those weights were then cleaned: at most 3 influences per vertex, anything under 0.05 removed, normalized, then smoothed so neighbouring verts around the joints agree. Unweighted 0. Root-only verts 0. His blend file was not saved over.
 
 ## Attack clip
-- `NIGHTFANG_blenderig_attack.fbx` MD5 `3e1d6cfa12e353f207a4e610804f9a3b` — Scene take, frames 0–30 @30fps (31 keys, starts and ends at rest).
+- `NIGHTFANG_blenderig_attack.fbx` MD5 `9fa7adc7882ad46ca28265947b081f19` — Scene take, frames 0–30 @30fps (31 keys, starts and ends at rest). Motion matches the previous attack (joint positions unchanged). Re-exported because the cleaned weights are in the mesh.
 - Keys: anticipation f9 · strike f14 · release/impact **f14** · follow-through f20 · recover f30.
 - Same design as the previous pass: in-place lunge (root forward 28 cm along Blender −Y, back to 0 by f30), jaw bite, and now both forelegs reach and rake. Claw-slash VFX stays visible on frames 13–18; its world point moved with the new snout (Unity 0, 0.381, 1.070).
 - Export: binary FBX, axis_forward −Z / up Y, `FBX_SCALE_ALL` + apply unit scale so UnitScaleFactor stays 100 and the armature scale curves stay 1 (not the collapsed 0.01 skeleton). add_leaf_bones off, embed textures, bake all bones step 1, simplify 0, force start/end keys. Blender 5.2.2. Take name `Scene`. Generic.
@@ -20,7 +20,8 @@
 ## Trot clip
 - Diagonal pairs (fore L with hind R, then the other pair), one stride per second, in place.
 - Each paw steps about 32 cm forward and back. Foreleg toes travel about 0.37 m. Swing paws lift (left fore up to about 8 cm; the more upright right fore lifts less). Spine and head bob, tail follows.
-- Reimport: armature scale curves 1.0, root travel 3.6 cm, head travel 7.8 cm, tail tip 76 cm, loop error 0 m.
+- Reimport: armature scale stays 1,1,1 (no scale keys). Loop error 0. Fore toes still travel about 31 cm and 29 cm.
+- Trot shake fix (2026-10-08): the left upper arm was reversing about 36° in a single frame, and 30,618 weights were under 0.05, so the skin swelled between bones. After the weight clean and a looping smooth of the trot curves, the max per-frame vertex jitter (second difference of each vertex) dropped from 29.3 cm to 2.3 cm. Mean of each vertex's worst jitter dropped from 3.4 cm to 0.8 cm. Max influences per vertex: 4 before, 3 after. Unity clip import keeps animation compression Off.
 
 ## Props / VFX (separate assets — never baked into the body mesh)
 - `NIGHTFANG_clawslash_vfx.fbx` MD5 `539dda574663d1bda0dba276dbb05e94` (1092 faces) — role `slash`

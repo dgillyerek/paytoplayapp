@@ -24,9 +24,9 @@ ModelImporter:
     importAnimatedCustomProperties: 0
     importConstraints: 0
     animationCompression: 0
-    animationRotationError: 0.5
-    animationPositionError: 0.5
-    animationScaleError: 0.5
+    animationRotationError: 0.01
+    animationPositionError: 0.01
+    animationScaleError: 0.01
     animationWrapMode: 0
     extraExposedTransformPaths: []
     extraUserProperties: []
@@ -127,6 +127,6 @@ ModelImporter:
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Nightfang attack rebake on Derek's rig (2026-10-08). 0-30 Scene take at 30fps. MD5 3e1d6cfa12e353f207a4e610804f9a3b. HOLD merge.
+  userData: Nightfang attack on Derek's rig, weights cleaned (2026-10-08). 0-30 Scene take at 30fps. MD5 9fa7adc7882ad46ca28265947b081f19. Animation compression Off. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 
