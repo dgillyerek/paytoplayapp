@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Survival.Domain.Enemies;
+using Survival.Domain.Heroes;
 
 namespace Survival.Domain.Roster
 {
@@ -207,14 +208,15 @@ namespace Survival.Domain.Roster
     }
 
     /// <summary>
-    /// Design Blender rigs that passed Derek's Game view: Ashwyrm and Nightfang.
+    /// Design Blender rigs that passed Derek's Game view: Ashwyrm, Nightfang, and Stormcrest.
     /// </summary>
     public static class BlenderRigRoster
     {
         public static IReadOnlyList<BlenderRigSpec> All { get; } = new[]
         {
             AshwyrmMotion.Spec,
-            NightfangMotion.Spec
+            NightfangMotion.Spec,
+            StormcrestMotion.Spec
         };
     }
 }

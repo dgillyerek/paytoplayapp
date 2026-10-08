@@ -17,6 +17,7 @@ namespace Survival.Editor
         private const string Emberfang = "Assets/Survival/Scenes/Emberfang.unity";
         private const string Ashwyrm = "Assets/Survival/Scenes/Ashwyrm.unity";
         private const string Nightfang = "Assets/Survival/Scenes/Nightfang.unity";
+        private const string Stormcrest = "Assets/Survival/Scenes/Stormcrest.unity";
         private const string GroveBoard = "Assets/Grove/Scenes/Board.unity";
 
         [MenuItem("Survival/Use Theme A Flavor (fantasy_kingdom_a)")]
@@ -35,6 +36,7 @@ namespace Survival.Editor
                 new EditorBuildSettingsScene(Emberfang, true),
                 new EditorBuildSettingsScene(Ashwyrm, true),
                 new EditorBuildSettingsScene(Nightfang, true),
+                new EditorBuildSettingsScene(Stormcrest, true),
                 new EditorBuildSettingsScene(GroveBoard, true)
             };
             Debug.Log("Survival flavor " + SurvIds.FlavorIdFantasyKingdomA + " → Splash then Play. Pack " + SurvIds.ThemeIdFantasyKingdomA);
@@ -74,6 +76,12 @@ namespace Survival.Editor
         public static void OpenNightfangDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Nightfang);
+        }
+
+        [MenuItem("Survival/Stormcrest Demo (rest + wing flap + walk + attack, Game view 1080x1920)")]
+        public static void OpenStormcrestDemo()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Stormcrest);
         }
 
         [MenuItem("Survival/Import locked Sir Aldric rear master")]
