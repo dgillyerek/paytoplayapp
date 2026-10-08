@@ -233,3 +233,15 @@ The stroke is one eased beat. It crests at 67.4° (wingtips stay outboard of the
 **Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
 
 MD5: blend `bd32eeb99fbde2aad3faa71f8b1c40f1`, flap `a63f63b4ca464bbe8a110e58eb2671b1`. **HOLD merge.**
+
+## Derek Game-view on db79128 — swept-back flap
+
+Derek: the wings go too high and move too robotically. They should come up and down the length of the body, very smoothly, tips straight back with a slight bend as they come down.
+
+The wings are no longer spread to the side. Each bone is aimed back along the body (tip direction Y 0.86–0.97, only about 0.2 of X) and the stroke is one sine over the existing 30 frames. `wing_root` leads, `wing_arm` lags 2 frames, the fingers lag 3–5, so the trailing tip peaks 4 frames after the shoulder. On the lower half of the sine the fingers curl down a few extra degrees and straighten again on the way up. Keys in the blend are bezier with the same slope at frame 0 and frame 30. Blender's FBX exporter still stamps the shared linear key flag it uses for every clip; the values themselves are one sine sample per frame, so the speed follows a cosine and there is no held crest.
+
+**Reimport** (Blender 4.2.3, take Scene, frames 1–31): `wing_f1` **−27.99° to −8.04°** above horizontal on both sides (was −8.6° to +67.4°). Leading tip height versus the hip back line **+0.002 m to +0.237 m**. Trailing tip (`wing_f4`) **−0.220 m to +0.059 m**, so the downstroke hangs along the flank. The skinned posterior tip matches that: **−0.219 m to +0.115 m**, and the FBX reimport puts that same vert at 0.622 m / 0.289 m. Shoulder tail peaks at frame 7, leading tip at frame 9 (**lag 2**), trailing tip at frame 11 (**lag 4**). Frame 0 and frame 30 match (loop error 0). Non-wing curves match db79128 exactly (max abs 0). `FBX_SCALE_NONE`, `UnitScaleFactor` 1, rig scale 100. Mesh still 99649 verts / 199427 faces.
+
+**Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
+
+MD5: blend `403ce89136072133e0d7144a45f4c195`, flap `d7e8afee7141418457bf9d0deb7fa4fd`. **HOLD merge.**
