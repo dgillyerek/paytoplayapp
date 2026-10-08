@@ -60,6 +60,21 @@ namespace Survival.Domain.Heroes
             "mixamorig:RightToeBase"
         };
 
+
+
+        /// <summary>Rest/walk staff: Design props/LYRA_staff.fbx on RightHand. Hidden while the attack plays (attack keeps its own LYRA_staff.fbx).</summary>
+        public static readonly BlenderRigIdlePropSpec[] IdleProps =
+        {
+            new BlenderRigIdlePropSpec(
+                "LYRA_staff_rest",
+                "LYRA_staff_rest.fbx",
+                "69872fb5cf0f1a515b0e17ca884bccc1",
+                "mixamorig:RightHand",
+                new[] { 0.54468f, 1.2833f, 0.13197f, 0.01582f, -0.00068f, -0.04293f, 0.99895f },
+                new[] { 0.27652f, 1.88927f, 0.11728f },
+                "Design props/LYRA_staff.fbx on RightHand at rest and in the walk (rest_world from LYRA_staff_meta.json). Hidden during attack.")
+        };
+
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(
             "Lyra",
             ThemePackDir,

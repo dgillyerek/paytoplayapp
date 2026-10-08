@@ -29,15 +29,21 @@ namespace Survival.Unity
         private bool _ready;
         private bool _loop;
         private readonly BlenderRigAttackSpec? _attackSpec;
+        private readonly BlenderRigIdlePropSpec[] _idleProps;
         private BlenderRigAttackDriver? _attack;
         private bool _attackMode;
         private float _length;
         private float _time;
         private string _pose;
 
-        public BlenderRigPlayer(BlenderRigSpec spec, Transform parent, BlenderRigAttackSpec? attack = null)
+        public BlenderRigPlayer(
+            BlenderRigSpec spec,
+            Transform parent,
+            BlenderRigAttackSpec? attack = null,
+            BlenderRigIdlePropSpec[]? idleProps = null)
         {
             _attackSpec = attack;
+            _idleProps = idleProps ?? System.Array.Empty<BlenderRigIdlePropSpec>();
             _spec = spec;
             _parent = parent;
             _pose = BlenderRigSpec.RestPoseName;
@@ -89,6 +95,15 @@ namespace Survival.Unity
             {
                 _attack = new BlenderRigAttackDriver(_attackSpec, _spec.ThemePackDir, _parent);
                 _attack.Calibrate(instance);
+                if (_idleProps.Length > 0)
+                {
+                    _attack.BindIdleProps(_idleProps);
+                    _attack.SetIdlePropsVisible(true);
+                }
+            }
+            else if (_idleProps.Length > 0)
+            {
+                Debug.LogWarning("Idle props need the attack calibration; none shown for " + _spec.ThemePackDir);
             }
 
             _animator = instance.GetComponent<Animator>() ?? instance.AddComponent<Animator>();
@@ -201,6 +216,7 @@ namespace Survival.Unity
             _loop = false;
             _attackMode = true;
             _time = 0f;
+            _attack.SetIdlePropsVisible(false);
             _attack.Activate(SampleAttackFrame);
             SampleAttackFrame(BlenderRigAttackSpec.FirstFrame);
             _attack.Tick(BlenderRigAttackSpec.FirstFrame, true, 0);
@@ -246,6 +262,7 @@ namespace Survival.Unity
 
             _attackMode = false;
             _attack?.Deactivate();
+            _attack?.SetIdlePropsVisible(true);
         }
 
         private void ShowRest()
