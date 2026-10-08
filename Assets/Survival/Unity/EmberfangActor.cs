@@ -1,4 +1,5 @@
 using Survival.Domain.Heroes;
+using Survival.Domain.Roster;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
@@ -9,7 +10,9 @@ using UnityEditor;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Plays the Design Blender dragon: rest bind pose, the 1s wing flap, and the walk ExtraClip.
+    /// Plays the Design Blender dragon: rest bind pose, the 1s wing flap, the walk ExtraClip,
+    /// and the Theme A attack (EmberfangAttack.Spec: frames 0–30, then 0.5 s rest, repeat) with the
+    /// fireball and breath-flare particles driven by <see cref="BlenderRigAttackDriver"/>.
     /// Custom bone names. Rejects a Mixamo EMBERFANG_rig.fbx.
     /// Metallic and roughness always bind. Base and normal stay embedded when import keeps them;
     /// otherwise the loose PNGs bind.
@@ -29,6 +32,8 @@ namespace Survival.Unity
         private float _length;
         private float _time;
         private string _pose = EmberfangMotion.RestPoseName;
+        private BlenderRigAttackDriver? _attack;
+        private bool _attackMode;
 
         public bool Built => _ready;
         public string Pose => _pose;
@@ -56,6 +61,8 @@ namespace Survival.Unity
 
             _instance = Instantiate(prefab, transform);
             _instance.name = "EmberfangDragonRig";
+            _attack = new BlenderRigAttackDriver(EmberfangAttack.Spec, EmberfangMotion.ThemePackDir, transform);
+            _attack.Calibrate(_instance);
             _animator = _instance.GetComponent<Animator>() ?? _instance.AddComponent<Animator>();
             var avatar = LoadGenericAvatar(path);
             if (avatar != null && avatar.isHuman)
@@ -95,6 +102,12 @@ namespace Survival.Unity
                 return false;
             }
 
+            if (string.Equals(poseName, EmberfangMotion.AttackPoseName, System.StringComparison.Ordinal))
+            {
+                return PlayAttack();
+            }
+
+            StopAttack();
             if (string.Equals(poseName, EmberfangMotion.RestPoseName, System.StringComparison.Ordinal))
             {
                 ShowRest();
@@ -122,8 +135,72 @@ namespace Survival.Unity
             return false;
         }
 
+        private bool PlayAttack()
+        {
+            if (_attack == null)
+            {
+                return false;
+            }
+
+            StopAttack();
+            if (!PlayClip(EmberfangAttack.FileName, BlenderRigAttackSpec.PoseName, BlenderRigAttackSpec.TakeName, BlenderRigAttackSpec.LastFrame))
+            {
+                return false;
+            }
+
+            _loop = false;
+            _attackMode = true;
+            _time = 0f;
+            _attack.Activate(SampleAttackFrame);
+            SampleAttackFrame(BlenderRigAttackSpec.FirstFrame);
+            _attack.Tick(BlenderRigAttackSpec.FirstFrame, true, 0);
+            return true;
+        }
+
+        private void TickAttack()
+        {
+            if (!_playable.IsValid() || _attack == null)
+            {
+                return;
+            }
+
+            _time += Time.unscaledDeltaTime;
+            var frame = BlenderRigAttackSpec.CycleFrame(_time, out var inClip, out var cycle);
+            SampleAttackFrame(frame);
+            _attack.Tick(frame, inClip, cycle);
+        }
+
+        private void SampleAttackFrame(float frame)
+        {
+            if (!_playable.IsValid())
+            {
+                return;
+            }
+
+            var seconds = frame / BlenderRigAttackSpec.FrameRate;
+            if (_length > 0.05f)
+            {
+                seconds = Mathf.Min(seconds, _length - 0.0005f);
+            }
+
+            _playable.SetTime(seconds);
+            _graph.Evaluate(0f);
+        }
+
+        private void StopAttack()
+        {
+            if (!_attackMode)
+            {
+                return;
+            }
+
+            _attackMode = false;
+            _attack?.Deactivate();
+        }
+
         private void ShowRest()
         {
+            StopAttack();
             if (_playable.IsValid())
             {
                 _playable.Destroy();
@@ -172,6 +249,12 @@ namespace Survival.Unity
 
         private void Update()
         {
+            if (_attackMode)
+            {
+                TickAttack();
+                return;
+            }
+
             if (!_ready || !_loop || !_playable.IsValid())
             {
                 return;
@@ -189,6 +272,7 @@ namespace Survival.Unity
 
         private void OnDestroy()
         {
+            _attack?.Dispose();
             if (_graph.IsValid())
             {
                 _graph.Destroy();

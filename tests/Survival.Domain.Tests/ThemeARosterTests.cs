@@ -34,11 +34,13 @@ public sealed class ThemeARosterTests
         Assert.Equal("root", EmberfangMotion.BoneNames[0]);
         Assert.Contains("spine_01", EmberfangMotion.BoneNames);
         Assert.Contains("wing_root.L", EmberfangMotion.BoneNames);
-        Assert.Equal(3, EmberfangMotion.PoseNames.Length);
+        Assert.Equal(4, EmberfangMotion.PoseNames.Length);
         Assert.Equal("rest", EmberfangMotion.PoseNames[0]);
         Assert.Equal("wing flap", EmberfangMotion.PoseNames[1]);
         Assert.Equal("walk", EmberfangMotion.PoseNames[2]);
-        Assert.Single(EmberfangMotion.ExtraClips);
+        Assert.Equal("attack", EmberfangMotion.PoseNames[3]);
+        Assert.Equal(2, EmberfangMotion.ExtraClips.Length);
+        Assert.Equal("attack", EmberfangMotion.ExtraClips[1].PoseName);
         Assert.Equal("walk", EmberfangMotion.ExtraClips[0].PoseName);
         Assert.Equal("EMBERFANG_dragonrig_walk.fbx", EmberfangMotion.ExtraClips[0].FileName);
         Assert.Equal("Scene", EmberfangMotion.ExtraClips[0].TakeName);
@@ -176,7 +178,7 @@ public sealed class ThemeARosterTests
         Assert.Contains("RestPoseName", fangDemo, StringComparison.Ordinal);
         Assert.Contains("PoseNames", fangDemo, StringComparison.Ordinal);
         Assert.Contains("SetValueWithoutNotify(0)", fangDemo, StringComparison.Ordinal);
-        Assert.Contains("Survival/Emberfang Demo (rest + wing flap + walk, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.Contains("Survival/Emberfang Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
 
         var excluded = new[]
         {

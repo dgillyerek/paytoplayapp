@@ -54,7 +54,7 @@ namespace Survival.Editor
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Ironhowl);
         }
 
-        [MenuItem("Survival/Emberfang Demo (rest + wing flap + walk, Game view 1080x1920)")]
+        [MenuItem("Survival/Emberfang Demo (rest + wing flap + walk + attack, Game view 1080x1920)")]
         public static void OpenEmberfangDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Emberfang);

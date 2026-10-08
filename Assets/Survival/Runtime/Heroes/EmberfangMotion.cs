@@ -1,3 +1,5 @@
+using Survival.Domain.Roster;
+
 namespace Survival.Domain.Heroes
 {
     /// <summary>
@@ -32,7 +34,7 @@ namespace Survival.Domain.Heroes
     /// <summary>
     /// Emberfang Design Blender dragon rig. Custom 55 bone names, including non-deform root.
     /// Rest is the bind pose. Wing flap and walk are 1 second Scene takes at 30 fps.
-    /// Walk is an ExtraClip. Reject the Mixamo file EMBERFANG_rig.fbx.
+    /// Walk and the Theme A attack (Design 2026-10-07, frames 0–30, plays then rests 0.5 s) are ExtraClips. Reject the Mixamo file EMBERFANG_rig.fbx.
     /// </summary>
     public static class EmberfangMotion
     {
@@ -43,6 +45,7 @@ namespace Survival.Domain.Heroes
         public const string RestThemePackRel = ThemePackDir + "/" + RestFileName;
         public const string FlapThemePackRel = ThemePackDir + "/" + FlapFileName;
         public const string WalkThemePackRel = ThemePackDir + "/" + WalkFileName;
+        public const string AttackFileName = EmberfangAttack.FileName;
         public const string RejectedMixamoFileName = "EMBERFANG_rig.fbx";
 
         public const string RestPoseName = "rest";
@@ -56,6 +59,7 @@ namespace Survival.Domain.Heroes
         public const float WalkSeconds = 1f;
         public const float WalkFrameRate = 30f;
         public const int WalkLastFrame = 30;
+        public const string AttackPoseName = BlenderRigAttackSpec.PoseName;
         public const int BoneCount = 55;
 
         public const string BoneRoot = "root";
@@ -63,7 +67,7 @@ namespace Survival.Domain.Heroes
         public const string BoneSpine = "spine_01";
         public const string BoneWing = "wing_root.L";
 
-        public static readonly string[] PoseNames = { RestPoseName, FlapPoseName, WalkPoseName };
+        public static readonly string[] PoseNames = { RestPoseName, FlapPoseName, WalkPoseName, AttackPoseName };
 
         public static readonly EmberfangClip[] ExtraClips =
         {
@@ -73,7 +77,14 @@ namespace Survival.Domain.Heroes
                 WalkTakeName,
                 WalkSeconds,
                 WalkFrameRate,
-                WalkLastFrame)
+                WalkLastFrame),
+            new EmberfangClip(
+                AttackPoseName,
+                AttackFileName,
+                BlenderRigAttackSpec.TakeName,
+                BlenderRigAttackSpec.ClipSeconds,
+                BlenderRigAttackSpec.FrameRate,
+                BlenderRigAttackSpec.LastFrame)
         };
 
         public static readonly string[] BoneNames =
