@@ -257,3 +257,24 @@ Each wing is yawed an extra **20°** back from the shoulder. Left arm heading go
 **Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
 
 MD5: blend `f5be0757bdb9b8a4fcc27700ea26e165`, flap `e163c1a87712c56cfde4976d08d25e83`. **HOLD merge.**
+
+## Derek Game-view on df54a63 — rigid wing at the shoulder
+
+Derek: part of the wing sits back, but the flap still does not look like the standing pose. Rotate the whole wing at the shoulder.
+
+Every wing bone past `wing_root` (`wing_arm`, `wing_inner`, `wing_f1`..`wing_f4`, both sides) holds its standing local rotation on every frame. The largest difference from the rest pose is **0.000°**. The membrane triangles match the rest pose exactly (area ratio **1.000**). Left fan stays **87.71°**, right fan stays **92.59°**. There is no finger lag and no curl.
+
+Only `wing_root` moves. It yaws the standing wing **50°** back about vertical, then beats **±7°** (14° peak to peak) on the same sine as before. The stroke off that swept pose is **0.00° to 6.96°**, peaking at frame 7. Angle from the rest pose is **50.00° to 50.45°**. Leading tip Z is **1.227..1.393** (peak frame 6 once the spine pose is included). Left tip Y through the cycle:
+
+| Bone | Standing Y | Flap Y |
+|---|---|---|
+| wing_f1 | −0.005 | +0.418..+0.504 |
+| wing_f2 | +0.016 | +0.563..+0.582 |
+| wing_f3 | +0.143 | +0.507..+0.543 |
+| wing_f4 | +0.161 | +0.316..+0.370 |
+
+Frame 0 and frame 30 match (loop error 0). Non-wing FBX curves match df54a63 exactly (max abs 0). `FBX_SCALE_NONE`, `UnitScaleFactor` 1, rig scale 100. Mesh still 99649 verts / 199427 faces.
+
+**Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
+
+MD5: blend `2e3e338d5b8ec67c5cc876b9da297dc8`, flap `ca88e019bcb1744f73907001f80d12d1`. **HOLD merge.**
