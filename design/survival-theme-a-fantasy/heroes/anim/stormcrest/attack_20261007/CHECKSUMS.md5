@@ -1,4 +1,4 @@
-f5ca30f09ad4300a1196e5e902a23d73  NOTE.md
+af821f6ff86c9a1d7151a980dd0d902b  NOTE.md
 b91d76d093668bb028560905167c676b  STORMCREST_attack_contact.jpg
 baa73ee9fea27ca60adc648a40788ed2  STORMCREST_attack_looksheet.png
 645e167e5256b17bc37bc585048ee7b0  STORMCREST_attack_preview_rear.mp4
@@ -21,9 +21,9 @@ e0803737c14dbd70a93d218c87a74eb9  stills/qc_follow_f21_rear.png
 addd8c4a7a7ec057597fe886edf86e1a  stills/qc_strike_f14_rear.png
 bef6b53bfd6534b89b951260f6306dfd  stills/qc_strike_f14_side.png
 9d0e9b638fca43198b6b03fe97df2edd  work/attack_meta.json
-4912057d27b374d67e4a3b70cb53d0d9  work/verify_fbx.json
+836e68eb5f229e67bd3e34f920a8d866  work/verify_fbx.json
 # built on Derek's rig (copies live in blender_rig/, not in this folder)
-afea32f84fb33d1e13a339abea29f774  heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig.blend
+98d5a29d9cc2516b67d032bf9aebc1e6  heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig.blend
 35dc5e9c396281225ca4734646bdd964  heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig.fbx
-f5efc9d99a8eef90755511748ed8c0a2  heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig_walk.fbx
-8abcc49e79a36eb73cbd1c7dd8d9c5a0  heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig_wingflap.fbx
+2c56cda37920642e4eef461436f04920  heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig_walk.fbx
+e4943eb627c722465a6e37fe2674ea39  heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig_wingflap.fbx

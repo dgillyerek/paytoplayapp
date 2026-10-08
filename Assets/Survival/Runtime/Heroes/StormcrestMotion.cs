@@ -32,10 +32,10 @@ namespace Survival.Domain.Heroes
         public const int WalkLastFrame = 30;
         public const int BoneCount = 45;
 
-        public const string BlendMd5 = "afea32f84fb33d1e13a339abea29f774";
+        public const string BlendMd5 = "98d5a29d9cc2516b67d032bf9aebc1e6";
         public const string RestMd5 = "35dc5e9c396281225ca4734646bdd964";
-        public const string WalkMd5 = "f5efc9d99a8eef90755511748ed8c0a2";
-        public const string WingFlapMd5 = "8abcc49e79a36eb73cbd1c7dd8d9c5a0";
+        public const string WalkMd5 = "2c56cda37920642e4eef461436f04920";
+        public const string WingFlapMd5 = "e4943eb627c722465a6e37fe2674ea39";
 
         public const string TextureFolder = "STORMCREST_blenderig.fbm";
         public const string BaseColorFile = "STORMCREST_basecolor_0.jpg";

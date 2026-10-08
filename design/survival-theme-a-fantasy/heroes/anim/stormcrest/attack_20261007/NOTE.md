@@ -4,12 +4,12 @@
 **Weapon / VFX:** Storm bolt VFX (blue-white forked lightning, royal-blue glow, gold sparks) cast from the beak
 
 ## Rig (Derek's hand-built skeleton is the source of truth)
-- Rig blend: `heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig.blend` MD5 `afea32f84fb33d1e13a339abea29f774`
+- Rig blend: `heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig.blend` MD5 `98d5a29d9cc2516b67d032bf9aebc1e6`
 - His 44 bones were kept in place (heads, tails, and rolls unchanged). They were default `Bone` / `Bone.00N` names and are now clean `.L` / `.R` names. A non-deforming `root` sits at the world origin and parents the chain roots without moving them. 45 bones total.
 - The blend he committed had an Armature modifier with no armature assigned, and the mesh was still weighted to the old 22 mixamorig vertex groups. Nothing was weighted to his bones. Automatic weights were applied onto his bones. Two zero-length pins (`wing_pin.L`, `wing_pin_b.L`) do not deform; their weight went to the parent. Unweighted verts: 0.
 - Rest FBX: `heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig.fbx` MD5 `35dc5e9c396281225ca4734646bdd964`
-- Walk FBX: `heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig_walk.fbx` MD5 `f5efc9d99a8eef90755511748ed8c0a2`
-- Wing flap FBX: `heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig_wingflap.fbx` MD5 `8abcc49e79a36eb73cbd1c7dd8d9c5a0`
+- Walk FBX: `heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig_walk.fbx` MD5 `2c56cda37920642e4eef461436f04920`
+- Wing flap FBX: `heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig_wingflap.fbx` MD5 `e4943eb627c722465a6e37fe2674ea39`
 - ThemePack copies of those three FBXs match these MD5s. No cloth.
 
 ## Attack clip
@@ -29,6 +29,7 @@
 - Work copy: `STORMCREST_attack_work.blend` is the old concept work file, not the rig source of truth.
 
 ## Caveats
-- Griffin, not a humanoid. Wings, four legs, and a tail are body bones. Walk steps the legs and holds the wings near the body, opposite left/right. Wing flap is a large eased sweep, both wings together, tips from about knee height up to level with the raised wing. No cloth.
+- Griffin, not a humanoid. Wings, four legs, and a tail are body bones. Walk steps the legs and holds the wings near the body, opposite left/right. The head nod is about half the previous pass (beak rises and falls 1.9 cm instead of 3.9 cm) and the neck counters the body's step so the head stays steadier. Wing flap is a sine-eased sweep, both wings together. The stroke plane sits closer to horizontal (about 68° from the ground instead of 87°). Outer wing and tip bones lag the inner wing by 4 frames, so the tips curl up on the downstroke and down on the upstroke. Tips stay outboard of the head. No cloth.
+- Rest FBX `35dc5e9c396281225ca4734646bdd964` and attack FBX `9bae7b662f48a1c1eec33fafc0fed6d2` were not re-exported.
 
 HOLD: do not merge until Derek Game-view PASS.
