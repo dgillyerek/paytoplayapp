@@ -290,3 +290,22 @@ Bones past `wing_root` still hold the standing local rotation (max difference **
 **Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
 
 MD5: blend `7d147011df8ae4f08a8203b4deb0aee2`, flap `b7ef0b307f3be6326d54afd98cb34fdc`. **HOLD merge.**
+
+## Derek Game-view on bbfe31b — shoulder pitch flipped to 40°
+
+Derek: the wing looks better, but the shoulder rotated the wrong way. Go about 40° in the opposite direction.
+
+Same axis as bbfe31b. The level pose (frame 0 and frame 30) is now **+40.00°** on the left and **−40.00°** on the right. The beat around that center is still the **±28°** sine (sampled **+12.15° to +67.85°** on the left, **−67.85° to −12.15°** on the right). Crest stays at frame 7, bottom at frame 22. Loop error 0.
+
+Wing-centroid elevation (standing was left **+2.25°**, right **+2.17°**):
+
+| | Center (f0) | Top (f7) | Bottom (f22) |
+|---|---|---|---|
+| Left | +41.91° | +66.96° | +13.98° |
+| Right | +38.63° | +61.39° | +13.12° |
+
+Bones past `wing_root` stay at the standing local rotation (max difference **0.000°**). Membrane area ratio **1.000**. Non-wing FBX curves match bbfe31b exactly (max abs 0). `FBX_SCALE_NONE`, `UnitScaleFactor` 1, rig scale 100. Mesh still 99649 verts / 199427 faces.
+
+**Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
+
+MD5: blend `102480a286929f6cec8b7564a15dabe2`, flap `561778dfe4a3678929779c7a80be70a7`. **HOLD merge.**

@@ -1,6 +1,6 @@
-7d147011df8ae4f08a8203b4deb0aee2  ASHWYRM_blenderig.blend
+102480a286929f6cec8b7564a15dabe2  ASHWYRM_blenderig.blend
 f1f9f937f2961ce185eb2d942d91d595  ASHWYRM_blenderig.fbx
-b7ef0b307f3be6326d54afd98cb34fdc  ASHWYRM_blenderig_wingflap.fbx
+561778dfe4a3678929779c7a80be70a7  ASHWYRM_blenderig_wingflap.fbx
 490e574a13f505202af9c468a9f38a0e  ASHWYRM_blenderig_walk.fbx
 # 2026-10-08 Derek Game-view on b391b49: tail-tip spike removed, so rest/flap/walk/attack all re-exported from this mesh.
 # Attack animation curves match b0d240cc17cf79af0af3ed22be5f07ef within 5e-5. New attack file MD5 9dc8b9a2d2083290b6a369129a6469b3.
@@ -12,3 +12,4 @@ b7ef0b307f3be6326d54afd98cb34fdc  ASHWYRM_blenderig_wingflap.fbx
 # 2026-10-08 Derek on 5059fad: flap only, finger fan reopened to the walk spread and wings yawed 20 deg further back. Walk, rest, and attack byte-identical.
 # 2026-10-08 Derek on df54a63: flap only, standing wing rotated at the shoulder. Walk, rest, and attack byte-identical.
 # 2026-10-08 Derek on 1c64ab9: flap only, standing yaw, 20 deg forward/down, ±28 deg beat. Walk, rest, and attack byte-identical.
+# 2026-10-08 Derek on bbfe31b: flap only, shoulder offset flipped to +40/-40 deg. Walk, rest, and attack byte-identical.
