@@ -10,6 +10,8 @@ namespace Survival.Unity
 {
     /// <summary>
     /// Plays a Design Blender rig: rest bind pose, then each action clip on the spec.
+    /// An optional Theme A attack add-on plays 0–30 once, holds rest for a short gap, and repeats,
+    /// with its held props and projectile effects driven by <see cref="BlenderRigAttackDriver"/>.
     /// Humanoid when the mixamorig avatar validates, otherwise Generic.
     /// Custom creatures stay Generic. Does not bake axis conversion, scale one axis,
     /// retarget by hand, or rewrite the imported root. Binds embedded basecolor and
@@ -26,12 +28,16 @@ namespace Survival.Unity
         private bool _humanoid;
         private bool _ready;
         private bool _loop;
+        private readonly BlenderRigAttackSpec? _attackSpec;
+        private BlenderRigAttackDriver? _attack;
+        private bool _attackMode;
         private float _length;
         private float _time;
         private string _pose;
 
-        public BlenderRigPlayer(BlenderRigSpec spec, Transform parent)
+        public BlenderRigPlayer(BlenderRigSpec spec, Transform parent, BlenderRigAttackSpec? attack = null)
         {
+            _attackSpec = attack;
             _spec = spec;
             _parent = parent;
             _pose = BlenderRigSpec.RestPoseName;
@@ -79,6 +85,12 @@ namespace Survival.Unity
 
             var instance = Object.Instantiate(prefab, _parent);
             instance.name = _spec.Name + "BlenderRig";
+            if (_attackSpec != null)
+            {
+                _attack = new BlenderRigAttackDriver(_attackSpec, _spec.ThemePackDir, _parent);
+                _attack.Calibrate(instance);
+            }
+
             _animator = instance.GetComponent<Animator>() ?? instance.AddComponent<Animator>();
             var avatar = _humanoid ? LoadHumanAvatar(path) : LoadGenericAvatar(path);
             if (avatar != null)
@@ -111,6 +123,13 @@ namespace Survival.Unity
                 return false;
             }
 
+            if (_attackSpec != null && string.Equals(poseName, BlenderRigAttackSpec.PoseName, System.StringComparison.Ordinal))
+            {
+                return PlayAttack();
+            }
+
+            StopAttack();
+
             if (string.Equals(poseName, BlenderRigSpec.RestPoseName, System.StringComparison.Ordinal))
             {
                 ShowRest();
@@ -136,6 +155,12 @@ namespace Survival.Unity
 
         public void Tick()
         {
+            if (_attackMode)
+            {
+                TickAttack();
+                return;
+            }
+
             if (!_ready || !_loop || !_playable.IsValid())
             {
                 return;
@@ -153,14 +178,79 @@ namespace Survival.Unity
 
         public void Dispose()
         {
+            _attack?.Dispose();
             if (_graph.IsValid())
             {
                 _graph.Destroy();
             }
         }
 
+        private bool PlayAttack()
+        {
+            if (_attackSpec == null || _attack == null)
+            {
+                return false;
+            }
+
+            StopAttack();
+            if (!PlayClip(_attackSpec.FileName, BlenderRigAttackSpec.PoseName, BlenderRigAttackSpec.TakeName, BlenderRigAttackSpec.LastFrame))
+            {
+                return false;
+            }
+
+            _loop = false;
+            _attackMode = true;
+            _time = 0f;
+            _attack.Activate(SampleAttackFrame);
+            SampleAttackFrame(BlenderRigAttackSpec.FirstFrame);
+            _attack.Tick(BlenderRigAttackSpec.FirstFrame, true, 0);
+            return true;
+        }
+
+        private void TickAttack()
+        {
+            if (!_playable.IsValid() || _attack == null)
+            {
+                return;
+            }
+
+            _time += Time.unscaledDeltaTime;
+            var frame = BlenderRigAttackSpec.CycleFrame(_time, out var inClip, out var cycle);
+            SampleAttackFrame(frame);
+            _attack.Tick(frame, inClip, cycle);
+        }
+
+        private void SampleAttackFrame(float frame)
+        {
+            if (!_playable.IsValid())
+            {
+                return;
+            }
+
+            var seconds = frame / BlenderRigAttackSpec.FrameRate;
+            if (_length > 0.05f)
+            {
+                seconds = Mathf.Min(seconds, _length - 0.0005f);
+            }
+
+            _playable.SetTime(seconds);
+            _graph.Evaluate(0f);
+        }
+
+        private void StopAttack()
+        {
+            if (!_attackMode)
+            {
+                return;
+            }
+
+            _attackMode = false;
+            _attack?.Deactivate();
+        }
+
         private void ShowRest()
         {
+            StopAttack();
             if (_playable.IsValid())
             {
                 _playable.Destroy();

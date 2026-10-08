@@ -19,7 +19,7 @@ namespace Survival.Unity
 
         public void Build()
         {
-            _player = new BlenderRigPlayer(AshwyrmMotion.Spec, transform);
+            _player = new BlenderRigPlayer(AshwyrmMotion.Spec, transform, AshwyrmAttack.Spec);
             _player.Build();
         }
 
