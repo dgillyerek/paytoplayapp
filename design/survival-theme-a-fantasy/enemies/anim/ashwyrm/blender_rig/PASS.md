@@ -245,3 +245,15 @@ The wings are no longer spread to the side. Each bone is aimed back along the bo
 **Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
 
 MD5: blend `403ce89136072133e0d7144a45f4c195`, flap `d7e8afee7141418457bf9d0deb7fa4fd`. **HOLD merge.**
+
+## Derek Game-view on 5059fad — open fan, swept for lift
+
+Derek: the flap wings look squished next to the walk, and the whole wing should rotate back so the tips sit further toward the tail, like the wing is getting lift.
+
+The finger fan is the walk spread again, stored once against the arm and replayed with it, so the membrane stays open for the whole loop. `wing_f1` to `wing_f4` is **86.75° min, 89.13° mean** (walk **87.67° min, 88.16° mean**). Membrane area, the three triangles from the wrist through the finger tips, averages **0.2810** against the walk's **0.2775**, ratio **1.013**. Outer fingers still curl 3° and 5° on the downstroke only. The shoulder tail peaks at frame 7, the arm at frame 8, the leading tip at frame 9 (**lag 2**), and the trailing tip at frame 11 (**lag 4**).
+
+Each wing is yawed an extra **20°** back from the shoulder. Left arm heading goes from 48° to **68°**. Arm elevation stays **−21.96° to −8.04°**. The rearmost finger (`wing_f2`) moves from Y **+0.668..+0.763** to **+0.787..+0.819**; at frame 0 that tip is **+0.100 m** further back (0.717 → 0.817), and the new range sits entirely behind the old one. Leading tip frame 0 is **+0.037 m** in Y (0.595 → 0.632) and **+0.421 m to +0.584 m** above the hip back line (was +0.002..+0.237), Z **0.944..1.104**. The outer trailing tip (`wing_f4`) opens outboard, so its frame-0 Y is **0.084 m** less than the collapsed spear (0.645 → 0.560) while its height versus the back line is **−0.122 m to +0.149 m** (was −0.220..+0.059). Frame 0 and frame 30 match (loop error 0). Non-wing FBX curves match 5059fad exactly (max abs 0). Arm and inner blend keys are unchanged; the FBX float32 rewrite of those channels is 3e-5. `FBX_SCALE_NONE`, `UnitScaleFactor` 1, rig scale 100. Mesh still 99649 verts / 199427 faces.
+
+**Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
+
+MD5: blend `f5be0757bdb9b8a4fcc27700ea26e165`, flap `e163c1a87712c56cfde4976d08d25e83`. **HOLD merge.**
