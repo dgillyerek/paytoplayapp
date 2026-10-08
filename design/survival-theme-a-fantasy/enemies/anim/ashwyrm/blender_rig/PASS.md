@@ -209,3 +209,15 @@ There is no neck bone. The snout rides `spine`. Overlap is spine yaw leading, ro
 **Scale.** `FBX_SCALE_NONE`, `apply_unit_scale` on, scene in meters. All four FBXs: `UnitScaleFactor` 1, `ASHWYRM_rig` and `ASHWYRM_body` Lcl Scaling 100, 100, 100. Rest has no animation curves. Flap, walk, and attack keep a scale curve of 100 on the rig. Unity was not run; this is the same headless reimport as the scale fix, not a Game-view pass.
 
 MD5: blend `01bef02707494e480f3c04e09ba111bc`, rest `f1f9f937f2961ce185eb2d942d91d595`, flap `d0def08faa525437f8d27bcb52d139e3`, walk `b7137b2d687efb4ad7408cf7d94b6492`, attack `9dc8b9a2d2083290b6a369129a6469b3`. Theme Pack matches the design FBXs. **HOLD merge.**
+
+## Derek Game-view on 44b9044 — opposite walk wings, level flap
+
+Derek: walk wings should swing opposite each other, like the arms, with the stride. Keep that bake's lag and a modest amplitude, and leave the rest of the walk. Wing flap should sit about 75° from vertical (15° off horizontal) through the stroke. Leg, arm, spine, and tail keys stay. Mesh, rest FBX, and attack FBX stay.
+
+**Walk.** A shared yaw on `wing_root.L` and `wing_root.R` (24° peak, world Z, cosine locked to the left-leg stride) sends the wings opposite ways: about 1.1 cm of tip travel per degree, and no vertical change. Outer-wing keys are the previous lag/overlap, untouched. Non-wing FBX curves match 44b9044 exactly (max abs 0). Reimport, frames 1–30: left wing tip most forward at f11, right at f24, 13 frames apart (156°). Forearms are f10 and f25, so the wings step with the arms. Tip forward span 0.232 m / 0.202 m (was 0.136 / 0.167). Shin, forearm, and tail forward frames are unchanged.
+
+**Wing flap.** Each wing bone's elevation is recentered on +15° from horizontal, keeping 22% of its old up/down stroke and the same outward heading. `wing_f1` is 11.4°–19.9° above horizontal (mean 15.0°), which is 70.1°–78.6° from vertical (mean 75.0°) on both sides. Non-wing FBX curves match 44b9044 exactly.
+
+**Unchanged files.** Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Mesh still 99649 verts / 199427 faces. Export `FBX_SCALE_NONE`, `UnitScaleFactor` 1, rig scale 100. Unity was not run.
+
+MD5: blend `d7d38f857c4317fe98529e07e264f743`, flap `29380f058b6c70b228a8d15b438937ca`, walk `490e574a13f505202af9c468a9f38a0e`. **HOLD merge.**

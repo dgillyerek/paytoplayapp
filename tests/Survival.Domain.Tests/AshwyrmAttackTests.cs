@@ -66,10 +66,10 @@ public sealed class AshwyrmAttackTests
             }
         }
 
-        // 2026-10-08 tail-tip mesh fix re-exported rest, flap, and walk with the attack.
+        // Rest and attack stay the 44b9044 files. Walk and flap are the counter-swing / level re-export.
         Assert.Equal("f1f9f937f2961ce185eb2d942d91d595", Md5(Path.Combine(pack, "ASHWYRM_blenderig.fbx")));
-        Assert.Equal("b7137b2d687efb4ad7408cf7d94b6492", Md5(Path.Combine(pack, "ASHWYRM_blenderig_walk.fbx")));
-        Assert.Equal("d0def08faa525437f8d27bcb52d139e3", Md5(Path.Combine(pack, "ASHWYRM_blenderig_wingflap.fbx")));
+        Assert.Equal("490e574a13f505202af9c468a9f38a0e", Md5(Path.Combine(pack, "ASHWYRM_blenderig_walk.fbx")));
+        Assert.Equal("29380f058b6c70b228a8d15b438937ca", Md5(Path.Combine(pack, "ASHWYRM_blenderig_wingflap.fbx")));
     }
 
     [Fact]
