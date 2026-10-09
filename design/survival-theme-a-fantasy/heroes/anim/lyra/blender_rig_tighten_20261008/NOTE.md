@@ -43,3 +43,19 @@ HOLD: staging only. Nothing committed, pushed or PR'd. Derek must check it in Ga
 Pose bones are XYZ euler (the walk's curves need that). The attack was converted from quaternion keys at f0/8/12/19/30 to per-frame linear euler keys (f0–f30). Its per-frame pose matches the old attack work file (max 4.5e-7). `LYRA_staff` is bone-parented to `mixamorig:RightHand` with the Design offset in all clips. Textures are packed.
 
 The old attack work and props blends, `props/LYRA_staff_props.blend` and `work/dec.blend` were removed. `dec.blend` was scratch: the decimated, unrigged 200k-face body, with vertices identical to `LYRA_tighten_body`. No FBX was re-exported.
+
+## Derek's rig edit + re-export (2026-10-08, e92a644 → this commit)
+Derek edited the combined blend in Blender 5.2. He saved it in Edit Mode; it has been re-saved in Object Mode. His change was to the bone rest positions only (Edit Mode). No keys, mesh, weights or hierarchy changed.
+- **Right arm:** elbow (RightArm tail / RightForeArm head) moved 7.1 cm, from (-31.5, -1.0, 123.5) to (-28.8, 4.3, 127.4) cm. Wrist (RightForeArm tail / RightHand head) moved 4.1 cm, from (-45.0, -7.0, 126.5) to (-49.1, -7.4, 126.5) cm. The hand tip and shoulder did not move.
+- **Feet:** both ball-of-foot joints (Foot tail / ToeBase head) moved up about 8 cm and back:
+  - L (27.9, -13.7, 3.8) → (29.0, -6.9, 12.4) cm.
+  - R (-23.8, -1.7, 3.8) → (-18.5, 3.5, 11.1) cm.
+  - Toe tips moved: L 6.4 cm, R 3.8 cm. Ankles did not move.
+- Rolls changed only as a side effect of those moves.
+- Rest, walk and attack were re-exported from his blend in Blender 5.2.2 with the same settings. A parity check of 5.2 against 4.3.2 on the pre-edit blend matched the shipped FBXs (bone transforms 0 / 0 / 1.6e-6).
+  - `LYRA_tighten_blenderig.fbx`: c8d41802 → 59768294.
+  - `LYRA_tighten_blenderig_walk.fbx`: e546a82b → ff4786e2.
+  - `../attack_20261008/LYRA_tighten_blenderig_attack.fbx`: 90385eda → 64d8b8d4.
+  - Staff FBXs unchanged (mesh identical).
+- **Staff:** it still sits at Design's `rest_world` in the fist. Its hand offset was re-derived for the new RightHand: `props/LYRA_staff_meta.json` and `attack_meta.json`.
+- **Bolt:** the crystal at f12 moved, so the bolt was re-keyed. The spawn is now (-0.168, -0.654, 1.910); it was (-0.342, -0.646, 1.862). Unity's `LyraAttack.cs` staff and bolt frames and its RightHand calibration anchor were updated to match.

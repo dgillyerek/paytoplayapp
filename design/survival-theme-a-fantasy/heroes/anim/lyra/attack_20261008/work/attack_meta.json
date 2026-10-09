@@ -18,22 +18,22 @@
    "parent": "RightHand f0-f30 (constant offset)",
    "offset_RightHand": [
     [
-     -0.3700212240219116,
-     0.92902010679245,
-     0.002442808821797371,
-     -0.02237587422132492
+     -0.5119721293449402,
+     0.8590004444122314,
+     -0.001640263944864273,
+     -0.022112179547548294
     ],
     [
-     -0.9290236234664917,
-     -0.370019793510437,
-     -0.001075982116162777,
-     0.1087605357170105
+     -0.8578712940216064,
+     -0.5113950371742249,
+     -0.05032264068722725,
+     0.07269445806741714
     ],
     [
-     -9.568780660629272e-05,
-     -0.0026672284584492445,
-     0.9999962449073792,
-     0.02847805805504322
+     -0.044065892696380615,
+     -0.024356242269277573,
+     0.9987313151359558,
+     0.028559615835547447
     ],
     [
      0.0,
@@ -58,9 +58,9 @@
     0
    ],
    "spawn_world": [
-    -0.3422810733318329,
-    -0.6455825567245483,
-    1.862177848815918
+    -0.16801710426807404,
+    -0.6541648507118225,
+    1.9104540348052979
    ],
    "note": "spawns at staff crystal, grows 40%->100% over 3 frames, travels -Y"
   }
@@ -124,5 +124,6 @@
  },
  "props_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261008/LYRA_tighten_attack_props.blend",
  "work_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261008/LYRA_tighten_attack_work.blend",
- "rear_cam_note": "rear battle cam re-rendered wider so the arrow/bolt stays in frame"
+ "rear_cam_note": "rear battle cam re-rendered wider so the arrow/bolt stays in frame",
+ "rig_edit_note": "2026-10-08: Derek moved the right elbow/wrist and both ball-of-foot joints in the combined blend; staff offset re-derived from the unchanged rest_world, bolt spawn re-measured at the f12 crystal. Old spawn [-0.34228,-0.64558,1.86218]."
 }

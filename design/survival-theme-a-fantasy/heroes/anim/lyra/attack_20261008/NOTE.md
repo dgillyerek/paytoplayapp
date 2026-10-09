@@ -30,3 +30,6 @@ Built on `heroes/anim/lyra/blender_rig_tighten_20261008/LYRA_tighten_blenderig.b
 ## Caveats
 - The hand keeps the Meshy fist. The strike reads as a staff thrust and bolt, not an open-palm cast.
 - Fist caps are the same as noted in the rig pack.
+
+## Re-export after Derek's rig edit (2026-10-08)
+`LYRA_tighten_blenderig_attack.fbx` was re-exported from Derek's edited combined blend: 90385eda → 64d8b8d4. The attack keys are unchanged. Because the right elbow and wrist joints moved, the same keys now put the staff crystal at f12 17 cm closer to the body midline and 5 cm higher. The bolt spawn in `work/attack_meta.json` was updated. See `../blender_rig_tighten_20261008/NOTE.md`.
