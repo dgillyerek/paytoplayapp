@@ -330,3 +330,23 @@ Wing-centroid elevation from the shoulder (static spine, standing was left **+2.
 **Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
 
 MD5: blend `7e0da670017cee72a0ba0ac8e0025481`, flap `e9b1dc479dde71c9c44d8fe6e22c5557`. **HOLD merge.**
+
+## Derek Game-view on fcec802 — wings swept back at the shoulder
+
+Derek: the wing flap still has the wings placed vertically. Rotate at the shoulders so the wing tips are further back. Do not distort the wings at all.
+
+Only `wing_root.L` / `wing_root.R` keys changed. Each shoulder key is now a yaw about the body's vertical axis (taken in the shoulder's rest frame, positive = tips toward the tail, right side mirrored) applied on top of the fcec802 beat (−22° ± 18°, top −4.1° at frame 7, bottom −39.9° at frame 22). The sweep is **32° ± 13°**, trailing the beat by 2 frames: **45°** back near the top of the upstroke (frame 9.5), **32°** at mid-stroke, **19°** near the bottom (frame 24.5). Same 30 frames at 30 fps, frame 0 equals frame 30 (loop error 4e-7 m).
+
+Why the sweep eases off on the downstroke: the tail curls to the left behind the hip, and with a fixed 30° or more the left trailing finger (`wing_f4.L`) cuts through `tail_02` on the downstroke (fixed 30°: frames 23–29; fixed 35°/40°: most of the lower half). A fixed 25° is clean but sits lower than the 35–45° brief. With the sweep easing to 19° at the bottom, no finger crosses the tail, legs, or forearms on any frame (triangle intersection test, frames 1–31). The fcec802 right-finger/forearm touch on the downstroke is gone too.
+
+Furthest-back wing point (Y, + is toward the tail): frame 7 **0.575 / 0.540 m** left/right (fcec802 0.151 / 0.089), frame 15 **0.447 / 0.463 m** (0.091 / 0.070), frame 22 **0.177 / 0.276 m** (0.076 / 0.052). Side and top-down renders confirm the tips go back toward the tail, not forward.
+
+**No wing distortion.** In the blend every other wing bone (`wing_arm`, `wing_inner`, `wing_f1`–`wing_f4`) and every other channel is identical to fcec802. In the FBX, non-`wing_root` curves match fcec802 within float noise (max 6e-5°). Membrane check on the reimport: 74,384 edges whose vertices are weighted only to one side's wing bones keep their rest length on every frame within **4.2e-6 m** (same rounding floor as fcec802, 4.1e-6 m).
+
+**Head and body.** Highest wing vertex 1.314 m, at least 3.4 cm under the head and horn top on every frame. 0 wing vertices inside the head outline from the front camera. Lowest wing vertex 0.21 m. The inner membrane next to the body (`wing_inner`) still overlaps the upper arm and tail root along its body-side edge, as it did in fcec802; the sweep makes that overlap larger (mostly on the left, hidden behind the arm and the tail root in the renders).
+
+`FBX_SCALE_NONE`, `UnitScaleFactor` 1, rig scale 100. Mesh still 99649 verts / 199427 faces. Bones unchanged.
+
+**Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
+
+MD5: blend `6fd955905099cf49e0e7aebeddb1b9ff`, flap `6f2b3924678d0fa6e9191cad096726c3`. **HOLD merge.**

@@ -66,10 +66,10 @@ public sealed class AshwyrmAttackTests
             }
         }
 
-        // Rest, attack, and walk stay byte-identical. Flap is the lowered shoulder beat re-export (tips below the head).
+        // Rest, attack, and walk stay byte-identical. Flap is the swept-back lowered shoulder beat re-export.
         Assert.Equal("f1f9f937f2961ce185eb2d942d91d595", Md5(Path.Combine(pack, "ASHWYRM_blenderig.fbx")));
         Assert.Equal("490e574a13f505202af9c468a9f38a0e", Md5(Path.Combine(pack, "ASHWYRM_blenderig_walk.fbx")));
-        Assert.Equal("e9b1dc479dde71c9c44d8fe6e22c5557", Md5(Path.Combine(pack, "ASHWYRM_blenderig_wingflap.fbx")));
+        Assert.Equal("6f2b3924678d0fa6e9191cad096726c3", Md5(Path.Combine(pack, "ASHWYRM_blenderig_wingflap.fbx")));
     }
 
     [Fact]
