@@ -1,0 +1,292 @@
+{
+ "pack": "ROWAN Meshy no-cape, no-bow body + rigid bow prop (2026-10-08)",
+ "frame_convention": "0-based frames at 24 fps, matching FBX time (frame = t*24). Blender's FBX importer shows these as frame+1 (the source Meshy FBX imports as 1..46 / 1..26 / 1..121 in Blender).",
+ "units": "metres (FBX UnitScaleFactor 100). Blender Z-up; FBX exported axis_forward -Z, up Y.",
+ "fps": 24,
+ "meshy_to_old_raw_scale_s": 0.8946931322764791,
+ "clips": {
+  "rest": {
+   "fbx": "ROWAN_meshy_nobow_rest.fbx",
+   "frames": [
+    0,
+    45
+   ]
+  },
+  "walk": {
+   "fbx": "ROWAN_meshy_nobow_walk.fbx",
+   "frames": [
+    0,
+    25
+   ]
+  },
+  "attack": {
+   "fbx": "ROWAN_meshy_nobow_attack.fbx",
+   "frames": [
+    0,
+    120
+   ]
+  }
+ },
+ "bow": {
+  "baked_fbx": "ROWAN_meshy_bow_attack.fbx",
+  "static_fbx": "props/ROWAN_bow_meshy.fbx",
+  "frame": "origin at the grip centre, +Z = long axis (lower to upper nock), local -Y = shot direction. bow_nock local +Y = string draw in metres.",
+  "baked_space": "bow_grip carries the per-frame transform in character space (the armature object space; the target_character object is identity). Drop the bow rig under the character root and play it in sync with the attack clip.",
+  "brace_m": 0.09072941871236086,
+  "hand_bones": {
+   "rest": "mixamorig:RightHand",
+   "walk": "mixamorig:RightHand",
+   "attack": "mixamorig:LeftHand (whole clip, frames 0-120)"
+  },
+  "offset_in_RightHand_rest_walk": [
+   [
+    -0.834567129611969,
+    -0.4641677141189575,
+    0.2967263162136078,
+    -0.020549949258565903
+   ],
+   [
+    0.08810271322727203,
+    -0.6441348791122437,
+    -0.7598209381103516,
+    0.032870929688215256
+   ],
+   [
+    0.5438162088394165,
+    -0.6079793572425842,
+    0.5784682035446167,
+    0.08331584185361862
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  ],
+  "offset_in_LeftHand_attack": [
+   [
+    0.5054187178611755,
+    -0.7023764252662659,
+    0.5012182593345642,
+    0.01329321414232254
+   ],
+   [
+    -0.8455449342727661,
+    -0.5189774036407471,
+    0.12536777555942535,
+    0.019021792337298393
+   ],
+   [
+    0.1720658838748932,
+    -0.487165629863739,
+    -0.8561906814575195,
+    0.00321757048368454
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  ],
+  "offset_note": "4x4 row-major, Blender metres. bow_world = hand_bone_pose_matrix(armature space) @ offset. Same convention as the Blender pack's ROWAN_bow_meta.json.",
+  "string_draw_m_per_frame": {
+   "0": 0.0,
+   "1": 0.0,
+   "2": 0.0,
+   "3": 0.0,
+   "4": 0.0,
+   "5": 0.0,
+   "6": 0.0,
+   "7": 0.0,
+   "8": 0.0,
+   "9": 0.0,
+   "10": 0.0,
+   "11": 0.0,
+   "12": 0.0,
+   "13": 0.0,
+   "14": 0.0,
+   "15": 0.0,
+   "16": 0.0,
+   "17": 0.0,
+   "18": 0.0,
+   "19": 0.0,
+   "20": 0.0,
+   "21": 0.0,
+   "22": 0.0,
+   "23": 0.0,
+   "24": 0.0,
+   "25": 0.0,
+   "26": 0.0,
+   "27": 0.0,
+   "28": 0.0,
+   "29": 0.0,
+   "30": 0.0,
+   "31": 0.0,
+   "32": 0.0,
+   "33": 0.0,
+   "34": 0.0,
+   "35": 0.0,
+   "36": 0.0,
+   "37": 0.0,
+   "38": 0.0,
+   "39": 0.0,
+   "40": 0.0,
+   "41": 0.0,
+   "42": 0.0,
+   "43": 0.0,
+   "44": 0.0,
+   "45": 0.1173,
+   "46": 0.359,
+   "47": 0.5168,
+   "48": 0.544,
+   "49": 0.5582,
+   "50": 0.5623,
+   "51": 0.5587,
+   "52": 0.5479,
+   "53": 0.5401,
+   "54": 0.5338,
+   "55": 0.5314,
+   "56": 0.5341,
+   "57": 0.5486,
+   "58": 0.5718,
+   "59": 0.6049,
+   "60": 0.6431,
+   "61": 0.6806,
+   "62": 0.7194,
+   "63": 0.7576,
+   "64": 0.7912,
+   "65": 0.8135,
+   "66": 0.8301,
+   "67": 0.8408,
+   "68": 0.8456,
+   "69": 0.8412,
+   "70": 0.8359,
+   "71": 0.8316,
+   "72": 0.8292,
+   "73": 0.8263,
+   "74": 0.8238,
+   "75": 0.8265,
+   "76": -0.02,
+   "77": 0.008,
+   "78": 0.0,
+   "79": 0.0,
+   "80": 0.0,
+   "81": 0.0,
+   "82": 0.0,
+   "83": 0.0,
+   "84": 0.0,
+   "85": 0.0,
+   "86": 0.0,
+   "87": 0.0,
+   "88": 0.0,
+   "89": 0.0,
+   "90": 0.0,
+   "91": 0.0,
+   "92": 0.0,
+   "93": 0.0,
+   "94": 0.0,
+   "95": 0.0,
+   "96": 0.0,
+   "97": 0.0,
+   "98": 0.0,
+   "99": 0.0,
+   "100": 0.0,
+   "101": 0.0,
+   "102": 0.0,
+   "103": 0.0,
+   "104": 0.0,
+   "105": 0.0,
+   "106": 0.0,
+   "107": 0.0,
+   "108": 0.0,
+   "109": 0.0,
+   "110": 0.0,
+   "111": 0.0,
+   "112": 0.0,
+   "113": 0.0,
+   "114": 0.0,
+   "115": 0.0,
+   "116": 0.0,
+   "117": 0.0,
+   "118": 0.0,
+   "119": 0.0,
+   "120": 0.0
+  }
+ },
+ "arrow": {
+  "static_fbx": "props/ROWAN_arrow_blue_fletch_meshy.fbx",
+  "baked_fbx": "ROWAN_meshy_arrow_attack.fbx (object animation, character space)",
+  "length_m": 1.0562901449203492,
+  "tip": "-Y",
+  "origin": "nock",
+  "fletching": "blue",
+  "visible_from": 25,
+  "scale_in_frames": [
+   25,
+   27
+  ],
+  "in_RightHand_frames": [
+   25,
+   44
+  ],
+  "offset_in_RightHand": [
+   [
+    -0.8315276503562927,
+    0.5304352045059204,
+    0.16492874920368195,
+    -0.10370676219463348
+   ],
+   [
+    -0.26147037744522095,
+    -0.11179357767105103,
+    -0.9587159156799316,
+    0.01896362192928791
+   ],
+   [
+    -0.49009889364242554,
+    -0.840322732925415,
+    0.23165267705917358,
+    -0.021014932543039322
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  ],
+  "nocked_frames": [
+   45,
+   75
+  ],
+  "release_frame": 76,
+  "release_time_s": 3.1666666666666665,
+  "spawn_pos_character_space": [
+   -0.13503777980804443,
+   0.09285759925842285,
+   1.567605972290039
+  ],
+  "flight_dir": [
+   0.0,
+   -1.0,
+   0.0
+  ],
+  "speed_mps": 12.525703851870707,
+  "flight_note": "horizontal along -Y = toward the top of the screen in the rear battle cam. Position at frame f >= release = spawn + dir*speed*(f-release+1)/24."
+ },
+ "aim_fix": {
+  "applied_to": "mixamorig:Hips (root) location+rotation keys in ROWAN_meshy_nobow_attack.fbx only, every frame",
+  "rotation_about_world_up_deg": -99.02901879338157,
+  "pivot_ground_xy": [
+   0.07917661219835281,
+   -0.1122986227273941
+  ],
+  "shot_yaw_before_deg": 99.02901879338157,
+  "shot_yaw_after_deg": -4.282939499873905e-06,
+  "shot_pitch_deg": -11.102173048548053,
+  "measure": "Direction from the right-fist centre to the left-fist centre, averaged over the full-draw hold (frames 68-75). Yaw 0 means -Y (up-screen); positive yaw is toward +X (Rowan's left).",
+  "unity": "Drop the 97 deg body turn for this clip. Facing at frames 0 and 120 is now rotated -99 deg vs idle/walk, the same as the Unity turn did."
+ }
+}

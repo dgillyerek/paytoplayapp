@@ -1,0 +1,288 @@
+{
+ "rest": {
+  "objects": [
+   [
+    "output_unwrapped",
+    "MESH"
+   ],
+   [
+    "target_character",
+    "ARMATURE"
+   ]
+  ],
+  "bones": 88,
+  "bone_names_same": true,
+  "frames": [
+   1.0,
+   46.0
+  ],
+  "fps": 24,
+  "tris": 29551,
+  "verts": 14635,
+  "height": 1.7000000991961741,
+  "zmin": 6.769683125185111e-08,
+  "sphere_absent": true,
+  "images": [
+   "normal",
+   "texture_0",
+   "texture_0_metallic.png",
+   "texture_0_roughness.png"
+  ],
+  "non_hips_basis_maxdiff_vs_source": 1.181202378575108e-06,
+  "kept_verts_maxdist_vs_source": 0,
+  "new_verts": 4,
+  "arm_world_identity": 1.6292068494294654e-07
+ },
+ "walk": {
+  "objects": [
+   [
+    "output_unwrapped",
+    "MESH"
+   ],
+   [
+    "target_character",
+    "ARMATURE"
+   ]
+  ],
+  "bones": 88,
+  "bone_names_same": true,
+  "frames": [
+   1.0,
+   26.0
+  ],
+  "fps": 24,
+  "tris": 29551,
+  "verts": 14635,
+  "height": 1.7000000991961741,
+  "zmin": 6.769683125185111e-08,
+  "sphere_absent": true,
+  "images": [
+   "normal",
+   "texture_0",
+   "texture_0_metallic.png",
+   "texture_0_roughness.png"
+  ],
+  "non_hips_basis_maxdiff_vs_source": 1.2405782854330027e-06,
+  "kept_verts_maxdist_vs_source": 0,
+  "new_verts": 4,
+  "arm_world_identity": 1.6292068494294654e-07
+ },
+ "attack": {
+  "objects": [
+   [
+    "output_unwrapped",
+    "MESH"
+   ],
+   [
+    "target_character",
+    "ARMATURE"
+   ]
+  ],
+  "bones": 88,
+  "bone_names_same": true,
+  "frames": [
+   1.0,
+   121.0
+  ],
+  "fps": 24,
+  "tris": 29551,
+  "verts": 14635,
+  "height": 1.7000000991961741,
+  "zmin": 6.769683125185111e-08,
+  "sphere_absent": true,
+  "images": [
+   "normal",
+   "texture_0",
+   "texture_0_metallic.png",
+   "texture_0_roughness.png"
+  ],
+  "non_hips_basis_maxdiff_vs_source": 1.6365183910238557e-06,
+  "kept_verts_maxdist_vs_source": 0,
+  "new_verts": 4,
+  "arm_world_identity": 1.6292068494294654e-07,
+  "shot_yaw_after_fix_deg": -4.662285569861717e-05,
+  "shot_pitch_deg": -11.102166488595623,
+  "LH_fist_f72": [
+   -0.0729907900094986,
+   -0.7918368577957153,
+   1.391189694404602
+  ]
+ },
+ "bow": {
+  "objects": [
+   [
+    "ROWAN_bow",
+    "MESH"
+   ],
+   [
+    "ROWAN_bow_rig",
+    "ARMATURE"
+   ]
+  ],
+  "bones": [
+   "bow_grip",
+   "bow_nock"
+  ],
+  "frames": [
+   1.0,
+   121.0
+  ],
+  "fps": 24,
+  "faces": 16284,
+  "bbox_len": 1.3152241110801697,
+  "rigid_verts": 8012,
+  "rigid_pairwise_maxdev_m": 6.517689576934771e-07,
+  "grip_f72": [
+   -0.07299008965492249,
+   -0.791837215423584,
+   1.391189694404602
+  ],
+  "grip_to_LHfist_f72_m": 7.863804579948641e-07
+ },
+ "arrow": {
+  "objects": [
+   [
+    "ROWAN_arrow_blue_fletch",
+    "MESH"
+   ]
+  ],
+  "frames": [
+   1.0,
+   121.0
+  ],
+  "pos": {
+   "20": [
+    [
+     0.1225891038775444,
+     0.31649529933929443,
+     1.6037869453430176
+    ],
+    [
+     0.00010000003385357559,
+     0.00010000000474974513,
+     0.00010000003385357559
+    ]
+   ],
+   "30": [
+    [
+     -0.10474305599927902,
+     -0.2737991213798523,
+     1.5747026205062866
+    ],
+    [
+     1.0,
+     1.0,
+     1.0
+    ]
+   ],
+   "50": [
+    [
+     -0.06496627628803253,
+     -0.16578435897827148,
+     1.0192251205444336
+    ],
+    [
+     1.0,
+     0.9999998807907104,
+     1.0
+    ]
+   ],
+   "76": [
+    [
+     -0.13503777980804443,
+     0.09285759925842285,
+     1.567605972290039
+    ],
+    [
+     0.9999998807907104,
+     1.0,
+     1.0
+    ]
+   ],
+   "77": [
+    [
+     -0.13503777980804443,
+     -0.42904675006866455,
+     1.567605972290039
+    ],
+    [
+     1.0,
+     1.0,
+     1.0
+    ]
+   ],
+   "78": [
+    [
+     -0.13503777980804443,
+     -0.950951099395752,
+     1.567605972290039
+    ],
+    [
+     1.0,
+     1.0,
+     1.0
+    ]
+   ],
+   "90": [
+    [
+     -0.13503777980804443,
+     -7.213803291320801,
+     1.567605972290039
+    ],
+    [
+     1.0,
+     1.0,
+     1.0
+    ]
+   ]
+  },
+  "mats": [
+   "ROWAN_arrow_blue_fletch_band",
+   "ROWAN_arrow_blue_fletch_fletch",
+   "ROWAN_arrow_blue_fletch_head",
+   "ROWAN_arrow_blue_fletch_shaft"
+  ]
+ },
+ "props/ROWAN_bow_meshy.fbx": {
+  "objects": [
+   [
+    "ROWAN_bow",
+    "MESH"
+   ],
+   [
+    "ROWAN_bow_rig",
+    "ARMATURE"
+   ]
+  ],
+  "bbox_min": [
+   -0.04540006443858147,
+   -0.07025686651468277,
+   -0.708837628364563
+  ],
+  "bbox_max": [
+   0.045688383281230927,
+   0.09937933832406998,
+   0.6526901125907898
+  ],
+  "faces": 16284
+ },
+ "props/ROWAN_arrow_blue_fletch_meshy.fbx": {
+  "objects": [
+   [
+    "ROWAN_arrow_blue_fletch",
+    "MESH"
+   ]
+  ],
+  "bbox_min": [
+   -0.017717212438583374,
+   -1.0562901496887207,
+   -0.011003853753209114
+  ],
+  "bbox_max": [
+   0.017046192660927773,
+   1.6209430464542152e-09,
+   0.01968325860798359
+  ],
+  "faces": 67
+ }
+}
