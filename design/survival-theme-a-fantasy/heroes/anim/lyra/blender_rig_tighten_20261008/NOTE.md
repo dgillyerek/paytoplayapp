@@ -59,3 +59,33 @@ Derek edited the combined blend in Blender 5.2. He saved it in Edit Mode; it has
   - Staff FBXs unchanged (mesh identical).
 - **Staff:** it still sits at Design's `rest_world` in the fist. Its hand offset was re-derived for the new RightHand: `props/LYRA_staff_meta.json` and `attack_meta.json`.
 - **Bolt:** the crystal at f12 moved, so the bolt was re-keyed. The spawn is now (-0.168, -0.654, 1.910); it was (-0.342, -0.646, 1.862). Unity's `LyraAttack.cs` staff and bolt frames and its RightHand calibration anchor were updated to match.
+
+## Walk v2 (2026-10-08, Derek: "walking is very stiff, arms wave out to the side")
+`LYRA_tighten_walk` was re-authored on Derek's rig with Blender 5.2.2. His bones are unchanged; the script is `work/scripts/walk_v2_author.py`. It is an in-place loop, f0–f30 @30fps with f30 = f0. Foot timing is unchanged: right contact f8, left contact f23.
+- **Legs:** two-bone IK to planted feet. Heel strike at −12°, then flat, then the heel rises to 24° at toe-off. The pivot sits on the mesh sole at the heel and toe points.
+  - The toes stay rigid with the foot: no keys bend around the raised ball joints.
+  - Knee bend comes from the hip drop.
+  - The sole sits at +3 mm in stance, fixing the old dips of −3.2 cm (left) and −1.9 cm (right).
+- **Body:**
+  - Pelvis yaw ±5° (that hip goes forward with its leg).
+  - Pelvis list ±2.5° (the swing-side hip drops).
+  - 1.6 cm shift over the stance leg.
+  - Bob ±1.1 cm, low at contact and high at passing.
+  - Chest counter-rotation ±4.5°, forward lean up to 3°.
+  - The head is held at its rest orientation.
+- **Left arm:**
+  - Swings in the sagittal plane: 22° forward, 16° back.
+  - Abduction is fixed at 11° (12° in the rest pose); the hand stays outside the hip mesh.
+  - Elbow bend goes from 12° at the back of the swing to 32° at the front.
+- **Right arm (staff):**
+  - IK to a grip that keeps the staff near vertical, swinging ±4°, with the staff foot at least 3 cm off the ground.
+  - Upper arm abduction is 18.5–21.8°; the rest pose is 28°.
+  - Forward/back upper-arm swing is only −1.5° to +2.8°.
+- **Upper-arm abduction (degrees out of the sagittal plane):**
+
+  | Arm | Before | After |
+  |---|---|---|
+  | Left | −5.6 to 38.5 | 11.0 to 11.0 |
+  | Right | 2.8 to 50.7 | 18.5 to 21.8 |
+
+- Only `LYRA_tighten_blenderig_walk.fbx` was re-exported: ff4786e2 → f66a08b9. Rest and attack are untouched.

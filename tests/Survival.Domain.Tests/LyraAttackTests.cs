@@ -68,7 +68,7 @@ public sealed class LyraAttackTests
 
         // Rest + walk re-exported from Derek's edited rig blend (2026-10-08).
         Assert.Equal("597682941cca75ebf5b2af192c3d5822", Md5(Path.Combine(pack, "LYRA_blenderig.fbx")));
-        Assert.Equal("ff4786e2f2c341b56a1143b9443eac03", Md5(Path.Combine(pack, "LYRA_blenderig_walk.fbx")));
+        Assert.Equal("f66a08b96c73cdfc753622aa0f1abff3", Md5(Path.Combine(pack, "LYRA_blenderig_walk.fbx")));
     }
 
     [Fact]

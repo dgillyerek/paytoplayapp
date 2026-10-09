@@ -102,6 +102,28 @@ public sealed class LyraIdlePropTests
     }
 
     [Fact]
+    public void Lyra_one_textured_staff_serves_rest_walk_and_attack()
+    {
+        // The attack's own LYRA_staff.fbx imported with an untextured material (white staff in Game view).
+        // The rest/walk staff rides RightHand under the rig and gets the rig's bound atlas, so it stands in.
+        var idle = LyraMotion.IdleProps[0];
+        Assert.Equal("LYRA_staff", idle.AttackTrackName);
+        Assert.True(idle.StandsInForAttackTrack);
+        var held = Assert.Single(LyraAttack.Spec.Tracks, t => t.ObjectName == idle.AttackTrackName);
+        Assert.Equal(AttackTrackKind.Held, held.Kind);
+        Assert.Equal(idle.Bone, held.Bone);
+        // Same grip: the attack's frame 0 is the rest pose, so its staff key equals the idle Design rest.
+        for (var i = 0; i < 3; i++)
+        {
+            Assert.Equal(idle.DesignRest[i], new[] { held.Frames[0].X, held.Frames[0].Y, held.Frames[0].Z }[i], 4);
+        }
+
+        var driver = File.ReadAllText(Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "BlenderRigAttackDriver.cs"));
+        Assert.Contains("IdleStandIn(track.ObjectName)", driver);
+        Assert.Contains("if (!visible && view.StandsInForAttack)", driver);
+    }
+
+    [Fact]
     public void Lyra_idle_prop_is_bound_on_the_bone_and_hidden_during_attack()
     {
         var unity = Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity");

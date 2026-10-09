@@ -17,7 +17,8 @@ namespace Survival.Domain.Roster
             string bone,
             float[] designRest,
             float[] propExtent,
-            string note)
+            string note,
+            string attackTrackName = "")
         {
             ObjectName = objectName;
             PropFileName = propFileName;
@@ -26,6 +27,7 @@ namespace Survival.Domain.Roster
             DesignRest = designRest ?? Array.Empty<float>();
             PropExtent = propExtent ?? Array.Empty<float>();
             Note = note ?? string.Empty;
+            AttackTrackName = attackTrackName ?? string.Empty;
         }
 
         public string ObjectName { get; }
@@ -45,6 +47,15 @@ namespace Survival.Domain.Roster
         public float[] PropExtent { get; }
 
         public string Note { get; }
+
+        /// <summary>
+        /// Attack held track this prop stands in for (same mesh, same bone, same rest grip). When set, the
+        /// attack does not load a second copy: this prop stays on the bone through the attack, so one prop and
+        /// one material serve rest, walk and attack. Empty: the prop hides while the attack plays.
+        /// </summary>
+        public string AttackTrackName { get; }
+
+        public bool StandsInForAttackTrack => AttackTrackName.Length > 0;
 
         /// <summary>The attack-driver track used to load and size the prop (one rest frame, held on <see cref="Bone"/>).</summary>
         public AttackTrack ToTrack()

@@ -33,3 +33,6 @@ Built on `heroes/anim/lyra/blender_rig_tighten_20261008/LYRA_tighten_blenderig.b
 
 ## Re-export after Derek's rig edit (2026-10-08)
 `LYRA_tighten_blenderig_attack.fbx` was re-exported from Derek's edited combined blend: 90385eda → 64d8b8d4. The attack keys are unchanged. Because the right elbow and wrist joints moved, the same keys now put the staff crystal at f12 17 cm closer to the body midline and 5 cm higher. The bolt spawn in `work/attack_meta.json` was updated. See `../blender_rig_tighten_20261008/NOTE.md`.
+
+## Attack staff in Unity (2026-10-08)
+Unity no longer loads `LYRA_staff.fbx` for the attack. The rest/walk staff (`LYRA_staff_rest.fbx`) stands in for the attack's `LYRA_staff` track: it has the same mesh and the same grip on RightHand. One textured staff now serves all three clips. The old attack copy rendered white because its imported material never got the rig's texture atlas. The file is kept, unchanged.

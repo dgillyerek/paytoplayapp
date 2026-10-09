@@ -62,7 +62,7 @@ namespace Survival.Domain.Heroes
 
 
 
-        /// <summary>Rest/walk staff: Design props/LYRA_staff.fbx on RightHand. Hidden while the attack plays (attack keeps its own LYRA_staff.fbx).</summary>
+        /// <summary>Staff for every clip: Design props/LYRA_staff.fbx on RightHand. It stands in for the attack's LYRA_staff track (same mesh and grip), so the attack never loads a second, untextured copy.</summary>
         public static readonly BlenderRigIdlePropSpec[] IdleProps =
         {
             new BlenderRigIdlePropSpec(
@@ -72,7 +72,8 @@ namespace Survival.Domain.Heroes
                 "mixamorig:RightHand",
                 new[] { 0.54468f, 1.2833f, 0.13197f, 0.01582f, -0.00068f, -0.04293f, 0.99895f },
                 new[] { 0.27652f, 1.88927f, 0.11728f },
-                "Design props/LYRA_staff.fbx on RightHand at rest and in the walk (rest_world from LYRA_staff_meta.json). Hidden during attack.")
+                "Design props/LYRA_staff.fbx on RightHand in rest, walk and attack (rest_world from LYRA_staff_meta.json). Stands in for the attack's LYRA_staff track so one textured staff serves every clip.",
+                "LYRA_staff")
         };
 
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(
