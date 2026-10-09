@@ -133,3 +133,6 @@ Derek, Game view on desktop: "the walk looks like her legs are facing to the sid
 - **Unchanged:** timing, heel-to-toe roll, arm swing, the staff grip, and soles at +3 mm in stance with no dips. Derek's bones, the rest and attack FBXs, both staff FBXs, and the rest/attack/bolt actions are all byte-identical.
 - **FBX MD5:** walk 94d6cc78 → 7c5b1577.
 - **Watch in Unity:** the right ankle and boot top twist by about 40° to straighten that foot.
+
+## 2026-10-09: attack staff clear of body, natural wrist (attack only)
+Derek: the staff pushed through her body in the attack and the wrist bent unnaturally. Only the attack's RightArm, RightForeArm and RightHand keys changed, plus the bolt location keys. The staff no longer enters the body: it was up to 8.5 cm into the right thigh and 6.8 cm into the shin, and now has at least 3.7 cm clearance. The staff wrist went from 119° to at most 25° from the rest grip. Bones, the rest and walk actions, the staff offset, the rest and walk FBXs and both staff FBXs are unchanged. Saved in Object Mode with the walk active. Attack FBX 53fd21bb → 835b0502. Details are in `../attack_20261008/NOTE.md`.
