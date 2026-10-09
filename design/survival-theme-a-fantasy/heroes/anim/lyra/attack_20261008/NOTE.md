@@ -36,3 +36,6 @@ Built on `heroes/anim/lyra/blender_rig_tighten_20261008/LYRA_tighten_blenderig.b
 
 ## Attack staff in Unity (2026-10-08)
 Unity no longer loads `LYRA_staff.fbx` for the attack. The rest/walk staff (`LYRA_staff_rest.fbx`) stands in for the attack's `LYRA_staff` track: it has the same mesh and the same grip on RightHand. One textured staff now serves all three clips. The old attack copy rendered white because its imported material never got the rig's texture atlas. The file is kept, unchanged.
+
+## Rebuild on Derek's second rig edit (2026-10-08 22:45, e8b050d)
+`LYRA_tighten_blenderig_attack.fbx` 64d8b8d4 → 53fd21bb. Derek moved the hips, knees, ankles, left elbow/wrist and right hand, and removed both toe bones. The attack was retargeted from a995489 by world-space rotation from rest, so the cast reads the same. The staff wrist path is within 1.6 cm and the staff crystal path within 1.5 cm. The bolt spawn was re-measured at f12: (-0.154, -0.660, 1.912). See `../blender_rig_tighten_20261008/NOTE.md`.

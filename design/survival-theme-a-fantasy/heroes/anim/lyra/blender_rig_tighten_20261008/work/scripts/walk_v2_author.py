@@ -33,7 +33,7 @@ for v in body.data.vertices:
     for g in v.groups: W[v.index,g.group]=g.weight
 SOLE={}
 for s in ('Left','Right'):
-    fv=co[(W[:,vg[P+s+'Foot']]+W[:,vg[P+s+'ToeBase']])>0.5]
+    fv=co[(W[:,vg[P+s+'Foot']]+(W[:,vg[P+s+'ToeBase']] if P+s+'ToeBase' in vg else 0.0))>0.5]   # toes merged into Foot when Derek removed ToeBase
     zmin=fv[:,2].min(); bot=fv[fv[:,2]<zmin+0.02]
     heel=Vector(bot[bot[:,1].argmax()]); toe=Vector(fv[fv[:,1].argmin()])
     heel.z=zmin; toe.z=zmin
@@ -119,7 +119,7 @@ def pose_frame(f, hips_extra_dz=0.0):
         dL=rot_between(shin_rest,end-knee)@dU
         place(s+'Leg',dL@R3(REST[s+'Leg']))
         place(s+'Foot',Rf@R3(REST[s+'Foot']))
-        place(s+'ToeBase',Rf@R3(REST[s+'ToeBase']))
+        if s+'ToeBase' in REST: place(s+'ToeBase',Rf@R3(REST[s+'ToeBase']))
         info[s]=dict(reach=(ank-hip).length/sum(LEN[s]),miss=(end-ank).length,stance=stance)
     # left arm: sagittal swing, fixed small abduction, more elbow bend forward
     phi=3.0+19.0*cyc(f,9.0)       # +forward deg; left arm forward when right leg forward (f8)

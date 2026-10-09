@@ -18,22 +18,22 @@
    "parent": "RightHand f0-f30 (constant offset)",
    "offset_RightHand": [
     [
-     -0.5119721293449402,
-     0.8590004444122314,
-     -0.001640263944864273,
-     -0.022112179547548294
+     -0.41683533787727356,
+     0.9089824557304382,
+     -0.00031092995777726173,
+     -0.030507054179906845
     ],
     [
-     -0.8578712940216064,
-     -0.5113950371742249,
-     -0.05032264068722725,
-     0.07269445806741714
+     -0.8759976029396057,
+     -0.40161818265914917,
+     0.2670799195766449,
+     0.07315909117460251
     ],
     [
-     -0.044065892696380615,
-     -0.024356242269277573,
-     0.9987313151359558,
-     0.028559615835547447
+     0.24264591932296753,
+     0.11160075664520264,
+     0.9636746048927307,
+     0.011795437894761562
     ],
     [
      0.0,
@@ -58,9 +58,9 @@
     0
    ],
    "spawn_world": [
-    -0.16801710426807404,
-    -0.6541648507118225,
-    1.9104540348052979
+    -0.15443961322307587,
+    -0.6598772406578064,
+    1.911718726158142
    ],
    "note": "spawns at staff crystal, grows 40%->100% over 3 frames, travels -Y"
   }
@@ -125,5 +125,6 @@
  "props_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261008/LYRA_tighten_attack_props.blend",
  "work_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261008/LYRA_tighten_attack_work.blend",
  "rear_cam_note": "rear battle cam re-rendered wider so the arrow/bolt stays in frame",
- "rig_edit_note": "2026-10-08: Derek moved the right elbow/wrist and both ball-of-foot joints in the combined blend; staff offset re-derived from the unchanged rest_world, bolt spawn re-measured at the f12 crystal. Old spawn [-0.34228,-0.64558,1.86218]."
+ "rig_edit_note": "2026-10-08: Derek moved the right elbow/wrist and both ball-of-foot joints in the combined blend; staff offset re-derived from the unchanged rest_world, bolt spawn re-measured at the f12 crystal. Old spawn [-0.34228,-0.64558,1.86218].",
+ "rig_edit_note_e8b050d": "2026-10-08 22:45: Derek moved hips, knees, ankles, left elbow/wrist, right wrist, head length and removed both ToeBase bones. Attack retargeted by world-space rotation deltas from a995489; staff offset re-derived from the unchanged rest_world; bolt spawn re-measured at the f12 crystal. Old spawn [-0.16802, -0.65416, 1.91045]."
 }

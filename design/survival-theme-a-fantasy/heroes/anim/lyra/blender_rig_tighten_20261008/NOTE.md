@@ -89,3 +89,35 @@ Derek edited the combined blend in Blender 5.2. He saved it in Edit Mode; it has
   | Right | 2.8 to 50.7 | 18.5 to 21.8 |
 
 - Only `LYRA_tighten_blenderig_walk.fbx` was re-exported: ff4786e2 → f66a08b9. Rest and attack are untouched.
+
+## Derek's second rig edit + rebuild (2026-10-08 22:45, e8b050d → this commit)
+Derek edited the combined blend on the laptop in Blender 5.2 and saved it in Edit Mode; it has been re-saved in Object Mode. His bones were kept exactly: every head, tail, roll and parent is byte-for-byte his (checked after the rebuild).
+
+**Note:** his saved file was built on the 8:11 PM version (e92a644), not on a995489. So it carried the old 10-05 walk, the old staff offset and the old bolt keys. Those were not hand edits, so they were replaced by the current versions below. Rest and attack keys, mesh, weights, materials and textures in his file were unchanged.
+
+**What he changed (bone rest positions, Edit Mode):**
+- **Both toe bones (`LeftToeBase`, `RightToeBase`) deleted.** The rig is now 20 bones and each Foot bone runs from the ankle to the tip of the toe on the ground.
+- **Knees** raised about 10 cm. L: z 0.49 → 0.60 m. R: z 0.49 → 0.59 m.
+- **Ankles** lowered about 8 cm. L: z 0.21 → 0.13 m. R: z 0.21 → 0.12 m.
+- **Hips** joint moved 4.8 cm back and 2 cm to her right, and 1.3 cm down. The right hip socket moved 1.4 cm.
+- **Head** bone shortened: its tip came down 6.4 cm. The neck/head joint did not move.
+- **Left arm:** elbow up 5.2 cm and back 2.9 cm; wrist 3.2 cm lower and 1.6 cm further out. The forearm is now 27 cm (was 18 cm).
+- **Right hand:** wrist moved 0.6 cm. The hand bone tip moved 1.7 cm, which re-rolled the hand.
+
+**What was rebuilt (`work/scripts/rebuild_e8b050d.py`, Blender 5.2.2):**
+- **Toe weights:** the 744 (L) and 1,060 (R) vertices weighted to the deleted toe bones were added onto their Foot bone, and the two empty toe groups were removed. Without this, 51 toe vertices had no bone at all and would stay behind when the foot moved. The 36 leftover toe curves in the rest and attack actions were removed.
+- **Walk:** walk v2 (`work/scripts/walk_v2_author.py`, now also works without toe bones) was re-authored on his bones. The timing, arm swing and heel-toe roll are the same. The soles sit at +3 mm in stance with no dips. Arm abduction is L 11°, R 17.8–21.0°.
+- **Attack:** retargeted from a995489's attack using world-space rotation from rest for every bone. Hips and feet stay still as before.
+  - Compared with a995489, joint paths are within 0.9 cm for the head, shoulders, staff arm and wrist (1.6 cm).
+  - The left hand travels up to 12.5 cm differently because Derek's left forearm is 9 cm longer. Re-using the old keys as-is would have been worse everywhere else.
+- **Staff:** the one shared staff stays at Design's `rest_world` in the fist. Its hand offset was re-derived for the re-rolled RightHand (`props/LYRA_staff_meta.json`, `attack_meta.json`). The staff mesh is unchanged, so both staff FBXs are unchanged.
+- **Bolt:** re-keyed at the f12 crystal. Spawn is (-0.154, -0.660, 1.912); it was (-0.168, -0.654, 1.910).
+- **Unity:**
+  - `LyraAttack.cs`: staff and bolt frames, and the Hips, LeftHand and RightHand calibration anchors, updated.
+  - `LyraMotion.BoneNames` is now 20 bones; the toes are gone.
+- **FBX MD5s:**
+  - Rest 59768294 → e4898881.
+  - Walk f66a08b9 → 94d6cc78.
+  - Attack 64d8b8d4 → 53fd21bb.
+
+**Known leftover:** the skin weights still bend at the old knee and ankle heights (z ≈ 0.50 m and 0.20 m), while the joints now pivot at 0.60 m and 0.13 m. The renders show no visible creasing in the walk, but watch the knees and boot tops.

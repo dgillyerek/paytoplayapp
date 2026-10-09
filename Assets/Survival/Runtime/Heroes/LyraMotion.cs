@@ -4,7 +4,7 @@ namespace Survival.Domain.Heroes
 {
 /// <summary>
 /// Lyra fitted/tighten (Design blender_rig_tighten_20261008, look PASS 2026-10-08).
-/// Mixamo-compatible mixamorig, 22 bones. Rest bind, 1 s Scene walk at 30 fps,
+/// Mixamo-compatible mixamorig, 20 bones (Derek removed both ToeBase bones 2026-10-08; toes ride the Foot). Rest bind, 1 s Scene walk at 30 fps,
 /// attack add-on (attack_20261008). Replaces prior blenderig + attack_20261007.
 /// Bones bound by name. Staff stays in RightHand.
 /// </summary>
@@ -25,7 +25,7 @@ namespace Survival.Domain.Heroes
         public const float WalkSeconds = 1f;
         public const float WalkFrameRate = 30f;
         public const int WalkLastFrame = 30;
-        public const int BoneCount = MixamoHumanoidBones.Count;
+        public const int BoneCount = 20;
 
         public const string TextureFolder = "LYRA_blenderig.fbm";
         public const string BaseColorFile = "LYRA_tighten_basecolor_0.jpg";
@@ -53,11 +53,9 @@ namespace Survival.Domain.Heroes
             "mixamorig:LeftUpLeg",
             "mixamorig:LeftLeg",
             "mixamorig:LeftFoot",
-            "mixamorig:LeftToeBase",
             "mixamorig:RightUpLeg",
             "mixamorig:RightLeg",
-            "mixamorig:RightFoot",
-            "mixamorig:RightToeBase"
+            "mixamorig:RightFoot"
         };
 
 
