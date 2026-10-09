@@ -121,3 +121,15 @@ Derek edited the combined blend on the laptop in Blender 5.2 and saved it in Edi
   - Attack 64d8b8d4 → 53fd21bb.
 
 **Known leftover:** the skin weights still bend at the old knee and ankle heights (z ≈ 0.50 m and 0.20 m), while the joints now pivot at 0.60 m and 0.13 m. The renders show no visible creasing in the walk, but watch the knees and boot tops.
+
+## 2026-10-09: walk v3, feet and knees forward, narrow stance, head motion (walk only)
+
+Derek, Game view on desktop: "the walk looks like her legs are facing to the side. can you rotate the left foot inward and move the hips and legs closer together. also her head should move slightly while walking."
+
+- **Script:** `work/scripts/walk_v3_author.py` (v2 plus the fixes below), run by `work/scripts/walk_feet_20261009.py`, which re-authors only `LYRA_tighten_walk`, checks that bones, rest/attack/bolt keys and the staff are unchanged, saves in Object Mode with the walk active, and exports only the walk FBX.
+- **Feet:** the mesh's right boot points about 42° outward and the left about 4°. v2 kept those angles and also aimed each knee along its foot, so the right knee pointed about 33° outward and the left about 10–15° outward. Both feet are now turned in to a near-straight 2–3° toe-out (right turned in about 40°, left about 1.5°), and both knees point forward (within about 2°) through the whole cycle.
+- **Stance:** the sole centres now land 16 cm apart, about 8 cm either side of the centre line; in v2 they were about 57 cm apart. The narrowest gap is about 4 cm between the boots and 2.5 cm between the thighs at passing, so there is no crossing or knee contact. Hip side-shift was cut from 1.6 to 1.1 cm and the hip drop from 2.5° to 2.0°.
+- **Head:** the head was locked to its rest angle. It now turns about ±2.5° with the chest's counter-rotation, nods about ±1.4° just after each heel strike, and tilts about ±0.9° with the weight shift, so the eyes stay level. The vertical bob (about 2 cm) comes from the body as before.
+- **Unchanged:** timing, heel-to-toe roll, arm swing, the staff grip, and soles at +3 mm in stance with no dips. Derek's bones, the rest and attack FBXs, both staff FBXs, and the rest/attack/bolt actions are all byte-identical.
+- **FBX MD5:** walk 94d6cc78 → 7c5b1577.
+- **Watch in Unity:** the right ankle and boot top twist by about 40° to straighten that foot.

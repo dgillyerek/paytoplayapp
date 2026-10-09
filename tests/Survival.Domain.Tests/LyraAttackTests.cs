@@ -66,9 +66,9 @@ public sealed class LyraAttackTests
             }
         }
 
-        // Rest + walk re-exported from Derek's edited rig blend (2026-10-08).
+        // Rest re-exported from Derek's edited rig blend (2026-10-08); walk v3 (feet forward, narrow stance, head motion) 2026-10-09.
         Assert.Equal("e48988811f6952b52a2a42eaffbd09e8", Md5(Path.Combine(pack, "LYRA_blenderig.fbx")));
-        Assert.Equal("94d6cc781ffb2e6fb972f43ab13073ed", Md5(Path.Combine(pack, "LYRA_blenderig_walk.fbx")));
+        Assert.Equal("7c5b15778f9cd5ec8787c83ccee5fb8f", Md5(Path.Combine(pack, "LYRA_blenderig_walk.fbx")));
     }
 
     [Fact]
