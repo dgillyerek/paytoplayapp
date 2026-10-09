@@ -309,3 +309,24 @@ Bones past `wing_root` stay at the standing local rotation (max difference **0.0
 **Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
 
 MD5: blend `102480a286929f6cec8b7564a15dabe2`, flap `561778dfe4a3678929779c7a80be70a7`. **HOLD merge.**
+
+## Derek Game-view on 0ab347a — flap lowered below the head
+
+Derek: better, but on the upstroke the wings come up too high into the head. Make them go down further and not as high.
+
+Same shoulder axis and direction as f82f633, same standing wing shape. Only `wing_root.L` / `wing_root.R` keys changed (left positive, right the mirror). The shoulder now beats **−22° ± 18°** from standing instead of **+40° ± 28°**: top of the stroke **−4.1°** (was **+67.85°**), bottom **−39.9°** (was **+12.15°**). Crest still frame 7, bottom frame 22, 30 frames at 30 fps, frame 0 equals frame 30 (loop error 5e-7 m).
+
+The cap comes from the head: the standing wing already reaches head height (highest wing vertex 1.347 m against a head/horn top of 1.352 m), so any shoulder lift above standing puts the tips over the head. The bottom comes from the body: below about −40° the right outer finger starts entering the right forearm.
+
+Wing-centroid elevation from the shoulder (static spine, standing was left **+2.8°**):
+
+| | Top (f7) | Center (f0) | Bottom (f22) |
+|---|---|---|---|
+| Left | −1.2° | −18.7° | −36.0° |
+| Right | −1.1° | −17.1° | −32.5° |
+
+**Reimport** (Blender 4.2.3, frames 1–31): highest wing vertex **1.313 m** at the crest against head top **1.348 m** in that frame (was **1.702 m**, over the head). Highest finger tip **1.21 m**. Wing vertices inside the head outline from the front camera **0** on every frame (was up to **5575**). Lowest wing vertex **0.21 m** (was **0.557 m**), so the downstroke hangs to the hips. Wing faces inside the body: only the inner membrane edge against the upper arm (present in the standing pose too) and, near the bottom, the left inner edge brushing the tail root; no finger or tip enters the legs. Non-wing FBX curves match f82f633 within float noise (max 5e-5°). `FBX_SCALE_NONE`, `UnitScaleFactor` 1, rig scale 100. Mesh still 99649 verts / 199427 faces. Blend: bones, walk action, and every other channel unchanged.
+
+**Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
+
+MD5: blend `7e0da670017cee72a0ba0ac8e0025481`, flap `e9b1dc479dde71c9c44d8fe6e22c5557`. **HOLD merge.**
