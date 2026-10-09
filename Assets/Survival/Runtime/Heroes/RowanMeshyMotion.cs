@@ -4,42 +4,58 @@ using Survival.Domain.View;
 namespace Survival.Domain.Heroes
 {
     /// <summary>
-    /// Rowan Meshy compare (Design meshy_nocape_20261008): Meshy auto-rigged "Azure Ranger" on its
-    /// Mixamo skeleton template, 31k tris, skinned bow (no bow prop; it warps in the attack, known).
-    /// Rest = Meshy Idle_02, walk = Walking, attack = Archery Shot. Separate scene and menu next to the
-    /// Blender-rig Rowan (#50) so Derek can compare. HOLD merge until Derek Game-view PASS.
-    /// The FBX headers say 24 fps (TimeMode custom, CustomFrameRate 24); clip lengths follow the file.
+    /// Rowan Meshy compare, NO-BOW pack (Design meshy_nocape_nobow_20261008): the Meshy auto-rigged
+    /// "Azure Ranger" (Mixamo skeleton template) with the fused bow and string deleted from the body,
+    /// plus Design's rigid bow prop. Rest = Idle_02, walk = Walking, attack = Archery Shot with the aim
+    /// fixed inside the export (-99° about the hips' ground point), so no Unity body turn.
+    /// Rest/walk: static bow on RightHand (meta idle/walk offset). Attack: idle bow hidden; baked
+    /// per-frame bow (LeftHand grip, string draw) and arrow (hand → string → flight, release f76) play in
+    /// sync. The old fused-bow pack (meshy_nocape_20261008) stays committed under design/ as superseded.
+    /// Metres, 24 fps. Separate scene and menu next to the Blender-rig Rowan (#50). HOLD merge.
     /// </summary>
     public static class RowanMeshyMotion
     {
         public const string Name = "RowanMeshyCompare";
         public const string Title = "ROWAN · MESHY COMPARE";
         public const string ThemePackDir = "ThemePack/fantasy_kingdom_a/art/heroes/3d/rowan_meshy";
-        public const string DesignDir = "design/survival-theme-a-fantasy/heroes/anim/rowan/meshy_nocape_20261008";
+        public const string DesignDir = "design/survival-theme-a-fantasy/heroes/anim/rowan/meshy_nocape_nobow_20261008";
+        public const string SupersededDesignDir = "design/survival-theme-a-fantasy/heroes/anim/rowan/meshy_nocape_20261008";
         public const string MenuItem = "Survival/Rowan Meshy Compare (rest + walk + attack, Game view 1080x1920)";
         public const string ScenePath = "Assets/Survival/Scenes/RowanMeshyCompare.unity";
 
-        public const string RestFileName = "ROWAN_meshy_rest.fbx";
-        public const string WalkFileName = "ROWAN_meshy_walk.fbx";
-        public const string AttackFileName = "ROWAN_meshy_attack.fbx";
-        public const string RestMd5 = "5cb9e286fd4aa63d55c192533e98697d";
-        public const string WalkMd5 = "d7680dc0f5848a78078bfb1387058fb5";
-        public const string AttackMd5 = "e74bf8ae1f3d73dfe6813318a3e7641f";
+        public const string RestFileName = "ROWAN_meshy_nobow_rest.fbx";
+        public const string WalkFileName = "ROWAN_meshy_nobow_walk.fbx";
+        public const string AttackFileName = "ROWAN_meshy_nobow_attack.fbx";
+        public const string BowAttackFileName = "ROWAN_meshy_bow_attack.fbx";
+        public const string ArrowAttackFileName = "ROWAN_meshy_arrow_attack.fbx";
+        public const string BowPropFileName = "props/ROWAN_bow_meshy.fbx";
+        public const string ArrowPropFileName = "props/ROWAN_arrow_blue_fletch_meshy.fbx";
+        public const string BowMetaFileName = "ROWAN_meshy_bow_meta.json";
 
-        public const string TakePrefix = "target_character|target_character|target_character|";
-        public const string RestTakeName = TakePrefix + "Idle_02";
-        public const string WalkTakeName = TakePrefix + "Walking";
-        public const string AttackTakeName = TakePrefix + "Archery_Shot";
+        public const string RestMd5 = "7868c8337afdcad0c03a2fa4684f3798";
+        public const string WalkMd5 = "d0a8262872c65b19288cf6f54f36a769";
+        public const string AttackMd5 = "ed5e50e663304431cab3c57de105609e";
+        public const string BowAttackMd5 = "12240e87b97897940285cd9886308a91";
+        public const string ArrowAttackMd5 = "4d99e038dd431d493df6d961f41c096d";
+        public const string BowPropMd5 = "698cf4720af7c8b8b3142c1c57fb7e12";
+        public const string ArrowPropMd5 = "958692923580766df6187103c3e8f7bd";
+        public const string BowMetaMd5 = "d3c32103af78de52c27e24920e275072";
 
-        /// <summary>FBX GlobalSettings CustomFrameRate. Design brief said 30; the files say 24.</summary>
+        /// <summary>Every no-bow export carries a single AnimationStack named Scene.</summary>
+        public const string TakeName = "Scene";
+
+        /// <summary>FBX GlobalSettings CustomFrameRate (24, same as the Meshy source).</summary>
         public const float FileFrameRate = 24f;
         public const int RestLastFrame = 45;
         public const int WalkLastFrame = 25;
         public const int AttackLastFrame = 120;
 
-        /// <summary>Full draw F82–F93 heads -96.8° (character's left) in Unity; +97° turns the shot to +Z.</summary>
-        public const float AttackYawDegrees = 97f;
-        public const int AttackReleaseFrame = 94;
+        /// <summary>Design re-exported in metres (FBX UnitScaleFactor 100), so file scale stays off.</summary>
+        public const bool UseFileScale = false;
+
+        /// <summary>Arrow release (0-based, t = 3.167 s); flight is baked at ~12.5 m/s up-screen.</summary>
+        public const int AttackReleaseFrame = 76;
+        public const float ArrowSpeedMetresPerSecond = 12.5257f;
 
         /// <summary>Rear battle camera: behind Rowan, slightly high, so the shot reads toward the top of the screen.</summary>
         public const float CameraYawDegrees = PortraitGameView.RearYawDegrees;
@@ -47,10 +63,29 @@ namespace Survival.Domain.Heroes
 
         public const string ArmatureName = "target_character";
         public const string BodyMeshName = "output_unwrapped";
-        public const string StrayMeshName = "Icosphere";
         public const string BoneRoot = "mixamorig:Hips";
+        public const string RightHand = "mixamorig:RightHand";
+        public const string LeftHand = "mixamorig:LeftHand";
         public const int BoneCount = 88;
-        public const int Triangles = 31109;
+        public const int Triangles = 29551;
+
+        /// <summary>Full-draw hold frame used to bind the LeftHand fallback bow (0-based).</summary>
+        public const int FallbackBindFrame = 68;
+
+        /// <summary>
+        /// Idle bow root in character space (Unity: x, y, z, qx, qy, qz, qw) at rest frame 0:
+        /// RightHand pose @ meta offset_in_RightHand_rest_walk, converted with (x, y, z)b → (-x, z, -y)u.
+        /// </summary>
+        public static readonly float[] IdleBowCharacterPose =
+        {
+            0.38545f, 0.95753f, 0.15926f, 0.45467f, 0.38234f, 0.05187f, 0.80275f
+        };
+
+        /// <summary>LeftHand fallback bow root at attack frame 68 (LeftHand pose @ meta offset_in_LeftHand_attack).</summary>
+        public static readonly float[] FallbackBowCharacterPose =
+        {
+            0.07096f, 1.41245f, 0.77648f, 0.08719f, -0.00038f, 0.01272f, 0.99611f
+        };
 
         public const string TextureFolder = "textures";
         public const string BaseColorFile = "Meshy_AI_Azure_Ranger_biped_texture_0.png";
@@ -62,7 +97,7 @@ namespace Survival.Domain.Heroes
         public const string MetallicMd5 = "33215dc5dddf96ed7402d6e4bc59d221";
         public const string RoughnessMd5 = "716b5985cb9f629fcac2be668dd8cd4a";
 
-        /// <summary>Every LimbNode in the three Meshy FBX exports (identical skeletons), in file order.</summary>
+        /// <summary>Every LimbNode in the no-bow body exports (same 88 names and order as the Meshy source).</summary>
         public static readonly string[] BoneNames =
         {
             "mixamorig:Hips",
@@ -160,20 +195,33 @@ namespace Survival.Domain.Heroes
             Title,
             ThemePackDir,
             DesignDir,
-            new MeshyRigClip(MeshyRigSpec.RestPoseName, RestFileName, RestMd5, "Idle_02", RestTakeName, FileFrameRate, RestLastFrame),
-            new MeshyRigClip(MeshyRigSpec.WalkPoseName, WalkFileName, WalkMd5, "Walking", WalkTakeName, FileFrameRate, WalkLastFrame),
-            new MeshyRigClip(MeshyRigSpec.AttackPoseName, AttackFileName, AttackMd5, "Archery_Shot", AttackTakeName, FileFrameRate, AttackLastFrame),
+            new MeshyRigClip(MeshyRigSpec.RestPoseName, RestFileName, RestMd5, "Idle_02", TakeName, FileFrameRate, RestLastFrame),
+            new MeshyRigClip(MeshyRigSpec.WalkPoseName, WalkFileName, WalkMd5, "Walking", TakeName, FileFrameRate, WalkLastFrame),
+            new MeshyRigClip(MeshyRigSpec.AttackPoseName, AttackFileName, AttackMd5, "Archery_Shot", TakeName, FileFrameRate, AttackLastFrame),
             ArmatureName,
             BoneRoot,
             BoneNames,
             BodyMeshName,
-            new[] { StrayMeshName },
+            System.Array.Empty<string>(),
             TextureFolder,
             BaseColorFile,
             NormalFile,
             MetallicFile,
             RoughnessFile,
-            AttackYawDegrees,
+            UseFileScale,
+            new[]
+            {
+                new MeshyHeldProp("ROWAN_bow_idle", BowPropFileName, BowPropMd5, RightHand, MeshyRigSpec.RestPoseName, 0, IdleBowCharacterPose)
+            },
+            new[]
+            {
+                new MeshyBakedProp("ROWAN_bow_attack", BowAttackFileName, BowAttackMd5, TakeName, AttackLastFrame),
+                new MeshyBakedProp("ROWAN_arrow_attack", ArrowAttackFileName, ArrowAttackMd5, TakeName, AttackLastFrame)
+            },
+            new[]
+            {
+                new MeshyHeldProp("ROWAN_bow_attack_fallback", BowPropFileName, BowPropMd5, LeftHand, MeshyRigSpec.AttackPoseName, FallbackBindFrame, FallbackBowCharacterPose)
+            },
             AttackReleaseFrame,
             CameraYawDegrees,
             CameraPitchDegrees);

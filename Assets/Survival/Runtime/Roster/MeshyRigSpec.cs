@@ -42,13 +42,72 @@ namespace Survival.Domain.Roster
     }
 
     /// <summary>
+    /// A static prop held on a bone. <see cref="CharacterPose"/> is the prop root pose in character space
+    /// (Unity convention: x, y, z, qx, qy, qz, qw) at <see cref="BindPose"/> frame <see cref="BindFrame"/>,
+    /// derived from Design's hand offset. The player samples that frame, converts it to bone-local, and
+    /// parents the prop to the bone, so it follows the hand with no per-frame code.
+    /// </summary>
+    public readonly struct MeshyHeldProp
+    {
+        public MeshyHeldProp(
+            string name,
+            string fileName,
+            string fileMd5,
+            string bone,
+            string bindPose,
+            int bindFrame,
+            float[] characterPose)
+        {
+            Name = name;
+            FileName = fileName;
+            FileMd5 = fileMd5;
+            Bone = bone;
+            BindPose = bindPose;
+            BindFrame = bindFrame;
+            CharacterPose = characterPose;
+        }
+
+        public string Name { get; }
+        public string FileName { get; }
+        public string FileMd5 { get; }
+        public string Bone { get; }
+        public string BindPose { get; }
+        public int BindFrame { get; }
+        public float[] CharacterPose { get; }
+    }
+
+    /// <summary>
+    /// A prop whose attack motion is baked per frame in character space (its own FBX take). Dropped
+    /// under the character root unparented from any bone and sampled in sync with the attack clip.
+    /// </summary>
+    public readonly struct MeshyBakedProp
+    {
+        public MeshyBakedProp(string name, string fileName, string fileMd5, string takeName, int lastFrame)
+        {
+            Name = name;
+            FileName = fileName;
+            FileMd5 = fileMd5;
+            TakeName = takeName;
+            LastFrame = lastFrame;
+        }
+
+        public string Name { get; }
+        public string FileName { get; }
+        public string FileMd5 { get; }
+        public string TakeName { get; }
+        public int LastFrame { get; }
+    }
+
+    /// <summary>
     /// A Meshy auto-rigged character (Mixamo skeleton template) played as-is in a portrait Game view:
     /// rest = Meshy idle loop, walk loop, and an attack that plays once, holds its last frame
     /// (rest) for <see cref="RestGapSeconds"/>, then repeats (house attack pattern).
     /// Generic import, clips bind by bone name (every export has the same skeleton). Root motion off.
-    /// Meshy FBX units are centimetres with a 100x node scale, so the FBX file scale is honoured.
-    /// Stray meshes Meshy leaves in the export (e.g. an Icosphere) are hidden by name.
+    /// <see cref="UseFileScale"/> follows the export units (raw Meshy cm exports need it; Design's
+    /// metre re-exports do not). Stray meshes listed in <see cref="HiddenMeshNames"/> are hidden by name.
     /// Separate metallic and roughness maps pack into URP metallic (R) + smoothness (A).
+    /// Rest/walk show <see cref="IdleProps"/> on their bones; the attack hides them and plays
+    /// <see cref="AttackBakedProps"/> in sync (or <see cref="AttackFallbackProps"/> if a baked file fails).
     /// </summary>
     public sealed class MeshyRigSpec
     {
@@ -75,7 +134,10 @@ namespace Survival.Domain.Roster
             string normalFile,
             string metallicFile,
             string roughnessFile,
-            float attackYawDegrees,
+            bool useFileScale,
+            MeshyHeldProp[] idleProps,
+            MeshyBakedProp[] attackBakedProps,
+            MeshyHeldProp[] attackFallbackProps,
             int attackReleaseFrame,
             float cameraYawDegrees,
             float cameraPitchDegrees)
@@ -97,7 +159,10 @@ namespace Survival.Domain.Roster
             NormalFile = normalFile;
             MetallicFile = metallicFile;
             RoughnessFile = roughnessFile;
-            AttackYawDegrees = attackYawDegrees;
+            UseFileScale = useFileScale;
+            IdleProps = idleProps;
+            AttackBakedProps = attackBakedProps;
+            AttackFallbackProps = attackFallbackProps;
             AttackReleaseFrame = attackReleaseFrame;
             CameraYawDegrees = cameraYawDegrees;
             CameraPitchDegrees = cameraPitchDegrees;
@@ -121,13 +186,19 @@ namespace Survival.Domain.Roster
         public string MetallicFile { get; }
         public string RoughnessFile { get; }
 
-        /// <summary>
-        /// Yaw applied to the whole character only while the attack plays, so the shot travels
-        /// +Z (top of the screen in the rear camera). Rest and walk keep 0 (character faces +Z).
-        /// </summary>
-        public float AttackYawDegrees { get; }
+        /// <summary>True when the FBX is in cm with a 100x node scale (raw Meshy). False for metre exports.</summary>
+        public bool UseFileScale { get; }
 
-        /// <summary>Approximate arrow release frame in the attack clip (informational).</summary>
+        /// <summary>Props shown in rest and walk (hidden while the attack plays).</summary>
+        public MeshyHeldProp[] IdleProps { get; }
+
+        /// <summary>Props baked per frame for the attack, sampled in sync with the body clip.</summary>
+        public MeshyBakedProp[] AttackBakedProps { get; }
+
+        /// <summary>Bone-held stand-ins used only if a baked attack prop cannot be loaded.</summary>
+        public MeshyHeldProp[] AttackFallbackProps { get; }
+
+        /// <summary>Arrow release frame in the attack clip (informational; the flight is baked).</summary>
         public int AttackReleaseFrame { get; }
 
         public float CameraYawDegrees { get; }

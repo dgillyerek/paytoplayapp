@@ -13,10 +13,14 @@ namespace Survival.Unity
     /// Plays a Meshy auto-rigged character as-is: rest (Meshy idle loop), walk loop, and an attack that
     /// plays once, holds its last frame for <see cref="MeshyRigSpec.RestGapSeconds"/>, then repeats.
     /// Generic import with the FBX's own bone names (clips from the other exports bind by name/path).
-    /// Root motion off. Honours the FBX file scale (Meshy exports are cm with a 100x node scale).
-    /// Hides stray meshes by name. Packs separate metallic + roughness maps into URP metallic (R) and
-    /// smoothness (A = 1 - roughness) so the body does not render as chrome. Does not re-rig, re-skin,
-    /// bake axis conversion, or touch the skinned bow.
+    /// Root motion off. File scale follows the spec (off for metre exports). Hides stray meshes by name.
+    /// Packs separate metallic + roughness maps into URP metallic (R) and smoothness (A = 1 - roughness)
+    /// so the body does not render as chrome.
+    /// Props: rest/walk show the spec's idle props parented to their bones (bound once from Design's
+    /// character-space pose). The attack hides them and samples each baked prop FBX (per-frame motion in
+    /// character space, dropped under the character root, never reparented) at the body's clip time.
+    /// If a baked file cannot be used, the bone-held fallback stands in. No projectile code: the arrow
+    /// flight is baked. Does not re-rig, re-skin, or bake axis conversion.
     /// </summary>
     public sealed class MeshyRigPlayer
     {
@@ -28,6 +32,10 @@ namespace Survival.Unity
         private AnimationPlayableOutput _output;
         private AnimationClipPlayable _playable;
         private readonly Dictionary<string, AnimationClip> _clips = new Dictionary<string, AnimationClip>();
+        private readonly List<GameObject> _idleProps = new List<GameObject>();
+        private readonly List<BakedView> _baked = new List<BakedView>();
+        private readonly List<GameObject> _fallback = new List<GameObject>();
+        private bool _attackPropsBuilt;
         private bool _ready;
         private bool _attackMode;
         private float _length;
@@ -82,6 +90,8 @@ namespace Survival.Unity
             _graph.Play();
             _ready = true;
             PlayPose(MeshyRigSpec.RestPoseName);
+            BuildIdleProps();
+            ShowIdleProps(true);
 #else
             Debug.LogError(_spec.Name + " plays in the Editor Game view.");
 #endif
@@ -108,7 +118,20 @@ namespace Survival.Unity
             }
 
             _attackMode = attack;
-            SetYaw(attack ? _spec.AttackYawDegrees : 0f);
+            if (attack)
+            {
+                // Hide the rest/walk bow first so no prop ever shows twice.
+                ShowIdleProps(false);
+                BuildAttackProps();
+                ShowAttackProps(true);
+                SampleAttackProps(0f);
+            }
+            else
+            {
+                ShowAttackProps(false);
+                ShowIdleProps(true);
+            }
+
             return true;
         }
 
@@ -137,22 +160,148 @@ namespace Survival.Unity
 
             _playable.SetTime(t);
             _graph.Evaluate(0f);
+            if (_attackMode)
+            {
+                SampleAttackProps(t);
+            }
         }
 
         public void Dispose()
         {
+            foreach (var view in _baked)
+            {
+                if (view.Graph.IsValid())
+                {
+                    view.Graph.Destroy();
+                }
+            }
+
+            _baked.Clear();
             if (_graph.IsValid())
             {
                 _graph.Destroy();
             }
         }
 
-        private void SetYaw(float degrees)
+        private void ShowIdleProps(bool shown)
         {
-            if (_instance != null)
+            foreach (var prop in _idleProps)
             {
-                _instance.transform.localRotation = Quaternion.Euler(0f, degrees, 0f);
+                if (prop != null)
+                {
+                    prop.SetActive(shown);
+                }
             }
+        }
+
+        private void ShowAttackProps(bool shown)
+        {
+            foreach (var view in _baked)
+            {
+                if (view.Root != null)
+                {
+                    view.Root.SetActive(shown);
+                }
+            }
+
+            foreach (var prop in _fallback)
+            {
+                if (prop != null)
+                {
+                    prop.SetActive(shown);
+                }
+            }
+        }
+
+        private void SampleAttackProps(float seconds)
+        {
+            foreach (var view in _baked)
+            {
+                if (!view.Graph.IsValid() || !view.Playable.IsValid())
+                {
+                    continue;
+                }
+
+                var t = view.Length > 0.05f ? Mathf.Min(seconds, view.Length - 0.0005f) : 0f;
+                view.Playable.SetTime(t);
+                view.Graph.Evaluate(0f);
+            }
+        }
+
+        private void BuildIdleProps()
+        {
+#if UNITY_EDITOR
+            // Body is at rest frame 0 here (PlayPose(rest) just evaluated t = 0).
+            foreach (var spec in _spec.IdleProps)
+            {
+                var prop = BindHeldProp(spec);
+                if (prop != null)
+                {
+                    _idleProps.Add(prop);
+                }
+            }
+#endif
+        }
+
+        private void BuildAttackProps()
+        {
+#if UNITY_EDITOR
+            if (_attackPropsBuilt || _instance == null)
+            {
+                return;
+            }
+
+            _attackPropsBuilt = true;
+            var bowBaked = true;
+            foreach (var spec in _spec.AttackBakedProps)
+            {
+                var view = LoadBakedProp(spec);
+                if (view == null)
+                {
+                    if (spec.Name.IndexOf("bow", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        bowBaked = false;
+                    }
+
+                    continue;
+                }
+
+                _baked.Add(view);
+            }
+
+            if (!bowBaked)
+            {
+                // Drop a half-loaded baked bow so the fallback is the only bow in the attack.
+                for (var i = _baked.Count - 1; i >= 0; i--)
+                {
+                    if (_baked[i].Root.name.IndexOf("bow", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        _baked[i].Graph.Destroy();
+                        Object.Destroy(_baked[i].Root);
+                        _baked.RemoveAt(i);
+                    }
+                }
+
+                Debug.LogWarning(_spec.Name + " baked attack bow unusable. Falling back to Design's LeftHand offset.");
+                var time = _time;
+                foreach (var spec in _spec.AttackFallbackProps)
+                {
+                    // Sample the attack at the bind frame, bind to the bone, then return to the clip start.
+                    _playable.SetTime(spec.BindFrame / _spec.Attack.FrameRate);
+                    _graph.Evaluate(0f);
+                    var prop = BindHeldProp(spec);
+                    if (prop != null)
+                    {
+                        _fallback.Add(prop);
+                    }
+                }
+
+                _playable.SetTime(time);
+                _graph.Evaluate(0f);
+            }
+
+            ShowAttackProps(false);
+#endif
         }
 
         private bool PlayClip(MeshyRigClip spec)
@@ -262,10 +411,10 @@ namespace Survival.Unity
                 dirty = true;
             }
 
-            // Meshy FBX: UnitScaleFactor 1 (cm) with a 100x node scale. Honour the file scale so Rowan is ~1.7 m.
-            if (!importer.useFileScale)
+            // Raw Meshy cm exports need the file scale; Design's metre re-exports (UnitScaleFactor 100) do not.
+            if (importer.useFileScale != _spec.UseFileScale)
             {
-                importer.useFileScale = true;
+                importer.useFileScale = _spec.UseFileScale;
                 dirty = true;
             }
 
@@ -306,10 +455,16 @@ namespace Survival.Unity
 
         private bool PinClip(ModelImporter importer, MeshyRigClip spec)
         {
+            var loop = !string.Equals(spec.PoseName, MeshyRigSpec.AttackPoseName, System.StringComparison.Ordinal);
+            return PinTake(importer, spec.PoseName, spec.TakeName, spec.MeshyAnimation, loop);
+        }
+
+        private bool PinTake(ModelImporter importer, string clipName, string takeName, string suffix, bool loop)
+        {
             var defaults = importer.defaultClipAnimations;
             if (defaults == null || defaults.Length == 0)
             {
-                Debug.LogError(_spec.Name + " Meshy clip has no take. Wanted " + spec.TakeName);
+                Debug.LogError(_spec.Name + " Meshy clip has no take. Wanted " + takeName);
                 return false;
             }
 
@@ -317,8 +472,8 @@ namespace Survival.Unity
             foreach (var candidate in defaults)
             {
                 var take = candidate.takeName ?? string.Empty;
-                if (string.Equals(take, spec.TakeName, System.StringComparison.Ordinal)
-                    || take.EndsWith("|" + spec.MeshyAnimation, System.StringComparison.Ordinal))
+                if (string.Equals(take, takeName, System.StringComparison.Ordinal)
+                    || (suffix.Length > 0 && take.EndsWith("|" + suffix, System.StringComparison.Ordinal)))
                 {
                     best = candidate;
                     break;
@@ -335,10 +490,9 @@ namespace Survival.Unity
                 return false;
             }
 
-            var loop = !string.Equals(spec.PoseName, MeshyRigSpec.AttackPoseName, System.StringComparison.Ordinal);
             var already = importer.clipAnimations;
             if (already != null && already.Length == 1
-                && string.Equals(already[0].name, spec.PoseName, System.StringComparison.Ordinal)
+                && string.Equals(already[0].name, clipName, System.StringComparison.Ordinal)
                 && string.Equals(already[0].takeName, best.takeName, System.StringComparison.Ordinal)
                 && already[0].loopTime == loop
                 && !already[0].mirror)
@@ -347,7 +501,7 @@ namespace Survival.Unity
             }
 
             // Keep the take's own frame range (file frame rate); only name, loop, and in-place flags change.
-            best.name = spec.PoseName;
+            best.name = clipName;
             best.mirror = false;
             best.loopTime = loop;
             best.loop = loop;
@@ -359,7 +513,279 @@ namespace Survival.Unity
             return true;
         }
 
+        private GameObject? BindHeldProp(MeshyHeldProp spec)
+        {
+            if (_instance == null)
+            {
+                return null;
+            }
+
+            var bone = FindBone(_instance.transform, spec.Bone);
+            if (bone == null)
+            {
+                Debug.LogError(_spec.Name + " prop bone missing. " + spec.Bone + " for " + spec.Name);
+                return null;
+            }
+
+            var path = Asset(spec.FileName);
+            EnsureStaticPropImport(path);
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (prefab == null)
+            {
+                Debug.LogError(_spec.Name + " prop missing. " + path);
+                return null;
+            }
+
+            var prop = Object.Instantiate(prefab, _instance.transform, false);
+            prop.name = spec.Name;
+            foreach (var anim in prop.GetComponentsInChildren<Animator>(true))
+            {
+                Object.Destroy(anim);
+            }
+
+            FixPropMaterials(prop);
+            var c = spec.CharacterPose;
+            var root = _instance.transform;
+            var worldPos = root.TransformPoint(new Vector3(c[0], c[1], c[2]));
+            var worldRot = root.rotation * new Quaternion(c[3], c[4], c[5], c[6]).normalized;
+            prop.transform.SetPositionAndRotation(worldPos, worldRot);
+            // Ride the bone from here on (bone-local offset fixed at the bind frame).
+            prop.transform.SetParent(bone, true);
+            Debug.Log(
+                _spec.Name + " " + spec.Name + " on " + spec.Bone + " (bound at " + spec.BindPose + " f" + spec.BindFrame +
+                ") local " + prop.transform.localPosition.ToString("F4") + " " + prop.transform.localRotation.eulerAngles.ToString("F1"));
+            return prop;
+        }
+
+        private BakedView? LoadBakedProp(MeshyBakedProp spec)
+        {
+            if (_instance == null)
+            {
+                return null;
+            }
+
+            var path = Asset(spec.FileName);
+            if (AssetImporter.GetAtPath(path) is not ModelImporter importer)
+            {
+                Debug.LogError(_spec.Name + " baked prop importer missing. " + path);
+                return null;
+            }
+
+            var dirty = false;
+            if (importer.animationType != ModelImporterAnimationType.Generic)
+            {
+                importer.animationType = ModelImporterAnimationType.Generic;
+                dirty = true;
+            }
+
+            if (importer.avatarSetup != ModelImporterAvatarSetup.CreateFromThisModel)
+            {
+                importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+                dirty = true;
+            }
+
+            if (importer.useFileScale != _spec.UseFileScale)
+            {
+                importer.useFileScale = _spec.UseFileScale;
+                dirty = true;
+            }
+
+            if (Mathf.Abs(importer.globalScale - 1f) > 0.001f)
+            {
+                importer.globalScale = 1f;
+                dirty = true;
+            }
+
+            if (importer.bakeAxisConversion)
+            {
+                importer.bakeAxisConversion = false;
+                dirty = true;
+            }
+
+            if (importer.optimizeGameObjects)
+            {
+                importer.optimizeGameObjects = false;
+                dirty = true;
+            }
+
+            if (!importer.importAnimation)
+            {
+                importer.importAnimation = true;
+                dirty = true;
+            }
+
+            if (importer.materialImportMode != ModelImporterMaterialImportMode.ImportViaMaterialDescription)
+            {
+                importer.materialImportMode = ModelImporterMaterialImportMode.ImportViaMaterialDescription;
+                dirty = true;
+            }
+
+            dirty |= PinTake(importer, spec.Name, spec.TakeName, string.Empty, loop: false);
+            if (dirty)
+            {
+                importer.SaveAndReimport();
+            }
+
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            AnimationClip? clip = null;
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
+            {
+                if (obj is AnimationClip c && !c.name.StartsWith("__preview__") && (clip == null || c.length > clip.length))
+                {
+                    clip = c;
+                }
+            }
+
+            if (prefab == null || clip == null || clip.empty || clip.length < 0.2f)
+            {
+                Debug.LogError(_spec.Name + " baked prop unusable (prefab or clip missing). " + path);
+                return null;
+            }
+
+            // Character space: the baked file's root is the character root (both are Design's world origin).
+            // Never reparented to a bone; the take carries every frame.
+            var root = Object.Instantiate(prefab, _instance.transform, false);
+            root.name = spec.Name;
+            root.transform.localPosition = Vector3.zero;
+            root.transform.localRotation = Quaternion.identity;
+            root.transform.localScale = Vector3.one;
+            FixPropMaterials(root);
+            var animator = root.GetComponent<Animator>();
+            if (animator == null)
+            {
+                animator = root.AddComponent<Animator>();
+            }
+
+            animator.runtimeAnimatorController = null;
+            animator.applyRootMotion = false;
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            var graph = PlayableGraph.Create(_spec.Name + spec.Name);
+            graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
+            var output = AnimationPlayableOutput.Create(graph, spec.Name, animator);
+            var playable = AnimationClipPlayable.Create(graph, clip);
+            playable.SetApplyFootIK(false);
+            playable.SetDuration(clip.length);
+            output.SetSourcePlayable(playable);
+            graph.Play();
+            if (Mathf.Abs(clip.length - _spec.Attack.Seconds) > 0.1f)
+            {
+                Debug.LogWarning(
+                    _spec.Name + " baked " + spec.Name + " length " + clip.length.ToString("0.000") +
+                    "s vs attack " + _spec.Attack.Seconds.ToString("0.000") + "s");
+            }
+
+            return new BakedView(root, graph, playable, clip.length);
+        }
+
+        private void EnsureStaticPropImport(string path)
+        {
+            if (AssetImporter.GetAtPath(path) is not ModelImporter importer)
+            {
+                Debug.LogError(_spec.Name + " prop importer missing. " + path);
+                return;
+            }
+
+            var dirty = false;
+            if (importer.animationType != ModelImporterAnimationType.None)
+            {
+                importer.animationType = ModelImporterAnimationType.None;
+                dirty = true;
+            }
+
+            if (importer.importAnimation)
+            {
+                importer.importAnimation = false;
+                dirty = true;
+            }
+
+            if (importer.useFileScale != _spec.UseFileScale)
+            {
+                importer.useFileScale = _spec.UseFileScale;
+                dirty = true;
+            }
+
+            if (importer.bakeAxisConversion)
+            {
+                importer.bakeAxisConversion = false;
+                dirty = true;
+            }
+
+            if (importer.materialImportMode != ModelImporterMaterialImportMode.ImportViaMaterialDescription)
+            {
+                importer.materialImportMode = ModelImporterMaterialImportMode.ImportViaMaterialDescription;
+                dirty = true;
+            }
+
+            if (dirty)
+            {
+                importer.SaveAndReimport();
+            }
+        }
+
+        /// <summary>Keeps URP materials from the FBX; rebuilds anything else as URP Lit with its colour and base map.</summary>
+        private static void FixPropMaterials(GameObject root)
+        {
+            var lit = Shader.Find("Universal Render Pipeline/Lit");
+            if (lit == null)
+            {
+                lit = Shader.Find("Standard");
+            }
+
+            foreach (var rend in root.GetComponentsInChildren<Renderer>(true))
+            {
+                rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                if (rend is SkinnedMeshRenderer skin)
+                {
+                    skin.updateWhenOffscreen = true;
+                }
+
+                var shared = rend.sharedMaterials;
+                for (var i = 0; i < shared.Length; i++)
+                {
+                    var mat = shared[i];
+                    if (lit == null || (mat != null && mat.shader != null && mat.shader.name.IndexOf("Universal", System.StringComparison.Ordinal) >= 0))
+                    {
+                        continue;
+                    }
+
+                    var color = Color.white;
+                    Texture? tex = null;
+                    if (mat != null)
+                    {
+                        color = mat.HasProperty("_BaseColor") ? mat.GetColor("_BaseColor") : (mat.HasProperty("_Color") ? mat.GetColor("_Color") : Color.white);
+                        tex = mat.HasProperty("_BaseMap") ? mat.GetTexture("_BaseMap") : (mat.HasProperty("_MainTex") ? mat.GetTexture("_MainTex") : null);
+                    }
+
+                    var next = new Material(lit);
+                    next.name = mat != null ? mat.name : "MeshyProp";
+                    next.SetColor("_BaseColor", color);
+                    if (tex != null)
+                    {
+                        next.SetTexture("_BaseMap", tex);
+                    }
+
+                    shared[i] = next;
+                }
+
+                rend.sharedMaterials = shared;
+            }
+        }
+
+        private static Transform? FindBone(Transform root, string name)
+        {
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (string.Equals(t.name, name, System.StringComparison.Ordinal))
+                {
+                    return t;
+                }
+            }
+
+            return null;
+        }
+
         private static Avatar? LoadGenericAvatar(string path)
+
         {
             foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
             {
@@ -637,6 +1063,22 @@ namespace Survival.Unity
             fill.intensity = 0.45f;
             fill.color = new Color(0.68f, 0.74f, 0.88f, 1f);
             fillGo.transform.rotation = Quaternion.Euler(18f, -24f, 0f);
+        }
+
+        private sealed class BakedView
+        {
+            public BakedView(GameObject root, PlayableGraph graph, AnimationClipPlayable playable, float length)
+            {
+                Root = root;
+                Graph = graph;
+                Playable = playable;
+                Length = length;
+            }
+
+            public GameObject Root { get; }
+            public PlayableGraph Graph { get; }
+            public AnimationClipPlayable Playable { get; }
+            public float Length { get; }
         }
     }
 }
