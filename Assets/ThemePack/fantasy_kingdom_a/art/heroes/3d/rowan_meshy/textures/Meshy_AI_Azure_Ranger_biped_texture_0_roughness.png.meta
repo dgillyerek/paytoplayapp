@@ -1,0 +1,24 @@
+fileFormatVersion: 2
+guid: 0abacb7149ee4f3d95352888fff0c377
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 1
+    sRGBTexture: 0
+  isReadable: 1
+  textureType: 0
+  textureShape: 1
+  nPOTScale: 1
+  alphaIsTransparency: 0
+  maxTextureSize: 4096
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    wrapU: 0
+    wrapV: 0
+  userData: Rowan Meshy compare map (Meshy Azure Ranger). HOLD merge.
+  assetBundleName: 
+  assetBundleVariant: 

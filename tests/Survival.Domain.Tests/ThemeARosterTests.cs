@@ -259,7 +259,8 @@ public sealed class ThemeARosterTests
 
         var excluded = new[]
         {
-            "Rowan", "Lyra", "Oakenshield", "Vespera", "Bonequill"
+            // Rowan is wired on this branch only (Meshy compare, HOLD).
+            "Lyra", "Oakenshield", "Vespera", "Bonequill"
         };
         var scenes = Path.Combine(root, "Assets", "Survival", "Scenes");
         var pack = Path.Combine(root, "Assets", "ThemePack");

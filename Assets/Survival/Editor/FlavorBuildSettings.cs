@@ -18,6 +18,7 @@ namespace Survival.Editor
         private const string Ashwyrm = "Assets/Survival/Scenes/Ashwyrm.unity";
         private const string Nightfang = "Assets/Survival/Scenes/Nightfang.unity";
         private const string Stormcrest = "Assets/Survival/Scenes/Stormcrest.unity";
+        private const string RowanMeshyCompare = "Assets/Survival/Scenes/RowanMeshyCompare.unity";
         private const string GroveBoard = "Assets/Grove/Scenes/Board.unity";
 
         [MenuItem("Survival/Use Theme A Flavor (fantasy_kingdom_a)")]
@@ -82,6 +83,12 @@ namespace Survival.Editor
         public static void OpenStormcrestDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Stormcrest);
+        }
+
+        [MenuItem("Survival/Rowan Meshy Compare (rest + walk + attack, Game view 1080x1920)")]
+        public static void OpenRowanMeshyCompare()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(RowanMeshyCompare);
         }
 
         [MenuItem("Survival/Import locked Sir Aldric rear master")]
