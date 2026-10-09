@@ -526,6 +526,13 @@ namespace Survival.Unity
             string takeName = "",
             int lastFrame = 0)
         {
+            // Getters can disagree with the saved .meta and still write the same bytes back.
+            // Reimporting from Play then reloads the scene and clears the demo dropdown.
+            if (SavedSettingsMatch(path, humanoid, clip, poseName, takeName, lastFrame))
+            {
+                return;
+            }
+
             if (AssetImporter.GetAtPath(path) is not ModelImporter importer)
             {
                 Debug.LogError(_spec.Name + " importer missing. " + path);
@@ -597,6 +604,33 @@ namespace Survival.Unity
             {
                 importer.SaveAndReimport();
             }
+        }
+
+        private static bool SavedSettingsMatch(
+            string path,
+            bool humanoid,
+            bool clip,
+            string poseName,
+            string takeName,
+            int lastFrame)
+        {
+            var metaPath = path + ".meta";
+            if (!System.IO.Path.IsPathRooted(metaPath) && !string.IsNullOrEmpty(Application.dataPath))
+            {
+                var root = System.IO.Directory.GetParent(Application.dataPath);
+                if (root != null)
+                {
+                    metaPath = System.IO.Path.Combine(root.FullName, metaPath.Replace('/', System.IO.Path.DirectorySeparatorChar));
+                }
+            }
+
+            if (!System.IO.File.Exists(metaPath))
+            {
+                return false;
+            }
+
+            var meta = System.IO.File.ReadAllText(metaPath);
+            return !BlenderRigImportMeta.NeedsReimport(meta, humanoid, clip, poseName, takeName, lastFrame);
         }
 
         private bool PinClip(ModelImporter importer, string poseName, string takeName, int lastFrame)
