@@ -32,3 +32,14 @@ HOLD: staging only. Nothing committed, pushed or PR'd. Derek must check it in Ga
 ## Known leftovers
 - Flat caps where the staff left the fist (staff-facing palm and thumb side). They are mostly covered while the staff is held.
 - Walk: the 10-05 arm swing (±28°) is applied to the staff arm, so the 1.9 m staff swings like a pendulum (about ±30° at the foot). If this reads badly in Game-view, the fix is to reduce RightArm swing for the staff hand. That would be a deviation from the 10-05 method, so it was not done without approval.
+
+## One blend (2026-10-08)
+`LYRA_tighten_blenderig.blend` is now the only Lyra fitted blend. It holds the rig, body, staff and bolt, plus four actions:
+- `LYRA_tighten_walk`: the armature's active action (edit this one).
+- `LYRA_tighten_rest`: identity bind pose at f0, kept on a muted NLA track named `rest`.
+- `LYRA_tighten_attack`: kept on a muted NLA track named `attack`. To preview it, mute the walk or set it as the active action.
+- `LYRA_arcane_bolt_attack`: on `LYRA_arcane_bolt_vfx`. It appears at f12 and travels −Y at 9 m/s. The `LYRA_attack_vfx` collection is hidden by default.
+
+Pose bones are XYZ euler (the walk's curves need that). The attack was converted from quaternion keys at f0/8/12/19/30 to per-frame linear euler keys (f0–f30). Its per-frame pose matches the old attack work file (max 4.5e-7). `LYRA_staff` is bone-parented to `mixamorig:RightHand` with the Design offset in all clips. Textures are packed.
+
+The old attack work and props blends, `props/LYRA_staff_props.blend` and `work/dec.blend` were removed. `dec.blend` was scratch: the decimated, unrigged 200k-face body, with vertices identical to `LYRA_tighten_body`. No FBX was re-exported.

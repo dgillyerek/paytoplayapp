@@ -1,4 +1,4 @@
-590c7d0afc1bc804720f8cdd6f4381f2  LYRA_tighten_blenderig.blend
+e52853ddf6b8f5c5789073e1cc653674  LYRA_tighten_blenderig.blend
 c8d418024e85d053a2d26e6219632cbe  LYRA_tighten_blenderig.fbx
 e546a82b1c3198fd935f37d37d99e3ba  LYRA_tighten_blenderig_walk.fbx
 65475988821b984bb80b9753a82026bc  LYRA_tighten_rest_compare_lookSoT.png
@@ -7,13 +7,11 @@ c2ebab3bffc40585935df59585471d3a  LYRA_tighten_walk_sheet.jpg
 ea06c4356cb8eba231901ab5327a200e  NOTE.md
 69872fb5cf0f1a515b0e17ca884bccc1  props/LYRA_staff.fbx
 1a541141023bd357b5cd00fe2f63594a  props/LYRA_staff_meta.json
-e5bec51bc6b0ddbb910a1102180eabf5  props/LYRA_staff_props.blend
 fac4ca2d39a74e4b2c30591f95c0ef3e  textures/LYRA_tighten_basecolor_0.png
 d0d8d0593adee228784721b9e13e83ee  textures/LYRA_tighten_metal_rough_1.png
 f356b8a53936fe641a5b52c1e3579bcb  textures/LYRA_tighten_normal_2.png
 d3d2c626ec4f3b08bd3d429c21adc3eb  work/batch.log
 0f77920b4c019cbcbc7dc75c5a5e681f  work/bone_overlay.png
-d0f28a9cfa6500c11a6c6a068592ace0  work/dec.blend
 4e5cdc698efe47829e7dcf46a4016b57  work/dz.txt
 931f55122d6de6d1c551420dcd0677ba  work/hum_analyze.py
 1c5b9b122f3d43d071eb0dee3b5aa45c  work/joints.json
