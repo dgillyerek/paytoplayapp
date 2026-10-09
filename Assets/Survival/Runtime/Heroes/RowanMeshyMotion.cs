@@ -12,6 +12,10 @@ namespace Survival.Domain.Heroes
     /// per-frame bow (LeftHand grip, string draw) and arrow (hand → string → flight, release f76) play in
     /// sync. The old fused-bow pack (meshy_nocape_20261008) stays committed under design/ as superseded.
     /// Metres, 24 fps. Separate scene and menu next to the Blender-rig Rowan (#50). HOLD merge.
+    /// Skin fix (SkinFixDir): the three body FBXs in the ThemePack are Design's no-bow files with Meshy's
+    /// auto-skin cleaned (static helper bones Bone_020-029/056/057 moved to the bones they ride, cross-limb
+    /// weight bleed removed, max 4 influences, weights under 0.05 dropped) and 63 fist-to-pouch weld
+    /// triangles removed. Mesh positions, UVs, paint, bones and animation curves are byte-for-byte Design's.
     /// </summary>
     public static class RowanMeshyMotion
     {
@@ -32,9 +36,17 @@ namespace Survival.Domain.Heroes
         public const string ArrowPropFileName = "props/ROWAN_arrow_blue_fletch_meshy.fbx";
         public const string BowMetaFileName = "ROWAN_meshy_bow_meta.json";
 
-        public const string RestMd5 = "7868c8337afdcad0c03a2fa4684f3798";
-        public const string WalkMd5 = "d0a8262872c65b19288cf6f54f36a769";
-        public const string AttackMd5 = "ed5e50e663304431cab3c57de105609e";
+        public const string SkinFixDir = "design/survival-theme-a-fantasy/heroes/anim/rowan/meshy_nocape_nobow_20261008_skinfix";
+
+        /// <summary>Shipped (skin-fixed) body FBXs in the ThemePack.</summary>
+        public const string RestMd5 = "0e8e571678a183f7f92420ded656d2f4";
+        public const string WalkMd5 = "3e0a0a29ba4f0c549ab6f83d04862433";
+        public const string AttackMd5 = "5d46384dda72e17e70e41868e70d0e59";
+
+        /// <summary>Design's no-bow body FBXs as delivered (DesignDir), the input of the skin fix.</summary>
+        public const string SourceRestMd5 = "7868c8337afdcad0c03a2fa4684f3798";
+        public const string SourceWalkMd5 = "d0a8262872c65b19288cf6f54f36a769";
+        public const string SourceAttackMd5 = "ed5e50e663304431cab3c57de105609e";
         public const string BowAttackMd5 = "12240e87b97897940285cd9886308a91";
         public const string ArrowAttackMd5 = "4d99e038dd431d493df6d961f41c096d";
         public const string BowPropMd5 = "698cf4720af7c8b8b3142c1c57fb7e12";
@@ -67,7 +79,8 @@ namespace Survival.Domain.Heroes
         public const string RightHand = "mixamorig:RightHand";
         public const string LeftHand = "mixamorig:LeftHand";
         public const int BoneCount = 88;
-        public const int Triangles = 29551;
+        public const int Triangles = 29488;
+        public const int SourceTriangles = 29551;
 
         /// <summary>Full-draw hold frame used to bind the LeftHand fallback bow (0-based).</summary>
         public const int FallbackBindFrame = 68;

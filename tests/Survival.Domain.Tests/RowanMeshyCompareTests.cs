@@ -36,9 +36,9 @@ public sealed class RowanMeshyCompareTests
             (RowanMeshyMotion.BowPropFileName, "698cf4720af7c8b8b3142c1c57fb7e12"),
             (RowanMeshyMotion.ArrowPropFileName, "958692923580766df6187103c3e8f7bd"),
         };
-        Assert.Equal(RowanMeshyMotion.RestMd5, expected[0].Md5);
-        Assert.Equal(RowanMeshyMotion.WalkMd5, expected[1].Md5);
-        Assert.Equal(RowanMeshyMotion.AttackMd5, expected[2].Md5);
+        Assert.Equal(RowanMeshyMotion.SourceRestMd5, expected[0].Md5);
+        Assert.Equal(RowanMeshyMotion.SourceWalkMd5, expected[1].Md5);
+        Assert.Equal(RowanMeshyMotion.SourceAttackMd5, expected[2].Md5);
         Assert.Equal(RowanMeshyMotion.BowAttackMd5, expected[3].Md5);
         Assert.Equal(RowanMeshyMotion.ArrowAttackMd5, expected[4].Md5);
         Assert.Equal(RowanMeshyMotion.BowPropMd5, expected[5].Md5);
@@ -48,7 +48,7 @@ public sealed class RowanMeshyCompareTests
         foreach (var (file, md5) in expected)
         {
             Assert.Equal(md5, Md5(Path.Combine(design, file)));
-            Assert.Equal(md5, Md5(Path.Combine(pack, file)));
+            Assert.Equal(ShippedMd5(file, md5), Md5(Path.Combine(pack, file)));
             Assert.True(File.Exists(Path.Combine(pack, file + ".meta")), file);
         }
 
@@ -66,6 +66,53 @@ public sealed class RowanMeshyCompareTests
             var file = line.Substring(32).TrimStart(' ', '*');
             Assert.Equal(md5, Md5(Path.Combine(design, file)));
         }
+    }
+
+    /// <summary>The three body FBXs ship skin-fixed; every other file ships exactly as Design delivered it.</summary>
+    private static string ShippedMd5(string file, string designMd5) => file switch
+    {
+        RowanMeshyMotion.RestFileName => RowanMeshyMotion.RestMd5,
+        RowanMeshyMotion.WalkFileName => RowanMeshyMotion.WalkMd5,
+        RowanMeshyMotion.AttackFileName => RowanMeshyMotion.AttackMd5,
+        _ => designMd5,
+    };
+
+    [Fact]
+    public void Skin_fix_ships_only_the_three_bodies_and_is_rebuildable_from_design()
+    {
+        var root = FindRepoRoot();
+        var fix = Path.Combine(root, RowanMeshyMotion.SkinFixDir);
+        Assert.NotEqual(RowanMeshyMotion.SourceRestMd5, RowanMeshyMotion.RestMd5);
+        Assert.NotEqual(RowanMeshyMotion.SourceWalkMd5, RowanMeshyMotion.WalkMd5);
+        Assert.NotEqual(RowanMeshyMotion.SourceAttackMd5, RowanMeshyMotion.AttackMd5);
+        Assert.Equal(63, RowanMeshyMotion.SourceTriangles - RowanMeshyMotion.Triangles);
+        foreach (var f in new[]
+        {
+            "README.md", "CHECKSUMS.md5", "rowan_meshy_nobow_skinfix_contact_sheet.png",
+            "tools/build.sh", "tools/port_nobow.py", "tools/reweight.py", "tools/seg.py", "tools/fbxbin.py",
+            "tools/stretch.py", "tools/dump_bind_bones.py", "tools/dump_bind_weights.py",
+            "tools/render_nb.py", "tools/contact_sheet_nb.py",
+        })
+        {
+            Assert.True(File.Exists(Path.Combine(fix, f)), f);
+        }
+
+        // CHECKSUMS.md5 pins the shipped bodies (what build.sh reproduces) and the contact sheet.
+        var lines = File.ReadAllLines(Path.Combine(fix, "CHECKSUMS.md5")).Where(l => l.Trim().Length > 0).ToArray();
+        var pack = Path.Combine(root, "Assets", RowanMeshyMotion.ThemePackDir);
+        foreach (var (file, md5) in new[]
+        {
+            (RowanMeshyMotion.RestFileName, RowanMeshyMotion.RestMd5),
+            (RowanMeshyMotion.WalkFileName, RowanMeshyMotion.WalkMd5),
+            (RowanMeshyMotion.AttackFileName, RowanMeshyMotion.AttackMd5),
+        })
+        {
+            Assert.Contains(md5 + "  " + file, lines);
+            Assert.Equal(md5, Md5(Path.Combine(pack, file)));
+        }
+
+        var sheet = lines.Single(l => l.EndsWith("rowan_meshy_nobow_skinfix_contact_sheet.png", StringComparison.Ordinal));
+        Assert.Equal(sheet.Substring(0, 32), Md5(Path.Combine(fix, "rowan_meshy_nobow_skinfix_contact_sheet.png")));
     }
 
     [Fact]
