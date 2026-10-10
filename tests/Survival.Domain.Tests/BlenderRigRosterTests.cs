@@ -138,33 +138,34 @@ public sealed class BlenderRigRosterTests
     }
 
     [Fact]
-    public void Ashwyrm_saved_import_settings_already_match_so_play_mode_does_not_reimport()
+    public void Vespera_saved_import_settings_already_match_so_play_mode_does_not_reimport()
     {
         var root = FindRepoRoot();
-        var spec = AshwyrmMotion.Spec;
+        var spec = VesperaMotion.Spec;
+        Assert.True(spec.PreferHumanoid);
         var restMeta = File.ReadAllText(Path.Combine(root, "Assets", spec.RestThemePackRel) + ".meta");
         Assert.False(BlenderRigImportMeta.NeedsReimport(restMeta, spec.PreferHumanoid, false, string.Empty, string.Empty, 0));
         var flapMeta = File.ReadAllText(Path.Combine(root, "Assets", spec.ClipThemePackRel) + ".meta");
         Assert.False(BlenderRigImportMeta.NeedsReimport(
-            flapMeta, false, true, spec.ClipPoseName, spec.ClipTakeName, spec.ClipLastFrame));
+            flapMeta, true, true, spec.ClipPoseName, spec.ClipTakeName, spec.ClipLastFrame));
         foreach (var extra in spec.ExtraClips)
         {
             var meta = File.ReadAllText(Path.Combine(root, "Assets", spec.ThemePackDir, extra.FileName) + ".meta");
-            Assert.False(BlenderRigImportMeta.NeedsReimport(meta, false, true, extra.PoseName, extra.TakeName, extra.LastFrame));
+            Assert.False(BlenderRigImportMeta.NeedsReimport(meta, true, true, extra.PoseName, extra.TakeName, extra.LastFrame));
         }
 
         Assert.True(BlenderRigImportMeta.NeedsReimport(
             restMeta.Replace("useFileScale: 0", "useFileScale: 1", StringComparison.Ordinal),
-            false, false, string.Empty, string.Empty, 0));
+            true, false, string.Empty, string.Empty, 0));
         Assert.True(BlenderRigImportMeta.NeedsReimport(
-            restMeta.Replace("animationType: 2", "animationType: 3", StringComparison.Ordinal),
-            false, false, string.Empty, string.Empty, 0));
+            restMeta.Replace("animationType: 3", "animationType: 2", StringComparison.Ordinal),
+            true, false, string.Empty, string.Empty, 0));
         Assert.True(BlenderRigImportMeta.NeedsReimport(
             restMeta.Replace("globalScale: 1", "globalScale: 0.01", StringComparison.Ordinal),
-            false, false, string.Empty, string.Empty, 0));
+            true, false, string.Empty, string.Empty, 0));
         Assert.True(BlenderRigImportMeta.NeedsReimport(
-            flapMeta.Replace("name: \"wing flap\"", "name: \"other\"", StringComparison.Ordinal),
-            false, true, spec.ClipPoseName, spec.ClipTakeName, spec.ClipLastFrame));
+            flapMeta.Replace("name: \"walk\"", "name: \"other\"", StringComparison.Ordinal),
+            true, true, spec.ClipPoseName, spec.ClipTakeName, spec.ClipLastFrame));
 
         var bare =
             "animationType: 2\n" +
