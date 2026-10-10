@@ -17,6 +17,8 @@ namespace Survival.Domain.Enemies
         public const string RestThemePackRel = ThemePackDir + "/" + RestFileName;
         public const string FlapThemePackRel = ThemePackDir + "/" + FlapFileName;
         public const string WalkThemePackRel = ThemePackDir + "/" + WalkFileName;
+        public const string AttackPoseName = BlenderRigAttackSpec.PoseName;
+        public const string AttackFileName = AshwyrmAttack.FileName;
         public const string RejectedMixamoFileName = "ASHWYRM_rig.fbx";
 
         public const string RestPoseName = BlenderRigSpec.RestPoseName;
@@ -38,7 +40,7 @@ namespace Survival.Domain.Enemies
 
         public const string BoneRoot = "root";
 
-        public static readonly string[] PoseNames = { RestPoseName, FlapPoseName, WalkPoseName };
+        public static readonly string[] PoseNames = { RestPoseName, FlapPoseName, WalkPoseName, AttackPoseName };
 
         public static readonly string[] BoneNames =
         {
@@ -77,7 +79,14 @@ namespace Survival.Domain.Enemies
                     WalkTakeName,
                     WalkSeconds,
                     WalkFrameRate,
-                    WalkLastFrame)
+                    WalkLastFrame),
+                new BlenderRigClip(
+                    AttackPoseName,
+                    AttackFileName,
+                    BlenderRigAttackSpec.TakeName,
+                    BlenderRigAttackSpec.ClipSeconds,
+                    BlenderRigAttackSpec.FrameRate,
+                    BlenderRigAttackSpec.LastFrame)
             });
     }
 }

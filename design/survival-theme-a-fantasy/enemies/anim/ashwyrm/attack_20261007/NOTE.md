@@ -1,0 +1,45 @@
+# ASHWYRM — attack add-on (Design, 2026-10-07)
+
+**Derek Game-view: PASS (2026-10-07) on the attack motion.** Prop FBXs and the props blend were not regenerated. On 2026-10-08 a stray tail-tip spike was cut from the body mesh, so this attack FBX was re-exported from that mesh. Its Lcl Rotation / Translation / Scaling keys match `b0d240cc17cf79af0af3ed22be5f07ef` within 5e-5. The file hash below is the re-export.
+
+The walk and wing-flap hashes in "Built on" are the clips this attack was authored against. Those two clips were polished afterward (`blender_rig/PASS.md`, 2026-10-08). The rest hash in "Built on" is the mesh this attack was authored against; the current rest FBX is in `blender_rig/CHECKSUMS.md5`.
+
+**Attack:** Void-Fire Breath: Fireball
+**Weapon / VFX:** Void-fire fireball (pink-white core, violet flame, deep-purple rim, black smoke) + breath flare at the snout
+
+## Built on (rig untouched — no rebind / reskin / weight edits)
+- Rig blend: `enemies/anim/ashwyrm/blender_rig/ASHWYRM_blenderig.blend` MD5 `a8a418e7856f0a268483217f787d4fec` (opened read-only in headless Blender 4.2.3 LTS; never saved)
+- Rest FBX: `enemies/anim/ashwyrm/blender_rig/ASHWYRM_blenderig.fbx` MD5 `a432672643153588f2e50cb4e24927b8`
+- Walk/loco FBX: `enemies/anim/ashwyrm/blender_rig/ASHWYRM_blenderig_walk.fbx` MD5 `c2dd2641005770612ffb8b448731ca4f`
+- Other clip: `enemies/anim/ashwyrm/blender_rig/ASHWYRM_blenderig_wingflap.fbx` MD5 `6cbf7c4a001d800d9eeaa3c064956fcd`
+- Before/after MD5 identical for rig blend + rest + walk + wingflap: **YES**; whole rig dir unchanged: **YES**
+
+## Attack clip
+- `ASHWYRM_blenderig_attack.fbx` MD5 `9dc8b9a2d2083290b6a369129a6469b3` — action `ASHWYRM_attack`, frames 0–30 @30fps (31 keys, starts/ends at rest so it blends from idle/walk). Re-exported 2026-10-08 with the tail-tip mesh removed; animation curves match the Game-view PASS file `b0d240cc17cf79af0af3ed22be5f07ef`.
+- Keys: anticipation f9 · strike f14 · release/impact **f14** · follow-through f21 · recover f30.
+- Export: same settings as the existing clip FBX for this rig (`dragon` profile: binary FBX, axis_forward -Z / up Y, add_leaf_bones off, embed textures, bake_anim all bones step 1, simplify 0, force start/end keys). Blender 4.2.3 LTS (matches the walk FBX's Blender version).
+- Reimport QC at the 2026-10-07 motion pass: same bone names+order as rest FBX: **True** ([30, 30]), rest-head delta 0.0 m, faces [199999, 199999], same vertex groups True, frames [1.0, 31.0], end-pose deviation from rest (deg) {'1': 0, '31': 0}, max bone travel 0.325 m.
+- 2026-10-08 mesh: same 30 bones. Body is 99649 verts / 199427 faces (272 tail-tip verts removed, one cap face). Packed paint images are byte-identical to the previous blend.
+- Direction: strike/projectile goes character-forward (Blender −Y, same facing as rest/walk) = **toward the TOP of the screen** in the rear gameplay camera; never toward camera.
+
+## Props / VFX (separate assets — never baked into the body mesh)
+- `ASHWYRM_voidfire_fireball_vfx.fbx` MD5 `ebbfabedbf66e68a3c80bd8e8e6b3a93` (2156 faces) — role `fireball`
+- `ASHWYRM_breathflare_vfx.fbx` MD5 `d7d1b90b48ce6d81ac86c36a0e349a5e` (736 faces) — role `flare`
+- All props in one blend: `ASHWYRM_attack_props.blend` MD5 `9c179a9ccf35798e8b6df2cb9d924f8d`
+- Attach / spawn (bone-local offsets + spawn transforms in `work/attack_meta.json`):
+  - `ASHWYRM_breathflare_vfx` — fixed — breath flare at snout vertex #35426
+  - `ASHWYRM_voidfire_fireball_vfx` — proj, release f14, speed 9.0 m/s — void-fire fireball spawns 10cm ahead of snout vertex #35426 (rides spine bone), travels character-forward
+- Prop axes: held weapons have origin at the grip (staff/bow long axis +Z; arrows/spear tip −Y, origin at nock/centre); projectiles/VFX travel along local −Y with the trail on +Y.
+
+## QC
+- Look sheet: `ASHWYRM_attack_looksheet.png` (SoT fullbody beside the prop/VFX renders; flat background, no blur fill / mirror pad / edge smear)
+- Contact sheet: `ASHWYRM_attack_contact.jpg` (rear gameplay cam + side, every 3rd frame)
+- Preview: `ASHWYRM_attack_preview_rear.mp4` (rear gameplay cam, 2 loops)
+- Stills: `stills/qc_*` (anticipation / strike / release / inflight / follow; rear + side, plus q34front at strike + inflight), `stills/look_*` (prop renders, transparent).
+- Work copy with action + props: `ASHWYRM_attack_work.blend` (compressed copy for review; **not** the rig SoT).
+
+## Caveats
+- Rig has no head/neck/jaw bones (head rides `spine`), so the breath lunge is driven by the non-deform root (pivot at the feet) with thighs counter-rotated to keep feet planted; no jaw open. Fireball spawns at the snout vertex.
+- Uses the current 30-bone Derek armsrebuild/small skeleton. The 2026-10-07 attack build did not touch rest/walk/wingflap. The 2026-10-08 tail-tip cut re-exported all four body FBXs from that mesh.
+
+Attack: Derek Game-view PASS (2026-10-07). Wing flap and walk were polished later and still await Game-view. HOLD merge.
