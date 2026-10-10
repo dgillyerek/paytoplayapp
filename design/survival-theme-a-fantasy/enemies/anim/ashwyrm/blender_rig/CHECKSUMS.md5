@@ -1,0 +1,21 @@
+b36784c8ed5c2b84196e0e26a1968e57  ASHWYRM_blenderig.blend
+f1f9f937f2961ce185eb2d942d91d595  ASHWYRM_blenderig.fbx
+edc0208bfeb246a85fdd50c8dad7683f  ASHWYRM_blenderig_wingflap.fbx
+490e574a13f505202af9c468a9f38a0e  ASHWYRM_blenderig_walk.fbx
+# 2026-10-08 Derek Game-view on b391b49: tail-tip spike removed, so rest/flap/walk/attack all re-exported from this mesh.
+# Attack animation curves match b0d240cc17cf79af0af3ed22be5f07ef within 5e-5. New attack file MD5 9dc8b9a2d2083290b6a369129a6469b3.
+# Export FBX_SCALE_NONE (UnitScaleFactor 1, ASHWYRM_rig scale 100). HOLD merge.
+# 2026-10-08 Derek on 44b9044: walk wings counter-swing; flap wings ~15 deg off horizontal.
+# Rest f1f9f937f2961ce185eb2d942d91d595 and attack 9dc8b9a2d2083290b6a369129a6469b3 byte-identical.
+# 2026-10-08 Derek on 9a860fb: flap only, mean wing_f1 45 deg. Walk 490e574a13f505202af9c468a9f38a0e byte-identical.
+# 2026-10-08 Derek on db79128: flap only, wings swept back along the body. Walk, rest, and attack byte-identical.
+# 2026-10-08 Derek on 5059fad: flap only, finger fan reopened to the walk spread and wings yawed 20 deg further back. Walk, rest, and attack byte-identical.
+# 2026-10-08 Derek on df54a63: flap only, standing wing rotated at the shoulder. Walk, rest, and attack byte-identical.
+# 2026-10-08 Derek on 1c64ab9: flap only, standing yaw, 20 deg forward/down, ±28 deg beat. Walk, rest, and attack byte-identical.
+# 2026-10-08 Derek on bbfe31b: flap only, shoulder offset flipped to +40/-40 deg. Walk, rest, and attack byte-identical.
+# 2026-10-09 Derek on 0ab347a: flap only, shoulder beat lowered to -4/-40 deg (center -22, ±18) so tips stay below the head. Walk, rest, and attack byte-identical.
+# 2026-10-09 Derek on fcec802: flap only, wing_root swept back about vertical 19-45 deg (32 ± 13, 2-frame lag), beat unchanged. Walk, rest, and attack byte-identical.
+# 2026-10-09 Derek on be76d61: flap only, wings laid flat for lift (70 deg about the side-to-side axis), beat +10 ± 18 deg, yaw sweep removed. Walk, rest, and attack byte-identical.
+# 2026-10-09 Derek on 34a16fd: flap only, wing_root = per-frame slerp(be76d61, 34a16fd, 0.5) with a 4 deg forward yaw nudge to clear the right upper arm. Walk, rest, and attack byte-identical.
+# 2026-10-09 LOCKED: Derek Game-view PASS at 320b968 ("perfect.. lock and merge ashwyrm"). Rest, wing flap, walk, attack locked.
+# Attack (ThemePack + ../attack_20261007/) 9dc8b9a2d2083290b6a369129a6469b3.
