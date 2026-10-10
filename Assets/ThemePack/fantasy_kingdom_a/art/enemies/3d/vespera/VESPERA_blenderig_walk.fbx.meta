@@ -127,6 +127,6 @@ ModelImporter:
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Vespera Design clothsplit_20261007 walk (VESPERA_clothsplit_walk.fbx, MD5 d7f30d54e3a0b503c3dcb01828ff2c7b). 50 bones: 22 mixamorig body + cloth chains on Spine, bound by name. Cloth never keyed; ClothSpringRig drives it. Humanoid only if mapped by name, else Generic. HOLD merge.
+  userData: Vespera Design blender_rig_nocape_20261009 walk, 1s at 30fps, take Scene (MD5 7fadc83f9f5ea1a90b92f898ac1c4915). No cape, 22 mixamorig bones, bound by name. Humanoid if the avatar validates, else Generic. bakeAxisConversion 0. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

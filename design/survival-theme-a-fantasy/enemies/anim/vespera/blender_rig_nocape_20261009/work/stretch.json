@@ -1,0 +1,56 @@
+{
+ "VESPERA_nocape_rest": {
+  "frames": [
+   0,
+   0
+  ],
+  "edges": 204717,
+  "stretch_gt_1.25x": 0,
+  "stretch_gt_1.5x": 0,
+  "stretch_gt_2x": 0,
+  "grow_gt_1cm": 0,
+  "grow_gt_2cm": 0,
+  "grow_gt_5cm": 0,
+  "max_ratio": 1.0,
+  "max_grow_cm": 0.0,
+  "compress_lt_0.5x": 0,
+  "stretched_50pct_and_5mm": 0,
+  "stretched_25pct_and_5mm": 0
+ },
+ "VESPERA_nocape_walk": {
+  "frames": [
+   0,
+   30
+  ],
+  "edges": 204717,
+  "stretch_gt_1.25x": 5874,
+  "stretch_gt_1.5x": 1767,
+  "stretch_gt_2x": 344,
+  "grow_gt_1cm": 77,
+  "grow_gt_2cm": 3,
+  "grow_gt_5cm": 0,
+  "max_ratio": 5.558,
+  "max_grow_cm": 2.57,
+  "compress_lt_0.5x": 441,
+  "stretched_50pct_and_5mm": 357,
+  "stretched_25pct_and_5mm": 516
+ },
+ "VESPERA_nocape_attack": {
+  "frames": [
+   0,
+   30
+  ],
+  "edges": 204717,
+  "stretch_gt_1.25x": 11010,
+  "stretch_gt_1.5x": 5337,
+  "stretch_gt_2x": 2033,
+  "grow_gt_1cm": 857,
+  "grow_gt_2cm": 158,
+  "grow_gt_5cm": 28,
+  "max_ratio": 22.172,
+  "max_grow_cm": 8.42,
+  "compress_lt_0.5x": 847,
+  "stretched_50pct_and_5mm": 2558,
+  "stretched_25pct_and_5mm": 3123
+ }
+}
