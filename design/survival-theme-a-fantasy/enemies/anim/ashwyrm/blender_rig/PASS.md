@@ -368,3 +368,23 @@ Membrane plane (fit to the finger vertices), angle of its normal from vertical, 
 **Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
 
 MD5: blend `ab154426820cb622fd5c55b6a47c8f24`, flap `4321658f1ff3dd3c33227db80115d6ac`. **HOLD merge.**
+
+## Derek Game-view on 34a16fd — midpoint of the sweep and the lift pose
+
+Derek: the lift pose went too far. Take a perfect middle ground between this version and the last change (be76d61).
+
+Only `wing_root.L` / `wing_root.R` keys changed. On every frame the shoulder rotation is the quaternion slerp at t = 0.5 between the be76d61 key (yaw sweep 32° ± 13° lagging 2 frames, beat −22° ± 18°) and the 34a16fd key (70° about the side-to-side axis, beat +10° ± 18°). Both source curves were rebuilt from their formulas and match the committed keys exactly. The midpoint sits 41–46° (left) and 47–50° (right) from each parent on every frame, equal on both sides of the slerp. In plain terms: about half the lift tilt, about half the backward sweep, a beat centre near −6°, same ±18° stroke and timing (crest frame 7, bottom frame 22, 30-frame loop, loop error 4e-7 m).
+
+**Nudge.** The exact midpoint touched the right upper arm with the right inner membrane on frames 6, 7, and 11 (36 intersecting triangle pairs). A 4° yaw forward about the vertical axis on both shoulders (mirrored) clears it; 3° still touched on frames 8–9. That 4° is the only change from the exact midpoint.
+
+Membrane normal from vertical, left / right: frame 0 39° / 46°, top (f7) 44° / 43°, mid (f15) 44° / 51°, bottom (f22) 48° / 60°. Finger tips above the shoulder joint, mean left / right: top 0.28 / 0.29 m, mid 0.09 / 0.10 m, bottom −0.12 / −0.10 m.
+
+**Collisions.** Triangle intersection between the wing and the head, horns, body, arms, tail, and legs: none on any frame (1–31). No wing vertex inside the head outline from the front camera. At the top of the stroke the leading wing tip reaches about 10 cm over the horn top, out to the side.
+
+**No distortion.** In the blend every other wing bone and channel is identical to 34a16fd. In the FBX, non-`wing_root` curves match within float noise (max 6e-5°). The 74,384 single-side wing edges keep their rest length on every frame within 4.2e-6 m.
+
+`FBX_SCALE_NONE`, `UnitScaleFactor` 1, rig scale 100. Mesh 99649 verts / 199427 faces. Bones unchanged.
+
+**Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
+
+MD5: blend `b36784c8ed5c2b84196e0e26a1968e57`, flap `edc0208bfeb246a85fdd50c8dad7683f`. **HOLD merge.**
