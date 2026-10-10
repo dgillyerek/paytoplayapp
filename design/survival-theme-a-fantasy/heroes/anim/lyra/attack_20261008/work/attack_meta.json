@@ -58,9 +58,9 @@
     0
    ],
    "spawn_world": [
-    -0.24640025198459625,
-    -0.6593160033226013,
-    1.9024888277053833
+    -0.21433532238006592,
+    -0.9163240790367126,
+    1.4502354860305786
    ],
    "note": "spawns at staff crystal, grows 40%->100% over 3 frames, travels -Y"
   }
@@ -127,5 +127,6 @@
  "rear_cam_note": "rear battle cam re-rendered wider so the arrow/bolt stays in frame",
  "rig_edit_note": "2026-10-08: Derek moved the right elbow/wrist and both ball-of-foot joints in the combined blend; staff offset re-derived from the unchanged rest_world, bolt spawn re-measured at the f12 crystal. Old spawn [-0.34228,-0.64558,1.86218].",
  "rig_edit_note_e8b050d": "2026-10-08 22:45: Derek moved hips, knees, ankles, left elbow/wrist, right wrist, head length and removed both ToeBase bones. Attack retargeted by world-space rotation deltas from a995489; staff offset re-derived from the unchanged rest_world; bolt spawn re-measured at the f12 crystal. Old spawn [-0.16802, -0.65416, 1.91045].",
- "staff_clear_note_20261009": "2026-10-09: right arm only (RightArm/RightForeArm/RightHand keys) re-posed so the staff never enters the body (min 3.7 cm clearance, was up to 8.5 cm inside the right thigh) and the staff wrist stays within 25 deg of Derek's rest grip (was up to 119 deg). Staff angle now comes from shoulder/elbow; butt leans out past the right hip. Bolt spawn re-measured at the f12 crystal; old spawn [-0.15444, -0.65988, 1.91172]."
+ "staff_clear_note_20261009": "2026-10-09: right arm only (RightArm/RightForeArm/RightHand keys) re-posed so the staff never enters the body (min 3.7 cm clearance, was up to 8.5 cm inside the right thigh) and the staff wrist stays within 25 deg of Derek's rest grip (was up to 119 deg). Staff angle now comes from shoulder/elbow; butt leans out past the right hip. Bolt spawn re-measured at the f12 crystal; old spawn [-0.15444, -0.65988, 1.91172].",
+ "two_hand_cast_note_20261009": "2026-10-09: attack re-authored as a two-handed side-on cast. Hips/torso turn ~55 deg on planted balls of the feet (heels pivot, toes fixed), staff comes up level-forward with RightHand main grip and LeftHand higher on the shaft (f8-f20), body-driven pull-back f9-f11 and thrust at f12, recover to rest by f30 (f0/f30 == rest). Bolt spawn re-measured at the f12 crystal; old spawn [-0.24640, -0.65932, 1.90249]. Bolt still travels -Y (character forward)."
 }

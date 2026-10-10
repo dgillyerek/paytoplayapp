@@ -50,3 +50,17 @@ Derek, Game view on desktop: "her staff pushes through the body on attack and he
 - **Bolt:** re-keyed at the f12 crystal: (-0.246, -0.659, 1.902), was (-0.154, -0.660, 1.912). Unity `LyraAttack` staff and bolt frames regenerated; calibration unchanged because the bones are unchanged.
 - **FBX:** attack 53fd21bb → 835b0502. Rest, walk and both staff FBXs are byte-identical.
 - **Scripts:** `work/scripts/staff_clear_*_20261009.py`. QC: `work/staff_clear_before_e1c7d36.json`, `work/staff_clear_after.json`.
+
+## Two-handed side-on cast (2026-10-09, replaces the one-handed cast)
+Derek: re-author the attack as a natural two-handed cast. The body turns sideways, both hands are on the staff, the crystal points forward, and the shoulders must not pull out or stretch the armpit skin.
+
+- **New attack (31 frames, release f12):** f0–f8 hips turn 52° (spine adds about 21° more at the chest; neck and head counter-turn so she keeps looking at the target). She drops 4.5 cm into a soft knee bend and pivots on the balls of both feet (toes fixed, heels swing 8–9 cm, no sliding). The right hand brings the staff up level-forward; the left hand comes in palm-first and closes on the shaft about 25 cm above the right hand at f8. f9–f11 is a small body pull-back (hips 3.5 cm back, 6° lean back), f12 is the thrust (hips 3.5 cm forward, 7° lean in) and the bolt leaves the crystal. f13–f20 hold and settle; f21–f23 the left hand opens and comes off the shaft; she recovers to rest by f30. f0 and f30 match rest (max bone-matrix difference 4e-6).
+- **Shoulder skin stretch** (armpit blend zone, edge length ÷ rest; worst frame): right p99 2.66 → 1.50, mean |stretch| 0.188 → 0.093. Left p99 1.75 → 1.53. The left mean goes up from 0.075 to 0.115 because the left arm now lifts to the shaft; the before value had the left arm hanging. Upper-arm swing: right 55° → 10.5°, left 28° → 34.5°. Upper-arm twist: right 50° → 8.4°, left 2° → 8°. Clavicles unkeyed (0°).
+- **Elbows:** hinge only (right at most 92° bend, left 38°). Forearm twist is at most 56° on the right and 17° on the left.
+- **Wrists:** right at most 23°, left at most 19.5° from rest (limit 25–30°).
+- **Clearance:** no staff/body triangle intersections on any frame. Closest non-hand body part to the staff: 16 cm (left forearm/torso during the hold), right leg at least 21 cm, head/hair never among the closest regions. Before, the shaft came within 3.5 cm of the right thigh.
+- **Grip:** the right hand keeps Derek's staff offset. The left grip axis sits on the shaft centre line (0.3 mm) f8–f20. The fingers press at most 6 mm into the shaft surface on hold frames and 9 mm on the close/open frames (f7, f21).
+- **Bolt:** re-keyed at the f12 crystal (-0.214, -0.916, 1.450), was (-0.246, -0.659, 1.902). It still travels -Y (character forward / Unity +Z, toward the enemy) at 9 m/s, whatever the body turn. Unity `LyraAttack` staff and bolt frames regenerated. Calibration is unchanged because the bones and rest are unchanged.
+- **FBX:** attack 835b0502 → 2d6f799e (Design + ThemePack). Rest e4898881, walk 7c5b1577 and both staff FBXs are byte-identical. The bones, rest and walk actions are unchanged in the blend.
+- **Not refreshed:** `LYRA_tighten_attack_sheet.jpg` and `LYRA_tighten_walk_attack_preview.mp4` still show the older cast.
+- **Scripts:** `work/scripts/twohand_*_20261009.*`. QC: `work/twohand_verify_before_265f536.json`, `work/twohand_verify_after.json`.
