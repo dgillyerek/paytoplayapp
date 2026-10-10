@@ -350,3 +350,21 @@ Furthest-back wing point (Y, + is toward the tail): frame 7 **0.575 / 0.540 m** 
 **Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
 
 MD5: blend `6fd955905099cf49e0e7aebeddb1b9ff`, flap `6f2b3924678d0fa6e9191cad096726c3`. **HOLD merge.**
+
+## Derek Game-view on be76d61 — wings laid flat for lift
+
+Derek: the flap motion looks good, but rotate the entire wings from the shoulder so the tips point up toward the sky and the wings look like they would generate lift. Keep the motion the same.
+
+Only `wing_root.L` / `wing_root.R` keys changed. The be76d61 yaw sweep is removed. Each whole wing is first turned **70°** about the body's side-to-side axis (world X through the shoulder; the same rotation on both sides, which is its own mirror). That lays the fan flat: the old top finger becomes the leading edge in front, the lower fingers trail back toward the tail, and the membrane faces the ground. The beat then runs on the same shoulder axis and timing as before (±18°, crest frame 7, bottom frame 22, 30 frames at 30 fps, first frame equals last), centred **+10°** up instead of −22°, so the wings hold a dihedral V. That gives **−8° to +28°**. Left positive, right mirrored.
+
+Membrane plane (fit to the finger vertices), angle of its normal from vertical, left / right: frame 0 **14° / 8°**, top (f7) **31° / 24°**, mid (f15) **14° / 9°**, bottom (f22) **7° / 15°** (be76d61 stood upright, about 71° / 76°). Finger tips above the shoulder joint, mean left / right: mid **0.26 / 0.21 m**, top **0.41 / 0.35 m**, bottom **0.08 / 0.06 m**.
+
+**Collisions.** Triangle intersection between the wing and the head, body, arms, tail, and legs: **none on any frame** (frames 1–31). From the front camera no wing vertex is inside the head outline. At the top of the stroke the outer wing reaches 1.39 m, about 4 cm above the horn top, but well out to the side of the head.
+
+**No distortion.** In the blend every other wing bone and channel is identical to be76d61. In the FBX, non-`wing_root` curves match be76d61 within float noise (max 6e-5°). The 74,384 single-side wing edges keep their rest length on every frame within 4.2e-6 m. Shoulder Euler curves are continuous (largest step 6.2° per frame).
+
+`FBX_SCALE_NONE`, `UnitScaleFactor` 1, rig scale 100. Mesh 99649 verts / 199427 faces. Bones unchanged.
+
+**Unchanged.** Walk `490e574a13f505202af9c468a9f38a0e`. Rest `f1f9f937f2961ce185eb2d942d91d595`. Attack `9dc8b9a2d2083290b6a369129a6469b3`. Unity was not run.
+
+MD5: blend `ab154426820cb622fd5c55b6a47c8f24`, flap `4321658f1ff3dd3c33227db80115d6ac`. **HOLD merge.**
