@@ -26,6 +26,8 @@ Direct Play shell (skips splash): `Assets/Survival/Scenes/Play.unity`.
 
 Sir Aldric **3D Animator** (high-angle rear, march+attack toward TOP): open **`Assets/Survival/Scenes/SirAldric.unity`**, Game view **1080×1920**, Play. Capsule-sculpted skinned mesh (`SirAldric3DActor`) with look-target albedo. Remaining DCC gap: `Docs/Survival/previews/ART_UPGRADE.md`. Play hub still uses locked rear PNG `SIR_ALDRIC_REAR_MASTER_LOCKED.png` until Design PASS. HUD portrait stays `theme_a_hero_knight_01`.
 
+Locked battle (heroes vs villains): menu **Survival → Locked Battle (heroes vs villains, Game view 1080x1920)** or open **`Assets/Survival/Scenes/BattleLocked.unity`**, Game view **1080×1920**, Play. Heroes Emberfang and Stormcrest start at the bottom, villains Ironhowl and Nightfang at the top. Each walks in on its locked walk (Nightfang trots), stops at its attack range, and loops its locked attack with a short rest. Hits land with an impact per attacker (Emberfang fire burst, Stormcrest lightning crackle, Nightfang shadow claw rake, Ironhowl claw sparks and dust): the fireball and storm bolt stop on the target body, the claws land on their contact frame (Nightfang f14, Ironhowl f11). The defender flinches back a few cm (skipped while it is mid-attack) and flashes. Hits: `LockedBattleHits`. The dropdown switches rear / three-quarter / front / side cameras (keys 1–4); **RESTART** runs it again. Roster: `Survival.Domain.Roster.LockedBattleRoster`. HOLD merge until Derek Game-view PASS.
+
 Menu **Survival → Use Theme A Flavor (fantasy_kingdom_a)** puts Splash then Play first in Editor Build Settings (Grove `Board` stays listed).
 
 Visual / playable: Design phone Game-view re-gate before merge. Do not self-merge.
