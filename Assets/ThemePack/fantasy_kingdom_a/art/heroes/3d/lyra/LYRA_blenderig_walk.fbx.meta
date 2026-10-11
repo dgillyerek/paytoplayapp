@@ -127,6 +127,6 @@ ModelImporter:
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Lyra walk. 1s at 30fps. Take Scene. Humanoid if the avatar validates, else Generic. bakeAxisConversion 0. HOLD merge.
+  userData: Lyra fitted walk v3 (feet + knees forward, narrow stance, slight head motion; relaxed arm swing, heel-toe roll; on Derek rig 2026-10-09). MD5 7c5b15778f9cd5ec8787c83ccee5fb8f. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

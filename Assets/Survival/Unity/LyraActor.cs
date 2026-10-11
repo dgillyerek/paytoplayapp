@@ -20,7 +20,7 @@ namespace Survival.Unity
 
         public void Build()
         {
-            _player = new BlenderRigPlayer(LyraMotion.Spec, transform, LyraAttack.Spec);
+            _player = new BlenderRigPlayer(LyraMotion.Spec, transform, LyraAttack.Spec, LyraMotion.IdleProps);
             _player.Build();
         }
 

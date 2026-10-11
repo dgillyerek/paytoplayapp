@@ -34,11 +34,11 @@ public sealed class LyraAttackTests
         var root = FindRepoRoot();
         var pack = Path.Combine(root, "Assets", LyraMotion.ThemePackDir);
         var design = Path.Combine(root, LyraAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
-        Assert.Equal("efd19534168581a65e3e7b4b21c10813", LyraAttack.FileMd5);
-        Assert.Equal("efd19534168581a65e3e7b4b21c10813", Md5(Path.Combine(pack, LyraAttack.FileName)));
-        Assert.Equal("efd19534168581a65e3e7b4b21c10813", Md5(Path.Combine(design, LyraAttack.FileName)));
-        Assert.Equal("cc8470fb650d01f27fda54913b4038a1", Md5(Path.Combine(pack, "LYRA_staff_goldcrystal.fbx")));
-        Assert.Equal("cc8470fb650d01f27fda54913b4038a1", Md5(Path.Combine(design, "LYRA_staff_goldcrystal.fbx")));
+        Assert.Equal("64f42e009e4c1a4bdae49029f30f5265", LyraAttack.FileMd5);
+        Assert.Equal("64f42e009e4c1a4bdae49029f30f5265", Md5(Path.Combine(pack, LyraAttack.FileName)));
+        Assert.Equal("64f42e009e4c1a4bdae49029f30f5265", Md5(Path.Combine(design, "LYRA_tighten_blenderig_attack.fbx")));
+        Assert.Equal("43aef847341f2e86f88a3020b32bae72", Md5(Path.Combine(pack, "LYRA_staff.fbx")));
+        Assert.Equal("43aef847341f2e86f88a3020b32bae72", Md5(Path.Combine(design, "LYRA_staff.fbx")));
         Assert.Equal(LyraAttack.PropFileNames.Length, LyraAttack.PropFileMd5s.Length);
         for (var i = 0; i < LyraAttack.PropFileNames.Length; i++)
         {
@@ -66,9 +66,9 @@ public sealed class LyraAttackTests
             }
         }
 
-        // Existing rig FBXs are untouched by the add-on.
-        Assert.Equal("6acba12a6b8bd710d2ef9910896f9c4a", Md5(Path.Combine(pack, "LYRA_blenderig.fbx")));
-        Assert.Equal("063a211075ab280af8359003f9a5d49a", Md5(Path.Combine(pack, "LYRA_blenderig_walk.fbx")));
+        // Rest re-exported from Derek's edited rig blend (2026-10-08); walk v3 (feet forward, narrow stance, head motion) 2026-10-09.
+        Assert.Equal("e48988811f6952b52a2a42eaffbd09e8", Md5(Path.Combine(pack, "LYRA_blenderig.fbx")));
+        Assert.Equal("7c5b15778f9cd5ec8787c83ccee5fb8f", Md5(Path.Combine(pack, "LYRA_blenderig_walk.fbx")));
     }
 
     [Fact]

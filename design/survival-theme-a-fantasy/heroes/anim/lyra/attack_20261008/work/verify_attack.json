@@ -1,0 +1,37 @@
+{
+ "bones": 22,
+ "same_names_order": true,
+ "faces": 200000,
+ "rest_faces": 200000,
+ "frame_range": [
+  1,
+  31
+ ],
+ "action": "LYRA_tighten_rig|Scene",
+ "hips_first_vs_rest_deg": 0.0,
+ "hips_first_vs_rest_m": 0.0,
+ "end_pose_dev_deg": {
+  "1": 0.0,
+  "31": 0.0
+ },
+ "hips_max_dev_deg_all_frames": 0,
+ "max_bone_travel_m": 0.41097488224225215,
+ "LYRA_staff.fbx": {
+  "armatures": [],
+  "meshes": [
+   [
+    "LYRA_staff",
+    14048
+   ]
+  ]
+ },
+ "LYRA_arcane_bolt_vfx.fbx": {
+  "armatures": [],
+  "meshes": [
+   [
+    "LYRA_arcane_bolt_vfx",
+    2040
+   ]
+  ]
+ }
+}

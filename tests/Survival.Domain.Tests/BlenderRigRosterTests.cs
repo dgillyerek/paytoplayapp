@@ -17,7 +17,7 @@ public sealed class BlenderRigRosterTests
     }
 
     [Fact]
-    public void Lyra_is_a_22_bone_mixamorig_with_rest_and_walk()
+    public void Lyra_is_a_20_bone_mixamorig_with_rest_and_walk()
     {
         Assert.Equal(22, MixamoHumanoidBones.Count);
         Assert.Equal(22, MixamoHumanoidBones.Names.Length);
@@ -25,10 +25,14 @@ public sealed class BlenderRigRosterTests
         Assert.Equal("mixamorig:Hips", MixamoHumanoidBones.Root);
         AssertHumanoidDemo(
             LyraMotion.Spec,
-            "LYRA_basecolor_0",
-            "LYRA_normal_2",
+            "LYRA_tighten_basecolor_0",
+            "LYRA_tighten_normal_2",
             "ce82c9521cb54da4bf669276f7f7c7cb",
             "Survival/Lyra Demo (rest + walk + attack, Game view 1080x1920)");
+        Assert.Equal("LYRA_tighten_metal_rough_1.png", LyraMotion.Spec.MetallicRoughnessFile);
+        // Derek removed both ToeBase bones in his rig edit (2026-10-08 22:45); the toes are weighted to the Foot.
+        Assert.Equal(20, LyraMotion.BoneNames.Length);
+        Assert.Equal(MixamoHumanoidBones.Names.Where(n => !n.EndsWith("ToeBase", StringComparison.Ordinal)).ToArray(), LyraMotion.BoneNames);
     }
 
 
@@ -71,14 +75,13 @@ public sealed class BlenderRigRosterTests
 
     private static void AssertHumanoidDemo(BlenderRigSpec spec, string albedoStem, string normalStem, string demoGuid, string menu)
     {
-        Assert.Equal(22, spec.BoneCount);
-        Assert.Equal(MixamoHumanoidBones.Names, spec.BoneNames);
+        Assert.Equal(spec.BoneNames.Length, spec.BoneCount);
+        Assert.All(spec.BoneNames, n => Assert.Contains(n, MixamoHumanoidBones.Names));
         Assert.Equal("rest", spec.PoseNames[0]);
         Assert.Equal("walk", spec.PoseNames[1]);
         Assert.Equal("Scene", spec.ClipTakeName);
         Assert.Equal(1f, spec.ClipSeconds);
         Assert.Equal(30, spec.ClipLastFrame);
-        Assert.Equal("", spec.MetallicRoughnessFile);
         Assert.True(spec.PreferHumanoid);
         Assert.True(BlenderRigSpec.IsRejectedMixamoRigFile(spec.RejectedMixamoFileName));
         Assert.Contains(spec, BlenderRigRoster.All);

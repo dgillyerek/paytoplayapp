@@ -1,0 +1,132 @@
+{
+ "name": "LYRA_tighten",
+ "frames": [
+  0,
+  30
+ ],
+ "fps": 30,
+ "forward": "-Y (Blender) = top of screen in rear battle cam",
+ "keys": {
+  "anticipation": 8,
+  "strike_release": 12,
+  "follow": 19,
+  "rest": 30
+ },
+ "props": {
+  "staff": {
+   "object": "LYRA_staff",
+   "parent": "RightHand f0-f30 (constant offset)",
+   "offset_RightHand": [
+    [
+     -0.41683533787727356,
+     0.9089824557304382,
+     -0.00031092995777726173,
+     -0.030507054179906845
+    ],
+    [
+     -0.8759976029396057,
+     -0.40161818265914917,
+     0.2670799195766449,
+     0.07315909117460251
+    ],
+    [
+     0.24264591932296753,
+     0.11160075664520264,
+     0.9636746048927307,
+     0.011795437894761562
+    ],
+    [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "crystal_local": [
+    0.0027701875660568476,
+    0.007639163173735142,
+    0.5250147581100464
+   ]
+  },
+  "bolt": {
+   "object": "LYRA_arcane_bolt_vfx",
+   "release": 12,
+   "speed_mps": 9.0,
+   "dir": [
+    0,
+    -1,
+    0
+   ],
+   "spawn_world": [
+    -0.1662762463092804,
+    -1.0545629262924194,
+    1.2680000066757202
+   ],
+   "note": "spawns at staff crystal, grows 40%->100% over 3 frames, travels -Y"
+  }
+ },
+ "release": 12,
+ "attack_fbx": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261008/LYRA_tighten_blenderig_attack.fbx",
+ "prop_fbx": [
+  "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261008/LYRA_staff.fbx",
+  "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261008/LYRA_arcane_bolt_vfx.fbx"
+ ],
+ "sheet_frames": [
+  0,
+  4,
+  8,
+  10,
+  12,
+  14,
+  16,
+  19,
+  23,
+  26,
+  30
+ ],
+ "views": {
+  "rear": [
+   [
+    -0.12194687128067017,
+    2.9350319814003263,
+    3.032177548689871
+   ],
+   [
+    -0.12194687128067017,
+    -1.3858210374758595,
+    0.5306310640773426
+   ]
+  ],
+  "side": [
+   [
+    3.668275075101949,
+    -0.8551899649822929,
+    1.1370665754985616
+   ],
+   [
+    -0.12194687128067017,
+    -0.8551899649822929,
+    0.9096532587156044
+   ]
+  ],
+  "q34front": [
+   [
+    -2.301324490450676,
+    -2.7503009381736025,
+    1.5160887701368235
+   ],
+   [
+    -0.12194687128067017,
+    -0.38141222168446554,
+    0.9096532587156044
+   ]
+  ]
+ },
+ "props_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261008/LYRA_tighten_attack_props.blend",
+ "work_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261008/LYRA_tighten_attack_work.blend",
+ "rear_cam_note": "rear battle cam re-rendered wider so the arrow/bolt stays in frame",
+ "rig_edit_note": "2026-10-08: Derek moved the right elbow/wrist and both ball-of-foot joints in the combined blend; staff offset re-derived from the unchanged rest_world, bolt spawn re-measured at the f12 crystal. Old spawn [-0.34228,-0.64558,1.86218].",
+ "rig_edit_note_e8b050d": "2026-10-08 22:45: Derek moved hips, knees, ankles, left elbow/wrist, right wrist, head length and removed both ToeBase bones. Attack retargeted by world-space rotation deltas from a995489; staff offset re-derived from the unchanged rest_world; bolt spawn re-measured at the f12 crystal. Old spawn [-0.16802, -0.65416, 1.91045].",
+ "staff_clear_note_20261009": "2026-10-09: right arm only (RightArm/RightForeArm/RightHand keys) re-posed so the staff never enters the body (min 3.7 cm clearance, was up to 8.5 cm inside the right thigh) and the staff wrist stays within 25 deg of Derek's rest grip (was up to 119 deg). Staff angle now comes from shoulder/elbow; butt leans out past the right hip. Bolt spawn re-measured at the f12 crystal; old spawn [-0.15444, -0.65988, 1.91172].",
+ "two_hand_cast_note_20261009": "2026-10-09: attack re-authored as a two-handed side-on cast. Hips/torso turn ~55 deg on planted balls of the feet (heels pivot, toes fixed), staff comes up level-forward with RightHand main grip and LeftHand higher on the shaft (f8-f20), body-driven pull-back f9-f11 and thrust at f12, recover to rest by f30 (f0/f30 == rest). Bolt spawn re-measured at the f12 crystal; old spawn [-0.24640, -0.65932, 1.90249]. Bolt still travels -Y (character forward)."
+}

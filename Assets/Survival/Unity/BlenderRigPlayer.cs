@@ -15,7 +15,9 @@ namespace Survival.Unity
     /// Humanoid when the mixamorig avatar validates, otherwise Generic.
     /// Custom creatures stay Generic. Does not bake axis conversion, scale one axis,
     /// retarget by hand, or rewrite the imported root. Binds embedded basecolor and
-    /// normal. Skips metal/roughness unless the spec names an embedded map.
+    /// normal. Skips metal/roughness unless the spec names an embedded map; a named glTF
+    /// metal-rough map (G roughness, B metallic) is imported linear and packed into URP's
+    /// metallic (R) + smoothness (A) layout so it does not render as a dark chrome mirror.
     /// </summary>
     public sealed class BlenderRigPlayer
     {
@@ -29,15 +31,21 @@ namespace Survival.Unity
         private bool _ready;
         private bool _loop;
         private readonly BlenderRigAttackSpec? _attackSpec;
+        private readonly BlenderRigIdlePropSpec[] _idleProps;
         private BlenderRigAttackDriver? _attack;
         private bool _attackMode;
         private float _length;
         private float _time;
         private string _pose;
 
-        public BlenderRigPlayer(BlenderRigSpec spec, Transform parent, BlenderRigAttackSpec? attack = null)
+        public BlenderRigPlayer(
+            BlenderRigSpec spec,
+            Transform parent,
+            BlenderRigAttackSpec? attack = null,
+            BlenderRigIdlePropSpec[]? idleProps = null)
         {
             _attackSpec = attack;
+            _idleProps = idleProps ?? System.Array.Empty<BlenderRigIdlePropSpec>();
             _spec = spec;
             _parent = parent;
             _pose = BlenderRigSpec.RestPoseName;
@@ -89,6 +97,15 @@ namespace Survival.Unity
             {
                 _attack = new BlenderRigAttackDriver(_attackSpec, _spec.ThemePackDir, _parent);
                 _attack.Calibrate(instance);
+                if (_idleProps.Length > 0)
+                {
+                    _attack.BindIdleProps(_idleProps);
+                    _attack.SetIdlePropsVisible(true);
+                }
+            }
+            else if (_idleProps.Length > 0)
+            {
+                Debug.LogWarning("Idle props need the attack calibration; none shown for " + _spec.ThemePackDir);
             }
 
             _animator = instance.GetComponent<Animator>() ?? instance.AddComponent<Animator>();
@@ -201,6 +218,7 @@ namespace Survival.Unity
             _loop = false;
             _attackMode = true;
             _time = 0f;
+            _attack.SetIdlePropsVisible(false);
             _attack.Activate(SampleAttackFrame);
             SampleAttackFrame(BlenderRigAttackSpec.FirstFrame);
             _attack.Tick(BlenderRigAttackSpec.FirstFrame, true, 0);
@@ -246,6 +264,7 @@ namespace Survival.Unity
 
             _attackMode = false;
             _attack?.Deactivate();
+            _attack?.SetIdlePropsVisible(true);
         }
 
         private void ShowRest()
@@ -510,10 +529,12 @@ namespace Survival.Unity
             var albedo = LoadMap(_spec.BaseColorThemePackRel, _spec.BaseColorFile, fbxPath, asNormal: false);
             var normal = LoadMap(_spec.NormalThemePackRel, _spec.NormalFile, fbxPath, asNormal: true);
             Texture2D? metal = null;
-            if (!string.IsNullOrEmpty(_spec.MetallicRoughnessFile))
+            var wantsMetal = !string.IsNullOrEmpty(_spec.MetallicRoughnessFile);
+            if (wantsMetal)
             {
                 var metalRel = _spec.ThemePackDir + "/" + _spec.TextureFolder + "/" + _spec.MetallicRoughnessFile;
-                metal = LoadMap(metalRel, _spec.MetallicRoughnessFile, fbxPath, asNormal: false);
+                var raw = LoadMap(metalRel, _spec.MetallicRoughnessFile, fbxPath, asNormal: false, linear: true, readable: true);
+                metal = PackGlTfMetallicRoughness(raw, _spec.Name);
             }
 
             if (albedo == null)
@@ -591,10 +612,9 @@ namespace Survival.Unity
                         }
                     }
 
-                    if (metal != null && mat.HasProperty("_MetallicGlossMap"))
+                    if (wantsMetal)
                     {
-                        mat.SetTexture("_MetallicGlossMap", metal);
-                        mat.EnableKeyword("_METALLICSPECGLOSSMAP");
+                        BindMetallicSmoothness(mat, metal);
                     }
                 }
 
@@ -602,7 +622,95 @@ namespace Survival.Unity
             }
         }
 
-        private static Texture2D? LoadMap(string themePackRel, string fileName, string fbxPath, bool asNormal)
+        /// <summary>
+        /// URP Lit metallic workflow. Packed map: metallic and smoothness come from the map
+        /// (scales 1). No usable map: plain dielectric with a modest sheen, never the raw glTF map.
+        /// </summary>
+        private static void BindMetallicSmoothness(Material mat, Texture2D? packed)
+        {
+            if (mat.HasProperty("_WorkflowMode"))
+            {
+                mat.SetFloat("_WorkflowMode", 1f);
+            }
+
+            mat.DisableKeyword("_SPECULAR_SETUP");
+            if (mat.HasProperty("_SmoothnessTextureChannel"))
+            {
+                mat.SetFloat("_SmoothnessTextureChannel", 0f);
+            }
+
+            mat.DisableKeyword("_SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A");
+            if (packed != null && mat.HasProperty("_MetallicGlossMap"))
+            {
+                mat.SetTexture("_MetallicGlossMap", packed);
+                mat.EnableKeyword("_METALLICSPECGLOSSMAP");
+                SetFloatIfPresent(mat, "_Metallic", GlTfMetalRough.PackedMetallicScale);
+                SetFloatIfPresent(mat, "_Smoothness", GlTfMetalRough.PackedSmoothnessScale);
+                SetFloatIfPresent(mat, "_Glossiness", GlTfMetalRough.PackedSmoothnessScale);
+                return;
+            }
+
+            if (mat.HasProperty("_MetallicGlossMap"))
+            {
+                mat.SetTexture("_MetallicGlossMap", null);
+            }
+
+            mat.DisableKeyword("_METALLICSPECGLOSSMAP");
+            SetFloatIfPresent(mat, "_Metallic", GlTfMetalRough.FallbackMetallic);
+            SetFloatIfPresent(mat, "_Smoothness", GlTfMetalRough.FallbackSmoothness);
+            SetFloatIfPresent(mat, "_Glossiness", GlTfMetalRough.FallbackSmoothness);
+        }
+
+        private static void SetFloatIfPresent(Material mat, string property, float value)
+        {
+            if (mat.HasProperty(property))
+            {
+                mat.SetFloat(property, value);
+            }
+        }
+
+        /// <summary>
+        /// glTF metallic-roughness (G roughness, B metallic) into URP Lit metallic (RGB) and
+        /// smoothness (A). Reads the linear, readable import. Does not paint new pixels.
+        /// </summary>
+        private static Texture2D? PackGlTfMetallicRoughness(Texture2D? source, string specName)
+        {
+            if (source == null)
+            {
+                Debug.LogWarning(specName + " metal-rough map missing; using plain dielectric.");
+                return null;
+            }
+
+            try
+            {
+                var pixels = source.GetPixels();
+                for (var i = 0; i < pixels.Length; i++)
+                {
+                    var (metallic, smoothness) = GlTfMetalRough.ToUrp(pixels[i].r, pixels[i].g, pixels[i].b);
+                    pixels[i] = new Color(metallic, metallic, metallic, smoothness);
+                }
+
+                var packed = new Texture2D(source.width, source.height, TextureFormat.RGBA32, true, true);
+                packed.SetPixels(pixels);
+                packed.Apply(true, false);
+                packed.wrapMode = source.wrapMode;
+                packed.name = specName + "_metallicSmoothness";
+                return packed;
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError(specName + " metal-rough pack failed; using plain dielectric. " + ex.Message);
+                return null;
+            }
+        }
+
+        private static Texture2D? LoadMap(
+            string themePackRel,
+            string fileName,
+            string fbxPath,
+            bool asNormal,
+            bool linear = false,
+            bool readable = false)
         {
             if (string.IsNullOrEmpty(fileName))
             {
@@ -626,9 +734,21 @@ namespace Survival.Unity
                     dirty = true;
                 }
 
-                if (!asNormal && !importer.sRGBTexture)
+                if (!asNormal && importer.sRGBTexture == linear)
                 {
-                    importer.sRGBTexture = true;
+                    importer.sRGBTexture = !linear;
+                    dirty = true;
+                }
+
+                if (readable && !importer.isReadable)
+                {
+                    importer.isReadable = true;
+                    dirty = true;
+                }
+
+                if (readable && importer.textureCompression != TextureImporterCompression.Uncompressed)
+                {
+                    importer.textureCompression = TextureImporterCompression.Uncompressed;
                     dirty = true;
                 }
 
