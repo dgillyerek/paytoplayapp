@@ -68,7 +68,7 @@ namespace Survival.Editor
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Emberfang);
         }
 
-        [MenuItem("Survival/Ashwyrm Demo (rest + wing flap, Game view 1080x1920)")]
+        [MenuItem("Survival/Ashwyrm Demo (rest + wing flap + walk + attack, Game view 1080x1920)")]
         public static void OpenAshwyrmDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Ashwyrm);

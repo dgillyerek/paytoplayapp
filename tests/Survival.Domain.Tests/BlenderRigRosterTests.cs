@@ -56,7 +56,7 @@ public sealed class BlenderRigRosterTests
             "ASHWYRM_normal_2",
             "wing_inner.L",
             "11f3e71f3fc54d8baee7d5ea145bd473",
-            "Survival/Ashwyrm Demo (rest + wing flap, Game view 1080x1920)");
+            "Survival/Ashwyrm Demo (rest + wing flap + walk + attack, Game view 1080x1920)");
 
         var root = FindRepoRoot();
         var rest = File.ReadAllBytes(Path.Combine(root, "Assets", AshwyrmMotion.RestThemePackRel));
@@ -136,7 +136,7 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
 
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains("Survival/Ashwyrm Demo (rest + wing flap, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.Contains("Survival/Ashwyrm Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         Assert.Contains("Ashwyrm.unity", editor, StringComparison.Ordinal);
         Assert.DoesNotContain("Rowan.unity", editor, StringComparison.Ordinal);
     }

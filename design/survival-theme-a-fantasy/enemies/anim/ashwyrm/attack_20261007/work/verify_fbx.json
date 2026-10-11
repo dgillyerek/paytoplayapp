@@ -1,0 +1,28 @@
+{
+  "same_bone_names_and_order": true,
+  "bone_count": [
+    30,
+    30
+  ],
+  "max_rest_head_delta_m": 0.0,
+  "faces": [
+    199999,
+    199999
+  ],
+  "same_vgroups": true,
+  "attack_action": "ASHWYRM_rig|Scene",
+  "attack_frames": [
+    1.0,
+    31.0
+  ],
+  "attack_endpose_deg": {
+    "1": 0,
+    "31": 0
+  },
+  "attack_max_bone_travel_m": 0.32464888211563414,
+  "walk_same_bones": true,
+  "walk_frames": [
+    1.0,
+    31.0
+  ]
+}
