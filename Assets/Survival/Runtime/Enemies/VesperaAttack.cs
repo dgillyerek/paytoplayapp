@@ -3,7 +3,7 @@ using Survival.Domain.Roster;
 namespace Survival.Domain.Enemies
 {
     /// <summary>
-    /// Vespera Theme A attack (Design 2026-10-07 intent, re-authored on the no-cape rig 2026-10-09: left hand on hip, right hand
+    /// Vespera Theme A attack (Design 2026-10-07 intent, re-authored on the no-cape rig 2026-10-09, rebuilt on Derek's 16-bone rig 2026-10-10: left hand on hip, right hand
     /// cocks back by the hip then drives forward at chest height; bolt leaves 12 cm ahead of the RightHand tail at f13).
     /// Original add-on: Shadow Bolt — empty-hand cast, violet/black shadow bolt from the right hand at f13.
     /// New 0–30 frame Scene take at 30 fps on the existing blenderig (same bones, no rebind; rest and walk unchanged).
@@ -14,7 +14,7 @@ namespace Survival.Domain.Enemies
     {
         public const string FileName = "VESPERA_blenderig_attack.fbx";
         /// <summary>ThemePack attack FBX: Design blender_rig_nocape_20261009 VESPERA_nocape_attack.fbx (no cape, 22 bones, re-rigged).</summary>
-        public const string FileMd5 = "3e74d719d4aa48097c94a61197f1b78f";
+        public const string FileMd5 = "c173a3c4c452356c7856ba020fcdd143";
         /// <summary>Original attack FBX in VesperaAttack.DesignDir (attack_20261007), unchanged.</summary>
         public const string DesignFileMd5 = "082b741eae52d9144a612566380766bc";
         public const string DesignDir = "design/survival-theme-a-fantasy/enemies/anim/vespera/attack_20261007";
@@ -39,8 +39,8 @@ namespace Survival.Domain.Enemies
             DesignDir,
             ReleaseFrame,
             InPlace,
-            new[] { "mixamorig:Hips", "mixamorig:Head", "mixamorig:LeftHand", "mixamorig:RightHand" },
-            new[] { 0.015f, 0.93f, 0.175f, 0.055f, 1.6f, 0.185f, -0.152f, 1.01f, 0.352f, 0.338f, 1f, 0.095f },
+            new[] { "mixamorig:Spine1", "mixamorig:Head", "mixamorig:LeftHand", "mixamorig:RightHand" },
+            new[] { 0.0667f, 1.11933f, 0.2049f, 0.05851f, 1.60558f, 0.12055f, -0.17125f, 1.05986f, 0.33079f, 0.32532f, 1.07361f, 0.06788f },
             new[]
             {
                 new AttackTrack(
@@ -60,37 +60,37 @@ namespace Survival.Domain.Enemies
                     new[] { 0.33825f, 0.338f, 1.29702f },
                     new[]
                     {
-                        new AttackFrame(0.10996f, 1.2148f, 0.86661f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(0.10996f, 1.2148f, 0.86661f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(0.10996f, 1.2148f, 0.86661f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(0.10996f, 1.2148f, 0.86661f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(0.10996f, 1.2148f, 0.86661f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(0.10996f, 1.2148f, 0.86661f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(0.10996f, 1.2148f, 0.86661f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(0.10996f, 1.2148f, 0.86661f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(0.10996f, 1.2148f, 0.86661f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(0.10996f, 1.2148f, 0.86661f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(0.10996f, 1.2148f, 0.86661f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(0.10996f, 1.2148f, 0.86661f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(0.10996f, 1.2148f, 0.86661f, 0f, 0f, 0f, 1f, 0.35f, false),
-                        new AttackFrame(0.10996f, 1.2148f, 0.86661f, 0f, 0f, 0f, 1f, 0.35f, true),
-                        new AttackFrame(0.10996f, 1.2148f, 1.16661f, 0f, 0f, 0f, 1f, 0.56667f, true),
-                        new AttackFrame(0.10996f, 1.2148f, 1.46661f, 0f, 0f, 0f, 1f, 0.78333f, true),
-                        new AttackFrame(0.10996f, 1.2148f, 1.76661f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.10996f, 1.2148f, 2.06661f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.10996f, 1.2148f, 2.36661f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.10996f, 1.2148f, 2.66661f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.10996f, 1.2148f, 2.96661f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.10996f, 1.2148f, 3.26661f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.10996f, 1.2148f, 3.56661f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.10996f, 1.2148f, 3.86661f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.10996f, 1.2148f, 4.16661f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.10996f, 1.2148f, 4.46661f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.10996f, 1.2148f, 4.76661f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.10996f, 1.2148f, 5.06661f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.10996f, 1.2148f, 5.36661f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.10996f, 1.2148f, 5.66661f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.10996f, 1.2148f, 5.96661f, 0f, 0f, 0f, 1f, 1f, true)
+                        new AttackFrame(0.03969f, 1.31295f, 0.99471f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(0.03969f, 1.31295f, 0.99471f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(0.03969f, 1.31295f, 0.99471f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(0.03969f, 1.31295f, 0.99471f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(0.03969f, 1.31295f, 0.99471f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(0.03969f, 1.31295f, 0.99471f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(0.03969f, 1.31295f, 0.99471f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(0.03969f, 1.31295f, 0.99471f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(0.03969f, 1.31295f, 0.99471f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(0.03969f, 1.31295f, 0.99471f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(0.03969f, 1.31295f, 0.99471f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(0.03969f, 1.31295f, 0.99471f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(0.03969f, 1.31295f, 0.99471f, 0f, 0f, 0f, 1f, 0.35f, false),
+                        new AttackFrame(0.03969f, 1.31295f, 0.99471f, 0f, 0f, 0f, 1f, 0.35f, true),
+                        new AttackFrame(0.03969f, 1.31295f, 1.29471f, 0f, 0f, 0f, 1f, 0.56667f, true),
+                        new AttackFrame(0.03969f, 1.31295f, 1.59471f, 0f, 0f, 0f, 1f, 0.78333f, true),
+                        new AttackFrame(0.03969f, 1.31295f, 1.89471f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.03969f, 1.31295f, 2.19471f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.03969f, 1.31295f, 2.49471f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.03969f, 1.31295f, 2.79471f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.03969f, 1.31295f, 3.09471f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.03969f, 1.31295f, 3.39471f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.03969f, 1.31295f, 3.69471f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.03969f, 1.31295f, 3.99471f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.03969f, 1.31295f, 4.29471f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.03969f, 1.31295f, 4.59471f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.03969f, 1.31295f, 4.89471f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.03969f, 1.31295f, 5.19471f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.03969f, 1.31295f, 5.49471f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.03969f, 1.31295f, 5.79471f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.03969f, 1.31295f, 6.09471f, 0f, 0f, 0f, 1f, 1f, true)
                     },
                     "shadow bolt spawns 12cm ahead of RightHand tail, travels character-forward")
             });

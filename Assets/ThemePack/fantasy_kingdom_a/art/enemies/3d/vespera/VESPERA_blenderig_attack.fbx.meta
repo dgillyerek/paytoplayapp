@@ -121,12 +121,12 @@ ModelImporter:
     hasExtraRoot: 0
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
-  autoGenerateAvatarMappingIfUnspecified: 1
-  animationType: 3
+  autoGenerateAvatarMappingIfUnspecified: 0
+  animationType: 2
   humanoidOversampling: 1
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Vespera Design blender_rig_nocape_20261009 attack, 1s at 30fps, take Scene, bolt f13 (MD5 3e74d719d4aa48097c94a61197f1b78f). No cape, 22 mixamorig bones, bound by name. Humanoid if the avatar validates, else Generic. bakeAxisConversion 0. HOLD merge.
+  userData: Vespera Design blender_rig_nocape_20261009 on Derek rig edit 265ec84, attack, 1s at 30fps, take Scene, bolt f13. 16 bones, no Hips, Generic (binds by path). bakeAxisConversion 0. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

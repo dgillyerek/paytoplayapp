@@ -1,11 +1,36 @@
-# VESPERA: no cape (2026-10-09)
+# VESPERA: no cape (2026-10-09), rebuilt on Derek's rig edit (2026-10-10)
+
+## 2026-10-10: Derek's rig (265ec84) - current state of this folder
+Derek reviewed 507fb9a in Unity ("distorted with her legs, big gap on her arm from pieces not moving"), edited the
+rig himself in Blender 5.2 and committed `VESPERA_nocape.blend` (265ec84). Rest / walk / attack were rebuilt on his
+rig; **his bones, weights and mesh are byte-for-byte unchanged** (verified by dump). Blend saved in Blender 5.2.2,
+walk active, Object Mode. FBXs exported from 5.2.2 with the same profiles.
+
+**What Derek changed (vs 507fb9a)**
+- Deleted 6 bones: Hips, Spine, LeftShoulder, RightShoulder, LeftToeBase, RightToeBase (22 -> 16 bones).
+- Hierarchy: Spine1, LeftUpLeg and RightUpLeg are now three separate roots (no Hips); both arms now hang directly off Spine2 (not connected).
+- Moved joints: hips/thigh tops up ~19-21 cm to waist height (z 1.07-1.09), knees up ~20 cm (z 0.68-0.70), ankles up ~9-12 cm (z 0.22-0.25); shoulders up ~11-14 cm (z 1.55-1.56) and inward, elbows up ~9 cm, wrists up 5-8 cm; Neck/Head moved ~5-6 cm forward; Spine1 down 5 cm; Spine2 head unchanged (roll changed).
+- Unchanged: mesh (69,202 verts / 135,003 faces), all 22 vertex groups and every weight value, modifiers, parenting, materials. No hand keys (all three actions identical to 507fb9a). Saved with the armature in Edit Mode.
+
+**Consequences (not fixed: weights are Derek's to change)**
+- The 6 deleted bones still have vertex groups. 3,044 verts are weighted only to deleted bones and do not move at all: waist/pelvis band (Hips/Spine, 2,691 verts, z 0.87-1.13) and shoulder tops (Right 189, Left 164 verts, z 1.41-1.53). 22,220 more are partly on deleted bones and get renormalised onto the remaining bones (Blender and Unity both do this).
+- The weights were made for the 507fb9a joint positions, so with the joints moved, legs and shoulders bend at Derek's pivots while the skin blends at the old ones.
+- The arm gap Derek saw: 539 split seam pairs where arm-weighted and torso-weighted copies of the same surface separate (right forearm/upper arm vs chest and waist at x -0.36..-0.17, z 1.03..1.27; left forearm/upper arm vs chest at x 0.11..0.21, z 1.07..1.26; right hand vs hip at z 0.89..1.04). These come from the contact edges split in 507fb9a and are still in this mesh. Report: `work/derek_rig_20261010/seam_gap.json`.
+- Unity: no Hips bone, so the rig imports as **Generic** (metas animationType 2) to avoid a Humanoid failure and reimport on every Play.
+
+**Animation rebuild:** same intent as 507fb9a. Deleted bones are used only as virtual pivots (their 507fb9a rest matrices) to place Derek's real bones; only his 16 bones are keyed (the three roots get the pelvis motion). Walk: in place, feet/knees forward, ~12 cm stance, heel-to-toe with floor clamp, arms close, slight head motion. Attack: Shadow Bolt, left hand to hip, right hand winds back by the hip (f9), drives forward (release f13), follow-through f20, rest f30. Bolt calibration now uses Spine1/Head/LeftHand/RightHand.
+
+**Stretch check on Derek's rig** (204,717 edges): rest 0. Walk: grew >5 cm 1,585, >2 cm 2,002, max 27.7 cm, stretched >25% and >5 mm 5,756. Attack: >5 cm 1,684, >2 cm 3,081, max 44.6 cm, >25% and >5 mm 7,138. Of the >5 cm edges, walk 1,520 touch a vertex left only on a deleted bone and 65 a partly-orphaned vertex (0 on clean weights); attack 1,379 / 288 / 17. Report: `work/derek_rig_20261010/` (stretch.json, tear_where.json).
+
+---
+## 2026-10-09 (507fb9a, superseded by the section above)
 
 Derek's cloth-rule fallback after the split cape still read badly in motion (same call as Rowan no-cape, #50):
 the cape/cloak is removed, the body is re-rigged on a clean 22-bone skeleton, and rest / walk / attack are re-authored.
 The cloth-split pack (`clothsplit_20261007/`) is unchanged and stays in git history.
 
 **Single source blend (rig + all three actions):** `design/survival-theme-a-fantasy/enemies/anim/vespera/blender_rig_nocape_20261009/VESPERA_nocape.blend`
-(Blender 4.3.2; objects `VESPERA_rig`, `VESPERA_body`; actions `VESPERA_nocape_rest`, `VESPERA_nocape_walk`, `VESPERA_nocape_attack`, 0-30 @ 30 fps).
+(now Derek's 5.2 rig, see above; objects `VESPERA_rig`, `VESPERA_body`; actions `VESPERA_nocape_rest`, `VESPERA_nocape_walk`, `VESPERA_nocape_attack`, 0-30 @ 30 fps).
 
 ## What was removed
 - `VESPERA_cloth` object (56,542 faces): the simulated lower cape and skirt strips, plus all 28 cloth bones (8 chains `skirt_*`, `cape_*`).
@@ -42,7 +67,7 @@ ThemePack copies keep their names, metas and GUIDs: `VESPERA_blenderig.fbx` = `V
 
 ## Files
 - `VESPERA_nocape.blend`, `VESPERA_nocape.fbx`, `VESPERA_nocape_walk.fbx`, `VESPERA_nocape_attack.fbx`
-- `VESPERA_nocape_contact.jpg` (old cloth split vs new no cape; rest, walk f0/8/15/23, attack f9/13/20; front, three-quarter, rear battle camera)
+- `VESPERA_nocape_contact.jpg` (now: 507fb9a vs Derek rig rebuild, incl. leg and arm close-ups; was: old cloth split vs new no cape; rest, walk f0/8/15/23, attack f9/13/20; front, three-quarter, rear battle camera)
 - `work/`: build scripts (prep_mesh, seg1, cut1, rig_build, anim_build, finalize, stretch, qc, measure, r_sheet) and reports (prep, rig, anim, finalize, qc_fbx, stretch, walk_measure, joints)
 
 HOLD: Derek Game-view before any merge.

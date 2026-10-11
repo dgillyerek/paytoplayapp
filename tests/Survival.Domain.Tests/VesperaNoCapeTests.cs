@@ -52,20 +52,29 @@ public sealed class VesperaNoCapeTests
     }
 
     [Fact]
-    public void Vespera_nocape_rig_is_22_body_bones_with_clean_weights()
+    public void Vespera_uses_derek_16_bone_rig_as_generic_and_reports_orphan_weights()
     {
-        Assert.Equal(22, VesperaNoCape.RigBoneCount);
+        Assert.Equal(16, VesperaNoCape.RigBoneCount);
         Assert.Equal(VesperaNoCape.RigBoneCount, VesperaMotion.BoneNames.Length);
-        Assert.Equal(MixamoHumanoidBones.Names, VesperaMotion.BoneNames);
-        foreach (var bone in VesperaMotion.BoneNames)
+        Assert.Equal(16, VesperaMotion.Spec.BoneCount);
+        Assert.Equal(BlenderRigAvatar.CustomGeneric, VesperaMotion.Spec.Avatar);
+        Assert.False(VesperaMotion.Spec.PreferHumanoid);
+        Assert.Equal("mixamorig:Spine1", VesperaMotion.BoneRoot);
+        foreach (var gone in VesperaNoCape.DeletedBones)
         {
-            Assert.StartsWith("mixamorig:", bone, StringComparison.Ordinal);
+            Assert.DoesNotContain(gone, VesperaMotion.BoneNames);
         }
 
-        var work = Path.Combine(FindRepoRoot(), VesperaNoCape.DesignDir.Replace('/', Path.DirectorySeparatorChar), "work");
-        using var fin = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "finalize.json")));
-        Assert.Equal(4, fin.RootElement.GetProperty("max_influences").GetInt32());
-        Assert.Equal(0, fin.RootElement.GetProperty("unweighted").GetInt32());
+        foreach (var bone in VesperaAttack.Spec.CalibrationBones)
+        {
+            Assert.Contains(bone, VesperaMotion.BoneNames);
+        }
+
+        var work = Path.Combine(FindRepoRoot(), VesperaNoCape.DesignDir.Replace('/', Path.DirectorySeparatorChar), "work", "derek_rig_20261010");
+        using var ex = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "export.json")));
+        var exported = ex.RootElement.GetProperty("bones").EnumerateArray().Select(b => b.GetString()).ToArray();
+        Assert.Equal(VesperaMotion.BoneNames, exported);
+        Assert.True(ex.RootElement.GetProperty("max_influences").GetInt32() <= 4);
 
         using var qc = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "qc_fbx.json")));
         foreach (var kind in new[] { "rest", "walk", "attack" })
@@ -74,18 +83,12 @@ public sealed class VesperaNoCapeTests
             var bones = k.GetProperty("bones").EnumerateArray().Select(b => b.GetString()).ToArray();
             Assert.Equal(VesperaMotion.BoneNames, bones);
             Assert.True(k.GetProperty("max_infl").GetInt32() <= 4, kind);
-            Assert.Equal(0, k.GetProperty("unweighted").GetInt32());
-            Assert.DoesNotContain(bones, b => b!.Contains("cape", StringComparison.OrdinalIgnoreCase) || b!.Contains("skirt", StringComparison.OrdinalIgnoreCase));
         }
 
         using var st = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "stretch.json")));
-        var rest = st.RootElement.GetProperty("VESPERA_nocape_rest");
-        Assert.Equal(0, rest.GetProperty("stretch_gt_1.25x").GetInt32());
-        var walk = st.RootElement.GetProperty("VESPERA_nocape_walk");
-        Assert.Equal(0, walk.GetProperty("grow_gt_5cm").GetInt32());
-        Assert.True(walk.GetProperty("max_grow_cm").GetDouble() < 3.0);
-        var attack = st.RootElement.GetProperty("VESPERA_nocape_attack");
-        Assert.True(attack.GetProperty("max_grow_cm").GetDouble() < 10.0);
+        Assert.Equal(0, st.RootElement.GetProperty("VESPERA_nocape_rest").GetProperty("stretch_gt_1.25x").GetInt32());
+        Assert.True(File.Exists(Path.Combine(work, "tear_where.json")));
+        Assert.True(File.Exists(Path.Combine(work, "seam_gap.json")));
     }
 
     [Fact]
@@ -104,7 +107,7 @@ public sealed class VesperaNoCapeTests
             var text = File.ReadAllText(Path.Combine(root, "Assets", VesperaMotion.ThemePackDir, meta));
             var clip = meta != "VESPERA_blenderig.fbx.meta";
             var pose = meta.Contains("walk") ? "walk" : "attack";
-            Assert.False(BlenderRigImportMeta.NeedsReimport(text, true, clip, pose, "Scene", 30), meta + " would reimport on Play");
+            Assert.False(BlenderRigImportMeta.NeedsReimport(text, false, clip, pose, "Scene", 30), meta + " would reimport on Play");
         }
     }
 

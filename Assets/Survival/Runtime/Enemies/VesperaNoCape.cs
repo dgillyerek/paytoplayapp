@@ -5,6 +5,8 @@ namespace Survival.Domain.Enemies
     /// the cape/cloak and the cloth split's 28 cloth bones are gone, the body is re-rigged on 22 mixamorig bones with
     /// clean weights (max 4 per vertex), and rest/walk/attack are re-authored on that rig. No runtime spring bones or leg
     /// colliders. ThemePack file names are kept (metas and GUIDs unchanged). One source blend carries rig + all three actions.
+    /// 2026-10-10: the blend is Derek's own rig edit (265ec84, Blender 5.2); animations were rebuilt on it without moving
+    /// his bones or changing weights.
     /// HOLD merge until Derek Game-view PASS.
     /// </summary>
     public static class VesperaNoCape
@@ -14,11 +16,17 @@ namespace Survival.Domain.Enemies
         public const string WalkFileName = "VESPERA_nocape_walk.fbx";
         public const string AttackFileName = "VESPERA_nocape_attack.fbx";
         public const string BlendFileName = "VESPERA_nocape.blend";
-        public const string RestMd5 = "93f412a4eaf62dc6694d175d82146846";
-        public const string WalkMd5 = "7fadc83f9f5ea1a90b92f898ac1c4915";
-        public const string AttackMd5 = "3e74d719d4aa48097c94a61197f1b78f";
-        public const string BlendMd5 = "0e2396d435a4887c25367304cbf59146";
-        public const int RigBoneCount = 22;
+        public const string RestMd5 = "8168515ceaa093e5f65575c58dc3db26";
+        public const string WalkMd5 = "ea64616729e27be0c176389bf1118b69";
+        public const string AttackMd5 = "c173a3c4c452356c7856ba020fcdd143";
+        public const string BlendMd5 = "06e10e9a89b87e8ce1fb6b9c6a791a82";
+        public const int RigBoneCount = 16;
+
+        /// <summary>Bones Derek deleted in 265ec84 (their vertex groups are still on the mesh, so those weights follow no bone).</summary>
+        public static readonly string[] DeletedBones =
+        {
+            "mixamorig:Hips", "mixamorig:Spine", "mixamorig:LeftShoulder", "mixamorig:RightShoulder", "mixamorig:LeftToeBase", "mixamorig:RightToeBase"
+        };
 
         /// <summary>Blend actions (frames 0-30 at 30 fps; rest is the bind pose).</summary>
         public static readonly string[] BlendActions = { "VESPERA_nocape_rest", "VESPERA_nocape_walk", "VESPERA_nocape_attack" };

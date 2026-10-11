@@ -17,20 +17,39 @@ public sealed class BlenderRigRosterTests
     }
 
     [Fact]
-    public void Vespera_is_a_22_bone_mixamorig_with_rest_and_walk()
+    public void Vespera_is_derek_16_bone_generic_rig_with_rest_and_walk()
     {
         Assert.Equal(22, MixamoHumanoidBones.Count);
-        Assert.Equal(22, MixamoHumanoidBones.Names.Length);
-        Assert.Equal(MixamoHumanoidBones.Names.Length, MixamoHumanoidBones.Names.Distinct(StringComparer.Ordinal).Count());
         Assert.Equal("mixamorig:Hips", MixamoHumanoidBones.Root);
-        AssertHumanoidDemo(
-            VesperaMotion.Spec,
-            "VESPERA_basecolor_0",
-            "VESPERA_normal_2",
-            "202447e53edf4ca4a70c7de7ffd9cf1e",
-            "Survival/Vespera Demo (rest + walk + attack, Game view 1080x1920)");
-    }
+        var spec = VesperaMotion.Spec;
+        Assert.Equal(16, spec.BoneCount);
+        Assert.Equal(16, spec.BoneNames.Distinct(StringComparer.Ordinal).Count());
+        Assert.DoesNotContain("mixamorig:Hips", spec.BoneNames);
+        Assert.False(spec.PreferHumanoid);
+        Assert.Equal("rest", spec.PoseNames[0]);
+        Assert.Equal("walk", spec.PoseNames[1]);
+        Assert.Equal("Scene", spec.ClipTakeName);
+        Assert.Equal(30, spec.ClipLastFrame);
+        Assert.Equal("", spec.MetallicRoughnessFile);
+        Assert.Contains(spec, BlenderRigRoster.All);
+        var root = FindRepoRoot();
+        var rest = File.ReadAllBytes(Path.Combine(root, "Assets", spec.RestThemePackRel));
+        var walk = File.ReadAllBytes(Path.Combine(root, "Assets", spec.ClipThemePackRel));
+        foreach (var bone in spec.BoneNames)
+        {
+            Assert.True(ContainsAscii(rest, bone), bone);
+        }
 
+        Assert.True(ContainsAscii(walk, "Scene"));
+        Assert.True(ContainsBytes(rest, File.ReadAllBytes(Path.Combine(root, "Assets", spec.BaseColorThemePackRel))));
+        Assert.True(ContainsBytes(rest, File.ReadAllBytes(Path.Combine(root, "Assets", spec.NormalThemePackRel))));
+        Assert.Contains("animationType: 2", File.ReadAllText(Path.Combine(root, "Assets", spec.RestThemePackRel) + ".meta"), StringComparison.Ordinal);
+        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", spec.SceneFileName));
+        Assert.Contains("VesperaRoot", scene, StringComparison.Ordinal);
+        Assert.Contains("202447e53edf4ca4a70c7de7ffd9cf1e", scene, StringComparison.Ordinal);
+        var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
+        Assert.Contains("Survival/Vespera Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
+    }
 
     [Fact]
     public void Player_binds_embedded_maps_and_does_not_rewrite_the_rig()
@@ -142,30 +161,30 @@ public sealed class BlenderRigRosterTests
     {
         var root = FindRepoRoot();
         var spec = VesperaMotion.Spec;
-        Assert.True(spec.PreferHumanoid);
+        Assert.False(spec.PreferHumanoid);
         var restMeta = File.ReadAllText(Path.Combine(root, "Assets", spec.RestThemePackRel) + ".meta");
-        Assert.False(BlenderRigImportMeta.NeedsReimport(restMeta, spec.PreferHumanoid, false, string.Empty, string.Empty, 0));
+        Assert.False(BlenderRigImportMeta.NeedsReimport(restMeta, false, false, string.Empty, string.Empty, 0));
         var flapMeta = File.ReadAllText(Path.Combine(root, "Assets", spec.ClipThemePackRel) + ".meta");
         Assert.False(BlenderRigImportMeta.NeedsReimport(
-            flapMeta, true, true, spec.ClipPoseName, spec.ClipTakeName, spec.ClipLastFrame));
+            flapMeta, false, true, spec.ClipPoseName, spec.ClipTakeName, spec.ClipLastFrame));
         foreach (var extra in spec.ExtraClips)
         {
             var meta = File.ReadAllText(Path.Combine(root, "Assets", spec.ThemePackDir, extra.FileName) + ".meta");
-            Assert.False(BlenderRigImportMeta.NeedsReimport(meta, true, true, extra.PoseName, extra.TakeName, extra.LastFrame));
+            Assert.False(BlenderRigImportMeta.NeedsReimport(meta, false, true, extra.PoseName, extra.TakeName, extra.LastFrame));
         }
 
         Assert.True(BlenderRigImportMeta.NeedsReimport(
             restMeta.Replace("useFileScale: 0", "useFileScale: 1", StringComparison.Ordinal),
-            true, false, string.Empty, string.Empty, 0));
+            false, false, string.Empty, string.Empty, 0));
         Assert.True(BlenderRigImportMeta.NeedsReimport(
-            restMeta.Replace("animationType: 3", "animationType: 2", StringComparison.Ordinal),
-            true, false, string.Empty, string.Empty, 0));
+            restMeta.Replace("animationType: 2", "animationType: 3", StringComparison.Ordinal),
+            false, false, string.Empty, string.Empty, 0));
         Assert.True(BlenderRigImportMeta.NeedsReimport(
             restMeta.Replace("globalScale: 1", "globalScale: 0.01", StringComparison.Ordinal),
-            true, false, string.Empty, string.Empty, 0));
+            false, false, string.Empty, string.Empty, 0));
         Assert.True(BlenderRigImportMeta.NeedsReimport(
             flapMeta.Replace("name: \"walk\"", "name: \"other\"", StringComparison.Ordinal),
-            true, true, spec.ClipPoseName, spec.ClipTakeName, spec.ClipLastFrame));
+            false, true, spec.ClipPoseName, spec.ClipTakeName, spec.ClipLastFrame));
 
         var bare =
             "animationType: 2\n" +
