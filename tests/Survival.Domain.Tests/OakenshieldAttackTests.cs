@@ -34,9 +34,9 @@ public sealed class OakenshieldAttackTests
         var root = FindRepoRoot();
         var pack = Path.Combine(root, "Assets", OakenshieldMotion.ThemePackDir);
         var design = Path.Combine(root, OakenshieldAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
-        // ThemePack attack is the Design cloth split; attack_20261007 keeps the original.
-        Assert.Equal("769543a3e39321857dc50e734aadffd2", OakenshieldAttack.FileMd5);
-        Assert.Equal("769543a3e39321857dc50e734aadffd2", Md5(Path.Combine(pack, OakenshieldAttack.FileName)));
+        // ThemePack attack is the Design rigid-leaves pack; attack_20261007 keeps the original.
+        Assert.Equal("494efd02f36e84ec97253f3f00572fee", OakenshieldAttack.FileMd5);
+        Assert.Equal("494efd02f36e84ec97253f3f00572fee", Md5(Path.Combine(pack, OakenshieldAttack.FileName)));
         Assert.Equal("3fe681bc07658c519dbc1e903614c766", OakenshieldAttack.DesignFileMd5);
         Assert.Equal("3fe681bc07658c519dbc1e903614c766", Md5(Path.Combine(design, OakenshieldAttack.FileName)));
         Assert.Equal("0b7ebca1eb1946a850320fc44e65c1f5", Md5(Path.Combine(pack, "OAKENSHIELD_thornspear.fbx")));
@@ -68,9 +68,9 @@ public sealed class OakenshieldAttackTests
             }
         }
 
-        // Rest/walk are now the Design cloth split (clothsplit_20261007).
-        Assert.Equal("6d754014dd09a23ad616378a70826b14", Md5(Path.Combine(pack, "OAKENSHIELD_blenderig.fbx")));
-        Assert.Equal("57fba709bf3c367dd9ac0b4bc552be26", Md5(Path.Combine(pack, "OAKENSHIELD_blenderig_walk.fbx")));
+        // Rest/walk are now the Design rigid-leaves pack (rigidleaves_20261010).
+        Assert.Equal("e768f9f440ed307aeb854a07b351a484", Md5(Path.Combine(pack, "OAKENSHIELD_blenderig.fbx")));
+        Assert.Equal("88da839e0de15044ab14a1bf36463ab2", Md5(Path.Combine(pack, "OAKENSHIELD_blenderig_walk.fbx")));
     }
 
     [Fact]

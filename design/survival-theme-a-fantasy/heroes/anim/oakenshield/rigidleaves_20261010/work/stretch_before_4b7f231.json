@@ -1,0 +1,56 @@
+{
+ "OAKENSHIELD_walk:OAKENSHIELD_body": {
+  "edges": 273929,
+  "grow_gt_2cm": 10667,
+  "grow_gt_5cm": 6707,
+  "max_grow_cm": 66.8,
+  "max_ratio": 373.33,
+  "gt5_z_hist(0-2m,0.2)": [
+   2257,
+   2056,
+   1236,
+   283,
+   769,
+   106,
+   0,
+   0,
+   0,
+   0
+  ]
+ },
+ "OAKENSHIELD_walk:OAKENSHIELD_cloth": {
+  "edges": 27620,
+  "grow_gt_2cm": 0,
+  "grow_gt_5cm": 0,
+  "max_grow_cm": 0.0,
+  "max_ratio": 1.0,
+  "gt5_z_hist(0-2m,0.2)": []
+ },
+ "OAKENSHIELD_attack:OAKENSHIELD_body": {
+  "edges": 273929,
+  "grow_gt_2cm": 4168,
+  "grow_gt_5cm": 3463,
+  "max_grow_cm": 14.31,
+  "max_ratio": 66.54,
+  "gt5_z_hist(0-2m,0.2)": [
+   2205,
+   1194,
+   0,
+   64,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ]
+ },
+ "OAKENSHIELD_attack:OAKENSHIELD_cloth": {
+  "edges": 27620,
+  "grow_gt_2cm": 0,
+  "grow_gt_5cm": 0,
+  "max_grow_cm": 0.0,
+  "max_ratio": 1.0,
+  "gt5_z_hist(0-2m,0.2)": []
+ }
+}

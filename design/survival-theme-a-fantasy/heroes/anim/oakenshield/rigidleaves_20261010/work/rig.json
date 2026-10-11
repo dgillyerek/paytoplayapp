@@ -1,0 +1,139 @@
+{
+ "joint_moves_cm": {
+  "Hips": 6.2,
+  "Spine": 4.8,
+  "Spine1": 4.1,
+  "Spine2": 1.6,
+  "Neck": 3.9,
+  "Head": 2.5,
+  "LeftShoulder": 12.0,
+  "LeftArm": 13.6,
+  "LeftForeArm": 18.3,
+  "LeftHand": 18.7,
+  "RightShoulder": 10.8,
+  "RightArm": 11.5,
+  "RightForeArm": 22.9,
+  "RightHand": 20.8,
+  "LeftUpLeg": 20.0,
+  "LeftLeg": 27.6,
+  "LeftFoot": 26.0,
+  "LeftToeBase": 37.0,
+  "RightUpLeg": 2.8,
+  "RightLeg": 21.1,
+  "RightFoot": 28.5,
+  "RightToeBase": 21.6
+ },
+ "boundary_edges_before": 62,
+ "parts_initial": {
+  "torso_head": 54032,
+  "L_arm": 6564,
+  "R_arm": 9904,
+  "L_leg": 9124,
+  "R_leg": 11062
+ },
+ "weld_edges_split": 348,
+ "weld_split_by_parts": {
+  "0-2": 306,
+  "0-1": 42
+ },
+ "boundary_edges_after_split": 758,
+ "fill_faces": 56,
+ "rim_twin_faces": 2143,
+ "boundary_edges_after_fill": 2211,
+ "small_islands_reattached": 64,
+ "parts": {
+  "torso_head": 54967,
+  "L_arm": 6787,
+  "R_arm": 10845,
+  "L_leg": 9136,
+  "R_leg": 11127
+ },
+ "masked_far_bone_verts": 680,
+ "ornament_verts": 12724,
+ "rigid_pieces": 330,
+ "rigid_by_bone": {
+  "mixamorig:RightHand": 12,
+  "mixamorig:RightForeArm": 25,
+  "mixamorig:LeftToeBase": 3,
+  "mixamorig:Hips": 51,
+  "mixamorig:RightUpLeg": 3,
+  "mixamorig:RightShoulder": 7,
+  "mixamorig:LeftFoot": 6,
+  "mixamorig:Head": 75,
+  "mixamorig:Spine": 24,
+  "mixamorig:RightArm": 9,
+  "mixamorig:Neck": 11,
+  "mixamorig:LeftLeg": 14,
+  "mixamorig:Spine2": 1,
+  "mixamorig:RightLeg": 39,
+  "mixamorig:LeftUpLeg": 1,
+  "mixamorig:Spine1": 3,
+  "mixamorig:RightToeBase": 3,
+  "mixamorig:RightFoot": 4,
+  "mixamorig:LeftShoulder": 12,
+  "mixamorig:LeftArm": 2,
+  "mixamorig:LeftHand": 12,
+  "mixamorig:LeftForeArm": 13
+ },
+ "root_ring_verts": 13335,
+ "pieces_spanning_joints_kept_smooth": 9,
+ "spanning_largest": [
+  [
+   36,
+   0.45,
+   "mixamorig:RightShoulder"
+  ],
+  [
+   29,
+   0.46,
+   "mixamorig:LeftArm"
+  ],
+  [
+   23,
+   0.46,
+   "mixamorig:LeftShoulder"
+  ],
+  [
+   20,
+   0.42,
+   "mixamorig:RightArm"
+  ],
+  [
+   10,
+   0.46,
+   "mixamorig:RightArm"
+  ],
+  [
+   9,
+   0.47,
+   "mixamorig:LeftArm"
+  ],
+  [
+   8,
+   0.5,
+   "mixamorig:RightShoulder"
+  ],
+  [
+   6,
+   0.44,
+   "mixamorig:Spine1"
+  ]
+ ],
+ "rigid_piece_verts": 12524,
+ "bones": 22,
+ "verts": 92862,
+ "faces": 184891,
+ "max_influences": 4,
+ "unweighted": 0,
+ "influence_hist": [
+  0,
+  55201,
+  30347,
+  6311,
+  1003
+ ],
+ "verts_weight_gt0.05_farther_than_30cm_from_bone": 8,
+ "leg_verts_with_torso_or_arm_weight": 0,
+ "torso_verts_with_forearm_or_hand_weight": 0,
+ "paint_fill_verts": 1889
+}

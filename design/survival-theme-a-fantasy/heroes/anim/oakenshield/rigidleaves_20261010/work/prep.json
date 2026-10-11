@@ -1,0 +1,24 @@
+{
+ "cloth_faces_removed": 18456,
+ "cloth_verts_removed": 9246,
+ "cloth_bones_removed": [
+  "vine_FL_01",
+  "vine_FL_02",
+  "vine_FL_03",
+  "vine_L_01",
+  "vine_L_02",
+  "vine_L_03",
+  "leaf_BL_01",
+  "leaf_BL_02",
+  "leaf_BL_03",
+  "leaf_B_01",
+  "leaf_B_02",
+  "leaf_BR_01",
+  "leaf_BR_02",
+  "leaf_BR_03"
+ ],
+ "old_actions": [
+  "OAKENSHIELD_attack",
+  "OAKENSHIELD_walk"
+ ]
+}

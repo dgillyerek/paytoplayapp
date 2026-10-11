@@ -127,6 +127,6 @@ ModelImporter:
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Oakenshield Design clothsplit_20261007 attack (OAKENSHIELD_clothsplit_attack.fbx, MD5 769543a3e39321857dc50e734aadffd2). 36 bones: 22 mixamorig body + cloth chains on Spine, bound by name. Cloth never keyed; ClothSpringRig drives it. Humanoid only if mapped by name, else Generic. HOLD merge.
+  userData: Oakenshield Design rigidleaves_20261010 attack (OAKENSHIELD_rigidleaves_attack.fbx, MD5 494efd02f36e84ec97253f3f00572fee). Hanging cloth and its 14 cloth bones removed; 22 mixamorig bones, rigid leaf/bark/spike pieces, clean weights (max 4). No spring bones. Humanoid if the avatar validates, else Generic. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 
