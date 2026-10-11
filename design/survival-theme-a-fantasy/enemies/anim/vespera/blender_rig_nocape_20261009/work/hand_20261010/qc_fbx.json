@@ -1,0 +1,102 @@
+{
+ "rest": {
+  "objects": [
+   "VESPERA_body",
+   "VESPERA_rig"
+  ],
+  "bones": [
+   "mixamorig:Spine1",
+   "mixamorig:Spine2",
+   "mixamorig:Neck",
+   "mixamorig:Head",
+   "mixamorig:LeftArm",
+   "mixamorig:LeftForeArm",
+   "mixamorig:LeftHand",
+   "mixamorig:RightArm",
+   "mixamorig:RightForeArm",
+   "mixamorig:RightHand",
+   "mixamorig:LeftUpLeg",
+   "mixamorig:LeftLeg",
+   "mixamorig:LeftFoot",
+   "mixamorig:RightUpLeg",
+   "mixamorig:RightLeg",
+   "mixamorig:RightFoot"
+  ],
+  "faces": 134863,
+  "max_infl": 4,
+  "unweighted": 0,
+  "actions": []
+ },
+ "walk": {
+  "objects": [
+   "VESPERA_body",
+   "VESPERA_rig"
+  ],
+  "bones": [
+   "mixamorig:Spine1",
+   "mixamorig:Spine2",
+   "mixamorig:Neck",
+   "mixamorig:Head",
+   "mixamorig:LeftArm",
+   "mixamorig:LeftForeArm",
+   "mixamorig:LeftHand",
+   "mixamorig:RightArm",
+   "mixamorig:RightForeArm",
+   "mixamorig:RightHand",
+   "mixamorig:LeftUpLeg",
+   "mixamorig:LeftLeg",
+   "mixamorig:LeftFoot",
+   "mixamorig:RightUpLeg",
+   "mixamorig:RightLeg",
+   "mixamorig:RightFoot"
+  ],
+  "faces": 134863,
+  "max_infl": 4,
+  "unweighted": 0,
+  "actions": [
+   [
+    "VESPERA_rig|Scene",
+    [
+     1.0,
+     31.0
+    ]
+   ]
+  ]
+ },
+ "attack": {
+  "objects": [
+   "VESPERA_body",
+   "VESPERA_rig"
+  ],
+  "bones": [
+   "mixamorig:Spine1",
+   "mixamorig:Spine2",
+   "mixamorig:Neck",
+   "mixamorig:Head",
+   "mixamorig:LeftArm",
+   "mixamorig:LeftForeArm",
+   "mixamorig:LeftHand",
+   "mixamorig:RightArm",
+   "mixamorig:RightForeArm",
+   "mixamorig:RightHand",
+   "mixamorig:LeftUpLeg",
+   "mixamorig:LeftLeg",
+   "mixamorig:LeftFoot",
+   "mixamorig:RightUpLeg",
+   "mixamorig:RightLeg",
+   "mixamorig:RightFoot"
+  ],
+  "faces": 134863,
+  "max_infl": 4,
+  "unweighted": 0,
+  "actions": [
+   [
+    "VESPERA_rig|Scene",
+    [
+     1.0,
+     31.0
+    ]
+   ]
+  ]
+ }
+}

@@ -121,12 +121,12 @@ ModelImporter:
     hasExtraRoot: 0
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
-  autoGenerateAvatarMappingIfUnspecified: 1
-  animationType: 3
+  autoGenerateAvatarMappingIfUnspecified: 0
+  animationType: 2
   humanoidOversampling: 1
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Vespera attack add-on (Design 2026-10-07). 0-30 Scene take at 30fps on the existing blenderig. MD5 082b741eae52d9144a612566380766bc. HOLD merge.
+  userData: Vespera Design blender_rig_nocape_20261009 on Derek rig edit 265ec84, attack, 1s at 30fps, take Scene, bolt f13. 16 bones, no Hips, Generic (binds by path). bakeAxisConversion 0. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

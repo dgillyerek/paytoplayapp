@@ -4,6 +4,7 @@ using UnityEngine;
 namespace Survival.Unity
 {
     /// <summary>
+    /// Design no-cape pack (blender_rig_nocape_20261009): 22 mixamorig bones, no cloth chains, no spring bones or leg colliders.
     /// Vespera rest bind pose and walk clip. Mixamorig humanoid when the avatar
     /// validates, otherwise Generic. Rejects VESPERA_rig.fbx. Does not bake axis
     /// conversion or rewrite the imported root.

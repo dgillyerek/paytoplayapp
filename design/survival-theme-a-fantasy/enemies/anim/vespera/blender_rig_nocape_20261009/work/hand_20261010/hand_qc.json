@@ -1,0 +1,11 @@
+{
+ "hand_piece_verts": 3069,
+ "hand_piece_max_nonarm_weight": 0.0,
+ "hand_forearm_max_upperarm_weight": 0.0,
+ "body_near_hand_verts": 2831,
+ "body_near_hand_max_rightarm_weight": 0.0,
+ "hand_lowforearm_open_edges": 0,
+ "coincident_surface_pairs": 0,
+ "max_influences": 4,
+ "unweighted": 0
+}

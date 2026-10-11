@@ -34,8 +34,10 @@ public sealed class VesperaAttackTests
         var root = FindRepoRoot();
         var pack = Path.Combine(root, "Assets", VesperaMotion.ThemePackDir);
         var design = Path.Combine(root, VesperaAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
-        Assert.Equal("082b741eae52d9144a612566380766bc", VesperaAttack.FileMd5);
-        Assert.Equal("082b741eae52d9144a612566380766bc", Md5(Path.Combine(pack, VesperaAttack.FileName)));
+        // ThemePack attack is the Design no-cape pack (blender_rig_nocape_20261009); attack_20261007 keeps the original.
+        Assert.Equal("7435a2059aed197590f7e33d93590453", VesperaAttack.FileMd5);
+        Assert.Equal("7435a2059aed197590f7e33d93590453", Md5(Path.Combine(pack, VesperaAttack.FileName)));
+        Assert.Equal("082b741eae52d9144a612566380766bc", VesperaAttack.DesignFileMd5);
         Assert.Equal("082b741eae52d9144a612566380766bc", Md5(Path.Combine(design, VesperaAttack.FileName)));
 
         Assert.Equal(VesperaAttack.PropFileNames.Length, VesperaAttack.PropFileMd5s.Length);
@@ -65,9 +67,9 @@ public sealed class VesperaAttackTests
             }
         }
 
-        // Existing rig FBXs are untouched by the add-on.
-        Assert.Equal("969964e9fc0d5818b8877548d83bdecc", Md5(Path.Combine(pack, "VESPERA_blenderig.fbx")));
-        Assert.Equal("25fff5842afb46fe50d0703236754cfb", Md5(Path.Combine(pack, "VESPERA_blenderig_walk.fbx")));
+        // Rest/walk are now the Design no-cape pack (blender_rig_nocape_20261009).
+        Assert.Equal("d46729fb1f36700957dd1ee0f08cb55f", Md5(Path.Combine(pack, "VESPERA_blenderig.fbx")));
+        Assert.Equal("c15ae1b2988aa8806fa9f6760a75b4a4", Md5(Path.Combine(pack, "VESPERA_blenderig_walk.fbx")));
     }
 
     [Fact]

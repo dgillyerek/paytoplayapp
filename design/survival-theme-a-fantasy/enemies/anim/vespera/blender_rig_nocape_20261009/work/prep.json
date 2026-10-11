@@ -1,0 +1,46 @@
+{
+ "cloth_object_removed": {
+  "name": "VESPERA_cloth",
+  "faces": 56542
+ },
+ "faces_in": 144634,
+ "cape_sheet_faces": 11647,
+ "ornament_faces": 1121,
+ "boundary_edges_before": 40,
+ "loose_pieces_removed": 53,
+ "loose_faces_removed": 2161,
+ "boundary_edges_after_cut": 999,
+ "holes_filled": [
+  {
+   "perimeter_m": 0.192,
+   "rim_edges": 22,
+   "faces": 20,
+   "center": [
+    -0.305,
+    -0.003,
+    1.295
+   ],
+   "uv": [
+    0.783,
+    0.958
+   ]
+  },
+  {
+   "perimeter_m": 0.121,
+   "rim_edges": 4,
+   "faces": 2,
+   "center": [
+    -0.218,
+    -0.274,
+    0.899
+   ],
+   "uv": [
+    0.9455,
+    0.1814
+   ]
+  }
+ ],
+ "boundary_edges_final": 973,
+ "faces_out": 129727,
+ "verts_out": 64712
+}

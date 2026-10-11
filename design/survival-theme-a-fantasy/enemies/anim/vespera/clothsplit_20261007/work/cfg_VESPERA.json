@@ -1,0 +1,3 @@
+{"name":"VESPERA","anim_dir":"enemies/anim/vespera","rig_blend":"enemies/anim/vespera/blender_rig/VESPERA_blenderig.blend",
+ "attack_blend":"enemies/anim/vespera/attack_20261007/VESPERA_attack_work.blend",
+ "prefix":{"F":"skirt_F","FL":"skirt_FL","L":"skirt_L","FR":"skirt_FR","R":"skirt_R","BL":"cape_L","B":"cape_C","BR":"cape_R"}}
