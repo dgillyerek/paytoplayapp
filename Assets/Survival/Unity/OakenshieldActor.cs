@@ -4,6 +4,7 @@ using UnityEngine;
 namespace Survival.Unity
 {
     /// <summary>
+    /// Design rigid-leaves pack (rigidleaves_20261010): 22 mixamorig bones, rigid leaf pieces, no cloth chains, no spring bones or leg colliders.
     /// Oakenshield rest bind pose and walk clip. Mixamorig humanoid when the avatar
     /// validates, otherwise Generic. Rejects OAKENSHIELD_rig.fbx. Does not bake axis
     /// conversion or rewrite the imported root.

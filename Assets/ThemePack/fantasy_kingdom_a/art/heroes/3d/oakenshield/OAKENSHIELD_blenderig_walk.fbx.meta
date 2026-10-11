@@ -127,6 +127,6 @@ ModelImporter:
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Oakenshield walk. 1s at 30fps. Take Scene. Humanoid if the avatar validates, else Generic. bakeAxisConversion 0. HOLD merge.
+  userData: Oakenshield Design rigidleaves_20261010 walk (OAKENSHIELD_rigidleaves_walk.fbx, MD5 88da839e0de15044ab14a1bf36463ab2). Hanging cloth and its 14 cloth bones removed; 22 mixamorig bones, rigid leaf/bark/spike pieces, clean weights (max 4). No spring bones. Humanoid if the avatar validates, else Generic. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

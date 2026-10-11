@@ -1,0 +1,211 @@
+{
+ "name": "OAKENSHIELD",
+ "rig_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/blender_rig/OAKENSHIELD_blenderig.blend",
+ "attack_blend": "/workspace/design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007/OAKENSHIELD_attack_work.blend",
+ "zcut": 0.8160000000000001,
+ "crotch_z": 0.906,
+ "body_cut": {
+  "faces_before": 199896,
+  "faces_deleted": 17830,
+  "boundary_edges_after_cut": 718,
+  "fill": {
+   "cycles": 15,
+   "filled": 15,
+   "fill_tris": 626,
+   "fails": 0
+  },
+  "boundary_edges_after_fill": 62,
+  "faces": 182692,
+  "verts": 90686
+ },
+ "cloth_cut": {
+  "faces_before": 199896,
+  "faces_deleted": 182066,
+  "boundary_edges_after_cut": 656,
+  "fill": {
+   "cycles": 15,
+   "filled": 15,
+   "fill_tris": 626,
+   "fails": 0
+  },
+  "boundary_edges_after_fill": 0,
+  "faces": 18456,
+  "verts": 9246
+ },
+ "body_weights": {
+  "leg_tube_verts": 15389,
+  "verts_leg_weight_moved_to_Hips": 17680,
+  "seam_verts_blended_to_Spine": 5360,
+  "crotch_z": 0.906,
+  "zcut": 0.8160000000000001,
+  "torso_verts_with_leg_weight_after": 0
+ },
+ "chains": [
+  {
+   "prefix": "vine_FL",
+   "sector": "FL",
+   "nbones": 3,
+   "nverts": 360,
+   "bones": [
+    "vine_FL_01",
+    "vine_FL_02",
+    "vine_FL_03"
+   ],
+   "joints": [
+    [
+     0.1055639423429966,
+     -0.14485541731119156,
+     0.8160000000000001
+    ],
+    [
+     0.16202334314584732,
+     -0.16474856436252594,
+     0.7039149004618327
+    ],
+    [
+     0.2000347077846527,
+     -0.18323351442813873,
+     0.5918298009236654
+    ],
+    [
+     0.16523674130439758,
+     -0.16997632384300232,
+     0.4797447013854981
+    ]
+   ],
+   "parent": "mixamorig:Spine"
+  },
+  {
+   "prefix": "vine_L",
+   "sector": "L",
+   "nbones": 3,
+   "nverts": 3470,
+   "bones": [
+    "vine_L_01",
+    "vine_L_02",
+    "vine_L_03"
+   ],
+   "joints": [
+    [
+     0.17976989597082138,
+     -0.0865439809858799,
+     0.8160000000000001
+    ],
+    [
+     0.23837553709745407,
+     -0.06968299672007561,
+     0.6757165390650431
+    ],
+    [
+     0.23783156275749207,
+     -0.09996706247329712,
+     0.5354330781300862
+    ],
+    [
+     0.18038369715213776,
+     -0.027350790798664093,
+     0.3951496171951294
+    ]
+   ],
+   "parent": "mixamorig:Spine"
+  },
+  {
+   "prefix": "leaf_BL",
+   "sector": "BL",
+   "nbones": 3,
+   "nverts": 1717,
+   "bones": [
+    "leaf_BL_01",
+    "leaf_BL_02",
+    "leaf_BL_03"
+   ],
+   "joints": [
+    [
+     0.09549751877784729,
+     0.10882318764925003,
+     0.8160000000000001
+    ],
+    [
+     0.10048449039459229,
+     0.13714691996574402,
+     0.6771513023376465
+    ],
+    [
+     0.1434508040547371,
+     0.12260642275214195,
+     0.538302604675293
+    ],
+    [
+     0.216072216629982,
+     0.09981626272201538,
+     0.3994539070129395
+    ]
+   ],
+   "parent": "mixamorig:Spine"
+  },
+  {
+   "prefix": "leaf_B",
+   "sector": "B",
+   "nbones": 2,
+   "nverts": 1530,
+   "bones": [
+    "leaf_B_01",
+    "leaf_B_02"
+   ],
+   "joints": [
+    [
+     -0.09020791202783585,
+     0.1955515295267105,
+     0.8160000000000001
+    ],
+    [
+     -0.05059891939163208,
+     0.22118213772773743,
+     0.7034560661315918
+    ],
+    [
+     0.012392694130539894,
+     0.2365901842713356,
+     0.5909121322631836
+    ]
+   ],
+   "parent": "mixamorig:Spine"
+  },
+  {
+   "prefix": "leaf_BR",
+   "sector": "BR",
+   "nbones": 3,
+   "nverts": 2111,
+   "bones": [
+    "leaf_BR_01",
+    "leaf_BR_02",
+    "leaf_BR_03"
+   ],
+   "joints": [
+    [
+     -0.3147886395454407,
+     0.18135397136211395,
+     0.8160000000000001
+    ],
+    [
+     -0.24309611320495605,
+     0.19249743968248367,
+     0.6561681626637778
+    ],
+    [
+     -0.2781190574169159,
+     0.20166747272014618,
+     0.4963363253275554
+    ],
+    [
+     -0.18047040700912476,
+     0.16556021571159363,
+     0.33650448799133303
+    ]
+   ],
+   "parent": "mixamorig:Spine"
+  }
+ ],
+ "fcurves_removed_non_body": 0,
+ "blender": "4.3.2"
+}

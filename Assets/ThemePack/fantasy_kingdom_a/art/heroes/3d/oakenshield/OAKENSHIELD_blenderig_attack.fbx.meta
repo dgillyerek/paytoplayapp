@@ -127,6 +127,6 @@ ModelImporter:
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Oakenshield attack add-on (Design 2026-10-07). 0-30 Scene take at 30fps on the existing blenderig. MD5 3fe681bc07658c519dbc1e903614c766. HOLD merge.
+  userData: Oakenshield Design rigidleaves_20261010 attack (OAKENSHIELD_rigidleaves_attack.fbx, MD5 494efd02f36e84ec97253f3f00572fee). Hanging cloth and its 14 cloth bones removed; 22 mixamorig bones, rigid leaf/bark/spike pieces, clean weights (max 4). No spring bones. Humanoid if the avatar validates, else Generic. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

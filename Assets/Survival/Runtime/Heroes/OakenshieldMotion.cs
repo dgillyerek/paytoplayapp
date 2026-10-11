@@ -3,6 +3,8 @@ using Survival.Domain.Roster;
 namespace Survival.Domain.Heroes
 {
     /// <summary>
+    /// ThemePack rest/walk/attack are the Design rigid-leaves pack (rigidleaves_20261010, see OakenshieldRigidLeaves):
+    /// hanging cloth removed, re-rigged on the 22 body bones below, rigid leaf pieces, no cloth chains and no runtime springs.
     /// Oakenshield Design Blender rig. Mixamo-compatible mixamorig, 22 bones.
     /// Rest is the bind pose. Walk is a 1 second Scene take at 30 fps
     /// (FBX LocalStop 46186158000 ticks). Reject OAKENSHIELD_rig.fbx.

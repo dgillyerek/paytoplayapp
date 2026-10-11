@@ -13,6 +13,9 @@ namespace Survival.Unity
     /// An optional Theme A attack add-on plays 0–30 once, holds rest for a short gap, and repeats,
     /// with its held props and projectile effects driven by <see cref="BlenderRigAttackDriver"/>.
     /// Humanoid when the mixamorig avatar validates, otherwise Generic.
+    /// With a Design cloth-split spec: the humanoid mapping must be the by-name mixamorig mapping on the rest and every
+    /// clip FBX (else Generic, which binds curves by transform path), cloth curves are masked out of every imported clip,
+    /// and <see cref="ClothSpringRig"/> drives the cloth chains in LateUpdate (never baked).
     /// Custom creatures stay Generic. Does not bake axis conversion, scale one axis,
     /// retarget by hand, or rewrite the imported root. Binds embedded basecolor and
     /// normal. Skips metal/roughness unless the spec names an embedded map.
@@ -29,15 +32,18 @@ namespace Survival.Unity
         private bool _ready;
         private bool _loop;
         private readonly BlenderRigAttackSpec? _attackSpec;
+        private readonly ClothSplitSpec? _clothSpec;
+        private ClothSpringRig? _cloth;
         private BlenderRigAttackDriver? _attack;
         private bool _attackMode;
         private float _length;
         private float _time;
         private string _pose;
 
-        public BlenderRigPlayer(BlenderRigSpec spec, Transform parent, BlenderRigAttackSpec? attack = null)
+        public BlenderRigPlayer(BlenderRigSpec spec, Transform parent, BlenderRigAttackSpec? attack = null, ClothSplitSpec? cloth = null)
         {
             _attackSpec = attack;
+            _clothSpec = cloth;
             _spec = spec;
             _parent = parent;
             _pose = BlenderRigSpec.RestPoseName;
@@ -47,6 +53,7 @@ namespace Survival.Unity
         public string Pose => _pose;
         public float ClipLength => _length;
         public Bounds VisibleBounds { get; private set; }
+        public ClothSpringRig? Cloth => _cloth;
 
         public void Build()
         {
@@ -64,10 +71,24 @@ namespace Survival.Unity
             if (_spec.PreferHumanoid)
             {
                 EnsureImport(path, humanoid: true, clip: false);
-                _humanoid = HasValidHumanAvatar(path);
+                _humanoid = HasValidHumanAvatar(path) && HumanMappedByName(path);
+                if (_humanoid && _clothSpec != null)
+                {
+                    foreach (var clipFile in ClipFileNames())
+                    {
+                        var clipPath = "Assets/" + _spec.ThemePackDir + "/" + clipFile;
+                        EnsureImport(clipPath, humanoid: true, clip: false);
+                        if (!HasValidHumanAvatar(clipPath) || !HumanMappedByName(clipPath))
+                        {
+                            _humanoid = false;
+                            break;
+                        }
+                    }
+                }
+
                 if (!_humanoid)
                 {
-                    Debug.LogWarning(_spec.Name + " humanoid avatar did not validate. Using Generic.");
+                    Debug.LogWarning(_spec.Name + " humanoid avatar did not validate by name. Using Generic (binds by transform path).");
                     EnsureImport(path, humanoid: false, clip: false);
                 }
             }
@@ -89,6 +110,12 @@ namespace Survival.Unity
             {
                 _attack = new BlenderRigAttackDriver(_attackSpec, _spec.ThemePackDir, _parent);
                 _attack.Calibrate(instance);
+            }
+
+            if (_clothSpec != null)
+            {
+                _cloth = instance.AddComponent<ClothSpringRig>();
+                _cloth.Bind(_clothSpec, _parent);
             }
 
             _animator = instance.GetComponent<Animator>() ?? instance.AddComponent<Animator>();
@@ -179,6 +206,12 @@ namespace Survival.Unity
         public void Dispose()
         {
             _attack?.Dispose();
+            if (_cloth != null)
+            {
+                Object.Destroy(_cloth);
+                _cloth = null;
+            }
+
             if (_graph.IsValid())
             {
                 _graph.Destroy();
@@ -262,6 +295,7 @@ namespace Survival.Unity
             _loop = false;
             _length = 0f;
             _time = 0f;
+            _cloth?.ResetToRest();
         }
 
         private bool PlayClip(string fileName, string poseName, string takeName, int lastFrame)
@@ -291,6 +325,7 @@ namespace Survival.Unity
             _loop = true;
             _pose = poseName;
             _graph.Evaluate(0f);
+            _cloth?.ResetToRest();
             return true;
 #else
             return false;
@@ -325,7 +360,130 @@ namespace Survival.Unity
                 fallback ??= clip;
             }
 
-            return named ?? fallback;
+            var found = named ?? fallback;
+            if (found != null && _clothSpec != null && HasClothCurves(found) && MaskClothCurves(path))
+            {
+                return LoadClip(fileName, poseName, takeName, lastFrame, retried: true);
+            }
+
+            return found;
+        }
+
+        private AnimationClip? LoadClip(string fileName, string poseName, string takeName, int lastFrame, bool retried)
+        {
+            var path = "Assets/" + _spec.ThemePackDir + "/" + fileName;
+            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
+            {
+                if (obj is AnimationClip clip && string.Equals(clip.name, poseName, System.StringComparison.Ordinal))
+                {
+                    if (retried && _clothSpec != null && HasClothCurves(clip))
+                    {
+                        Debug.LogWarning(_spec.Name + " " + fileName + " still has cloth curves after masking. ClothSpringRig overrides them in LateUpdate.");
+                    }
+
+                    return clip;
+                }
+            }
+
+            return null;
+        }
+
+        private System.Collections.Generic.IEnumerable<string> ClipFileNames()
+        {
+            yield return _spec.ClipFileName;
+            foreach (var extra in _spec.ExtraClips)
+            {
+                yield return extra.FileName;
+            }
+        }
+
+        /// <summary>By-name check of the humanoid mapping: 22 mixamorig body bones, no cloth bone.</summary>
+        private bool HumanMappedByName(string path)
+        {
+            if (_clothSpec == null)
+            {
+                return true;
+            }
+
+            var avatar = LoadHumanAvatar(path);
+            if (avatar == null)
+            {
+                return false;
+            }
+
+            var pairs = new System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<string, string>>();
+            foreach (var bone in avatar.humanDescription.human)
+            {
+                pairs.Add(new System.Collections.Generic.KeyValuePair<string, string>(bone.humanName, bone.boneName));
+            }
+
+            var error = MixamoHumanMap.Validate(pairs, _clothSpec.IsClothBone);
+            if (error != null)
+            {
+                Debug.LogWarning(_spec.Name + " humanoid mapping rejected (" + path + "): " + error);
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool HasClothCurves(AnimationClip clip)
+        {
+            foreach (var binding in AnimationUtility.GetCurveBindings(clip))
+            {
+                if (_clothSpec!.IsClothBone(ClothSplitSpec.Leaf(binding.path)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Cloth rule: no clip may key a cloth bone. Masks every cloth transform out of the clip import
+        /// (body bones and humanoid body parts stay active), then reimports.
+        /// </summary>
+        private bool MaskClothCurves(string path)
+        {
+            if (AssetImporter.GetAtPath(path) is not ModelImporter importer)
+            {
+                return false;
+            }
+
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            var clips = importer.clipAnimations;
+            if (model == null || clips == null || clips.Length == 0)
+            {
+                return false;
+            }
+
+            var mask = new AvatarMask();
+            mask.AddTransformPath(model.transform, true);
+            var masked = 0;
+            for (var i = 0; i < mask.transformCount; i++)
+            {
+                var cloth = _clothSpec!.IsClothBone(ClothSplitSpec.Leaf(mask.GetTransformPath(i)));
+                mask.SetTransformActive(i, !cloth);
+                masked += cloth ? 1 : 0;
+            }
+
+            for (var part = AvatarMaskBodyPart.Root; part < AvatarMaskBodyPart.LastBodyPart; part++)
+            {
+                mask.SetHumanoidBodyPartActive(part, true);
+            }
+
+            foreach (var clipAnimation in clips)
+            {
+                clipAnimation.maskType = ClipAnimationMaskType.CreateFromThisModel;
+                clipAnimation.ConfigureClipFromMask(mask);
+            }
+
+            importer.clipAnimations = clips;
+            importer.SaveAndReimport();
+            Object.DestroyImmediate(mask);
+            Debug.Log(_spec.Name + " masked " + masked + " cloth transforms out of " + path + " (cloth is never baked).");
+            return masked > 0;
         }
 
         private static bool HasValidHumanAvatar(string path)
@@ -368,6 +526,13 @@ namespace Survival.Unity
             string takeName = "",
             int lastFrame = 0)
         {
+            // Getters can disagree with the saved .meta and still write the same bytes back.
+            // Reimporting from Play then reloads the scene and clears the demo dropdown.
+            if (SavedSettingsMatch(path, humanoid, clip, poseName, takeName, lastFrame))
+            {
+                return;
+            }
+
             if (AssetImporter.GetAtPath(path) is not ModelImporter importer)
             {
                 Debug.LogError(_spec.Name + " importer missing. " + path);
@@ -439,6 +604,33 @@ namespace Survival.Unity
             {
                 importer.SaveAndReimport();
             }
+        }
+
+        private static bool SavedSettingsMatch(
+            string path,
+            bool humanoid,
+            bool clip,
+            string poseName,
+            string takeName,
+            int lastFrame)
+        {
+            var metaPath = path + ".meta";
+            if (!System.IO.Path.IsPathRooted(metaPath) && !string.IsNullOrEmpty(Application.dataPath))
+            {
+                var root = System.IO.Directory.GetParent(Application.dataPath);
+                if (root != null)
+                {
+                    metaPath = System.IO.Path.Combine(root.FullName, metaPath.Replace('/', System.IO.Path.DirectorySeparatorChar));
+                }
+            }
+
+            if (!System.IO.File.Exists(metaPath))
+            {
+                return false;
+            }
+
+            var meta = System.IO.File.ReadAllText(metaPath);
+            return !BlenderRigImportMeta.NeedsReimport(meta, humanoid, clip, poseName, takeName, lastFrame);
         }
 
         private bool PinClip(ModelImporter importer, string poseName, string takeName, int lastFrame)

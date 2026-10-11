@@ -1,0 +1,120 @@
+{
+ "rest": {
+  "objects": [
+   "OAKENSHIELD_body",
+   "OAKENSHIELD_rig"
+  ],
+  "bones": [
+   "mixamorig:Hips",
+   "mixamorig:Spine",
+   "mixamorig:Spine1",
+   "mixamorig:Spine2",
+   "mixamorig:Neck",
+   "mixamorig:Head",
+   "mixamorig:LeftShoulder",
+   "mixamorig:LeftArm",
+   "mixamorig:LeftForeArm",
+   "mixamorig:LeftHand",
+   "mixamorig:RightShoulder",
+   "mixamorig:RightArm",
+   "mixamorig:RightForeArm",
+   "mixamorig:RightHand",
+   "mixamorig:LeftUpLeg",
+   "mixamorig:LeftLeg",
+   "mixamorig:LeftFoot",
+   "mixamorig:LeftToeBase",
+   "mixamorig:RightUpLeg",
+   "mixamorig:RightLeg",
+   "mixamorig:RightFoot",
+   "mixamorig:RightToeBase"
+  ],
+  "faces": 187406,
+  "max_infl": 4,
+  "unweighted": 0,
+  "actions": []
+ },
+ "walk": {
+  "objects": [
+   "OAKENSHIELD_body",
+   "OAKENSHIELD_rig"
+  ],
+  "bones": [
+   "mixamorig:Hips",
+   "mixamorig:Spine",
+   "mixamorig:Spine1",
+   "mixamorig:Spine2",
+   "mixamorig:Neck",
+   "mixamorig:Head",
+   "mixamorig:LeftShoulder",
+   "mixamorig:LeftArm",
+   "mixamorig:LeftForeArm",
+   "mixamorig:LeftHand",
+   "mixamorig:RightShoulder",
+   "mixamorig:RightArm",
+   "mixamorig:RightForeArm",
+   "mixamorig:RightHand",
+   "mixamorig:LeftUpLeg",
+   "mixamorig:LeftLeg",
+   "mixamorig:LeftFoot",
+   "mixamorig:LeftToeBase",
+   "mixamorig:RightUpLeg",
+   "mixamorig:RightLeg",
+   "mixamorig:RightFoot",
+   "mixamorig:RightToeBase"
+  ],
+  "faces": 187406,
+  "max_infl": 4,
+  "unweighted": 0,
+  "actions": [
+   [
+    "OAKENSHIELD_rig|Scene",
+    [
+     1.0,
+     31.0
+    ]
+   ]
+  ]
+ },
+ "attack": {
+  "objects": [
+   "OAKENSHIELD_body",
+   "OAKENSHIELD_rig"
+  ],
+  "bones": [
+   "mixamorig:Hips",
+   "mixamorig:Spine",
+   "mixamorig:Spine1",
+   "mixamorig:Spine2",
+   "mixamorig:Neck",
+   "mixamorig:Head",
+   "mixamorig:LeftShoulder",
+   "mixamorig:LeftArm",
+   "mixamorig:LeftForeArm",
+   "mixamorig:LeftHand",
+   "mixamorig:RightShoulder",
+   "mixamorig:RightArm",
+   "mixamorig:RightForeArm",
+   "mixamorig:RightHand",
+   "mixamorig:LeftUpLeg",
+   "mixamorig:LeftLeg",
+   "mixamorig:LeftFoot",
+   "mixamorig:LeftToeBase",
+   "mixamorig:RightUpLeg",
+   "mixamorig:RightLeg",
+   "mixamorig:RightFoot",
+   "mixamorig:RightToeBase"
+  ],
+  "faces": 187406,
+  "max_infl": 4,
+  "unweighted": 0,
+  "actions": [
+   [
+    "OAKENSHIELD_rig|Scene",
+    [
+     1.0,
+     31.0
+    ]
+   ]
+  ]
+ }
+}

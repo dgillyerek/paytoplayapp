@@ -98,6 +98,6 @@ ModelImporter:
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Oakenshield Design Blender mixamorig. 22 bones. Rest pose. Humanoid if the avatar validates, else Generic. bakeAxisConversion 0. useFileScale 0. Embedded basecolor+normal. HOLD merge.
+  userData: Oakenshield Design rigidleaves_20261010 rest (OAKENSHIELD_rigidleaves.fbx, MD5 e768f9f440ed307aeb854a07b351a484). Hanging cloth and its 14 cloth bones removed; 22 mixamorig bones, rigid leaf/bark/spike pieces, clean weights (max 4). No spring bones. Humanoid if the avatar validates, else Generic. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 
