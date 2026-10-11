@@ -36,6 +36,18 @@ namespace Survival.Unity
         private int _cycle = -1;
         private int _lightningStep = -1;
 
+        /// <summary>
+        /// Optional hit test for flying tracks. Gets the track and the world segment its leading
+        /// point covered this frame. Return true with a world contact point to stop it there.
+        /// </summary>
+        public delegate bool ProjectileBlock(AttackTrack track, Vector3 from, Vector3 to, out Vector3 contact);
+
+        /// <summary>Null by default, so the single-character demos fly the full Design path.</summary>
+        public ProjectileBlock? Blocker { get; set; }
+
+        /// <summary>Raised once per attack cycle when <see cref="Blocker"/> stops a flying track.</summary>
+        public System.Action<AttackTrack, Vector3>? Impact { get; set; }
+
         public BlenderRigAttackDriver(BlenderRigAttackSpec spec, string themePackDir, Transform actor)
         {
             _spec = spec;
@@ -175,6 +187,16 @@ namespace Survival.Unity
             foreach (var view in _views)
             {
                 var track = view.Track;
+                if (newCycle)
+                {
+                    ResetBlock(view);
+                }
+
+                if (view.Stopped)
+                {
+                    continue;
+                }
+
                 bool visible;
                 if (track.Kind == AttackTrackKind.Held)
                 {
@@ -207,6 +229,11 @@ namespace Survival.Unity
                     SetShown(view, true, true);
                 }
 
+                if (track.Kind == AttackTrackKind.Projectile && Blocker != null && TryBlock(view))
+                {
+                    continue;
+                }
+
                 if (track.Shape == AttackVfxShape.Lightning && reroll)
                 {
                     RollLightning(view);
@@ -224,6 +251,7 @@ namespace Survival.Unity
         {
             foreach (var view in _views)
             {
+                ResetBlock(view);
                 SetShown(view, false, true);
                 view.Root.SetActive(false);
             }
@@ -646,16 +674,84 @@ namespace Survival.Unity
             view.Lines = lines.ToArray();
         }
 
+        private static void ResetBlock(TrackView view)
+        {
+            view.Stopped = false;
+            view.ImpactFired = false;
+            view.HasLastHead = false;
+            view.Reach = -1f;
+        }
+
+        /// <summary>
+        /// Asks <see cref="Blocker"/> whether this flying track reached something this frame.
+        /// A bolt is clipped at the contact and keeps crackling there. Anything else stops at the
+        /// contact: its mesh and particles stop emitting and its trail ends there.
+        /// Returns true when the track stopped and must not be updated further this cycle.
+        /// </summary>
+        private bool TryBlock(TrackView view)
+        {
+            var blocker = Blocker;
+            if (blocker == null)
+            {
+                return false;
+            }
+
+            var root = view.Root.transform;
+            if (view.Track.Shape == AttackVfxShape.Lightning && view.Lines.Length > 0)
+            {
+                var basePoint = root.position;
+                var tip = view.Lines[0].transform.TransformPoint(new Vector3(0f, 0f, view.LineLength));
+                if (!blocker(view.Track, basePoint, tip, out var hit))
+                {
+                    view.Reach = -1f;
+                    return false;
+                }
+
+                var scale = Mathf.Max(view.Lines[0].transform.lossyScale.z, 1e-6f);
+                view.Reach = Mathf.Clamp(Vector3.Distance(basePoint, hit) / scale, 0.01f, view.LineLength);
+                RollLightning(view);
+                FireImpact(view, hit);
+                return false;
+            }
+
+            var head = root.position;
+            var from = view.HasLastHead ? view.LastHead : head;
+            view.LastHead = head;
+            view.HasLastHead = true;
+            if (!blocker(view.Track, from, head, out var contact))
+            {
+                return false;
+            }
+
+            root.position = contact;
+            SetShown(view, false, false);
+            view.Stopped = true;
+            FireImpact(view, contact);
+            return true;
+        }
+
+        private void FireImpact(TrackView view, Vector3 contact)
+        {
+            if (view.ImpactFired)
+            {
+                return;
+            }
+
+            view.ImpactFired = true;
+            Impact?.Invoke(view.Track, contact);
+        }
+
         private void RollLightning(TrackView view)
         {
             var count = 12;
             var positions = new Vector3[count];
-            var jitter = view.LineLength * 0.035f;
+            var length = view.Reach > 0f ? Mathf.Min(view.Reach, view.LineLength) : view.LineLength;
+            var jitter = length * 0.035f;
             for (var i = 0; i < count; i++)
             {
                 var t = i / (float)(count - 1);
                 var j = i == 0 || i == count - 1 ? 0f : jitter;
-                positions[i] = new Vector3(Random.Range(-j, j), Random.Range(-j, j), t * view.LineLength);
+                positions[i] = new Vector3(Random.Range(-j, j), Random.Range(-j, j), t * length);
             }
 
             foreach (var line in view.Lines)
@@ -899,6 +995,11 @@ namespace Survival.Unity
             public float LineLength { get; set; }
             public float SlashWidth { get; set; }
             public float SlashHeight { get; set; }
+            public bool Stopped { get; set; }
+            public bool ImpactFired { get; set; }
+            public bool HasLastHead { get; set; }
+            public Vector3 LastHead { get; set; }
+            public float Reach { get; set; } = -1f;
         }
     }
 }

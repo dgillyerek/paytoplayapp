@@ -48,6 +48,9 @@ namespace Survival.Unity
         public float ClipLength => _length;
         public Bounds VisibleBounds { get; private set; }
 
+        /// <summary>Attack props and effects driver, or null when this rig has no attack add-on.</summary>
+        public BlenderRigAttackDriver? AttackDriver => _attack;
+
         public void Build()
         {
             BuildLights();
