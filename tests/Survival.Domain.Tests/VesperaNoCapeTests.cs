@@ -70,7 +70,8 @@ public sealed class VesperaNoCapeTests
             Assert.Contains(bone, VesperaMotion.BoneNames);
         }
 
-        var work = Path.Combine(FindRepoRoot(), VesperaNoCape.DesignDir.Replace('/', Path.DirectorySeparatorChar), "work", "reweight_20261010");
+        var design = Path.Combine(FindRepoRoot(), VesperaNoCape.DesignDir.Replace('/', Path.DirectorySeparatorChar));
+        var work = Path.Combine(FindRepoRoot(), VesperaNoCape.HandWorkDir.Replace('/', Path.DirectorySeparatorChar));
         using var ex = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "export.json")));
         var exported = ex.RootElement.GetProperty("bones").EnumerateArray().Select(b => b.GetString()).ToArray();
         Assert.Equal(VesperaMotion.BoneNames, exported);
@@ -91,7 +92,7 @@ public sealed class VesperaNoCapeTests
         Assert.True(st.RootElement.GetProperty("VESPERA_nocape_walk").GetProperty("max_grow_cm").GetDouble() <= 2.0);
 
         // 507fb9a arm split seams re-welded: no coincident duplicate surface vertices left (flipped lining twins excluded).
-        using var weld = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "weld.json")));
+        using var weld = JsonDocument.Parse(File.ReadAllText(Path.Combine(design, "work", "reweight_20261010", "weld.json")));
         Assert.True(weld.RootElement.GetProperty("seam_pairs_before").GetInt32() > 500);
         Assert.Equal(0, weld.RootElement.GetProperty("coincident_left").GetInt32());
 
@@ -105,6 +106,52 @@ public sealed class VesperaNoCapeTests
         {
             Assert.Equal(0, qc.RootElement.GetProperty(kind).GetProperty("unweighted").GetInt32());
         }
+    }
+
+    [Fact]
+    public void Vespera_right_hand_is_free_of_the_skirt_and_the_attack_goes_around_her()
+    {
+        var work = Path.Combine(FindRepoRoot(), VesperaNoCape.HandWorkDir.Replace('/', Path.DirectorySeparatorChar));
+
+        // Cut: the faces joining the right forearm/hand to the skirt/belt/hip were deleted, and the hand is closed.
+        using var cut = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "cut.json")));
+        Assert.True(cut.RootElement.GetProperty("faces_deleted").GetInt32() > 0);
+        Assert.True(cut.RootElement.GetProperty("holes_filled").GetArrayLength() > 0);
+
+        // Weights either side of the cut, closed hand, no duplicate surface verts, still <=4 and none unweighted.
+        using var qc = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "hand_qc.json")));
+        var q = qc.RootElement;
+        Assert.Equal(0.0, q.GetProperty("hand_piece_max_nonarm_weight").GetDouble());
+        Assert.Equal(0.0, q.GetProperty("hand_forearm_max_upperarm_weight").GetDouble());
+        Assert.Equal(0.0, q.GetProperty("body_near_hand_max_rightarm_weight").GetDouble());
+        Assert.Equal(0, q.GetProperty("hand_lowforearm_open_edges").GetInt32());
+        Assert.Equal(0, q.GetProperty("coincident_surface_pairs").GetInt32());
+        Assert.True(q.GetProperty("max_influences").GetInt32() <= 4);
+        Assert.Equal(0, q.GetProperty("unweighted").GetInt32());
+
+        // Attack: hand + forearm never intersect the body (hair excluded) between the bind-pose ends,
+        // and the hand + lower forearm keep >= 3 cm from f2 to f29.
+        using var clr = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "clear_attack.json")));
+        var frames = clr.RootElement.EnumerateArray().ToArray();
+        Assert.Equal(31, frames.Length);
+        for (var f = 1; f <= 29; f++)
+        {
+            Assert.Equal(0, frames[f].GetProperty("body_tri_overlaps").GetInt32());
+            if (f >= 2)
+            {
+                Assert.True(frames[f].GetProperty("min_body_hand_lowforearm_cm").GetDouble() >= 3.0, "attack f" + f);
+            }
+        }
+
+        // Release in front of her right side (Unity +X is her right), not across the chest.
+        var bolt = VesperaAttack.Spec.Tracks[0].Frames[VesperaAttack.ReleaseFrame];
+        Assert.True(bolt.X > 0.1f, "bolt spawns on her right side");
+
+        // Stretch: walk 0 edges over 2 cm, attack far better than f41ef77 (206 over 2 cm, max 7.4 cm).
+        using var st = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "stretch.json")));
+        Assert.Equal(0, st.RootElement.GetProperty("VESPERA_nocape_walk").GetProperty("grow_gt_2cm").GetInt32());
+        Assert.True(st.RootElement.GetProperty("VESPERA_nocape_attack").GetProperty("grow_gt_2cm").GetInt32() <= 20);
+        Assert.True(st.RootElement.GetProperty("VESPERA_nocape_attack").GetProperty("max_grow_cm").GetDouble() < 5.0);
     }
 
     [Fact]

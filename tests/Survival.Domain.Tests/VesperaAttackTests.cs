@@ -35,8 +35,8 @@ public sealed class VesperaAttackTests
         var pack = Path.Combine(root, "Assets", VesperaMotion.ThemePackDir);
         var design = Path.Combine(root, VesperaAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
         // ThemePack attack is the Design no-cape pack (blender_rig_nocape_20261009); attack_20261007 keeps the original.
-        Assert.Equal("6af075b085a879ff135b87424c377279", VesperaAttack.FileMd5);
-        Assert.Equal("6af075b085a879ff135b87424c377279", Md5(Path.Combine(pack, VesperaAttack.FileName)));
+        Assert.Equal("7435a2059aed197590f7e33d93590453", VesperaAttack.FileMd5);
+        Assert.Equal("7435a2059aed197590f7e33d93590453", Md5(Path.Combine(pack, VesperaAttack.FileName)));
         Assert.Equal("082b741eae52d9144a612566380766bc", VesperaAttack.DesignFileMd5);
         Assert.Equal("082b741eae52d9144a612566380766bc", Md5(Path.Combine(design, VesperaAttack.FileName)));
 
@@ -68,8 +68,8 @@ public sealed class VesperaAttackTests
         }
 
         // Rest/walk are now the Design no-cape pack (blender_rig_nocape_20261009).
-        Assert.Equal("e971308c85fd2e5548645ac41b815bf6", Md5(Path.Combine(pack, "VESPERA_blenderig.fbx")));
-        Assert.Equal("7183a0a06ba29bc7bf8af60127252f39", Md5(Path.Combine(pack, "VESPERA_blenderig_walk.fbx")));
+        Assert.Equal("d46729fb1f36700957dd1ee0f08cb55f", Md5(Path.Combine(pack, "VESPERA_blenderig.fbx")));
+        Assert.Equal("c15ae1b2988aa8806fa9f6760a75b4a4", Md5(Path.Combine(pack, "VESPERA_blenderig_walk.fbx")));
     }
 
     [Fact]

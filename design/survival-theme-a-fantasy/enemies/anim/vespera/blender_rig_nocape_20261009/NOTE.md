@@ -1,6 +1,56 @@
 # VESPERA: no cape (2026-10-09), rebuilt on Derek's rig edit (2026-10-10)
 
-## 2026-10-10 re-weight on Derek's rig - current state of this folder
+## 2026-10-10 right hand freed + Shadow Bolt goes around her - current state of this folder
+Derek on f41ef77: "there is still something attached to her right hand, maybe a piece of clothing. for the attack her hand
+comes through her body, it should go around." Derek's 16 bones are byte-identical to 265ec84 (heads, tails, rolls, parents,
+connect flags compared at full float precision). Blend saved in Blender 5.2.2, walk active, Object Mode. Scripts and reports:
+`work/hand_20261010/` (run.sh lists the chain; paths are the build box's).
+
+**What was attached to the hand.** In the source mesh the right forearm/hand surface is fused to the clothing next to it:
+the fingers and palm to skirt flaps and the hip (35 joining edges, z 0.90-0.97), the wrist/forearm to the belt/waist
+(18 edges, z 1.03-1.06), and the inner upper arm to the side of the chest by the armpit (230 edges, z 1.34-1.46). In
+f41ef77, 767 skirt/belt/hip vertices followed the right forearm/hand (>25% weight; 100 skirt/hip vertices >50%), so
+pieces of skirt travelled with the hand, and 40 hand/forearm vertices were partly on the torso.
+
+**How it was separated (cut_label.py, cut_fill.py).** A minimum cut over the surface between the arm core (hand, fingers,
+thumb, forearm, elbow) and the clothing around it found the shortest boundary along the contact; coarse skirt shards
+sitting against the fingers were forced onto the clothing side. The 350 faces crossing that boundary (281 surface + 69
+lining) were deleted, so the arm piece and the clothing no longer share any face or vertex (0 duplicate surface verts).
+Weights: the arm piece carries right-arm bones only (forearm/hand only below the elbow band; max non-arm weight 0.0); the
+skirt, belt and hip pieces near the hand carry torso/thigh bones only (max right-arm weight 0.0). Max 4 per vertex, 0 unweighted.
+
+**Filled holes (flag for Design to paint).** All filled with real triangles that take the UVs (paint) of the surrounding
+surface; flat shaded. Hand side: a 12-edge hole on the forearm (z 1.05), a 14-edge gap at the fingertips/palm (z 0.94),
+and four holes on the inner upper arm by the armpit (z 1.41-1.43). Body side: an 18-edge hole on the hip/skirt where the
+fingers were fused (z 0.935), and four on the side of the chest by the armpit (z 1.41-1.44). The hand and lower forearm are
+closed: 0 open edges (the only open edges there are the lining-patch borders that existed before). Seven short open edges
+remain on the inner upper arm right under the armpit (z 1.37-1.44, hidden by the arm in every pose we render) - flag for Design.
+
+**Attack path (anim_rw.py).** The right hand now winds back OUT to her right side (f3-f9, hand about 40 cm out from the
+shoulder at waist height), sweeps forward in an arc outside her hip, waist and chest (f9-f13), releases in front of her right
+shoulder at f13 (bolt spawn Unity 0.218, 1.409, 0.980 - her right side, chest height; was 0.040 across the chest), follows
+through to f20 and comes back along the outside to rest by f30. Wrist bend peaks at 21.7 deg; the upper arm
+lifts ~64 deg out to the side at the wind-up and ~79 deg forward at the release (a normal forward throw). Per-frame triangle test (clear.py, hand + forearm vs every non-arm, non-hair body triangle): 0 overlaps f1-f29;
+hand + lower forearm clearance 1.1 cm at f1 (just lifting off the hip), >=3.4 cm f2-f29, 15-23 cm around the release; the
+elbow passes 0.3-2 cm from the side of the chest during the wind-up. f0/f30 are the bind pose, where the hand still rests
+against the skirt. The arm does pass through a few strands of her long hair hanging at her right side during the wind-up
+(f4-f10; hair is skinned, it cannot move aside). Bolt frames in VesperaAttack re-keyed from the new spawn.
+
+**Walk.** Arm swing back to 16 deg (from 12) with the f41ef77 elbow pump restored, and the upper arm held at her bind-pose
+abduction (20 deg, easing to 14 deg on the back swing) so the freed hand passes outside the flared skirt instead of through it:
+hand + lower forearm stay >=2.0 cm from the body on every frame. Legs unchanged (knee bend 20-60 deg, stride ~0.25 m, 12 cm stance).
+
+**Stretch check** (204,125 edges incl. lining twins, growth vs bind over every frame, `stretch.json`, `where.json`):
+| clip | grew >1 cm | >2 cm | >5 cm | max growth | stretched >25% and >5 mm |
+|---|---|---|---|---|---|
+| rest | 0 | 0 | 0 | 0 cm | 0 |
+| walk (16 deg swing) | 63 | **0** | 0 | 1.7 cm | 671 |
+| attack | 85 | **7** | 0 | 3.2 cm | 659 |
+(f41ef77: walk 0 >2 cm / max 2.0 cm at 12 deg; attack 206 >2 cm / max 7.4 cm.) The 7 attack edges are on the right shoulder top at the release.
+
+---
+
+## 2026-10-10 (f41ef77) re-weight on Derek's rig (superseded by the section above)
 Derek: "just reanimate using the new rig." His 16-bone rig (265ec84) is kept exactly: no bones added back, none moved,
 same names/parents/rolls. What changed is the skin: weights re-solved on his joints, the 507fb9a arm seams re-welded,
 and rest / walk / attack rebuilt. Blend saved in Blender 5.2.2, walk active, Object Mode. Scripts and reports:
