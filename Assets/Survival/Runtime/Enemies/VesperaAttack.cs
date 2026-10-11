@@ -13,8 +13,8 @@ namespace Survival.Domain.Enemies
     public static class VesperaAttack
     {
         public const string FileName = "VESPERA_blenderig_attack.fbx";
-        /// <summary>ThemePack attack FBX: Design blender_rig_nocape_20261009 VESPERA_nocape_attack.fbx (no cape, 22 bones, re-rigged).</summary>
-        public const string FileMd5 = "c173a3c4c452356c7856ba020fcdd143";
+        /// <summary>ThemePack attack FBX: Design blender_rig_nocape_20261009 VESPERA_nocape_attack.fbx (no cape, Derek's 16-bone rig, re-weighted 2026-10-10).</summary>
+        public const string FileMd5 = "6af075b085a879ff135b87424c377279";
         /// <summary>Original attack FBX in VesperaAttack.DesignDir (attack_20261007), unchanged.</summary>
         public const string DesignFileMd5 = "082b741eae52d9144a612566380766bc";
         public const string DesignDir = "design/survival-theme-a-fantasy/enemies/anim/vespera/attack_20261007";

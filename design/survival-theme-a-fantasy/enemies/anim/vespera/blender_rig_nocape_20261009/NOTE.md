@@ -1,6 +1,52 @@
 # VESPERA: no cape (2026-10-09), rebuilt on Derek's rig edit (2026-10-10)
 
-## 2026-10-10: Derek's rig (265ec84) - current state of this folder
+## 2026-10-10 re-weight on Derek's rig - current state of this folder
+Derek: "just reanimate using the new rig." His 16-bone rig (265ec84) is kept exactly: no bones added back, none moved,
+same names/parents/rolls. What changed is the skin: weights re-solved on his joints, the 507fb9a arm seams re-welded,
+and rest / walk / attack rebuilt. Blend saved in Blender 5.2.2, walk active, Object Mode. Scripts and reports:
+`work/reweight_20261010/` (run.sh runs the whole chain; paths are the build box's).
+
+**Weights (b_solve.py).** Solved as a smooth (Laplace / "heat") blend over the welded surface, seeded only where a
+vertex clearly belongs to one of Derek's bones; the joint bands (his knees, ankles, elbows, wrists, the waist/pelvis
+band, the shoulder tops) and the re-welded contact areas are left free so the solve blends them smoothly. Then: limb
+weights fade out with distance from their own chain, a vertex never mixes left- and right-arm weights, head/neck stay
+on the head, neck and the scalp end of the hair, max 4 per vertex (truncate + relax, so no popping), normalised. The six
+deleted bones' vertex groups are gone; only his 16 groups remain.
+Where the orphaned weights went (average new weights of the verts that were mostly on each deleted bone; `orphan_moved.json`):
+- Hips (2,082 verts, waist/pelvis z 0.78-1.06): Spine1 56%, LeftUpLeg 37%, RightUpLeg 4% (the pelvis band blends from the torso root at the top into the thighs at the bottom).
+- Spine (3,937 verts, waist z 1.02-1.18): Spine1 82%, upper thighs 9%, Spine2 5%, right hand 4% (where the hand rests on the waist).
+- LeftShoulder (618 armour/skin verts, z 1.37-1.55): LeftArm 51%, Spine2 41%, Head 6%. Its 258 hair verts: Spine2 53%, LeftArm 25%, Head 19%.
+- RightShoulder (1,413 armour/skin verts, z 1.38-1.56): RightArm 41%, chest (Spine2 + Spine1) 35%, Head 19% (long hair lying over this shoulder that the hair detector did not flag). Its 1,358 hair verts: RightArm 33%, Head 27%, chest 39%.
+- LeftToeBase / RightToeBase (105 / 90 verts): 100% LeftFoot / RightFoot.
+- The 2,651 verts that were left on deleted bones only (did not move at all in 3d12122) now follow Spine1 1,887, LeftUpLeg 505, Spine2 108, RightArm 71, others 80.
+- Result: 0 unweighted, max 4 influences (1: 23,016; 2: 19,743; 3: 14,884; 4: 7,069 original-surface verts). Bends happen at Derek's knees, hips (waist-height UpLeg heads) and shoulders.
+
+**Seams.** The 525 coincident vertex pairs left by the 507fb9a contact-edge split (forearm / upper arm / hand against the
+chest, waist and hip; 933 verts) were re-welded (Blender merge-by-distance limited to those, 483 verts merged; 69,202 -> 68,719
+verts, 135,003 -> 135,002 faces). 0 coincident duplicate surface verts remain, so no gap can open on the arm. The 4,007 flipped
+lining-twin verts (back-face shell from 507fb9a) are not welded; they copy the weights of the surface they line. Sleeves
+that are separate geometry in the source stay separate (only the split pairs were welded).
+
+**Animation.** Same intent as 507fb9a / 3d12122, keyed on his 16 bones only (deleted bones are virtual pivots). Walk: arm swing
+16 -> 12 deg with less elbow pump (the right hand is welded to the hip, so a bigger swing stretches the hip skin); legs unchanged.
+Attack: unchanged (Shadow Bolt: wind-up f9, release f13, follow-through f20, rest f30), calibration and bolt spawn unchanged.
+Gait on his raised joints (`gait_new.json`): knee bend 20-60 deg (stance ~30-35, swing peak ~58-60; his bind knee is ~14 deg),
+each foot travels ~0.25 m per step on the treadmill, ankles 12 cm apart, feet within 12 deg of forward, pelvis root bob 1.074-1.102 m.
+Same leg motion as 3d12122; his waist-height hip pivots do not change stride or knee timing.
+
+**Stretch check** (204,257 edges incl. lining twins; growth vs bind over every frame, `stretch.json`, `where.json`):
+| clip | grew >1 cm | >2 cm | >5 cm | max growth | stretched >25% and >5 mm |
+|---|---|---|---|---|---|
+| rest | 0 | 0 | 0 | 0 cm | 0 |
+| walk | 92 | **0** | 0 | 2.0 cm | 835 |
+| attack | 1,023 | 206 | 7 | 7.4 cm | 3,128 |
+(3d12122: walk >2 cm 2,002 / max 27.7 cm; attack 3,081 / 44.6 cm.) The attack's remaining stretch is where the right hand is
+welded to the hip/skirt (fused in the source mesh): when the hand drives forward ~0.5 m that web has to stretch; also some
+right shoulder-top edges at the release.
+
+---
+
+## 2026-10-10 (3d12122): animations on Derek's rig, weights untouched (superseded by the section above)
 Derek reviewed 507fb9a in Unity ("distorted with her legs, big gap on her arm from pieces not moving"), edited the
 rig himself in Blender 5.2 and committed `VESPERA_nocape.blend` (265ec84). Rest / walk / attack were rebuilt on his
 rig; **his bones, weights and mesh are byte-for-byte unchanged** (verified by dump). Blend saved in Blender 5.2.2,
@@ -67,7 +113,7 @@ ThemePack copies keep their names, metas and GUIDs: `VESPERA_blenderig.fbx` = `V
 
 ## Files
 - `VESPERA_nocape.blend`, `VESPERA_nocape.fbx`, `VESPERA_nocape_walk.fbx`, `VESPERA_nocape_attack.fbx`
-- `VESPERA_nocape_contact.jpg` (now: 507fb9a vs Derek rig rebuild, incl. leg and arm close-ups; was: old cloth split vs new no cape; rest, walk f0/8/15/23, attack f9/13/20; front, three-quarter, rear battle camera)
+- `VESPERA_nocape_contact.jpg` (now: 3d12122 vs re-weight; rest, walk f0/8/15/23, attack f9/13/20; front, three-quarter, rear battle cam, waist/shoulder/arm close-ups; before that: 507fb9a vs Derek rig rebuild; was: old cloth split vs new no cape; rest, walk f0/8/15/23, attack f9/13/20; front, three-quarter, rear battle camera)
 - `work/`: build scripts (prep_mesh, seg1, cut1, rig_build, anim_build, finalize, stretch, qc, measure, r_sheet) and reports (prep, rig, anim, finalize, qc_fbx, stretch, walk_measure, joints)
 
 HOLD: Derek Game-view before any merge.

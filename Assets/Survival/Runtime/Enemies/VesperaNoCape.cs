@@ -5,8 +5,9 @@ namespace Survival.Domain.Enemies
     /// the cape/cloak and the cloth split's 28 cloth bones are gone, the body is re-rigged on 22 mixamorig bones with
     /// clean weights (max 4 per vertex), and rest/walk/attack are re-authored on that rig. No runtime spring bones or leg
     /// colliders. ThemePack file names are kept (metas and GUIDs unchanged). One source blend carries rig + all three actions.
-    /// 2026-10-10: the blend is Derek's own rig edit (265ec84, Blender 5.2); animations were rebuilt on it without moving
-    /// his bones or changing weights.
+    /// 2026-10-10: the rig is Derek's own edit (265ec84, Blender 5.2, 16 bones), kept exactly. Skin weights were then re-solved
+    /// on his joints (orphaned Hips/Spine/Shoulder/ToeBase weights moved to the bones he kept), the 507fb9a arm split seams
+    /// were re-welded, and rest/walk/attack were rebuilt on his rig.
     /// HOLD merge until Derek Game-view PASS.
     /// </summary>
     public static class VesperaNoCape
@@ -16,13 +17,13 @@ namespace Survival.Domain.Enemies
         public const string WalkFileName = "VESPERA_nocape_walk.fbx";
         public const string AttackFileName = "VESPERA_nocape_attack.fbx";
         public const string BlendFileName = "VESPERA_nocape.blend";
-        public const string RestMd5 = "8168515ceaa093e5f65575c58dc3db26";
-        public const string WalkMd5 = "ea64616729e27be0c176389bf1118b69";
-        public const string AttackMd5 = "c173a3c4c452356c7856ba020fcdd143";
-        public const string BlendMd5 = "06e10e9a89b87e8ce1fb6b9c6a791a82";
+        public const string RestMd5 = "e971308c85fd2e5548645ac41b815bf6";
+        public const string WalkMd5 = "7183a0a06ba29bc7bf8af60127252f39";
+        public const string AttackMd5 = "6af075b085a879ff135b87424c377279";
+        public const string BlendMd5 = "470ea86ffcf4417468baca04f0610337";
         public const int RigBoneCount = 16;
 
-        /// <summary>Bones Derek deleted in 265ec84 (their vertex groups are still on the mesh, so those weights follow no bone).</summary>
+        /// <summary>Bones Derek deleted in 265ec84. Their vertex groups are gone from the mesh; those weights now live on the kept bones.</summary>
         public static readonly string[] DeletedBones =
         {
             "mixamorig:Hips", "mixamorig:Spine", "mixamorig:LeftShoulder", "mixamorig:RightShoulder", "mixamorig:LeftToeBase", "mixamorig:RightToeBase"

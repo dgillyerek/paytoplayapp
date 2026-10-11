@@ -52,7 +52,7 @@ public sealed class VesperaNoCapeTests
     }
 
     [Fact]
-    public void Vespera_uses_derek_16_bone_rig_as_generic_and_reports_orphan_weights()
+    public void Vespera_uses_derek_16_bone_rig_as_generic_with_reweighted_skin_and_welded_seams()
     {
         Assert.Equal(16, VesperaNoCape.RigBoneCount);
         Assert.Equal(VesperaNoCape.RigBoneCount, VesperaMotion.BoneNames.Length);
@@ -70,7 +70,7 @@ public sealed class VesperaNoCapeTests
             Assert.Contains(bone, VesperaMotion.BoneNames);
         }
 
-        var work = Path.Combine(FindRepoRoot(), VesperaNoCape.DesignDir.Replace('/', Path.DirectorySeparatorChar), "work", "derek_rig_20261010");
+        var work = Path.Combine(FindRepoRoot(), VesperaNoCape.DesignDir.Replace('/', Path.DirectorySeparatorChar), "work", "reweight_20261010");
         using var ex = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "export.json")));
         var exported = ex.RootElement.GetProperty("bones").EnumerateArray().Select(b => b.GetString()).ToArray();
         Assert.Equal(VesperaMotion.BoneNames, exported);
@@ -87,8 +87,24 @@ public sealed class VesperaNoCapeTests
 
         using var st = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "stretch.json")));
         Assert.Equal(0, st.RootElement.GetProperty("VESPERA_nocape_rest").GetProperty("stretch_gt_1.25x").GetInt32());
-        Assert.True(File.Exists(Path.Combine(work, "tear_where.json")));
-        Assert.True(File.Exists(Path.Combine(work, "seam_gap.json")));
+        Assert.Equal(0, st.RootElement.GetProperty("VESPERA_nocape_walk").GetProperty("grow_gt_2cm").GetInt32());
+        Assert.True(st.RootElement.GetProperty("VESPERA_nocape_walk").GetProperty("max_grow_cm").GetDouble() <= 2.0);
+
+        // 507fb9a arm split seams re-welded: no coincident duplicate surface vertices left (flipped lining twins excluded).
+        using var weld = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "weld.json")));
+        Assert.True(weld.RootElement.GetProperty("seam_pairs_before").GetInt32() > 500);
+        Assert.Equal(0, weld.RootElement.GetProperty("coincident_left").GetInt32());
+
+        // Weights live only on Derek's 16 bones (no deleted-bone groups), <=4 per vertex, none unweighted.
+        using var w = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "weights.json")));
+        Assert.Equal(0, w.RootElement.GetProperty("unweighted").GetInt32());
+        Assert.True(w.RootElement.GetProperty("max_influences").GetInt32() <= 4);
+        var dominant = w.RootElement.GetProperty("dominant").EnumerateObject().Select(p => "mixamorig:" + p.Name).ToArray();
+        Assert.Equal(VesperaMotion.BoneNames, dominant);
+        foreach (var kind in new[] { "rest", "walk", "attack" })
+        {
+            Assert.Equal(0, qc.RootElement.GetProperty(kind).GetProperty("unweighted").GetInt32());
+        }
     }
 
     [Fact]
