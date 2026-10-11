@@ -16,6 +16,7 @@ namespace Survival.Unity
         public string Pose => _player != null ? _player.Pose : NightfangMotion.RestPoseName;
         public float ClipLength => _player != null ? _player.ClipLength : 0f;
         public Bounds VisibleBounds => _player != null ? _player.VisibleBounds : new Bounds(Vector3.zero, Vector3.one);
+        public BlenderRigAttackDriver? AttackDriver => _player?.AttackDriver;
 
         public void Build()
         {

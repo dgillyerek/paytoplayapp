@@ -99,8 +99,9 @@ namespace Survival.Domain.Roster
     }
 
     /// <summary>
-    /// Locked battle demo roster: every character on main whose animations are locked with a
-    /// Derek Game-view PASS and that has both a walk and an attack clip.
+    /// Locked battle demo roster: characters on main whose animations are locked with a
+    /// Derek Game-view PASS and that have both a walk and an attack clip. Ashwyrm qualifies
+    /// since #56 but is held out until Derek picks its lane (see <see cref="LeftOut"/>).
     /// Heroes come from Runtime/Heroes, villains from Runtime/Enemies (Theme A: heroes of the
     /// kingdom against the darkness). Pure presentation, no combat rules.
     /// </summary>
@@ -193,11 +194,11 @@ namespace Survival.Domain.Roster
         };
 
         /// <summary>
-        /// Locked on main but left out of the battle, with the reason. Unmerged PRs are not listed.
+        /// On main but not in the battle, with the reason. Unmerged PRs are not listed.
         /// </summary>
         public static IReadOnlyList<KeyValuePair<string, string>> LeftOut { get; } = new[]
         {
-            new KeyValuePair<string, string>("Ashwyrm", "main has rest, wing flap and walk only. Its attack is still on unmerged PR #43."),
+            new KeyValuePair<string, string>("Ashwyrm", "merged with walk and attack (#56), not placed yet: waiting on Derek's lane decision."),
             new KeyValuePair<string, string>("Blightroot", "creature pack is still HOLD, no Game-view PASS."),
             new KeyValuePair<string, string>("Sir Aldric", "walk and attack are not Design or Game-view PASS yet.")
         };

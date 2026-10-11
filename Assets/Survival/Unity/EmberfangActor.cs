@@ -39,6 +39,7 @@ namespace Survival.Unity
         public string Pose => _pose;
         public float ClipLength => _length;
         public Bounds VisibleBounds { get; private set; }
+        public BlenderRigAttackDriver? AttackDriver => _attack;
 
         public void Build()
         {

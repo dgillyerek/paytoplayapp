@@ -48,14 +48,29 @@ public sealed class LockedBattleRosterTests
             Assert.True(f.AttackCyclesItself);
         }
 
-        var unmerged = new[] { "Ashwyrm", "Lyra", "Rowan", "Bonequill", "Vespera", "Oakenshield", "Blightroot", "Sir Aldric", "SirAldric" };
-        foreach (var name in unmerged)
+        var notInBattle = new[] { "Ashwyrm", "Lyra", "Rowan", "Bonequill", "Vespera", "Oakenshield", "Blightroot", "Sir Aldric", "SirAldric" };
+        foreach (var name in notInBattle)
         {
             Assert.DoesNotContain(LockedBattleRoster.All, f => string.Equals(f.Name, name, StringComparison.Ordinal));
         }
 
         Assert.Equal(new[] { "Ashwyrm", "Blightroot", "Sir Aldric" }, LockedBattleRoster.LeftOut.Select(p => p.Key).ToArray());
-        Assert.DoesNotContain(AshwyrmMotion.Spec.PoseNames, p => p == BlenderRigAttackSpec.PoseName);
+    }
+
+    [Fact]
+    public void Ashwyrm_is_merged_with_walk_and_attack_but_not_placed_until_Derek_picks_its_lane()
+    {
+        // #56 merged Ashwyrm's attack. It qualifies now, it just has no lane yet.
+        Assert.Contains(AshwyrmMotion.WalkPoseName, AshwyrmMotion.Spec.PoseNames);
+        Assert.Contains(BlenderRigAttackSpec.PoseName, AshwyrmMotion.Spec.PoseNames);
+        Assert.Equal(BlenderRigAttackSpec.PoseName, AshwyrmMotion.AttackPoseName);
+
+        var reason = LockedBattleRoster.LeftOut.Single(p => p.Key == "Ashwyrm").Value;
+        Assert.Contains("merged", reason, StringComparison.Ordinal);
+        Assert.Contains("attack", reason, StringComparison.Ordinal);
+        Assert.Contains("lane", reason, StringComparison.Ordinal);
+        Assert.DoesNotContain("unmerged", reason, StringComparison.Ordinal);
+        Assert.DoesNotContain(LockedBattleRoster.All, f => f.Name == "Ashwyrm");
     }
 
     [Fact]

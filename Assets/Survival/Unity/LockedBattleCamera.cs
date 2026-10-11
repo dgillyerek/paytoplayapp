@@ -30,6 +30,12 @@ namespace Survival.Unity
         private int _mode = Rear;
         private Vector3 _eye;
         private Quaternion _rotation = Quaternion.identity;
+        private Vector3 _shakeOffset;
+        private float _shakeMetres;
+        private float _shakeAge = 1f;
+
+        /// <summary>How long one hit shake lasts.</summary>
+        public const float ShakeSeconds = 0.18f;
 
         public int Mode => _mode;
 
@@ -79,7 +85,37 @@ namespace Survival.Unity
             }
         }
 
-        private void LateUpdate() => Apply();
+        /// <summary>Small screen-plane shake for a big hit. Overlapping hits keep the stronger one.</summary>
+        public void Shake(float metres)
+        {
+            if (metres <= 0f)
+            {
+                return;
+            }
+
+            var left = _shakeAge < ShakeSeconds ? _shakeMetres * (1f - (_shakeAge / ShakeSeconds)) : 0f;
+            _shakeMetres = Mathf.Max(metres, left);
+            _shakeAge = 0f;
+        }
+
+        private void LateUpdate()
+        {
+            _shakeAge += Time.unscaledDeltaTime;
+            if (_shakeAge < ShakeSeconds && _shakeMetres > 0f)
+            {
+                var k = 1f - (_shakeAge / ShakeSeconds);
+                var t = Time.unscaledTime * 55f;
+                var x = (Mathf.PerlinNoise(t, 0.37f) * 2f) - 1f;
+                var y = (Mathf.PerlinNoise(0.71f, t) * 2f) - 1f;
+                _shakeOffset = ((_rotation * Vector3.right * x) + (_rotation * Vector3.up * y)) * (_shakeMetres * k * k);
+            }
+            else
+            {
+                _shakeOffset = Vector3.zero;
+            }
+
+            Apply();
+        }
 
         private void Solve()
         {
@@ -169,7 +205,7 @@ namespace Survival.Unity
             cam.aspect = PortraitGameView.Width / PortraitGameView.Height;
             cam.backgroundColor = new Color(0.07f, 0.09f, 0.06f, 1f);
             cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.transform.SetPositionAndRotation(_eye, _rotation);
+            cam.transform.SetPositionAndRotation(_eye + _shakeOffset, _rotation);
         }
     }
 }

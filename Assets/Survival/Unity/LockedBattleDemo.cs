@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using Survival.Domain.Enemies;
+using Survival.Domain.Heroes;
 using Survival.Domain.Roster;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,8 +12,11 @@ namespace Survival.Unity
     /// attack: heroes start at the bottom (−Z) facing up, villains at the top (+Z) facing down.
     /// Each one holds rest, walks at its opponent on its own locked walk clip, stops at its
     /// attack range, and plays its own locked attack (with its existing attack effects) with a
-    /// short rest between attacks. Pure presentation: the existing actors play the locked
-    /// FBXs as-is. Nobody takes damage. HOLD merge until Derek Game-view PASS.
+    /// short rest between attacks. Flying attacks stop on the target's body box and melee
+    /// attacks land on their contact frame. Each landing spawns the attacker's impact burst,
+    /// and the defender flinches (a small knock-back on its actor root, skipped mid-attack) and
+    /// flashes. Pure presentation: the existing actors play the locked FBXs as-is, and the
+    /// flinch moves only the actor root. Nobody takes damage. HOLD merge until Derek Game-view PASS.
     /// </summary>
     [DefaultExecutionOrder(500)]
     public sealed class LockedBattleDemo : MonoBehaviour
@@ -50,10 +55,12 @@ namespace Survival.Unity
                     continue;
                 }
 
-                f.Host.SetPositionAndRotation(f.StartPosition, f.StartRotation);
+                f.Slot.SetPositionAndRotation(f.StartPosition, f.StartRotation);
                 f.Play(f.Data.RestPoseName);
                 f.Phase = Phase.Hold;
                 f.PhaseTime = 0f;
+                f.PreviousPhaseTime = 0f;
+                ClearHit(f);
                 f.AttackClipOn = false;
                 f.PreviousForward = 0f;
                 f.RestForward = 0f;
@@ -77,6 +84,7 @@ namespace Survival.Unity
                     continue;
                 }
 
+                f.PreviousPhaseTime = f.PhaseTime;
                 f.PhaseTime += dt;
                 switch (f.Phase)
                 {
@@ -94,6 +102,14 @@ namespace Survival.Unity
                     case Phase.Attack:
                         TickAttack(f);
                         break;
+                }
+            }
+
+            foreach (var f in _fighters)
+            {
+                if (f.Built)
+                {
+                    TickHitReaction(f, dt);
                 }
             }
 
@@ -126,7 +142,7 @@ namespace Survival.Unity
                 var snap = LockedBattleRoster.LoopSnapBack(f.PreviousForward, forward, f.Data.WalkRootStrideMetres);
                 if (snap > 0f)
                 {
-                    f.Host.position += Flat(f.Host.forward) * snap;
+                    f.Slot.position += Flat(f.Slot.forward) * snap;
                 }
 
                 f.PreviousForward = forward;
@@ -134,7 +150,7 @@ namespace Survival.Unity
             else if (distance > 1e-4f)
             {
                 var step = LockedBattleRoster.ApproachStep(distance, f.Data.AttackRangeMetres, f.Data.WalkSpeedMetresPerSecond, dt);
-                f.Host.position += (to / distance) * step;
+                f.Slot.position += (to / distance) * step;
             }
 
             if (distance <= f.Data.AttackRangeMetres)
@@ -148,11 +164,12 @@ namespace Survival.Unity
             if (f.Data.WalkCarriesRoot)
             {
                 // Keep the body where the walk left it when the clip stops carrying it.
-                f.Host.position += Flat(f.Host.forward) * (StrideForward(f) - f.RestForward);
+                f.Slot.position += Flat(f.Slot.forward) * (StrideForward(f) - f.RestForward);
             }
 
             f.Phase = Phase.Attack;
             f.PhaseTime = 0f;
+            f.PreviousPhaseTime = 0f;
             f.AttackClipOn = true;
             f.Play(f.Data.AttackPoseName);
             MatchEffectWidths(f);
@@ -166,6 +183,12 @@ namespace Survival.Unity
             if (to.sqrMagnitude > 1e-8f)
             {
                 Face(f, to);
+            }
+
+            if (!f.Profile.Projectile
+                && LockedBattleHits.MeleeHitCrossed(f.Data, f.Profile, f.PreviousPhaseTime, f.PhaseTime))
+            {
+                LandHit(f, MeleeContact(f));
             }
 
             if (f.Data.AttackCyclesItself)
@@ -186,7 +209,7 @@ namespace Survival.Unity
         private static void Face(Fighter f, Vector3 flatDirection)
         {
             var want = Quaternion.LookRotation(flatDirection.normalized, Vector3.up);
-            f.Host.rotation = Quaternion.RotateTowards(f.Host.rotation, want, 240f * Time.unscaledDeltaTime);
+            f.Slot.rotation = Quaternion.RotateTowards(f.Slot.rotation, want, 240f * Time.unscaledDeltaTime);
         }
 
         private static Vector3 Flat(Vector3 v)
@@ -203,18 +226,183 @@ namespace Survival.Unity
                 return 0f;
             }
 
-            return f.Host.InverseTransformPoint(f.StrideBone.position).z * f.Scale;
+            // The slot is unscaled, so its local units are metres.
+            return f.Slot.InverseTransformPoint(f.StrideBone.position).z;
+        }
+
+        /// <summary>How far the walk clip itself has carried the body ahead of the slot right now.</summary>
+        private static float WalkOffset(Fighter f)
+        {
+            return f.StrideBone != null && f.Phase == Phase.Walk ? StrideForward(f) - f.RestForward : 0f;
         }
 
         private static Vector3 VisualPosition(Fighter f)
         {
-            var p = f.Host.position;
-            if (f.StrideBone != null && f.Phase == Phase.Walk)
+            return f.Slot.position + (Flat(f.Slot.forward) * WalkOffset(f));
+        }
+
+        /// <summary>World point into the defender's body-box frame (slot metres, walk travel removed).</summary>
+        private static Vector3 ToBox(Fighter defender, Vector3 world)
+        {
+            var p = defender.Slot.InverseTransformPoint(world);
+            p.z -= WalkOffset(defender);
+            return p;
+        }
+
+        private static Vector3 FromBox(Fighter defender, Vector3 local)
+        {
+            local.z += WalkOffset(defender);
+            return defender.Slot.TransformPoint(local);
+        }
+
+        /// <summary>
+        /// Blocker for flying tracks: the segment the projectile's leading point covered this frame,
+        /// tested against the lane target's body box. Stops it at the entry point.
+        /// </summary>
+        private static bool ProjectileHit(Fighter attacker, Vector3 from, Vector3 to, out Vector3 contact)
+        {
+            contact = to;
+            var target = attacker.Target;
+            if (target == null || !target.Built || attacker.Phase != Phase.Attack)
             {
-                p += Flat(f.Host.forward) * (StrideForward(f) - f.RestForward);
+                return false;
             }
 
-            return p;
+            var a = ToBox(target, from);
+            var b = ToBox(target, to);
+            if (!target.Profile.Box.SegmentEntry(a.x, a.y, a.z, b.x, b.y, b.z, out var t))
+            {
+                return false;
+            }
+
+            contact = FromBox(target, Vector3.Lerp(a, b, t));
+            return true;
+        }
+
+        /// <summary>
+        /// Melee contact point: where the line from the attacker to its striking bone enters the
+        /// target's body box, or the closest box point when the bone stops just short of it.
+        /// </summary>
+        private static Vector3 MeleeContact(Fighter attacker)
+        {
+            var target = attacker.Target!;
+            var bone = attacker.StrikeBone != null ? attacker.StrikeBone.position : attacker.Slot.position + (Vector3.up * 0.5f);
+            var origin = attacker.Slot.position;
+            origin.y = bone.y;
+            var a = ToBox(target, origin);
+            var b = ToBox(target, bone);
+            var box = target.Profile.Box;
+            if (box.SegmentEntry(a.x, a.y, a.z, b.x, b.y, b.z, out var t))
+            {
+                return FromBox(target, Vector3.Lerp(a, b, t));
+            }
+
+            box.ClosestPoint(b.x, b.y, b.z, out var cx, out var cy, out var cz);
+            return FromBox(target, new Vector3(cx, cy, cz));
+        }
+
+        /// <summary>Spawns the attacker's impact burst at the contact and starts the defender's reaction.</summary>
+        private void LandHit(Fighter attacker, Vector3 contact)
+        {
+            var target = attacker.Target;
+            if (target == null || !target.Built)
+            {
+                return;
+            }
+
+            var travel = target.Slot.position - attacker.Slot.position;
+            travel.y = 0f;
+            LockedBattleImpact.Spawn(attacker.Profile.Impact, contact, travel, attacker.Core, attacker.Glow, attacker.Edge);
+            _camera?.Shake(attacker.Profile.ShakeMetres);
+            var away = target.Slot.InverseTransformDirection(travel);
+            away.y = 0f;
+            target.HitAway = away.sqrMagnitude > 1e-8f ? away.normalized : Vector3.back;
+            target.HitAge = 0f;
+            target.RecoilOn = LockedBattleHits.RecoilAllowed(target.Data, target.Phase == Phase.Attack, target.PhaseTime);
+        }
+
+        /// <summary>
+        /// Knock-back and lean on the actor root (never the rig bones or clips), plus the hit flash
+        /// as a brief HDR tint through a property block.
+        /// </summary>
+        private static void TickHitReaction(Fighter f, float dt)
+        {
+            f.HitAge += dt;
+            var w = f.RecoilOn ? LockedBattleHits.RecoilWeight(f.HitAge) : 0f;
+            if (w > 0f)
+            {
+                var lean = f.Profile.RecoilDegrees * w * Mathf.Deg2Rad;
+                f.Host.localPosition = f.BaseLocal + (f.HitAway * (f.Profile.RecoilMetres * w));
+                f.Host.localRotation = Quaternion.FromToRotation(Vector3.up, (Vector3.up + (f.HitAway * Mathf.Tan(lean))).normalized);
+            }
+            else if (f.Recoiling)
+            {
+                f.Host.localPosition = f.BaseLocal;
+                f.Host.localRotation = Quaternion.identity;
+            }
+
+            f.Recoiling = w > 0f;
+            var flash = LockedBattleHits.FlashWeight(f.HitAge);
+            if (flash > 0f)
+            {
+                var tint = new Color(f.Profile.FlashR, f.Profile.FlashG, f.Profile.FlashB, 1f);
+                var gain = Color.Lerp(Color.white, tint * 2.4f, flash);
+                foreach (var slot in f.FlashSlots)
+                {
+                    if (slot.Renderer == null)
+                    {
+                        continue;
+                    }
+
+                    var lit = slot.BaseColor * gain;
+                    lit.a = slot.BaseColor.a;
+                    f.Block.Clear();
+                    f.Block.SetColor(BaseColorId, lit);
+                    f.Block.SetColor(ColorId, lit);
+                    f.Block.SetColor(EmissionColorId, tint * (1.5f * flash));
+                    slot.Renderer.SetPropertyBlock(f.Block, slot.Index);
+                }
+
+                f.Flashing = true;
+            }
+            else if (f.Flashing)
+            {
+                ClearFlash(f);
+            }
+        }
+
+        /// <summary>Puts each material's own base colour back (emission override dropped).</summary>
+        private static void ClearFlash(Fighter f)
+        {
+            if (!f.Flashing)
+            {
+                return;
+            }
+
+            foreach (var slot in f.FlashSlots)
+            {
+                if (slot.Renderer == null)
+                {
+                    continue;
+                }
+
+                f.Block.Clear();
+                f.Block.SetColor(BaseColorId, slot.BaseColor);
+                f.Block.SetColor(ColorId, slot.BaseColor);
+                slot.Renderer.SetPropertyBlock(f.Block, slot.Index);
+            }
+
+            f.Flashing = false;
+        }
+
+        private static void ClearHit(Fighter f)
+        {
+            f.HitAge = 10f;
+            f.RecoilOn = false;
+            f.Recoiling = false;
+            f.Host.localPosition = f.BaseLocal;
+            f.Host.localRotation = Quaternion.identity;
+            ClearFlash(f);
         }
 
         /// <summary>
@@ -284,12 +472,20 @@ namespace Survival.Unity
 
         private Fighter Spawn(LockedBattleFighter data)
         {
+            // Slot carries the battle position and facing. The actor host under it carries the
+            // body scale and the hit flinch, so neither touches the rig bones or the clips.
+            var slot = new GameObject(data.Name + "Slot");
+            slot.transform.SetParent(transform, false);
+            slot.transform.localPosition = Vector3.zero;
+            slot.transform.localRotation = Quaternion.identity;
+            slot.transform.localScale = Vector3.one;
             var host = new GameObject(data.Name + "Actor");
-            host.transform.SetParent(transform, false);
+            host.transform.SetParent(slot.transform, false);
             host.transform.localPosition = Vector3.zero;
             host.transform.localRotation = Quaternion.identity;
             host.transform.localScale = Vector3.one;
-            var f = new Fighter(data, host.transform);
+            var f = new Fighter(data, slot.transform, host.transform, LockedBattleHits.ProfileOf(data.Name));
+            BlenderRigAttackDriver? driver = null;
             switch (data.Name)
             {
                 case "Emberfang":
@@ -297,6 +493,7 @@ namespace Survival.Unity
                     var actor = host.AddComponent<EmberfangActor>();
                     actor.Build();
                     f.Bind(actor.PlayPose, () => actor.Pose, actor.Built, actor.VisibleBounds);
+                    driver = actor.AttackDriver;
                     break;
                 }
 
@@ -305,6 +502,7 @@ namespace Survival.Unity
                     var actor = host.AddComponent<StormcrestActor>();
                     actor.Build();
                     f.Bind(actor.PlayPose, () => actor.Pose, actor.Built, actor.VisibleBounds);
+                    driver = actor.AttackDriver;
                     break;
                 }
 
@@ -321,6 +519,7 @@ namespace Survival.Unity
                     var actor = host.AddComponent<NightfangActor>();
                     actor.Build();
                     f.Bind(actor.PlayPose, () => actor.Pose, actor.Built, actor.VisibleBounds);
+                    driver = actor.AttackDriver;
                     break;
                 }
 
@@ -340,10 +539,60 @@ namespace Survival.Unity
             var height = bounds.size.y;
             f.Scale = height > 1e-4f ? data.DesignHeightMetres / height : 1f;
             host.transform.localScale = new Vector3(f.Scale, f.Scale, f.Scale);
+            f.BaseLocal = new Vector3(0f, -bounds.min.y * f.Scale, 0f);
+            host.transform.localPosition = f.BaseLocal;
             LockedBattleRoster.StartPoint(data, out var x, out var z);
-            f.StartPosition = new Vector3(x, -bounds.min.y * f.Scale, z);
+            f.StartPosition = new Vector3(x, 0f, z);
             f.StartRotation = Quaternion.Euler(0f, LockedBattleRoster.StartYawDegrees(data), 0f);
-            host.transform.SetPositionAndRotation(f.StartPosition, f.StartRotation);
+            slot.transform.SetPositionAndRotation(f.StartPosition, f.StartRotation);
+            var flashSlots = new List<FlashSlot>();
+            foreach (var r in host.GetComponentsInChildren<Renderer>(true))
+            {
+                if (!(r is SkinnedMeshRenderer) && !(r is MeshRenderer))
+                {
+                    continue;
+                }
+
+                var mats = r.sharedMaterials;
+                for (var i = 0; i < mats.Length; i++)
+                {
+                    var m = mats[i];
+                    var baseColor = Color.white;
+                    if (m != null && m.HasProperty(BaseColorId))
+                    {
+                        baseColor = m.GetColor(BaseColorId);
+                    }
+                    else if (m != null && m.HasProperty(ColorId))
+                    {
+                        baseColor = m.GetColor(ColorId);
+                    }
+
+                    flashSlots.Add(new FlashSlot(r, i, baseColor));
+                }
+            }
+
+            f.FlashSlots = flashSlots.ToArray();
+            ImpactColors(data.Name, out var core, out var glow, out var edge);
+            f.Core = core;
+            f.Glow = glow;
+            f.Edge = edge;
+            if (f.Profile.StrikeBone.Length > 0)
+            {
+                f.StrikeBone = FindBone(host.transform, f.Profile.StrikeBone);
+                if (f.StrikeBone == null)
+                {
+                    Debug.LogWarning("Locked battle: " + data.Name + " strike bone missing. " + f.Profile.StrikeBone);
+                }
+            }
+
+            if (driver != null && f.Profile.Projectile)
+            {
+                var captured = f;
+                bool Block(AttackTrack track, Vector3 from, Vector3 to, out Vector3 contact) =>
+                    ProjectileHit(captured, from, to, out contact);
+                driver.Blocker = Block;
+                driver.Impact = (track, contact) => LandHit(captured, contact);
+            }
             if (data.WalkCarriesRoot)
             {
                 f.StrideBone = FindBone(host.transform, data.StrideBone);
@@ -359,6 +608,66 @@ namespace Survival.Unity
                 " m. Walk '" + data.WalkPoseName + "', attack '" + data.AttackPoseName + "' at " +
                 data.AttackRangeMetres.ToString("0.0") + " m.");
             return f;
+        }
+
+        /// <summary>Impact colours: the looksheet colours of each attack's flying or slash track, Ironhowl warm steel sparks.</summary>
+        private static void ImpactColors(string name, out Color core, out Color glow, out Color edge)
+        {
+            BlenderRigAttackSpec? spec = null;
+            switch (name)
+            {
+                case "Emberfang":
+                    spec = EmberfangAttack.Spec;
+                    break;
+                case "Stormcrest":
+                    spec = StormcrestAttack.Spec;
+                    break;
+                case "Nightfang":
+                    spec = NightfangAttack.Spec;
+                    break;
+            }
+
+            core = new Color(1f, 0.95f, 0.80f, 1f);
+            glow = new Color(1f, 0.62f, 0.25f, 0.85f);
+            edge = new Color(0.55f, 0.30f, 0.12f, 0.5f);
+            if (spec == null)
+            {
+                return;
+            }
+
+            AttackTrack? pick = null;
+            foreach (var track in spec.Tracks)
+            {
+                if (track.Kind == AttackTrackKind.Projectile || track.Shape == AttackVfxShape.Slash)
+                {
+                    pick = track;
+                    break;
+                }
+            }
+
+            if (pick == null && spec.Tracks.Length > 0)
+            {
+                pick = spec.Tracks[0];
+            }
+
+            if (pick == null)
+            {
+                return;
+            }
+
+            core = Rgb(pick.CoreRgb, 1f, core);
+            glow = Rgb(pick.GlowRgb, 0.85f, glow);
+            edge = Rgb(pick.EdgeRgb, 0.5f, edge);
+        }
+
+        private static Color Rgb(float[] rgb, float alpha, Color fallback)
+        {
+            if (rgb == null || rgb.Length < 3)
+            {
+                return fallback;
+            }
+
+            return new Color(rgb[0], rgb[1], rgb[2], alpha);
         }
 
         private static Transform? FindBone(Transform root, string name)
@@ -571,19 +880,59 @@ namespace Survival.Unity
             }
         }
 
+        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        private static readonly int ColorId = Shader.PropertyToID("_Color");
+        private static readonly int EmissionColorId = Shader.PropertyToID("_EmissionColor");
+
+        /// <summary>One body material slot and its own base colour, for the hit flash.</summary>
+        private readonly struct FlashSlot
+        {
+            public FlashSlot(Renderer renderer, int index, Color baseColor)
+            {
+                Renderer = renderer;
+                Index = index;
+                BaseColor = baseColor;
+            }
+
+            public Renderer Renderer { get; }
+            public int Index { get; }
+            public Color BaseColor { get; }
+        }
+
         private sealed class Fighter
         {
             private System.Func<string, bool> _play = _ => false;
 
-            public Fighter(LockedBattleFighter data, Transform host)
+            public Fighter(LockedBattleFighter data, Transform slot, Transform host, LockedBattleHitProfile profile)
             {
                 Data = data;
+                Slot = slot;
                 Host = host;
+                Profile = profile;
                 StartRotation = Quaternion.identity;
             }
 
             public LockedBattleFighter Data { get; }
+            public LockedBattleHitProfile Profile { get; }
+
+            /// <summary>Battle position and facing. Unscaled, so local units are metres.</summary>
+            public Transform Slot { get; }
+
+            /// <summary>Actor root: body scale, plus the hit flinch offset on top of <see cref="BaseLocal"/>.</summary>
             public Transform Host { get; }
+            public Vector3 BaseLocal { get; set; }
+            public Transform? StrikeBone { get; set; }
+            public FlashSlot[] FlashSlots { get; set; } = System.Array.Empty<FlashSlot>();
+            public MaterialPropertyBlock Block { get; } = new MaterialPropertyBlock();
+            public Color Core { get; set; } = Color.white;
+            public Color Glow { get; set; } = Color.white;
+            public Color Edge { get; set; } = Color.white;
+            public float PreviousPhaseTime { get; set; }
+            public float HitAge { get; set; } = 10f;
+            public Vector3 HitAway { get; set; } = Vector3.back;
+            public bool RecoilOn { get; set; }
+            public bool Recoiling { get; set; }
+            public bool Flashing { get; set; }
             public bool Built { get; private set; }
             public Bounds LocalBounds { get; private set; }
             public System.Func<string> Pose { get; private set; } = () => "rest";
