@@ -139,3 +139,6 @@ Derek: the staff pushed through her body in the attack and the wrist bent unnatu
 
 ## 2026-10-09: attack re-authored as a two-handed side-on cast (attack only)
 Derek: the shoulder pulled out too much. The attack is now a two-handed cast: 52° hip turn on planted balls of the feet, left hand on the shaft f8–f20, body-driven thrust at f12, recovering to rest at f30. Right armpit p99 stretch went from 2.66 to 1.50, and the wrists are at most 23°. No staff penetration. Attack and bolt actions changed. Bones, the rest and walk actions, the staff offset, the rest and walk FBXs and both staff FBXs are unchanged. Saved in Object Mode with the walk active. Attack FBX 835b0502 → 2d6f799e. Details are in `../attack_20261008/NOTE.md`.
+
+## 2026-10-10: attack turned left with a low left-hand grip (attack only)
+Derek: turn left, left hand lower on the shaft, staff forward, legs straight. Hips 33°, chest 45°, left hand about 61 cm below the right hand on the shaft, crystal leading forward at f12. Only the attack and bolt actions changed. Bones, rest and walk actions, the staff offset, the rest and walk FBXs and both staff FBXs are unchanged. Attack FBX 2d6f799e → 64f42e00. Details are in `../attack_20261008/NOTE.md`.

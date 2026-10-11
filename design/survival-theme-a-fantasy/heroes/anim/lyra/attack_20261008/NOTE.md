@@ -64,3 +64,15 @@ Derek: re-author the attack as a natural two-handed cast. The body turns sideway
 - **FBX:** attack 835b0502 → 2d6f799e (Design + ThemePack). Rest e4898881, walk 7c5b1577 and both staff FBXs are byte-identical. The bones, rest and walk actions are unchanged in the blend.
 - **Not refreshed:** `LYRA_tighten_attack_sheet.jpg` and `LYRA_tighten_walk_attack_preview.mp4` still show the older cast.
 - **Scripts:** `work/scripts/twohand_*_20261009.*`. QC: `work/twohand_verify_before_265f536.json`, `work/twohand_verify_after.json`.
+
+## Left turn, low left-hand grip (2026-10-10, replaces the side-on two-handed cast)
+Derek: turn her left, the left hand grips lower on the staff, the staff points forward, and the legs stay straight and natural.
+
+- **Body:** at the hold, the hips turn 33° left and the chest 45° (was 52° and about 73°). Feet stay planted: toes move under 0.5 cm and she pivots on the balls of the feet, as before. The left thigh-to-shin twist stays within 3° of rest, and the right knee stays straight.
+- **Grip:** the right hand keeps Derek's staff offset. Between f8 and f21 the left hand sits about 61 cm LOWER on the shaft than the right hand, toward the butt (before, it was 25 cm above). On hold frames it is 1 cm from the shaft centre line and the fingers press up to 7 mm into the surface.
+- **Staff:** from f9 to f15 the crystal leads forward toward the target. The staff points 22° left of straight ahead and is tipped up 17–19°. The bolt is re-keyed at the f12 crystal (-0.166, -1.055, 1.268), was (-0.214, -0.916, 1.450). It still travels straight forward (-Y, Unity +Z) at 9 m/s.
+- **Shoulders and wrists:** right armpit p99 stretch is 1.86 (was 1.50), and left is 1.25 (was 1.53). The right wrist is at most 25°, the left 12°, and the upper-arm twist at most 4°. Clavicles move up to 12° on the right and 5° on the left.
+- **Clearance:** no staff/body intersections from f6 to f24 (the whole cast and hold). In two swing frames the butt of the staff grazes her left leg: about 1 mm at f5 and up to 2 cm into the left boot at f25.
+- **Changed:** only the `LYRA_tighten_attack` and `LYRA_arcane_bolt_attack` actions. Bones, the rest and walk actions, the staff offset, the rest and walk FBXs and both staff FBXs are byte-identical. f0 and f30 match rest. Saved in Object Mode with the walk active.
+- **FBX:** attack 2d6f799e → 64f42e00 (Design + ThemePack). Unity `LyraAttack` staff and bolt frames regenerated. Calibration is unchanged.
+- **Scripts:** `work/scripts/lowgrip_*_20261010.*`. QC: `work/lowgrip_verify_after.json`, `work/lowgrip_legs_after.json`.
