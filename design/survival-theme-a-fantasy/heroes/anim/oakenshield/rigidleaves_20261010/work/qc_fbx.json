@@ -22,16 +22,15 @@
    "mixamorig:LeftUpLeg",
    "mixamorig:LeftLeg",
    "mixamorig:LeftFoot",
-   "mixamorig:LeftToeBase",
    "mixamorig:RightUpLeg",
    "mixamorig:RightLeg",
-   "mixamorig:RightFoot",
-   "mixamorig:RightToeBase"
+   "mixamorig:RightFoot"
   ],
-  "faces": 187406,
+  "faces": 187360,
   "max_infl": 4,
   "unweighted": 0,
-  "actions": []
+  "actions": [],
+  "head_pose_deg": 11.3
  },
  "walk": {
   "objects": [
@@ -56,13 +55,11 @@
    "mixamorig:LeftUpLeg",
    "mixamorig:LeftLeg",
    "mixamorig:LeftFoot",
-   "mixamorig:LeftToeBase",
    "mixamorig:RightUpLeg",
    "mixamorig:RightLeg",
-   "mixamorig:RightFoot",
-   "mixamorig:RightToeBase"
+   "mixamorig:RightFoot"
   ],
-  "faces": 187406,
+  "faces": 187360,
   "max_infl": 4,
   "unweighted": 0,
   "actions": [
@@ -73,7 +70,8 @@
      31.0
     ]
    ]
-  ]
+  ],
+  "head_pose_deg": 22.4
  },
  "attack": {
   "objects": [
@@ -98,13 +96,11 @@
    "mixamorig:LeftUpLeg",
    "mixamorig:LeftLeg",
    "mixamorig:LeftFoot",
-   "mixamorig:LeftToeBase",
    "mixamorig:RightUpLeg",
    "mixamorig:RightLeg",
-   "mixamorig:RightFoot",
-   "mixamorig:RightToeBase"
+   "mixamorig:RightFoot"
   ],
-  "faces": 187406,
+  "faces": 187360,
   "max_infl": 4,
   "unweighted": 0,
   "actions": [
@@ -115,6 +111,7 @@
      31.0
     ]
    ]
-  ]
+  ],
+  "head_pose_deg": 11.3
  }
 }

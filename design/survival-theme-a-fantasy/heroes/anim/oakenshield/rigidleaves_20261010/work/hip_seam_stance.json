@@ -1,0 +1,50 @@
+{
+ "before_b6e75ab:Right": {
+  "edges": 8791,
+  "weight_jump_gt_0p5": 4,
+  "weight_jump_gt_0p9": 4,
+  "weight_gradient_gt_20_per_m": 48,
+  "gradient_p99_per_m": 14.5,
+  "blend_verts": 634,
+  "region_verts": 2929
+ },
+ "before_b6e75ab:Left": {
+  "edges": 7288,
+  "weight_jump_gt_0p5": 0,
+  "weight_jump_gt_0p9": 0,
+  "weight_gradient_gt_20_per_m": 31,
+  "gradient_p99_per_m": 13.6,
+  "blend_verts": 449,
+  "region_verts": 2410
+ },
+ "before_b6e75ab:walk_stance_m": {
+  "ankle_sep": 0.124,
+  "knee_sep_min": 0.146,
+  "knee_sep_mean": 0.148,
+  "hip_joint_sep": 0.164
+ },
+ "after:Right": {
+  "edges": 8773,
+  "weight_jump_gt_0p5": 1,
+  "weight_jump_gt_0p9": 0,
+  "weight_gradient_gt_20_per_m": 13,
+  "gradient_p99_per_m": 9.3,
+  "blend_verts": 738,
+  "region_verts": 2929
+ },
+ "after:Left": {
+  "edges": 7263,
+  "weight_jump_gt_0p5": 0,
+  "weight_jump_gt_0p9": 0,
+  "weight_gradient_gt_20_per_m": 0,
+  "gradient_p99_per_m": 8.0,
+  "blend_verts": 461,
+  "region_verts": 2410
+ },
+ "after:walk_stance_m": {
+  "ankle_sep": 0.19,
+  "knee_sep_min": 0.171,
+  "knee_sep_mean": 0.174,
+  "hip_joint_sep": 0.164
+ }
+}

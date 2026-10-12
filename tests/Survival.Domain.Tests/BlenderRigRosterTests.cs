@@ -17,7 +17,7 @@ public sealed class BlenderRigRosterTests
     }
 
     [Fact]
-    public void Oakenshield_is_a_22_bone_mixamorig_with_rest_and_walk()
+    public void Oakenshield_is_a_20_bone_mixamorig_without_toes_with_rest_and_walk()
     {
         Assert.Equal(22, MixamoHumanoidBones.Count);
         Assert.Equal(22, MixamoHumanoidBones.Names.Length);
@@ -72,8 +72,10 @@ public sealed class BlenderRigRosterTests
 
     private static void AssertHumanoidDemo(BlenderRigSpec spec, string albedoStem, string normalStem, string demoGuid, string menu)
     {
-        Assert.Equal(22, spec.BoneCount);
-        Assert.Equal(MixamoHumanoidBones.Names, spec.BoneNames);
+        // Derek's 2026-10-11 rig edit deleted both ToeBases (optional Humanoid bones); the other 20 stay in order
+        Assert.Equal(20, spec.BoneCount);
+        Assert.Equal(MixamoHumanoidBones.Names.Where(n => !n.EndsWith("ToeBase", StringComparison.Ordinal)).ToArray(), spec.BoneNames);
+        Assert.Contains(spec.BoneRoot, spec.BoneNames);
         Assert.Equal("rest", spec.PoseNames[0]);
         Assert.Equal("walk", spec.PoseNames[1]);
         Assert.Equal("Scene", spec.ClipTakeName);

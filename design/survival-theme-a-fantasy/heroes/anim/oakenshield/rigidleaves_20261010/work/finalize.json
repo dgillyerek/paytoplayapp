@@ -1,14 +1,11 @@
 {
- "backface_visible_faces": 1929,
- "backface_scan_s": 7.7,
- "backface_twin_faces": 2678,
  "paint_fill_group_verts": 3359,
  "images": [
   "OAKENSHIELD_basecolor_0",
   "OAKENSHIELD_metal_rough_1",
   "OAKENSHIELD_normal_2"
  ],
- "faces": 187569,
+ "faces": 187523,
  "verts": 95134,
  "max_influences": 4,
  "unweighted": 0,
@@ -725,5 +722,5 @@
   1.71949,
   0.23937
  ],
- "blender": "4.3.2"
+ "blender": "5.2.2 LTS"
 }

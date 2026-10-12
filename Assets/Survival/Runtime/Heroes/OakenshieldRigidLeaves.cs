@@ -3,10 +3,13 @@ namespace Survival.Domain.Heroes
     /// <summary>
     /// Oakenshield rigid-leaves pack (Design rigidleaves_20261010). Derek's cloth-rule fallback, same call as Rowan and Vespera
     /// no-cape: the hanging leaf skirt/tabard (OAKENSHIELD_cloth) and its 14 cloth bones are gone, the body is re-rigged on 22
-    /// mixamorig bones refit to the mesh, every separate hard piece (leaf plates, bark, vines, shin and foot spikes, claw tips)
+    /// (now 20, see below) mixamorig bones refit to the mesh, every separate hard piece (leaf plates, bark, vines, shin and foot spikes, claw tips)
     /// is skinned 100% to one bone, and the rest of the skin is split by part (legs only on leg bones, forearm/hand weights off
     /// the torso, max 4 per vertex). Rest/walk/attack are re-authored on that rig. No runtime spring bones or leg colliders.
     /// ThemePack file names are kept (metas and GUIDs unchanged). One source blend carries rig + all three actions.
+    /// 2026-10-11: rebuilt on Derek's own blend edit (329ae0c): his bones kept exactly (both ToeBases deleted, ankles and foot
+    /// tips moved, Head tail shortened/tilted), toe weights moved onto Foot, hip/thigh weights smoothed (right hip crease), 46 long
+    /// web faces under the skirt/between the thighs removed, walk at hip width (19 cm ankles), head forward in rest/walk/attack.
     /// HOLD merge until Derek Game-view PASS.
     /// </summary>
     public static class OakenshieldRigidLeaves
@@ -16,13 +19,13 @@ namespace Survival.Domain.Heroes
         public const string WalkFileName = "OAKENSHIELD_rigidleaves_walk.fbx";
         public const string AttackFileName = "OAKENSHIELD_rigidleaves_attack.fbx";
         public const string BlendFileName = "OAKENSHIELD_rigidleaves.blend";
-        public const string RestMd5 = "e768f9f440ed307aeb854a07b351a484";
-        public const string WalkMd5 = "88da839e0de15044ab14a1bf36463ab2";
-        public const string AttackMd5 = "494efd02f36e84ec97253f3f00572fee";
-        public const string BlendMd5 = "134fa619c6c5c313756a46f33549ce31";
-        public const int RigBoneCount = 22;
+        public const string RestMd5 = "f624d75b76a2d52c190e712adb9c1253";
+        public const string WalkMd5 = "0d452682a9189372bde13f6e29e343f6";
+        public const string AttackMd5 = "7dd6b5add1220440c6f8438dd55eb2f8";
+        public const string BlendMd5 = "3f73aa0b3ec0302db2a11756a27910b3";
+        public const int RigBoneCount = 20;
 
-        /// <summary>Blend actions (frames 0-30 at 30 fps; rest is the bind pose).</summary>
+        /// <summary>Blend actions (frames 0-30 at 30 fps; rest is the bind pose with Neck/Head turned so the face looks forward).</summary>
         public static readonly string[] BlendActions = { "OAKENSHIELD_rest", "OAKENSHIELD_walk", "OAKENSHIELD_attack" };
 
         /// <summary>ThemePack MD5s of the cloth split this replaces (clothsplit_20261007, PR #48 4b7f231, still in git history).</summary>

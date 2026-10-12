@@ -1,26 +1,37 @@
 {
  "OAKENSHIELD_rest:OAKENSHIELD_body": {
-  "edges": 283068,
-  "grow_gt_2cm": 0,
+  "edges": 283020,
+  "grow_gt_2cm": 2,
   "grow_gt_5cm": 0,
-  "max_grow_cm": 0.0,
-  "max_ratio": 1.0,
+  "max_grow_cm": 2.12,
+  "max_ratio": 13.08,
   "gt5_z_hist(0-2m,0.2)": []
  },
  "OAKENSHIELD_walk:OAKENSHIELD_body": {
-  "edges": 283068,
-  "grow_gt_2cm": 80,
-  "grow_gt_5cm": 0,
-  "max_grow_cm": 4.64,
-  "max_ratio": 25.09,
-  "gt5_z_hist(0-2m,0.2)": []
+  "edges": 283020,
+  "grow_gt_2cm": 116,
+  "grow_gt_5cm": 1,
+  "max_grow_cm": 5.1,
+  "max_ratio": 29.4,
+  "gt5_z_hist(0-2m,0.2)": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   1,
+   0
+  ]
  },
  "OAKENSHIELD_attack:OAKENSHIELD_body": {
-  "edges": 283068,
-  "grow_gt_2cm": 302,
-  "grow_gt_5cm": 21,
+  "edges": 283020,
+  "grow_gt_2cm": 319,
+  "grow_gt_5cm": 26,
   "max_grow_cm": 8.56,
-  "max_ratio": 23.87,
+  "max_ratio": 31.02,
   "gt5_z_hist(0-2m,0.2)": [
    0,
    0,
@@ -30,7 +41,7 @@
    0,
    1,
    20,
-   0,
+   5,
    0
   ]
  }

@@ -44,7 +44,7 @@ for v in body.data.vertices:
 FOOT={}
 FDIR={'Left':(-0.34,-0.94,0.0),'Right':(-0.17,-0.98,0.0)}
 for s in ('Left','Right'):
-    fm=(W[:,vg[P+s+'Foot']]+W[:,vg[P+s+'ToeBase']])>0.5
+    fm=W[:,vg[P+s+'Foot']]>0.5   # Derek removed the ToeBase bones (2026-10-11); toe weights are on Foot
     fv=co[fm]; ank=HEAD[s+'Foot']
     tip0=Vector(fv[fv[:,1].argmin()]); d0=Vector((tip0.x-ank.x,tip0.y-ank.y,0)).normalized()
     along=(fv[:,0]-ank.x)*d0.x+(fv[:,1]-ank.y)*d0.y
@@ -91,7 +91,7 @@ def leg(pose,s,ank,Rf,pole):
     knee,end=ik2(hip,ank,*LEN[s],pole)
     dU=rot_between(R3(REST[s+'UpLeg'])@Y,knee-hip); pose.place(s+'UpLeg',dU@R3(REST[s+'UpLeg']))
     dL=rot_between(dU@(R3(REST[s+'Leg'])@Y),end-knee)@dU; pose.place(s+'Leg',dL@R3(REST[s+'Leg']))
-    pose.place(s+'Foot',Rf@R3(REST[s+'Foot'])); pose.place(s+'ToeBase',Rf@R3(REST[s+'ToeBase']))
+    pose.place(s+'Foot',Rf@R3(REST[s+'Foot']))
     return (ank-hip).length/sum(LEN[s]), (end-ank).length
 def arm_dirs(pose,s,d_up,d_fore,hand_extra=None):
     dU=rot_between(R3(REST[s+'Arm'])@Y,d_up); pose.place(s+'Arm',dU@R3(REST[s+'Arm']))
@@ -129,7 +129,11 @@ FORE_OUT=float(__import__('os').environ.get('FORE_OUT','7'))
 # ======================= WALK =======================
 CONTACT={'Right':8.0,'Left':23.0}; STANCE=18.0; SWING=NF-STANCE
 HIPS0=HEAD['Hips'].copy()
-X_ANK={'Left':HIPS0.x+0.062,'Right':HIPS0.x-0.062}
+# hip-width stance (Derek 2026-10-11: legs were too close): ankles under the hip joints of the squared pelvis, no crossing
+HIP_HALF=0.5*Vector((HEAD['LeftUpLeg']-HEAD['RightUpLeg']).xy).length
+STANCE_HALF=float(__import__('os').environ.get('STANCE_HALF','0.095'))   # 19 cm ankle spacing: hip joints are 16.4 cm apart, the outer hip is wider; knees end up ~17 cm apart over the feet
+X_ANK={'Left':HIPS0.x-STANCE_HALF if HEAD['LeftUpLeg'].x<HEAD['RightUpLeg'].x else HIPS0.x+STANCE_HALF,
+       'Right':HIPS0.x+STANCE_HALF if HEAD['LeftUpLeg'].x<HEAD['RightUpLeg'].x else HIPS0.x-STANCE_HALF}
 Y_FRONT=HIPS0.y-0.185; Y_BACK=HIPS0.y+0.205
 P_HEEL=-14.0; P_TOE=26.0; LIFT=0.075; CLEAR=0.002
 for s in FOOT:
@@ -170,7 +174,7 @@ def walk_body(f):
 def walk_pose(f,extra=0.0):
     bp=walk_body(f); pose=Pose()
     hp=HIPS0+Vector((bp['dx'],0,bp['dz']+extra))
-    ch=YAW_C*0.8; hd=YAW_F*0.45   # shoulders nearly square, face keeps a little of her bind turn (neck twist kept small)
+    ch=YAW_C*float(__import__("os").environ.get("CHK","0.65")); hd=YAW_F   # shoulders mostly square (0.65 keeps the neck twist small); face fully forward (Derek 2026-10-11)
     yb=[YAW_H, YAW_H+0.33*(ch-YAW_H), YAW_H+0.66*(ch-YAW_H), ch, 0.5*(ch+hd), hd]
     yw=[yb[0]+bp['yawP'], yb[1]+0.4*bp['yawP'], yb[2]+0.5*bp['yawC'], yb[3]+bp['yawC'], yb[4]+0.4*bp['yawC'], yb[5]+bp['turn']]
     ln=[0.0,1.0,1.5,2.0,1.0+0.5*bp['nod'],bp['nod']]
@@ -228,7 +232,7 @@ def attack_pose(f,spear=True):
     dz=ease_keys(f,[(0,0.0),(10,-0.015),(REL,-0.04),(20,-0.03),(30,0.0)])
     dy=ease_keys(f,[(0,0.0),(10,0.02),(REL,-0.03),(20,-0.025),(30,0.0)])
     hp=HEAD['Hips']+Vector((0,dy,dz))
-    yH=0.25*tw; yC=YAW_C*0.6*sq+tw; yF=YAW_F*0.45*min(1.0,sq/0.85)   # lower body stays on its bind stance; chest squares toward the throw
+    yH=0.25*tw; yC=YAW_C*0.6*sq+tw; yF=YAW_F   # lower body stays on its bind stance; chest squares toward the throw
     yw=[yH, yH+0.33*(yC-yH), yH+0.66*(yC-yH), yC, 0.5*(yC+yF), yF]
     ln=[0.3*lean,0.4*lean,0.5*lean,0.5*lean,-0.6*lean,-0.4*lean]
     spine_chain(pose,hp,yw,ln,[0,0,0,0,0,0])
@@ -278,8 +282,9 @@ for f in range(NF+1):
         wrist_miss=round(info['wrist_miss'],4),wrist_bend=round(info['wrist_bend'],1),left_miss=round(info['left_miss'],4)))
 key_action('OAKENSHIELD_attack',frames,loop=False)
 REPORT['attack']=arep
-pose=Pose()
+pose=Pose()   # rest: bind pose with the face turned forward (neck half, head the rest)
 for n in order: pose.D[n]=REST[n].copy()
+pose.place('Neck',Rax(Z,0.5*YAW_F)@R3(REST['Neck'])); pose.place('Head',Rax(Z,YAW_F)@R3(REST['Head']))
 key_action('OAKENSHIELD_rest',[pose.D],loop=False)
 arm.animation_data.action=bpy.data.actions['OAKENSHIELD_walk']
 sc.frame_start=0; sc.frame_end=30; sc.frame_set(0)

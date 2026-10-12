@@ -127,6 +127,6 @@ ModelImporter:
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Oakenshield Design rigidleaves_20261010 attack (OAKENSHIELD_rigidleaves_attack.fbx, MD5 494efd02f36e84ec97253f3f00572fee). Hanging cloth and its 14 cloth bones removed; 22 mixamorig bones, rigid leaf/bark/spike pieces, clean weights (max 4). No spring bones. Humanoid if the avatar validates, else Generic. HOLD merge.
+  userData: Oakenshield Design rigidleaves_20261010 attack (OAKENSHIELD_rigidleaves_attack.fbx, MD5 7dd6b5add1220440c6f8438dd55eb2f8), rebuilt 2026-10-11 on Derek's blend edit (329ae0c): 20 mixamorig bones (ToeBases deleted by Derek, toe weights on Foot), rigid leaf/bark/spike pieces, smoothed hip/thigh weights, hip-width walk, head forward (rest = bind pose with the head turned forward). No spring bones. Humanoid if the avatar validates, else Generic. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

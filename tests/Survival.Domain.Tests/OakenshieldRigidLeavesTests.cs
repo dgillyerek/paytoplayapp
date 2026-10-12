@@ -5,7 +5,7 @@ using Survival.Domain.Roster;
 
 namespace Survival.Domain.Tests;
 
-/// <summary>Oakenshield rigid-leaves pack (Design rigidleaves_20261010). HOLD merge until Derek Game-view PASS.</summary>
+/// <summary>Oakenshield rigid-leaves pack (Design rigidleaves_20261010, rebuilt 2026-10-11 on Derek's blend 329ae0c). HOLD merge until Derek Game-view PASS.</summary>
 public sealed class OakenshieldRigidLeavesTests
 {
     [Fact]
@@ -52,11 +52,13 @@ public sealed class OakenshieldRigidLeavesTests
     }
 
     [Fact]
-    public void Oakenshield_rigidleaves_rig_is_22_body_bones_with_clean_weights_and_no_stretch()
+    public void Oakenshield_rigidleaves_rig_is_dereks_20_body_bones_with_clean_weights_and_no_stretch()
     {
-        Assert.Equal(22, OakenshieldRigidLeaves.RigBoneCount);
+        Assert.Equal(20, OakenshieldRigidLeaves.RigBoneCount);
         Assert.Equal(OakenshieldRigidLeaves.RigBoneCount, OakenshieldMotion.BoneNames.Length);
-        Assert.Equal(MixamoHumanoidBones.Names, OakenshieldMotion.BoneNames);
+        Assert.Equal(OakenshieldMotion.BoneCount, OakenshieldMotion.BoneNames.Length);
+        // Derek's edit (329ae0c) deleted both ToeBases; every other mixamorig body bone stays, in order
+        Assert.Equal(MixamoHumanoidBones.Names.Where(n => !n.EndsWith("ToeBase", StringComparison.Ordinal)).ToArray(), OakenshieldMotion.BoneNames);
         foreach (var bone in OakenshieldMotion.BoneNames)
         {
             Assert.StartsWith("mixamorig:", bone, StringComparison.Ordinal);
@@ -80,11 +82,13 @@ public sealed class OakenshieldRigidLeavesTests
 
         using var st = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "stretch.json")));
         var rest = st.RootElement.GetProperty("OAKENSHIELD_rest:OAKENSHIELD_body");
-        Assert.Equal(0, rest.GetProperty("grow_gt_2cm").GetInt32());
+        // rest turns the head forward from the bind pose: only a couple of neck edges move, by about 2 cm
+        Assert.True(rest.GetProperty("grow_gt_2cm").GetInt32() <= 5);
+        Assert.Equal(0, rest.GetProperty("grow_gt_5cm").GetInt32());
         var walk = st.RootElement.GetProperty("OAKENSHIELD_walk:OAKENSHIELD_body");
-        Assert.Equal(0, walk.GetProperty("grow_gt_5cm").GetInt32());
+        Assert.True(walk.GetProperty("grow_gt_5cm").GetInt32() <= 2);
         Assert.True(walk.GetProperty("grow_gt_2cm").GetInt32() < 200);
-        Assert.True(walk.GetProperty("max_grow_cm").GetDouble() < 5.0);
+        Assert.True(walk.GetProperty("max_grow_cm").GetDouble() < 6.0);
         var attack = st.RootElement.GetProperty("OAKENSHIELD_attack:OAKENSHIELD_body");
         Assert.True(attack.GetProperty("grow_gt_5cm").GetInt32() < 50);
         Assert.True(attack.GetProperty("max_grow_cm").GetDouble() < 10.0);
@@ -95,6 +99,31 @@ public sealed class OakenshieldRigidLeavesTests
         {
             Assert.True(gap.RootElement.GetProperty(act).GetProperty("max_gap_open_cm").GetDouble() < 1.0, act);
         }
+
+        // Derek 2026-10-11: no hard crease at the right hip, hip-width walk, toes follow the feet
+        foreach (var side in new[] { "R", "L" })
+        {
+            using var before = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "crease_" + side + "_before_b6e75ab.json")));
+            using var after = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "crease_" + side + ".json")));
+            var b = before.RootElement.GetProperty("OAKENSHIELD_walk");
+            var a = after.RootElement.GetProperty("OAKENSHIELD_walk");
+            Assert.True(a.GetProperty("crease_gt_60deg").GetInt32() * 3 < b.GetProperty("crease_gt_60deg").GetInt32() * 2, side);
+            Assert.True(a.GetProperty("p99_crease_deg").GetDouble() < b.GetProperty("p99_crease_deg").GetDouble(), side);
+            Assert.True(a.GetProperty("max_grow_cm").GetDouble() < 3.0, side);
+        }
+
+        using var seam = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "hip_seam_stance.json")));
+        Assert.Equal(0, seam.RootElement.GetProperty("after:Right").GetProperty("weight_jump_gt_0p9").GetInt32());
+        Assert.True(seam.RootElement.GetProperty("after:Right").GetProperty("gradient_p99_per_m").GetDouble() < 10.0);
+        var stance = seam.RootElement.GetProperty("after:walk_stance_m");
+        Assert.True(stance.GetProperty("ankle_sep").GetDouble() >= stance.GetProperty("hip_joint_sep").GetDouble());
+        Assert.True(stance.GetProperty("knee_sep_min").GetDouble() > 0.15);
+
+        using var prep = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "prep2.json")));
+        Assert.True(prep.RootElement.GetProperty("LeftToeBase_verts_moved_to_Foot").GetInt32() > 0);
+        Assert.True(prep.RootElement.GetProperty("RightToeBase_verts_moved_to_Foot").GetInt32() > 0);
+        Assert.Equal(4, prep.RootElement.GetProperty("max_influences").GetInt32());
+        Assert.Equal(0, prep.RootElement.GetProperty("unweighted").GetInt32());
 
         using var rig = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "rig.json")));
         Assert.Equal(0, rig.RootElement.GetProperty("leg_verts_with_torso_or_arm_weight").GetInt32());

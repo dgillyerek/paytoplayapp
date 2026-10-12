@@ -1,3 +1,62 @@
+# 2026-10-11 rebuild on Derek's blend edit (329ae0c)
+
+Derek edited `OAKENSHIELD_rigidleaves.blend` himself (329ae0c, MD5 b582699dde3e411524ee5b9f4499b206, saved in Blender 5.2) and
+reviewed b6e75ab in Unity: "her legs are too close together when she walks and her right hip seems to have some hard crease line
+when moving. also her head should face forward instead of to the left all the time." His blend is the source for this rebuild
+(headless Blender 5.2.2; scripts `work/prep2.py`, `work/anim.py`, `work/finalize2.py`).
+
+**What Derek changed** (`work/derek_blend_changes.json`, diffed against b6e75ab with `work/dump.py`), all kept exactly:
+- Deleted both `ToeBase` bones (22 -> 20 bones).
+- Moved both ankles (LeftLeg tail / LeftFoot head 0.14 -> 0.177 m high and 2 cm inward; RightLeg tail / RightFoot head 0.14 -> 0.158 m)
+  and re-aimed both Foot bones (new tips).
+- Shortened/tilted the `Head` bone (tail 1.85 -> 1.793 m; pivot unchanged).
+- Mesh, vertex weights, vertex groups and the three actions unchanged. The rig was saved in Edit Mode (no pose deformation), so the
+  rebuild switches it back to Object Mode; bone data verified identical to his file after the rebuild.
+
+**Consequences handled:** the 846 left / 688 right vertices weighted to the deleted ToeBases (toe claws) are moved onto the Foot
+groups (they would otherwise freeze at the rest position); the two empty ToeBase vertex groups are removed. Unity spec bone list is
+now the 20 bones (toes are optional Humanoid bones, so the Humanoid avatar still validates; BoneCount 20).
+
+**Head:** the face is turned 22.6 deg to her left in the bind pose of the Design mesh itself (Derek's Head-bone edit does not move it).
+b6e75ab kept that turn in rest and 55% of it in walk/attack. Now the head turns the full 22.6 deg forward (Neck half) in rest, walk
+and attack. Unity's rest is the FBX default pose, so the rest FBX carries the rest action's posed Neck/Head node transforms (bind
+pose itself unchanged). Walk shoulders are squared 65% (was 80%) so the neck twist stays small.
+
+**Walk stance:** ankles 19.0 cm apart (was 12.4; hip joints are 16.4 cm apart), knees 17.1-17.6 cm apart tracking over the feet,
+no crossing toward the centre line. Feet still point forward on the same claw-fan direction.
+
+**Right hip crease:** cause was (a) a narrow Hips/RightUpLeg blend at the thigh top and (b) 46 long "web" faces from the source
+mesh (edges 12-43 cm) spanning from the skirt/hips to the thigh (a sheet under the skirt at z~0.82 and webs between the thighs at
+z~0.59) that sheared into a hard line whenever the thigh moved. Fix: Hips:UpLeg ratio Laplacian-smoothed over the skin within 18 cm
+of each hip joint (rigid pieces keep their one bone; their twin copies follow), and the 46 web faces removed (no verts removed).
+No rigid piece or 1-bone seam sits on the right hip skin (the 4 hard 1-bone jumps before were those web faces).
+
+| right hip (skin edges within 15 cm, slivers <4 mm2 skipped) | b6e75ab | now |
+|---|---|---|
+| walk: edges whose fold angle changes >30 deg / >60 deg | 671 / 226 | 319 / 113 |
+| walk: p99 fold change | 117.1 deg | 80.8 deg |
+| walk: max edge growth | 3.54 cm | 2.88 cm |
+| attack: >30 / >60 deg, p99 | 107 / 25, 36.7 deg | 56 / 10, 23.5 deg |
+| weight jumps >0.9 across an edge / gradient >20 per m / p99 gradient | 4 / 48 / 14.5 | 0 / 13 / 9.3 |
+| left hip walk >30 / >60 deg, p99 | 494 / 218, 146.5 deg | 241 / 93, 79.6 deg |
+
+| whole body stretch (edges growing) | b6e75ab >2 cm / >5 cm / max | now |
+|---|---|---|
+| rest | 0 / 0 / 0 | 2 / 0 / 2.12 cm (neck, head turned forward) |
+| walk | 80 / 0 / 4.64 cm | 116 / 1 / 5.10 cm (one neck edge) |
+| attack | 302 / 21 / 8.56 cm | 319 / 26 / 8.56 cm (+5 neck edges) |
+
+Loose-piece gaps: walk max 0.80 cm, attack 0.57 cm (0 over 1 cm). Thorn spear: frames, calibration and the prop FBX are unchanged
+(the throwing arm and the bones it uses did not move). FBX re-import QC: 20 bones, max 4 influences, 0 unweighted, 187,360 faces.
+
+Contact sheet: `OAKENSHIELD_rigidleaves_contact.jpg` (before walk front; after walk front/side; after attack front/side with the
+spear), small copy `OAKENSHIELD_rigidleaves_contact_small.jpg`.
+
+**Question for Derek:** none of the head turn came from your edit (it is in the mesh's bind pose), so it was fixed in the animation
+and rest pose rather than by touching your Head bone.
+
+---
+
 # OAKENSHIELD — rigid leaves + clean weights + new walk/attack (2026-10-10)
 
 Fixes Derek's Game-view note on PR #48 (4b7f231): "oakenshield's walk is extremely distorted". In the cloth-split pack the leaf

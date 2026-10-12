@@ -4,9 +4,9 @@ namespace Survival.Domain.Heroes
 {
     /// <summary>
     /// ThemePack rest/walk/attack are the Design rigid-leaves pack (rigidleaves_20261010, see OakenshieldRigidLeaves):
-    /// hanging cloth removed, re-rigged on the 22 body bones below, rigid leaf pieces, no cloth chains and no runtime springs.
-    /// Oakenshield Design Blender rig. Mixamo-compatible mixamorig, 22 bones.
-    /// Rest is the bind pose. Walk is a 1 second Scene take at 30 fps
+    /// hanging cloth removed, re-rigged on the body bones below (20 since Derek's 2026-10-11 edit removed the ToeBases), rigid leaf pieces, no cloth chains and no runtime springs.
+    /// Oakenshield Design Blender rig. Mixamo-compatible mixamorig, 20 bones (no ToeBase).
+    /// Rest is the bind pose with the head turned forward (posed node transforms in the rest FBX). Walk is a 1 second Scene take at 30 fps
     /// (FBX LocalStop 46186158000 ticks). Reject OAKENSHIELD_rig.fbx.
     /// Basecolor and normal are embedded. No metal/roughness map.
     /// </summary>
@@ -27,7 +27,7 @@ namespace Survival.Domain.Heroes
         public const float WalkSeconds = 1f;
         public const float WalkFrameRate = 30f;
         public const int WalkLastFrame = 30;
-        public const int BoneCount = MixamoHumanoidBones.Count;
+        public const int BoneCount = 20;
 
         public const string TextureFolder = "OAKENSHIELD_blenderig.fbm";
         public const string BaseColorFile = "OAKENSHIELD_basecolor_0.jpg";
@@ -36,7 +36,30 @@ namespace Survival.Domain.Heroes
         public const string BoneRoot = MixamoHumanoidBones.Root;
 
         public static readonly string[] PoseNames = { RestPoseName, WalkPoseName, AttackPoseName };
-        public static readonly string[] BoneNames = MixamoHumanoidBones.Names;
+        /// <summary>Derek's rig edit (2026-10-11) deleted both ToeBases; toes are optional Humanoid bones.</summary>
+        public static readonly string[] BoneNames =
+        {
+            "mixamorig:Hips",
+            "mixamorig:Spine",
+            "mixamorig:Spine1",
+            "mixamorig:Spine2",
+            "mixamorig:Neck",
+            "mixamorig:Head",
+            "mixamorig:LeftShoulder",
+            "mixamorig:LeftArm",
+            "mixamorig:LeftForeArm",
+            "mixamorig:LeftHand",
+            "mixamorig:RightShoulder",
+            "mixamorig:RightArm",
+            "mixamorig:RightForeArm",
+            "mixamorig:RightHand",
+            "mixamorig:LeftUpLeg",
+            "mixamorig:LeftLeg",
+            "mixamorig:LeftFoot",
+            "mixamorig:RightUpLeg",
+            "mixamorig:RightLeg",
+            "mixamorig:RightFoot"
+        };
 
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(
             "Oakenshield",

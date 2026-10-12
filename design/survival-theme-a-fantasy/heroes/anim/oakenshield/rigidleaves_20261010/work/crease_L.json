@@ -1,0 +1,20 @@
+{
+ "OAKENSHIELD_walk": {
+  "edges_in_region": 5892,
+  "crease_gt_30deg": 241,
+  "crease_gt_60deg": 93,
+  "max_crease_deg": 176.2,
+  "p99_crease_deg": 79.6,
+  "grow_gt_2cm": 4,
+  "max_grow_cm": 2.51
+ },
+ "OAKENSHIELD_attack": {
+  "edges_in_region": 5892,
+  "crease_gt_30deg": 32,
+  "crease_gt_60deg": 11,
+  "max_crease_deg": 152.5,
+  "p99_crease_deg": 18.7,
+  "grow_gt_2cm": 0,
+  "max_grow_cm": 0.45
+ }
+}

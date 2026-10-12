@@ -1,0 +1,111 @@
+{
+ "source": "329ae0c OAKENSHIELD_rigidleaves.blend md5 b582699dde3e411524ee5b9f4499b206 vs b6e75ab md5 134fa619c6c5c313756a46f33549ce31",
+ "saved_in": "5.2.2 LTS (file 5.2.45), rig left in Edit Mode",
+ "bones_deleted": [
+  "mixamorig:LeftToeBase",
+  "mixamorig:RightToeBase"
+ ],
+ "bones_added": [],
+ "bones_moved": {
+  "mixamorig:Head": {
+   "tail": {
+    "from": [
+     -0.01,
+     0.05,
+     1.85
+    ],
+    "to": [
+     -0.00462,
+     0.01788,
+     1.79314
+    ]
+   },
+   "orientation_changed": true
+  },
+  "mixamorig:LeftLeg": {
+   "tail": {
+    "from": [
+     -0.09,
+     -0.125,
+     0.14
+    ],
+    "to": [
+     -0.07577,
+     -0.1133,
+     0.17681
+    ]
+   },
+   "orientation_changed": true
+  },
+  "mixamorig:LeftFoot": {
+   "head": {
+    "from": [
+     -0.09,
+     -0.125,
+     0.14
+    ],
+    "to": [
+     -0.07577,
+     -0.1133,
+     0.17681
+    ]
+   },
+   "tail": {
+    "from": [
+     -0.121,
+     -0.21,
+     0.03
+    ],
+    "to": [
+     -0.1571,
+     -0.20617,
+     0.02975
+    ]
+   },
+   "orientation_changed": true
+  },
+  "mixamorig:RightLeg": {
+   "tail": {
+    "from": [
+     0.145,
+     0.14,
+     0.14
+    ],
+    "to": [
+     0.16109,
+     0.1527,
+     0.15767
+    ]
+   },
+   "orientation_changed": true
+  },
+  "mixamorig:RightFoot": {
+   "head": {
+    "from": [
+     0.145,
+     0.14,
+     0.14
+    ],
+    "to": [
+     0.16109,
+     0.1527,
+     0.15767
+    ]
+   },
+   "tail": {
+    "from": [
+     0.13,
+     0.052,
+     0.03
+    ],
+    "to": [
+     0.07943,
+     0.09716,
+     0.03207
+    ]
+   },
+   "orientation_changed": true
+  }
+ },
+ "unchanged": "mesh (95134 verts / 187569 faces, no vertex moved), all vertex weights, all 23 vertex groups, objects/modifiers, the three actions (keys identical), other 14 bones"
+}
