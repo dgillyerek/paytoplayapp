@@ -35,8 +35,8 @@ public sealed class VesperaAttackTests
         var pack = Path.Combine(root, "Assets", VesperaMotion.ThemePackDir);
         var design = Path.Combine(root, VesperaAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
         // ThemePack attack is the Design no-cape pack (blender_rig_nocape_20261009); attack_20261007 keeps the original.
-        Assert.Equal("5b907c6f5ec944e9fb4233bd9d451e5c", VesperaAttack.FileMd5);
-        Assert.Equal("5b907c6f5ec944e9fb4233bd9d451e5c", Md5(Path.Combine(pack, VesperaAttack.FileName)));
+        Assert.Equal("9b9f123acbc8504b8eec703cd7dce430", VesperaAttack.FileMd5);
+        Assert.Equal("9b9f123acbc8504b8eec703cd7dce430", Md5(Path.Combine(pack, VesperaAttack.FileName)));
         Assert.Equal("082b741eae52d9144a612566380766bc", VesperaAttack.DesignFileMd5);
         Assert.Equal("082b741eae52d9144a612566380766bc", Md5(Path.Combine(design, VesperaAttack.FileName)));
 
@@ -130,7 +130,7 @@ public sealed class VesperaAttackTests
     public void Vespera_orb_is_conjured_between_the_hands_then_launched_as_the_bolt()
     {
         var spec = VesperaAttack.Spec;
-        Assert.Equal(20, VesperaAttack.ReleaseFrame);
+        Assert.Equal(21, VesperaAttack.ReleaseFrame);
         Assert.Equal(new[] { "VESPERA_orb.fbx" }, VesperaAttack.PropFileNames);
         var orb = spec.Find("VESPERA_orb")!;
         var bolt = spec.Find("VESPERA_shadowbolt_vfx")!;
@@ -155,18 +155,12 @@ public sealed class VesperaAttackTests
         Assert.True(orb.Frames[orb.FirstVisibleFrame].Scale < 0.3f);
         Assert.Equal(1f, orb.Frames[VesperaAttack.OrbFullFrame].Scale, 2);
 
-        // The hands trace a circle: the orb centre moves at least 10 cm side to side and up/down during f6-f16.
-        float minX = 9f, maxX = -9f, minY = 9f, maxY = -9f;
+        // Rave conjure: the orb stays between the hands (it does not swing round with them) and spins with the contrary sweeps.
         for (var f = 6; f <= 16; f++)
         {
-            minX = Math.Min(minX, orb.Frames[f].X);
-            maxX = Math.Max(maxX, orb.Frames[f].X);
-            minY = Math.Min(minY, orb.Frames[f].Y);
-            maxY = Math.Max(maxY, orb.Frames[f].Y);
+            Assert.True(Math.Abs(orb.Frames[f].X - orb.Frames[5].X) < 0.05f, "orb stays centred f" + f);
+            Assert.True(Math.Abs(orb.Frames[f].Y - orb.Frames[5].Y) < 0.05f, "orb stays centred f" + f);
         }
-
-        Assert.True(maxX - minX > 0.10f, "circle width");
-        Assert.True(maxY - minY > 0.10f, "circle height");
 
         // The bolt starts where the orb is at the release (continuous hand-off, within 3 cm of the last orb frame).
         var last = orb.Frames[VesperaAttack.ReleaseFrame - 1];

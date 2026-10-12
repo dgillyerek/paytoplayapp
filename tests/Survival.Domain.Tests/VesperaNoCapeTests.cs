@@ -34,6 +34,7 @@ public sealed class VesperaNoCapeTests
         Assert.NotEqual(VesperaNoCape.ClothSplitAttackMd5, VesperaNoCape.AttackMd5);
         Assert.NotEqual(VesperaNoCape.HandPassWalkMd5, VesperaNoCape.WalkMd5);
         Assert.NotEqual(VesperaNoCape.HandPassAttackMd5, VesperaNoCape.AttackMd5);
+        Assert.NotEqual(VesperaNoCape.OrbPassAttackMd5, VesperaNoCape.AttackMd5);
         Assert.Equal(VesperaNoCape.OrbMd5, Md5(Path.Combine(design, VesperaNoCape.OrbFileName)));
         Assert.Equal(VesperaNoCape.OrbMd5, Md5(Path.Combine(pack, VesperaNoCape.OrbFileName)));
         Assert.True(File.Exists(Path.Combine(design, VesperaNoCape.OrbBlendFileName)));
@@ -135,11 +136,12 @@ public sealed class VesperaNoCapeTests
         Assert.True(q.GetProperty("max_influences").GetInt32() <= 4);
         Assert.Equal(0, q.GetProperty("unweighted").GetInt32());
 
-        // 2026-10-11 orb conjure: BOTH hand + forearm pieces never intersect the body (hair excluded) between the bind-pose ends,
+        // 2026-10-11 rave conjure (attack from work/rave_20261011; walk/gait unchanged from work/orb_20261011): BOTH hand + forearm pieces never intersect the body (hair excluded) between the bind-pose ends,
         // the hands + lower forearms keep >= 3 cm from f2 to f28 (2.5 cm at f29, the last frame before the bind pose),
         // the hands never pass through each other, and the hands never touch her hair.
         var orbWork = Path.Combine(FindRepoRoot(), VesperaNoCape.OrbWorkDir.Replace('/', Path.DirectorySeparatorChar));
-        using var clr = JsonDocument.Parse(File.ReadAllText(Path.Combine(orbWork, "clear_attack.json")));
+        var raveWork = Path.Combine(FindRepoRoot(), VesperaNoCape.RaveWorkDir.Replace('/', Path.DirectorySeparatorChar));
+        using var clr = JsonDocument.Parse(File.ReadAllText(Path.Combine(raveWork, "clear_attack.json")));
         var frames = clr.RootElement.EnumerateArray().ToArray();
         Assert.Equal(31, frames.Length);
         for (var f = 1; f <= 29; f++)
@@ -175,6 +177,31 @@ public sealed class VesperaNoCapeTests
             Assert.True(gait.RootElement.GetProperty("stride_m").GetProperty(side).GetDouble() >= 0.29, side);
         }
 
+        // Contrary sweeps: the left hand goes well over the top and well under the orb (the right hand mirrors it on the
+        // opposite side), palms facing the orb within 40 deg, wrists bend <= 45 deg.
+        using var anim = JsonDocument.Parse(File.ReadAllText(Path.Combine(raveWork, "anim.json")));
+        var atk = anim.RootElement.GetProperty("attack").EnumerateArray().ToArray();
+        double phiMin = 999, phiMax = -999;
+        for (var f = 5; f <= 17; f++)
+        {
+            var phi = atk[f].GetProperty("phiL").GetDouble();
+            phiMin = Math.Min(phiMin, phi);
+            phiMax = Math.Max(phiMax, phi);
+            foreach (var v in atk[f].GetProperty("palm_face").EnumerateArray())
+            {
+                Assert.True(v.GetDouble() <= 40.0, "palm faces the orb f" + f);
+            }
+        }
+
+        Assert.True(phiMax >= 75.0 && phiMin <= -60.0, "sweeps over and under the orb");
+        foreach (var fr in atk)
+        {
+            foreach (var v in fr.GetProperty("wrist_bend").EnumerateArray())
+            {
+                Assert.True(v.GetDouble() <= 45.0, "wrist bend f" + fr.GetProperty("f").GetInt32());
+            }
+        }
+
         // The bolt leaves from the orb between her hands, in front of her chest (not from one hand at her side).
         var bolt = VesperaAttack.Spec.Find("VESPERA_shadowbolt_vfx")!.Frames[VesperaAttack.ReleaseFrame];
         Assert.InRange(bolt.X, -0.05f, 0.2f);
@@ -182,7 +209,7 @@ public sealed class VesperaNoCapeTests
         Assert.True(bolt.Z > 0.45f, "bolt spawns in front of her");
 
         // Stretch: walk 0 edges over 2 cm; attack at least as good as the hand pass (7 over 2 cm, max 3.2 cm).
-        using var st = JsonDocument.Parse(File.ReadAllText(Path.Combine(orbWork, "stretch.json")));
+        using var st = JsonDocument.Parse(File.ReadAllText(Path.Combine(raveWork, "stretch.json")));
         Assert.Equal(0, st.RootElement.GetProperty("VESPERA_nocape_rest").GetProperty("stretch_gt_1.25x").GetInt32());
         Assert.Equal(0, st.RootElement.GetProperty("VESPERA_nocape_walk").GetProperty("grow_gt_2cm").GetInt32());
         Assert.True(st.RootElement.GetProperty("VESPERA_nocape_walk").GetProperty("max_grow_cm").GetDouble() <= 2.0);

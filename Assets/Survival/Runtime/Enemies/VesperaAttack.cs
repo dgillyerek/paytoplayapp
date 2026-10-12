@@ -4,29 +4,32 @@ namespace Survival.Domain.Enemies
 {
     /// <summary>
     /// Vespera Theme A attack (Design 2026-10-07 intent, re-authored on the no-cape rig 2026-10-09, rebuilt on Derek's 16-bone rig 2026-10-10).
-    /// 2026-10-11 orb conjure (Derek picked option C of the weapon sheet): both hands come up in front of her chest, palms facing,
-    /// and trace one circle together (f6-f16) while the orb forms and grows between them (visible f4, full size f16); two-hand
-    /// push f16-f20; the orb leaves as the Shadow Bolt at f20 from the orb centre, travels character-forward at 9 m/s; back to rest by f30.
+    /// 2026-10-11 orb conjure (Derek picked option C of the weapon sheet). Rave rework (Derek on a470cea: "make her hands go in
+    /// different directions as if she's outlining the orb. almost like a rave dance."): the hands sit on opposite sides of the orb
+    /// and sweep in contrary directions around its outline - left over the top while right goes under, swap, and again (hits on
+    /// f8, f11, f14, settle f17) - palms facing the orb at orb radius while it grows (visible f4, full size f17), with a small
+    /// shoulder/hip groove on the hits; two-hand push f17-f21; the orb leaves as the Shadow Bolt at f21 from the orb centre,
+    /// travels character-forward at 9 m/s; back to rest by f30.
     /// The orb is hidden at rest and walk. Prop mesh VESPERA_orb.fbx (dark-violet orb, silver claw, floating rune ring) rides
     /// both tracks; Unity adds the orb glow particles and trail around it.
     /// New 0–30 frame Scene take at 30 fps on the existing blenderig (same bones, no rebind).
-    /// Frames below are baked from the Design anim report (work/orb_20261011/anim.json) in Unity convention (character forward = +Z).
+    /// Frames below are baked from the Design anim report (work/rave_20261011/anim.json) in Unity convention (character forward = +Z).
     /// HOLD merge until Derek Game-view PASS.
     /// </summary>
     public static class VesperaAttack
     {
         public const string FileName = "VESPERA_blenderig_attack.fbx";
-        /// <summary>ThemePack attack FBX: Design blender_rig_nocape_20261009 VESPERA_nocape_attack.fbx (Derek's 16-bone rig, orb conjure 2026-10-11).</summary>
-        public const string FileMd5 = "5b907c6f5ec944e9fb4233bd9d451e5c";
+        /// <summary>ThemePack attack FBX: Design blender_rig_nocape_20261009 VESPERA_nocape_attack.fbx (Derek's 16-bone rig, orb conjure 2026-10-11, rave conjure 2026-10-11).</summary>
+        public const string FileMd5 = "9b9f123acbc8504b8eec703cd7dce430";
         /// <summary>Original attack FBX in VesperaAttack.DesignDir (attack_20261007), unchanged.</summary>
         public const string DesignFileMd5 = "082b741eae52d9144a612566380766bc";
         public const string DesignDir = "design/survival-theme-a-fantasy/enemies/anim/vespera/attack_20261007";
-        public const int ReleaseFrame = 20;
+        public const int ReleaseFrame = 21;
         public const bool InPlace = false;
 
         /// <summary>First frame the conjured orb shows between her hands, and the frame it reaches full size.</summary>
         public const int OrbAppearFrame = 4;
-        public const int OrbFullFrame = 16;
+        public const int OrbFullFrame = 17;
 
         /// <summary>Prop FBXs copied next to the character FBXs, with Design MD5s.</summary>
         public static readonly string[] PropFileNames =
@@ -67,39 +70,39 @@ namespace Survival.Domain.Enemies
                     new[] { 0.1f, 0.16023f, 0.15523f },
                     new[]
                     {
-                        new AttackFrame(0.0797f, 1.0028f, 0.208f, 0f, 0f, 0f, 1f, 0.18f, false),
-                        new AttackFrame(0.0787f, 1.0141f, 0.2836f, 0f, 0f, 0f, 1f, 0.18f, false),
-                        new AttackFrame(0.0716f, 1.0692f, 0.3849f, 0f, 0f, 0f, 1f, 0.18f, false),
-                        new AttackFrame(0.0682f, 1.1501f, 0.4706f, 0f, 0f, 0f, 1f, 0.18f, false),
-                        new AttackFrame(0.0661f, 1.2263f, 0.5242f, 0f, 0f, 0f, 1f, 0.18f, true),
-                        new AttackFrame(0.0651f, 1.2801f, 0.5457f, 0f, 0f, 0f, 1f, 0.196f, true),
-                        new AttackFrame(0.065f, 1.3f, 0.525f, 0f, 0f, 0f, 1f, 0.241f, true),
-                        new AttackFrame(0.0338f, 1.3073f, 0.5281f, 0.2292f, 0f, 0f, 0.97338f, 0.308f, true),
-                        new AttackFrame(0.0051f, 1.3338f, 0.5395f, 0.4909f, 0f, 0f, 0.87121f, 0.393f, true),
-                        new AttackFrame(-0.0046f, 1.3775f, 0.5582f, 0.74431f, 0f, 0f, 0.66783f, 0.488f, true),
-                        new AttackFrame(0.0174f, 1.4213f, 0.577f, 0.93074f, 0f, 0f, 0.36569f, 0.59f, true),
-                        new AttackFrame(0.065f, 1.44f, 0.585f, 1f, 0f, 0f, 0f, 0.692f, true),
-                        new AttackFrame(0.1126f, 1.4213f, 0.577f, 0.93074f, 0f, 0f, -0.36569f, 0.787f, true),
-                        new AttackFrame(0.1346f, 1.3775f, 0.5582f, 0.74431f, 0f, 0f, -0.66783f, 0.872f, true),
-                        new AttackFrame(0.1249f, 1.3338f, 0.5395f, 0.4909f, 0f, 0f, -0.87121f, 0.939f, true),
-                        new AttackFrame(0.0962f, 1.3073f, 0.5281f, 0.2292f, 0f, 0f, -0.97338f, 0.984f, true),
-                        new AttackFrame(0.065f, 1.3f, 0.525f, 0f, 0f, 0f, -1f, 1f, true),
-                        new AttackFrame(0.065f, 1.3156f, 0.5422f, 0f, 0f, 0f, -1f, 1f, true),
-                        new AttackFrame(0.065f, 1.35f, 0.58f, 0f, 0f, 0f, -1f, 1f, true),
-                        new AttackFrame(0.065f, 1.3844f, 0.6178f, 0f, 0f, 0f, -1f, 1f, true),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, -1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4016f, 0.6362f, 0f, 0f, 0f, -1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4044f, 0.6386f, 0f, 0f, 0f, -1f, 1f, false),
-                        new AttackFrame(0.0646f, 1.4068f, 0.6371f, 0f, 0f, 0f, -1f, 1f, false),
-                        new AttackFrame(0.0617f, 1.3873f, 0.6451f, 0f, 0f, 0f, -1f, 1f, false),
-                        new AttackFrame(0.0627f, 1.326f, 0.6268f, 0f, 0f, 0f, -1f, 1f, false),
-                        new AttackFrame(0.0658f, 1.2397f, 0.5727f, 0f, 0f, 0f, -1f, 1f, false),
-                        new AttackFrame(0.0705f, 1.1463f, 0.4865f, 0f, 0f, 0f, -1f, 1f, false),
-                        new AttackFrame(0.0753f, 1.0627f, 0.3804f, 0f, 0f, 0f, -1f, 1f, false),
-                        new AttackFrame(0.0789f, 1.0086f, 0.2781f, 0f, 0f, 0f, -1f, 1f, false),
-                        new AttackFrame(0.0796f, 1.0062f, 0.2071f, 0f, 0f, 0f, -1f, 1f, false)
+                        new AttackFrame(0.0799f, 0.9992f, 0.209f, 0f, 0f, 0f, 1f, 0.18f, false),
+                        new AttackFrame(0.0771f, 1.0319f, 0.3085f, 0f, 0f, 0f, 1f, 0.18f, false),
+                        new AttackFrame(0.0759f, 1.1303f, 0.4435f, 0f, 0f, 0f, 1f, 0.18f, false),
+                        new AttackFrame(0.0754f, 1.2416f, 0.5488f, 0f, 0f, 0f, 1f, 0.18f, false),
+                        new AttackFrame(0.078f, 1.3267f, 0.6061f, 0f, 0f, 0f, 1f, 0.18f, true),
+                        new AttackFrame(0.08f, 1.36f, 0.595f, 0f, 0f, 0f, 1f, 0.194f, true),
+                        new AttackFrame(0.08f, 1.36f, 0.595f, 0.15471f, 0f, 0f, 0.98796f, 0.232f, true),
+                        new AttackFrame(0.0791f, 1.3574f, 0.5933f, 0.55339f, 0f, 0f, 0.83292f, 0.291f, true),
+                        new AttackFrame(0.0748f, 1.3511f, 0.5894f, 0.67559f, 0f, 0f, 0.73728f, 0.365f, true),
+                        new AttackFrame(0.08f, 1.3567f, 0.595f, 0.43366f, 0f, 0f, 0.90108f, 0.451f, true),
+                        new AttackFrame(0.0821f, 1.3533f, 0.5948f, -0.35347f, 0f, 0f, 0.93544f, 0.543f, true),
+                        new AttackFrame(0.0873f, 1.3449f, 0.5924f, -0.60876f, 0f, 0f, 0.79335f, 0.637f, true),
+                        new AttackFrame(0.0821f, 1.3527f, 0.5948f, -0.35347f, 0f, 0f, 0.93544f, 0.729f, true),
+                        new AttackFrame(0.08f, 1.3573f, 0.595f, 0.43366f, 0f, 0f, 0.90108f, 0.815f, true),
+                        new AttackFrame(0.075f, 1.3513f, 0.589f, 0.67559f, 0f, 0f, 0.73728f, 0.889f, true),
+                        new AttackFrame(0.0792f, 1.3573f, 0.5924f, 0.55339f, 0f, 0f, 0.83292f, 0.948f, true),
+                        new AttackFrame(0.08f, 1.3573f, 0.595f, 0.15471f, 0f, 0f, 0.98796f, 0.986f, true),
+                        new AttackFrame(0.08f, 1.352f, 0.595f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.08f, 1.3698f, 0.6075f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.08f, 1.3993f, 0.635f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.08f, 1.4274f, 0.6625f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.4412f, 0.6762f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.4436f, 0.6786f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.4448f, 0.6798f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.0786f, 1.4145f, 0.6919f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.0767f, 1.3356f, 0.6456f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.0763f, 1.228f, 0.556f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.0779f, 1.1149f, 0.4321f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.0777f, 1.0267f, 0.2974f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.0799f, 0.9992f, 0.209f, 0f, 0f, 0f, 1f, 1f, false)
                     },
-                    "orb conjured between the palms f4-f19 (midpoint of the two palms, grows to full size by f16, spins with the circle)"),
+                    "orb conjured between the palms f4-f20 (midpoint of the two palms, grows to full size by f17, spins with the contrary sweeps)"),
                 new AttackTrack(
                     "VESPERA_shadowbolt_vfx",
                     AttackTrackKind.Projectile,
@@ -117,37 +120,37 @@ namespace Survival.Domain.Enemies
                     new[] { 0.1f, 0.16023f, 0.15523f },
                     new[]
                     {
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, false),
-                        new AttackFrame(0.065f, 1.4f, 0.635f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.065f, 1.4f, 0.935f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.065f, 1.4f, 1.235f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.065f, 1.4f, 1.535f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.065f, 1.4f, 1.835f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.065f, 1.4f, 2.135f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.065f, 1.4f, 2.435f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.065f, 1.4f, 2.735f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.065f, 1.4f, 3.035f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.065f, 1.4f, 3.335f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.065f, 1.4f, 3.635f, 0f, 0f, 0f, 1f, 1f, true)
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.08f, 1.44f, 0.975f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.08f, 1.44f, 1.275f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.08f, 1.44f, 1.575f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.08f, 1.44f, 1.875f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.08f, 1.44f, 2.175f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.08f, 1.44f, 2.475f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.08f, 1.44f, 2.775f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.08f, 1.44f, 3.075f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(0.08f, 1.44f, 3.375f, 0f, 0f, 0f, 1f, 1f, true)
                     },
                     "the orb leaves as the shadow bolt from the orb centre at release, travels character-forward")
             });

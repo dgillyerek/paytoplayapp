@@ -1,6 +1,30 @@
 # VESPERA: no cape (2026-10-09), rebuilt on Derek's rig edit (2026-10-10)
 
-## 2026-10-11 orb conjure + walk fix - current state of this folder
+## 2026-10-11 rave conjure (attack only) - current state of the attack
+Derek on a470cea: "that's pretty good. make her hands go in different directions as if she's outlining the orb. almost like a
+rave dance." Only the attack changed: rest `d46729fb`, walk `fe139c5f` and orb `45b71d1a` are byte-identical to a470cea (the
+blend's walk action re-keys to identical pose matrices on all 31 frames; Derek's 16 bones identical; `actdump.py`, `bonecmp.py`).
+Scripts and reports: `work/rave_20261011/` (`anim_rave.py` + `attack_params.json`).
+
+**Attack (31 frames, release f21, was f20).** f0-5 hands lift off her sides to opposite sides of the orb (visible f4). f5-17
+contrary "gloving": the hands stay on opposite sides of the orb outline (always facing each other through it) and sweep in
+contrary directions - left over the top while the right goes under (hit f8), swap: right over, left under (hit f11), again (hit
+f14), back to the sides (settle f17). Each sweep snaps (fast middle, crisp stop), palms face the orb at orb radius (within 36 deg),
+the orb grows to full size by f17 and spins with the sweeps. Loop plane tipped 25 deg so the under-pass swings forward, clear of her
+stomach. A small groove on each hit: 1.2 cm dip, alternating hip roll 2 deg and chest roll 3 deg; feet planted. Chest turns toward
+the target (85% of her bind twist). f17-21 two-hand push, f21 release from the orb centre (Unity 0.08, 1.44, 0.675), f21-24
+follow-through, rest by f30 (push/return shapes as a470cea, one frame later).
+Wrists: bend <=44 deg, twist <=39 deg; the forearm carries up to 46 deg of the palm turn (no twist bones). The right arm is at full
+reach on the under-passes (IK miss <=1.2 cm). Unity: `VESPERA_orb` f4-20, `VESPERA_shadowbolt_vfx` from f21; ReleaseFrame 21, OrbFullFrame 17.
+
+**Clearance** (`clear_attack.json`): 0 body overlaps f1-29 both sides, 0 hand-vs-hand, 0 hair; hands + lower forearms >=4.3 cm (right)
+/ >=8.0 cm (left) f2-28, 3.0 cm at f1 and 3.3 cm at f29; during the conjure >=5.9 cm (right) / 8.0 cm (left).
+**Stretch** (`stretch.json`): attack 6 edges >2 cm, max 2.41 cm (a470cea 5 / 2.9 cm); walk/rest unchanged (0 / 1.63 cm, 0).
+**Files.** attack `9b9f123acbc8504b8eec703cd7dce430`, blend `ebb48cf63b66b984664c71ac125a70bd`; contact sheet replaced (10 conjure/attack
+frames + follow-through, front + side).
+
+
+## 2026-10-11 orb conjure + walk fix (walk + orb still current; attack superseded by the rave section above)
 Derek on 369c25d: "it all looks good. her walk is a little weird. maybe she needs a small weapon to launch the attack." He picked
 option C (orb) from the weapon sheet: "make her put both hands in front and move in a circle to 'conjure' the orb before firing."
 Derek's 16 bones are byte-identical to 369c25d/265ec84 (heads, tails, matrices, parents, connect flags; `bonecmp.py`). Mesh and
