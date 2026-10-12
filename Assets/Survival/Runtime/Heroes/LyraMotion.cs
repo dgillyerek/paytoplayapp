@@ -6,7 +6,8 @@ namespace Survival.Domain.Heroes
 /// Lyra fitted/tighten (Design blender_rig_tighten_20261008, look PASS 2026-10-08).
 /// Mixamo-compatible mixamorig, 20 bones (Derek removed both ToeBase bones 2026-10-08; toes ride the Foot). Rest bind, 1 s Scene walk at 30 fps,
 /// attack add-on (attack_20261008). Replaces prior blenderig + attack_20261007.
-/// Bones bound by name. Staff stays in RightHand.
+/// Bones bound by name. Staff stays in RightHand. Imported Generic (2026-10-12): Humanoid retargeting with root motion off
+/// stripped the attack's 72 deg body turn and hip travel into discarded root motion.
 /// </summary>
     public static class LyraMotion
     {
@@ -94,7 +95,7 @@ namespace Survival.Domain.Heroes
             WalkSeconds,
             WalkFrameRate,
             WalkLastFrame,
-            BlenderRigAvatar.MixamoHumanoid,
+            BlenderRigAvatar.CustomGeneric,
             BoneCount,
             BoneNames,
             BoneRoot,

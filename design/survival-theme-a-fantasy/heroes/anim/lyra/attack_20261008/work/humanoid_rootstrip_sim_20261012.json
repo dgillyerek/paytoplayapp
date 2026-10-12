@@ -1,0 +1,556 @@
+[
+[
+"LYRA_tighten_attack",
+[
+{
+"f": 0,
+"body_yaw": 0.0,
+"hips_xy_cm": 0.0,
+"ltoe_blender": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_unity_humanoid": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_shift_cm": 0.0,
+"rtoe_shift_cm": 0.0
+},
+{
+"f": 2,
+"body_yaw": 11.3,
+"hips_xy_cm": 6.5,
+"ltoe_blender": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_unity_humanoid": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_shift_cm": 0.0,
+"rtoe_shift_cm": 10.8
+},
+{
+"f": 4,
+"body_yaw": 36.0,
+"hips_xy_cm": 20.4,
+"ltoe_blender": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_unity_humanoid": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_shift_cm": 0.0,
+"rtoe_shift_cm": 26.2
+},
+{
+"f": 6,
+"body_yaw": 60.8,
+"hips_xy_cm": 33.4,
+"ltoe_blender": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_unity_humanoid": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_shift_cm": 0.0,
+"rtoe_shift_cm": 45.1
+},
+{
+"f": 8,
+"body_yaw": 72.0,
+"hips_xy_cm": 38.8,
+"ltoe_blender": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_unity_humanoid": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_shift_cm": 0.0,
+"rtoe_shift_cm": 54.7
+},
+{
+"f": 10,
+"body_yaw": 72.0,
+"hips_xy_cm": 37.3,
+"ltoe_blender": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_unity_humanoid": [
+0.262,
+-0.144,
+0.023
+],
+"ltoe_shift_cm": 1.6,
+"rtoe_shift_cm": 55.1
+},
+{
+"f": 12,
+"body_yaw": 72.0,
+"hips_xy_cm": 40.7,
+"ltoe_blender": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_unity_humanoid": [
+0.297,
+-0.138,
+0.023
+],
+"ltoe_shift_cm": 2.0,
+"rtoe_shift_cm": 54.2
+},
+{
+"f": 14,
+"body_yaw": 72.0,
+"hips_xy_cm": 39.6,
+"ltoe_blender": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_unity_humanoid": [
+0.286,
+-0.14,
+0.023
+],
+"ltoe_shift_cm": 0.8,
+"rtoe_shift_cm": 54.5
+},
+{
+"f": 16,
+"body_yaw": 72.0,
+"hips_xy_cm": 38.8,
+"ltoe_blender": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_unity_humanoid": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_shift_cm": 0.0,
+"rtoe_shift_cm": 54.7
+},
+{
+"f": 18,
+"body_yaw": 72.0,
+"hips_xy_cm": 38.8,
+"ltoe_blender": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_unity_humanoid": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_shift_cm": 0.0,
+"rtoe_shift_cm": 54.7
+},
+{
+"f": 20,
+"body_yaw": 72.0,
+"hips_xy_cm": 38.8,
+"ltoe_blender": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_unity_humanoid": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_shift_cm": 0.0,
+"rtoe_shift_cm": 54.7
+},
+{
+"f": 22,
+"body_yaw": 68.9,
+"hips_xy_cm": 37.4,
+"ltoe_blender": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_unity_humanoid": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_shift_cm": 0.0,
+"rtoe_shift_cm": 50.4
+},
+{
+"f": 24,
+"body_yaw": 49.2,
+"hips_xy_cm": 27.5,
+"ltoe_blender": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_unity_humanoid": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_shift_cm": 0.0,
+"rtoe_shift_cm": 35.4
+},
+{
+"f": 26,
+"body_yaw": 22.8,
+"hips_xy_cm": 13.1,
+"ltoe_blender": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_unity_humanoid": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_shift_cm": 0.0,
+"rtoe_shift_cm": 21.7
+},
+{
+"f": 28,
+"body_yaw": 3.1,
+"hips_xy_cm": 1.8,
+"ltoe_blender": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_unity_humanoid": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_shift_cm": 0.0,
+"rtoe_shift_cm": 3.1
+},
+{
+"f": 30,
+"body_yaw": 0.0,
+"hips_xy_cm": 0.0,
+"ltoe_blender": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_unity_humanoid": [
+0.278,
+-0.142,
+0.023
+],
+"ltoe_shift_cm": 0.0,
+"rtoe_shift_cm": 0.0
+}
+]
+],
+[
+"LYRA_tighten_walk",
+[
+{
+"f": 0,
+"body_yaw": 0.0,
+"hips_xy_cm": 0.0,
+"ltoe_blender": [
+0.047,
+-0.158,
+0.026
+],
+"ltoe_unity_humanoid": [
+0.047,
+-0.158,
+0.026
+],
+"ltoe_shift_cm": 0.0,
+"rtoe_shift_cm": 0.0
+},
+{
+"f": 2,
+"body_yaw": 2.1,
+"hips_xy_cm": 0.1,
+"ltoe_blender": [
+0.047,
+-0.1,
+0.026
+],
+"ltoe_unity_humanoid": [
+0.043,
+-0.102,
+0.026
+],
+"ltoe_shift_cm": 0.5,
+"rtoe_shift_cm": 0.6
+},
+{
+"f": 4,
+"body_yaw": 3.9,
+"hips_xy_cm": 0.0,
+"ltoe_blender": [
+0.047,
+-0.042,
+0.026
+],
+"ltoe_unity_humanoid": [
+0.044,
+-0.046,
+0.026
+],
+"ltoe_shift_cm": 0.5,
+"rtoe_shift_cm": 1.8
+},
+{
+"f": 6,
+"body_yaw": 5.1,
+"hips_xy_cm": 0.3,
+"ltoe_blender": [
+0.047,
+0.014,
+0.03
+],
+"ltoe_unity_humanoid": [
+0.051,
+0.008,
+0.03
+],
+"ltoe_shift_cm": 0.7,
+"rtoe_shift_cm": 2.9
+},
+{
+"f": 8,
+"body_yaw": 5.5,
+"hips_xy_cm": 0.7,
+"ltoe_blender": [
+0.047,
+0.066,
+0.04
+],
+"ltoe_unity_humanoid": [
+0.06,
+0.06,
+0.04
+],
+"ltoe_shift_cm": 1.5,
+"rtoe_shift_cm": 3.0
+},
+{
+"f": 10,
+"body_yaw": 5.1,
+"hips_xy_cm": 1.1,
+"ltoe_blender": [
+0.047,
+0.118,
+0.049
+],
+"ltoe_unity_humanoid": [
+0.069,
+0.111,
+0.049
+],
+"ltoe_shift_cm": 2.3,
+"rtoe_shift_cm": 1.8
+},
+{
+"f": 12,
+"body_yaw": 3.9,
+"hips_xy_cm": 1.6,
+"ltoe_blender": [
+0.047,
+0.15,
+0.065
+],
+"ltoe_unity_humanoid": [
+0.073,
+0.144,
+0.065
+],
+"ltoe_shift_cm": 2.6,
+"rtoe_shift_cm": 0.5
+},
+{
+"f": 14,
+"body_yaw": 2.1,
+"hips_xy_cm": 1.9,
+"ltoe_blender": [
+0.047,
+0.091,
+0.096
+],
+"ltoe_unity_humanoid": [
+0.07,
+0.088,
+0.096
+],
+"ltoe_shift_cm": 2.3,
+"rtoe_shift_cm": 1.2
+},
+{
+"f": 16,
+"body_yaw": 0.0,
+"hips_xy_cm": 2.1,
+"ltoe_blender": [
+0.047,
+-0.028,
+0.111
+],
+"ltoe_unity_humanoid": [
+0.068,
+-0.028,
+0.111
+],
+"ltoe_shift_cm": 2.1,
+"rtoe_shift_cm": 2.1
+},
+{
+"f": 18,
+"body_yaw": -2.0,
+"hips_xy_cm": 2.1,
+"ltoe_blender": [
+0.047,
+-0.172,
+0.112
+],
+"ltoe_unity_humanoid": [
+0.073,
+-0.169,
+0.112
+],
+"ltoe_shift_cm": 2.7,
+"rtoe_shift_cm": 2.4
+},
+{
+"f": 20,
+"body_yaw": -3.5,
+"hips_xy_cm": 1.9,
+"ltoe_blender": [
+0.047,
+-0.294,
+0.101
+],
+"ltoe_unity_humanoid": [
+0.083,
+-0.289,
+0.101
+],
+"ltoe_shift_cm": 3.7,
+"rtoe_shift_cm": 2.1
+},
+{
+"f": 22,
+"body_yaw": -4.4,
+"hips_xy_cm": 1.6,
+"ltoe_blender": [
+0.047,
+-0.355,
+0.074
+],
+"ltoe_unity_humanoid": [
+0.089,
+-0.348,
+0.074
+],
+"ltoe_shift_cm": 4.2,
+"rtoe_shift_cm": 1.5
+},
+{
+"f": 24,
+"body_yaw": -4.4,
+"hips_xy_cm": 1.1,
+"ltoe_blender": [
+0.047,
+-0.326,
+0.048
+],
+"ltoe_unity_humanoid": [
+0.082,
+-0.32,
+0.048
+],
+"ltoe_shift_cm": 3.6,
+"rtoe_shift_cm": 0.7
+},
+{
+"f": 26,
+"body_yaw": -3.5,
+"hips_xy_cm": 0.7,
+"ltoe_blender": [
+0.047,
+-0.273,
+0.026
+],
+"ltoe_unity_humanoid": [
+0.07,
+-0.268,
+0.026
+],
+"ltoe_shift_cm": 2.3,
+"rtoe_shift_cm": 0.4
+},
+{
+"f": 28,
+"body_yaw": -2.0,
+"hips_xy_cm": 0.3,
+"ltoe_blender": [
+0.047,
+-0.215,
+0.026
+],
+"ltoe_unity_humanoid": [
+0.057,
+-0.213,
+0.026
+],
+"ltoe_shift_cm": 1.0,
+"rtoe_shift_cm": 0.3
+},
+{
+"f": 30,
+"body_yaw": 0.0,
+"hips_xy_cm": 0.0,
+"ltoe_blender": [
+0.047,
+-0.158,
+0.026
+],
+"ltoe_unity_humanoid": [
+0.047,
+-0.158,
+0.026
+],
+"ltoe_shift_cm": 0.0,
+"rtoe_shift_cm": 0.0
+}
+]
+]
+]

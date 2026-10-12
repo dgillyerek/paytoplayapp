@@ -4,8 +4,8 @@ using UnityEngine;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Lyra rest bind pose and walk clip. Mixamorig humanoid when the avatar
-    /// validates, otherwise Generic. Rejects LYRA_rig.fbx. Does not bake axis
+    /// Lyra rest bind pose, walk and attack clips, imported Generic (like the locked rigs) so Unity
+    /// plays the exact Blender bone keys; Humanoid retargeting dropped the attack's body turn and step. Rejects LYRA_rig.fbx. Does not bake axis
     /// conversion or rewrite the imported root; the actor transform carries
     /// LyraMotion.FacingYawDegrees so she faces the camera.
     /// </summary>

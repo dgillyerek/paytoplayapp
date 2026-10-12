@@ -23,7 +23,7 @@ public sealed class BlenderRigRosterTests
         Assert.Equal(22, MixamoHumanoidBones.Names.Length);
         Assert.Equal(MixamoHumanoidBones.Names.Length, MixamoHumanoidBones.Names.Distinct(StringComparer.Ordinal).Count());
         Assert.Equal("mixamorig:Hips", MixamoHumanoidBones.Root);
-        AssertHumanoidDemo(
+        AssertMixamorigDemo(
             LyraMotion.Spec,
             "LYRA_tighten_basecolor_0",
             "LYRA_tighten_normal_2",
@@ -61,6 +61,7 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("LyraMotion.Spec", demo, StringComparison.Ordinal);
         Assert.Contains("SetValueWithoutNotify(0)", shared, StringComparison.Ordinal);
         Assert.Contains("DropdownObjectName", shared, StringComparison.Ordinal);
+        AssertImportSkipsReimportWhenMetaAlreadyMatches(player);
 
         var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "Lyra.unity"));
         Assert.Contains("LyraRoot", scene, StringComparison.Ordinal);
@@ -73,7 +74,7 @@ public sealed class BlenderRigRosterTests
     }
 
 
-    private static void AssertHumanoidDemo(BlenderRigSpec spec, string albedoStem, string normalStem, string demoGuid, string menu)
+    private static void AssertMixamorigDemo(BlenderRigSpec spec, string albedoStem, string normalStem, string demoGuid, string menu)
     {
         Assert.Equal(spec.BoneNames.Length, spec.BoneCount);
         Assert.All(spec.BoneNames, n => Assert.Contains(n, MixamoHumanoidBones.Names));
@@ -82,7 +83,9 @@ public sealed class BlenderRigRosterTests
         Assert.Equal("Scene", spec.ClipTakeName);
         Assert.Equal(1f, spec.ClipSeconds);
         Assert.Equal(30, spec.ClipLastFrame);
-        Assert.True(spec.PreferHumanoid);
+        // Generic like the locked rigs: Humanoid retargeting stripped the attack's body turn and step (root motion off).
+        Assert.False(spec.PreferHumanoid);
+        Assert.Equal(BlenderRigAvatar.CustomGeneric, spec.Avatar);
         Assert.True(BlenderRigSpec.IsRejectedMixamoRigFile(spec.RejectedMixamoFileName));
         Assert.Contains(spec, BlenderRigRoster.All);
         Assert.Equal(1, BlenderRigRoster.All.Count);
@@ -126,7 +129,7 @@ public sealed class BlenderRigRosterTests
         Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(albedo)));
         Assert.True(ContainsBytes(restBytes, File.ReadAllBytes(normal)));
         var restMeta = File.ReadAllText(rest + ".meta");
-        Assert.Contains("animationType: 3", restMeta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 2", restMeta, StringComparison.Ordinal);
         Assert.Contains("bakeAxisConversion: 0", restMeta, StringComparison.Ordinal);
         Assert.Contains("useFileScale: 0", restMeta, StringComparison.Ordinal);
         Assert.Contains("materialImportMode: 2", restMeta, StringComparison.Ordinal);
@@ -135,8 +138,64 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("takeName: " + spec.ClipTakeName, walkMeta, StringComparison.Ordinal);
         Assert.Contains("lastFrame: " + spec.ClipLastFrame, walkMeta, StringComparison.Ordinal);
         Assert.Contains("bakeAxisConversion: 0", walkMeta, StringComparison.Ordinal);
-        Assert.Contains("animationType: 3", walkMeta, StringComparison.Ordinal);
+        Assert.Contains("animationType: 2", walkMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("mixamo.com", walkMeta, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Import_meta_check_matches_what_EnsureImport_writes()
+    {
+        var bare =
+            "animationType: 2\n" +
+            "avatarSetup: 1\n" +
+            "autoGenerateAvatarMappingIfUnspecified: 0\n" +
+            "materialImportMode: 2\n" +
+            "useFileScale: 0\n" +
+            "globalScale: 1\n" +
+            "optimizeBones: 0\n" +
+            "bakeAxisConversion: 0\n" +
+            "importAnimation: 1\n" +
+            "clipAnimations: []\n";
+        Assert.False(BlenderRigImportMeta.NeedsReimport(bare, false, false, string.Empty, string.Empty, 0));
+        Assert.True(BlenderRigImportMeta.NeedsReimport(bare, true, false, string.Empty, string.Empty, 0));
+        Assert.True(BlenderRigImportMeta.NeedsReimport(bare, false, true, "walk", "Scene", 30));
+        var human = bare
+            .Replace("animationType: 2", "animationType: 3", StringComparison.Ordinal)
+            .Replace("autoGenerateAvatarMappingIfUnspecified: 0", "autoGenerateAvatarMappingIfUnspecified: 1", StringComparison.Ordinal);
+        Assert.False(BlenderRigImportMeta.NeedsReimport(human, true, false, string.Empty, string.Empty, 0));
+    }
+
+    [Fact]
+    public void Lyra_imports_generic_and_saved_settings_already_match_so_play_mode_does_not_reimport()
+    {
+        var root = FindRepoRoot();
+        var spec = LyraMotion.Spec;
+        var restMeta = File.ReadAllText(Path.Combine(root, "Assets", spec.RestThemePackRel) + ".meta");
+        Assert.Contains("animationType: 2", restMeta, StringComparison.Ordinal);
+        Assert.False(BlenderRigImportMeta.NeedsReimport(restMeta, spec.PreferHumanoid, false, string.Empty, string.Empty, 0));
+        var walkMeta = File.ReadAllText(Path.Combine(root, "Assets", spec.ClipThemePackRel) + ".meta");
+        Assert.Contains("animationType: 2", walkMeta, StringComparison.Ordinal);
+        Assert.False(BlenderRigImportMeta.NeedsReimport(
+            walkMeta, spec.PreferHumanoid, true, spec.ClipPoseName, spec.ClipTakeName, spec.ClipLastFrame));
+        foreach (var extra in spec.ExtraClips)
+        {
+            var meta = File.ReadAllText(Path.Combine(root, "Assets", spec.ThemePackDir, extra.FileName) + ".meta");
+            Assert.Contains("animationType: 2", meta, StringComparison.Ordinal);
+            Assert.False(BlenderRigImportMeta.NeedsReimport(meta, spec.PreferHumanoid, true, extra.PoseName, extra.TakeName, extra.LastFrame));
+        }
+    }
+
+    private static void AssertImportSkipsReimportWhenMetaAlreadyMatches(string player)
+    {
+        var ensureAt = player.IndexOf("private void EnsureImport", StringComparison.Ordinal);
+        var pinAt = player.IndexOf("private bool PinClip", StringComparison.Ordinal);
+        Assert.True(ensureAt >= 0 && pinAt > ensureAt);
+        var ensure = player.Substring(ensureAt, pinAt - ensureAt);
+        var gate = ensure.IndexOf("SavedSettingsMatch", StringComparison.Ordinal);
+        var save = ensure.IndexOf("SaveAndReimport", StringComparison.Ordinal);
+        Assert.True(gate >= 0 && save > gate);
+        Assert.Contains("return;", ensure.Substring(gate, save - gate), StringComparison.Ordinal);
+        Assert.Contains("BlenderRigImportMeta.NeedsReimport", player, StringComparison.Ordinal);
     }
 
     private static void AssertGenericDemo(

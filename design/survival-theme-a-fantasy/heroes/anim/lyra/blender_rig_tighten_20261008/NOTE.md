@@ -154,3 +154,6 @@ Derek: "lyra needs to turn and face the camera forward. she faces to her right."
 - **Rest FBX:** it is now exported posed from the rest action, which carries the roll. The skin bind is still Derek's bones. The FBX default pose matches attack f0, so rest → attack doesn't jump.
 - **Facing:** the mesh's chest faces 8° to her right in the bind (pelvis 10°). Unity now spawns her with `LyraMotion.FacingYawDegrees = -8`. See `../attack_20261008/NOTE.md`.
 - **FBX MD5s:** rest e4898881 → 494f64e9, walk 7c5b1577 → 6edbe1ea. The attack is listed in the attack note. Both staff FBXs are unchanged.
+
+## 2026-10-12: Generic import in Unity
+Rest, walk and attack now import as Generic (`animationType: 2`), like the locked rigs. Humanoid retargeting with root motion off threw away the attack's body turn and hip travel. FBXs and the blend are unchanged. Details are in `../attack_20261008/NOTE.md`.
