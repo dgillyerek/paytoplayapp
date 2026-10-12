@@ -11,7 +11,7 @@ namespace Survival.Domain.Heroes
     public static class LyraAttack
     {
         public const string FileName = "LYRA_blenderig_attack.fbx";
-        public const string FileMd5 = "02c6ed0d3bb01db777f74199b071410c";
+        public const string FileMd5 = "916e0ab97866a084d4ccf1788db7ecbb";
         public const string DesignDir = "design/survival-theme-a-fantasy/heroes/anim/lyra/attack_20261008";
         public const int ReleaseFrame = 12;
         public const bool InPlace = false;
@@ -56,13 +56,13 @@ namespace Survival.Domain.Heroes
                     new[]
                     {
                         new AttackFrame(0.54468f, 1.2833f, 0.13197f, 0.01582f, -0.00068f, -0.04293f, 0.99895f, 1f, true),
-                        new AttackFrame(0.52598f, 1.27372f, 0.17269f, 0.01606f, -0.03806f, -0.07266f, 0.9965f, 1f, true),
-                        new AttackFrame(0.46283f, 1.24847f, 0.27077f, 0.0252f, -0.13518f, -0.15042f, 0.97901f, 1f, true),
-                        new AttackFrame(0.34438f, 1.21277f, 0.38099f, 0.05868f, -0.26496f, -0.25565f, 0.9279f, 1f, true),
-                        new AttackFrame(0.17907f, 1.17185f, 0.45744f, 0.12447f, -0.39498f, -0.36332f, 0.83457f, 1f, true),
-                        new AttackFrame(-0.00013f, 1.13093f, 0.47412f, 0.21518f, -0.49641f, -0.45032f, 0.71027f, 1f, true),
-                        new AttackFrame(-0.15254f, 1.09523f, 0.43889f, 0.30985f, -0.55599f, -0.50481f, 0.58312f, 1f, true),
-                        new AttackFrame(-0.25085f, 1.06998f, 0.38749f, 0.38278f, -0.57996f, -0.52968f, 0.48639f, 1f, true),
+                        new AttackFrame(0.52533f, 1.27776f, 0.18344f, 0.01606f, -0.03806f, -0.07266f, 0.9965f, 1f, true),
+                        new AttackFrame(0.45467f, 1.26262f, 0.30759f, 0.0252f, -0.13518f, -0.15042f, 0.97901f, 1f, true),
+                        new AttackFrame(0.31571f, 1.23792f, 0.44161f, 0.05868f, -0.26496f, -0.25565f, 0.9279f, 1f, true),
+                        new AttackFrame(0.12765f, 1.20185f, 0.51872f, 0.12447f, -0.39498f, -0.36332f, 0.83457f, 1f, true),
+                        new AttackFrame(-0.05485f, 1.15608f, 0.51288f, 0.21518f, -0.49641f, -0.45032f, 0.71027f, 1f, true),
+                        new AttackFrame(-0.18738f, 1.10937f, 0.45333f, 0.30985f, -0.55599f, -0.50481f, 0.58312f, 1f, true),
+                        new AttackFrame(-0.26132f, 1.07402f, 0.39f, 0.38278f, -0.57996f, -0.52968f, 0.48639f, 1f, true),
                         new AttackFrame(-0.28505f, 1.0604f, 0.36271f, 0.41127f, -0.58492f, -0.53598f, 0.44883f, 1f, true),
                         new AttackFrame(-0.28505f, 1.0604f, 0.34271f, 0.41127f, -0.58492f, -0.53598f, 0.44883f, 1f, true),
                         new AttackFrame(-0.28505f, 1.0604f, 0.32271f, 0.41127f, -0.58492f, -0.53598f, 0.44883f, 1f, true),
@@ -77,13 +77,13 @@ namespace Survival.Domain.Heroes
                         new AttackFrame(-0.28505f, 1.0604f, 0.36271f, 0.41127f, -0.58492f, -0.53598f, 0.44883f, 1f, true),
                         new AttackFrame(-0.28505f, 1.0604f, 0.36271f, 0.41127f, -0.58492f, -0.53598f, 0.44883f, 1f, true),
                         new AttackFrame(-0.28505f, 1.0604f, 0.36271f, 0.41127f, -0.58492f, -0.53598f, 0.44883f, 1f, true),
-                        new AttackFrame(-0.25085f, 1.06998f, 0.38749f, 0.38278f, -0.57996f, -0.52968f, 0.48639f, 1f, true),
-                        new AttackFrame(-0.15254f, 1.09523f, 0.43889f, 0.30985f, -0.55599f, -0.50481f, 0.58312f, 1f, true),
-                        new AttackFrame(-0.00013f, 1.13093f, 0.47412f, 0.21518f, -0.49641f, -0.45032f, 0.71027f, 1f, true),
-                        new AttackFrame(0.17907f, 1.17185f, 0.45744f, 0.12447f, -0.39498f, -0.36332f, 0.83457f, 1f, true),
-                        new AttackFrame(0.34438f, 1.21277f, 0.38099f, 0.05868f, -0.26496f, -0.25565f, 0.9279f, 1f, true),
-                        new AttackFrame(0.46283f, 1.24847f, 0.27077f, 0.0252f, -0.13518f, -0.15042f, 0.97901f, 1f, true),
-                        new AttackFrame(0.52598f, 1.27372f, 0.17269f, 0.01606f, -0.03806f, -0.07266f, 0.9965f, 1f, true),
+                        new AttackFrame(-0.26132f, 1.07402f, 0.39f, 0.38278f, -0.57996f, -0.52968f, 0.48639f, 1f, true),
+                        new AttackFrame(-0.18738f, 1.10937f, 0.45333f, 0.30985f, -0.55599f, -0.50481f, 0.58312f, 1f, true),
+                        new AttackFrame(-0.05485f, 1.15608f, 0.51288f, 0.21518f, -0.49641f, -0.45032f, 0.71027f, 1f, true),
+                        new AttackFrame(0.12765f, 1.20185f, 0.51872f, 0.12447f, -0.39498f, -0.36332f, 0.83457f, 1f, true),
+                        new AttackFrame(0.31571f, 1.23792f, 0.44161f, 0.05868f, -0.26496f, -0.25565f, 0.9279f, 1f, true),
+                        new AttackFrame(0.45467f, 1.26262f, 0.30759f, 0.0252f, -0.13518f, -0.15042f, 0.97901f, 1f, true),
+                        new AttackFrame(0.52533f, 1.27776f, 0.18344f, 0.01606f, -0.03806f, -0.07266f, 0.9965f, 1f, true),
                         new AttackFrame(0.54468f, 1.2833f, 0.13197f, 0.01582f, -0.00068f, -0.04293f, 0.99895f, 1f, true),
                         new AttackFrame(0.54468f, 1.2833f, 0.13197f, 0.01582f, -0.00068f, -0.04293f, 0.99895f, 1f, true)
                     },

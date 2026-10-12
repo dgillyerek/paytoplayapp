@@ -126,6 +126,7 @@ def pose_frame(f,roll,poleR,poleL,rollL,ktw):
     # staff
     ws=wbody(f); Sl0=S0; Slh=Bh.inverted()@staff_hold(roll)
     Sl=interp(Sl0,Slh,ws); th=TH.get(str(f),0.0)
+    Sl.translation=Sl.translation+Vector(PRM.get('draw_bump',[0,0,0]))*math.sin(math.pi*ws)
     Sw=Matrix.Translation(dW*th*(1-PRM['body_follow']))@Bm@Sl
     HmR=Sw@O.inverted()
     info={}
@@ -139,8 +140,16 @@ def pose_frame(f,roll,poleR,poleL,rollL,ktw):
     # left arm
     wl=wleft(f)
     Lg=Sw@Matrix.Rotation(math.radians(rollL),4,'Z')@Lrel
+    rad=Lg.translation-(Sw@Vector((0,0,(Sw.inverted()@Lg.translation).z))); rad=rad.normalized() if rad.length>1e-6 else rad
+    Lg=Matrix.Translation(rad*PRM.get('approach',0.0)*min(1.0,(1-wl)*PRM.get('ap_k',1.0)))@Lg
     Lr=Bm@M0[P+'LeftHand']
-    HmL=interp(Lr,Lg,wl) if wl>0 else Lr
+    if wl>0:
+        wr_=min(1.0,wl*PRM.get('rot_lead',1.0))
+        if PRM.get('staff_space'):
+            a_=Sw.inverted()@Lr; b_=Sw.inverted()@Lg; q=a_.to_quaternion().slerp(b_.to_quaternion(),wr_); X_=q.to_matrix().to_4x4(); X_.translation=a_.translation.lerp(b_.translation,wl); HmL=Sw@X_
+        else:
+            q=Lr.to_quaternion().slerp(Lg.to_quaternion(),wr_); HmL=q.to_matrix().to_4x4(); HmL.translation=Lr.translation.lerp(Lg.translation,wl)
+    else: HmL=Lr
     SaL=M[P+'LeftShoulder']@M0[P+'LeftShoulder'].inverted()@M0[P+'LeftArm']; SL=SaL.translation
     p_rest=Bm.to_3x3()@ARM['Left']['p0']; p_hold=Bm.to_3x3()@pole_vec(None,poleL,Bm.inverted()@SL,Bm.inverted()@HmL.translation)
     pL=p_rest*(1-wl)+p_hold*wl
