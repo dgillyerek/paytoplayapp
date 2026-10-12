@@ -1,0 +1,870 @@
+[
+{
+"f": 0,
+"wristR": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"lower shaft|RightFoot": 0.089,
+"crystal/head|RightHand": 0.108
+},
+"crystal": [
+-0.587,
+-0.141,
+1.8066
+]
+},
+{
+"f": 1,
+"wristR": [
+-0.2,
+-1.0,
+0.6,
+1.2
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightFoot": 0.122
+},
+"crystal": [
+-0.5957,
+-0.1019,
+1.8289
+]
+},
+{
+"f": 2,
+"wristR": [
+-0.7,
+-2.5,
+1.9,
+3.2
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightFoot": 0.202
+},
+"crystal": [
+-0.6006,
+-0.0279,
+1.8651
+]
+},
+{
+"f": 3,
+"wristR": [
+-1.2,
+-4.2,
+3.8,
+5.9
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightUpLeg": 0.283
+},
+"crystal": [
+-0.5864,
+0.0707,
+1.9093
+]
+},
+{
+"f": 4,
+"wristR": [
+-1.7,
+-5.6,
+6.2,
+8.5
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"crystal/head|RightArm": 0.285
+},
+"crystal": [
+-0.5494,
+0.168,
+1.9499
+]
+},
+{
+"f": 5,
+"wristR": [
+-2.0,
+-6.3,
+8.4,
+10.7
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightUpLeg": 0.275
+},
+"crystal": [
+-0.5084,
+0.241,
+1.9822
+]
+},
+{
+"f": 6,
+"wristR": [
+-2.3,
+-6.9,
+10.3,
+12.7
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightUpLeg": 0.23
+},
+"crystal": [
+-0.4907,
+0.2744,
+2.007
+]
+},
+{
+"f": 7,
+"wristR": [
+-2.4,
+-8.3,
+11.6,
+14.4
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightUpLeg": 0.158
+},
+"crystal": [
+-0.5155,
+0.259,
+2.022
+]
+},
+{
+"f": 8,
+"wristR": [
+-2.8,
+-10.1,
+12.0,
+15.9
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"lower shaft|RightUpLeg": 0.086,
+"crystal/head|RightHand": 0.108
+},
+"crystal": [
+-0.5782,
+0.1864,
+2.0183
+]
+},
+{
+"f": 9,
+"wristR": [
+-3.0,
+-11.8,
+12.0,
+17.1
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.037,
+"minclear_by": {
+"lower shaft|RightUpLeg": 0.037,
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"lower shaft|torso": 0.08
+},
+"crystal": [
+-0.6468,
+-0.0121,
+1.9962
+]
+},
+{
+"f": 10,
+"wristR": [
+-2.4,
+-12.7,
+10.9,
+16.9
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.037,
+"minclear_by": {
+"lower shaft|RightUpLeg": 0.037,
+"lower shaft|RightHand": 0.04,
+"lower shaft|RightLeg": 0.041,
+"upper shaft|RightHand": 0.058
+},
+"crystal": [
+-0.569,
+-0.331,
+1.9737
+]
+},
+{
+"f": 11,
+"wristR": [
+1.0,
+-15.9,
+10.0,
+18.8
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightLeg": 0.121
+},
+"crystal": [
+-0.3555,
+-0.5645,
+1.9428
+]
+},
+{
+"f": 12,
+"wristR": [
+3.5,
+-16.0,
+10.5,
+19.5
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightUpLeg": 0.192
+},
+"crystal": [
+-0.2464,
+-0.6593,
+1.9025
+]
+},
+{
+"f": 13,
+"wristR": [
+7.5,
+-16.1,
+11.3,
+21.0
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightForeArm": 0.219
+},
+"crystal": [
+-0.2229,
+-0.6981,
+1.8723
+]
+},
+{
+"f": 14,
+"wristR": [
+11.7,
+-16.1,
+11.9,
+23.2
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightForeArm": 0.203
+},
+"crystal": [
+-0.221,
+-0.7259,
+1.8438
+]
+},
+{
+"f": 15,
+"wristR": [
+14.2,
+-16.1,
+12.0,
+24.6
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightForeArm": 0.202
+},
+"crystal": [
+-0.2207,
+-0.7419,
+1.8259
+]
+},
+{
+"f": 16,
+"wristR": [
+14.6,
+-16.1,
+12.0,
+24.8
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightForeArm": 0.194
+},
+"crystal": [
+-0.2213,
+-0.7481,
+1.8188
+]
+},
+{
+"f": 17,
+"wristR": [
+13.3,
+-16.1,
+11.8,
+23.9
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightForeArm": 0.203
+},
+"crystal": [
+-0.2236,
+-0.7451,
+1.8214
+]
+},
+{
+"f": 18,
+"wristR": [
+10.4,
+-16.1,
+10.9,
+22.0
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightForeArm": 0.215
+},
+"crystal": [
+-0.2272,
+-0.7345,
+1.8316
+]
+},
+{
+"f": 19,
+"wristR": [
+6.8,
+-16.1,
+9.5,
+19.8
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightForeArm": 0.225
+},
+"crystal": [
+-0.2353,
+-0.7184,
+1.8453
+]
+},
+{
+"f": 20,
+"wristR": [
+4.0,
+-16.0,
+7.6,
+18.2
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightUpLeg": 0.239
+},
+"crystal": [
+-0.258,
+-0.6982,
+1.858
+]
+},
+{
+"f": 21,
+"wristR": [
+2.1,
+-16.0,
+5.7,
+17.1
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightLeg": 0.246
+},
+"crystal": [
+-0.3017,
+-0.6742,
+1.8663
+]
+},
+{
+"f": 22,
+"wristR": [
+1.0,
+-15.6,
+4.0,
+16.1
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightFoot": 0.189
+},
+"crystal": [
+-0.3634,
+-0.6422,
+1.8689
+]
+},
+{
+"f": 23,
+"wristR": [
+0.4,
+-14.2,
+2.6,
+14.4
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"crystal/head|RightHand": 0.108,
+"lower shaft|RightFoot": 0.133
+},
+"crystal": [
+-0.4355,
+-0.595,
+1.8663
+]
+},
+{
+"f": 24,
+"wristR": [
+0.1,
+-11.6,
+1.6,
+11.7
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"lower shaft|RightFoot": 0.097,
+"crystal/head|RightHand": 0.108
+},
+"crystal": [
+-0.5066,
+-0.5287,
+1.8591
+]
+},
+{
+"f": 25,
+"wristR": [
+-0.1,
+-8.4,
+0.8,
+8.4
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"lower shaft|RightFoot": 0.08,
+"crystal/head|RightHand": 0.108
+},
+"crystal": [
+-0.5633,
+-0.4461,
+1.8486
+]
+},
+{
+"f": 26,
+"wristR": [
+-0.2,
+-5.0,
+0.4,
+5.0
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"lower shaft|RightFoot": 0.086,
+"crystal/head|RightHand": 0.108
+},
+"crystal": [
+-0.5966,
+-0.3569,
+1.8366
+]
+},
+{
+"f": 27,
+"wristR": [
+-0.2,
+-2.2,
+0.2,
+2.2
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"lower shaft|RightFoot": 0.098,
+"crystal/head|RightHand": 0.108
+},
+"crystal": [
+-0.6075,
+-0.2734,
+1.8251
+]
+},
+{
+"f": 28,
+"wristR": [
+-0.2,
+-0.3,
+0.1,
+0.4
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"lower shaft|RightFoot": 0.104,
+"crystal/head|RightHand": 0.108
+},
+"crystal": [
+-0.6035,
+-0.2061,
+1.8159
+]
+},
+{
+"f": 29,
+"wristR": [
+-0.1,
+0.3,
+0.0,
+0.4
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"lower shaft|RightFoot": 0.101,
+"crystal/head|RightHand": 0.108
+},
+"crystal": [
+-0.5946,
+-0.1623,
+1.81
+]
+},
+{
+"f": 30,
+"wristR": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"wristL": [
+0.0,
+0.0,
+0.0,
+0.0
+],
+"pen": {},
+"minclear": 0.04,
+"minclear_by": {
+"lower shaft|RightHand": 0.04,
+"upper shaft|RightHand": 0.058,
+"lower shaft|RightFoot": 0.089,
+"crystal/head|RightHand": 0.108
+},
+"crystal": [
+-0.587,
+-0.141,
+1.8066
+]
+}
+]
