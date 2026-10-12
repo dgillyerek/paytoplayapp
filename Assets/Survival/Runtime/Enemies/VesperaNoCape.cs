@@ -11,6 +11,9 @@ namespace Survival.Domain.Enemies
     /// 2026-10-10 (hand): the right forearm/hand surface was cut free of the skirt, belt, hip and chest side it was fused to
     /// (min-cut along the contact, joining faces deleted, holes closed with nearby paint); the hand piece carries right-arm
     /// weights only and the skirt/belt/hip pieces carry torso/thigh weights only. Shadow Bolt now goes around her right side.
+    /// 2026-10-11 (orb): Derek picked the orb (weapon sheet option C). Attack rebuilt as a two-hand conjure (palms facing, one
+    /// circle while the orb grows, two-hand push, release f20); walk knees straighten at heel strike with a longer stride and the
+    /// arms hang closer (no forearm flare). Rig, mesh and weights unchanged (rest FBX kept byte-identical). Orb prop VESPERA_orb.fbx.
     /// HOLD merge until Derek Game-view PASS.
     /// </summary>
     public static class VesperaNoCape
@@ -21,13 +24,25 @@ namespace Survival.Domain.Enemies
         public const string AttackFileName = "VESPERA_nocape_attack.fbx";
         public const string BlendFileName = "VESPERA_nocape.blend";
         public const string RestMd5 = "d46729fb1f36700957dd1ee0f08cb55f";
-        public const string WalkMd5 = "c15ae1b2988aa8806fa9f6760a75b4a4";
-        public const string AttackMd5 = "7435a2059aed197590f7e33d93590453";
-        public const string BlendMd5 = "a0de9f2050efa5efc47fc483f12eedc1";
+        public const string WalkMd5 = "fe139c5fbaa4146b4bc3eadc03265d72";
+        public const string AttackMd5 = "5b907c6f5ec944e9fb4233bd9d451e5c";
+        public const string BlendMd5 = "60e8b1ffdd37dcdb480a572631a19bb6";
         public const int RigBoneCount = 16;
 
         /// <summary>Work folder for the freed-right-hand pass (cut, weights, clearance and stretch reports).</summary>
         public const string HandWorkDir = DesignDir + "/work/hand_20261010";
+
+        /// <summary>Work folder for the orb pass (scripts, anim report, both-hand clearance, stretch, gait, FBX QC).</summary>
+        public const string OrbWorkDir = DesignDir + "/work/orb_20261011";
+
+        /// <summary>Orb prop (Design FBX + prop blend) next to the character files.</summary>
+        public const string OrbFileName = "VESPERA_orb.fbx";
+        public const string OrbBlendFileName = "VESPERA_orb_prop.blend";
+        public const string OrbMd5 = "45b71d1aa45d4083d922560f59b77cc4";
+
+        /// <summary>Walk and attack MD5s of the freed-right-hand pass this replaces (369c25d).</summary>
+        public const string HandPassWalkMd5 = "c15ae1b2988aa8806fa9f6760a75b4a4";
+        public const string HandPassAttackMd5 = "7435a2059aed197590f7e33d93590453";
 
         /// <summary>Bones Derek deleted in 265ec84. Their vertex groups are gone from the mesh; those weights now live on the kept bones.</summary>
         public static readonly string[] DeletedBones =

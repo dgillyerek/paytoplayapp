@@ -1,6 +1,50 @@
 # VESPERA: no cape (2026-10-09), rebuilt on Derek's rig edit (2026-10-10)
 
-## 2026-10-10 right hand freed + Shadow Bolt goes around her - current state of this folder
+## 2026-10-11 orb conjure + walk fix - current state of this folder
+Derek on 369c25d: "it all looks good. her walk is a little weird. maybe she needs a small weapon to launch the attack." He picked
+option C (orb) from the weapon sheet: "make her put both hands in front and move in a circle to 'conjure' the orb before firing."
+Derek's 16 bones are byte-identical to 369c25d/265ec84 (heads, tails, matrices, parents, connect flags; `bonecmp.py`). Mesh and
+weights untouched, so the rest FBX is kept byte-identical (`d46729fb`). Blend saved in Blender 5.2.2, walk active, Object Mode.
+Scripts and reports: `work/orb_20261011/` (`anim_orb.py` with `attack_params.json` / `walk_params.json`; paths are the build box's).
+
+**Orb prop.** `VESPERA_orb.fbx` (+ `VESPERA_orb_prop.blend`): the sheet's option C at a 10 cm orb (radius 5 cm), dark-violet orb,
+silver claw cradle, floating rune ring across the hand-to-hand axis (so it never cuts the palms); origin at the orb centre, 1400
+faces. Materials `VESPERA_orb_crystal` / `VESPERA_orb_rune_glow` / `VESPERA_orb_silver` - the Unity attack driver turns emission on
+for the crystal and rune materials, and the Orb effect adds the glow core, embers and trail around the mesh. Hidden at rest/walk.
+
+**Attack (31 frames, release f20).** Feet planted. f0-6 both hands lift off her sides (outward first, clear of the skirt) and come
+up in front of her chest, palms facing each other and cupping the orb from the sides; f6-16 the two hands trace one full circle
+together (14 cm wide/high, a little depth, small roll) while the orb grows between the palms (visible f4 at 18%, full size f16,
+spinning with the circle); f16-20 two-hand push forward and up to chest height, body squares to the target and leans in; f20 the
+orb leaves as the Shadow Bolt from the orb centre (Unity 0.065, 1.40, 0.635), 9 m/s character-forward; f20-23 hands open a little
+and follow through; back to the bind pose by f30. Wrists: bend vs her bind wrist <=30 deg and twist <=30 deg during the conjure;
+up to 41 deg on the right wrist in the follow-through (f22-25, right arm fully extended at f24). Hands stay open (no finger bones).
+Unity: `VESPERA_orb` (Fixed track, per-frame orb centre = midpoint of the two palms, scale, spin) f4-19, then
+`VESPERA_shadowbolt_vfx` (Projectile, same mesh) from f20. Bolt spawn re-keyed to the orb at release.
+
+**Clearance** (`clear2.py`, both hand + forearm pieces vs every non-arm, non-hair body triangle; `clear_attack.json`, `clear_walk.json`):
+attack 0 body overlaps f1-29 on both sides, 0 hand-vs-hand overlaps, 0 hair overlaps (was f4-10 on the right), hands + lower forearms
+>=3.5 cm (right) / >=4.5 cm (left) from the body f2-28 (2.7 cm at f29, just before the bind pose; 13-14 cm at the release).
+Walk: 0 hand/lower-forearm overlaps on either side; min clearance right 1.8 cm, left 0.6 cm; the left upper forearm next to the
+elbow brushes the waist on 14 frames (max 63 small triangles) because the arms now hang closer.
+
+**Walk.** Knees straighten as each foot lands: min knee bend 11.5 deg (was 20-25), mid-stance 15-24 deg (was 30-38); hips carried
+higher (no constant -2.8 cm crouch) with the natural dip at double support; stride 0.31/0.32 m (was 0.25/0.26); stance width 12 cm,
+foot yaw unchanged. Arms: forearm flare 1 deg (was 4), elbows bend 24-46 deg (was 10-32) so the hands pass in front of the skirt,
+upper arm 19 deg out on the forward swing and 17 deg on the back swing (was 20/14). The flared skirt stops the arms going much
+closer: at 16-17 deg the hands enter the skirt (measured).
+
+**Stretch** (`stretch.json`, 204,125 edges, growth vs bind over every frame): rest 0; walk 0 edges >2 cm, max 1.63 cm; attack 5 edges
+>2 cm (right shoulder top in the follow-through f23), max 2.9 cm (369c25d: walk 0 / 1.7, attack 7 / 3.2).
+
+**Files.** walk `fe139c5fbaa4146b4bc3eadc03265d72`, attack `5b907c6f5ec944e9fb4233bd9d451e5c`, rest `d46729fb1f36700957dd1ee0f08cb55f`
+(unchanged), blend `60e8b1ffdd37dcdb480a572631a19bb6`, orb `45b71d1aa45d4083d922560f59b77cc4`. Contact sheet `VESPERA_nocape_contact.jpg`
+(front + side, 10 attack + 4 walk frames, EEVEE with the orb prop). Reimport QC `work/orb_20261011/qc_fbx.json`: 16 bones, 134,863
+faces, max 4 influences, 0 unweighted, clips 1-31.
+
+---
+
+## 2026-10-10 right hand freed + Shadow Bolt goes around her (superseded by the section above)
 Derek on f41ef77: "there is still something attached to her right hand, maybe a piece of clothing. for the attack her hand
 comes through her body, it should go around." Derek's 16 bones are byte-identical to 265ec84 (heads, tails, rolls, parents,
 connect flags compared at full float precision). Blend saved in Blender 5.2.2, walk active, Object Mode. Scripts and reports:

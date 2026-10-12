@@ -32,6 +32,11 @@ public sealed class VesperaNoCapeTests
         Assert.NotEqual(VesperaNoCape.ClothSplitRestMd5, VesperaNoCape.RestMd5);
         Assert.NotEqual(VesperaNoCape.ClothSplitWalkMd5, VesperaNoCape.WalkMd5);
         Assert.NotEqual(VesperaNoCape.ClothSplitAttackMd5, VesperaNoCape.AttackMd5);
+        Assert.NotEqual(VesperaNoCape.HandPassWalkMd5, VesperaNoCape.WalkMd5);
+        Assert.NotEqual(VesperaNoCape.HandPassAttackMd5, VesperaNoCape.AttackMd5);
+        Assert.Equal(VesperaNoCape.OrbMd5, Md5(Path.Combine(design, VesperaNoCape.OrbFileName)));
+        Assert.Equal(VesperaNoCape.OrbMd5, Md5(Path.Combine(pack, VesperaNoCape.OrbFileName)));
+        Assert.True(File.Exists(Path.Combine(design, VesperaNoCape.OrbBlendFileName)));
 
         var verified = 0;
         foreach (var line in File.ReadAllLines(Path.Combine(design, "CHECKSUMS.md5")))
@@ -71,7 +76,8 @@ public sealed class VesperaNoCapeTests
         }
 
         var design = Path.Combine(FindRepoRoot(), VesperaNoCape.DesignDir.Replace('/', Path.DirectorySeparatorChar));
-        var work = Path.Combine(FindRepoRoot(), VesperaNoCape.HandWorkDir.Replace('/', Path.DirectorySeparatorChar));
+        var work = Path.Combine(FindRepoRoot(), VesperaNoCape.OrbWorkDir.Replace('/', Path.DirectorySeparatorChar));
+        var handWork = Path.Combine(FindRepoRoot(), VesperaNoCape.HandWorkDir.Replace('/', Path.DirectorySeparatorChar));
         using var ex = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "export.json")));
         var exported = ex.RootElement.GetProperty("bones").EnumerateArray().Select(b => b.GetString()).ToArray();
         Assert.Equal(VesperaMotion.BoneNames, exported);
@@ -97,7 +103,7 @@ public sealed class VesperaNoCapeTests
         Assert.Equal(0, weld.RootElement.GetProperty("coincident_left").GetInt32());
 
         // Weights live only on Derek's 16 bones (no deleted-bone groups), <=4 per vertex, none unweighted.
-        using var w = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "weights.json")));
+        using var w = JsonDocument.Parse(File.ReadAllText(Path.Combine(handWork, "weights.json")));
         Assert.Equal(0, w.RootElement.GetProperty("unweighted").GetInt32());
         Assert.True(w.RootElement.GetProperty("max_influences").GetInt32() <= 4);
         var dominant = w.RootElement.GetProperty("dominant").EnumerateObject().Select(p => "mixamorig:" + p.Name).ToArray();
@@ -129,29 +135,59 @@ public sealed class VesperaNoCapeTests
         Assert.True(q.GetProperty("max_influences").GetInt32() <= 4);
         Assert.Equal(0, q.GetProperty("unweighted").GetInt32());
 
-        // Attack: hand + forearm never intersect the body (hair excluded) between the bind-pose ends,
-        // and the hand + lower forearm keep >= 3 cm from f2 to f29.
-        using var clr = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "clear_attack.json")));
+        // 2026-10-11 orb conjure: BOTH hand + forearm pieces never intersect the body (hair excluded) between the bind-pose ends,
+        // the hands + lower forearms keep >= 3 cm from f2 to f28 (2.5 cm at f29, the last frame before the bind pose),
+        // the hands never pass through each other, and the hands never touch her hair.
+        var orbWork = Path.Combine(FindRepoRoot(), VesperaNoCape.OrbWorkDir.Replace('/', Path.DirectorySeparatorChar));
+        using var clr = JsonDocument.Parse(File.ReadAllText(Path.Combine(orbWork, "clear_attack.json")));
         var frames = clr.RootElement.EnumerateArray().ToArray();
         Assert.Equal(31, frames.Length);
         for (var f = 1; f <= 29; f++)
         {
-            Assert.Equal(0, frames[f].GetProperty("body_tri_overlaps").GetInt32());
-            if (f >= 2)
+            Assert.Equal(0, frames[f].GetProperty("hand_hand_overlaps").GetInt32());
+            foreach (var side in new[] { "R", "L" })
             {
-                Assert.True(frames[f].GetProperty("min_body_hand_lowforearm_cm").GetDouble() >= 3.0, "attack f" + f);
+                var s = frames[f].GetProperty(side);
+                Assert.Equal(0, s.GetProperty("body_tri_overlaps").GetInt32());
+                Assert.Equal(0, s.GetProperty("hair_tri_overlaps").GetInt32());
+                if (f >= 2)
+                {
+                    Assert.True(s.GetProperty("min_body_hand_lowforearm_cm").GetDouble() >= (f <= 28 ? 3.0 : 2.5), "attack f" + f + " " + side);
+                }
             }
         }
 
-        // Release in front of her right side (Unity +X is her right), not across the chest.
-        var bolt = VesperaAttack.Spec.Tracks[0].Frames[VesperaAttack.ReleaseFrame];
-        Assert.True(bolt.X > 0.1f, "bolt spawns on her right side");
+        // Walk: neither hand nor lower forearm enters the body/skirt on any frame.
+        using var clw = JsonDocument.Parse(File.ReadAllText(Path.Combine(orbWork, "clear_walk.json")));
+        foreach (var fr in clw.RootElement.EnumerateArray())
+        {
+            foreach (var side in new[] { "R", "L" })
+            {
+                Assert.Equal(0, fr.GetProperty(side).GetProperty("hand_lowforearm_body_overlaps").GetInt32());
+            }
+        }
 
-        // Stretch: walk 0 edges over 2 cm, attack far better than f41ef77 (206 over 2 cm, max 7.4 cm).
-        using var st = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "stretch.json")));
+        // Walk gait: knees straighten at heel strike (min bend <= 15 deg, was 20-25), stride longer than 369c25d (0.25 m).
+        using var gait = JsonDocument.Parse(File.ReadAllText(Path.Combine(orbWork, "gait.json")));
+        foreach (var side in new[] { "Left", "Right" })
+        {
+            Assert.True(gait.RootElement.GetProperty("knee_bend_deg").GetProperty(side)[0].GetDouble() <= 15.0, side);
+            Assert.True(gait.RootElement.GetProperty("stride_m").GetProperty(side).GetDouble() >= 0.29, side);
+        }
+
+        // The bolt leaves from the orb between her hands, in front of her chest (not from one hand at her side).
+        var bolt = VesperaAttack.Spec.Find("VESPERA_shadowbolt_vfx")!.Frames[VesperaAttack.ReleaseFrame];
+        Assert.InRange(bolt.X, -0.05f, 0.2f);
+        Assert.InRange(bolt.Y, 1.2f, 1.55f);
+        Assert.True(bolt.Z > 0.45f, "bolt spawns in front of her");
+
+        // Stretch: walk 0 edges over 2 cm; attack at least as good as the hand pass (7 over 2 cm, max 3.2 cm).
+        using var st = JsonDocument.Parse(File.ReadAllText(Path.Combine(orbWork, "stretch.json")));
+        Assert.Equal(0, st.RootElement.GetProperty("VESPERA_nocape_rest").GetProperty("stretch_gt_1.25x").GetInt32());
         Assert.Equal(0, st.RootElement.GetProperty("VESPERA_nocape_walk").GetProperty("grow_gt_2cm").GetInt32());
-        Assert.True(st.RootElement.GetProperty("VESPERA_nocape_attack").GetProperty("grow_gt_2cm").GetInt32() <= 20);
-        Assert.True(st.RootElement.GetProperty("VESPERA_nocape_attack").GetProperty("max_grow_cm").GetDouble() < 5.0);
+        Assert.True(st.RootElement.GetProperty("VESPERA_nocape_walk").GetProperty("max_grow_cm").GetDouble() <= 2.0);
+        Assert.True(st.RootElement.GetProperty("VESPERA_nocape_attack").GetProperty("grow_gt_2cm").GetInt32() <= 7);
+        Assert.True(st.RootElement.GetProperty("VESPERA_nocape_attack").GetProperty("max_grow_cm").GetDouble() < 3.2);
     }
 
     [Fact]
@@ -165,6 +201,12 @@ public sealed class VesperaNoCapeTests
         Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Runtime", "Enemies", "VesperaClothSplit.cs")));
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
         Assert.Contains("Survival/Vespera Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        var orbMeta = File.ReadAllText(Path.Combine(root, "Assets", VesperaMotion.ThemePackDir, VesperaNoCape.OrbFileName + ".meta"));
+        // Prop import matches what the attack driver enforces, so Play never reimports it.
+        Assert.Contains("animationType: 0", orbMeta, StringComparison.Ordinal);
+        Assert.Contains("importAnimation: 0", orbMeta, StringComparison.Ordinal);
+        Assert.Contains("materialImportMode: 2", orbMeta, StringComparison.Ordinal);
+        Assert.Contains("bakeAxisConversion: 0", orbMeta, StringComparison.Ordinal);
         foreach (var meta in new[] { "VESPERA_blenderig.fbx.meta", "VESPERA_blenderig_walk.fbx.meta", "VESPERA_blenderig_attack.fbx.meta" })
         {
             var text = File.ReadAllText(Path.Combine(root, "Assets", VesperaMotion.ThemePackDir, meta));
