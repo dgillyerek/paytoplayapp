@@ -1,0 +1,36 @@
+{
+ "faces": 199999,
+ "verts": 99788,
+ "parts": {
+  "torso_head": 76616,
+  "L_arm": 5726,
+  "R_arm": 5732,
+  "L_leg": 5900,
+  "R_leg": 5814
+ },
+ "rigid_pieces": 127,
+ "rigid_by_bone": {
+  "mixamorig:RightHand": 2,
+  "mixamorig:RightArm": 6,
+  "mixamorig:Spine2": 9,
+  "mixamorig:RightShoulder": 3,
+  "mixamorig:Neck": 20,
+  "mixamorig:Hips": 7,
+  "mixamorig:RightFoot": 1,
+  "mixamorig:Head": 55,
+  "mixamorig:Spine": 6,
+  "mixamorig:RightLeg": 1,
+  "mixamorig:LeftFoot": 1,
+  "mixamorig:LeftLeg": 1,
+  "mixamorig:LeftUpLeg": 1,
+  "mixamorig:LeftShoulder": 6,
+  "mixamorig:LeftArm": 6,
+  "mixamorig:LeftHand": 2
+ },
+ "ornament_verts": 15372,
+ "skirt_verts_on_hips": 28472,
+ "head_locked_verts": 13613,
+ "head_band_verts": 1090,
+ "max_influences": 4,
+ "skirt_verts_with_leg_weight": 0
+}
