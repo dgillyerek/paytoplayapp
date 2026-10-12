@@ -15,7 +15,7 @@ namespace Survival.Domain.Heroes
     {
         public const string FileName = "OAKENSHIELD_blenderig_attack.fbx";
         /// <summary>ThemePack attack FBX: Design rigidleaves_20261010 OAKENSHIELD_rigidleaves_attack.fbx (cloth removed, re-rigged; 2026-10-11 on Derek's 20-bone edit, head forward; spear frames unchanged).</summary>
-        public const string FileMd5 = "7dd6b5add1220440c6f8438dd55eb2f8";
+        public const string FileMd5 = "976df69c7755cb8537397b309d235270";
         /// <summary>Original attack FBX in OakenshieldAttack.DesignDir (attack_20261007), unchanged.</summary>
         public const string DesignFileMd5 = "3fe681bc07658c519dbc1e903614c766";
         public const string DesignDir = "design/survival-theme-a-fantasy/heroes/anim/oakenshield/attack_20261007";

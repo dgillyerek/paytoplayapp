@@ -126,3 +126,10 @@ Loose rigid pieces vs the surface they sit on: max gap opening 0.7 cm (walk) / 0
 - The leg spikes that look like arrows in Game view are body ornaments (now rigid); Oakenshield holds no bow — the only held prop is the thorn spear.
 
 HOLD: Derek Game-view before any merge.
+
+## 2026-10-12 face fix (Derek: face skewed sideways on walk/attack)
+- Cause: chin/mouth/lower face carried Neck (and some Shoulder) weight, so the face bent with the neck.
+- Face and skull now 100% Head; 4 cm blend Neck->Head only below a chin-to-nape line; 15 small loose pieces above the neck made rigid to Head (work/face_reweight.py).
+- Face deviation from a rigid head: walk 47.2 -> 4.3 mm, attack 51.1 -> 4.7 mm (residual is the neck blend just under the chin).
+- Bones and all actions byte-identical to b76ea53 (walk spacing, hip smoothing, head forward unchanged). Import settings unchanged.
+- Contact: OAKENSHIELD_face_fix_contact.jpg (top before, bottom after).

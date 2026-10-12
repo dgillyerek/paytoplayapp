@@ -19,10 +19,10 @@ namespace Survival.Domain.Heroes
         public const string WalkFileName = "OAKENSHIELD_rigidleaves_walk.fbx";
         public const string AttackFileName = "OAKENSHIELD_rigidleaves_attack.fbx";
         public const string BlendFileName = "OAKENSHIELD_rigidleaves.blend";
-        public const string RestMd5 = "f624d75b76a2d52c190e712adb9c1253";
-        public const string WalkMd5 = "0d452682a9189372bde13f6e29e343f6";
-        public const string AttackMd5 = "7dd6b5add1220440c6f8438dd55eb2f8";
-        public const string BlendMd5 = "3f73aa0b3ec0302db2a11756a27910b3";
+        public const string RestMd5 = "aaf4595ef7b831da103251ea13fe1cde";
+        public const string WalkMd5 = "b771ed0c1f4325b82414bf3f18978f53";
+        public const string AttackMd5 = "976df69c7755cb8537397b309d235270";
+        public const string BlendMd5 = "abdc55082f7939d969d74143eaf2c374";
         public const int RigBoneCount = 20;
 
         /// <summary>Blend actions (frames 0-30 at 30 fps; rest is the bind pose with Neck/Head turned so the face looks forward).</summary>

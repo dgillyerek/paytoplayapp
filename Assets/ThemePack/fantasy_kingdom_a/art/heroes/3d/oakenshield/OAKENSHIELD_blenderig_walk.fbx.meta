@@ -127,6 +127,6 @@ ModelImporter:
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Oakenshield Design rigidleaves_20261010 walk (OAKENSHIELD_rigidleaves_walk.fbx, MD5 0d452682a9189372bde13f6e29e343f6), rebuilt 2026-10-11 on Derek's blend edit (329ae0c): 20 mixamorig bones (ToeBases deleted by Derek, toe weights on Foot), rigid leaf/bark/spike pieces, smoothed hip/thigh weights, hip-width walk, head forward (rest = bind pose with the head turned forward). No spring bones. Humanoid if the avatar validates, else Generic. HOLD merge.
+  userData: Oakenshield Design rigidleaves_20261010 walk (OAKENSHIELD_rigidleaves_walk.fbx, MD5 b771ed0c1f4325b82414bf3f18978f53), rebuilt 2026-10-11 on Derek's blend edit (329ae0c): 20 mixamorig bones (ToeBases deleted by Derek, toe weights on Foot), rigid leaf/bark/spike pieces, smoothed hip/thigh weights, hip-width walk, head forward (rest = bind pose with the head turned forward). No spring bones. Humanoid if the avatar validates, else Generic. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 
