@@ -1,10 +1,10 @@
 fa3200e26dbf45134d75cc3aaa47e8e2  LYRA_arcane_bolt_vfx.fbx
 43aef847341f2e86f88a3020b32bae72  LYRA_staff.fbx
 a9be307acc47f47b97e4b30a9e9974b4  LYRA_tighten_attack_sheet.jpg
-81021543e1ee1f7e7a330120d7bcf87f  LYRA_tighten_blenderig_attack.fbx
+ab3e887dde3d8a142278ff8972e641e8  LYRA_tighten_blenderig_attack.fbx
 254aafd4f12e887c4850368438e7e76e  LYRA_tighten_walk_attack_preview.mp4
-0af93fa86fbd0695d83a3840c1c37054  NOTE.md
-f4be5625e66e2787f96fc8123f01d095  work/attack_meta.json
+3fa480960a2d40eea7dead52e89a1da2  NOTE.md
+b1d474f6435c31c3625f5054694a9f2f  work/attack_meta.json
 cddecdaa6fe206e374448f4449f6bb16  work/scripts/atk08.py
 7802db6354eec487003e52052976665c  work/scripts/post08.py
 ef0a9163826afb129789fc790a8a39c7  work/scripts/verify_atk.py

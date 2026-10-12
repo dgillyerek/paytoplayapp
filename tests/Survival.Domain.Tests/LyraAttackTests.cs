@@ -34,9 +34,9 @@ public sealed class LyraAttackTests
         var root = FindRepoRoot();
         var pack = Path.Combine(root, "Assets", LyraMotion.ThemePackDir);
         var design = Path.Combine(root, LyraAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
-        Assert.Equal("81021543e1ee1f7e7a330120d7bcf87f", LyraAttack.FileMd5);
-        Assert.Equal("81021543e1ee1f7e7a330120d7bcf87f", Md5(Path.Combine(pack, LyraAttack.FileName)));
-        Assert.Equal("81021543e1ee1f7e7a330120d7bcf87f", Md5(Path.Combine(design, "LYRA_tighten_blenderig_attack.fbx")));
+        Assert.Equal("ab3e887dde3d8a142278ff8972e641e8", LyraAttack.FileMd5);
+        Assert.Equal("ab3e887dde3d8a142278ff8972e641e8", Md5(Path.Combine(pack, LyraAttack.FileName)));
+        Assert.Equal("ab3e887dde3d8a142278ff8972e641e8", Md5(Path.Combine(design, "LYRA_tighten_blenderig_attack.fbx")));
         Assert.Equal("43aef847341f2e86f88a3020b32bae72", Md5(Path.Combine(pack, "LYRA_staff.fbx")));
         Assert.Equal("43aef847341f2e86f88a3020b32bae72", Md5(Path.Combine(design, "LYRA_staff.fbx")));
         Assert.Equal(LyraAttack.PropFileNames.Length, LyraAttack.PropFileMd5s.Length);
@@ -66,9 +66,32 @@ public sealed class LyraAttackTests
             }
         }
 
-        // Rest re-exported from Derek's edited rig blend (2026-10-08); walk v3 (feet forward, narrow stance, head motion) 2026-10-09.
-        Assert.Equal("e48988811f6952b52a2a42eaffbd09e8", Md5(Path.Combine(pack, "LYRA_blenderig.fbx")));
-        Assert.Equal("7c5b15778f9cd5ec8787c83ccee5fb8f", Md5(Path.Combine(pack, "LYRA_blenderig_walk.fbx")));
+        // Rest and walk: left thigh/shin rolled 35 deg inward (2026-10-11) on walk v3 and the rest pose of Derek's rig.
+        Assert.Equal("494f64e92ee0308797232b21e6d8ed0e", Md5(Path.Combine(pack, "LYRA_blenderig.fbx")));
+        Assert.Equal("6edbe1ea06ce50dbdfdcd769b1a12b7b", Md5(Path.Combine(pack, "LYRA_blenderig_walk.fbx")));
+    }
+
+    [Fact]
+    public void Lyra_spawn_yaw_squares_her_to_the_camera_and_the_bolt_still_flies_straight()
+    {
+        Assert.Equal(-8f, LyraMotion.FacingYawDegrees);
+        var yaw = LyraMotion.FacingYawDegrees * Math.PI / 180.0;
+        foreach (var track in LyraAttack.Spec.Tracks)
+        {
+            if (track.Kind != AttackTrackKind.Projectile)
+            {
+                continue;
+            }
+
+            var a = track.Frames[track.FirstVisibleFrame];
+            var b = track.Frames[track.LastVisibleFrame];
+            double dx = b.X - a.X, dz = b.Z - a.Z;
+            // Unity yaw about +Y: x' = x cos + z sin, z' = -x sin + z cos.
+            var wx = (dx * Math.Cos(yaw)) + (dz * Math.Sin(yaw));
+            var wz = (-dx * Math.Sin(yaw)) + (dz * Math.Cos(yaw));
+            var off = Math.Abs(Math.Atan2(wx, wz) * 180.0 / Math.PI);
+            Assert.True(wz > 0.5 && off < 1.0, track.ObjectName + " must fly straight at the camera after the spawn yaw (off " + off + " deg).");
+        }
     }
 
     [Fact]

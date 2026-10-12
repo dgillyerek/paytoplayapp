@@ -32,7 +32,8 @@ def wleft(f):
     if f<=b: return sm((f-a)/(b-a))
     return 1-sm((f-c)/(d-c))
 TH=PRM['thrust']  # dict frame->metres along target dir
-dW=Vector((0,-1,0))
+AIM=PRM.get('aim',0.0)  # target direction in armature space, deg about Z (Unity actor yaw compensation)
+dW=Matrix.Rotation(math.radians(AIM),3,'Z')@Vector((0,-1,0))
 def body(f,w=None):
     w=wbody(f) if w is None else w
     th=TH.get(str(f),0.0)
@@ -248,7 +249,7 @@ sc.frame_set(REL); spawn=staff.matrix_world@CRY
 for fc in FC(bolt.animation_data.action):
     if fc.data_path=='location':
         for kk in fc.keyframe_points:
-            t=max(0,kk.co[0]-REL); v=spawn[fc.array_index]+(-SPD*t/30.0 if fc.array_index==1 else 0.0)
+            t=max(0,kk.co[0]-REL); v=spawn[fc.array_index]+dW[fc.array_index]*SPD*t/30.0
             dv=v-kk.co[1]; kk.co[1]=v; kk.handle_left[1]+=dv; kk.handle_right[1]+=dv
         fc.update()
 S={'staff':[],'crystal':[],'bolt':[]}; err=0

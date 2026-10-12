@@ -105,3 +105,13 @@ Derek: "when she starts attack her left leg is still twisted inward. the pattern
   2. Turn the right foot in to match the left (or the left out to match the right) in Derek's rest.
   3. Fix the left-leg UVs/texture placement in the mesh.
 - **Scripts/QC:** `work/scripts/sideon_pattern_*_20261011.py`, `work/legpattern_before_cbcb1cc.json`, `work/legpattern_after.json`.
+
+## 2026-10-11: facing the camera, left-leg roll in rest and walk, attack start matched
+
+Derek, Unity on 620f171: "lyra needs to turn and face the camera forward. she faces to her right."
+
+- **Cause:** Derek's mesh is sculpted turned to her right in the bind pose; the bones are square. Measured on the mesh's left/right mirror plane, the chest faces 8° to her right, the pelvis 10–13° and the head 3°. The hip-joint line is 5.6° to her right, the shoulder bones are square (0°), and the right boot points 36° out. The armature and mesh objects have no rotation, the export axes are the same as every other hero, and the Lyra demo camera is front-on (orbit yaw 0, LyraRoot identity). So nothing was adding a turn; the bind itself reads as turned right.
+- **Fix (spawn level):** `LyraMotion.FacingYawDegrees = -8` is applied to the actor transform in `LyraActor.Build`. That turns her 8° to her left in Unity: chest 0°, pelvis −2° to −5°, hip-joint line +2.4°, head +5°. The clips, staff and bolt all rotate with the actor. The walk is in place, so the demo walk doesn't travel anywhere new, and Lyra isn't in the battle scene, so the battle is unaffected. If she joins the battle, apply the same yaw to her spawn there.
+- **Attack:** same motion as 620f171 in camera space. It starts at the new rest, the right foot steps forward, the body turns 80° left of the camera (72° in clip space plus the spawn yaw), the head stays on the target, and the two-hand grip is unchanged. The staff, thrust and bolt aim 8° to her right in clip space, so the bolt flies straight at the camera after the spawn yaw (a test checks this to within 1°). The left-leg roll now comes from the rest pose instead of being added on top, so f0 and f30 equal rest (max bone-matrix difference 4e-6).
+- **Checks:** legs within 4.1° of the pelvis. No staff/body intersections; minimum clearance is 4.0 cm (staff to right hand at f1, same as before). Armpit p99 stretch is R 1.83 and L 1.48 (620f171: 1.87 and 1.54). Left fingers sink up to 2.6 cm into the shaft at f7 and f21 as before; there are no finger bones.
+- Script: `work/scripts/sideon_author_20261011.py` with `aim: -8`, `yaw: 72`, `counter: 72` and the leg roll off (`work/scripts/sideon_params_20261011.json`).

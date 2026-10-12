@@ -6,7 +6,8 @@ namespace Survival.Unity
     /// <summary>
     /// Lyra rest bind pose and walk clip. Mixamorig humanoid when the avatar
     /// validates, otherwise Generic. Rejects LYRA_rig.fbx. Does not bake axis
-    /// conversion or rewrite the imported root.
+    /// conversion or rewrite the imported root; the actor transform carries
+    /// LyraMotion.FacingYawDegrees so she faces the camera.
     /// </summary>
     [DefaultExecutionOrder(200)]
     public sealed class LyraActor : MonoBehaviour, IBlenderRigPlayback
@@ -20,6 +21,8 @@ namespace Survival.Unity
 
         public void Build()
         {
+            // Square her to the camera (see LyraMotion.FacingYawDegrees); before the build so bounds and attack calibration use it.
+            transform.localRotation = Quaternion.Euler(0f, LyraMotion.FacingYawDegrees, 0f);
             _player = new BlenderRigPlayer(LyraMotion.Spec, transform, LyraAttack.Spec, LyraMotion.IdleProps);
             _player.Build();
         }

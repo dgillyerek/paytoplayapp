@@ -87,22 +87,22 @@
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"RightFoot": 0.065,
-"RightLeg": 0.206,
+"RightFoot": 0.062,
+"RightLeg": 0.203,
 "RightUpLeg": 0.216
 },
 "stretch": {
 "Left": [
-1.06,
-1.021,
-0.852,
-0.0036
+1.054,
+1.019,
+0.866,
+0.0032
 ],
 "Right": [
-1.334,
-1.039,
+1.3,
+1.038,
 0.898,
-0.0082
+0.0079
 ]
 },
 "joints": {
@@ -133,27 +133,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.275,
+0.2758,
 -0.0217,
 0.1286
 ],
 "Right": [
--0.2919,
--0.0354,
-0.0281,
--0.2157,
-0.0852,
-0.1217
+-0.292,
+-0.0353,
+0.0278,
+-0.2151,
+0.0848,
+0.1213
 ]
 },
 "crystal": [
--0.606,
--0.2177,
+-0.6064,
+-0.2124,
 1.7989
 ],
 "hips": [
--0.031,
--0.0238,
+-0.0303,
+-0.022,
 1.0461
 ]
 },
@@ -166,22 +166,22 @@
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"RightUpLeg": 0.113,
-"RightLeg": 0.119,
-"RightFoot": 0.183
+"RightUpLeg": 0.104,
+"RightLeg": 0.105,
+"RightFoot": 0.178
 },
 "stretch": {
 "Left": [
-1.243,
-1.078,
-0.495,
-0.0129
+1.216,
+1.07,
+0.539,
+0.0116
 ],
 "Right": [
-2.281,
-1.155,
+2.148,
+1.148,
 0.674,
-0.0297
+0.0283
 ]
 },
 "joints": {
@@ -212,27 +212,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.2562,
--0.0236,
+0.2587,
+-0.0232,
 0.1286
 ],
 "Right": [
--0.2626,
--0.069,
+-0.267,
+-0.0669,
 0.0676,
--0.2064,
-0.0621,
+-0.2079,
+0.0629,
 0.1611
 ]
 },
 "crystal": [
--0.6245,
--0.429,
+-0.6306,
+-0.4092,
 1.7688
 ],
 "hips": [
--0.0457,
--0.0739,
+-0.0441,
+-0.0669,
 1.0415
 ]
 },
@@ -240,27 +240,27 @@
 "f": 3,
 "intersect": {},
 "grip_intersect": {
-"RightHand": 551
+"RightHand": 549
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"RightUpLeg": 0.077,
+"RightUpLeg": 0.071,
 "LeftFoot": 0.144,
-"LeftLeg": 0.153
+"RightLeg": 0.152
 },
 "stretch": {
 "Left": [
-1.537,
-1.16,
-0.311,
-0.026
+1.477,
+1.144,
+0.35,
+0.0234
 ],
 "Right": [
-3.644,
-1.329,
+3.376,
+1.316,
 0.423,
-0.0599
+0.0569
 ]
 },
 "joints": {
@@ -291,27 +291,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.2305,
--0.0313,
+0.2354,
+-0.0293,
 0.1286
 ],
 "Right": [
--0.1882,
--0.1702,
+-0.2034,
+-0.163,
 0.0969,
--0.1624,
--0.0299,
+-0.1715,
+-0.024,
 0.1904
 ]
 },
 "crystal": [
--0.569,
--0.7266,
+-0.594,
+-0.6887,
 1.7003
 ],
 "hips": [
--0.0527,
--0.1473,
+-0.0526,
+-0.1327,
 1.0351
 ]
 },
@@ -326,30 +326,30 @@
 "RightHand": 0.04,
 "LeftUpLeg": 0.075,
 "LeftLeg": 0.088,
-"RightUpLeg": 0.131
+"RightUpLeg": 0.133
 },
 "stretch": {
 "Left": [
-1.932,
-1.28,
-0.225,
-0.0589
+1.806,
+1.253,
+0.299,
+0.0542
 ],
 "Right": [
-5.171,
-1.51,
+4.761,
+1.488,
 0.305,
-0.0924
+0.0875
 ]
 },
 "joints": {
-"LeftWrist_total": 9.8,
-"LeftWrist_twist": 6.3,
-"LeftArm_swing": 8.9,
-"LeftArm_twist": -1.7,
+"LeftWrist_total": 11.1,
+"LeftWrist_twist": 5.5,
+"LeftArm_swing": 8.5,
+"LeftArm_twist": -1.8,
 "LeftClavicle": 0.0,
 "LeftElbow_bend": 2.1,
-"LeftForearm_twist": 0.2,
+"LeftForearm_twist": 0.1,
 "RightWrist_total": 26.7,
 "RightWrist_twist": 1.0,
 "RightArm_swing": 29.9,
@@ -359,38 +359,38 @@
 "RightForearm_twist": 2.1
 },
 "left_contact": {
-"min_gap": 0.2367,
+"min_gap": 0.2376,
 "max_pen": 0.0,
 "n_touch": 0,
-"grip_axis_dist": 0.3546
+"grip_axis_dist": 0.3549
 },
-"zL": -0.681,
+"zL": -0.682,
 "feet": {
 "Left": [
 0.2777,
 -0.1416,
 0.0225,
-0.2041,
--0.0469,
+0.2109,
+-0.042,
 0.1286
 ],
 "Right": [
--0.0915,
--0.3018,
+-0.1208,
+-0.288,
 0.1076,
--0.1021,
--0.1595,
+-0.1215,
+-0.1453,
 0.2011
 ]
 },
 "crystal": [
--0.3967,
--1.0202,
+-0.4564,
+-0.9711,
 1.5833
 ],
 "hips": [
--0.0404,
--0.2309,
+-0.0459,
+-0.2085,
 1.0278
 ]
 },
@@ -398,7 +398,7 @@
 "f": 5,
 "intersect": {},
 "grip_intersect": {
-"RightHand": 549
+"RightHand": 551
 },
 "minclear": 0.04,
 "minclear_by": {
@@ -409,26 +409,26 @@
 },
 "stretch": {
 "Left": [
-2.406,
-1.398,
-0.139,
-0.0842
+2.229,
+1.347,
+0.106,
+0.0728
 ],
 "Right": [
-6.624,
-1.646,
+6.094,
+1.613,
 0.268,
-0.1185
+0.1117
 ]
 },
 "joints": {
-"LeftWrist_total": 14.9,
-"LeftWrist_twist": 11.8,
-"LeftArm_swing": 14.8,
-"LeftArm_twist": -1.9,
+"LeftWrist_total": 18.1,
+"LeftWrist_twist": 10.2,
+"LeftArm_swing": 11.4,
+"LeftArm_twist": -2.4,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 2.1,
-"LeftForearm_twist": 1.8,
+"LeftElbow_bend": 6.4,
+"LeftForearm_twist": 1.2,
 "RightWrist_total": 28.9,
 "RightWrist_twist": 7.7,
 "RightArm_swing": 33.5,
@@ -438,38 +438,38 @@
 "RightForearm_twist": 6.7
 },
 "left_contact": {
-"min_gap": 0.0786,
+"min_gap": 0.079,
 "max_pen": 0.0,
 "n_touch": 0,
-"grip_axis_dist": 0.2042
+"grip_axis_dist": 0.2063
 },
-"zL": -0.669,
+"zL": -0.672,
 "feet": {
 "Left": [
 0.2777,
 -0.1416,
 0.0225,
-0.1825,
--0.0686,
+0.1899,
+-0.0599,
 0.1286
 ],
 "Right": [
-0.0052,
--0.4334,
+-0.0382,
+-0.4129,
 0.0969,
--0.0412,
--0.2984,
+-0.0716,
+-0.2742,
 0.1904
 ]
 },
 "crystal": [
--0.1389,
--1.2212,
+-0.2399,
+-1.1765,
 1.4292
 ],
 "hips": [
--0.0074,
--0.3087,
+-0.022,
+-0.2807,
 1.0204
 ]
 },
@@ -477,38 +477,38 @@
 "f": 6,
 "intersect": {},
 "grip_intersect": {
-"LeftHand": 50,
+"LeftHand": 18,
 "RightHand": 551
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"LeftHand": 0.079,
-"LeftUpLeg": 0.125,
+"LeftHand": 0.084,
+"LeftUpLeg": 0.119,
 "torso": 0.143
 },
 "stretch": {
 "Left": [
-2.86,
-1.447,
-0.191,
-0.0756
+2.592,
+1.392,
+0.234,
+0.0679
 ],
 "Right": [
-7.809,
-1.746,
+7.196,
+1.7,
 0.24,
-0.1368
+0.1287
 ]
 },
 "joints": {
-"LeftWrist_total": 14.7,
-"LeftWrist_twist": 11.4,
-"LeftArm_swing": 2.9,
-"LeftArm_twist": -2.0,
+"LeftWrist_total": 15.5,
+"LeftWrist_twist": 11.7,
+"LeftArm_swing": 2.1,
+"LeftArm_twist": -3.1,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 41.8,
-"LeftForearm_twist": 6.6,
+"LeftElbow_bend": 45.9,
+"LeftForearm_twist": 5.5,
 "RightWrist_total": 30.1,
 "RightWrist_twist": 13.0,
 "RightArm_swing": 34.2,
@@ -518,10 +518,10 @@
 "RightForearm_twist": 12.4
 },
 "left_contact": {
-"min_gap": -0.0193,
-"max_pen": 0.0193,
-"n_touch": 88,
-"grip_axis_dist": 0.11
+"min_gap": -0.0082,
+"max_pen": 0.0082,
+"n_touch": 32,
+"grip_axis_dist": 0.1174
 },
 "zL": -0.64,
 "feet": {
@@ -529,27 +529,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.1687,
--0.0916,
+0.1753,
+-0.0791,
 0.1286
 ],
 "Right": [
-0.0796,
--0.5346,
+0.0253,
+-0.509,
 0.0676,
-0.0045,
--0.4133,
+-0.0351,
+-0.3797,
 0.1611
 ]
 },
 "crystal": [
-0.1247,
--1.303,
+-0.0108,
+-1.2769,
 1.2718
 ],
 "hips": [
-0.0367,
--0.3677,
+0.0118,
+-0.3378,
 1.014
 ]
 },
@@ -557,38 +557,38 @@
 "f": 7,
 "intersect": {},
 "grip_intersect": {
-"LeftHand": 125,
+"LeftHand": 111,
 "RightHand": 549
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"LeftHand": 0.051,
+"LeftHand": 0.053,
 "LeftUpLeg": 0.109,
 "torso": 0.128
 },
 "stretch": {
 "Left": [
-3.204,
-1.509,
-0.149,
-0.0868
+2.911,
+1.451,
+0.183,
+0.0744
 ],
 "Right": [
-8.592,
-1.815,
-0.198,
-0.1495
+7.934,
+1.766,
+0.226,
+0.1408
 ]
 },
 "joints": {
-"LeftWrist_total": 18.9,
-"LeftWrist_twist": 8.8,
-"LeftArm_swing": 4.9,
-"LeftArm_twist": -1.5,
+"LeftWrist_total": 19.2,
+"LeftWrist_twist": 9.9,
+"LeftArm_swing": 0.8,
+"LeftArm_twist": -2.3,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 46.1,
-"LeftForearm_twist": 11.2,
+"LeftElbow_bend": 49.5,
+"LeftForearm_twist": 10.0,
 "RightWrist_total": 30.8,
 "RightWrist_twist": 16.1,
 "RightArm_swing": 34.4,
@@ -598,10 +598,10 @@
 "RightForearm_twist": 17.1
 },
 "left_contact": {
-"min_gap": -0.026,
-"max_pen": 0.026,
-"n_touch": 262,
-"grip_axis_dist": 0.0392
+"min_gap": -0.0264,
+"max_pen": 0.0264,
+"n_touch": 232,
+"grip_axis_dist": 0.0426
 },
 "zL": -0.619,
 "feet": {
@@ -609,27 +609,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.1621,
--0.1094,
+0.1675,
+-0.0943,
 0.1286
 ],
 "Right": [
-0.1094,
--0.5751,
+0.0507,
+-0.5474,
 0.0276,
-0.0161,
--0.4671,
+-0.0274,
+-0.428,
 0.1211
 ]
 },
 "crystal": [
-0.3185,
--1.3056,
+0.1631,
+-1.3007,
 1.1527
 ],
 "hips": [
-0.0754,
--0.4029,
+0.0424,
+-0.3736,
 1.0095
 ]
 },
@@ -637,38 +637,37 @@
 "f": 8,
 "intersect": {},
 "grip_intersect": {
-"LeftHand": 10,
-"RightHand": 549
+"RightHand": 550
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"LeftHand": 0.066,
+"LeftHand": 0.063,
 "LeftUpLeg": 0.106,
 "torso": 0.121
 },
 "stretch": {
 "Left": [
-3.331,
-1.534,
+3.032,
+1.476,
 0.155,
-0.0927
+0.0809
 ],
 "Right": [
-8.876,
-1.842,
-0.169,
-0.155
+8.204,
+1.794,
+0.229,
+0.146
 ]
 },
 "joints": {
-"LeftWrist_total": 19.9,
-"LeftWrist_twist": 7.9,
-"LeftArm_swing": 6.4,
-"LeftArm_twist": -1.6,
+"LeftWrist_total": 20.8,
+"LeftWrist_twist": 9.2,
+"LeftArm_swing": 3.3,
+"LeftArm_twist": -2.3,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 44.8,
-"LeftForearm_twist": 13.4,
+"LeftElbow_bend": 47.6,
+"LeftForearm_twist": 12.1,
 "RightWrist_total": 31.2,
 "RightWrist_twist": 17.1,
 "RightArm_swing": 34.7,
@@ -689,27 +688,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.1604,
--0.1164,
+0.1651,
+-0.1003,
 0.1286
 ],
 "Right": [
-0.1094,
--0.5751,
+0.0507,
+-0.5474,
 0.0276,
-0.0098,
--0.4729,
+-0.0337,
+-0.4324,
 0.1211
 ]
 },
 "crystal": [
-0.3917,
--1.2947,
+0.2301,
+-1.2993,
 1.1069
 ],
 "hips": [
-0.0914,
--0.4145,
+0.0552,
+-0.3859,
 1.0078
 ]
 },
@@ -717,38 +716,37 @@
 "f": 9,
 "intersect": {},
 "grip_intersect": {
-"LeftHand": 10,
 "RightHand": 549
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"LeftHand": 0.066,
+"LeftHand": 0.063,
 "LeftUpLeg": 0.105,
 "torso": 0.121
 },
 "stretch": {
 "Left": [
-3.332,
-1.535,
-0.143,
-0.0948
+3.033,
+1.477,
+0.135,
+0.0835
 ],
 "Right": [
-8.876,
-1.843,
-0.164,
-0.1534
+8.204,
+1.795,
+0.188,
+0.1445
 ]
 },
 "joints": {
-"LeftWrist_total": 18.9,
-"LeftWrist_twist": 9.2,
-"LeftArm_swing": 6.8,
-"LeftArm_twist": -3.8,
+"LeftWrist_total": 19.8,
+"LeftWrist_twist": 10.3,
+"LeftArm_swing": 3.7,
+"LeftArm_twist": -4.6,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 43.7,
-"LeftForearm_twist": 14.0,
+"LeftElbow_bend": 46.5,
+"LeftForearm_twist": 12.7,
 "RightWrist_total": 31.5,
 "RightWrist_twist": 17.3,
 "RightArm_swing": 34.0,
@@ -769,27 +767,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.1604,
--0.1164,
+0.1651,
+-0.1003,
 0.1286
 ],
 "Right": [
-0.1094,
--0.5751,
+0.0507,
+-0.5474,
 0.0276,
-0.0098,
--0.4729,
+-0.0337,
+-0.4324,
 0.1211
 ]
 },
 "crystal": [
-0.3917,
--1.2747,
+0.2329,
+-1.2795,
 1.1069
 ],
 "hips": [
-0.0914,
--0.4065,
+0.0563,
+-0.378,
 1.0078
 ]
 },
@@ -797,38 +795,37 @@
 "f": 10,
 "intersect": {},
 "grip_intersect": {
-"LeftHand": 10,
 "RightHand": 549
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"LeftHand": 0.066,
+"LeftHand": 0.063,
 "LeftUpLeg": 0.105,
 "torso": 0.121
 },
 "stretch": {
 "Left": [
-3.332,
-1.535,
-0.133,
-0.0975
+3.034,
+1.478,
+0.115,
+0.0865
 ],
 "Right": [
-8.876,
-1.847,
-0.161,
-0.1528
+8.204,
+1.797,
+0.169,
+0.1439
 ]
 },
 "joints": {
-"LeftWrist_total": 18.1,
-"LeftWrist_twist": 10.4,
-"LeftArm_swing": 7.3,
-"LeftArm_twist": -5.9,
+"LeftWrist_total": 19.1,
+"LeftWrist_twist": 11.4,
+"LeftArm_swing": 4.2,
+"LeftArm_twist": -6.8,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 42.3,
-"LeftForearm_twist": 14.6,
+"LeftElbow_bend": 45.2,
+"LeftForearm_twist": 13.2,
 "RightWrist_total": 31.6,
 "RightWrist_twist": 17.5,
 "RightArm_swing": 33.6,
@@ -849,27 +846,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.1604,
--0.1164,
+0.1651,
+-0.1003,
 0.1286
 ],
 "Right": [
-0.1094,
--0.5751,
+0.0507,
+-0.5474,
 0.0276,
-0.0098,
--0.4729,
+-0.0337,
+-0.4324,
 0.1211
 ]
 },
 "crystal": [
-0.3917,
--1.2547,
+0.2357,
+-1.2597,
 1.1069
 ],
 "hips": [
-0.0914,
--0.3985,
+0.0574,
+-0.3701,
 1.0078
 ]
 },
@@ -877,38 +874,37 @@
 "f": 11,
 "intersect": {},
 "grip_intersect": {
-"LeftHand": 10,
-"RightHand": 551
+"RightHand": 549
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"LeftHand": 0.066,
+"LeftHand": 0.063,
 "LeftUpLeg": 0.105,
 "torso": 0.121
 },
 "stretch": {
 "Left": [
-3.332,
-1.535,
-0.138,
-0.0961
+3.033,
+1.477,
+0.125,
+0.085
 ],
 "Right": [
-8.876,
-1.845,
-0.162,
-0.153
+8.204,
+1.795,
+0.176,
+0.1441
 ]
 },
 "joints": {
-"LeftWrist_total": 18.5,
-"LeftWrist_twist": 9.8,
-"LeftArm_swing": 7.1,
-"LeftArm_twist": -4.9,
+"LeftWrist_total": 19.4,
+"LeftWrist_twist": 10.9,
+"LeftArm_swing": 3.9,
+"LeftArm_twist": -5.7,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 43.0,
-"LeftForearm_twist": 14.3,
+"LeftElbow_bend": 45.9,
+"LeftForearm_twist": 12.9,
 "RightWrist_total": 31.5,
 "RightWrist_twist": 17.4,
 "RightArm_swing": 33.8,
@@ -929,27 +925,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.1604,
--0.1164,
+0.1651,
+-0.1003,
 0.1286
 ],
 "Right": [
-0.1094,
--0.5751,
+0.0507,
+-0.5474,
 0.0276,
-0.0098,
--0.4729,
+-0.0337,
+-0.4324,
 0.1211
 ]
 },
 "crystal": [
-0.3917,
--1.2647,
+0.2343,
+-1.2696,
 1.1069
 ],
 "hips": [
-0.0914,
--0.4025,
+0.0569,
+-0.3741,
 1.0078
 ]
 },
@@ -957,38 +953,37 @@
 "f": 12,
 "intersect": {},
 "grip_intersect": {
-"LeftHand": 10,
 "RightHand": 549
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"LeftHand": 0.066,
+"LeftHand": 0.063,
 "LeftUpLeg": 0.111,
 "torso": 0.119
 },
 "stretch": {
 "Left": [
-3.329,
-1.534,
-0.191,
-0.0907
+3.028,
+1.476,
+0.208,
+0.0792
 ],
 "Right": [
-8.876,
-1.873,
+8.204,
+1.833,
 0.048,
-0.1663
+0.1573
 ]
 },
 "joints": {
-"LeftWrist_total": 23.0,
-"LeftWrist_twist": 4.8,
-"LeftArm_swing": 6.1,
-"LeftArm_twist": 4.0,
+"LeftWrist_total": 24.1,
+"LeftWrist_twist": 6.2,
+"LeftArm_swing": 3.0,
+"LeftArm_twist": 3.7,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 47.1,
-"LeftForearm_twist": 11.7,
+"LeftElbow_bend": 49.7,
+"LeftForearm_twist": 10.7,
 "RightWrist_total": 29.8,
 "RightWrist_twist": 17.2,
 "RightArm_swing": 38.4,
@@ -1009,27 +1004,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.1604,
--0.1164,
+0.1651,
+-0.1003,
 0.1286
 ],
 "Right": [
-0.1094,
--0.5751,
+0.0507,
+-0.5474,
 0.0276,
-0.0098,
--0.4729,
+-0.0337,
+-0.4324,
 0.1211
 ]
 },
 "crystal": [
-0.3917,
--1.3447,
+0.2232,
+-1.3488,
 1.1069
 ],
 "hips": [
-0.0914,
--0.4345,
+0.0524,
+-0.4057,
 1.0078
 ]
 },
@@ -1037,38 +1032,37 @@
 "f": 13,
 "intersect": {},
 "grip_intersect": {
-"LeftHand": 10,
-"RightHand": 551
+"RightHand": 549
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"LeftHand": 0.066,
+"LeftHand": 0.063,
 "LeftUpLeg": 0.11,
 "torso": 0.119
 },
 "stretch": {
 "Left": [
-3.329,
-1.534,
-0.183,
-0.0907
+3.029,
+1.476,
+0.197,
+0.0788
 ],
 "Right": [
-8.876,
-1.853,
+8.204,
+1.81,
 0.126,
-0.1624
+0.1534
 ]
 },
 "joints": {
-"LeftWrist_total": 22.3,
-"LeftWrist_twist": 5.4,
-"LeftArm_swing": 6.1,
-"LeftArm_twist": 2.9,
+"LeftWrist_total": 23.4,
+"LeftWrist_twist": 6.8,
+"LeftArm_swing": 3.0,
+"LeftArm_twist": 2.5,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 46.7,
-"LeftForearm_twist": 12.1,
+"LeftElbow_bend": 49.4,
+"LeftForearm_twist": 11.0,
 "RightWrist_total": 30.3,
 "RightWrist_twist": 17.0,
 "RightArm_swing": 37.1,
@@ -1089,27 +1083,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.1604,
--0.1164,
+0.1651,
+-0.1003,
 0.1286
 ],
 "Right": [
-0.1094,
--0.5751,
+0.0507,
+-0.5474,
 0.0276,
-0.0098,
--0.4729,
+-0.0337,
+-0.4324,
 0.1211
 ]
 },
 "crystal": [
-0.3917,
--1.3347,
+0.2246,
+-1.3389,
 1.1069
 ],
 "hips": [
-0.0914,
--0.4305,
+0.053,
+-0.4018,
 1.0078
 ]
 },
@@ -1117,38 +1111,37 @@
 "f": 14,
 "intersect": {},
 "grip_intersect": {
-"LeftHand": 10,
 "RightHand": 549
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"LeftHand": 0.066,
+"LeftHand": 0.063,
 "LeftUpLeg": 0.108,
 "torso": 0.118
 },
 "stretch": {
 "Left": [
-3.33,
-1.534,
-0.168,
-0.0912
+3.031,
+1.476,
+0.176,
+0.0791
 ],
 "Right": [
-8.876,
-1.843,
-0.175,
-0.1577
+8.204,
+1.797,
+0.236,
+0.1487
 ]
 },
 "joints": {
-"LeftWrist_total": 21.0,
-"LeftWrist_twist": 6.7,
-"LeftArm_swing": 6.2,
-"LeftArm_twist": 0.6,
+"LeftWrist_total": 22.0,
+"LeftWrist_twist": 8.0,
+"LeftArm_swing": 3.1,
+"LeftArm_twist": 0.0,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 45.9,
-"LeftForearm_twist": 12.8,
+"LeftElbow_bend": 48.6,
+"LeftForearm_twist": 11.6,
 "RightWrist_total": 30.9,
 "RightWrist_twist": 17.0,
 "RightArm_swing": 35.6,
@@ -1169,27 +1162,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.1604,
--0.1164,
+0.1651,
+-0.1003,
 0.1286
 ],
 "Right": [
-0.1094,
--0.5751,
+0.0507,
+-0.5474,
 0.0276,
-0.0098,
--0.4729,
+-0.0337,
+-0.4324,
 0.1211
 ]
 },
 "crystal": [
-0.3917,
--1.3147,
+0.2273,
+-1.3191,
 1.1069
 ],
 "hips": [
-0.0914,
--0.4225,
+0.0541,
+-0.3939,
 1.0078
 ]
 },
@@ -1197,38 +1190,37 @@
 "f": 15,
 "intersect": {},
 "grip_intersect": {
-"LeftHand": 10,
-"RightHand": 549
+"RightHand": 550
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"LeftHand": 0.066,
+"LeftHand": 0.063,
 "LeftUpLeg": 0.106,
 "torso": 0.121
 },
 "stretch": {
 "Left": [
-3.331,
-1.534,
+3.032,
+1.476,
 0.155,
-0.0927
+0.0809
 ],
 "Right": [
-8.876,
-1.842,
-0.169,
-0.155
+8.204,
+1.794,
+0.229,
+0.146
 ]
 },
 "joints": {
-"LeftWrist_total": 19.9,
-"LeftWrist_twist": 7.9,
-"LeftArm_swing": 6.4,
-"LeftArm_twist": -1.6,
+"LeftWrist_total": 20.8,
+"LeftWrist_twist": 9.2,
+"LeftArm_swing": 3.3,
+"LeftArm_twist": -2.3,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 44.8,
-"LeftForearm_twist": 13.4,
+"LeftElbow_bend": 47.6,
+"LeftForearm_twist": 12.1,
 "RightWrist_total": 31.2,
 "RightWrist_twist": 17.1,
 "RightArm_swing": 34.7,
@@ -1249,27 +1241,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.1604,
--0.1164,
+0.1651,
+-0.1003,
 0.1286
 ],
 "Right": [
-0.1094,
--0.5751,
+0.0507,
+-0.5474,
 0.0276,
-0.0098,
--0.4729,
+-0.0337,
+-0.4324,
 0.1211
 ]
 },
 "crystal": [
-0.3917,
--1.2947,
+0.2301,
+-1.2993,
 1.1069
 ],
 "hips": [
-0.0914,
--0.4145,
+0.0552,
+-0.3859,
 1.0078
 ]
 },
@@ -1277,38 +1269,37 @@
 "f": 16,
 "intersect": {},
 "grip_intersect": {
-"LeftHand": 10,
-"RightHand": 549
+"RightHand": 550
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"LeftHand": 0.066,
+"LeftHand": 0.063,
 "LeftUpLeg": 0.106,
 "torso": 0.121
 },
 "stretch": {
 "Left": [
-3.331,
-1.534,
+3.032,
+1.476,
 0.155,
-0.0927
+0.0809
 ],
 "Right": [
-8.876,
-1.842,
-0.169,
-0.155
+8.204,
+1.794,
+0.229,
+0.146
 ]
 },
 "joints": {
-"LeftWrist_total": 19.9,
-"LeftWrist_twist": 7.9,
-"LeftArm_swing": 6.4,
-"LeftArm_twist": -1.6,
+"LeftWrist_total": 20.8,
+"LeftWrist_twist": 9.2,
+"LeftArm_swing": 3.3,
+"LeftArm_twist": -2.3,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 44.8,
-"LeftForearm_twist": 13.4,
+"LeftElbow_bend": 47.6,
+"LeftForearm_twist": 12.1,
 "RightWrist_total": 31.2,
 "RightWrist_twist": 17.1,
 "RightArm_swing": 34.7,
@@ -1329,27 +1320,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.1604,
--0.1164,
+0.1651,
+-0.1003,
 0.1286
 ],
 "Right": [
-0.1094,
--0.5751,
+0.0507,
+-0.5474,
 0.0276,
-0.0098,
--0.4729,
+-0.0337,
+-0.4324,
 0.1211
 ]
 },
 "crystal": [
-0.3917,
--1.2947,
+0.2301,
+-1.2993,
 1.1069
 ],
 "hips": [
-0.0914,
--0.4145,
+0.0552,
+-0.3859,
 1.0078
 ]
 },
@@ -1357,38 +1348,37 @@
 "f": 17,
 "intersect": {},
 "grip_intersect": {
-"LeftHand": 10,
-"RightHand": 549
+"RightHand": 550
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"LeftHand": 0.066,
+"LeftHand": 0.063,
 "LeftUpLeg": 0.106,
 "torso": 0.121
 },
 "stretch": {
 "Left": [
-3.331,
-1.534,
+3.032,
+1.476,
 0.155,
-0.0927
+0.0809
 ],
 "Right": [
-8.876,
-1.842,
-0.169,
-0.155
+8.204,
+1.794,
+0.229,
+0.146
 ]
 },
 "joints": {
-"LeftWrist_total": 19.9,
-"LeftWrist_twist": 7.9,
-"LeftArm_swing": 6.4,
-"LeftArm_twist": -1.6,
+"LeftWrist_total": 20.8,
+"LeftWrist_twist": 9.2,
+"LeftArm_swing": 3.3,
+"LeftArm_twist": -2.3,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 44.8,
-"LeftForearm_twist": 13.4,
+"LeftElbow_bend": 47.6,
+"LeftForearm_twist": 12.1,
 "RightWrist_total": 31.2,
 "RightWrist_twist": 17.1,
 "RightArm_swing": 34.7,
@@ -1409,27 +1399,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.1604,
--0.1164,
+0.1651,
+-0.1003,
 0.1286
 ],
 "Right": [
-0.1094,
--0.5751,
+0.0507,
+-0.5474,
 0.0276,
-0.0098,
--0.4729,
+-0.0337,
+-0.4324,
 0.1211
 ]
 },
 "crystal": [
-0.3917,
--1.2947,
+0.2301,
+-1.2993,
 1.1069
 ],
 "hips": [
-0.0914,
--0.4145,
+0.0552,
+-0.3859,
 1.0078
 ]
 },
@@ -1437,38 +1427,37 @@
 "f": 18,
 "intersect": {},
 "grip_intersect": {
-"LeftHand": 10,
-"RightHand": 549
+"RightHand": 550
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"LeftHand": 0.066,
+"LeftHand": 0.063,
 "LeftUpLeg": 0.106,
 "torso": 0.121
 },
 "stretch": {
 "Left": [
-3.331,
-1.534,
+3.032,
+1.476,
 0.155,
-0.0927
+0.0809
 ],
 "Right": [
-8.876,
-1.842,
-0.169,
-0.155
+8.204,
+1.794,
+0.229,
+0.146
 ]
 },
 "joints": {
-"LeftWrist_total": 19.9,
-"LeftWrist_twist": 7.9,
-"LeftArm_swing": 6.4,
-"LeftArm_twist": -1.6,
+"LeftWrist_total": 20.8,
+"LeftWrist_twist": 9.2,
+"LeftArm_swing": 3.3,
+"LeftArm_twist": -2.3,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 44.8,
-"LeftForearm_twist": 13.4,
+"LeftElbow_bend": 47.6,
+"LeftForearm_twist": 12.1,
 "RightWrist_total": 31.2,
 "RightWrist_twist": 17.1,
 "RightArm_swing": 34.7,
@@ -1489,27 +1478,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.1604,
--0.1164,
+0.1651,
+-0.1003,
 0.1286
 ],
 "Right": [
-0.1094,
--0.5751,
+0.0507,
+-0.5474,
 0.0276,
-0.0098,
--0.4729,
+-0.0337,
+-0.4324,
 0.1211
 ]
 },
 "crystal": [
-0.3917,
--1.2947,
+0.2301,
+-1.2993,
 1.1069
 ],
 "hips": [
-0.0914,
--0.4145,
+0.0552,
+-0.3859,
 1.0078
 ]
 },
@@ -1517,38 +1506,37 @@
 "f": 19,
 "intersect": {},
 "grip_intersect": {
-"LeftHand": 10,
-"RightHand": 549
+"RightHand": 550
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"LeftHand": 0.066,
+"LeftHand": 0.063,
 "LeftUpLeg": 0.106,
 "torso": 0.121
 },
 "stretch": {
 "Left": [
-3.331,
-1.534,
+3.032,
+1.476,
 0.155,
-0.0927
+0.0809
 ],
 "Right": [
-8.876,
-1.842,
-0.169,
-0.155
+8.204,
+1.794,
+0.229,
+0.146
 ]
 },
 "joints": {
-"LeftWrist_total": 19.9,
-"LeftWrist_twist": 7.9,
-"LeftArm_swing": 6.4,
-"LeftArm_twist": -1.6,
+"LeftWrist_total": 20.8,
+"LeftWrist_twist": 9.2,
+"LeftArm_swing": 3.3,
+"LeftArm_twist": -2.3,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 44.8,
-"LeftForearm_twist": 13.4,
+"LeftElbow_bend": 47.6,
+"LeftForearm_twist": 12.1,
 "RightWrist_total": 31.2,
 "RightWrist_twist": 17.1,
 "RightArm_swing": 34.7,
@@ -1569,27 +1557,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.1604,
--0.1164,
+0.1651,
+-0.1003,
 0.1286
 ],
 "Right": [
-0.1094,
--0.5751,
+0.0507,
+-0.5474,
 0.0276,
-0.0098,
--0.4729,
+-0.0337,
+-0.4324,
 0.1211
 ]
 },
 "crystal": [
-0.3917,
--1.2947,
+0.2301,
+-1.2993,
 1.1069
 ],
 "hips": [
-0.0914,
--0.4145,
+0.0552,
+-0.3859,
 1.0078
 ]
 },
@@ -1597,38 +1585,37 @@
 "f": 20,
 "intersect": {},
 "grip_intersect": {
-"LeftHand": 10,
-"RightHand": 549
+"RightHand": 550
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"LeftHand": 0.066,
+"LeftHand": 0.063,
 "LeftUpLeg": 0.106,
 "torso": 0.121
 },
 "stretch": {
 "Left": [
-3.331,
-1.534,
+3.032,
+1.476,
 0.155,
-0.0927
+0.0809
 ],
 "Right": [
-8.876,
-1.842,
-0.169,
-0.155
+8.204,
+1.794,
+0.229,
+0.146
 ]
 },
 "joints": {
-"LeftWrist_total": 19.9,
-"LeftWrist_twist": 7.9,
-"LeftArm_swing": 6.4,
-"LeftArm_twist": -1.6,
+"LeftWrist_total": 20.8,
+"LeftWrist_twist": 9.2,
+"LeftArm_swing": 3.3,
+"LeftArm_twist": -2.3,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 44.8,
-"LeftForearm_twist": 13.4,
+"LeftElbow_bend": 47.6,
+"LeftForearm_twist": 12.1,
 "RightWrist_total": 31.2,
 "RightWrist_twist": 17.1,
 "RightArm_swing": 34.7,
@@ -1649,27 +1636,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.1604,
--0.1164,
+0.1651,
+-0.1003,
 0.1286
 ],
 "Right": [
-0.1094,
--0.5751,
+0.0507,
+-0.5474,
 0.0276,
-0.0098,
--0.4729,
+-0.0337,
+-0.4324,
 0.1211
 ]
 },
 "crystal": [
-0.3917,
--1.2947,
+0.2301,
+-1.2993,
 1.1069
 ],
 "hips": [
-0.0914,
--0.4145,
+0.0552,
+-0.3859,
 1.0078
 ]
 },
@@ -1677,38 +1664,38 @@
 "f": 21,
 "intersect": {},
 "grip_intersect": {
-"LeftHand": 126,
-"RightHand": 549
+"LeftHand": 120,
+"RightHand": 550
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"LeftHand": 0.049,
+"LeftHand": 0.051,
 "LeftUpLeg": 0.106,
 "torso": 0.121
 },
 "stretch": {
 "Left": [
-3.329,
-1.521,
-0.157,
-0.0851
+3.025,
+1.462,
+0.162,
+0.0792
 ],
 "Right": [
-8.876,
-1.842,
-0.169,
-0.155
+8.204,
+1.794,
+0.229,
+0.146
 ]
 },
 "joints": {
-"LeftWrist_total": 23.4,
-"LeftWrist_twist": 9.2,
-"LeftArm_swing": 1.8,
-"LeftArm_twist": -3.6,
+"LeftWrist_total": 20.6,
+"LeftWrist_twist": 10.8,
+"LeftArm_swing": 3.8,
+"LeftArm_twist": -4.6,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 56.0,
-"LeftForearm_twist": 12.7,
+"LeftElbow_bend": 58.8,
+"LeftForearm_twist": 11.8,
 "RightWrist_total": 31.2,
 "RightWrist_twist": 17.1,
 "RightArm_swing": 34.7,
@@ -1718,10 +1705,10 @@
 "RightForearm_twist": 19.0
 },
 "left_contact": {
-"min_gap": -0.0266,
-"max_pen": 0.0266,
-"n_touch": 258,
-"grip_axis_dist": 0.0367
+"min_gap": -0.0249,
+"max_pen": 0.0249,
+"n_touch": 237,
+"grip_axis_dist": 0.0403
 },
 "zL": -0.618,
 "feet": {
@@ -1729,27 +1716,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.1604,
--0.1164,
+0.1651,
+-0.1003,
 0.1286
 ],
 "Right": [
-0.1094,
--0.5751,
+0.0507,
+-0.5474,
 0.0276,
-0.0098,
--0.4729,
+-0.0337,
+-0.4324,
 0.1211
 ]
 },
 "crystal": [
-0.3917,
--1.2947,
+0.2301,
+-1.2993,
 1.1069
 ],
 "hips": [
-0.0914,
--0.4145,
+0.0552,
+-0.3859,
 1.0078
 ]
 },
@@ -1757,38 +1744,38 @@
 "f": 22,
 "intersect": {},
 "grip_intersect": {
-"LeftHand": 234,
+"LeftHand": 122,
 "RightHand": 549
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"LeftHand": 0.06,
+"LeftHand": 0.067,
 "LeftUpLeg": 0.109,
 "torso": 0.128
 },
 "stretch": {
 "Left": [
-3.2,
-1.484,
-0.15,
-0.0855
+2.905,
+1.43,
+0.143,
+0.0853
 ],
 "Right": [
-8.592,
-1.815,
-0.198,
-0.1495
+7.934,
+1.766,
+0.226,
+0.1408
 ]
 },
 "joints": {
-"LeftWrist_total": 23.8,
-"LeftWrist_twist": 12.4,
-"LeftArm_swing": 6.4,
-"LeftArm_twist": -5.3,
+"LeftWrist_total": 19.6,
+"LeftWrist_twist": 13.9,
+"LeftArm_swing": 10.6,
+"LeftArm_twist": -6.7,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 61.1,
-"LeftForearm_twist": 8.7,
+"LeftElbow_bend": 63.7,
+"LeftForearm_twist": 8.0,
 "RightWrist_total": 30.8,
 "RightWrist_twist": 16.1,
 "RightArm_swing": 34.4,
@@ -1798,10 +1785,10 @@
 "RightForearm_twist": 17.1
 },
 "left_contact": {
-"min_gap": -0.0246,
-"max_pen": 0.0246,
-"n_touch": 286,
-"grip_axis_dist": 0.0879
+"min_gap": -0.0257,
+"max_pen": 0.0257,
+"n_touch": 195,
+"grip_axis_dist": 0.0968
 },
 "zL": -0.631,
 "feet": {
@@ -1809,27 +1796,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.1621,
--0.1094,
+0.1675,
+-0.0943,
 0.1286
 ],
 "Right": [
-0.0796,
--0.5346,
+0.0253,
+-0.509,
 0.0676,
--0.0137,
--0.4267,
+-0.0528,
+-0.3896,
 0.1611
 ]
 },
 "crystal": [
-0.3185,
--1.3056,
+0.1631,
+-1.3007,
 1.1527
 ],
 "hips": [
-0.0754,
--0.4029,
+0.0424,
+-0.3736,
 1.0095
 ]
 },
@@ -1842,32 +1829,32 @@
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"LeftHand": 0.083,
+"LeftHand": 0.088,
 "LeftUpLeg": 0.119,
 "torso": 0.143
 },
 "stretch": {
 "Left": [
-2.853,
-1.439,
-0.193,
-0.0734
+2.592,
+1.389,
+0.234,
+0.0695
 ],
 "Right": [
-7.809,
-1.746,
+7.196,
+1.7,
 0.24,
-0.1368
+0.1287
 ]
 },
 "joints": {
-"LeftWrist_total": 12.8,
-"LeftWrist_twist": 9.0,
-"LeftArm_swing": 1.6,
-"LeftArm_twist": -3.9,
+"LeftWrist_total": 10.6,
+"LeftWrist_twist": 8.8,
+"LeftArm_swing": 3.9,
+"LeftArm_twist": -4.5,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 35.8,
-"LeftForearm_twist": 2.4,
+"LeftElbow_bend": 37.4,
+"LeftForearm_twist": 2.0,
 "RightWrist_total": 30.1,
 "RightWrist_twist": 13.0,
 "RightArm_swing": 34.2,
@@ -1877,38 +1864,38 @@
 "RightForearm_twist": 12.4
 },
 "left_contact": {
-"min_gap": 0.0299,
+"min_gap": 0.0349,
 "max_pen": 0.0,
 "n_touch": 0,
-"grip_axis_dist": 0.1533
+"grip_axis_dist": 0.1589
 },
-"zL": -0.656,
+"zL": -0.657,
 "feet": {
 "Left": [
 0.2777,
 -0.1416,
 0.0225,
-0.1687,
--0.0916,
+0.1753,
+-0.0791,
 0.1286
 ],
 "Right": [
-0.0052,
--0.4334,
+-0.0382,
+-0.4129,
 0.0969,
--0.0699,
--0.3121,
+-0.0986,
+-0.2836,
 0.1904
 ]
 },
 "crystal": [
-0.1247,
--1.303,
+-0.0108,
+-1.2769,
 1.2718
 ],
 "hips": [
-0.0367,
--0.3677,
+0.0118,
+-0.3378,
 1.014
 ]
 },
@@ -1916,36 +1903,36 @@
 "f": 24,
 "intersect": {},
 "grip_intersect": {
-"RightHand": 549
+"RightHand": 551
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
 "LeftUpLeg": 0.122,
 "torso": 0.143,
-"LeftHand": 0.158
+"LeftHand": 0.169
 },
 "stretch": {
 "Left": [
-2.402,
-1.364,
-0.139,
-0.0624
+2.226,
+1.326,
+0.106,
+0.056
 ],
 "Right": [
-6.624,
-1.646,
+6.094,
+1.613,
 0.268,
-0.1185
+0.1118
 ]
 },
 "joints": {
-"LeftWrist_total": 4.8,
-"LeftWrist_twist": 4.7,
-"LeftArm_swing": 3.3,
-"LeftArm_twist": -1.9,
+"LeftWrist_total": 5.0,
+"LeftWrist_twist": 4.1,
+"LeftArm_swing": 2.5,
+"LeftArm_twist": -2.0,
 "LeftClavicle": 0.0,
-"LeftElbow_bend": 14.2,
+"LeftElbow_bend": 15.1,
 "LeftForearm_twist": 0.2,
 "RightWrist_total": 28.9,
 "RightWrist_twist": 7.7,
@@ -1956,38 +1943,38 @@
 "RightForearm_twist": 6.7
 },
 "left_contact": {
-"min_gap": 0.1347,
+"min_gap": 0.1355,
 "max_pen": 0.0,
 "n_touch": 0,
-"grip_axis_dist": 0.2555
+"grip_axis_dist": 0.2568
 },
-"zL": -0.691,
+"zL": -0.692,
 "feet": {
 "Left": [
 0.2777,
 -0.1416,
 0.0225,
-0.1825,
--0.0686,
+0.1899,
+-0.0599,
 0.1286
 ],
 "Right": [
--0.0915,
--0.3018,
+-0.1208,
+-0.288,
 0.1076,
--0.1379,
--0.1669,
+-0.1541,
+-0.1492,
 0.2011
 ]
 },
 "crystal": [
--0.1389,
--1.2212,
+-0.2399,
+-1.1765,
 1.4292
 ],
 "hips": [
--0.0074,
--0.3087,
+-0.022,
+-0.2807,
 1.0204
 ]
 },
@@ -2006,16 +1993,16 @@
 },
 "stretch": {
 "Left": [
-1.928,
-1.258,
-0.21,
-0.0407
+1.801,
+1.23,
+0.269,
+0.0367
 ],
 "Right": [
-5.171,
-1.51,
+4.761,
+1.488,
 0.305,
-0.0924
+0.0875
 ]
 },
 "joints": {
@@ -2046,27 +2033,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.2041,
--0.0469,
+0.2109,
+-0.042,
 0.1286
 ],
 "Right": [
--0.1882,
--0.1702,
+-0.2034,
+-0.163,
 0.0969,
--0.1989,
--0.0279,
+-0.2041,
+-0.0204,
 0.1904
 ]
 },
 "crystal": [
--0.3967,
--1.0202,
+-0.4564,
+-0.9711,
 1.5833
 ],
 "hips": [
--0.0404,
--0.2309,
+-0.0459,
+-0.2085,
 1.0278
 ]
 },
@@ -2074,27 +2061,27 @@
 "f": 26,
 "intersect": {},
 "grip_intersect": {
-"RightHand": 551
+"RightHand": 549
 },
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
 "LeftFoot": 0.144,
 "LeftLeg": 0.153,
-"RightUpLeg": 0.16
+"RightUpLeg": 0.158
 },
 "stretch": {
 "Left": [
-1.537,
-1.16,
-0.311,
-0.026
+1.477,
+1.144,
+0.35,
+0.0234
 ],
 "Right": [
-3.644,
-1.329,
+3.376,
+1.316,
 0.423,
-0.0599
+0.0569
 ]
 },
 "joints": {
@@ -2125,27 +2112,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.2305,
--0.0313,
+0.2354,
+-0.0293,
 0.1286
 ],
 "Right": [
--0.2626,
--0.069,
+-0.267,
+-0.0669,
 0.0676,
--0.2368,
-0.0713,
+-0.235,
+0.0721,
 0.1611
 ]
 },
 "crystal": [
--0.569,
--0.7266,
+-0.594,
+-0.6887,
 1.7003
 ],
 "hips": [
--0.0527,
--0.1473,
+-0.0526,
+-0.1327,
 1.0351
 ]
 },
@@ -2158,22 +2145,22 @@
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"RightUpLeg": 0.179,
-"RightFoot": 0.23,
-"RightLeg": 0.237
+"RightUpLeg": 0.178,
+"RightFoot": 0.223,
+"RightLeg": 0.229
 },
 "stretch": {
 "Left": [
-1.243,
-1.078,
-0.495,
-0.0129
+1.216,
+1.07,
+0.539,
+0.0116
 ],
 "Right": [
-2.281,
-1.155,
+2.148,
+1.148,
 0.674,
-0.0297
+0.0283
 ]
 },
 "joints": {
@@ -2204,27 +2191,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.2562,
--0.0236,
+0.2587,
+-0.0232,
 0.1286
 ],
 "Right": [
--0.29,
--0.0375,
-0.0375,
--0.2338,
-0.0936,
-0.131
+-0.2904,
+-0.0369,
+0.0352,
+-0.2313,
+0.0929,
+0.1287
 ]
 },
 "crystal": [
--0.6245,
--0.429,
+-0.6306,
+-0.4092,
 1.7688
 ],
 "hips": [
--0.0457,
--0.0739,
+-0.0441,
+-0.0669,
 1.0415
 ]
 },
@@ -2237,22 +2224,22 @@
 "minclear": 0.04,
 "minclear_by": {
 "RightHand": 0.04,
-"RightFoot": 0.065,
-"RightLeg": 0.206,
+"RightFoot": 0.062,
+"RightLeg": 0.203,
 "RightUpLeg": 0.216
 },
 "stretch": {
 "Left": [
-1.06,
-1.021,
-0.852,
-0.0036
+1.054,
+1.019,
+0.866,
+0.0032
 ],
 "Right": [
-1.334,
-1.039,
+1.3,
+1.038,
 0.898,
-0.0082
+0.0079
 ]
 },
 "joints": {
@@ -2283,27 +2270,27 @@
 0.2777,
 -0.1416,
 0.0225,
-0.275,
+0.2758,
 -0.0217,
 0.1286
 ],
 "Right": [
--0.2919,
--0.0354,
-0.0281,
--0.2157,
-0.0852,
-0.1217
+-0.292,
+-0.0353,
+0.0278,
+-0.2151,
+0.0848,
+0.1213
 ]
 },
 "crystal": [
--0.606,
--0.2177,
+-0.6064,
+-0.2124,
 1.7989
 ],
 "hips": [
--0.031,
--0.0238,
+-0.0303,
+-0.022,
 1.0461
 ]
 },
@@ -2311,7 +2298,7 @@
 "f": 29,
 "intersect": {},
 "grip_intersect": {
-"RightHand": 549
+"RightHand": 551
 },
 "minclear": 0.04,
 "minclear_by": {

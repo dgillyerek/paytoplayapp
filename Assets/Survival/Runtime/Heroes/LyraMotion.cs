@@ -27,6 +27,15 @@ namespace Survival.Domain.Heroes
         public const int WalkLastFrame = 30;
         public const int BoneCount = 20;
 
+        /// <summary>
+        /// Spawn yaw (Unity degrees about +Y) that squares Lyra to the camera. Derek's mesh is sculpted turned
+        /// about 8 deg to her right in the bind pose (chest mirror plane -8 deg, pelvis -10 deg, hip-joint line -5.6 deg,
+        /// while the shoulder bones are square), so with no yaw she reads as facing her right. -8 turns her 8 deg to her
+        /// left. Set on the actor transform, so the clips, the staff and the bolt rotate with her; the attack aims 8 deg to
+        /// her right in clip space so the bolt still flies straight at the camera (+Z). Not used by the battle scene.
+        /// </summary>
+        public const float FacingYawDegrees = -8f;
+
         public const string TextureFolder = "LYRA_blenderig.fbm";
         public const string BaseColorFile = "LYRA_tighten_basecolor_0.jpg";
         public const string NormalFile = "LYRA_tighten_normal_2.jpg";

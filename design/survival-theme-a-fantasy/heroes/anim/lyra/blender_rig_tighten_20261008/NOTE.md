@@ -145,3 +145,12 @@ Derek: turn left, left hand lower on the shaft, staff forward, legs straight. Hi
 
 ## 2026-10-11: attack re-authored as a whole-body side-on turn (attack only)
 Derek: the whole body turns sideways, not just the upper body. Hips, spine and legs turn 80° together with stepped feet. Legs stay within 6.4° of the pelvis. Two-hand grip with the left hand low, staff pointing at the target. Only the attack and bolt actions changed; bones, rest, walk and staff are unchanged. Details are in `../attack_20261008/NOTE.md`.
+
+## 2026-10-11: rest and walk get the left-leg roll; Unity spawn yaw squares her to the camera
+
+Derek: "lyra needs to turn and face the camera forward. she faces to her right." His bones are not moved.
+
+- **Left leg:** in the rest action and all 31 walk keys, LeftUpLeg and LeftLeg are rolled 35° inward about their own long axis. That's the attack's fix, so the left-thigh and shin pattern faces front everywhere. Every joint position and every other bone is unchanged (max difference 4e-7). Only the LeftUpLeg, LeftLeg and LeftFoot keys changed. Script: `work/scripts/rest_walk_legroll_20261011.py`.
+- **Rest FBX:** it is now exported posed from the rest action, which carries the roll. The skin bind is still Derek's bones. The FBX default pose matches attack f0, so rest → attack doesn't jump.
+- **Facing:** the mesh's chest faces 8° to her right in the bind (pelvis 10°). Unity now spawns her with `LyraMotion.FacingYawDegrees = -8`. See `../attack_20261008/NOTE.md`.
+- **FBX MD5s:** rest e4898881 → 494f64e9, walk 7c5b1577 → 6edbe1ea. The attack is listed in the attack note. Both staff FBXs are unchanged.
