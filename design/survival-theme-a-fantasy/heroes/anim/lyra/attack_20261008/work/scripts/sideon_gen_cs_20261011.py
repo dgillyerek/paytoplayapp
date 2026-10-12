@@ -19,7 +19,7 @@ for f,i in enumerate(staff_i):
     old=lines[i]; tail=old.split('(',1)[1].split(')')[0].split(', ')[7:]
     lines[i]=old.split('new AttackFrame(')[0]+'new AttackFrame('+', '.join([g(v) for v in (*p,*q)]+tail)+')'+(',' if old.rstrip().endswith(',') else '')
 for f,i in enumerate(bolt_i):
-    p=C@np.array(S['bolt'][f] if f>=12 else S['spawn']); old=lines[i]; parts=old.split('(',1)[1].split(')')[0].split(', ')  # sampled bolt path (aim-compensated), spawn before release; parts=old.split('(',1)[1].split(')')[0].split(', ')
+    p=C@np.array(S['bolt'][f] if f>=12 else S['spawn']); old=lines[i]; parts=old.split('(',1)[1].split(')')[0].split(', ')  # sampled bolt path (aim-compensated), spawn before release
     lines[i]=old.split('new AttackFrame(')[0]+'new AttackFrame('+', '.join([g(v) for v in p]+parts[3:])+')'+(',' if old.rstrip().endswith(',') else '')
 out='\n'.join(lines)
 out=re.sub(r'FileMd5 = "[0-9a-f]{32}"',f'FileMd5 = "{MD5}"',out)
