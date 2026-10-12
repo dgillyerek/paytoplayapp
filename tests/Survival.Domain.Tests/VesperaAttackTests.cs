@@ -20,9 +20,10 @@ public sealed class VesperaAttackTests
         Assert.Equal("attack", clip.PoseName);
         Assert.Equal("VESPERA_blenderig_attack.fbx", clip.FileName);
         Assert.Equal("Scene", clip.TakeName);
-        Assert.Equal(30, clip.LastFrame);
+        Assert.Equal(36, clip.LastFrame);
         Assert.Equal(30f, clip.FrameRate);
-        Assert.Equal(1f, clip.Seconds);
+        Assert.Equal(1.2f, clip.Seconds, 3);
+        Assert.Equal(36, VesperaAttack.Spec.ClipLastFrame);
         Assert.Equal("VESPERA_blenderig_attack.fbx", VesperaAttack.FileName);
         Assert.Equal("VESPERA_blenderig_attack.fbx", VesperaAttack.Spec.FileName);
         Assert.False(VesperaAttack.Spec.InPlace);
@@ -35,8 +36,8 @@ public sealed class VesperaAttackTests
         var pack = Path.Combine(root, "Assets", VesperaMotion.ThemePackDir);
         var design = Path.Combine(root, VesperaAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
         // ThemePack attack is the Design no-cape pack (blender_rig_nocape_20261009); attack_20261007 keeps the original.
-        Assert.Equal("9b9f123acbc8504b8eec703cd7dce430", VesperaAttack.FileMd5);
-        Assert.Equal("9b9f123acbc8504b8eec703cd7dce430", Md5(Path.Combine(pack, VesperaAttack.FileName)));
+        Assert.Equal("3ba1e081c79de8cbf65fc5f0d4749edb", VesperaAttack.FileMd5);
+        Assert.Equal("3ba1e081c79de8cbf65fc5f0d4749edb", Md5(Path.Combine(pack, VesperaAttack.FileName)));
         Assert.Equal("082b741eae52d9144a612566380766bc", VesperaAttack.DesignFileMd5);
         Assert.Equal("082b741eae52d9144a612566380766bc", Md5(Path.Combine(design, VesperaAttack.FileName)));
 
@@ -86,7 +87,7 @@ public sealed class VesperaAttackTests
         Assert.NotEmpty(spec.Tracks);
         foreach (var track in spec.Tracks)
         {
-            Assert.Equal(31, track.Frames.Length);
+            Assert.Equal(VesperaAttack.LastFrame + 1, track.Frames.Length);
             Assert.True(track.FirstVisibleFrame >= 0, track.ObjectName);
             if (track.Kind == AttackTrackKind.Held)
             {
@@ -130,7 +131,8 @@ public sealed class VesperaAttackTests
     public void Vespera_orb_is_conjured_between_the_hands_then_launched_as_the_bolt()
     {
         var spec = VesperaAttack.Spec;
-        Assert.Equal(21, VesperaAttack.ReleaseFrame);
+        Assert.Equal(27, VesperaAttack.ReleaseFrame);
+        Assert.Equal(23, VesperaAttack.OrbFullFrame);
         Assert.Equal(new[] { "VESPERA_orb.fbx" }, VesperaAttack.PropFileNames);
         var orb = spec.Find("VESPERA_orb")!;
         var bolt = spec.Find("VESPERA_shadowbolt_vfx")!;
@@ -156,7 +158,7 @@ public sealed class VesperaAttackTests
         Assert.Equal(1f, orb.Frames[VesperaAttack.OrbFullFrame].Scale, 2);
 
         // Rave conjure: the orb stays between the hands (it does not swing round with them) and spins with the contrary sweeps.
-        for (var f = 6; f <= 16; f++)
+        for (var f = 6; f <= 22; f++)
         {
             Assert.True(Math.Abs(orb.Frames[f].X - orb.Frames[5].X) < 0.05f, "orb stays centred f" + f);
             Assert.True(Math.Abs(orb.Frames[f].Y - orb.Frames[5].Y) < 0.05f, "orb stays centred f" + f);
@@ -172,15 +174,26 @@ public sealed class VesperaAttackTests
     [Fact]
     public void Vespera_attack_plays_once_then_rests_then_repeats()
     {
-        var f0 = BlenderRigAttackSpec.CycleFrame(0f, out var in0, out var c0);
+        // Vespera's take is f0-36 (1.2 s); everyone else keeps the shared f0-30 (1 s) cycle.
+        var spec = VesperaAttack.Spec;
+        var f0 = spec.CycleFrameFor(0f, out var in0, out var c0);
         Assert.Equal(0f, f0);
         Assert.True(in0);
         Assert.Equal(0, c0);
-        Assert.Equal(15f, BlenderRigAttackSpec.CycleFrame(0.5f, out _, out _), 3);
-        Assert.Equal(30f, BlenderRigAttackSpec.CycleFrame(1.2f, out var inGap, out _));
+        Assert.Equal(15f, spec.CycleFrameFor(0.5f, out _, out _), 3);
+        Assert.Equal(33f, spec.CycleFrameFor(1.1f, out var inLate, out _), 3);
+        Assert.True(inLate);
+        Assert.Equal(36f, spec.CycleFrameFor(1.5f, out var inGap, out _));
         Assert.False(inGap);
-        Assert.Equal(0f, BlenderRigAttackSpec.CycleFrame(BlenderRigAttackSpec.CycleSeconds, out _, out var c1), 3);
+        Assert.Equal(0f, spec.CycleFrameFor(1.7f, out _, out var c1), 3);
         Assert.Equal(1, c1);
+        Assert.Equal(1.2f, spec.ClipSecondsFor, 3);
+
+        // Shared default is unchanged for the other characters.
+        Assert.Equal(30f, BlenderRigAttackSpec.CycleFrame(1.2f, out var sharedGap, out _));
+        Assert.False(sharedGap);
+        Assert.Equal(0f, BlenderRigAttackSpec.CycleFrame(BlenderRigAttackSpec.CycleSeconds, out _, out var s1), 3);
+        Assert.Equal(1, s1);
     }
 
     [Fact]

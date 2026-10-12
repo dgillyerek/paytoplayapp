@@ -36,7 +36,7 @@ ModelImporter:
       takeName: Scene
       internalID: 0
       firstFrame: 0
-      lastFrame: 30
+      lastFrame: 36
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -127,6 +127,6 @@ ModelImporter:
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Vespera Design blender_rig_nocape_20261009 on Derek rig edit 265ec84, attack, 1s at 30fps, take Scene, bolt f13. 16 bones, no Hips, Generic (binds by path). bakeAxisConversion 0. HOLD merge.
+  userData: Vespera Design blender_rig_nocape_20261009 on Derek rig edit 265ec84, attack 2026-10-12 slow rave conjure, f0-36 (1.2s) at 30fps, take Scene, orb released f27. 16 bones, no Hips, Generic (binds by path). bakeAxisConversion 0. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

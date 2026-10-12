@@ -35,6 +35,7 @@ public sealed class VesperaNoCapeTests
         Assert.NotEqual(VesperaNoCape.HandPassWalkMd5, VesperaNoCape.WalkMd5);
         Assert.NotEqual(VesperaNoCape.HandPassAttackMd5, VesperaNoCape.AttackMd5);
         Assert.NotEqual(VesperaNoCape.OrbPassAttackMd5, VesperaNoCape.AttackMd5);
+        Assert.NotEqual(VesperaNoCape.RavePassAttackMd5, VesperaNoCape.AttackMd5);
         Assert.Equal(VesperaNoCape.OrbMd5, Md5(Path.Combine(design, VesperaNoCape.OrbFileName)));
         Assert.Equal(VesperaNoCape.OrbMd5, Md5(Path.Combine(pack, VesperaNoCape.OrbFileName)));
         Assert.True(File.Exists(Path.Combine(design, VesperaNoCape.OrbBlendFileName)));
@@ -137,14 +138,15 @@ public sealed class VesperaNoCapeTests
         Assert.Equal(0, q.GetProperty("unweighted").GetInt32());
 
         // 2026-10-11 rave conjure (attack from work/rave_20261011; walk/gait unchanged from work/orb_20261011): BOTH hand + forearm pieces never intersect the body (hair excluded) between the bind-pose ends,
-        // the hands + lower forearms keep >= 3 cm from f2 to f28 (2.5 cm at f29, the last frame before the bind pose),
+        // the hands + lower forearms keep >= 3 cm from f2 to f34 (2.5 cm at f35, the last frame before the bind pose),
         // the hands never pass through each other, and the hands never touch her hair.
         var orbWork = Path.Combine(FindRepoRoot(), VesperaNoCape.OrbWorkDir.Replace('/', Path.DirectorySeparatorChar));
-        var raveWork = Path.Combine(FindRepoRoot(), VesperaNoCape.RaveWorkDir.Replace('/', Path.DirectorySeparatorChar));
+        var raveWork = Path.Combine(FindRepoRoot(), VesperaNoCape.SlowWorkDir.Replace('/', Path.DirectorySeparatorChar));   // 2026-10-12 slow conjure, f0-36
         using var clr = JsonDocument.Parse(File.ReadAllText(Path.Combine(raveWork, "clear_attack.json")));
         var frames = clr.RootElement.EnumerateArray().ToArray();
-        Assert.Equal(31, frames.Length);
-        for (var f = 1; f <= 29; f++)
+        Assert.Equal(VesperaAttack.LastFrame + 1, frames.Length);
+        var lastF = VesperaAttack.LastFrame;
+        for (var f = 1; f <= lastF - 1; f++)
         {
             Assert.Equal(0, frames[f].GetProperty("hand_hand_overlaps").GetInt32());
             foreach (var side in new[] { "R", "L" })
@@ -154,7 +156,7 @@ public sealed class VesperaNoCapeTests
                 Assert.Equal(0, s.GetProperty("hair_tri_overlaps").GetInt32());
                 if (f >= 2)
                 {
-                    Assert.True(s.GetProperty("min_body_hand_lowforearm_cm").GetDouble() >= (f <= 28 ? 3.0 : 2.5), "attack f" + f + " " + side);
+                    Assert.True(s.GetProperty("min_body_hand_lowforearm_cm").GetDouble() >= (f <= lastF - 2 ? 3.0 : 2.5), "attack f" + f + " " + side);
                 }
             }
         }
@@ -182,7 +184,7 @@ public sealed class VesperaNoCapeTests
         using var anim = JsonDocument.Parse(File.ReadAllText(Path.Combine(raveWork, "anim.json")));
         var atk = anim.RootElement.GetProperty("attack").EnumerateArray().ToArray();
         double phiMin = 999, phiMax = -999;
-        for (var f = 5; f <= 17; f++)
+        for (var f = 5; f <= 23; f++)
         {
             var phi = atk[f].GetProperty("phiL").GetDouble();
             phiMin = Math.Min(phiMin, phi);
@@ -239,7 +241,7 @@ public sealed class VesperaNoCapeTests
             var text = File.ReadAllText(Path.Combine(root, "Assets", VesperaMotion.ThemePackDir, meta));
             var clip = meta != "VESPERA_blenderig.fbx.meta";
             var pose = meta.Contains("walk") ? "walk" : "attack";
-            Assert.False(BlenderRigImportMeta.NeedsReimport(text, false, clip, pose, "Scene", 30), meta + " would reimport on Play");
+            Assert.False(BlenderRigImportMeta.NeedsReimport(text, false, clip, pose, "Scene", pose == "attack" ? VesperaAttack.LastFrame : 30), meta + " would reimport on Play");
         }
     }
 

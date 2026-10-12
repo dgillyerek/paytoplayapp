@@ -81,9 +81,9 @@ namespace Survival.Domain.Enemies
                     AttackPoseName,
                     AttackFileName,
                     BlenderRigAttackSpec.TakeName,
-                    BlenderRigAttackSpec.ClipSeconds,
+                    VesperaAttack.ClipSeconds,
                     BlenderRigAttackSpec.FrameRate,
-                    BlenderRigAttackSpec.LastFrame)
+                    VesperaAttack.LastFrame)
             });
     }
 }

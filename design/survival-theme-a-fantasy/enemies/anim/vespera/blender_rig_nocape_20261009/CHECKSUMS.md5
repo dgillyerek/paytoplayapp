@@ -1,8 +1,8 @@
-ebb48cf63b66b984664c71ac125a70bd  VESPERA_nocape.blend
+2d69990f991f5e4cf134b096a8f9ad5a  VESPERA_nocape.blend
 d46729fb1f36700957dd1ee0f08cb55f  VESPERA_nocape.fbx
 fe139c5fbaa4146b4bc3eadc03265d72  VESPERA_nocape_walk.fbx
-9b9f123acbc8504b8eec703cd7dce430  VESPERA_nocape_attack.fbx
-dd3d94b651ae03684bfcdc41f8e64e75  VESPERA_nocape_contact.jpg
+3ba1e081c79de8cbf65fc5f0d4749edb  VESPERA_nocape_attack.fbx
+74e85a2e035c7ebd11f157caadeeafc5  VESPERA_nocape_contact.jpg
 45b71d1aa45d4083d922560f59b77cc4  VESPERA_orb.fbx
 ba73f0f2736db8a6194e59394dd13b61  VESPERA_orb_prop.blend
 6a14f975af598b69331acacfcee6ec62  work/orb_20261011/export.json
@@ -30,3 +30,8 @@ f4aab5761aede3ea6cfba29b60a10e47  work/reweight_20261010/weld.json
 9efa19193401d9818f1d933790b6b9ba  work/rave_20261011/clear_attack.json
 5792dcf6e6b8618b7f33134ce4c6ae4a  work/rave_20261011/clear_walk.json
 518c0aa964762dd5c160cc634ee2900f  work/rave_20261011/anim.json
+8563ce07c577b479511b3c4f9a31c647  work/slow_20261012/export.json
+ff54eefcd9148c9f1c28341797034dbe  work/slow_20261012/qc_fbx.json
+467575ee5506c4bc9da4015a90efb1dd  work/slow_20261012/stretch.json
+4703c17f941bc26dee1b1df6124ce1c0  work/slow_20261012/clear_attack.json
+074d05b977a9870a601f5c6990f1fbbb  work/slow_20261012/anim.json

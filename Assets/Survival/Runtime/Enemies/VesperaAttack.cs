@@ -10,26 +10,33 @@ namespace Survival.Domain.Enemies
     /// f8, f11, f14, settle f17) - palms facing the orb at orb radius while it grows (visible f4, full size f17), with a small
     /// shoulder/hip groove on the hits; two-hand push f17-f21; the orb leaves as the Shadow Bolt at f21 from the orb centre,
     /// travels character-forward at 9 m/s; back to rest by f30.
+    /// 2026-10-12 (Derek on d40bbca: "that's perfect.. just slow down the conjuring"): the conjure plays 1.5x slower - lift-in
+    /// f0-5 unchanged, contrary sweeps f5-23 (hits ~f9-10, f14, ~f18-19, settle f23), push f23-27, orb released at f27,
+    /// follow-through to f30, back to rest by f36 (push/return shapes identical, shifted +6). Take is f0-36.
     /// The orb is hidden at rest and walk. Prop mesh VESPERA_orb.fbx (dark-violet orb, silver claw, floating rune ring) rides
     /// both tracks; Unity adds the orb glow particles and trail around it.
     /// New 0–30 frame Scene take at 30 fps on the existing blenderig (same bones, no rebind).
-    /// Frames below are baked from the Design anim report (work/rave_20261011/anim.json) in Unity convention (character forward = +Z).
+    /// Frames below are baked from the Design anim report (work/slow_20261012/anim.json) in Unity convention (character forward = +Z).
     /// HOLD merge until Derek Game-view PASS.
     /// </summary>
     public static class VesperaAttack
     {
         public const string FileName = "VESPERA_blenderig_attack.fbx";
-        /// <summary>ThemePack attack FBX: Design blender_rig_nocape_20261009 VESPERA_nocape_attack.fbx (Derek's 16-bone rig, orb conjure 2026-10-11, rave conjure 2026-10-11).</summary>
-        public const string FileMd5 = "9b9f123acbc8504b8eec703cd7dce430";
+        /// <summary>ThemePack attack FBX: Design blender_rig_nocape_20261009 VESPERA_nocape_attack.fbx (Derek's 16-bone rig, orb conjure 2026-10-11, rave conjure 2026-10-11, slowed 2026-10-12).</summary>
+        public const string FileMd5 = "3ba1e081c79de8cbf65fc5f0d4749edb";
         /// <summary>Original attack FBX in VesperaAttack.DesignDir (attack_20261007), unchanged.</summary>
         public const string DesignFileMd5 = "082b741eae52d9144a612566380766bc";
         public const string DesignDir = "design/survival-theme-a-fantasy/enemies/anim/vespera/attack_20261007";
-        public const int ReleaseFrame = 21;
+        public const int ReleaseFrame = 27;
+
+        /// <summary>Attack take f0-36 (1.2 s at 30 fps): the conjure was slowed 1.5x on 2026-10-12, so it is longer than the shared 30.</summary>
+        public const int LastFrame = 36;
+        public const float ClipSeconds = LastFrame / 30f;
         public const bool InPlace = false;
 
         /// <summary>First frame the conjured orb shows between her hands, and the frame it reaches full size.</summary>
         public const int OrbAppearFrame = 4;
-        public const int OrbFullFrame = 17;
+        public const int OrbFullFrame = 23;
 
         /// <summary>Prop FBXs copied next to the character FBXs, with Design MD5s.</summary>
         public static readonly string[] PropFileNames =
@@ -76,17 +83,23 @@ namespace Survival.Domain.Enemies
                         new AttackFrame(0.0754f, 1.2416f, 0.5488f, 0f, 0f, 0f, 1f, 0.18f, false),
                         new AttackFrame(0.078f, 1.3267f, 0.6061f, 0f, 0f, 0f, 1f, 0.18f, true),
                         new AttackFrame(0.08f, 1.36f, 0.595f, 0f, 0f, 0f, 1f, 0.194f, true),
-                        new AttackFrame(0.08f, 1.36f, 0.595f, 0.15471f, 0f, 0f, 0.98796f, 0.232f, true),
+                        new AttackFrame(0.08f, 1.36f, 0.595f, 0.05669f, 0f, 0f, 0.99839f, 0.217f, true),
+                        new AttackFrame(0.08f, 1.36f, 0.595f, 0.28987f, 0f, 0f, 0.95707f, 0.25f, true),
                         new AttackFrame(0.0791f, 1.3574f, 0.5933f, 0.55339f, 0f, 0f, 0.83292f, 0.291f, true),
-                        new AttackFrame(0.0748f, 1.3511f, 0.5894f, 0.67559f, 0f, 0f, 0.73728f, 0.365f, true),
+                        new AttackFrame(0.0749f, 1.3532f, 0.5887f, 0.66913f, 0f, 0f, 0.74314f, 0.339f, true),
+                        new AttackFrame(0.0762f, 1.3543f, 0.5891f, 0.66393f, 0f, 0f, 0.7478f, 0.393f, true),
                         new AttackFrame(0.08f, 1.3567f, 0.595f, 0.43366f, 0f, 0f, 0.90108f, 0.451f, true),
-                        new AttackFrame(0.0821f, 1.3533f, 0.5948f, -0.35347f, 0f, 0f, 0.93544f, 0.543f, true),
+                        new AttackFrame(0.08f, 1.3582f, 0.595f, -0.10019f, 0f, 0f, 0.99497f, 0.512f, true),
+                        new AttackFrame(0.0848f, 1.3497f, 0.5937f, -0.52101f, 0f, 0f, 0.85355f, 0.574f, true),
                         new AttackFrame(0.0873f, 1.3449f, 0.5924f, -0.60876f, 0f, 0f, 0.79335f, 0.637f, true),
-                        new AttackFrame(0.0821f, 1.3527f, 0.5948f, -0.35347f, 0f, 0f, 0.93544f, 0.729f, true),
+                        new AttackFrame(0.0848f, 1.3497f, 0.5937f, -0.52101f, 0f, 0f, 0.85355f, 0.699f, true),
+                        new AttackFrame(0.08f, 1.3576f, 0.595f, -0.10019f, 0f, 0f, 0.99497f, 0.759f, true),
                         new AttackFrame(0.08f, 1.3573f, 0.595f, 0.43366f, 0f, 0f, 0.90108f, 0.815f, true),
-                        new AttackFrame(0.075f, 1.3513f, 0.589f, 0.67559f, 0f, 0f, 0.73728f, 0.889f, true),
+                        new AttackFrame(0.0762f, 1.3541f, 0.5889f, 0.66393f, 0f, 0f, 0.7478f, 0.866f, true),
+                        new AttackFrame(0.0764f, 1.3548f, 0.5883f, 0.66913f, 0f, 0f, 0.74314f, 0.911f, true),
                         new AttackFrame(0.0792f, 1.3573f, 0.5924f, 0.55339f, 0f, 0f, 0.83292f, 0.948f, true),
-                        new AttackFrame(0.08f, 1.3573f, 0.595f, 0.15471f, 0f, 0f, 0.98796f, 0.986f, true),
+                        new AttackFrame(0.08f, 1.3582f, 0.595f, 0.28987f, 0f, 0f, 0.95707f, 0.976f, true),
+                        new AttackFrame(0.08f, 1.3556f, 0.595f, 0.05669f, 0f, 0f, 0.99839f, 0.994f, true),
                         new AttackFrame(0.08f, 1.352f, 0.595f, 0f, 0f, 0f, 1f, 1f, true),
                         new AttackFrame(0.08f, 1.3698f, 0.6075f, 0f, 0f, 0f, 1f, 1f, true),
                         new AttackFrame(0.08f, 1.3993f, 0.635f, 0f, 0f, 0f, 1f, 1f, true),
@@ -102,7 +115,7 @@ namespace Survival.Domain.Enemies
                         new AttackFrame(0.0777f, 1.0267f, 0.2974f, 0f, 0f, 0f, 1f, 1f, false),
                         new AttackFrame(0.0799f, 0.9992f, 0.209f, 0f, 0f, 0f, 1f, 1f, false)
                     },
-                    "orb conjured between the palms f4-f20 (midpoint of the two palms, grows to full size by f17, spins with the contrary sweeps)"),
+                    "orb conjured between the palms f4-f26 (midpoint of the two palms, grows to full size by f23, spins with the contrary sweeps)"),
                 new AttackTrack(
                     "VESPERA_shadowbolt_vfx",
                     AttackTrackKind.Projectile,
@@ -141,6 +154,12 @@ namespace Survival.Domain.Enemies
                         new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
                         new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
                         new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
+                        new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, false),
                         new AttackFrame(0.08f, 1.44f, 0.675f, 0f, 0f, 0f, 1f, 1f, true),
                         new AttackFrame(0.08f, 1.44f, 0.975f, 0f, 0f, 0f, 1f, 1f, true),
                         new AttackFrame(0.08f, 1.44f, 1.275f, 0f, 0f, 0f, 1f, 1f, true),
@@ -153,6 +172,7 @@ namespace Survival.Domain.Enemies
                         new AttackFrame(0.08f, 1.44f, 3.375f, 0f, 0f, 0f, 1f, 1f, true)
                     },
                     "the orb leaves as the shadow bolt from the orb centre at release, travels character-forward")
-            });
+            },
+            LastFrame);
     }
 }

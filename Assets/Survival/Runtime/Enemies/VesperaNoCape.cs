@@ -16,7 +16,7 @@ namespace Survival.Domain.Enemies
     /// arms hang closer (no forearm flare). Rig, mesh and weights unchanged (rest FBX kept byte-identical). Orb prop VESPERA_orb.fbx.
     /// 2026-10-11 (rave): only the attack conjure changed - contrary sweeps around the orb (one hand over, one under, swap) with a
     /// small groove, push, release f21. Rest, walk and orb FBXs byte-identical to a470cea.
-    /// HOLD merge until Derek Game-view PASS.
+    /// 2026-10-12 (slow): conjure 1.5x slower, attack take f0-36, release f27. Derek Game-view PASS on d40bbca conditional on this.
     /// </summary>
     public static class VesperaNoCape
     {
@@ -27,8 +27,8 @@ namespace Survival.Domain.Enemies
         public const string BlendFileName = "VESPERA_nocape.blend";
         public const string RestMd5 = "d46729fb1f36700957dd1ee0f08cb55f";
         public const string WalkMd5 = "fe139c5fbaa4146b4bc3eadc03265d72";
-        public const string AttackMd5 = "9b9f123acbc8504b8eec703cd7dce430";
-        public const string BlendMd5 = "ebb48cf63b66b984664c71ac125a70bd";
+        public const string AttackMd5 = "3ba1e081c79de8cbf65fc5f0d4749edb";
+        public const string BlendMd5 = "2d69990f991f5e4cf134b096a8f9ad5a";
         public const int RigBoneCount = 16;
 
         /// <summary>Work folder for the freed-right-hand pass (cut, weights, clearance and stretch reports).</summary>
@@ -39,6 +39,12 @@ namespace Survival.Domain.Enemies
 
         /// <summary>Work folder for the rave conjure pass (attack only: anim report, both-hand clearance, stretch, FBX QC).</summary>
         public const string RaveWorkDir = DesignDir + "/work/rave_20261011";
+
+        /// <summary>Work folder for the slow-conjure pass (attack only).</summary>
+        public const string SlowWorkDir = DesignDir + "/work/slow_20261012";
+
+        /// <summary>Attack MD5 of the rave pass at normal speed (d40bbca).</summary>
+        public const string RavePassAttackMd5 = "9b9f123acbc8504b8eec703cd7dce430";
 
         /// <summary>Attack MD5 of the both-hands-circle orb pass this replaces (a470cea).</summary>
         public const string OrbPassAttackMd5 = "5b907c6f5ec944e9fb4233bd9d451e5c";

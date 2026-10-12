@@ -1,6 +1,19 @@
 # VESPERA: no cape (2026-10-09), rebuilt on Derek's rig edit (2026-10-10)
 
-## 2026-10-11 rave conjure (attack only) - current state of the attack
+## 2026-10-12 slow conjure (attack only) - FINAL, Derek Game-view PASS
+Derek on d40bbca: "that's perfect.. just slow down the conjuring then merge it." The conjure (source f5-17) now plays 1.5x
+slower: lift-in f0-5 unchanged (orb appears f4), contrary sweeps f5-23 (hits ~f9-10, f14, ~f18-19, settle f23; same poses,
+groove and snap, sampled from the same curves), push f23-27, **release f27**, follow-through to f30, rest by **f36**. Lift-in and
+push/release/return poses are identical to d40bbca (hand positions match to 0.0 m, shifted +6 frames). The take is now f0-36
+(1.2 s at 30 fps), so `VesperaAttack.LastFrame = 36` is passed to `BlenderRigAttackSpec` (new optional `clipLastFrame`, default
+30 for every other character); the player and attack driver use the per-character length; the attack .meta clip lastFrame is 36.
+Rest, walk and orb FBXs byte-identical; Derek's 16 bones identical. Scripts/reports: `work/slow_20261012/` (`anim_slow.py`).
+Clearance: 0 body overlaps f1-35 both sides, 0 hand-hand, 0 hair; hands + lower forearms >=4.3 cm (right) / >=8.1 cm (left)
+f2-34, 3.0 cm at f1, 3.3 cm at f35. Wrist bend <=44.9, twist <=38.3. Stretch: attack 6 edges >2 cm, max 2.41 cm (unchanged).
+Files: attack `3ba1e081c79de8cbf65fc5f0d4749edb`, blend `2d69990f991f5e4cf134b096a8f9ad5a`; contact sheet replaced.
+
+
+## 2026-10-11 rave conjure (attack only; timing superseded by the slow section above)
 Derek on a470cea: "that's pretty good. make her hands go in different directions as if she's outlining the orb. almost like a
 rave dance." Only the attack changed: rest `d46729fb`, walk `fe139c5f` and orb `45b71d1a` are byte-identical to a470cea (the
 blend's walk action re-keys to identical pose matrices on all 31 frames; Derek's 16 bones identical; `actdump.py`, `bonecmp.py`).
