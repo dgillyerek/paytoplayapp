@@ -88,3 +88,20 @@ Derek: in 1c0eb5f her left leg turned almost sideways. He wants her whole body t
 - **Clearance:** no staff/body triangle intersections on any frame. During the draw the staff swings 8 cm out in front, so it stays at least 4.8 cm from every non-hand body part on every frame (closest: right boot at f1). The f25 boot brush from 1c0eb5f is gone; at f25 the nearest body part is 13 cm away. The hand mesh has no finger bones, so on the grab and release frames (f6–f7, f21–f22) the left fingers slide across the shaft, up to 2.6 cm into it; on the hold frames it's 7 mm.
 - **Changed:** only the `LYRA_tighten_attack` and `LYRA_arcane_bolt_attack` actions. Bones, rest and walk actions, the staff offset, the rest and walk FBXs and both staff FBXs are byte-identical.
 - **Scripts:** `work/scripts/sideon_*_20261011.*`. QC: `work/sideon_verify_after.json`, `work/sideon_legalign_after.json`.
+
+## Right-foot step, head on target, left-leg pattern roll (2026-10-11, replaces cbcb1cc)
+Derek: "when she starts attack her left leg is still twisted inward. the pattern shown in front of her leg is on the side." Also: "make her right leg step forward as her entire body rotates to face left except for her head. she still should fire straight forward."
+
+- **Mesh measurement** (gold filigree vertices on the left thigh and shin, from the base-colour texture; facing = centre of the gold-rich sector around each bone, + = toward the leg's outer side):
+  - Bind, rest f0, walk f0 and cbcb1cc f0–f30 all put the left thigh pattern at +100° from the pelvis forward and +103° from the left foot. The right thigh's pattern is +98° from the pelvis but only +63° from its foot, because Derek's rest has the right foot turned out 36° while the left foot points straight ahead (-2°).
+  - The attack bones in cbcb1cc changed the left thigh pattern facing by under 1°, and bind = rest = attack f0. So the cause is **(b)**: the rest pose / rig carries it, not the attack's thigh roll (a) and not weight candy-wrapping (c). The same 103° shows in rest f0 and walk f0 (101°). Rest and walk are NOT changed.
+- **Attack fix:** on every attack frame, f0 included, the left thigh and shin are rolled 35° inward about their own long axes. Knee and foot positions and directions are unchanged. The left thigh pattern now sits +68° from the left foot (right leg: +63°) on every frame f0–f30. Attack f0 is therefore no longer identical to rest in the left leg (max bone-matrix difference 0.57).
+- **Motion:** she starts front-on. The left foot pivots in place (its yaw follows the pelvis). The right foot steps forward 0.67 m (f1–f7, 8 cm lift) to land in front of the left foot as the whole body turns 80° left about the left foot. The head counter-turns the full 80°, so it faces the camera/target on every frame. Hold f8–f21. The right foot steps back f21–f27, and she turns back by f29.
+- **Leg alignment vs pelvis** (bone check): thigh, shin and foot within 4.1°, knee direction within 2.7°.
+- **Staff:** two-hand grip with the left hand about 61 cm lower on the shaft. It points straight at the target (0° yaw, 5° up) during the hold, and the bolt is re-keyed at the f12 crystal.
+- **Clearance:** no staff/body intersections. The staff stays at least 6.5 cm from every non-hand body part, closest the right boot at f1/f28. Left fingers cross the shaft up to 2.6 cm only on the grab and release frames (no finger bones).
+- **Options for rest/walk (not done; they are locked):**
+  1. Apply the same 35° left thigh/shin roll to rest and walk.
+  2. Turn the right foot in to match the left (or the left out to match the right) in Derek's rest.
+  3. Fix the left-leg UVs/texture placement in the mesh.
+- **Scripts/QC:** `work/scripts/sideon_pattern_*_20261011.py`, `work/legpattern_before_cbcb1cc.json`, `work/legpattern_after.json`.

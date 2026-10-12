@@ -22,6 +22,8 @@ def rz(a,c=Vector((0,0,0))): return Matrix.Translation(c)@Matrix.Rotation(math.r
 def rot_between(a,b):
     a=a.normalized(); b=b.normalized(); return a.rotation_difference(b).to_matrix()
 YAW=PRM['yaw']; DROP=PRM['drop']; C=Vector((M0[P+'Hips'].translation.x,M0[P+'Hips'].translation.y,0))
+if PRM.get('pivot')=='leftfoot':
+    _lt=M0[P+'LeftFoot']@Vector((0,arm.data.bones[P+'LeftFoot'].length,0)); C=Vector((_lt.x,_lt.y,0))
 def wbody(f):
     if f<=PRM['hold_end']: return sm(f/PRM['turn_end'])
     return 1-sm((f-PRM['hold_end'])/(30-PRM['ret_pad']-PRM['hold_end']))
@@ -102,15 +104,17 @@ for s in ('Left','Right'):
 def foot_state(s,f):
     """toe position & foot matrix (armature space)."""
     toe0=LEG[s]['toe0']; toe1=rz(YAW,C)@toe0
+    sc_=PRM.get('stance_scale',1.0)
+    if sc_!=1.0: toe1=C+(toe1-C)*sc_; toe1.z=toe0.z
     steps=PRM['steps'][s]  # [[a,b,dir], ...]  dir +1 = go, -1 = return
     y=YAW*wbody(f)
     # planted position before/after steps
     pos=toe0.copy(); lift=0.0
     st_out,st_back=steps
     if f<=st_out[0]: pos=toe0
-    elif f<st_out[1]: u=(f-st_out[0])/(st_out[1]-st_out[0]); pos=toe0.lerp(toe1,sm(u)); lift=PRM['lift']*math.sin(math.pi*u)
+    elif f<st_out[1]: u=(f-st_out[0])/(st_out[1]-st_out[0]); pos=toe0.lerp(toe1,sm(u)); lift=(PRM['lift'] if (toe1-toe0).length>0.02 else 0.0)*math.sin(math.pi*u)
     elif f<=st_back[0]: pos=toe1
-    elif f<st_back[1]: u=(f-st_back[0])/(st_back[1]-st_back[0]); pos=toe1.lerp(toe0,sm(u)); lift=PRM['lift']*math.sin(math.pi*u)
+    elif f<st_back[1]: u=(f-st_back[0])/(st_back[1]-st_back[0]); pos=toe1.lerp(toe0,sm(u)); lift=(PRM['lift'] if (toe1-toe0).length>0.02 else 0.0)*math.sin(math.pi*u)
     else: pos=toe0
     pos=pos+Vector((0,0,lift))
     Fm=Matrix.Translation(pos)@Matrix.Rotation(math.radians(y),4,'Z')@Matrix.Translation(-toe0)@M0[P+s+'Foot']
@@ -199,9 +203,15 @@ if MODE=='search':
     sys.exit(0)
 roll,poleR,poleL,rollL=PRM['roll'],PRM['poleR'],PRM['poleL'],PRM['rollL']
 FR={}; SW=[]
+def leg_roll(M):
+    for bn,key in (('LeftUpLeg','lroll_thigh'),('LeftLeg','lroll_shin')):
+        a=PRM.get(key,0.0)
+        if a:
+            m=M[P+bn]; R=m.to_3x3()@Matrix.Rotation(math.radians(a),3,'Y'); t=m.translation.copy(); M[P+bn]=R.to_4x4(); M[P+bn].translation=t
+    return M
 for f in range(31):
-    if f in (0,30): FR[f]={n:M0[n].copy() for n in names}; SW.append(S0.copy()); print('F',f,'rest'); continue
-    M,Sw,info=pose_frame(f,roll,poleR,poleL,rollL,PRM['ktw']); FR[f]=M; SW.append(Sw); print('F',f,json.dumps(info))
+    if f in (0,30): FR[f]=leg_roll({n:M0[n].copy() for n in names}); SW.append(S0.copy()); print('F',f,'rest'); continue
+    M,Sw,info=pose_frame(f,roll,poleR,poleL,rollL,PRM['ktw']); FR[f]=leg_roll(M); SW.append(Sw); print('F',f,json.dumps(info))
 # write keys: convert pose matrices to basis
 def FC(a):
     out=[]

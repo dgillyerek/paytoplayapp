@@ -34,9 +34,9 @@ public sealed class LyraAttackTests
         var root = FindRepoRoot();
         var pack = Path.Combine(root, "Assets", LyraMotion.ThemePackDir);
         var design = Path.Combine(root, LyraAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
-        Assert.Equal("916e0ab97866a084d4ccf1788db7ecbb", LyraAttack.FileMd5);
-        Assert.Equal("916e0ab97866a084d4ccf1788db7ecbb", Md5(Path.Combine(pack, LyraAttack.FileName)));
-        Assert.Equal("916e0ab97866a084d4ccf1788db7ecbb", Md5(Path.Combine(design, "LYRA_tighten_blenderig_attack.fbx")));
+        Assert.Equal("81021543e1ee1f7e7a330120d7bcf87f", LyraAttack.FileMd5);
+        Assert.Equal("81021543e1ee1f7e7a330120d7bcf87f", Md5(Path.Combine(pack, LyraAttack.FileName)));
+        Assert.Equal("81021543e1ee1f7e7a330120d7bcf87f", Md5(Path.Combine(design, "LYRA_tighten_blenderig_attack.fbx")));
         Assert.Equal("43aef847341f2e86f88a3020b32bae72", Md5(Path.Combine(pack, "LYRA_staff.fbx")));
         Assert.Equal("43aef847341f2e86f88a3020b32bae72", Md5(Path.Combine(design, "LYRA_staff.fbx")));
         Assert.Equal(LyraAttack.PropFileNames.Length, LyraAttack.PropFileMd5s.Length);
