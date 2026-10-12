@@ -1,0 +1,75 @@
+namespace Survival.Domain.Enemies
+{
+    /// <summary>
+    /// Vespera no-cape pack (Design blender_rig_nocape_20261009). Derek's cloth-rule fallback, same call as Rowan no-cape:
+    /// the cape/cloak and the cloth split's 28 cloth bones are gone, the body is re-rigged on 22 mixamorig bones with
+    /// clean weights (max 4 per vertex), and rest/walk/attack are re-authored on that rig. No runtime spring bones or leg
+    /// colliders. ThemePack file names are kept (metas and GUIDs unchanged). One source blend carries rig + all three actions.
+    /// 2026-10-10: the rig is Derek's own edit (265ec84, Blender 5.2, 16 bones), kept exactly. Skin weights were then re-solved
+    /// on his joints (orphaned Hips/Spine/Shoulder/ToeBase weights moved to the bones he kept), the 507fb9a arm split seams
+    /// were re-welded, and rest/walk/attack were rebuilt on his rig.
+    /// 2026-10-10 (hand): the right forearm/hand surface was cut free of the skirt, belt, hip and chest side it was fused to
+    /// (min-cut along the contact, joining faces deleted, holes closed with nearby paint); the hand piece carries right-arm
+    /// weights only and the skirt/belt/hip pieces carry torso/thigh weights only. Shadow Bolt now goes around her right side.
+    /// 2026-10-11 (orb): Derek picked the orb (weapon sheet option C). Attack rebuilt as a two-hand conjure (palms facing, one
+    /// circle while the orb grows, two-hand push, release f20); walk knees straighten at heel strike with a longer stride and the
+    /// arms hang closer (no forearm flare). Rig, mesh and weights unchanged (rest FBX kept byte-identical). Orb prop VESPERA_orb.fbx.
+    /// 2026-10-11 (rave): only the attack conjure changed - contrary sweeps around the orb (one hand over, one under, swap) with a
+    /// small groove, push, release f21. Rest, walk and orb FBXs byte-identical to a470cea.
+    /// 2026-10-12 (slow): conjure 1.5x slower, attack take f0-36, release f27. Derek Game-view PASS on d40bbca conditional on this.
+    /// </summary>
+    public static class VesperaNoCape
+    {
+        public const string DesignDir = "design/survival-theme-a-fantasy/enemies/anim/vespera/blender_rig_nocape_20261009";
+        public const string RestFileName = "VESPERA_nocape.fbx";
+        public const string WalkFileName = "VESPERA_nocape_walk.fbx";
+        public const string AttackFileName = "VESPERA_nocape_attack.fbx";
+        public const string BlendFileName = "VESPERA_nocape.blend";
+        public const string RestMd5 = "d46729fb1f36700957dd1ee0f08cb55f";
+        public const string WalkMd5 = "fe139c5fbaa4146b4bc3eadc03265d72";
+        public const string AttackMd5 = "3ba1e081c79de8cbf65fc5f0d4749edb";
+        public const string BlendMd5 = "2d69990f991f5e4cf134b096a8f9ad5a";
+        public const int RigBoneCount = 16;
+
+        /// <summary>Work folder for the freed-right-hand pass (cut, weights, clearance and stretch reports).</summary>
+        public const string HandWorkDir = DesignDir + "/work/hand_20261010";
+
+        /// <summary>Work folder for the orb pass (scripts, anim report, both-hand clearance, stretch, gait, FBX QC).</summary>
+        public const string OrbWorkDir = DesignDir + "/work/orb_20261011";
+
+        /// <summary>Work folder for the rave conjure pass (attack only: anim report, both-hand clearance, stretch, FBX QC).</summary>
+        public const string RaveWorkDir = DesignDir + "/work/rave_20261011";
+
+        /// <summary>Work folder for the slow-conjure pass (attack only).</summary>
+        public const string SlowWorkDir = DesignDir + "/work/slow_20261012";
+
+        /// <summary>Attack MD5 of the rave pass at normal speed (d40bbca).</summary>
+        public const string RavePassAttackMd5 = "9b9f123acbc8504b8eec703cd7dce430";
+
+        /// <summary>Attack MD5 of the both-hands-circle orb pass this replaces (a470cea).</summary>
+        public const string OrbPassAttackMd5 = "5b907c6f5ec944e9fb4233bd9d451e5c";
+
+        /// <summary>Orb prop (Design FBX + prop blend) next to the character files.</summary>
+        public const string OrbFileName = "VESPERA_orb.fbx";
+        public const string OrbBlendFileName = "VESPERA_orb_prop.blend";
+        public const string OrbMd5 = "45b71d1aa45d4083d922560f59b77cc4";
+
+        /// <summary>Walk and attack MD5s of the freed-right-hand pass this replaces (369c25d).</summary>
+        public const string HandPassWalkMd5 = "c15ae1b2988aa8806fa9f6760a75b4a4";
+        public const string HandPassAttackMd5 = "7435a2059aed197590f7e33d93590453";
+
+        /// <summary>Bones Derek deleted in 265ec84. Their vertex groups are gone from the mesh; those weights now live on the kept bones.</summary>
+        public static readonly string[] DeletedBones =
+        {
+            "mixamorig:Hips", "mixamorig:Spine", "mixamorig:LeftShoulder", "mixamorig:RightShoulder", "mixamorig:LeftToeBase", "mixamorig:RightToeBase"
+        };
+
+        /// <summary>Blend actions (frames 0-30 at 30 fps; rest is the bind pose).</summary>
+        public static readonly string[] BlendActions = { "VESPERA_nocape_rest", "VESPERA_nocape_walk", "VESPERA_nocape_attack" };
+
+        /// <summary>ThemePack MD5s of the cloth split this replaces (clothsplit_20261007, still in git history).</summary>
+        public const string ClothSplitRestMd5 = "25e3a3c6b89923e8f58d579a0f8e6c74";
+        public const string ClothSplitWalkMd5 = "d7f30d54e3a0b503c3dcb01828ff2c7b";
+        public const string ClothSplitAttackMd5 = "c0abe43d57027edef1879a283efcd8f7";
+    }
+}

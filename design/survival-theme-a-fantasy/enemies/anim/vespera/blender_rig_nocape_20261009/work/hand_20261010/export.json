@@ -1,0 +1,56 @@
+{
+ "bones": [
+  "mixamorig:Spine1",
+  "mixamorig:Spine2",
+  "mixamorig:Neck",
+  "mixamorig:Head",
+  "mixamorig:LeftArm",
+  "mixamorig:LeftForeArm",
+  "mixamorig:LeftHand",
+  "mixamorig:RightArm",
+  "mixamorig:RightForeArm",
+  "mixamorig:RightHand",
+  "mixamorig:LeftUpLeg",
+  "mixamorig:LeftLeg",
+  "mixamorig:LeftFoot",
+  "mixamorig:RightUpLeg",
+  "mixamorig:RightLeg",
+  "mixamorig:RightFoot"
+ ],
+ "roots": [
+  "mixamorig:Spine1",
+  "mixamorig:LeftUpLeg",
+  "mixamorig:RightUpLeg"
+ ],
+ "calibration_unity": {
+  "Spine1": [
+   0.0667,
+   1.11933,
+   0.2049
+  ],
+  "Head": [
+   0.05851,
+   1.60558,
+   0.12055
+  ],
+  "LeftHand": [
+   -0.17125,
+   1.05986,
+   0.33079
+  ],
+  "RightHand": [
+   0.32532,
+   1.07361,
+   0.06788
+  ]
+ },
+ "bolt_spawn_unity_f13": [
+  0.21807,
+  1.40889,
+  0.98023
+ ],
+ "faces": 134906,
+ "verts": 68710,
+ "blender": "5.2.2 LTS",
+ "max_influences": 4
+}

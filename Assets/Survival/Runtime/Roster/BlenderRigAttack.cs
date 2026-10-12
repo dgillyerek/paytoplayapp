@@ -253,8 +253,10 @@ namespace Survival.Domain.Roster
             bool inPlace,
             string[] calibrationBones,
             float[] calibrationRest,
-            AttackTrack[] tracks)
+            AttackTrack[] tracks,
+            int clipLastFrame = LastFrame)
         {
+            ClipLastFrame = clipLastFrame > FirstFrame ? clipLastFrame : LastFrame;
             Character = character;
             FileName = fileName;
             FileMd5 = fileMd5;
@@ -285,6 +287,43 @@ namespace Survival.Domain.Roster
         public float[] CalibrationRest { get; }
 
         public AttackTrack[] Tracks { get; }
+
+        /// <summary>
+        /// Last frame of this character's attack take. Defaults to <see cref="LastFrame"/> (30); Vespera's slow
+        /// rave conjure (2026-10-12) runs f0-36.
+        /// </summary>
+        public int ClipLastFrame { get; }
+
+        /// <summary>Length of this character's attack take in seconds.</summary>
+        public float ClipSecondsFor => (ClipLastFrame - FirstFrame) / (float)FrameRate;
+
+        /// <summary>Same as <see cref="CycleFrame(float, out bool, out int)"/> but for this character's own take length.</summary>
+        public float CycleFrameFor(float seconds, out bool inClip, out int cycle)
+        {
+            return CycleFrame(seconds, ClipLastFrame, out inClip, out cycle);
+        }
+
+        /// <summary>Attack frame for a take ending at <paramref name="lastFrame"/>; plays once, holds rest through the gap, repeats.</summary>
+        public static float CycleFrame(float seconds, int lastFrame, out bool inClip, out int cycle)
+        {
+            if (seconds < 0f)
+            {
+                seconds = 0f;
+            }
+
+            var clipSeconds = (lastFrame - FirstFrame) / (float)FrameRate;
+            var cycleSeconds = clipSeconds + RestGapSeconds;
+            cycle = (int)Math.Floor(seconds / cycleSeconds);
+            var t = seconds - (cycle * cycleSeconds);
+            if (t <= clipSeconds)
+            {
+                inClip = true;
+                return FirstFrame + (t * FrameRate);
+            }
+
+            inClip = false;
+            return lastFrame;
+        }
 
         public static float ClipSeconds => (LastFrame - FirstFrame) / (float)FrameRate;
 

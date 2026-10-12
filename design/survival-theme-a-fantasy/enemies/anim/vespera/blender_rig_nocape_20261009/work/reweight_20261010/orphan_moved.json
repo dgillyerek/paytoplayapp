@@ -1,0 +1,155 @@
+{
+ "Hips": {
+  "verts_mostly_on_it": 2082,
+  "verts_touching": 4201,
+  "z": [
+   0.78,
+   1.06
+  ],
+  "now": {
+   "Spine1": 0.577,
+   "LeftUpLeg": 0.352,
+   "RightUpLeg": 0.041,
+   "Spine2": 0.018,
+   "RightHand": 0.011
+  },
+  "now_skin_armour": {
+   "verts": 1891,
+   "Spine1": 0.562,
+   "LeftUpLeg": 0.371,
+   "RightUpLeg": 0.043,
+   "Spine2": 0.012
+  },
+  "now_hair": {
+   "verts": 191,
+   "Spine1": 0.725,
+   "LeftUpLeg": 0.17,
+   "Spine2": 0.071,
+   "RightUpLeg": 0.028
+  }
+ },
+ "Spine": {
+  "verts_mostly_on_it": 3937,
+  "verts_touching": 9736,
+  "z": [
+   1.02,
+   1.18
+  ],
+  "now": {
+   "Spine1": 0.823,
+   "LeftUpLeg": 0.066,
+   "Spine2": 0.05,
+   "RightHand": 0.04,
+   "RightUpLeg": 0.02
+  },
+  "now_skin_armour": {
+   "verts": 3794,
+   "Spine1": 0.821,
+   "LeftUpLeg": 0.067,
+   "Spine2": 0.05,
+   "RightHand": 0.04
+  },
+  "now_hair": {
+   "verts": 143,
+   "Spine1": 0.866,
+   "LeftUpLeg": 0.045,
+   "RightHand": 0.04,
+   "Spine2": 0.039
+  }
+ },
+ "LeftShoulder": {
+  "verts_mostly_on_it": 876,
+  "verts_touching": 3359,
+  "z": [
+   1.37,
+   1.55
+  ],
+  "now": {
+   "Spine2": 0.446,
+   "LeftArm": 0.433,
+   "Head": 0.102,
+   "Spine1": 0.018
+  },
+  "now_skin_armour": {
+   "verts": 618,
+   "LeftArm": 0.51,
+   "Spine2": 0.41,
+   "Head": 0.064,
+   "Spine1": 0.016
+  },
+  "now_hair": {
+   "verts": 258,
+   "Spine2": 0.533,
+   "LeftArm": 0.248,
+   "Head": 0.194,
+   "Spine1": 0.022
+  }
+ },
+ "RightShoulder": {
+  "verts_mostly_on_it": 2771,
+  "verts_touching": 6710,
+  "z": [
+   1.38,
+   1.56
+  ],
+  "now": {
+   "RightArm": 0.373,
+   "Head": 0.229,
+   "Spine1": 0.196,
+   "Spine2": 0.174,
+   "Neck": 0.028
+  },
+  "now_skin_armour": {
+   "verts": 1413,
+   "RightArm": 0.412,
+   "Spine2": 0.203,
+   "Head": 0.188,
+   "Spine1": 0.144
+  },
+  "now_hair": {
+   "verts": 1358,
+   "RightArm": 0.332,
+   "Head": 0.271,
+   "Spine1": 0.251,
+   "Spine2": 0.143
+  }
+ },
+ "LeftToeBase": {
+  "verts_mostly_on_it": 105,
+  "verts_touching": 214,
+  "z": [
+   0.0,
+   0.12
+  ],
+  "now": {
+   "LeftFoot": 1.0
+  }
+ },
+ "RightToeBase": {
+  "verts_mostly_on_it": 90,
+  "verts_touching": 201,
+  "z": [
+   0.0,
+   0.1
+  ],
+  "now": {
+   "RightFoot": 1.0
+  }
+ },
+ "fully_orphaned_before": 2651,
+ "fully_orphaned_now_main_bone": {
+  "Spine1": 1887,
+  "LeftUpLeg": 505,
+  "Spine2": 108,
+  "RightArm": 71,
+  "RightHand": 27,
+  "Head": 27,
+  "LeftArm": 26
+ },
+ "influences_per_vertex": {
+  "1": 23016,
+  "2": 19743,
+  "3": 14884,
+  "4": 7069
+ }
+}

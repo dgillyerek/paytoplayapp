@@ -1,0 +1,622 @@
+[
+{
+"f": 0,
+"R": {
+"body_tri_overlaps": 91,
+"hand_lowforearm_body_overlaps": 91,
+"hair_tri_overlaps": 8,
+"min_body_cm": 0.0,
+"min_body_hand_lowforearm_cm": 0.0,
+"min_hair_hand_lowforearm_cm": 0.0
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 0.5,
+"min_body_hand_lowforearm_cm": 0.5,
+"min_hair_hand_lowforearm_cm": 1.7
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 1,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 2.6,
+"min_body_hand_lowforearm_cm": 3.0,
+"min_hair_hand_lowforearm_cm": 4.5
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 6.1,
+"min_body_hand_lowforearm_cm": 7.8,
+"min_hair_hand_lowforearm_cm": 10.2
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 2,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 2.9,
+"min_body_hand_lowforearm_cm": 4.3,
+"min_hair_hand_lowforearm_cm": 4.6
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 9.1,
+"min_body_hand_lowforearm_cm": 11.2,
+"min_hair_hand_lowforearm_cm": 15.1
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 3,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 3.5,
+"min_body_hand_lowforearm_cm": 6.9,
+"min_hair_hand_lowforearm_cm": 7.0
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 8.1,
+"min_body_hand_lowforearm_cm": 12.0,
+"min_hair_hand_lowforearm_cm": 19.6
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 4,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 5.7,
+"min_body_hand_lowforearm_cm": 9.6,
+"min_hair_hand_lowforearm_cm": 10.0
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 5.2,
+"min_body_hand_lowforearm_cm": 11.1,
+"min_hair_hand_lowforearm_cm": 24.8
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 5,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 3.6,
+"min_body_hand_lowforearm_cm": 7.5,
+"min_hair_hand_lowforearm_cm": 7.8
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 2.7,
+"min_body_hand_lowforearm_cm": 8.5,
+"min_hair_hand_lowforearm_cm": 24.1
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 6,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 6.4,
+"min_body_hand_lowforearm_cm": 7.3,
+"min_hair_hand_lowforearm_cm": 7.4
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 2.4,
+"min_body_hand_lowforearm_cm": 8.7,
+"min_hair_hand_lowforearm_cm": 23.9
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 7,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 5.6,
+"min_body_hand_lowforearm_cm": 6.8,
+"min_hair_hand_lowforearm_cm": 9.1
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 2.7,
+"min_body_hand_lowforearm_cm": 8.6,
+"min_hair_hand_lowforearm_cm": 21.8
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 8,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 5.4,
+"min_body_hand_lowforearm_cm": 5.9,
+"min_hair_hand_lowforearm_cm": 10.8
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 2.9,
+"min_body_hand_lowforearm_cm": 8.0,
+"min_hair_hand_lowforearm_cm": 21.0
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 9,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 6.1,
+"min_body_hand_lowforearm_cm": 6.1,
+"min_hair_hand_lowforearm_cm": 6.8
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 2.7,
+"min_body_hand_lowforearm_cm": 9.2,
+"min_hair_hand_lowforearm_cm": 22.8
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 10,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 3.6,
+"min_body_hand_lowforearm_cm": 8.8,
+"min_hair_hand_lowforearm_cm": 8.6
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 9.0,
+"min_body_hand_lowforearm_cm": 11.7,
+"min_hair_hand_lowforearm_cm": 25.5
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 11,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 3.6,
+"min_body_hand_lowforearm_cm": 7.5,
+"min_hair_hand_lowforearm_cm": 9.5
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 8.5,
+"min_body_hand_lowforearm_cm": 11.7,
+"min_hair_hand_lowforearm_cm": 23.6
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 12,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 3.6,
+"min_body_hand_lowforearm_cm": 8.8,
+"min_hair_hand_lowforearm_cm": 8.7
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 9.1,
+"min_body_hand_lowforearm_cm": 11.8,
+"min_hair_hand_lowforearm_cm": 25.6
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 13,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 6.1,
+"min_body_hand_lowforearm_cm": 6.1,
+"min_hair_hand_lowforearm_cm": 7.0
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 2.8,
+"min_body_hand_lowforearm_cm": 9.3,
+"min_hair_hand_lowforearm_cm": 22.9
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 14,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 5.4,
+"min_body_hand_lowforearm_cm": 6.0,
+"min_hair_hand_lowforearm_cm": 10.9
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 3.1,
+"min_body_hand_lowforearm_cm": 8.2,
+"min_hair_hand_lowforearm_cm": 21.2
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 15,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 5.7,
+"min_body_hand_lowforearm_cm": 7.0,
+"min_hair_hand_lowforearm_cm": 9.2
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 3.0,
+"min_body_hand_lowforearm_cm": 8.8,
+"min_hair_hand_lowforearm_cm": 22.2
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 16,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 6.6,
+"min_body_hand_lowforearm_cm": 7.5,
+"min_hair_hand_lowforearm_cm": 7.6
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 2.7,
+"min_body_hand_lowforearm_cm": 9.2,
+"min_hair_hand_lowforearm_cm": 24.3
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 17,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 3.5,
+"min_body_hand_lowforearm_cm": 7.7,
+"min_hair_hand_lowforearm_cm": 7.9
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 3.1,
+"min_body_hand_lowforearm_cm": 9.2,
+"min_hair_hand_lowforearm_cm": 24.7
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 18,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 4.6,
+"min_body_hand_lowforearm_cm": 8.7,
+"min_hair_hand_lowforearm_cm": 8.8
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 3.7,
+"min_body_hand_lowforearm_cm": 10.0,
+"min_hair_hand_lowforearm_cm": 25.1
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 19,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 6.4,
+"min_body_hand_lowforearm_cm": 10.8,
+"min_hair_hand_lowforearm_cm": 10.8
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 5.4,
+"min_body_hand_lowforearm_cm": 11.9,
+"min_hair_hand_lowforearm_cm": 25.8
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 20,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 7.6,
+"min_body_hand_lowforearm_cm": 11.5,
+"min_hair_hand_lowforearm_cm": 13.1
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 7.1,
+"min_body_hand_lowforearm_cm": 11.5,
+"min_hair_hand_lowforearm_cm": 26.8
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 21,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 7.6,
+"min_body_hand_lowforearm_cm": 11.6,
+"min_hair_hand_lowforearm_cm": 14.1
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 8.0,
+"min_body_hand_lowforearm_cm": 11.4,
+"min_hair_hand_lowforearm_cm": 26.9
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 22,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 8.0,
+"min_body_hand_lowforearm_cm": 12.1,
+"min_hair_hand_lowforearm_cm": 14.6
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 8.3,
+"min_body_hand_lowforearm_cm": 11.9,
+"min_hair_hand_lowforearm_cm": 26.7
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 23,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 8.7,
+"min_body_hand_lowforearm_cm": 13.1,
+"min_hair_hand_lowforearm_cm": 15.6
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 9.0,
+"min_body_hand_lowforearm_cm": 13.1,
+"min_hair_hand_lowforearm_cm": 26.5
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 24,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 8.8,
+"min_body_hand_lowforearm_cm": 13.7,
+"min_hair_hand_lowforearm_cm": 16.2
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 9.3,
+"min_body_hand_lowforearm_cm": 13.8,
+"min_hair_hand_lowforearm_cm": 26.4
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 25,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 9.8,
+"min_body_hand_lowforearm_cm": 17.3,
+"min_hair_hand_lowforearm_cm": 17.7
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 11.4,
+"min_body_hand_lowforearm_cm": 18.2,
+"min_hair_hand_lowforearm_cm": 27.5
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 26,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 8.8,
+"min_body_hand_lowforearm_cm": 14.8,
+"min_hair_hand_lowforearm_cm": 14.6
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 11.8,
+"min_body_hand_lowforearm_cm": 17.3,
+"min_hair_hand_lowforearm_cm": 27.6
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 27,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 4.9,
+"min_body_hand_lowforearm_cm": 8.6,
+"min_hair_hand_lowforearm_cm": 8.5
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 11.7,
+"min_body_hand_lowforearm_cm": 15.4,
+"min_hair_hand_lowforearm_cm": 21.3
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 28,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 3.9,
+"min_body_hand_lowforearm_cm": 4.7,
+"min_hair_hand_lowforearm_cm": 5.6
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 10.0,
+"min_body_hand_lowforearm_cm": 12.6,
+"min_hair_hand_lowforearm_cm": 15.9
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 29,
+"R": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 3.0,
+"min_body_hand_lowforearm_cm": 3.3,
+"min_hair_hand_lowforearm_cm": 4.2
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 6.0,
+"min_body_hand_lowforearm_cm": 7.8,
+"min_hair_hand_lowforearm_cm": 10.0
+},
+"hand_hand_overlaps": 0
+},
+{
+"f": 30,
+"R": {
+"body_tri_overlaps": 91,
+"hand_lowforearm_body_overlaps": 91,
+"hair_tri_overlaps": 8,
+"min_body_cm": 0.0,
+"min_body_hand_lowforearm_cm": 0.0,
+"min_hair_hand_lowforearm_cm": 0.0
+},
+"L": {
+"body_tri_overlaps": 0,
+"hand_lowforearm_body_overlaps": 0,
+"hair_tri_overlaps": 0,
+"min_body_cm": 0.5,
+"min_body_hand_lowforearm_cm": 0.5,
+"min_hair_hand_lowforearm_cm": 1.7
+},
+"hand_hand_overlaps": 0
+}
+]

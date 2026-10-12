@@ -1,0 +1,29 @@
+{
+ "shoulder_blend_verts": {
+  "Left": 1685,
+  "Right": 3119
+ },
+ "residual_cross_part_edges": 25,
+ "masked_far_bone_verts": 486,
+ "split_contact_edges": 461,
+ "hair_verts": 16721,
+ "bones": 22,
+ "verts": 65195,
+ "max_influences": 4,
+ "unweighted": 0,
+ "parts": {
+  "torso_head": 47616,
+  "L_arm": 2998,
+  "R_arm": 4008,
+  "L_leg": 5245,
+  "R_leg": 5328
+ },
+ "verts_weight_gt0.05_farther_than_30cm_from_bone": 12117,
+ "influence_hist": [
+  0,
+  22963,
+  32330,
+  9059,
+  843
+ ]
+}

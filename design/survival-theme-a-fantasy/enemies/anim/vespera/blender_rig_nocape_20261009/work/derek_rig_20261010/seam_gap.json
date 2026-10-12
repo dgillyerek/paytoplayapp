@@ -1,0 +1,149 @@
+{
+ "coincident_pairs": 4490,
+ "VESPERA_nocape_walk_where": {
+  "RightForeArm+Spine2": "x -0.36..-0.23 y -0.15..-0.02 z 1.03..1.23",
+  "RightForeArm+Spine": "x -0.30..-0.19 y -0.16..-0.05 z 1.08..1.16",
+  "RightArm+Spine2": "x -0.32..-0.20 y -0.05..0.01 z 1.22..1.27",
+  "LeftForeArm+Spine2": "x 0.11..0.21 y -0.36..-0.28 z 1.07..1.21",
+  "Hips+RightHand": "x -0.31..-0.26 y -0.17..-0.05 z 0.89..0.95",
+  "RightHand+Spine2": "x -0.34..-0.27 y -0.16..-0.06 z 0.93..1.04",
+  "LeftArm+Spine2": "x 0.11..0.21 y -0.31..-0.28 z 1.21..1.26",
+  "RightForeArm+Spine1": "x -0.26..-0.17 y -0.13..-0.07 z 1.17..1.22"
+ },
+ "VESPERA_nocape_walk": {
+  "seam_pairs_open_gt1cm": 539,
+  "gt3cm": 532,
+  "max_cm": 55.8,
+  "by_bone_pair": [
+   [
+    [
+     "RightForeArm",
+     "Spine2"
+    ],
+    173
+   ],
+   [
+    [
+     "RightForeArm",
+     "Spine"
+    ],
+    106
+   ],
+   [
+    [
+     "RightArm",
+     "Spine2"
+    ],
+    59
+   ],
+   [
+    [
+     "LeftForeArm",
+     "Spine2"
+    ],
+    57
+   ],
+   [
+    [
+     "Hips",
+     "RightHand"
+    ],
+    33
+   ],
+   [
+    [
+     "RightHand",
+     "Spine2"
+    ],
+    30
+   ],
+   [
+    [
+     "LeftArm",
+     "Spine2"
+    ],
+    27
+   ],
+   [
+    [
+     "RightForeArm",
+     "Spine1"
+    ],
+    22
+   ]
+  ]
+ },
+ "VESPERA_nocape_attack_where": {
+  "RightForeArm+Spine2": "x -0.36..-0.23 y -0.15..-0.02 z 1.03..1.23",
+  "RightForeArm+Spine": "x -0.30..-0.19 y -0.16..-0.05 z 1.08..1.16",
+  "RightArm+Spine2": "x -0.32..-0.20 y -0.05..0.01 z 1.22..1.27",
+  "LeftForeArm+Spine2": "x 0.11..0.21 y -0.36..-0.28 z 1.07..1.21",
+  "Hips+RightHand": "x -0.31..-0.26 y -0.17..-0.05 z 0.89..0.95",
+  "RightHand+Spine2": "x -0.34..-0.27 y -0.16..-0.06 z 0.93..1.04",
+  "LeftArm+Spine2": "x 0.11..0.21 y -0.31..-0.28 z 1.21..1.26",
+  "RightForeArm+Spine1": "x -0.26..-0.17 y -0.13..-0.07 z 1.17..1.22"
+ },
+ "VESPERA_nocape_attack": {
+  "seam_pairs_open_gt1cm": 539,
+  "gt3cm": 533,
+  "max_cm": 94.0,
+  "by_bone_pair": [
+   [
+    [
+     "RightForeArm",
+     "Spine2"
+    ],
+    173
+   ],
+   [
+    [
+     "RightForeArm",
+     "Spine"
+    ],
+    106
+   ],
+   [
+    [
+     "RightArm",
+     "Spine2"
+    ],
+    59
+   ],
+   [
+    [
+     "LeftForeArm",
+     "Spine2"
+    ],
+    57
+   ],
+   [
+    [
+     "Hips",
+     "RightHand"
+    ],
+    33
+   ],
+   [
+    [
+     "RightHand",
+     "Spine2"
+    ],
+    30
+   ],
+   [
+    [
+     "LeftArm",
+     "Spine2"
+    ],
+    27
+   ],
+   [
+    [
+     "RightForeArm",
+     "Spine1"
+    ],
+    22
+   ]
+  ]
+ }
+}

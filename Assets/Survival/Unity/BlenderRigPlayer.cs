@@ -196,7 +196,7 @@ namespace Survival.Unity
             }
 
             StopAttack();
-            if (!PlayClip(_attackSpec.FileName, BlenderRigAttackSpec.PoseName, BlenderRigAttackSpec.TakeName, BlenderRigAttackSpec.LastFrame))
+            if (!PlayClip(_attackSpec.FileName, BlenderRigAttackSpec.PoseName, BlenderRigAttackSpec.TakeName, _attackSpec.ClipLastFrame))
             {
                 return false;
             }
@@ -218,7 +218,11 @@ namespace Survival.Unity
             }
 
             _time += Time.unscaledDeltaTime;
-            var frame = BlenderRigAttackSpec.CycleFrame(_time, out var inClip, out var cycle);
+            bool inClip;
+            int cycle;
+            var frame = _attackSpec != null
+                ? _attackSpec.CycleFrameFor(_time, out inClip, out cycle)
+                : BlenderRigAttackSpec.CycleFrame(_time, out inClip, out cycle);
             SampleAttackFrame(frame);
             _attack.Tick(frame, inClip, cycle);
         }

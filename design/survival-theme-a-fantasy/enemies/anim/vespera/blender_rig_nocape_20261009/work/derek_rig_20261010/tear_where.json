@@ -1,0 +1,164 @@
+{
+ "VESPERA_nocape_walk": {
+  "edges_gt5cm": 1585,
+  "touch_orphan_vertex": 1520,
+  "touch_partly_orphan": 65,
+  "clean_weights": 0,
+  "by_main_bone_pair": [
+   [
+    [
+     "Spine"
+    ],
+    591
+   ],
+   [
+    [
+     "Hips"
+    ],
+    536
+   ],
+   [
+    [
+     "RightShoulder"
+    ],
+    290
+   ],
+   [
+    [
+     "LeftShoulder"
+    ],
+    147
+   ],
+   [
+    [
+     "Hips",
+     "Spine"
+    ],
+    16
+   ],
+   [
+    [
+     "RightUpLeg",
+     "Spine2"
+    ],
+    4
+   ],
+   [
+    [
+     "Hips",
+     "Spine2"
+    ],
+    1
+   ]
+  ],
+  "z_hist_0.1m": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   17,
+   496,
+   176,
+   459,
+   0,
+   0,
+   275,
+   162,
+   0,
+   0,
+   0,
+   0
+  ]
+ },
+ "VESPERA_nocape_attack": {
+  "edges_gt5cm": 1684,
+  "touch_orphan_vertex": 1379,
+  "touch_partly_orphan": 288,
+  "clean_weights": 17,
+  "by_main_bone_pair": [
+   [
+    [
+     "Spine"
+    ],
+    546
+   ],
+   [
+    [
+     "Hips"
+    ],
+    510
+   ],
+   [
+    [
+     "RightShoulder"
+    ],
+    489
+   ],
+   [
+    [
+     "LeftShoulder"
+    ],
+    66
+   ],
+   [
+    [
+     "Spine2"
+    ],
+    39
+   ],
+   [
+    [
+     "RightArm"
+    ],
+    15
+   ],
+   [
+    [
+     "Hips",
+     "Spine"
+    ],
+    13
+   ],
+   [
+    [
+     "RightShoulder",
+     "Spine2"
+    ],
+    3
+   ],
+   [
+    [
+     "RightArm",
+     "Spine2"
+    ],
+    3
+   ]
+  ],
+  "z_hist_0.1m": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   17,
+   465,
+   170,
+   417,
+   54,
+   13,
+   385,
+   163,
+   0,
+   0,
+   0,
+   0
+  ]
+ }
+}
