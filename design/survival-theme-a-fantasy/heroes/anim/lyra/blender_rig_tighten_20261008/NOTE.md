@@ -142,3 +142,6 @@ Derek: the shoulder pulled out too much. The attack is now a two-handed cast: 52
 
 ## 2026-10-10: attack turned left with a low left-hand grip (attack only)
 Derek: turn left, left hand lower on the shaft, staff forward, legs straight. Hips 33°, chest 45°, left hand about 61 cm below the right hand on the shaft, crystal leading forward at f12. Only the attack and bolt actions changed. Bones, rest and walk actions, the staff offset, the rest and walk FBXs and both staff FBXs are unchanged. Attack FBX 2d6f799e → 64f42e00. Details are in `../attack_20261008/NOTE.md`.
+
+## 2026-10-11: attack re-authored as a whole-body side-on turn (attack only)
+Derek: the whole body turns sideways, not just the upper body. Hips, spine and legs turn 80° together with stepped feet. Legs stay within 6.4° of the pelvis. Two-hand grip with the left hand low, staff pointing at the target. Only the attack and bolt actions changed; bones, rest, walk and staff are unchanged. Details are in `../attack_20261008/NOTE.md`.

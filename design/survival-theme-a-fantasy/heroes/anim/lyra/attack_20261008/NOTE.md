@@ -76,3 +76,15 @@ Derek: turn her left, the left hand grips lower on the staff, the staff points f
 - **Changed:** only the `LYRA_tighten_attack` and `LYRA_arcane_bolt_attack` actions. Bones, the rest and walk actions, the staff offset, the rest and walk FBXs and both staff FBXs are byte-identical. f0 and f30 match rest. Saved in Object Mode with the walk active.
 - **FBX:** attack 2d6f799e → 64f42e00 (Design + ThemePack). Unity `LyraAttack` staff and bolt frames regenerated. Calibration is unchanged.
 - **Scripts:** `work/scripts/lowgrip_*_20261010.*`. QC: `work/lowgrip_verify_after.json`, `work/lowgrip_legs_after.json`.
+
+## Whole-body side-on turn (2026-10-11, replaces the 1c0eb5f left-turn cast)
+Derek: in 1c0eb5f her left leg turned almost sideways. He wants her whole body to turn sideways while she draws the staff to fire.
+
+- **Turn:** f0–f8 the hips, spine and chest turn together 80° left about the hips, ending side-on with her right side toward the target. The neck and head counter-turn 55°, so she looks at the target over her right shoulder. She drops 4 cm into soft knees, then holds f8–f21. f21–f29 she turns back to rest. f0 and f30 match rest.
+- **Feet step with the body:** the left foot steps f1–f5 and the right foot f4–f8, each lifting 6 cm. The return steps are right f21–f25 and left f25–f29. Each foot's yaw follows the pelvis on every frame. Knees are aimed along the pelvis forward direction.
+- **Leg alignment vs pelvis** (yaw of each bone's rest-forward axis minus pelvis yaw, every frame): thigh, shin and foot stay within 6.4° on both legs. Knee bend direction stays within 2.7° of the pelvis whenever the knee is bent more than 2 cm.
+- **Staff:** both hands are on it f8–f21. The left hand is about 61 cm lower on the shaft than the right, toward the butt end. The shaft points straight at the target (-Y), tipped up 5°, with the crystal leading. She pulls it back 4 cm at f10 and thrusts 5 cm at f12. The bolt is re-keyed at the f12 crystal and flies straight forward at 9 m/s.
+- **Joints:** right wrist at most 32°, left at most 23°. Clavicles are unkeyed, and the elbows are pure hinges with up to 20° of forearm twist. Armpit stretch p99: right 1.77, left 1.38.
+- **Clearance:** no staff/body intersections. The closest approach is 2 mm to the left thigh at f4, while the staff swings up. The f25 boot brush from 1c0eb5f is gone; at least 4 cm clearance there now. The left fingers press up to 2.5 cm into the shaft on the grab and release frames (f6–f7, f21–f22).
+- **Changed:** only the `LYRA_tighten_attack` and `LYRA_arcane_bolt_attack` actions. Bones, rest and walk actions, the staff offset, the rest and walk FBXs and both staff FBXs are byte-identical.
+- **Scripts:** `work/scripts/sideon_*_20261011.*`. QC: `work/sideon_verify_after.json`, `work/sideon_legalign_after.json`.
