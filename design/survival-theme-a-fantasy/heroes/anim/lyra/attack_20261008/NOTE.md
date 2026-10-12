@@ -1,0 +1,127 @@
+# LYRA fitted: attack add-on (Design, 2026-10-08): staff spell cast
+
+HOLD: staging only. Nothing committed, pushed or PR'd. Derek must check it in Game-view before any merge.
+
+Built on `heroes/anim/lyra/blender_rig_tighten_20261008/LYRA_tighten_blenderig.blend`. The rig blend was opened and never saved.
+
+## Clip
+- `LYRA_tighten_blenderig_attack.fbx`: f0–f30 @30fps. Authored from identity rest; f0 = f30 = rest. Exported with the `hum` profile.
+- Timeline: same timing family as lyra attack_20261007 (efd19534).
+  - f8 anticipation: staff pulled back and up, torso turned right, left hand forward.
+  - **f12 strike / release:** staff thrust forward, tilted 27°.
+  - f19 follow-through.
+  - f30 rest.
+- **Staff stays parented to `mixamorig:RightHand` for the whole clip**, with a constant offset (meta).
+- `LYRA_arcane_bolt_vfx` spawns at the staff crystal at f12. It grows from 40% to 100% over 3 frames and travels along exactly −Y at 9 m/s, **toward the top of the screen** in the rear battle cam.
+
+## Props / VFX
+- `LYRA_staff.fbx` (14,048 faces): the Meshy staff split from the body. Origin is at the grip, +Z runs toward the crystal.
+- `LYRA_arcane_bolt_vfx.fbx`: emissive blue bolt with a gold ring.
+- `LYRA_tighten_attack_props.blend`: both props.
+
+## Reimport QC (`work/verify_attack.json`)
+- 22 bones, same names and order as rest. Faces 200,000. Frames 1–31.
+- **Hips at the first frame vs rest: 0.0°. Max over all frames: 0°.** End-pose deviation 0.0°.
+
+## QC media
+- `LYRA_tighten_attack_sheet.jpg`
+- `LYRA_tighten_walk_attack_preview.mp4`
+
+## Caveats
+- The hand keeps the Meshy fist. The strike reads as a staff thrust and bolt, not an open-palm cast.
+- Fist caps are the same as noted in the rig pack.
+
+## Re-export after Derek's rig edit (2026-10-08)
+`LYRA_tighten_blenderig_attack.fbx` was re-exported from Derek's edited combined blend: 90385eda → 64d8b8d4. The attack keys are unchanged. Because the right elbow and wrist joints moved, the same keys now put the staff crystal at f12 17 cm closer to the body midline and 5 cm higher. The bolt spawn in `work/attack_meta.json` was updated. See `../blender_rig_tighten_20261008/NOTE.md`.
+
+## Attack staff in Unity (2026-10-08)
+Unity no longer loads `LYRA_staff.fbx` for the attack. The rest/walk staff (`LYRA_staff_rest.fbx`) stands in for the attack's `LYRA_staff` track: it has the same mesh and the same grip on RightHand. One textured staff now serves all three clips. The old attack copy rendered white because its imported material never got the rig's texture atlas. The file is kept, unchanged.
+
+## Rebuild on Derek's second rig edit (2026-10-08 22:45, e8b050d)
+`LYRA_tighten_blenderig_attack.fbx` 64d8b8d4 → 53fd21bb. Derek moved the hips, knees, ankles, left elbow/wrist and right hand, and removed both toe bones. The attack was retargeted from a995489 by world-space rotation from rest, so the cast reads the same. The staff wrist path is within 1.6 cm and the staff crystal path within 1.5 cm. The bolt spawn was re-measured at f12: (-0.154, -0.660, 1.912). See `../blender_rig_tighten_20261008/NOTE.md`.
+
+## Staff clear of the body, natural wrist (2026-10-09)
+Derek, Game view on desktop: "her staff pushes through the body on attack and her wrist bends in an unnatural way."
+
+- **Penetration before (e1c7d36):** f9–f23 the lower shaft went through the right thigh (up to 8.5 cm deep at f18) and f20–f23 through the right knee/shin (up to 6.8 cm at f21); f11–f18 it also cut 1–2 cm into the right forearm. The crystal and head never touched the head or hair (closest about 11 cm).
+- **Wrist before:** the staff wrist bent up to 119° away from Derek's rest grip (f15). That was about 99° of bend around the shaft, about 40° sideways (84° at f10) and 64° of twist. In the wind-up at f6–f8 it was 52–76°, mostly sideways.
+- **Fix:** only RightArm, RightForeArm and RightHand keys changed, solved per frame against the real posed mesh. The staff angle now comes from the shoulder and elbow. During the cast the butt leans out past her right hip, and the crystal sits about 9 cm further to her right. Timing, f12 release, crystal height and forward reach, hips, legs, spine, head and the left arm are unchanged. f0 and f30 are identical to rest.
+- **After:** no staff penetration on any frame; minimum clearance 3.7 cm. Staff wrist at most 25° total (at most 15° around the shaft, 16° sideways, 12° twist). The elbow stays a hinge (at most 6° off-plane), forearm twist at most 56°, upper-arm twist at most 50°. Left wrist unchanged (0° from rest).
+- **Bolt:** re-keyed at the f12 crystal: (-0.246, -0.659, 1.902), was (-0.154, -0.660, 1.912). Unity `LyraAttack` staff and bolt frames regenerated; calibration unchanged because the bones are unchanged.
+- **FBX:** attack 53fd21bb → 835b0502. Rest, walk and both staff FBXs are byte-identical.
+- **Scripts:** `work/scripts/staff_clear_*_20261009.py`. QC: `work/staff_clear_before_e1c7d36.json`, `work/staff_clear_after.json`.
+
+## Two-handed side-on cast (2026-10-09, replaces the one-handed cast)
+Derek: re-author the attack as a natural two-handed cast. The body turns sideways, both hands are on the staff, the crystal points forward, and the shoulders must not pull out or stretch the armpit skin.
+
+- **New attack (31 frames, release f12):** f0–f8 hips turn 52° (spine adds about 21° more at the chest; neck and head counter-turn so she keeps looking at the target). She drops 4.5 cm into a soft knee bend and pivots on the balls of both feet (toes fixed, heels swing 8–9 cm, no sliding). The right hand brings the staff up level-forward; the left hand comes in palm-first and closes on the shaft about 25 cm above the right hand at f8. f9–f11 is a small body pull-back (hips 3.5 cm back, 6° lean back), f12 is the thrust (hips 3.5 cm forward, 7° lean in) and the bolt leaves the crystal. f13–f20 hold and settle; f21–f23 the left hand opens and comes off the shaft; she recovers to rest by f30. f0 and f30 match rest (max bone-matrix difference 4e-6).
+- **Shoulder skin stretch** (armpit blend zone, edge length ÷ rest; worst frame): right p99 2.66 → 1.50, mean |stretch| 0.188 → 0.093. Left p99 1.75 → 1.53. The left mean goes up from 0.075 to 0.115 because the left arm now lifts to the shaft; the before value had the left arm hanging. Upper-arm swing: right 55° → 10.5°, left 28° → 34.5°. Upper-arm twist: right 50° → 8.4°, left 2° → 8°. Clavicles unkeyed (0°).
+- **Elbows:** hinge only (right at most 92° bend, left 38°). Forearm twist is at most 56° on the right and 17° on the left.
+- **Wrists:** right at most 23°, left at most 19.5° from rest (limit 25–30°).
+- **Clearance:** no staff/body triangle intersections on any frame. Closest non-hand body part to the staff: 16 cm (left forearm/torso during the hold), right leg at least 21 cm, head/hair never among the closest regions. Before, the shaft came within 3.5 cm of the right thigh.
+- **Grip:** the right hand keeps Derek's staff offset. The left grip axis sits on the shaft centre line (0.3 mm) f8–f20. The fingers press at most 6 mm into the shaft surface on hold frames and 9 mm on the close/open frames (f7, f21).
+- **Bolt:** re-keyed at the f12 crystal (-0.214, -0.916, 1.450), was (-0.246, -0.659, 1.902). It still travels -Y (character forward / Unity +Z, toward the enemy) at 9 m/s, whatever the body turn. Unity `LyraAttack` staff and bolt frames regenerated. Calibration is unchanged because the bones and rest are unchanged.
+- **FBX:** attack 835b0502 → 2d6f799e (Design + ThemePack). Rest e4898881, walk 7c5b1577 and both staff FBXs are byte-identical. The bones, rest and walk actions are unchanged in the blend.
+- **Not refreshed:** `LYRA_tighten_attack_sheet.jpg` and `LYRA_tighten_walk_attack_preview.mp4` still show the older cast.
+- **Scripts:** `work/scripts/twohand_*_20261009.*`. QC: `work/twohand_verify_before_265f536.json`, `work/twohand_verify_after.json`.
+
+## Left turn, low left-hand grip (2026-10-10, replaces the side-on two-handed cast)
+Derek: turn her left, the left hand grips lower on the staff, the staff points forward, and the legs stay straight and natural.
+
+- **Body:** at the hold, the hips turn 33° left and the chest 45° (was 52° and about 73°). Feet stay planted: toes move under 0.5 cm and she pivots on the balls of the feet, as before. The left thigh-to-shin twist stays within 3° of rest, and the right knee stays straight.
+- **Grip:** the right hand keeps Derek's staff offset. Between f8 and f21 the left hand sits about 61 cm LOWER on the shaft than the right hand, toward the butt (before, it was 25 cm above). On hold frames it is 1 cm from the shaft centre line and the fingers press up to 7 mm into the surface.
+- **Staff:** from f9 to f15 the crystal leads forward toward the target. The staff points 22° left of straight ahead and is tipped up 17–19°. The bolt is re-keyed at the f12 crystal (-0.166, -1.055, 1.268), was (-0.214, -0.916, 1.450). It still travels straight forward (-Y, Unity +Z) at 9 m/s.
+- **Shoulders and wrists:** right armpit p99 stretch is 1.86 (was 1.50), and left is 1.25 (was 1.53). The right wrist is at most 25°, the left 12°, and the upper-arm twist at most 4°. Clavicles move up to 12° on the right and 5° on the left.
+- **Clearance:** no staff/body intersections from f6 to f24 (the whole cast and hold). In two swing frames the butt of the staff grazes her left leg: about 1 mm at f5 and up to 2 cm into the left boot at f25.
+- **Changed:** only the `LYRA_tighten_attack` and `LYRA_arcane_bolt_attack` actions. Bones, the rest and walk actions, the staff offset, the rest and walk FBXs and both staff FBXs are byte-identical. f0 and f30 match rest. Saved in Object Mode with the walk active.
+- **FBX:** attack 2d6f799e → 64f42e00 (Design + ThemePack). Unity `LyraAttack` staff and bolt frames regenerated. Calibration is unchanged.
+- **Scripts:** `work/scripts/lowgrip_*_20261010.*`. QC: `work/lowgrip_verify_after.json`, `work/lowgrip_legs_after.json`.
+
+## Whole-body side-on turn (2026-10-11, replaces the 1c0eb5f left-turn cast)
+Derek: in 1c0eb5f her left leg turned almost sideways. He wants her whole body to turn sideways while she draws the staff to fire.
+
+- **Turn:** f0–f8 the hips, spine and chest turn together 80° left about the hips, ending side-on with her right side toward the target. The neck and head counter-turn 55°, so she looks at the target over her right shoulder. She drops 4 cm into soft knees, then holds f8–f21. f21–f29 she turns back to rest. f0 and f30 match rest.
+- **Feet step with the body:** the left foot steps f1–f5 and the right foot f4–f8, each lifting 6 cm. The return steps are right f21–f25 and left f25–f29. Each foot's yaw follows the pelvis on every frame. Knees are aimed along the pelvis forward direction.
+- **Leg alignment vs pelvis** (yaw of each bone's rest-forward axis minus pelvis yaw, every frame): thigh, shin and foot stay within 6.4° on both legs. Knee bend direction stays within 2.7° of the pelvis whenever the knee is bent more than 2 cm.
+- **Staff:** both hands are on it f8–f21. The left hand is about 61 cm lower on the shaft than the right, toward the butt end. The shaft points straight at the target (-Y), tipped up 5°, with the crystal leading. She pulls it back 4 cm at f10 and thrusts 5 cm at f12. The bolt is re-keyed at the f12 crystal and flies straight forward at 9 m/s.
+- **Joints:** right wrist at most 32°, left at most 23°. Clavicles are unkeyed, and the elbows are pure hinges with up to 20° of forearm twist. Armpit stretch p99: right 1.77, left 1.38.
+- **Clearance:** no staff/body triangle intersections on any frame. During the draw the staff swings 8 cm out in front, so it stays at least 4.8 cm from every non-hand body part on every frame (closest: right boot at f1). The f25 boot brush from 1c0eb5f is gone; at f25 the nearest body part is 13 cm away. The hand mesh has no finger bones, so on the grab and release frames (f6–f7, f21–f22) the left fingers slide across the shaft, up to 2.6 cm into it; on the hold frames it's 7 mm.
+- **Changed:** only the `LYRA_tighten_attack` and `LYRA_arcane_bolt_attack` actions. Bones, rest and walk actions, the staff offset, the rest and walk FBXs and both staff FBXs are byte-identical.
+- **Scripts:** `work/scripts/sideon_*_20261011.*`. QC: `work/sideon_verify_after.json`, `work/sideon_legalign_after.json`.
+
+## Right-foot step, head on target, left-leg pattern roll (2026-10-11, replaces cbcb1cc)
+Derek: "when she starts attack her left leg is still twisted inward. the pattern shown in front of her leg is on the side." Also: "make her right leg step forward as her entire body rotates to face left except for her head. she still should fire straight forward."
+
+- **Mesh measurement** (gold filigree vertices on the left thigh and shin, from the base-colour texture; facing = centre of the gold-rich sector around each bone, + = toward the leg's outer side):
+  - Bind, rest f0, walk f0 and cbcb1cc f0–f30 all put the left thigh pattern at +100° from the pelvis forward and +103° from the left foot. The right thigh's pattern is +98° from the pelvis but only +63° from its foot, because Derek's rest has the right foot turned out 36° while the left foot points straight ahead (-2°).
+  - The attack bones in cbcb1cc changed the left thigh pattern facing by under 1°, and bind = rest = attack f0. So the cause is **(b)**: the rest pose / rig carries it, not the attack's thigh roll (a) and not weight candy-wrapping (c). The same 103° shows in rest f0 and walk f0 (101°). Rest and walk are NOT changed.
+- **Attack fix:** on every attack frame, f0 included, the left thigh and shin are rolled 35° inward about their own long axes. Knee and foot positions and directions are unchanged. The left thigh pattern now sits +68° from the left foot (right leg: +63°) on every frame f0–f30. Attack f0 is therefore no longer identical to rest in the left leg (max bone-matrix difference 0.57).
+- **Motion:** she starts front-on. The left foot pivots in place (its yaw follows the pelvis). The right foot steps forward 0.67 m (f1–f7, 8 cm lift) to land in front of the left foot as the whole body turns 80° left about the left foot. The head counter-turns the full 80°, so it faces the camera/target on every frame. Hold f8–f21. The right foot steps back f21–f27, and she turns back by f29.
+- **Leg alignment vs pelvis** (bone check): thigh, shin and foot within 4.1°, knee direction within 2.7°.
+- **Staff:** two-hand grip with the left hand about 61 cm lower on the shaft. It points straight at the target (0° yaw, 5° up) during the hold, and the bolt is re-keyed at the f12 crystal.
+- **Clearance:** no staff/body intersections. The staff stays at least 6.5 cm from every non-hand body part, closest the right boot at f1/f28. Left fingers cross the shaft up to 2.6 cm only on the grab and release frames (no finger bones).
+- **Options for rest/walk (not done; they are locked):**
+  1. Apply the same 35° left thigh/shin roll to rest and walk.
+  2. Turn the right foot in to match the left (or the left out to match the right) in Derek's rest.
+  3. Fix the left-leg UVs/texture placement in the mesh.
+- **Scripts/QC:** `work/scripts/sideon_pattern_*_20261011.py`, `work/legpattern_before_cbcb1cc.json`, `work/legpattern_after.json`.
+
+## 2026-10-11: facing the camera, left-leg roll in rest and walk, attack start matched
+
+Derek, Unity on 620f171: "lyra needs to turn and face the camera forward. she faces to her right."
+
+- **Cause:** Derek's mesh is sculpted turned to her right in the bind pose; the bones are square. Measured on the mesh's left/right mirror plane, the chest faces 8° to her right, the pelvis 10–13° and the head 3°. The hip-joint line is 5.6° to her right, the shoulder bones are square (0°), and the right boot points 36° out. The armature and mesh objects have no rotation, the export axes are the same as every other hero, and the Lyra demo camera is front-on (orbit yaw 0, LyraRoot identity). So nothing was adding a turn; the bind itself reads as turned right.
+- **Fix (spawn level):** `LyraMotion.FacingYawDegrees = -8` is applied to the actor transform in `LyraActor.Build`. That turns her 8° to her left in Unity: chest 0°, pelvis −2° to −5°, hip-joint line +2.4°, head +5°. The clips, staff and bolt all rotate with the actor. The walk is in place, so the demo walk doesn't travel anywhere new, and Lyra isn't in the battle scene, so the battle is unaffected. If she joins the battle, apply the same yaw to her spawn there.
+- **Attack:** same motion as 620f171 in camera space. It starts at the new rest, the right foot steps forward, the body turns 80° left of the camera (72° in clip space plus the spawn yaw), the head stays on the target, and the two-hand grip is unchanged. The staff, thrust and bolt aim 8° to her right in clip space, so the bolt flies straight at the camera after the spawn yaw (a test checks this to within 1°). The left-leg roll now comes from the rest pose instead of being added on top, so f0 and f30 equal rest (max bone-matrix difference 4e-6).
+- **Checks:** legs within 4.1° of the pelvis. No staff/body intersections; minimum clearance is 4.0 cm (staff to right hand at f1, same as before). Armpit p99 stretch is R 1.83 and L 1.48 (620f171: 1.87 and 1.54). Left fingers sink up to 2.6 cm into the shaft at f7 and f21 as before; there are no finger bones.
+- **FBX MD5s:** attack 81021543 → ab3e887d; rest 494f64e9 and walk 6edbe1ea (see the rig note). Both staff FBXs are unchanged.
+- Script: `work/scripts/sideon_author_20261011.py` with `aim: -8`, `yaw: 72`, `counter: 72` and the leg roll off (`work/scripts/sideon_params_20261011.json`).
+
+## 2026-10-12: Unity imports Lyra Generic (it was Humanoid); no animation data changed
+
+Derek on e3cd374 in Unity: "why does lyra attack not look like the images you sent."
+
+- **Cause:** Lyra was the only rig on the BlenderRigPlayer path imported as Humanoid. Her `LyraMotion.Spec` said `MixamoHumanoid`, and her three metas had `animationType: 3`. The locked rigs (Ashwyrm, Stormcrest, Nightfang, Ironhowl, Emberfang) are all Generic (`animationType: 2`). Humanoid doesn't play bone keys. It turns each file into muscle curves plus a root curve, and the root follows the body's yaw and its centre-of-mass ground position. The clip metas leave "Bake Into Pose" off (`loopBlendOrientation/PositionXZ: 0`), and BlenderRigPlayer sets `applyRootMotion = false`. So the root part was thrown away: the 72° turn and the 39–41 cm the hips travel as she pivots on her left foot. `work/humanoid_rootstrip_sim_20261012.json` simulates that strip on the real clip. She stays front-on, the whole held pose swings 72° back about her left toe, the staff points off to the side, and the right toe lands up to 55 cm from where Blender has it. The bolt is driven separately from `LyraAttack.cs`, so it still flew straight and no longer matched the staff. On top of that, each file built its own avatar from a different default pose, and muscle limits clamp the head counter-turn (43° against a 40° limit).
+- **Fix:** `LyraMotion.Spec` is now `CustomGeneric`, and the rest, walk and attack metas are `animationType: 2` and `autoGenerateAvatarMappingIfUnspecified: 0`. Apart from MD5 notes and guids, they're now identical to Ashwyrm's locked metas. Generic plays the FBX node curves as-is: a Blender re-import of the attack FBX matches the authored joints to 0.0 cm on every frame. The staff stays a held track on RightHand, and the bolt frames are unchanged, so they line up again.
+- **No Play reimport:** brought the `EnsureImport` meta gate from 0ab347a (`BlenderRigImportMeta`) onto this branch, and a test checks that all three Lyra metas already match. Unity reimports once on refresh, not on every Play.
+- FBX, blend and animation data are unchanged (attack ab3e887d, rest 494f64e9, walk 6edbe1ea). Bones and staff are unchanged.
