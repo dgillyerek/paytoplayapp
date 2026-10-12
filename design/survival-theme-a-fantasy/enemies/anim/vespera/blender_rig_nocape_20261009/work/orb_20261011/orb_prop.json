@@ -1,0 +1,19 @@
+{
+ "blender_extent_m": [
+  0.1,
+  0.15523,
+  0.16023
+ ],
+ "unity_extent_m": [
+  0.1,
+  0.16023,
+  0.15523
+ ],
+ "faces": 1400,
+ "materials": [
+  "VESPERA_orb_crystal",
+  "VESPERA_orb_rune_glow",
+  "VESPERA_orb_silver"
+ ],
+ "orb_radius_m": 0.05
+}

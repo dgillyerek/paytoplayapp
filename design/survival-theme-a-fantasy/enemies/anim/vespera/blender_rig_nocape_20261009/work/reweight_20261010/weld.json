@@ -1,0 +1,10 @@
+{
+ "verts_in": 69202,
+ "faces_in": 135003,
+ "twin_split_ok": true,
+ "seam_pairs_before": 525,
+ "verts_after_weld": 68719,
+ "twin_verts": 4007,
+ "twin_map_maxdist": 0.0,
+ "coincident_left": 0
+}

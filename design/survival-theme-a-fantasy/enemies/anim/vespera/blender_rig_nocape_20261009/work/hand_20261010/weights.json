@@ -1,0 +1,36 @@
+{
+ "hand_piece_verts": 3069,
+ "body_near_hand_verts": 2139,
+ "contact_unseeded": 17990,
+ "parts": {
+  "0": 51809,
+  "1": 2140,
+  "2": 4180,
+  "3": 5303,
+  "4": 5278
+ },
+ "seeded": 18384,
+ "free": 46324,
+ "components": 4003,
+ "loose_components": 1,
+ "max_influences": 4,
+ "unweighted": 0,
+ "dominant": {
+  "Spine1": 28266,
+  "Spine2": 5195,
+  "Neck": 492,
+  "Head": 13535,
+  "LeftArm": 1936,
+  "LeftForeArm": 1881,
+  "LeftHand": 572,
+  "RightArm": 2388,
+  "RightForeArm": 1983,
+  "RightHand": 750,
+  "LeftUpLeg": 1343,
+  "LeftLeg": 3385,
+  "LeftFoot": 1333,
+  "RightUpLeg": 933,
+  "RightLeg": 3662,
+  "RightFoot": 1056
+ }
+}

@@ -36,6 +36,9 @@ EditorBuildSettings:
     path: Assets/Survival/Scenes/BattleLocked.unity
     guid: 1e17599e6be640168c293406067786a5
   - enabled: 1
+    path: Assets/Survival/Scenes/Vespera.unity
+    guid: 309f3b25407344d3a07ab86aa7776092
+  - enabled: 1
     path: Assets/Grove/Scenes/Board.unity
     guid: b65522f703b44f9799e3eee95f2f36d0
   m_configObjects: {}

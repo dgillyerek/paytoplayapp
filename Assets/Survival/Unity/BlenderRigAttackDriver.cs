@@ -204,7 +204,7 @@ namespace Survival.Unity
                 }
                 else
                 {
-                    visible = inClip && frame < BlenderRigAttackSpec.LastFrame && track.VisibleAt(frame);
+                    visible = inClip && frame < _spec.ClipLastFrame && track.VisibleAt(frame);
                 }
 
                 if (newCycle && view.Shown && track.Kind != AttackTrackKind.Held)

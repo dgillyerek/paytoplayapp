@@ -19,6 +19,7 @@ namespace Survival.Editor
         private const string Nightfang = "Assets/Survival/Scenes/Nightfang.unity";
         private const string Stormcrest = "Assets/Survival/Scenes/Stormcrest.unity";
         private const string BattleLocked = "Assets/Survival/Scenes/BattleLocked.unity";
+        private const string Vespera = "Assets/Survival/Scenes/Vespera.unity";
         private const string GroveBoard = "Assets/Grove/Scenes/Board.unity";
 
         [MenuItem("Survival/Use Theme A Flavor (fantasy_kingdom_a)")]
@@ -39,6 +40,7 @@ namespace Survival.Editor
                 new EditorBuildSettingsScene(Nightfang, true),
                 new EditorBuildSettingsScene(Stormcrest, true),
                 new EditorBuildSettingsScene(BattleLocked, true),
+                new EditorBuildSettingsScene(Vespera, true),
                 new EditorBuildSettingsScene(GroveBoard, true)
             };
             Debug.Log("Survival flavor " + SurvIds.FlavorIdFantasyKingdomA + " → Splash then Play. Pack " + SurvIds.ThemeIdFantasyKingdomA);
@@ -90,6 +92,12 @@ namespace Survival.Editor
         public static void OpenLockedBattleDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(BattleLocked);
+        }
+
+        [MenuItem("Survival/Vespera Demo (rest + walk + attack, Game view 1080x1920)")]
+        public static void OpenVesperaDemo()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Vespera);
         }
 
         [MenuItem("Survival/Import locked Sir Aldric rear master")]

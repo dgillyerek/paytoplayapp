@@ -1,0 +1,34 @@
+{
+ "contact_unseeded": 18423,
+ "parts": {
+  "0": 53395,
+  "1": 2140,
+  "2": 2603,
+  "3": 5303,
+  "4": 5278
+ },
+ "seeded": 17906,
+ "free": 46806,
+ "components": 4008,
+ "loose_components": 0,
+ "max_influences": 4,
+ "unweighted": 0,
+ "dominant": {
+  "Spine1": 27775,
+  "Spine2": 6108,
+  "Neck": 479,
+  "Head": 12635,
+  "LeftArm": 1618,
+  "LeftForeArm": 1885,
+  "LeftHand": 572,
+  "RightArm": 3079,
+  "RightForeArm": 1858,
+  "RightHand": 995,
+  "LeftUpLeg": 1346,
+  "LeftLeg": 3385,
+  "LeftFoot": 1333,
+  "RightUpLeg": 933,
+  "RightLeg": 3662,
+  "RightFoot": 1056
+ }
+}
