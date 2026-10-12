@@ -21,6 +21,7 @@ namespace Survival.Editor
         private const string BattleLocked = "Assets/Survival/Scenes/BattleLocked.unity";
         private const string Vespera = "Assets/Survival/Scenes/Vespera.unity";
         private const string Lyra = "Assets/Survival/Scenes/Lyra.unity";
+        private const string Oakenshield = "Assets/Survival/Scenes/Oakenshield.unity";
         private const string GroveBoard = "Assets/Grove/Scenes/Board.unity";
 
         [MenuItem("Survival/Use Theme A Flavor (fantasy_kingdom_a)")]
@@ -43,6 +44,7 @@ namespace Survival.Editor
                 new EditorBuildSettingsScene(BattleLocked, true),
                 new EditorBuildSettingsScene(Vespera, true),
                 new EditorBuildSettingsScene(Lyra, true),
+                new EditorBuildSettingsScene(Oakenshield, true),
                 new EditorBuildSettingsScene(GroveBoard, true)
             };
             Debug.Log("Survival flavor " + SurvIds.FlavorIdFantasyKingdomA + " → Splash then Play. Pack " + SurvIds.ThemeIdFantasyKingdomA);
@@ -106,6 +108,12 @@ namespace Survival.Editor
         public static void OpenLyraDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Lyra);
+        }
+
+        [MenuItem("Survival/Oakenshield Demo (rest + walk + attack, Game view 1080x1920)")]
+        public static void OpenOakenshieldDemo()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Oakenshield);
         }
 
         [MenuItem("Survival/Import locked Sir Aldric rear master")]

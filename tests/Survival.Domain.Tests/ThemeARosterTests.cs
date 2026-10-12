@@ -259,7 +259,7 @@ public sealed class ThemeARosterTests
 
         var excluded = new[]
         {
-            "Rowan", "Oakenshield", "Bonequill"
+            "Rowan", "Bonequill"
         };
         var scenes = Path.Combine(root, "Assets", "Survival", "Scenes");
         var pack = Path.Combine(root, "Assets", "ThemePack");
