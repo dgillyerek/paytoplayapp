@@ -30,8 +30,10 @@ namespace Survival.Domain.Roster
             float gravity,
             float radiusMetres,
             float angleLimitDegrees,
-            float[] designJoints)
+            float[] designJoints,
+            float[]? jointStiffness = null)
         {
+            JointStiffness = jointStiffness ?? Array.Empty<float>();
             Name = name;
             Sector = sector;
             Bones = bones;
@@ -63,6 +65,13 @@ namespace Survival.Domain.Roster
         /// <summary>Design-space (Blender, metres, Z up) joints: each bone head, then the last bone's tail.</summary>
         public float[] DesignJoints { get; }
 
+        /// <summary>Optional per-joint stiffness for joints 1..n (the tip of each bone). Empty: <see cref="Stiffness"/> everywhere.</summary>
+        public float[] JointStiffness { get; }
+
+        /// <summary>Stiffness pulling joint <paramref name="joint"/> (1-based, joint 0 is pinned) back to its animated rest.</summary>
+        public float StiffnessAt(int joint) =>
+            joint >= 1 && joint <= JointStiffness.Length ? JointStiffness[joint - 1] : Stiffness;
+
         public int JointCount => Bones.Length + 1;
         public bool IsFrontStrip => Sector == "F" || Sector == "FL" || Sector == "FR";
 
@@ -75,8 +84,9 @@ namespace Survival.Domain.Roster
     /// <summary>Leg/hip collider from the NOTE.md suggestions. Capsule runs from Bone's head to TailBone's head.</summary>
     public sealed class ClothColliderSpec
     {
-        public ClothColliderSpec(string name, ClothColliderKind kind, string bone, string tailBone, float radiusMetres)
+        public ClothColliderSpec(string name, ClothColliderKind kind, string bone, string tailBone, float radiusMetres, float extendMetres = 0f)
         {
+            ExtendMetres = extendMetres;
             Name = name;
             Kind = kind;
             Bone = bone;
@@ -89,6 +99,9 @@ namespace Survival.Domain.Roster
         public string Bone { get; }
         public string TailBone { get; }
         public float RadiusMetres { get; }
+
+        /// <summary>Capsule tail pushed past TailBone along its bone axis (local +Y) by this many Design metres (hands: wrist to fingertips).</summary>
+        public float ExtendMetres { get; }
     }
 
     /// <summary>
@@ -400,11 +413,10 @@ namespace Survival.Domain.Roster
             var h = dt / steps;
             var k = h / StepSeconds;
             var retention = (float)Math.Pow(1.0 - _chain.Damping, k);
-            var elastic = 1f - (float)Math.Pow(1.0 - (_chain.Stiffness * ElasticityPerStep), k);
+
             var gravity = down * (_chain.Gravity * GravityStepMetres * _scale * k * k);
             var inherit = rootDelta * ((1f - _chain.Drag) / steps);
             var limit = _chain.AngleLimitDegrees * (float)Math.PI / 180f;
-            var maxDevScale = 2f * (1f - _chain.Stiffness);
 
             for (var s = 1; s <= steps; s++)
             {
@@ -425,6 +437,9 @@ namespace Survival.Domain.Roster
                 _prev[0] = _stepTarget[0];
                 for (var i = 1; i < _p.Length; i++)
                 {
+                    var stiffness = _chain.StiffnessAt(i);
+                    var elastic = 1f - (float)Math.Pow(1.0 - (stiffness * ElasticityPerStep), k);
+                    var maxDevScale = 2f * (1f - stiffness);
                     var v = (_p[i] - _prev[i]) * retention;
                     _prev[i] = _p[i] + inherit;
                     var p = _p[i] + v + gravity + inherit;

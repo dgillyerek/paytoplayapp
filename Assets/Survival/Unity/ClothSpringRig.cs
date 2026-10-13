@@ -260,6 +260,10 @@ namespace Survival.Unity
                 var c = _colliders[i];
                 var radius = c.Spec.RadiusMetres * _designToWorld;
                 var tail = c.Spec.Kind == ClothColliderKind.Sphere ? c.Head.position : c.Tail.position;
+                if (c.Spec.Kind == ClothColliderKind.Capsule && c.Spec.ExtendMetres > 0f)
+                {
+                    tail += c.Tail.up * (c.Spec.ExtendMetres * _designToWorld);
+                }
                 _colliderFrame[i] = new ClothCollider(ToN(c.Head.position), ToN(tail), radius);
             }
         }

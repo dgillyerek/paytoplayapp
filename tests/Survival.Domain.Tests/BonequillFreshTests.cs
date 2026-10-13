@@ -86,11 +86,15 @@ public sealed class BonequillFreshTests
             Assert.Equal(chain.JointCount * 3, chain.DesignJoints.Length);
             Assert.DoesNotContain(chain.Bones, b => b.StartsWith("mixamorig:", StringComparison.Ordinal));
             Assert.True(chain.Gravity <= 0.2f, chain.Name);
+            Assert.Equal(3, chain.JointStiffness.Length);
             bones += chain.Bones.Length;
         }
 
         Assert.Equal(BonequillCape.CapeBoneCount, bones);
-        Assert.Equal(5, BonequillCape.Spec.Colliders.Length);
+        Assert.Equal(11, BonequillCape.Spec.Colliders.Length);
+        Assert.Contains(BonequillCape.Spec.Colliders, c => c.Bone == "mixamorig:LeftForeArm");
+        Assert.Contains(BonequillCape.Spec.Colliders, c => c.Bone == "mixamorig:RightHand" && c.ExtendMetres > 0f);
+        Assert.True(BonequillCape.Chains[0].StiffnessAt(3) < BonequillCape.Chains[0].StiffnessAt(1));
         Assert.Contains(BonequillCape.Spec.Colliders, c => c.Bone == "mixamorig:LeftLeg");
         for (var i = 0; i < BonequillCape.Anchors.GetLength(0); i++)
         {
