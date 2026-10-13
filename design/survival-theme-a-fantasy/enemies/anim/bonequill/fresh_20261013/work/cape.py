@@ -50,7 +50,7 @@ ad=bpy.data.armatures.new('BONEQUILL_cape_rig'); crig=bpy.data.objects.new('BONE
 bpy.context.view_layer.objects.active=crig; bpy.ops.object.mode_set(mode='EDIT')
 ANCH={'cape_Spine2':'mixamorig:Spine2','cape_LeftShoulder':'mixamorig:LeftShoulder','cape_RightShoulder':'mixamorig:RightShoulder'}
 for cn,bn in ANCH.items():
-    bb=arm.data.bones[bn]; e=ad.edit_bones.new(cn); e.head=bb.head_local; e.tail=bb.tail_local; e.roll=0
+    bb=arm.data.bones[bn]; e=ad.edit_bones.new(cn); e.head=bb.head_local; e.tail=bb.tail_local; e.matrix=bb.matrix_local.copy(); e.length=bb.length
 yc=0.05; th=np.degrees(np.arctan2(C[:,0],C[:,1]-yc))
 SECT=[('B',0,'cape_Spine2'),('BL',45,'cape_Spine2'),('L',90,'cape_Spine2'),('FL',135,'cape_LeftShoulder'),
       ('FR',-135,'cape_RightShoulder'),('R',-90,'cape_Spine2'),('BR',-45,'cape_Spine2')]
