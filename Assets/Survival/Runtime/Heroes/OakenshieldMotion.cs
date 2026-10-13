@@ -22,7 +22,7 @@ namespace Survival.Domain.Heroes
         public const string AttackFileName = OakenshieldAttack.FileName;
         public const string RejectedMixamoFileName = "OAKENSHIELD_rig.fbx";
         public const string RestMd5 = "9cfe65858575c081ac115117307bcca3";
-        public const string WalkMd5 = "adf9321319c70e666708e9a18a2119fd";
+        public const string WalkMd5 = "b0adb8c162165c4b6a7dd4c1bbb4cb67";
         public const string AttackMd5 = OakenshieldAttack.FileMd5;
 
         public const string RestPoseName = BlenderRigSpec.RestPoseName;
