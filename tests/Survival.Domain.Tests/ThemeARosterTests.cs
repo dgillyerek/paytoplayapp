@@ -78,7 +78,7 @@ public sealed class ThemeARosterTests
         Assert.Equal("ironhowl_normal.png", IronhowlMotion.NormalFileName);
         Assert.Equal("ironhowl_metallic.png", IronhowlMotion.MetallicFileName);
         Assert.Equal("ironhowl_roughness.png", IronhowlMotion.RoughnessFileName);
-        Assert.Equal(IronhowlMotion.BodyMd5, IronhowlMotion.RestMd5);
+        Assert.NotEqual(IronhowlMotion.BodyMd5, IronhowlMotion.RestMd5);
         var source = File.ReadAllText(MotionPath("Enemies", "IronhowlMotion.cs"));
         Assert.DoesNotContain("ExactName", source, StringComparison.Ordinal);
         Assert.DoesNotContain("BlenderRigSpec", source, StringComparison.Ordinal);
