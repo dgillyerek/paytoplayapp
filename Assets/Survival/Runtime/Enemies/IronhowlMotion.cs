@@ -3,6 +3,7 @@ namespace Survival.Domain.Enemies
     /// <summary>
     /// Ironhowl Mixamo body. Bone root mixamorig:Hips. Generic import.
     /// Rest, walk, and attack are separate skinned FBX files on this skeleton.
+    /// Rest hangs the arms at the sides with a slight elbow bend. It is not the T-pose body.
     /// Take is mixamo.com at 30 fps (FBX TimeMode Frames30). Keys sit on every frame.
     /// Rest LocalStop 1539538600 ticks is frame 1. Walk LocalStop 47725696600 is frame 31.
     /// Attack LocalStop 40028003600 is frame 26. No mirror. No keyframe reduction.
@@ -47,7 +48,7 @@ namespace Survival.Domain.Enemies
         public const bool Mirror = false;
 
         public const string BodyMd5 = "2076255b828787ba8db7ea24d075f231";
-        public const string RestMd5 = "2076255b828787ba8db7ea24d075f231";
+        public const string RestMd5 = "360191a5b1932c6e48fc3f5fe7f4ade2";
         public const string WalkMd5 = "8c49b0f95c70418c2e7938036080040d";
         public const string AttackMd5 = "21cd216d46c3363ad9af8993a92daba3";
         public const string AtlasMd5 = "7c4b6b14ef204acf51139789b76d498d";
