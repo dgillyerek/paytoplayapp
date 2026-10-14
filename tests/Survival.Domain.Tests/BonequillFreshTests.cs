@@ -78,7 +78,8 @@ public sealed class BonequillFreshTests
     {
         var anchors = new[] { "cape_Spine2", "cape_LeftShoulder", "cape_RightShoulder" };
         Assert.Equal(7, BonequillCape.Chains.Length);
-        var bones = 3;
+        Assert.Equal("mixamorig:Head", BonequillCape.Anchors[0, 1]);
+        var bones = BonequillCape.Anchors.GetLength(0);
         foreach (var chain in BonequillCape.Chains)
         {
             Assert.Contains(chain.ParentBone, anchors);
