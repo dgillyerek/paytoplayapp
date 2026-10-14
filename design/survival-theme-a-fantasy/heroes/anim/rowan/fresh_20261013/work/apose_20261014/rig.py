@@ -2,6 +2,7 @@
 Arms: A-pose gap to the torso; every arm vertex is on Arm/ForeArm/Hand only (elbow blend +-3 cm, hard wrist: hand+fingers 100% Hand,
 lower forearm 100% ForeArm). Face/skull 100% Head above a tilted band; coat collar (blue) never on Head. Belt, pouches, pelvis 100% Hips."""
 import sys; sys.path.append("/home/box/.local/lib/python3.13/site-packages")
+import os; HK=float(os.environ.get("HK","0.9"))
 import bpy, numpy as np, json, bmesh
 from mathutils import Vector
 import scipy.sparse as sp, scipy.sparse.csgraph as cg
@@ -88,6 +89,12 @@ for s,pid in (('Left',1),('Right',2)):
     wA[hand]=0; wS[hand]=0
     lowfore=m&~hand&(uF>0.04)                       # lower forearm: 100% ForeArm
     wA[lowfore]=0; wS[lowfore]=0; wF[lowfore]=1
+    # armpit helper (2026-10-14 v2): underarm sleeve 10-20 cm from the shoulder joint, on the side facing the ribs, shares up to
+    # 55% with the Shoulder (clavicle, arm chain) so lowering the arm from the A-pose does not squash the sleeve into the ribs
+    dsh=np.linalg.norm(P-A,axis=1); radial=(P-A)-np.outer(uA,dA); inn=ss(0.0,0.03,radial@np.array([-sg_,0,0])) if False else None
+    side=np.array([-1.0,0,0]) if s=='Left' else np.array([1.0,0,0]); side=side-side.dot(dA)*dA; side/=np.linalg.norm(side)
+    inner=ss(-0.025,0.01,radial@side); helper=HK*inner*(1-ss(0.16,0.23,dsh))*ss(0.08,0.11,dsh)*(~hand)*(uF<-0.05)
+    wS=wS+wA*helper; wA=wA*(1-helper)
     tot=wA+wS+wF+wH; tot[tot==0]=1
     for n,w in (('Shoulder',wS),('Arm',wA),('ForeArm',wF),('Hand',wH)): add(s+n,(w/tot)*m)
     rep.setdefault('arm',{})[s]={'verts':int(m.sum()),'hand_100':int((m&hand).sum()),'lower_forearm_100':int(lowfore.sum())}

@@ -13,7 +13,7 @@ namespace Survival.Domain.Heroes
     public static class RowanCoat
     {
         public const string FileName = "ROWAN_coat.fbx";
-        public const string FileMd5 = "7e9be884a1388516764479a1b1c84017";
+        public const string FileMd5 = "7ffd74f1fe71069e8602c61ba6cd1007";
         public const string TextureFolder = "ROWAN_coat.fbm";
         public const string BaseColorFile = "ROWAN_coat_basecolor_0.jpg";
         public const string NormalFile = "ROWAN_coat_normal_2.jpg";

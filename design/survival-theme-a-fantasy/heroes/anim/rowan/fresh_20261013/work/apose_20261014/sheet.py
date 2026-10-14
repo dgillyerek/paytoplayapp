@@ -1,6 +1,6 @@
 """Rowan A-pose sheets + Unity tracks (2026-10-14). Coat tails get a Blender spring PREVIEW of the Unity ClothSpringRig
 (stiffness 0.3 falling to the hem, damping 0.45, 35 deg limit, velocity clamp, leg + hand colliders) so the sheets show what the
-springs do; nothing on the coat is baked. Bow: one prop rigid on LeftHand in every clip (upright at full draw f10)."""
+springs do; nothing on the coat is baked. Bow: one prop rigid on LeftHand in every clip, its grip inside the sculpted left fist (fist.py); bow vs hand/body checked every frame."""
 import sys; sys.path.append("/home/box/.local/lib/python3.13/site-packages")
 import bpy, math, json, numpy as np
 from mathutils import Vector, Matrix
@@ -92,6 +92,36 @@ FF=np.array([p.vertices[:] for p in me.polygons]); E=np.unique(np.sort(np.vstack
 armE=np.isin(part[E[:,0]],(1,2))
 def evalQ(o):
     dg=bpy.context.evaluated_depsgraph_get(); e=o.evaluated_get(dg); m=e.to_mesh(); Q=np.empty(len(m.vertices)*3); m.vertices.foreach_get('co',Q); e.to_mesh_clear(); return Q.reshape(-1,3)
+from mathutils.bvhtree import BVHTree
+handL=handv['Left']; HS=set(handL.tolist())
+hpolys=[tuple(p.vertices) for p in me.polygons if all(i in HS for i in p.vertices)]
+nonhand=[tuple(p.vertices) for p in me.polygons if not any(i in HS for i in p.vertices)]
+cpolys=[tuple(p.vertices) for p in coat.data.polygons]
+def dense(V,polys,step=0.004):
+    out=[]
+    for p in polys:
+        for k in range(1,len(p)-1):
+            A_,B_,C_=V[p[0]],V[p[k]],V[p[k+1]]; L=max(np.linalg.norm(B_-A_),np.linalg.norm(C_-A_),np.linalg.norm(C_-B_)); n_=max(1,int(L/step))
+            for i in range(n_+1):
+                for j in range(n_+1-i): out.append(A_+(B_-A_)*i/n_+(C_-A_)*j/n_)
+    return np.array(out)
+BOWV=np.array([v.co[:] for v in bow.data.vertices]); BOWP=[tuple(p.vertices) for p in bow.data.polygons]; BOWD=dense(BOWV,BOWP)
+def inside_count(tree,pts,tol=0.001,maxd=0.05):
+    c=0
+    for p in pts:
+        r=tree.find_nearest(Vector(p),maxd)
+        if r[0] is not None and (Vector(p)-r[0]).dot(r[1])<-tol: c+=1
+    return c
+def bow_checks(Q,C):
+    M=np.array(bow.matrix_world); D=BOWD@M[:3,:3].T+M[:3,3]
+    th=BVHTree.FromPolygons([tuple(v) for v in Q],hpolys); tb=BVHTree.FromPolygons([tuple(v) for v in D],[]) if False else None
+    near=np.linalg.norm(D-np.array(bm('LeftHand').to_translation()),axis=1)<0.25
+    bh=inside_count(th,D[near])
+    tbody=BVHTree.FromPolygons([tuple(v) for v in Q],nonhand); tc=BVHTree.FromPolygons([tuple(v) for v in C],cpolys)
+    bb=inside_count(tbody,D[::3],tol=0.004); bc=inside_count(tc,D[::3],tol=0.004)
+    # hand verts inside the bow
+    Bw=BOWV@M[:3,:3].T+M[:3,3]; tbw=BVHTree.FromPolygons([tuple(v) for v in Bw],BOWP); hb=inside_count(tbw,Q[handL])
+    return dict(bow_in_hand=bh,hand_in_bow=hb,bow_in_body=bb,bow_in_coat=bc)
 def metrics():
     Q=evalQ(body)
     M=np.array(arm.pose.bones[P_+'Head'].matrix@Hrest.inverted()); R=(np.c_[P0,np.ones(N)]@M.T)[:,:3]; d=np.linalg.norm(Q-R,axis=1)
@@ -109,10 +139,11 @@ def UQ(Rb):
     q=(Cv@Rb@Cv.inverted()).to_quaternion().normalized()
     if q.w<0: q=-q
     return [round(q.x,5),round(q.y,5),round(q.z,5),round(q.w,5)]
-REF,REL,V0=10,14,5; SPD=14.0
+REF,REL,V0=10,14,8; SPD=14.0
 arm.animation_data.action=A['attack']; sc.frame_set(REF)
-ML=bm('LeftHand'); RL=ML.to_3x3().normalized(); grip=ML.to_translation()+RL@Vector((0,0.075,0))
-bow_off=(RL.inverted()@(grip-ML.to_translation()), RL.inverted())
+# bow grip inside the left fist (fist.json: grip axis through the palm centre, bow long axis along it, string toward the wrist)
+FI=json.load(open(W+'/fist.json')); bow_off=(Vector(FI['grip_local']),Matrix(FI['grip_rot_local']))
+ML=bm('LeftHand'); RL=ML.to_3x3().normalized(); grip=ML.to_translation()+RL@bow_off[0]
 MR=bm('RightHand'); RR=MR.to_3x3().normalized(); nock=MR.to_translation()+RR@Vector((0,0.05,0))
 fw=(grip-nock).normalized(); yax=-fw; xax=Vector((1,0,0)); xax=(xax-xax.dot(yax)*yax).normalized(); zax=xax.cross(yax); Rar=Matrix((xax,yax,zax)).transposed()
 ar_off=(RR.inverted()@(nock-MR.to_translation()), RR.inverted()@Rar)
@@ -161,14 +192,15 @@ for k,frs in FR.items():
         sc.frame_set(f)
         if k=='rest': COATSIM.static()
         else: COATSIM.step()
-        m=metrics(); met.setdefault(k,[]).append(m)
+        bp,bR=place(bm('LeftHand'),bow_off); bow.matrix_world=Matrix.Translation(bp)@bR.to_4x4(); upd()
+        m=metrics(); m.update(bow_checks(evalQ(body),evalQ(coat))); met.setdefault(k,[]).append(m)
         if f not in frs: continue
-        bp,bR=place(bm('LeftHand'),bow_off); bow.matrix_world=Matrix.Translation(bp)@bR.to_4x4()
         p,R=place(bm('RightHand'),ar_off); arrow.matrix_world=Matrix.Translation(p)@R.to_4x4(); arrow.hide_render=not(k=='attack' and V0<=f<REL)
         proj.matrix_world=Matrix.Translation(sp+fw*max(0,f-REL+1)*SPD/30.0)@sR.to_4x4(); proj.hide_render=not(k=='attack' and f>=REL)
         views=['full','face','side','back']+(['handLF','handRF','handLS','handRS'] if k=='walk' else [])+(['bigfront','bigside'] if (k=='attack' and f==REF) else [])
         for v in views: shot(f'{W}/sh_{k}_{f:02d}_{v}.png',v)
 rep['metrics_max']={k:{q:round(max(m[q] for m in v)*(100 if q in ('face','band') else 1),4) for q in ('face','band','arm_stretch','coat_in_legs')} for k,v in met.items()}
+rep['bow_checks_max']={k:{q:max(m[q] for m in v) for q in ('bow_in_hand','hand_in_bow','bow_in_body','bow_in_coat')} for k,v in met.items()}
 rep['hand_gap_min_cm']={k:{s:round(min(m['hand_gap_'+s] for m in v)*100,2) for s in ('L','R')} for k,v in met.items()}
 rep['metrics_note']='face/band = max vertex drift from rigid Head (cm); hand_gap = min distance from 100%-Hand vertices to torso/leg vertices; arm_stretch = max edge length ratio on arm edges; coat_in_legs = coat verts >2 cm inside a leg capsule (with spring preview)'
 json.dump(rep,open(W+'/sheet.json','w'),indent=1)

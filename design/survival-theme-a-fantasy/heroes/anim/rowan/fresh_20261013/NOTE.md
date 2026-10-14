@@ -1,3 +1,28 @@
+## v2 fixes (2026-10-14, after Derek's Unity review of 8d638c7)
+
+- **Arm through the chest on the raise:** I rebuilt the attack so both hands follow keyed waypoints in the turning torso frame, which means the 70° chest turn carries the arms with it instead of sweeping the chest into them.
+  - Draw arm: at f3 the elbow leads out to the side, at f6 it goes up outside the shoulder line, at f8 the hand comes in at head height, and at f10 it reaches full draw at the right jaw. Near the jaw the wrist is flexed (swing only, no roll) so the fingers point along the arrow instead of at the neck. At full draw the elbow is out to the side, about 12 cm above the shoulder joint.
+  - Bow arm: it swings out to the side first, then straight out from the shoulder. Its roll is solved so the bow stands within 13.19° of vertical.
+  - The return to rest mirrors the raise.
+  - Penetration test (`work/apose_20261014/pen.py`), run on every frame and half-frame from 0 to 30 in all three clips. An arm vertex counts as inside if it is inside the posed torso cross-section hull and behind the nearest torso face by more than 4 mm beyond where it sat in the bind, or behind a coat-tail face.
+    - Excluded: arm vertices within 12 cm of the shoulder joint, and the arm/torso skin-seam ring, which is the 2 face-rings that share faces with the torso ({'L': 110, 'R': 134}).
+    - Result: **0 in every sample** (`pen.json`, `pen_rest_walk.json`). A new test enforces it.
+  - To get there:
+    - Underarm sleeve: shares up to 90% with the arm-chain Shoulder bone (`rig.py`).
+    - Rest hands: moved to (±0.39, −0.04, 0.95).
+    - Walk back-swing: goes out around the coat tails.
+- **Bow through the hand:** the 20-bone rig has no finger bones, so `fist.py` sculpts the left hand into a fist at bind.
+  - Every vertex past the knuckle line (0.08 m from the wrist, 1170 vertices) wraps around a grip axis across the palm.
+  - The grip is cleared to a radius of 0.024 m: 69 vertices were pushed off it.
+  - The bow grip sits on that axis, at the palm centre, with the string toward the wrist.
+  - The hand is 100% LeftHand and the bow is rigid on LeftHand, so the fist and the grip hold in every frame of rest, walk and attack.
+  - Checks on every frame (densely sampled bow surface vs hand, and hand vertices vs bow): {"rest": {"bow_in_hand": 0, "hand_in_bow": 0, "bow_in_body": 0, "bow_in_coat": 0}, "walk": {"bow_in_hand": 0, "hand_in_bow": 0, "bow_in_body": 0, "bow_in_coat": 0}, "attack": {"bow_in_hand": 0, "hand_in_bow": 0, "bow_in_body": 0, "bow_in_coat": 0}}.
+- **Roll check:** {"max_hinge_mismatch_deg": 0.0, "max_abs_forearm_twist_deg": 0.0, "max_abs_hand_twist_deg": 0.0, "walk_Left_max_hand_step_deg": 3.03, "walk_Right_max_hand_step_deg": 3.58, "attack_Left_max_hand_step_deg": 20.99, "attack_Right_max_hand_step_deg": 31.11}.
+- **New sheets:**
+  - `sheets/ROWAN_fresh_attack_raise_strip.jpg`: f0 to f10, every frame, front and side.
+  - `sheets/ROWAN_fresh_bow_hand_closeup.jpg`: rest, walk and attack, three angles.
+- **Pipeline order:** insp → dec → uvcol → seg → split → rig → fist → coat → anim → pen → sheet → mont/strip/bowhand → export.
+
 # Rowan fresh rebuild (2026-10-13), HOLD
 ## A-pose rebuild (2026-10-14, #64) — supersedes the sections below
 

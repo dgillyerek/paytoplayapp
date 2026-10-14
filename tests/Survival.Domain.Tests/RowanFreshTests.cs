@@ -108,6 +108,42 @@ public sealed class RowanFreshTests
         Assert.All(RowanCoat.Spec.ClothBoneNames, b => Assert.DoesNotContain(b, RowanMotion.BoneNames));
     }
 
+    [Fact]
+    public void Attack_arms_never_enter_chest_or_coat_and_bow_never_enters_the_fist()
+    {
+        var work = Path.Combine(FindRepoRoot(), RowanMotion.DesignDir, "work", "apose_20261014");
+        foreach (var file in new[] { "pen.json", "pen_rest_walk.json" })
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(work, file)));
+            foreach (var clip in doc.RootElement.EnumerateObject().Where(p => !p.Name.StartsWith("_", StringComparison.Ordinal) && p.Value.ValueKind == System.Text.Json.JsonValueKind.Array))
+            {
+                var rows = clip.Value.EnumerateArray().ToArray();
+                Assert.Equal(61, rows.Length); // every frame and half-frame 0..30
+                foreach (var r in rows)
+                {
+                    foreach (var k in new[] { "L_inside", "R_inside", "L_in_coat", "R_in_coat" })
+                    {
+                        Assert.Equal(0, r.GetProperty(k).GetInt32());
+                    }
+                }
+            }
+        }
+
+        using var sheet = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "sheet.json")));
+        foreach (var clip in sheet.RootElement.GetProperty("bow_checks_max").EnumerateObject())
+        {
+            foreach (var q in clip.Value.EnumerateObject())
+            {
+                Assert.Equal(0, q.Value.GetInt32());
+            }
+        }
+
+        using var fist = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "fist.json")));
+        Assert.Equal(0, fist.RootElement.GetProperty("bow_in_hand_bind").GetInt32());
+        Assert.Equal(0, fist.RootElement.GetProperty("hand_in_bow_bind").GetInt32());
+        Assert.True(fist.RootElement.GetProperty("curled_verts").GetInt32() > 500);
+    }
+
     private static string Md5(string path)
     {
         var hash = System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(path));

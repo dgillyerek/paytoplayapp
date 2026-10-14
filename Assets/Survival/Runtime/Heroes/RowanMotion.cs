@@ -5,7 +5,8 @@ namespace Survival.Domain.Heroes
     /// <summary>
     /// Rowan A-pose rebuild (2026-10-14, #64): Derek-approved A-pose Meshy model (1.78M faces) decimated to 200k with its texture,
     /// 20-bone mixamorig rig (no ToeBase) in Blender 5.2.2 (design .../rowan/fresh_20261013/work/apose_20261014). Face 100% on Head;
-    /// hands and fingers 100% on Hand, lower forearm 100% on ForeArm, no arm vertex weighted to hips or torso; belt 100% on Hips.
+    /// hands and fingers 100% on Hand (left hand sculpted into a fist round the bow grip), lower forearm 100% on ForeArm, no arm vertex
+    /// weighted to hips or torso (underarm sleeve shares with the arm-chain Shoulder bone so it never squashes into the ribs); belt 100% on Hips.
     /// Coat tails below the belt are a separate spring mesh (RowanCoat), never on the legs. Rest = arms down by the sides from the
     /// A-pose. Walk = 1 s in place at 30 fps, body bones only, head forward. Bow attack in RowanAttack. Imported Generic like the
     /// locked rigs. HOLD merge until Derek Game-view PASS.
@@ -21,8 +22,8 @@ namespace Survival.Domain.Heroes
         public const string AttackPoseName = BlenderRigAttackSpec.PoseName;
         public const string AttackFileName = RowanAttack.FileName;
         public const string RejectedMixamoFileName = "ROWAN_rig.fbx";
-        public const string RestMd5 = "df35363cb2f870a1d569947af2bc0e7e";
-        public const string WalkMd5 = "3876796bb9ea4db813df163128537e36";
+        public const string RestMd5 = "3a050d3f30d73071fba86ef9daa3ab05";
+        public const string WalkMd5 = "c4f5f73aa14e9e25cbc6fb6c889d8073";
         public const string AttackMd5 = RowanAttack.FileMd5;
 
         public const string RestPoseName = BlenderRigSpec.RestPoseName;
