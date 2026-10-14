@@ -1,4 +1,15 @@
 # Rowan fresh rebuild (2026-10-13), HOLD
+## A-pose rebuild (2026-10-14, #64) — supersedes the sections below
+
+- **Source:** Derek-approved A-pose Meshy model `ROWAN_apose_meshy_texture.glb` (1,783,138 faces, md5 in `source/MESHY_APOSE_SOURCE.md5`, not committed), decimated to 200,000 faces with the Meshy texture kept. Pipeline in `work/apose_20261014/` (insp, dec, uvcol, seg, split, rig, coat, anim, sheet, mont, export).
+- **Rig:** same 20-bone Generic rig. Hands and fingers 100% on Hand (hard wrist plane), lower forearm 100% on ForeArm, elbow blend ±3 cm, no arm vertex weighted to Hips or the spine (checks in `rig.json`: arm_verts_with_torso_or_hips_weight 0, hand_verts_not_100pct_hand 0), face 100% on Head, belt 100% on Hips. The right belt pouch had been caught in the right-arm part and was moved back to the torso.
+- **Coat tails (Derek's cloth rule):** split below the belt into `ROWAN_coat.fbx` (17,428 faces) on its own armature: anchor `coat_Hips` plus 7 chains × 3 bones (B, BL, L, FL, FR, R, BR), all parented to Hips, never the legs. Runtime `RowanCoat` + `ClothSpringRig` (damping 0.45, 35°, solver velocity clamp; leg/hips/forearm/hand colliders). The body clips move body bones only. The split looked clean, so the shorter-coat fallback was not needed. `ClothSpring.cs` / `ClothSpringRig.cs` are byte-identical copies from the unmerged Bonequill branch (same GUIDs).
+- **Clips:** rest = arms down by the sides from the A-pose; walk 1 s in place; archer attack: torso side-on (70° spread over hips and spine), bow arm straight out from the shoulder, draw hand at the cheek, loose f14.
+- **Arm roll:** after the aim the full Arm/ForeArm basis maps the rest elbow hinge onto the IK hinge (explicit pole roll). Both Hands are keyed every frame. Every attack frame was checked: hinge mismatch 0, forearm twist 0, hand twist 0 (`anim.json`, `upperarm_twist.json`).
+- **Props:** one bow (`ROWAN_bow.fbx`), rigid on LeftHand in every clip. Nothing on his back; the quiver was removed.
+- **Sheet metrics:** {"rest": {"face": 0.0, "band": 0.0, "arm_stretch": 20.076, "coat_in_legs": 0}, "walk": {"face": 0.0, "band": 0.5382, "arm_stretch": 43.4339, "coat_in_legs": 47}, "attack": {"face": 0.0, "band": 8.5044, "arm_stretch": 154.6727, "coat_in_legs": 0}}; hand gap minimum (cm) {"rest": {"L": 7.48, "R": 3.42}, "walk": {"L": 5.39, "R": 1.76}, "attack": {"L": 6.56, "R": 0.02}}. The attack R value is the draw hand at the cheek, as intended.
+- **Caveats:** the bowstring stays at brace height (static prop). The walk spring preview shows 47 coat verts more than 2 cm inside a leg capsule; Unity colliders push these out. The attack neck band moves up to 8.5 cm with the 70° twist.
+
 
 Derek approved the hero-blue front/back look (`source/ROWAN_FRONT_BACK_BLUE_LOCKED.jpg`). Design made the Meshy model from it (`source/MESHY_SOURCE.md5`; GLB 1.6M tris and zip not committed). This replaces the failed #54/#50/#45/#35 packs. The game setup and the bow attack idea come from `cursor/rowan-nocape-20261008`.
 

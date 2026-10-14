@@ -13,16 +13,21 @@ public sealed class RowanFreshTests
         Assert.Equal(MixamoHumanoidBones.Names.Where(n => !n.EndsWith("ToeBase", StringComparison.Ordinal)).ToArray(), RowanMotion.BoneNames);
         Assert.Equal(BlenderRigAvatar.CustomGeneric, RowanMotion.Spec.Avatar);
         Assert.Equal(new[] { "rest", "walk", "attack" }, RowanMotion.PoseNames);
-        Assert.Equal(5, RowanAttack.Spec.Tracks.Length);
+        Assert.Equal(4, RowanAttack.Spec.Tracks.Length);
         foreach (var track in RowanAttack.Spec.Tracks)
         {
             Assert.Equal(31, track.Frames.Length);
         }
 
         Assert.Single(RowanAttack.IdleProps);
-        Assert.Equal("ROWAN_quiver", RowanAttack.IdleProps[0].AttackTrackName);
-        Assert.Equal("mixamorig:Spine2", RowanAttack.IdleProps[0].Bone);
-        Assert.Equal("mixamorig:LeftHand", RowanAttack.Spec.Tracks[1].Bone);
+        Assert.Equal("ROWAN_bow", RowanAttack.IdleProps[0].AttackTrackName);
+        Assert.Equal("mixamorig:LeftHand", RowanAttack.IdleProps[0].Bone);
+        Assert.Equal("ROWAN_bow", RowanAttack.Spec.Tracks[0].ObjectName);
+        Assert.Equal("mixamorig:LeftHand", RowanAttack.Spec.Tracks[0].Bone);
+        Assert.Single(RowanAttack.Spec.Tracks, t => t.PropFileName == "ROWAN_bow.fbx");
+        Assert.DoesNotContain(RowanAttack.Spec.Tracks, t => t.Bone.Contains("Spine", StringComparison.Ordinal));
+        Assert.DoesNotContain(RowanAttack.PropFileNames, n => n.Contains("quiver", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal("mixamorig:RightHand", RowanAttack.Spec.Tracks[1].Bone);
         Assert.Equal(14, RowanAttack.ReleaseFrame);
     }
 
@@ -62,10 +67,45 @@ public sealed class RowanFreshTests
             Assert.Equal(RowanAttack.PropFileMd5s[i], Md5(Path.Combine(pack, RowanAttack.PropFileNames[i])));
             Assert.Equal(RowanAttack.PropFileMd5s[i], Md5(Path.Combine(root, RowanMotion.DesignDir, "props", RowanAttack.PropFileNames[i])));
         }
+
+        Assert.False(File.Exists(Path.Combine(pack, "ROWAN_quiver.fbx")));
+        Assert.Equal(RowanCoat.FileMd5, Md5(Path.Combine(pack, RowanCoat.FileName)));
+        Assert.Equal(RowanCoat.FileMd5, Md5(Path.Combine(design, RowanCoat.FileName)));
+        var coatMeta = File.ReadAllText(Path.Combine(pack, RowanCoat.FileName + ".meta"));
+        Assert.Contains("importAnimation: 0", coatMeta, StringComparison.Ordinal);
+        Assert.True(File.Exists(Path.Combine(pack, RowanCoat.TextureFolder, RowanCoat.BaseColorFile)));
+        Assert.True(File.Exists(Path.Combine(pack, RowanCoat.TextureFolder, RowanCoat.NormalFile)));
         var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "Rowan.unity"));
         Assert.Contains("RowanRoot", scene, StringComparison.Ordinal);
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
         Assert.Contains("Survival/Rowan Demo (rest + walk + bow attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Coat_tails_are_spring_chains_on_hips_never_the_legs()
+    {
+        Assert.Equal(1, RowanCoat.Anchors.GetLength(0));
+        Assert.Equal("coat_Hips", RowanCoat.Anchors[0, 0]);
+        Assert.Equal("mixamorig:Hips", RowanCoat.Anchors[0, 1]);
+        Assert.Equal(7, RowanCoat.Chains.Length);
+        var bones = 1;
+        foreach (var chain in RowanCoat.Chains)
+        {
+            Assert.Equal("coat_Hips", chain.ParentBone);
+            Assert.InRange(chain.Bones.Length, 2, 4);
+            Assert.Equal(0.45f, chain.Damping);
+            Assert.Equal(35f, chain.AngleLimitDegrees);
+            Assert.True(chain.StiffnessAt(chain.JointCount - 1) < chain.StiffnessAt(1));
+            Assert.All(chain.Bones, b => Assert.StartsWith("coat_", b, StringComparison.Ordinal));
+            Assert.True(chain.DesignJoint(0).Z <= RowanCoat.SplitHeightMetres + 0.001f);
+            bones += chain.Bones.Length;
+        }
+
+        Assert.Equal(RowanCoat.CoatBoneCount, bones);
+        Assert.Contains(RowanCoat.Spec.Colliders, c => c.Bone == "mixamorig:LeftUpLeg");
+        Assert.Contains(RowanCoat.Spec.Colliders, c => c.Bone == "mixamorig:RightLeg");
+        Assert.Contains(RowanCoat.Spec.Colliders, c => c.Bone == "mixamorig:RightHand" && c.ExtendMetres > 0f);
+        Assert.All(RowanCoat.Spec.ClothBoneNames, b => Assert.DoesNotContain(b, RowanMotion.BoneNames));
     }
 
     private static string Md5(string path)

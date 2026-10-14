@@ -1,0 +1,32 @@
+{
+ "faces": 182551,
+ "verts": 91163,
+ "parts": {
+  "torso_head": 58049,
+  "L_arm": 6497,
+  "R_arm": 6608,
+  "L_leg": 8954,
+  "R_leg": 11055
+ },
+ "arm_torso_faces_cut": 0,
+ "leg_torso_faces_cut": 21,
+ "arm": {
+  "Left": {
+   "verts": 6497,
+   "hand_100": 2088,
+   "lower_forearm_100": 1380
+  },
+  "Right": {
+   "verts": 6608,
+   "hand_100": 2148,
+   "lower_forearm_100": 1518
+  }
+ },
+ "arm_verts_with_torso_or_hips_weight": 0,
+ "hand_verts_not_100pct_hand": 0,
+ "belt_hips_verts": 13849,
+ "belt_with_leg_weight": 0,
+ "head_locked": 21509,
+ "head_band": 252,
+ "max_infl": 3
+}

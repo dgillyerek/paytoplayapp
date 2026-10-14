@@ -3,12 +3,12 @@ using Survival.Domain.Roster;
 namespace Survival.Domain.Heroes
 {
     /// <summary>
-    /// Rowan fresh rebuild (2026-10-13): Derek-approved hero-blue front/back look, Design's Meshy image-to-3D, decimated to 200k faces,
-    /// new 20-bone mixamorig rig (no ToeBase) in Blender 5.2.2 (design .../rowan/fresh_20261013). Face and skull 100% on Head (narrow
-    /// tilted Neck to Head band); tunic, coat flaps and belt pieces 100% on Hips (never the legs); short capelet rides the spine chain
-    /// and shoulders; the Meshy bow slung on his back is rigid on Spine2. Arms ripped from the coat below the armpit so nothing webs.
-    /// Rest = bind pose, arms hanging by the sides. Walk = 1 s in place at 30 fps, head forward with a tiny nod. Bow attack in
-    /// RowanAttack. Imported Generic like the locked rigs. Replaces the failed #54/#50/#45/#35 packs. HOLD merge until Derek Game-view PASS.
+    /// Rowan A-pose rebuild (2026-10-14, #64): Derek-approved A-pose Meshy model (1.78M faces) decimated to 200k with its texture,
+    /// 20-bone mixamorig rig (no ToeBase) in Blender 5.2.2 (design .../rowan/fresh_20261013/work/apose_20261014). Face 100% on Head;
+    /// hands and fingers 100% on Hand, lower forearm 100% on ForeArm, no arm vertex weighted to hips or torso; belt 100% on Hips.
+    /// Coat tails below the belt are a separate spring mesh (RowanCoat), never on the legs. Rest = arms down by the sides from the
+    /// A-pose. Walk = 1 s in place at 30 fps, body bones only, head forward. Bow attack in RowanAttack. Imported Generic like the
+    /// locked rigs. HOLD merge until Derek Game-view PASS.
     /// </summary>
     public static class RowanMotion
     {
@@ -21,8 +21,8 @@ namespace Survival.Domain.Heroes
         public const string AttackPoseName = BlenderRigAttackSpec.PoseName;
         public const string AttackFileName = RowanAttack.FileName;
         public const string RejectedMixamoFileName = "ROWAN_rig.fbx";
-        public const string RestMd5 = "4ca622623f48aaee0981cdd908fd819a";
-        public const string WalkMd5 = "c679da300593ffa2d2d59f7c9d5fe595";
+        public const string RestMd5 = "df35363cb2f870a1d569947af2bc0e7e";
+        public const string WalkMd5 = "3876796bb9ea4db813df163128537e36";
         public const string AttackMd5 = RowanAttack.FileMd5;
 
         public const string RestPoseName = BlenderRigSpec.RestPoseName;
@@ -65,7 +65,7 @@ namespace Survival.Domain.Heroes
             "mixamorig:RightFoot"
         };
 
-        /// <summary>Quiver on Spine2 (see RowanAttack.IdleProps).</summary>
+        /// <summary>Single bow on LeftHand (see RowanAttack.IdleProps).</summary>
         public static BlenderRigIdlePropSpec[] IdleProps => RowanAttack.IdleProps;
 
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(

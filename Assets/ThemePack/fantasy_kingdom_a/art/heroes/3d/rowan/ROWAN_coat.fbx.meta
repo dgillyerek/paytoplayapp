@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 38d5aed13790420e80c9f19ed6ad2605
+guid: b9a99f734ee64649a22816775eec09dc
 ModelImporter:
   serializedVersion: 24
   internalIDToNameTable: []
@@ -92,12 +92,12 @@ ModelImporter:
     hasExtraRoot: 0
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
-  autoGenerateAvatarMappingIfUnspecified: 1
-  animationType: 0
+  autoGenerateAvatarMappingIfUnspecified: 0
+  animationType: 2
   humanoidOversampling: 1
   avatarSetup: 1
   addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Rowan prop (Blender 2026-10-13). Static mesh, no animation. MD5 874a56bf7a88264d6db945e7f6d32b99
+  userData: Rowan coat tails (split below the belt, 7 x 3-bone spring chains on coat_Hips, never baked). MD5 7e9be884a1388516764479a1b1c84017. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 
