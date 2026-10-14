@@ -2,13 +2,13 @@
  "cape_faces": 39999,
  "cape_verts": 19745,
  "front_edge_deg_after": 69.8,
- "verts_inside_shell_before": 6202,
- "verts_inside_shell_after": 623,
+ "verts_inside_shell_before": 7131,
+ "verts_inside_shell_after": 560,
  "fit_iters": 60,
- "max_push_cm": 44.4,
- "mean_push_cm": 8.68,
+ "max_push_cm": 44.5,
+ "mean_push_cm": 8.61,
  "chains": 7,
- "cape_bones": 25,
+ "cape_bones": 27,
  "max_infl": 4,
  "anchor_rigid_verts": 4382
 }

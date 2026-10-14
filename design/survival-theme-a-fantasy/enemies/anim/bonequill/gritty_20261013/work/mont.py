@@ -3,7 +3,7 @@ from PIL import Image,ImageDraw
 W='/workspace/bonequill_gritty/work'; O='/workspace/bonequill_gritty'
 for k in ('rest','walk','attack'):
     fs=sorted(glob.glob(f'{W}/sh_{k}_*_full.png')); n=len(fs); cw=360
-    rows=[('full',640),('face',360),('side',640)]+([] if k=='attack' else [('back',640)])
+    rows=[('full',640),('face',360),('side',640)]+([] if k=='attack' else [('back',640)])+([] if k=='walk' else [('hood',360)])+([('arrow',360)] if k=='attack' else [])
     S=Image.new('RGB',(cw*n,30+sum(h for _,h in rows)),'white'); d=ImageDraw.Draw(S)
     for i,f in enumerate(fs):
         y=30

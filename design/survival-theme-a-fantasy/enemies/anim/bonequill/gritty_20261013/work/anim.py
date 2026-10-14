@@ -44,12 +44,14 @@ def spine_yaw(deg):
     for n,k in (('Spine',0.3),('Spine1',0.35),('Spine2',0.35)): rot(n,(0,0,1),deg*k)
     rot('Neck',(0,0,1),-deg*0.5)   # neck takes half the counter-turn so the head band never twists hard
     upd()
+HDX,HDZ=0.0,0.0
+BDX,BDZ=0.084,-0.055
 def draw_pose(pull=0.0,yaw=YAW):
     reset(); legs(); spine_yaw(yaw)
-    S=PB[P_+'LeftArm'].head.copy(); D=(Vector((-0.07,-0.62,1.52))-S).normalized()   # bow hand straight ahead of the face, so the arrow flies forward
+    S=PB[P_+'LeftArm'].head.copy(); D=(Vector((-0.07+BDX,-0.62,1.52+BDZ))-S).normalized()   # bow hand straight ahead of the face, so the arrow flies forward
     aim('LeftArm',D); aim('LeftForeArm',D)                    # bow arm straight out from the shoulder toward the target
     G=PB[P_+'LeftHand'].head.copy()
-    H=Vector((-0.09-pull,-0.17+pull*0.4,1.52))   # string hand at the right jaw; elbow out behind at shoulder height
+    H=Vector((-0.09+HDX-pull,-0.17+pull*0.4,1.52+HDZ))   # string hand at the right jaw; elbow out behind at shoulder height
     S2=PB[P_+'RightArm'].head; up,fo=ik(S2,H,LA,LF,(-1.0,0.35,-0.2)); aim('RightArm',up); aim('RightForeArm',fo)
 draw_pose(); upd()
 RL=PB[P_+'LeftHand'].matrix.to_3x3().to_quaternion()      # left-hand armature rotation at full draw (bow upright)
@@ -92,4 +94,4 @@ for f in range(31):
     for k,n in enumerate(('LeftArm','LeftForeArm','RightArm','RightForeArm')): aim(n,KEYS[i][1][k].lerp(KEYS[j][1][k],t).normalized())
     lefthand_hold(); head_forward(); key(f)
 reset(); arm.animation_data.action=A['rest']; sc.frame_set(0)
-bpy.ops.wm.save_as_mainfile(filepath='/workspace/bonequill_gritty/work/anim.blend',compress=True); print('ANIM ok ADD',ADD)
+bpy.ops.wm.save_as_mainfile(filepath='/workspace/bonequill_gritty/work/anim.blend',compress=True); bpy.ops.wm.save_as_mainfile(filepath='/workspace/bonequill_gritty/work/anim_nq.blend',compress=True,copy=True); print('ANIM ok ADD',ADD)
