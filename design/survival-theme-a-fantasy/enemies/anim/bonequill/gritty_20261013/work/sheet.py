@@ -39,7 +39,8 @@ REF,REL,V0=10,14,7; SPD=14.0
 arm.animation_data.action=A['attack']; sc.frame_set(REF)
 def bm(n): return arm.matrix_world@arm.pose.bones[P_+n].matrix
 # bow: grip 6 cm along LeftHand (palm), world-upright at full draw
-ML=bm('LeftHand'); RL=ML.to_3x3().normalized(); grip=ML.to_translation()+RL@Vector((0,0.06,0))
+FI=json.load(open(W+'/fist.json')); GL=Vector(FI['grip_local']); REST_L=Vector((FI['grip_local'][0],FI['grip_local'][1],FI['fist_top_local_z']+0.006))
+ML=bm('LeftHand'); RL=ML.to_3x3().normalized(); grip=ML@GL   # bow grip at the centre of the fist
 bow_off=(RL.inverted()@(grip-ML.to_translation()), RL.inverted())   # pos, rot (bow rot = identity at REF)
 # arrow: nock between the draw fingers (centroid of the RightHand finger verts, in hand space), shaft resting on top of the bow
 # hand at the grip (arrow rest), re-aimed every frame nock -> rest; projectile flies along the full-draw line
@@ -53,9 +54,7 @@ NOCK_LOCAL=Vector(fing.mean(0)); rep['nock_local_hand']=[round(v,4) for v in NOC
 REST_UP=Vector((0.0,0.0,0.035)); REST_SIDE=0.012
 def arrow_pose():
     MR=bm('RightHand'); nk=MR@NOCK_LOCAL
-    MLh=bm('LeftHand'); RLh=MLh.to_3x3().normalized(); gp=MLh.to_translation()+RLh@Vector((0,0.06,0))
-    side=(RLh@Vector((1,0,0))).normalized()
-    rest=gp+REST_UP+side*REST_SIDE
+    rest=bm('LeftHand')@REST_L      # arrow rest on top of the bow fist
     f_=(rest-nk).normalized(); yax=-f_; xax=Vector((1,0,0)); xax=(xax-xax.dot(yax)*yax).normalized(); zax=xax.cross(yax)
     return nk, Matrix((xax,yax,zax)).transposed(), f_
 _,_,fw=arrow_pose()
