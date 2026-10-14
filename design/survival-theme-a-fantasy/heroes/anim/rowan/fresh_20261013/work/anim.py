@@ -39,15 +39,16 @@ LA=(J['LeftForeArm']-J['LeftArm']).length; LF=(J['LeftHand']-J['LeftForeArm']).l
 # ---------- draw pose (reference f10) ----------
 def legs(stance=True):
     for s,sg in (('Left',1),('Right',-1)): rot(s+'UpLeg',(0,1,0),ADD*sg); rot(s+'Foot',(0,1,0),-ADD*sg)
-TW=-24.0
+TW=-70.0   # archer stance (2026-10-14): body side-on, left shoulder to the target; bow arm extends out from the shoulder (abducted, to the body's side),
+           # the draw arm stays beside the head (anchor on the right cheek), so neither arm crosses the chest or coat. Head faces the target.
 def twist(a):
-    rot('Spine',(0,0,1),a*0.3); rot('Spine1',(0,0,1),a*0.35); rot('Spine2',(0,0,1),a*0.35); rot('Neck',(0,0,1),-a*0.5); upd()
-BOWDIR=(-0.12,-0.99,0.03)
+    rot('Hips',(0,0,1),a*0.45); rot('Spine',(0,0,1),a*0.15); rot('Spine1',(0,0,1),a*0.15); rot('Spine2',(0,0,1),a*0.25); rot('Neck',(0,0,1),-a*0.45); upd()
+BOWDIR=(-0.20,-0.98,0.04)
 def draw_pose(pull=0.0):
     reset(); legs(); twist(TW)
     aim('LeftArm',BOWDIR); aim('LeftForeArm',BOWDIR)
-    S=PB[P_+'RightArm'].head; H=Vector((0.07,-0.17+pull,1.44))
-    up,fo=ik(S,H,LA,LF,(-1,0.6,0.25)); aim('RightArm',up); aim('RightForeArm',fo)
+    S=PB[P_+'RightArm'].head; H=Vector((-0.085,-0.10+pull,1.47))
+    up,fo=ik(S,H,LA,LF,(-1.0,0.6,0.35)); aim('RightArm',up); aim('RightForeArm',fo)
 draw_pose(); upd()
 RL=PB[P_+'LeftHand'].matrix.to_3x3().to_quaternion()      # left-hand armature rotation at full draw (bow upright)
 def lefthand_hold(): setrot('LeftHand',RL)
@@ -76,8 +77,8 @@ def dirs():
     upd(); return [PB[P_+n].matrix.to_3x3().col[1].normalized().copy() for n in ('LeftArm','LeftForeArm','RightArm','RightForeArm')]
 reset(); legs(); rest_arms(); D0=dirs(); RL0=PB[P_+'LeftHand'].matrix.to_3x3().to_quaternion()
 draw_pose(); D10=dirs()
-reset(); legs(); twist(TW); aim('LeftArm',(0.02,-0.99,-0.06)); aim('LeftForeArm',(0.02,-0.99,-0.06))
-S=PB[P_+'RightArm'].head; up,fo=ik(S,Vector((0.10,-0.40,1.38)),LA,LF,(-1,0.2,0.1)); aim('RightArm',up); aim('RightForeArm',fo); D6=dirs()
+reset(); legs(); twist(TW); aim('LeftArm',(-0.20,-0.95,-0.22)); aim('LeftForeArm',(-0.20,-0.95,-0.22))
+S=PB[P_+'RightArm'].head; up,fo=ik(S,Vector((-0.08,-0.36,1.36)),LA,LF,(-1.0,0.3,0.0)); aim('RightArm',up); aim('RightForeArm',fo); D6=dirs()
 draw_pose(pull=0.08); D16=dirs()
 KEYS=[(0,D0),(6,D6),(10,D10),(14,D10),(17,D16),(30,D0)]
 for f in range(31):

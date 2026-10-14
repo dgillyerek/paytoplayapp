@@ -24,3 +24,8 @@ Derek approved the hero-blue front/back look (`source/ROWAN_FRONT_BACK_BLUE_LOCK
   - The bow stave crosses the lower face in the front view at full draw.
 - **Sheets:** `sheets/ROWAN_fresh_{rest,walk,attack}_sheet.jpg`, each with front, face close-up, side and back rows.
 - **Unity:** ThemePack `heroes/3d/rowan/ROWAN_blenderig*.fbx`, Generic (`animationType: 2`). Open it with Survival → Rowan Demo.
+
+## Review fixes (2026-10-13, after Derek's Unity review of #64)
+- **Hands stuck to hips:** the Hand/HandEnd joints were placed about 5 cm off the real hands, so the surface-distance arm split left the hands and fingers on Hips. Fixed the joints and used the same split as Bonequill's fingertip fix (per-side surface distance to the arm and forearm segments, with an x-gap of 0.222 m from the coat). Hands and fingers below the wrist are now 100% on the Hand bone, and the wrist and lower forearm are 100% on ForeArm. Faces that joined the arm to the torso were cut (807). Checked in rest, walk, attack, and a 75° arm-raise test (work/pose2.png, work/hv_c.png).
+- **Attack shoulder:** re-baked as an archer stance. The body turns side-on (70° spread over hips and spine), and the left bow arm extends straight from the shoulder toward the target, clear of the torso. The draw hand anchors on the right cheek by 2-bone IK with the elbow out to the side. Front, side and back views at f10 full draw are in work/v3_f10zoom.png. Face drift is 0. The neck-to-head band moves about 11.2 cm in attack (counter-twist of the neck) versus 0.55 cm in walk.
+- Known issues: the back bow (Meshy mesh) and the hand bow are both visible during f4–24. The coat flaps still graze the thighs at the walk extremes.

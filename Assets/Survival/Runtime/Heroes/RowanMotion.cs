@@ -21,8 +21,8 @@ namespace Survival.Domain.Heroes
         public const string AttackPoseName = BlenderRigAttackSpec.PoseName;
         public const string AttackFileName = RowanAttack.FileName;
         public const string RejectedMixamoFileName = "ROWAN_rig.fbx";
-        public const string RestMd5 = "ca2e980bfa81dcb8918ba51e375d72c3";
-        public const string WalkMd5 = "384445362819cbda58c1947d6b6b3d5d";
+        public const string RestMd5 = "4ca622623f48aaee0981cdd908fd819a";
+        public const string WalkMd5 = "c679da300593ffa2d2d59f7c9d5fe595";
         public const string AttackMd5 = RowanAttack.FileMd5;
 
         public const string RestPoseName = BlenderRigSpec.RestPoseName;
