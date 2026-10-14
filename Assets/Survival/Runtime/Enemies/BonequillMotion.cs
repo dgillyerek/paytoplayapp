@@ -22,8 +22,8 @@ namespace Survival.Domain.Enemies
         public const string AttackPoseName = BlenderRigAttackSpec.PoseName;
         public const string AttackFileName = BonequillAttack.FileName;
         public const string RejectedMixamoFileName = "BONEQUILL_rig.fbx";
-        public const string RestMd5 = "10220ba5817a866c4de68a34a2c34f83";
-        public const string WalkMd5 = "5b039a1fa001ae22700a0ce38a3864a6";
+        public const string RestMd5 = "77723341832046c7546ea2afd938b89b";
+        public const string WalkMd5 = "ea64ad1a223debf8ac9a9126e37b8847";
         public const string AttackMd5 = BonequillAttack.FileMd5;
 
         public const string RestPoseName = BlenderRigSpec.RestPoseName;

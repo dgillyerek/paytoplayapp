@@ -64,7 +64,7 @@ me.vertices.foreach_set('co',C2.ravel()); me.update(); C=C2
 # ---- cape armature ----
 ad=bpy.data.armatures.new('BONEQUILL_cape_rig'); crig=bpy.data.objects.new('BONEQUILL_cape_rig',ad); sc.collection.objects.link(crig)
 bpy.context.view_layer.objects.active=crig; bpy.ops.object.mode_set(mode='EDIT')
-ANCH={'cape_Head':'mixamorig:Head','cape_Spine2':'mixamorig:Spine2','cape_LeftShoulder':'mixamorig:LeftShoulder','cape_RightShoulder':'mixamorig:RightShoulder'}
+ANCH={'cape_Head':'mixamorig:Head','cape_LeftArm':'mixamorig:LeftArm','cape_RightArm':'mixamorig:RightArm','cape_Spine2':'mixamorig:Spine2','cape_LeftShoulder':'mixamorig:LeftShoulder','cape_RightShoulder':'mixamorig:RightShoulder'}
 for cn,bn in ANCH.items():
     bb=arm.data.bones[bn]; e=ad.edit_bones.new(cn); e.head=bb.head_local; e.tail=bb.tail_local; e.matrix=bb.matrix_local.copy(); e.length=bb.length
 yc=0.03; th=np.degrees(np.arctan2(C[:,0],C[:,1]-yc))
@@ -95,7 +95,9 @@ def ss(e0,e1,x): t=np.clip((x-e0)/(e1-e0),0,1); return t*t*(3-2*t)
 anchor=ss(TOP-0.10,TOP+0.03,z)          # 1 on the mantle and hood
 side=ss(0.10,0.16,np.abs(C[:,0]))*(C[:,1]<yc+0.06)   # front mantle over the shoulders
 hood=ss(1.50,1.58,z)*(1-ss(0.17,0.24,np.abs(C[:,0])))   # hood rides the skull (Head), mantle rides Spine2/shoulders
-for cn,w in (('cape_Head',hood),('cape_Spine2',(1-side)*(1-hood)),('cape_LeftShoulder',side*(C[:,0]>0)*(1-hood)),('cape_RightShoulder',side*(C[:,0]<=0)*(1-hood))): Wt[:,bi[cn]]+=anchor*w
+armw=ss(0.22,0.28,np.abs(C[:,0]))*(1-ss(1.50,1.56,z))*(1-hood)   # outer mantle over the deltoid rides the upper arm (no arm through the cloak at full draw)
+for cn,w in (('cape_Head',hood),('cape_Spine2',(1-side)*(1-hood)*(1-armw)),('cape_LeftShoulder',side*(C[:,0]>0)*(1-hood)*(1-armw)),('cape_RightShoulder',side*(C[:,0]<=0)*(1-hood)*(1-armw)),
+             ('cape_LeftArm',armw*(C[:,0]>0)),('cape_RightArm',armw*(C[:,0]<=0))): Wt[:,bi[cn]]+=anchor*w
 ang=np.stack([np.clip(1-angd(th,c['theta'])/22.0,0,1)+1e-4 for c in chains],1); ang/=np.maximum(ang.sum(1,keepdims=True),1e-6)
 for k,c in enumerate(chains):
     J=np.array(c['joints']); hz=J[:,2]

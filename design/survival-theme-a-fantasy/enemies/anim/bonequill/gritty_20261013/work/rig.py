@@ -54,7 +54,7 @@ def chain(u,knots,bl):
         lo=1.0 if i==0 else ss(knots[i]-bl,knots[i]+bl,u); hi=1.0 if i==len(knots)-2 else 1-ss(knots[i+1]-bl,knots[i+1]+bl,u); w[:,i]=lo*hi
     return w/np.maximum(w.sum(1,keepdims=True),1e-9)
 t=part==0
-zc=1.57+np.clip(y+0.08,0,0.2)*0.10; hd=ss(zc-0.008,zc+0.008,z)
+zc=1.57+np.clip(y+0.08,0,0.2)*0.10; hd=ss(zc-0.008,zc+0.008,z)*(1-ss(0.09,0.11,np.abs(x)))   # skull only: pauldron tips beside the jaw stay on the torso
 cw=chain(z,[-9,1.12,1.22,1.32,1.50,9],0.02)*(1-hd)[:,None]
 for i,n in enumerate(('Hips','Spine','Spine1','Spine2','Neck')): add(n,cw[:,i]*t)
 add('Head',hd*t)

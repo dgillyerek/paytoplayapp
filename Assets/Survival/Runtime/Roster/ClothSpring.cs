@@ -310,6 +310,12 @@ namespace Survival.Domain.Roster
         public const float ElasticityPerStep = 0.3f;
         public const float GravityStepMetres = 0.005f;
         public const int ConstraintIterations = 2;
+        /// <summary>Max particle speed relative to its animated rest, metres per 60 Hz step (1.8 m/s): no whip after a fast pose change.</summary>
+        public const float MaxRelativeSpeedPerStep = 0.018f;
+        /// <summary>Max collider push per joint per 60 Hz step: a fast-moving hand/arm capsule eases the cloth out instead of snapping it.</summary>
+        public const float MaxPushPerStep = 0.006f;
+        /// <summary>Fraction of a constraint correction (angle / collider / length) that may turn into velocity. 0 = position-only, no fighting.</summary>
+        public const float ConstraintVelocityKeep = 0.05f;
 
         private readonly ClothChainSpec _chain;
         private readonly float _scale;
@@ -319,6 +325,7 @@ namespace Survival.Domain.Roster
         private readonly Vector3[] _lastTarget;
         private readonly Vector3[] _stepTarget;
         private readonly float[] _restLength;
+        private readonly Vector3[] _preConstraint;
         private float[,] _allowed = new float[0, 0];
         private ClothCollider[] _lastColliders = Array.Empty<ClothCollider>();
         private ClothCollider[] _stepColliders = Array.Empty<ClothCollider>();
@@ -335,6 +342,7 @@ namespace Survival.Domain.Roster
             _lastTarget = new Vector3[n];
             _stepTarget = new Vector3[n];
             _restLength = new float[n - 1];
+            _preConstraint = new Vector3[n];
         }
 
         public ClothChainSpec Chain => _chain;
@@ -441,6 +449,16 @@ namespace Survival.Domain.Roster
                     var elastic = 1f - (float)Math.Pow(1.0 - (stiffness * ElasticityPerStep), k);
                     var maxDevScale = 2f * (1f - stiffness);
                     var v = (_p[i] - _prev[i]) * retention;
+                    var previousTarget = Vector3.Lerp(_lastTarget[i], _target[i], (float)(s - 1) / steps);
+                    var targetMove = _stepTarget[i] - previousTarget;
+                    var relV = v - targetMove;
+                    var maxV = MaxRelativeSpeedPerStep * _scale * k;
+                    var relLen = relV.Length();
+                    if (relLen > maxV && relLen > 1e-9f)
+                    {
+                        v = targetMove + (relV * (maxV / relLen));
+                    }
+
                     _prev[i] = _p[i] + inherit;
                     var p = _p[i] + v + gravity + inherit;
                     p += (_stepTarget[i] - p) * elastic;
@@ -455,14 +473,21 @@ namespace Survival.Domain.Roster
                     _p[i] = p;
                 }
 
+                Array.Copy(_p, _preConstraint, _p.Length);
                 for (var iter = 0; iter < ConstraintIterations; iter++)
                 {
                     for (var i = 1; i < _p.Length; i++)
                     {
                         LimitAngle(i, limit);
-                        Collide(i);
+                        Collide(i, k);
                         KeepLength(i);
                     }
+                }
+
+                // constraint corrections move the cloth but (mostly) do not feed its velocity: no collider fighting, no ringing
+                for (var i = 1; i < _p.Length; i++)
+                {
+                    _prev[i] += (_p[i] - _preConstraint[i]) * (1f - ConstraintVelocityKeep);
                 }
             }
 
@@ -501,7 +526,7 @@ namespace Survival.Domain.Roster
             _p[i] = _p[i - 1] + (Vector3.Transform(r, q) * dirLen);
         }
 
-        private void Collide(int i)
+        private void Collide(int i, float k)
         {
             for (var j = 0; j < _stepColliders.Length; j++)
             {
@@ -532,7 +557,7 @@ namespace Survival.Domain.Roster
                 }
 
                 normal /= nLen;
-                var push = (allowed - dist) / Math.Max(t, 0.5f);
+                var push = Math.Min((allowed - dist) / Math.Max(t, 0.5f), MaxPushPerStep * _scale * k);
                 _p[i] += normal * push;
             }
         }

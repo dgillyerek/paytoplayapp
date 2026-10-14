@@ -14,7 +14,7 @@ bow=imp(W+'/BONEQUILL_bow.fbx'); arrow=imp(W+'/BONEQUILL_bonearrow_purple_fletch
 with bpy.data.libraries.load(W+'/cape.blend') as (s,d): d.objects=['BONEQUILL_cape','BONEQUILL_cape_rig']
 for o in d.objects: sc.collection.objects.link(o)
 crig=bpy.data.objects['BONEQUILL_cape_rig']
-for cn,bn in (('cape_Head','Head'),('cape_Spine2','Spine2'),('cape_LeftShoulder','LeftShoulder'),('cape_RightShoulder','RightShoulder')):
+for cn,bn in (('cape_Head','Head'),('cape_LeftArm','LeftArm'),('cape_RightArm','RightArm'),('cape_Spine2','Spine2'),('cape_LeftShoulder','LeftShoulder'),('cape_RightShoulder','RightShoulder')):
     c=crig.pose.bones[cn].constraints.new('COPY_TRANSFORMS'); c.target=arm; c.subtarget=P_+bn
 A={k:bpy.data.actions['BONEQUILL_'+k] for k in ('rest','walk','attack')}
 rep={}

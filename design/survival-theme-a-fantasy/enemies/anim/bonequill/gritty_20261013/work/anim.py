@@ -36,14 +36,21 @@ def ik(S,H,L1,L2,pole):
     a=(L1*L1-L2*L2+D*D)/(2*D); h=math.sqrt(max(L1*L1-a*a,0)); p=np.array(pole,float); p=p-(p@u)*u; p/=np.linalg.norm(p)
     E=S+u*a+p*h; return Vector(E-S),Vector(H-E)
 LA=(J['LeftForeArm']-J['LeftArm']).length; LF=(J['LeftHand']-J['LeftForeArm']).length
-# ---------- draw pose (reference f10) ----------
+# ---------- draw pose (reference f10): archer stance, torso turned side-on so the bow shoulder points at the target ----------
 def legs(stance=True):
     for s,sg in (('Left',1),('Right',-1)): rot(s+'UpLeg',(0,1,0),ADD*sg); rot(s+'Foot',(0,1,0),-ADD*sg)
-def draw_pose(pull=0.0):
-    reset(); legs()
-    aim('LeftArm',(-0.35,-0.94,0.02)); aim('LeftForeArm',(-0.35,-0.94,0.02))
-    S=PB[P_+'RightArm'].head; H=Vector((-0.02,-0.10+pull,1.45))
-    up,fo=ik(S,H,LA,LF,(-1,0.6,0.25)); aim('RightArm',up); aim('RightForeArm',fo)
+YAW=-55.0
+def spine_yaw(deg):
+    for n,k in (('Spine',0.3),('Spine1',0.35),('Spine2',0.35)): rot(n,(0,0,1),deg*k)
+    rot('Neck',(0,0,1),-deg*0.5)   # neck takes half the counter-turn so the head band never twists hard
+    upd()
+def draw_pose(pull=0.0,yaw=YAW):
+    reset(); legs(); spine_yaw(yaw)
+    S=PB[P_+'LeftArm'].head.copy(); D=(Vector((-0.07,-0.62,1.52))-S).normalized()   # bow hand straight ahead of the face, so the arrow flies forward
+    aim('LeftArm',D); aim('LeftForeArm',D)                    # bow arm straight out from the shoulder toward the target
+    G=PB[P_+'LeftHand'].head.copy()
+    H=Vector((-0.09-pull,-0.17+pull*0.4,1.52))   # string hand at the right jaw; elbow out behind at shoulder height
+    S2=PB[P_+'RightArm'].head; up,fo=ik(S2,H,LA,LF,(-1.0,0.35,-0.2)); aim('RightArm',up); aim('RightForeArm',fo)
 draw_pose(); upd()
 RL=PB[P_+'LeftHand'].matrix.to_3x3().to_quaternion()      # left-hand armature rotation at full draw (bow upright)
 def lefthand_hold(): setrot('LeftHand',RL)
@@ -73,14 +80,15 @@ def dirs():
     upd(); return [PB[P_+n].matrix.to_3x3().col[1].normalized().copy() for n in ('LeftArm','LeftForeArm','RightArm','RightForeArm')]
 reset(); legs(); rest_arms(); D0=dirs()
 draw_pose(); D10=dirs()
-reset(); legs(); aim('LeftArm',(-0.30,-0.95,-0.05)); aim('LeftForeArm',(-0.30,-0.95,-0.05))
-S=PB[P_+'RightArm'].head; up,fo=ik(S,Vector((0.03,-0.33,1.42)),LA,LF,(-1,0.2,0.1)); aim('RightArm',up); aim('RightForeArm',fo); D6=dirs()
+draw_pose(yaw=YAW*0.6); 
+S=PB[P_+'LeftArm'].head; Dn=Vector((0.15,-0.95,-0.25)).normalized(); aim('LeftArm',Dn); aim('LeftForeArm',Dn)
+G=PB[P_+'LeftHand'].head.copy(); up,fo=ik(PB[P_+'RightArm'].head,Vector((-0.13,-0.27,1.42)),LA,LF,(-1.0,0.35,-0.2)); aim('RightArm',up); aim('RightForeArm',fo); D6=dirs()
 draw_pose(pull=0.08); D16=dirs()
-KEYS=[(0,D0),(6,D6),(10,D10),(14,D10),(17,D16),(30,D0)]
+KEYS=[(0,D0,0),(6,D6,YAW*0.6),(10,D10,YAW),(14,D10,YAW),(17,D16,YAW),(30,D0,0)]
 for f in range(31):
     i=max(j for j in range(len(KEYS)) if KEYS[j][0]<=f); j=min(i+1,len(KEYS)-1); f0,f1=KEYS[i][0],KEYS[j][0]
     t=ease((f-f0)/(f1-f0)) if f1>f0 else 0
-    reset(); legs()
+    reset(); legs(); spine_yaw(KEYS[i][2]+(KEYS[j][2]-KEYS[i][2])*t)
     for k,n in enumerate(('LeftArm','LeftForeArm','RightArm','RightForeArm')): aim(n,KEYS[i][1][k].lerp(KEYS[j][1][k],t).normalized())
     lefthand_hold(); head_forward(); key(f)
 reset(); arm.animation_data.action=A['rest']; sc.frame_set(0)
