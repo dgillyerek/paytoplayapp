@@ -114,30 +114,50 @@ public class BonequillBowGripUnityTests
     [InlineData("rest")]
     [InlineData("walk")]
     [InlineData("attack")]
-    public void Bowstring_keeps_1cm_clear_of_the_bow_hand_except_during_the_draw(string clip)
+    public void Bowstring_keeps_2cm_clear_of_body_cloak_and_bow_arm_with_string_away_when_carried(string clip)
     {
         var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(FindRepoRoot(), BonequillMotion.DesignDir, "work", "string_clearance.json"))).RootElement;
-        // The clearance file was computed with the same bow roll the runtime grip uses.
-        var roll = doc.GetProperty("bow_roll_deg").GetDouble();
-        var q = BonequillAttack.BowGrip.GripRot;
-        var expected = 180.0 + roll;
-        var angle = 2.0 * Math.Acos(Math.Abs(q[3])) * 180.0 / Math.PI;
-        Assert.Equal(360.0 - expected, angle, 1);
+        var grip = BonequillAttack.BowGrip;
+        Assert.Equal(doc.GetProperty("roll_rest_deg").GetDouble(), grip.RollRestDeg, 3);
+        Assert.Equal(doc.GetProperty("roll_draw_deg").GetDouble(), grip.RollDrawDeg, 3);
         var samples = doc.GetProperty("per_sample").GetProperty(clip).EnumerateArray().ToArray();
         Assert.Equal(61, samples.Length);
         foreach (var s in samples)
         {
-            var f = s[0].GetDouble();
-            var drawing = s[3].GetBoolean();
-            Assert.Equal(clip == "attack" && f >= 4 && f <= 17, drawing);
-            if (drawing)
+            var f = (float)s[0].GetDouble();
+            // Runtime roll curve == the curve the clearance was measured with.
+            Assert.True(Math.Abs(s[5].GetDouble() - grip.RollDeg(clip == "attack", f)) < 0.05, $"{clip} f{f}: roll curve differs from Blender");
+            Assert.Equal(clip == "attack" && f >= 10 && f <= 17, s[4].GetBoolean());
+            Assert.True(s[1].GetDouble() >= 0.02, $"{clip} f{f}: string {s[1].GetDouble() * 100:0.0} cm from the body/bow hand/forearm");
+            Assert.True(s[2].GetDouble() >= 0.02, $"{clip} f{f}: string {s[2].GetDouble() * 100:0.0} cm from the cloak");
+            Assert.True(s[3].GetDouble() >= 0.02, $"{clip} f{f}: string {s[3].GetDouble() * 100:0.0} cm from the bow-arm bones");
+            if (clip != "attack" || f <= 4 || f >= 24)
             {
-                continue;
+                Assert.True(s[6].GetDouble() > 0.5, $"{clip} f{f}: carried string not on the side away from the body");
             }
-
-            Assert.True(s[1].GetDouble() >= 0.01, $"{clip} f{f}: string {s[1].GetDouble() * 100:0.0} cm from hand/finger/forearm mesh");
-            Assert.True(s[2].GetDouble() >= 0.01, $"{clip} f{f}: string {s[2].GetDouble() * 100:0.0} cm from hand/finger/forearm bones");
+            else if (f >= 10 && f <= 17)
+            {
+                Assert.True(s[6].GetDouble() < 0, $"{clip} f{f}: string should face him from nock to release");
+            }
         }
+    }
+
+    [Fact]
+    public void Roll_eases_smoothly_and_only_spins_about_the_bow_long_axis()
+    {
+        var grip = BonequillAttack.BowGrip;
+        var prev = grip.RollDeg(true, 0f);
+        for (var f = 0.25f; f <= 30f; f += 0.25f)
+        {
+            var r = grip.RollDeg(true, f);
+            Assert.True(Math.Abs(r - prev) <= 12f, $"roll jumps {Math.Abs(r - prev):0.0} deg at f{f}");
+            prev = r;
+            var axis = Rotate(grip.UnityRotation(r), new[] { 0f, 0f, 1f });
+            Assert.True(axis[2] > 0.999f);
+        }
+
+        Assert.Equal(grip.RollRestDeg, grip.RollDeg(false, 12f));
+        Assert.Equal(grip.RollDrawDeg, grip.RollDeg(true, 14f));
     }
 
     private static float[] Rotate(float[] q, float[] v)

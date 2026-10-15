@@ -1,3 +1,4 @@
+import sys; sys.path.insert(0,'/workspace/bonequill_gritty/work'); from bowroll import bowrot, roll
 """Bow-vs-body clearance on every frame and half-frame of rest, walk and attack: bow vertices inside (or within 1 cm of) the body
 surface, and bow edges crossing the cloak. The left hand/forearm (the fist around the grip) is excluded from the body test."""
 import bpy,json,math,hashlib,numpy as np
@@ -27,7 +28,7 @@ for an in ('rest','walk','attack'):
     for k in range(61):
         f=k/2; sc.frame_set(int(f),subframe=f-int(f)); dg=bpy.context.evaluated_depsgraph_get()
         M=arm.matrix_world@arm.pose.bones[P_+'LeftHand'].matrix; R=M.to_3x3().normalized()
-        BW=Matrix.Translation(M.to_translation()+R@op)@(R@oR).to_4x4()
+        oR=bowrot(an,f); BW=Matrix.Translation(M.to_translation()+R@op)@(R@oR).to_4x4()
         Pb=(np.c_[BV,np.ones(len(BV))]@np.array(BW).T)[:,:3]
         e=body.evaluated_get(dg); m=e.to_mesh(); V=[body.matrix_world@v.co for v in m.vertices]; e.to_mesh_clear()
         Bi=BW.inverted(); nh=0

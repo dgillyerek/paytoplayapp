@@ -1,3 +1,4 @@
+import sys; sys.path.insert(0,'/workspace/bonequill_gritty/work'); from bowroll import bowrot, roll
 import math
 import bpy,json,numpy as np
 from mathutils import Vector,Matrix
@@ -18,7 +19,7 @@ for an,n in (('BONEQUILL_rest',31),('BONEQUILL_walk',31),('BONEQUILL_attack',31)
     for f in range(n):
         sc.frame_set(f); dg=bpy.context.evaluated_depsgraph_get(); e=body.evaluated_get(dg); m=e.to_mesh()
         M=arm.matrix_world@arm.pose.bones[P_+'LeftHand'].matrix; R=M.to_3x3().normalized()
-        BW=Matrix.Translation(M.to_translation()+R@off_p)@(R@off_R).to_4x4(); Bi=BW.inverted()
+        off_R=bowrot(an[10:],f); BW=Matrix.Translation(M.to_translation()+R@off_p)@(R@off_R).to_4x4(); Bi=BW.inverted()
         cnt=0; mind=9
         for i in hidx:
             p=Bi@(body.matrix_world@m.vertices[i].co); loc,nrm,_,d=bvh.find_nearest(p)

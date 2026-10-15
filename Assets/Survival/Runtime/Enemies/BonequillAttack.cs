@@ -39,17 +39,20 @@ namespace Survival.Domain.Enemies
         };
 
         /// <summary>Bow grip in mixamorig:LeftHand bone space from Blender (design work/grip_unity.json): pivot at the grip
-        /// centre on the hand centreline, bow axis along the knuckle line, limb in the palm, rolled 45 deg about the long axis so
-        /// the string runs past the inner forearm (work/string_clearance.json). Unity parents the bow to the
+        /// centre on the hand centreline, bow axis along the knuckle line, limb in the palm. Rolled about the long axis per frame
+        /// (work/bowroll.py): string away from the body when carried, turned toward him only from nock to release (work/string_clearance.json). Unity parents the bow to the
         /// hand bone at this offset (mirror-X bone-space conversion) instead of fitting a world pose.</summary>
         public static readonly BlenderBoneGrip BowGrip = new BlenderBoneGrip(
             new[] { 0.04200f, 0.09400f, -0.08380f },
-            new[] { 0f, 0f, -0.92388f, 0.38268f },   // grip axis flip (180 deg) plus a 45 deg roll about the bow's long axis: string to the inner (palm) side, clear of fingers and wrist
+            new[] { 0f, 0f, 1f, 0f },   // grip axis flip (180 deg about bone z); the roll about the bow's long axis is per frame below
             "mixamorig:LeftHandFingers1",
             new[] { -0.01620f, 0.08500f, -0.08380f },
             "mixamorig:LeftHandThumb1",
             new[] { 0.04439f, 0.03838f, -0.05479f },
-            new[] { 0.04243f, 0.09263f, -0.08380f });
+            new[] { 0.04243f, 0.09263f, -0.08380f },
+            200f,   // rest/walk carry: string on the side away from the body and legs
+            30f,    // nock to release: string toward him
+            new[] { 4f, 10f, 17f, 24f });
 
         public static readonly BlenderRigIdlePropSpec[] IdleProps =
         {

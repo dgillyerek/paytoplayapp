@@ -175,6 +175,7 @@ namespace Survival.Unity
         /// <summary>Call after the rig evaluated <paramref name="frame"/>.</summary>
         public void Tick(float frame, bool inClip, int cycle)
         {
+            ApplyGripRoll(true, frame);
             if (!_built)
             {
                 return;
@@ -250,6 +251,7 @@ namespace Survival.Unity
         /// <summary>Hides every prop and effect (another pose was picked).</summary>
         public void Deactivate()
         {
+            ApplyGripRoll(false, 0f);
             foreach (var view in _views)
             {
                 ResetBlock(view);
@@ -629,7 +631,27 @@ namespace Survival.Unity
                     filter.transform.SetPositionAndRotation(t.position, t.rotation * Quaternion.Inverse(meshFrame));
                 }
             }
+
+            _gripRoot = t;
+            _grip = grip;
+            ApplyGripRoll(false, 0f);
         }
+
+        /// <summary>Rolls the bone-gripped prop about its long axis: rest/walk carry (string away from the body), eased to the draw
+        /// roll from nock to release in the attack. The mesh axis correction lives below the root, so only the root turns.</summary>
+        private void ApplyGripRoll(bool attack, float frame)
+        {
+            if (_gripRoot == null || _grip == null)
+            {
+                return;
+            }
+
+            var q = _grip.UnityRotation(_grip.RollDeg(attack, frame));
+            _gripRoot.localRotation = new Quaternion(q[0], q[1], q[2], q[3]);
+        }
+
+        private Transform? _gripRoot;
+        private BlenderBoneGrip? _grip;
 
         private static Vector3 V(float[] p) => new Vector3(p[0], p[1], p[2]);
 

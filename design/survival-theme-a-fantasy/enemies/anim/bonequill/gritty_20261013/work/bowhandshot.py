@@ -1,3 +1,4 @@
+import sys; sys.path.insert(0,'/workspace/bonequill_gritty/work'); from bowroll import bowrot, roll
 import bpy,math,json
 from mathutils import Vector,Matrix
 W='/workspace/bonequill_gritty/work'; sc=bpy.context.scene; arm=bpy.data.objects['BONEQUILL_rig']; P_='mixamorig:'
@@ -10,7 +11,7 @@ sc.render.engine='BLENDER_WORKBENCH'; sc.display.shading.light='STUDIO'; sc.disp
 cam=bpy.data.objects.new('cam',bpy.data.cameras.new('cam')); sc.collection.objects.link(cam); sc.camera=cam; cam.data.type='ORTHO'; cam.data.ortho_scale=0.32
 for an,f in (('BONEQUILL_rest',0),('BONEQUILL_walk',8),('BONEQUILL_attack',10)):
     arm.animation_data.action=A[an]; sc.frame_set(f); M=bm(); R=M.to_3x3().normalized()
-    g=M.to_translation()+R@op; bow.matrix_world=Matrix.Translation(g)@(R@oR).to_4x4()
+    oR=bowrot(an[10:],f); g=M.to_translation()+R@op; bow.matrix_world=Matrix.Translation(g)@(R@oR).to_4x4()
     ax=(R@oR)@Vector((0,0,1))
     for k,d in {'axis':ax.normalized()*-1,'outside':Vector((1,-0.3,0.1)),'inside':Vector((-1,-0.6,0.15)),'front':Vector((0.15,-1,0.25))}.items():
         d.normalize(); cam.location=g+d*2.5; cam.rotation_euler=(-d).to_track_quat('-Z','Y').to_euler()

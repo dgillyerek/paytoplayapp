@@ -1,9 +1,10 @@
+import sys; sys.path.insert(0,'/workspace/bonequill_gritty/work'); from bowroll import bowrot, roll
 """Bone-space bow grip for Unity: grip pose relative to mixamorig:LeftHand (Blender bone space), the two hand-child bone heads
 Unity uses to confirm axes/scale at runtime, and the centre of the closed hand around the grip axis per clip (rest, walk, attack)."""
 import bpy,json,math,numpy as np
 from mathutils import Vector,Matrix
 W='/workspace/bonequill_gritty/work'; sc=bpy.context.scene; arm=bpy.data.objects['BONEQUILL_rig']; P='mixamorig:'; body=bpy.data.objects['BONEQUILL_body']
-FI=json.load(open(W+'/fist.json')); GL=Vector(FI['grip_local']); RFIX=(Matrix(((-1,0,0),(0,-1,0),(0,0,1)))@Matrix.Rotation(math.radians(45),3,'Z'))
+FI=json.load(open(W+'/fist.json')); GL=Vector(FI['grip_local']); RFIX=Matrix(((-1,0,0),(0,-1,0),(0,0,1)))
 hb=arm.data.bones[P+'LeftHand']; Hinv=hb.matrix_local.inverted()
 kids={n:list(Hinv@arm.data.bones[P+n].head_local) for n in ('LeftHandFingers1','LeftHandThumb1')}
 ids=set(body.vertex_groups[P+n].index for n in ('LeftHand','LeftHandFingers1','LeftHandFingers2','LeftHandFingers3','LeftHandThumb1','LeftHandThumb2'))

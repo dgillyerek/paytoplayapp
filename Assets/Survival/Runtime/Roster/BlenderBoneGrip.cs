@@ -11,8 +11,12 @@ namespace Survival.Domain.Roster
     /// </summary>
     public sealed class BlenderBoneGrip
     {
-        public BlenderBoneGrip(float[] gripPos, float[] gripRot, string childA, float[] childAHead, string childB, float[] childBHead, float[] handCentre)
+        public BlenderBoneGrip(float[] gripPos, float[] gripRot, string childA, float[] childAHead, string childB, float[] childBHead, float[] handCentre,
+            float rollRestDeg = 0f, float rollDrawDeg = 0f, float[]? rollKeys = null)
         {
+            RollRestDeg = rollRestDeg;
+            RollDrawDeg = rollDrawDeg;
+            RollKeys = rollKeys ?? new[] { 0f, 0f, 0f, 0f };
             GripPos = gripPos ?? throw new ArgumentNullException(nameof(gripPos));
             GripRot = gripRot ?? throw new ArgumentNullException(nameof(gripRot));
             ChildA = childA;
@@ -35,6 +39,55 @@ namespace Survival.Domain.Roster
 
         /// <summary>Centre of the closed hand around the grip axis, Blender bone space (worst sample over rest, walk and attack).</summary>
         public float[] HandCentre { get; }
+
+        /// <summary>Roll about the prop's long axis (Blender prop-local z, after <see cref="GripRot"/>) in rest and walk.</summary>
+        public float RollRestDeg { get; }
+
+        /// <summary>Roll held in the attack from <see cref="RollKeys"/>[1] to [2] (nock to release).</summary>
+        public float RollDrawDeg { get; }
+
+        /// <summary>Attack frames: start easing to the draw roll, reach it, leave it, back to the rest roll (smoothstep eases).</summary>
+        public float[] RollKeys { get; }
+
+        public float RollDeg(bool attack, float frame)
+        {
+            float a = RollKeys[0], b = RollKeys[1], c = RollKeys[2], e = RollKeys[3];
+            if (!attack || frame <= a || frame >= e)
+            {
+                return RollRestDeg;
+            }
+
+            if (frame < b)
+            {
+                return RollRestDeg + (RollDrawDeg - RollRestDeg) * Smooth((frame - a) / (b - a));
+            }
+
+            if (frame <= c)
+            {
+                return RollDrawDeg;
+            }
+
+            return RollDrawDeg + (RollRestDeg - RollDrawDeg) * Smooth((frame - c) / (e - c));
+        }
+
+        private static float Smooth(float x)
+        {
+            x = Math.Max(0f, Math.Min(1f, x));
+            return x * x * (3f - 2f * x);
+        }
+
+        /// <summary>Blender bone-space prop rotation for a roll: GripRot * Rz(roll), quaternion x, y, z, w.</summary>
+        public float[] BlenderRotation(float rollDeg)
+        {
+            var h = rollDeg * Math.PI / 360.0;
+            float rz = (float)Math.Sin(h), rw = (float)Math.Cos(h);
+            float x = GripRot[0], y = GripRot[1], z = GripRot[2], w = GripRot[3];
+            // (x,y,z,w) * (0,0,rz,rw)
+            return new[] { x * rw + y * rz, y * rw - x * rz, z * rw + w * rz, w * rw - z * rz };
+        }
+
+        /// <summary>Unity bone-space prop rotation for a roll (mirror-X of <see cref="BlenderRotation"/>).</summary>
+        public float[] UnityRotation(float rollDeg) => ToUnityRotation(BlenderRotation(rollDeg));
 
         public static float[] ToUnityPoint(float[] p) => new[] { -p[0], p[1], p[2] };
 
