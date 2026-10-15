@@ -1,0 +1,169 @@
+{
+ "names": [
+  "mixamorig:LeftHandFingers1",
+  "mixamorig:LeftHandFingers2",
+  "mixamorig:LeftHandFingers3",
+  "mixamorig:LeftHandThumb1",
+  "mixamorig:LeftHandThumb2"
+ ],
+ "finger_curl_deg": [
+  15,
+  35,
+  20
+ ],
+ "thumb_axis_hand": [
+  0.0,
+  0.0,
+  -1.0
+ ],
+ "thumb_deg": [
+  60,
+  20
+ ],
+ "finger_local_quat": {
+  "mixamorig:LeftHandFingers1": [
+   0.9914448857307434,
+   -2.0779650000690708e-08,
+   -2.97072286770117e-08,
+   -0.13052617013454437
+  ],
+  "mixamorig:LeftHandFingers2": [
+   0.9537169337272644,
+   4.272270359706454e-08,
+   -8.593364952957927e-08,
+   -0.30070582032203674
+  ],
+  "mixamorig:LeftHandFingers3": [
+   0.9848077893257141,
+   -3.026206840672785e-08,
+   1.3464256198858493e-07,
+   -0.17364813387393951
+  ],
+  "mixamorig:LeftHandThumb1": [
+   0.866025447845459,
+   -1.881947575554932e-08,
+   0.02801460400223732,
+   -0.4992145895957947
+  ],
+  "mixamorig:LeftHandThumb2": [
+   0.9848077893257141,
+   -2.7424999160530206e-08,
+   0.009729377925395966,
+   -0.17337535321712494
+  ]
+ },
+ "grip_local": [
+  0.032,
+  0.128,
+  0.008657547369487428
+ ],
+ "grip_rot_local": [
+  [
+   -1,
+   0,
+   0
+  ],
+  [
+   0,
+   -1,
+   0
+  ],
+  [
+   0,
+   0,
+   1
+  ]
+ ],
+ "min_hand_to_grip_axis": 0.0221,
+ "wrap_deg_bind": 270,
+ "finger_chain_length_change": -0.0051,
+ "max_finger_length_change": 0.0051,
+ "finger_slice_centroid_ratio_info": [
+  [
+   0.0718,
+   0.0674,
+   -0.0617
+  ],
+  [
+   0.0783,
+   0.0743,
+   -0.0505
+  ],
+  [
+   0.0907,
+   0.0871,
+   -0.0397
+  ],
+  [
+   0.0761,
+   0.0738,
+   -0.0309
+  ]
+ ],
+ "edge_stretch_p99": 1.2838413305466343,
+ "max_edge_stretch": 2.023117911144673,
+ "finger_verts": 651,
+ "thumb_verts": 237,
+ "palm_verts": 247,
+ "joints_fingers": [
+  [
+   -0.022635075306029373,
+   0.135
+  ],
+  [
+   -0.010691507246547433,
+   0.15880864054326688
+  ],
+  [
+   0.00462485346072175,
+   0.16884059172121402
+  ],
+  [
+   0.009429677952957294,
+   0.1827402754117759
+  ]
+ ],
+ "joints_thumb": [
+  [
+   0.029083010809905992,
+   0.0654891093037854,
+   0.05843822862613702
+  ],
+  [
+   0.01898013434841997,
+   0.1312333141826334,
+   0.05470552833769856
+  ],
+  [
+   0.010714144516295043,
+   0.18502402726532718,
+   0.05165150082897618
+  ]
+ ],
+ "knuckle_y": 0.135,
+ "source": "fingers4.py (posed finger bones on the original Meshy hand, no sculpt)",
+ "finger_surface_path_rest_posed_ratio": [
+  [
+   0.0924,
+   0.0872,
+   -0.0562
+  ],
+  [
+   0.0775,
+   0.0722,
+   -0.0684
+  ],
+  [
+   0.0798,
+   0.0744,
+   -0.0684
+  ],
+  [
+   0.0674,
+   0.0639,
+   -0.0528
+  ]
+ ],
+ "finger_surface_path_change_max": 0.0684,
+ "finger_length_note": "max_finger_length_change = finger centreline through the bone weights, rest vs posed (same measure as Bonequill fingers.json). Surface paths knuckle->tip on the palm side shorten 5-7% (skin compressing on the inside of the curl; nothing stretches)."
+}

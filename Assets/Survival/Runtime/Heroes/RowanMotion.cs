@@ -4,8 +4,8 @@ namespace Survival.Domain.Heroes
 {
     /// <summary>
     /// Rowan A-pose rebuild (2026-10-14, #64): Derek-approved A-pose Meshy model (1.78M faces) decimated to 200k with its texture,
-    /// 20-bone mixamorig rig (no ToeBase) in Blender 5.2.2 (design .../rowan/fresh_20261013/work/apose_20261014). Face 100% on Head;
-    /// hands and fingers 100% on Hand (left hand sculpted into a fist round the bow grip), lower forearm 100% on ForeArm, no arm vertex
+    /// 25-bone mixamorig rig (20 body bones, no ToeBase, + 5 left-hand finger bones) in Blender 5.2.2 (design .../rowan/fresh_20261013/work/apose_20261014). Face 100% on Head;
+    /// right hand 100% on Hand; left hand = original Meshy shape with a 3-segment finger chain + 2-segment thumb (palm on LeftHand) keyed in a closed grip round the bow, lower forearm 100% on ForeArm, no arm vertex
     /// weighted to hips or torso (underarm sleeve shares with the arm-chain Shoulder bone so it never squashes into the ribs); belt 100% on Hips.
     /// Coat tails below the belt are a separate spring mesh (RowanCoat), never on the legs. Rest = arms down by the sides from the
     /// A-pose. Walk = 1 s in place at 30 fps, body bones only, head forward. Bow attack in RowanAttack. Imported Generic like the
@@ -22,8 +22,8 @@ namespace Survival.Domain.Heroes
         public const string AttackPoseName = BlenderRigAttackSpec.PoseName;
         public const string AttackFileName = RowanAttack.FileName;
         public const string RejectedMixamoFileName = "ROWAN_rig.fbx";
-        public const string RestMd5 = "3a050d3f30d73071fba86ef9daa3ab05";
-        public const string WalkMd5 = "c4f5f73aa14e9e25cbc6fb6c889d8073";
+        public const string RestMd5 = "83d9eb753fe91ec6e1348fa3cab3fb35";
+        public const string WalkMd5 = "c3b26e91a9ef102d05df4ec1ec8178ec";
         public const string AttackMd5 = RowanAttack.FileMd5;
 
         public const string RestPoseName = BlenderRigSpec.RestPoseName;
@@ -32,7 +32,7 @@ namespace Survival.Domain.Heroes
         public const float WalkSeconds = 1f;
         public const float WalkFrameRate = 30f;
         public const int WalkLastFrame = 30;
-        public const int BoneCount = 20;
+        public const int BoneCount = 25;
 
         public const string TextureFolder = "ROWAN_blenderig.fbm";
         public const string BaseColorFile = "ROWAN_fresh_basecolor_0.jpg";
@@ -63,7 +63,22 @@ namespace Survival.Domain.Heroes
             "mixamorig:LeftFoot",
             "mixamorig:RightUpLeg",
             "mixamorig:RightLeg",
-            "mixamorig:RightFoot"
+            "mixamorig:RightFoot",
+            "mixamorig:LeftHandFingers1",
+            "mixamorig:LeftHandFingers2",
+            "mixamorig:LeftHandFingers3",
+            "mixamorig:LeftHandThumb1",
+            "mixamorig:LeftHandThumb2"
+        };
+
+        /// <summary>Left-hand finger bones (v3): one 3-segment chain for the four fingers + a 2-segment thumb, all parented to LeftHand.</summary>
+        public static readonly string[] LeftFingerBoneNames =
+        {
+            "mixamorig:LeftHandFingers1",
+            "mixamorig:LeftHandFingers2",
+            "mixamorig:LeftHandFingers3",
+            "mixamorig:LeftHandThumb1",
+            "mixamorig:LeftHandThumb2"
         };
 
         /// <summary>Single bow on LeftHand (see RowanAttack.IdleProps).</summary>

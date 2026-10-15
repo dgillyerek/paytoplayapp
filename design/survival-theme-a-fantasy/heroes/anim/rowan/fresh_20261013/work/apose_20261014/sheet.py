@@ -1,6 +1,6 @@
 """Rowan A-pose sheets + Unity tracks (2026-10-14). Coat tails get a Blender spring PREVIEW of the Unity ClothSpringRig
 (stiffness 0.3 falling to the hem, damping 0.45, 35 deg limit, velocity clamp, leg + hand colliders) so the sheets show what the
-springs do; nothing on the coat is baked. Bow: one prop rigid on LeftHand in every clip, its grip inside the sculpted left fist (fist.py); bow vs hand/body checked every frame."""
+springs do; nothing on the coat is baked. Bow: one prop rigid on LeftHand in every clip, its grip inside the sculpted left fist (fingers.py); bow vs hand/body checked every frame."""
 import sys; sys.path.append("/home/box/.local/lib/python3.13/site-packages")
 import bpy, math, json, numpy as np
 from mathutils import Vector, Matrix
@@ -86,7 +86,7 @@ def wcol(name):
             if g.group==gi: w[v.index]=g.weight
     return w
 hw=wcol('Head'); face=np.nonzero(hw>0.999)[0]; band=np.nonzero((hw>0.01)&(hw<0.999))[0]; Hrest=arm.data.bones[P_+'Head'].matrix_local
-handv={s:np.nonzero(wcol(s+'Hand')>0.999)[0] for s in ('Left','Right')}
+handv={'Left':np.nonzero((wcol('LeftHand')+sum(wcol(x) for x in ('LeftHandFingers1','LeftHandFingers2','LeftHandFingers3','LeftHandThumb1','LeftHandThumb2')))>0.999)[0],'Right':np.nonzero(wcol('RightHand')>0.999)[0]}
 bodyv=np.nonzero((part==0)|(part==3)|(part==4))[0]
 FF=np.array([p.vertices[:] for p in me.polygons]); E=np.unique(np.sort(np.vstack([FF[:,[0,1]],FF[:,[1,2]],FF[:,[2,0]]]),1),axis=0); L0=np.linalg.norm(P0[E[:,0]]-P0[E[:,1]],axis=1)
 armE=np.isin(part[E[:,0]],(1,2))
@@ -115,7 +115,8 @@ def inside_count(tree,pts,tol=0.001,maxd=0.05):
 def bow_checks(Q,C):
     M=np.array(bow.matrix_world); D=BOWD@M[:3,:3].T+M[:3,3]
     th=BVHTree.FromPolygons([tuple(v) for v in Q],hpolys); tb=BVHTree.FromPolygons([tuple(v) for v in D],[]) if False else None
-    near=np.linalg.norm(D-np.array(bm('LeftHand').to_translation()),axis=1)<0.25
+    # the hand mesh is open at the wrist cut, so only bow samples within 9 cm of the grip centre can be inside the hand
+    near=np.linalg.norm(D-np.array(bow.matrix_world.to_translation()),axis=1)<0.09
     bh=inside_count(th,D[near])
     tbody=BVHTree.FromPolygons([tuple(v) for v in Q],nonhand); tc=BVHTree.FromPolygons([tuple(v) for v in C],cpolys)
     bb=inside_count(tbody,D[::3],tol=0.004); bc=inside_count(tc,D[::3],tol=0.004)
@@ -141,8 +142,8 @@ def UQ(Rb):
     return [round(q.x,5),round(q.y,5),round(q.z,5),round(q.w,5)]
 REF,REL,V0=10,14,8; SPD=14.0
 arm.animation_data.action=A['attack']; sc.frame_set(REF)
-# bow grip inside the left fist (fist.json: grip axis through the palm centre, bow long axis along it, string toward the wrist)
-FI=json.load(open(W+'/fist.json')); bow_off=(Vector(FI['grip_local']),Matrix(FI['grip_rot_local']))
+# bow grip inside the left fist (grip.json: grip axis through the palm centre, bow long axis along it, string toward the wrist)
+FI=json.load(open(W+'/grip.json')); bow_off=(Vector(FI['grip_local']),Matrix(FI['grip_rot_local']))
 ML=bm('LeftHand'); RL=ML.to_3x3().normalized(); grip=ML.to_translation()+RL@bow_off[0]
 MR=bm('RightHand'); RR=MR.to_3x3().normalized(); nock=MR.to_translation()+RR@Vector((0,0.05,0))
 fw=(grip-nock).normalized(); yax=-fw; xax=Vector((1,0,0)); xax=(xax-xax.dot(yax)*yax).normalized(); zax=xax.cross(yax); Rar=Matrix((xax,yax,zax)).transposed()

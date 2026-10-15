@@ -6,11 +6,12 @@ namespace Survival.Domain.Tests;
 public sealed class RowanFreshTests
 {
     [Fact]
-    public void Fresh_rig_is_20_bone_generic_with_rest_walk_attack()
+    public void Fresh_rig_is_25_bone_generic_with_left_finger_chain_and_rest_walk_attack()
     {
-        Assert.Equal(20, RowanMotion.BoneNames.Length);
+        Assert.Equal(25, RowanMotion.BoneNames.Length);
         Assert.Equal(RowanMotion.BoneCount, RowanMotion.Spec.BoneCount);
-        Assert.Equal(MixamoHumanoidBones.Names.Where(n => !n.EndsWith("ToeBase", StringComparison.Ordinal)).ToArray(), RowanMotion.BoneNames);
+        Assert.Equal(MixamoHumanoidBones.Names.Where(n => !n.EndsWith("ToeBase", StringComparison.Ordinal)).Concat(RowanMotion.LeftFingerBoneNames).ToArray(), RowanMotion.BoneNames);
+        Assert.Equal(5, RowanMotion.LeftFingerBoneNames.Length);
         Assert.Equal(BlenderRigAvatar.CustomGeneric, RowanMotion.Spec.Avatar);
         Assert.Equal(new[] { "rest", "walk", "attack" }, RowanMotion.PoseNames);
         Assert.Equal(4, RowanAttack.Spec.Tracks.Length);
@@ -109,7 +110,7 @@ public sealed class RowanFreshTests
     }
 
     [Fact]
-    public void Attack_arms_never_enter_chest_or_coat_and_bow_never_enters_the_fist()
+    public void Attack_arms_never_enter_chest_or_coat_and_bow_never_enters_the_gripping_hand()
     {
         var work = Path.Combine(FindRepoRoot(), RowanMotion.DesignDir, "work", "apose_20261014");
         foreach (var file in new[] { "pen.json", "pen_rest_walk.json" })
@@ -138,10 +139,29 @@ public sealed class RowanFreshTests
             }
         }
 
-        using var fist = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "fist.json")));
-        Assert.Equal(0, fist.RootElement.GetProperty("bow_in_hand_bind").GetInt32());
-        Assert.Equal(0, fist.RootElement.GetProperty("hand_in_bow_bind").GetInt32());
-        Assert.True(fist.RootElement.GetProperty("curled_verts").GetInt32() > 500);
+        using var grip = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "grip.json")));
+        var g = grip.RootElement;
+        Assert.Equal(RowanMotion.LeftFingerBoneNames, g.GetProperty("names").EnumerateArray().Select(x => x.GetString()).ToArray());
+        Assert.True(g.GetProperty("max_finger_length_change").GetDouble() <= 0.03);
+        Assert.True(g.GetProperty("min_hand_to_grip_axis").GetDouble() >= 0.020); // bow grip radius 2 cm
+        Assert.True(g.GetProperty("finger_verts").GetInt32() > 500);
+        Assert.Equal(new[] { 15, 35, 20 }, g.GetProperty("finger_curl_deg").EnumerateArray().Select(x => (int)Math.Round(x.GetDouble())).ToArray());
+        Assert.True(g.GetProperty("finger_chain_length_change").GetDouble() is > -0.03 and < 0.03);
+
+        // every half-frame of rest, walk and attack: hand wraps the grip >= 270 deg, nothing of the hand in the bow, no bow in hand, body or coat
+        using var half = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "grip_halfframe.json")));
+        Assert.Equal(61, half.RootElement.GetProperty("samples_per_clip").GetInt32());
+        foreach (var clip in new[] { "rest", "walk", "attack" })
+        {
+            var w = half.RootElement.GetProperty("worst").GetProperty(clip);
+            Assert.True(w.GetProperty("wrap_deg_min").GetInt32() >= 270, clip);
+            Assert.Equal(0, w.GetProperty("hand_in_bow").GetInt32());
+            Assert.Equal(0, w.GetProperty("bow_in_hand").GetInt32());
+            Assert.Equal(0, w.GetProperty("bow_in_body").GetInt32());
+            Assert.Equal(0, w.GetProperty("bow_in_coat").GetInt32());
+            Assert.True(w.GetProperty("finger_chain_change_max").GetDouble() < 0.03, clip);
+            Assert.Equal(61, half.RootElement.GetProperty("per_sample").GetProperty(clip).GetArrayLength());
+        }
     }
 
     private static string Md5(string path)

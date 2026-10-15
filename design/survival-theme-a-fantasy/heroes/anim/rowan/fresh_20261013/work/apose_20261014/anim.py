@@ -23,7 +23,9 @@ def rot(n,axis,deg):
 def setworld(n,R):
     upd(); pb=PB[P_+n]; M=pb.matrix.copy(); pb.matrix=Matrix.Translation(M.to_translation())@R.to_4x4(); upd()
 def keep_rest_world(n): setworld(n,RW(n))
+GRIPQ=json.load(open(W_+'/grip.json'))['finger_local_quat']
 def key(f):
+    for nm_,qq_ in GRIPQ.items(): PB[nm_].rotation_quaternion=Quaternion(qq_)
     upd()
     for pb in PB: pb.keyframe_insert('rotation_quaternion',frame=f); pb.keyframe_insert('location',frame=f)
 def act(name):
@@ -132,8 +134,8 @@ LK=[(0,None,1.0,POLE_REST['Left']),
     (23,Vector((0.88,0.02,-0.48)).normalized(),0.96,Vector((0.0,1.0,-0.4))),
     (30,None,1.0,POLE_REST['Left'])]
 # bow upright at full draw: the straight bow arm's roll (its pole about the shoulder->hand axis) is chosen so the fist's grip axis
-# (fist.json, the bow's long axis) stands as close to vertical as the wrist allows, elbow kept below the arm line.
-FI=json.load(open(W_+'/fist.json')); GR=Matrix(FI['grip_rot_local'])
+# (grip.json, the bow's long axis) stands as close to vertical as the wrist allows, elbow kept below the arm line.
+FI=json.load(open(W_+'/grip.json')); GR=Matrix(FI['grip_rot_local'])
 def bow_axis():
     upd(); return (PB[P_+'LeftHand'].matrix.to_3x3().normalized()@GR).col[2]
 reset(); twist(TW); head_forward(); upd()
