@@ -110,6 +110,36 @@ public class BonequillBowGripUnityTests
         Assert.Contains("t.SetParent(bone, false)", driver);
     }
 
+    [Theory]
+    [InlineData("rest")]
+    [InlineData("walk")]
+    [InlineData("attack")]
+    public void Bowstring_keeps_1cm_clear_of_the_bow_hand_except_during_the_draw(string clip)
+    {
+        var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(FindRepoRoot(), BonequillMotion.DesignDir, "work", "string_clearance.json"))).RootElement;
+        // The clearance file was computed with the same bow roll the runtime grip uses.
+        var roll = doc.GetProperty("bow_roll_deg").GetDouble();
+        var q = BonequillAttack.BowGrip.GripRot;
+        var expected = 180.0 + roll;
+        var angle = 2.0 * Math.Acos(Math.Abs(q[3])) * 180.0 / Math.PI;
+        Assert.Equal(360.0 - expected, angle, 1);
+        var samples = doc.GetProperty("per_sample").GetProperty(clip).EnumerateArray().ToArray();
+        Assert.Equal(61, samples.Length);
+        foreach (var s in samples)
+        {
+            var f = s[0].GetDouble();
+            var drawing = s[3].GetBoolean();
+            Assert.Equal(clip == "attack" && f >= 4 && f <= 17, drawing);
+            if (drawing)
+            {
+                continue;
+            }
+
+            Assert.True(s[1].GetDouble() >= 0.01, $"{clip} f{f}: string {s[1].GetDouble() * 100:0.0} cm from hand/finger/forearm mesh");
+            Assert.True(s[2].GetDouble() >= 0.01, $"{clip} f{f}: string {s[2].GetDouble() * 100:0.0} cm from hand/finger/forearm bones");
+        }
+    }
+
     private static float[] Rotate(float[] q, float[] v)
     {
         float x = q[0], y = q[1], z = q[2], w = q[3];

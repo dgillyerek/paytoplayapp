@@ -1,3 +1,4 @@
+import math
 import bpy,json,numpy as np
 from mathutils import Vector,Matrix
 from mathutils.bvhtree import BVHTree
@@ -10,7 +11,7 @@ FI=json.load(open(W+'/fist.json')); GL=Vector(FI['grip_local'])
 gis_={body.vertex_groups[P_+n].index for n in ('LeftHand','LeftHandFingers1','LeftHandFingers2','LeftHandFingers3','LeftHandThumb1','LeftHandThumb2')}; hidx=[v.index for v in body.data.vertices if sum(g.weight for g in v.groups if g.group in gis_)>0.3]
 A=bpy.data.actions; arm.animation_data.action=A['BONEQUILL_attack']; sc.frame_set(10)
 M=arm.matrix_world@arm.pose.bones[P_+'LeftHand'].matrix; RLr=M.to_3x3().normalized()
-off_p=GL.copy(); off_R=Matrix(((-1,0,0),(0,-1,0),(0,0,1)))
+off_p=GL.copy(); off_R=(Matrix(((-1,0,0),(0,-1,0),(0,0,1)))@Matrix.Rotation(math.radians(45),3,'Z'))
 out={}
 for an,n in (('BONEQUILL_rest',31),('BONEQUILL_walk',31),('BONEQUILL_attack',31)):
     arm.animation_data.action=A[an]; res=[]

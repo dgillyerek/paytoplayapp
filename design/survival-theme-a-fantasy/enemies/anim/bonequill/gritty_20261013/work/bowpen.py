@@ -20,7 +20,7 @@ hand_ids=set(body.vertex_groups[P_+n].index for n in ('LeftHand','LeftHandFinger
 hidx=[v.index for v in body.data.vertices if sum(g.weight for g in v.groups if g.group in hand_ids)>0.3]
 bowbvh=BVHTree.FromPolygons([v.co.copy() for v in bow.data.vertices],[p.vertices[:] for p in bow.data.polygons])
 A=bpy.data.actions; arm.animation_data.action=A['BONEQUILL_attack']; sc.frame_set(14)
-M=arm.matrix_world@arm.pose.bones[P_+'LeftHand'].matrix; R=M.to_3x3().normalized(); op=GL.copy(); oR=Matrix(((-1,0,0),(0,-1,0),(0,0,1)))
+M=arm.matrix_world@arm.pose.bones[P_+'LeftHand'].matrix; R=M.to_3x3().normalized(); op=GL.copy(); oR=(Matrix(((-1,0,0),(0,-1,0),(0,0,1)))@Matrix.Rotation(math.radians(45),3,'Z'))
 out={}; worst={}
 for an in ('rest','walk','attack'):
     arm.animation_data.action=A['BONEQUILL_'+an]; per=[]
