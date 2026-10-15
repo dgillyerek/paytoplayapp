@@ -1,4 +1,4 @@
-"""Quiver with bone arrows (Meshy didn't generate one): modelled here, sat on the back OUTSIDE the fitted cloak, over the left
+"""Quiver with bone arrows (Meshy didn't generate one): modelled here, sat on the back OUTSIDE the fitted cloak, over the right
 shoulder like the approved art, joined into the body mesh and skinned 100% to Spine2 (rigid). UVs point at body-texture patches
 (dark armour leather, bone, purple rune) so it keeps the single body material."""
 import sys; sys.path.append("/home/box/.local/lib/python3.13/site-packages")
@@ -22,8 +22,8 @@ uv_dark=UV[np.argsort(np.abs(lum-np.percentile(lum[(z_l>0.2)&(z_l<0.5)],30))+(~(
 uv_bone=UV[np.argmax(lum*(z_l>1.65))]
 uv_purp=UV[np.argmax(purple)]
 print('UV',uv_dark,uv_bone,uv_purp,'cols',col(np.array([uv_dark,uv_bone,uv_purp])))
-# axis: top over the left shoulder, bottom toward the right hip, behind the cloak
-top=Vector((0.15,0,1.52)); bot=Vector((-0.07,0,1.02)); ax=(top-bot).normalized(); R=0.055
+# axis: top over the right shoulder, bottom toward the left hip, behind the cloak
+top=Vector((-0.15,0,1.52)); bot=Vector((0.07,0,1.02)); ax=(top-bot).normalized(); R=0.055   # mouth over the RIGHT shoulder (draw-hand side) so he can pull an arrow; ax=(top-bot).normalized(); R=0.055
 ts=np.linspace(0,1,12); yb=[]
 for t in ts:
     p=bot.lerp(top,t); m=(np.abs(C[:,2]-p.z)<0.05)&(np.abs(C[:,0]-p.x)<0.09)&(C[:,1]>0); yb.append(C[m,1].max() if m.any() else 0.2)

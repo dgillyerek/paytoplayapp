@@ -35,7 +35,7 @@ def UQ(Rb):
     q=(C@Rb@C.inverted()).to_quaternion().normalized()
     if q.w<0: q=-q
     return [round(q.x,5),round(q.y,5),round(q.z,5),round(q.w,5)]
-REF,REL,V0=10,14,7; SPD=14.0
+REF,REL,V0=14,17,4; NOCK=10; SPD=14.0
 arm.animation_data.action=A['attack']; sc.frame_set(REF)
 def bm(n): return arm.matrix_world@arm.pose.bones[P_+n].matrix
 # bow: grip 6 cm along LeftHand (palm), world-upright at full draw
@@ -58,11 +58,31 @@ def arrow_pose():
     f_=(rest-nk).normalized(); yax=-f_; xax=Vector((1,0,0)); xax=(xax-xax.dot(yax)*yax).normalized(); zax=xax.cross(yax)
     return nk, Matrix((xax,yax,zax)).transposed(), f_
 _,_,fw=arrow_pose()
+# quiver draw: f4 the draw hand takes an arrow out of the quiver (spawned in the fingers, nock end up, shaft down the quiver
+# axis), carried rigidly in the hand and turned toward the nock pose by f10; from f10 it is nocked and aimed as before
+QTOP=Vector((-0.15,0.308,1.52)); QBOT=Vector((0.07,0.308,1.02)); QAX=(QTOP-QBOT).normalized()
+def _local(p,R):
+    M=bm('RightHand'); Mi=M.inverted(); return (Mi@p, (M.to_3x3().normalized().inverted()@R).to_quaternion())
+sc.frame_set(V0); S2=bm('Spine2')@arm.data.bones[P_+'Spine2'].matrix_local.inverted()
+_gp=S2@(QTOP+QAX*0.15); _gd=(S2.to_3x3()@(-QAX)).normalized()
+_y=-_gd; _x=Vector((1,0,0)); _x=(_x-_x.dot(_y)*_y).normalized(); _z=_x.cross(_y); GRAB_L=_local(_gp,Matrix((_x,_y,_z)).transposed())
+PULL=6
+sc.frame_set(V0); _gp=bm('RightHand')@NOCK_LOCAL; _f4=bm('RightHand').to_translation(); _Rg=Matrix((_x,_y,_z)).transposed()
+sc.frame_set(PULL); _p6=_gp+(bm('RightHand').to_translation()-_f4); PULL_L=_local(_p6,_Rg)
+sc.frame_set(NOCK); _p,_R,_=arrow_pose(); NOCK_L=_local(_p,_R); sc.frame_set(REF)
+def arrow_world(f):
+    if f>=NOCK: p,R,_=arrow_pose(); return p,R
+    if f<=PULL:   # pulled straight up out of the quiver along its axis, following the hand
+        return _gp+(bm('RightHand').to_translation()-_f4), _Rg.copy()
+    t=(f-PULL)/(NOCK-PULL); t=t*t*(3-2*t)
+    lp=PULL_L[0].lerp(NOCK_L[0],t); lq=PULL_L[1].slerp(NOCK_L[1],t); M=bm('RightHand')
+    return M@lp, M.to_3x3().normalized()@lq.to_matrix()
+rep['quiver_draw']={'grab_frame':V0,'nock_frame':NOCK,'full_draw':REF,'release':REL}
 rep['bow_idle_rest_world_unity']=None
 def place(o,M,off): R=M.to_3x3().normalized(); return M.to_translation()+R@off[0], R@off[1]
 held=[]; bowtr=[]; projtr=[]; arpose={}
 for f in range(31):
-    sc.frame_set(f); p,R,_=arrow_pose(); vis=V0<=f<REL; held.append(U(p)+UQ(R)+[1.0,vis]); arpose[f]=(p.copy(),R.copy())
+    sc.frame_set(f); p,R=arrow_world(f); vis=V0<=f<REL; held.append(U(p)+UQ(R)+[1.0,vis]); arpose[f]=(p.copy(),R.copy())
     bp,bR=place(bow,bm('LeftHand'),bow_off); bowtr.append(U(bp)+UQ(bR)+[1.0,True])
 sp,sR=arpose[REL-1]
 for f in range(31):
@@ -79,6 +99,9 @@ def shot(path,view):
     if view=='face':
         sc.render.resolution_x=360; sc.render.resolution_y=360; cam.data.ortho_scale=0.45; h=arm.matrix_world@arm.pose.bones[P_+'Head'].head
         cam.location=(h.x,-5,h.z+0.12); cam.rotation_euler=(math.pi/2,0,0)
+    elif view in ('sfront','sside'):   # quiver-draw strip: upper body, front and right side (draw-hand side)
+        sc.render.resolution_x=360; sc.render.resolution_y=420; cam.data.ortho_scale=1.25
+        cam.location,cam.rotation_euler=(((0,-5,1.45),(math.pi/2,0,0)) if view=='sfront' else ((-5,0,1.45),(math.pi/2,0,-math.pi/2)))
     elif view=='hood':      # hood close-up, three-quarter front
         sc.render.resolution_x=360; sc.render.resolution_y=360; cam.data.ortho_scale=0.8; h=arm.matrix_world@arm.pose.bones[P_+'Head'].head
         cam.location=(h.x+3.0,h.y-4.0,h.z); cam.rotation_euler=(math.pi/2,0,math.atan2(3.0,4.0))
@@ -89,7 +112,7 @@ def shot(path,view):
     else:
         sc.render.resolution_x=360; sc.render.resolution_y=640; cam.data.ortho_scale=2.1; cam.location,cam.rotation_euler=VIEWS[view]
     sc.render.filepath=path; bpy.ops.render.render(write_still=True)
-FR={'rest':[0],'walk':[0,4,8,12,15,19,23,27],'attack':[0,3,6,8,10,12,14,16,18,22,26,30]}
+FR={'rest':[0],'walk':[0,4,8,12,15,19,23,27],'attack':[0,2,4,6,8,10,12,14,16,18,20,24,30]}
 sk={}; feet={}
 for k,frs in FR.items():
     arm.animation_data.action=A[k]
@@ -99,13 +122,18 @@ for k,frs in FR.items():
             a=bm('LeftFoot').to_translation(); b=bm('RightFoot').to_translation(); feet[f]=round(abs(a.x-b.x)*100,1)
     for f in frs:
         sc.frame_set(f); M=bm('LeftHand'); bp,bR=place(bow,M,bow_off); bow.matrix_world=Matrix.Translation(bp)@bR.to_4x4()
-        p,R,_=arrow_pose(); arrow.matrix_world=Matrix.Translation(p)@R.to_4x4(); arrow.hide_render=not(k=='attack' and V0<=f<REL)
+        p,R=arrow_world(f); arrow.matrix_world=Matrix.Translation(p)@R.to_4x4(); arrow.hide_render=not(k=='attack' and V0<=f<REL)
         proj.matrix_world=Matrix.Translation(sp+fw*max(0,f-REL+1)*SPD/30.0)@sR.to_4x4(); proj.hide_render=not(k=='attack' and f>=REL)
         for v in ('full','face','side','back','hood','arrow'):
             if v=='back' and k=='attack': continue
             if v=='hood' and k=='walk': continue
             if v=='arrow' and k!='attack': continue
             shot(f'{W}/sh_{k}_{f:02d}_{v}.png',v)
+arm.animation_data.action=A['attack']
+for f in range(0,12):
+    sc.frame_set(f); M=bm('LeftHand'); bp,bR=place(bow,M,bow_off); bow.matrix_world=Matrix.Translation(bp)@bR.to_4x4()
+    p,R=arrow_world(f); arrow.matrix_world=Matrix.Translation(p)@R.to_4x4(); arrow.hide_render=not(V0<=f<REL); proj.hide_render=True
+    for v in ('sfront','sside'): shot(f'{W}/strip_{f:02d}_{v}.png',v)
 rep['face_skew_max_cm']={k:round(max(a for a,b in v)*100,3) for k,v in sk.items()}
 rep['neck_head_band_max_cm']={k:round(max(b for a,b in v)*100,3) for k,v in sk.items()}
 rep['walk_ankle_spacing_cm']=feet

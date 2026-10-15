@@ -22,7 +22,7 @@ public sealed class BonequillFreshTests
         Assert.Single(BonequillAttack.IdleProps);
         Assert.Equal("BONEQUILL_bow", BonequillAttack.IdleProps[0].AttackTrackName);
         Assert.Equal("mixamorig:LeftHand", BonequillAttack.IdleProps[0].Bone);
-        Assert.Equal(14, BonequillAttack.ReleaseFrame);
+        Assert.Equal(17, BonequillAttack.ReleaseFrame);   // quiver draw f0-10, full draw f14, loose f17
     }
 
     [Fact]

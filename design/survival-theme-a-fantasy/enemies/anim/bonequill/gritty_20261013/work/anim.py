@@ -76,6 +76,7 @@ def spine_yaw(deg):
     rot('Neck',(0,0,1),-deg*0.5)   # neck takes half the counter-turn so the head band never twists hard
     upd()
 HDX,HDZ=0.0,0.0
+RDX4=Vector((0,0,0))
 BDX,BDZ=0.119,-0.010
 def draw_pose(pull=0.0,yaw=YAW):
     reset(); legs(); spine_yaw(yaw)
@@ -118,12 +119,35 @@ draw_pose(yaw=YAW*0.6);
 S=PB[P_+'LeftArm'].head; Dn=Vector((0.15,-0.95,-0.25)).normalized(); aim('LeftArm',Dn); aim('LeftForeArm',Dn)
 G=PB[P_+'LeftHand'].head.copy(); up,fo=ik(PB[P_+'RightArm'].head,Vector((-0.13,-0.27,1.42)),LA,LF,(-1.0,0.35,-0.2)); aim('RightArm',up); aim('RightForeArm',fo); D6=dirs()
 draw_pose(pull=0.08); D16=dirs()
-KEYS=[(0,D0,0),(6,D6,YAW*0.6),(10,D10,YAW),(14,D10,YAW),(17,D16,YAW),(30,D0,0)]
+# ---- quiver draw (Derek 10-14): f0 rest -> f2 lift out to the side -> f4 grab an arrow at the quiver mouth over the right
+# shoulder (quiver rides Spine2) -> f6 pull it up out of the quiver -> f8 hand up over the right shoulder, forearm vertical ->
+# f10 nock -> f14 full draw -> f17 loose -> f20 recoil -> f30 rest. Elbow stays high and out so the arm never crosses the hood,
+# cloak or ribcage; the f8 key keeps the forearm from swinging through its antipode (no roll flip).
+QTOP=Vector((-0.15,0.317,1.52)); QBOT=Vector((0.07,0.317,1.02)); QAX=(QTOP-QBOT).normalized()
+QGRAB=QTOP+QAX*0.12
+RH={2:(Vector((-0.46,-0.04,1.50)),(-1,0.0,-0.3)),4:(Vector((-0.29,0.23,1.62)),(-1,0.2,0.1)),
+    6:(Vector((-0.38,0.20,1.80)),(-1,0.2,0.1)),8:(Vector((-0.50,-0.12,1.62)),(-1,0.0,0.3))}
+def rpose(H,pole):
+    reset(); legs(); rest_arms(); S2=PB[P_+'RightArm'].head; up,fo=ik(S2,H,LA,LF,pole); aim('RightArm',up); aim('RightForeArm',fo); return dirs()[2:]
+DR={k:rpose(*v) for k,v in RH.items()}
+KL=[(0,D0[:2]),(10,D6[:2]),(14,D10[:2]),(17,D10[:2]),(20,D16[:2]),(30,D0[:2])]
+KR=[(0,D0[2:]),(2,DR[2]),(4,DR[4]),(6,DR[6]),(8,DR[8]),(10,D6[2:]),(14,D10[2:]),(17,D10[2:]),(20,D16[2:]),(30,D0[2:])]
+KY=[(0,0.0),(8,0.0),(10,YAW*0.6),(14,YAW),(20,YAW),(30,0.0)]
+def untwist(n):
+    # drop the forearm's twist about its own axis relative to the upper arm (swing only): the elbow stays a hinge and the
+    # forearm can never roll-flip, whatever path the aim directions take
+    upd(); pb=PB[P_+n]; q=pb.rotation_quaternion.copy(); tw=Quaternion((q.w,0,q.y,0)); 
+    if tw.magnitude>1e-6: tw.normalize(); pb.rotation_quaternion=q@tw.inverted()
+    upd()
+def samp(K,f):
+    i=max(j for j in range(len(K)) if K[j][0]<=f); j=min(i+1,len(K)-1); f0,f1=K[i][0],K[j][0]; t=ease((f-f0)/(f1-f0)) if f1>f0 else 0
+    a,b=K[i][1],K[j][1]
+    if isinstance(a,float): return a+(b-a)*t
+    return [a[k].lerp(b[k],t).normalized() for k in range(len(a))]
 for f in range(31):
-    i=max(j for j in range(len(KEYS)) if KEYS[j][0]<=f); j=min(i+1,len(KEYS)-1); f0,f1=KEYS[i][0],KEYS[j][0]
-    t=ease((f-f0)/(f1-f0)) if f1>f0 else 0
-    reset(); legs(); spine_yaw(KEYS[i][2]+(KEYS[j][2]-KEYS[i][2])*t)
-    for k,n in enumerate(('LeftArm','LeftForeArm','RightArm','RightForeArm')): aim(n,KEYS[i][1][k].lerp(KEYS[j][1][k],t).normalized())
+    reset(); legs(); spine_yaw(samp(KY,f)); dl=samp(KL,f); dr=samp(KR,f)
+    for n,d in zip(('LeftArm','LeftForeArm','RightArm','RightForeArm'),dl+dr): aim(n,d)
+    untwist('RightForeArm')
     lefthand_hold(); head_forward(); key(f)
 reset(); arm.animation_data.action=A['rest']; sc.frame_set(0)
 bpy.ops.wm.save_as_mainfile(filepath='/workspace/bonequill_gritty/work/anim.blend',compress=True); bpy.ops.wm.save_as_mainfile(filepath='/workspace/bonequill_gritty/work/anim_nq.blend',compress=True,copy=True); print('ANIM ok ADD',ADD)

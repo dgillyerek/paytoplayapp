@@ -13,7 +13,7 @@ namespace Survival.Domain.Enemies
     public static class BonequillCape
     {
         public const string FileName = "BONEQUILL_cape.fbx";
-        public const string FileMd5 = "e4e91146b984f65cc4d0a29d625cd4c8";
+        public const string FileMd5 = "267e7ce55405c5517ec8fd706a3081b9";
         public const string TextureFolder = "BONEQUILL_cape.fbm";
         public const string BaseColorFile = "BONEQUILL_cape_basecolor_0.jpg";
         public const string NormalFile = "BONEQUILL_cape_normal_2.jpg";

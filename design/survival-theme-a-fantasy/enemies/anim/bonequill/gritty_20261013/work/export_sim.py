@@ -18,5 +18,5 @@ for i in range(61+36):
         tg[ch['name']]=[round(v,6) for p in pts for v in p]
     bo={b:[round(v,6) for v in list(arm.matrix_world@arm.pose.bones[b].head)+list(arm.matrix_world@arm.pose.bones[b].tail)] for b in BONES}
     samples.append({'t':round(i/60,5),'frame':fr,'targets':tg,'bones':bo})
-json.dump({'release_frame':14,'fps':30,'samples':samples},open(W+'/cape_attack_sim.json','w'))
+json.dump({'release_frame':17,'fps':30,'samples':samples},open(W+'/cape_attack_sim.json','w'))
 print('SIM',len(samples))

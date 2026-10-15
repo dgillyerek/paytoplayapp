@@ -1,6 +1,6 @@
 import bpy,numpy as np
 from mathutils import Vector
-sc=bpy.context.scene; arm=bpy.data.objects['BONEQUILL_rig']; arm.animation_data.action=bpy.data.actions['BONEQUILL_attack']; sc.frame_set(10)
+sc=bpy.context.scene; arm=bpy.data.objects['BONEQUILL_rig']; arm.animation_data.action=bpy.data.actions['BONEQUILL_attack']; sc.frame_set(14)
 bm=lambda n: arm.matrix_world@arm.pose.bones['mixamorig:'+n].matrix
 body=[o for o in bpy.data.objects if o.type=='MESH' and o.vertex_groups.get('mixamorig:RightHand')][0]
 gi=body.vertex_groups['mixamorig:RightHand'].index; HM=arm.data.bones['mixamorig:RightHand'].matrix_local.inverted()
