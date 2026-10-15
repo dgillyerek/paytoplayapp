@@ -2,6 +2,7 @@
 round the bow grip axis, hand-in-bow, bow-in-hand, bow-in-body, bow-in-coat (coat tails at their skinned rest on Hips). Writes grip_halfframe.json."""
 import sys; sys.path.append("/home/box/.local/lib/python3.13/site-packages")
 import bpy, json, math, numpy as np
+sys.path.insert(0,'/workspace/rowan_fresh/w2/bowgrip'); from bowroll import bowrot   # v5: bow rolled per frame (carry 270)
 from mathutils import Vector, Matrix
 from mathutils.bvhtree import BVHTree
 W='/workspace/rowan_fresh/w2'; P_='mixamorig:'
@@ -54,7 +55,7 @@ for an in ('rest','walk','attack'):
     for k in range(61):
         f=k*0.5; sc.frame_set(int(f),subframe=f-int(f)); bpy.context.view_layer.update()
         crig.pose.bones['coat_Hips'].matrix=arm.pose.bones[P_+'Hips'].matrix.copy(); bpy.context.view_layer.update()
-        HM=arm.matrix_world@arm.pose.bones[P_+'LeftHand'].matrix; R=HM.to_3x3().normalized(); c=HM@GL; Rb=R@GR
+        HM=arm.matrix_world@arm.pose.bones[P_+'LeftHand'].matrix; R=HM.to_3x3().normalized(); c=HM@GL; Rb=R@bowrot(an,f)
         bow.matrix_world=Matrix.Translation(c)@Rb.to_4x4(); bpy.context.view_layer.update()
         Q=evalQ(body); C=evalQ(coat); Mb=np.array(bow.matrix_world); D=BOWD@Mb[:3,:3].T+Mb[:3,3]; Bw=BOWV@Mb[:3,:3].T+Mb[:3,3]
         th=BVHTree.FromPolygons([tuple(v) for v in Q],hpolys); near=np.linalg.norm(D-np.array(c),axis=1)<0.09

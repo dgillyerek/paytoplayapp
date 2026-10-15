@@ -21,7 +21,7 @@ namespace Survival.Domain.Heroes
     public static class RowanAttack
     {
         public const string FileName = "ROWAN_blenderig_attack.fbx";
-        public const string FileMd5 = "0c3fc1a607792ec2418990d8ea1e272b";
+        public const string FileMd5 = "a641b366178197cff66cc5390a50580d";
         public const string DesignDir = RowanMotion.DesignDir;
         public const int ReleaseFrame = 14;
         public const bool InPlace = false;
@@ -42,8 +42,11 @@ namespace Survival.Domain.Heroes
         /// <summary>Bow grip in mixamorig:LeftHand bone space from Blender (design work/apose_20261014/grip_unity.json; same fix as Bonequill #63):
         /// pivot at the grip centre on the hand centreline, bow axis along the knuckle line. Unity parents the bow to the hand bone at this offset
         /// (mirror-X bone-space conversion) instead of fitting a world pose. Rolled about the long axis per frame (work/apose_20261014/bowroll.py):
-        /// string away from the body when carried (230 deg), turned toward him from nock to release (40 deg, eased f2-8, held to f17, back by f24); clearance in
-        /// work/apose_20261014/string_clearance.json.</summary>
+        /// rest/walk carry (Derek 2026-10-15 correction): the STRING faces up and lies along the inside of the forearm, ~0.7 cm off the skin (no
+        /// penetration), the limb on the outside; the bow runs fore-aft beside the leg (-45 deg; anim.py CARRY solves the hand from the bow, the
+        /// forearm from the hand with no wrist bend). Attack: eases -45 -> -310 (= 50, string toward him) over f1-f11 the long way round through
+        /// -180, because the short way (-45 -> 0 -> 50) sweeps the string through the wrist; held through the f14 release to f17, back to -45 by
+        /// f27. Checks: work/apose_20261014/carry_check.json, string_clearance.json.</summary>
         public static readonly BlenderBoneGrip BowGrip = new BlenderBoneGrip(
             new[] { 0.03200f, 0.12800f, 0.00866f },
             new[] { 0f, 0f, 1f, 0f },   // grip axis flip (180 deg about bone z); the roll about the bow's long axis is per frame below
@@ -52,9 +55,9 @@ namespace Survival.Domain.Heroes
             "mixamorig:LeftHandThumb1",
             new[] { 0.02908f, 0.06549f, 0.05844f },
             new[] { 0.02421f, 0.12533f, 0.00866f },
-            230f,   // rest/walk carry: string on the side away from the body and coat
-            40f,    // nock to release: string toward him
-            new[] { 2f, 8f, 17f, 24f });
+            -45f,   // rest/walk carry: string up, ~0.7 cm off the inner forearm, limb outside (-45 also keeps the grip corners clear of the fingers)
+            -310f,  // nock to release: string toward him (= 50 deg; reached the long way round so the string never crosses the wrist)
+            new[] { 1f, 11f, 17f, 27f });
 
         /// <summary>The single bow, a child of LeftHand at <see cref="BowGrip"/> in rest, walk and attack. Stands in for the attack's ROWAN_bow track.</summary>
         public static readonly BlenderRigIdlePropSpec[] IdleProps =
@@ -99,37 +102,37 @@ namespace Survival.Domain.Heroes
                     new[] { 0.048f, 1.3323f, 0.1643f },
                     new[]
                     {
-                        new AttackFrame(-0.35101f, 0.85809f, 0.09459f, 0.54675f, 0.00535f, -0.03011f, 0.83674f, 1f, true),
-                        new AttackFrame(-0.406f, 0.87787f, 0.11465f, 0.54016f, -0.02484f, -0.06857f, 0.8384f, 1f, true),
-                        new AttackFrame(-0.50779f, 0.94715f, 0.19625f, 0.4925f, -0.0884f, -0.14789f, 0.85309f, 1f, true),
-                        new AttackFrame(-0.53485f, 1.06149f, 0.34589f, 0.3521f, -0.08328f, -0.23542f, 0.90204f, 1f, true),
-                        new AttackFrame(-0.45552f, 1.11976f, 0.48935f, 0.26278f, -0.00891f, -0.28841f, 0.9207f, 1f, true),
-                        new AttackFrame(-0.30902f, 1.16732f, 0.63038f, 0.1721f, 0.07796f, -0.29602f, 0.93631f, 1f, true),
-                        new AttackFrame(-0.14287f, 1.28414f, 0.75326f, 0.03159f, 0.12405f, -0.2152f, 0.96814f, 1f, true),
-                        new AttackFrame(-0.03262f, 1.41201f, 0.80141f, -0.09698f, 0.16394f, -0.09172f, 0.9774f, 1f, true),
-                        new AttackFrame(-0.00719f, 1.46667f, 0.82046f, -0.15313f, 0.17992f, -0.03743f, 0.97097f, 1f, true),
-                        new AttackFrame(-0.00953f, 1.46081f, 0.8439f, -0.15313f, 0.17992f, -0.03743f, 0.97097f, 1f, true),
-                        new AttackFrame(-0.01125f, 1.45652f, 0.86105f, -0.15313f, 0.17992f, -0.03743f, 0.97097f, 1f, true),
-                        new AttackFrame(-0.01191f, 1.45486f, 0.86769f, -0.15313f, 0.17992f, -0.03743f, 0.97097f, 1f, true),
-                        new AttackFrame(-0.01191f, 1.45486f, 0.86769f, -0.15313f, 0.17992f, -0.03743f, 0.97097f, 1f, true),
-                        new AttackFrame(-0.01191f, 1.45486f, 0.86769f, -0.15313f, 0.17992f, -0.03743f, 0.97097f, 1f, true),
-                        new AttackFrame(-0.01191f, 1.45486f, 0.86769f, -0.15313f, 0.17992f, -0.03743f, 0.97097f, 1f, true),
-                        new AttackFrame(-0.01191f, 1.45486f, 0.86769f, -0.15313f, 0.17992f, -0.03743f, 0.97097f, 1f, true),
-                        new AttackFrame(-0.01191f, 1.45486f, 0.86769f, -0.15313f, 0.17992f, -0.03743f, 0.97097f, 1f, true),
-                        new AttackFrame(-0.01191f, 1.45486f, 0.86769f, -0.15313f, 0.17992f, -0.03743f, 0.97097f, 1f, true),
-                        new AttackFrame(-0.04092f, 1.42617f, 0.87127f, -0.12645f, 0.16169f, -0.06403f, 0.97661f, 1f, true),
-                        new AttackFrame(-0.11897f, 1.35273f, 0.86827f, -0.05247f, 0.11808f, -0.13104f, 0.98292f, 1f, true),
-                        new AttackFrame(-0.22426f, 1.26137f, 0.82708f, 0.04204f, 0.07673f, -0.2134f, 0.97304f, 1f, true),
-                        new AttackFrame(-0.33005f, 1.17844f, 0.73874f, 0.13991f, 0.04823f, -0.27351f, 0.95042f, 1f, true),
-                        new AttackFrame(-0.41994f, 1.12202f, 0.62607f, 0.22519f, 0.01506f, -0.29158f, 0.92954f, 1f, true),
-                        new AttackFrame(-0.49109f, 1.10476f, 0.52129f, 0.27127f, -0.03637f, -0.28044f, 0.92002f, 1f, true),
-                        new AttackFrame(-0.53955f, 1.08915f, 0.42297f, 0.30997f, -0.0856f, -0.25509f, 0.91188f, 1f, true),
-                        new AttackFrame(-0.5526f, 1.04188f, 0.31967f, 0.37485f, -0.10541f, -0.21705f, 0.89513f, 1f, true),
-                        new AttackFrame(-0.5381f, 0.97421f, 0.22217f, 0.47041f, -0.11678f, -0.16413f, 0.85915f, 1f, true),
-                        new AttackFrame(-0.48361f, 0.92199f, 0.15618f, 0.51352f, -0.07804f, -0.1193f, 0.84615f, 1f, true),
-                        new AttackFrame(-0.4214f, 0.88445f, 0.11794f, 0.53721f, -0.03688f, -0.07619f, 0.83919f, 1f, true),
-                        new AttackFrame(-0.37121f, 0.86425f, 0.09957f, 0.54547f, -0.00636f, -0.04319f, 0.83699f, 1f, true),
-                        new AttackFrame(-0.35101f, 0.85809f, 0.09459f, 0.54675f, 0.00535f, -0.03011f, 0.83674f, 1f, true)
+                        new AttackFrame(-0.4258f, 0.89891f, 0.14385f, 0.56953f, 0.37102f, 0.0278f, 0.73294f, 1f, true),
+                        new AttackFrame(-0.42566f, 0.89831f, 0.15579f, 0.56847f, 0.36908f, 0.03106f, 0.73461f, 1f, true),
+                        new AttackFrame(-0.4314f, 0.90358f, 0.19295f, 0.56108f, 0.40565f, 0.06679f, 0.71846f, 1f, true),
+                        new AttackFrame(-0.43658f, 0.92749f, 0.26664f, 0.5226f, 0.52295f, 0.13211f, 0.66028f, 1f, true),
+                        new AttackFrame(-0.41253f, 0.96104f, 0.36636f, 0.45756f, 0.69688f, 0.20289f, 0.51364f, 1f, true),
+                        new AttackFrame(-0.33963f, 1.00511f, 0.49919f, 0.36156f, 0.86234f, 0.24925f, 0.25204f, 1f, true),
+                        new AttackFrame(-0.2114f, 1.09934f, 0.66645f, -0.21879f, -0.94833f, -0.21352f, 0.0849f, 1f, true),
+                        new AttackFrame(-0.07932f, 1.25008f, 0.78192f, -0.09818f, -0.88461f, -0.08169f, 0.4485f, 1f, true),
+                        new AttackFrame(-0.02453f, 1.37924f, 0.82552f, -0.09177f, -0.68767f, 0.02988f, 0.71958f, 1f, true),
+                        new AttackFrame(-0.01366f, 1.43725f, 0.84653f, -0.13038f, -0.47155f, 0.05024f, 0.8707f, 1f, true),
+                        new AttackFrame(-0.01125f, 1.45652f, 0.86105f, -0.15229f, -0.30863f, 0.04074f, 0.93803f, 1f, true),
+                        new AttackFrame(-0.01191f, 1.45486f, 0.86769f, -0.1546f, -0.24729f, 0.0308f, 0.95603f, 1f, true),
+                        new AttackFrame(-0.01191f, 1.45486f, 0.86769f, -0.1546f, -0.24729f, 0.0308f, 0.95603f, 1f, true),
+                        new AttackFrame(-0.01191f, 1.45486f, 0.86769f, -0.1546f, -0.24729f, 0.0308f, 0.95603f, 1f, true),
+                        new AttackFrame(-0.01191f, 1.45486f, 0.86769f, -0.1546f, -0.24729f, 0.0308f, 0.95603f, 1f, true),
+                        new AttackFrame(-0.01191f, 1.45486f, 0.86769f, -0.1546f, -0.24729f, 0.0308f, 0.95603f, 1f, true),
+                        new AttackFrame(-0.01191f, 1.45486f, 0.86769f, -0.1546f, -0.24729f, 0.0308f, 0.95603f, 1f, true),
+                        new AttackFrame(-0.01191f, 1.45486f, 0.86769f, -0.1546f, -0.24729f, 0.0308f, 0.95603f, 1f, true),
+                        new AttackFrame(-0.04092f, 1.42617f, 0.87127f, -0.14166f, -0.32733f, 0.00459f, 0.93422f, 1f, true),
+                        new AttackFrame(-0.11897f, 1.35273f, 0.86827f, -0.12298f, -0.52358f, -0.06929f, 0.8402f, 1f, true),
+                        new AttackFrame(-0.22426f, 1.26137f, 0.82708f, -0.14688f, -0.73788f, -0.16042f, 0.63892f, 1f, true),
+                        new AttackFrame(-0.33186f, 1.16683f, 0.73334f, -0.21023f, -0.88538f, -0.22964f, 0.34521f, 1f, true),
+                        new AttackFrame(-0.41843f, 1.08964f, 0.60737f, -0.28832f, -0.92341f, -0.25334f, 2e-05f, 1f, true),
+                        new AttackFrame(-0.47374f, 1.04686f, 0.49122f, 0.36436f, 0.84096f, 0.21627f, 0.33654f, 1f, true),
+                        new AttackFrame(-0.49596f, 1.00759f, 0.38814f, 0.43038f, 0.67002f, 0.159f, 0.58358f, 1f, true),
+                        new AttackFrame(-0.48577f, 0.96061f, 0.29101f, 0.49232f, 0.49357f, 0.10555f, 0.70913f, 1f, true),
+                        new AttackFrame(-0.46293f, 0.92239f, 0.21537f, 0.54358f, 0.36891f, 0.06344f, 0.75127f, 1f, true),
+                        new AttackFrame(-0.43798f, 0.90399f, 0.1735f, 0.56008f, 0.34597f, 0.04055f, 0.75165f, 1f, true),
+                        new AttackFrame(-0.42612f, 0.89749f, 0.1547f, 0.56557f, 0.36266f, 0.03904f, 0.73965f, 1f, true),
+                        new AttackFrame(-0.42471f, 0.89782f, 0.14631f, 0.56837f, 0.36956f, 0.03178f, 0.73442f, 1f, true),
+                        new AttackFrame(-0.4258f, 0.89891f, 0.14385f, 0.56953f, 0.37102f, 0.0278f, 0.73294f, 1f, true)
                     },
                     "single wooden bow, grip closed in the finger-bone grip (grip.json) in every frame; the RowanMotion idle bow stands in for it"),
                 new AttackTrack(

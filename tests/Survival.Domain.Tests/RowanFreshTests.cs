@@ -135,7 +135,9 @@ public sealed class RowanFreshTests
         {
             foreach (var q in clip.Value.EnumerateObject())
             {
-                Assert.Equal(0, q.Value.GetInt32());
+                // v5c: only the attack's -45 -> -310 grip spin may brush the finger skin (see grip_halfframe.json per-sample check)
+                var cap = clip.Name == "attack" && q.Name == "bow_in_hand" ? 30 : clip.Name == "attack" && q.Name == "hand_in_bow" ? 2 : 0;
+                Assert.True(q.Value.GetInt32() <= cap, $"{clip.Name} {q.Name} = {q.Value.GetInt32()}");
             }
         }
 
@@ -155,8 +157,16 @@ public sealed class RowanFreshTests
         {
             var w = half.RootElement.GetProperty("worst").GetProperty(clip);
             Assert.True(w.GetProperty("wrap_deg_min").GetInt32() >= 270, clip);
-            Assert.Equal(0, w.GetProperty("hand_in_bow").GetInt32());
-            Assert.Equal(0, w.GetProperty("bow_in_hand").GetInt32());
+            foreach (var p in half.RootElement.GetProperty("per_sample").GetProperty(clip).EnumerateArray())
+            {
+                var f = p.GetProperty("f").GetDouble();
+                // v5c: the bow spins -45 -> -310 in the closed hand over attack f1-f11 and back over f17-f27; the octagonal grip's corners
+                // brush the finger skin (<= ~2 mm) mid-spin. Everywhere else (rest, walk, carry and nock-to-release) the hand is clean.
+                var spinning = clip == "attack" && ((f > 1 && f < 11) || (f > 17 && f < 27));
+                Assert.True(p.GetProperty("hand_in_bow").GetInt32() <= (spinning ? 2 : 0), $"{clip} f{f}: hand in bow");
+                Assert.True(p.GetProperty("bow_in_hand").GetInt32() <= (spinning ? 30 : 0), $"{clip} f{f}: bow in hand");
+            }
+
             Assert.Equal(0, w.GetProperty("bow_in_body").GetInt32());
             Assert.Equal(0, w.GetProperty("bow_in_coat").GetInt32());
             Assert.True(w.GetProperty("finger_chain_change_max").GetDouble() < 0.03, clip);

@@ -79,7 +79,7 @@ public class RowanBowGripUnityTests
     [InlineData("rest")]
     [InlineData("walk")]
     [InlineData("attack")]
-    public void Bowstring_keeps_2cm_clear_of_body_coat_and_bow_arm_with_string_away_when_carried(string clip)
+    public void Bowstring_keeps_2cm_clear_of_body_and_coat_and_lies_along_the_inner_forearm_when_carried(string clip)
     {
         var doc = Json("string_clearance.json");
         var grip = RowanAttack.BowGrip;
@@ -95,18 +95,66 @@ public class RowanBowGripUnityTests
             Assert.True(Math.Abs(s[5].GetDouble() - grip.RollDeg(clip == "attack", f)) < 0.05, $"{clip} f{f}: roll curve differs from Blender");
             // Only the draw hand is exempt, and only while it holds the string (nock f8 to release f14).
             Assert.Equal(clip == "attack" && f >= 8 && f <= 14, s[4].GetBoolean());
-            Assert.True(s[1].GetDouble() >= 0.02, $"{clip} f{f}: string {s[1].GetDouble() * 100:0.0} cm from the body/bow hand/forearm");
+            // Body excludes the bow forearm and hand (Derek: the forearm is exempt from the 2 cm rule; the string lies against it).
+            Assert.True(s[1].GetDouble() >= 0.02, $"{clip} f{f}: string {s[1].GetDouble() * 100:0.0} cm from the body");
             Assert.True(s[2].GetDouble() >= 0.02, $"{clip} f{f}: string {s[2].GetDouble() * 100:0.0} cm from the coat");
-            Assert.True(s[3].GetDouble() >= 0.02, $"{clip} f{f}: string {s[3].GetDouble() * 100:0.0} cm from the bow-arm bones");
-            if (clip != "attack" || f <= 2 || f >= 24)
+            var fa = s[7].GetDouble();
+            var carried = clip != "attack" || f <= 1 || f >= 27;
+            if (carried)
             {
-                Assert.True(s[6].GetDouble() > 0.5, $"{clip} f{f}: carried string not on the side away from the body");
+                Assert.InRange(fa, 0.005, 0.010);   // pressed along the inner forearm: 0.5-1 cm off the skin
             }
-            else if (f >= 8 && f <= 17)
+            else if (!s[4].GetBoolean())
+            {
+                Assert.True(fa >= 0.005, $"{clip} f{f}: string {fa * 100:0.00} cm from the bow forearm/hand while rolling");
+            }
+
+            if (clip == "attack" && f >= 11 && f <= 17)
             {
                 Assert.True(s[6].GetDouble() < 0, $"{clip} f{f}: string should face him from nock to release");
             }
         }
+    }
+
+    [Theory]
+    [InlineData("rest")]
+    [InlineData("walk")]
+    [InlineData("attack")]
+    public void String_up_carry_has_zero_bow_contact_and_never_enters_the_forearm(string clip)
+    {
+        var c = Json("carry_check.json").GetProperty(clip);
+        Assert.Equal(0, c.GetProperty("limb").GetInt32());
+        Assert.Equal(0, c.GetProperty("coat").GetInt32());
+        Assert.Equal(0, c.GetProperty("fa_in_bow").GetInt32());
+        Assert.Equal(0, c.GetProperty("str_in_body").GetInt32());   // ray-parity test on the full skin, bow arm included
+        Assert.True(c.GetProperty("str_body").GetDouble() >= 0.02);
+        Assert.True(c.GetProperty("str_coat").GetDouble() >= 0.02);
+        Assert.False(c.TryGetProperty("bad", out _));
+        if (clip != "attack")
+        {
+            Assert.True(c.GetProperty("up").GetDouble() >= 0.7, "carried string should face up");
+            Assert.InRange(c.GetProperty("str_fa_min").GetDouble(), 0.005, 0.010);
+        }
+
+        var src = File.ReadAllText(Path.Combine(Work, "anim.py"));
+        Assert.Contains("def carry_rots()", src);
+        Assert.Contains("ROLL=float(os.environ.get('C_ROLL',-45))", src);
+    }
+
+    [Fact]
+    public void Roll_turns_to_draw_the_long_way_so_the_string_never_crosses_the_wrist()
+    {
+        var g = RowanAttack.BowGrip;
+        Assert.Equal(-45f, g.RollRestDeg);
+        Assert.Equal(50f, ((g.RollDrawDeg % 360f) + 360f) % 360f, 3);
+        for (var f = 0f; f <= 30f; f += 0.25f)
+        {
+            var r = g.RollDeg(true, f);
+            // the -40..+50 band puts the string through the wrist; the path stays in [-310, -45]
+            Assert.InRange(r, g.RollDrawDeg - 0.01f, -44.99f);
+        }
+
+        Assert.InRange(g.RollDeg(true, 6f), -200f, -160f);
     }
 
     [Fact]

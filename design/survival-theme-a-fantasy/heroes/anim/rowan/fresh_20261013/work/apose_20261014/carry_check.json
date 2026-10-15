@@ -1,0 +1,47 @@
+{
+ "rest": {
+  "limb": 0,
+  "coat": 0,
+  "fa_in_bow": 0,
+  "str_body": 0.2309,
+  "str_coat": 0.3171,
+  "str_fa_min": 0.0073,
+  "str_fa_max": 0.0073,
+  "up": 0.81,
+  "tilt": 69.5,
+  "out": 0.58,
+  "wrist": 16.7,
+  "bow_fa": 0.211,
+  "str_in_body": 0
+ },
+ "walk": {
+  "limb": 0,
+  "coat": 0,
+  "fa_in_bow": 0,
+  "str_body": 0.2309,
+  "str_coat": 0.2933,
+  "str_fa_min": 0.0073,
+  "str_fa_max": 0.0073,
+  "up": 0.79,
+  "tilt": 78.1,
+  "out": 0.58,
+  "wrist": 16.7,
+  "bow_fa": 0.211,
+  "str_in_body": 0
+ },
+ "attack": {
+  "limb": 0,
+  "coat": 0,
+  "fa_in_bow": 0,
+  "str_body": 0.2019,
+  "str_coat": 0.3161,
+  "str_fa_min": 9,
+  "str_fa_max": 0,
+  "up": 1,
+  "tilt": 0,
+  "out": 1,
+  "wrist": 0,
+  "bow_fa": 0,
+  "str_in_body": 0
+ }
+}

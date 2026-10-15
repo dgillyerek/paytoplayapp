@@ -3,6 +3,7 @@
 springs do; nothing on the coat is baked. Bow: one prop rigid on LeftHand in every clip, its grip inside the sculpted left fist (fingers.py); bow vs hand/body checked every frame."""
 import sys; sys.path.append("/home/box/.local/lib/python3.13/site-packages")
 import bpy, math, json, numpy as np
+sys.path.insert(0,'/workspace/rowan_fresh/w2/bowgrip'); from bowroll import bowrot   # v5: bow rolled per frame (carry 270)
 from mathutils import Vector, Matrix
 from scipy.spatial import cKDTree
 W='/workspace/rowan_fresh/w2'
@@ -149,14 +150,15 @@ MR=bm('RightHand'); RR=MR.to_3x3().normalized(); nock=MR.to_translation()+RR@Vec
 fw=(grip-nock).normalized(); yax=-fw; xax=Vector((1,0,0)); xax=(xax-xax.dot(yax)*yax).normalized(); zax=xax.cross(yax); Rar=Matrix((xax,yax,zax)).transposed()
 ar_off=(RR.inverted()@(nock-MR.to_translation()), RR.inverted()@Rar)
 def place(M,off): R=M.to_3x3().normalized(); return M.to_translation()+R@off[0], R@off[1]
+def place_bow(M,clip,f): R=M.to_3x3().normalized(); return M.to_translation()+R@bow_off[0], R@bowrot(clip,f)
 held=[]; bowtr=[]; projtr=[]; arpose={}
 for f in range(31):
     sc.frame_set(f); p,R=place(bm('RightHand'),ar_off); held.append(U(p)+UQ(R)+[1.0,V0<=f<REL]); arpose[f]=(p.copy(),R.copy())
-    bp,bR=place(bm('LeftHand'),bow_off); bowtr.append(U(bp)+UQ(bR)+[1.0,True])
+    bp,bR=place_bow(bm('LeftHand'),'attack',f); bowtr.append(U(bp)+UQ(bR)+[1.0,True])
 sp,sR=arpose[REL-1]
 for f in range(31):
     p=sp+fw*max(0,f-REL+1)*SPD/30.0; projtr.append(U(p)+UQ(sR)+[1.0,f>=REL])
-arm.animation_data.action=A['rest']; sc.frame_set(0); bp,bR=place(bm('LeftHand'),bow_off)
+arm.animation_data.action=A['rest']; sc.frame_set(0); bp,bR=place_bow(bm('LeftHand'),'rest',0)
 rep['bow_idle_rest_world_unity']=U(bp)+UQ(bR)
 rep['calibration_unity']={n:U(arm.matrix_world@arm.data.bones[P_+n].head_local) for n in ('Hips','Head','LeftHand','RightHand')}
 rep.update(arrow_held_unity=held,arrow_proj_unity=projtr,bow_attack_unity=bowtr,arrow_dir_unity=U(fw))
@@ -193,7 +195,7 @@ for k,frs in FR.items():
         sc.frame_set(f)
         if k=='rest': COATSIM.static()
         else: COATSIM.step()
-        bp,bR=place(bm('LeftHand'),bow_off); bow.matrix_world=Matrix.Translation(bp)@bR.to_4x4(); upd()
+        bp,bR=place_bow(bm('LeftHand'),k,f); bow.matrix_world=Matrix.Translation(bp)@bR.to_4x4(); upd()
         m=metrics(); m.update(bow_checks(evalQ(body),evalQ(coat))); met.setdefault(k,[]).append(m)
         if f not in frs: continue
         p,R=place(bm('RightHand'),ar_off); arrow.matrix_world=Matrix.Translation(p)@R.to_4x4(); arrow.hide_render=not(k=='attack' and V0<=f<REL)

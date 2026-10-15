@@ -58,11 +58,64 @@ RX=float(os.environ.get('REST_X','0.39')); RZ=float(os.environ.get('REST_Z','0.9
 RY=float(os.environ.get('REST_Y','-0.04'))
 REST={'Left':Vector((RX,RY,RZ)),'Right':Vector((-RX,RY,RZ))}
 POLE_REST={'Left':Vector((0.25,1,0)),'Right':Vector((-0.25,1,0))}
+# rest/walk bow carry (Derek 2026-10-15, archer reference, same recipe as Bonequill #63 e541419): bow arm relaxed at the side, elbow
+# softly bent, the bow held near vertical along the INSIDE of the forearm, lower limb forward, top leaned out, string facing outward.
+# The bow frame is set in world space and the hand is solved from it: hand = Bw @ (RFIX @ Rz(ROLL))^-1.
+CARRY=dict(PITCH=float(os.environ.get('C_PITCH',25)),YAW=float(os.environ.get('C_YAW',8)),INWARD=float(os.environ.get('C_IN',15)),OUT=float(os.environ.get('C_OUT',12)),ELB=float(os.environ.get('C_ELB',65)),TILT=float(os.environ.get('C_TILT',10)),
+           LEAN=float(os.environ.get('C_LEAN',12)),ROLL=float(os.environ.get('C_ROLL',-45)))
+def carry_hand_rot():
+    # v5c (Derek 2026-10-15 correction): the STRING faces UP and lies along the inside of the forearm, the limb on the outside.
+    # Bow axis: forward, pitched down PITCH and yawed out YAW; string side (bow +y) = up, tipped toward the body by INWARD. With roll
+    # ROLL ~ 0 the string side points back along the hand toward the wrist, so the string crosses the inner forearm (gap tuned 0.5-1 cm).
+    P_r,Y_r,I_r=math.radians(CARRY['PITCH']),math.radians(CARRY['YAW']),math.radians(CARRY['INWARD'])
+    z=Vector((math.sin(Y_r)*math.cos(P_r),-math.cos(Y_r)*math.cos(P_r),-math.sin(P_r))).normalized()
+    y=Vector((-math.sin(I_r),0,math.cos(I_r))); y=(y-y.dot(z)*z).normalized(); x=y.cross(z)
+    Bw=Matrix((x,y,z)).transposed()
+    off=Matrix(((-1,0,0),(0,-1,0),(0,0,1)))@Matrix.Rotation(math.radians(CARRY['ROLL']),3,'Z')
+    return (Bw@off.inverted()).to_quaternion()
+RL_IDLE=carry_hand_rot()
+HOFF=(RW('LeftForeArm').inverted()@RW('LeftHand'))
+# v5c: re-aim the rigid bow+hand+forearm assembly so the forearm hangs forward-down from a relaxed elbow (C_FA, elbow->hand), then
+# twist it about the forearm so the bow runs fore-aft beside the leg with the string side as near UP as that allows (+C_TW deg trim). The hand/forearm relation
+# (string 0.5-1 cm off the inner forearm, set by ROLL) is unchanged by this rigid re-aim.
+def _reaim(q):
+    Rh=q.to_matrix(); u=(Rh@HOFF.inverted()).col[1].normalized()
+    ud=Vector([float(t) for t in os.environ.get('C_FA','0.2,-0.45,-0.87').split(',')]).normalized()
+    R0=u.rotation_difference(ud).to_matrix(); off=Matrix(((-1,0,0),(0,-1,0),(0,0,1)))@Matrix.Rotation(math.radians(CARRY['ROLL']),3,'Z')
+    best=None
+    for t in range(0,360,2):
+        Q=Matrix.Rotation(math.radians(t),3,ud)@R0; B=Q@Rh@off; up=(B@Vector((0,1,0))).z; fw=abs((B@Vector((0,0,1))).y)
+        sc_=fw+0.5*up   # bow along the walk direction beside the leg (not across the thighs), string as near up as that allows
+        if best is None or sc_>best[0]: best=(sc_,t,up,fw)
+    print('REAIM',best,flush=True)
+    Q=Matrix.Rotation(math.radians(best[1]+float(os.environ.get('C_TW',0))),3,ud)@R0
+    return (Q@Rh).to_quaternion()
+RL_IDLE=_reaim(RL_IDLE)
+WBEND=(Matrix.Rotation(math.radians(float(os.environ.get('C_WX',0))),3,'X')@Matrix.Rotation(math.radians(float(os.environ.get('C_WZ',0))),3,'Z'))  # small wrist set (hand frame)   # rest wrist offset: the carry keeps it (no wrist bend/twist -> no tear at the 100% ForeArm/Hand seam)
+EDES=Vector((float(os.environ.get('C_EX',0.10)),float(os.environ.get('C_EY',0.02)),-1.0)).normalized()   # preferred upper-arm direction (out a little, slightly back)
+def carry_rots():
+    """Bow frame in world -> hand rotation (RL_IDLE); forearm = hand @ HOFF^-1 (wrist at rest); elbow on the circle |E-S|=L1 with
+    (E-S) normal to the forearm hinge (so Arm/ForeArm share one hinge, no twist), closest to the preferred arm direction."""
+    upd(); S=PB[P_+'LeftArm'].head.copy(); Rh=RL_IDLE.to_matrix(); Rf=Rh@WBEND@HOFF.inverted(); dF=Rf.col[1].normalized()
+    n=(Rf@NLOC['LeftForeArm']).normalized(); d=(EDES-n*EDES.dot(n)).normalized(); E=S+d*L1
+    Ra=basis(n,d)@basis(NLOC['LeftArm']).inverted()
+    # whole arm (arm, forearm, hand rigidly) swung out OUT deg about world y at the shoulder: elbow clear of the ribs, bow lean = LEAN
+    q=Quaternion((0,1,0),math.radians(-CARRY['OUT'])).to_matrix()
+    return q@Ra,q@Rf,q@Rh
+def apply_carry(w,swing=0.0):
+    if w<=0: return
+    upd(); cur=[PB[P_+'Left'+b].matrix.to_3x3().normalized() for b in ('Arm','ForeArm','Hand')]
+    Ra,Rf,Rh=carry_rots()
+    if abs(swing)>0:   # walk: the whole carry swings a few degrees about the shoulder
+        q=Quaternion((1,0,0),math.radians(-swing*104)).to_matrix(); Ra,Rf,Rh=q@Ra,q@Rf,q@Rh
+    for b,c,t in zip(('Arm','ForeArm','Hand'),cur,(Ra,Rf,Rh)):
+        setworld('Left'+b,c.to_quaternion().slerp(t.to_quaternion(),w).to_matrix())
 def rest_arms(swL=0.0,swR=0.0):
     for s,sw in (('Left',swL),('Right',swR)):
         sg_=1 if s=='Left' else -1
         H=REST[s]+Vector((sg_*(0.012*(abs(sw)>0)+0.6*max(0.0,-sw)+0.2*max(0.0,sw)),-sw,0.25*abs(sw)))   # swing forward (-Y) lifts the hand a little; back swing goes out round the coat tails
         pose_arm(s,H,POLE_REST[s])
+    apply_carry(1.0,swL)
 # ---- roll check ----
 ROLL=[]
 def twist_about_y(q):
@@ -221,6 +274,7 @@ for f in range(31):
     HL=to_world(SLt+dL*(Lr+((L1+L2)*rL-Lr)*bl),a)
     pL=Rz(a)@lerpkey(LK,[k[3] for k in LK],f).normalized()
     pose_arm('Left',HL,pL); pose_arm('Right',HR,pR)
+    tb=ease(min(1.0,f/10.0)) if f<=10 else (1.0 if f<=20 else 1.0-ease((f-20)/10.0)); apply_carry(1.0-tb)   # carry -> draw f0-10, back f20-30
     # draw-hand wrist: near the jaw the fingers are bent to point forward along the arrow (not at the neck); flex only, no roll
     wD=ease((f-7)/3) if f<=10 else (1.0 if f<=17 else 1-ease((f-17)/3))
     if wD>0:
@@ -239,6 +293,6 @@ summ={'bow_tilt_from_vertical_at_full_draw_deg':round(BOW_TILT_DRAW,2),'max_hing
       'max_abs_forearm_twist_deg':max(max(abs(r['Left_forearm_twist_deg']),abs(r['Right_forearm_twist_deg'])) for r in ROLL),
       'max_abs_hand_twist_deg':max(max(abs(r['Left_hand_twist_deg']),abs(r['Right_hand_twist_deg'])) for r in ROLL),**jumps}
 reset(); arm.animation_data.action=A['rest']; sc.frame_set(0)
-bpy.ops.wm.save_as_mainfile(filepath=W_+'/anim.blend',compress=True)
+bpy.ops.wm.save_as_mainfile(filepath=os.environ.get('OUTBL',W_+'/anim.blend'),compress=True)
 for r in ROLL: r.pop('Left_hand_q'); r.pop('Right_hand_q')
-json.dump({'summary':summ,'frames':ROLL,'attack_step':STEPLOG},open(W_+'/anim.json','w'),indent=1); print('ANIM',json.dumps(summ))
+json.dump({'summary':summ,'frames':ROLL,'attack_step':STEPLOG},open(os.environ.get('OUTJS',W_+'/anim.json'),'w'),indent=1); print('ANIM',json.dumps(summ))

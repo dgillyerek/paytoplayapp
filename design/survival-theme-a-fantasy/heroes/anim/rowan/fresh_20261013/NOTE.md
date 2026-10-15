@@ -84,3 +84,14 @@ Derek approved the hero-blue front/back look (`source/ROWAN_FRONT_BACK_BLUE_LOCK
 - **Walk:** both legs adducted 2.9° with the sole kept flat. The ankle track goes from 31 cm to about 23.5 cm (≈24% narrower, close to the 20 cm hip joints). The stance foot drifts sideways by at most 2 mm. In the spring preview, coat vertices inside the leg capsules dropped from 47 to 40 (this grazing at the walk extremes was already there; Unity's leg colliders push the chains out).
 - **Attack step:** the left foot lifts at f2, plants 29 cm toward the target at f8 (6 frames before the release), holds through f19 and is back at rest by f26. The hips move 12 cm forward and 3 cm down onto it (f4–f11). Both feet use 2-bone IK on fixed world targets, so the right foot never moves (0 mm) and the planted left foot stays put. f0 and f30 are the rest pose. Arm vs chest/coat is still 0 (`pen.json`), and coat in legs is 0 in the attack.
 - Sheets: `sheets/ROWAN_fresh_bow_grip_closeup.jpg`, `ROWAN_fresh_walk_narrow_compare.jpg` and `ROWAN_fresh_attack_step_strip.jpg`. HOLD for Derek's Game-view check.
+
+## v5c (2026-10-15) string-up inner-forearm carry
+- Derek's correction: carried, the STRING faces up and lies along the inside of the forearm, the limb outside. Bow roll -45 deg in rest/walk
+  (anim.py CARRY: bow frame solved in world, hand from the bow, forearm from the hand with no wrist bend, then the rigid bow+hand+forearm
+  re-aimed so the forearm hangs forward-down and the bow runs fore-aft beside the leg).
+- String to the bow forearm/hand skin 0.73 cm, never inside it (ray-parity test, carry_check.json str_in_body = 0); string >= 2 cm from the
+  rest of the body (min 20 cm) and the coat (min 29 cm); bow limb: zero contact with body, coat, legs and forearm (rest, walk, attack).
+- Attack roll: -45 -> -310 (= 50, string toward him) over f1-f11 the long way round, held to f17, back by f27. The short way (-45 -> 0 -> 50)
+  sweeps the string through the wrist. Peak 10 deg per quarter frame.
+- Known: mid-spin (attack f2-f10, f18-f26) the octagonal grip's corners brush the finger skin (<= ~2 mm; grip_halfframe.json).
+- Narrower walk and the attack left-foot step are unchanged. Sheet: sheets/ROWAN_fresh_bow_carry_closeup.jpg.
