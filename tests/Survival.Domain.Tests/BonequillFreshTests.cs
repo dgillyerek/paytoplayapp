@@ -6,11 +6,11 @@ namespace Survival.Domain.Tests;
 public sealed class BonequillFreshTests
 {
     [Fact]
-    public void Fresh_rig_is_20_bone_generic_with_rest_walk_attack()
+    public void Fresh_rig_is_25_bone_generic_with_rest_walk_attack()
     {
-        Assert.Equal(20, BonequillMotion.BoneNames.Length);
+        Assert.Equal(25, BonequillMotion.BoneNames.Length);
         Assert.Equal(BonequillMotion.BoneCount, BonequillMotion.Spec.BoneCount);
-        Assert.Equal(MixamoHumanoidBones.Names.Where(n => !n.EndsWith("ToeBase", StringComparison.Ordinal)).ToArray(), BonequillMotion.BoneNames);
+        Assert.Equal(MixamoHumanoidBones.Names.Where(n => !n.EndsWith("ToeBase", StringComparison.Ordinal)).Concat(BonequillMotion.LeftGripBoneNames).ToArray(), BonequillMotion.BoneNames);
         Assert.Equal(BlenderRigAvatar.CustomGeneric, BonequillMotion.Spec.Avatar);
         Assert.Equal(new[] { "rest", "walk", "attack" }, BonequillMotion.PoseNames);
         Assert.Equal(4, BonequillAttack.Spec.Tracks.Length);

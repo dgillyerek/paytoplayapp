@@ -5,7 +5,7 @@ bpy.ops.import_scene.fbx(filepath=W+'/BONEQUILL_bow.fbx'); bow=[o for o in bpy.c
 FI=json.load(open(W+'/fist.json')); GL=Vector(FI['grip_local'])
 A=bpy.data.actions; arm.animation_data.action=A['BONEQUILL_attack']; sc.frame_set(10)
 bm=lambda: arm.matrix_world@arm.pose.bones[P_+'LeftHand'].matrix
-M=bm(); R=M.to_3x3().normalized(); op=R.inverted()@((M@GL)-M.to_translation()); oR=R.inverted()
+M=bm(); R=M.to_3x3().normalized(); op=GL.copy(); oR=Matrix(((-1,0,0),(0,-1,0),(0,0,1)))
 sc.render.engine='BLENDER_WORKBENCH'; sc.display.shading.light='STUDIO'; sc.display.shading.color_type='TEXTURE'; sc.render.resolution_x=360; sc.render.resolution_y=360
 cam=bpy.data.objects.new('cam',bpy.data.cameras.new('cam')); sc.collection.objects.link(cam); sc.camera=cam; cam.data.type='ORTHO'; cam.data.ortho_scale=0.32
 for an,f in (('BONEQUILL_rest',0),('BONEQUILL_walk',8),('BONEQUILL_attack',10)):

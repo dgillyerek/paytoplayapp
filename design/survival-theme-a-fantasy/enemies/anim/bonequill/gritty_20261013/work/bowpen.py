@@ -13,11 +13,14 @@ for cn,bn in (('cape_Head','Head'),('cape_LeftArm','LeftArm'),('cape_RightArm','
 bpy.ops.import_scene.fbx(filepath=W+'/BONEQUILL_bow.fbx'); bow=[o for o in bpy.context.selected_objects if o.type=='MESH'][0]
 BV=np.array([v.co[:] for v in bow.data.vertices]); BE=np.array([e.vertices[:] for e in bow.data.edges])
 FI=json.load(open(W+'/fist.json')); GL=Vector(FI['grip_local'])
-ex=set(body.vertex_groups[P_+n].index for n in ('LeftHand','LeftForeArm'))
+ex=set(body.vertex_groups[P_+n].index for n in ('LeftHand','LeftForeArm','LeftHandFingers1','LeftHandFingers2','LeftHandFingers3','LeftHandThumb1','LeftHandThumb2'))
 excl=np.array([any(g.group in ex and g.weight>0.3 for g in v.groups) for v in body.data.vertices])
 polys=[p.vertices[:] for p in body.data.polygons if not excl[list(p.vertices)].any()]
+hand_ids=set(body.vertex_groups[P_+n].index for n in ('LeftHand','LeftHandFingers1','LeftHandFingers2','LeftHandFingers3','LeftHandThumb1','LeftHandThumb2'))
+hidx=[v.index for v in body.data.vertices if sum(g.weight for g in v.groups if g.group in hand_ids)>0.3]
+bowbvh=BVHTree.FromPolygons([v.co.copy() for v in bow.data.vertices],[p.vertices[:] for p in bow.data.polygons])
 A=bpy.data.actions; arm.animation_data.action=A['BONEQUILL_attack']; sc.frame_set(14)
-M=arm.matrix_world@arm.pose.bones[P_+'LeftHand'].matrix; R=M.to_3x3().normalized(); op=R.inverted()@((M@GL)-M.to_translation()); oR=R.inverted()
+M=arm.matrix_world@arm.pose.bones[P_+'LeftHand'].matrix; R=M.to_3x3().normalized(); op=GL.copy(); oR=Matrix(((-1,0,0),(0,-1,0),(0,0,1)))
 out={}; worst={}
 for an in ('rest','walk','attack'):
     arm.animation_data.action=A['BONEQUILL_'+an]; per=[]
@@ -27,6 +30,10 @@ for an in ('rest','walk','attack'):
         BW=Matrix.Translation(M.to_translation()+R@op)@(R@oR).to_4x4()
         Pb=(np.c_[BV,np.ones(len(BV))]@np.array(BW).T)[:,:3]
         e=body.evaluated_get(dg); m=e.to_mesh(); V=[body.matrix_world@v.co for v in m.vertices]; e.to_mesh_clear()
+        Bi=BW.inverted(); nh=0
+        for i in hidx:
+            q=Bi@V[i]; loc,nrm,_,dd=bowbvh.find_nearest(q)
+            if loc is not None and (q-loc).dot(nrm)<0 and dd<0.05: nh+=1
         bvh=BVHTree.FromPolygons(V,polys)
         nb=0; md=9
         for p in Pb:
@@ -42,9 +49,10 @@ for an in ('rest','walk','attack'):
             if L<1e-6: continue
             hit=cb.ray_cast(pa,d/L,L)
             if hit[0] is not None: nc+=1
-        per.append([f,nb,nc,round(md,4)])
-    out[an]=per; worst[an]={'body_verts_max':max(r[1] for r in per),'cloak_edges_max':max(r[2] for r in per),'min_clearance_m':min(r[3] for r in per)}
+        per.append([f,nb,nc,round(md,4),nh])
+    out[an]=per; worst[an]={'body_verts_max':max(r[1] for r in per),'cloak_edges_max':max(r[2] for r in per),'min_clearance_m':min(r[3] for r in per),'hand_in_bow_max':max(r[4] for r in per)}
 md5=lambda p: hashlib.md5(open(p,'rb').read()).hexdigest()
-rep={'samples_per_clip':61,'step_frames':0.5,'worst':worst,'per_sample':out,
+FJ=json.load(open(W+'/fingers.json'))
+rep={'samples_per_clip':61,'grip':{k:FJ[k] for k in ('finger_curl_deg','thumb_deg','grip_coverage_deg','hole_radius','finger_len_change_pct','edge_stretch_p99','edge_stretch_max')},'step_frames':0.5,'worst':worst,'per_sample':out,
      'fbx_md5':{k:md5(W+'/export/'+f) for k,f in (('rest','BONEQUILL_blenderig.fbx'),('walk','BONEQUILL_blenderig_walk.fbx'),('attack','BONEQUILL_blenderig_attack.fbx'))}}
 json.dump(rep,open(W+'/bow_clearance.json','w'),indent=0); print('BOWPEN',json.dumps(worst))

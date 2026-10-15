@@ -4,37 +4,7 @@ import sys; sys.path.append("/home/box/.local/lib/python3.13/site-packages")
 import bpy, math, json, numpy as np
 from mathutils import Vector, Matrix, Quaternion
 bpy.ops.wm.open_mainfile(filepath='/workspace/bonequill_gritty/work/rig.blend')
-# ---- bow-hand fist (Derek 10-14): no finger bones, so sculpt the LeftHand fingers into a fist curled around a grip cylinder.
-# Hand-bone space: y wrist->fingers, palm normal +x, knuckle width along z. Fingers past the knuckle line wrap on a circle
-# around the grip axis (parallel to z) at C; the thumb is pushed out radially so it closes over the outside of the grip.
-BOW_R=0.024; FIST={}
-def sculpt_fist():
-    arm_=bpy.data.objects['BONEQUILL_rig']; body=bpy.data.objects['BONEQUILL_body']; B=arm_.data.bones['mixamorig:LeftHand']
-    Mi=np.array(B.matrix_local.inverted()); Mw=np.array(B.matrix_local); gi=body.vertex_groups['mixamorig:LeftHand'].index
-    V=np.array([v.co[:] for v in body.data.vertices]); W=np.zeros(len(V))
-    for v in body.data.vertices:
-        for g in v.groups:
-            if g.group==gi: W[v.index]=g.weight
-    L=(np.c_[V,np.ones(len(V))]@Mi.T)[:,:3]; hand=W>0.5
-    yk=0.085; band=hand&(np.abs(L[:,1]-yk)<0.012)&(L[:,0]<0.03); xf=float(np.median(L[band,0])); zc=float(np.median(L[hand&(L[:,1]>0.12),2]))
-    th_=float(np.percentile(L[band,0],90)-np.percentile(L[band,0],10))/2   # finger half-thickness
-    Rc=BOW_R+th_+0.006; C=np.array([xf+Rc,yk])
-    fing=hand&(L[:,1]>yk)&~((L[:,0]>0.035)&(L[:,1]<0.135))                # fingers (thumb excluded: palm-side and short)
-    thumb=hand&(L[:,0]>0.035)&(L[:,1]>0.02)&(L[:,1]<0.135)
-    N=L.copy(); s_=L[fing,1]-yk; t_=L[fing,0]-xf; th=s_/Rc; r=Rc-t_
-    wv=np.clip(W[fing],0,1)
-    nx=C[0]-r*np.cos(th); ny=C[1]+r*np.sin(th)
-    N[fing,0]=L[fing,0]+(nx-L[fing,0])*wv; N[fing,1]=L[fing,1]+(ny-L[fing,1])*wv
-    d=N[:,:2]-C; dn=np.linalg.norm(d,axis=1); need=thumb&(dn<BOW_R+0.010)
-    N[need,:2]=C+d[need]/np.maximum(dn[need],1e-6)[:,None]*(BOW_R+0.010)
-    # anything else of the hand still inside the grip cylinder (palm pad) gets pushed to its surface
-    d=N[:,:2]-C; dn=np.linalg.norm(d,axis=1); need=hand&(dn<BOW_R+0.006)&(np.abs(N[:,2]-zc)<0.09)
-    N[need,:2]=C+d[need]/np.maximum(dn[need],1e-6)[:,None]*(BOW_R+0.006)
-    Vn=(np.c_[N,np.ones(len(N))]@Mw.T)[:,:3]; body.data.vertices.foreach_set('co',Vn.ravel()); body.data.update()
-    zt=float(N[hand&(np.linalg.norm(N[:,:2]-C,axis=1)<0.06),2].max())
-    FIST.update(grip_local=[C[0],C[1],zc],rc=Rc,xf=xf,zc=zc,fist_top_local_z=zt,fingers=int(fing.sum()),thumb=int(thumb.sum()))
-    json.dump(FIST,open('/workspace/bonequill_gritty/work/fist.json','w'))
-sculpt_fist()
+# bow-hand grip: real finger bones added by fingers.py (rig.blend); the Meshy hand mesh is no longer sculpted
 sc=bpy.context.scene; sc.render.fps=30; sc.frame_start=0; sc.frame_end=30
 arm=bpy.data.objects['BONEQUILL_rig']; PB=arm.pose.bones; P_='mixamorig:'
 for pb in PB: pb.rotation_mode='QUATERNION'
@@ -77,7 +47,7 @@ def spine_yaw(deg):
     upd()
 HDX,HDZ=0.0,0.0
 RDX4=Vector((0,0,0))
-BDX,BDZ=0.119,-0.010
+BDX,BDZ=0.126,-0.011
 def draw_pose(pull=0.0,yaw=YAW):
     reset(); legs(); spine_yaw(yaw)
     S=PB[P_+'LeftArm'].head.copy(); D=(Vector((-0.07+BDX,-0.62,1.52+BDZ))-S).normalized()   # bow hand straight ahead of the face, so the arrow flies forward
@@ -88,7 +58,17 @@ def draw_pose(pull=0.0,yaw=YAW):
 draw_pose(); upd()
 _M=PB[P_+'LeftHand'].matrix.to_3x3(); _y=_M.col[1].normalized(); _z=Vector((0,0,1)); _z=(_z-_z.dot(_y)*_y).normalized(); _x=_y.cross(_z)
 RL=Matrix((_x,_y,_z)).transposed().to_quaternion()   # hand roll: knuckle width (local z) vertical so the grip sits across the palm, palm (+x) toward the midline      # left-hand armature rotation at full draw (bow upright)
-def lefthand_hold(q=None): setrot('LeftHand',q if q is not None else RL)
+FJ=json.load(open('/workspace/bonequill_gritty/work/fingers.json'))
+def left_grip():
+    # closed bow grip on the real finger bones (fingers.py): fingers curl about the knuckle axis, thumb wraps over the grip
+    Mh=PB[P_+'LeftHand'].bone.matrix_local.to_3x3()
+    def frot(n,ax,deg):
+        pb=PB[P_+n]; R=pb.bone.matrix_local.to_3x3(); q=Quaternion((Mh@Vector(ax)).normalized(),math.radians(deg))
+        pb.rotation_quaternion=(R.inverted()@q.to_matrix()@R).to_quaternion()
+    for i,d in enumerate(FJ['finger_curl_deg']): frot('LeftHandFingers%d'%(i+1),(0,0,1),-d)
+    for i,d in enumerate(FJ['thumb_deg']): frot('LeftHandThumb%d'%(i+1),FJ['thumb_axis'],d)
+    upd()
+def lefthand_hold(q=None): setrot('LeftHand',q if q is not None else RL); left_grip()
 # rest/walk bow carry (Derek 10-14): bow held lower, tipped 45 deg out and slightly back at the top so it clears the shoulder,
 # shoulder guard, cloak and leg on every frame; left arm 8 deg further out and the forearm bent 30 deg more (hand forward of the hip)
 IDLE_OUT,IDLE_FWD,IDLE_ABD,IDLE_ELB=45.0,-8.0,8.0,30.0

@@ -41,7 +41,7 @@ def bm(n): return arm.matrix_world@arm.pose.bones[P_+n].matrix
 # bow: grip 6 cm along LeftHand (palm), world-upright at full draw
 FI=json.load(open(W+'/fist.json')); GL=Vector(FI['grip_local']); REST_L=Vector((FI['grip_local'][0],FI['grip_local'][1],FI['fist_top_local_z']+0.006))
 ML=bm('LeftHand'); RL=ML.to_3x3().normalized(); grip=ML@GL   # bow grip at the centre of the fist
-bow_off=(RL.inverted()@(grip-ML.to_translation()), RL.inverted())   # pos, rot (bow rot = identity at REF)
+bow_off=(GL.copy(), Matrix(((-1,0,0),(0,-1,0),(0,0,1))))   # bow axis = the grip axis (hand-local z) through the centre of the closed hand; ~upright at full draw
 # arrow: nock between the draw fingers (centroid of the RightHand finger verts, in hand space), shaft resting on top of the bow
 # hand at the grip (arrow rest), re-aimed every frame nock -> rest; projectile flies along the full-draw line
 hw_i=body.vertex_groups[P_+'RightHand'].index; HB=arm.data.bones[P_+'RightHand']; HM=HB.matrix_local.inverted()

@@ -7,10 +7,10 @@ bpy.ops.import_scene.fbx(filepath=W+'/BONEQUILL_bow.fbx'); bow=[o for o in bpy.c
 bm_=bow.data; Vb=[bow.matrix_world@v.co for v in bm_.vertices]; Vb=[(bow.matrix_world.inverted()@v) for v in Vb]
 bvh=BVHTree.FromPolygons([v.co.copy() for v in bm_.vertices],[p.vertices[:] for p in bm_.polygons])
 FI=json.load(open(W+'/fist.json')); GL=Vector(FI['grip_local'])
-gi=body.vertex_groups[P_+'LeftHand'].index; hidx=[v.index for v in body.data.vertices if any(g.group==gi and g.weight>0.3 for g in v.groups)]
+gis_={body.vertex_groups[P_+n].index for n in ('LeftHand','LeftHandFingers1','LeftHandFingers2','LeftHandFingers3','LeftHandThumb1','LeftHandThumb2')}; hidx=[v.index for v in body.data.vertices if sum(g.weight for g in v.groups if g.group in gis_)>0.3]
 A=bpy.data.actions; arm.animation_data.action=A['BONEQUILL_attack']; sc.frame_set(10)
 M=arm.matrix_world@arm.pose.bones[P_+'LeftHand'].matrix; RLr=M.to_3x3().normalized()
-off_p=RLr.inverted()@((M@GL)-M.to_translation()); off_R=RLr.inverted()
+off_p=GL.copy(); off_R=Matrix(((-1,0,0),(0,-1,0),(0,0,1)))
 out={}
 for an,n in (('BONEQUILL_rest',31),('BONEQUILL_walk',31),('BONEQUILL_attack',31)):
     arm.animation_data.action=A[an]; res=[]

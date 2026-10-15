@@ -5,7 +5,7 @@ namespace Survival.Domain.Enemies
     /// <summary>
     /// Bonequill gritty rebuild (2026-10-13, replaces the fresh_20261013 build in #62): Derek-approved gritty purple look
     /// (weathered bone, battered iron armour, tattered purple hooded cloak), Meshy body decimated to 200k faces plus a modelled
-    /// quiver with bone arrows rigid on Spine2, same 20-bone mixamorig rig method (design .../bonequill/gritty_20261013). Skull and face 100% on Head, loincloth/belt/pelvis 100% on Hips
+    /// quiver with bone arrows rigid on Spine2, same mixamorig rig method (20 body bones + 5 left-hand grip bones: finger chain x3, thumb x2, Meshy hand mesh unsculpted) (design .../bonequill/gritty_20261013). Skull and face 100% on Head, loincloth/belt/pelvis 100% on Hips
     /// (never the legs), bracers and boots rigid on their bones, Hips to UpLeg ramp 6 cm. Rest = arms relaxed down by the sides.
     /// Walk = 1 s in-place Scene take at 30 fps, ankles about 30 cm apart, head forward with a 0-1.8 deg bob. Cape is a separate
     /// FBX on runtime springs (<see cref="BonequillCape"/>). Imported Generic like the locked rigs. Replaces #47 / #34.
@@ -22,8 +22,8 @@ namespace Survival.Domain.Enemies
         public const string AttackPoseName = BlenderRigAttackSpec.PoseName;
         public const string AttackFileName = BonequillAttack.FileName;
         public const string RejectedMixamoFileName = "BONEQUILL_rig.fbx";
-        public const string RestMd5 = "1ac0161ceb367c99e5305b081c8592ff";
-        public const string WalkMd5 = "ea606aca3a2e055f455e34101eac47d1";
+        public const string RestMd5 = "f563b6dc08cbff46e0817fcb30ceb9bb";
+        public const string WalkMd5 = "ed85533c305576dddbcc1a612f3d6298";
         public const string AttackMd5 = BonequillAttack.FileMd5;
 
         public const string RestPoseName = BlenderRigSpec.RestPoseName;
@@ -32,7 +32,7 @@ namespace Survival.Domain.Enemies
         public const float WalkSeconds = 1f;
         public const float WalkFrameRate = 30f;
         public const int WalkLastFrame = 30;
-        public const int BoneCount = 20;
+        public const int BoneCount = 25;   // 20 Mixamo body bones + 5 left-hand grip bones (finger chain x3, thumb x2)
 
         public const string TextureFolder = "BONEQUILL_blenderig.fbm";
         public const string BaseColorFile = "BONEQUILL_fresh_basecolor_0.jpg";
@@ -63,7 +63,22 @@ namespace Survival.Domain.Enemies
             "mixamorig:LeftFoot",
             "mixamorig:RightUpLeg",
             "mixamorig:RightLeg",
-            "mixamorig:RightFoot"
+            "mixamorig:RightFoot",
+            "mixamorig:LeftHandFingers1",
+            "mixamorig:LeftHandFingers2",
+            "mixamorig:LeftHandFingers3",
+            "mixamorig:LeftHandThumb1",
+            "mixamorig:LeftHandThumb2"
+        };
+
+        /// <summary>Bow-hand grip bones (not Mixamo): one combined chain for the four fingers and a two-segment thumb, parented to LeftHand.</summary>
+        public static readonly string[] LeftGripBoneNames =
+        {
+            "mixamorig:LeftHandFingers1",
+            "mixamorig:LeftHandFingers2",
+            "mixamorig:LeftHandFingers3",
+            "mixamorig:LeftHandThumb1",
+            "mixamorig:LeftHandThumb2"
         };
 
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(
