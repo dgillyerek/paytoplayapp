@@ -22,6 +22,9 @@ namespace Survival.Unity
         private PlayableGraph _graph;
         private AnimationPlayableOutput _output;
         private AnimationClipPlayable _playable;
+        private AnimationMixerPlayable _mixer;
+        private AnimationClipPlayable _from;
+        private float _fade = -1f;
         private GameObject? _instance;
         private bool _ready;
         private bool _loop;
@@ -78,6 +81,9 @@ namespace Survival.Unity
             _graph = PlayableGraph.Create("IronhowlRig");
             _graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
             _output = AnimationPlayableOutput.Create(_graph, "Ironhowl", _animator);
+            // Input 0 = outgoing pose (frozen), input 1 = current pose. See IronhowlMotion.CrossfadeWeight.
+            _mixer = AnimationMixerPlayable.Create(_graph, 2);
+            _output.SetSourcePlayable(_mixer);
             _graph.Play();
             _ready = true;
             PlayPose(IronhowlMotion.RestPoseName);
@@ -137,16 +143,11 @@ namespace Survival.Unity
                 return false;
             }
 
-            if (_playable.IsValid())
-            {
-                _playable.Destroy();
-            }
-
-            _playable = AnimationClipPlayable.Create(_graph, clip);
-            _output.SetSourcePlayable(_playable);
-            _playable.SetDuration(clip.length);
-            _playable.SetTime(0d);
-            _playable.SetSpeed(1d);
+            var next = AnimationClipPlayable.Create(_graph, clip);
+            next.SetDuration(clip.length);
+            next.SetTime(0d);
+            next.SetSpeed(0d);
+            BeginCrossfade(next);
             _length = clip.length;
             _time = 0f;
             _loop = true;
@@ -163,12 +164,65 @@ namespace Survival.Unity
 #endif
         }
 
-        private void HoldTpose(string poseName, bool clipMissing)
+        /// <summary>
+        /// Moves the current clip to input 0 frozen on its current frame and puts <paramref name="next"/>
+        /// on input 1. The first pose (nothing playing yet) starts at full weight with no fade.
+        /// </summary>
+        private void BeginCrossfade(AnimationClipPlayable next)
         {
+            ClearFrom();
             if (_playable.IsValid())
             {
+                _graph.Disconnect(_mixer, 1);
+                _from = _playable;
+                _from.SetSpeed(0d);
+                _graph.Connect(_from, 0, _mixer, 0);
+                _fade = 0f;
+            }
+            else
+            {
+                _fade = -1f;
+            }
+
+            _playable = next;
+            _graph.Connect(_playable, 0, _mixer, 1);
+            ApplyWeights();
+        }
+
+        private void ClearFrom()
+        {
+            if (_from.IsValid())
+            {
+                _graph.Disconnect(_mixer, 0);
+                _from.Destroy();
+            }
+
+            _from = default;
+            _fade = -1f;
+        }
+
+        private void ApplyWeights()
+        {
+            if (!_mixer.IsValid())
+            {
+                return;
+            }
+
+            var w = _fade < 0f ? 1f : IronhowlMotion.CrossfadeWeight(_fade);
+            _mixer.SetInputWeight(0, _from.IsValid() ? 1f - w : 0f);
+            _mixer.SetInputWeight(1, w);
+        }
+
+        private void HoldTpose(string poseName, bool clipMissing)
+        {
+            ClearFrom();
+            if (_playable.IsValid())
+            {
+                _graph.Disconnect(_mixer, 1);
                 _playable.Destroy();
             }
+
+            _playable = default;
 
             _animator?.Rebind();
             _animator?.Update(0f);
@@ -186,12 +240,23 @@ namespace Survival.Unity
                 return;
             }
 
-            _time += Time.unscaledDeltaTime;
+            var dt = Time.unscaledDeltaTime;
+            _time += dt;
             if (_length > 0.05f)
             {
                 _time %= _length;
             }
 
+            if (_fade >= 0f)
+            {
+                _fade += dt;
+                if (_fade >= IronhowlMotion.CrossfadeSeconds)
+                {
+                    ClearFrom();
+                }
+            }
+
+            ApplyWeights();
             _playable.SetTime(_time);
             _graph.Evaluate(0f);
         }

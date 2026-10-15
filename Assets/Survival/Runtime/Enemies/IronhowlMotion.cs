@@ -36,6 +36,34 @@ namespace Survival.Domain.Enemies
         public const string WalkPoseName = "walk";
         public const string AttackPoseName = "attack";
 
+        /// <summary>
+        /// Crossfade between poses (rest, walk, attack and back), Derek on #65: the rest to attack
+        /// switch popped. The outgoing clip freezes on its current frame while the incoming one
+        /// plays from frame 0 and takes over along <see cref="CrossfadeWeight"/>.
+        /// </summary>
+        public const float CrossfadeSeconds = 0.25f;
+
+        /// <summary>
+        /// Weight of the incoming pose, 0 at the switch and 1 after <see cref="CrossfadeSeconds"/>.
+        /// Smootherstep (6t^5 - 15t^4 + 10t^3): zero slope and zero acceleration at both ends, so
+        /// neither the start nor the end of the blend adds a velocity jump on any bone.
+        /// </summary>
+        public static float CrossfadeWeight(float secondsSinceSwitch)
+        {
+            if (secondsSinceSwitch <= 0f)
+            {
+                return 0f;
+            }
+
+            if (secondsSinceSwitch >= CrossfadeSeconds)
+            {
+                return 1f;
+            }
+
+            var t = secondsSinceSwitch / CrossfadeSeconds;
+            return t * t * t * ((t * ((t * 6f) - 15f)) + 10f);
+        }
+
         /// <summary>Verified AnimationStack on every Ironhowl Mixamo FBX. Not a Blender Scene take.</summary>
         public const string TakeName = "mixamo.com";
 
