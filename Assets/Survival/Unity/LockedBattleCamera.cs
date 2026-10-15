@@ -203,7 +203,7 @@ namespace Survival.Unity
             cam.nearClipPlane = PortraitGameView.Near;
             cam.farClipPlane = PortraitGameView.Far;
             cam.aspect = PortraitGameView.Width / PortraitGameView.Height;
-            cam.backgroundColor = new Color(0.07f, 0.09f, 0.06f, 1f);
+            cam.backgroundColor = LockedBattleGround.Horizon;
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.transform.SetPositionAndRotation(_eye + _shakeOffset, _rotation);
         }

@@ -581,6 +581,7 @@ namespace Survival.Unity
             f.StartPosition = new Vector3(x, 0f, z);
             f.StartRotation = Quaternion.Euler(0f, LockedBattleRoster.StartYawDegrees(data), 0f);
             slot.transform.SetPositionAndRotation(f.StartPosition, f.StartRotation);
+            LockedBattleGround.AddContactShadow(slot.transform, bounds.size.x * f.Scale, bounds.size.z * f.Scale);
             var flashSlots = new List<FlashSlot>();
             foreach (var r in host.GetComponentsInChildren<Renderer>(true))
             {
@@ -805,32 +806,10 @@ namespace Survival.Unity
             }
         }
 
-        /// <summary>Same dark ground as PortraitStage, sized to the whole battlefield.</summary>
+        /// <summary>World-map grass with a dirt track per lane and a hazy horizon (<see cref="LockedBattleGround"/>).</summary>
         private void BuildGround()
         {
-            var ground = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            ground.name = "Ground";
-            ground.transform.SetParent(transform, false);
-            ground.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-            ground.transform.localScale = new Vector3(16f, 16f, 1f);
-            ground.transform.position = Vector3.zero;
-            Destroy(ground.GetComponent<Collider>());
-            var renderer = ground.GetComponent<Renderer>();
-            if (renderer == null)
-            {
-                return;
-            }
-
-            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            var mat = new Material(shader);
-            var color = new Color(0.11f, 0.13f, 0.09f, 1f);
-            if (mat.HasProperty("_BaseColor"))
-            {
-                mat.SetColor("_BaseColor", color);
-            }
-
-            mat.color = color;
-            renderer.sharedMaterial = mat;
+            LockedBattleGround.Build(transform);
         }
 
         private void BuildHud()
