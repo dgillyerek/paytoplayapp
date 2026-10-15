@@ -95,7 +95,11 @@ namespace Survival.Editor
         [MenuItem("Survival/Locked Battle (heroes vs villains, Game view 1080x1920)")]
         public static void OpenLockedBattleDemo()
         {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(BattleLocked);
+            // Single mode closes every other loaded scene (including a Blightroot demo left open
+            // in the hierarchy), so Game view only shows the eight roster fighters.
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+                BattleLocked,
+                UnityEditor.SceneManagement.OpenSceneMode.Single);
         }
 
         [MenuItem("Survival/Vespera Demo (rest + walk + attack, Game view 1080x1920)")]
