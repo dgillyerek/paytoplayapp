@@ -88,12 +88,17 @@ def draw_pose(pull=0.0,yaw=YAW):
 draw_pose(); upd()
 _M=PB[P_+'LeftHand'].matrix.to_3x3(); _y=_M.col[1].normalized(); _z=Vector((0,0,1)); _z=(_z-_z.dot(_y)*_y).normalized(); _x=_y.cross(_z)
 RL=Matrix((_x,_y,_z)).transposed().to_quaternion()   # hand roll: knuckle width (local z) vertical so the grip sits across the palm, palm (+x) toward the midline      # left-hand armature rotation at full draw (bow upright)
-def lefthand_hold(): setrot('LeftHand',RL)
+def lefthand_hold(q=None): setrot('LeftHand',q if q is not None else RL)
+# rest/walk bow carry (Derek 10-14): bow held lower, tipped 45 deg out and slightly back at the top so it clears the shoulder,
+# shoulder guard, cloak and leg on every frame; left arm 8 deg further out and the forearm bent 30 deg more (hand forward of the hip)
+IDLE_OUT,IDLE_FWD,IDLE_ABD,IDLE_ELB=45.0,-8.0,8.0,30.0
+RL_IDLE=Quaternion((0,1,0),math.radians(IDLE_OUT))@Quaternion((1,0,0),math.radians(IDLE_FWD))@RL
 def rest_arms(swL=0,swR=0):
     rot('LeftArm',(0,1,0),ARM_DOWN); rot('RightArm',(0,1,0),-ARM_DOWN)
     rot('LeftArm',(1,0,0),swL); rot('RightArm',(1,0,0),swR)
     rot('LeftForeArm',(1,0,0),-12); rot('RightForeArm',(1,0,0),-6)
-    lefthand_hold()
+    rot('LeftArm',(0,1,0),IDLE_ABD); rot('LeftForeArm',(1,0,0),-IDLE_ELB); upd()
+    lefthand_hold(RL_IDLE)
 A={}
 A['rest']=act('BONEQUILL_rest')
 for f in (0,30): reset(); legs(); rest_arms(); head_forward(); key(f)
@@ -148,6 +153,6 @@ for f in range(31):
     reset(); legs(); spine_yaw(samp(KY,f)); dl=samp(KL,f); dr=samp(KR,f)
     for n,d in zip(('LeftArm','LeftForeArm','RightArm','RightForeArm'),dl+dr): aim(n,d)
     untwist('RightForeArm')
-    lefthand_hold(); head_forward(); key(f)
+    tb=ease(min(1.0,f/10.0)) if f<=10 else (1.0 if f<=20 else 1.0-ease((f-20)/10.0)); lefthand_hold(RL_IDLE.slerp(RL,tb)); head_forward(); key(f)
 reset(); arm.animation_data.action=A['rest']; sc.frame_set(0)
 bpy.ops.wm.save_as_mainfile(filepath='/workspace/bonequill_gritty/work/anim.blend',compress=True); bpy.ops.wm.save_as_mainfile(filepath='/workspace/bonequill_gritty/work/anim_nq.blend',compress=True,copy=True); print('ANIM ok ADD',ADD)

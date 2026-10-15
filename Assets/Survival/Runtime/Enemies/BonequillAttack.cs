@@ -8,16 +8,18 @@ namespace Survival.Domain.Enemies
     /// out of the quiver, f8 hand up over the right shoulder, f10 nock, f14 full draw with the torso yawed ~55 deg (bow shoulder at the
     /// target, LeftArm straight out, RightHand at the jaw, elbow out), f17 loose (arrow flies straight at the target at 14 m/s with a
     /// purple trail), f20 string-hand recoil, f30 rest. Elbow stays high and out, so the arm never crosses the hood, cloak or ribcage
-    /// (checked at every half frame); the forearm has no twist relative to the upper arm, so it cannot roll-flip. LeftHand keeps its
-    /// full-draw rotation in every clip, so the bow stays upright in rest, walk and attack;
-    /// the bow hand is sculpted into a fist (no finger bones) and rolled so the grip sits across the palm with the fingers wrapped around it.
+    /// (checked at every half frame); the forearm has no twist relative to the upper arm, so it cannot roll-flip.
+    /// In rest and walk the bow is carried lower, tipped 45 deg out (top clear of the shoulder guard), and swings up to the full-draw
+    /// grip between f0 and f10; it is back to the carry by f30. Bow-vs-body/cloak clearance is checked at every half frame of every clip
+    /// (work/bow_clearance.json, BonequillBowClearanceTests).
+    /// The bow hand is sculpted into a fist (no finger bones) and rolled so the grip sits across the palm with the fingers wrapped around it.
     /// Head forward. Frames baked in Unity convention (character forward = +Z) by design .../gritty_20261013/work/sheet.py.
     /// HOLD merge until Derek Game-view PASS.
     /// </summary>
     public static class BonequillAttack
     {
         public const string FileName = "BONEQUILL_blenderig_attack.fbx";
-        public const string FileMd5 = "e298c5b44f44df86fbf2730d9e396746";
+        public const string FileMd5 = "b4c84740cbeeae85ef7aeb8ae13b3e06";
         public const string DesignDir = BonequillMotion.DesignDir;
         public const int ReleaseFrame = 17;
         public const bool InPlace = false;
@@ -42,7 +44,7 @@ namespace Survival.Domain.Enemies
                 "BONEQUILL_bow.fbx",
                 "3b25e1c4d1f4f418fb00540e4e29345f",
                 "mixamorig:LeftHand",
-                new[] { -0.22682f, 0.89816f, 0.09669f, 0f, 0f, 0f, 1f },
+                new[] { -0.1548f, 1.02324f, 0.20243f, -0.06445f, -0.02669f, 0.38175f, 0.92163f },
                 new[] { 0.048f, 1.41f, 0.22335f },
                 "Bone bow on LeftHand in rest, walk and attack (rest_world from sheet.json). Stands in for the attack's BONEQUILL_bow track so one bow serves every clip.",
                 "BONEQUILL_bow")
@@ -76,16 +78,16 @@ namespace Survival.Domain.Enemies
                     new[] { 0.048f, 1.41f, 0.22335f },
                     new[]
                     {
-                        new AttackFrame(-0.22682f, 0.89816f, 0.09669f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.22817f, 0.8998f, 0.10859f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.23172f, 0.90617f, 0.14279f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.23632f, 0.92188f, 0.19773f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.23999f, 0.95355f, 0.2689f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.24038f, 1.00507f, 0.34455f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.23672f, 1.07046f, 0.40862f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.2308f, 1.13522f, 0.45197f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.22508f, 1.18696f, 0.47643f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.21384f, 1.21984f, 0.54783f, 0f, 0f, 0f, 1f, 1f, true),
+                        new AttackFrame(-0.1548f, 1.02324f, 0.20243f, -0.06445f, -0.02669f, 0.38175f, 0.92163f, 1f, true),
+                        new AttackFrame(-0.15649f, 1.02315f, 0.21119f, -0.06273f, -0.02599f, 0.37161f, 0.9259f, 1f, true),
+                        new AttackFrame(-0.16139f, 1.02422f, 0.23633f, -0.05805f, -0.02404f, 0.34386f, 0.93692f, 1f, true),
+                        new AttackFrame(-0.1693f, 1.03025f, 0.27679f, -0.05105f, -0.02115f, 0.30239f, 0.95158f, 1f, true),
+                        new AttackFrame(-0.17941f, 1.04703f, 0.32955f, -0.04241f, -0.01757f, 0.25123f, 0.96684f, 1f, true),
+                        new AttackFrame(-0.19004f, 1.07886f, 0.38587f, -0.03287f, -0.01362f, 0.19473f, 0.98021f, 1f, true),
+                        new AttackFrame(-0.19953f, 1.12212f, 0.43317f, -0.02322f, -0.00962f, 0.13755f, 0.99018f, 1f, true),
+                        new AttackFrame(-0.20739f, 1.16598f, 0.46442f, -0.01428f, -0.00591f, 0.08458f, 0.9963f, 1f, true),
+                        new AttackFrame(-0.21368f, 1.20116f, 0.48145f, -0.00688f, -0.00285f, 0.04076f, 0.99914f, 1f, true),
+                        new AttackFrame(-0.21075f, 1.22353f, 0.54902f, -0.00185f, -0.00077f, 0.01098f, 0.99994f, 1f, true),
                         new AttackFrame(-0.18849f, 1.23139f, 0.60631f, 0f, 0f, 0f, 1f, 1f, true),
                         new AttackFrame(-0.16026f, 1.26149f, 0.62643f, 0f, 0f, 0f, 1f, 1f, true),
                         new AttackFrame(-0.09311f, 1.3323f, 0.65853f, 0f, 0f, 0f, 1f, 1f, true),
@@ -97,16 +99,16 @@ namespace Survival.Domain.Enemies
                         new AttackFrame(0.00785f, 1.43446f, 0.67223f, 0f, 0f, 0f, 1f, 1f, true),
                         new AttackFrame(0.00785f, 1.43446f, 0.67223f, 0f, 0f, 0f, 1f, 1f, true),
                         new AttackFrame(0.00785f, 1.43446f, 0.67223f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(0.00127f, 1.42159f, 0.67138f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.01725f, 1.38214f, 0.66704f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.04685f, 1.31044f, 0.65219f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.08765f, 1.20188f, 0.60982f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.13588f, 1.07472f, 0.51727f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.17826f, 0.97643f, 0.38501f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.2053f, 0.92623f, 0.26036f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.21925f, 0.90635f, 0.16952f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.22523f, 0.89968f, 0.11526f, 0f, 0f, 0f, 1f, 1f, true),
-                        new AttackFrame(-0.22682f, 0.89816f, 0.09669f, 0f, 0f, 0f, 1f, 1f, true)
+                        new AttackFrame(0.00361f, 1.42427f, 0.67143f, -0.00185f, -0.00077f, 0.01098f, 0.99994f, 1f, true),
+                        new AttackFrame(-0.00825f, 1.39333f, 0.66739f, -0.00688f, -0.00285f, 0.04076f, 0.99914f, 1f, true),
+                        new AttackFrame(-0.0269f, 1.33783f, 0.65426f, -0.01428f, -0.00591f, 0.08458f, 0.9963f, 1f, true),
+                        new AttackFrame(-0.05237f, 1.2545f, 0.61885f, -0.02322f, -0.00962f, 0.13755f, 0.99018f, 1f, true),
+                        new AttackFrame(-0.08332f, 1.15728f, 0.54389f, -0.03287f, -0.01362f, 0.19473f, 0.98021f, 1f, true),
+                        new AttackFrame(-0.11285f, 1.08279f, 0.43805f, -0.04241f, -0.01757f, 0.25123f, 0.96684f, 1f, true),
+                        new AttackFrame(-0.13404f, 1.04501f, 0.33808f, -0.05105f, -0.02115f, 0.30239f, 0.95158f, 1f, true),
+                        new AttackFrame(-0.1466f, 1.02978f, 0.26384f, -0.05805f, -0.02404f, 0.34386f, 0.93692f, 1f, true),
+                        new AttackFrame(-0.15289f, 1.02447f, 0.21829f, -0.06273f, -0.02599f, 0.37161f, 0.9259f, 1f, true),
+                        new AttackFrame(-0.1548f, 1.02324f, 0.20243f, -0.06445f, -0.02669f, 0.38175f, 0.92163f, 1f, true)
                     },
                     "bone bow gripped 6 cm along LeftHand, world-upright at full draw; the LYRA-style idle prop stands in for it"),
                 new AttackTrack(
@@ -147,16 +149,16 @@ namespace Survival.Domain.Enemies
                         new AttackFrame(0.03537f, 1.49145f, 0.2695f, 0.0023f, -0.03721f, -0.00009f, 0.9993f, 1f, false),
                         new AttackFrame(0.08784f, 1.49532f, 0.26347f, 0.00704f, -0.10047f, -0.00071f, 0.99491f, 1f, false),
                         new AttackFrame(0.11454f, 1.49745f, 0.25749f, 0.00952f, -0.12985f, -0.00125f, 0.99149f, 1f, false),
-                        new AttackFrame(0.12051f, 1.48038f, 0.26129f, 0.00445f, -0.14557f, -0.00065f, 0.98934f, 1f, false),
-                        new AttackFrame(0.13614f, 1.42819f, 0.26964f, -0.01146f, -0.18822f, 0.0022f, 0.98206f, 1f, false),
-                        new AttackFrame(0.15779f, 1.33486f, 0.27318f, -0.03991f, -0.24991f, 0.01031f, 0.96739f, 1f, false),
-                        new AttackFrame(0.18305f, 1.19951f, 0.25398f, -0.07727f, -0.32157f, 0.02634f, 0.94336f, 1f, false),
-                        new AttackFrame(0.21181f, 1.0485f, 0.19648f, -0.116f, -0.3969f, 0.05064f, 0.90909f, 1f, false),
-                        new AttackFrame(0.24014f, 0.93118f, 0.11345f, -0.15926f, -0.4622f, 0.08478f, 0.86823f, 1f, false),
-                        new AttackFrame(0.26017f, 0.86869f, 0.03873f, -0.20461f, -0.50435f, 0.12439f, 0.82963f, 1f, false),
-                        new AttackFrame(0.27104f, 0.84386f, -0.01032f, -0.24555f, -0.5274f, 0.1625f, 0.79696f, 1f, false),
-                        new AttackFrame(0.27595f, 0.83612f, -0.03592f, -0.27726f, -0.53744f, 0.19284f, 0.77272f, 1f, false),
-                        new AttackFrame(0.27735f, 0.83458f, -0.04385f, -0.29024f, -0.53982f, 0.20533f, 0.76302f, 1f, false)
+                        new AttackFrame(0.12051f, 1.48038f, 0.26129f, 0.00126f, -0.14434f, -0.00018f, 0.98953f, 1f, false),
+                        new AttackFrame(0.13614f, 1.42819f, 0.26964f, -0.02501f, -0.18321f, 0.00466f, 0.98274f, 1f, false),
+                        new AttackFrame(0.15779f, 1.33486f, 0.27318f, -0.07344f, -0.23675f, 0.01795f, 0.96862f, 1f, false),
+                        new AttackFrame(0.18305f, 1.19951f, 0.25398f, -0.13954f, -0.29095f, 0.04294f, 0.94553f, 1f, false),
+                        new AttackFrame(0.21181f, 1.0485f, 0.19648f, -0.20478f, -0.33779f, 0.07555f, 0.91556f, 1f, false),
+                        new AttackFrame(0.24014f, 0.93118f, 0.11345f, -0.25674f, -0.374f, 0.10856f, 0.88455f, 1f, false),
+                        new AttackFrame(0.26017f, 0.86869f, 0.03873f, -0.29126f, -0.39883f, 0.13524f, 0.85896f, 1f, false),
+                        new AttackFrame(0.27104f, 0.84386f, -0.01032f, -0.31321f, -0.4166f, 0.1555f, 0.83914f, 1f, false),
+                        new AttackFrame(0.27595f, 0.83612f, -0.03592f, -0.32736f, -0.42798f, 0.1698f, 0.82513f, 1f, false),
+                        new AttackFrame(0.27735f, 0.83458f, -0.04385f, -0.33276f, -0.43201f, 0.17538f, 0.81968f, 1f, false)
                     },
                     "arrow nocked f5, drawn to the chin by RightHand at f10, held to f13"),
                 new AttackTrack(

@@ -99,6 +99,9 @@ def shot(path,view):
     if view=='face':
         sc.render.resolution_x=360; sc.render.resolution_y=360; cam.data.ortho_scale=0.45; h=arm.matrix_world@arm.pose.bones[P_+'Head'].head
         cam.location=(h.x,-5,h.z+0.12); cam.rotation_euler=(math.pi/2,0,0)
+    elif view in ('wfront','wside'):   # walk bow-clearance strip: full body, front and the bow (left) side
+        sc.render.resolution_x=300; sc.render.resolution_y=520; cam.data.ortho_scale=2.0
+        cam.location,cam.rotation_euler=(((0,-5,0.95),(math.pi/2,0,0)) if view=='wfront' else ((5,0,0.95),(math.pi/2,0,math.pi/2)))
     elif view in ('sfront','sside'):   # quiver-draw strip: upper body, front and right side (draw-hand side)
         sc.render.resolution_x=360; sc.render.resolution_y=420; cam.data.ortho_scale=1.25
         cam.location,cam.rotation_euler=(((0,-5,1.45),(math.pi/2,0,0)) if view=='sfront' else ((-5,0,1.45),(math.pi/2,0,-math.pi/2)))
@@ -134,6 +137,10 @@ for f in range(0,12):
     sc.frame_set(f); M=bm('LeftHand'); bp,bR=place(bow,M,bow_off); bow.matrix_world=Matrix.Translation(bp)@bR.to_4x4()
     p,R=arrow_world(f); arrow.matrix_world=Matrix.Translation(p)@R.to_4x4(); arrow.hide_render=not(V0<=f<REL); proj.hide_render=True
     for v in ('sfront','sside'): shot(f'{W}/strip_{f:02d}_{v}.png',v)
+arm.animation_data.action=A['walk']; arrow.hide_render=True; proj.hide_render=True
+for f in range(0,31,3):
+    sc.frame_set(f); M=bm('LeftHand'); bp,bR=place(bow,M,bow_off); bow.matrix_world=Matrix.Translation(bp)@bR.to_4x4()
+    for v in ('wfront','wside'): shot(f'{W}/wstrip_{f:02d}_{v}.png',v)
 rep['face_skew_max_cm']={k:round(max(a for a,b in v)*100,3) for k,v in sk.items()}
 rep['neck_head_band_max_cm']={k:round(max(b for a,b in v)*100,3) for k,v in sk.items()}
 rep['walk_ankle_spacing_cm']=feet
