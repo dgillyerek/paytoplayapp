@@ -1,3 +1,4 @@
+import sys; sys.path.insert(0,'/workspace/bonequill_gritty/work'); from bowroll import bowrot
 import sys; sys.path.append("/home/box/.local/lib/python3.13/site-packages")
 import bpy, math, json, numpy as np
 from mathutils import Vector, Matrix
@@ -83,11 +84,11 @@ def place(o,M,off): R=M.to_3x3().normalized(); return M.to_translation()+R@off[0
 held=[]; bowtr=[]; projtr=[]; arpose={}
 for f in range(31):
     sc.frame_set(f); p,R=arrow_world(f); vis=V0<=f<REL; held.append(U(p)+UQ(R)+[1.0,vis]); arpose[f]=(p.copy(),R.copy())
-    bp,bR=place(bow,bm('LeftHand'),bow_off); bowtr.append(U(bp)+UQ(bR)+[1.0,True])
+    bp,bR=place(bow,bm('LeftHand'),(GL,bowrot('attack',f))); bowtr.append(U(bp)+UQ(bR)+[1.0,True])
 sp,sR=arpose[REL-1]
 for f in range(31):
     p=sp+fw*max(0,f-REL+1)*SPD/30.0; projtr.append(U(p)+UQ(sR)+[1.0,f>=REL])
-arm.animation_data.action=A['rest']; sc.frame_set(0); bp,bR=place(bow,bm('LeftHand'),bow_off)
+arm.animation_data.action=A['rest']; sc.frame_set(0); bp,bR=place(bow,bm('LeftHand'),(GL,bowrot('rest',0)))
 rep['bow_idle_rest_world_unity']=U(bp)+UQ(bR)
 rep['calibration_unity']={n:U(arm.matrix_world@arm.data.bones[P_+n].head_local) for n in ('Hips','Head','LeftHand','RightHand')}
 rep.update(arrow_held_unity=held,arrow_proj_unity=projtr,bow_attack_unity=bowtr,arrow_dir_unity=U(fw))
@@ -124,7 +125,7 @@ for k,frs in FR.items():
         if k=='walk':
             a=bm('LeftFoot').to_translation(); b=bm('RightFoot').to_translation(); feet[f]=round(abs(a.x-b.x)*100,1)
     for f in frs:
-        sc.frame_set(f); M=bm('LeftHand'); bp,bR=place(bow,M,bow_off); bow.matrix_world=Matrix.Translation(bp)@bR.to_4x4()
+        sc.frame_set(f); M=bm('LeftHand'); bp,bR=place(bow,M,(GL,bowrot(k,f))); bow.matrix_world=Matrix.Translation(bp)@bR.to_4x4()
         p,R=arrow_world(f); arrow.matrix_world=Matrix.Translation(p)@R.to_4x4(); arrow.hide_render=not(k=='attack' and V0<=f<REL)
         proj.matrix_world=Matrix.Translation(sp+fw*max(0,f-REL+1)*SPD/30.0)@sR.to_4x4(); proj.hide_render=not(k=='attack' and f>=REL)
         for v in ('full','face','side','back','hood','arrow'):
@@ -134,12 +135,12 @@ for k,frs in FR.items():
             shot(f'{W}/sh_{k}_{f:02d}_{v}.png',v)
 arm.animation_data.action=A['attack']
 for f in range(0,12):
-    sc.frame_set(f); M=bm('LeftHand'); bp,bR=place(bow,M,bow_off); bow.matrix_world=Matrix.Translation(bp)@bR.to_4x4()
+    sc.frame_set(f); M=bm('LeftHand'); bp,bR=place(bow,M,(GL,bowrot('attack',f))); bow.matrix_world=Matrix.Translation(bp)@bR.to_4x4()
     p,R=arrow_world(f); arrow.matrix_world=Matrix.Translation(p)@R.to_4x4(); arrow.hide_render=not(V0<=f<REL); proj.hide_render=True
     for v in ('sfront','sside'): shot(f'{W}/strip_{f:02d}_{v}.png',v)
 arm.animation_data.action=A['walk']; arrow.hide_render=True; proj.hide_render=True
 for f in range(0,31,3):
-    sc.frame_set(f); M=bm('LeftHand'); bp,bR=place(bow,M,bow_off); bow.matrix_world=Matrix.Translation(bp)@bR.to_4x4()
+    sc.frame_set(f); M=bm('LeftHand'); bp,bR=place(bow,M,(GL,bowrot('walk',f))); bow.matrix_world=Matrix.Translation(bp)@bR.to_4x4()
     for v in ('wfront','wside'): shot(f'{W}/wstrip_{f:02d}_{v}.png',v)
 rep['face_skew_max_cm']={k:round(max(a for a,b in v)*100,3) for k,v in sk.items()}
 rep['neck_head_band_max_cm']={k:round(max(b for a,b in v)*100,3) for k,v in sk.items()}

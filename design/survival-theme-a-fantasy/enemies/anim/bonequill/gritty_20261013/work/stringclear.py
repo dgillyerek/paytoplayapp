@@ -37,7 +37,7 @@ for an in ('rest','walk','attack'):
         per.append([f,round(float(db),4),round(float(dc),4),round(float(dbone),4),draw,round(roll(an,f),2),round(away,3)])
     out[an]=per; worst[an]={'min_body_m':min(r[1] for r in per),'min_cloak_m':min(r[2] for r in per),'min_arm_bones_m':min(r[3] for r in per),
         'min_away_rest_carry':min((r[6] for r in per if r[5]==ROLL_REST),default=None)}
-json.dump({'roll_rest_deg':ROLL_REST,'roll_draw_deg':ROLL_DRAW,'roll_keys':[4,10,17,24],'string_bow_local':[[0,0.19,-0.62],[0,0.19,0.62]],
+json.dump({'roll_rest_deg':ROLL_REST,'roll_draw_deg':ROLL_DRAW,'roll_keys':[2,10,17,26],'string_bow_local':[[0,0.19,-0.62],[0,0.19,0.62]],
   'draw_hand_exempt':'RightHand* vertices, attack f10-f17','columns':'frame, body incl. bow hand+forearm, cloak, bow-arm bones, draw, roll_deg, away',
   'worst':worst,'per_sample':out},open(W+'/string_clearance.json','w'),indent=0)
 print('STRINGCLR',json.dumps(worst))

@@ -69,15 +69,24 @@ def left_grip():
     for i,d in enumerate(FJ['thumb_deg']): frot('LeftHandThumb%d'%(i+1),FJ['thumb_axis'],d)
     upd()
 def lefthand_hold(q=None): setrot('LeftHand',q if q is not None else RL); left_grip()
-# rest/walk bow carry (Derek 10-14): bow held lower, tipped 45 deg out and slightly back at the top so it clears the shoulder,
-# shoulder guard, cloak and leg on every frame; left arm 8 deg further out and the forearm bent 30 deg more (hand forward of the hip)
-IDLE_OUT,IDLE_FWD,IDLE_ABD,IDLE_ELB=45.0,-8.0,8.0,30.0
-RL_IDLE=Quaternion((0,1,0),math.radians(IDLE_OUT))@Quaternion((1,0,0),math.radians(IDLE_FWD))@RL
+# rest/walk bow carry (Derek 10-15, archer reference): bow arm hangs relaxed at the side, elbow softly bent, the bow held near
+# vertical along the INSIDE of the forearm, lower limb down and forward, upper limb up and back past the shoulder, string facing
+# outward (away from the body). The bow frame is set in world space and the hand is solved from it, so the grip never moves.
+import os
+CARRY=dict(ABD=float(os.environ.get('C_ABD',12)),SWING=float(os.environ.get('C_SWING',0)),ELB=float(os.environ.get('C_ELB',20)),
+           TILT=float(os.environ.get('C_TILT',18)),LEAN=float(os.environ.get('C_LEAN',12)),ROLL=float(os.environ.get('C_ROLL',270)))
+def carry_hand_rot():
+    # bow long axis: up, tipped back by TILT (lower limb forward) and its top leaned out by LEAN; string (bow +y) outward (+x)
+    T,L=math.radians(CARRY['TILT']),math.radians(CARRY['LEAN'])
+    z=Vector((math.sin(L),math.sin(T),math.cos(T))).normalized(); y=Vector((1,0,0)); y=(y-y.dot(z)*z).normalized(); x=y.cross(z)
+    Bw=Matrix((x,y,z)).transposed()
+    off=Matrix(((-1,0,0),(0,-1,0),(0,0,1)))@Matrix.Rotation(math.radians(CARRY['ROLL']),3,'Z')
+    return (Bw@off.inverted()).to_quaternion()
+RL_IDLE=carry_hand_rot()
 def rest_arms(swL=0,swR=0):
-    rot('LeftArm',(0,1,0),ARM_DOWN); rot('RightArm',(0,1,0),-ARM_DOWN)
-    rot('LeftArm',(1,0,0),swL); rot('RightArm',(1,0,0),swR)
-    rot('LeftForeArm',(1,0,0),-12); rot('RightForeArm',(1,0,0),-6)
-    rot('LeftArm',(0,1,0),IDLE_ABD); rot('LeftForeArm',(1,0,0),-IDLE_ELB); upd()
+    rot('LeftArm',(0,1,0),ARM_DOWN+CARRY['ABD']); rot('RightArm',(0,1,0),-ARM_DOWN)
+    rot('LeftArm',(1,0,0),swL-CARRY['SWING']); rot('RightArm',(1,0,0),swR)
+    rot('LeftForeArm',(1,0,0),-CARRY['ELB']); rot('RightForeArm',(1,0,0),-6); upd()
     lefthand_hold(RL_IDLE)
 A={}
 A['rest']=act('BONEQUILL_rest')
@@ -135,4 +144,4 @@ for f in range(31):
     untwist('RightForeArm')
     tb=ease(min(1.0,f/10.0)) if f<=10 else (1.0 if f<=20 else 1.0-ease((f-20)/10.0)); lefthand_hold(RL_IDLE.slerp(RL,tb)); head_forward(); key(f)
 reset(); arm.animation_data.action=A['rest']; sc.frame_set(0)
-bpy.ops.wm.save_as_mainfile(filepath='/workspace/bonequill_gritty/work/anim.blend',compress=True); bpy.ops.wm.save_as_mainfile(filepath='/workspace/bonequill_gritty/work/anim_nq.blend',compress=True,copy=True); print('ANIM ok ADD',ADD)
+bpy.ops.wm.save_as_mainfile(filepath='/workspace/bonequill_gritty/work/anim.blend',compress=True); bpy.ops.wm.save_as_mainfile(filepath='/workspace/bonequill_gritty/work/anim_nq.blend',compress=True,copy=True); print('ANIM ok ADD',ADD,CARRY)

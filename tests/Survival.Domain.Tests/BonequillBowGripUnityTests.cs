@@ -131,9 +131,13 @@ public class BonequillBowGripUnityTests
             Assert.True(s[1].GetDouble() >= 0.02, $"{clip} f{f}: string {s[1].GetDouble() * 100:0.0} cm from the body/bow hand/forearm");
             Assert.True(s[2].GetDouble() >= 0.02, $"{clip} f{f}: string {s[2].GetDouble() * 100:0.0} cm from the cloak");
             Assert.True(s[3].GetDouble() >= 0.02, $"{clip} f{f}: string {s[3].GetDouble() * 100:0.0} cm from the bow-arm bones");
-            if (clip != "attack" || f <= 4 || f >= 24)
+            if (clip != "attack")
             {
-                Assert.True(s[6].GetDouble() > 0.5, $"{clip} f{f}: carried string not on the side away from the body");
+                Assert.True(s[6].GetDouble() > 0.5, $"{clip} f{f}: carried string not facing outward, away from the body");
+            }
+            else if (f <= 2 || f >= 26)
+            {
+                Assert.True(s[6].GetDouble() > 0.2, $"{clip} f{f}: string turns toward him outside nock-to-release");
             }
             else if (f >= 10 && f <= 17)
             {

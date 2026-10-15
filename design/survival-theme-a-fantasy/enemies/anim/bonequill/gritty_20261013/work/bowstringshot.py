@@ -8,11 +8,11 @@ A=bpy.data.actions; arm.animation_data.action=A['BONEQUILL_attack']; sc.frame_se
 bm=lambda: arm.matrix_world@arm.pose.bones[P_+'LeftHand'].matrix
 M=bm(); R=M.to_3x3().normalized(); op=GL.copy(); oR=(Matrix(((-1,0,0),(0,-1,0),(0,0,1)))@Matrix.Rotation(math.radians(45),3,'Z'))
 sc.render.engine='BLENDER_WORKBENCH'; sc.display.shading.light='STUDIO'; sc.display.shading.color_type='TEXTURE'; sc.render.resolution_x=360; sc.render.resolution_y=360
-cam=bpy.data.objects.new('cam',bpy.data.cameras.new('cam')); sc.collection.objects.link(cam); sc.camera=cam; cam.data.type='ORTHO'; cam.data.ortho_scale=0.75
-for an,f in (('BONEQUILL_rest',0),('BONEQUILL_walk',8),('BONEQUILL_attack',7),('BONEQUILL_attack',14)):
+cam=bpy.data.objects.new('cam',bpy.data.cameras.new('cam')); sc.collection.objects.link(cam); sc.camera=cam; cam.data.type='ORTHO'; cam.data.ortho_scale=1.5
+for an,f in (('BONEQUILL_rest',0),('BONEQUILL_walk',8),('BONEQUILL_walk',23),('BONEQUILL_attack',6),('BONEQUILL_attack',14)):
     arm.animation_data.action=A[an]; sc.frame_set(f); M=bm(); R=M.to_3x3().normalized()
     oR=bowrot(an[10:],f); g=M.to_translation()+R@op; bow.matrix_world=Matrix.Translation(g)@(R@oR).to_4x4()
     ax=(R@oR)@Vector((0,0,1))
-    for k,d in {'axis':ax.normalized()*-1,'outside':Vector((1,-0.3,0.1)),'inside':Vector((-1,-0.6,0.15)),'front':Vector((0.15,-1,0.25))}.items():
+    for k,d in {'axis':ax.normalized()*-1,'outside':Vector((1,-0.3,0.1)),'back':Vector((0.25,1,0.15)),'front':Vector((0.15,-1,0.25))}.items():
         d.normalize(); cam.location=g+d*2.5; cam.rotation_euler=(-d).to_track_quat('-Z','Y').to_euler()
         sc.render.filepath=f'{W}/bs_{an[10:]}{f}_{k}.png'; bpy.ops.render.render(write_still=True)
