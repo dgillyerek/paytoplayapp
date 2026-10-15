@@ -25,7 +25,20 @@ public sealed class LockedBattleHitsTests
         Assert.False(LockedBattleHits.Nightfang.Projectile);
         Assert.DoesNotContain(NightfangAttack.Spec.Tracks, t => t.Kind == AttackTrackKind.Projectile);
         Assert.False(LockedBattleHits.Ironhowl.Projectile);
-        Assert.Throws<ArgumentException>(() => LockedBattleHits.ProfileOf("Ashwyrm"));
+        Assert.Equal(BattleImpactKind.VoidFireBreath, LockedBattleHits.Ashwyrm.Impact);
+        Assert.Equal(BattleImpactKind.ArcaneConjure, LockedBattleHits.Vespera.Impact);
+        Assert.Equal(BattleImpactKind.StaffLight, LockedBattleHits.Lyra.Impact);
+        Assert.Equal(BattleImpactKind.LeafEarth, LockedBattleHits.Oakenshield.Impact);
+        Assert.True(LockedBattleHits.Ashwyrm.Projectile);
+        Assert.Contains(AshwyrmAttack.Spec.Tracks, t => t.Kind == AttackTrackKind.Projectile);
+        Assert.True(LockedBattleHits.Vespera.Projectile);
+        Assert.Contains(VesperaAttack.Spec.Tracks, t => t.Kind == AttackTrackKind.Projectile);
+        Assert.True(LockedBattleHits.Lyra.Projectile);
+        Assert.Contains(LyraAttack.Spec.Tracks, t => t.Kind == AttackTrackKind.Projectile);
+        Assert.True(LockedBattleHits.Oakenshield.Projectile);
+        Assert.Contains(OakenshieldAttack.Spec.Tracks, t => t.Kind == AttackTrackKind.Projectile);
+        Assert.Throws<ArgumentException>(() => LockedBattleHits.ProfileOf("Rowan"));
+        Assert.Throws<ArgumentException>(() => LockedBattleHits.ProfileOf("Bonequill"));
     }
 
     [Fact]

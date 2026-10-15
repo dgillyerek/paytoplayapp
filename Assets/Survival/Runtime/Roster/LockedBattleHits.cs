@@ -15,7 +15,19 @@ namespace Survival.Domain.Roster
         ShadowRake = 2,
 
         /// <summary>Ironhowl claw: claw sparks, dust and debris.</summary>
-        IronClaw = 3
+        IronClaw = 3,
+
+        /// <summary>Ashwyrm void-fire fireball: purple fire burst, a gust of dark smoke, embers.</summary>
+        VoidFireBreath = 4,
+
+        /// <summary>Vespera shadow orb: violet flash, purple motes and dark wisps.</summary>
+        ArcaneConjure = 5,
+
+        /// <summary>Lyra arcane bolt: white-gold flash, halo and rising light motes.</summary>
+        StaffLight = 6,
+
+        /// <summary>Oakenshield thorn spear: leaves, splinters and earth dust.</summary>
+        LeafEarth = 7
     }
 
     /// <summary>
@@ -227,6 +239,62 @@ namespace Survival.Domain.Roster
             0.30f,
             0.055f);
 
+        public static readonly LockedBattleHitProfile Ashwyrm = new LockedBattleHitProfile(
+            "Ashwyrm",
+            BattleImpactKind.VoidFireBreath,
+            true,
+            -1,
+            string.Empty,
+            new BattleHitBox(0.35f, 0.30f, 0.35f, 1.30f),
+            0.05f,
+            4f,
+            1f,
+            0.45f,
+            0.45f,
+            0.035f);
+
+        public static readonly LockedBattleHitProfile Vespera = new LockedBattleHitProfile(
+            "Vespera",
+            BattleImpactKind.ArcaneConjure,
+            true,
+            -1,
+            string.Empty,
+            new BattleHitBox(0.25f, 0.20f, 0.20f, 1.85f),
+            0.04f,
+            3.5f,
+            1f,
+            0.40f,
+            0.40f,
+            0.025f);
+
+        public static readonly LockedBattleHitProfile Lyra = new LockedBattleHitProfile(
+            "Lyra",
+            BattleImpactKind.StaffLight,
+            true,
+            -1,
+            string.Empty,
+            new BattleHitBox(0.25f, 0.20f, 0.20f, 1.85f),
+            0.04f,
+            3.5f,
+            1f,
+            0.45f,
+            0.45f,
+            0.02f);
+
+        public static readonly LockedBattleHitProfile Oakenshield = new LockedBattleHitProfile(
+            "Oakenshield",
+            BattleImpactKind.LeafEarth,
+            true,
+            -1,
+            string.Empty,
+            new BattleHitBox(0.30f, 0.25f, 0.15f, 1.75f),
+            0.04f,
+            3f,
+            1f,
+            0.45f,
+            0.40f,
+            0.03f);
+
         public static LockedBattleHitProfile ProfileOf(string name)
         {
             switch (name)
@@ -239,6 +307,14 @@ namespace Survival.Domain.Roster
                     return Nightfang;
                 case "Ironhowl":
                     return Ironhowl;
+                case "Ashwyrm":
+                    return Ashwyrm;
+                case "Vespera":
+                    return Vespera;
+                case "Lyra":
+                    return Lyra;
+                case "Oakenshield":
+                    return Oakenshield;
                 default:
                     throw new ArgumentException("No locked battle hit profile for " + name, nameof(name));
             }

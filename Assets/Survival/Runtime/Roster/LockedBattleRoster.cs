@@ -90,7 +90,10 @@ namespace Survival.Domain.Roster
         /// </summary>
         public bool AttackCyclesItself { get; }
 
-        /// <summary>0 = left lane, 1 = right lane, seen from behind the heroes.</summary>
+        /// <summary>
+        /// Seen from behind the heroes: 0 = left inner lane, 1 = right inner lane (the original
+        /// #57 matchups), 2 = left outer lane, 3 = right outer lane.
+        /// </summary>
         public int Lane { get; }
 
         public bool WalkCarriesRoot => WalkRootStrideMetres > 0f;
@@ -100,8 +103,8 @@ namespace Survival.Domain.Roster
 
     /// <summary>
     /// Locked battle demo roster: characters on main whose animations are locked with a
-    /// Derek Game-view PASS and that have both a walk and an attack clip. Ashwyrm qualifies
-    /// since #56 but is held out until Derek picks its lane (see <see cref="LeftOut"/>).
+    /// Derek Game-view PASS and that have both a walk and an attack clip: four heroes against
+    /// four villains, one matchup per lane (see <see cref="LeftOut"/> for who is not in).
     /// Heroes come from Runtime/Heroes, villains from Runtime/Enemies (Theme A: heroes of the
     /// kingdom against the darkness). Pure presentation, no combat rules.
     /// </summary>
@@ -117,6 +120,13 @@ namespace Survival.Domain.Roster
 
         /// <summary>Lane centres sit this far either side of the battle centre line.</summary>
         public const float LaneHalfSpacingMetres = 1.15f;
+
+        /// <summary>
+        /// Outer lanes (2 and 3) sit this far either side of the centre line: 1.3 m outside the
+        /// inner lanes, so the widest added body (Ashwyrm, 1.9 m wingspan) clears its neighbours
+        /// and the inner lanes stay exactly where #57 put them.
+        /// </summary>
+        public const float OuterLaneHalfSpacingMetres = 2.45f;
 
         /// <summary>Everyone holds rest this long before walking in.</summary>
         public const float OpeningHoldSeconds = 0.75f;
@@ -185,12 +195,84 @@ namespace Survival.Domain.Roster
             true,
             1);
 
+        // Added lanes (2026-10-14). Walk speeds come from each locked walk clip's foot travel
+        // (two strides of the foot's forward sweep per 30-frame loop, the same measure that gives
+        // Emberfang 0.33 m/s); heights are the rest-mesh heights of the locked FBXs.
+
+        public static readonly LockedBattleFighter Lyra = new LockedBattleFighter(
+            "Lyra",
+            BattleSide.Hero,
+            "#59",
+            LyraMotion.WalkPoseName,
+            LyraMotion.AttackPoseName,
+            "staff cast arcane bolt",
+            1.885f,
+            0.88f,
+            0f,
+            string.Empty,
+            3.2f,
+            BlenderRigAttackSpec.ClipSeconds,
+            true,
+            2);
+
+        public static readonly LockedBattleFighter Oakenshield = new LockedBattleFighter(
+            "Oakenshield",
+            BattleSide.Hero,
+            "#60",
+            OakenshieldMotion.WalkPoseName,
+            OakenshieldMotion.AttackPoseName,
+            "thorn spear throw",
+            1.800f,
+            1.15f,
+            0f,
+            string.Empty,
+            3.0f,
+            BlenderRigAttackSpec.ClipSeconds,
+            true,
+            3);
+
+        public static readonly LockedBattleFighter Vespera = new LockedBattleFighter(
+            "Vespera",
+            BattleSide.Villain,
+            "#58",
+            VesperaMotion.WalkPoseName,
+            VesperaMotion.AttackPoseName,
+            "rave orb conjure shadow bolt",
+            1.909f,
+            0.63f,
+            0f,
+            string.Empty,
+            3.0f,
+            VesperaAttack.ClipSeconds,
+            true,
+            2);
+
+        public static readonly LockedBattleFighter Ashwyrm = new LockedBattleFighter(
+            "Ashwyrm",
+            BattleSide.Villain,
+            "#56",
+            AshwyrmMotion.WalkPoseName,
+            AshwyrmMotion.AttackPoseName,
+            "void-fire breath fireball",
+            1.343f,
+            0.52f,
+            0f,
+            string.Empty,
+            3.2f,
+            BlenderRigAttackSpec.ClipSeconds,
+            true,
+            3);
+
         public static IReadOnlyList<LockedBattleFighter> All { get; } = new[]
         {
             Emberfang,
             Stormcrest,
             Ironhowl,
-            Nightfang
+            Nightfang,
+            Lyra,
+            Oakenshield,
+            Vespera,
+            Ashwyrm
         };
 
         /// <summary>
@@ -198,7 +280,6 @@ namespace Survival.Domain.Roster
         /// </summary>
         public static IReadOnlyList<KeyValuePair<string, string>> LeftOut { get; } = new[]
         {
-            new KeyValuePair<string, string>("Ashwyrm", "merged with walk and attack (#56), not placed yet: waiting on Derek's lane decision."),
             new KeyValuePair<string, string>("Blightroot", "creature pack is still HOLD, no Game-view PASS."),
             new KeyValuePair<string, string>("Sir Aldric", "walk and attack are not Design or Game-view PASS yet.")
         };
@@ -217,8 +298,24 @@ namespace Survival.Domain.Roster
         /// <summary>Start point on the ground plane (x, z). Heroes at -Z, villains at +Z.</summary>
         public static void StartPoint(LockedBattleFighter fighter, out float x, out float z)
         {
-            x = fighter.Lane == 0 ? -LaneHalfSpacingMetres : LaneHalfSpacingMetres;
+            x = LaneX(fighter.Lane);
             z = fighter.Side == BattleSide.Hero ? -StartHalfGapMetres : StartHalfGapMetres;
+        }
+
+        /// <summary>Lane centre across the field (x), Design metres.</summary>
+        public static float LaneX(int lane)
+        {
+            switch (lane)
+            {
+                case 0:
+                    return -LaneHalfSpacingMetres;
+                case 1:
+                    return LaneHalfSpacingMetres;
+                case 2:
+                    return -OuterLaneHalfSpacingMetres;
+                default:
+                    return OuterLaneHalfSpacingMetres;
+            }
         }
 
         /// <summary>Start yaw in degrees. Every locked rig faces +Z at yaw 0.</summary>

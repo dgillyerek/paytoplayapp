@@ -523,6 +523,42 @@ namespace Survival.Unity
                     break;
                 }
 
+                case "Lyra":
+                {
+                    var actor = host.AddComponent<LyraActor>();
+                    actor.Build();
+                    f.Bind(actor.PlayPose, () => actor.Pose, actor.Built, actor.VisibleBounds);
+                    driver = actor.AttackDriver;
+                    break;
+                }
+
+                case "Oakenshield":
+                {
+                    var actor = host.AddComponent<OakenshieldActor>();
+                    actor.Build();
+                    f.Bind(actor.PlayPose, () => actor.Pose, actor.Built, actor.VisibleBounds);
+                    driver = actor.AttackDriver;
+                    break;
+                }
+
+                case "Vespera":
+                {
+                    var actor = host.AddComponent<VesperaActor>();
+                    actor.Build();
+                    f.Bind(actor.PlayPose, () => actor.Pose, actor.Built, actor.VisibleBounds);
+                    driver = actor.AttackDriver;
+                    break;
+                }
+
+                case "Ashwyrm":
+                {
+                    var actor = host.AddComponent<AshwyrmActor>();
+                    actor.Build();
+                    f.Bind(actor.PlayPose, () => actor.Pose, actor.Built, actor.VisibleBounds);
+                    driver = actor.AttackDriver;
+                    break;
+                }
+
                 default:
                     Debug.LogError("Locked battle has no actor for " + data.Name);
                     break;
@@ -624,6 +660,18 @@ namespace Survival.Unity
                     break;
                 case "Nightfang":
                     spec = NightfangAttack.Spec;
+                    break;
+                case "Lyra":
+                    spec = LyraAttack.Spec;
+                    break;
+                case "Oakenshield":
+                    spec = OakenshieldAttack.Spec;
+                    break;
+                case "Vespera":
+                    spec = VesperaAttack.Spec;
+                    break;
+                case "Ashwyrm":
+                    spec = AshwyrmAttack.Spec;
                     break;
             }
 
