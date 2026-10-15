@@ -100,11 +100,6 @@ namespace Survival.Unity
             {
                 _attack = new BlenderRigAttackDriver(_attackSpec, _spec.ThemePackDir, _parent);
                 _attack.Calibrate(instance);
-                if (_idleProps.Length > 0)
-                {
-                    _attack.BindIdleProps(_idleProps);
-                    _attack.SetIdlePropsVisible(true);
-                }
             }
             else if (_idleProps.Length > 0)
             {
@@ -130,6 +125,7 @@ namespace Survival.Unity
             _output = AnimationPlayableOutput.Create(_graph, _spec.Name, _animator);
             _graph.Play();
             _ready = true;
+            BindIdlePropsAtAttackRest();
             ShowRest();
 #else
             Debug.LogError(_spec.Name + " plays in the Editor Game view.");
@@ -272,6 +268,29 @@ namespace Survival.Unity
             _attackMode = false;
             _attack?.Deactivate();
             _attack?.SetIdlePropsVisible(true);
+        }
+
+        /// <summary>Idle props are keyed in design space at attack frame 0, so the hand they ride must be in that pose when the
+        /// bone-local grip is taken. Binding on the freshly instantiated bind pose put the bow beside the palm (fingers closing
+        /// in front of an empty grip) because the bind-pose hand sits elsewhere than the keyed hand.</summary>
+        private void BindIdlePropsAtAttackRest()
+        {
+            if (_attack == null || _attackSpec == null || _idleProps.Length == 0)
+            {
+                return;
+            }
+
+            if (PlayClip(_attackSpec.FileName, BlenderRigAttackSpec.PoseName, BlenderRigAttackSpec.TakeName, _attackSpec.ClipLastFrame))
+            {
+                SampleAttackFrame(BlenderRigAttackSpec.FirstFrame);
+            }
+            else
+            {
+                Debug.LogWarning(_spec.Name + " idle props bound without the attack pose; grip may sit off the hand.");
+            }
+
+            _attack.BindIdleProps(_idleProps);
+            _attack.SetIdlePropsVisible(true);
         }
 
         private void ShowRest()

@@ -11,6 +11,7 @@ cam=bpy.data.objects.new('cam',bpy.data.cameras.new('cam')); sc.collection.objec
 for an,f in (('BONEQUILL_rest',0),('BONEQUILL_walk',8),('BONEQUILL_attack',10)):
     arm.animation_data.action=A[an]; sc.frame_set(f); M=bm(); R=M.to_3x3().normalized()
     g=M.to_translation()+R@op; bow.matrix_world=Matrix.Translation(g)@(R@oR).to_4x4()
-    for k,d in {'outside':Vector((1,-0.3,0.1)),'inside':Vector((-1,-0.6,0.15)),'front':Vector((0.15,-1,0.25))}.items():
+    ax=(R@oR)@Vector((0,0,1))
+    for k,d in {'axis':ax.normalized()*-1,'outside':Vector((1,-0.3,0.1)),'inside':Vector((-1,-0.6,0.15)),'front':Vector((0.15,-1,0.25))}.items():
         d.normalize(); cam.location=g+d*2.5; cam.rotation_euler=(-d).to_track_quat('-Z','Y').to_euler()
         sc.render.filepath=f'{W}/bh_{an[10:]}_{k}.png'; bpy.ops.render.render(write_still=True)

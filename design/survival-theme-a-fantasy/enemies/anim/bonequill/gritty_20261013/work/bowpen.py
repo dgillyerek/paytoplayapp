@@ -34,6 +34,16 @@ for an in ('rest','walk','attack'):
         for i in hidx:
             q=Bi@V[i]; loc,nrm,_,dd=bowbvh.find_nearest(q)
             if loc is not None and (q-loc).dot(nrm)<0 and dd<0.05: nh+=1
+        # grip axis inside the finger wrap: hand/finger/thumb vertices around the bow axis through the grip centre
+        c=M.to_translation()+R@op; ax=(R@oR)@Vector((0,0,1)); ax.normalize()
+        u=ax.orthogonal().normalized(); w=ax.cross(u); bins=set(); rmin=9
+        for i in hidx:
+            d=V[i]-c; a=d.dot(ax)
+            if abs(a)>0.03: continue
+            r=d-ax*a; rl=r.length
+            if rl<0.06:
+                rmin=min(rmin,rl); bins.add(int((math.degrees(math.atan2(r.dot(w),r.dot(u)))+360)%360//10))
+        cov=len(bins)*10
         bvh=BVHTree.FromPolygons(V,polys)
         nb=0; md=9
         for p in Pb:
@@ -49,8 +59,8 @@ for an in ('rest','walk','attack'):
             if L<1e-6: continue
             hit=cb.ray_cast(pa,d/L,L)
             if hit[0] is not None: nc+=1
-        per.append([f,nb,nc,round(md,4),nh])
-    out[an]=per; worst[an]={'body_verts_max':max(r[1] for r in per),'cloak_edges_max':max(r[2] for r in per),'min_clearance_m':min(r[3] for r in per),'hand_in_bow_max':max(r[4] for r in per)}
+        per.append([f,nb,nc,round(md,4),nh,cov,round(rmin,4)])
+    out[an]=per; worst[an]={'body_verts_max':max(r[1] for r in per),'cloak_edges_max':max(r[2] for r in per),'min_clearance_m':min(r[3] for r in per),'hand_in_bow_max':max(r[4] for r in per),'wrap_coverage_min_deg':min(r[5] for r in per),'wrap_inner_radius_min_m':min(r[6] for r in per)}
 md5=lambda p: hashlib.md5(open(p,'rb').read()).hexdigest()
 FJ=json.load(open(W+'/fingers.json'))
 rep={'samples_per_clip':61,'grip':{k:FJ[k] for k in ('finger_curl_deg','thumb_deg','grip_coverage_deg','hole_radius','finger_len_change_pct','edge_stretch_p99','edge_stretch_max')},'step_frames':0.5,'worst':worst,'per_sample':out,

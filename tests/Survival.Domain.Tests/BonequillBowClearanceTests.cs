@@ -37,6 +37,8 @@ public sealed class BonequillBowClearanceTests
                 Assert.True(s[2].GetInt32() == 0, $"{clip} f{frame}: {s[2].GetInt32()} bow edges through the cloak");
                 Assert.True(s[3].GetDouble() > 0.0, $"{clip} f{frame}: bow clearance {s[3].GetDouble()} m");
                 Assert.True(s[4].GetInt32() == 0, $"{clip} f{frame}: {s[4].GetInt32()} hand/finger vertices inside the bow");
+                Assert.True(s[5].GetInt32() >= 270, $"{clip} f{frame}: grip axis wrapped only {s[5].GetInt32()} deg by palm/fingers/thumb");
+                Assert.True(s[6].GetDouble() >= 0.0255, $"{clip} f{frame}: hand {s[6].GetDouble()} m from the grip axis (grip radius 2.4 cm)");
             }
         }
     }
@@ -54,6 +56,17 @@ public sealed class BonequillBowClearanceTests
         {
             Assert.Contains(b, BonequillMotion.BoneNames);
         }
+    }
+
+    [Fact]
+    public void Idle_bow_is_bound_to_the_hand_in_the_keyed_attack_pose_not_the_bind_pose()
+    {
+        var src = File.ReadAllText(Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "BlenderRigPlayer.cs"));
+        int bind = src.IndexOf("_attack.BindIdleProps(_idleProps)", StringComparison.Ordinal);
+        int sample = src.LastIndexOf("SampleAttackFrame(BlenderRigAttackSpec.FirstFrame)", bind, StringComparison.Ordinal);
+        Assert.True(bind > 0 && sample > 0 && src.IndexOf("BindIdlePropsAtAttackRest", StringComparison.Ordinal) > 0,
+            "idle props must be bound after the attack clip is sampled at frame 0, or the bow floats beside the palm");
+        Assert.Equal(1, System.Text.RegularExpressions.Regex.Matches(src, @"_attack\.BindIdleProps\(").Count);
     }
 
     private static string FindRepoRoot()
