@@ -38,6 +38,18 @@ namespace Survival.Domain.Enemies
             "3b25e1c4d1f4f418fb00540e4e29345f"
         };
 
+        /// <summary>Bow grip in mixamorig:LeftHand bone space from Blender (design work/grip_unity.json): pivot at the grip
+        /// centre on the hand centreline, bow axis along the knuckle line, string toward the body. Unity parents the bow to the
+        /// hand bone at this offset (mirror-X bone-space conversion) instead of fitting a world pose.</summary>
+        public static readonly BlenderBoneGrip BowGrip = new BlenderBoneGrip(
+            new[] { 0.04200f, 0.09400f, -0.08380f },
+            new[] { 0f, 0f, 1f, 0f },
+            "mixamorig:LeftHandFingers1",
+            new[] { -0.01620f, 0.08500f, -0.08380f },
+            "mixamorig:LeftHandThumb1",
+            new[] { 0.04439f, 0.03838f, -0.05479f },
+            new[] { 0.04243f, 0.09263f, -0.08380f });
+
         public static readonly BlenderRigIdlePropSpec[] IdleProps =
         {
             new BlenderRigIdlePropSpec(
@@ -48,7 +60,8 @@ namespace Survival.Domain.Enemies
                 new[] { -0.15073f, 1.02774f, 0.21069f, -0.17258f, 0.06964f, 0.37536f, 0.908f },
                 new[] { 0.048f, 1.41f, 0.22335f },
                 "Bone bow on LeftHand in rest, walk and attack (rest_world from sheet.json). Stands in for the attack's BONEQUILL_bow track so one bow serves every clip.",
-                "BONEQUILL_bow")
+                "BONEQUILL_bow",
+                BowGrip)
         };
 
         public static readonly BlenderRigAttackSpec Spec = new BlenderRigAttackSpec(

@@ -28,7 +28,7 @@ namespace Survival.Unity
 
         public void Build()
         {
-            _player = new BlenderRigPlayer(BonequillMotion.Spec, transform, BonequillAttack.Spec, BonequillAttack.IdleProps);
+            _player = new BlenderRigPlayer(BonequillMotion.Spec, transform, BonequillAttack.Spec, BonequillAttack.IdleProps, restAtAttackStart: true);
             _player.Build();
             if (_player.Built)
             {

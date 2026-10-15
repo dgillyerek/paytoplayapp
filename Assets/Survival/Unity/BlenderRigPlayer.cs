@@ -31,6 +31,10 @@ namespace Survival.Unity
         private bool _ready;
         private bool _loop;
         private readonly BlenderRigAttackSpec? _attackSpec;
+
+        /// <summary>Rest shows attack frame 0 (the keyed rest carry, closed bow hand) instead of the FBX bind pose, which has
+        /// the arm at the side and the fingers straight because the rest FBX carries no animation.</summary>
+        private readonly bool _restAtAttackStart;
         private readonly BlenderRigIdlePropSpec[] _idleProps;
         private BlenderRigAttackDriver? _attack;
         private bool _attackMode;
@@ -42,8 +46,10 @@ namespace Survival.Unity
             BlenderRigSpec spec,
             Transform parent,
             BlenderRigAttackSpec? attack = null,
-            BlenderRigIdlePropSpec[]? idleProps = null)
+            BlenderRigIdlePropSpec[]? idleProps = null,
+            bool restAtAttackStart = false)
         {
+            _restAtAttackStart = restAtAttackStart;
             _attackSpec = attack;
             _idleProps = idleProps ?? System.Array.Empty<BlenderRigIdlePropSpec>();
             _spec = spec;
@@ -303,6 +309,12 @@ namespace Survival.Unity
 
             _animator?.Rebind();
             _animator?.Update(0f);
+            if (_restAtAttackStart && _attackSpec != null && _ready
+                && PlayClip(_attackSpec.FileName, BlenderRigAttackSpec.PoseName, BlenderRigAttackSpec.TakeName, _attackSpec.ClipLastFrame))
+            {
+                SampleAttackFrame(BlenderRigAttackSpec.FirstFrame);
+            }
+
             _pose = BlenderRigSpec.RestPoseName;
             _loop = false;
             _length = 0f;

@@ -304,7 +304,12 @@ namespace Survival.Unity
                     view.Mesh = LoadProp(track, root);
                 }
 
-                if (view.Bone != null)
+                if (view.Bone != null && prop.BoneGrip != null)
+                {
+                    // Child of the hand bone at the Blender grip, converted bone space to bone space (no world-space fit).
+                    AttachAtBoneGrip(view, root, prop.BoneGrip);
+                }
+                else if (view.Bone != null)
                 {
                     var key = track.Frames[0];
                     var worldPos = WorldPoint(key);
@@ -554,6 +559,81 @@ namespace Survival.Unity
             return null;
 #endif
         }
+
+        /// <summary>
+        /// Parents the prop to its bone at the fixed Blender grip. Unity keeps the bone's local axes and flips handedness by
+        /// negating local X; the import scale and that mapping are checked against two child bone heads of the real imported
+        /// skeleton. The prop mesh is then turned so its Blender axes (long axis z, string side +y) match the converted grip,
+        /// whatever node rotation the prop FBX import added.
+        /// </summary>
+        private void AttachAtBoneGrip(TrackView view, GameObject root, BlenderBoneGrip grip)
+        {
+            var bone = view.Bone!;
+            var unitsPerMetre = 1f;
+            if (_bones.TryGetValue(grip.ChildA, out var a) && _bones.TryGetValue(grip.ChildB, out var b))
+            {
+                var ea = V(BlenderBoneGrip.ToUnityPoint(grip.ChildAHead));
+                var eb = V(BlenderBoneGrip.ToUnityPoint(grip.ChildBHead));
+                unitsPerMetre = (a.localPosition.magnitude + b.localPosition.magnitude) / Mathf.Max(ea.magnitude + eb.magnitude, 1e-6f);
+                var angA = Vector3.Angle(a.localPosition, ea);
+                var angB = Vector3.Angle(b.localPosition, eb);
+                Debug.Log(_spec.Character + " bone grip on " + bone.name + ": " + unitsPerMetre.ToString("0.####") +
+                          " bone units per metre, child axis check " + angA.ToString("0.0") + " / " + angB.ToString("0.0") + " deg.");
+                if (angA > 10f || angB > 10f)
+                {
+                    Debug.LogError(_spec.Character + " imported " + bone.name + " axes differ from Blender bone space (mirror-X expected); grip may be off.");
+                }
+            }
+            else
+            {
+                Debug.LogWarning(_spec.Character + " bone grip: child bones " + grip.ChildA + "/" + grip.ChildB + " missing; assuming 1 unit per metre.");
+            }
+
+            var t = root.transform;
+            t.SetParent(bone, false);
+            t.localPosition = V(grip.UnityGripPos(unitsPerMetre));
+            var q = grip.UnityGripRot();
+            t.localRotation = new Quaternion(q[0], q[1], q[2], q[3]);
+            var bs = bone.lossyScale.x;
+            var s = Mathf.Abs(bs) > 1e-6f ? _actor.lossyScale.x / bs : 1f;
+            t.localScale = new Vector3(s, s, s);
+            view.BoneLocalPos = t.localPosition;
+            view.BoneLocalRot = t.localRotation;
+            view.BoneBound = true;
+            if (view.Mesh != null)
+            {
+                foreach (var filter in view.Mesh.GetComponentsInChildren<MeshFilter>(true))
+                {
+                    if (filter.sharedMesh == null)
+                    {
+                        continue;
+                    }
+
+                    var mb = filter.sharedMesh.bounds;
+                    var ext = mb.extents;
+                    var longAxis = LongAxis(ext);
+                    var lv = Axis(longAxis);
+                    int side = -1;
+                    var best = -1f;
+                    for (var i = 0; i < 3; i++)
+                    {
+                        if (i != longAxis && Mathf.Abs(mb.center[i]) > best)
+                        {
+                            best = Mathf.Abs(mb.center[i]);
+                            side = i;
+                        }
+                    }
+
+                    var sv = Axis(side) * Mathf.Sign(mb.center[side] == 0f ? 1f : mb.center[side]);
+                    var meshFrame = Quaternion.LookRotation(lv, sv);   // mesh-space long axis -> z, string side -> y
+                    filter.transform.SetPositionAndRotation(t.position, t.rotation * Quaternion.Inverse(meshFrame));
+                }
+            }
+        }
+
+        private static Vector3 V(float[] p) => new Vector3(p[0], p[1], p[2]);
+
+        private static Vector3 Axis(int i) => i == 0 ? Vector3.right : i == 1 ? Vector3.up : Vector3.forward;
 
         private TrackView? IdleStandIn(string attackTrackName)
         {
