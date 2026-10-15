@@ -441,6 +441,10 @@ namespace Survival.Unity
                 return;
             }
 
+            // Multi-scene Editor hierarchy: a prior Blightroot (or any) demo left open alongside
+            // BattleLocked would otherwise keep playing in Game view. Strip every Blightroot demo
+            // actor before we spawn the eight roster fighters.
+            StripLeftoverDemoActors();
             _booted = true;
             SurvivalVisuals.EnsureEventSystem();
             foreach (var data in LockedBattleRoster.All)
@@ -468,6 +472,31 @@ namespace Survival.Unity
             _camera.ModeChanged = OnCameraModeChanged;
             BuildHud();
             Restart();
+        }
+
+
+        /// <summary>
+        /// Destroys leftover Survival demo actors from other scenes still loaded in the Editor
+        /// (Blightroot in particular: HOLD, not in the battle, but its demo scene is often left
+        /// open next to BattleLocked). Roster fighters spawn under this transform after this runs.
+        /// </summary>
+        private static void StripLeftoverDemoActors()
+        {
+            foreach (var actor in Object.FindObjectsByType<BlightrootActor>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (actor != null)
+                {
+                    Object.Destroy(actor.gameObject);
+                }
+            }
+
+            foreach (var demo in Object.FindObjectsByType<BlightrootDemo>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (demo != null)
+                {
+                    Object.Destroy(demo.gameObject);
+                }
+            }
         }
 
         private Fighter Spawn(LockedBattleFighter data)

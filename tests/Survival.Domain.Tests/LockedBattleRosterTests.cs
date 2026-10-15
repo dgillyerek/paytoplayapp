@@ -73,6 +73,26 @@ public sealed class LockedBattleRosterTests
     }
 
     [Fact]
+    public void Battle_roster_is_exactly_the_eight_merged_fighters_and_never_Blightroot()
+    {
+        Assert.Equal(
+            new[] { "Emberfang", "Stormcrest", "Ironhowl", "Nightfang", "Lyra", "Oakenshield", "Vespera", "Ashwyrm" },
+            LockedBattleRoster.All.Select(f => f.Name).ToArray());
+        Assert.Equal(8, LockedBattleRoster.All.Count);
+        Assert.DoesNotContain(LockedBattleRoster.All, f => f.Name == "Blightroot");
+        Assert.DoesNotContain(LockedBattleRoster.All, f => f.Name == "Rowan");
+        Assert.DoesNotContain(LockedBattleRoster.All, f => f.Name == "Bonequill");
+        Assert.DoesNotContain(LockedBattleRoster.All, f => f.Name == "Sir Aldric");
+        Assert.Contains(LockedBattleRoster.LeftOut, p => p.Key == "Blightroot");
+        var demo = File.ReadAllText(Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "LockedBattleDemo.cs"));
+        Assert.Contains("StripLeftoverDemoActors", demo, StringComparison.Ordinal);
+        Assert.Contains("BlightrootActor", demo, StringComparison.Ordinal);
+        Assert.DoesNotContain("AddComponent<BlightrootActor>()", demo, StringComparison.Ordinal);
+        var menu = File.ReadAllText(Path.Combine(FindRepoRoot(), "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
+        Assert.Contains("OpenSceneMode.Single", menu, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Added_lanes_sit_outside_the_original_two_and_pair_one_hero_with_one_villain()
     {
         // #57 lanes stay exactly where they were.
