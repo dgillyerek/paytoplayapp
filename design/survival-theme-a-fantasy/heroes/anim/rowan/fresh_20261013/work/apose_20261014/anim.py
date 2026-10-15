@@ -79,6 +79,7 @@ def roll_check(tag,f):
 A={}
 A['rest']=act('ROWAN_rest')
 for f in (0,30): reset(); rest_arms(); head_forward(); key(f); roll_check('rest',f)
+NARROW=float(os.environ.get('NARROW','-2.9'))   # deg; Derek 2026-10-15: walk legs a little too far apart
 A['walk']=act('ROWAN_walk')
 for f in range(31):
     ph=2*math.pi*f/30; s,c=math.sin(ph),math.cos(ph); reset()
@@ -87,6 +88,7 @@ for f in range(31):
         sw=-17*s*sg; knee=5+36*max(0.0,c*sg)**1.3
         rot(side+'UpLeg',(1,0,0),sw); rot(side+'Leg',(1,0,0),knee)
         rot(side+'Foot',(1,0,0),-(sw+knee)*0.6 if c*sg>0 else -sw*0.5)
+        if NARROW: rot(side+'UpLeg',(0,1,0),-sg*NARROW); rot(side+'Foot',(0,1,0),sg*NARROW)   # adduct toward a hip-width track, sole kept flat
     rot('Spine1',(0,0,1),3*s); rot('Neck',(0,0,1),-1.5*s)
     rest_arms(swL=0.09*s,swR=-0.09*s)
     head_forward(nod=0.9*(1-math.cos(2*ph))); key(f); roll_check('walk',f)
@@ -164,9 +166,42 @@ def spline(keys,pts,f):
     return cr(p0,pts[i],pts[i+1],p3,ease(t)*0.5+t*0.5)
 def lerpkey(keys,vals,f):
     i,t=seg(keys,f); t=ease(t); return vals[i].lerp(vals[i+1],t)
+
+# ---- attack step (Derek 2026-10-15): left foot lifts early, plants ~30 cm toward the target before the release with the weight
+# shifting onto it, holds through the release, returns to rest by f26. Both feet are 2-bone IK on fixed world targets (no sliding).
+LU=(J['LeftLeg']-J['LeftUpLeg']).length; LLo=(J['LeftFoot']-J['LeftLeg']).length
+STEP=Vector((float(os.environ.get('STEPX','-0.02')),float(os.environ.get('STEPY','-0.29')),0.0)); LIFT=0.07
+SHIFT=Vector((0.012,float(os.environ.get('SHY','-0.12')),-0.03))
+def step_w(f):    # foot travel 0..1: lift f2, plant f8, hold to f19, back down at rest by f26
+    return ease((f-2)/6) if f<8 else (1.0 if f<=19 else 1-ease((f-19)/7))
+def lift_h(f):
+    if 2<f<8: return LIFT*math.sin(math.pi*(f-2)/6)
+    if 19<f<26: return LIFT*math.sin(math.pi*(f-19)/7)
+    return 0.0
+def shift_w(f):   # weight onto the front foot f4-f11, off again f19-f27
+    return ease((f-4)/7) if f<11 else (1.0 if f<=19 else 1-ease((f-19)/8))
+RFOOT={s_:J[s_+'Foot'].copy() for s_ in ('Left','Right')}
+def aim_bone(n,tgt):
+    upd(); pb=PB[P_+n]; M=pb.matrix.to_3x3().normalized(); d=(Vector(tgt)-pb.head).normalized(); q=M.col[1].rotation_difference(d); setworld(n,q.to_matrix()@M)
+def pose_leg(s,A_,pole=Vector((0,-1,0.0))):
+    upd(); H=PB[P_+s+'UpLeg'].head.copy(); d=A_-H; D=min(d.length,(LU+LLo)*0.999); u=d.normalized()
+    a=(LU*LU-LLo*LLo+D*D)/(2*D); h=math.sqrt(max(LU*LU-a*a,0)); p=(pole-pole.dot(u)*u).normalized(); K=H+u*a+p*h
+    aim_bone(s+'UpLeg',K); aim_bone(s+'Leg',H+u*D); keep_rest_world(s+'Foot')
+def step_pose(f):
+    w=step_w(f); sw=shift_w(f)
+    if w<=0 and sw<=0: return Vector()
+    return SHIFT*sw
+STEPLOG=[]
 for f in range(31):
     a=TW*twist_w(f)
-    reset(); twist(a); head_forward(); upd()
+    reset(); SH=step_pose(f)
+    if SH.length>0: upd(); hb_=PB[P_+'Hips']; hb_.matrix=Matrix.Translation(SH)@hb_.matrix; upd()
+    twist(a)
+    if f not in (0,30):
+        pose_leg('Right',RFOOT['Right'].copy())
+        pose_leg('Left',RFOOT['Left']+STEP*step_w(f)+Vector((0,0,lift_h(f))))
+    head_forward(); upd()
+    STEPLOG.append({'f':f,'L':[round(v,4) for v in PB[P_+'LeftFoot'].head],'R':[round(v,4) for v in PB[P_+'RightFoot'].head],'hips':[round(v,4) for v in PB[P_+'Hips'].head]})
     hp=PB[P_+'Head'].head.copy(); SL=PB[P_+'LeftArm'].head.copy()
     # right
     pts=[]
@@ -174,7 +209,7 @@ for f in range(31):
         if isinstance(k[1],str):
             w=hp+ANCH+(PULL if k[1]=='follow' else Vector())
             pts.append(to_torso(w,a))
-        else: pts.append(k[1].copy())
+        else: pts.append(k[1]+Rz(-a)@SH)
     HR=to_world(spline(RK,pts,f),a); pR=Rz(a)@lerpkey(RK,[k[2] for k in RK],f).normalized()
     # left: direction slerp in the torso frame
     SLt=to_torso(SL,a); d0=(REST['Left']-J['LeftArm']).normalized()
@@ -206,4 +241,4 @@ summ={'bow_tilt_from_vertical_at_full_draw_deg':round(BOW_TILT_DRAW,2),'max_hing
 reset(); arm.animation_data.action=A['rest']; sc.frame_set(0)
 bpy.ops.wm.save_as_mainfile(filepath=W_+'/anim.blend',compress=True)
 for r in ROLL: r.pop('Left_hand_q'); r.pop('Right_hand_q')
-json.dump({'summary':summ,'frames':ROLL},open(W_+'/anim.json','w'),indent=1); print('ANIM',json.dumps(summ))
+json.dump({'summary':summ,'frames':ROLL,'attack_step':STEPLOG},open(W_+'/anim.json','w'),indent=1); print('ANIM',json.dumps(summ))

@@ -1,7 +1,7 @@
 {
 "samples_per_clip": 61,
 "step_frames": 0.5,
-"finger_mesh_length_change_max": 0.0684,
+"finger_mesh_length_change_max": 0.0051,
 "finger_curl_deg": [
 15,
 35,
