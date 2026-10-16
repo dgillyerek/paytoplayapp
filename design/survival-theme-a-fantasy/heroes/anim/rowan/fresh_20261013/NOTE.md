@@ -95,3 +95,15 @@ Derek approved the hero-blue front/back look (`source/ROWAN_FRONT_BACK_BLUE_LOCK
   sweeps the string through the wrist. Peak 10 deg per quarter frame.
 - Known: mid-spin (attack f2-f10, f18-f26) the octagonal grip's corners brush the finger skin (<= ~2 mm; grip_halfframe.json).
 - Narrower walk and the attack left-foot step are unchanged. Sheet: sheets/ROWAN_fresh_bow_carry_closeup.jpg.
+
+## v5d (2026-10-15) string on the INSIDE of the forearm
+- Derek on 58df9e5: the string rests on the inside (body side) of the forearm, between forearm and body/leg, limb further out, string facing up.
+- Same hand/bow relation (roll -45, string 0.73 cm off the skin, never inside it); the rigid bow+hand+forearm is now twisted about the forearm
+  so the contact is on the body side (carry_check.json inner 0.62 rest / 0.53 walk, limb 12.5 cm further out than the string centre), the bow
+  still fore-aft beside the leg. Whole-arm swing OUT 14 deg (arm out of the chest in walk).
+- String to body/leg >= 5.1 cm, coat >= 5.1 cm (rule 1 cm, forearm exempt); zero bow contact with body, coat, legs and forearm.
+- Trade-off: with the string on the body side and the bow beside the leg, the string side tilts up only ~12 deg (up 0.21 rest / 0.18 walk).
+  Tilting it further up swings the bow across his thighs into the coat/legs.
+- Attack: roll -45 -> -310 (= 50) the long way, keys f1/f11/f17/f27; the carry blend adds an outward swing (60 deg peak, 4w(1-w)) so the
+  carried bow clears his coat and leg as the arm comes up. Grip corners still brush the fingers mid-spin (f2-f10, f18-f26).
+- Sheet: sheets/ROWAN_fresh_bow_carry_closeup.jpg.

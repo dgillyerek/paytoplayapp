@@ -61,7 +61,7 @@ POLE_REST={'Left':Vector((0.25,1,0)),'Right':Vector((-0.25,1,0))}
 # rest/walk bow carry (Derek 2026-10-15, archer reference, same recipe as Bonequill #63 e541419): bow arm relaxed at the side, elbow
 # softly bent, the bow held near vertical along the INSIDE of the forearm, lower limb forward, top leaned out, string facing outward.
 # The bow frame is set in world space and the hand is solved from it: hand = Bw @ (RFIX @ Rz(ROLL))^-1.
-CARRY=dict(PITCH=float(os.environ.get('C_PITCH',25)),YAW=float(os.environ.get('C_YAW',8)),INWARD=float(os.environ.get('C_IN',15)),OUT=float(os.environ.get('C_OUT',12)),ELB=float(os.environ.get('C_ELB',65)),TILT=float(os.environ.get('C_TILT',10)),
+CARRY=dict(PITCH=float(os.environ.get('C_PITCH',25)),YAW=float(os.environ.get('C_YAW',8)),INWARD=float(os.environ.get('C_IN',15)),OUT=float(os.environ.get('C_OUT',14)),ELB=float(os.environ.get('C_ELB',65)),TILT=float(os.environ.get('C_TILT',10)),
            LEAN=float(os.environ.get('C_LEAN',12)),ROLL=float(os.environ.get('C_ROLL',-45)))
 def carry_hand_rot():
     # v5c (Derek 2026-10-15 correction): the STRING faces UP and lies along the inside of the forearm, the limb on the outside.
@@ -76,17 +76,18 @@ def carry_hand_rot():
 RL_IDLE=carry_hand_rot()
 HOFF=(RW('LeftForeArm').inverted()@RW('LeftHand'))
 # v5c: re-aim the rigid bow+hand+forearm assembly so the forearm hangs forward-down from a relaxed elbow (C_FA, elbow->hand), then
-# twist it about the forearm so the bow runs fore-aft beside the leg with the string side as near UP as that allows (+C_TW deg trim). The hand/forearm relation
+# twist it about the forearm so the string sits on the INNER (body) side of the forearm, faces up, and the bow runs fore-aft (v5d) (+C_TW deg trim). The hand/forearm relation
 # (string 0.5-1 cm off the inner forearm, set by ROLL) is unchanged by this rigid re-aim.
 def _reaim(q):
     Rh=q.to_matrix(); u=(Rh@HOFF.inverted()).col[1].normalized()
-    ud=Vector([float(t) for t in os.environ.get('C_FA','0.2,-0.45,-0.87').split(',')]).normalized()
+    ud=Vector([float(t) for t in os.environ.get('C_FA','0.15,-0.35,-0.92').split(',')]).normalized()
     R0=u.rotation_difference(ud).to_matrix(); off=Matrix(((-1,0,0),(0,-1,0),(0,0,1)))@Matrix.Rotation(math.radians(CARRY['ROLL']),3,'Z')
-    best=None
+    best=None; qo=Quaternion((0,1,0),math.radians(-CARRY['OUT'])).to_matrix()   # scored after the whole-arm OUT swing (carry_rots)
     for t in range(0,360,2):
-        Q=Matrix.Rotation(math.radians(t),3,ud)@R0; B=Q@Rh@off; up=(B@Vector((0,1,0))).z; fw=abs((B@Vector((0,0,1))).y)
-        sc_=fw+0.5*up   # bow along the walk direction beside the leg (not across the thighs), string as near up as that allows
-        if best is None or sc_>best[0]: best=(sc_,t,up,fw)
+        Q=Matrix.Rotation(math.radians(t),3,ud)@R0; B=qo@Q@Rh@off; yb=B@Vector((0,1,0)); up=yb.z; fw=abs((B@Vector((0,0,1))).y); uf=qo@ud
+        inner=-(yb-uf*yb.dot(uf)).normalized().x   # v5d: string side of the forearm points at the body (-x for the left arm), limb further out
+        sc_=float(os.environ.get('C_WI',2.0))*inner+float(os.environ.get('C_WU',1.75))*up+float(os.environ.get('C_WF',0.5))*fw
+        if best is None or sc_>best[0]: best=(sc_,t,up,fw,inner)
     print('REAIM',best,flush=True)
     Q=Matrix.Rotation(math.radians(best[1]+float(os.environ.get('C_TW',0))),3,ud)@R0
     return (Q@Rh).to_quaternion()
@@ -102,12 +103,14 @@ def carry_rots():
     # whole arm (arm, forearm, hand rigidly) swung out OUT deg about world y at the shoulder: elbow clear of the ribs, bow lean = LEAN
     q=Quaternion((0,1,0),math.radians(-CARRY['OUT'])).to_matrix()
     return q@Ra,q@Rf,q@Rh
-def apply_carry(w,swing=0.0):
+def apply_carry(w,swing=0.0,xo=0.0):
     if w<=0: return
     upd(); cur=[PB[P_+'Left'+b].matrix.to_3x3().normalized() for b in ('Arm','ForeArm','Hand')]
     Ra,Rf,Rh=carry_rots()
     if abs(swing)>0:   # walk: the whole carry swings a few degrees about the shoulder
         q=Quaternion((1,0,0),math.radians(-swing*104)).to_matrix(); Ra,Rf,Rh=q@Ra,q@Rf,q@Rh
+    if xo:   # attack blend: the carried bow swings out first so its upper limb/string clears the coat and leg on the way to the draw
+        q=Quaternion((0,1,0),math.radians(-xo)).to_matrix(); Ra,Rf,Rh=q@Ra,q@Rf,q@Rh
     for b,c,t in zip(('Arm','ForeArm','Hand'),cur,(Ra,Rf,Rh)):
         setworld('Left'+b,c.to_quaternion().slerp(t.to_quaternion(),w).to_matrix())
 def rest_arms(swL=0.0,swR=0.0):
@@ -274,7 +277,7 @@ for f in range(31):
     HL=to_world(SLt+dL*(Lr+((L1+L2)*rL-Lr)*bl),a)
     pL=Rz(a)@lerpkey(LK,[k[3] for k in LK],f).normalized()
     pose_arm('Left',HL,pL); pose_arm('Right',HR,pR)
-    tb=ease(min(1.0,f/10.0)) if f<=10 else (1.0 if f<=20 else 1.0-ease((f-20)/10.0)); apply_carry(1.0-tb)   # carry -> draw f0-10, back f20-30
+    tb=ease(min(1.0,f/10.0)) if f<=10 else (1.0 if f<=20 else 1.0-ease((f-20)/10.0)); apply_carry(1.0-tb,0.0,float(os.environ.get('C_XO',60))*4*tb*(1-tb))   # carry -> draw f0-10, back f20-30
     # draw-hand wrist: near the jaw the fingers are bent to point forward along the arrow (not at the neck); flex only, no roll
     wD=ease((f-7)/3) if f<=10 else (1.0 if f<=17 else 1-ease((f-17)/3))
     if wD>0:

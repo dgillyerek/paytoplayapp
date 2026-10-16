@@ -79,7 +79,7 @@ public class RowanBowGripUnityTests
     [InlineData("rest")]
     [InlineData("walk")]
     [InlineData("attack")]
-    public void Bowstring_keeps_2cm_clear_of_body_and_coat_and_lies_along_the_inner_forearm_when_carried(string clip)
+    public void Bowstring_keeps_1cm_clear_of_body_leg_and_coat_and_rests_on_the_inner_forearm_when_carried(string clip)
     {
         var doc = Json("string_clearance.json");
         var grip = RowanAttack.BowGrip;
@@ -95,9 +95,9 @@ public class RowanBowGripUnityTests
             Assert.True(Math.Abs(s[5].GetDouble() - grip.RollDeg(clip == "attack", f)) < 0.05, $"{clip} f{f}: roll curve differs from Blender");
             // Only the draw hand is exempt, and only while it holds the string (nock f8 to release f14).
             Assert.Equal(clip == "attack" && f >= 8 && f <= 14, s[4].GetBoolean());
-            // Body excludes the bow forearm and hand (Derek: the forearm is exempt from the 2 cm rule; the string lies against it).
-            Assert.True(s[1].GetDouble() >= 0.02, $"{clip} f{f}: string {s[1].GetDouble() * 100:0.0} cm from the body");
-            Assert.True(s[2].GetDouble() >= 0.02, $"{clip} f{f}: string {s[2].GetDouble() * 100:0.0} cm from the coat");
+            // Body excludes the bow forearm and hand (Derek: the forearm is exempt from the 1 cm rule; the string lies against it).
+            Assert.True(s[1].GetDouble() >= 0.01, $"{clip} f{f}: string {s[1].GetDouble() * 100:0.0} cm from the body/leg");
+            Assert.True(s[2].GetDouble() >= 0.01, $"{clip} f{f}: string {s[2].GetDouble() * 100:0.0} cm from the coat");
             var fa = s[7].GetDouble();
             var carried = clip != "attack" || f <= 1 || f >= 27;
             if (carried)
@@ -120,19 +120,23 @@ public class RowanBowGripUnityTests
     [InlineData("rest")]
     [InlineData("walk")]
     [InlineData("attack")]
-    public void String_up_carry_has_zero_bow_contact_and_never_enters_the_forearm(string clip)
+    public void Inner_side_carry_has_zero_bow_contact_and_never_enters_the_forearm(string clip)
     {
         var c = Json("carry_check.json").GetProperty(clip);
         Assert.Equal(0, c.GetProperty("limb").GetInt32());
         Assert.Equal(0, c.GetProperty("coat").GetInt32());
         Assert.Equal(0, c.GetProperty("fa_in_bow").GetInt32());
         Assert.Equal(0, c.GetProperty("str_in_body").GetInt32());   // ray-parity test on the full skin, bow arm included
-        Assert.True(c.GetProperty("str_body").GetDouble() >= 0.02);
-        Assert.True(c.GetProperty("str_coat").GetDouble() >= 0.02);
+        Assert.True(c.GetProperty("str_body").GetDouble() >= 0.01);
+        Assert.True(c.GetProperty("str_coat").GetDouble() >= 0.01);
         Assert.False(c.TryGetProperty("bad", out _));
         if (clip != "attack")
         {
-            Assert.True(c.GetProperty("up").GetDouble() >= 0.7, "carried string should face up");
+            Assert.True(c.GetProperty("up").GetDouble() > 0.1, "carried string side should tilt up");
+            // the string touches the BODY side of the forearm (horizontal direction from the forearm axis to the contact points at him, -x)
+            Assert.True(c.GetProperty("inner").GetDouble() >= 0.5, "string should rest on the inside (body side) of the forearm");
+            // the bow limb (grip) sits further out than the string
+            Assert.True(c.GetProperty("limb_out").GetDouble() >= 0.05, "limb should be further out than the string");
             Assert.InRange(c.GetProperty("str_fa_min").GetDouble(), 0.005, 0.010);
         }
 

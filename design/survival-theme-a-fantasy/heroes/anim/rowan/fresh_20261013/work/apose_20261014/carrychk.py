@@ -68,9 +68,14 @@ for an in clips:
             p=Vector(a+(b-a)*(z+0.66)/1.32); loc,_n,_i,dd=fbv.find_nearest(p)
             if loc is None: continue
             if draw: continue   # nock-to-release: the string is in the draw fingers
-            sfa=min(sfa,dd)
+            if dd<sfa: sfa=dd; pc=p
             if dd<0.08 and inside(fbv,p): sin+=1
-        w['str_in_body']=max(w.get('str_in_body',0),sin); upz=(B@Vector((0,1,0))).z   # string vs the bow forearm (pressed against it, 0.5-1 cm), string side up
+        w['str_in_body']=max(w.get('str_in_body',0),sin)
+        if not draw and an!='attack':   # v5d: which side of the forearm the string touches (+1 = straight at the body, -x) and limb further out than the string
+            fb=arm.pose.bones[P+'LeftForeArm']; h0=arm.matrix_world@fb.head; t0=arm.matrix_world@fb.tail; dv_=t0-h0
+            tt=max(0.0,min(1.0,(pc-h0).dot(dv_)/dv_.dot(dv_))); vin=(pc-(h0+dv_*tt)); vin.z=0
+            w['inner']=round(min(w.get('inner',1.0),-vin.normalized().x),2)
+            sm=Vector(((a+b)/2).tolist()); w['limb_out']=round(min(w.get('limb_out',1.0),g.x-sm.x),3); upz=(B@Vector((0,1,0))).z   # string vs the bow forearm (pressed against it, 0.5-1 cm), string side up
         ax=B@Vector((0,0,1)); tilt=math.degrees(math.acos(abs(ax.z))); out=(B@Vector((0,1,0))).x
         fy=(arm.pose.bones[P+'LeftForeArm'].matrix.to_3x3()).col[1].normalized(); hy=R.col[1].normalized(); wr=math.degrees(fy.angle(hy))
         mid=(arm.pose.bones[P+'LeftForeArm'].head+arm.pose.bones[P+'LeftForeArm'].tail)/2; dv=mid-g; bfa=(dv-ax*dv.dot(ax)).length
