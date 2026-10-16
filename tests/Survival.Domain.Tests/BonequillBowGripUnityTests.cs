@@ -114,7 +114,7 @@ public class BonequillBowGripUnityTests
     [InlineData("rest")]
     [InlineData("walk")]
     [InlineData("attack")]
-    public void Bowstring_keeps_2cm_clear_of_body_cloak_and_bow_arm_with_string_away_when_carried(string clip)
+    public void Bowstring_rests_on_the_inner_forearm_and_keeps_1cm_from_body_cloak_and_legs(string clip)
     {
         var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(FindRepoRoot(), BonequillMotion.DesignDir, "work", "string_clearance.json"))).RootElement;
         var grip = BonequillAttack.BowGrip;
@@ -125,21 +125,26 @@ public class BonequillBowGripUnityTests
         foreach (var s in samples)
         {
             var f = (float)s[0].GetDouble();
-            // Runtime roll curve == the curve the clearance was measured with.
             Assert.True(Math.Abs(s[5].GetDouble() - grip.RollDeg(clip == "attack", f)) < 0.05, $"{clip} f{f}: roll curve differs from Blender");
-            Assert.Equal(clip == "attack" && f >= 10 && f <= 17, s[4].GetBoolean());
-            Assert.True(s[1].GetDouble() >= 0.02, $"{clip} f{f}: string {s[1].GetDouble() * 100:0.0} cm from the body/bow hand/forearm");
-            Assert.True(s[2].GetDouble() >= 0.02, $"{clip} f{f}: string {s[2].GetDouble() * 100:0.0} cm from the cloak");
-            Assert.True(s[3].GetDouble() >= 0.02, $"{clip} f{f}: string {s[3].GetDouble() * 100:0.0} cm from the bow-arm bones");
+            var drawing = s[4].GetBoolean();
+            Assert.Equal(clip == "attack" && f >= 10 && f <= 17, drawing);
+            // Body, legs and cloak: >= 1 cm everywhere (bow forearm exempt; draw hand exempt while it holds the string).
+            Assert.True(s[1].GetDouble() >= 0.01, $"{clip} f{f}: string {s[1].GetDouble() * 100:0.0} cm from the body/legs");
+            Assert.True(s[2].GetDouble() >= 0.01, $"{clip} f{f}: string {s[2].GetDouble() * 100:0.0} cm from the cloak");
+            Assert.True(s[3].GetDouble() >= 0.01, $"{clip} f{f}: string {s[3].GetDouble() * 100:0.0} cm from the bow-hand bones");
+            if (!drawing)
+            {
+                Assert.False(s[8].GetBoolean(), $"{clip} f{f}: string passes through the bow forearm");
+                Assert.True(s[7].GetDouble() >= 0.005, $"{clip} f{f}: string {s[7].GetDouble() * 100:0.00} cm from the forearm (min 0.5)");
+            }
+
             if (clip != "attack")
             {
-                Assert.True(s[6].GetDouble() > 0.5, $"{clip} f{f}: carried string not facing outward, away from the body");
+                // Carried: string on the body side, resting 0.5-1 cm off the inner forearm.
+                Assert.True(s[6].GetDouble() < -0.5, $"{clip} f{f}: carried string not on the body side of the forearm");
+                Assert.InRange(s[7].GetDouble(), 0.005, 0.01);
             }
-            else if (f <= 2 || f >= 26)
-            {
-                Assert.True(s[6].GetDouble() > 0.2, $"{clip} f{f}: string turns toward him outside nock-to-release");
-            }
-            else if (f >= 10 && f <= 17)
+            else if (drawing)
             {
                 Assert.True(s[6].GetDouble() < 0, $"{clip} f{f}: string should face him from nock to release");
             }

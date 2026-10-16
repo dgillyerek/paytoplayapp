@@ -15,6 +15,10 @@ for cn,bn in (('cape_Head','Head'),('cape_LeftArm','LeftArm'),('cape_RightArm','
     c=crig.pose.bones[cn].constraints.new('COPY_TRANSFORMS'); c.target=arm; c.subtarget=P+bn
 GL=Vector(json.load(open(W+'/fist.json'))['grip_local'])
 rh=set(g.index for g in body.vertex_groups if g.name.startswith(P+'RightHand'))
+fai=body.vertex_groups[P+'LeftForeArm'].index
+isfa=np.array([any(g.group==fai and g.weight>0.3 for g in v.groups) for v in body.data.vertices])
+fapolys=[p.vertices[:] for p in body.data.polygons if isfa[list(p.vertices)].all()]
+from mathutils.bvhtree import BVHTree
 isrh=np.array([sum(g.weight for g in v.groups if g.group in rh)>0.3 for v in body.data.vertices])
 BN=('LeftForeArm','LeftHand','LeftHandFingers1','LeftHandFingers2','LeftHandFingers3','LeftHandThumb1','LeftHandThumb2')
 def seg(Q,a,b):
@@ -29,15 +33,17 @@ for an in ('rest','walk','attack'):
         draw=an=='attack' and 10<=f<=17
         e=body.evaluated_get(dg); m=e.to_mesh(); V=np.array([(body.matrix_world@v.co)[:] for v in m.vertices]); e.to_mesh_clear()
         ec=cape.evaluated_get(dg); mc=ec.to_mesh(); C=np.array([(cape.matrix_world@v.co)[:] for v in mc.vertices]); ec.to_mesh_clear()
-        keep=~isrh if draw else np.ones(len(V),bool)
+        keep=(~isrh if draw else np.ones(len(V),bool))&~isfa   # bow forearm exempt (the string rests against it)
         db=seg(V[keep],a,b); dc=seg(C,a,b)
-        dbone=min(seg(np.array([np.array(arm.matrix_world@arm.pose.bones[P+n].head)+(np.array(arm.matrix_world@arm.pose.bones[P+n].tail)-np.array(arm.matrix_world@arm.pose.bones[P+n].head))*i/40 for i in range(41)]),a,b) for n in BN)
+        dfa=seg(V[isfa],a,b); fb=BVHTree.FromPolygons([Vector(v) for v in V],fapolys); dv=Vector(b-a)
+        pen=fb.ray_cast(Vector(a),dv.normalized(),dv.length)[0] is not None
+        dbone=min(9,*[seg(np.array([np.array(arm.matrix_world@arm.pose.bones[P+n].head)+(np.array(arm.matrix_world@arm.pose.bones[P+n].tail)-np.array(arm.matrix_world@arm.pose.bones[P+n].head))*i/40 for i in range(41)]),a,b) for n in BN if n!='LeftForeArm'])
         tor=Vector(V[::50].mean(0)); tor.z=g.z
         away=(B@Vector((0,1,0))).dot((g-tor).normalized())
-        per.append([f,round(float(db),4),round(float(dc),4),round(float(dbone),4),draw,round(roll(an,f),2),round(away,3)])
+        per.append([f,round(float(db),4),round(float(dc),4),round(float(dbone),4),draw,round(roll(an,f),2),round(away,3),round(float(dfa),4),bool(pen)])
     out[an]=per; worst[an]={'min_body_m':min(r[1] for r in per),'min_cloak_m':min(r[2] for r in per),'min_arm_bones_m':min(r[3] for r in per),
-        'min_away_rest_carry':min((r[6] for r in per if r[5]==ROLL_REST),default=None)}
+        'max_away_rest_carry':max((r[6] for r in per if r[5]==ROLL_REST),default=None),'forearm_gap_m':[min(r[7] for r in per if r[5]==ROLL_REST),max(r[7] for r in per if r[5]==ROLL_REST)],'forearm_pen':sum(r[8] for r in per if not r[4])}
 json.dump({'roll_rest_deg':ROLL_REST,'roll_draw_deg':ROLL_DRAW,'roll_keys':[2,10,17,26],'string_bow_local':[[0,0.19,-0.62],[0,0.19,0.62]],
-  'draw_hand_exempt':'RightHand* vertices, attack f10-f17','columns':'frame, body incl. bow hand+forearm, cloak, bow-arm bones, draw, roll_deg, away',
+  'draw_hand_exempt':'RightHand* vertices, attack f10-f17','columns':'frame, body (bow forearm exempt), cloak, bow hand bones (forearm exempt), draw, roll_deg, away (+ = string outward), string-to-forearm gap, string through forearm',
   'worst':worst,'per_sample':out},open(W+'/string_clearance.json','w'),indent=0)
 print('STRINGCLR',json.dumps(worst))

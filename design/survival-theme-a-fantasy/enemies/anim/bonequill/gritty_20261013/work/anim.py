@@ -73,21 +73,24 @@ def lefthand_hold(q=None): setrot('LeftHand',q if q is not None else RL); left_g
 # vertical along the INSIDE of the forearm, lower limb down and forward, upper limb up and back past the shoulder, string facing
 # outward (away from the body). The bow frame is set in world space and the hand is solved from it, so the grip never moves.
 import os
-CARRY=dict(ABD=float(os.environ.get('C_ABD',12)),SWING=float(os.environ.get('C_SWING',0)),ELB=float(os.environ.get('C_ELB',20)),
-           TILT=float(os.environ.get('C_TILT',18)),LEAN=float(os.environ.get('C_LEAN',12)),ROLL=float(os.environ.get('C_ROLL',270)))
+CARRY=dict(RABD=float(os.environ.get('C_RABD',-12)),ABD=float(os.environ.get('C_ABD',-3)),SWING=float(os.environ.get('C_SWING',0)),ELB=float(os.environ.get('C_ELB',20)),
+           TILT=float(os.environ.get('C_TILT',35)),LEAN=float(os.environ.get('C_LEAN',47)),ROLL=float(os.environ.get('C_ROLL',345)),PHI=float(os.environ.get('C_PHI',-7)))
 def carry_hand_rot():
     # bow long axis: up, tipped back by TILT (lower limb forward) and its top leaned out by LEAN; string (bow +y) outward (+x)
     T,L=math.radians(CARRY['TILT']),math.radians(CARRY['LEAN'])
-    z=Vector((math.sin(L),math.sin(T),math.cos(T))).normalized(); y=Vector((1,0,0)); y=(y-y.dot(z)*z).normalized(); x=y.cross(z)
+    z=Vector((math.sin(L),math.sin(T),math.cos(T))).normalized(); P=math.radians(CARRY['PHI']); y=Vector((-math.cos(P),math.sin(P),0)); y=(y-y.dot(z)*z).normalized(); x=y.cross(z)   # string toward the body side (inner forearm), PHI turns it toward the back
     Bw=Matrix((x,y,z)).transposed()
     off=Matrix(((-1,0,0),(0,-1,0),(0,0,1)))@Matrix.Rotation(math.radians(CARRY['ROLL']),3,'Z')
     return (Bw@off.inverted()).to_quaternion()
 RL_IDLE=carry_hand_rot()
-def rest_arms(swL=0,swR=0):
-    rot('LeftArm',(0,1,0),ARM_DOWN+CARRY['ABD']); rot('RightArm',(0,1,0),-ARM_DOWN)
+def _arm_carry(swL,swR):
+    rot('LeftArm',(0,1,0),ARM_DOWN+CARRY['ABD']); rot('RightArm',(0,1,0),-ARM_DOWN-CARRY['RABD'])   # +ABD/-RABD swing the arm toward the body
     rot('LeftArm',(1,0,0),swL-CARRY['SWING']); rot('RightArm',(1,0,0),swR)
     rot('LeftForeArm',(1,0,0),-CARRY['ELB']); rot('RightForeArm',(1,0,0),-6); upd()
-    lefthand_hold(RL_IDLE)
+def _fa_world(): return (PB[P_+'LeftForeArm'].matrix.to_3x3()).normalized().to_quaternion()
+reset(); legs(); _arm_carry(0,0); HAND_REL=_fa_world().inverted()@RL_IDLE   # bow frame rides the forearm: the string keeps its gap to the forearm through the walk swing
+def rest_arms(swL=0,swR=0):
+    _arm_carry(swL,swR); lefthand_hold(_fa_world()@HAND_REL)
 A={}
 A['rest']=act('BONEQUILL_rest')
 for f in (0,30): reset(); legs(); rest_arms(); head_forward(); key(f)
