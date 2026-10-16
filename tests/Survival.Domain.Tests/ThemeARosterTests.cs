@@ -78,7 +78,7 @@ public sealed class ThemeARosterTests
         Assert.Equal("ironhowl_normal.png", IronhowlMotion.NormalFileName);
         Assert.Equal("ironhowl_metallic.png", IronhowlMotion.MetallicFileName);
         Assert.Equal("ironhowl_roughness.png", IronhowlMotion.RoughnessFileName);
-        Assert.Equal(IronhowlMotion.BodyMd5, IronhowlMotion.RestMd5);
+        Assert.NotEqual(IronhowlMotion.BodyMd5, IronhowlMotion.RestMd5);
         var source = File.ReadAllText(MotionPath("Enemies", "IronhowlMotion.cs"));
         Assert.DoesNotContain("ExactName", source, StringComparison.Ordinal);
         Assert.DoesNotContain("BlenderRigSpec", source, StringComparison.Ordinal);
@@ -257,10 +257,7 @@ public sealed class ThemeARosterTests
         Assert.Contains("SetValueWithoutNotify(0)", fangDemo, StringComparison.Ordinal);
         Assert.Contains("Survival/Emberfang Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
 
-        var excluded = new[]
-        {
-            "Rowan"
-        };
+        var excluded = Array.Empty<string>();   // Rowan (#64) and Bonequill (#63) both ship now
         var scenes = Path.Combine(root, "Assets", "Survival", "Scenes");
         var pack = Path.Combine(root, "Assets", "ThemePack");
         foreach (var name in excluded)

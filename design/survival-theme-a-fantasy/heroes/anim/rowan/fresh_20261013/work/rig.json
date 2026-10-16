@@ -1,0 +1,30 @@
+{
+ "faces": 198024,
+ "verts": 99740,
+ "hand_split_verts": {
+  "Left": 2990,
+  "Right": 3331
+ },
+ "parts": {
+  "torso_head": 70158,
+  "L_arm": 6696,
+  "R_arm": 6792,
+  "L_leg": 7932,
+  "R_leg": 8175
+ },
+ "ripped_faces_arm": 807,
+ "ripped_faces_leg": 1168,
+ "islands_after_rip": 1,
+ "small_islands_reassigned_verts": 0,
+ "hand_hardlock": {
+  "Left": 2483,
+  "Right": 2845
+ },
+ "bow_on_back_spine2": 3985,
+ "loincloth_hips_verts": 25887,
+ "loincloth_with_leg_weight": 0,
+ "head_locked": 23644,
+ "head_band": 1016,
+ "max_infl": 3,
+ "single_bone_verts": 87895
+}

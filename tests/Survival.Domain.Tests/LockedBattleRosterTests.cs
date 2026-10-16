@@ -7,19 +7,19 @@ namespace Survival.Domain.Tests;
 public sealed class LockedBattleRosterTests
 {
     [Fact]
-    public void Roster_is_the_four_locked_merged_characters_with_walk_and_attack_split_two_against_two()
+    public void Roster_is_every_locked_merged_character_with_walk_and_attack_split_five_against_five()
     {
-        Assert.Equal(new[] { "Emberfang", "Stormcrest", "Ironhowl", "Nightfang" }, LockedBattleRoster.All.Select(f => f.Name).ToArray());
-        Assert.Equal(new[] { "Emberfang", "Stormcrest" }, LockedBattleRoster.OnSide(BattleSide.Hero).Select(f => f.Name).ToArray());
-        Assert.Equal(new[] { "Ironhowl", "Nightfang" }, LockedBattleRoster.OnSide(BattleSide.Villain).Select(f => f.Name).ToArray());
+        Assert.Equal(new[] { "Emberfang", "Stormcrest", "Ironhowl", "Nightfang", "Lyra", "Oakenshield", "Vespera", "Ashwyrm", "Sir Aldric", "Blightroot" }, LockedBattleRoster.All.Select(f => f.Name).ToArray());
+        Assert.Equal(new[] { "Emberfang", "Stormcrest", "Lyra", "Oakenshield", "Sir Aldric" }, LockedBattleRoster.OnSide(BattleSide.Hero).Select(f => f.Name).ToArray());
+        Assert.Equal(new[] { "Ironhowl", "Nightfang", "Vespera", "Ashwyrm", "Blightroot" }, LockedBattleRoster.OnSide(BattleSide.Villain).Select(f => f.Name).ToArray());
 
         var root = FindRepoRoot();
         foreach (var f in LockedBattleRoster.All)
         {
             var folder = f.Side == BattleSide.Hero ? "Heroes" : "Enemies";
-            Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Runtime", folder, f.Name + "Motion.cs")), f.Name);
-            Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Unity", f.Name + "Actor.cs")), f.Name);
-            Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", f.Name + ".unity")), f.Name);
+            Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Runtime", folder, f.FileKey + "Motion.cs")), f.Name);
+            Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Unity", f.ActorClassName + ".cs")), f.Name);
+            Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", f.FileKey + ".unity")), f.Name);
             Assert.True(f.DesignHeightMetres > 0.5f && f.DesignHeightMetres < 2.5f, f.Name);
             Assert.True(f.AttackRangeMetres > 1f && f.AttackRangeMetres < LockedBattleRoster.StartHalfGapMetres * 2f, f.Name);
             Assert.True(f.AttackSeconds > 0.5f, f.Name);
@@ -37,40 +37,121 @@ public sealed class LockedBattleRosterTests
         Assert.Contains(LockedBattleRoster.Nightfang.AttackPoseName, NightfangMotion.Spec.PoseNames);
         Assert.Contains(LockedBattleRoster.Ironhowl.WalkPoseName, IronhowlMotion.PoseNames);
         Assert.Contains(LockedBattleRoster.Ironhowl.AttackPoseName, IronhowlMotion.PoseNames);
+        Assert.Contains(LockedBattleRoster.Lyra.WalkPoseName, LyraMotion.Spec.PoseNames);
+        Assert.Contains(LockedBattleRoster.Lyra.AttackPoseName, LyraMotion.Spec.PoseNames);
+        Assert.Contains(LockedBattleRoster.Oakenshield.WalkPoseName, OakenshieldMotion.Spec.PoseNames);
+        Assert.Contains(LockedBattleRoster.Oakenshield.AttackPoseName, OakenshieldMotion.Spec.PoseNames);
+        Assert.Contains(LockedBattleRoster.Vespera.WalkPoseName, VesperaMotion.Spec.PoseNames);
+        Assert.Contains(LockedBattleRoster.Vespera.AttackPoseName, VesperaMotion.Spec.PoseNames);
+        Assert.Contains(LockedBattleRoster.Ashwyrm.WalkPoseName, AshwyrmMotion.Spec.PoseNames);
+        Assert.Contains(LockedBattleRoster.Ashwyrm.AttackPoseName, AshwyrmMotion.Spec.PoseNames);
+
+        // Each added fighter uses its own attack clip length: Vespera's slowed conjure runs f0-36.
+        Assert.Equal(VesperaAttack.ClipSeconds, LockedBattleRoster.Vespera.AttackSeconds);
+        Assert.Equal(BlenderRigAttackSpec.ClipSeconds, LockedBattleRoster.Lyra.AttackSeconds);
+        Assert.Equal(BlenderRigAttackSpec.ClipSeconds, LockedBattleRoster.Oakenshield.AttackSeconds);
+        Assert.Equal(BlenderRigAttackSpec.ClipSeconds, LockedBattleRoster.Ashwyrm.AttackSeconds);
+
+        // Lane 5: Sir Aldric plays Lite pack clips on his locked pilot actor; Blightroot's
+        // creature-pack walk carries its hips like Ironhowl's.
+        Assert.Equal("SirAldricMeshyAnimateActor", LockedBattleRoster.SirAldric.ActorClassName);
+        Assert.Equal("BlightrootActor", LockedBattleRoster.Blightroot.ActorClassName);
+        Assert.Equal("walk", LockedBattleRoster.SirAldric.WalkPoseName);
+        Assert.True(SirAldric3DMotion.TryLiteSwordShield(SirAldricBattlePoses.RestClip, out var aldricRest) && aldricRest.Loop);
+        Assert.True(SirAldric3DMotion.TryLiteSwordShield(SirAldricBattlePoses.AttackClip, out var aldricAttack) && !aldricAttack.Loop);
+        Assert.False(LockedBattleRoster.SirAldric.WalkCarriesRoot);
+        Assert.False(LockedBattleRoster.SirAldric.AttackCyclesItself);
+        Assert.Equal(33f / 30f, LockedBattleRoster.SirAldric.AttackSeconds, 4);
+        Assert.True(BlightrootMotion.TryGet(BlightrootBattlePoses.RestClip, out var bIdle) && bIdle.Loop);
+        Assert.True(BlightrootMotion.TryGet(BlightrootBattlePoses.WalkClip, out var bWalk) && bWalk.Loop);
+        Assert.True(BlightrootMotion.TryGet(BlightrootBattlePoses.AttackClip, out var bSwipe) && !bSwipe.Loop);
+        Assert.Equal(bSwipe.LastFrame / 30f, LockedBattleRoster.Blightroot.AttackSeconds, 4);
+        Assert.True(LockedBattleRoster.Blightroot.WalkCarriesRoot);
+        Assert.Equal(BlightrootMotion.BoneRoot, LockedBattleRoster.Blightroot.StrideBone);
+        Assert.False(LockedBattleRoster.Blightroot.AttackCyclesItself);
+        // Stride matches the clip's measured hips travel (HipZMax is the per-loop travel).
+        Assert.InRange(LockedBattleRoster.Blightroot.WalkRootStrideMetres, bWalk.HipZMax - 0.01f, bWalk.HipZMax + 0.01f);
 
         Assert.True(LockedBattleRoster.Ironhowl.WalkCarriesRoot);
         Assert.Equal(IronhowlMotion.BoneRoot, LockedBattleRoster.Ironhowl.StrideBone);
         Assert.False(LockedBattleRoster.Ironhowl.AttackCyclesItself);
         Assert.Equal(IronhowlMotion.AttackSeconds, LockedBattleRoster.Ironhowl.AttackSeconds);
-        foreach (var f in new[] { LockedBattleRoster.Emberfang, LockedBattleRoster.Stormcrest, LockedBattleRoster.Nightfang })
+        foreach (var f in new[] { LockedBattleRoster.Emberfang, LockedBattleRoster.Stormcrest, LockedBattleRoster.Nightfang, LockedBattleRoster.Lyra, LockedBattleRoster.Oakenshield, LockedBattleRoster.Vespera, LockedBattleRoster.Ashwyrm })
         {
             Assert.False(f.WalkCarriesRoot);
             Assert.True(f.AttackCyclesItself);
         }
 
-        var notInBattle = new[] { "Ashwyrm", "Lyra", "Rowan", "Bonequill", "Vespera", "Oakenshield", "Blightroot", "Sir Aldric", "SirAldric" };
+        // Rowan (#64) and Bonequill (#63) are unmerged HOLD PRs.
+        var notInBattle = new[] { "Rowan", "Bonequill", "SirAldric" };
         foreach (var name in notInBattle)
         {
             Assert.DoesNotContain(LockedBattleRoster.All, f => string.Equals(f.Name, name, StringComparison.Ordinal));
         }
 
-        Assert.Equal(new[] { "Ashwyrm", "Blightroot", "Sir Aldric" }, LockedBattleRoster.LeftOut.Select(p => p.Key).ToArray());
+        Assert.Empty(LockedBattleRoster.LeftOut);
     }
 
     [Fact]
-    public void Ashwyrm_is_merged_with_walk_and_attack_but_not_placed_until_Derek_picks_its_lane()
+    public void Battle_roster_is_locked_at_exactly_ten_fighters_and_only_the_lane_five_Blightroot_survives_the_cleanup()
     {
-        // #56 merged Ashwyrm's attack. It qualifies now, it just has no lane yet.
-        Assert.Contains(AshwyrmMotion.WalkPoseName, AshwyrmMotion.Spec.PoseNames);
-        Assert.Contains(BlenderRigAttackSpec.PoseName, AshwyrmMotion.Spec.PoseNames);
-        Assert.Equal(BlenderRigAttackSpec.PoseName, AshwyrmMotion.AttackPoseName);
+        Assert.Equal(
+            new[] { "Emberfang", "Stormcrest", "Ironhowl", "Nightfang", "Lyra", "Oakenshield", "Vespera", "Ashwyrm", "Sir Aldric", "Blightroot" },
+            LockedBattleRoster.All.Select(f => f.Name).ToArray());
+        Assert.Equal(10, LockedBattleRoster.All.Count);
+        Assert.Equal(5, LockedBattleRoster.OnSide(BattleSide.Hero).Count());
+        Assert.Equal(5, LockedBattleRoster.OnSide(BattleSide.Villain).Count());
+        Assert.Single(LockedBattleRoster.All, f => f.Name == "Blightroot");
+        Assert.Single(LockedBattleRoster.All, f => f.Name == "Sir Aldric");
+        Assert.DoesNotContain(LockedBattleRoster.All, f => f.Name == "Rowan");
+        Assert.DoesNotContain(LockedBattleRoster.All, f => f.Name == "Bonequill");
+        var demo = File.ReadAllText(Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "LockedBattleDemo.cs"));
+        // Stray demo Blightroots (an open Blightroot scene) are still stripped; the battle's own
+        // lane-5 Blightroot under its root is the one exception, and it spawns after the strip.
+        Assert.Contains("StripLeftoverDemoActors", demo, StringComparison.Ordinal);
+        Assert.Contains("FindObjectsByType<BlightrootActor>", demo, StringComparison.Ordinal);
+        Assert.Contains("FindObjectsByType<BlightrootDemo>", demo, StringComparison.Ordinal);
+        Assert.Contains("!IsOwnLaneFighter(actor.transform)", demo, StringComparison.Ordinal);
+        Assert.Contains("actor.IsChildOf(transform)", demo, StringComparison.Ordinal);
+        Assert.Contains("pivot.AddComponent<BlightrootActor>()", demo, StringComparison.Ordinal);
+        Assert.True(demo.IndexOf("StripLeftoverDemoActors();", StringComparison.Ordinal) < demo.IndexOf("var fighter = Spawn(data);", StringComparison.Ordinal));
+        var menu = File.ReadAllText(Path.Combine(FindRepoRoot(), "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
+        Assert.Contains("OpenSceneMode.Single", menu, StringComparison.Ordinal);
+    }
 
-        var reason = LockedBattleRoster.LeftOut.Single(p => p.Key == "Ashwyrm").Value;
-        Assert.Contains("merged", reason, StringComparison.Ordinal);
-        Assert.Contains("attack", reason, StringComparison.Ordinal);
-        Assert.Contains("lane", reason, StringComparison.Ordinal);
-        Assert.DoesNotContain("unmerged", reason, StringComparison.Ordinal);
-        Assert.DoesNotContain(LockedBattleRoster.All, f => f.Name == "Ashwyrm");
+    [Fact]
+    public void Added_lanes_sit_outside_the_original_two_and_pair_one_hero_with_one_villain()
+    {
+        // #57 lanes stay exactly where they were.
+        Assert.Equal(0, LockedBattleRoster.Emberfang.Lane);
+        Assert.Equal(0, LockedBattleRoster.Ironhowl.Lane);
+        Assert.Equal(1, LockedBattleRoster.Stormcrest.Lane);
+        Assert.Equal(1, LockedBattleRoster.Nightfang.Lane);
+        Assert.Equal(-1.15f, LockedBattleRoster.LaneX(0), 4);
+        Assert.Equal(1.15f, LockedBattleRoster.LaneX(1), 4);
+        Assert.Equal(-LockedBattleRoster.OuterLaneHalfSpacingMetres, LockedBattleRoster.LaneX(2), 4);
+        Assert.Equal(LockedBattleRoster.OuterLaneHalfSpacingMetres, LockedBattleRoster.LaneX(3), 4);
+        Assert.True(LockedBattleRoster.OuterLaneHalfSpacingMetres - LockedBattleRoster.LaneHalfSpacingMetres >= 1.2f);
+
+        foreach (var lane in new[] { 0, 1, 2, 3, 4 })
+        {
+            Assert.Single(LockedBattleRoster.All, f => f.Lane == lane && f.Side == BattleSide.Hero);
+            Assert.Single(LockedBattleRoster.All, f => f.Lane == lane && f.Side == BattleSide.Villain);
+        }
+
+        Assert.Equal("Vespera", LockedBattleRoster.TargetOf(LockedBattleRoster.Lyra).Name);
+        Assert.Equal("Lyra", LockedBattleRoster.TargetOf(LockedBattleRoster.Vespera).Name);
+        Assert.Equal("Ashwyrm", LockedBattleRoster.TargetOf(LockedBattleRoster.Oakenshield).Name);
+        Assert.Equal("Oakenshield", LockedBattleRoster.TargetOf(LockedBattleRoster.Ashwyrm).Name);
+
+        // Lane 5 sits outside lane 2 on the left and pairs Sir Aldric with Blightroot.
+        Assert.Equal(4, LockedBattleRoster.SirAldric.Lane);
+        Assert.Equal(4, LockedBattleRoster.Blightroot.Lane);
+        Assert.Equal(-LockedBattleRoster.FifthLaneHalfSpacingMetres, LockedBattleRoster.LaneX(4), 4);
+        Assert.True(LockedBattleRoster.FifthLaneHalfSpacingMetres - LockedBattleRoster.OuterLaneHalfSpacingMetres >= 1.2f);
+        Assert.Equal(5, LockedBattleRoster.LaneCount);
+        Assert.Equal("Blightroot", LockedBattleRoster.TargetOf(LockedBattleRoster.SirAldric).Name);
+        Assert.Equal("Sir Aldric", LockedBattleRoster.TargetOf(LockedBattleRoster.Blightroot).Name);
     }
 
     [Fact]
@@ -79,7 +160,7 @@ public sealed class LockedBattleRosterTests
         foreach (var f in LockedBattleRoster.All)
         {
             LockedBattleRoster.StartPoint(f, out var x, out var z);
-            Assert.Equal(f.Lane == 0 ? -LockedBattleRoster.LaneHalfSpacingMetres : LockedBattleRoster.LaneHalfSpacingMetres, x);
+            Assert.Equal(LockedBattleRoster.LaneX(f.Lane), x);
             Assert.Equal(f.Side == BattleSide.Hero ? -LockedBattleRoster.StartHalfGapMetres : LockedBattleRoster.StartHalfGapMetres, z);
             Assert.Equal(f.Side == BattleSide.Hero ? 0f : 180f, LockedBattleRoster.StartYawDegrees(f));
             var target = LockedBattleRoster.TargetOf(f);
@@ -143,7 +224,7 @@ public sealed class LockedBattleRosterTests
         var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "LockedBattleDemo.cs"));
         foreach (var f in LockedBattleRoster.All)
         {
-            Assert.Contains("AddComponent<" + f.Name + "Actor>()", demo, StringComparison.Ordinal);
+            Assert.Contains("AddComponent<" + f.ActorClassName + ">()", demo, StringComparison.Ordinal);
         }
 
         Assert.Contains("LockedBattleRoster.All", demo, StringComparison.Ordinal);
@@ -171,6 +252,24 @@ public sealed class LockedBattleRosterTests
         Assert.Equal(IronhowlMotion.BodyMd5, Md5(Path.Combine(assets, IronhowlMotion.BodyThemePackRel)));
         Assert.Equal(IronhowlMotion.WalkMd5, Md5(Path.Combine(assets, IronhowlMotion.WalkThemePackRel)));
         Assert.Equal(IronhowlMotion.AttackMd5, Md5(Path.Combine(assets, IronhowlMotion.AttackThemePackRel)));
+        Assert.Equal(LyraAttack.FileMd5, Md5(Path.Combine(assets, LyraMotion.ThemePackDir, LyraAttack.FileName)));
+        Assert.Equal(OakenshieldMotion.RestMd5, Md5(Path.Combine(assets, OakenshieldMotion.RestThemePackRel)));
+        Assert.Equal(OakenshieldMotion.WalkMd5, Md5(Path.Combine(assets, OakenshieldMotion.WalkThemePackRel)));
+        Assert.Equal(OakenshieldAttack.FileMd5, Md5(Path.Combine(assets, OakenshieldMotion.ThemePackDir, OakenshieldAttack.FileName)));
+        Assert.Equal(VesperaAttack.FileMd5, Md5(Path.Combine(assets, VesperaMotion.ThemePackDir, VesperaAttack.FileName)));
+        Assert.Equal(AshwyrmAttack.FileMd5, Md5(Path.Combine(assets, AshwyrmMotion.ThemePackDir, AshwyrmAttack.FileName)));
+        Assert.Equal(BlightrootMotion.BodyMd5, Md5(Path.Combine(assets, BlightrootMotion.BodyThemePackRel)));
+        foreach (var name in new[] { BlightrootBattlePoses.RestClip, BlightrootBattlePoses.WalkClip, BlightrootBattlePoses.AttackClip })
+        {
+            Assert.True(BlightrootMotion.TryGet(name, out var clip));
+            Assert.Equal(clip.Md5, Md5(Path.Combine(assets, clip.ThemePackRel)));
+        }
+
+        foreach (var name in new[] { SirAldricBattlePoses.RestClip, SirAldricBattlePoses.AttackClip })
+        {
+            Assert.True(SirAldric3DMotion.TryLiteSwordShield(name, out var clip));
+            Assert.Equal(clip.Md5, Md5(Path.Combine(assets, clip.ThemePackRel)));
+        }
 
         foreach (var spec in new[] { NightfangMotion.Spec, StormcrestMotion.Spec })
         {

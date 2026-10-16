@@ -52,6 +52,24 @@ namespace Survival.Unity
                 case BattleImpactKind.ShadowRake:
                     fx.BuildShadowRake(core, glow, edge, travel);
                     break;
+                case BattleImpactKind.VoidFireBreath:
+                    fx.BuildVoidFireBreath(core, glow, edge, travel);
+                    break;
+                case BattleImpactKind.ArcaneConjure:
+                    fx.BuildArcaneConjure(core, glow, edge);
+                    break;
+                case BattleImpactKind.StaffLight:
+                    fx.BuildStaffLight(core, glow, edge);
+                    break;
+                case BattleImpactKind.LeafEarth:
+                    fx.BuildLeafEarth(core, glow, edge, travel);
+                    break;
+                case BattleImpactKind.SwordSteel:
+                    fx.BuildSwordSteel(core, glow, edge, travel);
+                    break;
+                case BattleImpactKind.BlightRot:
+                    fx.BuildBlightRot(core, glow, edge, travel);
+                    break;
                 default:
                     fx.BuildIronClaw(core, glow, edge, travel);
                     break;
@@ -100,6 +118,32 @@ namespace Survival.Unity
             AddLight(new Color(0.55f, 0.25f, 0.85f, 1f), 3f, 2.0f, 0.15f);
         }
 
+        /// <summary>Sir Aldric sword hit: white steel flash, two blue (#1b3060) slash streaks across the thrust, steel sparks, cool light.</summary>
+        private void BuildSwordSteel(Color core, Color glow, Color edge, Vector3 travel)
+        {
+            _life = 0.42f;
+            Burst("Flash", Additive(), 1, 0.08f, 0.08f, 0f, 0f, 0.45f, 0.55f, Bright(core), core, glow, 0f, 0.02f, 180f, 0.25f);
+            Burst("Sparks", Additive(), 24, 0.15f, 0.30f, 3.5f, 6.5f, 0.012f, 0.03f, Bright(core), glow, edge, 1.4f, 0.04f, 55f, 0.25f);
+            Burst("Glint", Additive(), 4, 0.10f, 0.18f, 0.1f, 0.4f, 0.18f, 0.28f, glow, edge, edge, 0f, 0.05f, 180f, 1.2f);
+            AddStreaks(core, glow, travel, 0.40f, 0.06f, 0.07f, 0.28f, 30f);
+            AddLight(new Color(0.62f, 0.76f, 1f, 1f), 5f, 2.2f, 0.10f);
+        }
+
+        /// <summary>Blightroot claw hit: purple rot flash, three claw streaks, a sickly spore puff and falling bark splinters.</summary>
+        private void BuildBlightRot(Color core, Color glow, Color edge, Vector3 travel)
+        {
+            _life = 0.55f;
+            var spore = new Color(0.30f, 0.12f, 0.36f, 0.70f);
+            var sporeEnd = new Color(0.18f, 0.08f, 0.20f, 0.25f);
+            var bark = new Color(0.22f, 0.15f, 0.12f, 1f);
+            Burst("Flash", Additive(), 1, 0.10f, 0.10f, 0f, 0f, 0.50f, 0.60f, Bright(core), core, glow, 0f, 0.02f, 180f, 0.25f);
+            Burst("Spores", Alpha(), 10, 0.40f, 0.60f, 0.3f, 0.8f, 0.20f, 0.42f, spore, sporeEnd, sporeEnd, -0.12f, 0.14f, 120f, 2.0f);
+            Burst("Motes", Additive(), 16, 0.30f, 0.55f, 1.2f, 2.6f, 0.02f, 0.05f, glow, edge, edge, -0.3f, 0.06f, 80f, 0.4f);
+            Burst("Splinters", Alpha(), 10, 0.40f, 0.60f, 1.5f, 3.0f, 0.025f, 0.05f, bark, bark, bark, 2.5f, 0.08f, 70f, 1f);
+            AddStreaks(core, glow, travel, 0.38f, 0.06f, 0.10f, 0.40f, -40f);
+            AddLight(new Color(0.65f, 0.30f, 0.90f, 1f), 4f, 2.2f, 0.14f);
+        }
+
         /// <summary>Ironhowl claw hit: hot claw sparks, three short white slash streaks, a dust puff, falling debris.</summary>
         private void BuildIronClaw(Color core, Color glow, Color edge, Vector3 travel)
         {
@@ -112,6 +156,60 @@ namespace Survival.Unity
             Burst("Debris", Alpha(), 10, 0.40f, 0.60f, 1.5f, 3.0f, 0.03f, 0.06f, grit, grit, grit, 2.5f, 0.08f, 70f, 1f);
             AddStreaks(core, glow, travel, 0.30f, 0.04f, 0.07f, 0.30f, -55f);
             AddLight(new Color(1f, 0.70f, 0.40f, 1f), 4f, 2.0f, 0.10f);
+        }
+
+        /// <summary>Ashwyrm void-fire fireball hit: violet-white flash, purple flame puff, a gust of dark smoke pushed along the hit, embers, violet light.</summary>
+        private void BuildVoidFireBreath(Color core, Color glow, Color edge, Vector3 travel)
+        {
+            _life = 0.5f;
+            var smoke = new Color(0.12f, 0.05f, 0.18f, 0.75f);
+            var smokeEnd = new Color(0.06f, 0.02f, 0.09f, 0.3f);
+            Burst("Flash", Additive(), 1, 0.12f, 0.12f, 0f, 0f, 0.60f, 0.70f, Bright(core), core, glow, 0f, 0.02f, 180f, 0.25f);
+            Burst("Flame", Additive(), 28, 0.22f, 0.40f, 1.0f, 2.8f, 0.14f, 0.32f, core, glow, edge, -0.25f, 0.10f, 70f, 1.6f);
+            Burst("Gust", Alpha(), 8, 0.35f, 0.50f, 0.6f, 1.2f, 0.20f, 0.40f, smoke, smokeEnd, smokeEnd, -0.1f, 0.12f, 100f, 2.0f);
+            Burst("Embers", Additive(), 16, 0.35f, 0.60f, 2.4f, 4.4f, 0.02f, 0.05f, glow, edge, edge, 0.9f, 0.05f, 60f, 0.4f);
+            AddLight(new Color(0.70f, 0.35f, 1f, 1f), 7f, 2.6f, 0.18f);
+        }
+
+        /// <summary>Vespera shadow orb hit: violet flash, a ring of purple motes, dark wisps, rune-bright sparks.</summary>
+        private void BuildArcaneConjure(Color core, Color glow, Color edge)
+        {
+            _life = 0.45f;
+            var dark = new Color(0.12f, 0.03f, 0.20f, 0.8f);
+            var darker = new Color(0.05f, 0.01f, 0.09f, 0.5f);
+            Burst("Flash", Additive(), 1, 0.10f, 0.10f, 0f, 0f, 0.55f, 0.65f, Bright(core), core, glow, 0f, 0.02f, 180f, 0.3f);
+            Burst("Motes", Additive(), 22, 0.25f, 0.40f, 1.2f, 2.4f, 0.03f, 0.07f, Bright(core), glow, edge, 0f, 0.06f, 180f, 0.6f);
+            Burst("Wisps", Alpha(), 8, 0.30f, 0.45f, 0.3f, 0.7f, 0.18f, 0.34f, dark, darker, darker, -0.15f, 0.10f, 120f, 2.0f);
+            Burst("Sparks", Additive(), 10, 0.12f, 0.25f, 3.0f, 5.0f, 0.015f, 0.03f, Bright(core), glow, edge, 0.4f, 0.04f, 60f, 0.3f);
+            AddLight(new Color(0.65f, 0.30f, 1f, 1f), 6f, 2.2f, 0.15f);
+        }
+
+        /// <summary>Lyra arcane bolt hit: white-gold flash, a soft halo, rising light motes, warm light.</summary>
+        private void BuildStaffLight(Color core, Color glow, Color edge)
+        {
+            _life = 0.45f;
+            Burst("Flash", Additive(), 1, 0.10f, 0.10f, 0f, 0f, 0.65f, 0.75f, Bright(core), core, glow, 0f, 0.02f, 180f, 0.3f);
+            Burst("Halo", Additive(), 4, 0.20f, 0.30f, 0.1f, 0.3f, 0.35f, 0.50f, glow, edge, edge, 0f, 0.05f, 180f, 1.5f);
+            Burst("Motes", Additive(), 20, 0.35f, 0.55f, 0.8f, 1.8f, 0.02f, 0.05f, Bright(core), glow, edge, -0.6f, 0.08f, 90f, 0.5f);
+            Burst("Sparks", Additive(), 12, 0.12f, 0.22f, 3.0f, 5.0f, 0.015f, 0.03f, Bright(core), glow, edge, 0.3f, 0.04f, 50f, 0.3f);
+            AddLight(new Color(1f, 0.92f, 0.65f, 1f), 7f, 2.4f, 0.14f);
+        }
+
+        /// <summary>Oakenshield thorn spear hit: green flash, leaves and splinters thrown along the hit, an earth dust puff.</summary>
+        private void BuildLeafEarth(Color core, Color glow, Color edge, Vector3 travel)
+        {
+            _life = 0.55f;
+            var leaf = new Color(0.30f, 0.62f, 0.20f, 1f);
+            var leafEnd = new Color(0.45f, 0.55f, 0.15f, 0.8f);
+            var dust = new Color(0.42f, 0.34f, 0.24f, 0.55f);
+            var dustEnd = new Color(0.34f, 0.28f, 0.20f, 0.25f);
+            var bark = new Color(0.30f, 0.20f, 0.12f, 1f);
+            Burst("Flash", Additive(), 1, 0.08f, 0.08f, 0f, 0f, 0.45f, 0.55f, Bright(core), core, glow, 0f, 0.02f, 180f, 0.25f);
+            Burst("Leaves", Alpha(), 16, 0.45f, 0.60f, 1.2f, 2.6f, 0.04f, 0.08f, leaf, leafEnd, leafEnd, 1.2f, 0.08f, 70f, 1f);
+            Burst("Splinters", Alpha(), 10, 0.30f, 0.50f, 2.0f, 3.5f, 0.02f, 0.04f, bark, bark, bark, 2.5f, 0.05f, 55f, 1f);
+            Burst("Dust", Alpha(), 7, 0.40f, 0.55f, 0.3f, 0.8f, 0.22f, 0.45f, dust, dustEnd, dustEnd, -0.05f, 0.15f, 120f, 1.8f);
+            AddStreaks(core, glow, travel, 0.26f, 0.04f, 0.07f, 0.28f, 30f);
+            AddLight(new Color(0.55f, 0.90f, 0.40f, 1f), 4f, 2.0f, 0.12f);
         }
 
         private void Update()

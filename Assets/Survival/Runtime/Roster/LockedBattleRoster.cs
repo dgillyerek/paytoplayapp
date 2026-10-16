@@ -33,7 +33,8 @@ namespace Survival.Domain.Roster
             float attackRangeMetres,
             float attackSeconds,
             bool attackCyclesItself,
-            int lane)
+            int lane,
+            string actorClassName = "")
         {
             Name = name;
             Side = side;
@@ -49,7 +50,19 @@ namespace Survival.Domain.Roster
             AttackSeconds = attackSeconds;
             AttackCyclesItself = attackCyclesItself;
             Lane = lane;
+            ActorClassName = actorClassName.Length > 0 ? actorClassName : FileKeyOf(name) + "Actor";
         }
+
+        /// <summary>Name without spaces, as used by the Motion, Actor and scene file names ("Sir Aldric" → "SirAldric").</summary>
+        public string FileKey => FileKeyOf(Name);
+
+        /// <summary>
+        /// Unity component the battle adds for this fighter. "{FileKey}Actor" for everyone except
+        /// Sir Aldric, whose locked actor is SirAldricMeshyAnimateActor.
+        /// </summary>
+        public string ActorClassName { get; }
+
+        private static string FileKeyOf(string name) => name.Replace(" ", string.Empty);
 
         public string Name { get; }
         public BattleSide Side { get; }
@@ -90,7 +103,11 @@ namespace Survival.Domain.Roster
         /// </summary>
         public bool AttackCyclesItself { get; }
 
-        /// <summary>0 = left lane, 1 = right lane, seen from behind the heroes.</summary>
+        /// <summary>
+        /// Seen from behind the heroes: 0 = left inner lane, 1 = right inner lane (the original
+        /// #57 matchups), 2 = left outer lane, 3 = right outer lane, 4 = fifth lane, outside lane 2
+        /// on the left (Sir Aldric vs Blightroot, added 2026-10-15).
+        /// </summary>
         public int Lane { get; }
 
         public bool WalkCarriesRoot => WalkRootStrideMetres > 0f;
@@ -98,10 +115,60 @@ namespace Survival.Domain.Roster
         public float AttackCycleSeconds => AttackSeconds + BlenderRigAttackSpec.RestGapSeconds;
     }
 
+    /// <summary>Sir Aldric's battle poses on SirAldricMeshyAnimateActor.</summary>
+    public static class SirAldricBattlePoses
+    {
+        public const string Rest = "rest";
+        public const string Walk = "walk";
+        public const string Attack = "attack";
+
+        /// <summary>Lite pack clip played for rest (loops).</summary>
+        public const string RestClip = "Sword And Shield idle";
+
+        /// <summary>Lite pack clip played for attack: in place, frames 0-32 move, then it holds the idle pose.</summary>
+        public const string AttackClip = "Sword And Shield attack (4)";
+
+        /// <summary>Last moving frame of <see cref="AttackClip"/> (it holds the idle pose to frame 100).</summary>
+        public const int AttackLastFrame = 32;
+
+        public const float AttackSeconds = (AttackLastFrame + 1) / 30f;
+    }
+
+    /// <summary>Blightroot's battle poses on BlightrootActor (exact creature-pack Mixamo names).</summary>
+    public static class BlightrootBattlePoses
+    {
+        public const string Rest = "rest";
+        public const string Walk = "walk";
+        public const string Attack = "attack";
+        public const string RestClip = "mutant idle";
+        public const string WalkClip = "mutant walking";
+        public const string AttackClip = "mutant swiping";
+
+        /// <summary>Hips travel of one "mutant walking" loop (measured on the FBX, 1.4526 m).</summary>
+        public const float WalkStrideMetres = 1.453f;
+
+        /// <summary>"mutant swiping" runs frames 0-80 in Unity.</summary>
+        public const float AttackSeconds = 80f / 30f;
+
+        public static string ClipFor(string pose)
+        {
+            switch (pose)
+            {
+                case Walk:
+                    return WalkClip;
+                case Attack:
+                    return AttackClip;
+                default:
+                    return RestClip;
+            }
+        }
+    }
+
     /// <summary>
     /// Locked battle demo roster: characters on main whose animations are locked with a
-    /// Derek Game-view PASS and that have both a walk and an attack clip. Ashwyrm qualifies
-    /// since #56 but is held out until Derek picks its lane (see <see cref="LeftOut"/>).
+    /// Derek Game-view PASS and that have both a walk and an attack clip, plus the fifth lane
+    /// Derek approved on 2026-10-15 (Sir Aldric vs Blightroot): five heroes against five
+    /// villains, one matchup per lane (see <see cref="LeftOut"/> for who is not in).
     /// Heroes come from Runtime/Heroes, villains from Runtime/Enemies (Theme A: heroes of the
     /// kingdom against the darkness). Pure presentation, no combat rules.
     /// </summary>
@@ -117,6 +184,24 @@ namespace Survival.Domain.Roster
 
         /// <summary>Lane centres sit this far either side of the battle centre line.</summary>
         public const float LaneHalfSpacingMetres = 1.15f;
+
+        /// <summary>
+        /// Outer lanes (2 and 3) sit this far either side of the centre line: 1.3 m outside the
+        /// inner lanes, so the widest added body (Ashwyrm, 1.9 m wingspan) clears its neighbours
+        /// and the inner lanes stay exactly where #57 put them.
+        /// </summary>
+        public const float OuterLaneHalfSpacingMetres = 2.45f;
+
+        /// <summary>
+        /// Fifth lane (4) sits this far left of the centre line: 1.4 m outside lane 2. Vespera
+        /// (lane 2 villain) is slim, so Blightroot (1.65 m T-pose span, about 1.0 m with arms
+        /// down at idle) clears her. The right side is not used because Ashwyrm's 1.9 m wingspan
+        /// already reaches 3.4 m out. Lanes 0-3 do not move.
+        /// </summary>
+        public const float FifthLaneHalfSpacingMetres = 3.85f;
+
+        /// <summary>Lanes 0-4. The ground lays one dirt track per lane.</summary>
+        public const int LaneCount = 5;
 
         /// <summary>Everyone holds rest this long before walking in.</summary>
         public const float OpeningHoldSeconds = 0.75f;
@@ -185,23 +270,135 @@ namespace Survival.Domain.Roster
             true,
             1);
 
+        // Added lanes (2026-10-14). Walk speeds come from each locked walk clip's foot travel
+        // (two strides of the foot's forward sweep per 30-frame loop, the same measure that gives
+        // Emberfang 0.33 m/s); heights are the rest-mesh heights of the locked FBXs.
+
+        public static readonly LockedBattleFighter Lyra = new LockedBattleFighter(
+            "Lyra",
+            BattleSide.Hero,
+            "#59",
+            LyraMotion.WalkPoseName,
+            LyraMotion.AttackPoseName,
+            "staff cast arcane bolt",
+            1.885f,
+            0.88f,
+            0f,
+            string.Empty,
+            3.2f,
+            BlenderRigAttackSpec.ClipSeconds,
+            true,
+            2);
+
+        public static readonly LockedBattleFighter Oakenshield = new LockedBattleFighter(
+            "Oakenshield",
+            BattleSide.Hero,
+            "#60",
+            OakenshieldMotion.WalkPoseName,
+            OakenshieldMotion.AttackPoseName,
+            "thorn spear throw",
+            1.800f,
+            1.15f,
+            0f,
+            string.Empty,
+            3.0f,
+            BlenderRigAttackSpec.ClipSeconds,
+            true,
+            3);
+
+        public static readonly LockedBattleFighter Vespera = new LockedBattleFighter(
+            "Vespera",
+            BattleSide.Villain,
+            "#58",
+            VesperaMotion.WalkPoseName,
+            VesperaMotion.AttackPoseName,
+            "rave orb conjure shadow bolt",
+            1.909f,
+            0.63f,
+            0f,
+            string.Empty,
+            3.0f,
+            VesperaAttack.ClipSeconds,
+            true,
+            2);
+
+        public static readonly LockedBattleFighter Ashwyrm = new LockedBattleFighter(
+            "Ashwyrm",
+            BattleSide.Villain,
+            "#56",
+            AshwyrmMotion.WalkPoseName,
+            AshwyrmMotion.AttackPoseName,
+            "void-fire breath fireball",
+            1.343f,
+            0.52f,
+            0f,
+            string.Empty,
+            3.2f,
+            BlenderRigAttackSpec.ClipSeconds,
+            true,
+            3);
+
+        // Fifth lane (2026-10-15, Derek approved). Sir Aldric plays the Lite Sword And Shield Pack
+        // idle and "Sword And Shield attack (4)" (an in-place thrust that starts and ends on the
+        // idle pose, frames 0-32) and the holefixed Standard Walk, which is in place: 2 × 0.861 m
+        // foot sweep per 35-frame loop = 1.48 m/s. His blade tip reaches 0.94 m ahead on the
+        // contact frame (the blade angles across the thrust), so he stops 1.4 m out, where the
+        // tip meets Blightroot's 0.38 m front face. Blightroot plays the creature pack "mutant
+        // idle", "mutant walking" (carries the hips 1.453 m per 43-frame loop, like Ironhowl) and
+        // "mutant swiping" (80 frames, lunges and comes back to its start pose by the last frame).
+
+        public static readonly LockedBattleFighter SirAldric = new LockedBattleFighter(
+            "Sir Aldric",
+            BattleSide.Hero,
+            "lane 5 (Derek 2026-10-15)",
+            SirAldricBattlePoses.Walk,
+            SirAldricBattlePoses.Attack,
+            "sword and shield thrust",
+            1.800f,
+            1.48f,
+            0f,
+            string.Empty,
+            1.4f,
+            SirAldricBattlePoses.AttackSeconds,
+            false,
+            4,
+            "SirAldricMeshyAnimateActor");
+
+        public static readonly LockedBattleFighter Blightroot = new LockedBattleFighter(
+            "Blightroot",
+            BattleSide.Villain,
+            "lane 5 (Derek 2026-10-15)",
+            BlightrootBattlePoses.Walk,
+            BlightrootBattlePoses.Attack,
+            "rot claw swipe",
+            1.900f,
+            0f,
+            BlightrootBattlePoses.WalkStrideMetres,
+            BlightrootMotion.BoneRoot,
+            1.6f,
+            BlightrootBattlePoses.AttackSeconds,
+            false,
+            4);
+
         public static IReadOnlyList<LockedBattleFighter> All { get; } = new[]
         {
             Emberfang,
             Stormcrest,
             Ironhowl,
-            Nightfang
+            Nightfang,
+            Lyra,
+            Oakenshield,
+            Vespera,
+            Ashwyrm,
+            SirAldric,
+            Blightroot
         };
 
         /// <summary>
-        /// On main but not in the battle, with the reason. Unmerged PRs are not listed.
+        /// On main but not in the battle, with the reason. Unmerged PRs are not listed. Empty since
+        /// the fifth lane brought in Blightroot and Sir Aldric.
         /// </summary>
-        public static IReadOnlyList<KeyValuePair<string, string>> LeftOut { get; } = new[]
-        {
-            new KeyValuePair<string, string>("Ashwyrm", "merged with walk and attack (#56), not placed yet: waiting on Derek's lane decision."),
-            new KeyValuePair<string, string>("Blightroot", "creature pack is still HOLD, no Game-view PASS."),
-            new KeyValuePair<string, string>("Sir Aldric", "walk and attack are not Design or Game-view PASS yet.")
-        };
+        public static IReadOnlyList<KeyValuePair<string, string>> LeftOut { get; } = Array.Empty<KeyValuePair<string, string>>();
 
         public static IEnumerable<LockedBattleFighter> OnSide(BattleSide side)
         {
@@ -217,8 +414,26 @@ namespace Survival.Domain.Roster
         /// <summary>Start point on the ground plane (x, z). Heroes at -Z, villains at +Z.</summary>
         public static void StartPoint(LockedBattleFighter fighter, out float x, out float z)
         {
-            x = fighter.Lane == 0 ? -LaneHalfSpacingMetres : LaneHalfSpacingMetres;
+            x = LaneX(fighter.Lane);
             z = fighter.Side == BattleSide.Hero ? -StartHalfGapMetres : StartHalfGapMetres;
+        }
+
+        /// <summary>Lane centre across the field (x), Design metres.</summary>
+        public static float LaneX(int lane)
+        {
+            switch (lane)
+            {
+                case 0:
+                    return -LaneHalfSpacingMetres;
+                case 1:
+                    return LaneHalfSpacingMetres;
+                case 2:
+                    return -OuterLaneHalfSpacingMetres;
+                case 4:
+                    return -FifthLaneHalfSpacingMetres;
+                default:
+                    return OuterLaneHalfSpacingMetres;
+            }
         }
 
         /// <summary>Start yaw in degrees. Every locked rig faces +Z at yaw 0.</summary>

@@ -15,7 +15,25 @@ namespace Survival.Domain.Roster
         ShadowRake = 2,
 
         /// <summary>Ironhowl claw: claw sparks, dust and debris.</summary>
-        IronClaw = 3
+        IronClaw = 3,
+
+        /// <summary>Ashwyrm void-fire fireball: purple fire burst, a gust of dark smoke, embers.</summary>
+        VoidFireBreath = 4,
+
+        /// <summary>Vespera shadow orb: violet flash, purple motes and dark wisps.</summary>
+        ArcaneConjure = 5,
+
+        /// <summary>Lyra arcane bolt: white-gold flash, halo and rising light motes.</summary>
+        StaffLight = 6,
+
+        /// <summary>Oakenshield thorn spear: leaves, splinters and earth dust.</summary>
+        LeafEarth = 7,
+
+        /// <summary>Sir Aldric sword thrust: white steel flash, blue (#1b3060) slash streaks, steel sparks.</summary>
+        SwordSteel = 8,
+
+        /// <summary>Blightroot rot claw: purple rot flash, claw streaks, spore puff and falling bark splinters.</summary>
+        BlightRot = 9
     }
 
     /// <summary>
@@ -171,6 +189,21 @@ namespace Survival.Domain.Roster
         /// <summary>Ironhowl's swipe: right hand reaches furthest forward (1.16 m) on frame 11 of 26.</summary>
         public const int IronhowlContactFrame = 11;
 
+        /// <summary>
+        /// Sir Aldric's "Sword And Shield attack (4)": the right hand reaches furthest forward on
+        /// frame 16 of the 0-32 thrust, with the 1.01 m blade tip 0.94 m ahead of his origin.
+        /// </summary>
+        public const int SirAldricContactFrame = 16;
+
+        /// <summary>
+        /// Blightroot's "mutant swiping": the left claw reaches furthest forward (1.36 m, hips
+        /// lunged 0.55 m) at 52.6 % of the take, frame 42 of 80.
+        /// </summary>
+        public const int BlightrootContactFrame = 42;
+
+        /// <summary>Sir Aldric's blue, #1b3060 (27, 48, 96).</summary>
+        public static readonly float[] SirAldricBlueRgb = { 27f / 255f, 48f / 255f, 96f / 255f };
+
         public static readonly LockedBattleHitProfile Emberfang = new LockedBattleHitProfile(
             "Emberfang",
             BattleImpactKind.FireBurst,
@@ -227,6 +260,100 @@ namespace Survival.Domain.Roster
             0.30f,
             0.055f);
 
+        /// <summary>
+        /// Body box covers the chest and snout facing the heroes. Height reaches 1.70 m so a
+        /// human-height spear (Oakenshield releases at ~1.57 m) stops on the upper body instead of
+        /// flying over the 1.34 m rest mesh; from the rear battle camera that reads as a body hit.
+        /// </summary>
+        public static readonly LockedBattleHitProfile Ashwyrm = new LockedBattleHitProfile(
+            "Ashwyrm",
+            BattleImpactKind.VoidFireBreath,
+            true,
+            -1,
+            string.Empty,
+            new BattleHitBox(0.50f, 0.55f, 0.45f, 1.70f),
+            0.05f,
+            4f,
+            1f,
+            0.45f,
+            0.45f,
+            0.035f);
+
+        public static readonly LockedBattleHitProfile Vespera = new LockedBattleHitProfile(
+            "Vespera",
+            BattleImpactKind.ArcaneConjure,
+            true,
+            -1,
+            string.Empty,
+            new BattleHitBox(0.25f, 0.20f, 0.20f, 1.85f),
+            0.04f,
+            3.5f,
+            1f,
+            0.40f,
+            0.40f,
+            0.025f);
+
+        public static readonly LockedBattleHitProfile Lyra = new LockedBattleHitProfile(
+            "Lyra",
+            BattleImpactKind.StaffLight,
+            true,
+            -1,
+            string.Empty,
+            new BattleHitBox(0.25f, 0.20f, 0.20f, 1.85f),
+            0.04f,
+            3.5f,
+            1f,
+            0.45f,
+            0.45f,
+            0.02f);
+
+        public static readonly LockedBattleHitProfile Oakenshield = new LockedBattleHitProfile(
+            "Oakenshield",
+            BattleImpactKind.LeafEarth,
+            true,
+            -1,
+            string.Empty,
+            new BattleHitBox(0.30f, 0.25f, 0.15f, 1.75f),
+            0.04f,
+            3f,
+            1f,
+            0.45f,
+            0.40f,
+            0.03f);
+
+        /// <summary>
+        /// Lane 5 hero. Body box fits the 1.80 m armoured body with the shield side in front
+        /// (tight plate, no cape: the soft cape is never attached, so no loose cloth to clip).
+        /// </summary>
+        public static readonly LockedBattleHitProfile SirAldric = new LockedBattleHitProfile(
+            "Sir Aldric",
+            BattleImpactKind.SwordSteel,
+            false,
+            SirAldricContactFrame,
+            "mixamorig:RightHand",
+            new BattleHitBox(0.28f, 0.25f, 0.20f, 1.75f),
+            0.04f,
+            3f,
+            1f,
+            0.45f,
+            0.40f,
+            0.035f);
+
+        /// <summary>Lane 5 villain. Body box fits the 1.90 m trunk and antlers with arms down at idle.</summary>
+        public static readonly LockedBattleHitProfile Blightroot = new LockedBattleHitProfile(
+            "Blightroot",
+            BattleImpactKind.BlightRot,
+            false,
+            BlightrootContactFrame,
+            "mixamorig:LeftHand",
+            new BattleHitBox(0.45f, 0.38f, 0.35f, 1.85f),
+            0.03f,
+            2.5f,
+            1f,
+            0.45f,
+            0.45f,
+            0.05f);
+
         public static LockedBattleHitProfile ProfileOf(string name)
         {
             switch (name)
@@ -239,9 +366,40 @@ namespace Survival.Domain.Roster
                     return Nightfang;
                 case "Ironhowl":
                     return Ironhowl;
+                case "Ashwyrm":
+                    return Ashwyrm;
+                case "Vespera":
+                    return Vespera;
+                case "Lyra":
+                    return Lyra;
+                case "Oakenshield":
+                    return Oakenshield;
+                case "Sir Aldric":
+                    return SirAldric;
+                case "Blightroot":
+                    return Blightroot;
                 default:
                     throw new ArgumentException("No locked battle hit profile for " + name, nameof(name));
             }
+        }
+
+        /// <summary>
+        /// True when the flying segment a→b enters the body box. Used by the battle and by tests to
+        /// prove a projectile stops on contact (the Unity driver then parks the mesh at the entry
+        /// and despawns it, so it never travels past the far face).
+        /// </summary>
+        public static bool ProjectileSegmentHits(BattleHitBox box, float ax, float ay, float az, float bx, float by, float bz, out float entryT)
+        {
+            return box.SegmentEntry(ax, ay, az, bx, by, bz, out entryT);
+        }
+
+        /// <summary>
+        /// True when a→b hits the box and the entry is before the end of the segment (the bolt has
+        /// not already cleared the far side).
+        /// </summary>
+        public static bool ProjectileStopsOnContact(BattleHitBox box, float ax, float ay, float az, float bx, float by, float bz)
+        {
+            return ProjectileSegmentHits(box, ax, ay, az, bx, by, bz, out var t) && t < 1f - 1e-4f;
         }
 
         /// <summary>

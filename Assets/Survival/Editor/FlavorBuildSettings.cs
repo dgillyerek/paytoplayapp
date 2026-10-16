@@ -23,6 +23,7 @@ namespace Survival.Editor
         private const string Lyra = "Assets/Survival/Scenes/Lyra.unity";
         private const string Oakenshield = "Assets/Survival/Scenes/Oakenshield.unity";
         private const string Bonequill = "Assets/Survival/Scenes/Bonequill.unity";
+        private const string Rowan = "Assets/Survival/Scenes/Rowan.unity";
         private const string GroveBoard = "Assets/Grove/Scenes/Board.unity";
 
         [MenuItem("Survival/Use Theme A Flavor (fantasy_kingdom_a)")]
@@ -47,6 +48,7 @@ namespace Survival.Editor
                 new EditorBuildSettingsScene(Lyra, true),
                 new EditorBuildSettingsScene(Oakenshield, true),
                 new EditorBuildSettingsScene(Bonequill, true),
+                new EditorBuildSettingsScene(Rowan, true),
                 new EditorBuildSettingsScene(GroveBoard, true)
             };
             Debug.Log("Survival flavor " + SurvIds.FlavorIdFantasyKingdomA + " → Splash then Play. Pack " + SurvIds.ThemeIdFantasyKingdomA);
@@ -97,7 +99,11 @@ namespace Survival.Editor
         [MenuItem("Survival/Locked Battle (heroes vs villains, Game view 1080x1920)")]
         public static void OpenLockedBattleDemo()
         {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(BattleLocked);
+            // Single mode closes every other loaded scene (including a Blightroot demo left open
+            // in the hierarchy), so Game view only shows the eight roster fighters.
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+                BattleLocked,
+                UnityEditor.SceneManagement.OpenSceneMode.Single);
         }
 
         [MenuItem("Survival/Vespera Demo (rest + walk + attack, Game view 1080x1920)")]
@@ -122,6 +128,12 @@ namespace Survival.Editor
         public static void OpenBonequillDemo()
         {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Bonequill);
+        }
+
+        [MenuItem("Survival/Rowan Demo (rest + walk + bow attack, Game view 1080x1920)")]
+        public static void OpenRowanDemo()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Rowan);
         }
 
         [MenuItem("Survival/Import locked Sir Aldric rear master")]

@@ -48,6 +48,9 @@ EditorBuildSettings:
     path: Assets/Survival/Scenes/Bonequill.unity
     guid: 1a065974d2b54e6fa8c46a9e62fbb140
   - enabled: 1
+    path: Assets/Survival/Scenes/Rowan.unity
+    guid: c78ffacf32dd4fc483ec5385180a353a
+  - enabled: 1
     path: Assets/Grove/Scenes/Board.unity
     guid: b65522f703b44f9799e3eee95f2f36d0
   m_configObjects: {}
