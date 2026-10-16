@@ -1,0 +1,17 @@
+{
+ "faces": 199999,
+ "verts": 99687,
+ "parts": {
+  "torso_head": 51802,
+  "L_arm": 7703,
+  "R_arm": 7970,
+  "L_leg": 16059,
+  "R_leg": 16153
+ },
+ "loincloth_hips_verts": 15665,
+ "loincloth_with_leg_weight": 0,
+ "head_locked": 4306,
+ "head_band": 337,
+ "max_infl": 4,
+ "single_bone_verts": 73759
+}

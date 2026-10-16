@@ -12,8 +12,17 @@ namespace Survival.Domain.Roster
     public sealed class BlenderBoneGrip
     {
         public BlenderBoneGrip(float[] gripPos, float[] gripRot, string childA, float[] childAHead, string childB, float[] childBHead, float[] handCentre,
-            float rollRestDeg = 0f, float rollDrawDeg = 0f, float[]? rollKeys = null)
+            float rollRestDeg = 0f, float rollDrawDeg = 0f, float[]? rollKeys = null,
+            float[]? arrowRest = null, float[]? stringTop = null, float[]? stringBottom = null, string stringMaterial = "",
+            string arrowTrack = "", float nockFrame = -1f, float releaseFrame = -1f)
         {
+            ArrowRest = arrowRest;
+            StringTop = stringTop;
+            StringBottom = stringBottom;
+            StringMaterial = stringMaterial ?? string.Empty;
+            ArrowTrack = arrowTrack ?? string.Empty;
+            NockFrame = nockFrame;
+            ReleaseFrame = releaseFrame;
             RollRestDeg = rollRestDeg;
             RollDrawDeg = rollDrawDeg;
             RollKeys = rollKeys ?? new[] { 0f, 0f, 0f, 0f };
@@ -48,6 +57,34 @@ namespace Survival.Domain.Roster
 
         /// <summary>Attack frames: start easing to the draw roll, reach it, leave it, back to the rest roll (smoothstep eases).</summary>
         public float[] RollKeys { get; }
+
+        /// <summary>Arrow rest in Blender prop-local space (metres): beside the riser on the archer's left, just above the fist.
+        /// From <see cref="NockFrame"/> to <see cref="ReleaseFrame"/> the nocked arrow is aimed from its nock (the draw-hand bone
+        /// binding) through this point, exactly as Blender bakes it, so it lies on the correct side of the bow and flies straight.</summary>
+        public float[]? ArrowRest { get; }
+
+        /// <summary>Bowstring tips in Blender prop-local space (metres). Unity draws the string as tip, nock, tip while nocked.</summary>
+        public float[]? StringTop { get; }
+
+        public float[]? StringBottom { get; }
+
+        /// <summary>Prop material slot holding the static (braced) string; hidden in Unity, the drawn line replaces it.</summary>
+        public string StringMaterial { get; }
+
+        /// <summary>Attack track name of the nocked arrow.</summary>
+        public string ArrowTrack { get; }
+
+        public float NockFrame { get; }
+
+        public float ReleaseFrame { get; }
+
+        public bool HasDrawnString => StringTop != null && StringBottom != null && ArrowTrack.Length > 0 && NockFrame >= 0f;
+
+        /// <summary>True while the arrow sits on the string (nock to release): the string is drawn to the nock.</summary>
+        public bool Nocked(bool attack, float frame) => attack && HasDrawnString && frame >= NockFrame && frame < ReleaseFrame;
+
+        /// <summary>Blender prop-local point to the imported prop root's local space (mirror X).</summary>
+        public static float[] PropLocalToUnity(float[] p) => ToUnityPoint(p);
 
         public float RollDeg(bool attack, float frame)
         {

@@ -257,10 +257,7 @@ public sealed class ThemeARosterTests
         Assert.Contains("SetValueWithoutNotify(0)", fangDemo, StringComparison.Ordinal);
         Assert.Contains("Survival/Emberfang Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
 
-        var excluded = new[]
-        {
-            "Bonequill"
-        };
+        var excluded = Array.Empty<string>();   // Rowan (#64) and Bonequill (#63) both ship now
         var scenes = Path.Combine(root, "Assets", "Survival", "Scenes");
         var pack = Path.Combine(root, "Assets", "ThemePack");
         foreach (var name in excluded)

@@ -176,6 +176,7 @@ namespace Survival.Unity
         public void Tick(float frame, bool inClip, int cycle)
         {
             ApplyGripRoll(true, frame);
+            SetStringMiddle(null);
             if (!_built)
             {
                 return;
@@ -226,6 +227,11 @@ namespace Survival.Unity
 
                 var key = track.Sample(frame);
                 Place(view, key);
+                if (_grip != null && string.Equals(track.ObjectName, _grip.ArrowTrack, System.StringComparison.Ordinal))
+                {
+                    AimNockedArrow(view, frame);
+                }
+
                 if (!view.Shown)
                 {
                     SetShown(view, true, true);
@@ -252,6 +258,7 @@ namespace Survival.Unity
         public void Deactivate()
         {
             ApplyGripRoll(false, 0f);
+            SetStringMiddle(null);
             foreach (var view in _views)
             {
                 ResetBlock(view);
@@ -634,7 +641,145 @@ namespace Survival.Unity
 
             _gripRoot = t;
             _grip = grip;
+            _gripPerMetre = Mathf.Abs(s) > 1e-6f ? unitsPerMetre / s : unitsPerMetre;
+            BuildDrawnString(view, grip);
             ApplyGripRoll(false, 0f);
+        }
+
+        /// <summary>
+        /// Replaces the prop's static (braced) string with a line tip, middle, tip in the grip root's space. The middle point
+        /// sits on the straight string at rest and walk, and on the arrow nock from nock to release, so the string is drawn
+        /// to the arrow (Derek 10-15 23:29).
+        /// </summary>
+        private void BuildDrawnString(TrackView view, BlenderBoneGrip grip)
+        {
+            if (!grip.HasDrawnString || view.Mesh == null || _gripRoot == null)
+            {
+                return;
+            }
+
+            Material? stringMat = null;
+            Vector3? measuredTop = null;
+            Vector3? measuredBottom = null;
+            foreach (var r in view.Mesh.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                var filter = r.GetComponent<MeshFilter>();
+                var mats = r.sharedMaterials;
+                if (filter == null || filter.sharedMesh == null)
+                {
+                    continue;
+                }
+
+                for (var i = 0; i < mats.Length && i < filter.sharedMesh.subMeshCount; i++)
+                {
+                    if (mats[i] == null || grip.StringMaterial.Length == 0 || mats[i].name.IndexOf(grip.StringMaterial, System.StringComparison.Ordinal) < 0)
+                    {
+                        continue;
+                    }
+
+                    stringMat = mats[i];
+                    // measure the braced string where the import actually put it (grip-root space): tips = its two ends
+                    var verts = filter.sharedMesh.vertices;
+                    var tris = filter.sharedMesh.GetTriangles(i);
+                    var lo = new Vector3(0f, 0f, float.MaxValue);
+                    var hi = new Vector3(0f, 0f, float.MinValue);
+                    foreach (var vi in tris)
+                    {
+                        var lp = _gripRoot.InverseTransformPoint(filter.transform.TransformPoint(verts[vi]));
+                        if (lp.z < lo.z)
+                        {
+                            lo = lp;
+                        }
+
+                        if (lp.z > hi.z)
+                        {
+                            hi = lp;
+                        }
+                    }
+
+                    if (tris.Length > 0)
+                    {
+                        measuredTop = hi;
+                        measuredBottom = lo;
+                    }
+
+                    var copy = Object.Instantiate(filter.sharedMesh);
+                    copy.name = filter.sharedMesh.name + "_nostring";
+                    copy.SetTriangles(System.Array.Empty<int>(), i);
+                    filter.sharedMesh = copy;
+                }
+            }
+
+            if (stringMat == null)
+            {
+                Debug.LogWarning(_spec.Character + " bow string material " + grip.StringMaterial + " not found; drawn string skipped.");
+                return;
+            }
+
+            var go = new GameObject("DrawnString");
+            go.transform.SetParent(_gripRoot, false);
+            var line = go.AddComponent<LineRenderer>();
+            line.useWorldSpace = false;
+            line.positionCount = 3;
+            line.sharedMaterial = stringMat;
+            line.widthMultiplier = 0.004f * _scale * Mathf.Abs(_actor.lossyScale.x);
+            line.numCapVertices = 0;
+            line.alignment = LineAlignment.View;
+            line.shadowCastingMode = ShadowCastingMode.Off;
+            _stringTop = PropPoint(grip.StringTop!);
+            _stringBottom = PropPoint(grip.StringBottom!);
+            if (measuredTop.HasValue && measuredBottom.HasValue)
+            {
+                // trust the imported mesh: its string length fixes grip-root units per metre for the arrow rest too
+                var designLen = Mathf.Abs(grip.StringTop![2] - grip.StringBottom![2]);
+                var got = (measuredTop.Value - measuredBottom.Value).magnitude;
+                if (designLen > 1e-4f && got > 1e-6f)
+                {
+                    Debug.Log(_spec.Character + " bow string measured " + got.ToString("0.###") + " root units (expected " +
+                              (designLen * _gripPerMetre).ToString("0.###") + "); top " + measuredTop.Value.ToString("F3") + ", bottom " + measuredBottom.Value.ToString("F3"));
+                    _gripPerMetre = got / designLen;
+                }
+
+                _stringTop = measuredTop.Value;
+                _stringBottom = measuredBottom.Value;
+            }
+            _string = line;
+            SetStringMiddle(null);
+        }
+
+        private Vector3 PropPoint(float[] p) => V(BlenderBoneGrip.PropLocalToUnity(p)) * _gripPerMetre;
+
+        private void SetStringMiddle(Vector3? nockWorld)
+        {
+            if (_string == null || _gripRoot == null)
+            {
+                return;
+            }
+
+            var mid = nockWorld.HasValue ? _gripRoot.InverseTransformPoint(nockWorld.Value) : (_stringTop + _stringBottom) * 0.5f;
+            _string.SetPosition(0, _stringTop);
+            _string.SetPosition(1, mid);
+            _string.SetPosition(2, _stringBottom);
+        }
+
+        /// <summary>From nock to release: aim the nocked arrow from its nock through the arrow rest beside the riser (the same
+        /// line Blender bakes) and draw the string to the nock. The arrow's long axis is its root +Z (character forward in the keys).</summary>
+        private void AimNockedArrow(TrackView view, float frame)
+        {
+            if (_grip == null || _gripRoot == null || _grip.ArrowRest == null || !_grip.Nocked(true, frame))
+            {
+                return;
+            }
+
+            var t = view.Root.transform;
+            var rest = _gripRoot.TransformPoint(PropPoint(_grip.ArrowRest));
+            var dir = rest - t.position;
+            if (dir.sqrMagnitude > 1e-10f)
+            {
+                t.rotation = Quaternion.FromToRotation(t.forward, dir.normalized) * t.rotation;
+            }
+
+            SetStringMiddle(t.position);
         }
 
         /// <summary>Rolls the bone-gripped prop about its long axis: rest/walk carry (string away from the body), eased to the draw
@@ -652,6 +797,10 @@ namespace Survival.Unity
 
         private Transform? _gripRoot;
         private BlenderBoneGrip? _grip;
+        private float _gripPerMetre = 1f;
+        private LineRenderer? _string;
+        private Vector3 _stringTop;
+        private Vector3 _stringBottom;
 
         private static Vector3 V(float[] p) => new Vector3(p[0], p[1], p[2]);
 
