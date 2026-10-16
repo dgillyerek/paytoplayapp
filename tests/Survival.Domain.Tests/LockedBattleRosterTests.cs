@@ -7,11 +7,11 @@ namespace Survival.Domain.Tests;
 public sealed class LockedBattleRosterTests
 {
     [Fact]
-    public void Roster_is_every_locked_merged_character_with_walk_and_attack_split_five_against_five()
+    public void Roster_is_every_locked_merged_character_with_walk_and_attack_split_six_against_six()
     {
-        Assert.Equal(new[] { "Emberfang", "Stormcrest", "Ironhowl", "Nightfang", "Lyra", "Oakenshield", "Vespera", "Ashwyrm", "Sir Aldric", "Blightroot" }, LockedBattleRoster.All.Select(f => f.Name).ToArray());
-        Assert.Equal(new[] { "Emberfang", "Stormcrest", "Lyra", "Oakenshield", "Sir Aldric" }, LockedBattleRoster.OnSide(BattleSide.Hero).Select(f => f.Name).ToArray());
-        Assert.Equal(new[] { "Ironhowl", "Nightfang", "Vespera", "Ashwyrm", "Blightroot" }, LockedBattleRoster.OnSide(BattleSide.Villain).Select(f => f.Name).ToArray());
+        Assert.Equal(new[] { "Emberfang", "Stormcrest", "Ironhowl", "Nightfang", "Lyra", "Oakenshield", "Vespera", "Ashwyrm", "Sir Aldric", "Blightroot", "Rowan", "Bonequill" }, LockedBattleRoster.All.Select(f => f.Name).ToArray());
+        Assert.Equal(new[] { "Emberfang", "Stormcrest", "Lyra", "Oakenshield", "Sir Aldric", "Rowan" }, LockedBattleRoster.OnSide(BattleSide.Hero).Select(f => f.Name).ToArray());
+        Assert.Equal(new[] { "Ironhowl", "Nightfang", "Vespera", "Ashwyrm", "Blightroot", "Bonequill" }, LockedBattleRoster.OnSide(BattleSide.Villain).Select(f => f.Name).ToArray());
 
         var root = FindRepoRoot();
         foreach (var f in LockedBattleRoster.All)
@@ -82,8 +82,8 @@ public sealed class LockedBattleRosterTests
             Assert.True(f.AttackCyclesItself);
         }
 
-        // Rowan (#64) and Bonequill (#63) are unmerged HOLD PRs.
-        var notInBattle = new[] { "Rowan", "Bonequill", "SirAldric" };
+        // Display names only: no space-less duplicate of Sir Aldric.
+        var notInBattle = new[] { "SirAldric" };
         foreach (var name in notInBattle)
         {
             Assert.DoesNotContain(LockedBattleRoster.All, f => string.Equals(f.Name, name, StringComparison.Ordinal));
@@ -93,18 +93,18 @@ public sealed class LockedBattleRosterTests
     }
 
     [Fact]
-    public void Battle_roster_is_locked_at_exactly_ten_fighters_and_only_the_lane_five_Blightroot_survives_the_cleanup()
+    public void Battle_roster_is_locked_at_exactly_twelve_fighters_and_only_the_lane_five_Blightroot_survives_the_cleanup()
     {
         Assert.Equal(
-            new[] { "Emberfang", "Stormcrest", "Ironhowl", "Nightfang", "Lyra", "Oakenshield", "Vespera", "Ashwyrm", "Sir Aldric", "Blightroot" },
+            new[] { "Emberfang", "Stormcrest", "Ironhowl", "Nightfang", "Lyra", "Oakenshield", "Vespera", "Ashwyrm", "Sir Aldric", "Blightroot", "Rowan", "Bonequill" },
             LockedBattleRoster.All.Select(f => f.Name).ToArray());
-        Assert.Equal(10, LockedBattleRoster.All.Count);
-        Assert.Equal(5, LockedBattleRoster.OnSide(BattleSide.Hero).Count());
-        Assert.Equal(5, LockedBattleRoster.OnSide(BattleSide.Villain).Count());
+        Assert.Equal(12, LockedBattleRoster.All.Count);
+        Assert.Equal(6, LockedBattleRoster.OnSide(BattleSide.Hero).Count());
+        Assert.Equal(6, LockedBattleRoster.OnSide(BattleSide.Villain).Count());
         Assert.Single(LockedBattleRoster.All, f => f.Name == "Blightroot");
         Assert.Single(LockedBattleRoster.All, f => f.Name == "Sir Aldric");
-        Assert.DoesNotContain(LockedBattleRoster.All, f => f.Name == "Rowan");
-        Assert.DoesNotContain(LockedBattleRoster.All, f => f.Name == "Bonequill");
+        Assert.Single(LockedBattleRoster.All, f => f.Name == "Rowan");
+        Assert.Single(LockedBattleRoster.All, f => f.Name == "Bonequill");
         var demo = File.ReadAllText(Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "LockedBattleDemo.cs"));
         // Stray demo Blightroots (an open Blightroot scene) are still stripped; the battle's own
         // lane-5 Blightroot under its root is the one exception, and it spawns after the strip.
@@ -133,7 +133,7 @@ public sealed class LockedBattleRosterTests
         Assert.Equal(LockedBattleRoster.OuterLaneHalfSpacingMetres, LockedBattleRoster.LaneX(3), 4);
         Assert.True(LockedBattleRoster.OuterLaneHalfSpacingMetres - LockedBattleRoster.LaneHalfSpacingMetres >= 1.2f);
 
-        foreach (var lane in new[] { 0, 1, 2, 3, 4 })
+        foreach (var lane in new[] { 0, 1, 2, 3, 4, 5 })
         {
             Assert.Single(LockedBattleRoster.All, f => f.Lane == lane && f.Side == BattleSide.Hero);
             Assert.Single(LockedBattleRoster.All, f => f.Lane == lane && f.Side == BattleSide.Villain);
@@ -149,9 +149,19 @@ public sealed class LockedBattleRosterTests
         Assert.Equal(4, LockedBattleRoster.Blightroot.Lane);
         Assert.Equal(-LockedBattleRoster.FifthLaneHalfSpacingMetres, LockedBattleRoster.LaneX(4), 4);
         Assert.True(LockedBattleRoster.FifthLaneHalfSpacingMetres - LockedBattleRoster.OuterLaneHalfSpacingMetres >= 1.2f);
-        Assert.Equal(5, LockedBattleRoster.LaneCount);
+        Assert.Equal(6, LockedBattleRoster.LaneCount);
         Assert.Equal("Blightroot", LockedBattleRoster.TargetOf(LockedBattleRoster.SirAldric).Name);
         Assert.Equal("Sir Aldric", LockedBattleRoster.TargetOf(LockedBattleRoster.Blightroot).Name);
+
+        // Lane 6 sits outside lane 3 on the right, clear of Ashwyrm's 1.9 m wingspan, and pairs the archers.
+        Assert.Equal(5, LockedBattleRoster.Rowan.Lane);
+        Assert.Equal(5, LockedBattleRoster.Bonequill.Lane);
+        Assert.Equal(LockedBattleRoster.SixthLaneHalfSpacingMetres, LockedBattleRoster.LaneX(5), 4);
+        Assert.True(LockedBattleRoster.SixthLaneHalfSpacingMetres - 0.47f > LockedBattleRoster.OuterLaneHalfSpacingMetres + 0.95f);
+        Assert.Equal("Bonequill", LockedBattleRoster.TargetOf(LockedBattleRoster.Rowan).Name);
+        Assert.Equal("Rowan", LockedBattleRoster.TargetOf(LockedBattleRoster.Bonequill).Name);
+        Assert.Equal("Ashwyrm", LockedBattleRoster.TargetOf(LockedBattleRoster.Oakenshield).Name);
+        Assert.Equal("Oakenshield", LockedBattleRoster.TargetOf(LockedBattleRoster.Ashwyrm).Name);
     }
 
     [Fact]

@@ -37,8 +37,9 @@ public sealed class LockedBattleHitsTests
         Assert.Contains(LyraAttack.Spec.Tracks, t => t.Kind == AttackTrackKind.Projectile);
         Assert.True(LockedBattleHits.Oakenshield.Projectile);
         Assert.Contains(OakenshieldAttack.Spec.Tracks, t => t.Kind == AttackTrackKind.Projectile);
-        Assert.Throws<ArgumentException>(() => LockedBattleHits.ProfileOf("Rowan"));
-        Assert.Throws<ArgumentException>(() => LockedBattleHits.ProfileOf("Bonequill"));
+        Assert.True(LockedBattleHits.ProfileOf("Rowan").Projectile);
+        Assert.True(LockedBattleHits.ProfileOf("Bonequill").Projectile);
+        Assert.NotEqual(LockedBattleHits.ProfileOf("Rowan").Impact, LockedBattleHits.ProfileOf("Bonequill").Impact);
     }
 
     [Fact]

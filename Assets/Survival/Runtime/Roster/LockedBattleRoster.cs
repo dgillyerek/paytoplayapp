@@ -34,7 +34,8 @@ namespace Survival.Domain.Roster
             float attackSeconds,
             bool attackCyclesItself,
             int lane,
-            string actorClassName = "")
+            string actorClassName = "",
+            float aimYawDegrees = 0f)
         {
             Name = name;
             Side = side;
@@ -50,6 +51,7 @@ namespace Survival.Domain.Roster
             AttackSeconds = attackSeconds;
             AttackCyclesItself = attackCyclesItself;
             Lane = lane;
+            AimYawDegrees = aimYawDegrees;
             ActorClassName = actorClassName.Length > 0 ? actorClassName : FileKeyOf(name) + "Actor";
         }
 
@@ -61,6 +63,14 @@ namespace Survival.Domain.Roster
         /// Sir Aldric, whose locked actor is SirAldricMeshyAnimateActor.
         /// </summary>
         public string ActorClassName { get; }
+
+        /// <summary>
+        /// Extra yaw (degrees, + turns toward +X) on top of facing the target while attacking. Zero
+        /// for everyone but Rowan, whose locked arrow flies 15.25 deg left of his forward from a
+        /// release point right of his centre; 12.33 deg puts that line through Bonequill's centre at
+        /// the 4.2 m shooting range.
+        /// </summary>
+        public float AimYawDegrees { get; }
 
         private static string FileKeyOf(string name) => name.Replace(" ", string.Empty);
 
@@ -106,7 +116,8 @@ namespace Survival.Domain.Roster
         /// <summary>
         /// Seen from behind the heroes: 0 = left inner lane, 1 = right inner lane (the original
         /// #57 matchups), 2 = left outer lane, 3 = right outer lane, 4 = fifth lane, outside lane 2
-        /// on the left (Sir Aldric vs Blightroot, added 2026-10-15).
+        /// on the left (Sir Aldric vs Blightroot, added 2026-10-15), 5 = sixth lane, outside lane 3
+        /// on the right (Rowan vs Bonequill archers, added 2026-10-16).
         /// </summary>
         public int Lane { get; }
 
@@ -200,8 +211,21 @@ namespace Survival.Domain.Roster
         /// </summary>
         public const float FifthLaneHalfSpacingMetres = 3.85f;
 
-        /// <summary>Lanes 0-4. The ground lays one dirt track per lane.</summary>
-        public const int LaneCount = 5;
+        /// <summary>
+        /// Sixth lane (5) sits this far right of the centre line: 1.9 m outside lane 3, because
+        /// Ashwyrm (lane 3 villain) spans 1.9 m wing to wing and reaches 3.4 m out. Rowan and
+        /// Bonequill are 0.9 m across in A-pose, so their inner edge (3.9 m) clears it.
+        /// </summary>
+        public const float SixthLaneHalfSpacingMetres = 4.35f;
+
+        /// <summary>Lanes 0-5. The ground lays one dirt track per lane.</summary>
+        public const int LaneCount = 6;
+
+        /// <summary>
+        /// Archers shoot from here: the starts are 5 m apart, so they take a step or two in and
+        /// loose. Both arrows (Rowan 14 m/s, Bonequill 14 m/s) fly well past 4.2 m, so they reach.
+        /// </summary>
+        public const float ArcherRangeMetres = 4.2f;
 
         /// <summary>Everyone holds rest this long before walking in.</summary>
         public const float OpeningHoldSeconds = 0.75f;
@@ -380,6 +404,45 @@ namespace Survival.Domain.Roster
             false,
             4);
 
+        // Sixth lane (2026-10-16, Derek: the characters not in yet). Both are Theme A Blender rigs
+        // (#64, #63) with rest, walk and bow attack; their actors cycle attack + rest themselves.
+        // Walk speeds from the locked walk clips: two left-foot sweeps per 1 s loop (Rowan
+        // 0.515 m, Bonequill 0.549 m). Heights from the rest FBXs (1.80 m each).
+
+        public static readonly LockedBattleFighter Rowan = new LockedBattleFighter(
+            "Rowan",
+            BattleSide.Hero,
+            "#64",
+            RowanMotion.WalkPoseName,
+            RowanMotion.AttackPoseName,
+            "bow shot",
+            1.800f,
+            1.03f,
+            0f,
+            string.Empty,
+            ArcherRangeMetres,
+            BlenderRigAttackSpec.ClipSeconds,
+            true,
+            5,
+            "",
+            12.33f);
+
+        public static readonly LockedBattleFighter Bonequill = new LockedBattleFighter(
+            "Bonequill",
+            BattleSide.Villain,
+            "#63",
+            BonequillMotion.WalkPoseName,
+            BonequillMotion.AttackPoseName,
+            "bone arrow shot",
+            1.800f,
+            1.10f,
+            0f,
+            string.Empty,
+            ArcherRangeMetres,
+            BlenderRigAttackSpec.ClipSeconds,
+            true,
+            5);
+
         public static IReadOnlyList<LockedBattleFighter> All { get; } = new[]
         {
             Emberfang,
@@ -391,7 +454,9 @@ namespace Survival.Domain.Roster
             Vespera,
             Ashwyrm,
             SirAldric,
-            Blightroot
+            Blightroot,
+            Rowan,
+            Bonequill
         };
 
         /// <summary>
@@ -431,6 +496,8 @@ namespace Survival.Domain.Roster
                     return -OuterLaneHalfSpacingMetres;
                 case 4:
                     return -FifthLaneHalfSpacingMetres;
+                case 5:
+                    return SixthLaneHalfSpacingMetres;
                 default:
                     return OuterLaneHalfSpacingMetres;
             }

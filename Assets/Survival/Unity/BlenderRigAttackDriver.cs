@@ -49,6 +49,11 @@ namespace Survival.Unity
         /// <summary>Raised once per attack cycle when <see cref="Blocker"/> stops a flying track.</summary>
         public System.Action<AttackTrack, Vector3>? Impact { get; set; }
 
+        /// <summary>
+        /// Actor local-to-world without any hit flinch, sampled once per shot at release. Null: the live actor transform.
+        /// </summary>
+        public System.Func<Matrix4x4>? LaunchFrame { get; set; }
+
         public BlenderRigAttackDriver(BlenderRigAttackSpec spec, string themePackDir, Transform actor)
         {
             _spec = spec;
@@ -165,6 +170,7 @@ namespace Survival.Unity
 
             sampleFrame(BlenderRigAttackSpec.FirstFrame);
             _cycle = -1;
+            _impactCycle = -1;
             foreach (var view in _views)
             {
                 view.Root.SetActive(true);
@@ -197,6 +203,12 @@ namespace Survival.Unity
 
                 if (view.Stopped)
                 {
+                    // A stopped projectile mesh rests on the body at contact for a beat, then goes.
+                    if (view.Shown && view.Mesh != null && Time.time - view.StopTime > StuckSeconds)
+                    {
+                        SetShown(view, false, false);
+                    }
+
                     continue;
                 }
 
@@ -204,6 +216,12 @@ namespace Survival.Unity
                 if (track.Kind == AttackTrackKind.Held)
                 {
                     visible = track.VisibleAt(frame);
+                    if (visible && _grip != null && frame >= _grip.ReleaseFrame
+                        && string.Equals(track.ObjectName, _grip.ArrowTrack, System.StringComparison.Ordinal))
+                    {
+                        // The nocked arrow leaves the string at release; the flying projectile track takes over.
+                        visible = false;
+                    }
                 }
                 else
                 {
@@ -217,6 +235,14 @@ namespace Survival.Unity
 
                 if (!visible)
                 {
+                    if (track.Kind == AttackTrackKind.Projectile && view.Shown && Blocker != null
+                        && _impactCycle != _cycle && !view.Warned)
+                    {
+                        view.Warned = true;
+                        Debug.LogWarning(_spec.Character + " " + track.ObjectName + " ended its flight with no contact at " +
+                                         view.Root.transform.position.ToString("F2") + ".");
+                    }
+
                     if (view.Shown)
                     {
                         SetShown(view, false, false);
@@ -267,6 +293,7 @@ namespace Survival.Unity
             }
 
             _cycle = -1;
+            _impactCycle = -1;
         }
 
         /// <summary>
@@ -430,6 +457,21 @@ namespace Survival.Unity
             if (view.Track.Kind == AttackTrackKind.Held && view.BoneBound && view.Bone != null)
             {
                 t.SetPositionAndRotation(view.Bone.TransformPoint(view.BoneLocalPos), view.Bone.rotation * view.BoneLocalRot);
+            }
+            else if (view.Track.Kind == AttackTrackKind.Projectile && LaunchFrame != null)
+            {
+                // Once released, a shot flies in the frame it was launched in: a hit flinch on the
+                // shooter (which leans this actor) must not swing it off its line.
+                if (!view.HasLaunch)
+                {
+                    view.Launch = LaunchFrame();
+                    view.HasLaunch = true;
+                }
+
+                var launch = view.Launch;
+                t.SetPositionAndRotation(
+                    launch.MultiplyPoint3x4(MapLocal(new Vector3(key.X, key.Y, key.Z))),
+                    launch.rotation * _rotation * new Quaternion(key.Qx, key.Qy, key.Qz, key.Qw));
             }
             else
             {
@@ -795,6 +837,13 @@ namespace Survival.Unity
             _gripRoot.localRotation = new Quaternion(q[0], q[1], q[2], q[3]);
         }
 
+        /// <summary>How long a stopped arrow stays on the body before it is hidden.</summary>
+        private const float StuckSeconds = 0.15f;
+
+        /// <summary>Flying tracks this close to a stopped one are the same shot (its trail or particles).</summary>
+        private const float TwinRadius = 0.75f;
+
+        private int _impactCycle = -1;
         private Transform? _gripRoot;
         private BlenderBoneGrip? _grip;
         private float _gripPerMetre = 1f;
@@ -1045,6 +1094,8 @@ namespace Survival.Unity
             view.Stopped = false;
             view.ImpactFired = false;
             view.HasLastHead = false;
+            view.Warned = false;
+            view.HasLaunch = false;
             view.Reach = -1f;
         }
 
@@ -1080,30 +1131,117 @@ namespace Survival.Unity
                 return false;
             }
 
-            var head = root.position;
-            var from = view.HasLastHead ? view.LastHead : head;
-            view.LastHead = head;
+            // Swept contact on the leading tip: the segment from last frame's tip to this frame's tip,
+            // then the shaft itself (tail to tip), so a fast arrow cannot step over a thin body box.
+            MeasureTip(view);
+            var arrowTip = root.TransformPoint(new Vector3(0f, 0f, view.TipZ));
+            var arrowTail = root.TransformPoint(new Vector3(0f, 0f, view.TailZ));
+            var from = view.HasLastHead ? view.LastHead : arrowTail;
+            view.LastHead = arrowTip;
             view.HasLastHead = true;
-            if (!blocker(view.Track, from, head, out var contact))
+            if (!blocker(view.Track, from, arrowTip, out var contact)
+                && !blocker(view.Track, arrowTail, arrowTip, out contact))
             {
                 return false;
             }
 
-            root.position = contact;
-            SetShown(view, false, false);
-            view.Stopped = true;
+            StopAt(view, contact - arrowTip);
+            foreach (var other in _views)
+            {
+                // The trail or particle twin of the same shot (riding with it) ends where the arrow did.
+                if (other != view && !other.Stopped && other.Shown && other.Track.Kind == AttackTrackKind.Projectile
+                    && other.Track.Shape != AttackVfxShape.Lightning
+                    && (other.Root.transform.position - arrowTip).sqrMagnitude < TwinRadius * TwinRadius)
+                {
+                    StopAt(other, contact - other.Root.transform.position);
+                }
+            }
+
             FireImpact(view, contact);
             return true;
         }
 
-        private void FireImpact(TrackView view, Vector3 contact)
+        /// <summary>Freezes a flying track, shifted so its tip sits on the contact; a mesh stays visible there briefly.</summary>
+        private void StopAt(TrackView view, Vector3 shift)
         {
-            if (view.ImpactFired)
+            var t = view.Root.transform;
+            t.position += shift;
+            view.Stopped = true;
+            view.StopTime = Time.time;
+            foreach (var ps in view.Particles)
+            {
+                var emission = ps.emission;
+                emission.enabled = false;
+            }
+
+            foreach (var trail in view.Trails)
+            {
+                trail.emitting = false;
+            }
+
+            if (view.Mesh == null)
+            {
+                SetShown(view, false, false);
+            }
+        }
+
+        /// <summary>Tip and tail of a projectile mesh along its root +Z (the flight axis), in root units. Point effects use the root.</summary>
+        private static void MeasureTip(TrackView view)
+        {
+            if (view.HasTip)
             {
                 return;
             }
 
+            view.HasTip = true;
+            view.TipZ = 0f;
+            view.TailZ = 0f;
+            if (view.Mesh == null)
+            {
+                return;
+            }
+
+            var root = view.Root.transform;
+            var lo = float.MaxValue;
+            var hi = float.MinValue;
+            foreach (var filter in view.Mesh.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (filter.sharedMesh == null)
+                {
+                    continue;
+                }
+
+                var mb = filter.sharedMesh.bounds;
+                for (var corner = 0; corner < 8; corner++)
+                {
+                    var c = new Vector3(
+                        (corner & 1) == 0 ? mb.min.x : mb.max.x,
+                        (corner & 2) == 0 ? mb.min.y : mb.max.y,
+                        (corner & 4) == 0 ? mb.min.z : mb.max.z);
+                    var z = root.InverseTransformPoint(filter.transform.TransformPoint(c)).z;
+                    lo = Mathf.Min(lo, z);
+                    hi = Mathf.Max(hi, z);
+                }
+            }
+
+            if (hi >= lo)
+            {
+                view.TipZ = hi;
+                view.TailZ = lo;
+            }
+        }
+
+        private void FireImpact(TrackView view, Vector3 contact)
+        {
+            // One burst per shot: the arrow and its trail twin share the attack cycle.
+            if (view.ImpactFired || _impactCycle == _cycle)
+            {
+                view.ImpactFired = true;
+                return;
+            }
+
             view.ImpactFired = true;
+            _impactCycle = _cycle;
             Impact?.Invoke(view.Track, contact);
         }
 
@@ -1364,6 +1502,13 @@ namespace Survival.Unity
             public bool Stopped { get; set; }
             public bool ImpactFired { get; set; }
             public bool HasLastHead { get; set; }
+            public bool HasTip { get; set; }
+            public float TipZ { get; set; }
+            public float TailZ { get; set; }
+            public float StopTime { get; set; }
+            public bool Warned { get; set; }
+            public bool HasLaunch { get; set; }
+            public Matrix4x4 Launch { get; set; } = Matrix4x4.identity;
             public Vector3 LastHead { get; set; }
             public float Reach { get; set; } = -1f;
             public string AttackTrackName { get; set; } = string.Empty;
