@@ -183,7 +183,7 @@ namespace Survival.Unity
             to.y = 0f;
             if (to.sqrMagnitude > 1e-8f)
             {
-                Face(f, to);
+                Face(f, to, f.Data.AimYawDegrees);
             }
 
             if (!f.Profile.Projectile
@@ -207,9 +207,10 @@ namespace Survival.Unity
             f.Play(on ? f.Data.AttackPoseName : f.Data.RestPoseName);
         }
 
-        private static void Face(Fighter f, Vector3 flatDirection)
+        private static void Face(Fighter f, Vector3 flatDirection, float aimYawDegrees = 0f)
         {
-            var want = Quaternion.LookRotation(flatDirection.normalized, Vector3.up);
+            // Aim yaw (attack only, Rowan) turns the body so its locked arrow line meets the target.
+            var want = Quaternion.LookRotation(flatDirection.normalized, Vector3.up) * Quaternion.Euler(0f, aimYawDegrees, 0f);
             f.Slot.rotation = Quaternion.RotateTowards(f.Slot.rotation, want, 240f * Time.unscaledDeltaTime);
         }
 
@@ -675,6 +676,24 @@ namespace Survival.Unity
                     break;
                 }
 
+                case "Rowan":
+                {
+                    var actor = host.AddComponent<RowanActor>();
+                    actor.Build();
+                    f.Bind(actor.PlayPose, () => actor.Pose, actor.Built, actor.VisibleBounds);
+                    driver = actor.AttackDriver;
+                    break;
+                }
+
+                case "Bonequill":
+                {
+                    var actor = host.AddComponent<BonequillActor>();
+                    actor.Build();
+                    f.Bind(actor.PlayPose, () => actor.Pose, actor.Built, actor.VisibleBounds);
+                    driver = actor.AttackDriver;
+                    break;
+                }
+
                 default:
                     Debug.LogError("Locked battle has no actor for " + data.Name);
                     break;
@@ -809,6 +828,25 @@ namespace Survival.Unity
                 case "Ashwyrm":
                     spec = AshwyrmAttack.Spec;
                     break;
+                case "Rowan":
+                case "Bonequill":
+                {
+                    // Archers: the arrow mesh track carries no colours, so take the arrow trail's.
+                    var archer = name == "Rowan" ? RowanAttack.Spec : BonequillAttack.Spec;
+                    foreach (var trail in archer.Tracks)
+                    {
+                        if (trail.Kind == AttackTrackKind.Projectile && trail.CoreRgb != null && trail.CoreRgb.Length >= 3)
+                        {
+                            core = Rgb(trail.CoreRgb, 1f, Color.white);
+                            glow = Rgb(trail.GlowRgb, 0.85f, Color.white);
+                            edge = Rgb(trail.EdgeRgb, 0.5f, Color.white);
+                            return;
+                        }
+                    }
+
+                    spec = archer;
+                    break;
+                }
             }
 
             core = new Color(1f, 0.95f, 0.80f, 1f);

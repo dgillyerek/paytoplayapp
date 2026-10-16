@@ -70,6 +70,12 @@ namespace Survival.Unity
                 case BattleImpactKind.BlightRot:
                     fx.BuildBlightRot(core, glow, edge, travel);
                     break;
+                case BattleImpactKind.RangerArrow:
+                    fx.BuildRangerArrow(core, glow, edge, travel);
+                    break;
+                case BattleImpactKind.BoneShard:
+                    fx.BuildBoneShard(core, glow, edge, travel);
+                    break;
                 default:
                     fx.BuildIronClaw(core, glow, edge, travel);
                     break;
@@ -142,6 +148,35 @@ namespace Survival.Unity
             Burst("Splinters", Alpha(), 10, 0.40f, 0.60f, 1.5f, 3.0f, 0.025f, 0.05f, bark, bark, bark, 2.5f, 0.08f, 70f, 1f);
             AddStreaks(core, glow, travel, 0.38f, 0.06f, 0.10f, 0.40f, -40f);
             AddLight(new Color(0.65f, 0.30f, 0.90f, 1f), 4f, 2.2f, 0.14f);
+        }
+
+        /// <summary>Rowan arrow hit: hero-blue flash, one streak along the shot, wood splinters and green leaf flecks.</summary>
+        private void BuildRangerArrow(Color core, Color glow, Color edge, Vector3 travel)
+        {
+            _life = 0.45f;
+            var wood = new Color(0.45f, 0.32f, 0.18f, 1f);
+            var leaf = new Color(0.32f, 0.60f, 0.24f, 1f);
+            Burst("Flash", Additive(), 1, 0.08f, 0.08f, 0f, 0f, 0.40f, 0.50f, Bright(core), core, glow, 0f, 0.02f, 180f, 0.25f);
+            Burst("Sparks", Additive(), 14, 0.15f, 0.28f, 2.5f, 5.0f, 0.012f, 0.03f, Bright(core), glow, edge, 0.8f, 0.04f, 50f, 0.25f);
+            Burst("Splinters", Alpha(), 10, 0.35f, 0.55f, 1.5f, 3.0f, 0.02f, 0.045f, wood, wood, wood, 2.5f, 0.06f, 70f, 1f);
+            Burst("Leaves", Alpha(), 8, 0.45f, 0.65f, 0.6f, 1.4f, 0.03f, 0.06f, leaf, leaf, leaf, 0.6f, 0.08f, 90f, 1.2f);
+            AddStreaks(core, glow, travel, 0.34f, 0.03f, 0.06f, 0.26f, 0f);
+            AddLight(new Color(0.55f, 0.72f, 1f, 1f), 4f, 2.0f, 0.10f);
+        }
+
+        /// <summary>Bonequill bone arrow hit: violet flash, pale bone shards, dark purple wisps.</summary>
+        private void BuildBoneShard(Color core, Color glow, Color edge, Vector3 travel)
+        {
+            _life = 0.5f;
+            var bone = new Color(0.86f, 0.82f, 0.70f, 1f);
+            var wisp = new Color(0.16f, 0.05f, 0.22f, 0.75f);
+            var wispEnd = new Color(0.08f, 0.02f, 0.11f, 0.3f);
+            Burst("Flash", Additive(), 1, 0.10f, 0.10f, 0f, 0f, 0.45f, 0.55f, Bright(core), core, glow, 0f, 0.02f, 180f, 0.25f);
+            Burst("Shards", Alpha(), 12, 0.35f, 0.55f, 1.8f, 3.4f, 0.02f, 0.05f, bone, bone, bone, 2.5f, 0.06f, 70f, 1f);
+            Burst("Wisps", Alpha(), 8, 0.35f, 0.55f, 0.3f, 0.7f, 0.16f, 0.32f, wisp, wispEnd, wispEnd, -0.15f, 0.10f, 120f, 2.0f);
+            Burst("Motes", Additive(), 12, 0.25f, 0.45f, 1.5f, 3.0f, 0.02f, 0.04f, glow, edge, edge, 0.3f, 0.05f, 70f, 0.4f);
+            AddStreaks(core, glow, travel, 0.30f, 0.03f, 0.06f, 0.28f, 0f);
+            AddLight(new Color(0.70f, 0.35f, 0.95f, 1f), 4f, 2.0f, 0.12f);
         }
 
         /// <summary>Ironhowl claw hit: hot claw sparks, three short white slash streaks, a dust puff, falling debris.</summary>

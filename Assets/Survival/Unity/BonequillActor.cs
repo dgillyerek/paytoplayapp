@@ -20,6 +20,9 @@ namespace Survival.Unity
         private GameObject? _cape;
 
         public bool Built => _player != null && _player.Built;
+
+        /// <summary>Attack effects driver (arrow flight), for the locked battle's hit blocker.</summary>
+        public BlenderRigAttackDriver? AttackDriver => _player?.AttackDriver;
         public string Pose => _player != null ? _player.Pose : BonequillMotion.RestPoseName;
         public float ClipLength => _player != null ? _player.ClipLength : 0f;
         public Bounds VisibleBounds => _player != null ? _player.VisibleBounds : new Bounds(Vector3.zero, Vector3.one);

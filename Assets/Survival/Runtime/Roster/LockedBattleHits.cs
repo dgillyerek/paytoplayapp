@@ -33,7 +33,13 @@ namespace Survival.Domain.Roster
         SwordSteel = 8,
 
         /// <summary>Blightroot rot claw: purple rot flash, claw streaks, spore puff and falling bark splinters.</summary>
-        BlightRot = 9
+        BlightRot = 9,
+
+        /// <summary>Rowan arrow: hero-blue flash, wood splinters, green leaf flecks, blue streak along the shot.</summary>
+        RangerArrow = 10,
+
+        /// <summary>Bonequill bone arrow: violet flash, bone shards, dark purple wisps.</summary>
+        BoneShard = 11
     }
 
     /// <summary>
@@ -354,6 +360,36 @@ namespace Survival.Domain.Roster
             0.45f,
             0.05f);
 
+        /// <summary>Lane 6 hero archer. Body box fits the 1.80 m rest mesh without the A-pose arms or coat tails.</summary>
+        public static readonly LockedBattleHitProfile Rowan = new LockedBattleHitProfile(
+            "Rowan",
+            BattleImpactKind.RangerArrow,
+            true,
+            -1,
+            string.Empty,
+            new BattleHitBox(0.25f, 0.20f, 0.20f, 1.75f),
+            0.04f,
+            3.5f,
+            1f,
+            0.45f,
+            0.45f,
+            0.02f);
+
+        /// <summary>Lane 6 villain archer. Body box fits the 1.80 m rest mesh; the cape adds a little at the back.</summary>
+        public static readonly LockedBattleHitProfile Bonequill = new LockedBattleHitProfile(
+            "Bonequill",
+            BattleImpactKind.BoneShard,
+            true,
+            -1,
+            string.Empty,
+            new BattleHitBox(0.25f, 0.20f, 0.25f, 1.75f),
+            0.04f,
+            3.5f,
+            1f,
+            0.40f,
+            0.45f,
+            0.02f);
+
         public static LockedBattleHitProfile ProfileOf(string name)
         {
             switch (name)
@@ -378,6 +414,10 @@ namespace Survival.Domain.Roster
                     return SirAldric;
                 case "Blightroot":
                     return Blightroot;
+                case "Rowan":
+                    return Rowan;
+                case "Bonequill":
+                    return Bonequill;
                 default:
                     throw new ArgumentException("No locked battle hit profile for " + name, nameof(name));
             }
