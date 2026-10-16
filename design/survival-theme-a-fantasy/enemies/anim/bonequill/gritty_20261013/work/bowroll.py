@@ -1,12 +1,12 @@
 """Bow roll about its long axis inside the LeftHand grip (degrees, applied after the grip-axis flip RFIX).
-Rest/walk carry (Derek 10-15 late): 345, with the bow frame from anim.py CARRY so the string rests 0.8 cm off the INSIDE of the bow
-forearm. Attack: eases 345 -> 390 (= 30, string toward him) from f2 to the nock at f10, holds through the release at f17, eases back
-by f26. That +45 deg way turns the string off the forearm; the -315 deg way drags it through the forearm (string_clearance.json).
+Rest/walk carry (Derek 10-15 late, front-to-back): natural hand (wrist -20 deg ulnar, no forearm twist), arm out ABD -18;
+roll 10.5 lays the bow front to back beside the leg with the string 0.7 cm off the INSIDE of the forearm.
+Attack: eases 10.5 -> 30 from f2 to the nock at f10, holds through release f17, eases back by f26 (+19.5 deg, short way, clear of forearm).
 Mirrored exactly in Unity by BlenderBoneGrip.RollDeg."""
 import math
 from mathutils import Matrix
 import os
-ROLL_REST=float(os.environ.get('C_ROLL',345)); ROLL_DRAW=float(os.environ.get('C_RD',390)); F_A,F_B,F_C,F_E=2.0,10.0,17.0,26.0
+ROLL_REST=float(os.environ.get('C_ROLL',10.5)); ROLL_DRAW=float(os.environ.get('C_RD',30)); F_A,F_B,F_C,F_E=2.0,10.0,17.0,26.0
 def ss(x): x=max(0.0,min(1.0,x)); return x*x*(3-2*x)
 def roll(clip,f):
     if clip!='attack' or f<=F_A or f>=F_E: return ROLL_REST

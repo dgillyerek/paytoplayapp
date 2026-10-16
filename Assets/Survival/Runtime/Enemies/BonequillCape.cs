@@ -13,7 +13,7 @@ namespace Survival.Domain.Enemies
     public static class BonequillCape
     {
         public const string FileName = "BONEQUILL_cape.fbx";
-        public const string FileMd5 = "515d2fa42c962f8c5eeacc8ce224c765";
+        public const string FileMd5 = "2bfe577979dd47c27d6625571bdbf763";
         public const string TextureFolder = "BONEQUILL_cape.fbm";
         public const string BaseColorFile = "BONEQUILL_cape_basecolor_0.jpg";
         public const string NormalFile = "BONEQUILL_cape_normal_2.jpg";
@@ -51,7 +51,7 @@ namespace Survival.Domain.Enemies
                 "B",
                 new[] { "cape_B_01", "cape_B_02", "cape_B_03" },
                 "cape_Spine2",
-                1.11456f,
+                1.11451f,
                 0,
                 0.3f,
                 0.45f,
@@ -59,14 +59,14 @@ namespace Survival.Domain.Enemies
                 0.15f,
                 0.04f,
                 35f,
-                new[] { -0.00737f, 0.14935f, 1.3f, -0.01702f, 0.17227f, 0.92676f, -0.00372f, 0.20975f, 0.55353f, -0.02458f, 0.21118f, 0.18898f },
+                new[] { -0.00737f, 0.15028f, 1.3f, -0.01704f, 0.17227f, 0.92676f, -0.00372f, 0.20975f, 0.55353f, -0.02458f, 0.21118f, 0.18898f },
                 JointStiffness),
             new ClothChainSpec(
                 "cape_BL",
                 "BL",
                 new[] { "cape_BL_01", "cape_BL_02", "cape_BL_03" },
                 "cape_Spine2",
-                1.5106f,
+                1.51058f,
                 0,
                 0.3f,
                 0.45f,
@@ -74,14 +74,14 @@ namespace Survival.Domain.Enemies
                 0.15f,
                 0.04f,
                 35f,
-                new[] { 0.07615f, 0.18766f, 1.3f, 0.14671f, 0.29049f, 0.80659f, 0.21814f, 0.41157f, 0.31318f, 0.21497f, 0.39583f, -0.17518f },
+                new[] { 0.07615f, 0.18777f, 1.3f, 0.14681f, 0.29057f, 0.80659f, 0.21816f, 0.41157f, 0.31318f, 0.21497f, 0.39583f, -0.17518f },
                 JointStiffness),
             new ClothChainSpec(
                 "cape_L",
                 "L",
                 new[] { "cape_L_01", "cape_L_02", "cape_L_03" },
                 "cape_Spine2",
-                1.25285f,
+                1.25274f,
                 0,
                 0.3f,
                 0.45f,
@@ -89,14 +89,14 @@ namespace Survival.Domain.Enemies
                 0.15f,
                 0.04f,
                 35f,
-                new[] { 0.21807f, 0.23365f, 1.3f, 0.24607f, 0.34987f, 0.88935f, 0.27479f, 0.29696f, 0.4787f, 0.29585f, 0.3695f, 0.0756f },
+                new[] { 0.21848f, 0.23407f, 1.3f, 0.24615f, 0.34994f, 0.88935f, 0.27478f, 0.29696f, 0.4787f, 0.29585f, 0.3695f, 0.0756f },
                 JointStiffness),
             new ClothChainSpec(
                 "cape_FL",
                 "FL",
                 new[] { "cape_FL_01", "cape_FL_02", "cape_FL_03" },
                 "cape_LeftShoulder",
-                0.38469f,
+                0.38484f,
                 0,
                 0.3f,
                 0.45f,
@@ -104,14 +104,14 @@ namespace Survival.Domain.Enemies
                 0.15f,
                 0.04f,
                 35f,
-                new[] { 0.27491f, 0.20216f, 1.3f, 0.26525f, 0.19427f, 1.16689f, 0.25749f, 0.19945f, 1.03379f, 0.24815f, 0.20305f, 0.91665f },
+                new[] { 0.27688f, 0.20269f, 1.3f, 0.2659f, 0.19455f, 1.16689f, 0.25784f, 0.19957f, 1.03379f, 0.24823f, 0.20306f, 0.91665f },
                 JointStiffness),
             new ClothChainSpec(
                 "cape_FR",
                 "FR",
                 new[] { "cape_FR_01", "cape_FR_02", "cape_FR_03" },
                 "cape_RightShoulder",
-                0.22619f,
+                0.22617f,
                 0,
                 0.3f,
                 0.45f,
@@ -119,7 +119,7 @@ namespace Survival.Domain.Enemies
                 0.15f,
                 0.04f,
                 35f,
-                new[] { -0.30411f, 0.21044f, 1.3f, -0.28993f, 0.20998f, 1.21929f, -0.28224f, 0.20967f, 1.13858f, -0.28351f, 0.20978f, 1.07543f },
+                new[] { -0.30379f, 0.2105f, 1.3f, -0.28967f, 0.21001f, 1.21929f, -0.2822f, 0.2097f, 1.13858f, -0.28387f, 0.21002f, 1.07543f },
                 JointStiffness),
             new ClothChainSpec(
                 "cape_R",
@@ -134,7 +134,7 @@ namespace Survival.Domain.Enemies
                 0.15f,
                 0.04f,
                 35f,
-                new[] { -0.21677f, 0.24898f, 1.3f, -0.24187f, 0.33274f, 0.87037f, -0.27084f, 0.33807f, 0.44074f, -0.29528f, 0.38443f, 0.01808f },
+                new[] { -0.21676f, 0.24898f, 1.3f, -0.24187f, 0.33274f, 0.87037f, -0.27084f, 0.33807f, 0.44074f, -0.29528f, 0.38443f, 0.01808f },
                 JointStiffness),
             new ClothChainSpec(
                 "cape_BR",
@@ -149,7 +149,7 @@ namespace Survival.Domain.Enemies
                 0.15f,
                 0.04f,
                 35f,
-                new[] { -0.09167f, 0.19095f, 1.3f, -0.12991f, 0.27012f, 0.81218f, -0.19126f, 0.3944f, 0.32436f, -0.19161f, 0.3744f, -0.15824f },
+                new[] { -0.09168f, 0.19095f, 1.3f, -0.12991f, 0.27012f, 0.81218f, -0.19127f, 0.3944f, 0.32436f, -0.19161f, 0.3744f, -0.15824f },
                 JointStiffness)
         };
 

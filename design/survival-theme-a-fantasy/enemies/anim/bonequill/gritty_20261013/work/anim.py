@@ -73,8 +73,8 @@ def lefthand_hold(q=None): setrot('LeftHand',q if q is not None else RL); left_g
 # vertical along the INSIDE of the forearm, lower limb down and forward, upper limb up and back past the shoulder, string facing
 # outward (away from the body). The bow frame is set in world space and the hand is solved from it, so the grip never moves.
 import os
-CARRY=dict(RABD=float(os.environ.get('C_RABD',-12)),ABD=float(os.environ.get('C_ABD',-3)),SWING=float(os.environ.get('C_SWING',0)),ELB=float(os.environ.get('C_ELB',20)),
-           TILT=float(os.environ.get('C_TILT',35)),LEAN=float(os.environ.get('C_LEAN',47)),ROLL=float(os.environ.get('C_ROLL',345)),PHI=float(os.environ.get('C_PHI',-7)))
+CARRY=dict(RABD=float(os.environ.get('C_RABD',-12)),ABD=float(os.environ.get('C_ABD',-18)),SWING=float(os.environ.get('C_SWING',0)),ELB=float(os.environ.get('C_ELB',20)),
+           TILT=float(os.environ.get('C_TILT',35)),LEAN=float(os.environ.get('C_LEAN',47)),ROLL=float(os.environ.get('C_ROLL',345)),PHI=float(os.environ.get('C_PHI',-7)),WRIST=float(os.environ.get('C_WRIST',-20)))
 def carry_hand_rot():
     # bow long axis: up, tipped back by TILT (lower limb forward) and its top leaned out by LEAN; string (bow +y) outward (+x)
     T,L=math.radians(CARRY['TILT']),math.radians(CARRY['LEAN'])
@@ -88,9 +88,12 @@ def _arm_carry(swL,swR):
     rot('LeftArm',(1,0,0),swL-CARRY['SWING']); rot('RightArm',(1,0,0),swR)
     rot('LeftForeArm',(1,0,0),-CARRY['ELB']); rot('RightForeArm',(1,0,0),-6); upd()
 def _fa_world(): return (PB[P_+'LeftForeArm'].matrix.to_3x3()).normalized().to_quaternion()
-reset(); legs(); _arm_carry(0,0); HAND_REL=_fa_world().inverted()@RL_IDLE   # bow frame rides the forearm: the string keeps its gap to the forearm through the walk swing
+# Derek 10-15 23:06: carried bow runs FRONT TO BACK beside the leg. Hand and arm stay natural (the hand keeps its bind
+# orientation on the forearm: relaxed, palm to the thigh, knuckle line pointing forward); only the bow turns in the hand
+# (bowroll.py ROLL_REST) so its string side rests against the inside of the forearm.
 def rest_arms(swL=0,swR=0):
-    _arm_carry(swL,swR); lefthand_hold(_fa_world()@HAND_REL)
+    _arm_carry(swL,swR); PB[P_+'LeftHand'].rotation_quaternion=Quaternion((1,0,0),math.radians(CARRY['WRIST'])); upd(); left_grip()   # WRIST: small ulnar/radial deviation about the palm normal (hand-local x)
+reset(); legs(); rest_arms(); RL_IDLE=PB[P_+'LeftHand'].matrix.to_3x3().to_quaternion()   # attack starts from the natural carry hand
 A={}
 A['rest']=act('BONEQUILL_rest')
 for f in (0,30): reset(); legs(); rest_arms(); head_forward(); key(f)
@@ -145,6 +148,8 @@ for f in range(31):
     reset(); legs(); spine_yaw(samp(KY,f)); dl=samp(KL,f); dr=samp(KR,f)
     for n,d in zip(('LeftArm','LeftForeArm','RightArm','RightForeArm'),dl+dr): aim(n,d)
     untwist('RightForeArm')
-    tb=ease(min(1.0,f/10.0)) if f<=10 else (1.0 if f<=20 else 1.0-ease((f-20)/10.0)); lefthand_hold(RL_IDLE.slerp(RL,tb)); head_forward(); key(f)
+    tb=ease(min(1.0,f/10.0)) if f<=10 else (1.0 if f<=20 else 1.0-ease((f-20)/10.0)); setrot('LeftHand',RL); L1=PB[P_+'LeftHand'].rotation_quaternion.copy(); L0=Quaternion((1,0,0),math.radians(CARRY['WRIST']))
+    if L0.dot(L1)<0: L1=-L1
+    PB[P_+'LeftHand'].rotation_quaternion=L0.slerp(L1,tb); upd(); left_grip(); head_forward(); key(f)   # blend in forearm space: natural carry wrist <-> draw
 reset(); arm.animation_data.action=A['rest']; sc.frame_set(0)
 bpy.ops.wm.save_as_mainfile(filepath='/workspace/bonequill_gritty/work/anim.blend',compress=True); bpy.ops.wm.save_as_mainfile(filepath='/workspace/bonequill_gritty/work/anim_nq.blend',compress=True,copy=True); print('ANIM ok ADD',ADD,CARRY)

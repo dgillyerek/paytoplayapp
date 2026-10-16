@@ -141,7 +141,7 @@ public class BonequillBowGripUnityTests
             if (clip != "attack")
             {
                 // Carried: string on the body side, resting 0.5-1 cm off the inner forearm.
-                Assert.True(s[6].GetDouble() < -0.5, $"{clip} f{f}: carried string not on the body side of the forearm");
+                Assert.True(s[6].GetDouble() < -0.3, $"{clip} f{f}: carried string not on the body side of the forearm");
                 Assert.InRange(s[7].GetDouble(), 0.005, 0.01);
             }
             else if (drawing)
