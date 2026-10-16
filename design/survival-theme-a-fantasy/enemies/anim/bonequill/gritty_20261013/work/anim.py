@@ -41,19 +41,42 @@ LA=(J['LeftForeArm']-J['LeftArm']).length; LF=(J['LeftHand']-J['LeftForeArm']).l
 def legs(stance=True):
     for s,sg in (('Left',1),('Right',-1)): rot(s+'UpLeg',(0,1,0),ADD*sg); rot(s+'Foot',(0,1,0),-ADD*sg)
 YAW=-55.0
+import os as _o2
+# Derek 10-15 23:29: side-on archer stance on the attack: the left foot steps toward the target and the hips turn so the body is
+# sideways with the bow arm at the target. w=0 square (rest), w=1 full stance. The chest yaw stays YAW in total (hips + spine).
+HY,STEP_L,STEP_R=float(_o2.environ.get('C_HY',-30)),-14.0,6.0
+def _foot_z(s): upd(); return (arm.matrix_world@PB[P_+s+'Foot'].head).z
+FOOT_Z0=None; DROP=0.0
+def stance(w):
+    global FOOT_Z0,DROP
+    DROP=0.0
+    if w<=1e-4: return
+    rot('Hips',(0,0,1),HY*w)
+    rot('LeftUpLeg',(1,0,0),STEP_L*w); rot('LeftFoot',(1,0,0),-STEP_L*w)
+    rot('RightUpLeg',(1,0,0),STEP_R*w); rot('RightFoot',(1,0,0),-STEP_R*w)
+    upd(); drop=_foot_z('Left')-FOOT_Z0; PB[P_+'Hips'].location=(0,-drop,0); DROP=drop; upd()
+    # bend the right knee just enough to keep the back foot on the floor
+    lo,hi=0.0,30.0; q0=PB[P_+'RightLeg'].rotation_quaternion.copy(); qf=PB[P_+'RightFoot'].rotation_quaternion.copy()
+    for _ in range(18):
+        k=(lo+hi)/2; PB[P_+'RightLeg'].rotation_quaternion=q0; PB[P_+'RightFoot'].rotation_quaternion=qf
+        rot('RightLeg',(1,0,0),k); rot('RightFoot',(1,0,0),-k*0.5)
+        if _foot_z('Right')<FOOT_Z0: lo=k
+        else: hi=k
+    upd()
 def spine_yaw(deg):
     for n,k in (('Spine',0.3),('Spine1',0.35),('Spine2',0.35)): rot(n,(0,0,1),deg*k)
     rot('Neck',(0,0,1),-deg*0.5)   # neck takes half the counter-turn so the head band never twists hard
     upd()
+reset(); legs(); FOOT_Z0=_foot_z('Left')
 HDX,HDZ=0.0,0.0
 RDX4=Vector((0,0,0))
-BDX,BDZ=0.126,-0.011
-def draw_pose(pull=0.0,yaw=YAW):
-    reset(); legs(); spine_yaw(yaw)
-    S=PB[P_+'LeftArm'].head.copy(); D=(Vector((-0.07+BDX,-0.62,1.52+BDZ))-S).normalized()   # bow hand straight ahead of the face, so the arrow flies forward
+import os as _o; BDX,BDZ=float(_o.environ.get('C_BDX',0.094)),float(_o.environ.get('C_BDZ',-0.011))
+def draw_pose(pull=0.0,yaw=YAW,w=1.0):
+    reset(); legs(); stance(w); spine_yaw(yaw-HY*w)
+    S=PB[P_+'LeftArm'].head.copy(); D=(Vector((-0.07+BDX,-0.62,1.52+BDZ-DROP))-S).normalized()   # bow hand straight ahead of the face, so the arrow flies forward
     aim('LeftArm',D); aim('LeftForeArm',D)                    # bow arm straight out from the shoulder toward the target
     G=PB[P_+'LeftHand'].head.copy()
-    H=Vector((-0.09+HDX-pull,-0.17+pull*0.4,1.52+HDZ))   # string hand at the right jaw; elbow out behind at shoulder height
+    H=Vector((-0.09+HDX-pull,-0.17+pull*0.4,1.52+HDZ-DROP))   # targets ride down with the stance hip drop   # string hand at the right jaw; elbow out behind at shoulder height
     S2=PB[P_+'RightArm'].head; up,fo=ik(S2,H,LA,LF,(-1.0,0.35,-0.2)); aim('RightArm',up); aim('RightForeArm',fo)
 draw_pose(); upd()
 _M=PB[P_+'LeftHand'].matrix.to_3x3(); _y=_M.col[1].normalized(); _z=Vector((0,0,1)); _z=(_z-_z.dot(_y)*_y).normalized(); _x=_y.cross(_z)
@@ -115,7 +138,7 @@ def dirs():
     upd(); return [PB[P_+n].matrix.to_3x3().col[1].normalized().copy() for n in ('LeftArm','LeftForeArm','RightArm','RightForeArm')]
 reset(); legs(); rest_arms(); D0=dirs()
 draw_pose(); D10=dirs()
-draw_pose(yaw=YAW*0.6); 
+draw_pose(yaw=YAW*0.6,w=0.5); 
 S=PB[P_+'LeftArm'].head; Dn=Vector((0.15,-0.95,-0.25)).normalized(); aim('LeftArm',Dn); aim('LeftForeArm',Dn)
 G=PB[P_+'LeftHand'].head.copy(); up,fo=ik(PB[P_+'RightArm'].head,Vector((-0.13,-0.27,1.42)),LA,LF,(-1.0,0.35,-0.2)); aim('RightArm',up); aim('RightForeArm',fo); D6=dirs()
 draw_pose(pull=0.08); D16=dirs()
@@ -133,6 +156,7 @@ DR={k:rpose(*v) for k,v in RH.items()}
 KL=[(0,D0[:2]),(10,D6[:2]),(14,D10[:2]),(17,D10[:2]),(20,D16[:2]),(30,D0[:2])]
 KR=[(0,D0[2:]),(2,DR[2]),(4,DR[4]),(6,DR[6]),(8,DR[8]),(10,D6[2:]),(14,D10[2:]),(17,D10[2:]),(20,D16[2:]),(30,D0[2:])]
 KY=[(0,0.0),(8,0.0),(10,YAW*0.6),(14,YAW),(20,YAW),(30,0.0)]
+KW=[(0,0.0),(8,0.0),(10,0.5),(12,1.0),(20,1.0),(30,0.0)]   # stance weight
 def untwist(n):
     # drop the forearm's twist about its own axis relative to the upper arm (swing only): the elbow stays a hinge and the
     # forearm can never roll-flip, whatever path the aim directions take
@@ -145,7 +169,7 @@ def samp(K,f):
     if isinstance(a,float): return a+(b-a)*t
     return [a[k].lerp(b[k],t).normalized() for k in range(len(a))]
 for f in range(31):
-    reset(); legs(); spine_yaw(samp(KY,f)); dl=samp(KL,f); dr=samp(KR,f)
+    w=samp(KW,f); reset(); legs(); stance(w); spine_yaw(samp(KY,f)-HY*w); dl=samp(KL,f); dr=samp(KR,f)
     for n,d in zip(('LeftArm','LeftForeArm','RightArm','RightForeArm'),dl+dr): aim(n,d)
     untwist('RightForeArm')
     tb=ease(min(1.0,f/10.0)) if f<=10 else (1.0 if f<=20 else 1.0-ease((f-20)/10.0)); setrot('LeftHand',RL); L1=PB[P_+'LeftHand'].rotation_quaternion.copy(); L0=Quaternion((1,0,0),math.radians(CARRY['WRIST']))

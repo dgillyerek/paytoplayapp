@@ -1,4 +1,4 @@
-import sys; sys.path.insert(0,'/workspace/bonequill_gritty/work'); from bowroll import bowrot
+import sys; sys.path.insert(0,'/workspace/bonequill_gritty/work'); from bowroll import bowrot, bow_matrix, ARROW_REST_BOW
 import sys; sys.path.append("/home/box/.local/lib/python3.13/site-packages")
 import bpy, math, json, numpy as np
 from mathutils import Vector, Matrix
@@ -55,7 +55,7 @@ NOCK_LOCAL=Vector(fing.mean(0)); rep['nock_local_hand']=[round(v,4) for v in NOC
 REST_UP=Vector((0.0,0.0,0.035)); REST_SIDE=0.012
 def arrow_pose():
     MR=bm('RightHand'); nk=MR@NOCK_LOCAL
-    rest=bm('LeftHand')@REST_L      # arrow rest on top of the bow fist
+    rest=bow_matrix(bm('LeftHand'),GL,'attack',sc.frame_current)@Vector(ARROW_REST_BOW)      # arrow rest: left (outer) side of the riser, above the fist
     f_=(rest-nk).normalized(); yax=-f_; xax=Vector((1,0,0)); xax=(xax-xax.dot(yax)*yax).normalized(); zax=xax.cross(yax)
     return nk, Matrix((xax,yax,zax)).transposed(), f_
 _,_,fw=arrow_pose()

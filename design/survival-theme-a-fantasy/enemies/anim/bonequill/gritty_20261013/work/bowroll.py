@@ -15,3 +15,8 @@ def roll(clip,f):
     return ROLL_DRAW+(ROLL_REST-ROLL_DRAW)*ss((f-F_C)/(F_E-F_C))
 RFIX=Matrix(((-1,0,0),(0,-1,0),(0,0,1)))
 def bowrot(clip,f): return RFIX@Matrix.Rotation(math.radians(roll(clip,f)),3,'Z')
+# Derek 10-15 23:29: arrow rest on the archer's LEFT (outer) side of the riser, bow-local metres (x = left of the riser at the draw,
+# riser/wrap half-width 0.024 + shaft), just above the bow fist. The arrow runs nock -> this point; Unity aims at the same point.
+ARROW_REST_BOW=(0.033,0.0,0.0574)
+def bow_matrix(hand_world,GL,clip,f):
+    R=hand_world.to_3x3().normalized(); return Matrix.Translation(hand_world@GL)@(R@bowrot(clip,f)).to_4x4()
