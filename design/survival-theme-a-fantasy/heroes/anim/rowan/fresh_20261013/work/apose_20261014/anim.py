@@ -118,7 +118,7 @@ def apply_carry(w,swing=0.0,xo=0.0):
 def rest_arms(swL=0.0,swR=0.0):
     for s,sw in (('Left',swL),('Right',swR)):
         sg_=1 if s=='Left' else -1
-        H=REST[s]+Vector((sg_*(0.012*(abs(sw)>0)+0.6*max(0.0,-sw)+0.2*max(0.0,sw)),-sw,0.25*abs(sw)))   # swing forward (-Y) lifts the hand a little; back swing goes out round the coat tails
+        H=REST[s]+Vector((0.0,-sw*float(os.environ.get('C_SWK',1.6)),(sw*float(os.environ.get('C_SWK',1.6)))**2/1.1))   # v5f (Derek on 77c6de4): pure fore-aft pendulum about the shoulder (hand on the arm's arc), no in/out
         pose_arm(s,H,POLE_REST[s])
     apply_carry(1.0,swL)
 # ---- roll check ----

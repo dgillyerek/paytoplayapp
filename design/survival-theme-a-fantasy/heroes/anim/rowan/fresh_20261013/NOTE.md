@@ -116,3 +116,9 @@ Derek approved the hero-blue front/back look (`source/ROWAN_FRONT_BACK_BLUE_LOCK
 - Attack: 4.5 -> 50 over f1-f11, held to f17, back by f27 (the short way turns the string away from the forearm; strpen check clean every
   half-frame). Grip corners still brush the finger skin mid-roll (<= ~2 mm).
 - Sheets: sheets/ROWAN_fresh_carry_derek_angle.png (Derek's Game-view angle) and sheets/ROWAN_fresh_carry_front.png.
+
+## v5f (2026-10-15) sagittal arm swing in the walk
+- Derek on 77c6de4: arms swung in/out. rest_arms now moves each hand target only fore-aft on the arm's arc (+-14 cm, lift sw^2/1.1),
+  opposite to the legs as before; the in/out (x) term is gone. Natural arm/hand and the 4.5 deg bow carry from 77c6de4 unchanged; attack unchanged.
+- Walk: zero bow contact with body/coat/legs, string >= 8.7 cm from body/leg and >= 11.9 cm from the coat, string 0.76 cm off the inner
+  forearm, no arm in chest or coat. Sheet: sheets/ROWAN_fresh_walk_side_strip.jpg.

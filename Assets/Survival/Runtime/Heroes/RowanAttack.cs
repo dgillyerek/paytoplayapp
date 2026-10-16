@@ -21,7 +21,7 @@ namespace Survival.Domain.Heroes
     public static class RowanAttack
     {
         public const string FileName = "ROWAN_blenderig_attack.fbx";
-        public const string FileMd5 = "a7cac0a99fa3c468ceac9e3c46f5f7f7";
+        public const string FileMd5 = "4016ad2abba9f8814768962a4ac81510";
         public const string DesignDir = RowanMotion.DesignDir;
         public const int ReleaseFrame = 14;
         public const bool InPlace = false;
