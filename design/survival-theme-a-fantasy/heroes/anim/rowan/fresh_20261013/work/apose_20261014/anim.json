@@ -1,12 +1,12 @@
 {
  "summary": {
-  "bow_tilt_from_vertical_at_full_draw_deg": 18.14,
+  "bow_tilt_from_vertical_at_full_draw_deg": 17.85,
   "max_hinge_mismatch_deg": 0.0,
   "max_abs_forearm_twist_deg": 0.0,
   "max_abs_hand_twist_deg": 0.0,
-  "walk_Left_max_hand_step_deg": 3.59,
-  "walk_Right_max_hand_step_deg": 3.59,
-  "attack_Left_max_hand_step_deg": 20.99,
+  "walk_Left_max_hand_step_deg": 3.18,
+  "walk_Right_max_hand_step_deg": 3.18,
+  "attack_Left_max_hand_step_deg": 19.81,
   "attack_Right_max_hand_step_deg": 31.11
  },
  "frames": [
@@ -45,7 +45,7 @@
    "f": 1,
    "Left_hinge_mismatch_deg": 0.0,
    "Left_forearm_twist_deg": -0.0,
-   "Left_hand_twist_deg": 0.0,
+   "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": 0.0,
    "Right_hand_twist_deg": 0.0
@@ -64,11 +64,11 @@
    "clip": "walk",
    "f": 3,
    "Left_hinge_mismatch_deg": 0.0,
-   "Left_forearm_twist_deg": 0.0,
-   "Left_hand_twist_deg": -0.0,
+   "Left_forearm_twist_deg": -0.0,
+   "Left_hand_twist_deg": 0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": 0.0,
-   "Right_hand_twist_deg": 0.0
+   "Right_hand_twist_deg": -0.0
   },
   {
    "clip": "walk",
@@ -95,7 +95,7 @@
    "f": 6,
    "Left_hinge_mismatch_deg": 0.0,
    "Left_forearm_twist_deg": -0.0,
-   "Left_hand_twist_deg": 0.0,
+   "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": 0.0,
    "Right_hand_twist_deg": 0.0
@@ -105,7 +105,7 @@
    "f": 7,
    "Left_hinge_mismatch_deg": 0.0,
    "Left_forearm_twist_deg": -0.0,
-   "Left_hand_twist_deg": -0.0,
+   "Left_hand_twist_deg": 0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": 0.0,
    "Right_hand_twist_deg": 0.0
@@ -115,7 +115,7 @@
    "f": 8,
    "Left_hinge_mismatch_deg": 0.0,
    "Left_forearm_twist_deg": -0.0,
-   "Left_hand_twist_deg": -0.0,
+   "Left_hand_twist_deg": 0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": 0.0,
    "Right_hand_twist_deg": 0.0
@@ -125,7 +125,7 @@
    "f": 9,
    "Left_hinge_mismatch_deg": 0.0,
    "Left_forearm_twist_deg": -0.0,
-   "Left_hand_twist_deg": 0.0,
+   "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": 0.0,
    "Right_hand_twist_deg": 0.0
@@ -154,11 +154,11 @@
    "clip": "walk",
    "f": 12,
    "Left_hinge_mismatch_deg": 0.0,
-   "Left_forearm_twist_deg": 0.0,
-   "Left_hand_twist_deg": -0.0,
+   "Left_forearm_twist_deg": -0.0,
+   "Left_hand_twist_deg": 0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": 0.0,
-   "Right_hand_twist_deg": 0.0
+   "Right_hand_twist_deg": -0.0
   },
   {
    "clip": "walk",
@@ -175,7 +175,7 @@
    "f": 14,
    "Left_hinge_mismatch_deg": 0.0,
    "Left_forearm_twist_deg": -0.0,
-   "Left_hand_twist_deg": 0.0,
+   "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": 0.0,
    "Right_hand_twist_deg": 0.0
@@ -198,7 +198,7 @@
    "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": 0.0,
-   "Right_hand_twist_deg": -0.0
+   "Right_hand_twist_deg": 0.0
   },
   {
    "clip": "walk",
@@ -215,10 +215,10 @@
    "f": 18,
    "Left_hinge_mismatch_deg": 0.0,
    "Left_forearm_twist_deg": -0.0,
-   "Left_hand_twist_deg": -0.0,
+   "Left_hand_twist_deg": 0.0,
    "Right_hinge_mismatch_deg": 0.0,
-   "Right_forearm_twist_deg": -0.0,
-   "Right_hand_twist_deg": 0.0
+   "Right_forearm_twist_deg": 0.0,
+   "Right_hand_twist_deg": -0.0
   },
   {
    "clip": "walk",
@@ -248,7 +248,7 @@
    "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": 0.0,
-   "Right_hand_twist_deg": -0.0
+   "Right_hand_twist_deg": 0.0
   },
   {
    "clip": "walk",
@@ -258,7 +258,7 @@
    "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": 0.0,
-   "Right_hand_twist_deg": 0.0
+   "Right_hand_twist_deg": -0.0
   },
   {
    "clip": "walk",
@@ -268,7 +268,7 @@
    "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": 0.0,
-   "Right_hand_twist_deg": 0.0
+   "Right_hand_twist_deg": -0.0
   },
   {
    "clip": "walk",
@@ -278,7 +278,7 @@
    "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": 0.0,
-   "Right_hand_twist_deg": -0.0
+   "Right_hand_twist_deg": 0.0
   },
   {
    "clip": "walk",
@@ -305,10 +305,10 @@
    "f": 27,
    "Left_hinge_mismatch_deg": 0.0,
    "Left_forearm_twist_deg": -0.0,
-   "Left_hand_twist_deg": -0.0,
+   "Left_hand_twist_deg": 0.0,
    "Right_hinge_mismatch_deg": 0.0,
-   "Right_forearm_twist_deg": -0.0,
-   "Right_hand_twist_deg": 0.0
+   "Right_forearm_twist_deg": 0.0,
+   "Right_hand_twist_deg": -0.0
   },
   {
    "clip": "walk",
@@ -328,7 +328,7 @@
    "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": 0.0,
-   "Right_hand_twist_deg": -0.0
+   "Right_hand_twist_deg": 0.0
   },
   {
    "clip": "walk",
@@ -367,7 +367,7 @@
    "Left_forearm_twist_deg": -0.0,
    "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
-   "Right_forearm_twist_deg": 0.0,
+   "Right_forearm_twist_deg": -0.0,
    "Right_hand_twist_deg": 0.0
   },
   {
@@ -375,7 +375,7 @@
    "f": 3,
    "Left_hinge_mismatch_deg": 0.0,
    "Left_forearm_twist_deg": 0.0,
-   "Left_hand_twist_deg": 0.0,
+   "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": -0.0,
    "Right_hand_twist_deg": 0.0
@@ -395,17 +395,17 @@
    "f": 5,
    "Left_hinge_mismatch_deg": 0.0,
    "Left_forearm_twist_deg": 0.0,
-   "Left_hand_twist_deg": -0.0,
+   "Left_hand_twist_deg": 0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": -0.0,
-   "Right_hand_twist_deg": -0.0
+   "Right_hand_twist_deg": 0.0
   },
   {
    "clip": "attack",
    "f": 6,
    "Left_hinge_mismatch_deg": 0.0,
-   "Left_forearm_twist_deg": 0.0,
-   "Left_hand_twist_deg": -0.0,
+   "Left_forearm_twist_deg": -0.0,
+   "Left_hand_twist_deg": 0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": -0.0,
    "Right_hand_twist_deg": 0.0
@@ -415,7 +415,7 @@
    "f": 7,
    "Left_hinge_mismatch_deg": 0.0,
    "Left_forearm_twist_deg": 0.0,
-   "Left_hand_twist_deg": -0.0,
+   "Left_hand_twist_deg": 0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": -0.0,
    "Right_hand_twist_deg": 0.0
@@ -425,7 +425,7 @@
    "f": 8,
    "Left_hinge_mismatch_deg": 0.0,
    "Left_forearm_twist_deg": 0.0,
-   "Left_hand_twist_deg": 0.0,
+   "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": -0.0,
    "Right_hand_twist_deg": 0.0
@@ -434,7 +434,7 @@
    "clip": "attack",
    "f": 9,
    "Left_hinge_mismatch_deg": 0.0,
-   "Left_forearm_twist_deg": -0.0,
+   "Left_forearm_twist_deg": 0.0,
    "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": 0.0,
@@ -524,8 +524,8 @@
    "clip": "attack",
    "f": 18,
    "Left_hinge_mismatch_deg": 0.0,
-   "Left_forearm_twist_deg": -0.0,
-   "Left_hand_twist_deg": 0.0,
+   "Left_forearm_twist_deg": 0.0,
+   "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": -0.0,
    "Right_hand_twist_deg": 0.0
@@ -534,7 +534,7 @@
    "clip": "attack",
    "f": 19,
    "Left_hinge_mismatch_deg": 0.0,
-   "Left_forearm_twist_deg": -0.0,
+   "Left_forearm_twist_deg": 0.0,
    "Left_hand_twist_deg": 0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": -0.0,
@@ -545,10 +545,10 @@
    "f": 20,
    "Left_hinge_mismatch_deg": 0.0,
    "Left_forearm_twist_deg": 0.0,
-   "Left_hand_twist_deg": 0.0,
+   "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": -0.0,
-   "Right_hand_twist_deg": 0.0
+   "Right_hand_twist_deg": -0.0
   },
   {
    "clip": "attack",
@@ -557,7 +557,7 @@
    "Left_forearm_twist_deg": -0.0,
    "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
-   "Right_forearm_twist_deg": -0.0,
+   "Right_forearm_twist_deg": 0.0,
    "Right_hand_twist_deg": 0.0
   },
   {
@@ -567,8 +567,8 @@
    "Left_forearm_twist_deg": 0.0,
    "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
-   "Right_forearm_twist_deg": -0.0,
-   "Right_hand_twist_deg": -0.0
+   "Right_forearm_twist_deg": 0.0,
+   "Right_hand_twist_deg": 0.0
   },
   {
    "clip": "attack",
@@ -577,7 +577,7 @@
    "Left_forearm_twist_deg": 0.0,
    "Left_hand_twist_deg": 0.0,
    "Right_hinge_mismatch_deg": 0.0,
-   "Right_forearm_twist_deg": 0.0,
+   "Right_forearm_twist_deg": -0.0,
    "Right_hand_twist_deg": 0.0
   },
   {
@@ -588,7 +588,7 @@
    "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": -0.0,
-   "Right_hand_twist_deg": -0.0
+   "Right_hand_twist_deg": 0.0
   },
   {
    "clip": "attack",
@@ -598,7 +598,7 @@
    "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": -0.0,
-   "Right_hand_twist_deg": -0.0
+   "Right_hand_twist_deg": 0.0
   },
   {
    "clip": "attack",
@@ -608,13 +608,13 @@
    "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": -0.0,
-   "Right_hand_twist_deg": 0.0
+   "Right_hand_twist_deg": -0.0
   },
   {
    "clip": "attack",
    "f": 27,
    "Left_hinge_mismatch_deg": 0.0,
-   "Left_forearm_twist_deg": -0.0,
+   "Left_forearm_twist_deg": 0.0,
    "Left_hand_twist_deg": 0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": -0.0,
@@ -628,14 +628,14 @@
    "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": 0.0,
-   "Right_hand_twist_deg": 0.0
+   "Right_hand_twist_deg": -0.0
   },
   {
    "clip": "attack",
    "f": 29,
    "Left_hinge_mismatch_deg": 0.0,
-   "Left_forearm_twist_deg": -0.0,
-   "Left_hand_twist_deg": 0.0,
+   "Left_forearm_twist_deg": 0.0,
+   "Left_hand_twist_deg": -0.0,
    "Right_hinge_mismatch_deg": 0.0,
    "Right_forearm_twist_deg": 0.0,
    "Right_hand_twist_deg": 0.0

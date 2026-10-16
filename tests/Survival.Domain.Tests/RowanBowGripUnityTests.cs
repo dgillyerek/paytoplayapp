@@ -149,12 +149,12 @@ public class RowanBowGripUnityTests
     public void Roll_only_turns_the_bow_from_the_carry_to_the_draw_without_crossing_the_wrist()
     {
         var g = RowanAttack.BowGrip;
-        Assert.Equal(4.5f, g.RollRestDeg);
+        Assert.Equal(8f, g.RollRestDeg);
         Assert.Equal(50f, g.RollDrawDeg);
         for (var f = 0f; f <= 30f; f += 0.25f)
         {
-            // the string-through-the-wrist band is below 0 deg for the natural hand; the path stays in [4.5, 50]
-            Assert.InRange(g.RollDeg(true, f), 4.49f, 50.01f);
+            // the string-through-the-wrist band is at/below ~3 deg for the natural hand; the path stays in [7, 50]
+            Assert.InRange(g.RollDeg(true, f), 7.99f, 50.01f);
         }
     }
 
@@ -169,7 +169,7 @@ public class RowanBowGripUnityTests
             Assert.True(Math.Abs(r - prev) <= 12f, $"roll jumps {Math.Abs(r - prev):0.0} deg at f{f}");
             prev = r;
             var axis = Rotate(grip.UnityRotation(r), new[] { 0f, 0f, 1f });
-            Assert.True(axis[2] > 0.999f);
+            Assert.True(axis[2] > 0.99f);   // v5g: bow axis tilted 7 deg toward the palm (seat), the roll spins about it
         }
 
         Assert.Equal(grip.RollRestDeg, grip.RollDeg(false, 12f));

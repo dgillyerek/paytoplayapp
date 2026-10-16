@@ -53,6 +53,11 @@ def twist(a):
     rot('Hips',(0,0,1),a*0.25); rot('Spine',(0,0,1),a*0.20); rot('Spine1',(0,0,1),a*0.20); rot('Spine2',(0,0,1),a*0.35); rot('Neck',(0,0,1),-a*0.5)
     for s in ('Left','Right'): keep_rest_world(s+'UpLeg')      # feet stay planted, facing forward
 def ease(t): t=max(0,min(1,t)); return t*t*(3-2*t)
+import os; HIPF=float(os.environ.get('C_HIPF','0.85'))
+def twist_side(a,hf):
+    # v5g (Derek on 818c738): attack side-on stance -- the hips/legs turn with the upper body (hips take hf of the turn, the spine the rest)
+    rot('Hips',(0,0,1),a*hf); r_=1.0-hf
+    rot('Spine',(0,0,1),a*r_*0.2/0.75); rot('Spine1',(0,0,1),a*r_*0.2/0.75); rot('Spine2',(0,0,1),a*r_*0.35/0.75); rot('Neck',(0,0,1),-a*0.5)
 import os
 RX=float(os.environ.get('REST_X','0.39')); RZ=float(os.environ.get('REST_Z','0.95'))
 RY=float(os.environ.get('REST_Y','-0.04'))
@@ -118,7 +123,7 @@ def apply_carry(w,swing=0.0,xo=0.0):
 def rest_arms(swL=0.0,swR=0.0):
     for s,sw in (('Left',swL),('Right',swR)):
         sg_=1 if s=='Left' else -1
-        H=REST[s]+Vector((0.0,-sw*float(os.environ.get('C_SWK',1.6)),(sw*float(os.environ.get('C_SWK',1.6)))**2/1.1))   # v5f (Derek on 77c6de4): pure fore-aft pendulum about the shoulder (hand on the arm's arc), no in/out
+        H=REST[s]+Vector((0.0,-sw*float(os.environ.get('C_SWK',1.4)),(sw*float(os.environ.get('C_SWK',1.4)))**2/1.1))   # v5f (Derek on 77c6de4): pure fore-aft pendulum about the shoulder (hand on the arm's arc), no in/out
         pose_arm(s,H,POLE_REST[s])
     apply_carry(1.0,swL)
 # ---- roll check ----
@@ -241,10 +246,12 @@ def shift_w(f):   # weight onto the front foot f4-f11, off again f19-f27
 RFOOT={s_:J[s_+'Foot'].copy() for s_ in ('Left','Right')}
 def aim_bone(n,tgt):
     upd(); pb=PB[P_+n]; M=pb.matrix.to_3x3().normalized(); d=(Vector(tgt)-pb.head).normalized(); q=M.col[1].rotation_difference(d); setworld(n,q.to_matrix()@M)
-def pose_leg(s,A_,pole=Vector((0,-1,0.0))):
+def pose_leg(s,A_,pole=Vector((0,-1,0.0)),fyaw=0.0):
     upd(); H=PB[P_+s+'UpLeg'].head.copy(); d=A_-H; D=min(d.length,(LU+LLo)*0.999); u=d.normalized()
     a=(LU*LU-LLo*LLo+D*D)/(2*D); h=math.sqrt(max(LU*LU-a*a,0)); p=(pole-pole.dot(u)*u).normalized(); K=H+u*a+p*h
-    aim_bone(s+'UpLeg',K); aim_bone(s+'Leg',H+u*D); keep_rest_world(s+'Foot')
+    aim_bone(s+'UpLeg',K); aim_bone(s+'Leg',H+u*D)
+    if fyaw: setworld(s+'Foot',Matrix.Rotation(math.radians(fyaw),3,'Z')@RW(s+'Foot'))   # foot turned with the side-on stance (pivot at the ankle)
+    else: keep_rest_world(s+'Foot')
 def step_pose(f):
     w=step_w(f); sw=shift_w(f)
     if w<=0 and sw<=0: return Vector()
@@ -254,10 +261,10 @@ for f in range(31):
     a=TW*twist_w(f)
     reset(); SH=step_pose(f)
     if SH.length>0: upd(); hb_=PB[P_+'Hips']; hb_.matrix=Matrix.Translation(SH)@hb_.matrix; upd()
-    twist(a)
+    twist_side(a,HIPF); hy=a*HIPF; kp=Rz(hy)@Vector((0,-1,0.0))   # knees and feet follow the hips (no twisted knees)
     if f not in (0,30):
-        pose_leg('Right',RFOOT['Right'].copy())
-        pose_leg('Left',RFOOT['Left']+STEP*step_w(f)+Vector((0,0,lift_h(f))))
+        pose_leg('Right',RFOOT['Right'].copy(),kp,hy*float(os.environ.get('C_FOOTF','0.8')))
+        pose_leg('Left',RFOOT['Left']+STEP*step_w(f)+Vector((0,0,lift_h(f))),kp,hy*float(os.environ.get('C_FOOTF','0.8')))
     head_forward(); upd()
     STEPLOG.append({'f':f,'L':[round(v,4) for v in PB[P_+'LeftFoot'].head],'R':[round(v,4) for v in PB[P_+'RightFoot'].head],'hips':[round(v,4) for v in PB[P_+'Hips'].head]})
     hp=PB[P_+'Head'].head.copy(); SL=PB[P_+'LeftArm'].head.copy()

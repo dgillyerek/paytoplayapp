@@ -122,3 +122,9 @@ Derek approved the hero-blue front/back look (`source/ROWAN_FRONT_BACK_BLUE_LOCK
   opposite to the legs as before; the in/out (x) term is gone. Natural arm/hand and the 4.5 deg bow carry from 77c6de4 unchanged; attack unchanged.
 - Walk: zero bow contact with body/coat/legs, string >= 8.7 cm from body/leg and >= 11.9 cm from the coat, string 0.76 cm off the inner
   forearm, no arm in chest or coat. Sheet: sheets/ROWAN_fresh_walk_side_strip.jpg.
+
+## v5g (Derek on 818c738)
+- Attack: lower body turns side-on with the upper body. `twist_side(a, HIPF=0.85)` puts 85% of the attack yaw on Hips (the spine takes the rest). Knee poles are rotated by the hip yaw, and the feet yaw 0.8x about the ankle. The left-foot step forward is kept, and the step/no-slide tests pass.
+- Grip seated deeper in the palm (rest/walk/attack). The grip is tilted 7 deg about the pinky end (pivot 4.5 cm down the grip), so its centre sits about 5.5 mm deeper toward the palm centre. A straight shift hits the heel of the hand. grip_local [0.02683,0.12618,0.00832], grip_rot_local in grip.json (v5f values kept as *_v5f).
+- Rest roll 7 -> 8 deg (clears a 1-vertex hand/bow contact at walk f8.5). String-to-forearm gap is about 0.9 cm. Walk swing is reduced slightly (C_SWK 1.6 -> 1.4) so the tilted lower limb stays clear of the leg.
+- Checks: rest/walk bow/hand/body/coat 0. Attack bow/body/coat 0 and string penetration 0. There is minor grip-corner/finger contact (<=3 verts) during the attack roll.

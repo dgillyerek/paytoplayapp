@@ -53,25 +53,25 @@
   ]
  },
  "grip_local": [
-  0.032,
-  0.128,
-  0.008657547369487428
+  0.02683,
+  0.12618,
+  0.00832
  ],
  "grip_rot_local": [
   [
-   -1,
-   0,
-   0
+   -0.993364,
+   0.00233,
+   -0.114989
   ],
   [
-   0,
-   -1,
-   0
+   0.00233,
+   -0.999182,
+   -0.040369
   ],
   [
-   0,
-   0,
-   1
+   -0.114989,
+   -0.040369,
+   0.992546
   ]
  ],
  "min_hand_to_grip_axis": 0.0221,
@@ -165,5 +165,28 @@
   ]
  ],
  "finger_surface_path_change_max": 0.0684,
- "finger_length_note": "max_finger_length_change = finger centreline through the bone weights, rest vs posed (same measure as Bonequill fingers.json). Surface paths knuckle->tip on the palm side shorten 5-7% (skin compressing on the inside of the curl; nothing stretches)."
+ "finger_length_note": "max_finger_length_change = finger centreline through the bone weights, rest vs posed (same measure as Bonequill fingers.json). Surface paths knuckle->tip on the palm side shorten 5-7% (skin compressing on the inside of the curl; nothing stretches).",
+ "grip_local_v5f": [
+  0.032,
+  0.128,
+  0.008657547369487428
+ ],
+ "grip_seat_note": "v5g (Derek on 818c738): bow seated deeper in the palm -- tilted 7 deg toward the palm about the pinky end of the grip (pivot 4.5 cm down the grip), centre 5.5 mm deeper; a straight shift collides with the heel of the hand at the pinky end. Zero hand contact at carry and draw rolls.",
+ "grip_rot_local_v5f": [
+  [
+   -1,
+   0,
+   0
+  ],
+  [
+   0,
+   -1,
+   0
+  ],
+  [
+   0,
+   0,
+   1
+  ]
+ ]
 }
