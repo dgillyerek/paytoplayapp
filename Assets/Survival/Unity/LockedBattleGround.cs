@@ -30,7 +30,7 @@ namespace Survival.Unity
             var dirtTex = Load(LockedBattleGroundSpec.DirtTrackRel);
             var dirtMat = Lit(dirtTex, new Color(0.58f, 0.52f, 0.38f, 0.8f), true);
             Tile(dirtMat, 1f, LockedBattleGroundSpec.TrackLengthMetres / LockedBattleGroundSpec.TrackRepeatMetres);
-            for (var lane = 0; lane < 4; lane++)
+            for (var lane = 0; lane < LockedBattleRoster.LaneCount; lane++)
             {
                 var track = Quad(parent, "LaneTrack" + lane, LockedBattleGroundSpec.TrackWidthMetres, LockedBattleGroundSpec.TrackLengthMetres, LockedBattleRoster.LaneX(lane), 0.003f, 0f);
                 track.sharedMaterial = dirtMat;

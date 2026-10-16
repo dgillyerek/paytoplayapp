@@ -12,7 +12,8 @@ namespace Survival.Unity
     /// attack: heroes start at the bottom (−Z) facing up, villains at the top (+Z) facing down.
     /// Each one holds rest, walks at its opponent on its own locked walk clip, stops at its
     /// attack range, and plays its own locked attack (with its existing attack effects) with a
-    /// short rest between attacks. Flying attacks stop on the target's body box and melee
+    /// short rest between attacks. Five lanes: the four locked matchups plus lane 5,
+    /// Sir Aldric vs Blightroot (Derek approved 2026-10-15). Flying attacks stop on the target's body box and melee
     /// attacks land on their contact frame. Each landing spawns the attacker's impact burst,
     /// and the defender flinches (a small knock-back on its actor root, skipped mid-attack) and
     /// flashes. Pure presentation: the existing actors play the locked FBXs as-is, and the
@@ -442,8 +443,9 @@ namespace Survival.Unity
             }
 
             // Multi-scene Editor hierarchy: a prior Blightroot (or any) demo left open alongside
-            // BattleLocked would otherwise keep playing in Game view. Strip every Blightroot demo
-            // actor before we spawn the eight roster fighters.
+            // BattleLocked would otherwise keep playing in Game view. Strip every stray Blightroot
+            // demo actor before we spawn the ten roster fighters. The lane-5 Blightroot this
+            // battle spawns under its own root is exempt.
             StripLeftoverDemoActors();
             _booted = true;
             SurvivalVisuals.EnsureEventSystem();
@@ -477,14 +479,15 @@ namespace Survival.Unity
 
         /// <summary>
         /// Destroys leftover Survival demo actors from other scenes still loaded in the Editor
-        /// (Blightroot in particular: HOLD, not in the battle, but its demo scene is often left
-        /// open next to BattleLocked). Roster fighters spawn under this transform after this runs.
+        /// (Blightroot in particular: its demo scene is often left open next to BattleLocked).
+        /// Lane 5 exception: a BlightrootActor under this battle's own root is the roster
+        /// Blightroot and is kept. Roster fighters spawn under this transform after this runs.
         /// </summary>
-        private static void StripLeftoverDemoActors()
+        private void StripLeftoverDemoActors()
         {
             foreach (var actor in Object.FindObjectsByType<BlightrootActor>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
-                if (actor != null)
+                if (actor != null && !IsOwnLaneFighter(actor.transform))
                 {
                     Object.Destroy(actor.gameObject);
                 }
@@ -497,6 +500,48 @@ namespace Survival.Unity
                     Object.Destroy(demo.gameObject);
                 }
             }
+        }
+
+        /// <summary>True for an actor this battle spawned itself (the lane-5 Blightroot).</summary>
+        private bool IsOwnLaneFighter(Transform actor)
+        {
+            return actor.IsChildOf(transform);
+        }
+
+        /// <summary>
+        /// Bounds of the visible body renderers in the host frame. Only used for the two lane-5
+        /// actors, which have no VisibleBounds of their own. The host sits at the origin,
+        /// unrotated and unscaled, when this runs.
+        /// </summary>
+        private static Bounds MeasureVisibleBounds(Transform host)
+        {
+            var seeded = false;
+            var bounds = new Bounds(Vector3.zero, Vector3.zero);
+            foreach (var r in host.GetComponentsInChildren<Renderer>(false))
+            {
+                if (!r.enabled || (!(r is SkinnedMeshRenderer) && !(r is MeshRenderer)))
+                {
+                    continue;
+                }
+
+                var b = r.bounds;
+                var min = host.InverseTransformPoint(b.min);
+                var max = host.InverseTransformPoint(b.max);
+                var local = new Bounds((min + max) * 0.5f, Vector3.zero);
+                local.Encapsulate(min);
+                local.Encapsulate(max);
+                if (!seeded)
+                {
+                    bounds = local;
+                    seeded = true;
+                }
+                else
+                {
+                    bounds.Encapsulate(local);
+                }
+            }
+
+            return bounds;
         }
 
         private Fighter Spawn(LockedBattleFighter data)
@@ -585,6 +630,48 @@ namespace Survival.Unity
                     actor.Build();
                     f.Bind(actor.PlayPose, () => actor.Pose, actor.Built, actor.VisibleBounds);
                     driver = actor.AttackDriver;
+                    break;
+                }
+
+                case "Sir Aldric":
+                {
+                    // The pilot actor tunes the global ambient and reflections for its own
+                    // scene; keep the battle's.
+                    var reflections = RenderSettings.reflectionIntensity;
+                    var ambientIntensity = RenderSettings.ambientIntensity;
+                    var actor = host.AddComponent<SirAldricMeshyAnimateActor>();
+                    actor.Build();
+                    RenderSettings.reflectionIntensity = reflections;
+                    RenderSettings.ambientIntensity = ambientIntensity;
+                    var measured = new Bounds(Vector3.zero, Vector3.zero);
+                    if (actor.Built)
+                    {
+                        // Size him on the upright walk body (the idle is a crouched stance).
+                        actor.PlayBattlePose(SirAldricBattlePoses.Walk);
+                        measured = MeasureVisibleBounds(host.transform);
+                        actor.PlayBattlePose(SirAldricBattlePoses.Rest);
+                    }
+
+                    f.Bind(actor.PlayBattlePose, () => actor.BattlePose, actor.Built && measured.size.y > 1e-3f, measured);
+                    break;
+                }
+
+                case "Blightroot":
+                {
+                    // Own pivot: the actor's stand-up turn and foot plant write its transform,
+                    // and the host's transform belongs to the body scale and the hit flinch.
+                    var pivot = new GameObject("BlightrootPivot");
+                    pivot.transform.SetParent(host.transform, false);
+                    var actor = pivot.AddComponent<BlightrootActor>();
+                    actor.Build();
+                    var measured = new Bounds(Vector3.zero, Vector3.zero);
+                    if (actor.Built && actor.PlayBattlePose(BlightrootBattlePoses.Rest))
+                    {
+                        actor.FaceWalkForward();
+                        measured = MeasureVisibleBounds(host.transform);
+                    }
+
+                    f.Bind(actor.PlayBattlePose, () => actor.BattlePose, actor.Built && measured.size.y > 1e-3f, measured);
                     break;
                 }
 
@@ -679,6 +766,25 @@ namespace Survival.Unity
         /// <summary>Impact colours: the looksheet colours of each attack's flying or slash track, Ironhowl warm steel sparks.</summary>
         private static void ImpactColors(string name, out Color core, out Color glow, out Color edge)
         {
+            switch (name)
+            {
+                case "Sir Aldric":
+                {
+                    // Steel white core, bright blue glow, Sir Aldric's #1b3060 blue at the edge.
+                    var blue = LockedBattleHits.SirAldricBlueRgb;
+                    core = new Color(0.92f, 0.96f, 1f, 1f);
+                    glow = new Color(0.40f, 0.58f, 1f, 0.85f);
+                    edge = new Color(blue[0], blue[1], blue[2], 0.6f);
+                    return;
+                }
+
+                case "Blightroot":
+                    core = new Color(0.90f, 0.70f, 1f, 1f);
+                    glow = new Color(0.58f, 0.22f, 0.86f, 0.85f);
+                    edge = new Color(0.26f, 0.08f, 0.38f, 0.55f);
+                    return;
+            }
+
             BlenderRigAttackSpec? spec = null;
             switch (name)
             {
@@ -807,6 +913,10 @@ namespace Survival.Unity
                 DestroyNamed(f.Data.Name + "KeyLight");
                 DestroyNamed(f.Data.Name + "FillLight");
             }
+
+            // Sir Aldric's pilot actor names its lights without "Sir ".
+            DestroyNamed("AldricKeyLight");
+            DestroyNamed("AldricFillLight");
 
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientLight = new Color(0.36f, 0.36f, 0.38f, 1f);
