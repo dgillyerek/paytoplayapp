@@ -764,6 +764,8 @@ namespace Survival.Unity
                     ProjectileHit(captured, from, to, out contact);
                 driver.Blocker = Block;
                 driver.Impact = (track, contact) => LandHit(captured, contact);
+                driver.LaunchFrame = () => captured.Slot.localToWorldMatrix
+                    * Matrix4x4.TRS(captured.BaseLocal, Quaternion.identity, Vector3.one * captured.Scale);
             }
             if (data.WalkCarriesRoot)
             {

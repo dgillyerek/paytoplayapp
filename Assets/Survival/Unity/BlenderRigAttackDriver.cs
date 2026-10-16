@@ -49,6 +49,11 @@ namespace Survival.Unity
         /// <summary>Raised once per attack cycle when <see cref="Blocker"/> stops a flying track.</summary>
         public System.Action<AttackTrack, Vector3>? Impact { get; set; }
 
+        /// <summary>
+        /// Actor local-to-world without any hit flinch, sampled once per shot at release. Null: the live actor transform.
+        /// </summary>
+        public System.Func<Matrix4x4>? LaunchFrame { get; set; }
+
         public BlenderRigAttackDriver(BlenderRigAttackSpec spec, string themePackDir, Transform actor)
         {
             _spec = spec;
@@ -452,6 +457,21 @@ namespace Survival.Unity
             if (view.Track.Kind == AttackTrackKind.Held && view.BoneBound && view.Bone != null)
             {
                 t.SetPositionAndRotation(view.Bone.TransformPoint(view.BoneLocalPos), view.Bone.rotation * view.BoneLocalRot);
+            }
+            else if (view.Track.Kind == AttackTrackKind.Projectile && LaunchFrame != null)
+            {
+                // Once released, a shot flies in the frame it was launched in: a hit flinch on the
+                // shooter (which leans this actor) must not swing it off its line.
+                if (!view.HasLaunch)
+                {
+                    view.Launch = LaunchFrame();
+                    view.HasLaunch = true;
+                }
+
+                var launch = view.Launch;
+                t.SetPositionAndRotation(
+                    launch.MultiplyPoint3x4(MapLocal(new Vector3(key.X, key.Y, key.Z))),
+                    launch.rotation * _rotation * new Quaternion(key.Qx, key.Qy, key.Qz, key.Qw));
             }
             else
             {
@@ -1075,6 +1095,7 @@ namespace Survival.Unity
             view.ImpactFired = false;
             view.HasLastHead = false;
             view.Warned = false;
+            view.HasLaunch = false;
             view.Reach = -1f;
         }
 
@@ -1486,6 +1507,8 @@ namespace Survival.Unity
             public float TailZ { get; set; }
             public float StopTime { get; set; }
             public bool Warned { get; set; }
+            public bool HasLaunch { get; set; }
+            public Matrix4x4 Launch { get; set; } = Matrix4x4.identity;
             public Vector3 LastHead { get; set; }
             public float Reach { get; set; } = -1f;
             public string AttackTrackName { get; set; } = string.Empty;
