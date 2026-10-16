@@ -18,7 +18,8 @@ namespace Survival.Domain.Roster
             float[] designRest,
             float[] propExtent,
             string note,
-            string attackTrackName = "")
+            string attackTrackName = "",
+            BlenderBoneGrip? boneGrip = null)
         {
             ObjectName = objectName;
             PropFileName = propFileName;
@@ -28,6 +29,7 @@ namespace Survival.Domain.Roster
             PropExtent = propExtent ?? Array.Empty<float>();
             Note = note ?? string.Empty;
             AttackTrackName = attackTrackName ?? string.Empty;
+            BoneGrip = boneGrip;
         }
 
         public string ObjectName { get; }
@@ -54,6 +56,9 @@ namespace Survival.Domain.Roster
         /// one material serve rest, walk and attack. Empty: the prop hides while the attack plays.
         /// </summary>
         public string AttackTrackName { get; }
+
+        /// <summary>When set, the prop is a child of <see cref="Bone"/> at this fixed bone-space offset (no world-space fit).</summary>
+        public BlenderBoneGrip? BoneGrip { get; }
 
         public bool StandsInForAttackTrack => AttackTrackName.Length > 0;
 

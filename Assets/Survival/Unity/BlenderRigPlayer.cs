@@ -31,6 +31,10 @@ namespace Survival.Unity
         private bool _ready;
         private bool _loop;
         private readonly BlenderRigAttackSpec? _attackSpec;
+
+        /// <summary>Rest shows attack frame 0 (the keyed rest carry, closed bow hand) instead of the FBX bind pose, which has
+        /// the arm at the side and the fingers straight because the rest FBX carries no animation.</summary>
+        private readonly bool _restAtAttackStart;
         private readonly BlenderRigIdlePropSpec[] _idleProps;
         private BlenderRigAttackDriver? _attack;
         private bool _attackMode;
@@ -42,8 +46,10 @@ namespace Survival.Unity
             BlenderRigSpec spec,
             Transform parent,
             BlenderRigAttackSpec? attack = null,
-            BlenderRigIdlePropSpec[]? idleProps = null)
+            BlenderRigIdlePropSpec[]? idleProps = null,
+            bool restAtAttackStart = false)
         {
+            _restAtAttackStart = restAtAttackStart;
             _attackSpec = attack;
             _idleProps = idleProps ?? System.Array.Empty<BlenderRigIdlePropSpec>();
             _spec = spec;
@@ -100,11 +106,6 @@ namespace Survival.Unity
             {
                 _attack = new BlenderRigAttackDriver(_attackSpec, _spec.ThemePackDir, _parent);
                 _attack.Calibrate(instance);
-                if (_idleProps.Length > 0)
-                {
-                    _attack.BindIdleProps(_idleProps);
-                    _attack.SetIdlePropsVisible(true);
-                }
             }
             else if (_idleProps.Length > 0)
             {
@@ -130,6 +131,7 @@ namespace Survival.Unity
             _output = AnimationPlayableOutput.Create(_graph, _spec.Name, _animator);
             _graph.Play();
             _ready = true;
+            BindIdlePropsAtAttackRest();
             ShowRest();
 #else
             Debug.LogError(_spec.Name + " plays in the Editor Game view.");
@@ -274,6 +276,29 @@ namespace Survival.Unity
             _attack?.SetIdlePropsVisible(true);
         }
 
+        /// <summary>Idle props are keyed in design space at attack frame 0, so the hand they ride must be in that pose when the
+        /// bone-local grip is taken. Binding on the freshly instantiated bind pose put the bow beside the palm (fingers closing
+        /// in front of an empty grip) because the bind-pose hand sits elsewhere than the keyed hand.</summary>
+        private void BindIdlePropsAtAttackRest()
+        {
+            if (_attack == null || _attackSpec == null || _idleProps.Length == 0)
+            {
+                return;
+            }
+
+            if (PlayClip(_attackSpec.FileName, BlenderRigAttackSpec.PoseName, BlenderRigAttackSpec.TakeName, _attackSpec.ClipLastFrame))
+            {
+                SampleAttackFrame(BlenderRigAttackSpec.FirstFrame);
+            }
+            else
+            {
+                Debug.LogWarning(_spec.Name + " idle props bound without the attack pose; grip may sit off the hand.");
+            }
+
+            _attack.BindIdleProps(_idleProps);
+            _attack.SetIdlePropsVisible(true);
+        }
+
         private void ShowRest()
         {
             StopAttack();
@@ -284,6 +309,12 @@ namespace Survival.Unity
 
             _animator?.Rebind();
             _animator?.Update(0f);
+            if (_restAtAttackStart && _attackSpec != null && _ready
+                && PlayClip(_attackSpec.FileName, BlenderRigAttackSpec.PoseName, BlenderRigAttackSpec.TakeName, _attackSpec.ClipLastFrame))
+            {
+                SampleAttackFrame(BlenderRigAttackSpec.FirstFrame);
+            }
+
             _pose = BlenderRigSpec.RestPoseName;
             _loop = false;
             _length = 0f;

@@ -138,7 +138,6 @@ public sealed class BlenderRigRosterTests
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
         Assert.Contains("Survival/Ashwyrm Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         Assert.Contains("Ashwyrm.unity", editor, StringComparison.Ordinal);
-        Assert.DoesNotContain("Rowan.unity", editor, StringComparison.Ordinal);
     }
 
     [Fact]
