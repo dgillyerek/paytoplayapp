@@ -643,16 +643,16 @@ namespace Survival.Unity
                     actor.Build();
                     RenderSettings.reflectionIntensity = reflections;
                     RenderSettings.ambientIntensity = ambientIntensity;
-                    var bounds = new Bounds(Vector3.zero, Vector3.zero);
+                    var measured = new Bounds(Vector3.zero, Vector3.zero);
                     if (actor.Built)
                     {
                         // Size him on the upright walk body (the idle is a crouched stance).
                         actor.PlayBattlePose(SirAldricBattlePoses.Walk);
-                        bounds = MeasureVisibleBounds(host.transform);
+                        measured = MeasureVisibleBounds(host.transform);
                         actor.PlayBattlePose(SirAldricBattlePoses.Rest);
                     }
 
-                    f.Bind(actor.PlayBattlePose, () => actor.BattlePose, actor.Built && bounds.size.y > 1e-3f, bounds);
+                    f.Bind(actor.PlayBattlePose, () => actor.BattlePose, actor.Built && measured.size.y > 1e-3f, measured);
                     break;
                 }
 
@@ -664,14 +664,14 @@ namespace Survival.Unity
                     pivot.transform.SetParent(host.transform, false);
                     var actor = pivot.AddComponent<BlightrootActor>();
                     actor.Build();
-                    var bounds = new Bounds(Vector3.zero, Vector3.zero);
+                    var measured = new Bounds(Vector3.zero, Vector3.zero);
                     if (actor.Built && actor.PlayBattlePose(BlightrootBattlePoses.Rest))
                     {
                         actor.FaceWalkForward();
-                        bounds = MeasureVisibleBounds(host.transform);
+                        measured = MeasureVisibleBounds(host.transform);
                     }
 
-                    f.Bind(actor.PlayBattlePose, () => actor.BattlePose, actor.Built && bounds.size.y > 1e-3f, bounds);
+                    f.Bind(actor.PlayBattlePose, () => actor.BattlePose, actor.Built && measured.size.y > 1e-3f, measured);
                     break;
                 }
 
