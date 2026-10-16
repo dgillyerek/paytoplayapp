@@ -107,3 +107,12 @@ Derek approved the hero-blue front/back look (`source/ROWAN_FRONT_BACK_BLUE_LOCK
 - Attack: roll -45 -> -310 (= 50) the long way, keys f1/f11/f17/f27; the carry blend adds an outward swing (60 deg peak, 4w(1-w)) so the
   carried bow clears his coat and leg as the arm comes up. Grip corners still brush the fingers mid-spin (f2-f10, f18-f26).
 - Sheet: sheets/ROWAN_fresh_bow_carry_closeup.jpg.
+
+## v5e (2026-10-15) natural arm, only the bow rolls
+- Derek on 29ecada: the arm had been rotated inward. Restored: arm, forearm and hand use the natural relaxed hanging pose (palm to the thigh,
+  no carry twist; anim.py NATURAL, apply_carry is a no-op). Only the bow rolls in the closed grip: 4.5 deg in rest/walk.
+- The string lies along the inside (body side) of the forearm, 0.77 cm off the skin, never inside it; string side up (0.91 rest / 0.81 walk),
+  bow limb outside. String >= 8.7 cm from body/leg, >= 11.9 cm from the coat; zero bow contact with body, coat, legs and forearm; grip unchanged.
+- Attack: 4.5 -> 50 over f1-f11, held to f17, back by f27 (the short way turns the string away from the forearm; strpen check clean every
+  half-frame). Grip corners still brush the finger skin mid-roll (<= ~2 mm).
+- Sheets: sheets/ROWAN_fresh_carry_derek_angle.png (Derek's Game-view angle) and sheets/ROWAN_fresh_carry_front.png.

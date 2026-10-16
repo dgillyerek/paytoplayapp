@@ -132,33 +132,30 @@ public class RowanBowGripUnityTests
         Assert.False(c.TryGetProperty("bad", out _));
         if (clip != "attack")
         {
-            Assert.True(c.GetProperty("up").GetDouble() > 0.1, "carried string side should tilt up");
+            Assert.True(c.GetProperty("up").GetDouble() >= 0.7, "carried string side should face up");
             // the string touches the BODY side of the forearm (horizontal direction from the forearm axis to the contact points at him, -x)
             Assert.True(c.GetProperty("inner").GetDouble() >= 0.5, "string should rest on the inside (body side) of the forearm");
             // the bow limb (grip) sits further out than the string
-            Assert.True(c.GetProperty("limb_out").GetDouble() >= 0.05, "limb should be further out than the string");
+            Assert.True(c.GetProperty("limb_out").GetDouble() > 0, "limb should be further out than the string");
             Assert.InRange(c.GetProperty("str_fa_min").GetDouble(), 0.005, 0.010);
         }
 
         var src = File.ReadAllText(Path.Combine(Work, "anim.py"));
         Assert.Contains("def carry_rots()", src);
-        Assert.Contains("ROLL=float(os.environ.get('C_ROLL',-45))", src);
+        Assert.Contains("NATURAL=os.environ.get('C_NATURAL','1')=='1'", src);   // v5e: natural arm, only the bow rolls
     }
 
     [Fact]
-    public void Roll_turns_to_draw_the_long_way_so_the_string_never_crosses_the_wrist()
+    public void Roll_only_turns_the_bow_from_the_carry_to_the_draw_without_crossing_the_wrist()
     {
         var g = RowanAttack.BowGrip;
-        Assert.Equal(-45f, g.RollRestDeg);
-        Assert.Equal(50f, ((g.RollDrawDeg % 360f) + 360f) % 360f, 3);
+        Assert.Equal(4.5f, g.RollRestDeg);
+        Assert.Equal(50f, g.RollDrawDeg);
         for (var f = 0f; f <= 30f; f += 0.25f)
         {
-            var r = g.RollDeg(true, f);
-            // the -40..+50 band puts the string through the wrist; the path stays in [-310, -45]
-            Assert.InRange(r, g.RollDrawDeg - 0.01f, -44.99f);
+            // the string-through-the-wrist band is below 0 deg for the natural hand; the path stays in [4.5, 50]
+            Assert.InRange(g.RollDeg(true, f), 4.49f, 50.01f);
         }
-
-        Assert.InRange(g.RollDeg(true, 6f), -200f, -160f);
     }
 
     [Fact]

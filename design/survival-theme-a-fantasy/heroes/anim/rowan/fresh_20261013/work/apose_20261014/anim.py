@@ -94,6 +94,7 @@ def _reaim(q):
 RL_IDLE=_reaim(RL_IDLE)
 WBEND=(Matrix.Rotation(math.radians(float(os.environ.get('C_WX',0))),3,'X')@Matrix.Rotation(math.radians(float(os.environ.get('C_WZ',0))),3,'Z'))  # small wrist set (hand frame)   # rest wrist offset: the carry keeps it (no wrist bend/twist -> no tear at the 100% ForeArm/Hand seam)
 EDES=Vector((float(os.environ.get('C_EX',0.10)),float(os.environ.get('C_EY',0.02)),-1.0)).normalized()   # preferred upper-arm direction (out a little, slightly back)
+NATURAL=os.environ.get('C_NATURAL','1')=='1'
 def carry_rots():
     """Bow frame in world -> hand rotation (RL_IDLE); forearm = hand @ HOFF^-1 (wrist at rest); elbow on the circle |E-S|=L1 with
     (E-S) normal to the forearm hinge (so Arm/ForeArm share one hinge, no twist), closest to the preferred arm direction."""
@@ -104,6 +105,7 @@ def carry_rots():
     q=Quaternion((0,1,0),math.radians(-CARRY['OUT'])).to_matrix()
     return q@Ra,q@Rf,q@Rh
 def apply_carry(w,swing=0.0,xo=0.0):
+    if NATURAL: return   # v5e (Derek on 29ecada): natural relaxed arm/hand; only the bow is rolled in the grip (bowroll.py)
     if w<=0: return
     upd(); cur=[PB[P_+'Left'+b].matrix.to_3x3().normalized() for b in ('Arm','ForeArm','Hand')]
     Ra,Rf,Rh=carry_rots()
