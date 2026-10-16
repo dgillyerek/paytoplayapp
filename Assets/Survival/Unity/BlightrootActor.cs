@@ -1,5 +1,6 @@
 using System;
 using Survival.Domain.Enemies;
+using Survival.Domain.Roster;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
@@ -41,7 +42,12 @@ namespace Survival.Unity
         private bool _spineAligned;
         private bool _feetPlanted;
 
+        private string _battlePose = BlightrootBattlePoses.Rest;
+
         public bool Built => _ready;
+
+        /// <summary>Locked battle pose name: rest, walk or attack.</summary>
+        public string BattlePose => _battlePose;
         public string? ExactName => _exactName;
         public float ClipLength => _length;
 
@@ -131,6 +137,66 @@ namespace Survival.Unity
             _graph.Evaluate(0f);
             AlignVisiblePose();
             return true;
+        }
+
+        /// <summary>
+        /// Locked battle (lane 5): rest = "mutant idle", walk = "mutant walking" (carries the
+        /// hips forward, the battle catches each loop like Ironhowl), attack = "mutant swiping".
+        /// The battle puts this component on its own pivot under the actor host, because the
+        /// stand-up turn and the foot plant write this transform.
+        /// </summary>
+        public bool PlayBattlePose(string pose)
+        {
+            if (!PlayNamedClip(BlightrootBattlePoses.ClipFor(pose)))
+            {
+                return false;
+            }
+
+            _battlePose = pose == BlightrootBattlePoses.Walk || pose == BlightrootBattlePoses.Attack ? pose : BlightrootBattlePoses.Rest;
+            return true;
+        }
+
+        /// <summary>
+        /// Battle facing check, run once after the first idle stood the body up: plays the walk,
+        /// measures which way its own hips travel, and yaws this transform so that travel runs
+        /// along the parent's +Z (every locked rig faces +Z at yaw 0). Returns the yaw applied.
+        /// </summary>
+        public float FaceWalkForward()
+        {
+            var parent = transform.parent;
+            if (!_ready || _instance == null || parent == null)
+            {
+                return 0f;
+            }
+
+            var hips = FindNamed(_instance.transform, BlightrootMotion.BoneRoot);
+            if (hips == null || !PlayNamedClip(BlightrootBattlePoses.WalkClip))
+            {
+                return 0f;
+            }
+
+            _playable.SetTime(0d);
+            _graph.Evaluate(0f);
+            var a = parent.InverseTransformPoint(hips.position);
+            _playable.SetTime(_length * 0.9f);
+            _graph.Evaluate(0f);
+            var b = parent.InverseTransformPoint(hips.position);
+            var travel = b - a;
+            travel.y = 0f;
+            var yaw = 0f;
+            if (travel.sqrMagnitude > 1e-4f)
+            {
+                yaw = Vector3.SignedAngle(travel, Vector3.forward, Vector3.up);
+                // Same kind of one-parent turn as the stand-up: this actor transform, never the
+                // FBX instance root. Turn about the host's up axis through the host origin.
+                var turn = Quaternion.AngleAxis(yaw, parent.up);
+                transform.rotation = turn * transform.rotation;
+                transform.position = parent.position + (turn * (transform.position - parent.position));
+            }
+
+            Debug.Log("Blightroot battle: walk travel " + Fmt(travel) + " in the host frame, yawed " + yaw.ToString("0.0") + " deg to face +Z.");
+            PlayBattlePose(BlightrootBattlePoses.Rest);
+            return yaw;
         }
 
         private void AlignVisiblePose()

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Survival.Domain.Heroes;
+using Survival.Domain.Roster;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
@@ -127,7 +128,13 @@ namespace Survival.Unity
         private float _namedClipOrigin;
         private readonly Dictionary<string, AnimationClip> _liteClips = new();
 
+        private bool _battleWalkOnly;
+        private string _battlePose = SirAldricBattlePoses.Rest;
+
         public bool Built => _graphReady;
+
+        /// <summary>Locked battle pose name: rest, walk or attack.</summary>
+        public string BattlePose => _battlePose;
         public string? NamedClipExactName => _namedClipExactName;
         public bool HasAttackClip => _attackReady;
         public float WalkLength => _walkLength;
@@ -476,9 +483,50 @@ namespace Survival.Unity
             return true;
         }
 
+        /// <summary>
+        /// Locked battle (lane 5). rest = Lite "Sword And Shield idle", attack = Lite
+        /// "Sword And Shield attack (4)" (in place, starts and ends on the idle pose), walk = the
+        /// holefixed Standard Walk looping on its own (never rolling into the Pro slash). Clips
+        /// play as-is on their own avatars. No cape: <see cref="AttachSoftCape"/> is never
+        /// called, so the battle body is the tight plate mesh with no loose cloth.
+        /// </summary>
+        public bool PlayBattlePose(string pose)
+        {
+            if (!_graphReady)
+            {
+                return false;
+            }
+
+            if (string.Equals(pose, SirAldricBattlePoses.Walk, StringComparison.Ordinal))
+            {
+                PlayDefaultWalkThenSlash();
+                _battleWalkOnly = true;
+                _battlePose = pose;
+                SampleAt(Time.unscaledTime);
+                return true;
+            }
+
+            var clip = string.Equals(pose, SirAldricBattlePoses.Attack, StringComparison.Ordinal)
+                ? SirAldricBattlePoses.AttackClip
+                : SirAldricBattlePoses.RestClip;
+            _battleWalkOnly = false;
+            if (!PlayNamedClip(clip))
+            {
+                return false;
+            }
+
+            // Start the clip from its first frame now (not from the last LateUpdate time).
+            _namedClipOrigin = Time.unscaledTime;
+            _poseTime = Time.unscaledTime;
+            _battlePose = string.Equals(pose, SirAldricBattlePoses.Attack, StringComparison.Ordinal) ? pose : SirAldricBattlePoses.Rest;
+            SampleAt(Time.unscaledTime);
+            return true;
+        }
+
         /// <summary>Return to default Play: walk then Pro Sword And Shield Slash.</summary>
         public void PlayDefaultWalkThenSlash()
         {
+            _battleWalkOnly = false;
             _namedClipActive = false;
             _namedClipExactName = null;
             SetAvatarVisible(_liteInstance, false);
@@ -651,7 +699,12 @@ namespace Survival.Unity
             }
 
             var t = timeSeconds % loop;
-            var attacking = _attackReady && t >= walkBlock;
+            var attacking = _attackReady && t >= walkBlock && !_battleWalkOnly;
+            if (_battleWalkOnly)
+            {
+                t = timeSeconds % walkLen;
+            }
+
             _mixer.SetInputWeight(0, 1f);
             if (!attacking)
             {
