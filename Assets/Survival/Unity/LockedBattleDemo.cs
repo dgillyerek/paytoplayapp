@@ -22,13 +22,10 @@ namespace Survival.Unity
     [DefaultExecutionOrder(500)]
     public sealed class LockedBattleDemo : MonoBehaviour
     {
-        public const string CameraDropdownObjectName = "LockedBattleCameraDropdown";
         public const string RestartButtonObjectName = "LockedBattleRestart";
 
         private readonly List<Fighter> _fighters = new List<Fighter>();
         private LockedBattleCamera? _camera;
-        private Dropdown? _cameraDropdown;
-        private Text? _phase;
         private bool _booted;
         private float _time;
 
@@ -114,7 +111,6 @@ namespace Survival.Unity
                 }
             }
 
-            UpdatePhaseText();
         }
 
         private void BeginWalk(Fighter f)
@@ -472,7 +468,6 @@ namespace Survival.Unity
             BuildGround();
             _camera = gameObject.GetComponent<LockedBattleCamera>() ?? gameObject.AddComponent<LockedBattleCamera>();
             _camera.SetField(FieldBounds());
-            _camera.ModeChanged = OnCameraModeChanged;
             BuildHud();
             Restart();
         }
@@ -1000,40 +995,11 @@ namespace Survival.Unity
             var teams = SurvivalVisuals.Text(canvas, "Teams", TeamsLine(), 22, TextAnchor.MiddleCenter, SurvivalVisuals.Gold);
             Anchor(teams.rectTransform, 0.04f, 0.918f, 0.96f, 0.950f);
 
-            var dropdown = SurvivalVisuals.Dropdown(canvas, CameraDropdownObjectName, new Color(0.10f, 0.12f, 0.16f, 0.96f));
-            Anchor(dropdown.GetComponent<RectTransform>(), 0.04f, 0.840f, 0.66f, 0.910f);
-            if (dropdown.captionText != null)
-            {
-                dropdown.captionText.fontSize = 26;
-                dropdown.captionText.alignment = TextAnchor.MiddleLeft;
-            }
-
-            if (dropdown.itemText != null)
-            {
-                dropdown.itemText.fontSize = 26;
-            }
-
-            dropdown.ClearOptions();
-            var options = new List<Dropdown.OptionData>();
-            foreach (var mode in LockedBattleCamera.ModeNames)
-            {
-                options.Add(new Dropdown.OptionData(mode));
-            }
-
-            dropdown.AddOptions(options);
-            dropdown.SetValueWithoutNotify(LockedBattleCamera.Rear);
-            dropdown.RefreshShownValue();
-            dropdown.onValueChanged.AddListener(OnCameraPicked);
-            _cameraDropdown = dropdown;
-
             var restart = SurvivalVisuals.Button(canvas, RestartButtonObjectName, new Color(0.16f, 0.14f, 0.10f, 0.94f));
             Anchor(restart.GetComponent<RectTransform>(), 0.68f, 0.840f, 0.96f, 0.910f);
             var label = SurvivalVisuals.Text(restart.transform, "Label", "RESTART", 26, TextAnchor.MiddleCenter, SurvivalVisuals.Gold);
             SurvivalVisuals.Stretch(label.rectTransform);
             restart.onClick.AddListener(Restart);
-
-            _phase = SurvivalVisuals.Text(canvas, "Phase", string.Empty, 20, TextAnchor.MiddleCenter, SurvivalVisuals.Gold);
-            Anchor(_phase.rectTransform, 0.03f, 0.010f, 0.97f, 0.060f);
         }
 
         private static void Anchor(RectTransform rt, float x0, float y0, float x1, float y1)
@@ -1054,36 +1020,6 @@ namespace Survival.Unity
             }
 
             return "HEROES " + string.Join(" · ", heroes) + "   vs   VILLAINS " + string.Join(" · ", villains);
-        }
-
-        private void UpdatePhaseText()
-        {
-            if (_phase == null)
-            {
-                return;
-            }
-
-            var parts = new List<string>();
-            foreach (var f in _fighters)
-            {
-                parts.Add(f.Data.Name + " " + (f.Built ? f.Pose() : "missing"));
-            }
-
-            _phase.text = string.Join("   ·   ", parts);
-        }
-
-        private void OnCameraPicked(int index)
-        {
-            _camera?.SetMode(index);
-        }
-
-        private void OnCameraModeChanged(int mode)
-        {
-            if (_cameraDropdown != null && _cameraDropdown.value != mode)
-            {
-                _cameraDropdown.SetValueWithoutNotify(mode);
-                _cameraDropdown.RefreshShownValue();
-            }
         }
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");

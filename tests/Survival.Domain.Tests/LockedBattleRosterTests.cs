@@ -243,9 +243,21 @@ public sealed class LockedBattleRosterTests
         Assert.DoesNotContain("ModelImporter", demo, StringComparison.Ordinal);
         var camera = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "LockedBattleCamera.cs"));
         Assert.Contains("PortraitGameView.FovDegrees", camera, StringComparison.Ordinal);
-        Assert.Contains("Rear battle cam", camera, StringComparison.Ordinal);
-        Assert.Contains("Three-quarter", camera, StringComparison.Ordinal);
-        Assert.Contains("Front", camera, StringComparison.Ordinal);
+
+        // Free world-view camera (Derek 2026-10-16): mouse orbit, wheel zoom, middle-drag pan,
+        // starting on the old three-quarter framing. No view buttons, no bottom pose ticker.
+        Assert.Contains("Mouse.current", camera, StringComparison.Ordinal);
+        Assert.Contains("mouse.scroll", camera, StringComparison.Ordinal);
+        Assert.Contains("middleButton", camera, StringComparison.Ordinal);
+        Assert.Contains("DefaultYawDegrees = 135f", camera, StringComparison.Ordinal);
+        Assert.Contains("DefaultPitchDegrees = 30f", camera, StringComparison.Ordinal);
+        Assert.Contains("Mathf.Clamp(_pitch, MinPitchDegrees, MaxPitchDegrees)", camera, StringComparison.Ordinal);
+        Assert.Contains("MinEyeHeightMetres", camera, StringComparison.Ordinal);
+        Assert.DoesNotContain("Rear battle cam", camera, StringComparison.Ordinal);
+        Assert.DoesNotContain("SetMode", camera, StringComparison.Ordinal);
+        Assert.DoesNotContain("Dropdown", demo, StringComparison.Ordinal);
+        Assert.DoesNotContain("UpdatePhaseText", demo, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"Phase\"", demo, StringComparison.Ordinal);
     }
 
     [Fact]
