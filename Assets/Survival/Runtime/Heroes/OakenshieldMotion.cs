@@ -44,7 +44,8 @@ namespace Survival.Domain.Heroes
         // onto OAKENSHIELD_rig (design .../oakenshield/mixamo_attacks): T-pose Mixamo bind matched to the rig bind, body bones only,
         // hips drift removed, left-foot step into the side-on wind-up (hips -58 deg, as her spear throw), squaring up as both palms drive
         // down into the ground at f52, when the roots erupt under the target. Empty-handed: the thorn spear is only conjured in attack 1.
-        // Attack 2 waits for a forward-thrust download: Mixamo "Stabbing" holds her spear upright at her grip (design probe sheet).
+        // Attack 2 is still open: at her locked grip, Mixamo "Stabbing" holds the spear upright and "Bayonet Stab" points it back
+        // through her body (design probe sheets, NOTE.md).
         public const string DesignMixamoAttacksDir = "design/survival-theme-a-fantasy/heroes/anim/oakenshield/mixamo_attacks";
         public const string Attack3PoseName = "attack3";
         public const string Attack3FileName = "OAKENSHIELD_blenderig_attack3_root_snare.fbx";

@@ -85,7 +85,7 @@ lin=lambda i,arr: arr[0]+(arr[-1]-arr[0])*i/max(1,n_-1)
 travel={'hips_dx_range':[min(hx)-hx[0],max(hx)-hx[0]],'hips_dy_range':[min(hy)-hy[0],max(hy)-hy[0]],'net':[hx[-1]-hx[0],hy[-1]-hy[0]]}
 body_seq=[]
 for i,(Q,h,t,f) in enumerate(seq):
-    off=Vector((h.x-lin(i,hx),h.y-lin(i,hy),0))
+    off=Vector((0,0,0)) if PRM.get('hold_hips_xy') else Vector((h.x-lin(i,hx),h.y-lin(i,hy),0))
     stance=Vector((hx[0],hy[0],0))*PRM.get('keep_stance_offset',1.0)
     hw=Vector((TRh.x,TRh.y,TRh.z+h.z))+off+stance
     body_seq.append((Q,AWi@hw,t,f))
