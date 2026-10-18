@@ -90,8 +90,8 @@ files are not touched.
 | # | Attack | Mixamo title | Notes |
 |---|---|---|---|
 | 1 | bone arrow shot | *(locked)* | unchanged |
-| 2 | rapid quiver shot | **Standing Draw Arrow** (Pro Longbow pack) | The right hand reaches back to the quiver; keep it. Fast release. Bow grip and roll as the approved attack. Impact: BoneShard. |
-| 3 | bone volley (area) | **Standing Aim Overdraw** (Pro Longbow pack) | Quiver draw, overdraw, spread of 3. Upward angle via Spine and Spine1 only. Impact: BoneShard x3. |
+| 2 | rapid quiver shot | **Standing Draw Arrow** (Pro Longbow pack). **DOWNLOADED + WIRED 2026-10-18** (`BONEQUILL_blenderig_attack2_rapid_quiver_shot.fbx`, 1.3x, released with Rowan's Aim Recoil). | The right hand reaches back to the quiver; keep it. Fast release. Bow grip and roll as the approved attack. Impact: BoneShard. |
+| 3 | bone volley (area) | **Standing Aim Overdraw** (Pro Longbow pack). **DOWNLOADED + WIRED 2026-10-18** (`BONEQUILL_blenderig_attack3_bone_volley.fbx`, spine +35°). | Quiver draw, overdraw, spread of 3. Upward angle via Spine and Spine1 only. Impact: BoneShard x3. |
 
 ### Ironhowl (villain werewolf; native Mixamo skeleton, generic import like Blightroot)
 | # | Attack | Mixamo title | Notes |

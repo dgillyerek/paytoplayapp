@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Survival.Domain.Enemies;
 using Survival.Domain.Heroes;
 using Survival.Domain.Roster;
 
@@ -93,6 +94,65 @@ public sealed class ArcherExtraAttackTests
         Assert.InRange(loosed[0].Item3, 44f, 45f);
         Assert.InRange(loosed[1].Item3, 80f, 81f);
         Assert.InRange(loosed[2].Item3, 84f, 85f);
+    }
+
+    [Fact]
+    public void Bonequill_rapid_quiver_shot_and_bone_volley_are_baked_mixamo_clips_on_his_rig()
+    {
+        Assert.Equal(new[] { "rest", "walk", "attack", "attack2", "attack3" }, BonequillMotion.PoseNames);
+        AssertExtraClip(BonequillMotion.Spec, BonequillMotion.ThemePackDir, BonequillMotion.DesignMixamoAttacksDir, BonequillMotion.Attack2PoseName,
+            BonequillMotion.Attack2FileName, BonequillMotion.Attack2Md5, BonequillMotion.Attack2LastFrame, BonequillMotion.Attack2BowShots);
+        AssertExtraClip(BonequillMotion.Spec, BonequillMotion.ThemePackDir, BonequillMotion.DesignMixamoAttacksDir, BonequillMotion.Attack3PoseName,
+            BonequillMotion.Attack3FileName, BonequillMotion.Attack3Md5, BonequillMotion.Attack3LastFrame, BonequillMotion.Attack3BowShots);
+        var sums = File.ReadAllText(Path.Combine(FindRepoRoot(), BonequillMotion.DesignMixamoAttacksDir, "CHECKSUMS.md5"));
+        Assert.Contains("67c1411ced096fa3f00bccea26647f2c  BONEQUILL_mixamo_standing_draw_arrow.fbx", sums, StringComparison.Ordinal);
+        Assert.Contains("061909498f1487dd6fa9218297326633  BONEQUILL_mixamo_standing_aim_overdraw.fbx", sums, StringComparison.Ordinal);
+        Assert.Equal("b3fd5c3208bc3f2992a1293fcd77ef0c", BonequillAttack.FileMd5);
+
+        // Quiver draw, then the arrow nocked on his left side of the riser with the drawn string on its nock, and the bow only rolling in the grip.
+        var grip = BonequillAttack.BowGrip;
+        Assert.True(grip.HasDrawnString);
+        foreach (var shots in new[] { BonequillMotion.Attack2BowShots, BonequillMotion.Attack3BowShots })
+        {
+            Assert.Equal(grip.ArrowTrack, shots.ArrowTrack);
+            Assert.Equal(grip.ArrowRest, shots.ArrowRest);
+            foreach (var s in shots.Shots)
+            {
+                Assert.True(s.ArrowInHand < s.Nock && s.Nock < s.Release);
+                Assert.Equal(grip.RollDrawDeg, grip.RollDeg(shots, s.Release));
+                Assert.Equal(grip.RollRestDeg, grip.RollDeg(shots, s.RollE));
+            }
+        }
+    }
+
+    [Fact]
+    public void Bonequill_rotates_bone_arrow_rapid_shot_bone_volley_with_purple_flight_streaks()
+    {
+        var bq = LockedBattleRoster.Bonequill;
+        var profile = LockedBattleHits.ProfileOf("Bonequill");
+        Assert.Equal(3, LockedBattleRotation.Count(bq));
+        Assert.Equal(BonequillMotion.AttackPoseNames, new[] { 0, 1, 2 }.Select(i => LockedBattleRotation.AttackAt(bq, i).PoseName).ToArray());
+        Assert.Equal(BattleImpactKind.BoneShard, LockedBattleRotation.Impact(bq, profile, 1));
+        Assert.Equal(BattleImpactKind.BoneShard, LockedBattleRotation.Impact(bq, profile, 2));
+        var hits = new List<(int, int)>();
+        var loosed = new List<float>();
+        var dt = 1f / 120f;
+        for (var t = 0f; t < LockedBattleRotation.RotationSeconds(bq); t += dt)
+        {
+            if (LockedBattleRotation.MeleeHitCrossed(bq, profile, t, t + dt, out var a, out var h))
+            {
+                hits.Add((a, h));
+            }
+
+            if (LockedBattleRotation.ShotLoosed(bq, profile, t, t + dt, out var la, out _))
+            {
+                loosed.Add((t + dt - LockedBattleRotation.OffsetSeconds(bq, la)) * 30f);
+            }
+        }
+
+        Assert.Equal(new[] { (1, 0), (2, 0), (2, 1), (2, 2) }, hits);
+        Assert.InRange(loosed[0], BonequillMotion.Attack2ReleaseFrame, BonequillMotion.Attack2ReleaseFrame + 1f);
+        Assert.InRange(loosed[1], BonequillMotion.Attack3ReleaseFrame, BonequillMotion.Attack3ReleaseFrame + 1f);
     }
 
     internal static void AssertExtraClip(BlenderRigSpec spec, string themePackDir, string designDir, string pose, string file, string md5, int lastFrame, BlenderBowShots shots)

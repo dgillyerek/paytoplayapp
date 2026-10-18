@@ -615,6 +615,45 @@ namespace Survival.Domain.Roster
             12.33f,
             RowanAttacks);
 
+        /// <summary>
+        /// Bonequill's rotation (2026-10-18): the locked bone arrow shot, the rapid quiver shot and the bone volley (Mixamo). Arrows
+        /// land 9 frames after each loose with a purple flight streak from the bow hand; the volley's three arc up and land 0.35 m apart.
+        /// </summary>
+        public static readonly LockedBattleAttack[] BonequillAttacks =
+        {
+            new LockedBattleAttack("bone arrow shot", BonequillMotion.AttackPoseName, BlenderRigAttackSpec.ClipSeconds),
+            new LockedBattleAttack(
+                "rapid quiver shot",
+                BonequillMotion.Attack2PoseName,
+                BonequillMotion.Attack2LastFrame / BonequillMotion.WalkFrameRate,
+                BonequillMotion.Attack2ReleaseFrame + BonequillMotion.ShotFlightFrames,
+                "mixamorig:LeftHand",
+                0.02f,
+                false,
+                default,
+                BattleImpactKind.BoneShard,
+                null,
+                BonequillMotion.ShotFlightFrames),
+            new LockedBattleAttack(
+                "bone volley",
+                BonequillMotion.Attack3PoseName,
+                BonequillMotion.Attack3LastFrame / BonequillMotion.WalkFrameRate,
+                BonequillMotion.Attack3ReleaseFrame + BonequillMotion.ShotFlightFrames,
+                "mixamorig:LeftHand",
+                0.03f,
+                false,
+                default,
+                BattleImpactKind.BoneShard,
+                new[]
+                {
+                    new LockedBattleHitMark(BonequillMotion.Attack3ReleaseFrame + BonequillMotion.ShotFlightFrames + 2),
+                    new LockedBattleHitMark(BonequillMotion.Attack3ReleaseFrame + BonequillMotion.ShotFlightFrames + 4)
+                },
+                BonequillMotion.ShotFlightFrames,
+                0.6f,
+                0.35f)
+        };
+
         public static readonly LockedBattleFighter Bonequill = new LockedBattleFighter(
             "Bonequill",
             BattleSide.Villain,
@@ -629,7 +668,10 @@ namespace Survival.Domain.Roster
             ArcherRangeMetres,
             BlenderRigAttackSpec.ClipSeconds,
             true,
-            5);
+            5,
+            "",
+            0f,
+            BonequillAttacks);
 
         public static IReadOnlyList<LockedBattleFighter> All { get; } = new[]
         {

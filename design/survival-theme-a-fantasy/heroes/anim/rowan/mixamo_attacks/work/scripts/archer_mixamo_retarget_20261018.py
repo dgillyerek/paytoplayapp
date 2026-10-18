@@ -64,17 +64,20 @@ def load(src):
 seq=[]; segmeta=[]
 for si,sg in enumerate(PRM['segments']):
     fr,SRh,k,f0=load(sg['src']); a=sg.get('start',f0); b=sg.get('end',f0+len(fr)-1)
-    part=[]
-    for f in range(a,b+1):
-        Q,hw=fr[f-f0]; d=(hw-SRh)*k
-        part.append((Q,Vector((d.x,d.y,d.z)),sg['tag'],f))
+    part=[]; sp=sg.get('speed',1.0); fl=float(a)
+    while fl<=b+1e-6:
+        i0=int(math.floor(fl)); i1=min(i0+1,b); u=fl-i0
+        Qa,ha=fr[i0-f0]; Qb,hb=fr[i1-f0]
+        Q={n:Qa[n].slerp(Qb[n],u) for n in BODY}; hw=ha.lerp(hb,u); d=(hw-SRh)*k
+        part.append((Q,Vector((d.x,d.y,d.z)),sg['tag'],round(fl,3)))
+        fl+=sp
     cf=sg.get('crossfade',0)
     if seq and cf>0:
         Qa,ha=seq[-1][0],seq[-1][1]
         for i in range(min(cf,len(part))):
             w=sm((i+1)/(cf+1)); Q,h,t,f=part[i]
             part[i]=({n:Qa[n].slerp(Q[n],w) for n in BODY},ha.lerp(h,w),t,f)
-    segmeta.append({'tag':sg['tag'],'src':sg['src'].split('/')[-1],'frames':[a,b],'out_start':len(seq)+PRM['blend_in']})
+    segmeta.append({'tag':sg['tag'],'src':sg['src'].split('/')[-1],'frames':[a,b],'speed':sg.get('speed',1.0),'out_start':len(seq)+PRM['blend_in']})
     seq+=part
 # root strip: horizontal hips offset relative to the first clip frame, linear drift (net travel) removed, weight shift kept
 hx=[h.x for _,h,_,_ in seq]; hy=[h.y for _,h,_,_ in seq]; n_=len(seq)
@@ -142,7 +145,7 @@ def foot_u(kind,w,side):
 # ---- events in output frames
 def ofr(tag,f):
     for i,(kind,w,Q,h,t,ff) in enumerate(frames):
-        if t==tag and ff==f: return i
+        if t==tag and ff>=f-1e-6: return i
     raise KeyError((tag,f))
 shots=[]
 for s in PRM['shots']:

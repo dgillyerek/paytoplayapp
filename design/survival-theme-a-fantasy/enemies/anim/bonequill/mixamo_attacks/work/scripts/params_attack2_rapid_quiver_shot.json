@@ -1,0 +1,101 @@
+{
+ "rig": "BONEQUILL_rig",
+ "body": "BONEQUILL_body",
+ "rest_action": "BONEQUILL_attack",
+ "rest_frame": 0,
+ "blend_in": 10,
+ "blend_out": 12,
+ "lift": 0.07,
+ "keep_stance_offset": 1.0,
+ "roll_rest": 10.5,
+ "roll_draw": 30.0,
+ "grip": {
+  "pos": [
+   0.042,
+   0.094,
+   -0.0838
+  ],
+  "rot": [
+   0,
+   0,
+   1,
+   0
+  ]
+ },
+ "bow_fbx": "/workspace/ptp-three/design/survival-theme-a-fantasy/enemies/anim/bonequill/gritty_20261013/props/BONEQUILL_bow.fbx",
+ "arrow_fbx": "/workspace/ptp-three/design/survival-theme-a-fantasy/enemies/anim/bonequill/gritty_20261013/props/BONEQUILL_bonearrow_purple_fletch.fbx",
+ "nock_rhand_local": [
+  -0.0049,
+  0.1134,
+  -0.0705
+ ],
+ "arrow_rest_prop": [
+  0.033,
+  0.0,
+  0.0574
+ ],
+ "string_top": [
+  0,
+  0.19,
+  0.62
+ ],
+ "string_bottom": [
+  0,
+  0.19,
+  -0.62
+ ],
+ "qc_step": 2,
+ "draw_max_m": 0.72,
+ "action": "BONEQUILL_attack2_rapid_quiver_shot",
+ "segments": [
+  {
+   "src": "/home/box/Downloads/BONEQUILL@Standing Draw Arrow.fbx",
+   "tag": "d",
+   "start": 1,
+   "end": 32,
+   "speed": 1.3
+  },
+  {
+   "src": "/home/box/Downloads/ROWAN@Standing Aim Recoil.fbx",
+   "tag": "r",
+   "start": 1,
+   "end": 22,
+   "crossfade": 4
+  }
+ ],
+ "shots": [
+  {
+   "arrow_in_hand": [
+    "d",
+    12
+   ],
+   "nock": [
+    "d",
+    19
+   ],
+   "release": [
+    "r",
+    3
+   ],
+   "roll_a": [
+    "d",
+    12
+   ],
+   "roll_b": [
+    "d",
+    27
+   ],
+   "roll_c": [
+    "r",
+    6
+   ],
+   "roll_e": [
+    "r",
+    16
+   ]
+  }
+ ],
+ "meta_out": "final/qc_bq_rapid.json",
+ "blend_out_path": "final/BONEQUILL_rapid.blend",
+ "fbx_out": "final/BONEQUILL_rapid.fbx"
+}
