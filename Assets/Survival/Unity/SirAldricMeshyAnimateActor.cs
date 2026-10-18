@@ -413,7 +413,7 @@ namespace Survival.Unity
         private void CacheLiteSwordShieldClips()
         {
             _liteClips.Clear();
-            foreach (var entry in SirAldric3DMotion.LiteSwordShieldClips)
+            foreach (var entry in System.Linq.Enumerable.Concat(SirAldric3DMotion.LiteSwordShieldClips, SirAldric3DMotion.BattleExtraClips))
             {
                 var clip = LoadLiteNamedClip(entry);
                 if (clip == null)
@@ -506,9 +506,8 @@ namespace Survival.Unity
                 return true;
             }
 
-            var clip = string.Equals(pose, SirAldricBattlePoses.Attack, StringComparison.Ordinal)
-                ? SirAldricBattlePoses.AttackClip
-                : SirAldricBattlePoses.RestClip;
+            // attack / attack2 / attack3 play their lite-avatar clips (attacks 2-3 are the 2026-10-18 battle bakes); anything else rests.
+            var clip = SirAldricBattlePoses.ClipFor(pose);
             _battleWalkOnly = false;
             if (!PlayNamedClip(clip))
             {
@@ -518,7 +517,7 @@ namespace Survival.Unity
             // Start the clip from its first frame now (not from the last LateUpdate time).
             _namedClipOrigin = Time.unscaledTime;
             _poseTime = Time.unscaledTime;
-            _battlePose = string.Equals(pose, SirAldricBattlePoses.Attack, StringComparison.Ordinal) ? pose : SirAldricBattlePoses.Rest;
+            _battlePose = SirAldricBattlePoses.IsAttackPose(pose) ? pose : SirAldricBattlePoses.Rest;
             SampleAt(Time.unscaledTime);
             return true;
         }

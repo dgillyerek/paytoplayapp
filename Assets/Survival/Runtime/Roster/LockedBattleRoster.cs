@@ -154,6 +154,42 @@ namespace Survival.Domain.Roster
         public const int AttackLastFrame = 32;
 
         public const float AttackSeconds = (AttackLastFrame + 1) / 30f;
+
+        /// <summary>Attack 2 (rotation): the repo's diagonal slash baked onto the lite avatar, frames 0-75: high chamber at f20, the cut sweeps through by f24 (contact), arms open wide to f32, recovery to f75.</summary>
+        public const string Attack2 = "attack2";
+        public const string Attack2Clip = "Aldric Diagonal Slash";
+        public const int Attack2LastFrame = 75;
+        public const int Attack2ContactFrame = 24;
+
+        /// <summary>Attack 3 (rotation): shield bash (Mixamo "Sword And Shield Attack"), frames 0-59, shield hand furthest in at f38.</summary>
+        public const string Attack3 = "attack3";
+        public const string Attack3Clip = "Aldric Shield Bash";
+        public const int Attack3LastFrame = 59;
+        public const int Attack3ContactFrame = 38;
+
+        /// <summary>Strike bones on the lite instance (the actor also carries the hidden walk and slash rigs with the same bone names).</summary>
+        public const string LiteRightHand = "SirAldricLiteSwordShield/mixamorig:RightHand";
+        public const string LiteLeftHand = "SirAldricLiteSwordShield/mixamorig:LeftHand";
+
+        public static string ClipFor(string pose)
+        {
+            switch (pose)
+            {
+                case Attack:
+                    return AttackClip;
+                case Attack2:
+                    return Attack2Clip;
+                case Attack3:
+                    return Attack3Clip;
+                default:
+                    return RestClip;
+            }
+        }
+
+        public static bool IsAttackPose(string pose)
+        {
+            return pose == Attack || pose == Attack2 || pose == Attack3;
+        }
     }
 
     /// <summary>Blightroot's battle poses on BlightrootActor (exact creature-pack Mixamo names).</summary>
@@ -577,6 +613,36 @@ namespace Survival.Domain.Roster
         // idle", "mutant walking" (carries the hips 1.453 m per 43-frame loop, like Ironhowl) and
         // "mutant swiping" (80 frames, lunges and comes back to its start pose by the last frame).
 
+        /// <summary>
+        /// Sir Aldric's rotation (2026-10-18): the locked sword and shield thrust, the diagonal slash (steel sparks at the cut) and
+        /// the shield bash (blue ShieldShock ring): the bash's 2.8 m Mixamo charge is held on the spot in the bake and he slides
+        /// 0.35 m in over the charge instead.
+        /// </summary>
+        public static readonly LockedBattleAttack[] SirAldricAttacks =
+        {
+            new LockedBattleAttack("sword and shield thrust", SirAldricBattlePoses.Attack, SirAldricBattlePoses.AttackSeconds),
+            new LockedBattleAttack(
+                "diagonal slash",
+                SirAldricBattlePoses.Attack2,
+                (SirAldricBattlePoses.Attack2LastFrame + 1) / 30f,
+                SirAldricBattlePoses.Attack2ContactFrame,
+                SirAldricBattlePoses.LiteRightHand,
+                0.04f,
+                false,
+                new LockedBattleReachShift(0.2f, 10f, 22f, 30f, 60f),
+                BattleImpactKind.SwordSteel),
+            new LockedBattleAttack(
+                "shield bash",
+                SirAldricBattlePoses.Attack3,
+                (SirAldricBattlePoses.Attack3LastFrame + 1) / 30f,
+                SirAldricBattlePoses.Attack3ContactFrame,
+                SirAldricBattlePoses.LiteLeftHand,
+                0.07f,
+                false,
+                new LockedBattleReachShift(0.35f, 8f, 38f, 42f, 58f),
+                BattleImpactKind.HeroShieldShock)
+        };
+
         public static readonly LockedBattleFighter SirAldric = new LockedBattleFighter(
             "Sir Aldric",
             BattleSide.Hero,
@@ -592,7 +658,9 @@ namespace Survival.Domain.Roster
             SirAldricBattlePoses.AttackSeconds,
             false,
             4,
-            "SirAldricMeshyAnimateActor");
+            "SirAldricMeshyAnimateActor",
+            0f,
+            SirAldricAttacks);
 
         public static readonly LockedBattleFighter Blightroot = new LockedBattleFighter(
             "Blightroot",

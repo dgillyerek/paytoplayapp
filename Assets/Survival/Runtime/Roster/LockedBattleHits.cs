@@ -57,7 +57,10 @@ namespace Survival.Domain.Roster
         VillainShadowLash = 16,
 
         /// <summary>Vespera hex rain (attack 3): a purple hex glyph on the floor under each hit, violet motes falling into it, dark wisps.</summary>
-        VillainHexRain = 17
+        VillainHexRain = 17,
+
+        /// <summary>Sir Aldric shield bash (attack 3): hero-blue flash, a blue shock ring thrown off the shield face, blue motes, blue light.</summary>
+        HeroShieldShock = 18
     }
 
     /// <summary>

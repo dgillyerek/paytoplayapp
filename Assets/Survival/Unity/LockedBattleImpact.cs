@@ -145,6 +145,9 @@ namespace Survival.Unity
                 case BattleImpactKind.VillainHexRain:
                     fx.BuildVillainHexRain(travel);
                     break;
+                case BattleImpactKind.HeroShieldShock:
+                    fx.BuildHeroShieldShock(travel);
+                    break;
                 default:
                     fx.BuildIronClaw(core, glow, edge, travel);
                     break;
@@ -336,6 +339,34 @@ namespace Survival.Unity
             }
 
             AddLight(new Color(0.40f, 0.62f, 1f, 1f), 7f, 2.6f, 0.20f);
+        }
+
+        /// <summary>
+        /// Sir Aldric shield bash hit: hero-blue flash, two blue shock rings standing across the hit (facing the bash), a flat
+        /// ring of blue motes thrown out sideways, steel sparks, blue light.
+        /// </summary>
+        private void BuildHeroShieldShock(Vector3 travel)
+        {
+            _life = 0.5f;
+            Burst("Flash", Additive(), 1, 0.10f, 0.10f, 0f, 0f, 0.70f, 0.80f, Bright(HeroBlueCore), HeroBlueCore, HeroBlueGlow, 0f, 0.02f, 180f, 0.3f);
+            Burst("Ring", Additive(), 28, 0.25f, 0.40f, 2.4f, 3.4f, 0.025f, 0.05f, Bright(HeroBlueCore), HeroBlueGlow, HeroBlueEdge, 0f, 0.04f, 180f, 0.4f);
+            Burst("Sparks", Additive(), 12, 0.12f, 0.24f, 3.0f, 5.0f, 0.015f, 0.03f, Bright(HeroBlueCore), HeroBlueGlow, HeroBlueEdge, 0.4f, 0.04f, 50f, 0.3f);
+            var origin = transform.position;
+            var side = Vector3.Cross(Vector3.up, travel).normalized;
+            for (var r = 0; r < 2; r++)
+            {
+                var radius = r == 0 ? 0.28f : 0.45f;
+                var ring = Line("Shock" + r, Additive(), 25, r == 0 ? 0.05f : 0.03f, Bright(HeroBlueCore), HeroBlueGlow);
+                ring.alignment = LineAlignment.TransformZ;
+                ring.transform.rotation = Quaternion.LookRotation(travel, Vector3.up);
+                for (var k = 0; k < 25; k++)
+                {
+                    var a = (k / 24f) * Mathf.PI * 2f;
+                    ring.SetPosition(k, origin + (travel * (0.06f * r)) + (side * (Mathf.Cos(a) * radius)) + (Vector3.up * (Mathf.Sin(a) * radius)));
+                }
+            }
+
+            AddLight(new Color(0.40f, 0.62f, 1f, 1f), 8f, 2.8f, 0.16f);
         }
 
         /// <summary>Villain purple (the villain side of the locked VFX palette) for Vespera's shadow lash and hex rain.</summary>

@@ -1047,6 +1047,14 @@ namespace Survival.Unity
 
         private static Transform? FindBone(Transform root, string name)
         {
+            // "Scope/Bone": the bone inside the named child (Sir Aldric carries three rigs with the same bone names).
+            var slash = name.LastIndexOf('/');
+            if (slash > 0)
+            {
+                var scope = FindBone(root, name.Substring(0, slash));
+                return scope != null ? FindBone(scope, name.Substring(slash + 1)) : null;
+            }
+
             foreach (var t in root.GetComponentsInChildren<Transform>(true))
             {
                 if (string.Equals(t.name, name, System.StringComparison.Ordinal))

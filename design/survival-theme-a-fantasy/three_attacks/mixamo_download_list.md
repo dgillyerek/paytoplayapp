@@ -5,7 +5,7 @@ were done. Creatures (Emberfang, Stormcrest, Nightfang, Ashwyrm) are on hold and
 **Status 2026-10-18:**
 - **Blightroot:** no downloads; wired.
 - **Ironhowl:** downloaded and wired: `IRONHOWL_mixamo_mutant_jump_attack.fbx` and `IRONHOWL_mixamo_mutant_roaring.fbx`. Mixamo offered no In Place, so the battle holds the leap on the spot.
-- **Sir Aldric:** attack 2 is covered by a repo clip; attack 3 (shield bash) needs one download (see his section).
+- **Sir Aldric:** attacks 2 (repo diagonal slash) and 3 (downloaded shield bash) are wired (2026-10-18).
 - **Lyra, Rowan, Oakenshield, Vespera, Bonequill:** upload FBX files are ready.
 
 Blightroot needs no downloads: attacks 2 and 3 are already wired from the creature-pack clips in
@@ -55,8 +55,8 @@ files are not touched.
 | # | Attack | Mixamo title | Notes |
 |---|---|---|---|
 | 1 | sword and shield thrust | *(locked: "Sword And Shield attack (4)")* | unchanged |
-| 2 | diagonal slash | **Stable Sword Inward Slash**. **Covered by the repo; no download needed.** | Already in the repo as `SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx` (pilot, holefixed body). Download fresh onto the AccuRIG body only if the pilot take doesn't retarget cleanly. Fallback: **Sword And Shield Slash**. Impact: SwordSteel (blue arc of sparks). |
-| 3 | shield bash | **NEEDS A DOWNLOAD.** I measured the repo Lite clips: `Sword And Shield attack`, (2) and (3) are sword-led lunges (left-hand reach 0.35–0.54 vs right-hand 0.58–0.86 hips-to-head lengths) that carry the hips 3–5 body lengths forward, so none is a shield bash. Search Mixamo for **Sword And Shield Attack** (the shield-punch variant of the Pro Sword And Shield pack; confirm in preview, Mixamo lists it as "Sword And Shield Bash" in some library builds) | `sword_and_shield_attack.fbx` (2) and (3) are already in the Lite pack in the repo; check them first. In Place on. Impact: new ShieldShock (blue ring), with a short extra recoil. |
+| 2 | diagonal slash | **Stable Sword Inward Slash** (repo DIAG). **WIRED 2026-10-18** as `Aldric Diagonal Slash` (`lite_sword_shield/sir_aldric_attack2_diagonal_slash.fbx`, f0-75, contact f24; see sir_aldric/mixamo_attacks/NOTE.md). | Retargeted from `SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx` onto the lite avatar. Impact: SwordSteel. |
+| 3 | shield bash | **Sword And Shield Attack** (40 f, AccuRIG upload). **WIRED 2026-10-18** as `Aldric Shield Bash` (`lite_sword_shield/sir_aldric_attack3_shield_bash.fbx`, f0-59, contact f38). | 2.8 m spin charge held in place in the bake; 0.35 m battle slide instead. Impact: HeroShieldShock (blue rings). |
 
 ### Lyra (hero mage, staff held **two-handed**)
 | # | Attack | Mixamo title | Notes |
