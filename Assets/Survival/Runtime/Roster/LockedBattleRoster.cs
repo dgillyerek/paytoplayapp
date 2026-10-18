@@ -496,6 +496,43 @@ namespace Survival.Domain.Roster
             0f,
             OakenshieldAttacks);
 
+        /// <summary>
+        /// Vespera's rotation (2026-10-18): the locked rave orb conjure, the shadow lash (Mixamo, purple lash streaks at f50) and the
+        /// hex rain (Mixamo, three purple hexes falling 0.3 m apart from f84). Both Mixamo wind-ups play 1.5x slower, as her conjure.
+        /// </summary>
+        public static readonly LockedBattleAttack[] VesperaAttacks =
+        {
+            new LockedBattleAttack("rave orb conjure shadow bolt", VesperaMotion.AttackPoseName, VesperaAttack.ClipSeconds),
+            new LockedBattleAttack(
+                "shadow lash",
+                VesperaMotion.Attack2PoseName,
+                VesperaMotion.Attack2LastFrame / VesperaMotion.WalkFrameRate,
+                VesperaMotion.Attack2ContactFrame,
+                "mixamorig:RightHand",
+                0.03f,
+                false,
+                default,
+                BattleImpactKind.VillainShadowLash),
+            new LockedBattleAttack(
+                "hex rain",
+                VesperaMotion.Attack3PoseName,
+                VesperaMotion.Attack3LastFrame / VesperaMotion.WalkFrameRate,
+                VesperaMotion.Attack3ContactFrame,
+                "mixamorig:LeftHand",
+                0.04f,
+                false,
+                default,
+                BattleImpactKind.VillainHexRain,
+                new[]
+                {
+                    new LockedBattleHitMark(VesperaMotion.Attack3ContactFrame + 4),
+                    new LockedBattleHitMark(VesperaMotion.Attack3ContactFrame + 8)
+                },
+                0,
+                0f,
+                0.3f)
+        };
+
         public static readonly LockedBattleFighter Vespera = new LockedBattleFighter(
             "Vespera",
             BattleSide.Villain,
@@ -510,7 +547,10 @@ namespace Survival.Domain.Roster
             3.0f,
             VesperaAttack.ClipSeconds,
             true,
-            2);
+            2,
+            "",
+            0f,
+            VesperaAttacks);
 
         public static readonly LockedBattleFighter Ashwyrm = new LockedBattleFighter(
             "Ashwyrm",

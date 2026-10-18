@@ -1,0 +1,25 @@
+{
+ "rig": "VESPERA_rig",
+ "body": "VESPERA_body",
+ "rest_action": "VESPERA_nocape_rest",
+ "blend_in": 10,
+ "blend_out": 12,
+ "lift": 0.07,
+ "windup_scale": 1.5,
+ "action": "VESPERA_attack3_hex_rain",
+ "src": "/home/box/Downloads/VESPERA@Standing 2H Magic Area Attack 02.fbx",
+ "frames": [
+  1,
+  99
+ ],
+ "windup_end": 40,
+ "events": [
+  40,
+  46,
+  52,
+  55
+ ],
+ "meta_out": "final/qc_attack3_hex_rain.json",
+ "blend_out_path": "final/V_hex.blend",
+ "fbx_out": "final/VESPERA_blenderig_attack3_hex_rain.fbx"
+}

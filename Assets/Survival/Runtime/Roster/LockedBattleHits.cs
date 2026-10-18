@@ -51,7 +51,13 @@ namespace Survival.Domain.Roster
         GroundSlam = 14,
 
         /// <summary>Oakenshield root snare (attack 3): hero-blue flash, blue-glowing roots bursting up from the ground, leaves and earth dust.</summary>
-        HeroRootSnare = 15
+        HeroRootSnare = 15,
+
+        /// <summary>Vespera shadow lash (attack 2): violet flash, purple lash streaks along the strike, dark wisps.</summary>
+        VillainShadowLash = 16,
+
+        /// <summary>Vespera hex rain (attack 3): a purple hex glyph on the floor under each hit, violet motes falling into it, dark wisps.</summary>
+        VillainHexRain = 17
     }
 
     /// <summary>

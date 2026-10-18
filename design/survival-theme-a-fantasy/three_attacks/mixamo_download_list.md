@@ -83,8 +83,8 @@ files are not touched.
 | # | Attack | Mixamo title | Notes |
 |---|---|---|---|
 | 1 | orb conjure shadow bolt | *(locked, already 1.5x slowed)* | unchanged |
-| 2 | shadow lash (melee whip from the hand) | **Standing 1H Magic Attack 01** | One-hand lash. Fallback: **Standing 1H Magic Attack 03**. Download at default Overdrive; the bake time-stretches the conjure/wind-up part 1.5x, as for attack 1. Impact: ShadowRake (purple). |
-| 3 | hex rain (area) | **Standing 2H Magic Area Attack 02** | Arms raise the orb, shards fall. Fallback: **Standing 2H Magic Attack 05**. Wind-up stretched 1.5x. Impact: purple shards on the target. |
+| 2 | shadow lash (melee whip from the hand) | **Standing 1H Magic Attack 01** (WIRED 2026-10-18, contact f50) | One-hand lash. Fallback: **Standing 1H Magic Attack 03**. Download at default Overdrive; the bake time-stretches the conjure/wind-up part 1.5x, as for attack 1. Impact: ShadowRake (purple). |
+| 3 | hex rain (area) | **Standing 2H Magic Area Attack 02** (WIRED 2026-10-18, hits f84/88/92) | Arms raise the orb, shards fall. Fallback: **Standing 2H Magic Attack 05**. Wind-up stretched 1.5x. Impact: purple shards on the target. |
 
 ### Bonequill (villain archer: **quiver draw**, natural arm, only the bow rotates)
 | # | Attack | Mixamo title | Notes |

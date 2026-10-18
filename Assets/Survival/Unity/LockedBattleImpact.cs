@@ -139,6 +139,12 @@ namespace Survival.Unity
                 case BattleImpactKind.HeroRootSnare:
                     fx.BuildHeroRootSnare(travel);
                     break;
+                case BattleImpactKind.VillainShadowLash:
+                    fx.BuildVillainShadowLash(travel);
+                    break;
+                case BattleImpactKind.VillainHexRain:
+                    fx.BuildVillainHexRain(travel);
+                    break;
                 default:
                     fx.BuildIronClaw(core, glow, edge, travel);
                     break;
@@ -330,6 +336,51 @@ namespace Survival.Unity
             }
 
             AddLight(new Color(0.40f, 0.62f, 1f, 1f), 7f, 2.6f, 0.20f);
+        }
+
+        /// <summary>Villain purple (the villain side of the locked VFX palette) for Vespera's shadow lash and hex rain.</summary>
+        private static readonly Color VillainPurpleCore = new Color(0.86f, 0.70f, 1f, 1f);
+        private static readonly Color VillainPurpleGlow = new Color(0.62f, 0.28f, 1f, 1f);
+        private static readonly Color VillainPurpleEdge = new Color(0.30f, 0.08f, 0.55f, 0.9f);
+        private static readonly Color VillainWisp = new Color(0.16f, 0.05f, 0.22f, 0.75f);
+        private static readonly Color VillainWispEnd = new Color(0.08f, 0.02f, 0.11f, 0.3f);
+
+        /// <summary>Vespera shadow lash hit: violet flash, purple streaks thrown along the lash, sparks, dark wisps, violet light.</summary>
+        private void BuildVillainShadowLash(Vector3 travel)
+        {
+            _life = 0.5f;
+            Burst("Flash", Additive(), 1, 0.10f, 0.10f, 0f, 0f, 0.55f, 0.65f, Bright(VillainPurpleCore), VillainPurpleCore, VillainPurpleGlow, 0f, 0.02f, 180f, 0.3f);
+            Burst("Sparks", Additive(), 14, 0.12f, 0.26f, 3.0f, 5.5f, 0.015f, 0.03f, Bright(VillainPurpleCore), VillainPurpleGlow, VillainPurpleEdge, 0.3f, 0.04f, 60f, 0.3f);
+            Burst("Wisps", Alpha(), 10, 0.35f, 0.55f, 0.3f, 0.7f, 0.18f, 0.34f, VillainWisp, VillainWispEnd, VillainWispEnd, -0.15f, 0.12f, 120f, 2.0f);
+            AddStreaks(VillainPurpleCore, VillainPurpleGlow, travel, 0.45f, 0.03f, 0.06f, 0.30f, -20f);
+            AddLight(new Color(0.65f, 0.30f, 1f, 1f), 6f, 2.4f, 0.14f);
+        }
+
+        /// <summary>
+        /// Vespera hex rain hit: a purple hexagon glyph laid on the battle floor (y = 0) under the hit, violet motes falling into
+        /// it from above, a flash, dark wisps, violet light.
+        /// </summary>
+        private void BuildVillainHexRain(Vector3 travel)
+        {
+            _life = 0.6f;
+            Burst("Flash", Additive(), 1, 0.12f, 0.12f, 0f, 0f, 0.60f, 0.70f, Bright(VillainPurpleCore), VillainPurpleCore, VillainPurpleGlow, 0f, 0.02f, 180f, 0.3f);
+            Burst("Wisps", Alpha(), 8, 0.40f, 0.60f, 0.3f, 0.7f, 0.18f, 0.34f, VillainWisp, VillainWispEnd, VillainWispEnd, -0.15f, 0.15f, 120f, 2.0f);
+            var origin = transform.position;
+            var fall = Line("Fall", Additive(), 2, 0.05f, Bright(VillainPurpleCore), VillainPurpleGlow);
+            fall.SetPosition(0, origin + (Vector3.up * 1.2f));
+            fall.SetPosition(1, origin);
+            origin.y = 0.012f;
+            var side = Vector3.Cross(Vector3.up, travel).normalized;
+            var hex = Line("Hex", Additive(), 7, 0.035f, VillainPurpleGlow, Bright(VillainPurpleCore));
+            hex.alignment = LineAlignment.TransformZ;
+            hex.transform.rotation = Quaternion.LookRotation(Vector3.down, travel);
+            for (var k = 0; k < 7; k++)
+            {
+                var a = (k / 6f) * Mathf.PI * 2f;
+                hex.SetPosition(k, origin + (travel * (Mathf.Cos(a) * 0.32f)) + (side * (Mathf.Sin(a) * 0.32f)));
+            }
+
+            AddLight(new Color(0.65f, 0.30f, 1f, 1f), 7f, 2.6f, 0.18f);
         }
 
         /// <summary>Bonequill bone arrow hit: violet flash, pale bone shards, dark purple wisps.</summary>
