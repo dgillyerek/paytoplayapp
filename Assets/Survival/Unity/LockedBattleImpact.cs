@@ -27,6 +27,57 @@ namespace Survival.Unity
         private float _life = 0.6f;
         private float _age;
         private int _arcStep = -1;
+        private LineRenderer? _flightLine;
+        private Vector3 _flightFrom;
+        private Vector3 _flightTo;
+        private float _flightLoft;
+        private float _flightSeconds;
+
+        /// <summary>
+        /// An arrow's flight streak from an archer's extra clip (attacks 2 and 3): a short glowing dash that travels from the
+        /// bow hand to the contact over <paramref name="seconds"/>, on a parabola <paramref name="loft"/> metres above the line
+        /// (a volley). The hit burst itself is spawned when it lands, by the battle.
+        /// </summary>
+        public static LockedBattleImpact SpawnFlight(Vector3 from, Vector3 to, float seconds, float loft, Color core, Color glow)
+        {
+            var go = new GameObject("LockedBattleShotFlight");
+            go.transform.position = from;
+            var fx = go.AddComponent<LockedBattleImpact>();
+            fx._flightFrom = from;
+            fx._flightTo = to;
+            fx._flightLoft = loft;
+            fx._flightSeconds = Mathf.Max(seconds, 0.02f);
+            fx._life = fx._flightSeconds + 0.04f;
+            var line = fx.Line("Flight", Additive(), 6, 0.03f, glow, Bright(core));
+            line.widthCurve = new AnimationCurve(new Keyframe(0f, 0.15f), new Keyframe(1f, 1f));
+            fx._flightLine = line;
+            fx.TickFlight();
+            return fx;
+        }
+
+        private Vector3 FlightPoint(float t)
+        {
+            t = Mathf.Clamp01(t);
+            return Vector3.Lerp(_flightFrom, _flightTo, t) + (Vector3.up * (_flightLoft * 4f * t * (1f - t)));
+        }
+
+        private void TickFlight()
+        {
+            if (_flightLine == null)
+            {
+                return;
+            }
+
+            var head = _age / _flightSeconds;
+            var tail = head - 0.3f;
+            var n = _flightLine.positionCount;
+            for (var i = 0; i < n; i++)
+            {
+                _flightLine.SetPosition(i, FlightPoint(Mathf.Lerp(tail, head, i / (float)(n - 1))));
+            }
+
+            _flightLine.enabled = head <= 1.05f;
+        }
 
         /// <summary>Spawns the burst for <paramref name="kind"/> at <paramref name="point"/>. Travel is attacker → defender.</summary>
         public static LockedBattleImpact Spawn(BattleImpactKind kind, Vector3 point, Vector3 travel, Color core, Color glow, Color edge)
@@ -351,6 +402,8 @@ namespace Survival.Unity
             {
                 streak.Tick(_age);
             }
+
+            TickFlight();
 
             if (_age >= _life)
             {

@@ -69,8 +69,8 @@ files are not touched.
 | # | Attack | Mixamo title | Notes |
 |---|---|---|---|
 | 1 | bow shot | *(locked)* | unchanged |
-| 2 | double shot | **Standing Draw Arrow** then **Standing Aim Recoil** (Pro Longbow pack) | The battle plays the draw, release, draw, release. Bake only the body bones; the bow keeps its v5g grip and roll (8° rest, eases to 50°). Two RangerArrow hits 0.25 s apart. |
-| 3 | volley (area) | **Standing Aim Overdraw** (Pro Longbow pack) | Overdraw with the release angled up about 35° (added in the bake on Spine and Spine1 only, not the bow arm). Three arrows land in a spread. Fallback: **Standing Aim Recoil** with the same spine lift. |
+| 2 | double shot | **Standing Draw Arrow** then **Standing Aim Recoil** (Pro Longbow pack). **DOWNLOADED + WIRED 2026-10-18** (`ROWAN_blenderig_attack2_double_shot.fbx`, looses f44/f80). | The battle plays the draw, release, draw, release. Bake only the body bones; the bow keeps its v5g grip and roll (8° rest, eases to 50°). Two RangerArrow hits 0.25 s apart. |
+| 3 | volley (area) | **Standing Aim Overdraw** (Pro Longbow pack), released with **Standing Aim Recoil**. **DOWNLOADED + WIRED 2026-10-18** (`ROWAN_blenderig_attack3_volley.fbx`, spine +35°, looses f84). | Overdraw with the release angled up about 35° (added in the bake on Spine and Spine1 only, not the bow arm). Three arrows land in a spread. Fallback: **Standing Aim Recoil** with the same spine lift. |
 
 ### Oakenshield (hero, thorn spear: left-foot step, side-on including the hips)
 | # | Attack | Mixamo title | Notes |

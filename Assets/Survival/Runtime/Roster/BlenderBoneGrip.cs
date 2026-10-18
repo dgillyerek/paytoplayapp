@@ -107,6 +107,29 @@ namespace Survival.Domain.Roster
             return RollDrawDeg + (RollRestDeg - RollDrawDeg) * Smooth((frame - c) / (e - c));
         }
 
+        /// <summary>Roll for an extra bow clip (attacks 2 and 3): rest roll, eased to the draw roll and back once per shot.</summary>
+        public float RollDeg(BlenderBowShots shots, float frame)
+        {
+            var roll = RollRestDeg;
+            foreach (var s in shots.Shots)
+            {
+                if (frame > s.RollA && frame < s.RollB)
+                {
+                    roll = RollRestDeg + (RollDrawDeg - RollRestDeg) * Smooth((frame - s.RollA) / (s.RollB - s.RollA));
+                }
+                else if (frame >= s.RollB && frame <= s.RollC)
+                {
+                    roll = RollDrawDeg;
+                }
+                else if (frame > s.RollC && frame < s.RollE)
+                {
+                    roll = RollDrawDeg + (RollRestDeg - RollDrawDeg) * Smooth((frame - s.RollC) / (s.RollE - s.RollC));
+                }
+            }
+
+            return roll;
+        }
+
         private static float Smooth(float x)
         {
             x = Math.Max(0f, Math.Min(1f, x));
@@ -148,6 +171,80 @@ namespace Survival.Domain.Roster
             var dy = a[1] - b[1];
             var dz = a[2] - b[2];
             return (float)Math.Sqrt(dx * dx + dy * dy + dz * dz);
+        }
+    }
+
+    /// <summary>One shot inside an extra bow clip, in clip frames (30 fps).</summary>
+    public readonly struct BlenderBowShot
+    {
+        public BlenderBowShot(int arrowInHand, int nock, int release, int rollA, int rollB, int rollC, int rollE)
+        {
+            ArrowInHand = arrowInHand;
+            Nock = nock;
+            Release = release;
+            RollA = rollA;
+            RollB = rollB;
+            RollC = rollC;
+            RollE = rollE;
+        }
+
+        /// <summary>The arrow appears in the draw hand (from the quiver, or nocking).</summary>
+        public int ArrowInHand { get; }
+
+        /// <summary>On the string from here: the arrow is aimed from its nock through the arrow rest beside the riser.</summary>
+        public int Nock { get; }
+
+        /// <summary>Loose: the held arrow goes, the battle's flight streak takes over.</summary>
+        public int Release { get; }
+
+        public int RollA { get; }
+        public int RollB { get; }
+        public int RollC { get; }
+        public int RollE { get; }
+    }
+
+    /// <summary>
+    /// Bow behaviour for an extra (Mixamo) archer clip: the bow stays in the locked LeftHand grip and only rolls in it
+    /// (<see cref="BlenderBoneGrip.RollDeg(BlenderBowShots, float)"/>); the attack's held arrow track rides the draw hand and
+    /// is aimed through <see cref="ArrowRest"/> (Blender prop-local metres) while nocked.
+    /// </summary>
+    public sealed class BlenderBowShots
+    {
+        public BlenderBowShots(string arrowTrack, float[] arrowRest, BlenderBowShot[] shots)
+        {
+            ArrowTrack = arrowTrack ?? string.Empty;
+            ArrowRest = arrowRest ?? throw new ArgumentNullException(nameof(arrowRest));
+            Shots = shots ?? Array.Empty<BlenderBowShot>();
+        }
+
+        public string ArrowTrack { get; }
+        public float[] ArrowRest { get; }
+        public BlenderBowShot[] Shots { get; }
+
+        public bool ArrowHeld(float frame)
+        {
+            foreach (var s in Shots)
+            {
+                if (frame >= s.ArrowInHand && frame < s.Release)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool Nocked(float frame)
+        {
+            foreach (var s in Shots)
+            {
+                if (frame >= s.Nock && frame < s.Release)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

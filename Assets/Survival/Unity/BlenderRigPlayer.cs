@@ -37,6 +37,7 @@ namespace Survival.Unity
         private readonly bool _restAtAttackStart;
         private readonly BlenderRigIdlePropSpec[] _idleProps;
         private BlenderRigAttackDriver? _attack;
+        private BlenderBowShots? _bowShots;
         private bool _attackMode;
         private float _length;
         private float _time;
@@ -145,6 +146,7 @@ namespace Survival.Unity
                 return false;
             }
 
+            EndBowShots();
             if (_attackSpec != null && string.Equals(poseName, BlenderRigAttackSpec.PoseName, System.StringComparison.Ordinal))
             {
                 return PlayAttack();
@@ -167,7 +169,14 @@ namespace Survival.Unity
             {
                 if (string.Equals(poseName, extra.PoseName, System.StringComparison.Ordinal))
                 {
-                    return PlayClip(extra.FileName, extra.PoseName, extra.TakeName, extra.LastFrame);
+                    var ok = PlayClip(extra.FileName, extra.PoseName, extra.TakeName, extra.LastFrame);
+                    if (ok && extra.BowShots != null && _attack != null)
+                    {
+                        _bowShots = extra.BowShots;
+                        _attack.TickBowShots(_bowShots, 0f);
+                    }
+
+                    return ok;
                 }
             }
 
@@ -196,6 +205,21 @@ namespace Survival.Unity
 
             _playable.SetTime(_time);
             _graph.Evaluate(0f);
+            if (_bowShots != null)
+            {
+                _attack?.TickBowShots(_bowShots, _time * BlenderRigAttackSpec.FrameRate);
+            }
+        }
+
+        private void EndBowShots()
+        {
+            if (_bowShots == null)
+            {
+                return;
+            }
+
+            _attack?.EndBowShots(_bowShots);
+            _bowShots = null;
         }
 
         public void Dispose()

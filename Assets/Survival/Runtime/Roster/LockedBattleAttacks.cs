@@ -91,8 +91,14 @@ namespace Survival.Domain.Roster
             bool inPlace = false,
             LockedBattleReachShift reachShift = default,
             BattleImpactKind? impact = null,
-            LockedBattleHitMark[]? extraHits = null)
+            LockedBattleHitMark[]? extraHits = null,
+            int flightFrames = 0,
+            float flightLoftMetres = 0f,
+            float spreadMetres = 0f)
         {
+            FlightFrames = flightFrames;
+            FlightLoftMetres = flightLoftMetres;
+            SpreadMetres = spreadMetres;
             ExtraHits = extraHits ?? Array.Empty<LockedBattleHitMark>();
             Label = label;
             PoseName = poseName;
@@ -104,6 +110,18 @@ namespace Survival.Domain.Roster
             ReachShift = reachShift;
             Impact = impact;
         }
+
+        /// <summary>
+        /// Shots from an extra archer clip: each hit is an arrow loosed this many frames before it lands. The battle draws its
+        /// flight streak from the strike bone (the bow hand) to the contact over those frames. 0 = no streak (melee, staff).
+        /// </summary>
+        public int FlightFrames { get; }
+
+        /// <summary>Peak height of the flight streak's arc above the straight line (a volley lofted up), metres.</summary>
+        public float FlightLoftMetres { get; }
+
+        /// <summary>Hits of one attack land this far apart across the target (a volley spread), metres.</summary>
+        public float SpreadMetres { get; }
 
         /// <summary>Hits after the first one, in frame order (a combo). Empty for a single hit.</summary>
         public LockedBattleHitMark[] ExtraHits { get; }
@@ -368,6 +386,64 @@ namespace Survival.Domain.Roster
                     }
 
                     var at0 = OffsetSeconds(fighter, i) + contact;
+                    var n = (float)Math.Floor((seconds - at0) / rotation);
+                    if (n < 0f)
+                    {
+                        continue;
+                    }
+
+                    var at = (n * rotation) + at0;
+                    if (at > previousSeconds && at <= seconds)
+                    {
+                        attackIndex = i;
+                        hitIndex = h;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// True when an archer clip's arrow was loosed in (previousSeconds, seconds]: its hit frame minus the attack's
+        /// <see cref="LockedBattleAttack.FlightFrames"/>. The battle starts that hit's flight streak then.
+        /// </summary>
+        public static bool ShotLoosed(
+            LockedBattleFighter fighter,
+            LockedBattleHitProfile profile,
+            float previousSeconds,
+            float seconds,
+            out int attackIndex,
+            out int hitIndex)
+        {
+            attackIndex = 0;
+            hitIndex = 0;
+            var rotation = RotationSeconds(fighter);
+            if (seconds <= previousSeconds || seconds < 0f || rotation <= 0f)
+            {
+                return false;
+            }
+
+            var count = Count(fighter);
+            for (var i = 0; i < count; i++)
+            {
+                var attack = AttackAt(fighter, i);
+                if (attack.FlightFrames <= 0)
+                {
+                    continue;
+                }
+
+                var hits = HitCount(fighter, profile, i);
+                for (var h = 0; h < hits; h++)
+                {
+                    var frame = HitFrame(fighter, profile, i, h) - attack.FlightFrames;
+                    if (frame < 0)
+                    {
+                        continue;
+                    }
+
+                    var at0 = OffsetSeconds(fighter, i) + (frame / (float)BlenderRigAttackSpec.FrameRate);
                     var n = (float)Math.Floor((seconds - at0) / rotation);
                     if (n < 0f)
                     {

@@ -1,0 +1,141 @@
+{
+ "rig": "ROWAN_rig",
+ "body": "ROWAN_body",
+ "rest_action": "ROWAN_rest",
+ "rest_frame": 0,
+ "blend_in": 10,
+ "blend_out": 12,
+ "lift": 0.07,
+ "keep_stance_offset": 1.0,
+ "roll_rest": 8.0,
+ "roll_draw": 50.0,
+ "grip": {
+  "pos": [
+   0.02683,
+   0.12618,
+   0.00832
+  ],
+  "rot": [
+   -0.0576,
+   -0.02022,
+   0.99813,
+   0.0
+  ]
+ },
+ "bow_fbx": "/workspace/ptp-three/design/survival-theme-a-fantasy/heroes/anim/rowan/fresh_20261013/props/ROWAN_bow.fbx",
+ "arrow_fbx": "/workspace/ptp-three/design/survival-theme-a-fantasy/heroes/anim/rowan/fresh_20261013/props/ROWAN_arrow.fbx",
+ "nock_rhand_local": [
+  0,
+  0.05,
+  0
+ ],
+ "arrow_rest_prop": [
+  0.03,
+  0.0,
+  0.06
+ ],
+ "string_top": [
+  0,
+  0.13,
+  0.66
+ ],
+ "string_bottom": [
+  0,
+  0.13,
+  -0.66
+ ],
+ "qc_step": 2,
+ "action": "ROWAN_attack2_double_shot",
+ "segments": [
+  {
+   "src": "/home/box/Downloads/ROWAN@Standing Draw Arrow.fbx",
+   "tag": "d1",
+   "start": 1,
+   "end": 32
+  },
+  {
+   "src": "/home/box/Downloads/ROWAN@Standing Aim Recoil.fbx",
+   "tag": "r1",
+   "start": 1,
+   "end": 12
+  },
+  {
+   "src": "/home/box/Downloads/ROWAN@Standing Draw Arrow.fbx",
+   "tag": "d2",
+   "start": 9,
+   "end": 32,
+   "crossfade": 6
+  },
+  {
+   "src": "/home/box/Downloads/ROWAN@Standing Aim Recoil.fbx",
+   "tag": "r2",
+   "start": 1,
+   "end": 22
+  }
+ ],
+ "shots": [
+  {
+   "arrow_in_hand": [
+    "d1",
+    13
+   ],
+   "nock": [
+    "d1",
+    19
+   ],
+   "release": [
+    "r1",
+    3
+   ],
+   "roll_a": [
+    "d1",
+    13
+   ],
+   "roll_b": [
+    "d1",
+    27
+   ],
+   "roll_c": [
+    "r1",
+    6
+   ],
+   "roll_e": [
+    "r1",
+    12
+   ]
+  },
+  {
+   "arrow_in_hand": [
+    "d2",
+    15
+   ],
+   "nock": [
+    "d2",
+    19
+   ],
+   "release": [
+    "r2",
+    3
+   ],
+   "roll_a": [
+    "d2",
+    15
+   ],
+   "roll_b": [
+    "d2",
+    27
+   ],
+   "roll_c": [
+    "r2",
+    6
+   ],
+   "roll_e": [
+    "r2",
+    16
+   ]
+  }
+ ],
+ "meta_out": "final/qc_double.json",
+ "blend_out_path": "final/ROWAN_double.blend",
+ "fbx_out": "final/ROWAN_double.fbx"
+}

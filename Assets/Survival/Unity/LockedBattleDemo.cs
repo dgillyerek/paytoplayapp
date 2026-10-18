@@ -234,13 +234,21 @@ namespace Survival.Unity
             to.y = 0f;
             if (to.sqrMagnitude > 1e-8f)
             {
-                Face(f, to, f.Data.AimYawDegrees);
+                // The aim yaw belongs to the locked attack's arrow line (attack 1); the extra clips shoot straight ahead.
+                LockedBattleRotation.Locate(f.Data, f.PhaseTime, out var aimIndex, out _);
+                Face(f, to, aimIndex == 0 ? f.Data.AimYawDegrees : 0f);
             }
 
             // Projectile attacks land through their projectile; only explicit melee contacts land here.
             if (LockedBattleRotation.MeleeHitCrossed(f.Data, f.Profile, f.PreviousPhaseTime, f.PhaseTime, out var hitAttack, out var hitIndex))
             {
-                LandHit(f, MeleeContact(f, hitAttack, hitIndex), hitAttack);
+                LandHit(f, ShotContact(f, hitAttack, hitIndex), hitAttack);
+            }
+
+            // Archer extra clips: each arrow leaves the bow its flight time before it lands.
+            if (LockedBattleRotation.ShotLoosed(f.Data, f.Profile, f.PreviousPhaseTime, f.PhaseTime, out var shotAttack, out var shotHit))
+            {
+                LaunchShot(f, shotAttack, shotHit);
             }
 
             LockedBattleRotation.Locate(f.Data, f.PhaseTime, out var index, out var into);
@@ -374,6 +382,38 @@ namespace Survival.Unity
 
             box.ClosestPoint(b.x, b.y, b.z, out var cx, out var cy, out var cz);
             return FromBox(target, new Vector3(cx, cy, cz));
+        }
+
+        /// <summary>Melee contact, spread across the target for a volley (hit i of n sits (i - (n-1)/2) * spread to the side).</summary>
+        private static Vector3 ShotContact(Fighter attacker, int attackIndex, int hitIndex)
+        {
+            var contact = MeleeContact(attacker, attackIndex, hitIndex);
+            var attack = LockedBattleRotation.AttackAt(attacker.Data, attackIndex);
+            var n = LockedBattleRotation.HitCount(attacker.Data, attacker.Profile, attackIndex);
+            if (attack.SpreadMetres <= 0f || n < 2 || attacker.Target == null)
+            {
+                return contact;
+            }
+
+            var travel = Flat(attacker.Target.Slot.position - attacker.Slot.position);
+            var side = Vector3.Cross(Vector3.up, travel).normalized;
+            return contact + (side * ((hitIndex - ((n - 1) * 0.5f)) * attack.SpreadMetres));
+        }
+
+        /// <summary>Starts an archer clip's arrow flight streak from the bow hand to where that hit will land.</summary>
+        private static void LaunchShot(Fighter attacker, int attackIndex, int hitIndex)
+        {
+            var target = attacker.Target;
+            if (target == null || !target.Built)
+            {
+                return;
+            }
+
+            var attack = LockedBattleRotation.AttackAt(attacker.Data, attackIndex);
+            var bone = attacker.StrikeBoneFor(attackIndex, hitIndex);
+            var from = bone != null ? bone.position : attacker.Slot.position + (Vector3.up * 1.4f);
+            var to = ShotContact(attacker, attackIndex, hitIndex);
+            LockedBattleImpact.SpawnFlight(from, to, attack.FlightFrames / (float)BlenderRigAttackSpec.FrameRate, attack.FlightLoftMetres, attacker.Core, attacker.Glow);
         }
 
         /// <summary>Spawns the attacker's impact burst at the contact and starts the defender's reaction.</summary>

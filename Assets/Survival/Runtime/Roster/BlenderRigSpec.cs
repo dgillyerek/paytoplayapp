@@ -26,8 +26,10 @@ namespace Survival.Domain.Roster
             string takeName,
             float seconds,
             float frameRate,
-            int lastFrame)
+            int lastFrame,
+            BlenderBowShots? bowShots = null)
         {
+            BowShots = bowShots;
             PoseName = poseName;
             FileName = fileName;
             TakeName = takeName;
@@ -42,6 +44,9 @@ namespace Survival.Domain.Roster
         public float Seconds { get; }
         public float FrameRate { get; }
         public int LastFrame { get; }
+
+        /// <summary>Archer extra clips: bow roll in the grip and the nocked arrow per shot. Null for other clips.</summary>
+        public BlenderBowShots? BowShots { get; }
     }
 
     /// <summary>

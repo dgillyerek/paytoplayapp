@@ -13,7 +13,7 @@ public sealed class RowanFreshTests
         Assert.Equal(MixamoHumanoidBones.Names.Where(n => !n.EndsWith("ToeBase", StringComparison.Ordinal)).Concat(RowanMotion.LeftFingerBoneNames).ToArray(), RowanMotion.BoneNames);
         Assert.Equal(5, RowanMotion.LeftFingerBoneNames.Length);
         Assert.Equal(BlenderRigAvatar.CustomGeneric, RowanMotion.Spec.Avatar);
-        Assert.Equal(new[] { "rest", "walk", "attack" }, RowanMotion.PoseNames);
+        Assert.Equal(new[] { "rest", "walk", "attack", "attack2", "attack3" }, RowanMotion.PoseNames);
         Assert.Equal(4, RowanAttack.Spec.Tracks.Length);
         foreach (var track in RowanAttack.Spec.Tracks)
         {

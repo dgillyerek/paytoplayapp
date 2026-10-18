@@ -556,6 +556,46 @@ namespace Survival.Domain.Roster
         // Walk speeds from the locked walk clips: two left-foot sweeps per 1 s loop (Rowan
         // 0.515 m, Bonequill 0.549 m). Heights from the rest FBXs (1.80 m each).
 
+        /// <summary>
+        /// Rowan's rotation (2026-10-18): the locked bow shot, then the Mixamo double shot and volley. Their arrows land through
+        /// explicit hit frames (loose + 9 frames of flight at 14 m/s over the 4.2 m range) with a hero-blue flight streak from the
+        /// bow hand; the volley's three arrows arc up and land 0.35 m apart.
+        /// </summary>
+        public static readonly LockedBattleAttack[] RowanAttacks =
+        {
+            new LockedBattleAttack("bow shot", RowanMotion.AttackPoseName, BlenderRigAttackSpec.ClipSeconds),
+            new LockedBattleAttack(
+                "double shot",
+                RowanMotion.Attack2PoseName,
+                RowanMotion.Attack2LastFrame / RowanMotion.WalkFrameRate,
+                RowanMotion.Attack2ReleaseFrames[0] + RowanMotion.ShotFlightFrames,
+                "mixamorig:LeftHand",
+                0.02f,
+                false,
+                default,
+                BattleImpactKind.RangerArrow,
+                new[] { new LockedBattleHitMark(RowanMotion.Attack2ReleaseFrames[1] + RowanMotion.ShotFlightFrames) },
+                RowanMotion.ShotFlightFrames),
+            new LockedBattleAttack(
+                "volley",
+                RowanMotion.Attack3PoseName,
+                RowanMotion.Attack3LastFrame / RowanMotion.WalkFrameRate,
+                RowanMotion.Attack3ReleaseFrame + RowanMotion.ShotFlightFrames,
+                "mixamorig:LeftHand",
+                0.03f,
+                false,
+                default,
+                BattleImpactKind.RangerArrow,
+                new[]
+                {
+                    new LockedBattleHitMark(RowanMotion.Attack3ReleaseFrame + RowanMotion.ShotFlightFrames + 2),
+                    new LockedBattleHitMark(RowanMotion.Attack3ReleaseFrame + RowanMotion.ShotFlightFrames + 4)
+                },
+                RowanMotion.ShotFlightFrames,
+                0.6f,
+                0.35f)
+        };
+
         public static readonly LockedBattleFighter Rowan = new LockedBattleFighter(
             "Rowan",
             BattleSide.Hero,
@@ -572,7 +612,8 @@ namespace Survival.Domain.Roster
             true,
             5,
             "",
-            12.33f);
+            12.33f,
+            RowanAttacks);
 
         public static readonly LockedBattleFighter Bonequill = new LockedBattleFighter(
             "Bonequill",
