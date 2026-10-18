@@ -97,7 +97,7 @@ public sealed class LockedBattleLaneFiveTests
         var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "LockedBattleDemo.cs"));
         Assert.Contains("LockedBattleHits.SirAldricBlueRgb", demo, StringComparison.Ordinal);
         Assert.Contains("case \"Blightroot\":", demo, StringComparison.Ordinal);
-        Assert.Contains("LockedBattleImpact.Spawn(attacker.Profile.Impact", demo, StringComparison.Ordinal);
+        Assert.Contains("LockedBattleImpact.Spawn(LockedBattleRotation.Impact(attacker.Data, attacker.Profile, attackIndex)", demo, StringComparison.Ordinal);
 
         // Every impact kind is distinct per fighter.
         var kinds = LockedBattleRoster.All.Select(f => LockedBattleHits.ProfileOf(f.Name).Impact).ToArray();

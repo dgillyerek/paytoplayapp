@@ -67,7 +67,7 @@ namespace Survival.Unity
                 ClearHit(f);
                 f.AttackClipOn = false;
                 f.AttackIndex = 0;
-                f.AttackRootStart = 0f;
+                f.AttackRootStart = Vector3.zero;
                 f.AttackOffset = Vector3.zero;
                 f.Host.localPosition = f.BaseLocal;
                 f.PreviousForward = 0f;
@@ -189,16 +189,21 @@ namespace Survival.Unity
             f.AttackIndex = index;
             f.AttackOffset = Vector3.zero;
             f.Play(LockedBattleRotation.AttackAt(f.Data, index).PoseName);
-            f.AttackRootStart = RawStrideForward(f);
+            f.AttackRootStart = RawStride(f);
         }
 
         /// <summary>
-        /// Stride bone forward offset with this battle's own host offsets (reach slide, recoil)
-        /// taken out, so the in-place hold does not chase itself.
+        /// Stride bone in the slot frame (metres) with this battle's own host offsets (reach slide,
+        /// recoil) taken out, so the in-place hold does not chase itself.
         /// </summary>
-        private static float RawStrideForward(Fighter f)
+        private static Vector3 RawStride(Fighter f)
         {
-            return StrideForward(f) - (f.Host.localPosition - f.BaseLocal).z;
+            if (f.StrideBone == null)
+            {
+                return Vector3.zero;
+            }
+
+            return f.Slot.InverseTransformPoint(f.StrideBone.position) - (f.Host.localPosition - f.BaseLocal);
         }
 
         /// <summary>
@@ -207,20 +212,23 @@ namespace Survival.Unity
         /// </summary>
         private static void UpdateAttackOffset(Fighter f, bool inClip, float secondsIntoAttack)
         {
-            if (!inClip)
+            var attack = LockedBattleRotation.AttackAt(f.Data, f.AttackIndex);
+            var offset = Vector3.zero;
+            if (inClip)
             {
-                f.AttackOffset = Vector3.zero;
-                return;
+                offset.z = attack.ReachShift.At(secondsIntoAttack * BlenderRigAttackSpec.FrameRate);
             }
 
-            var attack = LockedBattleRotation.AttackAt(f.Data, f.AttackIndex);
-            var forward = attack.ReachShift.At(secondsIntoAttack * BlenderRigAttackSpec.FrameRate);
             if (attack.InPlace && f.StrideBone != null)
             {
-                forward -= RawStrideForward(f) - f.AttackRootStart;
+                // Held through the rest gap too: the actor may crossfade from the leap's last
+                // frame back to rest, and the hold fades out with it.
+                var carried = RawStride(f) - f.AttackRootStart;
+                offset.x -= carried.x;
+                offset.z -= carried.z;
             }
 
-            f.AttackOffset = new Vector3(0f, 0f, forward);
+            f.AttackOffset = offset;
         }
 
         private void TickAttack(Fighter f)
@@ -381,7 +389,7 @@ namespace Survival.Unity
 
             var travel = target.Slot.position - attacker.Slot.position;
             travel.y = 0f;
-            LockedBattleImpact.Spawn(attacker.Profile.Impact, contact, travel, attacker.Core, attacker.Glow, attacker.Edge);
+            LockedBattleImpact.Spawn(LockedBattleRotation.Impact(attacker.Data, attacker.Profile, attackIndex), contact, travel, attacker.Core, attacker.Glow, attacker.Edge);
             _camera?.Shake(LockedBattleRotation.ShakeMetres(attacker.Data, attacker.Profile, attackIndex));
             var away = target.Slot.InverseTransformDirection(travel);
             away.y = 0f;
@@ -1244,7 +1252,7 @@ namespace Survival.Unity
             public int AttackIndex { get; set; }
 
             /// <summary>Stride bone forward offset when the current attack clip started (in-place hold).</summary>
-            public float AttackRootStart { get; set; }
+            public Vector3 AttackRootStart { get; set; }
 
             /// <summary>Host offset (slot metres) from the current attack's reach slide and in-place hold.</summary>
             public Vector3 AttackOffset { get; set; }

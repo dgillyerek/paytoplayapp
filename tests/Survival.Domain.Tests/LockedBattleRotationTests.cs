@@ -193,6 +193,79 @@ public sealed class LockedBattleRotationTests
     }
 
     [Fact]
+    public void Ironhowl_rotates_swipe_ground_slam_roar_from_the_downloaded_mixamo_clips()
+    {
+        var iron = LockedBattleRoster.Ironhowl;
+        var profile = LockedBattleHits.Ironhowl;
+        Assert.Equal(3, LockedBattleRotation.Count(iron));
+        Assert.Equal(IronhowlMotion.AttackPoseName, LockedBattleRotation.AttackAt(iron, 0).PoseName);
+        Assert.Equal(IronhowlMotion.Attack2PoseName, LockedBattleRotation.AttackAt(iron, 1).PoseName);
+        Assert.Equal(IronhowlMotion.Attack3PoseName, LockedBattleRotation.AttackAt(iron, 2).PoseName);
+        Assert.Equal(IronhowlMotion.AttackPoseNames, new[] { "attack", "attack2", "attack3" });
+
+        // The ground slam holds the leap's hips travel on the spot; the roar comes back by itself.
+        Assert.True(LockedBattleRotation.AttackAt(iron, 1).InPlace);
+        Assert.False(LockedBattleRotation.AttackAt(iron, 2).InPlace);
+        Assert.Equal(BattleImpactKind.ShadowRake, LockedBattleRotation.Impact(iron, profile, 2));
+        Assert.Equal(profile.Impact, LockedBattleRotation.Impact(iron, profile, 0));
+        Assert.Equal(profile.Impact, LockedBattleRotation.Impact(iron, profile, 1));
+        Assert.Equal(IronhowlMotion.Attack2LastFrame / 30f, LockedBattleRotation.AttackAt(iron, 1).Seconds, 4);
+        Assert.Equal(IronhowlMotion.Attack3LastFrame / 30f, LockedBattleRotation.AttackAt(iron, 2).Seconds, 4);
+
+        var hits = new List<int>();
+        var dt = 1f / 120f;
+        var rotation = LockedBattleRotation.RotationSeconds(iron);
+        for (var t = 0f; t < rotation; t += dt)
+        {
+            if (LockedBattleRotation.MeleeHitCrossed(iron, profile, t, t + dt, out var index))
+            {
+                hits.Add(index);
+                Assert.True(LockedBattleRotation.InAttackClip(iron, t + dt));
+            }
+        }
+
+        Assert.Equal(new[] { 0, 1, 2 }, hits);
+    }
+
+    [Fact]
+    public void Ironhowl_mixamo_attack_files_match_the_downloads_and_are_pinned_generic()
+    {
+        var root = FindRepoRoot();
+        foreach (var (file, md5, pose, last) in new[]
+        {
+            (IronhowlMotion.Attack2FileName, IronhowlMotion.Attack2Md5, IronhowlMotion.Attack2PoseName, IronhowlMotion.Attack2LastFrame),
+            (IronhowlMotion.Attack3FileName, IronhowlMotion.Attack3Md5, IronhowlMotion.Attack3PoseName, IronhowlMotion.Attack3LastFrame)
+        })
+        {
+            var pack = Path.Combine(root, "Assets", IronhowlMotion.ThemePackDir, file);
+            var design = Path.Combine(root, IronhowlMotion.DesignMixamoAttacksDir, file);
+            Assert.Equal(md5, Md5(pack));
+            Assert.Equal(md5, Md5(design));
+            var sums = File.ReadAllText(Path.Combine(root, IronhowlMotion.DesignMixamoAttacksDir, "CHECKSUMS.md5"));
+            Assert.Contains(md5 + "  " + file, sums, StringComparison.Ordinal);
+            var meta = File.ReadAllText(pack + ".meta");
+            Assert.Contains("name: \"" + pose + "\"", meta, StringComparison.Ordinal);
+            Assert.Contains("takeName: mixamo.com", meta, StringComparison.Ordinal);
+            Assert.Contains("lastFrame: " + last, meta, StringComparison.Ordinal);
+            Assert.Contains("animationType: 2", meta, StringComparison.Ordinal);
+            Assert.Contains("mirror: 0", meta, StringComparison.Ordinal);
+            Assert.Contains("useFileScale: 0", meta, StringComparison.Ordinal);
+            Assert.Contains("bakeAxisConversion: 0", meta, StringComparison.Ordinal);
+        }
+
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "IronhowlActor.cs"));
+        Assert.Contains("IronhowlMotion.Attack2ThemePackRel, IronhowlMotion.Attack2PoseName", actor, StringComparison.Ordinal);
+        Assert.Contains("IronhowlMotion.Attack3ThemePackRel, IronhowlMotion.Attack3PoseName", actor, StringComparison.Ordinal);
+    }
+
+    private static string Md5(string path)
+    {
+        using var md5 = System.Security.Cryptography.MD5.Create();
+        using var stream = File.OpenRead(path);
+        return Convert.ToHexString(md5.ComputeHash(stream)).ToLowerInvariant();
+    }
+
+    [Fact]
     public void Battle_demo_plays_the_rotation_pose_and_lands_per_attack_hits()
     {
         var root = FindRepoRoot();

@@ -115,6 +115,17 @@ namespace Survival.Unity
                 return PlayClipOrTpose(IronhowlMotion.AttackThemePackRel, IronhowlMotion.AttackPoseName, allowBareTpose: false);
             }
 
+            // Attack rotation: Mixamo "Mutant Jump Attack" and "Mutant Roaring" on the same skeleton.
+            if (string.Equals(poseName, IronhowlMotion.Attack2PoseName, System.StringComparison.Ordinal))
+            {
+                return PlayClipOrTpose(IronhowlMotion.Attack2ThemePackRel, IronhowlMotion.Attack2PoseName, allowBareTpose: false);
+            }
+
+            if (string.Equals(poseName, IronhowlMotion.Attack3PoseName, System.StringComparison.Ordinal))
+            {
+                return PlayClipOrTpose(IronhowlMotion.Attack3ThemePackRel, IronhowlMotion.Attack3PoseName, allowBareTpose: false);
+            }
+
             Debug.LogWarning("Ironhowl unknown pose. " + poseName);
             return false;
         }

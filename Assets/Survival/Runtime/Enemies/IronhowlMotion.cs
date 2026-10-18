@@ -86,5 +86,35 @@ namespace Survival.Domain.Enemies
         public const string SceneName = "Ironhowl";
 
         public static readonly string[] PoseNames = { RestPoseName, WalkPoseName, AttackPoseName };
+
+        // Attack rotation (2026-10-17, Derek: humanoids get 3 premade Mixamo attacks). Downloaded on
+        // the IRONHOWL_UPLOAD Mixamo character: FBX for Unity, without skin, 30 fps, no keyframe
+        // reduction, no mirror. Same 33-bone mixamorig skeleton as IRONHOWL_rig, so they play on the
+        // body as-is (generic, no retarget). Mixamo offered no In Place for either, so the battle
+        // holds the jump's hips travel on the spot (LockedBattleAttack.InPlace); the files are kept
+        // byte-identical to the downloads.
+        public const string DesignMixamoAttacksDir = "design/survival-theme-a-fantasy/enemies/anim/ironhowl/mixamo_attacks";
+
+        /// <summary>Attack 2, ground slam: Mixamo "Mutant Jump Attack". Leaps 1.79 m forward (hips) and slams both claws.</summary>
+        public const string Attack2PoseName = "attack2";
+        public const string Attack2FileName = "IRONHOWL_mixamo_mutant_jump_attack.fbx";
+        public const string Attack2ThemePackRel = ThemePackDir + "/" + Attack2FileName;
+        public const string Attack2Md5 = "2ce6f751c01e4cf9f1112fe87a24ffdf";
+        public const int Attack2LastFrame = 111;
+
+        /// <summary>Claws hit the ground (0.01-0.04 m up, 0.7-0.9 m ahead of the in-place hips) on frame 54.</summary>
+        public const int Attack2ContactFrame = 54;
+
+        /// <summary>Attack 3, roar: Mixamo "Mutant Roaring". Leans 0.3 m in and comes back to its start pose.</summary>
+        public const string Attack3PoseName = "attack3";
+        public const string Attack3FileName = "IRONHOWL_mixamo_mutant_roaring.fbx";
+        public const string Attack3ThemePackRel = ThemePackDir + "/" + Attack3FileName;
+        public const string Attack3Md5 = "74863a8be8a6b080bb3be28d75d38cd0";
+        public const int Attack3LastFrame = 162;
+
+        /// <summary>Roar peak (hips leaned furthest in, arms flung up) on frame 42.</summary>
+        public const int Attack3ContactFrame = 42;
+
+        public static readonly string[] AttackPoseNames = { AttackPoseName, Attack2PoseName, Attack3PoseName };
     }
 }

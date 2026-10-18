@@ -2,6 +2,12 @@
 
 Scope (Derek, 2026-10-17): humanoids only, premade Mixamo attacks, the same way Blightroot's
 were done. Creatures (Emberfang, Stormcrest, Nightfang, Ashwyrm) are on hold and keep their one attack.
+**Status 2026-10-18:**
+- **Blightroot:** no downloads; wired.
+- **Ironhowl:** downloaded and wired: `IRONHOWL_mixamo_mutant_jump_attack.fbx` and `IRONHOWL_mixamo_mutant_roaring.fbx`. Mixamo offered no In Place, so the battle holds the leap on the spot.
+- **Sir Aldric:** attack 2 is covered by a repo clip; attack 3 (shield bash) needs one download (see his section).
+- **Lyra, Rowan, Oakenshield, Vespera, Bonequill:** upload FBX files are ready.
+
 Blightroot needs no downloads: attacks 2 and 3 are already wired from the creature-pack clips in
 the repo (`mutant punch`, `mutant jump attack`). See PR A.
 
@@ -24,7 +30,7 @@ files are not touched.
 
 **Which character to upload to Mixamo**
 - **Ironhowl, Sir Aldric:** already native Mixamo/AccuRIG skeletons. Upload the existing body (`IRONHOWL_rig.fbx`, `SirAldric_PILOT_accurig_humanoid.fbx`) and download onto it directly.
-- **Lyra, Rowan, Oakenshield, Vespera, Bonequill:** upload the approved rest skin (`*_blenderig.fbx` / `VESPERA_nocape.fbx`). These are Theme A Blender rigs with a reduced `mixamorig:` skeleton, so Mixamo will auto-rig them (Standard Skeleton, 65 bones; leave symmetry on).
+- **Lyra, Rowan, Oakenshield, Vespera, Bonequill:** upload the approved rest skin. Copies are ready in `/workspace/three_attacks/uploads/<CHARACTER>.fbx`: LYRA, ROWAN, OAKENSHIELD, VESPERA, BONEQUILL, each copied byte for byte from its ThemePack `*_blenderig.fbx`. These are Theme A Blender rigs with a reduced `mixamorig:` skeleton, so Mixamo will auto-rig them (Standard Skeleton, 65 bones; leave symmetry on).
   - The download comes out on the full Mixamo skeleton. Retarget it in Blender by bone name onto the approved Blender rig.
   - Bake onto the **body bones only**: Hips, Spine, Spine1, Spine2, Neck, Head, Shoulder/Arm/ForeArm/Hand, UpLeg/Leg/Foot/ToeBase.
   - Fingers come from each character's existing grip pose, not from Mixamo.
@@ -49,8 +55,8 @@ files are not touched.
 | # | Attack | Mixamo title | Notes |
 |---|---|---|---|
 | 1 | sword and shield thrust | *(locked: "Sword And Shield attack (4)")* | unchanged |
-| 2 | diagonal slash | **Stable Sword Inward Slash** | Already in the repo as `SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx` (pilot, holefixed body). Download fresh onto the AccuRIG body only if the pilot take doesn't retarget cleanly. Fallback: **Sword And Shield Slash**. Impact: SwordSteel (blue arc of sparks). |
-| 3 | shield bash | **Sword And Shield Attack** (the shield-punch variant of the Pro Sword And Shield pack; confirm in preview, Mixamo lists it as "Sword And Shield Bash" in some library builds) | `sword_and_shield_attack.fbx` (2) and (3) are already in the Lite pack in the repo; check them first. In Place on. Impact: new ShieldShock (blue ring), with a short extra recoil. |
+| 2 | diagonal slash | **Stable Sword Inward Slash**. **Covered by the repo; no download needed.** | Already in the repo as `SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx` (pilot, holefixed body). Download fresh onto the AccuRIG body only if the pilot take doesn't retarget cleanly. Fallback: **Sword And Shield Slash**. Impact: SwordSteel (blue arc of sparks). |
+| 3 | shield bash | **NEEDS A DOWNLOAD.** I measured the repo Lite clips: `Sword And Shield attack`, (2) and (3) are sword-led lunges (left-hand reach 0.35–0.54 vs right-hand 0.58–0.86 hips-to-head lengths) that carry the hips 3–5 body lengths forward, so none is a shield bash. Search Mixamo for **Sword And Shield Attack** (the shield-punch variant of the Pro Sword And Shield pack; confirm in preview, Mixamo lists it as "Sword And Shield Bash" in some library builds) | `sword_and_shield_attack.fbx` (2) and (3) are already in the Lite pack in the repo; check them first. In Place on. Impact: new ShieldShock (blue ring), with a short extra recoil. |
 
 ### Lyra (hero mage, staff held **two-handed**)
 | # | Attack | Mixamo title | Notes |
@@ -95,5 +101,5 @@ files are not touched.
 | 3 | roar | **Mutant Roaring** | Fallback: **Zombie Scream**. No hit effect; a purple shockwave plus target recoil. |
 
 ## Totals
-- Downloads: Ironhowl 2, Lyra 2, Oakenshield 2, Vespera 2, Bonequill 2, Rowan 2–3 (Draw Arrow, Aim Recoil, Aim Overdraw), Sir Aldric 0–2 (check the repo clips first). About 12–15 FBX files.
+- Downloads: Ironhowl 2 (done), Lyra 2, Oakenshield 2, Vespera 2, Bonequill 2, Rowan 2–3 (Draw Arrow, Aim Recoil, Aim Overdraw), Sir Aldric 1 (shield bash; the diagonal slash is covered by the repo). About 12–15 FBX files.
 - Each download is about 1–3 MB without skin.

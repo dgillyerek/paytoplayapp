@@ -301,6 +301,35 @@ namespace Survival.Domain.Roster
         /// <summary>Everyone holds rest this long before walking in.</summary>
         public const float OpeningHoldSeconds = 0.75f;
 
+        /// <summary>
+        /// Ironhowl's rotation: claw swipe (locked), ground slam (Mixamo "Mutant Jump Attack", hips
+        /// held in place, slid 0.25 m in so the slam lands where the swipe does), roar (Mixamo
+        /// "Mutant Roaring", a purple shadow burst on the target at the roar peak).
+        /// </summary>
+        public static readonly LockedBattleAttack[] IronhowlAttacks =
+        {
+            new LockedBattleAttack("claw swipe", IronhowlMotion.AttackPoseName, IronhowlMotion.AttackSeconds),
+            new LockedBattleAttack(
+                "ground slam",
+                IronhowlMotion.Attack2PoseName,
+                IronhowlMotion.Attack2LastFrame / IronhowlMotion.FrameRate,
+                IronhowlMotion.Attack2ContactFrame,
+                "mixamorig:LeftHand",
+                0.09f,
+                true,
+                new LockedBattleReachShift(0.25f, 14f, 50f, 72f, 108f)),
+            new LockedBattleAttack(
+                "roar",
+                IronhowlMotion.Attack3PoseName,
+                IronhowlMotion.Attack3LastFrame / IronhowlMotion.FrameRate,
+                IronhowlMotion.Attack3ContactFrame,
+                "mixamorig:Head",
+                0.03f,
+                false,
+                default,
+                BattleImpactKind.ShadowRake)
+        };
+
         public static readonly LockedBattleFighter Emberfang = new LockedBattleFighter(
             "Emberfang",
             BattleSide.Hero,
@@ -347,7 +376,10 @@ namespace Survival.Domain.Roster
             1.9f,
             IronhowlMotion.AttackSeconds,
             false,
-            0);
+            0,
+            "",
+            0f,
+            IronhowlAttacks);
 
         public static readonly LockedBattleFighter Nightfang = new LockedBattleFighter(
             "Nightfang",

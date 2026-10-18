@@ -74,7 +74,8 @@ namespace Survival.Domain.Roster
             string strikeBone = "",
             float shakeMetres = -1f,
             bool inPlace = false,
-            LockedBattleReachShift reachShift = default)
+            LockedBattleReachShift reachShift = default,
+            BattleImpactKind? impact = null)
         {
             Label = label;
             PoseName = poseName;
@@ -84,7 +85,11 @@ namespace Survival.Domain.Roster
             ShakeMetres = shakeMetres;
             InPlace = inPlace;
             ReachShift = reachShift;
+            Impact = impact;
         }
+
+        /// <summary>Impact burst for this attack's hits. Null for the profile's.</summary>
+        public BattleImpactKind? Impact { get; }
 
         public string Label { get; }
 
@@ -104,8 +109,9 @@ namespace Survival.Domain.Roster
         public float ShakeMetres { get; }
 
         /// <summary>
-        /// True when the clip carries the body forward (a leap) and the battle should hold the
-        /// stride bone on its spot, so the fighter lands where it took off.
+        /// True when the clip carries the body (a leap) and the battle should hold the stride bone
+        /// on its spot across the ground (forward and sideways), through the clip and its rest gap
+        /// (so a crossfade back to rest does not pop), and the fighter lands where it took off.
         /// </summary>
         public bool InPlace { get; }
 
@@ -243,6 +249,11 @@ namespace Survival.Domain.Roster
         {
             var bone = AttackAt(fighter, index).StrikeBone;
             return string.IsNullOrEmpty(bone) ? profile.StrikeBone : bone;
+        }
+
+        public static BattleImpactKind Impact(LockedBattleFighter fighter, LockedBattleHitProfile profile, int index)
+        {
+            return AttackAt(fighter, index).Impact ?? profile.Impact;
         }
 
         public static float ShakeMetres(LockedBattleFighter fighter, LockedBattleHitProfile profile, int index)
