@@ -115,7 +115,7 @@ namespace Survival.Unity
                 return PlayClipOrTpose(IronhowlMotion.AttackThemePackRel, IronhowlMotion.AttackPoseName, allowBareTpose: false);
             }
 
-            // Attack rotation: Mixamo "Mutant Jump Attack" and "Mutant Roaring" on the same skeleton.
+            // Attack rotation: Mixamo "Standing Melee Attack Downward" and "Standing Melee Combo Attack Ver. 2" on the same skeleton.
             if (string.Equals(poseName, IronhowlMotion.Attack2PoseName, System.StringComparison.Ordinal))
             {
                 return PlayClipOrTpose(IronhowlMotion.Attack2ThemePackRel, IronhowlMotion.Attack2PoseName, allowBareTpose: false);

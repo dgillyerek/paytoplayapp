@@ -1,11 +1,11 @@
 fileFormatVersion: 2
-guid: 107df46e2df544e389a81e312b10f52d
+guid: 6e1bc2f49c1444d680dab45842409149
 ModelImporter:
   serializedVersion: 24
   internalIDToNameTable: []
   externalObjects: {}
   materials:
-    materialImportMode: 0
+    materialImportMode: 2
     materialName: 0
     materialSearch: 1
     materialLocation: 1
@@ -15,6 +15,14 @@ ModelImporter:
     resampleCurves: 1
     optimizeGameObjects: 0
     motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
     animationCompression: 0
     animationRotationError: 0.5
     animationPositionError: 0.5
@@ -25,10 +33,10 @@ ModelImporter:
     clipAnimations:
     - serializedVersion: 16
       name: "attack3"
-      takeName: mixamo.com
+      takeName: Scene
       internalID: 0
       firstFrame: 0
-      lastFrame: 162
+      lastFrame: 111
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -117,7 +125,8 @@ ModelImporter:
   animationType: 2
   humanoidOversampling: 1
   avatarSetup: 1
+  addHumanoidExtraRoot: 0
   additionalBone: 0
-  userData: Ironhowl Mixamo Mutant Roaring (attack rotation attack3). Generic. take mixamo.com. Frame 0 to 162 at 30 fps. Keys every frame. No mirror. No humanoid retarget. Without skin; plays on IRONHOWL_rig. HOLD merge.
+  userData: Lyra attack rotation attack3, arcane nova (Mixamo Standing 2H Magic Area Attack 01) retargeted onto LYRA_tighten_rig (body bones only, two-handed staff; Design mixamo_attacks_20261018). MD5 e3d6ea7931b60ff285b646fb5faa795b. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

@@ -57,6 +57,21 @@ namespace Survival.Domain.Roster
         }
     }
 
+    /// <summary>A further melee hit inside one attack clip (a combo): its frame (30 fps) and the bone that lands it.</summary>
+    public readonly struct LockedBattleHitMark
+    {
+        public LockedBattleHitMark(int frame, string strikeBone = "")
+        {
+            Frame = frame;
+            StrikeBone = strikeBone;
+        }
+
+        public int Frame { get; }
+
+        /// <summary>Empty for the attack's own strike bone.</summary>
+        public string StrikeBone { get; }
+    }
+
     /// <summary>
     /// One attack in a fighter's rotation. Attack 1 is always the locked, approved attack the
     /// fighter's own fields describe; attacks 2 and 3 are added per character as their clips land.
@@ -75,8 +90,10 @@ namespace Survival.Domain.Roster
             float shakeMetres = -1f,
             bool inPlace = false,
             LockedBattleReachShift reachShift = default,
-            BattleImpactKind? impact = null)
+            BattleImpactKind? impact = null,
+            LockedBattleHitMark[]? extraHits = null)
         {
+            ExtraHits = extraHits ?? Array.Empty<LockedBattleHitMark>();
             Label = label;
             PoseName = poseName;
             Seconds = seconds;
@@ -87,6 +104,9 @@ namespace Survival.Domain.Roster
             ReachShift = reachShift;
             Impact = impact;
         }
+
+        /// <summary>Hits after the first one, in frame order (a combo). Empty for a single hit.</summary>
+        public LockedBattleHitMark[] ExtraHits { get; }
 
         /// <summary>Impact burst for this attack's hits. Null for the profile's.</summary>
         public BattleImpactKind? Impact { get; }
@@ -233,22 +253,53 @@ namespace Survival.Domain.Roster
             return into < attack.Seconds;
         }
 
-        /// <summary>Melee contact frame of attack <paramref name="index"/>, -1 when it has none.</summary>
+        /// <summary>
+        /// Melee contact frame of attack <paramref name="index"/>, -1 when it has none. A projectile
+        /// profile's own attack lands through its projectile, so it has none; an extra attack with an
+        /// explicit contact frame (Lyra's staff sweep and arcane nova) still lands on that frame.
+        /// </summary>
         public static int ContactFrame(LockedBattleFighter fighter, LockedBattleHitProfile profile, int index)
         {
-            if (profile.Projectile)
+            var frame = AttackAt(fighter, index).MeleeContactFrame;
+            if (frame == LockedBattleAttack.ProfileContactFrame)
             {
-                return -1;
+                return profile.Projectile ? -1 : profile.MeleeContactFrame;
             }
 
-            var frame = AttackAt(fighter, index).MeleeContactFrame;
-            return frame == LockedBattleAttack.ProfileContactFrame ? profile.MeleeContactFrame : frame;
+            return frame;
         }
 
         public static string StrikeBone(LockedBattleFighter fighter, LockedBattleHitProfile profile, int index)
         {
             var bone = AttackAt(fighter, index).StrikeBone;
             return string.IsNullOrEmpty(bone) ? profile.StrikeBone : bone;
+        }
+
+        /// <summary>Melee hits attack <paramref name="index"/> lands: 0 without a contact, else 1 plus its combo hits.</summary>
+        public static int HitCount(LockedBattleFighter fighter, LockedBattleHitProfile profile, int index)
+        {
+            return ContactFrame(fighter, profile, index) < 0 ? 0 : 1 + AttackAt(fighter, index).ExtraHits.Length;
+        }
+
+        /// <summary>Frame (30 fps) of hit <paramref name="hit"/> of attack <paramref name="index"/>.</summary>
+        public static int HitFrame(LockedBattleFighter fighter, LockedBattleHitProfile profile, int index, int hit)
+        {
+            return hit <= 0 ? ContactFrame(fighter, profile, index) : AttackAt(fighter, index).ExtraHits[hit - 1].Frame;
+        }
+
+        /// <summary>Bone that lands hit <paramref name="hit"/> of attack <paramref name="index"/>.</summary>
+        public static string HitStrikeBone(LockedBattleFighter fighter, LockedBattleHitProfile profile, int index, int hit)
+        {
+            if (hit > 0)
+            {
+                var bone = AttackAt(fighter, index).ExtraHits[hit - 1].StrikeBone;
+                if (!string.IsNullOrEmpty(bone))
+                {
+                    return bone;
+                }
+            }
+
+            return StrikeBone(fighter, profile, index);
         }
 
         public static BattleImpactKind Impact(LockedBattleFighter fighter, LockedBattleHitProfile profile, int index)
@@ -264,7 +315,8 @@ namespace Survival.Domain.Roster
 
         /// <summary>
         /// True when a melee contact was passed between two readings of the time since the first
-        /// attack started: one hit per attack, on that attack's own contact frame, never in a rest gap.
+        /// attack started: one hit per contact (a combo lands each of its hits), on that attack's own
+        /// frames, never in a rest gap.
         /// </summary>
         public static bool MeleeHitCrossed(
             LockedBattleFighter fighter,
@@ -273,8 +325,20 @@ namespace Survival.Domain.Roster
             float seconds,
             out int attackIndex)
         {
+            return MeleeHitCrossed(fighter, profile, previousSeconds, seconds, out attackIndex, out _);
+        }
+
+        public static bool MeleeHitCrossed(
+            LockedBattleFighter fighter,
+            LockedBattleHitProfile profile,
+            float previousSeconds,
+            float seconds,
+            out int attackIndex,
+            out int hitIndex)
+        {
             attackIndex = 0;
-            if (profile.Projectile || seconds <= previousSeconds || seconds < 0f)
+            hitIndex = 0;
+            if (seconds <= previousSeconds || seconds < 0f)
             {
                 return false;
             }
@@ -288,30 +352,35 @@ namespace Survival.Domain.Roster
             var count = Count(fighter);
             for (var i = 0; i < count; i++)
             {
-                var frame = ContactFrame(fighter, profile, i);
-                if (frame < 0)
+                var hits = HitCount(fighter, profile, i);
+                for (var h = 0; h < hits; h++)
                 {
-                    continue;
-                }
+                    var frame = HitFrame(fighter, profile, i, h);
+                    if (frame < 0)
+                    {
+                        continue;
+                    }
 
-                var contact = frame / (float)BlenderRigAttackSpec.FrameRate;
-                if (contact > AttackAt(fighter, i).Seconds)
-                {
-                    continue;
-                }
+                    var contact = frame / (float)BlenderRigAttackSpec.FrameRate;
+                    if (contact > AttackAt(fighter, i).Seconds)
+                    {
+                        continue;
+                    }
 
-                var at0 = OffsetSeconds(fighter, i) + contact;
-                var n = (float)Math.Floor((seconds - at0) / rotation);
-                if (n < 0f)
-                {
-                    continue;
-                }
+                    var at0 = OffsetSeconds(fighter, i) + contact;
+                    var n = (float)Math.Floor((seconds - at0) / rotation);
+                    if (n < 0f)
+                    {
+                        continue;
+                    }
 
-                var at = (n * rotation) + at0;
-                if (at > previousSeconds && at <= seconds)
-                {
-                    attackIndex = i;
-                    return true;
+                    var at = (n * rotation) + at0;
+                    if (at > previousSeconds && at <= seconds)
+                    {
+                        attackIndex = i;
+                        hitIndex = h;
+                        return true;
+                    }
                 }
             }
 

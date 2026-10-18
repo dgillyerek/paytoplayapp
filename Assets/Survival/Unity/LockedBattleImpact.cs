@@ -76,6 +76,15 @@ namespace Survival.Unity
                 case BattleImpactKind.BoneShard:
                     fx.BuildBoneShard(core, glow, edge, travel);
                     break;
+                case BattleImpactKind.HeroStaffSweep:
+                    fx.BuildHeroStaffSweep(travel);
+                    break;
+                case BattleImpactKind.HeroArcaneNova:
+                    fx.BuildHeroArcaneNova();
+                    break;
+                case BattleImpactKind.GroundSlam:
+                    fx.BuildGroundSlam(core, glow, edge, travel);
+                    break;
                 default:
                     fx.BuildIronClaw(core, glow, edge, travel);
                     break;
@@ -162,6 +171,71 @@ namespace Survival.Unity
             Burst("Leaves", Alpha(), 8, 0.45f, 0.65f, 0.6f, 1.4f, 0.03f, 0.06f, leaf, leaf, leaf, 0.6f, 0.08f, 90f, 1.2f);
             AddStreaks(core, glow, travel, 0.34f, 0.03f, 0.06f, 0.26f, 0f);
             AddLight(new Color(0.55f, 0.72f, 1f, 1f), 4f, 2.0f, 0.10f);
+        }
+
+        /// <summary>Hero blue (the hero side of the locked VFX palette) for Lyra's staff sweep and arcane nova.</summary>
+        private static readonly Color HeroBlueCore = new Color(0.80f, 0.90f, 1f, 1f);
+        private static readonly Color HeroBlueGlow = new Color(0.30f, 0.58f, 1f, 1f);
+        private static readonly Color HeroBlueEdge = new Color(0.12f, 0.30f, 0.85f, 0.8f);
+
+        /// <summary>Lyra staff sweep hit: hero-blue flash, blue streaks thrown along the sweep, light motes, blue light.</summary>
+        private void BuildHeroStaffSweep(Vector3 travel)
+        {
+            _life = 0.45f;
+            Burst("Flash", Additive(), 1, 0.10f, 0.10f, 0f, 0f, 0.55f, 0.65f, Bright(HeroBlueCore), HeroBlueCore, HeroBlueGlow, 0f, 0.02f, 180f, 0.3f);
+            Burst("Motes", Additive(), 18, 0.30f, 0.50f, 0.8f, 1.8f, 0.02f, 0.05f, Bright(HeroBlueCore), HeroBlueGlow, HeroBlueEdge, -0.5f, 0.08f, 90f, 0.5f);
+            Burst("Sparks", Additive(), 14, 0.12f, 0.24f, 3.0f, 5.5f, 0.015f, 0.03f, Bright(HeroBlueCore), HeroBlueGlow, HeroBlueEdge, 0.3f, 0.04f, 60f, 0.3f);
+            AddStreaks(HeroBlueCore, HeroBlueGlow, travel, 0.40f, 0.03f, 0.06f, 0.28f, 0f);
+            AddLight(new Color(0.45f, 0.65f, 1f, 1f), 6f, 2.4f, 0.14f);
+        }
+
+        /// <summary>Lyra arcane nova hit: hero-blue flash, a wide flat ring of blue motes, rising light motes, blue light.</summary>
+        private void BuildHeroArcaneNova()
+        {
+            _life = 0.6f;
+            Burst("Flash", Additive(), 1, 0.12f, 0.12f, 0f, 0f, 0.80f, 0.95f, Bright(HeroBlueCore), HeroBlueCore, HeroBlueGlow, 0f, 0.02f, 180f, 0.3f);
+            Burst("Ring", Additive(), 32, 0.30f, 0.45f, 2.6f, 3.6f, 0.03f, 0.06f, Bright(HeroBlueCore), HeroBlueGlow, HeroBlueEdge, 0f, 0.04f, 180f, 0.4f);
+            Burst("Rise", Additive(), 20, 0.40f, 0.60f, 0.6f, 1.4f, 0.02f, 0.05f, Bright(HeroBlueCore), HeroBlueGlow, HeroBlueEdge, -0.9f, 0.10f, 90f, 0.6f);
+            AddLight(new Color(0.40f, 0.62f, 1f, 1f), 8f, 3.0f, 0.20f);
+        }
+
+        /// <summary>
+        /// Ironhowl overhead smash: villain-purple flash, a ring of jagged purple cracks laid on the battle
+        /// floor (y = 0, where every lane slot stands) under the hit, dust and debris thrown out.
+        /// </summary>
+        private void BuildGroundSlam(Color core, Color glow, Color edge, Vector3 travel)
+        {
+            _life = 0.7f;
+            var purple = new Color(0.62f, 0.28f, 1f, 1f);
+            var purpleDeep = new Color(0.30f, 0.08f, 0.55f, 0.9f);
+            var dust = new Color(0.40f, 0.34f, 0.30f, 0.55f);
+            var dustEnd = new Color(0.30f, 0.26f, 0.22f, 0.2f);
+            Burst("Flash", Additive(), 1, 0.12f, 0.12f, 0f, 0f, 0.70f, 0.85f, Bright(purple), purple, purpleDeep, 0f, 0.02f, 180f, 0.3f);
+            Burst("Sparks", Additive(), 16, 0.15f, 0.30f, 3.0f, 5.5f, 0.015f, 0.035f, Bright(core), glow, edge, 0.6f, 0.05f, 60f, 0.3f);
+            Burst("Dust", Alpha(), 14, 0.40f, 0.65f, 0.8f, 1.8f, 0.20f, 0.38f, dust, dustEnd, dustEnd, -0.05f, 0.25f, 120f, 2.0f);
+            Burst("Debris", Alpha(), 12, 0.40f, 0.60f, 2.0f, 3.5f, 0.02f, 0.05f, dust, dust, dust, 2.5f, 0.10f, 70f, 1f);
+            var origin = transform.position;
+            origin.y = 0.012f;
+            var side = Vector3.Cross(Vector3.up, travel).normalized;
+            for (var i = 0; i < 9; i++)
+            {
+                var crack = Line("Crack" + i, Additive(), 6, 0.045f, purple, purpleDeep);
+                crack.alignment = LineAlignment.TransformZ;
+                crack.transform.rotation = Quaternion.LookRotation(Vector3.down, travel);
+                var angle = (i / 9f) * Mathf.PI * 2f + Random.Range(-0.2f, 0.2f);
+                var dir = (travel * Mathf.Cos(angle)) + (side * Mathf.Sin(angle));
+                var length = Random.Range(0.55f, 0.95f);
+                for (var k = 0; k < 6; k++)
+                {
+                    var t = k / 5f;
+                    var jag = k == 0 ? Vector3.zero : side * Random.Range(-0.06f, 0.06f) + travel * Random.Range(-0.06f, 0.06f);
+                    var p = origin + (dir * (0.12f + t * length)) + jag;
+                    p.y = origin.y;
+                    crack.SetPosition(k, p);
+                }
+            }
+
+            AddLight(new Color(0.65f, 0.30f, 1f, 1f), 8f, 3.0f, 0.22f);
         }
 
         /// <summary>Bonequill bone arrow hit: violet flash, pale bone shards, dark purple wisps.</summary>

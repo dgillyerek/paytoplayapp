@@ -39,7 +39,16 @@ namespace Survival.Domain.Roster
         RangerArrow = 10,
 
         /// <summary>Bonequill bone arrow: violet flash, bone shards, dark purple wisps.</summary>
-        BoneShard = 11
+        BoneShard = 11,
+
+        /// <summary>Lyra staff sweep (attack 2): hero-blue flash, blue streaks along the sweep, light motes.</summary>
+        HeroStaffSweep = 12,
+
+        /// <summary>Lyra arcane nova (attack 3): hero-blue flash, a wide ring of blue motes, rising light, blue light.</summary>
+        HeroArcaneNova = 13,
+
+        /// <summary>Ironhowl overhead smash (attack 2): purple flash, a purple crack ring on the ground, dust and debris.</summary>
+        GroundSlam = 14
     }
 
     /// <summary>

@@ -63,7 +63,7 @@ public sealed class LockedBattleHitsTests
 
     [Theory]
     [InlineData("Nightfang")]
-    // Ironhowl now rotates three attacks (LockedBattleRotationTests).
+    // Ironhowl rotates three attacks (LockedBattleRotationTests).
     public void Melee_lands_once_per_attack_cycle_on_its_contact_frame_and_never_in_the_rest_gap(string name)
     {
         var fighter = Fighter(name);

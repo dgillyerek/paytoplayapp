@@ -237,20 +237,22 @@ namespace Survival.Unity
                 Face(f, to, f.Data.AimYawDegrees);
             }
 
-            if (!f.Profile.Projectile
-                && LockedBattleRotation.MeleeHitCrossed(f.Data, f.Profile, f.PreviousPhaseTime, f.PhaseTime, out var hitIndex))
+            // Projectile attacks land through their projectile; only explicit melee contacts land here.
+            if (LockedBattleRotation.MeleeHitCrossed(f.Data, f.Profile, f.PreviousPhaseTime, f.PhaseTime, out var hitAttack, out var hitIndex))
             {
-                LandHit(f, MeleeContact(f, hitIndex), hitIndex);
+                LandHit(f, MeleeContact(f, hitAttack, hitIndex), hitAttack);
             }
 
             LockedBattleRotation.Locate(f.Data, f.PhaseTime, out var index, out var into);
             var attack = LockedBattleRotation.AttackAt(f.Data, index);
-            if (f.Data.AttackCyclesItself)
+            if (f.Data.AttackCyclesItself && index == 0)
             {
-                // The actor loops attack + rest itself. With one attack (the creatures) leave it
-                // alone; with more, switch its attack pose when the rotation moves on.
+                // The actor loops its own attack + rest. With one attack (the creatures) leave it
+                // alone; with more, restart it when the rotation comes back to it. Its extra
+                // attacks are plain clips, played once then rest like any other fighter's.
                 if (LockedBattleRotation.Count(f.Data) > 1 && index != f.AttackIndex)
                 {
+                    f.AttackClipOn = false;
                     StartAttackClip(f, index);
                 }
 
@@ -355,10 +357,10 @@ namespace Survival.Unity
         /// Melee contact point: where the line from the attacker to its striking bone enters the
         /// target's body box, or the closest box point when the bone stops just short of it.
         /// </summary>
-        private static Vector3 MeleeContact(Fighter attacker, int attackIndex)
+        private static Vector3 MeleeContact(Fighter attacker, int attackIndex, int hitIndex = 0)
         {
             var target = attacker.Target!;
-            var strike = attacker.StrikeBoneFor(attackIndex);
+            var strike = attacker.StrikeBoneFor(attackIndex, hitIndex);
             var bone = strike != null ? strike.position : attacker.Slot.position + (Vector3.up * 0.5f);
             var origin = attacker.Slot.position;
             origin.y = bone.y;
@@ -834,18 +836,35 @@ namespace Survival.Unity
 
             var attackCount = LockedBattleRotation.Count(data);
             f.AttackStrikeBones = new Transform?[attackCount];
+            f.AttackHitBones = new Transform?[attackCount][];
             for (var a = 0; a < attackCount; a++)
             {
-                var boneName = LockedBattleRotation.AttackAt(data, a).StrikeBone;
-                if (string.IsNullOrEmpty(boneName))
+                var attackData = LockedBattleRotation.AttackAt(data, a);
+                var boneName = attackData.StrikeBone;
+                if (!string.IsNullOrEmpty(boneName))
                 {
-                    continue;
+                    f.AttackStrikeBones[a] = FindBone(host.transform, boneName);
+                    if (f.AttackStrikeBones[a] == null)
+                    {
+                        Debug.LogWarning("Locked battle: " + data.Name + " attack " + (a + 1) + " strike bone missing. " + boneName);
+                    }
                 }
 
-                f.AttackStrikeBones[a] = FindBone(host.transform, boneName);
-                if (f.AttackStrikeBones[a] == null)
+                // Combo hits that name their own bone (a left-claw hit inside a right-claw combo).
+                f.AttackHitBones[a] = new Transform?[attackData.ExtraHits.Length];
+                for (var h = 0; h < attackData.ExtraHits.Length; h++)
                 {
-                    Debug.LogWarning("Locked battle: " + data.Name + " attack " + (a + 1) + " strike bone missing. " + boneName);
+                    var hitBone = attackData.ExtraHits[h].StrikeBone;
+                    if (string.IsNullOrEmpty(hitBone))
+                    {
+                        continue;
+                    }
+
+                    f.AttackHitBones[a][h] = FindBone(host.transform, hitBone);
+                    if (f.AttackHitBones[a][h] == null)
+                    {
+                        Debug.LogWarning("Locked battle: " + data.Name + " attack " + (a + 1) + " hit " + (h + 2) + " strike bone missing. " + hitBone);
+                    }
                 }
             }
 
@@ -1195,6 +1214,22 @@ namespace Survival.Unity
 
             /// <summary>Per-attack strike bones; null entries fall back to <see cref="StrikeBone"/>.</summary>
             public Transform?[] AttackStrikeBones { get; set; } = System.Array.Empty<Transform?>();
+
+            public Transform?[][] AttackHitBones { get; set; } = System.Array.Empty<Transform?[]>();
+
+            public Transform? StrikeBoneFor(int attackIndex, int hitIndex)
+            {
+                if (hitIndex > 0 && attackIndex >= 0 && attackIndex < AttackHitBones.Length)
+                {
+                    var hits = AttackHitBones[attackIndex];
+                    if (hitIndex - 1 < hits.Length && hits[hitIndex - 1] != null)
+                    {
+                        return hits[hitIndex - 1];
+                    }
+                }
+
+                return StrikeBoneFor(attackIndex);
+            }
 
             public Transform? StrikeBoneFor(int attackIndex)
             {

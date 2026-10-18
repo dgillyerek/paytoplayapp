@@ -302,32 +302,40 @@ namespace Survival.Domain.Roster
         public const float OpeningHoldSeconds = 0.75f;
 
         /// <summary>
-        /// Ironhowl's rotation: claw swipe (locked), ground slam (Mixamo "Mutant Jump Attack", hips
-        /// held in place, slid 0.25 m in so the slam lands where the swipe does), roar (Mixamo
-        /// "Mutant Roaring", a purple shadow burst on the target at the roar peak).
+        /// Ironhowl's rotation (2026-10-18; his own clips, not Blightroot's mutant moves): claw swipe
+        /// (locked), overhead smash (Mixamo "Standing Melee Attack Downward": purple ground-slam crack
+        /// ring and a heavy shake), claw combo (Mixamo "Standing Melee Combo Attack Ver. 2": four hits,
+        /// purple claw sparks on each). Both hold the hips' travel in place and slide 0.3 m in.
         /// </summary>
         public static readonly LockedBattleAttack[] IronhowlAttacks =
         {
             new LockedBattleAttack("claw swipe", IronhowlMotion.AttackPoseName, IronhowlMotion.AttackSeconds),
             new LockedBattleAttack(
-                "ground slam",
+                "overhead smash",
                 IronhowlMotion.Attack2PoseName,
                 IronhowlMotion.Attack2LastFrame / IronhowlMotion.FrameRate,
                 IronhowlMotion.Attack2ContactFrame,
-                "mixamorig:LeftHand",
+                "mixamorig:RightHand",
                 0.09f,
                 true,
-                new LockedBattleReachShift(0.25f, 14f, 50f, 72f, 108f)),
+                new LockedBattleReachShift(0.3f, 8f, 26f, 40f, 64f),
+                BattleImpactKind.GroundSlam),
             new LockedBattleAttack(
-                "roar",
+                "claw combo",
                 IronhowlMotion.Attack3PoseName,
                 IronhowlMotion.Attack3LastFrame / IronhowlMotion.FrameRate,
-                IronhowlMotion.Attack3ContactFrame,
-                "mixamorig:Head",
-                0.03f,
-                false,
-                default,
-                BattleImpactKind.ShadowRake)
+                IronhowlMotion.Attack3HitFrames[0],
+                IronhowlMotion.Attack3HitBones[0],
+                0.04f,
+                true,
+                new LockedBattleReachShift(0.3f, 16f, 28f, 100f, 122f),
+                BattleImpactKind.ShadowRake,
+                new[]
+                {
+                    new LockedBattleHitMark(IronhowlMotion.Attack3HitFrames[1], IronhowlMotion.Attack3HitBones[1]),
+                    new LockedBattleHitMark(IronhowlMotion.Attack3HitFrames[2], IronhowlMotion.Attack3HitBones[2]),
+                    new LockedBattleHitMark(IronhowlMotion.Attack3HitFrames[3], IronhowlMotion.Attack3HitBones[3])
+                })
         };
 
         public static readonly LockedBattleFighter Emberfang = new LockedBattleFighter(
@@ -401,6 +409,36 @@ namespace Survival.Domain.Roster
         // (two strides of the foot's forward sweep per 30-frame loop, the same measure that gives
         // Emberfang 0.33 m/s); heights are the rest-mesh heights of the locked FBXs.
 
+        /// <summary>
+        /// Lyra's rotation: arcane bolt (locked, projectile), staff sweep (attack 2) and arcane nova (attack 3)
+        /// from the retargeted Mixamo clips. The extra two land on their own contact frames in hero blue: the
+        /// sweep throws a blue arc onto the target from range, the nova bursts a blue ring on it.
+        /// </summary>
+        public static readonly LockedBattleAttack[] LyraAttacks =
+        {
+            new LockedBattleAttack("staff cast arcane bolt", LyraMotion.AttackPoseName, BlenderRigAttackSpec.ClipSeconds),
+            new LockedBattleAttack(
+                "staff sweep",
+                LyraMotion.Attack2PoseName,
+                LyraMotion.Attack2LastFrame / LyraMotion.WalkFrameRate,
+                LyraMotion.Attack2ContactFrame,
+                "mixamorig:RightHand",
+                0.03f,
+                false,
+                default,
+                BattleImpactKind.HeroStaffSweep),
+            new LockedBattleAttack(
+                "arcane nova",
+                LyraMotion.Attack3PoseName,
+                LyraMotion.Attack3LastFrame / LyraMotion.WalkFrameRate,
+                LyraMotion.Attack3ContactFrame,
+                "mixamorig:RightHand",
+                0.06f,
+                false,
+                default,
+                BattleImpactKind.HeroArcaneNova)
+        };
+
         public static readonly LockedBattleFighter Lyra = new LockedBattleFighter(
             "Lyra",
             BattleSide.Hero,
@@ -415,7 +453,10 @@ namespace Survival.Domain.Roster
             3.2f,
             BlenderRigAttackSpec.ClipSeconds,
             true,
-            2);
+            2,
+            "",
+            0f,
+            LyraAttacks);
 
         public static readonly LockedBattleFighter Oakenshield = new LockedBattleFighter(
             "Oakenshield",

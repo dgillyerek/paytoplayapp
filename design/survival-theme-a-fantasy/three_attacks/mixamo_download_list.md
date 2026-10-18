@@ -62,8 +62,8 @@ files are not touched.
 | # | Attack | Mixamo title | Notes |
 |---|---|---|---|
 | 1 | staff cast arcane bolt | *(locked)* | unchanged |
-| 2 | staff sweep (melee) | **Standing Melee Attack Horizontal** | Two-handed horizontal swing. Fallback: **Standing Melee Attack 360 Low**. In Place on. The staff stays on RightHand with the left hand on the shaft (existing two-hand grip). Impact: StaffLight arc. |
-| 3 | arcane nova (area) | **Standing 2H Magic Area Attack 01** | Two hands raise, then drive down. Fallback: **Standing 2H Magic Area Attack 02**. Impact: blue ground ring at the target (ArcaneConjure variant). |
+| 2 | staff sweep (melee) | **Standing Melee Attack Horizontal**. **DOWNLOADED + WIRED 2026-10-18** (`LYRA_blenderig_attack2_staff_sweep.fbx`, hero-blue HeroStaffSweep). | Two-handed horizontal swing. Fallback: **Standing Melee Attack 360 Low**. In Place on. The staff stays on RightHand with the left hand on the shaft (existing two-hand grip). Impact: StaffLight arc. |
+| 3 | arcane nova (area) | **Standing 2H Magic Area Attack 01**. **DOWNLOADED + WIRED 2026-10-18** (`LYRA_blenderig_attack3_arcane_nova.fbx`, hero-blue HeroArcaneNova). | Two hands raise, then drive down. Fallback: **Standing 2H Magic Area Attack 02**. Impact: blue ground ring at the target (ArcaneConjure variant). |
 
 ### Rowan (hero archer: natural arm, only the bow rotates, left-foot step, side-on including the hips)
 | # | Attack | Mixamo title | Notes |
@@ -97,9 +97,9 @@ files are not touched.
 | # | Attack | Mixamo title | Notes |
 |---|---|---|---|
 | 1 | claw swipe | *(locked)* | unchanged |
-| 2 | ground slam | **Mutant Jump Attack** | In Place on; the battle adds the reach slide as for Blightroot. Fallback: **Standing Melee Attack Downward** (two-arm overhead slam, no jump). Impact: new GroundSlam (purple crack ring) with camera shake. |
-| 3 | roar | **Mutant Roaring** | Fallback: **Zombie Scream**. No hit effect; a purple shockwave plus target recoil. |
+| 2 | overhead smash | **Standing Melee Attack Downward**. **DOWNLOADED + WIRED 2026-10-18.** | Derek 2026-10-18: no mutant moves on Ironhowl (they are Blightroot's), so Mutant Jump Attack / Mutant Roaring were dropped (kept only as rejected design copies). Hips travel held in place, 0.3 m reach slide. Impact: new GroundSlam (purple crack ring), 0.09 m shake. |
+| 3 | claw combo | **Standing Melee Combo Attack Ver. 2**. **DOWNLOADED + WIRED 2026-10-18.** | Four hits (R 29, L 46, L 59, R 82), purple ShadowRake claw sparks on each. Hips travel held in place, 0.3 m reach slide. |
 
 ## Totals
-- Downloads: Ironhowl 2 (done), Lyra 2, Oakenshield 2, Vespera 2, Bonequill 2, Rowan 2–3 (Draw Arrow, Aim Recoil, Aim Overdraw), Sir Aldric 1 (shield bash; the diagonal slash is covered by the repo). About 12–15 FBX files.
+- Downloads: Ironhowl 2 (done, replaced 2026-10-18), Lyra 2 (done), Oakenshield 2, Vespera 2, Bonequill 2, Rowan 2–3 (Draw Arrow, Aim Recoil, Aim Overdraw), Sir Aldric 1 (shield bash; the diagonal slash is covered by the repo). About 12–15 FBX files.
 - Each download is about 1–3 MB without skin.

@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 45578f140b7049489aa5b06991518734
+guid: f54d33e9fb164bb8a5fa3d437434ce5e
 ModelImporter:
   serializedVersion: 24
   internalIDToNameTable: []
@@ -28,7 +28,7 @@ ModelImporter:
       takeName: mixamo.com
       internalID: 0
       firstFrame: 0
-      lastFrame: 111
+      lastFrame: 68
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -118,6 +118,6 @@ ModelImporter:
   humanoidOversampling: 1
   avatarSetup: 1
   additionalBone: 0
-  userData: Ironhowl Mixamo Mutant Jump Attack (attack rotation attack2). Generic. take mixamo.com. Frame 0 to 111 at 30 fps. Keys every frame. No mirror. No humanoid retarget. Without skin; plays on IRONHOWL_rig. HOLD merge.
+  userData: Ironhowl Mixamo Standing Melee Attack Downward (attack rotation attack2). Generic. take mixamo.com. Frame 0 to 68 at 30 fps. Keys every frame. No mirror. No humanoid retarget. Without skin; plays on IRONHOWL_rig. HOLD merge.
   assetBundleName: 
   assetBundleVariant: 

@@ -11,12 +11,14 @@ public sealed class LyraAttackTests
     public void Lyra_attack_is_a_new_scene_take_after_the_existing_clips()
     {
         var poses = LyraMotion.PoseNames;
-        Assert.Equal(3, poses.Length);
+        Assert.Equal(5, poses.Length);
         Assert.Equal("rest", poses[0]);
         Assert.Equal("walk", poses[1]);
         Assert.Equal("attack", poses[2]);
+        Assert.Equal("attack2", poses[3]);
+        Assert.Equal("attack3", poses[4]);
         Assert.Equal(LyraMotion.PoseNames, LyraMotion.Spec.PoseNames);
-        var clip = LyraMotion.Spec.ExtraClips[LyraMotion.Spec.ExtraClips.Length - 1];
+        var clip = LyraMotion.Spec.ExtraClips[0];
         Assert.Equal("attack", clip.PoseName);
         Assert.Equal("LYRA_blenderig_attack.fbx", clip.FileName);
         Assert.Equal("Scene", clip.TakeName);
@@ -26,6 +28,59 @@ public sealed class LyraAttackTests
         Assert.Equal("LYRA_blenderig_attack.fbx", LyraAttack.FileName);
         Assert.Equal("LYRA_blenderig_attack.fbx", LyraAttack.Spec.FileName);
         Assert.False(LyraAttack.Spec.InPlace);
+    }
+
+    [Fact]
+    public void Lyra_attacks_2_and_3_are_retargeted_mixamo_bakes_on_her_rig_wired_into_the_battle_rotation()
+    {
+        var root = FindRepoRoot();
+        var pack = Path.Combine(root, "Assets", LyraMotion.ThemePackDir);
+        var design = Path.Combine(root, LyraMotion.DesignMixamoAttacksDir.Replace('/', Path.DirectorySeparatorChar));
+        var sums = File.ReadAllText(Path.Combine(design, "CHECKSUMS.md5"));
+        foreach (var (file, md5, pose, last) in new[]
+        {
+            (LyraMotion.Attack2FileName, LyraMotion.Attack2Md5, LyraMotion.Attack2PoseName, LyraMotion.Attack2LastFrame),
+            (LyraMotion.Attack3FileName, LyraMotion.Attack3Md5, LyraMotion.Attack3PoseName, LyraMotion.Attack3LastFrame)
+        })
+        {
+            Assert.Equal(md5, Md5(Path.Combine(pack, file)));
+            Assert.Equal(md5, Md5(Path.Combine(design, file)));
+            Assert.Contains(md5 + "  " + file, sums, StringComparison.Ordinal);
+            var meta = File.ReadAllText(Path.Combine(pack, file) + ".meta");
+            Assert.Contains("name: \"" + pose + "\"", meta, StringComparison.Ordinal);
+            Assert.Contains("takeName: Scene", meta, StringComparison.Ordinal);
+            Assert.Contains("lastFrame: " + last, meta, StringComparison.Ordinal);
+            Assert.Contains("animationType: 2", meta, StringComparison.Ordinal);
+            Assert.Contains(LyraMotion.Spec.ExtraClips, c => c.PoseName == pose && c.FileName == file && c.LastFrame == last && c.TakeName == "Scene");
+        }
+
+        // The raw Mixamo downloads stay beside the bakes.
+        Assert.Contains("  LYRA_mixamo_standing_melee_attack_horizontal.fbx", sums, StringComparison.Ordinal);
+        Assert.Contains("  LYRA_mixamo_standing_2h_magic_area_attack_01.fbx", sums, StringComparison.Ordinal);
+
+        var lyra = LockedBattleRoster.Lyra;
+        var profile = LockedBattleHits.ProfileOf("Lyra");
+        Assert.True(profile.Projectile);
+        Assert.Equal(3, LockedBattleRotation.Count(lyra));
+        Assert.Equal(LyraMotion.AttackPoseNames, new[] { 0, 1, 2 }.Select(i => LockedBattleRotation.AttackAt(lyra, i).PoseName).ToArray());
+        Assert.Equal(-1, LockedBattleRotation.ContactFrame(lyra, profile, 0));
+        Assert.Equal(LyraMotion.Attack2ContactFrame, LockedBattleRotation.ContactFrame(lyra, profile, 1));
+        Assert.Equal(LyraMotion.Attack3ContactFrame, LockedBattleRotation.ContactFrame(lyra, profile, 2));
+        Assert.Equal(BattleImpactKind.HeroStaffSweep, LockedBattleRotation.Impact(lyra, profile, 1));
+        Assert.Equal(BattleImpactKind.HeroArcaneNova, LockedBattleRotation.Impact(lyra, profile, 2));
+
+        // The bolt lands through its projectile; the sweep and the nova land once each on their own frames.
+        var hits = new List<int>();
+        var dt = 1f / 120f;
+        for (var t = 0f; t < LockedBattleRotation.RotationSeconds(lyra); t += dt)
+        {
+            if (LockedBattleRotation.MeleeHitCrossed(lyra, profile, t, t + dt, out var index))
+            {
+                hits.Add(index);
+            }
+        }
+
+        Assert.Equal(new[] { 1, 2 }, hits);
     }
 
     [Fact]

@@ -43,7 +43,33 @@ namespace Survival.Domain.Heroes
 
         public const string BoneRoot = MixamoHumanoidBones.Root;
 
-        public static readonly string[] PoseNames = { RestPoseName, WalkPoseName, AttackPoseName };
+        // Attack rotation (2026-10-18): Mixamo clips downloaded on the auto-rigged LYRA.fbx (same 20 mixamorig names),
+        // retargeted onto this rig by world rotation from rest, body bones only, hips' ground travel removed, blended in
+        // from rest (left foot steps forward first) and back out, both hands IK'd onto the staff (right hand keeps
+        // Derek's grip, left hand on the shaft below it). Design mixamo_attacks_20261018.
+        public const string DesignMixamoAttacksDir = "design/survival-theme-a-fantasy/heroes/anim/lyra/mixamo_attacks_20261018";
+
+        /// <summary>Attack 2, staff sweep: Mixamo "Standing Melee Attack Horizontal".</summary>
+        public const string Attack2PoseName = "attack2";
+        public const string Attack2FileName = "LYRA_blenderig_attack2_staff_sweep.fbx";
+        public const string Attack2Md5 = "934283e8764d3b4034f6c94ca508248d";
+        public const int Attack2LastFrame = 94;
+
+        /// <summary>The staff crystal sweeps across her front fastest on frame 40.</summary>
+        public const int Attack2ContactFrame = 40;
+
+        /// <summary>Attack 3, arcane nova: Mixamo "Standing 2H Magic Area Attack 01".</summary>
+        public const string Attack3PoseName = "attack3";
+        public const string Attack3FileName = "LYRA_blenderig_attack3_arcane_nova.fbx";
+        public const string Attack3Md5 = "e3d6ea7931b60ff285b646fb5faa795b";
+        public const int Attack3LastFrame = 111;
+
+        /// <summary>Both hands drive the staff down to their lowest (hands 0.5-0.64 m up) on frame 51.</summary>
+        public const int Attack3ContactFrame = 51;
+
+        public static readonly string[] AttackPoseNames = { AttackPoseName, Attack2PoseName, Attack3PoseName };
+
+        public static readonly string[] PoseNames = { RestPoseName, WalkPoseName, AttackPoseName, Attack2PoseName, Attack3PoseName };
         public static readonly string[] BoneNames =
         {
             "mixamorig:Hips",
@@ -111,7 +137,9 @@ namespace Survival.Domain.Heroes
                     BlenderRigAttackSpec.TakeName,
                     BlenderRigAttackSpec.ClipSeconds,
                     BlenderRigAttackSpec.FrameRate,
-                    BlenderRigAttackSpec.LastFrame)
+                    BlenderRigAttackSpec.LastFrame),
+                new BlenderRigClip(Attack2PoseName, Attack2FileName, WalkTakeName, Attack2LastFrame / WalkFrameRate, WalkFrameRate, Attack2LastFrame),
+                new BlenderRigClip(Attack3PoseName, Attack3FileName, WalkTakeName, Attack3LastFrame / WalkFrameRate, WalkFrameRate, Attack3LastFrame)
             });
     }
 }

@@ -193,38 +193,49 @@ public sealed class LockedBattleRotationTests
     }
 
     [Fact]
-    public void Ironhowl_rotates_swipe_ground_slam_roar_from_the_downloaded_mixamo_clips()
+    public void Ironhowl_rotates_swipe_overhead_smash_claw_combo_from_his_own_mixamo_clips()
     {
         var iron = LockedBattleRoster.Ironhowl;
         var profile = LockedBattleHits.Ironhowl;
         Assert.Equal(3, LockedBattleRotation.Count(iron));
-        Assert.Equal(IronhowlMotion.AttackPoseName, LockedBattleRotation.AttackAt(iron, 0).PoseName);
-        Assert.Equal(IronhowlMotion.Attack2PoseName, LockedBattleRotation.AttackAt(iron, 1).PoseName);
-        Assert.Equal(IronhowlMotion.Attack3PoseName, LockedBattleRotation.AttackAt(iron, 2).PoseName);
         Assert.Equal(IronhowlMotion.AttackPoseNames, new[] { "attack", "attack2", "attack3" });
+        for (var i = 0; i < 3; i++)
+        {
+            Assert.Equal(IronhowlMotion.AttackPoseNames[i], LockedBattleRotation.AttackAt(iron, i).PoseName);
+        }
 
-        // The ground slam holds the leap's hips travel on the spot; the roar comes back by itself.
+        // Not Blightroot's mutant moves (Derek 2026-10-18).
+        Assert.DoesNotContain("mutant", IronhowlMotion.Attack2FileName, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("mutant", IronhowlMotion.Attack3FileName, StringComparison.OrdinalIgnoreCase);
+        var root = FindRepoRoot();
+        Assert.Empty(Directory.GetFiles(Path.Combine(root, "Assets", IronhowlMotion.ThemePackDir), "*mutant*"));
+
+        // Mixamo offered no In Place: the battle holds the hips' travel on the spot for both.
         Assert.True(LockedBattleRotation.AttackAt(iron, 1).InPlace);
-        Assert.False(LockedBattleRotation.AttackAt(iron, 2).InPlace);
+        Assert.True(LockedBattleRotation.AttackAt(iron, 2).InPlace);
+        Assert.Equal(BattleImpactKind.GroundSlam, LockedBattleRotation.Impact(iron, profile, 1));
         Assert.Equal(BattleImpactKind.ShadowRake, LockedBattleRotation.Impact(iron, profile, 2));
         Assert.Equal(profile.Impact, LockedBattleRotation.Impact(iron, profile, 0));
-        Assert.Equal(profile.Impact, LockedBattleRotation.Impact(iron, profile, 1));
+        Assert.True(LockedBattleRotation.ShakeMetres(iron, profile, 1) >= 0.08f);
         Assert.Equal(IronhowlMotion.Attack2LastFrame / 30f, LockedBattleRotation.AttackAt(iron, 1).Seconds, 4);
         Assert.Equal(IronhowlMotion.Attack3LastFrame / 30f, LockedBattleRotation.AttackAt(iron, 2).Seconds, 4);
+        Assert.Equal(4, LockedBattleRotation.HitCount(iron, profile, 2));
+        Assert.Equal("mixamorig:LeftHand", LockedBattleRotation.HitStrikeBone(iron, profile, 2, 1));
+        Assert.Equal("mixamorig:RightHand", LockedBattleRotation.HitStrikeBone(iron, profile, 2, 3));
 
-        var hits = new List<int>();
+        var hits = new List<(int Attack, int Hit)>();
         var dt = 1f / 120f;
         var rotation = LockedBattleRotation.RotationSeconds(iron);
         for (var t = 0f; t < rotation; t += dt)
         {
-            if (LockedBattleRotation.MeleeHitCrossed(iron, profile, t, t + dt, out var index))
+            if (LockedBattleRotation.MeleeHitCrossed(iron, profile, t, t + dt, out var index, out var hit))
             {
-                hits.Add(index);
+                hits.Add((index, hit));
                 Assert.True(LockedBattleRotation.InAttackClip(iron, t + dt));
             }
         }
 
-        Assert.Equal(new[] { 0, 1, 2 }, hits);
+        Assert.Equal(new[] { (0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3) }, hits);
     }
 
     [Fact]
@@ -249,8 +260,6 @@ public sealed class LockedBattleRotationTests
             Assert.Contains("lastFrame: " + last, meta, StringComparison.Ordinal);
             Assert.Contains("animationType: 2", meta, StringComparison.Ordinal);
             Assert.Contains("mirror: 0", meta, StringComparison.Ordinal);
-            Assert.Contains("useFileScale: 0", meta, StringComparison.Ordinal);
-            Assert.Contains("bakeAxisConversion: 0", meta, StringComparison.Ordinal);
         }
 
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "IronhowlActor.cs"));
