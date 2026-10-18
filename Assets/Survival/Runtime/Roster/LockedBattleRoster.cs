@@ -35,7 +35,8 @@ namespace Survival.Domain.Roster
             bool attackCyclesItself,
             int lane,
             string actorClassName = "",
-            float aimYawDegrees = 0f)
+            float aimYawDegrees = 0f,
+            IReadOnlyList<LockedBattleAttack>? attacks = null)
         {
             Name = name;
             Side = side;
@@ -53,7 +54,17 @@ namespace Survival.Domain.Roster
             Lane = lane;
             AimYawDegrees = aimYawDegrees;
             ActorClassName = actorClassName.Length > 0 ? actorClassName : FileKeyOf(name) + "Actor";
+            Attacks = attacks != null && attacks.Count > 0
+                ? attacks
+                : new[] { new LockedBattleAttack(attackLabel, attackPoseName, attackSeconds) };
         }
+
+        /// <summary>
+        /// Attack rotation (<see cref="LockedBattleRotation"/>). Attack 1 is the locked attack
+        /// (<see cref="AttackPoseName"/>, <see cref="AttackSeconds"/>); humanoids add 2 and 3 as
+        /// their premade Mixamo clips land. Creatures (on hold) keep their single attack.
+        /// </summary>
+        public IReadOnlyList<LockedBattleAttack> Attacks { get; }
 
         /// <summary>Name without spaces, as used by the Motion, Actor and scene file names ("Sir Aldric" → "SirAldric").</summary>
         public string FileKey => FileKeyOf(Name);
@@ -155,6 +166,62 @@ namespace Survival.Domain.Roster
         public const string WalkClip = "mutant walking";
         public const string AttackClip = "mutant swiping";
 
+        /// <summary>Attack 2 (rotation): creature-pack "mutant punch", a right hook, frames 0-33.</summary>
+        public const string Attack2 = "attack2";
+        public const string Attack2Clip = "mutant punch";
+        public const int Attack2LastFrame = 33;
+
+        /// <summary>
+        /// Right fist furthest forward (0.70 m ahead of the start hips) on frame 10, measured on the
+        /// creature-pack FBX.
+        /// </summary>
+        public const int Attack2ContactFrame = 10;
+
+        /// <summary>Attack 3 (rotation): creature-pack "mutant jump attack", a leap and two-claw slam, frames 0-111.</summary>
+        public const string Attack3 = "attack3";
+        public const string Attack3Clip = "mutant jump attack";
+        public const int Attack3LastFrame = 111;
+
+        /// <summary>
+        /// Both claws hit the ground (0.2-0.3 m up, 1.9 m ahead of the start hips with the hips
+        /// carried 1.3 m) on frame 50.
+        /// </summary>
+        public const int Attack3ContactFrame = 50;
+
+        public static bool IsAttack(string pose)
+        {
+            return pose == Attack || pose == Attack2 || pose == Attack3;
+        }
+
+        /// <summary>
+        /// Rotation: swipe (locked attack 1), punch, jump smash. The punch reaches 0.70 m and the
+        /// in-place slam 0.6 m, short of Sir Aldric's front face 1.15 m away at his 1.4 m stop,
+        /// so each slides the actor root forward into the strike and back out (the leap's own
+        /// 1.3 m carry is held on the spot so Blightroot lands where it took off).
+        /// </summary>
+        public static readonly LockedBattleAttack[] Attacks =
+        {
+            new LockedBattleAttack("rot claw swipe", Attack, AttackSeconds),
+            new LockedBattleAttack(
+                "rot punch",
+                Attack2,
+                Attack2LastFrame / 30f,
+                Attack2ContactFrame,
+                "mixamorig:RightHand",
+                0.04f,
+                false,
+                new LockedBattleReachShift(0.45f, 2f, 10f, 14f, 30f)),
+            new LockedBattleAttack(
+                "rot jump smash",
+                Attack3,
+                Attack3LastFrame / 30f,
+                Attack3ContactFrame,
+                "mixamorig:LeftHand",
+                0.09f,
+                true,
+                new LockedBattleReachShift(0.55f, 14f, 49f, 72f, 108f))
+        };
+
         /// <summary>Hips travel of one "mutant walking" loop (measured on the FBX, 1.4526 m).</summary>
         public const float WalkStrideMetres = 1.453f;
 
@@ -169,6 +236,10 @@ namespace Survival.Domain.Roster
                     return WalkClip;
                 case Attack:
                     return AttackClip;
+                case Attack2:
+                    return Attack2Clip;
+                case Attack3:
+                    return Attack3Clip;
                 default:
                     return RestClip;
             }
@@ -402,7 +473,10 @@ namespace Survival.Domain.Roster
             1.6f,
             BlightrootBattlePoses.AttackSeconds,
             false,
-            4);
+            4,
+            "",
+            0f,
+            BlightrootBattlePoses.Attacks);
 
         // Sixth lane (2026-10-16, Derek: the characters not in yet). Both are Theme A Blender rigs
         // (#64, #63) with rest, walk and bow attack; their actors cycle attack + rest themselves.
@@ -576,19 +650,8 @@ namespace Survival.Domain.Roster
         /// </summary>
         public static bool InAttackClip(LockedBattleFighter fighter, float secondsSinceFirstAttack)
         {
-            if (secondsSinceFirstAttack < 0f)
-            {
-                return false;
-            }
-
-            var cycle = fighter.AttackCycleSeconds;
-            if (cycle <= 0f)
-            {
-                return true;
-            }
-
-            var t = secondsSinceFirstAttack % cycle;
-            return t < fighter.AttackSeconds;
+            // Rotation-aware: with one attack this is the old attack + rest gap loop.
+            return LockedBattleRotation.InAttackClip(fighter, secondsSinceFirstAttack);
         }
     }
 }

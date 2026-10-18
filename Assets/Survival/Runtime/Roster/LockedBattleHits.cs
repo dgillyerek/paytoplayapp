@@ -448,26 +448,9 @@ namespace Survival.Domain.Roster
         /// </summary>
         public static bool MeleeHitCrossed(LockedBattleFighter fighter, LockedBattleHitProfile profile, float previousSeconds, float seconds)
         {
-            if (profile.Projectile || profile.MeleeContactFrame < 0 || seconds <= previousSeconds || seconds < 0f)
-            {
-                return false;
-            }
-
-            var cycle = fighter.AttackCycleSeconds;
-            var contact = profile.MeleeContactSeconds;
-            if (cycle <= 0f || contact > fighter.AttackSeconds)
-            {
-                return false;
-            }
-
-            var n = (float)Math.Floor((seconds - contact) / cycle);
-            if (n < 0f)
-            {
-                return false;
-            }
-
-            var at = (n * cycle) + contact;
-            return at > previousSeconds && at <= seconds;
+            // Rotation-aware (each attack on its own contact frame); with one attack this is the
+            // old one-hit-per-cycle rule.
+            return LockedBattleRotation.MeleeHitCrossed(fighter, profile, previousSeconds, seconds, out _);
         }
 
         /// <summary>Knock-back weight 0..1: quick push out, then ease back to 0 by <see cref="RecoilSeconds"/>.</summary>

@@ -31,8 +31,9 @@ public sealed class LockedBattleLaneFiveTests
         Assert.Equal(16, LockedBattleHits.SirAldricContactFrame);
         Assert.Equal(42, LockedBattleHits.BlightrootContactFrame);
 
-        // One hit per attack cycle, never in the rest gap.
-        foreach (var (fighter, profile) in new[] { (LockedBattleRoster.SirAldric, aldric), (LockedBattleRoster.Blightroot, blight) })
+        // One hit per attack cycle, never in the rest gap. Sir Aldric still loops his one attack;
+        // Blightroot's rotation is covered in LockedBattleRotationTests.
+        foreach (var (fighter, profile) in new[] { (LockedBattleRoster.SirAldric, aldric) })
         {
             var hits = 0;
             var dt = 1f / 120f;

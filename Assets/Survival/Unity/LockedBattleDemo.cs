@@ -18,6 +18,9 @@ namespace Survival.Unity
     /// and the defender flinches (a small knock-back on its actor root, skipped mid-attack) and
     /// flashes. Pure presentation: the existing actors play the locked FBXs as-is, and the
     /// flinch moves only the actor root. Nobody takes damage. HOLD merge until Derek Game-view PASS.
+    /// Attack rotation (2026-10-17, humanoids): each fighter cycles its attack list 1, 2, 3 with the
+    /// rest gap after each (<see cref="LockedBattleRotation"/>); fighters with one attack (the
+    /// creatures, on hold) loop it exactly as before. Blightroot: swipe, punch, jump smash.
     /// </summary>
     [DefaultExecutionOrder(500)]
     public sealed class LockedBattleDemo : MonoBehaviour
@@ -63,6 +66,10 @@ namespace Survival.Unity
                 f.PreviousPhaseTime = 0f;
                 ClearHit(f);
                 f.AttackClipOn = false;
+                f.AttackIndex = 0;
+                f.AttackRootStart = 0f;
+                f.AttackOffset = Vector3.zero;
+                f.Host.localPosition = f.BaseLocal;
                 f.PreviousForward = 0f;
                 f.RestForward = 0f;
             }
@@ -172,8 +179,48 @@ namespace Survival.Unity
             f.PhaseTime = 0f;
             f.PreviousPhaseTime = 0f;
             f.AttackClipOn = true;
-            f.Play(f.Data.AttackPoseName);
+            StartAttackClip(f, 0);
             MatchEffectWidths(f);
+        }
+
+        /// <summary>Plays attack <paramref name="index"/> of the fighter's rotation (attack 1 is the locked attack).</summary>
+        private static void StartAttackClip(Fighter f, int index)
+        {
+            f.AttackIndex = index;
+            f.AttackOffset = Vector3.zero;
+            f.Play(LockedBattleRotation.AttackAt(f.Data, index).PoseName);
+            f.AttackRootStart = RawStrideForward(f);
+        }
+
+        /// <summary>
+        /// Stride bone forward offset with this battle's own host offsets (reach slide, recoil)
+        /// taken out, so the in-place hold does not chase itself.
+        /// </summary>
+        private static float RawStrideForward(Fighter f)
+        {
+            return StrideForward(f) - (f.Host.localPosition - f.BaseLocal).z;
+        }
+
+        /// <summary>
+        /// Host offset for the attack playing now: the reach slide toward the defender, and for a
+        /// leap (in place) the stride bone's own forward carry held back on the spot.
+        /// </summary>
+        private static void UpdateAttackOffset(Fighter f, bool inClip, float secondsIntoAttack)
+        {
+            if (!inClip)
+            {
+                f.AttackOffset = Vector3.zero;
+                return;
+            }
+
+            var attack = LockedBattleRotation.AttackAt(f.Data, f.AttackIndex);
+            var forward = attack.ReachShift.At(secondsIntoAttack * BlenderRigAttackSpec.FrameRate);
+            if (attack.InPlace && f.StrideBone != null)
+            {
+                forward -= RawStrideForward(f) - f.AttackRootStart;
+            }
+
+            f.AttackOffset = new Vector3(0f, 0f, forward);
         }
 
         private void TickAttack(Fighter f)
@@ -187,24 +234,39 @@ namespace Survival.Unity
             }
 
             if (!f.Profile.Projectile
-                && LockedBattleHits.MeleeHitCrossed(f.Data, f.Profile, f.PreviousPhaseTime, f.PhaseTime))
+                && LockedBattleRotation.MeleeHitCrossed(f.Data, f.Profile, f.PreviousPhaseTime, f.PhaseTime, out var hitIndex))
             {
-                LandHit(f, MeleeContact(f));
+                LandHit(f, MeleeContact(f, hitIndex), hitIndex);
             }
 
+            LockedBattleRotation.Locate(f.Data, f.PhaseTime, out var index, out var into);
+            var attack = LockedBattleRotation.AttackAt(f.Data, index);
             if (f.Data.AttackCyclesItself)
             {
+                // The actor loops attack + rest itself. With one attack (the creatures) leave it
+                // alone; with more, switch its attack pose when the rotation moves on.
+                if (LockedBattleRotation.Count(f.Data) > 1 && index != f.AttackIndex)
+                {
+                    StartAttackClip(f, index);
+                }
+
+                UpdateAttackOffset(f, into < attack.Seconds, into);
                 return;
             }
 
-            var on = LockedBattleRoster.InAttackClip(f.Data, f.PhaseTime);
-            if (on == f.AttackClipOn)
+            var on = into < attack.Seconds;
+            if (on && (!f.AttackClipOn || index != f.AttackIndex))
             {
-                return;
+                f.AttackClipOn = true;
+                StartAttackClip(f, index);
+            }
+            else if (!on && f.AttackClipOn)
+            {
+                f.AttackClipOn = false;
+                f.Play(f.Data.RestPoseName);
             }
 
-            f.AttackClipOn = on;
-            f.Play(on ? f.Data.AttackPoseName : f.Data.RestPoseName);
+            UpdateAttackOffset(f, on, into);
         }
 
         private static void Face(Fighter f, Vector3 flatDirection, float aimYawDegrees = 0f)
@@ -232,10 +294,14 @@ namespace Survival.Unity
             return f.Slot.InverseTransformPoint(f.StrideBone.position).z;
         }
 
-        /// <summary>How far the walk clip itself has carried the body ahead of the slot right now.</summary>
+        /// <summary>
+        /// How far the body is ahead of the slot right now: the walk clip's own carry, plus the
+        /// current attack's reach slide / in-place hold (so the body box moves with the body).
+        /// </summary>
         private static float WalkOffset(Fighter f)
         {
-            return f.StrideBone != null && f.Phase == Phase.Walk ? StrideForward(f) - f.RestForward : 0f;
+            var walk = f.StrideBone != null && f.Phase == Phase.Walk ? StrideForward(f) - f.RestForward : 0f;
+            return walk + f.AttackOffset.z;
         }
 
         private static Vector3 VisualPosition(Fighter f)
@@ -285,10 +351,11 @@ namespace Survival.Unity
         /// Melee contact point: where the line from the attacker to its striking bone enters the
         /// target's body box, or the closest box point when the bone stops just short of it.
         /// </summary>
-        private static Vector3 MeleeContact(Fighter attacker)
+        private static Vector3 MeleeContact(Fighter attacker, int attackIndex)
         {
             var target = attacker.Target!;
-            var bone = attacker.StrikeBone != null ? attacker.StrikeBone.position : attacker.Slot.position + (Vector3.up * 0.5f);
+            var strike = attacker.StrikeBoneFor(attackIndex);
+            var bone = strike != null ? strike.position : attacker.Slot.position + (Vector3.up * 0.5f);
             var origin = attacker.Slot.position;
             origin.y = bone.y;
             var a = ToBox(target, origin);
@@ -304,7 +371,7 @@ namespace Survival.Unity
         }
 
         /// <summary>Spawns the attacker's impact burst at the contact and starts the defender's reaction.</summary>
-        private void LandHit(Fighter attacker, Vector3 contact)
+        private void LandHit(Fighter attacker, Vector3 contact, int attackIndex = 0)
         {
             var target = attacker.Target;
             if (target == null || !target.Built)
@@ -315,7 +382,7 @@ namespace Survival.Unity
             var travel = target.Slot.position - attacker.Slot.position;
             travel.y = 0f;
             LockedBattleImpact.Spawn(attacker.Profile.Impact, contact, travel, attacker.Core, attacker.Glow, attacker.Edge);
-            _camera?.Shake(attacker.Profile.ShakeMetres);
+            _camera?.Shake(LockedBattleRotation.ShakeMetres(attacker.Data, attacker.Profile, attackIndex));
             var away = target.Slot.InverseTransformDirection(travel);
             away.y = 0f;
             target.HitAway = away.sqrMagnitude > 1e-8f ? away.normalized : Vector3.back;
@@ -334,13 +401,18 @@ namespace Survival.Unity
             if (w > 0f)
             {
                 var lean = f.Profile.RecoilDegrees * w * Mathf.Deg2Rad;
-                f.Host.localPosition = f.BaseLocal + (f.HitAway * (f.Profile.RecoilMetres * w));
+                f.Host.localPosition = f.BaseLocal + f.AttackOffset + (f.HitAway * (f.Profile.RecoilMetres * w));
                 f.Host.localRotation = Quaternion.FromToRotation(Vector3.up, (Vector3.up + (f.HitAway * Mathf.Tan(lean))).normalized);
             }
-            else if (f.Recoiling)
+            else
             {
-                f.Host.localPosition = f.BaseLocal;
-                f.Host.localRotation = Quaternion.identity;
+                if (f.Recoiling)
+                {
+                    f.Host.localRotation = Quaternion.identity;
+                }
+
+                // Attack reach slide / in-place hold (zero outside the attacks that use one).
+                f.Host.localPosition = f.BaseLocal + f.AttackOffset;
             }
 
             f.Recoiling = w > 0f;
@@ -402,7 +474,7 @@ namespace Survival.Unity
             f.HitAge = 10f;
             f.RecoilOn = false;
             f.Recoiling = false;
-            f.Host.localPosition = f.BaseLocal;
+            f.Host.localPosition = f.BaseLocal + f.AttackOffset;
             f.Host.localRotation = Quaternion.identity;
             ClearFlash(f);
         }
@@ -757,6 +829,23 @@ namespace Survival.Unity
                 }
             }
 
+            var attackCount = LockedBattleRotation.Count(data);
+            f.AttackStrikeBones = new Transform?[attackCount];
+            for (var a = 0; a < attackCount; a++)
+            {
+                var boneName = LockedBattleRotation.AttackAt(data, a).StrikeBone;
+                if (string.IsNullOrEmpty(boneName))
+                {
+                    continue;
+                }
+
+                f.AttackStrikeBones[a] = FindBone(host.transform, boneName);
+                if (f.AttackStrikeBones[a] == null)
+                {
+                    Debug.LogWarning("Locked battle: " + data.Name + " attack " + (a + 1) + " strike bone missing. " + boneName);
+                }
+            }
+
             if (driver != null && f.Profile.Projectile)
             {
                 var captured = f;
@@ -780,7 +869,7 @@ namespace Survival.Unity
                 "Locked battle " + data.Name + " (" + data.Side + "): imported height " + height.ToString("0.###") +
                 " units, scaled x" + f.Scale.ToString("0.####") + " to " + data.DesignHeightMetres.ToString("0.###") +
                 " m. Walk '" + data.WalkPoseName + "', attack '" + data.AttackPoseName + "' at " +
-                data.AttackRangeMetres.ToString("0.0") + " m.");
+                data.AttackRangeMetres.ToString("0.0") + " m, rotation of " + attackCount + " attack(s).");
             return f;
         }
 
@@ -1150,6 +1239,28 @@ namespace Survival.Unity
             public Phase Phase { get; set; }
             public float PhaseTime { get; set; }
             public bool AttackClipOn { get; set; }
+
+            /// <summary>Attack of the rotation playing now (0 = the locked attack 1).</summary>
+            public int AttackIndex { get; set; }
+
+            /// <summary>Stride bone forward offset when the current attack clip started (in-place hold).</summary>
+            public float AttackRootStart { get; set; }
+
+            /// <summary>Host offset (slot metres) from the current attack's reach slide and in-place hold.</summary>
+            public Vector3 AttackOffset { get; set; }
+
+            /// <summary>Per-attack strike bones; null entries fall back to <see cref="StrikeBone"/>.</summary>
+            public Transform?[] AttackStrikeBones { get; set; } = System.Array.Empty<Transform?>();
+
+            public Transform? StrikeBoneFor(int attackIndex)
+            {
+                if (attackIndex >= 0 && attackIndex < AttackStrikeBones.Length && AttackStrikeBones[attackIndex] != null)
+                {
+                    return AttackStrikeBones[attackIndex];
+                }
+
+                return StrikeBone;
+            }
             public float PreviousForward { get; set; }
             public float RestForward { get; set; }
             public HashSet<int> ScaledEffects { get; } = new HashSet<int>();
