@@ -12,7 +12,7 @@ public sealed class OakenshieldFreshTests
         Assert.Equal(OakenshieldMotion.BoneCount, OakenshieldMotion.Spec.BoneCount);
         Assert.Equal(MixamoHumanoidBones.Names.Where(n => !n.EndsWith("ToeBase", StringComparison.Ordinal)).ToArray(), OakenshieldMotion.BoneNames);
         Assert.Equal(BlenderRigAvatar.CustomGeneric, OakenshieldMotion.Spec.Avatar);
-        Assert.Equal(new[] { "rest", "walk", "attack", "attack3" }, OakenshieldMotion.PoseNames);
+        Assert.Equal(new[] { "rest", "walk", "attack", "attack2", "attack3" }, OakenshieldMotion.PoseNames);
         Assert.Equal(31, OakenshieldAttack.Spec.Tracks[0].Frames.Length);
         Assert.Equal(31, OakenshieldAttack.Spec.Tracks[1].Frames.Length);
         Assert.Equal(14, OakenshieldAttack.ReleaseFrame);

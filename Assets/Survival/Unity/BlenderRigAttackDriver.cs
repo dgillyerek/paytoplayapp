@@ -354,6 +354,87 @@ namespace Survival.Unity
             }
         }
 
+        /// <summary>True once the attack has bound <paramref name="trackName"/> to its bone (Activate on the attack clip).</summary>
+        public bool HeldBound(string trackName)
+        {
+            var view = HeldView(trackName);
+            return view != null && view.Bone != null && view.BoneBound;
+        }
+
+        /// <summary>
+        /// Extra clip with the attack's held prop (Oakenshield attack 2): the prop rides its bone at the attack binding, turns in
+        /// the grip toward the two-hand line by <see cref="BlenderHeldRealign.Weight"/> and slides forward through the fist.
+        /// The hand and arm are not touched. Call after the rig evaluated <paramref name="frame"/>.
+        /// </summary>
+        public void TickHeldRealign(BlenderHeldRealign realign, float frame)
+        {
+            var view = HeldView(realign.TrackName);
+            if (view == null || view.Bone == null || !view.BoneBound)
+            {
+                return;
+            }
+
+            if (!realign.Visible(frame))
+            {
+                if (view.Shown)
+                {
+                    SetShown(view, false, true);
+                }
+
+                view.Root.SetActive(false);
+                return;
+            }
+
+            view.Root.SetActive(true);
+            var pos = view.Bone.TransformPoint(view.BoneLocalPos);
+            var rot = view.Bone.rotation * view.BoneLocalRot;
+            var w = realign.Weight(frame);
+            if (w > 0f && _bones.TryGetValue(realign.FrontBone, out var front) && _bones.TryGetValue(realign.FrontParentBone, out var frontParent))
+            {
+                var fore = front.position - frontParent.position;
+                var want = front.position + (fore * realign.PalmFraction) - pos;
+                if (want.sqrMagnitude > 1e-10f)
+                {
+                    rot = Quaternion.Slerp(Quaternion.identity, Quaternion.FromToRotation(rot * Vector3.forward, want.normalized), w) * rot;
+                    var metre = fore.magnitude / Mathf.Max(realign.ForearmMetres, 1e-4f);
+                    pos += rot * Vector3.forward * (realign.SlideMetres * w * metre);
+                }
+            }
+
+            var t = view.Root.transform;
+            t.SetPositionAndRotation(pos, rot);
+            var s = realign.Scale(frame);
+            t.localScale = new Vector3(s, s, s);
+            if (!view.Shown)
+            {
+                SetShown(view, true, true);
+            }
+        }
+
+        /// <summary>Another pose took over from a held-realign clip: the prop hides until its attack shows it again.</summary>
+        public void EndHeldRealign(BlenderHeldRealign realign)
+        {
+            var view = HeldView(realign.TrackName);
+            if (view != null)
+            {
+                SetShown(view, false, true);
+                view.Root.SetActive(false);
+            }
+        }
+
+        private TrackView? HeldView(string trackName)
+        {
+            foreach (var view in _views)
+            {
+                if (view.Track.Kind == AttackTrackKind.Held && string.Equals(view.Track.ObjectName, trackName, System.StringComparison.Ordinal))
+                {
+                    return view;
+                }
+            }
+
+            return null;
+        }
+
         private TrackView? BowShotArrow(BlenderBowShots shots)
         {
             foreach (var view in _views)

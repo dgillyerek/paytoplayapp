@@ -45,7 +45,7 @@
  "action": "OAKENSHIELD_attack2_spear_thrust",
  "segments": [
   {
-   "src": "OAKENSHIELD_mixamo_bayonet_stab_REJECTED.fbx (raw: /home/box/Downloads/OAKENSHIELD@Bayonet Stab.fbx)",
+   "src": "OAKENSHIELD_mixamo_bayonet_stab.fbx (raw: /home/box/Downloads/OAKENSHIELD@Bayonet Stab.fbx)",
    "tag": "s",
    "start": 1,
    "end": 99

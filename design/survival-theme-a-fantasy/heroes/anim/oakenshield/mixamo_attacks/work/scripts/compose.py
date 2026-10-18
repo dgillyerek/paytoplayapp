@@ -2,7 +2,7 @@ import sys,os
 from PIL import Image,ImageDraw,ImageFont
 d,frames,title,out,contacts=sys.argv[1],[int(x) for x in sys.argv[2].split(',')],sys.argv[3],sys.argv[4],{int(x.split(':')[0]):(x.split(':')[1] if ':' in x else 'HIT') for x in sys.argv[5].split(',')}
 rows=sys.argv[6].split(',') if len(sys.argv)>6 else ['side','q34','hand']
-labels={'side':'side','q34':'3/4 front','hand':'bow-hand close-up (from behind the draw shoulder)'}
+labels={'side':'side','q34':'3/4 front','hand':'bow-hand close-up (from behind the draw shoulder)','shand':'hands + spear close-up (from in front of her chest)','top':'hands + spear from above her right shoulder'}
 W,H=420,560; pad=36
 font=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',18); big=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',24)
 img=Image.new('RGB',(W*len(frames),pad+len(rows)*(H+pad)),(24,26,30)); dr=ImageDraw.Draw(img)

@@ -76,7 +76,7 @@ files are not touched.
 | # | Attack | Mixamo title | Notes |
 |---|---|---|---|
 | 1 | thorn spear throw | *(locked)* | unchanged |
-| 2 | spear thrust (melee) | ~~Stabbing~~ REJECTED and ~~Bayonet Stab~~ REJECTED 2026-10-18. With her locked grip, the spear stands upright in Stabbing and points back through her body in Bayonet Stab; see oakenshield/mixamo_attacks/NOTE.md. Still open. | Needs a clip where the right fist drives forward with the spear along her grip axis, or Derek approves a different grip for this attack. Impact: LeafEarth splinters. |
+| 2 | spear thrust (melee) | ~~Stabbing~~ REJECTED. **Bayonet Stab WIRED 2026-10-18** as `attack2` (`OAKENSHIELD_blenderig_attack2_spear_thrust.fbx`, f0-91, reach f46); the spear turns in her grip into the two-hand line (see oakenshield/mixamo_attacks/NOTE.md). | Impact: LeafEarth splinters (hero blue). |
 | 3 | root snare (area) | **Standing 2H Magic Area Attack 02** (WIRED 2026-10-18, contact f52) | Ground-strike gesture. Fallback: **Mutant Jump Attack** with In Place on (a heavier stamp). The left foot plants on the strike. Impact: blue-tinted thorn roots under the target. |
 
 ### Vespera (villain sorceress, orb; conjure plays **1.5x slower**)

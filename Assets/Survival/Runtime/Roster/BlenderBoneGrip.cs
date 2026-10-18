@@ -247,4 +247,92 @@ namespace Survival.Domain.Roster
             return false;
         }
     }
+
+    /// <summary>
+    /// Extra clip that carries an attack's held prop and turns it in the grip (2026-10-18, Oakenshield attack 2 spear thrust).
+    /// The prop rides its bone at the attack binding (hand and arm untouched); from <see cref="Keys"/>[0] it turns about the grip
+    /// point (minimal rotation, smoothstep weight) from that orientation to the two-hand line, point leading (prop root +Z in
+    /// Unity, as at the attack's release) toward the front palm (<see cref="FrontBone"/> plus <see cref="PalmFraction"/> of the
+    /// forearm beyond it), full at Keys[1], held to Keys[2], back by Keys[3]. With the turn it slides <see cref="SlideMetres"/>
+    /// forward through the fist so the butt clears the rear forearm. <see cref="ShowKeys"/> conjure it in and out (scale).
+    /// </summary>
+    public sealed class BlenderHeldRealign
+    {
+        public const float HiddenScale = 0.05f;
+
+        public BlenderHeldRealign(
+            string trackName,
+            string frontBone,
+            string frontParentBone,
+            float palmFraction,
+            float[] keys,
+            float slideMetres,
+            float forearmMetres,
+            float[] showKeys)
+        {
+            TrackName = trackName ?? throw new ArgumentNullException(nameof(trackName));
+            FrontBone = frontBone ?? throw new ArgumentNullException(nameof(frontBone));
+            FrontParentBone = frontParentBone ?? throw new ArgumentNullException(nameof(frontParentBone));
+            PalmFraction = palmFraction;
+            Keys = keys is { Length: 4 } ? keys : throw new ArgumentException("four keys", nameof(keys));
+            SlideMetres = slideMetres;
+            ForearmMetres = forearmMetres;
+            ShowKeys = showKeys is { Length: 4 } ? showKeys : throw new ArgumentException("four show keys", nameof(showKeys));
+        }
+
+        public string TrackName { get; }
+        public string FrontBone { get; }
+        public string FrontParentBone { get; }
+        public float PalmFraction { get; }
+        public float[] Keys { get; }
+        public float SlideMetres { get; }
+        public float ForearmMetres { get; }
+        public float[] ShowKeys { get; }
+
+        /// <summary>0 = the attack grip orientation, 1 = the two-hand line.</summary>
+        public float Weight(float frame)
+        {
+            float a = Keys[0], b = Keys[1], c = Keys[2], e = Keys[3];
+            if (frame <= a || frame >= e)
+            {
+                return 0f;
+            }
+
+            if (frame < b)
+            {
+                return Smooth((frame - a) / (b - a));
+            }
+
+            return frame <= c ? 1f : 1f - Smooth((frame - c) / (e - c));
+        }
+
+        /// <summary>Prop scale: conjured in over ShowKeys[0..1], gone over ShowKeys[2..3].</summary>
+        public float Scale(float frame)
+        {
+            float a = ShowKeys[0], b = ShowKeys[1], c = ShowKeys[2], e = ShowKeys[3];
+            float u;
+            if (frame <= a || frame >= e)
+            {
+                u = 0f;
+            }
+            else if (frame < b)
+            {
+                u = Smooth((frame - a) / (b - a));
+            }
+            else
+            {
+                u = frame <= c ? 1f : 1f - Smooth((frame - c) / (e - c));
+            }
+
+            return HiddenScale + ((1f - HiddenScale) * u);
+        }
+
+        public bool Visible(float frame) => frame > ShowKeys[0] && frame < ShowKeys[3];
+
+        private static float Smooth(float t)
+        {
+            t = t < 0f ? 0f : t > 1f ? 1f : t;
+            return t * t * (3f - (2f * t));
+        }
+    }
 }

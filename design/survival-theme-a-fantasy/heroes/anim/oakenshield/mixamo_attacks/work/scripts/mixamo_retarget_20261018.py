@@ -111,6 +111,23 @@ if lift:
             for n in DS[part]:
                 if n in Q: Q[n]=R@Q[n]
         body_seq[i]=(Q,h,t,f)
+tw=PRM.get('spine_twist')
+if tw:
+    # upper-body twist about world Z, ramped (seq indices i0..i3), half on Spine, half on Spine1; Neck counter-turns so the head keeps facing
+    axz=AWq.inverted()@Vector((0,0,1)); DN=descendants(P+'Neck')
+    i0,i1,i2,i3=tw['keys']
+    for i,(Q,h,t,f) in enumerate(body_seq):
+        w=sm((i-i0)/max(1,i1-i0)) if i<i1 else (1.0 if i<=i2 else 1-sm((i-i2)/max(1,i3-i2)))
+        if w<=0: continue
+        Q=dict(Q); a=math.radians(tw['deg'])*w
+        for part in ('Spine','Spine1'):
+            R=Quaternion(axz,a*0.5)
+            for n in DS[part]:
+                if n in Q: Q[n]=R@Q[n]
+        Rc=Quaternion(axz,-a*tw.get('head_keep',1.0))
+        for n in DN:
+            if n in Q: Q[n]=Rc@Q[n]
+        body_seq[i]=(Q,h,t,f)
 by=PRM.get('body_yaw')
 if by:
     # whole-body yaw about world Z through the hips (side-on stance), optional upper-body counter-yaw; constant over the clip

@@ -44,9 +44,30 @@ namespace Survival.Domain.Heroes
         // onto OAKENSHIELD_rig (design .../oakenshield/mixamo_attacks): T-pose Mixamo bind matched to the rig bind, body bones only,
         // hips drift removed, left-foot step into the side-on wind-up (hips -58 deg, as her spear throw), squaring up as both palms drive
         // down into the ground at f52, when the roots erupt under the target. Empty-handed: the thorn spear is only conjured in attack 1.
-        // Attack 2 is still open: at her locked grip, Mixamo "Stabbing" holds the spear upright and "Bayonet Stab" points it back
-        // through her body (design probe sheets, NOTE.md).
+        // Attack 2 (2026-10-18): Mixamo "Bayonet Stab" retargeted the same way, hips travel held (the battle slides her in instead),
+        // upper body twisted up to 22 deg further side-on toward the reach (Spine/Spine1, head kept facing) so the line from her rear
+        // fist to her front palm points at the target. Hands and arms stay as retargeted: only the thorn spear turns in her grip,
+        // from the attack-1 grip orientation into the two-hand line (point leading, through both hands) by f40, held to f52, back
+        // by f72, sliding 0.56 m forward through the fist so the butt clears her rear forearm. Reach f46: LeafEarth splinters.
+        // At her plain locked grip the spear pointed back through her body ("Stabbing" held it upright): design probe sheets.
         public const string DesignMixamoAttacksDir = "design/survival-theme-a-fantasy/heroes/anim/oakenshield/mixamo_attacks";
+        public const string Attack2PoseName = "attack2";
+        public const string Attack2FileName = "OAKENSHIELD_blenderig_attack2_spear_thrust.fbx";
+        public const string Attack2Md5 = "a6ece9712edd047479c31428fcac0c37";
+        public const int Attack2LastFrame = 91;
+        public const int Attack2ContactFrame = 46;
+
+        /// <summary>Attack 2 spear: the attack-1 thorn spear track, turned in the RightHand grip toward the left palm (7 cm past the wrist).</summary>
+        public static readonly BlenderHeldRealign Attack2Spear = new BlenderHeldRealign(
+            "OAKENSHIELD_thornspear",
+            "mixamorig:LeftHand",
+            "mixamorig:LeftForeArm",
+            0.07f / 0.2019f,
+            new[] { 10f, 40f, 52f, 72f },
+            0.56f,
+            0.2019f,
+            new[] { 0f, 6f, 85f, 91f });
+
         public const string Attack3PoseName = "attack3";
         public const string Attack3FileName = "OAKENSHIELD_blenderig_attack3_root_snare.fbx";
         public const string Attack3Md5 = "bb933ae64a0fa880583eed00236f2663";
@@ -54,9 +75,9 @@ namespace Survival.Domain.Heroes
         public const int Attack3ContactFrame = 52;
         public const string ExtraTakeName = "Scene";
 
-        public static readonly string[] AttackPoseNames = { AttackPoseName, Attack3PoseName };
+        public static readonly string[] AttackPoseNames = { AttackPoseName, Attack2PoseName, Attack3PoseName };
 
-        public static readonly string[] PoseNames = { RestPoseName, WalkPoseName, AttackPoseName, Attack3PoseName };
+        public static readonly string[] PoseNames = { RestPoseName, WalkPoseName, AttackPoseName, Attack2PoseName, Attack3PoseName };
         public static readonly string[] BoneNames =
         {
             "mixamorig:Hips",
@@ -109,6 +130,15 @@ namespace Survival.Domain.Heroes
                     BlenderRigAttackSpec.ClipSeconds,
                     BlenderRigAttackSpec.FrameRate,
                     BlenderRigAttackSpec.LastFrame),
+                new BlenderRigClip(
+                    Attack2PoseName,
+                    Attack2FileName,
+                    ExtraTakeName,
+                    Attack2LastFrame / WalkFrameRate,
+                    WalkFrameRate,
+                    Attack2LastFrame,
+                    null,
+                    Attack2Spear),
                 new BlenderRigClip(Attack3PoseName, Attack3FileName, ExtraTakeName, Attack3LastFrame / WalkFrameRate, WalkFrameRate, Attack3LastFrame)
             });
     }
