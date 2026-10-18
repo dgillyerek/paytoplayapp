@@ -458,6 +458,25 @@ namespace Survival.Domain.Roster
             0f,
             LyraAttacks);
 
+        /// <summary>
+        /// Oakenshield's rotation (2026-10-18): the locked thorn spear throw, then the root snare (Mixamo): both palms drive down at
+        /// f52 and hero-blue roots burst up out of the ground under the target. Attack 2 (a forward spear thrust) is still to come.
+        /// </summary>
+        public static readonly LockedBattleAttack[] OakenshieldAttacks =
+        {
+            new LockedBattleAttack("thorn spear throw", OakenshieldMotion.AttackPoseName, BlenderRigAttackSpec.ClipSeconds),
+            new LockedBattleAttack(
+                "root snare",
+                OakenshieldMotion.Attack3PoseName,
+                OakenshieldMotion.Attack3LastFrame / OakenshieldMotion.WalkFrameRate,
+                OakenshieldMotion.Attack3ContactFrame,
+                "mixamorig:LeftHand",
+                0.05f,
+                false,
+                default,
+                BattleImpactKind.HeroRootSnare)
+        };
+
         public static readonly LockedBattleFighter Oakenshield = new LockedBattleFighter(
             "Oakenshield",
             BattleSide.Hero,
@@ -472,7 +491,10 @@ namespace Survival.Domain.Roster
             3.0f,
             BlenderRigAttackSpec.ClipSeconds,
             true,
-            3);
+            3,
+            "",
+            0f,
+            OakenshieldAttacks);
 
         public static readonly LockedBattleFighter Vespera = new LockedBattleFighter(
             "Vespera",

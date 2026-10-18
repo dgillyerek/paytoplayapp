@@ -136,6 +136,9 @@ namespace Survival.Unity
                 case BattleImpactKind.GroundSlam:
                     fx.BuildGroundSlam(core, glow, edge, travel);
                     break;
+                case BattleImpactKind.HeroRootSnare:
+                    fx.BuildHeroRootSnare(travel);
+                    break;
                 default:
                     fx.BuildIronClaw(core, glow, edge, travel);
                     break;
@@ -287,6 +290,46 @@ namespace Survival.Unity
             }
 
             AddLight(new Color(0.65f, 0.30f, 1f, 1f), 8f, 3.0f, 0.22f);
+        }
+
+        /// <summary>
+        /// Oakenshield root snare: hero-blue flash, seven blue-glowing roots curling up out of the battle floor (y = 0) around
+        /// the hit, leaves and an earth dust puff, blue light.
+        /// </summary>
+        private void BuildHeroRootSnare(Vector3 travel)
+        {
+            _life = 0.75f;
+            var root = new Color(0.36f, 0.26f, 0.14f, 1f);
+            var leaf = new Color(0.30f, 0.62f, 0.20f, 1f);
+            var leafEnd = new Color(0.45f, 0.55f, 0.15f, 0.8f);
+            var dust = new Color(0.42f, 0.34f, 0.24f, 0.55f);
+            var dustEnd = new Color(0.34f, 0.28f, 0.20f, 0.25f);
+            Burst("Flash", Additive(), 1, 0.12f, 0.12f, 0f, 0f, 0.60f, 0.75f, Bright(HeroBlueCore), HeroBlueCore, HeroBlueGlow, 0f, 0.02f, 180f, 0.3f);
+            Burst("Leaves", Alpha(), 14, 0.45f, 0.65f, 1.0f, 2.2f, 0.04f, 0.08f, leaf, leafEnd, leafEnd, 1.0f, 0.10f, 80f, 1f);
+            Burst("Dust", Alpha(), 10, 0.45f, 0.70f, 0.4f, 1.0f, 0.22f, 0.42f, dust, dustEnd, dustEnd, -0.05f, 0.25f, 120f, 1.8f);
+            Burst("Motes", Additive(), 16, 0.40f, 0.60f, 0.5f, 1.2f, 0.02f, 0.05f, Bright(HeroBlueCore), HeroBlueGlow, HeroBlueEdge, -0.8f, 0.20f, 90f, 0.6f);
+            var origin = transform.position;
+            origin.y = 0f;
+            var side = Vector3.Cross(Vector3.up, travel).normalized;
+            for (var i = 0; i < 7; i++)
+            {
+                var angle = (i / 7f) * Mathf.PI * 2f + Random.Range(-0.25f, 0.25f);
+                var dir = (travel * Mathf.Cos(angle)) + (side * Mathf.Sin(angle));
+                var foot = origin + (dir * Random.Range(0.25f, 0.40f));
+                var height = Random.Range(0.55f, 0.95f);
+                var bark = Line("Root" + i, Alpha(), 7, 0.07f, root, root);
+                var glowLine = Line("RootGlow" + i, Additive(), 7, 0.035f, HeroBlueGlow, Bright(HeroBlueCore));
+                for (var k = 0; k < 7; k++)
+                {
+                    var t = k / 6f;
+                    // Rises from the floor and curls in over the target.
+                    var p = foot - (dir * (0.22f * t * t)) + (Vector3.up * (height * t)) + (side * (0.05f * Mathf.Sin(t * 6f + i)));
+                    bark.SetPosition(k, p);
+                    glowLine.SetPosition(k, p);
+                }
+            }
+
+            AddLight(new Color(0.40f, 0.62f, 1f, 1f), 7f, 2.6f, 0.20f);
         }
 
         /// <summary>Bonequill bone arrow hit: violet flash, pale bone shards, dark purple wisps.</summary>

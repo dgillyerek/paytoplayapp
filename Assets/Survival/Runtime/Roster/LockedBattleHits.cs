@@ -48,7 +48,10 @@ namespace Survival.Domain.Roster
         HeroArcaneNova = 13,
 
         /// <summary>Ironhowl overhead smash (attack 2): purple flash, a purple crack ring on the ground, dust and debris.</summary>
-        GroundSlam = 14
+        GroundSlam = 14,
+
+        /// <summary>Oakenshield root snare (attack 3): hero-blue flash, blue-glowing roots bursting up from the ground, leaves and earth dust.</summary>
+        HeroRootSnare = 15
     }
 
     /// <summary>

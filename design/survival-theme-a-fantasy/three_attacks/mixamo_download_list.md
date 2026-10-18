@@ -76,8 +76,8 @@ files are not touched.
 | # | Attack | Mixamo title | Notes |
 |---|---|---|---|
 | 1 | thorn spear throw | *(locked)* | unchanged |
-| 2 | spear thrust (melee) | **Stabbing** | One-handed forward stab. In Place on. Fallback: **Sword And Shield Attack** (thrust variant). Spear stays in hand. Impact: LeafEarth splinters. |
-| 3 | root snare (area) | **Standing 2H Magic Area Attack 02** | Ground-strike gesture. Fallback: **Mutant Jump Attack** with In Place on (a heavier stamp). The left foot plants on the strike. Impact: blue-tinted thorn roots under the target. |
+| 2 | spear thrust (melee) | ~~Stabbing~~ REJECTED 2026-10-18 (holds her spear upright at her grip; see oakenshield/mixamo_attacks/NOTE.md). Wanted: search **"Advancing And Stabbing With Rifle Bayonet Or Spear"** | One-handed forward stab. In Place on. Fallback: **Sword And Shield Attack** (thrust variant). Spear stays in hand. Impact: LeafEarth splinters. |
+| 3 | root snare (area) | **Standing 2H Magic Area Attack 02** (WIRED 2026-10-18, contact f52) | Ground-strike gesture. Fallback: **Mutant Jump Attack** with In Place on (a heavier stamp). The left foot plants on the strike. Impact: blue-tinted thorn roots under the target. |
 
 ### Vespera (villain sorceress, orb; conjure plays **1.5x slower**)
 | # | Attack | Mixamo title | Notes |
