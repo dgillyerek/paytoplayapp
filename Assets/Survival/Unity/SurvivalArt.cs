@@ -43,6 +43,12 @@ namespace Survival.Unity
             {
                 LoadPath(Path.Combine(packRoot, pair.Value.Replace('/', Path.DirectorySeparatorChar)), pair.Key);
             }
+
+            // Painted art wins; the code-drawn kit in "art_fallback" only fills keys whose painted file is missing or unreadable.
+            foreach (var pair in pack.ArtFallback)
+            {
+                LoadPath(Path.Combine(packRoot, pair.Value.Replace('/', Path.DirectorySeparatorChar)), pair.Key, pack.ArtFallbackSlices);
+            }
         }
 
         public static Sprite? Get(string key)
@@ -196,8 +202,9 @@ namespace Survival.Unity
             }
         }
 
-        private static void LoadPath(string path, string key)
+        private static void LoadPath(string path, string key, IReadOnlyDictionary<string, ArtSlice>? slices = null)
         {
+            slices ??= _slices;
             if (_sprites!.ContainsKey(key) || !File.Exists(path))
             {
                 return;
@@ -222,7 +229,7 @@ namespace Survival.Unity
             }
 
             var border = Vector4.zero;
-            if (_slices != null && _slices.TryGetValue(key, out var slice))
+            if (slices != null && slices.TryGetValue(key, out var slice))
             {
                 border = new Vector4(
                     Mathf.Min(slice.Left, tex.width * 0.49f),

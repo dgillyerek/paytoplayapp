@@ -62,6 +62,48 @@ public sealed class HookArtKitTests
     }
 
     [Fact]
+    public void Painted_art_replaces_the_code_kit_which_stays_bound_as_fallback()
+    {
+        var pack = TestPaths.LoadPack();
+        var packRoot = Path.Combine(RepoRoot(), "Assets", "ThemePack", "fantasy_kingdom_a");
+        var painted = new[]
+            {
+                HookArtKeys.Panel, HookArtKeys.ButtonGold, HookArtKeys.ButtonGreen, HookArtKeys.ButtonBlue, HookArtKeys.ButtonRed,
+                HookArtKeys.Scroll, HookArtKeys.RibbonRed, HookArtKeys.RibbonBlue, HookArtKeys.BadgeFree, HookArtKeys.Header,
+                HookArtKeys.ChestClosed, HookArtKeys.ChestOpen, HookArtKeys.Gift,
+                HookArtKeys.GemsTier1, HookArtKeys.GemsTier2, HookArtKeys.GemsTier3, HookArtKeys.FxRays,
+                SurvIds.ThemeAStoreIcon, SurvIds.ThemeABuildingHqKeep,
+            }
+            .Concat(Resources.Select(HookArtKeys.ForResource))
+            .Concat(Plots.Append("base.plot.quarry_01").Select(HookArtKeys.ForPlot));
+        foreach (var key in painted)
+        {
+            Assert.True(pack.TryArt(key, out var rel), key + " missing from pack.json art");
+            Assert.StartsWith("art/hook/painted/", rel);
+        }
+
+        Assert.NotEmpty(pack.ArtFallback);
+        foreach (var pair in pack.ArtFallback)
+        {
+            Assert.True(pack.TryArt(pair.Key, out var primary), pair.Key + " has a fallback but no primary art");
+            Assert.NotEqual(primary, pair.Value);
+            var path = Path.Combine(packRoot, pair.Value.Replace('/', Path.DirectorySeparatorChar));
+            Assert.True(File.Exists(path), pair.Key + " fallback -> " + pair.Value + " not on disk");
+            var (w, h, colorType) = PngHeader(path);
+            Assert.True(colorType == 6 || colorType == 4, pair.Key + " fallback must be RGBA");
+            if (pack.ArtFallbackSlices.TryGetValue(pair.Key, out var s))
+            {
+                Assert.True(s.Left + s.Right < w && s.Bottom + s.Top < h, pair.Key + " fallback borders overlap");
+            }
+        }
+
+        foreach (var key in pack.ArtFallbackSlices.Keys)
+        {
+            Assert.True(pack.ArtFallback.ContainsKey(key), key + " fallback slice without fallback art");
+        }
+    }
+
+    [Fact]
     public void Bad_art_slice_is_rejected()
     {
         var bad = "{\"theme_id\":\"t\",\"systems_api\":\"" + SurvIds.SystemsApi + "\",\"art\":{},\"art_slices\":{\"k\":[1,2,3]}}";

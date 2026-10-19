@@ -64,6 +64,12 @@ namespace Survival.Domain.Theme
 
         public bool TrySlice(string contentKey, out ArtSlice slice) => ArtSlices.TryGetValue(contentKey, out slice!);
 
+        /// <summary>Optional per-key fallback art from pack.json "art_fallback" (e.g. the code-drawn hook kit behind painted art).</summary>
+        public IReadOnlyDictionary<string, string> ArtFallback { get; private set; } = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        /// <summary>9-slice borders for <see cref="ArtFallback"/> images, from pack.json "art_fallback_slices".</summary>
+        public IReadOnlyDictionary<string, ArtSlice> ArtFallbackSlices { get; private set; } = new Dictionary<string, ArtSlice>(StringComparer.Ordinal);
+
         public string StringOr(string key, string fallback) =>
             Strings.TryGetValue(key, out var value) && !string.IsNullOrEmpty(value) ? value : fallback;
 
@@ -77,19 +83,21 @@ namespace Survival.Domain.Theme
             var systemsApi = ReqString(pack, "systems_api");
             var displayName = pack.TryGet("display_name", out var dn) && dn is JsonNode.Str dns ? dns.Value : "";
             var strings = ReadStringMap(stringsJson);
-            var art = ReadArtMap(pack);
+            var art = ReadArtMap(pack, "art");
             var pins = ReadPins(pinsJson);
             var hud = ReadHud(hudJson);
             return new ThemePackBinder(themeId, packId, systemsApi, displayName, strings, art, pins, hud)
             {
-                ArtSlices = ReadSlices(pack)
+                ArtSlices = ReadSlices(pack, "art_slices"),
+                ArtFallback = ReadArtMap(pack, "art_fallback"),
+                ArtFallbackSlices = ReadSlices(pack, "art_fallback_slices")
             };
         }
 
-        private static IReadOnlyDictionary<string, ArtSlice> ReadSlices(JsonNode.Obj pack)
+        private static IReadOnlyDictionary<string, ArtSlice> ReadSlices(JsonNode.Obj pack, string section)
         {
             var map = new Dictionary<string, ArtSlice>(StringComparer.Ordinal);
-            if (!pack.TryGet("art_slices", out var node) || node is not JsonNode.Obj slices)
+            if (!pack.TryGet(section, out var node) || node is not JsonNode.Obj slices)
             {
                 return map;
             }
@@ -98,7 +106,7 @@ namespace Survival.Domain.Theme
             {
                 if (pair.Value is not JsonNode.Arr arr || arr.Items.Count != 4)
                 {
-                    throw new FormatException($"art_slices.{pair.Key} must be [left, bottom, right, top].");
+                    throw new FormatException($"{section}.{pair.Key} must be [left, bottom, right, top].");
                 }
 
                 var v = new float[4];
@@ -106,7 +114,7 @@ namespace Survival.Domain.Theme
                 {
                     if (arr.Items[i] is not JsonNode.Num num || num.Value < 0)
                     {
-                        throw new FormatException($"art_slices.{pair.Key} must hold non-negative numbers.");
+                        throw new FormatException($"{section}.{pair.Key} must hold non-negative numbers.");
                     }
 
                     v[i] = (float)num.Value;
@@ -133,10 +141,10 @@ namespace Survival.Domain.Theme
             return map;
         }
 
-        private static IReadOnlyDictionary<string, string> ReadArtMap(JsonNode.Obj pack)
+        private static IReadOnlyDictionary<string, string> ReadArtMap(JsonNode.Obj pack, string section)
         {
             var map = new Dictionary<string, string>(StringComparer.Ordinal);
-            if (!pack.TryGet("art", out var artNode) || artNode is not JsonNode.Obj art)
+            if (!pack.TryGet(section, out var artNode) || artNode is not JsonNode.Obj art)
             {
                 return map;
             }
