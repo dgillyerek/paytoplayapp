@@ -16,6 +16,8 @@ namespace Survival.Unity
         public const string KnightKey = SurvIds.ThemeAHeroKnight01;
 
         private static Dictionary<string, Sprite>? _sprites;
+        private static readonly Dictionary<string, Texture2D> Textures = new(StringComparer.OrdinalIgnoreCase);
+        private static IReadOnlyDictionary<string, ArtSlice>? _slices;
         private static Sprite? _white;
         private static Sprite? _circle;
         private static Sprite? _ring;
@@ -29,6 +31,7 @@ namespace Survival.Unity
             }
 
             _sprites = new Dictionary<string, Sprite>(StringComparer.Ordinal);
+            _slices = pack.ArtSlices;
             var packRoot = ResolvePackRoot(flavor);
             TryLoad(packRoot, pack, SurvIds.FlavorSplash, SplashKey);
             if (pack.Art.TryGetValue("map.terrain", out var terrainRel))
@@ -51,6 +54,9 @@ namespace Survival.Unity
 
             return null;
         }
+
+        /// <summary>True when the sprite was loaded with a 9-slice border from pack.json "art_slices".</summary>
+        public static bool IsSliced(Sprite? sprite) => sprite != null && sprite.border.sqrMagnitude > 0f;
 
         public static Sprite White()
         {
@@ -197,25 +203,43 @@ namespace Survival.Unity
                 return;
             }
 
-            var bytes = File.ReadAllBytes(path);
-            var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-            if (!tex.LoadImage(bytes, markNonReadable: false))
+            var full = Path.GetFullPath(path);
+            if (!Textures.TryGetValue(full, out var tex) || tex == null)
             {
-                UnityEngine.Object.Destroy(tex);
-                return;
+                var bytes = File.ReadAllBytes(full);
+                tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                if (!tex.LoadImage(bytes, markNonReadable: false))
+                {
+                    UnityEngine.Object.Destroy(tex);
+                    return;
+                }
+
+                tex.filterMode = FilterMode.Bilinear;
+                tex.wrapMode = TextureWrapMode.Clamp;
+                tex.alphaIsTransparency = true;
+                tex.name = key;
+                Textures[full] = tex;
             }
 
-            tex.filterMode = FilterMode.Bilinear;
-            tex.wrapMode = TextureWrapMode.Clamp;
-            tex.alphaIsTransparency = true;
-            tex.name = key;
+            var border = Vector4.zero;
+            if (_slices != null && _slices.TryGetValue(key, out var slice))
+            {
+                border = new Vector4(
+                    Mathf.Min(slice.Left, tex.width * 0.49f),
+                    Mathf.Min(slice.Bottom, tex.height * 0.49f),
+                    Mathf.Min(slice.Right, tex.width * 0.49f),
+                    Mathf.Min(slice.Top, tex.height * 0.49f));
+            }
+
             var sprite = Sprite.Create(
                 tex,
                 new Rect(0f, 0f, tex.width, tex.height),
                 new Vector2(0.5f, 0.5f),
                 100f,
                 0,
-                SpriteMeshType.FullRect);
+                SpriteMeshType.FullRect,
+                border);
+            sprite.name = key;
             _sprites[key] = sprite;
         }
     }

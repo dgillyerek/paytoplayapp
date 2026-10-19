@@ -8,6 +8,9 @@ namespace Survival.Domain.Theme
 {
     public sealed record ThemeArtBinding(string ContentKey, string RelativePath);
 
+    /// <summary>9-slice border in source pixels.</summary>
+    public sealed record ArtSlice(float Left, float Bottom, float Right, float Top);
+
     public sealed record WorldPin(
         string NodeId,
         string NodeTypeId,
@@ -56,6 +59,11 @@ namespace Survival.Domain.Theme
         public IReadOnlyList<WorldPin> Pins { get; }
         public IReadOnlyDictionary<string, HudRect> Hud { get; }
 
+        /// <summary>Optional 9-slice borders in source pixels (left, bottom, right, top) from pack.json "art_slices".</summary>
+        public IReadOnlyDictionary<string, ArtSlice> ArtSlices { get; private set; } = new Dictionary<string, ArtSlice>(StringComparer.Ordinal);
+
+        public bool TrySlice(string contentKey, out ArtSlice slice) => ArtSlices.TryGetValue(contentKey, out slice!);
+
         public string StringOr(string key, string fallback) =>
             Strings.TryGetValue(key, out var value) && !string.IsNullOrEmpty(value) ? value : fallback;
 
@@ -72,7 +80,42 @@ namespace Survival.Domain.Theme
             var art = ReadArtMap(pack);
             var pins = ReadPins(pinsJson);
             var hud = ReadHud(hudJson);
-            return new ThemePackBinder(themeId, packId, systemsApi, displayName, strings, art, pins, hud);
+            return new ThemePackBinder(themeId, packId, systemsApi, displayName, strings, art, pins, hud)
+            {
+                ArtSlices = ReadSlices(pack)
+            };
+        }
+
+        private static IReadOnlyDictionary<string, ArtSlice> ReadSlices(JsonNode.Obj pack)
+        {
+            var map = new Dictionary<string, ArtSlice>(StringComparer.Ordinal);
+            if (!pack.TryGet("art_slices", out var node) || node is not JsonNode.Obj slices)
+            {
+                return map;
+            }
+
+            foreach (var pair in slices.Fields)
+            {
+                if (pair.Value is not JsonNode.Arr arr || arr.Items.Count != 4)
+                {
+                    throw new FormatException($"art_slices.{pair.Key} must be [left, bottom, right, top].");
+                }
+
+                var v = new float[4];
+                for (var i = 0; i < 4; i++)
+                {
+                    if (arr.Items[i] is not JsonNode.Num num || num.Value < 0)
+                    {
+                        throw new FormatException($"art_slices.{pair.Key} must hold non-negative numbers.");
+                    }
+
+                    v[i] = (float)num.Value;
+                }
+
+                map[pair.Key] = new ArtSlice(v[0], v[1], v[2], v[3]);
+            }
+
+            return map;
         }
 
         private static IReadOnlyDictionary<string, string> ReadStringMap(string json)
