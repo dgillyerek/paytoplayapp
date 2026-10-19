@@ -120,6 +120,26 @@ namespace Survival.Unity
 
         }
 
+        /// <summary>
+        /// After every clip and the battle have posed the bodies: plant each fighter's lowest body
+        /// point on the ground (see <see cref="LockedBattleGrounding"/>). Host only, never the bones.
+        /// </summary>
+        private void LateUpdate()
+        {
+            if (!_booted)
+            {
+                return;
+            }
+
+            foreach (var f in _fighters)
+            {
+                if (f.Built)
+                {
+                    f.Ground?.Plant(f.Slot.position.y);
+                }
+            }
+        }
+
         private void BeginWalk(Fighter f)
         {
             f.Phase = Phase.Walk;
@@ -829,6 +849,9 @@ namespace Survival.Unity
             host.transform.localScale = new Vector3(f.Scale, f.Scale, f.Scale);
             f.BaseLocal = new Vector3(0f, -bounds.min.y * f.Scale, 0f);
             host.transform.localPosition = f.BaseLocal;
+            // The bounds only give the first frame's height; the real sole is planted every
+            // LateUpdate from the posed skin (renderer bounds sit below heeled or steep feet).
+            f.Ground = new LockedBattleGrounding(host.transform);
             LockedBattleRoster.StartPoint(data, out var x, out var z);
             f.StartPosition = new Vector3(x, 0f, z);
             f.StartRotation = Quaternion.Euler(0f, LockedBattleRoster.StartYawDegrees(data), 0f);
@@ -1227,6 +1250,9 @@ namespace Survival.Unity
             /// <summary>Actor root: body scale, plus the hit flinch offset on top of <see cref="BaseLocal"/>.</summary>
             public Transform Host { get; }
             public Vector3 BaseLocal { get; set; }
+
+            /// <summary>Plants the lowest body point on the ground each frame (host lift only).</summary>
+            public LockedBattleGrounding? Ground { get; set; }
             public Transform? StrikeBone { get; set; }
             public FlashSlot[] FlashSlots { get; set; } = System.Array.Empty<FlashSlot>();
             public MaterialPropertyBlock Block { get; } = new MaterialPropertyBlock();
@@ -1302,7 +1328,14 @@ namespace Survival.Unity
 
             public bool Play(string poseName)
             {
-                return Built && _play(poseName);
+                var played = Built && _play(poseName);
+                if (played)
+                {
+                    // A pose swap can turn on another body skin.
+                    Ground?.Refresh();
+                }
+
+                return played;
             }
         }
     }
