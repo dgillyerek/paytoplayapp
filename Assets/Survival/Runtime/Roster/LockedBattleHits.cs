@@ -60,7 +60,16 @@ namespace Survival.Domain.Roster
         VillainHexRain = 17,
 
         /// <summary>Sir Aldric shield bash (attack 3): hero-blue flash, a blue shock ring thrown off the shield face, blue motes, blue light.</summary>
-        HeroShieldShock = 18
+        HeroShieldShock = 18,
+
+        /// <summary>Creature wing gust (attack 2 of the dragons and Stormcrest): a flash and wind streaks swept across the hit, swirling motes, in the attacker's colours.</summary>
+        WingGust = 19,
+
+        /// <summary>Creature stomp quake (attack 3 of the dragons and Stormcrest): a crack ring on the floor under the hit, a dust ring and debris, in the attacker's colours.</summary>
+        StompQuake = 20,
+
+        /// <summary>Nightfang shadow claw wave (attack 3): three claw gouges ripping along the floor into the hit, a flash and dark wisps, in the attacker's colours.</summary>
+        ClawWave = 21
     }
 
     /// <summary>

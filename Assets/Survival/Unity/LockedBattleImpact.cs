@@ -152,6 +152,15 @@ namespace Survival.Unity
                 case BattleImpactKind.HeroShieldShock:
                     fx.BuildHeroShieldShock(travel);
                     break;
+                case BattleImpactKind.WingGust:
+                    fx.BuildWingGust(core, glow, edge, travel);
+                    break;
+                case BattleImpactKind.StompQuake:
+                    fx.BuildStompQuake(core, glow, edge, travel);
+                    break;
+                case BattleImpactKind.ClawWave:
+                    fx.BuildClawWave(core, glow, edge, travel);
+                    break;
                 default:
                     fx.BuildIronClaw(core, glow, edge, travel);
                     break;
@@ -303,6 +312,95 @@ namespace Survival.Unity
             }
 
             AddLight(new Color(0.65f, 0.30f, 1f, 1f), 8f, 3.0f, 0.22f);
+        }
+
+        /// <summary>
+        /// Creature wing gust (attack 2 of Emberfang, Stormcrest and Ashwyrm), in the attacker's own colours: a soft flash,
+        /// two sets of wind streaks swept across the hit (one level, one steep), swirling motes and a thin dust puff.
+        /// </summary>
+        private void BuildWingGust(Color core, Color glow, Color edge, Vector3 travel)
+        {
+            _life = 0.5f;
+            var dust = new Color(0.55f, 0.50f, 0.45f, 0.35f);
+            var dustEnd = new Color(0.45f, 0.42f, 0.38f, 0.1f);
+            Burst("Flash", Additive(), 1, 0.10f, 0.10f, 0f, 0f, 0.50f, 0.60f, Bright(core), core, glow, 0f, 0.02f, 180f, 0.3f);
+            Burst("Motes", Additive(), 22, 0.30f, 0.50f, 1.6f, 3.2f, 0.02f, 0.05f, Bright(core), glow, edge, -0.2f, 0.12f, 75f, 0.5f);
+            Burst("Dust", Alpha(), 8, 0.35f, 0.55f, 0.6f, 1.4f, 0.18f, 0.34f, dust, dustEnd, dustEnd, -0.05f, 0.15f, 110f, 1.8f);
+            AddStreaks(core, glow, travel, 0.60f, 0.09f, 0.10f, 0.36f, 8f);
+            AddStreaks(glow, edge, travel, 0.45f, 0.07f, 0.14f, 0.40f, 62f);
+            AddLight(glow, 4f, 2.2f, 0.14f);
+        }
+
+        /// <summary>
+        /// Creature stomp quake (attack 3 of Emberfang, Stormcrest and Ashwyrm), in the attacker's own colours: a flash, a
+        /// ring of jagged cracks on the battle floor under the hit, a dust ring, debris and sparks, a ground light.
+        /// </summary>
+        private void BuildStompQuake(Color core, Color glow, Color edge, Vector3 travel)
+        {
+            _life = 0.7f;
+            var dust = new Color(0.40f, 0.34f, 0.30f, 0.55f);
+            var dustEnd = new Color(0.30f, 0.26f, 0.22f, 0.2f);
+            Burst("Flash", Additive(), 1, 0.12f, 0.12f, 0f, 0f, 0.60f, 0.75f, Bright(core), core, glow, 0f, 0.02f, 180f, 0.3f);
+            Burst("Sparks", Additive(), 16, 0.15f, 0.30f, 3.0f, 5.5f, 0.015f, 0.035f, Bright(core), glow, edge, 0.6f, 0.05f, 60f, 0.3f);
+            Burst("Dust", Alpha(), 16, 0.40f, 0.70f, 0.8f, 1.8f, 0.20f, 0.40f, dust, dustEnd, dustEnd, -0.05f, 0.25f, 120f, 2.0f);
+            Burst("Debris", Alpha(), 12, 0.40f, 0.60f, 2.0f, 3.5f, 0.02f, 0.05f, dust, dust, dust, 2.5f, 0.10f, 70f, 1f);
+            var origin = transform.position;
+            origin.y = 0.012f;
+            var side = Vector3.Cross(Vector3.up, travel).normalized;
+            for (var i = 0; i < 8; i++)
+            {
+                var crack = Line("Crack" + i, Additive(), 6, 0.045f, Bright(core), glow);
+                crack.alignment = LineAlignment.TransformZ;
+                crack.transform.rotation = Quaternion.LookRotation(Vector3.down, travel);
+                var angle = (i / 8f) * Mathf.PI * 2f + Random.Range(-0.2f, 0.2f);
+                var dir = (travel * Mathf.Cos(angle)) + (side * Mathf.Sin(angle));
+                var length = Random.Range(0.45f, 0.85f) * _size;
+                for (var k = 0; k < 6; k++)
+                {
+                    var t = k / 5f;
+                    var jag = k == 0 ? Vector3.zero : (side * Random.Range(-0.06f, 0.06f)) + (travel * Random.Range(-0.06f, 0.06f));
+                    var p = origin + (dir * ((0.10f * _size) + (t * length))) + (jag * _size);
+                    p.y = origin.y;
+                    crack.SetPosition(k, p);
+                }
+            }
+
+            AddLight(glow, 7f, 2.8f, 0.22f);
+        }
+
+        /// <summary>
+        /// Nightfang shadow claw wave (attack 3), in the attacker's own colours: three claw gouges ripping along the battle
+        /// floor into the hit, a claw slash across it, dark wisps, sparks and a violet light.
+        /// </summary>
+        private void BuildClawWave(Color core, Color glow, Color edge, Vector3 travel)
+        {
+            _life = 0.55f;
+            var dark = new Color(0.10f, 0.03f, 0.16f, 0.85f);
+            var darker = new Color(0.04f, 0.01f, 0.07f, 0.6f);
+            Burst("Flash", Additive(), 1, 0.08f, 0.08f, 0f, 0f, 0.40f, 0.50f, Bright(core), core, glow, 0f, 0.02f, 180f, 0.3f);
+            Burst("Wisps", Alpha(), 10, 0.35f, 0.55f, 0.3f, 0.7f, 0.18f, 0.36f, dark, darker, darker, -0.15f, 0.12f, 120f, 2.0f);
+            Burst("Sparks", Additive(), 12, 0.15f, 0.30f, 2.0f, 4.0f, 0.015f, 0.035f, Bright(core), glow, edge, 0.6f, 0.05f, 70f, 0.3f);
+            AddStreaks(core, glow, travel, 0.30f, 0.06f, 0.09f, 0.38f, 55f);
+            var origin = transform.position;
+            origin.y = 0.012f;
+            var side = Vector3.Cross(Vector3.up, travel).normalized;
+            for (var i = 0; i < 3; i++)
+            {
+                var gouge = Line("Gouge" + i, Additive(), 5, 0.04f, glow, Bright(core));
+                gouge.alignment = LineAlignment.TransformZ;
+                gouge.transform.rotation = Quaternion.LookRotation(Vector3.down, travel);
+                gouge.widthCurve = new AnimationCurve(new Keyframe(0f, 0.2f), new Keyframe(0.7f, 1f), new Keyframe(1f, 0.3f));
+                var lateral = side * ((i - 1) * 0.09f);
+                for (var k = 0; k < 5; k++)
+                {
+                    var t = k / 4f;
+                    var p = origin - (travel * ((1f - t) * 0.9f)) + lateral + (side * Random.Range(-0.015f, 0.015f));
+                    p.y = origin.y;
+                    gouge.SetPosition(k, p);
+                }
+            }
+
+            AddLight(glow, 4f, 2.2f, 0.16f);
         }
 
         /// <summary>

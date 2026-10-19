@@ -158,8 +158,9 @@ namespace Survival.Domain.Roster
 
     /// <summary>
     /// Attack rotation: each fighter plays attack 1, rest gap, attack 2, rest gap, attack 3,
-    /// rest gap, and repeats. A fighter with one attack (the creatures, on hold) just loops it,
-    /// which is exactly the single-attack cycle the battle had before.
+    /// rest gap, and repeats. Every locked fighter now has three (the creatures since 2026-10-19,
+    /// see <see cref="CreatureBattleAttacks"/>); a fighter with one attack just loops it, which
+    /// is exactly the single-attack cycle the battle had before.
     /// </summary>
     public static class LockedBattleRotation
     {
