@@ -1,0 +1,23 @@
+{
+ "rig": "OAKENSHIELD_rig",
+ "body": "OAKENSHIELD_body",
+ "rest_action": "OAKENSHIELD_rest",
+ "rest_frame": 0,
+ "blend_in": 10,
+ "blend_out": 12,
+ "lift": 0.07,
+ "keep_stance_offset": 1.0,
+ "qc_step": 2,
+ "action": "OAKENSHIELD_attack3_root_snare",
+ "segments": [
+  {
+   "src": "/home/box/Downloads/OAKENSHIELD@Standing 2H Magic Area Attack 02.fbx",
+   "tag": "s",
+   "start": 1,
+   "end": 99
+  }
+ ],
+ "meta_out": "final/qc_oak_snare.json",
+ "blend_out_path": "final/OAK_snare.blend",
+ "fbx_out": "final/OAKENSHIELD_blenderig_attack3_root_snare.fbx"
+}

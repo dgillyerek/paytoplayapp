@@ -45,10 +45,12 @@ namespace Survival.Unity
         }
 
         /// <summary>Soft dark blob on the ground under a fighter. Child of the slot, so it follows the walk but not the flinch.</summary>
-        public static void AddContactShadow(Transform slot, float footprintWidth, float footprintDepth)
+        public static void AddContactShadow(Transform slot, float footprintWidth, float footprintDepth, float battleScale = 1f)
         {
-            var w = Mathf.Clamp(footprintWidth * LockedBattleGroundSpec.ContactShadowFootprintScale, LockedBattleGroundSpec.ContactShadowMinMetres, LockedBattleGroundSpec.ContactShadowMaxMetres);
-            var d = Mathf.Clamp(footprintDepth * LockedBattleGroundSpec.ContactShadowFootprintScale, LockedBattleGroundSpec.ContactShadowMinMetres, LockedBattleGroundSpec.ContactShadowMaxMetres);
+            // The cap grows with a battle-scaled body (the 2x dragons), so the blob stays the same share of it.
+            var max = LockedBattleGroundSpec.ContactShadowMaxMetres * Mathf.Max(battleScale, 1f);
+            var w = Mathf.Clamp(footprintWidth * LockedBattleGroundSpec.ContactShadowFootprintScale, LockedBattleGroundSpec.ContactShadowMinMetres, max);
+            var d = Mathf.Clamp(footprintDepth * LockedBattleGroundSpec.ContactShadowFootprintScale, LockedBattleGroundSpec.ContactShadowMinMetres, max);
             var r = Quad(slot, "ContactShadow", w, d, 0f, 0.006f, 0f);
             r.transform.localPosition = new Vector3(0f, 0.006f, 0f);
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;

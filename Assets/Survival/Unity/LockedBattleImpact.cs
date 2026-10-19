@@ -27,9 +27,63 @@ namespace Survival.Unity
         private float _life = 0.6f;
         private float _age;
         private int _arcStep = -1;
+        private LineRenderer? _flightLine;
+        private Vector3 _flightFrom;
+        private Vector3 _flightTo;
+        private float _flightLoft;
+        private float _flightSeconds;
+
+        /// <summary>Burst size multiplier: the attacker's battle scale (2 for the dragons), 1 for everyone else.</summary>
+        private float _size = 1f;
+
+        /// <summary>
+        /// An arrow's flight streak from an archer's extra clip (attacks 2 and 3): a short glowing dash that travels from the
+        /// bow hand to the contact over <paramref name="seconds"/>, on a parabola <paramref name="loft"/> metres above the line
+        /// (a volley). The hit burst itself is spawned when it lands, by the battle.
+        /// </summary>
+        public static LockedBattleImpact SpawnFlight(Vector3 from, Vector3 to, float seconds, float loft, Color core, Color glow)
+        {
+            var go = new GameObject("LockedBattleShotFlight");
+            go.transform.position = from;
+            var fx = go.AddComponent<LockedBattleImpact>();
+            fx._flightFrom = from;
+            fx._flightTo = to;
+            fx._flightLoft = loft;
+            fx._flightSeconds = Mathf.Max(seconds, 0.02f);
+            fx._life = fx._flightSeconds + 0.04f;
+            var line = fx.Line("Flight", Additive(), 6, 0.03f, glow, Bright(core));
+            line.widthCurve = new AnimationCurve(new Keyframe(0f, 0.15f), new Keyframe(1f, 1f));
+            fx._flightLine = line;
+            fx.TickFlight();
+            return fx;
+        }
+
+        private Vector3 FlightPoint(float t)
+        {
+            t = Mathf.Clamp01(t);
+            return Vector3.Lerp(_flightFrom, _flightTo, t) + (Vector3.up * (_flightLoft * 4f * t * (1f - t)));
+        }
+
+        private void TickFlight()
+        {
+            if (_flightLine == null)
+            {
+                return;
+            }
+
+            var head = _age / _flightSeconds;
+            var tail = head - 0.3f;
+            var n = _flightLine.positionCount;
+            for (var i = 0; i < n; i++)
+            {
+                _flightLine.SetPosition(i, FlightPoint(Mathf.Lerp(tail, head, i / (float)(n - 1))));
+            }
+
+            _flightLine.enabled = head <= 1.05f;
+        }
 
         /// <summary>Spawns the burst for <paramref name="kind"/> at <paramref name="point"/>. Travel is attacker → defender.</summary>
-        public static LockedBattleImpact Spawn(BattleImpactKind kind, Vector3 point, Vector3 travel, Color core, Color glow, Color edge)
+        public static LockedBattleImpact Spawn(BattleImpactKind kind, Vector3 point, Vector3 travel, Color core, Color glow, Color edge, float size = 1f)
         {
             travel.y = 0f;
             if (travel.sqrMagnitude < 1e-8f)
@@ -41,6 +95,7 @@ namespace Survival.Unity
             var go = new GameObject("LockedBattleImpact_" + kind);
             go.transform.SetPositionAndRotation(point, Quaternion.LookRotation(-travel, Vector3.up));
             var fx = go.AddComponent<LockedBattleImpact>();
+            fx._size = size > 1e-3f ? size : 1f;
             switch (kind)
             {
                 case BattleImpactKind.FireBurst:
@@ -75,6 +130,27 @@ namespace Survival.Unity
                     break;
                 case BattleImpactKind.BoneShard:
                     fx.BuildBoneShard(core, glow, edge, travel);
+                    break;
+                case BattleImpactKind.HeroStaffSweep:
+                    fx.BuildHeroStaffSweep(travel);
+                    break;
+                case BattleImpactKind.HeroArcaneNova:
+                    fx.BuildHeroArcaneNova();
+                    break;
+                case BattleImpactKind.GroundSlam:
+                    fx.BuildGroundSlam(core, glow, edge, travel);
+                    break;
+                case BattleImpactKind.HeroRootSnare:
+                    fx.BuildHeroRootSnare(travel);
+                    break;
+                case BattleImpactKind.VillainShadowLash:
+                    fx.BuildVillainShadowLash(travel);
+                    break;
+                case BattleImpactKind.VillainHexRain:
+                    fx.BuildVillainHexRain(travel);
+                    break;
+                case BattleImpactKind.HeroShieldShock:
+                    fx.BuildHeroShieldShock(travel);
                     break;
                 default:
                     fx.BuildIronClaw(core, glow, edge, travel);
@@ -162,6 +238,184 @@ namespace Survival.Unity
             Burst("Leaves", Alpha(), 8, 0.45f, 0.65f, 0.6f, 1.4f, 0.03f, 0.06f, leaf, leaf, leaf, 0.6f, 0.08f, 90f, 1.2f);
             AddStreaks(core, glow, travel, 0.34f, 0.03f, 0.06f, 0.26f, 0f);
             AddLight(new Color(0.55f, 0.72f, 1f, 1f), 4f, 2.0f, 0.10f);
+        }
+
+        /// <summary>Hero blue (the hero side of the locked VFX palette) for Lyra's staff sweep and arcane nova.</summary>
+        private static readonly Color HeroBlueCore = new Color(0.80f, 0.90f, 1f, 1f);
+        private static readonly Color HeroBlueGlow = new Color(0.30f, 0.58f, 1f, 1f);
+        private static readonly Color HeroBlueEdge = new Color(0.12f, 0.30f, 0.85f, 0.8f);
+
+        /// <summary>Lyra staff sweep hit: hero-blue flash, blue streaks thrown along the sweep, light motes, blue light.</summary>
+        private void BuildHeroStaffSweep(Vector3 travel)
+        {
+            _life = 0.45f;
+            Burst("Flash", Additive(), 1, 0.10f, 0.10f, 0f, 0f, 0.55f, 0.65f, Bright(HeroBlueCore), HeroBlueCore, HeroBlueGlow, 0f, 0.02f, 180f, 0.3f);
+            Burst("Motes", Additive(), 18, 0.30f, 0.50f, 0.8f, 1.8f, 0.02f, 0.05f, Bright(HeroBlueCore), HeroBlueGlow, HeroBlueEdge, -0.5f, 0.08f, 90f, 0.5f);
+            Burst("Sparks", Additive(), 14, 0.12f, 0.24f, 3.0f, 5.5f, 0.015f, 0.03f, Bright(HeroBlueCore), HeroBlueGlow, HeroBlueEdge, 0.3f, 0.04f, 60f, 0.3f);
+            AddStreaks(HeroBlueCore, HeroBlueGlow, travel, 0.40f, 0.03f, 0.06f, 0.28f, 0f);
+            AddLight(new Color(0.45f, 0.65f, 1f, 1f), 6f, 2.4f, 0.14f);
+        }
+
+        /// <summary>Lyra arcane nova hit: hero-blue flash, a wide flat ring of blue motes, rising light motes, blue light.</summary>
+        private void BuildHeroArcaneNova()
+        {
+            _life = 0.6f;
+            Burst("Flash", Additive(), 1, 0.12f, 0.12f, 0f, 0f, 0.80f, 0.95f, Bright(HeroBlueCore), HeroBlueCore, HeroBlueGlow, 0f, 0.02f, 180f, 0.3f);
+            Burst("Ring", Additive(), 32, 0.30f, 0.45f, 2.6f, 3.6f, 0.03f, 0.06f, Bright(HeroBlueCore), HeroBlueGlow, HeroBlueEdge, 0f, 0.04f, 180f, 0.4f);
+            Burst("Rise", Additive(), 20, 0.40f, 0.60f, 0.6f, 1.4f, 0.02f, 0.05f, Bright(HeroBlueCore), HeroBlueGlow, HeroBlueEdge, -0.9f, 0.10f, 90f, 0.6f);
+            AddLight(new Color(0.40f, 0.62f, 1f, 1f), 8f, 3.0f, 0.20f);
+        }
+
+        /// <summary>
+        /// Ironhowl overhead smash: villain-purple flash, a ring of jagged purple cracks laid on the battle
+        /// floor (y = 0, where every lane slot stands) under the hit, dust and debris thrown out.
+        /// </summary>
+        private void BuildGroundSlam(Color core, Color glow, Color edge, Vector3 travel)
+        {
+            _life = 0.7f;
+            var purple = new Color(0.62f, 0.28f, 1f, 1f);
+            var purpleDeep = new Color(0.30f, 0.08f, 0.55f, 0.9f);
+            var dust = new Color(0.40f, 0.34f, 0.30f, 0.55f);
+            var dustEnd = new Color(0.30f, 0.26f, 0.22f, 0.2f);
+            Burst("Flash", Additive(), 1, 0.12f, 0.12f, 0f, 0f, 0.70f, 0.85f, Bright(purple), purple, purpleDeep, 0f, 0.02f, 180f, 0.3f);
+            Burst("Sparks", Additive(), 16, 0.15f, 0.30f, 3.0f, 5.5f, 0.015f, 0.035f, Bright(core), glow, edge, 0.6f, 0.05f, 60f, 0.3f);
+            Burst("Dust", Alpha(), 14, 0.40f, 0.65f, 0.8f, 1.8f, 0.20f, 0.38f, dust, dustEnd, dustEnd, -0.05f, 0.25f, 120f, 2.0f);
+            Burst("Debris", Alpha(), 12, 0.40f, 0.60f, 2.0f, 3.5f, 0.02f, 0.05f, dust, dust, dust, 2.5f, 0.10f, 70f, 1f);
+            var origin = transform.position;
+            origin.y = 0.012f;
+            var side = Vector3.Cross(Vector3.up, travel).normalized;
+            for (var i = 0; i < 9; i++)
+            {
+                var crack = Line("Crack" + i, Additive(), 6, 0.045f, purple, purpleDeep);
+                crack.alignment = LineAlignment.TransformZ;
+                crack.transform.rotation = Quaternion.LookRotation(Vector3.down, travel);
+                var angle = (i / 9f) * Mathf.PI * 2f + Random.Range(-0.2f, 0.2f);
+                var dir = (travel * Mathf.Cos(angle)) + (side * Mathf.Sin(angle));
+                var length = Random.Range(0.55f, 0.95f);
+                for (var k = 0; k < 6; k++)
+                {
+                    var t = k / 5f;
+                    var jag = k == 0 ? Vector3.zero : side * Random.Range(-0.06f, 0.06f) + travel * Random.Range(-0.06f, 0.06f);
+                    var p = origin + (dir * (0.12f + t * length)) + jag;
+                    p.y = origin.y;
+                    crack.SetPosition(k, p);
+                }
+            }
+
+            AddLight(new Color(0.65f, 0.30f, 1f, 1f), 8f, 3.0f, 0.22f);
+        }
+
+        /// <summary>
+        /// Oakenshield root snare: hero-blue flash, seven blue-glowing roots curling up out of the battle floor (y = 0) around
+        /// the hit, leaves and an earth dust puff, blue light.
+        /// </summary>
+        private void BuildHeroRootSnare(Vector3 travel)
+        {
+            _life = 0.75f;
+            var root = new Color(0.36f, 0.26f, 0.14f, 1f);
+            var leaf = new Color(0.30f, 0.62f, 0.20f, 1f);
+            var leafEnd = new Color(0.45f, 0.55f, 0.15f, 0.8f);
+            var dust = new Color(0.42f, 0.34f, 0.24f, 0.55f);
+            var dustEnd = new Color(0.34f, 0.28f, 0.20f, 0.25f);
+            Burst("Flash", Additive(), 1, 0.12f, 0.12f, 0f, 0f, 0.60f, 0.75f, Bright(HeroBlueCore), HeroBlueCore, HeroBlueGlow, 0f, 0.02f, 180f, 0.3f);
+            Burst("Leaves", Alpha(), 14, 0.45f, 0.65f, 1.0f, 2.2f, 0.04f, 0.08f, leaf, leafEnd, leafEnd, 1.0f, 0.10f, 80f, 1f);
+            Burst("Dust", Alpha(), 10, 0.45f, 0.70f, 0.4f, 1.0f, 0.22f, 0.42f, dust, dustEnd, dustEnd, -0.05f, 0.25f, 120f, 1.8f);
+            Burst("Motes", Additive(), 16, 0.40f, 0.60f, 0.5f, 1.2f, 0.02f, 0.05f, Bright(HeroBlueCore), HeroBlueGlow, HeroBlueEdge, -0.8f, 0.20f, 90f, 0.6f);
+            var origin = transform.position;
+            origin.y = 0f;
+            var side = Vector3.Cross(Vector3.up, travel).normalized;
+            for (var i = 0; i < 7; i++)
+            {
+                var angle = (i / 7f) * Mathf.PI * 2f + Random.Range(-0.25f, 0.25f);
+                var dir = (travel * Mathf.Cos(angle)) + (side * Mathf.Sin(angle));
+                var foot = origin + (dir * Random.Range(0.25f, 0.40f));
+                var height = Random.Range(0.55f, 0.95f);
+                var bark = Line("Root" + i, Alpha(), 7, 0.07f, root, root);
+                var glowLine = Line("RootGlow" + i, Additive(), 7, 0.035f, HeroBlueGlow, Bright(HeroBlueCore));
+                for (var k = 0; k < 7; k++)
+                {
+                    var t = k / 6f;
+                    // Rises from the floor and curls in over the target.
+                    var p = foot - (dir * (0.22f * t * t)) + (Vector3.up * (height * t)) + (side * (0.05f * Mathf.Sin(t * 6f + i)));
+                    bark.SetPosition(k, p);
+                    glowLine.SetPosition(k, p);
+                }
+            }
+
+            AddLight(new Color(0.40f, 0.62f, 1f, 1f), 7f, 2.6f, 0.20f);
+        }
+
+        /// <summary>
+        /// Sir Aldric shield bash hit: hero-blue flash, two blue shock rings standing across the hit (facing the bash), a flat
+        /// ring of blue motes thrown out sideways, steel sparks, blue light.
+        /// </summary>
+        private void BuildHeroShieldShock(Vector3 travel)
+        {
+            _life = 0.5f;
+            Burst("Flash", Additive(), 1, 0.10f, 0.10f, 0f, 0f, 0.70f, 0.80f, Bright(HeroBlueCore), HeroBlueCore, HeroBlueGlow, 0f, 0.02f, 180f, 0.3f);
+            Burst("Ring", Additive(), 28, 0.25f, 0.40f, 2.4f, 3.4f, 0.025f, 0.05f, Bright(HeroBlueCore), HeroBlueGlow, HeroBlueEdge, 0f, 0.04f, 180f, 0.4f);
+            Burst("Sparks", Additive(), 12, 0.12f, 0.24f, 3.0f, 5.0f, 0.015f, 0.03f, Bright(HeroBlueCore), HeroBlueGlow, HeroBlueEdge, 0.4f, 0.04f, 50f, 0.3f);
+            var origin = transform.position;
+            var side = Vector3.Cross(Vector3.up, travel).normalized;
+            for (var r = 0; r < 2; r++)
+            {
+                var radius = r == 0 ? 0.28f : 0.45f;
+                var ring = Line("Shock" + r, Additive(), 25, r == 0 ? 0.05f : 0.03f, Bright(HeroBlueCore), HeroBlueGlow);
+                ring.alignment = LineAlignment.TransformZ;
+                ring.transform.rotation = Quaternion.LookRotation(travel, Vector3.up);
+                for (var k = 0; k < 25; k++)
+                {
+                    var a = (k / 24f) * Mathf.PI * 2f;
+                    ring.SetPosition(k, origin + (travel * (0.06f * r)) + (side * (Mathf.Cos(a) * radius)) + (Vector3.up * (Mathf.Sin(a) * radius)));
+                }
+            }
+
+            AddLight(new Color(0.40f, 0.62f, 1f, 1f), 8f, 2.8f, 0.16f);
+        }
+
+        /// <summary>Villain purple (the villain side of the locked VFX palette) for Vespera's shadow lash and hex rain.</summary>
+        private static readonly Color VillainPurpleCore = new Color(0.86f, 0.70f, 1f, 1f);
+        private static readonly Color VillainPurpleGlow = new Color(0.62f, 0.28f, 1f, 1f);
+        private static readonly Color VillainPurpleEdge = new Color(0.30f, 0.08f, 0.55f, 0.9f);
+        private static readonly Color VillainWisp = new Color(0.16f, 0.05f, 0.22f, 0.75f);
+        private static readonly Color VillainWispEnd = new Color(0.08f, 0.02f, 0.11f, 0.3f);
+
+        /// <summary>Vespera shadow lash hit: violet flash, purple streaks thrown along the lash, sparks, dark wisps, violet light.</summary>
+        private void BuildVillainShadowLash(Vector3 travel)
+        {
+            _life = 0.5f;
+            Burst("Flash", Additive(), 1, 0.10f, 0.10f, 0f, 0f, 0.55f, 0.65f, Bright(VillainPurpleCore), VillainPurpleCore, VillainPurpleGlow, 0f, 0.02f, 180f, 0.3f);
+            Burst("Sparks", Additive(), 14, 0.12f, 0.26f, 3.0f, 5.5f, 0.015f, 0.03f, Bright(VillainPurpleCore), VillainPurpleGlow, VillainPurpleEdge, 0.3f, 0.04f, 60f, 0.3f);
+            Burst("Wisps", Alpha(), 10, 0.35f, 0.55f, 0.3f, 0.7f, 0.18f, 0.34f, VillainWisp, VillainWispEnd, VillainWispEnd, -0.15f, 0.12f, 120f, 2.0f);
+            AddStreaks(VillainPurpleCore, VillainPurpleGlow, travel, 0.45f, 0.03f, 0.06f, 0.30f, -20f);
+            AddLight(new Color(0.65f, 0.30f, 1f, 1f), 6f, 2.4f, 0.14f);
+        }
+
+        /// <summary>
+        /// Vespera hex rain hit: a purple hexagon glyph laid on the battle floor (y = 0) under the hit, violet motes falling into
+        /// it from above, a flash, dark wisps, violet light.
+        /// </summary>
+        private void BuildVillainHexRain(Vector3 travel)
+        {
+            _life = 0.6f;
+            Burst("Flash", Additive(), 1, 0.12f, 0.12f, 0f, 0f, 0.60f, 0.70f, Bright(VillainPurpleCore), VillainPurpleCore, VillainPurpleGlow, 0f, 0.02f, 180f, 0.3f);
+            Burst("Wisps", Alpha(), 8, 0.40f, 0.60f, 0.3f, 0.7f, 0.18f, 0.34f, VillainWisp, VillainWispEnd, VillainWispEnd, -0.15f, 0.15f, 120f, 2.0f);
+            var origin = transform.position;
+            var fall = Line("Fall", Additive(), 2, 0.05f, Bright(VillainPurpleCore), VillainPurpleGlow);
+            fall.SetPosition(0, origin + (Vector3.up * 1.2f));
+            fall.SetPosition(1, origin);
+            origin.y = 0.012f;
+            var side = Vector3.Cross(Vector3.up, travel).normalized;
+            var hex = Line("Hex", Additive(), 7, 0.035f, VillainPurpleGlow, Bright(VillainPurpleCore));
+            hex.alignment = LineAlignment.TransformZ;
+            hex.transform.rotation = Quaternion.LookRotation(Vector3.down, travel);
+            for (var k = 0; k < 7; k++)
+            {
+                var a = (k / 6f) * Mathf.PI * 2f;
+                hex.SetPosition(k, origin + (travel * (Mathf.Cos(a) * 0.32f)) + (side * (Mathf.Sin(a) * 0.32f)));
+            }
+
+            AddLight(new Color(0.65f, 0.30f, 1f, 1f), 7f, 2.6f, 0.18f);
         }
 
         /// <summary>Bonequill bone arrow hit: violet flash, pale bone shards, dark purple wisps.</summary>
@@ -278,6 +532,8 @@ namespace Survival.Unity
                 streak.Tick(_age);
             }
 
+            TickFlight();
+
             if (_age >= _life)
             {
                 Destroy(gameObject);
@@ -292,7 +548,7 @@ namespace Survival.Unity
                 var dir = Random.onUnitSphere;
                 dir += transform.forward * 0.6f;
                 dir.Normalize();
-                var length = _arcLength * Random.Range(0.6f, 1f) * Mathf.Max(0.35f, strength);
+                var length = _arcLength * _size * Random.Range(0.6f, 1f) * Mathf.Max(0.35f, strength);
                 var n = arc.positionCount;
                 for (var i = 0; i < n; i++)
                 {
@@ -308,7 +564,9 @@ namespace Survival.Unity
             var right = Vector3.Cross(Vector3.up, travel).normalized;
             var across = (Quaternion.AngleAxis(tiltDegrees, travel) * right).normalized;
             var stack = Vector3.Cross(across, travel).normalized;
-            var origin = transform.position - (travel * 0.04f);
+            length *= _size;
+            spacing *= _size;
+            var origin = transform.position - (travel * (0.04f * _size));
             for (var i = 0; i < 3; i++)
             {
                 var offset = stack * ((i - 1) * spacing);
@@ -326,11 +584,11 @@ namespace Survival.Unity
         {
             var go = new GameObject("Flash");
             go.transform.SetParent(transform, false);
-            go.transform.localPosition = new Vector3(0f, 0f, 0.15f);
+            go.transform.localPosition = new Vector3(0f, 0f, 0.15f * _size);
             var light = go.AddComponent<Light>();
             light.type = LightType.Point;
             light.color = color;
-            light.range = range;
+            light.range = range * _size;
             light.intensity = intensity;
             light.shadows = LightShadows.None;
             _light = light;
@@ -369,10 +627,10 @@ namespace Survival.Unity
             main.loop = false;
             main.duration = 0.1f;
             main.startLifetime = new ParticleSystem.MinMaxCurve(lifeMin, lifeMax);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(speedMin, speedMax);
-            main.startSize = new ParticleSystem.MinMaxCurve(sizeMin, sizeMax);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(speedMin * _size, speedMax * _size);
+            main.startSize = new ParticleSystem.MinMaxCurve(sizeMin * _size, sizeMax * _size);
             main.startColor = Color.white;
-            main.gravityModifier = gravity;
+            main.gravityModifier = gravity * _size;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.scalingMode = ParticleSystemScalingMode.Local;
             main.maxParticles = Mathf.Max(count, 1);
@@ -392,7 +650,7 @@ namespace Survival.Unity
                 shape.angle = Mathf.Clamp(coneDegrees, 0f, 89f);
             }
 
-            shape.radius = Mathf.Max(radius, 0.0001f);
+            shape.radius = Mathf.Max(radius * _size, 0.0001f);
             var col = ps.colorOverLifetime;
             col.enabled = true;
             col.color = new ParticleSystem.MinMaxGradient(Fade(a, b, c));
@@ -414,7 +672,7 @@ namespace Survival.Unity
             var line = go.AddComponent<LineRenderer>();
             line.useWorldSpace = true;
             line.positionCount = count;
-            line.widthMultiplier = width;
+            line.widthMultiplier = width * _size;
             line.widthCurve = AnimationCurve.Linear(0f, 1f, 1f, 0.35f);
             var g = new Gradient();
             g.SetKeys(

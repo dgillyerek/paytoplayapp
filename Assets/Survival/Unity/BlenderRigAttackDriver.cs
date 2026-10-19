@@ -297,6 +297,158 @@ namespace Survival.Unity
         }
 
         /// <summary>
+        /// Extra archer clip (attacks 2 and 3, Mixamo): the idle bow stays in the locked LeftHand grip and only rolls in it per
+        /// shot; the attack's held arrow rides the draw hand (its RightHand binding from the attack) from <see cref="BlenderBowShot.ArrowInHand"/>
+        /// to the release, aimed from its nock through the arrow rest beside the riser; while nocked a drawn string (if the bow has one) meets the nock.
+        /// Call after the rig evaluated <paramref name="frame"/>.
+        /// </summary>
+        public void TickBowShots(BlenderBowShots shots, float frame)
+        {
+            if (_gripRoot != null && _grip != null)
+            {
+                var q = _grip.UnityRotation(_grip.RollDeg(shots, frame));
+                _gripRoot.localRotation = new Quaternion(q[0], q[1], q[2], q[3]);
+            }
+
+            var view = BowShotArrow(shots);
+            if (view == null || _gripRoot == null || view.Bone == null || !view.BoneBound || !shots.ArrowHeld(frame))
+            {
+                if (view != null && view.Shown)
+                {
+                    SetShown(view, false, true);
+                }
+
+                SetStringMiddle(null);
+                return;
+            }
+
+            view.Root.SetActive(true);
+            var t = view.Root.transform;
+            t.SetPositionAndRotation(view.Bone.TransformPoint(view.BoneLocalPos), view.Bone.rotation * view.BoneLocalRot);
+            t.localScale = Vector3.one;
+            var rest = _gripRoot.TransformPoint(PropPoint(shots.ArrowRest));
+            var dir = rest - t.position;
+            if (dir.sqrMagnitude > 1e-10f)
+            {
+                t.rotation = Quaternion.FromToRotation(t.forward, dir.normalized) * t.rotation;
+            }
+
+            if (!view.Shown)
+            {
+                SetShown(view, true, true);
+            }
+
+            SetStringMiddle(shots.Nocked(frame) ? t.position : (Vector3?)null);
+        }
+
+        /// <summary>Another pose took over from an extra archer clip: bow back to its rest roll, arrow hidden, string straight.</summary>
+        public void EndBowShots(BlenderBowShots shots)
+        {
+            ApplyGripRoll(false, 0f);
+            SetStringMiddle(null);
+            var view = BowShotArrow(shots);
+            if (view != null)
+            {
+                SetShown(view, false, true);
+                view.Root.SetActive(false);
+            }
+        }
+
+        /// <summary>True once the attack has bound <paramref name="trackName"/> to its bone (Activate on the attack clip).</summary>
+        public bool HeldBound(string trackName)
+        {
+            var view = HeldView(trackName);
+            return view != null && view.Bone != null && view.BoneBound;
+        }
+
+        /// <summary>
+        /// Extra clip with the attack's held prop (Oakenshield attack 2): the prop rides its bone at the attack binding, turns in
+        /// the grip toward the two-hand line by <see cref="BlenderHeldRealign.Weight"/> and slides forward through the fist.
+        /// The hand and arm are not touched. Call after the rig evaluated <paramref name="frame"/>.
+        /// </summary>
+        public void TickHeldRealign(BlenderHeldRealign realign, float frame)
+        {
+            var view = HeldView(realign.TrackName);
+            if (view == null || view.Bone == null || !view.BoneBound)
+            {
+                return;
+            }
+
+            if (!realign.Visible(frame))
+            {
+                if (view.Shown)
+                {
+                    SetShown(view, false, true);
+                }
+
+                view.Root.SetActive(false);
+                return;
+            }
+
+            view.Root.SetActive(true);
+            var pos = view.Bone.TransformPoint(view.BoneLocalPos);
+            var rot = view.Bone.rotation * view.BoneLocalRot;
+            var w = realign.Weight(frame);
+            if (w > 0f && _bones.TryGetValue(realign.FrontBone, out var front) && _bones.TryGetValue(realign.FrontParentBone, out var frontParent))
+            {
+                var fore = front.position - frontParent.position;
+                var want = front.position + (fore * realign.PalmFraction) - pos;
+                if (want.sqrMagnitude > 1e-10f)
+                {
+                    rot = Quaternion.Slerp(Quaternion.identity, Quaternion.FromToRotation(rot * Vector3.forward, want.normalized), w) * rot;
+                    var metre = fore.magnitude / Mathf.Max(realign.ForearmMetres, 1e-4f);
+                    pos += rot * Vector3.forward * (realign.SlideMetres * w * metre);
+                }
+            }
+
+            var t = view.Root.transform;
+            t.SetPositionAndRotation(pos, rot);
+            var s = realign.Scale(frame);
+            t.localScale = new Vector3(s, s, s);
+            if (!view.Shown)
+            {
+                SetShown(view, true, true);
+            }
+        }
+
+        /// <summary>Another pose took over from a held-realign clip: the prop hides until its attack shows it again.</summary>
+        public void EndHeldRealign(BlenderHeldRealign realign)
+        {
+            var view = HeldView(realign.TrackName);
+            if (view != null)
+            {
+                SetShown(view, false, true);
+                view.Root.SetActive(false);
+            }
+        }
+
+        private TrackView? HeldView(string trackName)
+        {
+            foreach (var view in _views)
+            {
+                if (view.Track.Kind == AttackTrackKind.Held && string.Equals(view.Track.ObjectName, trackName, System.StringComparison.Ordinal))
+                {
+                    return view;
+                }
+            }
+
+            return null;
+        }
+
+        private TrackView? BowShotArrow(BlenderBowShots shots)
+        {
+            foreach (var view in _views)
+            {
+                if (view.Track.Kind == AttackTrackKind.Held && string.Equals(view.Track.ObjectName, shots.ArrowTrack, System.StringComparison.Ordinal))
+                {
+                    return view;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Builds rest/walk held props on named bones (Design NOTE). They stay visible until
         /// <see cref="SetIdlePropsVisible"/> hides them for the attack add-on.
         /// </summary>

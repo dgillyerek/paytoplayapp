@@ -12,7 +12,7 @@ public sealed class BonequillFreshTests
         Assert.Equal(BonequillMotion.BoneCount, BonequillMotion.Spec.BoneCount);
         Assert.Equal(MixamoHumanoidBones.Names.Where(n => !n.EndsWith("ToeBase", StringComparison.Ordinal)).Concat(BonequillMotion.LeftGripBoneNames).ToArray(), BonequillMotion.BoneNames);
         Assert.Equal(BlenderRigAvatar.CustomGeneric, BonequillMotion.Spec.Avatar);
-        Assert.Equal(new[] { "rest", "walk", "attack" }, BonequillMotion.PoseNames);
+        Assert.Equal(new[] { "rest", "walk", "attack", "attack2", "attack3" }, BonequillMotion.PoseNames);
         Assert.Equal(4, BonequillAttack.Spec.Tracks.Length);
         foreach (var track in BonequillAttack.Spec.Tracks)
         {

@@ -35,7 +35,8 @@ namespace Survival.Domain.Roster
             bool attackCyclesItself,
             int lane,
             string actorClassName = "",
-            float aimYawDegrees = 0f)
+            float aimYawDegrees = 0f,
+            IReadOnlyList<LockedBattleAttack>? attacks = null)
         {
             Name = name;
             Side = side;
@@ -53,7 +54,17 @@ namespace Survival.Domain.Roster
             Lane = lane;
             AimYawDegrees = aimYawDegrees;
             ActorClassName = actorClassName.Length > 0 ? actorClassName : FileKeyOf(name) + "Actor";
+            Attacks = attacks != null && attacks.Count > 0
+                ? attacks
+                : new[] { new LockedBattleAttack(attackLabel, attackPoseName, attackSeconds) };
         }
+
+        /// <summary>
+        /// Attack rotation (<see cref="LockedBattleRotation"/>). Attack 1 is the locked attack
+        /// (<see cref="AttackPoseName"/>, <see cref="AttackSeconds"/>); humanoids add 2 and 3 as
+        /// their premade Mixamo clips land. Creatures (on hold) keep their single attack.
+        /// </summary>
+        public IReadOnlyList<LockedBattleAttack> Attacks { get; }
 
         /// <summary>Name without spaces, as used by the Motion, Actor and scene file names ("Sir Aldric" → "SirAldric").</summary>
         public string FileKey => FileKeyOf(Name);
@@ -143,6 +154,42 @@ namespace Survival.Domain.Roster
         public const int AttackLastFrame = 32;
 
         public const float AttackSeconds = (AttackLastFrame + 1) / 30f;
+
+        /// <summary>Attack 2 (rotation): the repo's diagonal slash baked onto the lite avatar, frames 0-75: high chamber at f20, the cut sweeps through by f24 (contact), arms open wide to f32, recovery to f75.</summary>
+        public const string Attack2 = "attack2";
+        public const string Attack2Clip = "Aldric Diagonal Slash";
+        public const int Attack2LastFrame = 75;
+        public const int Attack2ContactFrame = 24;
+
+        /// <summary>Attack 3 (rotation): shield bash (Mixamo "Sword And Shield Attack"), frames 0-59, shield hand furthest in at f38.</summary>
+        public const string Attack3 = "attack3";
+        public const string Attack3Clip = "Aldric Shield Bash";
+        public const int Attack3LastFrame = 59;
+        public const int Attack3ContactFrame = 38;
+
+        /// <summary>Strike bones on the lite instance (the actor also carries the hidden walk and slash rigs with the same bone names).</summary>
+        public const string LiteRightHand = "SirAldricLiteSwordShield/mixamorig:RightHand";
+        public const string LiteLeftHand = "SirAldricLiteSwordShield/mixamorig:LeftHand";
+
+        public static string ClipFor(string pose)
+        {
+            switch (pose)
+            {
+                case Attack:
+                    return AttackClip;
+                case Attack2:
+                    return Attack2Clip;
+                case Attack3:
+                    return Attack3Clip;
+                default:
+                    return RestClip;
+            }
+        }
+
+        public static bool IsAttackPose(string pose)
+        {
+            return pose == Attack || pose == Attack2 || pose == Attack3;
+        }
     }
 
     /// <summary>Blightroot's battle poses on BlightrootActor (exact creature-pack Mixamo names).</summary>
@@ -154,6 +201,62 @@ namespace Survival.Domain.Roster
         public const string RestClip = "mutant idle";
         public const string WalkClip = "mutant walking";
         public const string AttackClip = "mutant swiping";
+
+        /// <summary>Attack 2 (rotation): creature-pack "mutant punch", a right hook, frames 0-33.</summary>
+        public const string Attack2 = "attack2";
+        public const string Attack2Clip = "mutant punch";
+        public const int Attack2LastFrame = 33;
+
+        /// <summary>
+        /// Right fist furthest forward (0.70 m ahead of the start hips) on frame 10, measured on the
+        /// creature-pack FBX.
+        /// </summary>
+        public const int Attack2ContactFrame = 10;
+
+        /// <summary>Attack 3 (rotation): creature-pack "mutant jump attack", a leap and two-claw slam, frames 0-111.</summary>
+        public const string Attack3 = "attack3";
+        public const string Attack3Clip = "mutant jump attack";
+        public const int Attack3LastFrame = 111;
+
+        /// <summary>
+        /// Both claws hit the ground (0.2-0.3 m up, 1.9 m ahead of the start hips with the hips
+        /// carried 1.3 m) on frame 50.
+        /// </summary>
+        public const int Attack3ContactFrame = 50;
+
+        public static bool IsAttack(string pose)
+        {
+            return pose == Attack || pose == Attack2 || pose == Attack3;
+        }
+
+        /// <summary>
+        /// Rotation: swipe (locked attack 1), punch, jump smash. The punch reaches 0.70 m and the
+        /// in-place slam 0.6 m, short of Sir Aldric's front face 1.15 m away at his 1.4 m stop,
+        /// so each slides the actor root forward into the strike and back out (the leap's own
+        /// 1.3 m carry is held on the spot so Blightroot lands where it took off).
+        /// </summary>
+        public static readonly LockedBattleAttack[] Attacks =
+        {
+            new LockedBattleAttack("rot claw swipe", Attack, AttackSeconds),
+            new LockedBattleAttack(
+                "rot punch",
+                Attack2,
+                Attack2LastFrame / 30f,
+                Attack2ContactFrame,
+                "mixamorig:RightHand",
+                0.04f,
+                false,
+                new LockedBattleReachShift(0.45f, 2f, 10f, 14f, 30f)),
+            new LockedBattleAttack(
+                "rot jump smash",
+                Attack3,
+                Attack3LastFrame / 30f,
+                Attack3ContactFrame,
+                "mixamorig:LeftHand",
+                0.09f,
+                true,
+                new LockedBattleReachShift(0.55f, 14f, 49f, 72f, 108f))
+        };
 
         /// <summary>Hips travel of one "mutant walking" loop (measured on the FBX, 1.4526 m).</summary>
         public const float WalkStrideMetres = 1.453f;
@@ -169,6 +272,10 @@ namespace Survival.Domain.Roster
                     return WalkClip;
                 case Attack:
                     return AttackClip;
+                case Attack2:
+                    return Attack2Clip;
+                case Attack3:
+                    return Attack3Clip;
                 default:
                     return RestClip;
             }
@@ -193,30 +300,65 @@ namespace Survival.Domain.Roster
         /// <summary>Heroes start at -Z facing +Z. Villains start at +Z facing -Z.</summary>
         public const float StartHalfGapMetres = 2.5f;
 
-        /// <summary>Lane centres sit this far either side of the battle centre line.</summary>
+        /// <summary>
+        /// Inner lane centres (0 and 1) sit this far either side of the battle centre line. 2026-10-18 (Derek on 8fbc6d1: the two
+        /// dragons fight each other in one lane): back to 1.15 m. Lane 0 is now Oakenshield vs Ironhowl (Ironhowl about 0.56 m
+        /// half-width in his claw lunge), which clears Stormcrest's wing buffet (lane 1, 1.09 m half-width) by about 0.65 m.
+        /// </summary>
         public const float LaneHalfSpacingMetres = 1.15f;
 
         /// <summary>
-        /// Outer lanes (2 and 3) sit this far either side of the centre line: 1.3 m outside the
-        /// inner lanes, so the widest added body (Ashwyrm, 1.9 m wingspan) clears its neighbours
-        /// and the inner lanes stay exactly where #57 put them.
+        /// Battle-only body scale on top of the design-height fit (2026-10-18, Derek on #70: the two dragons much larger,
+        /// towering over the humanoids). Placement and scale only: the clips and imports are unchanged.
         /// </summary>
-        public const float OuterLaneHalfSpacingMetres = 2.45f;
+        public const float EmberfangBattleScale = 2f;
+
+        public const float AshwyrmBattleScale = 2f;
+
+        /// <summary>
+        /// Emberfang and Ashwyrm share lane 3 and both stop this far apart (was 3.2 m each against humanoids). At 2x Emberfang's
+        /// snout reaches 1.79 m ahead of its origin in the breath lunge and Ashwyrm's 1.29 m, so the bodies keep about 0.7 m
+        /// apart even when both lunge at once. Emberfang's fireball leaves the mouth 1.81 m ahead and meets Ashwyrm's scaled box
+        /// front (1.1 m) after about 0.9 m of flight; Ashwyrm's leaves 1.16 m ahead and meets Emberfang's (1.7 m) after about
+        /// 0.9 m.
+        /// </summary>
+        public const float DragonDuelRangeMetres = 3.8f;
+
+        /// <summary>
+        /// Ironhowl stops this far from Oakenshield (lane 0 since the dragons pair up; 1.9 m against design-size Emberfang,
+        /// 2.6 m against 2x Emberfang). Ironhowl's front is 0.39 m and his smash/combo slide in 0.3 m, so his body stays about
+        /// 0.43 m off Oakenshield's 0.18 m front, while his claws (1.05 m lunge) reach Oakenshield's 0.25 m box front.
+        /// </summary>
+        public const float IronhowlAttackRangeMetres = 1.3f;
+
+        /// <summary>
+        /// Left outer lane (2, Lyra vs Vespera) sits this far left of the centre line: 1.45 m outside lane 0, so Lyra's staff
+        /// side (0.55 m) clears Ironhowl's claw lunge (0.56 m half-width) by about 0.34 m. Was 2.45 m before the dragons grew
+        /// and 3.45 m while 2x Emberfang was in lane 0.
+        /// </summary>
+        public const float OuterLaneHalfSpacingMetres = 2.6f;
+
+        /// <summary>
+        /// Right outer lane (3, the dragon duel: Emberfang vs Ashwyrm) sits this far right of the centre line: 3.0 m outside
+        /// lane 1, so 2x Ashwyrm (wingspan about 3.2 m, 1.61 m half) and 2x Emberfang (1.23 m half) clear Stormcrest's wing
+        /// buffet (1.09 m) and Nightfang by about 0.3 m. Was 2.45 m, then 4.35 m with Ashwyrm alone.
+        /// </summary>
+        public const float RightOuterLaneHalfSpacingMetres = 4.15f;
 
         /// <summary>
         /// Fifth lane (4) sits this far left of the centre line: 1.4 m outside lane 2. Vespera
         /// (lane 2 villain) is slim, so Blightroot (1.65 m T-pose span, about 1.0 m with arms
-        /// down at idle) clears her. The right side is not used because Ashwyrm's 1.9 m wingspan
-        /// already reaches 3.4 m out. Lanes 0-3 do not move.
+        /// down at idle) clears her. The right side is not used because the dragon lane is there.
+        /// 2026-10-18: follows lane 2 (3.85 → 4.85 → 4.0 m), same 1.4 m gap.
         /// </summary>
-        public const float FifthLaneHalfSpacingMetres = 3.85f;
+        public const float FifthLaneHalfSpacingMetres = 4.0f;
 
         /// <summary>
-        /// Sixth lane (5) sits this far right of the centre line: 1.9 m outside lane 3, because
-        /// Ashwyrm (lane 3 villain) spans 1.9 m wing to wing and reaches 3.4 m out. Rowan and
-        /// Bonequill are 0.9 m across in A-pose, so their inner edge (3.9 m) clears it.
+        /// Sixth lane (5) sits this far right of the centre line: 2.4 m outside the dragon lane, because
+        /// 2x Ashwyrm spans about 3.2 m wing to wing and reaches 5.76 m out. Rowan and
+        /// Bonequill are 0.9 m across in A-pose, so their inner edge (6.06 m) clears it. Was 4.35 m, then 6.9 m.
         /// </summary>
-        public const float SixthLaneHalfSpacingMetres = 4.35f;
+        public const float SixthLaneHalfSpacingMetres = 6.55f;
 
         /// <summary>Lanes 0-5. The ground lays one dirt track per lane.</summary>
         public const int LaneCount = 6;
@@ -230,6 +372,43 @@ namespace Survival.Domain.Roster
         /// <summary>Everyone holds rest this long before walking in.</summary>
         public const float OpeningHoldSeconds = 0.75f;
 
+        /// <summary>
+        /// Ironhowl's rotation (2026-10-18; his own clips, not Blightroot's mutant moves): claw swipe
+        /// (locked), overhead smash (Mixamo "Standing Melee Attack Downward": purple ground-slam crack
+        /// ring and a heavy shake), claw combo (Mixamo "Standing Melee Combo Attack Ver. 2": four hits,
+        /// purple claw sparks on each). Both hold the hips' travel in place and slide 0.3 m in.
+        /// </summary>
+        public static readonly LockedBattleAttack[] IronhowlAttacks =
+        {
+            new LockedBattleAttack("claw swipe", IronhowlMotion.AttackPoseName, IronhowlMotion.AttackSeconds),
+            new LockedBattleAttack(
+                "overhead smash",
+                IronhowlMotion.Attack2PoseName,
+                IronhowlMotion.Attack2LastFrame / IronhowlMotion.FrameRate,
+                IronhowlMotion.Attack2ContactFrame,
+                "mixamorig:RightHand",
+                0.09f,
+                true,
+                new LockedBattleReachShift(0.3f, 8f, 26f, 40f, 64f),
+                BattleImpactKind.GroundSlam),
+            new LockedBattleAttack(
+                "claw combo",
+                IronhowlMotion.Attack3PoseName,
+                IronhowlMotion.Attack3LastFrame / IronhowlMotion.FrameRate,
+                IronhowlMotion.Attack3HitFrames[0],
+                IronhowlMotion.Attack3HitBones[0],
+                0.04f,
+                true,
+                new LockedBattleReachShift(0.3f, 16f, 28f, 100f, 122f),
+                BattleImpactKind.ShadowRake,
+                new[]
+                {
+                    new LockedBattleHitMark(IronhowlMotion.Attack3HitFrames[1], IronhowlMotion.Attack3HitBones[1]),
+                    new LockedBattleHitMark(IronhowlMotion.Attack3HitFrames[2], IronhowlMotion.Attack3HitBones[2]),
+                    new LockedBattleHitMark(IronhowlMotion.Attack3HitFrames[3], IronhowlMotion.Attack3HitBones[3])
+                })
+        };
+
         public static readonly LockedBattleFighter Emberfang = new LockedBattleFighter(
             "Emberfang",
             BattleSide.Hero,
@@ -241,10 +420,10 @@ namespace Survival.Domain.Roster
             0.33f,
             0f,
             string.Empty,
-            3.2f,
+            DragonDuelRangeMetres,
             BlenderRigAttackSpec.ClipSeconds,
             true,
-            0);
+            3);
 
         public static readonly LockedBattleFighter Stormcrest = new LockedBattleFighter(
             "Stormcrest",
@@ -273,10 +452,13 @@ namespace Survival.Domain.Roster
             0f,
             1.917f,
             IronhowlMotion.BoneRoot,
-            1.9f,
+            IronhowlAttackRangeMetres,
             IronhowlMotion.AttackSeconds,
             false,
-            0);
+            0,
+            "",
+            0f,
+            IronhowlAttacks);
 
         public static readonly LockedBattleFighter Nightfang = new LockedBattleFighter(
             "Nightfang",
@@ -298,6 +480,36 @@ namespace Survival.Domain.Roster
         // (two strides of the foot's forward sweep per 30-frame loop, the same measure that gives
         // Emberfang 0.33 m/s); heights are the rest-mesh heights of the locked FBXs.
 
+        /// <summary>
+        /// Lyra's rotation: arcane bolt (locked, projectile), staff sweep (attack 2) and arcane nova (attack 3)
+        /// from the retargeted Mixamo clips. The extra two land on their own contact frames in hero blue: the
+        /// sweep throws a blue arc onto the target from range, the nova bursts a blue ring on it.
+        /// </summary>
+        public static readonly LockedBattleAttack[] LyraAttacks =
+        {
+            new LockedBattleAttack("staff cast arcane bolt", LyraMotion.AttackPoseName, BlenderRigAttackSpec.ClipSeconds),
+            new LockedBattleAttack(
+                "staff sweep",
+                LyraMotion.Attack2PoseName,
+                LyraMotion.Attack2LastFrame / LyraMotion.WalkFrameRate,
+                LyraMotion.Attack2ContactFrame,
+                "mixamorig:RightHand",
+                0.03f,
+                false,
+                default,
+                BattleImpactKind.HeroStaffSweep),
+            new LockedBattleAttack(
+                "arcane nova",
+                LyraMotion.Attack3PoseName,
+                LyraMotion.Attack3LastFrame / LyraMotion.WalkFrameRate,
+                LyraMotion.Attack3ContactFrame,
+                "mixamorig:RightHand",
+                0.06f,
+                false,
+                default,
+                BattleImpactKind.HeroArcaneNova)
+        };
+
         public static readonly LockedBattleFighter Lyra = new LockedBattleFighter(
             "Lyra",
             BattleSide.Hero,
@@ -312,7 +524,40 @@ namespace Survival.Domain.Roster
             3.2f,
             BlenderRigAttackSpec.ClipSeconds,
             true,
-            2);
+            2,
+            "",
+            0f,
+            LyraAttacks);
+
+        /// <summary>
+        /// Oakenshield's rotation (2026-10-18): the locked thorn spear throw; the thorn spear thrust (Mixamo Bayonet Stab, the spear
+        /// turned in her grip into a two-hand line, reach f46, hero-blue LeafEarth splinters; she slides 0.6 m in over the lunge);
+        /// then the root snare (Mixamo): both palms drive down at f52 and hero-blue roots burst up out of the ground under the target.
+        /// </summary>
+        public static readonly LockedBattleAttack[] OakenshieldAttacks =
+        {
+            new LockedBattleAttack("thorn spear throw", OakenshieldMotion.AttackPoseName, BlenderRigAttackSpec.ClipSeconds),
+            new LockedBattleAttack(
+                "thorn spear thrust",
+                OakenshieldMotion.Attack2PoseName,
+                OakenshieldMotion.Attack2LastFrame / OakenshieldMotion.WalkFrameRate,
+                OakenshieldMotion.Attack2ContactFrame,
+                "mixamorig:RightHand",
+                0.05f,
+                false,
+                new LockedBattleReachShift(0.6f, 22f, 44f, 52f, 74f),
+                BattleImpactKind.LeafEarth),
+            new LockedBattleAttack(
+                "root snare",
+                OakenshieldMotion.Attack3PoseName,
+                OakenshieldMotion.Attack3LastFrame / OakenshieldMotion.WalkFrameRate,
+                OakenshieldMotion.Attack3ContactFrame,
+                "mixamorig:LeftHand",
+                0.05f,
+                false,
+                default,
+                BattleImpactKind.HeroRootSnare)
+        };
 
         public static readonly LockedBattleFighter Oakenshield = new LockedBattleFighter(
             "Oakenshield",
@@ -328,7 +573,47 @@ namespace Survival.Domain.Roster
             3.0f,
             BlenderRigAttackSpec.ClipSeconds,
             true,
-            3);
+            0,
+            "",
+            0f,
+            OakenshieldAttacks);
+
+        /// <summary>
+        /// Vespera's rotation (2026-10-18): the locked rave orb conjure, the shadow lash (Mixamo, purple lash streaks at f50) and the
+        /// hex rain (Mixamo, three purple hexes falling 0.3 m apart from f84). Both Mixamo wind-ups play 1.5x slower, as her conjure.
+        /// </summary>
+        public static readonly LockedBattleAttack[] VesperaAttacks =
+        {
+            new LockedBattleAttack("rave orb conjure shadow bolt", VesperaMotion.AttackPoseName, VesperaAttack.ClipSeconds),
+            new LockedBattleAttack(
+                "shadow lash",
+                VesperaMotion.Attack2PoseName,
+                VesperaMotion.Attack2LastFrame / VesperaMotion.WalkFrameRate,
+                VesperaMotion.Attack2ContactFrame,
+                "mixamorig:RightHand",
+                0.03f,
+                false,
+                default,
+                BattleImpactKind.VillainShadowLash),
+            new LockedBattleAttack(
+                "hex rain",
+                VesperaMotion.Attack3PoseName,
+                VesperaMotion.Attack3LastFrame / VesperaMotion.WalkFrameRate,
+                VesperaMotion.Attack3ContactFrame,
+                "mixamorig:LeftHand",
+                0.04f,
+                false,
+                default,
+                BattleImpactKind.VillainHexRain,
+                new[]
+                {
+                    new LockedBattleHitMark(VesperaMotion.Attack3ContactFrame + 4),
+                    new LockedBattleHitMark(VesperaMotion.Attack3ContactFrame + 8)
+                },
+                0,
+                0f,
+                0.3f)
+        };
 
         public static readonly LockedBattleFighter Vespera = new LockedBattleFighter(
             "Vespera",
@@ -344,7 +629,10 @@ namespace Survival.Domain.Roster
             3.0f,
             VesperaAttack.ClipSeconds,
             true,
-            2);
+            2,
+            "",
+            0f,
+            VesperaAttacks);
 
         public static readonly LockedBattleFighter Ashwyrm = new LockedBattleFighter(
             "Ashwyrm",
@@ -357,7 +645,7 @@ namespace Survival.Domain.Roster
             0.52f,
             0f,
             string.Empty,
-            3.2f,
+            DragonDuelRangeMetres,
             BlenderRigAttackSpec.ClipSeconds,
             true,
             3);
@@ -370,6 +658,36 @@ namespace Survival.Domain.Roster
         // tip meets Blightroot's 0.38 m front face. Blightroot plays the creature pack "mutant
         // idle", "mutant walking" (carries the hips 1.453 m per 43-frame loop, like Ironhowl) and
         // "mutant swiping" (80 frames, lunges and comes back to its start pose by the last frame).
+
+        /// <summary>
+        /// Sir Aldric's rotation (2026-10-18): the locked sword and shield thrust, the diagonal slash (steel sparks at the cut) and
+        /// the shield bash (blue ShieldShock ring): the bash's 2.8 m Mixamo charge is held on the spot in the bake and he slides
+        /// 0.35 m in over the charge instead.
+        /// </summary>
+        public static readonly LockedBattleAttack[] SirAldricAttacks =
+        {
+            new LockedBattleAttack("sword and shield thrust", SirAldricBattlePoses.Attack, SirAldricBattlePoses.AttackSeconds),
+            new LockedBattleAttack(
+                "diagonal slash",
+                SirAldricBattlePoses.Attack2,
+                (SirAldricBattlePoses.Attack2LastFrame + 1) / 30f,
+                SirAldricBattlePoses.Attack2ContactFrame,
+                SirAldricBattlePoses.LiteRightHand,
+                0.04f,
+                false,
+                new LockedBattleReachShift(0.2f, 10f, 22f, 30f, 60f),
+                BattleImpactKind.SwordSteel),
+            new LockedBattleAttack(
+                "shield bash",
+                SirAldricBattlePoses.Attack3,
+                (SirAldricBattlePoses.Attack3LastFrame + 1) / 30f,
+                SirAldricBattlePoses.Attack3ContactFrame,
+                SirAldricBattlePoses.LiteLeftHand,
+                0.07f,
+                false,
+                new LockedBattleReachShift(0.35f, 8f, 38f, 42f, 58f),
+                BattleImpactKind.HeroShieldShock)
+        };
 
         public static readonly LockedBattleFighter SirAldric = new LockedBattleFighter(
             "Sir Aldric",
@@ -386,7 +704,9 @@ namespace Survival.Domain.Roster
             SirAldricBattlePoses.AttackSeconds,
             false,
             4,
-            "SirAldricMeshyAnimateActor");
+            "SirAldricMeshyAnimateActor",
+            0f,
+            SirAldricAttacks);
 
         public static readonly LockedBattleFighter Blightroot = new LockedBattleFighter(
             "Blightroot",
@@ -402,12 +722,55 @@ namespace Survival.Domain.Roster
             1.6f,
             BlightrootBattlePoses.AttackSeconds,
             false,
-            4);
+            4,
+            "",
+            0f,
+            BlightrootBattlePoses.Attacks);
 
         // Sixth lane (2026-10-16, Derek: the characters not in yet). Both are Theme A Blender rigs
         // (#64, #63) with rest, walk and bow attack; their actors cycle attack + rest themselves.
         // Walk speeds from the locked walk clips: two left-foot sweeps per 1 s loop (Rowan
         // 0.515 m, Bonequill 0.549 m). Heights from the rest FBXs (1.80 m each).
+
+        /// <summary>
+        /// Rowan's rotation (2026-10-18): the locked bow shot, then the Mixamo double shot and volley. Their arrows land through
+        /// explicit hit frames (loose + 9 frames of flight at 14 m/s over the 4.2 m range) with a hero-blue flight streak from the
+        /// bow hand; the volley's three arrows arc up and land 0.35 m apart.
+        /// </summary>
+        public static readonly LockedBattleAttack[] RowanAttacks =
+        {
+            new LockedBattleAttack("bow shot", RowanMotion.AttackPoseName, BlenderRigAttackSpec.ClipSeconds),
+            new LockedBattleAttack(
+                "double shot",
+                RowanMotion.Attack2PoseName,
+                RowanMotion.Attack2LastFrame / RowanMotion.WalkFrameRate,
+                RowanMotion.Attack2ReleaseFrames[0] + RowanMotion.ShotFlightFrames,
+                "mixamorig:LeftHand",
+                0.02f,
+                false,
+                default,
+                BattleImpactKind.RangerArrow,
+                new[] { new LockedBattleHitMark(RowanMotion.Attack2ReleaseFrames[1] + RowanMotion.ShotFlightFrames) },
+                RowanMotion.ShotFlightFrames),
+            new LockedBattleAttack(
+                "volley",
+                RowanMotion.Attack3PoseName,
+                RowanMotion.Attack3LastFrame / RowanMotion.WalkFrameRate,
+                RowanMotion.Attack3ReleaseFrame + RowanMotion.ShotFlightFrames,
+                "mixamorig:LeftHand",
+                0.03f,
+                false,
+                default,
+                BattleImpactKind.RangerArrow,
+                new[]
+                {
+                    new LockedBattleHitMark(RowanMotion.Attack3ReleaseFrame + RowanMotion.ShotFlightFrames + 2),
+                    new LockedBattleHitMark(RowanMotion.Attack3ReleaseFrame + RowanMotion.ShotFlightFrames + 4)
+                },
+                RowanMotion.ShotFlightFrames,
+                0.6f,
+                0.35f)
+        };
 
         public static readonly LockedBattleFighter Rowan = new LockedBattleFighter(
             "Rowan",
@@ -425,7 +788,47 @@ namespace Survival.Domain.Roster
             true,
             5,
             "",
-            12.33f);
+            12.33f,
+            RowanAttacks);
+
+        /// <summary>
+        /// Bonequill's rotation (2026-10-18): the locked bone arrow shot, the rapid quiver shot and the bone volley (Mixamo). Arrows
+        /// land 9 frames after each loose with a purple flight streak from the bow hand; the volley's three arc up and land 0.35 m apart.
+        /// </summary>
+        public static readonly LockedBattleAttack[] BonequillAttacks =
+        {
+            new LockedBattleAttack("bone arrow shot", BonequillMotion.AttackPoseName, BlenderRigAttackSpec.ClipSeconds),
+            new LockedBattleAttack(
+                "rapid quiver shot",
+                BonequillMotion.Attack2PoseName,
+                BonequillMotion.Attack2LastFrame / BonequillMotion.WalkFrameRate,
+                BonequillMotion.Attack2ReleaseFrame + BonequillMotion.ShotFlightFrames,
+                "mixamorig:LeftHand",
+                0.02f,
+                false,
+                default,
+                BattleImpactKind.BoneShard,
+                null,
+                BonequillMotion.ShotFlightFrames),
+            new LockedBattleAttack(
+                "bone volley",
+                BonequillMotion.Attack3PoseName,
+                BonequillMotion.Attack3LastFrame / BonequillMotion.WalkFrameRate,
+                BonequillMotion.Attack3ReleaseFrame + BonequillMotion.ShotFlightFrames,
+                "mixamorig:LeftHand",
+                0.03f,
+                false,
+                default,
+                BattleImpactKind.BoneShard,
+                new[]
+                {
+                    new LockedBattleHitMark(BonequillMotion.Attack3ReleaseFrame + BonequillMotion.ShotFlightFrames + 2),
+                    new LockedBattleHitMark(BonequillMotion.Attack3ReleaseFrame + BonequillMotion.ShotFlightFrames + 4)
+                },
+                BonequillMotion.ShotFlightFrames,
+                0.6f,
+                0.35f)
+        };
 
         public static readonly LockedBattleFighter Bonequill = new LockedBattleFighter(
             "Bonequill",
@@ -441,7 +844,10 @@ namespace Survival.Domain.Roster
             ArcherRangeMetres,
             BlenderRigAttackSpec.ClipSeconds,
             true,
-            5);
+            5,
+            "",
+            0f,
+            BonequillAttacks);
 
         public static IReadOnlyList<LockedBattleFighter> All { get; } = new[]
         {
@@ -499,8 +905,31 @@ namespace Survival.Domain.Roster
                 case 5:
                     return SixthLaneHalfSpacingMetres;
                 default:
-                    return OuterLaneHalfSpacingMetres;
+                    return RightOuterLaneHalfSpacingMetres;
             }
+        }
+
+        /// <summary>Battle-only body scale (1 for everyone but the two dragons, see <see cref="EmberfangBattleScale"/>).</summary>
+        public static float BattleScaleOf(LockedBattleFighter fighter)
+        {
+            switch (fighter.Name)
+            {
+                case "Emberfang":
+                    return EmberfangBattleScale;
+                case "Ashwyrm":
+                    return AshwyrmBattleScale;
+                default:
+                    return 1f;
+            }
+        }
+
+        /// <summary>
+        /// Ground speed in the battle: an in-place walk's foot travel grows with the body, so a scaled body walks that much
+        /// faster and its feet do not slide.
+        /// </summary>
+        public static float BattleWalkSpeedOf(LockedBattleFighter fighter)
+        {
+            return fighter.WalkSpeedMetresPerSecond * BattleScaleOf(fighter);
         }
 
         /// <summary>Start yaw in degrees. Every locked rig faces +Z at yaw 0.</summary>
@@ -576,19 +1005,8 @@ namespace Survival.Domain.Roster
         /// </summary>
         public static bool InAttackClip(LockedBattleFighter fighter, float secondsSinceFirstAttack)
         {
-            if (secondsSinceFirstAttack < 0f)
-            {
-                return false;
-            }
-
-            var cycle = fighter.AttackCycleSeconds;
-            if (cycle <= 0f)
-            {
-                return true;
-            }
-
-            var t = secondsSinceFirstAttack % cycle;
-            return t < fighter.AttackSeconds;
+            // Rotation-aware: with one attack this is the old attack + rest gap loop.
+            return LockedBattleRotation.InAttackClip(fighter, secondsSinceFirstAttack);
         }
     }
 }

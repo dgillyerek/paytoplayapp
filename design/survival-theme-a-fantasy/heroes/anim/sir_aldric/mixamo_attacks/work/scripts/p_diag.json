@@ -1,0 +1,24 @@
+{
+ "target_fbx": "/workspace/ptp-three/Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_idle.fbx",
+ "idle_frame": 2,
+ "blend_in": 8,
+ "blend_out": 12,
+ "export": {
+  "axis_forward": "-Z",
+  "axis_up": "Y",
+  "apply_unit_scale": true,
+  "apply_scale_options": "FBX_SCALE_NONE",
+  "global_scale": 1.0
+ },
+ "action": "Scene",
+ "src": "/workspace/ptp-three/Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx",
+ "frames": [
+  31,
+  86
+ ],
+ "cancel_travel": true,
+ "yaw_deg": 0.0,
+ "meta_out": "final/qc_attack2_diagonal_slash.json",
+ "blend_out_path": "final/A_diag.blend",
+ "fbx_out": "final/sir_aldric_attack2_diagonal_slash.fbx"
+}

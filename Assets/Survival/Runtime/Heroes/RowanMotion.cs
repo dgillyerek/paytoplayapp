@@ -41,7 +41,53 @@ namespace Survival.Domain.Heroes
 
         public const string BoneRoot = MixamoHumanoidBones.Root;
 
-        public static readonly string[] PoseNames = { RestPoseName, WalkPoseName, AttackPoseName };
+        // Attacks 2 and 3 (2026-10-18): Mixamo Pro Longbow clips (auto-rig of ROWAN.fbx keeps his 25 mixamorig names) retargeted
+        // onto ROWAN_rig in Blender (design .../rowan/mixamo_attacks, work/scripts/archer_mixamo_retarget_20261018.py): the T-pose
+        // Mixamo bind is matched bone by bone to the A-pose bind, body bones only (left finger grip from rest), hips drift removed
+        // (net travel 0), 10-frame blend in with the left foot stepping forward into the side-on stance, 12-frame blend out. The draw
+        // hand is held so the 0.795 m arrow always reaches past the riser (draw length capped at 0.74 m). The bow never takes the
+        // Mixamo hand: it stays in the locked BowGrip and only rolls in it (8 -> 50 deg per shot, BlenderBowShots).
+        public const string DesignMixamoAttacksDir = "design/survival-theme-a-fantasy/heroes/anim/rowan/mixamo_attacks";
+        public const string Attack2PoseName = "attack2";
+        public const string Attack2FileName = "ROWAN_blenderig_attack2_double_shot.fbx";
+        public const string Attack2Md5 = "4f0d150a350d8dbb6e0f686dd4641e35";
+        public const int Attack2LastFrame = 111;
+        public const string Attack3PoseName = "attack3";
+        public const string Attack3FileName = "ROWAN_blenderig_attack3_volley.fbx";
+        public const string Attack3Md5 = "04418578f664edd228f159a13cae80fe";
+        public const int Attack3LastFrame = 115;
+        public const string ExtraTakeName = "Scene";
+
+        /// <summary>Arrow flight time for the extra clips' shots: 4.2 m archer range at the locked 14 m/s, 9 frames.</summary>
+        public const int ShotFlightFrames = 9;
+
+        /// <summary>Double shot: Draw Arrow, Aim Recoil (loose f44), Draw Arrow from the reach, Aim Recoil (loose f80).</summary>
+        public static readonly int[] Attack2ReleaseFrames = { 44, 80 };
+
+        /// <summary>Volley: Draw Arrow, Aim Overdraw (held 40 frames, spine lifted 35 deg so the shot goes up), Aim Recoil (loose f84).</summary>
+        public const int Attack3ReleaseFrame = 84;
+
+        /// <summary>Arrow rest for the extra clips, Blender prop-local metres: archer's left (outer) side of the riser just above the
+        /// fist (+X is his left at full draw on every shot frame, work/qc_*.json), like Bonequill's.</summary>
+        public static readonly float[] ExtraArrowRest = { 0.03f, 0f, 0.06f };
+
+        public static readonly BlenderBowShots Attack2BowShots = new BlenderBowShots(
+            "ROWAN_arrow",
+            ExtraArrowRest,
+            new[]
+            {
+                new BlenderBowShot(22, 28, 44, 22, 36, 47, 53),
+                new BlenderBowShot(60, 64, 80, 60, 72, 83, 93)
+            });
+
+        public static readonly BlenderBowShots Attack3BowShots = new BlenderBowShots(
+            "ROWAN_arrow",
+            ExtraArrowRest,
+            new[] { new BlenderBowShot(22, 28, 84, 22, 36, 87, 97) });
+
+        public static readonly string[] AttackPoseNames = { AttackPoseName, Attack2PoseName, Attack3PoseName };
+
+        public static readonly string[] PoseNames = { RestPoseName, WalkPoseName, AttackPoseName, Attack2PoseName, Attack3PoseName };
         public static readonly string[] BoneNames =
         {
             "mixamorig:Hips",
@@ -111,7 +157,9 @@ namespace Survival.Domain.Heroes
                     BlenderRigAttackSpec.TakeName,
                     BlenderRigAttackSpec.ClipSeconds,
                     BlenderRigAttackSpec.FrameRate,
-                    BlenderRigAttackSpec.LastFrame)
+                    BlenderRigAttackSpec.LastFrame),
+                new BlenderRigClip(Attack2PoseName, Attack2FileName, ExtraTakeName, Attack2LastFrame / WalkFrameRate, WalkFrameRate, Attack2LastFrame, Attack2BowShots),
+                new BlenderRigClip(Attack3PoseName, Attack3FileName, ExtraTakeName, Attack3LastFrame / WalkFrameRate, WalkFrameRate, Attack3LastFrame, Attack3BowShots)
             });
     }
 }

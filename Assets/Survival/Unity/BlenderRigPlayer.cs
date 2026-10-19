@@ -37,6 +37,8 @@ namespace Survival.Unity
         private readonly bool _restAtAttackStart;
         private readonly BlenderRigIdlePropSpec[] _idleProps;
         private BlenderRigAttackDriver? _attack;
+        private BlenderBowShots? _bowShots;
+        private BlenderHeldRealign? _heldRealign;
         private bool _attackMode;
         private float _length;
         private float _time;
@@ -145,6 +147,7 @@ namespace Survival.Unity
                 return false;
             }
 
+            EndBowShots();
             if (_attackSpec != null && string.Equals(poseName, BlenderRigAttackSpec.PoseName, System.StringComparison.Ordinal))
             {
                 return PlayAttack();
@@ -167,7 +170,25 @@ namespace Survival.Unity
             {
                 if (string.Equals(poseName, extra.PoseName, System.StringComparison.Ordinal))
                 {
-                    return PlayClip(extra.FileName, extra.PoseName, extra.TakeName, extra.LastFrame);
+                    if (extra.HeldRealign != null)
+                    {
+                        BindHeldForExtraClip(extra.HeldRealign);
+                    }
+
+                    var ok = PlayClip(extra.FileName, extra.PoseName, extra.TakeName, extra.LastFrame);
+                    if (ok && extra.BowShots != null && _attack != null)
+                    {
+                        _bowShots = extra.BowShots;
+                        _attack.TickBowShots(_bowShots, 0f);
+                    }
+
+                    if (ok && extra.HeldRealign != null && _attack != null)
+                    {
+                        _heldRealign = extra.HeldRealign;
+                        _attack.TickHeldRealign(_heldRealign, 0f);
+                    }
+
+                    return ok;
                 }
             }
 
@@ -196,6 +217,32 @@ namespace Survival.Unity
 
             _playable.SetTime(_time);
             _graph.Evaluate(0f);
+            if (_bowShots != null)
+            {
+                _attack?.TickBowShots(_bowShots, _time * BlenderRigAttackSpec.FrameRate);
+            }
+
+            if (_heldRealign != null)
+            {
+                _attack?.TickHeldRealign(_heldRealign, _time * BlenderRigAttackSpec.FrameRate);
+            }
+        }
+
+        private void EndBowShots()
+        {
+            if (_heldRealign != null)
+            {
+                _attack?.EndHeldRealign(_heldRealign);
+                _heldRealign = null;
+            }
+
+            if (_bowShots == null)
+            {
+                return;
+            }
+
+            _attack?.EndBowShots(_bowShots);
+            _bowShots = null;
         }
 
         public void Dispose()
@@ -274,6 +321,29 @@ namespace Survival.Unity
             _attackMode = false;
             _attack?.Deactivate();
             _attack?.SetIdlePropsVisible(true);
+        }
+
+        /// <summary>
+        /// A held-realign extra clip (Oakenshield attack 2) shows the attack's held prop, which binds to its bone on the attack
+        /// clip. If the attack has not played yet, play it once here to bind (idle props hidden while it is active), then stop it.
+        /// </summary>
+        private void BindHeldForExtraClip(BlenderHeldRealign realign)
+        {
+            if (_attack == null || _attackSpec == null || _attack.HeldBound(realign.TrackName))
+            {
+                return;
+            }
+
+            if (!PlayClip(_attackSpec.FileName, BlenderRigAttackSpec.PoseName, BlenderRigAttackSpec.TakeName, _attackSpec.ClipLastFrame))
+            {
+                Debug.LogWarning(_spec.Name + " could not bind " + realign.TrackName + " for the extra clip.");
+                return;
+            }
+
+            _attack.SetIdlePropsVisible(false);
+            _attack.Activate(SampleAttackFrame);
+            _attack.Deactivate();
+            _attack.SetIdlePropsVisible(true);
         }
 
         /// <summary>Idle props are keyed in design space at attack frame 0, so the hand they ride must be in that pose when the

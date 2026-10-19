@@ -31,24 +31,20 @@ public sealed class LockedBattleLaneFiveTests
         Assert.Equal(16, LockedBattleHits.SirAldricContactFrame);
         Assert.Equal(42, LockedBattleHits.BlightrootContactFrame);
 
-        // One hit per attack cycle, never in the rest gap.
-        foreach (var (fighter, profile) in new[] { (LockedBattleRoster.SirAldric, aldric), (LockedBattleRoster.Blightroot, blight) })
+        // Sir Aldric now runs a three-attack rotation (2026-10-18: thrust, diagonal slash, shield bash); one hit per
+        // attack, in rotation order, each inside its own clip. Blightroot's rotation is covered in LockedBattleRotationTests.
+        var fighter = LockedBattleRoster.SirAldric;
+        var order = new List<(int, int)>();
+        var dt = 1f / 120f;
+        for (var t = 0f; t < LockedBattleRotation.RotationSeconds(fighter); t += dt)
         {
-            var hits = 0;
-            var dt = 1f / 120f;
-            for (var t = 0f; t < fighter.AttackCycleSeconds * 3f; t += dt)
+            if (LockedBattleRotation.MeleeHitCrossed(fighter, aldric, t, t + dt, out var a, out var h))
             {
-                if (LockedBattleHits.MeleeHitCrossed(fighter, profile, t, t + dt))
-                {
-                    hits++;
-                    var inCycle = (t + dt) % fighter.AttackCycleSeconds;
-                    Assert.True(LockedBattleRoster.InAttackClip(fighter, t + dt), fighter.Name);
-                    Assert.InRange(inCycle, profile.MeleeContactSeconds - 0.02f, profile.MeleeContactSeconds + dt + 0.02f);
-                }
+                order.Add((a, h));
             }
-
-            Assert.Equal(3, hits);
         }
+
+        Assert.Equal(new[] { (0, 0), (1, 0), (2, 0) }, order);
     }
 
     [Fact]
@@ -96,7 +92,7 @@ public sealed class LockedBattleLaneFiveTests
         var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "LockedBattleDemo.cs"));
         Assert.Contains("LockedBattleHits.SirAldricBlueRgb", demo, StringComparison.Ordinal);
         Assert.Contains("case \"Blightroot\":", demo, StringComparison.Ordinal);
-        Assert.Contains("LockedBattleImpact.Spawn(attacker.Profile.Impact", demo, StringComparison.Ordinal);
+        Assert.Contains("LockedBattleImpact.Spawn(LockedBattleRotation.Impact(attacker.Data, attacker.Profile, attackIndex)", demo, StringComparison.Ordinal);
 
         // Every impact kind is distinct per fighter.
         var kinds = LockedBattleRoster.All.Select(f => LockedBattleHits.ProfileOf(f.Name).Impact).ToArray();

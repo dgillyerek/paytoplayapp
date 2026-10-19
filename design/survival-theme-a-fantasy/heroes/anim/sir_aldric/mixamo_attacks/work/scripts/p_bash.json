@@ -1,0 +1,47 @@
+{
+ "target_fbx": "/workspace/ptp-three/Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_idle.fbx",
+ "idle_frame": 2,
+ "blend_in": 8,
+ "blend_out": 12,
+ "export": {
+  "axis_forward": "-Z",
+  "axis_up": "Y",
+  "apply_unit_scale": true,
+  "apply_scale_options": "FBX_SCALE_NONE",
+  "global_scale": 1.0
+ },
+ "action": "Scene",
+ "src": "/home/box/Downloads/SIRALDRIC@Sword And Shield Attack.fbx",
+ "map": {
+  "Hips": "mixamorig:Hips",
+  "Spine02": "mixamorig:Spine",
+  "Spine01": "mixamorig:Spine1",
+  "Spine": "mixamorig:Spine2",
+  "neck": "mixamorig:Neck",
+  "Head": "mixamorig:Head",
+  "LeftShoulder": "mixamorig:LeftShoulder",
+  "LeftArm": "mixamorig:LeftArm",
+  "LeftForeArm": "mixamorig:LeftForeArm",
+  "LeftHand": "mixamorig:LeftHand",
+  "LeftUpLeg": "mixamorig:LeftUpLeg",
+  "LeftLeg": "mixamorig:LeftLeg",
+  "LeftFoot": "mixamorig:LeftFoot",
+  "LeftToeBase": "mixamorig:LeftToeBase",
+  "RightShoulder": "mixamorig:RightShoulder",
+  "RightArm": "mixamorig:RightArm",
+  "RightForeArm": "mixamorig:RightForeArm",
+  "RightHand": "mixamorig:RightHand",
+  "RightUpLeg": "mixamorig:RightUpLeg",
+  "RightLeg": "mixamorig:RightLeg",
+  "RightFoot": "mixamorig:RightFoot",
+  "RightToeBase": "mixamorig:RightToeBase"
+ },
+ "frames": [
+  1,
+  40
+ ],
+ "cancel_travel": true,
+ "meta_out": "final/qc_attack3_shield_bash.json",
+ "blend_out_path": "final/A_bash.blend",
+ "fbx_out": "final/sir_aldric_attack3_shield_bash.fbx"
+}

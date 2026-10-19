@@ -1,0 +1,24 @@
+{
+ "rig": "VESPERA_rig",
+ "body": "VESPERA_body",
+ "rest_action": "VESPERA_nocape_rest",
+ "blend_in": 10,
+ "blend_out": 12,
+ "lift": 0.07,
+ "windup_scale": 1.5,
+ "action": "VESPERA_attack2_shadow_lash",
+ "src": "/home/box/Downloads/VESPERA@Standing 1H Magic Attack 01.fbx",
+ "frames": [
+  1,
+  70
+ ],
+ "windup_end": 22,
+ "events": [
+  22,
+  28,
+  30
+ ],
+ "meta_out": "final/qc_attack2_shadow_lash.json",
+ "blend_out_path": "final/V_lash.blend",
+ "fbx_out": "final/VESPERA_blenderig_attack2_shadow_lash.fbx"
+}

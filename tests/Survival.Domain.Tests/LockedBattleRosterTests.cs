@@ -122,15 +122,17 @@ public sealed class LockedBattleRosterTests
     [Fact]
     public void Added_lanes_sit_outside_the_original_two_and_pair_one_hero_with_one_villain()
     {
-        // #57 lanes stay exactly where they were.
-        Assert.Equal(0, LockedBattleRoster.Emberfang.Lane);
+        // 2026-10-18 (Derek on 8fbc6d1): the 2x dragons duel in lane 3; their old opponents Oakenshield and Ironhowl pair up in lane 0.
+        Assert.Equal(3, LockedBattleRoster.Emberfang.Lane);
+        Assert.Equal(3, LockedBattleRoster.Ashwyrm.Lane);
+        Assert.Equal(0, LockedBattleRoster.Oakenshield.Lane);
         Assert.Equal(0, LockedBattleRoster.Ironhowl.Lane);
         Assert.Equal(1, LockedBattleRoster.Stormcrest.Lane);
         Assert.Equal(1, LockedBattleRoster.Nightfang.Lane);
         Assert.Equal(-1.15f, LockedBattleRoster.LaneX(0), 4);
         Assert.Equal(1.15f, LockedBattleRoster.LaneX(1), 4);
         Assert.Equal(-LockedBattleRoster.OuterLaneHalfSpacingMetres, LockedBattleRoster.LaneX(2), 4);
-        Assert.Equal(LockedBattleRoster.OuterLaneHalfSpacingMetres, LockedBattleRoster.LaneX(3), 4);
+        Assert.Equal(LockedBattleRoster.RightOuterLaneHalfSpacingMetres, LockedBattleRoster.LaneX(3), 4);
         Assert.True(LockedBattleRoster.OuterLaneHalfSpacingMetres - LockedBattleRoster.LaneHalfSpacingMetres >= 1.2f);
 
         foreach (var lane in new[] { 0, 1, 2, 3, 4, 5 })
@@ -141,8 +143,8 @@ public sealed class LockedBattleRosterTests
 
         Assert.Equal("Vespera", LockedBattleRoster.TargetOf(LockedBattleRoster.Lyra).Name);
         Assert.Equal("Lyra", LockedBattleRoster.TargetOf(LockedBattleRoster.Vespera).Name);
-        Assert.Equal("Ashwyrm", LockedBattleRoster.TargetOf(LockedBattleRoster.Oakenshield).Name);
-        Assert.Equal("Oakenshield", LockedBattleRoster.TargetOf(LockedBattleRoster.Ashwyrm).Name);
+        Assert.Equal("Ironhowl", LockedBattleRoster.TargetOf(LockedBattleRoster.Oakenshield).Name);
+        Assert.Equal("Oakenshield", LockedBattleRoster.TargetOf(LockedBattleRoster.Ironhowl).Name);
 
         // Lane 5 sits outside lane 2 on the left and pairs Sir Aldric with Blightroot.
         Assert.Equal(4, LockedBattleRoster.SirAldric.Lane);
@@ -153,15 +155,15 @@ public sealed class LockedBattleRosterTests
         Assert.Equal("Blightroot", LockedBattleRoster.TargetOf(LockedBattleRoster.SirAldric).Name);
         Assert.Equal("Sir Aldric", LockedBattleRoster.TargetOf(LockedBattleRoster.Blightroot).Name);
 
-        // Lane 6 sits outside lane 3 on the right, clear of Ashwyrm's 1.9 m wingspan, and pairs the archers.
+        // Lane 6 sits outside the dragon lane on the right, clear of 2x Ashwyrm's wingspan, and pairs the archers.
         Assert.Equal(5, LockedBattleRoster.Rowan.Lane);
         Assert.Equal(5, LockedBattleRoster.Bonequill.Lane);
         Assert.Equal(LockedBattleRoster.SixthLaneHalfSpacingMetres, LockedBattleRoster.LaneX(5), 4);
-        Assert.True(LockedBattleRoster.SixthLaneHalfSpacingMetres - 0.47f > LockedBattleRoster.OuterLaneHalfSpacingMetres + 0.95f);
+        Assert.True(LockedBattleRoster.SixthLaneHalfSpacingMetres - 0.47f > LockedBattleRoster.RightOuterLaneHalfSpacingMetres + 0.95f * LockedBattleRoster.AshwyrmBattleScale * 0.85f);
         Assert.Equal("Bonequill", LockedBattleRoster.TargetOf(LockedBattleRoster.Rowan).Name);
         Assert.Equal("Rowan", LockedBattleRoster.TargetOf(LockedBattleRoster.Bonequill).Name);
-        Assert.Equal("Ashwyrm", LockedBattleRoster.TargetOf(LockedBattleRoster.Oakenshield).Name);
-        Assert.Equal("Oakenshield", LockedBattleRoster.TargetOf(LockedBattleRoster.Ashwyrm).Name);
+        Assert.Equal("Ironhowl", LockedBattleRoster.TargetOf(LockedBattleRoster.Oakenshield).Name);
+        Assert.Equal("Oakenshield", LockedBattleRoster.TargetOf(LockedBattleRoster.Ironhowl).Name);
     }
 
     [Fact]
@@ -178,8 +180,8 @@ public sealed class LockedBattleRosterTests
             Assert.Equal(f.Lane, target.Lane);
         }
 
-        Assert.Equal("Ironhowl", LockedBattleRoster.TargetOf(LockedBattleRoster.Emberfang).Name);
-        Assert.Equal("Emberfang", LockedBattleRoster.TargetOf(LockedBattleRoster.Ironhowl).Name);
+        Assert.Equal("Ashwyrm", LockedBattleRoster.TargetOf(LockedBattleRoster.Emberfang).Name);
+        Assert.Equal("Emberfang", LockedBattleRoster.TargetOf(LockedBattleRoster.Ashwyrm).Name);
         Assert.Equal("Nightfang", LockedBattleRoster.TargetOf(LockedBattleRoster.Stormcrest).Name);
         Assert.Equal("Stormcrest", LockedBattleRoster.TargetOf(LockedBattleRoster.Nightfang).Name);
     }

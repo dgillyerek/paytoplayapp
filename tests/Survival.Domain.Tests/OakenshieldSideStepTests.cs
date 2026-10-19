@@ -48,16 +48,16 @@ public sealed class OakenshieldSideStepTests
     }
 
     [Fact]
-    public void Released_spear_still_stops_on_Ashwyrm_upper_body()
+    public void Released_spear_still_stops_on_Ironhowl_upper_body()
     {
         var rel = Flight.Frames[OakenshieldAttack.ReleaseFrame];
-        var box = LockedBattleHits.Ashwyrm.Box;
+        var box = LockedBattleHits.Ironhowl.Box;
         Assert.InRange(rel.Y, 1.0f, box.Height);
         Assert.InRange(Math.Abs(rel.X), 0f, box.HalfWidth);
 
-        // Same lane, facing each other at attack range: the spear flies down Ashwyrm's -Z (his front faces +Z toward her).
+        // Same lane (0 since 2026-10-18), Oakenshield at his attack range: the spear flies down Ironhowl's -Z (his front faces +Z toward him).
         var range = LockedBattleRoster.Oakenshield.AttackRangeMetres;
-        var startZ = range - rel.Z;          // distance in front of Ashwyrm's origin
+        var startZ = range - rel.Z;          // distance in front of Ironhowl's origin
         var x = -rel.X;                      // facing flips x
         Assert.True(LockedBattleHits.ProjectileStopsOnContact(box, x, rel.Y, startZ, x, rel.Y, -(box.Back + 1f)));
         Assert.True(LockedBattleHits.ProjectileSegmentHits(box, x, rel.Y, startZ, x, rel.Y, -(box.Back + 1f), out var t));

@@ -1,0 +1,67 @@
+{
+ "rig": "OAKENSHIELD_rig",
+ "body": "OAKENSHIELD_body",
+ "rest_action": "OAKENSHIELD_rest",
+ "rest_frame": 0,
+ "blend_in": 10,
+ "blend_out": 12,
+ "lift": 0.07,
+ "keep_stance_offset": 1.0,
+ "qc_step": 2,
+ "held": {
+  "fbx": "/workspace/ptp-three/design/survival-theme-a-fantasy/heroes/anim/oakenshield/fresh_20261012/OAKENSHIELD_thornspear.fbx",
+  "bone": "RightHand",
+  "local": [
+   [
+    0.9554195404052734,
+    -0.2047232985496521,
+    0.21274703741073608,
+    2.592802047729492e-06
+   ],
+   [
+    -0.16583694517612457,
+    0.22405938804149628,
+    0.9603619575500488,
+    0.06999380141496658
+   ],
+   [
+    -0.24427634477615356,
+    -0.9528300166130066,
+    0.18012022972106934,
+    7.450580596923828e-07
+   ],
+   [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  ],
+  "exclude_groups": [
+   "RightHand",
+   "RightForeArm"
+  ]
+ },
+ "action": "OAKENSHIELD_attack2_spear_thrust",
+ "segments": [
+  {
+   "src": "OAKENSHIELD_mixamo_bayonet_stab.fbx",
+   "tag": "s",
+   "start": 1,
+   "end": 70
+  }
+ ],
+ "meta_out": "final/qc_oak_thrust.json",
+ "blend_out_path": "final/OAK_thrust.blend",
+ "hold_hips_xy": true,
+ "fbx_out": "OAKENSHIELD_blenderig_attack2_spear_thrust.fbx",
+ "spine_twist": {
+  "deg": -22,
+  "keys": [
+   12,
+   30,
+   42,
+   60
+  ]
+ }
+}

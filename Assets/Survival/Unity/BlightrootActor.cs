@@ -141,7 +141,8 @@ namespace Survival.Unity
 
         /// <summary>
         /// Locked battle (lane 5): rest = "mutant idle", walk = "mutant walking" (carries the
-        /// hips forward, the battle catches each loop like Ironhowl), attack = "mutant swiping".
+        /// hips forward, the battle catches each loop like Ironhowl), attack = "mutant swiping",
+        /// attack2 = "mutant punch", attack3 = "mutant jump attack" (the battle's attack rotation).
         /// The battle puts this component on its own pivot under the actor host, because the
         /// stand-up turn and the foot plant write this transform.
         /// </summary>
@@ -152,7 +153,7 @@ namespace Survival.Unity
                 return false;
             }
 
-            _battlePose = pose == BlightrootBattlePoses.Walk || pose == BlightrootBattlePoses.Attack ? pose : BlightrootBattlePoses.Rest;
+            _battlePose = pose == BlightrootBattlePoses.Walk || BlightrootBattlePoses.IsAttack(pose) ? pose : BlightrootBattlePoses.Rest;
             return true;
         }
 

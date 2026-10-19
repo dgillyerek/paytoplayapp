@@ -39,7 +39,28 @@ namespace Survival.Domain.Roster
         RangerArrow = 10,
 
         /// <summary>Bonequill bone arrow: violet flash, bone shards, dark purple wisps.</summary>
-        BoneShard = 11
+        BoneShard = 11,
+
+        /// <summary>Lyra staff sweep (attack 2): hero-blue flash, blue streaks along the sweep, light motes.</summary>
+        HeroStaffSweep = 12,
+
+        /// <summary>Lyra arcane nova (attack 3): hero-blue flash, a wide ring of blue motes, rising light, blue light.</summary>
+        HeroArcaneNova = 13,
+
+        /// <summary>Ironhowl overhead smash (attack 2): purple flash, a purple crack ring on the ground, dust and debris.</summary>
+        GroundSlam = 14,
+
+        /// <summary>Oakenshield root snare (attack 3): hero-blue flash, blue-glowing roots bursting up from the ground, leaves and earth dust.</summary>
+        HeroRootSnare = 15,
+
+        /// <summary>Vespera shadow lash (attack 2): violet flash, purple lash streaks along the strike, dark wisps.</summary>
+        VillainShadowLash = 16,
+
+        /// <summary>Vespera hex rain (attack 3): a purple hex glyph on the floor under each hit, violet motes falling into it, dark wisps.</summary>
+        VillainHexRain = 17,
+
+        /// <summary>Sir Aldric shield bash (attack 3): hero-blue flash, a blue shock ring thrown off the shield face, blue motes, blue light.</summary>
+        HeroShieldShock = 18
     }
 
     /// <summary>
@@ -267,9 +288,10 @@ namespace Survival.Domain.Roster
             0.055f);
 
         /// <summary>
-        /// Body box covers the chest and snout facing the heroes. Height reaches 1.70 m so a
-        /// human-height spear (Oakenshield releases at ~1.57 m) stops on the upper body instead of
-        /// flying over the 1.34 m rest mesh; from the rear battle camera that reads as a body hit.
+        /// Body box covers the chest and snout facing Emberfang (the two dragons duel in lane 3 since 2026-10-18). The box is
+        /// in design-height metres and the battle doubles it with the body: front 0.45 (0.9 m at 2x, his walking snout),
+        /// height 1.15 (2.3 m, the top of his 2x rest mesh). It no longer has to reach 1.70 m for Oakenshield's
+        /// human-height spear, so Emberfang's low fireball (about 0.6 m up) bursts on the chest, not in the air.
         /// </summary>
         public static readonly LockedBattleHitProfile Ashwyrm = new LockedBattleHitProfile(
             "Ashwyrm",
@@ -277,7 +299,7 @@ namespace Survival.Domain.Roster
             true,
             -1,
             string.Empty,
-            new BattleHitBox(0.50f, 0.55f, 0.45f, 1.70f),
+            new BattleHitBox(0.50f, 0.45f, 0.45f, 1.15f),
             0.05f,
             4f,
             1f,
@@ -448,26 +470,9 @@ namespace Survival.Domain.Roster
         /// </summary>
         public static bool MeleeHitCrossed(LockedBattleFighter fighter, LockedBattleHitProfile profile, float previousSeconds, float seconds)
         {
-            if (profile.Projectile || profile.MeleeContactFrame < 0 || seconds <= previousSeconds || seconds < 0f)
-            {
-                return false;
-            }
-
-            var cycle = fighter.AttackCycleSeconds;
-            var contact = profile.MeleeContactSeconds;
-            if (cycle <= 0f || contact > fighter.AttackSeconds)
-            {
-                return false;
-            }
-
-            var n = (float)Math.Floor((seconds - contact) / cycle);
-            if (n < 0f)
-            {
-                return false;
-            }
-
-            var at = (n * cycle) + contact;
-            return at > previousSeconds && at <= seconds;
+            // Rotation-aware (each attack on its own contact frame); with one attack this is the
+            // old one-hit-per-cycle rule.
+            return LockedBattleRotation.MeleeHitCrossed(fighter, profile, previousSeconds, seconds, out _);
         }
 
         /// <summary>Knock-back weight 0..1: quick push out, then ease back to 0 by <see cref="RecoilSeconds"/>.</summary>

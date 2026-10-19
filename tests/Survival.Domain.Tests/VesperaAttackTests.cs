@@ -11,12 +11,12 @@ public sealed class VesperaAttackTests
     public void Vespera_attack_is_a_new_scene_take_after_the_existing_clips()
     {
         var poses = VesperaMotion.PoseNames;
-        Assert.Equal(3, poses.Length);
+        Assert.Equal(5, poses.Length);
         Assert.Equal("rest", poses[0]);
         Assert.Equal("walk", poses[1]);
         Assert.Equal("attack", poses[2]);
         Assert.Equal(VesperaMotion.PoseNames, VesperaMotion.Spec.PoseNames);
-        var clip = VesperaMotion.Spec.ExtraClips[VesperaMotion.Spec.ExtraClips.Length - 1];
+        var clip = VesperaMotion.Spec.ExtraClips[0];
         Assert.Equal("attack", clip.PoseName);
         Assert.Equal("VESPERA_blenderig_attack.fbx", clip.FileName);
         Assert.Equal("Scene", clip.TakeName);

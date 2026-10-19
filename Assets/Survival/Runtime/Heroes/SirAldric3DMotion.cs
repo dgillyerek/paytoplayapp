@@ -99,8 +99,30 @@ namespace Survival.Domain.Heroes
             new("Sword And Shield turn (2)", "sword_and_shield_turn_(2).fbx", "c531ea9ecae863e04819275ed199f373", false),
         };
 
+        /// <summary>
+        /// Battle attacks 2 and 3 (2026-10-18), baked onto the lite avatar (sword_and_shield_idle.fbx rig: Armature root, 41
+        /// mixamorig bones, take Scene, cm units) so they play through PlayNamedClip like the 17 lite clips. Both start and end on
+        /// the lite idle pose. Diagonal slash: the repo's Mixamo "Stable Sword Inward Slash" DIAG (source f30-85: high chamber at f20 of the bake,
+        /// cut through by f24). Shield bash: Mixamo "Sword And Shield Attack" (40 f, AccuRig upload): the 2.8 m charge is held on the spot and the
+        /// battle slides him 0.35 m in instead; the shield (left) hand drives 66 cm forward to f38. Not part of the 17-clip pack.
+        /// </summary>
+        public static readonly LiteSwordShieldClip[] BattleExtraClips =
+        {
+            new("Aldric Diagonal Slash", "sir_aldric_attack2_diagonal_slash.fbx", "62b8ad8845ec0e57e8fcbdb25daa05b5", false),
+            new("Aldric Shield Bash", "sir_aldric_attack3_shield_bash.fbx", "67a29befb4557d765abfb53707e22c93", false),
+        };
+
         public static bool TryLiteSwordShield(string exactName, out LiteSwordShieldClip clip)
         {
+            foreach (var candidate in BattleExtraClips)
+            {
+                if (string.Equals(candidate.ExactName, exactName, StringComparison.Ordinal))
+                {
+                    clip = candidate;
+                    return true;
+                }
+            }
+
             foreach (var candidate in LiteSwordShieldClips)
             {
                 if (string.Equals(candidate.ExactName, exactName, StringComparison.Ordinal))
@@ -132,6 +154,14 @@ namespace Survival.Domain.Heroes
             if (bslash >= 0)
             {
                 leaf = leaf[(bslash + 1)..];
+            }
+
+            foreach (var candidate in BattleExtraClips)
+            {
+                if (string.Equals(candidate.FileName, leaf, StringComparison.OrdinalIgnoreCase))
+                {
+                    return candidate.ExactName;
+                }
             }
 
             foreach (var candidate in LiteSwordShieldClips)
