@@ -11,6 +11,9 @@ namespace Survival.Unity
     /// three-quarter framing that fits the whole battlefield box, then the mouse drives it:
     /// left- or right-drag orbits around the battle centre, the scroll wheel zooms, middle-drag
     /// pans across the ground. Pitch stays above the ground and the zoom is clamped.
+    /// Laptop controls (no middle button, Derek 2026-10-18): Shift + left-drag pans like middle-drag; WASD or the arrow keys
+    /// slide the view across the ground relative to where the camera faces (W/Up away from the camera, D/Right to its right);
+    /// E, + or keypad + zooms in and Q, - or keypad - zooms out. Pans stay within <see cref="PanMarginMetres"/> of the field.
     /// Input: the project runs both backends (activeInputHandler 2); the Input System mouse is
     /// read first and the legacy Input Manager only when the Input System reports nothing.
     /// </summary>
@@ -40,6 +43,14 @@ namespace Survival.Unity
         /// <summary>Zoom factor per scroll notch.</summary>
         public const float ZoomPerNotch = 0.9f;
 
+        /// <summary>Keyboard pan speed as a fraction of the zoom distance per second, clamped to the range below.</summary>
+        public const float KeyPanDistancePerSecond = 0.6f;
+        public const float KeyPanMinMetresPerSecond = 2f;
+        public const float KeyPanMaxMetresPerSecond = 12f;
+
+        /// <summary>Keyboard zoom in scroll notches per second.</summary>
+        public const float KeyZoomNotchesPerSecond = 5f;
+
         /// <summary>How long one hit shake lasts.</summary>
         public const float ShakeSeconds = 0.18f;
 
@@ -51,6 +62,7 @@ namespace Survival.Unity
         private float _maxDistance = 25f;
         private bool _orbiting;
         private bool _panning;
+        private bool _shiftPanning;
         private Vector3 _eye;
         private Quaternion _rotation = Quaternion.identity;
         private Vector3 _shakeOffset;
@@ -88,6 +100,14 @@ namespace Survival.Unity
                 Pan(panDrag);
             }
 
+            ReadKeys(out var keyMove, out var keyZoom);
+            if (keyMove.sqrMagnitude > 0f)
+            {
+                var speed = Mathf.Clamp(_distance * KeyPanDistancePerSecond, KeyPanMinMetresPerSecond, KeyPanMaxMetresPerSecond);
+                Slide(keyMove.normalized * (speed * Time.unscaledDeltaTime));
+            }
+
+            notches += keyZoom * KeyZoomNotchesPerSecond * Time.unscaledDeltaTime;
             if (Mathf.Abs(notches) > 1e-4f)
             {
                 _distance *= Mathf.Pow(ZoomPerNotch, notches);
@@ -109,14 +129,17 @@ namespace Survival.Unity
             var mouse = Mouse.current;
             if (mouse != null && mouse.enabled)
             {
-                var orbitHeld = mouse.leftButton.isPressed || mouse.rightButton.isPressed;
-                var panHeld = mouse.middleButton.isPressed;
+                var keyboard = Keyboard.current;
+                var shift = keyboard != null && (keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed);
+                var leftHeld = mouse.leftButton.isPressed;
+                var rightHeld = mouse.rightButton.isPressed;
+                var middleHeld = mouse.middleButton.isPressed;
                 var pressed = mouse.leftButton.wasPressedThisFrame || mouse.rightButton.wasPressedThisFrame
                               || mouse.middleButton.wasPressedThisFrame;
-                Track(orbitHeld, panHeld, pressed);
+                Track(leftHeld, rightHeld, middleHeld, shift, pressed);
                 var delta = mouse.delta.ReadValue();
                 var wheel = mouse.scroll.ReadValue().y;
-                heard = orbitHeld || panHeld || Mathf.Abs(wheel) > 1e-4f;
+                heard = leftHeld || rightHeld || middleHeld || Mathf.Abs(wheel) > 1e-4f;
                 if (_orbiting)
                 {
                     orbitDrag = delta;
@@ -136,10 +159,9 @@ namespace Survival.Unity
 #if ENABLE_LEGACY_INPUT_MANAGER
             if (!heard)
             {
-                var orbitHeld = Input.GetMouseButton(0) || Input.GetMouseButton(1);
-                var panHeld = Input.GetMouseButton(2);
+                var legacyShift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
                 var pressed = Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.GetMouseButtonDown(2);
-                Track(orbitHeld, panHeld, pressed);
+                Track(Input.GetMouseButton(0), Input.GetMouseButton(1), Input.GetMouseButton(2), legacyShift, pressed);
                 var pixels = new Vector2(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y")) * 20f;
                 if (_orbiting)
                 {
@@ -160,24 +182,114 @@ namespace Survival.Unity
 #endif
         }
 
-        /// <summary>Starts a drag on a fresh press away from the HUD; ends it on release.</summary>
-        private void Track(bool orbitHeld, bool panHeld, bool pressed)
+        /// <summary>
+        /// Starts a drag on a fresh press away from the HUD; ends it on release. Left or right orbits, middle pans, and a
+        /// left press with Shift held pans (laptops without a middle button); that pan lasts while left stays down.
+        /// </summary>
+        private void Track(bool leftHeld, bool rightHeld, bool middleHeld, bool shift, bool pressed)
         {
             if (pressed && !OverHud())
             {
-                _orbiting = orbitHeld;
-                _panning = !orbitHeld && panHeld;
+                _shiftPanning = shift && leftHeld && !rightHeld;
+                _orbiting = !_shiftPanning && (leftHeld || rightHeld);
+                _panning = _shiftPanning || (!_orbiting && middleHeld);
             }
 
-            if (!orbitHeld)
+            if (!(leftHeld || rightHeld))
             {
                 _orbiting = false;
             }
 
-            if (!panHeld)
+            if (!(middleHeld || (_shiftPanning && leftHeld)))
             {
                 _panning = false;
+                _shiftPanning = false;
             }
+        }
+
+        /// <summary>
+        /// Keyboard this frame: ground move (x right, y away from the camera, -1..1) from WASD or the arrow keys, and zoom
+        /// (+1 in, -1 out) from E/+ and Q/-. Ignored while a HUD control has keyboard focus.
+        /// </summary>
+        private static void ReadKeys(out Vector2 move, out float zoom)
+        {
+            move = Vector2.zero;
+            zoom = 0f;
+            var events = EventSystem.current;
+            if (events != null && events.currentSelectedGameObject != null
+                && events.currentSelectedGameObject.GetComponent<UnityEngine.UI.InputField>() != null)
+            {
+                return;
+            }
+
+            var keyboard = Keyboard.current;
+            if (keyboard != null && keyboard.enabled)
+            {
+                if (keyboard.wKey.isPressed || keyboard.upArrowKey.isPressed)
+                {
+                    move.y += 1f;
+                }
+
+                if (keyboard.sKey.isPressed || keyboard.downArrowKey.isPressed)
+                {
+                    move.y -= 1f;
+                }
+
+                if (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed)
+                {
+                    move.x += 1f;
+                }
+
+                if (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed)
+                {
+                    move.x -= 1f;
+                }
+
+                if (keyboard.eKey.isPressed || keyboard.equalsKey.isPressed || keyboard.numpadPlusKey.isPressed)
+                {
+                    zoom += 1f;
+                }
+
+                if (keyboard.qKey.isPressed || keyboard.minusKey.isPressed || keyboard.numpadMinusKey.isPressed)
+                {
+                    zoom -= 1f;
+                }
+            }
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+            if (move == Vector2.zero && Mathf.Abs(zoom) < 1e-4f)
+            {
+                if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
+                {
+                    move.y += 1f;
+                }
+
+                if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow))
+                {
+                    move.y -= 1f;
+                }
+
+                if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
+                {
+                    move.x += 1f;
+                }
+
+                if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
+                {
+                    move.x -= 1f;
+                }
+
+                if (Input.GetKey(KeyCode.E) || Input.GetKey(KeyCode.Equals) || Input.GetKey(KeyCode.Plus) || Input.GetKey(KeyCode.KeypadPlus))
+                {
+                    zoom += 1f;
+                }
+
+                if (Input.GetKey(KeyCode.Q) || Input.GetKey(KeyCode.Minus) || Input.GetKey(KeyCode.KeypadMinus))
+                {
+                    zoom -= 1f;
+                }
+            }
+#endif
         }
 
         private static bool OverHud()
@@ -191,6 +303,12 @@ namespace Survival.Unity
         {
             var screenHeight = Mathf.Max(Screen.height, 1);
             var metresPerPixel = 2f * _distance * Mathf.Tan(PortraitGameView.FovDegrees * 0.5f * Mathf.Deg2Rad) / screenHeight;
+            Slide(-pixels * metresPerPixel);
+        }
+
+        /// <summary>Moves the orbit centre on the ground: x metres to the camera's right, y metres away from the camera (Solve clamps it to the field margin).</summary>
+        private void Slide(Vector2 metres)
+        {
             var flatRight = _rotation * Vector3.right;
             flatRight.y = 0f;
             var flatForward = _rotation * Vector3.forward;
@@ -201,7 +319,7 @@ namespace Survival.Unity
                 flatForward.y = 0f;
             }
 
-            _pivot -= ((flatRight.normalized * pixels.x) + (flatForward.normalized * pixels.y)) * metresPerPixel;
+            _pivot += (flatRight.normalized * metres.x) + (flatForward.normalized * metres.y);
         }
 
         /// <summary>Small screen-plane shake for a big hit. Overlapping hits keep the stronger one.</summary>
