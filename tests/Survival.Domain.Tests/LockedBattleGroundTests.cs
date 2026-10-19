@@ -35,10 +35,10 @@ public sealed class LockedBattleGroundTests
     [Fact]
     public void Ground_covers_every_lane_fades_into_the_horizon_and_leaves_the_lanes_alone()
     {
-        // Lanes unchanged by the ground (2026-10-18 dragon layout: inner 1.35 m, left outer 3.45 m, right outer 4.35 m).
-        Assert.Equal(1.35f, LockedBattleRoster.LaneHalfSpacingMetres, 4);
-        Assert.Equal(3.45f, LockedBattleRoster.OuterLaneHalfSpacingMetres, 4);
-        Assert.Equal(4.35f, LockedBattleRoster.RightOuterLaneHalfSpacingMetres, 4);
+        // Lanes unchanged by the ground (2026-10-18 dragon-duel layout: inner 1.15 m, left outer 2.6 m, dragon lane 4.15 m).
+        Assert.Equal(1.15f, LockedBattleRoster.LaneHalfSpacingMetres, 4);
+        Assert.Equal(2.6f, LockedBattleRoster.OuterLaneHalfSpacingMetres, 4);
+        Assert.Equal(4.15f, LockedBattleRoster.RightOuterLaneHalfSpacingMetres, 4);
 
         // Plane and tracks cover every lane from start to start, with room to spare.
         Assert.True(LockedBattleGroundSpec.GroundSizeMetres / 2f > LockedBattleGroundSpec.FogEndMetres);

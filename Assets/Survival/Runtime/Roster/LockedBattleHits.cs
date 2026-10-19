@@ -288,9 +288,10 @@ namespace Survival.Domain.Roster
             0.055f);
 
         /// <summary>
-        /// Body box covers the chest and snout facing the heroes. Height reaches 1.70 m so a
-        /// human-height spear (Oakenshield releases at ~1.57 m) stops on the upper body instead of
-        /// flying over the 1.34 m rest mesh; from the rear battle camera that reads as a body hit.
+        /// Body box covers the chest and snout facing Emberfang (the two dragons duel in lane 3 since 2026-10-18). The box is
+        /// in design-height metres and the battle doubles it with the body: front 0.45 (0.9 m at 2x, his walking snout),
+        /// height 1.15 (2.3 m, the top of his 2x rest mesh). It no longer has to reach 1.70 m for Oakenshield's
+        /// human-height spear, so Emberfang's low fireball (about 0.6 m up) bursts on the chest, not in the air.
         /// </summary>
         public static readonly LockedBattleHitProfile Ashwyrm = new LockedBattleHitProfile(
             "Ashwyrm",
@@ -298,7 +299,7 @@ namespace Survival.Domain.Roster
             true,
             -1,
             string.Empty,
-            new BattleHitBox(0.50f, 0.55f, 0.45f, 1.70f),
+            new BattleHitBox(0.50f, 0.45f, 0.45f, 1.15f),
             0.05f,
             4f,
             1f,

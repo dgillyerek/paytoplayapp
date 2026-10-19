@@ -145,17 +145,8 @@ public sealed class LockedBattleHitsTests
         foreach (var f in LockedBattleRoster.All)
         {
             var b = LockedBattleHits.ProfileOf(f.Name).Box;
-            // Ashwyrm's box is taller than the rest mesh on purpose: it has to catch human-height
-            // spears (Oakenshield) that visually clip the upper body from the rear camera.
-            if (f.Name == "Ashwyrm")
-            {
-                Assert.True(b.Height >= f.DesignHeightMetres, f.Name);
-                Assert.True(b.Height <= 1.8f, f.Name);
-            }
-            else
-            {
-                Assert.True(b.Height <= f.DesignHeightMetres * 1.0001f, f.Name);
-            }
+            // Every box stays inside its rest mesh height (Ashwyrm's no longer stretches for Oakenshield's spear).
+            Assert.True(b.Height <= f.DesignHeightMetres * 1.0001f, f.Name);
 
             Assert.True(b.HalfWidth > 0.1f && b.Front > 0.1f && b.Back > 0.1f, f.Name);
         }
@@ -198,37 +189,26 @@ public sealed class LockedBattleHitsTests
     }
 
     [Fact]
-    public void Oakenshield_spear_stops_on_Ashwyrm_and_never_travels_past_him()
+    public void Oakenshield_spear_stops_on_Ironhowl_and_never_travels_past_him()
     {
-        // Oakenshield throws at ~1.57 m (attack_meta release). Ashwyrm faces the heroes (local +Z
-        // toward Oakenshield). At attack range the spear flies character-forward into Ashwyrm's
-        // chest; the entry must land before the far face so the Unity driver despawns there.
-        var ash = LockedBattleHits.Ashwyrm;
-        Assert.True(ash.Projectile);
+        // Oakenshield throws at ~1.57 m (attack_meta release) and now faces Ironhowl in lane 0 (2026-10-18, the dragons
+        // pair up in lane 3). Ironhowl faces the heroes (local +Z toward Oakenshield); the spear stops on his body box.
+        var iron = LockedBattleHits.Ironhowl;
+        Assert.Equal("Ironhowl", LockedBattleRoster.TargetOf(LockedBattleRoster.Oakenshield).Name);
         Assert.Equal(BattleImpactKind.LeafEarth, LockedBattleHits.Oakenshield.Impact);
         Assert.True(LockedBattleHits.Oakenshield.Projectile);
 
-        // One frame of flight: from just in front of Ashwyrm's chest, through the body, to well past.
         var y = 1.57f;
-        Assert.True(LockedBattleHits.ProjectileStopsOnContact(ash.Box, 0f, y, ash.Box.Front + 0.4f, 0f, y, -(ash.Box.Back + 0.4f)));
-        Assert.True(LockedBattleHits.ProjectileSegmentHits(ash.Box, 0f, y, ash.Box.Front + 0.4f, 0f, y, -(ash.Box.Back + 0.4f), out var entry));
-        Assert.InRange(entry, 0f, 1f - 1e-4f);
-
-        // Contact local Z is on the front face; anything deeper than the back face is "past".
-        var contactZ = ash.Box.Front - (entry * (ash.Box.Front + ash.Box.Back + 0.8f));
-        // Simpler: entry point must not be past the back face.
-        var az = ash.Box.Front + 0.4f;
-        var bz = -(ash.Box.Back + 0.4f);
+        Assert.True(iron.Box.Height >= y);
+        var az = iron.Box.Front + 0.4f;
+        var bz = -(iron.Box.Back + 0.4f);
+        Assert.True(LockedBattleHits.ProjectileStopsOnContact(iron.Box, 0f, y, az, 0f, y, bz));
+        Assert.True(LockedBattleHits.ProjectileSegmentHits(iron.Box, 0f, y, az, 0f, y, bz, out var entry));
         var hitZ = az + (entry * (bz - az));
-        Assert.True(hitZ >= -ash.Box.Back - 1e-3f, "contact is on or in front of the back face");
-        Assert.True(hitZ <= ash.Box.Front + 1e-3f, "contact is on or behind the front face");
+        Assert.Equal(iron.Box.Front, hitZ, 3);
 
-        // A spear that has already cleared Ashwyrm (both ends past the back) must not "hit".
-        Assert.False(LockedBattleHits.ProjectileStopsOnContact(ash.Box, 0f, y, -(ash.Box.Back + 0.2f), 0f, y, -(ash.Box.Back + 1.5f)));
-
-        // Old short box (height 1.30) would miss this spear; the grown box must not.
-        Assert.True(ash.Box.Height >= 1.57f);
-        Assert.True(ash.Box.Contains(0f, y, 0f));
+        // A spear that has already cleared Ironhowl (both ends past the back) must not "hit".
+        Assert.False(LockedBattleHits.ProjectileStopsOnContact(iron.Box, 0f, y, -(iron.Box.Back + 0.2f), 0f, y, -(iron.Box.Back + 1.5f)));
     }
 
     [Fact]

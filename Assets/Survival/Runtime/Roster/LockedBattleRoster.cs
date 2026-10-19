@@ -301,11 +301,11 @@ namespace Survival.Domain.Roster
         public const float StartHalfGapMetres = 2.5f;
 
         /// <summary>
-        /// Inner lane centres (0 and 1) sit this far either side of the battle centre line. 2026-10-18 (Derek: "make the two
-        /// dragon looking characters much larger"): 1.15 → 1.35 m so 2x Emberfang (lane 0, about 1.23 m half-width when it
-        /// walks) clears Stormcrest's wing buffet (lane 1, 1.09 m half-width) by about 0.38 m.
+        /// Inner lane centres (0 and 1) sit this far either side of the battle centre line. 2026-10-18 (Derek on 8fbc6d1: the two
+        /// dragons fight each other in one lane): back to 1.15 m. Lane 0 is now Oakenshield vs Ironhowl (Ironhowl about 0.56 m
+        /// half-width in his claw lunge), which clears Stormcrest's wing buffet (lane 1, 1.09 m half-width) by about 0.65 m.
         /// </summary>
-        public const float LaneHalfSpacingMetres = 1.35f;
+        public const float LaneHalfSpacingMetres = 1.15f;
 
         /// <summary>
         /// Battle-only body scale on top of the design-height fit (2026-10-18, Derek on #70: the two dragons much larger,
@@ -316,39 +316,49 @@ namespace Survival.Domain.Roster
         public const float AshwyrmBattleScale = 2f;
 
         /// <summary>
-        /// Ironhowl stops this far from Emberfang (was 1.9 m). 2x Emberfang's snout reaches about 1.65 m ahead of its origin
-        /// at rest and 1.79 m in the breath lunge; Ironhowl's front is 0.4 m and his smash/combo slide in 0.3 m, so his body
-        /// stays clear while his claws (1.05 m lunge) still reach the snout and neck.
+        /// Emberfang and Ashwyrm share lane 3 and both stop this far apart (was 3.2 m each against humanoids). At 2x Emberfang's
+        /// snout reaches 1.79 m ahead of its origin in the breath lunge and Ashwyrm's 1.29 m, so the bodies keep about 0.7 m
+        /// apart even when both lunge at once. Emberfang's fireball leaves the mouth 1.81 m ahead and meets Ashwyrm's scaled box
+        /// front (1.1 m) after about 0.9 m of flight; Ashwyrm's leaves 1.16 m ahead and meets Emberfang's (1.7 m) after about
+        /// 0.9 m.
         /// </summary>
-        public const float IronhowlAttackRangeMetres = 2.6f;
+        public const float DragonDuelRangeMetres = 3.8f;
 
         /// <summary>
-        /// Left outer lane (2, Lyra vs Vespera) sits this far left of the centre line: 2.1 m outside lane 0, so Lyra's staff
-        /// side (0.55 m) clears 2x Emberfang (1.23 m half-width) by about 0.32 m. Was 2.45 m (both outer lanes) before the
-        /// dragons grew.
+        /// Ironhowl stops this far from Oakenshield (lane 0 since the dragons pair up; 1.9 m against design-size Emberfang,
+        /// 2.6 m against 2x Emberfang). Ironhowl's front is 0.39 m and his smash/combo slide in 0.3 m, so his body stays about
+        /// 0.43 m off Oakenshield's 0.18 m front, while his claws (1.05 m lunge) reach Oakenshield's 0.25 m box front.
         /// </summary>
-        public const float OuterLaneHalfSpacingMetres = 3.45f;
+        public const float IronhowlAttackRangeMetres = 1.3f;
 
         /// <summary>
-        /// Right outer lane (3, Oakenshield vs Ashwyrm) sits this far right of the centre line: 3.0 m outside lane 1, so
-        /// 2x Ashwyrm (wingspan about 3.2 m, 1.61 m half) clears Stormcrest's wing buffet and Nightfang. Was 2.45 m.
+        /// Left outer lane (2, Lyra vs Vespera) sits this far left of the centre line: 1.45 m outside lane 0, so Lyra's staff
+        /// side (0.55 m) clears Ironhowl's claw lunge (0.56 m half-width) by about 0.34 m. Was 2.45 m before the dragons grew
+        /// and 3.45 m while 2x Emberfang was in lane 0.
         /// </summary>
-        public const float RightOuterLaneHalfSpacingMetres = 4.35f;
+        public const float OuterLaneHalfSpacingMetres = 2.6f;
+
+        /// <summary>
+        /// Right outer lane (3, the dragon duel: Emberfang vs Ashwyrm) sits this far right of the centre line: 3.0 m outside
+        /// lane 1, so 2x Ashwyrm (wingspan about 3.2 m, 1.61 m half) and 2x Emberfang (1.23 m half) clear Stormcrest's wing
+        /// buffet (1.09 m) and Nightfang by about 0.3 m. Was 2.45 m, then 4.35 m with Ashwyrm alone.
+        /// </summary>
+        public const float RightOuterLaneHalfSpacingMetres = 4.15f;
 
         /// <summary>
         /// Fifth lane (4) sits this far left of the centre line: 1.4 m outside lane 2. Vespera
         /// (lane 2 villain) is slim, so Blightroot (1.65 m T-pose span, about 1.0 m with arms
-        /// down at idle) clears her. The right side is not used because Ashwyrm's wingspan
-        /// already reaches far out. 2026-10-18: moved out with lane 2 (3.85 → 4.85 m), same 1.4 m gap.
+        /// down at idle) clears her. The right side is not used because the dragon lane is there.
+        /// 2026-10-18: follows lane 2 (3.85 → 4.85 → 4.0 m), same 1.4 m gap.
         /// </summary>
-        public const float FifthLaneHalfSpacingMetres = 4.85f;
+        public const float FifthLaneHalfSpacingMetres = 4.0f;
 
         /// <summary>
-        /// Sixth lane (5) sits this far right of the centre line: 2.55 m outside lane 3, because
-        /// 2x Ashwyrm (lane 3 villain) spans about 3.2 m wing to wing and reaches 5.96 m out. Rowan and
-        /// Bonequill are 0.9 m across in A-pose, so their inner edge (6.43 m) clears it. Was 4.35 m.
+        /// Sixth lane (5) sits this far right of the centre line: 2.4 m outside the dragon lane, because
+        /// 2x Ashwyrm spans about 3.2 m wing to wing and reaches 5.76 m out. Rowan and
+        /// Bonequill are 0.9 m across in A-pose, so their inner edge (6.06 m) clears it. Was 4.35 m, then 6.9 m.
         /// </summary>
-        public const float SixthLaneHalfSpacingMetres = 6.9f;
+        public const float SixthLaneHalfSpacingMetres = 6.55f;
 
         /// <summary>Lanes 0-5. The ground lays one dirt track per lane.</summary>
         public const int LaneCount = 6;
@@ -410,10 +420,10 @@ namespace Survival.Domain.Roster
             0.33f,
             0f,
             string.Empty,
-            3.2f,
+            DragonDuelRangeMetres,
             BlenderRigAttackSpec.ClipSeconds,
             true,
-            0);
+            3);
 
         public static readonly LockedBattleFighter Stormcrest = new LockedBattleFighter(
             "Stormcrest",
@@ -563,7 +573,7 @@ namespace Survival.Domain.Roster
             3.0f,
             BlenderRigAttackSpec.ClipSeconds,
             true,
-            3,
+            0,
             "",
             0f,
             OakenshieldAttacks);
@@ -635,7 +645,7 @@ namespace Survival.Domain.Roster
             0.52f,
             0f,
             string.Empty,
-            3.2f,
+            DragonDuelRangeMetres,
             BlenderRigAttackSpec.ClipSeconds,
             true,
             3);
