@@ -235,7 +235,7 @@ namespace Survival.Domain.Heroes
 
         /// <summary>
         /// Scene-marker strike path (Derek rejected another Mixamo DIAG tweak).
-        /// Four empties in SirAldric.unity — drag in Scene, Play reads transforms.
+        /// Four empties under SirAldricStrikePath (they lived in the SirAldric.unity demo, removed 2026-10-19) — drag in Scene, Play reads transforms.
         /// No Mixamo DIAG playback. No Mixamo Mirror. No frozen holds.
         /// </summary>
         public const int StrikeMarkerCount = 4;

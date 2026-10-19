@@ -141,11 +141,11 @@ public sealed class AshwyrmAttackTests
     }
 
     [Fact]
-    public void Ashwyrm_attack_is_wired_in_the_demo_and_menu()
+    public void Ashwyrm_attack_is_wired_in_the_actor_and_has_no_demo_menu()
     {
         var root = FindRepoRoot();
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains("Survival/Ashwyrm Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Survival/Ashwyrm Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "AshwyrmActor.cs"));
         Assert.Contains("AshwyrmAttack.Spec", actor, StringComparison.Ordinal);
         var driver = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigAttackDriver.cs"));

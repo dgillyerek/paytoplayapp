@@ -550,13 +550,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("1821c4a", motionSrc, StringComparison.Ordinal);
         Assert.Contains("SampleStrikePath", motionSrc, StringComparison.Ordinal);
         Assert.Contains("StrikeMarkerDrawName", motionSrc, StringComparison.Ordinal);
-        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "SirAldric.unity"));
-        Assert.Contains("m_Name: SirAldricStrikePath", scene, StringComparison.Ordinal);
-        Assert.Contains("m_Name: 1_Draw_LeftHipPocket", scene, StringComparison.Ordinal);
-        Assert.Contains("m_Name: 2_Raise_AboveHeadRight", scene, StringComparison.Ordinal);
-        Assert.Contains("m_Name: 3_Strike_Forward", scene, StringComparison.Ordinal);
-        Assert.Contains("m_Name: 4_Strike_DownToFoot", scene, StringComparison.Ordinal);
-        Assert.Contains("c8a1d4e27b3f4906a5c8e1d2479b0f33", scene, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "SirAldric.unity")), "one-character demo scenes were removed 2026-10-19");
         var pathSrc = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricStrikePath.cs"));
         Assert.Contains("OnDrawGizmos", pathSrc, StringComparison.Ordinal);
         Assert.Contains("DrawSphere", pathSrc, StringComparison.Ordinal);
@@ -1020,11 +1014,7 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("ApplyLiteSwordShield", importer, StringComparison.Ordinal);
         Assert.Contains("best.name = exact", importer, StringComparison.Ordinal);
         Assert.DoesNotContain("best.name = walk ? \"Walking\" : \"Attack\";\n            if (lite)", importer, StringComparison.Ordinal);
-        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "SirAldric.unity"));
-        var pathIdx = scene.IndexOf("m_Name: SirAldricStrikePath", StringComparison.Ordinal);
-        Assert.True(pathIdx > 0);
-        var activeIdx = scene.IndexOf("m_IsActive:", pathIdx, StringComparison.Ordinal);
-        Assert.Contains("m_IsActive: 0", scene.Substring(activeIdx, 20), StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "SirAldric.unity")), "one-character demo scenes were removed 2026-10-19");
         var walk = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "pilot", "SirAldric_body_holefixed_walk.fbx");
         var slash = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "pilot", "SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx");
         Assert.Equal(

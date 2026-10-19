@@ -218,26 +218,33 @@ public sealed class ThemeARosterTests
     }
 
     [Fact]
-    public void Working_roster_scenes_are_listed_and_the_held_names_are_absent()
+    public void One_character_demo_scenes_are_gone_and_only_the_battle_and_play_remain()
     {
         var root = FindRepoRoot();
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
         var build = File.ReadAllText(Path.Combine(root, "ProjectSettings", "EditorBuildSettings.asset"));
-        foreach (var scene in new[] { "SirAldric.unity", "Blightroot.unity", "Ironhowl.unity", "Emberfang.unity", "Ashwyrm.unity", "Nightfang.unity", "Stormcrest.unity", "Vespera.unity", "Lyra.unity" })
+        // 2026-10-19 (Derek): the per-character review scenes and their Survival menu entries are removed; the characters
+        // play in the Locked Battle. Their actors, FBXs, materials and clips stay.
+        foreach (var name in new[] { "SirAldric", "Blightroot", "Ironhowl", "Emberfang", "Ashwyrm", "Nightfang", "Stormcrest", "Vespera", "Lyra", "Oakenshield", "Bonequill", "Rowan" })
         {
-            Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", scene)));
-            Assert.Contains(scene, editor, StringComparison.Ordinal);
-            Assert.Contains(scene, build, StringComparison.Ordinal);
+            var scene = name + ".unity";
+            Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", scene)), scene);
+            Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", scene + ".meta")), scene);
+            Assert.DoesNotContain(scene, editor, StringComparison.Ordinal);
+            Assert.DoesNotContain(scene, build, StringComparison.Ordinal);
+            Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Unity", name + "Actor.cs")) || name == "SirAldric", name + " actor kept");
         }
 
-        var ironScene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "Ironhowl.unity"));
-        var fangScene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "Emberfang.unity"));
-        Assert.Contains("IronhowlRoot", ironScene, StringComparison.Ordinal);
-        Assert.Contains("7c1e9a24b6d84f0a9e3c5b71d2a84f06", ironScene, StringComparison.Ordinal);
-        Assert.Contains("EmberfangRoot", fangScene, StringComparison.Ordinal);
-        Assert.Contains("8d2f0b35c7e94a1b0f4d6c82e3b95a17", fangScene, StringComparison.Ordinal);
-        Assert.Contains("field of view: 54", ironScene, StringComparison.Ordinal);
-        Assert.Contains("field of view: 54", fangScene, StringComparison.Ordinal);
+        Assert.DoesNotContain(" Demo (", editor, StringComparison.Ordinal);
+        var kept = Directory.GetFiles(Path.Combine(root, "Assets", "Survival", "Scenes"), "*.unity").Select(f => Path.GetFileName(f)).OrderBy(n => n, StringComparer.Ordinal).ToArray();
+        Assert.Equal(new[] { "BattleLocked.unity", "Play.unity", "Splash.unity" }, kept);
+        foreach (var keep in new[] { "Splash.unity", "Play.unity", "BattleLocked.unity" })
+        {
+            Assert.Contains("Assets/Survival/Scenes/" + keep, editor, StringComparison.Ordinal);
+            Assert.Contains("path: Assets/Survival/Scenes/" + keep, build, StringComparison.Ordinal);
+        }
+
+        Assert.Contains("[MenuItem(\"Survival/Play: World + Quest Hook (Game view 1080x1920)\")]", editor, StringComparison.Ordinal);
 
         var ironDemo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "IronhowlDemo.cs"));
         var fangDemo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "EmberfangDemo.cs"));
@@ -250,12 +257,12 @@ public sealed class ThemeARosterTests
         Assert.DoesNotContain("clip missing", ironDemo, StringComparison.Ordinal);
         Assert.DoesNotContain("T-pose · no clips", ironDemo, StringComparison.Ordinal);
         Assert.DoesNotContain("IRONHOWL_rig_atlas", ironDemo, StringComparison.Ordinal);
-        Assert.Contains("Survival/Ironhowl Demo (rest / walk / attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Survival/Ironhowl Demo (rest / walk / attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         Assert.Contains("EmberfangClipDropdown", fangDemo, StringComparison.Ordinal);
         Assert.Contains("RestPoseName", fangDemo, StringComparison.Ordinal);
         Assert.Contains("PoseNames", fangDemo, StringComparison.Ordinal);
         Assert.Contains("SetValueWithoutNotify(0)", fangDemo, StringComparison.Ordinal);
-        Assert.Contains("Survival/Emberfang Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Survival/Emberfang Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
 
         var excluded = Array.Empty<string>();   // Rowan (#64) and Bonequill (#63) both ship now
         var scenes = Path.Combine(root, "Assets", "Survival", "Scenes");

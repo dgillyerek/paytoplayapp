@@ -197,11 +197,11 @@ public sealed class VesperaAttackTests
     }
 
     [Fact]
-    public void Vespera_attack_is_wired_in_the_demo_and_menu()
+    public void Vespera_attack_is_wired_in_the_actor_and_has_no_demo_menu()
     {
         var root = FindRepoRoot();
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains("Survival/Vespera Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Survival/Vespera Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "VesperaActor.cs"));
         Assert.Contains("VesperaAttack.Spec", actor, StringComparison.Ordinal);
         var driver = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigAttackDriver.cs"));
