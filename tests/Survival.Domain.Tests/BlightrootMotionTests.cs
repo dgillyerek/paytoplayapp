@@ -207,11 +207,9 @@ public sealed class BlightrootMotionTests
         Assert.Contains("3 Rear", demo, StringComparison.Ordinal);
         Assert.DoesNotContain("BtnClip_", demo, StringComparison.Ordinal);
 
-        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "Blightroot.unity"));
-        Assert.Contains("guid: e7c3a1b24d5f4e8a9c0b6d2f11a8e5c4", scene, StringComparison.Ordinal);
-        Assert.Contains("BlightrootRoot", scene, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Blightroot.unity")), "one-character demo scenes were removed 2026-10-19");
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains("Blightroot.unity", editor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Blightroot.unity", editor, StringComparison.Ordinal);
     }
 
     private static BlightrootMotion.Clip idleOr(string exact)

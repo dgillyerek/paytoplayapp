@@ -35,7 +35,7 @@ namespace Survival.Editor
             if (path == null)
             {
                 Debug.LogWarning(
-                    "SirAldricStrikePath missing. Open Assets/Survival/Scenes/SirAldric.unity — " +
+                    "SirAldricStrikePath missing from the open scene (the SirAldric.unity demo that held it was removed 2026-10-19). " +
                     "Hierarchy: SirAldricStrikePath / 1_Draw_LeftHipPocket / 2_Raise_AboveHeadRight / " +
                     "3_Strike_Forward / 4_Strike_DownToFoot.");
                 return;

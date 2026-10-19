@@ -6,24 +6,13 @@ using UnityEngine;
 
 namespace Survival.Editor
 {
-    /// <summary>Pins Editor Play/build to the Theme A survival entry (splash → Play). Grove Board stays in the list.</summary>
+    /// <summary>Pins Editor Play/build to the Theme A survival entry (splash → Play) plus the Locked Battle. Grove Board stays in the list.
+    /// The one-character demo scenes were removed 2026-10-19; their characters play in the Locked Battle.</summary>
     public static class FlavorBuildSettings
     {
         private const string Splash = "Assets/Survival/Scenes/Splash.unity";
         private const string Play = "Assets/Survival/Scenes/Play.unity";
-        private const string SirAldric = "Assets/Survival/Scenes/SirAldric.unity";
-        private const string Blightroot = "Assets/Survival/Scenes/Blightroot.unity";
-        private const string Ironhowl = "Assets/Survival/Scenes/Ironhowl.unity";
-        private const string Emberfang = "Assets/Survival/Scenes/Emberfang.unity";
-        private const string Ashwyrm = "Assets/Survival/Scenes/Ashwyrm.unity";
-        private const string Nightfang = "Assets/Survival/Scenes/Nightfang.unity";
-        private const string Stormcrest = "Assets/Survival/Scenes/Stormcrest.unity";
         private const string BattleLocked = "Assets/Survival/Scenes/BattleLocked.unity";
-        private const string Vespera = "Assets/Survival/Scenes/Vespera.unity";
-        private const string Lyra = "Assets/Survival/Scenes/Lyra.unity";
-        private const string Oakenshield = "Assets/Survival/Scenes/Oakenshield.unity";
-        private const string Bonequill = "Assets/Survival/Scenes/Bonequill.unity";
-        private const string Rowan = "Assets/Survival/Scenes/Rowan.unity";
         private const string GroveBoard = "Assets/Grove/Scenes/Board.unity";
 
         [MenuItem("Survival/Use Theme A Flavor (fantasy_kingdom_a)")]
@@ -36,19 +25,7 @@ namespace Survival.Editor
             {
                 new EditorBuildSettingsScene(Splash, true),
                 new EditorBuildSettingsScene(Play, true),
-                new EditorBuildSettingsScene(SirAldric, true),
-                new EditorBuildSettingsScene(Blightroot, true),
-                new EditorBuildSettingsScene(Ironhowl, true),
-                new EditorBuildSettingsScene(Emberfang, true),
-                new EditorBuildSettingsScene(Ashwyrm, true),
-                new EditorBuildSettingsScene(Nightfang, true),
-                new EditorBuildSettingsScene(Stormcrest, true),
                 new EditorBuildSettingsScene(BattleLocked, true),
-                new EditorBuildSettingsScene(Vespera, true),
-                new EditorBuildSettingsScene(Lyra, true),
-                new EditorBuildSettingsScene(Oakenshield, true),
-                new EditorBuildSettingsScene(Bonequill, true),
-                new EditorBuildSettingsScene(Rowan, true),
                 new EditorBuildSettingsScene(GroveBoard, true)
             };
             Debug.Log("Survival flavor " + SurvIds.FlavorIdFantasyKingdomA + " → Splash then Play. Pack " + SurvIds.ThemeIdFantasyKingdomA);
@@ -67,86 +44,13 @@ namespace Survival.Editor
             EditorApplication.isPlaying = true;
         }
 
-        [MenuItem("Survival/Sir Aldric Demo (Meshy Animate Walking, high-angle rear)")]
-        public static void OpenSirAldricDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SirAldric);
-        }
-
-        [MenuItem("Survival/Blightroot Demo (creature pack, Game view 1080x1920)")]
-        public static void OpenBlightrootDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Blightroot);
-        }
-
-        [MenuItem("Survival/Ironhowl Demo (rest / walk / attack, Game view 1080x1920)")]
-        public static void OpenIronhowlDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Ironhowl);
-        }
-
-        [MenuItem("Survival/Emberfang Demo (rest + wing flap + walk + attack, Game view 1080x1920)")]
-        public static void OpenEmberfangDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Emberfang);
-        }
-
-        [MenuItem("Survival/Ashwyrm Demo (rest + wing flap + walk + attack, Game view 1080x1920)")]
-        public static void OpenAshwyrmDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Ashwyrm);
-        }
-
-        [MenuItem("Survival/Nightfang Demo (rest + trot + attack, Game view 1080x1920)")]
-        public static void OpenNightfangDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Nightfang);
-        }
-
-        [MenuItem("Survival/Stormcrest Demo (rest + wing flap + walk + attack, Game view 1080x1920)")]
-        public static void OpenStormcrestDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Stormcrest);
-        }
-
         [MenuItem("Survival/Locked Battle (heroes vs villains, Game view 1080x1920)")]
         public static void OpenLockedBattleDemo()
         {
-            // Single mode closes every other loaded scene (including a Blightroot demo left open
-            // in the hierarchy), so Game view only shows the eight roster fighters.
+            // Single mode closes every other loaded scene, so Game view only shows the roster fighters.
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
                 BattleLocked,
                 UnityEditor.SceneManagement.OpenSceneMode.Single);
-        }
-
-        [MenuItem("Survival/Vespera Demo (rest + walk + attack, Game view 1080x1920)")]
-        public static void OpenVesperaDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Vespera);
-        }
-
-        [MenuItem("Survival/Lyra Demo (rest + walk + attack, Game view 1080x1920)")]
-        public static void OpenLyraDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Lyra);
-        }
-
-        [MenuItem("Survival/Oakenshield Demo (rest + walk + attack, Game view 1080x1920)")]
-        public static void OpenOakenshieldDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Oakenshield);
-        }
-
-        [MenuItem("Survival/Bonequill Demo (rest + walk + attack, Game view 1080x1920)")]
-        public static void OpenBonequillDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Bonequill);
-        }
-
-        [MenuItem("Survival/Rowan Demo (rest + walk + bow attack, Game view 1080x1920)")]
-        public static void OpenRowanDemo()
-        {
-            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Rowan);
         }
 
         [MenuItem("Survival/Import locked Sir Aldric rear master")]

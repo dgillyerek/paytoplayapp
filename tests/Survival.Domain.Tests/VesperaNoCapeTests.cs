@@ -220,7 +220,7 @@ public sealed class VesperaNoCapeTests
     }
 
     [Fact]
-    public void Vespera_actor_has_no_cloth_springs_and_keeps_the_demo_menu()
+    public void Vespera_actor_has_no_cloth_springs_and_no_demo_menu()
     {
         var root = FindRepoRoot();
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "VesperaActor.cs"));
@@ -229,7 +229,7 @@ public sealed class VesperaNoCapeTests
         Assert.Contains("VesperaAttack.Spec", actor, StringComparison.Ordinal);
         Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Runtime", "Enemies", "VesperaClothSplit.cs")));
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains("Survival/Vespera Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Survival/Vespera Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         var orbMeta = File.ReadAllText(Path.Combine(root, "Assets", VesperaMotion.ThemePackDir, VesperaNoCape.OrbFileName + ".meta"));
         // Prop import matches what the attack driver enforces, so Play never reimports it.
         Assert.Contains("animationType: 0", orbMeta, StringComparison.Ordinal);

@@ -19,7 +19,7 @@ public sealed class LockedBattleRosterTests
             var folder = f.Side == BattleSide.Hero ? "Heroes" : "Enemies";
             Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Runtime", folder, f.FileKey + "Motion.cs")), f.Name);
             Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Unity", f.ActorClassName + ".cs")), f.Name);
-            Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", f.FileKey + ".unity")), f.Name);
+            Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", f.FileKey + ".unity")), f.Name + " plays in the battle, its own demo scene is gone");
             Assert.True(f.DesignHeightMetres > 0.5f && f.DesignHeightMetres < 2.5f, f.Name);
             Assert.True(f.AttackRangeMetres > 1f && f.AttackRangeMetres < LockedBattleRoster.StartHalfGapMetres * 2f, f.Name);
             Assert.True(f.AttackSeconds > 0.5f, f.Name);

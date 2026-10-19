@@ -57,7 +57,7 @@ Placeholder: keep showing locked rear PNG in Play until 3D clip PASSes.
 
 Runtime: `SirAldric3DActor` binds **Path 2 Meshy** (`sir_aldric_meshy.mesh.txt` + `sir_aldric_meshy_atlas.png`) and plays `Aldric_WalkAttackLoop` through **Animator + PlayableGraph**. Loft mid-poly is archive. `Evaluate()` keys from `5916447` are unchanged.
 
-- Scene: `Assets/Survival/Scenes/SirAldric.unity` — Game view **1080×1920** → Play
+- Scene: the standalone `SirAldric.unity` demo was removed 2026-10-19; Sir Aldric plays in `Assets/Survival/Scenes/BattleLocked.unity` (Game view **1080×1920** → Play)
 - Camera is **fixed** high-angle rear `(0, 2.80, −5.40)` look-at `(0, 0.90, 0.50)`; RootZ marches toward **TOP** (+Z). Root X = 0. Spine Z counters hip roll so the torso stays in one vertical plane (Derek CLOSE on ff81201: no left↔right weave). Small hip drop + shoulder–hip counter-rotate stay. **Passing** foot tucks under the pelvis then steps **+Z / TOP** (14d9c17 pass thigh +X read as a back-kick toward camera). Contact step matches march 0.40 m. **5916447 motion HOLD.**
 - **Look:** Path 2 Meshy GLB / `e5b132f` paint PASS (Image_0 + lion cards). UVs kept; no remesh/capsule Game-view. Scabbard character-right. **Look PASS claimed** (Design, paint stills). **Walk-with-look NOT claimed.**
 - Walk is **4 Game-view keys** in `SirAldric3DMotion` solved against `refs/WALK_GAIT_BAR_skeleton_sample.mp4` rear phases. BVH eulers reached the Actor but did **not** transfer the gait; do not re-claim a BVH eye-match. Sword / right hand stay on the far / TOP side as a rest; **walk** uses a loose contralateral pendulum (trailing arm may swing +X toward camera — that is the sample, not a FAIL).

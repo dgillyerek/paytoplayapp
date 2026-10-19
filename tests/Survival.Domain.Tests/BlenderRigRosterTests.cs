@@ -130,14 +130,11 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("DropdownObjectName", shared, StringComparison.Ordinal);
         AssertImportSkipsReimportWhenMetaAlreadyMatches(player);
 
-        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "Ashwyrm.unity"));
-        Assert.Contains("AshwyrmRoot", scene, StringComparison.Ordinal);
-        Assert.Contains("11f3e71f3fc54d8baee7d5ea145bd473", scene, StringComparison.Ordinal);
-        Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Ashwyrm.unity")), "one-character demo scenes were removed 2026-10-19");
 
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains("Survival/Ashwyrm Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
-        Assert.Contains("Ashwyrm.unity", editor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Survival/Ashwyrm Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Ashwyrm.unity", editor, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -188,14 +185,11 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("SetValueWithoutNotify(0)", shared, StringComparison.Ordinal);
         Assert.Contains("DropdownObjectName", shared, StringComparison.Ordinal);
 
-        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "Nightfang.unity"));
-        Assert.Contains("NightfangRoot", scene, StringComparison.Ordinal);
-        Assert.Contains("5a612f20bf58466c8634f45803244d4f", scene, StringComparison.Ordinal);
-        Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Nightfang.unity")), "one-character demo scenes were removed 2026-10-19");
 
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains("Survival/Nightfang Demo (rest + trot + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
-        Assert.Contains("Nightfang.unity", editor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Survival/Nightfang Demo (rest + trot + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Nightfang.unity", editor, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -265,10 +259,7 @@ public sealed class BlenderRigRosterTests
         AssertGenericClipMeta(walk + ".meta", expectClip: true, poseName: "walk");
         AssertGenericClipMeta(attack + ".meta", expectClip: true, poseName: "attack");
 
-        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", spec.SceneFileName));
-        Assert.Contains("StormcrestRoot", scene, StringComparison.Ordinal);
-        Assert.Contains("cd5dad8493e64f1bad48ecb1bf8586ed", scene, StringComparison.Ordinal);
-        Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", spec.SceneFileName)), "one-character demo scenes were removed 2026-10-19");
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "StormcrestActor.cs"));
         var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "StormcrestDemo.cs"));
         Assert.Contains("StormcrestMotion.Spec", actor, StringComparison.Ordinal);
@@ -276,9 +267,9 @@ public sealed class BlenderRigRosterTests
         Assert.DoesNotContain("mixamorig", actor, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("StormcrestClipDropdown", demo, StringComparison.Ordinal);
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains("Survival/Stormcrest Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Survival/Stormcrest Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         var build = File.ReadAllText(Path.Combine(root, "ProjectSettings", "EditorBuildSettings.asset"));
-        Assert.Contains("Stormcrest.unity", build, StringComparison.Ordinal);
+        Assert.DoesNotContain("Stormcrest.unity", build, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -307,14 +298,11 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("SetValueWithoutNotify(0)", shared, StringComparison.Ordinal);
         Assert.Contains("DropdownObjectName", shared, StringComparison.Ordinal);
 
-        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "Stormcrest.unity"));
-        Assert.Contains("StormcrestRoot", scene, StringComparison.Ordinal);
-        Assert.Contains("cd5dad8493e64f1bad48ecb1bf8586ed", scene, StringComparison.Ordinal);
-        Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Stormcrest.unity")), "one-character demo scenes were removed 2026-10-19");
 
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains("Survival/Stormcrest Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
-        Assert.Contains("Stormcrest.unity", editor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Survival/Stormcrest Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Stormcrest.unity", editor, StringComparison.Ordinal);
     }
 
     private static void AssertGenericClipMeta(string metaPath, bool expectClip, string poseName)
@@ -457,10 +445,7 @@ public sealed class BlenderRigRosterTests
         Assert.DoesNotContain("animationType: 3", clipMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("mixamo.com", clipMeta, StringComparison.Ordinal);
 
-        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", spec.SceneFileName));
-        Assert.Contains(spec.Name + "Root", scene, StringComparison.Ordinal);
-        Assert.Contains(demoGuid, scene, StringComparison.Ordinal);
-        Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", spec.SceneFileName)), "one-character demo scenes were removed 2026-10-19");
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", spec.Name + "Actor.cs"));
         var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", spec.Name + "Demo.cs"));
         Assert.Contains("Survival.Domain.Enemies", actor, StringComparison.Ordinal);
@@ -469,9 +454,9 @@ public sealed class BlenderRigRosterTests
         Assert.DoesNotContain("Mixamorig", actor, StringComparison.Ordinal);
         Assert.Contains(spec.DropdownObjectName, demo, StringComparison.Ordinal);
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains(menu, editor, StringComparison.Ordinal);
+        Assert.DoesNotContain(menu, editor, StringComparison.Ordinal);
         var build = File.ReadAllText(Path.Combine(root, "ProjectSettings", "EditorBuildSettings.asset"));
-        Assert.Contains(spec.SceneFileName, build, StringComparison.Ordinal);
+        Assert.DoesNotContain(spec.SceneFileName, build, StringComparison.Ordinal);
     }
 
     private static bool ContainsAscii(byte[] bytes, string needle)

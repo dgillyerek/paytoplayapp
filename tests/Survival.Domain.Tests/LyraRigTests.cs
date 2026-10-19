@@ -63,14 +63,11 @@ public sealed class LyraRigTests
         Assert.Contains("DropdownObjectName", shared, StringComparison.Ordinal);
         AssertImportSkipsReimportWhenMetaAlreadyMatches(player);
 
-        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", "Lyra.unity"));
-        Assert.Contains("LyraRoot", scene, StringComparison.Ordinal);
-        Assert.Contains("ce82c9521cb54da4bf669276f7f7c7cb", scene, StringComparison.Ordinal);
-        Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Lyra.unity")), "one-character demo scenes were removed 2026-10-19");
 
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains("Survival/Lyra Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
-        Assert.Contains("Lyra.unity", editor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Survival/Lyra Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
+        Assert.DoesNotContain("Lyra.unity", editor, StringComparison.Ordinal);
     }
 
 
@@ -90,17 +87,14 @@ public sealed class LyraRigTests
         AssertMixamoPair(spec, albedoStem, normalStem);
 
         var root = FindRepoRoot();
-        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", spec.SceneFileName));
-        Assert.Contains(spec.Name + "Root", scene, StringComparison.Ordinal);
-        Assert.Contains(demoGuid, scene, StringComparison.Ordinal);
-        Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", spec.SceneFileName)), "one-character demo scenes were removed 2026-10-19");
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", spec.Name + "Actor.cs"));
         var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", spec.Name + "Demo.cs"));
         Assert.Contains(spec.Name + "Motion.Spec", actor, StringComparison.Ordinal);
         Assert.Contains("PlayPose", actor, StringComparison.Ordinal);
         Assert.Contains(spec.DropdownObjectName, demo, StringComparison.Ordinal);
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains(menu, editor, StringComparison.Ordinal);
+        Assert.DoesNotContain(menu, editor, StringComparison.Ordinal);
     }
 
     private static void AssertMixamoPair(BlenderRigSpec spec, string albedoStem, string normalStem)
@@ -250,10 +244,7 @@ public sealed class LyraRigTests
         Assert.DoesNotContain("animationType: 3", clipMeta, StringComparison.Ordinal);
         Assert.DoesNotContain("mixamo.com", clipMeta, StringComparison.Ordinal);
 
-        var scene = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Scenes", spec.SceneFileName));
-        Assert.Contains(spec.Name + "Root", scene, StringComparison.Ordinal);
-        Assert.Contains(demoGuid, scene, StringComparison.Ordinal);
-        Assert.Contains("field of view: 54", scene, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", spec.SceneFileName)), "one-character demo scenes were removed 2026-10-19");
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", spec.Name + "Actor.cs"));
         var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", spec.Name + "Demo.cs"));
         Assert.Contains("Survival.Domain.Enemies", actor, StringComparison.Ordinal);
@@ -262,9 +253,9 @@ public sealed class LyraRigTests
         Assert.DoesNotContain("Mixamorig", actor, StringComparison.Ordinal);
         Assert.Contains(spec.DropdownObjectName, demo, StringComparison.Ordinal);
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.Contains(menu, editor, StringComparison.Ordinal);
+        Assert.DoesNotContain(menu, editor, StringComparison.Ordinal);
         var build = File.ReadAllText(Path.Combine(root, "ProjectSettings", "EditorBuildSettings.asset"));
-        Assert.Contains(spec.SceneFileName, build, StringComparison.Ordinal);
+        Assert.DoesNotContain(spec.SceneFileName, build, StringComparison.Ordinal);
     }
 
     private static bool ContainsAscii(byte[] bytes, string needle)

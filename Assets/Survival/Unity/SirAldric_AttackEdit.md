@@ -17,6 +17,6 @@ The `7958283` held-pose robot clip is discarded. Leftover AimArmAlong / MixamoDi
 
 ## Animation window (optional leftover)
 
-1. Open `Assets/Survival/Scenes/SirAldric.unity`.
+1. Open any scene (the standalone `SirAldric.unity` demo was removed 2026-10-19), e.g. an empty scene.
 2. **Survival → Sir Aldric → Spawn knight for Animation-window edit**.
 3. **Window → Animation → Animation**. Select root **`SirAldricAttackEditKnight`** → **Lock** → **Preview** → scrub `mixamorig:RightArm` / `mixamorig:RightHand`.
