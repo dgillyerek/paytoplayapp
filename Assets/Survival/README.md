@@ -32,8 +32,21 @@ Menu **Survival → Use Theme A Flavor (fantasy_kingdom_a)** puts Splash then Pl
 
 Visual / playable: Design phone Game-view re-gate before merge. Do not self-merge.
 
+## World + quest hook slice (HOLD)
+
+Menu **Survival → Play: World + Quest Hook (Game view 1080x1920)** opens `Assets/Survival/Scenes/Play.unity` and enters Play (or open Play.unity and press Play; Splash → Play also gets it).
+
+- **Base strip** (above the hero card): Castle, Farm, Lumber Mill. Farm/Lumber start full: tap the card (or its bobbing `+N` bubble) to collect: coins fly to the Food/Wood chip and it counts up. Refill 1 food/s, 0.83 wood/s, min 20 to collect.
+- **Castle → Upgrade**: 2,000 Gold · 1,500 Stone · 1,200 Wood, 10:00 timer, one builder. Tap again for **Speed Up**: gem rush (1 gem/min, rounded up), use speed-up minutes, or **Finish FREE** once ≤ 5:00 is left. Finish → level-up burst. Farm/Lumber upgrades unlock at Castle Lv 2.
+- **Quest tracker** (top-left, replaces the static queues mock): 1/3 collect ×3 → 2/3 mine the Stone Quarry (GATHER · Quarry → Mine) → 3/3 Castle Lv 2. Complete → bouncing chest → tap → chest-burst celebration → rewards fly to the HUD.
+- **Gem Shop** (right, under Events) + **Gems chip**: Free Gift slot, Pouch of Gems (80, $0.99), Chest of Gems (500, $4.99, BEST VALUE), 15 min Speed-up (12 gems). **SANDBOX** only: purchases succeed instantly, nothing is charged. Pulsing **FREE** badge while a gift waits.
+- **Free gift**: one every 20–45 min (random), max 6 per UTC day, never more than one unclaimed.
+- **Debug** (Editor / dev builds): **G** or the red **DEBUG: Gift now** button = gift instantly; **T** or **DEBUG: +5 min** = skip game clock 5 minutes.
+
+Data: `Resources/Survival/base_economy.json`, `quests.json`, `gifts.json`, `stores.json`; Theme A: `ThemePack/fantasy_kingdom_a/store/products.json`, `strings/en.json` (`hook.*`, `quest.*`, `store.*`, `offer.*`, `gift.*`, `res.*.name`), `ui/hud_layout.json` (`quest_tracker`, `res_hard`, `gem_shop`, `base_strip`, `debug_*`). Runtime: `Runtime/Clock`, `Economy`, `Base/BaseEconomy.cs`, `Quest`, `Gift`, `Store`, `Session/HookSession.cs`; view: `Unity/SurvivalHookView.cs`. Progress is in-memory (resets on Play). HOLD merge until Derek Game-view PASS.
+
 ## IDs
 
-Logic uses SURV-P0 stable IDs only (`sys.*`, `building.*`, `world.node_type.*`, `world.node.gather_01` / `fight_01` / `explore_01`, `world.action.gather` / `scout` / `march`, `battle.action.start`, `energy.action.gather` / `battle` / `march`). Stone/Gold are Theme A HUD chips (`res_stone` / `res_soft`), not new `res.*` ids. Theme A copy/art is `theme_a.*` inside the pack. Do not add `grove.*` / merge-board IDs.
+Logic uses SURV-P0 stable IDs only (`sys.*`, `building.*`, `world.node_type.*`, `world.node.gather_01` / `fight_01` / `explore_01`, `world.action.gather` / `scout` / `march`, `battle.action.start`, `energy.action.gather` / `battle` / `march`). Gold / Stone / Wood / Food / Gems are real `res.*` ids (`res.soft`, `res.stone`, `res.wood`, `res.food`, `res.hard`) held in one `Economy.Wallet`; the HUD chips (`res_soft` / `res_stone` / `res_wood` / `res_food` / `res_hard` layout slots) are a view over it (`ChipWallet`). Hook-slice families: `base.plot.*`, `quest.*`, `store.*`, `offer.*`, `gift.*` (see `Docs/Survival/surv-p0-stable-id-dictionary.md`). Theme A copy/art is `theme_a.*` inside the pack. Do not add `grove.*` / merge-board IDs.
 
 Headless: `dotnet test tests/Survival.Domain.Tests/Survival.Domain.Tests.csproj`

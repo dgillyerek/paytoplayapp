@@ -6,6 +6,9 @@
     "res.speedup_m",
     "res.hero_xp",
     "res.alliance_gift",
-    "res.event_score"
+    "res.event_score",
+    "res.stone",
+    "res.wood",
+    "res.food"
   ]
 }

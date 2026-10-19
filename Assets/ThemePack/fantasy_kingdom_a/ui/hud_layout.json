@@ -76,5 +76,41 @@
     "y_top_min": 0.9,
     "x_max": 0.98,
     "y_top_max": 0.985
+  },
+  "quest_tracker": {
+    "x_min": 0.018,
+    "y_top_min": 0.128,
+    "x_max": 0.36,
+    "y_top_max": 0.225
+  },
+  "res_hard": {
+    "x_min": 0.73,
+    "y_top_min": 0.243,
+    "x_max": 0.982,
+    "y_top_max": 0.278
+  },
+  "gem_shop": {
+    "x_min": 0.73,
+    "y_top_min": 0.282,
+    "x_max": 0.982,
+    "y_top_max": 0.326
+  },
+  "base_strip": {
+    "x_min": 0.02,
+    "y_top_min": 0.7,
+    "x_max": 0.98,
+    "y_top_max": 0.796
+  },
+  "debug_gift": {
+    "x_min": 0.58,
+    "y_top_min": 0.808,
+    "x_max": 0.98,
+    "y_top_max": 0.848
+  },
+  "debug_skip": {
+    "x_min": 0.58,
+    "y_top_min": 0.853,
+    "x_max": 0.98,
+    "y_top_max": 0.893
   }
 }

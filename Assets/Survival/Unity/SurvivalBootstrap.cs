@@ -1,9 +1,12 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using Survival.Domain.Catalog;
+using Survival.Domain.Clock;
 using Survival.Domain.Flavor;
 using Survival.Domain.Session;
+using Survival.Domain.Store;
 using Survival.Domain.Theme;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -104,8 +107,41 @@ namespace Survival.Unity
         private void LoadSession(AppFlavorConfig flavor, ThemePackBinder pack)
         {
             SurvivalArt.EnsureLoaded(flavor, pack);
-            var catalog = CatalogLoader.LoadFromDirectory(ResolveCatalogDir());
-            Session = new SurvivalSession(flavor, pack, catalog);
+            var catalogDir = ResolveCatalogDir();
+            var catalog = CatalogLoader.LoadFromDirectory(catalogDir);
+            Session = TryLoadHookSession(flavor, pack, catalog, catalogDir) ?? new SurvivalSession(flavor, pack, catalog);
+        }
+
+        /// <summary>World + quest hook slice: base_economy / quests / gifts / stores + Theme A store/products.json. Sandbox store only.</summary>
+        private static SurvivalSession? TryLoadHookSession(AppFlavorConfig flavor, ThemePackBinder pack, SurvivalCatalog catalog, string catalogDir)
+        {
+            if (!File.Exists(Path.Combine(catalogDir, HookCatalogLoader.BaseEconomyFileName)))
+            {
+                return null;
+            }
+
+            try
+            {
+                var hook = HookCatalogLoader.LoadFromDirectory(catalogDir);
+                var productsPath = Path.Combine(SurvivalArt.ResolvePackRoot(flavor), "store", "products.json");
+                var products = File.Exists(productsPath)
+                    ? HookCatalogLoader.ParseProducts(File.ReadAllText(productsPath))
+                    : new Dictionary<string, ProductDef>();
+                return new SurvivalSession(
+                    flavor,
+                    pack,
+                    catalog,
+                    hook,
+                    products,
+                    new WallClock(),
+                    new SandboxPurchaseService(),
+                    Environment.TickCount);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                return null;
+            }
         }
 
         private static ThemePackBinder LoadPack(AppFlavorConfig flavor)

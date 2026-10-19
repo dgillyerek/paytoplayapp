@@ -1,0 +1,13 @@
+{
+  "stores": [
+    {
+      "id": "store.gem_shop",
+      "offers": [
+        { "id": "offer.free_gift", "kind": "free" },
+        { "id": "offer.gems_s", "kind": "sku", "sku": "sku.hard_s", "grants": { "res.hard": 80 } },
+        { "id": "offer.gems_m", "kind": "sku", "sku": "sku.hard_m", "grants": { "res.hard": 500 }, "tag": "best_value" },
+        { "id": "offer.speedup_15", "kind": "currency", "price": { "res.hard": 12 }, "grants": { "res.speedup_m": 15 } }
+      ]
+    }
+  ]
+}

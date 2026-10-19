@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Survival.Domain.Ids;
@@ -21,6 +22,28 @@ namespace Survival.Unity
         private readonly Dictionary<string, Text> _chipValues = new();
         private GameObject? _inspect;
         private bool _busy;
+
+        /// <summary>Raised after a march lands and its yield is in the wallet: (loop, yield).</summary>
+        public event Action<WorldMarchLoop, int>? MarchResolved;
+
+        public RectTransform? Root => _root;
+        public RectTransform? Fx => _fx;
+
+        /// <summary>Value text of a HUD chip (res_soft, res_stone, ...), or null.</summary>
+        public Text? ChipText(string key) => _chipValues.TryGetValue(key, out var t) ? t : null;
+
+        /// <summary>Add one more HUD chip in its hud_layout slot (hook slice: res_hard gems).</summary>
+        public Text? AddChip(string key, string label)
+        {
+            if (_root == null || Session == null || !Session.Pack.Hud.ContainsKey(key))
+            {
+                return null;
+            }
+
+            Chip(_root, Session.Pack.Hud, key, label);
+            _fx?.SetAsLastSibling();
+            return ChipText(key);
+        }
 
         public void Build()
         {
@@ -53,9 +76,9 @@ namespace Survival.Unity
             Place(power.rectTransform, hud, "player_power");
 
             Chip(_root, hud, ChipWallet.SoftChip, pack.StringOr("hud.chip.gold_label", ""));
-            Chip(_root, hud, "res_wood", pack.StringOr("hud.chip.wood_label", ""));
+            Chip(_root, hud, ChipWallet.WoodChip, pack.StringOr("hud.chip.wood_label", ""));
             Chip(_root, hud, ChipWallet.StoneChip, pack.StringOr("hud.chip.stone_label", ""));
-            Chip(_root, hud, "res_food", pack.StringOr("hud.chip.food_label", ""));
+            Chip(_root, hud, ChipWallet.FoodChip, pack.StringOr("hud.chip.food_label", ""));
 
             var vip = SurvivalVisuals.Image(_root, "Vip", SurvivalVisuals.Panel);
             Place(vip.rectTransform, hud, "vip");
@@ -71,11 +94,16 @@ namespace Survival.Unity
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Cream);
 
-            var queues = SurvivalVisuals.Image(_root, "Queues", SurvivalVisuals.Panel);
-            Place(queues.rectTransform, hud, "queues");
-            var qBody = pack.StringOr("hud.queues_body", "");
-            SurvivalVisuals.Text(queues.transform, "QueuesText", qBody, 18, TextAnchor.UpperLeft, SurvivalVisuals.Cream).rectTransform.offsetMin = new Vector2(16f, 8f);
-            StretchPad(queues.transform.Find("QueuesText") as RectTransform);
+            // Hook slice: the live quest tracker takes the static queues mock's slot.
+            var hookOn = Session.Hook != null && hud.ContainsKey("quest_tracker");
+            if (!hookOn)
+            {
+                var queues = SurvivalVisuals.Image(_root, "Queues", SurvivalVisuals.Panel);
+                Place(queues.rectTransform, hud, "queues");
+                var qBody = pack.StringOr("hud.queues_body", "");
+                SurvivalVisuals.Text(queues.transform, "QueuesText", qBody, 18, TextAnchor.UpperLeft, SurvivalVisuals.Cream).rectTransform.offsetMin = new Vector2(16f, 8f);
+                StretchPad(queues.transform.Find("QueuesText") as RectTransform);
+            }
 
             var events = SurvivalVisuals.Image(_root, "Events", SurvivalVisuals.Panel);
             Place(events.rectTransform, hud, "events");
@@ -106,6 +134,12 @@ namespace Survival.Unity
 
             Nav(_root, hud, pack);
             _fx!.SetAsLastSibling();
+
+            if (hookOn)
+            {
+                var hookView = GetComponent<SurvivalHookView>() ?? gameObject.AddComponent<SurvivalHookView>();
+                hookView.Build(this, Session);
+            }
         }
 
         private void SpawnNode(RectTransform root, WorldNodeState node)
@@ -456,6 +490,7 @@ namespace Survival.Unity
 
                 Session.Chips.Add(result.ChipKey, result.Yield);
                 RefreshChip(result.ChipKey);
+                MarchResolved?.Invoke(loop, result.Yield);
                 yield return RewardPop(to, result.Yield, InspectPrefix(loop.NodeTypeId), LoopAccent(loop.NodeTypeId));
             }
 
@@ -673,6 +708,8 @@ namespace Survival.Unity
                 rt.offsetMin = Vector2.zero;
                 rt.offsetMax = Vector2.zero;
                 SurvivalVisuals.Text(btn.transform, "T", pack.StringOr(key, key), 20, TextAnchor.MiddleCenter, active ? SurvivalVisuals.Gold : SurvivalVisuals.Cream);
+                var navTab = btn.transform;
+                btn.onClick.AddListener(() => StartCoroutine(Punch(navTab, 0.10f, 8)));
             }
         }
 

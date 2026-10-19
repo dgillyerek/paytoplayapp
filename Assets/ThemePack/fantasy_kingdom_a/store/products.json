@@ -1,0 +1,7 @@
+{
+  "store": "sandbox",
+  "products": [
+    { "sku": "sku.hard_s", "product_id": "com.paytoplay.fantasykingdoma.hard_s", "price_label": "$0.99" },
+    { "sku": "sku.hard_m", "product_id": "com.paytoplay.fantasykingdoma.hard_m", "price_label": "$4.99" }
+  ]
+}

@@ -54,6 +54,19 @@ namespace Survival.Editor
             Debug.Log("Survival flavor " + SurvIds.FlavorIdFantasyKingdomA + " → Splash then Play. Pack " + SurvIds.ThemeIdFantasyKingdomA);
         }
 
+        /// <summary>World + quest hook slice: Play scene (skips splash) with Castle / Farm / Lumber Mill, quests, gifts, Gem Shop.</summary>
+        [MenuItem("Survival/Play: World + Quest Hook (Game view 1080x1920)")]
+        public static void OpenWorldQuestHook()
+        {
+            if (!UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            {
+                return;
+            }
+
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Play);
+            EditorApplication.isPlaying = true;
+        }
+
         [MenuItem("Survival/Sir Aldric Demo (Meshy Animate Walking, high-angle rear)")]
         public static void OpenSirAldricDemo()
         {

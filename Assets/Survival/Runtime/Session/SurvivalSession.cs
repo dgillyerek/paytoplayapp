@@ -1,8 +1,10 @@
+#nullable enable
 using System.Collections.Generic;
 using Survival.Domain.Alliance;
 using Survival.Domain.Base;
 using Survival.Domain.Battles;
 using Survival.Domain.Catalog;
+using Survival.Domain.Clock;
 using Survival.Domain.Energy;
 using Survival.Domain.Events;
 using Survival.Domain.Flavor;
@@ -11,6 +13,7 @@ using Survival.Domain.Heroes;
 using Survival.Domain.Iap;
 using Survival.Domain.Meta;
 using Survival.Domain.Research;
+using Survival.Domain.Store;
 using Survival.Domain.Theme;
 using Survival.Domain.World;
 
@@ -40,9 +43,24 @@ namespace Survival.Domain.Session
             {
                 [ChipWallet.SoftChip] = ParseChip(pack, "hud.chip.gold_amount", 245600),
                 [ChipWallet.StoneChip] = ParseChip(pack, "hud.chip.stone_amount", 96700),
-                ["res_wood"] = ParseChip(pack, "hud.chip.wood_amount", 178300),
-                ["res_food"] = ParseChip(pack, "hud.chip.food_amount", 64200)
+                [ChipWallet.WoodChip] = ParseChip(pack, "hud.chip.wood_amount", 178300),
+                [ChipWallet.FoodChip] = ParseChip(pack, "hud.chip.food_amount", 64200)
             });
+        }
+
+        /// <summary>Session plus the world + quest hook slice (wallet is shared with the HUD chips).</summary>
+        public SurvivalSession(
+            AppFlavorConfig flavor,
+            ThemePackBinder pack,
+            SurvivalCatalog catalog,
+            HookCatalog hook,
+            IReadOnlyDictionary<string, ProductDef> products,
+            IGameClock clock,
+            ISkuPurchaseService purchases,
+            int giftSeed)
+            : this(flavor, pack, catalog)
+        {
+            Hook = new HookSession(hook, Chips.Wallet, clock, products, purchases, Energy, giftSeed);
         }
 
         public AppFlavorConfig Flavor { get; }
@@ -60,6 +78,9 @@ namespace Survival.Domain.Session
         public FtueSystem Ftue { get; }
         public MetaSystem Meta { get; }
         public ChipWallet Chips { get; }
+
+        /// <summary>World + quest hook slice; null when the session was built without hook data.</summary>
+        public HookSession? Hook { get; }
 
         private static int ParseChip(ThemePackBinder pack, string key, int fallback)
         {
