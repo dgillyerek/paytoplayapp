@@ -24,7 +24,7 @@ public sealed class LockedBattleCameraLaptopTests
             Assert.Contains("keyboard." + key + ".isPressed", camera, StringComparison.Ordinal);
         }
 
-        Assert.Contains("Slide(keyMove.normalized * (speed * Time.unscaledDeltaTime));", camera, StringComparison.Ordinal);
+        Assert.Contains("Slide(keyMove.normalized * (speed * dt));", camera, StringComparison.Ordinal);
         Assert.Contains("Slide(-pixels * metresPerPixel);", camera, StringComparison.Ordinal);
         // every pan goes through Solve's clamp: the orbit centre stays within PanMarginMetres (3 m) of the field
         Assert.Contains("public const float PanMarginMetres = 3f;", camera, StringComparison.Ordinal);
