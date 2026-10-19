@@ -33,6 +33,9 @@ namespace Survival.Unity
         private float _flightLoft;
         private float _flightSeconds;
 
+        /// <summary>Burst size multiplier: the attacker's battle scale (2 for the dragons), 1 for everyone else.</summary>
+        private float _size = 1f;
+
         /// <summary>
         /// An arrow's flight streak from an archer's extra clip (attacks 2 and 3): a short glowing dash that travels from the
         /// bow hand to the contact over <paramref name="seconds"/>, on a parabola <paramref name="loft"/> metres above the line
@@ -80,7 +83,7 @@ namespace Survival.Unity
         }
 
         /// <summary>Spawns the burst for <paramref name="kind"/> at <paramref name="point"/>. Travel is attacker → defender.</summary>
-        public static LockedBattleImpact Spawn(BattleImpactKind kind, Vector3 point, Vector3 travel, Color core, Color glow, Color edge)
+        public static LockedBattleImpact Spawn(BattleImpactKind kind, Vector3 point, Vector3 travel, Color core, Color glow, Color edge, float size = 1f)
         {
             travel.y = 0f;
             if (travel.sqrMagnitude < 1e-8f)
@@ -92,6 +95,7 @@ namespace Survival.Unity
             var go = new GameObject("LockedBattleImpact_" + kind);
             go.transform.SetPositionAndRotation(point, Quaternion.LookRotation(-travel, Vector3.up));
             var fx = go.AddComponent<LockedBattleImpact>();
+            fx._size = size > 1e-3f ? size : 1f;
             switch (kind)
             {
                 case BattleImpactKind.FireBurst:
@@ -544,7 +548,7 @@ namespace Survival.Unity
                 var dir = Random.onUnitSphere;
                 dir += transform.forward * 0.6f;
                 dir.Normalize();
-                var length = _arcLength * Random.Range(0.6f, 1f) * Mathf.Max(0.35f, strength);
+                var length = _arcLength * _size * Random.Range(0.6f, 1f) * Mathf.Max(0.35f, strength);
                 var n = arc.positionCount;
                 for (var i = 0; i < n; i++)
                 {
@@ -560,7 +564,9 @@ namespace Survival.Unity
             var right = Vector3.Cross(Vector3.up, travel).normalized;
             var across = (Quaternion.AngleAxis(tiltDegrees, travel) * right).normalized;
             var stack = Vector3.Cross(across, travel).normalized;
-            var origin = transform.position - (travel * 0.04f);
+            length *= _size;
+            spacing *= _size;
+            var origin = transform.position - (travel * (0.04f * _size));
             for (var i = 0; i < 3; i++)
             {
                 var offset = stack * ((i - 1) * spacing);
@@ -578,11 +584,11 @@ namespace Survival.Unity
         {
             var go = new GameObject("Flash");
             go.transform.SetParent(transform, false);
-            go.transform.localPosition = new Vector3(0f, 0f, 0.15f);
+            go.transform.localPosition = new Vector3(0f, 0f, 0.15f * _size);
             var light = go.AddComponent<Light>();
             light.type = LightType.Point;
             light.color = color;
-            light.range = range;
+            light.range = range * _size;
             light.intensity = intensity;
             light.shadows = LightShadows.None;
             _light = light;
@@ -621,10 +627,10 @@ namespace Survival.Unity
             main.loop = false;
             main.duration = 0.1f;
             main.startLifetime = new ParticleSystem.MinMaxCurve(lifeMin, lifeMax);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(speedMin, speedMax);
-            main.startSize = new ParticleSystem.MinMaxCurve(sizeMin, sizeMax);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(speedMin * _size, speedMax * _size);
+            main.startSize = new ParticleSystem.MinMaxCurve(sizeMin * _size, sizeMax * _size);
             main.startColor = Color.white;
-            main.gravityModifier = gravity;
+            main.gravityModifier = gravity * _size;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.scalingMode = ParticleSystemScalingMode.Local;
             main.maxParticles = Mathf.Max(count, 1);
@@ -644,7 +650,7 @@ namespace Survival.Unity
                 shape.angle = Mathf.Clamp(coneDegrees, 0f, 89f);
             }
 
-            shape.radius = Mathf.Max(radius, 0.0001f);
+            shape.radius = Mathf.Max(radius * _size, 0.0001f);
             var col = ps.colorOverLifetime;
             col.enabled = true;
             col.color = new ParticleSystem.MinMaxGradient(Fade(a, b, c));
@@ -666,7 +672,7 @@ namespace Survival.Unity
             var line = go.AddComponent<LineRenderer>();
             line.useWorldSpace = true;
             line.positionCount = count;
-            line.widthMultiplier = width;
+            line.widthMultiplier = width * _size;
             line.widthCurve = AnimationCurve.Linear(0f, 1f, 1f, 0.35f);
             var g = new Gradient();
             g.SetKeys(

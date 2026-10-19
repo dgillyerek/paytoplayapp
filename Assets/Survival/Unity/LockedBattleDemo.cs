@@ -173,7 +173,7 @@ namespace Survival.Unity
             }
             else if (distance > 1e-4f)
             {
-                var step = LockedBattleRoster.ApproachStep(distance, f.Data.AttackRangeMetres, f.Data.WalkSpeedMetresPerSecond, dt);
+                var step = LockedBattleRoster.ApproachStep(distance, f.Data.AttackRangeMetres, LockedBattleRoster.BattleWalkSpeedOf(f.Data), dt);
                 f.Slot.position += (to / distance) * step;
             }
 
@@ -343,16 +343,20 @@ namespace Survival.Unity
             return f.Slot.position + (Flat(f.Slot.forward) * WalkOffset(f));
         }
 
-        /// <summary>World point into the defender's body-box frame (slot metres, walk travel removed).</summary>
+        /// <summary>
+        /// World point into the defender's body-box frame (slot metres, walk travel removed). The box is in Design metres
+        /// of the design-height body, so it grows with the defender's battle scale (the dragons' boxes are 2x).
+        /// </summary>
         private static Vector3 ToBox(Fighter defender, Vector3 world)
         {
             var p = defender.Slot.InverseTransformPoint(world);
             p.z -= WalkOffset(defender);
-            return p;
+            return p / defender.BattleScale;
         }
 
         private static Vector3 FromBox(Fighter defender, Vector3 local)
         {
+            local *= defender.BattleScale;
             local.z += WalkOffset(defender);
             return defender.Slot.TransformPoint(local);
         }
@@ -447,7 +451,7 @@ namespace Survival.Unity
 
             var travel = target.Slot.position - attacker.Slot.position;
             travel.y = 0f;
-            LockedBattleImpact.Spawn(LockedBattleRotation.Impact(attacker.Data, attacker.Profile, attackIndex), contact, travel, attacker.Core, attacker.Glow, attacker.Edge);
+            LockedBattleImpact.Spawn(LockedBattleRotation.Impact(attacker.Data, attacker.Profile, attackIndex), contact, travel, attacker.Core, attacker.Glow, attacker.Edge, attacker.BattleScale);
             _camera?.Shake(LockedBattleRotation.ShakeMetres(attacker.Data, attacker.Profile, attackIndex));
             var away = target.Slot.InverseTransformDirection(travel);
             away.y = 0f;
@@ -846,6 +850,9 @@ namespace Survival.Unity
             var bounds = f.LocalBounds;
             var height = bounds.size.y;
             f.Scale = height > 1e-4f ? data.DesignHeightMetres / height : 1f;
+            // Battle-only size (2x for the two dragons): placement and scale, never the clips.
+            f.BattleScale = LockedBattleRoster.BattleScaleOf(data);
+            f.Scale *= f.BattleScale;
             host.transform.localScale = new Vector3(f.Scale, f.Scale, f.Scale);
             f.BaseLocal = new Vector3(0f, -bounds.min.y * f.Scale, 0f);
             host.transform.localPosition = f.BaseLocal;
@@ -856,7 +863,7 @@ namespace Survival.Unity
             f.StartPosition = new Vector3(x, 0f, z);
             f.StartRotation = Quaternion.Euler(0f, LockedBattleRoster.StartYawDegrees(data), 0f);
             slot.transform.SetPositionAndRotation(f.StartPosition, f.StartRotation);
-            LockedBattleGround.AddContactShadow(slot.transform, bounds.size.x * f.Scale, bounds.size.z * f.Scale);
+            LockedBattleGround.AddContactShadow(slot.transform, bounds.size.x * f.Scale, bounds.size.z * f.Scale, f.BattleScale);
             var flashSlots = new List<FlashSlot>();
             foreach (var r in host.GetComponentsInChildren<Renderer>(true))
             {
@@ -938,8 +945,10 @@ namespace Survival.Unity
                     ProjectileHit(captured, from, to, out contact);
                 driver.Blocker = Block;
                 driver.Impact = (track, contact) => LandHit(captured, contact);
+                // The host's own position: it carries the ground planting (and any reach slide), so a
+                // shot leaves the mouth or hand where the body is drawn.
                 driver.LaunchFrame = () => captured.Slot.localToWorldMatrix
-                    * Matrix4x4.TRS(captured.BaseLocal, Quaternion.identity, Vector3.one * captured.Scale);
+                    * Matrix4x4.TRS(captured.Host.localPosition, Quaternion.identity, Vector3.one * captured.Scale);
             }
             if (data.WalkCarriesRoot)
             {
@@ -953,7 +962,7 @@ namespace Survival.Unity
             Debug.Log(
                 "Locked battle " + data.Name + " (" + data.Side + "): imported height " + height.ToString("0.###") +
                 " units, scaled x" + f.Scale.ToString("0.####") + " to " + data.DesignHeightMetres.ToString("0.###") +
-                " m. Walk '" + data.WalkPoseName + "', attack '" + data.AttackPoseName + "' at " +
+                " m" + (Mathf.Abs(f.BattleScale - 1f) > 1e-3f ? " x battle scale " + f.BattleScale.ToString("0.##") : string.Empty) + ". Walk '" + data.WalkPoseName + "', attack '" + data.AttackPoseName + "' at " +
                 data.AttackRangeMetres.ToString("0.0") + " m, rotation of " + attackCount + " attack(s).");
             return f;
         }
@@ -1269,6 +1278,9 @@ namespace Survival.Unity
             public Bounds LocalBounds { get; private set; }
             public System.Func<string> Pose { get; private set; } = () => "rest";
             public float Scale { get; set; } = 1f;
+
+            /// <summary>Battle-only size on top of the design-height fit (<see cref="LockedBattleRoster.BattleScaleOf"/>).</summary>
+            public float BattleScale { get; set; } = 1f;
             public Vector3 StartPosition { get; set; }
             public Quaternion StartRotation { get; set; }
             public Transform? StrideBone { get; set; }

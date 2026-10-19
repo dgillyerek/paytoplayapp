@@ -300,30 +300,55 @@ namespace Survival.Domain.Roster
         /// <summary>Heroes start at -Z facing +Z. Villains start at +Z facing -Z.</summary>
         public const float StartHalfGapMetres = 2.5f;
 
-        /// <summary>Lane centres sit this far either side of the battle centre line.</summary>
-        public const float LaneHalfSpacingMetres = 1.15f;
+        /// <summary>
+        /// Inner lane centres (0 and 1) sit this far either side of the battle centre line. 2026-10-18 (Derek: "make the two
+        /// dragon looking characters much larger"): 1.15 → 1.35 m so 2x Emberfang (lane 0, about 1.23 m half-width when it
+        /// walks) clears Stormcrest's wing buffet (lane 1, 1.09 m half-width) by about 0.38 m.
+        /// </summary>
+        public const float LaneHalfSpacingMetres = 1.35f;
 
         /// <summary>
-        /// Outer lanes (2 and 3) sit this far either side of the centre line: 1.3 m outside the
-        /// inner lanes, so the widest added body (Ashwyrm, 1.9 m wingspan) clears its neighbours
-        /// and the inner lanes stay exactly where #57 put them.
+        /// Battle-only body scale on top of the design-height fit (2026-10-18, Derek on #70: the two dragons much larger,
+        /// towering over the humanoids). Placement and scale only: the clips and imports are unchanged.
         /// </summary>
-        public const float OuterLaneHalfSpacingMetres = 2.45f;
+        public const float EmberfangBattleScale = 2f;
+
+        public const float AshwyrmBattleScale = 2f;
+
+        /// <summary>
+        /// Ironhowl stops this far from Emberfang (was 1.9 m). 2x Emberfang's snout reaches about 1.65 m ahead of its origin
+        /// at rest and 1.79 m in the breath lunge; Ironhowl's front is 0.4 m and his smash/combo slide in 0.3 m, so his body
+        /// stays clear while his claws (1.05 m lunge) still reach the snout and neck.
+        /// </summary>
+        public const float IronhowlAttackRangeMetres = 2.6f;
+
+        /// <summary>
+        /// Left outer lane (2, Lyra vs Vespera) sits this far left of the centre line: 2.1 m outside lane 0, so Lyra's staff
+        /// side (0.55 m) clears 2x Emberfang (1.23 m half-width) by about 0.32 m. Was 2.45 m (both outer lanes) before the
+        /// dragons grew.
+        /// </summary>
+        public const float OuterLaneHalfSpacingMetres = 3.45f;
+
+        /// <summary>
+        /// Right outer lane (3, Oakenshield vs Ashwyrm) sits this far right of the centre line: 3.0 m outside lane 1, so
+        /// 2x Ashwyrm (wingspan about 3.2 m, 1.61 m half) clears Stormcrest's wing buffet and Nightfang. Was 2.45 m.
+        /// </summary>
+        public const float RightOuterLaneHalfSpacingMetres = 4.35f;
 
         /// <summary>
         /// Fifth lane (4) sits this far left of the centre line: 1.4 m outside lane 2. Vespera
         /// (lane 2 villain) is slim, so Blightroot (1.65 m T-pose span, about 1.0 m with arms
-        /// down at idle) clears her. The right side is not used because Ashwyrm's 1.9 m wingspan
-        /// already reaches 3.4 m out. Lanes 0-3 do not move.
+        /// down at idle) clears her. The right side is not used because Ashwyrm's wingspan
+        /// already reaches far out. 2026-10-18: moved out with lane 2 (3.85 → 4.85 m), same 1.4 m gap.
         /// </summary>
-        public const float FifthLaneHalfSpacingMetres = 3.85f;
+        public const float FifthLaneHalfSpacingMetres = 4.85f;
 
         /// <summary>
-        /// Sixth lane (5) sits this far right of the centre line: 1.9 m outside lane 3, because
-        /// Ashwyrm (lane 3 villain) spans 1.9 m wing to wing and reaches 3.4 m out. Rowan and
-        /// Bonequill are 0.9 m across in A-pose, so their inner edge (3.9 m) clears it.
+        /// Sixth lane (5) sits this far right of the centre line: 2.55 m outside lane 3, because
+        /// 2x Ashwyrm (lane 3 villain) spans about 3.2 m wing to wing and reaches 5.96 m out. Rowan and
+        /// Bonequill are 0.9 m across in A-pose, so their inner edge (6.43 m) clears it. Was 4.35 m.
         /// </summary>
-        public const float SixthLaneHalfSpacingMetres = 4.35f;
+        public const float SixthLaneHalfSpacingMetres = 6.9f;
 
         /// <summary>Lanes 0-5. The ground lays one dirt track per lane.</summary>
         public const int LaneCount = 6;
@@ -417,7 +442,7 @@ namespace Survival.Domain.Roster
             0f,
             1.917f,
             IronhowlMotion.BoneRoot,
-            1.9f,
+            IronhowlAttackRangeMetres,
             IronhowlMotion.AttackSeconds,
             false,
             0,
@@ -870,8 +895,31 @@ namespace Survival.Domain.Roster
                 case 5:
                     return SixthLaneHalfSpacingMetres;
                 default:
-                    return OuterLaneHalfSpacingMetres;
+                    return RightOuterLaneHalfSpacingMetres;
             }
+        }
+
+        /// <summary>Battle-only body scale (1 for everyone but the two dragons, see <see cref="EmberfangBattleScale"/>).</summary>
+        public static float BattleScaleOf(LockedBattleFighter fighter)
+        {
+            switch (fighter.Name)
+            {
+                case "Emberfang":
+                    return EmberfangBattleScale;
+                case "Ashwyrm":
+                    return AshwyrmBattleScale;
+                default:
+                    return 1f;
+            }
+        }
+
+        /// <summary>
+        /// Ground speed in the battle: an in-place walk's foot travel grows with the body, so a scaled body walks that much
+        /// faster and its feet do not slide.
+        /// </summary>
+        public static float BattleWalkSpeedOf(LockedBattleFighter fighter)
+        {
+            return fighter.WalkSpeedMetresPerSecond * BattleScaleOf(fighter);
         }
 
         /// <summary>Start yaw in degrees. Every locked rig faces +Z at yaw 0.</summary>
