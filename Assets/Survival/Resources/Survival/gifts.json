@@ -1,0 +1,15 @@
+{
+  "id": "gift.scheduler.free",
+  "store": "store.gem_shop",
+  "offer": "offer.free_gift",
+  "min_seconds": 1200,
+  "max_seconds": 2700,
+  "daily_cap": 6,
+  "pool": [
+    { "id": "gift.gold", "resource": "res.soft", "min": 50, "max": 200, "weight": 30 },
+    { "id": "gift.speedup_5", "resource": "res.speedup_m", "min": 5, "max": 5, "weight": 25 },
+    { "id": "gift.energy", "resource": "res.energy", "min": 5, "max": 10, "weight": 20 },
+    { "id": "gift.gems", "resource": "res.hard", "min": 1, "max": 3, "weight": 15 },
+    { "id": "gift.gems_rare", "resource": "res.hard", "min": 10, "max": 10, "weight": 10 }
+  ]
+}

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Survival.Domain.Ids;
@@ -21,6 +22,28 @@ namespace Survival.Unity
         private readonly Dictionary<string, Text> _chipValues = new();
         private GameObject? _inspect;
         private bool _busy;
+
+        /// <summary>Raised after a march lands and its yield is in the wallet: (loop, yield).</summary>
+        public event Action<WorldMarchLoop, int>? MarchResolved;
+
+        public RectTransform? Root => _root;
+        public RectTransform? Fx => _fx;
+
+        /// <summary>Value text of a HUD chip (res_soft, res_stone, ...), or null.</summary>
+        public Text? ChipText(string key) => _chipValues.TryGetValue(key, out var t) ? t : null;
+
+        /// <summary>Add one more HUD chip in its hud_layout slot (hook slice: res_hard gems).</summary>
+        public Text? AddChip(string key, string label)
+        {
+            if (_root == null || Session == null || !Session.Pack.Hud.ContainsKey(key))
+            {
+                return null;
+            }
+
+            Chip(_root, Session.Pack.Hud, key, label);
+            _fx?.SetAsLastSibling();
+            return ChipText(key);
+        }
 
         public void Build()
         {
@@ -53,16 +76,19 @@ namespace Survival.Unity
             Place(power.rectTransform, hud, "player_power");
 
             Chip(_root, hud, ChipWallet.SoftChip, pack.StringOr("hud.chip.gold_label", ""));
-            Chip(_root, hud, "res_wood", pack.StringOr("hud.chip.wood_label", ""));
+            Chip(_root, hud, ChipWallet.WoodChip, pack.StringOr("hud.chip.wood_label", ""));
             Chip(_root, hud, ChipWallet.StoneChip, pack.StringOr("hud.chip.stone_label", ""));
-            Chip(_root, hud, "res_food", pack.StringOr("hud.chip.food_label", ""));
+            Chip(_root, hud, ChipWallet.FoodChip, pack.StringOr("hud.chip.food_label", ""));
 
             var vip = SurvivalVisuals.Image(_root, "Vip", SurvivalVisuals.Panel);
             Place(vip.rectTransform, hud, "vip");
-            SurvivalVisuals.Text(vip.transform, "VipText", pack.StringOr("hud.vip", ""), 20, TextAnchor.MiddleCenter, SurvivalVisuals.Gold);
+            var vipSkinned = HookSkin.TrySkin(vip, HookArtKeys.ButtonGold, 0.35f);
+            var vipText = SurvivalVisuals.Text(vip.transform, "VipText", pack.StringOr("hud.vip", ""), 20, TextAnchor.MiddleCenter, vipSkinned ? HookSkin.Ink : SurvivalVisuals.Gold);
+            vipText.fontStyle = vipSkinned ? FontStyle.Bold : FontStyle.Normal;
 
             var banner = SurvivalVisuals.Image(_root, "Banner", SurvivalVisuals.Panel);
             Place(banner.rectTransform, hud, "banner");
+            HookSkin.TrySkin(banner, HookArtKeys.Header, 0.42f);
             SurvivalVisuals.Text(
                 banner.transform,
                 "BannerText",
@@ -71,18 +97,25 @@ namespace Survival.Unity
                 TextAnchor.MiddleCenter,
                 SurvivalVisuals.Cream);
 
-            var queues = SurvivalVisuals.Image(_root, "Queues", SurvivalVisuals.Panel);
-            Place(queues.rectTransform, hud, "queues");
-            var qBody = pack.StringOr("hud.queues_body", "");
-            SurvivalVisuals.Text(queues.transform, "QueuesText", qBody, 18, TextAnchor.UpperLeft, SurvivalVisuals.Cream).rectTransform.offsetMin = new Vector2(16f, 8f);
-            StretchPad(queues.transform.Find("QueuesText") as RectTransform);
+            // Hook slice: the live quest tracker takes the static queues mock's slot.
+            var hookOn = Session.Hook != null && hud.ContainsKey("quest_tracker");
+            if (!hookOn)
+            {
+                var queues = SurvivalVisuals.Image(_root, "Queues", SurvivalVisuals.Panel);
+                Place(queues.rectTransform, hud, "queues");
+                var qBody = pack.StringOr("hud.queues_body", "");
+                SurvivalVisuals.Text(queues.transform, "QueuesText", qBody, 18, TextAnchor.UpperLeft, SurvivalVisuals.Cream).rectTransform.offsetMin = new Vector2(16f, 8f);
+                StretchPad(queues.transform.Find("QueuesText") as RectTransform);
+            }
 
             var events = SurvivalVisuals.Image(_root, "Events", SurvivalVisuals.Panel);
             Place(events.rectTransform, hud, "events");
+            HookSkin.TrySkin(events, HookArtKeys.Panel, 0.5f);
             SurvivalVisuals.Text(events.transform, "EventsText", pack.StringOr("hud.events_body", ""), 18, TextAnchor.UpperLeft, SurvivalVisuals.Cream);
 
             var hero = SurvivalVisuals.Image(_root, "HeroCard", SurvivalVisuals.Panel);
             Place(hero.rectTransform, hud, "hero_card");
+            HookSkin.TrySkin(hero, HookArtKeys.Panel, 0.45f);
             var portrait = SurvivalVisuals.Image(hero.transform, "Portrait", Color.white, SurvivalArt.Get(SurvIds.ThemeAHeroKnight01));
             var prt = portrait.rectTransform;
             prt.anchorMin = new Vector2(0.04f, 0.08f);
@@ -106,6 +139,12 @@ namespace Survival.Unity
 
             Nav(_root, hud, pack);
             _fx!.SetAsLastSibling();
+
+            if (hookOn)
+            {
+                var hookView = GetComponent<SurvivalHookView>() ?? gameObject.AddComponent<SurvivalHookView>();
+                hookView.Build(this, Session);
+            }
         }
 
         private void SpawnNode(RectTransform root, WorldNodeState node)
@@ -139,6 +178,7 @@ namespace Survival.Unity
             }
 
             var label = SurvivalVisuals.Image(root, node.Id + "_label", SurvivalVisuals.Panel);
+            HookSkin.TrySkin(label, HookArtKeys.Chip, 0.32f);
             var lr = label.rectTransform;
             lr.anchorMin = new Vector2(Mathf.Clamp01(x - 0.09f), Mathf.Clamp01(y - 0.055f));
             lr.anchorMax = new Vector2(Mathf.Clamp01(x + 0.09f), Mathf.Clamp01(y - 0.018f));
@@ -456,6 +496,7 @@ namespace Survival.Unity
 
                 Session.Chips.Add(result.ChipKey, result.Yield);
                 RefreshChip(result.ChipKey);
+                MarchResolved?.Invoke(loop, result.Yield);
                 yield return RewardPop(to, result.Yield, InspectPrefix(loop.NodeTypeId), LoopAccent(loop.NodeTypeId));
             }
 
@@ -622,12 +663,32 @@ namespace Survival.Unity
         {
             var img = SurvivalVisuals.Image(root, name, SurvivalVisuals.Panel);
             Place(img.rectTransform, hud, key);
+            HookSkin.TrySkin(img, HookArtKeys.Panel, 0.5f);
         }
 
         private void Chip(RectTransform root, IReadOnlyDictionary<string, HudRect> hud, string key, string label)
         {
             var img = SurvivalVisuals.Image(root, key, SurvivalVisuals.PanelSoft);
             Place(img.rectTransform, hud, key);
+            var resourceId = ChipWallet.ResourceFor(key);
+            if (HookSkin.Has(HookArtKeys.ForResource(resourceId)) && HookSkin.TrySkin(img, HookArtKeys.Chip, 0.45f))
+            {
+                // Theme kit chip: painted resource icon on a gold-rimmed pill, bold count beside it.
+                var icon = HookSkin.ResIcon(img.transform, "Icon", resourceId, SurvivalVisuals.Gold, "");
+                icon.rectTransform.anchorMin = new Vector2(-0.06f, -0.12f);
+                icon.rectTransform.anchorMax = new Vector2(0.40f, 1.12f);
+                icon.rectTransform.offsetMin = Vector2.zero;
+                icon.rectTransform.offsetMax = Vector2.zero;
+                var count = HookSkin.Outlined(SurvivalVisuals.Text(img.transform, "V", ChipWallet.FormatCompact(Session!.Chips.Get(key)), 21, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
+                count.fontStyle = FontStyle.Bold;
+                count.rectTransform.anchorMin = new Vector2(0.36f, 0f);
+                count.rectTransform.anchorMax = new Vector2(0.96f, 1f);
+                count.rectTransform.offsetMin = Vector2.zero;
+                count.rectTransform.offsetMax = Vector2.zero;
+                _chipValues[key] = count;
+                return;
+            }
+
             var lab = SurvivalVisuals.Text(img.transform, "L", label, 14, TextAnchor.UpperCenter, SurvivalVisuals.Mute);
             StretchPad(lab.rectTransform);
             lab.rectTransform.anchorMax = new Vector2(1f, 1f);
@@ -653,6 +714,7 @@ namespace Survival.Unity
         {
             var bar = SurvivalVisuals.Image(root, "Nav", SurvivalVisuals.Panel);
             Place(bar.rectTransform, hud, "nav");
+            HookSkin.TrySkin(bar, HookArtKeys.Panel, 0.5f);
             var tabs = new[]
             {
                 ("nav.base", SurvIds.SysBase, false),
@@ -665,6 +727,7 @@ namespace Survival.Unity
             {
                 var (key, _, active) = tabs[i];
                 var btn = SurvivalVisuals.Button(bar.transform, key, active ? SurvivalVisuals.WorldTab : SurvivalVisuals.PanelSoft);
+                var tabSkinned = HookSkin.TrySkin(btn.GetComponent<Image>(), active ? HookArtKeys.ButtonGold : HookArtKeys.ButtonBlue, 0.4f);
                 var rt = btn.GetComponent<RectTransform>();
                 var x0 = i / 5f;
                 var x1 = (i + 1) / 5f;
@@ -672,7 +735,17 @@ namespace Survival.Unity
                 rt.anchorMax = new Vector2(x1 - 0.01f, 0.88f);
                 rt.offsetMin = Vector2.zero;
                 rt.offsetMax = Vector2.zero;
-                SurvivalVisuals.Text(btn.transform, "T", pack.StringOr(key, key), 20, TextAnchor.MiddleCenter, active ? SurvivalVisuals.Gold : SurvivalVisuals.Cream);
+                var tabText = SurvivalVisuals.Text(btn.transform, "T", pack.StringOr(key, key), 20, TextAnchor.MiddleCenter, active ? (tabSkinned ? HookSkin.Ink : SurvivalVisuals.Gold) : SurvivalVisuals.Cream);
+                if (tabSkinned)
+                {
+                    tabText.fontStyle = FontStyle.Bold;
+                    if (!active)
+                    {
+                        HookSkin.Outlined(tabText, 1.5f);
+                    }
+                }
+                var navTab = btn.transform;
+                btn.onClick.AddListener(() => StartCoroutine(Punch(navTab, 0.10f, 8)));
             }
         }
 

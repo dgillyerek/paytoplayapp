@@ -27,6 +27,11 @@ Machine-readable twin: `surv-p0-stable-id-dictionary.json`
 | `energy.*` | Energy actions / meters |
 | `event.*` | Live events |
 | `iap.*` / `sku.*` | Monetization |
+| `base.plot.*` | Placed building **instances** on the base (each is one `building.*`, e.g. Farm = `building.economy` producing `res.food`) |
+| `quest.*` | Quest chains, steps, objective kinds |
+| `store.*` | Store fronts (Gem Shop, later Hero / Builder / Event stores) |
+| `offer.*` | Store offers (SKU, currency-priced, or the free slot) |
+| `gift.*` | Free-gift scheduler + reward pool entries |
 | `ftue.*` | Tutorial steps |
 | `theme.*` / `flavor.*` / `pack.*` | White-label build keys |
 | `theme_a.*` | Theme A **content keys** (strings/art bindings only) |
@@ -64,6 +69,9 @@ IDs are `snake_case`, lowercase, ASCII. Display names live in theme pack strings
 | `res.hero_xp` | Progression | Hero leveling |
 | `res.alliance_gift` | Social | Guild gift token |
 | `res.event_score` | Event | Per-event score currency (instance scoped) |
+| `res.stone` | Base resource | Quarry gather + build costs (Theme A: Stone) |
+| `res.wood` | Base resource | Lumber Mill output + build costs (Theme A: Wood) |
+| `res.food` | Base resource | Farm output + build costs (Theme A: Food) |
 
 ---
 
@@ -207,6 +215,24 @@ Do not redesign look — pin/layout follow Design Play mock.
 | `sku.pass_season` | Battle pass–class |
 
 Billing: StoreKit + Play only. Acceleration only — no paywall on HQ story.
+
+### Quests / stores / offers / gifts (world + quest hook slice, v0.2)
+| ID | Purpose |
+|----|---------|
+| `quest.chain.starter` | Starter chain (steps below, in order) |
+| `quest.starter.collect` | Collect from economy buildings ×3 |
+| `quest.starter.gather` | Gather at `world.node.gather_01` ×1 |
+| `quest.starter.upgrade_hq` | `building.hq` to Lv 2 |
+| `quest.objective.collect` · `quest.objective.gather` · `quest.objective.reach_level` | Objective kinds |
+| `store.gem_shop` | Gem Shop |
+| `offer.gems_s` · `offer.gems_m` | `sku.hard_s` / `sku.hard_m` → `res.hard` |
+| `offer.speedup_15` | 12 `res.hard` → 15 `res.speedup_m` |
+| `offer.free_gift` | Free slot fed by `gift.scheduler.free` |
+| `gift.scheduler.free` | Random 20–45 min, cap 6/day, 1 unclaimed |
+| `gift.gold` · `gift.speedup_5` · `gift.energy` · `gift.gems` · `gift.gems_rare` | Gift pool entries |
+| `base.plot.hq_01` · `base.plot.farm_01` · `base.plot.lumber_01` | Slice base plots (Castle / Farm / Lumber Mill in Theme A) |
+
+Store product ids are theme-pack data (`ThemePack/<pack>/store/products.json`: `sku.*` → `com.<bundle>.<class>`), never logic ids.
 
 ### FTUE steps (systems)
 | ID | Purpose |

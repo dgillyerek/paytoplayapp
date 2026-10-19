@@ -1,0 +1,28 @@
+{
+  "chain": {
+    "id": "quest.chain.starter",
+    "steps": [
+      {
+        "id": "quest.starter.collect",
+        "objective": "quest.objective.collect",
+        "target": "building.economy",
+        "count": 3,
+        "rewards": { "res.food": 300, "res.wood": 300 }
+      },
+      {
+        "id": "quest.starter.gather",
+        "objective": "quest.objective.gather",
+        "target": "world.node.gather_01",
+        "count": 1,
+        "rewards": { "res.stone": 500, "res.speedup_m": 5 }
+      },
+      {
+        "id": "quest.starter.upgrade_hq",
+        "objective": "quest.objective.reach_level",
+        "target": "building.hq",
+        "count": 2,
+        "rewards": { "res.hard": 20, "res.soft": 1000 }
+      }
+    ]
+  }
+}

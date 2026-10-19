@@ -1,6 +1,6 @@
 {
   "id": "surv-p0-stable-id-dictionary",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "systems_api": "survival_core_v1",
   "theme_a_id": "fantasy_kingdom_a",
   "design_sot": "/workspace/design/survival-theme-a-fantasy/",
@@ -24,7 +24,10 @@
     "res.speedup_m",
     "res.hero_xp",
     "res.alliance_gift",
-    "res.event_score"
+    "res.event_score",
+    "res.stone",
+    "res.wood",
+    "res.food"
   ],
   "buildings": [
     "building.hq",
@@ -36,6 +39,11 @@
     "building.alliance",
     "building.warehouse",
     "building.workshop"
+  ],
+  "base_plots_slice": [
+    "base.plot.hq_01",
+    "base.plot.farm_01",
+    "base.plot.lumber_01"
   ],
   "world_node_types": {
     "world.node_type.home": {
@@ -95,6 +103,32 @@
     "sku.speedup_bundle",
     "sku.starter_pack",
     "sku.pass_season"
+  ],
+  "quest": [
+    "quest.chain.starter",
+    "quest.starter.collect",
+    "quest.starter.gather",
+    "quest.starter.upgrade_hq",
+    "quest.objective.collect",
+    "quest.objective.gather",
+    "quest.objective.reach_level"
+  ],
+  "stores": [
+    "store.gem_shop"
+  ],
+  "offers": [
+    "offer.gems_s",
+    "offer.gems_m",
+    "offer.speedup_15",
+    "offer.free_gift"
+  ],
+  "gifts": [
+    "gift.scheduler.free",
+    "gift.gold",
+    "gift.speedup_5",
+    "gift.energy",
+    "gift.gems",
+    "gift.gems_rare"
   ],
   "flavor": {
     "theme.id": "theme.id.fantasy_kingdom_a",

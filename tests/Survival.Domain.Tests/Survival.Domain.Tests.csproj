@@ -16,6 +16,7 @@
     <None Include="..\..\Assets\ThemePack\fantasy_kingdom_a\strings\en.json" Link="Pack\strings\en.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\Assets\ThemePack\fantasy_kingdom_a\map\node_pins.json" Link="Pack\map\node_pins.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\Assets\ThemePack\fantasy_kingdom_a\ui\hud_layout.json" Link="Pack\ui\hud_layout.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Assets\ThemePack\fantasy_kingdom_a\store\products.json" Link="Pack\store\products.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\Assets\AppFlavor\fantasy_kingdom_a\flavor.json" Link="Flavor\flavor.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>

@@ -1,38 +1,68 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using Survival.Domain.Economy;
+using Survival.Domain.Ids;
 
 namespace Survival.Domain.World
 {
     /// <summary>
-    /// HUD chip amounts. Keys are layout slots (e.g. hud_layout res_stone), not new SURV-P0 resource IDs.
-    /// Theme A labels those chips in the pack (Gold / Wood / Stone / Food).
+    /// HUD chip view over the <see cref="Wallet"/>. Keys are hud_layout slots (res_soft, res_stone, ...);
+    /// each maps to a SURV-P0 res.* id (res.soft, res.stone, res.wood, res.food, res.hard).
+    /// Theme A labels those chips in the pack (Gold / Wood / Stone / Food / Gems).
     /// </summary>
     public sealed class ChipWallet
     {
         public const string StoneChip = "res_stone";
         public const string SoftChip = "res_soft";
+        public const string WoodChip = "res_wood";
+        public const string FoodChip = "res_food";
+        public const string HardChip = "res_hard";
 
-        private readonly Dictionary<string, int> _amounts;
+        private static readonly Dictionary<string, string> ChipToResource = new(StringComparer.Ordinal)
+        {
+            [SoftChip] = SurvIds.ResSoft,
+            [StoneChip] = SurvIds.ResStone,
+            [WoodChip] = SurvIds.ResWood,
+            [FoodChip] = SurvIds.ResFood,
+            [HardChip] = SurvIds.ResHard
+        };
 
         public ChipWallet(IReadOnlyDictionary<string, int> starting)
         {
-            _amounts = new Dictionary<string, int>(starting, StringComparer.Ordinal);
+            Wallet = new Wallet();
+            foreach (var pair in starting)
+            {
+                Wallet.Add(ResourceFor(pair.Key), pair.Value);
+            }
         }
 
-        public int Get(string chipKey) => _amounts.TryGetValue(chipKey, out var v) ? v : 0;
+        public ChipWallet(Wallet wallet) => Wallet = wallet ?? throw new ArgumentNullException(nameof(wallet));
 
-        public int Add(string chipKey, int delta)
+        public Wallet Wallet { get; }
+
+        /// <summary>hud chip key → res.* id. Unknown keys pass through unchanged.</summary>
+        public static string ResourceFor(string chipKey) =>
+            ChipToResource.TryGetValue(chipKey, out var id) ? id : chipKey;
+
+        /// <summary>res.* id → hud chip key, or null when the resource has no HUD chip.</summary>
+        public static string? ChipFor(string resourceId)
         {
-            var next = Get(chipKey) + delta;
-            if (next < 0)
+            foreach (var pair in ChipToResource)
             {
-                next = 0;
+                if (string.Equals(pair.Value, resourceId, StringComparison.Ordinal))
+                {
+                    return pair.Key;
+                }
             }
 
-            _amounts[chipKey] = next;
-            return next;
+            return null;
         }
+
+        public int Get(string chipKey) => Wallet.Get(ResourceFor(chipKey));
+
+        public int Add(string chipKey, int delta) => Wallet.Add(ResourceFor(chipKey), delta);
 
         public static string FormatCompact(int amount)
         {

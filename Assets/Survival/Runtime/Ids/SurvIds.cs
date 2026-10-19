@@ -41,6 +41,9 @@ namespace Survival.Domain.Ids
         public const string ResHeroXp = "res.hero_xp";
         public const string ResAllianceGift = "res.alliance_gift";
         public const string ResEventScore = "res.event_score";
+        public const string ResStone = "res.stone";
+        public const string ResWood = "res.wood";
+        public const string ResFood = "res.food";
 
         public const string BuildingHq = "building.hq";
         public const string BuildingBarracks = "building.barracks";
@@ -166,6 +169,54 @@ namespace Survival.Domain.Ids
         public const string ThemeANodeFightDarkKeep = "theme_a.node.fight_dark_keep";
         public const string ThemeANodeExploreRuins = "theme_a.node.explore_ruins";
 
+        // Hook slice (world + quest): base plots are instances of existing buildings.
+        public const string BasePlotHq01 = "base.plot.hq_01";
+        public const string BasePlotFarm01 = "base.plot.farm_01";
+        public const string BasePlotLumber01 = "base.plot.lumber_01";
+
+        public const string QuestChainStarter = "quest.chain.starter";
+        public const string QuestStarterCollect = "quest.starter.collect";
+        public const string QuestStarterGather = "quest.starter.gather";
+        public const string QuestStarterUpgradeHq = "quest.starter.upgrade_hq";
+        public const string QuestObjectiveCollect = "quest.objective.collect";
+        public const string QuestObjectiveGather = "quest.objective.gather";
+        public const string QuestObjectiveReachLevel = "quest.objective.reach_level";
+
+        public const string StoreGemShop = "store.gem_shop";
+        public const string OfferGemsS = "offer.gems_s";
+        public const string OfferGemsM = "offer.gems_m";
+        public const string OfferSpeedup15 = "offer.speedup_15";
+        public const string OfferFreeGift = "offer.free_gift";
+
+        public const string GiftSchedulerFree = "gift.scheduler.free";
+        public const string GiftGold = "gift.gold";
+        public const string GiftSpeedup5 = "gift.speedup_5";
+        public const string GiftEnergy = "gift.energy";
+        public const string GiftGems = "gift.gems";
+        public const string GiftGemsRare = "gift.gems_rare";
+
+        public static readonly IReadOnlyList<string> BasePlots = new[]
+        {
+            BasePlotHq01, BasePlotFarm01, BasePlotLumber01
+        };
+
+        public static readonly IReadOnlyList<string> QuestStepsStarter = new[]
+        {
+            QuestStarterCollect, QuestStarterGather, QuestStarterUpgradeHq
+        };
+
+        public static readonly IReadOnlyList<string> Stores = new[] { StoreGemShop };
+
+        public static readonly IReadOnlyList<string> Offers = new[]
+        {
+            OfferGemsS, OfferGemsM, OfferSpeedup15, OfferFreeGift
+        };
+
+        public static readonly IReadOnlyList<string> Gifts = new[]
+        {
+            GiftGold, GiftSpeedup5, GiftEnergy, GiftGems, GiftGemsRare
+        };
+
         public static readonly IReadOnlyList<string> Modules = new[]
         {
             SysBase, SysResearch, SysHeroes, SysAlliance, SysWorld, SysBattles,
@@ -174,7 +225,8 @@ namespace Survival.Domain.Ids
 
         public static readonly IReadOnlyList<string> Resources = new[]
         {
-            ResEnergy, ResSoft, ResHard, ResSpeedupM, ResHeroXp, ResAllianceGift, ResEventScore
+            ResEnergy, ResSoft, ResHard, ResSpeedupM, ResHeroXp, ResAllianceGift, ResEventScore,
+            ResStone, ResWood, ResFood
         };
 
         public static readonly IReadOnlyList<string> Buildings = new[]
