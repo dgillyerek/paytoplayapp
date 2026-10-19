@@ -19,8 +19,9 @@ namespace Survival.Unity
     /// flashes. Pure presentation: the existing actors play the locked FBXs as-is, and the
     /// flinch moves only the actor root. Nobody takes damage. HOLD merge until Derek Game-view PASS.
     /// Attack rotation (2026-10-17, humanoids): each fighter cycles its attack list 1, 2, 3 with the
-    /// rest gap after each (<see cref="LockedBattleRotation"/>); fighters with one attack (the
-    /// creatures, on hold) loop it exactly as before. Blightroot: swipe, punch, jump smash.
+    /// rest gap after each (<see cref="LockedBattleRotation"/>). The creatures joined on 2026-10-19
+    /// with attacks 2 and 3 from their own locked clips (<see cref="CreatureBattleAttacks"/>), so every
+    /// fighter now cycles three. Blightroot: swipe, punch, jump smash.
     /// </summary>
     [DefaultExecutionOrder(500)]
     public sealed class LockedBattleDemo : MonoBehaviour
@@ -275,8 +276,8 @@ namespace Survival.Unity
             var attack = LockedBattleRotation.AttackAt(f.Data, index);
             if (f.Data.AttackCyclesItself && index == 0)
             {
-                // The actor loops its own attack + rest. With one attack (the creatures) leave it
-                // alone; with more, restart it when the rotation comes back to it. Its extra
+                // The actor loops its own attack + rest. With one attack leave it alone; with more
+                // (the creatures since 2026-10-19), restart it when the rotation comes back to it. Its extra
                 // attacks are plain clips, played once then rest like any other fighter's.
                 if (LockedBattleRotation.Count(f.Data) > 1 && index != f.AttackIndex)
                 {
