@@ -136,6 +136,7 @@ namespace Survival.Unity
             {
                 if (f.Built)
                 {
+                    TickReactionPose(f);
                     f.Ground?.Plant(f.Slot.position.y);
                 }
             }
@@ -456,24 +457,41 @@ namespace Survival.Unity
             _camera?.Shake(LockedBattleRotation.ShakeMetres(attacker.Data, attacker.Profile, attackIndex));
             var away = target.Slot.InverseTransformDirection(travel);
             away.y = 0f;
+            // A combo hit landing before the last reaction settled: that one fades out under the new one.
+            target.PreviousReaction = target.Reaction;
+            target.PreviousHitAway = target.HitAway;
+            target.PreviousReactionWeight = target.Reaction.Weight(target.HitAge) * target.ReactionScale;
+            target.PreviousRootWeight = target.RecoilOn ? target.PreviousReactionWeight : 0f;
             target.HitAway = away.sqrMagnitude > 1e-8f ? away.normalized : Vector3.back;
             target.HitAge = 0f;
+            target.Reaction = LockedBattleReactions.ForHit(attacker.Data, attacker.Profile, attackIndex);
+
+            // Struck inside its own attack clip (wind-up or strike): a lighter flinch, no step back.
             target.RecoilOn = LockedBattleHits.RecoilAllowed(target.Data, target.Phase == Phase.Attack, target.PhaseTime);
+            target.ReactionScale = LockedBattleReactions.Scale(target.Data, target.Phase == Phase.Attack, target.PhaseTime);
         }
 
         /// <summary>
-        /// Knock-back and lean on the actor root (never the rig bones or clips), plus the hit flash
-        /// as a brief HDR tint through a property block.
+        /// Root part of the hit reaction (<see cref="LockedBattleReactions"/>): step back and lean on the actor root, sized
+        /// and timed per reaction, plus the hit flash as a brief HDR tint through a property block. The bone part runs in
+        /// LateUpdate (<see cref="TickReactionPose"/>).
         /// </summary>
         private static void TickHitReaction(Fighter f, float dt)
         {
             f.HitAge += dt;
-            var w = f.RecoilOn ? LockedBattleHits.RecoilWeight(f.HitAge) : 0f;
+
+            // Root step back and lean, scaled per reaction (none when struck mid-attack); the previous reaction's root part
+            // fades out over the new one's rise so a combo never pops the body.
+            var fade = PreviousFade(f);
+            var stepW = f.RecoilOn ? f.Reaction.Weight(f.HitAge) : 0f;
+            var step = (f.HitAway * (f.Reaction.RootScale * stepW)) + (f.PreviousHitAway * (f.PreviousReaction.RootScale * f.PreviousRootWeight * fade));
+            var tilt = (f.HitAway * (f.Reaction.RootLeanScale * stepW)) + (f.PreviousHitAway * (f.PreviousReaction.RootLeanScale * f.PreviousRootWeight * fade));
+            var w = step.sqrMagnitude > 1e-10f || tilt.sqrMagnitude > 1e-10f ? 1f : 0f;
             if (w > 0f)
             {
-                var lean = f.Profile.RecoilDegrees * w * Mathf.Deg2Rad;
-                f.Host.localPosition = f.BaseLocal + f.AttackOffset + (f.HitAway * (f.Profile.RecoilMetres * w));
-                f.Host.localRotation = Quaternion.FromToRotation(Vector3.up, (Vector3.up + (f.HitAway * Mathf.Tan(lean))).normalized);
+                f.Host.localPosition = f.BaseLocal + f.AttackOffset + (step * f.Profile.RecoilMetres);
+                var lean = Mathf.Tan(f.Profile.RecoilDegrees * Mathf.Deg2Rad);
+                f.Host.localRotation = Quaternion.FromToRotation(Vector3.up, (Vector3.up + (tilt * lean)).normalized);
             }
             else
             {
@@ -516,6 +534,37 @@ namespace Survival.Unity
             }
         }
 
+        /// <summary>Weight left of the previous reaction: 1 at the new hit, 0 once the new reaction peaks.</summary>
+        private static float PreviousFade(Fighter f)
+        {
+            var peak = Mathf.Max(f.Reaction.PeakSeconds, 1e-3f);
+            var u = Mathf.Clamp01(f.HitAge / peak);
+            return 1f - (u * u * (3f - (2f * u)));
+        }
+
+        /// <summary>
+        /// Bone part of the hit reaction (<see cref="LockedBattleReactionPose"/>), after the clips posed the bones this frame.
+        /// Full strength normally, <see cref="LockedBattleReactions.MidAttackScale"/> when struck inside its own attack clip.
+        /// </summary>
+        private static void TickReactionPose(Fighter f)
+        {
+            if (f.ReactionPose == null)
+            {
+                return;
+            }
+
+            var weight = f.Reaction.Weight(f.HitAge) * f.ReactionScale;
+            var previous = f.PreviousReactionWeight * PreviousFade(f);
+            f.ReactionPose.Apply(
+                f.Slot,
+                f.Reaction,
+                f.Slot.TransformDirection(f.HitAway),
+                weight,
+                f.PreviousReaction,
+                f.Slot.TransformDirection(f.PreviousHitAway),
+                previous);
+        }
+
         /// <summary>Puts each material's own base colour back (emission override dropped).</summary>
         private static void ClearFlash(Fighter f)
         {
@@ -545,6 +594,9 @@ namespace Survival.Unity
             f.HitAge = 10f;
             f.RecoilOn = false;
             f.Recoiling = false;
+            f.PreviousReactionWeight = 0f;
+            f.PreviousRootWeight = 0f;
+            f.ReactionPose?.Clear();
             f.Host.localPosition = f.BaseLocal + f.AttackOffset;
             f.Host.localRotation = Quaternion.identity;
             ClearFlash(f);
@@ -892,6 +944,11 @@ namespace Survival.Unity
             }
 
             f.FlashSlots = flashSlots.ToArray();
+            f.ReactionPose = LockedBattleReactionPose.Build(host.transform, LockedBattleReactions.RigFor(data));
+            if (f.ReactionPose.BoneCount == 0)
+            {
+                Debug.LogWarning("Locked battle: " + data.Name + " has no hit reaction bones; it reacts with the root step and flash only.");
+            }
             ImpactColors(data.Name, out var core, out var glow, out var edge);
             f.Core = core;
             f.Glow = glow;
@@ -1274,6 +1331,15 @@ namespace Survival.Unity
             public Vector3 HitAway { get; set; } = Vector3.back;
             public bool RecoilOn { get; set; }
             public bool Recoiling { get; set; }
+
+            /// <summary>Hit reaction playing now (<see cref="LockedBattleReactions"/>) and its strength (1, or lighter mid-attack).</summary>
+            public LockedBattleReaction Reaction { get; set; } = LockedBattleReactions.Flinch;
+            public float ReactionScale { get; set; } = 1f;
+            public LockedBattleReaction PreviousReaction { get; set; } = LockedBattleReactions.Flinch;
+            public Vector3 PreviousHitAway { get; set; } = Vector3.back;
+            public float PreviousReactionWeight { get; set; }
+            public float PreviousRootWeight { get; set; }
+            public LockedBattleReactionPose? ReactionPose { get; set; }
             public bool Flashing { get; set; }
             public bool Built { get; private set; }
             public Bounds LocalBounds { get; private set; }
