@@ -123,7 +123,8 @@ namespace Survival.Domain.Base
                 return new BuildingVisual(tier.ArtKey, tier.Scale, false, "", tier.Tier);
             }
 
-            return new BuildingVisual(HookArtKeys.ForPlot(def.Id), 1f, true, LevelBadge.Text(level), 0);
+            var art = def.BuildType != null ? HookArtKeys.ForBuildType(def.BuildType) : HookArtKeys.ForPlot(def.Id);
+            return new BuildingVisual(art, 1f, true, LevelBadge.Text(level), 0);
         }
 
         public static BuildingVisual For(BasePlot plot, IReadOnlyList<CastleTier>? tiers = null) => For(plot.Def, plot.Level, tiers);
@@ -132,8 +133,8 @@ namespace Survival.Domain.Base
     /// <summary>A building spot in the village: normalized center (x, y from top) and footprint width (fraction of map width).</summary>
     public sealed record VillagePlotSpot(string PlotId, float X, float YFromTop, float Size);
 
-    /// <summary>An empty plot ("room for more"): shows a sign until the castle reaches <see cref="UnlockCastleLevel"/>.</summary>
-    public sealed record VillageEmptySpot(string Id, float X, float YFromTop, float Size, int UnlockCastleLevel);
+    /// <summary>A free grass spot the player can place a new building on with Build (highlighted while choosing).</summary>
+    public sealed record VillageBuildSpot(string Id, float X, float YFromTop, float Size);
 
     public sealed record VillageProp(string Type, float X, float YFromTop, float Scale);
 
@@ -148,7 +149,7 @@ namespace Survival.Domain.Base
             float startZoom,
             IReadOnlyList<CastleTier> castleTiers,
             IReadOnlyList<VillagePlotSpot> plots,
-            IReadOnlyList<VillageEmptySpot> emptyPlots,
+            IReadOnlyList<VillageBuildSpot> buildSpots,
             IReadOnlyList<VillageProp> props)
         {
             Width = width;
@@ -158,7 +159,7 @@ namespace Survival.Domain.Base
             StartZoom = startZoom;
             CastleTiers = castleTiers;
             Plots = plots;
-            EmptyPlots = emptyPlots;
+            BuildSpots = buildSpots;
             Props = props;
         }
 
@@ -169,7 +170,21 @@ namespace Survival.Domain.Base
         public float StartZoom { get; }
         public IReadOnlyList<CastleTier> CastleTiers { get; }
         public IReadOnlyList<VillagePlotSpot> Plots { get; }
-        public IReadOnlyList<VillageEmptySpot> EmptyPlots { get; }
+        /// <summary>Free spots for Build, in auto-place order (nearest the castle first).</summary>
+        public IReadOnlyList<VillageBuildSpot> BuildSpots { get; }
+
+        public VillageBuildSpot? BuildSpot(string id)
+        {
+            foreach (var s in BuildSpots)
+            {
+                if (string.Equals(s.Id, id, StringComparison.Ordinal))
+                {
+                    return s;
+                }
+            }
+
+            return null;
+        }
         public IReadOnlyList<VillageProp> Props { get; }
 
         public VillagePlotSpot? SpotFor(string plotId)
@@ -211,15 +226,14 @@ namespace Survival.Domain.Base
                 plots.Add(new VillagePlotSpot(LayoutJson.Str(p, "plot"), LayoutJson.Frac(p, "x"), LayoutJson.Frac(p, "y"), LayoutJson.Num(p, "size")));
             }
 
-            var empty = new List<VillageEmptySpot>();
-            foreach (var p in LayoutJson.Objs(root, "empty_plots"))
+            var spots = new List<VillageBuildSpot>();
+            foreach (var p in LayoutJson.Objs(root, "build_spots"))
             {
-                empty.Add(new VillageEmptySpot(
+                spots.Add(new VillageBuildSpot(
                     LayoutJson.Str(p, "id"),
                     LayoutJson.Frac(p, "x"),
                     LayoutJson.Frac(p, "y"),
-                    LayoutJson.Num(p, "size"),
-                    LayoutJson.OptInt(p, "unlock_castle", 0)));
+                    LayoutJson.Num(p, "size")));
             }
 
             var props = new List<VillageProp>();
@@ -236,7 +250,7 @@ namespace Survival.Domain.Base
                 LayoutJson.OptNum(v, "start_zoom", 1f),
                 castle,
                 plots,
-                empty,
+                spots,
                 props);
         }
     }

@@ -1,7 +1,6 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using Survival.Domain.Base;
 using Survival.Domain.Theme;
 using Survival.Domain.View;
@@ -12,15 +11,21 @@ namespace Survival.Unity
 {
     /// <summary>
     /// Zoomed-in Village view: a scrollable lawn (map/village_layout.json) of grass and props - no roads - with one host per
-    /// base plot (the hook view fills each with its building, badge, bubble and timer) and empty plots that
-    /// open as the Castle levels up. The Castle host grows with its painted stage (one per castle level).
+    /// base plot (the hook view fills each with its building, badge, bubble and timer) and free build spots that light
+    /// up while the player is placing a new building (Build). The Castle host grows with its painted stage.
     /// </summary>
     public sealed class SurvivalVillageView : MonoBehaviour
     {
         private readonly Dictionary<string, RectTransform> _hosts = new(StringComparer.Ordinal);
-        private readonly List<(VillageEmptySpot Spot, Text Sign, Image Art)> _empty = new();
+        private readonly Dictionary<string, (VillageBuildSpot Spot, RectTransform Marker, Image Glow)> _spots = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, float> _hostBase = new(StringComparer.Ordinal);
         private readonly List<RectTransform> _labels = new();
-        private int _shownHq = -1;
+        private bool _placing;
+
+        /// <summary>A highlighted free spot was tapped while placing (spot id).</summary>
+        public event Action<string>? SpotTapped;
+
+        public bool Placing => _placing;
 
         public VillageLayout? Layout { get; private set; }
         public RectTransform? Root { get; private set; }
@@ -63,16 +68,16 @@ namespace Survival.Unity
                 items.Add((p.YFromTop, () => Prop(content, p)));
             }
 
-            foreach (var spot in layout.EmptyPlots)
+            foreach (var spot in layout.BuildSpots)
             {
                 var s = spot;
-                items.Add((s.YFromTop, () => Empty(content, s, strings)));
+                items.Add((s.YFromTop, () => SpotMarker(content, s)));
             }
 
             foreach (var spot in layout.Plots)
             {
                 var s = spot;
-                items.Add((s.YFromTop, () => _hosts[s.PlotId] = MakeHost(content, s)));
+                items.Add((s.YFromTop, () => _hosts[s.PlotId] = MakeHost(content, s.PlotId, s.X, s.YFromTop, s.Size)));
             }
 
             items.Sort((a, b) => a.YTop.CompareTo(b.YTop));
@@ -98,49 +103,142 @@ namespace Survival.Unity
             OnMoved(cam);
         }
 
-        /// <summary>Unlock signs on empty plots follow the castle level.</summary>
-        public void RefreshUnlocks(int hqLevel, Func<string, string, string> strings)
+        /// <summary>
+        /// Placement mode: light up <paramref name="freeSpots"/> (tap one to build there); null turns it off.
+        /// Returns the first lit spot so the camera can glide to it.
+        /// </summary>
+        public RectTransform? ShowPlacement(IEnumerable<string>? freeSpots)
         {
-            if (hqLevel == _shownHq)
+            _placing = freeSpots != null;
+            var free = freeSpots != null ? new HashSet<string>(freeSpots, StringComparer.Ordinal) : new HashSet<string>(StringComparer.Ordinal);
+            RectTransform? first = null;
+            foreach (var spot in Layout?.BuildSpots ?? Array.Empty<VillageBuildSpot>())
+            {
+                if (!_spots.TryGetValue(spot.Id, out var m))
+                {
+                    continue;
+                }
+
+                var on = free.Contains(spot.Id);
+                m.Marker.gameObject.SetActive(on);
+                if (on && first == null)
+                {
+                    first = m.Marker;
+                }
+            }
+
+            return first;
+        }
+
+        /// <summary>Pulse the lit spots (call every frame while placing).</summary>
+        public void TickPlacement(float time)
+        {
+            if (!_placing)
             {
                 return;
             }
 
-            _shownHq = hqLevel;
-            foreach (var (spot, sign, art) in _empty)
+            var a = 0.55f + 0.35f * Mathf.Sin(time * 5f);
+            var k = 1f + 0.05f * Mathf.Sin(time * 5f);
+            foreach (var m in _spots.Values)
             {
-                var open = hqLevel >= spot.UnlockCastleLevel;
-                sign.text = open
-                    ? strings("village.slot.open", "Build soon")
-                    : string.Format(CultureInfo.InvariantCulture, strings("village.slot.locked", "Castle Lv {0}"), spot.UnlockCastleLevel);
-                art.color = open ? Color.white : new Color(0.78f, 0.78f, 0.78f, 1f);
+                if (m.Marker.gameObject.activeSelf)
+                {
+                    m.Glow.color = new Color(1f, 0.86f, 0.35f, a);
+                    m.Marker.localScale = new Vector3(k, k, 1f);
+                }
             }
+        }
+
+        /// <summary>Map point of a build spot (content space), for camera glides and pops.</summary>
+        public Vector2? SpotPoint(string spotId)
+        {
+            var spot = Layout?.BuildSpot(spotId);
+            if (spot == null || Layout == null)
+            {
+                return null;
+            }
+
+            var (x, y) = Layout.ToMap(spot.X, spot.YFromTop);
+            return new Vector2(x, y);
+        }
+
+        /// <summary>Host for a building placed with Build on <paramref name="spotId"/>, drawn in y order with the rest.</summary>
+        public RectTransform? AddHost(string plotId, string spotId)
+        {
+            if (_hosts.TryGetValue(plotId, out var existing))
+            {
+                return existing;
+            }
+
+            var spot = Layout?.BuildSpot(spotId);
+            if (spot == null || Content == null)
+            {
+                return null;
+            }
+
+            var host = MakeHost(Content, plotId, spot.X, spot.YFromTop, spot.Size * 1.06f);
+            _hosts[plotId] = host;
+            SortInto(host);
+            if (_spots.TryGetValue(spotId, out var m))
+            {
+                m.Marker.gameObject.SetActive(false);
+            }
+
+            return host;
+        }
+
+        /// <summary>Move <paramref name="rt"/> among the content's children so south (lower y) draws over north.</summary>
+        private void SortInto(RectTransform rt)
+        {
+            if (Content == null)
+            {
+                return;
+            }
+
+            var y = rt.anchoredPosition.y;
+            var index = Content.childCount - 1;
+            for (var i = 1; i < Content.childCount; i++)
+            {
+                var c = Content.GetChild(i) as RectTransform;
+                if (c == null || c == rt || c == Fx)
+                {
+                    continue;
+                }
+
+                if (c.anchoredPosition.y < y)
+                {
+                    index = i;
+                    break;
+                }
+            }
+
+            rt.SetSiblingIndex(index);
+            Fx?.SetAsLastSibling();
         }
 
         /// <summary>Resize a plot host's footprint (Castle tiers): size is the fraction of map width at scale 1.</summary>
         public void SetFootprint(string plotId, float scale)
         {
             var host = Host(plotId);
-            var spot = Layout?.SpotFor(plotId);
-            if (host == null || spot == null || Layout == null)
+            if (host == null || !_hostBase.TryGetValue(plotId, out var basePx))
             {
                 return;
             }
 
-            var px = spot.Size * Layout.Width * scale;
+            var px = basePx * scale;
             host.sizeDelta = new Vector2(px, px);
         }
 
         public float FootprintScaleOf(string plotId)
         {
             var host = Host(plotId);
-            var spot = Layout?.SpotFor(plotId);
-            if (host == null || spot == null || Layout == null || spot.Size <= 0f)
+            if (host == null || !_hostBase.TryGetValue(plotId, out var basePx) || basePx <= 0f)
             {
                 return 1f;
             }
 
-            return host.sizeDelta.x / (spot.Size * Layout.Width);
+            return host.sizeDelta.x / basePx;
         }
 
         /// <summary>Counter-scale name plates a little so they stay readable when zoomed out.</summary>
@@ -168,34 +266,47 @@ namespace Survival.Unity
             }
         }
 
-        private RectTransform MakeHost(RectTransform content, VillagePlotSpot spot)
+        private RectTransform MakeHost(RectTransform content, string plotId, float nx, float ny, float size)
         {
-            var host = new GameObject("Plot_" + spot.PlotId, typeof(RectTransform)).GetComponent<RectTransform>();
+            var host = new GameObject("Plot_" + plotId, typeof(RectTransform)).GetComponent<RectTransform>();
             host.SetParent(content, false);
-            var (x, y) = Layout!.ToMap(spot.X, spot.YFromTop);
+            var (x, y) = Layout!.ToMap(nx, ny);
             host.anchorMin = Vector2.zero;
             host.anchorMax = Vector2.zero;
             host.pivot = new Vector2(0.5f, 0.32f); // the building's base sits on the plot point; growth goes up
             host.anchoredPosition = new Vector2(x, y);
-            var px = spot.Size * Layout.Width;
+            var px = size * Layout.Width;
             host.sizeDelta = new Vector2(px, px);
+            _hostBase[plotId] = px;
             return host;
         }
 
-        private void Empty(RectTransform content, VillageEmptySpot spot, Func<string, string, string> strings)
+        /// <summary>A free build spot: dirt plot + gold glow + hammer, hidden until the player is placing.</summary>
+        private void SpotMarker(RectTransform content, VillageBuildSpot spot)
         {
             var (x, y) = Layout!.ToMap(spot.X, spot.YFromTop);
             var px = spot.Size * Layout.Width;
-            var art = HookSkin.Art(content, "Slot_" + spot.Id, WorldArtKeys.PlotEmpty, new Color(0.45f, 0.33f, 0.2f, 1f));
-            Point(art.rectTransform, x, y, px, px, 0.4f);
-            var plate = HookSkin.Panel(art.transform, "Sign", HookArtKeys.Chip, SurvivalVisuals.PanelSoft, 0.4f);
-            Box(plate.rectTransform, 0.08f, -0.08f, 0.92f, 0.10f);
-            var sign = HookSkin.Outlined(SurvivalVisuals.Text(plate.transform, "T", "", 26, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
-            sign.fontStyle = FontStyle.Bold;
-            SurvivalVisuals.Stretch(sign.rectTransform);
-            _empty.Add((spot, sign, art));
-            RegisterLabel(plate.rectTransform);
-            sign.text = string.Format(CultureInfo.InvariantCulture, strings("village.slot.locked", "Castle Lv {0}"), spot.UnlockCastleLevel);
+            var marker = new GameObject("Spot_" + spot.Id, typeof(RectTransform)).GetComponent<RectTransform>();
+            marker.SetParent(content, false);
+            Point(marker, x, y, px, px * 0.75f, 0.5f);
+            var glow = HookSkin.Glow(marker, "Glow", new Color(1f, 0.86f, 0.35f, 0.7f));
+            Box(glow.rectTransform, -0.18f, -0.25f, 1.18f, 1.25f);
+            var dirt = HookSkin.Art(marker, "Dirt", WorldArtKeys.PlotEmpty, new Color(0.45f, 0.33f, 0.2f, 0.9f));
+            Box(dirt.rectTransform, 0f, 0f, 1f, 1f);
+            var hammer = HookSkin.Art(marker, "Hammer", BottomNav.IconBuild, SurvivalVisuals.Gold);
+            Box(hammer.rectTransform, 0.30f, 0.30f, 0.70f, 0.95f);
+            var hit = SurvivalVisuals.Button(marker, "Hit", new Color(1f, 1f, 1f, 0f));
+            Box((RectTransform)hit.transform, -0.05f, -0.1f, 1.05f, 1.2f);
+            var id = spot.Id;
+            hit.onClick.AddListener(() =>
+            {
+                if (_placing)
+                {
+                    SpotTapped?.Invoke(id);
+                }
+            });
+            marker.gameObject.SetActive(false);
+            _spots[spot.Id] = (spot, marker, glow);
         }
 
         private void Prop(RectTransform content, VillageProp prop)
@@ -208,9 +319,19 @@ namespace Survival.Unity
 
             var img = HookSkin.Art(content, "Prop_" + prop.Type, key, Color.white);
             var (x, y) = Layout!.ToMap(prop.X, prop.YFromTop);
-            var size = (prop.Type == "bushes" ? 200f : 380f) * prop.Scale;
+            var size = PropSize(prop.Type) * prop.Scale;
             Point(img.rectTransform, x, y, size, size, 0.35f);
         }
+
+        /// <summary>Base draw size (content px at scale 1) per decor type.</summary>
+        internal static float PropSize(string type) => type switch
+        {
+            "bushes" => 200f,
+            "tree" => 280f,
+            "rocks" => 260f,
+            "field" => 340f,
+            _ => 380f
+        };
 
         internal static Image Tiled(RectTransform content, string name, string key, float x, float y, float w, float h, Color fallback)
         {

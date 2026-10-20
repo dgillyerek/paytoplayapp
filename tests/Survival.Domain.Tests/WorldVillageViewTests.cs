@@ -232,7 +232,7 @@ public sealed class VillageEconomyTests
     }
 
     [Fact]
-    public void Every_plot_has_a_village_spot_and_new_buildings_wait_for_the_castle()
+    public void Every_plot_has_a_village_spot_and_buildings_wait_for_the_castle()
     {
         var layout = Layouts.Village();
         foreach (var id in SurvIds.BasePlots)
@@ -240,8 +240,7 @@ public sealed class VillageEconomyTests
             Assert.NotNull(layout.SpotFor(id));
         }
 
-        Assert.NotEmpty(layout.EmptyPlots);
-        Assert.All(layout.EmptyPlots, e => Assert.True(e.UnlockCastleLevel > 1));
+        Assert.True(layout.BuildSpots.Count >= 14, "free build spots");
         var hook = Hook.Session(new ManualClock()).Hook!;
         Assert.Equal(UpgradeBlock.NeedsCastle, hook.Base.CheckUpgrade(SurvIds.BasePlotForge01));
         Assert.Equal(UpgradeBlock.NeedsCastle, hook.Base.CheckUpgrade(SurvIds.BasePlotFarm02));
@@ -257,7 +256,8 @@ public sealed class VillageEconomyTests
         Assert.DoesNotContain(typeof(VillageLayout).GetProperties(), p => p.Name is "Roads" or "Paths");
         var layout = Layouts.Village();
         Assert.Equal(6, layout.Plots.Count);
-        Assert.NotEmpty(layout.EmptyPlots);
+        Assert.NotEmpty(layout.BuildSpots);
+        Assert.False(doc.RootElement.TryGetProperty("empty_plots", out _), "locked Castle Lv plots were replaced by Build");
         Assert.DoesNotContain(layout.Props, p => p.Type.Contains("road") || p.Type.Contains("path"));
         Assert.True(TestPaths.LoadPack().TryArt(WorldArtKeys.VillageLawn, out _));
     }

@@ -21,7 +21,8 @@ namespace Survival.Domain.Catalog
         IReadOnlyList<BasePlotDef> Plots,
         QuestChainDef StarterChain,
         GiftConfig Gifts,
-        IReadOnlyList<StoreDef> Stores);
+        IReadOnlyList<StoreDef> Stores,
+        IReadOnlyList<BuildableDef> Buildables);
 
     public static class HookCatalogLoader
     {
@@ -51,6 +52,15 @@ namespace Survival.Domain.Catalog
                 plots.Add(ReadPlot(Obj(item, "plot")));
             }
 
+            var buildables = new List<BuildableDef>();
+            if (economy.TryGet("buildables", out var bNode) && bNode is JsonNode.Arr bArr)
+            {
+                foreach (var item in bArr.Items)
+                {
+                    buildables.Add(ReadBuildable(Obj(item, "buildable"), plots));
+                }
+            }
+
             return new HookCatalog(
                 rush,
                 OptInt(economy, "build_slots", 1),
@@ -58,7 +68,8 @@ namespace Survival.Domain.Catalog
                 plots,
                 ReadChain(Obj(JsonRead.Parse(questsJson), "quests")),
                 ReadGifts(Obj(JsonRead.Parse(giftsJson), "gifts")),
-                ReadStores(Obj(JsonRead.Parse(storesJson), "stores")));
+                ReadStores(Obj(JsonRead.Parse(storesJson), "stores")),
+                buildables);
         }
 
         /// <summary>Theme pack store/products.json: { "products": [ { "sku", "product_id", "price_label" } ] }.</summary>
@@ -74,6 +85,80 @@ namespace Survival.Domain.Catalog
             }
 
             return map;
+        }
+
+        /// <summary>
+        /// { "type", "building", "produces"?, "build_cost", "build_seconds", "unlock_at_castle": [..],
+        ///   "levels_from": "base.plot.farm_01" | "levels": [..], "cost_growth"?, "time_growth"? }
+        /// </summary>
+        private static BuildableDef ReadBuildable(JsonNode.Obj o, IReadOnlyList<BasePlotDef> plots)
+        {
+            IReadOnlyList<BuildingLevelDef>? levels = null;
+            var from = OptStr(o, "levels_from");
+            if (from != null)
+            {
+                foreach (var p in plots)
+                {
+                    if (string.Equals(p.Id, from, StringComparison.Ordinal))
+                    {
+                        levels = p.Levels;
+                    }
+                }
+
+                if (levels == null)
+                {
+                    throw new FormatException($"Buildable levels_from '{from}' is not a plot.");
+                }
+            }
+            else
+            {
+                levels = ReadLevels(o);
+            }
+
+            var unlock = new List<int>();
+            if (o.TryGet("unlock_at_castle", out var u) && u is JsonNode.Arr ua)
+            {
+                foreach (var n in ua.Items)
+                {
+                    unlock.Add(n is JsonNode.Num num ? num.AsInt() : throw new FormatException("unlock_at_castle must be numbers."));
+                }
+            }
+
+            var produces = OptStr(o, "produces");
+            if (produces != null)
+            {
+                CheckId(produces);
+            }
+
+            var type = Str(o, "type");
+            return new BuildableDef(
+                type,
+                Id(o, "building"),
+                produces,
+                Amounts(o, "build_cost"),
+                Int(o, "build_seconds"),
+                unlock,
+                levels,
+                o.TryGet("cost_growth", out var cg) && cg is JsonNode.Num cgn ? cgn.Value : 1.6,
+                o.TryGet("time_growth", out var tg) && tg is JsonNode.Num tgn ? tgn.Value : 1.5);
+        }
+
+        private static List<BuildingLevelDef> ReadLevels(JsonNode.Obj o)
+        {
+            var levels = new List<BuildingLevelDef>();
+            foreach (var item in Arr(o, "levels"))
+            {
+                var l = Obj(item, "level");
+                levels.Add(new BuildingLevelDef(
+                    Int(l, "level"),
+                    OptInt(l, "per_hour", 0),
+                    OptInt(l, "capacity", 0),
+                    OptInt(l, "min_collect", 0),
+                    Amounts(l, "upgrade_cost"),
+                    OptInt(l, "upgrade_seconds", 0)));
+            }
+
+            return levels;
         }
 
         private static BasePlotDef ReadPlot(JsonNode.Obj o)

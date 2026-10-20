@@ -35,6 +35,7 @@ namespace Survival.Domain.Session
             Wallet.Grant(catalog.StartingWallet);
             Timers = new TimerQueue(clock, catalog.Rush, catalog.BuildSlots);
             Base = new BaseEconomy(catalog.Plots, clock, wallet, Timers);
+            Build = new VillageBuild(Base, catalog.Buildables);
             Quests = new QuestSystem(catalog.StarterChain, Base.LevelOf);
             Gifts = new FreeGiftScheduler(catalog.Gifts, clock, giftSeed);
             Store = new StoreSystem(catalog.Stores, products, purchases, wallet);
@@ -50,6 +51,9 @@ namespace Survival.Domain.Session
         public EnergySystem? Energy { get; }
         public TimerQueue Timers { get; }
         public BaseEconomy Base { get; }
+
+        /// <summary>Village Build (new Farms / Lumber Mills / Quarries / Forges on free spots).</summary>
+        public VillageBuild Build { get; }
         public QuestSystem Quests { get; }
         public FreeGiftScheduler Gifts { get; }
         public StoreSystem Store { get; }

@@ -23,9 +23,12 @@ namespace Survival.Unity
     /// finish; the Castle swaps to the next, bigger painted stage every level, the others show a numbered level badge),
     /// the starter quest tracker with chest claim, the free gift, the sandbox Gem Shop with its pulsing FREE badge,
     /// and the chest-burst celebration. Juice on every tap.
-    /// Debug (Editor / dev builds): G = free gift now, T = skip 5 min (also on-screen buttons).
+    /// Build (SurvivalHookView.Build.cs): the painted Build button opens the build menu; pick a type, tap a glowing
+    /// free spot (or let it auto-place) and the construction runs on the same timer / speed-up flow as upgrades.
+    /// The village (levels, placed buildings, timers) is saved to PlayerPrefs.
+    /// Debug (Editor / dev builds): G = free gift now, T = skip 5 min (also on-screen buttons), R = reset the village save.
     /// </summary>
-    public sealed class SurvivalHookView : MonoBehaviour
+    public sealed partial class SurvivalHookView : MonoBehaviour
     {
         private const float Aspect = 1080f / 1920f;
         private const float DebugSkipSeconds = 300f;
@@ -91,6 +94,7 @@ namespace Survival.Unity
             public Image Badge = null!;
             public Text BadgeText = null!;
             public Image Arrow = null!;
+            public Image? Hammer;
         }
 
         private sealed class QuestTracker
@@ -133,7 +137,9 @@ namespace Survival.Unity
             }
 
             var root = play.Root;
+            SetupBuild(play);
             BuildVillage(play.Village);
+            BuildBuildButton(root);
             BuildQuestTracker(root);
             BuildShopButton(root);
             if (Application.isEditor || Debug.isDebugBuild)
@@ -153,8 +159,10 @@ namespace Survival.Unity
         {
             if (_hook != null)
             {
+                SaveVillage();
                 _hook.Wallet.Changed -= OnWalletChanged;
                 _hook.Gifts.Offered -= OnGiftOffered;
+                _hook.Build.Built -= OnBuilt;
             }
 
             if (_play != null)
@@ -180,6 +188,7 @@ namespace Survival.Unity
             }
 
             AnimateIdle(Time.unscaledTime);
+            TickBuild();
         }
 
         // ---------- build ----------
@@ -193,7 +202,8 @@ namespace Survival.Unity
 
             foreach (var plot in _hook.Base.Plots)
             {
-                var host = village.Host(plot.Id);
+                var spot = _hook.Build.SpotOf(plot.Id);
+                var host = village.Host(plot.Id) ?? (spot != null ? village.AddHost(plot.Id, spot) : null);
                 if (host != null)
                 {
                     _cards[plot.Id] = BuildCard(village, host, plot);
@@ -236,7 +246,7 @@ namespace Survival.Unity
             plate.rectTransform.pivot = new Vector2(0.5f, 1f);
             plate.rectTransform.sizeDelta = new Vector2(card.IsCastle ? 330f : 260f, 58f);
             plate.rectTransform.anchoredPosition = Vector2.zero;
-            card.Name = HookSkin.Outlined(SurvivalVisuals.Text(plate.transform, "Name", S("hook.plot." + plotId, plotId), 26, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
+            card.Name = HookSkin.Outlined(SurvivalVisuals.Text(plate.transform, "Name", PlotName(plotId), 26, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
             card.Name.fontStyle = FontStyle.Bold;
             SurvivalVisuals.Stretch(card.Name.rectTransform);
             village.RegisterLabel(plate.rectTransform);
@@ -303,6 +313,12 @@ namespace Survival.Unity
             card.Arrow = HookSkin.Art(host, "UpgradeArrow", WorldArtKeys.IconUpgrade, FreeGreen);
             Box(card.Arrow.rectTransform, 0.76f, 0.66f, 0.98f, 0.90f);
             card.Arrow.gameObject.SetActive(false);
+
+            // Under construction: a hammer bobs over the half-built (faded) building.
+            card.Hammer = HookSkin.Art(host, "Hammer", Survival.Domain.View.BottomNav.IconBuild, SurvivalVisuals.Gold);
+            Box(card.Hammer.rectTransform, 0.34f, 0.62f, 0.66f, 0.98f);
+            card.Hammer.raycastTarget = false;
+            card.Hammer.gameObject.SetActive(plot.UnderConstruction);
 
             Wire(body, () => OnTapPlot(plotId));
             Wire(bubbleBtn, () => OnTapPlot(plotId));
@@ -437,6 +453,7 @@ namespace Survival.Unity
             RefreshQuest();
             RefreshShop();
             _sheetRefresh?.Invoke();
+            SaveIfChanged();
         }
 
         private void RefreshCards()
@@ -446,7 +463,6 @@ namespace Survival.Unity
                 return;
             }
 
-            _play?.Village?.RefreshUnlocks(_hook.Base.HqLevel, S);
             var now = _hook.Clock.Now;
             foreach (var card in _cards.Values)
             {
@@ -458,13 +474,20 @@ namespace Survival.Unity
 
                 if (card.IsCastle)
                 {
-                    card.Name.text = S("hook.plot." + plot.Id, plot.Id) + "  " + Fmt("hook.level", "Lv {0}", plot.Level);
+                    card.Name.text = PlotName(plot.Id) + "  " + Fmt("hook.level", "Lv {0}", plot.Level);
                 }
                 else if (card.LevelText != null)
                 {
                     card.LevelText.text = LevelBadge.Text(plot.Level);
                 }
 
+                if (!card.IsCastle)
+                {
+                    card.Art.color = plot.UnderConstruction ? new Color(1f, 1f, 1f, 0.55f) : Color.white;
+                    card.LevelBadge?.gameObject.SetActive(!plot.UnderConstruction);
+                }
+
+                card.Hammer?.gameObject.SetActive(plot.UnderConstruction);
                 var timerId = BaseEconomy.UpgradeTimerId(plot.Id);
                 var timer = _hook.Timers.Find(timerId);
                 if (timer != null)
@@ -473,7 +496,9 @@ namespace Survival.Unity
                     var done = remaining <= 0;
                     var free = _hook.Timers.CanFinishFree(timerId);
                     card.TimerRoot.gameObject.SetActive(true);
-                    card.Status.text = done ? S("hook.finish", "Finish!") : TimerQueue.FormatClock(remaining);
+                    card.Status.text = done
+                        ? S("hook.finish", "Finish!")
+                        : plot.UnderConstruction ? S("build.building", "Building") + " " + TimerQueue.FormatClock(remaining) : TimerQueue.FormatClock(remaining);
                     HookSkin.SetBar(card.BarFill, (float)timer.Progress(now), done || free ? HookArtKeys.BarFillGreen : HookArtKeys.BarFillBlue, done || free ? FreeGreen : SurvivalVisuals.PinBuild);
                     card.Badge.gameObject.SetActive(done || free);
                     card.BadgeText.text = done ? "!" : S("hook.free", "FREE");
@@ -677,10 +702,11 @@ namespace Survival.Unity
             {
                 if (_hook.Timers.IsDone(timerId) || _hook.Timers.CanFinishFree(timerId))
                 {
+                    var wasBuild = _hook.Base.Find(plotId)?.UnderConstruction == true;
                     var finished = _hook.FinishFree(plotId);
                     if (finished > 0)
                     {
-                        LevelUp(card, finished);
+                        Finished(card, finished, wasBuild);
                     }
                 }
                 else
@@ -798,7 +824,7 @@ namespace Survival.Unity
             }
 
             var hook = _hook;
-            var name = S("hook.plot." + plotId, plotId);
+            var name = PlotName(plotId);
             var panel = OpenSheet("BuildingSheet", 0.86f, 0.44f, name);
             if (panel == null)
             {
@@ -1074,9 +1100,10 @@ namespace Survival.Unity
 
             var hook = _hook;
             var timerId = BaseEconomy.UpgradeTimerId(plotId);
-            var building = HookSkin.Art(panel, "Building", HookArtKeys.ForPlot(plotId), SurvivalVisuals.PinBuild);
+            var speedPlot = hook.Base.Find(plotId);
+            var building = HookSkin.Art(panel, "Building", speedPlot != null ? BuildingVisual.For(speedPlot, Tiers).ArtKey : HookArtKeys.ForPlot(plotId), SurvivalVisuals.PinBuild);
             Box(building.rectTransform, 0.05f, 0.60f, 0.30f, 0.88f);
-            var plotName = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Plot", S("hook.plot." + plotId, plotId), 26, TextAnchor.MiddleLeft, SurvivalVisuals.Cream));
+            var plotName = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Plot", PlotName(plotId), 26, TextAnchor.MiddleLeft, SurvivalVisuals.Cream));
             Box(plotName.rectTransform, 0.33f, 0.78f, 0.95f, 0.87f);
             var hourglass = HookSkin.ResIcon(panel, "Hourglass", SurvIds.ResSpeedupM, ResColor(SurvIds.ResSpeedupM), ResGlyph(SurvIds.ResSpeedupM));
             Box(hourglass.rectTransform, 0.32f, 0.645f, 0.43f, 0.775f);
@@ -1159,6 +1186,7 @@ namespace Survival.Unity
             }
 
             var timerId = BaseEconomy.UpgradeTimerId(plotId);
+            var wasBuild = _hook.Base.Find(plotId)?.UnderConstruction == true;
             var level = _hook.Timers.IsDone(timerId) || _hook.Timers.CanFinishFree(timerId)
                 ? _hook.FinishFree(plotId)
                 : _hook.Rush(plotId, out _);
@@ -1171,7 +1199,7 @@ namespace Survival.Unity
             }
 
             CloseSheet();
-            LevelUp(card, level);
+            Finished(card, level, wasBuild);
         }
 
         private void OpenShop()
@@ -2289,18 +2317,21 @@ namespace Survival.Unity
 
             var gift = false;
             var skip = false;
+            var reset = false;
             var kb = Keyboard.current;
             if (kb != null && kb.enabled)
             {
                 gift |= kb.gKey.wasPressedThisFrame;
                 skip |= kb.tKey.wasPressedThisFrame;
+                reset |= kb.rKey.wasPressedThisFrame;
             }
 
 #if ENABLE_LEGACY_INPUT_MANAGER
             gift |= Input.GetKeyDown(KeyCode.G);
             skip |= Input.GetKeyDown(KeyCode.T);
+            reset |= Input.GetKeyDown(KeyCode.R);
 #endif
-            FireDebug(gift, skip);
+            FireDebug(gift, skip, reset);
         }
 
         private void OnGUI()
@@ -2316,12 +2347,12 @@ namespace Survival.Unity
                 return;
             }
 
-            FireDebug(ev.keyCode == KeyCode.G, ev.keyCode == KeyCode.T);
+            FireDebug(ev.keyCode == KeyCode.G, ev.keyCode == KeyCode.T, ev.keyCode == KeyCode.R);
         }
 
-        private void FireDebug(bool gift, bool skip)
+        private void FireDebug(bool gift, bool skip, bool reset = false)
         {
-            if ((!gift && !skip) || _lastDebugFrame == Time.frameCount)
+            if ((!gift && !skip && !reset) || _lastDebugFrame == Time.frameCount)
             {
                 return;
             }
@@ -2335,6 +2366,11 @@ namespace Survival.Unity
             if (skip)
             {
                 DebugSkip();
+            }
+
+            if (reset)
+            {
+                DebugResetVillage();
             }
         }
 

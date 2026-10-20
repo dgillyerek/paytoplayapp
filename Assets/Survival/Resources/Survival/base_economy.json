@@ -111,5 +111,49 @@
         { "level": 6 }
       ]
     }
+  ],
+  "buildables": [
+    {
+      "type": "farm",
+      "building": "building.economy",
+      "produces": "res.food",
+      "build_cost": { "res.soft": 600, "res.wood": 400 },
+      "build_seconds": 90,
+      "unlock_at_castle": [2, 4, 7, 11],
+      "levels_from": "base.plot.farm_01"
+    },
+    {
+      "type": "lumber",
+      "building": "building.economy",
+      "produces": "res.wood",
+      "build_cost": { "res.soft": 600, "res.food": 400 },
+      "build_seconds": 90,
+      "unlock_at_castle": [2, 5, 8, 12],
+      "levels_from": "base.plot.lumber_01"
+    },
+    {
+      "type": "quarry",
+      "building": "building.economy",
+      "produces": "res.stone",
+      "build_cost": { "res.soft": 900, "res.wood": 600 },
+      "build_seconds": 150,
+      "unlock_at_castle": [3, 6, 10, 15],
+      "levels": [
+        { "level": 1, "per_hour": 2400, "capacity": 400, "min_collect": 20, "upgrade_cost": { "res.soft": 900, "res.wood": 700 }, "upgrade_seconds": 240 },
+        { "level": 2, "per_hour": 3600, "capacity": 600, "min_collect": 25, "upgrade_cost": { "res.soft": 2700, "res.wood": 2000 }, "upgrade_seconds": 1080 },
+        { "level": 3, "per_hour": 4800, "capacity": 800, "min_collect": 30, "upgrade_cost": { "res.soft": 6800, "res.wood": 5000 }, "upgrade_seconds": 2160 },
+        { "level": 4, "per_hour": 6000, "capacity": 1000, "min_collect": 35, "upgrade_cost": { "res.soft": 15000, "res.wood": 11000 }, "upgrade_seconds": 4320 },
+        { "level": 5, "per_hour": 7200, "capacity": 1200, "min_collect": 40, "upgrade_cost": { "res.soft": 33000, "res.wood": 24000 }, "upgrade_seconds": 8640 },
+        { "level": 6, "per_hour": 8400, "capacity": 1400, "min_collect": 45 }
+      ]
+    },
+    {
+      "type": "forge",
+      "building": "building.workshop",
+      "build_cost": { "res.soft": 1500, "res.wood": 800, "res.stone": 1000 },
+      "build_seconds": 300,
+      "unlock_at_castle": [5, 12],
+      "levels_from": "base.plot.forge_01"
+    }
   ]
 }
