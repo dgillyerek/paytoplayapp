@@ -12,20 +12,36 @@ namespace Survival.Domain.Base
     public sealed record CastleTier(int Tier, int MinLevel, string ArtKey, float Scale);
 
     /// <summary>
-    /// Castle level -> painted tier. Each tier is distinct art and a larger footprint, so upgrading the Castle
-    /// visibly grows it. Other buildings keep their art and show a level badge instead (<see cref="LevelBadge"/>).
+    /// Castle level -> painted stage. The Castle has one painted stage per level (1 = a small wooden fort ... 20 = the
+    /// grand castle); each stage adds one visible feature to the one before and draws a little larger, so every
+    /// upgrade visibly grows it. Other buildings keep their art and show a level badge instead (<see cref="LevelBadge"/>).
     /// </summary>
     public static class CastleTiers
     {
         public const string ArtPrefix = "theme_a.village.castle.tier_";
 
-        public static IReadOnlyList<CastleTier> Default { get; } = new[]
+        /// <summary>Castle max level = number of painted stages.</summary>
+        public const int Stages = 20;
+
+        public const float FirstScale = 0.60f;
+        public const float LastScale = 1.30f;
+
+        /// <summary>Footprint scale for a stage: grows evenly from <see cref="FirstScale"/> (level 1) to <see cref="LastScale"/> (level 20).</summary>
+        public static float ScaleFor(int stage) =>
+            (float)Math.Round(FirstScale + (LastScale - FirstScale) * (Math.Clamp(stage, 1, Stages) - 1) / (Stages - 1), 3);
+
+        public static IReadOnlyList<CastleTier> Default { get; } = BuildDefault();
+
+        private static IReadOnlyList<CastleTier> BuildDefault()
         {
-            new CastleTier(1, 1, ArtPrefix + "1", 0.78f),
-            new CastleTier(2, 3, ArtPrefix + "2", 0.92f),
-            new CastleTier(3, 5, ArtPrefix + "3", 1.08f),
-            new CastleTier(4, 7, ArtPrefix + "4", 1.26f)
-        };
+            var list = new CastleTier[Stages];
+            for (var i = 1; i <= Stages; i++)
+            {
+                list[i - 1] = new CastleTier(i, i, ArtPrefix + i, ScaleFor(i));
+            }
+
+            return list;
+        }
 
         /// <summary>Highest tier whose MinLevel is reached (levels below the first tier use the first).</summary>
         public static CastleTier For(int level, IReadOnlyList<CastleTier>? tiers = null)
@@ -121,10 +137,7 @@ namespace Survival.Domain.Base
 
     public sealed record VillageProp(string Type, float X, float YFromTop, float Scale);
 
-    /// <summary>A dirt road segment between two normalized points; width in map pixels.</summary>
-    public sealed record VillageRoad(float X0, float Y0FromTop, float X1, float Y1FromTop, float Width);
-
-    /// <summary>map/village_layout.json: the zoomed-in base the Village view scrolls around.</summary>
+    /// <summary>map/village_layout.json: the zoomed-in base the Village view scrolls around (grass, props and plots; no roads).</summary>
     public sealed class VillageLayout
     {
         public VillageLayout(
@@ -136,8 +149,7 @@ namespace Survival.Domain.Base
             IReadOnlyList<CastleTier> castleTiers,
             IReadOnlyList<VillagePlotSpot> plots,
             IReadOnlyList<VillageEmptySpot> emptyPlots,
-            IReadOnlyList<VillageProp> props,
-            IReadOnlyList<VillageRoad> roads)
+            IReadOnlyList<VillageProp> props)
         {
             Width = width;
             Height = height;
@@ -148,7 +160,6 @@ namespace Survival.Domain.Base
             Plots = plots;
             EmptyPlots = emptyPlots;
             Props = props;
-            Roads = roads;
         }
 
         public float Width { get; }
@@ -160,7 +171,6 @@ namespace Survival.Domain.Base
         public IReadOnlyList<VillagePlotSpot> Plots { get; }
         public IReadOnlyList<VillageEmptySpot> EmptyPlots { get; }
         public IReadOnlyList<VillageProp> Props { get; }
-        public IReadOnlyList<VillageRoad> Roads { get; }
 
         public VillagePlotSpot? SpotFor(string plotId)
         {
@@ -218,17 +228,6 @@ namespace Survival.Domain.Base
                 props.Add(new VillageProp(LayoutJson.Str(p, "type"), LayoutJson.Frac(p, "x"), LayoutJson.Frac(p, "y"), LayoutJson.OptNum(p, "scale", 1f)));
             }
 
-            var roads = new List<VillageRoad>();
-            foreach (var r in LayoutJson.Objs(root, "roads"))
-            {
-                roads.Add(new VillageRoad(
-                    LayoutJson.Frac(r, "x0"),
-                    LayoutJson.Frac(r, "y0"),
-                    LayoutJson.Frac(r, "x1"),
-                    LayoutJson.Frac(r, "y1"),
-                    LayoutJson.OptNum(r, "width", 90f)));
-            }
-
             return new VillageLayout(
                 LayoutJson.Num(v, "width"),
                 LayoutJson.Num(v, "height"),
@@ -238,8 +237,7 @@ namespace Survival.Domain.Base
                 castle,
                 plots,
                 empty,
-                props,
-                roads);
+                props);
         }
     }
 }

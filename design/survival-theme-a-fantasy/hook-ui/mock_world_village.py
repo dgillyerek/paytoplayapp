@@ -202,8 +202,7 @@ def village_map(castle_level):
     Wm, Hm = vd["width"], vd["height"]
     img = Image.new("RGBA", (Wm, Hm), (97, 140, 61, 255))
     tile(img, "theme_a.village.tile.lawn")
-    for r in VILLAGE["roads"]:
-        road(img, (r["x0"] * Wm, r["y0"] * Hm), (r["x1"] * Wm, r["y1"] * Hm), r["width"])
+    # No roads in the village (Derek, PR #74): grass, props and plots only.
     for p in VILLAGE["props"]:
         key = "theme_a.village.prop." + p["type"] if art("theme_a.village.prop." + p["type"]) is not None else "theme_a.map.prop." + p["type"]
         size = (200 if p["type"] == "bushes" else 380) * p["scale"]
@@ -227,7 +226,7 @@ def village_map(castle_level):
             key, lv = t["art"], castle_level
         else:
             px = spot["size"] * Wm
-            key, lv = K + "plot." + pid.split("base.plot.")[1], LEVELS.get(pid, 1)
+            key, lv = K + "plot." + pid.split("base.plot.")[1], min(LEVELS.get(pid, 1), castle_level)
         host = R(x - px / 2, y - px * 0.68, x + px / 2, y + px * 0.32)  # pivot (0.5, 0.32)
         glow(img, host.box(-0.1, -0.05, 1.1, 1.05), (255, 219, 115), 0.18)
         fit(img, art(key), host)
@@ -264,20 +263,25 @@ def village_view(level):
 
 
 def tier_strip(out):
+    """All 20 castle stages in order (2 rows x 10) at their footprint scale, on the village lawn."""
     tiers = sorted(VILLAGE["castle_tiers"], key=lambda t: t["min_level"])
-    base = VILLAGE["plots"][0]["size"] * VILLAGE["village"]["width"] * 0.62
-    cw, ch = 520, 640
-    img = Image.new("RGBA", (cw * len(tiers), ch), (18, 22, 34, 255))
-    lawn = Image.new("RGBA", (cw * len(tiers), ch), (0, 0, 0, 0))
+    per_row, cw, ch = 5, 520, 600
+    rows = (len(tiers) + per_row - 1) // per_row
+    img = Image.new("RGBA", (cw * per_row, ch * rows), (18, 22, 34, 255))
+    lawn = Image.new("RGBA", img.size, (0, 0, 0, 0))
     tile(lawn, "theme_a.village.tile.lawn")
-    img.alpha_composite(tinted(lawn, (255, 255, 255, 120)))
+    img.alpha_composite(tinted(lawn, (255, 255, 255, 140)))
+    base = cw * 0.92 / max(t["scale"] for t in tiers)
+    anchors = {5, 10, 15, 20}
     for i, t in enumerate(tiers):
+        cx, row = (i % per_row) * cw + cw / 2, i // per_row
         px = base * t["scale"]
-        foot = ch - 120
-        r = R(i * cw + cw / 2 - px / 2, foot - px * 0.68, i * cw + cw / 2 + px / 2, foot + px * 0.32)
+        foot = row * ch + ch - 92
+        r = R(cx - px / 2, foot - px * 0.80, cx + px / 2, foot + px * 0.20)
         fit(img, art(t["art"]), r)
-        lab = f"Tier {t['tier']}  \u00b7  Castle Lv {t['min_level']}+  \u00b7  x{t['scale']:.2f}"
-        text(img, R(i * cw, ch - 70, (i + 1) * cw, ch - 20), lab, 26, REWARD, "mc", True)
+        lab = f"Lv {t['min_level']}" + ("  (anchor)" if t["min_level"] in anchors else "")
+        text(img, R(cx - cw / 2, row * ch + ch - 70, cx + cw / 2, row * ch + ch - 38), lab, 28, REWARD if t["min_level"] in anchors else CREAM, "mc", True)
+        text(img, R(cx - cw / 2, row * ch + ch - 38, cx + cw / 2, row * ch + ch - 10), f"x{t['scale']:.2f}", 22, MUTE, "mc", True)
     img.convert("RGB").save(out)
     return out
 
@@ -295,7 +299,7 @@ def contact(frames, strip_path, out):
         d.text((x + tw / 2, pad + lab / 2), name, font=font(24, True), fill=(237, 214, 115), anchor="mm")
         sheet.alpha_composite(Image.open(path).convert("RGBA").resize((tw, th), Image.LANCZOS), (x, pad + lab))
     y = pad + lab + th + pad
-    d.text((sw / 2, y + lab / 2), "Castle tiers (village_layout.json castle_tiers, real art at footprint scale)", font=font(26, True), fill=(237, 214, 115), anchor="mm")
+    d.text((sw / 2, y + lab / 2), "All 20 castle stages in order (village_layout.json castle_tiers, real art at footprint scale)", font=font(26, True), fill=(237, 214, 115), anchor="mm")
     sheet.alpha_composite(strip.resize((sw - 2 * pad, sh_strip), Image.LANCZOS), (pad, y + lab))
     sheet.convert("RGB").save(out)
 
@@ -307,7 +311,7 @@ if __name__ == "__main__":
     wd = WORLD["world"]
     px, py = pos["village.player"]
     frames = []
-    toggle_v = ("theme_a.village.castle.tier_1", S("view.toggle.village", "Village"))
+    toggle_v = ("theme_a.village.castle.tier_10", S("view.toggle.village", "Village"))
     w1 = main_view(camera_view(wfull, wd["start_zoom"], px + 180, py + 120), "nav.world", toggle_v, S("view.banner.world"))
     w2 = camera_view(wfull, 0.62, px + 300, py + 200)
     w2 = main_view(w2, "nav.world", toggle_v, S("view.banner.world"))
@@ -317,11 +321,11 @@ if __name__ == "__main__":
         p = os.path.join(out, "mock_" + name.split()[0].lower() + ("_card" if "card" in name else "") + "_1080x1920.png")
         im.convert("RGB").save(p)
         frames.append((name, p))
-    for lv in (1, 3, 5, 7):
+    for lv in (1, 5, 12, 20):
         p = os.path.join(out, f"mock_village_castle_lv{lv}_1080x1920.png")
         village_view(lv).convert("RGB").save(p)
-        frames.append((f"Village - Castle Lv {lv} (tier {tier_for(lv)['tier']})", p))
-    strip = tier_strip(os.path.join(out, "castle_tiers_strip.png"))
+        frames.append((f"Village (no roads) - Castle Lv {lv}", p))
+    strip = tier_strip(os.path.join(out, "castle_stages_1_to_20.png"))
     contact(frames, strip, os.path.join(out, "world_village_contact_sheet.png"))
     for _, p in frames:
         print("wrote", p)

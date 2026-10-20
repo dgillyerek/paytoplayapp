@@ -1,5 +1,5 @@
 {
-  "_comment": "Theme A player village for the Village view. x / y are fractions of the village map (y from top); size is the plot footprint as a fraction of the map width. Castle art and footprint scale come from castle_tiers by castle level.",
+  "_comment": "Theme A player village for the Village view. x / y are fractions of the village map (y from top); size is the plot footprint as a fraction of the map width. Castle art and footprint scale come from castle_tiers: one painted stage per castle level (1-20). No roads: grass and plots only.",
   "village": {
     "width": 2160,
     "height": 2880,
@@ -8,30 +8,26 @@
     "start_zoom": 0.72
   },
   "castle_tiers": [
-    {
-      "tier": 1,
-      "min_level": 1,
-      "art": "theme_a.village.castle.tier_1",
-      "scale": 0.78
-    },
-    {
-      "tier": 2,
-      "min_level": 3,
-      "art": "theme_a.village.castle.tier_2",
-      "scale": 0.92
-    },
-    {
-      "tier": 3,
-      "min_level": 5,
-      "art": "theme_a.village.castle.tier_3",
-      "scale": 1.08
-    },
-    {
-      "tier": 4,
-      "min_level": 7,
-      "art": "theme_a.village.castle.tier_4",
-      "scale": 1.26
-    }
+    { "tier": 1, "min_level": 1, "art": "theme_a.village.castle.tier_1", "scale": 0.6 },
+    { "tier": 2, "min_level": 2, "art": "theme_a.village.castle.tier_2", "scale": 0.637 },
+    { "tier": 3, "min_level": 3, "art": "theme_a.village.castle.tier_3", "scale": 0.674 },
+    { "tier": 4, "min_level": 4, "art": "theme_a.village.castle.tier_4", "scale": 0.711 },
+    { "tier": 5, "min_level": 5, "art": "theme_a.village.castle.tier_5", "scale": 0.747 },
+    { "tier": 6, "min_level": 6, "art": "theme_a.village.castle.tier_6", "scale": 0.784 },
+    { "tier": 7, "min_level": 7, "art": "theme_a.village.castle.tier_7", "scale": 0.821 },
+    { "tier": 8, "min_level": 8, "art": "theme_a.village.castle.tier_8", "scale": 0.858 },
+    { "tier": 9, "min_level": 9, "art": "theme_a.village.castle.tier_9", "scale": 0.895 },
+    { "tier": 10, "min_level": 10, "art": "theme_a.village.castle.tier_10", "scale": 0.932 },
+    { "tier": 11, "min_level": 11, "art": "theme_a.village.castle.tier_11", "scale": 0.968 },
+    { "tier": 12, "min_level": 12, "art": "theme_a.village.castle.tier_12", "scale": 1.005 },
+    { "tier": 13, "min_level": 13, "art": "theme_a.village.castle.tier_13", "scale": 1.042 },
+    { "tier": 14, "min_level": 14, "art": "theme_a.village.castle.tier_14", "scale": 1.079 },
+    { "tier": 15, "min_level": 15, "art": "theme_a.village.castle.tier_15", "scale": 1.116 },
+    { "tier": 16, "min_level": 16, "art": "theme_a.village.castle.tier_16", "scale": 1.153 },
+    { "tier": 17, "min_level": 17, "art": "theme_a.village.castle.tier_17", "scale": 1.189 },
+    { "tier": 18, "min_level": 18, "art": "theme_a.village.castle.tier_18", "scale": 1.226 },
+    { "tier": 19, "min_level": 19, "art": "theme_a.village.castle.tier_19", "scale": 1.263 },
+    { "tier": 20, "min_level": 20, "art": "theme_a.village.castle.tier_20", "scale": 1.3 }
   ],
   "plots": [
     {
@@ -72,33 +68,10 @@
     }
   ],
   "empty_plots": [
-    { "id": "village.slot_01", "x": 0.64, "y": 0.75, "size": 0.16, "unlock_castle": 3 },
-    { "id": "village.slot_02", "x": 0.13, "y": 0.82, "size": 0.16, "unlock_castle": 4 },
-    { "id": "village.slot_03", "x": 0.87, "y": 0.82, "size": 0.16, "unlock_castle": 5 },
-    { "id": "village.slot_04", "x": 0.5, "y": 0.9, "size": 0.16, "unlock_castle": 6 }
-  ],
-  "roads": [
-    {
-      "x0": 0.5,
-      "y0": 0.44,
-      "x1": 0.5,
-      "y1": 0.99,
-      "width": 110
-    },
-    {
-      "x0": 0.08,
-      "y0": 0.665,
-      "x1": 0.92,
-      "y1": 0.665,
-      "width": 90
-    },
-    {
-      "x0": 0.14,
-      "y0": 0.475,
-      "x1": 0.86,
-      "y1": 0.475,
-      "width": 80
-    }
+    { "id": "village.slot_01", "x": 0.64, "y": 0.75, "size": 0.16, "unlock_castle": 4 },
+    { "id": "village.slot_02", "x": 0.13, "y": 0.82, "size": 0.16, "unlock_castle": 8 },
+    { "id": "village.slot_03", "x": 0.87, "y": 0.82, "size": 0.16, "unlock_castle": 12 },
+    { "id": "village.slot_04", "x": 0.5, "y": 0.9, "size": 0.16, "unlock_castle": 16 }
   ],
   "props": [
     { "type": "mountains", "x": 0.14, "y": 0.06, "scale": 1.5 },

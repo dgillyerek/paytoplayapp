@@ -20,7 +20,7 @@ namespace Survival.Unity
     /// <summary>
     /// World + quest "hook" slice on top of the Play shell: the Village view's buildings (Castle, Farms, Lumber
     /// Mills, Forge on their plots: tap to collect, tap for the building card with timed upgrades, gem rush, free
-    /// finish; the Castle swaps to a bigger painted tier as it levels, the others show a numbered level badge),
+    /// finish; the Castle swaps to the next, bigger painted stage every level, the others show a numbered level badge),
     /// the starter quest tracker with chest claim, the free gift, the sandbox Gem Shop with its pulsing FREE badge,
     /// and the chest-burst celebration. Juice on every tap.
     /// Debug (Editor / dev builds): G = free gift now, T = skip 5 min (also on-screen buttons).
@@ -764,7 +764,7 @@ namespace Survival.Unity
                 StartCoroutine(Confetti(_overlay, at, 40, new Vector2(0f, 0.5f)));
             }
 
-            FloatText(at + new Vector2(0f, 0.12f), Fmt2("village.building.castle", "Castle tier {0} of {1}", visual.Tier, Tiers.Count), SurvivalVisuals.Reward, 44);
+            FloatText(at + new Vector2(0f, 0.12f), Fmt2("village.building.castle", "Castle stage {0} of {1}", visual.Tier, Tiers.Count), SurvivalVisuals.Reward, 44);
             const float grow = 0.7f;
             for (var e = 0f; e < grow; e += Time.unscaledDeltaTime)
             {
@@ -884,8 +884,8 @@ namespace Survival.Unity
                 if (isCastle)
                 {
                     var nextAt = CastleTiers.NextTierLevel(p.Level, Tiers);
-                    what.text = Fmt2("village.building.castle", "Castle tier {0} of {1}", visual.Tier, Tiers.Count) + "\n" +
-                        (nextAt is int n ? Fmt("village.building.next_tier", "Grows at Lv {0}", n) : S("village.building.top_tier", "Grand Citadel reached"));
+                    what.text = Fmt2("village.building.castle", "Castle stage {0} of {1}", visual.Tier, Tiers.Count) + "\n" +
+                        (nextAt is int n ? Fmt("village.building.next_tier", "Next stage at Lv {0}", n) : S("village.building.top_tier", "Grand Citadel reached"));
                     if (nextTier != null)
                     {
                         var nt = nextAt is int lv ? SurvivalArt.Get(CastleTiers.For(lv, Tiers).ArtKey) : null;

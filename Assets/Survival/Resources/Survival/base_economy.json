@@ -19,11 +19,23 @@
         { "level": 1, "upgrade_cost": { "res.soft": 2000, "res.stone": 1500, "res.wood": 1200 }, "upgrade_seconds": 600 },
         { "level": 2, "upgrade_cost": { "res.soft": 6000, "res.stone": 4500, "res.wood": 3600 }, "upgrade_seconds": 1800 },
         { "level": 3, "upgrade_cost": { "res.soft": 14000, "res.stone": 10000, "res.wood": 8000 }, "upgrade_seconds": 3600 },
-        { "level": 4, "upgrade_cost": { "res.soft": 30000, "res.stone": 22000, "res.wood": 18000 }, "upgrade_seconds": 7200 },
-        { "level": 5, "upgrade_cost": { "res.soft": 60000, "res.stone": 45000, "res.wood": 36000 }, "upgrade_seconds": 14400 },
-        { "level": 6, "upgrade_cost": { "res.soft": 120000, "res.stone": 90000, "res.wood": 72000 }, "upgrade_seconds": 28800 },
-        { "level": 7, "upgrade_cost": { "res.soft": 240000, "res.stone": 180000, "res.wood": 144000 }, "upgrade_seconds": 57600 },
-        { "level": 8 }
+        { "level": 4, "upgrade_cost": { "res.soft": 20000, "res.stone": 14000, "res.wood": 12000 }, "upgrade_seconds": 4680 },
+        { "level": 5, "upgrade_cost": { "res.soft": 29000, "res.stone": 21000, "res.wood": 17000 }, "upgrade_seconds": 6060 },
+        { "level": 6, "upgrade_cost": { "res.soft": 43000, "res.stone": 30000, "res.wood": 24000 }, "upgrade_seconds": 7920 },
+        { "level": 7, "upgrade_cost": { "res.soft": 62000, "res.stone": 44000, "res.wood": 35000 }, "upgrade_seconds": 10260 },
+        { "level": 8, "upgrade_cost": { "res.soft": 90000, "res.stone": 64000, "res.wood": 51000 }, "upgrade_seconds": 13380 },
+        { "level": 9, "upgrade_cost": { "res.soft": 130000, "res.stone": 93000, "res.wood": 74000 }, "upgrade_seconds": 17400 },
+        { "level": 10, "upgrade_cost": { "res.soft": 190000, "res.stone": 130000, "res.wood": 110000 }, "upgrade_seconds": 22560 },
+        { "level": 11, "upgrade_cost": { "res.soft": 270000, "res.stone": 200000, "res.wood": 160000 }, "upgrade_seconds": 29340 },
+        { "level": 12, "upgrade_cost": { "res.soft": 400000, "res.stone": 280000, "res.wood": 230000 }, "upgrade_seconds": 38160 },
+        { "level": 13, "upgrade_cost": { "res.soft": 580000, "res.stone": 410000, "res.wood": 330000 }, "upgrade_seconds": 49620 },
+        { "level": 14, "upgrade_cost": { "res.soft": 830000, "res.stone": 600000, "res.wood": 480000 }, "upgrade_seconds": 64500 },
+        { "level": 15, "upgrade_cost": { "res.soft": 1200000, "res.stone": 860000, "res.wood": 690000 }, "upgrade_seconds": 83880 },
+        { "level": 16, "upgrade_cost": { "res.soft": 1800000, "res.stone": 1300000, "res.wood": 1000000 }, "upgrade_seconds": 109020 },
+        { "level": 17, "upgrade_cost": { "res.soft": 2500000, "res.stone": 1800000, "res.wood": 1500000 }, "upgrade_seconds": 141720 },
+        { "level": 18, "upgrade_cost": { "res.soft": 3700000, "res.stone": 2600000, "res.wood": 2100000 }, "upgrade_seconds": 184260 },
+        { "level": 19, "upgrade_cost": { "res.soft": 5300000, "res.stone": 3800000, "res.wood": 3100000 }, "upgrade_seconds": 239520 },
+        { "level": 20 }
       ]
     },
     {

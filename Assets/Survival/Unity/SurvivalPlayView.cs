@@ -285,7 +285,10 @@ namespace Survival.Unity
 
             if (_toggleIcon != null)
             {
-                var key = Screen.Destination == PlayScreen.World ? WorldArtKeys.IconWorld : CastleTiers.Default[0].ArtKey;
+                // Village icon = the player's own castle at its current stage.
+                var key = Screen.Destination == PlayScreen.World
+                    ? WorldArtKeys.IconWorld
+                    : CastleTiers.For(Session?.Hook?.Base.HqLevel ?? 1, Village?.Layout?.CastleTiers).ArtKey;
                 var sprite = SurvivalArt.Get(key);
                 _toggleIcon.sprite = sprite ?? SurvivalArt.Circle();
                 _toggleIcon.color = sprite != null ? Color.white : SurvivalVisuals.Gold;

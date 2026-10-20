@@ -8,9 +8,9 @@ L = lambda n: Image.open(f'out/{n}.png').convert('RGBA')
 files = {}
 def save(img, rel):
     p = R + OUT + rel; os.makedirs(os.path.dirname(p), exist_ok=True); img.save(p, optimize=True); files[rel] = img.size
-# Castle tiers share one canvas size so the view scales them by tier, not by source framing.
-for t in (1, 2, 3, 4):
-    save(fit(L(f'castle_t{t}'), 512, 512, True), f'village/castle_t{t}.png')
+# The 20 castle stages share one canvas size so the view scales them by level, not by source framing.
+for lv in range(1, 21):
+    save(fit(L(f'castle_lv{lv:02d}'), 512, 512, True), f'village/castle_lv{lv:02d}.png')
 save(fit(L('forge'), 512, 512, True), '../hook/painted/buildings/forge.png')
 save(fit(L('plot_empty'), 384, 384, True), 'village/plot_empty.png')
 save(fit(L('prop_bushes'), 256, 256, True), 'village/prop_bushes.png')

@@ -97,48 +97,54 @@ public sealed class CastleTierTests
 {
     [Theory]
     [InlineData(1, 1)]
-    [InlineData(2, 1)]
-    [InlineData(3, 2)]
-    [InlineData(4, 2)]
-    [InlineData(5, 3)]
-    [InlineData(6, 3)]
-    [InlineData(7, 4)]
-    [InlineData(8, 4)]
+    [InlineData(2, 2)]
+    [InlineData(5, 5)]
+    [InlineData(10, 10)]
+    [InlineData(15, 15)]
+    [InlineData(19, 19)]
+    [InlineData(20, 20)]
     [InlineData(0, 1)]
-    [InlineData(99, 4)]
-    public void Castle_level_maps_to_painted_tier(int level, int tier)
+    [InlineData(99, 20)]
+    public void Every_castle_level_has_its_own_painted_stage(int level, int stage)
     {
-        Assert.Equal(tier, CastleTiers.For(level).Tier);
-        Assert.Equal(CastleTiers.ArtPrefix + tier, CastleTiers.For(level).ArtKey);
+        Assert.Equal(stage, CastleTiers.For(level).Tier);
+        Assert.Equal(CastleTiers.ArtPrefix + stage, CastleTiers.For(level).ArtKey);
     }
 
     [Fact]
-    public void Every_tier_is_bigger_than_the_last_and_tier_changes_are_flagged()
+    public void Twenty_stages_grow_gradually_and_every_level_up_changes_the_art()
     {
         var tiers = CastleTiers.Default;
-        Assert.Equal(4, tiers.Count);
+        Assert.Equal(20, tiers.Count);
+        Assert.Equal(CastleTiers.Stages, tiers.Count);
+        Assert.Equal(Enumerable.Range(1, 20), tiers.Select(t => t.MinLevel));
+        Assert.Equal(CastleTiers.FirstScale, tiers[0].Scale, 3);
+        Assert.Equal(CastleTiers.LastScale, tiers[^1].Scale, 3);
+        var step = (CastleTiers.LastScale - CastleTiers.FirstScale) / 19f;
         for (var i = 1; i < tiers.Count; i++)
         {
             Assert.True(tiers[i].Scale > tiers[i - 1].Scale);
+            Assert.InRange(tiers[i].Scale - tiers[i - 1].Scale, step - 0.002f, step + 0.002f); // even, gradual growth
         }
 
-        Assert.False(CastleTiers.TierChanged(1, 2));
-        Assert.True(CastleTiers.TierChanged(2, 3));
-        Assert.True(CastleTiers.TierChanged(6, 7));
-        Assert.Equal(3, CastleTiers.NextTierLevel(1));
-        Assert.Equal(7, CastleTiers.NextTierLevel(5));
-        Assert.Null(CastleTiers.NextTierLevel(7));
+        for (var lv = 1; lv < 20; lv++)
+        {
+            Assert.True(CastleTiers.TierChanged(lv, lv + 1), "lv" + lv);
+            Assert.Equal(lv + 1, CastleTiers.NextTierLevel(lv));
+        }
+
+        Assert.False(CastleTiers.TierChanged(20, 20));
+        Assert.Null(CastleTiers.NextTierLevel(20));
     }
 
     [Fact]
-    public void Village_layout_tiers_match_the_defaults_and_cover_the_castle_levels()
+    public void Village_layout_stages_match_the_defaults_and_cover_every_castle_level()
     {
         var layout = Layouts.Village();
         Assert.Equal(CastleTiers.Default, layout.CastleTiers);
         var castle = Hook.Catalog().Plots.Single(p => p.Id == SurvIds.BasePlotHq01);
-        var maxLevel = castle.Levels.Max(l => l.Level);
-        Assert.True(maxLevel >= 7, "castle needs levels for all four tiers");
-        Assert.Equal(4, Enumerable.Range(1, maxLevel).Select(l => CastleTiers.For(l, layout.CastleTiers).Tier).Distinct().Count());
+        Assert.Equal(20, castle.Levels.Max(l => l.Level));
+        Assert.Equal(20, Enumerable.Range(1, 20).Select(l => CastleTiers.For(l, layout.CastleTiers).ArtKey).Distinct().Count());
     }
 
     [Fact]
@@ -176,10 +182,13 @@ public sealed class LevelBadgeTests
         var v1 = BuildingVisual.For(castle);
         Assert.False(v1.ShowBadge);
         Assert.Equal(1, v1.Tier);
-        var v7 = BuildingVisual.For(castle.Def, 7);
-        Assert.Equal(4, v7.Tier);
-        Assert.True(v7.Scale > v1.Scale);
-        Assert.NotEqual(v1.ArtKey, v7.ArtKey);
+        var v2 = BuildingVisual.For(castle.Def, 2);
+        Assert.Equal(2, v2.Tier);
+        Assert.True(v2.Scale > v1.Scale);
+        Assert.NotEqual(v1.ArtKey, v2.ArtKey);
+        var v20 = BuildingVisual.For(castle.Def, 20);
+        Assert.Equal(20, v20.Tier);
+        Assert.False(v20.ShowBadge);
     }
 
     [Fact]
@@ -239,27 +248,63 @@ public sealed class VillageEconomyTests
     }
 
     [Fact]
-    public void Castle_can_climb_through_every_tier_with_resources()
+    public void Village_has_grass_and_plots_but_no_roads()
+    {
+        var json = File.ReadAllText(Path.Combine(TestPaths.PackDir, "map", "village_layout.json"));
+        using var doc = System.Text.Json.JsonDocument.Parse(json);
+        Assert.False(doc.RootElement.TryGetProperty("roads", out _), "village_layout.json must not define roads");
+        Assert.False(doc.RootElement.TryGetProperty("paths", out _), "village_layout.json must not define paths");
+        Assert.DoesNotContain(typeof(VillageLayout).GetProperties(), p => p.Name is "Roads" or "Paths");
+        var layout = Layouts.Village();
+        Assert.Equal(6, layout.Plots.Count);
+        Assert.NotEmpty(layout.EmptyPlots);
+        Assert.DoesNotContain(layout.Props, p => p.Type.Contains("road") || p.Type.Contains("path"));
+        Assert.True(TestPaths.LoadPack().TryArt(WorldArtKeys.VillageLawn, out _));
+    }
+
+    [Fact]
+    public void Castle_can_climb_through_every_stage_with_resources()
     {
         var clock = new ManualClock();
         var hook = Hook.Session(clock).Hook!;
         foreach (var res in new[] { SurvIds.ResSoft, SurvIds.ResStone, SurvIds.ResWood })
         {
-            hook.Wallet.Add(res, 2_000_000);
+            hook.Wallet.Add(res, 50_000_000);
         }
 
         var tiers = new HashSet<int>();
         while (hook.Base.CheckUpgrade(SurvIds.BasePlotHq01) == UpgradeBlock.None)
         {
             Assert.True(hook.Base.TryStartUpgrade(SurvIds.BasePlotHq01));
-            clock.Advance(100_000);
+            clock.Advance(400_000);
             Assert.True(hook.FinishFree(SurvIds.BasePlotHq01) > 0);
             tiers.Add(BuildingVisual.For(hook.Base.Find(SurvIds.BasePlotHq01)!).Tier);
         }
 
-        Assert.Equal(8, hook.Base.HqLevel);
+        Assert.Equal(20, hook.Base.HqLevel);
         Assert.Equal(UpgradeBlock.MaxLevel, hook.Base.CheckUpgrade(SurvIds.BasePlotHq01));
-        Assert.Equal(new[] { 1, 2, 3, 4 }, tiers.Order().ToArray());
+        Assert.Equal(Enumerable.Range(2, 19), tiers.Order());
+    }
+
+    [Fact]
+    public void Castle_costs_and_timers_rise_every_level_while_other_buildings_keep_their_caps()
+    {
+        var c = Hook.Catalog();
+        var hq = c.Plots.Single(p => p.Id == SurvIds.BasePlotHq01).Levels;
+        Assert.Equal(20, hq.Count);
+        for (var i = 1; i < hq.Count - 1; i++)
+        {
+            Assert.True(hq[i].UpgradeSeconds > hq[i - 1].UpgradeSeconds, "timer lv" + hq[i].Level);
+            foreach (var (res, amount) in hq[i].UpgradeCost)
+            {
+                Assert.True(amount > hq[i - 1].UpgradeCost[res], res + " lv" + hq[i].Level);
+            }
+        }
+
+        foreach (var id in new[] { SurvIds.BasePlotFarm01, SurvIds.BasePlotFarm02, SurvIds.BasePlotLumber01, SurvIds.BasePlotLumber02, SurvIds.BasePlotForge01 })
+        {
+            Assert.Equal(6, c.Plots.Single(p => p.Id == id).Levels.Count);
+        }
     }
 }
 
@@ -525,12 +570,15 @@ public sealed class WorldVillageArtTests
     }
 
     [Fact]
-    public void Castle_tiers_are_four_distinct_paintings()
+    public void Castle_stages_are_twenty_distinct_paintings()
     {
         var pack = TestPaths.LoadPack();
+        var root = Path.Combine(Layouts.RepoRoot(), "Assets", "ThemePack", "fantasy_kingdom_a");
         var paths = CastleTiers.Default.Select(t => pack.TryArt(t.ArtKey, out var rel) ? rel : "").ToList();
-        Assert.Equal(4, paths.Distinct().Count());
+        Assert.Equal(20, paths.Distinct().Count());
         Assert.DoesNotContain("", paths);
+        var hashes = paths.Select(rel => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(Path.Combine(root, rel))))).ToList();
+        Assert.Equal(20, hashes.Distinct().Count()); // different pixels, not just different file names
     }
 
     [Fact]

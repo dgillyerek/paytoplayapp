@@ -11,9 +11,9 @@ using UnityEngine.UI;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Zoomed-in Village view: a scrollable lawn (map/village_layout.json) with dirt roads, props, one host per
+    /// Zoomed-in Village view: a scrollable lawn (map/village_layout.json) of grass and props - no roads - with one host per
     /// base plot (the hook view fills each with its building, badge, bubble and timer) and empty plots that
-    /// open as the Castle levels up. The Castle host grows with its painted tier.
+    /// open as the Castle levels up. The Castle host grows with its painted stage (one per castle level).
     /// </summary>
     public sealed class SurvivalVillageView : MonoBehaviour
     {
@@ -55,13 +55,6 @@ namespace Survival.Unity
             Content = content;
 
             Tiled(content, "Lawn", WorldArtKeys.VillageLawn, 0f, 0f, layout.Width, layout.Height, new Color(0.38f, 0.55f, 0.24f, 1f));
-            foreach (var road in layout.Roads)
-            {
-                var (x0, y0) = layout.ToMap(road.X0, road.Y0FromTop);
-                var (x1, y1) = layout.ToMap(road.X1, road.Y1FromTop);
-                Road(content, "Road", new Vector2(x0, y0), new Vector2(x1, y1), road.Width);
-            }
-
             // Draw north first so southern things overlap them (simple painter's order on y).
             var items = new List<(float YTop, Action Make)>();
             foreach (var prop in layout.Props)
