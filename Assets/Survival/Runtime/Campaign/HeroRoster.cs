@@ -290,6 +290,36 @@ namespace Survival.Domain.Campaign
             return TryRush(heroId, out _);
         }
 
+        /// <summary>Heroes whose training is inside the free-finish window (the Village FREE hero badge), in queue order.</summary>
+        public IReadOnlyList<string> FreeFinishable()
+        {
+            var ids = new List<string>();
+            foreach (var t in _training)
+            {
+                if (CanFinishFree(t.HeroId))
+                {
+                    ids.Add(t.HeroId);
+                }
+            }
+
+            return ids;
+        }
+
+        /// <summary>Free-finish every eligible training (the FREE hero badge tap). Returns (hero, new level) for each.</summary>
+        public IReadOnlyList<(string HeroId, int Level)> FinishAllFree()
+        {
+            var done = new List<(string, int)>();
+            foreach (var id in FreeFinishable())
+            {
+                if (TryFinishFree(id))
+                {
+                    done.Add((id, Get(id)!.Level));
+                }
+            }
+
+            return done;
+        }
+
         /// <summary>Burns speed-up minutes (res.speedup_m) on a training timer; returns minutes used.</summary>
         public int ApplySpeedups(string heroId)
         {

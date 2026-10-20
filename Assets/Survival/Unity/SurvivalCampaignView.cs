@@ -39,6 +39,8 @@ namespace Survival.Unity
         public const string SetupScreenName = "BattleSetupScreen";
         public const string ResultScreenName = "BattleResultScreen";
         public const string BattleSlot = "battle_button";
+        public const string HeroFreeSlot = "hero_free";
+        public const string HeroFreeName = "HeroFreeBadge";
 
         private const float TickSeconds = 0.25f;
         private const float SaveDelaySeconds = 1.5f;
@@ -66,6 +68,10 @@ namespace Survival.Unity
         private Action? _sheetRefresh;
         private Image? _battleBadge;
         private Image? _heroesBadge;
+        private RectTransform? _heroFree;
+        private Text? _heroFreeCount;
+        private Image? _heroFreeCountDot;
+        private bool _bulkFree;
         private float _tick;
         private float _saveIn = -1f;
         private bool _inBattle;
@@ -124,6 +130,7 @@ namespace Survival.Unity
             _overlay = SurvivalVisuals.Canvas(transform, "SurvivalCampaignOverlay", 55);
             WireHeroesEntry(play, play.Root);
             BuildBattleEntry(play, play.Root, session.Pack.Hud);
+            BuildHeroFree(play.Root, session.Pack.Hud);
             if (play.WorldView != null)
             {
                 play.WorldView.AttackCamp = OnAttackCamp;
@@ -364,6 +371,117 @@ namespace Survival.Unity
             {
                 _heroesBadge.gameObject.SetActive(AnyHeroAction());
             }
+
+            if (_heroFree != null)
+            {
+                var n = Campaign.Roster.FreeFinishable().Count;
+                var show = n > 0 && !_inBattle;
+                if (_heroFree.gameObject.activeSelf != show)
+                {
+                    _heroFree.gameObject.SetActive(show);
+                    if (show)
+                    {
+                        StartCoroutine(PopIn(_heroFree));
+                    }
+                }
+
+                _heroFreeCountDot!.gameObject.SetActive(n > 1);
+                _heroFreeCount!.text = "x" + n.ToString(CultureInfo.InvariantCulture);
+            }
+        }
+
+        /// <summary>
+        /// Village / Play HUD: painted hero helmet with a FREE ribbon, shown only while at least one hero training is in its
+        /// free-finish window (a count when there are more). Tap: finish them all free and celebrate. Distinct from the
+        /// Gem Shop's FREE gift badge: hero helmet, hero-blue glow, its own slot.
+        /// </summary>
+        private void BuildHeroFree(RectTransform root, IReadOnlyDictionary<string, HudRect> hud)
+        {
+            var btn = SurvivalVisuals.Button(root, HeroFreeName, new Color(1f, 1f, 1f, 0f));
+            btn.transition = Selectable.Transition.None;
+            var rt = btn.GetComponent<RectTransform>();
+            if (hud.TryGetValue(HeroFreeSlot, out var slot))
+            {
+                SurvivalVisuals.Place(rt, slot);
+            }
+            else
+            {
+                Box(rt, 0.80f, 1f - 0.538f, 0.975f, 1f - 0.448f);
+            }
+
+            var glow = HookSkin.Glow(rt, "Glow", new Color(HeroGlow.r, HeroGlow.g, HeroGlow.b, 0.8f));
+            glow.raycastTarget = false;
+            Box(glow.rectTransform, -0.25f, -0.2f, 1.25f, 1.25f);
+            var disc = SurvivalVisuals.Circle(rt, "Disc", HeroFrame);
+            disc.raycastTarget = false;
+            Box(disc.rectTransform, 0.08f, 0.18f, 0.92f, 1.02f);
+            var ring = SurvivalVisuals.Ring(disc.transform, "Ring", SurvivalVisuals.GoldLine);
+            ring.raycastTarget = false;
+            SurvivalVisuals.Stretch(ring.rectTransform);
+            var helm = HookSkin.Art(rt, "Helm", BottomNav.IconHeroes, SurvivalVisuals.Cream);
+            helm.preserveAspect = true;
+            helm.raycastTarget = false;
+            Box(helm.rectTransform, 0.12f, 0.22f, 0.88f, 1.06f);
+            var ribbon = SurvivalArt.Get(HookArtKeys.BadgeFree);
+            var free = ribbon != null ? SurvivalVisuals.Image(rt, "Free", Color.white, ribbon) : SurvivalVisuals.Image(rt, "Free", FreeGreen);
+            free.preserveAspect = true;
+            free.raycastTarget = false;
+            Box(free.rectTransform, 0.02f, -0.10f, 0.98f, 0.36f);
+            var freeText = HookSkin.Outlined(SurvivalVisuals.Text(free.transform, "T", S("hook.free", "FREE"), 24, TextAnchor.MiddleCenter, Color.white), 1.6f);
+            freeText.fontStyle = FontStyle.Bold;
+            freeText.raycastTarget = false;
+            SurvivalVisuals.Stretch(freeText.rectTransform);
+            _heroFreeCountDot = SurvivalVisuals.Circle(rt, "Count", new Color(0.90f, 0.18f, 0.20f, 1f));
+            _heroFreeCountDot.raycastTarget = false;
+            _heroFreeCountDot.rectTransform.anchorMin = _heroFreeCountDot.rectTransform.anchorMax = new Vector2(0.9f, 0.92f);
+            _heroFreeCountDot.rectTransform.sizeDelta = new Vector2(46f, 46f);
+            _heroFreeCount = HookSkin.Outlined(SurvivalVisuals.Text(_heroFreeCountDot.transform, "T", "", 22, TextAnchor.MiddleCenter, Color.white), 1.2f);
+            _heroFreeCount.fontStyle = FontStyle.Bold;
+            SurvivalVisuals.Stretch(_heroFreeCount.rectTransform);
+            _heroFree = rt;
+            Wire(btn, OnHeroFreeTapped);
+            StartCoroutine(Breathe(rt));
+            rt.gameObject.SetActive(false);
+        }
+
+        /// <summary>Free-finish every hero training in its free window, then one celebration for them all.</summary>
+        public void OnHeroFreeTapped()
+        {
+            if (Campaign == null)
+            {
+                return;
+            }
+
+            _bulkFree = true;
+            IReadOnlyList<(string HeroId, int Level)> done;
+            try
+            {
+                done = Campaign.Roster.FinishAllFree();
+            }
+            finally
+            {
+                _bulkFree = false;
+            }
+
+            if (done.Count == 0)
+            {
+                RefreshBadges();
+                return;
+            }
+
+            if (_heroFree != null)
+            {
+                _hook?.Sparks(_heroFree, HeroGlow, 18);
+            }
+
+            var title = done.Count == 1
+                ? Fmt("campaign.levelled", "{0} reached Lv {1}!", HeroName(done[0].HeroId), done[0].Level)
+                : Fmt("campaign.levelled_many", "{0} heroes levelled up!", done.Count);
+            Celebrate(title, new Dictionary<string, int>());
+            Campaign.Touch();
+            SaveNow();
+            _refresh?.Invoke();
+            RefreshBadges();
         }
 
         /// <summary>Something to tap on the Heroes screen: an affordable level-up, a free finish, a star up or a shard unlock.</summary>
@@ -395,6 +513,11 @@ namespace Survival.Unity
 
         private void OnLevelledUp(string heroId, int level)
         {
+            if (_bulkFree)
+            {
+                return;
+            }
+
             Celebrate(Fmt("campaign.levelled", "{0} reached Lv {1}!", HeroName(heroId), level), new Dictionary<string, int>());
             MarkDirty();
         }
@@ -731,7 +854,9 @@ namespace Survival.Unity
 
                 levelBtn.gameObject.SetActive(p.Owned && training == null);
                 trainFrame.gameObject.SetActive(training != null);
-                rushBtn.gameObject.SetActive(training != null);
+                // Inside the free window the finish moves to the Village FREE hero badge; the timer stays, Rush hides.
+                var inFree = training != null && (roster.CanFinishFree(def.Id) || roster.RushCost(def.Id) == 0);
+                rushBtn.gameObject.SetActive(training != null && !inFree);
                 if (p.Owned && training == null)
                 {
                     var cost = roster.LevelUpCost(def.Id);

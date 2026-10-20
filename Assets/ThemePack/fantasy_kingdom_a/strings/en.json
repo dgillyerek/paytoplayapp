@@ -263,5 +263,7 @@
   "foe.blightroot.name": "Blightroot",
   "foe.vespera.name": "Vespera",
   "foe.ashwyrm.name": "Ashwyrm",
-  "world.card.camp_loot": "Loot {0} Gold"
+  "world.card.camp_loot": "Loot {0} Gold",
+  "campaign.levelled_many": "{0} heroes levelled up!",
+  "hook.upgrade_done": "{0} reached Lv {1}!"
 }

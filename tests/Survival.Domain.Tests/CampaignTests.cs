@@ -513,5 +513,18 @@ public sealed class CampaignRewardsAndSaveTests
             var overlap = V(b, "x_min") < V(o, "x_max") && V(o, "x_min") < V(b, "x_max") && V(b, "y_top_min") < V(o, "y_top_max") && V(o, "y_top_min") < V(b, "y_top_max");
             Assert.False(overlap, "battle_button overlaps " + slot.Name);
         }
+
+        Assert.True(hud.TryGetProperty("hero_free", out var f));
+        foreach (var slot in hud.EnumerateObject())
+        {
+            if (slot.Name is "hero_free" or "map_area")
+            {
+                continue;
+            }
+
+            var o = slot.Value;
+            var overlap = V(f, "x_min") < V(o, "x_max") && V(o, "x_min") < V(f, "x_max") && V(f, "y_top_min") < V(o, "y_top_max") && V(o, "y_top_min") < V(f, "y_top_max");
+            Assert.False(overlap, "hero_free overlaps " + slot.Name);
+        }
     }
 }
