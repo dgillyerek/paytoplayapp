@@ -58,8 +58,10 @@ namespace Survival.Domain.Session
         public FreeGiftScheduler Gifts { get; }
         public StoreSystem Store { get; }
 
+        /// <summary>Builds / upgrades whose timer ran out complete on their own (see <see cref="BaseEconomy.CompleteDueUpgrades"/>).</summary>
         public void Tick()
         {
+            Base.CompleteDueUpgrades();
             Base.Tick();
             Gifts.Tick();
         }

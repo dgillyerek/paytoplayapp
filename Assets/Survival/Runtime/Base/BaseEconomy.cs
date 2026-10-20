@@ -28,6 +28,9 @@ namespace Survival.Domain.Base
         IReadOnlyList<BuildingLevelDef> Levels,
         string? BuildType = null);
 
+    /// <summary>A finished build / upgrade whose congratulations reward waits for its tap.</summary>
+    public sealed record PendingCompletion(string PlotId, int Level, bool WasBuild, IReadOnlyDictionary<string, int> Rewards);
+
     public sealed class BasePlot
     {
         internal BasePlot(BasePlotDef def, double now)
@@ -294,19 +297,176 @@ namespace Survival.Domain.Base
             }
 
             Tick();
+            return Apply(p, Clock.Now);
+        }
+
+        /// <summary>
+        /// (plot, new level, was a construction) for each build / upgrade that finished on its own because its timer
+        /// ran out (<see cref="CompleteDueUpgrades"/>); <see cref="LevelReached"/> / <see cref="Constructed"/> fire too.
+        /// </summary>
+        public event Action<BasePlot, int, bool>? AutoCompleted;
+
+        /// <summary>
+        /// Every build / upgrade whose timer has run out completes now, no tap needed: the level applies (a construction
+        /// opens at Lv 1) and production carries on at the new rate. Timers that ran out while the game was closed finish
+        /// in the order they ended, each plot producing at its old rate up to its own end time. Returns the finished plots.
+        /// </summary>
+        public IReadOnlyList<BasePlot> CompleteDueUpgrades()
+        {
+            var now = Clock.Now;
+            List<(BasePlot Plot, double EndsAt)>? due = null;
+            foreach (var p in _plots)
+            {
+                var t = Timers.Find(UpgradeTimerId(p.Id));
+                if (t != null && t.IsDone(now))
+                {
+                    (due ??= new List<(BasePlot, double)>()).Add((p, t.EndsAt));
+                }
+            }
+
+            if (due == null)
+            {
+                return Array.Empty<BasePlot>();
+            }
+
+            due.Sort((a, b) => a.EndsAt.CompareTo(b.EndsAt));
+            var done = new List<BasePlot>(due.Count);
+            foreach (var (p, endsAt) in due)
+            {
+                if (!Timers.TryComplete(UpgradeTimerId(p.Id)))
+                {
+                    continue;
+                }
+
+                var at = Math.Min(now, endsAt);
+                Advance(p, at);
+                var wasBuild = p.UnderConstruction;
+                var level = Apply(p, at);
+                done.Add(p);
+                AutoCompleted?.Invoke(p, level, wasBuild);
+            }
+
+            Tick();
+            return done;
+        }
+
+        /// <summary>Produce at the plot's current rate up to <paramref name="until"/> (never backwards).</summary>
+        private static void Advance(BasePlot p, double until)
+        {
+            var dt = until - p.LastTick;
+            if (dt <= 0)
+            {
+                return;
+            }
+
+            p.LastTick = until;
+            if (p.IsProducer)
+            {
+                p.Stored = Math.Min(p.Current.Capacity, p.Stored + p.Current.PerHour / 3600.0 * dt);
+            }
+        }
+
+        private int Apply(BasePlot p, double at)
+        {
             if (p.UnderConstruction)
             {
                 p.UnderConstruction = false;
-                p.LastTick = Clock.Now;
+                p.LastTick = at;
                 p.Stored = 0;
+                AddPending(p.Id, p.Level, true, CompletionRewardsFor(p, true));
                 Constructed?.Invoke(p);
                 LevelReached?.Invoke(p, p.Level);
                 return p.Level;
             }
 
             p.Level = Math.Min(p.Level + 1, p.Def.Levels.Count);
+            AddPending(p.Id, p.Level, false, CompletionRewardsFor(p, false));
             LevelReached?.Invoke(p, p.Level);
             return p.Level;
+        }
+
+        // ---------- completion rewards (the congratulations tap) ----------
+
+        /// <summary>Gold for a finished non-producer step: this share of the step's gold cost (at least <see cref="MinCompletionGold"/>).</summary>
+        public const double CompletionGoldShare = 0.25;
+
+        public const int MinCompletionGold = 50;
+
+        private readonly Dictionary<string, PendingCompletion> _pending = new();
+
+        /// <summary>Finished builds / upgrades whose congratulations reward is waiting for its tap (the bubble on the building).</summary>
+        public IReadOnlyCollection<PendingCompletion> Pending => _pending.Values;
+
+        public PendingCompletion? PendingFor(string plotId) => _pending.TryGetValue(plotId, out var c) ? c : null;
+
+        /// <summary>A completion reward is now waiting on this plot.</summary>
+        public event Action<PendingCompletion>? CompletionPending;
+
+        /// <summary>
+        /// The congratulations reward for a finished step: producers give one hour of the new level's output; the Castle
+        /// and other non-producers give gold, a quarter of what the step cost (constructions: at least 50).
+        /// </summary>
+        public static IReadOnlyDictionary<string, int> CompletionRewardsFor(BasePlot p, bool wasBuild)
+        {
+            if (!string.IsNullOrEmpty(p.Def.Produces) && p.Current.PerHour > 0)
+            {
+                return new Dictionary<string, int> { [p.Def.Produces!] = Math.Max(1, p.Current.PerHour) };
+            }
+
+            var gold = 0;
+            if (!wasBuild && p.Level >= 2 && p.Def.Levels[p.Level - 2].UpgradeCost.TryGetValue(SurvIds.ResSoft, out var paid))
+            {
+                gold = (int)(Math.Round(paid * CompletionGoldShare / 10.0, MidpointRounding.AwayFromZero) * 10);
+            }
+
+            return new Dictionary<string, int> { [SurvIds.ResSoft] = Math.Max(MinCompletionGold, gold) };
+        }
+
+        /// <summary>Tap the congratulations bubble: the waiting reward goes into the wallet. Null if nothing waits.</summary>
+        public PendingCompletion? ClaimCompletion(string plotId)
+        {
+            if (!_pending.TryGetValue(plotId, out var c))
+            {
+                return null;
+            }
+
+            _pending.Remove(plotId);
+            Wallet.Grant(c.Rewards);
+            return c;
+        }
+
+        /// <summary>Save restore of a waiting reward (no event).</summary>
+        public void RestorePending(string plotId, int level, bool wasBuild, IReadOnlyDictionary<string, int> rewards)
+        {
+            if (Find(plotId) != null && rewards.Count > 0)
+            {
+                _pending[plotId] = new PendingCompletion(plotId, level, wasBuild, rewards);
+            }
+        }
+
+        private void AddPending(string plotId, int level, bool wasBuild, IReadOnlyDictionary<string, int> rewards)
+        {
+            // Two steps finishing before a tap stack into one bubble.
+            if (_pending.TryGetValue(plotId, out var prior))
+            {
+                var sum = new Dictionary<string, int>(prior.Rewards.Count + rewards.Count);
+                foreach (var kv in prior.Rewards)
+                {
+                    sum[kv.Key] = kv.Value;
+                }
+
+                foreach (var kv in rewards)
+                {
+                    sum[kv.Key] = (sum.TryGetValue(kv.Key, out var v) ? v : 0) + kv.Value;
+                }
+
+                rewards = sum;
+                wasBuild |= prior.WasBuild;
+            }
+
+            var c = new PendingCompletion(plotId, level, wasBuild, rewards);
+            _pending[plotId] = c;
+            CompletionPending?.Invoke(c);
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Survival.Domain.Base
     /// <summary>
     /// Village save data: every plot's level, every building placed with Build (type, spot, level, still building?)
     /// and the running build / upgrade timers (wall-clock start + duration, so a timer keeps counting while the game
-    /// is closed). Plain JSON; the Unity side keeps it in PlayerPrefs under <see cref="PrefsKey"/>.
+    /// is closed), plus congratulations rewards still waiting for their tap. Plain JSON; the Unity side keeps it in PlayerPrefs under <see cref="PrefsKey"/>.
     /// </summary>
     public static class VillageSave
     {
@@ -76,6 +76,34 @@ namespace Survival.Domain.Base
                 Str(sb, t.Id).Append(",\"target\":");
                 Str(sb, t.TargetId).Append(",\"started\":").Append(t.StartedAt.ToString("R", CultureInfo.InvariantCulture));
                 sb.Append(",\"seconds\":").Append(t.DurationSeconds.ToString("R", CultureInfo.InvariantCulture)).Append('}');
+            }
+
+            sb.Append("],\"pending\":[");
+            first = true;
+            foreach (var c in economy.Pending)
+            {
+                if (!first)
+                {
+                    sb.Append(',');
+                }
+
+                first = false;
+                sb.Append("{\"plot\":");
+                Str(sb, c.PlotId).Append(",\"level\":").Append(c.Level.ToString(CultureInfo.InvariantCulture));
+                sb.Append(",\"build\":").Append(c.WasBuild ? "true" : "false").Append(",\"rewards\":{");
+                var firstReward = true;
+                foreach (var kv in c.Rewards)
+                {
+                    if (!firstReward)
+                    {
+                        sb.Append(',');
+                    }
+
+                    firstReward = false;
+                    Str(sb, kv.Key).Append(':').Append(kv.Value.ToString(CultureInfo.InvariantCulture));
+                }
+
+                sb.Append("}}");
             }
 
             sb.Append("]}");
@@ -158,6 +186,34 @@ namespace Survival.Domain.Base
                     var started = o.TryGet("started", out var st) && st is JsonNode.Num sn ? sn.Value : economy.Clock.Now;
                     var seconds = o.TryGet("seconds", out var se) && se is JsonNode.Num secn ? secn.Value : 0;
                     economy.Timers.Restore(id, target, started, seconds);
+                }
+            }
+
+            // Congratulations rewards still waiting for their tap.
+            if (root.TryGet("pending", out var pd) && pd is JsonNode.Arr pending)
+            {
+                foreach (var item in pending.Items)
+                {
+                    if (item is not JsonNode.Obj o || S(o, "plot") is not { } plot)
+                    {
+                        continue;
+                    }
+
+                    var rewards = new Dictionary<string, int>();
+                    if (o.TryGet("rewards", out var rw) && rw is JsonNode.Obj ro)
+                    {
+                        foreach (var pair in ro.Fields)
+                        {
+                            if (pair.Value is JsonNode.Num rn && rn.AsInt() > 0)
+                            {
+                                rewards[pair.Key] = rn.AsInt();
+                            }
+                        }
+                    }
+
+                    var level = o.TryGet("level", out var pl) && pl is JsonNode.Num pln ? pln.AsInt() : 1;
+                    var wasBuild = o.TryGet("build", out var pb) && pb is JsonNode.Bool pbv && pbv.Value;
+                    economy.RestorePending(plot, level, wasBuild, rewards);
                 }
             }
 
