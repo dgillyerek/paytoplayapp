@@ -50,7 +50,25 @@ def wrap(s, size, width):
     return [ln for ln in lines if ln]
 
 
-def main_view(bg=None, active_nav="nav.world", toggle=None, banner=None):
+def nav_slot(i, n, pad=0.035, gap=0.03, max_w=0.22):
+    """Mirror of BottomNav.Slot: n equal buttons centred with equal gaps."""
+    w = min(max_w, (1 - 2 * pad - gap * (n - 1)) / n)
+    total = w * n + gap * (n - 1)
+    x0 = (1 - total) / 2 + i * (w + gap)
+    return x0, x0 + w
+
+
+def painted_button(img, r, icon_key, label, size=22, pressed=False):
+    """SurvivalPaintedButton: gold-bevel frame, icon popping out of the top, bold label under it (squashed when pressed)."""
+    if pressed:
+        cx, cy = (r.x0 + r.x1) / 2, r.y1
+        r = R(cx - r.w * 1.07 / 2, cy - r.h * 0.88, cx + r.w * 1.07 / 2, cy)
+    sliced(img, "theme_a.ui.nav_button", r, 0.42)
+    fit(img, art(icon_key), r.box(0.12, 0.30, 0.88, 1.14))
+    text(img, r.box(0, 0.03, 1, 0.32), label, size, CREAM, "mc", True)
+
+
+def main_view(bg=None, active_nav="nav.world", toggle=None, banner=None, build=False, pressed=None, nav_battle=False):
     """HUD over the old static map, or over a supplied map render (bg) for the World / Village mocks."""
     img = bg.copy() if bg is not None else art("map.terrain").resize((W, H)).copy()
     # world pins (labels + dots); quarry has its painted sprite
@@ -90,12 +108,14 @@ def main_view(bg=None, active_nav="nav.world", toggle=None, banner=None):
     fit(img, art("theme_a.hero.knight_01"), hc.box(0.04, 0.08, 0.28, 0.92))
     text(img, hc.box(0.32, 0.45, 0.98, 0.92), S("hud.hero_name"), 22, CREAM, "lc", outline=False)
     text(img, hc.box(0.32, 0.08, 0.98, 0.48), S("hud.hero_status"), 16, (115, 217, 140), "lc", outline=False)
+    # painted bottom bar: Heroes / Alliance / Bag, evenly spaced (BottomNav.Slot), room left for Battle
     n = hud("nav")
-    sliced(img, K + "ui.panel", n, 0.5)
-    for i, key in enumerate(["nav.base", "nav.heroes", "nav.alliance", "nav.world", "nav.bag"]):
-        r = n.box(i / 5 + 0.01, 0.12, (i + 1) / 5 - 0.01, 0.88)
-        act = key == active_nav
-        button(img, K + ("ui.button_gold" if act else "ui.button_blue"), r, S(key, key), 20, 0.4, INK if act else (237, 230, 209))
+    sliced(img, "theme_a.ui.nav_bar", n, 0.5)
+    ids = ["nav.heroes", "nav.alliance", "nav.bag"] + (["nav.battle"] if nav_battle else [])
+    icons = {"nav.heroes": "theme_a.ui.icon_heroes", "nav.alliance": "theme_a.ui.icon_alliance", "nav.bag": "theme_a.ui.icon_bag", "nav.battle": "theme_a.ui.icon_battle"}
+    for i, key in enumerate(ids):
+        x0, x1 = nav_slot(i, len(ids))
+        painted_button(img, n.box(x0, 0.10, x1, 0.86), icons[key], S(key, key), 22, pressed=(key == pressed))
     # hook: quest tracker
     q = hud("quest_tracker")
     sliced(img, K + "ui.scroll", q, 0.8)
@@ -141,12 +161,16 @@ def main_view(bg=None, active_nav="nav.world", toggle=None, banner=None):
             sliced(img, K + "ui.chip", br, 0.4)
             fit(img, res_icon(res), br.box(-0.08, -0.25, 0.40, 1.25))
             text(img, br.box(0.32, 0, 1, 1), bubble, 18, REWARD, "mc")
-    for slot, label in [("debug_gift", S("debug.gift", "DEBUG: Gift now (G)")), ("debug_skip", S("debug.skip", "DEBUG: +5 min (T)"))]:
-        button(img, K + "ui.button_red", hud(slot), label, 16, 0.34, CREAM)
+    for slot, label in [("debug_gift", S("debug.gift_short", "G: Gift")), ("debug_skip", S("debug.skip_short", "T: +5m"))]:
+        button(img, K + "ui.button_red", hud(slot), label, 13, 0.34, CREAM)
+    if build and "build_button" in HUD:
+        b = hud("build_button")
+        glow(img, b.box(-0.12, -0.10, 1.12, 1.25), (255, 217, 102), 0.35)
+        painted_button(img, b, "theme_a.ui.icon_build", S("build.button", "Build"), 28, pressed=(pressed == "build"))
     if toggle is not None and "view_toggle" in HUD:
         t = hud("view_toggle")
         glow(img, t.box(-0.12, -0.10, 1.12, 1.25), (140, 204, 255), 0.45)
-        sliced(img, K + "ui.button_blue", t, 0.45)
+        sliced(img, "theme_a.ui.nav_button", t, 0.42)
         icon_key, label = toggle
         fit(img, art(icon_key), t.box(0.10, 0.30, 0.90, 1.18))
         text(img, t.box(0, 0.02, 1, 0.32), label, 28, CREAM, "mc", True)

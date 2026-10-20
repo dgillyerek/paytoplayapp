@@ -30,12 +30,12 @@
     { "tier": 20, "min_level": 20, "art": "theme_a.village.castle.tier_20", "scale": 1.3 }
   ],
   "plots": [
-    { "plot": "base.plot.hq_01", "x": 0.5, "y": 0.4388, "size": 0.1224 },
-    { "plot": "base.plot.forge_01", "x": 0.4064, "y": 0.464, "size": 0.072 },
-    { "plot": "base.plot.lumber_02", "x": 0.5936, "y": 0.464, "size": 0.072 },
-    { "plot": "base.plot.farm_01", "x": 0.41, "y": 0.5288, "size": 0.0756 },
-    { "plot": "base.plot.lumber_01", "x": 0.59, "y": 0.5288, "size": 0.0756 },
-    { "plot": "base.plot.farm_02", "x": 0.4496, "y": 0.59, "size": 0.0756 }
+    { "plot": "base.plot.hq_01", "x": 0.5, "y": 0.398, "size": 0.204 },
+    { "plot": "base.plot.forge_01", "x": 0.344, "y": 0.44, "size": 0.12 },
+    { "plot": "base.plot.lumber_02", "x": 0.656, "y": 0.44, "size": 0.12 },
+    { "plot": "base.plot.farm_01", "x": 0.35, "y": 0.548, "size": 0.126 },
+    { "plot": "base.plot.lumber_01", "x": 0.65, "y": 0.548, "size": 0.126 },
+    { "plot": "base.plot.farm_02", "x": 0.416, "y": 0.65, "size": 0.126 }
   ],
   "build_spots": [
     { "id": "village.spot_01", "x": 0.5839, "y": 0.65, "size": 0.1194 },

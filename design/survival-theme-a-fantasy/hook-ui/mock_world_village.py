@@ -6,7 +6,7 @@ Run: python3 mock_world_village.py [out_dir]"""
 import json, math, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from mock_lib import *
-from mock_hook_screens import main_view, glow, button, K
+from mock_hook_screens import main_view, glow, button, painted_button, bar, sheet, nav_slot, K
 
 WORLD = json.load(open(os.path.join(PACK, "map", "world_layout.json")))
 VILLAGE = json.load(open(os.path.join(PACK, "map", "village_layout.json")))
@@ -197,59 +197,105 @@ def tier_for(level):
     return cur
 
 
-def village_map(castle_level):
+PROP_SIZE = {"bushes": 200, "tree": 280, "rocks": 260, "field": 340}
+SPOTS = {sp["id"]: sp for sp in VILLAGE["build_spots"]}
+BUILD_TYPES = {"farm": K + "build.farm", "lumber": K + "build.lumber", "quarry": K + "build.quarry", "forge": K + "build.forge"}
+
+
+def badge(img, host, lv):
+    br = host.box(0.0, 0.62, 0.26, 0.92)
+    s_ = min(br.w, br.h)
+    br = R(br.x0, br.y0 + (br.h - s_) / 2, br.x0 + s_, br.y0 + (br.h + s_) / 2)
+    fit(img, art("theme_a.ui.level_badge"), br)
+    text(img, br.box(0, 0, 1, 0.86), str(lv), 40, (255, 255, 255), "mc", True, od=3)
+
+
+def name_plate(img, x, host, name, pw=260):
+    pr = R(x - pw / 2, host.y1 - 0.05 * host.h - 29, x + pw / 2, host.y1 - 0.05 * host.h + 29)
+    sliced(img, K + "ui.chip", pr, 0.4)
+    text(img, pr, name, 26, CREAM, "mc", True)
+    return pr
+
+
+def village_map(castle_level, built=(), placing=False, glow_t=0.0):
+    """built: [(type, spot_id, level, timer_text or None)]; placing: light up the free build spots."""
     vd = VILLAGE["village"]
     Wm, Hm = vd["width"], vd["height"]
     img = Image.new("RGBA", (Wm, Hm), (97, 140, 61, 255))
     tile(img, "theme_a.village.tile.lawn")
-    # No roads in the village (Derek, PR #74): grass, props and plots only.
+    taken = {sid for _, sid, _, _ in built}
+    items = []
+    # No roads in the village (Derek, PR #74): grass, decor and buildings only.
     for p in VILLAGE["props"]:
-        key = "theme_a.village.prop." + p["type"] if art("theme_a.village.prop." + p["type"]) is not None else "theme_a.map.prop." + p["type"]
-        size = (200 if p["type"] == "bushes" else 380) * p["scale"]
-        point(img, art(key), p["x"] * Wm, p["y"] * Hm, size, size, 0.35)
-    for s in VILLAGE["empty_plots"]:
-        px = s["size"] * Wm
-        x, y = s["x"] * Wm, s["y"] * Hm
-        open_ = castle_level >= s["unlock_castle"]
-        r = point(img, art("theme_a.village.plot_empty"), x, y, px, px, 0.4, tint=None if open_ else (199, 199, 199))
-        sr = R(r.x0 + 0.08 * r.w, r.y1 - 0.10 * r.h, r.x0 + 0.92 * r.w, r.y1 + 0.08 * r.h)
-        sliced(img, K + "ui.chip", sr, 0.4)
-        lab = S("village.slot.open", "Build soon") if open_ else S("village.slot.locked", "Castle Lv {0}").replace("{0}", str(s["unlock_castle"]))
-        text(img, sr, lab, 26, CREAM, "mc", True)
-    for spot in sorted(VILLAGE["plots"], key=lambda s: s["y"]):
-        pid = spot["plot"]
-        x, y = spot["x"] * Wm, spot["y"] * Hm
-        castle = pid == "base.plot.hq_01"
-        if castle:
-            t = tier_for(castle_level)
-            px = spot["size"] * Wm * t["scale"]
-            key, lv = t["art"], castle_level
+        items.append((p["y"], "prop", p))
+    for spot in VILLAGE["plots"]:
+        items.append((spot["y"], "plot", spot))
+    for b in built:
+        items.append((SPOTS[b[1]]["y"], "built", b))
+    if placing:
+        for sid, sp in SPOTS.items():
+            if sid not in taken:
+                items.append((sp["y"], "spot", sp))
+    items.sort(key=lambda it: it[0])
+    for _, kind, it in items:
+        if kind == "prop":
+            p = it
+            key = "theme_a.village.prop." + p["type"] if art("theme_a.village.prop." + p["type"]) is not None else "theme_a.map.prop." + p["type"]
+            size = PROP_SIZE.get(p["type"], 380) * p["scale"]
+            point(img, art(key), p["x"] * Wm, p["y"] * Hm, size, size, 0.35)
+        elif kind == "spot":
+            sp = it
+            px = sp["size"] * Wm
+            x, y = sp["x"] * Wm, sp["y"] * Hm
+            r = R(x - px / 2, y - px * 0.375, x + px / 2, y + px * 0.375)
+            glow(img, r.box(-0.18, -0.25, 1.18, 1.25), (255, 219, 89), 0.75)
+            fit(img, art("theme_a.village.plot_empty"), r)
+            fit(img, art("theme_a.ui.icon_build"), r.box(0.30, 0.30, 0.70, 0.95))
+        elif kind == "built":
+            typ, sid, lv, timer = it
+            sp = SPOTS[sid]
+            px = sp["size"] * 1.06 * Wm
+            x, y = sp["x"] * Wm, sp["y"] * Hm
+            host = R(x - px / 2, y - px * 0.68, x + px / 2, y + px * 0.32)
+            fit(img, art(BUILD_TYPES[typ]), host, 0.55 if timer else 1.0)
+            pr = name_plate(img, x, host, S("build.type." + typ, typ))
+            if timer:
+                fit(img, art("theme_a.ui.icon_build"), host.box(0.34, 0.62, 0.66, 0.98))
+                tr = R(x - 140, pr.y1 + 6, x + 140, pr.y1 + 70)
+                text(img, tr.box(-0.2, 0.45, 1.2, 1.1), S("build.building", "Building") + " " + timer, 22, CREAM, "mc", True)
+                bar(img, tr.box(0, 0, 1, 0.5), 0.35, K + "ui.bar_fill_green")
+                fit(img, art(K + "ui.badge_free"), host.box(0.72, 0.66, 1.0, 0.98))
+                text(img, host.box(0.72, 0.66, 1.0, 0.98), S("hook.free", "FREE"), 22, (255, 255, 255), "mc", True)
+            else:
+                badge(img, host, lv)
         else:
-            px = spot["size"] * Wm
-            key, lv = K + "plot." + pid.split("base.plot.")[1], min(LEVELS.get(pid, 1), castle_level)
-        host = R(x - px / 2, y - px * 0.68, x + px / 2, y + px * 0.32)  # pivot (0.5, 0.32)
-        glow(img, host.box(-0.1, -0.05, 1.1, 1.05), (255, 219, 115), 0.18)
-        fit(img, art(key), host)
-        pw = 330 if castle else 260
-        name = S("hook.plot." + pid, pid)
-        if castle:
-            name = f"{name}  Lv {lv}"
-        pr = R(x - pw / 2, host.y1 - 0.05 * host.h - 29, x + pw / 2, host.y1 - 0.05 * host.h + 29)
-        sliced(img, K + "ui.chip", pr, 0.4)
-        text(img, pr, name, 26, CREAM, "mc", True)
-        if not castle:
-            br = host.box(0.0, 0.62, 0.26, 0.92)
-            s_ = min(br.w, br.h)
-            br = R(br.x0, br.y0 + (br.h - s_) / 2, br.x0 + s_, br.y0 + (br.h + s_) / 2)
-            fit(img, art("theme_a.ui.level_badge"), br)
-            text(img, br.box(0, 0, 1, 0.86), str(lv), 40, (255, 255, 255), "mc", True, od=3)
-            if pid == "base.plot.farm_01":
-                bb = host.box(0.22, 0.88, 0.78, 1.08)
-                sliced(img, K + "ui.chip", bb, 0.4)
-                fit(img, art(K + "icon.res.food"), bb.box(-0.08, -0.25, 0.40, 1.25))
-                text(img, bb.box(0.32, 0, 1, 1), "+600", 26, REWARD, "mc", True)
-            if pid == "base.plot.lumber_02":
-                fit(img, art("theme_a.ui.icon_upgrade"), host.box(0.74, 0.62, 0.98, 0.92))
+            spot = it
+            pid = spot["plot"]
+            x, y = spot["x"] * Wm, spot["y"] * Hm
+            castle = pid == "base.plot.hq_01"
+            if castle:
+                t = tier_for(castle_level)
+                px = spot["size"] * Wm * t["scale"]
+                key, lv = t["art"], castle_level
+            else:
+                px = spot["size"] * Wm
+                key, lv = K + "plot." + pid.split("base.plot.")[1], min(LEVELS.get(pid, 1), castle_level)
+            host = R(x - px / 2, y - px * 0.68, x + px / 2, y + px * 0.32)  # pivot (0.5, 0.32)
+            glow(img, host.box(-0.1, -0.05, 1.1, 1.05), (255, 219, 115), 0.18)
+            fit(img, art(key), host)
+            name = S("hook.plot." + pid, pid)
+            if castle:
+                name = f"{name}  Lv {lv}"
+            name_plate(img, x, host, name, 330 if castle else 260)
+            if not castle:
+                badge(img, host, lv)
+                if pid == "base.plot.farm_01":
+                    bb = host.box(0.22, 0.88, 0.78, 1.08)
+                    sliced(img, K + "ui.chip", bb, 0.4)
+                    fit(img, art(K + "icon.res.food"), bb.box(-0.08, -0.25, 0.40, 1.25))
+                    text(img, bb.box(0.32, 0, 1, 1), "+600", 26, REWARD, "mc", True)
+                if pid == "base.plot.lumber_02":
+                    fit(img, art("theme_a.ui.icon_upgrade"), host.box(0.74, 0.62, 0.98, 0.92))
     return img
 
 
@@ -257,9 +303,9 @@ def village_view(level):
     vd = VILLAGE["village"]
     full = village_map(level)
     hq = VILLAGE["plots"][0]
-    cx, cy = hq["x"] * vd["width"], (hq["y"] + 0.14) * vd["height"]
+    cx, cy = hq["x"] * vd["width"], hq["y"] * vd["height"] + 400
     shot = camera_view(full, vd["start_zoom"], cx, cy)
-    return main_view(shot, "nav.base", ("theme_a.ui.icon_world", S("view.toggle.world", "World")), S("view.banner.village"))
+    return main_view(shot, None, ("theme_a.ui.icon_world", S("view.toggle.world", "World")), S("view.banner.village"), build=True)
 
 
 def tier_strip(out):

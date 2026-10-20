@@ -95,7 +95,8 @@ namespace Survival.Unity
 
             var cam = new MapCamera(layout.Width, layout.Height, 1080f, 1920f, layout.MinZoom, layout.MaxZoom, layout.StartZoom);
             var castle = layout.Plots.Count > 0 ? layout.Plots[0] : null;
-            var (fx, fy) = castle != null ? layout.ToMap(castle.X, castle.YFromTop + 0.14f) : (layout.Width * 0.5f, layout.Height * 0.5f);
+            // Start a little south of the castle (400 map px) so the castle and the first buildings frame the screen.
+            var (fx, fy) = castle != null ? layout.ToMap(castle.X, castle.YFromTop + 400f / layout.Height) : (layout.Width * 0.5f, layout.Height * 0.5f);
             cam.CenterOn(fx, fy);
             Rig = viewport.gameObject.AddComponent<SurvivalMapRig>();
             Rig.Init(viewport.rectTransform, content, cam);
