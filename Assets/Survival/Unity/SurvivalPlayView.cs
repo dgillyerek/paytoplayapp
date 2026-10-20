@@ -1,33 +1,68 @@
+#nullable enable
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using Survival.Domain.Base;
 using Survival.Domain.Ids;
 using Survival.Domain.Layout;
 using Survival.Domain.Session;
 using Survival.Domain.Theme;
+using Survival.Domain.View;
 using Survival.Domain.World;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Survival.Unity
 {
-    /// <summary>Play shell: crusade map + Gather, Fight, and Explore march loops.</summary>
+    /// <summary>
+    /// Play shell with two screens and a toggle between them: the zoomed-in Village (Castle, Farms, Lumber Mills,
+    /// Forge on plots, all upgradable) and the zoomed-out World (kingdom map with every player's village, enemy
+    /// camps, resource fields, the six catalog nodes and live marches). Both scroll and zoom (SurvivalMapRig).
+    /// The HUD (top bar, chips, banner, quest, shop, nav) stays on top of whichever map is showing.
+    /// </summary>
     public sealed class SurvivalPlayView : MonoBehaviour
     {
+        private const string FallbackWorldJson =
+            "{\"world\":{\"width\":1080,\"height\":1920,\"min_zoom\":1,\"max_zoom\":1.6},\"heart\":{\"x\":0.5,\"y\":0.5,\"width\":1080,\"height\":1920}," +
+            "\"villages\":[{\"id\":\"village.player\",\"name\":\"You\",\"kind\":\"player\",\"x\":0.31,\"y\":0.3}]}";
+
         public SurvivalSession? Session { get; set; }
 
         private RectTransform? _root;
         private RectTransform? _fx;
-        private readonly Dictionary<string, Vector2> _pinCenters = new();
         private readonly Dictionary<string, Text> _chipValues = new();
-        private GameObject? _inspect;
-        private bool _busy;
+        private readonly Dictionary<string, RectTransform> _navButtons = new();
+        private readonly Dictionary<string, Action> _navHandlers = new();
+        private RectTransform? _navBar;
+        private ThemePackBinder? _navPack;
+        private Text? _bannerText;
+        private Image? _toggleIcon;
+        private Text? _toggleText;
+        private RectTransform? _toggleButton;
+        private PlayScreen _shownFor = (PlayScreen)(-1);
 
         /// <summary>Raised after a march lands and its yield is in the wallet: (loop, yield).</summary>
         public event Action<WorldMarchLoop, int>? MarchResolved;
 
+        /// <summary>Bottom-bar Heroes tap (see <see cref="OnHeroesTapped"/>). Battle Setup / Heroes screens hook here.</summary>
+        public event Action? HeroesTapped;
+
+        public event Action? AllianceTapped;
+
+        public event Action? BagTapped;
+
+        /// <summary>Bottom-bar model: Heroes, Alliance, Bag; add Battle with <see cref="AddNavButton"/>.</summary>
+        public BottomNav NavModel { get; } = new BottomNav();
+
         public RectTransform? Root => _root;
         public RectTransform? Fx => _fx;
+
+        /// <summary>World / Village switch (the HUD toggle button and Enter Village).</summary>
+        public PlayScreenToggle Screen { get; } = new PlayScreenToggle(PlayScreen.Village);
+
+        public SurvivalVillageView? Village { get; private set; }
+        public SurvivalWorldView? WorldView { get; private set; }
 
         /// <summary>Value text of a HUD chip (res_soft, res_stone, ...), or null.</summary>
         public Text? ChipText(string key) => _chipValues.TryGetValue(key, out var t) ? t : null;
@@ -45,6 +80,15 @@ namespace Survival.Unity
             return ChipText(key);
         }
 
+        /// <summary>World view reports a resolved catalog-node march (quests listen to <see cref="MarchResolved"/>).</summary>
+        public void RaiseMarchResolved(WorldMarchLoop loop, int yield)
+        {
+            RefreshChip(loop.ChipKey);
+            MarchResolved?.Invoke(loop, yield);
+        }
+
+        public void ShowScreen(PlayScreen screen) => Screen.Set(screen);
+
         public void Build()
         {
             if (Session == null)
@@ -56,15 +100,31 @@ namespace Survival.Unity
             _root = SurvivalVisuals.Canvas(transform, "SurvivalPlayCanvas", 40);
             var pack = Session.Pack;
             var hud = pack.Hud;
+            var hookOn = Session.Hook != null && hud.ContainsKey("quest_tracker");
 
-            var terrain = SurvivalVisuals.Image(_root, "Terrain", Color.white, SurvivalArt.Get("map.terrain") ?? SurvivalArt.Get("terrain"));
-            SurvivalVisuals.Stretch(terrain.rectTransform);
-            terrain.preserveAspect = false;
-
-            foreach (var node in Session.World.Nodes)
+            // Maps first (behind the HUD): the village needs the hook economy; the world always builds.
+            var maps = new GameObject("Maps", typeof(RectTransform)).GetComponent<RectTransform>();
+            maps.SetParent(_root, false);
+            SurvivalVisuals.Stretch(maps);
+            var packRoot = SurvivalArt.ResolvePackRoot(Session.Flavor);
+            WorldView = SurvivalWorldView.Create(maps, _root, this, Session, LoadWorld(packRoot));
+            WorldView.EnterVillage += () => Screen.Set(PlayScreen.Village);
+            if (hookOn)
             {
-                SpawnNode(_root, node);
+                var village = LoadVillage(packRoot);
+                if (village != null)
+                {
+                    Village = SurvivalVillageView.Create(maps, village, (k, f) => pack.StringOr(k, f));
+                }
             }
+
+            if (Village == null)
+            {
+                Screen.Set(PlayScreen.World);
+                Screen.Tick(10f);
+            }
+
+            Screen.Changed += (_, to) => OnScreenChanged(to);
 
             _fx = SurvivalVisuals.Image(_root, "FxLayer", new Color(1f, 1f, 1f, 0f)).rectTransform;
             SurvivalVisuals.Stretch(_fx);
@@ -89,7 +149,7 @@ namespace Survival.Unity
             var banner = SurvivalVisuals.Image(_root, "Banner", SurvivalVisuals.Panel);
             Place(banner.rectTransform, hud, "banner");
             HookSkin.TrySkin(banner, HookArtKeys.Header, 0.42f);
-            SurvivalVisuals.Text(
+            _bannerText = SurvivalVisuals.Text(
                 banner.transform,
                 "BannerText",
                 pack.StringOr(SurvIds.ThemeAMapLabel, pack.StringOr("hud.banner", "")),
@@ -98,7 +158,6 @@ namespace Survival.Unity
                 SurvivalVisuals.Cream);
 
             // Hook slice: the live quest tracker takes the static queues mock's slot.
-            var hookOn = Session.Hook != null && hud.ContainsKey("quest_tracker");
             if (!hookOn)
             {
                 var queues = SurvivalVisuals.Image(_root, "Queues", SurvivalVisuals.Panel);
@@ -138,6 +197,7 @@ namespace Survival.Unity
             heroStatus.rectTransform.offsetMax = Vector2.zero;
 
             Nav(_root, hud, pack);
+            BuildToggle(_root, hud, pack);
             _fx!.SetAsLastSibling();
 
             if (hookOn)
@@ -145,489 +205,178 @@ namespace Survival.Unity
                 var hookView = GetComponent<SurvivalHookView>() ?? gameObject.AddComponent<SurvivalHookView>();
                 hookView.Build(this, Session);
             }
+
+            ApplyScreen(1f);
         }
 
-        private void SpawnNode(RectTransform root, WorldNodeState node)
+        private WorldLayout LoadWorld(string packRoot)
         {
-            var pin = node.Pin;
-            var x = pin.PinX;
-            var y = 1f - pin.PinYFromTop;
-            _pinCenters[node.Id] = new Vector2(x, y);
-            var color = PinColor(node.NodeTypeId);
-            GameObject? quarryGo = null;
-
-            if (pin.SpriteSize > 0.01f)
+            var path = Path.Combine(packRoot, "map", "world_layout.json");
+            try
             {
-                var art = SurvivalArt.Get(pin.ContentKey);
-                var go = new GameObject(node.Id);
-                go.transform.SetParent(root, false);
-                var img = go.AddComponent<Image>();
-                img.sprite = art ?? SurvivalArt.White();
-                img.color = art != null ? Color.white : color;
-                img.preserveAspect = true;
-                img.raycastTarget = true;
-                var rt = img.rectTransform;
-                var w = pin.SpriteSize;
-                var aspect = art != null && art.rect.height > 1f ? art.rect.width / art.rect.height : 139f / 111f;
-                var h = w * (PlayHudLayout.ReferenceWidth / PlayHudLayout.ReferenceHeight) * (1f / aspect);
-                rt.anchorMin = new Vector2(x - w * 0.5f, y - h * 0.62f);
-                rt.anchorMax = new Vector2(x + w * 0.5f, y + h * 0.38f);
-                rt.offsetMin = Vector2.zero;
-                rt.offsetMax = Vector2.zero;
-                quarryGo = go;
-            }
-
-            var label = SurvivalVisuals.Image(root, node.Id + "_label", SurvivalVisuals.Panel);
-            HookSkin.TrySkin(label, HookArtKeys.Chip, 0.32f);
-            var lr = label.rectTransform;
-            lr.anchorMin = new Vector2(Mathf.Clamp01(x - 0.09f), Mathf.Clamp01(y - 0.055f));
-            lr.anchorMax = new Vector2(Mathf.Clamp01(x + 0.09f), Mathf.Clamp01(y - 0.018f));
-            lr.offsetMin = Vector2.zero;
-            lr.offsetMax = Vector2.zero;
-            var copy = Session!.Pack.StringOr("pin." + node.Id, node.NodeTypeId);
-            SurvivalVisuals.Text(label.transform, "Label", copy, 14, TextAnchor.MiddleCenter, SurvivalVisuals.Cream);
-
-            var dot = SurvivalVisuals.Circle(root, node.Id + "_pin", color);
-            SurvivalVisuals.AnchorBox(dot.rectTransform, x, y + 0.016f, 0.028f, 0.016f);
-
-            var hitGo = quarryGo ?? MakeHit(root, node.Id + "_hit", x, y, pin.SpriteSize > 0.01f ? 0.16f : 0.14f, 0.08f);
-            var btn = hitGo.GetComponent<Button>() ?? hitGo.AddComponent<Button>();
-            var graphic = hitGo.GetComponent<Image>();
-            if (graphic != null)
-            {
-                btn.targetGraphic = graphic;
-                graphic.raycastTarget = true;
-            }
-
-            var captured = node.Id;
-            var capturedGo = quarryGo ?? hitGo;
-            btn.onClick.AddListener(() => OnTapNode(capturedGo, captured));
-            if (quarryGo != null)
-            {
-                label.raycastTarget = true;
-                var labelBtn = label.gameObject.AddComponent<Button>();
-                labelBtn.targetGraphic = label;
-                labelBtn.onClick.AddListener(() => OnTapNode(capturedGo, captured));
-                dot.raycastTarget = true;
-                var pinBtn = dot.gameObject.AddComponent<Button>();
-                pinBtn.targetGraphic = dot;
-                pinBtn.onClick.AddListener(() => OnTapNode(capturedGo, captured));
-            }
-        }
-
-        private static GameObject MakeHit(RectTransform root, string name, float x, float y, float w, float h)
-        {
-            var img = SurvivalVisuals.Image(root, name, new Color(1f, 1f, 1f, 0f));
-            img.raycastTarget = true;
-            SurvivalVisuals.AnchorBox(img.rectTransform, x, y, w, h);
-            return img.gameObject;
-        }
-
-        private void OnTapNode(GameObject nodeGo, string nodeId)
-        {
-            if (_busy || Session == null)
-            {
-                return;
-            }
-
-            Session.World.Select(nodeId);
-            StopAllCoroutines();
-            CloseInspect();
-            StartCoroutine(TapJuice(nodeGo, nodeId));
-        }
-
-        private IEnumerator TapJuice(GameObject nodeGo, string nodeId)
-        {
-            if (_pinCenters.TryGetValue(nodeId, out var center))
-            {
-                var typeId = Session != null && Session.World.TryGet(nodeId, out var n) ? n.NodeTypeId : "";
-                StartCoroutine(PressRing(center, LoopAccent(typeId)));
-            }
-
-            yield return Punch(nodeGo.transform, 0.14f, 8);
-
-            if (Session != null && Session.World.TryGetMarch(nodeId, out var loop))
-            {
-                OpenNodeInspect(loop);
-            }
-        }
-
-        private IEnumerator PressRing(Vector2 center, Color color)
-        {
-            if (_fx == null)
-            {
-                yield break;
-            }
-
-            var ring = SurvivalVisuals.Ring(_fx, "TapRing", color);
-            SurvivalVisuals.AnchorBox(ring.rectTransform, center.x, center.y, 0.07f, 0.04f);
-            ring.rectTransform.localScale = Vector3.one * 0.55f;
-            for (var i = 0; i < 12; i++)
-            {
-                var t = i / 11f;
-                ring.rectTransform.localScale = Vector3.one * Mathf.Lerp(0.55f, 1.55f, t);
-                var c = ring.color;
-                c.a = Mathf.Lerp(color.a, 0f, t);
-                ring.color = c;
-                yield return null;
-            }
-
-            Destroy(ring.gameObject);
-        }
-
-        private void OpenNodeInspect(WorldMarchLoop loop)
-        {
-            if (_root == null || Session == null)
-            {
-                return;
-            }
-
-            CloseInspect();
-            var pack = Session.Pack;
-            var prefix = InspectPrefix(loop.NodeTypeId);
-            var frame = LoopFrame(loop.NodeTypeId);
-            var ctaFill = LoopCtaFill(loop.NodeTypeId);
-            var accent = LoopAccent(loop.NodeTypeId);
-            var blocker = SurvivalVisuals.Image(_root, loop.NodeId + "_inspect", new Color(0f, 0f, 0f, 0.12f));
-            SurvivalVisuals.Stretch(blocker.rectTransform);
-            blocker.raycastTarget = true;
-            _inspect = blocker.gameObject;
-
-            var panel = SurvivalVisuals.Framed(blocker.transform, "Panel", SurvivalVisuals.InspectFill, frame, 3f);
-            var pr = panel.rectTransform;
-            pr.anchorMin = new Vector2(0.09f, 0.40f);
-            pr.anchorMax = new Vector2(0.91f, 0.695f);
-            pr.offsetMin = Vector2.zero;
-            pr.offsetMax = Vector2.zero;
-
-            var title = SurvivalVisuals.Text(panel.transform, "Title", pack.StringOr(prefix + ".title", ""), 34, TextAnchor.MiddleLeft, SurvivalVisuals.Cream);
-            title.rectTransform.anchorMin = new Vector2(0.06f, 0.78f);
-            title.rectTransform.anchorMax = new Vector2(0.78f, 0.96f);
-            title.rectTransform.offsetMin = Vector2.zero;
-            title.rectTransform.offsetMax = Vector2.zero;
-
-            var close = SurvivalVisuals.Framed(panel.transform, "Close", SurvivalVisuals.InspectFill, frame, 2f);
-            var crt = close.rectTransform;
-            crt.anchorMin = new Vector2(0.86f, 0.80f);
-            crt.anchorMax = new Vector2(0.955f, 0.95f);
-            crt.offsetMin = Vector2.zero;
-            crt.offsetMax = Vector2.zero;
-            close.raycastTarget = true;
-            var closeBtn = close.gameObject.AddComponent<Button>();
-            closeBtn.targetGraphic = close;
-            SurvivalVisuals.Text(close.transform, "X", "×", 28, TextAnchor.MiddleCenter, accent);
-            closeBtn.onClick.AddListener(CloseInspect);
-
-            InspectRow(panel.transform, "Stat", 0.52f, 0.74f, InspectStatLeft(pack, prefix, loop.NodeTypeId), InspectStatRight(pack, prefix, loop));
-            InspectRow(
-                panel.transform,
-                "March",
-                0.30f,
-                0.50f,
-                pack.StringOr(prefix + ".march", ""),
-                WorldMarchLoop.FormatClock(loop.MarchSeconds));
-
-            var cta = SurvivalVisuals.Framed(panel.transform, "Cta", ctaFill, frame, 3f);
-            var mrt = cta.rectTransform;
-            mrt.anchorMin = new Vector2(0.06f, 0.07f);
-            mrt.anchorMax = new Vector2(0.94f, 0.26f);
-            mrt.offsetMin = Vector2.zero;
-            mrt.offsetMax = Vector2.zero;
-            cta.raycastTarget = true;
-            var fill = cta.transform.Find("Fill") as RectTransform;
-            if (fill != null)
-            {
-                var fillImg = fill.GetComponent<Image>();
-                if (fillImg != null)
+                if (File.Exists(path))
                 {
-                    fillImg.raycastTarget = true;
+                    return WorldLayout.Parse(File.ReadAllText(path));
                 }
             }
-
-            var ctaBtn = cta.gameObject.AddComponent<Button>();
-            ctaBtn.targetGraphic = cta;
-            SurvivalVisuals.Text(
-                cta.transform,
-                "CtaLabel",
-                pack.StringOr(prefix + ".action", ""),
-                32,
-                TextAnchor.MiddleCenter,
-                accent);
-            ctaBtn.onClick.AddListener(() => OnConfirmMarch(loop, cta.gameObject));
-        }
-
-        private static string InspectPrefix(string nodeTypeId) => nodeTypeId switch
-        {
-            SurvIds.WorldNodeTypeFight => "inspect.fight",
-            SurvIds.WorldNodeTypeExplore => "inspect.explore",
-            _ => "inspect.gather"
-        };
-
-        private static Color LoopAccent(string nodeTypeId) => nodeTypeId switch
-        {
-            SurvIds.WorldNodeTypeFight => SurvivalVisuals.ThreatSpark,
-            SurvIds.WorldNodeTypeExplore => SurvivalVisuals.PinExplore,
-            _ => new Color(1f, 0.84f, 0.28f, 0.95f)
-        };
-
-        private static Color LoopFrame(string nodeTypeId) => nodeTypeId switch
-        {
-            SurvIds.WorldNodeTypeFight => SurvivalVisuals.ThreatLine,
-            SurvIds.WorldNodeTypeExplore => SurvivalVisuals.ScoutLine,
-            _ => SurvivalVisuals.GoldLine
-        };
-
-        private static Color LoopCtaFill(string nodeTypeId) => nodeTypeId switch
-        {
-            SurvIds.WorldNodeTypeFight => SurvivalVisuals.AttackFill,
-            SurvIds.WorldNodeTypeExplore => SurvivalVisuals.ScoutFill,
-            _ => SurvivalVisuals.MineFill
-        };
-
-        private static string InspectStatLeft(ThemePackBinder pack, string prefix, string nodeTypeId)
-        {
-            var key = nodeTypeId switch
+            catch (Exception ex)
             {
-                SurvIds.WorldNodeTypeFight => ".threat",
-                SurvIds.WorldNodeTypeExplore => ".relics",
-                _ => ".available"
-            };
-            return pack.StringOr(prefix + key, "");
-        }
-
-        private static string InspectStatRight(ThemePackBinder pack, string prefix, WorldMarchLoop loop)
-        {
-            if (string.Equals(loop.NodeTypeId, SurvIds.WorldNodeTypeFight, System.StringComparison.Ordinal))
-            {
-                return pack.StringOr(prefix + ".enemy", "") + "  " + ChipWallet.FormatGrouped(loop.Available);
+                Debug.LogException(ex);
             }
 
-            if (string.Equals(loop.NodeTypeId, SurvIds.WorldNodeTypeExplore, System.StringComparison.Ordinal))
+            return WorldLayout.Parse(FallbackWorldJson);
+        }
+
+        private static VillageLayout? LoadVillage(string packRoot)
+        {
+            var path = Path.Combine(packRoot, "map", "village_layout.json");
+            try
             {
-                return ChipWallet.FormatGrouped(loop.Available);
+                return File.Exists(path) ? VillageLayout.Parse(File.ReadAllText(path)) : null;
             }
-
-            return pack.StringOr(prefix + ".resource", "") + " " + ChipWallet.FormatGrouped(loop.Available);
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                return null;
+            }
         }
 
-        private static void InspectRow(Transform panel, string name, float yMin, float yMax, string left, string right)
-        {
-            var row = SurvivalVisuals.Image(panel, name, SurvivalVisuals.RowFill);
-            var rt = row.rectTransform;
-            rt.anchorMin = new Vector2(0.06f, yMin);
-            rt.anchorMax = new Vector2(0.94f, yMax);
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-            var l = SurvivalVisuals.Text(row.transform, "L", left, 22, TextAnchor.MiddleLeft, SurvivalVisuals.Mute);
-            l.rectTransform.anchorMin = new Vector2(0.04f, 0f);
-            l.rectTransform.anchorMax = new Vector2(0.55f, 1f);
-            l.rectTransform.offsetMin = Vector2.zero;
-            l.rectTransform.offsetMax = Vector2.zero;
-            var r = SurvivalVisuals.Text(row.transform, "R", right, 22, TextAnchor.MiddleRight, SurvivalVisuals.Cream);
-            r.rectTransform.anchorMin = new Vector2(0.45f, 0f);
-            r.rectTransform.anchorMax = new Vector2(0.96f, 1f);
-            r.rectTransform.offsetMin = Vector2.zero;
-            r.rectTransform.offsetMax = Vector2.zero;
-        }
+        // ---------- World / Village switch ----------
 
-        private void OnConfirmMarch(WorldMarchLoop loop, GameObject cta)
+        private void Update()
         {
-            if (_busy || Session == null)
+            // Marches keep moving (and paying out) while the player is in the village.
+            WorldView?.TickSim();
+            if (!Screen.InTransition && _shownFor == Screen.Current)
             {
                 return;
             }
 
-            if (!loop.TryBegin(Session.Energy, SurvIds.WorldNodeHome01, out _))
+            Screen.Tick(Time.unscaledDeltaTime);
+            ApplyScreen(Screen.Fade);
+        }
+
+        private void OnScreenChanged(PlayScreen to)
+        {
+            WorldView?.CloseCard();
+            if (_toggleButton != null)
+            {
+                StartCoroutine(Punch(_toggleButton, 0.16f, 10));
+            }
+
+            ApplyScreen(0f);
+        }
+
+        /// <summary>Quick cross-fade: the incoming map fades in while settling from a slight zoom (in for Village, out for World).</summary>
+        private void ApplyScreen(float fade)
+        {
+            var current = Screen.Current;
+            Fade(Village?.Root, Village?.Rig, current == PlayScreen.Village, fade, 0.92f);
+            Fade(WorldView?.Root, WorldView?.Rig, current == PlayScreen.World, fade, 1.10f);
+            if (fade >= 1f)
+            {
+                _shownFor = current;
+            }
+
+            if (Session == null)
             {
                 return;
-            }
-
-            _busy = true;
-            StartCoroutine(MarchResolveLoop(loop, cta));
-        }
-
-        private IEnumerator MarchResolveLoop(WorldMarchLoop loop, GameObject cta)
-        {
-            yield return Punch(cta.transform, 0.08f, 6);
-            CloseInspect();
-
-            if (Session == null || _fx == null)
-            {
-                _busy = false;
-                yield break;
-            }
-
-            var fight = string.Equals(loop.NodeTypeId, SurvIds.WorldNodeTypeFight, System.StringComparison.Ordinal);
-            var from = PinOf(SurvIds.WorldNodeHome01);
-            var to = PinOf(loop.NodeId);
-            var markerCol = LoopAccent(loop.NodeTypeId);
-            var glowCol = markerCol;
-            glowCol.a = 0.75f;
-            var marker = SurvivalVisuals.Circle(_fx, "MarchMarker", markerCol);
-            var glow = SurvivalVisuals.Ring(marker.transform, "Glow", glowCol);
-            SurvivalVisuals.Stretch(glow.rectTransform);
-            glow.rectTransform.offsetMin = new Vector2(-10f, -10f);
-            glow.rectTransform.offsetMax = new Vector2(10f, 10f);
-
-            var clockHost = SurvivalVisuals.Image(_fx, "MarchClock", SurvivalVisuals.Panel);
-            var clock = SurvivalVisuals.Text(
-                clockHost.transform,
-                "T",
-                WorldMarchLoop.FormatClock(loop.MarchSeconds),
-                20,
-                TextAnchor.MiddleCenter,
-                markerCol);
-            SurvivalVisuals.Stretch(clock.rectTransform);
-            clock.rectTransform.offsetMin = new Vector2(6f, 2f);
-            clock.rectTransform.offsetMax = new Vector2(-6f, -2f);
-
-            yield return March(marker.rectTransform, from, to, loop.MarchSeconds, clockHost.rectTransform, clock);
-
-            Destroy(clockHost.gameObject);
-
-            var result = loop.CompleteArrive();
-            if (result.Ok)
-            {
-                if (fight)
-                {
-                    Session.Battles.StubResolvePve();
-                    yield return ThreatPulse(to);
-                }
-
-                Session.Chips.Add(result.ChipKey, result.Yield);
-                RefreshChip(result.ChipKey);
-                MarchResolved?.Invoke(loop, result.Yield);
-                yield return RewardPop(to, result.Yield, InspectPrefix(loop.NodeTypeId), LoopAccent(loop.NodeTypeId));
-            }
-
-            yield return March(marker.rectTransform, to, from, 0.95f, null, null);
-            Destroy(marker.gameObject);
-            _busy = false;
-        }
-
-        private IEnumerator ThreatPulse(Vector2 at)
-        {
-            if (_fx == null)
-            {
-                yield break;
-            }
-
-            var ring = SurvivalVisuals.Ring(_fx, "ThreatPulse", SurvivalVisuals.ThreatSpark);
-            SurvivalVisuals.AnchorBox(ring.rectTransform, at.x, at.y, 0.08f, 0.045f);
-            for (var i = 0; i < 16; i++)
-            {
-                var t = i / 15f;
-                ring.rectTransform.localScale = Vector3.one * Mathf.Lerp(0.4f, 2.1f, t);
-                var c = ring.color;
-                c.a = Mathf.Lerp(1f, 0f, t);
-                ring.color = c;
-                yield return null;
-            }
-
-            Destroy(ring.gameObject);
-        }
-
-        private IEnumerator RewardPop(Vector2 at, int yield, string prefix, Color sparkColor)
-        {
-            if (_fx == null || Session == null)
-            {
-                yield break;
             }
 
             var pack = Session.Pack;
-            var label = pack.StringOr(prefix + ".reward_format", "+{0} {1}");
-            var copy = string.Format(
-                System.Globalization.CultureInfo.InvariantCulture,
-                label,
-                ChipWallet.FormatGrouped(yield),
-                pack.StringOr(prefix + ".resource", ""));
-            var pop = SurvivalVisuals.Text(_fx, "RewardPop", copy, 44, TextAnchor.MiddleCenter, sparkColor);
-            SurvivalVisuals.AnchorBox(pop.rectTransform, at.x, at.y + 0.04f, 0.48f, 0.06f);
-            pop.rectTransform.localScale = Vector3.one * 0.7f;
-
-            for (var i = 0; i < 10; i++)
+            if (_bannerText != null)
             {
-                var spark = SurvivalVisuals.Circle(_fx, "Spark" + i, sparkColor);
-                var ang = i / 10f * Mathf.PI * 2f;
-                var ox = Mathf.Cos(ang) * 0.04f;
-                var oy = Mathf.Sin(ang) * 0.022f;
-                SurvivalVisuals.AnchorBox(spark.rectTransform, at.x + ox, at.y + oy, 0.018f, 0.01f);
-                StartCoroutine(FadeSpark(spark, at + new Vector2(ox * 1.6f, oy * 1.6f + 0.02f)));
+                _bannerText.text = current == PlayScreen.World
+                    ? pack.StringOr("view.banner.world", pack.StringOr(SurvIds.ThemeAMapLabel, ""))
+                    : pack.StringOr("view.banner.village", "");
             }
 
-            for (var i = 0; i < 18; i++)
+            if (_toggleText != null)
             {
-                var t = i / 17f;
-                pop.rectTransform.localScale = Vector3.one * Mathf.Lerp(0.7f, 1.08f, t);
-                var n = Mathf.Lerp(at.y + 0.04f, at.y + 0.08f, t);
-                SurvivalVisuals.AnchorBox(pop.rectTransform, at.x, n, 0.48f, 0.06f);
-                var c = pop.color;
-                c.a = t < 0.7f ? 1f : Mathf.Lerp(1f, 0f, (t - 0.7f) / 0.3f);
-                pop.color = c;
-                yield return null;
+                _toggleText.text = pack.StringOr(Screen.LabelKey, Screen.Destination.ToString());
             }
 
-            Destroy(pop.gameObject);
+            if (_toggleIcon != null)
+            {
+                // Village icon = the player's own castle at its current stage.
+                var key = Screen.Destination == PlayScreen.World
+                    ? WorldArtKeys.IconWorld
+                    : CastleTiers.For(Session?.Hook?.Base.HqLevel ?? 1, Village?.Layout?.CastleTiers).ArtKey;
+                var sprite = SurvivalArt.Get(key);
+                _toggleIcon.sprite = sprite ?? SurvivalArt.Circle();
+                _toggleIcon.color = sprite != null ? Color.white : SurvivalVisuals.Gold;
+            }
+
+            if (_toggleButton != null)
+            {
+                _toggleButton.gameObject.SetActive(Village != null);
+            }
         }
 
-        private IEnumerator FadeSpark(Image spark, Vector2 dest)
+        private static void Fade(RectTransform? root, SurvivalMapRig? rig, bool incoming, float fade, float fromScale)
         {
-            var start = spark.rectTransform.anchorMin + (spark.rectTransform.anchorMax - spark.rectTransform.anchorMin) * 0.5f;
-            for (var i = 0; i < 14; i++)
+            if (root == null)
             {
-                var t = i / 13f;
-                var p = Vector2.Lerp(start, dest, t);
-                SurvivalVisuals.AnchorBox(spark.rectTransform, p.x, p.y, 0.016f * (1f - t * 0.4f), 0.009f * (1f - t * 0.4f));
-                var c = spark.color;
-                c.a = 1f - t;
-                spark.color = c;
-                yield return null;
+                return;
             }
 
-            Destroy(spark.gameObject);
+            var group = root.GetComponent<CanvasGroup>();
+            var alpha = incoming ? fade : 1f - fade;
+            var visible = alpha > 0.001f;
+            if (root.gameObject.activeSelf != visible)
+            {
+                root.gameObject.SetActive(visible);
+            }
+
+            if (group != null)
+            {
+                group.alpha = alpha;
+                group.blocksRaycasts = incoming && fade >= 1f;
+                group.interactable = incoming;
+            }
+
+            if (rig != null)
+            {
+                rig.InputEnabled = incoming;
+            }
+
+            var k = incoming ? Mathf.Lerp(fromScale, 1f, fade) : Mathf.Lerp(1f, 2f - fromScale, fade);
+            root.localScale = new Vector3(k, k, 1f);
         }
 
-        private IEnumerator March(
-            RectTransform marker,
-            Vector2 from,
-            Vector2 to,
-            float seconds,
-            RectTransform? clockHost,
-            Text? clock)
+        private void BuildToggle(RectTransform root, IReadOnlyDictionary<string, HudRect> hud, ThemePackBinder pack)
         {
-            var duration = Mathf.Max(0.01f, seconds);
-            var total = Mathf.Max(0, Mathf.RoundToInt(seconds));
-            var elapsed = 0f;
-            while (elapsed < duration)
+            if (!hud.TryGetValue("view_toggle", out var slot))
             {
-                elapsed += Time.unscaledDeltaTime;
-                var t = Mathf.Clamp01(elapsed / duration);
-                var ease = t * t * (3f - 2f * t);
-                var p = Vector2.Lerp(from, to, ease);
-                SurvivalVisuals.AnchorBox(marker, p.x, p.y + 0.012f, 0.038f, 0.022f);
-                marker.localScale = Vector3.one * (0.9f + 0.12f * Mathf.Sin(elapsed * 10f));
-                if (clockHost != null && clock != null)
-                {
-                    SurvivalVisuals.AnchorBox(clockHost, p.x, p.y + 0.042f, 0.20f, 0.032f);
-                    clock.text = WorldMarchLoop.FormatClock(WorldMarchLoop.RemainingSeconds(total, elapsed));
-                }
-
-                yield return null;
+                return;
             }
 
-            SurvivalVisuals.AnchorBox(marker, to.x, to.y + 0.012f, 0.038f, 0.022f);
-        }
-
-        private Vector2 PinOf(string nodeId) =>
-            _pinCenters.TryGetValue(nodeId, out var p) ? p : new Vector2(0.5f, 0.5f);
-
-        private void CloseInspect()
-        {
-            if (_inspect != null)
-            {
-                Destroy(_inspect);
-                _inspect = null;
-            }
+            // Same painted frame as the bottom bar and the Build button (blue kit button if the pack lacks it).
+            var btn = HookSkin.Button(root, "ViewToggle", HookSkin.Has(BottomNav.ButtonArt) ? BottomNav.ButtonArt : HookArtKeys.ButtonBlue, SurvivalVisuals.PinBuild, 0.42f);
+            btn.transition = Selectable.Transition.None;
+            btn.gameObject.AddComponent<PressSquash>();
+            var rt = btn.GetComponent<RectTransform>();
+            SurvivalVisuals.Place(rt, slot);
+            var glow = HookSkin.Glow(rt, "Glow", new Color(0.55f, 0.8f, 1f, 0.45f));
+            glow.rectTransform.anchorMin = new Vector2(-0.12f, -0.10f);
+            glow.rectTransform.anchorMax = new Vector2(1.12f, 1.25f);
+            glow.rectTransform.offsetMin = Vector2.zero;
+            glow.rectTransform.offsetMax = Vector2.zero;
+            glow.transform.SetAsFirstSibling();
+            _toggleIcon = SurvivalVisuals.Image(rt, "Icon", Color.white);
+            _toggleIcon.preserveAspect = true;
+            _toggleIcon.rectTransform.anchorMin = new Vector2(0.10f, 0.30f);
+            _toggleIcon.rectTransform.anchorMax = new Vector2(0.90f, 1.18f);
+            _toggleIcon.rectTransform.offsetMin = Vector2.zero;
+            _toggleIcon.rectTransform.offsetMax = Vector2.zero;
+            _toggleText = HookSkin.Outlined(SurvivalVisuals.Text(rt, "T", pack.StringOr(Screen.LabelKey, ""), 28, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 2f);
+            _toggleText.fontStyle = FontStyle.Bold;
+            _toggleText.rectTransform.anchorMin = new Vector2(0f, 0.02f);
+            _toggleText.rectTransform.anchorMax = new Vector2(1f, 0.32f);
+            _toggleText.rectTransform.offsetMin = Vector2.zero;
+            _toggleText.rectTransform.offsetMax = Vector2.zero;
+            _toggleButton = rt;
+            btn.onClick.AddListener(() => Screen.Toggle());
         }
 
         private static IEnumerator Punch(Transform t, float amount, int frames)
@@ -648,16 +397,6 @@ namespace Survival.Unity
 
             rt.localScale = start;
         }
-
-        private static Color PinColor(string nodeTypeId) => nodeTypeId switch
-        {
-            SurvIds.WorldNodeTypeHome => SurvivalVisuals.PinHome,
-            SurvIds.WorldNodeTypeGather => SurvivalVisuals.PinGather,
-            SurvIds.WorldNodeTypeBuild => SurvivalVisuals.PinBuild,
-            SurvIds.WorldNodeTypeGuild => SurvivalVisuals.PinGuild,
-            SurvIds.WorldNodeTypeFight => SurvivalVisuals.PinFight,
-            _ => SurvivalVisuals.PinExplore
-        };
 
         private static void Panel(RectTransform root, string name, IReadOnlyDictionary<string, HudRect> hud, string key)
         {
@@ -702,7 +441,7 @@ namespace Survival.Unity
             _chipValues[key] = val;
         }
 
-        private void RefreshChip(string key)
+        public void RefreshChip(string key)
         {
             if (_chipValues.TryGetValue(key, out var text) && Session != null)
             {
@@ -710,42 +449,100 @@ namespace Survival.Unity
             }
         }
 
+        // ---------- bottom bar (Heroes / Alliance / Bag, room for Battle) ----------
+
+        /// <summary>
+        /// Builds the painted bottom bar from <see cref="NavModel"/>. Taps go button → <see cref="BottomNav.Tap"/>
+        /// → the per-id handler (Heroes → <see cref="OnHeroesTapped"/>, ...). Village / World switching lives on the
+        /// view toggle button, not in the bar.
+        /// </summary>
         private void Nav(RectTransform root, IReadOnlyDictionary<string, HudRect> hud, ThemePackBinder pack)
         {
-            var bar = SurvivalVisuals.Image(root, "Nav", SurvivalVisuals.Panel);
+            _navPack = pack;
+            var bar = SurvivalPaintedButton.Bar(root, "Nav");
             Place(bar.rectTransform, hud, "nav");
-            HookSkin.TrySkin(bar, HookArtKeys.Panel, 0.5f);
-            var tabs = new[]
+            _navBar = bar.rectTransform;
+            _navHandlers[BottomNav.Heroes] = OnHeroesTapped;
+            _navHandlers[BottomNav.Alliance] = OnAllianceTapped;
+            _navHandlers[BottomNav.Bag] = OnBagTapped;
+            NavModel.Tapped += id =>
             {
-                ("nav.base", SurvIds.SysBase, false),
-                ("nav.heroes", SurvIds.SysHeroes, false),
-                ("nav.alliance", SurvIds.SysAlliance, false),
-                ("nav.world", SurvIds.SysWorld, true),
-                ("nav.bag", SurvIds.SysMeta, false)
+                if (_navHandlers.TryGetValue(id, out var handler))
+                {
+                    handler();
+                }
             };
-            for (var i = 0; i < tabs.Length; i++)
+            NavModel.Changed += RelayoutNav;
+            RelayoutNav();
+        }
+
+        /// <summary>
+        /// Add one more bottom-bar button (Battle, ...) with its own tap handler. The bar re-spaces evenly.
+        /// <paramref name="index"/> null appends; 0 puts it first. Returns the button, or null if the id exists.
+        /// </summary>
+        public RectTransform? AddNavButton(string id, string iconKey, Action onTap, int? index = null)
+        {
+            _navHandlers[id] = onTap;
+            if (!NavModel.Add(new NavButtonDef(id, iconKey), index))
             {
-                var (key, _, active) = tabs[i];
-                var btn = SurvivalVisuals.Button(bar.transform, key, active ? SurvivalVisuals.WorldTab : SurvivalVisuals.PanelSoft);
-                var tabSkinned = HookSkin.TrySkin(btn.GetComponent<Image>(), active ? HookArtKeys.ButtonGold : HookArtKeys.ButtonBlue, 0.4f);
-                var rt = btn.GetComponent<RectTransform>();
-                var x0 = i / 5f;
-                var x1 = (i + 1) / 5f;
-                rt.anchorMin = new Vector2(x0 + 0.01f, 0.12f);
-                rt.anchorMax = new Vector2(x1 - 0.01f, 0.88f);
+                return null;
+            }
+
+            return _navButtons.TryGetValue(id, out var rt) ? rt : null;
+        }
+
+        /// <summary>The bottom-bar button for <paramref name="id"/> (badges, tutorials), or null.</summary>
+        public RectTransform? NavButton(string id) => _navButtons.TryGetValue(id, out var rt) ? rt : null;
+
+        /// <summary>Heroes bottom-bar entry point. The Heroes screen subscribes to <see cref="HeroesTapped"/>.</summary>
+        public void OnHeroesTapped() => HeroesTapped?.Invoke();
+
+        public void OnAllianceTapped() => AllianceTapped?.Invoke();
+
+        public void OnBagTapped() => BagTapped?.Invoke();
+
+        private void RelayoutNav()
+        {
+            if (_navBar == null)
+            {
+                return;
+            }
+
+            var keep = new HashSet<string>();
+            for (var i = 0; i < NavModel.Buttons.Count; i++)
+            {
+                var def = NavModel.Buttons[i];
+                keep.Add(def.Id);
+                if (!_navButtons.TryGetValue(def.Id, out var rt))
+                {
+                    var label = _navPack != null ? _navPack.StringOr(def.Id, def.Id) : def.Id;
+                    var btn = SurvivalPaintedButton.Create(_navBar, "Nav_" + def.Id, def.IconKey, label, out _, out _);
+                    rt = btn.GetComponent<RectTransform>();
+                    var id = def.Id;
+                    btn.onClick.AddListener(() => NavModel.Tap(id));
+                    _navButtons[def.Id] = rt;
+                }
+
+                var (x0, x1) = NavModel.Slot(i);
+                rt.anchorMin = new Vector2(x0, 0.10f);
+                rt.anchorMax = new Vector2(x1, 0.86f);
                 rt.offsetMin = Vector2.zero;
                 rt.offsetMax = Vector2.zero;
-                var tabText = SurvivalVisuals.Text(btn.transform, "T", pack.StringOr(key, key), 20, TextAnchor.MiddleCenter, active ? (tabSkinned ? HookSkin.Ink : SurvivalVisuals.Gold) : SurvivalVisuals.Cream);
-                if (tabSkinned)
+            }
+
+            var gone = new List<string>();
+            foreach (var kv in _navButtons)
+            {
+                if (!keep.Contains(kv.Key))
                 {
-                    tabText.fontStyle = FontStyle.Bold;
-                    if (!active)
-                    {
-                        HookSkin.Outlined(tabText, 1.5f);
-                    }
+                    Destroy(kv.Value.gameObject);
+                    gone.Add(kv.Key);
                 }
-                var navTab = btn.transform;
-                btn.onClick.AddListener(() => StartCoroutine(Punch(navTab, 0.10f, 8)));
+            }
+
+            foreach (var id in gone)
+            {
+                _navButtons.Remove(id);
             }
         }
 

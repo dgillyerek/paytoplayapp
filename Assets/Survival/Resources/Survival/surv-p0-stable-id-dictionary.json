@@ -43,7 +43,10 @@
   "base_plots_slice": [
     "base.plot.hq_01",
     "base.plot.farm_01",
-    "base.plot.lumber_01"
+    "base.plot.lumber_01",
+    "base.plot.farm_02",
+    "base.plot.lumber_02",
+    "base.plot.forge_01"
   ],
   "world_node_types": {
     "world.node_type.home": {

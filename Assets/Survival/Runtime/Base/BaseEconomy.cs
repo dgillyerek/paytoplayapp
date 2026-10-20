@@ -15,14 +15,18 @@ namespace Survival.Domain.Base
         IReadOnlyDictionary<string, int> UpgradeCost,
         int UpgradeSeconds);
 
-    /// <summary>A placed building on the base: an instance of a SURV-P0 building id (Farm = building.economy producing res.food).</summary>
+    /// <summary>
+    /// A placed building on the base: an instance of a SURV-P0 building id (Farm = building.economy producing res.food).
+    /// <paramref name="BuildType"/> is set for buildings the player placed with Build (farm, lumber, quarry, forge).
+    /// </summary>
     public sealed record BasePlotDef(
         string Id,
         string BuildingId,
         string? Produces,
         int StartLevel,
         double StartFill,
-        IReadOnlyList<BuildingLevelDef> Levels);
+        IReadOnlyList<BuildingLevelDef> Levels,
+        string? BuildType = null);
 
     public sealed class BasePlot
     {
@@ -37,12 +41,15 @@ namespace Survival.Domain.Base
         public BasePlotDef Def { get; }
         public string Id => Def.Id;
         public int Level { get; internal set; }
+
+        /// <summary>Placed with Build and still on its construction timer: no production, no upgrades.</summary>
+        public bool UnderConstruction { get; internal set; }
         public double Stored { get; internal set; }
         internal double LastTick { get; set; }
 
         public BuildingLevelDef Current => Def.Levels[Level - 1];
         public BuildingLevelDef? Next => Level < Def.Levels.Count ? Def.Levels[Level] : null;
-        public bool IsProducer => !string.IsNullOrEmpty(Def.Produces) && Current.PerHour > 0;
+        public bool IsProducer => !UnderConstruction && !string.IsNullOrEmpty(Def.Produces) && Current.PerHour > 0;
         public int Collectable => (int)Math.Floor(Stored + 1e-9);
         public bool CanCollect => IsProducer && Collectable >= Math.Max(1, Current.MinCollect);
         public bool IsFull => IsProducer && Stored >= Current.Capacity - 1e-9;
@@ -94,8 +101,56 @@ namespace Survival.Domain.Base
         /// <summary>(plot, resource, amount) after a tap-collect.</summary>
         public event Action<BasePlot, string, int>? Collected;
 
-        /// <summary>(plot, new level) after an upgrade finishes.</summary>
+        /// <summary>(plot, new level) after an upgrade finishes (also level 1 when a construction finishes).</summary>
         public event Action<BasePlot, int>? LevelReached;
+
+        /// <summary>A Build construction finished: the new building is standing at Lv 1.</summary>
+        public event Action<BasePlot>? Constructed;
+
+        /// <summary>A plot was added at runtime (Build placement or save restore).</summary>
+        public event Action<BasePlot>? PlotAdded;
+
+        /// <summary>
+        /// Add a plot at runtime. <paramref name="underConstruction"/> plots wait on
+        /// <see cref="UpgradeTimerId"/> (the caller starts it); finishing it leaves them at Lv 1.
+        /// </summary>
+        public BasePlot AddPlot(BasePlotDef def, bool underConstruction)
+        {
+            if (def.Levels.Count == 0)
+            {
+                throw new ArgumentException($"Plot '{def.Id}' has no levels.");
+            }
+
+            if (Find(def.Id) != null)
+            {
+                throw new ArgumentException($"Plot '{def.Id}' already exists.");
+            }
+
+            var p = new BasePlot(def, Clock.Now) { UnderConstruction = underConstruction };
+            if (underConstruction)
+            {
+                p.Stored = 0;
+            }
+
+            _plots.Add(p);
+            PlotAdded?.Invoke(p);
+            return p;
+        }
+
+        /// <summary>Save restore: set a plot's level (clamped) without events.</summary>
+        public bool RestoreLevel(string plotId, int level, bool underConstruction = false)
+        {
+            var p = Find(plotId);
+            if (p == null)
+            {
+                return false;
+            }
+
+            p.Level = Math.Max(1, Math.Min(level, p.Def.Levels.Count));
+            p.UnderConstruction = underConstruction;
+            p.Stored = Math.Min(p.Stored, p.Current.Capacity);
+            return true;
+        }
 
         public BasePlot? Find(string plotId)
         {
@@ -134,7 +189,7 @@ namespace Survival.Domain.Base
             var best = 0;
             foreach (var p in _plots)
             {
-                if (string.Equals(p.Def.BuildingId, buildingId, StringComparison.Ordinal) && p.Level > best)
+                if (!p.UnderConstruction && string.Equals(p.Def.BuildingId, buildingId, StringComparison.Ordinal) && p.Level > best)
                 {
                     best = p.Level;
                 }
@@ -188,7 +243,7 @@ namespace Survival.Domain.Base
                 return UpgradeBlock.MaxLevel;
             }
 
-            if (IsUpgrading(plotId))
+            if (IsUpgrading(plotId) || p.UnderConstruction)
             {
                 return UpgradeBlock.AlreadyUpgrading;
             }
@@ -229,7 +284,7 @@ namespace Survival.Domain.Base
             return true;
         }
 
-        /// <summary>Finish a done upgrade timer: level up. Returns the new level, or 0.</summary>
+        /// <summary>Finish a done upgrade timer: level up (a construction just opens at Lv 1). Returns the new level, or 0.</summary>
         public int TryFinishUpgrade(string plotId)
         {
             var p = Find(plotId);
@@ -239,6 +294,16 @@ namespace Survival.Domain.Base
             }
 
             Tick();
+            if (p.UnderConstruction)
+            {
+                p.UnderConstruction = false;
+                p.LastTick = Clock.Now;
+                p.Stored = 0;
+                Constructed?.Invoke(p);
+                LevelReached?.Invoke(p, p.Level);
+                return p.Level;
+            }
+
             p.Level = Math.Min(p.Level + 1, p.Def.Levels.Count);
             LevelReached?.Invoke(p, p.Level);
             return p.Level;

@@ -52,6 +52,9 @@ namespace Survival.Domain.Theme
             return Prefix + "plot." + tail;
         }
 
+        /// <summary>Building art for a Build type (farm, lumber, quarry, forge), e.g. theme_a.hook.build.farm.</summary>
+        public static string ForBuildType(string type) => Prefix + "build." + type;
+
         /// <summary>Gem Shop tier art by offer position (0 = smallest).</summary>
         public static string ForGemTier(int index) => index <= 0 ? GemsTier1 : index == 1 ? GemsTier2 : GemsTier3;
 

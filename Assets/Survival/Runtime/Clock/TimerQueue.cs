@@ -108,6 +108,18 @@ namespace Survival.Domain.Clock
             return true;
         }
 
+        /// <summary>Save restore: put a timer back exactly as it was (wall-clock start + duration), slots permitting.</summary>
+        public bool Restore(string id, string targetId, double startedAt, double durationSeconds)
+        {
+            if (!HasFreeSlot || Find(id) != null)
+            {
+                return false;
+            }
+
+            _timers.Add(new GameTimer(id, targetId, startedAt, Math.Max(0, durationSeconds)));
+            return true;
+        }
+
         public double Remaining(string id) => Find(id)?.Remaining(Clock.Now) ?? 0;
 
         public bool IsDone(string id)
