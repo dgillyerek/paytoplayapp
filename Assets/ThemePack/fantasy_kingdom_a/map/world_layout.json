@@ -1,0 +1,93 @@
+{
+  "_comment": "Theme A kingdom map for the World view. x / y are fractions of the map (y from top). The painted crusade map (heart) holds the six catalog world nodes at their node_pins.json positions.",
+  "world": {
+    "width": 3240,
+    "height": 4320,
+    "min_zoom": 0.45,
+    "max_zoom": 1.4,
+    "start_zoom": 0.8,
+    "march_speed": 110,
+    "min_march_seconds": 8,
+    "max_march_seconds": 40,
+    "max_player_marches": 3
+  },
+  "heart": {
+    "art": "theme_a.map.heart",
+    "x": 0.5,
+    "y": 0.5,
+    "width": 1080,
+    "height": 1920
+  },
+  "villages": [
+    { "id": "village.player", "name": "Lord Valerian", "power": 128540, "kind": "player", "level": 23, "x": 0.27, "y": 0.4 },
+    { "id": "village.rival_01", "name": "Lord Brannoc", "power": 98200, "kind": "rival", "level": 10, "x": 0.12, "y": 0.12 },
+    { "id": "village.rival_02", "name": "Queen Isolde", "power": 142900, "kind": "rival", "level": 13, "x": 0.8, "y": 0.11 },
+    { "id": "village.ally_01", "name": "Sir Gareth", "power": 76400, "kind": "ally", "level": 9, "x": 0.13, "y": 0.6 },
+    { "id": "village.rival_03", "name": "Baron Vex", "power": 110350, "kind": "rival", "level": 11, "x": 0.88, "y": 0.42 },
+    { "id": "village.ally_02", "name": "Lady Wren", "power": 64800, "kind": "ally", "level": 8, "x": 0.82, "y": 0.78 },
+    { "id": "village.rival_04", "name": "Warlord Kragg", "power": 188000, "kind": "rival", "level": 15, "x": 0.18, "y": 0.9 },
+    { "id": "village.rival_05", "name": "Count Mordane", "power": 131600, "kind": "rival", "level": 12, "x": 0.56, "y": 0.94 },
+    { "id": "village.ally_03", "name": "Thane Hal", "power": 58300, "kind": "ally", "level": 7, "x": 0.91, "y": 0.62 },
+    { "id": "village.rival_06", "name": "Duke Aldmar", "power": 95700, "kind": "rival", "level": 10, "x": 0.48, "y": 0.06 }
+  ],
+  "camps": [
+    { "id": "camp.goblin_01", "type": "goblin", "level": 3, "x": 0.22, "y": 0.24, "power": 4200, "reward": 1200 },
+    { "id": "camp.goblin_02", "type": "goblin", "level": 5, "x": 0.72, "y": 0.89, "power": 7800, "reward": 2000 },
+    { "id": "camp.bandit_01", "type": "bandit", "level": 4, "x": 0.07, "y": 0.38, "power": 6100, "reward": 1600 },
+    { "id": "camp.bandit_02", "type": "bandit", "level": 7, "x": 0.92, "y": 0.25, "power": 11800, "reward": 2800 },
+    { "id": "camp.undead_01", "type": "undead", "level": 9, "x": 0.68, "y": 0.2, "power": 16400, "reward": 3600 },
+    { "id": "camp.undead_02", "type": "undead", "level": 12, "x": 0.08, "y": 0.77, "power": 24500, "reward": 5200 },
+    { "id": "camp.dragon_01", "type": "dragon", "level": 20, "x": 0.36, "y": 0.82, "power": 61000, "reward": 12000 }
+  ],
+  "resources": [
+    { "id": "res.gold_01", "type": "gold", "x": 0.31, "y": 0.11, "amount": 12000 },
+    { "id": "res.wood_01", "type": "wood", "x": 0.06, "y": 0.22, "amount": 9000 },
+    { "id": "res.food_01", "type": "food", "x": 0.77, "y": 0.58, "amount": 9000 },
+    { "id": "res.stone_01", "type": "stone", "x": 0.94, "y": 0.88, "amount": 9000 },
+    { "id": "res.gold_02", "type": "gold", "x": 0.72, "y": 0.73, "amount": 15000 },
+    { "id": "res.food_02", "type": "food", "x": 0.26, "y": 0.67, "amount": 8000 },
+    { "id": "res.wood_02", "type": "wood", "x": 0.95, "y": 0.52, "amount": 10000 }
+  ],
+  "marches": [
+    { "owner": "village.rival_01", "target": "camp.goblin_01", "offset": 3 },
+    { "owner": "village.rival_02", "target": "camp.undead_01", "offset": 11 },
+    { "owner": "village.ally_01", "target": "res.food_02", "offset": 6 },
+    { "owner": "village.rival_03", "target": "camp.bandit_02", "offset": 2 },
+    { "owner": "village.ally_02", "target": "res.food_01", "offset": 9 },
+    { "owner": "village.rival_04", "target": "camp.undead_02", "offset": 14 },
+    { "owner": "village.rival_05", "target": "camp.dragon_01", "offset": 5 },
+    { "owner": "village.ally_03", "target": "res.wood_02", "offset": 1 },
+    { "owner": "village.rival_06", "target": "res.gold_01", "offset": 8 },
+    { "owner": "village.rival_03", "target": "world.node.fight_01", "offset": 17 },
+    { "owner": "village.rival_02", "target": "village.rival_06", "offset": 21 },
+    { "owner": "village.ally_01", "target": "world.node.explore_01", "offset": 12 }
+  ],
+  "props": [
+    { "type": "forest", "x": 0.639, "y": 0.098, "scale": 1.06 },
+    { "type": "forest", "x": 0.405, "y": 0.948, "scale": 0.87 },
+    { "type": "mountains", "x": 0.83, "y": 0.302, "scale": 0.91 },
+    { "type": "lake", "x": 0.148, "y": 0.32, "scale": 1.18 },
+    { "type": "forest", "x": 0.666, "y": 0.432, "scale": 0.98 },
+    { "type": "mountains", "x": 0.567, "y": 0.853, "scale": 0.98 },
+    { "type": "forest", "x": 0.096, "y": 0.689, "scale": 1.11 },
+    { "type": "forest", "x": 0.954, "y": 0.803, "scale": 0.96 },
+    { "type": "mountains", "x": 0.061, "y": 0.464, "scale": 0.92 },
+    { "type": "lake", "x": 0.853, "y": 0.93, "scale": 0.91 },
+    { "type": "forest", "x": 0.255, "y": 0.486, "scale": 1.09 },
+    { "type": "mountains", "x": 0.282, "y": 0.034, "scale": 1.02 },
+    { "type": "forest", "x": 0.063, "y": 0.852, "scale": 1.1 },
+    { "type": "forest", "x": 0.377, "y": 0.187, "scale": 1.16 },
+    { "type": "mountains", "x": 0.53, "y": 0.762, "scale": 0.98 },
+    { "type": "lake", "x": 0.245, "y": 0.793, "scale": 1.24 },
+    { "type": "forest", "x": 0.813, "y": 0.481, "scale": 1.11 },
+    { "type": "mountains", "x": 0.911, "y": 0.711, "scale": 0.92 },
+    { "type": "forest", "x": 0.362, "y": 0.546, "scale": 0.9 },
+    { "type": "forest", "x": 0.053, "y": 0.943, "scale": 1.11 },
+    { "type": "mountains", "x": 0.525, "y": 0.254, "scale": 0.89 },
+    { "type": "lake", "x": 0.944, "y": 0.352, "scale": 1.18 },
+    { "type": "forest", "x": 0.69, "y": 0.628, "scale": 1.01 },
+    { "type": "mountains", "x": 0.657, "y": 0.295, "scale": 0.95 },
+    { "type": "forest", "x": 0.282, "y": 0.934, "scale": 1.24 },
+    { "type": "forest", "x": 0.901, "y": 0.046, "scale": 1.03 }
+  ]
+}

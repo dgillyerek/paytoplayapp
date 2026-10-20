@@ -173,6 +173,11 @@ namespace Survival.Domain.Ids
         public const string BasePlotHq01 = "base.plot.hq_01";
         public const string BasePlotFarm01 = "base.plot.farm_01";
         public const string BasePlotLumber01 = "base.plot.lumber_01";
+        public const string BasePlotFarm02 = "base.plot.farm_02";
+        public const string BasePlotLumber02 = "base.plot.lumber_02";
+
+        /// <summary>Village Forge: an instance of <see cref="BuildingWorkshop"/> (no new building id).</summary>
+        public const string BasePlotForge01 = "base.plot.forge_01";
 
         public const string QuestChainStarter = "quest.chain.starter";
         public const string QuestStarterCollect = "quest.starter.collect";
@@ -197,7 +202,7 @@ namespace Survival.Domain.Ids
 
         public static readonly IReadOnlyList<string> BasePlots = new[]
         {
-            BasePlotHq01, BasePlotFarm01, BasePlotLumber01
+            BasePlotHq01, BasePlotFarm01, BasePlotLumber01, BasePlotFarm02, BasePlotLumber02, BasePlotForge01
         };
 
         public static readonly IReadOnlyList<string> QuestStepsStarter = new[]

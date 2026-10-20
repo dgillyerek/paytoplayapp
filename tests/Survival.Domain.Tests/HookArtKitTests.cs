@@ -11,7 +11,7 @@ public sealed class HookArtKitTests
         SurvIds.ResSoft, SurvIds.ResStone, SurvIds.ResWood, SurvIds.ResFood, SurvIds.ResHard, SurvIds.ResSpeedupM
     };
 
-    private static readonly string[] Plots = { SurvIds.BasePlotHq01, "base.plot.farm_01", "base.plot.lumber_01" };
+    private static readonly IReadOnlyList<string> Plots = SurvIds.BasePlots;
 
     [Fact]
     public void Pack_binds_every_hook_kit_key_to_an_existing_png()

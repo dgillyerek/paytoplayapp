@@ -50,10 +50,11 @@ def wrap(s, size, width):
     return [ln for ln in lines if ln]
 
 
-def main_view():
-    img = art("map.terrain").resize((W, H)).copy()
+def main_view(bg=None, active_nav="nav.world", toggle=None, banner=None):
+    """HUD over the old static map, or over a supplied map render (bg) for the World / Village mocks."""
+    img = bg.copy() if bg is not None else art("map.terrain").resize((W, H)).copy()
     # world pins (labels + dots); quarry has its painted sprite
-    for p in PINS:
+    for p in (PINS if bg is None else []):
         x, yt = p["pin_x"] * W, p["pin_y_from_top"] * H
         if p["sprite_size"] > 0.01:
             a = art(p["content_key"])
@@ -77,7 +78,7 @@ def main_view():
     text(img, v, S("hud.vip"), 20, INK, "mc", True, outline=False)
     b = hud("banner")
     sliced(img, K + "ui.header", b, 0.42)
-    text(img, b, S("theme_a.map.label", S("hud.banner")), 22, CREAM, outline=False)
+    text(img, b, banner or S("theme_a.map.label", S("hud.banner")), 22, CREAM, outline=False)
     e = hud("events")
     sliced(img, K + "ui.panel", e, 0.5)
     yy = e.y0 + 16
@@ -93,7 +94,7 @@ def main_view():
     sliced(img, K + "ui.panel", n, 0.5)
     for i, key in enumerate(["nav.base", "nav.heroes", "nav.alliance", "nav.world", "nav.bag"]):
         r = n.box(i / 5 + 0.01, 0.12, (i + 1) / 5 - 0.01, 0.88)
-        act = key == "nav.world"
+        act = key == active_nav
         button(img, K + ("ui.button_gold" if act else "ui.button_blue"), r, S(key, key), 20, 0.4, INK if act else (237, 230, 209))
     # hook: quest tracker
     q = hud("quest_tracker")
@@ -111,14 +112,14 @@ def main_view():
     glow(img, g.box(0.60, 0.05, 1.16, 1.80), (140, 255, 115), 0.9)
     fit(img, art(K + "ui.badge_free"), g.box(0.68, 0.30, 1.08, 1.55), rot=6)
     text(img, g.box(0.68, 0.30, 1.08, 1.55), S("hook.free"), 17, (255, 255, 255), "mc", True)
-    # base strip
-    strip = hud("base_strip")
+    # base strip (removed from hud_layout.json when the Village view replaced it)
+    strip = hud("base_strip") if "base_strip" in HUD else None
     cards = [
         ("base.plot.hq_01", None, "Lv 1", "2K Gold  1.5K Stone  1.2K Wood", 0.0, "ui.bar_fill_blue", ("ui.button_gold", S("hook.upgrade")), None, None),
         ("base.plot.farm_01", "res.food", "Lv 1", "600 / 600", 1.0, "ui.bar_fill_gold", ("ui.button_gold", S("hook.upgrade")), "+600", None),
         ("base.plot.lumber_01", "res.wood", "Lv 1", S("hook.upgrading") + "  02:41", 0.18, "ui.bar_fill_blue", ("ui.button_blue", S("hook.speedup.title")), None, None),
     ]
-    for i, (pid, res, lv, status, frac, fillk, act, bubble, badge) in enumerate(cards):
+    for i, (pid, res, lv, status, frac, fillk, act, bubble, badge) in enumerate(cards if strip is not None else []):
         c = strip.box(i / 3 + 0.006, 0, (i + 1) / 3 - 0.006, 1)
         sliced(img, K + "ui.panel", c, 0.55)
         glow(img, c.box(-0.04, 0.18, 0.46, 1.12), (255, 219, 115), 0.35)
@@ -142,6 +143,13 @@ def main_view():
             text(img, br.box(0.32, 0, 1, 1), bubble, 18, REWARD, "mc")
     for slot, label in [("debug_gift", S("debug.gift", "DEBUG: Gift now (G)")), ("debug_skip", S("debug.skip", "DEBUG: +5 min (T)"))]:
         button(img, K + "ui.button_red", hud(slot), label, 16, 0.34, CREAM)
+    if toggle is not None and "view_toggle" in HUD:
+        t = hud("view_toggle")
+        glow(img, t.box(-0.12, -0.10, 1.12, 1.25), (140, 204, 255), 0.45)
+        sliced(img, K + "ui.button_blue", t, 0.45)
+        icon_key, label = toggle
+        fit(img, art(icon_key), t.box(0.10, 0.30, 0.90, 1.18))
+        text(img, t.box(0, 0.02, 1, 0.32), label, 28, CREAM, "mc", True)
     return img
 
 

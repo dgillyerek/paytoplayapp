@@ -18,7 +18,12 @@
       "levels": [
         { "level": 1, "upgrade_cost": { "res.soft": 2000, "res.stone": 1500, "res.wood": 1200 }, "upgrade_seconds": 600 },
         { "level": 2, "upgrade_cost": { "res.soft": 6000, "res.stone": 4500, "res.wood": 3600 }, "upgrade_seconds": 1800 },
-        { "level": 3 }
+        { "level": 3, "upgrade_cost": { "res.soft": 14000, "res.stone": 10000, "res.wood": 8000 }, "upgrade_seconds": 3600 },
+        { "level": 4, "upgrade_cost": { "res.soft": 30000, "res.stone": 22000, "res.wood": 18000 }, "upgrade_seconds": 7200 },
+        { "level": 5, "upgrade_cost": { "res.soft": 60000, "res.stone": 45000, "res.wood": 36000 }, "upgrade_seconds": 14400 },
+        { "level": 6, "upgrade_cost": { "res.soft": 120000, "res.stone": 90000, "res.wood": 72000 }, "upgrade_seconds": 28800 },
+        { "level": 7, "upgrade_cost": { "res.soft": 240000, "res.stone": 180000, "res.wood": 144000 }, "upgrade_seconds": 57600 },
+        { "level": 8 }
       ]
     },
     {
@@ -30,7 +35,10 @@
       "levels": [
         { "level": 1, "per_hour": 3600, "capacity": 600, "min_collect": 20, "upgrade_cost": { "res.soft": 800, "res.wood": 600 }, "upgrade_seconds": 180 },
         { "level": 2, "per_hour": 5400, "capacity": 900, "min_collect": 25, "upgrade_cost": { "res.soft": 2400, "res.wood": 1800 }, "upgrade_seconds": 900 },
-        { "level": 3, "per_hour": 7200, "capacity": 1200, "min_collect": 30 }
+        { "level": 3, "per_hour": 7200, "capacity": 1200, "min_collect": 30, "upgrade_cost": { "res.soft": 6000, "res.wood": 4500 }, "upgrade_seconds": 1800 },
+        { "level": 4, "per_hour": 9000, "capacity": 1500, "min_collect": 35, "upgrade_cost": { "res.soft": 14000, "res.wood": 10000 }, "upgrade_seconds": 3600 },
+        { "level": 5, "per_hour": 10800, "capacity": 1800, "min_collect": 40, "upgrade_cost": { "res.soft": 30000, "res.wood": 22000 }, "upgrade_seconds": 7200 },
+        { "level": 6, "per_hour": 12600, "capacity": 2100, "min_collect": 45 }
       ]
     },
     {
@@ -42,7 +50,53 @@
       "levels": [
         { "level": 1, "per_hour": 3000, "capacity": 500, "min_collect": 20, "upgrade_cost": { "res.soft": 800, "res.food": 600 }, "upgrade_seconds": 180 },
         { "level": 2, "per_hour": 4500, "capacity": 750, "min_collect": 25, "upgrade_cost": { "res.soft": 2400, "res.food": 1800 }, "upgrade_seconds": 900 },
-        { "level": 3, "per_hour": 6000, "capacity": 1000, "min_collect": 30 }
+        { "level": 3, "per_hour": 6000, "capacity": 1000, "min_collect": 30, "upgrade_cost": { "res.soft": 6000, "res.food": 4500 }, "upgrade_seconds": 1800 },
+        { "level": 4, "per_hour": 7500, "capacity": 1250, "min_collect": 35, "upgrade_cost": { "res.soft": 14000, "res.food": 10000 }, "upgrade_seconds": 3600 },
+        { "level": 5, "per_hour": 9000, "capacity": 1500, "min_collect": 40, "upgrade_cost": { "res.soft": 30000, "res.food": 22000 }, "upgrade_seconds": 7200 },
+        { "level": 6, "per_hour": 10500, "capacity": 1750, "min_collect": 45 }
+      ]
+    },
+    {
+      "id": "base.plot.farm_02",
+      "building": "building.economy",
+      "produces": "res.food",
+      "start_level": 1,
+      "start_fill": 0.6,
+      "levels": [
+        { "level": 1, "per_hour": 3600, "capacity": 600, "min_collect": 20, "upgrade_cost": { "res.soft": 800, "res.wood": 600 }, "upgrade_seconds": 180 },
+        { "level": 2, "per_hour": 5400, "capacity": 900, "min_collect": 25, "upgrade_cost": { "res.soft": 2400, "res.wood": 1800 }, "upgrade_seconds": 900 },
+        { "level": 3, "per_hour": 7200, "capacity": 1200, "min_collect": 30, "upgrade_cost": { "res.soft": 6000, "res.wood": 4500 }, "upgrade_seconds": 1800 },
+        { "level": 4, "per_hour": 9000, "capacity": 1500, "min_collect": 35, "upgrade_cost": { "res.soft": 14000, "res.wood": 10000 }, "upgrade_seconds": 3600 },
+        { "level": 5, "per_hour": 10800, "capacity": 1800, "min_collect": 40, "upgrade_cost": { "res.soft": 30000, "res.wood": 22000 }, "upgrade_seconds": 7200 },
+        { "level": 6, "per_hour": 12600, "capacity": 2100, "min_collect": 45 }
+      ]
+    },
+    {
+      "id": "base.plot.lumber_02",
+      "building": "building.economy",
+      "produces": "res.wood",
+      "start_level": 1,
+      "start_fill": 0.6,
+      "levels": [
+        { "level": 1, "per_hour": 3000, "capacity": 500, "min_collect": 20, "upgrade_cost": { "res.soft": 800, "res.food": 600 }, "upgrade_seconds": 180 },
+        { "level": 2, "per_hour": 4500, "capacity": 750, "min_collect": 25, "upgrade_cost": { "res.soft": 2400, "res.food": 1800 }, "upgrade_seconds": 900 },
+        { "level": 3, "per_hour": 6000, "capacity": 1000, "min_collect": 30, "upgrade_cost": { "res.soft": 6000, "res.food": 4500 }, "upgrade_seconds": 1800 },
+        { "level": 4, "per_hour": 7500, "capacity": 1250, "min_collect": 35, "upgrade_cost": { "res.soft": 14000, "res.food": 10000 }, "upgrade_seconds": 3600 },
+        { "level": 5, "per_hour": 9000, "capacity": 1500, "min_collect": 40, "upgrade_cost": { "res.soft": 30000, "res.food": 22000 }, "upgrade_seconds": 7200 },
+        { "level": 6, "per_hour": 10500, "capacity": 1750, "min_collect": 45 }
+      ]
+    },
+    {
+      "id": "base.plot.forge_01",
+      "building": "building.workshop",
+      "start_level": 1,
+      "levels": [
+        { "level": 1, "upgrade_cost": { "res.soft": 1500, "res.stone": 1200 }, "upgrade_seconds": 300 },
+        { "level": 2, "upgrade_cost": { "res.soft": 4000, "res.stone": 3000 }, "upgrade_seconds": 1200 },
+        { "level": 3, "upgrade_cost": { "res.soft": 9000, "res.stone": 7000 }, "upgrade_seconds": 2400 },
+        { "level": 4, "upgrade_cost": { "res.soft": 20000, "res.stone": 15000 }, "upgrade_seconds": 4800 },
+        { "level": 5, "upgrade_cost": { "res.soft": 42000, "res.stone": 32000 }, "upgrade_seconds": 9600 },
+        { "level": 6 }
       ]
     }
   ]

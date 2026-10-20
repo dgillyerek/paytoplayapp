@@ -18,9 +18,11 @@ using UnityEngine.UI;
 namespace Survival.Unity
 {
     /// <summary>
-    /// World + quest "hook" slice on top of the Play shell: Castle / Farm / Lumber Mill cards (tap to collect,
-    /// timed upgrades, gem rush, free finish), the starter quest tracker with chest claim, the free gift,
-    /// the sandbox Gem Shop with its pulsing FREE badge, and the chest-burst celebration. Juice on every tap.
+    /// World + quest "hook" slice on top of the Play shell: the Village view's buildings (Castle, Farms, Lumber
+    /// Mills, Forge on their plots: tap to collect, tap for the building card with timed upgrades, gem rush, free
+    /// finish; the Castle swaps to a bigger painted tier as it levels, the others show a numbered level badge),
+    /// the starter quest tracker with chest claim, the free gift, the sandbox Gem Shop with its pulsing FREE badge,
+    /// and the chest-burst celebration. Juice on every tap.
     /// Debug (Editor / dev builds): G = free gift now, T = skip 5 min (also on-screen buttons).
     /// </summary>
     public sealed class SurvivalHookView : MonoBehaviour
@@ -70,19 +72,25 @@ namespace Survival.Unity
         private int _lastDebugFrame = -1;
         private float _uiTick;
 
+        /// <summary>One village building: art on its plot host plus its signs (level badge, name plate, timer, bubble).</summary>
         private sealed class PlotCard
         {
             public string PlotId = "";
+            public bool IsCastle;
+            public int Tier;
             public RectTransform Root = null!;
-            public Text Level = null!;
+            public Image Art = null!;
+            public Text Name = null!;
+            public Image? LevelBadge;
+            public Text? LevelText;
             public Image Bubble = null!;
             public Text BubbleText = null!;
+            public RectTransform TimerRoot = null!;
             public Image BarFill = null!;
             public Text Status = null!;
-            public Image Action = null!;
-            public Text ActionText = null!;
             public Image Badge = null!;
             public Text BadgeText = null!;
+            public Image Arrow = null!;
         }
 
         private sealed class QuestTracker
@@ -125,7 +133,7 @@ namespace Survival.Unity
             }
 
             var root = play.Root;
-            BuildBaseStrip(root);
+            BuildVillage(play.Village);
             BuildQuestTracker(root);
             BuildShopButton(root);
             if (Application.isEditor || Debug.isDebugBuild)
@@ -176,116 +184,128 @@ namespace Survival.Unity
 
         // ---------- build ----------
 
-        private void BuildBaseStrip(RectTransform root)
+        private void BuildVillage(SurvivalVillageView? village)
         {
-            if (_hook == null || _pack == null || !_pack.Hud.TryGetValue("base_strip", out var stripRect))
+            if (_hook == null || village == null)
             {
                 return;
             }
 
-            var strip = SurvivalVisuals.Image(root, "BaseStrip", new Color(0f, 0f, 0f, 0f));
-            SurvivalVisuals.Place(strip.rectTransform, stripRect);
-            var plots = _hook.Base.Plots;
-            for (var i = 0; i < plots.Count; i++)
+            foreach (var plot in _hook.Base.Plots)
             {
-                var plot = plots[i];
-                var x0 = i / (float)plots.Count;
-                var x1 = (i + 1) / (float)plots.Count;
-                _cards[plot.Id] = BuildCard(strip.rectTransform, plot, x0, x1);
+                var host = village.Host(plot.Id);
+                if (host != null)
+                {
+                    _cards[plot.Id] = BuildCard(village, host, plot);
+                }
             }
         }
 
-        private PlotCard BuildCard(RectTransform strip, BasePlot plot, float x0, float x1)
+        private IReadOnlyList<CastleTier> Tiers => _play?.Village?.Layout?.CastleTiers ?? CastleTiers.Default;
+
+        private PlotCard BuildCard(SurvivalVillageView village, RectTransform host, BasePlot plot)
         {
             var plotId = plot.Id;
-            var frame = HookSkin.Panel(strip, "Plot_" + plotId, HookArtKeys.Panel, SurvivalVisuals.InspectFill, 0.55f);
-            frame.raycastTarget = true;
-            var body = frame.gameObject.AddComponent<Button>();
-            body.targetGraphic = frame;
-            var rt = frame.rectTransform;
-            rt.anchorMin = new Vector2(x0 + 0.006f, 0f);
-            rt.anchorMax = new Vector2(x1 - 0.006f, 1f);
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-
-            var card = new PlotCard { PlotId = plotId, Root = rt };
-
-            // Painted building pops out over the top of its card (theme_a.hook.plot.* in the pack).
-            var glow = HookSkin.Glow(rt, "BuildingGlow", new Color(1f, 0.86f, 0.45f, 0.35f));
-            Box(glow.rectTransform, -0.04f, 0.18f, 0.46f, 1.12f);
-            var buildingKey = HookArtKeys.ForPlot(plotId);
-            Image icon;
-            if (HookSkin.Has(buildingKey))
+            var visual = BuildingVisual.For(plot, Tiers);
+            var card = new PlotCard { PlotId = plotId, Root = host, IsCastle = !visual.ShowBadge, Tier = visual.Tier };
+            if (card.IsCastle)
             {
-                icon = HookSkin.Art(rt, "Building", buildingKey, Color.white);
-                Box(icon.rectTransform, -0.02f, 0.16f, 0.44f, 1.16f);
-            }
-            else if (plot.Def.Produces == null)
-            {
-                icon = SurvivalVisuals.Image(rt, "Building", Color.white, SurvivalArt.Get(SurvIds.ThemeABuildingHqKeep));
-                icon.preserveAspect = true;
-                Box(icon.rectTransform, 0.04f, 0.31f, 0.38f, 0.92f);
-            }
-            else
-            {
-                icon = HookSkin.ResIcon(rt, "Building", plot.Def.Produces, ResColor(plot.Def.Produces), ResGlyph(plot.Def.Produces));
-                Box(icon.rectTransform, 0.04f, 0.31f, 0.38f, 0.92f);
+                village.SetFootprint(plotId, visual.Scale);
             }
 
-            var title = HookSkin.Outlined(SurvivalVisuals.Text(rt, "Title", S("hook.plot." + plotId, plotId), 22, TextAnchor.MiddleLeft, SurvivalVisuals.Cream));
-            Box(title.rectTransform, 0.43f, 0.74f, 0.80f, 0.94f);
-            card.Level = HookSkin.Outlined(SurvivalVisuals.Text(rt, "Level", "", 18, TextAnchor.MiddleRight, SurvivalVisuals.Reward));
-            Box(card.Level.rectTransform, 0.70f, 0.74f, 0.94f, 0.94f);
-
-            var statusX = 0.43f;
-            if (plot.Def.Produces != null)
+            // Painted building fills its plot footprint; transparent pixels let drags and taps fall through to the map.
+            var glow = HookSkin.Glow(host, "Glow", new Color(1f, 0.86f, 0.45f, 0f));
+            Box(glow.rectTransform, -0.1f, -0.05f, 1.1f, 1.05f);
+            var art = HookSkin.Art(host, "Building", visual.ArtKey, plot.Def.Produces != null ? ResColor(plot.Def.Produces) : SurvivalVisuals.PinBuild);
+            SurvivalVisuals.Stretch(art.rectTransform);
+            art.raycastTarget = true;
+            if (art.sprite != null && art.sprite.texture != null && art.sprite.texture.isReadable)
             {
-                var res = HookSkin.ResIcon(rt, "ResIcon", plot.Def.Produces, ResColor(plot.Def.Produces), ResGlyph(plot.Def.Produces));
-                Box(res.rectTransform, 0.42f, 0.50f, 0.53f, 0.74f);
-                statusX = 0.54f;
+                art.alphaHitTestMinimumThreshold = 0.08f;
             }
 
-            card.Status = HookSkin.Outlined(SurvivalVisuals.Text(rt, "Status", "", 15, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.5f);
-            card.Status.horizontalOverflow = HorizontalWrapMode.Wrap;
-            Box(card.Status.rectTransform, statusX, 0.50f, 0.95f, 0.74f);
-            var bar = HookSkin.Bar(rt, "Bar", out card.BarFill);
-            Box(bar.rectTransform, 0.43f, 0.36f, 0.94f, 0.49f);
+            card.Art = art;
+            var body = art.gameObject.AddComponent<Button>();
+            body.targetGraphic = art;
+            body.transition = Selectable.Transition.None;
 
-            var action = HookSkin.Button(rt, "Action", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.42f);
-            card.Action = action.GetComponent<Image>();
-            Box(card.Action.rectTransform, 0.42f, 0.05f, 0.95f, 0.34f);
-            card.ActionText = HookSkin.Outlined(SurvivalVisuals.Text(action.transform, "T", "", 18, TextAnchor.MiddleCenter, Color.white), 1.5f);
-            SurvivalVisuals.Stretch(card.ActionText.rectTransform);
+            // Name plate under the building (the Castle's carries its level; the rest wear a badge).
+            var plate = HookSkin.Panel(host, "Plate", HookArtKeys.Chip, SurvivalVisuals.PanelSoft, 0.4f);
+            plate.rectTransform.anchorMin = new Vector2(0.5f, 0.05f);
+            plate.rectTransform.anchorMax = new Vector2(0.5f, 0.05f);
+            plate.rectTransform.pivot = new Vector2(0.5f, 1f);
+            plate.rectTransform.sizeDelta = new Vector2(card.IsCastle ? 330f : 260f, 58f);
+            plate.rectTransform.anchoredPosition = Vector2.zero;
+            card.Name = HookSkin.Outlined(SurvivalVisuals.Text(plate.transform, "Name", S("hook.plot." + plotId, plotId), 26, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
+            card.Name.fontStyle = FontStyle.Bold;
+            SurvivalVisuals.Stretch(card.Name.rectTransform);
+            village.RegisterLabel(plate.rectTransform);
 
-            // Collect bubble: pill with the resource icon above the building.
+            if (visual.ShowBadge)
+            {
+                var badgeSprite = SurvivalArt.Get(LevelBadge.ArtKey);
+                card.LevelBadge = badgeSprite != null
+                    ? SurvivalVisuals.Image(host, "LevelBadge", Color.white, badgeSprite)
+                    : SurvivalVisuals.Circle(host, "LevelBadge", SurvivalVisuals.PinBuild);
+                card.LevelBadge.preserveAspect = true;
+                Box(card.LevelBadge.rectTransform, 0.0f, 0.62f, 0.26f, 0.92f);
+                card.LevelText = HookSkin.Outlined(SurvivalVisuals.Text(card.LevelBadge.transform, "N", visual.BadgeText, 40, TextAnchor.MiddleCenter, Color.white), 2.5f);
+                card.LevelText.fontStyle = FontStyle.Bold;
+                Box(card.LevelText.rectTransform, 0f, 0.0f, 1f, 0.86f);
+            }
+
+            // Upgrade timer under the plate.
+            var timer = new GameObject("Timer", typeof(RectTransform)).GetComponent<RectTransform>();
+            timer.SetParent(host, false);
+            timer.anchorMin = new Vector2(0.5f, 0.05f);
+            timer.anchorMax = new Vector2(0.5f, 0.05f);
+            timer.pivot = new Vector2(0.5f, 1f);
+            timer.sizeDelta = new Vector2(280f, 64f);
+            timer.anchoredPosition = new Vector2(0f, -60f);
+            var bar = HookSkin.Bar(timer, "Bar", out card.BarFill);
+            Box(bar.rectTransform, 0f, 0f, 1f, 0.5f);
+            card.Status = HookSkin.Outlined(SurvivalVisuals.Text(timer, "Status", "", 22, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
+            card.Status.fontStyle = FontStyle.Bold;
+            Box(card.Status.rectTransform, -0.2f, 0.45f, 1.2f, 1.1f);
+            card.TimerRoot = timer;
+            village.RegisterLabel(timer);
+
+            // Collect bubble: pill with the resource icon above the roof.
             var bubbleSprite = SurvivalArt.Get(HookArtKeys.Chip);
             card.Bubble = bubbleSprite != null
-                ? SurvivalVisuals.Image(rt, "Bubble", Color.white, bubbleSprite)
-                : SurvivalVisuals.Circle(rt, "Bubble", SurvivalVisuals.Cream);
+                ? SurvivalVisuals.Image(host, "Bubble", Color.white, bubbleSprite)
+                : SurvivalVisuals.Circle(host, "Bubble", SurvivalVisuals.Cream);
             HookSkin.ApplySliced(card.Bubble, 0.4f);
-            Box(card.Bubble.rectTransform, 0.02f, 0.86f, 0.40f, 1.14f);
+            Box(card.Bubble.rectTransform, 0.22f, 0.88f, 0.78f, 1.08f);
+            card.Bubble.raycastTarget = true;
+            var bubbleBtn = card.Bubble.gameObject.AddComponent<Button>();
+            bubbleBtn.targetGraphic = card.Bubble;
             if (plot.Def.Produces != null)
             {
                 var bubbleIcon = HookSkin.ResIcon(card.Bubble.transform, "Icon", plot.Def.Produces, ResColor(plot.Def.Produces), ResGlyph(plot.Def.Produces));
                 Box(bubbleIcon.rectTransform, -0.08f, -0.25f, 0.40f, 1.25f);
             }
 
-            card.BubbleText = HookSkin.Outlined(SurvivalVisuals.Text(card.Bubble.transform, "T", "", 18, TextAnchor.MiddleCenter, bubbleSprite != null ? SurvivalVisuals.Reward : SurvivalVisuals.Panel), 1.5f);
+            card.BubbleText = HookSkin.Outlined(SurvivalVisuals.Text(card.Bubble.transform, "T", "", 26, TextAnchor.MiddleCenter, bubbleSprite != null ? SurvivalVisuals.Reward : SurvivalVisuals.Panel), 1.5f);
             Box(card.BubbleText.rectTransform, 0.32f, 0f, 1f, 1f);
             card.Bubble.gameObject.SetActive(false);
 
-            var badgeSprite = SurvivalArt.Get(HookArtKeys.BadgeFree);
-            card.Badge = badgeSprite != null
-                ? SurvivalVisuals.Image(rt, "Badge", Color.white, badgeSprite)
-                : SurvivalVisuals.Circle(rt, "Badge", FreeGreen);
+            var badgeFree = SurvivalArt.Get(HookArtKeys.BadgeFree);
+            card.Badge = badgeFree != null
+                ? SurvivalVisuals.Image(host, "Badge", Color.white, badgeFree)
+                : SurvivalVisuals.Circle(host, "Badge", FreeGreen);
             card.Badge.preserveAspect = true;
-            Box(card.Badge.rectTransform, 0.78f, 0.78f, 1.06f, 1.24f);
-            card.BadgeText = HookSkin.Outlined(SurvivalVisuals.Text(card.Badge.transform, "T", "", 15, TextAnchor.MiddleCenter, Color.white), 1.5f);
+            Box(card.Badge.rectTransform, 0.72f, 0.66f, 1.0f, 0.98f);
+            card.BadgeText = HookSkin.Outlined(SurvivalVisuals.Text(card.Badge.transform, "T", "", 22, TextAnchor.MiddleCenter, Color.white), 1.5f);
             SurvivalVisuals.Stretch(card.BadgeText.rectTransform);
             card.Badge.gameObject.SetActive(false);
 
+            card.Arrow = HookSkin.Art(host, "UpgradeArrow", WorldArtKeys.IconUpgrade, FreeGreen);
+            Box(card.Arrow.rectTransform, 0.76f, 0.66f, 0.98f, 0.90f);
+            card.Arrow.gameObject.SetActive(false);
+
             Wire(body, () => OnTapPlot(plotId));
-            Wire(action, () => OnPlotAction(plotId));
+            Wire(bubbleBtn, () => OnTapPlot(plotId));
             return card;
         }
 
@@ -425,6 +445,7 @@ namespace Survival.Unity
                 return;
             }
 
+            _play?.Village?.RefreshUnlocks(_hook.Base.HqLevel, S);
             var now = _hook.Clock.Now;
             foreach (var card in _cards.Values)
             {
@@ -434,7 +455,15 @@ namespace Survival.Unity
                     continue;
                 }
 
-                card.Level.text = Fmt("hook.level", "Lv {0}", plot.Level);
+                if (card.IsCastle)
+                {
+                    card.Name.text = S("hook.plot." + plot.Id, plot.Id) + "  " + Fmt("hook.level", "Lv {0}", plot.Level);
+                }
+                else if (card.LevelText != null)
+                {
+                    card.LevelText.text = LevelBadge.Text(plot.Level);
+                }
+
                 var timerId = BaseEconomy.UpgradeTimerId(plot.Id);
                 var timer = _hook.Timers.Find(timerId);
                 if (timer != null)
@@ -442,46 +471,25 @@ namespace Survival.Unity
                     var remaining = timer.Remaining(now);
                     var done = remaining <= 0;
                     var free = _hook.Timers.CanFinishFree(timerId);
-                    card.Status.text = done
-                        ? S("hook.finish", "Finish!")
-                        : S("hook.upgrading", "Upgrading") + "  " + TimerQueue.FormatClock(remaining);
-                    card.Status.color = SurvivalVisuals.Cream;
+                    card.TimerRoot.gameObject.SetActive(true);
+                    card.Status.text = done ? S("hook.finish", "Finish!") : TimerQueue.FormatClock(remaining);
                     HookSkin.SetBar(card.BarFill, (float)timer.Progress(now), done || free ? HookArtKeys.BarFillGreen : HookArtKeys.BarFillBlue, done || free ? FreeGreen : SurvivalVisuals.PinBuild);
-                    card.ActionText.text = done
-                        ? S("hook.finish", "Finish!")
-                        : free ? S("hook.speedup.free", "Finish FREE") : S("hook.speedup.title", "Speed Up");
-                    var timerKey = done || free ? HookArtKeys.ButtonGreen : HookArtKeys.ButtonBlue;
-                    HookSkin.SetButton(card.Action, timerKey, done || free ? FreeGreen : SurvivalVisuals.PinBuild, true, 0.42f);
-                    card.ActionText.color = HookSkin.InkFor(timerKey);
                     card.Badge.gameObject.SetActive(done || free);
                     card.BadgeText.text = done ? "!" : S("hook.free", "FREE");
                     card.Bubble.gameObject.SetActive(false);
+                    card.Arrow.gameObject.SetActive(false);
                     continue;
                 }
 
+                card.TimerRoot.gameObject.SetActive(false);
                 card.Badge.gameObject.SetActive(false);
+                card.Bubble.gameObject.SetActive(plot.CanCollect);
                 if (plot.IsProducer)
                 {
-                    var res = plot.Def.Produces!;
-                    card.Status.text = ChipWallet.FormatGrouped(plot.Collectable) + " / " + ChipWallet.FormatGrouped(plot.Current.Capacity);
-                    card.Status.color = SurvivalVisuals.Cream;
-                    HookSkin.SetBar(card.BarFill, (float)plot.Fill, HookArtKeys.BarFillGold, ResColor(res));
-                    card.Bubble.gameObject.SetActive(plot.CanCollect);
                     card.BubbleText.text = "+" + ChipWallet.FormatCompact(plot.Collectable);
                 }
-                else
-                {
-                    card.Status.text = plot.Next == null ? "" : CostLine(plot.UpgradeCost);
-                    card.Status.color = SurvivalVisuals.Cream;
-                    HookSkin.SetBar(card.BarFill, 0f, HookArtKeys.BarFillBlue, SurvivalVisuals.PinBuild);
-                    card.Bubble.gameObject.SetActive(false);
-                }
 
-                var block = _hook.Base.CheckUpgrade(plot.Id);
-                card.ActionText.text = BlockLabel(block, plot.Next?.Level ?? 0, S("hook.upgrade", "Upgrade"));
-                var ok = block == UpgradeBlock.None;
-                HookSkin.SetButton(card.Action, HookArtKeys.ButtonGold, ok ? SurvivalVisuals.MineFill : Disabled, ok, 0.42f);
-                card.ActionText.color = ok ? HookSkin.InkFor(HookArtKeys.ButtonGold) : SurvivalVisuals.Cream;
+                card.Arrow.gameObject.SetActive(!plot.CanCollect && _hook.Base.CheckUpgrade(plot.Id) == UpgradeBlock.None);
             }
         }
 
@@ -561,6 +569,11 @@ namespace Survival.Unity
                     card.Badge.rectTransform.localScale = new Vector3(throb, throb, 1f);
                     card.Badge.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 6f * Mathf.Sin(t * 2.5f));
                 }
+
+                if (card.Arrow.gameObject.activeSelf)
+                {
+                    card.Arrow.rectTransform.anchoredPosition = new Vector2(0f, 10f * Mathf.Abs(Mathf.Sin(t * 3.4f + card.PlotId.Length)));
+                }
             }
 
             if (_freeBadge != null && _freeBadge.gameObject.activeSelf)
@@ -616,11 +629,23 @@ namespace Survival.Unity
                 return;
             }
 
-            if (!plot.IsProducer)
+            if (!plot.CanCollect)
+            {
+                OpenBuilding(plotId);
+                return;
+            }
+
+            Collect(card, plot);
+        }
+
+        private void Collect(PlotCard card, BasePlot plot)
+        {
+            if (_hook == null || !plot.IsProducer)
             {
                 return;
             }
 
+            var plotId = plot.Id;
             var res = plot.Def.Produces!;
             var from = NormCenterOf(card.Bubble.gameObject.activeSelf ? card.Bubble.rectTransform : card.Root);
             _held.Add(res);
@@ -669,7 +694,7 @@ namespace Survival.Unity
             if (block == UpgradeBlock.None && _hook.Base.TryStartUpgrade(plotId))
             {
                 Toast(NormCenterOf(card.Root), S("hook.upgrading", "Upgrading"), SurvivalVisuals.PinBuild);
-                StartCoroutine(SparkBurst(NormCenterOf(card.Action.rectTransform), SurvivalVisuals.PinBuild, 8, 0.05f));
+                StartCoroutine(SparkBurst(NormCenterOf(card.Root), SurvivalVisuals.PinBuild, 10, 0.06f));
                 RefreshCards();
                 return;
             }
@@ -681,14 +706,240 @@ namespace Survival.Unity
 
         private void LevelUp(PlotCard card, int level)
         {
-            var at = NormCenterOf(card.Root);
+            var at = NormCenterOf(card.Art.rectTransform);
             StartCoroutine(Punch(card.Root, 0.25f, 16));
             StartCoroutine(LevelBurst(at));
             StartCoroutine(RingBurst(at, SurvivalVisuals.Reward, 0.36f));
             StartCoroutine(RingBurst(at, Color.white, 0.22f));
             StartCoroutine(SparkBurst(at, SurvivalVisuals.Reward, 22, 0.13f));
             FloatText(at + new Vector2(0f, 0.06f), Fmt("hook.level_up", "Level {0}!", level), SurvivalVisuals.Reward, 52);
+            if (card.IsCastle && _hook?.Base.Find(card.PlotId) is BasePlot plot)
+            {
+                var visual = BuildingVisual.For(plot, Tiers);
+                if (visual.Tier != card.Tier)
+                {
+                    card.Tier = visual.Tier;
+                    StartCoroutine(GrowCastle(card, visual));
+                }
+            }
+            else if (card.LevelBadge != null)
+            {
+                StartCoroutine(Punch(card.LevelBadge.rectTransform, 0.5f, 18));
+            }
+
             RefreshAll();
+        }
+
+        /// <summary>Castle tier-up: flash, swap to the bigger painting, grow the footprint with an overshoot, confetti.</summary>
+        private IEnumerator GrowCastle(PlotCard card, BuildingVisual visual)
+        {
+            var village = _play?.Village;
+            var from = village != null ? village.FootprintScaleOf(card.PlotId) : 1f;
+            var glow = card.Root.Find("Glow")?.GetComponent<Image>();
+            const float flash = 0.22f;
+            for (var e = 0f; e < flash; e += Time.unscaledDeltaTime)
+            {
+                var u = e / flash;
+                card.Art.color = Color.Lerp(Color.white, new Color(1f, 0.95f, 0.75f, 1f), u);
+                if (glow != null)
+                {
+                    glow.color = new Color(1f, 0.86f, 0.45f, 0.9f * u);
+                }
+
+                yield return null;
+            }
+
+            var sprite = SurvivalArt.Get(visual.ArtKey);
+            if (sprite != null)
+            {
+                card.Art.sprite = sprite;
+            }
+
+            var at = NormCenterOf(card.Art.rectTransform);
+            StartCoroutine(LevelBurst(at));
+            StartCoroutine(RingBurst(at, SurvivalVisuals.Reward, 0.6f));
+            StartCoroutine(SparkBurst(at, Color.white, 28, 0.2f));
+            if (_overlay != null)
+            {
+                StartCoroutine(Confetti(_overlay, at, 40, new Vector2(0f, 0.5f)));
+            }
+
+            FloatText(at + new Vector2(0f, 0.12f), Fmt2("village.building.castle", "Castle tier {0} of {1}", visual.Tier, Tiers.Count), SurvivalVisuals.Reward, 44);
+            const float grow = 0.7f;
+            for (var e = 0f; e < grow; e += Time.unscaledDeltaTime)
+            {
+                var u = Mathf.Clamp01(e / grow);
+                var back = 1f + 2.4f * Mathf.Pow(u - 1f, 3f) + 1.4f * Mathf.Pow(u - 1f, 2f); // ease-out-back
+                village?.SetFootprint(card.PlotId, Mathf.LerpUnclamped(from, visual.Scale, back));
+                card.Art.color = Color.Lerp(new Color(1f, 0.95f, 0.75f, 1f), Color.white, u);
+                if (glow != null)
+                {
+                    glow.color = new Color(1f, 0.86f, 0.45f, 0.9f * (1f - u));
+                }
+
+                yield return null;
+            }
+
+            village?.SetFootprint(card.PlotId, visual.Scale);
+            card.Art.color = Color.white;
+            if (glow != null)
+            {
+                glow.color = new Color(1f, 0.86f, 0.45f, 0f);
+            }
+        }
+
+        /// <summary>Building card: what it does, its next level (cost, time), Upgrade / Speed Up / Collect.</summary>
+        private void OpenBuilding(string plotId)
+        {
+            if (_hook == null || _hook.Base.Find(plotId) is not BasePlot plot)
+            {
+                return;
+            }
+
+            var hook = _hook;
+            var name = S("hook.plot." + plotId, plotId);
+            var panel = OpenSheet("BuildingSheet", 0.86f, 0.44f, name);
+            if (panel == null)
+            {
+                return;
+            }
+
+            var isCastle = !LevelBadge.Shows(plot.Def);
+            var art = SurvivalVisuals.Image(panel, "Building", Color.white);
+            art.preserveAspect = true;
+            Box(art.rectTransform, 0.04f, 0.47f, 0.38f, 0.88f);
+            var badge = SurvivalVisuals.Image(panel, "Badge", Color.white, SurvivalArt.Get(LevelBadge.ArtKey) ?? SurvivalArt.Circle());
+            badge.preserveAspect = true;
+            Box(badge.rectTransform, 0.02f, 0.74f, 0.13f, 0.88f);
+            var badgeText = HookSkin.Outlined(SurvivalVisuals.Text(badge.transform, "N", "", 34, TextAnchor.MiddleCenter, Color.white), 2f);
+            badgeText.fontStyle = FontStyle.Bold;
+            Box(badgeText.rectTransform, 0f, 0f, 1f, 0.86f);
+
+            var level = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Level", "", 34, TextAnchor.MiddleLeft, SurvivalVisuals.Reward), 2f);
+            level.fontStyle = FontStyle.Bold;
+            Box(level.rectTransform, 0.41f, 0.78f, 0.96f, 0.87f);
+            var what = HookSkin.Outlined(SurvivalVisuals.Text(panel, "What", "", 23, TextAnchor.UpperLeft, SurvivalVisuals.Cream), 1.5f);
+            what.horizontalOverflow = HorizontalWrapMode.Wrap;
+            Box(what.rectTransform, 0.41f, 0.62f, 0.96f, 0.77f);
+            var next = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Next", "", 22, TextAnchor.UpperLeft, SurvivalVisuals.Cream), 1.5f);
+            next.horizontalOverflow = HorizontalWrapMode.Wrap;
+            Box(next.rectTransform, 0.41f, 0.45f, 0.96f, 0.62f);
+            Image? nextTier = null;
+            if (isCastle)
+            {
+                nextTier = SurvivalVisuals.Image(panel, "NextTier", new Color(1f, 1f, 1f, 0.9f));
+                nextTier.preserveAspect = true;
+                Box(nextTier.rectTransform, 0.80f, 0.42f, 0.97f, 0.62f);
+            }
+
+            var upText = SheetButton(panel, "Upgrade", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.06f, 0.24f, 0.94f, 0.40f, 28, out var up);
+            var collectText = SheetButton(panel, "Collect", HookArtKeys.ButtonGreen, FreeGreen, 0.06f, 0.12f, 0.49f, 0.225f, 22, out var collect);
+            var closeText = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.51f, 0.12f, 0.94f, 0.225f, 22, out var close);
+            closeText.text = S("hook.close", "Close");
+            var upImg = up.GetComponent<Image>();
+            var upRt = up.GetComponent<RectTransform>();
+
+            Wire(up, () =>
+            {
+                if (hook.Timers.Find(BaseEconomy.UpgradeTimerId(plotId)) != null)
+                {
+                    CloseSheet();
+                    OnPlotAction(plotId);
+                    return;
+                }
+
+                if (hook.Base.CheckUpgrade(plotId) == UpgradeBlock.None)
+                {
+                    CloseSheet();
+                }
+                else
+                {
+                    StartCoroutine(Shake(upRt));
+                }
+
+                OnPlotAction(plotId);
+            });
+            Wire(collect, () =>
+            {
+                if (_cards.TryGetValue(plotId, out var card) && hook.Base.Find(plotId) is BasePlot p)
+                {
+                    Collect(card, p);
+                }
+            });
+            Wire(close, CloseSheet);
+
+            _sheetRefresh = () =>
+            {
+                if (hook.Base.Find(plotId) is not BasePlot p)
+                {
+                    return;
+                }
+
+                var visual = BuildingVisual.For(p, Tiers);
+                var sprite = SurvivalArt.Get(visual.ArtKey);
+                art.sprite = sprite ?? SurvivalArt.Circle();
+                badge.gameObject.SetActive(visual.ShowBadge);
+                badgeText.text = visual.BadgeText;
+                level.text = Fmt("hook.level", "Lv {0}", p.Level);
+                if (isCastle)
+                {
+                    var nextAt = CastleTiers.NextTierLevel(p.Level, Tiers);
+                    what.text = Fmt2("village.building.castle", "Castle tier {0} of {1}", visual.Tier, Tiers.Count) + "\n" +
+                        (nextAt is int n ? Fmt("village.building.next_tier", "Grows at Lv {0}", n) : S("village.building.top_tier", "Grand Citadel reached"));
+                    if (nextTier != null)
+                    {
+                        var nt = nextAt is int lv ? SurvivalArt.Get(CastleTiers.For(lv, Tiers).ArtKey) : null;
+                        nextTier.gameObject.SetActive(nt != null);
+                        nextTier.sprite = nt ?? SurvivalArt.Circle();
+                    }
+                }
+                else if (p.Def.Produces != null)
+                {
+                    what.text = string.Format(CultureInfo.InvariantCulture, S("village.building.produces", "Produces {0}/h \u00b7 holds {1}"), ChipWallet.FormatCompact(p.Current.PerHour), ChipWallet.FormatCompact(p.Current.Capacity))
+                        + "  " + ResName(p.Def.Produces);
+                }
+                else
+                {
+                    what.text = Fmt("village.building.forge", "Forges arms: troop attack +{0}%", p.Level * 5);
+                }
+
+                var timerId = BaseEconomy.UpgradeTimerId(plotId);
+                var timer = hook.Timers.Find(timerId);
+                var block = hook.Base.CheckUpgrade(plotId);
+                if (timer != null)
+                {
+                    var left = timer.Remaining(hook.Clock.Now);
+                    next.text = S("hook.upgrading", "Upgrading") + "  " + TimerQueue.FormatClock(left);
+                    var free = left <= 0 || hook.Timers.CanFinishFree(timerId);
+                    upText.text = left <= 0 ? S("hook.finish", "Finish!") : free ? S("hook.speedup.free", "Finish FREE") : S("hook.speedup.title", "Speed Up");
+                    var key = free ? HookArtKeys.ButtonGreen : HookArtKeys.ButtonBlue;
+                    HookSkin.SetButton(upImg, key, free ? FreeGreen : SurvivalVisuals.PinBuild, true, 0.5f);
+                    upText.color = HookSkin.InkFor(key);
+                }
+                else if (p.Next == null)
+                {
+                    next.text = S("village.building.max", "Max level reached");
+                    upText.text = S("hook.max_level", "Max level");
+                    HookSkin.SetButton(upImg, HookArtKeys.ButtonGold, Disabled, false, 0.5f);
+                    upText.color = SurvivalVisuals.Cream;
+                }
+                else
+                {
+                    next.text = string.Format(CultureInfo.InvariantCulture, S("village.building.next", "Next: Lv {0}  \u00b7  {1}"), p.Next.Level, TimerQueue.FormatClock(p.Current.UpgradeSeconds))
+                        + "\n" + CostLine(p.UpgradeCost);
+                    var ok = block == UpgradeBlock.None;
+                    upText.text = BlockLabel(block, p.Next.Level, S("hook.upgrade", "Upgrade"));
+                    HookSkin.SetButton(upImg, HookArtKeys.ButtonGold, ok ? SurvivalVisuals.MineFill : Disabled, true, 0.5f);
+                    upText.color = ok ? HookSkin.InkFor(HookArtKeys.ButtonGold) : SurvivalVisuals.Cream;
+                }
+
+                collect.gameObject.SetActive(p.CanCollect);
+                collectText.text = Fmt("village.building.collect", "Collect +{0}", ChipWallet.FormatCompact(p.Collectable));
+                var closeRt = close.GetComponent<RectTransform>();
+                closeRt.anchorMin = new Vector2(p.CanCollect ? 0.51f : 0.25f, 0.12f);
+                closeRt.anchorMax = new Vector2(p.CanCollect ? 0.94f : 0.75f, 0.225f);
+            };
+            _sheetRefresh();
         }
 
         private void OnTapQuest()
@@ -2128,6 +2379,9 @@ namespace Survival.Unity
         }
 
         private string S(string key, string fallback) => _pack != null ? _pack.StringOr(key, fallback) : fallback;
+
+        private string Fmt2(string key, string fallback, object a, object b) =>
+            string.Format(CultureInfo.InvariantCulture, S(key, fallback), a, b);
 
         private string Fmt(string key, string fallback, object arg) =>
             string.Format(CultureInfo.InvariantCulture, S(key, fallback), arg);

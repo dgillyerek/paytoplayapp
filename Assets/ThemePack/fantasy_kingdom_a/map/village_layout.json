@@ -1,0 +1,124 @@
+{
+  "_comment": "Theme A player village for the Village view. x / y are fractions of the village map (y from top); size is the plot footprint as a fraction of the map width. Castle art and footprint scale come from castle_tiers by castle level.",
+  "village": {
+    "width": 2160,
+    "height": 2880,
+    "min_zoom": 0.67,
+    "max_zoom": 1.6,
+    "start_zoom": 0.72
+  },
+  "castle_tiers": [
+    {
+      "tier": 1,
+      "min_level": 1,
+      "art": "theme_a.village.castle.tier_1",
+      "scale": 0.78
+    },
+    {
+      "tier": 2,
+      "min_level": 3,
+      "art": "theme_a.village.castle.tier_2",
+      "scale": 0.92
+    },
+    {
+      "tier": 3,
+      "min_level": 5,
+      "art": "theme_a.village.castle.tier_3",
+      "scale": 1.08
+    },
+    {
+      "tier": 4,
+      "min_level": 7,
+      "art": "theme_a.village.castle.tier_4",
+      "scale": 1.26
+    }
+  ],
+  "plots": [
+    {
+      "plot": "base.plot.hq_01",
+      "x": 0.5,
+      "y": 0.33,
+      "size": 0.34
+    },
+    {
+      "plot": "base.plot.forge_01",
+      "x": 0.24,
+      "y": 0.4,
+      "size": 0.2
+    },
+    {
+      "plot": "base.plot.lumber_02",
+      "x": 0.76,
+      "y": 0.4,
+      "size": 0.2
+    },
+    {
+      "plot": "base.plot.farm_01",
+      "x": 0.25,
+      "y": 0.58,
+      "size": 0.21
+    },
+    {
+      "plot": "base.plot.lumber_01",
+      "x": 0.75,
+      "y": 0.58,
+      "size": 0.21
+    },
+    {
+      "plot": "base.plot.farm_02",
+      "x": 0.36,
+      "y": 0.75,
+      "size": 0.21
+    }
+  ],
+  "empty_plots": [
+    { "id": "village.slot_01", "x": 0.64, "y": 0.75, "size": 0.16, "unlock_castle": 3 },
+    { "id": "village.slot_02", "x": 0.13, "y": 0.82, "size": 0.16, "unlock_castle": 4 },
+    { "id": "village.slot_03", "x": 0.87, "y": 0.82, "size": 0.16, "unlock_castle": 5 },
+    { "id": "village.slot_04", "x": 0.5, "y": 0.9, "size": 0.16, "unlock_castle": 6 }
+  ],
+  "roads": [
+    {
+      "x0": 0.5,
+      "y0": 0.44,
+      "x1": 0.5,
+      "y1": 0.99,
+      "width": 110
+    },
+    {
+      "x0": 0.08,
+      "y0": 0.665,
+      "x1": 0.92,
+      "y1": 0.665,
+      "width": 90
+    },
+    {
+      "x0": 0.14,
+      "y0": 0.475,
+      "x1": 0.86,
+      "y1": 0.475,
+      "width": 80
+    }
+  ],
+  "props": [
+    { "type": "mountains", "x": 0.14, "y": 0.06, "scale": 1.5 },
+    { "type": "mountains", "x": 0.5, "y": 0.035, "scale": 1.3 },
+    { "type": "mountains", "x": 0.86, "y": 0.07, "scale": 1.5 },
+    { "type": "forest", "x": 0.06, "y": 0.22, "scale": 1.2 },
+    { "type": "forest", "x": 0.94, "y": 0.22, "scale": 1.2 },
+    { "type": "forest", "x": 0.05, "y": 0.55, "scale": 1.0 },
+    { "type": "forest", "x": 0.95, "y": 0.55, "scale": 1.0 },
+    { "type": "forest", "x": 0.04, "y": 0.94, "scale": 1.1 },
+    { "type": "forest", "x": 0.96, "y": 0.95, "scale": 1.1 },
+    { "type": "lake", "x": 0.84, "y": 0.15, "scale": 0.9 },
+    { "type": "bushes", "x": 0.33, "y": 0.47, "scale": 0.8 },
+    { "type": "bushes", "x": 0.67, "y": 0.47, "scale": 0.8 },
+    { "type": "bushes", "x": 0.12, "y": 0.66, "scale": 0.9 },
+    { "type": "bushes", "x": 0.88, "y": 0.67, "scale": 0.9 },
+    { "type": "bushes", "x": 0.58, "y": 0.62, "scale": 0.7 },
+    { "type": "bushes", "x": 0.25, "y": 0.92, "scale": 0.9 },
+    { "type": "bushes", "x": 0.75, "y": 0.93, "scale": 0.9 },
+    { "type": "bushes", "x": 0.3, "y": 0.18, "scale": 0.8 },
+    { "type": "bushes", "x": 0.7, "y": 0.18, "scale": 0.8 }
+  ]
+}
