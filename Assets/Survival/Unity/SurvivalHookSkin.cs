@@ -76,7 +76,10 @@ namespace Survival.Unity
         /// <summary>Resource icon (gold, stone, wood, food, gems, speed-up) or a disc with a letter glyph.</summary>
         public static Image ResIcon(Transform parent, string name, string resourceId, Color fallback, string glyph)
         {
-            var sprite = SurvivalArt.Get(HookArtKeys.ForResource(resourceId));
+            // Hero shards ("shard.{hero id}", battle rewards) share one painted shard icon.
+            var sprite = resourceId.StartsWith("shard.", System.StringComparison.Ordinal)
+                ? SurvivalArt.Get(Survival.Domain.Campaign.CampaignArtKeys.IconShard)
+                : SurvivalArt.Get(HookArtKeys.ForResource(resourceId));
             if (sprite != null)
             {
                 var img = SurvivalVisuals.Image(parent, name, Color.white, sprite);

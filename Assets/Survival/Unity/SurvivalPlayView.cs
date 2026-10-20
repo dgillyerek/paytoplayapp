@@ -206,6 +206,10 @@ namespace Survival.Unity
                 hookView.Build(this, Session);
             }
 
+            // Heroes screen + Battle Setup (campaign.json); without the hook layer it still runs, minus celebrations.
+            var campaignView = GetComponent<SurvivalCampaignView>() ?? gameObject.AddComponent<SurvivalCampaignView>();
+            campaignView.Build(this, Session, hookOn ? GetComponent<SurvivalHookView>() : null);
+
             ApplyScreen(1f);
         }
 

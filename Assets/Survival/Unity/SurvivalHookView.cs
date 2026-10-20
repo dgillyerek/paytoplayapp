@@ -1451,6 +1451,50 @@ namespace Survival.Unity
             RefreshAll();
         }
 
+        // ---------- public API: Heroes and Battle Setup screens (SurvivalCampaignView) ----------
+
+        /// <summary>
+        /// The chest-burst celebration for another screen: holds the HUD chips for the reward keys, runs
+        /// <paramref name="grant"/> (which pays the wallet), then queues the celebration; the chips count up as the
+        /// rewards fly in. Keys are resource ids or "shard.{hero id}".
+        /// </summary>
+        public void Celebrate(string title, IReadOnlyDictionary<string, int> rewards, Action? grant = null)
+        {
+            Hold(rewards);
+            grant?.Invoke();
+            QueueCelebration(title, rewards);
+        }
+
+        public bool Celebrating => _celebrating;
+
+        /// <summary>Keep the HUD chips for these keys still while another screen pays the wallet; Celebrate counts them up.</summary>
+        public void HoldChips(IReadOnlyDictionary<string, int> rewards) => Hold(rewards);
+
+        /// <summary>Let held chips count up to the wallet without a celebration.</summary>
+        public void ReleaseChips(IReadOnlyDictionary<string, int> rewards) => Release(rewards);
+
+        /// <summary>Tap juice on a button of another screen: punch plus a ring.</summary>
+        public void Juice(RectTransform pressed)
+        {
+            StartCoroutine(Punch(pressed, 0.12f, 8));
+            StartCoroutine(RingBurst(NormCenterOf(pressed), SurvivalVisuals.Cream, 0.10f));
+        }
+
+        /// <summary>Spark burst and ring on a rect (level up, star up, unlock).</summary>
+        public void Sparks(RectTransform at, Color color, int count = 16)
+        {
+            var c = NormCenterOf(at);
+            StartCoroutine(SparkBurst(c, color, count, 0.08f));
+            StartCoroutine(RingBurst(c, color, 0.3f));
+        }
+
+        public void Say(RectTransform at, string copy, Color color) => Toast(NormCenterOf(at), copy, color);
+
+        public void Rise(RectTransform at, string copy, Color color) => FloatText(NormCenterOf(at), copy, color);
+
+        /// <summary>Opens the sandbox Gem Shop sheet (above the Heroes screen).</summary>
+        public void OpenGemShop() => OpenShop();
+
         // ---------- celebration ----------
 
         private void QueueCelebration(string title, IReadOnlyDictionary<string, int> rewards)
@@ -2423,7 +2467,12 @@ namespace Survival.Unity
         private string Fmt(string key, string fallback, object arg) =>
             string.Format(CultureInfo.InvariantCulture, S(key, fallback), arg);
 
-        private string ResName(string resourceId) => S(resourceId + ".name", resourceId);
+        private string ResName(string resourceId) =>
+            resourceId.StartsWith(ShardPrefix, StringComparison.Ordinal)
+                ? string.Format(CultureInfo.InvariantCulture, S("campaign.shards_of", "{0} shards"), S(resourceId.Substring(ShardPrefix.Length) + ".name", resourceId.Substring(ShardPrefix.Length)))
+                : S(resourceId + ".name", resourceId);
+
+        private const string ShardPrefix = "shard.";
 
         private string CostLine(IReadOnlyDictionary<string, int> costs)
         {
@@ -2457,7 +2506,7 @@ namespace Survival.Unity
             return null;
         }
 
-        private static Color ResColor(string resourceId) => resourceId switch
+        private static Color ResColor(string resourceId) => resourceId.StartsWith(ShardPrefix, StringComparison.Ordinal) ? new Color(0.72f, 0.52f, 1f, 1f) : resourceId switch
         {
             SurvIds.ResSoft => new Color(0.97f, 0.78f, 0.25f, 1f),
             SurvIds.ResStone => new Color(0.72f, 0.74f, 0.78f, 1f),
@@ -2469,7 +2518,7 @@ namespace Survival.Unity
             _ => SurvivalVisuals.Cream
         };
 
-        private static string ResGlyph(string resourceId) => resourceId switch
+        private static string ResGlyph(string resourceId) => resourceId.StartsWith(ShardPrefix, StringComparison.Ordinal) ? "\u2726" : resourceId switch
         {
             SurvIds.ResSoft => "G",
             SurvIds.ResStone => "S",

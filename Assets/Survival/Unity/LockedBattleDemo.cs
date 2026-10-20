@@ -24,7 +24,7 @@ namespace Survival.Unity
     /// fighter now cycles three. Blightroot: swipe, punch, jump smash.
     /// </summary>
     [DefaultExecutionOrder(500)]
-    public sealed class LockedBattleDemo : MonoBehaviour
+    public sealed partial class LockedBattleDemo : MonoBehaviour
     {
         public const string RestartButtonObjectName = "LockedBattleRestart";
 
@@ -85,7 +85,7 @@ namespace Survival.Unity
             _time += dt;
             foreach (var f in _fighters)
             {
-                if (!f.Built || f.Target == null || !f.Target.Built)
+                if (!f.Built || f.Down || f.Target == null || !f.Target.Built)
                 {
                     continue;
                 }
@@ -119,6 +119,8 @@ namespace Survival.Unity
                 }
             }
 
+            // Configured battle (Play → Battle Setup → Fight): HP, defeats, retargeting, the end (no-op standalone).
+            TickConfigured(dt);
         }
 
         /// <summary>
@@ -134,12 +136,14 @@ namespace Survival.Unity
 
             foreach (var f in _fighters)
             {
-                if (f.Built)
+                if (f.Built && !f.Down)
                 {
                     TickReactionPose(f);
                     f.Ground?.Plant(f.Slot.position.y);
                 }
             }
+
+            LateConfigured();
         }
 
         private void BeginWalk(Fighter f)
@@ -251,6 +255,11 @@ namespace Survival.Unity
 
         private void TickAttack(Fighter f)
         {
+            if (ConfiguredRewalk(f))
+            {
+                return;
+            }
+
             var target = f.Target!;
             var to = VisualPosition(target) - VisualPosition(f);
             to.y = 0f;
@@ -371,7 +380,7 @@ namespace Survival.Unity
         {
             contact = to;
             var target = attacker.Target;
-            if (target == null || !target.Built || attacker.Phase != Phase.Attack)
+            if (target == null || !target.Built || target.Down || attacker.Phase != Phase.Attack)
             {
                 return false;
             }
@@ -446,7 +455,7 @@ namespace Survival.Unity
         private void LandHit(Fighter attacker, Vector3 contact, int attackIndex = 0)
         {
             var target = attacker.Target;
-            if (target == null || !target.Built)
+            if (target == null || !target.Built || target.Down || attacker.Down)
             {
                 return;
             }
@@ -469,6 +478,7 @@ namespace Survival.Unity
             // Struck inside its own attack clip (wind-up or strike): a lighter flinch, no step back.
             target.RecoilOn = LockedBattleHits.RecoilAllowed(target.Data, target.Phase == Phase.Attack, target.PhaseTime);
             target.ReactionScale = LockedBattleReactions.Scale(target.Data, target.Phase == Phase.Attack, target.PhaseTime);
+            OnConfiguredHit(attacker, target, attackIndex);
         }
 
         /// <summary>
@@ -645,6 +655,14 @@ namespace Survival.Unity
             StripLeftoverDemoActors();
             _booted = true;
             SurvivalVisuals.EnsureEventSystem();
+
+            // Fight from Battle Setup: the handed-off lineup (heroes vs villains per lane, stats from their levels);
+            // nothing pending keeps the standalone demo below.
+            if (BootConfigured())
+            {
+                return;
+            }
+
             foreach (var data in LockedBattleRoster.All)
             {
                 var fighter = Spawn(data);
@@ -1222,6 +1240,12 @@ namespace Survival.Unity
             fill.intensity = 0.45f;
             fill.color = new Color(0.68f, 0.74f, 0.88f, 1f);
             fillGo.transform.rotation = Quaternion.Euler(18f, -24f, 0f);
+            if (_config != null)
+            {
+                // Loaded additively over Play: keep the lights in the battle's own scene so they unload with it.
+                key.transform.SetParent(transform, true);
+                fillGo.transform.SetParent(transform, true);
+            }
         }
 
         private static void DestroyNamed(string name)
@@ -1295,7 +1319,7 @@ namespace Survival.Unity
             public Color BaseColor { get; }
         }
 
-        private sealed class Fighter
+        private sealed partial class Fighter
         {
             private System.Func<string, bool> _play = _ => false;
 
