@@ -410,8 +410,9 @@ namespace Survival.Unity
 
         private void BuildDebugButtons(RectTransform root)
         {
-            DebugButton(root, "debug_gift", S("debug.gift", "DEBUG: Gift now (G)"), DebugGiftNow);
-            DebugButton(root, "debug_skip", S("debug.skip", "DEBUG: +5 min (T)"), DebugSkip);
+            // Small corner chips; the G / T keys do the same.
+            DebugButton(root, "debug_gift", S("debug.gift_short", "G: Gift"), DebugGiftNow);
+            DebugButton(root, "debug_skip", S("debug.skip_short", "T: +5m"), DebugSkip);
         }
 
         private void DebugButton(RectTransform root, string slot, string label, Action onTap)
@@ -423,7 +424,7 @@ namespace Survival.Unity
 
             var btn = HookSkin.Button(root, "Debug_" + slot, HookArtKeys.ButtonRed, new Color(0.35f, 0.12f, 0.12f, 0.85f), 0.34f);
             SurvivalVisuals.Place(btn.GetComponent<RectTransform>(), slotRect);
-            var t = HookSkin.Outlined(SurvivalVisuals.Text(btn.transform, "T", label, 16, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
+            var t = HookSkin.Outlined(SurvivalVisuals.Text(btn.transform, "T", label, 13, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
             SurvivalVisuals.Stretch(t.rectTransform);
             Wire(btn, onTap);
         }

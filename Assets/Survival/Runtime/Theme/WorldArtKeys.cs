@@ -1,6 +1,7 @@
 #nullable enable
 using System.Collections.Generic;
 using Survival.Domain.Base;
+using Survival.Domain.View;
 using Survival.Domain.World;
 
 namespace Survival.Domain.Theme
@@ -24,7 +25,7 @@ namespace Survival.Domain.Theme
         public static readonly string[] CampTypes = { "goblin", "bandit", "undead", "dragon" };
         public static readonly string[] ResourceTypes = { "gold", "wood", "food", "stone" };
         public static readonly string[] MapProps = { "forest", "mountains", "lake" };
-        public static readonly string[] VillageProps = { "bushes" };
+        public static readonly string[] VillageProps = { "bushes", "rocks", "field", "tree" };
 
         public static string Village(WorldEntityKind kind) => kind switch
         {
@@ -59,6 +60,8 @@ namespace Survival.Domain.Theme
                 {
                     MapTile, RoadTile, MapHeart, VillageLawn, PlotEmpty, IconWorld, IconUpgrade, MarchPlayer, MarchRival,
                     LevelBadge.ArtKey,
+                    BottomNav.BarArt, BottomNav.ButtonArt, BottomNav.IconHeroes, BottomNav.IconAlliance, BottomNav.IconBag,
+                    BottomNav.IconBattle, BottomNav.IconBuild,
                     Village(WorldEntityKind.PlayerVillage), Village(WorldEntityKind.RivalVillage), Village(WorldEntityKind.AllyVillage)
                 };
                 foreach (var t in CampTypes)

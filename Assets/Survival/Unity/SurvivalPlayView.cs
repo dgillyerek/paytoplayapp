@@ -32,7 +32,10 @@ namespace Survival.Unity
         private RectTransform? _root;
         private RectTransform? _fx;
         private readonly Dictionary<string, Text> _chipValues = new();
-        private readonly List<(PlayScreen Screen, Image Img, Text Text)> _navTabs = new();
+        private readonly Dictionary<string, RectTransform> _navButtons = new();
+        private readonly Dictionary<string, Action> _navHandlers = new();
+        private RectTransform? _navBar;
+        private ThemePackBinder? _navPack;
         private Text? _bannerText;
         private Image? _toggleIcon;
         private Text? _toggleText;
@@ -42,10 +45,20 @@ namespace Survival.Unity
         /// <summary>Raised after a march lands and its yield is in the wallet: (loop, yield).</summary>
         public event Action<WorldMarchLoop, int>? MarchResolved;
 
+        /// <summary>Bottom-bar Heroes tap (see <see cref="OnHeroesTapped"/>). Battle Setup / Heroes screens hook here.</summary>
+        public event Action? HeroesTapped;
+
+        public event Action? AllianceTapped;
+
+        public event Action? BagTapped;
+
+        /// <summary>Bottom-bar model: Heroes, Alliance, Bag; add Battle with <see cref="AddNavButton"/>.</summary>
+        public BottomNav NavModel { get; } = new BottomNav();
+
         public RectTransform? Root => _root;
         public RectTransform? Fx => _fx;
 
-        /// <summary>World / Village switch (the HUD toggle button, the Base / World nav tabs, Enter Village).</summary>
+        /// <summary>World / Village switch (the HUD toggle button and Enter Village).</summary>
         public PlayScreenToggle Screen { get; } = new PlayScreenToggle(PlayScreen.Village);
 
         public SurvivalVillageView? Village { get; private set; }
@@ -298,17 +311,6 @@ namespace Survival.Unity
             {
                 _toggleButton.gameObject.SetActive(Village != null);
             }
-
-            foreach (var (screen, img, text) in _navTabs)
-            {
-                var active = screen == current;
-                if (!HookSkin.TrySkin(img, active ? HookArtKeys.ButtonGold : HookArtKeys.ButtonBlue, 0.4f))
-                {
-                    img.color = active ? SurvivalVisuals.WorldTab : SurvivalVisuals.PanelSoft;
-                }
-
-                text.color = active ? (HookSkin.Has(HookArtKeys.ButtonGold) ? HookSkin.Ink : SurvivalVisuals.Gold) : SurvivalVisuals.Cream;
-            }
         }
 
         private static void Fade(RectTransform? root, SurvivalMapRig? rig, bool incoming, float fade, float fromScale)
@@ -349,7 +351,10 @@ namespace Survival.Unity
                 return;
             }
 
-            var btn = HookSkin.Button(root, "ViewToggle", HookArtKeys.ButtonBlue, SurvivalVisuals.PinBuild, 0.45f);
+            // Same painted frame as the bottom bar and the Build button (blue kit button if the pack lacks it).
+            var btn = HookSkin.Button(root, "ViewToggle", HookSkin.Has(BottomNav.ButtonArt) ? BottomNav.ButtonArt : HookArtKeys.ButtonBlue, SurvivalVisuals.PinBuild, 0.42f);
+            btn.transition = Selectable.Transition.None;
+            btn.gameObject.AddComponent<PressSquash>();
             var rt = btn.GetComponent<RectTransform>();
             SurvivalVisuals.Place(rt, slot);
             var glow = HookSkin.Glow(rt, "Glow", new Color(0.55f, 0.8f, 1f, 0.45f));
@@ -444,54 +449,100 @@ namespace Survival.Unity
             }
         }
 
+        // ---------- bottom bar (Heroes / Alliance / Bag, room for Battle) ----------
+
+        /// <summary>
+        /// Builds the painted bottom bar from <see cref="NavModel"/>. Taps go button → <see cref="BottomNav.Tap"/>
+        /// → the per-id handler (Heroes → <see cref="OnHeroesTapped"/>, ...). Village / World switching lives on the
+        /// view toggle button, not in the bar.
+        /// </summary>
         private void Nav(RectTransform root, IReadOnlyDictionary<string, HudRect> hud, ThemePackBinder pack)
         {
-            var bar = SurvivalVisuals.Image(root, "Nav", SurvivalVisuals.Panel);
+            _navPack = pack;
+            var bar = SurvivalPaintedButton.Bar(root, "Nav");
             Place(bar.rectTransform, hud, "nav");
-            HookSkin.TrySkin(bar, HookArtKeys.Panel, 0.5f);
-            var tabs = new[]
+            _navBar = bar.rectTransform;
+            _navHandlers[BottomNav.Heroes] = OnHeroesTapped;
+            _navHandlers[BottomNav.Alliance] = OnAllianceTapped;
+            _navHandlers[BottomNav.Bag] = OnBagTapped;
+            NavModel.Tapped += id =>
             {
-                ("nav.base", (PlayScreen?)PlayScreen.Village),
-                ("nav.heroes", null),
-                ("nav.alliance", null),
-                ("nav.world", PlayScreen.World),
-                ("nav.bag", null)
+                if (_navHandlers.TryGetValue(id, out var handler))
+                {
+                    handler();
+                }
             };
-            for (var i = 0; i < tabs.Length; i++)
+            NavModel.Changed += RelayoutNav;
+            RelayoutNav();
+        }
+
+        /// <summary>
+        /// Add one more bottom-bar button (Battle, ...) with its own tap handler. The bar re-spaces evenly.
+        /// <paramref name="index"/> null appends; 0 puts it first. Returns the button, or null if the id exists.
+        /// </summary>
+        public RectTransform? AddNavButton(string id, string iconKey, Action onTap, int? index = null)
+        {
+            _navHandlers[id] = onTap;
+            if (!NavModel.Add(new NavButtonDef(id, iconKey), index))
             {
-                var (key, screen) = tabs[i];
-                var btn = SurvivalVisuals.Button(bar.transform, key, SurvivalVisuals.PanelSoft);
-                var img = btn.GetComponent<Image>();
-                var tabSkinned = HookSkin.TrySkin(img, HookArtKeys.ButtonBlue, 0.4f);
-                var rt = btn.GetComponent<RectTransform>();
-                var x0 = i / 5f;
-                var x1 = (i + 1) / 5f;
-                rt.anchorMin = new Vector2(x0 + 0.01f, 0.12f);
-                rt.anchorMax = new Vector2(x1 - 0.01f, 0.88f);
+                return null;
+            }
+
+            return _navButtons.TryGetValue(id, out var rt) ? rt : null;
+        }
+
+        /// <summary>The bottom-bar button for <paramref name="id"/> (badges, tutorials), or null.</summary>
+        public RectTransform? NavButton(string id) => _navButtons.TryGetValue(id, out var rt) ? rt : null;
+
+        /// <summary>Heroes bottom-bar entry point. The Heroes screen subscribes to <see cref="HeroesTapped"/>.</summary>
+        public void OnHeroesTapped() => HeroesTapped?.Invoke();
+
+        public void OnAllianceTapped() => AllianceTapped?.Invoke();
+
+        public void OnBagTapped() => BagTapped?.Invoke();
+
+        private void RelayoutNav()
+        {
+            if (_navBar == null)
+            {
+                return;
+            }
+
+            var keep = new HashSet<string>();
+            for (var i = 0; i < NavModel.Buttons.Count; i++)
+            {
+                var def = NavModel.Buttons[i];
+                keep.Add(def.Id);
+                if (!_navButtons.TryGetValue(def.Id, out var rt))
+                {
+                    var label = _navPack != null ? _navPack.StringOr(def.Id, def.Id) : def.Id;
+                    var btn = SurvivalPaintedButton.Create(_navBar, "Nav_" + def.Id, def.IconKey, label, out _, out _);
+                    rt = btn.GetComponent<RectTransform>();
+                    var id = def.Id;
+                    btn.onClick.AddListener(() => NavModel.Tap(id));
+                    _navButtons[def.Id] = rt;
+                }
+
+                var (x0, x1) = NavModel.Slot(i);
+                rt.anchorMin = new Vector2(x0, 0.10f);
+                rt.anchorMax = new Vector2(x1, 0.86f);
                 rt.offsetMin = Vector2.zero;
                 rt.offsetMax = Vector2.zero;
-                var tabText = SurvivalVisuals.Text(btn.transform, "T", pack.StringOr(key, key), 20, TextAnchor.MiddleCenter, SurvivalVisuals.Cream);
-                if (tabSkinned)
-                {
-                    tabText.fontStyle = FontStyle.Bold;
-                    HookSkin.Outlined(tabText, 1.5f);
-                }
+            }
 
-                var navTab = btn.transform;
-                btn.onClick.AddListener(() => StartCoroutine(Punch(navTab, 0.10f, 8)));
-                if (screen is PlayScreen target)
+            var gone = new List<string>();
+            foreach (var kv in _navButtons)
+            {
+                if (!keep.Contains(kv.Key))
                 {
-                    _navTabs.Add((target, img, tabText));
-                    btn.onClick.AddListener(() =>
-                    {
-                        if (target == PlayScreen.Village && Village == null)
-                        {
-                            return;
-                        }
-
-                        Screen.Set(target);
-                    });
+                    Destroy(kv.Value.gameObject);
+                    gone.Add(kv.Key);
                 }
+            }
+
+            foreach (var id in gone)
+            {
+                _navButtons.Remove(id);
             }
         }
 

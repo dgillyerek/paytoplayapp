@@ -72,10 +72,10 @@
     "y_top_max": 0.875
   },
   "nav": {
-    "x_min": 0.02,
+    "x_min": 0.0,
     "y_top_min": 0.9,
-    "x_max": 0.98,
-    "y_top_max": 0.985
+    "x_max": 1.0,
+    "y_top_max": 1.0
   },
   "quest_tracker": {
     "x_min": 0.018,
@@ -96,16 +96,16 @@
     "y_top_max": 0.326
   },
   "debug_gift": {
-    "x_min": 0.44,
-    "y_top_min": 0.808,
-    "x_max": 0.755,
-    "y_top_max": 0.848
+    "x_min": 0.018,
+    "y_top_min": 0.773,
+    "x_max": 0.105,
+    "y_top_max": 0.798
   },
   "debug_skip": {
-    "x_min": 0.44,
-    "y_top_min": 0.853,
-    "x_max": 0.755,
-    "y_top_max": 0.893
+    "x_min": 0.11,
+    "y_top_min": 0.773,
+    "x_max": 0.197,
+    "y_top_max": 0.798
   },
   "view_toggle": {
     "x_min": 0.775,
@@ -124,5 +124,11 @@
     "y_top_min": 0.0,
     "x_max": 1.0,
     "y_top_max": 1.0
+  },
+  "build_button": {
+    "x_min": 0.555,
+    "y_top_min": 0.775,
+    "x_max": 0.762,
+    "y_top_max": 0.893
   }
 }

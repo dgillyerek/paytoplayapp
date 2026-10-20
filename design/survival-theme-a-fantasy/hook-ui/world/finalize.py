@@ -24,6 +24,15 @@ for n in ['march_player', 'march_rival']:
 save(fit(L('level_badge'), 128, 128, True), 'ui/level_badge.png')
 save(fit(L('icon_world'), 192, 192, True), 'ui/icon_world.png')
 save(fit(L('icon_upgrade'), 128, 128, True), 'ui/icon_upgrade.png')
+# Bottom bar + Build button kit (9-sliced frames; icons sit on the frames).
+save(fit(L('nav_bar'), 1024, 1024), 'ui/nav_bar.png')
+save(fit(L('nav_button'), 256, 256), 'ui/nav_button.png')
+for n in ['icon_heroes', 'icon_alliance', 'icon_bag', 'icon_build', 'icon_battle']:
+    save(fit(L(n), 192, 192, True), f'ui/{n}.png')
+# Village decor for the bigger village.
+save(fit(L('prop_rocks'), 320, 320, True), 'village/prop_rocks.png')
+save(fit(L('prop_field'), 384, 384, True), 'village/prop_field.png')
+save(fit(L('prop_tree'), 320, 320, True), 'village/prop_tree.png')
 
 def tileable(src, size=512, bright=1.0, sat=1.0):
     im = Image.open(src).convert('RGB').resize((size, size), Image.LANCZOS)

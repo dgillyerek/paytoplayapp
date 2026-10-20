@@ -104,7 +104,17 @@
     "theme_a.world.march.rival": "art/world/map/march_rival.png",
     "theme_a.ui.level_badge": "art/world/ui/level_badge.png",
     "theme_a.ui.icon_world": "art/world/ui/icon_world.png",
-    "theme_a.ui.icon_upgrade": "art/world/ui/icon_upgrade.png"
+    "theme_a.ui.icon_upgrade": "art/world/ui/icon_upgrade.png",
+    "theme_a.ui.nav_bar": "art/world/ui/nav_bar.png",
+    "theme_a.ui.nav_button": "art/world/ui/nav_button.png",
+    "theme_a.ui.icon_heroes": "art/world/ui/icon_heroes.png",
+    "theme_a.ui.icon_alliance": "art/world/ui/icon_alliance.png",
+    "theme_a.ui.icon_bag": "art/world/ui/icon_bag.png",
+    "theme_a.ui.icon_build": "art/world/ui/icon_build.png",
+    "theme_a.ui.icon_battle": "art/world/ui/icon_battle.png",
+    "theme_a.village.prop.rocks": "art/world/village/prop_rocks.png",
+    "theme_a.village.prop.field": "art/world/village/prop_field.png",
+    "theme_a.village.prop.tree": "art/world/village/prop_tree.png"
   },
   "art_slices": {
     "theme_a.hook.ui.panel": [40, 40, 40, 40],
@@ -118,7 +128,9 @@
     "theme_a.hook.ui.scroll": [50, 40, 50, 40],
     "theme_a.hook.ui.ribbon_red": [84, 22, 84, 22],
     "theme_a.hook.ui.ribbon_blue": [84, 22, 84, 22],
-    "theme_a.hook.ui.header": [110, 44, 110, 44]
+    "theme_a.hook.ui.header": [110, 44, 110, 44],
+    "theme_a.ui.nav_bar": [56, 60, 56, 60],
+    "theme_a.ui.nav_button": [40, 36, 40, 36]
   },
   "art_fallback": {
     "theme_a.hook.icon.res.soft": "art/hook/icons/gold.png",
