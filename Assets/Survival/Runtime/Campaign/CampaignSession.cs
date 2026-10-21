@@ -32,6 +32,21 @@ namespace Survival.Domain.Campaign
         public int BountyIndex { get; private set; }
         public IReadOnlyCollection<string> Cleared => _cleared;
 
+        /// <summary>Highest runner level open (1-based; Level 1 is always open). Saved as "runner_unlocked".</summary>
+        public int RunnerUnlocked { get; private set; } = 1;
+
+        /// <summary>Open runner levels up to <paramref name="number"/> (never closes one).</summary>
+        public void UnlockRunner(int number)
+        {
+            if (number > RunnerUnlocked)
+            {
+                RunnerUnlocked = number;
+                Touch();
+            }
+        }
+
+        internal void RestoreRunner(int unlocked) => RunnerUnlocked = Math.Max(1, unlocked);
+
         /// <summary>Anything the save file holds changed (training, levels, battles, bounties).</summary>
         public event Action? Changed;
 

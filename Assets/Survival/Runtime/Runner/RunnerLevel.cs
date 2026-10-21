@@ -81,6 +81,61 @@ namespace Survival.Domain.Runner
         IReadOnlyList<RunnerRowDef> Rows,
         RunnerRewardDef Rewards)
     {
+        /// <summary>1-based place in the level sequence (Level 1 = Thornwood Road).</summary>
+        public int Number { get; init; } = 1;
+
+        /// <summary>Shown when the pack has no string for <see cref="Title"/>.</summary>
+        public string DisplayName { get; init; } = "";
+
+        /// <summary>Every enemy's HP on this level is its unit HP times this (progressive levels toughen the same units).</summary>
+        public float FoeHpMul { get; init; } = 1f;
+
+        /// <summary>The boss's HP is its unit HP times this.</summary>
+        public float BossHpMul { get; init; } = 1f;
+
+        /// <summary>Boss HP on this level (0 without a boss).</summary>
+        public int BossHp(RunnerCatalog catalog)
+        {
+            foreach (var r in Rows)
+            {
+                if (r.Kind == RunnerRowKind.Boss)
+                {
+                    return Math.Max(1, (int)Math.Round(catalog.Unit(r.Unit).Hp * BossHpMul));
+                }
+            }
+
+            return 0;
+        }
+
+        /// <summary>Sum of every non-boss enemy's HP on this level.</summary>
+        public int FoeHpTotal(RunnerCatalog catalog)
+        {
+            var hp = 0;
+            foreach (var r in Rows)
+            {
+                if (r.Kind == RunnerRowKind.Enemy)
+                {
+                    hp += r.Count * Math.Max(1, (int)Math.Round(catalog.Unit(r.Unit).Hp * FoeHpMul));
+                }
+            }
+
+            return hp;
+        }
+
+        public int BoxHpTotal
+        {
+            get
+            {
+                var hp = 0;
+                foreach (var r in Rows)
+                {
+                    hp += r.Box?.Hp ?? 0;
+                }
+
+                return hp;
+            }
+        }
+
         public bool HasBoss
         {
             get
@@ -186,6 +241,12 @@ namespace Survival.Domain.Runner
 
         public RunnerLevelDef First => _levels.Count > 0 ? _levels[0] : throw new InvalidOperationException(FileName + " has no levels.");
 
+        /// <summary>Level <paramref name="number"/> (1-based), clamped into the sequence.</summary>
+        public RunnerLevelDef ByNumber(int number) => _levels[Math.Max(0, Math.Min(_levels.Count - 1, number - 1))];
+
+        /// <summary>The level after <paramref name="level"/>, or null after the last.</summary>
+        public RunnerLevelDef? Next(RunnerLevelDef level) => level.Number < _levels.Count ? _levels[level.Number] : null;
+
         private void Validate(RunnerLevelDef level)
         {
             Unit(level.Hero);
@@ -247,6 +308,7 @@ namespace Survival.Domain.Runner
             var levels = new List<RunnerLevelDef>();
             foreach (var l in LayoutJson.Objs(root, "levels"))
             {
+                var number = levels.Count + 1;
                 var rows = new List<RunnerRowDef>();
                 foreach (var r in LayoutJson.Objs(l, "rows"))
                 {
@@ -269,7 +331,29 @@ namespace Survival.Domain.Runner
                         LayoutJson.OptInt(rw, "gold_per_kill", 0),
                         LayoutJson.OptInt(rw, "gold_per_box", 0),
                         LayoutJson.OptInt(rw, "shards", 0),
-                        LayoutJson.OptStr(rw, "shard_hero", ""))));
+                        LayoutJson.OptStr(rw, "shard_hero", "")))
+                {
+                    Number = number,
+                    DisplayName = LayoutJson.OptStr(l, "name", LayoutJson.Str(l, "id")),
+                    FoeHpMul = Math.Max(0.1f, LayoutJson.OptNum(l, "foe_hp_mul", 1f)),
+                    BossHpMul = Math.Max(0.1f, LayoutJson.OptNum(l, "boss_hp_mul", 1f))
+                });
+            }
+
+            // The authored levels come first (Level 1 = Thornwood Road); "progression" generates the rest from a seed.
+            if (root.TryGet("progression", out var pn) && pn is JsonNode.Obj po && levels.Count > 0)
+            {
+                var prog = RunnerProgressionDef.Read(po);
+                var have = new HashSet<string>(StringComparer.Ordinal);
+                foreach (var u in units)
+                {
+                    have.Add(u.Id);
+                }
+
+                for (var n = levels.Count + 1; n <= prog.Count; n++)
+                {
+                    levels.Add(RunnerProgression.Generate(levels[0], prog, n, have.Contains));
+                }
             }
 
             return new RunnerCatalog(units, levels);

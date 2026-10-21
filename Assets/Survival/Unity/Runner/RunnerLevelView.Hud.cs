@@ -35,6 +35,7 @@ namespace Survival.Unity
         private Image? _badgeIcon;
         private Text? _hint;
         private RectTransform? _result;
+        private RectTransform? _levelList;
         private RectTransform? _banner;
         private Text? _bannerText;
         private float _bannerAge = 9f;
@@ -94,7 +95,7 @@ namespace Survival.Unity
             // Title plate + distance bar.
             var plate = HookSkin.Panel(_hud, "TitlePlate", HookArtKeys.Header, SurvivalVisuals.Panel, 0.6f);
             Anchor(plate.rectTransform, 0.16f, 0.925f, 0.84f, 0.985f);
-            var title = HookSkin.Outlined(SurvivalVisuals.Text(plate.transform, "Title", S(_level?.Title ?? "", "Runner"), 44, TextAnchor.MiddleCenter, SurvivalVisuals.Cream));
+            var title = HookSkin.Outlined(SurvivalVisuals.Text(plate.transform, "Title", LevelTitle(_level), 44, TextAnchor.MiddleCenter, SurvivalVisuals.Cream));
             SurvivalVisuals.Stretch(title.rectTransform);
             var bar = HookSkin.Bar(_hud, "Progress", out var fill);
             Anchor(bar.rectTransform, 0.14f, 0.885f, 0.80f, 0.915f);
@@ -728,15 +729,110 @@ namespace Survival.Unity
                 Anchor(note.rectTransform, 0.05f, 0.2f, 0.95f, 0.26f);
             }
 
-            var retry = PanelButton(panel.transform, "Retry", S("runner.retry", "Retry"), HookArtKeys.ButtonBlue, RunnerHandoff.FromPlay ? 0.06f : 0.25f, RunnerHandoff.FromPlay ? 0.47f : 0.75f);
-            retry.onClick.AddListener(Retry);
+            // Levels (the list) / Retry / Next level (a win opens it) / Continue (back to the village, from Play).
+            var buttons = new List<(string Name, string Label, string Key, UnityEngine.Events.UnityAction Act)>
+            {
+                ("Levels", S("runner.levels", "Levels"), HookArtKeys.ButtonBlue, ShowLevelList),
+                ("Retry", S("runner.retry", "Retry"), HookArtKeys.ButtonBlue, Retry)
+            };
+            var next = OpenNext;
+            if (result.Won && next != null)
+            {
+                var n = next.Number;
+                buttons.Add(("Next", S("runner.next", "Next level"), HookArtKeys.ButtonGreen, () => PlayLevel(n)));
+            }
+
             if (RunnerHandoff.FromPlay)
             {
-                var cont = PanelButton(panel.transform, "Continue", S("runner.continue", "Continue"), HookArtKeys.ButtonGreen, 0.53f, 0.94f);
-                cont.onClick.AddListener(Leave);
+                buttons.Add(("Continue", S("runner.continue", "Continue"), HookArtKeys.ButtonGreen, Leave));
+            }
+
+            var w = 0.88f / buttons.Count;
+            for (var i = 0; i < buttons.Count; i++)
+            {
+                var b = PanelButton(panel.transform, buttons[i].Name, buttons[i].Label, buttons[i].Key, 0.06f + (i * w) + 0.01f, 0.06f + ((i + 1) * w) - 0.01f);
+                b.onClick.AddListener(buttons[i].Act);
+            }
+
+            if (result.Won && next != null && next.Number > result.Number)
+            {
+                var unlocked = HookSkin.Outlined(SurvivalVisuals.Text(panel.transform, "Unlocked", Fmt("runner.unlocked", "Level {0} unlocked: {1}", next.Number, LevelName(next)), 26, TextAnchor.MiddleCenter, new Color(1f, 0.9f, 0.45f, 1f)));
+                Anchor(unlocked.rectTransform, 0.05f, 0.175f, 0.95f, 0.215f);
             }
 
             _result.localScale = Vector3.one;
+        }
+
+        private string LevelName(RunnerLevelDef level) => S(level.Title, level.DisplayName.Length > 0 ? level.DisplayName : "Runner");
+
+        /// <summary>"3 · Mirefen Causeway".</summary>
+        private string LevelTitle(RunnerLevelDef? level) =>
+            level == null ? S("runner.title", "Runner") : level.Number.ToString(CultureInfo.InvariantCulture) + " · " + LevelName(level);
+
+        private void HideLevelList()
+        {
+            if (_levelList != null)
+            {
+                Destroy(_levelList.gameObject);
+                _levelList = null;
+            }
+        }
+
+        /// <summary>A simple level list over the result screen: open levels play, locked ones show a lock.</summary>
+        private void ShowLevelList()
+        {
+            HideLevelList();
+            if (_hud == null || _catalog == null)
+            {
+                return;
+            }
+
+            var dim = SurvivalVisuals.Image(_hud, "RunnerLevels", new Color(0.02f, 0.03f, 0.05f, 0.86f));
+            dim.raycastTarget = true;
+            SurvivalVisuals.Stretch(dim.rectTransform);
+            _levelList = dim.rectTransform;
+            var panel = HookSkin.Panel(_levelList, "Panel", HookArtKeys.Panel, SurvivalVisuals.InspectFill, 1f);
+            Anchor(panel.rectTransform, 0.05f, 0.14f, 0.95f, 0.86f);
+            var ribbon = HookSkin.Panel(panel.transform, "Ribbon", HookArtKeys.RibbonBlue, new Color(0.15f, 0.3f, 0.6f, 1f), 0.7f);
+            Anchor(ribbon.rectTransform, -0.04f, 0.9f, 1.04f, 1.03f);
+            var title = HookSkin.Outlined(SurvivalVisuals.Text(ribbon.transform, "Title", S("runner.levels", "Levels"), 52, TextAnchor.MiddleCenter, new Color(1f, 0.9f, 0.45f, 1f)));
+            SurvivalVisuals.Stretch(title.rectTransform);
+
+            const int cols = 3;
+            var levels = _catalog.Levels;
+            var rows = (levels.Count + cols - 1) / cols;
+            var cellH = 0.74f / Mathf.Max(1, rows);
+            for (var i = 0; i < levels.Count; i++)
+            {
+                var level = levels[i];
+                var open = RunnerProgress.IsOpen(_unlocked, level.Number);
+                var current = _level != null && level.Number == _level.Number;
+                var c = i % cols;
+                var r = i / cols;
+                var x0 = 0.05f + (c * 0.3f);
+                var y1 = 0.87f - (r * cellH);
+                var key = open ? (current ? HookArtKeys.ButtonGreen : HookArtKeys.ButtonBlue) : HookArtKeys.ButtonRed;
+                var btn = HookSkin.Button(panel.transform, "Level" + level.Number, key, open ? SurvivalVisuals.PinBuild : new Color(0.3f, 0.3f, 0.3f, 1f));
+                Anchor(btn.GetComponent<RectTransform>(), x0 + 0.01f, y1 - cellH + 0.012f, x0 + 0.29f, y1 - 0.012f);
+                var label = open
+                    ? level.Number.ToString(CultureInfo.InvariantCulture) + "\n" + LevelName(level)
+                    : level.Number.ToString(CultureInfo.InvariantCulture) + "\n" + S("runner.locked", "Locked");
+                var t = HookSkin.Outlined(SurvivalVisuals.Text(btn.transform, "Label", label, 24, TextAnchor.MiddleCenter, open ? HookSkin.InkFor(key) : new Color(0.75f, 0.75f, 0.75f, 1f)));
+                SurvivalVisuals.Stretch(t.rectTransform);
+                btn.interactable = open;
+                if (open)
+                {
+                    var n = level.Number;
+                    btn.onClick.AddListener(() => PlayLevel(n));
+                    btn.gameObject.AddComponent<PressSquash>();
+                }
+            }
+
+            var close = HookSkin.Button(panel.transform, "Close", HookArtKeys.ButtonRed, new Color(0.65f, 0.18f, 0.15f, 1f));
+            Anchor(close.GetComponent<RectTransform>(), 0.3f, 0.02f, 0.7f, 0.1f);
+            var closeText = HookSkin.Outlined(SurvivalVisuals.Text(close.transform, "Label", S("runner.close", "Close"), 32, TextAnchor.MiddleCenter, Color.white));
+            SurvivalVisuals.Stretch(closeText.rectTransform);
+            close.onClick.AddListener(HideLevelList);
         }
 
         private static Button PanelButton(Transform parent, string name, string label, string key, float x0, float x1)

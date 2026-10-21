@@ -5,15 +5,29 @@
     "rowan": { "roster": "Rowan", "hero": "hero.rowan", "hp": 1, "damage": 15, "cycle": 0.29, "range": 12.5, "ranged": true, "shot_speed": 22, "radius": 0.45 },
     "oakenshield": { "roster": "Oakenshield", "hero": "hero.oakenshield", "hp": 1, "damage": 24, "cycle": 0.4, "range": 10, "ranged": true, "shot_speed": 15, "radius": 0.5 },
     "sir_aldric": { "roster": "Sir Aldric", "hero": "hero.sir_aldric", "hp": 1, "damage": 46, "cycle": 0.4, "range": 2.2, "ranged": false, "radius": 0.5 },
-    "bonequill": { "roster": "Bonequill", "hp": 124, "damage": 30, "cycle": 2.2, "range": 7, "ranged": true, "shot_speed": 12, "speed": 0.9, "radius": 0.45 },
-    "nightfang": { "roster": "Nightfang", "hp": 192, "damage": 40, "cycle": 1.3, "range": 1.2, "ranged": false, "speed": 2.2, "radius": 0.6 },
-    "blightroot": { "roster": "Blightroot", "hp": 384, "damage": 60, "cycle": 1.7, "range": 1.5, "ranged": false, "speed": 0, "radius": 0.65 },
+    "bonequill": { "roster": "Bonequill", "hp": 87, "damage": 30, "cycle": 2.2, "range": 7, "ranged": true, "shot_speed": 12, "speed": 0.9, "radius": 0.45 },
+    "nightfang": { "roster": "Nightfang", "hp": 134, "damage": 40, "cycle": 1.3, "range": 1.2, "ranged": false, "speed": 2.2, "radius": 0.6 },
+    "blightroot": { "roster": "Blightroot", "hp": 269, "damage": 60, "cycle": 1.7, "range": 1.5, "ranged": false, "speed": 0, "radius": 0.65 },
+    "vespera": { "roster": "Vespera", "hp": 210, "damage": 45, "cycle": 2.0, "range": 8, "ranged": true, "shot_speed": 11, "speed": 0.8, "radius": 0.5 },
+    "ashwyrm": { "roster": "Ashwyrm", "hp": 630, "damage": 80, "cycle": 1.8, "range": 1.8, "ranged": false, "speed": 1.2, "radius": 0.9 },
     "ironhowl": { "roster": "Ironhowl", "hp": 10080, "damage": 70, "cycle": 1.5, "range": 1.8, "ranged": false, "speed": 0, "radius": 1.0 }
+  },
+  "progression": {
+    "count": 12,
+    "seed": 20261021,
+    "length_step": 12,
+    "speed_step": 0.02,
+    "foe_hp_step": 0.15,
+    "boss_hp_step": 0.6,
+    "box_hp_step": 0.15,
+    "reward_step": 0.3,
+    "names": [ "Thornwood Road", "Bramble Pass", "Mirefen Causeway", "Ashen Ridge", "Wolfsong Hollow", "Bonefield Track", "Hexmoor Way", "Cinder Gorge", "Gloomwood Trail", "Ironhowl's Reach", "Dragonspine Road", "Throne of Thorns" ]
   },
   "levels": [
     {
       "id": "runner.thornwood_road",
       "title": "runner.level.thornwood_road",
+      "name": "Thornwood Road",
       "hero": "lyra",
       "length": 150,
       "speed": 1.7,

@@ -13,7 +13,7 @@ namespace Survival.Domain.Runner
         {
             var r = level.Rewards;
             var gold = (result.Kills * r.GoldPerKill) + (result.BoxesBroken * r.GoldPerBox) + (result.Won ? r.WinGold : 0);
-            var bundle = new RewardBundle { Won = result.Won };
+            var bundle = new RewardBundle { Won = result.Won, RunnerNumber = Math.Max(1, result.Number) };
             if (gold > 0)
             {
                 bundle.Resources[SurvIds.ResSoft] = gold;
@@ -32,6 +32,11 @@ namespace Survival.Domain.Runner
         public static void Grant(RewardBundle bundle, CampaignSession campaign)
         {
             campaign.Wallet.Grant(bundle.Resources);
+            if (bundle.Won && bundle.RunnerNumber > 0)
+            {
+                campaign.UnlockRunner(bundle.RunnerNumber + 1);
+            }
+
             if (bundle.Shards > 0 && bundle.ShardHero.Length > 0)
             {
                 campaign.Roster.AddShards(bundle.ShardHero, bundle.Shards);
@@ -67,6 +72,9 @@ namespace Survival.Domain.Runner
         private static readonly List<(RunnerResult Result, RewardBundle Bundle)> Banked = new();
 
         public static string? PendingLevel { get; private set; }
+
+        /// <summary>Highest runner level open when Play opened the runner (the scene's level list and Next button).</summary>
+        public static int Unlocked { get; private set; } = 1;
         public static bool FromPlay => PendingLevel != null;
         public static bool Done { get; private set; }
 
@@ -74,14 +82,22 @@ namespace Survival.Domain.Runner
 
         public static event Action? Finished;
 
-        public static void Begin(string levelId)
+        public static void Begin(string levelId, int unlocked = 1)
         {
             PendingLevel = levelId ?? throw new ArgumentNullException(nameof(levelId));
+            Unlocked = Math.Max(1, unlocked);
             Banked.Clear();
             Done = false;
         }
 
-        public static void Bank(RunnerResult result, RewardBundle bundle) => Banked.Add((result, bundle));
+        public static void Bank(RunnerResult result, RewardBundle bundle)
+        {
+            Banked.Add((result, bundle));
+            if (result.Won)
+            {
+                Unlocked = Math.Max(Unlocked, result.Number + 1);
+            }
+        }
 
         public static void Finish()
         {
@@ -102,6 +118,7 @@ namespace Survival.Domain.Runner
         public static void Reset()
         {
             Banked.Clear();
+            Unlocked = 1;
             PendingLevel = null;
             Done = false;
             Finished = null;

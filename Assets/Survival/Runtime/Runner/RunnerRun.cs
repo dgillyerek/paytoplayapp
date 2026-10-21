@@ -37,8 +37,36 @@ namespace Survival.Domain.Runner
         /// <summary>Enemies drift sideways toward the hero this fast while they walk in.</summary>
         public const float EnemySeek = 0.55f;
 
-        /// <summary>Enemies and boxes this far behind the hero are left behind (no kill, no box).</summary>
+        /// <summary>Boxes this far behind the hero are left behind (no box).</summary>
         public const float PassBehind = 1.2f;
+
+        /// <summary>
+        /// Enemies this far behind the squad's back row fall off the road (no kill). The squad never stops: what it does
+        /// not kill it walks through, taking hits on the way, and leaves behind.
+        /// </summary>
+        public const float DropBehind = 4f;
+
+        /// <summary>
+        /// A ranged enemy's body overlapping a squad body strikes it this often while they overlap (a melee enemy's
+        /// contact damage is its own swing, every cycle, at whoever is in reach as the squad pushes past).
+        /// </summary>
+        public const float ContactHitsPerSecond = 1f;
+
+        /// <summary>Share of an enemy's attack damage a contact hit does to the hero (a follower dies to any hit).</summary>
+        public const float ContactDamageShare = 0.5f;
+
+        /// <summary>
+        /// An enemy the squad walks past keeps fighting (turns, chases, hits the rows going by) for this long after the
+        /// hero is past it, then gives up and drops behind.
+        /// </summary>
+        public const float ChaseSeconds = 1.5f;
+
+        /// <summary>
+        /// The boss fight is a running fight: once the squad reaches it, the boss backs off down the road at the squad's
+        /// pace, slamming at the front row. The road runs on this far past the level's length; if the boss is still up
+        /// when it runs out, the boss gets away and the run is lost.
+        /// </summary>
+        public const float BossRunoff = 150f;
 
         /// <summary>A hit at least this big (or any boss, box break, follower loss or hero hit) shakes the screen.</summary>
         public const int BigHit = 60;
@@ -157,14 +185,14 @@ namespace Survival.Domain.Runner
 
     public sealed class RunnerFoe
     {
-        internal RunnerFoe(int id, RunnerUnitDef unit, float x, float z, bool boss)
+        internal RunnerFoe(int id, RunnerUnitDef unit, float x, float z, bool boss, float hpMul = 1f)
         {
             Id = id;
             Unit = unit;
             X = x;
             Z = z;
             Boss = boss;
-            Hp = MaxHp = unit.Hp;
+            Hp = MaxHp = Math.Max(1, (int)Math.Round(unit.Hp * (hpMul > 0f ? hpMul : 1f)));
         }
 
         public int Id { get; }
@@ -176,7 +204,17 @@ namespace Survival.Domain.Runner
         public int MaxHp { get; }
         public float Cooldown { get; internal set; }
         public bool Walking { get; internal set; }
+
+        /// <summary>Body to body with a squad member (or, for the boss, in slam range of the front row).</summary>
         public bool Engaged { get; internal set; }
+
+        /// <summary>The squad has walked past it (its front is behind the hero); it chases for <see cref="RunnerRules.ChaseSeconds"/>.</summary>
+        public bool Passed { get; internal set; }
+        public float ChaseLeft { get; internal set; } = RunnerRules.ChaseSeconds;
+
+        /// <summary>Member it last attacked (0 = none).</summary>
+        public int TargetId { get; internal set; }
+        public float ContactClock { get; internal set; }
         public float SinceAttack { get; internal set; } = 99f;
         public bool Attacking => SinceAttack < Unit.Cycle + 0.25f;
         public float HpFraction => MaxHp > 0 ? Math.Max(0f, Hp / (float)MaxHp) : 0f;
@@ -210,8 +248,9 @@ namespace Survival.Domain.Runner
     /// </summary>
     public sealed class RunnerShot
     {
-        internal RunnerShot(int id, int shooter, bool byFoe, float x, float z, int damage, float speed, float range)
+        internal RunnerShot(int id, int shooter, bool byFoe, float x, float z, int damage, float speed, float range, float direction = 0f)
         {
+            Direction = direction != 0f ? Math.Sign(direction) : byFoe ? -1f : 1f;
             Id = id;
             Shooter = shooter;
             ByFoe = byFoe;
@@ -226,8 +265,9 @@ namespace Survival.Domain.Runner
         public int Shooter { get; }
         public bool ByFoe { get; }
 
-        /// <summary>+1 for squad shots (down the road), -1 for foe shots.</summary>
-        public float Direction => ByFoe ? -1f : 1f;
+        /// <summary>+1 down the road (squad shots), -1 back up it (foe shots at a squad still ahead of them); a foe
+        /// the squad has walked past shoots after it (+1).</summary>
+        public float Direction { get; }
         public float Range { get; }
         public float Travelled { get; internal set; }
         public float X { get; internal set; }
@@ -245,14 +285,17 @@ namespace Survival.Domain.Runner
         int FollowersPeak,
         int FollowersLeft,
         float Distance,
-        float Seconds);
+        float Seconds,
+        int Number = 1);
 
     /// <summary>
     /// One run of a runner level ("runner army"): the squad auto-walks down the lane at the level's pace and every unit
     /// auto-attacks straight ahead (ranged shots fly down its own lane, melee swings hit what stands in front of it);
-    /// the player only steers left / right, which is also the aim. Enemy
-    /// waves walk in; one in contact holds the squad up, and every enemy hit kills a follower first, the hero only once
-    /// no followers are left. Bonus boxes have HP and must be shot down to be claimed: followers, a new hero, or
+    /// the player only steers left / right, which is also the aim. The squad never stops: enemy waves walk in, and what
+    /// it does not kill it walks through while they keep swinging (melee in reach, ahead or already passed, ranged foes
+    /// shooting either way down the road, bodies touching a caster hurting) and chase it briefly, then they drop behind.
+    /// An enemy hit kills a follower (1 HP) first, the hero only once no followers are left. The boss is a running
+    /// fight: it backs off down the road ahead of the squad, slamming the front row, until it falls or the road runs out. Bonus boxes have HP and must be shot down to be claimed: followers, a new hero, or
     /// weapon / attack-speed upgrades. Reaching the end (or killing the boss, when the level has one) wins; losing the
     /// hero loses. Plain C#, deterministic, stepped by <see cref="Step"/>.
     /// </summary>
@@ -303,13 +346,19 @@ namespace Survival.Domain.Runner
         public int BoxesBroken { get; private set; }
         public int BoxesMissed { get; private set; }
 
-        /// <summary>True while a foe in contact (or the boss) holds the squad up.</summary>
-        public bool Blocked { get; private set; }
+        /// <summary>True while the squad is in the running boss fight (the boss backs off ahead of it).</summary>
+        public bool BossFight { get; private set; }
+
+        /// <summary>How far the road runs: the level's length, plus the boss fight's run-off on a boss level.</summary>
+        public float RoadEnd => Level.HasBoss ? Level.Length + RunnerRules.BossRunoff : Level.Length;
+
+        /// <summary>The level's enemy HP multiplier (progressive levels toughen the same units).</summary>
+        public float FoeHpMul => Level.FoeHpMul;
         public RunnerOutcome Outcome { get; private set; }
         public bool Over => Outcome != RunnerOutcome.Running;
 
         public RunnerResult Result =>
-            new RunnerResult(Level.Id, Outcome == RunnerOutcome.Won, Kills, BoxesBroken, BoxesMissed, FollowersPeak, Followers, Distance, Seconds);
+            new RunnerResult(Level.Id, Outcome == RunnerOutcome.Won, Kills, BoxesBroken, BoxesMissed, FollowersPeak, Followers, Distance, Seconds, Level.Number);
 
         public float MaxSteer => Math.Max(0.5f, Level.HalfWidth - Hero.Unit.Radius);
 
@@ -353,20 +402,8 @@ namespace Survival.Domain.Runner
 
         private void MoveSquad(float dt)
         {
-            Blocked = false;
-            foreach (var f in _foes)
-            {
-                if (f.Engaged && (f.Boss || f.Z >= Hero.Z - 0.3f))
-                {
-                    Blocked = true;
-                    break;
-                }
-            }
-
-            if (!Blocked)
-            {
-                Distance = Math.Min(Level.Length, Distance + (Level.Speed * dt));
-            }
+            // Never held up: the squad walks through whatever it has not killed (and pays for it in hits).
+            Distance = Math.Min(RoadEnd, Distance + (Level.Speed * dt));
 
             var maxMove = RunnerRules.SteerSpeed * dt;
             Hero.X += Clamp(_steer - Hero.X, -maxMove, maxMove);
@@ -409,7 +446,7 @@ namespace Survival.Domain.Runner
                         for (var i = 0; i < row.Count; i++)
                         {
                             var x = Clamp(row.XOf(i), -Level.HalfWidth + unit.Radius, Level.HalfWidth - unit.Radius);
-                            var foe = new RunnerFoe(_nextId++, unit, x, row.At, boss);
+                            var foe = new RunnerFoe(_nextId++, unit, x, row.At, boss, boss ? Level.BossHpMul : Level.FoeHpMul);
                             // Stagger the first swing so a pack does not attack in one beat.
                             foe.Cooldown = unit.Cycle * (0.35f + (0.2f * (i % 3)));
                             _foes.Add(foe);
@@ -429,30 +466,65 @@ namespace Survival.Domain.Runner
                 var near = NearestMember(f.X, f.Z, out var dist);
                 var reach = f.Unit.Range + f.Unit.Radius + (near?.Unit.Radius ?? 0f);
                 var wasEngaged = f.Engaged;
+                f.Walking = false;
                 if (f.Boss)
                 {
-                    // The boss holds the whole road: no going round it.
+                    // A running fight: once the front row reaches slam range the boss backs off down the road at the
+                    // squad's pace, keeping that range, so it never holds the squad up and keeps slamming the front.
+                    var keep = f.Unit.Range + f.Unit.Radius + Hero.Unit.Radius;
                     var gap = f.Z - Hero.Z;
-                    f.Engaged = gap <= reach;
-                    if (f.Engaged && !wasEngaged)
+                    f.Engaged = gap <= keep + 0.05f;
+                    if (f.Engaged)
                     {
-                        Emit(RunnerEventKind.BossEngaged, f.Id, Hero.Id, f.X, f.Z, f.Hp, true);
+                        if (!wasEngaged)
+                        {
+                            BossFight = true;
+                            Emit(RunnerEventKind.BossEngaged, f.Id, Hero.Id, f.X, f.Z, f.Hp, true);
+                        }
+
+                        f.Walking = true;
+                        f.Z = Math.Max(f.Z, Hero.Z + keep * 0.9f);
                     }
-                }
-                else
-                {
-                    // Contact is body to body: a ranged foe shoots from range but only holds the squad up once it is touched.
-                    f.Engaged = near != null && dist <= ContactReach(f) + (near?.Unit.Radius ?? 0f);
+
+                    continue;
                 }
 
-                f.Walking = false;
-                var holding = f.Unit.Ranged && near != null && dist <= reach * 0.8f;
-                if (f.Engaged || holding || f.Unit.Speed <= 0f || near == null)
+                // Contact is body to body: a ranged foe shoots from range, and anything the squad walks into hits back.
+                f.Engaged = near != null && dist <= ContactReach(f) + near.Unit.Radius;
+                if (!f.Passed && f.Z < Hero.Z - 0.3f)
+                {
+                    f.Passed = true;
+                }
+
+                if (f.Passed)
+                {
+                    // Once the hero is past, it has a moment to turn, chase and hit the rows going by; then it gives up.
+                    f.ChaseLeft -= dt;
+                }
+
+                if (f.Unit.Speed <= 0f || near == null || f.Engaged)
                 {
                     continue;
                 }
 
-                if (f.Z - Hero.Z > RunnerRules.Aggro)
+                if (f.Passed)
+                {
+                    // Turns and chases the squad that walked past it for a moment, then gives up and drops behind.
+                    if (f.ChaseLeft <= 0f || f.Unit.Ranged)
+                    {
+                        continue;
+                    }
+
+                    f.Walking = true;
+                    f.Z += Math.Min(f.Unit.Speed, Level.Speed) * dt;
+                    var chase = RunnerRules.EnemySeek * dt;
+                    f.X += Clamp(near.X - f.X, -chase, chase);
+                    f.X = Clamp(f.X, -Level.HalfWidth + f.Unit.Radius, Level.HalfWidth - f.Unit.Radius);
+                    continue;
+                }
+
+                var holding = f.Unit.Ranged && dist <= reach * 0.8f;
+                if (holding || f.Z - Hero.Z > RunnerRules.Aggro)
                 {
                     continue;
                 }
@@ -613,8 +685,9 @@ namespace Survival.Domain.Runner
 
         private void FoesAttack(float dt)
         {
-            foreach (var f in _foes)
+            for (var i = 0; i < _foes.Count && !Over; i++)
             {
+                var f = _foes[i];
                 f.SinceAttack += dt;
                 if (f.Hp <= 0)
                 {
@@ -623,17 +696,45 @@ namespace Survival.Domain.Runner
 
                 f.Cooldown -= dt;
                 var target = NearestMember(f.X, f.Z, out var dist);
-                if (target == null)
+                if (target == null || (f.Passed && f.ChaseLeft <= 0f))
                 {
+                    // Gave up on the squad that walked past: it drops behind and falls off the road.
                     continue;
                 }
 
+                // Bodies overlapping: the squad pushing through takes contact hits, whatever the enemy's own attack is.
+                if (!f.Boss && f.Unit.Ranged && dist <= f.Unit.Radius + target.Unit.Radius)
+                {
+                    f.ContactClock += dt * RunnerRules.ContactHitsPerSecond;
+                    if (f.ContactClock >= 1f)
+                    {
+                        f.ContactClock -= 1f;
+                        StrikeMember(f, target, Math.Max(1, (int)Math.Round(f.Unit.Damage * RunnerRules.ContactDamageShare)));
+                        if (Over)
+                        {
+                            return;
+                        }
+
+                        target = NearestMember(f.X, f.Z, out dist);
+                        if (target == null)
+                        {
+                            continue;
+                        }
+                    }
+                }
+                else
+                {
+                    f.ContactClock = Math.Min(f.ContactClock, 0.5f);
+                }
+
+                // Melee: whoever is in reach, ahead or already past. Ranged: whoever is in range in its strip, either way
+                // down the road (a foe the squad has walked past shoots after it). The boss slams the front row.
                 var inRange = f.Boss
                     ? f.Engaged
                     : f.Unit.Ranged
                         ? dist <= f.Unit.Range + f.Unit.Radius + target.Unit.Radius && Math.Abs(target.X - f.X) <= RunnerRules.AimHalfWidth + target.Unit.Radius
-                        : f.Engaged;
-                if (!inRange || target.Z > f.Z + 1.5f)
+                        : dist <= f.Unit.Range + f.Unit.Radius + target.Unit.Radius;
+                if (!inRange)
                 {
                     f.Cooldown = Math.Max(f.Cooldown, 0f);
                     continue;
@@ -644,17 +745,54 @@ namespace Survival.Domain.Runner
                     continue;
                 }
 
+                if (f.Boss)
+                {
+                    target = Hero;
+                }
+
                 f.Cooldown = f.Unit.Cycle;
                 f.SinceAttack = 0f;
+                f.TargetId = target.Id;
                 Emit(RunnerEventKind.Fired, f.Id, target.Id, target.X, target.Z, 0, false, false, f.Unit.Id);
                 if (f.Unit.Ranged)
                 {
-                    _shots.Add(new RunnerShot(_nextId++, f.Id, true, f.X, f.Z - 0.4f, f.Unit.Damage, f.Unit.ShotSpeed, f.Unit.Range + RunnerRules.ShotOvershoot + 2f));
+                    var dir = target.Z >= f.Z ? 1f : -1f;
+                    _shots.Add(new RunnerShot(_nextId++, f.Id, true, f.X, f.Z + (0.4f * dir), f.Unit.Damage, f.Unit.ShotSpeed, f.Unit.Range + RunnerRules.ShotOvershoot + 2f, dir));
                 }
                 else
                 {
                     StrikeSquad(f, f.Unit.Damage);
                 }
+            }
+        }
+
+        /// <summary>A contact hit on one member: a follower dies, the hero takes the damage.</summary>
+        private void StrikeMember(RunnerFoe f, RunnerMember m, int damage)
+        {
+            if (m.IsHero)
+            {
+                HurtHero(f, damage);
+                return;
+            }
+
+            KillFollower(f, m);
+        }
+
+        private void KillFollower(RunnerFoe f, RunnerMember victim)
+        {
+            _squad.Remove(victim);
+            Emit(RunnerEventKind.FollowerLost, victim.Id, f.Id, victim.X, victim.Z, Followers, true, false, victim.Unit.Id);
+            Reslot();
+        }
+
+        private void HurtHero(RunnerFoe f, int damage)
+        {
+            Hero.Hp = Math.Max(0, Hero.Hp - damage);
+            Emit(RunnerEventKind.HeroHit, Hero.Id, f.Id, Hero.X, Hero.Z, damage, true, false, Hero.Unit.Id);
+            if (Hero.Hp <= 0 && !Over)
+            {
+                Outcome = RunnerOutcome.Lost;
+                Emit(RunnerEventKind.Lost, Hero.Id, f.Id, Hero.X, Hero.Z, 0, true);
             }
         }
 
@@ -676,19 +814,11 @@ namespace Survival.Domain.Runner
 
             if (victim != null)
             {
-                _squad.Remove(victim);
-                Emit(RunnerEventKind.FollowerLost, victim.Id, f.Id, victim.X, victim.Z, Followers, true, false, victim.Unit.Id);
-                Reslot();
+                KillFollower(f, victim);
                 return;
             }
 
-            Hero.Hp = Math.Max(0, Hero.Hp - damage);
-            Emit(RunnerEventKind.HeroHit, Hero.Id, f.Id, Hero.X, Hero.Z, damage, true, false, Hero.Unit.Id);
-            if (Hero.Hp <= 0)
-            {
-                Outcome = RunnerOutcome.Lost;
-                Emit(RunnerEventKind.Lost, Hero.Id, f.Id, Hero.X, Hero.Z, 0, true);
-            }
+            HurtHero(f, damage);
         }
 
         private void MoveShots(float dt)
@@ -843,7 +973,9 @@ namespace Survival.Domain.Runner
             var unit = _catalog.Unit(b.Def.Unit);
             for (var i = 0; i < b.Def.Count && Followers < Level.MaxFollowers; i++)
             {
-                var m = new RunnerMember(_nextId++, unit, false, b.X + ((i - ((b.Def.Count - 1) * 0.5f)) * 0.6f), b.Z);
+                // Joiners step out at the box's side of the road level with the squad (not out among the enemies
+                // beyond it, now that the squad never stops) and run into their slot.
+                var m = new RunnerMember(_nextId++, unit, false, b.X + ((i - ((b.Def.Count - 1) * 0.5f)) * 0.6f), Math.Min(b.Z, Hero.Z));
                 m.Cooldown = unit.Cycle * (0.2f + (0.13f * (_squad.Count % 6)));
                 _squad.Add(m);
                 Reslot();
@@ -868,7 +1000,7 @@ namespace Survival.Domain.Runner
             for (var i = _foes.Count - 1; i >= 0; i--)
             {
                 var f = _foes[i];
-                if (!f.Boss && f.Z < Hero.Z - RunnerRules.PassBehind - SquadDepth && !f.Engaged)
+                if (!f.Boss && f.Z < Hero.Z - SquadDepth - RunnerRules.DropBehind)
                 {
                     _foes.RemoveAt(i);
                     Emit(RunnerEventKind.FoePassed, f.Id, 0, f.X, f.Z, 0, false, false, f.Unit.Id);
@@ -899,6 +1031,14 @@ namespace Survival.Domain.Runner
             var won = Level.HasBoss
                 ? _nextRow >= Level.Rows.Count && !_foes.Exists(f => f.Boss)
                 : Distance >= Level.Length - 1e-3f;
+            if (!won && Level.HasBoss && Distance >= RoadEnd - 1e-3f)
+            {
+                // The road ran out with the boss still up: it gets away.
+                Outcome = RunnerOutcome.Lost;
+                Emit(RunnerEventKind.Lost, Hero.Id, 0, Hero.X, Hero.Z, 0, true);
+                return;
+            }
+
             if (won)
             {
                 Outcome = RunnerOutcome.Won;

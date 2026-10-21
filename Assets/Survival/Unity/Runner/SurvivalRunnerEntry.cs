@@ -55,7 +55,7 @@ namespace Survival.Unity
             btn.onClick.AddListener(OnRunnerTapped);
         }
 
-        /// <summary>The one entry point: open the first runner level.</summary>
+        /// <summary>The one entry point: open the highest runner level the save has open (the result screen lists the rest).</summary>
         public void OnRunnerTapped()
         {
             if (_busy)
@@ -68,10 +68,27 @@ namespace Survival.Unity
                 _hook.Juice(Button);
             }
 
-            StartCoroutine(RunRunner("runner.thornwood_road"));
+            var unlocked = _campaign != null && _campaign.Campaign != null ? _campaign.Campaign.RunnerUnlocked : 1;
+            StartCoroutine(RunRunner(LevelFor(unlocked), unlocked));
         }
 
-        private IEnumerator RunRunner(string levelId)
+        /// <summary>Id of runner level <paramref name="unlocked"/> (clamped to the levels there are); Thornwood Road when the catalog is unreadable.</summary>
+        private static string LevelFor(int unlocked)
+        {
+            try
+            {
+                var path = System.IO.Path.Combine(SurvivalBootstrap.ResolveCatalogDir(), RunnerCatalog.FileName);
+                var catalog = RunnerCatalog.Parse(System.IO.File.ReadAllText(path));
+                return catalog.ByNumber(unlocked).Id;
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning("Runner: level list unreadable, opening Level 1. " + ex.Message);
+                return "runner.thornwood_road";
+            }
+        }
+
+        private IEnumerator RunRunner(string levelId, int unlocked)
         {
             if (!Application.CanStreamedLevelBeLoaded(RunnerLevelView.SceneName))
             {
@@ -88,7 +105,7 @@ namespace Survival.Unity
             _campaign?.SaveNow();
             var playScene = gameObject.scene;
             var render = Capture();
-            RunnerHandoff.Begin(levelId);
+            RunnerHandoff.Begin(levelId, unlocked);
             var load = SceneManager.LoadSceneAsync(RunnerLevelView.SceneName, LoadSceneMode.Additive);
             while (load != null && !load.isDone)
             {

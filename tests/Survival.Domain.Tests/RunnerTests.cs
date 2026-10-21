@@ -294,22 +294,114 @@ public sealed class RunnerTests
     }
 
     [Fact]
-    public void Enemy_contact_holds_the_squad_kills_followers_first_then_hurts_the_hero_and_ends_the_run()
+    public void Enemies_the_squad_walks_into_keep_hitting_it_as_it_pushes_through_followers_first()
     {
+        // A brute it cannot kill: the squad walks on through it (never held up), the brute keeps swinging at whoever is
+        // in reach, ahead or already past, killing the followers first and then hurting the hero, then it drops behind.
         var run = Runner.Run(Runner.Tiny(@"{ ""at"": 8, ""kind"": ""box"", ""hp"": 10, ""reward"": ""followers"", ""unit"": ""archer"", ""count"": 2 },
-            { ""at"": 30, ""kind"": ""enemy"", ""unit"": ""brute"" }"));
-        var events = Runner.Play(run);
+            { ""at"": 30, ""kind"": ""enemy"", ""unit"": ""brute"" }", length: 60f));
+        var events = new List<RunnerEvent>();
+        var hitWhilePassed = 0;
+        while (!run.Over && run.Seconds < 120f)
+        {
+            var before = run.Distance;
+            foreach (var e in run.Step(1f / 30f))
+            {
+                events.Add(e);
+                if ((e.Kind == RunnerEventKind.FollowerLost || e.Kind == RunnerEventKind.HeroHit) && run.Foe(e.Other) is { Passed: true })
+                {
+                    hitWhilePassed++;
+                }
+            }
+
+            Assert.Equal(before + (run.Level.Speed / 30f), run.Distance, 3);
+        }
+
         var lost = events.Where(e => e.Kind == RunnerEventKind.FollowerLost).ToList();
         var firstHeroHit = events.FindIndex(e => e.Kind == RunnerEventKind.HeroHit);
         Assert.Equal(2, lost.Count);
         Assert.True(firstHeroHit > events.LastIndexOf(lost[^1]), "followers die before the hero is touched");
         Assert.All(lost, e => Assert.True(e.Big));
-        Assert.Equal(RunnerOutcome.Lost, run.Outcome);
-        Assert.Equal(0, run.Hero.Hp);
-        Assert.True(run.Distance < 30f, "contact held the squad at " + run.Distance);
-        Assert.Contains(events, e => e.Kind == RunnerEventKind.Lost);
-        Assert.False(run.Result.Won);
+        Assert.True(run.Hero.Hp < run.Hero.Unit.Hp);
+        Assert.True(hitWhilePassed > 0, "it kept hitting the squad after the hero was past it");
+        Assert.True(run.Distance > 30f, "the squad walked on past it to " + run.Distance);
+        Assert.Contains(events, e => e.Kind == RunnerEventKind.FoePassed);
         Assert.Equal(2, run.Result.FollowersPeak);
+    }
+
+    [Fact]
+    public void The_squad_never_stops_on_any_level_whatever_is_in_the_road()
+    {
+        var c = Runner.Catalog();
+        foreach (var level in new[] { c.First, c.ByNumber(6), c.Levels[^1] })
+        {
+            foreach (var steer in new Func<RunnerRun, float>[] { Runner.AimLikeAPlayer, _ => 0f, _ => 3.9f })
+            {
+                var run = new RunnerRun(c, level);
+                while (!run.Over && run.Seconds < 400f)
+                {
+                    run.SteerTo(steer(run));
+                    var before = run.Distance;
+                    run.Step(1f / 30f);
+                    if (!run.Over)
+                    {
+                        Assert.Equal(before + (level.Speed / 30f), run.Distance, 3);
+                    }
+                }
+
+                Assert.True(run.Over);
+            }
+        }
+    }
+
+    [Fact]
+    public void A_ranged_enemy_the_squad_walks_past_turns_and_shoots_after_it_and_a_touching_body_hurts()
+    {
+        var c = RunnerCatalog.Parse(@"{
+  ""units"": {
+    ""hero"": { ""roster"": ""Lyra"", ""hp"": 2000, ""damage"": 1, ""cycle"": 0.5, ""range"": 10, ""ranged"": true, ""shot_speed"": 20 },
+    ""tower"": { ""roster"": ""Bonequill"", ""hp"": 100000, ""damage"": 10, ""cycle"": 0.6, ""range"": 8, ""ranged"": true, ""shot_speed"": 12, ""speed"": 0 }
+  },
+  ""levels"": [ { ""id"": ""t"", ""hero"": ""hero"", ""length"": 40, ""speed"": 2, ""half_width"": 4,
+    ""rows"": [ { ""at"": 15, ""kind"": ""enemy"", ""unit"": ""tower"" } ] } ] }");
+        var run = new RunnerRun(c, c.First);
+        var backShots = 0;
+        var forwardShots = 0;
+        var hpAtContact = -1;
+        var contactHits = 0;
+        var seen = new HashSet<int>();
+        while (!run.Over && run.Seconds < 60f)
+        {
+            foreach (var e in run.Step(1f / 30f))
+            {
+                if (e.Kind == RunnerEventKind.HeroHit && run.Foes.Count > 0 && Math.Abs(run.Foes[0].Z - run.Hero.Z) < 0.6f)
+                {
+                    contactHits++;
+                }
+            }
+
+            foreach (var s in run.Shots.Where(s => s.ByFoe && seen.Add(s.Id)))
+            {
+                if (s.Direction < 0f)
+                {
+                    backShots++;
+                }
+                else
+                {
+                    forwardShots++;
+                }
+            }
+
+            if (hpAtContact < 0 && run.Foes.Count > 0 && run.Foes[0].Engaged)
+            {
+                hpAtContact = run.Hero.Hp;
+            }
+        }
+
+        Assert.Equal(RunnerOutcome.Won, run.Outcome);
+        Assert.True(backShots > 0 && forwardShots > 0, $"shots up the road {backShots}, after the squad {forwardShots}");
+        Assert.True(contactHits > 0, "the body it walked through hit it");
+        Assert.True(run.Hero.Hp < hpAtContact);
     }
 
     [Fact]
@@ -323,19 +415,53 @@ public sealed class RunnerTests
     }
 
     [Fact]
-    public void Killing_the_boss_wins_and_the_boss_blocks_the_whole_road()
+    public void Killing_the_boss_wins_it_is_a_running_fight_the_boss_backs_off_and_still_blocks_the_whole_road()
     {
         var run = Runner.Run(Runner.Tiny(@"{ ""at"": 12, ""kind"": ""enemy"", ""unit"": ""wolf"", ""count"": 2, ""spread"": 2 },
             { ""at"": 36, ""kind"": ""boss"", ""x"": 0, ""unit"": ""boss"" }"));
-        // Line up the wolves first (shots fly straight), then hug the edge: the boss still blocks and still gets hit.
-        var events = Runner.Play(run, r => r.Foes.Any(f => !f.Boss) ? 0f : 3.9f);
+        // Line up the wolves first (shots fly straight), then hug the edge: the boss still fills the road and gets hit.
+        var events = new List<RunnerEvent>();
+        var engagedAt = -1f;
+        while (!run.Over && run.Seconds < 120f)
+        {
+            run.SteerTo(run.Foes.Any(f => !f.Boss) ? 0f : 3.9f);
+            var before = run.Distance;
+            events.AddRange(run.Step(1f / 30f));
+            Assert.Equal(before + (run.Level.Speed / 30f), run.Distance, 3);
+            if (run.BossFight && run.Foes.FirstOrDefault(f => f.Boss) is { } boss)
+            {
+                engagedAt = engagedAt < 0f ? boss.Z : engagedAt;
+                // It keeps slam range in front of the hero as it backs off down the road.
+                Assert.InRange(boss.Z - run.Hero.Z, 0.5f, boss.Unit.Range + boss.Unit.Radius + run.Hero.Unit.Radius + 0.2f);
+            }
+        }
+
         Assert.Contains(events, e => e.Kind == RunnerEventKind.BossEngaged);
         Assert.Contains(events, e => e.Kind == RunnerEventKind.FoeKilled && e.Big);
         Assert.Equal(RunnerOutcome.Won, run.Outcome);
-        Assert.True(run.Distance < 36f);
+        Assert.True(run.Distance > 36f - 3f && events.Last(e => e.Kind == RunnerEventKind.FoeKilled).Z > engagedAt, "the boss backed off before it fell");
         Assert.Contains(events, e => e.Kind == RunnerEventKind.Hit && e.Big);
         Assert.DoesNotContain(run.Foes, f => f.Boss);
         Assert.True(run.Kills >= 2);
+    }
+
+    [Fact]
+    public void A_boss_still_up_when_the_road_runs_out_gets_away()
+    {
+        var c = RunnerCatalog.Parse(@"{
+  ""units"": {
+    ""hero"": { ""roster"": ""Lyra"", ""hp"": 100, ""damage"": 1, ""cycle"": 0.5, ""range"": 10, ""ranged"": true, ""shot_speed"": 20 },
+    ""boss"": { ""roster"": ""Ironhowl"", ""hp"": 1000000, ""damage"": 0, ""cycle"": 1.0, ""range"": 1.8, ""radius"": 1.0 }
+  },
+  ""levels"": [ { ""id"": ""t"", ""hero"": ""hero"", ""length"": 30, ""speed"": 4, ""half_width"": 4,
+    ""rows"": [ { ""at"": 25, ""kind"": ""boss"", ""unit"": ""boss"" } ] } ] }");
+        var run = new RunnerRun(c, c.First);
+        var events = Runner.Play(run);
+        Assert.Equal(RunnerOutcome.Lost, run.Outcome);
+        Assert.Equal(run.RoadEnd, run.Distance, 2);
+        Assert.Equal(30f + RunnerRules.BossRunoff, run.RoadEnd, 2);
+        Assert.Equal(run.Hero.Unit.Hp, run.Hero.Hp);
+        Assert.Single(events, e => e.Kind == RunnerEventKind.Lost);
     }
 
     [Fact]
@@ -484,7 +610,7 @@ public sealed class RunnerTests
         Assert.Equal(0.44f, P(c, "sir_aldric").Interval, 3);
 
         // Still about twice the old 0.8-1.1 s cadence; enemy, box and boss HP scaled to land the run at ~90 s.
-        Assert.InRange(c.Unit("nightfang").Hp, 110 * 1.6, 110 * 2.0);
+        Assert.InRange(c.Unit("nightfang").Hp, 110 * 1.1, 110 * 1.4);
         Assert.InRange(c.Unit("ironhowl").Hp, 4200 * 2.2, 4200 * 2.6);
         Assert.All(c.First.Rows.Where(r => r.Box != null), r => Assert.True(r.Box!.Hp >= 100, "box hp " + r.Box!.Hp));
     }
@@ -692,6 +818,126 @@ public sealed class RunnerTests
         Assert.True(again.Load(json));
         Assert.Equal(gold + 1900, again.Wallet.Get(SurvIds.ResSoft));
         Assert.Equal(shards + 10, again.Roster.Get("hero.lyra")!.Shards);
+    }
+
+    [Fact]
+    public void Runner_levels_are_a_sequence_that_gets_harder_level_by_level()
+    {
+        var c = Runner.Catalog();
+        Assert.True(c.Levels.Count >= 10, "levels " + c.Levels.Count);
+        Assert.Equal("runner.thornwood_road", c.First.Id);
+        for (var i = 0; i < c.Levels.Count; i++)
+        {
+            var l = c.Levels[i];
+            Assert.Equal(i + 1, l.Number);
+            Assert.Same(l, c.ByNumber(l.Number));
+            Assert.True(l.HasBoss);
+            Assert.False(string.IsNullOrWhiteSpace(l.DisplayName));
+            if (i == 0)
+            {
+                continue;
+            }
+
+            var p = c.Levels[i - 1];
+            Assert.True(l.Length > p.Length, $"L{l.Number} length");
+            Assert.True(l.EnemyCount > p.EnemyCount, $"L{l.Number} enemies {p.EnemyCount} -> {l.EnemyCount}");
+            Assert.True(l.FoeHpTotal(c) > p.FoeHpTotal(c), $"L{l.Number} enemy hp");
+            Assert.True(l.FoeHpMul >= p.FoeHpMul);
+            Assert.True(l.BoxCount >= p.BoxCount, $"L{l.Number} boxes {p.BoxCount} -> {l.BoxCount}");
+            Assert.True(l.BoxHpTotal > p.BoxHpTotal, $"L{l.Number} box hp");
+            Assert.True(l.BossHp(c) > p.BossHp(c), $"L{l.Number} boss hp");
+            Assert.True(l.Rewards.WinGold > p.Rewards.WinGold && l.Rewards.GoldPerKill >= p.Rewards.GoldPerKill && l.Rewards.Shards >= p.Rewards.Shards);
+            Assert.True(l.Rows.Count(r => r.Box?.Kind == RunnerBoxKind.Followers) >= p.Rows.Count(r => r.Box?.Kind == RunnerBoxKind.Followers));
+        }
+
+        // Later levels bring the tougher villains; every rig is still a locked villain fighter.
+        Assert.Contains(c.Levels[^1].Rows, r => r.Unit == "vespera");
+        Assert.Contains(c.Levels[^1].Rows, r => r.Unit == "ashwyrm");
+        Assert.DoesNotContain(c.First.Rows, r => r.Unit == "vespera" || r.Unit == "ashwyrm");
+        var names = LockedBattleRoster.All.ToDictionary(f => f.Name, f => f.Side);
+        Assert.All(c.Levels.SelectMany(l => l.Rows).Where(r => r.Kind != RunnerRowKind.Box), r => Assert.Equal(BattleSide.Villain, names[c.Unit(r.Unit).Roster]));
+
+        // Same seed, same levels.
+        var again = Runner.Catalog();
+        for (var i = 0; i < c.Levels.Count; i++)
+        {
+            Assert.Equal(c.Levels[i].Rows, again.Levels[i].Rows);
+        }
+    }
+
+    [Fact]
+    public void Every_level_is_won_by_a_steering_player_later_ones_take_longer_and_hugging_the_edge_loses()
+    {
+        var c = Runner.Catalog();
+        var last = 0f;
+        foreach (var level in c.Levels)
+        {
+            var good = new RunnerRun(c, level);
+            Runner.Play(good, Runner.AimLikeAPlayer);
+            var lazy = new RunnerRun(c, level);
+            Runner.Play(lazy, _ => 3.9f);
+            _out.WriteLine($"L{level.Number} {level.DisplayName}: {good.Outcome} {good.Seconds:0.0}s boxes {good.BoxesBroken}/{level.BoxCount} kills {good.Kills} peak {good.FollowersPeak} left {good.Followers}; edge {lazy.Outcome}");
+            Assert.Equal(RunnerOutcome.Won, good.Outcome);
+            Assert.Equal(RunnerOutcome.Lost, lazy.Outcome);
+            Assert.True(good.Seconds > last, $"L{level.Number} {good.Seconds} after {last}");
+            last = good.Seconds;
+        }
+    }
+
+    [Fact]
+    public void A_win_opens_the_next_runner_level_and_it_is_kept_in_the_save()
+    {
+        var levels = Runner.Catalog();
+        var n = levels.Levels.Count;
+        RunnerResult R(int number, bool won) => new RunnerResult("x", won, 0, 0, 0, 0, 0, 0, 0, number);
+        Assert.Equal(1, RunnerProgress.AfterRun(1, R(1, false), n));
+        Assert.Equal(2, RunnerProgress.AfterRun(1, R(1, true), n));
+        Assert.Equal(5, RunnerProgress.AfterRun(5, R(2, true), n));
+        Assert.Equal(n, RunnerProgress.AfterRun(n, R(n, true), n));
+        Assert.True(RunnerProgress.IsOpen(3, 3));
+        Assert.False(RunnerProgress.IsOpen(3, 4));
+
+        var catalog = CampaignCatalog.Parse(File.ReadAllText(Path.Combine(TestPaths.CatalogDir, CampaignCatalog.FileName)));
+        var campaign = new CampaignSession(catalog, new Wallet(), new ManualClock(1000));
+        Assert.Equal(1, campaign.RunnerUnlocked);
+        var level2 = levels.ByNumber(2);
+        var win = RunnerRewards.For(level2, new RunnerResult(level2.Id, true, 3, 1, 0, 2, 1, level2.Length, 90, level2.Number));
+        Assert.Equal(2, win.RunnerNumber);
+        RunnerRewards.Grant(win, campaign);
+        Assert.Equal(3, campaign.RunnerUnlocked);
+        var loss = RunnerRewards.For(levels.ByNumber(3), new RunnerResult("x", false, 3, 1, 0, 2, 0, 20, 30, 3));
+        RunnerRewards.Grant(loss, campaign);
+        Assert.Equal(3, campaign.RunnerUnlocked);
+        var json = campaign.Save();
+        Assert.Contains("\"runner_unlocked\": 3", json.Replace("\":3", "\": 3"));
+        var again = new CampaignSession(catalog, new Wallet(), new ManualClock(1000));
+        Assert.True(again.Load(json));
+        Assert.Equal(3, again.RunnerUnlocked);
+
+        // An older save without the field opens Level 1 only.
+        var old = new CampaignSession(catalog, new Wallet(), new ManualClock(1000));
+        Assert.True(old.Load(json.Replace("\"runner_unlocked\"", "\"x_runner\"")));
+        Assert.Equal(1, old.RunnerUnlocked);
+
+        // From Play, the handoff knows what is open and a banked win opens the next level for the scene's Next button.
+        RunnerHandoff.Reset();
+        RunnerHandoff.Begin(levels.ByNumber(3).Id, 3);
+        Assert.Equal(3, RunnerHandoff.Unlocked);
+        RunnerHandoff.Bank(new RunnerResult("x", true, 0, 0, 0, 0, 0, 0, 0, 3), new RewardBundle { Won = true, RunnerNumber = 3 });
+        Assert.Equal(4, RunnerHandoff.Unlocked);
+        RunnerHandoff.Reset();
+    }
+
+    [Fact]
+    public void Rewards_grow_with_the_level()
+    {
+        var c = Runner.Catalog();
+        var result = new RunnerResult("x", true, 20, 8, 0, 10, 5, 100, 90);
+        var gold = c.Levels.Select(l => RunnerRewards.For(l, result with { LevelId = l.Id, Number = l.Number }).Resources[SurvIds.ResSoft]).ToList();
+        for (var i = 1; i < gold.Count; i++)
+        {
+            Assert.True(gold[i] > gold[i - 1], $"L{i + 1} gold {gold[i]} after {gold[i - 1]}");
+        }
     }
 
     [Fact]

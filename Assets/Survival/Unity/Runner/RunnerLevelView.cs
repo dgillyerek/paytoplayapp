@@ -68,6 +68,9 @@ namespace Survival.Unity
         private bool _steered;
         private bool _booted;
         private bool _resultShown;
+
+        /// <summary>Highest runner level open (from Play's save via the handoff, or the save file when opened on its own).</summary>
+        private int _unlocked = 1;
         private float _endDelay = -1f;
         private int _attempt;
 
@@ -104,8 +107,9 @@ namespace Survival.Unity
                 return;
             }
 
+            _unlocked = RunnerHandoff.FromPlay ? RunnerHandoff.Unlocked : StandaloneUnlocked();
             var wanted = RunnerHandoff.PendingLevel ?? (levelId.Length > 0 ? levelId : null);
-            _level = _catalog.Level(wanted) ?? _catalog.First;
+            _level = _catalog.Level(wanted) ?? _catalog.ByNumber(_unlocked);
             _world = new GameObject("RunnerWorld").transform;
             _world.SetParent(transform, false);
             BuildLights();
@@ -159,6 +163,43 @@ namespace Survival.Unity
         }
 
         public void Retry() => StartRun();
+
+        /// <summary>
+        /// Switch to runner level <paramref name="number"/> in place (result screen Next / level list): a new road, HUD and
+        /// run. Only open levels; banked runs from Play still pay once on the way back.
+        /// </summary>
+        public void PlayLevel(int number)
+        {
+            if (_catalog == null || !RunnerProgress.IsOpen(_unlocked, number))
+            {
+                return;
+            }
+
+            ClearActors();
+            HideResult();
+            HideLevelList();
+            if (_hud != null)
+            {
+                Destroy(_hud.gameObject);
+                _hud = null;
+            }
+
+            if (_world != null)
+            {
+                Destroy(_world.gameObject);
+            }
+
+            _level = _catalog.ByNumber(number);
+            _world = new GameObject("RunnerWorld").transform;
+            _world.SetParent(transform, false);
+            _actors = null;
+            BuildGround(_level);
+            BuildHud();
+            StartRun();
+        }
+
+        /// <summary>The next level after this one, when it is open.</summary>
+        private RunnerLevelDef? OpenNext => _catalog != null && _level != null && _catalog.Next(_level) is { } next && RunnerProgress.IsOpen(_unlocked, next.Number) ? next : null;
 
         /// <summary>Back to Play (from the village) or a fresh run (opened on its own).</summary>
         public void Leave()
@@ -281,6 +322,7 @@ namespace Survival.Unity
             _resultShown = true;
             var result = _run.Result;
             var bundle = RunnerRewards.For(_level, result);
+            _unlocked = RunnerProgress.AfterRun(_unlocked, result, _catalog?.Levels.Count ?? 1);
             var saved = false;
             if (RunnerHandoff.FromPlay)
             {
@@ -298,6 +340,27 @@ namespace Survival.Unity
         /// Opened on its own (no Play behind it): pay into survival_save.json the way Play would, but only when the
         /// save exists, so a fresh install's starting wallet is never overwritten by a runner-only save.
         /// </summary>
+        private static int StandaloneUnlocked()
+        {
+            try
+            {
+                var savePath = SurvivalCampaignView.SavePath;
+                var catalogPath = Path.Combine(SurvivalBootstrap.ResolveCatalogDir(), CampaignCatalog.FileName);
+                if (!File.Exists(savePath) || !File.Exists(catalogPath))
+                {
+                    return 1;
+                }
+
+                var campaign = new CampaignSession(CampaignCatalog.Parse(File.ReadAllText(catalogPath)), new Wallet(), new WallClock());
+                return campaign.Load(File.ReadAllText(savePath)) ? campaign.RunnerUnlocked : 1;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("Runner: save unreadable, Level 1 only. " + ex.Message);
+                return 1;
+            }
+        }
+
         private static bool PayStandalone(RewardBundle bundle)
         {
             try
@@ -575,15 +638,9 @@ namespace Survival.Unity
                     continue;
                 }
 
+                // The squad never stops: it walks through whatever it has not killed.
                 rig.Face(Vector3.forward);
-                if (_run.Blocked)
-                {
-                    rig.Rest();
-                }
-                else
-                {
-                    rig.Walk();
-                }
+                rig.Walk();
             }
         }
 
@@ -601,8 +658,9 @@ namespace Survival.Unity
                     continue;
                 }
 
-                var hero = _run.Hero;
-                rig.Face(new Vector3(hero.X - f.X, 0f, hero.Z - f.Z));
+                // Faces whoever it last went for (it turns round on a squad that walked past it), else the hero.
+                var at = (f.TargetId != 0 ? _run.Member(f.TargetId) : null) ?? _run.Hero;
+                rig.Face(new Vector3(at.X - f.X, 0f, at.Z - f.Z));
                 if (f.Attacking)
                 {
                     continue;
@@ -853,7 +911,7 @@ namespace Survival.Unity
                 return;
             }
 
-            var boss = _run != null && _run.Blocked && _run.Foes.Count > 0 && _run.Foes[0].Boss;
+            var boss = _run != null && _run.BossFight && !_run.Over;
             var back = CameraBack + (boss ? 1.4f : 0f);
             var pos = _camFocus + new Vector3(CameraSide, CameraHeight + (boss ? 0.8f : 0f), -back);
             var look = _camFocus + new Vector3(0f, CameraLookHeight + (boss ? 0.6f : 0f), CameraLookAhead);
@@ -891,8 +949,10 @@ namespace Survival.Unity
         /// <summary>Map grass either side of a worn dirt road (the battle's painted ground tiles), with painted decor billboards.</summary>
         private void BuildGround(RunnerLevelDef level)
         {
-            var length = level.Length + 60f;
-            var mid = (level.Length * 0.5f) + 10f;
+            // A boss level's road runs on past the boss row for the running fight (the boss backs off down it).
+            var roadEnd = level.HasBoss ? level.Length + RunnerRules.BossRunoff : level.Length;
+            var length = roadEnd + 60f;
+            var mid = (roadEnd * 0.5f) + 10f;
             var grassTex = LockedBattleGround.Load(LockedBattleGroundSpec.GrassTileRel);
             var grass = LockedBattleGround.Quad(_world!, "RunnerGrass", 70f, length, 0f, 0f, mid);
             var grassMat = LockedBattleGround.Lit(grassTex, new Color(0.39f, 0.41f, 0.20f, 1f), false);
@@ -912,7 +972,7 @@ namespace Survival.Unity
 
             var props = new[] { "theme_a.village.prop.tree", "theme_a.village.prop.bushes", "theme_a.village.prop.rocks", "theme_a.village.prop.tree" };
             var rnd = new System.Random(level.Id.GetHashCode() & 0x7fffffff);
-            for (var z = -6f; z < level.Length + 40f; z += 2.6f + ((float)rnd.NextDouble() * 2.2f))
+            for (var z = -6f; z < roadEnd + 40f; z += 2.6f + ((float)rnd.NextDouble() * 2.2f))
             {
                 for (var side = -1; side <= 1; side += 2)
                 {
