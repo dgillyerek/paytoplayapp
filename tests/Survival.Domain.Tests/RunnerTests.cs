@@ -60,6 +60,57 @@ internal static class Runner
 
         return best?.X ?? 0f;
     }
+
+    /// <summary>
+    /// A player who aims by steering (shots fly straight): lines up the nearest box ahead within 22 m, else the
+    /// nearest enemy ahead within 16 m, else holds the line. <paramref name="upgrades"/> false skips weapon / rate boxes.
+    /// </summary>
+    public static float AimLikeAPlayer(RunnerRun run) => Aim(run, true);
+
+    public static float Aim(RunnerRun run, bool upgrades)
+    {
+        RunnerBox? box = null;
+        foreach (var b in run.Boxes)
+        {
+            if (b.Z > run.Hero.Z && b.Z - run.Hero.Z < 22f && (upgrades || b.Def.GivesUnits) && (box == null || b.Z < box.Z))
+            {
+                box = b;
+            }
+        }
+
+        if (box != null)
+        {
+            return box.X;
+        }
+
+        RunnerFoe? foe = null;
+        foreach (var f in run.Foes)
+        {
+            if (f.Hp > 0 && f.Z > run.Hero.Z - 0.5f && f.Z - run.Hero.Z < 16f && (foe == null || f.Z < foe.Z))
+            {
+                foe = f;
+            }
+        }
+
+        return foe?.X ?? run.Hero.X;
+    }
+
+    /// <summary>The shipped catalog with every box of the given kinds taken out.</summary>
+    public static RunnerCatalog CatalogWithout(params RunnerBoxKind[] kinds)
+    {
+        var json = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(Path.Combine(TestPaths.CatalogDir, RunnerCatalog.FileName)))!;
+        var rows = json["levels"]![0]!["rows"]!.AsArray();
+        for (var i = rows.Count - 1; i >= 0; i--)
+        {
+            var reward = (string?)rows[i]!["reward"];
+            if (reward != null && kinds.Any(k => string.Equals(k.ToString(), reward, StringComparison.OrdinalIgnoreCase)))
+            {
+                rows.RemoveAt(i);
+            }
+        }
+
+        return RunnerCatalog.Parse(json.ToJsonString());
+    }
 }
 
 public sealed class RunnerTests
@@ -275,7 +326,8 @@ public sealed class RunnerTests
     {
         var run = Runner.Run(Runner.Tiny(@"{ ""at"": 12, ""kind"": ""enemy"", ""unit"": ""wolf"", ""count"": 2, ""spread"": 2 },
             { ""at"": 36, ""kind"": ""boss"", ""x"": 0, ""unit"": ""boss"" }"));
-        var events = Runner.Play(run, _ => 3.9f);
+        // Line up the wolves first (shots fly straight), then hug the edge: the boss still blocks and still gets hit.
+        var events = Runner.Play(run, r => r.Foes.Any(f => !f.Boss) ? 0f : 3.9f);
         Assert.Contains(events, e => e.Kind == RunnerEventKind.BossEngaged);
         Assert.Contains(events, e => e.Kind == RunnerEventKind.FoeKilled && e.Big);
         Assert.Equal(RunnerOutcome.Won, run.Outcome);
@@ -335,17 +387,127 @@ public sealed class RunnerTests
     {
         var c = Runner.Catalog();
         var good = new RunnerRun(c, c.First);
-        Runner.Play(good, Runner.AimAtBoxes);
+        Runner.Play(good, Runner.AimLikeAPlayer);
         _out.WriteLine($"aim: {good.Outcome} t={good.Seconds:0} kills={good.Kills} boxes={good.BoxesBroken}/{c.First.BoxCount} peak={good.FollowersPeak} left={good.Followers} hp={good.Hero.Hp}");
         Assert.Equal(RunnerOutcome.Won, good.Outcome);
         Assert.True(good.BoxesBroken >= c.First.BoxCount - 2);
         Assert.True(good.FollowersPeak >= 8);
-        Assert.InRange(good.Seconds, 80f, 240f);
+        Assert.InRange(good.Seconds, 80f, 120f);
 
         var lazy = new RunnerRun(c, c.First);
         Runner.Play(lazy, _ => 3.9f);
         _out.WriteLine($"edge: {lazy.Outcome} t={lazy.Seconds:0} kills={lazy.Kills} boxes={lazy.BoxesBroken} peak={lazy.FollowersPeak} hp={lazy.Hero.Hp}");
         Assert.Equal(RunnerOutcome.Lost, lazy.Outcome);
+    }
+
+    [Fact]
+    public void Shots_fly_straight_down_the_shooters_lane_so_steering_is_the_aim()
+    {
+        // A box off to the side: shots fly past it while the hero holds the middle, and land once she steers under it.
+        var run = Runner.Run(Runner.Tiny(@"{ ""at"": 20, ""kind"": ""box"", ""x"": 3, ""hp"": 9999, ""reward"": ""weapon"" }", length: 60f));
+        var fired = 0;
+        var maxTravel = 0f;
+        for (var t = 0; t < 255; t++)
+        {
+            foreach (var e in run.Step(1f / 30f))
+            {
+                fired += e.Kind == RunnerEventKind.Fired ? 1 : 0;
+                Assert.NotEqual(RunnerEventKind.Hit, e.Kind);
+                if (e.Kind == RunnerEventKind.Fired)
+                {
+                    Assert.Equal(run.Hero.X, e.X, 3);
+                }
+            }
+
+            foreach (var s in run.Shots)
+            {
+                Assert.Equal(0f, s.X, 3);
+                Assert.True(s.Direction > 0f);
+                maxTravel = Math.Max(maxTravel, s.Travelled);
+            }
+        }
+
+        Assert.True(fired >= 6, "fired " + fired);
+        Assert.Equal(9999, run.Boxes.Single().Hp);
+        Assert.InRange(maxTravel, 0.1f, run.Hero.Unit.Range + RunnerRules.ShotOvershoot);
+        run.SteerTo(3f);
+        var hits = 0;
+        for (var t = 0; t < 45; t++)
+        {
+            hits += run.Step(1f / 30f).Count(e => e.Kind == RunnerEventKind.Hit && e.OnBox);
+        }
+
+        Assert.True(hits >= 2, "hits " + hits);
+        Assert.True(run.Boxes.Single().Hp < 9999);
+    }
+
+    [Fact]
+    public void Every_shot_keeps_its_lane_in_flight_squad_and_enemy_alike()
+    {
+        var shipped = Runner.Catalog();
+        Assert.True(shipped.Unit("bonequill").Ranged);
+        var run = new RunnerRun(shipped, shipped.First);
+        // Every shot in flight keeps its lane and heading, whoever fired it.
+        var seen = new Dictionary<int, float>();
+        for (var t = 0; t < 30 * 40 && !run.Over; t++)
+        {
+            run.SteerTo(Runner.AimLikeAPlayer(run));
+            run.Step(1f / 30f);
+            foreach (var s in run.Shots)
+            {
+                if (seen.TryGetValue(s.Id, out var x))
+                {
+                    Assert.Equal(x, s.X, 4);
+                }
+
+                seen[s.Id] = s.X;
+            }
+        }
+
+        Assert.True(seen.Count > 50, "shots " + seen.Count);
+    }
+
+    [Fact]
+    public void Squad_fires_about_three_times_faster_and_enemy_box_and_boss_hp_scaled_to_match()
+    {
+        var c = Runner.Catalog();
+        Assert.InRange(c.Unit("lyra").Cycle, 0.85f / 3.1f, 0.85f / 2.4f);
+        Assert.InRange(c.Unit("rowan").Cycle, 0.8f / 3.1f, 0.8f / 2.4f);
+        Assert.InRange(c.Unit("oakenshield").Cycle, 1.1f / 3.1f, 1.1f / 2.4f);
+        Assert.InRange(c.Unit("sir_aldric").Cycle, 1.1f / 3.1f, 1.1f / 2.4f);
+        Assert.InRange(c.Unit("nightfang").Hp, 110 * 2, 110 * 2.5);
+        Assert.InRange(c.Unit("ironhowl").Hp, 4200 * 2.5, 4200 * 3.2);
+        Assert.All(c.First.Rows.Where(r => r.Box != null), r => Assert.True(r.Box!.Hp >= 130, "box hp " + r.Box!.Hp));
+    }
+
+    [Fact]
+    public void Damage_and_attack_speed_boxes_still_shorten_the_boss_fight()
+    {
+        static (RunnerRun Run, float Boss) Fight(RunnerCatalog c)
+        {
+            var run = new RunnerRun(c, c.First);
+            var engaged = -1f;
+            while (!run.Over && run.Seconds < 400f)
+            {
+                run.SteerTo(Runner.Aim(run, true));
+                foreach (var e in run.Step(1f / 30f))
+                {
+                    if (e.Kind == RunnerEventKind.BossEngaged)
+                    {
+                        engaged = run.Seconds;
+                    }
+                }
+            }
+
+            return (run, engaged < 0f ? -1f : run.Seconds - engaged);
+        }
+
+        var with = Fight(Runner.Catalog());
+        var without = Fight(Runner.CatalogWithout(RunnerBoxKind.Weapon, RunnerBoxKind.Rate));
+        _out.WriteLine($"with upgrades: {with.Run.Outcome} boss {with.Boss:0.0}s; without: {without.Run.Outcome} boss {without.Boss:0.0}s");
+        Assert.Equal(RunnerOutcome.Won, with.Run.Outcome);
+        Assert.True(with.Run.DamageMul > 1.5f && with.Run.RateMul > 1.25f);
+        Assert.True(without.Run.Outcome == RunnerOutcome.Lost || without.Boss > with.Boss * 1.5f, $"boss {with.Boss} vs {without.Boss}");
     }
 
     [Fact]

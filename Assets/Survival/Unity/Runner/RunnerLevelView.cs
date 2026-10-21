@@ -566,14 +566,12 @@ namespace Survival.Unity
                     continue;
                 }
 
-                if (m.Attacking && m.TargetId != 0)
+                if (m.Attacking)
                 {
-                    var target = TargetPosition(m.TargetId);
-                    if (target != null)
-                    {
-                        rig.Face(target.Value - rig.Slot.position, rig.Data.AimYawDegrees);
-                    }
-
+                    // Shots fly straight down the road, so shooters face straight down it (plus the rig's own aim
+                    // offset, e.g. Rowan's bow); a melee swing turns to what it hit.
+                    var target = !m.Unit.Ranged && m.TargetId != 0 ? TargetPosition(m.TargetId) : null;
+                    rig.Face(target != null ? target.Value - rig.Slot.position : Vector3.forward, rig.Data.AimYawDegrees);
                     continue;
                 }
 

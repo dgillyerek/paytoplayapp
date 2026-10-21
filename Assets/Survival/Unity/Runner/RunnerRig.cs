@@ -33,6 +33,7 @@ namespace Survival.Unity
         private float _deathAge = -1f;
         private Vector3 _baseLocal;
         private float _punch;
+        private float _attackStarted = -99f;
 
         private RunnerRig(LockedBattleFighter data, Transform slot, Transform host)
         {
@@ -327,11 +328,15 @@ namespace Survival.Unity
             if (Pose != AttackPose)
             {
                 Play(AttackPose);
+                _attackStarted = Time.time;
             }
-            else if (!Data.AttackCyclesItself)
+            else if (!Data.AttackCyclesItself && Time.time - _attackStarted >= Mathf.Max(0.3f, Data.AttackSeconds * 0.6f))
             {
+                // The runner fires ~3x faster than these clips last: restart the swing only once most of it has played,
+                // so it reads as a swing and not a twitch (the hits still land at the runner's rate).
                 Play(RestPose);
                 Play(AttackPose);
+                _attackStarted = Time.time;
             }
         }
 

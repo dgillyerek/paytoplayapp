@@ -59,6 +59,11 @@ namespace Survival.Unity
             public RunnerRig? Rig;
             public float HalfWidth;
             public float MeasureAge;
+
+            /// <summary>Fades the bar itself (a box's reward tag stays visible).</summary>
+            public CanvasGroup Group = null!;
+            public int LastHp = -1;
+            public float SinceDamage = -1f;
         }
 
         private sealed class Floating
@@ -275,16 +280,29 @@ namespace Survival.Unity
                 return;
             }
 
+            // A thin, semi-transparent strip with a small HP number, shown only while the box is being shot (see
+            // RunnerSideBar.Alpha); the reward tag above it stays, so you always know what is inside.
             var root = new GameObject(onBox ? "BoxBar" : "FoeBar", typeof(RectTransform)).GetComponent<RectTransform>();
             root.SetParent(_worldUi, false);
-            root.sizeDelta = boss ? new Vector2(300f, 34f) : new Vector2(150f, 26f);
-            var frame = HookSkin.Bar(root, "Bar", out var fill);
-            SurvivalVisuals.Stretch(frame.rectTransform);
-            var number = HookSkin.Outlined(SurvivalVisuals.Text(root, "Hp", "", boss ? 30 : 26, TextAnchor.MiddleCenter, Color.white));
+            root.sizeDelta = new Vector2(110f, 9f);
+            var body = new GameObject("Body", typeof(RectTransform), typeof(CanvasGroup)).GetComponent<RectTransform>();
+            body.SetParent(root, false);
+            SurvivalVisuals.Stretch(body);
+            var group = body.GetComponent<CanvasGroup>();
+            group.alpha = 0f;
+            group.blocksRaycasts = false;
+            group.interactable = false;
+            var back = SurvivalVisuals.Image(body, "Back", new Color(0.05f, 0.05f, 0.08f, 0.8f));
+            SurvivalVisuals.Stretch(back.rectTransform);
+            var fill = SurvivalVisuals.Image(back.transform, "Fill", SurvivalVisuals.Gold);
+            Anchor(fill.rectTransform, 0f, 0f, 1f, 1f);
+            fill.rectTransform.offsetMin = new Vector2(1.5f, 1.5f);
+            fill.rectTransform.offsetMax = new Vector2(-1.5f, -1.5f);
+            var number = HookSkin.Outlined(SurvivalVisuals.Text(body, "Hp", "", 18, TextAnchor.LowerCenter, Color.white), 1.2f);
             number.rectTransform.anchorMin = new Vector2(0f, 1f);
-            number.rectTransform.anchorMax = new Vector2(1f, 2.2f);
+            number.rectTransform.anchorMax = new Vector2(1f, 3.4f);
             number.rectTransform.offsetMin = number.rectTransform.offsetMax = Vector2.zero;
-            var bar = new WorldBar { Root = root, Fill = fill, Number = number, OnBox = onBox, Boss = boss, Height = height };
+            var bar = new WorldBar { Root = root, Fill = fill, Number = number, OnBox = onBox, Boss = boss, Height = height, Group = group };
             if (onBox && _boxDefs.TryGetValue(id, out var def))
             {
                 bar.Reward = RewardTag(root, def);
@@ -306,26 +324,33 @@ namespace Survival.Unity
 
             // The configured battle's frame and fill colours (navy hero frame / purple villain frame, green / red fill).
             var rgb = hero ? CampaignArtKeys.HeroFrameRgb : CampaignArtKeys.VillainFrameRgb;
+            // Slimmed to a 6 px sliver with a 1 px frame, and faded in only while the unit is taking damage. Only the
+            // boss carries a (small) HP number; fodder and the hero show the sliver alone.
             var root = SurvivalVisuals.Image(_worldUi, hero ? "HeroHp" : "FoeHp", new Color(rgb[0], rgb[1], rgb[2], 1f)).rectTransform;
             root.anchorMin = root.anchorMax = Vector2.zero;
             root.pivot = new Vector2(0.5f, 0f);
             root.sizeDelta = new Vector2(RunnerSideBar.WidthPx, RunnerSideBar.MinHeightPx);
-            var back = SurvivalVisuals.Image(root, "Back", new Color(0.05f, 0.05f, 0.08f, 0.9f));
+            var group = root.gameObject.AddComponent<CanvasGroup>();
+            group.alpha = 0f;
+            group.blocksRaycasts = false;
+            group.interactable = false;
+            var back = SurvivalVisuals.Image(root, "Back", new Color(0.05f, 0.05f, 0.08f, 0.85f));
             Anchor(back.rectTransform, 0f, 0f, 1f, 1f);
-            back.rectTransform.offsetMin = new Vector2(3f, 3f);
-            back.rectTransform.offsetMax = new Vector2(-3f, -3f);
+            back.rectTransform.offsetMin = new Vector2(1f, 1f);
+            back.rectTransform.offsetMax = new Vector2(-1f, -1f);
             var fill = SurvivalVisuals.Image(back.transform, "Fill", hero ? HeroFill : BattleVillainFill);
             Anchor(fill.rectTransform, 0f, 0f, 1f, 1f);
-            var number = HookSkin.Outlined(SurvivalVisuals.Text(root, "Hp", "", boss ? 26 : 20, TextAnchor.LowerCenter, Color.white), 1.5f);
+            var number = HookSkin.Outlined(SurvivalVisuals.Text(root, "Hp", "", 18, TextAnchor.LowerCenter, Color.white), 1.2f);
             var nrt = number.rectTransform;
             nrt.anchorMin = nrt.anchorMax = new Vector2(0.5f, 1f);
             nrt.pivot = new Vector2(0.5f, 0f);
-            nrt.sizeDelta = new Vector2(110f, 30f);
-            nrt.anchoredPosition = new Vector2(0f, 4f);
+            nrt.sizeDelta = new Vector2(110f, 24f);
+            nrt.anchoredPosition = new Vector2(0f, 3f);
+            number.gameObject.SetActive(boss);
             _bars[id] = new WorldBar
             {
                 Root = root, Fill = fill, Number = number, Boss = boss, Height = rig.Height, Side = true, Hero = hero, Rig = rig,
-                HalfWidth = RunnerSideBar.HalfWidth(rig.Height),
+                HalfWidth = RunnerSideBar.HalfWidth(rig.Height), Group = group,
             };
         }
 
@@ -382,9 +407,11 @@ namespace Survival.Unity
         private RectTransform RewardTag(RectTransform bar, RunnerBoxDef def)
         {
             var tag = HookSkin.Panel(bar, "Reward", HookArtKeys.Plate, new Color(0.12f, 0.2f, 0.36f, 0.95f), 0.4f).rectTransform;
-            tag.anchorMin = new Vector2(0.05f, 2.25f);
-            tag.anchorMax = new Vector2(0.95f, 4.3f);
-            tag.offsetMin = tag.offsetMax = Vector2.zero;
+            // Fixed size above the (thin, often hidden) bar, clear of the HP number.
+            tag.anchorMin = tag.anchorMax = new Vector2(0.5f, 1f);
+            tag.pivot = new Vector2(0.5f, 0f);
+            tag.sizeDelta = new Vector2(150f, 40f);
+            tag.anchoredPosition = new Vector2(0f, 26f);
             string label;
             string icon;
             switch (def.Kind)
@@ -455,6 +482,7 @@ namespace Survival.Unity
                     at = new Vector3(b.X, bar.Height + 0.25f, b.Z);
                     fraction = b.HpFraction;
                     hp = b.Hp;
+                    FadeBar(bar, hp, b.MaxHp);
                 }
                 else if (bar.Side)
                 {
@@ -470,6 +498,7 @@ namespace Survival.Unity
                         origin = new Vector3(m.X, 0f, m.Z);
                         fraction = Mathf.Clamp01(m.Hp / (float)Mathf.Max(1, m.Unit.Hp));
                         hp = m.Hp;
+                        FadeBar(bar, hp, m.Unit.Hp);
                     }
                     else
                     {
@@ -482,10 +511,11 @@ namespace Survival.Unity
                         origin = new Vector3(f.X, 0f, f.Z);
                         fraction = f.HpFraction;
                         hp = f.Hp;
+                        FadeBar(bar, hp, f.MaxHp);
                     }
 
                     MeasureBar(bar);
-                    var shown = (bar.Rig == null || !bar.Rig.Dead) && PlaceSideBar(bar, origin, fraction);
+                    var shown = bar.Group.alpha > 0.001f && (bar.Rig == null || !bar.Rig.Dead) && PlaceSideBar(bar, origin, fraction);
                     bar.Root.gameObject.SetActive(shown);
                     bar.Number.text = hp.ToString(CultureInfo.InvariantCulture);
                     continue;
@@ -510,12 +540,7 @@ namespace Survival.Unity
                     continue;
                 }
 
-                HookSkin.SetBar(bar.Fill, fraction, bar.OnBox ? HookArtKeys.BarFillGold : HookArtKeys.BarFillGreen, bar.OnBox ? SurvivalVisuals.Gold : FoeFill);
-                if (!bar.OnBox)
-                {
-                    bar.Fill.color = FoeFill;
-                }
-
+                bar.Fill.rectTransform.anchorMax = new Vector2(Mathf.Max(0.001f, fraction), 1f);
                 bar.Number.text = hp.ToString(CultureInfo.InvariantCulture);
             }
 
@@ -528,6 +553,22 @@ namespace Survival.Unity
             {
                 Place(f.Rt, f.World + (Vector3.up * (f.Age * 1.4f)));
             }
+        }
+
+        /// <summary>Hidden at full HP; in on a hit, held while hits land, faded out two seconds after the last one.</summary>
+        private static void FadeBar(WorldBar bar, int hp, int maxHp)
+        {
+            if (bar.LastHp >= 0 && hp < bar.LastHp)
+            {
+                bar.SinceDamage = 0f;
+            }
+            else if (bar.SinceDamage >= 0f)
+            {
+                bar.SinceDamage += Time.deltaTime;
+            }
+
+            bar.LastHp = hp;
+            bar.Group.alpha = RunnerSideBar.Alpha(hp, maxHp, bar.SinceDamage);
         }
 
         /// <summary>Put a HUD rect over a world point; false when it is behind the camera or off screen.</summary>

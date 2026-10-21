@@ -13,8 +13,20 @@ namespace Survival.Domain.Runner
         /// <summary>Enemies start walking at the squad once it is this close.</summary>
         public const float Aggro = 15f;
 
-        /// <summary>Half width of the strip in front of each unit that it shoots into (plus the target's radius).</summary>
+        /// <summary>Half width of the strip a foe archer shoots into (plus the target's radius).</summary>
         public const float AimHalfWidth = 1.5f;
+
+        /// <summary>
+        /// Half width of a squad shot: shots fly straight down the road from the shooter's lane position and hit the
+        /// first foe or box whose body (radius) they pass through. Steering is the aim.
+        /// </summary>
+        public const float ShotHalfWidth = 0.25f;
+
+        /// <summary>Shots fly this far past the shooter's range before they despawn.</summary>
+        public const float ShotOvershoot = 1.5f;
+
+        /// <summary>Half width of the strip straight in front of a melee unit that its swing reaches (plus the target's radius).</summary>
+        public const float MeleeHalfWidth = 0.7f;
 
         /// <summary>Formation spacing between followers.</summary>
         public const float Spacing = 1.15f;
@@ -30,9 +42,6 @@ namespace Survival.Domain.Runner
 
         /// <summary>A hit at least this big (or any boss, box break, follower loss or hero hit) shakes the screen.</summary>
         public const int BigHit = 60;
-
-        /// <summary>Shots land once they are this close to the target.</summary>
-        public const float ShotHitRadius = 0.35f;
 
         /// <summary>Longest internal step; bigger frame deltas are split so results do not depend on frame rate.</summary>
         public const float MaxStep = 1f / 30f;
@@ -173,27 +182,32 @@ namespace Survival.Domain.Runner
         public float HpFraction => MaxHp > 0 ? Math.Max(0f, Hp / (float)MaxHp) : 0f;
     }
 
-    /// <summary>A shot in flight. It homes on its target; it fizzles if the target is gone first.</summary>
+    /// <summary>
+    /// A shot in flight, straight down the road (squad shots +z, foe shots -z) from where it was fired; no homing.
+    /// It hits the first body it passes through and despawns after <see cref="Range"/> metres.
+    /// </summary>
     public sealed class RunnerShot
     {
-        internal RunnerShot(int id, int shooter, int target, bool onBox, bool byFoe, float x, float z, int damage, float speed)
+        internal RunnerShot(int id, int shooter, bool byFoe, float x, float z, int damage, float speed, float range)
         {
             Id = id;
             Shooter = shooter;
-            Target = target;
-            OnBox = onBox;
             ByFoe = byFoe;
             X = x;
             Z = z;
             Damage = damage;
             Speed = speed;
+            Range = range;
         }
 
         public int Id { get; }
         public int Shooter { get; }
-        public int Target { get; }
-        public bool OnBox { get; }
         public bool ByFoe { get; }
+
+        /// <summary>+1 for squad shots (down the road), -1 for foe shots.</summary>
+        public float Direction => ByFoe ? -1f : 1f;
+        public float Range { get; }
+        public float Travelled { get; internal set; }
         public float X { get; internal set; }
         public float Z { get; internal set; }
         public int Damage { get; }
@@ -213,7 +227,8 @@ namespace Survival.Domain.Runner
 
     /// <summary>
     /// One run of a runner level ("runner army"): the squad auto-walks down the lane at the level's pace and every unit
-    /// auto-attacks what is in front of it (ranged shots or melee swings); the player only steers left / right. Enemy
+    /// auto-attacks straight ahead (ranged shots fly down its own lane, melee swings hit what stands in front of it);
+    /// the player only steers left / right, which is also the aim. Enemy
     /// waves walk in; one in contact holds the squad up, and every enemy hit kills a follower first, the hero only once
     /// no followers are left. Bonus boxes have HP and must be shot down to be claimed: followers, a new hero, or
     /// weapon / attack-speed upgrades. Reaching the end (or killing the boss, when the level has one) wins; losing the
@@ -444,7 +459,10 @@ namespace Survival.Domain.Runner
                     continue;
                 }
 
-                if (!FindTarget(m, out var targetId, out var onBox, out var tx, out var tz))
+                // Ranged units fire straight ahead whenever anything is in range down the road (whether or not their
+                // lane lines up: steering is the aim); melee units swing at what stands right in front of them.
+                var melee = default((int Id, bool OnBox, float X, float Z));
+                if (m.Unit.Ranged ? !AnythingAhead(m) : !MeleeTarget(m, out melee))
                 {
                     m.Cooldown = 0f;
                     continue;
@@ -456,78 +474,84 @@ namespace Survival.Domain.Runner
                     m.Cooldown = 0f;
                 }
 
-                m.TargetId = targetId;
                 m.SinceAttack = 0f;
                 var damage = (int)Math.Round(m.Unit.Damage * DamageMul);
                 if (m.Unit.Ranged)
                 {
-                    var shot = new RunnerShot(_nextId++, m.Id, targetId, onBox, false, m.X, m.Z + 0.4f, damage, m.Unit.ShotSpeed);
+                    m.TargetId = 0;
+                    var shot = new RunnerShot(_nextId++, m.Id, false, m.X, m.Z + 0.4f, damage, m.Unit.ShotSpeed, m.Unit.Range + RunnerRules.ShotOvershoot);
                     _shots.Add(shot);
-                    Emit(RunnerEventKind.Fired, m.Id, targetId, tx, tz, shot.Id, false, onBox, m.Unit.Id);
+                    Emit(RunnerEventKind.Fired, m.Id, 0, m.X, m.Z + m.Unit.Range, shot.Id, false, false, m.Unit.Id);
                 }
                 else
                 {
-                    Emit(RunnerEventKind.Fired, m.Id, targetId, tx, tz, 0, false, onBox, m.Unit.Id);
-                    Damage(targetId, onBox, damage, m.Id);
+                    m.TargetId = melee.Id;
+                    Emit(RunnerEventKind.Fired, m.Id, melee.Id, melee.X, melee.Z, 0, false, melee.OnBox, m.Unit.Id);
+                    Damage(melee.Id, melee.OnBox, damage, m.Id);
                 }
             }
         }
 
-        /// <summary>Nearest enemy in front (in range, inside the aim strip) first, else the nearest box.</summary>
-        private bool FindTarget(RunnerMember m, out int id, out bool onBox, out float x, out float z)
+        /// <summary>Any live foe or box ahead within the unit's range, at any lane position.</summary>
+        private bool AnythingAhead(RunnerMember m)
         {
-            id = 0;
-            onBox = false;
-            x = z = 0f;
+            foreach (var f in _foes)
+            {
+                if (f.Hp > 0 && f.Z > m.Z - 0.5f && f.Z - m.Z <= m.Unit.Range + f.Unit.Radius)
+                {
+                    return true;
+                }
+            }
+
+            foreach (var b in _boxes)
+            {
+                if (b.Hp > 0 && b.Z > m.Z - 0.5f && b.Z - m.Z <= m.Unit.Range + RunnerBox.Radius)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>The nearest foe (then box) straight in front of a melee unit, within its reach.</summary>
+        private bool MeleeTarget(RunnerMember m, out (int Id, bool OnBox, float X, float Z) hit)
+        {
+            hit = default;
             var best = float.MaxValue;
             foreach (var f in _foes)
             {
-                // The boss fills the road, so everyone can reach it from any lane position.
-                var x0 = f.Boss ? m.X : f.X;
-                if (f.Hp <= 0 || !InStrike(m, x0, f.Z, f.Unit.Radius, out var d) || d >= best)
+                var dz = f.Z - m.Z;
+                var dx = f.Boss ? 0f : Math.Abs(f.X - m.X);
+                if (f.Hp <= 0 || dz <= -1f || dz > m.Unit.Range + f.Unit.Radius + m.Unit.Radius
+                    || dx > RunnerRules.MeleeHalfWidth + f.Unit.Radius || dz >= best)
                 {
                     continue;
                 }
 
-                best = d;
-                id = f.Id;
-                x = f.X;
-                z = f.Z;
+                best = dz;
+                hit = (f.Id, false, f.X, f.Z);
             }
 
-            if (id != 0)
+            if (hit.Id != 0)
             {
                 return true;
             }
 
             foreach (var b in _boxes)
             {
-                if (b.Hp <= 0 || !InStrike(m, b.X, b.Z, RunnerBox.Radius, out var d) || d >= best)
+                var dz = b.Z - m.Z;
+                if (b.Hp <= 0 || dz <= -1f || dz > m.Unit.Range + RunnerBox.Radius + m.Unit.Radius
+                    || Math.Abs(b.X - m.X) > RunnerRules.MeleeHalfWidth + RunnerBox.Radius || dz >= best)
                 {
                     continue;
                 }
 
-                best = d;
-                id = b.Id;
-                x = b.X;
-                z = b.Z;
-                onBox = true;
+                best = dz;
+                hit = (b.Id, true, b.X, b.Z);
             }
 
-            return id != 0;
-        }
-
-        private static bool InStrike(RunnerMember m, float x, float z, float radius, out float distance)
-        {
-            var dx = x - m.X;
-            var dz = z - m.Z;
-            distance = (float)Math.Sqrt((dx * dx) + (dz * dz));
-            if (m.Unit.Ranged)
-            {
-                return dz > -0.5f && Math.Abs(dx) <= RunnerRules.AimHalfWidth + radius && distance <= m.Unit.Range + radius;
-            }
-
-            return dz > -1f && distance <= m.Unit.Range + radius + m.Unit.Radius;
+            return hit.Id != 0;
         }
 
         private void FoesAttack(float dt)
@@ -568,7 +592,7 @@ namespace Survival.Domain.Runner
                 Emit(RunnerEventKind.Fired, f.Id, target.Id, target.X, target.Z, 0, false, false, f.Unit.Id);
                 if (f.Unit.Ranged)
                 {
-                    _shots.Add(new RunnerShot(_nextId++, f.Id, target.Id, false, true, f.X, f.Z - 0.4f, f.Unit.Damage, f.Unit.ShotSpeed));
+                    _shots.Add(new RunnerShot(_nextId++, f.Id, true, f.X, f.Z - 0.4f, f.Unit.Damage, f.Unit.ShotSpeed, f.Unit.Range + RunnerRules.ShotOvershoot + 2f));
                 }
                 else
                 {
@@ -615,66 +639,79 @@ namespace Survival.Domain.Runner
             for (var i = _shots.Count - 1; i >= 0; i--)
             {
                 var s = _shots[i];
-                float tx, tz;
+                var step = s.Speed * dt;
+                var from = s.Z;
+                var to = s.Z + (s.Direction * step);
+                var lo = Math.Min(from, to);
+                var hi = Math.Max(from, to);
+                var hit = false;
                 if (s.ByFoe)
                 {
-                    var m = Member(s.Target) ?? NearestMember(s.X, s.Z, out _);
-                    if (m == null)
+                    // Straight back up the road: the first squad member it passes through takes it (as a hit on the
+                    // squad: a follower dies first, the hero only once none are left).
+                    RunnerMember? struck = null;
+                    var best = float.MinValue;
+                    foreach (var m in _squad)
                     {
-                        _shots.RemoveAt(i);
-                        continue;
+                        var r = m.Unit.Radius + RunnerRules.ShotHalfWidth;
+                        if (Math.Abs(m.X - s.X) <= r && m.Z >= lo - r && m.Z <= hi + r && m.Z > best)
+                        {
+                            best = m.Z;
+                            struck = m;
+                        }
                     }
 
-                    tx = m.X;
-                    tz = m.Z;
-                }
-                else if (s.OnBox)
-                {
-                    var b = Box(s.Target);
-                    if (b == null || b.Hp <= 0)
+                    if (struck != null)
                     {
+                        hit = true;
                         _shots.RemoveAt(i);
-                        continue;
-                    }
-
-                    tx = b.X;
-                    tz = b.Z;
-                }
-                else
-                {
-                    var f = Foe(s.Target);
-                    if (f == null || f.Hp <= 0)
-                    {
-                        _shots.RemoveAt(i);
-                        continue;
-                    }
-
-                    tx = f.X;
-                    tz = f.Z;
-                }
-
-                var dx = tx - s.X;
-                var dz = tz - s.Z;
-                var d = (float)Math.Sqrt((dx * dx) + (dz * dz));
-                var step = s.Speed * dt;
-                if (d <= step + RunnerRules.ShotHitRadius)
-                {
-                    _shots.RemoveAt(i);
-                    s.X = tx;
-                    s.Z = tz;
-                    if (s.ByFoe)
-                    {
+                        s.Z = struck.Z;
                         var shooter = Foe(s.Shooter);
                         if (shooter != null)
                         {
                             StrikeSquad(shooter, s.Damage);
                         }
                     }
-                    else
+                }
+                else
+                {
+                    // Straight down the road: the nearest foe or box whose body it passes through. The boss fills the road.
+                    var bestZ = float.MaxValue;
+                    var id = 0;
+                    var onBox = false;
+                    foreach (var f in _foes)
                     {
-                        Damage(s.Target, s.OnBox, s.Damage, s.Shooter);
+                        var r = f.Unit.Radius + RunnerRules.ShotHalfWidth;
+                        if (f.Hp > 0 && (f.Boss || Math.Abs(f.X - s.X) <= r) && f.Z >= lo - r && f.Z <= hi + r && f.Z < bestZ)
+                        {
+                            bestZ = f.Z;
+                            id = f.Id;
+                            onBox = false;
+                        }
                     }
 
+                    foreach (var b in _boxes)
+                    {
+                        var r = RunnerBox.Radius + RunnerRules.ShotHalfWidth;
+                        if (b.Hp > 0 && Math.Abs(b.X - s.X) <= r && b.Z >= lo - r && b.Z <= hi + r && b.Z < bestZ)
+                        {
+                            bestZ = b.Z;
+                            id = b.Id;
+                            onBox = true;
+                        }
+                    }
+
+                    if (id != 0)
+                    {
+                        hit = true;
+                        _shots.RemoveAt(i);
+                        s.Z = bestZ;
+                        Damage(id, onBox, s.Damage, s.Shooter);
+                    }
+                }
+
+                if (hit)
+                {
                     if (Over)
                     {
                         return;
@@ -683,8 +720,12 @@ namespace Survival.Domain.Runner
                     continue;
                 }
 
-                s.X += dx / d * step;
-                s.Z += dz / d * step;
+                s.Z = to;
+                s.Travelled += step;
+                if (s.Travelled >= s.Range)
+                {
+                    _shots.RemoveAt(i);
+                }
             }
         }
 

@@ -30,7 +30,21 @@ public sealed class RunnerSideBarTests
         Assert.Equal(1.76f, top, 3);
         Assert.Equal(RunnerSideBar.MinHeightPx, RunnerSideBar.HeightPx(10f));
         Assert.Equal(RunnerSideBar.MaxHeightPx, RunnerSideBar.HeightPx(5000f));
-        Assert.Equal(200f, RunnerSideBar.HeightPx(200f));
-        Assert.Equal(20f, RunnerSideBar.WidthPx);
+        Assert.Equal(80f, RunnerSideBar.HeightPx(80f));
+        Assert.True(RunnerSideBar.WidthPx <= 8f, "a sliver, not the battle's 20 px bar");
+    }
+
+    [Fact]
+    public void Bars_are_hidden_at_full_hp_show_faintly_on_damage_and_fade_two_seconds_after_the_last_hit()
+    {
+        Assert.Equal(0f, RunnerSideBar.Alpha(100, 100, 0.5f));
+        Assert.Equal(0f, RunnerSideBar.Alpha(0, 100, 0.5f));
+        Assert.Equal(0f, RunnerSideBar.Alpha(60, 100, -1f));
+        Assert.Equal(RunnerSideBar.ShownAlpha, RunnerSideBar.Alpha(60, 100, 1f), 3);
+        Assert.True(RunnerSideBar.ShownAlpha < 1f);
+        Assert.Equal(RunnerSideBar.ShownAlpha, RunnerSideBar.Alpha(60, 100, RunnerSideBar.HoldSeconds), 3);
+        var mid = RunnerSideBar.Alpha(60, 100, RunnerSideBar.HoldSeconds + (RunnerSideBar.FadeSeconds * 0.5f));
+        Assert.InRange(mid, 0.01f, RunnerSideBar.ShownAlpha - 0.01f);
+        Assert.Equal(0f, RunnerSideBar.Alpha(60, 100, RunnerSideBar.HoldSeconds + RunnerSideBar.FadeSeconds + 0.01f));
     }
 }
