@@ -34,6 +34,7 @@ namespace Survival.Unity
         private Vector3 _baseLocal;
         private float _punch;
         private float _attackStarted = -99f;
+        private System.Action<float>? _attackSpeed;
 
         private RunnerRig(LockedBattleFighter data, Transform slot, Transform host)
         {
@@ -134,7 +135,7 @@ namespace Survival.Unity
                 {
                     var a = host.AddComponent<LyraActor>();
                     a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose);
+                    rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
                     built = a.Built;
                     measured = a.VisibleBounds;
                     break;
@@ -144,7 +145,7 @@ namespace Survival.Unity
                 {
                     var a = host.AddComponent<OakenshieldActor>();
                     a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose);
+                    rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
                     built = a.Built;
                     measured = a.VisibleBounds;
                     break;
@@ -174,7 +175,7 @@ namespace Survival.Unity
                 {
                     var a = host.AddComponent<RowanActor>();
                     a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose);
+                    rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
                     built = a.Built;
                     measured = a.VisibleBounds;
                     break;
@@ -207,7 +208,7 @@ namespace Survival.Unity
                         a.PlayBattlePose(SirAldricBattlePoses.Rest);
                     }
 
-                    rig.Bind(a.PlayBattlePose, () => a.BattlePose);
+                    rig.Bind(a.PlayBattlePose, () => a.BattlePose, v => a.BattleSpeed = v);
                     built = a.Built && measured.size.y > 1e-3f;
                     break;
                 }
@@ -281,10 +282,37 @@ namespace Survival.Unity
             return rig;
         }
 
-        private void Bind(System.Func<string, bool> play, System.Func<string> pose)
+        private void Bind(System.Func<string, bool> play, System.Func<string> pose, System.Action<float>? attackSpeed = null)
         {
             _play = play;
             _pose = pose;
+            _attackSpeed = attackSpeed;
+        }
+
+        /// <summary>True when the actor can play its attack take faster (the squad shooters and Sir Aldric).</summary>
+        public bool HasAttackSpeed => _attackSpeed != null;
+
+        /// <summary>
+        /// One attack take from its first frame at <paramref name="speed"/>x (the runner sim's AttackStarted). The take is
+        /// as long as the fire interval, so this lands exactly as the last take reaches its end frame: both are the rest
+        /// pose, and the restart does not pop. The shot follows at the take's release (the sim's Fired).
+        /// </summary>
+        public void StartTake(float speed)
+        {
+            if (Dead)
+            {
+                return;
+            }
+
+            _attackSpeed?.Invoke(speed > 0.01f ? speed : 1f);
+            if (!Data.AttackCyclesItself)
+            {
+                // Sir Aldric's named clips restart from their origin on each attack pose.
+                Play(RestPose);
+            }
+
+            Play(AttackPose);
+            _attackStarted = Time.time;
         }
 
         public bool Play(string pose)

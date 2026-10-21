@@ -1,3 +1,4 @@
+using Survival.Domain.Heroes;
 using Survival.Domain.Campaign;
 using Survival.Domain.Clock;
 using Survival.Domain.Economy;
@@ -468,16 +469,163 @@ public sealed class RunnerTests
     }
 
     [Fact]
-    public void Squad_fires_about_three_times_faster_and_enemy_box_and_boss_hp_scaled_to_match()
+    public void Squad_fire_rate_is_the_sped_up_attack_take_and_enemy_box_and_boss_hp_scaled_to_match()
     {
         var c = Runner.Catalog();
-        Assert.InRange(c.Unit("lyra").Cycle, 0.85f / 3.1f, 0.85f / 2.4f);
-        Assert.InRange(c.Unit("rowan").Cycle, 0.8f / 3.1f, 0.8f / 2.4f);
-        Assert.InRange(c.Unit("oakenshield").Cycle, 1.1f / 3.1f, 1.1f / 2.4f);
-        Assert.InRange(c.Unit("sir_aldric").Cycle, 1.1f / 3.1f, 1.1f / 2.4f);
-        Assert.InRange(c.Unit("nightfang").Hp, 110 * 2, 110 * 2.5);
-        Assert.InRange(c.Unit("ironhowl").Hp, 4200 * 2.5, 4200 * 3.2);
-        Assert.All(c.First.Rows.Where(r => r.Box != null), r => Assert.True(r.Box!.Hp >= 130, "box hp " + r.Box!.Hp));
+        static RunnerAttackPlan P(RunnerCatalog c, string id) => RunnerAttackTiming.PlanFor(c.Unit(id));
+
+        // Lyra, Rowan and Sir Aldric asked for more than 2.5x: capped, interval stretched to take / 2.5.
+        Assert.True(P(c, "lyra").Capped && P(c, "rowan").Capped && P(c, "sir_aldric").Capped);
+        Assert.False(P(c, "oakenshield").Capped);
+        Assert.All(new[] { "lyra", "rowan", "oakenshield", "sir_aldric" }, id => Assert.InRange(P(c, id).Speed, 1f, RunnerAttackTiming.MaxSpeed + 1e-4f));
+        Assert.Equal(0.40f, P(c, "lyra").Interval, 3);
+        Assert.Equal(0.40f, P(c, "rowan").Interval, 3);
+        Assert.Equal(0.40f, P(c, "oakenshield").Interval, 3);
+        Assert.Equal(0.44f, P(c, "sir_aldric").Interval, 3);
+
+        // Still about twice the old 0.8-1.1 s cadence; enemy, box and boss HP scaled to land the run at ~90 s.
+        Assert.InRange(c.Unit("nightfang").Hp, 110 * 1.6, 110 * 2.0);
+        Assert.InRange(c.Unit("ironhowl").Hp, 4200 * 2.2, 4200 * 2.6);
+        Assert.All(c.First.Rows.Where(r => r.Box != null), r => Assert.True(r.Box!.Hp >= 100, "box hp " + r.Box!.Hp));
+    }
+
+    [Fact]
+    public void Each_shooter_releases_on_its_battle_take_release_frame()
+    {
+        var lyra = RunnerAttackTiming.ClipFor("Lyra")!.Value;
+        var rowan = RunnerAttackTiming.ClipFor("Rowan")!.Value;
+        var oak = RunnerAttackTiming.ClipFor("Oakenshield")!.Value;
+        var aldric = RunnerAttackTiming.ClipFor("Sir Aldric")!.Value;
+        Assert.Equal(LyraAttack.Spec.ClipSecondsFor, lyra.ClipSeconds, 4);
+        Assert.Equal(LyraAttack.ReleaseFrame / 30f, lyra.ReleaseSeconds, 4);
+        Assert.Equal(RowanAttack.ReleaseFrame / 30f, rowan.ReleaseSeconds, 4);
+        Assert.Equal(OakenshieldAttack.ReleaseFrame / 30f, oak.ReleaseSeconds, 4);
+        Assert.Equal(SirAldricBattlePoses.AttackSeconds, aldric.ClipSeconds, 4);
+        Assert.Equal(LockedBattleHits.SirAldricContactFrame / 30f, aldric.ReleaseSeconds, 4);
+        Assert.Null(RunnerAttackTiming.ClipFor("Nightfang"));
+
+        // Speeding the take up keeps the release at the same point of it.
+        var plan = RunnerAttackTiming.Plan(lyra, 0.31f);
+        Assert.Equal(lyra.ReleaseNormalized, plan.Release / plan.Interval, 4);
+        Assert.Equal(lyra.ClipSeconds / plan.Speed, plan.Interval, 4);
+        var faster = plan.Faster(1.3f);
+        Assert.Equal(lyra.ReleaseNormalized, faster.Release / faster.Interval, 4);
+        Assert.Equal(plan.Speed * 1.3f, faster.Speed, 4);
+    }
+
+    [Fact]
+    public void A_shot_leaves_at_the_release_point_of_each_take_and_takes_chain_back_to_back()
+    {
+        var run = Runner.Run(Runner.Tiny(@"{ ""at"": 12, ""kind"": ""enemy"", ""unit"": ""brute"" }", length: 60f));
+        var plan = run.Hero.Plan;
+        Assert.Equal(2f, plan.Speed, 3);
+        Assert.Equal(0.5f, plan.Interval, 3);
+        Assert.Equal(LyraAttack.ReleaseFrame / 30f / 2f, plan.Release, 3);
+
+        const float dt = 1f / 120f;
+        var starts = new List<float>();
+        var fires = new List<float>();
+        while (fires.Count < 6 && run.Seconds < 20f)
+        {
+            foreach (var e in run.Step(dt))
+            {
+                if (e.Id != run.Hero.Id)
+                {
+                    continue;
+                }
+
+                if (e.Kind == RunnerEventKind.AttackStarted)
+                {
+                    starts.Add(run.Seconds);
+                    Assert.Equal(plan.Speed, e.Amount, 3);
+                }
+                else if (e.Kind == RunnerEventKind.Fired)
+                {
+                    fires.Add(run.Seconds);
+                    Assert.True(e.Amount > 0f);
+                }
+            }
+        }
+
+        Assert.Equal(6, fires.Count);
+        for (var i = 0; i < fires.Count; i++)
+        {
+            Assert.InRange(fires[i] - starts[i], plan.Release - dt - 0.001f, plan.Release + 0.001f);
+            if (i > 0)
+            {
+                Assert.InRange(starts[i] - starts[i - 1], plan.Interval - dt - 0.001f, plan.Interval + dt + 0.001f);
+            }
+        }
+    }
+
+    [Fact]
+    public void Every_attack_take_fires_exactly_once_across_the_shipped_level()
+    {
+        var c = Runner.Catalog();
+        var run = new RunnerRun(c, c.First);
+        var starts = new Dictionary<int, int>();
+        var fires = new Dictionary<int, int>();
+        var members = new Dictionary<int, RunnerMember>();
+        var shots = 0;
+        while (!run.Over && run.Seconds < 200f)
+        {
+            run.SteerTo(Runner.AimLikeAPlayer(run));
+            foreach (var e in run.Step(1f / 30f))
+            {
+                if (e.Kind == RunnerEventKind.AttackStarted)
+                {
+                    starts[e.Id] = starts.GetValueOrDefault(e.Id) + 1;
+                }
+                else if (e.Kind == RunnerEventKind.Fired)
+                {
+                    fires[e.Id] = fires.GetValueOrDefault(e.Id) + 1;
+                    if (starts.ContainsKey(e.Id) && e.Amount > 0f)
+                    {
+                        shots++;
+                    }
+                }
+            }
+
+            foreach (var m in run.Squad)
+            {
+                members[m.Id] = m;
+            }
+        }
+
+        Assert.Equal(RunnerOutcome.Won, run.Outcome);
+        Assert.True(starts.Values.Sum() > 500, "takes " + starts.Values.Sum());
+        foreach (var (id, n) in starts)
+        {
+            // One release per take; only a take still running when the run ended (or its member fell) has not fired yet.
+            var f = fires.GetValueOrDefault(id);
+            Assert.InRange(n - f, 0, 1);
+            Assert.Equal(members[id].CyclesStarted, n);
+            Assert.Equal(members[id].Releases, f);
+        }
+
+        Assert.Equal(members.Values.Where(m => m.Unit.Ranged).Sum(m => m.Releases), shots);
+    }
+
+    [Fact]
+    public void The_take_plays_out_then_the_member_walks_again_when_nothing_is_in_range()
+    {
+        var run = Runner.Run(Runner.Tiny(@"{ ""at"": 9, ""kind"": ""box"", ""hp"": 1, ""reward"": ""weapon"" }", length: 60f));
+        while (!run.Step(1f / 30f).Any(e => e.Kind == RunnerEventKind.BoxBroken))
+        {
+            Assert.True(run.Seconds < 20f);
+        }
+
+        // The box broke while a take was playing; that take runs to its end (no cut), then no new one starts.
+        Assert.True(run.Hero.Attacking);
+        var events = new List<RunnerEvent>();
+        for (var i = 0; i < 30; i++)
+        {
+            events.AddRange(run.Step(1f / 30f));
+        }
+
+        Assert.False(run.Hero.Attacking);
+        Assert.DoesNotContain(events, e => e.Kind == RunnerEventKind.AttackStarted);
+        Assert.Equal(run.Hero.CyclesStarted, run.Hero.Releases);
     }
 
     [Fact]

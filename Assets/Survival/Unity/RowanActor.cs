@@ -16,6 +16,19 @@ namespace Survival.Unity
     public sealed class RowanActor : MonoBehaviour, IBlenderRigPlayback
     {
         private BlenderRigPlayer? _player;
+
+        /// <summary>Attack take playback rate (runner: one sped-up take per shot); 1 in the battle.</summary>
+        public float AttackSpeed
+        {
+            get => _player?.AttackSpeed ?? 1f;
+            set
+            {
+                if (_player != null)
+                {
+                    _player.AttackSpeed = value;
+                }
+            }
+        }
         private ClothSpringRig? _cloth;
         private GameObject? _coat;
 

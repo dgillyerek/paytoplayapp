@@ -643,12 +643,27 @@ namespace Survival.Unity
             var at = new Vector3(e.X, 0f, e.Z);
             switch (e.Kind)
             {
+                case RunnerEventKind.AttackStarted:
+                {
+                    // One take per shot: the sim starts it and fires at its release frame, so the bolt leaves on the draw.
+                    if (_members.TryGetValue(e.Id, out var m))
+                    {
+                        m.StartTake(e.Amount);
+                    }
+
+                    break;
+                }
+
                 case RunnerEventKind.Fired:
                 {
                     if (_members.TryGetValue(e.Id, out var m))
                     {
-                        m.Attack();
-                        if (e.Amount <= 0f)
+                        if (!m.HasAttackSpeed)
+                        {
+                            m.Attack();
+                        }
+
+                        if (e.Amount <= 0f && e.Other != 0)
                         {
                             Slash(at + (Vector3.up * 0.9f), m.Data.Name);
                         }

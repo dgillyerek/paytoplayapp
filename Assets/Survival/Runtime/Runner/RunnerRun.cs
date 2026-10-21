@@ -70,7 +70,10 @@ namespace Survival.Domain.Runner
         Upgrade,
         BossEngaged,
         Won,
-        Lost
+        Lost,
+
+        /// <summary>A squad member starts one attack take (<see cref="RunnerEvent.Amount"/> = playback speed); its <see cref="Fired"/> follows at the take's release.</summary>
+        AttackStarted
     }
 
     /// <summary>
@@ -116,11 +119,15 @@ namespace Survival.Domain.Runner
             X = x;
             Z = z;
             Hp = unit.Hp;
+            Plan = RunnerAttackTiming.PlanFor(unit);
         }
 
         public int Id { get; }
         public RunnerUnitDef Unit { get; }
         public bool IsHero { get; }
+
+        /// <summary>The unit's attack take timing before upgrades (speed, interval, release).</summary>
+        public RunnerAttackPlan Plan { get; }
         public float X { get; internal set; }
         public float Z { get; internal set; }
         public int Hp { get; internal set; }
@@ -130,7 +137,22 @@ namespace Survival.Domain.Runner
         /// <summary>Id of the foe or box this member last attacked (0 = none), and how long ago.</summary>
         public int TargetId { get; internal set; }
         public float SinceAttack { get; internal set; } = 99f;
-        public bool Attacking => SinceAttack < Unit.Cycle + 0.25f;
+
+        /// <summary>True from the start of an attack take to its end (the scene plays the take, then walks again).</summary>
+        public bool Attacking => CycleClock >= 0f;
+
+        /// <summary>Seconds into the current attack take, or -1 between takes.</summary>
+        public float CycleClock { get; internal set; } = -1f;
+
+        /// <summary>The current take's timing (the plan with the attack-speed upgrade in force when it started).</summary>
+        public RunnerAttackPlan Cycle { get; internal set; }
+
+        /// <summary>Whether the current take has already let its shot (or swing) go.</summary>
+        public bool Released { get; internal set; }
+
+        /// <summary>Attack takes started and shots / swings released so far.</summary>
+        public int CyclesStarted { get; internal set; }
+        public int Releases { get; internal set; }
     }
 
     public sealed class RunnerFoe
@@ -450,46 +472,81 @@ namespace Survival.Domain.Runner
 
         private void SquadAttacks(float dt)
         {
-            foreach (var m in _squad)
+            // By index over the members there at the start of the step: a swing that breaks a box adds followers.
+            var count = _squad.Count;
+            for (var i = 0; i < count && i < _squad.Count; i++)
             {
+                var m = _squad[i];
                 m.SinceAttack += dt;
-                m.Cooldown -= dt;
-                if (m.Cooldown > 0f)
+                if (m.CycleClock >= 0f)
                 {
-                    continue;
-                }
-
-                // Ranged units fire straight ahead whenever anything is in range down the road (whether or not their
-                // lane lines up: steering is the aim); melee units swing at what stands right in front of them.
-                var melee = default((int Id, bool OnBox, float X, float Z));
-                if (m.Unit.Ranged ? !AnythingAhead(m) : !MeleeTarget(m, out melee))
-                {
-                    m.Cooldown = 0f;
-                    continue;
-                }
-
-                m.Cooldown += m.Unit.Cycle / RateMul;
-                if (m.Cooldown < 0f)
-                {
-                    m.Cooldown = 0f;
-                }
-
-                m.SinceAttack = 0f;
-                var damage = (int)Math.Round(m.Unit.Damage * DamageMul);
-                if (m.Unit.Ranged)
-                {
-                    m.TargetId = 0;
-                    var shot = new RunnerShot(_nextId++, m.Id, false, m.X, m.Z + 0.4f, damage, m.Unit.ShotSpeed, m.Unit.Range + RunnerRules.ShotOvershoot);
-                    _shots.Add(shot);
-                    Emit(RunnerEventKind.Fired, m.Id, 0, m.X, m.Z + m.Unit.Range, shot.Id, false, false, m.Unit.Id);
+                    m.CycleClock += dt;
                 }
                 else
                 {
-                    m.TargetId = melee.Id;
-                    Emit(RunnerEventKind.Fired, m.Id, melee.Id, melee.X, melee.Z, 0, false, melee.OnBox, m.Unit.Id);
-                    Damage(melee.Id, melee.OnBox, damage, m.Id);
+                    m.Cooldown -= dt;
+                }
+
+                // One attack take = one shot or swing. The take runs to its end; the next starts right then if anything
+                // is still in range (no rest gap, so the cadence is the take's length), otherwise the member walks on.
+                for (var guard = 0; guard < 4; guard++)
+                {
+                    if (m.CycleClock >= 0f && !m.Released && m.CycleClock >= m.Cycle.Release)
+                    {
+                        Release(m);
+                    }
+
+                    if (m.CycleClock >= 0f && m.CycleClock < m.Cycle.Interval)
+                    {
+                        break;
+                    }
+
+                    // From idle the take counts as started at the top of this step (dt in), so its release lands on the
+                    // same sim time whatever the frame rate; back to back, the next take carries the last one's overrun.
+                    var carry = m.CycleClock >= 0f ? m.CycleClock - m.Cycle.Interval : dt;
+                    m.CycleClock = -1f;
+                    if (m.Cooldown > 0f || !(m.Unit.Ranged ? AnythingAhead(m) : MeleeTarget(m, out _)))
+                    {
+                        m.Cooldown = Math.Max(m.Cooldown, 0f);
+                        break;
+                    }
+
+                    m.Cycle = m.Plan.Faster(RateMul);
+                    m.CycleClock = Math.Min(carry, dt);
+                    m.Released = false;
+                    m.Cooldown = 0f;
+                    m.CyclesStarted++;
+                    Emit(RunnerEventKind.AttackStarted, m.Id, 0, m.X, m.Z, m.Cycle.Speed, false, false, m.Unit.Id);
                 }
             }
+        }
+
+        /// <summary>The take's release frame: the shot leaves the shooter's lane, or the swing lands on what is in front now.</summary>
+        private void Release(RunnerMember m)
+        {
+            m.Released = true;
+            m.Releases++;
+            m.SinceAttack = 0f;
+            var damage = (int)Math.Round(m.Unit.Damage * DamageMul);
+            if (m.Unit.Ranged)
+            {
+                m.TargetId = 0;
+                var shot = new RunnerShot(_nextId++, m.Id, false, m.X, m.Z + 0.4f, damage, m.Unit.ShotSpeed, m.Unit.Range + RunnerRules.ShotOvershoot);
+                _shots.Add(shot);
+                Emit(RunnerEventKind.Fired, m.Id, 0, m.X, m.Z + m.Unit.Range, shot.Id, false, false, m.Unit.Id);
+                return;
+            }
+
+            if (!MeleeTarget(m, out var melee))
+            {
+                // Whatever it swung at died or slipped out of reach mid-take: the blade whiffs.
+                Emit(RunnerEventKind.Fired, m.Id, 0, m.X, m.Z + m.Unit.Range, 0, false, false, m.Unit.Id);
+                return;
+            }
+
+            m.TargetId = melee.Id;
+            Emit(RunnerEventKind.Fired, m.Id, melee.Id, melee.X, melee.Z, 0, false, melee.OnBox, m.Unit.Id);
+            Damage(melee.Id, melee.OnBox, damage, m.Id);
         }
 
         /// <summary>Any live foe or box ahead within the unit's range, at any lane position.</summary>

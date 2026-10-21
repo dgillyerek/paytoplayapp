@@ -14,6 +14,19 @@ namespace Survival.Unity
     {
         private BlenderRigPlayer? _player;
 
+        /// <summary>Attack take playback rate (runner: one sped-up take per shot); 1 in the battle.</summary>
+        public float AttackSpeed
+        {
+            get => _player?.AttackSpeed ?? 1f;
+            set
+            {
+                if (_player != null)
+                {
+                    _player.AttackSpeed = value;
+                }
+            }
+        }
+
         public bool Built => _player != null && _player.Built;
         public string Pose => _player != null ? _player.Pose : LyraMotion.RestPoseName;
         public float ClipLength => _player != null ? _player.ClipLength : 0f;

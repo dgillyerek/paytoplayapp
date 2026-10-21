@@ -1,14 +1,14 @@
 {
-  "_doc": "Runner mini-game (Survival > Runner: Walk & Fight). units: runner stats per locked battle rig (roster = LockedBattleRoster name; hp, damage per attack, cycle = seconds between attacks (squad shots fly straight down the road from the shooter's lane: steering is the aim), range m, ranged shots fly at shot_speed m/s, speed = enemy walk-in m/s, 0 = holds its ground, radius m). levels: spawn rows by distance 'at' metres down the lane; x = metres from the centre line (+ right). enemy rows spawn 'count' units 'spread' m apart; box rows have hp and a reward (followers: count copies of unit, hero: one new hero, weapon: +amount damage, rate: +amount attack speed); a boss row ends the level (kill it to win). Without a boss, reaching 'length' wins.",
+  "_doc": "Runner mini-game (Survival > Runner: Walk & Fight). units: runner stats per locked battle rig (roster = LockedBattleRoster name; hp, damage per attack, cycle = seconds between attacks; for squad units it is the asked-for interval: the battle attack take is sped up so one take lasts one cycle, the shot leaving on the take's release frame, capped at 2.5x speed (RunnerAttackTiming), which stretches the interval to take / 2.5 (squad shots fly straight down the road from the shooter's lane: steering is the aim), range m, ranged shots fly at shot_speed m/s, speed = enemy walk-in m/s, 0 = holds its ground, radius m). levels: spawn rows by distance 'at' metres down the lane; x = metres from the centre line (+ right). enemy rows spawn 'count' units 'spread' m apart; box rows have hp and a reward (followers: count copies of unit, hero: one new hero, weapon: +amount damage, rate: +amount attack speed); a boss row ends the level (kill it to win). Without a boss, reaching 'length' wins.",
   "units": {
     "lyra": { "roster": "Lyra", "hero": "hero.lyra", "hp": 420, "damage": 26, "cycle": 0.31, "range": 11.5, "ranged": true, "shot_speed": 17, "radius": 0.45 },
     "rowan": { "roster": "Rowan", "hero": "hero.rowan", "hp": 1, "damage": 15, "cycle": 0.29, "range": 12.5, "ranged": true, "shot_speed": 22, "radius": 0.45 },
     "oakenshield": { "roster": "Oakenshield", "hero": "hero.oakenshield", "hp": 1, "damage": 24, "cycle": 0.4, "range": 10, "ranged": true, "shot_speed": 15, "radius": 0.5 },
     "sir_aldric": { "roster": "Sir Aldric", "hero": "hero.sir_aldric", "hp": 1, "damage": 46, "cycle": 0.4, "range": 2.2, "ranged": false, "radius": 0.5 },
-    "bonequill": { "roster": "Bonequill", "hp": 155, "damage": 30, "cycle": 2.2, "range": 7, "ranged": true, "shot_speed": 12, "speed": 0.9, "radius": 0.45 },
-    "nightfang": { "roster": "Nightfang", "hp": 240, "damage": 40, "cycle": 1.3, "range": 1.2, "ranged": false, "speed": 2.2, "radius": 0.6 },
-    "blightroot": { "roster": "Blightroot", "hp": 480, "damage": 60, "cycle": 1.7, "range": 1.5, "ranged": false, "speed": 0, "radius": 0.65 },
-    "ironhowl": { "roster": "Ironhowl", "hp": 12600, "damage": 70, "cycle": 1.5, "range": 1.8, "ranged": false, "speed": 0, "radius": 1.0 }
+    "bonequill": { "roster": "Bonequill", "hp": 124, "damage": 30, "cycle": 2.2, "range": 7, "ranged": true, "shot_speed": 12, "speed": 0.9, "radius": 0.45 },
+    "nightfang": { "roster": "Nightfang", "hp": 192, "damage": 40, "cycle": 1.3, "range": 1.2, "ranged": false, "speed": 2.2, "radius": 0.6 },
+    "blightroot": { "roster": "Blightroot", "hp": 384, "damage": 60, "cycle": 1.7, "range": 1.5, "ranged": false, "speed": 0, "radius": 0.65 },
+    "ironhowl": { "roster": "Ironhowl", "hp": 10080, "damage": 70, "cycle": 1.5, "range": 1.8, "ranged": false, "speed": 0, "radius": 1.0 }
   },
   "levels": [
     {
@@ -21,24 +21,24 @@
       "max_followers": 24,
       "rewards": { "win_gold": 1500, "gold_per_kill": 20, "gold_per_box": 40, "shards": 10, "shard_hero": "hero.lyra" },
       "rows": [
-        { "at": 12, "kind": "box", "x": -1.6, "hp": 130, "reward": "followers", "unit": "rowan", "count": 2 },
-        { "at": 14, "kind": "box", "x": 1.8, "hp": 240, "reward": "weapon", "amount": 0.25 },
+        { "at": 12, "kind": "box", "x": -1.6, "hp": 104, "reward": "followers", "unit": "rowan", "count": 2 },
+        { "at": 14, "kind": "box", "x": 1.8, "hp": 192, "reward": "weapon", "amount": 0.25 },
         { "at": 24, "kind": "enemy", "x": 0, "unit": "bonequill", "count": 2, "spread": 2.4 },
-        { "at": 34, "kind": "box", "x": -2.0, "hp": 400, "reward": "followers", "unit": "lyra", "count": 3 },
+        { "at": 34, "kind": "box", "x": -2.0, "hp": 320, "reward": "followers", "unit": "lyra", "count": 3 },
         { "at": 37, "kind": "enemy", "x": 1.4, "unit": "nightfang", "count": 3, "spread": 1.3 },
-        { "at": 48, "kind": "box", "x": 2.0, "hp": 530, "reward": "hero", "unit": "sir_aldric" },
+        { "at": 48, "kind": "box", "x": 2.0, "hp": 424, "reward": "hero", "unit": "sir_aldric" },
         { "at": 52, "kind": "enemy", "x": -1.5, "unit": "blightroot", "count": 1 },
-        { "at": 61, "kind": "box", "x": 0, "hp": 570, "reward": "rate", "amount": 0.3 },
+        { "at": 61, "kind": "box", "x": 0, "hp": 456, "reward": "rate", "amount": 0.3 },
         { "at": 68, "kind": "enemy", "x": -1.0, "unit": "nightfang", "count": 4, "spread": 1.3 },
         { "at": 74, "kind": "enemy", "x": 1.5, "unit": "bonequill", "count": 3, "spread": 1.5 },
-        { "at": 82, "kind": "box", "x": -2.0, "hp": 840, "reward": "followers", "unit": "rowan", "count": 4 },
-        { "at": 84, "kind": "box", "x": 2.2, "hp": 840, "reward": "hero", "unit": "oakenshield" },
+        { "at": 82, "kind": "box", "x": -2.0, "hp": 672, "reward": "followers", "unit": "rowan", "count": 4 },
+        { "at": 84, "kind": "box", "x": 2.2, "hp": 672, "reward": "hero", "unit": "oakenshield" },
         { "at": 94, "kind": "enemy", "x": 0, "unit": "blightroot", "count": 2, "spread": 3.0 },
-        { "at": 102, "kind": "box", "x": 0, "hp": 1140, "reward": "weapon", "amount": 0.35 },
+        { "at": 102, "kind": "box", "x": 0, "hp": 912, "reward": "weapon", "amount": 0.35 },
         { "at": 110, "kind": "enemy", "x": 0, "unit": "nightfang", "count": 5, "spread": 1.2 },
         { "at": 116, "kind": "enemy", "x": 0, "unit": "bonequill", "count": 4, "spread": 1.6 },
-        { "at": 123, "kind": "box", "x": -1.9, "hp": 1320, "reward": "followers", "unit": "sir_aldric", "count": 2 },
-        { "at": 123, "kind": "box", "x": 1.9, "hp": 1320, "reward": "followers", "unit": "lyra", "count": 2 },
+        { "at": 123, "kind": "box", "x": -1.9, "hp": 1056, "reward": "followers", "unit": "sir_aldric", "count": 2 },
+        { "at": 123, "kind": "box", "x": 1.9, "hp": 1056, "reward": "followers", "unit": "lyra", "count": 2 },
         { "at": 142, "kind": "boss", "x": 0, "unit": "ironhowl" }
       ]
     }
