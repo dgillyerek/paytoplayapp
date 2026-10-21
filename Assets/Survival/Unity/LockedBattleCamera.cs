@@ -557,7 +557,8 @@ namespace Survival.Unity
 
         private void Place(Camera? cam)
         {
-            if (cam == null)
+            // The loading screen's floor camera (it only clears the screen) is not a battle view.
+            if (cam == null || BattleLoadingScreen.IsLoadingCamera(cam))
             {
                 return;
             }

@@ -131,7 +131,9 @@
     "theme_a.hero.portrait.ashwyrm": "art/heroes/portraits/portrait_ashwyrm.png",
     "theme_a.hero.portrait.blightroot": "art/heroes/portraits/portrait_blightroot.png",
     "theme_a.hero.portrait.bonequill": "art/heroes/portraits/portrait_bonequill.png",
-    "theme_a.ui.icon_shard": "art/hook/painted/icons/hero_shard.png"
+    "theme_a.ui.icon_shard": "art/hook/painted/icons/hero_shard.png",
+    "theme_a.battle.loading_backdrop": "art/battle/loading_backdrop.png",
+    "theme_a.battle.crossed_swords": "art/battle/crossed_swords.png"
   },
   "art_slices": {
     "theme_a.hook.ui.panel": [40, 40, 40, 40],

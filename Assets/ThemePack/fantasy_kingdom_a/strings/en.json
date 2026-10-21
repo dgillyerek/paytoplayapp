@@ -265,5 +265,17 @@
   "foe.ashwyrm.name": "Ashwyrm",
   "world.card.camp_loot": "Loot {0} Gold",
   "campaign.levelled_many": "{0} heroes levelled up!",
-  "hook.upgrade_done": "{0} reached Lv {1}!"
+  "hook.upgrade_done": "{0} reached Lv {1}!",
+  "battle.loading.into": "To battle!",
+  "battle.loading.vs": "VS",
+  "battle.loading.back": "Back to the village",
+  "battle.loading.retreat": "Retreat!",
+  "battle.loading.victory": "Victory!",
+  "battle.loading.defeat": "Defeat",
+  "battle.tip.1": "Each lane fights its own duel: put your strongest hero against the toughest foe.",
+  "battle.tip.2": "Level up heroes in the Heroes screen to raise their power.",
+  "battle.tip.3": "Hero shards from battles unlock new heroes and add stars.",
+  "battle.tip.4": "Losing still pays some gold, so try again!",
+  "battle.tip.5": "Upgrade your Castle to unlock higher building levels.",
+  "battle.tip.6": "Clear a stage for the first time to earn bonus gems."
 }
