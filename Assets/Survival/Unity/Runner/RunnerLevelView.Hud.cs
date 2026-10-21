@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Survival.Domain.Campaign;
 using Survival.Domain.Ids;
+using Survival.Domain.Roster;
 using Survival.Domain.Runner;
 using Survival.Domain.Theme;
 using UnityEngine;
@@ -19,6 +20,7 @@ namespace Survival.Unity
     {
         private static readonly Color Ink = new Color(0.12f, 0.07f, 0.02f, 1f);
         private static readonly Color FoeFill = new Color(1f, 0.42f, 0.32f, 1f);
+        private static readonly Color HeroFill = new Color(0.45f, 0.9f, 0.4f, 1f);
 
         private RectTransform? _hud;
         private RectTransform? _worldUi;
@@ -29,7 +31,7 @@ namespace Survival.Unity
         private Text? _spdChip;
         private RectTransform? _badge;
         private Text? _badgeText;
-        private Image? _badgePortrait;
+        private Image? _badgeIcon;
         private Text? _hint;
         private RectTransform? _result;
         private RectTransform? _banner;
@@ -49,6 +51,13 @@ namespace Survival.Unity
             public bool Boss;
             public float Height;
             public RectTransform? Reward;
+
+            /// <summary>A fighter's vertical side bar (the battle's layout) rather than a box's horizontal bar.</summary>
+            public bool Side;
+            public bool Hero;
+            public RunnerRig? Rig;
+            public float HalfWidth;
+            public float MeasureAge;
         }
 
         private sealed class Floating
@@ -97,8 +106,9 @@ namespace Survival.Unity
                     }
                 }
 
-                var roster = boss != null && _catalog != null ? _catalog.Unit(boss.Unit).Roster : "Ironhowl";
-                var face = HookSkin.Art(_hud, "BossFace", RunnerArtKeys.Portrait(roster), FoeFill);
+                // The boss is the 3D Ironhowl on the road; the bar's end only marks where he stands.
+                var face = HookSkin.Art(_hud, "BossMark", "theme_a.ui.icon_battle", FoeFill);
+                face.color = new Color(1f, 0.55f, 0.5f, 1f);
                 Anchor(face.rectTransform, 0.80f, 0.872f, 0.88f, 0.928f);
                 var tag = HookSkin.Outlined(SurvivalVisuals.Text(face.transform, "Boss", S("runner.boss", "BOSS"), 20, TextAnchor.UpperCenter, FoeFill));
                 tag.rectTransform.anchorMin = new Vector2(0f, -0.45f);
@@ -126,8 +136,8 @@ namespace Survival.Unity
             // Squad badge over the hero (count of everyone walking).
             _badge = HookSkin.Panel(_worldUi, "SquadBadge", HookArtKeys.Chip, new Color(0.10f, 0.22f, 0.45f, 0.96f), 0.45f).rectTransform;
             _badge.sizeDelta = new Vector2(150f, 62f);
-            _badgePortrait = HookSkin.Art(_badge, "Face", RunnerArtKeys.Portrait(_catalog != null && _level != null ? _catalog.Unit(_level.Hero).Roster : "Lyra"), SurvivalVisuals.PinBuild);
-            Anchor(_badgePortrait.rectTransform, -0.1f, -0.2f, 0.42f, 1.2f);
+            _badgeIcon = HookSkin.Art(_badge, "Icon", "theme_a.ui.icon_battle", SurvivalVisuals.PinBuild);
+            Anchor(_badgeIcon.rectTransform, -0.05f, -0.15f, 0.40f, 1.15f);
             _badgeText = HookSkin.Outlined(SurvivalVisuals.Text(_badge, "Count", "1", 36, TextAnchor.MiddleCenter, Color.white));
             Anchor(_badgeText.rectTransform, 0.40f, 0f, 1f, 1f);
 
@@ -282,6 +292,89 @@ namespace Survival.Unity
             _bars[id] = bar;
         }
 
+        /// <summary>
+        /// A fighter's HP bar as the configured battle draws it (#76): vertical, beside the body on its own outer side
+        /// (the hero's left, a foe's right), filling bottom to top, with the HP number on top.
+        /// </summary>
+        private void AddSideBar(int id, bool hero, RunnerRig rig, bool boss)
+        {
+            if (_worldUi == null || _bars.ContainsKey(id))
+            {
+                return;
+            }
+
+            var root = SurvivalVisuals.Image(_worldUi, hero ? "HeroHp" : "FoeHp", hero ? new Color(0.85f, 0.72f, 0.38f, 1f) : new Color(0.55f, 0.16f, 0.14f, 1f)).rectTransform;
+            root.anchorMin = root.anchorMax = Vector2.zero;
+            root.pivot = new Vector2(0.5f, 0f);
+            root.sizeDelta = new Vector2(RunnerSideBar.WidthPx, RunnerSideBar.MinHeightPx);
+            var back = SurvivalVisuals.Image(root, "Back", new Color(0.05f, 0.05f, 0.08f, 0.9f));
+            Anchor(back.rectTransform, 0f, 0f, 1f, 1f);
+            back.rectTransform.offsetMin = new Vector2(3f, 3f);
+            back.rectTransform.offsetMax = new Vector2(-3f, -3f);
+            var fill = SurvivalVisuals.Image(back.transform, "Fill", hero ? HeroFill : FoeFill);
+            Anchor(fill.rectTransform, 0f, 0f, 1f, 1f);
+            var number = HookSkin.Outlined(SurvivalVisuals.Text(root, "Hp", "", boss ? 26 : 20, TextAnchor.LowerCenter, Color.white), 1.5f);
+            var nrt = number.rectTransform;
+            nrt.anchorMin = nrt.anchorMax = new Vector2(0.5f, 1f);
+            nrt.pivot = new Vector2(0.5f, 0f);
+            nrt.sizeDelta = new Vector2(110f, 30f);
+            nrt.anchoredPosition = new Vector2(0f, 4f);
+            _bars[id] = new WorldBar
+            {
+                Root = root, Fill = fill, Number = number, Boss = boss, Height = rig.Height, Side = true, Hero = hero, Rig = rig,
+                HalfWidth = RunnerSideBar.HalfWidth(rig.Height),
+            };
+        }
+
+        /// <summary>Stand a side bar beside its fighter: foot from the battle's layout, height from the projected body.</summary>
+        private bool PlaceSideBar(WorldBar bar, Vector3 origin, float fraction)
+        {
+            var scale = bar.Rig != null ? LockedBattleRoster.BattleScaleOf(bar.Rig.Data) * (bar.Boss ? BossScale : 1f) : 1f;
+            var (dx, dz) = RunnerSideBar.WorldOffset(bar.Hero, bar.HalfWidth, scale);
+            var (bottom, top) = RunnerSideBar.Span(bar.Height);
+            var foot = new Vector3(origin.x + dx, 0f, origin.z + dz);
+            var low = _cam!.WorldToScreenPoint(foot + (Vector3.up * bottom));
+            var high = _cam.WorldToScreenPoint(foot + (Vector3.up * top));
+            if (low.z <= 0.1f || high.z <= 0.1f)
+            {
+                return false;
+            }
+
+            var canvas = _hud!.GetComponent<Canvas>();
+            var k = canvas != null && canvas.scaleFactor > 0f ? canvas.scaleFactor : 1f;
+            var height = RunnerSideBar.HeightPx(Mathf.Abs(high.y - low.y) / k);
+            bar.Root.anchorMin = bar.Root.anchorMax = Vector2.zero;
+            bar.Root.anchoredPosition = new Vector2((low.x + high.x) * 0.5f / k, (((low.y + high.y) * 0.5f) / k) - (height * 0.5f));
+            bar.Root.sizeDelta = new Vector2(RunnerSideBar.WidthPx, height);
+            bar.Fill.rectTransform.anchorMax = new Vector2(1f, Mathf.Max(0.001f, fraction));
+            return low.x > -200f && low.x < Screen.width + 200f && low.y > -200f && low.y < Screen.height + 200f;
+        }
+
+        /// <summary>Widest sideways reach of the rendered body, measured over its first second (the battle does the same).</summary>
+        private static void MeasureBar(WorldBar bar)
+        {
+            if (bar.Rig == null || bar.Rig.Host == null || bar.MeasureAge > 1f)
+            {
+                return;
+            }
+
+            bar.MeasureAge += Time.deltaTime;
+            var origin = bar.Rig.Slot.position;
+            var widest = 0f;
+            foreach (var r in bar.Rig.Host.GetComponentsInChildren<Renderer>(false))
+            {
+                if (!r.enabled || (!(r is SkinnedMeshRenderer) && !(r is MeshRenderer)))
+                {
+                    continue;
+                }
+
+                var bb = r.bounds;
+                widest = Mathf.Max(widest, Mathf.Abs(bb.min.x - origin.x), Mathf.Abs(bb.max.x - origin.x));
+            }
+
+            bar.HalfWidth = Mathf.Max(bar.HalfWidth, Mathf.Min(widest, 2.5f));
+        }
+
         /// <summary>What a box pays, drawn over its bar: hero portrait + "+3", or the upgrade %.</summary>
         private RectTransform RewardTag(RectTransform bar, RunnerBoxDef def)
         {
@@ -303,17 +396,23 @@ namespace Survival.Unity
                     break;
                 default:
                 {
-                    var roster = _catalog != null ? _catalog.Unit(def.Unit).Roster : def.Unit;
-                    label = def.Kind == RunnerBoxKind.Hero ? HeroName(def.Unit) : Fmt("runner.box.followers", "+{0}", def.Count);
-                    icon = RunnerArtKeys.Portrait(roster);
+                    // The unit itself stands caged on the box in 3D (see BuildBox); the tag only says how many.
+                    label = def.Kind == RunnerBoxKind.Hero ? HeroName(def.Unit) : Fmt("runner.box.followers", "+{0}", def.Count) + " " + HeroName(def.Unit);
+                    icon = string.Empty;
                     break;
                 }
             }
 
-            var art = HookSkin.Art(tag, "Icon", icon, SurvivalVisuals.Gold);
-            Anchor(art.rectTransform, -0.05f, -0.15f, 0.38f, 1.15f);
+            var textLeft = 0.04f;
+            if (icon.Length > 0)
+            {
+                var art = HookSkin.Art(tag, "Icon", icon, SurvivalVisuals.Gold);
+                Anchor(art.rectTransform, -0.05f, -0.15f, 0.38f, 1.15f);
+                textLeft = 0.36f;
+            }
+
             var text = HookSkin.Outlined(SurvivalVisuals.Text(tag, "Text", label, 24, TextAnchor.MiddleCenter, def.Kind == RunnerBoxKind.Rate ? new Color(0.6f, 0.92f, 1f, 1f) : SurvivalVisuals.Reward));
-            Anchor(text.rectTransform, 0.36f, 0f, 1f, 1f);
+            Anchor(text.rectTransform, textLeft, 0f, 0.96f, 1f);
             return tag;
         }
 
@@ -353,6 +452,40 @@ namespace Survival.Unity
                     at = new Vector3(b.X, bar.Height + 0.25f, b.Z);
                     fraction = b.HpFraction;
                     hp = b.Hp;
+                }
+                else if (bar.Side)
+                {
+                    Vector3 origin;
+                    if (bar.Hero)
+                    {
+                        var m = _run.Member(pair.Key);
+                        if (m == null)
+                        {
+                            continue;
+                        }
+
+                        origin = new Vector3(m.X, 0f, m.Z);
+                        fraction = Mathf.Clamp01(m.Hp / (float)Mathf.Max(1, m.Unit.Hp));
+                        hp = m.Hp;
+                    }
+                    else
+                    {
+                        var f = _run.Foe(pair.Key);
+                        if (f == null)
+                        {
+                            continue;
+                        }
+
+                        origin = new Vector3(f.X, 0f, f.Z);
+                        fraction = f.HpFraction;
+                        hp = f.Hp;
+                    }
+
+                    MeasureBar(bar);
+                    var shown = (bar.Rig == null || !bar.Rig.Dead) && PlaceSideBar(bar, origin, fraction);
+                    bar.Root.gameObject.SetActive(shown);
+                    bar.Number.text = hp.ToString(CultureInfo.InvariantCulture);
+                    continue;
                 }
                 else
                 {

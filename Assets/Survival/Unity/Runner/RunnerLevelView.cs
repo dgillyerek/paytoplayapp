@@ -30,9 +30,16 @@ namespace Survival.Unity
         public const string SceneName = "RunnerLevel";
         public const string ScenePath = "Assets/Survival/Runner/RunnerLevel.unity";
 
-        private const float CameraHeight = 9.2f;
-        private const float CameraBack = 7.6f;
-        private const float CameraLookAhead = 7.0f;
+        // Behind / above, a quarter turn off the centre line: the squad reads as 3D bodies in 3/4 from behind, the
+        // foes coming down the road in 3/4 from the front (about 26 degrees down).
+        private const float CameraHeight = 6.4f;
+        private const float CameraBack = 7.0f;
+        private const float CameraSide = -1.8f;
+        private const float CameraLookAhead = 6.5f;
+        private const float CameraLookHeight = 0.9f;
+
+        /// <summary>The unit a follower / hero box pays stands on its lid at this share of battle size.</summary>
+        private const float CaptiveScale = 0.72f;
         private const float KeySteerSpeed = 7.5f;
         private const float DragMetresPerScreen = 9.5f;
         private const float ShotHeight = 1.15f;
@@ -242,6 +249,11 @@ namespace Survival.Unity
                 r.Late(dt);
             }
 
+            foreach (var b in _boxes.Values)
+            {
+                b.Captive?.Late(dt);
+            }
+
             for (var i = _dying.Count - 1; i >= 0; i--)
             {
                 var r = _dying[i];
@@ -392,6 +404,10 @@ namespace Survival.Unity
                         rig.Slot.rotation = Quaternion.identity;
                         rig.Walk();
                         _members[m.Id] = rig;
+                        if (m.IsHero)
+                        {
+                            AddSideBar(m.Id, true, rig, false);
+                        }
                     }
                 }
             }
@@ -408,7 +424,7 @@ namespace Survival.Unity
                         rig.Slot.rotation = Quaternion.Euler(0f, 180f, 0f);
                         rig.Rest();
                         _foes[f.Id] = rig;
-                        AddBar(f.Id, false, rig.Height, f.Boss);
+                        AddSideBar(f.Id, false, rig, f.Boss);
                     }
                 }
             }
@@ -418,8 +434,9 @@ namespace Survival.Unity
             {
                 if (!_boxes.ContainsKey(b.Id))
                 {
-                    _boxes[b.Id] = BuildBox(b);
-                    AddBar(b.Id, true, BoxView.Size * 0.95f, false);
+                    var view = BuildBox(b);
+                    _boxes[b.Id] = view;
+                    AddBar(b.Id, true, view.Top, false);
                 }
             }
 
@@ -430,6 +447,7 @@ namespace Survival.Unity
                     var v = _boxes[id];
                     _boxes.Remove(id);
                     RemoveBar(id);
+                    v.Captive?.Destroy();
                     if (v.Root != null)
                     {
                         Destroy(v.Root.gameObject);
@@ -653,6 +671,7 @@ namespace Survival.Unity
                         if (_boxes.TryGetValue(e.Id, out var box))
                         {
                             box.Punch = 1f;
+                            box.Captive?.Hit(null, Vector3.forward, 0.35f);
                         }
 
                         HitNumber(at + (Vector3.up * BoxView.Size), (int)e.Amount, e.Big, true);
@@ -768,7 +787,7 @@ namespace Survival.Unity
 
             _cam.clearFlags = CameraClearFlags.SolidColor;
             _cam.backgroundColor = LockedBattleGround.Horizon;
-            _cam.fieldOfView = 50f;
+            _cam.fieldOfView = 48f;
             _cam.nearClipPlane = 0.2f;
             _cam.farClipPlane = 120f;
             _cam.enabled = true;
@@ -815,8 +834,8 @@ namespace Survival.Unity
 
             var boss = _run != null && _run.Blocked && _run.Foes.Count > 0 && _run.Foes[0].Boss;
             var back = CameraBack + (boss ? 1.4f : 0f);
-            var pos = _camFocus + new Vector3(0f, CameraHeight + (boss ? 0.8f : 0f), -back);
-            var look = _camFocus + new Vector3(0f, 0.6f, CameraLookAhead);
+            var pos = _camFocus + new Vector3(CameraSide, CameraHeight + (boss ? 0.8f : 0f), -back);
+            var look = _camFocus + new Vector3(0f, CameraLookHeight + (boss ? 0.6f : 0f), CameraLookAhead);
             _cam.transform.position = pos;
             _cam.transform.rotation = Quaternion.LookRotation(look - pos, Vector3.up);
             _cam.transform.position += _cam.transform.rotation * jitter;
@@ -954,6 +973,12 @@ namespace Survival.Unity
             public Transform Root = null!;
             public SpriteRenderer? Sprite;
             public float Punch;
+
+            /// <summary>The 3D unit the box pays (follower and hero boxes), standing on the lid until the box breaks.</summary>
+            public RunnerRig? Captive;
+
+            /// <summary>Top of the box and whatever stands on it, metres (the HP bar sits above it).</summary>
+            public float Top = Size * 0.95f;
         }
 
         private BoxView BuildBox(RunnerBox b)
@@ -961,7 +986,22 @@ namespace Survival.Unity
             var root = Billboard(_actors!, "Box", b.Def.ArtKey, new Vector3(b.X, 0f, b.Z), BoxView.Size, new Color(0.6f, 0.42f, 0.2f, 1f));
             LockedBattleGround.AddContactShadow(root, BoxView.Size, BoxView.Size * 0.7f);
             _boxDefs[b.Id] = b.Def;
-            return new BoxView { Root = root, Sprite = root.GetComponentInChildren<SpriteRenderer>() };
+            var view = new BoxView { Root = root, Sprite = root.GetComponentInChildren<SpriteRenderer>() };
+            if (b.Def.GivesUnits && _catalog != null && _actors != null)
+            {
+                // The real battle rig of what's inside (not its portrait): rest pose on the lid, facing the squad.
+                var captive = RunnerRig.Spawn(_catalog.Unit(b.Def.Unit).Roster, _actors, "Captive_" + b.Def.Unit + "_" + b.Id, CaptiveScale);
+                if (captive != null)
+                {
+                    captive.Slot.position = new Vector3(b.X, BoxView.Size * 0.5f, b.Z + 0.15f);
+                    captive.Slot.rotation = Quaternion.Euler(0f, 180f, 0f);
+                    captive.Rest();
+                    view.Captive = captive;
+                    view.Top = (BoxView.Size * 0.5f) + captive.Height + 0.1f;
+                }
+            }
+
+            return view;
         }
 
         private sealed class ShotView
