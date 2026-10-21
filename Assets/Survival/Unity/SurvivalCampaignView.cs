@@ -1656,6 +1656,7 @@ namespace Survival.Unity
             var celebrateTitle = result.Won ? S("campaign.victory", "VICTORY!") : S("campaign.consolation", "Consolation");
             var collect = SheetButton(panel, "Collect", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, result.Won ? 0.25f : 0.52f, 0.06f, result.Won ? 0.75f : 0.96f, 0.15f, 34, out var collectBtn);
             collect.text = S("campaign.collect", "COLLECT");
+            FitButtonLabel(collect, 34);
             Wire(collectBtn, () =>
             {
                 CloseScreen();
@@ -1665,6 +1666,7 @@ namespace Survival.Unity
             {
                 var up = SheetButton(panel, "Upgrade", HookArtKeys.ButtonBlue, HeroFrame, 0.04f, 0.06f, 0.48f, 0.15f, 28, out var upBtn);
                 up.text = S("campaign.upgrade", "UPGRADE HEROES");
+                FitButtonLabel(up, 28);
                 Wire(upBtn, () =>
                 {
                     CelebrateOrRelease(celebrateTitle, rows);
@@ -1754,6 +1756,16 @@ namespace Survival.Unity
                 stars[i].color = i < count ? StarOn : StarOff;
                 stars[i].gameObject.SetActive(count > 0);
             }
+        }
+
+        /// <summary>
+        /// Shrink a sheet button's label to fit inside the painted rim (best fit, never above its design size), so long
+        /// labels like "UPGRADE HEROES" don't spill past a half-width button on narrow phones.
+        /// </summary>
+        private static void FitButtonLabel(Text label, int size)
+        {
+            HookSkin.Fit(label, Mathf.Max(12, Mathf.RoundToInt(size * 0.5f)), size);
+            HookSkin.PadLabel(label.rectTransform, 0.07f, 0.12f);
         }
 
         private static Text SheetButton(RectTransform parent, string name, string key, Color fallback, float x0, float y0, float x1, float y1, int size, out Button button)

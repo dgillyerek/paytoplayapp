@@ -867,26 +867,9 @@ namespace Survival.Unity
             return btn;
         }
 
-        /// <summary>Best-fit a label into its rect (shrinks between min and max instead of spilling over the edges).</summary>
-        private static Text Fit(Text text, int min, int max)
-        {
-            text.horizontalOverflow = HorizontalWrapMode.Wrap;
-            text.verticalOverflow = VerticalWrapMode.Truncate;
-            text.resizeTextForBestFit = true;
-            text.resizeTextMinSize = min;
-            text.resizeTextMaxSize = max;
-            return text;
-        }
+        private static Text Fit(Text text, int min, int max) => HookSkin.Fit(text, min, max);
 
-        /// <summary>Stretch a label over its button, inset so it clears the painted rim.</summary>
-        private static void Pad(RectTransform rect)
-        {
-            SurvivalVisuals.Stretch(rect);
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
-            rect.anchorMin = new Vector2(0.08f, 0.14f);
-            rect.anchorMax = new Vector2(0.92f, 0.86f);
-        }
+        private static void Pad(RectTransform rect) => HookSkin.PadLabel(rect);
     }
 
     /// <summary>Slow spin for the victory rays.</summary>

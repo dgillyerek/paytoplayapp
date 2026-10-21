@@ -11,9 +11,11 @@ namespace Survival.Unity
 {
     /// <summary>
     /// Play's way into the runner: a painted "Runner" event button (hud slot runner_button) that loads RunnerLevel
-    /// additively. Play stays loaded; it is only hidden once the runner scene (with its own camera) is in, and shown
-    /// again before the runner unloads, so a camera is rendering every frame. Every finished run, retries included,
-    /// is paid once on the way back through the village celebration (wallet + hero shards, saved with the heroes).
+    /// additively. Both ways go through the shared painted loading screen (#76's BattleLoadingScreen). Its floor
+    /// camera renders the whole hand-off, so Display 1 never shows "No cameras rendering". Play is hidden only once
+    /// the screen covers it, and the screen only fades once the destination scene's camera has drawn a frame. Every
+    /// finished run, retries included, is paid once on the way back through the village celebration (wallet + hero
+    /// shards, saved with the heroes).
     /// </summary>
     public sealed class SurvivalRunnerEntry : MonoBehaviour
     {
@@ -25,6 +27,7 @@ namespace Survival.Unity
         private SurvivalCampaignView? _campaign;
         private ThemePackBinder? _pack;
         private bool _busy;
+        private int _trips;
 
         public RectTransform? Button { get; private set; }
 
@@ -69,26 +72,52 @@ namespace Survival.Unity
             }
 
             var unlocked = _campaign != null && _campaign.Campaign != null ? _campaign.Campaign.RunnerUnlocked : 1;
-            StartCoroutine(RunRunner(LevelFor(unlocked), unlocked));
+            var (catalog, level) = LevelFor(unlocked);
+            StartCoroutine(RunRunner(catalog, level, level?.Id ?? "runner.thornwood_road", unlocked));
         }
 
-        /// <summary>Id of runner level <paramref name="unlocked"/> (clamped to the levels there are); Thornwood Road when the catalog is unreadable.</summary>
-        private static string LevelFor(int unlocked)
+        /// <summary>Runner level <paramref name="unlocked"/> (clamped to the levels there are); none when the catalog is unreadable (Thornwood Road opens).</summary>
+        private static (RunnerCatalog? Catalog, RunnerLevelDef? Level) LevelFor(int unlocked)
         {
             try
             {
                 var path = System.IO.Path.Combine(SurvivalBootstrap.ResolveCatalogDir(), RunnerCatalog.FileName);
                 var catalog = RunnerCatalog.Parse(System.IO.File.ReadAllText(path));
-                return catalog.ByNumber(unlocked).Id;
+                return (catalog, catalog.ByNumber(unlocked));
             }
             catch (System.Exception ex)
             {
                 Debug.LogWarning("Runner: level list unreadable, opening Level 1. " + ex.Message);
-                return "runner.thornwood_road";
+                return (null, null);
             }
         }
 
-        private IEnumerator RunRunner(string levelId, int unlocked)
+        private string S(string key, string fallback) => _pack != null ? _pack.StringOr(key, fallback) : fallback;
+
+        private string LevelName(RunnerLevelDef? level) =>
+            level == null ? S("runner.level.thornwood_road", "Thornwood Road") : S(level.Title, level.DisplayName.Length > 0 ? level.DisplayName : "Runner");
+
+        private string Tip(string levelId)
+        {
+            var tips = new List<string>();
+            for (var i = 1; i <= RunnerLoading.TipCount; i++)
+            {
+                var t = S(RunnerLoading.TipPrefix + i, "");
+                if (t.Length > 0)
+                {
+                    tips.Add(t);
+                }
+            }
+
+            if (tips.Count == 0)
+            {
+                tips.Add("Steer through boxes to grow your squad.");
+            }
+
+            return Survival.Domain.Campaign.BattleTransition.Tip(tips, Survival.Domain.Campaign.BattleTransition.StableSeed(levelId) + _trips);
+        }
+
+        private IEnumerator RunRunner(RunnerCatalog? catalog, RunnerLevelDef? level, string levelId, int unlocked)
         {
             if (!Application.CanStreamedLevelBeLoaded(RunnerLevelView.SceneName))
             {
@@ -102,23 +131,47 @@ namespace Survival.Unity
             }
 
             _busy = true;
+            _trips++;
             _campaign?.SaveNow();
             var playScene = gameObject.scene;
+            var levelName = LevelName(level);
+            var tip = Tip(levelId);
+            var vs = S("battle.loading.vs", "VS");
+            var info = catalog != null && level != null
+                ? RunnerLoading.Into(catalog, level, levelName, S(RunnerLoading.IntoKey, "Onto the road!"), tip)
+                : RunnerLoading.Back(S(RunnerLoading.IntoKey, "Onto the road!"), levelName, tip);
+
+            // The painted loading screen's floor camera keeps Display 1 rendering while Play's cameras are off and
+            // the runner's camera doesn't exist yet. Play is only hidden once the screen covers it.
+            var into = BattleLoadingScreen.Show(info, vs);
+            yield return into.WaitCovered();
             var render = Capture();
+            var hidden = Hide(playScene);
             RunnerHandoff.Begin(levelId, unlocked);
             var load = SceneManager.LoadSceneAsync(RunnerLevelView.SceneName, LoadSceneMode.Additive);
             while (load != null && !load.isDone)
             {
+                into.Progress(load.progress);
                 yield return null;
             }
 
+            into.Progress(1f);
             var runner = SceneManager.GetSceneByName(RunnerLevelView.SceneName);
-            var hidden = new List<Behaviour>();
             if (runner.IsValid() && runner.isLoaded)
             {
-                // The runner's camera exists now; hide Play in the same frame.
-                hidden = Hide(playScene);
                 SceneManager.SetActiveScene(runner);
+                into.RevealOnFirstFrameOf(runner);
+            }
+            else
+            {
+                // Load failed: bring Play straight back under the screen.
+                Show(hidden);
+                hidden.Clear();
+                render();
+                into.RevealOnFirstFrameOf(playScene);
+                RunnerHandoff.Take();
+                _busy = false;
+                yield break;
             }
 
             while (!RunnerHandoff.Done && runner.IsValid() && runner.isLoaded)
@@ -126,15 +179,18 @@ namespace Survival.Unity
                 yield return null;
             }
 
-            // Play back on first, then the runner goes.
-            foreach (var b in hidden)
+            // The way back: cover the runner, unload it, then Play's cameras come back and the screen fades on their
+            // first frame.
+            var results = new List<RunnerResult>();
+            foreach (var r in RunnerHandoff.Runs)
             {
-                if (b != null)
-                {
-                    b.enabled = true;
-                }
+                results.Add(r.Result);
             }
 
+            var headlineKey = RunnerLoading.BackHeadlineKey(results);
+            var headline = headlineKey == RunnerLoading.VictoryKey ? S(headlineKey, "Victory!") : headlineKey == RunnerLoading.DefeatKey ? S(headlineKey, "Defeat") : S(headlineKey, "Back to the village");
+            var back = BattleLoadingScreen.Show(RunnerLoading.Back(headline, levelName, Tip(levelId + ".back")), vs);
+            yield return back.WaitCovered();
             if (playScene.IsValid())
             {
                 SceneManager.SetActiveScene(playScene);
@@ -145,11 +201,15 @@ namespace Survival.Unity
                 var unload = SceneManager.UnloadSceneAsync(runner);
                 while (unload != null && !unload.isDone)
                 {
+                    back.Progress(unload.progress);
                     yield return null;
                 }
             }
 
+            back.Progress(1f);
             render();
+            Show(hidden);
+            back.RevealOnFirstFrameOf(playScene);
             _busy = false;
             Pay(RunnerHandoff.Take());
         }
@@ -192,6 +252,17 @@ namespace Survival.Unity
             else
             {
                 Grant();
+            }
+        }
+
+        private static void Show(List<Behaviour> hidden)
+        {
+            foreach (var b in hidden)
+            {
+                if (b != null)
+                {
+                    b.enabled = true;
+                }
             }
         }
 

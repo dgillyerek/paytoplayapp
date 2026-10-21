@@ -1,23 +1,25 @@
 #nullable enable
 using System;
+using Survival.Domain.Campaign;
 
 namespace Survival.Domain.Runner
 {
     /// <summary>
-    /// Where a runner fighter's HP bar sits, following the configured battle's side bars (#76's BattleHpBarLayout):
-    /// a vertical bar beside the body on its own outer side (heroes their left, foes their right), nudged back, its
-    /// height following the body, drawn in screen space and clamped to a pixel height. Same numbers as the
-    /// battle so the two read alike; swap to BattleHpBarLayout once that lands on main. Offsets are metres in the
-    /// fighter's facing frame (x = its right, z = its forward).
+    /// Where a runner fighter's HP bar sits and how it looks. The layout is the configured battle's shared
+    /// <see cref="BattleHpBarLayout"/> (a vertical bar beside the body on its own outer side, heroes their left, foes
+    /// their right, nudged back, its height following the body). The runner has no lanes, so the bar always clears
+    /// the body sideways. Only the style is the runner's own: a thin sliver, short, semi-transparent, and faded in
+    /// only while the unit is taking damage (Derek: "less conspicuous"). Offsets are metres in the fighter's facing
+    /// frame (x = its right, z = its forward).
     /// </summary>
     public static class RunnerSideBar
     {
-        public const float GapMetres = 0.18f;
-        public const float BackMetres = 0.3f;
-        public const float BottomShare = 0.12f;
-        public const float TopShare = 0.88f;
-        // The runner's bars are the battle's layout, slimmed down (Derek: "less conspicuous"): a 6 px sliver, short,
-        // semi-transparent, and only there while something is taking damage (see Alpha).
+        public const float GapMetres = BattleHpBarLayout.GapMetres;
+        public const float BackMetres = BattleHpBarLayout.BackMetres;
+        public const float BottomShare = BattleHpBarLayout.BottomShare;
+        public const float TopShare = BattleHpBarLayout.TopShare;
+
+        // The runner's style: a 6 px sliver, short, semi-transparent, only there while something takes damage.
         public const float WidthPx = 6f;
         public const float MinHeightPx = 34f;
         public const float MaxHeightPx = 110f;
@@ -31,6 +33,9 @@ namespace Survival.Domain.Runner
 
         /// <summary>Fade-in after a hit (so it doesn't pop).</summary>
         public const float RiseSeconds = 0.08f;
+
+        /// <summary>The runner's road has no lanes: the bar never has to fold back to fit one.</summary>
+        private const float NoLane = float.MaxValue;
 
         /// <summary>
         /// How visible a unit's or box's bar is: hidden at full HP (and once dead), in at <see cref="ShownAlpha"/> as
@@ -50,17 +55,14 @@ namespace Survival.Domain.Runner
         }
 
         /// <summary>Body half-width before the mesh is measured (the battle's estimate for upright bodies).</summary>
-        public static float HalfWidth(float bodyHeightMetres) => Math.Max(0.05f, bodyHeightMetres) * 0.32f;
+        public static float HalfWidth(float bodyHeightMetres) => BattleHpBarLayout.EstimatedHalfWidth(Math.Max(0.05f, bodyHeightMetres), 1f, false);
 
         /// <summary>-1 = the fighter's own left (heroes), +1 = its own right (foes).</summary>
-        public static float SideSign(bool hero) => hero ? -1f : 1f;
+        public static float SideSign(bool hero) => BattleHpBarLayout.SideSign(Side(hero));
 
-        /// <summary>Foot of the bar from the fighter's origin in its facing frame.</summary>
-        public static (float Right, float Forward) Offset(bool hero, float halfWidthMetres, float scale)
-        {
-            var s = Math.Max(0.01f, scale);
-            return (SideSign(hero) * (Math.Max(0f, halfWidthMetres) + (GapMetres * s)), -BackMetres * s);
-        }
+        /// <summary>Foot of the bar from the fighter's origin in its facing frame (the battle's layout, lane-free).</summary>
+        public static (float Right, float Forward) Offset(bool hero, float halfWidthMetres, float scale) =>
+            BattleHpBarLayout.Offset(Side(hero), halfWidthMetres, scale, NoLane);
 
         /// <summary>
         /// The same offset in runner world space (x across the road, z down it): heroes face +z, foes face -z, so
@@ -72,12 +74,12 @@ namespace Survival.Domain.Runner
             return hero ? (right, forward) : (-right, -forward);
         }
 
-        public static (float Bottom, float Top) Span(float bodyHeightMetres)
-        {
-            var h = Math.Max(0.1f, bodyHeightMetres);
-            return (h * BottomShare, h * TopShare);
-        }
+        /// <summary>Bottom and top of the bar above the ground (the battle's span; runner heights are already scaled).</summary>
+        public static (float Bottom, float Top) Span(float bodyHeightMetres) => BattleHpBarLayout.Span(bodyHeightMetres, 1f);
 
+        /// <summary>On-screen height, clamped to the runner's short sliver range.</summary>
         public static float HeightPx(float projectedPx) => Math.Min(MaxHeightPx, Math.Max(MinHeightPx, projectedPx));
+
+        private static CampaignSide Side(bool hero) => hero ? CampaignSide.Hero : CampaignSide.Villain;
     }
 }
