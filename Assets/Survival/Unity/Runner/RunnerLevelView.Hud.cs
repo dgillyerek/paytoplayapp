@@ -20,7 +20,8 @@ namespace Survival.Unity
     {
         private static readonly Color Ink = new Color(0.12f, 0.07f, 0.02f, 1f);
         private static readonly Color FoeFill = new Color(1f, 0.42f, 0.32f, 1f);
-        private static readonly Color HeroFill = new Color(0.45f, 0.9f, 0.4f, 1f);
+        private static readonly Color HeroFill = new Color(0.36f, 0.86f, 0.42f, 1f);
+        private static readonly Color BattleVillainFill = new Color(0.92f, 0.30f, 0.32f, 1f);
 
         private RectTransform? _hud;
         private RectTransform? _worldUi;
@@ -303,7 +304,9 @@ namespace Survival.Unity
                 return;
             }
 
-            var root = SurvivalVisuals.Image(_worldUi, hero ? "HeroHp" : "FoeHp", hero ? new Color(0.85f, 0.72f, 0.38f, 1f) : new Color(0.55f, 0.16f, 0.14f, 1f)).rectTransform;
+            // The configured battle's frame and fill colours (navy hero frame / purple villain frame, green / red fill).
+            var rgb = hero ? CampaignArtKeys.HeroFrameRgb : CampaignArtKeys.VillainFrameRgb;
+            var root = SurvivalVisuals.Image(_worldUi, hero ? "HeroHp" : "FoeHp", new Color(rgb[0], rgb[1], rgb[2], 1f)).rectTransform;
             root.anchorMin = root.anchorMax = Vector2.zero;
             root.pivot = new Vector2(0.5f, 0f);
             root.sizeDelta = new Vector2(RunnerSideBar.WidthPx, RunnerSideBar.MinHeightPx);
@@ -311,7 +314,7 @@ namespace Survival.Unity
             Anchor(back.rectTransform, 0f, 0f, 1f, 1f);
             back.rectTransform.offsetMin = new Vector2(3f, 3f);
             back.rectTransform.offsetMax = new Vector2(-3f, -3f);
-            var fill = SurvivalVisuals.Image(back.transform, "Fill", hero ? HeroFill : FoeFill);
+            var fill = SurvivalVisuals.Image(back.transform, "Fill", hero ? HeroFill : BattleVillainFill);
             Anchor(fill.rectTransform, 0f, 0f, 1f, 1f);
             var number = HookSkin.Outlined(SurvivalVisuals.Text(root, "Hp", "", boss ? 26 : 20, TextAnchor.LowerCenter, Color.white), 1.5f);
             var nrt = number.rectTransform;

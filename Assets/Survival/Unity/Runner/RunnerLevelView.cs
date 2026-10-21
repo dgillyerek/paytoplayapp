@@ -32,10 +32,11 @@ namespace Survival.Unity
 
         // Behind / above, a quarter turn off the centre line: the squad reads as 3D bodies in 3/4 from behind, the
         // foes coming down the road in 3/4 from the front (about 26 degrees down).
-        private const float CameraHeight = 6.4f;
-        private const float CameraBack = 7.0f;
-        private const float CameraSide = -1.8f;
-        private const float CameraLookAhead = 6.5f;
+        // Framed on the middle of the squad (not the leader) so a 10-strong formation's back row stays in shot.
+        private const float CameraHeight = 7.6f;
+        private const float CameraBack = 10.0f;
+        private const float CameraSide = -1.2f;
+        private const float CameraLookAhead = 5.0f;
         private const float CameraLookHeight = 0.9f;
 
         /// <summary>The unit a follower / hero box pays stands on its lid at this share of battle size.</summary>
@@ -787,7 +788,7 @@ namespace Survival.Unity
 
             _cam.clearFlags = CameraClearFlags.SolidColor;
             _cam.backgroundColor = LockedBattleGround.Horizon;
-            _cam.fieldOfView = 48f;
+            _cam.fieldOfView = 52f;
             _cam.nearClipPlane = 0.2f;
             _cam.farClipPlane = 120f;
             _cam.enabled = true;
@@ -806,8 +807,15 @@ namespace Survival.Unity
                 return Vector3.zero;
             }
 
-            // Ride a little toward the steer side, never the full lane, so the squad stays centred.
-            return new Vector3(_run.Hero.X * 0.45f, 0f, _run.Distance);
+            // Ride a little toward the steer side, never the full lane, so the squad stays centred; halfway between
+            // the leader and the back row.
+            var back = _run.Distance;
+            foreach (var m in _run.Squad)
+            {
+                back = Mathf.Min(back, m.Z);
+            }
+
+            return new Vector3(_run.Hero.X * 0.45f, 0f, (_run.Distance + back) * 0.5f);
         }
 
         private void FollowCamera(float dt)
@@ -880,7 +888,8 @@ namespace Survival.Unity
             var dirtTex = LockedBattleGround.Load(LockedBattleGroundSpec.DirtTrackRel);
             var road = LockedBattleGround.Quad(_world!, "RunnerRoad", (level.HalfWidth * 2f) + 1.4f, length, 0f, 0.004f, mid);
             var dirtMat = LockedBattleGround.Lit(dirtTex, new Color(0.58f, 0.52f, 0.38f, 0.9f), true);
-            LockedBattleGround.Tile(dirtMat, 2f, length / 5f);
+            // One worn track across the whole road (the tile is a single track with soft alpha edges; two side by side read as twin paths).
+            LockedBattleGround.Tile(dirtMat, 1f, length / 8f);
             road.sharedMaterial = dirtMat;
             road.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
