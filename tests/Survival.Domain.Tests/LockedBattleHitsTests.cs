@@ -61,17 +61,27 @@ public sealed class LockedBattleHitsTests
         Assert.Equal(11f / 30f, LockedBattleHits.Ironhowl.MeleeContactSeconds, 4);
     }
 
-    [Theory]
-    [InlineData("Nightfang")]
-    // Ironhowl rotates three attacks (LockedBattleRotationTests).
-    public void Melee_lands_once_per_attack_cycle_on_its_contact_frame_and_never_in_the_rest_gap(string name)
+    [Fact]
+    // Nightfang and Ironhowl rotate three attacks (LockedBattleRotationTests, CreatureExtraAttackTests).
+    public void Nightfang_lands_every_rotation_hit_once_on_its_frame_and_never_in_the_rest_gap()
     {
-        var fighter = Fighter(name);
-        var profile = LockedBattleHits.ProfileOf(name);
+        var fighter = Fighter("Nightfang");
+        var profile = LockedBattleHits.ProfileOf("Nightfang");
+        var rotation = LockedBattleRotation.RotationSeconds(fighter);
+        var expected = new List<float>();
+        for (var i = 0; i < LockedBattleRotation.Count(fighter); i++)
+        {
+            for (var h = 0; h < LockedBattleRotation.HitCount(fighter, profile, i); h++)
+            {
+                expected.Add(LockedBattleRotation.OffsetSeconds(fighter, i) + (LockedBattleRotation.HitFrame(fighter, profile, i, h) / 30f));
+            }
+        }
+
+        expected.Sort();
         var hits = new List<float>();
         var dt = 1f / 60f;
         var previous = 0f;
-        for (var i = 1; i <= 600; i++)
+        for (var i = 1; i <= 60 * 20; i++)
         {
             var now = i * dt;
             if (LockedBattleHits.MeleeHitCrossed(fighter, profile, previous, now))
@@ -82,17 +92,21 @@ public sealed class LockedBattleHitsTests
             previous = now;
         }
 
-        var cycles = (int)Math.Floor(((600 * dt) - profile.MeleeContactSeconds) / fighter.AttackCycleSeconds) + 1;
-        Assert.Equal(cycles, hits.Count);
-        for (var n = 0; n < hits.Count; n++)
+        var passes = (int)Math.Floor((60 * 20 * dt) / rotation);
+        Assert.True(hits.Count >= passes * expected.Count, "hits " + hits.Count);
+        for (var n = 0; n < passes * expected.Count; n++)
         {
-            var expected = (n * fighter.AttackCycleSeconds) + profile.MeleeContactSeconds;
-            Assert.InRange(hits[n], expected, expected + dt + 1e-4f);
-            Assert.True(LockedBattleRoster.InAttackClip(fighter, hits[n]), name + " hit in rest gap at " + hits[n]);
+            var want = ((n / expected.Count) * rotation) + expected[n % expected.Count];
+            Assert.InRange(hits[n], want, want + dt + 1e-3f);
+            Assert.True(LockedBattleRoster.InAttackClip(fighter, hits[n]), "Nightfang hit in rest gap at " + hits[n]);
         }
 
+        // Attack 1 still lands on the locked claw-rake frame.
+        Assert.Equal(LockedBattleHits.NightfangContactFrame, LockedBattleRotation.HitFrame(fighter, profile, 0, 0));
         Assert.False(LockedBattleHits.MeleeHitCrossed(fighter, profile, 0.5f, 0.5f));
-        Assert.False(LockedBattleHits.MeleeHitCrossed(fighter, LockedBattleHits.Emberfang, 0f, 10f));
+
+        // A projectile profile's own attack (attack 1) never lands as melee.
+        Assert.Equal(-1, LockedBattleRotation.ContactFrame(fighter, LockedBattleHits.Emberfang, 0));
     }
 
     [Fact]

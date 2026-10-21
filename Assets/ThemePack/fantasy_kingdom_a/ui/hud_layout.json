@@ -95,6 +95,18 @@
     "x_max": 0.982,
     "y_top_max": 0.326
   },
+  "battle_button": {
+    "x_min": 0.8,
+    "y_top_min": 0.338,
+    "x_max": 0.975,
+    "y_top_max": 0.438
+  },
+  "hero_free": {
+    "x_min": 0.8,
+    "y_top_min": 0.448,
+    "x_max": 0.975,
+    "y_top_max": 0.538
+  },
   "debug_gift": {
     "x_min": 0.018,
     "y_top_min": 0.773,

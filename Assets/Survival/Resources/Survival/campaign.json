@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "training_slots": 2,
+  "level_curve": {
+    "gold_base": 2000, "gold_growth": 1.45,
+    "food_base": 800, "food_growth": 1.42,
+    "seconds_base": 30, "seconds_growth": 1.6,
+    "star_level_caps": [10, 20, 30, 40, 50],
+    "shards_per_star": [10, 20, 40, 80],
+    "star_stat_bonus": 0.15,
+    "power_hp": 0.5, "power_atk": 3.0
+  },
+  "heroes": [
+    { "id": "hero.sir_aldric", "fighter": "Sir Aldric", "side": "hero", "rarity": "epic", "role": "knight", "hp": 1150, "atk": 78, "hp_per_level": 135, "atk_per_level": 9, "owned": true, "level": 1, "stars": 1, "gems": 0, "shards": 0, "portrait": "theme_a.hero.portrait.sir_aldric" },
+    { "id": "hero.lyra", "fighter": "Lyra", "side": "hero", "rarity": "rare", "role": "mage", "hp": 820, "atk": 96, "hp_per_level": 95, "atk_per_level": 12, "owned": true, "level": 1, "stars": 1, "gems": 0, "shards": 0, "portrait": "theme_a.hero.portrait.lyra" },
+    { "id": "hero.rowan", "fighter": "Rowan", "side": "hero", "rarity": "rare", "role": "ranger", "hp": 860, "atk": 90, "hp_per_level": 100, "atk_per_level": 11, "owned": true, "level": 1, "stars": 1, "gems": 0, "shards": 0, "portrait": "theme_a.hero.portrait.rowan" },
+    { "id": "hero.oakenshield", "fighter": "Oakenshield", "side": "hero", "rarity": "epic", "role": "frost spirit", "hp": 1000, "atk": 92, "hp_per_level": 118, "atk_per_level": 11, "owned": false, "level": 1, "stars": 1, "gems": 300, "shards": 30, "portrait": "theme_a.hero.portrait.oakenshield" },
+    { "id": "hero.stormcrest", "fighter": "Stormcrest", "side": "hero", "rarity": "epic", "role": "griffin", "hp": 1250, "atk": 104, "hp_per_level": 140, "atk_per_level": 13, "owned": false, "level": 1, "stars": 1, "gems": 600, "shards": 50, "portrait": "theme_a.hero.portrait.stormcrest" },
+    { "id": "hero.emberfang", "fighter": "Emberfang", "side": "hero", "rarity": "legendary", "role": "dragon", "hp": 1700, "atk": 128, "hp_per_level": 190, "atk_per_level": 16, "owned": false, "level": 1, "stars": 1, "gems": 1200, "shards": 80, "portrait": "theme_a.hero.portrait.emberfang" },
+    { "id": "foe.nightfang", "fighter": "Nightfang", "side": "villain", "rarity": "rare", "role": "dire wolf", "hp": 780, "atk": 74, "hp_per_level": 90, "atk_per_level": 9, "portrait": "theme_a.hero.portrait.nightfang" },
+    { "id": "foe.ironhowl", "fighter": "Ironhowl", "side": "villain", "rarity": "rare", "role": "warlord", "hp": 980, "atk": 70, "hp_per_level": 115, "atk_per_level": 8, "portrait": "theme_a.hero.portrait.ironhowl" },
+    { "id": "foe.bonequill", "fighter": "Bonequill", "side": "villain", "rarity": "rare", "role": "bone archer", "hp": 700, "atk": 82, "hp_per_level": 82, "atk_per_level": 10, "portrait": "theme_a.hero.portrait.bonequill" },
+    { "id": "foe.blightroot", "fighter": "Blightroot", "side": "villain", "rarity": "epic", "role": "blight treant", "hp": 1150, "atk": 80, "hp_per_level": 130, "atk_per_level": 10, "portrait": "theme_a.hero.portrait.blightroot" },
+    { "id": "foe.vespera", "fighter": "Vespera", "side": "villain", "rarity": "epic", "role": "dark witch", "hp": 860, "atk": 100, "hp_per_level": 98, "atk_per_level": 12, "portrait": "theme_a.hero.portrait.vespera" },
+    { "id": "foe.ashwyrm", "fighter": "Ashwyrm", "side": "villain", "rarity": "legendary", "role": "ash dragon", "hp": 1600, "atk": 118, "hp_per_level": 180, "atk_per_level": 15, "portrait": "theme_a.hero.portrait.ashwyrm" }
+  ],
+  "stages": [
+    { "id": "stage.1", "name": "Wolf Den", "enemies": [ { "id": "foe.nightfang", "level": 1 } ],
+      "rewards": { "res.soft": 1500, "res.food": 600 }, "shard_hero": "hero.oakenshield", "shards": 6, "first_gems": 30 },
+    { "id": "stage.2", "name": "Iron Pass", "enemies": [ { "id": "foe.ironhowl", "level": 2 }, { "id": "foe.nightfang", "level": 2 } ],
+      "rewards": { "res.soft": 2500, "res.food": 900 }, "shard_hero": "hero.oakenshield", "shards": 8, "first_gems": 40 },
+    { "id": "stage.3", "name": "Bone Ridge", "enemies": [ { "id": "foe.bonequill", "level": 3 }, { "id": "foe.ironhowl", "level": 3 } ],
+      "rewards": { "res.soft": 4000, "res.food": 1400 }, "shard_hero": "hero.stormcrest", "shards": 8, "first_gems": 50 },
+    { "id": "stage.4", "name": "Rotwood", "enemies": [ { "id": "foe.blightroot", "level": 4 }, { "id": "foe.bonequill", "level": 4 }, { "id": "foe.nightfang", "level": 4 } ],
+      "rewards": { "res.soft": 6000, "res.food": 2000 }, "shard_hero": "hero.stormcrest", "shards": 10, "first_gems": 60 },
+    { "id": "stage.5", "name": "Witch Hollow", "enemies": [ { "id": "foe.vespera", "level": 6 }, { "id": "foe.blightroot", "level": 5 }, { "id": "foe.bonequill", "level": 5 } ],
+      "rewards": { "res.soft": 9000, "res.food": 3000 }, "shard_hero": "hero.emberfang", "shards": 10, "first_gems": 80 },
+    { "id": "stage.6", "name": "Ashwyrm's Lair", "enemies": [ { "id": "foe.ashwyrm", "level": 8 }, { "id": "foe.vespera", "level": 7 }, { "id": "foe.ironhowl", "level": 7 } ],
+      "rewards": { "res.soft": 14000, "res.food": 4500 }, "shard_hero": "hero.emberfang", "shards": 14, "first_gems": 120 }
+  ],
+  "camps": {
+    "goblin": { "enemies": ["foe.nightfang", "foe.ironhowl"], "shard_hero": "hero.oakenshield", "shards": 4 },
+    "bandit": { "enemies": ["foe.ironhowl", "foe.bonequill", "foe.nightfang"], "shard_hero": "hero.oakenshield", "shards": 5 },
+    "undead": { "enemies": ["foe.bonequill", "foe.blightroot", "foe.vespera"], "shard_hero": "hero.stormcrest", "shards": 6 },
+    "dragon": { "enemies": ["foe.ashwyrm", "foe.vespera", "foe.blightroot"], "shard_hero": "hero.emberfang", "shards": 10 }
+  },
+  "bounties": [
+    { "id": "bounty.win_1", "kind": "win", "count": 1, "rewards": { "res.hard": 25, "res.soft": 1000 } },
+    { "id": "bounty.clear_2", "kind": "clear", "target": "stage.2", "count": 1, "rewards": { "res.hard": 30, "res.food": 1000 } },
+    { "id": "bounty.level_5", "kind": "hero_level", "count": 5, "rewards": { "res.hard": 40, "res.speedup_m": 15 } },
+    { "id": "bounty.win_5", "kind": "win", "count": 5, "rewards": { "res.hard": 60, "res.soft": 5000 } },
+    { "id": "bounty.clear_6", "kind": "clear", "target": "stage.6", "count": 1, "rewards": { "res.hard": 150 } }
+  ],
+  "loss_gold_share": 0.25,
+  "battle_timeout_seconds": 120
+}

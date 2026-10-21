@@ -56,6 +56,12 @@ namespace Survival.Unity
         /// <summary>The player tapped "Enter Village" on their own village card.</summary>
         public event Action? EnterVillage;
 
+        /// <summary>
+        /// Set by the Heroes / Battle slice: Attack on an enemy camp opens Battle Setup for (camp, display name)
+        /// instead of sending a march. Null keeps the march.
+        /// </summary>
+        public Action<WorldEntity, string>? AttackCamp { get; set; }
+
         private sealed class EntityView
         {
             public WorldEntity Entity = null!;
@@ -621,6 +627,19 @@ namespace Survival.Unity
                 }
 
                 case WorldEntityKind.EnemyCamp:
+                    if (AttackCamp != null)
+                    {
+                        // Heroes battle: Attack opens Battle Setup against this camp's villains.
+                        var camp = e;
+                        var campName = name;
+                        ShowCard(art, name, F("world.card.camp", "Enemy camp \u00b7 Lv {0}", e.Level), F("world.card.camp_loot", "Loot {0} Gold", ChipWallet.FormatCompact(e.Amount)), S("world.action.attack", "Attack"), () =>
+                        {
+                            CloseCard();
+                            AttackCamp(camp, campName);
+                        });
+                        break;
+                    }
+
                     ShowMarchCard(e, art, name, F("world.card.camp", "Enemy camp \u00b7 Lv {0}", e.Level), F("world.card.camp_power", "Troops {0}  \u00b7  Loot {1} Gold", ChipWallet.FormatCompact(e.Power), ChipWallet.FormatCompact(e.Amount)), S("world.action.attack", "Attack"), "attack", null);
                     break;
                 case WorldEntityKind.ResourceNode:

@@ -61,8 +61,8 @@ namespace Survival.Domain.Roster
 
         /// <summary>
         /// Attack rotation (<see cref="LockedBattleRotation"/>). Attack 1 is the locked attack
-        /// (<see cref="AttackPoseName"/>, <see cref="AttackSeconds"/>); humanoids add 2 and 3 as
-        /// their premade Mixamo clips land. Creatures (on hold) keep their single attack.
+        /// (<see cref="AttackPoseName"/>, <see cref="AttackSeconds"/>); humanoids add 2 and 3 from
+        /// premade Mixamo clips, the creatures from their own locked clips (<see cref="CreatureBattleAttacks"/>).
         /// </summary>
         public IReadOnlyList<LockedBattleAttack> Attacks { get; }
 
@@ -423,7 +423,10 @@ namespace Survival.Domain.Roster
             DragonDuelRangeMetres,
             BlenderRigAttackSpec.ClipSeconds,
             true,
-            3);
+            3,
+            "",
+            0f,
+            CreatureBattleAttacks.EmberfangAttacks());
 
         public static readonly LockedBattleFighter Stormcrest = new LockedBattleFighter(
             "Stormcrest",
@@ -439,7 +442,10 @@ namespace Survival.Domain.Roster
             3.0f,
             BlenderRigAttackSpec.ClipSeconds,
             true,
-            1);
+            1,
+            "",
+            0f,
+            CreatureBattleAttacks.StormcrestAttacks());
 
         public static readonly LockedBattleFighter Ironhowl = new LockedBattleFighter(
             "Ironhowl",
@@ -474,7 +480,10 @@ namespace Survival.Domain.Roster
             2.1f,
             BlenderRigAttackSpec.ClipSeconds,
             true,
-            1);
+            1,
+            "",
+            0f,
+            CreatureBattleAttacks.NightfangAttacks());
 
         // Added lanes (2026-10-14). Walk speeds come from each locked walk clip's foot travel
         // (two strides of the foot's forward sweep per 30-frame loop, the same measure that gives
@@ -648,7 +657,10 @@ namespace Survival.Domain.Roster
             DragonDuelRangeMetres,
             BlenderRigAttackSpec.ClipSeconds,
             true,
-            3);
+            3,
+            "",
+            0f,
+            CreatureBattleAttacks.AshwyrmAttacks());
 
         // Fifth lane (2026-10-15, Derek approved). Sir Aldric plays the Lite Sword And Shield Pack
         // idle and "Sword And Shield attack (4)" (an in-place thrust that starts and ends on the

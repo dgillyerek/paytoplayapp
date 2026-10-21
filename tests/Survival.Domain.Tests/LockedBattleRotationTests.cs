@@ -42,11 +42,20 @@ public sealed class LockedBattleRotationTests
     }
 
     [Fact]
-    public void Creatures_are_on_hold_with_their_single_attack()
+    public void Creatures_rotate_three_attacks_like_the_humanoids()
     {
         foreach (var name in Creatures)
         {
-            Assert.Equal(1, LockedBattleRotation.Count(Fighter(name)));
+            Assert.Equal(3, LockedBattleRotation.Count(Fighter(name)));
+        }
+    }
+
+    [Fact]
+    public void Every_fighter_in_the_locked_battle_has_three_attacks()
+    {
+        foreach (var f in LockedBattleRoster.All)
+        {
+            Assert.True(LockedBattleRotation.Count(f) == 3, f.Name);
         }
     }
 

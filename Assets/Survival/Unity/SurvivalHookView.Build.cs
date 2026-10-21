@@ -4,6 +4,7 @@ using Survival.Domain.Base;
 using Survival.Domain.Clock;
 using Survival.Domain.Theme;
 using Survival.Domain.View;
+using Survival.Domain.World;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -74,6 +75,10 @@ namespace Survival.Unity
             }
 
             VillageSave.Apply(PlayerPrefs.GetString(VillageSave.PrefsKey, ""), _hook.Base, _hook.Build);
+
+            // Timers that ran out while the game was closed finish now, before the buildings are drawn; their
+            // congratulations bubbles wait on the buildings.
+            _hook.Base.CompleteDueUpgrades();
             _lastSave = VillageSave.Capture(_hook.Base, _hook.Build);
         }
 
@@ -370,6 +375,7 @@ namespace Survival.Unity
             if (!wasBuild)
             {
                 LevelUp(card, level);
+                ClaimCongrats(card, card.PlotId);
                 return;
             }
 
@@ -387,6 +393,75 @@ namespace Survival.Unity
             FloatText(at + new Vector2(0f, 0.06f), Fmt("build.done", "{0} built!", PlotName(card.PlotId)), SurvivalVisuals.Reward, 48);
             SaveVillage();
             RefreshAll();
+            ClaimCongrats(card, card.PlotId);
+        }
+
+        // ---------- timers that finish on their own ----------
+
+        /// <summary>
+        /// A build / upgrade timer ran out (no tap): the level applies, the faded / hammer look clears and the badge
+        /// updates, with a sparkle. The reward waits in the congratulations bubble on the building.
+        /// </summary>
+        private void OnAutoCompleted(BasePlot plot, int level, bool wasBuild)
+        {
+            if (!_cards.TryGetValue(plot.Id, out var card))
+            {
+                return;
+            }
+
+            var at = NormCenterOf(card.Art.rectTransform);
+            card.Art.color = Color.white;
+            card.Hammer?.gameObject.SetActive(false);
+            StartCoroutine(Punch(card.Root, 0.14f, 10));
+            StartCoroutine(RingBurst(at, SurvivalVisuals.Reward, 0.26f));
+            StartCoroutine(SparkBurst(at, wasBuild ? Color.white : SurvivalVisuals.Reward, 16, 0.10f));
+            if (card.IsCastle)
+            {
+                var visual = BuildingVisual.For(plot, Tiers);
+                if (visual.Tier != card.Tier)
+                {
+                    card.Tier = visual.Tier;
+                    StartCoroutine(GrowCastle(card, visual));
+                }
+            }
+            else if (card.LevelBadge != null)
+            {
+                StartCoroutine(Punch(card.LevelBadge.rectTransform, 0.4f, 14));
+            }
+
+            SaveVillage();
+            RefreshAll();
+            _ = level;
+        }
+
+        /// <summary>Tap the congratulations bubble: the celebration plays and the reward counts into the chips.</summary>
+        private void ClaimCongrats(PlotCard card, string plotId)
+        {
+            var pending = _hook?.Base.PendingFor(plotId);
+            if (_hook == null || pending == null)
+            {
+                return;
+            }
+
+            var title = pending.WasBuild
+                ? Fmt("build.done", "{0} built!", PlotName(plotId))
+                : Fmt2("hook.upgrade_done", "{0} reached Lv {1}!", PlotName(plotId), pending.Level);
+            var at = NormCenterOf(card.Congrats.gameObject.activeSelf ? card.Congrats.rectTransform : card.Root);
+            StartCoroutine(SparkBurst(at, SurvivalVisuals.Reward, 14, 0.08f));
+            var hook = _hook;
+            Celebrate(title, pending.Rewards, () => hook.Base.ClaimCompletion(plotId));
+            SaveVillage();
+            RefreshAll();
+        }
+
+        private string CongratsLabel(PendingCompletion pending)
+        {
+            foreach (var kv in pending.Rewards)
+            {
+                return "+" + ChipWallet.FormatCompact(kv.Value);
+            }
+
+            return S("hook.claim", "Claim");
         }
 
         private void TickBuild()

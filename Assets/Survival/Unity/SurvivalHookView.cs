@@ -95,6 +95,10 @@ namespace Survival.Unity
             public Text BadgeText = null!;
             public Image Arrow = null!;
             public Image? Hammer;
+
+            /// <summary>Congratulations bubble: a finished build / upgrade's reward, granted on tap.</summary>
+            public Image Congrats = null!;
+            public Text CongratsText = null!;
         }
 
         private sealed class QuestTracker
@@ -150,6 +154,7 @@ namespace Survival.Unity
             play.Fx?.SetAsLastSibling();
             _hook.Wallet.Changed += OnWalletChanged;
             _hook.Gifts.Offered += OnGiftOffered;
+            _hook.Base.AutoCompleted += OnAutoCompleted;
             play.MarchResolved += OnMarchResolved;
             _questWasComplete = _hook.Quests.IsComplete;
             RefreshAll();
@@ -163,6 +168,7 @@ namespace Survival.Unity
                 _hook.Wallet.Changed -= OnWalletChanged;
                 _hook.Gifts.Offered -= OnGiftOffered;
                 _hook.Build.Built -= OnBuilt;
+                _hook.Base.AutoCompleted -= OnAutoCompleted;
             }
 
             if (_play != null)
@@ -320,8 +326,29 @@ namespace Survival.Unity
             card.Hammer.raycastTarget = false;
             card.Hammer.gameObject.SetActive(plot.UnderConstruction);
 
+            // Congratulations bubble (gold pill + chest): the build / upgrade finished on its own; tap to collect.
+            card.Congrats = HookSkin.Panel(host, "Congrats", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.4f);
+            card.Congrats.raycastTarget = true;
+            Box(card.Congrats.rectTransform, 0.16f, 0.90f, 0.84f, 1.12f);
+            var congratsGlow = HookSkin.Glow(card.Congrats.transform, "Glow", new Color(1f, 0.86f, 0.4f, 0.75f));
+            congratsGlow.raycastTarget = false;
+            Box(congratsGlow.rectTransform, -0.25f, -0.6f, 1.25f, 1.6f);
+            congratsGlow.transform.SetAsFirstSibling();
+            var chest = HookSkin.Art(card.Congrats.transform, "Chest", HookArtKeys.ChestClosed, ChestWood);
+            chest.raycastTarget = false;
+            Box(chest.rectTransform, -0.10f, -0.35f, 0.36f, 1.30f);
+            card.CongratsText = HookSkin.Outlined(SurvivalVisuals.Text(card.Congrats.transform, "T", "", 24, TextAnchor.MiddleCenter, HookSkin.InkFor(HookArtKeys.ButtonGold)), 1f);
+            card.CongratsText.fontStyle = FontStyle.Bold;
+            card.CongratsText.raycastTarget = false;
+            Box(card.CongratsText.rectTransform, 0.32f, 0f, 1f, 1f);
+            var congratsBtn = card.Congrats.gameObject.AddComponent<Button>();
+            congratsBtn.targetGraphic = card.Congrats;
+            congratsBtn.transition = Selectable.Transition.None;
+            card.Congrats.gameObject.SetActive(false);
+
             Wire(body, () => OnTapPlot(plotId));
             Wire(bubbleBtn, () => OnTapPlot(plotId));
+            Wire(congratsBtn, () => OnTapPlot(plotId));
             return card;
         }
 
@@ -504,11 +531,22 @@ namespace Survival.Unity
                     card.BadgeText.text = done ? "!" : S("hook.free", "FREE");
                     card.Bubble.gameObject.SetActive(false);
                     card.Arrow.gameObject.SetActive(false);
+                    card.Congrats.gameObject.SetActive(false);
                     continue;
                 }
 
                 card.TimerRoot.gameObject.SetActive(false);
                 card.Badge.gameObject.SetActive(false);
+                var pending = _hook.Base.PendingFor(plot.Id);
+                card.Congrats.gameObject.SetActive(pending != null);
+                if (pending != null)
+                {
+                    card.CongratsText.text = CongratsLabel(pending);
+                    card.Bubble.gameObject.SetActive(false);
+                    card.Arrow.gameObject.SetActive(false);
+                    continue;
+                }
+
                 card.Bubble.gameObject.SetActive(plot.CanCollect);
                 if (plot.IsProducer)
                 {
@@ -596,6 +634,13 @@ namespace Survival.Unity
                     card.Badge.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 6f * Mathf.Sin(t * 2.5f));
                 }
 
+                if (card.Congrats.gameObject.activeSelf)
+                {
+                    var hop = 1f + 0.08f * Mathf.Abs(Mathf.Sin(t * 4.2f + card.PlotId.Length));
+                    card.Congrats.rectTransform.localScale = new Vector3(hop, hop, 1f);
+                    card.Congrats.rectTransform.anchoredPosition = new Vector2(0f, 8f * Mathf.Abs(Mathf.Sin(t * 3f + card.PlotId.Length)));
+                }
+
                 if (card.Arrow.gameObject.activeSelf)
                 {
                     card.Arrow.rectTransform.anchoredPosition = new Vector2(0f, 10f * Mathf.Abs(Mathf.Sin(t * 3.4f + card.PlotId.Length)));
@@ -646,6 +691,12 @@ namespace Survival.Unity
             var plot = _hook.Base.Find(plotId);
             if (plot == null)
             {
+                return;
+            }
+
+            if (_hook.Base.PendingFor(plotId) != null)
+            {
+                ClaimCongrats(card, plotId);
                 return;
             }
 
@@ -1450,6 +1501,50 @@ namespace Survival.Unity
             QueueCelebration(S(offer.Id + ".title", offer.Id), offer.Grants);
             RefreshAll();
         }
+
+        // ---------- public API: Heroes and Battle Setup screens (SurvivalCampaignView) ----------
+
+        /// <summary>
+        /// The chest-burst celebration for another screen: holds the HUD chips for the reward keys, runs
+        /// <paramref name="grant"/> (which pays the wallet), then queues the celebration; the chips count up as the
+        /// rewards fly in. Keys are resource ids or "shard.{hero id}".
+        /// </summary>
+        public void Celebrate(string title, IReadOnlyDictionary<string, int> rewards, Action? grant = null)
+        {
+            Hold(rewards);
+            grant?.Invoke();
+            QueueCelebration(title, rewards);
+        }
+
+        public bool Celebrating => _celebrating;
+
+        /// <summary>Keep the HUD chips for these keys still while another screen pays the wallet; Celebrate counts them up.</summary>
+        public void HoldChips(IReadOnlyDictionary<string, int> rewards) => Hold(rewards);
+
+        /// <summary>Let held chips count up to the wallet without a celebration.</summary>
+        public void ReleaseChips(IReadOnlyDictionary<string, int> rewards) => Release(rewards);
+
+        /// <summary>Tap juice on a button of another screen: punch plus a ring.</summary>
+        public void Juice(RectTransform pressed)
+        {
+            StartCoroutine(Punch(pressed, 0.12f, 8));
+            StartCoroutine(RingBurst(NormCenterOf(pressed), SurvivalVisuals.Cream, 0.10f));
+        }
+
+        /// <summary>Spark burst and ring on a rect (level up, star up, unlock).</summary>
+        public void Sparks(RectTransform at, Color color, int count = 16)
+        {
+            var c = NormCenterOf(at);
+            StartCoroutine(SparkBurst(c, color, count, 0.08f));
+            StartCoroutine(RingBurst(c, color, 0.3f));
+        }
+
+        public void Say(RectTransform at, string copy, Color color) => Toast(NormCenterOf(at), copy, color);
+
+        public void Rise(RectTransform at, string copy, Color color) => FloatText(NormCenterOf(at), copy, color);
+
+        /// <summary>Opens the sandbox Gem Shop sheet (above the Heroes screen).</summary>
+        public void OpenGemShop() => OpenShop();
 
         // ---------- celebration ----------
 
@@ -2423,7 +2518,12 @@ namespace Survival.Unity
         private string Fmt(string key, string fallback, object arg) =>
             string.Format(CultureInfo.InvariantCulture, S(key, fallback), arg);
 
-        private string ResName(string resourceId) => S(resourceId + ".name", resourceId);
+        private string ResName(string resourceId) =>
+            resourceId.StartsWith(ShardPrefix, StringComparison.Ordinal)
+                ? string.Format(CultureInfo.InvariantCulture, S("campaign.shards_of", "{0} shards"), S(resourceId.Substring(ShardPrefix.Length) + ".name", resourceId.Substring(ShardPrefix.Length)))
+                : S(resourceId + ".name", resourceId);
+
+        private const string ShardPrefix = "shard.";
 
         private string CostLine(IReadOnlyDictionary<string, int> costs)
         {
@@ -2457,7 +2557,7 @@ namespace Survival.Unity
             return null;
         }
 
-        private static Color ResColor(string resourceId) => resourceId switch
+        private static Color ResColor(string resourceId) => resourceId.StartsWith(ShardPrefix, StringComparison.Ordinal) ? new Color(0.72f, 0.52f, 1f, 1f) : resourceId switch
         {
             SurvIds.ResSoft => new Color(0.97f, 0.78f, 0.25f, 1f),
             SurvIds.ResStone => new Color(0.72f, 0.74f, 0.78f, 1f),
@@ -2469,7 +2569,7 @@ namespace Survival.Unity
             _ => SurvivalVisuals.Cream
         };
 
-        private static string ResGlyph(string resourceId) => resourceId switch
+        private static string ResGlyph(string resourceId) => resourceId.StartsWith(ShardPrefix, StringComparison.Ordinal) ? "\u2726" : resourceId switch
         {
             SurvIds.ResSoft => "G",
             SurvIds.ResStone => "S",
