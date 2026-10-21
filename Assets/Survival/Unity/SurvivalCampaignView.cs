@@ -34,6 +34,7 @@ namespace Survival.Unity
     public sealed class SurvivalCampaignView : MonoBehaviour
     {
         public const string BattleSceneName = "BattleLocked";
+        private const int LoadingTipCount = 6;
         public const string BattleButtonName = "BattleButton";
         public const string HeroesScreenName = "HeroesScreen";
         public const string SetupScreenName = "BattleSetupScreen";
@@ -75,6 +76,7 @@ namespace Survival.Unity
         private float _tick;
         private float _saveIn = -1f;
         private bool _inBattle;
+        private int _battleTrips;
         private bool _foesTab;
         private string _selected = "";
         private BattleSetup? _setup;
@@ -1365,6 +1367,15 @@ namespace Survival.Unity
             CloseScreen();
             var stage = lineup.Stage;
             var playScene = gameObject.scene;
+            _battleTrips++;
+
+            // Root cause of "Display 1 No cameras rendering": Play's cameras went off before BattleLocked's camera
+            // existed (the additive load spans several frames), and on the way back BattleLocked's camera was
+            // unloaded before Play's came back on. The loading screen's floor camera lives outside both scenes and
+            // renders the whole time; Play is only hidden once the screen covers the view, and the screen only
+            // fades once the destination camera has drawn a frame.
+            var into = BattleLoadingScreen.Show(BattleLoadingInfo.Into(lineup, S("battle.loading.into", "To battle!"), LoadingTip(stage.Id)), S("battle.loading.vs", "VS"));
+            yield return into.WaitCovered();
             var hidden = HidePlay(playScene);
             var render = RenderState.Capture();
             BattleReport? report = null;
@@ -1374,13 +1385,23 @@ namespace Survival.Unity
             var load = SceneManager.LoadSceneAsync(BattleSceneName, LoadSceneMode.Additive);
             while (load != null && !load.isDone)
             {
+                into.Progress(load.progress);
                 yield return null;
             }
 
+            into.Progress(1f);
             var battle = SceneManager.GetSceneByName(BattleSceneName);
             if (battle.IsValid() && battle.isLoaded)
             {
                 SceneManager.SetActiveScene(battle);
+                into.RevealOnFirstFrameOf(battle);
+            }
+            else
+            {
+                // Load failed: bring Play straight back under the screen.
+                render.Restore();
+                ShowPlay(hidden);
+                into.RevealOnFirstFrameOf(playScene);
             }
 
             while (report == null && battle.IsValid() && battle.isLoaded)
@@ -1389,6 +1410,9 @@ namespace Survival.Unity
             }
 
             BattleHandoff.Completed -= OnDone;
+            var finished = report ?? BattleHandoff.Result;
+            var back = BattleLoadingScreen.Show(BattleLoadingInfo.Back(ReturnHeadline(finished), stage.Name, LoadingTip(stage.Id)), S("battle.loading.vs", "VS"));
+            yield return back.WaitCovered();
             if (playScene.IsValid())
             {
                 SceneManager.SetActiveScene(playScene);
@@ -1399,12 +1423,15 @@ namespace Survival.Unity
                 var unload = SceneManager.UnloadSceneAsync(battle);
                 while (unload != null && !unload.isDone)
                 {
+                    back.Progress(unload.progress);
                     yield return null;
                 }
             }
 
+            back.Progress(1f);
             render.Restore();
             ShowPlay(hidden);
+            back.RevealOnFirstFrameOf(playScene);
             var taken = BattleHandoff.TakeResult();
             _inBattle = false;
             var result = report ?? taken ?? new BattleReport(stage.Id, stage.CampId, false, 0, 0, 0, false, true);
@@ -1416,6 +1443,32 @@ namespace Survival.Unity
 
             _deferred.Clear();
         }
+
+        private string LoadingTip(string stageId)
+        {
+            var tips = new List<string>();
+            for (var i = 1; i <= LoadingTipCount; i++)
+            {
+                var t = S("battle.tip." + i, "");
+                if (t.Length > 0)
+                {
+                    tips.Add(t);
+                }
+            }
+
+            if (tips.Count == 0)
+            {
+                tips.Add("Level up heroes in the Heroes screen to raise their power.");
+            }
+
+            return BattleTransition.Tip(tips, BattleTransition.StableSeed(stageId) + _battleTrips);
+        }
+
+        private string ReturnHeadline(BattleReport? r) =>
+            r == null ? S("battle.loading.back", "Back to the village")
+            : r.Retreated ? S("battle.loading.retreat", "Retreat!")
+            : r.Won ? S("battle.loading.victory", "Victory!")
+            : S("battle.loading.defeat", "Defeat");
 
         /// <summary>Play stays loaded (village, world and timers keep running); its canvases, cameras and listeners switch off.</summary>
         private static List<Behaviour> HidePlay(Scene scene)

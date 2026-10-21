@@ -53,6 +53,14 @@ namespace Survival.Unity
             public RectTransform? Bar { get; set; }
             public Image? BarFill { get; set; }
             public float ShownFraction { get; set; } = 1f;
+
+            /// <summary>Lane width this fighter stands in (the bar stays inside it).</summary>
+            public float LaneWidth { get; set; } = BattleLaneLayout.BaseLaneMetres;
+
+            /// <summary>Widest point of the body sideways (metres, battle scale, wings included).</summary>
+            public float BarHalfWidth { get; set; }
+
+            public float BarMeasureAge { get; set; }
         }
 
         private bool BootConfigured()
@@ -100,6 +108,8 @@ namespace Survival.Unity
                 f.StartPosition = new Vector3(centres[lane], 0f, hero ? -depth[lane] : depth[lane]);
                 f.StartRotation = Quaternion.Euler(0f, hero ? 0f : 180f, 0f);
                 f.Slot.SetPositionAndRotation(f.StartPosition, f.StartRotation);
+                f.LaneWidth = widths[lane];
+                f.BarHalfWidth = BattleHpBarLayout.HalfWidthOf(data.Name, data.DesignHeightMetres, f.BattleScale);
                 _fighters.Add(f);
             }
 
@@ -386,21 +396,14 @@ namespace Survival.Unity
                 var show = !f.Down && cam != null && _hud != null;
                 if (show)
                 {
-                    var head = f.Slot.position + (Vector3.up * ((f.Data.DesignHeightMetres * f.BattleScale) + 0.3f));
-                    var screen = cam!.WorldToScreenPoint(head);
-                    show = screen.z > 0f && RectTransformUtility.ScreenPointToLocalPointInRectangle(_hud!, screen, null, out var local);
-                    if (show)
-                    {
-                        RectTransformUtility.ScreenPointToLocalPointInRectangle(_hud!, screen, null, out var at);
-                        f.Bar.anchoredPosition = at;
-                    }
+                    show = PlaceSideBar(f, cam!);
                 }
 
                 f.Bar.gameObject.SetActive(show);
                 f.ShownFraction = Mathf.MoveTowards(f.ShownFraction, f.Unit.Fraction, Time.unscaledDeltaTime * 1.5f);
                 if (f.BarFill != null)
                 {
-                    f.BarFill.rectTransform.anchorMax = new Vector2(Mathf.Max(0.001f, f.ShownFraction), 1f);
+                    f.BarFill.rectTransform.anchorMax = new Vector2(1f, Mathf.Max(0.001f, f.ShownFraction));
                 }
             }
 
@@ -422,6 +425,70 @@ namespace Survival.Unity
                 var s = pop.Age < 0.12f ? Mathf.Lerp(0.5f, 1.25f, pop.Age / 0.12f) : Mathf.Lerp(1.25f, 1f, Mathf.Clamp01((pop.Age - 0.12f) / 0.15f));
                 pop.Text.rectTransform.localScale = new Vector3(s, s, 1f);
             }
+        }
+
+        /// <summary>
+        /// Vertical HP bar beside the fighter on its outer / back side (heroes their left, foes their right), clear of
+        /// the body and wings and out of the lane between the sides. Placed in the fighter's start frame so it does not
+        /// swing when the body turns to strike; drawn in screen space so it always faces the camera, upright, and kept
+        /// at a readable height at any free-camera zoom.
+        /// </summary>
+        private bool PlaceSideBar(Fighter f, Camera cam)
+        {
+            MeasureBody(f);
+            var side = f.Unit!.Side;
+            var (right, forward) = BattleHpBarLayout.Offset(side, f.BarHalfWidth, f.BattleScale, f.LaneWidth);
+            var (bottom, top) = BattleHpBarLayout.Span(f.Data.DesignHeightMetres, f.BattleScale);
+            var foot = f.Slot.position + (f.StartRotation * new Vector3(right, 0f, forward));
+            foot.y = f.StartPosition.y;
+            var low = cam.WorldToScreenPoint(foot + (Vector3.up * bottom));
+            var high = cam.WorldToScreenPoint(foot + (Vector3.up * top));
+            if (low.z <= 0f || high.z <= 0f
+                || !RectTransformUtility.ScreenPointToLocalPointInRectangle(_hud!, low, null, out var a)
+                || !RectTransformUtility.ScreenPointToLocalPointInRectangle(_hud!, high, null, out var b))
+            {
+                return false;
+            }
+
+            var height = BattleHpBarLayout.HeightPx(Mathf.Abs(b.y - a.y));
+            f.Bar!.anchoredPosition = new Vector2((a.x + b.x) * 0.5f, ((a.y + b.y) * 0.5f) - (height * 0.5f));
+            f.Bar.sizeDelta = new Vector2(BattleHpBarLayout.WidthPx, height);
+            return true;
+        }
+
+        /// <summary>
+        /// Widest sideways extent of the rendered body (start frame), sampled over its first second so the bones have
+        /// posed. Never narrower than the roster estimate (the dragons' known wing spans).
+        /// </summary>
+        private static void MeasureBody(Fighter f)
+        {
+            if (f.BarMeasureAge > 1f)
+            {
+                return;
+            }
+
+            f.BarMeasureAge += Time.unscaledDeltaTime;
+            var axis = f.StartRotation * Vector3.right;
+            var origin = f.Slot.position;
+            var widest = 0f;
+            foreach (var r in f.Host.GetComponentsInChildren<Renderer>(false))
+            {
+                if (r is ParticleSystemRenderer || r is TrailRenderer || r is LineRenderer || !r.enabled)
+                {
+                    continue;
+                }
+
+                var bb = r.bounds;
+                for (var i = 0; i < 8; i++)
+                {
+                    var corner = bb.center + Vector3.Scale(bb.extents, new Vector3((i & 1) == 0 ? -1f : 1f, (i & 2) == 0 ? -1f : 1f, (i & 4) == 0 ? -1f : 1f));
+                    widest = Mathf.Max(widest, Mathf.Abs(Vector3.Dot(corner - origin, axis)));
+                }
+            }
+
+            // An axis-aligned box overstates a turned body; cap the measurement at the lane so a bad bound can't push
+            // the bar into the next lane (Offset moves any excess backwards instead).
+            f.BarHalfWidth = Mathf.Max(f.BarHalfWidth, Mathf.Min(widest, f.LaneWidth));
         }
 
         private void PopDamage(Fighter target, int dmg, bool heavy)
@@ -487,15 +554,20 @@ namespace Survival.Unity
                 var bar = SurvivalVisuals.Image(canvas, f.Data.FileKey + "Hp", hero ? heroFrame : villainFrame).rectTransform;
                 bar.anchorMin = bar.anchorMax = new Vector2(0.5f, 0.5f);
                 bar.pivot = new Vector2(0.5f, 0f);
-                bar.sizeDelta = new Vector2(170f, 22f);
+                bar.sizeDelta = new Vector2(BattleHpBarLayout.WidthPx, BattleHpBarLayout.MinHeightPx);
                 var back = SurvivalVisuals.Image(bar, "Back", new Color(0.05f, 0.05f, 0.08f, 0.9f));
                 Anchor(back.rectTransform, 0f, 0f, 1f, 1f);
                 back.rectTransform.offsetMin = new Vector2(3f, 3f);
                 back.rectTransform.offsetMax = new Vector2(-3f, -3f);
                 var fill = SurvivalVisuals.Image(back.transform, "Fill", hero ? HeroFill : VillainFill);
                 Anchor(fill.rectTransform, 0f, 0f, 1f, 1f);
-                var name = HookSkin.Outlined(SurvivalVisuals.Text(bar, "Name", f.Data.Name + "  Lv " + f.Unit.Fighter.Level, 18, TextAnchor.LowerCenter, SurvivalVisuals.Cream), 1.5f);
-                Anchor(name.rectTransform, -0.4f, 1f, 1.4f, 2.3f);
+                // Level tag on top of the vertical bar (the name would cross the lane).
+                var name = HookSkin.Outlined(SurvivalVisuals.Text(bar, "Name", "Lv " + f.Unit.Fighter.Level, 18, TextAnchor.LowerCenter, SurvivalVisuals.Cream), 1.5f);
+                var nrt = name.rectTransform;
+                nrt.anchorMin = nrt.anchorMax = new Vector2(0.5f, 1f);
+                nrt.pivot = new Vector2(0.5f, 0f);
+                nrt.sizeDelta = new Vector2(90f, 26f);
+                nrt.anchoredPosition = new Vector2(0f, 4f);
                 f.Bar = bar;
                 f.BarFill = fill;
             }
