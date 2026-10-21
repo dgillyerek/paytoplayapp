@@ -137,8 +137,8 @@ namespace Survival.Unity
             var leave = HookSkin.Button(_hud, "Leave", HookArtKeys.ButtonRed, new Color(0.65f, 0.18f, 0.15f, 1f));
             Anchor(leave.GetComponent<RectTransform>(), 0.015f, 0.93f, 0.14f, 0.98f);
             leave.onClick.AddListener(Leave);
-            var leaveText = HookSkin.Outlined(SurvivalVisuals.Text(leave.transform, "Label", S("runner.leave", "Leave"), 24, TextAnchor.MiddleCenter, Color.white));
-            SurvivalVisuals.Stretch(leaveText.rectTransform);
+            var leaveText = Fit(HookSkin.Outlined(SurvivalVisuals.Text(leave.transform, "Label", S("runner.leave", "Leave"), 24, TextAnchor.MiddleCenter, Color.white)), 14, 24);
+            Pad(leaveText.rectTransform);
 
             // Squad badge over the hero (count of everyone walking).
             _badge = HookSkin.Panel(_worldUi, "SquadBadge", HookArtKeys.Chip, new Color(0.10f, 0.22f, 0.45f, 0.96f), 0.45f).rectTransform;
@@ -687,7 +687,7 @@ namespace Survival.Unity
             }
 
             var panel = HookSkin.Panel(_result, "Panel", HookArtKeys.Panel, SurvivalVisuals.InspectFill, 1f);
-            Anchor(panel.rectTransform, 0.07f, 0.22f, 0.93f, 0.76f);
+            Anchor(panel.rectTransform, 0.06f, 0.16f, 0.94f, 0.79f);
             var ribbon = HookSkin.Panel(panel.transform, "Ribbon", result.Won ? HookArtKeys.RibbonBlue : HookArtKeys.RibbonRed, result.Won ? new Color(0.15f, 0.3f, 0.6f, 1f) : new Color(0.55f, 0.15f, 0.12f, 1f), 0.7f);
             Anchor(ribbon.rectTransform, -0.06f, 0.86f, 1.06f, 1.04f);
             var title = HookSkin.Outlined(SurvivalVisuals.Text(ribbon.transform, "Title", result.Won ? S("runner.victory", "VICTORY!") : S("runner.defeat", "DEFEAT"), 64, TextAnchor.MiddleCenter, result.Won ? new Color(1f, 0.9f, 0.45f, 1f) : Color.white));
@@ -700,13 +700,15 @@ namespace Survival.Unity
                 (S("runner.result.squad", "Biggest squad"), "×" + (result.FollowersPeak + 1)),
                 (S("runner.result.distance", "Distance"), Mathf.FloorToInt(result.Distance) + " m")
             };
+            // Cream labels and gold values with a dark outline: readable on the navy panel, like the painted UI.
             for (var i = 0; i < rows.Length; i++)
             {
-                var y = 0.76f - (i * 0.075f);
-                var k = SurvivalVisuals.Text(panel.transform, "Stat" + i, rows[i].Item1, 32, TextAnchor.MiddleLeft, HookSkin.ParchmentInk);
-                Anchor(k.rectTransform, 0.1f, y - 0.035f, 0.7f, y + 0.035f);
-                var v = SurvivalVisuals.Text(panel.transform, "Value" + i, rows[i].Item2, 34, TextAnchor.MiddleRight, HookSkin.ParchmentTitle);
-                Anchor(v.rectTransform, 0.55f, y - 0.035f, 0.9f, y + 0.035f);
+                var y = 0.79f - (i * 0.07f);
+                var k = Fit(HookSkin.Outlined(SurvivalVisuals.Text(panel.transform, "Stat" + i, rows[i].Item1, 36, TextAnchor.MiddleLeft, SurvivalVisuals.Cream)), 22, 36);
+                Anchor(k.rectTransform, 0.08f, y - 0.032f, 0.64f, y + 0.032f);
+                var v = Fit(HookSkin.Outlined(SurvivalVisuals.Text(panel.transform, "Value" + i, rows[i].Item2, 38, TextAnchor.MiddleRight, ValueGold)), 22, 38);
+                v.fontStyle = FontStyle.Bold;
+                Anchor(v.rectTransform, 0.64f, y - 0.032f, 0.92f, y + 0.032f);
             }
 
             // Rewards: gold always (kills + boxes), win gold and hero shards on a win.
@@ -715,7 +717,7 @@ namespace Survival.Unity
             foreach (var pair in rewards)
             {
                 var slot = HookSkin.Panel(panel.transform, "Reward", HookArtKeys.Plate, SurvivalVisuals.RowFill, 0.5f);
-                Anchor(slot.rectTransform, x - 0.14f, 0.27f, x + 0.14f, 0.45f);
+                Anchor(slot.rectTransform, x - 0.14f, 0.375f, x + 0.14f, 0.52f);
                 var icon = HookSkin.ResIcon(slot.transform, "Icon", pair.Key, SurvivalVisuals.Gold, pair.Key == SurvIds.ResSoft ? "G" : "S");
                 Anchor(icon.rectTransform, 0.2f, 0.38f, 0.8f, 0.98f);
                 var amount = HookSkin.Outlined(SurvivalVisuals.Text(slot.transform, "Amount", "+" + pair.Value.ToString("N0", CultureInfo.InvariantCulture), 32, TextAnchor.MiddleCenter, Color.white));
@@ -725,39 +727,38 @@ namespace Survival.Unity
 
             if (!RunnerHandoff.FromPlay)
             {
-                var note = SurvivalVisuals.Text(panel.transform, "Saved", saved ? S("runner.result.saved", "Rewards saved") : "Open from the village to keep rewards", 24, TextAnchor.MiddleCenter, HookSkin.ParchmentInk);
-                Anchor(note.rectTransform, 0.05f, 0.2f, 0.95f, 0.26f);
+                var note = Fit(HookSkin.Outlined(SurvivalVisuals.Text(panel.transform, "Saved", saved ? S("runner.result.saved", "Rewards saved") : "Open from the village to keep rewards", 24, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f), 16, 24);
+                Anchor(note.rectTransform, 0.05f, 0.29f, 0.95f, 0.325f);
             }
 
-            // Levels (the list) / Retry / Next level (a win opens it) / Continue (back to the village, from Play).
-            var buttons = new List<(string Name, string Label, string Key, UnityEngine.Events.UnityAction Act)>
-            {
-                ("Levels", S("runner.levels", "Levels"), HookArtKeys.ButtonBlue, ShowLevelList),
-                ("Retry", S("runner.retry", "Retry"), HookArtKeys.ButtonBlue, Retry)
-            };
+            // Two rows so no label is squeezed: the way on (Next level / Continue, green) on top, Levels / Retry (blue)
+            // below. A lone button in a row runs wider; labels best-fit inside padded buttons.
+            var primary = new List<(string Name, string Label, string Key, UnityEngine.Events.UnityAction Act)>();
             var next = OpenNext;
             if (result.Won && next != null)
             {
                 var n = next.Number;
-                buttons.Add(("Next", S("runner.next", "Next level"), HookArtKeys.ButtonGreen, () => PlayLevel(n)));
+                primary.Add(("Next", S("runner.next", "Next level"), HookArtKeys.ButtonGreen, () => PlayLevel(n)));
             }
 
             if (RunnerHandoff.FromPlay)
             {
-                buttons.Add(("Continue", S("runner.continue", "Continue"), HookArtKeys.ButtonGreen, Leave));
+                primary.Add(("Continue", S("runner.continue", "Continue"), HookArtKeys.ButtonGreen, Leave));
             }
 
-            var w = 0.88f / buttons.Count;
-            for (var i = 0; i < buttons.Count; i++)
+            var secondary = new List<(string Name, string Label, string Key, UnityEngine.Events.UnityAction Act)>
             {
-                var b = PanelButton(panel.transform, buttons[i].Name, buttons[i].Label, buttons[i].Key, 0.06f + (i * w) + 0.01f, 0.06f + ((i + 1) * w) - 0.01f);
-                b.onClick.AddListener(buttons[i].Act);
-            }
+                ("Levels", S("runner.levels", "Levels"), HookArtKeys.ButtonBlue, ShowLevelList),
+                ("Retry", S("runner.retry", "Retry"), HookArtKeys.ButtonBlue, Retry)
+            };
+            ButtonRow(panel.transform, primary, 0.165f, 0.28f);
+            ButtonRow(panel.transform, secondary, primary.Count > 0 ? 0.035f : 0.165f, primary.Count > 0 ? 0.15f : 0.28f);
 
             if (result.Won && next != null && next.Number > result.Number)
             {
                 var unlocked = HookSkin.Outlined(SurvivalVisuals.Text(panel.transform, "Unlocked", Fmt("runner.unlocked", "Level {0} unlocked: {1}", next.Number, LevelName(next)), 26, TextAnchor.MiddleCenter, new Color(1f, 0.9f, 0.45f, 1f)));
-                Anchor(unlocked.rectTransform, 0.05f, 0.175f, 0.95f, 0.215f);
+                Fit(unlocked, 16, 26);
+                Anchor(unlocked.rectTransform, 0.05f, 0.325f, 0.95f, 0.365f);
             }
 
             _result.localScale = Vector3.one;
@@ -817,8 +818,8 @@ namespace Survival.Unity
                 var label = open
                     ? level.Number.ToString(CultureInfo.InvariantCulture) + "\n" + LevelName(level)
                     : level.Number.ToString(CultureInfo.InvariantCulture) + "\n" + S("runner.locked", "Locked");
-                var t = HookSkin.Outlined(SurvivalVisuals.Text(btn.transform, "Label", label, 24, TextAnchor.MiddleCenter, open ? HookSkin.InkFor(key) : new Color(0.75f, 0.75f, 0.75f, 1f)));
-                SurvivalVisuals.Stretch(t.rectTransform);
+                var t = Fit(HookSkin.Outlined(SurvivalVisuals.Text(btn.transform, "Label", label, 24, TextAnchor.MiddleCenter, open ? HookSkin.InkFor(key) : new Color(0.75f, 0.75f, 0.75f, 1f))), 14, 24);
+                Pad(t.rectTransform);
                 btn.interactable = open;
                 if (open)
                 {
@@ -830,19 +831,61 @@ namespace Survival.Unity
 
             var close = HookSkin.Button(panel.transform, "Close", HookArtKeys.ButtonRed, new Color(0.65f, 0.18f, 0.15f, 1f));
             Anchor(close.GetComponent<RectTransform>(), 0.3f, 0.02f, 0.7f, 0.1f);
-            var closeText = HookSkin.Outlined(SurvivalVisuals.Text(close.transform, "Label", S("runner.close", "Close"), 32, TextAnchor.MiddleCenter, Color.white));
-            SurvivalVisuals.Stretch(closeText.rectTransform);
+            var closeText = Fit(HookSkin.Outlined(SurvivalVisuals.Text(close.transform, "Label", S("runner.close", "Close"), 32, TextAnchor.MiddleCenter, Color.white)), 18, 32);
+            Pad(closeText.rectTransform);
             close.onClick.AddListener(HideLevelList);
         }
 
-        private static Button PanelButton(Transform parent, string name, string label, string key, float x0, float x1)
+        /// <summary>Result-screen gold for stat values (brighter than the resource gold, to read on navy).</summary>
+        private static readonly Color ValueGold = new Color(1f, 0.84f, 0.38f, 1f);
+
+        /// <summary>One row of result buttons across the panel; one button alone runs most of the width.</summary>
+        private static void ButtonRow(Transform parent, List<(string Name, string Label, string Key, UnityEngine.Events.UnityAction Act)> buttons, float y0, float y1)
+        {
+            if (buttons.Count == 0)
+            {
+                return;
+            }
+
+            var left = buttons.Count == 1 ? 0.18f : 0.06f;
+            var w = (1f - (2f * left)) / buttons.Count;
+            for (var i = 0; i < buttons.Count; i++)
+            {
+                var b = PanelButton(parent, buttons[i].Name, buttons[i].Label, buttons[i].Key, left + (i * w) + 0.015f, left + ((i + 1) * w) - 0.015f, y0, y1);
+                b.onClick.AddListener(buttons[i].Act);
+            }
+        }
+
+        private static Button PanelButton(Transform parent, string name, string label, string key, float x0, float x1, float y0, float y1)
         {
             var btn = HookSkin.Button(parent, name, key, key == HookArtKeys.ButtonGreen ? new Color(0.2f, 0.6f, 0.25f, 1f) : SurvivalVisuals.PinBuild);
-            Anchor(btn.GetComponent<RectTransform>(), x0, 0.05f, x1, 0.17f);
-            var t = HookSkin.Outlined(SurvivalVisuals.Text(btn.transform, "Label", label, 40, TextAnchor.MiddleCenter, HookSkin.InkFor(key)));
-            SurvivalVisuals.Stretch(t.rectTransform);
+            Anchor(btn.GetComponent<RectTransform>(), x0, y0, x1, y1);
+            var t = Fit(HookSkin.Outlined(SurvivalVisuals.Text(btn.transform, "Label", label, 38, TextAnchor.MiddleCenter, HookSkin.InkFor(key))), 18, 38);
+            t.fontStyle = FontStyle.Bold;
+            Pad(t.rectTransform);
             btn.gameObject.AddComponent<PressSquash>();
             return btn;
+        }
+
+        /// <summary>Best-fit a label into its rect (shrinks between min and max instead of spilling over the edges).</summary>
+        private static Text Fit(Text text, int min, int max)
+        {
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
+            text.resizeTextForBestFit = true;
+            text.resizeTextMinSize = min;
+            text.resizeTextMaxSize = max;
+            return text;
+        }
+
+        /// <summary>Stretch a label over its button, inset so it clears the painted rim.</summary>
+        private static void Pad(RectTransform rect)
+        {
+            SurvivalVisuals.Stretch(rect);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+            rect.anchorMin = new Vector2(0.08f, 0.14f);
+            rect.anchorMax = new Vector2(0.92f, 0.86f);
         }
     }
 

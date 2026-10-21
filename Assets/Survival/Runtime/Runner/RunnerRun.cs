@@ -62,11 +62,11 @@ namespace Survival.Domain.Runner
         public const float ChaseSeconds = 1.5f;
 
         /// <summary>
-        /// The boss fight is a running fight: once the squad reaches it, the boss backs off down the road at the squad's
-        /// pace, slamming at the front row. The road runs on this far past the level's length; if the boss is still up
-        /// when it runs out, the boss gets away and the run is lost.
+        /// The boss fight is a stand: the squad walks up to an arena line this share of the boss's slam reach in front of
+        /// him (so his slam lands on the front row) and halts there to fight, still steering left / right. He holds his
+        /// ground. There is no time limit: the run is won when he falls and lost only when the squad is wiped.
         /// </summary>
-        public const float BossRunoff = 150f;
+        public const float BossArenaShare = 0.9f;
 
         /// <summary>A hit at least this big (or any boss, box break, follower loss or hero hit) shakes the screen.</summary>
         public const int BigHit = 60;
@@ -294,8 +294,8 @@ namespace Survival.Domain.Runner
     /// the player only steers left / right, which is also the aim. The squad never stops: enemy waves walk in, and what
     /// it does not kill it walks through while they keep swinging (melee in reach, ahead or already passed, ranged foes
     /// shooting either way down the road, bodies touching a caster hurting) and chase it briefly, then they drop behind.
-    /// An enemy hit kills a follower (1 HP) first, the hero only once no followers are left. The boss is a running
-    /// fight: it backs off down the road ahead of the squad, slamming the front row, until it falls or the road runs out. Bonus boxes have HP and must be shot down to be claimed: followers, a new hero, or
+    /// An enemy hit kills a follower (1 HP) first, the hero only once no followers are left. Only the boss stops the
+    /// squad: it halts at his arena line and fights (still steering) until he falls or the squad is wiped. Bonus boxes have HP and must be shot down to be claimed: followers, a new hero, or
     /// weapon / attack-speed upgrades. Reaching the end (or killing the boss, when the level has one) wins; losing the
     /// hero loses. Plain C#, deterministic, stepped by <see cref="Step"/>.
     /// </summary>
@@ -316,6 +316,16 @@ namespace Survival.Domain.Runner
             _catalog = catalog;
             Level = level;
             Hero = new RunnerMember(_nextId++, catalog.Unit(level.Hero), true, 0f, 0f);
+            ArenaLine = level.Length;
+            foreach (var r in level.Rows)
+            {
+                if (r.Kind == RunnerRowKind.Boss)
+                {
+                    var boss = catalog.Unit(r.Unit);
+                    ArenaLine = r.At - (RunnerRules.BossArenaShare * (boss.Range + boss.Radius + Hero.Unit.Radius));
+                }
+            }
+
             _squad.Add(Hero);
             SpawnRows();
         }
@@ -346,11 +356,20 @@ namespace Survival.Domain.Runner
         public int BoxesBroken { get; private set; }
         public int BoxesMissed { get; private set; }
 
-        /// <summary>True while the squad is in the running boss fight (the boss backs off ahead of it).</summary>
+        /// <summary>True once the squad has reached the boss.</summary>
         public bool BossFight { get; private set; }
 
-        /// <summary>How far the road runs: the level's length, plus the boss fight's run-off on a boss level.</summary>
-        public float RoadEnd => Level.HasBoss ? Level.Length + RunnerRules.BossRunoff : Level.Length;
+        /// <summary>True while the squad stands at the boss's arena line (only the boss ever stops it).</summary>
+        public bool Halted { get; private set; }
+
+        /// <summary>
+        /// Where the squad halts for the boss: <see cref="RunnerRules.BossArenaShare"/> of the boss's slam reach in front of
+        /// his row (the level's length without a boss).
+        /// </summary>
+        public float ArenaLine { get; }
+
+        /// <summary>How far the squad can walk: the arena line on a boss level, else the level's length.</summary>
+        public float RoadEnd => Math.Min(Level.Length, ArenaLine);
 
         /// <summary>The level's enemy HP multiplier (progressive levels toughen the same units).</summary>
         public float FoeHpMul => Level.FoeHpMul;
@@ -402,8 +421,10 @@ namespace Survival.Domain.Runner
 
         private void MoveSquad(float dt)
         {
-            // Never held up: the squad walks through whatever it has not killed (and pays for it in hits).
+            // Never held up by the waves: the squad walks through whatever it has not killed (and pays for it in hits).
+            // Only the boss stops it, at the arena line in front of him.
             Distance = Math.Min(RoadEnd, Distance + (Level.Speed * dt));
+            Halted = Level.HasBoss && Distance >= ArenaLine - 1e-4f;
 
             var maxMove = RunnerRules.SteerSpeed * dt;
             Hero.X += Clamp(_steer - Hero.X, -maxMove, maxMove);
@@ -469,21 +490,13 @@ namespace Survival.Domain.Runner
                 f.Walking = false;
                 if (f.Boss)
                 {
-                    // A running fight: once the front row reaches slam range the boss backs off down the road at the
-                    // squad's pace, keeping that range, so it never holds the squad up and keeps slamming the front.
+                    // He holds his ground; the squad halts at the arena line inside his slam reach and they fight it out.
                     var keep = f.Unit.Range + f.Unit.Radius + Hero.Unit.Radius;
-                    var gap = f.Z - Hero.Z;
-                    f.Engaged = gap <= keep + 0.05f;
-                    if (f.Engaged)
+                    f.Engaged = f.Z - Hero.Z <= keep + 0.05f;
+                    if (f.Engaged && !wasEngaged)
                     {
-                        if (!wasEngaged)
-                        {
-                            BossFight = true;
-                            Emit(RunnerEventKind.BossEngaged, f.Id, Hero.Id, f.X, f.Z, f.Hp, true);
-                        }
-
-                        f.Walking = true;
-                        f.Z = Math.Max(f.Z, Hero.Z + keep * 0.9f);
+                        BossFight = true;
+                        Emit(RunnerEventKind.BossEngaged, f.Id, Hero.Id, f.X, f.Z, f.Hp, true);
                     }
 
                     continue;
@@ -1031,14 +1044,6 @@ namespace Survival.Domain.Runner
             var won = Level.HasBoss
                 ? _nextRow >= Level.Rows.Count && !_foes.Exists(f => f.Boss)
                 : Distance >= Level.Length - 1e-3f;
-            if (!won && Level.HasBoss && Distance >= RoadEnd - 1e-3f)
-            {
-                // The road ran out with the boss still up: it gets away.
-                Outcome = RunnerOutcome.Lost;
-                Emit(RunnerEventKind.Lost, Hero.Id, 0, Hero.X, Hero.Z, 0, true);
-                return;
-            }
-
             if (won)
             {
                 Outcome = RunnerOutcome.Won;

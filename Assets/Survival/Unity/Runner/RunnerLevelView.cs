@@ -638,9 +638,17 @@ namespace Survival.Unity
                     continue;
                 }
 
-                // The squad never stops: it walks through whatever it has not killed.
+                // The squad never stops for the waves (it walks through what it has not killed); it only stands at the
+                // boss's arena line.
                 rig.Face(Vector3.forward);
-                rig.Walk();
+                if (_run.Halted)
+                {
+                    rig.Rest();
+                }
+                else
+                {
+                    rig.Walk();
+                }
             }
         }
 
@@ -949,8 +957,7 @@ namespace Survival.Unity
         /// <summary>Map grass either side of a worn dirt road (the battle's painted ground tiles), with painted decor billboards.</summary>
         private void BuildGround(RunnerLevelDef level)
         {
-            // A boss level's road runs on past the boss row for the running fight (the boss backs off down it).
-            var roadEnd = level.HasBoss ? level.Length + RunnerRules.BossRunoff : level.Length;
+            var roadEnd = level.Length;
             var length = roadEnd + 60f;
             var mid = (roadEnd * 0.5f) + 10f;
             var grassTex = LockedBattleGround.Load(LockedBattleGroundSpec.GrassTileRel);

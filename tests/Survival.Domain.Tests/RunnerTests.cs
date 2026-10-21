@@ -330,7 +330,7 @@ public sealed class RunnerTests
     }
 
     [Fact]
-    public void The_squad_never_stops_on_any_level_whatever_is_in_the_road()
+    public void The_squad_never_stops_on_any_level_until_the_boss_arena_line()
     {
         var c = Runner.Catalog();
         foreach (var level in new[] { c.First, c.ByNumber(6), c.Levels[^1] })
@@ -345,11 +345,14 @@ public sealed class RunnerTests
                     run.Step(1f / 30f);
                     if (!run.Over)
                     {
-                        Assert.Equal(before + (level.Speed / 30f), run.Distance, 3);
+                        // Full pace through every wave; only the arena line in front of the boss stops it.
+                        Assert.Equal(Math.Min(before + (level.Speed / 30f), run.ArenaLine), run.Distance, 3);
+                        Assert.Equal(run.Distance >= run.ArenaLine - 1e-3f, run.Halted);
                     }
                 }
 
                 Assert.True(run.Over);
+                Assert.True(run.Distance <= run.ArenaLine + 1e-3f);
             }
         }
     }
@@ -415,52 +418,72 @@ public sealed class RunnerTests
     }
 
     [Fact]
-    public void Killing_the_boss_wins_it_is_a_running_fight_the_boss_backs_off_and_still_blocks_the_whole_road()
+    public void The_squad_halts_at_the_boss_arena_line_and_fights_him_there_he_holds_his_ground_and_fills_the_road()
     {
         var run = Runner.Run(Runner.Tiny(@"{ ""at"": 12, ""kind"": ""enemy"", ""unit"": ""wolf"", ""count"": 2, ""spread"": 2 },
             { ""at"": 36, ""kind"": ""boss"", ""x"": 0, ""unit"": ""boss"" }"));
-        // Line up the wolves first (shots fly straight), then hug the edge: the boss still fills the road and gets hit.
+        var bossUnit = run.Level.Rows.Single(r => r.Kind == RunnerRowKind.Boss);
+        var reach = 1.8f + 1.0f + run.Hero.Unit.Radius;
+        Assert.Equal(36f - (RunnerRules.BossArenaShare * reach), run.ArenaLine, 3);
+        Assert.True(36f - run.ArenaLine < reach, "the line is inside his slam reach, so he fights");
+
+        // Line up the wolves first (shots fly straight), then steer about at the line: the boss still fills the road.
         var events = new List<RunnerEvent>();
-        var engagedAt = -1f;
+        var haltedFor = 0f;
+        var xs = new HashSet<int>();
         while (!run.Over && run.Seconds < 120f)
         {
-            run.SteerTo(run.Foes.Any(f => !f.Boss) ? 0f : 3.9f);
-            var before = run.Distance;
+            run.SteerTo(run.Foes.Any(f => !f.Boss) ? 0f : (float)Math.Sin(run.Seconds * 3f) * 3.9f);
             events.AddRange(run.Step(1f / 30f));
-            Assert.Equal(before + (run.Level.Speed / 30f), run.Distance, 3);
-            if (run.BossFight && run.Foes.FirstOrDefault(f => f.Boss) is { } boss)
+            if (run.Halted)
             {
-                engagedAt = engagedAt < 0f ? boss.Z : engagedAt;
-                // It keeps slam range in front of the hero as it backs off down the road.
-                Assert.InRange(boss.Z - run.Hero.Z, 0.5f, boss.Unit.Range + boss.Unit.Radius + run.Hero.Unit.Radius + 0.2f);
+                haltedFor += 1f / 30f;
+                xs.Add((int)Math.Round(run.Hero.X));
+                Assert.Equal(run.ArenaLine, run.Distance, 3);
+                if (run.Foes.FirstOrDefault(f => f.Boss) is { } boss)
+                {
+                    Assert.Equal(bossUnit.At, boss.Z, 3);
+                    Assert.False(boss.Walking);
+                }
             }
         }
 
         Assert.Contains(events, e => e.Kind == RunnerEventKind.BossEngaged);
         Assert.Contains(events, e => e.Kind == RunnerEventKind.FoeKilled && e.Big);
         Assert.Equal(RunnerOutcome.Won, run.Outcome);
-        Assert.True(run.Distance > 36f - 3f && events.Last(e => e.Kind == RunnerEventKind.FoeKilled).Z > engagedAt, "the boss backed off before it fell");
+        Assert.True(haltedFor > 0.5f, "stood and fought for " + haltedFor);
+        Assert.True(xs.Count >= 3, "still steers left / right at the line");
         Assert.Contains(events, e => e.Kind == RunnerEventKind.Hit && e.Big);
         Assert.DoesNotContain(run.Foes, f => f.Boss);
         Assert.True(run.Kills >= 2);
     }
 
     [Fact]
-    public void A_boss_still_up_when_the_road_runs_out_gets_away()
+    public void There_is_no_time_limit_at_the_boss_only_a_wiped_squad_loses()
     {
-        var c = RunnerCatalog.Parse(@"{
+        static RunnerCatalog Arena(int bossDamage) => RunnerCatalog.Parse(@"{
   ""units"": {
     ""hero"": { ""roster"": ""Lyra"", ""hp"": 100, ""damage"": 1, ""cycle"": 0.5, ""range"": 10, ""ranged"": true, ""shot_speed"": 20 },
-    ""boss"": { ""roster"": ""Ironhowl"", ""hp"": 1000000, ""damage"": 0, ""cycle"": 1.0, ""range"": 1.8, ""radius"": 1.0 }
+    ""boss"": { ""roster"": ""Ironhowl"", ""hp"": 1000000, ""damage"": " + bossDamage + @", ""cycle"": 1.0, ""range"": 1.8, ""radius"": 1.0 }
   },
   ""levels"": [ { ""id"": ""t"", ""hero"": ""hero"", ""length"": 30, ""speed"": 4, ""half_width"": 4,
     ""rows"": [ { ""at"": 25, ""kind"": ""boss"", ""unit"": ""boss"" } ] } ] }");
+
+        // A boss that cannot hurt it: the squad just stands at the line and keeps fighting; nothing ends the run.
+        var c = Arena(0);
         var run = new RunnerRun(c, c.First);
-        var events = Runner.Play(run);
+        var events = Runner.Play(run, maxSeconds: 600f);
+        Assert.False(run.Over);
+        Assert.True(run.Halted);
+        Assert.Equal(run.ArenaLine, run.Distance, 3);
+        Assert.DoesNotContain(events, e => e.Kind == RunnerEventKind.Lost);
+
+        // One that can: lost only once the hero falls.
+        c = Arena(10);
+        run = new RunnerRun(c, c.First);
+        events = Runner.Play(run);
         Assert.Equal(RunnerOutcome.Lost, run.Outcome);
-        Assert.Equal(run.RoadEnd, run.Distance, 2);
-        Assert.Equal(30f + RunnerRules.BossRunoff, run.RoadEnd, 2);
-        Assert.Equal(run.Hero.Unit.Hp, run.Hero.Hp);
+        Assert.Equal(0, run.Hero.Hp);
         Assert.Single(events, e => e.Kind == RunnerEventKind.Lost);
     }
 
