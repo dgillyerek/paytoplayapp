@@ -1,0 +1,46 @@
+{
+  "_doc": "Runner mini-game (Survival > Runner: Walk & Fight). units: runner stats per locked battle rig (roster = LockedBattleRoster name; hp, damage per attack, cycle = seconds between attacks, range m, ranged shots fly at shot_speed m/s, speed = enemy walk-in m/s, 0 = holds its ground, radius m). levels: spawn rows by distance 'at' metres down the lane; x = metres from the centre line (+ right). enemy rows spawn 'count' units 'spread' m apart; box rows have hp and a reward (followers: count copies of unit, hero: one new hero, weapon: +amount damage, rate: +amount attack speed); a boss row ends the level (kill it to win). Without a boss, reaching 'length' wins.",
+  "units": {
+    "lyra": { "roster": "Lyra", "hero": "hero.lyra", "hp": 420, "damage": 26, "cycle": 0.85, "range": 11.5, "ranged": true, "shot_speed": 17, "radius": 0.45 },
+    "rowan": { "roster": "Rowan", "hero": "hero.rowan", "hp": 1, "damage": 15, "cycle": 0.8, "range": 12.5, "ranged": true, "shot_speed": 22, "radius": 0.45 },
+    "oakenshield": { "roster": "Oakenshield", "hero": "hero.oakenshield", "hp": 1, "damage": 24, "cycle": 1.1, "range": 10, "ranged": true, "shot_speed": 15, "radius": 0.5 },
+    "sir_aldric": { "roster": "Sir Aldric", "hero": "hero.sir_aldric", "hp": 1, "damage": 46, "cycle": 1.1, "range": 2.2, "ranged": false, "radius": 0.5 },
+    "bonequill": { "roster": "Bonequill", "hp": 70, "damage": 30, "cycle": 2.2, "range": 7, "ranged": true, "shot_speed": 12, "speed": 0.9, "radius": 0.45 },
+    "nightfang": { "roster": "Nightfang", "hp": 110, "damage": 40, "cycle": 1.3, "range": 1.2, "ranged": false, "speed": 2.2, "radius": 0.6 },
+    "blightroot": { "roster": "Blightroot", "hp": 220, "damage": 60, "cycle": 1.7, "range": 1.5, "ranged": false, "speed": 0, "radius": 0.65 },
+    "ironhowl": { "roster": "Ironhowl", "hp": 4200, "damage": 70, "cycle": 1.5, "range": 1.8, "ranged": false, "speed": 0, "radius": 1.0 }
+  },
+  "levels": [
+    {
+      "id": "runner.thornwood_road",
+      "title": "runner.level.thornwood_road",
+      "hero": "lyra",
+      "length": 150,
+      "speed": 1.7,
+      "half_width": 4.0,
+      "max_followers": 24,
+      "rewards": { "win_gold": 1500, "gold_per_kill": 20, "gold_per_box": 40, "shards": 10, "shard_hero": "hero.lyra" },
+      "rows": [
+        { "at": 12, "kind": "box", "x": -1.6, "hp": 60, "reward": "followers", "unit": "rowan", "count": 2 },
+        { "at": 14, "kind": "box", "x": 1.8, "hp": 110, "reward": "weapon", "amount": 0.25 },
+        { "at": 24, "kind": "enemy", "x": 0, "unit": "bonequill", "count": 2, "spread": 2.4 },
+        { "at": 34, "kind": "box", "x": -2.0, "hp": 180, "reward": "followers", "unit": "lyra", "count": 3 },
+        { "at": 37, "kind": "enemy", "x": 1.4, "unit": "nightfang", "count": 3, "spread": 1.3 },
+        { "at": 48, "kind": "box", "x": 2.0, "hp": 240, "reward": "hero", "unit": "sir_aldric" },
+        { "at": 52, "kind": "enemy", "x": -1.5, "unit": "blightroot", "count": 1 },
+        { "at": 61, "kind": "box", "x": 0, "hp": 260, "reward": "rate", "amount": 0.3 },
+        { "at": 68, "kind": "enemy", "x": -1.0, "unit": "nightfang", "count": 4, "spread": 1.3 },
+        { "at": 74, "kind": "enemy", "x": 1.5, "unit": "bonequill", "count": 3, "spread": 1.5 },
+        { "at": 82, "kind": "box", "x": -2.0, "hp": 380, "reward": "followers", "unit": "rowan", "count": 4 },
+        { "at": 84, "kind": "box", "x": 2.2, "hp": 380, "reward": "hero", "unit": "oakenshield" },
+        { "at": 94, "kind": "enemy", "x": 0, "unit": "blightroot", "count": 2, "spread": 3.0 },
+        { "at": 102, "kind": "box", "x": 0, "hp": 520, "reward": "weapon", "amount": 0.35 },
+        { "at": 110, "kind": "enemy", "x": 0, "unit": "nightfang", "count": 5, "spread": 1.2 },
+        { "at": 116, "kind": "enemy", "x": 0, "unit": "bonequill", "count": 4, "spread": 1.6 },
+        { "at": 123, "kind": "box", "x": -1.9, "hp": 600, "reward": "followers", "unit": "sir_aldric", "count": 2 },
+        { "at": 123, "kind": "box", "x": 1.9, "hp": 600, "reward": "followers", "unit": "lyra", "count": 2 },
+        { "at": 142, "kind": "boss", "x": 0, "unit": "ironhowl" }
+      ]
+    }
+  ]
+}

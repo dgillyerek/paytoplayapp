@@ -1,0 +1,581 @@
+#nullable enable
+using System.Collections.Generic;
+using System.Globalization;
+using Survival.Domain.Campaign;
+using Survival.Domain.Ids;
+using Survival.Domain.Runner;
+using Survival.Domain.Theme;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace Survival.Unity
+{
+    /// <summary>
+    /// Runner HUD in the painted kit (pack.json keys, code-drawn fallback): title plate and distance bar with the boss
+    /// at its end, kills, upgrade chips, the squad badge over the hero, an HP bar with its number over every enemy and
+    /// every box (the same widget for both), rising hit numbers, call-out banners and the result panel.
+    /// </summary>
+    public sealed partial class RunnerLevelView
+    {
+        private static readonly Color Ink = new Color(0.12f, 0.07f, 0.02f, 1f);
+        private static readonly Color FoeFill = new Color(1f, 0.42f, 0.32f, 1f);
+
+        private RectTransform? _hud;
+        private RectTransform? _worldUi;
+        private Image? _progressFill;
+        private Text? _progressText;
+        private Text? _killsText;
+        private Text? _dmgChip;
+        private Text? _spdChip;
+        private RectTransform? _badge;
+        private Text? _badgeText;
+        private Image? _badgePortrait;
+        private Text? _hint;
+        private RectTransform? _result;
+        private RectTransform? _banner;
+        private Text? _bannerText;
+        private float _bannerAge = 9f;
+        private int _lastSquad = -1;
+        private float _badgePunch;
+        private readonly Dictionary<int, WorldBar> _bars = new Dictionary<int, WorldBar>();
+        private readonly List<Floating> _floaters = new List<Floating>();
+
+        private sealed class WorldBar
+        {
+            public RectTransform Root = null!;
+            public Image Fill = null!;
+            public Text Number = null!;
+            public bool OnBox;
+            public bool Boss;
+            public float Height;
+            public RectTransform? Reward;
+        }
+
+        private sealed class Floating
+        {
+            public RectTransform Rt = null!;
+            public Text Text = null!;
+            public Vector3 World;
+            public float Age;
+            public float Life;
+            public Color Color;
+            public float Pop;
+        }
+
+        private void BuildHud()
+        {
+            _hud = SurvivalVisuals.Canvas(transform, "RunnerHud", 60);
+            _worldUi = new GameObject("WorldUi", typeof(RectTransform)).GetComponent<RectTransform>();
+            _worldUi.SetParent(_hud, false);
+            SurvivalVisuals.Stretch(_worldUi);
+
+            // Drag anywhere to steer (under every button).
+            var pad = SurvivalVisuals.Image(_hud, "DragPad", new Color(1f, 1f, 1f, 0f));
+            pad.raycastTarget = true;
+            SurvivalVisuals.Stretch(pad.rectTransform);
+            pad.transform.SetAsFirstSibling();
+            pad.gameObject.AddComponent<RunnerDragPad>().View = this;
+
+            // Title plate + distance bar.
+            var plate = HookSkin.Panel(_hud, "TitlePlate", HookArtKeys.Header, SurvivalVisuals.Panel, 0.6f);
+            Anchor(plate.rectTransform, 0.16f, 0.925f, 0.84f, 0.985f);
+            var title = HookSkin.Outlined(SurvivalVisuals.Text(plate.transform, "Title", S(_level?.Title ?? "", "Runner"), 44, TextAnchor.MiddleCenter, SurvivalVisuals.Cream));
+            SurvivalVisuals.Stretch(title.rectTransform);
+            var bar = HookSkin.Bar(_hud, "Progress", out var fill);
+            Anchor(bar.rectTransform, 0.14f, 0.885f, 0.80f, 0.915f);
+            _progressFill = fill;
+            _progressText = HookSkin.Outlined(SurvivalVisuals.Text(bar.transform, "Metres", "", 24, TextAnchor.MiddleCenter, Color.white));
+            SurvivalVisuals.Stretch(_progressText.rectTransform);
+            if (_level != null && _level.HasBoss)
+            {
+                RunnerRowDef? boss = null;
+                foreach (var r in _level.Rows)
+                {
+                    if (r.Kind == RunnerRowKind.Boss)
+                    {
+                        boss = r;
+                    }
+                }
+
+                var roster = boss != null && _catalog != null ? _catalog.Unit(boss.Unit).Roster : "Ironhowl";
+                var face = HookSkin.Art(_hud, "BossFace", RunnerArtKeys.Portrait(roster), FoeFill);
+                Anchor(face.rectTransform, 0.80f, 0.872f, 0.88f, 0.928f);
+                var tag = HookSkin.Outlined(SurvivalVisuals.Text(face.transform, "Boss", S("runner.boss", "BOSS"), 20, TextAnchor.UpperCenter, FoeFill));
+                tag.rectTransform.anchorMin = new Vector2(0f, -0.45f);
+                tag.rectTransform.anchorMax = new Vector2(1f, 0f);
+                tag.rectTransform.offsetMin = tag.rectTransform.offsetMax = Vector2.zero;
+            }
+
+            // Kills (crossed swords) and upgrade chips.
+            var kills = HookSkin.Panel(_hud, "Kills", HookArtKeys.Chip, SurvivalVisuals.PanelSoft, 0.5f);
+            Anchor(kills.rectTransform, 0.70f, 0.835f, 0.97f, 0.875f);
+            var swords = HookSkin.Art(kills.transform, "Icon", "theme_a.ui.icon_battle", SurvivalVisuals.PinFight);
+            Anchor(swords.rectTransform, 0.02f, -0.15f, 0.30f, 1.15f);
+            _killsText = HookSkin.Outlined(SurvivalVisuals.Text(kills.transform, "Count", "0", 30, TextAnchor.MiddleCenter, Color.white));
+            Anchor(_killsText.rectTransform, 0.30f, 0f, 0.98f, 1f);
+            _dmgChip = Chip("DmgChip", 0.03f, "theme_a.runner.crate_weapon");
+            _spdChip = Chip("SpdChip", 0.25f, "theme_a.runner.crate_speed");
+
+            // Leave (back to the village, or a fresh run on its own).
+            var leave = HookSkin.Button(_hud, "Leave", HookArtKeys.ButtonRed, new Color(0.65f, 0.18f, 0.15f, 1f));
+            Anchor(leave.GetComponent<RectTransform>(), 0.015f, 0.93f, 0.14f, 0.98f);
+            leave.onClick.AddListener(Leave);
+            var leaveText = HookSkin.Outlined(SurvivalVisuals.Text(leave.transform, "Label", S("runner.leave", "Leave"), 24, TextAnchor.MiddleCenter, Color.white));
+            SurvivalVisuals.Stretch(leaveText.rectTransform);
+
+            // Squad badge over the hero (count of everyone walking).
+            _badge = HookSkin.Panel(_worldUi, "SquadBadge", HookArtKeys.Chip, new Color(0.10f, 0.22f, 0.45f, 0.96f), 0.45f).rectTransform;
+            _badge.sizeDelta = new Vector2(150f, 62f);
+            _badgePortrait = HookSkin.Art(_badge, "Face", RunnerArtKeys.Portrait(_catalog != null && _level != null ? _catalog.Unit(_level.Hero).Roster : "Lyra"), SurvivalVisuals.PinBuild);
+            Anchor(_badgePortrait.rectTransform, -0.1f, -0.2f, 0.42f, 1.2f);
+            _badgeText = HookSkin.Outlined(SurvivalVisuals.Text(_badge, "Count", "1", 36, TextAnchor.MiddleCenter, Color.white));
+            Anchor(_badgeText.rectTransform, 0.40f, 0f, 1f, 1f);
+
+            _hint = HookSkin.Outlined(SurvivalVisuals.Text(_hud, "Hint", "⟵  " + S("runner.hint", "Drag or A / D to steer") + "  ⟶", 34, TextAnchor.MiddleCenter, SurvivalVisuals.Cream));
+            Anchor(_hint.rectTransform, 0f, 0.10f, 1f, 0.15f);
+
+            var banner = HookSkin.Panel(_hud, "Banner", HookArtKeys.RibbonBlue, new Color(0.12f, 0.24f, 0.5f, 0.95f), 0.6f);
+            _banner = banner.rectTransform;
+            Anchor(_banner, 0.08f, 0.70f, 0.92f, 0.765f);
+            _bannerText = HookSkin.Outlined(SurvivalVisuals.Text(_banner, "Text", "", 40, TextAnchor.MiddleCenter, Color.white));
+            SurvivalVisuals.Stretch(_bannerText.rectTransform);
+            _banner.gameObject.SetActive(false);
+        }
+
+        private Text Chip(string name, float x, string iconKey)
+        {
+            var chip = HookSkin.Panel(_hud!, name, HookArtKeys.Chip, SurvivalVisuals.PanelSoft, 0.5f);
+            Anchor(chip.rectTransform, x, 0.835f, x + 0.2f, 0.875f);
+            var icon = HookSkin.Art(chip.transform, "Icon", iconKey, SurvivalVisuals.Gold);
+            Anchor(icon.rectTransform, 0.0f, -0.25f, 0.36f, 1.25f);
+            var t = HookSkin.Outlined(SurvivalVisuals.Text(chip.transform, "Value", "", 24, TextAnchor.MiddleCenter, Color.white));
+            Anchor(t.rectTransform, 0.34f, 0f, 1f, 1f);
+            chip.gameObject.SetActive(false);
+            return t;
+        }
+
+        private static void Anchor(RectTransform rt, float x0, float y0, float x1, float y1)
+        {
+            rt.anchorMin = new Vector2(x0, y0);
+            rt.anchorMax = new Vector2(x1, y1);
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+        }
+
+        private void ShowHint(bool on)
+        {
+            if (_hint != null)
+            {
+                _hint.gameObject.SetActive(on && !_steered);
+            }
+        }
+
+        private void TickHud(float dt)
+        {
+            if (_run == null)
+            {
+                return;
+            }
+
+            if (_progressFill != null)
+            {
+                HookSkin.SetBar(_progressFill, _run.Progress, HookArtKeys.BarFillGold, SurvivalVisuals.Gold);
+            }
+
+            if (_progressText != null)
+            {
+                _progressText.text = Mathf.FloorToInt(_run.Distance).ToString(CultureInfo.InvariantCulture) + " / " + Mathf.RoundToInt(_run.Level.Length) + " m";
+            }
+
+            if (_killsText != null)
+            {
+                _killsText.text = _run.Kills.ToString(CultureInfo.InvariantCulture);
+            }
+
+            SetChip(_dmgChip, _run.DamageMul, "runner.box.weapon", "+{0}% DMG");
+            SetChip(_spdChip, _run.RateMul, "runner.box.rate", "+{0}% SPD");
+            var squad = _run.Squad.Count;
+            if (squad != _lastSquad)
+            {
+                _badgePunch = _lastSquad >= 0 ? 1f : 0f;
+                _lastSquad = squad;
+                if (_badgeText != null)
+                {
+                    _badgeText.text = "×" + squad.ToString(CultureInfo.InvariantCulture);
+                }
+            }
+
+            _badgePunch = Mathf.MoveTowards(_badgePunch, 0f, dt * 3.5f);
+            if (_badge != null)
+            {
+                _badge.localScale = Vector3.one * (1f + (0.3f * Mathf.Sin(_badgePunch * Mathf.PI)));
+                _badge.gameObject.SetActive(!_run.Over || _run.Outcome == RunnerOutcome.Won);
+            }
+
+            if (_banner != null)
+            {
+                _bannerAge += dt;
+                var on = _bannerAge < 1.8f;
+                _banner.gameObject.SetActive(on);
+                if (on)
+                {
+                    var t = Mathf.Clamp01(_bannerAge / 0.18f);
+                    _banner.localScale = Vector3.one * Mathf.LerpUnclamped(1.4f, 1f, t);
+                }
+            }
+
+            TickFloaters(dt);
+        }
+
+        private void SetChip(Text? chip, float mul, string key, string fallback)
+        {
+            if (chip == null)
+            {
+                return;
+            }
+
+            var on = mul > 1.0001f;
+            chip.transform.parent.gameObject.SetActive(on);
+            if (on)
+            {
+                chip.text = Fmt(key, fallback, Mathf.RoundToInt((mul - 1f) * 100f));
+            }
+        }
+
+        private void Banner(string text, Color color)
+        {
+            if (_banner == null || _bannerText == null)
+            {
+                return;
+            }
+
+            _bannerText.text = text;
+            _bannerText.color = color;
+            _bannerAge = 0f;
+            _banner.gameObject.SetActive(true);
+        }
+
+        // ---------- world-anchored UI ----------
+
+        private void AddBar(int id, bool onBox, float height, bool boss)
+        {
+            if (_worldUi == null || _bars.ContainsKey(id))
+            {
+                return;
+            }
+
+            var root = new GameObject(onBox ? "BoxBar" : "FoeBar", typeof(RectTransform)).GetComponent<RectTransform>();
+            root.SetParent(_worldUi, false);
+            root.sizeDelta = boss ? new Vector2(300f, 34f) : new Vector2(150f, 26f);
+            var frame = HookSkin.Bar(root, "Bar", out var fill);
+            SurvivalVisuals.Stretch(frame.rectTransform);
+            var number = HookSkin.Outlined(SurvivalVisuals.Text(root, "Hp", "", boss ? 30 : 26, TextAnchor.MiddleCenter, Color.white));
+            number.rectTransform.anchorMin = new Vector2(0f, 1f);
+            number.rectTransform.anchorMax = new Vector2(1f, 2.2f);
+            number.rectTransform.offsetMin = number.rectTransform.offsetMax = Vector2.zero;
+            var bar = new WorldBar { Root = root, Fill = fill, Number = number, OnBox = onBox, Boss = boss, Height = height };
+            if (onBox && _boxDefs.TryGetValue(id, out var def))
+            {
+                bar.Reward = RewardTag(root, def);
+            }
+
+            _bars[id] = bar;
+        }
+
+        /// <summary>What a box pays, drawn over its bar: hero portrait + "+3", or the upgrade %.</summary>
+        private RectTransform RewardTag(RectTransform bar, RunnerBoxDef def)
+        {
+            var tag = HookSkin.Panel(bar, "Reward", HookArtKeys.Plate, new Color(0.12f, 0.2f, 0.36f, 0.95f), 0.4f).rectTransform;
+            tag.anchorMin = new Vector2(0.05f, 2.25f);
+            tag.anchorMax = new Vector2(0.95f, 4.3f);
+            tag.offsetMin = tag.offsetMax = Vector2.zero;
+            string label;
+            string icon;
+            switch (def.Kind)
+            {
+                case RunnerBoxKind.Weapon:
+                    label = Fmt("runner.box.weapon", "+{0}% DMG", Mathf.RoundToInt(def.Amount * 100f));
+                    icon = "theme_a.runner.crate_weapon";
+                    break;
+                case RunnerBoxKind.Rate:
+                    label = Fmt("runner.box.rate", "+{0}% SPD", Mathf.RoundToInt(def.Amount * 100f));
+                    icon = "theme_a.runner.crate_speed";
+                    break;
+                default:
+                {
+                    var roster = _catalog != null ? _catalog.Unit(def.Unit).Roster : def.Unit;
+                    label = def.Kind == RunnerBoxKind.Hero ? HeroName(def.Unit) : Fmt("runner.box.followers", "+{0}", def.Count);
+                    icon = RunnerArtKeys.Portrait(roster);
+                    break;
+                }
+            }
+
+            var art = HookSkin.Art(tag, "Icon", icon, SurvivalVisuals.Gold);
+            Anchor(art.rectTransform, -0.05f, -0.15f, 0.38f, 1.15f);
+            var text = HookSkin.Outlined(SurvivalVisuals.Text(tag, "Text", label, 24, TextAnchor.MiddleCenter, def.Kind == RunnerBoxKind.Rate ? new Color(0.6f, 0.92f, 1f, 1f) : SurvivalVisuals.Reward));
+            Anchor(text.rectTransform, 0.36f, 0f, 1f, 1f);
+            return tag;
+        }
+
+        private void RemoveBar(int id)
+        {
+            if (_bars.TryGetValue(id, out var bar))
+            {
+                _bars.Remove(id);
+                if (bar.Root != null)
+                {
+                    Destroy(bar.Root.gameObject);
+                }
+            }
+        }
+
+        private void PlaceWorldUi()
+        {
+            if (_cam == null || _run == null || _hud == null)
+            {
+                return;
+            }
+
+            foreach (var pair in _bars)
+            {
+                var bar = pair.Value;
+                Vector3 at;
+                float fraction;
+                int hp;
+                if (bar.OnBox)
+                {
+                    var b = _run.Box(pair.Key);
+                    if (b == null)
+                    {
+                        continue;
+                    }
+
+                    at = new Vector3(b.X, bar.Height + 0.25f, b.Z);
+                    fraction = b.HpFraction;
+                    hp = b.Hp;
+                }
+                else
+                {
+                    var f = _run.Foe(pair.Key);
+                    if (f == null)
+                    {
+                        continue;
+                    }
+
+                    at = new Vector3(f.X, bar.Height + 0.3f, f.Z);
+                    fraction = f.HpFraction;
+                    hp = f.Hp;
+                }
+
+                var visible = Place(bar.Root, at);
+                bar.Root.gameObject.SetActive(visible);
+                if (!visible)
+                {
+                    continue;
+                }
+
+                HookSkin.SetBar(bar.Fill, fraction, bar.OnBox ? HookArtKeys.BarFillGold : HookArtKeys.BarFillGreen, bar.OnBox ? SurvivalVisuals.Gold : FoeFill);
+                if (!bar.OnBox)
+                {
+                    bar.Fill.color = FoeFill;
+                }
+
+                bar.Number.text = hp.ToString(CultureInfo.InvariantCulture);
+            }
+
+            if (_badge != null && _members.TryGetValue(_run.Hero.Id, out var hero))
+            {
+                Place(_badge, hero.Slot.position + (Vector3.up * (hero.Height + 0.55f)));
+            }
+
+            foreach (var f in _floaters)
+            {
+                Place(f.Rt, f.World + (Vector3.up * (f.Age * 1.4f)));
+            }
+        }
+
+        /// <summary>Put a HUD rect over a world point; false when it is behind the camera or off screen.</summary>
+        private bool Place(RectTransform rt, Vector3 world)
+        {
+            var sp = _cam!.WorldToScreenPoint(world);
+            if (sp.z <= 0.1f)
+            {
+                return false;
+            }
+
+            var canvas = _hud!.GetComponent<Canvas>();
+            var scale = canvas != null && canvas.scaleFactor > 0f ? canvas.scaleFactor : 1f;
+            rt.anchorMin = rt.anchorMax = Vector2.zero;
+            rt.anchoredPosition = new Vector2(sp.x / scale, sp.y / scale);
+            return sp.x > -200f && sp.x < Screen.width + 200f && sp.y > -100f && sp.y < Screen.height + 100f;
+        }
+
+        private void HitNumber(Vector3 world, int amount, bool big, bool onBox, bool onHero = false)
+        {
+            var color = onHero ? new Color(1f, 0.35f, 0.3f, 1f) : big ? new Color(1f, 0.85f, 0.25f, 1f) : onBox ? new Color(1f, 0.93f, 0.7f, 1f) : Color.white;
+            Floater(world, (onHero ? "-" : "") + amount.ToString(CultureInfo.InvariantCulture), color, big ? 50 : 36);
+        }
+
+        private void Floater(Vector3 world, string text, Color color, int size)
+        {
+            if (_worldUi == null || _floaters.Count > 60)
+            {
+                return;
+            }
+
+            var t = HookSkin.Outlined(SurvivalVisuals.Text(_worldUi, "Hit", text, size, TextAnchor.MiddleCenter, color));
+            t.rectTransform.sizeDelta = new Vector2(220f, 70f);
+            var jitter = new Vector3(Random.Range(-0.35f, 0.35f), 0f, 0f);
+            _floaters.Add(new Floating { Rt = t.rectTransform, Text = t, World = world + jitter, Life = 0.85f, Color = color, Pop = 1f });
+        }
+
+        private void TickFloaters(float dt)
+        {
+            for (var i = _floaters.Count - 1; i >= 0; i--)
+            {
+                var f = _floaters[i];
+                f.Age += dt;
+                if (f.Rt == null || f.Age >= f.Life)
+                {
+                    if (f.Rt != null)
+                    {
+                        Destroy(f.Rt.gameObject);
+                    }
+
+                    _floaters.RemoveAt(i);
+                    continue;
+                }
+
+                var u = f.Age / f.Life;
+                f.Rt.localScale = Vector3.one * (1f + (0.5f * Mathf.Max(0f, 1f - (f.Age / 0.12f))));
+                var c = f.Color;
+                c.a = 1f - (u * u * u);
+                f.Text.color = c;
+            }
+        }
+
+        private void ClearFloaters()
+        {
+            foreach (var f in _floaters)
+            {
+                if (f.Rt != null)
+                {
+                    Destroy(f.Rt.gameObject);
+                }
+            }
+
+            _floaters.Clear();
+            foreach (var b in _bars.Values)
+            {
+                if (b.Root != null)
+                {
+                    Destroy(b.Root.gameObject);
+                }
+            }
+
+            _bars.Clear();
+            _lastSquad = -1;
+        }
+
+        // ---------- result ----------
+
+        private void HideResult()
+        {
+            if (_result != null)
+            {
+                Destroy(_result.gameObject);
+                _result = null;
+            }
+        }
+
+        private void ShowResult(RunnerResult result, RewardBundle bundle, bool saved)
+        {
+            HideResult();
+            if (_hud == null)
+            {
+                return;
+            }
+
+            var dim = SurvivalVisuals.Image(_hud, "RunnerResult", new Color(0.02f, 0.03f, 0.05f, 0.78f));
+            dim.raycastTarget = true;
+            SurvivalVisuals.Stretch(dim.rectTransform);
+            _result = dim.rectTransform;
+            if (result.Won)
+            {
+                var rays = HookSkin.Art(_result, "Rays", HookArtKeys.FxRays, new Color(1f, 0.85f, 0.4f, 0.3f));
+                Anchor(rays.rectTransform, -0.2f, 0.42f, 1.2f, 1.02f);
+                rays.color = new Color(1f, 0.92f, 0.6f, 0.75f);
+                rays.gameObject.AddComponent<RunnerSpin>();
+            }
+
+            var panel = HookSkin.Panel(_result, "Panel", HookArtKeys.Panel, SurvivalVisuals.InspectFill, 1f);
+            Anchor(panel.rectTransform, 0.07f, 0.22f, 0.93f, 0.76f);
+            var ribbon = HookSkin.Panel(panel.transform, "Ribbon", result.Won ? HookArtKeys.RibbonBlue : HookArtKeys.RibbonRed, result.Won ? new Color(0.15f, 0.3f, 0.6f, 1f) : new Color(0.55f, 0.15f, 0.12f, 1f), 0.7f);
+            Anchor(ribbon.rectTransform, -0.06f, 0.86f, 1.06f, 1.04f);
+            var title = HookSkin.Outlined(SurvivalVisuals.Text(ribbon.transform, "Title", result.Won ? S("runner.victory", "VICTORY!") : S("runner.defeat", "DEFEAT"), 64, TextAnchor.MiddleCenter, result.Won ? new Color(1f, 0.9f, 0.45f, 1f) : Color.white));
+            SurvivalVisuals.Stretch(title.rectTransform);
+
+            var rows = new[]
+            {
+                (S("runner.result.kills", "Enemies defeated"), result.Kills.ToString(CultureInfo.InvariantCulture)),
+                (S("runner.result.boxes", "Boxes broken"), result.BoxesBroken + " / " + (result.BoxesBroken + result.BoxesMissed + (_run?.Boxes.Count ?? 0))),
+                (S("runner.result.squad", "Biggest squad"), "×" + (result.FollowersPeak + 1)),
+                (S("runner.result.distance", "Distance"), Mathf.FloorToInt(result.Distance) + " m")
+            };
+            for (var i = 0; i < rows.Length; i++)
+            {
+                var y = 0.76f - (i * 0.075f);
+                var k = SurvivalVisuals.Text(panel.transform, "Stat" + i, rows[i].Item1, 32, TextAnchor.MiddleLeft, HookSkin.ParchmentInk);
+                Anchor(k.rectTransform, 0.1f, y - 0.035f, 0.7f, y + 0.035f);
+                var v = SurvivalVisuals.Text(panel.transform, "Value" + i, rows[i].Item2, 34, TextAnchor.MiddleRight, HookSkin.ParchmentTitle);
+                Anchor(v.rectTransform, 0.55f, y - 0.035f, 0.9f, y + 0.035f);
+            }
+
+            // Rewards: gold always (kills + boxes), win gold and hero shards on a win.
+            var rewards = bundle.AsRows();
+            var x = 0.5f - ((rewards.Count - 1) * 0.16f);
+            foreach (var pair in rewards)
+            {
+                var slot = HookSkin.Panel(panel.transform, "Reward", HookArtKeys.Plate, SurvivalVisuals.RowFill, 0.5f);
+                Anchor(slot.rectTransform, x - 0.14f, 0.27f, x + 0.14f, 0.45f);
+                var icon = HookSkin.ResIcon(slot.transform, "Icon", pair.Key, SurvivalVisuals.Gold, pair.Key == SurvIds.ResSoft ? "G" : "S");
+                Anchor(icon.rectTransform, 0.2f, 0.38f, 0.8f, 0.98f);
+                var amount = HookSkin.Outlined(SurvivalVisuals.Text(slot.transform, "Amount", "+" + pair.Value.ToString("N0", CultureInfo.InvariantCulture), 32, TextAnchor.MiddleCenter, Color.white));
+                Anchor(amount.rectTransform, 0f, 0.02f, 1f, 0.4f);
+                x += 0.32f;
+            }
+
+            if (!RunnerHandoff.FromPlay)
+            {
+                var note = SurvivalVisuals.Text(panel.transform, "Saved", saved ? S("runner.result.saved", "Rewards saved") : "Open from the village to keep rewards", 24, TextAnchor.MiddleCenter, HookSkin.ParchmentInk);
+                Anchor(note.rectTransform, 0.05f, 0.2f, 0.95f, 0.26f);
+            }
+
+            var retry = PanelButton(panel.transform, "Retry", S("runner.retry", "Retry"), HookArtKeys.ButtonBlue, RunnerHandoff.FromPlay ? 0.06f : 0.25f, RunnerHandoff.FromPlay ? 0.47f : 0.75f);
+            retry.onClick.AddListener(Retry);
+            if (RunnerHandoff.FromPlay)
+            {
+                var cont = PanelButton(panel.transform, "Continue", S("runner.continue", "Continue"), HookArtKeys.ButtonGreen, 0.53f, 0.94f);
+                cont.onClick.AddListener(Leave);
+            }
+
+            _result.localScale = Vector3.one;
+        }
+
+        private static Button PanelButton(Transform parent, string name, string label, string key, float x0, float x1)
+        {
+            var btn = HookSkin.Button(parent, name, key, key == HookArtKeys.ButtonGreen ? new Color(0.2f, 0.6f, 0.25f, 1f) : SurvivalVisuals.PinBuild);
+            Anchor(btn.GetComponent<RectTransform>(), x0, 0.05f, x1, 0.17f);
+            var t = HookSkin.Outlined(SurvivalVisuals.Text(btn.transform, "Label", label, 40, TextAnchor.MiddleCenter, HookSkin.InkFor(key)));
+            SurvivalVisuals.Stretch(t.rectTransform);
+            btn.gameObject.AddComponent<PressSquash>();
+            return btn;
+        }
+    }
+
+    /// <summary>Slow spin for the victory rays.</summary>
+    public sealed class RunnerSpin : MonoBehaviour
+    {
+        private void Update() => transform.Rotate(0f, 0f, -18f * Time.deltaTime);
+    }
+}

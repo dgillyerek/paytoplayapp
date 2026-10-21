@@ -1,0 +1,110 @@
+#nullable enable
+using System;
+using System.Collections.Generic;
+using Survival.Domain.Campaign;
+using Survival.Domain.Ids;
+
+namespace Survival.Domain.Runner
+{
+    /// <summary>Gold per kill and per box broken either way; the win gold and the hero shards only for a win.</summary>
+    public static class RunnerRewards
+    {
+        public static RewardBundle For(RunnerLevelDef level, RunnerResult result)
+        {
+            var r = level.Rewards;
+            var gold = (result.Kills * r.GoldPerKill) + (result.BoxesBroken * r.GoldPerBox) + (result.Won ? r.WinGold : 0);
+            var bundle = new RewardBundle { Won = result.Won };
+            if (gold > 0)
+            {
+                bundle.Resources[SurvIds.ResSoft] = gold;
+            }
+
+            if (result.Won && r.Shards > 0 && r.ShardHero.Length > 0)
+            {
+                bundle.ShardHero = r.ShardHero;
+                bundle.Shards = r.Shards;
+            }
+
+            return bundle;
+        }
+
+        /// <summary>Pay a bundle into the wallet and the hero roster (the same path a Battle Setup fight pays through).</summary>
+        public static void Grant(RewardBundle bundle, CampaignSession campaign)
+        {
+            campaign.Wallet.Grant(bundle.Resources);
+            if (bundle.Shards > 0 && bundle.ShardHero.Length > 0)
+            {
+                campaign.Roster.AddShards(bundle.ShardHero, bundle.Shards);
+            }
+
+            campaign.Touch();
+        }
+
+        /// <summary>Several runs (Retry) paid together: resources and shards summed per hero.</summary>
+        public static Dictionary<string, int> Rows(IEnumerable<RewardBundle> bundles)
+        {
+            var rows = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (var b in bundles)
+            {
+                foreach (var pair in b.AsRows())
+                {
+                    rows.TryGetValue(pair.Key, out var have);
+                    rows[pair.Key] = have + pair.Value;
+                }
+            }
+
+            return rows;
+        }
+    }
+
+    /// <summary>
+    /// Play → RunnerLevel round trip (the scene loads additively; Play stays loaded). <see cref="Begin"/> names the level;
+    /// every finished run (Retry included) is banked with <see cref="Bank"/> and paid once when the scene hands back with
+    /// <see cref="Finish"/>. Standalone (menu entry), nothing is pending and the scene pays the save file itself.
+    /// </summary>
+    public static class RunnerHandoff
+    {
+        private static readonly List<(RunnerResult Result, RewardBundle Bundle)> Banked = new();
+
+        public static string? PendingLevel { get; private set; }
+        public static bool FromPlay => PendingLevel != null;
+        public static bool Done { get; private set; }
+
+        public static IReadOnlyList<(RunnerResult Result, RewardBundle Bundle)> Runs => Banked;
+
+        public static event Action? Finished;
+
+        public static void Begin(string levelId)
+        {
+            PendingLevel = levelId ?? throw new ArgumentNullException(nameof(levelId));
+            Banked.Clear();
+            Done = false;
+        }
+
+        public static void Bank(RunnerResult result, RewardBundle bundle) => Banked.Add((result, bundle));
+
+        public static void Finish()
+        {
+            Done = true;
+            Finished?.Invoke();
+        }
+
+        /// <summary>The banked runs, cleared; Play pays them.</summary>
+        public static List<(RunnerResult Result, RewardBundle Bundle)> Take()
+        {
+            var runs = new List<(RunnerResult, RewardBundle)>(Banked);
+            Banked.Clear();
+            PendingLevel = null;
+            Done = false;
+            return runs;
+        }
+
+        public static void Reset()
+        {
+            Banked.Clear();
+            PendingLevel = null;
+            Done = false;
+            Finished = null;
+        }
+    }
+}
