@@ -75,7 +75,7 @@ namespace Survival.Unity
             r.sharedMaterial = mat;
         }
 
-        private static MeshRenderer Quad(Transform parent, string name, float width, float depth, float x, float y, float z)
+        internal static MeshRenderer Quad(Transform parent, string name, float width, float depth, float x, float y, float z)
         {
             var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
             go.name = name;
@@ -87,7 +87,7 @@ namespace Survival.Unity
             return go.GetComponent<MeshRenderer>();
         }
 
-        private static Material Lit(Texture2D? tex, Color fallback, bool transparent)
+        internal static Material Lit(Texture2D? tex, Color fallback, bool transparent)
         {
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
             var mat = new Material(shader);
@@ -126,7 +126,7 @@ namespace Survival.Unity
             return mat;
         }
 
-        private static void Tile(Material mat, float u, float v)
+        internal static void Tile(Material mat, float u, float v)
         {
             var scale = new Vector2(u, v);
             if (mat.HasProperty(BaseMapId))
@@ -138,7 +138,7 @@ namespace Survival.Unity
         }
 
         /// <summary>URP alpha blend, no depth write, drawn after the ground.</summary>
-        private static void MakeTransparent(Material mat)
+        internal static void MakeTransparent(Material mat)
         {
             if (mat.HasProperty("_Surface"))
             {
@@ -158,7 +158,7 @@ namespace Survival.Unity
             mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent - 10;
         }
 
-        private static Texture2D? Load(string themePackRel)
+        internal static Texture2D? Load(string themePackRel)
         {
             var path = Path.Combine(Application.dataPath, themePackRel.Replace('/', Path.DirectorySeparatorChar));
             if (!File.Exists(path))

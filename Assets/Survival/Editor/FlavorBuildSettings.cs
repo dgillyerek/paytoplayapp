@@ -13,6 +13,7 @@ namespace Survival.Editor
         private const string Splash = "Assets/Survival/Scenes/Splash.unity";
         private const string Play = "Assets/Survival/Scenes/Play.unity";
         private const string BattleLocked = "Assets/Survival/Scenes/BattleLocked.unity";
+        private const string Runner = Survival.Unity.RunnerLevelView.ScenePath;
         private const string GroveBoard = "Assets/Grove/Scenes/Board.unity";
 
         [MenuItem("Survival/Use Theme A Flavor (fantasy_kingdom_a)")]
@@ -26,6 +27,7 @@ namespace Survival.Editor
                 new EditorBuildSettingsScene(Splash, true),
                 new EditorBuildSettingsScene(Play, true),
                 new EditorBuildSettingsScene(BattleLocked, true),
+                new EditorBuildSettingsScene(Runner, true),
                 new EditorBuildSettingsScene(GroveBoard, true)
             };
             Debug.Log("Survival flavor " + SurvIds.FlavorIdFantasyKingdomA + " → Splash then Play. Pack " + SurvIds.ThemeIdFantasyKingdomA);
@@ -51,6 +53,39 @@ namespace Survival.Editor
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
                 BattleLocked,
                 UnityEditor.SceneManagement.OpenSceneMode.Single);
+        }
+
+        /// <summary>
+        /// Runner mini-game on its own (RunnerLevel scene, Play pressed): steer the squad with drag or A / D, shoot the bonus
+        /// boxes down for followers and upgrades, beat Ironhowl at the end. Also reachable from Play's Runner button, which
+        /// needs the scene in Build Settings; this entry adds it when missing.
+        /// </summary>
+        [MenuItem("Survival/Runner: Walk & Fight")]
+        public static void OpenRunner()
+        {
+            if (!UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            {
+                return;
+            }
+
+            EnsureInBuild(Runner);
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(Runner, UnityEditor.SceneManagement.OpenSceneMode.Single);
+            EditorApplication.isPlaying = true;
+        }
+
+        private static void EnsureInBuild(string path)
+        {
+            var scenes = new System.Collections.Generic.List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
+            foreach (var s in scenes)
+            {
+                if (s.path == path)
+                {
+                    return;
+                }
+            }
+
+            scenes.Add(new EditorBuildSettingsScene(path, true));
+            EditorBuildSettings.scenes = scenes.ToArray();
         }
 
         [MenuItem("Survival/Import locked Sir Aldric rear master")]

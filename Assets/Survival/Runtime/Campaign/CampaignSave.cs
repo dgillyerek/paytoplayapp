@@ -69,6 +69,7 @@ namespace Survival.Domain.Campaign
             w.Field("wins", s.Wins);
             w.Field("battles", s.Battles);
             w.Field("bounty", s.BountyIndex);
+            w.Field("runner_unlocked", s.RunnerUnlocked);
             w.End();
             return w.ToString();
         }
@@ -139,6 +140,7 @@ namespace Survival.Domain.Campaign
             }
 
             s.RestoreCounters(CampaignCatalog.Int(o, "wins", 0), CampaignCatalog.Int(o, "battles", 0), CampaignCatalog.Int(o, "bounty", 0), cleared);
+            s.RestoreRunner(CampaignCatalog.Int(o, "runner_unlocked", 1));
             return true;
         }
     }

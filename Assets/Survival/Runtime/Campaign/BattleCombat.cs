@@ -269,6 +269,9 @@ namespace Survival.Domain.Campaign
         public bool FirstClear { get; set; }
         public bool Won { get; set; }
 
+        /// <summary>Runner level this bundle pays for (0 = not a runner run); a win opens the next level when granted.</summary>
+        public int RunnerNumber { get; set; }
+
         /// <summary>Resource ids plus "shard.{hero id}" for the celebration rows.</summary>
         public Dictionary<string, int> AsRows()
         {

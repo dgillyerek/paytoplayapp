@@ -135,6 +135,9 @@ namespace Survival.Unity
 
         /// <summary>Locked battle pose name: rest, walk or attack.</summary>
         public string BattlePose => _battlePose;
+
+        /// <summary>Playback rate of the battle attack clips (runner: one sped-up thrust per hit); 1 in the battle.</summary>
+        public float BattleSpeed { get; set; } = 1f;
         public string? NamedClipExactName => _namedClipExactName;
         public bool HasAttackClip => _attackReady;
         public float WalkLength => _walkLength;
@@ -667,7 +670,7 @@ namespace Survival.Unity
                 SetAvatarVisible(_instance, false);
                 SetAvatarVisible(_slashInstance, false);
                 SetAvatarVisible(_liteInstance, true);
-                var namedT = timeSeconds - _namedClipOrigin;
+                var namedT = (timeSeconds - _namedClipOrigin) * (SirAldricBattlePoses.IsAttackPose(_battlePose) ? BattleSpeed : 1f);
                 if (namedT < 0f)
                 {
                     namedT = 0f;

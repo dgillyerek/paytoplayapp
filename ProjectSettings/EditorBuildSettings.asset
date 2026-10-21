@@ -15,6 +15,9 @@ EditorBuildSettings:
     path: Assets/Survival/Scenes/BattleLocked.unity
     guid: 1e17599e6be640168c293406067786a5
   - enabled: 1
+    path: Assets/Survival/Runner/RunnerLevel.unity
+    guid: 0ab3efc1a323440683348e4fa2094540
+  - enabled: 1
     path: Assets/Grove/Scenes/Board.unity
     guid: b65522f703b44f9799e3eee95f2f36d0
   m_configObjects: {}

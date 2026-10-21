@@ -210,6 +210,10 @@ namespace Survival.Unity
             var campaignView = GetComponent<SurvivalCampaignView>() ?? gameObject.AddComponent<SurvivalCampaignView>();
             campaignView.Build(this, Session, hookOn ? GetComponent<SurvivalHookView>() : null);
 
+            // Runner: Walk & Fight (RunnerLevel scene) behind a painted event button; pays through the campaign wallet.
+            var runnerEntry = GetComponent<SurvivalRunnerEntry>() ?? gameObject.AddComponent<SurvivalRunnerEntry>();
+            runnerEntry.Build(this, pack, hookOn ? GetComponent<SurvivalHookView>() : null, campaignView);
+
             ApplyScreen(1f);
         }
 

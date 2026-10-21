@@ -61,6 +61,12 @@ namespace Survival.Unity
 
         public bool Built => _ready;
         public string Pose => _pose;
+
+        /// <summary>
+        /// Playback rate of the attack take (1 = as authored). The runner speeds the take up so one take is one shot;
+        /// the battle leaves it at 1.
+        /// </summary>
+        public float AttackSpeed { get; set; } = 1f;
         public float ClipLength => _length;
         public Bounds VisibleBounds { get; private set; }
 
@@ -284,7 +290,7 @@ namespace Survival.Unity
                 return;
             }
 
-            _time += Time.unscaledDeltaTime;
+            _time += Time.unscaledDeltaTime * AttackSpeed;
             bool inClip;
             int cycle;
             var frame = _attackSpec != null

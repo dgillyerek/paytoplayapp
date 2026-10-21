@@ -101,6 +101,12 @@
     "x_max": 0.975,
     "y_top_max": 0.438
   },
+  "runner_button": {
+    "x_min": 0.8,
+    "y_top_min": 0.548,
+    "x_max": 0.975,
+    "y_top_max": 0.648
+  },
   "hero_free": {
     "x_min": 0.8,
     "y_top_min": 0.448,
