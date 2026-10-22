@@ -41,6 +41,7 @@ namespace Survival.Unity
         private Scene _target;
         private bool _watching;
         private float _watchStarted;
+        private bool _warnedGaveUp;
 
         public bool Covered => _t.Covered;
 
@@ -73,6 +74,20 @@ namespace Survival.Unity
             _target = target;
             _watching = true;
             _watchStarted = Time.unscaledTime;
+        }
+
+        /// <summary>
+        /// Stop waiting for a destination frame and fade out (after the minimum show time). Used when the trip fails
+        /// part-way, so the screen never freezes the game under it.
+        /// </summary>
+        public void Release(string why)
+        {
+            if (!_t.TargetRendered)
+            {
+                Debug.LogWarning("Loading screen released: " + why);
+            }
+
+            _t.Release();
         }
 
         public IEnumerator WaitCovered()
@@ -112,6 +127,12 @@ namespace Survival.Unity
             }
 
             _t.Step(Time.unscaledTimeAsDouble);
+            if (_t.GaveUp && !_warnedGaveUp)
+            {
+                _warnedGaveUp = true;
+                Debug.LogWarning("Battle loading: destination never rendered within " + BattleTransition.ShowLimitSeconds + " s of the screen going up; clearing it anyway.");
+            }
+
             Apply();
             if (_t.Done)
             {

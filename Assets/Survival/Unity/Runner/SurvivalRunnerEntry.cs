@@ -142,76 +142,136 @@ namespace Survival.Unity
                 : RunnerLoading.Back(S(RunnerLoading.IntoKey, "Onto the road!"), levelName, tip);
 
             // The painted loading screen's floor camera keeps Display 1 rendering while Play's cameras are off and
-            // the runner's camera doesn't exist yet. Play is only hidden once the screen covers it.
+            // the runner's camera doesn't exist yet. Play is only hidden once the screen covers it. Everything after
+            // the screen goes up runs under try / finally: if any step throws, the village comes back and the
+            // screen is released instead of freezing the game under it (it also clears itself after
+            // BattleTransition.ShowLimitSeconds whatever happens).
             var into = BattleLoadingScreen.Show(info, vs);
-            yield return into.WaitCovered();
-            var render = Capture();
-            var hidden = Hide(playScene);
-            RunnerHandoff.Begin(levelId, unlocked);
-            var load = SceneManager.LoadSceneAsync(RunnerLevelView.SceneName, LoadSceneMode.Additive);
-            while (load != null && !load.isDone)
+            BattleLoadingScreen? back = null;
+            var hidden = new List<Behaviour>();
+            System.Action? render = null;
+            var runner = default(Scene);
+            var finished = false;
+            try
             {
-                into.Progress(load.progress);
-                yield return null;
-            }
+                yield return into.WaitCovered();
+                render = Capture();
+                hidden = Hide(playScene);
+                RunnerHandoff.Begin(levelId, unlocked);
+                var load = SceneManager.LoadSceneAsync(RunnerLevelView.SceneName, LoadSceneMode.Additive);
+                if (load != null)
+                {
+                    // Scene activation must not be held back (nothing else may leave it off).
+                    load.allowSceneActivation = true;
+                }
 
-            into.Progress(1f);
-            var runner = SceneManager.GetSceneByName(RunnerLevelView.SceneName);
-            if (runner.IsValid() && runner.isLoaded)
-            {
+                while (load != null && !load.isDone)
+                {
+                    into.Progress(load.progress);
+                    yield return null;
+                }
+
+                into.Progress(1f);
+                runner = SceneManager.GetSceneByName(RunnerLevelView.SceneName);
+                if (!runner.IsValid() || !runner.isLoaded)
+                {
+                    Debug.LogError("Runner: scene '" + RunnerLevelView.SceneName + "' did not load; back to the village.");
+                    Restore(playScene, hidden, render);
+                    into.RevealOnFirstFrameOf(playScene);
+                    RunnerHandoff.Take();
+                    finished = true;
+                    yield break;
+                }
+
                 SceneManager.SetActiveScene(runner);
                 into.RevealOnFirstFrameOf(runner);
+
+                while (!RunnerHandoff.Done && runner.IsValid() && runner.isLoaded)
+                {
+                    yield return null;
+                }
+
+                // The way back: cover the runner, unload it, then Play's cameras come back and the screen fades on
+                // their first frame.
+                var results = new List<RunnerResult>();
+                foreach (var r in RunnerHandoff.Runs)
+                {
+                    results.Add(r.Result);
+                }
+
+                var headlineKey = RunnerLoading.BackHeadlineKey(results);
+                var headline = headlineKey == RunnerLoading.VictoryKey ? S(headlineKey, "Victory!") : headlineKey == RunnerLoading.DefeatKey ? S(headlineKey, "Defeat") : S(headlineKey, "Back to the village");
+                back = BattleLoadingScreen.Show(RunnerLoading.Back(headline, levelName, Tip(levelId + ".back")), vs);
+                yield return back.WaitCovered();
+                if (playScene.IsValid())
+                {
+                    SceneManager.SetActiveScene(playScene);
+                }
+
+                if (runner.IsValid() && runner.isLoaded)
+                {
+                    var unload = SceneManager.UnloadSceneAsync(runner);
+                    while (unload != null && !unload.isDone)
+                    {
+                        back.Progress(unload.progress);
+                        yield return null;
+                    }
+                }
+
+                back.Progress(1f);
+                Restore(playScene, hidden, render);
+                back.RevealOnFirstFrameOf(playScene);
+                finished = true;
             }
-            else
+            finally
             {
-                // Load failed: bring Play straight back under the screen.
-                Show(hidden);
-                hidden.Clear();
-                render();
-                into.RevealOnFirstFrameOf(playScene);
-                RunnerHandoff.Take();
+                if (!finished)
+                {
+                    // A step threw: put the village back under the screen and let the screen go.
+                    Debug.LogError("Runner: the trip to the runner failed part-way; bringing the village back.");
+                    if (runner.IsValid() && runner.isLoaded)
+                    {
+                        SceneManager.UnloadSceneAsync(runner);
+                    }
+
+                    Restore(playScene, hidden, render);
+                    if (into != null)
+                    {
+                        into.Release("runner trip failed");
+                    }
+
+                    if (back != null)
+                    {
+                        back.Release("runner trip failed");
+                    }
+
+                    // Runs already banked still pay.
+                    try
+                    {
+                        Pay(RunnerHandoff.Take());
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogException(ex);
+                    }
+                }
+
                 _busy = false;
-                yield break;
             }
 
-            while (!RunnerHandoff.Done && runner.IsValid() && runner.isLoaded)
-            {
-                yield return null;
-            }
+            Pay(RunnerHandoff.Take());
+        }
 
-            // The way back: cover the runner, unload it, then Play's cameras come back and the screen fades on their
-            // first frame.
-            var results = new List<RunnerResult>();
-            foreach (var r in RunnerHandoff.Runs)
-            {
-                results.Add(r.Result);
-            }
-
-            var headlineKey = RunnerLoading.BackHeadlineKey(results);
-            var headline = headlineKey == RunnerLoading.VictoryKey ? S(headlineKey, "Victory!") : headlineKey == RunnerLoading.DefeatKey ? S(headlineKey, "Defeat") : S(headlineKey, "Back to the village");
-            var back = BattleLoadingScreen.Show(RunnerLoading.Back(headline, levelName, Tip(levelId + ".back")), vs);
-            yield return back.WaitCovered();
-            if (playScene.IsValid())
+        /// <summary>Play's cameras, canvases and listeners back on, its render settings back, and it is the active scene again.</summary>
+        private static void Restore(Scene playScene, List<Behaviour> hidden, System.Action? render)
+        {
+            render?.Invoke();
+            Show(hidden);
+            hidden.Clear();
+            if (playScene.IsValid() && playScene.isLoaded)
             {
                 SceneManager.SetActiveScene(playScene);
             }
-
-            if (runner.IsValid() && runner.isLoaded)
-            {
-                var unload = SceneManager.UnloadSceneAsync(runner);
-                while (unload != null && !unload.isDone)
-                {
-                    back.Progress(unload.progress);
-                    yield return null;
-                }
-            }
-
-            back.Progress(1f);
-            render();
-            Show(hidden);
-            back.RevealOnFirstFrameOf(playScene);
-            _busy = false;
-            Pay(RunnerHandoff.Take());
         }
 
         private void Pay(List<(RunnerResult Result, Survival.Domain.Campaign.RewardBundle Bundle)> runs)

@@ -89,151 +89,160 @@ namespace Survival.Unity
             var rig = new RunnerRig(data, slot.transform, host.transform);
             var measured = new Bounds(Vector3.zero, Vector3.zero);
             var built = false;
-            switch (data.Name)
+            try
             {
-                case "Emberfang":
+                switch (data.Name)
                 {
-                    var a = host.AddComponent<EmberfangActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Stormcrest":
-                {
-                    var a = host.AddComponent<StormcrestActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Ironhowl":
-                {
-                    var a = host.AddComponent<IronhowlActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Nightfang":
-                {
-                    var a = host.AddComponent<NightfangActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Lyra":
-                {
-                    var a = host.AddComponent<LyraActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Oakenshield":
-                {
-                    var a = host.AddComponent<OakenshieldActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Vespera":
-                {
-                    var a = host.AddComponent<VesperaActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Ashwyrm":
-                {
-                    var a = host.AddComponent<AshwyrmActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Rowan":
-                {
-                    var a = host.AddComponent<RowanActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Bonequill":
-                {
-                    var a = host.AddComponent<BonequillActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Sir Aldric":
-                {
-                    // Same as the battle: the pilot actor tunes the global ambient for its own scene; keep ours.
-                    var reflections = RenderSettings.reflectionIntensity;
-                    var ambient = RenderSettings.ambientIntensity;
-                    var a = host.AddComponent<SirAldricMeshyAnimateActor>();
-                    a.Build();
-                    RenderSettings.reflectionIntensity = reflections;
-                    RenderSettings.ambientIntensity = ambient;
-                    if (a.Built)
+                    case "Emberfang":
                     {
-                        // Sized on the upright walk body (the idle is a crouched stance).
-                        a.PlayBattlePose(SirAldricBattlePoses.Walk);
-                        measured = Measure(host.transform);
-                        a.PlayBattlePose(SirAldricBattlePoses.Rest);
+                        var a = host.AddComponent<EmberfangActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
                     }
 
-                    rig.Bind(a.PlayBattlePose, () => a.BattlePose, v => a.BattleSpeed = v);
-                    built = a.Built && measured.size.y > 1e-3f;
-                    break;
-                }
-
-                case "Blightroot":
-                {
-                    // Own pivot, as in the battle: its stand-up turn and foot plant write that transform.
-                    var pivot = new GameObject("BlightrootPivot");
-                    pivot.transform.SetParent(host.transform, false);
-                    var a = pivot.AddComponent<BlightrootActor>();
-                    a.Build();
-                    if (a.Built && a.PlayBattlePose(BlightrootBattlePoses.Rest))
+                    case "Stormcrest":
                     {
-                        a.FaceWalkForward();
-                        measured = Measure(host.transform);
+                        var a = host.AddComponent<StormcrestActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
                     }
 
-                    rig.Bind(a.PlayBattlePose, () => a.BattlePose);
-                    built = a.Built && measured.size.y > 1e-3f;
-                    break;
-                }
+                    case "Ironhowl":
+                    {
+                        var a = host.AddComponent<IronhowlActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
+                    }
 
-                default:
-                    Debug.LogError("Runner: no actor for " + data.Name);
-                    break;
+                    case "Nightfang":
+                    {
+                        var a = host.AddComponent<NightfangActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
+                    }
+
+                    case "Lyra":
+                    {
+                        var a = host.AddComponent<LyraActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
+                    }
+
+                    case "Oakenshield":
+                    {
+                        var a = host.AddComponent<OakenshieldActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
+                    }
+
+                    case "Vespera":
+                    {
+                        var a = host.AddComponent<VesperaActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
+                    }
+
+                    case "Ashwyrm":
+                    {
+                        var a = host.AddComponent<AshwyrmActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
+                    }
+
+                    case "Rowan":
+                    {
+                        var a = host.AddComponent<RowanActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
+                    }
+
+                    case "Bonequill":
+                    {
+                        var a = host.AddComponent<BonequillActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
+                    }
+
+                    case "Sir Aldric":
+                    {
+                        // Same as the battle: the pilot actor tunes the global ambient for its own scene; keep ours.
+                        var reflections = RenderSettings.reflectionIntensity;
+                        var ambient = RenderSettings.ambientIntensity;
+                        var a = host.AddComponent<SirAldricMeshyAnimateActor>();
+                        a.Build();
+                        RenderSettings.reflectionIntensity = reflections;
+                        RenderSettings.ambientIntensity = ambient;
+                        if (a.Built)
+                        {
+                            // Sized on the upright walk body (the idle is a crouched stance).
+                            a.PlayBattlePose(SirAldricBattlePoses.Walk);
+                            measured = Measure(host.transform);
+                            a.PlayBattlePose(SirAldricBattlePoses.Rest);
+                        }
+
+                        rig.Bind(a.PlayBattlePose, () => a.BattlePose, v => a.BattleSpeed = v);
+                        built = a.Built && measured.size.y > 1e-3f;
+                        break;
+                    }
+
+                    case "Blightroot":
+                    {
+                        // Own pivot, as in the battle: its stand-up turn and foot plant write that transform.
+                        var pivot = new GameObject("BlightrootPivot");
+                        pivot.transform.SetParent(host.transform, false);
+                        var a = pivot.AddComponent<BlightrootActor>();
+                        a.Build();
+                        if (a.Built && a.PlayBattlePose(BlightrootBattlePoses.Rest))
+                        {
+                            a.FaceWalkForward();
+                            measured = Measure(host.transform);
+                        }
+
+                        rig.Bind(a.PlayBattlePose, () => a.BattlePose);
+                        built = a.Built && measured.size.y > 1e-3f;
+                        break;
+                    }
+
+                    default:
+                        Debug.LogError("Runner: no actor for " + data.Name);
+                        break;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                // One actor failing to build must not take the run down with it: that fighter is skipped.
+                Debug.LogException(ex);
+                built = false;
             }
 
             if (!built)

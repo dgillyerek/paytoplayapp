@@ -306,20 +306,26 @@ namespace Survival.Unity
             for (var i = _pops.Count - 1; i >= 0; i--)
             {
                 _pops[i].Age += dt;
-                if (_pops[i].Age > 0.9f)
+                if (_pops[i].Age > 0.9f || _pops[i].Text == null)
                 {
-                    Destroy(_pops[i].Text.gameObject);
+                    if (_pops[i].Text != null)
+                    {
+                        Destroy(_pops[i].Text.gameObject);
+                    }
+
                     _pops.RemoveAt(i);
                 }
             }
 
-            if (_clock != null)
+            // _config is cleared once the result is handed off, but the scene stays up (under the loading screen)
+            // until it is unloaded: the HUD lines must not read it after that.
+            if (_clock != null && _config != null)
             {
                 var left = Mathf.Max(0f, (float)(_config!.TimeoutSeconds - _combat.Elapsed));
                 _clock.text = ((int)left / 60) + ":" + ((int)left % 60).ToString("00");
             }
 
-            if (_score != null)
+            if (_score != null && _config != null)
             {
                 _score.text = "HEROES " + _combat.Standing(CampaignSide.Hero) + "/" + _config!.Heroes.Count + "   \u00b7   FOES " + _combat.Standing(CampaignSide.Villain) + "/" + _config.Enemies.Count;
             }

@@ -110,13 +110,29 @@ namespace Survival.Unity
             _unlocked = RunnerHandoff.FromPlay ? RunnerHandoff.Unlocked : StandaloneUnlocked();
             var wanted = RunnerHandoff.PendingLevel ?? (levelId.Length > 0 ? levelId : null);
             _level = _catalog.Level(wanted) ?? _catalog.ByNumber(_unlocked);
-            _world = new GameObject("RunnerWorld").transform;
-            _world.SetParent(transform, false);
-            BuildLights();
-            BuildGround(_level);
-            BuildCamera();
-            BuildHud();
-            StartRun();
+            try
+            {
+                // Camera first, so the scene always has a working camera for the loading screen to reveal.
+                BuildCamera();
+                _world = new GameObject("RunnerWorld").transform;
+                _world.SetParent(transform, false);
+                BuildLights();
+                BuildGround(_level);
+                BuildHud();
+                StartRun();
+            }
+            catch (Exception ex)
+            {
+                // A broken boot must never strand the player: log it and, from Play, go straight back to the village
+                // (the loading screen covers the way back).
+                Debug.LogError("Runner: boot failed; " + (RunnerHandoff.FromPlay ? "back to the village." : "nothing to run."));
+                Debug.LogException(ex);
+                _run = null;
+                if (RunnerHandoff.FromPlay && !RunnerHandoff.Done)
+                {
+                    RunnerHandoff.Finish();
+                }
+            }
         }
 
         private static ThemePackBinder? LoadPack()
