@@ -34,6 +34,12 @@ namespace Survival.Domain.Runner
         /// <summary>Fade-in after a hit (so it doesn't pop).</summary>
         public const float RiseSeconds = 0.08f;
 
+        /// <summary>
+        /// Boxes (chests and upgrade crates) are different: their bar is always shown, fully opaque, from the moment the
+        /// box is on screen until it breaks, so you can see at a glance how much each one still needs.
+        /// </summary>
+        public static float BoxAlpha(int hp) => hp > 0 ? 1f : 0f;
+
         /// <summary>The runner's road has no lanes: the bar never has to fold back to fit one.</summary>
         private const float NoLane = float.MaxValue;
 

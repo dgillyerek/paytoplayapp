@@ -31,8 +31,21 @@ namespace Survival.Domain.Runner
         /// <summary>Formation spacing between followers.</summary>
         public const float Spacing = 1.15f;
 
-        /// <summary>The hero slides toward the steer point at most this fast.</summary>
+        /// <summary>The hero slides toward the steer point at most this fast (m/s).</summary>
         public const float SteerSpeed = 11f;
+
+        /// <summary>
+        /// Steering is a critically damped spring (SmoothDamp) toward the steer point: it eases in and settles without
+        /// overshoot. This is its smooth time (s): about how long it takes to close most of a gap.
+        /// </summary>
+        public const float SteerSmoothSeconds = 0.10f;
+
+        /// <summary>Followers' spring smooth time: the front row a touch behind the hero, each row back a bit more.</summary>
+        public const float FollowSmoothSeconds = 0.12f;
+        public const float FollowSmoothPerRow = 0.03f;
+
+        /// <summary>Followers may move sideways a little faster than the hero, so they can catch up to their slot.</summary>
+        public const float FollowMaxSpeed = 13f;
 
         /// <summary>Enemies drift sideways toward the hero this fast while they walk in.</summary>
         public const float EnemySeek = 0.55f;
@@ -158,6 +171,9 @@ namespace Survival.Domain.Runner
         public RunnerAttackPlan Plan { get; }
         public float X { get; internal set; }
         public float Z { get; internal set; }
+
+        /// <summary>Sideways velocity (m/s, + = right) from the steering spring; the scene leans the body with it.</summary>
+        public float VX { get; internal set; }
         public int Hp { get; internal set; }
         public int Slot { get; internal set; } = -1;
         public float Cooldown { get; internal set; }
@@ -426,18 +442,21 @@ namespace Survival.Domain.Runner
             Distance = Math.Min(RoadEnd, Distance + (Level.Speed * dt));
             Halted = Level.HasBoss && Distance >= ArenaLine - 1e-4f;
 
-            var maxMove = RunnerRules.SteerSpeed * dt;
-            Hero.X += Clamp(_steer - Hero.X, -maxMove, maxMove);
+            var vx = Hero.VX;
+            Hero.X = RunnerSteering.SmoothDamp(Hero.X, _steer, ref vx, RunnerRules.SteerSmoothSeconds, RunnerRules.SteerSpeed, dt);
+            Hero.VX = vx;
             Hero.Z = Distance;
             for (var i = 1; i < _squad.Count; i++)
             {
                 var m = _squad[i];
                 var (sx, sz) = RunnerFormation.Offset(m.Slot);
                 var row = RunnerFormation.RowOf(m.Slot);
-                // Back rows lag more, so the formation bends as the hero steers.
-                var lag = 1f - (float)Math.Exp(-dt * (9f / (1f + (0.35f * row))));
+                // Each follower springs toward its slot; back rows ease a bit slower, so the formation bends as the
+                // hero steers and settles without snapping.
                 var tx = Clamp(Hero.X + sx, -Level.HalfWidth + m.Unit.Radius, Level.HalfWidth - m.Unit.Radius);
-                m.X += (tx - m.X) * lag;
+                var fvx = m.VX;
+                m.X = RunnerSteering.SmoothDamp(m.X, tx, ref fvx, RunnerRules.FollowSmoothSeconds + (RunnerRules.FollowSmoothPerRow * row), RunnerRules.FollowMaxSpeed, dt);
+                m.VX = fvx;
                 // Joiners run in from their box faster than the walk, then hold their slot exactly.
                 var tz = Distance + sz;
                 var run = (Level.Speed + 4f) * dt;
@@ -1080,6 +1099,38 @@ namespace Survival.Domain.Runner
     }
 
     /// <summary>Follower slots behind the hero: row r (1, 2, 3 ...) holds r + 1 units, centred, <see cref="RunnerRules.Spacing"/> apart.</summary>
+    /// <summary>Critically damped spring used for steering (the same maths as Unity's Mathf.SmoothDamp).</summary>
+    public static class RunnerSteering
+    {
+        public static float SmoothDamp(float current, float target, ref float velocity, float smoothTime, float maxSpeed, float dt)
+        {
+            if (dt <= 0f)
+            {
+                return current;
+            }
+
+            smoothTime = Math.Max(0.0001f, smoothTime);
+            var omega = 2f / smoothTime;
+            var x = omega * dt;
+            var exp = 1f / (1f + x + (0.48f * x * x) + (0.235f * x * x * x));
+            var change = current - target;
+            var original = target;
+            var maxChange = maxSpeed * smoothTime;
+            change = change < -maxChange ? -maxChange : change > maxChange ? maxChange : change;
+            target = current - change;
+            var temp = (velocity + (omega * change)) * dt;
+            velocity = (velocity - (omega * temp)) * exp;
+            var output = target + ((change + temp) * exp);
+            if ((original - current > 0f) == (output > original))
+            {
+                output = original;
+                velocity = (output - original) / dt;
+            }
+
+            return output;
+        }
+    }
+
     public static class RunnerFormation
     {
         public static int RowOf(int slot)

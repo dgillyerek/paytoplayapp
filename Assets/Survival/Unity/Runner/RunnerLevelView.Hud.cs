@@ -281,8 +281,8 @@ namespace Survival.Unity
                 return;
             }
 
-            // A thin, semi-transparent strip with a small HP number, shown only while the box is being shot (see
-            // RunnerSideBar.Alpha); the reward tag above it stays, so you always know what is inside.
+            // A thin strip with a small HP number. On a box it is always shown at full opacity until the box breaks
+            // (RunnerSideBar.BoxAlpha), under the reward tag; fighters' bars fade in on damage (RunnerSideBar.Alpha).
             var root = new GameObject(onBox ? "BoxBar" : "FoeBar", typeof(RectTransform)).GetComponent<RectTransform>();
             root.SetParent(_worldUi, false);
             root.sizeDelta = new Vector2(110f, 9f);
@@ -290,7 +290,7 @@ namespace Survival.Unity
             body.SetParent(root, false);
             SurvivalVisuals.Stretch(body);
             var group = body.GetComponent<CanvasGroup>();
-            group.alpha = 0f;
+            group.alpha = onBox ? 1f : 0f;
             group.blocksRaycasts = false;
             group.interactable = false;
             var back = SurvivalVisuals.Image(body, "Back", new Color(0.05f, 0.05f, 0.08f, 0.8f));
@@ -483,7 +483,8 @@ namespace Survival.Unity
                     at = new Vector3(b.X, bar.Height + 0.25f, b.Z);
                     fraction = b.HpFraction;
                     hp = b.Hp;
-                    FadeBar(bar, hp, b.MaxHp);
+                    // Boxes always show their bar (and HP number) until they break, so you can judge which to shoot.
+                    bar.Group.alpha = RunnerSideBar.BoxAlpha(hp);
                 }
                 else if (bar.Side)
                 {

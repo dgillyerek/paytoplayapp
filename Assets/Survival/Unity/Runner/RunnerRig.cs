@@ -29,6 +29,14 @@ namespace Survival.Unity
         private LockedBattleReaction _reaction = LockedBattleReactions.Flinch;
         private Vector3 _away = Vector3.back;
         private float _hitAge = 10f;
+
+        /// <summary>Body roll toward the sideways move (degrees, + = top to the left), eased.</summary>
+        private float _lean;
+        private float _leanTarget;
+
+        /// <summary>Degrees of lean per m/s of sideways speed, and the most it ever leans.</summary>
+        public const float LeanPerMetrePerSecond = 0.75f;
+        public const float MaxLeanDegrees = 7f;
         private bool _flashing;
         private float _deathAge = -1f;
         private Vector3 _baseLocal;
@@ -378,6 +386,10 @@ namespace Survival.Unity
         }
 
         /// <summary>Face a world direction on the ground (yaw only), plus an aim offset (Rowan's bow).</summary>
+        /// <summary>Lean with a sideways speed (m/s, + = right): the top of the body tips toward the move.</summary>
+        public void LeanWith(float sidewaysSpeed) =>
+            _leanTarget = Mathf.Clamp(-sidewaysSpeed * LeanPerMetrePerSecond, -MaxLeanDegrees, MaxLeanDegrees);
+
         public void Face(Vector3 direction, float aimYaw = 0f)
         {
             direction.y = 0f;
@@ -432,7 +444,10 @@ namespace Survival.Unity
             var tilt = local * (_reaction.RootLeanScale * w * punch);
             Host.localPosition = _baseLocal + (step * Profile.RecoilMetres);
             var lean = Mathf.Tan(Profile.RecoilDegrees * Mathf.Deg2Rad);
-            Host.localRotation = Quaternion.FromToRotation(Vector3.up, (Vector3.up + (tilt * lean)).normalized);
+            // Lean into the sideways move: roll about the road's forward axis (in the slot's frame), eased in and out.
+            _lean = Mathf.Lerp(_lean, _leanTarget, 1f - Mathf.Exp(-12f * dt));
+            var roll = Quaternion.AngleAxis(_lean, Slot.InverseTransformDirection(Vector3.forward));
+            Host.localRotation = roll * Quaternion.FromToRotation(Vector3.up, (Vector3.up + (tilt * lean)).normalized);
             if (_deathAge >= 0f)
             {
                 _deathAge += dt;

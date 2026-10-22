@@ -42,6 +42,9 @@ namespace Survival.Unity
         /// <summary>The unit a follower / hero box pays stands on its lid at this share of battle size.</summary>
         private const float CaptiveScale = 0.72f;
         private const float KeySteerSpeed = 7.5f;
+
+        /// <summary>How far ahead of the hero a held key can push the steer point (m).</summary>
+        private const float KeyLeadMetres = 1.2f;
         private const float DragMetresPerScreen = 9.5f;
         private const float ShotHeight = 1.15f;
         private const float BossScale = 1.5f;
@@ -65,6 +68,7 @@ namespace Survival.Unity
         private readonly HashSet<int> _killed = new HashSet<int>();
         private float _shake;
         private float _dragAccum;
+        private bool _keyHeld;
         private bool _steered;
         private bool _booted;
         private bool _resultShown;
@@ -431,9 +435,19 @@ namespace Survival.Unity
 #endif
             if (dir != 0f)
             {
-                // Keys move the steer point from where the hero is, so letting go stops at once.
-                _run.SteerTo(_run.Hero.X + (Mathf.Clamp(dir, -1f, 1f) * KeySteerSpeed * Mathf.Max(dt, 0.05f)));
+                // Keys slide the steer point at a steady pace, kept a short lead ahead of the hero; the steering spring
+                // eases the hero after it.
+                var lead = KeyLeadMetres;
+                var next = Mathf.Clamp(_run.SteerTarget + (Mathf.Clamp(dir, -1f, 1f) * KeySteerSpeed * dt), _run.Hero.X - lead, _run.Hero.X + lead);
+                _run.SteerTo(next);
+                _keyHeld = true;
                 Steered();
+            }
+            else if (_keyHeld)
+            {
+                // Let go: settle just past where the hero is heading, so it eases to a stop instead of snapping.
+                _keyHeld = false;
+                _run.SteerTo(_run.Hero.X + (_run.Hero.VX * RunnerRules.SteerSmoothSeconds * 0.5f));
             }
 
             if (Mathf.Abs(_dragAccum) > 1e-4f)
@@ -638,6 +652,7 @@ namespace Survival.Unity
                     continue;
                 }
 
+                rig.LeanWith(_run.Over ? 0f : m.VX);
                 if (_run.Over && _run.Outcome == RunnerOutcome.Won)
                 {
                     rig.Rest();
