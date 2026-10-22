@@ -63,8 +63,8 @@ internal static class Runner
     }
 
     /// <summary>
-    /// A player who aims by steering (shots fly straight): lines up the nearest box ahead within 22 m, else the
-    /// nearest enemy ahead within 16 m, else holds the line. <paramref name="upgrades"/> false skips weapon / rate boxes.
+    /// A player who aims by steering (shots fly straight): lines up the nearest box ahead within 22 m, else the nearest enemy ahead within 16 m, else holds the line, and
+    /// steers the hero round any lane trap coming up. <paramref name="upgrades"/> false skips weapon / rate boxes.
     /// </summary>
     public static float AimLikeAPlayer(RunnerRun run) => Aim(run, true);
 
@@ -81,7 +81,7 @@ internal static class Runner
 
         if (box != null)
         {
-            return box.X;
+            return Dodge(run, box.X);
         }
 
         RunnerFoe? foe = null;
@@ -93,7 +93,30 @@ internal static class Runner
             }
         }
 
-        return foe?.X ?? run.Hero.X;
+        return Dodge(run, foe?.X ?? run.Hero.X);
+    }
+
+    /// <summary>Like a player: keeps the hero's line clear of any lane trap coming up in the next 9 m (the squad behind may still clip one).</summary>
+    public static float Dodge(RunnerRun run, float want)
+    {
+        foreach (var h in run.Hazards)
+        {
+            var ahead = h.Z - run.Hero.Z;
+            var clear = h.HalfWidth + run.Hero.Unit.Radius + 0.5f;
+            if (ahead < -1f || ahead > 9f || Math.Abs(want - h.X) >= clear)
+            {
+                continue;
+            }
+
+            var lane = run.Level.HalfWidth - run.Hero.Unit.Radius;
+            var left = h.X - clear;
+            var right = h.X + clear;
+            var leftOk = left >= -lane;
+            var rightOk = right <= lane;
+            want = leftOk && (!rightOk || Math.Abs(want - left) <= Math.Abs(want - right)) ? left : right;
+        }
+
+        return want;
     }
 
     /// <summary>The shipped catalog with every box of the given kinds taken out.</summary>
@@ -128,8 +151,11 @@ public sealed class RunnerTests
         Assert.Equal("runner.thornwood_road", level.Id);
         Assert.Equal("lyra", level.Hero);
         Assert.True(level.HasBoss);
-        Assert.True(level.EnemyCount >= 20, "enemies " + level.EnemyCount);
-        Assert.True(level.BoxCount >= 8, "boxes " + level.BoxCount);
+        Assert.True(level.EnemyCount >= 45, "enemies " + level.EnemyCount);
+        Assert.True(level.BoxCount >= 15, "boxes " + level.BoxCount);
+        Assert.InRange(level.HazardCount, 1, 4);
+        Assert.Contains(level.Rows, r => r.Hazard?.Kind == RunnerHazardKind.Spikes);
+        Assert.Contains(level.Rows, r => r.Hazard?.Kind == RunnerHazardKind.Fire);
         foreach (var kind in Enum.GetValues<RunnerBoxKind>())
         {
             Assert.Contains(level.Rows, r => r.Box?.Kind == kind);
@@ -151,7 +177,11 @@ public sealed class RunnerTests
         foreach (var row in level.Rows)
         {
             Assert.InRange(Math.Abs(row.X), 0f, level.HalfWidth);
-            if (row.Kind != RunnerRowKind.Box)
+            if (row.Kind == RunnerRowKind.Hazard)
+            {
+                Assert.NotNull(row.Hazard);
+            }
+            else if (row.Kind != RunnerRowKind.Box)
             {
                 Assert.Equal(BattleSide.Villain, names[c.Unit(row.Unit).Roster]);
             }
@@ -166,7 +196,7 @@ public sealed class RunnerTests
     public void Rows_spawn_by_distance_as_the_squad_walks_forward_at_the_level_pace()
     {
         var run = Runner.Run(Runner.Tiny(@"{ ""at"": 10, ""kind"": ""box"", ""hp"": 9999, ""reward"": ""weapon"" },
-            { ""at"": 38, ""kind"": ""box"", ""x"": 3, ""hp"": 9999, ""reward"": ""rate"" }"));
+            { ""at"": 46, ""kind"": ""box"", ""x"": 3, ""hp"": 9999, ""reward"": ""rate"" }", length: 60f));
         Assert.Single(run.Boxes);
         Assert.Equal(0f, run.Distance);
         var events = run.Step(4f);
@@ -542,7 +572,7 @@ public sealed class RunnerTests
         Assert.Equal(RunnerOutcome.Won, good.Outcome);
         Assert.True(good.BoxesBroken >= c.First.BoxCount - 2);
         Assert.True(good.FollowersPeak >= 8);
-        Assert.InRange(good.Seconds, 80f, 120f);
+        Assert.InRange(good.Seconds, 65f, 120f);
 
         var lazy = new RunnerRun(c, c.First);
         Runner.Play(lazy, _ => 3.9f);
@@ -632,8 +662,9 @@ public sealed class RunnerTests
         Assert.Equal(0.40f, P(c, "oakenshield").Interval, 3);
         Assert.Equal(0.44f, P(c, "sir_aldric").Interval, 3);
 
-        // Still about twice the old 0.8-1.1 s cadence; enemy, box and boss HP scaled to land the run at ~90 s.
-        Assert.InRange(c.Unit("nightfang").Hp, 110 * 1.1, 110 * 1.4);
+        // Still about twice the old 0.8-1.1 s cadence; enemies are many and weak (about half the old 134 HP), the boss
+        // and boxes scaled to land the run at ~80 s.
+        Assert.InRange(c.Unit("nightfang").Hp, 50, 75);
         Assert.InRange(c.Unit("ironhowl").Hp, 4200 * 2.2, 4200 * 2.6);
         Assert.All(c.First.Rows.Where(r => r.Box != null), r => Assert.True(r.Box!.Hp >= 100, "box hp " + r.Box!.Hp));
     }
@@ -871,14 +902,20 @@ public sealed class RunnerTests
             Assert.True(l.BossHp(c) > p.BossHp(c), $"L{l.Number} boss hp");
             Assert.True(l.Rewards.WinGold > p.Rewards.WinGold && l.Rewards.GoldPerKill >= p.Rewards.GoldPerKill && l.Rewards.Shards >= p.Rewards.Shards);
             Assert.True(l.Rows.Count(r => r.Box?.Kind == RunnerBoxKind.Followers) >= p.Rows.Count(r => r.Box?.Kind == RunnerBoxKind.Followers));
+            Assert.True(l.HazardCount >= p.HazardCount, $"L{l.Number} hazards {p.HazardCount} -> {l.HazardCount}");
         }
+
+        // Traps get more common and more varied: rolling logs from Level 4, and many more by the last level.
+        Assert.DoesNotContain(c.ByNumber(3).Rows, r => r.Hazard?.Kind == RunnerHazardKind.Log);
+        Assert.Contains(c.Levels[^1].Rows, r => r.Hazard?.Kind == RunnerHazardKind.Log);
+        Assert.True(c.Levels[^1].HazardCount >= 3 * c.First.HazardCount, "hazards " + c.Levels[^1].HazardCount);
 
         // Later levels bring the tougher villains; every rig is still a locked villain fighter.
         Assert.Contains(c.Levels[^1].Rows, r => r.Unit == "vespera");
         Assert.Contains(c.Levels[^1].Rows, r => r.Unit == "ashwyrm");
         Assert.DoesNotContain(c.First.Rows, r => r.Unit == "vespera" || r.Unit == "ashwyrm");
         var names = LockedBattleRoster.All.ToDictionary(f => f.Name, f => f.Side);
-        Assert.All(c.Levels.SelectMany(l => l.Rows).Where(r => r.Kind != RunnerRowKind.Box), r => Assert.Equal(BattleSide.Villain, names[c.Unit(r.Unit).Roster]));
+        Assert.All(c.Levels.SelectMany(l => l.Rows).Where(r => r.Kind != RunnerRowKind.Box && r.Kind != RunnerRowKind.Hazard), r => Assert.Equal(BattleSide.Villain, names[c.Unit(r.Unit).Roster]));
 
         // Same seed, same levels.
         var again = Runner.Catalog();

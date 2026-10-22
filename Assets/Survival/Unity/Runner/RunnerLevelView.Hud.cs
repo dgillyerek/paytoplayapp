@@ -61,6 +61,9 @@ namespace Survival.Unity
             public float HalfWidth;
             public float MeasureAge;
 
+            /// <summary>The unit's runner scale (enemies are drawn bigger than in battle); the bar stands off by it.</summary>
+            public float Scale = 1f;
+
             /// <summary>Fades the bar itself (a box's reward tag stays visible).</summary>
             public CanvasGroup Group = null!;
             public int LastHp = -1;
@@ -316,7 +319,7 @@ namespace Survival.Unity
         /// A fighter's HP bar as the configured battle draws it (#76): vertical, beside the body on its own outer side
         /// (the hero's left, a foe's right), filling bottom to top, with the HP number on top.
         /// </summary>
-        private void AddSideBar(int id, bool hero, RunnerRig rig, bool boss)
+        private void AddSideBar(int id, bool hero, RunnerRig rig, bool boss, float scale = 1f)
         {
             if (_worldUi == null || _bars.ContainsKey(id))
             {
@@ -351,14 +354,14 @@ namespace Survival.Unity
             _bars[id] = new WorldBar
             {
                 Root = root, Fill = fill, Number = number, Boss = boss, Height = rig.Height, Side = true, Hero = hero, Rig = rig,
-                HalfWidth = RunnerSideBar.HalfWidth(rig.Height), Group = group,
+                HalfWidth = RunnerSideBar.HalfWidth(rig.Height), Group = group, Scale = scale,
             };
         }
 
         /// <summary>Stand a side bar beside its fighter: foot from the battle's layout, height from the projected body.</summary>
         private bool PlaceSideBar(WorldBar bar, Vector3 origin, float fraction)
         {
-            var scale = bar.Rig != null ? LockedBattleRoster.BattleScaleOf(bar.Rig.Data) * (bar.Boss ? BossScale : 1f) : 1f;
+            var scale = bar.Rig != null ? LockedBattleRoster.BattleScaleOf(bar.Rig.Data) * bar.Scale : 1f;
             var (dx, dz) = RunnerSideBar.WorldOffset(bar.Hero, bar.HalfWidth, scale);
             var (bottom, top) = RunnerSideBar.Span(bar.Height);
             var foot = new Vector3(origin.x + dx, 0f, origin.z + dz);
@@ -425,6 +428,14 @@ namespace Survival.Unity
                     label = Fmt("runner.box.rate", "+{0}% SPD", Mathf.RoundToInt(def.Amount * 100f));
                     icon = "theme_a.runner.crate_speed";
                     break;
+                case RunnerBoxKind.Range:
+                    label = Fmt("runner.box.range", "+{0}% RNG", Mathf.RoundToInt(def.Amount * 100f));
+                    icon = "theme_a.runner.crate_weapon";
+                    break;
+                case RunnerBoxKind.Heal:
+                    label = Fmt("runner.box.heal", "+{0}% HP", Mathf.RoundToInt(def.Amount * 100f));
+                    icon = "theme_a.runner.crate_speed";
+                    break;
                 default:
                 {
                     // The unit itself stands caged on the box in 3D (see BuildBox); the tag only says how many.
@@ -442,7 +453,7 @@ namespace Survival.Unity
                 textLeft = 0.36f;
             }
 
-            var text = HookSkin.Outlined(SurvivalVisuals.Text(tag, "Text", label, 24, TextAnchor.MiddleCenter, def.Kind == RunnerBoxKind.Rate ? new Color(0.6f, 0.92f, 1f, 1f) : SurvivalVisuals.Reward));
+            var text = HookSkin.Outlined(SurvivalVisuals.Text(tag, "Text", label, 24, TextAnchor.MiddleCenter, RewardColor(def.Kind, SurvivalVisuals.Reward)));
             Anchor(text.rectTransform, textLeft, 0f, 0.96f, 1f);
             return tag;
         }

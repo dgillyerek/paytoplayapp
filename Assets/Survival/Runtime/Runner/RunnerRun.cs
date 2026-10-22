@@ -8,7 +8,7 @@ namespace Survival.Domain.Runner
     public static class RunnerRules
     {
         /// <summary>Rows spawn this far ahead of the squad, so they are in view before they matter.</summary>
-        public const float SpawnAhead = 30f;
+        public const float SpawnAhead = 38f;
 
         /// <summary>Enemies start walking at the squad once it is this close.</summary>
         public const float Aggro = 15f;
@@ -84,6 +84,32 @@ namespace Survival.Domain.Runner
         /// <summary>A hit at least this big (or any boss, box break, follower loss or hero hit) shakes the screen.</summary>
         public const int BigHit = 60;
 
+        /// <summary>Spike strip cycle (s): down, then a rattle warning, then up (hurting); staggered by the row's phase.</summary>
+        public const float SpikeDown = 1.3f;
+        public const float SpikeWarn = 0.7f;
+        public const float SpikeUp = 1.0f;
+        public const float SpikeCycle = SpikeDown + SpikeWarn + SpikeUp;
+
+        /// <summary>A log starts wobbling (its warning) once the hero is this close, then rolls down its lane at <see cref="LogSpeed"/>.</summary>
+        public const float LogTrigger = 17f;
+        public const float LogWarn = 1.1f;
+        public const float LogSpeed = 2.6f;
+
+        /// <summary>Footprint depth (half, metres along the road) of each trap.</summary>
+        public const float SpikeHalfDepth = 0.55f;
+        public const float FireHalfDepth = 0.75f;
+        public const float LogHalfDepth = 0.4f;
+
+        /// <summary>Share of a member's body radius that has to overlap a trap for it to count (forgiving edges).</summary>
+        public const float HazardBodyShare = 0.5f;
+
+        /// <summary>Most squad members one activation catches (spikes snap shut on the first, a log flattens two); the rest get through.</summary>
+        public const int SpikeCatch = 1;
+        public const int LogCatch = 2;
+
+        /// <summary>A fire patch burns one member at a time, re-flaring every this many seconds.</summary>
+        public const float FireFlare = 1.2f;
+
         /// <summary>Longest internal step; bigger frame deltas are split so results do not depend on frame rate.</summary>
         public const float MaxStep = 1f / 30f;
     }
@@ -110,6 +136,12 @@ namespace Survival.Domain.Runner
         HeroHit,
         Upgrade,
         BossEngaged,
+
+        /// <summary>A lane trap appeared (<see cref="RunnerEvent.Unit"/> = spikes / log / fire).</summary>
+        HazardSpawned,
+
+        /// <summary>A trap caught a squad member (<see cref="RunnerEvent.Id"/> = the trap, Other = the member, Amount = hero damage or 0 for a knocked-out follower).</summary>
+        HazardHit,
         Won,
         Lost,
 
@@ -258,6 +290,68 @@ namespace Survival.Domain.Runner
         public float HpFraction => MaxHp > 0 ? Math.Max(0f, Hp / (float)MaxHp) : 0f;
     }
 
+    public enum RunnerHazardState
+    {
+        /// <summary>Harmless for now (spikes down, a log waiting at the top of its lane).</summary>
+        Idle,
+
+        /// <summary>About to hurt: spikes rattling, a log wobbling. The scene shows it plainly.</summary>
+        Warning,
+
+        /// <summary>Hurts what it touches (spikes up, a log rolling, fire always).</summary>
+        Active
+    }
+
+    /// <summary>A lane trap in play. Cannot be shot; the squad steers round it.</summary>
+    public sealed class RunnerHazard
+    {
+        private readonly HashSet<int> _hit = new();
+
+        internal RunnerHazard(int id, RunnerHazardDef def, float x, float z)
+        {
+            Id = id;
+            Def = def;
+            X = x;
+            Z = z;
+            StartZ = z;
+            State = def.Kind == RunnerHazardKind.Fire ? RunnerHazardState.Active : RunnerHazardState.Idle;
+        }
+
+        public int Id { get; }
+        public RunnerHazardDef Def { get; }
+        public RunnerHazardKind Kind => Def.Kind;
+        public float X { get; }
+        public float Z { get; internal set; }
+        public float StartZ { get; }
+        public float HalfWidth => Def.Width * 0.5f;
+
+        public float HalfDepth => Def.Kind switch
+        {
+            RunnerHazardKind.Spikes => RunnerRules.SpikeHalfDepth,
+            RunnerHazardKind.Log => RunnerRules.LogHalfDepth,
+            _ => RunnerRules.FireHalfDepth
+        };
+
+        public RunnerHazardState State { get; internal set; }
+
+        /// <summary>Seconds in the current state (the scene times the rattle / wobble / spike pop on it).</summary>
+        public float StateClock { get; internal set; }
+
+        /// <summary>Squad members this activation has already caught (each once per activation).</summary>
+        internal HashSet<int> Hit => _hit;
+
+        /// <summary>Members caught this activation, and the most one activation catches.</summary>
+        internal int Caught { get; set; }
+
+        internal int CatchCap => Def.Kind == RunnerHazardKind.Log ? RunnerRules.LogCatch : RunnerRules.SpikeCatch;
+
+        public bool Hurts => State == RunnerHazardState.Active;
+
+        public bool Touches(float x, float z, float radius) =>
+            Math.Abs(x - X) <= HalfWidth + (radius * RunnerRules.HazardBodyShare)
+            && Math.Abs(z - Z) <= HalfDepth + (radius * RunnerRules.HazardBodyShare);
+    }
+
     /// <summary>
     /// A shot in flight, straight down the road (squad shots +z, foe shots -z) from where it was fired; no homing.
     /// It hits the first body it passes through and despawns after <see cref="Range"/> metres.
@@ -322,6 +416,7 @@ namespace Survival.Domain.Runner
         private readonly List<RunnerFoe> _foes = new();
         private readonly List<RunnerBox> _boxes = new();
         private readonly List<RunnerShot> _shots = new();
+        private readonly List<RunnerHazard> _hazards = new();
         private readonly List<RunnerEvent> _events = new();
         private int _nextRow;
         private int _nextId = 1;
@@ -354,6 +449,7 @@ namespace Survival.Domain.Runner
         public IReadOnlyList<RunnerFoe> Foes => _foes;
         public IReadOnlyList<RunnerBox> Boxes => _boxes;
         public IReadOnlyList<RunnerShot> Shots => _shots;
+        public IReadOnlyList<RunnerHazard> Hazards => _hazards;
 
         public int Followers => _squad.Count - 1;
         public int FollowersPeak { get; private set; }
@@ -367,6 +463,15 @@ namespace Survival.Domain.Runner
         /// <summary>Squad-wide damage and attack speed multipliers from upgrade boxes.</summary>
         public float DamageMul { get; private set; } = 1f;
         public float RateMul { get; private set; } = 1f;
+
+        /// <summary>Squad-wide range multiplier for ranged shots (range crates).</summary>
+        public float RangeMul { get; private set; } = 1f;
+
+        /// <summary>Followers knocked out and hero hits taken from lane traps.</summary>
+        public int HazardHits { get; private set; }
+
+        /// <summary>How far a member's attack reaches now: ranged shots scale with <see cref="RangeMul"/>, melee does not.</summary>
+        public float ReachOf(RunnerMember m) => m.Unit.Ranged ? m.Unit.Range * RangeMul : m.Unit.Range;
 
         public int Kills { get; private set; }
         public int BoxesBroken { get; private set; }
@@ -405,6 +510,7 @@ namespace Survival.Domain.Runner
         public RunnerMember? Member(int id) => _squad.Find(m => m.Id == id);
         public RunnerFoe? Foe(int id) => _foes.Find(f => f.Id == id);
         public RunnerBox? Box(int id) => _boxes.Find(b => b.Id == id);
+        public RunnerHazard? Hazard(int id) => _hazards.Find(h => h.Id == id);
 
         /// <summary>Advance by <paramref name="dt"/> seconds; returns what happened (valid until the next call).</summary>
         public IReadOnlyList<RunnerEvent> Step(float dt)
@@ -429,6 +535,7 @@ namespace Survival.Domain.Runner
             SquadAttacks(dt);
             FoesAttack(dt);
             MoveShots(dt);
+            StepHazards(dt);
             DropPassed();
             CheckEnd();
         }
@@ -476,6 +583,16 @@ namespace Survival.Domain.Runner
                         var box = new RunnerBox(_nextId++, row.Box!, Clamp(row.X, -Level.HalfWidth + RunnerBox.Radius, Level.HalfWidth - RunnerBox.Radius), row.At);
                         _boxes.Add(box);
                         Emit(RunnerEventKind.BoxSpawned, box.Id, 0, box.X, box.Z, box.Hp, false, true, box.Def.Unit);
+                        break;
+                    }
+
+                    case RunnerRowKind.Hazard:
+                    {
+                        var hd = row.Hazard!;
+                        var half = Math.Min(hd.Width * 0.5f, Level.HalfWidth);
+                        var hz = new RunnerHazard(_nextId++, hd, Clamp(row.X, -Level.HalfWidth + half, Level.HalfWidth - half), row.At);
+                        _hazards.Add(hz);
+                        Emit(RunnerEventKind.HazardSpawned, hz.Id, 0, hz.X, hz.Z, hd.Width, false, false, RunnerHazardDef.Name(hd.Kind));
                         break;
                     }
 
@@ -635,9 +752,10 @@ namespace Survival.Domain.Runner
             if (m.Unit.Ranged)
             {
                 m.TargetId = 0;
-                var shot = new RunnerShot(_nextId++, m.Id, false, m.X, m.Z + 0.4f, damage, m.Unit.ShotSpeed, m.Unit.Range + RunnerRules.ShotOvershoot);
+                var reach = ReachOf(m);
+                var shot = new RunnerShot(_nextId++, m.Id, false, m.X, m.Z + 0.4f, damage, m.Unit.ShotSpeed, reach + RunnerRules.ShotOvershoot);
                 _shots.Add(shot);
-                Emit(RunnerEventKind.Fired, m.Id, 0, m.X, m.Z + m.Unit.Range, shot.Id, false, false, m.Unit.Id);
+                Emit(RunnerEventKind.Fired, m.Id, 0, m.X, m.Z + reach, shot.Id, false, false, m.Unit.Id);
                 return;
             }
 
@@ -658,7 +776,7 @@ namespace Survival.Domain.Runner
         {
             foreach (var f in _foes)
             {
-                if (f.Hp > 0 && f.Z > m.Z - 0.5f && f.Z - m.Z <= m.Unit.Range + f.Unit.Radius)
+                if (f.Hp > 0 && f.Z > m.Z - 0.5f && f.Z - m.Z <= ReachOf(m) + f.Unit.Radius)
                 {
                     return true;
                 }
@@ -666,7 +784,7 @@ namespace Survival.Domain.Runner
 
             foreach (var b in _boxes)
             {
-                if (b.Hp > 0 && b.Z > m.Z - 0.5f && b.Z - m.Z <= m.Unit.Range + RunnerBox.Radius)
+                if (b.Hp > 0 && b.Z > m.Z - 0.5f && b.Z - m.Z <= ReachOf(m) + RunnerBox.Radius)
                 {
                     return true;
                 }
@@ -1000,6 +1118,17 @@ namespace Survival.Domain.Runner
                     RateMul += b.Def.Amount;
                     Emit(RunnerEventKind.Upgrade, b.Id, 0, b.X, b.Z, RateMul, true, true, "rate");
                     return;
+                case RunnerBoxKind.Range:
+                    RangeMul += b.Def.Amount;
+                    Emit(RunnerEventKind.Upgrade, b.Id, 0, b.X, b.Z, RangeMul, true, true, "range");
+                    return;
+                case RunnerBoxKind.Heal:
+                {
+                    var heal = Math.Max(1, (int)Math.Round(Hero.Unit.Hp * b.Def.Amount));
+                    Hero.Hp = Math.Min(Hero.Unit.Hp, Hero.Hp + heal);
+                    Emit(RunnerEventKind.Upgrade, b.Id, 0, b.X, b.Z, Hero.Hp, true, true, "heal");
+                    return;
+                }
             }
 
             var unit = _catalog.Unit(b.Def.Unit);
@@ -1048,6 +1177,122 @@ namespace Survival.Domain.Runner
                     BoxesMissed++;
                     Emit(RunnerEventKind.BoxMissed, b.Id, 0, b.X, b.Z, b.Hp, false, true, b.Def.Unit);
                 }
+            }
+        }
+
+        // ---------- lane traps ----------
+
+        private void StepHazards(float dt)
+        {
+            for (var i = _hazards.Count - 1; i >= 0 && !Over; i--)
+            {
+                var h = _hazards[i];
+                var was = h.State;
+                h.StateClock += dt;
+                switch (h.Kind)
+                {
+                    case RunnerHazardKind.Spikes:
+                    {
+                        // On the run's clock (deterministic, staggered by the row's phase): down, rattle, up.
+                        var t = (Seconds + h.Def.Phase) % RunnerRules.SpikeCycle;
+                        h.State = t < RunnerRules.SpikeDown ? RunnerHazardState.Idle
+                            : t < RunnerRules.SpikeDown + RunnerRules.SpikeWarn ? RunnerHazardState.Warning
+                            : RunnerHazardState.Active;
+                        break;
+                    }
+
+                    case RunnerHazardKind.Fire:
+                        if (h.StateClock >= RunnerRules.FireFlare)
+                        {
+                            h.StateClock = 0f;
+                            h.Hit.Clear();
+                            h.Caught = 0;
+                        }
+
+                        break;
+
+                    case RunnerHazardKind.Log:
+                        if (h.State == RunnerHazardState.Idle && h.Z - Hero.Z <= RunnerRules.LogTrigger + h.Def.Phase)
+                        {
+                            h.State = RunnerHazardState.Warning;
+                        }
+                        else if (h.State == RunnerHazardState.Warning && h.StateClock >= RunnerRules.LogWarn)
+                        {
+                            h.State = RunnerHazardState.Active;
+                        }
+                        else if (h.State == RunnerHazardState.Active)
+                        {
+                            h.Z -= RunnerRules.LogSpeed * dt;
+                        }
+
+                        break;
+                }
+
+                if (h.State != was)
+                {
+                    h.StateClock = 0f;
+                    if (h.State == RunnerHazardState.Active)
+                    {
+                        // A new activation: everyone can be caught again (once).
+                        h.Hit.Clear();
+                        h.Caught = 0;
+                    }
+                }
+
+                if (h.Hurts)
+                {
+                    Catch(h);
+                }
+
+                if (h.Z < Hero.Z - SquadDepth - RunnerRules.DropBehind)
+                {
+                    _hazards.RemoveAt(i);
+                }
+            }
+        }
+
+        /// <summary>Whoever the trap touches (once each per activation): a follower is knocked out, the hero takes the damage.</summary>
+        private void Catch(RunnerHazard h)
+        {
+            for (var i = _squad.Count - 1; i >= 0 && !Over; i--)
+            {
+                if (i >= _squad.Count)
+                {
+                    continue;
+                }
+
+                var m = _squad[i];
+                if (h.Caught >= h.CatchCap)
+                {
+                    return;
+                }
+
+                if (h.Hit.Contains(m.Id) || !h.Touches(m.X, m.Z, m.Unit.Radius))
+                {
+                    continue;
+                }
+
+                h.Hit.Add(m.Id);
+                h.Caught++;
+                HazardHits++;
+                if (m.IsHero)
+                {
+                    Hero.Hp = Math.Max(0, Hero.Hp - h.Def.Damage);
+                    Emit(RunnerEventKind.HazardHit, h.Id, m.Id, m.X, m.Z, h.Def.Damage, true, false, RunnerHazardDef.Name(h.Kind));
+                    Emit(RunnerEventKind.HeroHit, Hero.Id, h.Id, Hero.X, Hero.Z, h.Def.Damage, true, false, Hero.Unit.Id);
+                    if (Hero.Hp <= 0 && !Over)
+                    {
+                        Outcome = RunnerOutcome.Lost;
+                        Emit(RunnerEventKind.Lost, Hero.Id, h.Id, Hero.X, Hero.Z, 0, true);
+                    }
+
+                    continue;
+                }
+
+                _squad.Remove(m);
+                Emit(RunnerEventKind.HazardHit, h.Id, m.Id, m.X, m.Z, 0, false, false, RunnerHazardDef.Name(h.Kind));
+                Emit(RunnerEventKind.FollowerLost, m.Id, h.Id, m.X, m.Z, Followers, true, false, m.Unit.Id);
+                Reslot();
             }
         }
 

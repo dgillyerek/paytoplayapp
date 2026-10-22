@@ -36,7 +36,8 @@ namespace Survival.Unity
         private const float CameraHeight = 7.6f;
         private const float CameraBack = 10.0f;
         private const float CameraSide = -1.2f;
-        private const float CameraLookAhead = 5.0f;
+        // Looks further down the road since the squad's reach grew to ~20 m (Update 4): the foes it shoots stay in shot.
+        private const float CameraLookAhead = 6.5f;
         private const float CameraLookHeight = 0.9f;
 
         /// <summary>The unit a follower / hero box pays stands on its lid at this share of battle size.</summary>
@@ -47,7 +48,6 @@ namespace Survival.Unity
         private const float KeyLeadMetres = 1.2f;
         private const float DragMetresPerScreen = 9.5f;
         private const float ShotHeight = 1.15f;
-        private const float BossScale = 1.5f;
 
         [SerializeField] private string levelId = "";
 
@@ -247,6 +247,7 @@ namespace Survival.Unity
             _boxes.Clear();
             _boxDefs.Clear();
             _shots.Clear();
+            _hazards.Clear();
             _dying.Clear();
             foreach (var f in _fx)
             {
@@ -294,6 +295,7 @@ namespace Survival.Unity
 
             AnimateSquad();
             AnimateFoes();
+            AnimateHazards(dt);
             TickFx(dt);
             TickHud(dt);
         }
@@ -511,14 +513,14 @@ namespace Survival.Unity
             {
                 if (!_foes.ContainsKey(f.Id))
                 {
-                    var rig = RunnerRig.Spawn(f.Unit.Roster, _actors, "Foe_" + f.Unit.Id + "_" + f.Id, f.Boss ? BossScale : 1f);
+                    var rig = RunnerRig.Spawn(f.Unit.Roster, _actors, "Foe_" + f.Unit.Id + "_" + f.Id, f.Unit.Scale);
                     if (rig != null)
                     {
                         rig.Slot.position = new Vector3(f.X, 0f, f.Z);
                         rig.Slot.rotation = Quaternion.Euler(0f, 180f, 0f);
                         rig.Rest();
                         _foes[f.Id] = rig;
-                        AddSideBar(f.Id, false, rig, f.Boss);
+                        AddSideBar(f.Id, false, rig, f.Boss, f.Unit.Scale);
                     }
                 }
             }
@@ -549,6 +551,7 @@ namespace Survival.Unity
                 }
             }
 
+            SyncHazards();
             foreach (var s in _run.Shots)
             {
                 if (!_shots.ContainsKey(s.Id))
@@ -847,6 +850,13 @@ namespace Survival.Unity
                 case RunnerEventKind.Upgrade:
                     break;
 
+                case RunnerEventKind.HazardSpawned:
+                    break;
+
+                case RunnerEventKind.HazardHit:
+                    HazardStruck(e, at);
+                    break;
+
                 case RunnerEventKind.BossEngaged:
                     Banner(S("runner.boss_incoming", "Ironhowl blocks the road!"), new Color(1f, 0.45f, 0.35f, 1f));
                     Shake(0.35f);
@@ -1024,8 +1034,8 @@ namespace Survival.Unity
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Linear;
             RenderSettings.fogColor = LockedBattleGround.Horizon;
-            RenderSettings.fogStartDistance = 26f;
-            RenderSettings.fogEndDistance = 60f;
+            RenderSettings.fogStartDistance = 32f;
+            RenderSettings.fogEndDistance = 68f;
         }
 
         private readonly List<Transform> _billboards = new List<Transform>();
@@ -1107,6 +1117,11 @@ namespace Survival.Unity
             LockedBattleGround.AddContactShadow(root, BoxView.Size, BoxView.Size * 0.7f);
             _boxDefs[b.Id] = b.Def;
             var view = new BoxView { Root = root, Sprite = root.GetComponentInChildren<SpriteRenderer>() };
+            if (view.Sprite != null && (b.Def.Kind == RunnerBoxKind.Range || b.Def.Kind == RunnerBoxKind.Heal))
+            {
+                view.Sprite.color = CrateTint(b.Def.Kind);
+            }
+
             if (b.Def.GivesUnits && _catalog != null && _actors != null)
             {
                 // The real battle rig of what's inside (not its portrait): rest pose on the lid, facing the squad.
@@ -1348,10 +1363,12 @@ namespace Survival.Unity
             {
                 RunnerBoxKind.Weapon => Fmt("runner.upgrade.weapon", "Weapon up! +{0}% damage", Mathf.RoundToInt(box.Amount * 100f)),
                 RunnerBoxKind.Rate => Fmt("runner.upgrade.rate", "Faster attacks! +{0}% speed", Mathf.RoundToInt(box.Amount * 100f)),
+                RunnerBoxKind.Range => Fmt("runner.upgrade.range", "Longer reach! +{0}% range", Mathf.RoundToInt(box.Amount * 100f)),
+                RunnerBoxKind.Heal => Fmt("runner.upgrade.heal", "Healed! +{0}% HP", Mathf.RoundToInt(box.Amount * 100f)),
                 RunnerBoxKind.Hero => Fmt("runner.box.hero", "{0} joins!", HeroName(box.Unit)),
                 _ => Fmt("runner.joined", "+{0} {1}", box.Count, HeroName(box.Unit))
             };
-            Banner(call, box.Kind == RunnerBoxKind.Rate ? new Color(0.55f, 0.9f, 1f, 1f) : gold);
+            Banner(call, RewardColor(box.Kind, gold));
         }
 
         private void Slash(Vector3 at, string who)

@@ -15,7 +15,7 @@ namespace Survival.Domain.Runner
         /// <summary>The loading screen shows at most this many faces per side.</summary>
         public const int MaxFaces = 5;
 
-        public const int TipCount = 4;
+        public const int TipCount = 5;
 
         public const string IntoKey = "runner.loading.into";
         public const string BackKey = "runner.loading.back";

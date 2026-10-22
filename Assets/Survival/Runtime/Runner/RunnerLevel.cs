@@ -19,14 +19,50 @@ namespace Survival.Domain.Runner
         Weapon,
 
         /// <summary>Attack speed upgrade: the whole squad attacks faster (+Amount, 0.25 = +25%).</summary>
-        Rate
+        Rate,
+
+        /// <summary>Range upgrade: the squad's shots fly further (+Amount, 0.15 = +15%).</summary>
+        Range,
+
+        /// <summary>Healing: the hero gets back Amount of its max HP (0.35 = 35%).</summary>
+        Heal
     }
 
     public enum RunnerRowKind
     {
         Enemy,
         Box,
-        Boss
+        Boss,
+
+        /// <summary>A trap in the lane (spikes, a rolling log, a fire patch): steer round it; it cannot be shot.</summary>
+        Hazard
+    }
+
+    /// <summary>Lane traps. Each one shows a warning before it can hurt (see <see cref="RunnerHazardDef"/>).</summary>
+    public enum RunnerHazardKind
+    {
+        /// <summary>A spike strip: it cycles down, then a rattle warning, then the spikes stand up (only then does it hurt).</summary>
+        Spikes,
+
+        /// <summary>A log at the top of the lane: it wobbles as a warning, then rolls back down its lane at the squad.</summary>
+        Log,
+
+        /// <summary>A fire patch: ringed in scorch marks, burns whatever walks through it, always on.</summary>
+        Fire
+    }
+
+    /// <summary>
+    /// A lane trap: <see cref="Width"/> metres across the lane (centred on the row's x), <see cref="Damage"/> to the hero
+    /// on contact (a follower it touches is knocked out). Spikes and logs use <see cref="Phase"/> to stagger their cycle.
+    /// </summary>
+    public sealed record RunnerHazardDef(RunnerHazardKind Kind, float Width, int Damage, float Phase = 0f)
+    {
+        public static string Name(RunnerHazardKind kind) => kind switch
+        {
+            RunnerHazardKind.Spikes => "spikes",
+            RunnerHazardKind.Log => "log",
+            _ => "fire"
+        };
     }
 
     /// <summary>
@@ -44,7 +80,14 @@ namespace Survival.Domain.Runner
         bool Ranged,
         float ShotSpeed,
         float Speed,
-        float Radius);
+        float Radius)
+    {
+        /// <summary>
+        /// Runner body scale on top of the battle size (1 = battle size). The JSON radius is the scale-1 body; <see cref="Radius"/>
+        /// is already multiplied by this, so the hit body, lane clamp and bars grow with the model.
+        /// </summary>
+        public float Scale { get; init; } = 1f;
+    }
 
     public sealed record RunnerBoxDef(int Hp, RunnerBoxKind Kind, string Unit, int Count, float Amount)
     {
@@ -55,6 +98,8 @@ namespace Survival.Domain.Runner
         {
             RunnerBoxKind.Weapon => RunnerArtKeys.CrateWeapon,
             RunnerBoxKind.Rate => RunnerArtKeys.CrateSpeed,
+            RunnerBoxKind.Range => RunnerArtKeys.CrateRange,
+            RunnerBoxKind.Heal => RunnerArtKeys.CrateHeal,
             _ => RunnerArtKeys.ChestHero
         };
     }
@@ -65,6 +110,9 @@ namespace Survival.Domain.Runner
     /// </summary>
     public sealed record RunnerRowDef(float At, RunnerRowKind Kind, float X, string Unit, int Count, float Spread, RunnerBoxDef? Box)
     {
+        /// <summary>The trap, on a <see cref="RunnerRowKind.Hazard"/> row.</summary>
+        public RunnerHazardDef? Hazard { get; init; }
+
         public float XOf(int index) => X + ((index - ((Count - 1) * 0.5f)) * Spread);
     }
 
@@ -166,6 +214,20 @@ namespace Survival.Domain.Runner
             }
         }
 
+        public int HazardCount
+        {
+            get
+            {
+                var n = 0;
+                foreach (var r in Rows)
+                {
+                    n += r.Kind == RunnerRowKind.Hazard ? 1 : 0;
+                }
+
+                return n;
+            }
+        }
+
         public int BoxCount
         {
             get
@@ -187,6 +249,10 @@ namespace Survival.Domain.Runner
         public const string ChestOpen = "theme_a.hook.icon.chest_open";
         public const string CrateWeapon = "theme_a.runner.crate_weapon";
         public const string CrateSpeed = "theme_a.runner.crate_speed";
+
+        /// <summary>Range and heal crates reuse the painted crates, tinted in the scene (the pack has no third crate yet).</summary>
+        public const string CrateRange = CrateWeapon;
+        public const string CrateHeal = CrateSpeed;
         public const string EventIcon = "theme_a.runner.icon";
         public const string PortraitPrefix = "theme_a.hero.portrait.";
 
@@ -223,6 +289,9 @@ namespace Survival.Domain.Runner
         public IReadOnlyDictionary<string, RunnerUnitDef> Units => _units;
         public IReadOnlyList<RunnerLevelDef> Levels => _levels;
 
+        /// <summary>The level generator's settings, when the file has a "progression" block.</summary>
+        public RunnerProgressionDef? Progression { get; private set; }
+
         public RunnerUnitDef Unit(string id) =>
             _units.TryGetValue(id, out var u) ? u : throw new KeyNotFoundException("Runner unit '" + id + "' is not in " + FileName + ".");
 
@@ -257,7 +326,14 @@ namespace Survival.Domain.Runner
                     throw new FormatException(level.Id + ": row at " + row.At + " m is outside the 0.." + level.Length + " m lane.");
                 }
 
-                if (row.Kind == RunnerRowKind.Box)
+                if (row.Kind == RunnerRowKind.Hazard)
+                {
+                    if (row.Hazard == null || row.Hazard.Width <= 0f)
+                    {
+                        throw new FormatException(level.Id + ": hazard at " + row.At + " m needs a width > 0.");
+                    }
+                }
+                else if (row.Kind == RunnerRowKind.Box)
                 {
                     if (row.Box == null || row.Box.Hp <= 0)
                     {
@@ -290,6 +366,7 @@ namespace Survival.Domain.Runner
                     }
 
                     var ranged = LayoutJson.OptBool(u, "ranged", false);
+                    var scale = Math.Max(0.2f, LayoutJson.OptNum(u, "scale", 1f));
                     units.Add(new RunnerUnitDef(
                         pair.Key,
                         LayoutJson.Str(u, "roster"),
@@ -301,7 +378,7 @@ namespace Survival.Domain.Runner
                         ranged,
                         LayoutJson.OptNum(u, "shot_speed", 16f),
                         Math.Max(0f, LayoutJson.OptNum(u, "speed", 0f)),
-                        Math.Max(0.1f, LayoutJson.OptNum(u, "radius", 0.45f))));
+                        Math.Max(0.1f, LayoutJson.OptNum(u, "radius", 0.45f)) * scale) { Scale = scale });
                 }
             }
 
@@ -341,9 +418,11 @@ namespace Survival.Domain.Runner
             }
 
             // The authored levels come first (Level 1 = Thornwood Road); "progression" generates the rest from a seed.
+            RunnerProgressionDef? progression = null;
             if (root.TryGet("progression", out var pn) && pn is JsonNode.Obj po && levels.Count > 0)
             {
                 var prog = RunnerProgressionDef.Read(po);
+                progression = prog;
                 var have = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var u in units)
                 {
@@ -356,7 +435,7 @@ namespace Survival.Domain.Runner
                 }
             }
 
-            return new RunnerCatalog(units, levels);
+            return new RunnerCatalog(units, levels) { Progression = progression };
         }
 
         private static RunnerRowDef ReadRow(JsonNode.Obj r)
@@ -379,7 +458,9 @@ namespace Survival.Domain.Runner
                         "hero" => RunnerBoxKind.Hero,
                         "weapon" => RunnerBoxKind.Weapon,
                         "rate" => RunnerBoxKind.Rate,
-                        _ => throw new FormatException("Runner box reward '" + give + "' is not followers / hero / weapon / rate.")
+                        "range" => RunnerBoxKind.Range,
+                        "heal" => RunnerBoxKind.Heal,
+                        _ => throw new FormatException("Runner box reward '" + give + "' is not followers / hero / weapon / rate / range / heal.")
                     };
                     var box = new RunnerBoxDef(
                         LayoutJson.OptInt(r, "hp", 0),
@@ -390,8 +471,22 @@ namespace Survival.Domain.Runner
                     return new RunnerRowDef(at, RunnerRowKind.Box, x, box.Unit, 1, 0f, box);
                 }
 
+                case "hazard":
+                {
+                    var type = LayoutJson.OptStr(r, "hazard", "spikes");
+                    var hk = type switch
+                    {
+                        "spikes" => RunnerHazardKind.Spikes,
+                        "log" => RunnerHazardKind.Log,
+                        "fire" => RunnerHazardKind.Fire,
+                        _ => throw new FormatException("Runner hazard '" + type + "' is not spikes / log / fire.")
+                    };
+                    var hz = new RunnerHazardDef(hk, Math.Max(0.4f, LayoutJson.OptNum(r, "width", 1.8f)), Math.Max(0, LayoutJson.OptInt(r, "damage", 40)), LayoutJson.OptNum(r, "phase", 0f));
+                    return new RunnerRowDef(at, RunnerRowKind.Hazard, x, "", 1, 0f, null) { Hazard = hz };
+                }
+
                 default:
-                    throw new FormatException("Runner row kind '" + kindText + "' at " + at.ToString(CultureInfo.InvariantCulture) + " m is not enemy / box / boss.");
+                    throw new FormatException("Runner row kind '" + kindText + "' at " + at.ToString(CultureInfo.InvariantCulture) + " m is not enemy / box / boss / hazard.");
             }
         }
     }
