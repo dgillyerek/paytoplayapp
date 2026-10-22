@@ -367,6 +367,11 @@ namespace Survival.Unity
 
         private void BuildLights()
         {
+            if (ActorSceneLights.Suppressed)
+            {
+                return;
+            }
+
             if (UnityEngine.Object.FindFirstObjectByType<Light>() != null)
             {
                 return;

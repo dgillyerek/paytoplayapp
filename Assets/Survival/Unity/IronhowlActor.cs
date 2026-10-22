@@ -165,7 +165,11 @@ namespace Survival.Unity
             _clipMissing = false;
             _pose = poseName;
             _graph.Evaluate(0f);
-            Debug.Log("Ironhowl pose " + poseName + " length " + clip.length.ToString("0.00"));
+            if (ActorClipCache.First("log|ironhowl|" + poseName))
+            {
+                // Once per pose per session: the boss changes pose every swing.
+                Debug.Log("Ironhowl pose " + poseName + " length " + clip.length.ToString("0.00"));
+            }
             return true;
 #else
             _ = themePackRel;
@@ -283,6 +287,13 @@ namespace Survival.Unity
 #if UNITY_EDITOR
         private static AnimationClip? LoadClip(string path, string poseName)
         {
+            var key = path + "|" + poseName;
+            var cached = ActorClipCache.Get(key);
+            if (cached != null)
+            {
+                return cached;
+            }
+
             if (!EnsureClipImport(path, poseName))
             {
                 return null;
@@ -312,7 +323,7 @@ namespace Survival.Unity
                 return null;
             }
 
-            return found;
+            return ActorClipCache.Put(key, found);
         }
 
         private static Avatar? LoadGenericAvatar(string path)
@@ -551,6 +562,11 @@ namespace Survival.Unity
 
         private static void BuildLights()
         {
+            if (ActorSceneLights.Suppressed)
+            {
+                return;
+            }
+
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientLight = new Color(0.38f, 0.36f, 0.34f, 1f);
             var key = new GameObject("IronhowlKeyLight");

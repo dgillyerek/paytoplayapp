@@ -270,10 +270,17 @@ namespace Survival.Unity
         {
 #if UNITY_EDITOR
             var path = AssetPath(entry.ThemePackRel);
+            var key = path + "|" + entry.ExactName;
+            var cached = ActorClipCache.Get(key);
+            if (cached != null)
+            {
+                return cached;
+            }
+
             var clip = PickClip(path, entry.ExactName);
             if (clip != null && !clip.empty && !BlightrootMotion.IsEmptyClip(clip.length))
             {
-                return clip;
+                return ActorClipCache.Put(key, clip);
             }
 
             if (!RepairTake(path, entry))
@@ -288,7 +295,7 @@ namespace Survival.Unity
                 return null;
             }
 
-            return clip;
+            return ActorClipCache.Put(key, clip);
 #else
             return null;
 #endif
@@ -328,6 +335,12 @@ namespace Survival.Unity
 
         private static bool RepairTake(string path, BlightrootMotion.Clip entry)
         {
+            // One reimport per take per session: a take still missing after one repair is not fixed by another.
+            if (!ActorClipCache.First("repair|" + path + "|" + entry.ExactName))
+            {
+                return false;
+            }
+
             if (AssetImporter.GetAtPath(path) is not ModelImporter importer)
             {
                 Debug.LogError("Blightroot importer missing. " + path);
@@ -859,6 +872,11 @@ namespace Survival.Unity
 
         private static void BuildLights()
         {
+            if (ActorSceneLights.Suppressed)
+            {
+                return;
+            }
+
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientLight = new Color(0.38f, 0.36f, 0.34f, 1f);
             var key = new GameObject("BlightrootKeyLight");

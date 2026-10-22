@@ -36,6 +36,7 @@ namespace Survival.Unity
             public Transform? Body;
             public Light? Light;
             public float Seed;
+            public RunnerHazardDef Def = null!;
             public RunnerHazardState Last = RunnerHazardState.Idle;
         }
 
@@ -46,35 +47,45 @@ namespace Survival.Unity
                 return;
             }
 
-            foreach (var h in _run.Hazards)
+            var hazards = _run.Hazards;
+            for (var i = 0; i < hazards.Count; i++)
             {
+                var h = hazards[i];
                 if (!_hazards.ContainsKey(h.Id))
                 {
-                    _hazards[h.Id] = BuildHazard(h);
+                    _hazards[h.Id] = TakeHazard(h);
                 }
             }
 
-            foreach (var id in new List<int>(_hazards.Keys))
+            if (_hazards.Count == hazards.Count)
+            {
+                return;
+            }
+
+            _scratchIds.Clear();
+            _scratchIds.AddRange(_hazards.Keys);
+            foreach (var id in _scratchIds)
             {
                 if (_run.Hazard(id) == null)
                 {
                     var v = _hazards[id];
                     _hazards.Remove(id);
-                    if (v.Root != null)
-                    {
-                        Destroy(v.Root.gameObject);
-                    }
+                    ReleaseHazard(v);
                 }
             }
         }
 
-        private HazardView BuildHazard(RunnerHazard h)
+        private static int _hazardsBuilt;
+
+        /// <summary>A trap of <paramref name="def"/>'s kind and width (pooled: <see cref="TakeHazard"/> places it).</summary>
+        private HazardView BuildHazard(RunnerHazardDef def, Transform parent)
         {
-            var root = new GameObject("Hazard_" + RunnerHazardDef.Name(h.Kind) + "_" + h.Id).transform;
-            root.SetParent(_actors, false);
-            root.position = new Vector3(h.X, 0f, h.Z);
-            var v = new HazardView { Root = root, Kind = h.Kind, Seed = (h.Id * 0.618f) % 1f };
-            var w = h.Def.Width;
+            var n = ++_hazardsBuilt;
+            var root = new GameObject("Hazard_" + RunnerHazardDef.Name(def.Kind) + "_" + n).transform;
+            root.SetParent(parent, false);
+            var v = new HazardView { Root = root, Kind = def.Kind, Def = def, Seed = (n * 0.618f) % 1f };
+            var h = (Kind: def.Kind, HalfDepth: RunnerHazard.HalfDepthOf(def.Kind));
+            var w = def.Width;
             switch (h.Kind)
             {
                 case RunnerHazardKind.Spikes:
@@ -160,6 +171,7 @@ namespace Survival.Unity
                 return;
             }
 
+            RunnerHitchLog.Begin(RunnerHitchLog.Section.Hazards);
             var time = Time.time;
             foreach (var pair in _hazards)
             {
@@ -269,6 +281,8 @@ namespace Survival.Unity
 
                 v.Last = h.State;
             }
+
+            RunnerHitchLog.End(RunnerHitchLog.Section.Hazards);
         }
 
         /// <summary>A trap caught someone: a flash on the spot and the call-out.</summary>

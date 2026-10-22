@@ -143,6 +143,12 @@ namespace Survival.Unity
         public float WalkLength => _walkLength;
         public float AttackLength => _attackLength > 0.05f ? _attackLength : 0f;
 
+        private static bool _attackClipEnsuredThisSession;
+
+        /// <summary>FBXs already repaired (reimported) this session: a take that is still missing after one reimport is
+        /// not fixed by reimporting it again on every build, and each reimport stalls the editor for seconds.</summary>
+        private static readonly System.Collections.Generic.HashSet<string> RepairedThisSession = new System.Collections.Generic.HashSet<string>();
+
         public void Build()
         {
             BuildLights();
@@ -202,7 +208,15 @@ namespace Survival.Unity
             _mixer.SetInputWeight(0, 1f);
             _output.SetSourcePlayable(_mixer);
 
-            EnsureEditableAttackClip();
+            // Once per editor session, not per build: it rewrites the .anim and calls AssetDatabase.SaveAssets(), which
+            // saves every dirty asset in the project. Per build that is a multi-second stall each time the runner (or
+            // the pool's prewarm) builds another Sir Aldric.
+            if (!_attackClipEnsuredThisSession)
+            {
+                _attackClipEnsuredThisSession = true;
+                EnsureEditableAttackClip();
+            }
+
             // Leftover LoadClip(ThemePackAttackAnim) unused at Play.
             _ = ThemePackAttackAnim;
             _ = ThemePackAttackFbxDiagLeftover;
@@ -1679,6 +1693,11 @@ namespace Survival.Unity
         private static bool RepairClipTake(string rel, bool walk)
         {
 #if UNITY_EDITOR
+            if (!RepairedThisSession.Add(rel))
+            {
+                return false;
+            }
+
             if (AssetImporter.GetAtPath(rel) is not ModelImporter importer)
             {
                 return false;
@@ -2276,6 +2295,11 @@ namespace Survival.Unity
 
         private static void BuildLights()
         {
+            if (ActorSceneLights.Suppressed)
+            {
+                return;
+            }
+
             RenderSettings.ambientMode = AmbientMode.Trilight;
             RenderSettings.ambientSkyColor = new Color(0.42f, 0.44f, 0.48f);
             RenderSettings.ambientEquatorColor = new Color(0.28f, 0.29f, 0.30f);

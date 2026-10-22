@@ -10,8 +10,11 @@ namespace Survival.Domain.Runner
         /// <summary>Rows spawn this far ahead of the squad, so they are in view before they matter.</summary>
         public const float SpawnAhead = 38f;
 
-        /// <summary>Enemies start walking at the squad once it is this close.</summary>
-        public const float Aggro = 15f;
+        /// <summary>
+        /// Enemies walk at the squad from the moment they spawn (no aggro wait); within this distance of the hero they also
+        /// drift sideways toward his line, so a lane layout still reads as lanes while it is far off.
+        /// </summary>
+        public const float SeekRange = 15f;
 
         /// <summary>Half width of the strip a foe archer shoots into (plus the target's radius).</summary>
         public const float AimHalfWidth = 1.5f;
@@ -241,6 +244,8 @@ namespace Survival.Domain.Runner
             Z = z;
             Boss = boss;
             Hp = MaxHp = Math.Max(1, (int)Math.Round(unit.Hp * (hpMul > 0f ? hpMul : 1f)));
+            // Walking from the moment it spawns (even the rows already in view when the run starts); the boss holds.
+            Walking = !boss;
         }
 
         public int Id { get; }
@@ -325,7 +330,10 @@ namespace Survival.Domain.Runner
         public float StartZ { get; }
         public float HalfWidth => Def.Width * 0.5f;
 
-        public float HalfDepth => Def.Kind switch
+        public float HalfDepth => HalfDepthOf(Def.Kind);
+
+        /// <summary>Half the trap's depth along the road for <paramref name="kind"/> (the view builds pooled traps from it).</summary>
+        public static float HalfDepthOf(RunnerHazardKind kind) => kind switch
         {
             RunnerHazardKind.Spikes => RunnerRules.SpikeHalfDepth,
             RunnerHazardKind.Log => RunnerRules.LogHalfDepth,
@@ -507,10 +515,59 @@ namespace Survival.Domain.Runner
 
         public void SteerBy(float dx) => SteerTo(_steer + dx);
 
-        public RunnerMember? Member(int id) => _squad.Find(m => m.Id == id);
-        public RunnerFoe? Foe(int id) => _foes.Find(f => f.Id == id);
-        public RunnerBox? Box(int id) => _boxes.Find(b => b.Id == id);
-        public RunnerHazard? Hazard(int id) => _hazards.Find(h => h.Id == id);
+        // Plain loops, not List.Find(lambda): the scene looks these up for every health bar every frame, and a capturing
+        // lambda allocates each call (garbage the collector then stalls a frame to sweep).
+        public RunnerMember? Member(int id)
+        {
+            for (var i = 0; i < _squad.Count; i++)
+            {
+                if (_squad[i].Id == id)
+                {
+                    return _squad[i];
+                }
+            }
+
+            return null;
+        }
+
+        public RunnerFoe? Foe(int id)
+        {
+            for (var i = 0; i < _foes.Count; i++)
+            {
+                if (_foes[i].Id == id)
+                {
+                    return _foes[i];
+                }
+            }
+
+            return null;
+        }
+
+        public RunnerBox? Box(int id)
+        {
+            for (var i = 0; i < _boxes.Count; i++)
+            {
+                if (_boxes[i].Id == id)
+                {
+                    return _boxes[i];
+                }
+            }
+
+            return null;
+        }
+
+        public RunnerHazard? Hazard(int id)
+        {
+            for (var i = 0; i < _hazards.Count; i++)
+            {
+                if (_hazards[i].Id == id)
+                {
+                    return _hazards[i];
+                }
+            }
+
+            return null;
+        }
 
         /// <summary>Advance by <paramref name="dt"/> seconds; returns what happened (valid until the next call).</summary>
         public IReadOnlyList<RunnerEvent> Step(float dt)
@@ -672,18 +729,21 @@ namespace Survival.Domain.Runner
                     continue;
                 }
 
-                var holding = f.Unit.Ranged && dist <= reach * 0.8f;
-                if (holding || f.Z - Hero.Z > RunnerRules.Aggro)
+                // A ranged foe stops once the squad is inside its range and shoots; everything else keeps coming.
+                if (f.Unit.Ranged && dist <= reach * 0.8f)
                 {
                     continue;
                 }
 
+                // Walks in down the lane from the moment it spawns; once close it also drifts toward the hero's line.
                 f.Walking = true;
-                // Walk in down the lane and drift toward the hero's line.
                 f.Z -= f.Unit.Speed * dt;
-                var seek = RunnerRules.EnemySeek * dt;
-                f.X += Clamp(Hero.X - f.X, -seek, seek);
-                f.X = Clamp(f.X, -Level.HalfWidth + f.Unit.Radius, Level.HalfWidth - f.Unit.Radius);
+                if (f.Z - Hero.Z <= RunnerRules.SeekRange)
+                {
+                    var seek = RunnerRules.EnemySeek * dt;
+                    f.X += Clamp(Hero.X - f.X, -seek, seek);
+                    f.X = Clamp(f.X, -Level.HalfWidth + f.Unit.Radius, Level.HalfWidth - f.Unit.Radius);
+                }
             }
         }
 
