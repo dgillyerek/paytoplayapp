@@ -1,8 +1,5 @@
 using Survival.Domain.Enemies;
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace Survival.Unity
 {
@@ -48,9 +45,8 @@ namespace Survival.Unity
 
         private void BuildCape()
         {
-#if UNITY_EDITOR
             var dir = "Assets/" + BonequillMotion.ThemePackDir + "/";
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(dir + BonequillCape.FileName);
+            var prefab = PlayerAssets.Load<GameObject>(dir + BonequillCape.FileName);
             if (prefab == null)
             {
                 Debug.LogError("Bonequill cape missing. " + dir + BonequillCape.FileName);
@@ -86,7 +82,6 @@ namespace Survival.Unity
             {
                 Debug.LogWarning("Bonequill cape springs did not bind fully. Missing: " + string.Join(", ", _cloth.MissingBones));
             }
-#endif
         }
 
         private static Transform? Find(Transform[] all, string name)
@@ -102,7 +97,6 @@ namespace Survival.Unity
             return null;
         }
 
-#if UNITY_EDITOR
         private void BindCapeMaterial(string dir)
         {
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
@@ -112,8 +106,8 @@ namespace Survival.Unity
             }
 
             var tex = dir + BonequillCape.TextureFolder + "/";
-            var albedo = AssetDatabase.LoadAssetAtPath<Texture2D>(tex + BonequillCape.BaseColorFile);
-            var normal = AssetDatabase.LoadAssetAtPath<Texture2D>(tex + BonequillCape.NormalFile);
+            var albedo = PlayerAssets.Load<Texture2D>(tex + BonequillCape.BaseColorFile);
+            var normal = PlayerAssets.Load<Texture2D>(tex + BonequillCape.NormalFile);
             var mat = new Material(shader) { name = "BONEQUILL_cape" };
             if (albedo != null)
             {
@@ -169,7 +163,6 @@ namespace Survival.Unity
                 mat.SetColor(name, value);
             }
         }
-#endif
 
         private void Update()
         {

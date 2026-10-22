@@ -110,7 +110,7 @@ namespace Survival.Unity
             var path = Path.Combine(SurvivalBootstrap.ResolveCatalogDir(), RunnerCatalog.FileName);
             try
             {
-                _catalog = RunnerCatalog.Parse(File.ReadAllText(path));
+                _catalog = RunnerCatalog.Parse(PlayerAssets.ReadAllText(path));
             }
             catch (Exception ex)
             {
@@ -157,10 +157,10 @@ namespace Survival.Unity
             {
                 var root = SurvivalArt.ResolvePackRoot(AppFlavorConfig.FantasyKingdomA);
                 return ThemePackBinder.Parse(
-                    File.ReadAllText(Path.Combine(root, "pack.json")),
-                    File.ReadAllText(Path.Combine(root, "strings", "en.json")),
-                    File.ReadAllText(Path.Combine(root, "map", "node_pins.json")),
-                    File.ReadAllText(Path.Combine(root, "ui", "hud_layout.json")));
+                    PlayerAssets.ReadAllText(Path.Combine(root, "pack.json")),
+                    PlayerAssets.ReadAllText(Path.Combine(root, "strings", "en.json")),
+                    PlayerAssets.ReadAllText(Path.Combine(root, "map", "node_pins.json")),
+                    PlayerAssets.ReadAllText(Path.Combine(root, "ui", "hud_layout.json")));
             }
             catch (Exception ex)
             {
@@ -397,12 +397,12 @@ namespace Survival.Unity
             {
                 var savePath = SurvivalCampaignView.SavePath;
                 var catalogPath = Path.Combine(SurvivalBootstrap.ResolveCatalogDir(), CampaignCatalog.FileName);
-                if (!File.Exists(savePath) || !File.Exists(catalogPath))
+                if (!File.Exists(savePath) || !PlayerAssets.FileExists(catalogPath))
                 {
                     return 1;
                 }
 
-                var campaign = new CampaignSession(CampaignCatalog.Parse(File.ReadAllText(catalogPath)), new Wallet(), new WallClock());
+                var campaign = new CampaignSession(CampaignCatalog.Parse(PlayerAssets.ReadAllText(catalogPath)), new Wallet(), new WallClock());
                 return campaign.Load(File.ReadAllText(savePath)) ? campaign.RunnerUnlocked : 1;
             }
             catch (Exception ex)
@@ -418,12 +418,12 @@ namespace Survival.Unity
             {
                 var savePath = SurvivalCampaignView.SavePath;
                 var catalogPath = Path.Combine(SurvivalBootstrap.ResolveCatalogDir(), CampaignCatalog.FileName);
-                if (!File.Exists(savePath) || !File.Exists(catalogPath))
+                if (!File.Exists(savePath) || !PlayerAssets.FileExists(catalogPath))
                 {
                     return false;
                 }
 
-                var campaign = new CampaignSession(CampaignCatalog.Parse(File.ReadAllText(catalogPath)), new Wallet(), new WallClock());
+                var campaign = new CampaignSession(CampaignCatalog.Parse(PlayerAssets.ReadAllText(catalogPath)), new Wallet(), new WallClock());
                 if (!campaign.Load(File.ReadAllText(savePath)))
                 {
                     return false;

@@ -108,24 +108,24 @@ namespace Survival.Unity
         {
             SurvivalArt.EnsureLoaded(flavor, pack);
             var catalogDir = ResolveCatalogDir();
-            var catalog = CatalogLoader.LoadFromDirectory(catalogDir);
+            var catalog = CatalogLoader.LoadFromDirectory(catalogDir, PlayerAssets.ReadAllText);
             Session = TryLoadHookSession(flavor, pack, catalog, catalogDir) ?? new SurvivalSession(flavor, pack, catalog);
         }
 
         /// <summary>World + quest hook slice: base_economy / quests / gifts / stores + Theme A store/products.json. Sandbox store only.</summary>
         private static SurvivalSession? TryLoadHookSession(AppFlavorConfig flavor, ThemePackBinder pack, SurvivalCatalog catalog, string catalogDir)
         {
-            if (!File.Exists(Path.Combine(catalogDir, HookCatalogLoader.BaseEconomyFileName)))
+            if (!PlayerAssets.FileExists(Path.Combine(catalogDir, HookCatalogLoader.BaseEconomyFileName)))
             {
                 return null;
             }
 
             try
             {
-                var hook = HookCatalogLoader.LoadFromDirectory(catalogDir);
+                var hook = HookCatalogLoader.LoadFromDirectory(catalogDir, PlayerAssets.ReadAllText);
                 var productsPath = Path.Combine(SurvivalArt.ResolvePackRoot(flavor), "store", "products.json");
-                var products = File.Exists(productsPath)
-                    ? HookCatalogLoader.ParseProducts(File.ReadAllText(productsPath))
+                var products = PlayerAssets.FileExists(productsPath)
+                    ? HookCatalogLoader.ParseProducts(PlayerAssets.ReadAllText(productsPath))
                     : new Dictionary<string, ProductDef>();
                 return new SurvivalSession(
                     flavor,
@@ -148,10 +148,10 @@ namespace Survival.Unity
         {
             var packRoot = SurvivalArt.ResolvePackRoot(flavor);
             return ThemePackBinder.Parse(
-                File.ReadAllText(Path.Combine(packRoot, "pack.json")),
-                File.ReadAllText(Path.Combine(packRoot, "strings", "en.json")),
-                File.ReadAllText(Path.Combine(packRoot, "map", "node_pins.json")),
-                File.ReadAllText(Path.Combine(packRoot, "ui", "hud_layout.json")));
+                PlayerAssets.ReadAllText(Path.Combine(packRoot, "pack.json")),
+                PlayerAssets.ReadAllText(Path.Combine(packRoot, "strings", "en.json")),
+                PlayerAssets.ReadAllText(Path.Combine(packRoot, "map", "node_pins.json")),
+                PlayerAssets.ReadAllText(Path.Combine(packRoot, "ui", "hud_layout.json")));
         }
 
         private void ShowSplash(ThemePackBinder pack)
@@ -250,7 +250,7 @@ namespace Survival.Unity
             if (!string.IsNullOrEmpty(data))
             {
                 var fromAssets = Path.Combine(data, "Survival", "Resources", "Survival");
-                if (File.Exists(Path.Combine(fromAssets, CatalogLoader.WorldFileName)))
+                if (PlayerAssets.FileExists(Path.Combine(fromAssets, CatalogLoader.WorldFileName)))
                 {
                     return fromAssets;
                 }

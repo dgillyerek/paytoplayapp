@@ -82,7 +82,7 @@ namespace Survival.Unity
             try
             {
                 var path = System.IO.Path.Combine(SurvivalBootstrap.ResolveCatalogDir(), RunnerCatalog.FileName);
-                var catalog = RunnerCatalog.Parse(System.IO.File.ReadAllText(path));
+                var catalog = RunnerCatalog.Parse(PlayerAssets.ReadAllText(path));
                 return (catalog, catalog.ByNumber(unlocked));
             }
             catch (System.Exception ex)

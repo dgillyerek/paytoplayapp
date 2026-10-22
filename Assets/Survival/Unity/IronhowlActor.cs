@@ -42,10 +42,11 @@ namespace Survival.Unity
         public void Build()
         {
             BuildLights();
-#if UNITY_EDITOR
             var path = "Assets/" + IronhowlMotion.BodyThemePackRel;
+#if UNITY_EDITOR
             EnsureBodyImport(path);
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+#endif
+            var prefab = PlayerAssets.Load<GameObject>(path);
             if (prefab == null)
             {
                 Debug.LogError("Ironhowl rig missing. " + path);
@@ -88,9 +89,6 @@ namespace Survival.Unity
             _ready = true;
             PlayPose(IronhowlMotion.RestPoseName);
             Debug.Log("Ironhowl " + _pose + ". bounds " + VisibleBounds.size);
-#else
-            Debug.LogError("Ironhowl plays in the Editor Game view.");
-#endif
         }
 
         public bool PlayPose(string poseName)
@@ -132,9 +130,8 @@ namespace Survival.Unity
 
         private bool PlayClipOrTpose(string themePackRel, string poseName, bool allowBareTpose)
         {
-#if UNITY_EDITOR
             var path = "Assets/" + themePackRel;
-            if (!System.IO.File.Exists(path))
+            if (!PlayerAssets.AssetFileExists(path))
             {
                 HoldTpose(poseName, clipMissing: !allowBareTpose);
                 if (allowBareTpose)
@@ -171,12 +168,6 @@ namespace Survival.Unity
                 Debug.Log("Ironhowl pose " + poseName + " length " + clip.length.ToString("0.00"));
             }
             return true;
-#else
-            _ = themePackRel;
-            _ = poseName;
-            _ = allowBareTpose;
-            return false;
-#endif
         }
 
         /// <summary>
@@ -284,7 +275,6 @@ namespace Survival.Unity
             }
         }
 
-#if UNITY_EDITOR
         private static AnimationClip? LoadClip(string path, string poseName)
         {
             var key = path + "|" + poseName;
@@ -294,14 +284,16 @@ namespace Survival.Unity
                 return cached;
             }
 
+#if UNITY_EDITOR
             if (!EnsureClipImport(path, poseName))
             {
                 return null;
             }
+#endif
 
             AnimationClip? named = null;
             AnimationClip? fallback = null;
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
+            foreach (var obj in PlayerAssets.LoadAll(path))
             {
                 if (obj is not AnimationClip clip || clip.name.StartsWith("__preview__"))
                 {
@@ -328,7 +320,7 @@ namespace Survival.Unity
 
         private static Avatar? LoadGenericAvatar(string path)
         {
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
+            foreach (var obj in PlayerAssets.LoadAll(path))
             {
                 if (obj is Avatar avatar && !avatar.isHuman)
                 {
@@ -339,6 +331,7 @@ namespace Survival.Unity
             return null;
         }
 
+#if UNITY_EDITOR
         private static void EnsureBodyImport(string path)
         {
             if (AssetImporter.GetAtPath(path) is not ModelImporter importer)

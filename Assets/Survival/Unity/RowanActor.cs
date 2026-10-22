@@ -1,8 +1,5 @@
 using Survival.Domain.Heroes;
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace Survival.Unity
 {
@@ -61,9 +58,8 @@ namespace Survival.Unity
 
         private void BuildCoat()
         {
-#if UNITY_EDITOR
             var dir = "Assets/" + RowanMotion.ThemePackDir + "/";
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(dir + RowanCoat.FileName);
+            var prefab = PlayerAssets.Load<GameObject>(dir + RowanCoat.FileName);
             if (prefab == null)
             {
                 Debug.LogError("Rowan coat missing. " + dir + RowanCoat.FileName);
@@ -99,7 +95,6 @@ namespace Survival.Unity
             {
                 Debug.LogWarning("Rowan coat springs did not bind fully. Missing: " + string.Join(", ", _cloth.MissingBones));
             }
-#endif
         }
 
         private static Transform? Find(Transform[] all, string name)
@@ -115,7 +110,6 @@ namespace Survival.Unity
             return null;
         }
 
-#if UNITY_EDITOR
         private void BindCoatMaterial(string dir)
         {
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
@@ -125,8 +119,8 @@ namespace Survival.Unity
             }
 
             var tex = dir + RowanCoat.TextureFolder + "/";
-            var albedo = AssetDatabase.LoadAssetAtPath<Texture2D>(tex + RowanCoat.BaseColorFile);
-            var normal = AssetDatabase.LoadAssetAtPath<Texture2D>(tex + RowanCoat.NormalFile);
+            var albedo = PlayerAssets.Load<Texture2D>(tex + RowanCoat.BaseColorFile);
+            var normal = PlayerAssets.Load<Texture2D>(tex + RowanCoat.NormalFile);
             var mat = new Material(shader) { name = "ROWAN_coat" };
             if (albedo != null)
             {
@@ -182,7 +176,6 @@ namespace Survival.Unity
                 mat.SetColor(name, value);
             }
         }
-#endif
 
         private void Update()
         {

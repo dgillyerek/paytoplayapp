@@ -185,7 +185,7 @@ namespace Survival.Unity
             if (!string.IsNullOrEmpty(data))
             {
                 var fromAssets = Path.Combine(data, flavor.PackPath.Replace('/', Path.DirectorySeparatorChar));
-                if (Directory.Exists(fromAssets))
+                if (PlayerAssets.DirectoryExists(fromAssets))
                 {
                     return fromAssets;
                 }
@@ -205,7 +205,7 @@ namespace Survival.Unity
         private static void LoadPath(string path, string key, IReadOnlyDictionary<string, ArtSlice>? slices = null)
         {
             slices ??= _slices;
-            if (_sprites!.ContainsKey(key) || !File.Exists(path))
+            if (_sprites!.ContainsKey(key) || !PlayerAssets.FileExists(path))
             {
                 return;
             }
@@ -213,7 +213,7 @@ namespace Survival.Unity
             var full = Path.GetFullPath(path);
             if (!Textures.TryGetValue(full, out var tex) || tex == null)
             {
-                var bytes = File.ReadAllBytes(full);
+                var bytes = PlayerAssets.ReadAllBytes(full);
                 tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
                 if (!tex.LoadImage(bytes, markNonReadable: false))
                 {

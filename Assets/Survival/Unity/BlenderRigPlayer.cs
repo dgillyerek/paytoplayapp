@@ -102,7 +102,6 @@ namespace Survival.Unity
         public void Build()
         {
             BuildLights();
-#if UNITY_EDITOR
             var path = "Assets/" + _spec.RestThemePackRel;
             if (BlenderRigSpec.IsRejectedMixamoRigFile(path)
                 || path.EndsWith(_spec.RejectedMixamoFileName, System.StringComparison.Ordinal))
@@ -114,20 +113,26 @@ namespace Survival.Unity
             _humanoid = false;
             if (_spec.PreferHumanoid)
             {
+#if UNITY_EDITOR
                 EnsureImport(path, humanoid: true, clip: false);
+#endif
                 _humanoid = HasValidHumanAvatar(path);
                 if (!_humanoid)
                 {
                     Debug.LogWarning(_spec.Name + " humanoid avatar did not validate. Using Generic.");
+#if UNITY_EDITOR
                     EnsureImport(path, humanoid: false, clip: false);
+#endif
                 }
             }
+#if UNITY_EDITOR
             else
             {
                 EnsureImport(path, humanoid: false, clip: false);
             }
+#endif
 
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            var prefab = PlayerAssets.Load<GameObject>(path);
             if (prefab == null)
             {
                 Debug.LogError(_spec.Name + " blender rig missing. " + path);
@@ -167,9 +172,6 @@ namespace Survival.Unity
             _ready = true;
             BindIdlePropsAtAttackRest();
             ShowRest();
-#else
-            Debug.LogError(_spec.Name + " plays in the Editor Game view.");
-#endif
         }
 
         public bool PlayPose(string poseName)
@@ -431,7 +433,6 @@ namespace Survival.Unity
 
         private bool PlayClip(string fileName, string poseName, string takeName, int lastFrame)
         {
-#if UNITY_EDITOR
             var clip = LoadClip(fileName, poseName, takeName, lastFrame);
             if (clip == null || clip.empty || clip.length < 0.2f)
             {
@@ -457,12 +458,8 @@ namespace Survival.Unity
             _pose = poseName;
             _graph.Evaluate(0f);
             return true;
-#else
-            return false;
-#endif
         }
 
-#if UNITY_EDITOR
         private AnimationClip? LoadClip(string fileName, string poseName, string takeName, int lastFrame)
         {
             var path = "Assets/" + _spec.ThemePackDir + "/" + fileName;
@@ -475,10 +472,12 @@ namespace Survival.Unity
                 return cached;
             }
 
+#if UNITY_EDITOR
             EnsureImport(path, _humanoid, true, poseName, takeName, lastFrame);
+#endif
             AnimationClip? named = null;
             AnimationClip? fallback = null;
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
+            foreach (var obj in PlayerAssets.LoadAll(path))
             {
                 if (obj is not AnimationClip clip || clip.name.StartsWith("__preview__"))
                 {
@@ -510,7 +509,7 @@ namespace Survival.Unity
 
         private static Avatar? LoadHumanAvatar(string path)
         {
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
+            foreach (var obj in PlayerAssets.LoadAll(path))
             {
                 if (obj is Avatar avatar && avatar.isHuman && avatar.isValid)
                 {
@@ -523,7 +522,7 @@ namespace Survival.Unity
 
         private static Avatar? LoadGenericAvatar(string path)
         {
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
+            foreach (var obj in PlayerAssets.LoadAll(path))
             {
                 if (obj is Avatar avatar && !avatar.isHuman)
                 {
@@ -534,6 +533,7 @@ namespace Survival.Unity
             return null;
         }
 
+#if UNITY_EDITOR
         private void EnsureImport(
             string path,
             bool humanoid,
@@ -712,6 +712,7 @@ namespace Survival.Unity
             importer.clipAnimations = new[] { best };
             return true;
         }
+#endif
 
         private void BindEmbeddedMaps(GameObject root, string fbxPath)
         {
@@ -907,6 +908,7 @@ namespace Survival.Unity
             }
 
             var path = "Assets/" + themePackRel;
+#if UNITY_EDITOR
             if (AssetImporter.GetAtPath(path) is TextureImporter importer)
             {
                 var dirty = false;
@@ -946,15 +948,20 @@ namespace Survival.Unity
                     importer.SaveAndReimport();
                 }
             }
+#else
+            _ = asNormal;
+            _ = linear;
+            _ = readable;
+#endif
 
-            var onDisk = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            var onDisk = PlayerAssets.Load<Texture2D>(path);
             if (onDisk != null)
             {
                 return onDisk;
             }
 
             var stem = System.IO.Path.GetFileNameWithoutExtension(fileName);
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(fbxPath))
+            foreach (var obj in PlayerAssets.LoadAll(fbxPath))
             {
                 if (obj is Texture2D tex && tex.name.IndexOf(stem, System.StringComparison.OrdinalIgnoreCase) >= 0)
                 {
@@ -964,7 +971,6 @@ namespace Survival.Unity
 
             return null;
         }
-#endif
 
         private static void WarnIfBoneMissing(GameObject instance, string bone)
         {

@@ -99,7 +99,7 @@ namespace Survival.Unity
             }
 
             var path = Path.Combine(SurvivalBootstrap.ResolveCatalogDir(), CampaignCatalog.FileName);
-            if (!File.Exists(path))
+            if (!PlayerAssets.FileExists(path))
             {
                 Debug.LogWarning("Heroes / battles: " + path + " missing; the Heroes and Battle screens stay off.");
                 return;
@@ -108,7 +108,7 @@ namespace Survival.Unity
             CampaignCatalog catalog;
             try
             {
-                catalog = CampaignCatalog.Parse(File.ReadAllText(path));
+                catalog = CampaignCatalog.Parse(PlayerAssets.ReadAllText(path));
             }
             catch (Exception ex)
             {

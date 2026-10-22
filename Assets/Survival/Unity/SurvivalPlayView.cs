@@ -222,9 +222,9 @@ namespace Survival.Unity
             var path = Path.Combine(packRoot, "map", "world_layout.json");
             try
             {
-                if (File.Exists(path))
+                if (PlayerAssets.FileExists(path))
                 {
-                    return WorldLayout.Parse(File.ReadAllText(path));
+                    return WorldLayout.Parse(PlayerAssets.ReadAllText(path));
                 }
             }
             catch (Exception ex)
@@ -240,7 +240,7 @@ namespace Survival.Unity
             var path = Path.Combine(packRoot, "map", "village_layout.json");
             try
             {
-                return File.Exists(path) ? VillageLayout.Parse(File.ReadAllText(path)) : null;
+                return PlayerAssets.FileExists(path) ? VillageLayout.Parse(PlayerAssets.ReadAllText(path)) : null;
             }
             catch (Exception ex)
             {

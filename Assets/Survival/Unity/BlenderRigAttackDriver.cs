@@ -721,10 +721,11 @@ namespace Survival.Unity
 
         private GameObject? LoadProp(AttackTrack track, GameObject root)
         {
-#if UNITY_EDITOR
             var path = "Assets/" + _themePackDir + "/" + track.PropFileName;
+#if UNITY_EDITOR
             EnsurePropImport(path);
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+#endif
+            var prefab = PlayerAssets.Load<GameObject>(path);
             if (prefab == null)
             {
                 Debug.LogError(_spec.Character + " attack prop missing. " + path);
@@ -758,9 +759,6 @@ namespace Survival.Unity
             holder.transform.localScale = new Vector3(baseScale, baseScale, baseScale);
             FixPropMaterials(instance);
             return holder;
-#else
-            return null;
-#endif
         }
 
         /// <summary>

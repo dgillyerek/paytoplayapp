@@ -1,0 +1,5 @@
+<!-- IL2CPP managed stripping: keep the Survival assemblies whole (JsonUtility DTOs, ScriptableObject fields, MonoBehaviours added by code). -->
+<linker>
+  <assembly fullname="Survival.Domain" preserve="all" />
+  <assembly fullname="Survival.Unity" preserve="all" />
+</linker>
