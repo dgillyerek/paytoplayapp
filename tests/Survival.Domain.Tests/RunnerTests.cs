@@ -15,7 +15,7 @@ internal static class Runner
     public static RunnerCatalog Catalog() =>
         RunnerCatalog.Parse(File.ReadAllText(Path.Combine(TestPaths.CatalogDir, RunnerCatalog.FileName)));
 
-    public static RunnerCatalog Tiny(string rows, string extra = "", float length = 40f) => RunnerCatalog.Parse(@"{
+    public static RunnerCatalog Tiny(string rows, string extra = "", float length = 40f, bool allowMelee = false, int maxFollowers = 6) => RunnerCatalog.Parse(@"{
   ""units"": {
     ""hero"": { ""roster"": ""Lyra"", ""hp"": 100, ""damage"": 10, ""cycle"": 0.5, ""range"": 10, ""ranged"": true, ""shot_speed"": 20 },
     ""archer"": { ""roster"": ""Rowan"", ""hp"": 1, ""damage"": 10, ""cycle"": 0.5, ""range"": 10, ""ranged"": true, ""shot_speed"": 20 },
@@ -24,9 +24,9 @@ internal static class Runner
     ""brute"": { ""roster"": ""Blightroot"", ""hp"": 100000, ""damage"": 40, ""cycle"": 1.0, ""range"": 1.5, ""speed"": 2.0, ""radius"": 0.6 },
     ""boss"": { ""roster"": ""Ironhowl"", ""hp"": 450, ""damage"": 4, ""cycle"": 1.0, ""range"": 1.8, ""radius"": 1.0 }
   },
-  ""levels"": [ { ""id"": ""t"", ""hero"": ""hero"", ""length"": " + length.ToString(System.Globalization.CultureInfo.InvariantCulture) + @", ""speed"": 2, ""half_width"": 4, ""max_followers"": 6, " + extra + @"
+  ""levels"": [ { ""id"": ""t"", ""hero"": ""hero"", ""length"": " + length.ToString(System.Globalization.CultureInfo.InvariantCulture) + @", ""speed"": 2, ""half_width"": 4, ""max_followers"": " + maxFollowers + @", " + extra + @"
     ""rewards"": { ""win_gold"": 100, ""gold_per_kill"": 5, ""gold_per_box"": 10, ""shards"": 3, ""shard_hero"": ""hero.lyra"" },
-    ""rows"": [ " + rows + @" ] } ] }");
+    ""rows"": [ " + rows + @" ] } ] }", allowMelee);
 
     public static RunnerRun Run(RunnerCatalog c) => new(c, c.First);
 
@@ -448,7 +448,7 @@ public sealed class RunnerTests
     }
 
     [Fact]
-    public void The_squad_halts_at_the_boss_arena_line_and_fights_him_there_he_holds_his_ground_and_fills_the_road()
+    public void The_squad_halts_at_the_boss_arena_line_and_fights_him_there_he_holds_his_ground()
     {
         var run = Runner.Run(Runner.Tiny(@"{ ""at"": 12, ""kind"": ""enemy"", ""unit"": ""wolf"", ""count"": 2, ""spread"": 2 },
             { ""at"": 36, ""kind"": ""boss"", ""x"": 0, ""unit"": ""boss"" }"));
@@ -457,7 +457,7 @@ public sealed class RunnerTests
         Assert.Equal(36f - (RunnerRules.BossArenaShare * reach), run.ArenaLine, 3);
         Assert.True(36f - run.ArenaLine < reach, "the line is inside his slam reach, so he fights");
 
-        // Line up the wolves first (shots fly straight), then steer about at the line: the boss still fills the road.
+        // Line up the wolves first (shots fly straight), then steer about at the line (he is hit when the sweep crosses his lane).
         var events = new List<RunnerEvent>();
         var haltedFor = 0f;
         var xs = new HashSet<int>();
@@ -531,7 +531,7 @@ public sealed class RunnerTests
     public void Melee_followers_hit_what_reaches_them_ranged_units_shoot_down_the_lane()
     {
         var run = Runner.Run(Runner.Tiny(@"{ ""at"": 6, ""kind"": ""box"", ""hp"": 10, ""reward"": ""hero"", ""unit"": ""knight"" },
-            { ""at"": 30, ""kind"": ""enemy"", ""unit"": ""wolf"", ""count"": 3, ""spread"": 1 }"));
+            { ""at"": 30, ""kind"": ""enemy"", ""unit"": ""wolf"", ""count"": 3, ""spread"": 1 }", allowMelee: true));
         var events = Runner.Play(run);
         var knight = events.First(e => e.Kind == RunnerEventKind.FollowerJoined).Id;
         Assert.Equal("knight", events.First(e => e.Kind == RunnerEventKind.FollowerJoined).Unit);
@@ -653,19 +653,19 @@ public sealed class RunnerTests
         var c = Runner.Catalog();
         static RunnerAttackPlan P(RunnerCatalog c, string id) => RunnerAttackTiming.PlanFor(c.Unit(id));
 
-        // Lyra, Rowan and Sir Aldric asked for more than 2.5x: capped, interval stretched to take / 2.5.
-        Assert.True(P(c, "lyra").Capped && P(c, "rowan").Capped && P(c, "sir_aldric").Capped);
+        // Lyra and Rowan asked for more than 2.5x: capped, interval stretched to take / 2.5.
+        Assert.True(P(c, "lyra").Capped && P(c, "rowan").Capped);
         Assert.False(P(c, "oakenshield").Capped);
-        Assert.All(new[] { "lyra", "rowan", "oakenshield", "sir_aldric" }, id => Assert.InRange(P(c, id).Speed, 1f, RunnerAttackTiming.MaxSpeed + 1e-4f));
+        Assert.All(new[] { "lyra", "rowan", "oakenshield" }, id => Assert.InRange(P(c, id).Speed, 1f, RunnerAttackTiming.MaxSpeed + 1e-4f));
         Assert.Equal(0.40f, P(c, "lyra").Interval, 3);
         Assert.Equal(0.40f, P(c, "rowan").Interval, 3);
         Assert.Equal(0.40f, P(c, "oakenshield").Interval, 3);
-        Assert.Equal(0.44f, P(c, "sir_aldric").Interval, 3);
 
-        // Still about twice the old 0.8-1.1 s cadence; enemies are many and weak (about half the old 134 HP), the boss
-        // and boxes scaled to land the run at ~80 s.
-        Assert.InRange(c.Unit("nightfang").Hp, 50, 75);
-        Assert.InRange(c.Unit("ironhowl").Hp, 4200 * 2.2, 4200 * 2.6);
+        // Still about twice the old 0.8-1.1 s cadence; enemies are many and weak (a bit under half the old 134 HP, a
+        // little lighter again now they walk 1.5x faster and spend less time under fire), the boss now has to survive
+        // the walk in and be fought at the arena (his hit is a slam, his HP retuned for it).
+        Assert.InRange(c.Unit("nightfang").Hp, 30, 60);
+        Assert.InRange(c.Unit("ironhowl").Hp, 12000, 30000);
         Assert.All(c.First.Rows.Where(r => r.Box != null), r => Assert.True(r.Box!.Hp >= 100, "box hp " + r.Box!.Hp));
     }
 
@@ -933,14 +933,28 @@ public sealed class RunnerTests
         foreach (var level in c.Levels)
         {
             var good = new RunnerRun(c, level);
-            Runner.Play(good, Runner.AimLikeAPlayer);
+            var arrived = -1f;
+            while (!good.Over && good.Seconds < 600f)
+            {
+                good.SteerTo(Runner.AimLikeAPlayer(good));
+                foreach (var e in good.Step(1f / 30f))
+                {
+                    if (e.Kind == RunnerEventKind.BossEngaged && arrived < 0f)
+                    {
+                        arrived = good.Seconds;
+                    }
+                }
+            }
+
             var lazy = new RunnerRun(c, level);
             Runner.Play(lazy, _ => 3.9f);
             _out.WriteLine($"L{level.Number} {level.DisplayName}: {good.Outcome} {good.Seconds:0.0}s boxes {good.BoxesBroken}/{level.BoxCount} kills {good.Kills} peak {good.FollowersPeak} left {good.Followers}; edge {lazy.Outcome}");
             Assert.Equal(RunnerOutcome.Won, good.Outcome);
             Assert.Equal(RunnerOutcome.Lost, lazy.Outcome);
-            Assert.True(good.Seconds > last, $"L{level.Number} {good.Seconds} after {last}");
-            last = good.Seconds;
+
+            // Later levels are longer roads: the squad reaches the boss later each time (the fight itself varies with the squad it arrives with).
+            Assert.True(arrived > last, $"L{level.Number} reaches the boss at {arrived} after {last}");
+            last = arrived;
         }
     }
 

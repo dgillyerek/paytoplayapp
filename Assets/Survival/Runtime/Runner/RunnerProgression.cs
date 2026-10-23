@@ -64,7 +64,7 @@ namespace Survival.Domain.Runner
         /// <summary>Most enemies standing side by side in one row; bigger groups form ranks behind.</summary>
         public const int MaxPerRank = 5;
 
-        private static readonly string[] FollowerUnits = { "rowan", "lyra", "rowan", "sir_aldric", "lyra", "oakenshield" };
+        private static readonly string[] FollowerUnits = { "rowan", "lyra", "rowan", "oakenshield", "lyra", "oakenshield" };
         private static readonly string[] ShardHeroes = { "hero.lyra", "hero.rowan", "hero.oakenshield", "hero.sir_aldric" };
         private static readonly RunnerBoxKind[] PowerUps = { RunnerBoxKind.Weapon, RunnerBoxKind.Rate, RunnerBoxKind.Range, RunnerBoxKind.Followers, RunnerBoxKind.Heal, RunnerBoxKind.Weapon, RunnerBoxKind.Rate, RunnerBoxKind.Followers };
 
@@ -94,7 +94,7 @@ namespace Survival.Domain.Runner
                 length,
                 first.Speed + (p.SpeedStep * t),
                 first.HalfWidth,
-                first.MaxFollowers + t,
+                first.MaxFollowers,
                 rows,
                 rewards)
             {
@@ -154,7 +154,7 @@ namespace Survival.Domain.Runner
                 // The follower chest (a hero chest on beats 3 and 6).
                 if (beat == 3 || beat == 6)
                 {
-                    rows.Add(Box(z, fx, hpAt, RunnerBoxKind.Hero, beat == 3 ? "sir_aldric" : "oakenshield", 1, 0f));
+                    rows.Add(Box(z, fx, hpAt, RunnerBoxKind.Hero, beat == 3 ? "rowan" : "oakenshield", 1, 0f));
                 }
                 else
                 {
@@ -188,7 +188,7 @@ namespace Survival.Domain.Runner
                 if (beat % 2 == 1 && beat >= 3)
                 {
                     var skirm = beat % 4 == 1 ? "nightfang" : "bonequill";
-                    Group(rows, z + 4f, fx * 0.6f, skirm, 2 + (int)Math.Round(t * along * 0.3f), 1.1f, halfWidth);
+                    Group(rows, z + 4f, fx * 0.6f, skirm, 2 + (int)Math.Round(t * along * 0.2f), 1.1f, halfWidth);
                 }
 
                 // A lane trap between the boxes and the wave.
@@ -196,7 +196,7 @@ namespace Survival.Domain.Runner
                 {
                     AddTrap(rows, traps[trap % traps.Count], z + 5.5f, rnd, halfWidth, t);
                     trap++;
-                    if ((number >= 8 && beat % 4 == 1) || (number >= 11 && beat % 4 == 3))
+                    if ((number >= 9 && beat % 4 == 1) || (number >= 12 && beat % 4 == 3))
                     {
                         AddTrap(rows, traps[trap % traps.Count], z + 10f, rnd, halfWidth, t);
                         trap++;
@@ -224,10 +224,10 @@ namespace Survival.Domain.Runner
                 var wx = ((float)rnd.NextDouble() * 2.4f) - 1.2f;
                 // The first two waves stay small: the squad is still the hero and a chest or two.
                 var opening = beat < 2;
-                Group(rows, z + 8f, wx, front, opening ? 2 + beat : 3 + (beat % 2) + (int)Math.Round(t * along * 0.5f), 1.1f, halfWidth);
+                Group(rows, z + 8f, wx, front, opening ? 2 + beat : 3 + (beat % 2) + (int)Math.Round(t * along * 0.3f), 1.1f, halfWidth);
                 if (beat > 0)
                 {
-                    Group(rows, z + 10.5f, -wx * 0.5f, back, opening ? 1 : 2 + (int)Math.Round(t * along * 0.4f), 1.4f, halfWidth);
+                    Group(rows, z + 10.5f, -wx * 0.5f, back, opening ? 1 : 2 + (int)Math.Round(t * along * 0.25f), 1.4f, halfWidth);
                 }
 
                 if (beat % 3 == 2 || (t >= 6 && beat % 3 == 0 && beat > 0))

@@ -176,7 +176,7 @@ public sealed class RunnerHazardTests
         Assert.InRange(s.Unit("blightroot").Scale, 1.8f, 2.0f);
         Assert.True(s.Unit("ironhowl").Scale >= s.Unit("blightroot").Scale);
         Assert.True(s.Unit("blightroot").Radius > s.Unit("nightfang").Radius);
-        Assert.All(new[] { "lyra", "rowan", "oakenshield", "sir_aldric" }, id => Assert.Equal(1f, s.Unit(id).Scale));
+        Assert.All(new[] { "lyra", "rowan", "oakenshield" }, id => Assert.Equal(1f, s.Unit(id).Scale));
     }
 
     [Fact]
@@ -186,7 +186,7 @@ public sealed class RunnerHazardTests
         Assert.InRange(c.Unit("lyra").Range, 11.5f * 1.5f, 11.5f * 2f);
         Assert.InRange(c.Unit("rowan").Range, 12.5f * 1.5f, 12.5f * 2f);
         Assert.InRange(c.Unit("oakenshield").Range, 10f * 1.5f, 10f * 2f);
-        Assert.False(c.Unit("sir_aldric").Ranged);
+        Assert.Throws<KeyNotFoundException>(() => c.Unit("sir_aldric"));
 
         // Before this pass: 25 enemies / 10 boxes / 3198 enemy HP on Level 1, 93 / 28 / 43295 on Level 12.
         var old = new[] { (25, 10, 3198), (26, 15, 3512), (32, 16, 4953), (40, 18, 8386), (45, 19, 10938), (54, 21, 13773), (56, 22, 20391), (65, 24, 24817), (70, 25, 31705), (78, 27, 34216), (80, 27, 36987), (93, 28, 43295) };
@@ -195,7 +195,13 @@ public sealed class RunnerHazardTests
             var l = c.Levels[i];
             Assert.True(l.EnemyCount >= 2 * old[i].Item1, $"L{l.Number} enemies {l.EnemyCount}");
             Assert.True(l.BoxCount >= old[i].Item2 + 5, $"L{l.Number} boxes {l.BoxCount}");
-            Assert.InRange(l.FoeHpTotal(c), old[i].Item3 * 0.95, old[i].Item3 * 1.35);
+            // Enemies walk 1.5x faster now and the squad is capped at 10, so each one is lighter (about 0.45x-0.8x the old total HP) and the
+            // total still climbs every level.
+            Assert.InRange(l.FoeHpTotal(c), old[i].Item3 * 0.4, old[i].Item3 * 1.0);
+            if (i > 0)
+            {
+                Assert.True(l.FoeHpTotal(c) > c.Levels[i - 1].FoeHpTotal(c), $"L{l.Number} enemy HP total climbs");
+            }
         }
 
         // Waves come as mixed groups: on Level 1, some 6 m stretch holds two or more kinds of enemy.

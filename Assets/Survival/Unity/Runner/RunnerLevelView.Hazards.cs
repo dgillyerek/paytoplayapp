@@ -9,8 +9,10 @@ namespace Survival.Unity
     /// <summary>
     /// Lane traps (Update 4), drawn from shaded primitives in the painted kingdom palette (iron, oak, ember) so they
     /// sit with the ground art: a spike plate whose iron cones rattle and glow before they shoot up, an oak log that
-    /// wobbles with a warning stripe down its lane before it rolls at the squad, and a fire patch on a scorch ring
-    /// that flares on the run's beat. The run owns every state and position; this only shows them.
+    /// wobbles with a warning stripe down its lane before it rolls at the squad, and a fire patch: a scorched
+    /// ground decal with a burnt edge, a warm ground glow, a hot rim marking the damage footprint, layered flame
+    /// tongues (yellow-white core, orange-to-red body) that flicker, sink low just before the next flare and leap on it,
+    /// and embers rising off it (<see cref="RunnerFireArt"/>: a few quads on six shared materials, no lights, no allocation per frame). The run owns every state and position; this only shows them.
     /// </summary>
     public sealed partial class RunnerLevelView
     {
@@ -23,6 +25,8 @@ namespace Survival.Unity
         private static readonly Color Flame = new Color(1f, 0.55f, 0.12f, 0.85f);
         private static readonly Color FlameCore = new Color(1f, 0.9f, 0.45f, 0.9f);
 
+        private const int FireEmbers = 8;
+
         private static Mesh? _cone;
 
         private readonly Dictionary<int, HazardView> _hazards = new Dictionary<int, HazardView>();
@@ -34,7 +38,10 @@ namespace Survival.Unity
             public readonly List<Transform> Parts = new List<Transform>();
             public Renderer? Glow;
             public Transform? Body;
-            public Light? Light;
+            public readonly List<Transform> Cores = new List<Transform>();
+            public readonly List<Transform> Embers = new List<Transform>();
+            public Transform? Heat;
+            public Transform? Rim;
             public float Seed;
             public RunnerHazardDef Def = null!;
             public RunnerHazardState Last = RunnerHazardState.Idle;
@@ -136,27 +143,34 @@ namespace Survival.Unity
 
                 default:
                 {
-                    v.Glow = Part(root, PrimitiveType.Cylinder, "Scorch", new Vector3(0f, 0.01f, 0f), new Vector3(w + 0.4f, 0.005f, h.HalfDepth * 2f + 0.4f), Unlit(Scorch), Quaternion.identity).GetComponent<Renderer>();
-                    var tongues = Mathf.Max(4, Mathf.RoundToInt(w / 0.32f));
+                    RunnerFireArt.Warm();
+                    var depth = h.HalfDepth * 2f;
+                    // Ground, bottom to top: burnt scorch, warm glow, hot rim at the footprint's edge.
+                    v.Glow = Part(root, PrimitiveType.Quad, "Scorch", new Vector3(0f, 0.011f, 0f), new Vector3(w + 1.1f, depth + 1.1f, 1f), RunnerFireArt.Scorch, Quaternion.Euler(90f, 0f, 0f)).GetComponent<Renderer>();
+                    v.Heat = Part(root, PrimitiveType.Quad, "Glow", new Vector3(0f, 0.016f, 0f), new Vector3(w + 1.5f, depth + 1.5f, 1f), RunnerFireArt.Glow, Quaternion.Euler(90f, 0f, 0f)).transform;
+                    v.Rim = Part(root, PrimitiveType.Quad, "Rim", new Vector3(0f, 0.02f, 0f), new Vector3(w + 0.35f, depth + 0.35f, 1f), RunnerFireArt.Rim, Quaternion.Euler(90f, 0f, 0f)).transform;
+
+                    // Flames: an outer tongue (orange to red) with a hot core in front of it, spread over the footprint.
+                    var tongues = Mathf.Clamp(Mathf.RoundToInt(w / 0.42f), 6, 12);
                     for (var i = 0; i < tongues; i++)
                     {
                         var a = (i * 2.39996f) + (v.Seed * 6.28f);
                         var rad = Mathf.Sqrt((i + 0.5f) / tongues);
-                        var at = new Vector3(Mathf.Cos(a) * rad * w * 0.42f, 0.25f, Mathf.Sin(a) * rad * h.HalfDepth * 0.85f);
-                        var core = i % 3 == 0;
-                        var f = Part(root, PrimitiveType.Sphere, "Flame", at, new Vector3(0.28f, 0.6f, 0.28f), Unlit(core ? FlameCore : Flame), Quaternion.identity);
-                        v.Parts.Add(f.transform);
+                        var x = Mathf.Cos(a) * rad * w * 0.44f;
+                        var z = Mathf.Sin(a) * rad * h.HalfDepth * 0.8f;
+                        var yaw = Mathf.Sin(i * 1.9f) * 14f;
+                        v.Parts.Add(Part(root, PrimitiveType.Quad, "Flame", new Vector3(x, 0.4f, z), new Vector3(0.85f, 0.9f, 1f), RunnerFireArt.Tongue, Quaternion.Euler(0f, yaw, 0f)).transform);
+                        v.Cores.Add(Part(root, PrimitiveType.Quad, "Core", new Vector3(x, 0.3f, z - 0.02f), new Vector3(0.55f, 0.6f, 1f), RunnerFireArt.Core, Quaternion.Euler(0f, yaw, 0f)).transform);
                     }
 
-                    var light = new GameObject("Glow").AddComponent<Light>();
-                    light.transform.SetParent(root, false);
-                    light.transform.localPosition = new Vector3(0f, 0.8f, 0f);
-                    light.type = LightType.Point;
-                    light.color = new Color(1f, 0.55f, 0.2f, 1f);
-                    light.range = 3.2f;
-                    light.intensity = 1.4f;
-                    light.shadows = LightShadows.None;
-                    v.Light = light;
+                    // Embers: small bright dots that rise, drift and shrink away, looping on their own phase.
+                    for (var i = 0; i < FireEmbers; i++)
+                    {
+                        var x = (((i * 0.6180339f) % 1f) - 0.5f) * w * 0.8f;
+                        var z = ((((i * 0.7548777f) + v.Seed) % 1f) - 0.5f) * h.HalfDepth * 1.4f;
+                        v.Embers.Add(Part(root, PrimitiveType.Quad, "Ember", new Vector3(x, 0.4f, z), new Vector3(0.1f, 0.1f, 1f), RunnerFireArt.Ember, Quaternion.identity).transform);
+                    }
+
                     break;
                 }
             }
@@ -253,28 +267,7 @@ namespace Survival.Unity
 
                     default:
                     {
-                        // Each flare (FireFlare beat) leaps, then settles into a flicker.
-                        var flare = 1f + (0.6f * Mathf.Exp(-h.StateClock * 6f));
-                        for (var i = 0; i < v.Parts.Count; i++)
-                        {
-                            var f = v.Parts[i];
-                            var n = Mathf.PerlinNoise((time * 5f) + (i * 1.7f), v.Seed * 9f);
-                            var tall = (0.4f + (0.5f * n)) * flare;
-                            f.localScale = new Vector3(0.26f + (0.08f * n), tall, 0.26f + (0.08f * n));
-                            var p = f.localPosition;
-                            f.localPosition = new Vector3(p.x, tall * 0.45f, p.z);
-                        }
-
-                        if (v.Light != null)
-                        {
-                            v.Light.intensity = (1.1f + (0.5f * Mathf.PerlinNoise(time * 7f, v.Seed))) * flare;
-                        }
-
-                        if (h.StateClock < dt && Random.value < 0.6f)
-                        {
-                            Sparks(v.Root.position + (Vector3.up * 0.6f), Flame, 3, 0.8f);
-                        }
-
+                        AnimateFire(v, h, dt, time);
                         break;
                     }
                 }
@@ -283,6 +276,66 @@ namespace Survival.Unity
             }
 
             RunnerHitchLog.End(RunnerHitchLog.Section.Hazards);
+        }
+
+        /// <summary>
+        /// One fire patch for one frame. The patch burns one member at a time and re-flares every <see cref="RunnerRules.FireFlare"/>
+        /// seconds (the run owns that clock: <see cref="RunnerHazard.StateClock"/>). The look follows it: the flames leap at the flare,
+        /// settle into a flicker, and sink low over the last third of the beat, so a squad can read when the next burn is coming; the rim
+        /// quickens and the ground glow swells with it. Transforms only: no allocation, no materials touched.
+        /// </summary>
+        private void AnimateFire(HazardView v, RunnerHazard h, float dt, float time)
+        {
+            var beat = Mathf.Clamp01(h.StateClock / RunnerRules.FireFlare);
+            var flare = 1f + (0.65f * Mathf.Exp(-h.StateClock * 6f));
+            var wind = beat > 0.65f ? Mathf.Lerp(1f, 0.6f, (beat - 0.65f) / 0.35f) : 1f;
+            for (var i = 0; i < v.Parts.Count; i++)
+            {
+                var f = v.Parts[i];
+                var n = Mathf.PerlinNoise((time * 6f) + (i * 1.7f), v.Seed * 9f);
+                var tall = (0.55f + (0.6f * n)) * flare * wind;
+                var wide = (0.8f + (0.2f * n)) * (1.15f - (0.15f * flare));
+                var sway = Mathf.Sin((time * 3.1f) + (i * 1.3f)) * 9f;
+                var yaw = Mathf.Sin(i * 1.9f) * 14f;
+                var rot = Quaternion.Euler(0f, yaw, sway);
+                f.localScale = new Vector3(wide, tall * 1.1f, 1f);
+                f.localRotation = rot;
+                var p = f.localPosition;
+                f.localPosition = new Vector3(p.x, tall * 0.55f, p.z);
+
+                var core = v.Cores[i];
+                core.localScale = new Vector3(wide * 0.62f, tall * 0.8f, 1f);
+                core.localRotation = rot;
+                var q = core.localPosition;
+                core.localPosition = new Vector3(q.x, tall * 0.4f, q.z);
+            }
+
+            if (v.Heat != null)
+            {
+                var swell = 1f + (0.1f * flare) + (0.04f * Mathf.Sin(time * 9f));
+                v.Heat.localScale = new Vector3((v.Def.Width + 1.5f) * swell, (RunnerHazard.HalfDepthOf(v.Kind) * 2f + 1.5f) * swell, 1f);
+            }
+
+            if (v.Rim != null)
+            {
+                var quick = 1f + (0.035f * Mathf.Sin(time * (8f + (14f * beat))));
+                v.Rim.localScale = new Vector3((v.Def.Width + 0.35f) * quick, (RunnerHazard.HalfDepthOf(v.Kind) * 2f + 0.35f) * quick, 1f);
+            }
+
+            for (var i = 0; i < v.Embers.Count; i++)
+            {
+                var e = v.Embers[i];
+                var life = Mathf.Repeat((time * (0.32f + (0.07f * (i % 3)))) + (i * 0.37f) + v.Seed, 1f);
+                var p = e.localPosition;
+                var size = 0.13f * (1f - life) * (0.7f + (0.3f * Mathf.Sin(i * 2.1f + 1f)));
+                e.localScale = new Vector3(size, size, 1f);
+                e.localPosition = new Vector3(p.x + (Mathf.Sin((time * 2.2f) + i) * dt * 0.25f), 0.25f + (life * 1.7f), p.z);
+            }
+
+            if (h.StateClock < dt)
+            {
+                Sparks(v.Root.position + (Vector3.up * 0.6f), Flame, 3, 0.8f);
+            }
         }
 
         /// <summary>A trap caught someone: a flash on the spot and the call-out.</summary>

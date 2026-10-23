@@ -12,7 +12,7 @@ namespace Survival.Unity
     /// rigs (squad, enemies, captives) come off <see cref="RunnerRigPool"/> shelves, and shots, effect sprites and traps
     /// off the free lists here, all filled in <see cref="Prewarm"/> while the loading screen still covers the scene.
     /// The prewarm ends with one off-screen render of everything it built (the rigs in their poses, a shot of every
-    /// look, every effect sprite, every trap with its point light), so the shaders, variants and materials the run
+    /// look, every effect sprite, every trap with its flame, glow and ember quads), so the shaders, variants and materials the run
     /// needs are compiled and uploaded before the first frame the player sees, not when the first fire trap or the
     /// first Lyra bolt appears.
     /// </summary>
@@ -139,6 +139,7 @@ namespace Survival.Unity
             }
 
             PrewarmHazards(level);
+            BuildSlamMark();
             if (next != null)
             {
                 PrewarmHazards(next);
@@ -182,7 +183,7 @@ namespace Survival.Unity
 
         /// <summary>
         /// One off-screen frame of everything just built, spread in front of the camera, so the GPU sees every
-        /// material, shader variant (shadows, additional point lights, transparency) and mesh before the run does.
+        /// material, shader variant (shadows, transparency, additive glow) and mesh before the run does.
         /// </summary>
         private void WarmRender()
         {

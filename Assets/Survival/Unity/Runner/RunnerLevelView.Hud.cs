@@ -184,7 +184,7 @@ namespace Survival.Unity
 
             // Squad badge over the hero (count of everyone walking).
             _badge = HookSkin.Panel(_worldUi, "SquadBadge", HookArtKeys.Chip, new Color(0.10f, 0.22f, 0.45f, 0.96f), 0.45f).rectTransform;
-            _badge.sizeDelta = new Vector2(150f, 62f);
+            _badge.sizeDelta = new Vector2(190f, 62f);
             _badgeIcon = HookSkin.Art(_badge, "Icon", "theme_a.ui.icon_battle", SurvivalVisuals.PinBuild);
             Anchor(_badgeIcon.rectTransform, -0.05f, -0.15f, 0.40f, 1.15f);
             _badgeText = HookSkin.Outlined(SurvivalVisuals.Text(_badge, "Count", "1", 36, TextAnchor.MiddleCenter, Color.white));
@@ -276,7 +276,9 @@ namespace Survival.Unity
                 _lastSquad = squad;
                 if (_badgeText != null)
                 {
-                    _badgeText.text = "×" + squad.ToString(CultureInfo.InvariantCulture);
+                    // The squad against its cap (the lead counts); gold once it is full.
+                    _badgeText.text = squad.ToString(CultureInfo.InvariantCulture) + "/" + RunnerRules.SquadCap.ToString(CultureInfo.InvariantCulture);
+                    _badgeText.color = squad >= RunnerRules.SquadCap ? new Color(1f, 0.86f, 0.3f, 1f) : Color.white;
                 }
             }
 
@@ -858,7 +860,7 @@ namespace Survival.Unity
             {
                 (S("runner.result.kills", "Enemies defeated"), result.Kills.ToString(CultureInfo.InvariantCulture)),
                 (S("runner.result.boxes", "Boxes broken"), result.BoxesBroken + " / " + (result.BoxesBroken + result.BoxesMissed + (_run?.Boxes.Count ?? 0))),
-                (S("runner.result.squad", "Biggest squad"), "×" + (result.FollowersPeak + 1)),
+                (S("runner.result.squad", "Biggest squad"), (result.FollowersPeak + 1).ToString(CultureInfo.InvariantCulture) + " / " + RunnerRules.SquadCap.ToString(CultureInfo.InvariantCulture)),
                 (S("runner.result.distance", "Distance"), Mathf.FloorToInt(result.Distance) + " m")
             };
             // Cream labels and gold values with a dark outline: readable on the navy panel, like the painted UI.
