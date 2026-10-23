@@ -106,6 +106,7 @@ namespace Survival.Unity
                         var a = host.AddComponent<EmberfangActor>();
                         a.Build();
                         rig.Bind(a.PlayPose, () => a.Pose);
+                        rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
                         break;
@@ -116,6 +117,7 @@ namespace Survival.Unity
                         var a = host.AddComponent<StormcrestActor>();
                         a.Build();
                         rig.Bind(a.PlayPose, () => a.Pose);
+                        rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
                         break;
@@ -136,6 +138,7 @@ namespace Survival.Unity
                         var a = host.AddComponent<NightfangActor>();
                         a.Build();
                         rig.Bind(a.PlayPose, () => a.Pose);
+                        rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
                         break;
@@ -146,6 +149,7 @@ namespace Survival.Unity
                         var a = host.AddComponent<LyraActor>();
                         a.Build();
                         rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
+                        rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
                         break;
@@ -156,6 +160,7 @@ namespace Survival.Unity
                         var a = host.AddComponent<OakenshieldActor>();
                         a.Build();
                         rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
+                        rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
                         break;
@@ -166,6 +171,7 @@ namespace Survival.Unity
                         var a = host.AddComponent<VesperaActor>();
                         a.Build();
                         rig.Bind(a.PlayPose, () => a.Pose);
+                        rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
                         break;
@@ -176,6 +182,7 @@ namespace Survival.Unity
                         var a = host.AddComponent<AshwyrmActor>();
                         a.Build();
                         rig.Bind(a.PlayPose, () => a.Pose);
+                        rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
                         break;
@@ -186,6 +193,7 @@ namespace Survival.Unity
                         var a = host.AddComponent<RowanActor>();
                         a.Build();
                         rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
+                        rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
                         break;
@@ -196,6 +204,7 @@ namespace Survival.Unity
                         var a = host.AddComponent<BonequillActor>();
                         a.Build();
                         rig.Bind(a.PlayPose, () => a.Pose);
+                        rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
                         break;
@@ -297,6 +306,19 @@ namespace Survival.Unity
             rig._reactionPose = LockedBattleReactionPose.Build(host.transform, LockedBattleReactions.RigFor(data));
             rig.Play(rig.RestPose);
             return rig;
+        }
+
+        /// <summary>
+        /// The runner draws every shot itself (the sim's shot, one per take, at the take's release), so the rig's own
+        /// flying-projectile track (the battle's thrown spear, arrow and bolt) must not draw a second one: the held
+        /// props and the clip still play, only the flight is off.
+        /// </summary>
+        private void OwnShotsOff(BlenderRigAttackDriver? driver)
+        {
+            if (driver != null)
+            {
+                driver.ProjectilesEnabled = false;
+            }
         }
 
         private void Bind(System.Func<string, bool> play, System.Func<string> pose, System.Action<float>? attackSpeed = null)

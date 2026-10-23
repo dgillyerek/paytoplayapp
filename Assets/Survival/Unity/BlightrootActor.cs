@@ -416,6 +416,11 @@ namespace Survival.Unity
 
         private static void EnsureBodyImport(string path)
         {
+            if (!RigAssetCache.First("blightbody|" + path))
+            {
+                return;
+            }
+
             if (AssetImporter.GetAtPath(path) is not ModelImporter importer)
             {
                 return;
@@ -468,7 +473,7 @@ namespace Survival.Unity
 
         private static Avatar? LoadAvatar(string path)
         {
-            foreach (var obj in PlayerAssets.LoadAll(path))
+            foreach (var obj in RigAssetCache.All(path))
             {
                 if (obj is Avatar avatar && !avatar.isHuman)
                 {
@@ -696,10 +701,11 @@ namespace Survival.Unity
         private static void EnableSkin(GameObject root)
         {
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            var albedo = LoadThemeMap(BaseColorFile, asNormal: false, linear: false, readable: false);
-            var normal = LoadThemeMap(NormalFile, asNormal: true, linear: true, readable: false);
-            var metallicRoughness = LoadThemeMap(MetallicRoughnessFile, asNormal: false, linear: true, readable: true);
-            var packedMetal = PackGlTfMetallicRoughness(metallicRoughness);
+            // Loaded and repacked once per session, shared by every Blightroot copy.
+            var albedo = RigAssetCache.Texture("blight|" + BaseColorFile, () => LoadThemeMap(BaseColorFile, asNormal: false, linear: false, readable: false));
+            var normal = RigAssetCache.Texture("blight|" + NormalFile, () => LoadThemeMap(NormalFile, asNormal: true, linear: true, readable: false));
+            var packedMetal = RigAssetCache.Texture("blight|packed|" + MetallicRoughnessFile, () =>
+                PackGlTfMetallicRoughness(LoadThemeMap(MetallicRoughnessFile, asNormal: false, linear: true, readable: true)));
             if (albedo == null)
             {
                 Debug.LogError("Blightroot albedo missing. " + BaseColorFile + " next to the Dual Weapon Combo body.");

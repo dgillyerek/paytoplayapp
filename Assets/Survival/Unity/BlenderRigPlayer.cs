@@ -114,21 +114,21 @@ namespace Survival.Unity
             if (_spec.PreferHumanoid)
             {
 #if UNITY_EDITOR
-                EnsureImport(path, humanoid: true, clip: false);
+                EnsureBodyImport(path, humanoid: true);
 #endif
                 _humanoid = HasValidHumanAvatar(path);
                 if (!_humanoid)
                 {
                     Debug.LogWarning(_spec.Name + " humanoid avatar did not validate. Using Generic.");
 #if UNITY_EDITOR
-                    EnsureImport(path, humanoid: false, clip: false);
+                    EnsureBodyImport(path, humanoid: false);
 #endif
                 }
             }
 #if UNITY_EDITOR
             else
             {
-                EnsureImport(path, humanoid: false, clip: false);
+                EnsureBodyImport(path, humanoid: false);
             }
 #endif
 
@@ -509,7 +509,7 @@ namespace Survival.Unity
 
         private static Avatar? LoadHumanAvatar(string path)
         {
-            foreach (var obj in PlayerAssets.LoadAll(path))
+            foreach (var obj in RigAssetCache.All(path))
             {
                 if (obj is Avatar avatar && avatar.isHuman && avatar.isValid)
                 {
@@ -522,7 +522,7 @@ namespace Survival.Unity
 
         private static Avatar? LoadGenericAvatar(string path)
         {
-            foreach (var obj in PlayerAssets.LoadAll(path))
+            foreach (var obj in RigAssetCache.All(path))
             {
                 if (obj is Avatar avatar && !avatar.isHuman)
                 {
@@ -534,6 +534,15 @@ namespace Survival.Unity
         }
 
 #if UNITY_EDITOR
+        /// <summary>The body import check, once per file per session (it parses the .meta; ten copies of a hero asked ten times).</summary>
+        private void EnsureBodyImport(string path, bool humanoid)
+        {
+            if (RigAssetCache.First("body|" + path + "|" + humanoid))
+            {
+                EnsureImport(path, humanoid, clip: false);
+            }
+        }
+
         private void EnsureImport(
             string path,
             bool humanoid,
@@ -716,15 +725,19 @@ namespace Survival.Unity
 
         private void BindEmbeddedMaps(GameObject root, string fbxPath)
         {
-            var albedo = LoadMap(_spec.BaseColorThemePackRel, _spec.BaseColorFile, fbxPath, asNormal: false);
-            var normal = LoadMap(_spec.NormalThemePackRel, _spec.NormalFile, fbxPath, asNormal: true);
+            // Shared between every copy of this rig kind: loaded and (for metal) repacked once per session.
+            var albedo = RigAssetCache.Texture("map|" + _spec.BaseColorThemePackRel, () => LoadMap(_spec.BaseColorThemePackRel, _spec.BaseColorFile, fbxPath, asNormal: false));
+            var normal = RigAssetCache.Texture("map|" + _spec.NormalThemePackRel + "|n", () => LoadMap(_spec.NormalThemePackRel, _spec.NormalFile, fbxPath, asNormal: true));
             Texture2D? metal = null;
             var wantsMetal = !string.IsNullOrEmpty(_spec.MetallicRoughnessFile);
             if (wantsMetal)
             {
                 var metalRel = _spec.ThemePackDir + "/" + _spec.TextureFolder + "/" + _spec.MetallicRoughnessFile;
-                var raw = LoadMap(metalRel, _spec.MetallicRoughnessFile, fbxPath, asNormal: false, linear: true, readable: true);
-                metal = PackGlTfMetallicRoughness(raw, _spec.Name);
+                metal = RigAssetCache.Texture("metal|" + metalRel, () =>
+                {
+                    var raw = LoadMap(metalRel, _spec.MetallicRoughnessFile, fbxPath, asNormal: false, linear: true, readable: true);
+                    return PackGlTfMetallicRoughness(raw, _spec.Name);
+                });
             }
 
             if (albedo == null)

@@ -19,6 +19,13 @@ namespace Survival.Unity
     /// </summary>
     public sealed class SurvivalRunnerEntry : MonoBehaviour
     {
+        /// <summary>
+        /// How long the trip waits for the runner's boot to report done before it reveals the runner anyway. The boot's
+        /// own timeout is <see cref="RunnerBootProgress.TimeoutSeconds"/>; this sits just past it, and the loading
+        /// screen's 20 s self-clear is the last resort behind both.
+        /// </summary>
+        private const float BootFailsafeSeconds = 16f;
+
         public const string ButtonName = "RunnerButton";
         public const string Slot = "runner_button";
 
@@ -158,6 +165,8 @@ namespace Survival.Unity
                 render = Capture();
                 hidden = Hide(playScene);
                 RunnerHandoff.Begin(levelId, unlocked);
+                // The runner builds its pools over many frames after the scene loads: watch that boot for the bar.
+                var boot = RunnerBoot.Arm();
                 var load = SceneManager.LoadSceneAsync(RunnerLevelView.SceneName, LoadSceneMode.Additive);
                 if (load != null)
                 {
@@ -165,13 +174,14 @@ namespace Survival.Unity
                     load.allowSceneActivation = true;
                 }
 
+                into.SetStatus(S("runner.loading_road", "Loading the road") + "  0%");
                 while (load != null && !load.isDone)
                 {
-                    into.Progress(load.progress);
+                    into.Progress(RunnerBootProgress.Bar(load.progress, 0f));
                     yield return null;
                 }
 
-                into.Progress(1f);
+                into.Progress(RunnerBootProgress.Bar(1f, 0f));
                 runner = SceneManager.GetSceneByName(RunnerLevelView.SceneName);
                 if (!runner.IsValid() || !runner.isLoaded)
                 {
@@ -184,6 +194,26 @@ namespace Survival.Unity
                 }
 
                 SceneManager.SetActiveScene(runner);
+
+                // The loading screen stays up (and live: bar, percentage, step name) until the runner has built its pools
+                // and started the run. A failsafe covers a boot that never reports; the screen's own 20 s self-clear is
+                // behind that.
+                var waitStart = Time.unscaledTime;
+                while (!boot.Finished && !RunnerHandoff.Done && runner.IsValid() && runner.isLoaded
+                    && Time.unscaledTime - waitStart < BootFailsafeSeconds)
+                {
+                    into.Progress(RunnerBootProgress.Bar(1f, boot.Fraction));
+                    into.SetStatus(RunnerBoot.Status(boot));
+                    yield return null;
+                }
+
+                if (!boot.Finished)
+                {
+                    Debug.LogWarning("Runner: the boot did not finish in " + BootFailsafeSeconds + " s (step " + boot.Step + " " + boot.StepDone + "/" + boot.StepTotal + "); revealing the runner anyway.");
+                }
+
+                into.Progress(1f);
+                into.SetStatus(RunnerBoot.Status(boot));
                 into.RevealOnFirstFrameOf(runner);
 
                 while (!RunnerHandoff.Done && runner.IsValid() && runner.isLoaded)

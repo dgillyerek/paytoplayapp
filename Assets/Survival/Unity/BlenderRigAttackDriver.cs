@@ -50,6 +50,13 @@ namespace Survival.Unity
         public System.Action<AttackTrack, Vector3>? Impact { get; set; }
 
         /// <summary>
+        /// True (default): flying tracks (thrown spear, arrow, bolt) draw their own flight at the release frame, as in the
+        /// battle and the single-character demos. The runner turns this off: its sim fires one shot per take and the
+        /// view draws that, so a second flight from the rig would be a second attack.
+        /// </summary>
+        public bool ProjectilesEnabled { get; set; } = true;
+
+        /// <summary>
         /// Actor local-to-world without any hit flinch, sampled once per shot at release. Null: the live actor transform.
         /// </summary>
         public System.Func<Matrix4x4>? LaunchFrame { get; set; }
@@ -226,6 +233,10 @@ namespace Survival.Unity
                 else
                 {
                     visible = inClip && frame < _spec.ClipLastFrame && track.VisibleAt(frame);
+                    if (track.Kind == AttackTrackKind.Projectile && !ProjectilesEnabled)
+                    {
+                        visible = false;
+                    }
                 }
 
                 if (newCycle && view.Shown && track.Kind != AttackTrackKind.Held)

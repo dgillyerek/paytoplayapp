@@ -52,7 +52,10 @@ namespace Survival.Unity
             }
 
 #if UNITY_EDITOR
-            EnsureImport(path, poseName: null, takeName: null);
+            if (RigAssetCache.First("emberbody|" + path))
+            {
+                EnsureImport(path, poseName: null, takeName: null);
+            }
 #endif
             var prefab = PlayerAssets.Load<GameObject>(path);
             if (prefab == null)
@@ -315,7 +318,7 @@ namespace Survival.Unity
 
         private static Avatar? LoadGenericAvatar(string path)
         {
-            foreach (var obj in PlayerAssets.LoadAll(path))
+            foreach (var obj in RigAssetCache.All(path))
             {
                 if (obj is Avatar avatar && !avatar.isHuman)
                 {

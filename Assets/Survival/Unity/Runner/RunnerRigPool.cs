@@ -116,6 +116,33 @@ namespace Survival.Unity
             return made;
         }
 
+        /// <summary>
+        /// Build one more rig of <paramref name="roster"/> (parked at once, unless <paramref name="keepForWarm"/>: the
+        /// shader warm-up draws one of each kind, then <see cref="FinishWarm"/> shelves it). One rig per call, so the boot
+        /// can build under a frame budget and keep its loading bar moving. Null when the roster has no rig.
+        /// </summary>
+        public RunnerRig? PrewarmOne(string roster, float extraScale, bool keepForWarm)
+        {
+            RunnerHitchLog.NoteRigBuilt(roster, prewarm: true);
+            var rig = Build((roster, ScaleKey(extraScale)), roster, _shelf, roster + "_Pooled", extraScale);
+            if (rig == null)
+            {
+                return null;
+            }
+
+            rig.WarmPoses();
+            if (keepForWarm)
+            {
+                _warming.Add(rig);
+            }
+            else
+            {
+                Return(rig);
+            }
+
+            return rig;
+        }
+
         /// <summary>Prewarmed rigs not yet on a shelf: still drawn, so the caller can show them once to warm shaders.</summary>
         public IReadOnlyList<RunnerRig> Warming => _warming;
 

@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using Survival.Domain.Campaign;
@@ -83,23 +84,54 @@ namespace Survival.Unity
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics() => RunnerHandoff.Reset();
 
-        private void Start() => Boot();
+        // A coroutine Start: Unity runs it as one, so the boot below spreads its work over frames.
+        private IEnumerator Start() => Boot();
 
         private void OnDestroy()
         {
             // Other scenes' actors light themselves again.
             ActorSceneLights.Suppressed = false;
             RunnerHitchLog.Loading(false);
+            RunnerHitchLog.Describe(null);
         }
 
-        private void Boot()
+        private IEnumerator Boot()
         {
             if (_booted || !Application.isPlaying)
             {
-                return;
+                yield break;
             }
 
             _booted = true;
+            var bootStart = System.Diagnostics.Stopwatch.GetTimestamp();
+            var progress = RunnerBoot.Begin();
+            RunnerHitchLog.Loading(true);
+            RunnerHitchLog.Describe(DescribeBoss);
+            RunnerHitchLog.Transition("runner boot");
+            Debug.Log(RunnerHitchLog.Prefix + " device " + SystemInfo.graphicsDeviceName + " (" + SystemInfo.graphicsDeviceType + "), " + Screen.width + "x" + Screen.height
+                + ", quality " + QualitySettings.names[QualitySettings.GetQualityLevel()] + ", vSync " + QualitySettings.vSyncCount + ", target fps " + Application.targetFrameRate
+                + ", cpu " + SystemInfo.processorCount + " threads");
+            bool ready;
+            using (RunnerHitchLog.Heavy("runner scene setup"))
+            {
+                ready = BootSetup();
+            }
+
+            if (!ready)
+            {
+                RunnerHitchLog.Loading(false);
+                progress.Finish();
+                yield break;
+            }
+
+            // Every rig, shot, effect and trap the level shows at launch, built a few milliseconds a frame while the loading
+            // screen reports each step, then drawn once off-screen to compile shaders; the run starts when that is done.
+            yield return PrewarmRoutine(_level!, progress, null, bootStart);
+        }
+
+        /// <summary>The synchronous part of the boot: pack, catalog, camera, world, lights, ground, HUD. False when there is nothing to run.</summary>
+        private bool BootSetup()
+        {
             SurvivalVisuals.EnsureEventSystem();
             _pack = LoadPack();
             if (_pack != null)
@@ -115,7 +147,12 @@ namespace Survival.Unity
             catch (Exception ex)
             {
                 Debug.LogError("Runner: could not read " + path + ". " + ex.Message);
-                return;
+                if (RunnerHandoff.FromPlay && !RunnerHandoff.Done)
+                {
+                    RunnerHandoff.Finish();
+                }
+
+                return false;
             }
 
             _unlocked = RunnerHandoff.FromPlay ? RunnerHandoff.Unlocked : StandaloneUnlocked();
@@ -123,6 +160,8 @@ namespace Survival.Unity
             _level = _catalog.Level(wanted) ?? _catalog.ByNumber(_unlocked);
             try
             {
+                // The level's plan runs on a worker thread while the scene below is built.
+                PlanOf(_level);
                 // Camera first, so the scene always has a working camera for the loading screen to reveal.
                 BuildCamera();
                 _world = new GameObject("RunnerWorld").transform;
@@ -132,10 +171,7 @@ namespace Survival.Unity
                 BuildHud();
                 _actors = new GameObject("RunnerActors").transform;
                 _actors.SetParent(_world, false);
-                // Every rig, shot, effect and trap the level can show, built now while the loading screen covers
-                // the scene (Boot runs before the first frame), then drawn once off-screen to compile shaders.
-                Prewarm(_level);
-                StartRun();
+                return true;
             }
             catch (Exception ex)
             {
@@ -148,6 +184,8 @@ namespace Survival.Unity
                 {
                     RunnerHandoff.Finish();
                 }
+
+                return false;
             }
         }
 
@@ -182,6 +220,7 @@ namespace Survival.Unity
                 return;
             }
 
+            StopTopUp();
             ClearActors();
             _attempt++;
             _run = new RunnerRun(_catalog, _level);
@@ -204,36 +243,12 @@ namespace Survival.Unity
         /// </summary>
         public void PlayLevel(int number)
         {
-            if (_catalog == null || !RunnerProgress.IsOpen(_unlocked, number))
+            if (_catalog == null || _switching || !RunnerProgress.IsOpen(_unlocked, number))
             {
                 return;
             }
 
-            ClearActors();
-            HideResult();
-            HideLevelList();
-            if (_hud != null)
-            {
-                Destroy(_hud.gameObject);
-                _hud = null;
-            }
-
-            if (_world != null)
-            {
-                Destroy(_world.gameObject);
-            }
-
-            _level = _catalog.ByNumber(number);
-            _world = new GameObject("RunnerWorld").transform;
-            _world.SetParent(transform, false);
-            _actors = new GameObject("RunnerActors").transform;
-            _actors.SetParent(_world, false);
-            BuildGround(_level);
-            BuildHud();
-            // Tops the pools up for this level and the next. Boot already warmed this one, so only what the level
-            // after it adds is built, here at the switch (logged loading=yes) rather than live on the road.
-            Prewarm(_level);
-            StartRun();
+            StartCoroutine(PlayLevelRoutine(number));
         }
 
         /// <summary>The next level after this one, when it is open.</summary>
@@ -278,6 +293,8 @@ namespace Survival.Unity
         {
             if (_run == null)
             {
+                // Booting or switching levels: the frame still goes in the hitch log (tagged loading=yes).
+                RunnerHitchLog.Frame(_level?.Number ?? 0, 0f, 0, 0, 0);
                 return;
             }
 
@@ -333,6 +350,7 @@ namespace Survival.Unity
         private void LateUpdate()
         {
             var dt = Time.deltaTime;
+            RunnerHitchLog.Begin(RunnerHitchLog.Section.Late);
             foreach (var r in _members.Values)
             {
                 r.Late(dt);
@@ -359,9 +377,12 @@ namespace Survival.Unity
                 }
             }
 
+            RunnerHitchLog.End(RunnerHitchLog.Section.Late);
+            RunnerHitchLog.Begin(RunnerHitchLog.Section.Camera);
             FollowCamera(dt);
             Billboards();
             PlaceWorldUi();
+            RunnerHitchLog.End(RunnerHitchLog.Section.Camera);
         }
 
         private void Finish()
@@ -372,6 +393,8 @@ namespace Survival.Unity
             }
 
             _resultShown = true;
+            RunnerHitchLog.Transition("result build");
+            RunnerHitchLog.Begin(RunnerHitchLog.Section.Finish);
             var result = _run.Result;
             RunnerHitchLog.Summary(_level.Number, result.Won ? "Won" : "Lost", _peakFoes, _peakSquad, _peakShots);
             var bundle = RunnerRewards.For(_level, result);
@@ -386,7 +409,26 @@ namespace Survival.Unity
                 saved = PayStandalone(bundle);
             }
 
-            ShowResult(result, bundle, saved);
+            RunnerHitchLog.End(RunnerHitchLog.Section.Finish);
+            using (RunnerHitchLog.Heavy("result screen build"))
+            {
+                ShowResult(result, bundle, saved);
+            }
+
+            // The canvas lays out and builds its meshes on the next render; doing it here, named, puts its cost in the
+            // log instead of in an anonymous frame (best-fit text and the outlines are the suspects).
+            using (RunnerHitchLog.Heavy("result canvas layout"))
+            {
+                Canvas.ForceUpdateCanvases();
+            }
+
+            RunnerHitchLog.Transition("result shown");
+            // Nothing is running now: finish the pools (this level's margin, the next level's extras) a few ms a frame.
+            StopTopUp();
+            if (_level != null)
+            {
+                _topUp = StartCoroutine(TopUpRoutine(_level));
+            }
         }
 
         /// <summary>
@@ -947,18 +989,22 @@ namespace Survival.Unity
                     break;
 
                 case RunnerEventKind.BossWindup:
+                    RunnerHitchLog.Transition("boss slam telegraph");
                     BossWindup(e);
                     break;
 
                 case RunnerEventKind.BossSlam:
+                    RunnerHitchLog.Transition("boss slam landed");
                     BossSlammed(e);
                     break;
 
                 case RunnerEventKind.BossQuakeWindup:
+                    RunnerHitchLog.Transition("boss quake telegraph");
                     BossQuakeWindup(e);
                     break;
 
                 case RunnerEventKind.BossQuake:
+                    RunnerHitchLog.Transition("boss quake landed");
                     BossQuaked(e);
                     break;
 
@@ -970,15 +1016,18 @@ namespace Survival.Unity
                     break;
 
                 case RunnerEventKind.BossEngaged:
+                    RunnerHitchLog.Transition("boss engaged");
                     Banner(S("runner.boss_incoming", "Ironhowl blocks the road!"), new Color(1f, 0.45f, 0.35f, 1f));
                     Shake(0.35f);
                     break;
 
                 case RunnerEventKind.Won:
+                    RunnerHitchLog.Transition("run won");
                     Burst(at + (Vector3.up * 1.2f), new Color(1f, 0.85f, 0.35f, 1f), 3.2f, true);
                     break;
 
                 case RunnerEventKind.Lost:
+                    RunnerHitchLog.Transition("run lost");
                     if (_run != null && _members.TryGetValue(_run.Hero.Id, out var dead))
                     {
                         _members.Remove(_run.Hero.Id);

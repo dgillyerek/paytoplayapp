@@ -8,18 +8,20 @@ using UnityEngine;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Pools and the loading-screen prewarm (Update 5). Nothing the road shows is built or destroyed mid-run any more:
-    /// rigs (squad, enemies, captives) come off <see cref="RunnerRigPool"/> shelves, and shots, effect sprites and traps
-    /// off the free lists here, all filled in <see cref="Prewarm"/> while the loading screen still covers the scene.
-    /// The prewarm ends with one off-screen render of everything it built (the rigs in their poses, a shot of every
-    /// look, every effect sprite, every trap with its flame, glow and ember quads), so the shaders, variants and materials the run
-    /// needs are compiled and uploaded before the first frame the player sees, not when the first fire trap or the
-    /// first Lyra bolt appears.
+    /// Pools and the loading-screen prewarm. Nothing the road shows is built or destroyed mid-run: rigs (squad, enemies,
+    /// captives) come off <see cref="RunnerRigPool"/> shelves, and shots, effect sprites and traps off the free lists here.
+    /// They are filled by <c>PrewarmRoutine</c> (RunnerLevelView.Boot.cs) a few milliseconds per frame while the loading
+    /// screen shows real progress, and the run starts only when it is done. The prewarm ends with one off-screen render
+    /// of everything it built (the rigs in their poses, a shot of every look, every effect sprite, every trap), so the
+    /// shaders, variants and materials the run needs are compiled and uploaded before the first frame the player sees.
     /// </summary>
     public sealed partial class RunnerLevelView
     {
-        /// <summary>Effect sprites kept ready (a boss kill plus a box break plus sparks in one frame is ~60).</summary>
-        private const int FxPrewarm = 200;
+        /// <summary>Effect sprites built before the run starts (a boss kill plus a box break plus sparks in one frame is ~60).</summary>
+        private const int FxLaunch = 100;
+
+        /// <summary>Effect sprites kept ready once the result-screen top-up has run.</summary>
+        private const int FxFull = 200;
 
         /// <summary>Traps of one kind and width kept ready (each level has a handful at most).</summary>
         private const int HazardPrewarmCap = 6;
@@ -46,10 +48,9 @@ namespace Survival.Unity
         /// for the level after next is started on a worker thread as soon as a level is warmed (the sim is pure C#, no
         /// shared state) and is ready by the time Next asks for it.
         /// </summary>
-        private static readonly Dictionary<int, Task<(IReadOnlyList<RunnerPrewarmEntry> Entries, int Shots)>> Plans =
-            new Dictionary<int, Task<(IReadOnlyList<RunnerPrewarmEntry> Entries, int Shots)>>();
+        private static readonly Dictionary<int, Task<RunnerPrewarmSet>> Plans = new Dictionary<int, Task<RunnerPrewarmSet>>();
 
-        private Task<(IReadOnlyList<RunnerPrewarmEntry> Entries, int Shots)> PlanOf(RunnerLevelDef level)
+        private Task<RunnerPrewarmSet> PlanOf(RunnerLevelDef level)
         {
             if (Plans.TryGetValue(level.Number, out var task) && !task.IsFaulted && !task.IsCanceled)
             {
@@ -59,127 +60,12 @@ namespace Survival.Unity
             var catalog = _catalog!;
 #if UNITY_WEBGL && !UNITY_EDITOR
             // No worker threads on the web player.
-            var entries = RunnerPrewarm.Plan(level, catalog, CaptiveScale, out var shots);
-            task = Task.FromResult((entries, shots));
+            task = Task.FromResult(RunnerPrewarm.Sets(level, catalog, CaptiveScale));
 #else
-            task = Task.Run(() =>
-            {
-                var entries = RunnerPrewarm.Plan(level, catalog, CaptiveScale, out var shots);
-                return (entries, shots);
-            });
+            task = Task.Run(() => RunnerPrewarm.Sets(level, catalog, CaptiveScale));
 #endif
             Plans[level.Number] = task;
             return task;
-        }
-
-        /// <summary>
-        /// Build, under the loading screen, everything <paramref name="level"/> (and the level after it, so Next on the
-        /// result screen builds nothing) can show at once, then draw it all once off-screen to warm the shaders.
-        /// </summary>
-        private void Prewarm(RunnerLevelDef level)
-        {
-            if (_catalog == null)
-            {
-                return;
-            }
-
-            RunnerHitchLog.Loading(true);
-            var started = Time.realtimeSinceStartup;
-            _pool ??= new RunnerRigPool(transform);
-            if (_spare == null)
-            {
-                _spare = new GameObject("RunnerSpare").transform;
-                _spare.SetParent(transform, false);
-            }
-
-            // This level and the next, planned side by side (both usually ready already: see PlanOf).
-            var next = _catalog.Next(level);
-            var mine = PlanOf(level);
-            var theirs = next != null ? PlanOf(next) : null;
-            var (plan, shots) = mine.Result;
-            if (theirs != null)
-            {
-                var (nextPlan, nextShots) = theirs.Result;
-                plan = RunnerPrewarm.Union(plan, nextPlan);
-                shots = Mathf.Max(shots, nextShots);
-            }
-
-            // The level after next, in the background, for when Next is pressed on this level's result screen.
-            if (next != null && _catalog.Next(next) is { } later)
-            {
-                PlanOf(later);
-            }
-
-            // Squad and enemy entries of one roster and size share a shelf: they can be on the road together.
-            var want = new Dictionary<(string, int), (string Roster, float Scale, int Count)>();
-            foreach (var e in plan)
-            {
-                var key = (e.Roster, RunnerRigPool.ScaleKey(e.Scale));
-                want[key] = want.TryGetValue(key, out var have) ? (e.Roster, e.Scale, have.Count + e.Count) : (e.Roster, e.Scale, e.Count);
-            }
-
-            foreach (var w in want.Values)
-            {
-                _pool.Prewarm(w.Roster, w.Scale, w.Count);
-            }
-
-            // Shots: spread over the looks (any look can be any shot; a pooled shot is re-dressed on take).
-            for (var i = _freeShots.Count + _fadingShots.Count; i < shots; i++)
-            {
-                var s = NewShot();
-                s.Root.gameObject.SetActive(false);
-                _freeShots.Push(s);
-            }
-
-            for (var i = _freeFx.Count; i < FxPrewarm; i++)
-            {
-                var f = NewFx();
-                f.Go.SetActive(false);
-                _freeFx.Push(f);
-            }
-
-            PrewarmHazards(level);
-            BuildSlamMark();
-            BuildQuakeMark();
-            if (next != null)
-            {
-                PrewarmHazards(next);
-            }
-
-            WarmRender();
-            _pool.FinishWarm();
-            RunnerHitchLog.Loading(false);
-            Debug.Log(RunnerHitchLog.Prefix + " prewarm L" + level.Number + ": " + _pool.Built + " rigs, " + (_freeShots.Count + _fadingShots.Count) + " shots, "
-                + _freeFx.Count + " fx in " + Mathf.RoundToInt((Time.realtimeSinceStartup - started) * 1000f) + " ms (under the loading screen)");
-        }
-
-        private void PrewarmHazards(RunnerLevelDef level)
-        {
-            var counts = new Dictionary<(RunnerHazardKind, int), (RunnerHazardDef Def, int Count)>();
-            foreach (var r in level.Rows)
-            {
-                if (r.Kind == RunnerRowKind.Hazard && r.Hazard != null)
-                {
-                    var key = HazardKey(r.Hazard);
-                    counts[key] = counts.TryGetValue(key, out var have) ? (have.Def, have.Count + 1) : (r.Hazard, 1);
-                }
-            }
-
-            foreach (var pair in counts)
-            {
-                if (!_freeHazards.TryGetValue(pair.Key, out var stack))
-                {
-                    stack = new Stack<HazardView>();
-                    _freeHazards[pair.Key] = stack;
-                }
-
-                for (var i = stack.Count; i < Mathf.Min(pair.Value.Count, HazardPrewarmCap); i++)
-                {
-                    var v = BuildHazard(pair.Value.Def, _spare!);
-                    v.Root.gameObject.SetActive(false);
-                    stack.Push(v);
-                }
-            }
         }
 
         /// <summary>

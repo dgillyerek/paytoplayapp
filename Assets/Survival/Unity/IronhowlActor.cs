@@ -320,7 +320,7 @@ namespace Survival.Unity
 
         private static Avatar? LoadGenericAvatar(string path)
         {
-            foreach (var obj in PlayerAssets.LoadAll(path))
+            foreach (var obj in RigAssetCache.All(path))
             {
                 if (obj is Avatar avatar && !avatar.isHuman)
                 {
@@ -334,6 +334,11 @@ namespace Survival.Unity
 #if UNITY_EDITOR
         private static void EnsureBodyImport(string path)
         {
+            if (!RigAssetCache.First("ironbody|" + path))
+            {
+                return;
+            }
+
             if (AssetImporter.GetAtPath(path) is not ModelImporter importer)
             {
                 return;
