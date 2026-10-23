@@ -140,6 +140,7 @@ namespace Survival.Unity
 
             PrewarmHazards(level);
             BuildSlamMark();
+            BuildQuakeMark();
             if (next != null)
             {
                 PrewarmHazards(next);

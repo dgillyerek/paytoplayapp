@@ -463,7 +463,9 @@ public sealed class RunnerTests
         var xs = new HashSet<int>();
         while (!run.Over && run.Seconds < 120f)
         {
-            run.SteerTo(run.Foes.Any(f => !f.Boss) ? 0f : (float)Math.Sin(run.Seconds * 3f) * 3.9f);
+            // (He winds up his big quake now and then: step into its clear band, as the warning asks.)
+            var quaking = run.Foes.FirstOrDefault(f => f.Boss && f.Move == RunnerBossMove.Quake);
+            run.SteerTo(quaking is not null ? Math.Sign(quaking.QuakeSafeX) * 2.9f : run.Foes.Any(f => !f.Boss) ? 0f : (float)Math.Sin(run.Seconds * 3f) * 3.9f);
             events.AddRange(run.Step(1f / 30f));
             if (run.Halted)
             {
@@ -936,7 +938,7 @@ public sealed class RunnerTests
             var arrived = -1f;
             while (!good.Over && good.Seconds < 600f)
             {
-                good.SteerTo(Runner.AimLikeAPlayer(good));
+                good.SteerTo(RunnerBossQuakeTests.DodgingPlayer(good));
                 foreach (var e in good.Step(1f / 30f))
                 {
                     if (e.Kind == RunnerEventKind.BossEngaged && arrived < 0f)

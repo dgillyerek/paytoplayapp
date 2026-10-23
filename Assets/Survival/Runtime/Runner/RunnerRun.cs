@@ -54,6 +54,34 @@ namespace Survival.Domain.Runner
         public const float BossSlamDepth = 5.0f;
         public const float BossSlamExtra = 0.5f;
 
+        /// <summary>
+        /// The boss's signature attack, the quake (Update 8): seconds from the rear-up (the red road and the DODGE! cue appear)
+        /// to the impact. Long enough to read and to steer across the whole road (<see cref="BossQuakeSteerSeconds"/> is the worst case).
+        /// </summary>
+        public const float BossQuakeWindup = 1.8f;
+
+        /// <summary>Every this many boss actions one is the quake (the rest are slams): slam, QUAKE, slam, slam, QUAKE ... about every 12 s.</summary>
+        public const int BossQuakeEvery = 3;
+
+        /// <summary>Which action of each <see cref="BossQuakeEvery"/> is the quake (0 = first): the 2nd, so the first one lands about 5 s into the fight.</summary>
+        public const int BossQuakeSlot = 1;
+
+        /// <summary>The quake lands on all of the road this far back from the boss's front (metres); only the safe band is spared.</summary>
+        public const float BossQuakeDepth = 9.0f;
+
+        /// <summary>The safe band: centred this far off the middle of the road on the side away from the hero, <see cref="BossQuakeSafeHalf"/> each side of that.</summary>
+        public const float BossQuakeSafeCentre = 2.4f;
+        public const float BossQuakeSafeHalf = 2.1f;
+
+        /// <summary>The hero's hit from the quake, in boss hits (a follower in the marked area just falls).</summary>
+        public const float BossQuakeDamage = 2.5f;
+
+        /// <summary>Extra pause after a quake before the boss's next action, on top of his cycle.</summary>
+        public const float BossQuakeRecovery = 1.0f;
+
+        /// <summary>The longest the squad needs to get the lead and every follower into the safe band from anywhere on the road (see the tests).</summary>
+        public const float BossQuakeSteerSeconds = 1.2f;
+
         /// <summary>Formation spacing between followers.</summary>
         public const float Spacing = 1.15f;
 
@@ -178,7 +206,24 @@ namespace Survival.Domain.Runner
         BossWindup,
 
         /// <summary>The slam lands (<see cref="RunnerEvent.Amount"/> = squad members caught, the hero's hit shows as <see cref="HeroHit"/>).</summary>
-        BossSlam
+        BossSlam,
+
+        /// <summary>
+        /// The boss rears up for the quake: it lands in <see cref="RunnerEvent.Amount"/> seconds on all the road except the safe band centred on
+        /// <see cref="RunnerEvent.X"/> (the scene marks the rest red, shows DODGE! and the safe band).
+        /// </summary>
+        BossQuakeWindup,
+
+        /// <summary>The quake lands (<see cref="RunnerEvent.Amount"/> = squad members caught, the hero's hit shows as <see cref="HeroHit"/>; X = the safe band's centre).</summary>
+        BossQuake
+    }
+
+    /// <summary>What the boss is winding up.</summary>
+    public enum RunnerBossMove
+    {
+        None,
+        Slam,
+        Quake
     }
 
     /// <summary>
@@ -300,6 +345,21 @@ namespace Survival.Domain.Runner
 
         /// <summary>Seconds until the boss's raised slam lands (0 = not winding up).</summary>
         public float Windup { get; internal set; }
+
+        /// <summary>What the boss is winding up (<see cref="RunnerBossMove.None"/> when he is not).</summary>
+        public RunnerBossMove Move { get; internal set; }
+
+        /// <summary>Seconds the current windup was given (the scene's fill is <c>1 - Windup / WindupTotal</c>).</summary>
+        public float WindupTotal { get; internal set; }
+
+        /// <summary>Boss actions started so far (slams and quakes): every <see cref="RunnerRules.BossQuakeEvery"/>th is a quake.</summary>
+        public int Actions { get; internal set; }
+
+        /// <summary>Quakes started so far.</summary>
+        public int Quakes { get; internal set; }
+
+        /// <summary>Centre (x) of the current or last quake's safe band.</summary>
+        public float QuakeSafeX { get; internal set; }
 
         public float SinceAttack { get; internal set; } = 99f;
         public bool Attacking => SinceAttack < Unit.Cycle + 0.25f;
@@ -1023,8 +1083,17 @@ namespace Survival.Domain.Runner
                 if (f.Windup <= 0f)
                 {
                     f.Windup = 0f;
-                    f.Cooldown = f.Unit.Cycle;
-                    Slam(f);
+                    var quake = f.Move == RunnerBossMove.Quake;
+                    f.Move = RunnerBossMove.None;
+                    f.Cooldown = f.Unit.Cycle + (quake ? RunnerRules.BossQuakeRecovery : 0f);
+                    if (quake)
+                    {
+                        Quake(f);
+                    }
+                    else
+                    {
+                        Slam(f);
+                    }
                 }
 
                 return;
@@ -1036,11 +1105,96 @@ namespace Survival.Domain.Runner
                 return;
             }
 
-            f.Windup = RunnerRules.BossWindup;
             f.SinceAttack = 0f;
             f.TargetId = Hero.Id;
+            if (f.Actions % RunnerRules.BossQuakeEvery == RunnerRules.BossQuakeSlot)
+            {
+                // The quake: a long telegraph, the whole road marked except a safe band on the side away from the hero.
+                f.Move = RunnerBossMove.Quake;
+                f.Windup = f.WindupTotal = RunnerRules.BossQuakeWindup;
+                f.QuakeSafeX = QuakeSafeCentre(Hero.X, f.Quakes, Level.HalfWidth);
+                f.Quakes++;
+                f.Actions++;
+                Emit(RunnerEventKind.BossQuakeWindup, f.Id, Hero.Id, f.QuakeSafeX, f.Z, f.Windup, true, false, f.Unit.Id);
+                return;
+            }
+
+            f.Move = RunnerBossMove.Slam;
+            f.Windup = f.WindupTotal = RunnerRules.BossWindup;
+            f.Actions++;
             Emit(RunnerEventKind.BossWindup, f.Id, Hero.Id, f.X, f.Z, f.Windup, false, false, f.Unit.Id);
             Emit(RunnerEventKind.Fired, f.Id, Hero.Id, Hero.X, Hero.Z, 0, false, false, f.Unit.Id);
+        }
+
+        /// <summary>
+        /// Where the quake's safe band is centred: on the side of the road away from the lead, so the squad has to cross to it
+        /// (a lead near the middle alternates sides). The band is <see cref="RunnerRules.BossQuakeSafeHalf"/> each side of it.
+        /// </summary>
+        public static float QuakeSafeCentre(float heroX, int quakesSoFar, float roadHalfWidth)
+        {
+            var side = heroX > 0.4f ? -1f : heroX < -0.4f ? 1f : (quakesSoFar % 2 == 0 ? -1f : 1f);
+            return side * Math.Min(RunnerRules.BossQuakeSafeCentre, roadHalfWidth * 0.6f);
+        }
+
+        /// <summary>The road a quake lands on: z back from the boss's front (all of the road's width except <see cref="QuakeSafe"/>).</summary>
+        public static (float MinZ, float MaxZ) QuakeArea(RunnerFoe boss) => (boss.Z - RunnerRules.BossQuakeDepth, boss.Z);
+
+        /// <summary>The quake's safe band (x range) for the quake the boss is winding up or last landed.</summary>
+        public static (float MinX, float MaxX) QuakeSafe(RunnerFoe boss) =>
+            (boss.QuakeSafeX - RunnerRules.BossQuakeSafeHalf, boss.QuakeSafeX + RunnerRules.BossQuakeSafeHalf);
+
+        /// <summary>True when a body at (<paramref name="x"/>, <paramref name="z"/>) of <paramref name="radius"/> would be caught by the boss's quake (same body tolerance as the slam).</summary>
+        public static bool QuakeCatches(RunnerFoe boss, float x, float z, float radius)
+        {
+            var r = radius * 0.5f;
+            var (minZ, maxZ) = QuakeArea(boss);
+            if (z < minZ - r || z > maxZ + r)
+            {
+                return false;
+            }
+
+            var (minX, maxX) = QuakeSafe(boss);
+            return x - r < minX || x + r > maxX;
+        }
+
+        private void Quake(RunnerFoe f)
+        {
+            var caught = 0;
+            var heroHit = false;
+            var victims = new List<RunnerMember>();
+            foreach (var m in _squad)
+            {
+                if (!QuakeCatches(f, m.X, m.Z, m.Unit.Radius))
+                {
+                    continue;
+                }
+
+                if (m.IsHero)
+                {
+                    heroHit = true;
+                }
+                else
+                {
+                    victims.Add(m);
+                }
+            }
+
+            foreach (var v in victims)
+            {
+                KillFollower(f, v);
+                caught++;
+            }
+
+            if (heroHit)
+            {
+                caught++;
+            }
+
+            Emit(RunnerEventKind.BossQuake, f.Id, Hero.Id, f.QuakeSafeX, f.Z - (RunnerRules.BossQuakeDepth * 0.5f), caught, true, false, f.Unit.Id);
+            if (heroHit)
+            {
+                HurtHero(f, (int)Math.Round(f.Unit.Damage * RunnerRules.BossQuakeDamage));
+            }
         }
 
         /// <summary>The road a boss's slam lands on: across his body (plus a margin) and <see cref="RunnerRules.BossSlamDepth"/> back from his front.</summary>

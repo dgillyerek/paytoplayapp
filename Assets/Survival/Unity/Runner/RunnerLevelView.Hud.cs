@@ -212,6 +212,7 @@ namespace Survival.Unity
             }
 
             _freeHeroBars.Push(NewSideBar(true));
+            BuildQuakeHud();
         }
 
         private Text Chip(string name, float x, string iconKey)
