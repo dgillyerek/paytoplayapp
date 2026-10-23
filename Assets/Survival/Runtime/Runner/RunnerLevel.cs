@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using Survival.Domain.Roster;
 using Survival.Domain.Serialization;
 
 namespace Survival.Domain.Runner
@@ -263,6 +264,84 @@ namespace Survival.Domain.Runner
         public static IReadOnlyList<string> Required { get; } = new[] { CrateWeapon, CrateSpeed, EventIcon };
     }
 
+    /// <summary>
+    /// Who may be on the runner's squad. The runner fires straight down the road, so only heroes with a ranged attack
+    /// belong: a fighter whose every attack is a melee swing (Sir Aldric) is not a start hero, a follower box, a hero
+    /// chest or a captive. Read from the locked battle data (an attack with no melee contact frame, or a flight streak,
+    /// is a shot), so a roster change there flows through.
+    /// </summary>
+    public static class RunnerRoster
+    {
+        /// <summary>The order a stand-in hero is picked in when a requested one is not allowed.</summary>
+        public static readonly string[] Fallbacks = { "lyra", "rowan", "oakenshield" };
+
+        /// <summary>True when at least one of the roster fighter's attacks is a projectile (an unknown name is judged by its unit flag alone).</summary>
+        public static bool IsRangedFighter(string roster)
+        {
+            var found = false;
+            var fighter = LockedBattleRoster.All.Count > 0 ? LockedBattleRoster.All[0] : default;
+            foreach (var f in LockedBattleRoster.All)
+            {
+                if (string.Equals(f.Name, roster, StringComparison.OrdinalIgnoreCase))
+                {
+                    fighter = f;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                return true;
+            }
+
+            var profile = LockedBattleHits.ProfileOf(fighter.Name);
+            for (var i = 0; i < LockedBattleRotation.Count(fighter); i++)
+            {
+                if (LockedBattleRotation.ContactFrame(fighter, profile, i) < 0 || LockedBattleRotation.AttackAt(fighter, i).FlightFrames > 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>A unit that may stand on the squad: flagged ranged, and a fighter that really shoots.</summary>
+        public static bool IsPlayable(RunnerUnitDef unit) => unit.Ranged && IsRangedFighter(unit.Roster);
+
+        /// <summary>
+        /// The hero a run starts with: <paramref name="preferredId"/> (a saved choice, say) when the catalog has it and
+        /// it may be on the squad, else the first of <see cref="Fallbacks"/> (lyra, rowan, oakenshield) it has, else any
+        /// ranged hero. A stale selection naming a melee hero therefore never reaches the road.
+        /// </summary>
+        public static RunnerUnitDef? PlayableHero(RunnerCatalog catalog, string? preferredId)
+        {
+            if (!string.IsNullOrEmpty(preferredId) && catalog.Units.TryGetValue(preferredId!, out var wanted) && !string.IsNullOrEmpty(wanted.HeroId) && IsPlayable(wanted))
+            {
+                return wanted;
+            }
+
+            foreach (var id in Fallbacks)
+            {
+                if (catalog.Units.TryGetValue(id, out var u) && IsPlayable(u))
+                {
+                    return u;
+                }
+            }
+
+            foreach (var u in catalog.Units.Values)
+            {
+                if (!string.IsNullOrEmpty(u.HeroId) && IsPlayable(u))
+                {
+                    return u;
+                }
+            }
+
+            return null;
+        }
+    }
+
     /// <summary>runner_levels.json: the unit stats and the levels (spawn rows by distance). More levels are more JSON.</summary>
     public sealed class RunnerCatalog
     {
@@ -271,8 +350,15 @@ namespace Survival.Domain.Runner
         private readonly Dictionary<string, RunnerUnitDef> _units;
         private readonly List<RunnerLevelDef> _levels;
 
-        public RunnerCatalog(IEnumerable<RunnerUnitDef> units, IEnumerable<RunnerLevelDef> levels)
+        private readonly bool _allowMeleeHeroes;
+
+        /// <param name="allowMeleeHeroes">
+        /// Off by default: the runner never fields a hero whose attacks are all melee (the start hero, a follower or
+        /// hero box, a captive), see <see cref="RunnerRoster"/>. Tests of the melee squad rules switch it on.
+        /// </param>
+        public RunnerCatalog(IEnumerable<RunnerUnitDef> units, IEnumerable<RunnerLevelDef> levels, bool allowMeleeHeroes = false)
         {
+            _allowMeleeHeroes = allowMeleeHeroes;
             _units = new Dictionary<string, RunnerUnitDef>(StringComparer.Ordinal);
             foreach (var u in units)
             {
@@ -316,9 +402,20 @@ namespace Survival.Domain.Runner
         /// <summary>The level after <paramref name="level"/>, or null after the last.</summary>
         public RunnerLevelDef? Next(RunnerLevelDef level) => level.Number < _levels.Count ? _levels[level.Number] : null;
 
+        private RunnerUnitDef SquadUnit(string id, string where)
+        {
+            var u = Unit(id);
+            if (!_allowMeleeHeroes && !RunnerRoster.IsPlayable(u))
+            {
+                throw new FormatException(where + ": '" + id + "' (" + u.Roster + ") is melee-only; the runner squad is ranged heroes only.");
+            }
+
+            return u;
+        }
+
         private void Validate(RunnerLevelDef level)
         {
-            Unit(level.Hero);
+            SquadUnit(level.Hero, level.Id + " hero");
             foreach (var row in level.Rows)
             {
                 if (row.At < 0f || row.At > level.Length)
@@ -342,7 +439,7 @@ namespace Survival.Domain.Runner
 
                     if (row.Box.GivesUnits)
                     {
-                        Unit(row.Box.Unit);
+                        SquadUnit(row.Box.Unit, level.Id + ": box at " + row.At + " m");
                     }
                 }
                 else
@@ -352,7 +449,9 @@ namespace Survival.Domain.Runner
             }
         }
 
-        public static RunnerCatalog Parse(string json)
+        public static RunnerCatalog Parse(string json) => Parse(json, false);
+
+        internal static RunnerCatalog Parse(string json, bool allowMeleeHeroes)
         {
             var root = LayoutJson.Root(json, FileName);
             var units = new List<RunnerUnitDef>();
@@ -401,7 +500,7 @@ namespace Survival.Domain.Runner
                     Math.Max(10f, LayoutJson.Num(l, "length")),
                     Math.Max(0.2f, LayoutJson.OptNum(l, "speed", 1.6f)),
                     Math.Max(1.5f, LayoutJson.OptNum(l, "half_width", 4f)),
-                    Math.Max(0, LayoutJson.OptInt(l, "max_followers", 24)),
+                    Math.Min(RunnerRules.MaxFollowers, Math.Max(0, LayoutJson.OptInt(l, "max_followers", RunnerRules.MaxFollowers))),
                     rows,
                     new RunnerRewardDef(
                         LayoutJson.OptInt(rw, "win_gold", 0),
@@ -435,7 +534,7 @@ namespace Survival.Domain.Runner
                 }
             }
 
-            return new RunnerCatalog(units, levels) { Progression = progression };
+            return new RunnerCatalog(units, levels, allowMeleeHeroes) { Progression = progression };
         }
 
         private static RunnerRowDef ReadRow(JsonNode.Obj r)

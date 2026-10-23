@@ -319,6 +319,7 @@ namespace Survival.Unity
             AnimateFoes();
             RunnerHitchLog.End(RunnerHitchLog.Section.Actors);
             AnimateHazards(dt);
+            AnimateSlamMark();
             RunnerHitchLog.Begin(RunnerHitchLog.Section.Shots);
             TickShots(dt);
             TickFx(dt);
@@ -932,6 +933,24 @@ namespace Survival.Unity
                 }
 
                 case RunnerEventKind.Upgrade:
+                    if (e.Unit == "squad_full")
+                    {
+                        // A follower or hero chest at a full squad: the units that do not fit pay out as damage and a heal.
+                        Banner(Fmt("runner.squad_full", "Squad full! Damage ×{0}, healed", e.Amount.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)), new Color(1f, 0.85f, 0.35f, 1f));
+                        if (_run != null && _members.TryGetValue(_run.Hero.Id, out var lead))
+                        {
+                            Floater(new Vector3(lead.Slot.position.x, 0f, lead.Slot.position.z) + (Vector3.up * 2.6f), S("runner.squad_full_heal", "+HP"), new Color(0.55f, 1f, 0.6f, 1f), 40);
+                        }
+                    }
+
+                    break;
+
+                case RunnerEventKind.BossWindup:
+                    BossWindup(e);
+                    break;
+
+                case RunnerEventKind.BossSlam:
+                    BossSlammed(e);
                     break;
 
                 case RunnerEventKind.HazardSpawned:
