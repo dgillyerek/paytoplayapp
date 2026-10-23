@@ -8,10 +8,13 @@ namespace Survival.Domain.Runner
     public static class RunnerRules
     {
         /// <summary>Rows spawn this far ahead of the squad, so they are in view before they matter.</summary>
-        public const float SpawnAhead = 30f;
+        public const float SpawnAhead = 38f;
 
-        /// <summary>Enemies start walking at the squad once it is this close.</summary>
-        public const float Aggro = 15f;
+        /// <summary>
+        /// Enemies walk at the squad from the moment they spawn (no aggro wait); within this distance of the hero they also
+        /// drift sideways toward his line, so a lane layout still reads as lanes while it is far off.
+        /// </summary>
+        public const float SeekRange = 15f;
 
         /// <summary>Half width of the strip a foe archer shoots into (plus the target's radius).</summary>
         public const float AimHalfWidth = 1.5f;
@@ -28,11 +31,47 @@ namespace Survival.Domain.Runner
         /// <summary>Half width of the strip straight in front of a melee unit that its swing reaches (plus the target's radius).</summary>
         public const float MeleeHalfWidth = 0.7f;
 
+        /// <summary>
+        /// Most squad members on the road at once, the lead hero included (a phone-friendly cap: the rigs, shots and
+        /// formation rows all stay small). A follower or hero box broken with the squad full pays out
+        /// <see cref="FullSquadDamage"/> and <see cref="FullSquadHeal"/> instead.
+        /// </summary>
+        public const int SquadCap = 10;
+
+        /// <summary>Most followers behind the lead hero (<see cref="SquadCap"/> minus the hero).</summary>
+        public const int MaxFollowers = SquadCap - 1;
+
+        /// <summary>Squad damage bonus for each unit a box would have added with the squad already full.</summary>
+        public const float FullSquadDamage = 0.03f;
+
+        /// <summary>Share of the hero's max HP a unit box heals when the squad is already full.</summary>
+        public const float FullSquadHeal = 0.2f;
+
+        /// <summary>The boss's slam: seconds from the raised arm (the ground marker appears) to the impact.</summary>
+        public const float BossWindup = 0.9f;
+
+        /// <summary>The slam lands on this much road in front of the boss (metres back from his front), across his body plus <see cref="BossSlamExtra"/> each side.</summary>
+        public const float BossSlamDepth = 5.0f;
+        public const float BossSlamExtra = 0.5f;
+
         /// <summary>Formation spacing between followers.</summary>
         public const float Spacing = 1.15f;
 
-        /// <summary>The hero slides toward the steer point at most this fast.</summary>
+        /// <summary>The hero slides toward the steer point at most this fast (m/s).</summary>
         public const float SteerSpeed = 11f;
+
+        /// <summary>
+        /// Steering is a critically damped spring (SmoothDamp) toward the steer point: it eases in and settles without
+        /// overshoot. This is its smooth time (s): about how long it takes to close most of a gap.
+        /// </summary>
+        public const float SteerSmoothSeconds = 0.10f;
+
+        /// <summary>Followers' spring smooth time: the front row a touch behind the hero, each row back a bit more.</summary>
+        public const float FollowSmoothSeconds = 0.12f;
+        public const float FollowSmoothPerRow = 0.03f;
+
+        /// <summary>Followers may move sideways a little faster than the hero, so they can catch up to their slot.</summary>
+        public const float FollowMaxSpeed = 13f;
 
         /// <summary>Enemies drift sideways toward the hero this fast while they walk in.</summary>
         public const float EnemySeek = 0.55f;
@@ -71,6 +110,32 @@ namespace Survival.Domain.Runner
         /// <summary>A hit at least this big (or any boss, box break, follower loss or hero hit) shakes the screen.</summary>
         public const int BigHit = 60;
 
+        /// <summary>Spike strip cycle (s): down, then a rattle warning, then up (hurting); staggered by the row's phase.</summary>
+        public const float SpikeDown = 1.3f;
+        public const float SpikeWarn = 0.7f;
+        public const float SpikeUp = 1.0f;
+        public const float SpikeCycle = SpikeDown + SpikeWarn + SpikeUp;
+
+        /// <summary>A log starts wobbling (its warning) once the hero is this close, then rolls down its lane at <see cref="LogSpeed"/>.</summary>
+        public const float LogTrigger = 17f;
+        public const float LogWarn = 1.1f;
+        public const float LogSpeed = 2.6f;
+
+        /// <summary>Footprint depth (half, metres along the road) of each trap.</summary>
+        public const float SpikeHalfDepth = 0.55f;
+        public const float FireHalfDepth = 0.75f;
+        public const float LogHalfDepth = 0.4f;
+
+        /// <summary>Share of a member's body radius that has to overlap a trap for it to count (forgiving edges).</summary>
+        public const float HazardBodyShare = 0.5f;
+
+        /// <summary>Most squad members one activation catches (spikes snap shut on the first, a log flattens two); the rest get through.</summary>
+        public const int SpikeCatch = 1;
+        public const int LogCatch = 2;
+
+        /// <summary>A fire patch burns one member at a time, re-flaring every this many seconds.</summary>
+        public const float FireFlare = 1.2f;
+
         /// <summary>Longest internal step; bigger frame deltas are split so results do not depend on frame rate.</summary>
         public const float MaxStep = 1f / 30f;
     }
@@ -97,11 +162,23 @@ namespace Survival.Domain.Runner
         HeroHit,
         Upgrade,
         BossEngaged,
+
+        /// <summary>A lane trap appeared (<see cref="RunnerEvent.Unit"/> = spikes / log / fire).</summary>
+        HazardSpawned,
+
+        /// <summary>A trap caught a squad member (<see cref="RunnerEvent.Id"/> = the trap, Other = the member, Amount = hero damage or 0 for a knocked-out follower).</summary>
+        HazardHit,
         Won,
         Lost,
 
         /// <summary>A squad member starts one attack take (<see cref="RunnerEvent.Amount"/> = playback speed); its <see cref="Fired"/> follows at the take's release.</summary>
-        AttackStarted
+        AttackStarted,
+
+        /// <summary>The boss raises his arm: the slam lands in <see cref="RunnerEvent.Amount"/> seconds on the marked road in front of him.</summary>
+        BossWindup,
+
+        /// <summary>The slam lands (<see cref="RunnerEvent.Amount"/> = squad members caught, the hero's hit shows as <see cref="HeroHit"/>).</summary>
+        BossSlam
     }
 
     /// <summary>
@@ -158,6 +235,9 @@ namespace Survival.Domain.Runner
         public RunnerAttackPlan Plan { get; }
         public float X { get; internal set; }
         public float Z { get; internal set; }
+
+        /// <summary>Sideways velocity (m/s, + = right) from the steering spring; the scene leans the body with it.</summary>
+        public float VX { get; internal set; }
         public int Hp { get; internal set; }
         public int Slot { get; internal set; } = -1;
         public float Cooldown { get; internal set; }
@@ -193,6 +273,8 @@ namespace Survival.Domain.Runner
             Z = z;
             Boss = boss;
             Hp = MaxHp = Math.Max(1, (int)Math.Round(unit.Hp * (hpMul > 0f ? hpMul : 1f)));
+            // Walking from the moment it spawns (even the rows already in view when the run starts); the boss holds.
+            Walking = !boss;
         }
 
         public int Id { get; }
@@ -215,6 +297,10 @@ namespace Survival.Domain.Runner
         /// <summary>Member it last attacked (0 = none).</summary>
         public int TargetId { get; internal set; }
         public float ContactClock { get; internal set; }
+
+        /// <summary>Seconds until the boss's raised slam lands (0 = not winding up).</summary>
+        public float Windup { get; internal set; }
+
         public float SinceAttack { get; internal set; } = 99f;
         public bool Attacking => SinceAttack < Unit.Cycle + 0.25f;
         public float HpFraction => MaxHp > 0 ? Math.Max(0f, Hp / (float)MaxHp) : 0f;
@@ -240,6 +326,71 @@ namespace Survival.Domain.Runner
         public int Hp { get; internal set; }
         public int MaxHp => Def.Hp;
         public float HpFraction => MaxHp > 0 ? Math.Max(0f, Hp / (float)MaxHp) : 0f;
+    }
+
+    public enum RunnerHazardState
+    {
+        /// <summary>Harmless for now (spikes down, a log waiting at the top of its lane).</summary>
+        Idle,
+
+        /// <summary>About to hurt: spikes rattling, a log wobbling. The scene shows it plainly.</summary>
+        Warning,
+
+        /// <summary>Hurts what it touches (spikes up, a log rolling, fire always).</summary>
+        Active
+    }
+
+    /// <summary>A lane trap in play. Cannot be shot; the squad steers round it.</summary>
+    public sealed class RunnerHazard
+    {
+        private readonly HashSet<int> _hit = new();
+
+        internal RunnerHazard(int id, RunnerHazardDef def, float x, float z)
+        {
+            Id = id;
+            Def = def;
+            X = x;
+            Z = z;
+            StartZ = z;
+            State = def.Kind == RunnerHazardKind.Fire ? RunnerHazardState.Active : RunnerHazardState.Idle;
+        }
+
+        public int Id { get; }
+        public RunnerHazardDef Def { get; }
+        public RunnerHazardKind Kind => Def.Kind;
+        public float X { get; }
+        public float Z { get; internal set; }
+        public float StartZ { get; }
+        public float HalfWidth => Def.Width * 0.5f;
+
+        public float HalfDepth => HalfDepthOf(Def.Kind);
+
+        /// <summary>Half the trap's depth along the road for <paramref name="kind"/> (the view builds pooled traps from it).</summary>
+        public static float HalfDepthOf(RunnerHazardKind kind) => kind switch
+        {
+            RunnerHazardKind.Spikes => RunnerRules.SpikeHalfDepth,
+            RunnerHazardKind.Log => RunnerRules.LogHalfDepth,
+            _ => RunnerRules.FireHalfDepth
+        };
+
+        public RunnerHazardState State { get; internal set; }
+
+        /// <summary>Seconds in the current state (the scene times the rattle / wobble / spike pop on it).</summary>
+        public float StateClock { get; internal set; }
+
+        /// <summary>Squad members this activation has already caught (each once per activation).</summary>
+        internal HashSet<int> Hit => _hit;
+
+        /// <summary>Members caught this activation, and the most one activation catches.</summary>
+        internal int Caught { get; set; }
+
+        internal int CatchCap => Def.Kind == RunnerHazardKind.Log ? RunnerRules.LogCatch : RunnerRules.SpikeCatch;
+
+        public bool Hurts => State == RunnerHazardState.Active;
+
+        public bool Touches(float x, float z, float radius) =>
+            Math.Abs(x - X) <= HalfWidth + (radius * RunnerRules.HazardBodyShare)
+            && Math.Abs(z - Z) <= HalfDepth + (radius * RunnerRules.HazardBodyShare);
     }
 
     /// <summary>
@@ -306,6 +457,7 @@ namespace Survival.Domain.Runner
         private readonly List<RunnerFoe> _foes = new();
         private readonly List<RunnerBox> _boxes = new();
         private readonly List<RunnerShot> _shots = new();
+        private readonly List<RunnerHazard> _hazards = new();
         private readonly List<RunnerEvent> _events = new();
         private int _nextRow;
         private int _nextId = 1;
@@ -338,6 +490,7 @@ namespace Survival.Domain.Runner
         public IReadOnlyList<RunnerFoe> Foes => _foes;
         public IReadOnlyList<RunnerBox> Boxes => _boxes;
         public IReadOnlyList<RunnerShot> Shots => _shots;
+        public IReadOnlyList<RunnerHazard> Hazards => _hazards;
 
         public int Followers => _squad.Count - 1;
         public int FollowersPeak { get; private set; }
@@ -351,6 +504,15 @@ namespace Survival.Domain.Runner
         /// <summary>Squad-wide damage and attack speed multipliers from upgrade boxes.</summary>
         public float DamageMul { get; private set; } = 1f;
         public float RateMul { get; private set; } = 1f;
+
+        /// <summary>Squad-wide range multiplier for ranged shots (range crates).</summary>
+        public float RangeMul { get; private set; } = 1f;
+
+        /// <summary>Followers knocked out and hero hits taken from lane traps.</summary>
+        public int HazardHits { get; private set; }
+
+        /// <summary>How far a member's attack reaches now: ranged shots scale with <see cref="RangeMul"/>, melee does not.</summary>
+        public float ReachOf(RunnerMember m) => m.Unit.Ranged ? m.Unit.Range * RangeMul : m.Unit.Range;
 
         public int Kills { get; private set; }
         public int BoxesBroken { get; private set; }
@@ -386,9 +548,59 @@ namespace Survival.Domain.Runner
 
         public void SteerBy(float dx) => SteerTo(_steer + dx);
 
-        public RunnerMember? Member(int id) => _squad.Find(m => m.Id == id);
-        public RunnerFoe? Foe(int id) => _foes.Find(f => f.Id == id);
-        public RunnerBox? Box(int id) => _boxes.Find(b => b.Id == id);
+        // Plain loops, not List.Find(lambda): the scene looks these up for every health bar every frame, and a capturing
+        // lambda allocates each call (garbage the collector then stalls a frame to sweep).
+        public RunnerMember? Member(int id)
+        {
+            for (var i = 0; i < _squad.Count; i++)
+            {
+                if (_squad[i].Id == id)
+                {
+                    return _squad[i];
+                }
+            }
+
+            return null;
+        }
+
+        public RunnerFoe? Foe(int id)
+        {
+            for (var i = 0; i < _foes.Count; i++)
+            {
+                if (_foes[i].Id == id)
+                {
+                    return _foes[i];
+                }
+            }
+
+            return null;
+        }
+
+        public RunnerBox? Box(int id)
+        {
+            for (var i = 0; i < _boxes.Count; i++)
+            {
+                if (_boxes[i].Id == id)
+                {
+                    return _boxes[i];
+                }
+            }
+
+            return null;
+        }
+
+        public RunnerHazard? Hazard(int id)
+        {
+            for (var i = 0; i < _hazards.Count; i++)
+            {
+                if (_hazards[i].Id == id)
+                {
+                    return _hazards[i];
+                }
+            }
+
+            return null;
+        }
 
         /// <summary>Advance by <paramref name="dt"/> seconds; returns what happened (valid until the next call).</summary>
         public IReadOnlyList<RunnerEvent> Step(float dt)
@@ -413,6 +625,7 @@ namespace Survival.Domain.Runner
             SquadAttacks(dt);
             FoesAttack(dt);
             MoveShots(dt);
+            StepHazards(dt);
             DropPassed();
             CheckEnd();
         }
@@ -426,18 +639,21 @@ namespace Survival.Domain.Runner
             Distance = Math.Min(RoadEnd, Distance + (Level.Speed * dt));
             Halted = Level.HasBoss && Distance >= ArenaLine - 1e-4f;
 
-            var maxMove = RunnerRules.SteerSpeed * dt;
-            Hero.X += Clamp(_steer - Hero.X, -maxMove, maxMove);
+            var vx = Hero.VX;
+            Hero.X = RunnerSteering.SmoothDamp(Hero.X, _steer, ref vx, RunnerRules.SteerSmoothSeconds, RunnerRules.SteerSpeed, dt);
+            Hero.VX = vx;
             Hero.Z = Distance;
             for (var i = 1; i < _squad.Count; i++)
             {
                 var m = _squad[i];
                 var (sx, sz) = RunnerFormation.Offset(m.Slot);
                 var row = RunnerFormation.RowOf(m.Slot);
-                // Back rows lag more, so the formation bends as the hero steers.
-                var lag = 1f - (float)Math.Exp(-dt * (9f / (1f + (0.35f * row))));
+                // Each follower springs toward its slot; back rows ease a bit slower, so the formation bends as the
+                // hero steers and settles without snapping.
                 var tx = Clamp(Hero.X + sx, -Level.HalfWidth + m.Unit.Radius, Level.HalfWidth - m.Unit.Radius);
-                m.X += (tx - m.X) * lag;
+                var fvx = m.VX;
+                m.X = RunnerSteering.SmoothDamp(m.X, tx, ref fvx, RunnerRules.FollowSmoothSeconds + (RunnerRules.FollowSmoothPerRow * row), RunnerRules.FollowMaxSpeed, dt);
+                m.VX = fvx;
                 // Joiners run in from their box faster than the walk, then hold their slot exactly.
                 var tz = Distance + sz;
                 var run = (Level.Speed + 4f) * dt;
@@ -457,6 +673,16 @@ namespace Survival.Domain.Runner
                         var box = new RunnerBox(_nextId++, row.Box!, Clamp(row.X, -Level.HalfWidth + RunnerBox.Radius, Level.HalfWidth - RunnerBox.Radius), row.At);
                         _boxes.Add(box);
                         Emit(RunnerEventKind.BoxSpawned, box.Id, 0, box.X, box.Z, box.Hp, false, true, box.Def.Unit);
+                        break;
+                    }
+
+                    case RunnerRowKind.Hazard:
+                    {
+                        var hd = row.Hazard!;
+                        var half = Math.Min(hd.Width * 0.5f, Level.HalfWidth);
+                        var hz = new RunnerHazard(_nextId++, hd, Clamp(row.X, -Level.HalfWidth + half, Level.HalfWidth - half), row.At);
+                        _hazards.Add(hz);
+                        Emit(RunnerEventKind.HazardSpawned, hz.Id, 0, hz.X, hz.Z, hd.Width, false, false, RunnerHazardDef.Name(hd.Kind));
                         break;
                     }
 
@@ -536,18 +762,21 @@ namespace Survival.Domain.Runner
                     continue;
                 }
 
-                var holding = f.Unit.Ranged && dist <= reach * 0.8f;
-                if (holding || f.Z - Hero.Z > RunnerRules.Aggro)
+                // A ranged foe stops once the squad is inside its range and shoots; everything else keeps coming.
+                if (f.Unit.Ranged && dist <= reach * 0.8f)
                 {
                     continue;
                 }
 
+                // Walks in down the lane from the moment it spawns; once close it also drifts toward the hero's line.
                 f.Walking = true;
-                // Walk in down the lane and drift toward the hero's line.
                 f.Z -= f.Unit.Speed * dt;
-                var seek = RunnerRules.EnemySeek * dt;
-                f.X += Clamp(Hero.X - f.X, -seek, seek);
-                f.X = Clamp(f.X, -Level.HalfWidth + f.Unit.Radius, Level.HalfWidth - f.Unit.Radius);
+                if (f.Z - Hero.Z <= RunnerRules.SeekRange)
+                {
+                    var seek = RunnerRules.EnemySeek * dt;
+                    f.X += Clamp(Hero.X - f.X, -seek, seek);
+                    f.X = Clamp(f.X, -Level.HalfWidth + f.Unit.Radius, Level.HalfWidth - f.Unit.Radius);
+                }
             }
         }
 
@@ -616,9 +845,10 @@ namespace Survival.Domain.Runner
             if (m.Unit.Ranged)
             {
                 m.TargetId = 0;
-                var shot = new RunnerShot(_nextId++, m.Id, false, m.X, m.Z + 0.4f, damage, m.Unit.ShotSpeed, m.Unit.Range + RunnerRules.ShotOvershoot);
+                var reach = ReachOf(m);
+                var shot = new RunnerShot(_nextId++, m.Id, false, m.X, m.Z + 0.4f, damage, m.Unit.ShotSpeed, reach + RunnerRules.ShotOvershoot);
                 _shots.Add(shot);
-                Emit(RunnerEventKind.Fired, m.Id, 0, m.X, m.Z + m.Unit.Range, shot.Id, false, false, m.Unit.Id);
+                Emit(RunnerEventKind.Fired, m.Id, 0, m.X, m.Z + reach, shot.Id, false, false, m.Unit.Id);
                 return;
             }
 
@@ -639,7 +869,7 @@ namespace Survival.Domain.Runner
         {
             foreach (var f in _foes)
             {
-                if (f.Hp > 0 && f.Z > m.Z - 0.5f && f.Z - m.Z <= m.Unit.Range + f.Unit.Radius)
+                if (f.Hp > 0 && f.Z > m.Z - 0.5f && f.Z - m.Z <= ReachOf(m) + f.Unit.Radius)
                 {
                     return true;
                 }
@@ -647,7 +877,7 @@ namespace Survival.Domain.Runner
 
             foreach (var b in _boxes)
             {
-                if (b.Hp > 0 && b.Z > m.Z - 0.5f && b.Z - m.Z <= m.Unit.Range + RunnerBox.Radius)
+                if (b.Hp > 0 && b.Z > m.Z - 0.5f && b.Z - m.Z <= ReachOf(m) + RunnerBox.Radius)
                 {
                     return true;
                 }
@@ -664,7 +894,7 @@ namespace Survival.Domain.Runner
             foreach (var f in _foes)
             {
                 var dz = f.Z - m.Z;
-                var dx = f.Boss ? 0f : Math.Abs(f.X - m.X);
+                var dx = Math.Abs(f.X - m.X);
                 if (f.Hp <= 0 || dz <= -1f || dz > m.Unit.Range + f.Unit.Radius + m.Unit.Radius
                     || dx > RunnerRules.MeleeHalfWidth + f.Unit.Radius || dz >= best)
                 {
@@ -715,8 +945,14 @@ namespace Survival.Domain.Runner
                     continue;
                 }
 
+                if (f.Boss)
+                {
+                    BossAttack(f, dt);
+                    continue;
+                }
+
                 // Bodies overlapping: the squad pushing through takes contact hits, whatever the enemy's own attack is.
-                if (!f.Boss && f.Unit.Ranged && dist <= f.Unit.Radius + target.Unit.Radius)
+                if (f.Unit.Ranged && dist <= f.Unit.Radius + target.Unit.Radius)
                 {
                     f.ContactClock += dt * RunnerRules.ContactHitsPerSecond;
                     if (f.ContactClock >= 1f)
@@ -741,10 +977,8 @@ namespace Survival.Domain.Runner
                 }
 
                 // Melee: whoever is in reach, ahead or already past. Ranged: whoever is in range in its strip, either way
-                // down the road (a foe the squad has walked past shoots after it). The boss slams the front row.
-                var inRange = f.Boss
-                    ? f.Engaged
-                    : f.Unit.Ranged
+                // down the road (a foe the squad has walked past shoots after it).
+                var inRange = f.Unit.Ranged
                         ? dist <= f.Unit.Range + f.Unit.Radius + target.Unit.Radius && Math.Abs(target.X - f.X) <= RunnerRules.AimHalfWidth + target.Unit.Radius
                         : dist <= f.Unit.Range + f.Unit.Radius + target.Unit.Radius;
                 if (!inRange)
@@ -756,11 +990,6 @@ namespace Survival.Domain.Runner
                 if (f.Cooldown > 0f)
                 {
                     continue;
-                }
-
-                if (f.Boss)
-                {
-                    target = Hero;
                 }
 
                 f.Cooldown = f.Unit.Cycle;
@@ -776,6 +1005,88 @@ namespace Survival.Domain.Runner
                 {
                     StrikeSquad(f, f.Unit.Damage);
                 }
+            }
+        }
+
+        /// <summary>
+        /// The boss's attack is a telegraphed slam, never a free hit: once the squad is at his arena line and his cooldown
+        /// is up he raises his arm (<see cref="RunnerEventKind.BossWindup"/>, the scene marks the road and plays his swing),
+        /// and <see cref="RunnerRules.BossWindup"/> seconds later the slam lands on everyone standing in the marked area
+        /// (<see cref="SlamArea"/>): each follower in it falls, the hero takes the boss's damage. Steering out of the
+        /// marked road in time dodges it. A squad nowhere near him is not slammed.
+        /// </summary>
+        private void BossAttack(RunnerFoe f, float dt)
+        {
+            if (f.Windup > 0f)
+            {
+                f.Windup -= dt;
+                if (f.Windup <= 0f)
+                {
+                    f.Windup = 0f;
+                    f.Cooldown = f.Unit.Cycle;
+                    Slam(f);
+                }
+
+                return;
+            }
+
+            if (!f.Engaged || f.Cooldown > 0f)
+            {
+                f.Cooldown = Math.Max(f.Cooldown, 0f);
+                return;
+            }
+
+            f.Windup = RunnerRules.BossWindup;
+            f.SinceAttack = 0f;
+            f.TargetId = Hero.Id;
+            Emit(RunnerEventKind.BossWindup, f.Id, Hero.Id, f.X, f.Z, f.Windup, false, false, f.Unit.Id);
+            Emit(RunnerEventKind.Fired, f.Id, Hero.Id, Hero.X, Hero.Z, 0, false, false, f.Unit.Id);
+        }
+
+        /// <summary>The road a boss's slam lands on: across his body (plus a margin) and <see cref="RunnerRules.BossSlamDepth"/> back from his front.</summary>
+        public static (float MinX, float MaxX, float MinZ, float MaxZ) SlamArea(RunnerFoe boss)
+        {
+            var half = boss.Unit.Radius + RunnerRules.BossSlamExtra;
+            return (boss.X - half, boss.X + half, boss.Z - RunnerRules.BossSlamDepth, boss.Z);
+        }
+
+        private void Slam(RunnerFoe f)
+        {
+            var (minX, maxX, minZ, maxZ) = SlamArea(f);
+            var caught = 0;
+            var heroHit = false;
+            var victims = new List<RunnerMember>();
+            foreach (var m in _squad)
+            {
+                var r = m.Unit.Radius * 0.5f;
+                if (m.X >= minX - r && m.X <= maxX + r && m.Z >= minZ - r && m.Z <= maxZ + r)
+                {
+                    if (m.IsHero)
+                    {
+                        heroHit = true;
+                    }
+                    else
+                    {
+                        victims.Add(m);
+                    }
+                }
+            }
+
+            foreach (var v in victims)
+            {
+                KillFollower(f, v);
+                caught++;
+            }
+
+            if (heroHit)
+            {
+                caught++;
+            }
+
+            Emit(RunnerEventKind.BossSlam, f.Id, Hero.Id, f.X, f.Z - (RunnerRules.BossSlamDepth * 0.5f), caught, true, false, f.Unit.Id);
+            if (heroHit)
+            {
+                HurtHero(f, f.Unit.Damage);
             }
         }
 
@@ -875,14 +1186,15 @@ namespace Survival.Domain.Runner
                 }
                 else
                 {
-                    // Straight down the road: the nearest foe or box whose body it passes through. The boss fills the road.
+                    // Straight down the road: the nearest foe or box whose body it passes through (the boss too: only a
+                    // shot whose lane overlaps his body, radius included, hurts him).
                     var bestZ = float.MaxValue;
                     var id = 0;
                     var onBox = false;
                     foreach (var f in _foes)
                     {
                         var r = f.Unit.Radius + RunnerRules.ShotHalfWidth;
-                        if (f.Hp > 0 && (f.Boss || Math.Abs(f.X - s.X) <= r) && f.Z >= lo - r && f.Z <= hi + r && f.Z < bestZ)
+                        if (f.Hp > 0 && Math.Abs(f.X - s.X) <= r && f.Z >= lo - r && f.Z <= hi + r && f.Z < bestZ)
                         {
                             bestZ = f.Z;
                             id = f.Id;
@@ -981,10 +1293,23 @@ namespace Survival.Domain.Runner
                     RateMul += b.Def.Amount;
                     Emit(RunnerEventKind.Upgrade, b.Id, 0, b.X, b.Z, RateMul, true, true, "rate");
                     return;
+                case RunnerBoxKind.Range:
+                    RangeMul += b.Def.Amount;
+                    Emit(RunnerEventKind.Upgrade, b.Id, 0, b.X, b.Z, RangeMul, true, true, "range");
+                    return;
+                case RunnerBoxKind.Heal:
+                {
+                    var heal = Math.Max(1, (int)Math.Round(Hero.Unit.Hp * b.Def.Amount));
+                    Hero.Hp = Math.Min(Hero.Unit.Hp, Hero.Hp + heal);
+                    Emit(RunnerEventKind.Upgrade, b.Id, 0, b.X, b.Z, Hero.Hp, true, true, "heal");
+                    return;
+                }
             }
 
             var unit = _catalog.Unit(b.Def.Unit);
-            for (var i = 0; i < b.Def.Count && Followers < Level.MaxFollowers; i++)
+            var room = Math.Max(0, Math.Min(Level.MaxFollowers, RunnerRules.MaxFollowers) - Followers);
+            var spare = Math.Max(0, b.Def.Count - room);
+            for (var i = 0; i < b.Def.Count && Followers < Math.Min(Level.MaxFollowers, RunnerRules.MaxFollowers); i++)
             {
                 // Joiners step out at the box's side of the road level with the squad (not out among the enemies
                 // beyond it, now that the squad never stops) and run into their slot.
@@ -996,6 +1321,14 @@ namespace Survival.Domain.Runner
             }
 
             FollowersPeak = Math.Max(FollowersPeak, Followers);
+            if (spare > 0)
+            {
+                // The squad is full: the units that would not fit are paid as a damage boost, and the chest heals the hero.
+                DamageMul += RunnerRules.FullSquadDamage * spare;
+                var heal = Math.Max(1, (int)Math.Round(Hero.Unit.Hp * RunnerRules.FullSquadHeal));
+                Hero.Hp = Math.Min(Hero.Unit.Hp, Hero.Hp + heal);
+                Emit(RunnerEventKind.Upgrade, b.Id, 0, b.X, b.Z, DamageMul, true, true, "squad_full");
+            }
         }
 
         private void Reslot()
@@ -1029,6 +1362,122 @@ namespace Survival.Domain.Runner
                     BoxesMissed++;
                     Emit(RunnerEventKind.BoxMissed, b.Id, 0, b.X, b.Z, b.Hp, false, true, b.Def.Unit);
                 }
+            }
+        }
+
+        // ---------- lane traps ----------
+
+        private void StepHazards(float dt)
+        {
+            for (var i = _hazards.Count - 1; i >= 0 && !Over; i--)
+            {
+                var h = _hazards[i];
+                var was = h.State;
+                h.StateClock += dt;
+                switch (h.Kind)
+                {
+                    case RunnerHazardKind.Spikes:
+                    {
+                        // On the run's clock (deterministic, staggered by the row's phase): down, rattle, up.
+                        var t = (Seconds + h.Def.Phase) % RunnerRules.SpikeCycle;
+                        h.State = t < RunnerRules.SpikeDown ? RunnerHazardState.Idle
+                            : t < RunnerRules.SpikeDown + RunnerRules.SpikeWarn ? RunnerHazardState.Warning
+                            : RunnerHazardState.Active;
+                        break;
+                    }
+
+                    case RunnerHazardKind.Fire:
+                        if (h.StateClock >= RunnerRules.FireFlare)
+                        {
+                            h.StateClock = 0f;
+                            h.Hit.Clear();
+                            h.Caught = 0;
+                        }
+
+                        break;
+
+                    case RunnerHazardKind.Log:
+                        if (h.State == RunnerHazardState.Idle && h.Z - Hero.Z <= RunnerRules.LogTrigger + h.Def.Phase)
+                        {
+                            h.State = RunnerHazardState.Warning;
+                        }
+                        else if (h.State == RunnerHazardState.Warning && h.StateClock >= RunnerRules.LogWarn)
+                        {
+                            h.State = RunnerHazardState.Active;
+                        }
+                        else if (h.State == RunnerHazardState.Active)
+                        {
+                            h.Z -= RunnerRules.LogSpeed * dt;
+                        }
+
+                        break;
+                }
+
+                if (h.State != was)
+                {
+                    h.StateClock = 0f;
+                    if (h.State == RunnerHazardState.Active)
+                    {
+                        // A new activation: everyone can be caught again (once).
+                        h.Hit.Clear();
+                        h.Caught = 0;
+                    }
+                }
+
+                if (h.Hurts)
+                {
+                    Catch(h);
+                }
+
+                if (h.Z < Hero.Z - SquadDepth - RunnerRules.DropBehind)
+                {
+                    _hazards.RemoveAt(i);
+                }
+            }
+        }
+
+        /// <summary>Whoever the trap touches (once each per activation): a follower is knocked out, the hero takes the damage.</summary>
+        private void Catch(RunnerHazard h)
+        {
+            for (var i = _squad.Count - 1; i >= 0 && !Over; i--)
+            {
+                if (i >= _squad.Count)
+                {
+                    continue;
+                }
+
+                var m = _squad[i];
+                if (h.Caught >= h.CatchCap)
+                {
+                    return;
+                }
+
+                if (h.Hit.Contains(m.Id) || !h.Touches(m.X, m.Z, m.Unit.Radius))
+                {
+                    continue;
+                }
+
+                h.Hit.Add(m.Id);
+                h.Caught++;
+                HazardHits++;
+                if (m.IsHero)
+                {
+                    Hero.Hp = Math.Max(0, Hero.Hp - h.Def.Damage);
+                    Emit(RunnerEventKind.HazardHit, h.Id, m.Id, m.X, m.Z, h.Def.Damage, true, false, RunnerHazardDef.Name(h.Kind));
+                    Emit(RunnerEventKind.HeroHit, Hero.Id, h.Id, Hero.X, Hero.Z, h.Def.Damage, true, false, Hero.Unit.Id);
+                    if (Hero.Hp <= 0 && !Over)
+                    {
+                        Outcome = RunnerOutcome.Lost;
+                        Emit(RunnerEventKind.Lost, Hero.Id, h.Id, Hero.X, Hero.Z, 0, true);
+                    }
+
+                    continue;
+                }
+
+                _squad.Remove(m);
+                Emit(RunnerEventKind.HazardHit, h.Id, m.Id, m.X, m.Z, 0, false, false, RunnerHazardDef.Name(h.Kind));
+                Emit(RunnerEventKind.FollowerLost, m.Id, h.Id, m.X, m.Z, Followers, true, false, m.Unit.Id);
+                Reslot();
             }
         }
 
@@ -1080,6 +1529,38 @@ namespace Survival.Domain.Runner
     }
 
     /// <summary>Follower slots behind the hero: row r (1, 2, 3 ...) holds r + 1 units, centred, <see cref="RunnerRules.Spacing"/> apart.</summary>
+    /// <summary>Critically damped spring used for steering (the same maths as Unity's Mathf.SmoothDamp).</summary>
+    public static class RunnerSteering
+    {
+        public static float SmoothDamp(float current, float target, ref float velocity, float smoothTime, float maxSpeed, float dt)
+        {
+            if (dt <= 0f)
+            {
+                return current;
+            }
+
+            smoothTime = Math.Max(0.0001f, smoothTime);
+            var omega = 2f / smoothTime;
+            var x = omega * dt;
+            var exp = 1f / (1f + x + (0.48f * x * x) + (0.235f * x * x * x));
+            var change = current - target;
+            var original = target;
+            var maxChange = maxSpeed * smoothTime;
+            change = change < -maxChange ? -maxChange : change > maxChange ? maxChange : change;
+            target = current - change;
+            var temp = (velocity + (omega * change)) * dt;
+            velocity = (velocity - (omega * temp)) * exp;
+            var output = target + ((change + temp) * exp);
+            if ((original - current > 0f) == (output > original))
+            {
+                output = original;
+                velocity = (output - original) / dt;
+            }
+
+            return output;
+        }
+    }
+
     public static class RunnerFormation
     {
         public static int RowOf(int slot)

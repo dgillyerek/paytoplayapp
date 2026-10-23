@@ -872,6 +872,23 @@ namespace Survival.Unity
                     }
 
                     stringMat = mats[i];
+                    if (!filter.sharedMesh.isReadable)
+                    {
+                        // Read/Write off on the import: the CPU can't read or cut the mesh (that only logs "Not allowed to
+                        // access vertices" errors). Use the spec's design string tips, and hide the braced string by
+                        // dropping its material slot when it is the mesh's last submesh (the GPU skips unmaterialed
+                        // submeshes); otherwise it stays alongside the drawn one.
+                        Debug.LogWarning(_spec.Character + " bow mesh " + filter.sharedMesh.name + " has Read/Write off; using the design string tips.");
+                        if (i == mats.Length - 1 && i == filter.sharedMesh.subMeshCount - 1 && i > 0)
+                        {
+                            var kept = new Material[i];
+                            System.Array.Copy(mats, kept, i);
+                            r.sharedMaterials = kept;
+                        }
+
+                        continue;
+                    }
+
                     // measure the braced string where the import actually put it (grip-root space): tips = its two ends
                     var verts = filter.sharedMesh.vertices;
                     var tris = filter.sharedMesh.GetTriangles(i);

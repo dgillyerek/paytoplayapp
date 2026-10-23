@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Survival.Domain.Roster;
 using UnityEngine;
 using UnityEngine.Animations;
@@ -61,6 +62,31 @@ namespace Survival.Unity
 
         public bool Built => _ready;
         public string Pose => _pose;
+
+        // Looping clips (walk, idle) can be sampled less often on rigs nobody watches closely (the runner's back rows):
+        // keyed by the actor transform each player was built under; 1 (or absent) = every frame. Attacks always sample
+        // every frame so the release stays on its frame.
+        private static readonly Dictionary<Transform, int> EveryNth = new Dictionary<Transform, int>();
+        private static int _phases;
+        private readonly int _phase = _phases++;
+
+        /// <summary>Sample the looping clips of the rig built under <paramref name="host"/> every <paramref name="frames"/>th frame (1 = every frame).</summary>
+        public static void SetEvaluateEvery(Transform host, int frames)
+        {
+            if (host == null)
+            {
+                return;
+            }
+
+            if (frames <= 1)
+            {
+                EveryNth.Remove(host);
+            }
+            else
+            {
+                EveryNth[host] = frames;
+            }
+        }
 
         /// <summary>
         /// Playback rate of the attack take (1 = as authored). The runner speeds the take up so one take is one shot;
@@ -219,6 +245,12 @@ namespace Survival.Unity
             if (_length > 0.05f)
             {
                 _time %= _length;
+            }
+
+            if (EveryNth.Count > 0 && EveryNth.TryGetValue(_parent, out var every) && (Time.frameCount + _phase) % every != 0)
+            {
+                // Time still runs; the pose catches up on the next sampled frame.
+                return;
             }
 
             _playable.SetTime(_time);
@@ -434,6 +466,15 @@ namespace Survival.Unity
         private AnimationClip? LoadClip(string fileName, string poseName, string takeName, int lastFrame)
         {
             var path = "Assets/" + _spec.ThemePackDir + "/" + fileName;
+            // Once per clip per session: the import check reads the .meta from disk and LoadAllAssetsAtPath walks the
+            // whole FBX, and the runner changes pose every few frames per rig.
+            var key = path + "|" + _humanoid + "|" + poseName + "|" + takeName + "|" + lastFrame;
+            var cached = ActorClipCache.Get(key);
+            if (cached != null)
+            {
+                return cached;
+            }
+
             EnsureImport(path, _humanoid, true, poseName, takeName, lastFrame);
             AnimationClip? named = null;
             AnimationClip? fallback = null;
@@ -458,7 +499,7 @@ namespace Survival.Unity
                 fallback ??= clip;
             }
 
-            return named ?? fallback;
+            return ActorClipCache.Put(key, named ?? fallback);
         }
 
         private static bool HasValidHumanAvatar(string path)
@@ -960,6 +1001,11 @@ namespace Survival.Unity
 
         private void BuildLights()
         {
+            if (ActorSceneLights.Suppressed)
+            {
+                return;
+            }
+
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientLight = new Color(0.36f, 0.36f, 0.38f, 1f);
             var key = new GameObject(_spec.Name + "KeyLight");

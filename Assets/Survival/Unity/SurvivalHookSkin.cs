@@ -196,6 +196,29 @@ namespace Survival.Unity
             return text;
         }
 
+        /// <summary>
+        /// Best-fit a label into its rect: it shrinks between <paramref name="min"/> and <paramref name="max"/> instead of
+        /// spilling over the edges (labels are built with overflow on, which lets long words run past a button).
+        /// </summary>
+        public static Text Fit(Text text, int min, int max)
+        {
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
+            text.resizeTextForBestFit = true;
+            text.resizeTextMinSize = Mathf.Min(min, max);
+            text.resizeTextMaxSize = max;
+            return text;
+        }
+
+        /// <summary>Stretch a label over its button, inset so it clears the painted rim.</summary>
+        public static void PadLabel(RectTransform rect, float padX = 0.08f, float padY = 0.14f)
+        {
+            rect.anchorMin = new Vector2(padX, padY);
+            rect.anchorMax = new Vector2(1f - padX, 1f - padY);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+        }
+
         /// <summary>Title banner straddling the top edge of a sheet panel, with the title on it.</summary>
         public static Text Header(RectTransform panel, string title, float width, float height, int size)
         {

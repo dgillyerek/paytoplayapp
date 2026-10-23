@@ -284,6 +284,13 @@ namespace Survival.Unity
         private static AnimationClip? LoadClip(string fileName, string poseName, string takeName, int lastFrame)
         {
             var path = "Assets/" + EmberfangMotion.ThemePackDir + "/" + fileName;
+            var key = path + "|" + poseName + "|" + takeName + "|" + lastFrame;
+            var cached = ActorClipCache.Get(key);
+            if (cached != null)
+            {
+                return cached;
+            }
+
             EnsureImport(path, poseName, takeName, lastFrame);
             AnimationClip? named = null;
             AnimationClip? fallback = null;
@@ -308,7 +315,7 @@ namespace Survival.Unity
                 fallback ??= clip;
             }
 
-            return named ?? fallback;
+            return ActorClipCache.Put(key, named ?? fallback);
         }
 
         private static Avatar? LoadGenericAvatar(string path)
@@ -487,6 +494,11 @@ namespace Survival.Unity
 
         private static void BuildLights()
         {
+            if (ActorSceneLights.Suppressed)
+            {
+                return;
+            }
+
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientLight = new Color(0.34f, 0.36f, 0.4f, 1f);
             var key = new GameObject("EmberfangKeyLight");

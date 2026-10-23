@@ -44,6 +44,33 @@ namespace Survival.Unity
         private readonly Dictionary<int, WorldBar> _bars = new Dictionary<int, WorldBar>();
         private readonly List<Floating> _floaters = new List<Floating>();
 
+        // Update 5: hit numbers and fighters' side bars are pooled (made with the HUD, reused all run), and HUD text
+        // is only set when its value changes (no per-frame strings).
+        private const int FloaterCap = 60;
+        private const int FoeBarPrewarm = 40;
+        private readonly Stack<Floating> _freeFloaters = new Stack<Floating>();
+        private readonly Stack<WorldBar> _freeFoeBars = new Stack<WorldBar>();
+        private readonly Stack<WorldBar> _freeHeroBars = new Stack<WorldBar>();
+        private Canvas? _hudCanvas;
+        private int _shownMetres = -1;
+        private int _shownKills = -1;
+        private int _shownDmg = -1;
+        private int _shownSpd = -1;
+        private static readonly string[] Numbers = new string[10000];
+        private static readonly string[] MinusNumbers = new string[10000];
+
+        /// <summary>A cached string for <paramref name="n"/> (hit numbers and HP numbers repeat all run).</summary>
+        private static string Num(int n, bool minus = false)
+        {
+            if (n < 0 || n >= Numbers.Length)
+            {
+                return (minus ? "-" : "") + n.ToString(CultureInfo.InvariantCulture);
+            }
+
+            var table = minus ? MinusNumbers : Numbers;
+            return table[n] ??= (minus ? "-" : "") + n.ToString(CultureInfo.InvariantCulture);
+        }
+
         private sealed class WorldBar
         {
             public RectTransform Root = null!;
@@ -61,10 +88,17 @@ namespace Survival.Unity
             public float HalfWidth;
             public float MeasureAge;
 
+            /// <summary>The unit's runner scale (enemies are drawn bigger than in battle); the bar stands off by it.</summary>
+            public float Scale = 1f;
+
             /// <summary>Fades the bar itself (a box's reward tag stays visible).</summary>
             public CanvasGroup Group = null!;
             public int LastHp = -1;
             public float SinceDamage = -1f;
+
+            /// <summary>The HP the number shows (set only when it changes).</summary>
+            public int ShownHp = int.MinValue;
+            public Image? Frame;
         }
 
         private sealed class Floating
@@ -81,9 +115,17 @@ namespace Survival.Unity
         private void BuildHud()
         {
             _hud = SurvivalVisuals.Canvas(transform, "RunnerHud", 60);
+            _hudCanvas = _hud.GetComponent<Canvas>();
             _worldUi = new GameObject("WorldUi", typeof(RectTransform)).GetComponent<RectTransform>();
             _worldUi.SetParent(_hud, false);
             SurvivalVisuals.Stretch(_worldUi);
+            // Its own (nested) canvas: the bars, badge and hit numbers move every frame, and a nested canvas keeps
+            // that re-batching off the rest of the HUD.
+            _worldUi.gameObject.AddComponent<Canvas>();
+            _freeFloaters.Clear();
+            _freeFoeBars.Clear();
+            _freeHeroBars.Clear();
+            _shownMetres = _shownKills = _shownDmg = _shownSpd = -1;
 
             // Drag anywhere to steer (under every button).
             var pad = SurvivalVisuals.Image(_hud, "DragPad", new Color(1f, 1f, 1f, 0f));
@@ -142,7 +184,7 @@ namespace Survival.Unity
 
             // Squad badge over the hero (count of everyone walking).
             _badge = HookSkin.Panel(_worldUi, "SquadBadge", HookArtKeys.Chip, new Color(0.10f, 0.22f, 0.45f, 0.96f), 0.45f).rectTransform;
-            _badge.sizeDelta = new Vector2(150f, 62f);
+            _badge.sizeDelta = new Vector2(190f, 62f);
             _badgeIcon = HookSkin.Art(_badge, "Icon", "theme_a.ui.icon_battle", SurvivalVisuals.PinBuild);
             Anchor(_badgeIcon.rectTransform, -0.05f, -0.15f, 0.40f, 1.15f);
             _badgeText = HookSkin.Outlined(SurvivalVisuals.Text(_badge, "Count", "1", 36, TextAnchor.MiddleCenter, Color.white));
@@ -157,6 +199,19 @@ namespace Survival.Unity
             _bannerText = HookSkin.Outlined(SurvivalVisuals.Text(_banner, "Text", "", 40, TextAnchor.MiddleCenter, Color.white));
             SurvivalVisuals.Stretch(_bannerText.rectTransform);
             _banner.gameObject.SetActive(false);
+
+            // Pools for the world UI, filled now (under the loading screen) rather than one per hit / spawn.
+            for (var i = 0; i <= FloaterCap; i++)
+            {
+                _freeFloaters.Push(NewFloater());
+            }
+
+            for (var i = 0; i < FoeBarPrewarm; i++)
+            {
+                _freeFoeBars.Push(NewSideBar(false));
+            }
+
+            _freeHeroBars.Push(NewSideBar(true));
         }
 
         private Text Chip(string name, float x, string iconKey)
@@ -199,18 +254,21 @@ namespace Survival.Unity
                 HookSkin.SetBar(_progressFill, _run.Progress, HookArtKeys.BarFillGold, SurvivalVisuals.Gold);
             }
 
-            if (_progressText != null)
+            var metres = Mathf.FloorToInt(_run.Distance);
+            if (_progressText != null && metres != _shownMetres)
             {
-                _progressText.text = Mathf.FloorToInt(_run.Distance).ToString(CultureInfo.InvariantCulture) + " / " + Mathf.RoundToInt(_run.Level.Length) + " m";
+                _shownMetres = metres;
+                _progressText.text = Num(metres) + " / " + Num(Mathf.RoundToInt(_run.Level.Length)) + " m";
             }
 
-            if (_killsText != null)
+            if (_killsText != null && _run.Kills != _shownKills)
             {
-                _killsText.text = _run.Kills.ToString(CultureInfo.InvariantCulture);
+                _shownKills = _run.Kills;
+                _killsText.text = Num(_run.Kills);
             }
 
-            SetChip(_dmgChip, _run.DamageMul, "runner.box.weapon", "+{0}% DMG");
-            SetChip(_spdChip, _run.RateMul, "runner.box.rate", "+{0}% SPD");
+            SetChip(_dmgChip, _run.DamageMul, "runner.box.weapon", "+{0}% DMG", ref _shownDmg);
+            SetChip(_spdChip, _run.RateMul, "runner.box.rate", "+{0}% SPD", ref _shownSpd);
             var squad = _run.Squad.Count;
             if (squad != _lastSquad)
             {
@@ -218,7 +276,9 @@ namespace Survival.Unity
                 _lastSquad = squad;
                 if (_badgeText != null)
                 {
-                    _badgeText.text = "×" + squad.ToString(CultureInfo.InvariantCulture);
+                    // The squad against its cap (the lead counts); gold once it is full.
+                    _badgeText.text = squad.ToString(CultureInfo.InvariantCulture) + "/" + RunnerRules.SquadCap.ToString(CultureInfo.InvariantCulture);
+                    _badgeText.color = squad >= RunnerRules.SquadCap ? new Color(1f, 0.86f, 0.3f, 1f) : Color.white;
                 }
             }
 
@@ -244,7 +304,7 @@ namespace Survival.Unity
             TickFloaters(dt);
         }
 
-        private void SetChip(Text? chip, float mul, string key, string fallback)
+        private void SetChip(Text? chip, float mul, string key, string fallback, ref int shown)
         {
             if (chip == null)
             {
@@ -252,10 +312,17 @@ namespace Survival.Unity
             }
 
             var on = mul > 1.0001f;
+            var pct = on ? Mathf.RoundToInt((mul - 1f) * 100f) : 0;
+            if (pct == shown)
+            {
+                return;
+            }
+
+            shown = pct;
             chip.transform.parent.gameObject.SetActive(on);
             if (on)
             {
-                chip.text = Fmt(key, fallback, Mathf.RoundToInt((mul - 1f) * 100f));
+                chip.text = Fmt(key, fallback, pct);
             }
         }
 
@@ -281,8 +348,8 @@ namespace Survival.Unity
                 return;
             }
 
-            // A thin, semi-transparent strip with a small HP number, shown only while the box is being shot (see
-            // RunnerSideBar.Alpha); the reward tag above it stays, so you always know what is inside.
+            // A thin strip with a small HP number. On a box it is always shown at full opacity until the box breaks
+            // (RunnerSideBar.BoxAlpha), under the reward tag; fighters' bars fade in on damage (RunnerSideBar.Alpha).
             var root = new GameObject(onBox ? "BoxBar" : "FoeBar", typeof(RectTransform)).GetComponent<RectTransform>();
             root.SetParent(_worldUi, false);
             root.sizeDelta = new Vector2(110f, 9f);
@@ -290,7 +357,7 @@ namespace Survival.Unity
             body.SetParent(root, false);
             SurvivalVisuals.Stretch(body);
             var group = body.GetComponent<CanvasGroup>();
-            group.alpha = 0f;
+            group.alpha = onBox ? 1f : 0f;
             group.blocksRaycasts = false;
             group.interactable = false;
             var back = SurvivalVisuals.Image(body, "Back", new Color(0.05f, 0.05f, 0.08f, 0.8f));
@@ -316,18 +383,52 @@ namespace Survival.Unity
         /// A fighter's HP bar as the configured battle draws it (#76): vertical, beside the body on its own outer side
         /// (the hero's left, a foe's right), filling bottom to top, with the HP number on top.
         /// </summary>
-        private void AddSideBar(int id, bool hero, RunnerRig rig, bool boss)
+        private void AddSideBar(int id, bool hero, RunnerRig rig, bool boss, float scale = 1f)
         {
             if (_worldUi == null || _bars.ContainsKey(id))
             {
                 return;
             }
 
+            RunnerHitchLog.Note(RunnerHitchLog.Counter.Bar);
+            var free = hero ? _freeHeroBars : _freeFoeBars;
+            WorldBar? bar = null;
+            while (free.Count > 0 && (bar == null || bar.Root == null))
+            {
+                bar = free.Pop();
+            }
+
+            if (bar == null || bar.Root == null)
+            {
+                bar = NewSideBar(hero);
+            }
+
+            bar.Root.sizeDelta = new Vector2(RunnerSideBar.WidthPx, RunnerSideBar.MinHeightPx);
+            bar.Fill.rectTransform.anchorMax = Vector2.one;
+            bar.Group.alpha = 0f;
+            bar.Number.gameObject.SetActive(boss);
+            bar.Boss = boss;
+            bar.Height = rig.Height;
+            bar.Rig = rig;
+            bar.HalfWidth = RunnerSideBar.HalfWidth(rig.Height);
+            bar.Scale = scale;
+            bar.MeasureAge = 0f;
+            bar.LastHp = -1;
+            bar.SinceDamage = -1f;
+            bar.ShownHp = int.MinValue;
+            bar.Root.gameObject.SetActive(false);
+            _bars[id] = bar;
+        }
+
+        /// <summary>A pooled side bar (inactive until <see cref="AddSideBar"/> takes it).</summary>
+        private WorldBar NewSideBar(bool hero)
+        {
             // The configured battle's frame and fill colours (navy hero frame / purple villain frame, green / red fill).
             var rgb = hero ? CampaignArtKeys.HeroFrameRgb : CampaignArtKeys.VillainFrameRgb;
             // Slimmed to a 6 px sliver with a 1 px frame, and faded in only while the unit is taking damage. Only the
             // boss carries a (small) HP number; fodder and the hero show the sliver alone.
-            var root = SurvivalVisuals.Image(_worldUi, hero ? "HeroHp" : "FoeHp", new Color(rgb[0], rgb[1], rgb[2], 1f)).rectTransform;
+            var frame = SurvivalVisuals.Image(_worldUi!, hero ? "HeroHp" : "FoeHp", new Color(rgb[0], rgb[1], rgb[2], 1f));
+            var root = frame.rectTransform;
             root.anchorMin = root.anchorMax = Vector2.zero;
             root.pivot = new Vector2(0.5f, 0f);
             root.sizeDelta = new Vector2(RunnerSideBar.WidthPx, RunnerSideBar.MinHeightPx);
@@ -347,18 +448,15 @@ namespace Survival.Unity
             nrt.pivot = new Vector2(0.5f, 0f);
             nrt.sizeDelta = new Vector2(110f, 24f);
             nrt.anchoredPosition = new Vector2(0f, 3f);
-            number.gameObject.SetActive(boss);
-            _bars[id] = new WorldBar
-            {
-                Root = root, Fill = fill, Number = number, Boss = boss, Height = rig.Height, Side = true, Hero = hero, Rig = rig,
-                HalfWidth = RunnerSideBar.HalfWidth(rig.Height), Group = group,
-            };
+            number.gameObject.SetActive(false);
+            root.gameObject.SetActive(false);
+            return new WorldBar { Root = root, Fill = fill, Number = number, Side = true, Hero = hero, Group = group, Frame = frame };
         }
 
         /// <summary>Stand a side bar beside its fighter: foot from the battle's layout, height from the projected body.</summary>
         private bool PlaceSideBar(WorldBar bar, Vector3 origin, float fraction)
         {
-            var scale = bar.Rig != null ? LockedBattleRoster.BattleScaleOf(bar.Rig.Data) * (bar.Boss ? BossScale : 1f) : 1f;
+            var scale = bar.Rig != null ? LockedBattleRoster.BattleScaleOf(bar.Rig.Data) * bar.Scale : 1f;
             var (dx, dz) = RunnerSideBar.WorldOffset(bar.Hero, bar.HalfWidth, scale);
             var (bottom, top) = RunnerSideBar.Span(bar.Height);
             var foot = new Vector3(origin.x + dx, 0f, origin.z + dz);
@@ -369,8 +467,7 @@ namespace Survival.Unity
                 return false;
             }
 
-            var canvas = _hud!.GetComponent<Canvas>();
-            var k = canvas != null && canvas.scaleFactor > 0f ? canvas.scaleFactor : 1f;
+            var k = _hudCanvas != null && _hudCanvas.scaleFactor > 0f ? _hudCanvas.scaleFactor : 1f;
             var height = RunnerSideBar.HeightPx(Mathf.Abs(high.y - low.y) / k);
             bar.Root.anchorMin = bar.Root.anchorMax = Vector2.zero;
             bar.Root.anchoredPosition = new Vector2((low.x + high.x) * 0.5f / k, (((low.y + high.y) * 0.5f) / k) - (height * 0.5f));
@@ -378,6 +475,8 @@ namespace Survival.Unity
             bar.Fill.rectTransform.anchorMax = new Vector2(1f, Mathf.Max(0.001f, fraction));
             return low.x > -200f && low.x < Screen.width + 200f && low.y > -200f && low.y < Screen.height + 200f;
         }
+
+        private static readonly List<Renderer> MeasureScratch = new List<Renderer>();
 
         /// <summary>Widest sideways reach of the rendered body, measured over its first second (the battle does the same).</summary>
         private static void MeasureBar(WorldBar bar)
@@ -390,7 +489,8 @@ namespace Survival.Unity
             bar.MeasureAge += Time.deltaTime;
             var origin = bar.Rig.Slot.position;
             var widest = 0f;
-            foreach (var r in bar.Rig.Host.GetComponentsInChildren<Renderer>(false))
+            bar.Rig.Host.GetComponentsInChildren(false, MeasureScratch);
+            foreach (var r in MeasureScratch)
             {
                 if (!r.enabled || (!(r is SkinnedMeshRenderer) && !(r is MeshRenderer)))
                 {
@@ -425,6 +525,14 @@ namespace Survival.Unity
                     label = Fmt("runner.box.rate", "+{0}% SPD", Mathf.RoundToInt(def.Amount * 100f));
                     icon = "theme_a.runner.crate_speed";
                     break;
+                case RunnerBoxKind.Range:
+                    label = Fmt("runner.box.range", "+{0}% RNG", Mathf.RoundToInt(def.Amount * 100f));
+                    icon = "theme_a.runner.crate_weapon";
+                    break;
+                case RunnerBoxKind.Heal:
+                    label = Fmt("runner.box.heal", "+{0}% HP", Mathf.RoundToInt(def.Amount * 100f));
+                    icon = "theme_a.runner.crate_speed";
+                    break;
                 default:
                 {
                     // The unit itself stands caged on the box in 3D (see BuildBox); the tag only says how many.
@@ -442,7 +550,7 @@ namespace Survival.Unity
                 textLeft = 0.36f;
             }
 
-            var text = HookSkin.Outlined(SurvivalVisuals.Text(tag, "Text", label, 24, TextAnchor.MiddleCenter, def.Kind == RunnerBoxKind.Rate ? new Color(0.6f, 0.92f, 1f, 1f) : SurvivalVisuals.Reward));
+            var text = HookSkin.Outlined(SurvivalVisuals.Text(tag, "Text", label, 24, TextAnchor.MiddleCenter, RewardColor(def.Kind, SurvivalVisuals.Reward)));
             Anchor(text.rectTransform, textLeft, 0f, 0.96f, 1f);
             return tag;
         }
@@ -452,11 +560,27 @@ namespace Survival.Unity
             if (_bars.TryGetValue(id, out var bar))
             {
                 _bars.Remove(id);
-                if (bar.Root != null)
-                {
-                    Destroy(bar.Root.gameObject);
-                }
+                ReleaseBar(bar);
             }
+        }
+
+        /// <summary>A fighter's side bar back to its pool; a box bar (with its reward tag) is destroyed.</summary>
+        private void ReleaseBar(WorldBar bar)
+        {
+            if (bar.Root == null)
+            {
+                return;
+            }
+
+            if (bar.Side)
+            {
+                bar.Rig = null;
+                bar.Root.gameObject.SetActive(false);
+                (bar.Hero ? _freeHeroBars : _freeFoeBars).Push(bar);
+                return;
+            }
+
+            Destroy(bar.Root.gameObject);
         }
 
         private void PlaceWorldUi()
@@ -483,7 +607,8 @@ namespace Survival.Unity
                     at = new Vector3(b.X, bar.Height + 0.25f, b.Z);
                     fraction = b.HpFraction;
                     hp = b.Hp;
-                    FadeBar(bar, hp, b.MaxHp);
+                    // Boxes always show their bar (and HP number) until they break, so you can judge which to shoot.
+                    bar.Group.alpha = RunnerSideBar.BoxAlpha(hp);
                 }
                 else if (bar.Side)
                 {
@@ -518,7 +643,12 @@ namespace Survival.Unity
                     MeasureBar(bar);
                     var shown = bar.Group.alpha > 0.001f && (bar.Rig == null || !bar.Rig.Dead) && PlaceSideBar(bar, origin, fraction);
                     bar.Root.gameObject.SetActive(shown);
-                    bar.Number.text = hp.ToString(CultureInfo.InvariantCulture);
+                    if (bar.Boss && hp != bar.ShownHp)
+                    {
+                        bar.ShownHp = hp;
+                        bar.Number.text = Num(hp);
+                    }
+
                     continue;
                 }
                 else
@@ -542,7 +672,11 @@ namespace Survival.Unity
                 }
 
                 bar.Fill.rectTransform.anchorMax = new Vector2(Mathf.Max(0.001f, fraction), 1f);
-                bar.Number.text = hp.ToString(CultureInfo.InvariantCulture);
+                if (hp != bar.ShownHp)
+                {
+                    bar.ShownHp = hp;
+                    bar.Number.text = Num(hp);
+                }
             }
 
             if (_badge != null && _members.TryGetValue(_run.Hero.Id, out var hero))
@@ -581,8 +715,7 @@ namespace Survival.Unity
                 return false;
             }
 
-            var canvas = _hud!.GetComponent<Canvas>();
-            var scale = canvas != null && canvas.scaleFactor > 0f ? canvas.scaleFactor : 1f;
+            var scale = _hudCanvas != null && _hudCanvas.scaleFactor > 0f ? _hudCanvas.scaleFactor : 1f;
             rt.anchorMin = rt.anchorMax = Vector2.zero;
             rt.anchoredPosition = new Vector2(sp.x / scale, sp.y / scale);
             return sp.x > -200f && sp.x < Screen.width + 200f && sp.y > -100f && sp.y < Screen.height + 100f;
@@ -591,20 +724,60 @@ namespace Survival.Unity
         private void HitNumber(Vector3 world, int amount, bool big, bool onBox, bool onHero = false)
         {
             var color = onHero ? new Color(1f, 0.35f, 0.3f, 1f) : big ? new Color(1f, 0.85f, 0.25f, 1f) : onBox ? new Color(1f, 0.93f, 0.7f, 1f) : Color.white;
-            Floater(world, (onHero ? "-" : "") + amount.ToString(CultureInfo.InvariantCulture), color, big ? 50 : 36);
+            Floater(world, Num(amount, onHero), color, big ? 50 : 36);
         }
 
         private void Floater(Vector3 world, string text, Color color, int size)
         {
-            if (_worldUi == null || _floaters.Count > 60)
+            if (_worldUi == null || _floaters.Count > FloaterCap)
             {
                 return;
             }
 
-            var t = HookSkin.Outlined(SurvivalVisuals.Text(_worldUi, "Hit", text, size, TextAnchor.MiddleCenter, color));
-            t.rectTransform.sizeDelta = new Vector2(220f, 70f);
+            RunnerHitchLog.Note(RunnerHitchLog.Counter.Floater);
+            Floating? f = null;
+            while (_freeFloaters.Count > 0 && (f == null || f.Rt == null))
+            {
+                f = _freeFloaters.Pop();
+            }
+
+            if (f == null || f.Rt == null)
+            {
+                f = NewFloater();
+            }
+
+            f.Text.text = text;
+            f.Text.fontSize = size;
+            f.Text.color = color;
+            f.Rt.localScale = Vector3.one;
             var jitter = new Vector3(Random.Range(-0.35f, 0.35f), 0f, 0f);
-            _floaters.Add(new Floating { Rt = t.rectTransform, Text = t, World = world + jitter, Life = 0.85f, Color = color, Pop = 1f });
+            f.World = world + jitter;
+            f.Age = 0f;
+            f.Life = 0.85f;
+            f.Color = color;
+            f.Pop = 1f;
+            f.Rt.gameObject.SetActive(true);
+            _floaters.Add(f);
+        }
+
+        /// <summary>A pooled hit number (inactive until <see cref="Floater"/> takes it).</summary>
+        private Floating NewFloater()
+        {
+            var t = HookSkin.Outlined(SurvivalVisuals.Text(_worldUi!, "Hit", "", 36, TextAnchor.MiddleCenter, Color.white));
+            t.rectTransform.sizeDelta = new Vector2(220f, 70f);
+            t.gameObject.SetActive(false);
+            return new Floating { Rt = t.rectTransform, Text = t };
+        }
+
+        private void ReleaseFloater(Floating f)
+        {
+            if (f.Rt == null)
+            {
+                return;
+            }
+
+            f.Rt.gameObject.SetActive(false);
+            _freeFloaters.Push(f);
         }
 
         private void TickFloaters(float dt)
@@ -615,11 +788,7 @@ namespace Survival.Unity
                 f.Age += dt;
                 if (f.Rt == null || f.Age >= f.Life)
                 {
-                    if (f.Rt != null)
-                    {
-                        Destroy(f.Rt.gameObject);
-                    }
-
+                    ReleaseFloater(f);
                     _floaters.RemoveAt(i);
                     continue;
                 }
@@ -636,19 +805,13 @@ namespace Survival.Unity
         {
             foreach (var f in _floaters)
             {
-                if (f.Rt != null)
-                {
-                    Destroy(f.Rt.gameObject);
-                }
+                ReleaseFloater(f);
             }
 
             _floaters.Clear();
             foreach (var b in _bars.Values)
             {
-                if (b.Root != null)
-                {
-                    Destroy(b.Root.gameObject);
-                }
+                ReleaseBar(b);
             }
 
             _bars.Clear();
@@ -697,7 +860,7 @@ namespace Survival.Unity
             {
                 (S("runner.result.kills", "Enemies defeated"), result.Kills.ToString(CultureInfo.InvariantCulture)),
                 (S("runner.result.boxes", "Boxes broken"), result.BoxesBroken + " / " + (result.BoxesBroken + result.BoxesMissed + (_run?.Boxes.Count ?? 0))),
-                (S("runner.result.squad", "Biggest squad"), "×" + (result.FollowersPeak + 1)),
+                (S("runner.result.squad", "Biggest squad"), (result.FollowersPeak + 1).ToString(CultureInfo.InvariantCulture) + " / " + RunnerRules.SquadCap.ToString(CultureInfo.InvariantCulture)),
                 (S("runner.result.distance", "Distance"), Mathf.FloorToInt(result.Distance) + " m")
             };
             // Cream labels and gold values with a dark outline: readable on the navy panel, like the painted UI.
@@ -867,26 +1030,9 @@ namespace Survival.Unity
             return btn;
         }
 
-        /// <summary>Best-fit a label into its rect (shrinks between min and max instead of spilling over the edges).</summary>
-        private static Text Fit(Text text, int min, int max)
-        {
-            text.horizontalOverflow = HorizontalWrapMode.Wrap;
-            text.verticalOverflow = VerticalWrapMode.Truncate;
-            text.resizeTextForBestFit = true;
-            text.resizeTextMinSize = min;
-            text.resizeTextMaxSize = max;
-            return text;
-        }
+        private static Text Fit(Text text, int min, int max) => HookSkin.Fit(text, min, max);
 
-        /// <summary>Stretch a label over its button, inset so it clears the painted rim.</summary>
-        private static void Pad(RectTransform rect)
-        {
-            SurvivalVisuals.Stretch(rect);
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
-            rect.anchorMin = new Vector2(0.08f, 0.14f);
-            rect.anchorMax = new Vector2(0.92f, 0.86f);
-        }
+        private static void Pad(RectTransform rect) => HookSkin.PadLabel(rect);
     }
 
     /// <summary>Slow spin for the victory rays.</summary>

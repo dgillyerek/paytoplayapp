@@ -37,6 +37,13 @@ namespace Survival.Domain.Campaign
         public const double FadeInSeconds = 0.18;
         public const double FadeOutSeconds = 0.35;
 
+        /// <summary>
+        /// Last-resort net, counted from the moment the screen went up: if the destination has still not drawn by
+        /// then (a trip that threw part-way, a scene that never shows a camera), the screen clears anyway rather
+        /// than freezing the game under it.
+        /// </summary>
+        public const double ShowLimitSeconds = 20.0;
+
         /// <summary>The bar tops out here until the destination camera has actually drawn.</summary>
         public const float LoadedBarShare = 0.9f;
 
@@ -61,6 +68,9 @@ namespace Survival.Domain.Campaign
 
         public bool TargetRendered => _rendered;
 
+        /// <summary>True when the screen cleared on <see cref="ShowLimitSeconds"/> or <see cref="Release"/>, not on a frame.</summary>
+        public bool GaveUp { get; private set; }
+
         public bool Done => Phase == BattleTransitionPhase.Hidden;
 
         /// <summary>Show the screen. <paramref name="instant"/> skips the fade-in (nothing worth showing underneath).</summary>
@@ -71,6 +81,7 @@ namespace Survival.Domain.Campaign
             _lastStep = now;
             _target = 0f;
             _rendered = false;
+            GaveUp = false;
             Bar = 0f;
             Phase = instant ? BattleTransitionPhase.Holding : BattleTransitionPhase.FadingIn;
             Alpha = instant ? 1f : 0f;
@@ -93,6 +104,17 @@ namespace Survival.Domain.Campaign
             _target = 1f;
         }
 
+        /// <summary>Stop waiting for the destination (the trip failed): the screen fades out after the minimum show time.</summary>
+        public void Release()
+        {
+            if (!_rendered)
+            {
+                GaveUp = true;
+            }
+
+            MarkTargetRendered();
+        }
+
         /// <summary>Advance to <paramref name="now"/> (seconds, unscaled).</summary>
         public void Step(double now)
         {
@@ -101,6 +123,11 @@ namespace Survival.Domain.Campaign
             if (Phase == BattleTransitionPhase.Hidden)
             {
                 return;
+            }
+
+            if (!_rendered && now - _shownAt >= ShowLimitSeconds)
+            {
+                Release();
             }
 
             var ease = (float)(1.0 - Math.Exp(-BarEasePerSecond * dt));

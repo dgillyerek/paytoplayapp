@@ -11,9 +11,11 @@ namespace Survival.Unity
 {
     /// <summary>
     /// Play's way into the runner: a painted "Runner" event button (hud slot runner_button) that loads RunnerLevel
-    /// additively. Play stays loaded; it is only hidden once the runner scene (with its own camera) is in, and shown
-    /// again before the runner unloads, so a camera is rendering every frame. Every finished run, retries included,
-    /// is paid once on the way back through the village celebration (wallet + hero shards, saved with the heroes).
+    /// additively. Both ways go through the shared painted loading screen (#76's BattleLoadingScreen). Its floor
+    /// camera renders the whole hand-off, so Display 1 never shows "No cameras rendering". Play is hidden only once
+    /// the screen covers it, and the screen only fades once the destination scene's camera has drawn a frame. Every
+    /// finished run, retries included, is paid once on the way back through the village celebration (wallet + hero
+    /// shards, saved with the heroes).
     /// </summary>
     public sealed class SurvivalRunnerEntry : MonoBehaviour
     {
@@ -25,6 +27,7 @@ namespace Survival.Unity
         private SurvivalCampaignView? _campaign;
         private ThemePackBinder? _pack;
         private bool _busy;
+        private int _trips;
 
         public RectTransform? Button { get; private set; }
 
@@ -69,26 +72,52 @@ namespace Survival.Unity
             }
 
             var unlocked = _campaign != null && _campaign.Campaign != null ? _campaign.Campaign.RunnerUnlocked : 1;
-            StartCoroutine(RunRunner(LevelFor(unlocked), unlocked));
+            var (catalog, level) = LevelFor(unlocked);
+            StartCoroutine(RunRunner(catalog, level, level?.Id ?? "runner.thornwood_road", unlocked));
         }
 
-        /// <summary>Id of runner level <paramref name="unlocked"/> (clamped to the levels there are); Thornwood Road when the catalog is unreadable.</summary>
-        private static string LevelFor(int unlocked)
+        /// <summary>Runner level <paramref name="unlocked"/> (clamped to the levels there are); none when the catalog is unreadable (Thornwood Road opens).</summary>
+        private static (RunnerCatalog? Catalog, RunnerLevelDef? Level) LevelFor(int unlocked)
         {
             try
             {
                 var path = System.IO.Path.Combine(SurvivalBootstrap.ResolveCatalogDir(), RunnerCatalog.FileName);
                 var catalog = RunnerCatalog.Parse(System.IO.File.ReadAllText(path));
-                return catalog.ByNumber(unlocked).Id;
+                return (catalog, catalog.ByNumber(unlocked));
             }
             catch (System.Exception ex)
             {
                 Debug.LogWarning("Runner: level list unreadable, opening Level 1. " + ex.Message);
-                return "runner.thornwood_road";
+                return (null, null);
             }
         }
 
-        private IEnumerator RunRunner(string levelId, int unlocked)
+        private string S(string key, string fallback) => _pack != null ? _pack.StringOr(key, fallback) : fallback;
+
+        private string LevelName(RunnerLevelDef? level) =>
+            level == null ? S("runner.level.thornwood_road", "Thornwood Road") : S(level.Title, level.DisplayName.Length > 0 ? level.DisplayName : "Runner");
+
+        private string Tip(string levelId)
+        {
+            var tips = new List<string>();
+            for (var i = 1; i <= RunnerLoading.TipCount; i++)
+            {
+                var t = S(RunnerLoading.TipPrefix + i, "");
+                if (t.Length > 0)
+                {
+                    tips.Add(t);
+                }
+            }
+
+            if (tips.Count == 0)
+            {
+                tips.Add("Steer through boxes to grow your squad.");
+            }
+
+            return Survival.Domain.Campaign.BattleTransition.Tip(tips, Survival.Domain.Campaign.BattleTransition.StableSeed(levelId) + _trips);
+        }
+
+        private IEnumerator RunRunner(RunnerCatalog? catalog, RunnerLevelDef? level, string levelId, int unlocked)
         {
             if (!Application.CanStreamedLevelBeLoaded(RunnerLevelView.SceneName))
             {
@@ -102,56 +131,147 @@ namespace Survival.Unity
             }
 
             _busy = true;
+            _trips++;
             _campaign?.SaveNow();
             var playScene = gameObject.scene;
-            var render = Capture();
-            RunnerHandoff.Begin(levelId, unlocked);
-            var load = SceneManager.LoadSceneAsync(RunnerLevelView.SceneName, LoadSceneMode.Additive);
-            while (load != null && !load.isDone)
-            {
-                yield return null;
-            }
+            var levelName = LevelName(level);
+            var tip = Tip(levelId);
+            var vs = S("battle.loading.vs", "VS");
+            var info = catalog != null && level != null
+                ? RunnerLoading.Into(catalog, level, levelName, S(RunnerLoading.IntoKey, "Onto the road!"), tip)
+                : RunnerLoading.Back(S(RunnerLoading.IntoKey, "Onto the road!"), levelName, tip);
 
-            var runner = SceneManager.GetSceneByName(RunnerLevelView.SceneName);
+            // The painted loading screen's floor camera keeps Display 1 rendering while Play's cameras are off and
+            // the runner's camera doesn't exist yet. Play is only hidden once the screen covers it. Everything after
+            // the screen goes up runs under try / finally: if any step throws, the village comes back and the
+            // screen is released instead of freezing the game under it (it also clears itself after
+            // BattleTransition.ShowLimitSeconds whatever happens).
+            var into = BattleLoadingScreen.Show(info, vs);
+            BattleLoadingScreen? back = null;
             var hidden = new List<Behaviour>();
-            if (runner.IsValid() && runner.isLoaded)
+            System.Action? render = null;
+            var runner = default(Scene);
+            var finished = false;
+            try
             {
-                // The runner's camera exists now; hide Play in the same frame.
+                yield return into.WaitCovered();
+                render = Capture();
                 hidden = Hide(playScene);
-                SceneManager.SetActiveScene(runner);
-            }
-
-            while (!RunnerHandoff.Done && runner.IsValid() && runner.isLoaded)
-            {
-                yield return null;
-            }
-
-            // Play back on first, then the runner goes.
-            foreach (var b in hidden)
-            {
-                if (b != null)
+                RunnerHandoff.Begin(levelId, unlocked);
+                var load = SceneManager.LoadSceneAsync(RunnerLevelView.SceneName, LoadSceneMode.Additive);
+                if (load != null)
                 {
-                    b.enabled = true;
+                    // Scene activation must not be held back (nothing else may leave it off).
+                    load.allowSceneActivation = true;
                 }
-            }
 
-            if (playScene.IsValid())
-            {
-                SceneManager.SetActiveScene(playScene);
-            }
+                while (load != null && !load.isDone)
+                {
+                    into.Progress(load.progress);
+                    yield return null;
+                }
 
-            if (runner.IsValid() && runner.isLoaded)
-            {
-                var unload = SceneManager.UnloadSceneAsync(runner);
-                while (unload != null && !unload.isDone)
+                into.Progress(1f);
+                runner = SceneManager.GetSceneByName(RunnerLevelView.SceneName);
+                if (!runner.IsValid() || !runner.isLoaded)
+                {
+                    Debug.LogError("Runner: scene '" + RunnerLevelView.SceneName + "' did not load; back to the village.");
+                    Restore(playScene, hidden, render);
+                    into.RevealOnFirstFrameOf(playScene);
+                    RunnerHandoff.Take();
+                    finished = true;
+                    yield break;
+                }
+
+                SceneManager.SetActiveScene(runner);
+                into.RevealOnFirstFrameOf(runner);
+
+                while (!RunnerHandoff.Done && runner.IsValid() && runner.isLoaded)
                 {
                     yield return null;
                 }
+
+                // The way back: cover the runner, unload it, then Play's cameras come back and the screen fades on
+                // their first frame.
+                var results = new List<RunnerResult>();
+                foreach (var r in RunnerHandoff.Runs)
+                {
+                    results.Add(r.Result);
+                }
+
+                var headlineKey = RunnerLoading.BackHeadlineKey(results);
+                var headline = headlineKey == RunnerLoading.VictoryKey ? S(headlineKey, "Victory!") : headlineKey == RunnerLoading.DefeatKey ? S(headlineKey, "Defeat") : S(headlineKey, "Back to the village");
+                back = BattleLoadingScreen.Show(RunnerLoading.Back(headline, levelName, Tip(levelId + ".back")), vs);
+                yield return back.WaitCovered();
+                if (playScene.IsValid())
+                {
+                    SceneManager.SetActiveScene(playScene);
+                }
+
+                if (runner.IsValid() && runner.isLoaded)
+                {
+                    var unload = SceneManager.UnloadSceneAsync(runner);
+                    while (unload != null && !unload.isDone)
+                    {
+                        back.Progress(unload.progress);
+                        yield return null;
+                    }
+                }
+
+                back.Progress(1f);
+                Restore(playScene, hidden, render);
+                back.RevealOnFirstFrameOf(playScene);
+                finished = true;
+            }
+            finally
+            {
+                if (!finished)
+                {
+                    // A step threw: put the village back under the screen and let the screen go.
+                    Debug.LogError("Runner: the trip to the runner failed part-way; bringing the village back.");
+                    if (runner.IsValid() && runner.isLoaded)
+                    {
+                        SceneManager.UnloadSceneAsync(runner);
+                    }
+
+                    Restore(playScene, hidden, render);
+                    if (into != null)
+                    {
+                        into.Release("runner trip failed");
+                    }
+
+                    if (back != null)
+                    {
+                        back.Release("runner trip failed");
+                    }
+
+                    // Runs already banked still pay.
+                    try
+                    {
+                        Pay(RunnerHandoff.Take());
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogException(ex);
+                    }
+                }
+
+                _busy = false;
             }
 
-            render();
-            _busy = false;
             Pay(RunnerHandoff.Take());
+        }
+
+        /// <summary>Play's cameras, canvases and listeners back on, its render settings back, and it is the active scene again.</summary>
+        private static void Restore(Scene playScene, List<Behaviour> hidden, System.Action? render)
+        {
+            render?.Invoke();
+            Show(hidden);
+            hidden.Clear();
+            if (playScene.IsValid() && playScene.isLoaded)
+            {
+                SceneManager.SetActiveScene(playScene);
+            }
         }
 
         private void Pay(List<(RunnerResult Result, Survival.Domain.Campaign.RewardBundle Bundle)> runs)
@@ -192,6 +312,17 @@ namespace Survival.Unity
             else
             {
                 Grant();
+            }
+        }
+
+        private static void Show(List<Behaviour> hidden)
+        {
+            foreach (var b in hidden)
+            {
+                if (b != null)
+                {
+                    b.enabled = true;
+                }
             }
         }
 

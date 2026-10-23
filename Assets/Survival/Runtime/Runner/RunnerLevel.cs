@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using Survival.Domain.Roster;
 using Survival.Domain.Serialization;
 
 namespace Survival.Domain.Runner
@@ -19,14 +20,50 @@ namespace Survival.Domain.Runner
         Weapon,
 
         /// <summary>Attack speed upgrade: the whole squad attacks faster (+Amount, 0.25 = +25%).</summary>
-        Rate
+        Rate,
+
+        /// <summary>Range upgrade: the squad's shots fly further (+Amount, 0.15 = +15%).</summary>
+        Range,
+
+        /// <summary>Healing: the hero gets back Amount of its max HP (0.35 = 35%).</summary>
+        Heal
     }
 
     public enum RunnerRowKind
     {
         Enemy,
         Box,
-        Boss
+        Boss,
+
+        /// <summary>A trap in the lane (spikes, a rolling log, a fire patch): steer round it; it cannot be shot.</summary>
+        Hazard
+    }
+
+    /// <summary>Lane traps. Each one shows a warning before it can hurt (see <see cref="RunnerHazardDef"/>).</summary>
+    public enum RunnerHazardKind
+    {
+        /// <summary>A spike strip: it cycles down, then a rattle warning, then the spikes stand up (only then does it hurt).</summary>
+        Spikes,
+
+        /// <summary>A log at the top of the lane: it wobbles as a warning, then rolls back down its lane at the squad.</summary>
+        Log,
+
+        /// <summary>A fire patch: ringed in scorch marks, burns whatever walks through it, always on.</summary>
+        Fire
+    }
+
+    /// <summary>
+    /// A lane trap: <see cref="Width"/> metres across the lane (centred on the row's x), <see cref="Damage"/> to the hero
+    /// on contact (a follower it touches is knocked out). Spikes and logs use <see cref="Phase"/> to stagger their cycle.
+    /// </summary>
+    public sealed record RunnerHazardDef(RunnerHazardKind Kind, float Width, int Damage, float Phase = 0f)
+    {
+        public static string Name(RunnerHazardKind kind) => kind switch
+        {
+            RunnerHazardKind.Spikes => "spikes",
+            RunnerHazardKind.Log => "log",
+            _ => "fire"
+        };
     }
 
     /// <summary>
@@ -44,7 +81,14 @@ namespace Survival.Domain.Runner
         bool Ranged,
         float ShotSpeed,
         float Speed,
-        float Radius);
+        float Radius)
+    {
+        /// <summary>
+        /// Runner body scale on top of the battle size (1 = battle size). The JSON radius is the scale-1 body; <see cref="Radius"/>
+        /// is already multiplied by this, so the hit body, lane clamp and bars grow with the model.
+        /// </summary>
+        public float Scale { get; init; } = 1f;
+    }
 
     public sealed record RunnerBoxDef(int Hp, RunnerBoxKind Kind, string Unit, int Count, float Amount)
     {
@@ -55,6 +99,8 @@ namespace Survival.Domain.Runner
         {
             RunnerBoxKind.Weapon => RunnerArtKeys.CrateWeapon,
             RunnerBoxKind.Rate => RunnerArtKeys.CrateSpeed,
+            RunnerBoxKind.Range => RunnerArtKeys.CrateRange,
+            RunnerBoxKind.Heal => RunnerArtKeys.CrateHeal,
             _ => RunnerArtKeys.ChestHero
         };
     }
@@ -65,6 +111,9 @@ namespace Survival.Domain.Runner
     /// </summary>
     public sealed record RunnerRowDef(float At, RunnerRowKind Kind, float X, string Unit, int Count, float Spread, RunnerBoxDef? Box)
     {
+        /// <summary>The trap, on a <see cref="RunnerRowKind.Hazard"/> row.</summary>
+        public RunnerHazardDef? Hazard { get; init; }
+
         public float XOf(int index) => X + ((index - ((Count - 1) * 0.5f)) * Spread);
     }
 
@@ -166,6 +215,20 @@ namespace Survival.Domain.Runner
             }
         }
 
+        public int HazardCount
+        {
+            get
+            {
+                var n = 0;
+                foreach (var r in Rows)
+                {
+                    n += r.Kind == RunnerRowKind.Hazard ? 1 : 0;
+                }
+
+                return n;
+            }
+        }
+
         public int BoxCount
         {
             get
@@ -187,6 +250,10 @@ namespace Survival.Domain.Runner
         public const string ChestOpen = "theme_a.hook.icon.chest_open";
         public const string CrateWeapon = "theme_a.runner.crate_weapon";
         public const string CrateSpeed = "theme_a.runner.crate_speed";
+
+        /// <summary>Range and heal crates reuse the painted crates, tinted in the scene (the pack has no third crate yet).</summary>
+        public const string CrateRange = CrateWeapon;
+        public const string CrateHeal = CrateSpeed;
         public const string EventIcon = "theme_a.runner.icon";
         public const string PortraitPrefix = "theme_a.hero.portrait.";
 
@@ -197,6 +264,84 @@ namespace Survival.Domain.Runner
         public static IReadOnlyList<string> Required { get; } = new[] { CrateWeapon, CrateSpeed, EventIcon };
     }
 
+    /// <summary>
+    /// Who may be on the runner's squad. The runner fires straight down the road, so only heroes with a ranged attack
+    /// belong: a fighter whose every attack is a melee swing (Sir Aldric) is not a start hero, a follower box, a hero
+    /// chest or a captive. Read from the locked battle data (an attack with no melee contact frame, or a flight streak,
+    /// is a shot), so a roster change there flows through.
+    /// </summary>
+    public static class RunnerRoster
+    {
+        /// <summary>The order a stand-in hero is picked in when a requested one is not allowed.</summary>
+        public static readonly string[] Fallbacks = { "lyra", "rowan", "oakenshield" };
+
+        /// <summary>True when at least one of the roster fighter's attacks is a projectile (an unknown name is judged by its unit flag alone).</summary>
+        public static bool IsRangedFighter(string roster)
+        {
+            var found = false;
+            var fighter = LockedBattleRoster.All.Count > 0 ? LockedBattleRoster.All[0] : default;
+            foreach (var f in LockedBattleRoster.All)
+            {
+                if (string.Equals(f.Name, roster, StringComparison.OrdinalIgnoreCase))
+                {
+                    fighter = f;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                return true;
+            }
+
+            var profile = LockedBattleHits.ProfileOf(fighter.Name);
+            for (var i = 0; i < LockedBattleRotation.Count(fighter); i++)
+            {
+                if (LockedBattleRotation.ContactFrame(fighter, profile, i) < 0 || LockedBattleRotation.AttackAt(fighter, i).FlightFrames > 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>A unit that may stand on the squad: flagged ranged, and a fighter that really shoots.</summary>
+        public static bool IsPlayable(RunnerUnitDef unit) => unit.Ranged && IsRangedFighter(unit.Roster);
+
+        /// <summary>
+        /// The hero a run starts with: <paramref name="preferredId"/> (a saved choice, say) when the catalog has it and
+        /// it may be on the squad, else the first of <see cref="Fallbacks"/> (lyra, rowan, oakenshield) it has, else any
+        /// ranged hero. A stale selection naming a melee hero therefore never reaches the road.
+        /// </summary>
+        public static RunnerUnitDef? PlayableHero(RunnerCatalog catalog, string? preferredId)
+        {
+            if (!string.IsNullOrEmpty(preferredId) && catalog.Units.TryGetValue(preferredId!, out var wanted) && !string.IsNullOrEmpty(wanted.HeroId) && IsPlayable(wanted))
+            {
+                return wanted;
+            }
+
+            foreach (var id in Fallbacks)
+            {
+                if (catalog.Units.TryGetValue(id, out var u) && IsPlayable(u))
+                {
+                    return u;
+                }
+            }
+
+            foreach (var u in catalog.Units.Values)
+            {
+                if (!string.IsNullOrEmpty(u.HeroId) && IsPlayable(u))
+                {
+                    return u;
+                }
+            }
+
+            return null;
+        }
+    }
+
     /// <summary>runner_levels.json: the unit stats and the levels (spawn rows by distance). More levels are more JSON.</summary>
     public sealed class RunnerCatalog
     {
@@ -205,8 +350,15 @@ namespace Survival.Domain.Runner
         private readonly Dictionary<string, RunnerUnitDef> _units;
         private readonly List<RunnerLevelDef> _levels;
 
-        public RunnerCatalog(IEnumerable<RunnerUnitDef> units, IEnumerable<RunnerLevelDef> levels)
+        private readonly bool _allowMeleeHeroes;
+
+        /// <param name="allowMeleeHeroes">
+        /// Off by default: the runner never fields a hero whose attacks are all melee (the start hero, a follower or
+        /// hero box, a captive), see <see cref="RunnerRoster"/>. Tests of the melee squad rules switch it on.
+        /// </param>
+        public RunnerCatalog(IEnumerable<RunnerUnitDef> units, IEnumerable<RunnerLevelDef> levels, bool allowMeleeHeroes = false)
         {
+            _allowMeleeHeroes = allowMeleeHeroes;
             _units = new Dictionary<string, RunnerUnitDef>(StringComparer.Ordinal);
             foreach (var u in units)
             {
@@ -222,6 +374,9 @@ namespace Survival.Domain.Runner
 
         public IReadOnlyDictionary<string, RunnerUnitDef> Units => _units;
         public IReadOnlyList<RunnerLevelDef> Levels => _levels;
+
+        /// <summary>The level generator's settings, when the file has a "progression" block.</summary>
+        public RunnerProgressionDef? Progression { get; private set; }
 
         public RunnerUnitDef Unit(string id) =>
             _units.TryGetValue(id, out var u) ? u : throw new KeyNotFoundException("Runner unit '" + id + "' is not in " + FileName + ".");
@@ -247,9 +402,20 @@ namespace Survival.Domain.Runner
         /// <summary>The level after <paramref name="level"/>, or null after the last.</summary>
         public RunnerLevelDef? Next(RunnerLevelDef level) => level.Number < _levels.Count ? _levels[level.Number] : null;
 
+        private RunnerUnitDef SquadUnit(string id, string where)
+        {
+            var u = Unit(id);
+            if (!_allowMeleeHeroes && !RunnerRoster.IsPlayable(u))
+            {
+                throw new FormatException(where + ": '" + id + "' (" + u.Roster + ") is melee-only; the runner squad is ranged heroes only.");
+            }
+
+            return u;
+        }
+
         private void Validate(RunnerLevelDef level)
         {
-            Unit(level.Hero);
+            SquadUnit(level.Hero, level.Id + " hero");
             foreach (var row in level.Rows)
             {
                 if (row.At < 0f || row.At > level.Length)
@@ -257,7 +423,14 @@ namespace Survival.Domain.Runner
                     throw new FormatException(level.Id + ": row at " + row.At + " m is outside the 0.." + level.Length + " m lane.");
                 }
 
-                if (row.Kind == RunnerRowKind.Box)
+                if (row.Kind == RunnerRowKind.Hazard)
+                {
+                    if (row.Hazard == null || row.Hazard.Width <= 0f)
+                    {
+                        throw new FormatException(level.Id + ": hazard at " + row.At + " m needs a width > 0.");
+                    }
+                }
+                else if (row.Kind == RunnerRowKind.Box)
                 {
                     if (row.Box == null || row.Box.Hp <= 0)
                     {
@@ -266,7 +439,7 @@ namespace Survival.Domain.Runner
 
                     if (row.Box.GivesUnits)
                     {
-                        Unit(row.Box.Unit);
+                        SquadUnit(row.Box.Unit, level.Id + ": box at " + row.At + " m");
                     }
                 }
                 else
@@ -276,7 +449,9 @@ namespace Survival.Domain.Runner
             }
         }
 
-        public static RunnerCatalog Parse(string json)
+        public static RunnerCatalog Parse(string json) => Parse(json, false);
+
+        internal static RunnerCatalog Parse(string json, bool allowMeleeHeroes)
         {
             var root = LayoutJson.Root(json, FileName);
             var units = new List<RunnerUnitDef>();
@@ -290,6 +465,7 @@ namespace Survival.Domain.Runner
                     }
 
                     var ranged = LayoutJson.OptBool(u, "ranged", false);
+                    var scale = Math.Max(0.2f, LayoutJson.OptNum(u, "scale", 1f));
                     units.Add(new RunnerUnitDef(
                         pair.Key,
                         LayoutJson.Str(u, "roster"),
@@ -301,7 +477,7 @@ namespace Survival.Domain.Runner
                         ranged,
                         LayoutJson.OptNum(u, "shot_speed", 16f),
                         Math.Max(0f, LayoutJson.OptNum(u, "speed", 0f)),
-                        Math.Max(0.1f, LayoutJson.OptNum(u, "radius", 0.45f))));
+                        Math.Max(0.1f, LayoutJson.OptNum(u, "radius", 0.45f)) * scale) { Scale = scale });
                 }
             }
 
@@ -324,7 +500,7 @@ namespace Survival.Domain.Runner
                     Math.Max(10f, LayoutJson.Num(l, "length")),
                     Math.Max(0.2f, LayoutJson.OptNum(l, "speed", 1.6f)),
                     Math.Max(1.5f, LayoutJson.OptNum(l, "half_width", 4f)),
-                    Math.Max(0, LayoutJson.OptInt(l, "max_followers", 24)),
+                    Math.Min(RunnerRules.MaxFollowers, Math.Max(0, LayoutJson.OptInt(l, "max_followers", RunnerRules.MaxFollowers))),
                     rows,
                     new RunnerRewardDef(
                         LayoutJson.OptInt(rw, "win_gold", 0),
@@ -341,9 +517,11 @@ namespace Survival.Domain.Runner
             }
 
             // The authored levels come first (Level 1 = Thornwood Road); "progression" generates the rest from a seed.
+            RunnerProgressionDef? progression = null;
             if (root.TryGet("progression", out var pn) && pn is JsonNode.Obj po && levels.Count > 0)
             {
                 var prog = RunnerProgressionDef.Read(po);
+                progression = prog;
                 var have = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var u in units)
                 {
@@ -356,7 +534,7 @@ namespace Survival.Domain.Runner
                 }
             }
 
-            return new RunnerCatalog(units, levels);
+            return new RunnerCatalog(units, levels, allowMeleeHeroes) { Progression = progression };
         }
 
         private static RunnerRowDef ReadRow(JsonNode.Obj r)
@@ -379,7 +557,9 @@ namespace Survival.Domain.Runner
                         "hero" => RunnerBoxKind.Hero,
                         "weapon" => RunnerBoxKind.Weapon,
                         "rate" => RunnerBoxKind.Rate,
-                        _ => throw new FormatException("Runner box reward '" + give + "' is not followers / hero / weapon / rate.")
+                        "range" => RunnerBoxKind.Range,
+                        "heal" => RunnerBoxKind.Heal,
+                        _ => throw new FormatException("Runner box reward '" + give + "' is not followers / hero / weapon / rate / range / heal.")
                     };
                     var box = new RunnerBoxDef(
                         LayoutJson.OptInt(r, "hp", 0),
@@ -390,8 +570,22 @@ namespace Survival.Domain.Runner
                     return new RunnerRowDef(at, RunnerRowKind.Box, x, box.Unit, 1, 0f, box);
                 }
 
+                case "hazard":
+                {
+                    var type = LayoutJson.OptStr(r, "hazard", "spikes");
+                    var hk = type switch
+                    {
+                        "spikes" => RunnerHazardKind.Spikes,
+                        "log" => RunnerHazardKind.Log,
+                        "fire" => RunnerHazardKind.Fire,
+                        _ => throw new FormatException("Runner hazard '" + type + "' is not spikes / log / fire.")
+                    };
+                    var hz = new RunnerHazardDef(hk, Math.Max(0.4f, LayoutJson.OptNum(r, "width", 1.8f)), Math.Max(0, LayoutJson.OptInt(r, "damage", 40)), LayoutJson.OptNum(r, "phase", 0f));
+                    return new RunnerRowDef(at, RunnerRowKind.Hazard, x, "", 1, 0f, null) { Hazard = hz };
+                }
+
                 default:
-                    throw new FormatException("Runner row kind '" + kindText + "' at " + at.ToString(CultureInfo.InvariantCulture) + " m is not enemy / box / boss.");
+                    throw new FormatException("Runner row kind '" + kindText + "' at " + at.ToString(CultureInfo.InvariantCulture) + " m is not enemy / box / boss / hazard.");
             }
         }
     }

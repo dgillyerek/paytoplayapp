@@ -36,15 +36,18 @@ namespace Survival.Unity
         private const float CameraHeight = 7.6f;
         private const float CameraBack = 10.0f;
         private const float CameraSide = -1.2f;
-        private const float CameraLookAhead = 5.0f;
+        // Looks further down the road since the squad's reach grew to ~20 m (Update 4): the foes it shoots stay in shot.
+        private const float CameraLookAhead = 6.5f;
         private const float CameraLookHeight = 0.9f;
 
         /// <summary>The unit a follower / hero box pays stands on its lid at this share of battle size.</summary>
         private const float CaptiveScale = 0.72f;
         private const float KeySteerSpeed = 7.5f;
+
+        /// <summary>How far ahead of the hero a held key can push the steer point (m).</summary>
+        private const float KeyLeadMetres = 1.2f;
         private const float DragMetresPerScreen = 9.5f;
         private const float ShotHeight = 1.15f;
-        private const float BossScale = 1.5f;
 
         [SerializeField] private string levelId = "";
 
@@ -65,6 +68,7 @@ namespace Survival.Unity
         private readonly HashSet<int> _killed = new HashSet<int>();
         private float _shake;
         private float _dragAccum;
+        private bool _keyHeld;
         private bool _steered;
         private bool _booted;
         private bool _resultShown;
@@ -80,6 +84,13 @@ namespace Survival.Unity
         private static void ResetStatics() => RunnerHandoff.Reset();
 
         private void Start() => Boot();
+
+        private void OnDestroy()
+        {
+            // Other scenes' actors light themselves again.
+            ActorSceneLights.Suppressed = false;
+            RunnerHitchLog.Loading(false);
+        }
 
         private void Boot()
         {
@@ -110,13 +121,34 @@ namespace Survival.Unity
             _unlocked = RunnerHandoff.FromPlay ? RunnerHandoff.Unlocked : StandaloneUnlocked();
             var wanted = RunnerHandoff.PendingLevel ?? (levelId.Length > 0 ? levelId : null);
             _level = _catalog.Level(wanted) ?? _catalog.ByNumber(_unlocked);
-            _world = new GameObject("RunnerWorld").transform;
-            _world.SetParent(transform, false);
-            BuildLights();
-            BuildGround(_level);
-            BuildCamera();
-            BuildHud();
-            StartRun();
+            try
+            {
+                // Camera first, so the scene always has a working camera for the loading screen to reveal.
+                BuildCamera();
+                _world = new GameObject("RunnerWorld").transform;
+                _world.SetParent(transform, false);
+                BuildLights();
+                BuildGround(_level);
+                BuildHud();
+                _actors = new GameObject("RunnerActors").transform;
+                _actors.SetParent(_world, false);
+                // Every rig, shot, effect and trap the level can show, built now while the loading screen covers
+                // the scene (Boot runs before the first frame), then drawn once off-screen to compile shaders.
+                Prewarm(_level);
+                StartRun();
+            }
+            catch (Exception ex)
+            {
+                // A broken boot must never strand the player: log it and, from Play, go straight back to the village
+                // (the loading screen covers the way back).
+                Debug.LogError("Runner: boot failed; " + (RunnerHandoff.FromPlay ? "back to the village." : "nothing to run."));
+                Debug.LogException(ex);
+                _run = null;
+                if (RunnerHandoff.FromPlay && !RunnerHandoff.Done)
+                {
+                    RunnerHandoff.Finish();
+                }
+            }
         }
 
         private static ThemePackBinder? LoadPack()
@@ -153,6 +185,8 @@ namespace Survival.Unity
             ClearActors();
             _attempt++;
             _run = new RunnerRun(_catalog, _level);
+            RunnerHitchLog.Reset();
+            _peakFoes = _peakSquad = _peakShots = 0;
             _resultShown = false;
             _endDelay = -1f;
             _killed.Clear();
@@ -192,9 +226,13 @@ namespace Survival.Unity
             _level = _catalog.ByNumber(number);
             _world = new GameObject("RunnerWorld").transform;
             _world.SetParent(transform, false);
-            _actors = null;
+            _actors = new GameObject("RunnerActors").transform;
+            _actors.SetParent(_world, false);
             BuildGround(_level);
             BuildHud();
+            // Tops the pools up for this level and the next. Boot already warmed this one, so only what the level
+            // after it adds is built, here at the switch (logged loading=yes) rather than live on the road.
+            Prewarm(_level);
             StartRun();
         }
 
@@ -215,6 +253,9 @@ namespace Survival.Unity
 
         private void ClearActors()
         {
+            // Rigs, shots, effects and traps go back to their pools first (they outlive the road); boxes and the
+            // rest of the road's own objects go with it.
+            ReturnAll();
             if (_actors != null)
             {
                 Destroy(_actors.gameObject);
@@ -227,15 +268,8 @@ namespace Survival.Unity
             _boxes.Clear();
             _boxDefs.Clear();
             _shots.Clear();
+            _hazards.Clear();
             _dying.Clear();
-            foreach (var f in _fx)
-            {
-                if (f.Go != null)
-                {
-                    Destroy(f.Go);
-                }
-            }
-
             _fx.Clear();
             ClearFloaters();
         }
@@ -247,16 +281,24 @@ namespace Survival.Unity
                 return;
             }
 
+            RunnerHitchLog.Frame(_level?.Number ?? 0, _run.Seconds, _run.Foes.Count, _run.Squad.Count, _run.Shots.Count);
             var dt = Mathf.Min(Time.deltaTime, 0.1f);
             if (!_run.Over)
             {
                 ReadSteer(dt);
+                RunnerHitchLog.Begin(RunnerHitchLog.Section.Sim);
                 var events = _run.Step(dt);
+                RunnerHitchLog.End(RunnerHitchLog.Section.Sim);
+                RunnerHitchLog.Begin(RunnerHitchLog.Section.Actors);
                 Sync();
-                foreach (var e in events)
+                RunnerHitchLog.Note(RunnerHitchLog.Counter.Event, events.Count);
+                for (var i = 0; i < events.Count; i++)
                 {
-                    OnEvent(e);
+                    OnEvent(events[i]);
                 }
+
+                RunnerHitchLog.End(RunnerHitchLog.Section.Actors);
+                TrackPeaks();
             }
             else if (!_resultShown)
             {
@@ -272,10 +314,19 @@ namespace Survival.Unity
                 }
             }
 
+            RunnerHitchLog.Begin(RunnerHitchLog.Section.Actors);
             AnimateSquad();
             AnimateFoes();
+            RunnerHitchLog.End(RunnerHitchLog.Section.Actors);
+            AnimateHazards(dt);
+            AnimateSlamMark();
+            RunnerHitchLog.Begin(RunnerHitchLog.Section.Shots);
+            TickShots(dt);
             TickFx(dt);
+            RunnerHitchLog.End(RunnerHitchLog.Section.Shots);
+            RunnerHitchLog.Begin(RunnerHitchLog.Section.Hud);
             TickHud(dt);
+            RunnerHitchLog.End(RunnerHitchLog.Section.Hud);
         }
 
         private void LateUpdate()
@@ -302,7 +353,7 @@ namespace Survival.Unity
                 r.Late(dt);
                 if (r.Gone)
                 {
-                    r.Destroy();
+                    ReturnRig(r);
                     _dying.RemoveAt(i);
                 }
             }
@@ -321,6 +372,7 @@ namespace Survival.Unity
 
             _resultShown = true;
             var result = _run.Result;
+            RunnerHitchLog.Summary(_level.Number, result.Won ? "Won" : "Lost", _peakFoes, _peakSquad, _peakShots);
             var bundle = RunnerRewards.For(_level, result);
             _unlocked = RunnerProgress.AfterRun(_unlocked, result, _catalog?.Levels.Count ?? 1);
             var saved = false;
@@ -415,9 +467,19 @@ namespace Survival.Unity
 #endif
             if (dir != 0f)
             {
-                // Keys move the steer point from where the hero is, so letting go stops at once.
-                _run.SteerTo(_run.Hero.X + (Mathf.Clamp(dir, -1f, 1f) * KeySteerSpeed * Mathf.Max(dt, 0.05f)));
+                // Keys slide the steer point at a steady pace, kept a short lead ahead of the hero; the steering spring
+                // eases the hero after it.
+                var lead = KeyLeadMetres;
+                var next = Mathf.Clamp(_run.SteerTarget + (Mathf.Clamp(dir, -1f, 1f) * KeySteerSpeed * dt), _run.Hero.X - lead, _run.Hero.X + lead);
+                _run.SteerTo(next);
+                _keyHeld = true;
                 Steered();
+            }
+            else if (_keyHeld)
+            {
+                // Let go: settle just past where the hero is heading, so it eases to a stop instead of snapping.
+                _keyHeld = false;
+                _run.SteerTo(_run.Hero.X + (_run.Hero.VX * RunnerRules.SteerSmoothSeconds * 0.5f));
             }
 
             if (Mathf.Abs(_dragAccum) > 1e-4f)
@@ -457,11 +519,14 @@ namespace Survival.Unity
                 return;
             }
 
-            foreach (var m in _run.Squad)
+            var squad = _run.Squad;
+            for (var i = 0; i < squad.Count; i++)
             {
+                var m = squad[i];
                 if (!_members.ContainsKey(m.Id))
                 {
-                    var rig = RunnerRig.Spawn(m.Unit.Roster, _actors, (m.IsHero ? "Hero_" : "Follower_") + m.Unit.Id + "_" + m.Id);
+                    RunnerHitchLog.Note(RunnerHitchLog.Counter.FollowerJoined);
+                    var rig = TakeRig(m.Unit.Roster, m.IsHero ? "Hero_" : "Follower_", m.Unit.Id, m.Id, 1f);
                     if (rig != null)
                     {
                         rig.Slot.position = new Vector3(m.X, 0f, m.Z);
@@ -476,57 +541,85 @@ namespace Survival.Unity
                 }
             }
 
-            RemoveMissing(_members, id => _run.Member(id) != null);
-            foreach (var f in _run.Foes)
+            RemoveMissing(_members, foes: false);
+            var foes = _run.Foes;
+            for (var i = 0; i < foes.Count; i++)
             {
+                var f = foes[i];
                 if (!_foes.ContainsKey(f.Id))
                 {
-                    var rig = RunnerRig.Spawn(f.Unit.Roster, _actors, "Foe_" + f.Unit.Id + "_" + f.Id, f.Boss ? BossScale : 1f);
+                    RunnerHitchLog.Note(RunnerHitchLog.Counter.FoeSpawned);
+                    var rig = TakeRig(f.Unit.Roster, "Foe_", f.Unit.Id, f.Id, f.Unit.Scale);
                     if (rig != null)
                     {
                         rig.Slot.position = new Vector3(f.X, 0f, f.Z);
                         rig.Slot.rotation = Quaternion.Euler(0f, 180f, 0f);
-                        rig.Rest();
+                        // Walking from the frame it appears (the run has it walking from spawn); only the boss,
+                        // who holds his arena, stands.
+                        if (f.Walking)
+                        {
+                            rig.Walk();
+                        }
+                        else
+                        {
+                            rig.Rest();
+                        }
+
                         _foes[f.Id] = rig;
-                        AddSideBar(f.Id, false, rig, f.Boss);
+                        AddSideBar(f.Id, false, rig, f.Boss, f.Unit.Scale);
                     }
                 }
             }
 
-            RemoveMissing(_foes, id => _run.Foe(id) != null);
-            foreach (var b in _run.Boxes)
+            RemoveMissing(_foes, foes: true);
+            var boxes = _run.Boxes;
+            for (var i = 0; i < boxes.Count; i++)
             {
+                var b = boxes[i];
                 if (!_boxes.ContainsKey(b.Id))
                 {
+                    RunnerHitchLog.Note(RunnerHitchLog.Counter.BoxSpawned);
                     var view = BuildBox(b);
                     _boxes[b.Id] = view;
                     AddBar(b.Id, true, view.Top, false);
                 }
             }
 
-            foreach (var id in new List<int>(_boxes.Keys))
+            if (_boxes.Count != boxes.Count)
             {
-                if (_run.Box(id) == null)
+                _scratchIds.Clear();
+                _scratchIds.AddRange(_boxes.Keys);
+                foreach (var id in _scratchIds)
                 {
-                    var v = _boxes[id];
-                    _boxes.Remove(id);
-                    RemoveBar(id);
-                    v.Captive?.Destroy();
-                    if (v.Root != null)
+                    if (_run.Box(id) == null)
                     {
-                        Destroy(v.Root.gameObject);
+                        var v = _boxes[id];
+                        _boxes.Remove(id);
+                        RemoveBar(id);
+                        ReturnRig(v.Captive);
+                        v.Captive = null;
+                        if (v.Root != null)
+                        {
+                            Destroy(v.Root.gameObject);
+                        }
                     }
                 }
             }
 
-            foreach (var s in _run.Shots)
+            SyncHazards();
+            RunnerHitchLog.Begin(RunnerHitchLog.Section.Shots);
+            var shots = _run.Shots;
+            _liveIds.Clear();
+            for (var i = 0; i < shots.Count; i++)
             {
-                if (!_shots.ContainsKey(s.Id))
+                var s = shots[i];
+                _liveIds.Add(s.Id);
+                if (!_shots.TryGetValue(s.Id, out var view))
                 {
-                    _shots[s.Id] = BuildShot(s);
+                    view = TakeShot(s);
+                    _shots[s.Id] = view;
                 }
 
-                var view = _shots[s.Id];
                 var to = new Vector3(s.X, ShotHeight, s.Z);
                 var dir = to - view.Root.position;
                 view.Root.position = to;
@@ -536,45 +629,41 @@ namespace Survival.Unity
                 }
             }
 
-            foreach (var id in new List<int>(_shots.Keys))
+            if (_shots.Count != _liveIds.Count)
             {
-                var live = false;
-                foreach (var s in _run.Shots)
+                // A hash set of the live ids (not a scan of every shot per view): ~250 shots in flight late on.
+                _scratchIds.Clear();
+                foreach (var id in _shots.Keys)
                 {
-                    if (s.Id == id)
+                    if (!_liveIds.Contains(id))
                     {
-                        live = true;
-                        break;
+                        _scratchIds.Add(id);
                     }
                 }
 
-                if (!live)
+                foreach (var id in _scratchIds)
                 {
                     var v = _shots[id];
                     _shots.Remove(id);
-                    if (v.Root != null)
-                    {
-                        // Let the trail finish rather than popping.
-                        v.Root.gameObject.AddComponent<RunnerAutoDestroy>().Seconds = 0.25f;
-                        if (v.Head != null)
-                        {
-                            v.Head.enabled = false;
-                        }
-                    }
+                    ReleaseShot(v);
                 }
             }
 
+            RunnerHitchLog.End(RunnerHitchLog.Section.Shots);
+
             // Positions: the run owns them; rigs follow exactly.
-            foreach (var m in _run.Squad)
+            for (var i = 0; i < squad.Count; i++)
             {
+                var m = squad[i];
                 if (_members.TryGetValue(m.Id, out var rig))
                 {
                     rig.Slot.position = new Vector3(m.X, 0f, m.Z);
                 }
             }
 
-            foreach (var f in _run.Foes)
+            for (var i = 0; i < foes.Count; i++)
             {
+                var f = foes[i];
                 if (_foes.TryGetValue(f.Id, out var rig))
                 {
                     rig.Slot.position = new Vector3(f.X, 0f, f.Z);
@@ -582,14 +671,35 @@ namespace Survival.Unity
             }
         }
 
-        private void RemoveMissing(Dictionary<int, RunnerRig> rigs, Func<int, bool> alive)
+        /// <summary>A rig off the pool (built live only when its shelf ran dry, which the hitch log reports).</summary>
+        private RunnerRig? TakeRig(string roster, string prefix, string unitId, int id, float scale)
         {
-            foreach (var id in new List<int>(rigs.Keys))
+            _pool ??= new RunnerRigPool(transform);
+#if UNITY_EDITOR
+            // Readable names in the Hierarchy; a build skips the string work.
+            var name = prefix + unitId + "_" + id;
+#else
+            var name = prefix;
+#endif
+            return _pool.Take(roster, _actors!, name, scale);
+        }
+
+        private void RemoveMissing(Dictionary<int, RunnerRig> rigs, bool foes)
+        {
+            if (_run == null)
             {
-                if (alive(id))
+                return;
+            }
+
+            _scratchIds.Clear();
+            _scratchIds.AddRange(rigs.Keys);
+            foreach (var id in _scratchIds)
+            {
+                if (foes ? _run.Foe(id) != null : _run.Member(id) != null)
                 {
                     continue;
                 }
+
 
                 var rig = rigs[id];
                 rigs.Remove(id);
@@ -615,13 +725,19 @@ namespace Survival.Unity
                 return;
             }
 
-            foreach (var m in _run.Squad)
+            var squad = _run.Squad;
+            for (var i = 0; i < squad.Count; i++)
             {
+                var m = squad[i];
                 if (!_members.TryGetValue(m.Id, out var rig))
                 {
                     continue;
                 }
 
+                // Back rows (fourth row on) sample their walk / rest loop every other frame: up to ~30 rigs at the
+                // back, small on screen and mostly behind the front rows. The hero and every swing stay full rate.
+                rig.SetEvaluateEvery(!m.IsHero && !m.Attacking && RunnerFormation.RowOf(m.Slot) >= 4 ? 2 : 1);
+                rig.LeanWith(_run.Over ? 0f : m.VX);
                 if (_run.Over && _run.Outcome == RunnerOutcome.Won)
                 {
                     rig.Rest();
@@ -659,8 +775,10 @@ namespace Survival.Unity
                 return;
             }
 
-            foreach (var f in _run.Foes)
+            var foes = _run.Foes;
+            for (var i = 0; i < foes.Count; i++)
             {
+                var f = foes[i];
                 if (!_foes.TryGetValue(f.Id, out var rig))
                 {
                     continue;
@@ -771,6 +889,7 @@ namespace Survival.Unity
                 }
 
                 case RunnerEventKind.FoeKilled:
+                    RunnerHitchLog.Note(RunnerHitchLog.Counter.Kill);
                     _killed.Add(e.Id);
                     Burst(at + (Vector3.up * 0.8f), new Color(1f, 0.55f, 0.25f, 1f), e.Big ? 2.4f : 1.1f, false);
                     if (e.Big)
@@ -814,6 +933,31 @@ namespace Survival.Unity
                 }
 
                 case RunnerEventKind.Upgrade:
+                    if (e.Unit == "squad_full")
+                    {
+                        // A follower or hero chest at a full squad: the units that do not fit pay out as damage and a heal.
+                        Banner(Fmt("runner.squad_full", "Squad full! Damage ×{0}, healed", e.Amount.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)), new Color(1f, 0.85f, 0.35f, 1f));
+                        if (_run != null && _members.TryGetValue(_run.Hero.Id, out var lead))
+                        {
+                            Floater(new Vector3(lead.Slot.position.x, 0f, lead.Slot.position.z) + (Vector3.up * 2.6f), S("runner.squad_full_heal", "+HP"), new Color(0.55f, 1f, 0.6f, 1f), 40);
+                        }
+                    }
+
+                    break;
+
+                case RunnerEventKind.BossWindup:
+                    BossWindup(e);
+                    break;
+
+                case RunnerEventKind.BossSlam:
+                    BossSlammed(e);
+                    break;
+
+                case RunnerEventKind.HazardSpawned:
+                    break;
+
+                case RunnerEventKind.HazardHit:
+                    HazardStruck(e, at);
                     break;
 
                 case RunnerEventKind.BossEngaged:
@@ -932,6 +1076,9 @@ namespace Survival.Unity
 
         private void BuildLights()
         {
+            // The road owns its lighting: rigs built from here on add no lights of their own (each used to add a key
+            // with soft shadows and a fill that never went away, and reset the ambient).
+            ActorSceneLights.Suppressed = true;
             var key = new GameObject("RunnerKeyLight");
             key.transform.SetParent(transform, false);
             key.transform.rotation = Quaternion.Euler(52f, -28f, 0f);
@@ -948,6 +1095,7 @@ namespace Survival.Unity
             f.intensity = 0.35f;
             f.color = new Color(0.75f, 0.82f, 1f, 1f);
             f.shadows = LightShadows.None;
+            RenderSettings.sun = light;
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
             RenderSettings.ambientSkyColor = new Color(0.62f, 0.68f, 0.78f, 1f);
             RenderSettings.ambientEquatorColor = new Color(0.45f, 0.46f, 0.38f, 1f);
@@ -993,8 +1141,8 @@ namespace Survival.Unity
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Linear;
             RenderSettings.fogColor = LockedBattleGround.Horizon;
-            RenderSettings.fogStartDistance = 26f;
-            RenderSettings.fogEndDistance = 60f;
+            RenderSettings.fogStartDistance = 32f;
+            RenderSettings.fogEndDistance = 68f;
         }
 
         private readonly List<Transform> _billboards = new List<Transform>();
@@ -1076,10 +1224,15 @@ namespace Survival.Unity
             LockedBattleGround.AddContactShadow(root, BoxView.Size, BoxView.Size * 0.7f);
             _boxDefs[b.Id] = b.Def;
             var view = new BoxView { Root = root, Sprite = root.GetComponentInChildren<SpriteRenderer>() };
+            if (view.Sprite != null && (b.Def.Kind == RunnerBoxKind.Range || b.Def.Kind == RunnerBoxKind.Heal))
+            {
+                view.Sprite.color = CrateTint(b.Def.Kind);
+            }
+
             if (b.Def.GivesUnits && _catalog != null && _actors != null)
             {
                 // The real battle rig of what's inside (not its portrait): rest pose on the lid, facing the squad.
-                var captive = RunnerRig.Spawn(_catalog.Unit(b.Def.Unit).Roster, _actors, "Captive_" + b.Def.Unit + "_" + b.Id, CaptiveScale);
+                var captive = TakeRig(_catalog.Unit(b.Def.Unit).Roster, "Captive_", b.Def.Unit, b.Id, CaptiveScale);
                 if (captive != null)
                 {
                     captive.Slot.position = new Vector3(b.X, BoxView.Size * 0.5f, b.Z + 0.15f);
@@ -1093,36 +1246,16 @@ namespace Survival.Unity
             return view;
         }
 
+        /// <summary>A pooled shot (<see cref="TakeShot"/>): an arrow head and an orb head, one shown per look, and its trail.</summary>
         private sealed class ShotView
         {
             public Transform Root = null!;
             public Renderer? Head;
-        }
-
-        private ShotView BuildShot(RunnerShot s)
-        {
-            var name = ShooterName(s);
-            ShotColors(name, out var core, out var glow);
-            var arrow = name == "Rowan" || name == "Bonequill" || name == "Oakenshield";
-            var go = new GameObject("Shot_" + name);
-            go.transform.SetParent(_actors, false);
-            go.transform.position = new Vector3(s.X, ShotHeight, s.Z);
-            var head = GameObject.CreatePrimitive(arrow ? PrimitiveType.Cube : PrimitiveType.Sphere);
-            Destroy(head.GetComponent<Collider>());
-            head.transform.SetParent(go.transform, false);
-            head.transform.localScale = arrow ? new Vector3(0.06f, 0.06f, 0.7f) : Vector3.one * 0.32f;
-            var r = head.GetComponent<Renderer>();
-            r.sharedMaterial = Unlit(core);
-            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            var trail = go.AddComponent<TrailRenderer>();
-            trail.time = 0.18f;
-            trail.startWidth = arrow ? 0.08f : 0.26f;
-            trail.endWidth = 0f;
-            trail.sharedMaterial = Unlit(glow);
-            trail.startColor = glow;
-            trail.endColor = new Color(glow.r, glow.g, glow.b, 0f);
-            trail.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            return new ShotView { Root = go.transform, Head = r };
+            public Renderer? Arrow;
+            public Renderer? Orb;
+            public TrailRenderer? Trail;
+            public string? Look;
+            public float Fade;
         }
 
         private string ShooterName(RunnerShot s)
@@ -1135,15 +1268,7 @@ namespace Survival.Unity
             if (s.ByFoe)
             {
                 // The shooter may be dead already; the shot keeps its look.
-                foreach (var pair in _foes)
-                {
-                    if (pair.Key == s.Shooter)
-                    {
-                        return pair.Value.Data.Name;
-                    }
-                }
-
-                return "Bonequill";
+                return _foes.TryGetValue(s.Shooter, out var rig) ? rig.Data.Name : "Bonequill";
             }
 
             return _run.Member(s.Shooter)?.Unit.Roster ?? "";
@@ -1218,16 +1343,21 @@ namespace Survival.Unity
         private void AddFx(string key, Vector3 at, float size, float life, Color color, Vector3 velocity, float grow, float spin)
         {
             var sprite = SurvivalArt.Get(key) ?? SurvivalArt.Circle();
-            var go = new GameObject("Fx");
-            go.transform.SetParent(_actors, false);
+            var fx = TakeFx();
+            var go = fx.Go;
             go.transform.position = at;
-            var sr = go.AddComponent<SpriteRenderer>();
+            var sr = fx.Sprite!;
             sr.sprite = sprite;
             sr.color = color;
-            sr.sortingOrder = 10;
             var w = Mathf.Max(0.01f, sprite.bounds.size.x);
             go.transform.localScale = Vector3.one * (size / w);
-            _fx.Add(new Fx { Go = go, Sprite = sr, Life = life, Velocity = velocity, Grow = grow, Spin = spin, Color = color, Size = size / w });
+            fx.Life = life;
+            fx.Velocity = velocity;
+            fx.Grow = grow;
+            fx.Spin = spin;
+            fx.Color = color;
+            fx.Size = size / w;
+            _fx.Add(fx);
         }
 
         private void TickFx(float dt)
@@ -1244,11 +1374,7 @@ namespace Survival.Unity
                 f.Age += dt;
                 if (f.Go == null || f.Age >= f.Life)
                 {
-                    if (f.Go != null)
-                    {
-                        Destroy(f.Go);
-                    }
-
+                    ReleaseFx(f);
                     _fx.RemoveAt(i);
                     continue;
                 }
@@ -1317,10 +1443,12 @@ namespace Survival.Unity
             {
                 RunnerBoxKind.Weapon => Fmt("runner.upgrade.weapon", "Weapon up! +{0}% damage", Mathf.RoundToInt(box.Amount * 100f)),
                 RunnerBoxKind.Rate => Fmt("runner.upgrade.rate", "Faster attacks! +{0}% speed", Mathf.RoundToInt(box.Amount * 100f)),
+                RunnerBoxKind.Range => Fmt("runner.upgrade.range", "Longer reach! +{0}% range", Mathf.RoundToInt(box.Amount * 100f)),
+                RunnerBoxKind.Heal => Fmt("runner.upgrade.heal", "Healed! +{0}% HP", Mathf.RoundToInt(box.Amount * 100f)),
                 RunnerBoxKind.Hero => Fmt("runner.box.hero", "{0} joins!", HeroName(box.Unit)),
                 _ => Fmt("runner.joined", "+{0} {1}", box.Count, HeroName(box.Unit))
             };
-            Banner(call, box.Kind == RunnerBoxKind.Rate ? new Color(0.55f, 0.9f, 1f, 1f) : gold);
+            Banner(call, RewardColor(box.Kind, gold));
         }
 
         private void Slash(Vector3 at, string who)

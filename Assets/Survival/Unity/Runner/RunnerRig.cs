@@ -29,6 +29,14 @@ namespace Survival.Unity
         private LockedBattleReaction _reaction = LockedBattleReactions.Flinch;
         private Vector3 _away = Vector3.back;
         private float _hitAge = 10f;
+
+        /// <summary>Body roll toward the sideways move (degrees, + = top to the left), eased.</summary>
+        private float _lean;
+        private float _leanTarget;
+
+        /// <summary>Degrees of lean per m/s of sideways speed, and the most it ever leans.</summary>
+        public const float LeanPerMetrePerSecond = 0.75f;
+        public const float MaxLeanDegrees = 7f;
         private bool _flashing;
         private float _deathAge = -1f;
         private Vector3 _baseLocal;
@@ -89,151 +97,160 @@ namespace Survival.Unity
             var rig = new RunnerRig(data, slot.transform, host.transform);
             var measured = new Bounds(Vector3.zero, Vector3.zero);
             var built = false;
-            switch (data.Name)
+            try
             {
-                case "Emberfang":
+                switch (data.Name)
                 {
-                    var a = host.AddComponent<EmberfangActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Stormcrest":
-                {
-                    var a = host.AddComponent<StormcrestActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Ironhowl":
-                {
-                    var a = host.AddComponent<IronhowlActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Nightfang":
-                {
-                    var a = host.AddComponent<NightfangActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Lyra":
-                {
-                    var a = host.AddComponent<LyraActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Oakenshield":
-                {
-                    var a = host.AddComponent<OakenshieldActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Vespera":
-                {
-                    var a = host.AddComponent<VesperaActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Ashwyrm":
-                {
-                    var a = host.AddComponent<AshwyrmActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Rowan":
-                {
-                    var a = host.AddComponent<RowanActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Bonequill":
-                {
-                    var a = host.AddComponent<BonequillActor>();
-                    a.Build();
-                    rig.Bind(a.PlayPose, () => a.Pose);
-                    built = a.Built;
-                    measured = a.VisibleBounds;
-                    break;
-                }
-
-                case "Sir Aldric":
-                {
-                    // Same as the battle: the pilot actor tunes the global ambient for its own scene; keep ours.
-                    var reflections = RenderSettings.reflectionIntensity;
-                    var ambient = RenderSettings.ambientIntensity;
-                    var a = host.AddComponent<SirAldricMeshyAnimateActor>();
-                    a.Build();
-                    RenderSettings.reflectionIntensity = reflections;
-                    RenderSettings.ambientIntensity = ambient;
-                    if (a.Built)
+                    case "Emberfang":
                     {
-                        // Sized on the upright walk body (the idle is a crouched stance).
-                        a.PlayBattlePose(SirAldricBattlePoses.Walk);
-                        measured = Measure(host.transform);
-                        a.PlayBattlePose(SirAldricBattlePoses.Rest);
+                        var a = host.AddComponent<EmberfangActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
                     }
 
-                    rig.Bind(a.PlayBattlePose, () => a.BattlePose, v => a.BattleSpeed = v);
-                    built = a.Built && measured.size.y > 1e-3f;
-                    break;
-                }
-
-                case "Blightroot":
-                {
-                    // Own pivot, as in the battle: its stand-up turn and foot plant write that transform.
-                    var pivot = new GameObject("BlightrootPivot");
-                    pivot.transform.SetParent(host.transform, false);
-                    var a = pivot.AddComponent<BlightrootActor>();
-                    a.Build();
-                    if (a.Built && a.PlayBattlePose(BlightrootBattlePoses.Rest))
+                    case "Stormcrest":
                     {
-                        a.FaceWalkForward();
-                        measured = Measure(host.transform);
+                        var a = host.AddComponent<StormcrestActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
                     }
 
-                    rig.Bind(a.PlayBattlePose, () => a.BattlePose);
-                    built = a.Built && measured.size.y > 1e-3f;
-                    break;
-                }
+                    case "Ironhowl":
+                    {
+                        var a = host.AddComponent<IronhowlActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
+                    }
 
-                default:
-                    Debug.LogError("Runner: no actor for " + data.Name);
-                    break;
+                    case "Nightfang":
+                    {
+                        var a = host.AddComponent<NightfangActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
+                    }
+
+                    case "Lyra":
+                    {
+                        var a = host.AddComponent<LyraActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
+                    }
+
+                    case "Oakenshield":
+                    {
+                        var a = host.AddComponent<OakenshieldActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
+                    }
+
+                    case "Vespera":
+                    {
+                        var a = host.AddComponent<VesperaActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
+                    }
+
+                    case "Ashwyrm":
+                    {
+                        var a = host.AddComponent<AshwyrmActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
+                    }
+
+                    case "Rowan":
+                    {
+                        var a = host.AddComponent<RowanActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
+                    }
+
+                    case "Bonequill":
+                    {
+                        var a = host.AddComponent<BonequillActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
+                    }
+
+                    case "Sir Aldric":
+                    {
+                        // Same as the battle: the pilot actor tunes the global ambient for its own scene; keep ours.
+                        var reflections = RenderSettings.reflectionIntensity;
+                        var ambient = RenderSettings.ambientIntensity;
+                        var a = host.AddComponent<SirAldricMeshyAnimateActor>();
+                        a.Build();
+                        RenderSettings.reflectionIntensity = reflections;
+                        RenderSettings.ambientIntensity = ambient;
+                        if (a.Built)
+                        {
+                            // Sized on the upright walk body (the idle is a crouched stance).
+                            a.PlayBattlePose(SirAldricBattlePoses.Walk);
+                            measured = Measure(host.transform);
+                            a.PlayBattlePose(SirAldricBattlePoses.Rest);
+                        }
+
+                        rig.Bind(a.PlayBattlePose, () => a.BattlePose, v => a.BattleSpeed = v);
+                        built = a.Built && measured.size.y > 1e-3f;
+                        break;
+                    }
+
+                    case "Blightroot":
+                    {
+                        // Own pivot, as in the battle: its stand-up turn and foot plant write that transform.
+                        var pivot = new GameObject("BlightrootPivot");
+                        pivot.transform.SetParent(host.transform, false);
+                        var a = pivot.AddComponent<BlightrootActor>();
+                        a.Build();
+                        if (a.Built && a.PlayBattlePose(BlightrootBattlePoses.Rest))
+                        {
+                            a.FaceWalkForward();
+                            measured = Measure(host.transform);
+                        }
+
+                        rig.Bind(a.PlayBattlePose, () => a.BattlePose);
+                        built = a.Built && measured.size.y > 1e-3f;
+                        break;
+                    }
+
+                    default:
+                        Debug.LogError("Runner: no actor for " + data.Name);
+                        break;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                // One actor failing to build must not take the run down with it: that fighter is skipped.
+                Debug.LogException(ex);
+                built = false;
             }
 
             if (!built)
@@ -369,6 +386,10 @@ namespace Survival.Unity
         }
 
         /// <summary>Face a world direction on the ground (yaw only), plus an aim offset (Rowan's bow).</summary>
+        /// <summary>Lean with a sideways speed (m/s, + = right): the top of the body tips toward the move.</summary>
+        public void LeanWith(float sidewaysSpeed) =>
+            _leanTarget = Mathf.Clamp(-sidewaysSpeed * LeanPerMetrePerSecond, -MaxLeanDegrees, MaxLeanDegrees);
+
         public void Face(Vector3 direction, float aimYaw = 0f)
         {
             direction.y = 0f;
@@ -423,7 +444,10 @@ namespace Survival.Unity
             var tilt = local * (_reaction.RootLeanScale * w * punch);
             Host.localPosition = _baseLocal + (step * Profile.RecoilMetres);
             var lean = Mathf.Tan(Profile.RecoilDegrees * Mathf.Deg2Rad);
-            Host.localRotation = Quaternion.FromToRotation(Vector3.up, (Vector3.up + (tilt * lean)).normalized);
+            // Lean into the sideways move: roll about the road's forward axis (in the slot's frame), eased in and out.
+            _lean = Mathf.Lerp(_lean, _leanTarget, 1f - Mathf.Exp(-12f * dt));
+            var roll = Quaternion.AngleAxis(_lean, Slot.InverseTransformDirection(Vector3.forward));
+            Host.localRotation = roll * Quaternion.FromToRotation(Vector3.up, (Vector3.up + (tilt * lean)).normalized);
             if (_deathAge >= 0f)
             {
                 _deathAge += dt;
@@ -485,9 +509,183 @@ namespace Survival.Unity
 
         public void Destroy()
         {
+            SetEvaluateEvery(1);
             if (Slot != null)
             {
                 Object.Destroy(Slot.gameObject);
+            }
+        }
+
+        // ---------- pooling (RunnerRigPool) ----------
+
+        private readonly List<Renderer> _parkedRenderers = new List<Renderer>();
+        private readonly List<Behaviour> _parkedBehaviours = new List<Behaviour>();
+        private readonly List<(Animator Animator, AnimatorCullingMode Mode)> _parkedAnimators = new List<(Animator, AnimatorCullingMode)>();
+        private static readonly List<Renderer> ScratchRenderers = new List<Renderer>();
+        private static readonly List<Behaviour> ScratchBehaviours = new List<Behaviour>();
+
+        /// <summary>The pool shelf this rig goes back to: roster name and extra scale.</summary>
+        public (string Roster, int ScaleKey) PoolKey { get; internal set; }
+
+        public bool Parked { get; private set; }
+
+        private int _evaluateEvery = 1;
+
+        /// <summary>
+        /// Sample this rig's walk / idle loop every <paramref name="frames"/>th frame (the squad's back rows: small on
+        /// screen, half hidden behind the rows in front). Attacks always run every frame.
+        /// </summary>
+        public void SetEvaluateEvery(int frames)
+        {
+            frames = Mathf.Max(1, frames);
+            if (frames == _evaluateEvery)
+            {
+                return;
+            }
+
+            _evaluateEvery = frames;
+            BlenderRigPlayer.SetEvaluateEvery(Host, frames);
+        }
+
+        /// <summary>
+        /// Every pose the runner asks for, once, so the lazy work (clip lookups, the attack driver's props and effects,
+        /// Sir Aldric's named takes) happens now (the loading screen) and not on this rig's first swing mid-run.
+        /// </summary>
+        public void WarmPoses()
+        {
+            Play(AttackPose);
+            Play(RestPose);
+            Play(WalkPose);
+            Play(RestPose);
+        }
+
+        /// <summary>
+        /// Off the road without deactivating anything: renderers and scripts off (so no skinning, no clip evaluation, no
+        /// cloth), animators culled, the slot moved under <paramref name="shelf"/>. Deactivating would make every
+        /// Animator rebind on the way back, which is the cost the pool exists to avoid.
+        /// </summary>
+        public void Park(Transform shelf)
+        {
+            if (Parked || Slot == null)
+            {
+                return;
+            }
+
+            Parked = true;
+            SetEvaluateEvery(1);
+            _parkedRenderers.Clear();
+            _parkedBehaviours.Clear();
+            _parkedAnimators.Clear();
+            Slot.GetComponentsInChildren(false, ScratchRenderers);
+            foreach (var r in ScratchRenderers)
+            {
+                if (r.enabled)
+                {
+                    r.enabled = false;
+                    _parkedRenderers.Add(r);
+                }
+            }
+
+            Slot.GetComponentsInChildren(false, ScratchBehaviours);
+            foreach (var b in ScratchBehaviours)
+            {
+                if (b is Animator a)
+                {
+                    _parkedAnimators.Add((a, a.cullingMode));
+                    a.cullingMode = AnimatorCullingMode.CullCompletely;
+                    continue;
+                }
+
+                if (b.enabled)
+                {
+                    b.enabled = false;
+                    _parkedBehaviours.Add(b);
+                }
+            }
+
+            ScratchRenderers.Clear();
+            ScratchBehaviours.Clear();
+            Slot.SetParent(shelf, false);
+            Slot.localPosition = Vector3.zero;
+            Slot.localRotation = Quaternion.identity;
+        }
+
+        /// <summary>Back on the road under <paramref name="parent"/> as <paramref name="name"/>, alive and un-hit.</summary>
+        public void Unpark(Transform parent, string name)
+        {
+            if (!Parked || Slot == null)
+            {
+                return;
+            }
+
+            Parked = false;
+            Slot.SetParent(parent, false);
+            Slot.gameObject.name = name;
+            foreach (var (a, mode) in _parkedAnimators)
+            {
+                if (a != null)
+                {
+                    a.cullingMode = mode;
+                }
+            }
+
+            foreach (var b in _parkedBehaviours)
+            {
+                if (b != null)
+                {
+                    b.enabled = true;
+                }
+            }
+
+            foreach (var r in _parkedRenderers)
+            {
+                if (r != null)
+                {
+                    r.enabled = true;
+                }
+            }
+
+            _parkedAnimators.Clear();
+            _parkedBehaviours.Clear();
+            _parkedRenderers.Clear();
+            ResetState();
+        }
+
+        private void ResetState()
+        {
+            var wasDead = _deathAge >= 0f;
+            _deathAge = -1f;
+            _hitAge = 10f;
+            _punch = 0f;
+            _lean = 0f;
+            _leanTarget = 0f;
+            _attackStarted = -99f;
+            _reaction = LockedBattleReactions.Flinch;
+            _away = Vector3.back;
+            Host.localPosition = _baseLocal;
+            Host.localRotation = Quaternion.identity;
+            if (_flashing)
+            {
+                foreach (var (r, i, c) in _flash)
+                {
+                    if (r == null)
+                    {
+                        continue;
+                    }
+
+                    _block.Clear();
+                    _block.SetColor(BaseColorId, c);
+                    _block.SetColor(ColorId, c);
+                    r.SetPropertyBlock(_block, i);
+                }
+
+                _flashing = false;
+            }
+
+            if (wasDead)
+            {
+                // A rig that died last went out mid-stagger: start it from its rest pose.
+                Play(RestPose);
             }
         }
 
