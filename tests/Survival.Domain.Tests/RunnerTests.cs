@@ -627,25 +627,36 @@ public sealed class RunnerTests
     }
 
     [Fact]
-    public void Every_shot_keeps_its_lane_in_flight_squad_and_enemy_alike()
+    public void Squad_shots_keep_their_lane_in_flight_and_enemy_shots_their_aimed_heading()
     {
         var shipped = Runner.Catalog();
         Assert.True(shipped.Unit("bonequill").Ranged);
         var run = new RunnerRun(shipped, shipped.First);
-        // Every shot in flight keeps its lane and heading, whoever fired it.
-        var seen = new Dictionary<int, float>();
+        // A squad shot keeps its lane; an enemy shot (aimed at a hero when fired, so it may cross lanes) keeps its
+        // heading and flies straight along it: nothing homes.
+        var seen = new Dictionary<int, (float X, float Z, float Dx, float Dz)>();
         for (var t = 0; t < 30 * 40 && !run.Over; t++)
         {
             run.SteerTo(Runner.AimLikeAPlayer(run));
             run.Step(1f / 30f);
             foreach (var s in run.Shots)
             {
-                if (seen.TryGetValue(s.Id, out var x))
+                if (seen.TryGetValue(s.Id, out var was))
                 {
-                    Assert.Equal(x, s.X, 4);
+                    Assert.Equal(was.Dx, s.DX);
+                    Assert.Equal(was.Dz, s.DZ);
+                    if (s.ByFoe)
+                    {
+                        var step = (float)System.Math.Sqrt(((s.X - was.X) * (s.X - was.X)) + ((s.Z - was.Z) * (s.Z - was.Z)));
+                        Assert.Equal(s.DX * step, s.X - was.X, 3);
+                    }
+                    else
+                    {
+                        Assert.Equal(was.X, s.X, 4);
+                    }
                 }
 
-                seen[s.Id] = s.X;
+                seen[s.Id] = (s.X, s.Z, s.DX, s.DZ);
             }
         }
 

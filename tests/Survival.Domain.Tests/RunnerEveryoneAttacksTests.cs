@@ -152,11 +152,110 @@ public sealed class RunnerEveryoneAttacksTests
         }
     }
 
+    /// <summary>One ranged foe the squad cannot kill on a bare road, the lead steered to <paramref name="leadX"/>.</summary>
+    private static (RunnerRun Run, List<RunnerShot> FoeShots, List<RunnerShot> SquadShots, List<(float X, float Z, float Ox, float Oz)> Targets) Shoot(string foe, float leadX, int followers = 0)
+    {
+        var run = Arena(foe, followers);
+        var foeShots = new List<RunnerShot>();
+        var squadShots = new List<RunnerShot>();
+        var targets = new List<(float, float, float, float)>();
+        var seen = new HashSet<int>();
+        while (!run.Over && run.Seconds < 30f)
+        {
+            run.SteerTo(leadX);
+            var fired = new Queue<(float X, float Z)>();
+            foreach (var e in run.Step(1f / 30f))
+            {
+                // The Fired event carries the target's place at fire time.
+                if (e.Kind == RunnerEventKind.Fired && run.Foe(e.Id) != null)
+                {
+                    fired.Enqueue((e.X, e.Z));
+                }
+            }
+
+            foreach (var s in run.Shots)
+            {
+                if (seen.Add(s.Id))
+                {
+                    (s.ByFoe ? foeShots : squadShots).Add(s);
+                    if (s.ByFoe && fired.Count > 0)
+                    {
+                        // Where it left the bow: back along its heading by what it has flown so far.
+                        var (tx, tz) = fired.Dequeue();
+                        targets.Add((tx, tz, s.X - (s.DX * s.Travelled), s.Z - (s.DZ * s.Travelled)));
+                    }
+                }
+            }
+        }
+
+        return (run, foeShots, squadShots, targets);
+    }
+
     [Fact]
-    public void Ranged_enemies_aim_at_whoever_is_in_their_strip_not_only_the_nearest_member()
+    public void Enemy_shots_are_aimed_at_the_hero_even_a_lane_over_and_squad_shots_still_fly_straight()
+    {
+        foreach (var foe in RangedFoes)
+        {
+            // The foe walks down the middle (x 0); the lead holds 3 m to one side, well outside the old 1.5 m strip.
+            var (run, foeShots, squadShots, targets) = Shoot(foe, 3f);
+            Assert.True(foeShots.Count >= 2, foe + " fired " + foeShots.Count + " at a hero a lane over");
+            Assert.Equal(foeShots.Count, targets.Count);
+            for (var k = 0; k < foeShots.Count; k++)
+            {
+                var s = foeShots[k];
+                var (tx, tz, fx, fz) = targets[k];
+                var (ax, az) = RunnerRun.FoeAim(fx, fz, tx, tz, s.Speed, run.Level.Speed);
+                var len = (float)System.Math.Sqrt((ax * ax) + (az * az));
+                // Heading = the aim at fire time: straight at the target's x, diagonal across the road.
+                Assert.Equal(ax / len, s.DX, 2);
+                Assert.Equal(az / len, s.DZ, 2);
+                Assert.True(System.Math.Sign(s.DX) == System.Math.Sign(tx - fx) && System.Math.Abs(s.DX) > 0.05f, foe + " shot dx " + s.DX + " target dx " + (tx - fx));
+                Assert.Equal(1f, (s.DX * s.DX) + (s.DZ * s.DZ), 3);
+            }
+
+            // ... and they land on him.
+            Assert.True(run.Hero.Hp < run.Hero.MaxHp, foe + " hits a hero a lane over");
+            // Heroes are unchanged: dead straight down the road.
+            Assert.NotEmpty(squadShots);
+            Assert.All(squadShots, s => { Assert.Equal(0f, s.DX); Assert.Equal(1f, s.DZ); });
+        }
+    }
+
+    [Fact]
+    public void An_aimed_shot_is_not_homing_a_sidestep_after_it_leaves_dodges_it()
+    {
+        var run = Arena("bonequill");
+        RunnerShot? shot = null;
+        var hitsBefore = 0;
+        while (!run.Over && run.Seconds < 30f && shot == null)
+        {
+            run.SteerTo(0f);
+            run.Step(1f / 30f);
+            shot = run.Shots.FirstOrDefault(s => s.ByFoe);
+        }
+
+        Assert.NotNull(shot);
+        var dx = shot!.DX;
+        var dz = shot.DZ;
+        hitsBefore = run.Hero.MaxHp - run.Hero.Hp;
+        // Step well out of its line at once: the shot keeps its heading and misses.
+        for (var k = 0; k < 90 && run.Shots.Contains(shot); k++)
+        {
+            run.SteerTo(run.Level.HalfWidth);
+            run.Step(1f / 30f);
+            Assert.Equal(dx, shot.DX);
+            Assert.Equal(dz, shot.DZ);
+        }
+
+        Assert.Equal(hitsBefore, run.Hero.MaxHp - run.Hero.Hp);
+    }
+
+    [Fact]
+    public void Ranged_enemies_pick_the_nearest_member_in_range_in_any_lane()
     {
         var src = File.ReadAllText(Path.Combine(Layouts.RepoRoot(), "Assets/Survival/Runtime/Runner/RunnerRun.cs"));
-        Assert.Contains("target = NearestInStrip(f, out dist) ?? target;", src);
+        Assert.DoesNotContain("NearestInStrip", src);
+        Assert.DoesNotContain("AimHalfWidth", src);
     }
 
     [Fact]

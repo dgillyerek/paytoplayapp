@@ -16,8 +16,13 @@ namespace Survival.Domain.Runner
         /// </summary>
         public const float SeekRange = 15f;
 
-        /// <summary>Half width of the strip a foe archer shoots into (plus the target's radius).</summary>
-        public const float AimHalfWidth = 1.5f;
+        /// <summary>
+        /// Share of the road's own scroll a foe's aimed shot leads its target by (the squad walks on at the level speed
+        /// whatever the player does). Steering is never led: a shot is aimed once, when fired, and flies straight, so a
+        /// sidestep dodges it (Derek 2026-10-23: "the enimies should target the hero's ... unlike the heroes who just fire
+        /// straight").
+        /// </summary>
+        public const float FoeShotLead = 1f;
 
         /// <summary>
         /// Half width of a squad shot: shots fly straight down the road from the shooter's lane position and hit the
@@ -476,9 +481,13 @@ namespace Survival.Domain.Runner
     /// </summary>
     public sealed class RunnerShot
     {
-        internal RunnerShot(int id, int shooter, bool byFoe, float x, float z, int damage, float speed, float range, float direction = 0f)
+        internal RunnerShot(int id, int shooter, bool byFoe, float x, float z, int damage, float speed, float range, float direction = 0f, float aimX = 0f)
         {
             Direction = direction != 0f ? Math.Sign(direction) : byFoe ? -1f : 1f;
+            // Heading: straight along the road (squad shots, aimX 0), or a foe's aimed line (aimX, Direction) normalised.
+            var len = (float)Math.Sqrt((aimX * aimX) + 1f);
+            DX = aimX / len;
+            DZ = Direction / len;
             Id = id;
             Shooter = shooter;
             ByFoe = byFoe;
@@ -496,6 +505,11 @@ namespace Survival.Domain.Runner
         /// <summary>+1 down the road (squad shots), -1 back up it (foe shots at a squad still ahead of them); a foe
         /// the squad has walked past shoots after it (+1).</summary>
         public float Direction { get; }
+
+        /// <summary>Unit heading on the road (x across, z along). Squad shots: (0, 1), straight ahead. Foe shots: at
+        /// the target as it stood when the shot was fired (plus the road's scroll), diagonals across lanes included.</summary>
+        public float DX { get; }
+        public float DZ { get; }
         public float Range { get; }
         public float Travelled { get; internal set; }
         public float X { get; internal set; }
@@ -1053,18 +1067,9 @@ namespace Survival.Domain.Runner
                     f.ContactClock = Math.Min(f.ContactClock, 0.5f);
                 }
 
-                // Melee: whoever is in reach, ahead or already past. Ranged: whoever is in range in its strip, either way
-                // down the road (a foe the squad has walked past shoots after it).
-                // A ranged foe shoots the nearest member in its strip (not just the nearest one overall, who may stand a lane
-                // over while a follower is dead ahead), so it fires whenever anyone of the squad is in its line.
-                if (f.Unit.Ranged)
-                {
-                    target = NearestInStrip(f, out dist) ?? target;
-                }
-
-                var inRange = f.Unit.Ranged
-                        ? dist <= f.Unit.Range + f.Unit.Radius + target.Unit.Radius && Math.Abs(target.X - f.X) <= RunnerRules.AimHalfWidth + target.Unit.Radius
-                        : dist <= f.Unit.Range + f.Unit.Radius + target.Unit.Radius;
+                // Melee: whoever is in reach, ahead or already past. Ranged: the nearest member in range, in any lane,
+                // either way down the road (a foe the squad has walked past shoots after it): enemies aim, heroes fire straight.
+                var inRange = dist <= f.Unit.Range + f.Unit.Radius + target.Unit.Radius;
                 if (!inRange)
                 {
                     f.Cooldown = Math.Max(f.Cooldown, 0f);
@@ -1083,7 +1088,8 @@ namespace Survival.Domain.Runner
                 if (f.Unit.Ranged)
                 {
                     var dir = target.Z >= f.Z ? 1f : -1f;
-                    _shots.Add(new RunnerShot(_nextId++, f.Id, true, f.X, f.Z + (0.4f * dir), f.Unit.Damage, f.Unit.ShotSpeed, f.Unit.Range + RunnerRules.ShotOvershoot + 2f, dir));
+                    var (ax, az) = FoeAim(f.X, f.Z + (0.4f * dir), target.X, target.Z, f.Unit.ShotSpeed, Level.Speed);
+                    _shots.Add(new RunnerShot(_nextId++, f.Id, true, f.X, f.Z + (0.4f * dir), f.Unit.Damage, f.Unit.ShotSpeed, f.Unit.Range + RunnerRules.ShotOvershoot + 2f, az, Math.Abs(az) > 1e-4f ? ax / Math.Abs(az) : 0f));
                 }
                 else
                 {
@@ -1344,22 +1350,27 @@ namespace Survival.Domain.Runner
                 var s = _shots[i];
                 var step = s.Speed * dt;
                 var from = s.Z;
-                var to = s.Z + (s.Direction * step);
+                var to = s.Z + (s.DZ * step);
+                var toX = s.X + (s.DX * step);
                 var lo = Math.Min(from, to);
                 var hi = Math.Max(from, to);
                 var hit = false;
                 if (s.ByFoe)
                 {
-                    // Straight back up the road: the first squad member it passes through takes it (as a hit on the
-                    // squad: a follower dies first, the hero only once none are left).
+                    // Along its aimed line (diagonal across lanes too): the first squad member whose body the segment
+                    // flown this frame passes through takes it (as a hit on the squad: a follower first, the hero only
+                    // once none are left).
                     RunnerMember? struck = null;
-                    var best = float.MinValue;
+                    var bestT = float.MaxValue;
                     foreach (var m in _squad)
                     {
                         var r = m.Unit.Radius + RunnerRules.ShotHalfWidth;
-                        if (Math.Abs(m.X - s.X) <= r && m.Z >= lo - r && m.Z <= hi + r && m.Z > best)
+                        var t = Math.Max(0f, Math.Min(step, ((m.X - s.X) * s.DX) + ((m.Z - s.Z) * s.DZ)));
+                        var px = s.X + (s.DX * t);
+                        var pz = s.Z + (s.DZ * t);
+                        if (Sq(m.X - px) + Sq(m.Z - pz) <= r * r && t < bestT)
                         {
-                            best = m.Z;
+                            bestT = t;
                             struck = m;
                         }
                     }
@@ -1368,7 +1379,8 @@ namespace Survival.Domain.Runner
                     {
                         hit = true;
                         _shots.RemoveAt(i);
-                        s.Z = struck.Z;
+                        s.X += s.DX * bestT;
+                        s.Z += s.DZ * bestT;
                         var shooter = Foe(s.Shooter);
                         if (shooter != null)
                         {
@@ -1425,6 +1437,7 @@ namespace Survival.Domain.Runner
                 }
 
                 s.Z = to;
+                s.X = toX;
                 s.Travelled += step;
                 if (s.Travelled >= s.Range)
                 {
@@ -1693,6 +1706,25 @@ namespace Survival.Domain.Runner
 
         // ---------- helpers ----------
 
+        /// <summary>
+        /// A foe's aimed heading (unnormalised x, z) from (x, z) at a target standing at (tx, tz): straight at it, led by
+        /// <see cref="RunnerRules.FoeShotLead"/> of the road scroll for the shot's flight time. Never its steering:
+        /// aimed once at fire time and never homing, so moving out of the line dodges it.
+        /// </summary>
+        public static (float X, float Z) FoeAim(float x, float z, float tx, float tz, float shotSpeed, float roadSpeed)
+        {
+            var flight = (float)Math.Sqrt(Sq(tx - x) + Sq(tz - z)) / Math.Max(0.1f, shotSpeed);
+            var lz = tz + (roadSpeed * flight * RunnerRules.FoeShotLead);
+            var dx = tx - x;
+            var dz = lz - z;
+            if (Math.Abs(dz) < 1e-3f)
+            {
+                dz = tz >= z ? 1e-3f : -1e-3f;
+            }
+
+            return (dx, dz);
+        }
+
         private RunnerMember? NearestMember(float x, float z, out float distance)
         {
             RunnerMember? best = null;
@@ -1700,29 +1732,6 @@ namespace Survival.Domain.Runner
             foreach (var m in _squad)
             {
                 var d = Sq(m.X - x) + Sq(m.Z - z);
-                if (d < bestSq)
-                {
-                    bestSq = d;
-                    best = m;
-                }
-            }
-
-            distance = best != null ? (float)Math.Sqrt(bestSq) : float.MaxValue;
-            return best;
-        }
-
-        private RunnerMember? NearestInStrip(RunnerFoe f, out float distance)
-        {
-            RunnerMember? best = null;
-            var bestSq = float.MaxValue;
-            foreach (var m in _squad)
-            {
-                if (Math.Abs(m.X - f.X) > RunnerRules.AimHalfWidth + m.Unit.Radius)
-                {
-                    continue;
-                }
-
-                var d = Sq(m.X - f.X) + Sq(m.Z - f.Z);
                 if (d < bestSq)
                 {
                     bestSq = d;
