@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Survival.Domain.Enemies;
 using Survival.Domain.Heroes;
 using Survival.Domain.Roster;
+using Survival.Domain.Runner;
 using UnityEngine;
 
 namespace Survival.Unity
@@ -43,6 +44,11 @@ namespace Survival.Unity
         private float _punch;
         private float _attackStarted = -99f;
         private System.Action<float>? _attackSpeed;
+        private System.Action<bool>? _walkUnderAttack;
+
+        /// <summary>The bone a root-carrying walk moves (Blightroot), and where it sits along the road at rest (slot metres).</summary>
+        private Transform? _strideBone;
+        private float _strideRest;
 
         private RunnerRig(LockedBattleFighter data, Transform slot, Transform host)
         {
@@ -148,7 +154,8 @@ namespace Survival.Unity
                     {
                         var a = host.AddComponent<LyraActor>();
                         a.Build();
-                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
+                        a.UpperBodyAttack = RunnerUpperBodyAttack.Applies(data.Name);
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
@@ -159,7 +166,8 @@ namespace Survival.Unity
                     {
                         var a = host.AddComponent<OakenshieldActor>();
                         a.Build();
-                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
+                        a.UpperBodyAttack = RunnerUpperBodyAttack.Applies(data.Name);
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
@@ -192,7 +200,8 @@ namespace Survival.Unity
                     {
                         var a = host.AddComponent<RowanActor>();
                         a.Build();
-                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
+                        a.UpperBodyAttack = RunnerUpperBodyAttack.Applies(data.Name);
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
@@ -277,6 +286,19 @@ namespace Survival.Unity
             host.transform.localPosition = rig._baseLocal;
             rig.Height = data.DesignHeightMetres * LockedBattleRoster.BattleScaleOf(data) * extraScale;
             rig._ground = new LockedBattleGrounding(host.transform);
+            if (RunnerStrideHold.Applies(data))
+            {
+                rig._strideBone = FindBone(host.transform, data.StrideBone);
+                if (rig._strideBone != null)
+                {
+                    rig._strideRest = rig.StrideForward();
+                }
+                else
+                {
+                    Debug.LogWarning("Runner: " + data.Name + " stride bone " + data.StrideBone + " not found; its walk is not held.");
+                }
+            }
+
             LockedBattleGround.AddContactShadow(slot.transform, measured.size.x * scale, measured.size.z * scale, LockedBattleRoster.BattleScaleOf(data) * extraScale);
             foreach (var r in host.GetComponentsInChildren<Renderer>(true))
             {
@@ -321,11 +343,28 @@ namespace Survival.Unity
             }
         }
 
-        private void Bind(System.Func<string, bool> play, System.Func<string> pose, System.Action<float>? attackSpeed = null)
+        private void Bind(
+            System.Func<string, bool> play,
+            System.Func<string> pose,
+            System.Action<float>? attackSpeed = null,
+            System.Action<bool>? walkUnderAttack = null)
         {
             _play = play;
             _pose = pose;
             _attackSpeed = attackSpeed;
+            _walkUnderAttack = walkUnderAttack;
+        }
+
+        /// <summary>
+        /// Shooters that fire on the upper body over the walk (<see cref="RunnerUpperBodyAttack"/>): their legs walk under
+        /// the attack (true) or stand (the squad halted at the boss's arena line). No-op for the other rigs.
+        /// </summary>
+        public void WalkUnderAttack(bool walking)
+        {
+            if (!Dead)
+            {
+                _walkUnderAttack?.Invoke(walking);
+            }
         }
 
         /// <summary>True when the actor can play its attack take faster (the squad shooters and Sir Aldric).</summary>
@@ -454,6 +493,49 @@ namespace Survival.Unity
             _reaction = LockedBattleReactions.Stagger;
         }
 
+        /// <summary>Slot metres the stride bone has travelled along the road from its rest place (0 when not held).</summary>
+        private float StrideHold() => _strideBone != null ? StrideForward() - _strideRest : 0f;
+
+        /// <summary>The stride bone's place along the slot's forward, in slot metres, independent of the host's own offset.</summary>
+        private float StrideForward()
+        {
+            if (_strideBone == null)
+            {
+                return 0f;
+            }
+
+            var local = Host.InverseTransformPoint(_strideBone.position);
+            var forward = Host.InverseTransformDirection(Slot.forward);
+            forward.y = 0f;
+            return forward.sqrMagnitude > 1e-6f ? Vector3.Dot(local, forward.normalized) * Host.localScale.z : 0f;
+        }
+
+        /// <summary>A bone by name under <paramref name="root"/>; "Scope/Bone" looks inside the named child (as the battle's).</summary>
+        private static Transform? FindBone(Transform root, string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return null;
+            }
+
+            var slash = name.LastIndexOf('/');
+            if (slash > 0)
+            {
+                var scope = FindBone(root, name.Substring(0, slash));
+                return scope != null ? FindBone(scope, name.Substring(slash + 1)) : null;
+            }
+
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (string.Equals(t.name, name, System.StringComparison.Ordinal))
+                {
+                    return t;
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>Called from the scene's LateUpdate after the clips posed the bones.</summary>
         public void Late(float dt)
         {
@@ -464,7 +546,14 @@ namespace Survival.Unity
             var punch = 0.6f + (0.4f * _punch);
             var step = local * (_reaction.RootScale * w * punch);
             var tilt = local * (_reaction.RootLeanScale * w * punch);
-            Host.localPosition = _baseLocal + (step * Profile.RecoilMetres);
+            // A small flinch only, never a pushback (Derek 2026-10-23): capped for every enemy whatever its profile and scale.
+            var nudge = step * Profile.RecoilMetres;
+            nudge.y = 0f;
+            nudge *= RunnerHitNudge.Scale(nudge.x, nudge.z);
+            // Cancel a root-carrying walk's own forward travel (Blightroot: 1.45 m per loop x 1.9 scale), which otherwise
+            // drifts ahead and snaps back on every loop wrap and every walk / attack / rest change.
+            var hold = Vector3.forward * StrideHold();
+            Host.localPosition = _baseLocal + nudge - hold;
             var lean = Mathf.Tan(Profile.RecoilDegrees * Mathf.Deg2Rad);
             // Lean into the sideways move: roll about the road's forward axis (in the slot's frame), eased in and out.
             _lean = Mathf.Lerp(_lean, _leanTarget, 1f - Mathf.Exp(-12f * dt));
@@ -476,7 +565,7 @@ namespace Survival.Unity
                 var t = Mathf.Clamp01(_deathAge / 0.9f);
                 var fall = Vector3.Cross(Vector3.up, local).normalized;
                 Host.localRotation = Quaternion.AngleAxis(-80f * Mathf.SmoothStep(0f, 1f, Mathf.Min(1f, t * 1.6f)), fall == Vector3.zero ? Vector3.right : fall);
-                Host.localPosition = _baseLocal + (Vector3.down * (Height * 0.9f * t * t));
+                Host.localPosition = _baseLocal + (Vector3.down * (Height * 0.9f * t * t)) - hold;
             }
             else
             {

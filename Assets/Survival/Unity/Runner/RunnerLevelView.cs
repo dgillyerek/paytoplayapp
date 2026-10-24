@@ -790,6 +790,8 @@ namespace Survival.Unity
 
                 if (m.Attacking)
                 {
+                    // The shooters keep walking under their take unless the squad stands at the boss's line.
+                    rig.WalkUnderAttack(!_run.Halted);
                     // Shots fly straight down the road, so shooters face straight down it (plus the rig's own aim
                     // offset, e.g. Rowan's bow); a melee swing turns to what it hit.
                     var target = !m.Unit.Ranged && m.TargetId != 0 ? TargetPosition(m.TargetId) : null;

@@ -26,6 +26,22 @@ namespace Survival.Unity
                 }
             }
         }
+
+        /// <summary>Runner only: the attack plays on the upper body over the walk (see <see cref="BlenderRigPlayer.UpperBodyAttack"/>).</summary>
+        public bool UpperBodyAttack
+        {
+            get => _player != null && _player.UpperBodyAttack;
+            set
+            {
+                if (_player != null)
+                {
+                    _player.UpperBodyAttack = value;
+                }
+            }
+        }
+
+        /// <summary>Runner: legs walk (true) or stand under an upper-body attack.</summary>
+        public void SetWalkUnderAttack(bool walking) => _player?.SetWalkUnderAttack(walking);
         private ClothSpringRig? _cloth;
         private GameObject? _coat;
 

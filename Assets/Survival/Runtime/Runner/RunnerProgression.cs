@@ -64,6 +64,9 @@ namespace Survival.Domain.Runner
         /// <summary>Most enemies standing side by side in one row; bigger groups form ranks behind.</summary>
         public const int MaxPerRank = 5;
 
+        /// <summary>How far past the first follower chest the opening wave stands (later waves stand 8 m past theirs).</summary>
+        public const float FirstWaveMetres = 12f;
+
         private static readonly string[] FollowerUnits = { "rowan", "lyra", "rowan", "oakenshield", "lyra", "oakenshield" };
         private static readonly string[] ShardHeroes = { "hero.lyra", "hero.rowan", "hero.oakenshield", "hero.sir_aldric" };
         private static readonly RunnerBoxKind[] PowerUps = { RunnerBoxKind.Weapon, RunnerBoxKind.Rate, RunnerBoxKind.Range, RunnerBoxKind.Followers, RunnerBoxKind.Heal, RunnerBoxKind.Weapon, RunnerBoxKind.Rate, RunnerBoxKind.Followers };
@@ -224,7 +227,9 @@ namespace Survival.Domain.Runner
                 var wx = ((float)rnd.NextDouble() * 2.4f) - 1.2f;
                 // The first two waves stay small: the squad is still the hero and a chest or two.
                 var opening = beat < 2;
-                Group(rows, z + 8f, wx, front, opening ? 2 + beat : 3 + (beat % 2) + (int)Math.Round(t * along * 0.3f), 1.1f, halfWidth);
+                // The very first wave stands 12 m past its chest (8 m later on): the faster walkers otherwise reach the
+                // chest as it opens and pick off the new 1 hp followers before they can shoot.
+                Group(rows, z + (beat == 0 ? FirstWaveMetres : 8f), wx, front, opening ? 2 + beat : 3 + (beat % 2) + (int)Math.Round(t * along * 0.3f), 1.1f, halfWidth);
                 if (beat > 0)
                 {
                     Group(rows, z + 10.5f, -wx * 0.5f, back, opening ? 1 : 2 + (int)Math.Round(t * along * 0.25f), 1.4f, halfWidth);

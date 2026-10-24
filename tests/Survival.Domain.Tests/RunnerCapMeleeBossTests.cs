@@ -46,7 +46,8 @@ public sealed class RunnerCapMeleeBossTests
         var old = new Dictionary<string, float> { ["bonequill"] = 0.9f, ["nightfang"] = 2.2f, ["blightroot"] = 0.6f, ["vespera"] = 0.8f, ["ashwyrm"] = 1.2f };
         foreach (var pair in old)
         {
-            Assert.Equal(pair.Value * 1.5f, c.Unit(pair.Key).Speed, 2);
+            // 1.5x the original walk, then another ~20-25% on top (Oct 23 evening pass).
+            Assert.InRange(c.Unit(pair.Key).Speed / (pair.Value * 1.5f), 1.19f, 1.26f);
         }
 
         var small = new[] { "bonequill", "nightfang", "vespera" };

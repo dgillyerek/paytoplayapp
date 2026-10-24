@@ -611,7 +611,8 @@ namespace Survival.Unity
                 return;
             }
 
-            var panel = OpenScreen(HeroesScreenName, S("campaign.heroes.title", "HEROES"));
+            // The banner follows the tab: OpenHeroes runs on open and on every tab tap, so the title is rebuilt each time.
+            var panel = OpenScreen(HeroesScreenName, S(HeroesScreen.TitleKey(_foesTab), HeroesScreen.TitleFallback(_foesTab)));
             var roster = Campaign.Roster;
             var defs = new List<CampaignHeroDef>(Campaign.Catalog.OnSide(_foesTab ? CampaignSide.Villain : CampaignSide.Hero));
             var sel = _selected.Length > 0 ? Campaign.Catalog.Hero(_selected) : null;
@@ -620,8 +621,8 @@ namespace Survival.Unity
                 _selected = defs.Count > 0 ? defs[0].Id : "";
             }
 
-            Tab(panel, "TabHeroes", S("campaign.tab.heroes", "Heroes"), !_foesTab, 0.04f, 0.27f, () => { _foesTab = false; _selected = ""; OpenHeroes(); });
-            Tab(panel, "TabFoes", S("campaign.tab.foes", "Foes"), _foesTab, 0.29f, 0.52f, () => { _foesTab = true; _selected = ""; OpenHeroes(); });
+            Tab(panel, "TabHeroes", S("campaign.tab.heroes", "Heroes"), HeroesScreen.TabHighlighted(false, _foesTab), 0.04f, 0.27f, () => { _foesTab = false; _selected = ""; OpenHeroes(); });
+            Tab(panel, "TabFoes", S("campaign.tab.foes", "Foes"), HeroesScreen.TabHighlighted(true, _foesTab), 0.29f, 0.52f, () => { _foesTab = true; _selected = ""; OpenHeroes(); });
             var queue = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Queue", "", 22, TextAnchor.MiddleRight, SurvivalVisuals.Cream), 1.5f);
             Box(queue.rectTransform, 0.54f, 0.895f, 0.96f, 0.935f);
 
