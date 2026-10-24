@@ -284,11 +284,20 @@ namespace Survival.Unity
             var height = measured.size.y;
             var scale = (height > 1e-4f ? data.DesignHeightMetres / height : 1f) * LockedBattleRoster.BattleScaleOf(data) * extraScale;
             host.transform.localScale = Vector3.one * scale;
-            rig._baseLocal = new Vector3(0f, -measured.min.y * scale, 0f);
+            // Most actors measure world-space renderer bounds, and the pool builds its rigs on a shelf 500 m below the
+            // road, so that box's height is right but its min / centre are not in the host's frame. The feet and the
+            // turn pivot need the host's own frame: a pivot ~500 m off swung the host metres sideways with the steer lean.
+            var hostBox = Measure(host.transform);
+            if (hostBox.size.y < 1e-4f)
+            {
+                hostBox = new Bounds(new Vector3(0f, height * 0.5f, 0f), measured.size);
+            }
+
+            rig._baseLocal = new Vector3(0f, -hostBox.min.y * scale, 0f);
             host.transform.localPosition = rig._baseLocal;
             rig.Height = data.DesignHeightMetres * LockedBattleRoster.BattleScaleOf(data) * extraScale;
             rig._ground = new LockedBattleGrounding(host.transform);
-            rig._pivotRest = new Vector3(0f, measured.center.y, 0f);
+            rig._pivotRest = new Vector3(0f, hostBox.center.y, 0f);
             if (RunnerStrideHold.Applies(data))
             {
                 rig._strideBone = FindBone(host.transform, data.StrideBone);

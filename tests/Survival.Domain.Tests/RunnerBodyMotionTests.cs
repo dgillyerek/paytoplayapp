@@ -234,6 +234,63 @@ public class RunnerBodyMotionTests
         Assert.Contains("PlaceHost(nudge, Height * 0.9f * t * t);", rig);
         Assert.Contains("PlaceHost(nudge, 0f);", rig);
         Assert.DoesNotContain("- hold", rig);
+        // The feet and the turn pivot come from the host's own frame, never the world-space renderer box
+        // (pooled rigs are built 500 m below the road, so that box's centre threw the steering hero off screen).
+        Assert.Contains("var hostBox = Measure(host.transform);", rig);
+        Assert.Contains("rig._pivotRest = new Vector3(0f, hostBox.center.y, 0f);", rig);
+        Assert.DoesNotContain("measured.center.y", rig);
+        Assert.DoesNotContain("-measured.min.y", rig);
+    }
+
+    /// <summary>Derek 2026-10-23: moving the hero side to side made him jump way off the screen.</summary>
+    [Fact]
+    public void Steering_left_and_right_keeps_the_drawn_hero_on_the_road_and_on_the_steer()
+    {
+        const float leanPerMetrePerSecond = 0.75f; // RunnerRig.LeanPerMetrePerSecond
+        const float maxLean = 7f;                  // RunnerRig.MaxLeanDegrees
+        const float shelfY = -500f;                // RunnerRigPool shelf
+        var run = Runner.Run(Runner.Catalog());
+        var scale = new System.Numerics.Vector3(1.1f);
+        var pivot = new System.Numerics.Vector3(0f, 0.9f, 0f);            // host-local hips height
+        var shelfPivot = new System.Numerics.Vector3(0f, shelfY + 0.9f, 0f); // the world-space box centre the rig used
+        var half = run.Level.HalfWidth;
+        var lean = 0f;
+        var worstGap = 0f;
+        var worstOldGap = 0f;
+        var dt = 1f / 30f;
+        for (var frame = 0; frame < 300 && !run.Over; frame++)
+        {
+            // Full left, full right, a quick wiggle, then hold right.
+            var target = frame < 240 ? ((frame / (frame < 120 ? 45 : 10)) % 2 == 0 ? -run.MaxSteer : run.MaxSteer) : run.MaxSteer * 0.5f;
+            run.SteerTo(target);
+            var before = run.Hero.X;
+            run.Step(dt);
+            var leanTarget = System.Math.Clamp(-run.Hero.VX * leanPerMetrePerSecond, -maxLean, maxLean);
+            lean += (leanTarget - lean) * System.Math.Min(1f, dt * 12f);
+            var turn = System.Numerics.Quaternion.CreateFromAxisAngle(System.Numerics.Vector3.UnitZ, lean * (float)System.Math.PI / 180f);
+            var host = RunnerRootPlacement.HostPosition(System.Numerics.Vector3.Zero, System.Numerics.Vector3.Zero, 0f, turn, scale, pivot, pivot, false);
+            var drawn = run.Hero.X + RunnerRootPlacement.Rendered(host, turn, scale, pivot).X;
+            var oldHost = RunnerRootPlacement.HostPosition(System.Numerics.Vector3.Zero, System.Numerics.Vector3.Zero, 0f, turn, scale, shelfPivot, shelfPivot, false);
+            var oldDrawn = run.Hero.X + RunnerRootPlacement.Rendered(oldHost, turn, scale, pivot).X;
+
+            Assert.InRange(run.Hero.X, -half, half);
+            Assert.InRange(drawn, -half, half);
+            worstGap = System.Math.Max(worstGap, System.Math.Abs(drawn - run.Hero.X));
+            worstOldGap = System.Math.Max(worstOldGap, System.Math.Abs(oldDrawn - run.Hero.X));
+            // The hero moves toward the steer, never away from it.
+            if (System.Math.Abs(target - before) > 0.05f)
+            {
+                Assert.True(System.Math.Sign(run.Hero.X - before) == System.Math.Sign(target - before) || System.Math.Abs(run.Hero.X - before) < 1e-4f,
+                    "frame " + frame + " moved away from the steer");
+            }
+        }
+
+        Assert.False(run.Over);
+        Assert.InRange(run.Hero.X, run.MaxSteer * 0.5f - 0.05f, run.MaxSteer * 0.5f + 0.05f);
+        // The drawn body stays within a few cm of the hero's lane.
+        Assert.True(worstGap < 0.15f, "drawn hero strayed " + worstGap + " m from his lane");
+        // The old world-space pivot reproduces the jump: metres off the lane.
+        Assert.True(worstOldGap > 5f, "the old pivot should reproduce the jump, strayed " + worstOldGap);
     }
 
     [Fact]
