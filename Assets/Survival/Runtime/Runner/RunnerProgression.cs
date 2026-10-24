@@ -44,8 +44,79 @@ namespace Survival.Domain.Runner
                 Math.Max(0f, LayoutJson.OptNum(o, "boss_hp_step", 0.2f)),
                 Math.Max(0f, LayoutJson.OptNum(o, "box_hp_step", 0.1f)),
                 Math.Max(0f, LayoutJson.OptNum(o, "reward_step", 0.3f)),
-                names);
+                names)
+            {
+                Ramp = o.TryGet("ramp", out var rn) && rn is JsonNode.Obj ro ? RunnerRampDef.Read(ro) : null
+            };
         }
+
+        /// <summary>The late-game ramp (levels past <see cref="RunnerRampDef.From"/>), or null for the plain linear steps.</summary>
+        public RunnerRampDef? Ramp { get; init; }
+
+        /// <summary>The t (level - 1) the enemy and box counts use: it stops growing at the ramp's count cap.</summary>
+        public int CountT(int number) => Math.Max(0, Math.Min(number, Ramp?.CountCap ?? int.MaxValue) - 1);
+    }
+
+    /// <summary>
+    /// runner_levels.json "progression" "ramp": how levels past <see cref="From"/> keep getting harder once the road stops
+    /// getting longer. Each level past From multiplies enemy HP, enemy damage and boss HP by the growth; each level past
+    /// <see cref="WallFrom"/> by the (steeper) wall growth instead. That wall is what a free player's trained heroes stop
+    /// keeping up with (RunnerBalance; tests/Survival.Domain.Tests/RunnerBalanceTests.cs).
+    /// </summary>
+    public sealed record RunnerRampDef(
+        int From,
+        int WallFrom,
+        int CountCap,
+        float LengthCap,
+        float SpeedCap,
+        float FoeHpGrowth,
+        float FoeDmgGrowth,
+        float BossHpGrowth,
+        float WallHpGrowth,
+        float WallDmgGrowth,
+        float WallBossGrowth,
+        float WallStepHp = 1f,
+        float WallStepDmg = 1f)
+    {
+        internal static RunnerRampDef Read(JsonNode.Obj o) => new(
+            Math.Max(1, LayoutJson.OptInt(o, "from", 12)),
+            Math.Max(1, LayoutJson.OptInt(o, "wall_from", 30)),
+            Math.Max(1, LayoutJson.OptInt(o, "count_cap", 20)),
+            Math.Max(10f, LayoutJson.OptNum(o, "length_cap", 330f)),
+            Math.Max(0.5f, LayoutJson.OptNum(o, "speed_cap", 2.3f)),
+            Math.Max(1f, LayoutJson.OptNum(o, "foe_hp_growth", 1f)),
+            Math.Max(1f, LayoutJson.OptNum(o, "foe_dmg_growth", 1f)),
+            Math.Max(1f, LayoutJson.OptNum(o, "boss_hp_growth", 1f)),
+            Math.Max(1f, LayoutJson.OptNum(o, "wall_hp_growth", 1f)),
+            Math.Max(1f, LayoutJson.OptNum(o, "wall_dmg_growth", 1f)),
+            Math.Max(1f, LayoutJson.OptNum(o, "wall_boss_growth", 1f)),
+            Math.Max(1f, LayoutJson.OptNum(o, "wall_step_hp", 1f)),
+            Math.Max(1f, LayoutJson.OptNum(o, "wall_step_dmg", 1f)));
+
+        /// <summary>
+        /// Product of the per-level growths from From + 1 to <paramref name="number"/> (1 up to From), times the one-time
+        /// <paramref name="step"/> from the first wall level on.
+        /// </summary>
+        public float Mul(int number, float growth, float wallGrowth, float step = 1f)
+        {
+            var m = 1.0;
+            for (var n = From + 1; n <= number; n++)
+            {
+                m *= n > WallFrom ? wallGrowth : growth;
+                if (n == WallFrom + 1)
+                {
+                    m *= step;
+                }
+            }
+
+            return (float)m;
+        }
+
+        public float FoeHpMul(int number) => Mul(number, FoeHpGrowth, WallHpGrowth, WallStepHp);
+
+        public float FoeDmgMul(int number) => Mul(number, FoeDmgGrowth, WallDmgGrowth, WallStepDmg);
+
+        public float BossHpMul(int number) => Mul(number, BossHpGrowth, WallBossGrowth, WallStepHp);
     }
 
     /// <summary>
@@ -79,7 +150,8 @@ namespace Survival.Domain.Runner
             }
 
             var t = number - 1;
-            var length = (float)Math.Round(first.Length + (p.LengthStep * t));
+            var ramp = p.Ramp;
+            var length = (float)Math.Round(Math.Min(first.Length + (p.LengthStep * t), ramp?.LengthCap ?? float.MaxValue));
             var rows = Rows(p, number, length, first.HalfWidth, BossUnit(first), hasUnit);
             var r = first.Rewards;
             var pay = 1f + (p.RewardStep * t);
@@ -95,7 +167,7 @@ namespace Survival.Domain.Runner
                 "runner.level." + slug,
                 first.Hero,
                 length,
-                first.Speed + (p.SpeedStep * t),
+                Math.Min(first.Speed + (p.SpeedStep * t), Math.Max(first.Speed, ramp?.SpeedCap ?? float.MaxValue)),
                 first.HalfWidth,
                 first.MaxFollowers,
                 rows,
@@ -103,8 +175,9 @@ namespace Survival.Domain.Runner
             {
                 Number = number,
                 DisplayName = number - 1 < p.Names.Count ? p.Names[number - 1] : "Road " + number.ToString(CultureInfo.InvariantCulture),
-                FoeHpMul = first.FoeHpMul * (1f + (p.FoeHpStep * t)),
-                BossHpMul = first.BossHpMul * (1f + (p.BossHpStep * t))
+                FoeHpMul = first.FoeHpMul * (1f + (p.FoeHpStep * t)) * (ramp?.FoeHpMul(number) ?? 1f),
+                BossHpMul = first.BossHpMul * (1f + (p.BossHpStep * t)) * (ramp?.BossHpMul(number) ?? 1f),
+                FoeDmgMul = first.FoeDmgMul * (ramp?.FoeDmgMul(number) ?? 1f)
             };
         }
 
@@ -112,6 +185,8 @@ namespace Survival.Domain.Runner
         public static List<RunnerRowDef> Rows(RunnerProgressionDef p, int number, float length, float halfWidth, string bossUnit, Func<string, bool> hasUnit)
         {
             var t = Math.Max(0, number - 1);
+            // Enemy / box counts stop growing at the ramp's count cap (the road stops growing too); HP and damage carry on.
+            var tc = p.CountT(number);
             var rnd = new Random(unchecked(p.Seed + (number * 7919)));
             var bossAt = length - 8f;
             var boxMul = 1f + (p.BoxHpStep * t);
@@ -163,7 +238,7 @@ namespace Survival.Domain.Runner
                 }
                 else if (beat % 2 == 0 || beat == 1)
                 {
-                    var count = 2 + (beat % 3) + (t / 3);
+                    var count = 2 + (beat % 3) + (tc / 3);
                     rows.Add(Box(z, fx, hpAt, RunnerBoxKind.Followers, FollowerUnits[beat % FollowerUnits.Length], count, 0f));
                 }
 
@@ -188,7 +263,7 @@ namespace Survival.Domain.Runner
                             rows.Add(Box(z + 1.5f, ux, (int)Math.Round(upHp * 0.7f), kind, "", 1, 0.35f));
                             break;
                         default:
-                            rows.Add(Box(z + 1.5f, ux, (int)Math.Round(upHp * 0.6f), RunnerBoxKind.Followers, FollowerUnits[(beat + 2) % FollowerUnits.Length], 1 + (t / 4), 0f));
+                            rows.Add(Box(z + 1.5f, ux, (int)Math.Round(upHp * 0.6f), RunnerBoxKind.Followers, FollowerUnits[(beat + 2) % FollowerUnits.Length], 1 + (tc / 4), 0f));
                             break;
                     }
                 }
@@ -197,7 +272,7 @@ namespace Survival.Domain.Runner
                 if (beat % 2 == 1 && beat >= 3)
                 {
                     var skirm = beat % 4 == 1 ? "nightfang" : "bonequill";
-                    Group(rows, z + 4f, fx * 0.6f, skirm, 2 + (int)Math.Round(t * along * 0.2f), 1.1f, halfWidth);
+                    Group(rows, z + 4f, fx * 0.6f, skirm, 2 + (int)Math.Round(tc * along * 0.2f), 1.1f, halfWidth);
                 }
 
                 // A lane trap between the boxes and the wave.
@@ -235,16 +310,16 @@ namespace Survival.Domain.Runner
                 var opening = beat < 2;
                 // The very first wave stands 12 m past its chest (8 m later on): the faster walkers otherwise reach the
                 // chest as it opens and pick off the new 1 hp followers before they can shoot.
-                Group(rows, z + (beat == 0 ? FirstWaveMetres : 8f), wx, front, opening ? 2 + beat : 3 + (beat % 2) + (int)Math.Round(t * along * 0.3f), 1.1f, halfWidth);
+                Group(rows, z + (beat == 0 ? FirstWaveMetres : 8f), wx, front, opening ? 2 + beat : 3 + (beat % 2) + (int)Math.Round(tc * along * 0.3f), 1.1f, halfWidth);
                 if (beat > 0)
                 {
-                    Group(rows, z + 10.5f, -wx * 0.5f, back, opening ? 1 : 2 + (int)Math.Round(t * along * 0.25f), 1.4f, halfWidth);
+                    Group(rows, z + 10.5f, -wx * 0.5f, back, opening ? 1 : 2 + (int)Math.Round(tc * along * 0.25f), 1.4f, halfWidth);
                 }
 
                 if (beat % 3 == 2 || (t >= 6 && beat % 3 == 0 && beat > 0))
                 {
                     var heavy = number >= 7 && hasUnit("ashwyrm") && beat % 2 == 0 ? "ashwyrm" : "blightroot";
-                    var hc = 1 + (int)Math.Round(t * along / 5f);
+                    var hc = 1 + (int)Math.Round(tc * along / 5f);
                     Group(rows, z + 12f, -wx, heavy, hc, 3.2f, halfWidth);
                 }
 
@@ -252,7 +327,7 @@ namespace Survival.Domain.Runner
             }
 
             // The boss's guard: a line of archers just before it, longer with the level.
-            Group(rows, bossAt - 7f, 0f, "bonequill", 3 + (t / 2), 1.4f, halfWidth);
+            Group(rows, bossAt - 7f, 0f, "bonequill", 3 + (tc / 2), 1.4f, halfWidth);
             rows.Add(new RunnerRowDef(bossAt, RunnerRowKind.Boss, 0f, bossUnit, 1, 0f, null));
             rows.Sort((a, b) => a.At.CompareTo(b.At));
             return rows;

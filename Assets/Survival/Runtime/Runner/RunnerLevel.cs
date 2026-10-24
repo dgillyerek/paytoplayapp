@@ -142,6 +142,9 @@ namespace Survival.Domain.Runner
         /// <summary>The boss's HP is its unit HP times this.</summary>
         public float BossHpMul { get; init; } = 1f;
 
+        /// <summary>Every enemy's (and the boss's) hit is its unit damage times this; 1 up to Level 12, then the ramp (see <see cref="RunnerProgression"/>).</summary>
+        public float FoeDmgMul { get; init; } = 1f;
+
         /// <summary>Boss HP on this level (0 without a boss).</summary>
         public int BossHp(RunnerCatalog catalog)
         {
@@ -512,7 +515,8 @@ namespace Survival.Domain.Runner
                     Number = number,
                     DisplayName = LayoutJson.OptStr(l, "name", LayoutJson.Str(l, "id")),
                     FoeHpMul = Math.Max(0.1f, LayoutJson.OptNum(l, "foe_hp_mul", 1f)),
-                    BossHpMul = Math.Max(0.1f, LayoutJson.OptNum(l, "boss_hp_mul", 1f))
+                    BossHpMul = Math.Max(0.1f, LayoutJson.OptNum(l, "boss_hp_mul", 1f)),
+                    FoeDmgMul = Math.Max(0.1f, LayoutJson.OptNum(l, "foe_dmg_mul", 1f))
                 });
             }
 

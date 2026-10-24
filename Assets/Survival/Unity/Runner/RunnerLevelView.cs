@@ -56,6 +56,7 @@ namespace Survival.Unity
         private ThemePackBinder? _pack;
         private RunnerCatalog? _catalog;
         private RunnerLevelDef? _level;
+        private RunnerLoadout _loadout = RunnerLoadout.None;
         private RunnerRun? _run;
         private Camera? _cam;
         private Transform? _world;
@@ -157,6 +158,7 @@ namespace Survival.Unity
             }
 
             _unlocked = RunnerHandoff.FromPlay ? RunnerHandoff.Unlocked : StandaloneUnlocked();
+            _loadout = SavedLoadout(_catalog);
             var wanted = RunnerHandoff.PendingLevel ?? (levelId.Length > 0 ? levelId : null);
             _level = _catalog.Level(wanted) ?? _catalog.ByNumber(_unlocked);
             try
@@ -224,7 +226,7 @@ namespace Survival.Unity
             StopTopUp();
             ClearActors();
             _attempt++;
-            _run = new RunnerRun(_catalog, _level);
+            _run = new RunnerRun(_catalog, _level, _loadout);
             RunnerHitchLog.Reset();
             _peakFoes = _peakSquad = _peakShots = 0;
             _resultShown = false;
@@ -454,6 +456,31 @@ namespace Survival.Unity
             {
                 Debug.LogWarning("Runner: save unreadable, Level 1 only. " + ex.Message);
                 return 1;
+            }
+        }
+
+        /// <summary>
+        /// The trained heroes in survival_save.json carried into the run (RunnerLoadout: each runner unit's damage and HP
+        /// scale with its campaign hero's level and stars). No save, or an unreadable one: the untrained JSON numbers.
+        /// </summary>
+        private static RunnerLoadout SavedLoadout(RunnerCatalog runner)
+        {
+            try
+            {
+                var savePath = SurvivalCampaignView.SavePath;
+                var catalogPath = Path.Combine(SurvivalBootstrap.ResolveCatalogDir(), CampaignCatalog.FileName);
+                if (!File.Exists(savePath) || !PlayerAssets.FileExists(catalogPath))
+                {
+                    return RunnerLoadout.None;
+                }
+
+                var campaign = new CampaignSession(CampaignCatalog.Parse(PlayerAssets.ReadAllText(catalogPath)), new Wallet(), new WallClock());
+                return campaign.Load(File.ReadAllText(savePath)) ? RunnerLoadout.From(runner, campaign.Roster) : RunnerLoadout.None;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("Runner: save unreadable, untrained squad. " + ex.Message);
+                return RunnerLoadout.None;
             }
         }
 

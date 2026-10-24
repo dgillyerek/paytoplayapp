@@ -102,7 +102,7 @@ public sealed class RunnerCapMeleeBossTests
 
         foreach (var level in c.Levels)
         {
-            var run = new RunnerRun(c, level);
+            var run = new RunnerRun(c, level, RunnerShipped.Squad(c, level));
             var most = 0;
             while (!run.Over && run.Seconds < 300f)
             {
@@ -327,7 +327,7 @@ public sealed class RunnerCapMeleeBossTests
         var c = Runner.Catalog();
         foreach (var level in c.Levels)
         {
-            var run = new RunnerRun(c, level);
+            var run = new RunnerRun(c, level, RunnerShipped.Squad(c, level));
             int windups = 0, slams = 0;
             float caught = 0f;
             while (!run.Over && run.Seconds < 400f)
@@ -341,7 +341,7 @@ public sealed class RunnerCapMeleeBossTests
                 }
             }
 
-            _out.WriteLine($"L{level.Number}: {run.Outcome} windups {windups} slams {slams} caught {caught} hero {run.Hero.Hp}/{run.Hero.Unit.Hp}");
+            _out.WriteLine($"L{level.Number}: {run.Outcome} windups {windups} slams {slams} caught {caught} hero {run.Hero.Hp}/{run.Hero.MaxHp}");
             Assert.Equal(RunnerOutcome.Won, run.Outcome);
             Assert.True(slams >= 1 && windups >= slams, $"L{level.Number}: the boss attacked ({windups} windups, {slams} slams)");
         }

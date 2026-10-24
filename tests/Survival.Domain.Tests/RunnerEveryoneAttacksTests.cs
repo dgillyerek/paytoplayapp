@@ -88,7 +88,7 @@ public sealed class RunnerEveryoneAttacksTests
         var shooters = RangedFoes.ToDictionary(f => f, _ => 0);
         foreach (var level in c.Levels)
         {
-            var run = new RunnerRun(c, level);
+            var run = new RunnerRun(c, level, RunnerShipped.Squad(c, level));
             var unitOf = new Dictionary<int, string>();
             var fired = new HashSet<int>();
             var joined = new Dictionary<int, float>();

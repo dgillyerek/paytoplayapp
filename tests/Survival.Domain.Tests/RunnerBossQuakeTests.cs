@@ -333,12 +333,12 @@ public sealed class RunnerBossQuakeTests
         var problems = new List<string>();
         foreach (var level in c.Levels)
         {
-            var dodge = Play(new RunnerRun(c, level), r => DodgingPlayer(r, 0.3f));
-            var still = Play(new RunnerRun(c, level), Runner.AimLikeAPlayer);
+            var dodge = Play(new RunnerRun(c, level, RunnerShipped.Squad(c, level)), r => DodgingPlayer(r, 0.3f));
+            var still = Play(new RunnerRun(c, level, RunnerShipped.Squad(c, level)), Runner.AimLikeAPlayer);
             var dq = dodge.Moves.Count(m => m.Kind == RunnerEventKind.BossQuake);
             var sq = still.Moves.Count(m => m.Kind == RunnerEventKind.BossQuake);
-            var dHp = dodge.Run.Hero.Hp / (float)dodge.Run.Hero.Unit.Hp;
-            var sHp = still.Run.Hero.Hp / (float)still.Run.Hero.Unit.Hp;
+            var dHp = dodge.Run.Hero.HpFraction;
+            var sHp = still.Run.Hero.HpFraction;
             var dLost = dodge.Events.Count(e => e.Kind == RunnerEventKind.FollowerLost && e.Amount >= 0);
             var sLost = still.Events.Count(e => e.Kind == RunnerEventKind.FollowerLost);
             var dFight = dodge.Run.Seconds - dodge.Moves.First(m => m.Kind == RunnerEventKind.BossEngaged).At;
