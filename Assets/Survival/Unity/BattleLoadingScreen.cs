@@ -37,6 +37,7 @@ namespace Survival.Unity
         private Camera? _floor;
         private CanvasGroup? _group;
         private Image? _barFill;
+        private Text? _status;
         private RectTransform? _emblem;
         private Scene _target;
         private bool _watching;
@@ -64,6 +65,15 @@ namespace Survival.Unity
 
         /// <summary>Scene load / unload progress for the bar.</summary>
         public void Progress(float p) => _t.ReportProgress(p);
+
+        /// <summary>The line above the bar (what is being built and how far: "Mustering heroes and foes 12/35 - 47%").</summary>
+        public void SetStatus(string text)
+        {
+            if (_status != null && _status.text != text)
+            {
+                _status.text = text;
+            }
+        }
 
         /// <summary>
         /// From now on, the first frame any camera in <paramref name="target"/> renders lets the screen fade out
@@ -270,6 +280,8 @@ namespace Survival.Unity
             var bar = HookSkin.Bar(root, "Bar", out var fill);
             SurvivalVisuals.AnchorBox(bar.rectTransform, 0.5f, 0.17f, 0.78f, 0.03f);
             _barFill = fill;
+            _status = HookSkin.Outlined(SurvivalVisuals.Text(root, "Status", "", 30, TextAnchor.MiddleCenter, SurvivalVisuals.Reward), 2f);
+            SurvivalVisuals.AnchorBox(_status.rectTransform, 0.5f, 0.225f, 0.86f, 0.05f);
             var tip = HookSkin.Outlined(SurvivalVisuals.Text(root, "Tip", info.Tip, 32, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 2f);
             tip.horizontalOverflow = HorizontalWrapMode.Wrap;
             SurvivalVisuals.AnchorBox(tip.rectTransform, 0.5f, 0.1f, 0.86f, 0.08f);

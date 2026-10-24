@@ -40,6 +40,17 @@ namespace Survival.Domain.Runner
         /// </summary>
         public static float BoxAlpha(int hp) => hp > 0 ? 1f : 0f;
 
+        /// <summary>
+        /// The squad's own bars (the lead and every follower) are always shown too, fully opaque, while the member is
+        /// alive (Derek 2026-10-23: the followers' 25 HP has to be seen); only enemy bars fade in on damage.
+        /// </summary>
+        public static float SquadAlpha(int hp) => hp > 0 ? 1f : 0f;
+
+        /// <summary>The squad's bars are a little wider than an enemy's sliver so they read at a glance.</summary>
+        public const float SquadWidthPx = 8f;
+
+        public static float WidthFor(bool squad) => squad ? SquadWidthPx : WidthPx;
+
         /// <summary>The runner's road has no lanes: the bar never has to fold back to fit one.</summary>
         private const float NoLane = float.MaxValue;
 

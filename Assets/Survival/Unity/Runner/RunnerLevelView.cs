@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using Survival.Domain.Campaign;
@@ -33,12 +34,13 @@ namespace Survival.Unity
         // Behind / above, a quarter turn off the centre line: the squad reads as 3D bodies in 3/4 from behind, the
         // foes coming down the road in 3/4 from the front (about 26 degrees down).
         // Framed on the middle of the squad (not the leader) so a 10-strong formation's back row stays in shot.
-        private const float CameraHeight = 7.6f;
-        private const float CameraBack = 10.0f;
+        // Heights, look-ahead and the one-row push live in RunnerFraming (Survival.Domain) so the tests frame the same shot.
+        private const float CameraHeight = RunnerFraming.CameraHeight;
+        private const float CameraBack = RunnerFraming.CameraBack;
         private const float CameraSide = -1.2f;
         // Looks further down the road since the squad's reach grew to ~20 m (Update 4): the foes it shoots stay in shot.
-        private const float CameraLookAhead = 6.5f;
-        private const float CameraLookHeight = 0.9f;
+        private const float CameraLookAhead = RunnerFraming.CameraLookAhead;
+        private const float CameraLookHeight = RunnerFraming.CameraLookHeight;
 
         /// <summary>The unit a follower / hero box pays stands on its lid at this share of battle size.</summary>
         private const float CaptiveScale = 0.72f;
@@ -83,23 +85,54 @@ namespace Survival.Unity
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics() => RunnerHandoff.Reset();
 
-        private void Start() => Boot();
+        // A coroutine Start: Unity runs it as one, so the boot below spreads its work over frames.
+        private IEnumerator Start() => Boot();
 
         private void OnDestroy()
         {
             // Other scenes' actors light themselves again.
             ActorSceneLights.Suppressed = false;
             RunnerHitchLog.Loading(false);
+            RunnerHitchLog.Describe(null);
         }
 
-        private void Boot()
+        private IEnumerator Boot()
         {
             if (_booted || !Application.isPlaying)
             {
-                return;
+                yield break;
             }
 
             _booted = true;
+            var bootStart = System.Diagnostics.Stopwatch.GetTimestamp();
+            var progress = RunnerBoot.Begin();
+            RunnerHitchLog.Loading(true);
+            RunnerHitchLog.Describe(DescribeBoss);
+            RunnerHitchLog.Transition("runner boot");
+            Debug.Log(RunnerHitchLog.Prefix + " device " + SystemInfo.graphicsDeviceName + " (" + SystemInfo.graphicsDeviceType + "), " + Screen.width + "x" + Screen.height
+                + ", quality " + QualitySettings.names[QualitySettings.GetQualityLevel()] + ", vSync " + QualitySettings.vSyncCount + ", target fps " + Application.targetFrameRate
+                + ", cpu " + SystemInfo.processorCount + " threads");
+            bool ready;
+            using (RunnerHitchLog.Heavy("runner scene setup"))
+            {
+                ready = BootSetup();
+            }
+
+            if (!ready)
+            {
+                RunnerHitchLog.Loading(false);
+                progress.Finish();
+                yield break;
+            }
+
+            // Every rig, shot, effect and trap the level shows at launch, built a few milliseconds a frame while the loading
+            // screen reports each step, then drawn once off-screen to compile shaders; the run starts when that is done.
+            yield return PrewarmRoutine(_level!, progress, null, bootStart);
+        }
+
+        /// <summary>The synchronous part of the boot: pack, catalog, camera, world, lights, ground, HUD. False when there is nothing to run.</summary>
+        private bool BootSetup()
+        {
             SurvivalVisuals.EnsureEventSystem();
             _pack = LoadPack();
             if (_pack != null)
@@ -110,12 +143,17 @@ namespace Survival.Unity
             var path = Path.Combine(SurvivalBootstrap.ResolveCatalogDir(), RunnerCatalog.FileName);
             try
             {
-                _catalog = RunnerCatalog.Parse(File.ReadAllText(path));
+                _catalog = RunnerCatalog.Parse(PlayerAssets.ReadAllText(path));
             }
             catch (Exception ex)
             {
                 Debug.LogError("Runner: could not read " + path + ". " + ex.Message);
-                return;
+                if (RunnerHandoff.FromPlay && !RunnerHandoff.Done)
+                {
+                    RunnerHandoff.Finish();
+                }
+
+                return false;
             }
 
             _unlocked = RunnerHandoff.FromPlay ? RunnerHandoff.Unlocked : StandaloneUnlocked();
@@ -123,6 +161,8 @@ namespace Survival.Unity
             _level = _catalog.Level(wanted) ?? _catalog.ByNumber(_unlocked);
             try
             {
+                // The level's plan runs on a worker thread while the scene below is built.
+                PlanOf(_level);
                 // Camera first, so the scene always has a working camera for the loading screen to reveal.
                 BuildCamera();
                 _world = new GameObject("RunnerWorld").transform;
@@ -132,10 +172,7 @@ namespace Survival.Unity
                 BuildHud();
                 _actors = new GameObject("RunnerActors").transform;
                 _actors.SetParent(_world, false);
-                // Every rig, shot, effect and trap the level can show, built now while the loading screen covers
-                // the scene (Boot runs before the first frame), then drawn once off-screen to compile shaders.
-                Prewarm(_level);
-                StartRun();
+                return true;
             }
             catch (Exception ex)
             {
@@ -148,6 +185,8 @@ namespace Survival.Unity
                 {
                     RunnerHandoff.Finish();
                 }
+
+                return false;
             }
         }
 
@@ -157,10 +196,10 @@ namespace Survival.Unity
             {
                 var root = SurvivalArt.ResolvePackRoot(AppFlavorConfig.FantasyKingdomA);
                 return ThemePackBinder.Parse(
-                    File.ReadAllText(Path.Combine(root, "pack.json")),
-                    File.ReadAllText(Path.Combine(root, "strings", "en.json")),
-                    File.ReadAllText(Path.Combine(root, "map", "node_pins.json")),
-                    File.ReadAllText(Path.Combine(root, "ui", "hud_layout.json")));
+                    PlayerAssets.ReadAllText(Path.Combine(root, "pack.json")),
+                    PlayerAssets.ReadAllText(Path.Combine(root, "strings", "en.json")),
+                    PlayerAssets.ReadAllText(Path.Combine(root, "map", "node_pins.json")),
+                    PlayerAssets.ReadAllText(Path.Combine(root, "ui", "hud_layout.json")));
             }
             catch (Exception ex)
             {
@@ -182,6 +221,7 @@ namespace Survival.Unity
                 return;
             }
 
+            StopTopUp();
             ClearActors();
             _attempt++;
             _run = new RunnerRun(_catalog, _level);
@@ -204,36 +244,12 @@ namespace Survival.Unity
         /// </summary>
         public void PlayLevel(int number)
         {
-            if (_catalog == null || !RunnerProgress.IsOpen(_unlocked, number))
+            if (_catalog == null || _switching || !RunnerProgress.IsOpen(_unlocked, number))
             {
                 return;
             }
 
-            ClearActors();
-            HideResult();
-            HideLevelList();
-            if (_hud != null)
-            {
-                Destroy(_hud.gameObject);
-                _hud = null;
-            }
-
-            if (_world != null)
-            {
-                Destroy(_world.gameObject);
-            }
-
-            _level = _catalog.ByNumber(number);
-            _world = new GameObject("RunnerWorld").transform;
-            _world.SetParent(transform, false);
-            _actors = new GameObject("RunnerActors").transform;
-            _actors.SetParent(_world, false);
-            BuildGround(_level);
-            BuildHud();
-            // Tops the pools up for this level and the next. Boot already warmed this one, so only what the level
-            // after it adds is built, here at the switch (logged loading=yes) rather than live on the road.
-            Prewarm(_level);
-            StartRun();
+            StartCoroutine(PlayLevelRoutine(number));
         }
 
         /// <summary>The next level after this one, when it is open.</summary>
@@ -278,6 +294,8 @@ namespace Survival.Unity
         {
             if (_run == null)
             {
+                // Booting or switching levels: the frame still goes in the hitch log (tagged loading=yes).
+                RunnerHitchLog.Frame(_level?.Number ?? 0, 0f, 0, 0, 0);
                 return;
             }
 
@@ -320,6 +338,7 @@ namespace Survival.Unity
             RunnerHitchLog.End(RunnerHitchLog.Section.Actors);
             AnimateHazards(dt);
             AnimateSlamMark();
+            AnimateQuakeMark();
             RunnerHitchLog.Begin(RunnerHitchLog.Section.Shots);
             TickShots(dt);
             TickFx(dt);
@@ -332,6 +351,7 @@ namespace Survival.Unity
         private void LateUpdate()
         {
             var dt = Time.deltaTime;
+            RunnerHitchLog.Begin(RunnerHitchLog.Section.Late);
             foreach (var r in _members.Values)
             {
                 r.Late(dt);
@@ -358,9 +378,12 @@ namespace Survival.Unity
                 }
             }
 
+            RunnerHitchLog.End(RunnerHitchLog.Section.Late);
+            RunnerHitchLog.Begin(RunnerHitchLog.Section.Camera);
             FollowCamera(dt);
             Billboards();
             PlaceWorldUi();
+            RunnerHitchLog.End(RunnerHitchLog.Section.Camera);
         }
 
         private void Finish()
@@ -371,6 +394,8 @@ namespace Survival.Unity
             }
 
             _resultShown = true;
+            RunnerHitchLog.Transition("result build");
+            RunnerHitchLog.Begin(RunnerHitchLog.Section.Finish);
             var result = _run.Result;
             RunnerHitchLog.Summary(_level.Number, result.Won ? "Won" : "Lost", _peakFoes, _peakSquad, _peakShots);
             var bundle = RunnerRewards.For(_level, result);
@@ -385,7 +410,26 @@ namespace Survival.Unity
                 saved = PayStandalone(bundle);
             }
 
-            ShowResult(result, bundle, saved);
+            RunnerHitchLog.End(RunnerHitchLog.Section.Finish);
+            using (RunnerHitchLog.Heavy("result screen build"))
+            {
+                ShowResult(result, bundle, saved);
+            }
+
+            // The canvas lays out and builds its meshes on the next render; doing it here, named, puts its cost in the
+            // log instead of in an anonymous frame (best-fit text and the outlines are the suspects).
+            using (RunnerHitchLog.Heavy("result canvas layout"))
+            {
+                Canvas.ForceUpdateCanvases();
+            }
+
+            RunnerHitchLog.Transition("result shown");
+            // Nothing is running now: finish the pools (this level's margin, the next level's extras) a few ms a frame.
+            StopTopUp();
+            if (_level != null)
+            {
+                _topUp = StartCoroutine(TopUpRoutine(_level));
+            }
         }
 
         /// <summary>
@@ -398,12 +442,12 @@ namespace Survival.Unity
             {
                 var savePath = SurvivalCampaignView.SavePath;
                 var catalogPath = Path.Combine(SurvivalBootstrap.ResolveCatalogDir(), CampaignCatalog.FileName);
-                if (!File.Exists(savePath) || !File.Exists(catalogPath))
+                if (!File.Exists(savePath) || !PlayerAssets.FileExists(catalogPath))
                 {
                     return 1;
                 }
 
-                var campaign = new CampaignSession(CampaignCatalog.Parse(File.ReadAllText(catalogPath)), new Wallet(), new WallClock());
+                var campaign = new CampaignSession(CampaignCatalog.Parse(PlayerAssets.ReadAllText(catalogPath)), new Wallet(), new WallClock());
                 return campaign.Load(File.ReadAllText(savePath)) ? campaign.RunnerUnlocked : 1;
             }
             catch (Exception ex)
@@ -419,12 +463,12 @@ namespace Survival.Unity
             {
                 var savePath = SurvivalCampaignView.SavePath;
                 var catalogPath = Path.Combine(SurvivalBootstrap.ResolveCatalogDir(), CampaignCatalog.FileName);
-                if (!File.Exists(savePath) || !File.Exists(catalogPath))
+                if (!File.Exists(savePath) || !PlayerAssets.FileExists(catalogPath))
                 {
                     return false;
                 }
 
-                var campaign = new CampaignSession(CampaignCatalog.Parse(File.ReadAllText(catalogPath)), new Wallet(), new WallClock());
+                var campaign = new CampaignSession(CampaignCatalog.Parse(PlayerAssets.ReadAllText(catalogPath)), new Wallet(), new WallClock());
                 if (!campaign.Load(File.ReadAllText(savePath)))
                 {
                     return false;
@@ -533,10 +577,8 @@ namespace Survival.Unity
                         rig.Slot.rotation = Quaternion.identity;
                         rig.Walk();
                         _members[m.Id] = rig;
-                        if (m.IsHero)
-                        {
-                            AddSideBar(m.Id, true, rig, false);
-                        }
+                        // The lead and every follower: a sliver always shown while alive, so the followers' HP reads.
+                        AddSideBar(m.Id, true, rig, false);
                     }
                 }
             }
@@ -747,6 +789,8 @@ namespace Survival.Unity
 
                 if (m.Attacking)
                 {
+                    // The shooters keep walking under their take unless the squad stands at the boss's line.
+                    rig.WalkUnderAttack(!_run.Halted);
                     // Shots fly straight down the road, so shooters face straight down it (plus the rig's own aim
                     // offset, e.g. Rowan's bow); a melee swing turns to what it hit.
                     var target = !m.Unit.Ranged && m.TargetId != 0 ? TargetPosition(m.TargetId) : null;
@@ -919,6 +963,18 @@ namespace Survival.Unity
                     break;
                 }
 
+                case RunnerEventKind.FollowerHit:
+                {
+                    if (_members.TryGetValue(e.Id, out var follower))
+                    {
+                        var foe = _run?.Foe(e.Other);
+                        follower.Hit(foe != null ? RunnerRig.Find(foe.Unit.Roster) : null, foe != null ? at - new Vector3(foe.X, 0f, foe.Z) : Vector3.back, 1f);
+                        HitNumber(at + (Vector3.up * follower.Height), (int)e.Amount, true, false, true);
+                    }
+
+                    break;
+                }
+
                 case RunnerEventKind.HeroHit:
                 {
                     if (_run != null && _members.TryGetValue(_run.Hero.Id, out var hero))
@@ -946,11 +1002,23 @@ namespace Survival.Unity
                     break;
 
                 case RunnerEventKind.BossWindup:
+                    RunnerHitchLog.Transition("boss slam telegraph");
                     BossWindup(e);
                     break;
 
                 case RunnerEventKind.BossSlam:
+                    RunnerHitchLog.Transition("boss slam landed");
                     BossSlammed(e);
+                    break;
+
+                case RunnerEventKind.BossQuakeWindup:
+                    RunnerHitchLog.Transition("boss quake telegraph");
+                    BossQuakeWindup(e);
+                    break;
+
+                case RunnerEventKind.BossQuake:
+                    RunnerHitchLog.Transition("boss quake landed");
+                    BossQuaked(e);
                     break;
 
                 case RunnerEventKind.HazardSpawned:
@@ -961,15 +1029,18 @@ namespace Survival.Unity
                     break;
 
                 case RunnerEventKind.BossEngaged:
+                    RunnerHitchLog.Transition("boss engaged");
                     Banner(S("runner.boss_incoming", "Ironhowl blocks the road!"), new Color(1f, 0.45f, 0.35f, 1f));
                     Shake(0.35f);
                     break;
 
                 case RunnerEventKind.Won:
+                    RunnerHitchLog.Transition("run won");
                     Burst(at + (Vector3.up * 1.2f), new Color(1f, 0.85f, 0.35f, 1f), 3.2f, true);
                     break;
 
                 case RunnerEventKind.Lost:
+                    RunnerHitchLog.Transition("run lost");
                     if (_run != null && _members.TryGetValue(_run.Hero.Id, out var dead))
                     {
                         _members.Remove(_run.Hero.Id);
@@ -1011,7 +1082,7 @@ namespace Survival.Unity
 
             _cam.clearFlags = CameraClearFlags.SolidColor;
             _cam.backgroundColor = LockedBattleGround.Horizon;
-            _cam.fieldOfView = 52f;
+            _cam.fieldOfView = RunnerFraming.FieldOfViewDegrees;
             _cam.nearClipPlane = 0.2f;
             _cam.farClipPlane = 120f;
             _cam.enabled = true;
@@ -1030,15 +1101,12 @@ namespace Survival.Unity
                 return Vector3.zero;
             }
 
-            // Ride a little toward the steer side, never the full lane, so the squad stays centred; halfway between
-            // the leader and the back row.
-            var back = _run.Distance;
-            foreach (var m in _run.Squad)
-            {
-                back = Mathf.Min(back, m.Z);
-            }
-
-            return new Vector3(_run.Hero.X * 0.45f, 0f, (_run.Distance + back) * 0.5f);
+            // Ride a little toward the steer side, never the full lane, so the squad stays centred. The rearmost row
+            // always sits on the same bottom spot of the shot and the squad fills forward from it; the back row is the
+            // members' actual places (joiners run back into their slot), and FollowCamera eases the focus, so a row
+            // gained or lost slides the shot rather than snapping it.
+            var back = RunnerFraming.BackZ(_run.Squad, _run.Distance);
+            return new Vector3(_run.Hero.X * 0.45f, 0f, RunnerFraming.FocusZ(back));
         }
 
         private void FollowCamera(float dt)

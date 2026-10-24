@@ -161,14 +161,14 @@ namespace Survival.Unity
         internal static Texture2D? Load(string themePackRel)
         {
             var path = Path.Combine(Application.dataPath, themePackRel.Replace('/', Path.DirectorySeparatorChar));
-            if (!File.Exists(path))
+            if (!PlayerAssets.FileExists(path))
             {
                 Debug.LogWarning("Locked battle ground: missing " + themePackRel + ", using the map grass colour.");
                 return null;
             }
 
             var tex = new Texture2D(2, 2, TextureFormat.RGBA32, true);
-            if (!tex.LoadImage(File.ReadAllBytes(path)))
+            if (!tex.LoadImage(PlayerAssets.ReadAllBytes(path)))
             {
                 return null;
             }

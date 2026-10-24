@@ -24,14 +24,18 @@ namespace Survival.Domain.Catalog
         public const string FtueFileName = "ftue.json";
         public const string ResourcesFileName = "resources.json";
 
-        public static SurvivalCatalog LoadFromDirectory(string directory)
+        public static SurvivalCatalog LoadFromDirectory(string directory) => LoadFromDirectory(directory, File.ReadAllText);
+
+        /// <summary>Same as <see cref="LoadFromDirectory(string)"/>, reading each file (full path) through <paramref name="readAllText"/>
+        /// (a player build reads the baked copies, not the disk).</summary>
+        public static SurvivalCatalog LoadFromDirectory(string directory, Func<string, string> readAllText)
         {
             if (string.IsNullOrWhiteSpace(directory))
             {
                 throw new ArgumentException("Catalog directory is required.", nameof(directory));
             }
 
-            string Read(string name) => File.ReadAllText(Path.Combine(directory, name));
+            string Read(string name) => readAllText(Path.Combine(directory, name));
 
             var dictionary = JsonRead.Parse(Read(DictionaryFileName)) as JsonNode.Obj
                              ?? throw new FormatException("Dictionary root must be an object.");

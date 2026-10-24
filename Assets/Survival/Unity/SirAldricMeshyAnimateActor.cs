@@ -1500,14 +1500,14 @@ namespace Survival.Unity
 
         private static GameObject? LoadFbxPrefab(string themePackRel, string resourcesName)
         {
-#if UNITY_EDITOR
             var rel = AssetPath(themePackRel);
-            var go = AssetDatabase.LoadAssetAtPath<GameObject>(rel);
+            var go = PlayerAssets.Load<GameObject>(rel);
             if (go != null)
             {
                 return go;
             }
 
+#if UNITY_EDITOR
             var data = Application.dataPath;
             var abs = Path.Combine(Directory.GetParent(data)!.FullName, rel);
             if (File.Exists(abs))
@@ -1521,15 +1521,14 @@ namespace Survival.Unity
 
         private static Avatar? LoadImportedAvatar(string rel)
         {
-#if UNITY_EDITOR
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
+            foreach (var obj in PlayerAssets.LoadAll(rel))
             {
                 if (obj is Avatar avatar)
                 {
                     return avatar;
                 }
             }
-#endif
+
             return null;
         }
 
@@ -1588,7 +1587,6 @@ namespace Survival.Unity
 
         private static AnimationClip? LoadClip(string themePackRel, string hint, bool repairWalk)
         {
-#if UNITY_EDITOR
             var rel = AssetPath(themePackRel);
             var clip = PickClip(rel, hint);
             if (clip != null)
@@ -1596,6 +1594,7 @@ namespace Survival.Unity
                 return clip;
             }
 
+#if UNITY_EDITOR
             Debug.LogWarning(
                 "PILOT LoadClip empty for " + rel + " hint=" + hint +
                 " assets=" + DumpAssets(rel) + ". Repairing from defaultClipAnimations.");
@@ -1612,15 +1611,16 @@ namespace Survival.Unity
             Debug.LogError("PILOT LoadClip still empty after repair. " + rel + " assets=" + DumpAssets(rel));
             return PickClip(rel, hint);
 #else
+            _ = repairWalk;
+            Debug.LogError("PILOT clip missing from the player bake. " + rel + " hint=" + hint + " assets=" + DumpAssets(rel));
             return null;
 #endif
         }
 
         private static string DumpAssets(string rel)
         {
-#if UNITY_EDITOR
             var parts = new System.Collections.Generic.List<string>();
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
+            foreach (var obj in PlayerAssets.LoadAll(rel))
             {
                 if (obj == null)
                 {
@@ -1631,18 +1631,14 @@ namespace Survival.Unity
             }
 
             return parts.Count == 0 ? "(none)" : string.Join(", ", parts);
-#else
-            return "";
-#endif
         }
 
         private static AnimationClip? PickClip(string rel, string hint)
         {
-#if UNITY_EDITOR
             AnimationClip? exact = null;
             AnimationClip? named = null;
             AnimationClip? longest = null;
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
+            foreach (var obj in PlayerAssets.LoadAll(rel))
             {
                 if (obj is not AnimationClip clip || clip.name.StartsWith("__preview", StringComparison.Ordinal))
                 {
@@ -1681,9 +1677,6 @@ namespace Survival.Unity
             }
 
             return exact ?? named ?? longest;
-#else
-            return null;
-#endif
         }
 
         private static bool RepairWalkingTake(string rel) => RepairClipTake(rel, walk: true);
@@ -2052,10 +2045,9 @@ namespace Survival.Unity
                 return _cachedAlbedo;
             }
 
-#if UNITY_EDITOR
             foreach (var rel in new[] { AssetPath(ThemePackFbx), AssetPath(ThemePackWalkFbx) })
             {
-                foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(rel))
+                foreach (var obj in PlayerAssets.LoadAll(rel))
                 {
                     if (obj is not Texture2D tex || tex.width < 256)
                     {
@@ -2073,7 +2065,7 @@ namespace Survival.Unity
                     }
                 }
             }
-#endif
+
             _cachedAlbedo = ExtractFbxPng(ThemePackWalkFbx, color: true, grayIndex: -1)
                             ?? ExtractFbxPng(ThemePackFbx, color: true, grayIndex: -1);
             return _cachedAlbedo;
@@ -2082,7 +2074,7 @@ namespace Survival.Unity
         private static Texture2D? LoadPilotMap(string fileName, bool sRgb)
         {
             var path = ResolveHero3D(fileName);
-            if (path == null || !File.Exists(path) || path.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase))
+            if (path == null || !PlayerAssets.FileExists(path) || path.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase))
             {
                 return null;
             }
@@ -2090,7 +2082,7 @@ namespace Survival.Unity
             try
             {
                 var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false, linear: !sRgb);
-                if (tex.LoadImage(File.ReadAllBytes(path)))
+                if (tex.LoadImage(PlayerAssets.ReadAllBytes(path)))
                 {
                     tex.wrapMode = TextureWrapMode.Repeat;
                     tex.filterMode = FilterMode.Bilinear;
@@ -2140,7 +2132,7 @@ namespace Survival.Unity
                          Path.Combine(repo, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", rel),
                      })
             {
-                if (File.Exists(path) && path.Replace('\\', '/').EndsWith(rel, StringComparison.OrdinalIgnoreCase))
+                if (PlayerAssets.FileExists(path) && path.Replace('\\', '/').EndsWith(rel, StringComparison.OrdinalIgnoreCase))
                 {
                     return path;
                 }

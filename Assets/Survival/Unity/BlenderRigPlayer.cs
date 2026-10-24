@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Survival.Domain.Roster;
+using Survival.Domain.Runner;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
@@ -44,6 +45,32 @@ namespace Survival.Unity
         private float _length;
         private float _time;
         private string _pose;
+
+        // Upper-body attack layering (UpperBodyAttack): input 0 the legs' base (walk loop, or the take's first frame held
+        // while the squad stands), input 1 the previous take fading out, input 2 the current take (_playable).
+        private static readonly Dictionary<AnimationClip, Quaternion[]> HipsTurnCache = new Dictionary<AnimationClip, Quaternion[]>();
+        private AnimationLayerMixerPlayable _layers;
+        private AnimationClipPlayable _base;
+        private AnimationClipPlayable _prevTake;
+        private AnimationClipPlayable _calib;
+        private AnimationClip? _attackClip;
+        private AvatarMask? _upperMask;
+        private Transform? _hips;
+        private Transform? _spine;
+        private bool _maskTried;
+        private bool _wantWalkBase = true;
+        private bool _baseIsWalk;
+        private bool _baseLoop;
+        private float _baseTime;
+        private float _baseLength;
+        private float _takeFrame;
+        private float _takeAge;
+        private float _prevFrame;
+        private float _prevFrom;
+        private float _prevAge;
+        private bool _fadingOut;
+        private float _outFrom;
+        private float _outAge;
 
         public BlenderRigPlayer(
             BlenderRigSpec spec,
@@ -93,6 +120,14 @@ namespace Survival.Unity
         /// the battle leaves it at 1.
         /// </summary>
         public float AttackSpeed { get; set; } = 1f;
+
+        /// <summary>
+        /// Runner only (the battle leaves it off): the attack take plays on the upper body (spine down, see
+        /// <see cref="RunnerUpperBodyAttack"/>) over the walk loop, which keeps going, so the take's hips step does not
+        /// show. Each take crossfades in over the last one, and out when the pose goes back to the walk; the take's own
+        /// timing, and so its release frame, is unchanged. Rest and any other pose fall back to the full-body path.
+        /// </summary>
+        public bool UpperBodyAttack { get; set; }
         public float ClipLength => _length;
         public Bounds VisibleBounds { get; private set; }
 
@@ -102,7 +137,6 @@ namespace Survival.Unity
         public void Build()
         {
             BuildLights();
-#if UNITY_EDITOR
             var path = "Assets/" + _spec.RestThemePackRel;
             if (BlenderRigSpec.IsRejectedMixamoRigFile(path)
                 || path.EndsWith(_spec.RejectedMixamoFileName, System.StringComparison.Ordinal))
@@ -114,20 +148,26 @@ namespace Survival.Unity
             _humanoid = false;
             if (_spec.PreferHumanoid)
             {
-                EnsureImport(path, humanoid: true, clip: false);
+#if UNITY_EDITOR
+                EnsureBodyImport(path, humanoid: true);
+#endif
                 _humanoid = HasValidHumanAvatar(path);
                 if (!_humanoid)
                 {
                     Debug.LogWarning(_spec.Name + " humanoid avatar did not validate. Using Generic.");
-                    EnsureImport(path, humanoid: false, clip: false);
+#if UNITY_EDITOR
+                    EnsureBodyImport(path, humanoid: false);
+#endif
                 }
             }
+#if UNITY_EDITOR
             else
             {
-                EnsureImport(path, humanoid: false, clip: false);
+                EnsureBodyImport(path, humanoid: false);
             }
+#endif
 
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            var prefab = PlayerAssets.Load<GameObject>(path);
             if (prefab == null)
             {
                 Debug.LogError(_spec.Name + " blender rig missing. " + path);
@@ -167,9 +207,6 @@ namespace Survival.Unity
             _ready = true;
             BindIdlePropsAtAttackRest();
             ShowRest();
-#else
-            Debug.LogError(_spec.Name + " plays in the Editor Game view.");
-#endif
         }
 
         public bool PlayPose(string poseName)
@@ -180,7 +217,29 @@ namespace Survival.Unity
             }
 
             EndBowShots();
-            if (_attackSpec != null && string.Equals(poseName, BlenderRigAttackSpec.PoseName, System.StringComparison.Ordinal))
+            var isAttack = _attackSpec != null && string.Equals(poseName, BlenderRigAttackSpec.PoseName, System.StringComparison.Ordinal);
+            if (isAttack && UpperBodyAttack && EnsureUpperMask())
+            {
+                return PlayAttackLayered();
+            }
+
+            if (_layers.IsValid())
+            {
+                if (UpperBodyAttack && string.Equals(poseName, _spec.ClipPoseName, System.StringComparison.Ordinal))
+                {
+                    // Back to the walk: the legs never left it; the take fades out over the arms.
+                    StopAttack();
+                    BeginFadeOut();
+                    _wantWalkBase = true;
+                    SetBase(true);
+                    _pose = poseName;
+                    return true;
+                }
+
+                LeaveLayers();
+            }
+
+            if (isAttack)
             {
                 return PlayAttack();
             }
@@ -230,6 +289,12 @@ namespace Survival.Unity
 
         public void Tick()
         {
+            if (_layers.IsValid())
+            {
+                TickLayers();
+                return;
+            }
+
             if (_attackMode)
             {
                 TickAttack();
@@ -264,6 +329,439 @@ namespace Survival.Unity
             {
                 _attack?.TickHeldRealign(_heldRealign, _time * BlenderRigAttackSpec.FrameRate);
             }
+        }
+
+        /// <summary>
+        /// Runner: whether the legs walk under an upper-body attack (true) or stand on the take's first frame (the squad
+        /// halted at the boss's arena line). Only matters while <see cref="UpperBodyAttack"/> is on.
+        /// </summary>
+        public void SetWalkUnderAttack(bool walking)
+        {
+            _wantWalkBase = walking;
+            if (_layers.IsValid())
+            {
+                SetBase(walking);
+            }
+        }
+
+        private bool PlayAttackLayered()
+        {
+            if (_attackSpec == null || _attack == null)
+            {
+                return false;
+            }
+
+            var clip = LoadClip(_attackSpec.FileName, BlenderRigAttackSpec.PoseName, BlenderRigAttackSpec.TakeName, _attackSpec.ClipLastFrame);
+            if (clip == null || clip.empty || clip.length < 0.2f)
+            {
+                Debug.LogError(_spec.Name + " clip missing. take=" + BlenderRigAttackSpec.TakeName + " file=" + _attackSpec.FileName);
+                return false;
+            }
+
+            StopAttack();
+            if (_attackClip != clip && _calib.IsValid())
+            {
+                _calib.Destroy();
+            }
+
+            _attackClip = clip;
+            EnterLayers();
+            CacheHipsTurn(clip);
+
+            // The running take (if any) moves down to the fade-out slot; the new one goes on top and fades in over it.
+            if (_prevTake.IsValid())
+            {
+                _layers.DisconnectInput(1);
+                _prevTake.Destroy();
+            }
+
+            if (_playable.IsValid())
+            {
+                var from = TakeWeight();
+                _layers.DisconnectInput(2);
+                _graph.Connect(_playable, 0, _layers, 1);
+                _prevTake = _playable;
+                _prevFrom = from;
+                _prevAge = 0f;
+                _prevFrame = _takeFrame;
+            }
+
+            _playable = AnimationClipPlayable.Create(_graph, clip);
+            _playable.SetDuration(clip.length);
+            _playable.SetTime(0d);
+            _playable.SetSpeed(1d);
+            _graph.Connect(_playable, 0, _layers, 2);
+            _length = clip.length;
+            _time = 0f;
+            _loop = false;
+            _attackMode = true;
+            _pose = BlenderRigAttackSpec.PoseName;
+            _takeAge = 0f;
+            _fadingOut = false;
+            _takeFrame = BlenderRigAttackSpec.FirstFrame;
+            _attack.SetIdlePropsVisible(false);
+            // Held props bind on the full-body take (their keys are in the take's design space, hips included).
+            _attack.Activate(SampleAttackFullBody);
+            EvaluateLayers();
+            _attack.Tick(BlenderRigAttackSpec.FirstFrame, true, 0);
+            return true;
+        }
+
+        private void TickLayers()
+        {
+            var dt = Time.unscaledDeltaTime;
+            if (_base.IsValid() && _baseLoop)
+            {
+                _baseTime += dt;
+                if (_baseLength > 0.05f)
+                {
+                    _baseTime %= _baseLength;
+                }
+            }
+
+            _takeAge += dt;
+            _prevAge += dt;
+            _outAge += dt;
+            var inClip = false;
+            var cycle = 0;
+            if (_attackMode && _attackSpec != null)
+            {
+                // Same clock as the full-body take: the release lands on the same frame.
+                _time += dt * AttackSpeed;
+                _takeFrame = _attackSpec.CycleFrameFor(_time, out inClip, out cycle);
+            }
+
+            if (_prevTake.IsValid() && PrevWeight() <= 0f)
+            {
+                _layers.DisconnectInput(1);
+                _prevTake.Destroy();
+            }
+
+            if (!_attackMode && _playable.IsValid() && TakeWeight() <= 0f)
+            {
+                _layers.DisconnectInput(2);
+                _playable.Destroy();
+            }
+
+            var layered = _attackMode || _playable.IsValid() || _prevTake.IsValid();
+            if (!layered && EveryNth.Count > 0 && EveryNth.TryGetValue(_parent, out var every) && (Time.frameCount + _phase) % every != 0)
+            {
+                return;
+            }
+
+            EvaluateLayers();
+            if (_attackMode)
+            {
+                _attack?.Tick(_takeFrame, inClip, cycle);
+            }
+        }
+
+        private float TakeWeight()
+        {
+            if (!_playable.IsValid())
+            {
+                return 0f;
+            }
+
+            return _fadingOut ? RunnerUpperBodyAttack.FadeOut(_outFrom, _outAge) : RunnerUpperBodyAttack.FadeIn(_takeAge);
+        }
+
+        private float PrevWeight() => _prevTake.IsValid() ? RunnerUpperBodyAttack.FadeOut(_prevFrom, _prevAge) : 0f;
+
+        private void BeginFadeOut()
+        {
+            if (_fadingOut)
+            {
+                return;
+            }
+
+            _outFrom = TakeWeight();
+            _outAge = 0f;
+            _fadingOut = true;
+        }
+
+        private float FrameSeconds(float frame)
+        {
+            var seconds = frame / BlenderRigAttackSpec.FrameRate;
+            return _length > 0.05f ? Mathf.Min(seconds, _length - 0.0005f) : seconds;
+        }
+
+        private void EvaluateLayers()
+        {
+            var take = TakeWeight();
+            var prev = PrevWeight();
+            if (_base.IsValid())
+            {
+                _base.SetTime(_baseTime);
+            }
+
+            if (_playable.IsValid())
+            {
+                _playable.SetTime(FrameSeconds(_takeFrame));
+            }
+
+            if (_prevTake.IsValid())
+            {
+                _prevTake.SetTime(FrameSeconds(_prevFrame));
+            }
+
+            _layers.SetInputWeight(0, 1f);
+            _layers.SetInputWeight(1, prev);
+            _layers.SetInputWeight(2, take);
+            _graph.Evaluate(0f);
+            CarryHipsTurn(take, prev);
+        }
+
+        /// <summary>
+        /// The take turns the hips 60-72 degrees to aim; the hips stay on the walk, so that turn goes on the spine
+        /// instead and the chest, arms and weapon point where the full-body take points them.
+        /// </summary>
+        private void CarryHipsTurn(float take, float prev)
+        {
+            if (_hips == null || _spine == null || _attackClip == null || !HipsTurnCache.TryGetValue(_attackClip, out var turns))
+            {
+                return;
+            }
+
+            var w = 1f - ((1f - take) * (1f - prev));
+            if (w <= 1e-3f)
+            {
+                return;
+            }
+
+            var target = take > 0f ? HipsAt(turns, _takeFrame) : HipsAt(turns, _prevFrame);
+            if (take > 0f && prev > 0f)
+            {
+                target = Quaternion.Slerp(HipsAt(turns, _prevFrame), target, take);
+            }
+
+            var delta = Quaternion.Inverse(_hips.localRotation) * target;
+            _spine.localRotation = Quaternion.Slerp(Quaternion.identity, delta, w) * _spine.localRotation;
+        }
+
+        private static Quaternion HipsAt(Quaternion[] turns, float frame)
+        {
+            var f = Mathf.Clamp(frame, 0f, turns.Length - 1);
+            var i = Mathf.Min((int)f, turns.Length - 1);
+            var j = Mathf.Min(i + 1, turns.Length - 1);
+            return Quaternion.Slerp(turns[i], turns[j], f - i);
+        }
+
+        /// <summary>The take's hips rotation at every frame, sampled once per clip (all instances share the FBX).</summary>
+        private void CacheHipsTurn(AnimationClip clip)
+        {
+            if (_hips == null || HipsTurnCache.ContainsKey(clip) || _attackSpec == null)
+            {
+                return;
+            }
+
+            var frames = Mathf.Max(1, _attackSpec.ClipLastFrame - BlenderRigAttackSpec.FirstFrame) + 1;
+            var turns = new Quaternion[frames];
+            var probe = AnimationClipPlayable.Create(_graph, clip);
+            _output.SetSourcePlayable(probe);
+            for (var f = 0; f < frames; f++)
+            {
+                probe.SetTime(Mathf.Min((BlenderRigAttackSpec.FirstFrame + f) / (float)BlenderRigAttackSpec.FrameRate, clip.length - 0.0005f));
+                _graph.Evaluate(0f);
+                turns[f] = _hips.localRotation;
+            }
+
+            _output.SetSourcePlayable(_layers);
+            probe.Destroy();
+            HipsTurnCache[clip] = turns;
+        }
+
+        /// <summary>The attack driver's sampler while layered: poses the whole body on the take, then hands back to the layers.</summary>
+        private void SampleAttackFullBody(float frame)
+        {
+            if (_attackClip == null || !_layers.IsValid())
+            {
+                return;
+            }
+
+            if (!_calib.IsValid())
+            {
+                _calib = AnimationClipPlayable.Create(_graph, _attackClip);
+            }
+
+            _output.SetSourcePlayable(_calib);
+            _calib.SetTime(FrameSeconds(frame));
+            _graph.Evaluate(0f);
+            _output.SetSourcePlayable(_layers);
+        }
+
+        private void EnterLayers()
+        {
+            if (_layers.IsValid())
+            {
+                return;
+            }
+
+            _layers = AnimationLayerMixerPlayable.Create(_graph, 3);
+            if (_upperMask != null)
+            {
+                _layers.SetLayerMaskFromAvatarMask(1u, _upperMask);
+                _layers.SetLayerMaskFromAvatarMask(2u, _upperMask);
+            }
+
+            var adopt = _playable.IsValid() && _loop && _wantWalkBase
+                && string.Equals(_pose, _spec.ClipPoseName, System.StringComparison.Ordinal);
+            if (adopt)
+            {
+                // Already walking: that walk becomes the legs' base and keeps its phase.
+                _base = _playable;
+                _baseTime = _time;
+                _baseLength = _length;
+                _baseIsWalk = true;
+                _baseLoop = true;
+                _playable = default;
+                _graph.Connect(_base, 0, _layers, 0);
+            }
+            else
+            {
+                if (_playable.IsValid())
+                {
+                    _playable.Destroy();
+                }
+
+                _playable = default;
+                _base = default;
+                SetBase(_wantWalkBase);
+            }
+
+            _layers.SetInputWeight(0, 1f);
+            _output.SetSourcePlayable(_layers);
+            _prevTake = default;
+        }
+
+        /// <summary>Legs' base: the walk loop, or the take's first frame held (the squad standing).</summary>
+        private void SetBase(bool walking)
+        {
+            if (_base.IsValid() && _baseIsWalk == walking)
+            {
+                return;
+            }
+
+            var clip = walking
+                ? LoadClip(_spec.ClipFileName, _spec.ClipPoseName, _spec.ClipTakeName, _spec.ClipLastFrame)
+                : _attackClip;
+            if (clip == null || clip.empty)
+            {
+                return;
+            }
+
+            if (_base.IsValid())
+            {
+                _layers.DisconnectInput(0);
+                _base.Destroy();
+            }
+
+            _base = AnimationClipPlayable.Create(_graph, clip);
+            _base.SetDuration(clip.length);
+            _base.SetTime(0d);
+            _base.SetSpeed(1d);
+            _graph.Connect(_base, 0, _layers, 0);
+            _layers.SetInputWeight(0, 1f);
+            _baseIsWalk = walking;
+            _baseLoop = walking;
+            _baseLength = clip.length;
+            _baseTime = 0f;
+        }
+
+        /// <summary>Back to the single full-body playable (rest, extra clips, or the layering switched off).</summary>
+        private void LeaveLayers()
+        {
+            StopAttack();
+            if (_prevTake.IsValid())
+            {
+                _prevTake.Destroy();
+            }
+
+            if (_base.IsValid())
+            {
+                _base.Destroy();
+            }
+
+            if (_calib.IsValid())
+            {
+                _calib.Destroy();
+            }
+
+            if (_playable.IsValid())
+            {
+                _playable.Destroy();
+            }
+
+            _layers.Destroy();
+            _layers = default;
+            _prevTake = default;
+            _base = default;
+            _calib = default;
+            _playable = default;
+            _fadingOut = false;
+            _output.SetSourcePlayable(Playable.Null);
+        }
+
+        /// <summary>
+        /// Builds the upper-body mask from this instance's hierarchy once: the hips' spine child and everything under it
+        /// (and any side branch beside the hips) take the attack. False (full-body path) when the rig has no hips / spine.
+        /// </summary>
+        private bool EnsureUpperMask()
+        {
+            if (_maskTried)
+            {
+                return _upperMask != null;
+            }
+
+            _maskTried = true;
+            if (!_ready || _animator == null)
+            {
+                return false;
+            }
+
+            var root = _animator.transform;
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name.EndsWith("Hips", System.StringComparison.Ordinal))
+                {
+                    _hips = t;
+                    break;
+                }
+            }
+
+            if (_hips != null)
+            {
+                foreach (Transform child in _hips)
+                {
+                    if (child.name.EndsWith("Spine", System.StringComparison.Ordinal))
+                    {
+                        _spine = child;
+                        break;
+                    }
+                }
+            }
+
+            if (_hips == null || _spine == null)
+            {
+                Debug.LogWarning(_spec.Name + " has no hips / spine; its runner attack stays full-body.");
+                return false;
+            }
+
+            var hipsPath = _hips.name;
+            for (var p = _hips.parent; p != null && p != root; p = p.parent)
+            {
+                hipsPath = p.name + "/" + hipsPath;
+            }
+
+            var mask = new AvatarMask();
+            mask.AddTransformPath(root, true);
+            for (var i = 0; i < mask.transformCount; i++)
+            {
+                mask.SetTransformActive(i, RunnerUpperBodyAttack.IsUpperBody(mask.GetTransformPath(i), hipsPath, _spine.name));
+            }
+
+            _upperMask = mask;
+            return true;
         }
 
         private void EndBowShots()
@@ -431,7 +929,6 @@ namespace Survival.Unity
 
         private bool PlayClip(string fileName, string poseName, string takeName, int lastFrame)
         {
-#if UNITY_EDITOR
             var clip = LoadClip(fileName, poseName, takeName, lastFrame);
             if (clip == null || clip.empty || clip.length < 0.2f)
             {
@@ -457,12 +954,8 @@ namespace Survival.Unity
             _pose = poseName;
             _graph.Evaluate(0f);
             return true;
-#else
-            return false;
-#endif
         }
 
-#if UNITY_EDITOR
         private AnimationClip? LoadClip(string fileName, string poseName, string takeName, int lastFrame)
         {
             var path = "Assets/" + _spec.ThemePackDir + "/" + fileName;
@@ -475,10 +968,12 @@ namespace Survival.Unity
                 return cached;
             }
 
+#if UNITY_EDITOR
             EnsureImport(path, _humanoid, true, poseName, takeName, lastFrame);
+#endif
             AnimationClip? named = null;
             AnimationClip? fallback = null;
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
+            foreach (var obj in PlayerAssets.LoadAll(path))
             {
                 if (obj is not AnimationClip clip || clip.name.StartsWith("__preview__"))
                 {
@@ -510,7 +1005,7 @@ namespace Survival.Unity
 
         private static Avatar? LoadHumanAvatar(string path)
         {
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
+            foreach (var obj in RigAssetCache.All(path))
             {
                 if (obj is Avatar avatar && avatar.isHuman && avatar.isValid)
                 {
@@ -523,7 +1018,7 @@ namespace Survival.Unity
 
         private static Avatar? LoadGenericAvatar(string path)
         {
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
+            foreach (var obj in RigAssetCache.All(path))
             {
                 if (obj is Avatar avatar && !avatar.isHuman)
                 {
@@ -532,6 +1027,16 @@ namespace Survival.Unity
             }
 
             return null;
+        }
+
+#if UNITY_EDITOR
+        /// <summary>The body import check, once per file per session (it parses the .meta; ten copies of a hero asked ten times).</summary>
+        private void EnsureBodyImport(string path, bool humanoid)
+        {
+            if (RigAssetCache.First("body|" + path + "|" + humanoid))
+            {
+                EnsureImport(path, humanoid, clip: false);
+            }
         }
 
         private void EnsureImport(
@@ -712,18 +1217,23 @@ namespace Survival.Unity
             importer.clipAnimations = new[] { best };
             return true;
         }
+#endif
 
         private void BindEmbeddedMaps(GameObject root, string fbxPath)
         {
-            var albedo = LoadMap(_spec.BaseColorThemePackRel, _spec.BaseColorFile, fbxPath, asNormal: false);
-            var normal = LoadMap(_spec.NormalThemePackRel, _spec.NormalFile, fbxPath, asNormal: true);
+            // Shared between every copy of this rig kind: loaded and (for metal) repacked once per session.
+            var albedo = RigAssetCache.Texture("map|" + _spec.BaseColorThemePackRel, () => LoadMap(_spec.BaseColorThemePackRel, _spec.BaseColorFile, fbxPath, asNormal: false));
+            var normal = RigAssetCache.Texture("map|" + _spec.NormalThemePackRel + "|n", () => LoadMap(_spec.NormalThemePackRel, _spec.NormalFile, fbxPath, asNormal: true));
             Texture2D? metal = null;
             var wantsMetal = !string.IsNullOrEmpty(_spec.MetallicRoughnessFile);
             if (wantsMetal)
             {
                 var metalRel = _spec.ThemePackDir + "/" + _spec.TextureFolder + "/" + _spec.MetallicRoughnessFile;
-                var raw = LoadMap(metalRel, _spec.MetallicRoughnessFile, fbxPath, asNormal: false, linear: true, readable: true);
-                metal = PackGlTfMetallicRoughness(raw, _spec.Name);
+                metal = RigAssetCache.Texture("metal|" + metalRel, () =>
+                {
+                    var raw = LoadMap(metalRel, _spec.MetallicRoughnessFile, fbxPath, asNormal: false, linear: true, readable: true);
+                    return PackGlTfMetallicRoughness(raw, _spec.Name);
+                });
             }
 
             if (albedo == null)
@@ -907,6 +1417,7 @@ namespace Survival.Unity
             }
 
             var path = "Assets/" + themePackRel;
+#if UNITY_EDITOR
             if (AssetImporter.GetAtPath(path) is TextureImporter importer)
             {
                 var dirty = false;
@@ -946,15 +1457,20 @@ namespace Survival.Unity
                     importer.SaveAndReimport();
                 }
             }
+#else
+            _ = asNormal;
+            _ = linear;
+            _ = readable;
+#endif
 
-            var onDisk = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            var onDisk = PlayerAssets.Load<Texture2D>(path);
             if (onDisk != null)
             {
                 return onDisk;
             }
 
             var stem = System.IO.Path.GetFileNameWithoutExtension(fileName);
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(fbxPath))
+            foreach (var obj in PlayerAssets.LoadAll(fbxPath))
             {
                 if (obj is Texture2D tex && tex.name.IndexOf(stem, System.StringComparison.OrdinalIgnoreCase) >= 0)
                 {
@@ -964,7 +1480,6 @@ namespace Survival.Unity
 
             return null;
         }
-#endif
 
         private static void WarnIfBoneMissing(GameObject instance, string bone)
         {

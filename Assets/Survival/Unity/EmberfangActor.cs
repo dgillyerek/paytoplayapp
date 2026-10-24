@@ -44,7 +44,6 @@ namespace Survival.Unity
         public void Build()
         {
             BuildLights();
-#if UNITY_EDITOR
             var path = "Assets/" + EmberfangMotion.RestThemePackRel;
             if (path.EndsWith(EmberfangMotion.RejectedMixamoFileName, System.StringComparison.Ordinal))
             {
@@ -52,8 +51,13 @@ namespace Survival.Unity
                 return;
             }
 
-            EnsureImport(path, poseName: null, takeName: null);
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+#if UNITY_EDITOR
+            if (RigAssetCache.First("emberbody|" + path))
+            {
+                EnsureImport(path, poseName: null, takeName: null);
+            }
+#endif
+            var prefab = PlayerAssets.Load<GameObject>(path);
             if (prefab == null)
             {
                 Debug.LogError("Emberfang dragon rig missing. " + path);
@@ -91,9 +95,6 @@ namespace Survival.Unity
             _graph.Play();
             _ready = true;
             ShowRest();
-#else
-            Debug.LogError("Emberfang plays in the Editor Game view.");
-#endif
         }
 
         public bool PlayPose(string poseName)
@@ -217,7 +218,6 @@ namespace Survival.Unity
 
         private bool PlayClip(string fileName, string poseName, string takeName, int lastFrame)
         {
-#if UNITY_EDITOR
             var clip = LoadClip(fileName, poseName, takeName, lastFrame);
             if (clip == null || clip.empty || clip.length < 0.2f)
             {
@@ -243,9 +243,6 @@ namespace Survival.Unity
             _pose = poseName;
             _graph.Evaluate(0f);
             return true;
-#else
-            return false;
-#endif
         }
 
         private void Update()
@@ -280,7 +277,6 @@ namespace Survival.Unity
             }
         }
 
-#if UNITY_EDITOR
         private static AnimationClip? LoadClip(string fileName, string poseName, string takeName, int lastFrame)
         {
             var path = "Assets/" + EmberfangMotion.ThemePackDir + "/" + fileName;
@@ -291,10 +287,12 @@ namespace Survival.Unity
                 return cached;
             }
 
+#if UNITY_EDITOR
             EnsureImport(path, poseName, takeName, lastFrame);
+#endif
             AnimationClip? named = null;
             AnimationClip? fallback = null;
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
+            foreach (var obj in PlayerAssets.LoadAll(path))
             {
                 if (obj is not AnimationClip clip || clip.name.StartsWith("__preview__"))
                 {
@@ -320,7 +318,7 @@ namespace Survival.Unity
 
         private static Avatar? LoadGenericAvatar(string path)
         {
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
+            foreach (var obj in RigAssetCache.All(path))
             {
                 if (obj is Avatar avatar && !avatar.isHuman)
                 {
@@ -331,6 +329,7 @@ namespace Survival.Unity
             return null;
         }
 
+#if UNITY_EDITOR
         private static void EnsureImport(string path, string? poseName, string? takeName = null, int lastFrame = 0)
         {
             if (AssetImporter.GetAtPath(path) is not ModelImporter importer)

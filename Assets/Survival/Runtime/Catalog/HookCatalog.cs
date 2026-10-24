@@ -31,12 +31,16 @@ namespace Survival.Domain.Catalog
         public const string GiftsFileName = "gifts.json";
         public const string StoresFileName = "stores.json";
 
-        public static HookCatalog LoadFromDirectory(string directory) =>
+        public static HookCatalog LoadFromDirectory(string directory) => LoadFromDirectory(directory, File.ReadAllText);
+
+        /// <summary>Same as <see cref="LoadFromDirectory(string)"/>, reading each file (full path) through <paramref name="readAllText"/>
+        /// (a player build reads the baked copies, not the disk).</summary>
+        public static HookCatalog LoadFromDirectory(string directory, Func<string, string> readAllText) =>
             FromJson(
-                File.ReadAllText(Path.Combine(directory, BaseEconomyFileName)),
-                File.ReadAllText(Path.Combine(directory, QuestsFileName)),
-                File.ReadAllText(Path.Combine(directory, GiftsFileName)),
-                File.ReadAllText(Path.Combine(directory, StoresFileName)));
+                readAllText(Path.Combine(directory, BaseEconomyFileName)),
+                readAllText(Path.Combine(directory, QuestsFileName)),
+                readAllText(Path.Combine(directory, GiftsFileName)),
+                readAllText(Path.Combine(directory, StoresFileName)));
 
         public static HookCatalog FromJson(string baseEconomyJson, string questsJson, string giftsJson, string storesJson)
         {

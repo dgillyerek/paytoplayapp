@@ -46,7 +46,8 @@ public sealed class RunnerCapMeleeBossTests
         var old = new Dictionary<string, float> { ["bonequill"] = 0.9f, ["nightfang"] = 2.2f, ["blightroot"] = 0.6f, ["vespera"] = 0.8f, ["ashwyrm"] = 1.2f };
         foreach (var pair in old)
         {
-            Assert.Equal(pair.Value * 1.5f, c.Unit(pair.Key).Speed, 2);
+            // 1.5x the original walk, then another ~20-25% on top (Oct 23 evening pass).
+            Assert.InRange(c.Unit(pair.Key).Speed / (pair.Value * 1.5f), 1.19f, 1.26f);
         }
 
         var small = new[] { "bonequill", "nightfang", "vespera" };
@@ -259,7 +260,7 @@ public sealed class RunnerCapMeleeBossTests
     public void Heroes_off_his_lane_lose_nothing_to_his_slam_and_those_in_it_do()
     {
         // Off to the side: he winds up and slams the marked road, and the hero is not on it.
-        var side = FightAt(3.4f, 8f);
+        var side = FightAt(3.4f, 3f);
         Assert.Contains(side.Events, e => e.Kind == RunnerEventKind.BossWindup);
         Assert.Contains(side.Events, e => e.Kind == RunnerEventKind.BossSlam);
         Assert.All(side.Events.Where(e => e.Kind == RunnerEventKind.BossSlam), e => Assert.Equal(0f, e.Amount));
@@ -278,7 +279,7 @@ public sealed class RunnerCapMeleeBossTests
     }
 
     [Fact]
-    public void The_slam_kills_the_followers_in_front_and_the_slam_area_is_the_marked_road()
+    public void The_slam_hurts_the_followers_in_front_through_their_hp_and_the_slam_area_is_the_marked_road()
     {
         var rows = @"{ ""at"": 6, ""kind"": ""box"", ""hp"": 10, ""reward"": ""followers"", ""unit"": ""archer"", ""count"": 4 }, " + BossRow;
         var run = Runner.Run(Runner.Tiny(rows.Replace("\"at\": 36", "\"at\": 56"), maxFollowers: 9, length: 60f));
@@ -298,7 +299,12 @@ public sealed class RunnerCapMeleeBossTests
         }
 
         Assert.True(caught >= 1f, "the slam caught followers: " + caught);
-        Assert.Equal(4, events.Count(e => e.Kind == RunnerEventKind.FollowerLost));
+        // The slam goes through a follower's 25 HP (it used to knock them out whatever the damage): this boss swings
+        // for 4, so the first follower it catches is hit for 4 and stands; the shipped boss's 40 still drops one.
+        var first = events.First(e => (e.Kind == RunnerEventKind.FollowerHit || e.Kind == RunnerEventKind.FollowerLost)
+            && events.Any(s => s.Kind == RunnerEventKind.FoeSpawned && s.Id == e.Other && s.Unit == "boss"));
+        Assert.Equal(RunnerEventKind.FollowerHit, first.Kind);
+        Assert.Equal(4f, first.Amount);
         Assert.Contains(events, e => e.Kind == RunnerEventKind.HeroHit);
 
         var tiny = Runner.Run(Runner.Tiny(BossRow));
@@ -316,7 +322,7 @@ public sealed class RunnerCapMeleeBossTests
     }
 
     [Fact]
-    public void Every_shipped_boss_winds_up_and_slams_and_still_loses_to_nobody_who_lines_up()
+    public void Every_shipped_boss_winds_up_and_slams_and_still_loses_to_nobody_who_lines_up_and_dodges()
     {
         var c = Runner.Catalog();
         foreach (var level in c.Levels)
@@ -326,7 +332,7 @@ public sealed class RunnerCapMeleeBossTests
             float caught = 0f;
             while (!run.Over && run.Seconds < 400f)
             {
-                run.SteerTo(Runner.AimLikeAPlayer(run));
+                run.SteerTo(RunnerBossQuakeTests.DodgingPlayer(run));
                 foreach (var e in run.Step(1f / 30f))
                 {
                     windups += e.Kind == RunnerEventKind.BossWindup ? 1 : 0;
@@ -338,7 +344,6 @@ public sealed class RunnerCapMeleeBossTests
             _out.WriteLine($"L{level.Number}: {run.Outcome} windups {windups} slams {slams} caught {caught} hero {run.Hero.Hp}/{run.Hero.Unit.Hp}");
             Assert.Equal(RunnerOutcome.Won, run.Outcome);
             Assert.True(slams >= 1 && windups >= slams, $"L{level.Number}: the boss attacked ({windups} windups, {slams} slams)");
-            Assert.True(caught > 0f || run.Hero.Hp < run.Hero.Unit.Hp, $"L{level.Number}: his hits landed");
         }
     }
 

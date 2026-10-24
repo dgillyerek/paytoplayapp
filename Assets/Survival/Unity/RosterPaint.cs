@@ -29,7 +29,6 @@ namespace Survival.Unity
             string label,
             bool preferEmbeddedBaseAndNormal)
         {
-#if UNITY_EDITOR
             var shader = Shader.Find(LitShader) ?? Shader.Find("Standard");
             if (shader == null)
             {
@@ -93,19 +92,8 @@ namespace Survival.Unity
             {
                 Debug.LogError(label + " paint found no renderer.");
             }
-#else
-            _ = root;
-            _ = themePackDir;
-            _ = baseColorFile;
-            _ = normalFile;
-            _ = metallicFile;
-            _ = roughnessFile;
-            _ = preferEmbeddedBaseAndNormal;
-            Debug.LogError(label + " paint binds in the Editor Game view.");
-#endif
         }
 
-#if UNITY_EDITOR
         private static Material MakeMaterial(
             Shader shader,
             Material? existing,
@@ -249,6 +237,7 @@ namespace Survival.Unity
         private static Texture2D? LoadMap(string themePackDir, string fileName, bool asNormal, bool linear, bool readable)
         {
             var path = "Assets/" + themePackDir.Replace('\\', '/') + "/" + fileName;
+#if UNITY_EDITOR
             var importer = AssetImporter.GetAtPath(path) as TextureImporter;
             if (importer == null)
             {
@@ -287,7 +276,19 @@ namespace Survival.Unity
                 importer.SaveAndReimport();
             }
 
-            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            return PlayerAssets.Load<Texture2D>(path);
+#else
+            _ = asNormal;
+            _ = linear;
+            _ = readable;
+            var baked = PlayerAssets.Load<Texture2D>(path);
+            if (baked == null)
+            {
+                Debug.LogError("Roster paint map missing. " + path);
+            }
+
+            return baked;
+#endif
         }
 
         /// <summary>
@@ -403,6 +404,5 @@ namespace Survival.Unity
         {
             return mat.shader == null || mat.shader.name.IndexOf("InternalError", StringComparison.Ordinal) >= 0;
         }
-#endif
     }
 }

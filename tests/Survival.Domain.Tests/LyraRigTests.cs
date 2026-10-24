@@ -46,7 +46,9 @@ public sealed class LyraRigTests
         var shared = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigDemo.cs"));
         Assert.Contains("bakeAxisConversion = false", player, StringComparison.Ordinal);
         Assert.DoesNotContain("bakeAxisConversion = true", player, StringComparison.Ordinal);
-        Assert.DoesNotContain("localRotation =", player, StringComparison.Ordinal);
+        // The one pose write is the runner upper-body layer carrying the take's hips turn onto the spine each frame
+        // (BlenderRigPlayer.CarryHipsTurn); the rig itself is never rewritten.
+        Assert.DoesNotContain("localRotation =", player.Replace("_spine.localRotation = ", "", StringComparison.Ordinal), StringComparison.Ordinal);
         Assert.DoesNotContain("localScale =", player, StringComparison.Ordinal);
         Assert.Contains("ImportViaMaterialDescription", player, StringComparison.Ordinal);
         Assert.Contains("ModelImporterAnimationType.Human", player, StringComparison.Ordinal);

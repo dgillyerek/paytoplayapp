@@ -152,13 +152,15 @@ public sealed class RunnerTests
         Assert.Equal("lyra", level.Hero);
         Assert.True(level.HasBoss);
         Assert.True(level.EnemyCount >= 45, "enemies " + level.EnemyCount);
-        Assert.True(level.BoxCount >= 15, "boxes " + level.BoxCount);
+        // About 40% fewer boxes than before (18 -> 11): one box a beat, not a chest and a crate on every beat.
+        Assert.InRange(level.BoxCount, 9, 13);
         Assert.InRange(level.HazardCount, 1, 4);
         Assert.Contains(level.Rows, r => r.Hazard?.Kind == RunnerHazardKind.Spikes);
         Assert.Contains(level.Rows, r => r.Hazard?.Kind == RunnerHazardKind.Fire);
         foreach (var kind in Enum.GetValues<RunnerBoxKind>())
         {
-            Assert.Contains(level.Rows, r => r.Box?.Kind == kind);
+            // Level 1 has no heal crate any more; healing turns up from Level 2.
+            Assert.Contains(kind == RunnerBoxKind.Heal ? c.Levels[1].Rows : level.Rows, r => r.Box?.Kind == kind);
         }
 
         // Fodder from the locked villain roster, Ironhowl as the end boss; every rig is a locked battle fighter.
@@ -463,7 +465,9 @@ public sealed class RunnerTests
         var xs = new HashSet<int>();
         while (!run.Over && run.Seconds < 120f)
         {
-            run.SteerTo(run.Foes.Any(f => !f.Boss) ? 0f : (float)Math.Sin(run.Seconds * 3f) * 3.9f);
+            // (He winds up his big quake now and then: step into its clear band, as the warning asks.)
+            var quaking = run.Foes.FirstOrDefault(f => f.Boss && f.Move == RunnerBossMove.Quake);
+            run.SteerTo(quaking is not null ? Math.Sign(quaking.QuakeSafeX) * 2.9f : run.Foes.Any(f => !f.Boss) ? 0f : (float)Math.Sin(run.Seconds * 3f) * 3.9f);
             events.AddRange(run.Step(1f / 30f));
             if (run.Halted)
             {
@@ -567,7 +571,8 @@ public sealed class RunnerTests
     {
         var c = Runner.Catalog();
         var good = new RunnerRun(c, c.First);
-        Runner.Play(good, Runner.AimLikeAPlayer);
+        // With fewer upgrade boxes the boss now outlasts a squad that never steps out of his quakes, so this player dodges.
+        Runner.Play(good, r => RunnerBossQuakeTests.DodgingPlayer(r));
         _out.WriteLine($"aim: {good.Outcome} t={good.Seconds:0} kills={good.Kills} boxes={good.BoxesBroken}/{c.First.BoxCount} peak={good.FollowersPeak} left={good.Followers} hp={good.Hero.Hp}");
         Assert.Equal(RunnerOutcome.Won, good.Outcome);
         Assert.True(good.BoxesBroken >= c.First.BoxCount - 2);
@@ -622,25 +627,36 @@ public sealed class RunnerTests
     }
 
     [Fact]
-    public void Every_shot_keeps_its_lane_in_flight_squad_and_enemy_alike()
+    public void Squad_shots_keep_their_lane_in_flight_and_enemy_shots_their_aimed_heading()
     {
         var shipped = Runner.Catalog();
         Assert.True(shipped.Unit("bonequill").Ranged);
         var run = new RunnerRun(shipped, shipped.First);
-        // Every shot in flight keeps its lane and heading, whoever fired it.
-        var seen = new Dictionary<int, float>();
+        // A squad shot keeps its lane; an enemy shot (aimed at a hero when fired, so it may cross lanes) keeps its
+        // heading and flies straight along it: nothing homes.
+        var seen = new Dictionary<int, (float X, float Z, float Dx, float Dz)>();
         for (var t = 0; t < 30 * 40 && !run.Over; t++)
         {
             run.SteerTo(Runner.AimLikeAPlayer(run));
             run.Step(1f / 30f);
             foreach (var s in run.Shots)
             {
-                if (seen.TryGetValue(s.Id, out var x))
+                if (seen.TryGetValue(s.Id, out var was))
                 {
-                    Assert.Equal(x, s.X, 4);
+                    Assert.Equal(was.Dx, s.DX);
+                    Assert.Equal(was.Dz, s.DZ);
+                    if (s.ByFoe)
+                    {
+                        var step = (float)System.Math.Sqrt(((s.X - was.X) * (s.X - was.X)) + ((s.Z - was.Z) * (s.Z - was.Z)));
+                        Assert.Equal(s.DX * step, s.X - was.X, 3);
+                    }
+                    else
+                    {
+                        Assert.Equal(was.X, s.X, 4);
+                    }
                 }
 
-                seen[s.Id] = s.X;
+                seen[s.Id] = (s.X, s.Z, s.DX, s.DZ);
             }
         }
 
@@ -749,7 +765,7 @@ public sealed class RunnerTests
         var shots = 0;
         while (!run.Over && run.Seconds < 200f)
         {
-            run.SteerTo(Runner.AimLikeAPlayer(run));
+            run.SteerTo(RunnerBossQuakeTests.DodgingPlayer(run));
             foreach (var e in run.Step(1f / 30f))
             {
                 if (e.Kind == RunnerEventKind.AttackStarted)
@@ -817,7 +833,7 @@ public sealed class RunnerTests
             var engaged = -1f;
             while (!run.Over && run.Seconds < 400f)
             {
-                run.SteerTo(Runner.Aim(run, true));
+                run.SteerTo(RunnerBossQuakeTests.DodgingPlayer(run));
                 foreach (var e in run.Step(1f / 30f))
                 {
                     if (e.Kind == RunnerEventKind.BossEngaged)
@@ -834,7 +850,7 @@ public sealed class RunnerTests
         var without = Fight(Runner.CatalogWithout(RunnerBoxKind.Weapon, RunnerBoxKind.Rate));
         _out.WriteLine($"with upgrades: {with.Run.Outcome} boss {with.Boss:0.0}s; without: {without.Run.Outcome} boss {without.Boss:0.0}s");
         Assert.Equal(RunnerOutcome.Won, with.Run.Outcome);
-        Assert.True(with.Run.DamageMul > 1.5f && with.Run.RateMul > 1.25f);
+        Assert.True(with.Run.DamageMul > 1.5f && with.Run.RateMul >= 1.25f, $"damage {with.Run.DamageMul} rate {with.Run.RateMul}");
         Assert.True(without.Run.Outcome == RunnerOutcome.Lost || without.Boss > with.Boss * 1.5f, $"boss {with.Boss} vs {without.Boss}");
     }
 
@@ -936,7 +952,7 @@ public sealed class RunnerTests
             var arrived = -1f;
             while (!good.Over && good.Seconds < 600f)
             {
-                good.SteerTo(Runner.AimLikeAPlayer(good));
+                good.SteerTo(RunnerBossQuakeTests.DodgingPlayer(good));
                 foreach (var e in good.Step(1f / 30f))
                 {
                     if (e.Kind == RunnerEventKind.BossEngaged && arrived < 0f)

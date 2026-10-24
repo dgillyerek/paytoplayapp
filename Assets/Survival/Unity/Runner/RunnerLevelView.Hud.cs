@@ -30,17 +30,12 @@ namespace Survival.Unity
         private Text? _killsText;
         private Text? _dmgChip;
         private Text? _spdChip;
-        private RectTransform? _badge;
-        private Text? _badgeText;
-        private Image? _badgeIcon;
         private Text? _hint;
         private RectTransform? _result;
         private RectTransform? _levelList;
         private RectTransform? _banner;
         private Text? _bannerText;
         private float _bannerAge = 9f;
-        private int _lastSquad = -1;
-        private float _badgePunch;
         private readonly Dictionary<int, WorldBar> _bars = new Dictionary<int, WorldBar>();
         private readonly List<Floating> _floaters = new List<Floating>();
 
@@ -182,13 +177,8 @@ namespace Survival.Unity
             var leaveText = Fit(HookSkin.Outlined(SurvivalVisuals.Text(leave.transform, "Label", S("runner.leave", "Leave"), 24, TextAnchor.MiddleCenter, Color.white)), 14, 24);
             Pad(leaveText.rectTransform);
 
-            // Squad badge over the hero (count of everyone walking).
-            _badge = HookSkin.Panel(_worldUi, "SquadBadge", HookArtKeys.Chip, new Color(0.10f, 0.22f, 0.45f, 0.96f), 0.45f).rectTransform;
-            _badge.sizeDelta = new Vector2(190f, 62f);
-            _badgeIcon = HookSkin.Art(_badge, "Icon", "theme_a.ui.icon_battle", SurvivalVisuals.PinBuild);
-            Anchor(_badgeIcon.rectTransform, -0.05f, -0.15f, 0.40f, 1.15f);
-            _badgeText = HookSkin.Outlined(SurvivalVisuals.Text(_badge, "Count", "1", 36, TextAnchor.MiddleCenter, Color.white));
-            Anchor(_badgeText.rectTransform, 0.40f, 0f, 1f, 1f);
+            // No squad-count badge over the hero (Derek 2026-10-23: "I don't need the label for how many heros I have"); the
+            // 10 cap and the "Squad full!" banner stay.
 
             _hint = HookSkin.Outlined(SurvivalVisuals.Text(_hud, "Hint", "⟵  " + S("runner.hint", "Drag or A / D to steer") + "  ⟶", 34, TextAnchor.MiddleCenter, SurvivalVisuals.Cream));
             Anchor(_hint.rectTransform, 0f, 0.10f, 1f, 0.15f);
@@ -211,7 +201,13 @@ namespace Survival.Unity
                 _freeFoeBars.Push(NewSideBar(false));
             }
 
-            _freeHeroBars.Push(NewSideBar(true));
+            // The lead and every follower carry a sliver (followers have HP now), pooled up front for a full squad.
+            for (var i = 0; i < RunnerRules.SquadCap; i++)
+            {
+                _freeHeroBars.Push(NewSideBar(true));
+            }
+
+            BuildQuakeHud();
         }
 
         private Text Chip(string name, float x, string iconKey)
@@ -269,26 +265,6 @@ namespace Survival.Unity
 
             SetChip(_dmgChip, _run.DamageMul, "runner.box.weapon", "+{0}% DMG", ref _shownDmg);
             SetChip(_spdChip, _run.RateMul, "runner.box.rate", "+{0}% SPD", ref _shownSpd);
-            var squad = _run.Squad.Count;
-            if (squad != _lastSquad)
-            {
-                _badgePunch = _lastSquad >= 0 ? 1f : 0f;
-                _lastSquad = squad;
-                if (_badgeText != null)
-                {
-                    // The squad against its cap (the lead counts); gold once it is full.
-                    _badgeText.text = squad.ToString(CultureInfo.InvariantCulture) + "/" + RunnerRules.SquadCap.ToString(CultureInfo.InvariantCulture);
-                    _badgeText.color = squad >= RunnerRules.SquadCap ? new Color(1f, 0.86f, 0.3f, 1f) : Color.white;
-                }
-            }
-
-            _badgePunch = Mathf.MoveTowards(_badgePunch, 0f, dt * 3.5f);
-            if (_badge != null)
-            {
-                _badge.localScale = Vector3.one * (1f + (0.3f * Mathf.Sin(_badgePunch * Mathf.PI)));
-                _badge.gameObject.SetActive(!_run.Over || _run.Outcome == RunnerOutcome.Won);
-            }
-
             if (_banner != null)
             {
                 _bannerAge += dt;
@@ -403,7 +379,7 @@ namespace Survival.Unity
                 bar = NewSideBar(hero);
             }
 
-            bar.Root.sizeDelta = new Vector2(RunnerSideBar.WidthPx, RunnerSideBar.MinHeightPx);
+            bar.Root.sizeDelta = new Vector2(RunnerSideBar.WidthFor(bar.Hero), RunnerSideBar.MinHeightPx);
             bar.Fill.rectTransform.anchorMax = Vector2.one;
             bar.Group.alpha = 0f;
             bar.Number.gameObject.SetActive(boss);
@@ -431,7 +407,7 @@ namespace Survival.Unity
             var root = frame.rectTransform;
             root.anchorMin = root.anchorMax = Vector2.zero;
             root.pivot = new Vector2(0.5f, 0f);
-            root.sizeDelta = new Vector2(RunnerSideBar.WidthPx, RunnerSideBar.MinHeightPx);
+            root.sizeDelta = new Vector2(RunnerSideBar.WidthFor(hero), RunnerSideBar.MinHeightPx);
             var group = root.gameObject.AddComponent<CanvasGroup>();
             group.alpha = 0f;
             group.blocksRaycasts = false;
@@ -471,7 +447,7 @@ namespace Survival.Unity
             var height = RunnerSideBar.HeightPx(Mathf.Abs(high.y - low.y) / k);
             bar.Root.anchorMin = bar.Root.anchorMax = Vector2.zero;
             bar.Root.anchoredPosition = new Vector2((low.x + high.x) * 0.5f / k, (((low.y + high.y) * 0.5f) / k) - (height * 0.5f));
-            bar.Root.sizeDelta = new Vector2(RunnerSideBar.WidthPx, height);
+            bar.Root.sizeDelta = new Vector2(RunnerSideBar.WidthFor(bar.Hero), height);
             bar.Fill.rectTransform.anchorMax = new Vector2(1f, Mathf.Max(0.001f, fraction));
             return low.x > -200f && low.x < Screen.width + 200f && low.y > -200f && low.y < Screen.height + 200f;
         }
@@ -622,9 +598,10 @@ namespace Survival.Unity
                         }
 
                         origin = new Vector3(m.X, 0f, m.Z);
-                        fraction = Mathf.Clamp01(m.Hp / (float)Mathf.Max(1, m.Unit.Hp));
+                        fraction = m.HpFraction;
                         hp = m.Hp;
-                        FadeBar(bar, hp, m.Unit.Hp);
+                        // Squad bars are always on (followers' HP must read); enemies' fade in on damage.
+                        bar.Group.alpha = RunnerSideBar.SquadAlpha(hp);
                     }
                     else
                     {
@@ -677,11 +654,6 @@ namespace Survival.Unity
                     bar.ShownHp = hp;
                     bar.Number.text = Num(hp);
                 }
-            }
-
-            if (_badge != null && _members.TryGetValue(_run.Hero.Id, out var hero))
-            {
-                Place(_badge, hero.Slot.position + (Vector3.up * (hero.Height + 0.55f)));
             }
 
             foreach (var f in _floaters)
@@ -815,7 +787,6 @@ namespace Survival.Unity
             }
 
             _bars.Clear();
-            _lastSquad = -1;
         }
 
         // ---------- result ----------

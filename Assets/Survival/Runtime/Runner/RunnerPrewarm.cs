@@ -31,6 +31,23 @@ namespace Survival.Domain.Runner
         public override string ToString() => Role + " " + Roster + " x" + Scale.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + " = " + Count;
     }
 
+    /// <summary>The two prewarm plans for a level: what to build before the run starts, and the fuller one to top up to later.</summary>
+    public sealed class RunnerPrewarmSet
+    {
+        public RunnerPrewarmSet(IReadOnlyList<RunnerPrewarmEntry> launch, int launchShots, IReadOnlyList<RunnerPrewarmEntry> full, int fullShots)
+        {
+            Launch = launch;
+            LaunchShots = launchShots;
+            Full = full;
+            FullShots = fullShots;
+        }
+
+        public IReadOnlyList<RunnerPrewarmEntry> Launch { get; }
+        public int LaunchShots { get; }
+        public IReadOnlyList<RunnerPrewarmEntry> Full { get; }
+        public int FullShots { get; }
+    }
+
     /// <summary>
     /// How many rigs of each kind a level needs on the road at once, so the view can build them all under the loading
     /// screen and never build one mid-run. <see cref="For"/> plays the level with two simple bots (one that chases boxes
@@ -67,17 +84,73 @@ namespace Survival.Domain.Runner
         /// <summary><see cref="For"/>, plus the shots to pool (the bots' most in flight at once, plus <see cref="Margin"/>).</summary>
         public static IReadOnlyList<RunnerPrewarmEntry> Plan(RunnerLevelDef level, RunnerCatalog catalog, float captiveScale, out int shots)
         {
+            var set = Sets(level, catalog, captiveScale);
+            shots = set.FullShots;
+            return set.Full;
+        }
+
+        /// <summary>Most rigs of the squad kinds a run can have built at once: the squad cap (hero included) and the followers tumbling out.</summary>
+        public const int SquadRigLimit = RunnerRules.SquadCap + DyingFollowerMargin;
+
+        /// <summary>Most shots built before the run starts (most bot peaks are 35-49 and level 10 reaches 67, so a rare extra is built live and logged).</summary>
+        public const int LaunchShotCap = 40;
+
+        /// <summary>
+        /// Both plans for a level, from one pair of bot runs. <see cref="RunnerPrewarmSet.Launch"/> is what the loading
+        /// screen builds (the bots' peak of each kind, at least one of every kind the level has, squads together capped
+        /// at <see cref="SquadRigLimit"/>, never past <see cref="Bound"/>); <see cref="RunnerPrewarmSet.Full"/> adds the
+        /// <see cref="Margin"/> and is topped up later, while no run is being played.
+        /// </summary>
+        public static RunnerPrewarmSet Sets(RunnerLevelDef level, RunnerCatalog catalog, float captiveScale)
+        {
             var bound = Bound(level, catalog, captiveScale);
             var seen = Peaks(level, catalog, captiveScale);
-            var entries = new List<RunnerPrewarmEntry>(bound.Count);
+            var full = new List<RunnerPrewarmEntry>(bound.Count);
+            var launch = new List<RunnerPrewarmEntry>(bound.Count);
             foreach (var b in bound)
             {
                 var peak = seen.TryGetValue(KeyOf(b.Role, b.Roster, b.Scale), out var p) ? p : 0;
-                entries.Add(new RunnerPrewarmEntry(b.Roster, b.Scale, Math.Min(b.Count, Margin(peak)), b.Role));
+                full.Add(new RunnerPrewarmEntry(b.Roster, b.Scale, Math.Min(b.Count, Margin(peak)), b.Role));
+                launch.Add(new RunnerPrewarmEntry(b.Roster, b.Scale, Math.Min(b.Count, Math.Max(1, peak)), b.Role));
             }
 
-            shots = Margin(seen.TryGetValue(ShotsKey, out var s) ? s : 0);
-            return entries;
+            // Each roster's own peak can fall at a different moment, so the sum can pass what a squad can ever hold at once.
+            while (SquadTotal(launch) > SquadRigLimit)
+            {
+                var worst = -1;
+                for (var i = 0; i < launch.Count; i++)
+                {
+                    if (launch[i].Role == RunnerPrewarmRole.Squad && launch[i].Count > 1 && (worst < 0 || launch[i].Count > launch[worst].Count))
+                    {
+                        worst = i;
+                    }
+                }
+
+                if (worst < 0)
+                {
+                    break;
+                }
+
+                var e = launch[worst];
+                launch[worst] = new RunnerPrewarmEntry(e.Roster, e.Scale, e.Count - 1, e.Role);
+            }
+
+            var shotPeak = seen.TryGetValue(ShotsKey, out var s) ? s : 0;
+            return new RunnerPrewarmSet(launch, Math.Min(LaunchShotCap, Math.Max(1, shotPeak)), full, Margin(shotPeak));
+        }
+
+        private static int SquadTotal(List<RunnerPrewarmEntry> entries)
+        {
+            var n = 0;
+            foreach (var e in entries)
+            {
+                if (e.Role == RunnerPrewarmRole.Squad)
+                {
+                    n += e.Count;
+                }
+            }
+
+            return n;
         }
 
         /// <summary>Per kind, the larger of two plans (this level and the next, so Next on the result screen builds nothing).</summary>

@@ -223,6 +223,7 @@
   "campaign.unlocked": "{0} joins your heroes!",
   "campaign.starred": "{0} \u2605 {1}!",
   "campaign.heroes.title": "HEROES",
+  "campaign.foes.title": "FOES",
   "campaign.tab.heroes": "Heroes",
   "campaign.tab.foes": "Foes",
   "campaign.training_slots": "Training {0}/{1}",

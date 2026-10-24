@@ -49,17 +49,20 @@ public sealed class RunnerHazardTests
     }
 
     [Fact]
-    public void A_trap_knocks_out_a_follower_it_catches_but_not_the_whole_squad()
+    public void A_trap_burns_hp_off_the_followers_it_catches_instead_of_knocking_them_out()
     {
         var run = Runner.Run(Runner.Tiny(@"{ ""at"": 4, ""kind"": ""box"", ""hp"": 1, ""reward"": ""followers"", ""unit"": ""archer"", ""count"": 5 },
             { ""at"": 16, ""kind"": ""hazard"", ""hazard"": ""fire"", ""width"": 7.6, ""damage"": 10 }"));
         var fire = Assert.Single(run.Hazards).Id;
         var evs = Runner.Play(run, null, 16f);
-        var lost = evs.Where(e => e.Kind == RunnerEventKind.FollowerLost && e.Other == fire).ToList();
-        Assert.NotEmpty(lost);
+        // Followers have 25 HP: the patch takes a share of its hero damage (10 -> 4) off each one it catches.
+        var burns = evs.Where(e => e.Kind == RunnerEventKind.FollowerHit && e.Other == fire).ToList();
+        Assert.NotEmpty(burns);
+        Assert.All(burns, e => Assert.Equal(RunnerRun.FollowerTrapDamage(10), (int)e.Amount));
+        Assert.DoesNotContain(evs, e => e.Kind == RunnerEventKind.FollowerLost && e.Other == fire);
         Assert.All(evs.Where(e => e.Kind == RunnerEventKind.HazardHit && !e.Big), e => Assert.Equal(0f, e.Amount));
-        Assert.True(run.Followers >= 1, "a fire patch burns one at a time; the rest walk through: left " + run.Followers);
-        Assert.Equal(5, run.Followers + lost.Count + evs.Count(e => e.Kind == RunnerEventKind.FollowerLost && e.Other != fire));
+        Assert.Contains(run.Squad, m => !m.IsHero && m.Hp < m.MaxHp);
+        Assert.Equal(5, run.Followers + evs.Count(e => e.Kind == RunnerEventKind.FollowerLost));
     }
 
     [Fact]
@@ -194,7 +197,10 @@ public sealed class RunnerHazardTests
         {
             var l = c.Levels[i];
             Assert.True(l.EnemyCount >= 2 * old[i].Item1, $"L{l.Number} enemies {l.EnemyCount}");
-            Assert.True(l.BoxCount >= old[i].Item2 + 5, $"L{l.Number} boxes {l.BoxCount}");
+            // Boxes were cut about 40% (Derek 2026-10-23: "theres too many upgrades to enimies"): about one box for every 5 enemies on
+            // Level 1, falling to about one for every 10 on Level 12, while the count itself still climbs.
+            Assert.InRange((float)l.BoxCount / l.EnemyCount, 0.08f, 0.21f);
+            Assert.True(i == 0 || (float)l.BoxCount / l.EnemyCount < (float)c.Levels[i - 1].BoxCount / c.Levels[i - 1].EnemyCount + 0.005f, $"L{l.Number} boxes per enemy");
             // Enemies walk 1.5x faster now and the squad is capped at 10, so each one is lighter (about 0.45x-0.8x the old total HP) and the
             // total still climbs every level.
             Assert.InRange(l.FoeHpTotal(c), old[i].Item3 * 0.4, old[i].Item3 * 1.0);
@@ -208,10 +214,10 @@ public sealed class RunnerHazardTests
         var enemyRows = c.First.Rows.Where(r => r.Kind == RunnerRowKind.Enemy).ToList();
         Assert.Contains(enemyRows, a => enemyRows.Any(b => b.Unit != a.Unit && b.At > a.At && b.At - a.At <= 6f));
 
-        // Every power-up kind on Level 1, each a box with HP to break.
+        // Every power-up kind by Level 2 (Level 1 lost its heal crate in the box cut), each a box with HP to break.
         foreach (var k in new[] { RunnerBoxKind.Weapon, RunnerBoxKind.Rate, RunnerBoxKind.Range, RunnerBoxKind.Heal })
         {
-            Assert.Contains(c.First.Rows, r => r.Box?.Kind == k && r.Box.Hp >= 100);
+            Assert.Contains(k == RunnerBoxKind.Heal ? c.Levels[1].Rows : c.First.Rows, r => r.Box?.Kind == k && r.Box.Hp >= 100);
         }
     }
 }

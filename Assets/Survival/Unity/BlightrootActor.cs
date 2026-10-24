@@ -54,7 +54,6 @@ namespace Survival.Unity
         public void Build()
         {
             BuildLights();
-#if UNITY_EDITOR
             var prefab = LoadBodyPrefab();
             if (prefab == null)
             {
@@ -89,9 +88,6 @@ namespace Survival.Unity
             _output = AnimationPlayableOutput.Create(_graph, "Blightroot", _animator);
             _graph.Play();
             _ready = true;
-#else
-            Debug.LogError("Blightroot creature pack plays in the Editor Game view.");
-#endif
         }
 
         public bool PlayNamedClip(string exactName)
@@ -257,18 +253,15 @@ namespace Survival.Unity
 
         private GameObject? LoadBodyPrefab()
         {
-#if UNITY_EDITOR
             var path = AssetPath(ThemePackBody);
+#if UNITY_EDITOR
             EnsureBodyImport(path);
-            return AssetDatabase.LoadAssetAtPath<GameObject>(path);
-#else
-            return null;
 #endif
+            return PlayerAssets.Load<GameObject>(path);
         }
 
         private AnimationClip? LoadClip(BlightrootMotion.Clip entry)
         {
-#if UNITY_EDITOR
             var path = AssetPath(entry.ThemePackRel);
             var key = path + "|" + entry.ExactName;
             var cached = ActorClipCache.Get(key);
@@ -283,6 +276,7 @@ namespace Survival.Unity
                 return ActorClipCache.Put(key, clip);
             }
 
+#if UNITY_EDITOR
             if (!RepairTake(path, entry))
             {
                 return null;
@@ -297,16 +291,20 @@ namespace Survival.Unity
 
             return ActorClipCache.Put(key, clip);
 #else
+            if (ActorClipCache.First("baked-empty|" + path + "|" + entry.ExactName))
+            {
+                Debug.LogError("Blightroot take empty in the player bake. " + entry.ExactName + " " + path);
+            }
+
             return null;
 #endif
         }
 
-#if UNITY_EDITOR
         private static AnimationClip? PickClip(string path, string exactName)
         {
             AnimationClip? exact = null;
             AnimationClip? take = null;
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
+            foreach (var obj in PlayerAssets.LoadAll(path))
             {
                 if (obj is not AnimationClip clip || clip.name.StartsWith("__preview", StringComparison.Ordinal))
                 {
@@ -333,6 +331,7 @@ namespace Survival.Unity
             return exact ?? take;
         }
 
+#if UNITY_EDITOR
         private static bool RepairTake(string path, BlightrootMotion.Clip entry)
         {
             // One reimport per take per session: a take still missing after one repair is not fixed by another.
@@ -417,6 +416,11 @@ namespace Survival.Unity
 
         private static void EnsureBodyImport(string path)
         {
+            if (!RigAssetCache.First("blightbody|" + path))
+            {
+                return;
+            }
+
             if (AssetImporter.GetAtPath(path) is not ModelImporter importer)
             {
                 return;
@@ -465,9 +469,11 @@ namespace Survival.Unity
             }
         }
 
+#endif
+
         private static Avatar? LoadAvatar(string path)
         {
-            foreach (var obj in AssetDatabase.LoadAllAssetsAtPath(path))
+            foreach (var obj in RigAssetCache.All(path))
             {
                 if (obj is Avatar avatar && !avatar.isHuman)
                 {
@@ -477,7 +483,6 @@ namespace Survival.Unity
 
             return null;
         }
-#endif
 
         /// <summary>
         /// Roots hang this far below the foot bones in the Dual Weapon Combo bind.
@@ -696,10 +701,11 @@ namespace Survival.Unity
         private static void EnableSkin(GameObject root)
         {
             var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            var albedo = LoadThemeMap(BaseColorFile, asNormal: false, linear: false, readable: false);
-            var normal = LoadThemeMap(NormalFile, asNormal: true, linear: true, readable: false);
-            var metallicRoughness = LoadThemeMap(MetallicRoughnessFile, asNormal: false, linear: true, readable: true);
-            var packedMetal = PackGlTfMetallicRoughness(metallicRoughness);
+            // Loaded and repacked once per session, shared by every Blightroot copy.
+            var albedo = RigAssetCache.Texture("blight|" + BaseColorFile, () => LoadThemeMap(BaseColorFile, asNormal: false, linear: false, readable: false));
+            var normal = RigAssetCache.Texture("blight|" + NormalFile, () => LoadThemeMap(NormalFile, asNormal: true, linear: true, readable: false));
+            var packedMetal = RigAssetCache.Texture("blight|packed|" + MetallicRoughnessFile, () =>
+                PackGlTfMetallicRoughness(LoadThemeMap(MetallicRoughnessFile, asNormal: false, linear: true, readable: true)));
             if (albedo == null)
             {
                 Debug.LogError("Blightroot albedo missing. " + BaseColorFile + " next to the Dual Weapon Combo body.");
@@ -798,8 +804,8 @@ namespace Survival.Unity
 
         private static Texture2D? LoadThemeMap(string fileName, bool asNormal, bool linear, bool readable)
         {
-#if UNITY_EDITOR
             var path = AssetPath(BlightrootMotion.ThemePackDir + "/" + fileName);
+#if UNITY_EDITOR
             if (AssetImporter.GetAtPath(path) is TextureImporter importer)
             {
                 var dirty = false;
@@ -828,10 +834,12 @@ namespace Survival.Unity
                 }
             }
 
-            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
 #else
-            return null;
+            _ = asNormal;
+            _ = linear;
+            _ = readable;
 #endif
+            return PlayerAssets.Load<Texture2D>(path);
         }
 
         /// <summary>
