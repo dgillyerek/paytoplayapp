@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Numerics;
 using Survival.Domain.Roster;
 
 namespace Survival.Domain.Runner
@@ -36,13 +37,44 @@ namespace Survival.Domain.Runner
         /// </summary>
         public static bool Applies(LockedBattleFighter fighter) =>
             fighter.WalkCarriesRoot && !string.Equals(fighter.Name, LockedBattleRoster.Ironhowl.Name, StringComparison.Ordinal);
+    }
 
-        /// <summary>
-        /// Where the body shows along the road (metres, + = the way it faces) when the stride bone has travelled
-        /// <paramref name="boneForward"/> from its rest place <paramref name="restForward"/> and the hold is on.
-        /// </summary>
-        public static float Shown(float restForward, float boneForward, bool hold) =>
-            hold ? restForward : boneForward;
+    /// <summary>
+    /// Where a runner rig's host sits in its slot (Derek 2026-10-23: "blightroot when shot still bounces way back").
+    /// The body turns (hit lean, death tip) about its pivot: the rest place of the stride bone (Blightroot's hips) or,
+    /// for a rig without one, its mid height. The pivot stays where the sim puts the slot, give or take the hit
+    /// nudge and the death sink, and a held rig's clip travel is cancelled whatever the host's turn (only its bob is
+    /// kept, straight up). (The old hold was subtracted along the road while the host was tipped
+    /// 80 degrees in its death fall: the walk's forward travel had turned upward, so the hold pushed the body up to
+    /// 2.3 m back, sawing on every loop. The old lean also pivoted at the feet, swinging the hips back.)
+    /// All vectors are in the slot's frame except <paramref name="pivotRest"/> and <paramref name="bone"/>, which are
+    /// host-local (before the host's scale).
+    /// </summary>
+    public static class RunnerRootPlacement
+    {
+        public static Vector3 HostPosition(
+            Vector3 baseLocal,
+            Vector3 nudge,
+            float sink,
+            Quaternion rotation,
+            Vector3 scale,
+            Vector3 pivotRest,
+            Vector3 bone,
+            bool hold)
+        {
+            if (!hold)
+            {
+                bone = pivotRest;
+            }
+
+            // The held bone shows at its rest place; only its own rise and fall (the walk's bob) is kept, straight up.
+            var bob = (bone.Y - pivotRest.Y) * scale.Y;
+            return baseLocal + nudge + new Vector3(0f, bob - sink, 0f) + (pivotRest * scale) - Vector3.Transform(bone * scale, rotation);
+        }
+
+        /// <summary>Where host-local point <paramref name="point"/> shows in the slot.</summary>
+        public static Vector3 Rendered(Vector3 hostPosition, Quaternion rotation, Vector3 scale, Vector3 point) =>
+            hostPosition + Vector3.Transform(point * scale, rotation);
     }
 
     /// <summary>

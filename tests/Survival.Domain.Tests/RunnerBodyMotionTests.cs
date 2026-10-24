@@ -125,19 +125,115 @@ public class RunnerBodyMotionTests
             Assert.Equal(f.WalkCarriesRoot && f.Name != "Ironhowl", RunnerStrideHold.Applies(f));
         }
 
-        // His walk carries the hips the stride forward per loop, then wraps to 0: unheld that is a jump back of the
-        // whole stride (x 1.9 scale on the road); held, the body shows at its rest place every frame.
-        var scale = 1.9f;
-        var previous = RunnerStrideHold.Shown(0f, 0f, true);
-        for (var frame = 0; frame <= 86; frame++)
+    }
+
+    // Blightroot's walk as Unity measured it on Derek's laptop: 1.339 host units of hips travel per 44-frame loop
+    // (0.016 sideways), hips about 1 host unit up; on the road the host is scaled 1.9 / 2.135 x 1.9.
+    private const float BlightScale = 1.9f / 2.135f * 1.9f;
+    private static readonly System.Numerics.Vector3 BlightHipsRest = new(0f, 1f, 0f);
+
+    private static System.Numerics.Vector3 BlightHips(int frame)
+    {
+        var u = (frame % 44) / 44f;
+        return new System.Numerics.Vector3(-0.016f * u, 1f + (0.03f * (float)System.Math.Sin(u * 4 * System.Math.PI)), 1.339f * u);
+    }
+
+    /// <summary>RunnerRig.Late's host turn: the hit lean (FromToRotation up to up + tilt x tan(recoil)), else the death tip.</summary>
+    private static System.Numerics.Quaternion HostTurn(float leanWeight, float deathT)
+    {
+        // The hit comes from the squad in front, so "away" is the slot's -Z.
+        var away = new System.Numerics.Vector3(0f, 0f, -1f);
+        if (deathT >= 0f)
         {
-            var bone = blight.WalkRootStrideMetres * scale * ((frame % 43) / 43f);
-            var shown = RunnerStrideHold.Shown(0f, bone, true);
-            Assert.InRange(previous - shown, -0.1f, 0.1f);
-            previous = shown;
+            var fall = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.Cross(System.Numerics.Vector3.UnitY, away));
+            var s = System.Math.Min(1f, deathT * 1.6f);
+            var deg = -80f * (s * s * (3f - (2f * s)));
+            return System.Numerics.Quaternion.CreateFromAxisAngle(fall, deg * (float)System.Math.PI / 180f);
         }
 
-        Assert.True(blight.WalkRootStrideMetres * scale - RunnerStrideHold.Shown(0f, 0f, false) > 1f);
+        var tilt = away * (LockedBattleReactions.Stagger.RootLeanScale * leanWeight);
+        var to = System.Numerics.Vector3.Normalize(System.Numerics.Vector3.UnitY + (tilt * (float)System.Math.Tan(2.5 * System.Math.PI / 180)));
+        var axis = System.Numerics.Vector3.Cross(System.Numerics.Vector3.UnitY, to);
+        if (axis.LengthSquared() < 1e-10f)
+        {
+            return System.Numerics.Quaternion.Identity;
+        }
+
+        return System.Numerics.Quaternion.CreateFromAxisAngle(System.Numerics.Vector3.Normalize(axis), (float)System.Math.Acos(System.Math.Clamp(to.Y, -1f, 1f)));
+    }
+
+    [Fact]
+    public void Blightroot_rendered_body_never_travels_back_when_shot_while_walking_attacking_or_dying()
+    {
+        var scale = new System.Numerics.Vector3(BlightScale);
+        var baseLocal = new System.Numerics.Vector3(0f, 0.2f, 0f);
+        // The capped hit nudge, pointing back down the road.
+        var nudge = new System.Numerics.Vector3(0f, 0f, -RunnerHitNudge.MaxMetres);
+        var worstNew = 0f;
+        var oldBack = 0f;
+        var previousOld = 0f;
+        for (var frame = 0; frame < 160; frame++)
+        {
+            // A shot lands every 9 frames (Stagger lean, the heaviest); the killing shot at frame 100 starts the fall.
+            var hitAge = (frame % 9) / 30f;
+            var w = LockedBattleReactions.Stagger.Weight(hitAge);
+            var deathT = frame >= 100 ? System.Math.Min(1f, (frame - 100) / 30f / 0.9f) : -1f;
+            var turn = HostTurn(w, deathT);
+            var sink = deathT >= 0f ? 1.9f * 1.9f * 0.9f * deathT * deathT : 0f;
+            var hips = BlightHips(frame);
+            var host = RunnerRootPlacement.HostPosition(baseLocal, nudge * w, sink, turn, scale, BlightHipsRest, hips, true);
+            var shown = RunnerRootPlacement.Rendered(host, turn, scale, hips);
+            worstNew = System.Math.Min(worstNew, shown.Z);
+            Assert.InRange(shown.X, -0.05f, 0.05f);
+
+            // The old placement (8362e21): the hold subtracted along the road, the turn about the feet.
+            var oldHost = baseLocal + (nudge * w) + new System.Numerics.Vector3(0f, -sink, 0f) - new System.Numerics.Vector3(0f, 0f, hips.Z * BlightScale);
+            var oldZ = RunnerRootPlacement.Rendered(oldHost, turn, scale, hips).Z;
+            if (frame > 100)
+            {
+                // Each frame the body slid back down the road (it snaps forward again on the loop wrap).
+                oldBack += System.Math.Max(0f, previousOld - oldZ);
+            }
+
+            previousOld = oldZ;
+        }
+
+        Assert.True(worstNew >= -RunnerHitNudge.MaxMetres - 0.005f, "Blightroot's hips showed " + worstNew + " m back");
+        // The old placement saws the falling body back down the road by the walk's whole stride per loop.
+        Assert.True(oldBack > 2f, "the old placement should reproduce the bounce, slid back " + oldBack);
+    }
+
+    [Fact]
+    public void Every_rig_turns_about_its_pivot_so_a_hit_or_a_fall_never_carries_its_body_back()
+    {
+        foreach (var height in new[] { 0.6f, 1.9f, 3.6f })
+        {
+            var pivot = new System.Numerics.Vector3(0f, height * 0.5f, 0f);
+            var scale = System.Numerics.Vector3.One;
+            for (var frame = 0; frame < 60; frame++)
+            {
+                var deathT = frame >= 30 ? (frame - 30) / 27f : -1f;
+                var turn = HostTurn(1f, System.Math.Min(1f, deathT));
+                var host = RunnerRootPlacement.HostPosition(System.Numerics.Vector3.Zero, System.Numerics.Vector3.Zero, 0f, turn, scale, pivot, pivot, false);
+                var shown = RunnerRootPlacement.Rendered(host, turn, scale, pivot);
+                Assert.InRange(shown.Z, -0.001f, 0.001f);
+                Assert.InRange(shown.X, -0.001f, 0.001f);
+            }
+        }
+
+        // At rest the host is where it always was.
+        var still = RunnerRootPlacement.HostPosition(new System.Numerics.Vector3(0f, 0.3f, 0f), System.Numerics.Vector3.Zero, 0f, System.Numerics.Quaternion.Identity, new System.Numerics.Vector3(1.7f), BlightHipsRest, BlightHipsRest, true);
+        Assert.True(System.Numerics.Vector3.Distance(new System.Numerics.Vector3(0f, 0.3f, 0f), still) < 1e-5f);
+    }
+
+    [Fact]
+    public void Runner_rig_places_its_host_through_the_shared_root_placement()
+    {
+        var rig = File.ReadAllText(Path.Combine(Layouts.RepoRoot(), "Assets/Survival/Unity/Runner/RunnerRig.cs"));
+        Assert.Contains("RunnerRootPlacement.HostPosition(", rig);
+        Assert.Contains("PlaceHost(nudge, Height * 0.9f * t * t);", rig);
+        Assert.Contains("PlaceHost(nudge, 0f);", rig);
+        Assert.DoesNotContain("- hold", rig);
     }
 
     [Fact]
@@ -209,5 +305,34 @@ public class RunnerBodyMotionTests
         Assert.Contains("_foesTab = true; _selected = \"\"; OpenHeroes();", view);
         Assert.Contains("HeroesScreen.TabHighlighted(false, _foesTab)", view);
         Assert.Contains("HeroesScreen.TabHighlighted(true, _foesTab)", view);
+    }
+
+    [Fact]
+    public void A_full_squad_of_ten_sits_one_row_lower_with_its_back_row_still_in_shot()
+    {
+        // Nine followers fill rows 1 to 3; there is no fourth row any more.
+        var backRow = 0;
+        for (var slot = 0; slot < RunnerRules.MaxFollowers; slot++)
+        {
+            backRow = System.Math.Max(backRow, RunnerFormation.RowOf(slot));
+        }
+
+        Assert.Equal(3, backRow);
+        var backZ = RunnerFormation.Offset(RunnerRules.MaxFollowers - 1).Z;
+        Assert.Equal(-3f * RunnerFraming.RowMetres, backZ, 3);
+        var focus = RunnerFraming.FocusZ(0f, backZ);
+        foreach (var boss in new[] { false, true })
+        {
+            var bottom = RunnerFraming.BottomGroundFromFocus(boss);
+            var spare = (backZ - focus) - bottom;
+            // The back row's feet stay in shot, with less than a row of empty road behind them.
+            Assert.InRange(spare, 0.2f, RunnerFraming.RowMetres);
+            // The old framing (halfway between the lead and the back row) left more than a whole row empty.
+            var oldSpare = (backZ - ((0f + backZ) * 0.5f)) - bottom;
+            Assert.True(oldSpare > RunnerFraming.RowMetres, "old spare " + oldSpare);
+        }
+
+        // The lead stays in the top half's reach: ahead of the focus by half a row.
+        Assert.InRange(0f - focus, 0f, RunnerFraming.RowMetres);
     }
 }

@@ -34,12 +34,13 @@ namespace Survival.Unity
         // Behind / above, a quarter turn off the centre line: the squad reads as 3D bodies in 3/4 from behind, the
         // foes coming down the road in 3/4 from the front (about 26 degrees down).
         // Framed on the middle of the squad (not the leader) so a 10-strong formation's back row stays in shot.
-        private const float CameraHeight = 7.6f;
-        private const float CameraBack = 10.0f;
+        // Heights, look-ahead and the one-row push live in RunnerFraming (Survival.Domain) so the tests frame the same shot.
+        private const float CameraHeight = RunnerFraming.CameraHeight;
+        private const float CameraBack = RunnerFraming.CameraBack;
         private const float CameraSide = -1.2f;
         // Looks further down the road since the squad's reach grew to ~20 m (Update 4): the foes it shoots stay in shot.
-        private const float CameraLookAhead = 6.5f;
-        private const float CameraLookHeight = 0.9f;
+        private const float CameraLookAhead = RunnerFraming.CameraLookAhead;
+        private const float CameraLookHeight = RunnerFraming.CameraLookHeight;
 
         /// <summary>The unit a follower / hero box pays stands on its lid at this share of battle size.</summary>
         private const float CaptiveScale = 0.72f;
@@ -576,10 +577,8 @@ namespace Survival.Unity
                         rig.Slot.rotation = Quaternion.identity;
                         rig.Walk();
                         _members[m.Id] = rig;
-                        if (m.IsHero)
-                        {
-                            AddSideBar(m.Id, true, rig, false);
-                        }
+                        // Followers too: the same thin sliver, hidden at full HP and faded in only on damage.
+                        AddSideBar(m.Id, true, rig, false);
                     }
                 }
             }
@@ -964,6 +963,18 @@ namespace Survival.Unity
                     break;
                 }
 
+                case RunnerEventKind.FollowerHit:
+                {
+                    if (_members.TryGetValue(e.Id, out var follower))
+                    {
+                        var foe = _run?.Foe(e.Other);
+                        follower.Hit(foe != null ? RunnerRig.Find(foe.Unit.Roster) : null, foe != null ? at - new Vector3(foe.X, 0f, foe.Z) : Vector3.back, 1f);
+                        HitNumber(at + (Vector3.up * follower.Height), (int)e.Amount, true, false, true);
+                    }
+
+                    break;
+                }
+
                 case RunnerEventKind.HeroHit:
                 {
                     if (_run != null && _members.TryGetValue(_run.Hero.Id, out var hero))
@@ -1071,7 +1082,7 @@ namespace Survival.Unity
 
             _cam.clearFlags = CameraClearFlags.SolidColor;
             _cam.backgroundColor = LockedBattleGround.Horizon;
-            _cam.fieldOfView = 52f;
+            _cam.fieldOfView = RunnerFraming.FieldOfViewDegrees;
             _cam.nearClipPlane = 0.2f;
             _cam.farClipPlane = 120f;
             _cam.enabled = true;
@@ -1091,14 +1102,14 @@ namespace Survival.Unity
             }
 
             // Ride a little toward the steer side, never the full lane, so the squad stays centred; halfway between
-            // the leader and the back row.
+            // the leader and the back row, one row up the road so the squad sits a row lower in the shot.
             var back = _run.Distance;
             foreach (var m in _run.Squad)
             {
                 back = Mathf.Min(back, m.Z);
             }
 
-            return new Vector3(_run.Hero.X * 0.45f, 0f, (_run.Distance + back) * 0.5f);
+            return new Vector3(_run.Hero.X * 0.45f, 0f, RunnerFraming.FocusZ(_run.Distance, back));
         }
 
         private void FollowCamera(float dt)

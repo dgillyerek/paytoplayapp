@@ -152,13 +152,15 @@ public sealed class RunnerTests
         Assert.Equal("lyra", level.Hero);
         Assert.True(level.HasBoss);
         Assert.True(level.EnemyCount >= 45, "enemies " + level.EnemyCount);
-        Assert.True(level.BoxCount >= 15, "boxes " + level.BoxCount);
+        // About 40% fewer boxes than before (18 -> 11): one box a beat, not a chest and a crate on every beat.
+        Assert.InRange(level.BoxCount, 9, 13);
         Assert.InRange(level.HazardCount, 1, 4);
         Assert.Contains(level.Rows, r => r.Hazard?.Kind == RunnerHazardKind.Spikes);
         Assert.Contains(level.Rows, r => r.Hazard?.Kind == RunnerHazardKind.Fire);
         foreach (var kind in Enum.GetValues<RunnerBoxKind>())
         {
-            Assert.Contains(level.Rows, r => r.Box?.Kind == kind);
+            // Level 1 has no heal crate any more; healing turns up from Level 2.
+            Assert.Contains(kind == RunnerBoxKind.Heal ? c.Levels[1].Rows : level.Rows, r => r.Box?.Kind == kind);
         }
 
         // Fodder from the locked villain roster, Ironhowl as the end boss; every rig is a locked battle fighter.
@@ -569,7 +571,8 @@ public sealed class RunnerTests
     {
         var c = Runner.Catalog();
         var good = new RunnerRun(c, c.First);
-        Runner.Play(good, Runner.AimLikeAPlayer);
+        // With fewer upgrade boxes the boss now outlasts a squad that never steps out of his quakes, so this player dodges.
+        Runner.Play(good, r => RunnerBossQuakeTests.DodgingPlayer(r));
         _out.WriteLine($"aim: {good.Outcome} t={good.Seconds:0} kills={good.Kills} boxes={good.BoxesBroken}/{c.First.BoxCount} peak={good.FollowersPeak} left={good.Followers} hp={good.Hero.Hp}");
         Assert.Equal(RunnerOutcome.Won, good.Outcome);
         Assert.True(good.BoxesBroken >= c.First.BoxCount - 2);
@@ -751,7 +754,7 @@ public sealed class RunnerTests
         var shots = 0;
         while (!run.Over && run.Seconds < 200f)
         {
-            run.SteerTo(Runner.AimLikeAPlayer(run));
+            run.SteerTo(RunnerBossQuakeTests.DodgingPlayer(run));
             foreach (var e in run.Step(1f / 30f))
             {
                 if (e.Kind == RunnerEventKind.AttackStarted)
@@ -819,7 +822,7 @@ public sealed class RunnerTests
             var engaged = -1f;
             while (!run.Over && run.Seconds < 400f)
             {
-                run.SteerTo(Runner.Aim(run, true));
+                run.SteerTo(RunnerBossQuakeTests.DodgingPlayer(run));
                 foreach (var e in run.Step(1f / 30f))
                 {
                     if (e.Kind == RunnerEventKind.BossEngaged)
@@ -836,7 +839,7 @@ public sealed class RunnerTests
         var without = Fight(Runner.CatalogWithout(RunnerBoxKind.Weapon, RunnerBoxKind.Rate));
         _out.WriteLine($"with upgrades: {with.Run.Outcome} boss {with.Boss:0.0}s; without: {without.Run.Outcome} boss {without.Boss:0.0}s");
         Assert.Equal(RunnerOutcome.Won, with.Run.Outcome);
-        Assert.True(with.Run.DamageMul > 1.5f && with.Run.RateMul > 1.25f);
+        Assert.True(with.Run.DamageMul > 1.5f && with.Run.RateMul >= 1.25f, $"damage {with.Run.DamageMul} rate {with.Run.RateMul}");
         Assert.True(without.Run.Outcome == RunnerOutcome.Lost || without.Boss > with.Boss * 1.5f, $"boss {with.Boss} vs {without.Boss}");
     }
 

@@ -154,37 +154,43 @@ namespace Survival.Domain.Runner
                 var fx = side * (1.6f + ((float)rnd.NextDouble() * 0.6f));
                 var ux = -side * (1.6f + ((float)rnd.NextDouble() * 0.6f));
 
-                // The follower chest (a hero chest on beats 3 and 6).
+                // One box a beat, not two (Derek 2026-10-23: "theres too many upgrades to enimies"): a follower chest on
+                // the even beats, a power-up crate on the odd ones, plus a chest on beat 1 and the hero chest on beat 3
+                // (and beat 6). The waves keep growing, so later levels have more boxes but fewer per enemy.
                 if (beat == 3 || beat == 6)
                 {
                     rows.Add(Box(z, fx, hpAt, RunnerBoxKind.Hero, beat == 3 ? "rowan" : "oakenshield", 1, 0f));
                 }
-                else
+                else if (beat % 2 == 0 || beat == 1)
                 {
                     var count = 2 + (beat % 3) + (t / 3);
                     rows.Add(Box(z, fx, hpAt, RunnerBoxKind.Followers, FollowerUnits[beat % FollowerUnits.Length], count, 0f));
                 }
 
-                // A power-up crate on the other side, every beat, cycling through the kinds.
-                var kind = PowerUps[beat % PowerUps.Length];
-                var upHp = (int)Math.Round(hpAt * 0.8f);
-                switch (kind)
+                // A power-up crate on the other side on the odd beats, cycling through the kinds; half as many crates, so
+                // each damage / rate crate gives a little more than the old 0.2 / 0.15.
+                if (beat % 2 == 1)
                 {
-                    case RunnerBoxKind.Weapon:
-                        rows.Add(Box(z + 1.5f, ux, upHp, kind, "", 1, 0.2f + (0.015f * t)));
-                        break;
-                    case RunnerBoxKind.Rate:
-                        rows.Add(Box(z + 1.5f, ux, upHp, kind, "", 1, 0.15f + (0.01f * t)));
-                        break;
-                    case RunnerBoxKind.Range:
-                        rows.Add(Box(z + 1.5f, ux, upHp, kind, "", 1, 0.15f));
-                        break;
-                    case RunnerBoxKind.Heal:
-                        rows.Add(Box(z + 1.5f, ux, (int)Math.Round(upHp * 0.7f), kind, "", 1, 0.35f));
-                        break;
-                    default:
-                        rows.Add(Box(z + 1.5f, ux, (int)Math.Round(upHp * 0.6f), RunnerBoxKind.Followers, FollowerUnits[(beat + 2) % FollowerUnits.Length], 1 + (t / 4), 0f));
-                        break;
+                    var kind = PowerUps[(beat / 2) % PowerUps.Length];
+                    var upHp = (int)Math.Round(hpAt * 0.8f);
+                    switch (kind)
+                    {
+                        case RunnerBoxKind.Weapon:
+                            rows.Add(Box(z + 1.5f, ux, upHp, kind, "", 1, 0.3f + (0.02f * t)));
+                            break;
+                        case RunnerBoxKind.Rate:
+                            rows.Add(Box(z + 1.5f, ux, upHp, kind, "", 1, 0.25f + (0.012f * t)));
+                            break;
+                        case RunnerBoxKind.Range:
+                            rows.Add(Box(z + 1.5f, ux, upHp, kind, "", 1, 0.15f));
+                            break;
+                        case RunnerBoxKind.Heal:
+                            rows.Add(Box(z + 1.5f, ux, (int)Math.Round(upHp * 0.7f), kind, "", 1, 0.35f));
+                            break;
+                        default:
+                            rows.Add(Box(z + 1.5f, ux, (int)Math.Round(upHp * 0.6f), RunnerBoxKind.Followers, FollowerUnits[(beat + 2) % FollowerUnits.Length], 1 + (t / 4), 0f));
+                            break;
+                    }
                 }
 
                 // Skirmishers between the boxes and the wave, on every other beat (a pair of runners or archers).

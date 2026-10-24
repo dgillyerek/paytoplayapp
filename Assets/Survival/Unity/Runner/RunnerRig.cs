@@ -46,9 +46,11 @@ namespace Survival.Unity
         private System.Action<float>? _attackSpeed;
         private System.Action<bool>? _walkUnderAttack;
 
-        /// <summary>The bone a root-carrying walk moves (Blightroot), and where it sits along the road at rest (slot metres).</summary>
+        /// <summary>The bone a root-carrying walk moves (Blightroot); null for a rig whose clips stay in place.</summary>
         private Transform? _strideBone;
-        private float _strideRest;
+
+        /// <summary>The body's pivot, host-local: the stride bone's rest place, else mid height (RunnerRootPlacement).</summary>
+        private Vector3 _pivotRest;
 
         private RunnerRig(LockedBattleFighter data, Transform slot, Transform host)
         {
@@ -286,12 +288,13 @@ namespace Survival.Unity
             host.transform.localPosition = rig._baseLocal;
             rig.Height = data.DesignHeightMetres * LockedBattleRoster.BattleScaleOf(data) * extraScale;
             rig._ground = new LockedBattleGrounding(host.transform);
+            rig._pivotRest = new Vector3(0f, measured.center.y, 0f);
             if (RunnerStrideHold.Applies(data))
             {
                 rig._strideBone = FindBone(host.transform, data.StrideBone);
                 if (rig._strideBone != null)
                 {
-                    rig._strideRest = rig.StrideForward();
+                    rig._pivotRest = host.transform.InverseTransformPoint(rig._strideBone.position);
                 }
                 else
                 {
@@ -493,22 +496,21 @@ namespace Survival.Unity
             _reaction = LockedBattleReactions.Stagger;
         }
 
-        /// <summary>Slot metres the stride bone has travelled along the road from its rest place (0 when not held).</summary>
-        private float StrideHold() => _strideBone != null ? StrideForward() - _strideRest : 0f;
-
-        /// <summary>The stride bone's place along the slot's forward, in slot metres, independent of the host's own offset.</summary>
-        private float StrideForward()
+        /// <summary>
+        /// Puts the host so the body's pivot shows where the sim puts the slot (plus the hit nudge, minus the death sink)
+        /// whatever the host's turn, cancelling a root-carrying clip's travel in the host's own frame (RunnerRootPlacement).
+        /// </summary>
+        private void PlaceHost(Vector3 nudge, float sink)
         {
-            if (_strideBone == null)
-            {
-                return 0f;
-            }
-
-            var local = Host.InverseTransformPoint(_strideBone.position);
-            var forward = Host.InverseTransformDirection(Slot.forward);
-            forward.y = 0f;
-            return forward.sqrMagnitude > 1e-6f ? Vector3.Dot(local, forward.normalized) * Host.localScale.z : 0f;
+            var bone = _strideBone != null ? Host.InverseTransformPoint(_strideBone.position) : _pivotRest;
+            var placed = RunnerRootPlacement.HostPosition(
+                N(_baseLocal), N(nudge), sink, NQ(Host.localRotation), N(Host.localScale), N(_pivotRest), N(bone), _strideBone != null);
+            Host.localPosition = new Vector3(placed.X, placed.Y, placed.Z);
         }
+
+        private static System.Numerics.Vector3 N(Vector3 v) => new System.Numerics.Vector3(v.x, v.y, v.z);
+
+        private static System.Numerics.Quaternion NQ(Quaternion q) => new System.Numerics.Quaternion(q.x, q.y, q.z, q.w);
 
         /// <summary>A bone by name under <paramref name="root"/>; "Scope/Bone" looks inside the named child (as the battle's).</summary>
         private static Transform? FindBone(Transform root, string name)
@@ -550,10 +552,6 @@ namespace Survival.Unity
             var nudge = step * Profile.RecoilMetres;
             nudge.y = 0f;
             nudge *= RunnerHitNudge.Scale(nudge.x, nudge.z);
-            // Cancel a root-carrying walk's own forward travel (Blightroot: 1.45 m per loop x 1.9 scale), which otherwise
-            // drifts ahead and snaps back on every loop wrap and every walk / attack / rest change.
-            var hold = Vector3.forward * StrideHold();
-            Host.localPosition = _baseLocal + nudge - hold;
             var lean = Mathf.Tan(Profile.RecoilDegrees * Mathf.Deg2Rad);
             // Lean into the sideways move: roll about the road's forward axis (in the slot's frame), eased in and out.
             _lean = Mathf.Lerp(_lean, _leanTarget, 1f - Mathf.Exp(-12f * dt));
@@ -565,10 +563,11 @@ namespace Survival.Unity
                 var t = Mathf.Clamp01(_deathAge / 0.9f);
                 var fall = Vector3.Cross(Vector3.up, local).normalized;
                 Host.localRotation = Quaternion.AngleAxis(-80f * Mathf.SmoothStep(0f, 1f, Mathf.Min(1f, t * 1.6f)), fall == Vector3.zero ? Vector3.right : fall);
-                Host.localPosition = _baseLocal + (Vector3.down * (Height * 0.9f * t * t)) - hold;
+                PlaceHost(nudge, Height * 0.9f * t * t);
             }
             else
             {
+                PlaceHost(nudge, 0f);
                 _ground?.Plant(Slot.position.y);
                 if (_reactionPose != null && w > 0f)
                 {

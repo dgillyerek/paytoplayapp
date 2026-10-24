@@ -41,6 +41,13 @@ namespace Survival.Domain.Runner
         /// <summary>Most followers behind the lead hero (<see cref="SquadCap"/> minus the hero).</summary>
         public const int MaxFollowers = SquadCap - 1;
 
+        /// <summary>
+        /// A follower's HP (Derek 2026-10-23: "a little more health ... maybe like 25"; it was 1, so any hit killed one).
+        /// Small enemies' shots and swings take two hits, the big ones still one; a trap still knocks a follower out and
+        /// the boss's slam and quake still kill every follower caught in the marked road. The lead keeps the unit's HP.
+        /// </summary>
+        public const int FollowerHp = 25;
+
         /// <summary>Squad damage bonus for each unit a box would have added with the squad already full.</summary>
         public const float FullSquadDamage = 0.03f;
 
@@ -119,7 +126,7 @@ namespace Survival.Domain.Runner
         /// </summary>
         public const float ContactHitsPerSecond = 1f;
 
-        /// <summary>Share of an enemy's attack damage a contact hit does to the hero (a follower dies to any hit).</summary>
+        /// <summary>Share of an enemy's attack damage a contact hit does to a squad member.</summary>
         public const float ContactDamageShare = 0.5f;
 
         /// <summary>
@@ -215,7 +222,10 @@ namespace Survival.Domain.Runner
         BossQuakeWindup,
 
         /// <summary>The quake lands (<see cref="RunnerEvent.Amount"/> = squad members caught, the hero's hit shows as <see cref="HeroHit"/>; X = the safe band's centre).</summary>
-        BossQuake
+        BossQuake,
+
+        /// <summary>A follower took a hit it survives (<see cref="RunnerEvent.Id"/> = the follower, Other = the foe, Amount = damage); one it does not is <see cref="FollowerLost"/>.</summary>
+        FollowerHit
     }
 
     /// <summary>What the boss is winding up.</summary>
@@ -268,9 +278,13 @@ namespace Survival.Domain.Runner
             IsHero = hero;
             X = x;
             Z = z;
-            Hp = unit.Hp;
+            Hp = MaxHp = hero ? unit.Hp : RunnerRules.FollowerHp;
             Plan = RunnerAttackTiming.PlanFor(unit);
         }
+
+        /// <summary>The lead's unit HP, or <see cref="RunnerRules.FollowerHp"/> for a follower.</summary>
+        public int MaxHp { get; }
+        public float HpFraction => MaxHp > 0 ? Math.Max(0f, Hp / (float)MaxHp) : 0f;
 
         public int Id { get; }
         public RunnerUnitDef Unit { get; }
@@ -505,7 +519,7 @@ namespace Survival.Domain.Runner
     /// the player only steers left / right, which is also the aim. The squad never stops: enemy waves walk in, and what
     /// it does not kill it walks through while they keep swinging (melee in reach, ahead or already passed, ranged foes
     /// shooting either way down the road, bodies touching a caster hurting) and chase it briefly, then they drop behind.
-    /// An enemy hit kills a follower (1 HP) first, the hero only once no followers are left. Only the boss stops the
+    /// An enemy hit lands on a follower (<see cref="RunnerRules.FollowerHp"/>) first, the hero only once no followers are left. Only the boss stops the
     /// squad: it halts at his arena line and fights (still steering) until he falls or the squad is wiped. Bonus boxes have HP and must be shot down to be claimed: followers, a new hero, or
     /// weapon / attack-speed upgrades. Reaching the end (or killing the boss, when the level has one) wins; losing the
     /// hero loses. Plain C#, deterministic, stepped by <see cref="Step"/>.
@@ -1244,7 +1258,7 @@ namespace Survival.Domain.Runner
             }
         }
 
-        /// <summary>A contact hit on one member: a follower dies, the hero takes the damage.</summary>
+        /// <summary>A contact hit on one member: the damage comes off its HP (a follower at 0 falls).</summary>
         private void StrikeMember(RunnerFoe f, RunnerMember m, int damage)
         {
             if (m.IsHero)
@@ -1253,7 +1267,19 @@ namespace Survival.Domain.Runner
                 return;
             }
 
-            KillFollower(f, m);
+            HurtFollower(f, m, damage);
+        }
+
+        private void HurtFollower(RunnerFoe f, RunnerMember victim, int damage)
+        {
+            victim.Hp = Math.Max(0, victim.Hp - damage);
+            if (victim.Hp <= 0)
+            {
+                KillFollower(f, victim);
+                return;
+            }
+
+            Emit(RunnerEventKind.FollowerHit, victim.Id, f.Id, victim.X, victim.Z, damage, true, false, victim.Unit.Id);
         }
 
         private void KillFollower(RunnerFoe f, RunnerMember victim)
@@ -1274,7 +1300,7 @@ namespace Survival.Domain.Runner
             }
         }
 
-        /// <summary>An enemy hit: kills the follower nearest the enemy; with no followers left it hurts the hero.</summary>
+        /// <summary>An enemy hit: hurts the follower nearest the enemy; with no followers left it hurts the hero.</summary>
         private void StrikeSquad(RunnerFoe f, int damage)
         {
             RunnerMember? victim = null;
@@ -1292,7 +1318,7 @@ namespace Survival.Domain.Runner
 
             if (victim != null)
             {
-                KillFollower(f, victim);
+                HurtFollower(f, victim, damage);
                 return;
             }
 
@@ -1712,6 +1738,39 @@ namespace Survival.Domain.Runner
             }
 
             return output;
+        }
+    }
+
+    /// <summary>
+    /// Where the road camera frames the squad. It rides halfway between the lead and the back row, pushed one row
+    /// up the road (Derek 2026-10-23: "the heros can be pushed back a row. now that we limited it to 10 there's an
+    /// empty row in the back"): with the squad capped at 10 the back row is row 3, and the bottom of the shot used to
+    /// leave a row and a half of empty road behind it. Only the camera moves; the sim (and so the engage distance,
+    /// shot range, the arena line and the quake lanes) is unchanged.
+    /// </summary>
+    public static class RunnerFraming
+    {
+        public const float CameraHeight = 7.6f;
+        public const float CameraBack = 10.0f;
+        public const float CameraLookAhead = 6.5f;
+        public const float CameraLookHeight = 0.9f;
+        public const float FieldOfViewDegrees = 52f;
+
+        /// <summary>One formation row (see <see cref="RunnerFormation.Offset"/>).</summary>
+        public const float RowMetres = RunnerRules.Spacing * 0.95f;
+
+        /// <summary>The focus's place along the road for the lead at <paramref name="leadZ"/> and the back row at <paramref name="backZ"/>.</summary>
+        public static float FocusZ(float leadZ, float backZ) => ((leadZ + backZ) * 0.5f) + RowMetres;
+
+        /// <summary>Road place (metres from the focus, - = behind) where the bottom edge of the shot meets the ground.</summary>
+        public static float BottomGroundFromFocus(bool boss)
+        {
+            var height = CameraHeight + (boss ? 0.8f : 0f);
+            var back = CameraBack + (boss ? 1.4f : 0f);
+            var lookHeight = CameraLookHeight + (boss ? 0.6f : 0f);
+            var pitch = Math.Atan2(height - lookHeight, back + CameraLookAhead);
+            var down = pitch + (FieldOfViewDegrees * 0.5 * Math.PI / 180.0);
+            return (float)(-back + (height / Math.Tan(down)));
         }
     }
 
