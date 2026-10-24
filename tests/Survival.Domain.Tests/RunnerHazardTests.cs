@@ -49,17 +49,20 @@ public sealed class RunnerHazardTests
     }
 
     [Fact]
-    public void A_trap_knocks_out_a_follower_it_catches_but_not_the_whole_squad()
+    public void A_trap_burns_hp_off_the_followers_it_catches_instead_of_knocking_them_out()
     {
         var run = Runner.Run(Runner.Tiny(@"{ ""at"": 4, ""kind"": ""box"", ""hp"": 1, ""reward"": ""followers"", ""unit"": ""archer"", ""count"": 5 },
             { ""at"": 16, ""kind"": ""hazard"", ""hazard"": ""fire"", ""width"": 7.6, ""damage"": 10 }"));
         var fire = Assert.Single(run.Hazards).Id;
         var evs = Runner.Play(run, null, 16f);
-        var lost = evs.Where(e => e.Kind == RunnerEventKind.FollowerLost && e.Other == fire).ToList();
-        Assert.NotEmpty(lost);
+        // Followers have 25 HP: the patch takes a share of its hero damage (10 -> 4) off each one it catches.
+        var burns = evs.Where(e => e.Kind == RunnerEventKind.FollowerHit && e.Other == fire).ToList();
+        Assert.NotEmpty(burns);
+        Assert.All(burns, e => Assert.Equal(RunnerRun.FollowerTrapDamage(10), (int)e.Amount));
+        Assert.DoesNotContain(evs, e => e.Kind == RunnerEventKind.FollowerLost && e.Other == fire);
         Assert.All(evs.Where(e => e.Kind == RunnerEventKind.HazardHit && !e.Big), e => Assert.Equal(0f, e.Amount));
-        Assert.True(run.Followers >= 1, "a fire patch burns one at a time; the rest walk through: left " + run.Followers);
-        Assert.Equal(5, run.Followers + lost.Count + evs.Count(e => e.Kind == RunnerEventKind.FollowerLost && e.Other != fire));
+        Assert.Contains(run.Squad, m => !m.IsHero && m.Hp < m.MaxHp);
+        Assert.Equal(5, run.Followers + evs.Count(e => e.Kind == RunnerEventKind.FollowerLost));
     }
 
     [Fact]

@@ -377,7 +377,7 @@ public class RunnerBodyMotionTests
         Assert.Equal(3, backRow);
         var backZ = RunnerFormation.Offset(RunnerRules.MaxFollowers - 1).Z;
         Assert.Equal(-3f * RunnerFraming.RowMetres, backZ, 3);
-        var focus = RunnerFraming.FocusZ(0f, backZ);
+        var focus = RunnerFraming.FocusZ(backZ);
         foreach (var boss in new[] { false, true })
         {
             var bottom = RunnerFraming.BottomGroundFromFocus(boss);

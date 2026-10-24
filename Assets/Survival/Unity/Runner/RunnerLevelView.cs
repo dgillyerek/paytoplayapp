@@ -577,7 +577,7 @@ namespace Survival.Unity
                         rig.Slot.rotation = Quaternion.identity;
                         rig.Walk();
                         _members[m.Id] = rig;
-                        // Followers too: the same thin sliver, hidden at full HP and faded in only on damage.
+                        // The lead and every follower: a sliver always shown while alive, so the followers' HP reads.
                         AddSideBar(m.Id, true, rig, false);
                     }
                 }
@@ -1101,15 +1101,12 @@ namespace Survival.Unity
                 return Vector3.zero;
             }
 
-            // Ride a little toward the steer side, never the full lane, so the squad stays centred; halfway between
-            // the leader and the back row, one row up the road so the squad sits a row lower in the shot.
-            var back = _run.Distance;
-            foreach (var m in _run.Squad)
-            {
-                back = Mathf.Min(back, m.Z);
-            }
-
-            return new Vector3(_run.Hero.X * 0.45f, 0f, RunnerFraming.FocusZ(_run.Distance, back));
+            // Ride a little toward the steer side, never the full lane, so the squad stays centred. The rearmost row
+            // always sits on the same bottom spot of the shot and the squad fills forward from it; the back row is the
+            // members' actual places (joiners run back into their slot), and FollowCamera eases the focus, so a row
+            // gained or lost slides the shot rather than snapping it.
+            var back = RunnerFraming.BackZ(_run.Squad, _run.Distance);
+            return new Vector3(_run.Hero.X * 0.45f, 0f, RunnerFraming.FocusZ(back));
         }
 
         private void FollowCamera(float dt)

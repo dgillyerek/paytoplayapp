@@ -379,7 +379,7 @@ namespace Survival.Unity
                 bar = NewSideBar(hero);
             }
 
-            bar.Root.sizeDelta = new Vector2(RunnerSideBar.WidthPx, RunnerSideBar.MinHeightPx);
+            bar.Root.sizeDelta = new Vector2(RunnerSideBar.WidthFor(bar.Hero), RunnerSideBar.MinHeightPx);
             bar.Fill.rectTransform.anchorMax = Vector2.one;
             bar.Group.alpha = 0f;
             bar.Number.gameObject.SetActive(boss);
@@ -407,7 +407,7 @@ namespace Survival.Unity
             var root = frame.rectTransform;
             root.anchorMin = root.anchorMax = Vector2.zero;
             root.pivot = new Vector2(0.5f, 0f);
-            root.sizeDelta = new Vector2(RunnerSideBar.WidthPx, RunnerSideBar.MinHeightPx);
+            root.sizeDelta = new Vector2(RunnerSideBar.WidthFor(hero), RunnerSideBar.MinHeightPx);
             var group = root.gameObject.AddComponent<CanvasGroup>();
             group.alpha = 0f;
             group.blocksRaycasts = false;
@@ -447,7 +447,7 @@ namespace Survival.Unity
             var height = RunnerSideBar.HeightPx(Mathf.Abs(high.y - low.y) / k);
             bar.Root.anchorMin = bar.Root.anchorMax = Vector2.zero;
             bar.Root.anchoredPosition = new Vector2((low.x + high.x) * 0.5f / k, (((low.y + high.y) * 0.5f) / k) - (height * 0.5f));
-            bar.Root.sizeDelta = new Vector2(RunnerSideBar.WidthPx, height);
+            bar.Root.sizeDelta = new Vector2(RunnerSideBar.WidthFor(bar.Hero), height);
             bar.Fill.rectTransform.anchorMax = new Vector2(1f, Mathf.Max(0.001f, fraction));
             return low.x > -200f && low.x < Screen.width + 200f && low.y > -200f && low.y < Screen.height + 200f;
         }
@@ -600,7 +600,8 @@ namespace Survival.Unity
                         origin = new Vector3(m.X, 0f, m.Z);
                         fraction = m.HpFraction;
                         hp = m.Hp;
-                        FadeBar(bar, hp, m.MaxHp);
+                        // Squad bars are always on (followers' HP must read); enemies' fade in on damage.
+                        bar.Group.alpha = RunnerSideBar.SquadAlpha(hp);
                     }
                     else
                     {

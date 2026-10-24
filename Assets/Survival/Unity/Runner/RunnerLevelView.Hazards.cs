@@ -346,7 +346,7 @@ namespace Survival.Unity
             AddFx(HookArtKeys.FxBurstRing, at + (Vector3.up * 0.1f), 1.4f, 0.35f, new Color(1f, 0.45f, 0.2f, 0.9f), Vector3.zero, 1.4f, 0f);
             if (!e.Big)
             {
-                // A follower knocked out: FollowerLost (next event) shows the "-1" and drops the body.
+                // A follower caught: FollowerHit (next event) shows the damage off its HP bar, or FollowerLost drops it at 0.
                 return;
             }
 

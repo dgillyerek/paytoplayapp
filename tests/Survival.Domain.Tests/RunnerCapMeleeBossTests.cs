@@ -279,7 +279,7 @@ public sealed class RunnerCapMeleeBossTests
     }
 
     [Fact]
-    public void The_slam_kills_the_followers_in_front_and_the_slam_area_is_the_marked_road()
+    public void The_slam_hurts_the_followers_in_front_through_their_hp_and_the_slam_area_is_the_marked_road()
     {
         var rows = @"{ ""at"": 6, ""kind"": ""box"", ""hp"": 10, ""reward"": ""followers"", ""unit"": ""archer"", ""count"": 4 }, " + BossRow;
         var run = Runner.Run(Runner.Tiny(rows.Replace("\"at\": 36", "\"at\": 56"), maxFollowers: 9, length: 60f));
@@ -299,7 +299,12 @@ public sealed class RunnerCapMeleeBossTests
         }
 
         Assert.True(caught >= 1f, "the slam caught followers: " + caught);
-        Assert.Equal(4, events.Count(e => e.Kind == RunnerEventKind.FollowerLost));
+        // The slam goes through a follower's 25 HP (it used to knock them out whatever the damage): this boss swings
+        // for 4, so the first follower it catches is hit for 4 and stands; the shipped boss's 40 still drops one.
+        var first = events.First(e => (e.Kind == RunnerEventKind.FollowerHit || e.Kind == RunnerEventKind.FollowerLost)
+            && events.Any(s => s.Kind == RunnerEventKind.FoeSpawned && s.Id == e.Other && s.Unit == "boss"));
+        Assert.Equal(RunnerEventKind.FollowerHit, first.Kind);
+        Assert.Equal(4f, first.Amount);
         Assert.Contains(events, e => e.Kind == RunnerEventKind.HeroHit);
 
         var tiny = Runner.Run(Runner.Tiny(BossRow));

@@ -48,6 +48,9 @@ namespace Survival.Domain.Runner
         /// </summary>
         public const int FollowerHp = 25;
 
+        /// <summary>Share of a trap's hero damage a follower takes (spikes 40 -> 16 of its 25 HP).</summary>
+        public const float FollowerTrapShare = 0.4f;
+
         /// <summary>Squad damage bonus for each unit a box would have added with the squad already full.</summary>
         public const float FullSquadDamage = 0.03f;
 
@@ -1052,6 +1055,13 @@ namespace Survival.Domain.Runner
 
                 // Melee: whoever is in reach, ahead or already past. Ranged: whoever is in range in its strip, either way
                 // down the road (a foe the squad has walked past shoots after it).
+                // A ranged foe shoots the nearest member in its strip (not just the nearest one overall, who may stand a lane
+                // over while a follower is dead ahead), so it fires whenever anyone of the squad is in its line.
+                if (f.Unit.Ranged)
+                {
+                    target = NearestInStrip(f, out dist) ?? target;
+                }
+
                 var inRange = f.Unit.Ranged
                         ? dist <= f.Unit.Range + f.Unit.Radius + target.Unit.Radius && Math.Abs(target.X - f.X) <= RunnerRules.AimHalfWidth + target.Unit.Radius
                         : dist <= f.Unit.Range + f.Unit.Radius + target.Unit.Radius;
@@ -1195,7 +1205,7 @@ namespace Survival.Domain.Runner
 
             foreach (var v in victims)
             {
-                KillFollower(f, v);
+                HurtFollower(f, v, f.Unit.Damage);
                 caught++;
             }
 
@@ -1242,7 +1252,7 @@ namespace Survival.Domain.Runner
 
             foreach (var v in victims)
             {
-                KillFollower(f, v);
+                HurtFollower(f, v, f.Unit.Damage);
                 caught++;
             }
 
@@ -1270,24 +1280,26 @@ namespace Survival.Domain.Runner
             HurtFollower(f, m, damage);
         }
 
-        private void HurtFollower(RunnerFoe f, RunnerMember victim, int damage)
+        private void HurtFollower(RunnerFoe f, RunnerMember victim, int damage) => HurtFollower(f.Id, victim, damage);
+
+        /// <summary>Every hit on a follower (contact, shots, traps, the boss) comes off its HP; it falls only at 0.</summary>
+        private void HurtFollower(int source, RunnerMember victim, int damage)
         {
             victim.Hp = Math.Max(0, victim.Hp - damage);
             if (victim.Hp <= 0)
             {
-                KillFollower(f, victim);
+                _squad.Remove(victim);
+                Emit(RunnerEventKind.FollowerLost, victim.Id, source, victim.X, victim.Z, Followers, true, false, victim.Unit.Id);
+                Reslot();
                 return;
             }
 
-            Emit(RunnerEventKind.FollowerHit, victim.Id, f.Id, victim.X, victim.Z, damage, true, false, victim.Unit.Id);
+            Emit(RunnerEventKind.FollowerHit, victim.Id, source, victim.X, victim.Z, damage, true, false, victim.Unit.Id);
         }
 
-        private void KillFollower(RunnerFoe f, RunnerMember victim)
-        {
-            _squad.Remove(victim);
-            Emit(RunnerEventKind.FollowerLost, victim.Id, f.Id, victim.X, victim.Z, Followers, true, false, victim.Unit.Id);
-            Reslot();
-        }
+        /// <summary>A follower's share of a trap's hero damage: one trap takes a good bite of its HP, a second one finishes it.</summary>
+        public static int FollowerTrapDamage(int heroDamage) =>
+            Math.Max(1, Math.Min(RunnerRules.FollowerHp - 1, (int)Math.Round(heroDamage * RunnerRules.FollowerTrapShare)));
 
         private void HurtHero(RunnerFoe f, int damage)
         {
@@ -1654,10 +1666,9 @@ namespace Survival.Domain.Runner
                     continue;
                 }
 
-                _squad.Remove(m);
+                var bite = FollowerTrapDamage(h.Def.Damage);
                 Emit(RunnerEventKind.HazardHit, h.Id, m.Id, m.X, m.Z, 0, false, false, RunnerHazardDef.Name(h.Kind));
-                Emit(RunnerEventKind.FollowerLost, m.Id, h.Id, m.X, m.Z, Followers, true, false, m.Unit.Id);
-                Reslot();
+                HurtFollower(h.Id, m, bite);
             }
         }
 
@@ -1689,6 +1700,29 @@ namespace Survival.Domain.Runner
             foreach (var m in _squad)
             {
                 var d = Sq(m.X - x) + Sq(m.Z - z);
+                if (d < bestSq)
+                {
+                    bestSq = d;
+                    best = m;
+                }
+            }
+
+            distance = best != null ? (float)Math.Sqrt(bestSq) : float.MaxValue;
+            return best;
+        }
+
+        private RunnerMember? NearestInStrip(RunnerFoe f, out float distance)
+        {
+            RunnerMember? best = null;
+            var bestSq = float.MaxValue;
+            foreach (var m in _squad)
+            {
+                if (Math.Abs(m.X - f.X) > RunnerRules.AimHalfWidth + m.Unit.Radius)
+                {
+                    continue;
+                }
+
+                var d = Sq(m.X - f.X) + Sq(m.Z - f.Z);
                 if (d < bestSq)
                 {
                     bestSq = d;
@@ -1759,8 +1793,43 @@ namespace Survival.Domain.Runner
         /// <summary>One formation row (see <see cref="RunnerFormation.Offset"/>).</summary>
         public const float RowMetres = RunnerRules.Spacing * 0.95f;
 
-        /// <summary>The focus's place along the road for the lead at <paramref name="leadZ"/> and the back row at <paramref name="backZ"/>.</summary>
-        public static float FocusZ(float leadZ, float backZ) => ((leadZ + backZ) * 0.5f) + RowMetres;
+        /// <summary>Formation rows behind the lead in a full squad (<see cref="RunnerRules.MaxFollowers"/> followers).</summary>
+        public static int FullRows => RunnerFormation.RowOf(RunnerRules.MaxFollowers - 1);
+
+        /// <summary>
+        /// Where the back row sits from the focus (metres, - = below/behind): the same spot whatever the squad's size.
+        /// It is the full squad's framing (halfway between lead and back row, one row up the road), so ten heroes fill
+        /// the shot exactly as before; a smaller squad keeps its rearmost row on that bottom spot and fills forward
+        /// from it (Derek 2026-10-23: "the 2 in the back sit all the way down with the lead in front").
+        /// </summary>
+        public static float BackRowFromFocus => (-FullRows * RowMetres * 0.5f) - RowMetres;
+
+        /// <summary>The focus's place along the road with the rearmost member at <paramref name="backZ"/> (bottom-anchored).</summary>
+        public static float FocusZ(float backZ) => backZ - BackRowFromFocus;
+
+        /// <summary>The rearmost member's place along the road (the lead's when it walks alone).</summary>
+        public static float BackZ(IReadOnlyList<RunnerMember> squad, float leadZ)
+        {
+            var back = leadZ;
+            for (var i = 0; i < squad.Count; i++)
+            {
+                back = Math.Min(back, squad[i].Z);
+            }
+
+            return back;
+        }
+
+        /// <summary>The back row's offset from the lead once a squad of <paramref name="members"/> has settled into its slots.</summary>
+        public static float SettledBackOffset(int members)
+        {
+            var back = 0f;
+            for (var slot = 0; slot < members - 1; slot++)
+            {
+                back = Math.Min(back, RunnerFormation.Offset(slot).Z);
+            }
+
+            return back;
+        }
 
         /// <summary>Road place (metres from the focus, - = behind) where the bottom edge of the shot meets the ground.</summary>
         public static float BottomGroundFromFocus(bool boss)
