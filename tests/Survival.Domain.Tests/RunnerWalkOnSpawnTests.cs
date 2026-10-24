@@ -9,10 +9,10 @@ public sealed class RunnerWalkOnSpawnTests
     public void On_every_shipped_level_each_enemy_is_walking_on_its_first_frame_and_closes_on_the_next_only_the_boss_holds()
     {
         var c = Runner.Catalog();
-        Assert.Equal(12, c.Levels.Count);
+        Assert.Equal(50, c.Levels.Count);
         foreach (var level in c.Levels)
         {
-            var run = new RunnerRun(c, level);
+            var run = new RunnerRun(c, level, RunnerShipped.Squad(c, level));
             var firstZ = new Dictionary<int, float>();
             var checkedNext = new HashSet<int>();
             var seen = 0;

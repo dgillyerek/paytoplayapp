@@ -299,7 +299,7 @@ public class RunnerBodyMotionTests
         var c = Runner.Catalog();
         foreach (var level in c.Levels)
         {
-            var r = new RunnerRun(c, level);
+            var r = new RunnerRun(c, level, RunnerShipped.Squad(c, level));
             var before = new Dictionary<int, (float Z, bool Passed)>();
             var hits = 0;
             while (!r.Over && r.Seconds < 600f)
