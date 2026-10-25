@@ -41,6 +41,13 @@ namespace Survival.Unity
         /// </summary>
         private bool _aimHeld;
 
+        /// <summary>
+        /// A held shooter's per-shot kick (<see cref="RunnerShotFlick"/>): a few degrees on its arm / hand / upper-spine
+        /// bones, rotation only, eased back to the hold. Null for every other rig (and never in the battle).
+        /// </summary>
+        private RunnerShotFlickState? _flick;
+        private readonly List<FlickBone> _flickBones = new List<FlickBone>();
+
         /// <summary>Degrees of lean per m/s of sideways speed, and the most it ever leans.</summary>
         public const float LeanPerMetrePerSecond = 0.75f;
         public const float MaxLeanDegrees = 7f;
@@ -350,8 +357,114 @@ namespace Survival.Unity
             }
 
             rig._reactionPose = LockedBattleReactionPose.Build(host.transform, LockedBattleReactions.RigFor(data));
+            rig.BuildFlick(host.transform);
             rig.Play(rig.RestPose);
             return rig;
+        }
+
+        /// <summary>Finds the kicked bones of a held shooter (parent before child); no-op for every other rig.</summary>
+        private void BuildFlick(Transform host)
+        {
+            var bones = RunnerShotFlick.BonesFor(Data.Name);
+            if (!_aimHeld || bones.Length == 0)
+            {
+                return;
+            }
+
+            var all = host.GetComponentsInChildren<Transform>(true);
+            foreach (var bone in bones)
+            {
+                foreach (var t in all)
+                {
+                    if (string.Equals(t.name, bone.Bone, System.StringComparison.Ordinal))
+                    {
+                        _flickBones.Add(new FlickBone(t, bone.PitchDegrees));
+                        break;
+                    }
+                }
+            }
+
+            _flick = new RunnerShotFlickState(RunnerShotFlick.SecondsFor(Data.Name));
+        }
+
+        /// <summary>The sim fired this rig's shot (the scene draws it this frame): start the subtle firing kick.</summary>
+        public void ShotFlick()
+        {
+            if (!Dead)
+            {
+                _flick?.Fire();
+            }
+        }
+
+        /// <summary>
+        /// After the clips posed the bones: the kick as a pitch about the road's right axis on each kicked bone, scaled by
+        /// the kick's weight. Rotation only, never the host, hips or legs, so the body does not move forward or back and
+        /// the legs keep walking. The clip value is put back first whenever nothing re-posed the bone (a skipped
+        /// evaluation), so the kick never accumulates.
+        /// </summary>
+        private void TickFlick(float dt)
+        {
+            if (_flick == null)
+            {
+                return;
+            }
+
+            foreach (var b in _flickBones)
+            {
+                b.Restore();
+            }
+
+            _flick.Advance(dt);
+            var w = Dead ? 0f : _flick.Weight;
+            if (w <= 1e-4f)
+            {
+                return;
+            }
+
+            foreach (var b in _flickBones)
+            {
+                b.Set(Quaternion.AngleAxis(b.PitchDegrees * w, Vector3.right) * b.T.rotation);
+            }
+        }
+
+        private sealed class FlickBone
+        {
+            private Quaternion _base;
+            private Quaternion _applied;
+            private bool _has;
+
+            public FlickBone(Transform t, float pitchDegrees)
+            {
+                T = t;
+                PitchDegrees = pitchDegrees;
+            }
+
+            public Transform T { get; }
+
+            public float PitchDegrees { get; }
+
+            public void Restore()
+            {
+                if (_has && T != null && Quaternion.Angle(T.localRotation, _applied) < 0.01f)
+                {
+                    T.localRotation = _base;
+                }
+
+                _has = false;
+            }
+
+            public void Set(Quaternion world)
+            {
+                if (T == null)
+                {
+                    return;
+                }
+
+                _base = T.localRotation;
+                T.rotation = world;
+                _applied = T.localRotation;
+                _has = true;
+            }
         }
 
         /// <summary>
@@ -563,6 +676,7 @@ namespace Survival.Unity
         public void Late(float dt)
         {
             _hitAge += dt;
+            TickFlick(dt);
             // A held shooter's body never reacts (RunnerAimHold.BodyReactionScale): no step, lean or flinch pose.
             var w = _aimHeld ? 0f : _reaction.Weight(_hitAge);
             var local = Slot.InverseTransformDirection(_away);
@@ -786,6 +900,12 @@ namespace Survival.Unity
 
         private void ResetState()
         {
+            _flick?.Reset();
+            foreach (var b in _flickBones)
+            {
+                b.Restore();
+            }
+
             var wasDead = _deathAge >= 0f;
             _deathAge = -1f;
             _hitAge = 10f;

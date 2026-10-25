@@ -235,4 +235,141 @@ namespace Survival.Domain.Runner
         /// <summary>The rig left the layered path (another clip played full-body): the next request builds the hold again.</summary>
         public void Reset() => Active = false;
     }
+
+    /// <summary>One bone of a <see cref="RunnerShotFlick"/>: a pitch about the road's right axis, + = forward/down (toward the shot), - = up/back (recoil).</summary>
+    public readonly struct RunnerShotFlickBone
+    {
+        public RunnerShotFlickBone(string bone, float pitchDegrees)
+        {
+            Bone = bone;
+            PitchDegrees = pitchDegrees;
+        }
+
+        public string Bone { get; }
+
+        public float PitchDegrees { get; }
+    }
+
+    /// <summary>
+    /// Derek 2026-10-24: "add is some sort of firing motion for heroes, just make it subtle". On top of the held aim
+    /// pose (<see cref="RunnerAimHold"/>) each shot adds a small rotation-only kick on a few arm / hand / upper-spine bones
+    /// (a few degrees, about a fifth of a second: a quick rise, then an ease-out back to the hold), started on the sim's
+    /// Fired (the frame the scene draws the shot). Never the hips, root or legs: the body does not move forward or back
+    /// and the legs keep walking. Runner only; the battle never uses it.
+    /// </summary>
+    public static class RunnerShotFlick
+    {
+        /// <summary>No shot's kick may turn any bone chain more than this (the sum down one chain at the peak).</summary>
+        public const float MaxDegrees = 10f;
+
+        /// <summary>Seconds from the shot to the peak of the kick.</summary>
+        public const float RiseSeconds = 0.04f;
+
+        /// <summary>Oakenshield: a small follow-through flick of the throwing arm toward the thorn.</summary>
+        public static readonly RunnerShotFlickBone[] Oakenshield =
+        {
+            new RunnerShotFlickBone("mixamorig:RightForeArm", 4f),
+            new RunnerShotFlickBone("mixamorig:RightHand", 3f),
+        };
+
+        /// <summary>Lyra: a small staff recoil. The upper spine carries both hands, so her two-handed grip stays on the shaft.</summary>
+        public static readonly RunnerShotFlickBone[] Lyra =
+        {
+            new RunnerShotFlickBone("mixamorig:Spine2", -3f),
+            new RunnerShotFlickBone("mixamorig:RightHand", -2.5f),
+        };
+
+        /// <summary>Rowan: the bow arm kicks up a little and the string hand flicks back off the release.</summary>
+        public static readonly RunnerShotFlickBone[] Rowan =
+        {
+            new RunnerShotFlickBone("mixamorig:LeftForeArm", -3f),
+            new RunnerShotFlickBone("mixamorig:LeftHand", -2f),
+            new RunnerShotFlickBone("mixamorig:RightHand", -4f),
+        };
+
+        /// <summary>Bones that may never take the kick (the root, hips and legs: no step, no forward/back move).</summary>
+        public static readonly string[] Forbidden =
+        {
+            "root", "Armature", "mixamorig:Hips",
+            "mixamorig:LeftUpLeg", "mixamorig:LeftLeg", "mixamorig:LeftFoot", "mixamorig:LeftToeBase",
+            "mixamorig:RightUpLeg", "mixamorig:RightLeg", "mixamorig:RightFoot", "mixamorig:RightToeBase",
+        };
+
+        /// <summary>The kicked bones (parent before child) for a roster, or an empty list for one that does not kick.</summary>
+        public static RunnerShotFlickBone[] BonesFor(string rosterName) => rosterName switch
+        {
+            "Lyra" => Lyra,
+            "Rowan" => Rowan,
+            "Oakenshield" => Oakenshield,
+            _ => Array.Empty<RunnerShotFlickBone>(),
+        };
+
+        /// <summary>How long one kick lasts, shot to back on the hold.</summary>
+        public static float SecondsFor(string rosterName) => rosterName switch
+        {
+            "Lyra" => 0.22f,
+            "Rowan" => 0.2f,
+            "Oakenshield" => 0.18f,
+            _ => 0f,
+        };
+
+        /// <summary>
+        /// Kick weight 0..1 <paramref name="age"/> seconds after a shot: a smoothstep up to 1 over <see cref="RiseSeconds"/>,
+        /// then an ease-out (quadratic) back to exactly 0 at <paramref name="seconds"/>.
+        /// </summary>
+        public static float Weight(float age, float seconds)
+        {
+            if (age < 0f || seconds <= RiseSeconds || age >= seconds)
+            {
+                return 0f;
+            }
+
+            if (age < RiseSeconds)
+            {
+                return RunnerUpperBodyAttack.Ease(age / RiseSeconds);
+            }
+
+            var u = 1f - ((age - RiseSeconds) / (seconds - RiseSeconds));
+            return u * u;
+        }
+    }
+
+    /// <summary>
+    /// One rig's running kick. A new shot starts a new kick; one still fading keeps fading, and the rig shows the larger of
+    /// the two, so a fast fire rate never pops the arm or stacks past one kick's peak.
+    /// </summary>
+    public sealed class RunnerShotFlickState
+    {
+        private float _age = 10f;
+        private float _previousAge = 10f;
+
+        public RunnerShotFlickState(float seconds)
+        {
+            Seconds = seconds;
+        }
+
+        public float Seconds { get; }
+
+        /// <summary>The sim fired (the shot leaves this frame).</summary>
+        public void Fire()
+        {
+            _previousAge = _age;
+            _age = 0f;
+        }
+
+        public void Advance(float dt)
+        {
+            _age += dt;
+            _previousAge += dt;
+        }
+
+        public void Reset()
+        {
+            _age = 10f;
+            _previousAge = 10f;
+        }
+
+        /// <summary>The kick's weight now, 0..1 (0 = exactly the held pose).</summary>
+        public float Weight => Math.Max(RunnerShotFlick.Weight(_age, Seconds), RunnerShotFlick.Weight(_previousAge, Seconds));
+    }
 }
