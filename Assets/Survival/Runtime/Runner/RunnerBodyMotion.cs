@@ -251,40 +251,53 @@ namespace Survival.Domain.Runner
     }
 
     /// <summary>
-    /// Derek 2026-10-24: "add is some sort of firing motion for heroes, just make it subtle". On top of the held aim
-    /// pose (<see cref="RunnerAimHold"/>) each shot adds a small rotation-only kick on a few arm / hand / upper-spine bones
-    /// (a few degrees, about a fifth of a second: a quick rise, then an ease-out back to the hold), started on the sim's
-    /// Fired (the frame the scene draws the shot). Never the hips, root or legs: the body does not move forward or back
-    /// and the legs keep walking. Runner only; the battle never uses it.
+    /// Derek 2026-10-24: "add is some sort of firing motion for heroes, just make it subtle", then "add a better firing
+    /// animation. for a staff it should just shift backwards almost like firing a shotgun". On top of the held aim pose
+    /// (<see cref="RunnerAimHold"/>) each shot adds a readable, controlled recoil: a rotation-only snap on the arm / hand /
+    /// shoulder / upper-spine bones that peaks fast (<see cref="RiseSeconds"/>) and eases back to the hold over about
+    /// 0.3 s, started on the sim's Fired (the frame the scene draws the shot). Never the hips, root or legs: the body does
+    /// not step forward or back and the legs keep walking. Runner only; the battle never uses it.
     /// </summary>
     public static class RunnerShotFlick
     {
-        /// <summary>No shot's kick may turn any bone chain more than this (the sum down one chain at the peak).</summary>
-        public const float MaxDegrees = 10f;
+        /// <summary>No shot's recoil may turn a rig's kicked bones more than this in total at the peak.</summary>
+        public const float MaxDegrees = 20f;
 
-        /// <summary>Seconds from the shot to the peak of the kick.</summary>
-        public const float RiseSeconds = 0.04f;
+        /// <summary>Seconds from the shot to the peak of the recoil (a shotgun-fast snap).</summary>
+        public const float RiseSeconds = 0.05f;
 
-        /// <summary>Oakenshield: a small follow-through flick of the throwing arm toward the thorn.</summary>
+        /// <summary>Oakenshield: a sharp snap of the throwing arm toward the thorn, the shoulder and upper back following through.</summary>
         public static readonly RunnerShotFlickBone[] Oakenshield =
         {
-            new RunnerShotFlickBone("mixamorig:RightForeArm", 4f),
-            new RunnerShotFlickBone("mixamorig:RightHand", 3f),
+            new RunnerShotFlickBone("mixamorig:Spine2", 2f),
+            new RunnerShotFlickBone("mixamorig:RightShoulder", 3f),
+            new RunnerShotFlickBone("mixamorig:RightForeArm", 7f),
+            new RunnerShotFlickBone("mixamorig:RightHand", 5f),
         };
 
-        /// <summary>Lyra: a small staff recoil. The upper spine carries both hands, so her two-handed grip stays on the shaft.</summary>
+        /// <summary>
+        /// Lyra: a shotgun recoil. The spine chain rocks her chest and shoulders back about 13 degrees, carrying both hands
+        /// and the staff with it (her two-handed grip stays on the shaft), and the staff hand kicks the staff back toward
+        /// her shoulder.
+        /// </summary>
         public static readonly RunnerShotFlickBone[] Lyra =
         {
-            new RunnerShotFlickBone("mixamorig:Spine2", -3f),
-            new RunnerShotFlickBone("mixamorig:RightHand", -2.5f),
+            new RunnerShotFlickBone("mixamorig:Spine", -3f),
+            new RunnerShotFlickBone("mixamorig:Spine1", -5f),
+            new RunnerShotFlickBone("mixamorig:Spine2", -5f),
+            new RunnerShotFlickBone("mixamorig:RightHand", -3.5f),
         };
 
-        /// <summary>Rowan: the bow arm kicks up a little and the string hand flicks back off the release.</summary>
+        /// <summary>The bones of Lyra's upper-body rock (the spine chain), whose sum is her recoil's lean back.</summary>
+        public static readonly string[] LyraSpine = { "mixamorig:Spine", "mixamorig:Spine1", "mixamorig:Spine2" };
+
+        /// <summary>Rowan: the bow arm kicks up off the shot and the string hand flicks back off the release.</summary>
         public static readonly RunnerShotFlickBone[] Rowan =
         {
-            new RunnerShotFlickBone("mixamorig:LeftForeArm", -3f),
-            new RunnerShotFlickBone("mixamorig:LeftHand", -2f),
-            new RunnerShotFlickBone("mixamorig:RightHand", -4f),
+            new RunnerShotFlickBone("mixamorig:LeftForeArm", -5f),
+            new RunnerShotFlickBone("mixamorig:LeftHand", -4f),
+            new RunnerShotFlickBone("mixamorig:RightForeArm", -4f),
+            new RunnerShotFlickBone("mixamorig:RightHand", -6f),
         };
 
         /// <summary>Bones that may never take the kick (the root, hips and legs: no step, no forward/back move).</summary>
@@ -304,12 +317,12 @@ namespace Survival.Domain.Runner
             _ => Array.Empty<RunnerShotFlickBone>(),
         };
 
-        /// <summary>How long one kick lasts, shot to back on the hold.</summary>
+        /// <summary>How long one recoil lasts, shot to back on the hold (the snap plus about 0.3 s of ease back).</summary>
         public static float SecondsFor(string rosterName) => rosterName switch
         {
-            "Lyra" => 0.22f,
-            "Rowan" => 0.2f,
-            "Oakenshield" => 0.18f,
+            "Lyra" => 0.35f,
+            "Rowan" => 0.32f,
+            "Oakenshield" => 0.3f,
             _ => 0f,
         };
 

@@ -25,7 +25,7 @@
 5. **The level ramp (runner_levels.json `ramp`).**
    - Past L12, levels stop adding length past 330 m and stop adding enemies or boxes past 20 rows (`count_cap`).
    - Each level multiplies enemy HP by 1.115 and enemy damage by 1.072 (boss HP 1.115).
-   - From L31 on there is a one-time **step of +30% HP / +12% damage**, followed by a gentler 1.016 / 1.008 per level.
+   - From L31 on there is a one-time **step of +30% HP / +12% damage**, followed by a gentler 1.016 / 1.0105 per level (wall damage growth raised from 1.008 when the heroes went to half the shots at ~2x damage, to keep the free L50 grind over a year).
    - The result is a ramp, not a cliff: no level needs more than 1.6× the level before (tested).
 
 ## Power packs (the IAP ladder, added Oct 24, 2026)

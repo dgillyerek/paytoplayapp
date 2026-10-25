@@ -42,7 +42,7 @@ namespace Survival.Unity
         private bool _aimHeld;
 
         /// <summary>
-        /// A held shooter's per-shot kick (<see cref="RunnerShotFlick"/>): a few degrees on its arm / hand / upper-spine
+        /// A held shooter's per-shot kick (<see cref="RunnerShotFlick"/>): a readable recoil on its arm / hand / shoulder / upper-spine
         /// bones, rotation only, eased back to the hold. Null for every other rig (and never in the battle).
         /// </summary>
         private RunnerShotFlickState? _flick;
@@ -396,7 +396,7 @@ namespace Survival.Unity
             _flick = new RunnerShotFlickState(RunnerShotFlick.SecondsFor(Data.Name));
         }
 
-        /// <summary>The sim fired this rig's shot (the scene draws it this frame): start the subtle firing kick.</summary>
+        /// <summary>The sim fired this rig's shot (the scene draws it this frame): start the firing recoil.</summary>
         public void ShotFlick()
         {
             if (!Dead)

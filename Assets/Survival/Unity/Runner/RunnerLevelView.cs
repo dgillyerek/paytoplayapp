@@ -979,7 +979,7 @@ namespace Survival.Unity
                             m.Attack();
                         }
 
-                        // The held shooters' subtle per-shot kick, on the frame the shot leaves (RunnerShotFlick).
+                        // The held shooters' per-shot recoil, on the frame the shot leaves (RunnerShotFlick).
                         m.ShotFlick();
 
                         if (e.Amount <= 0f && e.Other != 0)
