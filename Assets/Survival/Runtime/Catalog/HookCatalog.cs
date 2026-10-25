@@ -76,6 +76,9 @@ namespace Survival.Domain.Catalog
                 buildables);
         }
 
+        /// <summary>stores.json alone: { "stores": [ { "id", "offers": [..] } ] } (the runner balance model reads the power packs).</summary>
+        public static IReadOnlyList<StoreDef> ParseStores(string storesJson) => ReadStores(Obj(JsonRead.Parse(storesJson), "stores"));
+
         /// <summary>Theme pack store/products.json: { "products": [ { "sku", "product_id", "price_label" } ] }.</summary>
         public static IReadOnlyDictionary<string, ProductDef> ParseProducts(string productsJson)
         {

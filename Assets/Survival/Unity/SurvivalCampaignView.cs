@@ -9,6 +9,7 @@ using Survival.Domain.Clock;
 using Survival.Domain.Ids;
 using Survival.Domain.Layout;
 using Survival.Domain.Session;
+using Survival.Domain.Store;
 using Survival.Domain.Theme;
 using Survival.Domain.View;
 using Survival.Domain.World;
@@ -39,6 +40,7 @@ namespace Survival.Unity
         public const string HeroesScreenName = "HeroesScreen";
         public const string SetupScreenName = "BattleSetupScreen";
         public const string ResultScreenName = "BattleResultScreen";
+        public const string PowerPacksSheetName = "PowerPacksSheet";
         public const string BattleSlot = "battle_button";
         public const string HeroFreeSlot = "hero_free";
         public const string HeroFreeName = "HeroFreeBadge";
@@ -85,6 +87,9 @@ namespace Survival.Unity
 
         public CampaignSession? Campaign { get; private set; }
 
+        /// <summary>The power-up ladder (power_packs.json + store.power_packs); null when the file or the hook store is missing.</summary>
+        public PowerPackShop? PowerPacks { get; private set; }
+
         public static string SavePath => Path.Combine(Application.persistentDataPath, CampaignSave.FileName);
 
         /// <summary>The static handoff survives "enter play mode" without a domain reload; start every session clean.</summary>
@@ -122,6 +127,7 @@ namespace Survival.Unity
             var clock = session.Hook != null ? session.Hook.Clock : new WallClock();
             Campaign = new CampaignSession(catalog, session.Chips.Wallet, clock, session.Hook?.Timers.Rules);
             LoadSave();
+            PowerPacks = LoadPowerPacks(session, Campaign);
             Campaign.Changed += MarkDirty;
             session.Chips.Wallet.Changed += (_, __, ___) => MarkDirty();
             Campaign.Roster.LevelledUp += OnLevelledUp;
@@ -645,7 +651,16 @@ namespace Survival.Unity
                 refreshers.Add(def.Side == CampaignSide.Hero ? HeroDetail(detail.rectTransform, def) : FoeDetail(detail.rectTransform, def));
             }
 
-            var close = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.30f, 0.025f, 0.70f, 0.082f, 26, out var closeBtn);
+            var closeX0 = 0.30f;
+            if (PowerPacks != null)
+            {
+                closeX0 = 0.52f;
+                var power = SheetButton(panel, "PowerUp", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.06f, 0.025f, 0.48f, 0.082f, 26, out var powerBtn);
+                power.text = S("store.power_packs.button", "POWER UP");
+                Wire(powerBtn, OpenPowerPacks);
+            }
+
+            var close = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, closeX0, 0.025f, closeX0 + 0.40f, 0.082f, 26, out var closeBtn);
             close.text = S("hook.close", "Close");
             Wire(closeBtn, CloseScreen);
 
@@ -748,7 +763,34 @@ namespace Survival.Unity
             name.fontStyle = FontStyle.Bold;
             Box(name.rectTransform, 0.37f, 0.86f, 0.98f, 0.98f);
             var role = HookSkin.Outlined(SurvivalVisuals.Text(d, "Role", Title(def.Rarity) + "  \u00b7  " + Title(def.Role), 22, TextAnchor.MiddleLeft, RarityColor(def.Rarity)), 1.5f);
-            Box(role.rectTransform, 0.37f, 0.78f, 0.98f, 0.86f);
+            Box(role.rectTransform, 0.37f, 0.78f, 0.74f, 0.86f);
+            // Hero Tome (power packs): one level now, up to the star cap.
+            var tomeText = SheetButton(d, "Tome", HookArtKeys.ButtonGreen, FreeGreen, 0.76f, 0.775f, 0.975f, 0.865f, 18, out var tomeBtn);
+            var tomeImg = tomeBtn.GetComponent<Image>();
+            var tomeRt = tomeBtn.GetComponent<RectTransform>();
+            Wire(tomeBtn, () =>
+            {
+                if (wallet.Get(SurvIds.ResHeroXp) <= 0)
+                {
+                    OpenPowerPacks();
+                    return;
+                }
+
+                var check = roster.TryUseTome(def.Id);
+                if (check == LevelUpCheck.Ok)
+                {
+                    _hook?.Rise(tomeRt, S("hero.tome.used", "Tome used: level up!"), SurvivalVisuals.Reward);
+                    _hook?.Sparks(tomeRt, HeroGlow, 12);
+                    Campaign.Touch();
+                    SaveNow();
+                }
+                else
+                {
+                    _hook?.Say(tomeRt, LevelReason(check), Warn);
+                }
+
+                _refresh?.Invoke();
+            });
             var hp = StatLine(d, "Hp", 0.69f);
             var atk = StatLine(d, "Atk", 0.60f);
             var pow = StatLine(d, "Power", 0.51f);
@@ -854,6 +896,11 @@ namespace Survival.Unity
                 SetStat(pow, S("campaign.stat.power", "POWER"), now.Power, preview ? next.Power : 0);
                 SetStars(stars, p.Owned ? p.Stars : 0);
                 name.text = HeroName(def.Id) + (p.Owned ? "   " + Fmt("campaign.level", "Lv {0}/{1}", p.Level, roster.LevelCap(def.Id)) : "");
+                var tomes = wallet.Get(SurvIds.ResHeroXp);
+                tomeBtn.gameObject.SetActive(p.Owned && (tomes > 0 || PowerPacks != null));
+                tomeText.text = Fmt("hero.tome.use", "Tome ({0})", tomes);
+                var tomeOk = tomes <= 0 || roster.CanUseTome(def.Id) == LevelUpCheck.Ok;
+                HookSkin.SetButton(tomeImg, HookArtKeys.ButtonGreen, tomeOk ? FreeGreen : Disabled, tomeOk, 0.5f);
 
                 levelBtn.gameObject.SetActive(p.Owned && training == null);
                 trainFrame.gameObject.SetActive(training != null);
@@ -1044,6 +1091,110 @@ namespace Survival.Unity
                 HookSkin.SetButton(shardImg, HookArtKeys.ButtonGreen, ok ? FreeGreen : Disabled, ok, 0.5f);
             };
             _sheetRefresh();
+        }
+
+        // ---------- Power Packs ----------
+
+        private static PowerPackShop? LoadPowerPacks(SurvivalSession session, CampaignSession campaign)
+        {
+            var path = Path.Combine(SurvivalBootstrap.ResolveCatalogDir(), PowerPackCatalog.FileName);
+            if (session.Hook == null || !PlayerAssets.FileExists(path))
+            {
+                return null;
+            }
+
+            try
+            {
+                var shop = new PowerPackShop(PowerPackCatalog.Parse(PlayerAssets.ReadAllText(path)), session.Hook.Store, campaign);
+                return shop.Store.Find(shop.Catalog.StoreId) != null && ReferenceEquals(shop.Store.Wallet, campaign.Wallet) ? shop : null;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// The power-up ladder sheet ($0.99 .. $39.99 + the one-time starter): title, contents, "+X% value" against the $0.99
+        /// pack, price from the theme's products.json. Sandbox purchases only (no real billing in this build).
+        /// </summary>
+        public void OpenPowerPacks()
+        {
+            if (Campaign == null || PowerPacks == null || _overlay == null)
+            {
+                return;
+            }
+
+            var shop = PowerPacks;
+            var panel = OpenSheet(PowerPacksSheetName, S("store.power_packs.title", "Power Packs"), 0.88f);
+            var have = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Have", "", 20, TextAnchor.MiddleCenter, SurvivalVisuals.Reward), 1.5f);
+            Box(have.rectTransform, 0.03f, 0.845f, 0.97f, 0.875f);
+            var sandbox = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Sandbox", S("store.sandbox", "SANDBOX \u00b7 no real charge"), 16, TextAnchor.MiddleCenter, Warn), 1.5f);
+            Box(sandbox.rectTransform, 0f, 0.82f, 1f, 0.845f);
+
+            var rows = shop.Available();
+            var top = 0.81f;
+            var h = Mathf.Min(0.095f, (top - 0.10f) / Mathf.Max(1, rows.Count));
+            for (var i = 0; i < rows.Count; i++)
+            {
+                var r = rows[i];
+                var y1 = top - (i * h);
+                var row = HookSkin.Panel(panel, "Pack_" + r.Offer.Id, HookArtKeys.Plate, SurvivalVisuals.RowFill, 0.45f);
+                Box(row.rectTransform, 0.03f, y1 - h + 0.006f, 0.97f, y1);
+                var title = HookSkin.Outlined(SurvivalVisuals.Text(row.transform, "Name", S(r.Offer.Id + ".title", r.Offer.Id), 22, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.5f);
+                title.fontStyle = FontStyle.Bold;
+                Box(title.rectTransform, 0.03f, 0.52f, 0.48f, 0.96f);
+                var tagLine = r.Offer.Tag is { Length: > 0 } tag ? S("offer.tag." + tag, tag.ToUpperInvariant()) : "";
+                var bonus = r.BonusLabel.Length > 0 ? Fmt("store.power_packs.value", "{0} value", r.BonusLabel) : "";
+                var bonusText = HookSkin.Outlined(SurvivalVisuals.Text(row.transform, "Bonus", (bonus + (bonus.Length > 0 && tagLine.Length > 0 ? "  \u00b7  " : "") + tagLine), 18, TextAnchor.MiddleRight, FreeGreen), 1.5f);
+                bonusText.fontStyle = FontStyle.Bold;
+                Box(bonusText.rectTransform, 0.48f, 0.52f, 0.66f, 0.96f);
+                var contents = HookSkin.Outlined(SurvivalVisuals.Text(row.transform, "Contents", PackLine(r.Grants), 15, TextAnchor.MiddleLeft, SurvivalVisuals.Reward), 1.2f);
+                Box(contents.rectTransform, 0.03f, 0.04f, 0.66f, 0.52f);
+                var price = SheetButton((RectTransform)row.transform, "Buy", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.68f, 0.14f, 0.98f, 0.86f, 22, out var buyBtn);
+                price.text = shop.PriceLabel(r);
+                var buyRt = buyBtn.GetComponent<RectTransform>();
+                var offerId = r.Offer.Id;
+                var grants = new Dictionary<string, int>(r.Offer.Grants);
+                var name = title.text;
+                Wire(buyBtn, () => shop.Buy(offerId, outcome =>
+                {
+                    if (outcome.Ok)
+                    {
+                        _hook?.Celebrate(name, grants);
+                        SaveNow();
+                        OpenPowerPacks();
+                        _refresh?.Invoke();
+                    }
+                    else
+                    {
+                        _hook?.Say(buyRt, S("store.power_packs.failed", "Purchase failed"), Warn);
+                    }
+                }));
+            }
+
+            var close = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.30f, 0.02f, 0.70f, 0.085f, 24, out var closeBtn);
+            close.text = S("hook.close", "Close");
+            Wire(closeBtn, CloseSheet);
+
+            _sheetRefresh = () =>
+            {
+                have.text = ChipWallet.FormatGrouped(Campaign.Wallet.Get(SurvIds.ResHeroXp)) + " " + S(SurvIds.ResHeroXp + ".name", "Hero Tome") + "   \u00b7   "
+                    + ChipWallet.FormatGrouped(Campaign.Wallet.Get(SurvIds.ResRunnerBoost)) + " " + S(SurvIds.ResRunnerBoost + ".name", "War Banner");
+            };
+            _sheetRefresh();
+        }
+
+        private string PackLine(IReadOnlyDictionary<string, int> grants)
+        {
+            var parts = new List<string>();
+            foreach (var pair in grants)
+            {
+                parts.Add("+" + ChipWallet.FormatCompact(pair.Value) + " " + S(pair.Key + ".name", pair.Key));
+            }
+
+            return string.Join("  ", parts);
         }
 
         // ---------- Battle Setup ----------

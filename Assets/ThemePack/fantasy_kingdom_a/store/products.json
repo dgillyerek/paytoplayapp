@@ -2,6 +2,13 @@
   "store": "sandbox",
   "products": [
     { "sku": "sku.hard_s", "product_id": "com.paytoplay.fantasykingdoma.hard_s", "price_label": "$0.99" },
-    { "sku": "sku.hard_m", "product_id": "com.paytoplay.fantasykingdoma.hard_m", "price_label": "$4.99" }
+    { "sku": "sku.hard_m", "product_id": "com.paytoplay.fantasykingdoma.hard_m", "price_label": "$4.99" },
+    { "sku": "sku.starter_pack", "product_id": "com.paytoplay.fantasykingdoma.starter_pack", "price_label": "$1.99" },
+    { "sku": "sku.power_t1", "product_id": "com.paytoplay.fantasykingdoma.power_t1", "price_label": "$0.99" },
+    { "sku": "sku.power_t2", "product_id": "com.paytoplay.fantasykingdoma.power_t2", "price_label": "$1.99" },
+    { "sku": "sku.power_t3", "product_id": "com.paytoplay.fantasykingdoma.power_t3", "price_label": "$4.99" },
+    { "sku": "sku.power_t4", "product_id": "com.paytoplay.fantasykingdoma.power_t4", "price_label": "$9.99" },
+    { "sku": "sku.power_t5", "product_id": "com.paytoplay.fantasykingdoma.power_t5", "price_label": "$19.99" },
+    { "sku": "sku.power_t6", "product_id": "com.paytoplay.fantasykingdoma.power_t6", "price_label": "$39.99" }
   ]
 }

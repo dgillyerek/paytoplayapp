@@ -34,6 +34,12 @@ namespace Survival.Domain.Runner
             campaign.Wallet.Grant(bundle.Resources);
             if (bundle.Won && bundle.RunnerNumber > 0)
             {
+                // A War Banner charge is spent only on a new level cleared (the run was boosted while charges were left).
+                if (bundle.RunnerNumber >= campaign.RunnerUnlocked && campaign.Wallet.Get(SurvIds.ResRunnerBoost) > 0)
+                {
+                    campaign.Wallet.TrySpend(SurvIds.ResRunnerBoost, 1);
+                }
+
                 campaign.UnlockRunner(bundle.RunnerNumber + 1);
             }
 

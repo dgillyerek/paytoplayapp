@@ -7,6 +7,12 @@
     "sku.hard_m",
     "sku.hard_l",
     "sku.hard_xl",
+    "sku.power_t1",
+    "sku.power_t2",
+    "sku.power_t3",
+    "sku.power_t4",
+    "sku.power_t5",
+    "sku.power_t6",
     "sku.speedup_bundle",
     "sku.starter_pack",
     "sku.pass_season"

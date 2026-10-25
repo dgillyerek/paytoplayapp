@@ -279,19 +279,24 @@ namespace Survival.Domain.Runner
     /// <summary>The hero (<see cref="IsHero"/>) or a follower.</summary>
     public sealed class RunnerMember
     {
-        internal RunnerMember(int id, RunnerUnitDef unit, bool hero, float x, float z)
+        internal RunnerMember(int id, RunnerUnitDef unit, bool hero, float x, float z, RunnerUnitBoost? boost = null)
         {
             Id = id;
             Unit = unit;
             IsHero = hero;
             X = x;
             Z = z;
-            Hp = MaxHp = hero ? unit.Hp : RunnerRules.FollowerHp;
+            var b = boost ?? RunnerUnitBoost.None;
+            Hp = MaxHp = Math.Max(1, (int)Math.Round((hero ? unit.Hp : RunnerRules.FollowerHp) * b.HpMul));
+            Power = b.DamageMul;
             Plan = RunnerAttackTiming.PlanFor(unit);
         }
 
-        /// <summary>The lead's unit HP, or <see cref="RunnerRules.FollowerHp"/> for a follower.</summary>
+        /// <summary>The lead's unit HP, or <see cref="RunnerRules.FollowerHp"/> for a follower, times the hero's trained HP boost.</summary>
         public int MaxHp { get; }
+
+        /// <summary>Damage multiplier from the hero's trained level and stars (1 untrained); see <see cref="RunnerLoadout"/>.</summary>
+        public float Power { get; }
         public float HpFraction => MaxHp > 0 ? Math.Max(0f, Hp / (float)MaxHp) : 0f;
 
         public int Id { get; }
@@ -332,7 +337,7 @@ namespace Survival.Domain.Runner
 
     public sealed class RunnerFoe
     {
-        internal RunnerFoe(int id, RunnerUnitDef unit, float x, float z, bool boss, float hpMul = 1f)
+        internal RunnerFoe(int id, RunnerUnitDef unit, float x, float z, bool boss, float hpMul = 1f, float damageMul = 1f)
         {
             Id = id;
             Unit = unit;
@@ -340,6 +345,7 @@ namespace Survival.Domain.Runner
             Z = z;
             Boss = boss;
             Hp = MaxHp = Math.Max(1, (int)Math.Round(unit.Hp * (hpMul > 0f ? hpMul : 1f)));
+            Damage = (int)Math.Round(unit.Damage * (damageMul > 0f ? damageMul : 1f));
             // Walking from the moment it spawns (even the rows already in view when the run starts); the boss holds.
             Walking = !boss;
         }
@@ -351,6 +357,9 @@ namespace Survival.Domain.Runner
         public bool Boss { get; }
         public int Hp { get; internal set; }
         public int MaxHp { get; }
+
+        /// <summary>One hit: the unit's damage times the level's <see cref="RunnerLevelDef.FoeDmgMul"/>.</summary>
+        public int Damage { get; }
         public float Cooldown { get; internal set; }
         public bool Walking { get; internal set; }
 
@@ -555,10 +564,17 @@ namespace Survival.Domain.Runner
         private float _steer;
 
         public RunnerRun(RunnerCatalog catalog, RunnerLevelDef level)
+            : this(catalog, level, RunnerLoadout.None)
+        {
+        }
+
+        /// <summary>A run whose squad carries the player's trained heroes (<paramref name="loadout"/>: damage / HP per runner unit).</summary>
+        public RunnerRun(RunnerCatalog catalog, RunnerLevelDef level, RunnerLoadout loadout)
         {
             _catalog = catalog;
             Level = level;
-            Hero = new RunnerMember(_nextId++, catalog.Unit(level.Hero), true, 0f, 0f);
+            Loadout = loadout ?? RunnerLoadout.None;
+            Hero = new RunnerMember(_nextId++, catalog.Unit(level.Hero), true, 0f, 0f, Loadout.For(level.Hero));
             ArenaLine = level.Length;
             foreach (var r in level.Rows)
             {
@@ -574,6 +590,7 @@ namespace Survival.Domain.Runner
         }
 
         public RunnerLevelDef Level { get; }
+        public RunnerLoadout Loadout { get; }
         public RunnerMember Hero { get; }
 
         /// <summary>Hero first, then followers in formation order.</summary>
@@ -784,7 +801,7 @@ namespace Survival.Domain.Runner
                         for (var i = 0; i < row.Count; i++)
                         {
                             var x = Clamp(row.XOf(i), -Level.HalfWidth + unit.Radius, Level.HalfWidth - unit.Radius);
-                            var foe = new RunnerFoe(_nextId++, unit, x, row.At, boss, boss ? Level.BossHpMul : Level.FoeHpMul);
+                            var foe = new RunnerFoe(_nextId++, unit, x, row.At, boss, boss ? Level.BossHpMul : Level.FoeHpMul, Level.FoeDmgMul);
                             // Stagger the first swing so a pack does not attack in one beat.
                             foe.Cooldown = unit.Cycle * (0.35f + (0.2f * (i % 3)));
                             _foes.Add(foe);
@@ -932,7 +949,7 @@ namespace Survival.Domain.Runner
             m.Released = true;
             m.Releases++;
             m.SinceAttack = 0f;
-            var damage = (int)Math.Round(m.Unit.Damage * DamageMul);
+            var damage = (int)Math.Round(m.Unit.Damage * m.Power * DamageMul);
             if (m.Unit.Ranged)
             {
                 m.TargetId = 0;
@@ -1049,7 +1066,7 @@ namespace Survival.Domain.Runner
                     if (f.ContactClock >= 1f)
                     {
                         f.ContactClock -= 1f;
-                        StrikeMember(f, target, Math.Max(1, (int)Math.Round(f.Unit.Damage * RunnerRules.ContactDamageShare)));
+                        StrikeMember(f, target, Math.Max(1, (int)Math.Round(f.Damage * RunnerRules.ContactDamageShare)));
                         if (Over)
                         {
                             return;
@@ -1089,11 +1106,11 @@ namespace Survival.Domain.Runner
                 {
                     var dir = target.Z >= f.Z ? 1f : -1f;
                     var (ax, az) = FoeAim(f.X, f.Z + (0.4f * dir), target.X, target.Z, f.Unit.ShotSpeed, Level.Speed);
-                    _shots.Add(new RunnerShot(_nextId++, f.Id, true, f.X, f.Z + (0.4f * dir), f.Unit.Damage, f.Unit.ShotSpeed, f.Unit.Range + RunnerRules.ShotOvershoot + 2f, az, Math.Abs(az) > 1e-4f ? ax / Math.Abs(az) : 0f));
+                    _shots.Add(new RunnerShot(_nextId++, f.Id, true, f.X, f.Z + (0.4f * dir), f.Damage, f.Unit.ShotSpeed, f.Unit.Range + RunnerRules.ShotOvershoot + 2f, az, Math.Abs(az) > 1e-4f ? ax / Math.Abs(az) : 0f));
                 }
                 else
                 {
-                    StrikeSquad(f, f.Unit.Damage);
+                    StrikeSquad(f, f.Damage);
                 }
             }
         }
@@ -1211,7 +1228,7 @@ namespace Survival.Domain.Runner
 
             foreach (var v in victims)
             {
-                HurtFollower(f, v, f.Unit.Damage);
+                HurtFollower(f, v, f.Damage);
                 caught++;
             }
 
@@ -1223,7 +1240,7 @@ namespace Survival.Domain.Runner
             Emit(RunnerEventKind.BossQuake, f.Id, Hero.Id, f.QuakeSafeX, f.Z - (RunnerRules.BossQuakeDepth * 0.5f), caught, true, false, f.Unit.Id);
             if (heroHit)
             {
-                HurtHero(f, (int)Math.Round(f.Unit.Damage * RunnerRules.BossQuakeDamage));
+                HurtHero(f, (int)Math.Round(f.Damage * RunnerRules.BossQuakeDamage));
             }
         }
 
@@ -1258,7 +1275,7 @@ namespace Survival.Domain.Runner
 
             foreach (var v in victims)
             {
-                HurtFollower(f, v, f.Unit.Damage);
+                HurtFollower(f, v, f.Damage);
                 caught++;
             }
 
@@ -1270,7 +1287,7 @@ namespace Survival.Domain.Runner
             Emit(RunnerEventKind.BossSlam, f.Id, Hero.Id, f.X, f.Z - (RunnerRules.BossSlamDepth * 0.5f), caught, true, false, f.Unit.Id);
             if (heroHit)
             {
-                HurtHero(f, f.Unit.Damage);
+                HurtHero(f, f.Damage);
             }
         }
 
@@ -1504,8 +1521,8 @@ namespace Survival.Domain.Runner
                     return;
                 case RunnerBoxKind.Heal:
                 {
-                    var heal = Math.Max(1, (int)Math.Round(Hero.Unit.Hp * b.Def.Amount));
-                    Hero.Hp = Math.Min(Hero.Unit.Hp, Hero.Hp + heal);
+                    var heal = Math.Max(1, (int)Math.Round(Hero.MaxHp * b.Def.Amount));
+                    Hero.Hp = Math.Min(Hero.MaxHp, Hero.Hp + heal);
                     Emit(RunnerEventKind.Upgrade, b.Id, 0, b.X, b.Z, Hero.Hp, true, true, "heal");
                     return;
                 }
@@ -1518,7 +1535,7 @@ namespace Survival.Domain.Runner
             {
                 // Joiners step out at the box's side of the road level with the squad (not out among the enemies
                 // beyond it, now that the squad never stops) and run into their slot.
-                var m = new RunnerMember(_nextId++, unit, false, b.X + ((i - ((b.Def.Count - 1) * 0.5f)) * 0.6f), Math.Min(b.Z, Hero.Z));
+                var m = new RunnerMember(_nextId++, unit, false, b.X + ((i - ((b.Def.Count - 1) * 0.5f)) * 0.6f), Math.Min(b.Z, Hero.Z), Loadout.For(unit.Id));
                 m.Cooldown = unit.Cycle * (0.2f + (0.13f * (_squad.Count % 6)));
                 _squad.Add(m);
                 Reslot();
@@ -1530,8 +1547,8 @@ namespace Survival.Domain.Runner
             {
                 // The squad is full: the units that would not fit are paid as a damage boost, and the chest heals the hero.
                 DamageMul += RunnerRules.FullSquadDamage * spare;
-                var heal = Math.Max(1, (int)Math.Round(Hero.Unit.Hp * RunnerRules.FullSquadHeal));
-                Hero.Hp = Math.Min(Hero.Unit.Hp, Hero.Hp + heal);
+                var heal = Math.Max(1, (int)Math.Round(Hero.MaxHp * RunnerRules.FullSquadHeal));
+                Hero.Hp = Math.Min(Hero.MaxHp, Hero.Hp + heal);
                 Emit(RunnerEventKind.Upgrade, b.Id, 0, b.X, b.Z, DamageMul, true, true, "squad_full");
             }
         }

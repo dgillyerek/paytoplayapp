@@ -47,6 +47,30 @@ namespace Survival.Domain.Campaign
 
         internal void RestoreRunner(int unlocked) => RunnerUnlocked = Math.Max(1, unlocked);
 
+        private readonly HashSet<string> _boughtOnce = new(StringComparer.Ordinal);
+
+        /// <summary>One-time store offers already bought (the power-pack starter offer). Saved as "bought_once".</summary>
+        public IReadOnlyCollection<string> BoughtOnce => _boughtOnce;
+
+        public bool HasBought(string offerId) => _boughtOnce.Contains(offerId);
+
+        public void MarkBought(string offerId)
+        {
+            if (_boughtOnce.Add(offerId))
+            {
+                Touch();
+            }
+        }
+
+        internal void RestoreBought(IEnumerable<string> offers)
+        {
+            _boughtOnce.Clear();
+            foreach (var o in offers)
+            {
+                _boughtOnce.Add(o);
+            }
+        }
+
         /// <summary>Anything the save file holds changed (training, levels, battles, bounties).</summary>
         public event Action? Changed;
 
@@ -177,7 +201,8 @@ namespace Survival.Domain.Campaign
         /// <summary>Resource ids the save keeps for the wallet.</summary>
         public static readonly string[] SavedResources =
         {
-            SurvIds.ResSoft, SurvIds.ResHard, SurvIds.ResFood, SurvIds.ResWood, SurvIds.ResStone, SurvIds.ResSpeedupM
+            SurvIds.ResSoft, SurvIds.ResHard, SurvIds.ResFood, SurvIds.ResWood, SurvIds.ResStone, SurvIds.ResSpeedupM,
+            SurvIds.ResHeroXp, SurvIds.ResRunnerBoost
         };
     }
 }

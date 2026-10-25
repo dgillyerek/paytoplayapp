@@ -909,8 +909,12 @@ public sealed class RunnerTests
             }
 
             var p = c.Levels[i - 1];
-            Assert.True(l.Length > p.Length, $"L{l.Number} length");
-            Assert.True(l.EnemyCount > p.EnemyCount, $"L{l.Number} enemies {p.EnemyCount} -> {l.EnemyCount}");
+            // The road grows until the ramp's length cap and the packs until its count cap; past those only HP and damage climb.
+            var cap = c.Progression!.Ramp!;
+            Assert.True(l.Length > p.Length || (l.Length == cap.LengthCap && p.Length == cap.LengthCap), $"L{l.Number} length {p.Length} -> {l.Length}");
+            Assert.True(l.Length <= cap.LengthCap);
+            Assert.True(l.Number > cap.CountCap ? l.EnemyCount >= p.EnemyCount : l.EnemyCount > p.EnemyCount, $"L{l.Number} enemies {p.EnemyCount} -> {l.EnemyCount}");
+            Assert.True(l.FoeDmgMul >= p.FoeDmgMul, $"L{l.Number} enemy damage");
             Assert.True(l.FoeHpTotal(c) > p.FoeHpTotal(c), $"L{l.Number} enemy hp");
             Assert.True(l.FoeHpMul >= p.FoeHpMul);
             Assert.True(l.BoxCount >= p.BoxCount, $"L{l.Number} boxes {p.BoxCount} -> {l.BoxCount}");
@@ -948,7 +952,7 @@ public sealed class RunnerTests
         var last = 0f;
         foreach (var level in c.Levels)
         {
-            var good = new RunnerRun(c, level);
+            var good = new RunnerRun(c, level, RunnerShipped.Squad(c, level));
             var arrived = -1f;
             while (!good.Over && good.Seconds < 600f)
             {
@@ -962,14 +966,17 @@ public sealed class RunnerTests
                 }
             }
 
-            var lazy = new RunnerRun(c, level);
+            var lazy = new RunnerRun(c, level, RunnerShipped.Squad(c, level));
             Runner.Play(lazy, _ => 3.9f);
             _out.WriteLine($"L{level.Number} {level.DisplayName}: {good.Outcome} {good.Seconds:0.0}s boxes {good.BoxesBroken}/{level.BoxCount} kills {good.Kills} peak {good.FollowersPeak} left {good.Followers}; edge {lazy.Outcome}");
             Assert.Equal(RunnerOutcome.Won, good.Outcome);
             Assert.Equal(RunnerOutcome.Lost, lazy.Outcome);
 
             // Later levels are longer roads: the squad reaches the boss later each time (the fight itself varies with the squad it arrives with).
-            Assert.True(arrived > last, $"L{level.Number} reaches the boss at {arrived} after {last}");
+            // Once the road hits the ramp's length cap it stops growing (the squad still speeds up to the speed cap),
+            // so from there the arrival only has to stay within 10% of the last one.
+            var grew = level.Number == 1 || level.Length > c.ByNumber(level.Number - 1).Length;
+            Assert.True(grew ? arrived > last : arrived >= 0.9f * last, $"L{level.Number} reaches the boss at {arrived} after {last}");
             last = arrived;
         }
     }

@@ -239,6 +239,52 @@ namespace Survival.Domain.Campaign
             return LevelUpCheck.Ok;
         }
 
+        /// <summary>
+        /// A Hero Tome (res.hero_xp, from power packs): one level now, no gold, food, timer or slot. Up to the star cap,
+        /// counting a level in training (that training still adds its own level when it ends).
+        /// </summary>
+        public LevelUpCheck CanUseTome(string heroId)
+        {
+            var p = Get(heroId);
+            if (p == null)
+            {
+                return LevelUpCheck.Unknown;
+            }
+
+            if (!p.Owned)
+            {
+                return LevelUpCheck.NotOwned;
+            }
+
+            var level = p.Level + (TrainingOf(heroId) != null ? 1 : 0);
+            if (level >= Catalog.Curve.LevelCap(Catalog.Curve.MaxStars))
+            {
+                return LevelUpCheck.MaxLevel;
+            }
+
+            if (level >= LevelCap(heroId))
+            {
+                return LevelUpCheck.AtStarCap;
+            }
+
+            return Wallet.Get(SurvIds.ResHeroXp) > 0 ? LevelUpCheck.Ok : LevelUpCheck.CantAfford;
+        }
+
+        /// <summary>Spends one Hero Tome for one level now (see <see cref="CanUseTome"/>).</summary>
+        public LevelUpCheck TryUseTome(string heroId)
+        {
+            var check = CanUseTome(heroId);
+            if (check != LevelUpCheck.Ok || !Wallet.TrySpend(SurvIds.ResHeroXp, 1))
+            {
+                return check == LevelUpCheck.Ok ? LevelUpCheck.CantAfford : check;
+            }
+
+            var p = Get(heroId)!;
+            p.Level++;
+            LevelledUp?.Invoke(p.Id, p.Level);
+            return LevelUpCheck.Ok;
+        }
+
         public double Remaining(string heroId) => TrainingOf(heroId)?.Remaining(Clock.Now) ?? 0;
 
         public bool CanFinishFree(string heroId)

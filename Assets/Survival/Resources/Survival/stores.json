@@ -8,6 +8,18 @@
         { "id": "offer.gems_m", "kind": "sku", "sku": "sku.hard_m", "grants": { "res.hard": 500 }, "tag": "best_value" },
         { "id": "offer.speedup_15", "kind": "currency", "price": { "res.hard": 12 }, "grants": { "res.speedup_m": 15 } }
       ]
+    },
+    {
+      "id": "store.power_packs",
+      "offers": [
+        { "id": "offer.power_starter", "kind": "sku", "sku": "sku.starter_pack", "grants": { "res.hard": 300, "res.hero_xp": 2, "res.speedup_m": 30 }, "tag": "starter" },
+        { "id": "offer.power_t1", "kind": "sku", "sku": "sku.power_t1", "grants": { "res.hard": 50, "res.runner_boost": 1 } },
+        { "id": "offer.power_t2", "kind": "sku", "sku": "sku.power_t2", "grants": { "res.hard": 100, "res.runner_boost": 1, "res.soft": 15000, "res.speedup_m": 60 } },
+        { "id": "offer.power_t3", "kind": "sku", "sku": "sku.power_t3", "grants": { "res.hero_xp": 2, "res.runner_boost": 1, "res.speedup_m": 60, "res.soft": 25000, "res.food": 10000 } },
+        { "id": "offer.power_t4", "kind": "sku", "sku": "sku.power_t4", "grants": { "res.hero_xp": 3, "res.runner_boost": 2, "res.speedup_m": 300, "res.soft": 100000, "res.food": 50000 }, "tag": "popular" },
+        { "id": "offer.power_t5", "kind": "sku", "sku": "sku.power_t5", "grants": { "res.hero_xp": 6, "res.runner_boost": 3, "res.speedup_m": 960, "res.soft": 300000, "res.food": 100000 } },
+        { "id": "offer.power_t6", "kind": "sku", "sku": "sku.power_t6", "grants": { "res.hero_xp": 10, "res.runner_boost": 5, "res.speedup_m": 2000, "res.soft": 1000000, "res.food": 500000 }, "tag": "best_value" }
+      ]
     }
   ]
 }
