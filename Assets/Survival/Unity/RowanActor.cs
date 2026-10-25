@@ -42,6 +42,19 @@ namespace Survival.Unity
 
         /// <summary>Runner: legs walk (true) or stand under an upper-body attack.</summary>
         public void SetWalkUnderAttack(bool walking) => _player?.SetWalkUnderAttack(walking);
+
+        /// <summary>Runner only: the take frame the upper body holds the whole run (see <see cref="BlenderRigPlayer.AimHoldFrame"/>), or null.</summary>
+        public float? AimHoldFrame
+        {
+            get => _player?.AimHoldFrame;
+            set
+            {
+                if (_player != null)
+                {
+                    _player.AimHoldFrame = value;
+                }
+            }
+        }
         private ClothSpringRig? _cloth;
         private GameObject? _coat;
 

@@ -35,6 +35,12 @@ namespace Survival.Unity
         private float _lean;
         private float _leanTarget;
 
+        /// <summary>
+        /// A squad shooter holding its aim (<see cref="RunnerAimHold"/>): its body takes no hit step, hit lean, flinch
+        /// pose or steering roll, so the firing stance never moves (the hit flash still shows).
+        /// </summary>
+        private bool _aimHeld;
+
         /// <summary>Degrees of lean per m/s of sideways speed, and the most it ever leans.</summary>
         public const float LeanPerMetrePerSecond = 0.75f;
         public const float MaxLeanDegrees = 7f;
@@ -157,6 +163,8 @@ namespace Survival.Unity
                         var a = host.AddComponent<LyraActor>();
                         a.Build();
                         a.UpperBodyAttack = RunnerUpperBodyAttack.Applies(data.Name);
+                        a.AimHoldFrame = a.UpperBodyAttack ? RunnerAimHold.HoldFrameFor(data.Name) : null;
+                        rig._aimHeld = a.AimHoldFrame != null;
                         rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
@@ -169,6 +177,8 @@ namespace Survival.Unity
                         var a = host.AddComponent<OakenshieldActor>();
                         a.Build();
                         a.UpperBodyAttack = RunnerUpperBodyAttack.Applies(data.Name);
+                        a.AimHoldFrame = a.UpperBodyAttack ? RunnerAimHold.HoldFrameFor(data.Name) : null;
+                        rig._aimHeld = a.AimHoldFrame != null;
                         rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
@@ -203,6 +213,8 @@ namespace Survival.Unity
                         var a = host.AddComponent<RowanActor>();
                         a.Build();
                         a.UpperBodyAttack = RunnerUpperBodyAttack.Applies(data.Name);
+                        a.AimHoldFrame = a.UpperBodyAttack ? RunnerAimHold.HoldFrameFor(data.Name) : null;
+                        rig._aimHeld = a.AimHoldFrame != null;
                         rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
@@ -395,7 +407,7 @@ namespace Survival.Unity
             }
 
             _attackSpeed?.Invoke(speed > 0.01f ? speed : 1f);
-            if (!Data.AttackCyclesItself)
+            if (!Data.AttackCyclesItself && !_aimHeld)
             {
                 // Sir Aldric's named clips restart from their origin on each attack pose.
                 Play(RestPose);
@@ -551,7 +563,8 @@ namespace Survival.Unity
         public void Late(float dt)
         {
             _hitAge += dt;
-            var w = _reaction.Weight(_hitAge);
+            // A held shooter's body never reacts (RunnerAimHold.BodyReactionScale): no step, lean or flinch pose.
+            var w = _aimHeld ? 0f : _reaction.Weight(_hitAge);
             var local = Slot.InverseTransformDirection(_away);
             // The battle's root reaction: step back and lean, sized by the defender's recoil profile.
             var punch = 0.6f + (0.4f * _punch);
@@ -563,7 +576,8 @@ namespace Survival.Unity
             nudge *= RunnerHitNudge.Scale(nudge.x, nudge.z);
             var lean = Mathf.Tan(Profile.RecoilDegrees * Mathf.Deg2Rad);
             // Lean into the sideways move: roll about the road's forward axis (in the slot's frame), eased in and out.
-            _lean = Mathf.Lerp(_lean, _leanTarget, 1f - Mathf.Exp(-12f * dt));
+            // (Not for a held shooter: the aim stays level, RunnerAimHold.LeanScale.)
+            _lean = Mathf.Lerp(_lean, _aimHeld ? 0f : _leanTarget, 1f - Mathf.Exp(-12f * dt));
             var roll = Quaternion.AngleAxis(_lean, Slot.InverseTransformDirection(Vector3.forward));
             Host.localRotation = roll * Quaternion.FromToRotation(Vector3.up, (Vector3.up + (tilt * lean)).normalized);
             if (_deathAge >= 0f)

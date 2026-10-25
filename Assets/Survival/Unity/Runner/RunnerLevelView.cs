@@ -1029,9 +1029,10 @@ namespace Survival.Unity
                     if (e.Unit == "squad_full")
                     {
                         // A follower or hero chest at a full squad: the units that do not fit pay out as damage and a heal.
-                        Banner(Fmt("runner.squad_full", "Squad full! Damage ×{0}, healed", e.Amount.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)), new Color(1f, 0.85f, 0.35f, 1f));
+                        // A small pop-up at the lead, not a screen banner (RunnerPickupPopup.SquadFull).
                         if (_run != null && _members.TryGetValue(_run.Hero.Id, out var lead))
                         {
+                            Popup(RunnerPickupPopup.SquadFull(e.Amount, lead.Slot.position.x, lead.Slot.position.z), new Color(1f, 0.85f, 0.35f, 1f));
                             Floater(new Vector3(lead.Slot.position.x, 0f, lead.Slot.position.z) + (Vector3.up * 2.6f), S("runner.squad_full_heal", "+HP"), new Color(0.55f, 1f, 0.6f, 1f), 40);
                         }
                     }
@@ -1544,16 +1545,8 @@ namespace Survival.Unity
                 return;
             }
 
-            var call = box.Kind switch
-            {
-                RunnerBoxKind.Weapon => Fmt("runner.upgrade.weapon", "Weapon up! +{0}% damage", Mathf.RoundToInt(box.Amount * 100f)),
-                RunnerBoxKind.Rate => Fmt("runner.upgrade.rate", "Faster attacks! +{0}% speed", Mathf.RoundToInt(box.Amount * 100f)),
-                RunnerBoxKind.Range => Fmt("runner.upgrade.range", "Longer reach! +{0}% range", Mathf.RoundToInt(box.Amount * 100f)),
-                RunnerBoxKind.Heal => Fmt("runner.upgrade.heal", "Healed! +{0}% HP", Mathf.RoundToInt(box.Amount * 100f)),
-                RunnerBoxKind.Hero => Fmt("runner.box.hero", "{0} joins!", HeroName(box.Unit)),
-                _ => Fmt("runner.joined", "+{0} {1}", box.Count, HeroName(box.Unit))
-            };
-            Banner(call, RewardColor(box.Kind, gold));
+            // Derek 2026-10-24: no screen banner for pick-ups; a quick pop-up rises from the box where it was granted.
+            Popup(RunnerPickupPopup.For(box, e.X, e.Z), RewardColor(box.Kind, gold));
         }
 
         private void Slash(Vector3 at, string who)

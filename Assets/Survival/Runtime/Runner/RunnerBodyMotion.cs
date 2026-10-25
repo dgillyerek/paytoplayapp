@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Numerics;
+using Survival.Domain.Heroes;
 using Survival.Domain.Roster;
 
 namespace Survival.Domain.Runner
@@ -142,5 +143,96 @@ namespace Survival.Domain.Runner
             var below = path.Substring(hipsPath.Length + 1).Split('/');
             return string.Equals(below[0], spineName, StringComparison.Ordinal);
         }
+    }
+
+    /// <summary>
+    /// Derek 2026-10-24: "just keep the heros body in firing position constantly. moving back and forth is wild." In the
+    /// runner the squad shooters (Lyra, Rowan, Oakenshield) hold one aim pose on the upper body the whole run: the
+    /// attack take pinned at <see cref="HoldFrameFor"/> (the frame before its release: bow at full draw, bolt charged,
+    /// thorn cocked) at full weight, while the legs keep walking (or stand at the boss's line). A shot no longer
+    /// restarts or crossfades the take, and going back to the walk does not fade it out; the sim still fires on its
+    /// own timer and the scene draws the shot from the shooter. Their body also takes no hit step, hit lean, hit
+    /// flinch pose or steering roll (the hit flash stays). The battle never turns this on.
+    /// </summary>
+    public static class RunnerAimHold
+    {
+        /// <summary>True for a roster the runner holds in its aim pose (the upper-body shooters).</summary>
+        public static bool Applies(string rosterName) => RunnerUpperBodyAttack.Applies(rosterName);
+
+        /// <summary>The attack-take frame the upper body holds (one before the take's release), or null for a roster that does not hold.</summary>
+        public static float? HoldFrameFor(string rosterName) => rosterName switch
+        {
+            "Lyra" => LyraAttack.ReleaseFrame - 1,
+            "Rowan" => RowanAttack.ReleaseFrame - 1,
+            "Oakenshield" => OakenshieldAttack.ReleaseFrame - 1,
+            _ => null,
+        };
+
+        /// <summary>How much of the hit reaction (root step, root lean, flinch pose) a runner rig's body shows: none for a held shooter.</summary>
+        public static float BodyReactionScale(string rosterName) => Applies(rosterName) ? 0f : 1f;
+
+        /// <summary>How much of the steering roll a runner rig shows: none for a held shooter (the aim stays level).</summary>
+        public static float LeanScale(string rosterName) => Applies(rosterName) ? 0f : 1f;
+    }
+
+    /// <summary>What a pose request does to a rig's held aim (<see cref="RunnerAimHoldLayer"/>).</summary>
+    public enum RunnerAimHoldPose
+    {
+        Attack,
+        Walk,
+        Rest,
+    }
+
+    /// <summary>
+    /// The held aim's upper-body layer state (<see cref="RunnerAimHold"/>), as the rig player drives it: any pose
+    /// (walk, rest or a new take) enters the hold once; after that nothing restarts, crossfades or fades it, so the
+    /// upper body's weight and sampled frame never change across shots, walk returns or attack speed changes.
+    /// </summary>
+    public sealed class RunnerAimHoldLayer
+    {
+        public RunnerAimHoldLayer(float holdFrame)
+        {
+            HoldFrame = holdFrame;
+        }
+
+        public float HoldFrame { get; }
+
+        /// <summary>True once the hold is on (the take is built and pinned).</summary>
+        public bool Active { get; private set; }
+
+        /// <summary>Legs on the walk loop (true) or standing (the squad halted at the boss's line).</summary>
+        public bool LegsWalk { get; private set; } = true;
+
+        /// <summary>Upper-body weight of the held take: full from the first frame, never eased.</summary>
+        public float Weight => Active ? 1f : 0f;
+
+        /// <summary>The take frame sampled on the upper body: always <see cref="HoldFrame"/>.</summary>
+        public float Frame => HoldFrame;
+
+        /// <summary>
+        /// A pose request. Returns true only when the held take has to be built (the first request, or after
+        /// <see cref="Reset"/>); every later request leaves the upper body exactly as it is.
+        /// </summary>
+        public bool Play(RunnerAimHoldPose pose)
+        {
+            var build = !Active;
+            Active = true;
+            if (pose == RunnerAimHoldPose.Walk)
+            {
+                LegsWalk = true;
+            }
+            else if (pose == RunnerAimHoldPose.Rest)
+            {
+                LegsWalk = false;
+            }
+
+            return build;
+        }
+
+        /// <summary>The legs walk or stand under the hold (the upper body is untouched).</summary>
+        public void SetLegsWalk(bool walking) => LegsWalk = walking;
+
+        /// <summary>The rig left the layered path (another clip played full-body): the next request builds the hold again.</summary>
+        public void Reset() => Active = false;
     }
 }

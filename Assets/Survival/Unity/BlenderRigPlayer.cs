@@ -128,6 +128,19 @@ namespace Survival.Unity
         /// timing, and so its release frame, is unchanged. Rest and any other pose fall back to the full-body path.
         /// </summary>
         public bool UpperBodyAttack { get; set; }
+
+        /// <summary>
+        /// Runner only (with <see cref="UpperBodyAttack"/>): the take frame the upper body holds the whole run
+        /// (<see cref="RunnerAimHold"/>), or null for the per-shot take. While set, every pose (walk, rest, a new take)
+        /// keeps the same pinned take at full weight: no restart, crossfade or fade-out between shots.
+        /// </summary>
+        public float? AimHoldFrame
+        {
+            get => _aim?.HoldFrame;
+            set => _aim = value is float f ? new RunnerAimHoldLayer(f) : null;
+        }
+
+        private RunnerAimHoldLayer? _aim;
         public float ClipLength => _length;
         public Bounds VisibleBounds { get; private set; }
 
@@ -218,6 +231,15 @@ namespace Survival.Unity
 
             EndBowShots();
             var isAttack = _attackSpec != null && string.Equals(poseName, BlenderRigAttackSpec.PoseName, System.StringComparison.Ordinal);
+            var aimPose = isAttack ? RunnerAimHoldPose.Attack
+                : string.Equals(poseName, _spec.ClipPoseName, System.StringComparison.Ordinal) ? RunnerAimHoldPose.Walk
+                : string.Equals(poseName, BlenderRigSpec.RestPoseName, System.StringComparison.Ordinal) ? (RunnerAimHoldPose?)RunnerAimHoldPose.Rest
+                : null;
+            if (_aim != null && aimPose != null && _attackSpec != null && UpperBodyAttack && EnsureUpperMask())
+            {
+                return PlayAimHold(poseName, aimPose.Value);
+            }
+
             if (isAttack && UpperBodyAttack && EnsureUpperMask())
             {
                 return PlayAttackLayered();
@@ -338,6 +360,7 @@ namespace Survival.Unity
         public void SetWalkUnderAttack(bool walking)
         {
             _wantWalkBase = walking;
+            _aim?.SetLegsWalk(walking);
             if (_layers.IsValid())
             {
                 SetBase(walking);
@@ -407,6 +430,76 @@ namespace Survival.Unity
             return true;
         }
 
+        /// <summary>
+        /// The runner's held aim (<see cref="AimHoldFrame"/>): the first request builds the take on the upper body,
+        /// pinned at the hold frame at full weight; later ones (each shot, each walk return) only set the legs.
+        /// </summary>
+        private bool PlayAimHold(string poseName, RunnerAimHoldPose pose)
+        {
+            if (_aim == null || _attackSpec == null || _attack == null)
+            {
+                return false;
+            }
+
+            var build = _aim.Play(pose) || !_layers.IsValid() || !_playable.IsValid();
+            if (build)
+            {
+                var clip = LoadClip(_attackSpec.FileName, BlenderRigAttackSpec.PoseName, BlenderRigAttackSpec.TakeName, _attackSpec.ClipLastFrame);
+                if (clip == null || clip.empty || clip.length < 0.2f)
+                {
+                    Debug.LogError(_spec.Name + " clip missing. take=" + BlenderRigAttackSpec.TakeName + " file=" + _attackSpec.FileName);
+                    _aim.Reset();
+                    return false;
+                }
+
+                StopAttack();
+                if (_attackClip != clip && _calib.IsValid())
+                {
+                    _calib.Destroy();
+                }
+
+                _attackClip = clip;
+                _wantWalkBase = _aim.LegsWalk;
+                EnterLayers();
+                CacheHipsTurn(clip);
+                if (_prevTake.IsValid())
+                {
+                    _layers.DisconnectInput(1);
+                    _prevTake.Destroy();
+                    _prevTake = default;
+                }
+
+                if (_playable.IsValid())
+                {
+                    _layers.DisconnectInput(2);
+                    _playable.Destroy();
+                }
+
+                _playable = AnimationClipPlayable.Create(_graph, clip);
+                _playable.SetDuration(clip.length);
+                _playable.SetTime(0d);
+                _playable.SetSpeed(1d);
+                _graph.Connect(_playable, 0, _layers, 2);
+                _length = clip.length;
+                _time = 0f;
+                _loop = false;
+                _attackMode = true;
+                _fadingOut = false;
+                _takeFrame = _aim.Frame;
+                _attack.SetIdlePropsVisible(false);
+                // Held props bind on the full-body take (their keys are in the take's design space, hips included).
+                _attack.Activate(SampleAttackFullBody);
+            }
+
+            _wantWalkBase = _aim.LegsWalk;
+            SetBase(_aim.LegsWalk);
+            _pose = poseName;
+            EvaluateLayers();
+            // Held props only: the take's one-shot effects (release flashes, flight) never play on a held aim.
+            _attack.Tick(_aim.Frame, false, 0);
+            return true;
+        }
+
         private void TickLayers()
         {
             var dt = Time.unscaledDeltaTime;
@@ -424,7 +517,12 @@ namespace Survival.Unity
             _outAge += dt;
             var inClip = false;
             var cycle = 0;
-            if (_attackMode && _attackSpec != null)
+            if (_aim != null && _aim.Active)
+            {
+                // Held aim: the upper body never moves off its frame (no clock, no restarts).
+                _takeFrame = _aim.Frame;
+            }
+            else if (_attackMode && _attackSpec != null)
             {
                 // Same clock as the full-body take: the release lands on the same frame.
                 _time += dt * AttackSpeed;
@@ -443,14 +541,19 @@ namespace Survival.Unity
                 _playable.Destroy();
             }
 
-            var layered = _attackMode || _playable.IsValid() || _prevTake.IsValid();
+            var held = _aim != null && _aim.Active;
+            var layered = !held && (_attackMode || _playable.IsValid() || _prevTake.IsValid());
             if (!layered && EveryNth.Count > 0 && EveryNth.TryGetValue(_parent, out var every) && (Time.frameCount + _phase) % every != 0)
             {
                 return;
             }
 
             EvaluateLayers();
-            if (_attackMode)
+            if (held)
+            {
+                _attack?.Tick(_takeFrame, false, 0);
+            }
+            else if (_attackMode)
             {
                 _attack?.Tick(_takeFrame, inClip, cycle);
             }
@@ -461,6 +564,11 @@ namespace Survival.Unity
             if (!_playable.IsValid())
             {
                 return 0f;
+            }
+
+            if (_aim != null && _aim.Active)
+            {
+                return _aim.Weight;
             }
 
             return _fadingOut ? RunnerUpperBodyAttack.FadeOut(_outFrom, _outAge) : RunnerUpperBodyAttack.FadeIn(_takeAge);
@@ -671,6 +779,7 @@ namespace Survival.Unity
         /// <summary>Back to the single full-body playable (rest, extra clips, or the layering switched off).</summary>
         private void LeaveLayers()
         {
+            _aim?.Reset();
             StopAttack();
             if (_prevTake.IsValid())
             {
