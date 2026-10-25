@@ -65,7 +65,7 @@ namespace Survival.Unity
             btn.onClick.AddListener(OnRunnerTapped);
         }
 
-        /// <summary>The one entry point: open the highest runner level the save has open (the result screen lists the rest).</summary>
+        /// <summary>The one entry point: open the next unbeaten runner level (beaten levels never open again).</summary>
         public void OnRunnerTapped()
         {
             if (_busy)
@@ -80,6 +80,17 @@ namespace Survival.Unity
 
             var unlocked = _campaign != null && _campaign.Campaign != null ? _campaign.Campaign.RunnerUnlocked : 1;
             var (catalog, level) = LevelFor(unlocked);
+            if (catalog != null && RunnerProgress.AllBeaten(unlocked, catalog.Levels.Count))
+            {
+                // No going back: every level is beaten, so there is nothing left to play (no replays).
+                if (_hook != null && Button != null)
+                {
+                    _hook.Say(Button, S("runner.all_beaten", "Every runner level beaten!"), new Color(1f, 0.85f, 0.35f, 1f));
+                }
+
+                return;
+            }
+
             StartCoroutine(RunRunner(catalog, level, level?.Id ?? "runner.thornwood_road", unlocked));
         }
 

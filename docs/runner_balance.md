@@ -17,7 +17,7 @@
    - applies star-ups and unlocks from shards;
    - buys greedy level-ups (best Δpower per gold + 2·food);
    - uses speed-ups and gems for rushes (1 gem/min) and Hero Tomes on the best hero;
-   - attempts the next level once (the stuck player buys on a fail and keeps going) and replays the best cleared level once.
+   - attempts the next level once (the stuck player buys on a fail and keeps going). There are **no replays**: a beaten level can never be played again, so each level pays its win gold and shards once.
 
    Runner win gold uses the real reward formula.
 5. **The level ramp (runner_levels.json `ramp`).**
@@ -45,7 +45,7 @@ The packs are the `store.power_packs` offers in `stores.json`. Their SKUs are in
 \*Value is in gems: 1 gem = 1 speed-up minute = 500 gold = 250 food, a Hero Tome = 250 and a War Banner = 60. The "+X%" label is value per $ against the $0.99 pack, rounded down. Value per $ rises with every tier (tested).
 
 - **Hero Tome:** one instant hero level, still capped by stars. It also counts a level that is in training.
-- **War Banner:** one charge gives ×1.1 damage and ×1.1 HP to the whole squad. A charge is spent on each **first clear**; replays are free.
+- **War Banner:** one charge gives ×1.1 damage and ×1.1 HP to the whole squad. A charge is spent on each **first clear** (every win is a first clear now); losses are free.
 - **Gold and food** go 100% to heroes.
 - **UI:** a **POWER UP** sheet on the Heroes screen lists the ladder. Hero detail has a **Tome (n)** button. Purchases go through the existing store purchase path (`StoreSystem.BuySku`, sandbox IAP), and **no real billing is wired up**.
 
@@ -53,34 +53,43 @@ The packs are the `store.power_packs` offers in `stores.json`. Their SKUs are in
 
 | ratio on schedule | L12 | L20 | L25 | L30 | **L31** | L35 | L40 | L50 |
 |---|---|---|---|---|---|---|---|---|
-| free | 8.8 | 6.1 | 2.8 | 1.43 | **0.91** | 0.76 | 0.75 | 0.52 |
-| light | 9.9 | 6.1 | 3.3 | 1.65 | 1.06 | 0.84 | 0.83 | 0.63 |
-| mid | 11.1 | 7.2 | 4.4 | 2.08 | 1.33 | 1.09 | 1.04 | 0.87 |
-| whale | 33.6 | 14.4 | 10.7 | 4.23 | 2.71 | 3.42 | 2.68 | 2.26 |
-| stuck_39 | 8.8 | 6.1 | 2.8 | 1.43 | 0.91 | 1.28 | 1.22 | 0.80 |
+| free | 6.3 | 5.0 | 2.8 | 1.42 | **0.91** | 0.76 | 0.75 | 0.52 |
+| light | 6.9 | 5.0 | 3.3 | 1.57 | 1.01 | 0.84 | 0.79 | 0.60 |
+| mid | 8.2 | 5.9 | 4.5 | 2.15 | 1.38 | 1.09 | 1.03 | 0.87 |
+| whale | 27.0 | 11.4 | 10.6 | 4.18 | 2.68 | 3.42 | 2.67 | 2.26 |
+| stuck_39 | 6.3 | 5.0 | 2.8 | 1.42 | 0.91 | 1.28 | 1.22 | 0.80 |
 
 **Walls and first clears:**
 
 | Profile (invented) | Buys | Wall | L35 | L40 | L45 | L50 | Spent by the L50 clear |
 |---|---|---|---|---|---|---|---|
-| free | nothing | **L31** | day 49 | 117 | 237 | **583** | $0 |
-| light | starter + one $4.99 a week | **L34** | 17 | 29 | 50 | **64** | ≈ $52 |
+| free | nothing | **L31** | never | never | never | **never (stops at L33)** | $0 |
+| light | starter + one $4.99 a week | **L34** | 18 | 29 | 50 | **64** | ≈ $52 |
 | mid | starter + one $19.99 a week | **L38** | 12 | 15 | 22 | **29** | ≈ $102 |
 | whale | starter + two $39.99 a week | **none** | 12 | 13 | 15 | **17** (on schedule) | ≈ $202 |
-| stuck_39 | free until stuck, then ONE $39.99 | L31 (at pace) | 10 | **26** | 147 | 493 | $39.99 |
+| stuck_39 | free until stuck, then ONE $39.99 | L31 (at pace) | 10 | never | never | **never (stops at L38)** | $39.99 |
 
-**What $39.99 buys a stuck player:** the free player fails L31 in session 31 (day 10). Buying one King's Treasury there clears **L31–L38 in that same session (8 new levels)**. In that run, the tomes take lyra 12→18 and rowan 12→19, and the banners carry L31–35. L40 then comes on day 26 instead of 117. The wall comes back around L43 (L45 on day 147 vs 237 free), so the pack is a big boost, not the end of the game.
+**What $39.99 buys a stuck player:** the free player fails L31 in session 31 (day 10). Buying one King's Treasury there clears **L31–L38 in that same session (8 new levels)**. In that run, the tomes take lyra 12→18 and rowan 12→19, and the banners carry L31–35. Before the no-replay change, L40 then came on day 26. Now L38 is as far as that player ever gets (see No replays below).
 
 - **Free power over time:** 13.7 on day 10, 18.3 on day 30, 23.5 on day 90 and 31.5 on day 365. The free curve did not move with the packs.
 - **Free roster:** lyra and rowan reach 5★ around day 5–7. Their levels are then food-bound at 12–13 by L30, and the free player creeps up roughly one level per month.
 
 Chart: `balance_curve.png` (kept outside the repo; regenerate it from the CSV) shows all five profiles and marks the $39.99 purchase.
 
+## No replays (Oct 24, 2026)
+
+Derek: "once you beat a runner level there should be no going back". A beaten level shows as completed in the level list and can never be started again; only the next unbeaten level has a play button. A loss can be retried. The model lost its 1 replay per session.
+
+- **Walls did not move:** free L31, light L34, mid L38, whale none, stuck_39 L31.
+- **L1–30 stay comfortable:** the free player still clears L30 on day 9.7, on schedule. The margins are lower early on (L12 ratio 8.8 → 6.3, L20 6.1 → 5.0) but L25–30 are unchanged (2.8 / 1.42), so first-clear rewards were not retuned.
+- **Payers barely moved:** light, mid and whale reach L50 on the same days (64 / 29 / 17).
+- **Free and stuck players now stop for good.** Before, replay gold was the free player's only real gold income after the wall (the farms pay food). Without it the free player stops at **L33** (was L50 on day 583) and stuck_39 at **L38** (was L50 on day 493). They pile up food, but gold sits at about 150k against a 364k level-up. **This needs Derek's call:** for example, a daily runner chest, more village gold, or accepting a hard stop for non-payers.
+
 ## Invented numbers (need Derek's call)
 
 These are in `runner_balance.json`, `power_packs.json` and `stores.json`.
 
-- **Pace:** 3 sessions/day; each session plays 1 new level and 1 replay.
+- **Pace:** 3 sessions/day; each session tries 1 new level. No replays (beaten levels are locked).
 - **Village:** 3 farms at level 4, collected 4×/day; 4 of the 6 daily gifts opened; 75% of farm/run gold goes to heroes.
 - **Pack contents, value rates, the War Banner ×1.1/×1.1 and the "+X%" labels:** all invented (see the table above).
 - **Profiles:** how often each payer buys (weekly buys are spread across the week; the starter is bought in session 1). The stuck player buys the moment they first fail a level ≥ 31, then keeps playing until they lose.

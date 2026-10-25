@@ -32,7 +32,7 @@ namespace Survival.Domain.Campaign
         public int BountyIndex { get; private set; }
         public IReadOnlyCollection<string> Cleared => _cleared;
 
-        /// <summary>Highest runner level open (1-based; Level 1 is always open). Saved as "runner_unlocked".</summary>
+        /// <summary>The next unbeaten runner level (1-based; levels below it are beaten and never play again; level count + 1 = all beaten). Saved as "runner_unlocked".</summary>
         public int RunnerUnlocked { get; private set; } = 1;
 
         /// <summary>Open runner levels up to <paramref name="number"/> (never closes one).</summary>

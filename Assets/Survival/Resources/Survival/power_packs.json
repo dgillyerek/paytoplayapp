@@ -12,7 +12,7 @@
     "res.runner_boost": 60
   },
   "runner_boost": {
-    "_invented": "One War Banner charge: every squad unit +10% damage and +10% HP for runner runs; one charge is spent per new runner level cleared while charges are left (losses and replays are free).",
+    "_invented": "One War Banner charge: every squad unit +10% damage and +10% HP for runner runs; one charge is spent per new runner level cleared while charges are left (losses are free; beaten levels cannot be replayed).",
     "damage_pct": 10,
     "hp_pct": 10
   },

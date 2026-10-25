@@ -161,7 +161,15 @@ namespace Survival.Unity
             _unlocked = RunnerHandoff.FromPlay ? RunnerHandoff.Unlocked : StandaloneUnlocked();
             _loadout = SavedLoadout(_catalog);
             var wanted = RunnerHandoff.PendingLevel ?? (levelId.Length > 0 ? levelId : null);
-            _level = _catalog.Level(wanted) ?? _catalog.ByNumber(_unlocked);
+            // A beaten level never opens again: a named level that is already beaten falls back to the frontier.
+            var count = _catalog.Levels.Count;
+            var pick = _catalog.Level(wanted);
+            if (pick == null || RunnerProgress.IsBeaten(_unlocked, pick.Number))
+            {
+                pick = _catalog.ByNumber(RunnerProgress.Frontier(_unlocked, count) ?? count);
+            }
+
+            _level = pick;
             try
             {
                 // The level's plan runs on a worker thread while the scene below is built.
@@ -224,6 +232,23 @@ namespace Survival.Unity
                 return;
             }
 
+            // No going back: a beaten level is never run again (the level list shows it as completed).
+            if (!RunnerProgress.CanStart(_unlocked, _level.Number, _catalog.Levels.Count))
+            {
+                Debug.Log("Runner: level " + _level.Number + " is already beaten; it cannot be played again.");
+                if (_run == null && RunnerHandoff.FromPlay && !RunnerHandoff.Done)
+                {
+                    // Nothing to run from Play: straight back to the village rather than a stranded scene.
+                    RunnerHandoff.Finish();
+                }
+                else if (_hud != null)
+                {
+                    ShowLevelList();
+                }
+
+                return;
+            }
+
             StopTopUp();
             ClearActors();
             _attempt++;
@@ -239,7 +264,20 @@ namespace Survival.Unity
             ShowHint(true);
         }
 
-        public void Retry() => StartRun();
+        /// <summary>Run this level again: only after a loss (a win beat it for good) or mid-run on the frontier.</summary>
+        public void Retry()
+        {
+            if (_catalog == null || _level == null)
+            {
+                return;
+            }
+
+            var won = _run != null && _run.Over && _run.Result.Won;
+            if (RunnerProgress.CanRetry(_unlocked, _level.Number, won, _catalog.Levels.Count))
+            {
+                StartRun();
+            }
+        }
 
         /// <summary>
         /// Switch to runner level <paramref name="number"/> in place (result screen Next / level list): a new road, HUD and
@@ -247,7 +285,7 @@ namespace Survival.Unity
         /// </summary>
         public void PlayLevel(int number)
         {
-            if (_catalog == null || _switching || !RunnerProgress.IsOpen(_unlocked, number))
+            if (_catalog == null || _switching || !RunnerProgress.CanStart(_unlocked, number, _catalog.Levels.Count))
             {
                 return;
             }
@@ -255,8 +293,8 @@ namespace Survival.Unity
             StartCoroutine(PlayLevelRoutine(number));
         }
 
-        /// <summary>The next level after this one, when it is open.</summary>
-        private RunnerLevelDef? OpenNext => _catalog != null && _level != null && _catalog.Next(_level) is { } next && RunnerProgress.IsOpen(_unlocked, next.Number) ? next : null;
+        /// <summary>The next level after this one, when it is the one that can be played now (the frontier).</summary>
+        private RunnerLevelDef? OpenNext => _catalog != null && _level != null && _catalog.Next(_level) is { } next && RunnerProgress.CanStart(_unlocked, next.Number, _catalog.Levels.Count) ? next : null;
 
         /// <summary>Back to Play (from the village) or a fresh run (opened on its own).</summary>
         public void Leave()
@@ -267,7 +305,20 @@ namespace Survival.Unity
                 return;
             }
 
-            StartRun();
+            // Opened on its own: a fresh run of this level only if it is still unbeaten; after a win, on to the frontier
+            // (or the level list once every level is beaten).
+            if (_catalog != null && _level != null && RunnerProgress.CanStart(_unlocked, _level.Number, _catalog.Levels.Count))
+            {
+                StartRun();
+            }
+            else if (_catalog != null && RunnerProgress.Frontier(_unlocked, _catalog.Levels.Count) is int frontier)
+            {
+                PlayLevel(frontier);
+            }
+            else
+            {
+                ShowLevelList();
+            }
         }
 
         private void ClearActors()

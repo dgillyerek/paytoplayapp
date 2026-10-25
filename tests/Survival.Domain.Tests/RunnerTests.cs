@@ -990,7 +990,7 @@ public sealed class RunnerTests
         Assert.Equal(1, RunnerProgress.AfterRun(1, R(1, false), n));
         Assert.Equal(2, RunnerProgress.AfterRun(1, R(1, true), n));
         Assert.Equal(5, RunnerProgress.AfterRun(5, R(2, true), n));
-        Assert.Equal(n, RunnerProgress.AfterRun(n, R(n, true), n));
+        Assert.Equal(n + 1, RunnerProgress.AfterRun(n, R(n, true), n)); // the last level beaten: nothing left to play
         Assert.True(RunnerProgress.IsOpen(3, 3));
         Assert.False(RunnerProgress.IsOpen(3, 4));
 

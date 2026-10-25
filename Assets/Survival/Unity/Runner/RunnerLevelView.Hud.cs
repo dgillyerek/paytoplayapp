@@ -960,7 +960,7 @@ namespace Survival.Unity
             }
 
             // Two rows so no label is squeezed: the way on (Next level / Continue, green) on top, Levels / Retry (blue)
-            // below. A lone button in a row runs wider; labels best-fit inside padded buttons.
+            // below. Retry only after a loss: a won level is beaten for good (no going back). A lone button in a row runs wider; labels best-fit inside padded buttons.
             var primary = new List<(string Name, string Label, string Key, UnityEngine.Events.UnityAction Act)>();
             var next = OpenNext;
             if (result.Won && next != null)
@@ -976,9 +976,12 @@ namespace Survival.Unity
 
             var secondary = new List<(string Name, string Label, string Key, UnityEngine.Events.UnityAction Act)>
             {
-                ("Levels", S("runner.levels", "Levels"), HookArtKeys.ButtonBlue, ShowLevelList),
-                ("Retry", S("runner.retry", "Retry"), HookArtKeys.ButtonBlue, Retry)
+                ("Levels", S("runner.levels", "Levels"), HookArtKeys.ButtonBlue, ShowLevelList)
             };
+            if (_catalog != null && RunnerProgress.CanRetry(_unlocked, result.Number, result.Won, _catalog.Levels.Count))
+            {
+                secondary.Add(("Retry", S("runner.retry", "Retry"), HookArtKeys.ButtonBlue, Retry));
+            }
             ButtonRow(panel.transform, primary, 0.165f, 0.28f);
             ButtonRow(panel.transform, secondary, primary.Count > 0 ? 0.035f : 0.165f, primary.Count > 0 ? 0.15f : 0.28f);
 
@@ -1007,7 +1010,10 @@ namespace Survival.Unity
             }
         }
 
-        /// <summary>A simple level list over the result screen: open levels play, locked ones show a lock.</summary>
+        /// <summary>
+        /// A simple level list over the result screen: beaten levels show as completed (never playable again), only the
+        /// next unbeaten level has a play button, the rest show a lock.
+        /// </summary>
         private void ShowLevelList()
         {
             HideLevelList();
@@ -1034,19 +1040,20 @@ namespace Survival.Unity
             for (var i = 0; i < levels.Count; i++)
             {
                 var level = levels[i];
-                var open = RunnerProgress.IsOpen(_unlocked, level.Number);
+                var open = RunnerProgress.CanStart(_unlocked, level.Number, levels.Count);
+                var beaten = RunnerProgress.IsBeaten(_unlocked, level.Number);
                 var current = _level != null && level.Number == _level.Number;
                 var c = i % cols;
                 var r = i / cols;
                 var x0 = 0.05f + (c * 0.3f);
                 var y1 = 0.87f - (r * cellH);
-                var key = open ? (current ? HookArtKeys.ButtonGreen : HookArtKeys.ButtonBlue) : HookArtKeys.ButtonRed;
-                var btn = HookSkin.Button(panel.transform, "Level" + level.Number, key, open ? SurvivalVisuals.PinBuild : new Color(0.3f, 0.3f, 0.3f, 1f));
+                var key = open ? (current ? HookArtKeys.ButtonGreen : HookArtKeys.ButtonBlue) : beaten ? HookArtKeys.ButtonBlue : HookArtKeys.ButtonRed;
+                var btn = HookSkin.Button(panel.transform, "Level" + level.Number, key, open ? SurvivalVisuals.PinBuild : beaten ? new Color(0.22f, 0.32f, 0.42f, 1f) : new Color(0.3f, 0.3f, 0.3f, 1f));
                 Anchor(btn.GetComponent<RectTransform>(), x0 + 0.01f, y1 - cellH + 0.012f, x0 + 0.29f, y1 - 0.012f);
-                var label = open
-                    ? level.Number.ToString(CultureInfo.InvariantCulture) + "\n" + LevelName(level)
-                    : level.Number.ToString(CultureInfo.InvariantCulture) + "\n" + S("runner.locked", "Locked");
-                var t = Fit(HookSkin.Outlined(SurvivalVisuals.Text(btn.transform, "Label", label, 24, TextAnchor.MiddleCenter, open ? HookSkin.InkFor(key) : new Color(0.75f, 0.75f, 0.75f, 1f))), 14, 24);
+                var label = level.Number.ToString(CultureInfo.InvariantCulture) + "\n"
+                    + (open ? LevelName(level) : beaten ? S("runner.completed", "\u2713 Completed") : S("runner.locked", "Locked"));
+                var ink = open ? HookSkin.InkFor(key) : beaten ? new Color(0.62f, 0.9f, 0.62f, 1f) : new Color(0.75f, 0.75f, 0.75f, 1f);
+                var t = Fit(HookSkin.Outlined(SurvivalVisuals.Text(btn.transform, "Label", label, 24, TextAnchor.MiddleCenter, ink)), 14, 24);
                 Pad(t.rectTransform);
                 btn.interactable = open;
                 if (open)

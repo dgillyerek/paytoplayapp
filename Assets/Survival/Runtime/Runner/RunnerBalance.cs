@@ -17,7 +17,6 @@ namespace Survival.Domain.Runner
 
         public int SessionsPerDay { get; init; } = 3;
         public int NewLevelsPerSession { get; init; } = 1;
-        public int ReplaysPerSession { get; init; } = 1;
         public int MaxDays { get; init; } = 1095;
         public int Farms { get; init; } = 3;
         public int FarmLevel { get; init; } = 4;
@@ -51,7 +50,6 @@ namespace Survival.Domain.Runner
             {
                 SessionsPerDay = Math.Max(1, LayoutJson.OptInt(pace, "sessions_per_day", 3)),
                 NewLevelsPerSession = Math.Max(1, LayoutJson.OptInt(pace, "new_levels_per_session", 1)),
-                ReplaysPerSession = Math.Max(0, LayoutJson.OptInt(pace, "replays_per_session", 1)),
                 MaxDays = Math.Max(1, LayoutJson.OptInt(pace, "max_days", 1095)),
                 Farms = Math.Max(0, LayoutJson.OptInt(village, "farms", 3)),
                 FarmLevel = Math.Max(1, LayoutJson.OptInt(village, "farm_level", 4)),
@@ -364,7 +362,7 @@ namespace Survival.Domain.Runner
     /// gifts, one-time campaign / bounty / quest rewards in the first days, the profile's power packs), trainings tick on two
     /// slots, star-ups and unlocks from shards, Hero Tomes on the best hero, greedy level-ups (best squad power per cost,
     /// gold + food), rush with gems / speed-ups, then one attempt at the next runner level (cleared if the squad's power
-    /// ratio, x the War Banner boost while charges are left, is at least 1; a first clear spends a charge) and the replays.
+    /// ratio, x the War Banner boost while charges are left, is at least 1; a first clear spends a charge). No replays: a beaten level never plays again.
     /// A "stuck" buy fires on the first failed attempt at or past its level; the player then keeps attempting in that
     /// session until a level fails (the burst).
     /// </summary>
@@ -493,11 +491,8 @@ namespace Survival.Domain.Runner
 
                 _burst = false;
 
-                for (var r = 0; r < _def.ReplaysPerSession && _cleared > 0; r++)
-                {
-                    Win(_cleared);
-                }
-
+                // No replays: a beaten runner level can never be played again (RunnerProgress.CanStart), so the only runner
+                // income is each level's first clear.
                 Spend();
                 if (k % _def.SessionsPerDay == 0)
                 {
