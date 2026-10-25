@@ -43,6 +43,9 @@ namespace Survival.Unity
         private Vector3 _baseLocal;
         private float _punch;
         private float _attackStarted = -99f;
+        private int _swingIndex;
+        private string _swingPose = "";
+        private float _swingSeconds;
         private System.Action<float>? _attackSpeed;
         private System.Action<bool>? _walkUnderAttack;
 
@@ -73,6 +76,12 @@ namespace Survival.Unity
         public string WalkPose => Data.WalkPoseName;
         public string AttackPose => Data.AttackPoseName;
         public string RestPose => Data.RestPoseName;
+
+        /// <summary>
+        /// Ironhowl swings through his whole battle rotation in the runner, not only the claw swipe (Derek 2026-10-24:
+        /// "he just punches"). The others keep their one attack take.
+        /// </summary>
+        public bool RotatesAttacks => Data.Name == LockedBattleRoster.Ironhowl.Name && LockedBattleRotation.Count(Data) > 1;
 
         public static LockedBattleFighter? Find(string rosterName)
         {
@@ -443,6 +452,20 @@ namespace Survival.Unity
                 return;
             }
 
+            if (RotatesAttacks)
+            {
+                // Let the current swing mostly play, then the next attack of his rotation.
+                if (Pose == _swingPose && Time.time - _attackStarted < Mathf.Max(0.3f, _swingSeconds * 0.6f))
+                {
+                    return;
+                }
+
+                var next = LockedBattleRotation.AttackAt(Data, _swingIndex % LockedBattleRotation.Count(Data));
+                _swingIndex++;
+                Swing(next.PoseName, next.Seconds);
+                return;
+            }
+
             if (Pose != AttackPose)
             {
                 Play(AttackPose);
@@ -456,6 +479,24 @@ namespace Survival.Unity
                 Play(AttackPose);
                 _attackStarted = Time.time;
             }
+        }
+
+        /// <summary>
+        /// One named attack take from its first frame (the boss quake's ground pound). A later <see cref="Attack"/>
+        /// waits for most of it before the next swing.
+        /// </summary>
+        public void Swing(string pose, float seconds)
+        {
+            if (Dead)
+            {
+                return;
+            }
+
+            Play(RestPose);
+            Play(pose);
+            _swingPose = pose;
+            _swingSeconds = seconds;
+            _attackStarted = Time.time;
         }
 
         /// <summary>Face a world direction on the ground (yaw only), plus an aim offset (Rowan's bow).</summary>
@@ -672,6 +713,14 @@ namespace Survival.Unity
         /// </summary>
         public void WarmPoses()
         {
+            if (RotatesAttacks)
+            {
+                for (var i = 0; i < LockedBattleRotation.Count(Data); i++)
+                {
+                    Play(LockedBattleRotation.AttackAt(Data, i).PoseName);
+                }
+            }
+
             Play(AttackPose);
             Play(RestPose);
             Play(WalkPose);

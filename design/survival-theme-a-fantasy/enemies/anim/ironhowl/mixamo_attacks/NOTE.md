@@ -13,3 +13,6 @@ and a 'Standing Melee Combo Attack') are wired.
   md5 53449519ca7b87c34699dbab97c291b0, frames 0-126, hits 29 R / 46 L / 59 L / 82 R, purple claw sparks per hit).
 - Both: same 33-bone skeleton, no retarget, byte-identical to the downloads; no In Place offered, so the battle holds
   the hips' ground travel on the spot (downward 0.17 m max, combo 0.47 m max; both return to start).
+
+## Authored attacks added (2026-10-24)
+attack4 ground pound, attack5 backhand sweep, attack6 shoulder charge, keyposed on his own skeleton. See `../authored_attacks/NOTE.md`.

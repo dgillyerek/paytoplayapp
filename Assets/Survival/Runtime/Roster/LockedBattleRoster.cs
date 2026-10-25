@@ -377,6 +377,12 @@ namespace Survival.Domain.Roster
         /// (locked), overhead smash (Mixamo "Standing Melee Attack Downward": purple ground-slam crack
         /// ring and a heavy shake), claw combo (Mixamo "Standing Melee Combo Attack Ver. 2": four hits,
         /// purple claw sparks on each). Both hold the hips' travel in place and slide 0.3 m in.
+        /// Then his authored moves (2026-10-24, Derek: "he just punches"): ground pound (both fists into the
+        /// ground: crack ring, dust ring and debris, heavy shake), backhand sweep (lead arm whips out flat to
+        /// the side: claw sparks and dust) and shoulder charge (two steps in behind the lead shoulder: claw
+        /// sparks and dust). Their feet are pinned in the clip, so they keep their own hips travel (not in
+        /// place): the charge's hips end 0.62 m ahead, his front 1.01 m, short of Oakenshield's front at 1.12 m;
+        /// the pound and backhand add a 0.3 m slide.
         /// </summary>
         public static readonly LockedBattleAttack[] IronhowlAttacks =
         {
@@ -406,7 +412,37 @@ namespace Survival.Domain.Roster
                     new LockedBattleHitMark(IronhowlMotion.Attack3HitFrames[1], IronhowlMotion.Attack3HitBones[1]),
                     new LockedBattleHitMark(IronhowlMotion.Attack3HitFrames[2], IronhowlMotion.Attack3HitBones[2]),
                     new LockedBattleHitMark(IronhowlMotion.Attack3HitFrames[3], IronhowlMotion.Attack3HitBones[3])
-                })
+                }),
+            new LockedBattleAttack(
+                "ground pound",
+                IronhowlMotion.Attack4PoseName,
+                IronhowlMotion.Attack4LastFrame / IronhowlMotion.FrameRate,
+                IronhowlMotion.Attack4ContactFrame,
+                "mixamorig:RightHand",
+                0.08f,
+                false,
+                new LockedBattleReachShift(0.3f, 13f, 22f, 32f, 52f),
+                BattleImpactKind.StompQuake),
+            new LockedBattleAttack(
+                "backhand sweep",
+                IronhowlMotion.Attack5PoseName,
+                IronhowlMotion.Attack5LastFrame / IronhowlMotion.FrameRate,
+                IronhowlMotion.Attack5ContactFrame,
+                "mixamorig:LeftHand",
+                0.04f,
+                false,
+                new LockedBattleReachShift(0.3f, 6f, 15f, 24f, 40f),
+                BattleImpactKind.IronClaw),
+            new LockedBattleAttack(
+                "shoulder charge",
+                IronhowlMotion.Attack6PoseName,
+                IronhowlMotion.Attack6LastFrame / IronhowlMotion.FrameRate,
+                IronhowlMotion.Attack6ContactFrame,
+                "mixamorig:LeftArm",
+                0.06f,
+                false,
+                default,
+                BattleImpactKind.IronClaw)
         };
 
         public static readonly LockedBattleFighter Emberfang = new LockedBattleFighter(

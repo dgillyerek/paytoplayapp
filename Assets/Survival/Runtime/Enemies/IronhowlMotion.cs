@@ -123,6 +123,52 @@ namespace Survival.Domain.Enemies
             "mixamorig:RightHand", "mixamorig:LeftHand", "mixamorig:LeftHand", "mixamorig:RightHand"
         };
 
-        public static readonly string[] AttackPoseNames = { AttackPoseName, Attack2PoseName, Attack3PoseName };
+        // Authored attacks (2026-10-24). Derek: "iron howl needs more attack motions. he just punches."
+        // Keyposed in Blender on IRONHOWL_rig.fbx's own skeleton (mesh, rig and weights untouched), starting
+        // and ending on frame 0 of the overhead smash's stance, feet pinned by IK. The motion is written into a
+        // copy of the overhead smash FBX (its PreRotations, mixamo.com take, mixamorig:Hips root, no Armature
+        // node), so the curve paths are the walk's and the clips play on the body as-is, like the Mixamo ones.
+        // Sources, specs and tools: DesignAuthoredAttacksDir.
+        public const string DesignAuthoredAttacksDir = "design/survival-theme-a-fantasy/enemies/anim/ironhowl/authored_attacks";
+
+        /// <summary>
+        /// Attack 4, ground pound: both fists clasp high over the head (frame 17), then he folds forward and
+        /// hammers both fists into the ground in front of him (frame 22), holds the crouch and rises back.
+        /// </summary>
+        public const string Attack4PoseName = "attack4";
+        public const string Attack4FileName = "IRONHOWL_rig_ground_pound.fbx";
+        public const string Attack4ThemePackRel = ThemePackDir + "/" + Attack4FileName;
+        public const string Attack4Md5 = "b2e7b6f1b12bdeb230deaab063204bd1";
+        public const int Attack4LastFrame = 52;
+
+        /// <summary>Both fists hit the ground 0.62 m ahead of the stance hips.</summary>
+        public const int Attack4ContactFrame = 22;
+
+        /// <summary>
+        /// Attack 5, backhand sweep: the lead (left) arm coils across his chest as the torso winds to the
+        /// right (frame 12), then whips out flat to his left side (frame 15) and follows through behind.
+        /// </summary>
+        public const string Attack5PoseName = "attack5";
+        public const string Attack5FileName = "IRONHOWL_rig_backhand_sweep.fbx";
+        public const string Attack5ThemePackRel = ThemePackDir + "/" + Attack5FileName;
+        public const string Attack5Md5 = "5d933a147d5cf6ef5d1358603cb62164";
+        public const int Attack5LastFrame = 40;
+        public const int Attack5ContactFrame = 15;
+
+        /// <summary>
+        /// Attack 6, shoulder charge: he sinks back (frame 10), then drives two steps forward with both arms
+        /// tucked and the lead (left) shoulder low in front, hips 0.62 m ahead at the hit (frame 20), and backs up.
+        /// </summary>
+        public const string Attack6PoseName = "attack6";
+        public const string Attack6FileName = "IRONHOWL_rig_shoulder_charge.fbx";
+        public const string Attack6ThemePackRel = ThemePackDir + "/" + Attack6FileName;
+        public const string Attack6Md5 = "5b5eb4b9fd4b19cb9e5e0583c54c86c0";
+        public const int Attack6LastFrame = 46;
+        public const int Attack6ContactFrame = 20;
+
+        public static readonly string[] AttackPoseNames =
+        {
+            AttackPoseName, Attack2PoseName, Attack3PoseName, Attack4PoseName, Attack5PoseName, Attack6PoseName
+        };
     }
 }
