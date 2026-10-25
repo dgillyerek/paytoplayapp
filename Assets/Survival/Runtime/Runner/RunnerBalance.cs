@@ -26,6 +26,9 @@ namespace Survival.Domain.Runner
         public double HeroFoodShare { get; init; } = 1.0;
         public double FoodValue { get; init; } = 2.0;
 
+        /// <summary>Gold Mines the player builds (base_economy.json buildable "mine"); 0 = none.</summary>
+        public int GoldMines { get; init; } = 1;
+
         /// <summary>Stop the timeline once every level is cleared (false: run all max_days, for power-over-time charts).</summary>
         public bool StopWhenDone { get; init; } = true;
         public IReadOnlyList<RunnerSpendProfile> Profiles { get; init; } = Array.Empty<RunnerSpendProfile>();
@@ -58,6 +61,7 @@ namespace Survival.Domain.Runner
                 HeroGoldShare = Math.Max(0f, Math.Min(1f, LayoutJson.OptNum(village, "hero_gold_share", 0.75f))),
                 HeroFoodShare = Math.Max(0f, Math.Min(1f, LayoutJson.OptNum(village, "hero_food_share", 1f))),
                 FoodValue = Math.Max(0f, LayoutJson.OptNum(greedy, "food_value", 2f)),
+                GoldMines = Math.Max(0, LayoutJson.OptInt(village, "gold_mines", 1)),
                 Profiles = profiles
             };
         }
@@ -124,6 +128,40 @@ namespace Survival.Domain.Runner
                 }
             }
 
+            // The Castle's upgrade gold / timer per level (a building never goes past the Castle level) and the Gold Mine buildable.
+            foreach (var plot in LayoutJson.Objs(eco, "plots"))
+            {
+                if (LayoutJson.OptStr(plot, "building", "") == "building.hq")
+                {
+                    foreach (var l in LayoutJson.Objs(plot, "levels"))
+                    {
+                        CastleLevels.Add(Step(l));
+                    }
+
+                    break;
+                }
+            }
+
+            foreach (var b in LayoutJson.Objs(eco, "buildables"))
+            {
+                if (LayoutJson.OptStr(b, "produces", "") != SurvIds.ResSoft)
+                {
+                    continue;
+                }
+
+                MineBuild = (Gold(b, "build_cost"), LayoutJson.OptInt(b, "build_seconds", 0));
+                MineUnlockCastle = b.TryGet("unlock_at_castle", out var u) && u is JsonNode.Arr ua
+                    ? ua.Items.OfType<JsonNode.Num>().Select(n => n.AsInt()).DefaultIfEmpty(1).Min()
+                    : 1;
+                foreach (var l in LayoutJson.Objs(b, "levels"))
+                {
+                    MineLevels.Add((LayoutJson.OptInt(l, "per_hour", 0), LayoutJson.OptInt(l, "capacity", 0)));
+                    MineSteps.Add(Step(l));
+                }
+
+                break;
+            }
+
             var gifts = LayoutJson.Root(giftsJson, "gifts.json");
             DailyGiftCap = LayoutJson.OptInt(gifts, "daily_cap", 6);
             var pool = LayoutJson.Objs(gifts, "pool").ToList();
@@ -157,8 +195,36 @@ namespace Survival.Domain.Runner
             }
         }
 
+        private static int Gold(JsonNode.Obj o, string key) =>
+            o.TryGet(key, out var c) && c is JsonNode.Obj cost ? LayoutJson.OptInt(cost, SurvIds.ResSoft, 0) : 0;
+
+        private static (int Gold, int Seconds) Step(JsonNode.Obj level) => (Gold(level, "upgrade_cost"), LayoutJson.OptInt(level, "upgrade_seconds", 0));
+
         public CampaignCatalog Campaign { get; }
         public RunnerCatalog Runner { get; }
+
+        /// <summary>Castle level n (index n-1): gold and seconds of its upgrade to n+1 (0 at the top).</summary>
+        public List<(int Gold, int Seconds)> CastleLevels { get; } = new();
+
+        /// <summary>Gold Mine level n (index n-1): output per hour and storage cap.</summary>
+        public List<(int PerHour, int Capacity)> MineLevels { get; } = new();
+
+        /// <summary>Gold Mine level n (index n-1): gold and seconds of its upgrade to n+1 (0 at the top).</summary>
+        public List<(int Gold, int Seconds)> MineSteps { get; } = new();
+        public (int Gold, int Seconds) MineBuild { get; private set; }
+        public int MineUnlockCastle { get; private set; } = 1;
+
+        /// <summary>Gold a day from <paramref name="mines"/> Gold Mines at <paramref name="level"/> (0 = not built), collected like the farms.</summary>
+        public double MineGoldPerDay(RunnerBalanceDef d, int mines, int level)
+        {
+            if (level <= 0 || MineLevels.Count == 0)
+            {
+                return 0;
+            }
+
+            var (perHour, cap) = MineLevels[Math.Min(MineLevels.Count, level) - 1];
+            return mines * Math.Min(perHour * 24.0, cap * (double)d.CollectionsPerDay);
+        }
         public int StartGems { get; }
         public int FreeFinishSeconds { get; } = 300;
         public float GemsPerMinute { get; } = 1f;
@@ -346,7 +412,10 @@ namespace Survival.Domain.Runner
         double GoldEarned,
         double FoodEarned,
         double UsdSpent,
-        int Banners = 0);
+        int Banners = 0,
+        int Mine = 0,
+        int Castle = 1,
+        double MineGoldEarned = 0);
 
     /// <summary>What one profile's timeline says about one level.</summary>
     public sealed record RunnerLevelOutcome(
@@ -359,7 +428,7 @@ namespace Survival.Domain.Runner
 
     /// <summary>
     /// The deterministic player model: a session-by-session timeline from a fresh save. Each session: free income (farms,
-    /// gifts, one-time campaign / bounty / quest rewards in the first days, the profile's power packs), trainings tick on two
+    /// the Gold Mine (built and upgraded greedily with the building share of gold), gifts, one-time campaign / bounty / quest rewards in the first days, the profile's power packs), trainings tick on two
     /// slots, star-ups and unlocks from shards, Hero Tomes on the best hero, greedy level-ups (best squad power per cost,
     /// gold + food), rush with gems / speed-ups, then one attempt at the next runner level (cleared if the squad's power
     /// ratio, x the War Banner boost while charges are left, is at least 1; a first clear spends a charge). No replays: a beaten level never plays again.
@@ -374,8 +443,14 @@ namespace Survival.Domain.Runner
         private readonly Func<int, double> _requiredScale;
         private readonly Dictionary<string, ModelHero> _heroes = new(StringComparer.Ordinal);
         private readonly List<RunnerUnitDef> _squadUnits;
-        private double _gold, _food, _gems, _speedupMin, _goldEarned, _foodEarned, _usd;
+        private double _gold, _food, _gems, _speedupMin, _goldEarned, _foodEarned, _usd, _mineGoldEarned;
         private int _cleared, _tomes, _banners;
+
+        // The village build queue (one slot): the share of gold that is not for heroes builds the Gold Mine and upgrades it,
+        // raising the Castle first whenever the mine's next level needs it. Everything else that share would buy is not modelled.
+        private double _buildGold, _buildLeft;
+        private int _mine, _castle = 1;
+        private Action? _buildDone;
         private bool _burst;
         private readonly HashSet<RunnerBuy> _stuckDone = new();
 
@@ -527,12 +602,92 @@ namespace Survival.Domain.Runner
             _goldEarned,
             _foodEarned,
             _usd,
-            _banners);
+            _banners,
+            _mine,
+            _castle,
+            _mineGoldEarned);
 
         private void AddGold(double g)
         {
             _gold += g * _def.HeroGoldShare;
+            _buildGold += g * (1 - _def.HeroGoldShare);
             _goldEarned += g;
+        }
+
+        public int MineLevel => _mine;
+        public int CastleLevel => _castle;
+
+        /// <summary>Starts the next village step if the build slot is free and the building share can pay: build the Gold Mine
+        /// (Castle at its unlock level first), then upgrade it, raising the Castle whenever the mine's next level needs it.
+        /// Timers finish on their own (the last few minutes are free).</summary>
+        private void Village()
+        {
+            if (_def.GoldMines <= 0 || _src.MineLevels.Count == 0)
+            {
+                return;
+            }
+
+            for (var guard = 0; guard < 4 && _buildDone == null; guard++)
+            {
+                int gold, seconds;
+                Action done;
+                var want = _mine == 0 ? _src.MineUnlockCastle : _mine + 1;
+                if (_mine >= _src.MineLevels.Count)
+                {
+                    return;
+                }
+
+                if (_castle < want)
+                {
+                    if (_castle > _src.CastleLevels.Count || _src.CastleLevels[_castle - 1].Gold <= 0)
+                    {
+                        return;
+                    }
+
+                    (gold, seconds) = _src.CastleLevels[_castle - 1];
+                    done = () => _castle++;
+                }
+                else if (_mine == 0)
+                {
+                    (gold, seconds) = _src.MineBuild;
+                    gold *= _def.GoldMines;
+                    done = () => _mine = 1;
+                }
+                else
+                {
+                    (gold, seconds) = _src.MineSteps[_mine - 1];
+                    gold *= _def.GoldMines;
+                    seconds *= _def.GoldMines;
+                    done = () => _mine++;
+                }
+
+                if (_buildGold < gold)
+                {
+                    return;
+                }
+
+                _buildGold -= gold;
+                _buildLeft = seconds;
+                _buildDone = done;
+                TickVillage(0);
+            }
+        }
+
+        private void TickVillage(double dt)
+        {
+            if (_buildDone == null)
+            {
+                return;
+            }
+
+            _buildLeft -= dt;
+            if (_buildLeft <= _src.FreeFinishSeconds)
+            {
+                var d = _buildDone;
+                _buildDone = null;
+                _buildLeft = 0;
+                d();
+            }
         }
 
         private void AddFood(double f)
@@ -661,9 +816,14 @@ namespace Survival.Domain.Runner
             }
 
             AddFood(_src.FoodPerDay(_def) / spd);
+            var mined = _src.MineGoldPerDay(_def, _def.GoldMines, _mine) / spd;
+            _mineGoldEarned += mined;
+            AddGold(mined);
 
-            // Training runs between sessions.
+            // Training and the village build run between sessions.
             var dt = 86400.0 / spd;
+            TickVillage(dt);
+            Village();
             foreach (var h in _heroes.Values)
             {
                 if (h.Training > 0)

@@ -7,13 +7,14 @@
     "max_days": 1095
   },
   "village": {
-    "_invented": "Free income outside the runner: farms (count and level assumed; output and capacity per level come from base_economy.json), how often the player collects them, how many of the 6 daily free gifts he opens, and the share of gold he puts into heroes (the rest goes on buildings). Campaign stages 1-6 and the bounties are assumed cleared one per day from day 1; the starter quests on day 1.",
+    "_invented": "Free income outside the runner: farms (count and level assumed; output and capacity per level come from base_economy.json), how often the player collects them, how many of the 6 daily free gifts he opens, and the share of gold he puts into heroes (the rest goes on buildings: the model spends it on building and upgrading gold_mines Gold Mines, raising the Castle when a mine level needs it; mine output, cap, cost and timers per level come from base_economy.json buildable \"mine\", collected collections_per_day times like the farms). Campaign stages 1-6 and the bounties are assumed cleared one per day from day 1; the starter quests on day 1.",
     "farms": 3,
     "farm_level": 4,
     "collections_per_day": 4,
     "gifts_per_day": 4,
     "hero_gold_share": 0.75,
-    "hero_food_share": 1.0
+    "hero_food_share": 1.0,
+    "gold_mines": 1
   },
   "greedy": {
     "_doc": "Best power per cost: cost = gold + food_value * food.",

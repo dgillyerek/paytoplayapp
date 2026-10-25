@@ -64,6 +64,7 @@
     "theme_a.hook.build.lumber": "art/hook/painted/buildings/lumber_mill.png",
     "theme_a.hook.build.quarry": "art/hook/painted/buildings/quarry.png",
     "theme_a.hook.build.forge": "art/hook/painted/buildings/forge.png",
+    "theme_a.hook.build.mine": "art/world/map/node_gold.png",
     "theme_a.village.castle.tier_1": "art/world/village/castle_lv01.png",
     "theme_a.village.castle.tier_2": "art/world/village/castle_lv02.png",
     "theme_a.village.castle.tier_3": "art/world/village/castle_lv03.png",

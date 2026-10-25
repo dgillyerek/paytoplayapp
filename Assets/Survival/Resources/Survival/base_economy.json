@@ -154,6 +154,26 @@
       "build_seconds": 300,
       "unlock_at_castle": [5, 12],
       "levels_from": "base.plot.forge_01"
+    },
+    {
+      "type": "mine",
+      "building": "building.economy",
+      "produces": "res.soft",
+      "build_cost": { "res.soft": 1000, "res.wood": 800 },
+      "build_seconds": 120,
+      "unlock_at_castle": [2],
+      "levels": [
+        { "level": 1, "per_hour": 80, "capacity": 480, "min_collect": 20, "upgrade_cost": { "res.soft": 1000, "res.wood": 300 }, "upgrade_seconds": 300 },
+        { "level": 2, "per_hour": 120, "capacity": 720, "min_collect": 20, "upgrade_cost": { "res.soft": 2200, "res.wood": 660 }, "upgrade_seconds": 600 },
+        { "level": 3, "per_hour": 180, "capacity": 1080, "min_collect": 20, "upgrade_cost": { "res.soft": 4840, "res.wood": 1450 }, "upgrade_seconds": 1080 },
+        { "level": 4, "per_hour": 270, "capacity": 1620, "min_collect": 25, "upgrade_cost": { "res.soft": 10600, "res.wood": 3200 }, "upgrade_seconds": 2040 },
+        { "level": 5, "per_hour": 400, "capacity": 2400, "min_collect": 40, "upgrade_cost": { "res.soft": 23400, "res.wood": 7000 }, "upgrade_seconds": 3900 },
+        { "level": 6, "per_hour": 610, "capacity": 3660, "min_collect": 60, "upgrade_cost": { "res.soft": 51500, "res.wood": 15500 }, "upgrade_seconds": 7440 },
+        { "level": 7, "per_hour": 910, "capacity": 5460, "min_collect": 90, "upgrade_cost": { "res.soft": 113000, "res.wood": 34000 }, "upgrade_seconds": 14100 },
+        { "level": 8, "per_hour": 1370, "capacity": 8220, "min_collect": 135, "upgrade_cost": { "res.soft": 249000, "res.wood": 75000 }, "upgrade_seconds": 26820 },
+        { "level": 9, "per_hour": 2050, "capacity": 12300, "min_collect": 205, "upgrade_cost": { "res.soft": 549000, "res.wood": 165000 }, "upgrade_seconds": 50940 },
+        { "level": 10, "per_hour": 3080, "capacity": 18480, "min_collect": 310 }
+      ]
     }
   ]
 }

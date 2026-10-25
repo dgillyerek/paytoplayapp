@@ -103,12 +103,15 @@ public class RunnerNoReplayTests
         var json = File.ReadAllText(Path.Combine(TestPaths.CatalogDir, RunnerBalanceDef.FileName));
         Assert.DoesNotContain("replays_per_session", json);
 
-        // Every level's win pays once: the free player's runner gold is exactly the sum of first clears plus village income,
-        // so a stuck free player's gold stops growing from the runner (it only creeps from the village).
+        // Every level's win pays once: a free player at the wall earns no runner gold from beaten levels, only the village
+        // (gifts and the Gold Mine). Over days 60-120 he clears a handful of levels at most (the mine makes progress slow, not
+        // impossible), so non-mine gold earned in the window stays small next to what replays used to pay.
         var free = BalanceReport.Get().Economies["free"];
-        var stuck = free.Daily[59];
-        var later = free.Daily[119];
-        Assert.Equal(stuck.Cleared, later.Cleared);
-        Assert.True(later.GoldEarned - stuck.GoldEarned < 60 * 2000, $"free gold earned day 60-120: {later.GoldEarned - stuck.GoldEarned:0}");
+        var a = free.Daily[59];
+        var b = free.Daily[119];
+        Assert.True(b.Cleared - a.Cleared <= 6, $"free cleared day 60 L{a.Cleared}, day 120 L{b.Cleared}");
+        var nonMine = (b.GoldEarned - b.MineGoldEarned) - (a.GoldEarned - a.MineGoldEarned);
+        Assert.True(nonMine < 60 * 2000 + (b.Cleared - a.Cleared) * 120_000, $"free non-mine gold earned day 60-120: {nonMine:0}");
+        Assert.True(b.MineGoldEarned > a.MineGoldEarned, "the Gold Mine keeps paying while stuck");
     }
 }
