@@ -56,7 +56,7 @@ public sealed class HookIdTests
     {
         Assert.Equal(SurvIds.BasePlots, JsonList("base_plots_slice"));
         Assert.Equal(SurvIds.Stores, JsonList("stores"));
-        Assert.Equal(SurvIds.Offers, JsonList("offers"));
+        Assert.Equal(SurvIds.Offers.Concat(SurvIds.PowerOffers), JsonList("offers"));
         var gifts = JsonList("gifts");
         Assert.Contains(SurvIds.GiftSchedulerFree, gifts);
         foreach (var g in SurvIds.Gifts)
@@ -88,7 +88,9 @@ public sealed class HookIdTests
         Assert.Equal(SurvIds.ResFood, c.Plots[1].Produces);
         Assert.Equal(SurvIds.ResWood, c.Plots[2].Produces);
         Assert.Equal(SurvIds.QuestStepsStarter, c.StarterChain.Steps.Select(s => s.Id).ToList());
-        Assert.Equal(SurvIds.Offers.OrderBy(x => x), c.Stores.Single().Offers.Select(o => o.Id).OrderBy(x => x));
+        Assert.Equal(SurvIds.Stores, c.Stores.Select(s => s.Id).ToList());
+        Assert.Equal(SurvIds.Offers.OrderBy(x => x), c.Stores.Single(s => s.Id == SurvIds.StoreGemShop).Offers.Select(o => o.Id).OrderBy(x => x));
+        Assert.Equal(SurvIds.PowerOffers, c.Stores.Single(s => s.Id == SurvIds.StorePowerPacks).Offers.Select(o => o.Id).ToList());
         Assert.Equal(SurvIds.Gifts, c.Gifts.Pool.Select(g => g.Id).ToList());
         foreach (var plot in c.Plots)
         {
@@ -106,7 +108,7 @@ public sealed class HookIdTests
     public void Theme_a_products_map_every_sku_offer_to_bundle_product_ids()
     {
         var products = Hook.Products();
-        foreach (var offer in Hook.Catalog().Stores.Single().Offers.Where(o => o.Kind == OfferKinds.Sku))
+        foreach (var offer in Hook.Catalog().Stores.SelectMany(s => s.Offers).Where(o => o.Kind == OfferKinds.Sku))
         {
             Assert.True(products.TryGetValue(offer.Sku!, out var p));
             Assert.StartsWith("com.paytoplay.fantasykingdoma.", p!.ProductId);

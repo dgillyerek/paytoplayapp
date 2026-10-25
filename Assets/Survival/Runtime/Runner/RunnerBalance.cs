@@ -3,12 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Survival.Domain.Campaign;
+using Survival.Domain.Catalog;
 using Survival.Domain.Ids;
 using Survival.Domain.Serialization;
+using Survival.Domain.Store;
 
 namespace Survival.Domain.Runner
 {
-    /// <summary>runner_balance.json: the modelling assumptions (pace, village income, the gem crate, spend tiers).</summary>
+    /// <summary>runner_balance.json: the modelling assumptions (pace, village income, what each spend profile buys from the power-pack ladder).</summary>
     public sealed record RunnerBalanceDef
     {
         public const string FileName = "runner_balance.json";
@@ -23,10 +25,6 @@ namespace Survival.Domain.Runner
         public int GiftsPerDay { get; init; } = 4;
         public double HeroGoldShare { get; init; } = 0.75;
         public double HeroFoodShare { get; init; } = 1.0;
-        public double GemsPerUsd { get; init; } = 100.2;
-        public int CrateGems { get; init; } = 100;
-        public int CrateGold { get; init; } = 30000;
-        public int CrateFood { get; init; } = 15000;
         public double FoodValue { get; init; } = 2.0;
 
         /// <summary>Stop the timeline once every level is cleared (false: run all max_days, for power-over-time charts).</summary>
@@ -41,9 +39,14 @@ namespace Survival.Domain.Runner
             JsonNode.Obj O(string k) => root.TryGet(k, out var n) && n is JsonNode.Obj o ? o : new JsonNode.Obj();
             var pace = O("pace");
             var village = O("village");
-            var gems = O("gems");
             var greedy = O("greedy");
-            var profiles = LayoutJson.Objs(root, "profiles").Select(p => new RunnerSpendProfile(LayoutJson.Str(p, "id"), LayoutJson.OptNum(p, "usd_per_week", 0f))).ToList();
+            var profiles = LayoutJson.Objs(root, "profiles").Select(p => new RunnerSpendProfile(
+                LayoutJson.Str(p, "id"),
+                LayoutJson.Objs(p, "buys").Select(b => new RunnerBuy(
+                    LayoutJson.Str(b, "offer"),
+                    LayoutJson.OptBool(b, "once", false),
+                    Math.Max(0, LayoutJson.OptInt(b, "per_week", 0)),
+                    Math.Max(0, LayoutJson.OptInt(b, "when_stuck_from", 0)))).ToList())).ToList();
             return new RunnerBalanceDef
             {
                 SessionsPerDay = Math.Max(1, LayoutJson.OptInt(pace, "sessions_per_day", 3)),
@@ -56,28 +59,48 @@ namespace Survival.Domain.Runner
                 GiftsPerDay = Math.Max(0, LayoutJson.OptInt(village, "gifts_per_day", 4)),
                 HeroGoldShare = Math.Max(0f, Math.Min(1f, LayoutJson.OptNum(village, "hero_gold_share", 0.75f))),
                 HeroFoodShare = Math.Max(0f, Math.Min(1f, LayoutJson.OptNum(village, "hero_food_share", 1f))),
-                GemsPerUsd = Math.Max(0f, LayoutJson.OptNum(gems, "per_usd", 100.2f)),
-                CrateGems = Math.Max(1, LayoutJson.OptInt(gems, "crate_gems", 100)),
-                CrateGold = Math.Max(0, LayoutJson.OptInt(gems, "crate_gold", 30000)),
-                CrateFood = Math.Max(0, LayoutJson.OptInt(gems, "crate_food", 15000)),
                 FoodValue = Math.Max(0f, LayoutJson.OptNum(greedy, "food_value", 2f)),
                 Profiles = profiles
             };
         }
     }
 
-    public sealed record RunnerSpendProfile(string Id, double UsdPerWeek);
+    /// <summary>
+    /// One purchase rule of a spend profile, on a power-pack offer: once (session 1), <paramref name="PerWeek"/> times a week
+    /// (spread over the week), or once when the player first fails a level at or past <paramref name="WhenStuckFrom"/>.
+    /// </summary>
+    public sealed record RunnerBuy(string OfferId, bool Once, int PerWeek, int WhenStuckFrom);
+
+    /// <summary>A spend profile: the power packs it buys (none = free).</summary>
+    public sealed record RunnerSpendProfile(string Id, IReadOnlyList<RunnerBuy> Buys)
+    {
+        public bool Pays => Buys.Count > 0;
+
+        /// <summary>USD a week from the recurring buys (one-time and stuck buys not counted).</summary>
+        public double UsdPerWeek(PowerPackCatalog packs) => Buys.Sum(b => b.PerWeek * (packs.Pack(b.OfferId)?.Usd ?? 0));
+    }
 
     /// <summary>
     /// The real game files the economy reads: campaign.json (heroes, level curve, stages, bounties), runner_levels.json,
-    /// base_economy.json (farm output, starting gems, the rush rate), gifts.json, quests.json.
+    /// base_economy.json (farm output, starting gems, the rush rate), gifts.json, quests.json, and the power-pack ladder
+    /// (stores.json store.power_packs + power_packs.json).
     /// </summary>
     public sealed class RunnerBalanceSources
     {
-        public RunnerBalanceSources(CampaignCatalog campaign, RunnerCatalog runner, string baseEconomyJson, string giftsJson, string questsJson)
+        public RunnerBalanceSources(CampaignCatalog campaign, RunnerCatalog runner, string baseEconomyJson, string giftsJson, string questsJson, string? storesJson = null, string? powerPacksJson = null)
         {
             Campaign = campaign;
             Runner = runner;
+            if (storesJson != null && powerPacksJson != null)
+            {
+                Packs = PowerPackCatalog.Parse(powerPacksJson);
+                var store = HookCatalogLoader.ParseStores(storesJson).FirstOrDefault(s => s.Id == Packs.StoreId);
+                if (store != null)
+                {
+                    PackRows = Packs.Rows(store).ToDictionary(r => r.Offer.Id, StringComparer.Ordinal);
+                }
+            }
+
             var eco = LayoutJson.Root(baseEconomyJson, "base_economy.json");
             if (eco.TryGet("starting_wallet", out var sw) && sw is JsonNode.Obj wallet)
             {
@@ -145,6 +168,10 @@ namespace Survival.Domain.Runner
         public int DailyGiftCap { get; }
         public Dictionary<string, double> GiftMean { get; } = new(StringComparer.Ordinal);
         public Dictionary<string, int> QuestRewards { get; } = new(StringComparer.Ordinal);
+
+        /// <summary>The power-pack ladder (null: no packs, every profile plays free).</summary>
+        public PowerPackCatalog? Packs { get; }
+        public IReadOnlyDictionary<string, PowerPackRow> PackRows { get; } = new Dictionary<string, PowerPackRow>();
 
         /// <summary>Campaign heroes whose runner units the squad uses (lyra, rowan, oakenshield), in a stable order.</summary>
         public IReadOnlyList<string> SquadHeroes =>
@@ -320,7 +347,8 @@ namespace Survival.Domain.Runner
         double Gems,
         double GoldEarned,
         double FoodEarned,
-        double UsdSpent);
+        double UsdSpent,
+        int Banners = 0);
 
     /// <summary>What one profile's timeline says about one level.</summary>
     public sealed record RunnerLevelOutcome(
@@ -333,9 +361,12 @@ namespace Survival.Domain.Runner
 
     /// <summary>
     /// The deterministic player model: a session-by-session timeline from a fresh save. Each session: free income (farms,
-    /// gifts, one-time campaign / bounty / quest rewards in the first days, a payer's weekly gem pack), trainings tick on two
-    /// slots, star-ups and unlocks from shards, greedy level-ups (best squad power per cost, gold + food), rush with gems /
-    /// speed-ups, then one attempt at the next runner level (cleared if the squad's power ratio is at least 1) and the replays.
+    /// gifts, one-time campaign / bounty / quest rewards in the first days, the profile's power packs), trainings tick on two
+    /// slots, star-ups and unlocks from shards, Hero Tomes on the best hero, greedy level-ups (best squad power per cost,
+    /// gold + food), rush with gems / speed-ups, then one attempt at the next runner level (cleared if the squad's power
+    /// ratio, x the War Banner boost while charges are left, is at least 1; a first clear spends a charge) and the replays.
+    /// A "stuck" buy fires on the first failed attempt at or past its level; the player then keeps attempting in that
+    /// session until a level fails (the burst).
     /// </summary>
     public sealed class RunnerEconomy
     {
@@ -346,7 +377,9 @@ namespace Survival.Domain.Runner
         private readonly Dictionary<string, ModelHero> _heroes = new(StringComparer.Ordinal);
         private readonly List<RunnerUnitDef> _squadUnits;
         private double _gold, _food, _gems, _speedupMin, _goldEarned, _foodEarned, _usd;
-        private int _cleared;
+        private int _cleared, _tomes, _banners;
+        private bool _burst;
+        private readonly HashSet<RunnerBuy> _stuckDone = new();
 
         /// <param name="requiredScale">The uniform stat scale level n needs (from the sim: the least boost a dodging player wins with).</param>
         public RunnerEconomy(RunnerBalanceSources src, RunnerBalanceDef def, RunnerSpendProfile profile, Func<int, double> requiredScale)
@@ -369,10 +402,30 @@ namespace Survival.Domain.Runner
         /// <summary>The state at the end of every day of the last <see cref="Run"/> (index 0 = end of day 1).</summary>
         public List<RunnerModelSnapshot> Daily { get; } = new();
 
-        public RunnerLoadout Loadout() => Loadout(_heroes);
+        /// <summary>Every power pack bought in the last <see cref="Run"/>: (session, offer, level the player was on).</summary>
+        public List<(int Session, string OfferId, int Level)> Purchases { get; } = new();
+
+        /// <summary>The stuck buys of the last <see cref="Run"/>: the level that failed, the session, and how many new levels the burst cleared.</summary>
+        public List<(int Level, int Session, int Burst)> StuckBuys { get; } = new();
+
+        public int Tomes => _tomes;
+        public int Banners => _banners;
+
+        /// <summary>The squad now, boosted while a War Banner charge is held.</summary>
+        public RunnerLoadout Loadout() => Loadout(_heroes, _banners);
 
         public RunnerLoadout Loadout(IReadOnlyDictionary<string, ModelHero> heroes) =>
             RunnerLoadout.From(_src.Runner, _src.Campaign, id => heroes.TryGetValue(id, out var h) ? (h.Level, h.Stars) : null);
+
+        public RunnerLoadout Loadout(IReadOnlyDictionary<string, ModelHero> heroes, int banners)
+        {
+            var lo = Loadout(heroes);
+            return banners > 0 && _src.Packs != null ? lo.Boosted(_src.Runner, _src.Packs.BoostDamageMul, _src.Packs.BoostHpMul) : lo;
+        }
+
+        /// <summary>The loadout a snapshot fights with (its heroes, boosted if it held a banner).</summary>
+        public RunnerLoadout LoadoutOf(RunnerModelSnapshot s) =>
+            Loadout(s.Heroes.ToDictionary(h => h.Key, h => new ModelHero(h.Key) { Owned = true, Level = h.Value.Level, Stars = h.Value.Stars }), s.Banners);
 
         public double Ratio(int number) => Ratio(number, Loadout());
 
@@ -403,18 +456,42 @@ namespace Survival.Domain.Runner
                     atPace[k] = Snap(k);
                 }
 
-                for (var a = 0; a < _def.NewLevelsPerSession && _cleared < count; a++)
+                var burstFrom = -1;
+                for (var a = 0; (a < _def.NewLevelsPerSession || _burst) && _cleared < count; a++)
                 {
                     var next = _cleared + 1;
                     if (Ratio(next) < 1.0)
                     {
-                        break;
+                        if (!StuckBuy(k, next))
+                        {
+                            break;
+                        }
+
+                        burstFrom = _cleared;
+                        _burst = true;
+                        Spend();
+                        if (Ratio(next) < 1.0)
+                        {
+                            break;
+                        }
                     }
 
                     _cleared = next;
+                    if (_banners > 0)
+                    {
+                        _banners--;
+                    }
+
                     Win(next);
                     cleared[next] = (k, Snap(k));
                 }
+
+                if (burstFrom >= 0)
+                {
+                    StuckBuys.Add((burstFrom + 1, k, _cleared - burstFrom));
+                }
+
+                _burst = false;
 
                 for (var r = 0; r < _def.ReplaysPerSession && _cleared > 0; r++)
                 {
@@ -437,7 +514,7 @@ namespace Survival.Domain.Runner
             for (var n = 1; n <= count; n++)
             {
                 var snap = atPace[n]!;
-                var lo = RunnerLoadout.From(_src.Runner, _src.Campaign, id => snap.Heroes.TryGetValue(id, out var h) ? h : null);
+                var lo = LoadoutOf(snap);
                 var c = cleared[n];
                 outcomes.Add(new RunnerLevelOutcome(n, snap, Ratio(n, lo), c?.Session, c == null ? null : (c.Value.Session - 1) / (double)_def.SessionsPerDay, c?.Snap));
             }
@@ -454,7 +531,8 @@ namespace Survival.Domain.Runner
             _gems,
             _goldEarned,
             _foodEarned,
-            _usd);
+            _usd,
+            _banners);
 
         private void AddGold(double g)
         {
@@ -490,6 +568,65 @@ namespace Survival.Domain.Runner
             }
         }
 
+        /// <summary>A power pack: its gold and food go straight to heroes (bought for them), gems, speed-ups, tomes, banners.</summary>
+        private void Buy(int session, string offerId)
+        {
+            if (!_src.PackRows.TryGetValue(offerId, out var row))
+            {
+                throw new InvalidOperationException("Profile " + _profile.Id + " buys unknown power pack " + offerId);
+            }
+
+            _usd += row.Pack.Usd;
+            Purchases.Add((session, offerId, _cleared + 1));
+            foreach (var g in row.Grants)
+            {
+                switch (g.Key)
+                {
+                    case SurvIds.ResSoft: _gold += g.Value; break;
+                    case SurvIds.ResFood: _food += g.Value; break;
+                    case SurvIds.ResHard: _gems += g.Value; break;
+                    case SurvIds.ResSpeedupM: _speedupMin += g.Value; break;
+                    case SurvIds.ResHeroXp: _tomes += g.Value; break;
+                    case SurvIds.ResRunnerBoost: _banners += g.Value; break;
+                }
+            }
+        }
+
+        private void ScheduledBuys(int k)
+        {
+            var week = 7 * _def.SessionsPerDay;
+            var offset = (k - 1) % week;
+            foreach (var b in _profile.Buys)
+            {
+                if (b.Once && k == 1)
+                {
+                    Buy(k, b.OfferId);
+                }
+
+                for (var i = 0; i < b.PerWeek; i++)
+                {
+                    if (offset == (int)Math.Floor(i * week / (double)b.PerWeek))
+                    {
+                        Buy(k, b.OfferId);
+                    }
+                }
+            }
+        }
+
+        private bool StuckBuy(int k, int level)
+        {
+            foreach (var b in _profile.Buys)
+            {
+                if (b.WhenStuckFrom > 0 && level >= b.WhenStuckFrom && _stuckDone.Add(b))
+                {
+                    Buy(k, b.OfferId);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private void Income(int k, IReadOnlyList<StageDef> stages, IReadOnlyList<BountyDef> bounties)
         {
             var spd = _def.SessionsPerDay;
@@ -514,12 +651,8 @@ namespace Survival.Domain.Runner
                 Grant(bounties[day].Rewards);
             }
 
-            // A payer's gem pack once a week (first session of the week).
-            if (_profile.UsdPerWeek > 0 && (k - 1) % (7 * spd) == 0)
-            {
-                _gems += Math.Floor(_profile.UsdPerWeek * _def.GemsPerUsd);
-                _usd += _profile.UsdPerWeek;
-            }
+            // The profile's power packs (one-time on session 1, weekly ones spread over the week).
+            ScheduledBuys(k);
 
             var gifts = Math.Min(_def.GiftsPerDay, _src.DailyGiftCap) / (double)spd;
             foreach (var g in _src.GiftMean)
@@ -563,6 +696,7 @@ namespace Survival.Domain.Runner
             for (var pass = 0; pass < 8; pass++)
             {
                 var changed = StarsAndUnlocks();
+                changed |= ApplyTomes();
                 changed |= LevelUps();
                 changed |= Rush();
                 if (!changed)
@@ -616,13 +750,51 @@ namespace Survival.Domain.Runner
             return RunnerBalance.Strength(_src.Runner, _src.Runner.ByNumber(number), Loadout(copy)).Power;
         }
 
+        /// <summary>Hero Tomes: one level each on the hero it adds the most squad power to, up to the star cap (counting training).</summary>
+        private bool ApplyTomes()
+        {
+            var changed = false;
+            while (_tomes > 0)
+            {
+                var number = Math.Max(1, Math.Min(_src.Runner.Levels.Count, _cleared + 1));
+                var now = RunnerBalance.Strength(_src.Runner, _src.Runner.ByNumber(number), Loadout(_heroes)).Power;
+                ModelHero? best = null;
+                var bestGain = double.NegativeInfinity;
+                foreach (var h in _heroes.Values)
+                {
+                    if (!h.Owned || h.Level + (h.Training > 0 ? 1 : 0) >= Curve.LevelCap(h.Stars))
+                    {
+                        continue;
+                    }
+
+                    var gain = PowerWith(h.Id, h.Level + 1) - now;
+                    if (gain > bestGain)
+                    {
+                        best = h;
+                        bestGain = gain;
+                    }
+                }
+
+                if (best == null)
+                {
+                    return changed;
+                }
+
+                best.Level++;
+                _tomes--;
+                changed = true;
+            }
+
+            return changed;
+        }
+
         private bool LevelUps()
         {
             var changed = false;
             while (TrainingCount < _src.Campaign.TrainingSlots)
             {
                 var number = Math.Max(1, Math.Min(_src.Runner.Levels.Count, _cleared + 1));
-                var now = RunnerBalance.Strength(_src.Runner, _src.Runner.ByNumber(number), Loadout()).Power;
+                var now = RunnerBalance.Strength(_src.Runner, _src.Runner.ByNumber(number), Loadout(_heroes)).Power;
                 ModelHero? best = null;
                 var bestValue = 0.0;
                 foreach (var h in _heroes.Values)
@@ -648,14 +820,6 @@ namespace Survival.Domain.Runner
 
                 var gold = Curve.GoldFor(best.Level);
                 var food = Curve.FoodFor(best.Level);
-                // A payer tops up with resource crates; a free player saves up for the best pick.
-                while ((_gold < gold || _food < food) && _profile.UsdPerWeek > 0 && _gems >= _def.CrateGems)
-                {
-                    _gems -= _def.CrateGems;
-                    _gold += _def.CrateGold;
-                    _food += _def.CrateFood;
-                }
-
                 if (_gold < gold || _food < food)
                 {
                     return changed;
@@ -696,7 +860,6 @@ namespace Survival.Domain.Runner
             {
                 var minutes = Math.Ceiling(Math.Max(0, h.Training - _src.FreeFinishSeconds - (_speedupMin * 60)) / 60.0);
                 var cost = Math.Max(1, Math.Ceiling(minutes * _src.GemsPerMinute));
-                // Keep enough gems for a crate when crates are what the payer is short of.
                 if (_gems >= cost)
                 {
                     _gems -= cost;

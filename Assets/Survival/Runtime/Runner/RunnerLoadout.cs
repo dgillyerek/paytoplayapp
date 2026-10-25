@@ -70,6 +70,27 @@ namespace Survival.Domain.Runner
             return new RunnerLoadout(map);
         }
 
+        /// <summary>
+        /// This loadout with every hero unit's damage x <paramref name="damageMul"/> and HP x <paramref name="hpMul"/> (a War
+        /// Banner charge, power_packs.json runner_boost). Units without a hero are not boosted.
+        /// </summary>
+        public RunnerLoadout Boosted(RunnerCatalog runner, double damageMul, double hpMul)
+        {
+            var map = new Dictionary<string, RunnerUnitBoost>(StringComparer.Ordinal);
+            foreach (var u in runner.Units.Values)
+            {
+                if (u.HeroId.Length == 0)
+                {
+                    continue;
+                }
+
+                var b = For(u.Id);
+                map[u.Id] = new RunnerUnitBoost((float)(b.DamageMul * damageMul), (float)(b.HpMul * hpMul));
+            }
+
+            return new RunnerLoadout(map);
+        }
+
         /// <summary>The loadout of the heroes in <paramref name="roster"/> (owned or not: an unowned hero is level 1, one star).</summary>
         public static RunnerLoadout From(RunnerCatalog runner, HeroRoster roster) =>
             From(runner, roster.Catalog, id => roster.Get(id) is { } p ? (p.Level, p.Stars) : null);

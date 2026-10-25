@@ -45,6 +45,9 @@ namespace Survival.Domain.Ids
         public const string ResWood = "res.wood";
         public const string ResFood = "res.food";
 
+        /// <summary>War Banner charges: a runner squad boost, one charge per new runner level cleared (power_packs.json).</summary>
+        public const string ResRunnerBoost = "res.runner_boost";
+
         public const string BuildingHq = "building.hq";
         public const string BuildingBarracks = "building.barracks";
         public const string BuildingEconomy = "building.economy";
@@ -140,6 +143,12 @@ namespace Survival.Domain.Ids
         public const string SkuHardM = "sku.hard_m";
         public const string SkuHardL = "sku.hard_l";
         public const string SkuHardXl = "sku.hard_xl";
+        public const string SkuPowerT1 = "sku.power_t1";
+        public const string SkuPowerT2 = "sku.power_t2";
+        public const string SkuPowerT3 = "sku.power_t3";
+        public const string SkuPowerT4 = "sku.power_t4";
+        public const string SkuPowerT5 = "sku.power_t5";
+        public const string SkuPowerT6 = "sku.power_t6";
         public const string SkuSpeedupBundle = "sku.speedup_bundle";
         public const string SkuStarterPack = "sku.starter_pack";
         public const string SkuPassSeason = "sku.pass_season";
@@ -193,6 +202,16 @@ namespace Survival.Domain.Ids
         public const string OfferSpeedup15 = "offer.speedup_15";
         public const string OfferFreeGift = "offer.free_gift";
 
+        // Power-up pack ladder (power_packs.json): one-time starter, then tiers t1..t6 ($0.99 .. $39.99 in Theme A).
+        public const string StorePowerPacks = "store.power_packs";
+        public const string OfferPowerStarter = "offer.power_starter";
+        public const string OfferPowerT1 = "offer.power_t1";
+        public const string OfferPowerT2 = "offer.power_t2";
+        public const string OfferPowerT3 = "offer.power_t3";
+        public const string OfferPowerT4 = "offer.power_t4";
+        public const string OfferPowerT5 = "offer.power_t5";
+        public const string OfferPowerT6 = "offer.power_t6";
+
         public const string GiftSchedulerFree = "gift.scheduler.free";
         public const string GiftGold = "gift.gold";
         public const string GiftSpeedup5 = "gift.speedup_5";
@@ -210,11 +229,16 @@ namespace Survival.Domain.Ids
             QuestStarterCollect, QuestStarterGather, QuestStarterUpgradeHq
         };
 
-        public static readonly IReadOnlyList<string> Stores = new[] { StoreGemShop };
+        public static readonly IReadOnlyList<string> Stores = new[] { StoreGemShop, StorePowerPacks };
 
         public static readonly IReadOnlyList<string> Offers = new[]
         {
             OfferGemsS, OfferGemsM, OfferSpeedup15, OfferFreeGift
+        };
+
+        public static readonly IReadOnlyList<string> PowerOffers = new[]
+        {
+            OfferPowerStarter, OfferPowerT1, OfferPowerT2, OfferPowerT3, OfferPowerT4, OfferPowerT5, OfferPowerT6
         };
 
         public static readonly IReadOnlyList<string> Gifts = new[]
@@ -231,7 +255,7 @@ namespace Survival.Domain.Ids
         public static readonly IReadOnlyList<string> Resources = new[]
         {
             ResEnergy, ResSoft, ResHard, ResSpeedupM, ResHeroXp, ResAllianceGift, ResEventScore,
-            ResStone, ResWood, ResFood
+            ResStone, ResWood, ResFood, ResRunnerBoost
         };
 
         public static readonly IReadOnlyList<string> Buildings = new[]

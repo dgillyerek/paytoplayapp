@@ -1,0 +1,28 @@
+{
+  "_doc": "Power-up pack ladder (store.power_packs in stores.json holds each pack's sku and grants; the theme pack's store/products.json maps the sku to its store product id and price label). This file adds what the store does not know: the reference USD price of each tier (for the value maths only; the shown price is the theme's price_label), one-time offers, the gem-equivalent rates behind the '+X% value' labels, and what a War Banner charge does in the runner. tests/Survival.Domain.Tests/PowerPackTests.cs, docs/runner_balance.md.",
+  "store": "store.power_packs",
+  "baseline": "offer.power_t1",
+  "value_rates": {
+    "_invented": "Gem-equivalent value of one unit, for the '+X% value' labels and the value-per-dollar test. res.speedup_m = 1 gem is the real rush rate (base_economy.json rush.gems_per_minute); the rest are placeholders Derek has to confirm.",
+    "res.hard": 1,
+    "res.speedup_m": 1,
+    "res.soft": 0.002,
+    "res.food": 0.004,
+    "res.hero_xp": 250,
+    "res.runner_boost": 60
+  },
+  "runner_boost": {
+    "_invented": "One War Banner charge: every squad unit +10% damage and +10% HP for runner runs; one charge is spent per new runner level cleared while charges are left (losses and replays are free).",
+    "damage_pct": 10,
+    "hp_pct": 10
+  },
+  "packs": [
+    { "offer": "offer.power_starter", "usd": 1.99, "one_time": true },
+    { "offer": "offer.power_t1", "usd": 0.99 },
+    { "offer": "offer.power_t2", "usd": 1.99 },
+    { "offer": "offer.power_t3", "usd": 4.99 },
+    { "offer": "offer.power_t4", "usd": 9.99 },
+    { "offer": "offer.power_t5", "usd": 19.99 },
+    { "offer": "offer.power_t6", "usd": 39.99 }
+  ]
+}

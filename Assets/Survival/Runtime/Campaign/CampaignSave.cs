@@ -9,7 +9,8 @@ namespace Survival.Domain.Campaign
 {
     /// <summary>
     /// Save data for heroes and battles (survival_save.json): wallet balances, every hero's owned / level / stars /
-    /// shards, running training timers (absolute clock seconds), cleared stages, wins, bounty step.
+    /// shards, running training timers (absolute clock seconds), cleared stages, wins, bounty step, the runner level
+    /// reached and the one-time store offers bought.
     /// </summary>
     public static class CampaignSave
     {
@@ -70,6 +71,16 @@ namespace Survival.Domain.Campaign
             w.Field("battles", s.Battles);
             w.Field("bounty", s.BountyIndex);
             w.Field("runner_unlocked", s.RunnerUnlocked);
+            w.Key("bought_once");
+            w.BeginArray();
+            var bought = new List<string>(s.BoughtOnce);
+            bought.Sort(StringComparer.Ordinal);
+            foreach (var b in bought)
+            {
+                w.Value(b);
+            }
+
+            w.EndArray();
             w.End();
             return w.ToString();
         }
@@ -141,6 +152,16 @@ namespace Survival.Domain.Campaign
 
             s.RestoreCounters(CampaignCatalog.Int(o, "wins", 0), CampaignCatalog.Int(o, "battles", 0), CampaignCatalog.Int(o, "bounty", 0), cleared);
             s.RestoreRunner(CampaignCatalog.Int(o, "runner_unlocked", 1));
+            var once = new List<string>();
+            foreach (var b in CampaignCatalog.Items(o, "bought_once"))
+            {
+                if (b is JsonNode.Str bs)
+                {
+                    once.Add(bs.Value);
+                }
+            }
+
+            s.RestoreBought(once);
             return true;
         }
     }

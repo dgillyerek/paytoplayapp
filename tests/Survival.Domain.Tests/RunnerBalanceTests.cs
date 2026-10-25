@@ -8,7 +8,8 @@ namespace Survival.Domain.Tests;
 
 /// <summary>
 /// The 50-level runner balance, as tests. BalanceReport (RunnerBalanceModel.cs) sims every level to find the power it
-/// needs, plays each spend profile (free / light / whale, runner_balance.json) through the campaign economy, and sims
+/// needs, plays each spend profile (free / light / mid / whale / stuck_39, runner_balance.json: what each buys from the
+/// power-pack ladder) through the campaign economy, and sims
 /// each level again with the squad that profile has when it gets there. These tests hold the design targets:
 ///   L1-30: a free player who keeps upgrading clears every level on schedule, with margin.
 ///   L31-50: the free player hits a wall at about L31 and from there falls further behind; payers get through.
@@ -41,7 +42,11 @@ public sealed class RunnerBalanceTests
         _out.WriteLine("csv: " + csv);
         _out.WriteLine(r.Table());
         Assert.Equal(50, r.Levels);
-        Assert.Equal(new[] { "free", "light", "whale" }, r.Def.Profiles.Select(p => p.Id).ToArray());
+        Assert.Equal(new[] { "free", "light", "mid", "whale", "stuck_39" }, r.Def.Profiles.Select(p => p.Id).ToArray());
+        foreach (var p in r.Def.Profiles)
+        {
+            _out.WriteLine($"{p.Id,-9} ${p.UsdPerWeek(r.Src.Packs!):0.00}/week  wall L{r.Wall(p.Id)}  L50 day {r.Row(p.Id, 50).ClearedDay?.ToString("0.0", CultureInfo.InvariantCulture) ?? "never"}  spent ${r.Rows[p.Id][^1].UsdSpent:0.00}");
+        }
         Assert.All(r.Rows.Values, rows => Assert.Equal(r.Levels, rows.Count));
     }
 
@@ -98,23 +103,38 @@ public sealed class RunnerBalanceTests
     }
 
     [Fact]
-    public void Paying_gets_through_the_last_20_much_sooner()
+    public void Paying_moves_the_wall_and_gets_through_the_last_20_much_sooner()
     {
         var r = R;
         double Day(string p, int n) => r.Row(p, n).ClearedDay ?? double.PositiveInfinity;
+        var ladder = new[] { "free", "light", "mid", "whale" };
         for (var n = 1; n <= r.Levels; n++)
         {
-            Assert.True(Day("light", n) <= Day("free", n) + 1e-6, $"L{n}: light day {Day("light", n)} after free {Day("free", n)}");
-            Assert.True(Day("whale", n) <= Day("light", n) + 1e-6, $"L{n}: whale day {Day("whale", n)} after light {Day("light", n)}");
+            for (var i = 1; i < ladder.Length; i++)
+            {
+                Assert.True(Day(ladder[i], n) <= Day(ladder[i - 1], n) + 1e-6, $"L{n}: {ladder[i]} day {Day(ladder[i], n)} after {ladder[i - 1]} {Day(ladder[i - 1], n)}");
+            }
         }
 
-        // The whale ($49.99 a week) clears the wall levels on schedule and L50 within four months, at least 4x sooner than free.
-        Assert.True(r.Wall("whale") > r.Wall("free") + 3, $"whale wall L{r.Wall("whale")}, free L{r.Wall("free")}");
-        Assert.True(Day("whale", 50) <= 120, $"whale L50 day {Day("whale", 50)}");
-        Assert.True(Day("whale", 50) * 4 <= Day("free", 50), $"whale L50 day {Day("whale", 50)}, free {Day("free", 50)}");
+        // What they spend a week from the ladder: light $4.99, mid $19.99, whale two $39.99 packs.
+        var packs = r.Src.Packs!;
+        Assert.Equal(4.99, r.Def.Profile("light").UsdPerWeek(packs), 2);
+        Assert.Equal(19.99, r.Def.Profile("mid").UsdPerWeek(packs), 2);
+        Assert.True(r.Def.Profile("whale").UsdPerWeek(packs) >= 2 * 39.99 - 1e-6);
 
-        // Light ($4.99 a week) is in between: clears L50 within the modelled years, sooner than free.
-        Assert.True(Day("light", 50) < Day("free", 50), $"light L50 day {Day("light", 50)}");
+        // Each step up the ladder moves the at-pace wall: light a few levels, mid further, the whale past L50.
+        Assert.InRange(r.Wall("light"), r.Wall("free") + 2, r.Wall("free") + 5);
+        Assert.InRange(r.Wall("mid"), r.Wall("light") + 2, 45);
+        Assert.Equal(r.Levels + 1, r.Wall("whale"));
+
+        // The whale clears L50 within a month (no later than about the free schedule plus two weeks), far sooner than free.
+        Assert.True(Day("whale", 50) <= 30, $"whale L50 day {Day("whale", 50)}");
+        Assert.True(Day("whale", 50) * 20 <= Day("free", 50), $"whale L50 day {Day("whale", 50)}, free {Day("free", 50)}");
+
+        // Mid within about two months, light within about three, both much sooner than free.
+        Assert.True(Day("mid", 50) <= 60, $"mid L50 day {Day("mid", 50)}");
+        Assert.True(Day("light", 50) <= 120, $"light L50 day {Day("light", 50)}");
+        Assert.True(Day("light", 50) * 4 <= Day("free", 50), $"light L50 day {Day("light", 50)}, free {Day("free", 50)}");
     }
 
     [Fact]

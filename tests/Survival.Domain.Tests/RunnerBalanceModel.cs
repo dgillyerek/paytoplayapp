@@ -52,6 +52,11 @@ public sealed class BalanceReport
     public required Dictionary<string, List<BalanceRow>> Rows { get; init; }
     public required Dictionary<string, List<RunnerLevelOutcome>> Timelines { get; init; }
 
+    /// <summary>The economy of each profile's run (purchases, stuck buys).</summary>
+    public required Dictionary<string, RunnerEconomy> Economies { get; init; }
+
+    public required RunnerBalanceSources Src { get; init; }
+
     public int Levels => Runner.Levels.Count;
 
     public BalanceRow Row(string profile, int level) => Rows[profile][level - 1];
@@ -70,7 +75,9 @@ public sealed class BalanceReport
             runner,
             File.ReadAllText(Path.Combine(dir, "base_economy.json")),
             File.ReadAllText(Path.Combine(dir, "gifts.json")),
-            File.ReadAllText(Path.Combine(dir, "quests.json")));
+            File.ReadAllText(Path.Combine(dir, "quests.json")),
+            File.ReadAllText(Path.Combine(dir, "stores.json")),
+            File.ReadAllText(Path.Combine(dir, "power_packs.json")));
     }
 
     public static RunnerBalanceDef LoadDef() => RunnerBalanceDef.Parse(File.ReadAllText(Path.Combine(TestPaths.CatalogDir, RunnerBalanceDef.FileName)));
@@ -137,6 +144,7 @@ public sealed class BalanceReport
         var byDay = new Dictionary<string, List<(int, double, string, double)>>();
         var rows = new Dictionary<string, List<BalanceRow>>();
         var timelines = new Dictionary<string, List<RunnerLevelOutcome>>();
+        var economies = new Dictionary<string, RunnerEconomy>();
         foreach (var p in d.Profiles)
         {
             var eco = new RunnerEconomy(src, d, p, k => Math.Sqrt(reqPower[k]));
@@ -147,16 +155,17 @@ public sealed class BalanceReport
             byDay[p.Id] = ReportDays.Where(day => day <= full.Daily.Count).Select(day =>
             {
                 var snap = full.Daily[day - 1];
-                var lo = full.Loadout(snap.Heroes.ToDictionary(h => h.Key, h => new ModelHero(h.Key) { Owned = true, Level = h.Value.Level, Stars = h.Value.Stars }));
+                var lo = full.LoadoutOf(snap);
                 return (day, RunnerBalance.Strength(c, refLevel, lo).Power, HeroText(snap.Heroes), snap.UsdSpent);
             }).ToList();
             timelines[p.Id] = tl;
+            economies[p.Id] = eco;
             var outRows = new BalanceRow[n];
             Parallel.For(0, n, i =>
             {
                 var o = tl[i];
                 var level = c.ByNumber(o.Number);
-                var lo = eco.Loadout(o.AtPace.Heroes.ToDictionary(h => h.Key, h => new ModelHero(h.Key) { Owned = true, Level = h.Value.Level, Stars = h.Value.Stars }));
+                var lo = eco.LoadoutOf(o.AtPace);
                 var st = RunnerBalance.Strength(c, level, lo);
                 var run = Sim(c, level, lo);
                 outRows[i] = new BalanceRow(
@@ -179,7 +188,7 @@ public sealed class BalanceReport
             rows[p.Id] = outRows.ToList();
         }
 
-        return new BalanceReport { Runner = c, Def = d, RequiredScale = req, RequiredPower = reqPower, Rows = rows, Timelines = timelines, PowerByDay = byDay };
+        return new BalanceReport { Runner = c, Def = d, RequiredScale = req, RequiredPower = reqPower, Rows = rows, Timelines = timelines, PowerByDay = byDay, Economies = economies, Src = src };
     }
 
     public static readonly int[] ReportDays = { 1, 3, 7, 10, 14, 21, 30, 45, 60, 90, 120, 180, 270, 365, 730, 1095 };

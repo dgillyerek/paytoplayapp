@@ -27,7 +27,8 @@
     "res.event_score",
     "res.stone",
     "res.wood",
-    "res.food"
+    "res.food",
+    "res.runner_boost"
   ],
   "buildings": [
     "building.hq",
@@ -103,6 +104,12 @@
     "sku.hard_m",
     "sku.hard_l",
     "sku.hard_xl",
+    "sku.power_t1",
+    "sku.power_t2",
+    "sku.power_t3",
+    "sku.power_t4",
+    "sku.power_t5",
+    "sku.power_t6",
     "sku.speedup_bundle",
     "sku.starter_pack",
     "sku.pass_season"
@@ -117,13 +124,21 @@
     "quest.objective.reach_level"
   ],
   "stores": [
-    "store.gem_shop"
+    "store.gem_shop",
+    "store.power_packs"
   ],
   "offers": [
     "offer.gems_s",
     "offer.gems_m",
     "offer.speedup_15",
-    "offer.free_gift"
+    "offer.free_gift",
+    "offer.power_starter",
+    "offer.power_t1",
+    "offer.power_t2",
+    "offer.power_t3",
+    "offer.power_t4",
+    "offer.power_t5",
+    "offer.power_t6"
   ],
   "gifts": [
     "gift.scheduler.free",

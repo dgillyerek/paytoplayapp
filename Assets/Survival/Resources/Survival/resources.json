@@ -9,6 +9,7 @@
     "res.event_score",
     "res.stone",
     "res.wood",
-    "res.food"
+    "res.food",
+    "res.runner_boost"
   ]
 }

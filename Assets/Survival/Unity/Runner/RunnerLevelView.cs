@@ -9,6 +9,7 @@ using Survival.Domain.Economy;
 using Survival.Domain.Flavor;
 using Survival.Domain.Roster;
 using Survival.Domain.Runner;
+using Survival.Domain.Store;
 using Survival.Domain.Theme;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -461,7 +462,8 @@ namespace Survival.Unity
 
         /// <summary>
         /// The trained heroes in survival_save.json carried into the run (RunnerLoadout: each runner unit's damage and HP
-        /// scale with its campaign hero's level and stars). No save, or an unreadable one: the untrained JSON numbers.
+        /// scale with its campaign hero's level and stars, x the War Banner boost while a charge is held). No save, or an
+        /// unreadable one: the untrained JSON numbers.
         /// </summary>
         private static RunnerLoadout SavedLoadout(RunnerCatalog runner)
         {
@@ -475,7 +477,15 @@ namespace Survival.Unity
                 }
 
                 var campaign = new CampaignSession(CampaignCatalog.Parse(PlayerAssets.ReadAllText(catalogPath)), new Wallet(), new WallClock());
-                return campaign.Load(File.ReadAllText(savePath)) ? RunnerLoadout.From(runner, campaign.Roster) : RunnerLoadout.None;
+                if (!campaign.Load(File.ReadAllText(savePath)))
+                {
+                    return RunnerLoadout.None;
+                }
+
+                // A War Banner charge (power packs) boosts the squad; it is spent when a new level is cleared.
+                var packsPath = Path.Combine(SurvivalBootstrap.ResolveCatalogDir(), PowerPackCatalog.FileName);
+                var packs = PlayerAssets.FileExists(packsPath) ? PowerPackCatalog.Parse(PlayerAssets.ReadAllText(packsPath)) : null;
+                return RunnerBanner.Loadout(runner, campaign, packs);
             }
             catch (Exception ex)
             {

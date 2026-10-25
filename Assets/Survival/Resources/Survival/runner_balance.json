@@ -1,5 +1,5 @@
 {
-  "_doc": "Inputs of RunnerBalance, the economy + power model behind the runner's 50-level curve (tests/Survival.Domain.Tests/RunnerBalanceTests.cs, docs/runner_balance.md). Hero stats, level-up gold / food / timers, star caps, shards, runner rewards, campaign stages, bounties, quests, the free gift pool, farm output and the rush rate are read from the real game files. Every number in THIS file is a modelling assumption; the ones marked _invented are placeholders Derek has to confirm (pace, village income, the gem resource crate that does not exist in the store yet).",
+  "_doc": "Inputs of RunnerBalance, the economy + power model behind the runner's 50-level curve (tests/Survival.Domain.Tests/RunnerBalanceTests.cs, docs/runner_balance.md). Hero stats, level-up gold / food / timers, star caps, shards, runner rewards, campaign stages, bounties, quests, the free gift pool, farm output and the rush rate are read from the real game files. Every number in THIS file is a modelling assumption; the ones marked _invented are placeholders Derek has to confirm (pace, village income, how often each profile buys). What a power pack holds and costs is read from stores.json (store.power_packs) and power_packs.json.",
   "pace": {
     "_invented": "How a 'normal' free player plays: 3 sessions a day, each session tries the next runner level once and replays the best cleared level once (a modest replay count); the timeline stops after max_days.",
     "sessions_per_day": 3,
@@ -16,21 +16,15 @@
     "hero_gold_share": 0.75,
     "hero_food_share": 1.0
   },
-  "gems": {
-    "_source": "sku.hard_m: 500 gems for $4.99 (store pack products.json / stores.json offer.gems_m).",
-    "per_usd": 100.2,
-    "_invented_crate": "The only thing gems buy for heroes today is rush time (1 gem / minute) and hero unlocks; there is no gem -> gold / food offer. The model assumes a 'resource crate' offer: 100 gems -> 30000 gold + 15000 food. Without some such offer a payer cannot outpace the gold / food cost of training and the late wall is a wall for everyone.",
-    "crate_gems": 100,
-    "crate_gold": 30000,
-    "crate_food": 15000
-  },
   "greedy": {
     "_doc": "Best power per cost: cost = gold + food_value * food.",
     "food_value": 2.0
   },
   "profiles": [
-    { "id": "free", "usd_per_week": 0 },
-    { "id": "light", "usd_per_week": 4.99, "_invented": "one hard_m pack a week" },
-    { "id": "whale", "usd_per_week": 49.99, "_invented": "ten hard_m packs a week" }
+    { "id": "free", "buys": [] },
+    { "id": "light", "_invented": "about $5 a week: the $1.99 starter once, then the $4.99 Knight's Satchel every week", "buys": [ { "offer": "offer.power_starter", "once": true }, { "offer": "offer.power_t3", "per_week": 1 } ] },
+    { "id": "mid", "_invented": "about $20 a week: the starter once, then the $19.99 Warlord's Hoard every week", "buys": [ { "offer": "offer.power_starter", "once": true }, { "offer": "offer.power_t5", "per_week": 1 } ] },
+    { "id": "whale", "_invented": "about $80 a week: the starter once, then the $39.99 King's Treasury twice a week", "buys": [ { "offer": "offer.power_starter", "once": true }, { "offer": "offer.power_t6", "per_week": 2 } ] },
+    { "id": "stuck_39", "_invented": "a free player who buys ONE $39.99 King's Treasury the first time he fails a level from L31 on (the free wall), and nothing else", "buys": [ { "offer": "offer.power_t6", "when_stuck_from": 31 } ] }
   ]
 }
