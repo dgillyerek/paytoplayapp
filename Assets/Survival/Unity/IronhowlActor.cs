@@ -124,6 +124,22 @@ namespace Survival.Unity
                 return PlayClipOrTpose(IronhowlMotion.Attack3ThemePackRel, IronhowlMotion.Attack3PoseName, allowBareTpose: false);
             }
 
+            // Authored on his own skeleton (2026-10-24): ground pound, backhand sweep, shoulder charge.
+            if (string.Equals(poseName, IronhowlMotion.Attack4PoseName, System.StringComparison.Ordinal))
+            {
+                return PlayClipOrTpose(IronhowlMotion.Attack4ThemePackRel, IronhowlMotion.Attack4PoseName, allowBareTpose: false);
+            }
+
+            if (string.Equals(poseName, IronhowlMotion.Attack5PoseName, System.StringComparison.Ordinal))
+            {
+                return PlayClipOrTpose(IronhowlMotion.Attack5ThemePackRel, IronhowlMotion.Attack5PoseName, allowBareTpose: false);
+            }
+
+            if (string.Equals(poseName, IronhowlMotion.Attack6PoseName, System.StringComparison.Ordinal))
+            {
+                return PlayClipOrTpose(IronhowlMotion.Attack6ThemePackRel, IronhowlMotion.Attack6PoseName, allowBareTpose: false);
+            }
+
             Debug.LogWarning("Ironhowl unknown pose. " + poseName);
             return false;
         }

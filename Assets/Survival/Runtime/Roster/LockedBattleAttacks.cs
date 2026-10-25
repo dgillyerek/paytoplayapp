@@ -160,11 +160,12 @@ namespace Survival.Domain.Roster
     /// Attack rotation: each fighter plays attack 1, rest gap, attack 2, rest gap, attack 3,
     /// rest gap, and repeats. Every locked fighter now has three (the creatures since 2026-10-19,
     /// see <see cref="CreatureBattleAttacks"/>); a fighter with one attack just loops it, which
-    /// is exactly the single-attack cycle the battle had before.
+    /// is exactly the single-attack cycle the battle had before. Ironhowl has six: his three Mixamo
+    /// attacks, then the ground pound, backhand sweep and shoulder charge authored 2026-10-24.
     /// </summary>
     public static class LockedBattleRotation
     {
-        public const int MaxAttacks = 3;
+        public const int MaxAttacks = 6;
 
         public static int Count(LockedBattleFighter fighter)
         {

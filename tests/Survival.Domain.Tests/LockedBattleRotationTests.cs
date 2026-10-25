@@ -51,11 +51,12 @@ public sealed class LockedBattleRotationTests
     }
 
     [Fact]
-    public void Every_fighter_in_the_locked_battle_has_three_attacks()
+    public void Every_fighter_in_the_locked_battle_has_three_attacks_and_ironhowl_six()
     {
         foreach (var f in LockedBattleRoster.All)
         {
-            Assert.True(LockedBattleRotation.Count(f) == 3, f.Name);
+            var expected = f.Name == LockedBattleRoster.Ironhowl.Name ? 6 : 3;
+            Assert.True(LockedBattleRotation.Count(f) == expected, f.Name);
         }
     }
 
@@ -202,13 +203,13 @@ public sealed class LockedBattleRotationTests
     }
 
     [Fact]
-    public void Ironhowl_rotates_swipe_overhead_smash_claw_combo_from_his_own_mixamo_clips()
+    public void Ironhowl_rotates_swipe_overhead_smash_claw_combo_then_his_authored_moves()
     {
         var iron = LockedBattleRoster.Ironhowl;
         var profile = LockedBattleHits.Ironhowl;
-        Assert.Equal(3, LockedBattleRotation.Count(iron));
-        Assert.Equal(IronhowlMotion.AttackPoseNames, new[] { "attack", "attack2", "attack3" });
-        for (var i = 0; i < 3; i++)
+        Assert.Equal(6, LockedBattleRotation.Count(iron));
+        Assert.Equal(IronhowlMotion.AttackPoseNames, new[] { "attack", "attack2", "attack3", "attack4", "attack5", "attack6" });
+        for (var i = 0; i < 6; i++)
         {
             Assert.Equal(IronhowlMotion.AttackPoseNames[i], LockedBattleRotation.AttackAt(iron, i).PoseName);
         }
@@ -216,6 +217,9 @@ public sealed class LockedBattleRotationTests
         // Not Blightroot's mutant moves (Derek 2026-10-18).
         Assert.DoesNotContain("mutant", IronhowlMotion.Attack2FileName, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("mutant", IronhowlMotion.Attack3FileName, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("mutant", IronhowlMotion.Attack4FileName, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("mutant", IronhowlMotion.Attack5FileName, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("mutant", IronhowlMotion.Attack6FileName, StringComparison.OrdinalIgnoreCase);
         var root = FindRepoRoot();
         Assert.Empty(Directory.GetFiles(Path.Combine(root, "Assets", IronhowlMotion.ThemePackDir), "*mutant*"));
 
@@ -244,7 +248,7 @@ public sealed class LockedBattleRotationTests
             }
         }
 
-        Assert.Equal(new[] { (0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3) }, hits);
+        Assert.Equal(new[] { (0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (3, 0), (4, 0), (5, 0) }, hits);
     }
 
     [Fact]
