@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "defaults": { "volume": 0.8, "max_voices": 4, "min_gap": 0.03, "pitch_jitter": 0.04 },
+  "music_crossfade": 1.2,
+  "cues": {
+    "music.village":       { "file": "amb_village_loop.ogg",       "bus": "music", "loop": true, "volume": 0.70 },
+    "music.runner":        { "file": "mus_runner_march_loop.ogg",  "bus": "music", "loop": true, "volume": 0.55 },
+    "music.battle":        { "file": "mus_battle_loop.ogg",        "bus": "music", "loop": true, "volume": 0.55 },
+
+    "sting.boss_incoming": { "file": "sting_boss_incoming.ogg", "volume": 0.90, "max_voices": 1, "min_gap": 3.0, "pitch_jitter": 0 },
+    "jingle.win":          { "file": "jingle_win.ogg",          "volume": 0.90, "max_voices": 1, "min_gap": 2.0, "pitch_jitter": 0 },
+    "jingle.lose":         { "file": "jingle_lose.ogg",         "volume": 0.90, "max_voices": 1, "min_gap": 2.0, "pitch_jitter": 0 },
+
+    "sfx.shot.lyra":        { "file": "sfx_lyra_shot.ogg",         "volume": 0.70, "max_voices": 3, "min_gap": 0.06 },
+    "sfx.shot.rowan":       { "file": "sfx_rowan_shot.ogg",        "volume": 0.65, "max_voices": 3, "min_gap": 0.06 },
+    "sfx.shot.oakenshield": { "file": "sfx_oakenshield_throw.ogg", "volume": 0.65, "max_voices": 3, "min_gap": 0.06 },
+
+    "sfx.enemy.hit":        { "file": "sfx_enemy_hit.ogg",        "volume": 0.55, "max_voices": 4, "min_gap": 0.04, "pitch_jitter": 0.08 },
+    "sfx.enemy.death":      { "file": "sfx_enemy_death.ogg",      "volume": 0.65, "max_voices": 3, "min_gap": 0.05, "pitch_jitter": 0.08 },
+    "sfx.enemy.death_big":  { "file": "sfx_enemy_death_big.ogg",  "volume": 0.90, "max_voices": 1, "min_gap": 1.0, "pitch_jitter": 0 },
+    "sfx.enemy.projectile": { "file": "sfx_enemy_projectile.ogg", "volume": 0.50, "max_voices": 3, "min_gap": 0.08, "pitch_jitter": 0.06 },
+    "sfx.crate.hit":        { "file": "sfx_crate_hit.ogg",        "volume": 0.50, "max_voices": 3, "min_gap": 0.05, "pitch_jitter": 0.08 },
+
+    "sfx.hero.hurt":        { "file": "sfx_hero_hurt.ogg",     "volume": 0.70, "max_voices": 2, "min_gap": 0.15, "pitch_jitter": 0.06 },
+    "sfx.hero.death":       { "file": "sfx_hero_death.ogg",    "volume": 0.85, "max_voices": 1, "min_gap": 1.0, "pitch_jitter": 0 },
+    "sfx.follower.down":    { "file": "sfx_follower_down.ogg", "volume": 0.60, "max_voices": 2, "min_gap": 0.08 },
+    "sfx.follower.join":    { "file": "sfx_follower_join.ogg", "volume": 0.60, "max_voices": 2, "min_gap": 0.06 },
+
+    "sfx.pickup.pop":       { "file": "sfx_pickup_pop.ogg", "volume": 0.70, "max_voices": 3, "min_gap": 0.05 },
+    "sfx.powerup":          { "file": "sfx_powerup.ogg",    "volume": 0.70, "max_voices": 2, "min_gap": 0.15, "pitch_jitter": 0.02 },
+
+    "sfx.hazard.spikes":    { "file": "sfx_hazard_spikes.ogg", "volume": 0.70, "max_voices": 2, "min_gap": 0.10 },
+    "sfx.hazard.log":       { "file": "sfx_hazard_log.ogg",    "volume": 0.75, "max_voices": 2, "min_gap": 0.10 },
+    "sfx.hazard.fire":      { "file": "sfx_hazard_fire.ogg",   "volume": 0.70, "max_voices": 2, "min_gap": 0.10 },
+
+    "sfx.boss.quake_rumble":   { "file": "sfx_boss_quake_rumble.ogg",     "volume": 0.90, "max_voices": 1, "min_gap": 0.5, "pitch_jitter": 0 },
+    "sfx.boss.dodge_warning":  { "file": "sfx_boss_dodge_warning.ogg",    "volume": 0.80, "max_voices": 1, "min_gap": 0.5, "pitch_jitter": 0 },
+    "sfx.boss.growl":          { "file": "sfx_ironhowl_growl.ogg",        "volume": 0.80, "max_voices": 1, "min_gap": 0.4 },
+    "sfx.boss.punch":          { "file": "sfx_ironhowl_punch.ogg",        "volume": 0.80, "max_voices": 2, "min_gap": 0.10 },
+    "sfx.boss.ground_pound":   { "file": "sfx_ironhowl_ground_pound.ogg", "volume": 0.90, "max_voices": 1, "min_gap": 0.30 },
+    "sfx.boss.sweep":          { "file": "sfx_ironhowl_sweep.ogg",        "volume": 0.80, "max_voices": 1, "min_gap": 0.20 },
+    "sfx.boss.charge":         { "file": "sfx_ironhowl_charge.ogg",       "volume": 0.85, "max_voices": 1, "min_gap": 0.30 },
+
+    "sfx.impact.magic":     { "file": "sfx_magic_impact.ogg", "volume": 0.55, "max_voices": 3, "min_gap": 0.05, "pitch_jitter": 0.06 },
+    "sfx.impact.sword":     { "file": "sfx_sword_hit.ogg",    "volume": 0.55, "max_voices": 3, "min_gap": 0.05, "pitch_jitter": 0.06 },
+    "sfx.impact.arrow":     { "file": "sfx_arrow_hit.ogg",    "volume": 0.55, "max_voices": 3, "min_gap": 0.05, "pitch_jitter": 0.06 },
+
+    "ui.tap":               { "file": "ui_tap.ogg",            "volume": 0.45, "max_voices": 2, "min_gap": 0.05, "pitch_jitter": 0.03 },
+    "ui.deny":              { "file": "ui_deny.ogg",           "volume": 0.40, "max_voices": 1, "min_gap": 0.20, "pitch_jitter": 0 },
+    "ui.store_open":        { "file": "ui_store_open.ogg",     "volume": 0.60, "max_voices": 1, "min_gap": 0.50, "pitch_jitter": 0 },
+    "ui.gift":              { "file": "ui_gift_celebrate.ogg", "volume": 0.75, "max_voices": 1, "min_gap": 0.50, "pitch_jitter": 0 },
+    "ui.purchase_success":  { "file": "purchase_success.ogg",  "volume": 0.75, "max_voices": 1, "min_gap": 0.30, "pitch_jitter": 0 },
+
+    "eco.collect.food":     { "file": "collect_food.ogg",     "volume": 0.65, "max_voices": 3, "min_gap": 0.06 },
+    "eco.collect.gold":     { "file": "collect_gold.ogg",     "volume": 0.65, "max_voices": 3, "min_gap": 0.06 },
+    "eco.collect.resource": { "file": "collect_resource.ogg", "volume": 0.65, "max_voices": 3, "min_gap": 0.06 },
+    "eco.build_complete":   { "file": "build_complete.ogg",   "volume": 0.75, "max_voices": 1, "min_gap": 0.40, "pitch_jitter": 0 },
+    "eco.upgrade_start":    { "file": "upgrade_start.ogg",    "volume": 0.65, "max_voices": 2, "min_gap": 0.10 }
+  },
+  "runner_shots": {
+    "lyra": "sfx.shot.lyra",
+    "rowan": "sfx.shot.rowan",
+    "oakenshield": "sfx.shot.oakenshield",
+    "bonequill": "sfx.enemy.projectile",
+    "vespera": "sfx.enemy.projectile"
+  },
+  "runner_events": {
+    "Hit": "sfx.enemy.hit",
+    "Hit.box": "sfx.crate.hit",
+    "FoeKilled": "sfx.enemy.death",
+    "FoeKilled.big": "sfx.enemy.death_big",
+    "BoxBroken": "sfx.pickup.pop",
+    "FollowerJoined": "sfx.follower.join",
+    "FollowerLost": "sfx.follower.down",
+    "FollowerHit": "sfx.hero.hurt",
+    "HeroHit": "sfx.hero.hurt",
+    "Upgrade": "sfx.powerup",
+    "BossEngaged": "sting.boss_incoming",
+    "BossWindup": "sfx.boss.growl",
+    "BossSlam": "sfx.boss.ground_pound",
+    "BossQuakeWindup": "sfx.boss.dodge_warning",
+    "BossQuake": ["sfx.boss.quake_rumble", "sfx.boss.ground_pound"],
+    "Won": "jingle.win",
+    "Lost": ["sfx.hero.death", "jingle.lose"]
+  },
+  "runner_hazards": {
+    "spikes": "sfx.hazard.spikes",
+    "log": "sfx.hazard.log",
+    "fire": "sfx.hazard.fire"
+  },
+  "battle_impacts": {
+    "FireBurst": "sfx.impact.magic",
+    "StormCrackle": "sfx.impact.magic",
+    "ShadowRake": "sfx.enemy.hit",
+    "IronClaw": "sfx.boss.punch",
+    "VoidFireBreath": "sfx.impact.magic",
+    "ArcaneConjure": "sfx.impact.magic",
+    "StaffLight": "sfx.impact.magic",
+    "LeafEarth": "sfx.impact.arrow",
+    "SwordSteel": "sfx.impact.sword",
+    "BlightRot": "sfx.enemy.hit",
+    "RangerArrow": "sfx.impact.arrow",
+    "BoneShard": "sfx.impact.arrow",
+    "HeroStaffSweep": "sfx.impact.magic",
+    "HeroArcaneNova": "sfx.impact.magic",
+    "GroundSlam": "sfx.boss.ground_pound",
+    "HeroRootSnare": "sfx.enemy.hit",
+    "VillainShadowLash": "sfx.impact.magic",
+    "VillainHexRain": "sfx.impact.magic",
+    "HeroShieldShock": "sfx.impact.sword",
+    "WingGust": "sfx.enemy.hit",
+    "StompQuake": "sfx.boss.ground_pound",
+    "ClawWave": "sfx.enemy.hit"
+  },
+  "battle_bosses": ["Ironhowl"],
+  "battle_shots": {
+    "Lyra": "sfx.shot.lyra",
+    "Rowan": "sfx.shot.rowan",
+    "Oakenshield": "sfx.shot.oakenshield",
+    "Bonequill": "sfx.enemy.projectile",
+    "Vespera": "sfx.enemy.projectile",
+    "Ashwyrm": "sfx.enemy.projectile",
+    "Emberfang": "sfx.enemy.projectile",
+    "Stormcrest": "sfx.enemy.projectile"
+  },
+  "boss_attacks": {
+    "claw swipe": "sfx.boss.punch",
+    "claw combo": "sfx.boss.punch",
+    "overhead smash": "sfx.boss.ground_pound",
+    "ground pound": "sfx.boss.ground_pound",
+    "backhand sweep": "sfx.boss.sweep",
+    "shoulder charge": "sfx.boss.charge"
+  },
+  "economy_collect": {
+    "food": "eco.collect.food",
+    "soft": "eco.collect.gold",
+    "wood": "eco.collect.resource",
+    "stone": "eco.collect.resource"
+  }
+}

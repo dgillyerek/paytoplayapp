@@ -70,6 +70,9 @@ namespace Survival.Domain.Theme
         /// <summary>9-slice borders for <see cref="ArtFallback"/> images, from pack.json "art_fallback_slices".</summary>
         public IReadOnlyDictionary<string, ArtSlice> ArtFallbackSlices { get; private set; } = new Dictionary<string, ArtSlice>(StringComparer.Ordinal);
 
+        /// <summary>Pack-relative path of the theme's sound config (pack.json "audio"), "" when the pack ships no sound.</summary>
+        public string AudioConfigPath { get; private set; } = "";
+
         public string StringOr(string key, string fallback) =>
             Strings.TryGetValue(key, out var value) && !string.IsNullOrEmpty(value) ? value : fallback;
 
@@ -90,7 +93,8 @@ namespace Survival.Domain.Theme
             {
                 ArtSlices = ReadSlices(pack, "art_slices"),
                 ArtFallback = ReadArtMap(pack, "art_fallback"),
-                ArtFallbackSlices = ReadSlices(pack, "art_fallback_slices")
+                ArtFallbackSlices = ReadSlices(pack, "art_fallback_slices"),
+                AudioConfigPath = pack.TryGet("audio", out var au) && au is JsonNode.Str aus ? aus.Value : ""
             };
         }
 

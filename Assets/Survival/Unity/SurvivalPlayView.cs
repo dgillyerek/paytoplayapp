@@ -97,6 +97,7 @@ namespace Survival.Unity
             }
 
             SurvivalVisuals.EnsureEventSystem();
+            SurvivalAudio.RequestMusic(this, Survival.Domain.Audio.AudioCues.MusicVillage);
             _root = SurvivalVisuals.Canvas(transform, "SurvivalPlayCanvas", 40);
             var pack = Session.Pack;
             var hud = pack.Hud;

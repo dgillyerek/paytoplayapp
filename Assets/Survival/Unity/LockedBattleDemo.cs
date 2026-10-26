@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using Survival.Domain.Audio;
+using Survival.Domain.Campaign;
 using Survival.Domain.Enemies;
 using Survival.Domain.Heroes;
 using Survival.Domain.Roster;
@@ -449,6 +451,7 @@ namespace Survival.Unity
             var from = bone != null ? bone.position : attacker.Slot.position + (Vector3.up * 1.4f);
             var to = ShotContact(attacker, attackIndex, hitIndex);
             LockedBattleImpact.SpawnFlight(from, to, attack.FlightFrames / (float)BlenderRigAttackSpec.FrameRate, attack.FlightLoftMetres, attacker.Core, attacker.Glow);
+            SurvivalAudio.Play(AudioEventMap.BattleLaunch(SurvivalAudio.Config, attacker.Data.Name));
         }
 
         /// <summary>Spawns the attacker's impact burst at the contact and starts the defender's reaction.</summary>
@@ -463,6 +466,7 @@ namespace Survival.Unity
             var travel = target.Slot.position - attacker.Slot.position;
             travel.y = 0f;
             LockedBattleImpact.Spawn(LockedBattleRotation.Impact(attacker.Data, attacker.Profile, attackIndex), contact, travel, attacker.Core, attacker.Glow, attacker.Edge, attacker.BattleScale);
+            PlayHitSound(attacker, target, attackIndex, LockedBattleRotation.Impact(attacker.Data, attacker.Profile, attackIndex));
             _camera?.Shake(LockedBattleRotation.ShakeMetres(attacker.Data, attacker.Profile, attackIndex));
             var away = target.Slot.InverseTransformDirection(travel);
             away.y = 0f;
@@ -658,8 +662,10 @@ namespace Survival.Unity
 
             // Fight from Battle Setup: the handed-off lineup (heroes vs villains per lane, stats from their levels);
             // nothing pending keeps the standalone demo below.
+            SurvivalAudio.RequestMusic(this, AudioCues.MusicBattle);
             if (BootConfigured())
             {
+                PlayBossSting();
                 return;
             }
 
@@ -687,6 +693,39 @@ namespace Survival.Unity
             _camera.SetField(FieldBounds());
             BuildHud();
             Restart();
+            PlayBossSting();
+        }
+
+        private void OnDestroy()
+        {
+            SurvivalAudio.ReleaseMusic(this);
+        }
+
+        // ---------- sound (presentation only) ----------
+
+        private void PlayBossSting()
+        {
+            foreach (var f in _fighters)
+            {
+                if (AudioEventMap.IsBoss(SurvivalAudio.Config, f.Data.Name))
+                {
+                    SurvivalAudio.Play(AudioCues.BossIncoming);
+                    return;
+                }
+            }
+        }
+
+        private static bool OnHeroSide(Fighter f) =>
+            f.Unit != null ? f.Unit.Side == CampaignSide.Hero : f.Data.Side == BattleSide.Hero;
+
+        private static void PlayHitSound(Fighter attacker, Fighter target, int attackIndex, BattleImpactKind impact)
+        {
+            var label = LockedBattleRotation.AttackAt(attacker.Data, attackIndex).Label;
+            SurvivalAudio.Play(AudioEventMap.BattleImpact(SurvivalAudio.Config, attacker.Data.Name, label, impact));
+            if (OnHeroSide(target))
+            {
+                SurvivalAudio.Play(AudioCues.HeroHurt);
+            }
         }
 
 
@@ -1021,6 +1060,7 @@ namespace Survival.Unity
                     ProjectileHit(captured, from, to, out contact);
                 driver.Blocker = Block;
                 driver.Impact = (track, contact) => LandHit(captured, contact);
+                driver.Launched = track => SurvivalAudio.Play(AudioEventMap.BattleLaunch(SurvivalAudio.Config, captured.Data.Name));
                 // The host's own position: it carries the ground planting (and any reach slide), so a
                 // shot leaves the mouth or hand where the body is drawn.
                 driver.LaunchFrame = () => captured.Slot.localToWorldMatrix

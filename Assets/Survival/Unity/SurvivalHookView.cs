@@ -734,6 +734,7 @@ namespace Survival.Unity
                 return;
             }
 
+            SurvivalAudio.Play(Survival.Domain.Audio.AudioEventMap.Collect(SurvivalAudio.Config, res));
             FloatText(from, "+" + ChipWallet.FormatGrouped(got) + " " + ResName(res), ResColor(res));
             StartCoroutine(SparkBurst(from, ResColor(res), 10, 0.05f));
             StartCoroutine(FlyReward(res, from, 6));
@@ -771,6 +772,7 @@ namespace Survival.Unity
             var block = _hook.Base.CheckUpgrade(plotId);
             if (block == UpgradeBlock.None && _hook.Base.TryStartUpgrade(plotId))
             {
+                SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UpgradeStart);
                 Toast(NormCenterOf(card.Root), S("hook.upgrading", "Upgrading"), SurvivalVisuals.PinBuild);
                 StartCoroutine(SparkBurst(NormCenterOf(card.Root), SurvivalVisuals.PinBuild, 10, 0.06f));
                 RefreshCards();
@@ -778,6 +780,7 @@ namespace Survival.Unity
             }
 
             var nextLevel = _hook.Base.Find(plotId)?.Next?.Level ?? 0;
+            SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiDeny);
             Toast(NormCenterOf(card.Root), BlockLabel(block, nextLevel, S("hook.need_more", "Not enough resources")), Warn);
             StartCoroutine(Shake(card.Root));
         }
@@ -1243,6 +1246,7 @@ namespace Survival.Unity
                 : _hook.Rush(plotId, out _);
             if (level <= 0)
             {
+                SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiDeny);
                 StartCoroutine(Shake(button));
                 Toast(NormCenterOf(button), S("hook.need_more", "Not enough resources"), Warn);
                 OpenShop();
@@ -1267,6 +1271,7 @@ namespace Survival.Unity
             }
 
             var panel = OpenSheet("GemShopSheet", 0.92f, 0.56f, S("store.gem_shop.title", "Gem Shop"));
+            SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiStoreOpen);
             if (panel == null)
             {
                 return;
@@ -1464,6 +1469,7 @@ namespace Survival.Unity
                     return;
                 }
 
+                SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiGift);
                 QueueCelebration(S("gift.claim.title", "Free Gift!"), new Dictionary<string, int> { [gift.Resource] = gift.Amount });
                 RefreshAll();
                 return;
@@ -1476,10 +1482,12 @@ namespace Survival.Unity
                 {
                     if (outcome.Ok)
                     {
+                        SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiPurchaseSuccess);
                         QueueCelebration(S(offer.Id + ".title", offer.Id), offer.Grants);
                     }
                     else
                     {
+                        SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiDeny);
                         Release(offer.Grants);
                         StartCoroutine(Shake(button));
                     }
@@ -1492,11 +1500,14 @@ namespace Survival.Unity
             Hold(offer.Grants);
             if (!_hook.Store.TryBuyWithCurrency(offer.Id))
             {
+                SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiDeny);
                 Release(offer.Grants);
                 StartCoroutine(Shake(button));
                 Toast(NormCenterOf(button), S("hook.need_more", "Not enough resources"), Warn);
                 return;
             }
+
+            SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiPurchaseSuccess);
 
             QueueCelebration(S(offer.Id + ".title", offer.Id), offer.Grants);
             RefreshAll();
