@@ -35,10 +35,10 @@ public sealed class VillageBuildTests
     }
 
     [Fact]
-    public void Menu_lists_farm_lumber_quarry_forge_with_cost_timer_and_castle_gated_counts()
+    public void Menu_lists_farm_lumber_quarry_forge_mine_with_cost_timer_and_castle_gated_counts()
     {
         var types = Hook.Catalog().Buildables;
-        Assert.Equal(new[] { "farm", "lumber", "quarry", "forge" }, types.Select(t => t.Type));
+        Assert.Equal(new[] { "farm", "lumber", "quarry", "forge", "mine" }, types.Select(t => t.Type));
         foreach (var t in types)
         {
             Assert.NotEmpty(t.BuildCost);

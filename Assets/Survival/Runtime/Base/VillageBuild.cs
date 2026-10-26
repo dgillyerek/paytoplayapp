@@ -82,13 +82,14 @@ namespace Survival.Domain.Base
     }
 
     /// <summary>
-    /// Build: place a new Farm / Lumber Mill / Quarry / Forge on a free village spot. Spends the build cost, then
+    /// Build: place a new Farm / Lumber Mill / Quarry / Forge / Gold Mine on a free village spot. Spends the build cost, then
     /// runs the construction on the shared build queue (same timer id as an upgrade, so free finish / gem rush /
-    /// speed-ups work unchanged). The new building opens at Lv 1 and upgrades like any other, up to
-    /// <see cref="MaxLevel"/> and never past the Castle level.
+    /// speed-ups work unchanged). The new building opens at Lv 1 and upgrades like any other, through every level its
+    /// data lists (<see cref="MaxLevel"/> for Farm / Lumber Mill / Quarry / Forge, 10 for the Gold Mine) and never past the Castle level.
     /// </summary>
     public sealed class VillageBuild
     {
+        /// <summary>Top level of the Farm / Lumber Mill / Quarry / Forge (their data lists 6). A type's own top level is its level count.</summary>
         public const int MaxLevel = 6;
 
         private readonly BaseEconomy _base;
@@ -320,7 +321,7 @@ namespace Survival.Domain.Base
         private static BasePlotDef DefFor(BuildableDef t, string plotId)
         {
             var levels = new List<BuildingLevelDef>();
-            for (var i = 0; i < t.Levels.Count && i < MaxLevel; i++)
+            for (var i = 0; i < t.Levels.Count; i++)
             {
                 levels.Add(t.Levels[i]);
             }

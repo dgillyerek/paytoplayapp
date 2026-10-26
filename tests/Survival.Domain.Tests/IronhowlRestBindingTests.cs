@@ -49,7 +49,7 @@ public sealed class IronhowlRestBindingTests
         Assert.NotEqual(bodyArm, restArm);
     }
 
-    private static HashSet<string> AnimatedPaths(byte[] data)
+    internal static HashSet<string> AnimatedPaths(byte[] data)
     {
         var doc = Fbx.Parse(data);
         var models = new Dictionary<long, string>();
@@ -168,7 +168,7 @@ public sealed class IronhowlRestBindingTests
         throw new DirectoryNotFoundException("repo root");
     }
 
-    private sealed class Fbx
+    internal sealed class Fbx
     {
         private readonly List<Node> _top = new();
 

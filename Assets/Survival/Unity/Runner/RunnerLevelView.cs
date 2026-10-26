@@ -161,7 +161,15 @@ namespace Survival.Unity
             _unlocked = RunnerHandoff.FromPlay ? RunnerHandoff.Unlocked : StandaloneUnlocked();
             _loadout = SavedLoadout(_catalog);
             var wanted = RunnerHandoff.PendingLevel ?? (levelId.Length > 0 ? levelId : null);
-            _level = _catalog.Level(wanted) ?? _catalog.ByNumber(_unlocked);
+            // A beaten level never opens again: a named level that is already beaten falls back to the frontier.
+            var count = _catalog.Levels.Count;
+            var pick = _catalog.Level(wanted);
+            if (pick == null || RunnerProgress.IsBeaten(_unlocked, pick.Number))
+            {
+                pick = _catalog.ByNumber(RunnerProgress.Frontier(_unlocked, count) ?? count);
+            }
+
+            _level = pick;
             try
             {
                 // The level's plan runs on a worker thread while the scene below is built.
@@ -224,6 +232,23 @@ namespace Survival.Unity
                 return;
             }
 
+            // No going back: a beaten level is never run again (the level list shows it as completed).
+            if (!RunnerProgress.CanStart(_unlocked, _level.Number, _catalog.Levels.Count))
+            {
+                Debug.Log("Runner: level " + _level.Number + " is already beaten; it cannot be played again.");
+                if (_run == null && RunnerHandoff.FromPlay && !RunnerHandoff.Done)
+                {
+                    // Nothing to run from Play: straight back to the village rather than a stranded scene.
+                    RunnerHandoff.Finish();
+                }
+                else if (_hud != null)
+                {
+                    ShowLevelList();
+                }
+
+                return;
+            }
+
             StopTopUp();
             ClearActors();
             _attempt++;
@@ -239,7 +264,20 @@ namespace Survival.Unity
             ShowHint(true);
         }
 
-        public void Retry() => StartRun();
+        /// <summary>Run this level again: only after a loss (a win beat it for good) or mid-run on the frontier.</summary>
+        public void Retry()
+        {
+            if (_catalog == null || _level == null)
+            {
+                return;
+            }
+
+            var won = _run != null && _run.Over && _run.Result.Won;
+            if (RunnerProgress.CanRetry(_unlocked, _level.Number, won, _catalog.Levels.Count))
+            {
+                StartRun();
+            }
+        }
 
         /// <summary>
         /// Switch to runner level <paramref name="number"/> in place (result screen Next / level list): a new road, HUD and
@@ -247,7 +285,7 @@ namespace Survival.Unity
         /// </summary>
         public void PlayLevel(int number)
         {
-            if (_catalog == null || _switching || !RunnerProgress.IsOpen(_unlocked, number))
+            if (_catalog == null || _switching || !RunnerProgress.CanStart(_unlocked, number, _catalog.Levels.Count))
             {
                 return;
             }
@@ -255,8 +293,8 @@ namespace Survival.Unity
             StartCoroutine(PlayLevelRoutine(number));
         }
 
-        /// <summary>The next level after this one, when it is open.</summary>
-        private RunnerLevelDef? OpenNext => _catalog != null && _level != null && _catalog.Next(_level) is { } next && RunnerProgress.IsOpen(_unlocked, next.Number) ? next : null;
+        /// <summary>The next level after this one, when it is the one that can be played now (the frontier).</summary>
+        private RunnerLevelDef? OpenNext => _catalog != null && _level != null && _catalog.Next(_level) is { } next && RunnerProgress.CanStart(_unlocked, next.Number, _catalog.Levels.Count) ? next : null;
 
         /// <summary>Back to Play (from the village) or a fresh run (opened on its own).</summary>
         public void Leave()
@@ -267,7 +305,20 @@ namespace Survival.Unity
                 return;
             }
 
-            StartRun();
+            // Opened on its own: a fresh run of this level only if it is still unbeaten; after a win, on to the frontier
+            // (or the level list once every level is beaten).
+            if (_catalog != null && _level != null && RunnerProgress.CanStart(_unlocked, _level.Number, _catalog.Levels.Count))
+            {
+                StartRun();
+            }
+            else if (_catalog != null && RunnerProgress.Frontier(_unlocked, _catalog.Levels.Count) is int frontier)
+            {
+                PlayLevel(frontier);
+            }
+            else
+            {
+                ShowLevelList();
+            }
         }
 
         private void ClearActors()
@@ -928,6 +979,9 @@ namespace Survival.Unity
                             m.Attack();
                         }
 
+                        // The held shooters' per-shot recoil, on the frame the shot leaves (RunnerShotFlick).
+                        m.ShotFlick();
+
                         if (e.Amount <= 0f && e.Other != 0)
                         {
                             Slash(at + (Vector3.up * 0.9f), m.Data.Name);
@@ -1029,9 +1083,10 @@ namespace Survival.Unity
                     if (e.Unit == "squad_full")
                     {
                         // A follower or hero chest at a full squad: the units that do not fit pay out as damage and a heal.
-                        Banner(Fmt("runner.squad_full", "Squad full! Damage ×{0}, healed", e.Amount.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)), new Color(1f, 0.85f, 0.35f, 1f));
+                        // A small pop-up at the lead, not a screen banner (RunnerPickupPopup.SquadFull).
                         if (_run != null && _members.TryGetValue(_run.Hero.Id, out var lead))
                         {
+                            Popup(RunnerPickupPopup.SquadFull(e.Amount, lead.Slot.position.x, lead.Slot.position.z), new Color(1f, 0.85f, 0.35f, 1f));
                             Floater(new Vector3(lead.Slot.position.x, 0f, lead.Slot.position.z) + (Vector3.up * 2.6f), S("runner.squad_full_heal", "+HP"), new Color(0.55f, 1f, 0.6f, 1f), 40);
                         }
                     }
@@ -1544,16 +1599,8 @@ namespace Survival.Unity
                 return;
             }
 
-            var call = box.Kind switch
-            {
-                RunnerBoxKind.Weapon => Fmt("runner.upgrade.weapon", "Weapon up! +{0}% damage", Mathf.RoundToInt(box.Amount * 100f)),
-                RunnerBoxKind.Rate => Fmt("runner.upgrade.rate", "Faster attacks! +{0}% speed", Mathf.RoundToInt(box.Amount * 100f)),
-                RunnerBoxKind.Range => Fmt("runner.upgrade.range", "Longer reach! +{0}% range", Mathf.RoundToInt(box.Amount * 100f)),
-                RunnerBoxKind.Heal => Fmt("runner.upgrade.heal", "Healed! +{0}% HP", Mathf.RoundToInt(box.Amount * 100f)),
-                RunnerBoxKind.Hero => Fmt("runner.box.hero", "{0} joins!", HeroName(box.Unit)),
-                _ => Fmt("runner.joined", "+{0} {1}", box.Count, HeroName(box.Unit))
-            };
-            Banner(call, RewardColor(box.Kind, gold));
+            // Derek 2026-10-24: no screen banner for pick-ups; a quick pop-up rises from the box where it was granted.
+            Popup(RunnerPickupPopup.For(box, e.X, e.Z), RewardColor(box.Kind, gold));
         }
 
         private void Slash(Vector3 at, string who)

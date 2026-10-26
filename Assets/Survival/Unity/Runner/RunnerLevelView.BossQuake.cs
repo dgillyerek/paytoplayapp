@@ -1,4 +1,5 @@
 #nullable enable
+using Survival.Domain.Enemies;
 using Survival.Domain.Runner;
 using Survival.Domain.Theme;
 using UnityEngine;
@@ -40,6 +41,9 @@ namespace Survival.Unity
         private bool _quakeLive;
         private bool _quakeRight;
         private RunnerRig? _quakeRig;
+
+        /// <summary>Ironhowl's ground pound has started, timed so its fists hit the road as the quake lands.</summary>
+        private bool _quakePounded;
 
         private RectTransform? _quakeHud;
         private readonly Image?[] _quakeEdges = new Image?[4];
@@ -161,6 +165,7 @@ namespace Survival.Unity
             }
 
             _quakeRig = _foes.TryGetValue(boss.Id, out var rig) ? rig : null;
+            _quakePounded = false;
             Banner(S("runner.quake_banner", "Ironhowl is winding up a quake!"), new Color(1f, 0.3f, 0.2f, 1f));
             Shake(0.25f);
             AnimateQuakeMark();
@@ -178,7 +183,11 @@ namespace Survival.Unity
             if (_quakeRig != null)
             {
                 _quakeRig.Slot.localScale = Vector3.one;
-                _quakeRig.Attack();
+                if (!_quakePounded)
+                {
+                    _quakeRig.Attack();
+                }
+
                 _quakeRig = null;
             }
 
@@ -216,6 +225,13 @@ namespace Survival.Unity
                     var up = 1f + (0.28f * p * p);
                     var wobble = 1f + (0.05f * p * Mathf.Sin(t * 38f));
                     _quakeRig.Slot.localScale = new Vector3(wobble, up, wobble);
+
+                    // Ironhowl: start the ground pound so its contact frame lands with the quake.
+                    if (!_quakePounded && _quakeRig.RotatesAttacks && t >= _quakeLength - (IronhowlMotion.Attack4ContactFrame / IronhowlMotion.FrameRate))
+                    {
+                        _quakePounded = true;
+                        _quakeRig.Swing(IronhowlMotion.Attack4PoseName, IronhowlMotion.Attack4LastFrame / IronhowlMotion.FrameRate);
+                    }
                 }
 
                 if (t > _quakeLength + 0.6f)

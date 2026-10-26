@@ -669,15 +669,17 @@ public sealed class RunnerTests
         var c = Runner.Catalog();
         static RunnerAttackPlan P(RunnerCatalog c, string id) => RunnerAttackTiming.PlanFor(c.Unit(id));
 
-        // Lyra and Rowan asked for more than 2.5x: capped, interval stretched to take / 2.5.
-        Assert.True(P(c, "lyra").Capped && P(c, "rowan").Capped);
-        Assert.False(P(c, "oakenshield").Capped);
+        // Derek: "heros need less firing with more damage. by about half." The heroes used to all fire every 0.40 s
+        // (Lyra and Rowan asked for more than 2.5x and were capped at take / 2.5); now every 0.76 s (~1.9x slower,
+        // under the cap) with ~2x the damage per shot, so the DPS and the balance curve stay about the same.
+        Assert.All(new[] { "lyra", "rowan", "oakenshield" }, id => Assert.False(P(c, id).Capped));
         Assert.All(new[] { "lyra", "rowan", "oakenshield" }, id => Assert.InRange(P(c, id).Speed, 1f, RunnerAttackTiming.MaxSpeed + 1e-4f));
-        Assert.Equal(0.40f, P(c, "lyra").Interval, 3);
-        Assert.Equal(0.40f, P(c, "rowan").Interval, 3);
-        Assert.Equal(0.40f, P(c, "oakenshield").Interval, 3);
+        Assert.All(new[] { "lyra", "rowan", "oakenshield" }, id => Assert.Equal(0.76f, P(c, id).Interval, 3));
+        Assert.Equal(51, c.Unit("lyra").Damage);
+        Assert.Equal(30, c.Unit("rowan").Damage);
+        Assert.Equal(47, c.Unit("oakenshield").Damage);
 
-        // Still about twice the old 0.8-1.1 s cadence; enemies are many and weak (a bit under half the old 134 HP, a
+        // Enemies tuned for the old ~0.4 s cadence; enemies are many and weak (a bit under half the old 134 HP, a
         // little lighter again now they walk 1.5x faster and spend less time under fire), the boss now has to survive
         // the walk in and be fought at the arena (his hit is a slam, his HP retuned for it).
         Assert.InRange(c.Unit("nightfang").Hp, 30, 60);
@@ -990,7 +992,7 @@ public sealed class RunnerTests
         Assert.Equal(1, RunnerProgress.AfterRun(1, R(1, false), n));
         Assert.Equal(2, RunnerProgress.AfterRun(1, R(1, true), n));
         Assert.Equal(5, RunnerProgress.AfterRun(5, R(2, true), n));
-        Assert.Equal(n, RunnerProgress.AfterRun(n, R(n, true), n));
+        Assert.Equal(n + 1, RunnerProgress.AfterRun(n, R(n, true), n)); // the last level beaten: nothing left to play
         Assert.True(RunnerProgress.IsOpen(3, 3));
         Assert.False(RunnerProgress.IsOpen(3, 4));
 

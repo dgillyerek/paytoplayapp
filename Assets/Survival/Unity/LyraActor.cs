@@ -43,6 +43,19 @@ namespace Survival.Unity
         /// <summary>Runner: legs walk (true) or stand under an upper-body attack.</summary>
         public void SetWalkUnderAttack(bool walking) => _player?.SetWalkUnderAttack(walking);
 
+        /// <summary>Runner only: the take frame the upper body holds the whole run (see <see cref="BlenderRigPlayer.AimHoldFrame"/>), or null.</summary>
+        public float? AimHoldFrame
+        {
+            get => _player?.AimHoldFrame;
+            set
+            {
+                if (_player != null)
+                {
+                    _player.AimHoldFrame = value;
+                }
+            }
+        }
+
         public bool Built => _player != null && _player.Built;
         public string Pose => _player != null ? _player.Pose : LyraMotion.RestPoseName;
         public float ClipLength => _player != null ? _player.ClipLength : 0f;

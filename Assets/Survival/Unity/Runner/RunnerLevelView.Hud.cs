@@ -39,6 +39,17 @@ namespace Survival.Unity
         private readonly Dictionary<int, WorldBar> _bars = new Dictionary<int, WorldBar>();
         private readonly List<Floating> _floaters = new List<Floating>();
 
+        /// <summary>Pick-up pop-ups in flight (<see cref="Popup"/>): rare (one per box), so made per pop-up and dropped after.</summary>
+        private readonly List<PickupPopup> _popups = new List<PickupPopup>();
+
+        private sealed class PickupPopup
+        {
+            public RectTransform Rt = null!;
+            public CanvasGroup Group = null!;
+            public Vector3 World;
+            public float Age;
+        }
+
         // Update 5: hit numbers and fighters' side bars are pooled (made with the HUD, reused all run), and HUD text
         // is only set when its value changes (no per-frame strings).
         private const int FloaterCap = 60;
@@ -178,7 +189,7 @@ namespace Survival.Unity
             Pad(leaveText.rectTransform);
 
             // No squad-count badge over the hero (Derek 2026-10-23: "I don't need the label for how many heros I have"); the
-            // 10 cap and the "Squad full!" banner stay.
+            // 10 cap stays; "Squad full!" is a pop-up at the lead now (RunnerPickupPopup), not a banner.
 
             _hint = HookSkin.Outlined(SurvivalVisuals.Text(_hud, "Hint", "⟵  " + S("runner.hint", "Drag or A / D to steer") + "  ⟶", 34, TextAnchor.MiddleCenter, SurvivalVisuals.Cream));
             Anchor(_hint.rectTransform, 0f, 0.10f, 1f, 0.15f);
@@ -278,6 +289,7 @@ namespace Survival.Unity
             }
 
             TickFloaters(dt);
+            TickPopups(dt);
         }
 
         private void SetChip(Text? chip, float mul, string key, string fallback, ref int shown)
@@ -660,6 +672,87 @@ namespace Survival.Unity
             {
                 Place(f.Rt, f.World + (Vector3.up * (f.Age * 1.4f)));
             }
+
+            foreach (var p in _popups)
+            {
+                if (p.Rt != null)
+                {
+                    Place(p.Rt, p.World + (Vector3.up * RunnerPickupPopup.Height(p.Age)));
+                }
+            }
+        }
+
+        /// <summary>
+        /// A quick pick-up pop-up (<see cref="RunnerPickupPopup"/>): a small icon + label that rises from the box where it
+        /// was granted and fades in under a second. Replaces the old screen banner for boxes and "squad full".
+        /// </summary>
+        private void Popup(RunnerPopupSpec spec, Color color)
+        {
+            if (_worldUi == null)
+            {
+                return;
+            }
+
+            var a0 = spec.UnitArg == 0 ? HeroName(spec.Arg0) : spec.Arg0;
+            var a1 = spec.UnitArg == 1 ? HeroName(spec.Arg1) : spec.Arg1;
+            var label = spec.Arg1.Length > 0 ? Fmt(spec.Key, spec.Fallback, a0, a1) : Fmt(spec.Key, spec.Fallback, a0);
+            var root = new GameObject("Popup", typeof(RectTransform), typeof(CanvasGroup)).GetComponent<RectTransform>();
+            root.SetParent(_worldUi, false);
+            root.sizeDelta = new Vector2(260f, 52f);
+            var group = root.GetComponent<CanvasGroup>();
+            group.blocksRaycasts = false;
+            group.interactable = false;
+            var textLeft = 0f;
+            if (spec.IconKey.Length > 0)
+            {
+                var icon = HookSkin.Art(root, "Icon", spec.IconKey, SurvivalVisuals.Gold);
+                icon.raycastTarget = false;
+                Anchor(icon.rectTransform, 0f, -0.1f, 0.22f, 1.1f);
+                textLeft = 0.2f;
+            }
+
+            var text = HookSkin.Outlined(SurvivalVisuals.Text(root, "Text", label, RunnerPickupPopup.TextSize, TextAnchor.MiddleLeft, color));
+            text.raycastTarget = false;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            Anchor(text.rectTransform, textLeft + 0.02f, 0f, 1f, 1f);
+            var p = new PickupPopup { Rt = root, Group = group, World = new Vector3(spec.X, 0f, spec.Z), Age = 0f };
+            Place(root, p.World + (Vector3.up * RunnerPickupPopup.Height(0f)));
+            _popups.Add(p);
+        }
+
+        private void TickPopups(float dt)
+        {
+            for (var i = _popups.Count - 1; i >= 0; i--)
+            {
+                var p = _popups[i];
+                p.Age += dt;
+                if (p.Rt == null || p.Age >= RunnerPickupPopup.LifeSeconds)
+                {
+                    if (p.Rt != null)
+                    {
+                        Destroy(p.Rt.gameObject);
+                    }
+
+                    _popups.RemoveAt(i);
+                    continue;
+                }
+
+                p.Group.alpha = RunnerPickupPopup.Alpha(p.Age);
+                p.Rt.localScale = Vector3.one * RunnerPickupPopup.Scale(p.Age);
+            }
+        }
+
+        private void ClearPopups()
+        {
+            foreach (var p in _popups)
+            {
+                if (p.Rt != null)
+                {
+                    Destroy(p.Rt.gameObject);
+                }
+            }
+
+            _popups.Clear();
         }
 
         /// <summary>Hidden at full HP; in on a hit, held while hits land, faded out two seconds after the last one.</summary>
@@ -775,6 +868,7 @@ namespace Survival.Unity
 
         private void ClearFloaters()
         {
+            ClearPopups();
             foreach (var f in _floaters)
             {
                 ReleaseFloater(f);
@@ -866,7 +960,7 @@ namespace Survival.Unity
             }
 
             // Two rows so no label is squeezed: the way on (Next level / Continue, green) on top, Levels / Retry (blue)
-            // below. A lone button in a row runs wider; labels best-fit inside padded buttons.
+            // below. Retry only after a loss: a won level is beaten for good (no going back). A lone button in a row runs wider; labels best-fit inside padded buttons.
             var primary = new List<(string Name, string Label, string Key, UnityEngine.Events.UnityAction Act)>();
             var next = OpenNext;
             if (result.Won && next != null)
@@ -882,9 +976,12 @@ namespace Survival.Unity
 
             var secondary = new List<(string Name, string Label, string Key, UnityEngine.Events.UnityAction Act)>
             {
-                ("Levels", S("runner.levels", "Levels"), HookArtKeys.ButtonBlue, ShowLevelList),
-                ("Retry", S("runner.retry", "Retry"), HookArtKeys.ButtonBlue, Retry)
+                ("Levels", S("runner.levels", "Levels"), HookArtKeys.ButtonBlue, ShowLevelList)
             };
+            if (_catalog != null && RunnerProgress.CanRetry(_unlocked, result.Number, result.Won, _catalog.Levels.Count))
+            {
+                secondary.Add(("Retry", S("runner.retry", "Retry"), HookArtKeys.ButtonBlue, Retry));
+            }
             ButtonRow(panel.transform, primary, 0.165f, 0.28f);
             ButtonRow(panel.transform, secondary, primary.Count > 0 ? 0.035f : 0.165f, primary.Count > 0 ? 0.15f : 0.28f);
 
@@ -913,7 +1010,10 @@ namespace Survival.Unity
             }
         }
 
-        /// <summary>A simple level list over the result screen: open levels play, locked ones show a lock.</summary>
+        /// <summary>
+        /// A simple level list over the result screen: beaten levels show as completed (never playable again), only the
+        /// next unbeaten level has a play button, the rest show a lock.
+        /// </summary>
         private void ShowLevelList()
         {
             HideLevelList();
@@ -940,19 +1040,20 @@ namespace Survival.Unity
             for (var i = 0; i < levels.Count; i++)
             {
                 var level = levels[i];
-                var open = RunnerProgress.IsOpen(_unlocked, level.Number);
+                var open = RunnerProgress.CanStart(_unlocked, level.Number, levels.Count);
+                var beaten = RunnerProgress.IsBeaten(_unlocked, level.Number);
                 var current = _level != null && level.Number == _level.Number;
                 var c = i % cols;
                 var r = i / cols;
                 var x0 = 0.05f + (c * 0.3f);
                 var y1 = 0.87f - (r * cellH);
-                var key = open ? (current ? HookArtKeys.ButtonGreen : HookArtKeys.ButtonBlue) : HookArtKeys.ButtonRed;
-                var btn = HookSkin.Button(panel.transform, "Level" + level.Number, key, open ? SurvivalVisuals.PinBuild : new Color(0.3f, 0.3f, 0.3f, 1f));
+                var key = open ? (current ? HookArtKeys.ButtonGreen : HookArtKeys.ButtonBlue) : beaten ? HookArtKeys.ButtonBlue : HookArtKeys.ButtonRed;
+                var btn = HookSkin.Button(panel.transform, "Level" + level.Number, key, open ? SurvivalVisuals.PinBuild : beaten ? new Color(0.22f, 0.32f, 0.42f, 1f) : new Color(0.3f, 0.3f, 0.3f, 1f));
                 Anchor(btn.GetComponent<RectTransform>(), x0 + 0.01f, y1 - cellH + 0.012f, x0 + 0.29f, y1 - 0.012f);
-                var label = open
-                    ? level.Number.ToString(CultureInfo.InvariantCulture) + "\n" + LevelName(level)
-                    : level.Number.ToString(CultureInfo.InvariantCulture) + "\n" + S("runner.locked", "Locked");
-                var t = Fit(HookSkin.Outlined(SurvivalVisuals.Text(btn.transform, "Label", label, 24, TextAnchor.MiddleCenter, open ? HookSkin.InkFor(key) : new Color(0.75f, 0.75f, 0.75f, 1f))), 14, 24);
+                var label = level.Number.ToString(CultureInfo.InvariantCulture) + "\n"
+                    + (open ? LevelName(level) : beaten ? S("runner.completed", "\u2713 Completed") : S("runner.locked", "Locked"));
+                var ink = open ? HookSkin.InkFor(key) : beaten ? new Color(0.62f, 0.9f, 0.62f, 1f) : new Color(0.75f, 0.75f, 0.75f, 1f);
+                var t = Fit(HookSkin.Outlined(SurvivalVisuals.Text(btn.transform, "Label", label, 24, TextAnchor.MiddleCenter, ink)), 14, 24);
                 Pad(t.rectTransform);
                 btn.interactable = open;
                 if (open)

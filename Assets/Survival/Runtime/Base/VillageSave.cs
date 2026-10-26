@@ -11,7 +11,7 @@ namespace Survival.Domain.Base
     /// <summary>
     /// Village save data: every plot's level, every building placed with Build (type, spot, level, still building?)
     /// and the running build / upgrade timers (wall-clock start + duration, so a timer keeps counting while the game
-    /// is closed), plus congratulations rewards still waiting for their tap. Plain JSON; the Unity side keeps it in PlayerPrefs under <see cref="PrefsKey"/>.
+    /// is closed), plus congratulations rewards still waiting for their tap and every producer's uncollected stock (Gold Mine gold, farm food). Plain JSON; the Unity side keeps it in PlayerPrefs under <see cref="PrefsKey"/>.
     /// </summary>
     public static class VillageSave
     {
@@ -106,7 +106,27 @@ namespace Survival.Domain.Base
                 sb.Append("}}");
             }
 
-            sb.Append("]}");
+            // Producers' uncollected stock and when they last produced, so stored gold / food survives a restart.
+            sb.Append("],\"stock\":{");
+            first = true;
+            foreach (var p in economy.Plots)
+            {
+                if (!p.IsProducer)
+                {
+                    continue;
+                }
+
+                if (!first)
+                {
+                    sb.Append(',');
+                }
+
+                first = false;
+                Str(sb, p.Id).Append(":[").Append(p.Stored.ToString("R", CultureInfo.InvariantCulture)).Append(',');
+                sb.Append(p.LastTick.ToString("R", CultureInfo.InvariantCulture)).Append(']');
+            }
+
+            sb.Append("}}");
             return sb.ToString();
         }
 
@@ -223,6 +243,18 @@ namespace Survival.Domain.Base
                 if (p.UnderConstruction && economy.Timers.Find(BaseEconomy.UpgradeTimerId(p.Id)) == null)
                 {
                     economy.RestoreLevel(p.Id, p.Level, false);
+                }
+            }
+
+            // Uncollected stock (older saves have none: producers then start empty, as before).
+            if (root.TryGet("stock", out var sk) && sk is JsonNode.Obj stock)
+            {
+                foreach (var pair in stock.Fields)
+                {
+                    if (pair.Value is JsonNode.Arr a && a.Items.Count == 2 && a.Items[0] is JsonNode.Num sv && a.Items[1] is JsonNode.Num tv)
+                    {
+                        economy.RestoreStock(pair.Key, sv.Value, tv.Value);
+                    }
                 }
             }
 

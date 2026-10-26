@@ -380,10 +380,15 @@ namespace Survival.Domain.Runner
             new RunnerRowDef(z, RunnerRowKind.Box, x, unit, 1, 0f, new RunnerBoxDef(Math.Max(100, hp), kind, unit, kind == RunnerBoxKind.Hero ? 1 : Math.Max(1, count), amount));
     }
 
-    /// <summary>Which runner levels are open: Level 1 always, each win opens the next. Saved in survival_save.json.</summary>
+    /// <summary>
+    /// Which runner levels can be played. Levels are beaten in order and a beaten level can never be played again: only the
+    /// next unbeaten level (the frontier) can be started, a loss there can be retried, a win moves the frontier on.
+    /// <c>unlocked</c> is the frontier's number, saved as "runner_unlocked" in survival_save.json; levelCount + 1 means
+    /// every level is beaten.
+    /// </summary>
     public static class RunnerProgress
     {
-        /// <summary>Highest level number open after <paramref name="result"/> (a win on the highest open level opens the next).</summary>
+        /// <summary>The frontier after <paramref name="result"/> (a win on the frontier moves it on; levelCount + 1 = all beaten).</summary>
         public static int AfterRun(int unlocked, RunnerResult result, int levelCount)
         {
             var open = Math.Max(1, unlocked);
@@ -392,9 +397,29 @@ namespace Survival.Domain.Runner
                 open = Math.Max(open, result.Number + 1);
             }
 
-            return Math.Max(1, Math.Min(open, Math.Max(1, levelCount)));
+            return Math.Max(1, Math.Min(open, Math.Max(1, levelCount) + 1));
         }
 
+        /// <summary>Reached: beaten or the frontier.</summary>
         public static bool IsOpen(int unlocked, int number) => number >= 1 && number <= Math.Max(1, unlocked);
+
+        /// <summary>Beaten: below the frontier. It shows as completed and can never be started again.</summary>
+        public static bool IsBeaten(int unlocked, int number) => number >= 1 && number < Math.Max(1, unlocked);
+
+        /// <summary>Only the frontier (the next unbeaten level) can be started.</summary>
+        public static bool CanStart(int unlocked, int number, int levelCount) =>
+            number >= 1 && number <= levelCount && number == Math.Max(1, unlocked);
+
+        /// <summary>Run <paramref name="number"/> again after a run of it ended: only after a loss (a win beat it for good).</summary>
+        public static bool CanRetry(int unlocked, int number, bool won, int levelCount) => !won && CanStart(unlocked, number, levelCount);
+
+        /// <summary>The level to open (the frontier), or null when every level is beaten.</summary>
+        public static int? Frontier(int unlocked, int levelCount)
+        {
+            var f = Math.Max(1, unlocked);
+            return f <= levelCount ? f : null;
+        }
+
+        public static bool AllBeaten(int unlocked, int levelCount) => Math.Max(1, unlocked) > levelCount;
     }
 }

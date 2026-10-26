@@ -35,6 +35,19 @@ namespace Survival.Unity
         private float _lean;
         private float _leanTarget;
 
+        /// <summary>
+        /// A squad shooter holding its aim (<see cref="RunnerAimHold"/>): its body takes no hit step, hit lean, flinch
+        /// pose or steering roll, so the firing stance never moves (the hit flash still shows).
+        /// </summary>
+        private bool _aimHeld;
+
+        /// <summary>
+        /// A held shooter's per-shot kick (<see cref="RunnerShotFlick"/>): a readable recoil on its arm / hand / shoulder / upper-spine
+        /// bones, rotation only, eased back to the hold. Null for every other rig (and never in the battle).
+        /// </summary>
+        private RunnerShotFlickState? _flick;
+        private readonly List<FlickBone> _flickBones = new List<FlickBone>();
+
         /// <summary>Degrees of lean per m/s of sideways speed, and the most it ever leans.</summary>
         public const float LeanPerMetrePerSecond = 0.75f;
         public const float MaxLeanDegrees = 7f;
@@ -43,6 +56,9 @@ namespace Survival.Unity
         private Vector3 _baseLocal;
         private float _punch;
         private float _attackStarted = -99f;
+        private int _swingIndex;
+        private string _swingPose = "";
+        private float _swingSeconds;
         private System.Action<float>? _attackSpeed;
         private System.Action<bool>? _walkUnderAttack;
 
@@ -73,6 +89,12 @@ namespace Survival.Unity
         public string WalkPose => Data.WalkPoseName;
         public string AttackPose => Data.AttackPoseName;
         public string RestPose => Data.RestPoseName;
+
+        /// <summary>
+        /// Ironhowl swings through his whole battle rotation in the runner, not only the claw swipe (Derek 2026-10-24:
+        /// "he just punches"). The others keep their one attack take.
+        /// </summary>
+        public bool RotatesAttacks => Data.Name == LockedBattleRoster.Ironhowl.Name && LockedBattleRotation.Count(Data) > 1;
 
         public static LockedBattleFighter? Find(string rosterName)
         {
@@ -157,6 +179,8 @@ namespace Survival.Unity
                         var a = host.AddComponent<LyraActor>();
                         a.Build();
                         a.UpperBodyAttack = RunnerUpperBodyAttack.Applies(data.Name);
+                        a.AimHoldFrame = a.UpperBodyAttack ? RunnerAimHold.HoldFrameFor(data.Name) : null;
+                        rig._aimHeld = a.AimHoldFrame != null;
                         rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
@@ -169,6 +193,8 @@ namespace Survival.Unity
                         var a = host.AddComponent<OakenshieldActor>();
                         a.Build();
                         a.UpperBodyAttack = RunnerUpperBodyAttack.Applies(data.Name);
+                        a.AimHoldFrame = a.UpperBodyAttack ? RunnerAimHold.HoldFrameFor(data.Name) : null;
+                        rig._aimHeld = a.AimHoldFrame != null;
                         rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
@@ -203,6 +229,8 @@ namespace Survival.Unity
                         var a = host.AddComponent<RowanActor>();
                         a.Build();
                         a.UpperBodyAttack = RunnerUpperBodyAttack.Applies(data.Name);
+                        a.AimHoldFrame = a.UpperBodyAttack ? RunnerAimHold.HoldFrameFor(data.Name) : null;
+                        rig._aimHeld = a.AimHoldFrame != null;
                         rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
@@ -338,8 +366,114 @@ namespace Survival.Unity
             }
 
             rig._reactionPose = LockedBattleReactionPose.Build(host.transform, LockedBattleReactions.RigFor(data));
+            rig.BuildFlick(host.transform);
             rig.Play(rig.RestPose);
             return rig;
+        }
+
+        /// <summary>Finds the kicked bones of a held shooter (parent before child); no-op for every other rig.</summary>
+        private void BuildFlick(Transform host)
+        {
+            var bones = RunnerShotFlick.BonesFor(Data.Name);
+            if (!_aimHeld || bones.Length == 0)
+            {
+                return;
+            }
+
+            var all = host.GetComponentsInChildren<Transform>(true);
+            foreach (var bone in bones)
+            {
+                foreach (var t in all)
+                {
+                    if (string.Equals(t.name, bone.Bone, System.StringComparison.Ordinal))
+                    {
+                        _flickBones.Add(new FlickBone(t, bone.PitchDegrees));
+                        break;
+                    }
+                }
+            }
+
+            _flick = new RunnerShotFlickState(RunnerShotFlick.SecondsFor(Data.Name));
+        }
+
+        /// <summary>The sim fired this rig's shot (the scene draws it this frame): start the firing recoil.</summary>
+        public void ShotFlick()
+        {
+            if (!Dead)
+            {
+                _flick?.Fire();
+            }
+        }
+
+        /// <summary>
+        /// After the clips posed the bones: the kick as a pitch about the road's right axis on each kicked bone, scaled by
+        /// the kick's weight. Rotation only, never the host, hips or legs, so the body does not move forward or back and
+        /// the legs keep walking. The clip value is put back first whenever nothing re-posed the bone (a skipped
+        /// evaluation), so the kick never accumulates.
+        /// </summary>
+        private void TickFlick(float dt)
+        {
+            if (_flick == null)
+            {
+                return;
+            }
+
+            foreach (var b in _flickBones)
+            {
+                b.Restore();
+            }
+
+            _flick.Advance(dt);
+            var w = Dead ? 0f : _flick.Weight;
+            if (w <= 1e-4f)
+            {
+                return;
+            }
+
+            foreach (var b in _flickBones)
+            {
+                b.Set(Quaternion.AngleAxis(b.PitchDegrees * w, Vector3.right) * b.T.rotation);
+            }
+        }
+
+        private sealed class FlickBone
+        {
+            private Quaternion _base;
+            private Quaternion _applied;
+            private bool _has;
+
+            public FlickBone(Transform t, float pitchDegrees)
+            {
+                T = t;
+                PitchDegrees = pitchDegrees;
+            }
+
+            public Transform T { get; }
+
+            public float PitchDegrees { get; }
+
+            public void Restore()
+            {
+                if (_has && T != null && Quaternion.Angle(T.localRotation, _applied) < 0.01f)
+                {
+                    T.localRotation = _base;
+                }
+
+                _has = false;
+            }
+
+            public void Set(Quaternion world)
+            {
+                if (T == null)
+                {
+                    return;
+                }
+
+                _base = T.localRotation;
+                T.rotation = world;
+                _applied = T.localRotation;
+                _has = true;
+            }
         }
 
         /// <summary>
@@ -395,7 +529,7 @@ namespace Survival.Unity
             }
 
             _attackSpeed?.Invoke(speed > 0.01f ? speed : 1f);
-            if (!Data.AttackCyclesItself)
+            if (!Data.AttackCyclesItself && !_aimHeld)
             {
                 // Sir Aldric's named clips restart from their origin on each attack pose.
                 Play(RestPose);
@@ -443,6 +577,20 @@ namespace Survival.Unity
                 return;
             }
 
+            if (RotatesAttacks)
+            {
+                // Let the current swing mostly play, then the next attack of his rotation.
+                if (Pose == _swingPose && Time.time - _attackStarted < Mathf.Max(0.3f, _swingSeconds * 0.6f))
+                {
+                    return;
+                }
+
+                var next = LockedBattleRotation.AttackAt(Data, _swingIndex % LockedBattleRotation.Count(Data));
+                _swingIndex++;
+                Swing(next.PoseName, next.Seconds);
+                return;
+            }
+
             if (Pose != AttackPose)
             {
                 Play(AttackPose);
@@ -456,6 +604,24 @@ namespace Survival.Unity
                 Play(AttackPose);
                 _attackStarted = Time.time;
             }
+        }
+
+        /// <summary>
+        /// One named attack take from its first frame (the boss quake's ground pound). A later <see cref="Attack"/>
+        /// waits for most of it before the next swing.
+        /// </summary>
+        public void Swing(string pose, float seconds)
+        {
+            if (Dead)
+            {
+                return;
+            }
+
+            Play(RestPose);
+            Play(pose);
+            _swingPose = pose;
+            _swingSeconds = seconds;
+            _attackStarted = Time.time;
         }
 
         /// <summary>Face a world direction on the ground (yaw only), plus an aim offset (Rowan's bow).</summary>
@@ -551,7 +717,9 @@ namespace Survival.Unity
         public void Late(float dt)
         {
             _hitAge += dt;
-            var w = _reaction.Weight(_hitAge);
+            TickFlick(dt);
+            // A held shooter's body never reacts (RunnerAimHold.BodyReactionScale): no step, lean or flinch pose.
+            var w = _aimHeld ? 0f : _reaction.Weight(_hitAge);
             var local = Slot.InverseTransformDirection(_away);
             // The battle's root reaction: step back and lean, sized by the defender's recoil profile.
             var punch = 0.6f + (0.4f * _punch);
@@ -563,7 +731,8 @@ namespace Survival.Unity
             nudge *= RunnerHitNudge.Scale(nudge.x, nudge.z);
             var lean = Mathf.Tan(Profile.RecoilDegrees * Mathf.Deg2Rad);
             // Lean into the sideways move: roll about the road's forward axis (in the slot's frame), eased in and out.
-            _lean = Mathf.Lerp(_lean, _leanTarget, 1f - Mathf.Exp(-12f * dt));
+            // (Not for a held shooter: the aim stays level, RunnerAimHold.LeanScale.)
+            _lean = Mathf.Lerp(_lean, _aimHeld ? 0f : _leanTarget, 1f - Mathf.Exp(-12f * dt));
             var roll = Quaternion.AngleAxis(_lean, Slot.InverseTransformDirection(Vector3.forward));
             Host.localRotation = roll * Quaternion.FromToRotation(Vector3.up, (Vector3.up + (tilt * lean)).normalized);
             if (_deathAge >= 0f)
@@ -672,6 +841,14 @@ namespace Survival.Unity
         /// </summary>
         public void WarmPoses()
         {
+            if (RotatesAttacks)
+            {
+                for (var i = 0; i < LockedBattleRotation.Count(Data); i++)
+                {
+                    Play(LockedBattleRotation.AttackAt(Data, i).PoseName);
+                }
+            }
+
             Play(AttackPose);
             Play(RestPose);
             Play(WalkPose);
@@ -772,6 +949,12 @@ namespace Survival.Unity
 
         private void ResetState()
         {
+            _flick?.Reset();
+            foreach (var b in _flickBones)
+            {
+                b.Restore();
+            }
+
             var wasDead = _deathAge >= 0f;
             _deathAge = -1f;
             _hitAge = 10f;

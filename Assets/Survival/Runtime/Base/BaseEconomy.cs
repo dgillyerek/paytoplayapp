@@ -17,7 +17,7 @@ namespace Survival.Domain.Base
 
     /// <summary>
     /// A placed building on the base: an instance of a SURV-P0 building id (Farm = building.economy producing res.food).
-    /// <paramref name="BuildType"/> is set for buildings the player placed with Build (farm, lumber, quarry, forge).
+    /// <paramref name="BuildType"/> is set for buildings the player placed with Build (farm, lumber, quarry, forge, mine).
     /// </summary>
     public sealed record BasePlotDef(
         string Id,
@@ -48,7 +48,8 @@ namespace Survival.Domain.Base
         /// <summary>Placed with Build and still on its construction timer: no production, no upgrades.</summary>
         public bool UnderConstruction { get; internal set; }
         public double Stored { get; internal set; }
-        internal double LastTick { get; set; }
+        /// <summary>When the plot last produced (clock seconds).</summary>
+        public double LastTick { get; internal set; }
 
         public BuildingLevelDef Current => Def.Levels[Level - 1];
         public BuildingLevelDef? Next => Level < Def.Levels.Count ? Def.Levels[Level] : null;
@@ -138,6 +139,24 @@ namespace Survival.Domain.Base
             _plots.Add(p);
             PlotAdded?.Invoke(p);
             return p;
+        }
+
+        /// <summary>
+        /// Save restore: a producer's stock (e.g. Gold Mine gold not yet collected) and when it last produced. The next
+        /// Tick produces from <paramref name="lastTick"/> to now, so a building keeps filling (up to its cap) while the
+        /// game is closed. Clamped to 0..capacity; a future time is treated as now.
+        /// </summary>
+        public bool RestoreStock(string plotId, double stored, double lastTick)
+        {
+            var p = Find(plotId);
+            if (p == null || !p.IsProducer)
+            {
+                return false;
+            }
+
+            p.Stored = Math.Max(0, Math.Min(p.Current.Capacity, stored));
+            p.LastTick = Math.Min(lastTick, Clock.Now);
+            return true;
         }
 
         /// <summary>Save restore: set a plot's level (clamped) without events.</summary>
