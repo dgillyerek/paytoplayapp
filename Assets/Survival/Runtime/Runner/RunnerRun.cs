@@ -149,6 +149,9 @@ namespace Survival.Domain.Runner
         /// </summary>
         public const float ChaseSeconds = 1.5f;
 
+        /// <summary>An enemy take started on the approach waits this long past its release frame for the squad to come into reach, then lapses.</summary>
+        public const float FoeTakeGraceSeconds = 0.6f;
+
         /// <summary>
         /// The boss fight is a stand: the squad walks up to an arena line this share of the boss's slam reach in front of
         /// him (so his slam lands on the front row) and halts there to fight, still steering left / right. He holds his
@@ -398,7 +401,27 @@ namespace Survival.Domain.Runner
             Damage = (int)Math.Round(unit.Damage * (damageMul > 0f ? damageMul : 1f));
             // Walking from the moment it spawns (even the rows already in view when the run starts); the boss holds.
             Walking = !boss;
+            Plan = RunnerAttackTiming.FoePlanFor(unit);
         }
+
+        /// <summary>Its attack take: the shot or hit leaves <see cref="RunnerAttackPlan.Release"/> into it, one take per fire interval.</summary>
+        public RunnerAttackPlan Plan { get; }
+
+        /// <summary>Mid attack take: started (AttackStarted), shot or hit not released yet (Fired at the release frame).</summary>
+        public bool InTake { get; internal set; }
+
+        /// <summary>Seconds into the current take.</summary>
+        public float TakeClock { get; internal set; }
+
+        /// <summary>The current take's playback speed and its release time (normally <see cref="Plan"/>'s; see AttackStarted).</summary>
+        public float TakeSpeed { get; internal set; } = 1f;
+        public float TakeRelease { get; internal set; }
+
+        /// <summary>The barrier the current take batters (0 = the take is at the squad).</summary>
+        internal int TakeWall { get; set; }
+
+        /// <summary>Last tick's distance short of attack reach (&lt;= 0 in reach), to see a take's release coming into reach.</summary>
+        internal float LastSlack { get; set; } = float.NaN;
 
         public int Id { get; }
         public RunnerUnitDef Unit { get; }
@@ -456,7 +479,7 @@ namespace Survival.Domain.Runner
         public float QuakeSafeX { get; internal set; }
 
         public float SinceAttack { get; internal set; } = 99f;
-        public bool Attacking => SinceAttack < Unit.Cycle + 0.25f;
+        public bool Attacking => InTake || SinceAttack < Unit.Cycle + 0.25f;
         public float HpFraction => MaxHp > 0 ? Math.Max(0f, Hp / (float)MaxHp) : 0f;
     }
 
@@ -1339,23 +1362,6 @@ namespace Survival.Domain.Runner
         /// </summary>
         public float FireRangeOf(RunnerFoe f) => f.Unit.Ranged && !f.Boss ? Math.Max(f.Unit.Range, SquadReach) : f.Unit.Range;
 
-        /// <summary>
-        /// True when a ranged squad member could shoot this foe right now (the same test as <see cref="AnythingAhead"/>):
-        /// a foe a hero can hit can shoot back, even when its nearest target is a lane or two over.
-        /// </summary>
-        private bool InSquadReach(RunnerFoe f)
-        {
-            foreach (var m in _squad)
-            {
-                if (m.Unit.Ranged && f.Z > m.Z - 0.5f && f.Z - m.Z <= ReachOf(m) + f.Unit.Radius)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         /// <summary>Any live foe or box ahead within the unit's range, at any lane position.</summary>
         private bool AnythingAhead(RunnerMember m)
         {
@@ -1426,6 +1432,12 @@ namespace Survival.Domain.Runner
             return hit.Id != 0;
         }
 
+        /// <summary>Enemy shots / hits that had to leave on the tick their take started (no warning of the reach): diagnostics.</summary>
+        public int UnforeseenFoeShots { get; private set; }
+
+        /// <summary>Enemy shots / hits released from a take started ahead of them.</summary>
+        public int ForeseenFoeShots { get; private set; }
+
         private void FoesAttack(float dt)
         {
             for (var i = 0; i < _foes.Count && !Over; i++)
@@ -1442,6 +1454,7 @@ namespace Survival.Domain.Runner
                 if (target == null || (f.Passed && f.ChaseLeft <= 0f))
                 {
                     // Gave up on the squad that walked past: it drops behind and falls off the road.
+                    f.InTake = false;
                     continue;
                 }
 
@@ -1476,53 +1489,185 @@ namespace Survival.Domain.Runner
                     f.ContactClock = Math.Min(f.ContactClock, 0.5f);
                 }
 
-                // Melee: whoever is in reach, ahead or already past. Ranged: the nearest member in range, in any lane,
-                // either way down the road (a foe the squad has walked past shoots after it): enemies aim, heroes fire straight.
+                var slack = ReachSlack(f, target, dist);
+                var closing = float.IsNaN(f.LastSlack) || dt <= 0f ? 0f : Math.Min(Math.Max((f.LastSlack - slack) / dt, 0f), 30f);
+                f.LastSlack = slack;
+
                 // Held up behind a barrier: it batters the barrier down at its own attack rate rather than firing over it
                 // (unless a squad member is right on it), so a pack never sits safe behind a wall shooting.
-                if (f.BlockedBy != 0 && dist > f.Unit.Radius + target.Unit.Radius + f.Unit.Range && Barrier(f.BlockedBy) is { Hp: > 0 } wall)
+                var wall = f.BlockedBy != 0 && dist > f.Unit.Radius + target.Unit.Radius + f.Unit.Range && Barrier(f.BlockedBy) is { Hp: > 0 } w ? w : null;
+
+                // Mid take: the shot or hit leaves exactly when it always did (cooldown up, something in reach: the same
+                // rate and first shot as before takes), which the take was started and paced to put on its release frame.
+                if (f.InTake)
                 {
-                    if (f.Cooldown <= 0f)
+                    f.TakeClock += dt;
+                    if (f.Cooldown <= 0f && (wall != null || slack <= 0f))
                     {
-                        f.Cooldown = f.Unit.Cycle;
-                        f.SinceAttack = 0f;
-                        f.TargetId = wall.Id;
-                        Emit(RunnerEventKind.Fired, f.Id, wall.Id, wall.X, wall.Z, 0, false, false, f.Unit.Id);
-                        DamageBarrier(wall, f.Damage, f.Id);
+                        f.TakeWall = wall?.Id ?? 0;
+                        ForeseenFoeShots++;
+                        f.InTake = false;
+                        ReleaseFoeTake(f, wall, target);
+                        if (Over)
+                        {
+                            return;
+                        }
+                    }
+                    else if (f.TakeClock > f.TakeRelease + RunnerRules.FoeTakeGraceSeconds)
+                    {
+                        // Started on an approach that stalled (held up, turned off): the take lapses unfired.
+                        f.InTake = false;
+                    }
+
+                    if (wall == null && slack > 0f)
+                    {
+                        f.Cooldown = Math.Max(f.Cooldown, 0f);
                     }
 
                     continue;
                 }
 
-                var inRange = dist <= FireRangeOf(f) + f.Unit.Radius + target.Unit.Radius || (f.Unit.Ranged && InSquadReach(f));
-                if (!inRange)
+                // Melee: whoever is in reach, ahead or already past. Ranged: the nearest member in range, in any lane,
+                // either way down the road (a foe the squad has walked past shoots after it): enemies aim, heroes fire straight.
+                if (wall != null)
+                {
+                    if (f.Cooldown <= f.Plan.Release)
+                    {
+                        StartFoeTake(f, wall.Id, wall.Id, wall.X, wall.Z, Math.Max(f.Cooldown, 0f));
+                        if (f.Cooldown <= 0f)
+                        {
+                            UnforeseenFoeShots += f.Plan.Release > 0f ? 1 : 0;
+                            f.InTake = false;
+                            ReleaseFoeTake(f, wall, target);
+                        }
+
+                        if (Over)
+                        {
+                            return;
+                        }
+                    }
+
+                    continue;
+                }
+
+                if (slack > 0f)
                 {
                     f.Cooldown = Math.Max(f.Cooldown, 0f);
+                }
+
+                // The take starts Release ahead of the shot - on the approach too, when it will be in reach by its release
+                // frame - so the shots leave when they always did (same rate, same first shot); only the take moves earlier.
+                if (f.Cooldown > f.Plan.Release || slack - (closing * f.Plan.Release) > 0f)
+                {
                     continue;
                 }
 
-                if (f.Cooldown > 0f)
+                // Seconds until it lets go: the cooldown, or the moment its target walks into reach, whichever is later.
+                var lead = Math.Max(f.Cooldown, slack > 0f && closing > 1e-4f ? slack / closing : 0f);
+                StartFoeTake(f, 0, target.Id, target.X, target.Z, lead);
+                if (f.Cooldown <= 0f && slack <= 0f)
                 {
-                    continue;
+                    // Due this very tick (it came into reach with nothing to see it coming): it fires now, as it always has.
+                    UnforeseenFoeShots += f.Plan.Release > 0f ? 1 : 0;
+                    f.InTake = false;
+                    ReleaseFoeTake(f, null, target);
                 }
 
-                f.Cooldown = f.Unit.Cycle;
-                f.SinceAttack = 0f;
-                f.TargetId = target.Id;
-                Emit(RunnerEventKind.Fired, f.Id, target.Id, target.X, target.Z, 0, false, false, f.Unit.Id);
-                if (f.Unit.Ranged)
+                if (Over)
                 {
-                    var dir = target.Z >= f.Z ? 1f : -1f;
-                    var (ax, az) = FoeAim(f.X, f.Z + (0.4f * dir), target.X, target.Z, f.Unit.ShotSpeed, Level.Speed);
-                    // It flies far enough to cover the longer fire range and the led aim point, so it never fizzles short.
-                    var flight = Math.Max(FireRangeOf(f), (float)Math.Sqrt((ax * ax) + (az * az))) + RunnerRules.ShotOvershoot + 2f;
-                    _shots.Add(new RunnerShot(_nextId++, f.Id, true, f.X, f.Z + (0.4f * dir), f.Damage, f.Unit.ShotSpeed, flight, az, Math.Abs(az) > 1e-4f ? ax / Math.Abs(az) : 0f));
-                }
-                else
-                {
-                    StrikeSquad(f, f.Damage);
+                    return;
                 }
             }
+        }
+
+        /// <summary>
+        /// Start an enemy's attack take (AttackStarted, Amount = this take's playback speed). The shot still leaves exactly
+        /// when it always did (cooldown up and in reach: same rate, same first shot); the take is started ahead of that by
+        /// its release time and played at the speed that puts its release frame on that moment, <paramref name="lead"/>
+        /// seconds from now (normally the plan's own speed). A unit with no take of its own releases on the spot.
+        /// </summary>
+        private void StartFoeTake(RunnerFoe f, int wallId, int targetId, float x, float z, float lead)
+        {
+            f.SinceAttack = 0f;
+            f.TargetId = targetId;
+            f.TakeWall = wallId;
+            f.TakeClock = 0f;
+            if (f.Plan.Release <= 0f)
+            {
+                // No take of its own: it acts on the spot when due (the caller releases it).
+                f.InTake = false;
+                return;
+            }
+
+            var speed = f.Plan.Speed;
+            var release = f.Plan.Release;
+            var leadIn = Math.Max(lead, 0f);
+            if (Math.Abs(leadIn - release) > 0.02f)
+            {
+                // Hand-push frame on the shot: faster when it is due sooner (spawned already aiming, a late reach), slower
+                // when the squad is still walking in. Past the speed limits the frame lands as near as it can.
+                var clipRelease = release * speed;
+                speed = Clamp(leadIn > 1e-4f ? clipRelease / leadIn : RunnerAttackTiming.MaxSpeed, RunnerAttackTiming.MinFoeSpeed, RunnerAttackTiming.MaxSpeed);
+                release = clipRelease / speed;
+            }
+
+            f.TakeSpeed = speed;
+            f.TakeRelease = release;
+            f.InTake = true;
+            Emit(RunnerEventKind.AttackStarted, f.Id, targetId, x, z, speed, false, false, f.Unit.Id);
+        }
+
+        /// <summary>
+        /// The take's release frame: it batters the barrier holding it up, or the shot leaves (aimed now) / the swing lands
+        /// on the squad. Exactly what an enemy did the moment it was due before attacks had takes.
+        /// </summary>
+        private void ReleaseFoeTake(RunnerFoe f, RunnerBarrier? wall, RunnerMember target)
+        {
+            f.TakeWall = 0;
+            f.Cooldown = f.Unit.Cycle;
+            if (wall != null)
+            {
+                f.TargetId = wall.Id;
+                Emit(RunnerEventKind.Fired, f.Id, wall.Id, wall.X, wall.Z, 0, false, false, f.Unit.Id);
+                DamageBarrier(wall, f.Damage, f.Id);
+                return;
+            }
+
+            f.TargetId = target.Id;
+            Emit(RunnerEventKind.Fired, f.Id, target.Id, target.X, target.Z, 0, false, false, f.Unit.Id);
+            if (f.Unit.Ranged)
+            {
+                var dir = target.Z >= f.Z ? 1f : -1f;
+                var (ax, az) = FoeAim(f.X, f.Z + (0.4f * dir), target.X, target.Z, f.Unit.ShotSpeed, Level.Speed);
+                // It flies far enough to cover the longer fire range and the led aim point, so it never fizzles short.
+                var flight = Math.Max(FireRangeOf(f), (float)Math.Sqrt((ax * ax) + (az * az))) + RunnerRules.ShotOvershoot + 2f;
+                _shots.Add(new RunnerShot(_nextId++, f.Id, true, f.X, f.Z + (0.4f * dir), f.Damage, f.Unit.ShotSpeed, flight, az, Math.Abs(az) > 1e-4f ? ax / Math.Abs(az) : 0f));
+            }
+            else
+            {
+                StrikeSquad(f, f.Damage);
+            }
+        }
+
+        /// <summary>
+        /// How far short of attack reach a foe is (&lt;= 0: in reach): its own fire range to <paramref name="target"/>, or for
+        /// a ranged foe, inside any squad shooter's reach (so it never stands off out-ranging them).
+        /// </summary>
+        private float ReachSlack(RunnerFoe f, RunnerMember target, float dist)
+        {
+            var slack = dist - (FireRangeOf(f) + f.Unit.Radius + target.Unit.Radius);
+            if (f.Unit.Ranged)
+            {
+                foreach (var m in _squad)
+                {
+                    if (m.Unit.Ranged && f.Z > m.Z - 0.5f)
+                    {
+                        slack = Math.Min(slack, f.Z - m.Z - (ReachOf(m) + f.Unit.Radius));
+                    }
+                }
+            }
+
+            return slack;
         }
 
         /// <summary>

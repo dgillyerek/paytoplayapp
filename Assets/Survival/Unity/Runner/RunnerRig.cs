@@ -167,7 +167,7 @@ namespace Survival.Unity
                     {
                         var a = host.AddComponent<NightfangActor>();
                         a.Build();
-                        rig.Bind(a.PlayPose, () => a.Pose);
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
@@ -206,7 +206,7 @@ namespace Survival.Unity
                     {
                         var a = host.AddComponent<VesperaActor>();
                         a.Build();
-                        rig.Bind(a.PlayPose, () => a.Pose);
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
@@ -217,7 +217,7 @@ namespace Survival.Unity
                     {
                         var a = host.AddComponent<AshwyrmActor>();
                         a.Build();
-                        rig.Bind(a.PlayPose, () => a.Pose);
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
@@ -242,7 +242,7 @@ namespace Survival.Unity
                     {
                         var a = host.AddComponent<BonequillActor>();
                         a.Build();
-                        rig.Bind(a.PlayPose, () => a.Pose);
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
@@ -686,6 +686,42 @@ namespace Survival.Unity
         private static System.Numerics.Vector3 N(Vector3 v) => new System.Numerics.Vector3(v.x, v.y, v.z);
 
         private static System.Numerics.Quaternion NQ(Quaternion q) => new System.Numerics.Quaternion(q.x, q.y, q.z, q.w);
+
+        private Transform[]? _hands;
+
+        /// <summary>
+        /// Between its hands, world space (the Mixamo-named hand bones, mixamorig:LeftHand / RightHand): where an enemy's
+        /// bolt or arrow is drawn leaving from. Null when the rig has no hand bones (the shot then starts at its sim point).
+        /// </summary>
+        public Vector3? HandPoint()
+        {
+            if (_hands == null)
+            {
+                var found = new List<Transform>();
+                foreach (var t in Host.GetComponentsInChildren<Transform>(true))
+                {
+                    if (t.name.EndsWith("LeftHand", System.StringComparison.Ordinal) || t.name.EndsWith("RightHand", System.StringComparison.Ordinal))
+                    {
+                        found.Add(t);
+                    }
+                }
+
+                _hands = found.ToArray();
+            }
+
+            if (_hands.Length == 0 || Dead)
+            {
+                return null;
+            }
+
+            var sum = Vector3.zero;
+            foreach (var h in _hands)
+            {
+                sum += h.position;
+            }
+
+            return sum / _hands.Length;
+        }
 
         /// <summary>A bone by name under <paramref name="root"/>; "Scope/Bone" looks inside the named child (as the battle's).</summary>
         private static Transform? FindBone(Transform root, string name)

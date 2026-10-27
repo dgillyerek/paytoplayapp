@@ -781,7 +781,7 @@ public sealed class RunnerTests
         Assert.Equal(OakenshieldAttack.ReleaseFrame / 30f, oak.ReleaseSeconds, 4);
         Assert.Equal(SirAldricBattlePoses.AttackSeconds, aldric.ClipSeconds, 4);
         Assert.Equal(LockedBattleHits.SirAldricContactFrame / 30f, aldric.ReleaseSeconds, 4);
-        Assert.Null(RunnerAttackTiming.ClipFor("Nightfang"));
+        Assert.Null(RunnerAttackTiming.ClipFor("Ironhowl"));
 
         // Speeding the take up keeps the release at the same point of it.
         var plan = RunnerAttackTiming.Plan(lyra, 0.31f);
@@ -851,7 +851,7 @@ public sealed class RunnerTests
             run.SteerTo(RunnerBossQuakeTests.DodgingPlayer(run));
             foreach (var e in run.Step(1f / 30f))
             {
-                if (e.Kind == RunnerEventKind.AttackStarted)
+                if (e.Kind == RunnerEventKind.AttackStarted && run.Squad.Any(m => m.Id == e.Id))
                 {
                     starts[e.Id] = starts.GetValueOrDefault(e.Id) + 1;
                 }

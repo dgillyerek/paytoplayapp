@@ -217,7 +217,18 @@ namespace Survival.Unity
             var v = _freeShots.Count > 0 ? _freeShots.Pop() : NewShot();
             Dress(v, ShooterName(s));
             v.Head!.enabled = true;
-            v.Root.position = new Vector3(s.X, ShotHeight, s.Z);
+            var at = new Vector3(s.X, ShotHeight, s.Z);
+            v.Launch = Vector3.zero;
+            v.LaunchLeft = 0f;
+            if (s.ByFoe && _foes.TryGetValue(s.Shooter, out var shooter) && shooter.HandPoint() is { } hands && (hands - at).sqrMagnitude < 9f)
+            {
+                // Out of the hands that pushed it (Vespera's conjure, Bonequill's draw), not out of her chest height.
+                v.Launch = hands - at;
+                v.LaunchLeft = ShotLaunchBlendSeconds;
+                at = hands;
+            }
+
+            v.Root.position = at;
             v.Root.gameObject.SetActive(true);
             v.Trail!.Clear();
             v.Fade = 0f;

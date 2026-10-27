@@ -52,6 +52,12 @@ namespace Survival.Unity
         private const float DragMetresPerScreen = 9.5f;
         private const float ShotHeight = 1.15f;
 
+        /// <summary>An enemy shot drawn from its hands eases onto its sim flight line over this long.</summary>
+        private const float ShotLaunchBlendSeconds = 0.25f;
+
+        /// <summary>Enemies whose attack take is playing ahead of its shot (AttackStarted seen, Fired not yet).</summary>
+        private readonly HashSet<int> _foeTakes = new HashSet<int>();
+
         [SerializeField] private string levelId = "";
 
         private ThemePackBinder? _pack;
@@ -337,6 +343,7 @@ namespace Survival.Unity
             _actors.SetParent(_world, false);
             _members.Clear();
             _foes.Clear();
+            _foeTakes.Clear();
             _boxes.Clear();
             _boxDefs.Clear();
             _shots.Clear();
@@ -756,6 +763,14 @@ namespace Survival.Unity
                 }
 
                 var to = new Vector3(s.X, ShotHeight, s.Z);
+                if (view.LaunchLeft > 0f)
+                {
+                    // Leaves from the shooter's hands, easing onto its flight line over the first moment of flight.
+                    view.LaunchLeft = Mathf.Max(0f, view.LaunchLeft - Time.deltaTime);
+                    var k = view.LaunchLeft / ShotLaunchBlendSeconds;
+                    to += view.Launch * (k * k);
+                }
+
                 var dir = to - view.Root.position;
                 view.Root.position = to;
                 if (dir.sqrMagnitude > 1e-6f)
@@ -972,6 +987,13 @@ namespace Survival.Unity
                     {
                         m.StartTake(e.Amount);
                     }
+                    else if (_foes.TryGetValue(e.Id, out var foe))
+                    {
+                        // Enemies too (Derek 2026-10-27): the take starts ahead of the shot at the speed that puts its
+                        // release frame (Vespera's hands' push) on the sim's Fired, and fills one fire interval.
+                        foe.StartTake(e.Amount);
+                        _foeTakes.Add(e.Id);
+                    }
 
                     break;
                 }
@@ -995,7 +1017,11 @@ namespace Survival.Unity
                     }
                     else if (_foes.TryGetValue(e.Id, out var f))
                     {
-                        f.Attack();
+                        // Its take is already playing (AttackStarted): this is its release frame, not a new swing.
+                        if (!_foeTakes.Remove(e.Id))
+                        {
+                            f.Attack();
+                        }
                     }
 
                     break;
@@ -1433,6 +1459,10 @@ namespace Survival.Unity
             public TrailRenderer? Trail;
             public string? Look;
             public float Fade;
+
+            /// <summary>Drawn offset from the sim position at launch (hands - flight line), eased out over <see cref="LaunchLeft"/>.</summary>
+            public Vector3 Launch;
+            public float LaunchLeft;
         }
 
         private string ShooterName(RunnerShot s)

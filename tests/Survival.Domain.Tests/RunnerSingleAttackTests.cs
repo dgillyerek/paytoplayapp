@@ -41,7 +41,7 @@ public sealed class RunnerSingleAttackTests
                 run.SteerTo(Runner.AimLikeAPlayer(run));
                 foreach (var e in run.Step(Dt))
                 {
-                    if (e.Kind == RunnerEventKind.AttackStarted)
+                    if (e.Kind == RunnerEventKind.AttackStarted && run.Member(e.Id) != null)
                     {
                         Assert.False(open.Contains(e.Id), $"L{level.Number} member {e.Id}: a take started while its last take had not fired");
                         open.Add(e.Id);
