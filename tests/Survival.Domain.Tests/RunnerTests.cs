@@ -96,8 +96,31 @@ internal static class Runner
         return Dodge(run, foe?.X ?? run.Hero.X);
     }
 
-    /// <summary>Like a player: keeps the hero's line clear of any lane trap coming up in the next 9 m (the squad behind may still clip one).</summary>
+    /// <summary>
+    /// Like a player: keeps the hero's line clear of any lane trap coming up in the next 9 m (the squad behind may still clip
+    /// one), and never swerves across a trap or barrier it is already level with (a side hit costs double).
+    /// </summary>
     public static float Dodge(RunnerRun run, float want)
+    {
+        var to = DodgeTarget(run, want); if (Environment.GetEnvironmentVariable("X_NOCLAMP") == "1") return to; // TEMPX
+        var hero = run.Hero;
+        foreach (var (x, z, hw, hd) in run.Hazards.Select(h => (h.X, h.Z, h.HalfWidth, h.HalfDepth))
+                     .Concat(run.Barriers.Where(b => b.Hp > 0).Select(b => (b.X, b.Z, b.HalfWidth, b.HalfDepth))))
+        {
+            var clear = hw + hero.Unit.Radius + 0.2f;
+            if (Math.Abs(z - hero.Z) > hd + hero.Unit.Radius + 0.6f || Math.Abs(hero.X - x) < clear)
+            {
+                continue;
+            }
+
+            // Beside it: stays on its own side until it has gone by.
+            to = hero.X < x ? Math.Min(to, x - clear) : Math.Max(to, x + clear);
+        }
+
+        return to;
+    }
+
+    private static float DodgeTarget(RunnerRun run, float want)
     {
         // Looks at every trap in the next 9 m at once (the roads have about twice the traps since Derek 2026-10-26, often
         // two in a beat): the spot nearest the one wanted that clears all of them, or the old one-at-a-time sidestep.

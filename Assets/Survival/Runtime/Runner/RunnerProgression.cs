@@ -163,7 +163,8 @@ namespace Survival.Domain.Runner
         public const int PalisadeDamage = 50, PalisadeDamageStep = 4, StoneWallDamage = 60, StoneWallDamageStep = 5, BarricadeDamage = 70, BarricadeDamageStep = 5;
 
         /// <summary>Barrier HP as a share of the beat's box HP: a barricade breaks fast, a stone wall slowly; a full-width one at <see cref="FullWidthHpShare"/>.</summary>
-        public const float BarricadeHpShare = 0.15f, PalisadeHpShare = 0.22f, StoneWallHpShare = 0.3f, FullWidthHpShare = 0.2f;
+        public const float BarricadeHpShare = 0.15f, PalisadeHpShare = 0.22f, StoneWallHpShare = 0.3f;
+        public static readonly float FullWidthHpShare = float.Parse(System.Environment.GetEnvironmentVariable("X_FWHP") ?? "0.2", System.Globalization.CultureInfo.InvariantCulture);
 
         /// <summary>Metres past the beat's chest a barrier stands (behind the crate, before the skirmishers).</summary>
         public const float BarrierOffset = 3f;
