@@ -972,8 +972,8 @@ namespace Survival.Unity
                 Anchor(v.rectTransform, 0.64f, y - 0.032f, 0.92f, y + 0.032f);
             }
 
-            // Rewards: gold always (kills + boxes), win gold and hero shards on a win.
-            var rewards = bundle.AsRows();
+            // Rewards on a win only (kills + boxes + win gold, hero shards); a defeat shows none, just Retry.
+            var rewards = result.Won ? bundle.AsRows() : new Dictionary<string, int>();
             var x = 0.5f - ((rewards.Count - 1) * 0.16f);
             foreach (var pair in rewards)
             {
@@ -986,7 +986,7 @@ namespace Survival.Unity
                 x += 0.32f;
             }
 
-            if (!RunnerHandoff.FromPlay)
+            if (!RunnerHandoff.FromPlay && result.Won)
             {
                 var note = Fit(HookSkin.Outlined(SurvivalVisuals.Text(panel.transform, "Saved", saved ? S("runner.result.saved", "Rewards saved") : "Open from the village to keep rewards", 24, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f), 16, 24);
                 Anchor(note.rectTransform, 0.05f, 0.29f, 0.95f, 0.325f);

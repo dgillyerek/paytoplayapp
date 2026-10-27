@@ -945,12 +945,39 @@ public sealed class RunnerTests
         Assert.Equal(100 + 20 + 20, win.Resources[SurvIds.ResSoft]);
         Assert.Equal(3, win.Shards);
         Assert.Equal("hero.lyra", win.ShardHero);
+        // Derek 2026-10-27: "i shouldn't get runner rewards when I die": a loss pays nothing, kills and boxes included.
         var loss = RunnerRewards.For(level, new RunnerResult("t", false, 4, 2, 0, 3, 0, 20, 20));
-        Assert.Equal(40, loss.Resources[SurvIds.ResSoft]);
+        Assert.Empty(loss.Resources);
         Assert.Equal(0, loss.Shards);
+        Assert.Empty(loss.AsRows());
         var rows = RunnerRewards.Rows(new[] { win, loss });
-        Assert.Equal(180, rows[SurvIds.ResSoft]);
+        Assert.Equal(140, rows[SurvIds.ResSoft]);
         Assert.Equal(3, rows[RewardBundle.ShardKey("hero.lyra")]);
+    }
+
+    [Fact]
+    public void A_lost_run_grants_nothing_and_leaves_the_wallet_roster_and_progress_as_they_were()
+    {
+        var catalog = CampaignCatalog.Parse(File.ReadAllText(Path.Combine(TestPaths.CatalogDir, CampaignCatalog.FileName)));
+        var campaign = new CampaignSession(catalog, new Wallet(), new ManualClock(1000));
+        var c = Runner.Catalog();
+        var before = campaign.Save();
+        foreach (var n in new[] { 1, 2, 10, c.Levels.Count })
+        {
+            var l = c.ByNumber(n);
+            // A wipe deep into the level: plenty of kills and boxes, so a payout would show.
+            var bundle = RunnerRewards.For(l, new RunnerResult(l.Id, false, l.EnemyCount, l.BoxCount, 0, 9, 0, l.Length * 0.9f, 120, n));
+            Assert.False(bundle.Won);
+            Assert.Empty(bundle.AsRows());
+            RunnerRewards.Grant(bundle, campaign);
+            RunnerHandoff.Begin(l.Id, 1);
+            RunnerHandoff.Bank(new RunnerResult(l.Id, false, l.EnemyCount, l.BoxCount, 0, 9, 0, l.Length * 0.9f, 120, n), bundle);
+            Assert.Empty(RunnerRewards.Rows(RunnerHandoff.Take().Select(r => r.Bundle)));
+            RunnerHandoff.Reset();
+        }
+
+        Assert.Equal(before, campaign.Save());
+        Assert.Equal(1, campaign.RunnerUnlocked);
     }
 
     [Fact]
