@@ -717,8 +717,10 @@ namespace Survival.Domain.Runner
         public RunnerRun(RunnerCatalog catalog, RunnerLevelDef level, RunnerLoadout loadout)
         {
             _catalog = catalog;
-            Level = level;
             Loadout = loadout ?? RunnerLoadout.None;
+            // Only heroes owned in the main game field: an unowned hero's chests hand out an owned hero instead.
+            level = RunnerOwnership.Gate(catalog, level, Loadout);
+            Level = level;
             Hero = new RunnerMember(_nextId++, catalog.Unit(level.Hero), true, 0f, 0f, Loadout.For(level.Hero));
             ArenaLine = level.Length;
             foreach (var r in level.Rows)

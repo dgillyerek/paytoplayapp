@@ -177,7 +177,8 @@ namespace Survival.Unity
                 pick = _catalog.ByNumber(RunnerProgress.Frontier(_unlocked, count) ?? count);
             }
 
-            _level = pick;
+            // Heroes not yet recruited in the Kingdom stay out of the runner (their chests hand out an owned hero).
+            _level = RunnerOwnership.Gate(_catalog, pick, _loadout);
             try
             {
                 // The level's plan runs on a worker thread while the scene below is built.
