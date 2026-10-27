@@ -84,6 +84,9 @@ namespace Survival.Unity
             public Text Number = null!;
             public bool OnBox;
             public bool Boss;
+
+            /// <summary>A breakable barrier's bar: always shown, like a box's, so you can judge whether to shoot it down.</summary>
+            public bool Barrier;
             public float Height;
             public RectTransform? Reward;
 
@@ -597,6 +600,19 @@ namespace Survival.Unity
                     hp = b.Hp;
                     // Boxes always show their bar (and HP number) until they break, so you can judge which to shoot.
                     bar.Group.alpha = RunnerSideBar.BoxAlpha(hp);
+                }
+                else if (bar.Barrier)
+                {
+                    var b = _run.Barrier(pair.Key);
+                    if (b == null)
+                    {
+                        continue;
+                    }
+
+                    at = new Vector3(b.X, bar.Height + 0.25f, b.Z);
+                    fraction = b.HpFraction;
+                    hp = b.Hp;
+                    bar.Group.alpha = 1f;
                 }
                 else if (bar.Side)
                 {

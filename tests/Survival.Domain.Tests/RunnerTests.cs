@@ -99,21 +99,69 @@ internal static class Runner
     /// <summary>Like a player: keeps the hero's line clear of any lane trap coming up in the next 9 m (the squad behind may still clip one).</summary>
     public static float Dodge(RunnerRun run, float want)
     {
+        // Looks at every trap in the next 9 m at once (the roads have about twice the traps since Derek 2026-10-26, often
+        // two in a beat): the spot nearest the one wanted that clears all of them, or the old one-at-a-time sidestep.
+        var lane = run.Level.HalfWidth - run.Hero.Unit.Radius;
+        var near = new List<(float X, float Clear)>();
         foreach (var h in run.Hazards)
         {
             var ahead = h.Z - run.Hero.Z;
-            var clear = h.HalfWidth + run.Hero.Unit.Radius + 0.5f;
-            if (ahead < -1f || ahead > 9f || Math.Abs(want - h.X) >= clear)
+            if (ahead >= -1f && ahead <= 9f)
+            {
+                near.Add((h.X, h.HalfWidth + run.Hero.Unit.Radius + 0.5f));
+            }
+        }
+
+        // A barrier that leaves a gap is steered round like a trap (shooting it down is the other answer); one as wide as
+        // the road cannot be, so the bot keeps its line and shoots it down (or walks into it).
+        foreach (var b in run.Barriers)
+        {
+            var ahead = b.Z - run.Hero.Z;
+            if (ahead >= -1f && ahead <= 9f && !b.Def.FullWidth(run.Level.HalfWidth))
+            {
+                near.Add((b.X, b.HalfWidth + run.Hero.Unit.Radius + 0.5f));
+            }
+        }
+
+        bool Clear(float x) => near.All(h => Math.Abs(x - h.X) >= h.Clear - 1e-4f);
+        if (near.Count == 0 || Clear(want))
+        {
+            return want;
+        }
+
+        var spots = new List<float>();
+        foreach (var h in near)
+        {
+            spots.Add(h.X - h.Clear);
+            spots.Add(h.X + h.Clear);
+        }
+
+        spots.Add(-lane);
+        spots.Add(lane);
+        float? best = null;
+        foreach (var x in spots)
+        {
+            if (x >= -lane && x <= lane && Clear(x) && (best == null || Math.Abs(x - want) < Math.Abs(best.Value - want)))
+            {
+                best = x;
+            }
+        }
+
+        if (best != null)
+        {
+            return best.Value;
+        }
+
+        foreach (var h in near)
+        {
+            if (Math.Abs(want - h.X) >= h.Clear)
             {
                 continue;
             }
 
-            var lane = run.Level.HalfWidth - run.Hero.Unit.Radius;
-            var left = h.X - clear;
-            var right = h.X + clear;
-            var leftOk = left >= -lane;
-            var rightOk = right <= lane;
-            want = leftOk && (!rightOk || Math.Abs(want - left) <= Math.Abs(want - right)) ? left : right;
+            var left = h.X - h.Clear;
+            var right = h.X + h.Clear;
+            want = left >= -lane && (right > lane || Math.Abs(want - left) <= Math.Abs(want - right)) ? left : right;
         }
 
         return want;
@@ -150,11 +198,13 @@ public sealed class RunnerTests
         var level = c.First;
         Assert.Equal("runner.thornwood_road", level.Id);
         Assert.Equal("lyra", level.Hero);
-        Assert.True(level.HasBoss);
+        // A big boss only every 5th level now (Derek 2026-10-26), so Level 1 ends on its last wave.
+        Assert.False(level.HasBoss);
         Assert.True(level.EnemyCount >= 45, "enemies " + level.EnemyCount);
         // About 40% fewer boxes than before (18 -> 11): one box a beat, not a chest and a crate on every beat.
         Assert.InRange(level.BoxCount, 9, 13);
-        Assert.InRange(level.HazardCount, 1, 4);
+        // More lane traps since Derek 2026-10-26 ("the obstacles need to be more prevelant"): one every other beat on Level 1.
+        Assert.InRange(level.HazardCount, 3, 6);
         Assert.Contains(level.Rows, r => r.Hazard?.Kind == RunnerHazardKind.Spikes);
         Assert.Contains(level.Rows, r => r.Hazard?.Kind == RunnerHazardKind.Fire);
         foreach (var kind in Enum.GetValues<RunnerBoxKind>())
@@ -167,8 +217,9 @@ public sealed class RunnerTests
         Assert.Contains(level.Rows, r => r.Kind == RunnerRowKind.Enemy && r.Unit == "bonequill");
         Assert.Contains(level.Rows, r => r.Kind == RunnerRowKind.Enemy && r.Unit == "nightfang");
         Assert.Contains(level.Rows, r => r.Kind == RunnerRowKind.Enemy && r.Unit == "blightroot");
-        Assert.Equal("ironhowl", level.Rows.Single(r => r.Kind == RunnerRowKind.Boss).Unit);
-        Assert.Equal(level.Rows.Max(r => r.At), level.Rows.Single(r => r.Kind == RunnerRowKind.Boss).At);
+        var firstBoss = c.ByNumber(5);
+        Assert.Equal("ironhowl", firstBoss.Rows.Single(r => r.Kind == RunnerRowKind.Boss).Unit);
+        Assert.Equal(firstBoss.Rows.Max(r => r.At), firstBoss.Rows.Single(r => r.Kind == RunnerRowKind.Boss).At);
         var names = LockedBattleRoster.All.ToDictionary(f => f.Name, f => f.Side);
         foreach (var u in c.Units.Values)
         {
@@ -182,6 +233,10 @@ public sealed class RunnerTests
             if (row.Kind == RunnerRowKind.Hazard)
             {
                 Assert.NotNull(row.Hazard);
+            }
+            else if (row.Kind == RunnerRowKind.Barrier)
+            {
+                Assert.NotNull(row.Barrier);
             }
             else if (row.Kind != RunnerRowKind.Box)
             {
@@ -903,7 +958,8 @@ public sealed class RunnerTests
             var l = c.Levels[i];
             Assert.Equal(i + 1, l.Number);
             Assert.Same(l, c.ByNumber(l.Number));
-            Assert.True(l.HasBoss);
+            // A big boss on every 5th level only (Derek 2026-10-26: "there should only be a a big boss every 5 levels or so").
+            Assert.Equal(l.Number % 5 == 0, l.HasBoss);
             Assert.False(string.IsNullOrWhiteSpace(l.DisplayName));
             if (i == 0)
             {
@@ -915,13 +971,18 @@ public sealed class RunnerTests
             var cap = c.Progression!.Ramp!;
             Assert.True(l.Length > p.Length || (l.Length == cap.LengthCap && p.Length == cap.LengthCap), $"L{l.Number} length {p.Length} -> {l.Length}");
             Assert.True(l.Length <= cap.LengthCap);
-            Assert.True(l.Number > cap.CountCap ? l.EnemyCount >= p.EnemyCount : l.EnemyCount > p.EnemyCount, $"L{l.Number} enemies {p.EnemyCount} -> {l.EnemyCount}");
+            // The boss counts as one enemy and is only on every 5th level, so compare the waves without it.
+            int Waves(RunnerLevelDef x) => x.EnemyCount - (x.HasBoss ? 1 : 0);
+            Assert.True(l.Number > cap.CountCap ? Waves(l) >= Waves(p) : Waves(l) > Waves(p), $"L{l.Number} enemies {Waves(p)} -> {Waves(l)}");
             Assert.True(l.FoeDmgMul >= p.FoeDmgMul, $"L{l.Number} enemy damage");
             Assert.True(l.FoeHpTotal(c) > p.FoeHpTotal(c), $"L{l.Number} enemy hp");
             Assert.True(l.FoeHpMul >= p.FoeHpMul);
             Assert.True(l.BoxCount >= p.BoxCount, $"L{l.Number} boxes {p.BoxCount} -> {l.BoxCount}");
             Assert.True(l.BoxHpTotal > p.BoxHpTotal, $"L{l.Number} box hp");
-            Assert.True(l.BossHp(c) > p.BossHp(c), $"L{l.Number} boss hp");
+            if (l.HasBoss && l.Number > 5)
+            {
+                Assert.True(l.BossHp(c) > c.ByNumber(l.Number - 5).BossHp(c), $"L{l.Number} boss hp");
+            }
             Assert.True(l.Rewards.WinGold > p.Rewards.WinGold && l.Rewards.GoldPerKill >= p.Rewards.GoldPerKill && l.Rewards.Shards >= p.Rewards.Shards);
             Assert.True(l.Rows.Count(r => r.Box?.Kind == RunnerBoxKind.Followers) >= p.Rows.Count(r => r.Box?.Kind == RunnerBoxKind.Followers));
             Assert.True(l.HazardCount >= p.HazardCount, $"L{l.Number} hazards {p.HazardCount} -> {l.HazardCount}");
@@ -937,7 +998,7 @@ public sealed class RunnerTests
         Assert.Contains(c.Levels[^1].Rows, r => r.Unit == "ashwyrm");
         Assert.DoesNotContain(c.First.Rows, r => r.Unit == "vespera" || r.Unit == "ashwyrm");
         var names = LockedBattleRoster.All.ToDictionary(f => f.Name, f => f.Side);
-        Assert.All(c.Levels.SelectMany(l => l.Rows).Where(r => r.Kind != RunnerRowKind.Box && r.Kind != RunnerRowKind.Hazard), r => Assert.Equal(BattleSide.Villain, names[c.Unit(r.Unit).Roster]));
+        Assert.All(c.Levels.SelectMany(l => l.Rows).Where(r => r.Kind is RunnerRowKind.Enemy or RunnerRowKind.Boss), r => Assert.Equal(BattleSide.Villain, names[c.Unit(r.Unit).Roster]));
 
         // Same seed, same levels.
         var again = Runner.Catalog();
@@ -952,6 +1013,7 @@ public sealed class RunnerTests
     {
         var c = Runner.Catalog();
         var last = 0f;
+        RunnerLevelDef? lastBoss = null;
         foreach (var level in c.Levels)
         {
             var good = new RunnerRun(c, level, RunnerShipped.Squad(c, level));
@@ -977,9 +1039,17 @@ public sealed class RunnerTests
             // Later levels are longer roads: the squad reaches the boss later each time (the fight itself varies with the squad it arrives with).
             // Once the road hits the ramp's length cap it stops growing (the squad still speeds up to the speed cap),
             // so from there the arrival only has to stay within 10% of the last one.
-            var grew = level.Number == 1 || level.Length > c.ByNumber(level.Number - 1).Length;
-            Assert.True(grew ? arrived > last : arrived >= 0.9f * last, $"L{level.Number} reaches the boss at {arrived} after {last}");
+            // Only every 5th level has a boss now, so the arrival is compared with the last boss level's; five levels of a faster
+            // squad (up to the speed cap) can take back a little of the longer road, so it only has to stay within 5% of it.
+            if (!level.HasBoss)
+            {
+                continue;
+            }
+
+            var grew = lastBoss == null || level.Length > lastBoss.Length;
+            Assert.True(grew ? arrived >= 0.95f * last : arrived >= 0.9f * last, $"L{level.Number} reaches the boss at {arrived} after {last}");
             last = arrived;
+            lastBoss = level;
         }
     }
 

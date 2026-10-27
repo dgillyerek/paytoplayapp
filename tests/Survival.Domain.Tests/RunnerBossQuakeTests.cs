@@ -341,12 +341,20 @@ public sealed class RunnerBossQuakeTests
             var sHp = still.Run.Hero.HpFraction;
             var dLost = dodge.Events.Count(e => e.Kind == RunnerEventKind.FollowerLost && e.Amount >= 0);
             var sLost = still.Events.Count(e => e.Kind == RunnerEventKind.FollowerLost);
-            var dFight = dodge.Run.Seconds - dodge.Moves.First(m => m.Kind == RunnerEventKind.BossEngaged).At;
-            var sFight = still.Run.Seconds - still.Moves.First(m => m.Kind == RunnerEventKind.BossEngaged).At;
-            _out.WriteLine($"L{level.Number}: dodge {dodge.Run.Outcome} fight {dFight:0.0}s quakes {dq} hero {dHp:P0} lost {dLost} | still {still.Run.Outcome} fight {sFight:0.0}s quakes {sq} hero {sHp:P0} lost {sLost}");
-            if (dodge.Run.Outcome != RunnerOutcome.Won || dq < 1)
+            // Only every fifth level ends on the boss (Derek 2026-10-26); the rest end at the finish line and are just won.
+            var boss = level.HasBoss;
+            float FightOf(Fight f) => boss && f.Moves.Any(m => m.Kind == RunnerEventKind.BossEngaged) ? f.Run.Seconds - f.Moves.First(m => m.Kind == RunnerEventKind.BossEngaged).At : 0f;
+            var dFight = FightOf(dodge);
+            var sFight = FightOf(still);
+            _out.WriteLine($"L{level.Number}{(boss ? " boss" : "")}: dodge {dodge.Run.Outcome} fight {dFight:0.0}s quakes {dq} hero {dHp:P0} lost {dLost} | still {still.Run.Outcome} fight {sFight:0.0}s quakes {sq} hero {sHp:P0} lost {sLost}");
+            if (dodge.Run.Outcome != RunnerOutcome.Won || (boss && dq < 1) || (!boss && dq > 0))
             {
                 problems.Add($"L{level.Number}: {dodge.Run.Outcome}, {dq} quakes");
+            }
+
+            if (!boss)
+            {
+                continue;
             }
 
             if (still.Run.Outcome == RunnerOutcome.Won && sHp > 0.8f)

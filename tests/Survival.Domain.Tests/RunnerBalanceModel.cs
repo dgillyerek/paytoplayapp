@@ -101,8 +101,37 @@ public sealed class BalanceReport
     public static bool Wins(RunnerCatalog c, RunnerLevelDef level, RunnerLoadout loadout) => Sim(c, level, loadout).Outcome == RunnerOutcome.Won;
 
     /// <summary>
+    /// Wins at scale <paramref name="s"/> by a vote of the runs at s / 1.05, s and s x 1.05. Since the roads got about twice
+    /// the traps plus breakable barriers (Derek 2026-10-26), one run is no longer monotone in the scale: a slightly stronger
+    /// squad walks into a trap at a different moment and can lose where a weaker one won. The vote smooths that out so the
+    /// bisection measures the trend, not one unlucky run.
+    /// </summary>
+    public static bool WinsAround(RunnerCatalog c, RunnerLevelDef level, double s)
+    {
+        int won = 0, lost = 0;
+        foreach (var k in new[] { 1.0, 1 / 1.05, 1.05 })
+        {
+            if (Wins(c, level, RunnerBalance.Uniform(c, s * k)))
+            {
+                won++;
+            }
+            else
+            {
+                lost++;
+            }
+
+            if (won == 2 || lost == 2)
+            {
+                break;
+            }
+        }
+
+        return won == 2;
+    }
+
+    /// <summary>
     /// The least uniform stat scale (every squad unit's damage and HP times s) a dodging player wins the level with:
-    /// geometric bisection on [1/8, 64], 12 halvings (about 0.4% precision).
+    /// geometric bisection on [1/8, 64], 12 halvings (about 0.4% precision), each step a <see cref="WinsAround"/> vote.
     /// </summary>
     public static double FindRequiredScale(RunnerCatalog c, RunnerLevelDef level)
     {
@@ -115,7 +144,7 @@ public sealed class BalanceReport
         for (var k = 0; k < 12; k++)
         {
             var mid = Math.Sqrt(lo * hi);
-            if (Wins(c, level, RunnerBalance.Uniform(c, mid)))
+            if (WinsAround(c, level, mid))
             {
                 hi = mid;
             }

@@ -301,9 +301,11 @@ public sealed class RunnerEveryoneAttacksTests
         var events = Runner.Play(run, _ => 0f, 40f);
         var hits = events.Where(e => e.Kind == RunnerEventKind.FollowerHit).ToList();
         Assert.NotEmpty(hits);
-        // 15 off 25: the first arrow leaves a follower standing on 10.
+        // The catalog's arrow (5 since the longer reach, Derek 2026-10-26) off 25: the first one leaves a follower standing.
         var first = hits[0];
-        Assert.Equal(15f, first.Amount);
+        var arrow = Runner.Catalog().Unit("bonequill").Damage;
+        Assert.Equal((float)arrow, first.Amount);
+        Assert.True(arrow < RunnerRules.FollowerHp);
         Assert.True(events.IndexOf(first) < events.FindIndex(e => e.Kind == RunnerEventKind.FollowerLost && e.Id == first.Id)
             || !events.Any(e => e.Kind == RunnerEventKind.FollowerLost && e.Id == first.Id));
     }

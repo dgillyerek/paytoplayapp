@@ -325,7 +325,7 @@ public sealed class RunnerCapMeleeBossTests
     public void Every_shipped_boss_winds_up_and_slams_and_still_loses_to_nobody_who_lines_up_and_dodges()
     {
         var c = Runner.Catalog();
-        foreach (var level in c.Levels)
+        foreach (var level in c.Levels.Where(l => l.HasBoss))
         {
             var run = new RunnerRun(c, level, RunnerShipped.Squad(c, level));
             int windups = 0, slams = 0;
