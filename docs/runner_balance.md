@@ -25,8 +25,48 @@
 5. **The level ramp (runner_levels.json `ramp`).**
    - Past L12, levels stop adding length past 330 m and stop adding enemies or boxes past 20 rows (`count_cap`).
    - Each level multiplies enemy HP by 1.115 and enemy damage by 1.072 (boss HP 1.115).
-   - From L31 on there is a one-time **step of +30% HP / +12% damage**, followed by a gentler 1.016 / 1.0105 per level (wall damage growth raised from 1.008 when the heroes went to half the shots at ~2x damage, to keep the free L50 grind over a year).
+   - From L31 on there is a one-time **step of +30% HP / +12% damage**, followed by a gentler 1.021 HP / 1.0125 damage / 1.016 boss HP per level (HP and damage were 1.016 / 1.0105 before the Oct 26, 2026 obstacle pass; see below).
    - The result is a ramp, not a cliff: no level needs more than 1.6× the level before (tested).
+
+## Enemy shots, denser traps, bosses every 5 levels, barriers (Oct 26, 2026)
+
+Derek: *"the attacks from the enimies in the runner stage move too slowly once fired. make them about 25% faster. Also they don't start firing from as far away as the heroes can"*, *"the obstacles need to be more prevelant and do more damage. there should only be a a big boss every 5 levels or so"*, and *"there hsould be some obstacles that can get destroyed but do damage if you don't avoid them. maybe some type of gate or stone fence"*.
+
+- **Enemy shots 25% faster:** Bonequill 12 → 15 m/s, Vespera 11 → 13.75 m/s. A shot's flight length now covers the range it was fired from.
+- **Range parity:** a ranged enemy (not the boss) opens fire from its own range or the squad's longest current reach, whichever is longer. The squad's reach includes range crates (`RangeMul`), so the enemies' range grows with the heroes'. A ranged foe that a hero can hit can also shoot back.
+- **Ranged enemy damage 15 → 5 (Bonequill) and 24 → 7 (Vespera).** With faster shots fired from ~1.5x as far, archers hit far more often, and on the old damage the free wall dropped well below L31. The new numbers keep a ranged foe's damage per fight about where it was.
+- **Traps about 1.5–2x as often and about 1.75x the damage.**
+  - Placement: every other beat on L1–4 and every beat from L5. A second trap goes on one beat in four from L13 and on every other beat from L22. Before, it was every third beat or every other beat.
+  - Damage: spikes 70 + 5/level, rolling log 96 + 7/level, fire 52 + 5/level. Before, it was 40 + 3, 55 + 4 and 30 + 3.
+  - A trap never sits in the lane of the box just before it, so every trap can still be dodged. The dodge sim agrees: steering costs 0.36 levels in 50, and not steering costs 10.
+  - Per level (traps / mean damage), before → after: L1 3/37 → 5/63, L10 14/70 → 17/122, L20 22/105 → 28/180, L30 22/138 → 33/237, L50 22/204 → 33/350.
+- **Big boss (Ironhowl) only on L5, 10, 15 … 50** (`boss_every: 5`): 10 boss levels instead of 50. The other levels end on the last wave and the finish line. The boss bar and the quake only appear on boss levels. The boss TTK balance test now runs on boss levels only.
+- **Breakable barriers** (`kind: "barrier"` rows):
+  - Kinds: palisade gate, stone wall, spiked barricade.
+  - Each has an always-visible HP bar. Squad shots chip it down until it breaks with debris.
+  - Walking into one damages whoever touches it (the hero takes the full damage; a follower takes a trap share) and smashes it.
+  - Placement: L2+ every third beat, every other beat from L15, every beat from L25. At 3 m past the beat's box.
+    - Most barriers stand against the road edge away from that box and leave at least 2 m open (dodge or shoot).
+    - From L6, every fourth barrier is full width (alternating palisade and stone wall), so it has to be shot down or walked through.
+  - HP is a share of the beat's box HP, so it scales with the level: barricade 15%, palisade 22%, stone wall 30%, full width 20%.
+  - Contact damage: palisade 50 + 4/level, stone wall 60 + 5/level, barricade 70 + 5/level.
+  - Barrier counts: L5 4, L10 6, L15 10, L20 11, L25+ 21 (720 in all, 159 full width).
+  - Tests check that at L1–30 the free player's required power shoots down every full-width barrier in time.
+  - The art is placeholder primitives (`RunnerLevelView.Barriers.cs`). **Design should make the final art.**
+  - Sound hooks (`RunnerLevelView.BarrierSound` event): `runner.barrier.hit`, `runner.barrier.break`, `runner.barrier.smash`.
+- **Ramp past the wall:** HP 1.016 → 1.021 and damage 1.0105 → 1.0125 per level; boss HP is unchanged at 1.016. Fewer bosses made late levels shorter fights, and this keeps the free L50 grind near two years.
+
+| Profile | Wall before → after | L35 | L40 | L45 | L50 first clear (day) before → after |
+|---|---|---|---|---|---|
+| free | L31 → **L31** | 28.7 → 75.3 | 195.3 → 122.3 | 238.0 → 233.3 | 566.3 → **701.3** |
+| light | L33 → L33 | 14.7 → 21.0 | 28.0 → 35.0 | 43.0 → 49.0 | 63.3 → 63.3 |
+| mid | L40 → L35 | 11.3 → 14.0 | 14.0 → 15.7 | 21.7 → 22.0 | 28.3 → 28.3 |
+| whale | none → none | 11.3 → 11.3 | 13.0 → 13.0 | 14.7 → 14.7 | 16.3 → 16.3 |
+| stuck_39 | L31 → L31 | 10.0 → 10.0 | 122.7 → 28.7 | 165.3 → 157.0 | 494.0 → 624.7 |
+
+The "before" numbers come from the model on main just before this change. They differ slightly from the older tables above, which predate later tweaks.
+
+**L1–30 stay easy:** the free player still clears L30 on day 9.7, on schedule. The required-power ratio is L12 6.3 → 7.6, L20 3.8 → 4.9, L25 3.0 → 2.6 and L30 1.34 → 1.15, and the free wall stays at L31 (ratio 0.96). The mid player's wall moved from L40 to L35, but mid still clears L50 on day 28.
 
 ## Power packs (the IAP ladder, added Oct 24, 2026)
 
@@ -192,6 +232,8 @@ UPDATE_GOLDEN=1 dotnet test tests/Survival.Domain.Tests --filter RunnerBalance
 
 Commit the updated `Golden/runner_balance.json` along with the change, and read the diff in the PR.
 
-**Last intentional regen (Oct 24, 2026, power packs):** the free curve is unchanged (no `free` line in the diff). Light/whale moved because the gem crate was replaced by the pack ladder (whale wall L39 → none, light L50 day 358 → 64), and the `mid` and `stuck_39` profiles are new. If a band test (wall at L30–33 etc.) fails, the change broke the design itself, not just the snapshot: retune `ramp` in runner_levels.json instead.
+**Last intentional regen (Oct 26, 2026, enemy shots, traps, bosses every 5, barriers):** walls free L31, light L33, mid L40 → L35, whale none, stuck_39 L31. Free L50 day 566 → 701. See the Oct 26 section above.
+
+**Previous regen (Oct 24, 2026, power packs):** the free curve is unchanged (no `free` line in the diff). Light/whale moved because the gem crate was replaced by the pack ladder (whale wall L39 → none, light L50 day 358 → 64), and the `mid` and `stuck_39` profiles are new. If a band test (wall at L30–33 etc.) fails, the change broke the design itself, not just the snapshot: retune `ramp` in runner_levels.json instead.
 
 To see the table: `dotnet test tests/Survival.Domain.Tests --filter Writes_the_balance_table --logger "console;verbosity=detailed"`.
