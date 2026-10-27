@@ -2,7 +2,7 @@
 
 **Goal (Derek):** a free player with normal upgrades gets through levels 1–30 fairly easily. Levels 31–50 are close to impossible without buying upgrades. Any change to a baseline (units, power-ups, upgrades, starting damage …) that moves the curve noticeably should fail a test.
 
-**Where it stands:** the free player hits the **wall at level 31**. Levels 1–12 play the same as before. Since the Gold Mine (below), a free player is no longer stuck for good: L40 takes about 5 months and L50 about 27 months.
+**Where it stands:** the free player hits the **wall at level 31**. Levels 1–12 play the same as before. Since the Gold Mine (below), a free player is no longer stuck for good: L40 takes about 3 months and L50 about 18 months.
 
 ## How the math works
 
@@ -28,6 +28,59 @@
    - From L31 on there is a one-time **step of +30% HP / +12% damage**, followed by a gentler 1.021 HP / 1.0125 damage / 1.016 boss HP per level (HP and damage were 1.016 / 1.0105 before the Oct 26, 2026 obstacle pass; see below).
    - The result is a ramp, not a cliff: no level needs more than 1.6× the level before (tested).
 
+## Layout variety (Oct 27, 2026)
+
+**Why (Derek):** "it seems like each item is in the same place". Every generated level put its beats every 13 m and built each beat the same way, so boxes, traps and barriers stood in the same spots level after level (98–100% of item positions matched the level before).
+
+**What changed (`RunnerProgression`, L2 onwards; L1 stays hand-made):**
+- **Uneven spacing.** After the three opening beats, the road runs in stretches of 1–3 beats that are tight (9–11.5 m), even (12–14 m) or breathing (15–18 m). The draw stays within `MaxDrift` (6 m) of the even 13 m beat. Fitting back to the level's length can push a beat a little further (10.5 m at most). The last beat stands where it always did, so the finale and the boss keep their places.
+- **Set pieces.** Each beat is one of 8 set pieces (`RunnerSetPiece`):
+  - **March:** the old layout.
+  - **WaveFirst:** half the back line ahead of the box.
+  - **Ambush:** the box in the middle with the wave split to both sides.
+  - **TrapCorridor:** traps down both edges.
+  - **Barricade:** a barrier on one edge with the wave across the open side.
+  - **ArcherNest:** archers behind a wall on one edge.
+  - **CrateRun:** the beat's boxes back to back down the middle.
+  - **FodderRush:** the front wave in three small packs.
+- **How the pieces are picked.** Beat 2 cycles Ambush / CrateRun / ArcherNest / FodderRush by level number, so two levels in a row never open the same way. Later beats are drawn from the seed among the pieces that beat's contents allow, never the same piece twice running.
+- **What stays the same.** What each beat holds (boxes, enemies, traps, barriers, HP) still follows the beat index. So counts, HP, the box-to-enemy trend and the 1.6x limit are unchanged in kind; only placement moves.
+- **Safety.** Every trap and side barrier still leaves an escape lane of at least 2 m (`KeepEscapeLanes`). Enemies that would spawn pressed against a full-width barrier stand `WallStandOff` (1.8 m) back, so they walk from their first frame (`StandOffWalls`).
+- **Result.** Two levels in a row now share 3–39% of their item positions (same kind, same lane, within 1 m), against 98–100% before.
+
+**Layout re-rolls (`"layout": n` in `level_tweaks`).** A re-roll changes only the RNG for where the beats start and which set piece each is. Everything on the road stays the same. The first roll made some levels much harder or easier than the curve, which mostly came down to whether boxes got opened before the wave arrived. A sweep of salts 0–9 per level (required power, a shipped-squad win and a free at-pace win) picked the re-rolls that keep the curve close to before, keep the walls, keep L1–12 under power 1, and keep every step under 1.6x:
+
+| Level | Layout | Required power before → after |
+|---|---|---|
+| L2 | 7 | 0.67 → 0.67 |
+| L5 | 2 | 0.70 → 0.67 |
+| L6 | 3 | 0.87 → 0.84 |
+| L9 | 1 | 0.78 → 0.81 |
+| L10 | 2 | 0.80 → 0.80 |
+| L11 | 2 | 0.70 → 0.78 |
+| L12 | 2 | 0.83 → 0.81 |
+| L15 | 5 | 1.27 → 1.21 |
+| L29 | 3 | 10.46 → 10.68 |
+| L31 | 4 | 14.94 → 14.71 |
+| L32 | 4 | 14.62 → 14.53 |
+| L33 | 2 | 14.31 → 14.31 |
+| L50 | 2 | 35.70 → 33.48 |
+
+**Balance before → after:**
+- **Walls:** unchanged (free L31, light L34, mid L36, whale none, stuck_39 L31).
+- **Largest step:** 1.56x → 1.49x.
+- **Free player:** L40 day 152 → 98 and L50 day 830 → 564. Some late levels (L34–35, L41, L44, L49) roll easier than before.
+- **Paying players:** light, mid and whale clear days are unchanged.
+
+`RunnerLayoutVarietyTests` checks:
+- position similarity under 50% for every pair of neighbouring levels, and L10 / L11 / L12;
+- no repeated set-piece sequence;
+- 9–18 m gaps;
+- escape lanes;
+- the wall stand-off.
+
+`RunnerLevelTweakTests` checks that a re-roll keeps the same boxes, enemies, traps, barriers and HP (within 2%, since HP climbs along the road) and moves rows.
+
 ## Side hits, enemies avoid obstacles, per-level tweaks (Oct 27, 2026)
 
 **What changed in play (Derek):**
@@ -36,15 +89,7 @@
 - **Full-width barriers** have 0.1 of the beat-box HP, so the squad can still shoot through them.
 - **Ramp:** foe HP grows 1.112 a level and foe damage 1.067. Past the wall, wall HP grows 1.026 a level and the wall step is 1.35.
 
-**Per-level tweaks (`progression.level_tweaks` in `runner_levels.json`, `RunnerLevelTweak`).** Each level can set `wave` (enemies per wave group), `foe_hp` (enemy HP) and `barrier_hp` (barrier HP). All three default to 1.0, and the layout always stays the seed's. With the new mechanics the seed made three levels spike past the 1.6x step limit. The seed and the limit stay, and only these levels are trimmed:
-
-| Level | Tweak | Required power before → after | Step from the level before, before → after |
-|---|---|---|---|
-| L19 | `wave` 0.7 | 2.90 → 2.49 | 1.71 → **1.47** |
-| L22 | `wave` 0.8 | 4.36 → 3.65 | 1.87 → **1.56** |
-| L26 | `foe_hp` 0.8 | 7.41 → 6.58 | 1.76 → **1.56** |
-
-L26 trims enemy HP rather than the wave, because thinning its wave broke the shipped-level sims (walk-on spawns, everyone attacks). The "gets harder level by level" test skips the enemy-count and HP checks for a tweaked level and compares the next level with the last untweaked one. `RunnerLevelTweakTests` checks that only L19, L22 and L26 are tweaked, that boxes, traps, barriers and the boss stay where the seed put them, and that enemy groups keep their spot and unit.
+**Per-level tweaks (`progression.level_tweaks` in `runner_levels.json`, `RunnerLevelTweak`).** Each level can set `wave` (enemies per wave group), `foe_hp` (enemy HP), `barrier_hp` (barrier HP) and `layout` (re-roll the layout; see "Layout variety" below). The L19 / L22 / L26 wave and HP trims of this pass were replaced by layout re-rolls in the layout-variety pass. The "gets harder level by level" test skips the enemy-count and HP checks only for a level trimmed with `wave` or `foe_hp`.
 
 **King's Treasury ($39.99):** War Banners 5 → **6**. With 5, a player stuck at the free wall cleared only 5 new levels (L31–L35), and the test asks for at least 6. With 6, they clear **11 (L31–L41)**. Value is 8,800 → 8,860 gem-eq (1.98× → 1.99× the $0.99 pack's value per $), and the label stays "+95%".
 
@@ -288,7 +333,9 @@ UPDATE_GOLDEN=1 dotnet test tests/Survival.Domain.Tests --filter RunnerBalance
 
 Commit the updated `Golden/runner_balance.json` along with the change, and read the diff in the PR.
 
-**Last intentional regen (Oct 27, 2026, side hits, enemies avoid obstacles, L19/L22/L26 tweaks, 6th Banner in the $39.99 pack):** walls free L31, light L33 → L34, mid L35 → L36, whale none, stuck_39 L31. Free L50 day 701 → 832, mid 28 → 28. See the Oct 27 section above.
+**Last intentional regen (Oct 27, 2026, layout variety):** walls unchanged (free L31, light L34, mid L36, whale none, stuck_39 L31). Free L50 day 830 → 564, stuck_39 745 → 486, light / mid / whale unchanged. See "Layout variety" above.
+
+**Previous regen (Oct 27, 2026, side hits, enemies avoid obstacles, L19/L22/L26 tweaks, 6th Banner in the $39.99 pack):** walls free L31, light L33 → L34, mid L35 → L36, whale none, stuck_39 L31. Free L50 day 701 → 832, mid 28 → 28. See the Oct 27 section above.
 
 **Previous regen (Oct 26, 2026, enemy shots, traps, bosses every 5, barriers):** walls free L31, light L33, mid L40 → L35, whale none, stuck_39 L31. Free L50 day 566 → 701. See the Oct 26 section above.
 
