@@ -455,8 +455,11 @@ public sealed class RunnerTests
                     run.Step(1f / 30f);
                     if (!run.Over)
                     {
-                        // Full pace through every wave; only the arena line in front of the boss stops it.
-                        Assert.Equal(Math.Min(before + (level.Speed / 30f), run.ArenaLine), run.Distance, 3);
+                        // Full pace through every wave; only the arena line in front of the boss stops it. On a level
+                        // without a boss the squad runs for the gate once the road ahead is clear (never slower).
+                        Assert.Equal(run.Charging ? run.Pace : level.Speed, run.Pace);
+                        Assert.True(run.Pace >= level.Speed);
+                        Assert.Equal(Math.Min(before + (run.Pace / 30f), run.ArenaLine), run.Distance, 3);
                         Assert.Equal(run.Distance >= run.ArenaLine - 1e-3f, run.Halted);
                     }
                 }
@@ -990,6 +993,13 @@ public sealed class RunnerTests
             }
 
             var p = c.Levels[i - 1];
+            // A boss level has the boss where a level without one has its closing set piece (trap gauntlet, fodder push,
+            // captain): compare a boss level with the level before minus that set piece.
+            if (l.HasBoss)
+            {
+                p = p with { Rows = p.Rows.Where(r => !r.Finale).ToList() };
+            }
+
             // The road grows until the ramp's length cap and the packs until its count cap; past those only HP and damage climb.
             var cap = c.Progression!.Ramp!;
             Assert.True(l.Length > p.Length || (l.Length == cap.LengthCap && p.Length == cap.LengthCap), $"L{l.Number} length {p.Length} -> {l.Length}");

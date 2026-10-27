@@ -185,6 +185,15 @@ namespace Survival.Domain.Runner
     /// </summary>
     public static class RunnerProgression
     {
+        /// <summary>A level without a boss ends this many metres past its last row (the finale's captain): the finish gate.</summary>
+        public const float FinishPad = 3f;
+
+        /// <summary>The finale (no-boss levels) starts this far before where the boss would stand (the old archer line's spot).</summary>
+        public const float FinaleBack = 7f;
+
+        /// <summary>From this level on the finale has two captains.</summary>
+        public const int FinaleSecondCaptainFrom = 20;
+
         /// <summary>Metres from one beat (boxes, then a wave) to the next.</summary>
         public const float BeatMetres = 13f;
 
@@ -232,6 +241,12 @@ namespace Survival.Domain.Runner
             var ramp = p.Ramp;
             var length = (float)Math.Round(Math.Min(first.Length + (p.LengthStep * t), ramp?.LengthCap ?? float.MaxValue));
             var rows = Rows(p, number, length, first.HalfWidth, p.IsBossLevel(number) ? BossUnit(first) : null, hasUnit);
+            if (!p.IsBossLevel(number))
+            {
+                // No boss: the finish gate stands just past the finale, not where the boss section would end.
+                length = Math.Min(length, (float)Math.Ceiling(rows[rows.Count - 1].At + FinishPad));
+            }
+
             var r = first.Rewards;
             var pay = 1f + (p.RewardStep * t);
             var rewards = new RunnerRewardDef(
@@ -256,7 +271,8 @@ namespace Survival.Domain.Runner
                 DisplayName = number - 1 < p.Names.Count ? p.Names[number - 1] : "Road " + number.ToString(CultureInfo.InvariantCulture),
                 FoeHpMul = first.FoeHpMul * (1f + (p.FoeHpStep * t)) * (ramp?.FoeHpMul(number) ?? 1f) * p.Tweak(number).FoeHp,
                 BossHpMul = first.BossHpMul * (1f + (p.BossHpStep * t)) * (ramp?.BossHpMul(number) ?? 1f),
-                FoeDmgMul = first.FoeDmgMul * (ramp?.FoeDmgMul(number) ?? 1f)
+                FoeDmgMul = first.FoeDmgMul * (ramp?.FoeDmgMul(number) ?? 1f),
+                GateCharge = first.GateCharge
             };
         }
 
@@ -423,16 +439,57 @@ namespace Survival.Domain.Runner
                 side = -side;
             }
 
-            // The boss's guard (or, on a level without a boss, the last wave before the finish): a line of archers, longer
-            // with the level.
-            Group(rows, bossAt - 7f, 0f, "bonequill", 3 + (tc / 2), 1.4f, halfWidth);
             if (bossUnit != null)
             {
+                // The boss's guard: a line of archers, longer with the level, then the boss.
+                Group(rows, bossAt - 7f, 0f, "bonequill", 3 + (tc / 2), 1.4f, halfWidth);
                 rows.Add(new RunnerRowDef(bossAt, RunnerRowKind.Boss, 0f, bossUnit, 1, 0f, null));
+            }
+            else
+            {
+                Finale(rows, number, t, tc, bossAt - FinaleBack, traps, halfWidth, hasUnit, W);
             }
 
             rows.Sort((a, b) => a.At.CompareTo(b.At));
             return rows;
+        }
+
+        /// <summary>
+        /// The closing set piece of a level without a boss, where the boss section used to stand (Derek 2026-10-27: "too
+        /// much empty space at the end of the runner levels that don't have a larger enemy"): a trap gauntlet on both
+        /// edges with the middle left open, a fast fodder line down that middle, the old archer line, and a captain (a
+        /// heavy: Blightroot, Ashwyrm from Level 7; two of them from <see cref="FinaleSecondCaptainFrom"/>) at the back,
+        /// just short of the finish gate (<see cref="FinishPad"/> m past the last rank).
+        /// </summary>
+        private static void Finale(List<RunnerRowDef> rows, int number, int t, int tc, float z, List<RunnerHazardKind> traps, float halfWidth, Func<string, bool> hasUnit, Func<int, int> w)
+        {
+            var edge = halfWidth - 1.1f;
+            var from = rows.Count;
+            AddFinaleTrap(rows, traps[number % traps.Count], z, -edge, halfWidth, t);
+            AddFinaleTrap(rows, traps[(number + 1) % traps.Count], z + 1.5f, edge, halfWidth, t);
+            Group(rows, z + 3f, 0f, "nightfang", w(3 + (tc / 3)), 1.1f, halfWidth);
+            var captain = number >= 7 && hasUnit("ashwyrm") ? "ashwyrm" : "blightroot";
+            Group(rows, z + 6f + (FinaleRanks(3 + (tc / 2)) * 1.5f) + 1f, 0f, captain, number >= FinaleSecondCaptainFrom ? 2 : 1, 3.2f, halfWidth);
+            for (var i = from; i < rows.Count; i++)
+            {
+                rows[i] = rows[i] with { Finale = true };
+            }
+
+            // The archer line a boss level has as the boss's guard stands between the push and the captain.
+            Group(rows, z + 6f, 0f, "bonequill", 3 + (tc / 2), 1.4f, halfWidth);
+        }
+
+        private static int FinaleRanks(int count) => (count + MaxPerRank - 1) / MaxPerRank;
+
+        private static void AddFinaleTrap(List<RunnerRowDef> rows, RunnerHazardKind kind, float z, float x, float halfWidth, int t)
+        {
+            var def = kind switch
+            {
+                RunnerHazardKind.Spikes => new RunnerHazardDef(kind, 2.0f, SpikeDamage + (SpikeDamageStep * t), 0f),
+                RunnerHazardKind.Log => new RunnerHazardDef(kind, 2.2f, LogDamage + (LogDamageStep * t), 0f),
+                _ => new RunnerHazardDef(kind, 1.8f, FireDamage + (FireDamageStep * t), 0f)
+            };
+            rows.Add(new RunnerRowDef(z, RunnerRowKind.Hazard, Math.Max(-halfWidth + (def.Width * 0.5f), Math.Min(halfWidth - (def.Width * 0.5f), x)), "", 1, 0f, null) { Hazard = def });
         }
 
         /// <summary>A group of <paramref name="count"/> enemies around x: ranks of up to <see cref="MaxPerRank"/>, 1.5 m apart, fitted to the lane.</summary>

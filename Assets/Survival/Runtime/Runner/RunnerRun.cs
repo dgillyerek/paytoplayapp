@@ -119,6 +119,12 @@ namespace Survival.Domain.Runner
         /// <summary>Enemies drift sideways toward the hero this fast while they walk in.</summary>
         public const float EnemySeek = 0.55f;
 
+        /// <summary>
+        /// On a level without a boss, once the road ahead is clear the squad runs for the finish gate and covers what is
+        /// left in at most this long (s) (Derek 2026-10-27: no long empty walk at the end).
+        /// </summary>
+        public const float GateChargeSeconds = 1.2f;
+
         /// <summary>Boxes this far behind the hero are left behind (no box).</summary>
         public const float PassBehind = 1.2f;
 
@@ -754,6 +760,14 @@ namespace Survival.Domain.Runner
         /// <summary>True once the squad has reached the boss.</summary>
         public bool BossFight { get; private set; }
 
+        /// <summary>True once the road to the finish is clear on a level without a boss and the squad runs for the gate.</summary>
+        public bool Charging => _charge > 0f;
+
+        /// <summary>The squad's walking pace (m/s): the level's speed, or the gate charge's once it starts.</summary>
+        public float Pace => Charging ? _charge : Level.Speed;
+
+        private float _charge;
+
         /// <summary>True while the squad stands at the boss's arena line (only the boss ever stops it).</summary>
         public bool Halted { get; private set; }
 
@@ -889,7 +903,17 @@ namespace Survival.Domain.Runner
                 p.PrevZ = p.Z;
             }
 
-            Distance = Math.Min(RoadEnd, Distance + (Level.Speed * dt));
+            // Gate charge: on a level without a boss, once the last row has spawned and the road ahead is clear (no enemy
+            // left, no box, trap or barrier still ahead), the squad runs for the finish so it never walks an empty road
+            // for long. Latched at the moment the road clears: it covers what is left in GateChargeSeconds, never slower
+            // than the walk.
+            if (_charge == 0f && RoadClear())
+            {
+                _charge = Math.Max(Level.Speed, (Level.Length - Distance) / RunnerRules.GateChargeSeconds);
+            }
+
+            var pace = Pace;
+            Distance = Math.Min(RoadEnd, Distance + (pace * dt));
             Halted = Level.HasBoss && Distance >= ArenaLine - 1e-4f;
 
             var vx = Hero.VX;
@@ -909,7 +933,7 @@ namespace Survival.Domain.Runner
                 m.VX = fvx;
                 // Joiners run in from their box faster than the walk, then hold their slot exactly.
                 var tz = Distance + sz;
-                var run = (Level.Speed + 4f) * dt;
+                var run = (pace + 4f) * dt;
                 m.Z += Clamp(tz - m.Z, -run, run);
             }
         }
@@ -2065,6 +2089,15 @@ namespace Survival.Domain.Runner
         }
 
         // ---------- clean-up and end ----------
+
+        private bool RoadClear() =>
+            Level.GateCharge
+            && !Level.HasBoss
+            && _nextRow >= Level.Rows.Count
+            && _foes.Count == 0
+            && !_boxes.Exists(b => b.Z > Hero.Z)
+            && !_hazards.Exists(h => h.Z > Hero.Z - 1f)
+            && !_barriers.Exists(b => b.Z > Hero.Z - 1f);
 
         private void DropPassed()
         {

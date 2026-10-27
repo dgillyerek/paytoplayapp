@@ -58,6 +58,32 @@ L26 trims enemy HP rather than the wave, because thinning its wave broke the shi
 
 Required power is now 0.83 on L12, 2.04 on L20, 4.21 on L25, 10.3 on L30, 14.9 on L31 (a 1.45 step), 22.5 on L40 and 35.7 on L50. The free player still clears L30 on day 9.7 and fails L31 (ratio 0.92).
 
+## Level finale and finish gate on levels without a boss (Oct 27, 2026)
+
+Derek: *"there's too much empty space at the end of the runner levels that don't have an larger enemy"*. Once bosses moved to every 5th level, the other levels kept the empty stretch where the boss section used to stand. The squad walked 11–20 s of empty road before the finish (L1 20 s, L2 16 s, L17+ about 13 s).
+
+- **Finale** (`RunnerProgression.Finale`, rows flagged `Finale`), where the boss section used to be. Every generated level without a boss now ends like this:
+  - a trap gauntlet: one trap on each edge, with the middle left open;
+  - a fodder push down the middle: Nightfang, `3 + tc/3` (with the per-level wave tweak);
+  - the archer line (the same line a boss level has as the boss's guard);
+  - a captain heavy at the back: Blightroot, Ashwyrm from L7, and two captains from L20 (`FinaleSecondCaptainFrom`).
+- **Finish gate** `FinishPad` = 3 m past the captain. The level is shortened to fit, and the length cap is unchanged:
+
+  | Level | Before | After |
+  |---|---|---|
+  | L2 | 162 | 159 |
+  | L9 | 246 | 244 |
+  | L16 | 330 | 328 |
+  | L17–49 | 330 | 330 |
+
+  On L17–49 the finale fills the old dead stretch. The last row moved from 318 m to 326.5 m.
+- **Gate charge** (`RunnerRules.GateChargeSeconds` = 1.2 s, level setting `gate_charge`):
+  - What it does: on a level without a boss, once the last row has spawned and nothing is left ahead (no enemy, box, trap or barrier), the squad runs for the gate. It covers the rest in at most 1.2 s and never goes slower than the walk.
+  - Where it is on: the campaign's first level turns it on in `runner_levels.json`, and the generated levels copy it. Test levels leave it off.
+  - Effect: it only shortens a walk that has nothing left in it, so it changes no outcome.
+- **Result:** at most 1.8 s of empty road before the finish on every level without a boss, even with a squad 4x the required power (L1 included). Boss levels are unchanged.
+- **Balance:** the required power is unchanged on every level, and so are the walls: free L31, light L34, mid L36, whale none, stuck_39 L31. The largest level-to-level jump is still 1.56x. Shorter levels shift the first-clear days slightly, for example free L50 on day 831.7 → 830.0. The golden was regenerated.
+
 ## Enemy shots, denser traps, bosses every 5 levels, barriers (Oct 26, 2026)
 
 Derek: *"the attacks from the enimies in the runner stage move too slowly once fired. make them about 25% faster. Also they don't start firing from as far away as the heroes can"*, *"the obstacles need to be more prevelant and do more damage. there should only be a a big boss every 5 levels or so"*, and *"there hsould be some obstacles that can get destroyed but do damage if you don't avoid them. maybe some type of gate or stone fence"*.
@@ -70,7 +96,7 @@ Derek: *"the attacks from the enimies in the runner stage move too slowly once f
   - Damage: spikes 70 + 5/level, rolling log 96 + 7/level, fire 52 + 5/level. Before, it was 40 + 3, 55 + 4 and 30 + 3.
   - A trap never sits in the lane of the box just before it, so every trap can still be dodged. The dodge sim agrees: steering costs 0.36 levels in 50, and not steering costs 10.
   - Per level (traps / mean damage), before → after: L1 3/37 → 5/63, L10 14/70 → 17/122, L20 22/105 → 28/180, L30 22/138 → 33/237, L50 22/204 → 33/350.
-- **Big boss (Ironhowl) only on L5, 10, 15 … 50** (`boss_every: 5`): 10 boss levels instead of 50. The other levels end on the last wave and the finish line. The boss bar and the quake only appear on boss levels. The boss TTK balance test now runs on boss levels only.
+- **Big boss (Ironhowl) only on L5, 10, 15 … 50** (`boss_every: 5`): 10 boss levels instead of 50. The other levels end on the last wave and the finish line (since Oct 27 on a closing finale, see above). The boss bar and the quake only appear on boss levels. The boss TTK balance test now runs on boss levels only.
 - **Breakable barriers** (`kind: "barrier"` rows):
   - Kinds: palisade gate, stone wall, spiked barricade.
   - Each has an always-visible HP bar. Squad shots chip it down until it breaks with debris.

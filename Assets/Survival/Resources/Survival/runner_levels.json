@@ -42,6 +42,7 @@
       "speed": 1.7,
       "half_width": 4.0,
       "max_followers": 9,
+      "gate_charge": true,
       "rewards": { "win_gold": 1500, "gold_per_kill": 20, "gold_per_box": 40, "shards": 10, "shard_hero": "hero.lyra" },
       "rows": [
         { "at": 12, "kind": "box", "x": -1.7, "hp": 103, "reward": "followers", "unit": "rowan", "count": 2 },
