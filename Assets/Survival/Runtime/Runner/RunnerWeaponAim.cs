@@ -40,6 +40,13 @@ namespace Survival.Domain.Runner
         /// <summary>The staff hand's hold point from its shoulder: forward, down and out to the side (right hand: +x).</summary>
         public static readonly Vector3 StaffHold = new Vector3(0.10f, -0.28f, 0.30f);
 
+        /// <summary>
+        /// Where the staff hand holds the shaft, as a share of its length from the butt: the walk clip carries the staff by
+        /// its head, which held level would put most of it behind her; levelled it slides through the hand so the head
+        /// leads, like a pointed quarterstaff.
+        /// </summary>
+        public const float StaffGripFromButt = 0.36f;
+
         /// <summary>The off hand grips the shaft this far ahead of the staff hand (two-handed, like a levelled quarterstaff).</summary>
         public const float StaffOffHandAlong = 0.36f;
 
@@ -71,18 +78,19 @@ namespace Survival.Domain.Runner
         public const float BowTipUpDegrees = 6f;
 
         /// <summary>
-        /// The bow's draw, 0 (string hand at the nock) to 1 (full draw), <paramref name="sinceShot"/> seconds after the last
-        /// release with shots every <paramref name="interval"/> seconds: the follow-through and the reach back to the string
-        /// take the first part, the draw the middle, and the hand holds full draw for the last 15% before the release.
+        /// How far the string hand is drawn, 0 (on the string at the nock) to 1 (full draw at the jaw),
+        /// <paramref name="sinceShot"/> seconds after the last release with shots every <paramref name="interval"/> seconds:
+        /// at the release the hand is at the anchor (it flies back past it with the kick) and reaches forward to the string
+        /// over the first 35% of the interval, draws over the next 50%, and holds full draw for the last 15%.
         /// </summary>
         public static float Draw(float sinceShot, float interval)
         {
             interval = Math.Max(interval, 0.05f);
-            var start = 0.35f * interval;
-            var full = 0.85f * interval;
+            var start = DrawStart * interval;
+            var full = DrawFull * interval;
             if (sinceShot <= start)
             {
-                return 0f;
+                return 1f - Smooth(sinceShot / start);
             }
 
             if (sinceShot >= full)
@@ -92,6 +100,10 @@ namespace Survival.Domain.Runner
 
             return Smooth((sinceShot - start) / (full - start));
         }
+
+        /// <summary>The draw starts at this share of the fire interval and reaches full draw at <see cref="DrawFull"/>.</summary>
+        public const float DrawStart = 0.35f;
+        public const float DrawFull = 0.85f;
 
         private static float Smooth(float x)
         {

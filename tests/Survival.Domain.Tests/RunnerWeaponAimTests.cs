@@ -101,13 +101,22 @@ public sealed class RunnerWeaponAimTests
     {
         foreach (var interval in new[] { 0.3f, 0.8f, 1.4f })
         {
-            Assert.Equal(0f, RunnerWeaponAim.Draw(0f, interval));
+            Assert.Equal(1f, RunnerWeaponAim.Draw(0f, interval));
+            Assert.Equal(0f, RunnerWeaponAim.Draw(RunnerWeaponAim.DrawStart * interval, interval), 3);
             Assert.Equal(1f, RunnerWeaponAim.Draw(interval * 0.99f, interval));
-            var prev = 0f;
-            for (var t = 0f; t < interval; t += 0.005f)
+            var prev = 1f;
+            for (var t = 0f; t <= RunnerWeaponAim.DrawStart * interval; t += 0.005f)
             {
                 var d = RunnerWeaponAim.Draw(t, interval);
-                Assert.True(d >= prev - 1e-6f);
+                Assert.True(d <= prev + 1e-6f, "back to the string");
+                prev = d;
+            }
+
+            prev = 0f;
+            for (var t = RunnerWeaponAim.DrawStart * interval; t < interval; t += 0.005f)
+            {
+                var d = RunnerWeaponAim.Draw(t, interval);
+                Assert.True(d >= prev - 1e-6f, "drawing");
                 prev = d;
             }
 
@@ -150,6 +159,7 @@ public sealed class RunnerWeaponAimTests
     {
         Assert.True(RunnerWeaponAim.StaffHold.Z > 0.2f && RunnerWeaponAim.StaffHold.Y < 0f);
         Assert.True(RunnerWeaponAim.BowHold.Z > 0.45f);
+        Assert.InRange(RunnerWeaponAim.StaffGripFromButt, 0.25f, 0.45f);
         Assert.True(RunnerWeaponAim.FullDrawBehind > RunnerWeaponAim.NockBehind + 0.3f);
     }
 }
