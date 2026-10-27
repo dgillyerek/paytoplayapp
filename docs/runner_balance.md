@@ -28,6 +28,61 @@
    - From L31 on there is a one-time **step of +30% HP / +12% damage**, followed by a gentler 1.021 HP / 1.0125 damage / 1.016 boss HP per level (HP and damage were 1.016 / 1.0105 before the Oct 26, 2026 obstacle pass; see below).
    - The result is a ramp, not a cliff: no level needs more than 1.6× the level before (tested).
 
+## Tougher obstacles and a frailer hero (Oct 27, 2026)
+
+**Why (Derek):** "the destructible obstacles are too weak. regular obstacles don't do enough damage", and "the hero need to start with less health. it's too easy on the first few levels without any upgrades. don't make it significantly harder".
+
+**What changed:**
+
+| | Before | After |
+|---|---|---|
+| Barricade / palisade / stone wall HP (share of the beat's box HP) | 0.15 / 0.22 / 0.30 | 0.41 / 0.60 / 0.83 |
+| Full-width gate HP share | 0.10 | 0.28 |
+| Least barrier HP (side / full width) | 40 / 60 | 110 / 165 |
+| Palisade damage (L1, + per level) | 50 + 4 | 92 + 7 |
+| Stone wall damage | 60 + 5 | 110 + 9 |
+| Barricade damage | 70 + 5 | 130 + 9 |
+| Spikes damage | 70 + 5 | 130 + 9 |
+| Log damage | 96 + 7 | 176 + 13 |
+| Fire damage | 52 + 5 | 96 + 9 |
+| L1 (hand-made): spikes / fire / palisade | 70 / 52 / 120 HP, 50 dmg | 130 / 96 / 330 HP, 92 dmg |
+| Lyra (lead hero) base HP | 420 | 320 |
+
+- Barrier HP is about 2.75x, so a barrier takes sustained fire to break. Trap and barrier contact damage is about 1.85x.
+- A side hit still does 2x (`SideHitMul`). A follower still takes 40% of the hero's damage, capped one short of its 25 HP, so one hit never kills a fresh follower.
+- Lyra's HP is cut on the base unit, so trained HP boosts keep their value.
+- Up to L30, walking into a full-width barrier with the weakest squad that clears the level now costs up to 65% of the hero's HP; before, it was under half. The test now allows up to two thirds.
+
+**Early levels with no upgrades (320 HP).** These come from a test player who dodges everything, and from careless players who walk the hero into the first 1, 2, 3 or all of a level's traps and barriers and dodge the rest.
+- Clean play wins L1–L8 and never drops below 310 HP.
+- One mistake still wins L1–L8, with the lowest point between 127 and 310 HP.
+- Three mistakes still win L1–L6, but the hero drops to 8–118 HP. L7 is lost at 3 mistakes and L8 at 2.
+- Walking into everything clears only L1 (118 HP at the lowest).
+
+**Re-tune.** The tougher obstacles made the layout re-rolls below stale, so I swept salts 0–15 per level again. The new picks (36 levels; a pick must also keep an escape lane beside every trap and keep the boxes' and enemies' total HP within 2%) bring the curve back to the pre-variety one: free wall L31, every step at most 1.50x, L1–12 under power 1. That also brings the easier L34–35, L41, L44 and L49 back in line.
+
+| Level | Layout | Level | Layout | Level | Layout | Level | Layout |
+|---|---|---|---|---|---|---|---|
+| L2 | 2 | L3 | 8 | L4 | 12 | L5 | 1 |
+| L6 | 15 | L10 | 2 | L11 | 2 | L12 | 2 |
+| L14 | 15 | L15 | 5 | L16 | 13 | L18 | 4 |
+| L20 | 15 | L21 | 2 | L22 | 12 | L24 | 7 |
+| L25 | 12 | L26 | 11 | L27 | 5 | L28 | 5 |
+| L29 | 2 | L30 | 8 | L31 | 15 | L33 | 3 |
+| L34 | 10 | L37 | 12 | L38 | 13 | L41 | 4 |
+| L42 | 4 | L43 | 8 | L44 | 11 | L45 | 1 |
+| L46 | 5 | L47 | 7 | L48 | 9 | L50 | 14 |
+
+**Required power, #90 first pass → now:** L34 16.0 → 19.8, L35 16.1 → 18.4, L41 17.9 → 21.1, L44 22.3 → 30.5, L49 24.0 → 30.3, L50 33.5 → 35.1 (before #90: 19.5 / 17.5 / 22.3 / 29.3 / 29.6 / 35.7).
+
+| Profile | Wall | L50 first clear (day): before #90 → #90 first pass → now |
+|---|---|---|
+| free | L31 | 830.0 → 564.3 → **829.0** |
+| light | L34 | 63.0 → 63.0 → **56.0** |
+| mid | L36 | 28.0 → 28.0 → **23.0** |
+| whale | none | 16.3 → 16.3 → **16.3** |
+| stuck_39 | L31 | 745.0 → 485.7 → **602.0** |
+
 ## Layout variety (Oct 27, 2026)
 
 **Why (Derek):** "it seems like each item is in the same place". Every generated level put its beats every 13 m and built each beat the same way, so boxes, traps and barriers stood in the same spots level after level (98–100% of item positions matched the level before).
@@ -48,7 +103,7 @@
 - **Safety.** Every trap and side barrier still leaves an escape lane of at least 2 m (`KeepEscapeLanes`). Enemies that would spawn pressed against a full-width barrier stand `WallStandOff` (1.8 m) back, so they walk from their first frame (`StandOffWalls`).
 - **Result.** Two levels in a row now share 3–39% of their item positions (same kind, same lane, within 1 m), against 98–100% before.
 
-**Layout re-rolls (`"layout": n` in `level_tweaks`).** A re-roll changes only the RNG for where the beats start and which set piece each is. Everything on the road stays the same. The first roll made some levels much harder or easier than the curve, which mostly came down to whether boxes got opened before the wave arrived. A sweep of salts 0–9 per level (required power, a shipped-squad win and a free at-pace win) picked the re-rolls that keep the curve close to before, keep the walls, keep L1–12 under power 1, and keep every step under 1.6x:
+**Layout re-rolls (`"layout": n` in `level_tweaks`).** A re-roll changes only the RNG for where the beats start and which set piece each is. Everything on the road stays the same. The first roll made some levels much harder or easier than the curve, which mostly came down to whether boxes got opened before the wave arrived. (Superseded by the re-tune in "Tougher obstacles and a frailer hero" above.) A sweep of salts 0–9 per level (required power, a shipped-squad win and a free at-pace win) picked the re-rolls that keep the curve close to before, keep the walls, keep L1–12 under power 1, and keep every step under 1.6x:
 
 | Level | Layout | Required power before → after |
 |---|---|---|

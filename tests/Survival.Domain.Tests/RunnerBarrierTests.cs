@@ -168,6 +168,7 @@ public sealed class RunnerBarrierTests
         var c = Runner.Catalog();
         var r = BalanceReport.Get();
         var checkedAny = false;
+        var worst = 0f;
         for (var n = 1; n <= 30; n++)
         {
             var level = c.ByNumber(n);
@@ -181,11 +182,14 @@ public sealed class RunnerBarrierTests
                 PlayPast(run, row.At + 2f, Runner.AimLikeAPlayer);
                 Assert.True(run.Barriers.Count == 0, $"L{n} barrier at {row.At} still standing: {run.Outcome} z {run.Hero.Z:0.0} t {run.Seconds:0.0} hp {run.Barriers.FirstOrDefault()?.Hp} last {level.Rows.Last().Kind} {level.Rows.Last().At}");
                 Assert.True(run.BarriersBroken == 1 && run.BarriersSmashed == 0, $"L{n} barrier at {row.At} ({row.Barrier!.Hp} hp) reached the hero before it fell");
-                // And walking into it by mistake costs less than half the hero.
-                Assert.True(row.Barrier!.Damage < run.Hero.MaxHp / 2, $"L{n} barrier damage {row.Barrier.Damage} vs hero {run.Hero.MaxHp}");
+                // And walking into it by mistake hurts (Derek 2026-10-27: obstacles should do real damage) but never takes
+                // more than two thirds of the hero.
+                worst = Math.Max(worst, row.Barrier!.Damage / (float)run.Hero.MaxHp);
+                Assert.True(row.Barrier.Damage < run.Hero.MaxHp * 2 / 3, $"L{n} barrier damage {row.Barrier.Damage} vs hero {run.Hero.MaxHp}");
             }
         }
 
+        _out.WriteLine($"worst barrier damage / hero hp {worst:0.00}");
         Assert.True(checkedAny);
     }
 }

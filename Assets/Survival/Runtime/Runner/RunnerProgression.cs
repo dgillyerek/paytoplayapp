@@ -241,16 +241,26 @@ namespace Survival.Domain.Runner
         /// </summary>
         public const int BarrierFrom = 2, BarrierEveryOtherFrom = 15, BarrierEveryBeatFrom = 25, FullWidthBarrierFrom = 6, FullWidthEvery = 4;
 
-        public const int PalisadeDamage = 50, PalisadeDamageStep = 4, StoneWallDamage = 60, StoneWallDamageStep = 5, BarricadeDamage = 70, BarricadeDamageStep = 5;
+        public const int PalisadeDamage = 92, PalisadeDamageStep = 7, StoneWallDamage = 110, StoneWallDamageStep = 9, BarricadeDamage = 130, BarricadeDamageStep = 9;
 
-        /// <summary>Barrier HP as a share of the beat's box HP: a barricade breaks fast, a stone wall slowly; a full-width one at <see cref="FullWidthHpShare"/>.</summary>
-        public const float BarricadeHpShare = 0.15f, PalisadeHpShare = 0.22f, StoneWallHpShare = 0.3f, FullWidthHpShare = 0.1f;
+        /// <summary>
+        /// Barrier HP as a share of the beat's box HP: a barricade breaks fastest, a stone wall slowest; a full-width one at
+        /// <see cref="FullWidthHpShare"/>. About 2.75x the Oct 26 shares (0.15 / 0.22 / 0.3 / 0.1), so a barrier takes sustained
+        /// fire to break (Derek 2026-10-27: "the destructible obstacles are too weak"); contact damage went up about 1.85x with it.
+        /// </summary>
+        public const float BarricadeHpShare = 0.41f, PalisadeHpShare = 0.6f, StoneWallHpShare = 0.83f, FullWidthHpShare = 0.28f;
 
         /// <summary>Metres past the beat's chest a barrier stands (behind the crate, before the skirmishers).</summary>
         public const float BarrierOffset = 3f;
 
-        /// <summary>Trap damage on Level 1 and per level after (about 1.75x the old 40 + 3, 55 + 4 and 30 + 3: Derek 2026-10-26).</summary>
-        public const int SpikeDamage = 70, SpikeDamageStep = 5, LogDamage = 96, LogDamageStep = 7, FireDamage = 52, FireDamageStep = 5;
+        /// <summary>Least HP a side barrier / a full-width one has (was 40 / 60).</summary>
+        public const int MinBarrierHp = 110, MinFullWidthHp = 165;
+
+        /// <summary>
+        /// Trap damage on Level 1 and per level after: about 1.85x the Oct 26 70 + 5, 96 + 7 and 52 + 5 (Derek 2026-10-27: "regular
+        /// obstacles don't do enough damage"). A follower's share stays capped one short of its HP.
+        /// </summary>
+        public const int SpikeDamage = 130, SpikeDamageStep = 9, LogDamage = 176, LogDamageStep = 13, FireDamage = 96, FireDamageStep = 9;
 
         private static readonly string[] FollowerUnits = { "rowan", "lyra", "rowan", "oakenshield", "lyra", "oakenshield" };
         private static readonly string[] ShardHeroes = { "hero.lyra", "hero.rowan", "hero.oakenshield", "hero.sir_aldric" };
@@ -1018,7 +1028,7 @@ namespace Survival.Domain.Runner
             if (full)
             {
                 var kind = (index / FullWidthEvery) % 2 == 0 ? RunnerBarrierKind.Palisade : RunnerBarrierKind.StoneWall;
-                def = new RunnerBarrierDef(kind, 2f * halfWidth, Math.Max(60, (int)Math.Round(hpAt * FullWidthHpShare)), BarrierDamage(kind, t));
+                def = new RunnerBarrierDef(kind, 2f * halfWidth, Math.Max(MinFullWidthHp, (int)Math.Round(hpAt * FullWidthHpShare)), BarrierDamage(kind, t));
             }
             else
             {
@@ -1033,7 +1043,7 @@ namespace Survival.Domain.Runner
                 // from the squad's fire; never the whole road: at least 2 m of open road stays beside it.
                 var width = kind == RunnerBarrierKind.StoneWall ? 3.6f : 3.2f;
                 x = -boxSide * (halfWidth - (width * 0.5f));
-                def = new RunnerBarrierDef(kind, width, Math.Max(40, (int)Math.Round(hpAt * share)), BarrierDamage(kind, t));
+                def = new RunnerBarrierDef(kind, width, Math.Max(MinBarrierHp, (int)Math.Round(hpAt * share)), BarrierDamage(kind, t));
             }
 
             rows.Add(new RunnerRowDef(z, RunnerRowKind.Barrier, x, "", 1, 0f, null) { Barrier = def });

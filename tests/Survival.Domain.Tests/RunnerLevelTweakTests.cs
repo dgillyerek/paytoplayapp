@@ -10,7 +10,7 @@ namespace Survival.Domain.Tests;
 /// </summary>
 public sealed class RunnerLevelTweakTests
 {
-    private static readonly int[] Rerolled = { 2, 5, 6, 9, 10, 11, 12, 15, 29, 31, 32, 33, 50 };
+    private static readonly int[] Rerolled = { 2, 3, 4, 5, 6, 10, 11, 12, 14, 15, 16, 18, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 37, 38, 41, 42, 43, 44, 45, 46, 47, 48, 50 };
 
     [Fact]
     public void The_rerolled_levels_keep_their_boxes_enemies_traps_and_hp_and_only_move_them()
@@ -18,7 +18,7 @@ public sealed class RunnerLevelTweakTests
         var c = Runner.Catalog();
         var p = c.Progression!;
         Assert.Equal(Rerolled, p.Tweaks.Keys.OrderBy(k => k).ToArray());
-        Assert.Equal(RunnerLevelTweak.None, p.Tweak(3));
+        Assert.Equal(RunnerLevelTweak.None, p.Tweak(7));
         var plain = p with { Tweaks = new Dictionary<int, RunnerLevelTweak>() };
         foreach (var n in Rerolled)
         {
