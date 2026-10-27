@@ -2,7 +2,7 @@
 
 **Goal (Derek):** a free player with normal upgrades gets through levels 1–30 fairly easily. Levels 31–50 are close to impossible without buying upgrades. Any change to a baseline (units, power-ups, upgrades, starting damage …) that moves the curve noticeably should fail a test.
 
-**Where it stands:** the free player hits the **wall at level 31**. Levels 1–12 play the same as before. Since the Gold Mine (below), a free player is no longer stuck for good: L40 takes about 5 months and L50 about 2 years.
+**Where it stands:** the free player hits the **wall at level 31**. Levels 1–12 play the same as before. Since the Gold Mine (below), a free player is no longer stuck for good: L40 takes about 5 months and L50 about 27 months.
 
 ## How the math works
 
@@ -27,6 +27,36 @@
    - Each level multiplies enemy HP by 1.115 and enemy damage by 1.072 (boss HP 1.115).
    - From L31 on there is a one-time **step of +30% HP / +12% damage**, followed by a gentler 1.021 HP / 1.0125 damage / 1.016 boss HP per level (HP and damage were 1.016 / 1.0105 before the Oct 26, 2026 obstacle pass; see below).
    - The result is a ramp, not a cliff: no level needs more than 1.6× the level before (tested).
+
+## Side hits, enemies avoid obstacles, per-level tweaks (Oct 27, 2026)
+
+**What changed in play (Derek):**
+- **Side hits hurt more.** A hero or follower that runs into the side of a trap or barrier takes double damage (`SideHitMul` 2). A follower's side hit is capped at 24 of its 25 HP, so one hit never kills it outright.
+- **Enemies go around traps and barriers** instead of walking over them. They look 5 m ahead, sidestep at 3 m/s and keep 0.15 m clear. A barrier that spans the whole road can't be walked around, so enemies stop and batter it.
+- **Full-width barriers** have 0.1 of the beat-box HP, so the squad can still shoot through them.
+- **Ramp:** foe HP grows 1.112 a level and foe damage 1.067. Past the wall, wall HP grows 1.026 a level and the wall step is 1.35.
+
+**Per-level tweaks (`progression.level_tweaks` in `runner_levels.json`, `RunnerLevelTweak`).** Each level can set `wave` (enemies per wave group), `foe_hp` (enemy HP) and `barrier_hp` (barrier HP). All three default to 1.0, and the layout always stays the seed's. With the new mechanics the seed made three levels spike past the 1.6x step limit. The seed and the limit stay, and only these levels are trimmed:
+
+| Level | Tweak | Required power before → after | Step from the level before, before → after |
+|---|---|---|---|
+| L19 | `wave` 0.7 | 2.90 → 2.49 | 1.71 → **1.47** |
+| L22 | `wave` 0.8 | 4.36 → 3.65 | 1.87 → **1.56** |
+| L26 | `foe_hp` 0.8 | 7.41 → 6.58 | 1.76 → **1.56** |
+
+L26 trims enemy HP rather than the wave, because thinning its wave broke the shipped-level sims (walk-on spawns, everyone attacks). The "gets harder level by level" test skips the enemy-count and HP checks for a tweaked level and compares the next level with the last untweaked one. `RunnerLevelTweakTests` checks that only L19, L22 and L26 are tweaked, that boxes, traps, barriers and the boss stay where the seed put them, and that enemy groups keep their spot and unit.
+
+**King's Treasury ($39.99):** War Banners 5 → **6**. With 5, a player stuck at the free wall cleared only 5 new levels (L31–L35), and the test asks for at least 6. With 6, they clear **11 (L31–L41)**. Value is 8,800 → 8,860 gem-eq (1.98× → 1.99× the $0.99 pack's value per $), and the label stays "+95%".
+
+| Profile | Wall before → after | L35 | L40 | L45 | L50 first clear (day) before → after |
+|---|---|---|---|---|---|
+| free | L31 → **L31** | 75.3 → 51.3 | 122.3 → 152.7 | 233.3 → 282.0 | 701.3 → **831.7** |
+| light | L33 → **L34** | 21.0 → 14.7 | 35.0 → 28.0 | 49.0 → 49.3 | 63.3 → **63.0** |
+| mid | L35 → **L36** | 14.0 → 11.3 | 15.7 → 15.3 | 22.0 → 21.3 | 28.3 → **28.0** |
+| whale | none → **none** | 11.3 → 11.3 | 13.0 → 13.0 | 14.7 → 14.7 | 16.3 → **16.3** |
+| stuck_39 | L31 → **L31** | 10.0 → 10.0 | 28.7 → 10.0 | 157.0 → 197.3 | 624.7 → **747.0** |
+
+Required power is now 0.83 on L12, 2.04 on L20, 4.21 on L25, 10.3 on L30, 14.9 on L31 (a 1.45 step), 22.5 on L40 and 35.7 on L50. The free player still clears L30 on day 9.7 and fails L31 (ratio 0.92).
 
 ## Enemy shots, denser traps, bosses every 5 levels, barriers (Oct 26, 2026)
 
@@ -82,7 +112,7 @@ The packs are the `store.power_packs` offers in `stores.json`. Their SKUs are in
 | Knight's Satchel | $4.99 | 2 Tomes, 1 Banner, 60 min, 25k gold, 10k food | 710 | 142 | +25% |
 | Captain's Chest (popular) | $9.99 | 3 Tomes, 2 Banners, 5 h, 100k gold, 50k food | 1,570 | 157 | +40% |
 | Warlord's Hoard | $19.99 | 6 Tomes, 3 Banners, 16 h, 300k gold, 100k food | 3,640 | 182 | +60% |
-| King's Treasury (best value) | $39.99 | 10 Tomes, 5 Banners, 33 h 20 min, 1M gold, 500k food | 8,800 | 220 | +95% (1.98×) |
+| King's Treasury (best value) | $39.99 | 10 Tomes, 6 Banners, 33 h 20 min, 1M gold, 500k food | 8,860 | 222 | +95% (1.99×) |
 
 \*Value is in gems: 1 gem = 1 speed-up minute = 500 gold = 250 food, a Hero Tome = 250 and a War Banner = 60. The "+X%" label is value per $ against the $0.99 pack, rounded down. Value per $ rises with every tier (tested).
 
@@ -111,7 +141,7 @@ The packs are the `store.power_packs` offers in `stores.json`. Their SKUs are in
 | whale | starter + two $39.99 a week | **none** | 12 | 13 | 15 | **17** (on schedule) | ≈ $202 |
 | stuck_39 | free until stuck, then ONE $39.99 | L31 (at pace) | 10 | 32 | 182 | **606** | $39.99 |
 
-**What $39.99 buys a stuck player:** the free player fails L31 in session 31 (day 10). Buying one King's Treasury there clears **L31–L38 in that same session (8 new levels)**. In that run, the tomes take lyra 12→18 and rowan 12→19, and the banners carry L31–35. Before the no-replay change, L40 then came on day 26; with no replays and the Gold Mine it comes on day 32.
+**What $39.99 buys a stuck player:** the free player fails L31 in session 31 (day 10). Buying one King's Treasury there clears **L31–L38 in that same session (8 new levels)**. (Since Oct 27, with side hits and the 6th Banner: **L31–L41, 11 new levels**; see the Oct 27 section.) In that run, the tomes take lyra 12→18 and rowan 12→19, and the banners carry L31–35. Before the no-replay change, L40 then came on day 26; with no replays and the Gold Mine it comes on day 32.
 
 - **Free power over time:** 13.7 on day 10, 18.3 on day 30, 23.5 on day 90 and 31.5 on day 365. The free curve did not move with the packs.
 - **Free roster:** lyra and rowan reach 5★ around day 5–7. Their levels are then food-bound at 12–13 by L30, and the free player creeps up roughly one level per month.
@@ -232,7 +262,9 @@ UPDATE_GOLDEN=1 dotnet test tests/Survival.Domain.Tests --filter RunnerBalance
 
 Commit the updated `Golden/runner_balance.json` along with the change, and read the diff in the PR.
 
-**Last intentional regen (Oct 26, 2026, enemy shots, traps, bosses every 5, barriers):** walls free L31, light L33, mid L40 → L35, whale none, stuck_39 L31. Free L50 day 566 → 701. See the Oct 26 section above.
+**Last intentional regen (Oct 27, 2026, side hits, enemies avoid obstacles, L19/L22/L26 tweaks, 6th Banner in the $39.99 pack):** walls free L31, light L33 → L34, mid L35 → L36, whale none, stuck_39 L31. Free L50 day 701 → 832, mid 28 → 28. See the Oct 27 section above.
+
+**Previous regen (Oct 26, 2026, enemy shots, traps, bosses every 5, barriers):** walls free L31, light L33, mid L40 → L35, whale none, stuck_39 L31. Free L50 day 566 → 701. See the Oct 26 section above.
 
 **Previous regen (Oct 24, 2026, power packs):** the free curve is unchanged (no `free` line in the diff). Light/whale moved because the gem crate was replaced by the pack ladder (whale wall L39 → none, light L50 day 358 → 64), and the `mid` and `stuck_39` profiles are new. If a band test (wall at L30–33 etc.) fails, the change broke the design itself, not just the snapshot: retune `ramp` in runner_levels.json instead.
 

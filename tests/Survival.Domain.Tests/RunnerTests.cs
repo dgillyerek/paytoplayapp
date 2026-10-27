@@ -96,8 +96,31 @@ internal static class Runner
         return Dodge(run, foe?.X ?? run.Hero.X);
     }
 
-    /// <summary>Like a player: keeps the hero's line clear of any lane trap coming up in the next 9 m (the squad behind may still clip one).</summary>
+    /// <summary>
+    /// Like a player: keeps the hero's line clear of any lane trap coming up in the next 9 m (the squad behind may still clip
+    /// one), and never swerves across a trap or barrier it is already level with (a side hit costs double).
+    /// </summary>
     public static float Dodge(RunnerRun run, float want)
+    {
+        var to = DodgeTarget(run, want);
+        var hero = run.Hero;
+        foreach (var (x, z, hw, hd) in run.Hazards.Select(h => (h.X, h.Z, h.HalfWidth, h.HalfDepth))
+                     .Concat(run.Barriers.Where(b => b.Hp > 0).Select(b => (b.X, b.Z, b.HalfWidth, b.HalfDepth))))
+        {
+            var clear = hw + hero.Unit.Radius + 0.2f;
+            if (Math.Abs(z - hero.Z) > hd + hero.Unit.Radius + 0.6f || Math.Abs(hero.X - x) < clear)
+            {
+                continue;
+            }
+
+            // Beside it: stays on its own side until it has gone by.
+            to = hero.X < x ? Math.Min(to, x - clear) : Math.Max(to, x + clear);
+        }
+
+        return to;
+    }
+
+    private static float DodgeTarget(RunnerRun run, float want)
     {
         // Looks at every trap in the next 9 m at once (the roads have about twice the traps since Derek 2026-10-26, often
         // two in a beat): the spot nearest the one wanted that clears all of them, or the old one-at-a-time sidestep.
@@ -973,10 +996,24 @@ public sealed class RunnerTests
             Assert.True(l.Length <= cap.LengthCap);
             // The boss counts as one enemy and is only on every 5th level, so compare the waves without it.
             int Waves(RunnerLevelDef x) => x.EnemyCount - (x.HasBoss ? 1 : 0);
-            Assert.True(l.Number > cap.CountCap ? Waves(l) >= Waves(p) : Waves(l) > Waves(p), $"L{l.Number} enemies {Waves(p)} -> {Waves(l)}");
+            // A hand-tweaked level (progression "level_tweaks", Derek 2026-10-27: smooth a level the seed made far harder than
+            // the one before) has fewer or weaker enemies on purpose: skip it here and compare the next level with the last
+            // untweaked one.
+            var tweaks = c.Progression!.Tweaks;
+            var q = p;
+            for (var j = i - 1; j > 0 && tweaks.ContainsKey(q.Number); j--)
+            {
+                q = c.Levels[j - 1];
+            }
+
+            if (!tweaks.ContainsKey(l.Number))
+            {
+                Assert.True(l.Number > cap.CountCap ? Waves(l) >= Waves(q) : Waves(l) > Waves(q), $"L{l.Number} enemies {Waves(q)} -> {Waves(l)}");
+                Assert.True(l.FoeHpTotal(c) > q.FoeHpTotal(c), $"L{l.Number} enemy hp");
+                Assert.True(l.FoeHpMul >= q.FoeHpMul);
+            }
+
             Assert.True(l.FoeDmgMul >= p.FoeDmgMul, $"L{l.Number} enemy damage");
-            Assert.True(l.FoeHpTotal(c) > p.FoeHpTotal(c), $"L{l.Number} enemy hp");
-            Assert.True(l.FoeHpMul >= p.FoeHpMul);
             Assert.True(l.BoxCount >= p.BoxCount, $"L{l.Number} boxes {p.BoxCount} -> {l.BoxCount}");
             Assert.True(l.BoxHpTotal > p.BoxHpTotal, $"L{l.Number} box hp");
             if (l.HasBoss && l.Number > 5)

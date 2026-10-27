@@ -95,8 +95,18 @@ public sealed class RunnerEveryoneAttacksTests
             var lost = new Dictionary<int, float>();
             var levelSpawned = new HashSet<string>();
             var levelFired = new HashSet<string>();
+            // Seconds each member walked with the squad while there was still an enemy on the road to shoot at.
+            var withFoes = new Dictionary<int, float>();
             while (!run.Over && run.Seconds < 600f)
             {
+                if (run.Foes.Count > 0)
+                {
+                    foreach (var m in run.Squad)
+                    {
+                        withFoes[m.Id] = withFoes.GetValueOrDefault(m.Id) + (1f / 30f);
+                    }
+                }
+
                 run.SteerTo(RunnerBossQuakeTests.DodgingPlayer(run));
                 foreach (var e in run.Step(1f / 30f))
                 {
@@ -132,12 +142,14 @@ public sealed class RunnerEveryoneAttacksTests
             Assert.Equal(RunnerOutcome.Won, run.Outcome);
             // Every ranged type that walks onto a road shoots on it.
             Assert.Subset(levelFired, levelSpawned);
-            // The lead and every follower who walked with the squad for 2 s fired.
+            // The lead and every follower who walked with the squad for 2 s with enemies about fired.
             Assert.Contains(run.Hero.Id, fired);
+            // (One that joined after the last enemy fell has nothing left to shoot: enemies go round the traps and barriers
+            // now, so the last wave can be down before the final chest is opened.)
             foreach (var (id, at) in joined)
             {
                 var gone = lost.TryGetValue(id, out var l) ? l : run.Seconds;
-                if (gone - at >= 2f)
+                if (gone - at >= 2f && withFoes.GetValueOrDefault(id) >= 2f)
                 {
                     Assert.True(fired.Contains(id), level.Id + ": follower " + id + " never fired");
                 }

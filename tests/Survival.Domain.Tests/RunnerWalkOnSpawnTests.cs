@@ -38,7 +38,8 @@ public sealed class RunnerWalkOnSpawnTests
                     }
                     else if (!f.Boss && checkedNext.Add(f.Id))
                     {
-                        Assert.True(f.Z < firstZ[f.Id], $"L{level.Number} foe {f.Id} ({f.Unit.Roster}) moved toward the squad on its second frame");
+                        // One that appeared right behind a trap or barrier waits there or side-steps round it (it never walks over one).
+                        Assert.True(f.Z < firstZ[f.Id] || f.Blocked || f.Avoiding, $"L{level.Number} foe {f.Id} ({f.Unit.Roster}) moved toward the squad on its second frame");
                     }
                 }
             }

@@ -47,9 +47,16 @@ namespace Survival.Domain.Runner
                 names)
             {
                 Ramp = o.TryGet("ramp", out var rn) && rn is JsonNode.Obj ro ? RunnerRampDef.Read(ro) : null,
-                BossEvery = Math.Max(1, LayoutJson.OptInt(o, "boss_every", 1))
+                BossEvery = Math.Max(1, LayoutJson.OptInt(o, "boss_every", 1)),
+                Tweaks = RunnerLevelTweak.ReadAll(o)
             };
         }
+
+        /// <summary>Per-level hand adjustments ("level_tweaks"), by level number; levels not listed use <see cref="RunnerLevelTweak.None"/>.</summary>
+        public IReadOnlyDictionary<int, RunnerLevelTweak> Tweaks { get; init; } = new Dictionary<int, RunnerLevelTweak>();
+
+        /// <summary>The hand adjustment for Level <paramref name="number"/> (all 1.0 when none is set).</summary>
+        public RunnerLevelTweak Tweak(int number) => Tweaks.TryGetValue(number, out var tw) ? tw : RunnerLevelTweak.None;
 
         /// <summary>The late-game ramp (levels past <see cref="RunnerRampDef.From"/>), or null for the plain linear steps.</summary>
         public RunnerRampDef? Ramp { get; init; }
@@ -65,6 +72,45 @@ namespace Survival.Domain.Runner
 
         /// <summary>The t (level - 1) the enemy and box counts use: it stops growing at the ramp's count cap.</summary>
         public int CountT(int number) => Math.Max(0, Math.Min(number, Ramp?.CountCap ?? int.MaxValue) - 1);
+    }
+
+    /// <summary>
+    /// runner_levels.json "progression" "level_tweaks": a small hand adjustment to one generated level, keyed by its number
+    /// ("19": { "wave": 0.85, "foe_hp": 0.9, "barrier_hp": 0.7 }). Everything defaults to 1.0. The layout (where every row
+    /// stands, which units, traps and barriers) stays the seed's; "wave" scales how many enemies each wave group has
+    /// (never below one), "foe_hp" the level's enemy HP and "barrier_hp" its barriers' HP. Used only to smooth a level the
+    /// seed made much harder than the one before it (RunnerBalanceTests.No_level_needs_much_more_than_the_one_before).
+    /// </summary>
+    public sealed record RunnerLevelTweak(float Wave = 1f, float FoeHp = 1f, float BarrierHp = 1f)
+    {
+        public static readonly RunnerLevelTweak None = new();
+
+        internal static Dictionary<int, RunnerLevelTweak> ReadAll(JsonNode.Obj progression)
+        {
+            var all = new Dictionary<int, RunnerLevelTweak>();
+            if (!progression.TryGet("level_tweaks", out var tn) || tn is not JsonNode.Obj t)
+            {
+                return all;
+            }
+
+            foreach (var key in t.Fields.Keys)
+            {
+                if (key.StartsWith("_", StringComparison.Ordinal) || !int.TryParse(key, NumberStyles.Integer, CultureInfo.InvariantCulture, out var n))
+                {
+                    continue;
+                }
+
+                if (t.TryGet(key, out var v) && v is JsonNode.Obj o)
+                {
+                    all[n] = new RunnerLevelTweak(
+                        Math.Max(0.1f, LayoutJson.OptNum(o, "wave", 1f)),
+                        Math.Max(0.1f, LayoutJson.OptNum(o, "foe_hp", 1f)),
+                        Math.Max(0.1f, LayoutJson.OptNum(o, "barrier_hp", 1f)));
+                }
+            }
+
+            return all;
+        }
     }
 
     /// <summary>
@@ -163,7 +209,7 @@ namespace Survival.Domain.Runner
         public const int PalisadeDamage = 50, PalisadeDamageStep = 4, StoneWallDamage = 60, StoneWallDamageStep = 5, BarricadeDamage = 70, BarricadeDamageStep = 5;
 
         /// <summary>Barrier HP as a share of the beat's box HP: a barricade breaks fast, a stone wall slowly; a full-width one at <see cref="FullWidthHpShare"/>.</summary>
-        public const float BarricadeHpShare = 0.15f, PalisadeHpShare = 0.22f, StoneWallHpShare = 0.3f, FullWidthHpShare = 0.2f;
+        public const float BarricadeHpShare = 0.15f, PalisadeHpShare = 0.22f, StoneWallHpShare = 0.3f, FullWidthHpShare = 0.1f;
 
         /// <summary>Metres past the beat's chest a barrier stands (behind the crate, before the skirmishers).</summary>
         public const float BarrierOffset = 3f;
@@ -208,7 +254,7 @@ namespace Survival.Domain.Runner
             {
                 Number = number,
                 DisplayName = number - 1 < p.Names.Count ? p.Names[number - 1] : "Road " + number.ToString(CultureInfo.InvariantCulture),
-                FoeHpMul = first.FoeHpMul * (1f + (p.FoeHpStep * t)) * (ramp?.FoeHpMul(number) ?? 1f),
+                FoeHpMul = first.FoeHpMul * (1f + (p.FoeHpStep * t)) * (ramp?.FoeHpMul(number) ?? 1f) * p.Tweak(number).FoeHp,
                 BossHpMul = first.BossHpMul * (1f + (p.BossHpStep * t)) * (ramp?.BossHpMul(number) ?? 1f),
                 FoeDmgMul = first.FoeDmgMul * (ramp?.FoeDmgMul(number) ?? 1f)
             };
@@ -223,6 +269,9 @@ namespace Survival.Domain.Runner
             var t = Math.Max(0, number - 1);
             // Enemy / box counts stop growing at the ramp's count cap (the road stops growing too); HP and damage carry on.
             var tc = p.CountT(number);
+            // A hand tweak for this level (default 1.0): wave sizes and barrier HP only, so the layout stays the seed's.
+            var tw = p.Tweak(number);
+            int W(int count) => tw.Wave == 1f ? count : Math.Max(1, (int)Math.Round(count * tw.Wave));
             var rnd = new Random(unchecked(p.Seed + (number * 7919)));
             var bossAt = length - 8f;
             var boxMul = 1f + (p.BoxHpStep * t);
@@ -313,12 +362,12 @@ namespace Survival.Domain.Runner
                 if (beat % 2 == 1 && beat >= 3)
                 {
                     var skirm = beat % 4 == 1 ? "nightfang" : "bonequill";
-                    Group(rows, z + 4f, fx * 0.6f, skirm, 2 + (int)Math.Round(tc * along * 0.2f), 1.1f, halfWidth);
+                    Group(rows, z + 4f, fx * 0.6f, skirm, W(2 + (int)Math.Round(tc * along * 0.2f)), 1.1f, halfWidth);
                 }
 
                 if (HasBarrier(number, beat))
                 {
-                    AddBarrier(rows, z + BarrierOffset, hpAt, number, t, barrier, brnd, halfWidth, Math.Sign(beat % 2 == 1 ? ux : fx));
+                    AddBarrier(rows, z + BarrierOffset, tw.BarrierHp == 1f ? hpAt : (int)Math.Round(hpAt * tw.BarrierHp), number, t, barrier, brnd, halfWidth, Math.Sign(beat % 2 == 1 ? ux : fx));
                     barrier++;
                 }
 
@@ -358,17 +407,17 @@ namespace Survival.Domain.Runner
                 var opening = beat < 2;
                 // The very first wave stands 12 m past its chest (8 m later on): the faster walkers otherwise reach the
                 // chest as it opens and pick off the new 1 hp followers before they can shoot.
-                Group(rows, z + (beat == 0 ? FirstWaveMetres : 8f), wx, front, opening ? 2 + beat : 3 + (beat % 2) + (int)Math.Round(tc * along * 0.3f), 1.1f, halfWidth);
+                Group(rows, z + (beat == 0 ? FirstWaveMetres : 8f), wx, front, W(opening ? 2 + beat : 3 + (beat % 2) + (int)Math.Round(tc * along * 0.3f)), 1.1f, halfWidth);
                 if (beat > 0)
                 {
-                    Group(rows, z + 10.5f, -wx * 0.5f, back, opening ? 1 : 2 + (int)Math.Round(tc * along * 0.25f), 1.4f, halfWidth);
+                    Group(rows, z + 10.5f, -wx * 0.5f, back, W(opening ? 1 : 2 + (int)Math.Round(tc * along * 0.25f)), 1.4f, halfWidth);
                 }
 
                 if (beat % 3 == 2 || (t >= 6 && beat % 3 == 0 && beat > 0))
                 {
                     var heavy = number >= 7 && hasUnit("ashwyrm") && beat % 2 == 0 ? "ashwyrm" : "blightroot";
                     var hc = 1 + (int)Math.Round(tc * along / 5f);
-                    Group(rows, z + 12f, -wx, heavy, hc, 3.2f, halfWidth);
+                    Group(rows, z + 12f, -wx, heavy, W(hc), 3.2f, halfWidth);
                 }
 
                 side = -side;
