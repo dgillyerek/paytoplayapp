@@ -49,6 +49,9 @@ namespace Survival.Unity
         /// bones, rotation only, eased back to the hold. Null for every other rig (and never in the battle).
         /// </summary>
         private RunnerShotFlickState? _flick;
+
+        /// <summary>Lyra's levelled staff and Rowan's drawn bow (<see cref="RunnerWeaponAim"/>); null for every other rig.</summary>
+        private RunnerWeaponPose? _weapon;
         private readonly List<FlickBone> _flickBones = new List<FlickBone>();
 
         /// <summary>Degrees of lean per m/s of sideways speed, and the most it ever leans.</summary>
@@ -380,6 +383,7 @@ namespace Survival.Unity
         /// <summary>Finds the kicked bones of a held shooter (parent before child); no-op for every other rig.</summary>
         private void BuildFlick(Transform host)
         {
+            _weapon = RunnerWeaponPose.Build(host, Data.Name);
             var bones = RunnerShotFlick.BonesFor(Data.Name);
             if (!_aimHeld || bones.Length == 0)
             {
@@ -408,6 +412,7 @@ namespace Survival.Unity
             if (!Dead)
             {
                 _flick?.Fire();
+                _weapon?.Fire();
             }
         }
 
@@ -513,10 +518,27 @@ namespace Survival.Unity
         /// </summary>
         public void WalkUnderAttack(bool walking)
         {
-            if (!Dead)
+            if (Dead)
             {
-                _walkUnderAttack?.Invoke(walking);
+                return;
             }
+
+            if (_weapon != null)
+            {
+                // No take plays under the weapon pose: the legs walk the walk clip, or stand at the boss's line.
+                if (walking)
+                {
+                    Walk();
+                }
+                else
+                {
+                    Rest();
+                }
+
+                return;
+            }
+
+            _walkUnderAttack?.Invoke(walking);
         }
 
         /// <summary>True when the actor can play its attack take faster (the squad shooters and Sir Aldric).</summary>
@@ -531,6 +553,13 @@ namespace Survival.Unity
         {
             if (Dead)
             {
+                return;
+            }
+
+            if (_weapon != null)
+            {
+                // The weapon pose fires on the shot itself (ShotFlick); the take would turn the body side-on.
+                _attackStarted = Time.time;
                 return;
             }
 
@@ -643,6 +672,12 @@ namespace Survival.Unity
                 return;
             }
 
+            if (_weapon != null)
+            {
+                // The weapon pose aims the weapon itself; the clip's side-on aim offset no longer applies.
+                aimYaw = 0f;
+            }
+
             var target = Quaternion.LookRotation(direction.normalized, Vector3.up) * Quaternion.Euler(0f, aimYaw, 0f);
             Slot.rotation = Quaternion.Slerp(Slot.rotation, target, 1f - Mathf.Exp(-Time.deltaTime * 12f));
         }
@@ -701,6 +736,12 @@ namespace Survival.Unity
         /// </summary>
         public Vector3? HandPoint()
         {
+            if (_weapon?.Muzzle is { } muzzle && !Dead)
+            {
+                // A held weapon fires from its tip (the staff head, the arrow on the bow).
+                return muzzle;
+            }
+
             if (_hands == null)
             {
                 var found = new List<Transform>();
@@ -794,6 +835,9 @@ namespace Survival.Unity
                     _reactionPose.Apply(Slot, _reaction, _away, w, _reaction, _away, 0f);
                 }
             }
+
+            // After the host is placed: the weapon held at the enemy, straight down the road like the shots.
+            _weapon?.Tick(dt, Vector3.forward, Dead);
 
             var flash = _deathAge >= 0f ? 0f : LockedBattleHits.FlashWeight(_hitAge);
             if (flash > 0f)
@@ -992,6 +1036,7 @@ namespace Survival.Unity
         private void ResetState()
         {
             _flick?.Reset();
+            _weapon?.Reset();
             foreach (var b in _flickBones)
             {
                 b.Restore();

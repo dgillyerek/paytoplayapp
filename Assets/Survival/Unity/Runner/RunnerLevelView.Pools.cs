@@ -227,6 +227,13 @@ namespace Survival.Unity
                 v.LaunchLeft = ShotLaunchBlendSeconds;
                 at = hands;
             }
+            else if (!s.ByFoe && _members.TryGetValue(s.Shooter, out var hero) && hero.HandPoint() is { } tip && (tip - at).sqrMagnitude < 9f)
+            {
+                // A hero's shot leaves its weapon: the staff head or the arrow on the bow (RunnerWeaponPose), else its hands.
+                v.Launch = tip - at;
+                v.LaunchLeft = ShotLaunchBlendSeconds;
+                at = tip;
+            }
 
             v.Root.position = at;
             v.Root.gameObject.SetActive(true);
