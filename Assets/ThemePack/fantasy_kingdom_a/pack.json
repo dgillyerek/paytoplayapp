@@ -3,6 +3,7 @@
   "theme_id": "theme.id.fantasy_kingdom_a",
   "display_name": "Kingdom Defense",
   "systems_api": "survival_core_v1",
+  "audio": "audio/audio.json",
   "art": {
     "flavor.splash": "art/splash/THEME_A_SPLASH_KEEP_1080x1920.png",
     "map.terrain": "art/map/THEME_A_WORLD_TERRAIN_PLAIN_1080x1920.png",

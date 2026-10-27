@@ -167,6 +167,7 @@ namespace Survival.Unity
             img.raycastTarget = true;
             var btn = img.gameObject.AddComponent<Button>();
             btn.targetGraphic = img;
+            btn.onClick.AddListener(SurvivalAudio.Tap);
             return btn;
         }
 

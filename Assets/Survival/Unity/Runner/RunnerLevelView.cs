@@ -96,6 +96,7 @@ namespace Survival.Unity
             ActorSceneLights.Suppressed = false;
             RunnerHitchLog.Loading(false);
             RunnerHitchLog.Describe(null);
+            SurvivalAudio.ReleaseMusic(this);
         }
 
         private IEnumerator Boot()
@@ -106,6 +107,7 @@ namespace Survival.Unity
             }
 
             _booted = true;
+            SurvivalAudio.RequestMusic(this, Survival.Domain.Audio.AudioCues.MusicRunner);
             var bootStart = System.Diagnostics.Stopwatch.GetTimestamp();
             var progress = RunnerBoot.Begin();
             RunnerHitchLog.Loading(true);
@@ -959,6 +961,7 @@ namespace Survival.Unity
 
         private void OnEvent(RunnerEvent e)
         {
+            SurvivalAudio.Runner(e);
             var at = new Vector3(e.X, 0f, e.Z);
             switch (e.Kind)
             {
