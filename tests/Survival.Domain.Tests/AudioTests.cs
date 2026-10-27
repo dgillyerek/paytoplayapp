@@ -120,9 +120,30 @@ public class AudioTests
         var cfg = Config;
         Assert.Contains(RunnerEventKind.BarrierSpawned, AudioEventMap.SilentRunnerEvents);
         Assert.Empty(AudioEventMap.Runner(cfg, new RunnerEvent(RunnerEventKind.BarrierSpawned, 1, 0, 0f, 0f, 0f, false)));
-        Assert.Equal(new[] { "sfx.crate.hit" }, AudioEventMap.Runner(cfg, new RunnerEvent(RunnerEventKind.BarrierHit, 1, 2, 0f, 0f, 10f, false)));
-        Assert.Equal(new[] { "sfx.crate.hit", "sfx.hazard.log" }, AudioEventMap.Runner(cfg, new RunnerEvent(RunnerEventKind.BarrierBroken, 1, 2, 0f, 0f, 0f, false)));
-        Assert.Equal(new[] { "sfx.crate.hit", "sfx.hazard.log" }, AudioEventMap.Runner(cfg, new RunnerEvent(RunnerEventKind.BarrierBroken, 1, 0, 0f, 0f, 1f, true)));
+        string Hit(string kind) => AudioEventMap.Runner(cfg, new RunnerEvent(RunnerEventKind.BarrierHit, 1, 2, 0f, 0f, 10f, false, false, kind)).Single();
+        string Broken(string kind, bool rammed) => AudioEventMap.Runner(cfg, new RunnerEvent(RunnerEventKind.BarrierBroken, 1, rammed ? 0 : 2, 0f, 0f, rammed ? 1f : 0f, rammed, false, kind)).Single();
+        Assert.Equal("sfx.barrier.wood_hit", Hit("palisade"));
+        Assert.Equal("sfx.barrier.stone_hit", Hit("stone_wall"));
+        Assert.Equal("sfx.barrier.spike_hit", Hit("barricade"));
+        foreach (var rammed in new[] { false, true })
+        {
+            Assert.Equal("sfx.barrier.wood_break", Broken("palisade", rammed));
+            Assert.Equal("sfx.barrier.stone_break", Broken("stone_wall", rammed));
+            Assert.Equal("sfx.barrier.spike_break", Broken("barricade", rammed));
+        }
+
+        // Every barrier kind has its own material sound, none borrowed from the power-up crate.
+        foreach (RunnerBarrierKind kind in Enum.GetValues(typeof(RunnerBarrierKind)))
+        {
+            var name = RunnerBarrierDef.Name(kind);
+            Assert.True(cfg.RunnerEvents.ContainsKey("BarrierHit." + name), name);
+            Assert.True(cfg.RunnerEvents.ContainsKey("BarrierBroken." + name), name);
+            Assert.NotEqual("sfx.crate.hit", Hit(name));
+        }
+
+        // An unknown kind falls back to the plain wooden crack / crash.
+        Assert.Equal("sfx.barrier.wood_hit", Hit(""));
+        Assert.Equal("sfx.barrier.wood_break", Broken("", false));
     }
 
     [Fact]

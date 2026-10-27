@@ -634,8 +634,23 @@ def sfx():
 
 # ---------------------------------------------------------------- write
 
+# Runner sounds replaced by CC0 recordings (scripts/audio/medieval_runner/, see LICENSES.md). This script must not
+# overwrite them; it still owns the village, UI, economy, battle-only, power-up and pickup files.
+RECORDED = {
+    "mus_runner_march_loop", "jingle_win", "jingle_lose", "sting_boss_incoming",
+    "sfx_rowan_shot", "sfx_lyra_shot", "sfx_oakenshield_throw", "sfx_enemy_projectile",
+    "sfx_enemy_hit", "sfx_crate_hit", "sfx_enemy_death", "sfx_enemy_death_big",
+    "sfx_hero_hurt", "sfx_hero_death", "sfx_follower_down", "sfx_follower_join",
+    "sfx_hazard_spikes", "sfx_hazard_log", "sfx_hazard_fire",
+    "sfx_ironhowl_growl", "sfx_ironhowl_ground_pound", "sfx_boss_dodge_warning", "sfx_boss_quake_rumble",
+}
+
+
 def write_ogg(name, data, quality):
     path = os.path.join(OUT, name + ".ogg")
+    if name in RECORDED:
+        print(f"{name}: skipped (CC0 recording, built by scripts/audio/medieval_runner/)")
+        return path
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
         wavfile.write(tmp.name, SR, (np.clip(data, -1, 1) * 32767).astype(np.int16))
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", tmp.name, "-map_metadata", "-1", "-fflags", "+bitexact",

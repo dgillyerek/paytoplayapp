@@ -38,6 +38,10 @@ namespace Survival.Domain.Audio
                     return Lookup(config, "Hit.box", "Hit");
                 case RunnerEventKind.FoeKilled when e.Big:
                     return Lookup(config, "FoeKilled.big", "FoeKilled");
+                case RunnerEventKind.BarrierHit:
+                case RunnerEventKind.BarrierBroken:
+                    // Unit = the barrier kind (palisade / stone_wall / barricade): each material has its own crack and crash.
+                    return Lookup(config, e.Kind + "." + (e.Unit ?? ""), e.Kind.ToString());
                 default:
                     return Lookup(config, e.Kind.ToString(), "");
             }
