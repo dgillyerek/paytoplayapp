@@ -996,10 +996,24 @@ public sealed class RunnerTests
             Assert.True(l.Length <= cap.LengthCap);
             // The boss counts as one enemy and is only on every 5th level, so compare the waves without it.
             int Waves(RunnerLevelDef x) => x.EnemyCount - (x.HasBoss ? 1 : 0);
-            Assert.True(l.Number > cap.CountCap ? Waves(l) >= Waves(p) : Waves(l) > Waves(p), $"L{l.Number} enemies {Waves(p)} -> {Waves(l)}");
+            // A hand-tweaked level (progression "level_tweaks", Derek 2026-10-27: smooth a level the seed made far harder than
+            // the one before) has fewer or weaker enemies on purpose: skip it here and compare the next level with the last
+            // untweaked one.
+            var tweaks = c.Progression!.Tweaks;
+            var q = p;
+            for (var j = i - 1; j > 0 && tweaks.ContainsKey(q.Number); j--)
+            {
+                q = c.Levels[j - 1];
+            }
+
+            if (!tweaks.ContainsKey(l.Number))
+            {
+                Assert.True(l.Number > cap.CountCap ? Waves(l) >= Waves(q) : Waves(l) > Waves(q), $"L{l.Number} enemies {Waves(q)} -> {Waves(l)}");
+                Assert.True(l.FoeHpTotal(c) > q.FoeHpTotal(c), $"L{l.Number} enemy hp");
+                Assert.True(l.FoeHpMul >= q.FoeHpMul);
+            }
+
             Assert.True(l.FoeDmgMul >= p.FoeDmgMul, $"L{l.Number} enemy damage");
-            Assert.True(l.FoeHpTotal(c) > p.FoeHpTotal(c), $"L{l.Number} enemy hp");
-            Assert.True(l.FoeHpMul >= p.FoeHpMul);
             Assert.True(l.BoxCount >= p.BoxCount, $"L{l.Number} boxes {p.BoxCount} -> {l.BoxCount}");
             Assert.True(l.BoxHpTotal > p.BoxHpTotal, $"L{l.Number} box hp");
             if (l.HasBoss && l.Number > 5)

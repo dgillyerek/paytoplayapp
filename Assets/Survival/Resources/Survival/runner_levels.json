@@ -24,6 +24,12 @@
     "_boss_doc": "A big boss (Ironhowl) only ends Levels 5, 10, 15, ... 50; the other levels end on the last wave and the finish line.",
     "_ramp_doc": "Levels past from (12) stop getting longer past length_cap and stop adding enemies / boxes past count_cap; instead every level multiplies enemy HP, enemy damage and boss HP by the growth, and every level past wall_from (30) by the steeper wall growth. Balanced by tests/Survival.Domain.Tests/RunnerBalanceTests.cs (see docs/runner_balance.md): a free player with normal upgrades clears 1-30, 31-50 need bought upgrades.",
     "ramp": { "from": 12, "wall_from": 30, "count_cap": 20, "length_cap": 330, "speed_cap": 2.3, "foe_hp_growth": 1.112, "foe_dmg_growth": 1.067, "boss_hp_growth": 1.115, "wall_hp_growth": 1.026, "wall_dmg_growth": 1.0125, "wall_boss_growth": 1.016, "wall_step_hp": 1.35, "wall_step_dmg": 1.12 },
+    "level_tweaks": {
+      "_doc": "Hand adjustments to single generated levels (RunnerLevelTweak; all default 1.0, the layout stays the seed's): wave = enemies per wave group, foe_hp = enemy HP, barrier_hp = barrier HP. L19 and L22 trim waves and L26 trims enemy HP where the seed made a level oversized, so no level needs more than 1.6x the power of the one before (Derek 2026-10-27).",
+      "19": { "wave": 0.7 },
+      "22": { "wave": 0.8 },
+      "26": { "foe_hp": 0.8 }
+    },
     "names": [ "Thornwood Road", "Bramble Pass", "Mirefen Causeway", "Ashen Ridge", "Wolfsong Hollow", "Bonefield Track", "Hexmoor Way", "Cinder Gorge", "Gloomwood Trail", "Ironhowl's Reach", "Dragonspine Road", "Throne of Thorns", "Gravelmarch", "Witchlight Fen", "Hollowbone Pass", "Emberfall Steps", "Rotwood Crossing", "Saltmire Dyke", "Black Briar Lane", "Frostfang Rise", "Crowspire Road", "Dreadmoss Vale", "Sunken Kingsway", "Ravenhold Gate", "Skullcairn Track", "Weeping Oaks", "Duskhollow Bridge", "Cindermaw Pass", "Thistlegrave Moor", "Shattered Causeway", "Banewood Deep", "Howling Steppe", "Mournvale Road", "Ashfall Bastion", "Blood Thorn Gate", "Wyrmscar Canyon", "Gloamspire Climb", "Ironroot Labyrinth", "Nightfang Den", "Hexfire Wastes", "Bonequill Spires", "Vespera's Veil", "Blightheart Mire", "Dragonfall Ridge", "Obsidian Way", "The Last Bridge", "Ironhowl's Maw", "Crown of Ash", "Thornking's Road", "Heart of Thorns" ]
   },
   "levels": [
