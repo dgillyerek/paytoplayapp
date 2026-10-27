@@ -339,6 +339,7 @@ namespace Survival.Unity
             _boxDefs.Clear();
             _shots.Clear();
             _hazards.Clear();
+            ClearBarriers();
             _dying.Clear();
             _fx.Clear();
             ClearFloaters();
@@ -391,6 +392,7 @@ namespace Survival.Unity
             AnimateFoes();
             RunnerHitchLog.End(RunnerHitchLog.Section.Actors);
             AnimateHazards(dt);
+            AnimateBarriers(dt);
             AnimateSlamMark();
             AnimateQuakeMark();
             RunnerHitchLog.Begin(RunnerHitchLog.Section.Shots);
@@ -737,6 +739,7 @@ namespace Survival.Unity
             }
 
             SyncHazards();
+            SyncBarriers();
             RunnerHitchLog.Begin(RunnerHitchLog.Section.Shots);
             var shots = _run.Shots;
             _liveIds.Clear();
@@ -1118,6 +1121,17 @@ namespace Survival.Unity
 
                 case RunnerEventKind.HazardHit:
                     HazardStruck(e, at);
+                    break;
+
+                case RunnerEventKind.BarrierSpawned:
+                    break;
+
+                case RunnerEventKind.BarrierHit:
+                    BarrierStruck(e);
+                    break;
+
+                case RunnerEventKind.BarrierBroken:
+                    BarrierBroke(e);
                     break;
 
                 case RunnerEventKind.BossEngaged:

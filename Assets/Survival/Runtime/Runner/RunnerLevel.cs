@@ -36,7 +36,53 @@ namespace Survival.Domain.Runner
         Boss,
 
         /// <summary>A trap in the lane (spikes, a rolling log, a fire patch): steer round it; it cannot be shot.</summary>
-        Hazard
+        Hazard,
+
+        /// <summary>A breakable obstacle (palisade gate, stone wall, spiked barricade): shoot it down or steer round it; walking into it hurts.</summary>
+        Barrier
+    }
+
+    /// <summary>
+    /// Breakable road obstacles (Derek 2026-10-26: "some obstacles that can get destroyed but do damage if you don't avoid
+    /// them. maybe some type of gate or stone fence. something time period appropriate"). See <see cref="RunnerBarrierDef"/>.
+    /// </summary>
+    public enum RunnerBarrierKind
+    {
+        /// <summary>A wooden palisade gate: sharpened oak stakes on cross beams. Middling HP and bite.</summary>
+        Palisade,
+
+        /// <summary>A dry-stone field wall: the toughest to shoot down, a hard knock to run into.</summary>
+        StoneWall,
+
+        /// <summary>A cheval de frise: crossed sharpened stakes on a log. Quick to break, nasty to walk into.</summary>
+        Barricade
+    }
+
+    /// <summary>
+    /// A breakable obstacle: <see cref="Width"/> metres across the lane (centred on the row's x), <see cref="Hp"/> that the
+    /// squad's shots chip down, and <see cref="Damage"/> to every squad member it touches when the squad walks into it while
+    /// it still stands (the hero takes all of it, a follower a trap's share); that contact smashes it. A barrier as wide as
+    /// the road cannot be steered round: it has to be shot down (or walked through, at that price).
+    /// </summary>
+    public sealed record RunnerBarrierDef(RunnerBarrierKind Kind, float Width, int Hp, int Damage)
+    {
+        public static string Name(RunnerBarrierKind kind) => kind switch
+        {
+            RunnerBarrierKind.StoneWall => "stone_wall",
+            RunnerBarrierKind.Barricade => "barricade",
+            _ => "palisade"
+        };
+
+        public static RunnerBarrierKind Parse(string name) => name switch
+        {
+            "palisade" => RunnerBarrierKind.Palisade,
+            "stone_wall" => RunnerBarrierKind.StoneWall,
+            "barricade" => RunnerBarrierKind.Barricade,
+            _ => throw new FormatException("Runner barrier '" + name + "' is not palisade / stone_wall / barricade.")
+        };
+
+        /// <summary>True when it spans a road <paramref name="halfWidth"/> either side of the centre line (no way round).</summary>
+        public bool FullWidth(float halfWidth) => Width >= (2f * halfWidth) - 0.05f;
     }
 
     /// <summary>Lane traps. Each one shows a warning before it can hurt (see <see cref="RunnerHazardDef"/>).</summary>
@@ -113,6 +159,9 @@ namespace Survival.Domain.Runner
     {
         /// <summary>The trap, on a <see cref="RunnerRowKind.Hazard"/> row.</summary>
         public RunnerHazardDef? Hazard { get; init; }
+
+        /// <summary>The obstacle, on a <see cref="RunnerRowKind.Barrier"/> row.</summary>
+        public RunnerBarrierDef? Barrier { get; init; }
 
         public float XOf(int index) => X + ((index - ((Count - 1) * 0.5f)) * Spread);
     }
@@ -226,6 +275,35 @@ namespace Survival.Domain.Runner
                 foreach (var r in Rows)
                 {
                     n += r.Kind == RunnerRowKind.Hazard ? 1 : 0;
+                }
+
+                return n;
+            }
+        }
+
+        public int BarrierCount
+        {
+            get
+            {
+                var n = 0;
+                foreach (var r in Rows)
+                {
+                    n += r.Kind == RunnerRowKind.Barrier ? 1 : 0;
+                }
+
+                return n;
+            }
+        }
+
+        /// <summary>Barriers as wide as the road (shoot them down or walk through them).</summary>
+        public int FullWidthBarrierCount
+        {
+            get
+            {
+                var n = 0;
+                foreach (var r in Rows)
+                {
+                    n += r.Barrier != null && r.Barrier.FullWidth(HalfWidth) ? 1 : 0;
                 }
 
                 return n;
@@ -433,6 +511,13 @@ namespace Survival.Domain.Runner
                         throw new FormatException(level.Id + ": hazard at " + row.At + " m needs a width > 0.");
                     }
                 }
+                else if (row.Kind == RunnerRowKind.Barrier)
+                {
+                    if (row.Barrier == null || row.Barrier.Width <= 0f || row.Barrier.Hp <= 0)
+                    {
+                        throw new FormatException(level.Id + ": barrier at " + row.At + " m needs a width > 0 and hp > 0.");
+                    }
+                }
                 else if (row.Kind == RunnerRowKind.Box)
                 {
                     if (row.Box == null || row.Box.Hp <= 0)
@@ -588,8 +673,15 @@ namespace Survival.Domain.Runner
                     return new RunnerRowDef(at, RunnerRowKind.Hazard, x, "", 1, 0f, null) { Hazard = hz };
                 }
 
+                case "barrier":
+                {
+                    var bk = RunnerBarrierDef.Parse(LayoutJson.OptStr(r, "barrier", "palisade"));
+                    var bd = new RunnerBarrierDef(bk, Math.Max(0.4f, LayoutJson.OptNum(r, "width", 3f)), Math.Max(1, LayoutJson.OptInt(r, "hp", 100)), Math.Max(0, LayoutJson.OptInt(r, "damage", 40)));
+                    return new RunnerRowDef(at, RunnerRowKind.Barrier, x, "", 1, 0f, null) { Barrier = bd };
+                }
+
                 default:
-                    throw new FormatException("Runner row kind '" + kindText + "' at " + at.ToString(CultureInfo.InvariantCulture) + " m is not enemy / box / boss / hazard.");
+                    throw new FormatException("Runner row kind '" + kindText + "' at " + at.ToString(CultureInfo.InvariantCulture) + " m is not enemy / box / boss / hazard / barrier.");
             }
         }
     }

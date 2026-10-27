@@ -179,6 +179,9 @@ namespace Survival.Domain.Runner
         /// <summary>A fire patch burns one member at a time, re-flaring every this many seconds.</summary>
         public const float FireFlare = 1.2f;
 
+        /// <summary>Half a breakable barrier's depth along the road (a gate, a wall, a stake barricade are all thin).</summary>
+        public const float BarrierHalfDepth = 0.35f;
+
         /// <summary>Longest internal step; bigger frame deltas are split so results do not depend on frame rate.</summary>
         public const float MaxStep = 1f / 30f;
     }
@@ -233,7 +236,20 @@ namespace Survival.Domain.Runner
         BossQuake,
 
         /// <summary>A follower took a hit it survives (<see cref="RunnerEvent.Id"/> = the follower, Other = the foe, Amount = damage); one it does not is <see cref="FollowerLost"/>.</summary>
-        FollowerHit
+        FollowerHit,
+
+        /// <summary>A breakable barrier appeared (<see cref="RunnerEvent.Unit"/> = palisade / stone_wall / barricade, Amount = its HP).</summary>
+        BarrierSpawned,
+
+        /// <summary>A squad shot chipped a barrier (<see cref="RunnerEvent.Id"/> = the barrier, Other = the shooter, Amount = damage).</summary>
+        BarrierHit,
+
+        /// <summary>
+        /// A barrier came apart (<see cref="RunnerEvent.Unit"/> = its kind). Shot down: Other = the shooter, Amount 0, Big false.
+        /// Walked into: Other 0, Amount = squad members it hurt, Big true (their hits follow as HeroHit / FollowerHit / FollowerLost).
+        /// The scene's break sound hook keys on this event.
+        /// </summary>
+        BarrierBroken
     }
 
     /// <summary>What the boss is winding up.</summary>
@@ -485,6 +501,37 @@ namespace Survival.Domain.Runner
     }
 
     /// <summary>
+    /// A breakable barrier in play: the squad's shots chip it down (it stops them, like a box), and walking into it while it
+    /// stands hurts whoever it touches and smashes it. It never moves; enemies and their shots go through it.
+    /// </summary>
+    public sealed class RunnerBarrier
+    {
+        internal RunnerBarrier(int id, RunnerBarrierDef def, float x, float z)
+        {
+            Id = id;
+            Def = def;
+            X = x;
+            Z = z;
+            Hp = def.Hp;
+        }
+
+        public int Id { get; }
+        public RunnerBarrierDef Def { get; }
+        public RunnerBarrierKind Kind => Def.Kind;
+        public float X { get; }
+        public float Z { get; }
+        public int Hp { get; internal set; }
+        public int MaxHp => Def.Hp;
+        public float HpFraction => MaxHp > 0 ? Math.Max(0f, Hp / (float)MaxHp) : 0f;
+        public float HalfWidth => Def.Width * 0.5f;
+        public float HalfDepth => RunnerRules.BarrierHalfDepth;
+
+        public bool Touches(float x, float z, float radius) =>
+            Math.Abs(x - X) <= HalfWidth + (radius * RunnerRules.HazardBodyShare)
+            && Math.Abs(z - Z) <= HalfDepth + (radius * RunnerRules.HazardBodyShare);
+    }
+
+    /// <summary>
     /// A shot in flight, straight down the road (squad shots +z, foe shots -z) from where it was fired; no homing.
     /// It hits the first body it passes through and despawns after <see cref="Range"/> metres.
     /// </summary>
@@ -558,6 +605,7 @@ namespace Survival.Domain.Runner
         private readonly List<RunnerBox> _boxes = new();
         private readonly List<RunnerShot> _shots = new();
         private readonly List<RunnerHazard> _hazards = new();
+        private readonly List<RunnerBarrier> _barriers = new();
         private readonly List<RunnerEvent> _events = new();
         private int _nextRow;
         private int _nextId = 1;
@@ -599,6 +647,7 @@ namespace Survival.Domain.Runner
         public IReadOnlyList<RunnerBox> Boxes => _boxes;
         public IReadOnlyList<RunnerShot> Shots => _shots;
         public IReadOnlyList<RunnerHazard> Hazards => _hazards;
+        public IReadOnlyList<RunnerBarrier> Barriers => _barriers;
 
         public int Followers => _squad.Count - 1;
         public int FollowersPeak { get; private set; }
@@ -618,6 +667,11 @@ namespace Survival.Domain.Runner
 
         /// <summary>Followers knocked out and hero hits taken from lane traps.</summary>
         public int HazardHits { get; private set; }
+
+        /// <summary>Barriers shot down, barriers the squad walked into (and the squad members those hurt).</summary>
+        public int BarriersBroken { get; private set; }
+        public int BarriersSmashed { get; private set; }
+        public int BarrierHits { get; private set; }
 
         /// <summary>How far a member's attack reaches now: ranged shots scale with <see cref="RangeMul"/>, melee does not.</summary>
         public float ReachOf(RunnerMember m) => m.Unit.Ranged ? m.Unit.Range * RangeMul : m.Unit.Range;
@@ -697,6 +751,19 @@ namespace Survival.Domain.Runner
             return null;
         }
 
+        public RunnerBarrier? Barrier(int id)
+        {
+            for (var i = 0; i < _barriers.Count; i++)
+            {
+                if (_barriers[i].Id == id)
+                {
+                    return _barriers[i];
+                }
+            }
+
+            return null;
+        }
+
         public RunnerHazard? Hazard(int id)
         {
             for (var i = 0; i < _hazards.Count; i++)
@@ -734,6 +801,7 @@ namespace Survival.Domain.Runner
             FoesAttack(dt);
             MoveShots(dt);
             StepHazards(dt);
+            StepBarriers();
             DropPassed();
             CheckEnd();
         }
@@ -791,6 +859,16 @@ namespace Survival.Domain.Runner
                         var hz = new RunnerHazard(_nextId++, hd, Clamp(row.X, -Level.HalfWidth + half, Level.HalfWidth - half), row.At);
                         _hazards.Add(hz);
                         Emit(RunnerEventKind.HazardSpawned, hz.Id, 0, hz.X, hz.Z, hd.Width, false, false, RunnerHazardDef.Name(hd.Kind));
+                        break;
+                    }
+
+                    case RunnerRowKind.Barrier:
+                    {
+                        var bd = row.Barrier!;
+                        var half = Math.Min(bd.Width * 0.5f, Level.HalfWidth);
+                        var bar = new RunnerBarrier(_nextId++, bd, Clamp(row.X, -Level.HalfWidth + half, Level.HalfWidth - half), row.At);
+                        _barriers.Add(bar);
+                        Emit(RunnerEventKind.BarrierSpawned, bar.Id, 0, bar.X, bar.Z, bar.Hp, false, false, RunnerBarrierDef.Name(bd.Kind));
                         break;
                     }
 
@@ -972,6 +1050,48 @@ namespace Survival.Domain.Runner
             Damage(melee.Id, melee.OnBox, damage, m.Id);
         }
 
+        /// <summary>The longest reach any ranged squad member has right now (range crates included); 0 with none.</summary>
+        public float SquadReach
+        {
+            get
+            {
+                var r = 0f;
+                foreach (var m in _squad)
+                {
+                    if (m.Unit.Ranged)
+                    {
+                        r = Math.Max(r, ReachOf(m));
+                    }
+                }
+
+                return r;
+            }
+        }
+
+        /// <summary>
+        /// How far a foe opens fire from. A ranged enemy shoots from its own range or the squad's longest reach, whichever
+        /// is further, so it is never outranged (Derek 2026-10-26: "they don't start firing from as far away as the heroes
+        /// can"). Melee and the boss keep their own reach.
+        /// </summary>
+        public float FireRangeOf(RunnerFoe f) => f.Unit.Ranged && !f.Boss ? Math.Max(f.Unit.Range, SquadReach) : f.Unit.Range;
+
+        /// <summary>
+        /// True when a ranged squad member could shoot this foe right now (the same test as <see cref="AnythingAhead"/>):
+        /// a foe a hero can hit can shoot back, even when its nearest target is a lane or two over.
+        /// </summary>
+        private bool InSquadReach(RunnerFoe f)
+        {
+            foreach (var m in _squad)
+            {
+                if (m.Unit.Ranged && f.Z > m.Z - 0.5f && f.Z - m.Z <= ReachOf(m) + f.Unit.Radius)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>Any live foe or box ahead within the unit's range, at any lane position.</summary>
         private bool AnythingAhead(RunnerMember m)
         {
@@ -986,6 +1106,14 @@ namespace Survival.Domain.Runner
             foreach (var b in _boxes)
             {
                 if (b.Hp > 0 && b.Z > m.Z - 0.5f && b.Z - m.Z <= ReachOf(m) + RunnerBox.Radius)
+                {
+                    return true;
+                }
+            }
+
+            foreach (var b in _barriers)
+            {
+                if (b.Hp > 0 && b.Z > m.Z - 0.5f && b.Z - m.Z <= ReachOf(m) + b.HalfDepth)
                 {
                     return true;
                 }
@@ -1086,7 +1214,7 @@ namespace Survival.Domain.Runner
 
                 // Melee: whoever is in reach, ahead or already past. Ranged: the nearest member in range, in any lane,
                 // either way down the road (a foe the squad has walked past shoots after it): enemies aim, heroes fire straight.
-                var inRange = dist <= f.Unit.Range + f.Unit.Radius + target.Unit.Radius;
+                var inRange = dist <= FireRangeOf(f) + f.Unit.Radius + target.Unit.Radius || (f.Unit.Ranged && InSquadReach(f));
                 if (!inRange)
                 {
                     f.Cooldown = Math.Max(f.Cooldown, 0f);
@@ -1106,7 +1234,9 @@ namespace Survival.Domain.Runner
                 {
                     var dir = target.Z >= f.Z ? 1f : -1f;
                     var (ax, az) = FoeAim(f.X, f.Z + (0.4f * dir), target.X, target.Z, f.Unit.ShotSpeed, Level.Speed);
-                    _shots.Add(new RunnerShot(_nextId++, f.Id, true, f.X, f.Z + (0.4f * dir), f.Damage, f.Unit.ShotSpeed, f.Unit.Range + RunnerRules.ShotOvershoot + 2f, az, Math.Abs(az) > 1e-4f ? ax / Math.Abs(az) : 0f));
+                    // It flies far enough to cover the longer fire range and the led aim point, so it never fizzles short.
+                    var flight = Math.Max(FireRangeOf(f), (float)Math.Sqrt((ax * ax) + (az * az))) + RunnerRules.ShotOvershoot + 2f;
+                    _shots.Add(new RunnerShot(_nextId++, f.Id, true, f.X, f.Z + (0.4f * dir), f.Damage, f.Unit.ShotSpeed, flight, az, Math.Abs(az) > 1e-4f ? ax / Math.Abs(az) : 0f));
                 }
                 else
                 {
@@ -1434,7 +1564,26 @@ namespace Survival.Domain.Runner
                         }
                     }
 
-                    if (id != 0)
+                    // A barrier stops the shot too (the stakes, the stones): whatever is nearest along the lane takes it.
+                    RunnerBarrier? wall = null;
+                    foreach (var b in _barriers)
+                    {
+                        var r = b.HalfDepth + RunnerRules.ShotHalfWidth;
+                        if (b.Hp > 0 && Math.Abs(b.X - s.X) <= b.HalfWidth + RunnerRules.ShotHalfWidth && b.Z >= lo - r && b.Z <= hi + r && b.Z < bestZ)
+                        {
+                            bestZ = b.Z;
+                            wall = b;
+                        }
+                    }
+
+                    if (wall != null)
+                    {
+                        hit = true;
+                        _shots.RemoveAt(i);
+                        s.Z = bestZ;
+                        DamageBarrier(wall, s.Damage, s.Shooter);
+                    }
+                    else if (id != 0)
                     {
                         hit = true;
                         _shots.RemoveAt(i);
@@ -1501,6 +1650,83 @@ namespace Survival.Domain.Runner
                 Emit(RunnerEventKind.FoeKilled, f.Id, by, f.X, f.Z, Kills, f.Boss, false, f.Unit.Id);
             }
         }
+
+        private void DamageBarrier(RunnerBarrier b, int damage, int by)
+        {
+            if (b.Hp <= 0)
+            {
+                return;
+            }
+
+            b.Hp = Math.Max(0, b.Hp - damage);
+            Emit(RunnerEventKind.BarrierHit, b.Id, by, b.X, b.Z, damage, false, false, RunnerBarrierDef.Name(b.Kind));
+            if (b.Hp == 0)
+            {
+                _barriers.Remove(b);
+                BarriersBroken++;
+                Emit(RunnerEventKind.BarrierBroken, b.Id, by, b.X, b.Z, 0, false, false, RunnerBarrierDef.Name(b.Kind));
+            }
+        }
+
+        /// <summary>
+        /// A standing barrier the squad walks into: everyone it touches right then takes its damage (the hero all of it, a
+        /// follower a trap's share, <see cref="FollowerTrapDamage"/>), and the impact smashes it, so the rows behind walk on.
+        /// </summary>
+        private void StepBarriers()
+        {
+            for (var i = _barriers.Count - 1; i >= 0 && !Over; i--)
+            {
+                var b = _barriers[i];
+                if (b.Z < Hero.Z - SquadDepth - RunnerRules.DropBehind)
+                {
+                    _barriers.RemoveAt(i);
+                    continue;
+                }
+
+                _touching.Clear();
+                foreach (var m in _squad)
+                {
+                    if (b.Touches(m.X, m.Z, m.Unit.Radius))
+                    {
+                        _touching.Add(m);
+                    }
+                }
+
+                if (_touching.Count == 0)
+                {
+                    continue;
+                }
+
+                _barriers.RemoveAt(i);
+                BarriersSmashed++;
+                BarrierHits += _touching.Count;
+                Emit(RunnerEventKind.BarrierBroken, b.Id, 0, b.X, b.Z, _touching.Count, true, false, RunnerBarrierDef.Name(b.Kind));
+                foreach (var m in _touching)
+                {
+                    if (Over)
+                    {
+                        break;
+                    }
+
+                    if (m.IsHero)
+                    {
+                        Hero.Hp = Math.Max(0, Hero.Hp - b.Def.Damage);
+                        Emit(RunnerEventKind.HeroHit, Hero.Id, b.Id, Hero.X, Hero.Z, b.Def.Damage, true, false, Hero.Unit.Id);
+                        if (Hero.Hp <= 0)
+                        {
+                            Outcome = RunnerOutcome.Lost;
+                            Emit(RunnerEventKind.Lost, Hero.Id, b.Id, Hero.X, Hero.Z, 0, true);
+                        }
+
+                        continue;
+                    }
+
+                    HurtFollower(b.Id, m, FollowerTrapDamage(b.Def.Damage));
+                }
+            }
+        }
+
+        private readonly List<RunnerMember> _touching = new();
 
         /// <summary>A broken box pays out: units join at the box and run into formation, or the squad is upgraded.</summary>
         private void Claim(RunnerBox b)

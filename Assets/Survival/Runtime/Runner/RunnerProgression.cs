@@ -46,12 +46,22 @@ namespace Survival.Domain.Runner
                 Math.Max(0f, LayoutJson.OptNum(o, "reward_step", 0.3f)),
                 names)
             {
-                Ramp = o.TryGet("ramp", out var rn) && rn is JsonNode.Obj ro ? RunnerRampDef.Read(ro) : null
+                Ramp = o.TryGet("ramp", out var rn) && rn is JsonNode.Obj ro ? RunnerRampDef.Read(ro) : null,
+                BossEvery = Math.Max(1, LayoutJson.OptInt(o, "boss_every", 1))
             };
         }
 
         /// <summary>The late-game ramp (levels past <see cref="RunnerRampDef.From"/>), or null for the plain linear steps.</summary>
         public RunnerRampDef? Ramp { get; init; }
+
+        /// <summary>
+        /// A big boss stands at the end of every <see cref="BossEvery"/>th level only (Derek 2026-10-26: "there should only
+        /// be a big boss every 5 levels or so"): Levels 5, 10, 15, ... The other levels end on a last wave and the finish line.
+        /// </summary>
+        public int BossEvery { get; init; } = 1;
+
+        /// <summary>Whether Level <paramref name="number"/> ends on the boss.</summary>
+        public bool IsBossLevel(int number) => BossEvery <= 1 || (number >= 1 && number % BossEvery == 0);
 
         /// <summary>The t (level - 1) the enemy and box counts use: it stops growing at the ramp's count cap.</summary>
         public int CountT(int number) => Math.Max(0, Math.Min(number, Ramp?.CountCap ?? int.MaxValue) - 1);
@@ -138,6 +148,29 @@ namespace Survival.Domain.Runner
         /// <summary>How far past the first follower chest the opening wave stands (later waves stand 8 m past theirs).</summary>
         public const float FirstWaveMetres = 12f;
 
+        /// <summary>A second trap on one beat in four from <see cref="SecondTrapFrom"/>, on every other beat from <see cref="SecondTrapEveryOtherFrom"/>.</summary>
+        public const int SecondTrapFrom = 13, SecondTrapEveryOtherFrom = 22;
+
+        /// <summary>
+        /// Breakable barriers (Derek 2026-10-26): from Level 2 on every third beat, every other beat from Level 15, every beat
+        /// from Level 25. Most stand against the edge of the road away from the beat's box (dodge or shoot), leaving at least
+        /// 2 m open; from Level 6 every fourth one is a
+        /// full-width palisade gate or stone wall that has to be shot down (or walked through, at its damage). HP is a share
+        /// of the beat's box HP (so it scales with the level); damage grows a step a level like the traps'.
+        /// </summary>
+        public const int BarrierFrom = 2, BarrierEveryOtherFrom = 15, BarrierEveryBeatFrom = 25, FullWidthBarrierFrom = 6, FullWidthEvery = 4;
+
+        public const int PalisadeDamage = 50, PalisadeDamageStep = 4, StoneWallDamage = 60, StoneWallDamageStep = 5, BarricadeDamage = 70, BarricadeDamageStep = 5;
+
+        /// <summary>Barrier HP as a share of the beat's box HP: a barricade breaks fast, a stone wall slowly; a full-width one at <see cref="FullWidthHpShare"/>.</summary>
+        public const float BarricadeHpShare = 0.15f, PalisadeHpShare = 0.22f, StoneWallHpShare = 0.3f, FullWidthHpShare = 0.2f;
+
+        /// <summary>Metres past the beat's chest a barrier stands (behind the crate, before the skirmishers).</summary>
+        public const float BarrierOffset = 3f;
+
+        /// <summary>Trap damage on Level 1 and per level after (about 1.75x the old 40 + 3, 55 + 4 and 30 + 3: Derek 2026-10-26).</summary>
+        public const int SpikeDamage = 70, SpikeDamageStep = 5, LogDamage = 96, LogDamageStep = 7, FireDamage = 52, FireDamageStep = 5;
+
         private static readonly string[] FollowerUnits = { "rowan", "lyra", "rowan", "oakenshield", "lyra", "oakenshield" };
         private static readonly string[] ShardHeroes = { "hero.lyra", "hero.rowan", "hero.oakenshield", "hero.sir_aldric" };
         private static readonly RunnerBoxKind[] PowerUps = { RunnerBoxKind.Weapon, RunnerBoxKind.Rate, RunnerBoxKind.Range, RunnerBoxKind.Followers, RunnerBoxKind.Heal, RunnerBoxKind.Weapon, RunnerBoxKind.Rate, RunnerBoxKind.Followers };
@@ -152,7 +185,7 @@ namespace Survival.Domain.Runner
             var t = number - 1;
             var ramp = p.Ramp;
             var length = (float)Math.Round(Math.Min(first.Length + (p.LengthStep * t), ramp?.LengthCap ?? float.MaxValue));
-            var rows = Rows(p, number, length, first.HalfWidth, BossUnit(first), hasUnit);
+            var rows = Rows(p, number, length, first.HalfWidth, p.IsBossLevel(number) ? BossUnit(first) : null, hasUnit);
             var r = first.Rewards;
             var pay = 1f + (p.RewardStep * t);
             var rewards = new RunnerRewardDef(
@@ -181,8 +214,11 @@ namespace Survival.Domain.Runner
             };
         }
 
-        /// <summary>The spawn rows of level <paramref name="number"/> on a <paramref name="length"/> m road (boss row last).</summary>
-        public static List<RunnerRowDef> Rows(RunnerProgressionDef p, int number, float length, float halfWidth, string bossUnit, Func<string, bool> hasUnit)
+        /// <summary>
+        /// The spawn rows of level <paramref name="number"/> on a <paramref name="length"/> m road: the boss row last when
+        /// <paramref name="bossUnit"/> is set, otherwise the road ends on the last wave and the finish line.
+        /// </summary>
+        public static List<RunnerRowDef> Rows(RunnerProgressionDef p, int number, float length, float halfWidth, string? bossUnit, Func<string, bool> hasUnit)
         {
             var t = Math.Max(0, number - 1);
             // Enemy / box counts stop growing at the ramp's count cap (the road stops growing too); HP and damage carry on.
@@ -202,8 +238,10 @@ namespace Survival.Domain.Runner
                 pool.Add("ashwyrm");
             }
 
-            // Traps: spikes from Level 1, fire from Level 2, rolling logs from Level 4. Every third beat on Level 1,
-            // every other beat by Level 5, then a second trap in some beats.
+            // Traps: spikes from Level 1, fire from Level 2, rolling logs from Level 4. Every other beat on Levels 1-4,
+            // every beat from Level 5, and a second trap on one beat in four from Level 13 and every other beat from Level 22
+            // (Derek 2026-10-26: "the obstacles need to be more prevelant and do more damage": about 1.5-2x the old every
+            // third / every other beat).
             var traps = new List<RunnerHazardKind> { RunnerHazardKind.Spikes };
             if (number >= 2)
             {
@@ -215,11 +253,14 @@ namespace Survival.Domain.Runner
                 traps.Add(RunnerHazardKind.Log);
             }
 
-            var trapEvery = number >= 5 ? 2 : 3;
+            var trapEvery = number >= 5 ? 1 : 2;
             var side = rnd.Next(2) == 0 ? -1f : 1f;
             var beat = 0;
             var beats = Math.Max(1, (int)Math.Floor((bossAt - 16f - 12f) / BeatMetres) + 1);
             var trap = 0;
+            // Barriers draw from their own seed so adding them leaves the rest of the road as it was.
+            var brnd = new Random(unchecked(p.Seed + (number * 104729) + 17));
+            var barrier = 0;
             for (var z = 12f; z < bossAt - 16f; z += BeatMetres, beat++)
             {
                 // How far into the level this beat is (0 = the start, 1 = just before the boss): the waves grow along the
@@ -275,12 +316,19 @@ namespace Survival.Domain.Runner
                     Group(rows, z + 4f, fx * 0.6f, skirm, 2 + (int)Math.Round(tc * along * 0.2f), 1.1f, halfWidth);
                 }
 
+                if (HasBarrier(number, beat))
+                {
+                    AddBarrier(rows, z + BarrierOffset, hpAt, number, t, barrier, brnd, halfWidth, Math.Sign(beat % 2 == 1 ? ux : fx));
+                    barrier++;
+                }
+
                 // A lane trap between the boxes and the wave.
                 if (beat >= 1 && (beat - 1) % trapEvery == 0)
                 {
-                    AddTrap(rows, traps[trap % traps.Count], z + 5.5f, rnd, halfWidth, t);
+                    // Not in the lane of the chest or crate just before it, so the busier roads still let the squad take its boxes.
+                    AddTrap(rows, traps[trap % traps.Count], z + 5.5f, rnd, halfWidth, t, beat % 2 == 1 ? ux : fx);
                     trap++;
-                    if ((number >= 9 && beat % 4 == 1) || (number >= 12 && beat % 4 == 3))
+                    if (number >= SecondTrapFrom && (beat % 4 == 1 || (number >= SecondTrapEveryOtherFrom && beat % 2 == 1)))
                     {
                         AddTrap(rows, traps[trap % traps.Count], z + 10f, rnd, halfWidth, t);
                         trap++;
@@ -326,9 +374,14 @@ namespace Survival.Domain.Runner
                 side = -side;
             }
 
-            // The boss's guard: a line of archers just before it, longer with the level.
+            // The boss's guard (or, on a level without a boss, the last wave before the finish): a line of archers, longer
+            // with the level.
             Group(rows, bossAt - 7f, 0f, "bonequill", 3 + (tc / 2), 1.4f, halfWidth);
-            rows.Add(new RunnerRowDef(bossAt, RunnerRowKind.Boss, 0f, bossUnit, 1, 0f, null));
+            if (bossUnit != null)
+            {
+                rows.Add(new RunnerRowDef(bossAt, RunnerRowKind.Boss, 0f, bossUnit, 1, 0f, null));
+            }
+
             rows.Sort((a, b) => a.At.CompareTo(b.At));
             return rows;
         }
@@ -349,16 +402,61 @@ namespace Survival.Domain.Runner
             }
         }
 
-        private static void AddTrap(List<RunnerRowDef> rows, RunnerHazardKind kind, float z, Random rnd, float halfWidth, int t)
+        /// <summary>Whether beat <paramref name="beat"/> of Level <paramref name="number"/> has a breakable barrier.</summary>
+        public static bool HasBarrier(int number, int beat) =>
+            number >= BarrierFrom && beat >= 2 && (number >= BarrierEveryBeatFrom || (number >= BarrierEveryOtherFrom ? beat % 2 == 0 : beat % 3 == 2));
+
+        private static void AddBarrier(List<RunnerRowDef> rows, float z, int hpAt, int number, int t, int index, Random rnd, float halfWidth, int boxSide)
+        {
+            var full = number >= FullWidthBarrierFrom && index % FullWidthEvery == FullWidthEvery - 1;
+            RunnerBarrierDef def;
+            var x = 0f;
+            if (full)
+            {
+                var kind = (index / FullWidthEvery) % 2 == 0 ? RunnerBarrierKind.Palisade : RunnerBarrierKind.StoneWall;
+                def = new RunnerBarrierDef(kind, 2f * halfWidth, Math.Max(60, (int)Math.Round(hpAt * FullWidthHpShare)), BarrierDamage(kind, t));
+            }
+            else
+            {
+                var kind = (RunnerBarrierKind)rnd.Next(3);
+                var share = kind switch
+                {
+                    RunnerBarrierKind.StoneWall => StoneWallHpShare,
+                    RunnerBarrierKind.Barricade => BarricadeHpShare,
+                    _ => PalisadeHpShare
+                };
+                // Against the edge away from the beat's box, so it never hides the box (or the wave coming down the middle)
+                // from the squad's fire; never the whole road: at least 2 m of open road stays beside it.
+                var width = kind == RunnerBarrierKind.StoneWall ? 3.6f : 3.2f;
+                x = -boxSide * (halfWidth - (width * 0.5f));
+                def = new RunnerBarrierDef(kind, width, Math.Max(40, (int)Math.Round(hpAt * share)), BarrierDamage(kind, t));
+            }
+
+            rows.Add(new RunnerRowDef(z, RunnerRowKind.Barrier, x, "", 1, 0f, null) { Barrier = def });
+        }
+
+        public static int BarrierDamage(RunnerBarrierKind kind, int t) => kind switch
+        {
+            RunnerBarrierKind.StoneWall => StoneWallDamage + (StoneWallDamageStep * t),
+            RunnerBarrierKind.Barricade => BarricadeDamage + (BarricadeDamageStep * t),
+            _ => PalisadeDamage + (PalisadeDamageStep * t)
+        };
+
+        private static void AddTrap(List<RunnerRowDef> rows, RunnerHazardKind kind, float z, Random rnd, float halfWidth, int t, float? clearOf = null)
         {
             // Never the full lane: a trap covers one side or the middle, so there is always a way round.
-            var lanes = new[] { -2.2f, 0f, 2.2f };
-            var x = lanes[rnd.Next(lanes.Length)];
+            var lanes = new List<float> { -2.2f, 0f, 2.2f };
+            if (clearOf is float keep)
+            {
+                lanes.RemoveAll(l => Math.Abs(l - keep) < 1.2f);
+            }
+
+            var x = lanes[rnd.Next(lanes.Count)];
             var def = kind switch
             {
-                RunnerHazardKind.Spikes => new RunnerHazardDef(kind, 2.0f, 40 + (3 * t), (float)Math.Round(rnd.NextDouble() * RunnerRules.SpikeCycle, 2)),
-                RunnerHazardKind.Log => new RunnerHazardDef(kind, 2.2f, 55 + (4 * t), 0f),
-                _ => new RunnerHazardDef(kind, 1.8f, 30 + (3 * t), 0f)
+                RunnerHazardKind.Spikes => new RunnerHazardDef(kind, 2.0f, SpikeDamage + (SpikeDamageStep * t), (float)Math.Round(rnd.NextDouble() * RunnerRules.SpikeCycle, 2)),
+                RunnerHazardKind.Log => new RunnerHazardDef(kind, 2.2f, LogDamage + (LogDamageStep * t), 0f),
+                _ => new RunnerHazardDef(kind, 1.8f, FireDamage + (FireDamageStep * t), 0f)
             };
             rows.Add(new RunnerRowDef(z, RunnerRowKind.Hazard, Math.Max(-halfWidth + (def.Width * 0.5f), Math.Min(halfWidth - (def.Width * 0.5f), x)), "", 1, 0f, null) { Hazard = def });
         }
