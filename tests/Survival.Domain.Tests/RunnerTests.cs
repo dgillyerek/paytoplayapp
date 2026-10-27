@@ -1036,16 +1036,29 @@ public sealed class RunnerTests
             // A level tweaked to fewer or weaker enemies (progression "level_tweaks" wave / foe_hp) is smaller on purpose: skip it
             // here and compare the next level with the last untrimmed one. A layout re-roll keeps the same enemies, so it counts.
             var tweaks = c.Progression!.Tweaks;
+            // Wave trims change the enemy count; foe_hp trims (the free-pace tune) only change HP, so each check skips its own kind.
+            bool WaveTrimmed(int n) => tweaks.TryGetValue(n, out var t) && t.Wave != 1f;
             bool Trimmed(int n) => tweaks.TryGetValue(n, out var t) && (t.Wave != 1f || t.FoeHp != 1f);
-            var q = p;
-            for (var j = i - 1; j > 0 && Trimmed(q.Number); j--)
+            RunnerLevelDef Last(Func<int, bool> skip)
             {
-                q = c.Levels[j - 1];
+                var x = p;
+                for (var j = i - 1; j > 0 && skip(x.Number); j--)
+                {
+                    x = c.Levels[j - 1];
+                }
+
+                return x;
             }
 
+            var w = Last(WaveTrimmed);
+            if (!WaveTrimmed(l.Number))
+            {
+                Assert.True(l.Number > cap.CountCap ? Waves(l) >= Waves(w) : Waves(l) > Waves(w), $"L{l.Number} enemies {Waves(w)} -> {Waves(l)}");
+            }
+
+            var q = Last(Trimmed);
             if (!Trimmed(l.Number))
             {
-                Assert.True(l.Number > cap.CountCap ? Waves(l) >= Waves(q) : Waves(l) > Waves(q), $"L{l.Number} enemies {Waves(q)} -> {Waves(l)}");
                 Assert.True(l.FoeHpTotal(c) > q.FoeHpTotal(c), $"L{l.Number} enemy hp");
                 Assert.True(l.FoeHpMul >= q.FoeHpMul);
             }

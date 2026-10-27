@@ -17,13 +17,14 @@ public sealed class RunnerLevelTweakTests
     {
         var c = Runner.Catalog();
         var p = c.Progression!;
-        Assert.Equal(Rerolled, p.Tweaks.Keys.OrderBy(k => k).ToArray());
+        Assert.Equal(Rerolled, p.Tweaks.Where(kv => kv.Value.Layout != 0).Select(kv => kv.Key).OrderBy(k => k).ToArray());
         Assert.Equal(RunnerLevelTweak.None, p.Tweak(7));
-        var plain = p with { Tweaks = new Dictionary<int, RunnerLevelTweak>() };
+        // The free-pace foe_hp tune (Derek 2026-10-27) stays on; only the layout re-roll is taken off for the seed.
+        var plain = p with { Tweaks = p.Tweaks.ToDictionary(kv => kv.Key, kv => kv.Value with { Layout = 0 }) };
         foreach (var n in Rerolled)
         {
             var tw = p.Tweak(n);
-            Assert.Equal(RunnerLevelTweak.None with { Layout = tw.Layout }, tw);
+            Assert.Equal(RunnerLevelTweak.None with { Layout = tw.Layout, FoeHp = tw.FoeHp }, tw);
             Assert.NotEqual(0, tw.Layout);
             var tweaked = c.ByNumber(n);
             var seed = RunnerProgression.Generate(c.Levels[0], plain, n, c.Units.ContainsKey);
