@@ -20,6 +20,7 @@ namespace Survival.Domain.Audio
             RunnerEventKind.FoePassed,
             RunnerEventKind.BoxMissed,
             RunnerEventKind.HazardSpawned,
+            RunnerEventKind.BarrierSpawned,
             RunnerEventKind.AttackStarted
         };
 

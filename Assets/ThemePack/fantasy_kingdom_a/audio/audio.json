@@ -69,7 +69,7 @@
     "Hit.box": "sfx.crate.hit",
     "FoeKilled": "sfx.enemy.death",
     "FoeKilled.big": "sfx.enemy.death_big",
-    "BoxBroken": "sfx.pickup.pop",
+    "BoxBroken": "sfx.pickup.pop", "BarrierHit": "sfx.crate.hit", "BarrierBroken": ["sfx.crate.hit", "sfx.hazard.log"],
     "FollowerJoined": "sfx.follower.join",
     "FollowerLost": "sfx.follower.down",
     "FollowerHit": "sfx.hero.hurt",

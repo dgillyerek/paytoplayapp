@@ -115,6 +115,17 @@ public class AudioTests
     }
 
     [Fact]
+    public void Barriers_crack_when_hit_and_crash_when_broken_but_appear_silently()
+    {
+        var cfg = Config;
+        Assert.Contains(RunnerEventKind.BarrierSpawned, AudioEventMap.SilentRunnerEvents);
+        Assert.Empty(AudioEventMap.Runner(cfg, new RunnerEvent(RunnerEventKind.BarrierSpawned, 1, 0, 0f, 0f, 0f, false)));
+        Assert.Equal(new[] { "sfx.crate.hit" }, AudioEventMap.Runner(cfg, new RunnerEvent(RunnerEventKind.BarrierHit, 1, 2, 0f, 0f, 10f, false)));
+        Assert.Equal(new[] { "sfx.crate.hit", "sfx.hazard.log" }, AudioEventMap.Runner(cfg, new RunnerEvent(RunnerEventKind.BarrierBroken, 1, 2, 0f, 0f, 0f, false)));
+        Assert.Equal(new[] { "sfx.crate.hit", "sfx.hazard.log" }, AudioEventMap.Runner(cfg, new RunnerEvent(RunnerEventKind.BarrierBroken, 1, 0, 0f, 0f, 1f, true)));
+    }
+
+    [Fact]
     public void Every_runner_event_kind_is_mapped_or_deliberately_silent()
     {
         var cfg = Config;
