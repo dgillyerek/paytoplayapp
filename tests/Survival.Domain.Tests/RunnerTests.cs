@@ -102,7 +102,7 @@ internal static class Runner
     /// </summary>
     public static float Dodge(RunnerRun run, float want)
     {
-        var to = DodgeTarget(run, want); if (Environment.GetEnvironmentVariable("X_NOCLAMP") == "1") return to; // TEMPX
+        var to = DodgeTarget(run, want);
         var hero = run.Hero;
         foreach (var (x, z, hw, hd) in run.Hazards.Select(h => (h.X, h.Z, h.HalfWidth, h.HalfDepth))
                      .Concat(run.Barriers.Where(b => b.Hp > 0).Select(b => (b.X, b.Z, b.HalfWidth, b.HalfDepth))))

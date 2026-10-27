@@ -185,8 +185,8 @@ namespace Survival.Domain.Runner
         /// <summary>
         /// A trap or barrier a squad member runs into from the side (it was already level with it along the road and
         /// steered sideways into it) hits this many times harder than one walked into head-on (Derek 2026-10-27: "the
-        /// obstacles should do more damage when heroes side run into them"). A side hit on a follower is not capped below
-        /// its HP, so it can knock a fresh follower out.
+        /// obstacles should do more damage when heroes side run into them"). A side hit on a follower is doubled too, but still
+        /// capped one short of a fresh follower's HP (see <see cref="RunnerRun.FollowerTrapDamage(int, bool)"/>).
         /// </summary>
         public const float SideHitMul = 2f;
 
@@ -194,11 +194,11 @@ namespace Survival.Domain.Runner
         /// Enemies steer round traps and standing barriers instead of walking through them (Derek 2026-10-27: "the enemies
         /// should avoid the obstacles and not run over them"). They look this far ahead (metres from their front)...
         /// </summary>
-        public static readonly float EnemyAvoidLook = float.Parse(System.Environment.GetEnvironmentVariable("X_ENEMYAVOIDLOOK") ?? "5", System.Globalization.CultureInfo.InvariantCulture);
+        public const float EnemyAvoidLook = 5f;
 
         /// <summary>...side-step toward the nearer open side this fast (m/s), keeping this much clearance past the edge...</summary>
-        public static readonly float EnemyAvoidSpeed = float.Parse(System.Environment.GetEnvironmentVariable("X_ENEMYAVOIDSPEED") ?? "3", System.Globalization.CultureInfo.InvariantCulture);
-        public static readonly float EnemyAvoidMargin = float.Parse(System.Environment.GetEnvironmentVariable("X_ENEMYAVOIDMARGIN") ?? "0.15", System.Globalization.CultureInfo.InvariantCulture);
+        public const float EnemyAvoidSpeed = 3f;
+        public const float EnemyAvoidMargin = 0.15f;
 
         /// <summary>Longest internal step; bigger frame deltas are split so results do not depend on frame rate.</summary>
         public const float MaxStep = 1f / 30f;
@@ -1120,18 +1120,11 @@ namespace Survival.Domain.Runner
         }
 
         /// <summary>The obstacle footprint (a trap, or a barrier still standing) a body of half-size <paramref name="r"/> at (x, z) would stand on.</summary>
-        private static readonly bool XNoBar = Environment.GetEnvironmentVariable("X_NOBAR") == "1";
-        private static readonly bool XFull = Environment.GetEnvironmentVariable("X_FULL") == "1";
-        private static readonly bool XSeekFree = Environment.GetEnvironmentVariable("X_SEEKFREE") == "1";
-        private static readonly bool XNoHaz = Environment.GetEnvironmentVariable("X_NOHAZ") == "1";
-        private static readonly bool XNoSide = Environment.GetEnvironmentVariable("X_NOSIDE") == "1";
-        private static readonly bool XPrefSq = Environment.GetEnvironmentVariable("X_PREFSQ") == "1";
-        private static readonly bool XNoBatter = Environment.GetEnvironmentVariable("X_NOBATTER") == "1";
         private bool ObstacleUnder(float x, float z, float r, out float ox, out float halfWidth)
         {
             foreach (var h in _hazards)
             {
-                if (!XNoHaz && RunnerObstacle.Overlaps(h.X, h.Z, h.HalfWidth, h.HalfDepth, x, z, r))
+                if (RunnerObstacle.Overlaps(h.X, h.Z, h.HalfWidth, h.HalfDepth, x, z, r))
                 {
                     ox = h.X;
                     halfWidth = h.HalfWidth;
@@ -1141,7 +1134,7 @@ namespace Survival.Domain.Runner
 
             foreach (var b in _barriers)
             {
-                if (b.Hp > 0 && !XNoBar && !(XFull && b.HalfWidth >= Level.HalfWidth - 0.5f) && RunnerObstacle.Overlaps(b.X, b.Z, b.HalfWidth, b.HalfDepth, x, z, r))
+                if (b.Hp > 0 && RunnerObstacle.Overlaps(b.X, b.Z, b.HalfWidth, b.HalfDepth, x, z, r))
                 {
                     ox = b.X;
                     halfWidth = b.HalfWidth;
@@ -1161,7 +1154,7 @@ namespace Survival.Domain.Runner
             ox = oz = halfWidth = 0f;
             foreach (var h in _hazards)
             {
-                if (!XNoHaz && InPath(x, z, dir, r, h.X, h.Z, h.HalfWidth, h.HalfDepth, ref best))
+                if (InPath(x, z, dir, r, h.X, h.Z, h.HalfWidth, h.HalfDepth, ref best))
                 {
                     (ox, oz, halfWidth) = (h.X, h.Z, h.HalfWidth);
                 }
@@ -1169,7 +1162,7 @@ namespace Survival.Domain.Runner
 
             foreach (var b in _barriers)
             {
-                if (b.Hp > 0 && !XNoBar && !(XFull && b.HalfWidth >= Level.HalfWidth - 0.5f) && InPath(x, z, dir, r, b.X, b.Z, b.HalfWidth, b.HalfDepth, ref best))
+                if (b.Hp > 0 && InPath(x, z, dir, r, b.X, b.Z, b.HalfWidth, b.HalfDepth, ref best))
                 {
                     (ox, oz, halfWidth) = (b.X, b.Z, b.HalfWidth);
                 }
@@ -1207,7 +1200,6 @@ namespace Survival.Domain.Runner
             {
                 var dl = Math.Abs(from - left);
                 var dr = Math.Abs(from - right);
-                if (XPrefSq) return Math.Abs(prefer - left) <= Math.Abs(prefer - right) ? left : right;
                 return Math.Abs(dl - dr) < 0.05f ? (Math.Abs(prefer - left) <= Math.Abs(prefer - right) ? left : right) : dl < dr ? left : right;
             }
 
@@ -1464,7 +1456,7 @@ namespace Survival.Domain.Runner
                 // either way down the road (a foe the squad has walked past shoots after it): enemies aim, heroes fire straight.
                 // Held up behind a barrier: it batters the barrier down at its own attack rate rather than firing over it
                 // (unless a squad member is right on it), so a pack never sits safe behind a wall shooting.
-                if (!XNoBatter && f.BlockedBy != 0 && dist > f.Unit.Radius + target.Unit.Radius + f.Unit.Range && Barrier(f.BlockedBy) is { Hp: > 0 } wall)
+                if (f.BlockedBy != 0 && dist > f.Unit.Radius + target.Unit.Radius + f.Unit.Range && Barrier(f.BlockedBy) is { Hp: > 0 } wall)
                 {
                     if (f.Cooldown <= 0f)
                     {
@@ -1990,7 +1982,7 @@ namespace Survival.Domain.Runner
                         break;
                     }
 
-                    var side = XNoSide ? false : b.SideEntry(m.PrevX, m.PrevZ, m.Unit.Radius);
+                    var side = b.SideEntry(m.PrevX, m.PrevZ, m.Unit.Radius);
                     SideHits += side ? 1 : 0;
                     if (m.IsHero)
                     {
@@ -2194,7 +2186,7 @@ namespace Survival.Domain.Runner
                 h.Hit.Add(m.Id);
                 h.Caught++;
                 HazardHits++;
-                var side = XNoSide ? false : h.SideEntry(m.PrevX, m.PrevZ, m.Unit.Radius);
+                var side = h.SideEntry(m.PrevX, m.PrevZ, m.Unit.Radius);
                 SideHits += side ? 1 : 0;
                 if (m.IsHero)
                 {
