@@ -368,6 +368,7 @@ namespace Survival.Domain.Runner
             var brnd = new Random(unchecked(p.Seed + (number * 104729) + 17));
             var barrier = 0;
             var crates = PlanCrates(p, number, count);
+            var opener = count >= 3 ? OpeningFor(number) : new Opening(0f, (int)side, 2, false);
             for (var beat = 0; beat < count; beat++)
             {
                 var z = starts[beat];
@@ -381,6 +382,11 @@ namespace Survival.Domain.Runner
                 // Box and barrier HP follow the beat's number, not where it stands, so a stretched road is no tougher.
                 var hpAt = (int)Math.Round(8.6f * (12f + (BeatMetres * beat)) * boxMul);
                 var fx = side * (1.6f + ((float)rnd.NextDouble() * 0.6f));
+                if (beat == 0)
+                {
+                    // The opening chest stands on the level's own side of the road (or in the middle).
+                    fx = opener.Lane * Math.Abs(fx);
+                }
                 var ux = -side * (1.6f + ((float)rnd.NextDouble() * 0.6f));
                 var wx = ((float)rnd.NextDouble() * 2.4f) - 1.2f;
                 var laneRoll = rnd.NextDouble();
@@ -422,6 +428,7 @@ namespace Survival.Domain.Runner
                 // The first two waves stay small: the squad is still the hero and a chest or two.
                 var opening = beat < 2;
                 var frontCount = W(opening ? 2 + beat : 3 + (beat % 2) + (int)Math.Round(tc * along * 0.3f));
+
                 var backCount = beat > 0 ? W(opening ? 1 : 2 + (int)Math.Round(tc * along * 0.25f)) : 0;
                 var hasHeavy = beat % 3 == 2 || (t >= 6 && beat % 3 == 0 && beat > 0);
                 var heavy = number >= 7 && hasUnit("ashwyrm") && beat % 2 == 0 ? "ashwyrm" : "blightroot";
@@ -478,6 +485,22 @@ namespace Survival.Domain.Runner
                         // A swarm in three small packs across the road, one behind the other.
                         barrierAt = 3f; trapAt = 5f; frontAt = 7f; frontSplit = 3; frontX = 0f; skirmAt = 4f; backAt = 11f; trap2At = 11.5f; heavyAt = 12.5f;
                         break;
+                }
+
+                if (beat == 0)
+                {
+                    // The level's opening moves its first box nearer or further, or behind the first wave (the waves and
+                    // the beats stay where they were, so the fights do too).
+                    boxAt = opener.WaveFirst ? WaveFirstFrontMetres + WaveFirstBoxMetres : opener.Shift;
+                    if (opener.WaveFirst)
+                    {
+                        frontAt = WaveFirstFrontMetres;
+                    }
+                }
+                else if (beat == 1 && opener.WaveFirst)
+                {
+                    // The second beat's boxes step back so they do not crowd the first box behind the wave.
+                    boxAt += WaveFirstNextBoxMetres;
                 }
 
                 // A crate run stands its boxes back to back down the middle, 3 m apart.
@@ -579,6 +602,49 @@ namespace Survival.Domain.Runner
             return rows;
         }
 
+        /// <summary>
+        /// How a level opens (Derek 2026-10-27: "on the first level there is immediately one on the left followed shortly
+        /// after by one on each left and right side of all the levels"). Every level used to open the same way: a chest on one
+        /// edge at 12 m, then a chest and a crate side by side at 25 m. Now the first box stands 7-17 m in
+        /// (<see cref="Shift"/> metres from the first beat), its chest on the left, the right or in the middle (<see cref="Lane"/>), the first crate beside
+        /// the first chest, a few metres behind it, beside the second chest or behind that (<see cref="CrateMode"/> 0-3), and
+        /// some levels meet a small wave before any box (<see cref="WaveFirst"/>). The same boxes with the same HP, so the
+        /// balance holds.
+        /// </summary>
+        public readonly struct Opening
+        {
+            public readonly float Shift; public readonly int Lane, CrateMode; public readonly bool WaveFirst;
+            public Opening(float shift, int lane, int crateMode, bool waveFirst) { Shift = shift; Lane = lane; CrateMode = crateMode; WaveFirst = waveFirst; }
+        }
+
+        private static readonly Opening[] Openings =
+        {
+            new(0f, -1, 0, false),
+            new(-3f, 1, 1, false),
+            new(5f, 0, 3, false),
+            new(0f, -1, 1, true),
+            new(0f, 1, 3, false),
+            new(5f, -1, 0, false),
+            new(-4f, 1, 2, false),
+            new(0f, 1, 2, false),
+            new(4f, 1, 2, false),
+            new(2f, 1, 0, false),
+            new(-5f, -1, 1, false),
+            new(3f, -1, 2, false),
+        };
+
+        /// <summary>Level <paramref name="number"/>'s opening: the table stepped 5 at a time (so neighbours never share one),
+        /// mirrored on every other pass through it.</summary>
+        public static Opening OpeningFor(int number)
+        {
+            var o = Openings[(number * 5) % Openings.Length];
+            return (number / Openings.Length) % 2 == 1 ? new Opening(o.Shift, -o.Lane, o.CrateMode, o.WaveFirst) : o;
+        }
+
+        /// <summary>On a wave-first opening, how far into the first beat the first wave stands (4 m nearer than usual), how
+        /// far past it the first box stands, and how much further on the second beat's boxes step.</summary>
+        public const float WaveFirstFrontMetres = 8f, WaveFirstBoxMetres = 1.5f, WaveFirstNextBoxMetres = 1.5f;
+
         /// <summary>How many beats a road of <paramref name="length"/> m has (the first at 12 m, nominally 13 m apart, all short of the boss section).</summary>
         public static int BeatCount(float length)
         {
@@ -593,7 +659,7 @@ namespace Survival.Domain.Runner
 
         /// <summary>
         /// Where each of a level's <paramref name="count"/> beats starts. The first three stand 13 m apart as always (the
-        /// opening: a chest, a small wave, a chest and a crate); after that the road runs in stretches of two or three beats
+        /// opening; its boxes move with the level's <see cref="Opening"/>); after that the road runs in stretches of two or three beats
         /// that are tight (9-11.5 m), even (12-14 m) or breathing (15-18 m), scaled so the last beat stands where it always
         /// did (the finale and the boss keep their places). From the seed and the level number only.
         /// </summary>
@@ -826,6 +892,15 @@ namespace Survival.Domain.Runner
                 // Odd levels set their crates deeper into the beat than even ones (2.7-4 m against 0.5-1.5 m), so a crate
                 // that rides with the same beat as on the level before still stands well over a metre away.
                 var dz = (number % 2 == 1 ? 2.7f : 0.5f) + ((float)rnd.NextDouble() * (number % 2 == 1 ? 1.3f : 1f));
+                if (i == 0 && count >= 3)
+                {
+                    // The first crate follows the level's opening: beside the first chest, a few metres behind it, beside
+                    // the second chest or a few metres behind that one.
+                    var mode = OpeningFor(number).CrateMode;
+                    host = mode < 2 ? b - 1 : b;
+                    dz = mode % 2 == 0 ? 0.4f : 3.5f;
+                }
+
                 plan.Add(new Crate(b, kinds[i], host, dz, (edge + rnd.NextDouble()) * 0.5));
             }
 
