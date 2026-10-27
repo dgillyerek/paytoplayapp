@@ -41,6 +41,9 @@ namespace Survival.Unity
         /// </summary>
         private bool _aimHeld;
 
+        /// <summary>A squad shooter (<see cref="RunnerAimHold.Applies"/>): plays its take per shot, but its body takes no hit step or lean.</summary>
+        private bool _steady;
+
         /// <summary>
         /// A held shooter's per-shot kick (<see cref="RunnerShotFlick"/>): a readable recoil on its arm / hand / shoulder / upper-spine
         /// bones, rotation only, eased back to the hold. Null for every other rig (and never in the battle).
@@ -181,6 +184,7 @@ namespace Survival.Unity
                         a.UpperBodyAttack = RunnerUpperBodyAttack.Applies(data.Name);
                         a.AimHoldFrame = a.UpperBodyAttack ? RunnerAimHold.HoldFrameFor(data.Name) : null;
                         rig._aimHeld = a.AimHoldFrame != null;
+                        rig._steady = RunnerAimHold.Applies(data.Name);
                         rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
@@ -195,6 +199,7 @@ namespace Survival.Unity
                         a.UpperBodyAttack = RunnerUpperBodyAttack.Applies(data.Name);
                         a.AimHoldFrame = a.UpperBodyAttack ? RunnerAimHold.HoldFrameFor(data.Name) : null;
                         rig._aimHeld = a.AimHoldFrame != null;
+                        rig._steady = RunnerAimHold.Applies(data.Name);
                         rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
@@ -231,6 +236,7 @@ namespace Survival.Unity
                         a.UpperBodyAttack = RunnerUpperBodyAttack.Applies(data.Name);
                         a.AimHoldFrame = a.UpperBodyAttack ? RunnerAimHold.HoldFrameFor(data.Name) : null;
                         rig._aimHeld = a.AimHoldFrame != null;
+                        rig._steady = RunnerAimHold.Applies(data.Name);
                         rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
@@ -755,7 +761,7 @@ namespace Survival.Unity
             _hitAge += dt;
             TickFlick(dt);
             // A held shooter's body never reacts (RunnerAimHold.BodyReactionScale): no step, lean or flinch pose.
-            var w = _aimHeld ? 0f : _reaction.Weight(_hitAge);
+            var w = _steady ? 0f : _reaction.Weight(_hitAge);
             var local = Slot.InverseTransformDirection(_away);
             // The battle's root reaction: step back and lean, sized by the defender's recoil profile.
             var punch = 0.6f + (0.4f * _punch);
@@ -768,7 +774,7 @@ namespace Survival.Unity
             var lean = Mathf.Tan(Profile.RecoilDegrees * Mathf.Deg2Rad);
             // Lean into the sideways move: roll about the road's forward axis (in the slot's frame), eased in and out.
             // (Not for a held shooter: the aim stays level, RunnerAimHold.LeanScale.)
-            _lean = Mathf.Lerp(_lean, _aimHeld ? 0f : _leanTarget, 1f - Mathf.Exp(-12f * dt));
+            _lean = Mathf.Lerp(_lean, _steady ? 0f : _leanTarget, 1f - Mathf.Exp(-12f * dt));
             var roll = Quaternion.AngleAxis(_lean, Slot.InverseTransformDirection(Vector3.forward));
             Host.localRotation = roll * Quaternion.FromToRotation(Vector3.up, (Vector3.up + (tilt * lean)).normalized);
             if (_deathAge >= 0f)
