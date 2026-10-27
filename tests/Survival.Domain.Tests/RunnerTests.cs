@@ -455,8 +455,11 @@ public sealed class RunnerTests
                     run.Step(1f / 30f);
                     if (!run.Over)
                     {
-                        // Full pace through every wave; only the arena line in front of the boss stops it.
-                        Assert.Equal(Math.Min(before + (level.Speed / 30f), run.ArenaLine), run.Distance, 3);
+                        // Full pace through every wave; only the arena line in front of the boss stops it. On a level
+                        // without a boss the squad runs for the gate once the road ahead is clear (never slower).
+                        Assert.Equal(run.Charging ? run.Pace : level.Speed, run.Pace);
+                        Assert.True(run.Pace >= level.Speed);
+                        Assert.Equal(Math.Min(before + (run.Pace / 30f), run.ArenaLine), run.Distance, 3);
                         Assert.Equal(run.Distance >= run.ArenaLine - 1e-3f, run.Halted);
                     }
                 }
@@ -990,23 +993,30 @@ public sealed class RunnerTests
             }
 
             var p = c.Levels[i - 1];
+            // A boss level has the boss where a level without one has its closing set piece (trap gauntlet, fodder push,
+            // captain): compare a boss level with the level before minus that set piece.
+            if (l.HasBoss)
+            {
+                p = p with { Rows = p.Rows.Where(r => !r.Finale).ToList() };
+            }
+
             // The road grows until the ramp's length cap and the packs until its count cap; past those only HP and damage climb.
             var cap = c.Progression!.Ramp!;
             Assert.True(l.Length > p.Length || (l.Length == cap.LengthCap && p.Length == cap.LengthCap), $"L{l.Number} length {p.Length} -> {l.Length}");
             Assert.True(l.Length <= cap.LengthCap);
             // The boss counts as one enemy and is only on every 5th level, so compare the waves without it.
             int Waves(RunnerLevelDef x) => x.EnemyCount - (x.HasBoss ? 1 : 0);
-            // A hand-tweaked level (progression "level_tweaks", Derek 2026-10-27: smooth a level the seed made far harder than
-            // the one before) has fewer or weaker enemies on purpose: skip it here and compare the next level with the last
-            // untweaked one.
+            // A level tweaked to fewer or weaker enemies (progression "level_tweaks" wave / foe_hp) is smaller on purpose: skip it
+            // here and compare the next level with the last untrimmed one. A layout re-roll keeps the same enemies, so it counts.
             var tweaks = c.Progression!.Tweaks;
+            bool Trimmed(int n) => tweaks.TryGetValue(n, out var t) && (t.Wave != 1f || t.FoeHp != 1f);
             var q = p;
-            for (var j = i - 1; j > 0 && tweaks.ContainsKey(q.Number); j--)
+            for (var j = i - 1; j > 0 && Trimmed(q.Number); j--)
             {
                 q = c.Levels[j - 1];
             }
 
-            if (!tweaks.ContainsKey(l.Number))
+            if (!Trimmed(l.Number))
             {
                 Assert.True(l.Number > cap.CountCap ? Waves(l) >= Waves(q) : Waves(l) > Waves(q), $"L{l.Number} enemies {Waves(q)} -> {Waves(l)}");
                 Assert.True(l.FoeHpTotal(c) > q.FoeHpTotal(c), $"L{l.Number} enemy hp");
