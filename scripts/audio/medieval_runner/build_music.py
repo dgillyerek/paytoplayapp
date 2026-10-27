@@ -7,7 +7,14 @@ def loud(y, target=-16, tp=-1.0):
 m=load('the_march_of_devils_dome_loop.wav',2)
 m=norm_rms(m,-21.5,-1.0); write(m,O+'mus_runner_march_loop.ogg',q=0)
 # win: cynicmusic victory fanfare short, natural ending
-w=load('Heavy_ConceptB.wav',2); w=tail_trim(trim(w,db=-40,fade=0.4),-55); write(norm_rms(w,-14,-1.0),O+'jingle_win.ogg',q=3)
+w=load('Heavy_ConceptB.wav',2); w=trim(w,db=-40,fade=0.0)
+n=int(4.7*SR); w=w[:n].copy(); f0=int(3.2*SR)
+w[f0:]*=np.cos(np.linspace(0,np.pi/2,n-f0))[:,None]**1.5   # natural ~1.5 s fade, ends near 4.7 s
+ir=np.random.default_rng(7).standard_normal(int(1.0*SR))*np.exp(-np.linspace(0,7,int(1.0*SR)))
+tail=np.stack([np.convolve(w[:,c],ir)[:n+int(0.8*SR)] for c in range(2)],1); tail*=0.12/np.abs(tail).max()*np.abs(w).max()
+w=np.concatenate([w,np.zeros((int(0.8*SR),2))]); w=w+lowpass(tail,3000)
+e=np.ones(len(w)); e[-int(0.4*SR):]=np.linspace(1,0,int(0.4*SR)); w*=e[:,None]
+write(norm_rms(tail_trim(w,-55),-14,-1.0),O+'jingle_win.ogg',q=3)
 # lose: low war horn phrase pitched down + slow heavy drum hits
 h=load('war_horns.wav',2,rate=0.84)
 horn=trim(h,start=0.6/0.84,dur=4.2,fade=1.4)

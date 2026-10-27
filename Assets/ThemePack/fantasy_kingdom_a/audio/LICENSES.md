@@ -3,12 +3,12 @@
 This pack mixes two kinds of files. **Every file is CC0 1.0 / public domain; none needs attribution and none is
 non-commercial-only.**
 
-1. **CC0 recordings (the runner level):** weapon, impact, creature, barrier, trap and music files built from real
-   recordings published as CC0 by Kenney (kenney.nl) and creators on OpenGameArt.org. Each row below names the pack,
+1. **CC0 recordings (everything except the two below):** village, UI, economy, battle, runner, boss and music files
+   built from real recordings published as CC0 by Kenney (kenney.nl) and creators on OpenGameArt.org. Each row below names the pack,
    its page URL and the source clips. The license field on each page was checked to be CC0 on 2026-10-27.
    Rebuild: download the packs into a folder, then `AUDIO_SRC=<folder> python3 scripts/audio/medieval_runner/build.py`
-   and `.../build_music.py` (trim, layer, high-pass, loudness-normalize, Ogg Vorbis via ffmpeg/libvorbis).
-2. **Procedural (original):** village, UI, economy, battle-only, power-up and pickup files synthesized by
+   and `.../build_music.py`, `.../build_hub.py`, `.../build_loops.py` (trim, layer, high-pass, loudness-normalize, Ogg Vorbis via ffmpeg/libvorbis).
+2. **Procedural (original):** only `sfx_powerup.ogg` and `sfx_pickup_pop.ogg`, synthesized by
    `scripts/audio/gen_theme_a_audio.py` (numpy + scipy, fixed seed 20261026). That script skips the recorded files
    (its `RECORDED` set) so it cannot overwrite them.
 
@@ -22,17 +22,17 @@ events play them live in `audio.json` (white-label: another theme pack ships its
 
 | File | Cue id(s) in audio.json | Source | License |
 |---|---|---|---|
-| `amb_village_loop.ogg` | `music.village` | Procedural (original) | CC0 1.0 |
-| `build_complete.ogg` | `eco.build_complete` | Procedural (original) | CC0 1.0 |
-| `collect_food.ogg` | `eco.collect.food` | Procedural (original) | CC0 1.0 |
-| `collect_gold.ogg` | `eco.collect.gold` | Procedural (original) | CC0 1.0 |
-| `collect_resource.ogg` | `eco.collect.resource` | Procedural (original) | CC0 1.0 |
+| `amb_village_loop.ogg` | `music.village` | CC0 recording(s), trimmed/mixed/normalized: RandomMind "Medieval: The Old Tower Inn" https://opengameart.org/content/medieval-the-old-tower-inn (whole loop, seam de-clicked) + isaiah658 "Ambient Bird Sounds" https://opengameart.org/content/ambient-bird-sounds (looped, low) + rubberduck "100 CC0 metal and wood SFX" https://opengameart.org/content/100-cc0-metal-and-wood-sfx (hammer_02/03/04, metal_hit_02, distant smithy) | CC0 1.0 |
+| `build_complete.ogg` | `eco.build_complete` | CC0 recording(s), trimmed/mixed/normalized: rubberduck "100 CC0 metal and wood SFX" https://opengameart.org/content/100-cc0-metal-and-wood-sfx (wood_hammer_01/02, hammer_02, metal_hit_02) + Kenney "Impact Sounds" https://kenney.nl/assets/impact-sounds (impactBell_heavy_001) + Eldritch Grim "War Horns" https://opengameart.org/content/war-horns | CC0 1.0 |
+| `collect_food.ogg` | `eco.collect.food` | CC0 recording(s), trimmed/mixed/normalized: Kenney "Impact Sounds" https://kenney.nl/assets/impact-sounds (footstep_grass_002) + Kenney "RPG Audio" https://kenney.nl/assets/rpg-audio (cloth2) + rubberduck "80 CC0 RPG SFX" https://opengameart.org/content/80-cc0-rpg-sfx (item_wood_02) | CC0 1.0 |
+| `collect_gold.ogg` | `eco.collect.gold` | CC0 recording(s), trimmed/mixed/normalized: rubberduck "80 CC0 RPG SFX" https://opengameart.org/content/80-cc0-rpg-sfx (item_coins_03) + Kenney "RPG Audio" https://kenney.nl/assets/rpg-audio (handleCoins2) | CC0 1.0 |
+| `collect_resource.ogg` | `eco.collect.resource` | CC0 recording(s), trimmed/mixed/normalized: rubberduck "80 CC0 RPG SFX" https://opengameart.org/content/80-cc0-rpg-sfx (item_wood_01, item_stone_03) | CC0 1.0 |
 | `jingle_lose.ogg` | `jingle.lose` | CC0 recording(s), trimmed/mixed/normalized: Eldritch Grim "War Horns" https://opengameart.org/content/war-horns (pitched down) + William Hector "Horde War Drums Loop" https://opengameart.org/content/horde-war-drums-loop (slowed) | CC0 1.0 |
-| `jingle_win.ogg` | `jingle.win` | CC0 recording(s), trimmed/mixed/normalized: cynicmusic "Victory Fanfare Short" https://opengameart.org/content/victory-fanfare-short (Heavy_ConceptB.wav) | CC0 1.0 |
-| `mus_battle_loop.ogg` | `music.battle` | Procedural (original) | CC0 1.0 |
+| `jingle_win.ogg` | `jingle.win` | CC0 recording(s), trimmed/mixed/normalized: cynicmusic "Victory Fanfare Short" https://opengameart.org/content/victory-fanfare-short (Heavy_ConceptB.wav, first ~4.7 s with a natural fade and short reverb tail) | CC0 1.0 |
+| `mus_battle_loop.ogg` | `music.battle` | CC0 recording(s), trimmed/mixed/normalized: RandomMind "Medieval Battle" https://opengameart.org/content/medieval-battle (16-bar section cut into a seamless loop with a 1.2 s crossfade) | CC0 1.0 |
 | `mus_runner_march_loop.ogg` | `music.runner` | CC0 recording(s), trimmed/mixed/normalized: Eldritch Grim "Epic March Loop" https://opengameart.org/content/epic-march-loop (whole seamless loop, level-matched) | CC0 1.0 |
-| `purchase_success.ogg` | `ui.purchase_success` | Procedural (original) | CC0 1.0 |
-| `sfx_arrow_hit.ogg` | `sfx.impact.arrow` | Procedural (original) | CC0 1.0 |
+| `purchase_success.ogg` | `ui.purchase_success` | CC0 recording(s), trimmed/mixed/normalized: Kenney "RPG Audio" https://kenney.nl/assets/rpg-audio (beltHandle1, handleCoins) + rubberduck "80 CC0 RPG SFX" https://opengameart.org/content/80-cc0-rpg-sfx (item_coins_01) | CC0 1.0 |
+| `sfx_arrow_hit.ogg` | `sfx.impact.arrow` | CC0 recording(s), trimmed/mixed/normalized: Kenney "Impact Sounds" https://kenney.nl/assets/impact-sounds (impactWood_medium_002, impactPunch_medium_003) | CC0 1.0 |
 | `sfx_barrier_spike_break.ogg` | `sfx.barrier.spike_break` | CC0 recording(s), trimmed/mixed/normalized: rubberduck "75 CC0 breaking/falling/hit SFX" https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx (bfh1_breaking_02, bfh1_wood_breaking_03, bfh1_metal_falling_03) | CC0 1.0 |
 | `sfx_barrier_spike_hit.ogg` | `sfx.barrier.spike_hit` | CC0 recording(s), trimmed/mixed/normalized: Kenney "Impact Sounds" https://kenney.nl/assets/impact-sounds (impactWood_heavy_003, impactMetal_medium_002) | CC0 1.0 |
 | `sfx_barrier_stone_break.ogg` | `sfx.barrier.stone_break` | CC0 recording(s), trimmed/mixed/normalized: rubberduck "75 CC0 breaking/falling/hit SFX" https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx (bfh1_rock_breaking_01, bfh1_rock_falling_03) + themightyglider "Breaking Rock" https://opengameart.org/content/breaking-rock + themightyglider "Moving Boulder" https://opengameart.org/content/moving-boulder | CC0 1.0 |
@@ -53,21 +53,21 @@ events play them live in `audio.json` (white-label: another theme pack ships its
 | `sfx_hazard_spikes.ogg` | `sfx.hazard.spikes` | CC0 recording(s), trimmed/mixed/normalized: Kenney "Impact Sounds" https://kenney.nl/assets/impact-sounds (impactMetal_heavy_001, impactPunch_heavy_002) + rubberduck "80 CC0 RPG SFX" https://opengameart.org/content/80-cc0-rpg-sfx (blade_02) | CC0 1.0 |
 | `sfx_hero_death.ogg` | `sfx.hero.death` | CC0 recording(s), trimmed/mixed/normalized: Kenney "Impact Sounds" https://kenney.nl/assets/impact-sounds (impactPlate_heavy_002) + rubberduck "75 CC0 breaking/falling/hit SFX" https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx (bfh1_metal_falling_02) + rubberduck "80 CC0 creature SFX #2" https://opengameart.org/content/80-cc0-creture-sfx-2 (human_06) | CC0 1.0 |
 | `sfx_hero_hurt.ogg` | `sfx.hero.hurt` | CC0 recording(s), trimmed/mixed/normalized: Kenney "Impact Sounds" https://kenney.nl/assets/impact-sounds (impactPlate_medium_001, impactPunch_medium_002) + rubberduck "80 CC0 creature SFX #2" https://opengameart.org/content/80-cc0-creture-sfx-2 (human_02) | CC0 1.0 |
-| `sfx_ironhowl_charge.ogg` | `sfx.boss.charge` | Procedural (original) | CC0 1.0 |
+| `sfx_ironhowl_charge.ogg` | `sfx.boss.charge` | CC0 recording(s), trimmed/mixed/normalized: rubberduck "80 CC0 creature SFX #2" https://opengameart.org/content/80-cc0-creture-sfx-2 (stomp_01, roar_04) + Kenney "Impact Sounds" https://kenney.nl/assets/impact-sounds (impactPunch_heavy_002/003) | CC0 1.0 |
 | `sfx_ironhowl_ground_pound.ogg` | `sfx.boss.ground_pound` | CC0 recording(s), trimmed/mixed/normalized: themightyglider "Moving Boulder" https://opengameart.org/content/moving-boulder + Kenney "Impact Sounds" https://kenney.nl/assets/impact-sounds (impactPunch) + rubberduck "75 CC0 breaking/falling/hit SFX" https://opengameart.org/content/75-cc0-breaking-falling-hit-sfx (bfh1_rock_falling_05) | CC0 1.0 |
 | `sfx_ironhowl_growl.ogg` | `sfx.boss.growl` | CC0 recording(s), trimmed/mixed/normalized: rubberduck "80 CC0 creature SFX #2" https://opengameart.org/content/80-cc0-creture-sfx-2 (roar_04) + rubberduck "80 CC0 creature SFX" https://opengameart.org/content/80-cc0-creature-sfx (grunt_01) | CC0 1.0 |
-| `sfx_ironhowl_punch.ogg` | `sfx.boss.punch` | Procedural (original) | CC0 1.0 |
-| `sfx_ironhowl_sweep.ogg` | `sfx.boss.sweep` | Procedural (original) | CC0 1.0 |
+| `sfx_ironhowl_punch.ogg` | `sfx.boss.punch` | CC0 recording(s), trimmed/mixed/normalized: Kenney "Impact Sounds" https://kenney.nl/assets/impact-sounds (impactPunch_heavy_001, impactPlate_heavy_001) + rubberduck "80 CC0 creature SFX #2" https://opengameart.org/content/80-cc0-creture-sfx-2 (attack_02) | CC0 1.0 |
+| `sfx_ironhowl_sweep.ogg` | `sfx.boss.sweep` | CC0 recording(s), trimmed/mixed/normalized: Still North Media "Medieval Sound Effects: Weapon Textures" https://opengameart.org/content/medieval-sound-effects-weapon-textures (Axe Swing, pitched down) + rubberduck "80 CC0 creature SFX #2" https://opengameart.org/content/80-cc0-creture-sfx-2 (attack_04) + Kenney "Impact Sounds" https://kenney.nl/assets/impact-sounds (impactPunch_heavy_004) | CC0 1.0 |
 | `sfx_lyra_shot.ogg` | `sfx.shot.lyra` | CC0 recording(s), trimmed/mixed/normalized: Still North Media "Medieval Sound Effects: Weapon Textures" https://opengameart.org/content/medieval-sound-effects-weapon-textures (Spear Swing, pitched down) + rubberduck "80 CC0 RPG SFX" https://opengameart.org/content/80-cc0-rpg-sfx (spell_01) + themightyglider "Moving Boulder" https://opengameart.org/content/moving-boulder (low rumble) | CC0 1.0 |
-| `sfx_magic_impact.ogg` | `sfx.impact.magic` | Procedural (original) | CC0 1.0 |
+| `sfx_magic_impact.ogg` | `sfx.impact.magic` | CC0 recording(s), trimmed/mixed/normalized: rubberduck "80 CC0 RPG SFX" https://opengameart.org/content/80-cc0-rpg-sfx (spell_02, spell_fire_01) + themightyglider "Moving Boulder" https://opengameart.org/content/moving-boulder | CC0 1.0 |
 | `sfx_oakenshield_throw.ogg` | `sfx.shot.oakenshield` | CC0 recording(s), trimmed/mixed/normalized: Still North Media "Medieval Sound Effects: Weapon Textures" https://opengameart.org/content/medieval-sound-effects-weapon-textures (Spear Swing, Crossbow Bolt Pass) | CC0 1.0 |
 | `sfx_pickup_pop.ogg` | `sfx.pickup.pop` | Procedural (original) | CC0 1.0 |
 | `sfx_powerup.ogg` | `sfx.powerup` | Procedural (original) | CC0 1.0 |
 | `sfx_rowan_shot.ogg` | `sfx.shot.rowan` | CC0 recording(s), trimmed/mixed/normalized: Still North Media "Medieval Sound Effects: Weapon Textures" https://opengameart.org/content/medieval-sound-effects-weapon-textures (English Longbow Shoot, Scythian Recurve Arrow Pass) | CC0 1.0 |
-| `sfx_sword_hit.ogg` | `sfx.impact.sword` | Procedural (original) | CC0 1.0 |
+| `sfx_sword_hit.ogg` | `sfx.impact.sword` | CC0 recording(s), trimmed/mixed/normalized: Vehicle "Fantasy Weapons and Apparel SFX Library" https://opengameart.org/content/fantasy-weapons-and-apparel-sfx-library (sword-knife-clash-07) + StarNinjas "20 sword sound effects" https://opengameart.org/content/20-sword-sound-effects-attacks-and-clashes (sword_clash.1) + Kenney "Impact Sounds" https://kenney.nl/assets/impact-sounds (impactPunch_medium_001) | CC0 1.0 |
 | `sting_boss_incoming.ogg` | `sting.boss_incoming` | CC0 recording(s), trimmed/mixed/normalized: William Hector "Horde War Drums Loop" https://opengameart.org/content/horde-war-drums-loop + Eldritch Grim "War Horns" https://opengameart.org/content/war-horns | CC0 1.0 |
-| `ui_deny.ogg` | `ui.deny` | Procedural (original) | CC0 1.0 |
-| `ui_gift_celebrate.ogg` | `ui.gift` | Procedural (original) | CC0 1.0 |
-| `ui_store_open.ogg` | `ui.store_open` | Procedural (original) | CC0 1.0 |
-| `ui_tap.ogg` | `ui.tap` | Procedural (original) | CC0 1.0 |
-| `upgrade_start.ogg` | `eco.upgrade_start` | Procedural (original) | CC0 1.0 |
+| `ui_deny.ogg` | `ui.deny` | CC0 recording(s), trimmed/mixed/normalized: Kenney "Impact Sounds" https://kenney.nl/assets/impact-sounds (impactWood_medium_003, low-passed) + Kenney "RPG Audio" https://kenney.nl/assets/rpg-audio (dropLeather) | CC0 1.0 |
+| `ui_gift_celebrate.ogg` | `ui.gift` | CC0 recording(s), trimmed/mixed/normalized: Kenney "Impact Sounds" https://kenney.nl/assets/impact-sounds (impactBell_heavy_000/001) + RandomMind "Medieval Victory Theme" https://opengameart.org/content/medieval-victory-theme (opening flourish) + Kenney "RPG Audio" https://kenney.nl/assets/rpg-audio (handleCoins) | CC0 1.0 |
+| `ui_store_open.ogg` | `ui.store_open` | CC0 recording(s), trimmed/mixed/normalized: Kenney "RPG Audio" https://kenney.nl/assets/rpg-audio (metalLatch, doorOpen_2) | CC0 1.0 |
+| `ui_tap.ogg` | `ui.tap` | CC0 recording(s), trimmed/mixed/normalized: Kenney "Impact Sounds" https://kenney.nl/assets/impact-sounds (impactWood_light_002) + Kenney "RPG Audio" https://kenney.nl/assets/rpg-audio (bookOpen) | CC0 1.0 |
+| `upgrade_start.ogg` | `eco.upgrade_start` | CC0 recording(s), trimmed/mixed/normalized: rubberduck "100 CC0 metal and wood SFX" https://opengameart.org/content/100-cc0-metal-and-wood-sfx (wood_hammer_01/02, hammer_02, metal_hit_02) | CC0 1.0 |

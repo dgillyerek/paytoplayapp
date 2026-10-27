@@ -634,9 +634,12 @@ def sfx():
 
 # ---------------------------------------------------------------- write
 
-# Runner sounds replaced by CC0 recordings (scripts/audio/medieval_runner/, see LICENSES.md). This script must not
-# overwrite them; it still owns the village, UI, economy, battle-only, power-up and pickup files.
+# Sounds replaced by CC0 recordings (scripts/audio/medieval_runner/, see LICENSES.md). This script must not
+# overwrite them; it now only owns the power-up and pickup files (sfx_powerup, sfx_pickup_pop).
 RECORDED = {
+    "amb_village_loop", "mus_battle_loop", "ui_tap", "ui_deny", "ui_store_open", "ui_gift_celebrate",
+    "purchase_success", "collect_food", "collect_gold", "collect_resource", "build_complete", "upgrade_start",
+    "sfx_magic_impact", "sfx_sword_hit", "sfx_arrow_hit", "sfx_ironhowl_punch", "sfx_ironhowl_sweep", "sfx_ironhowl_charge",
     "mus_runner_march_loop", "jingle_win", "jingle_lose", "sting_boss_incoming",
     "sfx_rowan_shot", "sfx_lyra_shot", "sfx_oakenshield_throw", "sfx_enemy_projectile",
     "sfx_enemy_hit", "sfx_crate_hit", "sfx_enemy_death", "sfx_enemy_death_big",
