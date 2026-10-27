@@ -136,6 +136,28 @@
 
 `RunnerLevelTweakTests` checks that a re-roll keeps the same boxes, enemies, traps, barriers and HP (within 2%, since HP climbs along the road) and moves rows.
 
+## Free pace is locked (Oct 27, 2026)
+
+Derek, 2026-10-27: "No matter what changes we make we always want to keep the pace the same without power ups." The free
+(no-spend) profile's progression is an invariant. Any change (power-ups, layouts, units, economy) that moves it has to be
+paid back by re-tuning enemy strength, never by moving the target.
+
+- **Pinned in** `tests/Survival.Domain.Tests/RunnerFreePaceTests.cs` (`FreePaceTarget`): wall L31, and the day the free
+  profile first clears L10, L20, L31, L34, L36, L40, L44, L46 and L50, each within 3% (never tighter than one session).
+- **Why it was re-tuned:** the varied power-up openings (5193159) eased L31-50 for the free player (L50 day 828.7 -> 567.7).
+  Per-level enemy HP (`level_tweaks` `foe_hp` on L31, L32, L35-L49 in runner_levels.json) puts the late curve back where it
+  was; the power-up variety stays.
+- **Not exact:** L31 now clears on day 13 (was 11). The sim's win/lose step at L31 could not hit day 11 without moving
+  the free wall to L32, so the lock pins 13.
+
+| profile | before B | after B | now |
+|---|---|---|---|
+| free | wall L31, L50 day 828.7 | L31, 567.7 | L31, 831.3 |
+| light | L34, 56.0 | L34, 56.0 | L34, 56.3 |
+| mid | L36, 22.3 | L39, 23.0 | L36, 23.0 |
+| whale | L51, 16.3 | L51, 16.3 | L51, 16.3 |
+| stuck_39 | L31, 602.0 | L31, 344.3 | L31, 604.3 |
+
 ## Power-up placement (Oct 27, 2026)
 
 **Why (Derek):** "it stil feels like the power ups are in the same place every level". The layout re-roll above moved boxes, traps and barriers, but not the power-up crates.
