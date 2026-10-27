@@ -136,6 +136,31 @@
 
 `RunnerLevelTweakTests` checks that a re-roll keeps the same boxes, enemies, traps, barriers and HP (within 2%, since HP climbs along the road) and moves rows.
 
+## Power-up placement (Oct 27, 2026)
+
+**Why (Derek):** "it stil feels like the power ups are in the same place every level". The layout re-roll above moved boxes, traps and barriers, but not the power-up crates.
+
+**Root cause:** crates were placed by a fixed rule: a fixed kind cycle (Weapon, Rate, Range/Followers/Heal...) on every other beat, always 1.5 m into the beat, on the side opposite the chest. The opening beats are pinned at 12, 25 and 38 m, so every level's first crate was damage at 26.5 m, and neighbouring levels had the same kind order 100% of the time.
+
+**What changed (`RunnerProgression.PlanCrates`, L2 onwards):**
+- Each crate may move to the beat before (35%), never later, so power stays on schedule.
+- Side alternates per level and per crate (edge lanes only; a centre crate made early levels harder), with a random lean toward the middle.
+- Depth into the beat uses alternating bands: odd levels 2.7-4.0 m, even 0.5-1.5 m, so neighbours never line up.
+- The utility crates (Range, Followers, Heal) come in each level's own order. Damage and Rate keep their slots: shuffling them swung L11/L12 by 20-30%.
+- No crate is placed in a trap's or barrier's lane, or within 1.2 m of the chest.
+
+**Overlap with the level before (power-up crates, same kind + same side within 1 m):** mean 16% / max 33% before, now 2% / max 13%. The first crate now lands anywhere from 12.5 to 29 m, in 10 spots (2 m, same side), with no spot holding more than 12 of 49 levels; before, all 49 were at 26.5 m.
+
+**Balance:** the layout salts were re-swept (16 per level) and re-picked with the same rules as before (no step above 1.5x, L1-12 need no upgrades, free wall L31). 43 levels are salted; L7, L24, L32, L38, L40, L47 keep their first roll. Salts that broke an escape lane or moved enemy HP by more than 2% were excluded. The biggest moves are L25 +25%, L9/L11 +12%, L28 -8%; the largest step is 1.50x (L31), and the free ratio at L31 is 0.95.
+
+| profile | wall | L50 day before → after |
+|---|---|---|
+| free | L31 | 829.0 → **828.7** |
+| light | L34 | 56.0 → **56.0** |
+| mid | L36 | 23.0 → **22.3** |
+| whale | none | 16.3 → **16.3** |
+| stuck_39 | L31 | 602.0 → **602.0** |
+
 ## Side hits, enemies avoid obstacles, per-level tweaks (Oct 27, 2026)
 
 **What changed in play (Derek):**
@@ -388,7 +413,9 @@ UPDATE_GOLDEN=1 dotnet test tests/Survival.Domain.Tests --filter RunnerBalance
 
 Commit the updated `Golden/runner_balance.json` along with the change, and read the diff in the PR.
 
-**Last intentional regen (Oct 27, 2026, layout variety):** walls unchanged (free L31, light L34, mid L36, whale none, stuck_39 L31). Free L50 day 830 → 564, stuck_39 745 → 486, light / mid / whale unchanged. See "Layout variety" above.
+**Last intentional regen (Oct 27, 2026, power-up placement):** walls unchanged (free L31, light L34, mid L36, whale none, stuck_39 L31). L50 days: free 829 → 829, mid 23 → 22, others unchanged. See "Power-up placement" above.
+
+**Previous regen (Oct 27, 2026, layout variety):** walls unchanged (free L31, light L34, mid L36, whale none, stuck_39 L31). Free L50 day 830 → 564, stuck_39 745 → 486, light / mid / whale unchanged. See "Layout variety" above.
 
 **Previous regen (Oct 27, 2026, side hits, enemies avoid obstacles, L19/L22/L26 tweaks, 6th Banner in the $39.99 pack):** walls free L31, light L33 → L34, mid L35 → L36, whale none, stuck_39 L31. Free L50 day 701 → 832, mid 28 → 28. See the Oct 27 section above.
 

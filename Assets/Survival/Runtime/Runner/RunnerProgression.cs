@@ -367,6 +367,7 @@ namespace Survival.Domain.Runner
             // Barriers draw from their own seed so adding them leaves the rest of the road as it was.
             var brnd = new Random(unchecked(p.Seed + (number * 104729) + 17));
             var barrier = 0;
+            var crates = PlanCrates(p, number, count);
             for (var beat = 0; beat < count; beat++)
             {
                 var z = starts[beat];
@@ -391,7 +392,7 @@ namespace Survival.Domain.Runner
                 // The beat's boxes (one box a beat, not two: Derek 2026-10-23 "theres too many upgrades to enimies"): a
                 // follower chest on the even beats, a power-up crate on the odd ones, plus a chest on beat 1 and the hero chest
                 // on beat 3 (and beat 6). The waves keep growing, so later levels have more boxes but fewer per enemy.
-                var boxes = BeatBoxes(beat, tc, t, boxMul, fx, ux);
+                var boxes = BeatBoxes(beat, tc, t, boxMul, fx, crates, k);
                 var hasBarrier = HasBarrier(number, beat);
                 var trapEvery = number >= 5 ? 1 : 2;
                 var nTraps = beat >= 1 && (beat - 1) % trapEvery == 0
@@ -490,9 +491,14 @@ namespace Survival.Domain.Runner
                         x = (i % 2 == 0 ? -0.6f : 0.6f) * side;
                         rows.Add(bx with { At = boxZ + (3f * i), X = x });
                     }
+                    else if (boxX != null)
+                    {
+                        // A middle-of-the-road piece: the chest in the middle, a crate beside it (or alone in the middle).
+                        rows.Add(bx with { At = boxZ + Math.Max(2f * i, bx.At), X = boxes.Count > 1 ? (i == 0 ? -0.9f : 0.9f) * side : x });
+                    }
                     else
                     {
-                        rows.Add(bx with { At = boxZ + (boxX != null ? 2f * i : bx.At), X = boxX != null && boxes.Count > 1 ? (i == 0 ? -0.9f : 0.9f) * side : x });
+                        rows.Add(bx with { At = boxZ + bx.At });
                     }
                 }
 
@@ -567,6 +573,7 @@ namespace Survival.Domain.Runner
             }
 
             KeepEscapeLanes(rows, halfWidth);
+            ClearBoxes(rows, halfWidth);
             StandOffWalls(rows, halfWidth);
             rows.Sort((a, b) => a.At.CompareTo(b.At));
             return rows;
@@ -754,8 +761,83 @@ namespace Survival.Domain.Runner
 
         private static readonly RunnerSetPiece[] Beat2Cycle = { RunnerSetPiece.Ambush, RunnerSetPiece.CrateRun, RunnerSetPiece.ArcherNest, RunnerSetPiece.FodderRush };
 
-        /// <summary>The boxes beat <paramref name="beat"/> holds (x and z filled in by its set piece).</summary>
-        private static List<RunnerRowDef> BeatBoxes(int beat, int tc, int t, float boxMul, float fx, float ux)
+        /// <summary>One power-up crate: the beat it belongs to (its HP and kind come from there), the beat it rides with,
+        /// how far into that beat it stands (metres, before the beat's stretch) and a roll for its lane.</summary>
+        private readonly struct Crate
+        {
+            public Crate(int origin, RunnerBoxKind kind, int host, float dz, double lane)
+            {
+                Origin = origin;
+                Kind = kind;
+                Host = host;
+                Dz = dz;
+                Lane = lane;
+            }
+
+            public int Origin { get; }
+            public RunnerBoxKind Kind { get; }
+            public int Host { get; }
+            public float Dz { get; }
+            public double Lane { get; }
+        }
+
+        /// <summary>
+        /// Where a level's power-up crates go (Derek 2026-10-27: "it stil feels like the power ups are in the same place
+        /// every level"). A level still has one crate per odd beat with the same kinds as before (the same total value);
+        /// the range, follower and heal crates come in the level's own order, and each crate rides with its own beat or
+        /// the beat before (never later, so no power-up comes later than it used to), 0.5-4 m into it (odd and even
+        /// levels apart), on the other edge from the level before where no chest takes it. The first may come with the opening beat (12 m). From its own seeds, so the rest of the road
+        /// is as it was.
+        /// </summary>
+        private static List<Crate> PlanCrates(RunnerProgressionDef p, int number, int count)
+        {
+            var kinds = new List<RunnerBoxKind>();
+            var origins = new List<int>();
+            for (var b = 1; b < count; b += 2)
+            {
+                origins.Add(b);
+                kinds.Add(PowerUps[(b / 2) % PowerUps.Length]);
+            }
+
+            // The order follows the level only, so a re-rolled layout keeps its kinds where the balance put them. The
+            // damage and rate crates keep their slots (moving them swung the early levels by 20-30%); the range, follower
+            // and heal crates in each round of the cycle swap among themselves.
+            var orng = new Random(unchecked(p.Seed + (number * 130363) + 29));
+            for (var start = 2; start < kinds.Count; start += PowerUps.Length)
+            {
+                var len = Math.Min(3, kinds.Count - start);
+                for (var i = len - 1; i > 0; i--)
+                {
+                    var j = orng.Next(i + 1);
+                    (kinds[start + i], kinds[start + j]) = (kinds[start + j], kinds[start + i]);
+                }
+            }
+
+            var rnd = new Random(unchecked(p.Seed + (number * 130363) + 31 + (p.Tweak(number).Layout * 7919)));
+            var plan = new List<Crate>();
+            for (var i = 0; i < kinds.Count; i++)
+            {
+                var b = origins[i];
+                var roll = rnd.NextDouble();
+                var host = roll < 0.35 ? b - 1 : b;
+                // The edge flips with the level number (in a fixed scramble down the road), so a crate never stands on
+                // the same edge as the same crate on the level before or after, unless a chest takes that edge.
+                var edge = (number + (CrateEdges >> (i % 8))) & 1;
+                // Odd levels set their crates deeper into the beat than even ones (2.7-4 m against 0.5-1.5 m), so a crate
+                // that rides with the same beat as on the level before still stands well over a metre away.
+                var dz = (number % 2 == 1 ? 2.7f : 0.5f) + ((float)rnd.NextDouble() * (number % 2 == 1 ? 1.3f : 1f));
+                plan.Add(new Crate(b, kinds[i], host, dz, (edge + rnd.NextDouble()) * 0.5));
+            }
+
+            return plan;
+        }
+
+        private static readonly float[] CrateLanes = { -2f, 2f };
+        private const int CrateEdges = 0b1011_0010;
+
+        /// <summary>The boxes beat <paramref name="beat"/> holds (x and z filled in by its set piece): its chest at the beat
+        /// start and the power-up crates that ride with it, each at its own distance in and on a lane clear of the chest.</summary>
+        private static List<RunnerRowDef> BeatBoxes(int beat, int tc, int t, float boxMul, float fx, List<Crate> crates, float k)
         {
             var boxes = new List<RunnerRowDef>();
             var hpAt = (int)Math.Round(8.6f * (12f + (BeatMetres * beat)) * boxMul);
@@ -768,23 +850,87 @@ namespace Survival.Domain.Runner
                 boxes.Add(Box(0f, fx, hpAt, RunnerBoxKind.Followers, FollowerUnits[beat % FollowerUnits.Length], 2 + (beat % 3) + (tc / 3), 0f));
             }
 
-            // A power-up crate on the other side on the odd beats, cycling through the kinds; half as many crates, so each
-            // damage / rate crate gives a little more than the old 0.2 / 0.15.
-            if (beat % 2 == 1)
+            // Half as many crates as beats, so each damage / rate crate gives a little more than the old 0.2 / 0.15.
+            foreach (var c in crates)
             {
-                var kind = PowerUps[(beat / 2) % PowerUps.Length];
-                var upHp = (int)Math.Round(hpAt * 0.8f);
+                if (c.Host != beat)
+                {
+                    continue;
+                }
+
+                var lanes = CrateLanes.Where(l => boxes.Count == 0 || Math.Abs(l - fx) > 1.2f).ToArray();
+                var ux = lanes[(int)(c.Lane * lanes.Length) % lanes.Length] + (((float)(c.Lane * 7 % 1) - 0.5f) * 0.4f);
+                var dz = c.Dz * k;
+                var upHp = (int)Math.Round((int)Math.Round(8.6f * (12f + (BeatMetres * c.Origin)) * boxMul) * 0.8f);
+                var kind = c.Kind;
                 boxes.Add(kind switch
                 {
-                    RunnerBoxKind.Weapon => Box(1.5f, ux, upHp, kind, "", 1, 0.3f + (0.02f * t)),
-                    RunnerBoxKind.Rate => Box(1.5f, ux, upHp, kind, "", 1, 0.25f + (0.012f * t)),
-                    RunnerBoxKind.Range => Box(1.5f, ux, upHp, kind, "", 1, 0.15f),
-                    RunnerBoxKind.Heal => Box(1.5f, ux, (int)Math.Round(upHp * 0.7f), kind, "", 1, 0.35f),
-                    _ => Box(1.5f, ux, (int)Math.Round(upHp * 0.6f), RunnerBoxKind.Followers, FollowerUnits[(beat + 2) % FollowerUnits.Length], 1 + (tc / 4), 0f)
+                    RunnerBoxKind.Weapon => Box(dz, ux, upHp, kind, "", 1, 0.3f + (0.02f * t)),
+                    RunnerBoxKind.Rate => Box(dz, ux, upHp, kind, "", 1, 0.25f + (0.012f * t)),
+                    RunnerBoxKind.Range => Box(dz, ux, upHp, kind, "", 1, 0.15f),
+                    RunnerBoxKind.Heal => Box(dz, ux, (int)Math.Round(upHp * 0.7f), kind, "", 1, 0.35f),
+                    _ => Box(dz, ux, (int)Math.Round(upHp * 0.6f), RunnerBoxKind.Followers, FollowerUnits[(c.Origin + 2) % FollowerUnits.Length], 1 + (tc / 4), 0f)
                 });
             }
 
             return boxes;
+        }
+
+        /// <summary>How close (metres down the road) a box may stand to a trap or barrier in its lane.</summary>
+        public const float BoxClearance = 1.5f;
+
+        /// <summary>Whether a box at (z, x) stands in or right against a trap or a barrier.</summary>
+        public static bool BoxBlocked(IReadOnlyList<RunnerRowDef> rows, float z, float x, float halfWidth, RunnerRowDef? skip = null)
+        {
+            foreach (var r in rows)
+            {
+                if (ReferenceEquals(r, skip) || Math.Abs(r.At - z) >= BoxClearance)
+                {
+                    continue;
+                }
+
+                var w = r.Hazard?.Width ?? r.Barrier?.Width ?? -1f;
+                if (w >= 0f && Math.Abs(x - r.X) < (w * 0.5f) + 0.7f)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>A last check over the whole road: a box that ended up in or against a trap or barrier moves to another
+        /// lane, else up to 3 m back or on down the road.</summary>
+        private static void ClearBoxes(List<RunnerRowDef> rows, float halfWidth)
+        {
+            var edge = halfWidth - 0.8f;
+            for (var i = 0; i < rows.Count; i++)
+            {
+                var r = rows[i];
+                if (r.Kind != RunnerRowKind.Box || r.Finale || !BoxBlocked(rows, r.At, r.X, halfWidth, r))
+                {
+                    continue;
+                }
+
+                var fixedIt = false;
+                foreach (var dz in new[] { 0f, -1.5f, 1.5f, -3f, 3f })
+                {
+                    foreach (var l in new[] { r.X, -2f, 0f, 2f, -edge, edge })
+                    {
+                        if (!BoxBlocked(rows, r.At + dz, l, halfWidth, r))
+                        {
+                            rows[i] = r with { At = r.At + dz, X = l };
+                            fixedIt = true;
+                            break;
+                        }
+                    }
+
+                    if (fixedIt)
+                    {
+                        break;
+                    }
+                }
+            }
         }
 
         /// <summary>Least open road (metres) a squad must have beside traps and side barriers that stand within <see cref="EscapeWindow"/> m of each other.</summary>

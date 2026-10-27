@@ -138,4 +138,70 @@ public sealed class RunnerLayoutVarietyTests
             }
         }
     }
+
+    private static bool IsPowerUp(RunnerRowDef r) =>
+        r.Kind == RunnerRowKind.Box && r.Box!.Kind is RunnerBoxKind.Weapon or RunnerBoxKind.Rate or RunnerBoxKind.Range or RunnerBoxKind.Heal;
+
+    /// <summary>Share of <paramref name="a"/>'s power-up crates that <paramref name="b"/> has too: same kind, same lane, within 1 m.</summary>
+    public static double PowerUpSimilarity(RunnerLevelDef a, RunnerLevelDef b)
+    {
+        var ia = a.Rows.Where(IsPowerUp).ToList();
+        var ib = b.Rows.Where(IsPowerUp).ToList();
+        var hit = ia.Count(r => ib.Any(q => q.Box!.Kind == r.Box!.Kind && Lane(q.X) == Lane(r.X) && Math.Abs(q.At - r.At) <= 1f));
+        return ia.Count == 0 ? 0 : hit / (double)ia.Count;
+    }
+
+    [Fact]
+    public void Power_ups_stand_in_different_places_level_to_level()
+    {
+        // Derek 2026-10-27: "it stil feels like the power ups are in the same place every level". Before: the first crate was
+        // always damage at 26.5 m, the kinds came in the same order every level, and neighbours shared up to a third of them.
+        var c = Runner.Catalog();
+        var shares = new List<double>();
+        for (var n = 3; n <= c.Levels.Count; n++)
+        {
+            var s = PowerUpSimilarity(c.ByNumber(n - 1), c.ByNumber(n));
+            shares.Add(s);
+            Assert.True(s < 0.3, $"L{n - 1} and L{n} share {s:P0} of their power-up positions");
+        }
+
+        _out.WriteLine($"power-up share mean {shares.Average():0.00} max {shares.Max():0.00}");
+        Assert.True(shares.Average() < 0.1, $"neighbours share {shares.Average():P0} of their power-ups on average");
+
+        var firsts = Enumerable.Range(2, c.Levels.Count - 1).Select(n => c.ByNumber(n).Rows.First(IsPowerUp)).ToList();
+        var zs = firsts.Select(r => r.At).ToList();
+        _out.WriteLine($"first power-up z {zs.Min():0.0}-{zs.Max():0.0} m, {zs.Select(z => Math.Round(z)).Distinct().Count()} distinct");
+        Assert.True(zs.Max() - zs.Min() >= 8f, "the first power-up stands within a few metres on every level");
+        // The opening beats sit at fixed distances, so the first crate lands in a few bands (beat 0 or 1, early or late in it);
+        // what matters is that no one spot (2 m, same side) holds most levels any more - it used to hold all of them.
+        var spots = firsts.GroupBy(r => (Math.Round(r.At / 2f), Math.Sign(r.X))).Select(g => g.Count()).ToList();
+        _out.WriteLine($"first power-up: {spots.Count} spots, busiest holds {spots.Max()} of {firsts.Count}");
+        Assert.True(spots.Count >= 8, $"the first power-up keeps to {spots.Count} spots");
+        Assert.True(spots.Max() <= firsts.Count / 4, $"one spot holds the first power-up on {spots.Max()} of {firsts.Count} levels");
+        // The damage and rate crates keep their slots (balance); the range and heal crates come in each level's own order.
+        var orders = Enumerable.Range(2, c.Levels.Count - 1)
+            .Select(n => string.Join(",", c.ByNumber(n).Rows.Where(IsPowerUp).Select(r => r.Box!.Kind).Take(6)))
+            .Where(o => o.Contains(nameof(RunnerBoxKind.Heal))).ToList();
+        Assert.True(orders.Distinct().Count() >= 3, $"power-up kinds come in {orders.Distinct().Count()} orders");
+    }
+
+    [Fact]
+    public void Power_ups_keep_their_kinds_and_never_stand_in_a_trap_or_barrier()
+    {
+        var c = Runner.Catalog();
+        for (var n = 2; n <= c.Levels.Count; n++)
+        {
+            var l = c.ByNumber(n);
+            foreach (var r in l.Rows.Where(r => r.Kind == RunnerRowKind.Box && !r.Finale))
+            {
+                Assert.False(RunnerProgression.BoxBlocked(l.Rows, r.At, r.X, l.HalfWidth, r), $"L{n}: {r.Box!.Kind} box at {r.At:0.0} m, x {r.X:0.0} stands in a trap or barrier");
+                Assert.InRange(r.X, -l.HalfWidth, l.HalfWidth);
+            }
+
+            // The damage and rate crates keep their slots: the first power-up is damage, the second rate.
+            var ups = l.Rows.Where(IsPowerUp).ToList();
+            Assert.Equal(RunnerBoxKind.Weapon, ups[0].Box!.Kind);
+            Assert.Equal(RunnerBoxKind.Rate, ups[1].Box!.Kind);
+        }
+    }
 }
