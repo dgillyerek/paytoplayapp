@@ -26,7 +26,7 @@ namespace Survival.Unity
         /// <summary>Traps of one kind and width kept ready (each level has a handful at most).</summary>
         private const int HazardPrewarmCap = 6;
 
-        private static readonly string[] ShotLooks = { "Lyra", "Rowan", "Oakenshield", "Bonequill", "" };
+        private static readonly string[] ShotLooks = { "Lyra", "Rowan", "Oakenshield", "Bonequill", "Vespera", "" };
 
         private RunnerRigPool? _pool;
 
@@ -171,24 +171,51 @@ namespace Survival.Unity
         {
             var go = new GameObject("Shot");
             go.transform.SetParent(_spare, false);
-            var arrow = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            Destroy(arrow.GetComponent<Collider>());
+            var arrow = new GameObject("Arrow");
             arrow.transform.SetParent(go.transform, false);
-            arrow.transform.localScale = new Vector3(0.06f, 0.06f, 0.7f);
+            arrow.AddComponent<MeshFilter>().sharedMesh = RunnerShotArt.Arrow;
+            var arrowR = arrow.AddComponent<MeshRenderer>();
+            var thorn = new GameObject("Thorn");
+            thorn.transform.SetParent(go.transform, false);
+            thorn.AddComponent<MeshFilter>().sharedMesh = RunnerShotArt.Thorn;
+            var thornR = thorn.AddComponent<MeshRenderer>();
             var orb = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             Destroy(orb.GetComponent<Collider>());
             orb.transform.SetParent(go.transform, false);
-            orb.transform.localScale = Vector3.one * 0.32f;
+            orb.transform.localScale = Vector3.one * 0.13f;
+            var halo = new GameObject("Halo");
+            halo.transform.SetParent(go.transform, false);
+            halo.transform.localScale = Vector3.one * 0.75f;
+            halo.AddComponent<MeshFilter>().sharedMesh = RunnerShotArt.Quad;
+            var haloR = halo.AddComponent<MeshRenderer>();
             var trail = go.AddComponent<TrailRenderer>();
-            trail.time = 0.18f;
+            trail.textureMode = LineTextureMode.Stretch;
+            trail.minVertexDistance = 0.12f;
+            trail.numCapVertices = 0;
             trail.endWidth = 0f;
             trail.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            var view = new ShotView { Root = go.transform, Arrow = arrow.GetComponent<Renderer>(), Orb = orb.GetComponent<Renderer>(), Trail = trail };
-            view.Arrow.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            view.Orb.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            trail.receiveShadows = false;
+            var view = new ShotView
+            {
+                Root = go.transform, Arrow = arrowR, Thorn = thornR, Orb = orb.GetComponent<Renderer>(), Halo = haloR, Trail = trail,
+            };
+            foreach (var r in new[] { view.Arrow, view.Thorn, view.Orb, view.Halo })
+            {
+                r!.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                r.receiveShadows = false;
+            }
+
             Dress(view, "");
             return view;
         }
+
+        /// <summary>Arrow-shooters fly a real arrow; Oakenshield throws a thorn; everyone else casts a glowing bolt.</summary>
+        private static ShotKind KindOf(string look) => look switch
+        {
+            "Rowan" or "Bonequill" => ShotKind.Arrow,
+            "Oakenshield" => ShotKind.Thorn,
+            _ => ShotKind.Bolt,
+        };
 
         /// <summary>Re-dress a pooled shot as <paramref name="look"/>'s (only when the look changes).</summary>
         private static void Dress(ShotView v, string look)
@@ -199,16 +226,46 @@ namespace Survival.Unity
             }
 
             v.Look = look;
+            v.Kind = KindOf(look);
             ShotColors(look, out var core, out var glow);
-            var arrow = look == "Rowan" || look == "Bonequill" || look == "Oakenshield";
-            v.Head = arrow ? v.Arrow : v.Orb;
-            v.Arrow!.enabled = arrow;
-            v.Orb!.enabled = !arrow;
-            v.Head!.sharedMaterial = Unlit(core);
-            v.Trail!.startWidth = arrow ? 0.08f : 0.26f;
-            v.Trail.sharedMaterial = Unlit(glow);
-            v.Trail.startColor = glow;
-            v.Trail.endColor = new Color(glow.r, glow.g, glow.b, 0f);
+            v.Arrow!.enabled = false;
+            v.Thorn!.enabled = false;
+            v.Orb!.enabled = false;
+            v.Halo!.enabled = false;
+            switch (v.Kind)
+            {
+                case ShotKind.Arrow:
+                    v.Head = v.Arrow;
+                    // Ash shaft, dark steel head, fletching in the archer's colour, a dark nock.
+                    v.Arrow.sharedMaterials = new[]
+                    {
+                        Unlit(new Color(0.62f, 0.46f, 0.3f, 1f)), Unlit(new Color(0.56f, 0.6f, 0.66f, 1f)), Unlit(core), Unlit(new Color(0.2f, 0.15f, 0.12f, 1f)),
+                    };
+                    // A faint motion streak, not a glow.
+                    v.Trail!.time = 0.1f;
+                    v.Trail.startWidth = 0.035f;
+                    v.Trail.sharedMaterial = RunnerShotArt.Wake(new Color(1f, 1f, 1f, 0.35f));
+                    break;
+                case ShotKind.Thorn:
+                    v.Head = v.Thorn;
+                    v.Thorn.sharedMaterials = new[] { Unlit(new Color(0.36f, 0.27f, 0.16f, 1f)), Unlit(core) };
+                    v.Trail!.time = 0.12f;
+                    v.Trail.startWidth = 0.06f;
+                    v.Trail.sharedMaterial = RunnerShotArt.Wake(new Color(glow.r, glow.g, glow.b, 0.45f));
+                    break;
+                default:
+                    v.Head = v.Orb;
+                    // White-hot core inside a soft halo of the hero's element, trailing a fading wake.
+                    v.Orb.sharedMaterial = Unlit(Color.Lerp(core, Color.white, 0.6f));
+                    v.Halo.sharedMaterial = RunnerShotArt.Glow(glow);
+                    v.Trail!.time = 0.22f;
+                    v.Trail.startWidth = 0.2f;
+                    v.Trail.sharedMaterial = RunnerShotArt.Wake(glow);
+                    break;
+            }
+
+            v.Trail.startColor = Color.white;
+            v.Trail.endColor = Color.white;
         }
 
         private ShotView TakeShot(RunnerShot s)
@@ -216,7 +273,9 @@ namespace Survival.Unity
             RunnerHitchLog.Note(RunnerHitchLog.Counter.Shot);
             var v = _freeShots.Count > 0 ? _freeShots.Pop() : NewShot();
             Dress(v, ShooterName(s));
+            v.Foe = s.ByFoe;
             v.Head!.enabled = true;
+            v.Halo!.enabled = v.Kind == ShotKind.Bolt;
             var at = new Vector3(s.X, ShotHeight, s.Z);
             v.Launch = Vector3.zero;
             v.LaunchLeft = 0f;
@@ -238,6 +297,12 @@ namespace Survival.Unity
             v.Root.position = at;
             v.Root.gameObject.SetActive(true);
             v.Trail!.Clear();
+            if (v.Kind == ShotKind.Bolt)
+            {
+                // Muzzle flash at the release point (staff head / hands).
+                ShotColors(v.Look ?? "", out _, out var flash);
+                AddFx(HookArtKeys.FxGlow, at, 0.7f, 0.14f, new Color(flash.r, flash.g, flash.b, 0.9f), Vector3.zero, 1.4f, 0f);
+            }
             v.Fade = 0f;
             return v;
         }
@@ -250,13 +315,55 @@ namespace Survival.Unity
                 return;
             }
 
+            if (v.Head != null && v.Head.enabled && v.Root.gameObject.activeSelf)
+            {
+                Impact(v);
+            }
+
             if (v.Head != null)
             {
                 v.Head.enabled = false;
             }
 
+            v.Halo!.enabled = false;
             v.Fade = 0.25f;
             _fadingShots.Add(v);
+        }
+
+        /// <summary>A shot that ends on someone (not one that runs out of range) leaves an impact: a burst of its
+        /// element for a bolt, a few sparks for an arrow or thorn.</summary>
+        private void Impact(ShotView v)
+        {
+            var at = v.Root.position;
+            var hit = false;
+            foreach (var rig in (v.Foe ? (IEnumerable<RunnerRig>)_members.Values : _foes.Values))
+            {
+                var d = rig.Slot.position - at;
+                d.y = 0f;
+                if (d.sqrMagnitude < 2.25f)
+                {
+                    hit = true;
+                    break;
+                }
+            }
+
+            if (!hit)
+            {
+                return;
+            }
+
+            ShotColors(v.Look ?? "", out var core, out var glow);
+            if (v.Kind == ShotKind.Bolt)
+            {
+                AddFx(HookArtKeys.FxBurstRing, at, 0.8f, 0.25f, new Color(glow.r, glow.g, glow.b, 0.9f), Vector3.zero, 1.8f, 0f);
+                AddFx(HookArtKeys.FxGlow, at, 0.9f, 0.2f, new Color(core.r, core.g, core.b, 0.85f), Vector3.zero, 0.6f, 0f);
+            }
+
+            for (var i = 0; i < 3; i++)
+            {
+                var spark = new Vector3(UnityEngine.Random.Range(-1.2f, 1.2f), UnityEngine.Random.Range(0.6f, 1.6f), UnityEngine.Random.Range(-1.2f, 0.4f));
+                AddFx(HookArtKeys.FxSparkle, at, 0.18f, 0.3f, v.Kind == ShotKind.Bolt ? glow : new Color(1f, 0.85f, 0.55f, 0.9f), spark, 0f, 300f);
+            }
         }
 
         private void TickShots(float dt)
