@@ -78,6 +78,40 @@ namespace Survival.Domain.Runner
         public const float BowTipUpDegrees = 6f;
 
         /// <summary>
+        /// The bow arm's elbow hint, per metre of design arm from its shoulder (<paramref name="r"/> the aim's right, <paramref name="u"/> up,
+        /// <paramref name="f"/> the aim): out to the bow side (the left), down, and a touch back, so the near-straight bow arm never folds the wrong way.
+        /// </summary>
+        public static Vector3 BowElbowPole(Vector3 r, Vector3 u, Vector3 f) => (-r * 0.30f) - (u * 0.40f) - (f * 0.10f);
+
+        /// <summary>The draw arm's elbow hint from its shoulder: back behind the shoulder, out to the draw side and up, so the elbow rides high at the anchor.</summary>
+        public static Vector3 DrawElbowPole(Vector3 r, Vector3 u, Vector3 f) => (-f * 0.45f) + (r * 0.25f) + (u * 0.20f);
+
+        /// <summary>
+        /// Whether the bow's measured depth axis (riser side) should be flipped so turning the bow to face <paramref name="fwd"/> twists the hand the least.
+        /// The riser side can't be read from a non-readable mesh, and a wrong guess spins the bow hand 180 degrees in the wrist (Derek 2026-10-27: arms looked backwards).
+        /// Frames follow Unity's LookRotation (x = up cross z).
+        /// </summary>
+        public static bool FlipBowDepth(Vector3 depth, Vector3 longAxis, Vector3 fwd, Vector3 up)
+        {
+            return Twist(-depth, longAxis, fwd, up) > Twist(depth, longAxis, fwd, up) + 1e-4f;
+        }
+
+        // The trace of the rotation taking the (depth, long) frame onto the (fwd, up) frame: larger is a smaller turn.
+        private static float Twist(Vector3 depth, Vector3 longAxis, Vector3 fwd, Vector3 up)
+        {
+            Frame(depth, longAxis, out var fx, out var fy, out var fz);
+            Frame(fwd, up, out var tx, out var ty, out var tz);
+            return Vector3.Dot(fx, tx) + Vector3.Dot(fy, ty) + Vector3.Dot(fz, tz);
+        }
+
+        private static void Frame(Vector3 z, Vector3 up, out Vector3 x, out Vector3 y, out Vector3 zn)
+        {
+            zn = Vector3.Normalize(z);
+            x = Vector3.Normalize(Vector3.Cross(up, zn));
+            y = Vector3.Cross(zn, x);
+        }
+
+        /// <summary>
         /// How far the string hand is drawn, 0 (on the string at the nock) to 1 (full draw at the jaw),
         /// <paramref name="sinceShot"/> seconds after the last release with shots every <paramref name="interval"/> seconds:
         /// at the release the hand is at the anchor (it flies back past it with the kick) and reaches forward to the string

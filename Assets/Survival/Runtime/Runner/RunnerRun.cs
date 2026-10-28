@@ -69,6 +69,9 @@ namespace Survival.Domain.Runner
         public const float BossSlamDepth = 5.0f;
         public const float BossSlamExtra = 0.5f;
 
+        /// <summary>After a slam or quake lands the boss keeps facing the locked danger zone this long (his follow-through), then turns back to the squad.</summary>
+        public const float BossAimHoldAfter = 0.8f;
+
         /// <summary>
         /// The boss's signature attack, the quake (Update 8): seconds from the rear-up (the red road and the DODGE! cue appear)
         /// to the impact. Long enough to read and to steer across the whole road (<see cref="BossQuakeSteerSeconds"/> is the worst case).
@@ -477,6 +480,22 @@ namespace Survival.Domain.Runner
 
         /// <summary>Centre (x) of the current or last quake's safe band.</summary>
         public float QuakeSafeX { get; internal set; }
+
+        /// <summary>
+        /// The ground point the boss's telegraphed attack is aimed at, locked when the warning starts (Derek 2026-10-27: he
+        /// kept turning to follow the hero, so he seemed to swing at a hero who had already dodged). It sits inside the marked
+        /// danger zone and does not move while he winds up or strikes; the scene faces him at it, not at the hero.
+        /// </summary>
+        public float AimX { get; internal set; }
+
+        /// <inheritdoc cref="AimX"/>
+        public float AimZ { get; internal set; }
+
+        /// <summary>Seconds he keeps facing <see cref="AimX"/>/<see cref="AimZ"/>: the whole windup plus <see cref="RunnerRules.BossAimHoldAfter"/> after the impact.</summary>
+        public float AimHold { get; internal set; }
+
+        /// <summary>True while a telegraphed attack's aim is locked (windup, strike and its follow-through).</summary>
+        public bool AimLocked => Boss && (Windup > 0f || AimHold > 0f);
 
         public float SinceAttack { get; internal set; } = 99f;
         public bool Attacking => InTake || SinceAttack < Unit.Cycle + 0.25f;
@@ -1681,6 +1700,7 @@ namespace Survival.Domain.Runner
         /// </summary>
         private void BossAttack(RunnerFoe f, float dt)
         {
+            f.AimHold = Math.Max(0f, f.AimHold - dt);
             if (f.Windup > 0f)
             {
                 f.Windup -= dt;
@@ -1690,6 +1710,7 @@ namespace Survival.Domain.Runner
                     var quake = f.Move == RunnerBossMove.Quake;
                     f.Move = RunnerBossMove.None;
                     f.Cooldown = f.Unit.Cycle + (quake ? RunnerRules.BossQuakeRecovery : 0f);
+                    f.AimHold = RunnerRules.BossAimHoldAfter;
                     if (quake)
                     {
                         Quake(f);
@@ -1719,6 +1740,7 @@ namespace Survival.Domain.Runner
                 f.QuakeSafeX = QuakeSafeCentre(Hero.X, f.Quakes, Level.HalfWidth);
                 f.Quakes++;
                 f.Actions++;
+                (f.AimX, f.AimZ) = QuakeAim(f, Hero.X);
                 Emit(RunnerEventKind.BossQuakeWindup, f.Id, Hero.Id, f.QuakeSafeX, f.Z, f.Windup, true, false, f.Unit.Id);
                 return;
             }
@@ -1726,8 +1748,35 @@ namespace Survival.Domain.Runner
             f.Move = RunnerBossMove.Slam;
             f.Windup = f.WindupTotal = RunnerRules.BossWindup;
             f.Actions++;
+            (f.AimX, f.AimZ) = SlamAim(f, Hero.X, Hero.Z);
             Emit(RunnerEventKind.BossWindup, f.Id, Hero.Id, f.X, f.Z, f.Windup, false, false, f.Unit.Id);
-            Emit(RunnerEventKind.Fired, f.Id, Hero.Id, Hero.X, Hero.Z, 0, false, false, f.Unit.Id);
+            Emit(RunnerEventKind.Fired, f.Id, Hero.Id, f.AimX, f.AimZ, 0, false, false, f.Unit.Id);
+        }
+
+        /// <summary>
+        /// Where a slam is aimed, locked at its windup: the hero's spot then, clamped into <see cref="SlamArea"/> (the marked road).
+        /// </summary>
+        public static (float X, float Z) SlamAim(RunnerFoe boss, float heroX, float heroZ)
+        {
+            var (minX, maxX, minZ, maxZ) = SlamArea(boss);
+            return (Clamp(heroX, minX, maxX), Clamp(heroZ, minZ, maxZ));
+        }
+
+        /// <summary>
+        /// Where a quake is aimed, locked at its windup: the middle of its depth, across from the hero's x then, pushed out of
+        /// the safe band (so it is always on red road, the side the warning tells the squad to leave).
+        /// </summary>
+        public static (float X, float Z) QuakeAim(RunnerFoe boss, float heroX)
+        {
+            var (minX, maxX) = QuakeSafe(boss);
+            var x = heroX;
+            if (x > minX - 0.5f && x < maxX + 0.5f)
+            {
+                x = boss.QuakeSafeX < 0f ? maxX + 0.5f : minX - 0.5f;
+            }
+
+            var (minZ, maxZ) = QuakeArea(boss);
+            return (x, (minZ + maxZ) * 0.5f);
         }
 
         /// <summary>
@@ -1794,7 +1843,8 @@ namespace Survival.Domain.Runner
                 caught++;
             }
 
-            Emit(RunnerEventKind.BossQuake, f.Id, Hero.Id, f.QuakeSafeX, f.Z - (RunnerRules.BossQuakeDepth * 0.5f), caught, true, false, f.Unit.Id);
+            // X is the locked aim (on red road): the landing's dust and flash go there, never on the safe band.
+            Emit(RunnerEventKind.BossQuake, f.Id, Hero.Id, f.AimX, f.AimZ, caught, true, false, f.Unit.Id);
             if (heroHit)
             {
                 HurtHero(f, (int)Math.Round(f.Damage * RunnerRules.BossQuakeDamage));
@@ -1841,7 +1891,7 @@ namespace Survival.Domain.Runner
                 caught++;
             }
 
-            Emit(RunnerEventKind.BossSlam, f.Id, Hero.Id, f.X, f.Z - (RunnerRules.BossSlamDepth * 0.5f), caught, true, false, f.Unit.Id);
+            Emit(RunnerEventKind.BossSlam, f.Id, Hero.Id, f.AimX, f.AimZ, caught, true, false, f.Unit.Id);
             if (heroHit)
             {
                 HurtHero(f, f.Damage);
