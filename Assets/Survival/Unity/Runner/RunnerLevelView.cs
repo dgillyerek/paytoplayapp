@@ -937,9 +937,18 @@ namespace Survival.Unity
                     continue;
                 }
 
-                // Faces whoever it last went for (it turns round on a squad that walked past it), else the hero.
-                var at = (f.TargetId != 0 ? _run.Member(f.TargetId) : null) ?? _run.Hero;
-                rig.Face(new Vector3(at.X - f.X, 0f, at.Z - f.Z));
+                if (f.AimLocked)
+                {
+                    // A boss winding up or landing a telegraphed attack faces the danger zone locked at the warning, not
+                    // the hero: a hero who dodged sees him swing at the marked road (Derek 2026-10-27).
+                    rig.Face(new Vector3(f.AimX - f.X, 0f, f.AimZ - f.Z));
+                }
+                else
+                {
+                    // Faces whoever it last went for (it turns round on a squad that walked past it), else the hero.
+                    var at = (f.TargetId != 0 ? _run.Member(f.TargetId) : null) ?? _run.Hero;
+                    rig.Face(new Vector3(at.X - f.X, 0f, at.Z - f.Z));
+                }
                 if (f.Attacking)
                 {
                     continue;
