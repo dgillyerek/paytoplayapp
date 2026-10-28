@@ -24,6 +24,8 @@ namespace Survival.Unity
         private static readonly Color BattleVillainFill = new Color(0.92f, 0.30f, 0.32f, 1f);
 
         private RectTransform? _hud;
+        private HeroHpPanel? _heroPanel;
+        private readonly List<RunnerMember> _panelHeroes = new List<RunnerMember>();
         private RectTransform? _worldUi;
         private Image? _progressFill;
         private Text? _progressText;
@@ -195,7 +197,12 @@ namespace Survival.Unity
             // 10 cap stays; "Squad full!" is a pop-up at the lead now (RunnerPickupPopup), not a banner.
 
             _hint = HookSkin.Outlined(SurvivalVisuals.Text(_hud, "Hint", "⟵  " + S("runner.hint", "Drag or A / D to steer") + "  ⟶", 34, TextAnchor.MiddleCenter, SurvivalVisuals.Cream));
-            Anchor(_hint.rectTransform, 0f, 0.10f, 1f, 0.15f);
+            // Above the hero panel's corner (a full five-row panel reaches ~0.19 of the height).
+            Anchor(_hint.rectTransform, 0f, 0.215f, 1f, 0.265f);
+
+            // Hero HP: a corner panel, not a bar over the hero (Derek 2026-10-28); rows join as heroes join the squad.
+            _heroPanel = HeroHpPanel.Build(_hud);
+            _panelHeroes.Clear();
 
             var banner = HookSkin.Panel(_hud, "Banner", HookArtKeys.RibbonBlue, new Color(0.12f, 0.24f, 0.5f, 0.95f), 0.6f);
             _banner = banner.rectTransform;
@@ -215,8 +222,9 @@ namespace Survival.Unity
                 _freeFoeBars.Push(NewSideBar(false));
             }
 
-            // The lead and every follower carry a sliver (followers have HP now), pooled up front for a full squad.
-            for (var i = 0; i < RunnerRules.SquadCap; i++)
+            // Squad slivers only when the policy draws them (heroes are in the corner panel; followers off since #86).
+            var squadBars = RunnerSideBar.Shows(RunnerBarOwner.LeadHero) || RunnerSideBar.Shows(RunnerBarOwner.Follower);
+            for (var i = 0; squadBars && i < RunnerRules.SquadCap; i++)
             {
                 _freeHeroBars.Push(NewSideBar(true));
             }
@@ -249,6 +257,32 @@ namespace Survival.Unity
             rt.offsetMax = Vector2.zero;
         }
 
+        /// <summary>Corner hero rows: a row per hero who joined; one who left the squad (fell) reads 0 and dims.</summary>
+        private void TickHeroPanel(float dt)
+        {
+            if (_heroPanel == null || _run == null)
+            {
+                return;
+            }
+
+            foreach (var m in _run.Squad)
+            {
+                if (m.IsHero && !_panelHeroes.Contains(m))
+                {
+                    _panelHeroes.Add(m);
+                    _heroPanel.Add(m.Id, m.Unit.Roster, string.Empty, RunnerArtKeys.Portrait(m.Unit.Roster));
+                }
+            }
+
+            foreach (var m in _panelHeroes)
+            {
+                var alive = _run.Member(m.Id) != null;
+                _heroPanel.Set(m.Id, alive ? m.Hp : 0, m.MaxHp);
+            }
+
+            _heroPanel.Tick(dt);
+        }
+
         private void ShowHint(bool on)
         {
             if (_hint != null)
@@ -263,6 +297,8 @@ namespace Survival.Unity
             {
                 return;
             }
+
+            TickHeroPanel(dt);
 
             if (_progressFill != null)
             {
