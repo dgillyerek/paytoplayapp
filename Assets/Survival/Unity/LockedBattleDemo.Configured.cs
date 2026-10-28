@@ -548,19 +548,23 @@ namespace Survival.Unity
             _hud = canvas;
             var top = SurvivalVisuals.Image(canvas, "TopPlate", new Color(0.06f, 0.08f, 0.16f, 0.82f));
             HookSkin.TrySkin(top, HookArtKeys.Header, 0.42f);
-            Anchor(top.rectTransform, 0.10f, 0.925f, 0.90f, 0.990f);
-            var title = HookSkin.Outlined(SurvivalVisuals.Text(top.transform, "Caption", _config!.Stage.Name.ToUpperInvariant(), 32, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 2f);
+            // Same slim top row as the runner (Derek 2026-10-28): clock, small title banner, Retreat; the hero panel under it.
+            Anchor(top.rectTransform, TopHudLayout.BattleTitle.X0, TopHudLayout.BattleTitle.Y0, TopHudLayout.BattleTitle.X1, TopHudLayout.BattleTitle.Y1);
+            var title = HookSkin.Outlined(SurvivalVisuals.Text(top.transform, "Caption", _config!.Stage.Name.ToUpperInvariant(), 24, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 2f);
             title.fontStyle = FontStyle.Bold;
-            Anchor(title.rectTransform, 0.05f, 0.30f, 0.95f, 0.98f);
-            _score = HookSkin.Outlined(SurvivalVisuals.Text(top.transform, "Score", "", 20, TextAnchor.MiddleCenter, SurvivalVisuals.Gold), 1.5f);
-            Anchor(_score.rectTransform, 0.05f, 0.02f, 0.95f, 0.36f);
+            Anchor(title.rectTransform, 0.06f, 0.36f, 0.94f, 0.94f);
+            title.resizeTextForBestFit = true;
+            title.resizeTextMinSize = 14;
+            title.resizeTextMaxSize = 24;
+            _score = HookSkin.Outlined(SurvivalVisuals.Text(top.transform, "Score", "", 15, TextAnchor.MiddleCenter, SurvivalVisuals.Gold), 1.5f);
+            Anchor(_score.rectTransform, 0.06f, 0.06f, 0.94f, 0.40f);
 
-            _clock = HookSkin.Outlined(SurvivalVisuals.Text(canvas, "Clock", "", 30, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 2f);
-            Anchor(_clock.rectTransform, 0.02f, 0.86f, 0.22f, 0.915f);
+            _clock = HookSkin.Outlined(SurvivalVisuals.Text(canvas, "Clock", "", 28, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 2f);
+            Anchor(_clock.rectTransform, TopHudLayout.Clock.X0, TopHudLayout.Clock.Y0, TopHudLayout.Clock.X1, TopHudLayout.Clock.Y1);
 
             var retreat = HookSkin.Button(canvas, "LockedBattleRetreat", HookArtKeys.ButtonRed, new Color(0.45f, 0.12f, 0.12f, 0.94f), 0.5f);
-            Anchor(retreat.GetComponent<RectTransform>(), 0.74f, 0.862f, 0.97f, 0.914f);
-            var label = HookSkin.Outlined(SurvivalVisuals.Text(retreat.transform, "Label", "RETREAT", 24, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
+            Anchor(retreat.GetComponent<RectTransform>(), TopHudLayout.Retreat.X0, TopHudLayout.Retreat.Y0, TopHudLayout.Retreat.X1, TopHudLayout.Retreat.Y1);
+            var label = HookSkin.Outlined(SurvivalVisuals.Text(retreat.transform, "Label", "RETREAT", 20, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
             label.fontStyle = FontStyle.Bold;
             SurvivalVisuals.Stretch(label.rectTransform);
             retreat.onClick.AddListener(() => _combat?.Retreat());
@@ -571,7 +575,7 @@ namespace Survival.Unity
             _banner.gameObject.SetActive(false);
 
             var villainFrame = Rgb(CampaignArtKeys.VillainFrameRgb, 1f, Color.magenta);
-            // Heroes: one row each in the bottom-left corner panel instead of a bar beside the body (Derek 2026-10-28).
+            // Heroes: one row each in the top-left corner panel instead of a bar beside the body (Derek 2026-10-28).
             _heroPanel = HeroHpPanel.Build(canvas);
             foreach (var f in _fighters)
             {

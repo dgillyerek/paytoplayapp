@@ -147,11 +147,13 @@ namespace Survival.Unity
 
             // Title plate + distance bar.
             var plate = HookSkin.Panel(_hud, "TitlePlate", HookArtKeys.Header, SurvivalVisuals.Panel, 0.6f);
-            Anchor(plate.rectTransform, 0.16f, 0.925f, 0.84f, 0.985f);
-            var title = HookSkin.Outlined(SurvivalVisuals.Text(plate.transform, "Title", LevelTitle(_level), 44, TextAnchor.MiddleCenter, SurvivalVisuals.Cream));
+            // A small title banner with the distance beside it on one top row (Derek 2026-10-28), the hero panel under it.
+            Anchor(plate.rectTransform, TopHudLayout.RunnerTitle);
+            var title = Fit(HookSkin.Outlined(SurvivalVisuals.Text(plate.transform, "Title", LevelTitle(_level), 30, TextAnchor.MiddleCenter, SurvivalVisuals.Cream)), 16, 30);
             SurvivalVisuals.Stretch(title.rectTransform);
+            Pad(title.rectTransform);
             var bar = HookSkin.Bar(_hud, "Progress", out var fill);
-            Anchor(bar.rectTransform, 0.14f, 0.885f, 0.80f, 0.915f);
+            Anchor(bar.rectTransform, TopHudLayout.Distance);
             _progressFill = fill;
             _progressText = HookSkin.Outlined(SurvivalVisuals.Text(bar.transform, "Metres", "", 24, TextAnchor.MiddleCenter, Color.white));
             SurvivalVisuals.Stretch(_progressText.rectTransform);
@@ -169,16 +171,17 @@ namespace Survival.Unity
                 // The boss is the 3D Ironhowl on the road; the bar's end only marks where he stands.
                 var face = HookSkin.Art(_hud, "BossMark", "theme_a.ui.icon_battle", FoeFill);
                 face.color = new Color(1f, 0.55f, 0.5f, 1f);
-                Anchor(face.rectTransform, 0.80f, 0.872f, 0.88f, 0.928f);
-                var tag = HookSkin.Outlined(SurvivalVisuals.Text(face.transform, "Boss", S("runner.boss", "BOSS"), 20, TextAnchor.UpperCenter, FoeFill));
-                tag.rectTransform.anchorMin = new Vector2(0f, -0.45f);
-                tag.rectTransform.anchorMax = new Vector2(1f, 0f);
+                Anchor(face.rectTransform, TopHudLayout.BossMark);
+                // The tag sits on the mark's lower half (the badge row is right under it).
+                var tag = HookSkin.Outlined(SurvivalVisuals.Text(face.transform, "Boss", S("runner.boss", "BOSS"), 14, TextAnchor.LowerCenter, FoeFill));
+                tag.rectTransform.anchorMin = new Vector2(-0.2f, -0.05f);
+                tag.rectTransform.anchorMax = new Vector2(1.2f, 0.4f);
                 tag.rectTransform.offsetMin = tag.rectTransform.offsetMax = Vector2.zero;
             }
 
             // Kills (crossed swords) and upgrade chips.
             var kills = HookSkin.Panel(_hud, "Kills", HookArtKeys.Chip, SurvivalVisuals.PanelSoft, 0.5f);
-            Anchor(kills.rectTransform, 0.70f, 0.835f, 0.97f, 0.875f);
+            Anchor(kills.rectTransform, TopHudLayout.Kills);
             var swords = HookSkin.Art(kills.transform, "Icon", "theme_a.ui.icon_battle", SurvivalVisuals.PinFight);
             Anchor(swords.rectTransform, 0.02f, -0.15f, 0.30f, 1.15f);
             _killsText = HookSkin.Outlined(SurvivalVisuals.Text(kills.transform, "Count", "0", 30, TextAnchor.MiddleCenter, Color.white));
@@ -188,7 +191,7 @@ namespace Survival.Unity
 
             // Leave (back to the village, or a fresh run on its own).
             var leave = HookSkin.Button(_hud, "Leave", HookArtKeys.ButtonRed, new Color(0.65f, 0.18f, 0.15f, 1f));
-            Anchor(leave.GetComponent<RectTransform>(), 0.015f, 0.93f, 0.14f, 0.98f);
+            Anchor(leave.GetComponent<RectTransform>(), TopHudLayout.Leave);
             leave.onClick.AddListener(Leave);
             var leaveText = Fit(HookSkin.Outlined(SurvivalVisuals.Text(leave.transform, "Label", S("runner.leave", "Leave"), 24, TextAnchor.MiddleCenter, Color.white)), 14, 24);
             Pad(leaveText.rectTransform);
@@ -197,8 +200,7 @@ namespace Survival.Unity
             // 10 cap stays; "Squad full!" is a pop-up at the lead now (RunnerPickupPopup), not a banner.
 
             _hint = HookSkin.Outlined(SurvivalVisuals.Text(_hud, "Hint", "⟵  " + S("runner.hint", "Drag or A / D to steer") + "  ⟶", 34, TextAnchor.MiddleCenter, SurvivalVisuals.Cream));
-            // Above the hero panel's corner (a full five-row panel reaches ~0.19 of the height).
-            Anchor(_hint.rectTransform, 0f, 0.215f, 1f, 0.265f);
+            Anchor(_hint.rectTransform, TopHudLayout.Hint);
 
             // Hero HP: a corner panel, not a bar over the hero (Derek 2026-10-28); rows join as heroes join the squad.
             _heroPanel = HeroHpPanel.Build(_hud);
@@ -237,7 +239,7 @@ namespace Survival.Unity
             var chip = HookSkin.Panel(_hud!, name, HookArtKeys.Chip, SurvivalVisuals.PanelSoft, 0.5f);
             // Wide enough for "+100% DMG" on a narrow phone, the text kept inside the badge's rim (Derek 2026-10-27: the
             // badge text ran past its right edge); SetChip shrinks the type if a long label still does not fit.
-            Anchor(chip.rectTransform, x, 0.835f, x + RunnerHudChips.Width, 0.875f);
+            Anchor(chip.rectTransform, x, TopHudLayout.BadgeY0, x + RunnerHudChips.Width, TopHudLayout.BadgeY1);
             var icon = HookSkin.Art(chip.transform, "Icon", iconKey, SurvivalVisuals.Gold);
             Anchor(icon.rectTransform, 0.0f, -0.25f, RunnerHudChips.IconTo, 1.25f);
             var t = HookSkin.Outlined(SurvivalVisuals.Text(chip.transform, "Value", "", RunnerHudChips.MaxFont, TextAnchor.MiddleCenter, Color.white));
@@ -248,6 +250,8 @@ namespace Survival.Unity
             chip.gameObject.SetActive(false);
             return t;
         }
+
+        private static void Anchor(RectTransform rt, TopHudLayout.Box b) => Anchor(rt, b.X0, b.Y0, b.X1, b.Y1);
 
         private static void Anchor(RectTransform rt, float x0, float y0, float x1, float y1)
         {

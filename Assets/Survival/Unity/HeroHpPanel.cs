@@ -61,8 +61,8 @@ namespace Survival.Unity
             var panel = HookSkin.Panel(safe, "HeroHpPanel", HookArtKeys.Panel, SurvivalVisuals.PanelSoft, 0.4f);
             panel.raycastTarget = false;
             var rt = panel.rectTransform;
-            rt.anchorMin = rt.anchorMax = Vector2.zero;
-            rt.pivot = Vector2.zero;
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+            rt.pivot = new Vector2(0f, 1f);
             var hp = new HeroHpPanel(safe, rt);
             hp.FitSafeArea();
             panel.gameObject.SetActive(false);
@@ -102,21 +102,21 @@ namespace Survival.Unity
             }
             else
             {
-                var initial = HookSkin.Outlined(SurvivalVisuals.Text(inner.transform, "Initial", HeroHpPanelLayout.Initial(name), 28, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
+                var initial = HookSkin.Outlined(SurvivalVisuals.Text(inner.transform, "Initial", HeroHpPanelLayout.Initial(name), HeroHpPanelLayout.InitialFont, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
                 initial.fontStyle = FontStyle.Bold;
                 SurvivalVisuals.Stretch(initial.rectTransform);
             }
 
             var left = 6f + portrait + 8f;
-            var title = HookSkin.Outlined(SurvivalVisuals.Text(bg.transform, "Name", name, 20, TextAnchor.LowerLeft, SurvivalVisuals.Cream), 1.5f);
+            var title = HookSkin.Outlined(SurvivalVisuals.Text(bg.transform, "Name", name, HeroHpPanelLayout.NameFont, TextAnchor.LowerLeft, SurvivalVisuals.Cream), 1.5f);
             title.fontStyle = FontStyle.Bold;
             title.horizontalOverflow = HorizontalWrapMode.Overflow;
-            Band(title.rectTransform, left, 70f, 0.50f, 0.96f);
-            var level = HookSkin.Outlined(SurvivalVisuals.Text(bg.transform, "Tag", tag, 17, TextAnchor.LowerRight, SurvivalVisuals.Gold), 1.5f);
-            Band(level.rectTransform, left, 10f, 0.50f, 0.96f);
+            Band(title.rectTransform, left, string.IsNullOrEmpty(tag) ? 8f : 46f, 0.50f, 0.96f);
+            var level = HookSkin.Outlined(SurvivalVisuals.Text(bg.transform, "Tag", tag, HeroHpPanelLayout.TagFont, TextAnchor.LowerRight, SurvivalVisuals.Gold), 1.5f);
+            Band(level.rectTransform, left, 8f, 0.50f, 0.96f);
 
             var bar = HookSkin.Bar(bg.transform, "Hp", out var fill);
-            Band(bar.rectTransform, left, 10f, 0.10f, 0.46f);
+            Band(bar.rectTransform, left, 8f, 0.10f, 0.46f);
             row.Fill = fill;
             row.Trail = SurvivalVisuals.Image(bar.transform, "Trail", TrailColor, fill.sprite);
             row.Trail.transform.SetSiblingIndex(fill.transform.GetSiblingIndex());
@@ -129,7 +129,7 @@ namespace Survival.Unity
             row.Trail.type = fill.type;
             row.Trail.fillMethod = fill.fillMethod;
             row.Trail.fillOrigin = fill.fillOrigin;
-            row.Hp = HookSkin.Outlined(SurvivalVisuals.Text(bar.transform, "Value", "", 15, TextAnchor.MiddleCenter, Color.white), 1.2f);
+            row.Hp = HookSkin.Outlined(SurvivalVisuals.Text(bar.transform, "Value", "", HeroHpPanelLayout.HpFont, TextAnchor.MiddleCenter, Color.white), 1.2f);
             SurvivalVisuals.Stretch(row.Hp.rectTransform);
 
             foreach (var g in bg.GetComponentsInChildren<Graphic>(true))
@@ -229,7 +229,11 @@ namespace Survival.Unity
             _panel.gameObject.SetActive(n > 0);
             var width = HeroHpPanelLayout.Width(_safe.rect.width);
             _panel.sizeDelta = new Vector2(width, HeroHpPanelLayout.Height(n));
-            _panel.anchoredPosition = new Vector2(HeroHpPanelLayout.Margin, HeroHpPanelLayout.Margin);
+            // Under the HUD's top row (TopHudLayout.PanelTop), measured from the safe area's top edge.
+            var canvas = _safe.parent as RectTransform;
+            var canvasHeight = canvas != null ? canvas.rect.height : 1920f;
+            var inset = canvasHeight * (1f - _safe.anchorMax.y);
+            _panel.anchoredPosition = new Vector2(HeroHpPanelLayout.Margin, -HeroHpPanelLayout.TopOffset(canvasHeight, inset));
             for (var i = 0; i < _rows.Count; i++)
             {
                 var rt = _rows[i].Rect;

@@ -20,15 +20,16 @@ public sealed class HeroHpPanelLayoutTests
         Assert.Equal(0f, HeroHpPanelLayout.Height(0));
         Assert.Equal(HeroHpPanelLayout.RowHeight + HeroHpPanelLayout.RowGap, HeroHpPanelLayout.Height(2) - HeroHpPanelLayout.Height(1), 3);
         Assert.Equal(HeroHpPanelLayout.Height(5), HeroHpPanelLayout.Height(8));
-        // A full panel stays under the runner's steer hint (0.215 of the 1920 reference height).
-        Assert.True(HeroHpPanelLayout.ClearAboveShare(1920f) <= 0.215f);
+        // ~80-85% of the first cut (62 px rows), and a full panel ends well above mid-screen.
+        Assert.InRange(HeroHpPanelLayout.RowHeight / 62f, 0.80f, 0.85f);
+        Assert.True(TopHudLayout.PanelTop - (HeroHpPanelLayout.Height(5) / 1920f) > 0.70f);
         Assert.True(HeroHpPanelLayout.RowTop(4) + HeroHpPanelLayout.RowHeight + HeroHpPanelLayout.Padding <= HeroHpPanelLayout.Height(5) + 1e-3f);
     }
 
     [Fact]
     public void Width_is_a_corner_share_of_a_phone_and_capped_on_wide_screens()
     {
-        Assert.InRange(HeroHpPanelLayout.Width(886f), HeroHpPanelLayout.MinWidth, 0.45f * 886f);
+        Assert.InRange(HeroHpPanelLayout.Width(886f), HeroHpPanelLayout.MinWidth, 0.40f * 886f);
         Assert.Equal(HeroHpPanelLayout.MaxWidth, HeroHpPanelLayout.Width(3000f));
     }
 
@@ -51,5 +52,13 @@ public sealed class HeroHpPanelLayoutTests
         Assert.Equal("?", HeroHpPanelLayout.Initial(" "));
         Assert.Equal(1f, HeroHpPanelLayout.Flash(0f));
         Assert.Equal(0f, HeroHpPanelLayout.Flash(1f));
+    }
+
+    [Fact]
+    public void Panel_hangs_under_the_top_row_inside_the_safe_area()
+    {
+        Assert.Equal(HeroHpPanelLayout.Margin, HeroHpPanelLayout.TopOffset(1920f, 500f));
+        Assert.Equal((1f - TopHudLayout.PanelTop) * 1920f, HeroHpPanelLayout.TopOffset(1920f, 0f), 3);
+        Assert.True(TopHudLayout.PanelTop <= TopHudLayout.RowY0);
     }
 }

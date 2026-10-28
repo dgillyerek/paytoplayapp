@@ -6,23 +6,23 @@ namespace Survival.Domain.Theme
     /// <summary>
     /// The hero HP panel (Derek 2026-10-28: "find a better place for hero health bars. maybe a section in one of the
     /// corners"). Heroes no longer carry a world HP bar in the runner or the battle; one compact row per hero sits in the
-    /// bottom-left corner of the safe area instead (the top of both screens holds the title, progress, buff badges, clock
-    /// and Retreat). Each row: framed portrait, name / level, a horizontal HP bar with a damage trail, dimmed once the hero
+    /// top-left corner under the top row instead (Derek 2026-10-28, from the mock: "make them slightly smaller and put
+    /// them in the top left"; rows are ~82% of the first cut). See <see cref="TopHudLayout"/>. Each row: framed portrait, name / level, a horizontal HP bar with a damage trail, dimmed once the hero
     /// is down. Sizes are reference units on the 1080 x 1920 canvas (the HUD scales with height).
     /// </summary>
     public static class HeroHpPanelLayout
     {
         public const int MaxRows = 5;
 
-        public const float Margin = 18f;
-        public const float Padding = 8f;
-        public const float RowHeight = 62f;
-        public const float RowGap = 6f;
+        public const float Margin = 16f;
+        public const float Padding = 7f;
+        public const float RowHeight = 51f;
+        public const float RowGap = 5f;
 
         /// <summary>Panel width as a share of the safe width, never past <see cref="MaxWidth"/> (tablets, landscape).</summary>
-        public const float WidthShare = 0.40f;
-        public const float MaxWidth = 420f;
-        public const float MinWidth = 300f;
+        public const float WidthShare = 0.38f;
+        public const float MaxWidth = 360f;
+        public const float MinWidth = 260f;
 
         /// <summary>The red trail behind the fill holds this long after a hit, then drains at <see cref="TrailDrainPerSecond"/>.</summary>
         public const float TrailHoldSeconds = 0.35f;
@@ -84,11 +84,11 @@ namespace Survival.Domain.Theme
         public static (float R, float G, float B) FillRgb(float fraction) =>
             fraction > 0.5f ? (0.36f, 0.86f, 0.42f) : fraction > 0.25f ? (0.95f, 0.74f, 0.25f) : (0.92f, 0.30f, 0.32f);
 
-        /// <summary>
-        /// The pixels above the panel are free for screen-wide text (the runner's steer hint): bottom of that text as a
-        /// share of the canvas height for a full panel.
-        /// </summary>
-        public static float ClearAboveShare(float canvasHeight) =>
-            (Margin + Height(MaxRows) + Margin) / Math.Max(1f, canvasHeight);
+        /// <summary>Type sizes for a row (name, level tag, HP numbers, initial).</summary>
+        public const int NameFont = 17, TagFont = 14, HpFont = 13, InitialFont = 23;
+
+        /// <summary>Distance from the safe area's top edge to the panel: under the HUD's top row, never closer than the margin.</summary>
+        public static float TopOffset(float canvasHeight, float safeTopInset) =>
+            Math.Max(Margin, ((1f - TopHudLayout.PanelTop) * canvasHeight) - Math.Max(0f, safeTopInset));
     }
 }
