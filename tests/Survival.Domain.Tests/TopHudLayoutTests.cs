@@ -25,7 +25,7 @@ public sealed class TopHudLayoutTests
     [Theory]
     [MemberData(nameof(Screens))]
     public void Battle_top_elements_and_hero_panel_do_not_overlap(float width, int heroes) =>
-        AssertApart(TopHudLayout.Battle().Append(TopHudLayout.Panel(width, 1920f, heroes)).ToArray());
+        AssertApart(TopHudLayout.Battle().Append(TopHudLayout.Panel(width, 1920f, heroes)).Append(TopHudLayout.EnemyPanel(width, 1920f, heroes)).ToArray());
 
     [Fact]
     public void Everything_is_on_screen_and_the_title_shares_its_row_with_the_distance()

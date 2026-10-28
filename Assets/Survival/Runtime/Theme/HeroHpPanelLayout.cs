@@ -19,10 +19,6 @@ namespace Survival.Domain.Theme
         public const float RowHeight = 56f;
         public const float RowGap = 5f;
 
-        /// <summary>Panel width as a share of the safe width, never past <see cref="MaxWidth"/> (tablets, landscape).</summary>
-        public const float WidthShare = 0.28f;
-        public const float MaxWidth = 270f;
-        public const float MinWidth = 230f;
 
         /// <summary>The red trail behind the fill holds this long after a hit, then drains at <see cref="TrailDrainPerSecond"/>.</summary>
         public const float TrailHoldSeconds = 0.35f;
@@ -68,8 +64,74 @@ namespace Survival.Domain.Theme
             return Padding + (n * (RowHeight + RowGap)) + (n > 0 ? DividerHeight : 0f) + (Math.Max(0, index) * (UnitRowHeight + RowGap));
         }
 
-        /// <summary>Panel width on a safe area <paramref name="safeWidth"/> reference units wide.</summary>
-        public static float Width(float safeWidth) => Math.Min(MaxWidth, Math.Max(MinWidth, safeWidth * WidthShare));
+        /// <summary>
+        /// Fixed panel width (Derek 2026-10-28: "make the bars the same size on both the runner and battle"): one number for
+        /// every panel in both scenes (both HUD canvases scale with height from the same 1080 x 1920 reference), so rows and
+        /// bars are pixel-identical. ~0.28 of a 9 : 19.5 phone.
+        /// </summary>
+        public const float PanelWidth = 250f;
+
+        /// <summary>Panel width; the same on every screen and in both scenes (see <see cref="PanelWidth"/>).</summary>
+        public static float Width(float safeWidth) => PanelWidth;
+
+        /// <summary>Row width inside the panel.</summary>
+        public const float RowWidth = PanelWidth - (2f * Padding);
+
+        /// <summary>Row-local geometry (x from the row's left edge, y up from its bottom), shared by every row in both scenes.</summary>
+        public const float PortraitSlot = RowHeight - 10f, Inset = 6f, NameGap = 8f, RightPad = 8f, TagWidth = 40f;
+        public const float BarHeight = 22f, BarBottom = 4f;
+
+        public readonly struct Span
+        {
+            public readonly float X0, Y0, X1, Y1;
+
+            public Span(float x0, float y0, float x1, float y1)
+            {
+                X0 = x0;
+                Y0 = y0;
+                X1 = x1;
+                Y1 = y1;
+            }
+
+            public float Width => X1 - X0;
+
+            public Span Mirror(bool right) => right ? new Span(RowWidth - X1, Y0, RowWidth - X0, Y1) : this;
+
+            public override string ToString() => $"[{X0:0.##},{Y0:0.##} - {X1:0.##},{Y1:0.##}]";
+        }
+
+        public readonly struct RowRects
+        {
+            public readonly Span Portrait, Name, Tag, Bar;
+
+            public RowRects(Span portrait, Span name, Span tag, Span bar)
+            {
+                Portrait = portrait;
+                Name = name;
+                Tag = tag;
+                Bar = bar;
+            }
+        }
+
+        /// <summary>
+        /// Where a row's parts go. The bar has one fixed rect for every row (hero, follower type, enemy; any name; either
+        /// scene); the name is held to its own box and shrinks or clips instead of moving the bar (Derek 2026-10-28: "make
+        /// all the health bars the same size. they are slightly different based on the characters name"). Follower rows
+        /// are shorter, with a smaller portrait centred in the same slot. <paramref name="right"/> mirrors the row for the
+        /// battle's enemy panel (portrait on the outer, right edge).
+        /// </summary>
+        public static RowRects Rects(bool unitRow, bool right)
+        {
+            var h = unitRow ? UnitRowHeight : RowHeight;
+            var size = h - 10f;
+            var px = Inset + ((PortraitSlot - size) * 0.5f);
+            var left = Inset + PortraitSlot + NameGap;
+            var bar = new Span(left, BarBottom, RowWidth - RightPad, BarBottom + BarHeight);
+            var textY0 = bar.Y1 + 1f;
+            var tag = new Span(RowWidth - RightPad - TagWidth, textY0, RowWidth - RightPad, h - 2f);
+            var name = new Span(left, textY0, tag.X0 - 4f, h - 2f);
+            return new RowRects(new Span(px, (h - size) * 0.5f, px + size, ((h - size) * 0.5f) + size).Mirror(right), name.Mirror(right), tag.Mirror(right), bar.Mirror(right));
+        }
 
         /// <summary>Top of row <paramref name="index"/> below the panel's top edge (row 0 at the top).</summary>
         public static float RowTop(int index) => Padding + (Math.Max(0, index) * (RowHeight + RowGap));
@@ -109,7 +171,7 @@ namespace Survival.Domain.Theme
             fraction > 0.5f ? (0.36f, 0.86f, 0.42f) : fraction > 0.25f ? (0.95f, 0.74f, 0.25f) : (0.92f, 0.30f, 0.32f);
 
         /// <summary>Type sizes for a row (name, level tag, HP numbers, initial).</summary>
-        public const int NameFont = 17, TagFont = 14, HpFont = 13, InitialFont = 23;
+        public const int NameFont = 17, MinNameFont = 10, TagFont = 14, HpFont = 13, InitialFont = 23;
 
         /// <summary>Distance from the safe area's top edge to the panel: under the HUD's top row, never closer than the margin.</summary>
         public static float TopOffset(float canvasHeight, float safeTopInset) =>

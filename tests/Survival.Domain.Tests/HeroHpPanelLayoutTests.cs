@@ -31,8 +31,8 @@ public sealed class HeroHpPanelLayoutTests
     [Fact]
     public void Width_is_a_corner_share_of_a_phone_and_capped_on_wide_screens()
     {
-        Assert.InRange(HeroHpPanelLayout.Width(886f), HeroHpPanelLayout.MinWidth, 0.40f * 886f);
-        Assert.Equal(HeroHpPanelLayout.MaxWidth, HeroHpPanelLayout.Width(3000f));
+        Assert.InRange(HeroHpPanelLayout.Width(886f), 0.25f * 886f, 0.30f * 886f);
+        Assert.Equal(HeroHpPanelLayout.Width(886f), HeroHpPanelLayout.Width(3000f));
     }
 
     [Fact]
@@ -62,6 +62,49 @@ public sealed class HeroHpPanelLayoutTests
         Assert.Equal(HeroHpPanelLayout.Margin, HeroHpPanelLayout.TopOffset(1920f, 500f));
         Assert.Equal((1f - TopHudLayout.PanelTop) * 1920f, HeroHpPanelLayout.TopOffset(1920f, 0f), 3);
         Assert.True(TopHudLayout.PanelTop <= TopHudLayout.RowY0);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Every_bar_has_the_same_rect_whatever_the_row_name_or_scene(bool right)
+    {
+        // Rects take no name: a short and a long name ("Li" / "Sir Aldric the Unbroken") get the same bar by construction.
+        var hero = HeroHpPanelLayout.Rects(false, right);
+        var unit = HeroHpPanelLayout.Rects(true, right);
+        Assert.Equal(hero.Bar, unit.Bar);
+        Assert.Equal(HeroHpPanelLayout.BarHeight, hero.Bar.Y1 - hero.Bar.Y0, 3);
+        Assert.True(hero.Name.X1 <= hero.Tag.X0 || hero.Name.X0 >= hero.Tag.X1, "name box clear of the tag");
+        Assert.True(hero.Name.Y0 >= hero.Bar.Y1 && unit.Name.Y0 >= unit.Bar.Y1, "text above the bar");
+        Assert.True(unit.Name.Y1 <= HeroHpPanelLayout.UnitRowHeight && hero.Name.Y1 <= HeroHpPanelLayout.RowHeight);
+        Assert.True(hero.Bar.X0 >= 0f && hero.Bar.X1 <= HeroHpPanelLayout.RowWidth);
+        foreach (var r in new[] { hero, unit })
+        {
+            Assert.True(right ? r.Portrait.X0 >= r.Bar.X1 : r.Portrait.X1 <= r.Bar.X0, "portrait on the outer edge, clear of the bar");
+        }
+    }
+
+    [Fact]
+    public void Enemy_rows_mirror_hero_rows_with_the_same_bar_width()
+    {
+        var l = HeroHpPanelLayout.Rects(false, false);
+        var r = HeroHpPanelLayout.Rects(false, true);
+        Assert.Equal(l.Bar.Width, r.Bar.Width, 3);
+        Assert.Equal(l.Bar.X0, HeroHpPanelLayout.RowWidth - r.Bar.X1, 3);
+        Assert.Equal(l.Portrait.Width, r.Portrait.Width, 3);
+    }
+
+    [Fact]
+    public void Runner_and_battle_panels_are_the_same_size_on_every_screen()
+    {
+        // One width for both scenes and any safe area (both HUD canvases share the 1080 x 1920 height-matched reference).
+        foreach (var safe in new[] { 886f, 1080f, 1440f })
+        {
+            Assert.Equal(HeroHpPanelLayout.PanelWidth, HeroHpPanelLayout.Width(safe));
+        }
+
+        Assert.Equal(TopHudLayout.Panel(886f, 1920f, 3).X1 - TopHudLayout.Panel(886f, 1920f, 3).X0, TopHudLayout.EnemyPanel(886f, 1920f, 3).X1 - TopHudLayout.EnemyPanel(886f, 1920f, 3).X0, 4);
+        Assert.Equal(TopHudLayout.Panel(886f, 1920f, 3).Y0, TopHudLayout.EnemyPanel(886f, 1920f, 3).Y0, 4);
     }
 
     [Fact]

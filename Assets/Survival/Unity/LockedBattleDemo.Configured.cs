@@ -23,12 +23,12 @@ namespace Survival.Unity
         private const float DefeatShrinkSeconds = 0.6f;
         private const float EndBannerSeconds = 2.2f;
 
-        private static readonly Color VillainFill = new Color(0.92f, 0.30f, 0.32f, 1f);
 
         private BattleLineup? _config;
         private BattleCombat? _combat;
         private RectTransform? _hud;
         private HeroHpPanel? _heroPanel;
+        private HeroHpPanel? _enemyPanel;
         private Text? _clock;
         private Text? _score;
         private Text? _banner;
@@ -394,6 +394,10 @@ namespace Survival.Unity
                 {
                     _heroPanel?.Set(f.Unit.Uid, f.Unit.Hp, f.Unit.MaxHp);
                 }
+                else if (f.Unit != null)
+                {
+                    _enemyPanel?.Set(f.Unit.Uid, f.Unit.Hp, f.Unit.MaxHp);
+                }
 
                 if (f.Down)
                 {
@@ -427,6 +431,7 @@ namespace Survival.Unity
             }
 
             _heroPanel?.Tick(Time.unscaledDeltaTime);
+            _enemyPanel?.Tick(Time.unscaledDeltaTime);
             foreach (var pop in _pops)
             {
                 if (cam == null || _hud == null)
@@ -574,7 +579,6 @@ namespace Survival.Unity
             Anchor(_banner.rectTransform, 0f, 0.55f, 1f, 0.68f);
             _banner.gameObject.SetActive(false);
 
-            var villainFrame = Rgb(CampaignArtKeys.VillainFrameRgb, 1f, Color.magenta);
             // Heroes: one row each in the top-left corner panel instead of a bar beside the body (Derek 2026-10-28).
             _heroPanel = HeroHpPanel.Build(canvas);
             foreach (var f in _fighters)
@@ -585,32 +589,14 @@ namespace Survival.Unity
                 }
             }
 
+            // Enemies: the same rows mirrored into the top-right corner instead of world bars (Derek 2026-10-28).
+            _enemyPanel = HeroHpPanel.Build(canvas, right: true);
             foreach (var f in _fighters)
             {
-                if (f.Unit == null || f.Unit.Side == CampaignSide.Hero)
+                if (f.Unit != null && f.Unit.Side != CampaignSide.Hero)
                 {
-                    continue;
+                    _enemyPanel.Add(f.Unit.Uid, f.Data.Name, "Lv " + f.Unit.Fighter.Level, f.Unit.Fighter.PortraitKey);
                 }
-
-                var bar = SurvivalVisuals.Image(canvas, f.Data.FileKey + "Hp", villainFrame).rectTransform;
-                bar.anchorMin = bar.anchorMax = new Vector2(0.5f, 0.5f);
-                bar.pivot = new Vector2(0.5f, 0f);
-                bar.sizeDelta = new Vector2(BattleHpBarLayout.WidthPx, BattleHpBarLayout.MinHeightPx);
-                var back = SurvivalVisuals.Image(bar, "Back", new Color(0.05f, 0.05f, 0.08f, 0.9f));
-                Anchor(back.rectTransform, 0f, 0f, 1f, 1f);
-                back.rectTransform.offsetMin = new Vector2(3f, 3f);
-                back.rectTransform.offsetMax = new Vector2(-3f, -3f);
-                var fill = SurvivalVisuals.Image(back.transform, "Fill", VillainFill);
-                Anchor(fill.rectTransform, 0f, 0f, 1f, 1f);
-                // Level tag on top of the vertical bar (the name would cross the lane).
-                var name = HookSkin.Outlined(SurvivalVisuals.Text(bar, "Name", "Lv " + f.Unit.Fighter.Level, 18, TextAnchor.LowerCenter, SurvivalVisuals.Cream), 1.5f);
-                var nrt = name.rectTransform;
-                nrt.anchorMin = nrt.anchorMax = new Vector2(0.5f, 1f);
-                nrt.pivot = new Vector2(0.5f, 0f);
-                nrt.sizeDelta = new Vector2(90f, 26f);
-                nrt.anchoredPosition = new Vector2(0f, 4f);
-                f.Bar = bar;
-                f.BarFill = fill;
             }
         }
     }

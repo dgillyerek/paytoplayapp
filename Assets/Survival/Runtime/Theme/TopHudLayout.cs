@@ -69,6 +69,13 @@ namespace Survival.Domain.Theme
 
         public static IReadOnlyList<Box> Battle() => new[] { Clock, BattleTitle, Retreat };
 
+        /// <summary>The battle's enemy panel: the hero panel mirrored to the top-right.</summary>
+        public static Box EnemyPanel(float width, float height, int enemies)
+        {
+            var p = Panel(width, height, enemies);
+            return new Box("EnemyPanel", 1f - p.X1, p.Y0, 1f - p.X0, p.Y1);
+        }
+
         /// <summary>The hero panel's box on a canvas <paramref name="width"/> x <paramref name="height"/> reference units.</summary>
         public static Box Panel(float width, float height, int heroes, int unitTypes = 0)
         {

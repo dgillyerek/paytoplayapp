@@ -40,6 +40,7 @@ namespace Survival.Unity
         private readonly RectTransform _safe;
         private readonly RectTransform _panel;
         private Image? _divider;
+        private bool _right;
         private readonly List<Row> _rows = new List<Row>();
         private Rect _lastSafe;
         private Vector2Int _lastScreen;
@@ -53,7 +54,8 @@ namespace Survival.Unity
         public int RowCount => _rows.Count;
 
         /// <summary>Builds the (empty) panel on a HUD canvas.</summary>
-        public static HeroHpPanel Build(RectTransform canvas)
+        /// <param name="right">The battle's enemy panel: top-right, rows mirrored (portrait on the outer edge).</param>
+        public static HeroHpPanel Build(RectTransform canvas, bool right = false)
         {
             var safeGo = new GameObject("HeroHpSafeArea", typeof(RectTransform));
             safeGo.transform.SetParent(canvas, false);
@@ -65,9 +67,9 @@ namespace Survival.Unity
             var panel = HookSkin.Panel(safe, "HeroHpPanel", HookArtKeys.Panel, SurvivalVisuals.PanelSoft, 0.4f);
             panel.raycastTarget = false;
             var rt = panel.rectTransform;
-            rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
-            rt.pivot = new Vector2(0f, 1f);
-            var hp = new HeroHpPanel(safe, rt);
+            rt.anchorMin = rt.anchorMax = new Vector2(right ? 1f : 0f, 1f);
+            rt.pivot = new Vector2(right ? 1f : 0f, 1f);
+            var hp = new HeroHpPanel(safe, rt) { _right = right };
             // Thin gold rule between the hero rows and the runner's follower-type rows.
             hp._divider = SurvivalVisuals.Image(rt, "Divider", new Color(0.83f, 0.69f, 0.32f, 0.7f));
             hp._divider.raycastTarget = false;
@@ -94,11 +96,12 @@ namespace Survival.Unity
             row.Group = bg.gameObject.AddComponent<CanvasGroup>();
             row.Frame = bg;
 
-            var h = unit ? HeroHpPanelLayout.UnitRowHeight : HeroHpPanelLayout.RowHeight;
-            var portrait = h - 10f;
-            var heroFrame = Rgb(CampaignArtKeys.HeroFrameRgb, SurvivalVisuals.Gold);
+            // One shared geometry for every row in both scenes: the bar never depends on the name (Derek 2026-10-28).
+            var geo = HeroHpPanelLayout.Rects(unit, _right);
+            var frameRgb = _right ? CampaignArtKeys.VillainFrameRgb : CampaignArtKeys.HeroFrameRgb;
+            var heroFrame = Rgb(frameRgb, SurvivalVisuals.Gold);
             var ring = SurvivalVisuals.Circle(bg.transform, "Portrait", SurvivalVisuals.Gold);
-            Place(ring.rectTransform, 6f, portrait, portrait);
+            Pixel(ring.rectTransform, geo.Portrait);
             var inner = SurvivalVisuals.Circle(ring.transform, "Back", heroFrame);
             Inset(inner.rectTransform, 3f);
             var sprite = string.IsNullOrEmpty(portraitKey) ? null : SurvivalArt.Get(portraitKey);
@@ -115,18 +118,23 @@ namespace Survival.Unity
                 SurvivalVisuals.Stretch(initial.rectTransform);
             }
 
-            var left = 6f + portrait + 8f;
-            var title = HookSkin.Outlined(SurvivalVisuals.Text(bg.transform, "Name", name, HeroHpPanelLayout.NameFont, TextAnchor.LowerLeft, SurvivalVisuals.Cream), 1.5f);
+            // The name keeps to its own box: long names shrink, then clip; they never push the bar.
+            var title = HookSkin.Outlined(SurvivalVisuals.Text(bg.transform, "Name", name, HeroHpPanelLayout.NameFont, _right ? TextAnchor.LowerRight : TextAnchor.LowerLeft, SurvivalVisuals.Cream), 1.5f);
             title.fontStyle = FontStyle.Bold;
-            title.horizontalOverflow = HorizontalWrapMode.Overflow;
-            Band(title.rectTransform, left, string.IsNullOrEmpty(tag) ? 8f : 46f, 0.52f, 0.96f);
-            var level = HookSkin.Outlined(SurvivalVisuals.Text(bg.transform, "Tag", tag, HeroHpPanelLayout.TagFont, TextAnchor.LowerRight, SurvivalVisuals.Gold), 1.5f);
-            Band(level.rectTransform, left, 8f, 0.52f, 0.96f);
+            title.horizontalOverflow = HorizontalWrapMode.Wrap;
+            title.verticalOverflow = VerticalWrapMode.Truncate;
+            title.resizeTextForBestFit = true;
+            title.resizeTextMinSize = HeroHpPanelLayout.MinNameFont;
+            title.resizeTextMaxSize = HeroHpPanelLayout.NameFont;
+            Pixel(title.rectTransform, geo.Name);
+            var level = HookSkin.Outlined(SurvivalVisuals.Text(bg.transform, "Tag", tag, HeroHpPanelLayout.TagFont, _right ? TextAnchor.LowerLeft : TextAnchor.LowerRight, SurvivalVisuals.Gold), 1.5f);
+            level.horizontalOverflow = HorizontalWrapMode.Overflow;
+            Pixel(level.rectTransform, geo.Tag);
             row.Tag = level;
             row.ShownTag = tag;
 
             var bar = HookSkin.Bar(bg.transform, "Hp", out var fill);
-            Band(bar.rectTransform, left, 8f, 0.08f, 0.48f);
+            Pixel(bar.rectTransform, geo.Bar);
             row.Fill = fill;
             row.Trail = SurvivalVisuals.Image(bar.transform, "Trail", TrailColor, fill.sprite);
             row.Trail.transform.SetSiblingIndex(fill.transform.GetSiblingIndex());
@@ -269,7 +277,7 @@ namespace Survival.Unity
             var canvas = _safe.parent as RectTransform;
             var canvasHeight = canvas != null ? canvas.rect.height : 1920f;
             var inset = canvasHeight * (1f - _safe.anchorMax.y);
-            _panel.anchoredPosition = new Vector2(HeroHpPanelLayout.Margin, -HeroHpPanelLayout.TopOffset(canvasHeight, inset));
+            _panel.anchoredPosition = new Vector2(_right ? -HeroHpPanelLayout.Margin : HeroHpPanelLayout.Margin, -HeroHpPanelLayout.TopOffset(canvasHeight, inset));
             int hi = 0, ui = 0;
             foreach (var row in _rows)
             {
@@ -311,12 +319,13 @@ namespace Survival.Unity
             Relayout();
         }
 
-        private static void Place(RectTransform rt, float left, float width, float height)
+        /// <summary>A rect in row pixels (x from the row's left edge, y up from its bottom).</summary>
+        private static void Pixel(RectTransform rt, HeroHpPanelLayout.Span r)
         {
-            rt.anchorMin = rt.anchorMax = new Vector2(0f, 0.5f);
-            rt.pivot = new Vector2(0f, 0.5f);
-            rt.sizeDelta = new Vector2(width, height);
-            rt.anchoredPosition = new Vector2(left, 0f);
+            rt.anchorMin = rt.anchorMax = Vector2.zero;
+            rt.pivot = Vector2.zero;
+            rt.anchoredPosition = new Vector2(r.X0, r.Y0);
+            rt.sizeDelta = new Vector2(r.X1 - r.X0, r.Y1 - r.Y0);
         }
 
         private static void Inset(RectTransform rt, float px)
@@ -325,14 +334,6 @@ namespace Survival.Unity
             rt.anchorMax = Vector2.one;
             rt.offsetMin = new Vector2(px, px);
             rt.offsetMax = new Vector2(-px, -px);
-        }
-
-        private static void Band(RectTransform rt, float left, float right, float yMin, float yMax)
-        {
-            rt.anchorMin = new Vector2(0f, yMin);
-            rt.anchorMax = new Vector2(1f, yMax);
-            rt.offsetMin = new Vector2(left, 0f);
-            rt.offsetMax = new Vector2(-right, 0f);
         }
 
         private static Color Rgb(float[] rgb, Color fallback) =>
