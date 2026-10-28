@@ -17,11 +17,11 @@ public sealed class RunnerHudChipTests
     }
 
     [Fact]
-    public void The_badges_stand_side_by_side_clear_of_each_other_and_the_kills_panel()
+    public void The_badges_stand_side_by_side_clear_of_each_other_and_on_screen()
     {
         Assert.True(RunnerHudChips.DamageLeft >= 0f);
         Assert.True(RunnerHudChips.DamageLeft + RunnerHudChips.Width < RunnerHudChips.SpeedLeft);
-        Assert.True(RunnerHudChips.SpeedLeft + RunnerHudChips.Width < RunnerHudChips.KillsLeft);
+        Assert.True(RunnerHudChips.SpeedLeft + RunnerHudChips.Width <= 0.99f);
         Assert.True(RunnerHudChips.TextFrom < RunnerHudChips.TextTo && RunnerHudChips.TextTo < 1f);
         Assert.True(RunnerHudChips.MinFont < RunnerHudChips.MaxFont);
     }

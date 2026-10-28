@@ -32,10 +32,13 @@ namespace Survival.Domain.Runner
         /// </summary>
         public const bool SecondaryBars = false;
 
-        /// <summary>Whether a world HP bar is drawn for <paramref name="owner"/> (see <see cref="SecondaryBars"/>).</summary>
+        /// <summary>
+        /// Whether a world HP bar is drawn for <paramref name="owner"/> (see <see cref="SecondaryBars"/>). Heroes have
+        /// none: their HP lives in the corner hero panel (<see cref="Theme.HeroHpPanelLayout"/>, Derek 2026-10-28).
+        /// </summary>
         public static bool Shows(RunnerBarOwner owner, bool secondaryBars = SecondaryBars) => owner switch
         {
-            RunnerBarOwner.LeadHero => true,
+            RunnerBarOwner.LeadHero => false,
             RunnerBarOwner.Boss => true,
             // A box's bar carries its reward tag and how much it still needs; it is a pickup, not a unit.
             RunnerBarOwner.Box => true,
