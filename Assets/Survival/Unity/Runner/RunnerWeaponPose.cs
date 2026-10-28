@@ -128,6 +128,18 @@ namespace Survival.Unity
             var k = _weaponArm.Length / DesignArm;
             var w = _kick.Weight;
 
+            if (_style == RunnerAimStyle.Bow)
+            {
+                // Bonequill's draw: turn the upper body side-on so the chest faces a little right of the aim. Set absolutely
+                // from the measured shoulder line, so the attack clip's own spine yaw never stacks onto it.
+                var line = Vector3.ProjectOnPlane(_offArm.Upper.position - _weaponArm.Upper.position, u);
+                if (line.sqrMagnitude > 1e-6f)
+                {
+                    var twisted = U(RunnerWeaponAim.ShoulderLine(N(r), N(f)));
+                    Set(_chest, Quaternion.FromToRotation(line.normalized, twisted) * _chest.rotation);
+                }
+            }
+
             // The chest gives a little with the shot (pitch back about the aim's right axis).
             var give = Quaternion.AngleAxis(-RunnerWeaponAim.ShoulderGiveDegrees * w, r);
             Set(_chest, give * _chest.rotation);
