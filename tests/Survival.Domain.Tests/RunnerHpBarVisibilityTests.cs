@@ -8,10 +8,11 @@ namespace Survival.Domain.Tests;
 public sealed class RunnerHpBarVisibilityTests
 {
     [Fact]
-    public void Only_the_lead_hero_the_boss_and_boxes_get_a_bar_by_default()
+    public void Only_the_boss_and_boxes_get_a_world_bar_by_default()
     {
         Assert.False(RunnerSideBar.SecondaryBars);
-        Assert.True(RunnerSideBar.Shows(RunnerBarOwner.LeadHero));
+        // Derek 2026-10-28: hero HP moved to the corner hero panel (HeroHpPanelLayout), no bar over the hero.
+        Assert.False(RunnerSideBar.Shows(RunnerBarOwner.LeadHero));
         Assert.True(RunnerSideBar.Shows(RunnerBarOwner.Boss));
         Assert.True(RunnerSideBar.Shows(RunnerBarOwner.Box));
         Assert.False(RunnerSideBar.Shows(RunnerBarOwner.Follower));
@@ -22,7 +23,8 @@ public sealed class RunnerHpBarVisibilityTests
     [Fact]
     public void The_flag_brings_the_secondary_bars_back()
     {
-        foreach (var owner in new[] { RunnerBarOwner.LeadHero, RunnerBarOwner.Follower, RunnerBarOwner.Foe, RunnerBarOwner.Boss, RunnerBarOwner.Box, RunnerBarOwner.Barrier })
+        Assert.False(RunnerSideBar.Shows(RunnerBarOwner.LeadHero, secondaryBars: true));
+        foreach (var owner in new[] { RunnerBarOwner.Follower, RunnerBarOwner.Foe, RunnerBarOwner.Boss, RunnerBarOwner.Box, RunnerBarOwner.Barrier })
         {
             Assert.True(RunnerSideBar.Shows(owner, secondaryBars: true));
         }

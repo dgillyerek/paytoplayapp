@@ -121,6 +121,8 @@ namespace Survival.Unity
                 }
             }
 
+            SeparateBodies();
+
             // Configured battle (Play → Battle Setup → Fight): HP, defeats, retargeting, the end (no-op standalone).
             TickConfigured(dt);
         }
@@ -181,11 +183,11 @@ namespace Survival.Unity
             }
             else if (distance > 1e-4f)
             {
-                var step = LockedBattleRoster.ApproachStep(distance, f.Data.AttackRangeMetres, LockedBattleRoster.BattleWalkSpeedOf(f.Data), dt);
+                var step = LockedBattleRoster.ApproachStep(distance, StopDistance(f, target), LockedBattleRoster.BattleWalkSpeedOf(f.Data), dt);
                 f.Slot.position += (to / distance) * step;
             }
 
-            if (distance <= f.Data.AttackRangeMetres)
+            if (distance <= StopDistance(f, target))
             {
                 BeginAttack(f);
             }
@@ -234,6 +236,41 @@ namespace Survival.Unity
         /// Host offset for the attack playing now: the reach slide toward the defender, and for a
         /// leap (in place) the stride bone's own forward carry held back on the spot.
         /// </summary>
+        /// <summary>
+        /// Where this fighter stops walking at <paramref name="target"/>: its attack range, or further when the two
+        /// bodies are deeper than that (<see cref="BattleSpacing"/>), so melee fighters face off at striking distance.
+        /// </summary>
+        private static float StopDistance(Fighter f, Fighter target) =>
+            BattleSpacing.StopDistance(f.Data.AttackRangeMetres, f.HalfDepth, target.HalfDepth);
+
+        /// <summary>
+        /// Last guard after every fighter moved: two opposing bodies closer than their depths plus the contact gap are
+        /// pushed apart, half each (a fighter already down, or a leap in place, is not pushed).
+        /// </summary>
+        private void SeparateBodies()
+        {
+            foreach (var a in _fighters)
+            {
+                var b = a.Target;
+                if (!a.Built || a.Down || b == null || !b.Built || b.Down)
+                {
+                    continue;
+                }
+
+                var d = VisualPosition(b) - VisualPosition(a);
+                d.y = 0f;
+                var overlap = BattleSpacing.Overlap(d.magnitude, a.HalfDepth, b.HalfDepth);
+                if (overlap <= 1e-4f)
+                {
+                    continue;
+                }
+
+                var dir = d.sqrMagnitude > 1e-8f ? d.normalized : Flat(a.Slot.forward);
+                a.Slot.position -= dir * (overlap * 0.5f);
+                b.Slot.position += dir * (overlap * 0.5f);
+            }
+        }
+
         private static void UpdateAttackOffset(Fighter f, bool inClip, float secondsIntoAttack)
         {
             var attack = LockedBattleRotation.AttackAt(f.Data, f.AttackIndex);
@@ -250,6 +287,16 @@ namespace Survival.Unity
                 var carried = RawStride(f) - f.AttackRootStart;
                 offset.x -= carried.x;
                 offset.z -= carried.z;
+            }
+
+            // The reach slide stops at the defender's body (only the room the defender's own slide left).
+            var target = f.Target;
+            if (target != null && target.Built && offset.z > 0f)
+            {
+                var gap = target.Slot.position - f.Slot.position;
+                gap.y = 0f;
+                var otherSlide = target.Target == f ? Mathf.Max(0f, WalkOffset(target)) : 0f;
+                offset.z = BattleSpacing.ClampReach(offset.z, gap.magnitude, otherSlide, f.HalfDepth, target.HalfDepth);
             }
 
             f.AttackOffset = offset;
@@ -963,6 +1010,7 @@ namespace Survival.Unity
             // Battle-only size (2x for the two dragons): placement and scale, never the clips.
             f.BattleScale = LockedBattleRoster.BattleScaleOf(data);
             f.Scale *= f.BattleScale;
+            f.HalfDepth = BattleSpacing.HalfDepthOf(data.Name, data.DesignHeightMetres, f.BattleScale);
             host.transform.localScale = new Vector3(f.Scale, f.Scale, f.Scale);
             f.BaseLocal = new Vector3(0f, -bounds.min.y * f.Scale, 0f);
             host.transform.localPosition = f.BaseLocal;
@@ -1412,6 +1460,9 @@ namespace Survival.Unity
 
             /// <summary>Battle-only size on top of the design-height fit (<see cref="LockedBattleRoster.BattleScaleOf"/>).</summary>
             public float BattleScale { get; set; } = 1f;
+
+            /// <summary>Front-to-back half-depth of the body (metres, battle scale); see <see cref="BattleSpacing"/>.</summary>
+            public float HalfDepth { get; set; } = 0.36f;
             public Vector3 StartPosition { get; set; }
             public Quaternion StartRotation { get; set; }
             public Transform? StrideBone { get; set; }
