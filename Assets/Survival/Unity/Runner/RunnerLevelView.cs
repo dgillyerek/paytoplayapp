@@ -677,8 +677,11 @@ namespace Survival.Unity
                         rig.Slot.rotation = Quaternion.identity;
                         rig.Walk();
                         _members[m.Id] = rig;
-                        // The lead and every follower: a sliver always shown while alive, so the followers' HP reads.
-                        AddSideBar(m.Id, true, rig, false);
+                        // The lead's sliver, always shown while alive; followers only with RunnerSideBar.SecondaryBars.
+                        if (RunnerSideBar.Shows(RunnerSideBar.SquadOwner(m.IsHero)))
+                        {
+                            AddSideBar(m.Id, true, rig, false);
+                        }
                     }
                 }
             }
@@ -708,7 +711,11 @@ namespace Survival.Unity
                         }
 
                         _foes[f.Id] = rig;
-                        AddSideBar(f.Id, false, rig, f.Boss, f.Unit.Scale);
+                        // The boss's bar; regular foes only with RunnerSideBar.SecondaryBars.
+                        if (RunnerSideBar.Shows(RunnerSideBar.FoeOwner(f.Boss)))
+                        {
+                            AddSideBar(f.Id, false, rig, f.Boss, f.Unit.Scale);
+                        }
                     }
                 }
             }

@@ -4,6 +4,17 @@ using Survival.Domain.Campaign;
 
 namespace Survival.Domain.Runner
 {
+    /// <summary>Who a runner world HP bar belongs to.</summary>
+    public enum RunnerBarOwner
+    {
+        LeadHero,
+        Follower,
+        Foe,
+        Boss,
+        Box,
+        Barrier
+    }
+
     /// <summary>
     /// Where a runner fighter's HP bar sits and how it looks. The layout is the configured battle's shared
     /// <see cref="BattleHpBarLayout"/> (a vertical bar beside the body on its own outer side, heroes their left, foes
@@ -14,6 +25,29 @@ namespace Survival.Domain.Runner
     /// </summary>
     public static class RunnerSideBar
     {
+        /// <summary>
+        /// Whether the runner draws a world HP bar over secondary units: followers, regular (non-boss) enemies and the
+        /// breakable barriers. Off (Derek 2026-10-27: "I don't need health bars on the secondary units in the runner");
+        /// the lead hero's and the boss's bars stay. Flip to true to bring the secondary bars back.
+        /// </summary>
+        public const bool SecondaryBars = false;
+
+        /// <summary>Whether a world HP bar is drawn for <paramref name="owner"/> (see <see cref="SecondaryBars"/>).</summary>
+        public static bool Shows(RunnerBarOwner owner, bool secondaryBars = SecondaryBars) => owner switch
+        {
+            RunnerBarOwner.LeadHero => true,
+            RunnerBarOwner.Boss => true,
+            // A box's bar carries its reward tag and how much it still needs; it is a pickup, not a unit.
+            RunnerBarOwner.Box => true,
+            _ => secondaryBars
+        };
+
+        /// <summary>The owner kind of a squad member's bar.</summary>
+        public static RunnerBarOwner SquadOwner(bool isHero) => isHero ? RunnerBarOwner.LeadHero : RunnerBarOwner.Follower;
+
+        /// <summary>The owner kind of a foe's bar.</summary>
+        public static RunnerBarOwner FoeOwner(bool boss) => boss ? RunnerBarOwner.Boss : RunnerBarOwner.Foe;
+
         public const float GapMetres = BattleHpBarLayout.GapMetres;
         public const float BackMetres = BattleHpBarLayout.BackMetres;
         public const float BottomShare = BattleHpBarLayout.BottomShare;
