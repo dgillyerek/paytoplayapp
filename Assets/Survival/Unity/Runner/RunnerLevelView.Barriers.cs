@@ -70,7 +70,12 @@ namespace Survival.Unity
                     var v = BuildBarrier(b.Def, _actors);
                     v.Root.localPosition = new Vector3(b.X, 0f, b.Z);
                     _barrierViews[b.Id] = v;
-                    AddBar(b.Id, false, v.Height, false);
+                    // A barrier is a secondary obstacle: no HP bar unless RunnerSideBar.SecondaryBars is on.
+                    if (RunnerSideBar.Shows(RunnerBarOwner.Barrier))
+                    {
+                        AddBar(b.Id, false, v.Height, false);
+                    }
+
                     if (_bars.TryGetValue(b.Id, out var bar))
                     {
                         bar.Barrier = true;
