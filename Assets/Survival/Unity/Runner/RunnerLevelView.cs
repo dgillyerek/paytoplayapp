@@ -785,6 +785,12 @@ namespace Survival.Unity
                 {
                     view.Root.rotation = Quaternion.LookRotation(dir.normalized, Vector3.up);
                 }
+
+                if (view.Kind == ShotKind.Bolt && view.Halo != null && _cam != null)
+                {
+                    // The halo is a camera-facing card.
+                    view.Halo.transform.rotation = _cam.transform.rotation;
+                }
             }
 
             if (_shots.Count != _liveIds.Count)
@@ -1466,6 +1472,13 @@ namespace Survival.Unity
             return view;
         }
 
+        private enum ShotKind
+        {
+            Bolt,
+            Arrow,
+            Thorn,
+        }
+
         /// <summary>A pooled shot (<see cref="TakeShot"/>): an arrow head and an orb head, one shown per look, and its trail.</summary>
         private sealed class ShotView
         {
@@ -1473,6 +1486,10 @@ namespace Survival.Unity
             public Renderer? Head;
             public Renderer? Arrow;
             public Renderer? Orb;
+            public Renderer? Thorn;
+            public Renderer? Halo;
+            public ShotKind Kind;
+            public bool Foe;
             public TrailRenderer? Trail;
             public string? Look;
             public float Fade;
@@ -1506,8 +1523,13 @@ namespace Survival.Unity
                     core = new Color(0.85f, 0.75f, 1f, 1f);
                     glow = new Color(0.55f, 0.4f, 1f, 0.9f);
                     return;
+                case "Vespera":
+                    core = new Color(1f, 0.6f, 0.9f, 1f);
+                    glow = new Color(0.85f, 0.2f, 0.65f, 0.9f);
+                    return;
                 case "Rowan":
-                    core = new Color(0.95f, 0.88f, 0.6f, 1f);
+                    // Rowan's fletching: green goose feathers.
+                    core = new Color(0.3f, 0.5f, 0.28f, 1f);
                     glow = new Color(1f, 0.85f, 0.4f, 0.7f);
                     return;
                 case "Oakenshield":
@@ -1515,6 +1537,7 @@ namespace Survival.Unity
                     glow = new Color(0.4f, 0.9f, 0.3f, 0.7f);
                     return;
                 case "Bonequill":
+                    // Bonequill's fletching: bone-white.
                     core = new Color(0.92f, 0.9f, 0.82f, 1f);
                     glow = new Color(0.6f, 0.95f, 0.7f, 0.7f);
                     return;
