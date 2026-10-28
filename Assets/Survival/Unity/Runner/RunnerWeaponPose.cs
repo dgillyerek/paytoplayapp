@@ -100,9 +100,9 @@ namespace Survival.Unity
         /// <summary>After the clips posed the bones (and the host was placed): aims the weapon down <paramref name="aim"/>.</summary>
         public void Tick(float dt, Vector3 aim, bool dead)
         {
-            foreach (var k in _kept)
+            foreach (var saved in _kept)
             {
-                k.Restore();
+                saved.Restore();
             }
 
             _kick.Advance(dt);
