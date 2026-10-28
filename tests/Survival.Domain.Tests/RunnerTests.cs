@@ -781,7 +781,7 @@ public sealed class RunnerTests
         Assert.Equal(OakenshieldAttack.ReleaseFrame / 30f, oak.ReleaseSeconds, 4);
         Assert.Equal(SirAldricBattlePoses.AttackSeconds, aldric.ClipSeconds, 4);
         Assert.Equal(LockedBattleHits.SirAldricContactFrame / 30f, aldric.ReleaseSeconds, 4);
-        Assert.Null(RunnerAttackTiming.ClipFor("Nightfang"));
+        Assert.Null(RunnerAttackTiming.ClipFor("Ironhowl"));
 
         // Speeding the take up keeps the release at the same point of it.
         var plan = RunnerAttackTiming.Plan(lyra, 0.31f);
@@ -851,7 +851,7 @@ public sealed class RunnerTests
             run.SteerTo(RunnerBossQuakeTests.DodgingPlayer(run));
             foreach (var e in run.Step(1f / 30f))
             {
-                if (e.Kind == RunnerEventKind.AttackStarted)
+                if (e.Kind == RunnerEventKind.AttackStarted && run.Squad.Any(m => m.Id == e.Id))
                 {
                     starts[e.Id] = starts.GetValueOrDefault(e.Id) + 1;
                 }
@@ -945,12 +945,39 @@ public sealed class RunnerTests
         Assert.Equal(100 + 20 + 20, win.Resources[SurvIds.ResSoft]);
         Assert.Equal(3, win.Shards);
         Assert.Equal("hero.lyra", win.ShardHero);
+        // Derek 2026-10-27: "i shouldn't get runner rewards when I die": a loss pays nothing, kills and boxes included.
         var loss = RunnerRewards.For(level, new RunnerResult("t", false, 4, 2, 0, 3, 0, 20, 20));
-        Assert.Equal(40, loss.Resources[SurvIds.ResSoft]);
+        Assert.Empty(loss.Resources);
         Assert.Equal(0, loss.Shards);
+        Assert.Empty(loss.AsRows());
         var rows = RunnerRewards.Rows(new[] { win, loss });
-        Assert.Equal(180, rows[SurvIds.ResSoft]);
+        Assert.Equal(140, rows[SurvIds.ResSoft]);
         Assert.Equal(3, rows[RewardBundle.ShardKey("hero.lyra")]);
+    }
+
+    [Fact]
+    public void A_lost_run_grants_nothing_and_leaves_the_wallet_roster_and_progress_as_they_were()
+    {
+        var catalog = CampaignCatalog.Parse(File.ReadAllText(Path.Combine(TestPaths.CatalogDir, CampaignCatalog.FileName)));
+        var campaign = new CampaignSession(catalog, new Wallet(), new ManualClock(1000));
+        var c = Runner.Catalog();
+        var before = campaign.Save();
+        foreach (var n in new[] { 1, 2, 10, c.Levels.Count })
+        {
+            var l = c.ByNumber(n);
+            // A wipe deep into the level: plenty of kills and boxes, so a payout would show.
+            var bundle = RunnerRewards.For(l, new RunnerResult(l.Id, false, l.EnemyCount, l.BoxCount, 0, 9, 0, l.Length * 0.9f, 120, n));
+            Assert.False(bundle.Won);
+            Assert.Empty(bundle.AsRows());
+            RunnerRewards.Grant(bundle, campaign);
+            RunnerHandoff.Begin(l.Id, 1);
+            RunnerHandoff.Bank(new RunnerResult(l.Id, false, l.EnemyCount, l.BoxCount, 0, 9, 0, l.Length * 0.9f, 120, n), bundle);
+            Assert.Empty(RunnerRewards.Rows(RunnerHandoff.Take().Select(r => r.Bundle)));
+            RunnerHandoff.Reset();
+        }
+
+        Assert.Equal(before, campaign.Save());
+        Assert.Equal(1, campaign.RunnerUnlocked);
     }
 
     [Fact]
@@ -1009,16 +1036,29 @@ public sealed class RunnerTests
             // A level tweaked to fewer or weaker enemies (progression "level_tweaks" wave / foe_hp) is smaller on purpose: skip it
             // here and compare the next level with the last untrimmed one. A layout re-roll keeps the same enemies, so it counts.
             var tweaks = c.Progression!.Tweaks;
+            // Wave trims change the enemy count; foe_hp trims (the free-pace tune) only change HP, so each check skips its own kind.
+            bool WaveTrimmed(int n) => tweaks.TryGetValue(n, out var t) && t.Wave != 1f;
             bool Trimmed(int n) => tweaks.TryGetValue(n, out var t) && (t.Wave != 1f || t.FoeHp != 1f);
-            var q = p;
-            for (var j = i - 1; j > 0 && Trimmed(q.Number); j--)
+            RunnerLevelDef Last(Func<int, bool> skip)
             {
-                q = c.Levels[j - 1];
+                var x = p;
+                for (var j = i - 1; j > 0 && skip(x.Number); j--)
+                {
+                    x = c.Levels[j - 1];
+                }
+
+                return x;
             }
 
+            var w = Last(WaveTrimmed);
+            if (!WaveTrimmed(l.Number))
+            {
+                Assert.True(l.Number > cap.CountCap ? Waves(l) >= Waves(w) : Waves(l) > Waves(w), $"L{l.Number} enemies {Waves(w)} -> {Waves(l)}");
+            }
+
+            var q = Last(Trimmed);
             if (!Trimmed(l.Number))
             {
-                Assert.True(l.Number > cap.CountCap ? Waves(l) >= Waves(q) : Waves(l) > Waves(q), $"L{l.Number} enemies {Waves(q)} -> {Waves(l)}");
                 Assert.True(l.FoeHpTotal(c) > q.FoeHpTotal(c), $"L{l.Number} enemy hp");
                 Assert.True(l.FoeHpMul >= q.FoeHpMul);
             }

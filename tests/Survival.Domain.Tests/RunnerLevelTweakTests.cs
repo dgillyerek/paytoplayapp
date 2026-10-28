@@ -10,20 +10,21 @@ namespace Survival.Domain.Tests;
 /// </summary>
 public sealed class RunnerLevelTweakTests
 {
-    private static readonly int[] Rerolled = { 2, 3, 4, 5, 6, 10, 11, 12, 14, 15, 16, 18, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 37, 38, 41, 42, 43, 44, 45, 46, 47, 48, 50 };
+    private static readonly int[] Rerolled = { 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 37, 39, 41, 42, 43, 44, 45, 46, 48, 49, 50 };
 
     [Fact]
     public void The_rerolled_levels_keep_their_boxes_enemies_traps_and_hp_and_only_move_them()
     {
         var c = Runner.Catalog();
         var p = c.Progression!;
-        Assert.Equal(Rerolled, p.Tweaks.Keys.OrderBy(k => k).ToArray());
+        Assert.Equal(Rerolled, p.Tweaks.Where(kv => kv.Value.Layout != 0).Select(kv => kv.Key).OrderBy(k => k).ToArray());
         Assert.Equal(RunnerLevelTweak.None, p.Tweak(7));
-        var plain = p with { Tweaks = new Dictionary<int, RunnerLevelTweak>() };
+        // The free-pace foe_hp tune (Derek 2026-10-27) stays on; only the layout re-roll is taken off for the seed.
+        var plain = p with { Tweaks = p.Tweaks.ToDictionary(kv => kv.Key, kv => kv.Value with { Layout = 0 }) };
         foreach (var n in Rerolled)
         {
             var tw = p.Tweak(n);
-            Assert.Equal(RunnerLevelTweak.None with { Layout = tw.Layout }, tw);
+            Assert.Equal(RunnerLevelTweak.None with { Layout = tw.Layout, FoeHp = tw.FoeHp }, tw);
             Assert.NotEqual(0, tw.Layout);
             var tweaked = c.ByNumber(n);
             var seed = RunnerProgression.Generate(c.Levels[0], plain, n, c.Units.ContainsKey);
