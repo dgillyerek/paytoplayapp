@@ -17,6 +17,10 @@ namespace Survival.Unity
         /// <summary>The arm length (shoulder to wrist) the domain's metres are written for.</summary>
         private const float DesignArm = 0.55f;
 
+        private static System.Numerics.Vector3 N(Vector3 v) => new System.Numerics.Vector3(v.x, v.y, v.z);
+
+        private static Vector3 U(System.Numerics.Vector3 v) => new Vector3(v.X, v.Y, v.Z);
+
         private readonly RunnerAimStyle _style;
         private readonly Transform _host;
         private readonly Transform _chest;
@@ -147,6 +151,12 @@ namespace Survival.Unity
                 var fwd = Quaternion.AngleAxis(-RunnerWeaponAim.BowTipUpDegrees * w, r) * f;
                 var nowLong = hand.TransformDirection(_longLocal);
                 var nowDepth = Vector3.ProjectOnPlane(hand.TransformDirection(_depthLocal), nowLong);
+                if (RunnerWeaponAim.FlipBowDepth(N(nowDepth), N(nowLong), N(fwd), N(up)))
+                {
+                    // Turn the bow the short way round rather than spin the hand in the wrist.
+                    nowDepth = -nowDepth;
+                }
+
                 var from = Quaternion.LookRotation(nowDepth.normalized, nowLong.normalized);
                 var to = Quaternion.LookRotation(fwd, up);
                 want = to * Quaternion.Inverse(from) * hand.rotation;
@@ -156,8 +166,10 @@ namespace Survival.Unity
 
             // Put the weapon's grip (not the wrist) at the hold point.
             var gripOffset = want * Quaternion.Inverse(hand.rotation) * (hand.TransformPoint(_gripLocal) - hand.position);
-            var side = _style == RunnerAimStyle.Staff ? r : -r;
-            _weaponArm.Reach(hold - gripOffset, _weaponArm.Upper.position + (k * ((side * 0.30f) - (u * 0.40f) - (f * 0.10f))), Set);
+            var pole = _style == RunnerAimStyle.Staff
+                ? (r * 0.30f) - (u * 0.40f) - (f * 0.10f)
+                : U(RunnerWeaponAim.BowElbowPole(N(r), N(u), N(f)));
+            _weaponArm.Reach(hold - gripOffset, _weaponArm.Upper.position + (k * pole), Set);
             Set(hand, want);
 
             var grip = hand.TransformPoint(_gripLocal);
@@ -178,7 +190,7 @@ namespace Survival.Unity
                 var nock = grip - (f * (RunnerWeaponAim.NockBehind * k));
                 var full = grip - (f * (RunnerWeaponAim.FullDrawBehind * k)) + (u * (RunnerWeaponAim.FullDrawUp * k));
                 var flick = ((-f * 0.6f) + (r * 0.8f)).normalized * (RunnerWeaponAim.ReleaseFollowThrough * k * w);
-                off.Reach(Vector3.Lerp(nock, full, draw) + flick, off.Upper.position + (k * ((-f * 0.45f) + (r * 0.25f))), Set);
+                off.Reach(Vector3.Lerp(nock, full, draw) + flick, off.Upper.position + (k * U(RunnerWeaponAim.DrawElbowPole(N(r), N(u), N(f)))), Set);
                 Muzzle = grip + (u * (0.03f * k));
             }
         }
@@ -348,7 +360,6 @@ namespace Survival.Unity
                 set(Lower, Quaternion.FromToRotation(Hand.position - Lower.position, wrist - Lower.position) * Lower.rotation);
             }
 
-            private static System.Numerics.Vector3 N(Vector3 v) => new System.Numerics.Vector3(v.x, v.y, v.z);
         }
 
         /// <summary>A bone this pose turns: its clip rotation is put back before each solve (unless the clip re-posed it).</summary>
