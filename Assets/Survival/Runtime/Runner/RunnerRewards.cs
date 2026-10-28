@@ -6,20 +6,28 @@ using Survival.Domain.Ids;
 
 namespace Survival.Domain.Runner
 {
-    /// <summary>Gold per kill and per box broken either way; the win gold and the hero shards only for a win.</summary>
+    /// <summary>
+    /// A won run pays gold per kill and per box broken, the win gold and the hero shards. A lost run pays nothing at all
+    /// (Derek 2026-10-27: "i shouldn't get runner rewards when I die"): an empty bundle, no level opened, no banner spent.
+    /// </summary>
     public static class RunnerRewards
     {
         public static RewardBundle For(RunnerLevelDef level, RunnerResult result)
         {
-            var r = level.Rewards;
-            var gold = (result.Kills * r.GoldPerKill) + (result.BoxesBroken * r.GoldPerBox) + (result.Won ? r.WinGold : 0);
             var bundle = new RewardBundle { Won = result.Won, RunnerNumber = Math.Max(1, result.Number) };
+            if (!result.Won)
+            {
+                return bundle;
+            }
+
+            var r = level.Rewards;
+            var gold = (result.Kills * r.GoldPerKill) + (result.BoxesBroken * r.GoldPerBox) + r.WinGold;
             if (gold > 0)
             {
                 bundle.Resources[SurvIds.ResSoft] = gold;
             }
 
-            if (result.Won && r.Shards > 0 && r.ShardHero.Length > 0)
+            if (r.Shards > 0 && r.ShardHero.Length > 0)
             {
                 bundle.ShardHero = r.ShardHero;
                 bundle.Shards = r.Shards;
@@ -31,6 +39,12 @@ namespace Survival.Domain.Runner
         /// <summary>Pay a bundle into the wallet and the hero roster (the same path a Battle Setup fight pays through).</summary>
         public static void Grant(RewardBundle bundle, CampaignSession campaign)
         {
+            if (!bundle.Won)
+            {
+                // A lost run: nothing to pay, nothing saved.
+                return;
+            }
+
             campaign.Wallet.Grant(bundle.Resources);
             if (bundle.Won && bundle.RunnerNumber > 0)
             {

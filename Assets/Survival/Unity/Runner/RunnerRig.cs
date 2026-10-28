@@ -41,11 +41,17 @@ namespace Survival.Unity
         /// </summary>
         private bool _aimHeld;
 
+        /// <summary>A squad shooter (<see cref="RunnerAimHold.Applies"/>): plays its take per shot, but its body takes no hit step or lean.</summary>
+        private bool _steady;
+
         /// <summary>
         /// A held shooter's per-shot kick (<see cref="RunnerShotFlick"/>): a readable recoil on its arm / hand / shoulder / upper-spine
         /// bones, rotation only, eased back to the hold. Null for every other rig (and never in the battle).
         /// </summary>
         private RunnerShotFlickState? _flick;
+
+        /// <summary>Lyra's levelled staff and Rowan's drawn bow (<see cref="RunnerWeaponAim"/>); null for every other rig.</summary>
+        private RunnerWeaponPose? _weapon;
         private readonly List<FlickBone> _flickBones = new List<FlickBone>();
 
         /// <summary>Degrees of lean per m/s of sideways speed, and the most it ever leans.</summary>
@@ -167,7 +173,7 @@ namespace Survival.Unity
                     {
                         var a = host.AddComponent<NightfangActor>();
                         a.Build();
-                        rig.Bind(a.PlayPose, () => a.Pose);
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
@@ -181,6 +187,7 @@ namespace Survival.Unity
                         a.UpperBodyAttack = RunnerUpperBodyAttack.Applies(data.Name);
                         a.AimHoldFrame = a.UpperBodyAttack ? RunnerAimHold.HoldFrameFor(data.Name) : null;
                         rig._aimHeld = a.AimHoldFrame != null;
+                        rig._steady = RunnerAimHold.Applies(data.Name);
                         rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
@@ -195,6 +202,7 @@ namespace Survival.Unity
                         a.UpperBodyAttack = RunnerUpperBodyAttack.Applies(data.Name);
                         a.AimHoldFrame = a.UpperBodyAttack ? RunnerAimHold.HoldFrameFor(data.Name) : null;
                         rig._aimHeld = a.AimHoldFrame != null;
+                        rig._steady = RunnerAimHold.Applies(data.Name);
                         rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
@@ -206,7 +214,7 @@ namespace Survival.Unity
                     {
                         var a = host.AddComponent<VesperaActor>();
                         a.Build();
-                        rig.Bind(a.PlayPose, () => a.Pose);
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
@@ -217,7 +225,7 @@ namespace Survival.Unity
                     {
                         var a = host.AddComponent<AshwyrmActor>();
                         a.Build();
-                        rig.Bind(a.PlayPose, () => a.Pose);
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
@@ -231,6 +239,7 @@ namespace Survival.Unity
                         a.UpperBodyAttack = RunnerUpperBodyAttack.Applies(data.Name);
                         a.AimHoldFrame = a.UpperBodyAttack ? RunnerAimHold.HoldFrameFor(data.Name) : null;
                         rig._aimHeld = a.AimHoldFrame != null;
+                        rig._steady = RunnerAimHold.Applies(data.Name);
                         rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
@@ -242,7 +251,7 @@ namespace Survival.Unity
                     {
                         var a = host.AddComponent<BonequillActor>();
                         a.Build();
-                        rig.Bind(a.PlayPose, () => a.Pose);
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
@@ -374,6 +383,7 @@ namespace Survival.Unity
         /// <summary>Finds the kicked bones of a held shooter (parent before child); no-op for every other rig.</summary>
         private void BuildFlick(Transform host)
         {
+            _weapon = RunnerWeaponPose.Build(host, Data.Name);
             var bones = RunnerShotFlick.BonesFor(Data.Name);
             if (!_aimHeld || bones.Length == 0)
             {
@@ -402,6 +412,7 @@ namespace Survival.Unity
             if (!Dead)
             {
                 _flick?.Fire();
+                _weapon?.Fire();
             }
         }
 
@@ -507,10 +518,27 @@ namespace Survival.Unity
         /// </summary>
         public void WalkUnderAttack(bool walking)
         {
-            if (!Dead)
+            if (Dead)
             {
-                _walkUnderAttack?.Invoke(walking);
+                return;
             }
+
+            if (_weapon != null)
+            {
+                // No take plays under the weapon pose: the legs walk the walk clip, or stand at the boss's line.
+                if (walking)
+                {
+                    Walk();
+                }
+                else
+                {
+                    Rest();
+                }
+
+                return;
+            }
+
+            _walkUnderAttack?.Invoke(walking);
         }
 
         /// <summary>True when the actor can play its attack take faster (the squad shooters and Sir Aldric).</summary>
@@ -525,6 +553,13 @@ namespace Survival.Unity
         {
             if (Dead)
             {
+                return;
+            }
+
+            if (_weapon != null)
+            {
+                // The weapon pose fires on the shot itself (ShotFlick); the take would turn the body side-on.
+                _attackStarted = Time.time;
                 return;
             }
 
@@ -637,6 +672,12 @@ namespace Survival.Unity
                 return;
             }
 
+            if (_weapon != null)
+            {
+                // The weapon pose aims the weapon itself; the clip's side-on aim offset no longer applies.
+                aimYaw = 0f;
+            }
+
             var target = Quaternion.LookRotation(direction.normalized, Vector3.up) * Quaternion.Euler(0f, aimYaw, 0f);
             Slot.rotation = Quaternion.Slerp(Slot.rotation, target, 1f - Mathf.Exp(-Time.deltaTime * 12f));
         }
@@ -687,6 +728,48 @@ namespace Survival.Unity
 
         private static System.Numerics.Quaternion NQ(Quaternion q) => new System.Numerics.Quaternion(q.x, q.y, q.z, q.w);
 
+        private Transform[]? _hands;
+
+        /// <summary>
+        /// Between its hands, world space (the Mixamo-named hand bones, mixamorig:LeftHand / RightHand): where an enemy's
+        /// bolt or arrow is drawn leaving from. Null when the rig has no hand bones (the shot then starts at its sim point).
+        /// </summary>
+        public Vector3? HandPoint()
+        {
+            if (_weapon?.Muzzle is { } muzzle && !Dead)
+            {
+                // A held weapon fires from its tip (the staff head, the arrow on the bow).
+                return muzzle;
+            }
+
+            if (_hands == null)
+            {
+                var found = new List<Transform>();
+                foreach (var t in Host.GetComponentsInChildren<Transform>(true))
+                {
+                    if (t.name.EndsWith("LeftHand", System.StringComparison.Ordinal) || t.name.EndsWith("RightHand", System.StringComparison.Ordinal))
+                    {
+                        found.Add(t);
+                    }
+                }
+
+                _hands = found.ToArray();
+            }
+
+            if (_hands.Length == 0 || Dead)
+            {
+                return null;
+            }
+
+            var sum = Vector3.zero;
+            foreach (var h in _hands)
+            {
+                sum += h.position;
+            }
+
+            return sum / _hands.Length;
+        }
+
         /// <summary>A bone by name under <paramref name="root"/>; "Scope/Bone" looks inside the named child (as the battle's).</summary>
         private static Transform? FindBone(Transform root, string name)
         {
@@ -719,7 +802,7 @@ namespace Survival.Unity
             _hitAge += dt;
             TickFlick(dt);
             // A held shooter's body never reacts (RunnerAimHold.BodyReactionScale): no step, lean or flinch pose.
-            var w = _aimHeld ? 0f : _reaction.Weight(_hitAge);
+            var w = _steady ? 0f : _reaction.Weight(_hitAge);
             var local = Slot.InverseTransformDirection(_away);
             // The battle's root reaction: step back and lean, sized by the defender's recoil profile.
             var punch = 0.6f + (0.4f * _punch);
@@ -732,7 +815,7 @@ namespace Survival.Unity
             var lean = Mathf.Tan(Profile.RecoilDegrees * Mathf.Deg2Rad);
             // Lean into the sideways move: roll about the road's forward axis (in the slot's frame), eased in and out.
             // (Not for a held shooter: the aim stays level, RunnerAimHold.LeanScale.)
-            _lean = Mathf.Lerp(_lean, _aimHeld ? 0f : _leanTarget, 1f - Mathf.Exp(-12f * dt));
+            _lean = Mathf.Lerp(_lean, _steady ? 0f : _leanTarget, 1f - Mathf.Exp(-12f * dt));
             var roll = Quaternion.AngleAxis(_lean, Slot.InverseTransformDirection(Vector3.forward));
             Host.localRotation = roll * Quaternion.FromToRotation(Vector3.up, (Vector3.up + (tilt * lean)).normalized);
             if (_deathAge >= 0f)
@@ -752,6 +835,9 @@ namespace Survival.Unity
                     _reactionPose.Apply(Slot, _reaction, _away, w, _reaction, _away, 0f);
                 }
             }
+
+            // After the host is placed: the weapon held at the enemy, straight down the road like the shots.
+            _weapon?.Tick(dt, Vector3.forward, Dead);
 
             var flash = _deathAge >= 0f ? 0f : LockedBattleHits.FlashWeight(_hitAge);
             if (flash > 0f)
@@ -950,6 +1036,7 @@ namespace Survival.Unity
         private void ResetState()
         {
             _flick?.Reset();
+            _weapon?.Reset();
             foreach (var b in _flickBones)
             {
                 b.Restore();

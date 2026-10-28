@@ -361,6 +361,7 @@ namespace Survival.Unity
             var card = BuildCard(village, host, plot);
             _cards[plot.Id] = card;
             var at = NormCenterOf(host);
+            SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UpgradeStart);
             StartCoroutine(Punch(host, 0.3f, 16));
             StartCoroutine(RingBurst(at, SurvivalVisuals.Reward, 0.3f));
             StartCoroutine(SparkBurst(at, SurvivalVisuals.Reward, 18, 0.1f));
@@ -372,6 +373,7 @@ namespace Survival.Unity
         /// <summary>A timer finished: a construction opens (Lv 1) or an upgrade levels up.</summary>
         private void Finished(PlotCard card, int level, bool wasBuild)
         {
+            SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.BuildComplete);
             if (!wasBuild)
             {
                 LevelUp(card, level);

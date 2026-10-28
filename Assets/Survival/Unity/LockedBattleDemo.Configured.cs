@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Survival.Domain.Audio;
 using Survival.Domain.Campaign;
 using Survival.Domain.Roster;
 using Survival.Domain.Theme;
@@ -202,6 +203,7 @@ namespace Survival.Unity
 
         private void Defeat(Fighter f)
         {
+            SurvivalAudio.Play(AudioEventMap.BattleDefeat(SurvivalAudio.Config, f.Data.Name, OnHeroSide(f)));
             f.Down = true;
             f.DownAge = 0f;
             f.Phase = Phase.Hold;
@@ -339,6 +341,7 @@ namespace Survival.Unity
             {
                 _ended = true;
                 _endAge = 0f;
+                SurvivalAudio.Play(_combat.Outcome == BattleOutcome.Won ? AudioCues.JingleWin : AudioCues.JingleLose);
                 foreach (var f in _fighters)
                 {
                     if (!f.Down)

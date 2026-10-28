@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Survival.Domain.Campaign;
 
 namespace Survival.Domain.Runner
@@ -24,8 +25,9 @@ namespace Survival.Domain.Runner
 
         private readonly Dictionary<string, RunnerUnitBoost> _byUnit;
 
-        public RunnerLoadout(IReadOnlyDictionary<string, RunnerUnitBoost> byUnit)
+        public RunnerLoadout(IReadOnlyDictionary<string, RunnerUnitBoost> byUnit, IReadOnlyCollection<string>? ownedHeroes = null)
         {
+            OwnedHeroes = ownedHeroes == null ? null : new HashSet<string>(ownedHeroes, StringComparer.Ordinal);
             _byUnit = new Dictionary<string, RunnerUnitBoost>(StringComparer.Ordinal);
             foreach (var pair in byUnit)
             {
@@ -34,6 +36,18 @@ namespace Survival.Domain.Runner
         }
 
         public IReadOnlyDictionary<string, RunnerUnitBoost> ByUnit => _byUnit;
+
+        /// <summary>
+        /// Campaign heroes the player owns in the main game (Derek 2026-10-27: "the runner characters shouldn't be available
+        /// until they've been purchased in the main level"). Null: no gate (tests, the balance sim's scale probes).
+        /// </summary>
+        public IReadOnlyCollection<string>? OwnedHeroes { get; }
+
+        /// <summary>True when <paramref name="u"/> may appear in the squad: not a hero unit, no gate, or its hero is owned.</summary>
+        public bool Fields(RunnerUnitDef u) => u.HeroId.Length == 0 || OwnedHeroes == null || OwnedHeroes.Contains(u.HeroId);
+
+        /// <summary>This loadout's boosts, gated on <paramref name="ownedHeroes"/>.</summary>
+        public RunnerLoadout OwningOnly(IReadOnlyCollection<string>? ownedHeroes) => new(_byUnit, ownedHeroes);
 
         public RunnerUnitBoost For(string unitId) => _byUnit.TryGetValue(unitId, out var b) ? b : RunnerUnitBoost.None;
 
@@ -88,11 +102,11 @@ namespace Survival.Domain.Runner
                 map[u.Id] = new RunnerUnitBoost((float)(b.DamageMul * damageMul), (float)(b.HpMul * hpMul));
             }
 
-            return new RunnerLoadout(map);
+            return new RunnerLoadout(map, OwnedHeroes);
         }
 
-        /// <summary>The loadout of the heroes in <paramref name="roster"/> (owned or not: an unowned hero is level 1, one star).</summary>
+        /// <summary>The loadout of the heroes in <paramref name="roster"/>, gated on the ones it owns (an unowned hero never fields).</summary>
         public static RunnerLoadout From(RunnerCatalog runner, HeroRoster roster) =>
-            From(runner, roster.Catalog, id => roster.Get(id) is { } p ? (p.Level, p.Stars) : null);
+            From(runner, roster.Catalog, id => roster.Get(id) is { } p ? (p.Level, p.Stars) : null).OwningOnly(roster.OwnedIds().ToList());
     }
 }

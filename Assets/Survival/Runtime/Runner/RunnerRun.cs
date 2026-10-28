@@ -119,6 +119,12 @@ namespace Survival.Domain.Runner
         /// <summary>Enemies drift sideways toward the hero this fast while they walk in.</summary>
         public const float EnemySeek = 0.55f;
 
+        /// <summary>
+        /// On a level without a boss, once the road ahead is clear the squad runs for the finish gate and covers what is
+        /// left in at most this long (s) (Derek 2026-10-27: no long empty walk at the end).
+        /// </summary>
+        public const float GateChargeSeconds = 1.2f;
+
         /// <summary>Boxes this far behind the hero are left behind (no box).</summary>
         public const float PassBehind = 1.2f;
 
@@ -142,6 +148,9 @@ namespace Survival.Domain.Runner
         /// hero is past it, then gives up and drops behind.
         /// </summary>
         public const float ChaseSeconds = 1.5f;
+
+        /// <summary>An enemy take started on the approach waits this long past its release frame for the squad to come into reach, then lapses.</summary>
+        public const float FoeTakeGraceSeconds = 0.6f;
 
         /// <summary>
         /// The boss fight is a stand: the squad walks up to an arena line this share of the boss's slam reach in front of
@@ -182,6 +191,24 @@ namespace Survival.Domain.Runner
         /// <summary>Half a breakable barrier's depth along the road (a gate, a wall, a stake barricade are all thin).</summary>
         public const float BarrierHalfDepth = 0.35f;
 
+        /// <summary>
+        /// A trap or barrier a squad member runs into from the side (it was already level with it along the road and
+        /// steered sideways into it) hits this many times harder than one walked into head-on (Derek 2026-10-27: "the
+        /// obstacles should do more damage when heroes side run into them"). A side hit on a follower is doubled too, but still
+        /// capped one short of a fresh follower's HP (see <see cref="RunnerRun.FollowerTrapDamage(int, bool)"/>).
+        /// </summary>
+        public const float SideHitMul = 2f;
+
+        /// <summary>
+        /// Enemies steer round traps and standing barriers instead of walking through them (Derek 2026-10-27: "the enemies
+        /// should avoid the obstacles and not run over them"). They look this far ahead (metres from their front)...
+        /// </summary>
+        public const float EnemyAvoidLook = 5f;
+
+        /// <summary>...side-step toward the nearer open side this fast (m/s), keeping this much clearance past the edge...</summary>
+        public const float EnemyAvoidSpeed = 3f;
+        public const float EnemyAvoidMargin = 0.15f;
+
         /// <summary>Longest internal step; bigger frame deltas are split so results do not depend on frame rate.</summary>
         public const float MaxStep = 1f / 30f;
     }
@@ -212,7 +239,10 @@ namespace Survival.Domain.Runner
         /// <summary>A lane trap appeared (<see cref="RunnerEvent.Unit"/> = spikes / log / fire).</summary>
         HazardSpawned,
 
-        /// <summary>A trap caught a squad member (<see cref="RunnerEvent.Id"/> = the trap, Other = the member, Amount = hero damage or 0 for a knocked-out follower).</summary>
+        /// <summary>
+        /// A trap caught a squad member (<see cref="RunnerEvent.Id"/> = the trap, Other = the member, Amount = hero damage or
+        /// 0 for a follower). <see cref="RunnerEvent.OnBox"/> is true for a side hit (<see cref="RunnerRules.SideHitMul"/>).
+        /// </summary>
         HazardHit,
         Won,
         Lost,
@@ -302,6 +332,8 @@ namespace Survival.Domain.Runner
             IsHero = hero;
             X = x;
             Z = z;
+            PrevX = x;
+            PrevZ = z;
             var b = boost ?? RunnerUnitBoost.None;
             Hp = MaxHp = Math.Max(1, (int)Math.Round((hero ? unit.Hp : RunnerRules.FollowerHp) * b.HpMul));
             Power = b.DamageMul;
@@ -326,6 +358,10 @@ namespace Survival.Domain.Runner
 
         /// <summary>Sideways velocity (m/s, + = right) from the steering spring; the scene leans the body with it.</summary>
         public float VX { get; internal set; }
+
+        /// <summary>Where it stood at the start of this step (tells a side hit from a head-on one).</summary>
+        internal float PrevX { get; set; }
+        internal float PrevZ { get; set; }
         public int Hp { get; internal set; }
         public int Slot { get; internal set; } = -1;
         public float Cooldown { get; internal set; }
@@ -358,13 +394,34 @@ namespace Survival.Domain.Runner
             Id = id;
             Unit = unit;
             X = x;
+            LaneX = x;
             Z = z;
             Boss = boss;
             Hp = MaxHp = Math.Max(1, (int)Math.Round(unit.Hp * (hpMul > 0f ? hpMul : 1f)));
             Damage = (int)Math.Round(unit.Damage * (damageMul > 0f ? damageMul : 1f));
             // Walking from the moment it spawns (even the rows already in view when the run starts); the boss holds.
             Walking = !boss;
+            Plan = RunnerAttackTiming.FoePlanFor(unit);
         }
+
+        /// <summary>Its attack take: the shot or hit leaves <see cref="RunnerAttackPlan.Release"/> into it, one take per fire interval.</summary>
+        public RunnerAttackPlan Plan { get; }
+
+        /// <summary>Mid attack take: started (AttackStarted), shot or hit not released yet (Fired at the release frame).</summary>
+        public bool InTake { get; internal set; }
+
+        /// <summary>Seconds into the current take.</summary>
+        public float TakeClock { get; internal set; }
+
+        /// <summary>The current take's playback speed and its release time (normally <see cref="Plan"/>'s; see AttackStarted).</summary>
+        public float TakeSpeed { get; internal set; } = 1f;
+        public float TakeRelease { get; internal set; }
+
+        /// <summary>The barrier the current take batters (0 = the take is at the squad).</summary>
+        internal int TakeWall { get; set; }
+
+        /// <summary>Last tick's distance short of attack reach (&lt;= 0 in reach), to see a take's release coming into reach.</summary>
+        internal float LastSlack { get; set; } = float.NaN;
 
         public int Id { get; }
         public RunnerUnitDef Unit { get; }
@@ -378,6 +435,19 @@ namespace Survival.Domain.Runner
         public int Damage { get; }
         public float Cooldown { get; internal set; }
         public bool Walking { get; internal set; }
+
+        /// <summary>Side-stepping round a trap or barrier in its path, toward <see cref="AvoidX"/>.</summary>
+        public bool Avoiding { get; internal set; }
+        public float AvoidX { get; internal set; }
+
+        /// <summary>The line it would walk with nothing in the way (its spawn lane, drifting toward its target); it steps back onto it once past an obstacle.</summary>
+        internal float LaneX { get; set; }
+
+        /// <summary>Held up behind a trap or barrier it cannot get round yet (or one that spans the road).</summary>
+        public bool Blocked { get; internal set; }
+
+        /// <summary>The barrier it is held up behind (0 for none or a trap): with no squad member in reach it batters this.</summary>
+        public int BlockedBy { get; internal set; }
 
         /// <summary>Body to body with a squad member (or, for the boss, in slam range of the front row).</summary>
         public bool Engaged { get; internal set; }
@@ -409,7 +479,7 @@ namespace Survival.Domain.Runner
         public float QuakeSafeX { get; internal set; }
 
         public float SinceAttack { get; internal set; } = 99f;
-        public bool Attacking => SinceAttack < Unit.Cycle + 0.25f;
+        public bool Attacking => InTake || SinceAttack < Unit.Cycle + 0.25f;
         public float HpFraction => MaxHp > 0 ? Math.Max(0f, Hp / (float)MaxHp) : 0f;
     }
 
@@ -468,6 +538,9 @@ namespace Survival.Domain.Runner
         public float X { get; }
         public float Z { get; internal set; }
         public float StartZ { get; }
+
+        /// <summary>Where it was at the start of this step (a log rolls).</summary>
+        internal float PrevZ { get; set; }
         public float HalfWidth => Def.Width * 0.5f;
 
         public float HalfDepth => HalfDepthOf(Def.Kind);
@@ -498,11 +571,31 @@ namespace Survival.Domain.Runner
         public bool Touches(float x, float z, float radius) =>
             Math.Abs(x - X) <= HalfWidth + (radius * RunnerRules.HazardBodyShare)
             && Math.Abs(z - Z) <= HalfDepth + (radius * RunnerRules.HazardBodyShare);
+
+        /// <summary>True when a member now touching it came in from the side (see <see cref="RunnerObstacle.SideEntry"/>).</summary>
+        public bool SideEntry(float prevX, float prevZ, float radius) =>
+            RunnerObstacle.SideEntry(X, PrevZ, HalfWidth, HalfDepth, prevX, prevZ, radius * RunnerRules.HazardBodyShare);
+    }
+
+    /// <summary>Footprint geometry shared by traps and barriers.</summary>
+    public static class RunnerObstacle
+    {
+        /// <summary>
+        /// A side hit: at the start of the step the body was already level with the obstacle along the road (its depth
+        /// overlapped) but clear of it sideways, so it got there by steering into it, not by walking into its face.
+        /// </summary>
+        public static bool SideEntry(float x, float z, float halfWidth, float halfDepth, float prevX, float prevZ, float pad) =>
+            Math.Abs(prevZ - z) <= halfDepth + pad && Math.Abs(prevX - x) > halfWidth + pad;
+
+        /// <summary>True when a body of <paramref name="radius"/> at (<paramref name="px"/>, <paramref name="pz"/>) would stand on the footprint.</summary>
+        public static bool Overlaps(float x, float z, float halfWidth, float halfDepth, float px, float pz, float radius) =>
+            Math.Abs(px - x) < halfWidth + radius && Math.Abs(pz - z) < halfDepth + radius;
     }
 
     /// <summary>
     /// A breakable barrier in play: the squad's shots chip it down (it stops them, like a box), and walking into it while it
-    /// stands hurts whoever it touches and smashes it. It never moves; enemies and their shots go through it.
+    /// stands hurts whoever it touches and smashes it. It never moves; enemies walk round it (or wait behind one that spans
+    /// the road), and their shots fly over it.
     /// </summary>
     public sealed class RunnerBarrier
     {
@@ -529,6 +622,10 @@ namespace Survival.Domain.Runner
         public bool Touches(float x, float z, float radius) =>
             Math.Abs(x - X) <= HalfWidth + (radius * RunnerRules.HazardBodyShare)
             && Math.Abs(z - Z) <= HalfDepth + (radius * RunnerRules.HazardBodyShare);
+
+        /// <summary>True when a member now touching it came in from the side (see <see cref="RunnerObstacle.SideEntry"/>).</summary>
+        public bool SideEntry(float prevX, float prevZ, float radius) =>
+            RunnerObstacle.SideEntry(X, Z, HalfWidth, HalfDepth, prevX, prevZ, radius * RunnerRules.HazardBodyShare);
     }
 
     /// <summary>
@@ -620,8 +717,10 @@ namespace Survival.Domain.Runner
         public RunnerRun(RunnerCatalog catalog, RunnerLevelDef level, RunnerLoadout loadout)
         {
             _catalog = catalog;
-            Level = level;
             Loadout = loadout ?? RunnerLoadout.None;
+            // Only heroes owned in the main game field: an unowned hero's chests hand out an owned hero instead.
+            level = RunnerOwnership.Gate(catalog, level, Loadout);
+            Level = level;
             Hero = new RunnerMember(_nextId++, catalog.Unit(level.Hero), true, 0f, 0f, Loadout.For(level.Hero));
             ArenaLine = level.Length;
             foreach (var r in level.Rows)
@@ -673,6 +772,9 @@ namespace Survival.Domain.Runner
         public int BarriersSmashed { get; private set; }
         public int BarrierHits { get; private set; }
 
+        /// <summary>Trap and barrier hits taken from the side (<see cref="RunnerRules.SideHitMul"/> damage).</summary>
+        public int SideHits { get; private set; }
+
         /// <summary>How far a member's attack reaches now: ranged shots scale with <see cref="RangeMul"/>, melee does not.</summary>
         public float ReachOf(RunnerMember m) => m.Unit.Ranged ? m.Unit.Range * RangeMul : m.Unit.Range;
 
@@ -682,6 +784,14 @@ namespace Survival.Domain.Runner
 
         /// <summary>True once the squad has reached the boss.</summary>
         public bool BossFight { get; private set; }
+
+        /// <summary>True once the road to the finish is clear on a level without a boss and the squad runs for the gate.</summary>
+        public bool Charging => _charge > 0f;
+
+        /// <summary>The squad's walking pace (m/s): the level's speed, or the gate charge's once it starts.</summary>
+        public float Pace => Charging ? _charge : Level.Speed;
+
+        private float _charge;
 
         /// <summary>True while the squad stands at the boss's arena line (only the boss ever stops it).</summary>
         public bool Halted { get; private set; }
@@ -812,7 +922,23 @@ namespace Survival.Domain.Runner
         {
             // Never held up by the waves: the squad walks through whatever it has not killed (and pays for it in hits).
             // Only the boss stops it, at the arena line in front of him.
-            Distance = Math.Min(RoadEnd, Distance + (Level.Speed * dt));
+            foreach (var p in _squad)
+            {
+                p.PrevX = p.X;
+                p.PrevZ = p.Z;
+            }
+
+            // Gate charge: on a level without a boss, once the last row has spawned and the road ahead is clear (no enemy
+            // left, no box, trap or barrier still ahead), the squad runs for the finish so it never walks an empty road
+            // for long. Latched at the moment the road clears: it covers what is left in GateChargeSeconds, never slower
+            // than the walk.
+            if (_charge == 0f && RoadClear())
+            {
+                _charge = Math.Max(Level.Speed, (Level.Length - Distance) / RunnerRules.GateChargeSeconds);
+            }
+
+            var pace = Pace;
+            Distance = Math.Min(RoadEnd, Distance + (pace * dt));
             Halted = Level.HasBoss && Distance >= ArenaLine - 1e-4f;
 
             var vx = Hero.VX;
@@ -832,7 +958,7 @@ namespace Survival.Domain.Runner
                 m.VX = fvx;
                 // Joiners run in from their box faster than the walk, then hold their slot exactly.
                 var tz = Distance + sz;
-                var run = (Level.Speed + 4f) * dt;
+                var run = (pace + 4f) * dt;
                 m.Z += Clamp(tz - m.Z, -run, run);
             }
         }
@@ -856,7 +982,7 @@ namespace Survival.Domain.Runner
                     {
                         var hd = row.Hazard!;
                         var half = Math.Min(hd.Width * 0.5f, Level.HalfWidth);
-                        var hz = new RunnerHazard(_nextId++, hd, Clamp(row.X, -Level.HalfWidth + half, Level.HalfWidth - half), row.At);
+                        var hz = new RunnerHazard(_nextId++, hd, Clamp(row.X, -Level.HalfWidth + half, Level.HalfWidth - half), row.At) { PrevZ = row.At };
                         _hazards.Add(hz);
                         Emit(RunnerEventKind.HazardSpawned, hz.Id, 0, hz.X, hz.Z, hd.Width, false, false, RunnerHazardDef.Name(hd.Kind));
                         break;
@@ -940,11 +1066,7 @@ namespace Survival.Domain.Runner
                         continue;
                     }
 
-                    f.Walking = true;
-                    f.Z += Math.Min(f.Unit.Speed, Level.Speed) * dt;
-                    var chase = RunnerRules.EnemySeek * dt;
-                    f.X += Clamp(near.X - f.X, -chase, chase);
-                    f.X = Clamp(f.X, -Level.HalfWidth + f.Unit.Radius, Level.HalfWidth - f.Unit.Radius);
+                    WalkFoe(f, 1f, Math.Min(f.Unit.Speed, Level.Speed) * dt, near.X, dt);
                     continue;
                 }
 
@@ -955,15 +1077,182 @@ namespace Survival.Domain.Runner
                 }
 
                 // Walks in down the lane from the moment it spawns; once close it also drifts toward the hero's line.
-                f.Walking = true;
-                f.Z -= f.Unit.Speed * dt;
-                if (f.Z - Hero.Z <= RunnerRules.SeekRange)
+                WalkFoe(f, -1f, f.Unit.Speed * dt, f.Z - Hero.Z <= RunnerRules.SeekRange ? Hero.X : f.LaneX, dt);
+            }
+        }
+
+        /// <summary>
+        /// One walking step for a foe going <paramref name="dir"/> along the road (-1 toward the squad, +1 chasing it), at
+        /// its usual pace, drifting toward <paramref name="seekX"/> (Derek 2026-10-27: "the enemies should avoid the
+        /// obstacles and not run over them"). A trap or standing barrier within <see cref="RunnerRules.EnemyAvoidLook"/>
+        /// in its path makes it side-step toward the nearer open end instead; it never steps onto a footprint, so if the
+        /// way round is not clear yet (or the barrier spans the road) it waits behind it, and walks on once it is clear
+        /// (or the squad smashes / shoots the barrier down). One it is somehow standing on (a log rolled into it) it
+        /// steps off sideways.
+        /// </summary>
+        private void WalkFoe(RunnerFoe f, float dir, float step, float seekX, float dt)
+        {
+            // Its body counts the way a squad member's does against a trap (half its radius); it plans with its whole
+            // radius plus a margin so it goes round with room to spare, and squeezes through on the body alone when the
+            // roomy line is shut (two obstacles close together).
+            var body = f.Unit.Radius * RunnerRules.HazardBodyShare;
+            var plan = f.Unit.Radius + RunnerRules.EnemyAvoidMargin;
+            var minX = -Level.HalfWidth + f.Unit.Radius;
+            var maxX = Level.HalfWidth - f.Unit.Radius;
+            var side = RunnerRules.EnemyAvoidSpeed * dt;
+            f.Walking = true;
+            f.Avoiding = false;
+            f.Blocked = false;
+            f.BlockedBy = 0;
+            var oldX = f.X;
+
+            // The line it would hold with the road clear: the usual slow drift toward its target.
+            f.LaneX = Clamp(f.LaneX + Clamp(seekX - f.LaneX, -RunnerRules.EnemySeek * dt, RunnerRules.EnemySeek * dt), minX, maxX);
+
+            if (ObstacleUnder(f.X, f.Z, body, out var ox, out var ohw))
+            {
+                // Standing on one (it appeared there, or a log rolled into it): steps off to the nearer open side.
+                var to = OpenSide(f.X, f.Z, ox, ohw, body, minX, maxX, f.X) ?? (f.X < ox ? minX : maxX);
+                f.X = Clamp(f.X + Clamp(to - f.X, -side, side), minX, maxX);
+                f.Avoiding = true;
+            }
+            else if (ObstacleAhead(f.X, f.Z, dir, plan, out var ax, out var az, out var ahw))
+            {
+                // Side-steps to the open end (or holds its line if the barrier spans the road, and waits behind it).
+                var open = OpenSide(f.X, az, ax, ahw, plan, minX, maxX, seekX) ?? OpenSide(f.X, az, ax, ahw, body, minX, maxX, seekX);
+                f.Avoiding = open != null;
+                f.AvoidX = open ?? f.X;
+                var nx = Clamp(f.X + Clamp(f.AvoidX - f.X, -side, side), minX, maxX);
+                if (!ObstacleUnder(nx, f.Z, body, out _, out _))
                 {
-                    var seek = RunnerRules.EnemySeek * dt;
-                    f.X += Clamp(Hero.X - f.X, -seek, seek);
-                    f.X = Clamp(f.X, -Level.HalfWidth + f.Unit.Radius, Level.HalfWidth - f.Unit.Radius);
+                    f.X = nx;
                 }
             }
+            else
+            {
+                // Back onto its own line (it keeps its place in the pack rather than bunching at the end of the obstacle it
+                // went round), unless that would steer it into the path of one coming up. With nothing gone round this is
+                // just the usual slow drift toward its target.
+                var nx = Clamp(f.X + Clamp(f.LaneX - f.X, -side, side), minX, maxX);
+                if (!ObstacleUnder(nx, f.Z, body, out _, out _) && !ObstacleAhead(nx, f.Z, dir, plan, out _, out _, out _))
+                {
+                    f.X = nx;
+                }
+            }
+
+            // Then along the road at its usual pace, unless that step would put its body on a footprint: it waits.
+            var nz = f.Z + (dir * step);
+            if (!ObstacleUnder(f.X, nz, body, out _, out _) || ObstacleUnder(f.X, f.Z, body, out _, out _))
+            {
+                f.Z = nz;
+            }
+            else
+            {
+                f.Blocked = true;
+                f.BlockedBy = BarrierUnder(f.X, nz, body)?.Id ?? 0;
+                f.Walking = Math.Abs(f.X - oldX) > 1e-4f;
+            }
+        }
+
+        /// <summary>The standing barrier a body of half-size <paramref name="r"/> at (x, z) would stand on, if any.</summary>
+        private RunnerBarrier? BarrierUnder(float x, float z, float r)
+        {
+            foreach (var b in _barriers)
+            {
+                if (b.Hp > 0 && RunnerObstacle.Overlaps(b.X, b.Z, b.HalfWidth, b.HalfDepth, x, z, r))
+                {
+                    return b;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>The obstacle footprint (a trap, or a barrier still standing) a body of half-size <paramref name="r"/> at (x, z) would stand on.</summary>
+        private bool ObstacleUnder(float x, float z, float r, out float ox, out float halfWidth)
+        {
+            foreach (var h in _hazards)
+            {
+                if (RunnerObstacle.Overlaps(h.X, h.Z, h.HalfWidth, h.HalfDepth, x, z, r))
+                {
+                    ox = h.X;
+                    halfWidth = h.HalfWidth;
+                    return true;
+                }
+            }
+
+            foreach (var b in _barriers)
+            {
+                if (b.Hp > 0 && RunnerObstacle.Overlaps(b.X, b.Z, b.HalfWidth, b.HalfDepth, x, z, r))
+                {
+                    ox = b.X;
+                    halfWidth = b.HalfWidth;
+                    return true;
+                }
+            }
+
+            ox = 0f;
+            halfWidth = 0f;
+            return false;
+        }
+
+        /// <summary>The nearest obstacle in the lane at <paramref name="x"/> within <see cref="RunnerRules.EnemyAvoidLook"/> ahead of a body at <paramref name="z"/> going <paramref name="dir"/>.</summary>
+        private bool ObstacleAhead(float x, float z, float dir, float r, out float ox, out float oz, out float halfWidth)
+        {
+            var best = float.MaxValue;
+            ox = oz = halfWidth = 0f;
+            foreach (var h in _hazards)
+            {
+                if (InPath(x, z, dir, r, h.X, h.Z, h.HalfWidth, h.HalfDepth, ref best))
+                {
+                    (ox, oz, halfWidth) = (h.X, h.Z, h.HalfWidth);
+                }
+            }
+
+            foreach (var b in _barriers)
+            {
+                if (b.Hp > 0 && InPath(x, z, dir, r, b.X, b.Z, b.HalfWidth, b.HalfDepth, ref best))
+                {
+                    (ox, oz, halfWidth) = (b.X, b.Z, b.HalfWidth);
+                }
+            }
+
+            return best < float.MaxValue;
+        }
+
+        /// <summary>True (and <paramref name="best"/> lowered to its gap) when this footprint is the nearest one in the lane ahead so far.</summary>
+        private static bool InPath(float x, float z, float dir, float r, float ox, float oz, float hw, float hd, ref float best)
+        {
+            // Anything whose middle is still ahead counts, even one it is already level with (it is beside it, squeezing past).
+            var gap = (dir * (oz - z)) - hd - r;
+            if (dir * (oz - z) <= 0f || gap > RunnerRules.EnemyAvoidLook || gap >= best || Math.Abs(x - ox) >= hw + r)
+            {
+                return false;
+            }
+
+            best = gap;
+            return true;
+        }
+
+        /// <summary>
+        /// The lane just past the left or right end of an obstacle that a body of half-size <paramref name="r"/> fits in at
+        /// the obstacle's row (on the road and off every other footprint there), the one nearer <paramref name="from"/>
+        /// (ties toward <paramref name="prefer"/>); null when neither end is open (a barrier that spans the road).
+        /// </summary>
+        private float? OpenSide(float from, float atZ, float ox, float halfWidth, float r, float minX, float maxX, float prefer)
+        {
+            var left = ox - halfWidth - r - 0.01f;
+            var right = ox + halfWidth + r + 0.01f;
+            var leftOk = left >= minX && !ObstacleUnder(left, atZ, r, out _, out _);
+            var rightOk = right <= maxX && !ObstacleUnder(right, atZ, r, out _, out _);
+            if (leftOk && rightOk)
+            {
+                var dl = Math.Abs(from - left);
+                var dr = Math.Abs(from - right);
+                return Math.Abs(dl - dr) < 0.05f ? (Math.Abs(prefer - left) <= Math.Abs(prefer - right) ? left : right) : dl < dr ? left : right;
+            }
+
+            return leftOk ? left : rightOk ? right : null;
         }
 
         private static float ContactReach(RunnerFoe f) => (f.Unit.Ranged ? 0.6f : f.Unit.Range) + f.Unit.Radius;
@@ -1075,23 +1364,6 @@ namespace Survival.Domain.Runner
         /// </summary>
         public float FireRangeOf(RunnerFoe f) => f.Unit.Ranged && !f.Boss ? Math.Max(f.Unit.Range, SquadReach) : f.Unit.Range;
 
-        /// <summary>
-        /// True when a ranged squad member could shoot this foe right now (the same test as <see cref="AnythingAhead"/>):
-        /// a foe a hero can hit can shoot back, even when its nearest target is a lane or two over.
-        /// </summary>
-        private bool InSquadReach(RunnerFoe f)
-        {
-            foreach (var m in _squad)
-            {
-                if (m.Unit.Ranged && f.Z > m.Z - 0.5f && f.Z - m.Z <= ReachOf(m) + f.Unit.Radius)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         /// <summary>Any live foe or box ahead within the unit's range, at any lane position.</summary>
         private bool AnythingAhead(RunnerMember m)
         {
@@ -1162,6 +1434,12 @@ namespace Survival.Domain.Runner
             return hit.Id != 0;
         }
 
+        /// <summary>Enemy shots / hits that had to leave on the tick their take started (no warning of the reach): diagnostics.</summary>
+        public int UnforeseenFoeShots { get; private set; }
+
+        /// <summary>Enemy shots / hits released from a take started ahead of them.</summary>
+        public int ForeseenFoeShots { get; private set; }
+
         private void FoesAttack(float dt)
         {
             for (var i = 0; i < _foes.Count && !Over; i++)
@@ -1178,6 +1456,7 @@ namespace Survival.Domain.Runner
                 if (target == null || (f.Passed && f.ChaseLeft <= 0f))
                 {
                     // Gave up on the squad that walked past: it drops behind and falls off the road.
+                    f.InTake = false;
                     continue;
                 }
 
@@ -1212,37 +1491,185 @@ namespace Survival.Domain.Runner
                     f.ContactClock = Math.Min(f.ContactClock, 0.5f);
                 }
 
+                var slack = ReachSlack(f, target, dist);
+                var closing = float.IsNaN(f.LastSlack) || dt <= 0f ? 0f : Math.Min(Math.Max((f.LastSlack - slack) / dt, 0f), 30f);
+                f.LastSlack = slack;
+
+                // Held up behind a barrier: it batters the barrier down at its own attack rate rather than firing over it
+                // (unless a squad member is right on it), so a pack never sits safe behind a wall shooting.
+                var wall = f.BlockedBy != 0 && dist > f.Unit.Radius + target.Unit.Radius + f.Unit.Range && Barrier(f.BlockedBy) is { Hp: > 0 } w ? w : null;
+
+                // Mid take: the shot or hit leaves exactly when it always did (cooldown up, something in reach: the same
+                // rate and first shot as before takes), which the take was started and paced to put on its release frame.
+                if (f.InTake)
+                {
+                    f.TakeClock += dt;
+                    if (f.Cooldown <= 0f && (wall != null || slack <= 0f))
+                    {
+                        f.TakeWall = wall?.Id ?? 0;
+                        ForeseenFoeShots++;
+                        f.InTake = false;
+                        ReleaseFoeTake(f, wall, target);
+                        if (Over)
+                        {
+                            return;
+                        }
+                    }
+                    else if (f.TakeClock > f.TakeRelease + RunnerRules.FoeTakeGraceSeconds)
+                    {
+                        // Started on an approach that stalled (held up, turned off): the take lapses unfired.
+                        f.InTake = false;
+                    }
+
+                    if (wall == null && slack > 0f)
+                    {
+                        f.Cooldown = Math.Max(f.Cooldown, 0f);
+                    }
+
+                    continue;
+                }
+
                 // Melee: whoever is in reach, ahead or already past. Ranged: the nearest member in range, in any lane,
                 // either way down the road (a foe the squad has walked past shoots after it): enemies aim, heroes fire straight.
-                var inRange = dist <= FireRangeOf(f) + f.Unit.Radius + target.Unit.Radius || (f.Unit.Ranged && InSquadReach(f));
-                if (!inRange)
+                if (wall != null)
+                {
+                    if (f.Cooldown <= f.Plan.Release)
+                    {
+                        StartFoeTake(f, wall.Id, wall.Id, wall.X, wall.Z, Math.Max(f.Cooldown, 0f));
+                        if (f.Cooldown <= 0f)
+                        {
+                            UnforeseenFoeShots += f.Plan.Release > 0f ? 1 : 0;
+                            f.InTake = false;
+                            ReleaseFoeTake(f, wall, target);
+                        }
+
+                        if (Over)
+                        {
+                            return;
+                        }
+                    }
+
+                    continue;
+                }
+
+                if (slack > 0f)
                 {
                     f.Cooldown = Math.Max(f.Cooldown, 0f);
+                }
+
+                // The take starts Release ahead of the shot - on the approach too, when it will be in reach by its release
+                // frame - so the shots leave when they always did (same rate, same first shot); only the take moves earlier.
+                if (f.Cooldown > f.Plan.Release || slack - (closing * f.Plan.Release) > 0f)
+                {
                     continue;
                 }
 
-                if (f.Cooldown > 0f)
+                // Seconds until it lets go: the cooldown, or the moment its target walks into reach, whichever is later.
+                var lead = Math.Max(f.Cooldown, slack > 0f && closing > 1e-4f ? slack / closing : 0f);
+                StartFoeTake(f, 0, target.Id, target.X, target.Z, lead);
+                if (f.Cooldown <= 0f && slack <= 0f)
                 {
-                    continue;
+                    // Due this very tick (it came into reach with nothing to see it coming): it fires now, as it always has.
+                    UnforeseenFoeShots += f.Plan.Release > 0f ? 1 : 0;
+                    f.InTake = false;
+                    ReleaseFoeTake(f, null, target);
                 }
 
-                f.Cooldown = f.Unit.Cycle;
-                f.SinceAttack = 0f;
-                f.TargetId = target.Id;
-                Emit(RunnerEventKind.Fired, f.Id, target.Id, target.X, target.Z, 0, false, false, f.Unit.Id);
-                if (f.Unit.Ranged)
+                if (Over)
                 {
-                    var dir = target.Z >= f.Z ? 1f : -1f;
-                    var (ax, az) = FoeAim(f.X, f.Z + (0.4f * dir), target.X, target.Z, f.Unit.ShotSpeed, Level.Speed);
-                    // It flies far enough to cover the longer fire range and the led aim point, so it never fizzles short.
-                    var flight = Math.Max(FireRangeOf(f), (float)Math.Sqrt((ax * ax) + (az * az))) + RunnerRules.ShotOvershoot + 2f;
-                    _shots.Add(new RunnerShot(_nextId++, f.Id, true, f.X, f.Z + (0.4f * dir), f.Damage, f.Unit.ShotSpeed, flight, az, Math.Abs(az) > 1e-4f ? ax / Math.Abs(az) : 0f));
-                }
-                else
-                {
-                    StrikeSquad(f, f.Damage);
+                    return;
                 }
             }
+        }
+
+        /// <summary>
+        /// Start an enemy's attack take (AttackStarted, Amount = this take's playback speed). The shot still leaves exactly
+        /// when it always did (cooldown up and in reach: same rate, same first shot); the take is started ahead of that by
+        /// its release time and played at the speed that puts its release frame on that moment, <paramref name="lead"/>
+        /// seconds from now (normally the plan's own speed). A unit with no take of its own releases on the spot.
+        /// </summary>
+        private void StartFoeTake(RunnerFoe f, int wallId, int targetId, float x, float z, float lead)
+        {
+            f.SinceAttack = 0f;
+            f.TargetId = targetId;
+            f.TakeWall = wallId;
+            f.TakeClock = 0f;
+            if (f.Plan.Release <= 0f)
+            {
+                // No take of its own: it acts on the spot when due (the caller releases it).
+                f.InTake = false;
+                return;
+            }
+
+            var speed = f.Plan.Speed;
+            var release = f.Plan.Release;
+            var leadIn = Math.Max(lead, 0f);
+            if (Math.Abs(leadIn - release) > 0.02f)
+            {
+                // Hand-push frame on the shot: faster when it is due sooner (spawned already aiming, a late reach), slower
+                // when the squad is still walking in. Past the speed limits the frame lands as near as it can.
+                var clipRelease = release * speed;
+                speed = Clamp(leadIn > 1e-4f ? clipRelease / leadIn : RunnerAttackTiming.MaxSpeed, RunnerAttackTiming.MinFoeSpeed, RunnerAttackTiming.MaxSpeed);
+                release = clipRelease / speed;
+            }
+
+            f.TakeSpeed = speed;
+            f.TakeRelease = release;
+            f.InTake = true;
+            Emit(RunnerEventKind.AttackStarted, f.Id, targetId, x, z, speed, false, false, f.Unit.Id);
+        }
+
+        /// <summary>
+        /// The take's release frame: it batters the barrier holding it up, or the shot leaves (aimed now) / the swing lands
+        /// on the squad. Exactly what an enemy did the moment it was due before attacks had takes.
+        /// </summary>
+        private void ReleaseFoeTake(RunnerFoe f, RunnerBarrier? wall, RunnerMember target)
+        {
+            f.TakeWall = 0;
+            f.Cooldown = f.Unit.Cycle;
+            if (wall != null)
+            {
+                f.TargetId = wall.Id;
+                Emit(RunnerEventKind.Fired, f.Id, wall.Id, wall.X, wall.Z, 0, false, false, f.Unit.Id);
+                DamageBarrier(wall, f.Damage, f.Id);
+                return;
+            }
+
+            f.TargetId = target.Id;
+            Emit(RunnerEventKind.Fired, f.Id, target.Id, target.X, target.Z, 0, false, false, f.Unit.Id);
+            if (f.Unit.Ranged)
+            {
+                var dir = target.Z >= f.Z ? 1f : -1f;
+                var (ax, az) = FoeAim(f.X, f.Z + (0.4f * dir), target.X, target.Z, f.Unit.ShotSpeed, Level.Speed);
+                // It flies far enough to cover the longer fire range and the led aim point, so it never fizzles short.
+                var flight = Math.Max(FireRangeOf(f), (float)Math.Sqrt((ax * ax) + (az * az))) + RunnerRules.ShotOvershoot + 2f;
+                _shots.Add(new RunnerShot(_nextId++, f.Id, true, f.X, f.Z + (0.4f * dir), f.Damage, f.Unit.ShotSpeed, flight, az, Math.Abs(az) > 1e-4f ? ax / Math.Abs(az) : 0f));
+            }
+            else
+            {
+                StrikeSquad(f, f.Damage);
+            }
+        }
+
+        /// <summary>
+        /// How far short of attack reach a foe is (&lt;= 0: in reach): its own fire range to <paramref name="target"/>, or for
+        /// a ranged foe, inside any squad shooter's reach (so it never stands off out-ranging them).
+        /// </summary>
+        private float ReachSlack(RunnerFoe f, RunnerMember target, float dist)
+        {
+            var slack = dist - (FireRangeOf(f) + f.Unit.Radius + target.Unit.Radius);
+            if (f.Unit.Ranged)
+            {
+                foreach (var m in _squad)
+                {
+                    if (m.Unit.Ranged && f.Z > m.Z - 0.5f)
+                    {
+                        slack = Math.Min(slack, f.Z - m.Z - (ReachOf(m) + f.Unit.Radius));
+                    }
+                }
+            }
+
+            return slack;
         }
 
         /// <summary>
@@ -1453,6 +1880,16 @@ namespace Survival.Domain.Runner
         /// <summary>A follower's share of a trap's hero damage: one trap takes a good bite of its HP, a second one finishes it.</summary>
         public static int FollowerTrapDamage(int heroDamage) =>
             Math.Max(1, Math.Min(RunnerRules.FollowerHp - 1, (int)Math.Round(heroDamage * RunnerRules.FollowerTrapShare)));
+
+        /// <summary>
+        /// The follower's bite, <see cref="RunnerRules.SideHitMul"/> times over from the side, still never all of a fresh
+        /// follower's HP in one go (spikes 40: 16 head-on, 24 from the side, so the next knock of any kind drops it).
+        /// </summary>
+        public static int FollowerTrapDamage(int heroDamage, bool side) =>
+            side ? Math.Max(1, Math.Min(RunnerRules.FollowerHp - 1, (int)Math.Round(heroDamage * RunnerRules.FollowerTrapShare * RunnerRules.SideHitMul))) : FollowerTrapDamage(heroDamage);
+
+        /// <summary>A trap's or barrier's hero damage, <see cref="RunnerRules.SideHitMul"/> times over from the side.</summary>
+        public static int SideDamage(int damage, bool side) => side ? (int)Math.Round(damage * RunnerRules.SideHitMul) : damage;
 
         private void HurtHero(RunnerFoe f, int damage)
         {
@@ -1670,7 +2107,8 @@ namespace Survival.Domain.Runner
 
         /// <summary>
         /// A standing barrier the squad walks into: everyone it touches right then takes its damage (the hero all of it, a
-        /// follower a trap's share, <see cref="FollowerTrapDamage"/>), and the impact smashes it, so the rows behind walk on.
+        /// follower a trap's share, <see cref="FollowerTrapDamage(int, bool)"/>; double from the side), and the impact smashes
+        /// it, so the rows behind walk on.
         /// </summary>
         private void StepBarriers()
         {
@@ -1700,7 +2138,14 @@ namespace Survival.Domain.Runner
                 _barriers.RemoveAt(i);
                 BarriersSmashed++;
                 BarrierHits += _touching.Count;
-                Emit(RunnerEventKind.BarrierBroken, b.Id, 0, b.X, b.Z, _touching.Count, true, false, RunnerBarrierDef.Name(b.Kind));
+                var anySide = false;
+                foreach (var m in _touching)
+                {
+                    anySide |= b.SideEntry(m.PrevX, m.PrevZ, m.Unit.Radius);
+                }
+
+                // OnBox flags a side crash (someone ran into its end sideways) so the scene can call it out.
+                Emit(RunnerEventKind.BarrierBroken, b.Id, 0, b.X, b.Z, _touching.Count, true, anySide, RunnerBarrierDef.Name(b.Kind));
                 foreach (var m in _touching)
                 {
                     if (Over)
@@ -1708,10 +2153,13 @@ namespace Survival.Domain.Runner
                         break;
                     }
 
+                    var side = b.SideEntry(m.PrevX, m.PrevZ, m.Unit.Radius);
+                    SideHits += side ? 1 : 0;
                     if (m.IsHero)
                     {
-                        Hero.Hp = Math.Max(0, Hero.Hp - b.Def.Damage);
-                        Emit(RunnerEventKind.HeroHit, Hero.Id, b.Id, Hero.X, Hero.Z, b.Def.Damage, true, false, Hero.Unit.Id);
+                        var dmg = SideDamage(b.Def.Damage, side);
+                        Hero.Hp = Math.Max(0, Hero.Hp - dmg);
+                        Emit(RunnerEventKind.HeroHit, Hero.Id, b.Id, Hero.X, Hero.Z, dmg, true, false, Hero.Unit.Id);
                         if (Hero.Hp <= 0)
                         {
                             Outcome = RunnerOutcome.Lost;
@@ -1721,7 +2169,7 @@ namespace Survival.Domain.Runner
                         continue;
                     }
 
-                    HurtFollower(b.Id, m, FollowerTrapDamage(b.Def.Damage));
+                    HurtFollower(b.Id, m, FollowerTrapDamage(b.Def.Damage, side));
                 }
             }
         }
@@ -1789,6 +2237,15 @@ namespace Survival.Domain.Runner
 
         // ---------- clean-up and end ----------
 
+        private bool RoadClear() =>
+            Level.GateCharge
+            && !Level.HasBoss
+            && _nextRow >= Level.Rows.Count
+            && _foes.Count == 0
+            && !_boxes.Exists(b => b.Z > Hero.Z)
+            && !_hazards.Exists(h => h.Z > Hero.Z - 1f)
+            && !_barriers.Exists(b => b.Z > Hero.Z - 1f);
+
         private void DropPassed()
         {
             for (var i = _foes.Count - 1; i >= 0; i--)
@@ -1821,6 +2278,7 @@ namespace Survival.Domain.Runner
             {
                 var h = _hazards[i];
                 var was = h.State;
+                h.PrevZ = h.Z;
                 h.StateClock += dt;
                 switch (h.Kind)
                 {
@@ -1908,11 +2366,14 @@ namespace Survival.Domain.Runner
                 h.Hit.Add(m.Id);
                 h.Caught++;
                 HazardHits++;
+                var side = h.SideEntry(m.PrevX, m.PrevZ, m.Unit.Radius);
+                SideHits += side ? 1 : 0;
                 if (m.IsHero)
                 {
-                    Hero.Hp = Math.Max(0, Hero.Hp - h.Def.Damage);
-                    Emit(RunnerEventKind.HazardHit, h.Id, m.Id, m.X, m.Z, h.Def.Damage, true, false, RunnerHazardDef.Name(h.Kind));
-                    Emit(RunnerEventKind.HeroHit, Hero.Id, h.Id, Hero.X, Hero.Z, h.Def.Damage, true, false, Hero.Unit.Id);
+                    var dmg = SideDamage(h.Def.Damage, side);
+                    Hero.Hp = Math.Max(0, Hero.Hp - dmg);
+                    Emit(RunnerEventKind.HazardHit, h.Id, m.Id, m.X, m.Z, dmg, true, side, RunnerHazardDef.Name(h.Kind));
+                    Emit(RunnerEventKind.HeroHit, Hero.Id, h.Id, Hero.X, Hero.Z, dmg, true, false, Hero.Unit.Id);
                     if (Hero.Hp <= 0 && !Over)
                     {
                         Outcome = RunnerOutcome.Lost;
@@ -1922,8 +2383,8 @@ namespace Survival.Domain.Runner
                     continue;
                 }
 
-                var bite = FollowerTrapDamage(h.Def.Damage);
-                Emit(RunnerEventKind.HazardHit, h.Id, m.Id, m.X, m.Z, 0, false, false, RunnerHazardDef.Name(h.Kind));
+                var bite = FollowerTrapDamage(h.Def.Damage, side);
+                Emit(RunnerEventKind.HazardHit, h.Id, m.Id, m.X, m.Z, 0, false, side, RunnerHazardDef.Name(h.Kind));
                 HurtFollower(h.Id, m, bite);
             }
         }

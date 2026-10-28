@@ -160,7 +160,17 @@ namespace Survival.Domain.Runner
         public static bool Applies(string rosterName) => RunnerUpperBodyAttack.Applies(rosterName);
 
         /// <summary>The attack-take frame the upper body holds (one before the take's release), or null for a roster that does not hold.</summary>
-        public static float? HoldFrameFor(string rosterName) => rosterName switch
+        /// <remarks>
+        /// Null for every roster now (Derek 2026-10-27: "not all heros have a firing animation in the runner. some of them
+        /// are just walking"). The frozen aim frame read as walking, so each shot plays the hero's real attack take on the
+        /// upper body again (legs keep walking, release frame on the sim's Fired); the body still takes no hit step or lean
+        /// (<see cref="BodyReactionScale"/>, <see cref="LeanScale"/>), which was the "moving back and forth" of 2026-10-24.
+        /// <see cref="HeldFrameWas"/> keeps the old frame for reference.
+        /// </remarks>
+        public static float? HoldFrameFor(string rosterName) => null;
+
+        /// <summary>The frame the 2026-10-24 hold froze on (one before release), kept so a later hold can come back as a switch.</summary>
+        public static float? HeldFrameWas(string rosterName) => rosterName switch
         {
             "Lyra" => LyraAttack.ReleaseFrame - 1,
             "Rowan" => RowanAttack.ReleaseFrame - 1,

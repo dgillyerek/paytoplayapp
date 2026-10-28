@@ -181,8 +181,8 @@ namespace Survival.Unity
             Anchor(swords.rectTransform, 0.02f, -0.15f, 0.30f, 1.15f);
             _killsText = HookSkin.Outlined(SurvivalVisuals.Text(kills.transform, "Count", "0", 30, TextAnchor.MiddleCenter, Color.white));
             Anchor(_killsText.rectTransform, 0.30f, 0f, 0.98f, 1f);
-            _dmgChip = Chip("DmgChip", 0.03f, "theme_a.runner.crate_weapon");
-            _spdChip = Chip("SpdChip", 0.25f, "theme_a.runner.crate_speed");
+            _dmgChip = Chip("DmgChip", RunnerHudChips.DamageLeft, "theme_a.runner.crate_weapon");
+            _spdChip = Chip("SpdChip", RunnerHudChips.SpeedLeft, "theme_a.runner.crate_speed");
 
             // Leave (back to the village, or a fresh run on its own).
             var leave = HookSkin.Button(_hud, "Leave", HookArtKeys.ButtonRed, new Color(0.65f, 0.18f, 0.15f, 1f));
@@ -227,11 +227,16 @@ namespace Survival.Unity
         private Text Chip(string name, float x, string iconKey)
         {
             var chip = HookSkin.Panel(_hud!, name, HookArtKeys.Chip, SurvivalVisuals.PanelSoft, 0.5f);
-            Anchor(chip.rectTransform, x, 0.835f, x + 0.2f, 0.875f);
+            // Wide enough for "+100% DMG" on a narrow phone, the text kept inside the badge's rim (Derek 2026-10-27: the
+            // badge text ran past its right edge); SetChip shrinks the type if a long label still does not fit.
+            Anchor(chip.rectTransform, x, 0.835f, x + RunnerHudChips.Width, 0.875f);
             var icon = HookSkin.Art(chip.transform, "Icon", iconKey, SurvivalVisuals.Gold);
-            Anchor(icon.rectTransform, 0.0f, -0.25f, 0.36f, 1.25f);
-            var t = HookSkin.Outlined(SurvivalVisuals.Text(chip.transform, "Value", "", 24, TextAnchor.MiddleCenter, Color.white));
-            Anchor(t.rectTransform, 0.34f, 0f, 1f, 1f);
+            Anchor(icon.rectTransform, 0.0f, -0.25f, RunnerHudChips.IconTo, 1.25f);
+            var t = HookSkin.Outlined(SurvivalVisuals.Text(chip.transform, "Value", "", RunnerHudChips.MaxFont, TextAnchor.MiddleCenter, Color.white));
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.verticalOverflow = VerticalWrapMode.Overflow;
+            t.resizeTextForBestFit = false;
+            Anchor(t.rectTransform, RunnerHudChips.TextFrom, 0.08f, RunnerHudChips.TextTo, 0.92f);
             chip.gameObject.SetActive(false);
             return t;
         }
@@ -314,6 +319,18 @@ namespace Survival.Unity
             if (on)
             {
                 chip.text = Fmt(key, fallback, pct);
+                FitChip(chip);
+            }
+        }
+
+        /// <summary>The largest type (down to <see cref="RunnerHudChips.MinFont"/>) that keeps a chip's one-line label inside it.</summary>
+        private static void FitChip(Text chip)
+        {
+            var room = chip.rectTransform.rect.width;
+            chip.fontSize = RunnerHudChips.MaxFont;
+            while (room > 0f && chip.fontSize > RunnerHudChips.MinFont && chip.preferredWidth > room)
+            {
+                chip.fontSize--;
             }
         }
 
@@ -955,8 +972,8 @@ namespace Survival.Unity
                 Anchor(v.rectTransform, 0.64f, y - 0.032f, 0.92f, y + 0.032f);
             }
 
-            // Rewards: gold always (kills + boxes), win gold and hero shards on a win.
-            var rewards = bundle.AsRows();
+            // Rewards on a win only (kills + boxes + win gold, hero shards); a defeat shows none, just Retry.
+            var rewards = result.Won ? bundle.AsRows() : new Dictionary<string, int>();
             var x = 0.5f - ((rewards.Count - 1) * 0.16f);
             foreach (var pair in rewards)
             {
@@ -969,7 +986,7 @@ namespace Survival.Unity
                 x += 0.32f;
             }
 
-            if (!RunnerHandoff.FromPlay)
+            if (!RunnerHandoff.FromPlay && result.Won)
             {
                 var note = Fit(HookSkin.Outlined(SurvivalVisuals.Text(panel.transform, "Saved", saved ? S("runner.result.saved", "Rewards saved") : "Open from the village to keep rewards", 24, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f), 16, 24);
                 Anchor(note.rectTransform, 0.05f, 0.29f, 0.95f, 0.325f);

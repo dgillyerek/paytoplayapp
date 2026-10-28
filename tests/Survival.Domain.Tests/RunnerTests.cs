@@ -96,8 +96,31 @@ internal static class Runner
         return Dodge(run, foe?.X ?? run.Hero.X);
     }
 
-    /// <summary>Like a player: keeps the hero's line clear of any lane trap coming up in the next 9 m (the squad behind may still clip one).</summary>
+    /// <summary>
+    /// Like a player: keeps the hero's line clear of any lane trap coming up in the next 9 m (the squad behind may still clip
+    /// one), and never swerves across a trap or barrier it is already level with (a side hit costs double).
+    /// </summary>
     public static float Dodge(RunnerRun run, float want)
+    {
+        var to = DodgeTarget(run, want);
+        var hero = run.Hero;
+        foreach (var (x, z, hw, hd) in run.Hazards.Select(h => (h.X, h.Z, h.HalfWidth, h.HalfDepth))
+                     .Concat(run.Barriers.Where(b => b.Hp > 0).Select(b => (b.X, b.Z, b.HalfWidth, b.HalfDepth))))
+        {
+            var clear = hw + hero.Unit.Radius + 0.2f;
+            if (Math.Abs(z - hero.Z) > hd + hero.Unit.Radius + 0.6f || Math.Abs(hero.X - x) < clear)
+            {
+                continue;
+            }
+
+            // Beside it: stays on its own side until it has gone by.
+            to = hero.X < x ? Math.Min(to, x - clear) : Math.Max(to, x + clear);
+        }
+
+        return to;
+    }
+
+    private static float DodgeTarget(RunnerRun run, float want)
     {
         // Looks at every trap in the next 9 m at once (the roads have about twice the traps since Derek 2026-10-26, often
         // two in a beat): the spot nearest the one wanted that clears all of them, or the old one-at-a-time sidestep.
@@ -432,8 +455,11 @@ public sealed class RunnerTests
                     run.Step(1f / 30f);
                     if (!run.Over)
                     {
-                        // Full pace through every wave; only the arena line in front of the boss stops it.
-                        Assert.Equal(Math.Min(before + (level.Speed / 30f), run.ArenaLine), run.Distance, 3);
+                        // Full pace through every wave; only the arena line in front of the boss stops it. On a level
+                        // without a boss the squad runs for the gate once the road ahead is clear (never slower).
+                        Assert.Equal(run.Charging ? run.Pace : level.Speed, run.Pace);
+                        Assert.True(run.Pace >= level.Speed);
+                        Assert.Equal(Math.Min(before + (run.Pace / 30f), run.ArenaLine), run.Distance, 3);
                         Assert.Equal(run.Distance >= run.ArenaLine - 1e-3f, run.Halted);
                     }
                 }
@@ -755,7 +781,7 @@ public sealed class RunnerTests
         Assert.Equal(OakenshieldAttack.ReleaseFrame / 30f, oak.ReleaseSeconds, 4);
         Assert.Equal(SirAldricBattlePoses.AttackSeconds, aldric.ClipSeconds, 4);
         Assert.Equal(LockedBattleHits.SirAldricContactFrame / 30f, aldric.ReleaseSeconds, 4);
-        Assert.Null(RunnerAttackTiming.ClipFor("Nightfang"));
+        Assert.Null(RunnerAttackTiming.ClipFor("Ironhowl"));
 
         // Speeding the take up keeps the release at the same point of it.
         var plan = RunnerAttackTiming.Plan(lyra, 0.31f);
@@ -825,7 +851,7 @@ public sealed class RunnerTests
             run.SteerTo(RunnerBossQuakeTests.DodgingPlayer(run));
             foreach (var e in run.Step(1f / 30f))
             {
-                if (e.Kind == RunnerEventKind.AttackStarted)
+                if (e.Kind == RunnerEventKind.AttackStarted && run.Squad.Any(m => m.Id == e.Id))
                 {
                     starts[e.Id] = starts.GetValueOrDefault(e.Id) + 1;
                 }
@@ -919,12 +945,39 @@ public sealed class RunnerTests
         Assert.Equal(100 + 20 + 20, win.Resources[SurvIds.ResSoft]);
         Assert.Equal(3, win.Shards);
         Assert.Equal("hero.lyra", win.ShardHero);
+        // Derek 2026-10-27: "i shouldn't get runner rewards when I die": a loss pays nothing, kills and boxes included.
         var loss = RunnerRewards.For(level, new RunnerResult("t", false, 4, 2, 0, 3, 0, 20, 20));
-        Assert.Equal(40, loss.Resources[SurvIds.ResSoft]);
+        Assert.Empty(loss.Resources);
         Assert.Equal(0, loss.Shards);
+        Assert.Empty(loss.AsRows());
         var rows = RunnerRewards.Rows(new[] { win, loss });
-        Assert.Equal(180, rows[SurvIds.ResSoft]);
+        Assert.Equal(140, rows[SurvIds.ResSoft]);
         Assert.Equal(3, rows[RewardBundle.ShardKey("hero.lyra")]);
+    }
+
+    [Fact]
+    public void A_lost_run_grants_nothing_and_leaves_the_wallet_roster_and_progress_as_they_were()
+    {
+        var catalog = CampaignCatalog.Parse(File.ReadAllText(Path.Combine(TestPaths.CatalogDir, CampaignCatalog.FileName)));
+        var campaign = new CampaignSession(catalog, new Wallet(), new ManualClock(1000));
+        var c = Runner.Catalog();
+        var before = campaign.Save();
+        foreach (var n in new[] { 1, 2, 10, c.Levels.Count })
+        {
+            var l = c.ByNumber(n);
+            // A wipe deep into the level: plenty of kills and boxes, so a payout would show.
+            var bundle = RunnerRewards.For(l, new RunnerResult(l.Id, false, l.EnemyCount, l.BoxCount, 0, 9, 0, l.Length * 0.9f, 120, n));
+            Assert.False(bundle.Won);
+            Assert.Empty(bundle.AsRows());
+            RunnerRewards.Grant(bundle, campaign);
+            RunnerHandoff.Begin(l.Id, 1);
+            RunnerHandoff.Bank(new RunnerResult(l.Id, false, l.EnemyCount, l.BoxCount, 0, 9, 0, l.Length * 0.9f, 120, n), bundle);
+            Assert.Empty(RunnerRewards.Rows(RunnerHandoff.Take().Select(r => r.Bundle)));
+            RunnerHandoff.Reset();
+        }
+
+        Assert.Equal(before, campaign.Save());
+        Assert.Equal(1, campaign.RunnerUnlocked);
     }
 
     [Fact]
@@ -967,16 +1020,50 @@ public sealed class RunnerTests
             }
 
             var p = c.Levels[i - 1];
+            // A boss level has the boss where a level without one has its closing set piece (trap gauntlet, fodder push,
+            // captain): compare a boss level with the level before minus that set piece.
+            if (l.HasBoss)
+            {
+                p = p with { Rows = p.Rows.Where(r => !r.Finale).ToList() };
+            }
+
             // The road grows until the ramp's length cap and the packs until its count cap; past those only HP and damage climb.
             var cap = c.Progression!.Ramp!;
             Assert.True(l.Length > p.Length || (l.Length == cap.LengthCap && p.Length == cap.LengthCap), $"L{l.Number} length {p.Length} -> {l.Length}");
             Assert.True(l.Length <= cap.LengthCap);
             // The boss counts as one enemy and is only on every 5th level, so compare the waves without it.
             int Waves(RunnerLevelDef x) => x.EnemyCount - (x.HasBoss ? 1 : 0);
-            Assert.True(l.Number > cap.CountCap ? Waves(l) >= Waves(p) : Waves(l) > Waves(p), $"L{l.Number} enemies {Waves(p)} -> {Waves(l)}");
+            // A level tweaked to fewer or weaker enemies (progression "level_tweaks" wave / foe_hp) is smaller on purpose: skip it
+            // here and compare the next level with the last untrimmed one. A layout re-roll keeps the same enemies, so it counts.
+            var tweaks = c.Progression!.Tweaks;
+            // Wave trims change the enemy count; foe_hp trims (the free-pace tune) only change HP, so each check skips its own kind.
+            bool WaveTrimmed(int n) => tweaks.TryGetValue(n, out var t) && t.Wave != 1f;
+            bool Trimmed(int n) => tweaks.TryGetValue(n, out var t) && (t.Wave != 1f || t.FoeHp != 1f);
+            RunnerLevelDef Last(Func<int, bool> skip)
+            {
+                var x = p;
+                for (var j = i - 1; j > 0 && skip(x.Number); j--)
+                {
+                    x = c.Levels[j - 1];
+                }
+
+                return x;
+            }
+
+            var w = Last(WaveTrimmed);
+            if (!WaveTrimmed(l.Number))
+            {
+                Assert.True(l.Number > cap.CountCap ? Waves(l) >= Waves(w) : Waves(l) > Waves(w), $"L{l.Number} enemies {Waves(w)} -> {Waves(l)}");
+            }
+
+            var q = Last(Trimmed);
+            if (!Trimmed(l.Number))
+            {
+                Assert.True(l.FoeHpTotal(c) > q.FoeHpTotal(c), $"L{l.Number} enemy hp");
+                Assert.True(l.FoeHpMul >= q.FoeHpMul);
+            }
+
             Assert.True(l.FoeDmgMul >= p.FoeDmgMul, $"L{l.Number} enemy damage");
-            Assert.True(l.FoeHpTotal(c) > p.FoeHpTotal(c), $"L{l.Number} enemy hp");
-            Assert.True(l.FoeHpMul >= p.FoeHpMul);
             Assert.True(l.BoxCount >= p.BoxCount, $"L{l.Number} boxes {p.BoxCount} -> {l.BoxCount}");
             Assert.True(l.BoxHpTotal > p.BoxHpTotal, $"L{l.Number} box hp");
             if (l.HasBoss && l.Number > 5)

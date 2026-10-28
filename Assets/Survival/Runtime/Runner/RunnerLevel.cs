@@ -163,6 +163,12 @@ namespace Survival.Domain.Runner
         /// <summary>The obstacle, on a <see cref="RunnerRowKind.Barrier"/> row.</summary>
         public RunnerBarrierDef? Barrier { get; init; }
 
+        /// <summary>
+        /// Part of a no-boss level's closing set piece (its trap gauntlet, fodder push and captain; see
+        /// RunnerProgression's Finale), beyond the archer line a boss level has as its guard.
+        /// </summary>
+        public bool Finale { get; init; }
+
         public float XOf(int index) => X + ((index - ((Count - 1) * 0.5f)) * Spread);
     }
 
@@ -193,6 +199,12 @@ namespace Survival.Domain.Runner
 
         /// <summary>Every enemy's (and the boss's) hit is its unit damage times this; 1 up to Level 12, then the ramp (see <see cref="RunnerProgression"/>).</summary>
         public float FoeDmgMul { get; init; } = 1f;
+
+        /// <summary>
+        /// Whether the squad runs for the finish once the road ahead is clear on a level without a boss (json
+        /// "gate_charge", off by default; the campaign's first level turns it on and the generated levels copy it).
+        /// </summary>
+        public bool GateCharge { get; init; }
 
         /// <summary>Boss HP on this level (0 without a boss).</summary>
         public int BossHp(RunnerCatalog catalog)
@@ -601,7 +613,8 @@ namespace Survival.Domain.Runner
                     DisplayName = LayoutJson.OptStr(l, "name", LayoutJson.Str(l, "id")),
                     FoeHpMul = Math.Max(0.1f, LayoutJson.OptNum(l, "foe_hp_mul", 1f)),
                     BossHpMul = Math.Max(0.1f, LayoutJson.OptNum(l, "boss_hp_mul", 1f)),
-                    FoeDmgMul = Math.Max(0.1f, LayoutJson.OptNum(l, "foe_dmg_mul", 1f))
+                    FoeDmgMul = Math.Max(0.1f, LayoutJson.OptNum(l, "foe_dmg_mul", 1f)),
+                    GateCharge = LayoutJson.OptBool(l, "gate_charge", false)
                 });
             }
 
