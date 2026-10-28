@@ -193,10 +193,18 @@ namespace Survival.Unity
 
             _quakeFlashAge = 0f;
             Shake(1.2f);
-            var at = new Vector3(0f, 0.2f, e.Z);
-            for (var i = -1; i <= 1; i++)
+            // The landing goes on the red road only: the locked aim (e.X, e.Z) and the middle of each red strip, never the
+            // green safe band the squad was told to run to.
+            var at = new Vector3(e.X, 0.2f, e.Z);
+            for (var i = 0; i < 3; i++)
             {
-                var p = at + new Vector3(i * 2.6f, 0f, 0f);
+                var x = i == 0 ? e.X : i == 1 ? (_quakeAMinX + _quakeAMaxX) * 0.5f : (_quakeBMinX + _quakeBMaxX) * 0.5f;
+                if (i > 0 && ((i == 1 ? _quakeAMaxX - _quakeAMinX : _quakeBMaxX - _quakeBMinX) < 1f || Mathf.Abs(x - e.X) < 1.5f))
+                {
+                    continue;
+                }
+
+                var p = new Vector3(x, 0.2f, e.Z);
                 AddFx(HookArtKeys.FxBurstRing, p, 4.2f, 0.6f, new Color(1f, 0.4f, 0.2f, 0.9f), Vector3.zero, 2.4f, 0f);
                 Sparks(p, new Color(1f, 0.55f, 0.25f, 1f), 10, 2.2f);
             }

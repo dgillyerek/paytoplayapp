@@ -371,4 +371,78 @@ public sealed class RunnerBossQuakeTests
         Assert.True(problems.Count == 0, "a dodging player wins every level and meets the quake on each: " + string.Join("; ", problems));
         Assert.True(sumStill >= sumDodge + 2f || stillLost >= 2, "not dodging costs a lot");
     }
+
+    // Derek 2026-10-27: "on Ironhowl's 'GET LEFT' his attack still follows the hero". The target is locked at the warning.
+    [Fact]
+    public void The_quake_aim_is_locked_at_the_warning_and_does_not_follow_the_hero_who_dodges()
+    {
+        var run = TinyFight(3f);
+        var boss = run.Foes.Single(b => b.Boss);
+        while (!run.Over && boss.Move != RunnerBossMove.Quake)
+        {
+            run.SteerTo(3f);
+            run.Step(Dt);
+        }
+
+        // Hero on the right: the warning says GET LEFT, so the safe band is left and the locked aim is on the red right side.
+        Assert.True(boss.QuakeSafeX < 0f, "safe band left of the hero: " + boss.QuakeSafeX);
+        var (safeMin, safeMax) = RunnerRun.QuakeSafe(boss);
+        var (aimX, aimZ) = (boss.AimX, boss.AimZ);
+        Assert.True(aimX > safeMax, $"aim {aimX} on the red side, not the safe band [{safeMin}, {safeMax}]");
+        Assert.True(RunnerRun.QuakeCatches(boss, aimX, aimZ, 0f), "aim inside the marked danger zone");
+
+        var events = new List<RunnerEvent>();
+        var heroStart = run.Hero.X;
+        while (!run.Over && !events.Any(e => e.Kind == RunnerEventKind.BossQuake))
+        {
+            run.SteerTo(boss.QuakeSafeX);
+            events.AddRange(run.Step(Dt));
+            Assert.True(boss.AimLocked);
+            Assert.Equal(aimX, boss.AimX);
+            Assert.Equal(aimZ, boss.AimZ);
+        }
+
+        Assert.True(heroStart - run.Hero.X > 2f, "the hero really moved: " + heroStart + " -> " + run.Hero.X);
+        var quake = events.First(e => e.Kind == RunnerEventKind.BossQuake);
+        Assert.Equal(aimX, quake.X);
+        Assert.Equal(aimZ, quake.Z);
+        Assert.False(RunnerRun.QuakeCatches(boss, run.Hero.X, run.Hero.Z, run.Hero.Unit.Radius));
+        Assert.DoesNotContain(events, e => e.Kind == RunnerEventKind.HeroHit);
+        Assert.True(boss.AimLocked, "he follows through at the locked zone after the impact");
+        Assert.Equal(aimX, boss.AimX);
+    }
+
+    [Fact]
+    public void The_slam_aim_is_locked_at_the_warning_and_a_hero_outside_the_zone_at_impact_takes_nothing()
+    {
+        var run = TinyFight(0f);
+        var boss = run.Foes.Single(b => b.Boss);
+        while (!run.Over && boss.Move != RunnerBossMove.Slam)
+        {
+            run.SteerTo(0f);
+            run.Step(Dt);
+        }
+
+        Assert.Equal(RunnerBossMove.Slam, boss.Move);
+        var (aimX, aimZ) = (boss.AimX, boss.AimZ);
+        var (minX, maxX, minZ, maxZ) = RunnerRun.SlamArea(boss);
+        Assert.InRange(aimX, minX, maxX);
+        Assert.InRange(aimZ, minZ, maxZ);
+        var hp = run.Hero.Hp;
+        var events = new List<RunnerEvent>();
+        while (!run.Over && !events.Any(e => e.Kind == RunnerEventKind.BossSlam))
+        {
+            run.SteerTo(boss.X > 0f ? -9f : 9f);
+            events.AddRange(run.Step(Dt));
+            Assert.Equal(aimX, boss.AimX);
+            Assert.Equal(aimZ, boss.AimZ);
+        }
+
+        var slam = events.First(e => e.Kind == RunnerEventKind.BossSlam);
+        Assert.Equal(aimX, slam.X);
+        var r = run.Hero.Unit.Radius * 0.5f;
+        Assert.True(run.Hero.X < minX - r || run.Hero.X > maxX + r, $"hero {run.Hero.X} left the slam zone [{minX}, {maxX}]");
+        Assert.DoesNotContain(events, e => e.Kind == RunnerEventKind.HeroHit && e.Other == boss.Id);
+        Assert.Equal(hp, run.Hero.Hp);
+    }
 }
