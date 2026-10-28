@@ -21,7 +21,9 @@ public sealed class HeroHpPanelLayoutTests
         Assert.Equal(HeroHpPanelLayout.RowHeight + HeroHpPanelLayout.RowGap, HeroHpPanelLayout.Height(2) - HeroHpPanelLayout.Height(1), 3);
         Assert.Equal(HeroHpPanelLayout.Height(5), HeroHpPanelLayout.Height(8));
         // ~80-85% of the first cut (62 px rows), and a full panel ends well above mid-screen.
-        Assert.InRange(HeroHpPanelLayout.RowHeight / 62f, 0.80f, 0.85f);
+        Assert.InRange(HeroHpPanelLayout.RowHeight / 62f, 0.85f, 0.95f);
+        // Narrower than the 0.38-share / 360 cut (Derek: "less wide but a little taller").
+        Assert.InRange(HeroHpPanelLayout.Width(886f) / 336.7f, 0.70f, 0.76f);
         Assert.True(TopHudLayout.PanelTop - (HeroHpPanelLayout.Height(5) / 1920f) > 0.70f);
         Assert.True(HeroHpPanelLayout.RowTop(4) + HeroHpPanelLayout.RowHeight + HeroHpPanelLayout.Padding <= HeroHpPanelLayout.Height(5) + 1e-3f);
     }
@@ -60,5 +62,16 @@ public sealed class HeroHpPanelLayoutTests
         Assert.Equal(HeroHpPanelLayout.Margin, HeroHpPanelLayout.TopOffset(1920f, 500f));
         Assert.Equal((1f - TopHudLayout.PanelTop) * 1920f, HeroHpPanelLayout.TopOffset(1920f, 0f), 3);
         Assert.True(TopHudLayout.PanelTop <= TopHudLayout.RowY0);
+    }
+
+    [Fact]
+    public void Follower_type_rows_sit_under_a_divider_and_are_a_little_shorter()
+    {
+        Assert.True(HeroHpPanelLayout.UnitRowHeight < HeroHpPanelLayout.RowHeight);
+        Assert.Equal(HeroHpPanelLayout.Height(5), HeroHpPanelLayout.Height(5, 0));
+        Assert.Equal(HeroHpPanelLayout.UnitRowHeight + HeroHpPanelLayout.RowGap + HeroHpPanelLayout.DividerHeight, HeroHpPanelLayout.Height(2, 1) - HeroHpPanelLayout.Height(2), 3);
+        Assert.Equal(HeroHpPanelLayout.Height(5, 4), HeroHpPanelLayout.Height(5, 9));
+        Assert.True(HeroHpPanelLayout.UnitRowTop(5, 0) >= HeroHpPanelLayout.RowTop(4) + HeroHpPanelLayout.RowHeight + HeroHpPanelLayout.DividerHeight);
+        Assert.Equal(HeroHpPanelLayout.Height(5, 4), HeroHpPanelLayout.UnitRowTop(5, 3) + HeroHpPanelLayout.UnitRowHeight + HeroHpPanelLayout.Padding, 3);
     }
 }

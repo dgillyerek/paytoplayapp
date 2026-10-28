@@ -7,7 +7,7 @@ namespace Survival.Domain.Theme
     /// The hero HP panel (Derek 2026-10-28: "find a better place for hero health bars. maybe a section in one of the
     /// corners"). Heroes no longer carry a world HP bar in the runner or the battle; one compact row per hero sits in the
     /// top-left corner under the top row instead (Derek 2026-10-28, from the mock: "make them slightly smaller and put
-    /// them in the top left"; rows are ~82% of the first cut). See <see cref="TopHudLayout"/>. Each row: framed portrait, name / level, a horizontal HP bar with a damage trail, dimmed once the hero
+    /// them in the top left"; rows are ~82% of the first cut; then "make the bars less wide but a little taller not much": ~74% of that width, bar ~+22%). See <see cref="TopHudLayout"/>. Each row: framed portrait, name / level, a horizontal HP bar with a damage trail, dimmed once the hero
     /// is down. Sizes are reference units on the 1080 x 1920 canvas (the HUD scales with height).
     /// </summary>
     public static class HeroHpPanelLayout
@@ -16,13 +16,13 @@ namespace Survival.Domain.Theme
 
         public const float Margin = 16f;
         public const float Padding = 7f;
-        public const float RowHeight = 51f;
+        public const float RowHeight = 56f;
         public const float RowGap = 5f;
 
         /// <summary>Panel width as a share of the safe width, never past <see cref="MaxWidth"/> (tablets, landscape).</summary>
-        public const float WidthShare = 0.38f;
-        public const float MaxWidth = 360f;
-        public const float MinWidth = 260f;
+        public const float WidthShare = 0.28f;
+        public const float MaxWidth = 270f;
+        public const float MinWidth = 230f;
 
         /// <summary>The red trail behind the fill holds this long after a hit, then drains at <see cref="TrailDrainPerSecond"/>.</summary>
         public const float TrailHoldSeconds = 0.35f;
@@ -37,11 +37,35 @@ namespace Survival.Domain.Theme
         /// <summary>Rows shown for <paramref name="heroes"/> heroes (0..<see cref="MaxRows"/>).</summary>
         public static int Rows(int heroes) => Math.Max(0, Math.Min(MaxRows, heroes));
 
-        /// <summary>Panel height for <paramref name="heroes"/> heroes (0 when there are none).</summary>
-        public static float Height(int heroes)
+        /// <summary>
+        /// Runner follower rows, one per unit type under the hero rows (Derek 2026-10-28: "new rows with the cumulative
+        /// health of the secondary units split up by unit type"): a little shorter, after a thin divider.
+        /// </summary>
+        public const int MaxUnitRows = 4;
+        public const float UnitRowHeight = 46f;
+        public const float DividerHeight = 6f;
+
+        /// <summary>Unit-type rows shown for <paramref name="types"/> types (0..<see cref="MaxUnitRows"/>).</summary>
+        public static int UnitRows(int types) => Math.Max(0, Math.Min(MaxUnitRows, types));
+
+        /// <summary>Panel height for <paramref name="heroes"/> heroes and <paramref name="unitTypes"/> follower types (0 when empty).</summary>
+        public static float Height(int heroes, int unitTypes = 0)
         {
             var n = Rows(heroes);
-            return n == 0 ? 0f : (Padding * 2f) + (n * RowHeight) + ((n - 1) * RowGap);
+            var u = UnitRows(unitTypes);
+            if (n + u == 0)
+            {
+                return 0f;
+            }
+
+            return (Padding * 2f) + (n * RowHeight) + (u * UnitRowHeight) + ((n + u - 1) * RowGap) + (u > 0 && n > 0 ? DividerHeight : 0f);
+        }
+
+        /// <summary>Top of unit row <paramref name="index"/> below the panel's top edge, after <paramref name="heroes"/> hero rows.</summary>
+        public static float UnitRowTop(int heroes, int index)
+        {
+            var n = Rows(heroes);
+            return Padding + (n * (RowHeight + RowGap)) + (n > 0 ? DividerHeight : 0f) + (Math.Max(0, index) * (UnitRowHeight + RowGap));
         }
 
         /// <summary>Panel width on a safe area <paramref name="safeWidth"/> reference units wide.</summary>

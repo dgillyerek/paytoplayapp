@@ -9,7 +9,7 @@ namespace Survival.Domain.Runner
     /// </summary>
     public static class RunnerHudChips
     {
-        public const float DamageLeft = 0.43f, SpeedLeft = 0.715f, Width = 0.27f;
+        public const float DamageLeft = 0.34f, SpeedLeft = 0.665f, Width = 0.31f;
 
         /// <summary>The icon covers the badge's left part; the label sits between these, clear of the rounded rim.</summary>
         public const float IconTo = 0.33f, TextFrom = 0.32f, TextTo = 0.95f;

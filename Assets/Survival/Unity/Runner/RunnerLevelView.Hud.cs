@@ -205,10 +205,11 @@ namespace Survival.Unity
             // Hero HP: a corner panel, not a bar over the hero (Derek 2026-10-28); rows join as heroes join the squad.
             _heroPanel = HeroHpPanel.Build(_hud);
             _panelHeroes.Clear();
+            _panelTypes.Clear();
 
             var banner = HookSkin.Panel(_hud, "Banner", HookArtKeys.RibbonBlue, new Color(0.12f, 0.24f, 0.5f, 0.95f), 0.6f);
             _banner = banner.rectTransform;
-            Anchor(_banner, 0.08f, 0.70f, 0.92f, 0.765f);
+            Anchor(_banner, TopHudLayout.RunnerBanner.X0, TopHudLayout.RunnerBanner.Y0, TopHudLayout.RunnerBanner.X1, TopHudLayout.RunnerBanner.Y1);
             _bannerText = HookSkin.Outlined(SurvivalVisuals.Text(_banner, "Text", "", 40, TextAnchor.MiddleCenter, Color.white));
             SurvivalVisuals.Stretch(_bannerText.rectTransform);
             _banner.gameObject.SetActive(false);
@@ -262,6 +263,24 @@ namespace Survival.Unity
         }
 
         /// <summary>Corner hero rows: a row per hero who joined; one who left the squad (fell) reads 0 and dims.</summary>
+        private readonly List<RunnerSquadHp.TypeHp> _typeHp = new List<RunnerSquadHp.TypeHp>();
+        private readonly List<string> _panelTypes = new List<string>();
+        private static readonly string[] _typeTags = BuildTypeTags();
+
+        private static string[] BuildTypeTags()
+        {
+            var tags = new string[33];
+            for (var i = 0; i < tags.Length; i++)
+            {
+                tags[i] = "x" + i;
+            }
+
+            return tags;
+        }
+
+        /// <summary>Follower-type rows key below zero (heroes key by member id, which is never negative).</summary>
+        private static int TypeKey(int index) => -1 - index;
+
         private void TickHeroPanel(float dt)
         {
             if (_heroPanel == null || _run == null)
@@ -282,6 +301,33 @@ namespace Survival.Unity
             {
                 var alive = _run.Member(m.Id) != null;
                 _heroPanel.Set(m.Id, alive ? m.Hp : 0, m.MaxHp);
+            }
+
+            // Followers: one summed row per unit type (Derek 2026-10-28). A type with nobody left stays, dimmed at 0.
+            RunnerSquadHp.ByType(_run.Squad, _typeHp);
+            foreach (var t in _typeHp)
+            {
+                if (!_panelTypes.Contains(t.Roster))
+                {
+                    _panelTypes.Add(t.Roster);
+                    _heroPanel.Add(TypeKey(_panelTypes.Count - 1), t.Roster, "x" + t.Count, RunnerArtKeys.Portrait(t.Roster), unit: true);
+                }
+            }
+
+            for (var i = 0; i < _panelTypes.Count; i++)
+            {
+                int count = 0, hp = 0, max = 0;
+                foreach (var t in _typeHp)
+                {
+                    if (t.Roster == _panelTypes[i])
+                    {
+                        (count, hp, max) = (t.Count, t.Hp, t.MaxHp);
+                    }
+                }
+
+                var key = TypeKey(i);
+                _heroPanel.SetTag(key, count < _typeTags.Length ? _typeTags[count] : "x" + count);
+                _heroPanel.Set(key, hp, max > 0 ? max : 1);
             }
 
             _heroPanel.Tick(dt);

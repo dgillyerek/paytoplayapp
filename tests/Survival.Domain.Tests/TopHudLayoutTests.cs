@@ -20,7 +20,7 @@ public sealed class TopHudLayoutTests
     [Theory]
     [MemberData(nameof(Screens))]
     public void Runner_top_elements_and_hero_panel_do_not_overlap(float width, int heroes) =>
-        AssertApart(RunnerBoxes().Append(TopHudLayout.Panel(width, 1920f, heroes)).ToArray());
+        AssertApart(RunnerBoxes().Append(TopHudLayout.Panel(width, 1920f, heroes, heroes == 5 ? HeroHpPanelLayout.MaxUnitRows : 1)).ToArray());
 
     [Theory]
     [MemberData(nameof(Screens))]

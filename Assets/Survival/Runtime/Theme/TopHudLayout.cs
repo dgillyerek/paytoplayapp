@@ -55,23 +55,27 @@ namespace Survival.Domain.Theme
         /// <summary>The runner's steer hint (the bottom of the screen is free again).</summary>
         public static readonly Box Hint = new Box("Hint", 0f, 0.10f, 1f, 0.15f);
 
+        /// <summary>The runner's pop-up banner, under a full panel (5 heroes + 4 follower types).</summary>
+        public static readonly Box RunnerBanner = new Box("Banner", 0.08f, 0.56f, 0.92f, 0.625f);
+
         public static IReadOnlyList<Box> Runner(float badgeLeft, float badgeWidth, float speedLeft) => new[]
         {
             Leave, RunnerTitle, Distance, BossMark, Kills,
             new Box("DmgBadge", badgeLeft, BadgeY0, badgeLeft + badgeWidth, BadgeY1),
             new Box("SpdBadge", speedLeft, BadgeY0, speedLeft + badgeWidth, BadgeY1),
+            RunnerBanner,
             Hint,
         };
 
         public static IReadOnlyList<Box> Battle() => new[] { Clock, BattleTitle, Retreat };
 
         /// <summary>The hero panel's box on a canvas <paramref name="width"/> x <paramref name="height"/> reference units.</summary>
-        public static Box Panel(float width, float height, int heroes)
+        public static Box Panel(float width, float height, int heroes, int unitTypes = 0)
         {
             var x0 = HeroHpPanelLayout.Margin / width;
             var x1 = (HeroHpPanelLayout.Margin + HeroHpPanelLayout.Width(width)) / width;
             var y1 = PanelTop;
-            var y0 = y1 - (HeroHpPanelLayout.Height(heroes) / Math.Max(1f, height));
+            var y0 = y1 - (HeroHpPanelLayout.Height(heroes, unitTypes) / Math.Max(1f, height));
             return new Box("HeroPanel", x0, y0, x1, y1);
         }
     }

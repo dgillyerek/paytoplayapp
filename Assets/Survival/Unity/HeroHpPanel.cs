@@ -18,6 +18,9 @@ namespace Survival.Unity
         private sealed class Row
         {
             public int Key;
+            public bool IsUnit;
+            public Text Tag = null!;
+            public string ShownTag = string.Empty;
             public RectTransform Rect = null!;
             public CanvasGroup Group = null!;
             public Image Frame = null!;
@@ -36,6 +39,7 @@ namespace Survival.Unity
 
         private readonly RectTransform _safe;
         private readonly RectTransform _panel;
+        private Image? _divider;
         private readonly List<Row> _rows = new List<Row>();
         private Rect _lastSafe;
         private Vector2Int _lastScreen;
@@ -64,20 +68,24 @@ namespace Survival.Unity
             rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
             rt.pivot = new Vector2(0f, 1f);
             var hp = new HeroHpPanel(safe, rt);
+            // Thin gold rule between the hero rows and the runner's follower-type rows.
+            hp._divider = SurvivalVisuals.Image(rt, "Divider", new Color(0.83f, 0.69f, 0.32f, 0.7f));
+            hp._divider.raycastTarget = false;
+            hp._divider.gameObject.SetActive(false);
             hp.FitSafeArea();
             panel.gameObject.SetActive(false);
             return hp;
         }
 
         /// <summary>Adds a row for a hero (no-op past <see cref="HeroHpPanelLayout.MaxRows"/> or for a known key).</summary>
-        public void Add(int key, string name, string tag, string portraitKey)
+        public void Add(int key, string name, string tag, string portraitKey, bool unit = false)
         {
-            if (_rows.Count >= HeroHpPanelLayout.MaxRows || Find(key) != null)
+            if (Find(key) != null || Count(unit) >= (unit ? HeroHpPanelLayout.MaxUnitRows : HeroHpPanelLayout.MaxRows))
             {
                 return;
             }
 
-            var row = new Row { Key = key };
+            var row = new Row { Key = key, IsUnit = unit };
             var bg = HookSkin.Panel(_panel, "Hero" + _rows.Count, HookArtKeys.Chip, RowFill, 0.35f);
             row.Rect = bg.rectTransform;
             row.Rect.anchorMin = new Vector2(0f, 1f);
@@ -86,8 +94,8 @@ namespace Survival.Unity
             row.Group = bg.gameObject.AddComponent<CanvasGroup>();
             row.Frame = bg;
 
-            const float h = HeroHpPanelLayout.RowHeight;
-            const float portrait = h - 10f;
+            var h = unit ? HeroHpPanelLayout.UnitRowHeight : HeroHpPanelLayout.RowHeight;
+            var portrait = h - 10f;
             var heroFrame = Rgb(CampaignArtKeys.HeroFrameRgb, SurvivalVisuals.Gold);
             var ring = SurvivalVisuals.Circle(bg.transform, "Portrait", SurvivalVisuals.Gold);
             Place(ring.rectTransform, 6f, portrait, portrait);
@@ -111,12 +119,14 @@ namespace Survival.Unity
             var title = HookSkin.Outlined(SurvivalVisuals.Text(bg.transform, "Name", name, HeroHpPanelLayout.NameFont, TextAnchor.LowerLeft, SurvivalVisuals.Cream), 1.5f);
             title.fontStyle = FontStyle.Bold;
             title.horizontalOverflow = HorizontalWrapMode.Overflow;
-            Band(title.rectTransform, left, string.IsNullOrEmpty(tag) ? 8f : 46f, 0.50f, 0.96f);
+            Band(title.rectTransform, left, string.IsNullOrEmpty(tag) ? 8f : 46f, 0.52f, 0.96f);
             var level = HookSkin.Outlined(SurvivalVisuals.Text(bg.transform, "Tag", tag, HeroHpPanelLayout.TagFont, TextAnchor.LowerRight, SurvivalVisuals.Gold), 1.5f);
-            Band(level.rectTransform, left, 8f, 0.50f, 0.96f);
+            Band(level.rectTransform, left, 8f, 0.52f, 0.96f);
+            row.Tag = level;
+            row.ShownTag = tag;
 
             var bar = HookSkin.Bar(bg.transform, "Hp", out var fill);
-            Band(bar.rectTransform, left, 8f, 0.10f, 0.46f);
+            Band(bar.rectTransform, left, 8f, 0.08f, 0.48f);
             row.Fill = fill;
             row.Trail = SurvivalVisuals.Image(bar.transform, "Trail", TrailColor, fill.sprite);
             row.Trail.transform.SetSiblingIndex(fill.transform.GetSiblingIndex());
@@ -140,6 +150,31 @@ namespace Survival.Unity
             _rows.Add(row);
             Paint(row);
             Relayout();
+        }
+
+        /// <summary>Updates a row's right-hand tag (a follower type's "x7"); no-op when unchanged.</summary>
+        public void SetTag(int key, string tag)
+        {
+            var row = Find(key);
+            if (row != null && row.ShownTag != tag)
+            {
+                row.ShownTag = tag;
+                row.Tag.text = tag;
+            }
+        }
+
+        private int Count(bool unit)
+        {
+            var n = 0;
+            foreach (var r in _rows)
+            {
+                if (r.IsUnit == unit)
+                {
+                    n++;
+                }
+            }
+
+            return n;
         }
 
         /// <summary>Feeds a hero's HP; a drop starts the trail hold and the frame flash.</summary>
@@ -225,20 +260,33 @@ namespace Survival.Unity
 
         private void Relayout()
         {
-            var n = HeroHpPanelLayout.Rows(_rows.Count);
-            _panel.gameObject.SetActive(n > 0);
+            var n = Count(false);
+            var u = Count(true);
+            _panel.gameObject.SetActive(n + u > 0);
             var width = HeroHpPanelLayout.Width(_safe.rect.width);
-            _panel.sizeDelta = new Vector2(width, HeroHpPanelLayout.Height(n));
+            _panel.sizeDelta = new Vector2(width, HeroHpPanelLayout.Height(n, u));
             // Under the HUD's top row (TopHudLayout.PanelTop), measured from the safe area's top edge.
             var canvas = _safe.parent as RectTransform;
             var canvasHeight = canvas != null ? canvas.rect.height : 1920f;
             var inset = canvasHeight * (1f - _safe.anchorMax.y);
             _panel.anchoredPosition = new Vector2(HeroHpPanelLayout.Margin, -HeroHpPanelLayout.TopOffset(canvasHeight, inset));
-            for (var i = 0; i < _rows.Count; i++)
+            int hi = 0, ui = 0;
+            foreach (var row in _rows)
             {
-                var rt = _rows[i].Rect;
-                rt.sizeDelta = new Vector2(-2f * HeroHpPanelLayout.Padding, HeroHpPanelLayout.RowHeight);
-                rt.anchoredPosition = new Vector2(0f, -HeroHpPanelLayout.RowTop(i));
+                var rt = row.Rect;
+                rt.sizeDelta = new Vector2(-2f * HeroHpPanelLayout.Padding, row.IsUnit ? HeroHpPanelLayout.UnitRowHeight : HeroHpPanelLayout.RowHeight);
+                rt.anchoredPosition = new Vector2(0f, -(row.IsUnit ? HeroHpPanelLayout.UnitRowTop(n, ui++) : HeroHpPanelLayout.RowTop(hi++)));
+            }
+
+            if (_divider != null)
+            {
+                _divider.gameObject.SetActive(n > 0 && u > 0);
+                var d = _divider.rectTransform;
+                d.anchorMin = new Vector2(0f, 1f);
+                d.anchorMax = new Vector2(1f, 1f);
+                d.pivot = new Vector2(0.5f, 0.5f);
+                d.sizeDelta = new Vector2(-4f * HeroHpPanelLayout.Padding, 2f);
+                d.anchoredPosition = new Vector2(0f, -(HeroHpPanelLayout.UnitRowTop(n, 0) - ((HeroHpPanelLayout.DividerHeight + HeroHpPanelLayout.RowGap) * 0.5f)));
             }
         }
 
