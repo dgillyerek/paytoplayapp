@@ -187,10 +187,8 @@ namespace Survival.Unity
             {
                 // The string hand: back from the nock to the jaw over the draw, flying back and out on the release.
                 var draw = RunnerWeaponAim.Draw(_kick.SinceShot, _kick.Interval);
-                var nock = grip - (f * (RunnerWeaponAim.NockBehind * k));
-                var full = grip - (f * (RunnerWeaponAim.FullDrawBehind * k)) + (u * (RunnerWeaponAim.FullDrawUp * k));
-                var flick = ((-f * 0.6f) + (r * 0.8f)).normalized * (RunnerWeaponAim.ReleaseFollowThrough * k * w);
-                off.Reach(Vector3.Lerp(nock, full, draw) + flick, off.Upper.position + (k * U(RunnerWeaponAim.DrawElbowPole(N(r), N(u), N(f)))), Set);
+                var at = U(RunnerWeaponAim.DrawHand(N(grip), N(off.Upper.position), N(r), N(u), N(f), draw, w, k));
+                off.Reach(at, off.Upper.position + (k * U(RunnerWeaponAim.DrawElbowPole(N(r), N(u), N(f)))), Set);
                 Muzzle = grip + (u * (0.03f * k));
             }
         }

@@ -67,9 +67,16 @@ namespace Survival.Domain.Runner
         /// <summary>The nock (string hand at rest on the string) behind the bow hand, along the aim.</summary>
         public const float NockBehind = 0.18f;
 
-        /// <summary>Full draw: the string hand this far behind the bow hand (at the jaw), and this much above it.</summary>
+        /// <summary>Full draw: how far the string hand has come back from the nock toward the anchor (kept for the draw-length check).</summary>
         public const float FullDrawBehind = 0.58f;
-        public const float FullDrawUp = 0.06f;
+
+        /// <summary>
+        /// The full-draw anchor from the DRAW (right) shoulder, in (right, up, aim) metres: at the right cheek, in front of the
+        /// face. It used to be the bow hand pulled 0.58 m straight back along the aim, which lands behind the bow-side
+        /// (left) shoulder: the right hand had to cross behind the neck and the elbow wrapped up behind the head
+        /// (Derek 2026-10-28: "his right arm is bent completely behind his head").
+        /// </summary>
+        public static readonly Vector3 FullDrawAnchor = new Vector3(-0.12f, 0.10f, 0.17f);
 
         /// <summary>Release: the string hand flies back and out past the anchor by this much.</summary>
         public const float ReleaseFollowThrough = 0.10f;
@@ -83,8 +90,22 @@ namespace Survival.Domain.Runner
         /// </summary>
         public static Vector3 BowElbowPole(Vector3 r, Vector3 u, Vector3 f) => (-r * 0.30f) - (u * 0.40f) - (f * 0.10f);
 
-        /// <summary>The draw arm's elbow hint from its shoulder: back behind the shoulder, out to the draw side and up, so the elbow rides high at the anchor.</summary>
-        public static Vector3 DrawElbowPole(Vector3 r, Vector3 u, Vector3 f) => (-f * 0.45f) + (r * 0.25f) + (u * 0.20f);
+        /// <summary>The draw arm's elbow hint from its shoulder: out to the draw side and a touch down, so the elbow stays at or under shoulder height and never folds up behind the head.</summary>
+        public static Vector3 DrawElbowPole(Vector3 r, Vector3 u, Vector3 f) => (r * 0.50f) - (u * 0.50f);
+
+        /// <summary>
+        /// Where the string (right) hand goes: from the nock behind the bow grip (<paramref name="draw"/> 0) to the cheek anchor
+        /// in front of the face (1), flicking back and out by <paramref name="flick"/> metres on the release. <paramref name="k"/>
+        /// scales design metres to the rig.
+        /// </summary>
+        public static Vector3 DrawHand(Vector3 grip, Vector3 drawShoulder, Vector3 r, Vector3 u, Vector3 f, float draw, float flick, float k)
+        {
+            var nock = grip - (f * (NockBehind * k));
+            var a = FullDrawAnchor;
+            var full = drawShoulder + (k * ((r * a.X) + (u * a.Y) + (f * a.Z)));
+            var fly = Vector3.Normalize((-f * 0.6f) + (r * 0.8f)) * (ReleaseFollowThrough * k * flick);
+            return Vector3.Lerp(nock, full, Math.Clamp(draw, 0f, 1f)) + fly;
+        }
 
         /// <summary>
         /// Whether the bow's measured depth axis (riser side) should be flipped so turning the bow to face <paramref name="fwd"/> twists the hand the least.

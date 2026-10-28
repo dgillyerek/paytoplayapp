@@ -34,30 +34,43 @@ namespace Survival.Domain.Tests
             Assert.True(bend.Y <= 0f, $"bow elbow should not point up, bend {bend}");
         }
 
+        // The head: centred over the shoulders, its back at the shoulder line's depth (z 0), top at 1.75 m.
+        private const float HeadPlaneZ = 0f;
+        private const float HeadTop = 1.75f;
+
         [Theory]
-        [InlineData(0f)]
-        [InlineData(0.5f)]
-        [InlineData(1f)]
-        public void DrawElbowRidesBackAndUpBehindTheShoulder(float draw)
+        [InlineData(0f, 0f)]
+        [InlineData(0.5f, 0f)]
+        [InlineData(1f, 0f)]
+        [InlineData(1f, 1f)]
+        public void DrawArmStaysInFrontOfTheHeadAndUnderShoulderHeight(float draw, float flick)
+        {
+            // Derek 2026-10-28: "his right arm is bent completely behind his head in a non-natural position".
+            var grip = LeftShoulder + (R * RunnerWeaponAim.BowHold.X) + (Up * RunnerWeaponAim.BowHold.Y) + (F * RunnerWeaponAim.BowHold.Z);
+            var at = RunnerWeaponAim.DrawHand(grip, RightShoulder, R, Up, F, draw, flick, 1f);
+            RunnerTwoBoneIk.Solve(RightShoulder, UpperArm, Forearm, at, RightShoulder + RunnerWeaponAim.DrawElbowPole(R, Up, F), out var elbow, out var wrist);
+            Assert.True(wrist.Z > HeadPlaneZ + 0.05f, $"string hand in front of the head, wrist {wrist}");
+            Assert.True(elbow.Z > HeadPlaneZ - 0.02f, $"draw elbow not behind the head, elbow {elbow}");
+            Assert.True(wrist.Y < HeadTop && elbow.Y < HeadTop, $"nothing over the head, wrist {wrist} elbow {elbow}");
+            Assert.True(elbow.Y <= RightShoulder.Y + 0.02f, $"draw elbow at or under shoulder height, elbow {elbow}");
+            // At the nock the arm reaches across the chest (fine: "cross his body or in front"); once drawn the elbow is on the right.
+            if (draw >= 0.5f) Assert.True(elbow.X > 0f, $"draw elbow stays on the right side, elbow {elbow}");
+            if (draw >= 1f && flick == 0f)
+            {
+                // Anchored at the right cheek: near the face, above the shoulder, right of the bow hand.
+                Assert.InRange(wrist.Y, RightShoulder.Y, HeadTop - 0.1f);
+                Assert.True(wrist.X > grip.X + 0.1f, $"anchor on the draw side of the bow, wrist {wrist}");
+            }
+        }
+
+        [Fact]
+        public void BowHandIsForwardOfTheShoulderAndUnderTheHead()
         {
             var grip = LeftShoulder + (R * RunnerWeaponAim.BowHold.X) + (Up * RunnerWeaponAim.BowHold.Y) + (F * RunnerWeaponAim.BowHold.Z);
-            var nock = grip - (F * RunnerWeaponAim.NockBehind);
-            var full = grip - (F * RunnerWeaponAim.FullDrawBehind) + (Up * RunnerWeaponAim.FullDrawUp);
-            var at = Vector3.Lerp(nock, full, draw);
-            RunnerTwoBoneIk.Solve(RightShoulder, UpperArm, Forearm, at, RightShoulder + RunnerWeaponAim.DrawElbowPole(R, Up, F), out var elbow, out var wrist);
-            var bend = elbow - ((RightShoulder + wrist) * 0.5f);
-            if (bend.Length() > 0.02f)
-            {
-                // A bent draw arm folds back and up, never forward or down (a backwards elbow).
-                Assert.True(bend.Z < 0f, $"draw elbow should point back, bend {bend}");
-                Assert.True(bend.Y > -0.01f, $"draw elbow should not drop under the arm, bend {bend}");
-            }
-
-            if (draw >= 1f)
-            {
-                Assert.True(elbow.Z < RightShoulder.Z + 0.05f, $"at full draw the elbow is back level with or behind the shoulder, elbow {elbow}");
-                Assert.True(elbow.Y > RightShoulder.Y - 0.12f, $"at full draw the elbow rides high, elbow {elbow}");
-            }
+            RunnerTwoBoneIk.Solve(LeftShoulder, UpperArm, Forearm, grip, LeftShoulder + RunnerWeaponAim.BowElbowPole(R, Up, F), out var elbow, out var wrist);
+            Assert.True(wrist.Z > LeftShoulder.Z + 0.4f, $"bow arm out toward the enemy, wrist {wrist}");
+            Assert.InRange(wrist.Y, LeftShoulder.Y - 0.15f, LeftShoulder.Y + 0.15f);
+            Assert.True(elbow.Y < HeadTop - 0.2f);
         }
 
         [Fact]
