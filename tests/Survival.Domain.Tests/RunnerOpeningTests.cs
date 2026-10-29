@@ -44,12 +44,12 @@ public sealed class RunnerOpeningTests
         return events;
     }
 
-    public static string Signature(RunnerLevelDef l)
+    public static string Signature(RunnerLevelDef l, float runUp = 0f)
     {
         var ev = Pickups(l);
-        var first = ev[0].At;
+        var first = ev[0].At - runUp;
         var bucket = first < 10f ? "near" : first < 14f ? "12m" : first < 18f ? "far" : "late";
-        var waveFirst = l.Rows.Any(r => r.Kind == RunnerRowKind.Enemy && r.At < first) ? "wave," : "";
+        var waveFirst = l.Rows.Any(r => r.Kind == RunnerRowKind.Enemy && r.At < ev[0].At) ? "wave," : "";
         return bucket + ":" + waveFirst + string.Join(",", ev.Take(3).Select(e => e.Sides));
     }
 
@@ -60,7 +60,7 @@ public sealed class RunnerOpeningTests
         var sigs = new Dictionary<int, string>();
         for (var n = 2; n <= c.Levels.Count; n++)
         {
-            sigs[n] = Signature(c.ByNumber(n));
+            sigs[n] = Signature(c.ByNumber(n), c.FirstRunUp);
         }
 
         foreach (var g in sigs.GroupBy(kv => kv.Value).OrderByDescending(g => g.Count()))
@@ -84,7 +84,7 @@ public sealed class RunnerOpeningTests
         Assert.Contains(shapes, s => s.StartsWith("R,", StringComparison.Ordinal));
         Assert.Contains(shapes, s => s.StartsWith("C,", StringComparison.Ordinal));
         Assert.Contains(shapes, s => s.StartsWith("wave,", StringComparison.Ordinal));
-        var firsts = Enumerable.Range(2, c.Levels.Count - 1).Select(n => Pickups(c.ByNumber(n))[0].At).ToList();
+        var firsts = Enumerable.Range(2, c.Levels.Count - 1).Select(n => Pickups(c.ByNumber(n))[0].At - c.FirstRunUp).ToList();
         Assert.True(firsts.Min() < 10f && firsts.Max() > 18f, $"first pickup {firsts.Min()}-{firsts.Max()} m");
     }
 }

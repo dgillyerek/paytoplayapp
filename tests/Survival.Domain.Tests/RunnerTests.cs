@@ -1029,8 +1029,8 @@ public sealed class RunnerTests
 
             // The road grows until the ramp's length cap and the packs until its count cap; past those only HP and damage climb.
             var cap = c.Progression!.Ramp!;
-            Assert.True(l.Length > p.Length || (l.Length == cap.LengthCap && p.Length == cap.LengthCap), $"L{l.Number} length {p.Length} -> {l.Length}");
-            Assert.True(l.Length <= cap.LengthCap);
+            Assert.True(l.Length > p.Length || (l.Length == cap.LengthCap + c.FirstRunUp && p.Length == cap.LengthCap + c.FirstRunUp), $"L{l.Number} length {p.Length} -> {l.Length}");
+            Assert.True(l.Length <= cap.LengthCap + c.FirstRunUp);
             // The boss counts as one enemy and is only on every 5th level, so compare the waves without it.
             int Waves(RunnerLevelDef x) => x.EnemyCount - (x.HasBoss ? 1 : 0);
             // A level tweaked to fewer or weaker enemies (progression "level_tweaks" wave / foe_hp) is smaller on purpose: skip it
