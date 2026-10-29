@@ -25,7 +25,7 @@ public sealed class RunnerBarrierTests
     {
         var json = JsonNode.Parse(File.ReadAllText(Path.Combine(TestPaths.CatalogDir, RunnerCatalog.FileName)))!;
         json.AsObject().Remove("progression");
-        json.AsObject().Remove("first_run_up");
+        json.AsObject().Remove("first_run_up"); json.AsObject().Remove("first_run_up_early");
         var level = json["levels"]![0]!;
         level["length"] = 120;
         var rows = new JsonArray();

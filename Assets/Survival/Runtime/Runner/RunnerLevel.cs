@@ -474,6 +474,15 @@ namespace Survival.Domain.Runner
         /// <summary>Metres every level's rows were moved up the road by the pack's "first_run_up" (0 = none).</summary>
         public float FirstRunUp { get; private set; }
 
+        /// <summary>How many opening levels use <see cref="EarlyRunUp"/> instead of <see cref="FirstRunUp"/>.</summary>
+        public int EarlyRunUpLevels { get; private set; }
+
+        /// <summary>Run-up (metres) of the first <see cref="EarlyRunUpLevels"/> levels.</summary>
+        public float EarlyRunUp { get; private set; }
+
+        /// <summary>Metres level <paramref name="number"/>'s rows were moved up the road.</summary>
+        public float RunUpFor(int number) => number <= EarlyRunUpLevels ? EarlyRunUp : FirstRunUp;
+
         public RunnerUnitDef Unit(string id) =>
             _units.TryGetValue(id, out var u) ? u : throw new KeyNotFoundException("Runner unit '" + id + "' is not in " + FileName + ".");
 
@@ -643,13 +652,26 @@ namespace Survival.Domain.Runner
             // before the first items in the level. but only the first items and enemies. everything else remains the same").
             // Every row moves up the road by the same amount and the road grows by it, so only the empty start gets longer.
             // Set by the pack's "first_run_up" (metres; 0 when absent, so hand-built test roads keep their exact places).
+            // "first_run_up_early" {"levels": n, "metres": m} gives the first n levels a different run-up, so the opening
+            // levels can keep main's difficulty (Derek 2026-10-29: the free pace and the start must feel the same).
             var runUp = Math.Max(0f, LayoutJson.OptNum(root, "first_run_up", 0f));
-            for (var i = 0; i < levels.Count; i++)
+            var earlyLevels = 0;
+            var earlyRunUp = runUp;
+            if (root.TryGet("first_run_up_early", out var en) && en is JsonNode.Obj eo)
             {
-                levels[i] = RunnerProgression.WithRunUp(levels[i], runUp);
+                earlyLevels = (int)LayoutJson.OptNum(eo, "levels", 0f);
+                earlyRunUp = Math.Max(0f, LayoutJson.OptNum(eo, "metres", runUp));
             }
 
-            return new RunnerCatalog(units, levels, allowMeleeHeroes) { Progression = progression, FirstRunUp = runUp };
+            for (var i = 0; i < levels.Count; i++)
+            {
+                levels[i] = RunnerProgression.WithRunUp(levels[i], i < earlyLevels ? earlyRunUp : runUp);
+            }
+
+            return new RunnerCatalog(units, levels, allowMeleeHeroes)
+            {
+                Progression = progression, FirstRunUp = runUp, EarlyRunUpLevels = earlyLevels, EarlyRunUp = earlyRunUp,
+            };
         }
 
         private static RunnerRowDef ReadRow(JsonNode.Obj r)

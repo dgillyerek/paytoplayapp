@@ -27,7 +27,7 @@ public sealed class RunnerLevelTweakTests
             Assert.Equal(RunnerLevelTweak.None with { Layout = tw.Layout, FoeHp = tw.FoeHp }, tw);
             Assert.NotEqual(0, tw.Layout);
             var tweaked = c.ByNumber(n);
-            var seed = RunnerProgression.WithRunUp(RunnerProgression.Generate(RunnerProgression.WithRunUp(c.Levels[0], -c.FirstRunUp), plain, n, c.Units.ContainsKey), c.FirstRunUp);
+            var seed = RunnerProgression.WithRunUp(RunnerProgression.Generate(RunnerProgression.WithRunUp(c.Levels[0], -c.RunUpFor(1)), plain, n, c.Units.ContainsKey), c.RunUpFor(n));
             Assert.True(seed.BoxCount == tweaked.BoxCount, $"L{n} boxes {seed.BoxCount} vs {tweaked.BoxCount}");
             Assert.Equal(seed.EnemyCount, tweaked.EnemyCount);
             Assert.Equal(seed.HazardCount, tweaked.HazardCount);

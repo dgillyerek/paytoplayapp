@@ -60,7 +60,7 @@ public sealed class RunnerOpeningTests
         var sigs = new Dictionary<int, string>();
         for (var n = 2; n <= c.Levels.Count; n++)
         {
-            sigs[n] = Signature(c.ByNumber(n), c.FirstRunUp);
+            sigs[n] = Signature(c.ByNumber(n), c.RunUpFor(n));
         }
 
         foreach (var g in sigs.GroupBy(kv => kv.Value).OrderByDescending(g => g.Count()))
@@ -84,7 +84,7 @@ public sealed class RunnerOpeningTests
         Assert.Contains(shapes, s => s.StartsWith("R,", StringComparison.Ordinal));
         Assert.Contains(shapes, s => s.StartsWith("C,", StringComparison.Ordinal));
         Assert.Contains(shapes, s => s.StartsWith("wave,", StringComparison.Ordinal));
-        var firsts = Enumerable.Range(2, c.Levels.Count - 1).Select(n => Pickups(c.ByNumber(n))[0].At - c.FirstRunUp).ToList();
+        var firsts = Enumerable.Range(2, c.Levels.Count - 1).Select(n => Pickups(c.ByNumber(n))[0].At - c.RunUpFor(n)).ToList();
         Assert.True(firsts.Min() < 10f && firsts.Max() > 18f, $"first pickup {firsts.Min()}-{firsts.Max()} m");
     }
 }
