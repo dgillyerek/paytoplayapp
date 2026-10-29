@@ -22,6 +22,26 @@ namespace Survival.Domain.Clock
 
         public bool IsFree(double remainingSeconds) => remainingSeconds <= FreeFinishSeconds;
 
+        /// <summary>
+        /// The free window for one timer: its last <see cref="FreeFinishSeconds"/>, but never more than the last half of it,
+        /// so a short build / training still shows a running countdown before it can be finished for free.
+        /// </summary>
+        public double FreeWindow(double durationSeconds) => Math.Min(FreeFinishSeconds, Math.Max(0, durationSeconds) * 0.5);
+
+        public bool IsFree(double remainingSeconds, double durationSeconds) => remainingSeconds <= FreeWindow(durationSeconds);
+
+        /// <summary>Gems to finish a timer of <paramref name="durationSeconds"/> now. 0 when done or inside its free window.</summary>
+        public int GemCost(double remainingSeconds, double durationSeconds)
+        {
+            if (remainingSeconds <= 0 || IsFree(remainingSeconds, durationSeconds))
+            {
+                return 0;
+            }
+
+            var raw = (int)Math.Ceiling(remainingSeconds / 60.0 * GemsPerMinute - 1e-9);
+            return Math.Max(MinGems, raw);
+        }
+
         /// <summary>Gems to finish now. 0 when done or inside the free window.</summary>
         public int GemCost(double remainingSeconds)
         {
@@ -42,13 +62,16 @@ namespace Survival.Domain.Clock
             Id = id;
             TargetId = targetId;
             StartedAt = startedAt;
-            DurationSeconds = durationSeconds;
+            TotalSeconds = DurationSeconds = durationSeconds;
         }
 
         public string Id { get; }
         public string TargetId { get; }
         public double StartedAt { get; }
         public double DurationSeconds { get; private set; }
+
+        /// <summary>Length when started; speed-ups shorten <see cref="DurationSeconds"/> but not this (the free window is half of it).</summary>
+        public double TotalSeconds { get; }
         public double EndsAt => StartedAt + DurationSeconds;
 
         public double Remaining(double now) => Math.Max(0, EndsAt - now);
@@ -131,13 +154,13 @@ namespace Survival.Domain.Clock
         public int RushCost(string id)
         {
             var t = Find(id);
-            return t == null ? 0 : Rules.GemCost(t.Remaining(Clock.Now));
+            return t == null ? 0 : Rules.GemCost(t.Remaining(Clock.Now), t.TotalSeconds);
         }
 
         public bool CanFinishFree(string id)
         {
             var t = Find(id);
-            return t != null && !t.IsDone(Clock.Now) && Rules.IsFree(t.Remaining(Clock.Now));
+            return t != null && !t.IsDone(Clock.Now) && Rules.IsFree(t.Remaining(Clock.Now), t.TotalSeconds);
         }
 
         /// <summary>Inside the free window: end the timer now for 0 gems.</summary>
@@ -162,7 +185,7 @@ namespace Survival.Domain.Clock
                 return false;
             }
 
-            var cost = Rules.GemCost(t.Remaining(Clock.Now));
+            var cost = Rules.GemCost(t.Remaining(Clock.Now), t.TotalSeconds);
             if (cost > 0 && !wallet.TrySpend(SurvIds.ResHard, cost))
             {
                 return false;

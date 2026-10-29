@@ -383,7 +383,8 @@ namespace Survival.Unity
             if (_heroFree != null)
             {
                 var n = Campaign.Roster.FreeFinishable().Count;
-                var show = n > 0 && !_inBattle;
+                // Hidden behind any open campaign screen (the Heroes panel shows the countdown itself).
+                var show = HeroRoster.ShowFreeBadge(n, _inBattle, _screen != null);
                 if (_heroFree.gameObject.activeSelf != show)
                 {
                     _heroFree.gameObject.SetActive(show);
@@ -563,6 +564,7 @@ namespace Survival.Unity
             dim.transition = Selectable.Transition.None;
             SurvivalVisuals.Stretch(dim.GetComponent<RectTransform>());
             _screen = dim.gameObject;
+            RefreshBadges(); // hide the village FREE hero badge behind the screen right away
             var panel = HookSkin.Panel(dim.transform, "Panel", HookArtKeys.Panel, SurvivalVisuals.InspectFill, 1f);
             panel.raycastTarget = true;
             Box(panel.rectTransform, 0.02f, 0.035f, 0.98f, 0.955f);
