@@ -657,11 +657,13 @@ namespace Survival.Unity
                 closeX0 = 0.52f;
                 var power = SheetButton(panel, "PowerUp", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.06f, 0.025f, 0.48f, 0.082f, 26, out var powerBtn);
                 power.text = S("store.power_packs.button", "POWER UP");
+                FitButtonLabel(power, 26);
                 Wire(powerBtn, OpenPowerPacks);
             }
 
             var close = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, closeX0, 0.025f, closeX0 + 0.40f, 0.082f, 26, out var closeBtn);
             close.text = S("hook.close", "Close");
+            FitButtonLabel(close, 26);
             Wire(closeBtn, CloseScreen);
 
             _refresh = () =>
@@ -797,6 +799,16 @@ namespace Survival.Unity
 
             // Level row: Level Up (cost + time), or the training bar with Finish FREE / Speed up / Rush.
             var levelText = SheetButton(d, "LevelUp", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.37f, 0.27f, 0.975f, 0.46f, 22, out var levelBtn);
+            // Two rows: LEVEL UP on top, cost + time underneath, each best-fit inside the rim.
+            HookSkin.Fit(levelText, 16, 28);
+            HookSkin.PadLabel(levelText.rectTransform, 0.05f, 0.0f);
+            levelText.rectTransform.anchorMin = new Vector2(0.05f, 0.50f);
+            levelText.rectTransform.anchorMax = new Vector2(0.95f, 0.92f);
+            var levelCost = HookSkin.Outlined(SurvivalVisuals.Text(levelBtn.transform, "Cost", "", 18, TextAnchor.MiddleCenter, HookSkin.InkFor(HookArtKeys.ButtonGold)), 1.2f);
+            levelCost.fontStyle = FontStyle.Bold;
+            levelCost.raycastTarget = false;
+            HookSkin.Fit(levelCost, 11, 18);
+            Box(levelCost.rectTransform, 0.06f, 0.10f, 0.94f, 0.50f);
             var levelImg = levelBtn.GetComponent<Image>();
             var levelRt = levelBtn.GetComponent<RectTransform>();
             var trainFrame = HookSkin.Bar(d, "TrainBar", out var trainFill);
@@ -804,6 +816,8 @@ namespace Survival.Unity
             var trainText = HookSkin.Outlined(SurvivalVisuals.Text(trainFrame.transform, "T", "", 20, TextAnchor.MiddleCenter, Color.white), 1.5f);
             SurvivalVisuals.Stretch(trainText.rectTransform);
             var rushText = SheetButton(d, "Rush", HookArtKeys.ButtonGreen, FreeGreen, 0.68f, 0.27f, 0.975f, 0.46f, 22, out var rushBtn);
+            FitButtonLabel(rushText, 22);
+            HookSkin.Fit(trainText, 12, 20);
             var rushImg = rushBtn.GetComponent<Image>();
             var rushRt = rushBtn.GetComponent<RectTransform>();
 
@@ -815,6 +829,7 @@ namespace Survival.Unity
             var shardText = HookSkin.Outlined(SurvivalVisuals.Text(shardFrame.transform, "T", "", 20, TextAnchor.MiddleCenter, Color.white), 1.5f);
             SurvivalVisuals.Stretch(shardText.rectTransform);
             var starText = SheetButton(d, "StarUp", HookArtKeys.ButtonBlue, HeroFrame, 0.68f, 0.04f, 0.975f, 0.23f, 24, out var starBtn);
+            FitButtonLabel(starText, 24);
             var starImg = starBtn.GetComponent<Image>();
             var starRt = starBtn.GetComponent<RectTransform>();
 
@@ -911,11 +926,14 @@ namespace Survival.Unity
                 {
                     var cost = roster.LevelUpCost(def.Id);
                     var ok = check == LevelUpCheck.Ok;
-                    levelText.text = check == LevelUpCheck.AtStarCap || check == LevelUpCheck.MaxLevel || check == LevelUpCheck.NoSlot
-                        ? LevelReason(check)
-                        : Fmt("campaign.level_up", "LEVEL UP  {0} Gold \u00b7 {1} Food \u00b7 {2}", ChipWallet.FormatCompact(Cost(cost, SurvIds.ResSoft)), ChipWallet.FormatCompact(Cost(cost, SurvIds.ResFood)), TimerQueue.FormatClock(roster.LevelUpSeconds(def.Id)));
+                    var blocked = check == LevelUpCheck.AtStarCap || check == LevelUpCheck.MaxLevel || check == LevelUpCheck.NoSlot;
+                    levelText.text = blocked ? LevelReason(check) : S("campaign.level_up_title", "LEVEL UP");
+                    levelText.rectTransform.anchorMin = new Vector2(0.05f, blocked ? 0.12f : 0.50f);
+                    levelCost.gameObject.SetActive(!blocked);
+                    levelCost.text = Fmt("campaign.level_up_cost", "{0} Gold  \u00b7  {1} Food  \u00b7  \u23f1 {2}", ChipWallet.FormatGrouped(Cost(cost, SurvIds.ResSoft)), ChipWallet.FormatGrouped(Cost(cost, SurvIds.ResFood)), TimerQueue.FormatClock(roster.LevelUpSeconds(def.Id)));
                     HookSkin.SetButton(levelImg, HookArtKeys.ButtonGold, ok ? SurvivalVisuals.MineFill : Disabled, ok, 0.5f);
                     levelText.color = ok ? HookSkin.InkFor(HookArtKeys.ButtonGold) : SurvivalVisuals.Cream;
+                    levelCost.color = levelText.color;
                 }
 
                 if (training != null)
@@ -1140,20 +1158,58 @@ namespace Survival.Unity
             {
                 var r = rows[i];
                 var y1 = top - (i * h);
-                var row = HookSkin.Panel(panel, "Pack_" + r.Offer.Id, HookArtKeys.Plate, SurvivalVisuals.RowFill, 0.45f);
+                var tag = r.Offer.Tag ?? "";
+                var hot = tag == "popular" || tag == "best_value";
+                var accent = tag == "best_value" ? SurvivalVisuals.MineFill : tag == "popular" ? HeroGlow : FreeGreen;
+                if (hot)
+                {
+                    // Highlighted cards: soft glow and a gold border behind the plate.
+                    var glow = HookSkin.Glow(panel, "PackGlow_" + r.Offer.Id, new Color(accent.r, accent.g, accent.b, 0.55f));
+                    glow.raycastTarget = false;
+                    Box(glow.rectTransform, 0.015f, y1 - h - 0.002f, 0.985f, y1 + 0.008f);
+                    var border = SurvivalVisuals.Image(panel, "PackBorder_" + r.Offer.Id, SurvivalVisuals.GoldLine);
+                    border.raycastTarget = false;
+                    Box(border.rectTransform, 0.026f, y1 - h + 0.003f, 0.974f, y1 + 0.003f);
+                }
+
+                var row = HookSkin.Panel(panel, "Pack_" + r.Offer.Id, HookArtKeys.Plate, hot ? new Color(0.16f, 0.24f, 0.52f, 1f) : SurvivalVisuals.RowFill, 0.45f);
                 Box(row.rectTransform, 0.03f, y1 - h + 0.006f, 0.97f, y1);
-                var title = HookSkin.Outlined(SurvivalVisuals.Text(row.transform, "Name", S(r.Offer.Id + ".title", r.Offer.Id), 22, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.5f);
+                var title = HookSkin.Outlined(SurvivalVisuals.Text(row.transform, "Name", S(r.Offer.Id + ".title", r.Offer.Id), 24, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.5f);
                 title.fontStyle = FontStyle.Bold;
-                Box(title.rectTransform, 0.03f, 0.52f, 0.48f, 0.96f);
-                var tagLine = r.Offer.Tag is { Length: > 0 } tag ? S("offer.tag." + tag, tag.ToUpperInvariant()) : "";
-                var bonus = r.BonusLabel.Length > 0 ? Fmt("store.power_packs.value", "{0} value", r.BonusLabel) : "";
-                var bonusText = HookSkin.Outlined(SurvivalVisuals.Text(row.transform, "Bonus", (bonus + (bonus.Length > 0 && tagLine.Length > 0 ? "  \u00b7  " : "") + tagLine), 18, TextAnchor.MiddleRight, FreeGreen), 1.5f);
-                bonusText.fontStyle = FontStyle.Bold;
-                Box(bonusText.rectTransform, 0.48f, 0.52f, 0.66f, 0.96f);
-                var contents = HookSkin.Outlined(SurvivalVisuals.Text(row.transform, "Contents", PackLine(r.Grants), 15, TextAnchor.MiddleLeft, SurvivalVisuals.Reward), 1.2f);
-                Box(contents.rectTransform, 0.03f, 0.04f, 0.66f, 0.52f);
-                var price = SheetButton((RectTransform)row.transform, "Buy", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.68f, 0.14f, 0.98f, 0.86f, 22, out var buyBtn);
+                HookSkin.Fit(title, 14, 24);
+                Box(title.rectTransform, tag.Length > 0 ? 0.20f : 0.03f, 0.60f, 0.60f, 0.96f);
+                if (tag.Length > 0)
+                {
+                    // Corner ribbon: ONE TIME / POPULAR / BEST VALUE.
+                    var ribbon = SurvivalVisuals.Image(row.transform, "Ribbon", tag == "starter" ? new Color(0.80f, 0.22f, 0.24f, 1f) : accent);
+                    ribbon.raycastTarget = false;
+                    Box(ribbon.rectTransform, 0.0f, 0.66f, 0.185f, 1.0f);
+                    var label = tag == "starter" ? S("store.power_packs.one_time", "ONE TIME") : S("offer.tag." + tag, tag.Replace('_', ' ').ToUpperInvariant());
+                    var rt = HookSkin.Outlined(SurvivalVisuals.Text(ribbon.transform, "T", label, 16, TextAnchor.MiddleCenter, Color.white), 1.4f);
+                    rt.fontStyle = FontStyle.Bold;
+                    HookSkin.Fit(rt, 9, 16);
+                    HookSkin.PadLabel(rt.rectTransform, 0.06f, 0.08f);
+                }
+
+                if (r.BonusLabel.Length > 0)
+                {
+                    // Big "+X%" with VALUE under it.
+                    var pct = HookSkin.Outlined(SurvivalVisuals.Text(row.transform, "Bonus", r.BonusLabel, 34, TextAnchor.MiddleCenter, FreeGreen), 2f);
+                    pct.fontStyle = FontStyle.Bold;
+                    HookSkin.Fit(pct, 16, 34);
+                    Box(pct.rectTransform, 0.61f, 0.36f, 0.75f, 0.96f);
+                    var val = HookSkin.Outlined(SurvivalVisuals.Text(row.transform, "BonusSub", S("store.power_packs.value_word", "VALUE"), 15, TextAnchor.MiddleCenter, FreeGreen), 1.2f);
+                    val.fontStyle = FontStyle.Bold;
+                    HookSkin.Fit(val, 9, 15);
+                    Box(val.rectTransform, 0.61f, 0.08f, 0.75f, 0.38f);
+                }
+
+                PackChips((RectTransform)row.transform, r.Grants, 0.03f, 0.05f, 0.60f, 0.58f);
+                var price = SheetButton((RectTransform)row.transform, "Buy", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.77f, 0.14f, 0.98f, 0.86f, 26, out var buyBtn);
                 price.text = shop.PriceLabel(r);
+                price.color = Color.white; // crisp: white on gold with the dark outline
+                HookSkin.Fit(price, 14, 26);
+                HookSkin.PadLabel(price.rectTransform, 0.08f, 0.16f);
                 var buyRt = buyBtn.GetComponent<RectTransform>();
                 var offerId = r.Offer.Id;
                 var grants = new Dictionary<string, int>(r.Offer.Grants);
@@ -1186,15 +1242,55 @@ namespace Survival.Unity
             _sheetRefresh();
         }
 
-        private string PackLine(IReadOnlyDictionary<string, int> grants)
+        /// <summary>Reward chips (icon + amount) in up to two rows across the box, nothing clipped.</summary>
+        private void PackChips(RectTransform parent, IReadOnlyDictionary<string, int> grants, float x0, float y0, float x1, float y1)
         {
-            var parts = new List<string>();
-            foreach (var pair in grants)
+            var n = grants.Count;
+            if (n == 0)
             {
-                parts.Add("+" + ChipWallet.FormatCompact(pair.Value) + " " + S(pair.Key + ".name", pair.Key));
+                return;
             }
 
-            return string.Join("  ", parts);
+            var rowsN = n > 3 ? 2 : 1;
+            var cols = (n + rowsN - 1) / rowsN;
+            var w = (x1 - x0) / cols;
+            var hh = (y1 - y0) / rowsN;
+            var i = 0;
+            foreach (var pair in grants)
+            {
+                var c = i % cols;
+                var rr = i / cols;
+                var cx0 = x0 + (c * w);
+                var cy1 = y1 - (rr * hh);
+                var chip = SurvivalVisuals.Image(parent, "Chip_" + pair.Key, new Color(0.05f, 0.08f, 0.20f, 0.55f));
+                chip.raycastTarget = false;
+                Box(chip.rectTransform, cx0 + 0.004f, cy1 - hh + 0.04f, cx0 + w - 0.004f, cy1 - 0.02f);
+                var icon = HookSkin.ResIcon(chip.transform, "Icon", pair.Key, SurvivalVisuals.Reward, "\u2726");
+                icon.raycastTarget = false;
+                Box(icon.rectTransform, 0.02f, 0.06f, 0.30f, 0.94f);
+                var amount = HookSkin.Outlined(SurvivalVisuals.Text(chip.transform, "T", "+" + ChipAmount(pair.Key, pair.Value), 18, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.2f);
+                amount.fontStyle = FontStyle.Bold;
+                amount.raycastTarget = false;
+                HookSkin.Fit(amount, 9, 18);
+                Box(amount.rectTransform, 0.32f, 0.04f, 0.98f, 0.96f);
+                i++;
+            }
+        }
+
+        private static string ChipAmount(string resourceId, int value) =>
+            string.Equals(resourceId, SurvIds.ResSpeedupM, StringComparison.Ordinal) ? FormatMinutes(value) : ChipWallet.FormatCompact(value);
+
+        /// <summary>Speed-up minutes as hours: 45 -> 45m, 960 -> 16h, 2000 -> 33h20m.</summary>
+        public static string FormatMinutes(int minutes)
+        {
+            if (minutes < 60)
+            {
+                return minutes.ToString(CultureInfo.InvariantCulture) + "m";
+            }
+
+            var hrs = minutes / 60;
+            var m = minutes % 60;
+            return hrs.ToString(CultureInfo.InvariantCulture) + "h" + (m > 0 ? m.ToString(CultureInfo.InvariantCulture) + "m" : "");
         }
 
         // ---------- Battle Setup ----------
@@ -1870,9 +1966,26 @@ namespace Survival.Unity
                 ? SurvivalVisuals.Image(trim.transform, "Art", Color.white, sprite)
                 : SurvivalVisuals.Image(trim.transform, "Art", hero ? new Color(0.22f, 0.36f, 0.66f, 1f) : new Color(0.36f, 0.18f, 0.48f, 1f));
             art.raycastTarget = false;
-            SurvivalVisuals.Stretch(art.rectTransform);
-            art.rectTransform.offsetMin = new Vector2(3f, 3f);
-            art.rectTransform.offsetMax = new Vector2(-3f, -3f);
+            if (sprite != null)
+            {
+                // Crop to fill, never squash: the art keeps its aspect and envelopes a clipped window inside the trim.
+                var window = new GameObject("Window", typeof(RectTransform), typeof(RectMask2D)).GetComponent<RectTransform>();
+                window.SetParent(trim.transform, false);
+                SurvivalVisuals.Stretch(window);
+                window.offsetMin = new Vector2(3f, 3f);
+                window.offsetMax = new Vector2(-3f, -3f);
+                art.rectTransform.SetParent(window, false);
+                var fit = art.gameObject.AddComponent<AspectRatioFitter>();
+                fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+                fit.aspectRatio = sprite.rect.height > 0 ? sprite.rect.width / sprite.rect.height : 1f;
+            }
+            else
+            {
+                SurvivalVisuals.Stretch(art.rectTransform);
+                art.rectTransform.offsetMin = new Vector2(3f, 3f);
+                art.rectTransform.offsetMax = new Vector2(-3f, -3f);
+            }
+
             if (sprite == null)
             {
                 var initials = HookSkin.Outlined(SurvivalVisuals.Text(art.transform, "Initials", Initials(HeroName(def.Id)), 64, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 2f);
