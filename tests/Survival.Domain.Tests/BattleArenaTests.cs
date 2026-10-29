@@ -142,3 +142,29 @@ public sealed class OpenArenaTargetingTests
         Assert.NotEqual(first.Uid, second.Uid);
     }
 }
+
+public sealed class BattleLightTests
+{
+    [Theory]
+    [InlineData(0f)]
+    [InlineData(90f)]
+    [InlineData(200f)]
+    [InlineData(359f)]
+    public void The_sun_stays_behind_the_viewer_all_the_way_round_the_orbit(float cameraYaw)
+    {
+        Assert.True(BattleLight.BacklightDegrees(cameraYaw) <= 60f, "fighters lit from the front, never backlit");
+        Assert.InRange(BattleLight.SunPitchDegrees, 35f, 60f);
+    }
+
+    [Fact]
+    public void Ambient_is_bright_and_warm_and_fog_clears_the_fight()
+    {
+        Assert.True(BattleLight.SkyAmbient.G >= 0.5f && BattleLight.EquatorAmbient.R > BattleLight.EquatorAmbient.B);
+        Assert.True(BattleLight.SunColour.R >= BattleLight.SunColour.B);
+        foreach (var r in new[] { 7f, 10f, 14f })
+        {
+            Assert.True(BattleLight.FogStartMetres(r) > 2f * r + 8f, "far fighters out of the fog");
+            Assert.True(BattleLight.FogEndMetres(r) < r + BattleArena.PropRingMetres + 14f + (2.4f * r) + 20f + 1f);
+        }
+    }
+}

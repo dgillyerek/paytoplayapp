@@ -400,6 +400,7 @@ namespace Survival.Unity
             }
 
             var cam = Camera.main;
+            FollowSun(cam);
             foreach (var f in _fighters)
             {
                 if (f.Built && !f.Down)
