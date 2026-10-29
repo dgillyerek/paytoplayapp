@@ -36,6 +36,10 @@ namespace Survival.Unity
 
         private static readonly Color RowFill = new Color(0.06f, 0.08f, 0.16f, 0.86f);
         private static readonly Color TrailColor = new Color(0.95f, 0.30f, 0.25f, 0.95f);
+        private static readonly Color EnemyFill = new Color(0.82f, 0.12f, 0.10f, 1f);
+        private static readonly Color EnemyTint = new Color(1f, 0.28f, 0.24f, 1f);
+        // Enemy bars are red, so their damage trail is a pale gold to stay visible against the fill.
+        private static readonly Color EnemyTrailColor = new Color(1f, 0.88f, 0.55f, 0.9f);
 
         private readonly RectTransform _safe;
         private readonly RectTransform _panel;
@@ -136,7 +140,7 @@ namespace Survival.Unity
             var bar = HookSkin.Bar(bg.transform, "Hp", out var fill);
             Pixel(bar.rectTransform, geo.Bar);
             row.Fill = fill;
-            row.Trail = SurvivalVisuals.Image(bar.transform, "Trail", TrailColor, fill.sprite);
+            row.Trail = SurvivalVisuals.Image(bar.transform, "Trail", _right ? EnemyTrailColor : TrailColor, fill.sprite);
             row.Trail.transform.SetSiblingIndex(fill.transform.GetSiblingIndex());
             var trt = row.Trail.rectTransform;
             var frt = fill.rectTransform;
@@ -223,13 +227,25 @@ namespace Survival.Unity
 
         private void Paint(Row row)
         {
-            var (r, g, b) = HeroHpPanelLayout.FillRgb(row.Fraction);
-            var key = row.Fraction > 0.5f ? HookArtKeys.BarFillGreen : HookArtKeys.BarFillGold;
-            HookSkin.SetBar(row.Fill, row.Fraction, key, new Color(r, g, b, 1f));
-            if (row.Fraction <= 0.25f && row.Fill.type == Image.Type.Filled)
+            if (_right)
             {
-                // Low: tint the gold art red (there is no red fill sprite in the kit).
-                row.Fill.color = new Color(1f, 0.45f, 0.42f, 1f);
+                // Enemy rows (battle, right panel) are always red: the gold fill art tinted red (no red sprite in the kit).
+                HookSkin.SetBar(row.Fill, row.Fraction, HookArtKeys.BarFillGold, EnemyFill);
+                if (row.Fill.type == Image.Type.Filled)
+                {
+                    row.Fill.color = EnemyTint;
+                }
+            }
+            else
+            {
+                var (r, g, b) = HeroHpPanelLayout.FillRgb(row.Fraction);
+                var key = row.Fraction > 0.5f ? HookArtKeys.BarFillGreen : HookArtKeys.BarFillGold;
+                HookSkin.SetBar(row.Fill, row.Fraction, key, new Color(r, g, b, 1f));
+                if (row.Fraction <= 0.25f && row.Fill.type == Image.Type.Filled)
+                {
+                    // Low: tint the gold art red (there is no red fill sprite in the kit).
+                    row.Fill.color = new Color(1f, 0.45f, 0.42f, 1f);
+                }
             }
 
             SetTrail(row.Trail, row.Trailed);
