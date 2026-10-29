@@ -128,6 +128,18 @@ namespace Survival.Unity
             var k = _weaponArm.Length / DesignArm;
             var w = _kick.Weight;
 
+            if (_style == RunnerAimStyle.Bow)
+            {
+                // Bonequill's draw: turn the upper body side-on so the chest faces a little right of the aim. Set absolutely
+                // from the measured shoulder line, so the attack clip's own spine yaw never stacks onto it.
+                var line = Vector3.ProjectOnPlane(_offArm.Upper.position - _weaponArm.Upper.position, u);
+                if (line.sqrMagnitude > 1e-6f)
+                {
+                    var twisted = U(RunnerWeaponAim.ShoulderLine(N(r), N(f)));
+                    Set(_chest, Quaternion.FromToRotation(line.normalized, twisted) * _chest.rotation);
+                }
+            }
+
             // The chest gives a little with the shot (pitch back about the aim's right axis).
             var give = Quaternion.AngleAxis(-RunnerWeaponAim.ShoulderGiveDegrees * w, r);
             Set(_chest, give * _chest.rotation);
@@ -187,10 +199,8 @@ namespace Survival.Unity
             {
                 // The string hand: back from the nock to the jaw over the draw, flying back and out on the release.
                 var draw = RunnerWeaponAim.Draw(_kick.SinceShot, _kick.Interval);
-                var nock = grip - (f * (RunnerWeaponAim.NockBehind * k));
-                var full = grip - (f * (RunnerWeaponAim.FullDrawBehind * k)) + (u * (RunnerWeaponAim.FullDrawUp * k));
-                var flick = ((-f * 0.6f) + (r * 0.8f)).normalized * (RunnerWeaponAim.ReleaseFollowThrough * k * w);
-                off.Reach(Vector3.Lerp(nock, full, draw) + flick, off.Upper.position + (k * U(RunnerWeaponAim.DrawElbowPole(N(r), N(u), N(f)))), Set);
+                var at = U(RunnerWeaponAim.DrawHand(N(grip), N(off.Upper.position), N(r), N(u), N(f), draw, w, k));
+                off.Reach(at, off.Upper.position + (k * U(RunnerWeaponAim.DrawElbowPole(N(r), N(u), N(f)))), Set);
                 Muzzle = grip + (u * (0.03f * k));
             }
         }

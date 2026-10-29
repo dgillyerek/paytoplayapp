@@ -61,15 +61,43 @@ namespace Survival.Domain.Runner
 
         // ---- bow (Rowan) ----
 
-        /// <summary>The bow hand's hold point from its shoulder (left hand: -x): the bow arm out at the enemy, near shoulder height.</summary>
-        public static readonly Vector3 BowHold = new Vector3(-0.06f, 0.02f, 0.56f);
+        /// <summary>
+        /// The bow hand's hold point from its (twisted) left shoulder: the bow arm out at the enemy at shoulder height, the grip
+        /// just right of the body's centreline, as Bonequill's baked attack holds it (Derek 2026-10-28).
+        /// </summary>
+        public static readonly Vector3 BowHold = new Vector3(0.20f, 0.02f, 0.48f);
 
         /// <summary>The nock (string hand at rest on the string) behind the bow hand, along the aim.</summary>
         public const float NockBehind = 0.18f;
 
-        /// <summary>Full draw: the string hand this far behind the bow hand (at the jaw), and this much above it.</summary>
+        /// <summary>Full draw: how far the string hand has come back from the nock toward the anchor (kept for the draw-length check).</summary>
         public const float FullDrawBehind = 0.58f;
-        public const float FullDrawUp = 0.06f;
+
+        /// <summary>
+        /// The upper body turns this far about up so the chest faces a little right of the aim (left shoulder toward the enemy),
+        /// like Bonequill's baked draw (Derek 2026-10-28: "his upper torso should be twisted so that his chest is slightly facing right").
+        /// </summary>
+        public const float TorsoTwistDegrees = 30f;
+
+        /// <summary>Where the chest faces once twisted: the aim turned <see cref="TorsoTwistDegrees"/> toward the right.</summary>
+        public static Vector3 ChestFacing(Vector3 r, Vector3 f)
+        {
+            var a = TorsoTwistDegrees * (MathF.PI / 180f);
+            return Vector3.Normalize((f * MathF.Cos(a)) + (r * MathF.Sin(a)));
+        }
+
+        /// <summary>The twisted shoulder line (left shoulder to right shoulder): the right shoulder swings back, the left forward.</summary>
+        public static Vector3 ShoulderLine(Vector3 r, Vector3 f)
+        {
+            var a = TorsoTwistDegrees * (MathF.PI / 180f);
+            return Vector3.Normalize((r * MathF.Cos(a)) - (f * MathF.Sin(a)));
+        }
+
+        /// <summary>
+        /// The full-draw anchor from the twisted DRAW (right) shoulder, in (right, up, aim) metres: the string pulled back to just behind
+        /// the right shoulder along the arrow line, the arm folded with the elbow behind him (Bonequill's draw).
+        /// </summary>
+        public static readonly Vector3 FullDrawAnchor = new Vector3(0.04f, -0.03f, -0.15f);
 
         /// <summary>Release: the string hand flies back and out past the anchor by this much.</summary>
         public const float ReleaseFollowThrough = 0.10f;
@@ -83,8 +111,22 @@ namespace Survival.Domain.Runner
         /// </summary>
         public static Vector3 BowElbowPole(Vector3 r, Vector3 u, Vector3 f) => (-r * 0.30f) - (u * 0.40f) - (f * 0.10f);
 
-        /// <summary>The draw arm's elbow hint from its shoulder: back behind the shoulder, out to the draw side and up, so the elbow rides high at the anchor.</summary>
-        public static Vector3 DrawElbowPole(Vector3 r, Vector3 u, Vector3 f) => (-f * 0.45f) + (r * 0.25f) + (u * 0.20f);
+        /// <summary>The draw arm's elbow hint from its shoulder: back behind him, out to the draw side and a touch down, so the bent elbow points back at about shoulder height and never folds up over or behind the head.</summary>
+        public static Vector3 DrawElbowPole(Vector3 r, Vector3 u, Vector3 f) => (-f * 0.60f) + (r * 0.60f) - (u * 0.10f);
+
+        /// <summary>
+        /// Where the string (right) hand goes: from the nock behind the bow grip (<paramref name="draw"/> 0) to the shoulder anchor
+        /// (1), flicking back and out by <paramref name="flick"/> metres on the release. <paramref name="k"/>
+        /// scales design metres to the rig.
+        /// </summary>
+        public static Vector3 DrawHand(Vector3 grip, Vector3 drawShoulder, Vector3 r, Vector3 u, Vector3 f, float draw, float flick, float k)
+        {
+            var nock = grip - (f * (NockBehind * k));
+            var a = FullDrawAnchor;
+            var full = drawShoulder + (k * ((r * a.X) + (u * a.Y) + (f * a.Z)));
+            var fly = Vector3.Normalize((-f * 0.8f) + (r * 0.3f) - (u * 0.4f)) * (ReleaseFollowThrough * k * flick);
+            return Vector3.Lerp(nock, full, Math.Clamp(draw, 0f, 1f)) + fly;
+        }
 
         /// <summary>
         /// Whether the bow's measured depth axis (riser side) should be flipped so turning the bow to face <paramref name="fwd"/> twists the hand the least.
