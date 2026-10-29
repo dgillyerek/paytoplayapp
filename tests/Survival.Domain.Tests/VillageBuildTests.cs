@@ -24,13 +24,29 @@ public sealed class VillageBuildTests
         return (hook, clock);
     }
 
+    /// <summary>Wait until the timer reaches its free window (last min(300 s, half)), then finish it free.</summary>
+    private static int Free(HookSession hook, ManualClock clock, string plotId)
+    {
+        var t = hook.Timers.Find(BaseEconomy.UpgradeTimerId(plotId));
+        if (t != null)
+        {
+            var wait = t.Remaining(clock.Now) - hook.Timers.Rules.FreeWindow(t.TotalSeconds);
+            if (wait > 0)
+            {
+                clock.Advance(wait);
+            }
+        }
+
+        return hook.FinishFree(plotId);
+    }
+
     private static void CastleTo(HookSession hook, ManualClock clock, int level)
     {
         while (hook.Base.HqLevel < level)
         {
             Assert.True(hook.Base.TryStartUpgrade(SurvIds.BasePlotHq01));
             clock.Advance(400_000);
-            Assert.True(hook.FinishFree(SurvIds.BasePlotHq01) > 0);
+            Assert.True(Free(hook, clock, SurvIds.BasePlotHq01) > 0);
         }
     }
 
@@ -77,7 +93,7 @@ public sealed class VillageBuildTests
         Assert.Equal(BuildBlock.Locked, hook.Build.Check("quarry")); // quarry waits for Castle Lv 3
         Assert.NotNull(hook.Build.TryBuild("farm"));
         clock.Advance(10_000);
-        Assert.True(hook.FinishFree(hook.Build.Placed.Keys.First()) > 0);
+        Assert.True(Free(hook, clock, hook.Build.Placed.Keys.First()) > 0);
         Assert.Equal(BuildBlock.MaxCount, hook.Build.Check("farm"));
         Assert.Equal(BuildBlock.Unknown, hook.Build.Check("dragon_lair"));
     }
@@ -104,7 +120,9 @@ public sealed class VillageBuildTests
 
         var built = new List<string>();
         hook.Base.Constructed += p => built.Add(p.Id);
-        Assert.Equal(1, hook.FinishFree(plot.Id)); // 90 s is inside the free-finish window
+        Assert.Equal(0, hook.FinishFree(plot.Id)); // 90 s build: free only in its last half (45 s)
+        clock.Advance(45);
+        Assert.Equal(1, hook.FinishFree(plot.Id));
         Assert.Equal(new[] { plot.Id }, built);
         Assert.False(plot.UnderConstruction);
         Assert.Equal(1, plot.Level);
@@ -122,7 +140,9 @@ public sealed class VillageBuildTests
     {
         var (hook, clock) = Fresh();
         CastleTo(hook, clock, 12);
-        var first = hook.Build.TryBuild("forge")!; // 300 s: free-finish window from the start
+        var first = hook.Build.TryBuild("forge")!; // 300 s
+        Assert.False(hook.Timers.CanFinishFree(BaseEconomy.UpgradeTimerId(first.Id))); // 300 s: free in its last 150 s
+        clock.Advance(150);
         Assert.True(hook.Timers.CanFinishFree(BaseEconomy.UpgradeTimerId(first.Id)));
         Assert.Equal(1, hook.FinishFree(first.Id));
         var second = hook.Build.TryBuild("forge")!; // 2nd copy: 450 s
@@ -146,12 +166,12 @@ public sealed class VillageBuildTests
         var spots = hook.Build.Spots;
         var a = hook.Build.TryBuild("farm")!; // auto
         Assert.Equal(spots[0], hook.Build.SpotOf(a.Id));
-        hook.FinishFree(a.Id);
+        Free(hook, clock, a.Id);
         Assert.Equal(BuildBlock.SpotTaken, hook.Build.Check("lumber", spots[0]));
         Assert.Equal(BuildBlock.NoSpot, hook.Build.Check("lumber", "village.nowhere"));
         var b = hook.Build.TryBuild("lumber", spots[3])!;
         Assert.Equal(spots[3], hook.Build.SpotOf(b.Id));
-        hook.FinishFree(b.Id);
+        Free(hook, clock, b.Id);
         Assert.Equal(spots[1], hook.Build.NextFreeSpot);
         Assert.Equal(spots.Count - 2, hook.Build.FreeSpots.Count());
     }
@@ -163,7 +183,7 @@ public sealed class VillageBuildTests
         CastleTo(hook, clock, 2);
         hook.Build.UseSpots(new[] { "village.spot_01" });
         var a = hook.Build.TryBuild("farm")!;
-        hook.FinishFree(a.Id);
+        Free(hook, clock, a.Id);
         Assert.Equal(BuildBlock.NoSpot, hook.Build.Check("lumber"));
     }
 
@@ -188,7 +208,7 @@ public sealed class VillageBuildTests
         var (hook, clock) = Fresh();
         CastleTo(hook, clock, 2);
         var farm = hook.Build.TryBuild("farm")!;
-        hook.FinishFree(farm.Id);
+        Free(hook, clock, farm.Id);
         Assert.True(hook.Base.TryStartUpgrade(farm.Id));
         clock.Advance(100_000);
         Assert.Equal(2, hook.FinishFree(farm.Id));
@@ -212,7 +232,7 @@ public sealed class VillageBuildTests
         var (hook, clock) = Fresh();
         CastleTo(hook, clock, 3);
         var farm = hook.Build.TryBuild("farm", "village.spot_02")!;
-        hook.FinishFree(farm.Id);
+        Free(hook, clock, farm.Id);
         Assert.True(hook.Base.TryStartUpgrade(farm.Id));
         clock.Advance(100_000);
         hook.FinishFree(farm.Id);
