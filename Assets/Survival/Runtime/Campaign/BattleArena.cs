@@ -42,6 +42,12 @@ namespace Survival.Domain.Campaign
 
         public const float OrbitSeconds = 50f;
 
+        /// <summary>
+        /// The orbit sits this much of the all-yaw fit distance (Derek 2026-10-28: "zoom in a little on the fly around"):
+        /// 17% closer, so the fight fills the frame and an edge fighter can brush the frame edge on some sides of the turn.
+        /// </summary>
+        public const float OrbitZoomFactor = 0.83f;
+
         public static float OrbitDegreesPerSecond => 360f / OrbitSeconds;
 
         /// <summary>Start points (x, z) for one side's fighters, centred on x = 0, at z = ±halfGap (heroes negative).</summary>
@@ -210,15 +216,16 @@ namespace Survival.Domain.Campaign
             public float Distance => (float)Math.Sqrt((X * X) + (Z * Z));
         }
 
+        /// <summary>How far each detailed prop reaches from its centre at scale 1 (leaf clusters, plinths, fallen drums, rubble, banner cloth).</summary>
         public static float FootprintOf(PropKind kind) => kind switch
         {
-            PropKind.Tree => 1.4f,
+            PropKind.Tree => 1.8f,
             PropKind.Pine => 1.1f,
-            PropKind.Bush => 0.7f,
-            PropKind.Rock => 0.8f,
-            PropKind.Pillar => 0.5f,
+            PropKind.Bush => 0.95f,
+            PropKind.Rock => 1.15f,
+            PropKind.Pillar => 1.25f,
             PropKind.BrokenWall => 1.6f,
-            _ => 0.4f,
+            _ => 0.9f,
         };
 
         /// <summary>

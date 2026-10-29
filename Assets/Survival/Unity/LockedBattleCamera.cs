@@ -142,6 +142,8 @@ namespace Survival.Unity
                 {
                     _distance = Mathf.Max(_distance, FitDistance(a, _pitch));
                 }
+
+                _distance *= BattleArena.OrbitZoomFactor;
             }
 
             _maxDistance = Mathf.Max(MinDistanceMetres * 2f, _distance * MaxDistanceFactor);

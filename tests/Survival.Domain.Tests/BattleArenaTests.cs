@@ -114,6 +114,7 @@ public sealed class BattleArenaTests
     {
         Assert.Equal(30f, BattleArena.OrbitPitchDegrees);
         Assert.InRange(BattleArena.OrbitSeconds, 40f, 60f);
+        Assert.InRange(BattleArena.OrbitZoomFactor, 0.78f, 0.87f);
         Assert.Equal(360f / BattleArena.OrbitSeconds, BattleArena.OrbitDegreesPerSecond, 4);
     }
 }
