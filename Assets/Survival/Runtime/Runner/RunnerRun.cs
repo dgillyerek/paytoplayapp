@@ -1440,7 +1440,7 @@ namespace Survival.Domain.Runner
             foreach (var b in _boxes)
             {
                 var dz = b.Z - m.Z;
-                if (b.Hp <= 0 || dz <= -1f || dz > m.Unit.Range + RunnerBox.Radius + m.Unit.Radius
+                if (b.Hp <= 0 || b.Def.Fixed || dz <= -1f || dz > m.Unit.Range + RunnerBox.Radius + m.Unit.Radius
                     || Math.Abs(b.X - m.X) > RunnerRules.MeleeHalfWidth + RunnerBox.Radius || dz >= best)
                 {
                     continue;
