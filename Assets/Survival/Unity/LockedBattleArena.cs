@@ -46,8 +46,8 @@ namespace Survival.Unity
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Linear;
             RenderSettings.fogColor = LockedBattleGround.Horizon;
-            RenderSettings.fogStartDistance = LockedBattleGroundSpec.FogStartMetres + 6f;
-            RenderSettings.fogEndDistance = LockedBattleGroundSpec.FogEndMetres + 12f;
+            RenderSettings.fogStartDistance = BattleLight.FogStartMetres(arenaRadius);
+            RenderSettings.fogEndDistance = BattleLight.FogEndMetres(arenaRadius);
         }
 
         private static Mesh GroundMesh(float half, float arenaRadius)

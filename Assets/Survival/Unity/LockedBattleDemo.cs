@@ -32,6 +32,7 @@ namespace Survival.Unity
 
         private readonly List<Fighter> _fighters = new List<Fighter>();
         private LockedBattleCamera? _camera;
+        private Light? _sun;
         private bool _booted;
         private float _time;
 
@@ -1350,7 +1351,33 @@ namespace Survival.Unity
                 // Loaded additively over Play: keep the lights in the battle's own scene so they unload with it.
                 key.transform.SetParent(transform, true);
                 fillGo.transform.SetParent(transform, true);
+
+                // The open arena: one warm sun that follows the orbit (see BattleLight), bright trilight ambient
+                // instead of the grey flat ambient, and no second directional (mobile: one realtime directional).
+                Object.Destroy(fillGo);
+                RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+                RenderSettings.ambientSkyColor = Rgb(BattleLight.SkyAmbient);
+                RenderSettings.ambientEquatorColor = Rgb(BattleLight.EquatorAmbient);
+                RenderSettings.ambientGroundColor = Rgb(BattleLight.GroundAmbient);
+                light.intensity = BattleLight.SunIntensity;
+                light.color = Rgb(BattleLight.SunColour);
+                _sun = light;
             }
+        }
+
+        private static Color Rgb((float R, float G, float B) c) => new Color(c.R, c.G, c.B, 1f);
+
+        /// <summary>Keep the open-arena sun over the viewer's shoulder as the camera orbits, so no fighter is backlit.</summary>
+        private void FollowSun(Camera? cam)
+        {
+            if (_sun == null || cam == null)
+            {
+                return;
+            }
+
+            var f = cam.transform.forward;
+            var yaw = Mathf.Atan2(f.x, f.z) * Mathf.Rad2Deg;
+            _sun.transform.rotation = Quaternion.Euler(BattleLight.SunPitchDegrees, BattleLight.SunYawDegrees(yaw), 0f);
         }
 
         private static void DestroyNamed(string name)
