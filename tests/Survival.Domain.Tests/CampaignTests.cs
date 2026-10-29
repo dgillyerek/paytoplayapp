@@ -394,14 +394,19 @@ public sealed class CampaignRewardsAndSaveTests
     }
 
     [Fact]
-    public void A_loss_pays_a_quarter_of_the_gold_only()
+    public void A_loss_pays_nothing_at_all()
     {
         var s = Camp.Session(new ManualClock(), gold: 0, food: 0);
         var stage = s.Catalog.Stage("stage.2")!;
         var b = s.ApplyResult(new BattleReport(stage.Id, null, false, 60, 0, 1), stage);
         Assert.False(b.Won);
-        Assert.Equal(630, s.Wallet.Get(SurvIds.ResSoft));
+        // Derek 2026-10-28: "there should be no bonuses when you are defeated in the battle".
+        Assert.Empty(b.Resources);
+        Assert.Empty(b.AsRows());
+        Assert.False(b.FirstClear);
+        Assert.Equal(0, s.Wallet.Get(SurvIds.ResSoft));
         Assert.Equal(0, s.Wallet.Get(SurvIds.ResFood));
+        Assert.Equal(0, s.Wallet.Get("res.hard"));
         Assert.Equal(0, b.Shards);
         Assert.False(s.IsCleared("stage.2"));
         Assert.Equal(1, s.Battles);
