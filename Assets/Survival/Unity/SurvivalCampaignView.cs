@@ -41,6 +41,7 @@ namespace Survival.Unity
         public const string SetupScreenName = "BattleSetupScreen";
         public const string ResultScreenName = "BattleResultScreen";
         public const string PowerPacksSheetName = "PowerPacksSheet";
+        public const string RewardTrackSheetName = "RewardTrackSheet";
         public const string BattleSlot = "battle_button";
         public const string HeroFreeSlot = "hero_free";
         public const string HeroFreeName = "HeroFreeBadge";
@@ -90,6 +91,11 @@ namespace Survival.Unity
         /// <summary>The power-up ladder (power_packs.json + store.power_packs); null when the file or the hook store is missing.</summary>
         public PowerPackShop? PowerPacks { get; private set; }
 
+        /// <summary>The Kingdom Path reward track (reward_track.json + store.reward_track); null when the file or the hook store is missing.</summary>
+        public RewardTrack? Track { get; private set; }
+
+        private int _trackPage = -1;
+
         public static string SavePath => Path.Combine(Application.persistentDataPath, CampaignSave.FileName);
 
         /// <summary>The static handoff survives "enter play mode" without a domain reload; start every session clean.</summary>
@@ -128,6 +134,7 @@ namespace Survival.Unity
             Campaign = new CampaignSession(catalog, session.Chips.Wallet, clock, session.Hook?.Timers.Rules);
             LoadSave();
             PowerPacks = LoadPowerPacks(session, Campaign);
+            Track = LoadRewardTrack(session, Campaign);
             Campaign.Changed += MarkDirty;
             session.Chips.Wallet.Changed += (_, __, ___) => MarkDirty();
             Campaign.Roster.LevelledUp += OnLevelledUp;
@@ -377,7 +384,7 @@ namespace Survival.Unity
 
             if (_heroesBadge != null)
             {
-                _heroesBadge.gameObject.SetActive(AnyHeroAction());
+                _heroesBadge.gameObject.SetActive(AnyHeroAction() || (Track != null && Track.ClaimableCount() > 0));
             }
 
             if (_heroFree != null)
@@ -652,15 +659,42 @@ namespace Survival.Unity
             }
 
             var closeX0 = 0.30f;
+            var closeX1 = 0.70f;
             if (PowerPacks != null)
             {
                 closeX0 = 0.52f;
-                var power = SheetButton(panel, "PowerUp", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.06f, 0.025f, 0.48f, 0.082f, 26, out var powerBtn);
+                closeX1 = 0.92f;
+                var powerX1 = Track != null ? 0.335f : 0.48f;
+                var power = SheetButton(panel, "PowerUp", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.03f, 0.025f, powerX1, 0.082f, 24, out var powerBtn);
                 power.text = S("store.power_packs.button", "POWER UP");
                 Wire(powerBtn, OpenPowerPacks);
             }
 
-            var close = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, closeX0, 0.025f, closeX0 + 0.40f, 0.082f, 26, out var closeBtn);
+            if (Track != null)
+            {
+                var pathX0 = PowerPacks != null ? 0.35f : 0.03f;
+                var path = SheetButton(panel, "KingdomPath", HookArtKeys.ButtonBlue, HeroFrame, pathX0, 0.025f, pathX0 + 0.305f, 0.082f, 24, out var pathBtn);
+                path.text = S("reward_track.button", "KINGDOM PATH");
+                Wire(pathBtn, OpenRewardTrack);
+                var free = FreeTag(pathBtn.transform, "FreeBadge");
+                var freeRt = free.rectTransform;
+                refreshers.Add(() =>
+                {
+                    var show = Track.ClaimableCount() > 0;
+                    if (free.gameObject.activeSelf != show)
+                    {
+                        free.gameObject.SetActive(show);
+                        if (show)
+                        {
+                            StartCoroutine(Breathe(freeRt));
+                        }
+                    }
+                });
+                closeX0 = PowerPacks != null ? 0.67f : 0.35f;
+                closeX1 = 0.97f;
+            }
+
+            var close = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, closeX0, 0.025f, closeX1, 0.082f, 26, out var closeBtn);
             close.text = S("hook.close", "Close");
             Wire(closeBtn, CloseScreen);
 
@@ -1184,6 +1218,306 @@ namespace Survival.Unity
                     + ChipWallet.FormatGrouped(Campaign.Wallet.Get(SurvIds.ResRunnerBoost)) + " " + S(SurvIds.ResRunnerBoost + ".name", "War Banner");
             };
             _sheetRefresh();
+        }
+
+        // ---------- Kingdom Path (reward track) ----------
+
+        private static RewardTrack? LoadRewardTrack(SurvivalSession session, CampaignSession campaign)
+        {
+            var path = Path.Combine(SurvivalBootstrap.ResolveCatalogDir(), RewardTrackCatalog.FileName);
+            if (session.Hook == null || !PlayerAssets.FileExists(path))
+            {
+                return null;
+            }
+
+            try
+            {
+                var track = new RewardTrack(RewardTrackCatalog.Parse(PlayerAssets.ReadAllText(path)), session.Hook.Store, campaign);
+                return track.Store.Find(SurvIds.StoreRewardTrack) != null && ReferenceEquals(track.Store.Wallet, campaign.Wallet) ? track : null;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                return null;
+            }
+        }
+
+        /// <summary>A green "FREE" pill on a store button (hidden until something free is claimable).</summary>
+        private static Image FreeTag(Transform parent, string name)
+        {
+            var pill = SurvivalVisuals.Image(parent, name, FreeGreen);
+            HookSkin.TrySkin(pill, HookArtKeys.ButtonGreen, 0.5f);
+            pill.rectTransform.anchorMin = pill.rectTransform.anchorMax = new Vector2(0.86f, 0.92f);
+            pill.rectTransform.sizeDelta = new Vector2(78f, 34f);
+            var t = HookSkin.Outlined(SurvivalVisuals.Text(pill.transform, "T", "FREE", 20, TextAnchor.MiddleCenter, Color.white), 1.5f);
+            t.fontStyle = FontStyle.Bold;
+            SurvivalVisuals.Stretch(t.rectTransform);
+            pill.raycastTarget = false;
+            pill.gameObject.SetActive(false);
+            return pill;
+        }
+
+        private const int TrackRowsPerPage = 6;
+
+        /// <summary>
+        /// The Kingdom Path sheet: three columns per milestone (FREE, PREMIUM $2.99, ROYAL $3.99 which opens both paid
+        /// columns; a Premium owner sees the $0.99 upgrade). Reached cells pulse CLAIM, locked ones show a lock and the price,
+        /// buying late opens every reached row. Sandbox purchases only (no real billing in this build).
+        /// </summary>
+        public void OpenRewardTrack()
+        {
+            if (Campaign == null || Track == null || _overlay == null)
+            {
+                return;
+            }
+
+            var track = Track;
+            var rows = track.Catalog.Rows;
+            var pages = Mathf.Max(1, (rows.Count + TrackRowsPerPage - 1) / TrackRowsPerPage);
+            if (_trackPage < 0)
+            {
+                var next = 0;
+                while (next < rows.Count && track.Progress >= rows[next].Level)
+                {
+                    next++;
+                }
+
+                _trackPage = Mathf.Clamp((next == 0 ? 0 : next - 1) / TrackRowsPerPage, 0, pages - 1);
+            }
+
+            _trackPage = Mathf.Clamp(_trackPage, 0, pages - 1);
+            var panel = OpenSheet(RewardTrackSheetName, S("reward_track.title", track.Catalog.Title), 0.90f);
+            var progress = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Progress", Fmt("reward_track.progress", "Runner levels beaten: {0}", track.Progress), 20, TextAnchor.MiddleCenter, SurvivalVisuals.Reward), 1.5f);
+            Box(progress.rectTransform, 0.03f, 0.85f, 0.97f, 0.88f);
+            var sandbox = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Sandbox", S("store.sandbox", "SANDBOX \u00b7 no real charge"), 16, TextAnchor.MiddleCenter, Warn), 1.5f);
+            Box(sandbox.rectTransform, 0f, 0.828f, 1f, 0.85f);
+
+            // Header: the three column titles; the paid ones carry their buy button.
+            var colX = new[] { 0.17f, 0.445f, 0.72f };
+            const float colW = 0.265f;
+            HeaderCell(panel, "HeadFree", colX[0], colW, S("reward_track.free", "FREE"), FreeGreen, null, null, null);
+            HeaderCell(panel, "HeadPremium", colX[1], colW, S("reward_track.premium", "PREMIUM"), SurvivalVisuals.Gold,
+                track.PremiumOfferNow is { } p ? track.PriceLabel(p) : null, track.Owns(TrackColumn.Premium) ? S("reward_track.owned", "OWNED") : null,
+                () => BuyTrack(track.BuyPremium, S("reward_track.premium", "PREMIUM")));
+            HeaderCell(panel, "HeadRoyal", colX[2], colW, S("reward_track.royal", "ROYAL"), RoyalBlue,
+                track.RoyalOfferNow is { } r ? track.PriceLabel(r) + (track.Tier == TrackTier.Premium ? " " + S("reward_track.upgrade", "UPGRADE") : "") : null,
+                track.Owns(TrackColumn.Royal) ? S("reward_track.owned", "OWNED") : null,
+                () => BuyTrack(track.BuyRoyal, S("reward_track.royal", "ROYAL")));
+            var pitch = track.Tier == TrackTier.None ? S("reward_track.pitch_royal", "Royal opens PREMIUM + ROYAL") : "";
+            var pitchText = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Pitch", pitch, 15, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.2f);
+            Box(pitchText.rectTransform, colX[1], 0.675f, colX[2] + colW, 0.70f);
+
+            var top = 0.67f;
+            var h = (top - 0.17f) / TrackRowsPerPage;
+            for (var i = 0; i < TrackRowsPerPage; i++)
+            {
+                var idx = (_trackPage * TrackRowsPerPage) + i;
+                if (idx >= rows.Count)
+                {
+                    break;
+                }
+
+                var row = rows[idx];
+                var y1 = top - (i * h);
+                var reached = track.Progress >= row.Level;
+                var plate = HookSkin.Panel(panel, "Milestone_" + row.Level, HookArtKeys.Plate, reached ? SurvivalVisuals.RowFill : HeroFrame, 0.45f);
+                Box(plate.rectTransform, 0.03f, y1 - h + 0.006f, 0.165f, y1);
+                var lvl = HookSkin.Outlined(SurvivalVisuals.Text(plate.transform, "L", Fmt("reward_track.level", "LV\n{0}", row.Level), 22, TextAnchor.MiddleCenter, reached ? SurvivalVisuals.Gold : SurvivalVisuals.Mute), 1.5f);
+                lvl.fontStyle = FontStyle.Bold;
+                SurvivalVisuals.Stretch(lvl.rectTransform);
+                for (var c = 0; c < 3; c++)
+                {
+                    TrackCell(panel, track, row, (TrackColumn)c, colX[c], y1 - h + 0.006f, colX[c] + colW, y1);
+                }
+            }
+
+            var prev = SheetButton(panel, "Prev", HookArtKeys.ButtonBlue, HeroFrame, 0.03f, 0.10f, 0.20f, 0.155f, 22, out var prevBtn);
+            prev.text = "\u25C0";
+            Wire(prevBtn, () =>
+            {
+                _trackPage = Mathf.Max(0, _trackPage - 1);
+                OpenRewardTrack();
+            });
+            var pageText = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Page", (_trackPage + 1) + " / " + pages, 18, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.2f);
+            Box(pageText.rectTransform, 0.20f, 0.10f, 0.30f, 0.155f);
+            var nextB = SheetButton(panel, "Next", HookArtKeys.ButtonBlue, HeroFrame, 0.30f, 0.10f, 0.47f, 0.155f, 22, out var nextBtn);
+            nextB.text = "\u25B6";
+            Wire(nextBtn, () =>
+            {
+                _trackPage = Mathf.Min(pages - 1, _trackPage + 1);
+                OpenRewardTrack();
+            });
+            var n = track.ClaimableCount();
+            var all = SheetButton(panel, "ClaimAll", n > 0 ? HookArtKeys.ButtonGreen : HookArtKeys.ButtonBlue, n > 0 ? FreeGreen : Disabled, 0.50f, 0.10f, 0.97f, 0.155f, 22, out var allBtn);
+            all.text = n > 0 ? Fmt("reward_track.claim_all", "CLAIM ALL ({0})", n) : S("reward_track.nothing", "Nothing to claim");
+            if (n > 0)
+            {
+                StartCoroutine(Breathe(allBtn.GetComponent<RectTransform>()));
+            }
+
+            Wire(allBtn, () =>
+            {
+                var got = track.ClaimAll();
+                if (got.Count > 0)
+                {
+                    Celebrate(S("reward_track.claimed", "Rewards claimed!"), TrackRewards(got));
+                    SaveNow();
+                }
+
+                OpenRewardTrack();
+                _refresh?.Invoke();
+            });
+
+            var close = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.30f, 0.02f, 0.70f, 0.085f, 24, out var closeBtn);
+            close.text = S("hook.close", "Close");
+            Wire(closeBtn, () =>
+            {
+                _trackPage = -1;
+                CloseSheet();
+            });
+        }
+
+        private static readonly Color RoyalBlue = new Color(0.20f, 0.36f, 0.85f, 1f);
+
+        private void HeaderCell(RectTransform panel, string name, float x0, float w, string title, Color color, string? price, string? owned, Action? buy)
+        {
+            var head = HookSkin.Panel(panel, name, HookArtKeys.Plate, new Color(color.r * 0.45f, color.g * 0.45f, color.b * 0.45f, 1f), 0.45f);
+            Box(head.rectTransform, x0, 0.705f, x0 + w - 0.01f, 0.825f);
+            var t = HookSkin.Outlined(SurvivalVisuals.Text(head.transform, "T", title, 24, TextAnchor.MiddleCenter, color), 2f);
+            t.fontStyle = FontStyle.Bold;
+            Box(t.rectTransform, 0f, 0.52f, 1f, 1f);
+            if (price != null && buy != null)
+            {
+                var label = SheetButton((RectTransform)head.transform, "Buy", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.06f, 0.06f, 0.94f, 0.50f, 20, out var btn);
+                label.text = price;
+                Wire(btn, buy);
+            }
+            else
+            {
+                var sub = HookSkin.Outlined(SurvivalVisuals.Text(head.transform, "Sub", owned ?? S("reward_track.everyone", "EVERYONE"), 18, TextAnchor.MiddleCenter, owned != null ? FreeGreen : SurvivalVisuals.Cream), 1.5f);
+                sub.fontStyle = FontStyle.Bold;
+                Box(sub.rectTransform, 0f, 0.06f, 1f, 0.50f);
+            }
+        }
+
+        private void TrackCell(RectTransform panel, RewardTrack track, TrackRow row, TrackColumn col, float x0, float y0, float x1, float y1)
+        {
+            var state = track.State(row, col);
+            var fill = state switch
+            {
+                TrackCellState.Claimable => new Color(0.16f, 0.42f, 0.20f, 1f),
+                TrackCellState.Claimed => new Color(0.16f, 0.17f, 0.20f, 1f),
+                TrackCellState.Locked => new Color(0.12f, 0.14f, 0.24f, 1f),
+                _ => SurvivalVisuals.RowFill
+            };
+            var cell = HookSkin.Panel(panel, "Cell_" + row.Level + "_" + col, HookArtKeys.Plate, fill, 0.45f);
+            Box(cell.rectTransform, x0, y0, x1 - 0.01f, y1);
+            if (state == TrackCellState.Claimed || state == TrackCellState.Locked)
+            {
+                cell.color = new Color(cell.color.r * 0.75f, cell.color.g * 0.75f, cell.color.b * 0.75f, 1f);
+            }
+
+            var line = HookSkin.Outlined(SurvivalVisuals.Text(cell.transform, "Reward", TrackLine(row.Rewards(col)), 17, TextAnchor.MiddleCenter,
+                state == TrackCellState.Claimed ? SurvivalVisuals.Mute : SurvivalVisuals.Reward), 1.2f);
+            Box(line.rectTransform, 0.03f, 0.48f, 0.97f, 0.98f);
+            switch (state)
+            {
+                case TrackCellState.Claimable:
+                {
+                    var label = SheetButton((RectTransform)cell.transform, "Claim", HookArtKeys.ButtonGreen, FreeGreen, 0.10f, 0.06f, 0.90f, 0.46f, 18, out var btn);
+                    label.text = S("reward_track.claim", "CLAIM");
+                    var rt = btn.GetComponent<RectTransform>();
+                    StartCoroutine(Breathe(rt));
+                    var level = row.Level;
+                    Wire(btn, () =>
+                    {
+                        if (track.Claim(level, col) is { } got)
+                        {
+                            Juice(rt);
+                            Celebrate(Fmt("reward_track.cell_claimed", "Level {0} reward!", level), TrackRewards(got));
+                            SaveNow();
+                        }
+
+                        OpenRewardTrack();
+                        _refresh?.Invoke();
+                    });
+                    break;
+                }
+
+                case TrackCellState.Locked:
+                {
+                    var offer = col == TrackColumn.Premium ? track.PremiumOfferNow ?? track.RoyalOfferNow : track.RoyalOfferNow;
+                    var label = SheetButton((RectTransform)cell.transform, "Unlock", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.10f, 0.06f, 0.90f, 0.46f, 17, out var btn);
+                    label.text = S("reward_track.unlock", "UNLOCK") + " " + (offer != null ? track.PriceLabel(offer) : "");
+                    Wire(btn, () => BuyTrack(col == TrackColumn.Premium && track.PremiumOfferNow != null ? track.BuyPremium : track.BuyRoyal,
+                        col == TrackColumn.Premium ? S("reward_track.premium", "PREMIUM") : S("reward_track.royal", "ROYAL")));
+                    break;
+                }
+
+                default:
+                {
+                    var mark = HookSkin.Outlined(SurvivalVisuals.Text(cell.transform, "State",
+                        state == TrackCellState.Claimed ? "\u2713 " + S("reward_track.done", "CLAIMED") : Fmt("reward_track.at", "at LV {0}", row.Level),
+                        16, TextAnchor.MiddleCenter, state == TrackCellState.Claimed ? FreeGreen : SurvivalVisuals.Mute), 1.2f);
+                    mark.fontStyle = FontStyle.Bold;
+                    Box(mark.rectTransform, 0.03f, 0.06f, 0.97f, 0.46f);
+                    break;
+                }
+            }
+        }
+
+        private void BuyTrack(Action<Action<PurchaseOutcome>> buy, string name)
+        {
+            if (Track == null)
+            {
+                return;
+            }
+
+            var opened = Track.LockedReached(TrackColumn.Premium) + Track.LockedReached(TrackColumn.Royal);
+            buy(outcome =>
+            {
+                if (outcome.Ok)
+                {
+                    var now = Track.LockedReached(TrackColumn.Premium) + Track.LockedReached(TrackColumn.Royal);
+                    Celebrate(Fmt("reward_track.bought", "{0} unlocked! {1} rewards ready", name, Mathf.Max(0, opened - now)), new Dictionary<string, int>());
+                    SaveNow();
+                    OpenRewardTrack();
+                    _refresh?.Invoke();
+                }
+                else
+                {
+                    _hook?.Say(_overlay!, S("store.power_packs.failed", "Purchase failed"), Warn);
+                }
+            });
+        }
+
+        /// <summary>Wallet rewards as they are; "shard:&lt;hero&gt;" as "&lt;Hero&gt; Shards".</summary>
+        private Dictionary<string, int> TrackRewards(IReadOnlyDictionary<string, int> got)
+        {
+            var rows = new Dictionary<string, int>();
+            foreach (var g in got)
+            {
+                var key = g.Key.StartsWith(RewardTrackCatalog.ShardPrefix, StringComparison.Ordinal)
+                    ? HeroName(g.Key.Substring(RewardTrackCatalog.ShardPrefix.Length)) + " " + S("reward_track.shards", "Shards")
+                    : g.Key;
+                rows[key] = (rows.TryGetValue(key, out var v) ? v : 0) + g.Value;
+            }
+
+            return rows;
+        }
+
+        private string TrackLine(IReadOnlyDictionary<string, int> grants)
+        {
+            var parts = new List<string>();
+            foreach (var pair in grants)
+            {
+                var name = pair.Key.StartsWith(RewardTrackCatalog.ShardPrefix, StringComparison.Ordinal)
+                    ? HeroName(pair.Key.Substring(RewardTrackCatalog.ShardPrefix.Length)) + " " + S("reward_track.shards", "Shards")
+                    : S(pair.Key + ".name", pair.Key);
+                parts.Add("+" + ChipWallet.FormatCompact(pair.Value) + " " + name);
+            }
+
+            return string.Join("\n", parts);
         }
 
         private string PackLine(IReadOnlyDictionary<string, int> grants)
