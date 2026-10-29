@@ -51,12 +51,15 @@ namespace Survival.Domain.Campaign
         {
             HeroId = heroId;
             StartedAt = startedAt;
-            DurationSeconds = Math.Max(0, durationSeconds);
+            TotalSeconds = DurationSeconds = Math.Max(0, durationSeconds);
         }
 
         public string HeroId { get; }
         public double StartedAt { get; }
         public double DurationSeconds { get; private set; }
+
+        /// <summary>Length when started; speed-ups shorten <see cref="DurationSeconds"/> but not this (the free window is half of it).</summary>
+        public double TotalSeconds { get; }
         public double EndsAt => StartedAt + DurationSeconds;
 
         public double Remaining(double now) => Math.Max(0, EndsAt - now);
@@ -290,13 +293,13 @@ namespace Survival.Domain.Campaign
         public bool CanFinishFree(string heroId)
         {
             var t = TrainingOf(heroId);
-            return t != null && t.Remaining(Clock.Now) > 0 && Rush.IsFree(t.Remaining(Clock.Now));
+            return t != null && t.Remaining(Clock.Now) > 0 && Rush.IsFree(t.Remaining(Clock.Now), t.TotalSeconds);
         }
 
         public int RushCost(string heroId)
         {
             var t = TrainingOf(heroId);
-            return t == null ? 0 : Rush.GemCost(t.Remaining(Clock.Now));
+            return t == null ? 0 : Rush.GemCost(t.Remaining(Clock.Now), t.TotalSeconds);
         }
 
         /// <summary>Inside the free window ends the timer for 0 gems; otherwise spends <see cref="RushCost"/> gems. Levels the hero up now.</summary>
@@ -312,7 +315,7 @@ namespace Survival.Domain.Campaign
             var remaining = t.Remaining(Clock.Now);
             if (remaining > 0)
             {
-                var cost = Rush.GemCost(remaining);
+                var cost = Rush.GemCost(remaining, t.TotalSeconds);
                 if (cost > 0 && !Wallet.TrySpend(SurvIds.ResHard, cost))
                 {
                     return false;
@@ -337,6 +340,9 @@ namespace Survival.Domain.Campaign
         }
 
         /// <summary>Heroes whose training is inside the free-finish window (the Village FREE hero badge), in queue order.</summary>
+        /// <summary>The Village FREE hero badge shows only with a free finish ready, out of battle, and with no campaign screen (Heroes panel) open.</summary>
+        public static bool ShowFreeBadge(int freeCount, bool inBattle, bool screenOpen) => freeCount > 0 && !inBattle && !screenOpen;
+
         public IReadOnlyList<string> FreeFinishable()
         {
             var ids = new List<string>();

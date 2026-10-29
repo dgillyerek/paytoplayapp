@@ -159,7 +159,10 @@ public sealed class HeroRosterTests
         Assert.Equal(100 - cost, s.Wallet.Get(SurvIds.ResHard));
         Assert.Equal(9, r.Get("hero.lyra")!.Level);
 
-        r.TryStartLevelUp("hero.rowan");
+        r.TryStartLevelUp("hero.rowan"); // 30 s: free only in its last half
+        Assert.False(r.CanFinishFree("hero.rowan"));
+        Assert.Equal(1, r.RushCost("hero.rowan"));
+        clock.Advance(15);
         Assert.True(r.CanFinishFree("hero.rowan"));
         Assert.Equal(0, r.RushCost("hero.rowan"));
         Assert.True(r.TryFinishFree("hero.rowan"));
