@@ -28,6 +28,7 @@ namespace Survival.Unity
         private BattleCombat? _combat;
         private RectTransform? _hud;
         private HeroHpPanel? _heroPanel;
+        private float _arenaRadius = BattleArena.MinArenaRadiusMetres;
         private HeroHpPanel? _enemyPanel;
         private Text? _clock;
         private Text? _score;
@@ -75,25 +76,10 @@ namespace Survival.Unity
             _config = lineup;
             _combat = new BattleCombat(lineup);
 
-            // Lane widths from the widest body in each lane.
-            var widths = new float[Mathf.Max(1, lineup.LaneCount)];
-            var depth = new float[widths.Length];
-            for (var i = 0; i < widths.Length; i++)
-            {
-                var scale = 1f;
-                foreach (var lf in lineup.All)
-                {
-                    if (lf.Lane == i && TryRoster(lf.Fighter, out var d))
-                    {
-                        scale = Mathf.Max(scale, LockedBattleRoster.BattleScaleOf(d));
-                    }
-                }
-
-                widths[i] = BattleLaneLayout.LaneWidth(scale);
-                depth[i] = LockedBattleRoster.StartHalfGapMetres * (scale > 1.01f ? 1.4f : 1f);
-            }
-
-            var centres = BattleLaneLayout.Centres(widths);
+            // One open arena, no lanes (Derek 2026-10-28): each side starts in a shallow arc facing the other, slots as
+            // wide as each body; the lineup's lane order only sets who stands where.
+            var spawn = new List<(CombatUnit Unit, LockedBattleFighter Data)>();
+            var big = false;
             foreach (var unit in _combat.Units)
             {
                 if (!TryRoster(unit.Fighter.Fighter, out var data))
@@ -102,17 +88,38 @@ namespace Survival.Unity
                     continue;
                 }
 
-                var f = Spawn(data);
-                f.Unit = unit;
-                var lane = Mathf.Clamp(unit.Fighter.Lane, 0, centres.Length - 1);
-                var hero = unit.Side == CampaignSide.Hero;
-                f.StartPosition = new Vector3(centres[lane], 0f, hero ? -depth[lane] : depth[lane]);
-                f.StartRotation = Quaternion.Euler(0f, hero ? 0f : 180f, 0f);
-                f.Slot.SetPositionAndRotation(f.StartPosition, f.StartRotation);
-                f.LaneWidth = widths[lane];
-                f.BarHalfWidth = BattleHpBarLayout.HalfWidthOf(data.Name, data.DesignHeightMetres, f.BattleScale);
-                _fighters.Add(f);
+                big |= LockedBattleRoster.BattleScaleOf(data) > 1.01f;
+                spawn.Add((unit, data));
             }
+
+            spawn.Sort((a, b) => a.Unit.Fighter.Lane.CompareTo(b.Unit.Fighter.Lane));
+            var halfGap = LockedBattleRoster.StartHalfGapMetres * (big ? 1.4f : 1f);
+            var starts = new List<(float X, float Z)>();
+            foreach (var heroes in new[] { true, false })
+            {
+                var side = spawn.FindAll(e => (e.Unit.Side == CampaignSide.Hero) == heroes);
+                var halves = new List<float>();
+                foreach (var e in side)
+                {
+                    halves.Add(BattleHpBarLayout.HalfWidthOf(e.Data.Name, e.Data.DesignHeightMetres, LockedBattleRoster.BattleScaleOf(e.Data)));
+                }
+
+                var at = BattleArena.Starts(halves, halfGap, heroes);
+                for (var k = 0; k < side.Count; k++)
+                {
+                    var (unit, data) = side[k];
+                    var f = Spawn(data);
+                    f.Unit = unit;
+                    f.StartPosition = new Vector3(at[k].X, 0f, at[k].Z);
+                    f.StartRotation = Quaternion.Euler(0f, heroes ? 0f : 180f, 0f);
+                    f.Slot.SetPositionAndRotation(f.StartPosition, f.StartRotation);
+                    f.BarHalfWidth = BattleHpBarLayout.HalfWidthOf(data.Name, data.DesignHeightMetres, f.BattleScale);
+                    _fighters.Add(f);
+                    starts.Add(at[k]);
+                }
+            }
+
+            _arenaRadius = BattleArena.ArenaRadius(starts);
 
             foreach (var f in _fighters)
             {
@@ -120,12 +127,12 @@ namespace Survival.Unity
             }
 
             BuildLights();
-            BuildGround();
+            LockedBattleArena.Build(transform, _arenaRadius);
             _camera = gameObject.GetComponent<LockedBattleCamera>() ?? gameObject.AddComponent<LockedBattleCamera>();
-            _camera.SetField(FieldBounds());
+            _camera.SetField(FieldBounds(), autoOrbit: true);
             BuildConfiguredHud();
             Restart();
-            Debug.Log("Locked battle (configured): " + lineup.Stage.Name + ", " + lineup.Heroes.Count + " hero(es) vs " + lineup.Enemies.Count + " villain(s) in " + lineup.LaneCount + " lane(s).");
+            Debug.Log("Locked battle (configured): " + lineup.Stage.Name + ", " + lineup.Heroes.Count + " hero(es) vs " + lineup.Enemies.Count + " villain(s) in one open arena (radius " + _arenaRadius.ToString("0.0") + " m).");
             return true;
         }
 
@@ -161,7 +168,17 @@ namespace Survival.Unity
                 }
             }
 
-            var unit = _combat.NearestFoe(from.Unit, u => positions.TryGetValue(u.Uid, out var p) ? p : (0f, 0f));
+            var engaged = new Dictionary<int, int>();
+            foreach (var f in _fighters)
+            {
+                if (f != from && !f.Down && f.Target?.Unit != null)
+                {
+                    engaged.TryGetValue(f.Target.Unit.Uid, out var c);
+                    engaged[f.Target.Unit.Uid] = c + 1;
+                }
+            }
+
+            var unit = _combat.NearestFoe(from.Unit, u => positions.TryGetValue(u.Uid, out var p) ? p : (0f, 0f), u => engaged.TryGetValue(u.Uid, out var c) ? c : 0);
             if (unit == null)
             {
                 return null;
