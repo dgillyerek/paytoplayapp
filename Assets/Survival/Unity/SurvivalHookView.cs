@@ -1206,7 +1206,7 @@ namespace Survival.Unity
 
                 var nowSec = hook.Clock.Now;
                 var left = timer.Remaining(nowSec);
-                var isFree = hook.Timers.Rules.IsFree(left);
+                var isFree = left > 0 && hook.Timers.Rules.IsFree(left, timer.TotalSeconds);
                 clock.text = TimerQueue.FormatClock(left);
                 clock.color = isFree ? FreeGreen : SurvivalVisuals.Reward;
                 HookSkin.SetBar(barFill, (float)timer.Progress(nowSec), isFree ? HookArtKeys.BarFillGreen : HookArtKeys.BarFillBlue, isFree ? FreeGreen : SurvivalVisuals.PinBuild);
