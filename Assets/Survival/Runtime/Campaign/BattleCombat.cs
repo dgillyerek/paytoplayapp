@@ -301,7 +301,10 @@ namespace Survival.Domain.Campaign
 
     public static class BattleRewards
     {
-        /// <summary>Win: the stage rewards, its hero shards and on the first clear its gems. Loss: a share of the gold only.</summary>
+        /// <summary>
+        /// Win: the stage rewards, its hero shards and on the first clear its gems. Loss: nothing at all (Derek 2026-10-28:
+        /// "there should be no bonuses when you are defeated in the battle"); <paramref name="lossGoldShare"/> is ignored.
+        /// </summary>
         public static RewardBundle For(StageDef stage, bool won, bool firstClear, double lossGoldShare)
         {
             var bundle = new RewardBundle { Won = won, FirstClear = won && firstClear };
@@ -324,15 +327,6 @@ namespace Survival.Domain.Campaign
                 bundle.ShardHero = stage.ShardHero;
                 bundle.Shards = stage.ShardHero.Length > 0 ? stage.Shards : 0;
             }
-            else if (stage.Rewards.TryGetValue("res.soft", out var gold))
-            {
-                var share = (int)Math.Round(gold * Math.Max(0, lossGoldShare) / 10.0, MidpointRounding.AwayFromZero) * 10;
-                if (share > 0)
-                {
-                    bundle.Resources["res.soft"] = share;
-                }
-            }
-
             return bundle;
         }
     }

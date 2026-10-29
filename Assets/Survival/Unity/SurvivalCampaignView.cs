@@ -1805,9 +1805,9 @@ namespace Survival.Unity
                 Box(tip.rectTransform, 0.04f, 0.19f, 0.96f, 0.23f);
             }
 
-            var celebrateTitle = result.Won ? S("campaign.victory", "VICTORY!") : S("campaign.consolation", "Consolation");
+            var celebrateTitle = result.Won ? S("campaign.victory", "VICTORY!") : S("campaign.defeat", "DEFEAT");
             var collect = SheetButton(panel, "Collect", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, result.Won ? 0.25f : 0.52f, 0.06f, result.Won ? 0.75f : 0.96f, 0.15f, 34, out var collectBtn);
-            collect.text = S("campaign.collect", "COLLECT");
+            collect.text = result.Won ? S("campaign.collect", "COLLECT") : S("campaign.continue", "CONTINUE");
             FitButtonLabel(collect, 34);
             Wire(collectBtn, () =>
             {
