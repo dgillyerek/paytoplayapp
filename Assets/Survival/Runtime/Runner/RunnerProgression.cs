@@ -284,6 +284,19 @@ namespace Survival.Domain.Runner
             return level with { Length = level.Length + metres, Rows = rows };
         }
 
+        /// <summary>Marks the first <paramref name="count"/> unit chests up the road as fixed (<see cref="RunnerBoxDef.Fixed"/>).</summary>
+        public static RunnerLevelDef WithFixedHeroBoxes(RunnerLevelDef level, int count)
+        {
+            var order = level.Rows.Select((r, i) => (r, i)).Where(t => t.r.Box is { GivesUnits: true }).OrderBy(t => t.r.At).Take(count).Select(t => t.i).ToHashSet();
+            if (order.Count == 0)
+            {
+                return level;
+            }
+
+            var rows = level.Rows.Select((r, i) => order.Contains(i) ? r with { Box = r.Box! with { Fixed = true } } : r).ToList();
+            return level with { Rows = rows };
+        }
+
         public static RunnerLevelDef Generate(RunnerLevelDef first, RunnerProgressionDef p, int number, Func<string, bool> hasUnit)
         {
             if (number < 2)

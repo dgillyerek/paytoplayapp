@@ -2311,6 +2311,16 @@ namespace Survival.Domain.Runner
             for (var i = _boxes.Count - 1; i >= 0; i--)
             {
                 var b = _boxes[i];
+                if (b.Def.Fixed && b.Z <= Hero.Z)
+                {
+                    // A fixed hero chest joins as the squad draws level with it, broken or not (see RunnerBoxDef.Fixed).
+                    _boxes.RemoveAt(i);
+                    BoxesBroken++;
+                    Emit(RunnerEventKind.BoxBroken, b.Id, 0, b.X, b.Z, b.Def.Count, true, true, b.Def.Unit);
+                    Claim(b);
+                    continue;
+                }
+
                 if (b.Z < Hero.Z - RunnerRules.PassBehind)
                 {
                     _boxes.RemoveAt(i);

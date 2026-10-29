@@ -140,6 +140,13 @@ namespace Survival.Domain.Runner
     {
         public bool GivesUnits => Kind == RunnerBoxKind.Followers || Kind == RunnerBoxKind.Hero;
 
+        /// <summary>
+        /// A fixed hero chest: it joins as the squad draws level with it whether or not it was broken, so every player
+        /// starts a level with the same early squad (Derek 2026-10-29: make the first 2-3 hero boxes give fixed heroes, so a
+        /// level depends less on lucky early pickups). Set on a level's first unit chests by the pack's "fixed_hero_boxes".
+        /// </summary>
+        public bool Fixed { get; init; }
+
         /// <summary>Painted art: the hero chest for followers and heroes, the sword crate and the lightning crate for upgrades.</summary>
         public string ArtKey => Kind switch
         {
@@ -666,6 +673,12 @@ namespace Survival.Domain.Runner
             for (var i = 0; i < levels.Count; i++)
             {
                 levels[i] = RunnerProgression.WithRunUp(levels[i], i < earlyLevels ? earlyRunUp : runUp);
+            }
+
+            var fixedHeroes = Math.Max(0, (int)LayoutJson.OptNum(root, "fixed_hero_boxes", 0f));
+            for (var i = 0; i < levels.Count && fixedHeroes > 0; i++)
+            {
+                levels[i] = RunnerProgression.WithFixedHeroBoxes(levels[i], fixedHeroes);
             }
 
             return new RunnerCatalog(units, levels, allowMeleeHeroes)
