@@ -249,27 +249,44 @@ namespace Survival.Unity
         /// </summary>
         private void SeparateBodies()
         {
-            foreach (var a in _fighters)
+            // Open arena (no lanes, Derek 2026-10-28): every pair of standing bodies, allies included, not just a
+            // fighter and its target.
+            _sepFighters.Clear();
+            _sepPositions.Clear();
+            _sepHalf.Clear();
+            foreach (var f in _fighters)
             {
-                var b = a.Target;
-                if (!a.Built || a.Down || b == null || !b.Built || b.Down)
+                if (!f.Built || f.Down)
                 {
                     continue;
                 }
 
-                var d = VisualPosition(b) - VisualPosition(a);
-                d.y = 0f;
-                var overlap = BattleSpacing.Overlap(d.magnitude, a.HalfDepth, b.HalfDepth);
-                if (overlap <= 1e-4f)
-                {
-                    continue;
-                }
+                var p = VisualPosition(f);
+                _sepFighters.Add(f);
+                _sepPositions.Add((p.x, p.z));
+                _sepHalf.Add(f.HalfDepth);
+            }
 
-                var dir = d.sqrMagnitude > 1e-8f ? d.normalized : Flat(a.Slot.forward);
-                a.Slot.position -= dir * (overlap * 0.5f);
-                b.Slot.position += dir * (overlap * 0.5f);
+            var before = _sepPositions.ToArray();
+            if (BattleArena.Separate(_sepPositions, _sepHalf) <= 1e-4f)
+            {
+                return;
+            }
+
+            for (var i = 0; i < _sepFighters.Count; i++)
+            {
+                var dx = _sepPositions[i].X - before[i].X;
+                var dz = _sepPositions[i].Z - before[i].Z;
+                if ((dx * dx) + (dz * dz) > 1e-10f)
+                {
+                    _sepFighters[i].Slot.position += new Vector3(dx, 0f, dz);
+                }
             }
         }
+
+        private readonly List<Fighter> _sepFighters = new List<Fighter>();
+        private readonly List<(float X, float Z)> _sepPositions = new List<(float X, float Z)>();
+        private readonly List<float> _sepHalf = new List<float>();
 
         private static void UpdateAttackOffset(Fighter f, bool inClip, float secondsIntoAttack)
         {
