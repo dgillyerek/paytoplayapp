@@ -101,8 +101,12 @@ namespace Survival.Unity
             }
         }
 
-        /// <summary>After the clips posed the bones (and the host was placed): aims the weapon down <paramref name="aim"/>.</summary>
-        public void Tick(float dt, Vector3 aim, bool dead)
+        /// <summary>
+        /// After the clips posed the bones (and the host was placed): aims the weapon down <paramref name="aim"/>, blended
+        /// over the walk clip by <paramref name="weight"/> (<see cref="RunnerCombatStance.Weight"/>: 0 with nothing in reach,
+        /// so the hero carries the weapon as in the walking scenes).
+        /// </summary>
+        public void Tick(float dt, Vector3 aim, bool dead, float weight = 1f)
         {
             foreach (var saved in _kept)
             {
@@ -202,6 +206,20 @@ namespace Survival.Unity
                 var at = U(RunnerWeaponAim.DrawHand(N(grip), N(off.Upper.position), N(r), N(u), N(f), draw, w, k));
                 off.Reach(at, off.Upper.position + (k * U(RunnerWeaponAim.DrawElbowPole(N(r), N(u), N(f)))), Set);
                 Muzzle = grip + (u * (0.03f * k));
+            }
+
+            if (weight < 1f)
+            {
+                // Part way between the walk and the aim (or fully walking): ease every posed bone back toward its clip.
+                var t = Mathf.Clamp01(weight);
+                foreach (var saved in _kept)
+                {
+                    saved.Blend(t);
+                }
+
+                var tipNow = hand.TransformPoint(_tipLocal);
+                var gripNow = hand.TransformPoint(_gripLocal);
+                Muzzle = _style == RunnerAimStyle.Staff ? tipNow : gripNow + (u * (0.03f * k));
             }
         }
 
@@ -394,6 +412,18 @@ namespace Survival.Unity
                 }
 
                 _has = false;
+            }
+
+            /// <summary>Slerp the posed rotation back toward the clip's: 0 = the clip, 1 = the pose as solved.</summary>
+            public void Blend(float t)
+            {
+                if (!_has || T == null)
+                {
+                    return;
+                }
+
+                T.localRotation = Quaternion.Slerp(_base, T.localRotation, t);
+                _applied = T.localRotation;
             }
 
             public void Set(Quaternion world)
