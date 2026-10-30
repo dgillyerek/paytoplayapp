@@ -56,6 +56,7 @@ namespace Survival.Unity
         private static readonly Color VillainGlow = new Color(0.72f, 0.42f, 1f, 1f);
         private static readonly Color Disabled = new Color(0.30f, 0.31f, 0.34f, 1f);
         private static readonly Color FreeGreen = new Color(0.30f, 0.82f, 0.38f, 1f);
+        private static readonly Color ShortRed = new Color(1f, 0.30f, 0.26f, 1f);
         private static readonly Color Warn = new Color(1f, 0.55f, 0.45f, 1f);
         private static readonly Color StarOn = new Color(1f, 0.82f, 0.25f, 1f);
         private static readonly Color StarOff = new Color(0.35f, 0.33f, 0.30f, 0.9f);
@@ -629,10 +630,12 @@ namespace Survival.Unity
                 _selected = defs.Count > 0 ? defs[0].Id : "";
             }
 
+            // What you have, right where you spend it: gold + food (Level Up), gems / speed-ups (Rush), tomes.
+            BalanceBar.Inside(panel, Campaign.Wallet, BalanceBarIds.Heroes, 0.035f, 0.893f, 0.965f, 0.940f);
             Tab(panel, "TabHeroes", S("campaign.tab.heroes", "Heroes"), HeroesScreen.TabHighlighted(false, _foesTab), 0.04f, 0.27f, () => { _foesTab = false; _selected = ""; OpenHeroes(); });
             Tab(panel, "TabFoes", S("campaign.tab.foes", "Foes"), HeroesScreen.TabHighlighted(true, _foesTab), 0.29f, 0.52f, () => { _foesTab = true; _selected = ""; OpenHeroes(); });
             var queue = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Queue", "", 22, TextAnchor.MiddleRight, SurvivalVisuals.Cream), 1.5f);
-            Box(queue.rectTransform, 0.54f, 0.895f, 0.96f, 0.935f);
+            Box(queue.rectTransform, 0.54f, 0.845f, 0.96f, 0.885f);
 
             var refreshers = new List<Action>();
             for (var i = 0; i < defs.Count && i < 6; i++)
@@ -640,8 +643,8 @@ namespace Survival.Unity
                 var col = i % 3;
                 var row = i / 3;
                 var x0 = 0.035f + col * 0.315f;
-                var y1 = 0.885f - row * 0.228f;
-                refreshers.Add(HeroCard(panel, defs[i], x0, y1 - 0.215f, x0 + 0.30f, y1));
+                var y1 = 0.837f - row * 0.204f;
+                refreshers.Add(HeroCard(panel, defs[i], x0, y1 - 0.195f, x0 + 0.30f, y1));
             }
 
             var detail = SurvivalVisuals.Image(panel, "Detail", new Color(0f, 0f, 0f, 0.28f));
@@ -685,7 +688,7 @@ namespace Survival.Unity
         private void Tab(RectTransform panel, string name, string label, bool on, float x0, float x1, Action tap)
         {
             var key = on ? HookArtKeys.ButtonGold : HookArtKeys.ButtonBlue;
-            var text = SheetButton(panel, name, key, on ? SurvivalVisuals.MineFill : SurvivalVisuals.PanelSoft, x0, 0.893f, x1, 0.937f, 24, out var btn);
+            var text = SheetButton(panel, name, key, on ? SurvivalVisuals.MineFill : SurvivalVisuals.PanelSoft, x0, 0.845f, x1, 0.887f, 24, out var btn);
             text.text = label;
             Wire(btn, tap);
         }
@@ -959,6 +962,18 @@ namespace Survival.Unity
                     {
                         ct.color = levelText.color;
                     }
+
+                    // The resource you're short on goes red, so it's clear what's missing.
+                    if (!blocked)
+                    {
+                        for (var ci = 0; ci < 2; ci++)
+                        {
+                            if (!wallet.CanAfford(costIds[ci], Cost(cost, costIds[ci])))
+                            {
+                                costTexts[ci].color = ShortRed;
+                            }
+                        }
+                    }
                 }
 
                 if (training != null)
@@ -1061,6 +1076,7 @@ namespace Survival.Unity
 
             var roster = Campaign.Roster;
             var panel = OpenSheet("RecruitSheet", Fmt("campaign.recruit_title", "Recruit {0}", HeroName(def.Id)), 0.50f);
+            BalanceBar.Above(panel, Campaign.Wallet, BalanceBarIds.Recruit);
             Portrait(panel, def, 0.05f, 0.50f, 0.36f, 0.84f, out _);
             var blurb = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Blurb", Title(def.Rarity) + " " + Title(def.Role), 26, TextAnchor.MiddleLeft, RarityColor(def.Rarity)), 1.5f);
             Box(blurb.rectTransform, 0.40f, 0.74f, 0.96f, 0.82f);
@@ -1175,8 +1191,7 @@ namespace Survival.Unity
             Ornaments.Frame(panel, Ornaments.Gold, 4f);
             var crestTop = Ornaments.Crest(panel, new Color(0.30f, 0.55f, 1f, 1f));
             Box(crestTop.rectTransform, 0.44f, 0.955f, 0.56f, 1.035f);
-            var have = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Have", "", 20, TextAnchor.MiddleCenter, SurvivalVisuals.Reward), 1.5f);
-            Box(have.rectTransform, 0.03f, 0.845f, 0.97f, 0.875f);
+            BalanceBar.Inside(panel, Campaign.Wallet, BalanceBarIds.PowerPacks, 0.05f, 0.843f, 0.95f, 0.885f);
             var sandbox = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Sandbox", S("store.sandbox", "SANDBOX \u00b7 no real charge"), 16, TextAnchor.MiddleCenter, Warn), 1.5f);
             Box(sandbox.rectTransform, 0f, 0.82f, 1f, 0.845f);
 
@@ -1279,12 +1294,6 @@ namespace Survival.Unity
             close.text = S("hook.close", "Close");
             Wire(closeBtn, CloseSheet);
 
-            _sheetRefresh = () =>
-            {
-                have.text = ChipWallet.FormatGrouped(Campaign.Wallet.Get(SurvIds.ResHeroXp)) + " " + S(SurvIds.ResHeroXp + ".name", "Hero Tome") + "   \u00b7   "
-                    + ChipWallet.FormatGrouped(Campaign.Wallet.Get(SurvIds.ResRunnerBoost)) + " " + S(SurvIds.ResRunnerBoost + ".name", "War Banner");
-            };
-            _sheetRefresh();
         }
 
         /// <summary>Reward chips (icon + amount) in up to two rows across the box, nothing clipped.</summary>

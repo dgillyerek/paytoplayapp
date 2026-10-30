@@ -11,6 +11,7 @@ using Survival.Domain.Session;
 using Survival.Domain.Store;
 using Survival.Domain.Theme;
 using Survival.Domain.World;
+using Survival.Domain.View;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -885,6 +886,7 @@ namespace Survival.Unity
                 return;
             }
 
+            BalanceBar.Above(panel, hook.Wallet, BalanceBarIds.Building);
             var isCastle = !LevelBadge.Shows(plot.Def);
             var art = SurvivalVisuals.Image(panel, "Building", Color.white);
             art.preserveAspect = true;
@@ -1154,6 +1156,7 @@ namespace Survival.Unity
 
             var hook = _hook;
             var timerId = BaseEconomy.UpgradeTimerId(plotId);
+            BalanceBar.Above(panel, hook.Wallet, BalanceBarIds.SpeedUp);
             var speedPlot = hook.Base.Find(plotId);
             var building = HookSkin.Art(panel, "Building", speedPlot != null ? BuildingVisual.For(speedPlot, Tiers).ArtKey : HookArtKeys.ForPlot(plotId), SurvivalVisuals.PinBuild);
             Box(building.rectTransform, 0.05f, 0.60f, 0.30f, 0.88f);
