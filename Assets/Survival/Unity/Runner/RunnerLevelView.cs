@@ -1425,23 +1425,10 @@ namespace Survival.Unity
                 {
                     b.Sprite.color = Color.Lerp(Color.white, new Color(1.6f, 1.6f, 1.6f, 1f), b.Punch);
                 }
-
-                if (b.JoinGlow != null)
-                {
-                    // A slow breathing pulse between the theme's gold and blue.
-                    var t = 0.5f + (0.5f * Mathf.Sin(Time.time * 3f));
-                    var c = Color.Lerp(JoinBlue, JoinGold, t);
-                    b.JoinGlow.color = new Color(c.r, c.g, c.b, 0.55f + (0.25f * t));
-                    b.JoinGlow.transform.localScale = Vector3.one * (0.95f + (0.1f * t));
-                }
             }
         }
 
         // ---------- boxes, shots, bursts ----------
-
-        /// <summary>Fixed hero chest colours (Theme A gold trim on its blue plate).</summary>
-        private static readonly Color JoinBlue = new Color(0.35f, 0.7f, 1f, 0.8f);
-        private static readonly Color JoinGold = new Color(1f, 0.84f, 0.38f, 0.8f);
 
         private sealed class BoxView
         {
@@ -1452,9 +1439,6 @@ namespace Survival.Unity
 
             /// <summary>The 3D unit the box pays (follower and hero boxes), standing on the lid until the box breaks.</summary>
             public RunnerRig? Captive;
-
-            /// <summary>The friendly gold/blue glow under a fixed hero chest (<see cref="RunnerBoxDef.Fixed"/>), pulsed each frame.</summary>
-            public SpriteRenderer? JoinGlow;
 
             /// <summary>Top of the box and whatever stands on it, metres (the HP bar sits above it).</summary>
             public float Top = Size * 0.95f;
@@ -1469,18 +1453,6 @@ namespace Survival.Unity
             if (view.Sprite != null && (b.Def.Kind == RunnerBoxKind.Range || b.Def.Kind == RunnerBoxKind.Heal))
             {
                 view.Sprite.color = CrateTint(b.Def.Kind);
-            }
-
-            if (b.Def.Fixed)
-            {
-                // A fixed hero chest joins by itself (no HP to shoot down): a soft gold and blue glow on the road under it.
-                var glow = Billboard(root, "JoinGlow", HookArtKeys.FxGlow, new Vector3(b.X, 0.05f, b.Z), BoxView.Size * 2.1f, JoinBlue);
-                view.JoinGlow = glow.GetComponentInChildren<SpriteRenderer>();
-                if (view.JoinGlow != null)
-                {
-                    view.JoinGlow.color = JoinBlue;
-                    view.JoinGlow.sortingOrder = (view.Sprite != null ? view.Sprite.sortingOrder : 0) - 1;
-                }
             }
 
             if (b.Def.GivesUnits && _catalog != null && _actors != null)
@@ -1704,19 +1676,6 @@ namespace Survival.Unity
             if (box != null && box.GivesUnits)
             {
                 AddFx(RunnerArtKeys.ChestOpen, at, BoxView.Size * 1.1f, 0.9f, Color.white, Vector3.up * 0.6f, 0.2f, 0f);
-            }
-
-            if (box != null && box.Fixed)
-            {
-                // The join celebration: a gold-and-blue pop, a sparkle shower and a little confetti as the hero steps in.
-                AddFx(HookArtKeys.FxGlow, at, 3.2f, 0.5f, new Color(JoinBlue.r, JoinBlue.g, JoinBlue.b, 0.9f), Vector3.zero, 1.2f, 0f);
-                AddFx(HookArtKeys.FxBurstRing, at, 2.8f, 0.6f, JoinBlue, Vector3.zero, 2.2f, 0f);
-                Sparks(at + (Vector3.up * 0.4f), JoinBlue, 12, 2.4f);
-                for (var i = 0; i < 10; i++)
-                {
-                    var v = new Vector3(UnityEngine.Random.Range(-2.5f, 2.5f), UnityEngine.Random.Range(4f, 7f), UnityEngine.Random.Range(-1f, 1.5f));
-                    AddFx(HookArtKeys.FxConfetti, at, 0.3f, 1.3f, Color.white, v, 0f, UnityEngine.Random.Range(-400f, 400f));
-                }
             }
 
             AddFx(HookArtKeys.FxRays, at, 3.4f, 0.9f, new Color(1f, 0.92f, 0.55f, 0.8f), Vector3.zero, 0.6f, 60f);

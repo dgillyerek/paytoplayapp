@@ -14,7 +14,7 @@ public sealed class RunnerBoostSwingProbe(ITestOutputHelper output)
     public static readonly int[] Levels = { 10, 15, 25, 31 };
     public static readonly int[] Keep = { 0, 2, 99 };
 
-    public static bool IsBoost(RunnerRowDef r) => r.Kind == RunnerRowKind.Box && r.Box != null && r.Box.Kind != RunnerBoxKind.Heal && !r.Box.Fixed;
+    public static bool IsBoost(RunnerRowDef r) => r.Kind == RunnerRowKind.Box && r.Box != null && r.Box.Kind != RunnerBoxKind.Heal;
 
     public static RunnerLevelDef KeepFirst(RunnerLevelDef level, int n)
     {
