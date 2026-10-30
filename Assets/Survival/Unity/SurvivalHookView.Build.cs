@@ -182,6 +182,7 @@ namespace Survival.Unity
                 return;
             }
 
+            BalanceBar.Above(panel, hook.Wallet, BalanceBarIds.Building);
             var refreshers = new List<System.Action>();
             const float top = 0.84f;
             const float rowH = 0.165f;
