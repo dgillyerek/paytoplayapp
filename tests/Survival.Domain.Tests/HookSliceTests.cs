@@ -56,7 +56,7 @@ public sealed class HookIdTests
     {
         Assert.Equal(SurvIds.BasePlots, JsonList("base_plots_slice"));
         Assert.Equal(SurvIds.Stores, JsonList("stores"));
-        Assert.Equal(SurvIds.Offers.Concat(SurvIds.PowerOffers), JsonList("offers"));
+        Assert.Equal(SurvIds.Offers.Concat(SurvIds.PowerOffers).Concat(SurvIds.TrackOffers), JsonList("offers"));
         var gifts = JsonList("gifts");
         Assert.Contains(SurvIds.GiftSchedulerFree, gifts);
         foreach (var g in SurvIds.Gifts)
@@ -91,6 +91,7 @@ public sealed class HookIdTests
         Assert.Equal(SurvIds.Stores, c.Stores.Select(s => s.Id).ToList());
         Assert.Equal(SurvIds.Offers.OrderBy(x => x), c.Stores.Single(s => s.Id == SurvIds.StoreGemShop).Offers.Select(o => o.Id).OrderBy(x => x));
         Assert.Equal(SurvIds.PowerOffers, c.Stores.Single(s => s.Id == SurvIds.StorePowerPacks).Offers.Select(o => o.Id).ToList());
+        Assert.Equal(SurvIds.TrackOffers, c.Stores.Single(s => s.Id == SurvIds.StoreRewardTrack).Offers.Select(o => o.Id).ToList());
         Assert.Equal(SurvIds.Gifts, c.Gifts.Pool.Select(g => g.Id).ToList());
         foreach (var plot in c.Plots)
         {

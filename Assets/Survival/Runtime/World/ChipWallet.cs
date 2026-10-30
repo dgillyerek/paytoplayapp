@@ -75,6 +75,40 @@ namespace Survival.Domain.World
             return FormatGrouped(amount);
         }
 
+        /// <summary>Balance-bar amount: grouped under 10,000, then 12.5K / 250K / 1.2M (one decimal, trailing .0 dropped).</summary>
+        public static string FormatAbbrev(int amount)
+        {
+            if (amount < 10000)
+            {
+                return FormatGrouped(amount);
+            }
+
+            if (amount < 1000000)
+            {
+                return Trim(Math.Floor(amount / 100.0) / 10.0) + "K";
+            }
+
+            return Trim(Math.Floor(amount / 100000.0) / 10.0) + "M";
+        }
+
+        /// <summary>Speed-up minutes for the balance bar: 45m, 2.5h, 3d.</summary>
+        public static string FormatMinutesAbbrev(int minutes)
+        {
+            if (minutes < 60)
+            {
+                return minutes.ToString(CultureInfo.InvariantCulture) + "m";
+            }
+
+            if (minutes < 1440)
+            {
+                return Trim(Math.Floor(minutes / 6.0) / 10.0) + "h";
+            }
+
+            return Trim(Math.Floor(minutes / 144.0) / 10.0) + "d";
+        }
+
+        private static string Trim(double v) => v.ToString("0.#", CultureInfo.InvariantCulture);
+
         public static string FormatGrouped(int amount) =>
             amount.ToString("N0", CultureInfo.InvariantCulture);
     }

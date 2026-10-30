@@ -152,6 +152,9 @@ namespace Survival.Domain.Ids
         public const string SkuSpeedupBundle = "sku.speedup_bundle";
         public const string SkuStarterPack = "sku.starter_pack";
         public const string SkuPassSeason = "sku.pass_season";
+        public const string SkuTrackPremium = "sku.track_premium";
+        public const string SkuTrackRoyal = "sku.track_royal";
+        public const string SkuTrackRoyalUpgrade = "sku.track_royal_upgrade";
 
         public const string FtueStepBoot = "ftue.step.boot";
         public const string FtueStepPlaceHq = "ftue.step.place_hq";
@@ -212,6 +215,11 @@ namespace Survival.Domain.Ids
         public const string OfferPowerT5 = "offer.power_t5";
         public const string OfferPowerT6 = "offer.power_t6";
 
+        public const string StoreRewardTrack = "store.reward_track";
+        public const string OfferTrackPremium = "offer.track_premium";
+        public const string OfferTrackRoyal = "offer.track_royal";
+        public const string OfferTrackRoyalUpgrade = "offer.track_royal_upgrade";
+
         public const string GiftSchedulerFree = "gift.scheduler.free";
         public const string GiftGold = "gift.gold";
         public const string GiftSpeedup5 = "gift.speedup_5";
@@ -229,7 +237,7 @@ namespace Survival.Domain.Ids
             QuestStarterCollect, QuestStarterGather, QuestStarterUpgradeHq
         };
 
-        public static readonly IReadOnlyList<string> Stores = new[] { StoreGemShop, StorePowerPacks };
+        public static readonly IReadOnlyList<string> Stores = new[] { StoreGemShop, StorePowerPacks, StoreRewardTrack };
 
         public static readonly IReadOnlyList<string> Offers = new[]
         {
@@ -239,6 +247,11 @@ namespace Survival.Domain.Ids
         public static readonly IReadOnlyList<string> PowerOffers = new[]
         {
             OfferPowerStarter, OfferPowerT1, OfferPowerT2, OfferPowerT3, OfferPowerT4, OfferPowerT5, OfferPowerT6
+        };
+
+        public static readonly IReadOnlyList<string> TrackOffers = new[]
+        {
+            OfferTrackPremium, OfferTrackRoyal, OfferTrackRoyalUpgrade
         };
 
         public static readonly IReadOnlyList<string> Gifts = new[]
