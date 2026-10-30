@@ -7,6 +7,7 @@ using Survival.Domain.Roster;
 using Survival.Domain.Runner;
 using Survival.Domain.Theme;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace Survival.Unity
@@ -33,6 +34,8 @@ namespace Survival.Unity
         private Text? _dmgChip;
         private Text? _spdChip;
         private Text? _hint;
+        private Text? _startHint;
+        private float _startPulse;
         private RectTransform? _result;
         private RectTransform? _levelList;
         private RectTransform? _banner;
@@ -202,6 +205,16 @@ namespace Survival.Unity
             _hint = HookSkin.Outlined(SurvivalVisuals.Text(_hud, "Hint", "⟵  " + S("runner.hint", "Drag or A / D to steer") + "  ⟶", 34, TextAnchor.MiddleCenter, SurvivalVisuals.Cream));
             Anchor(_hint.rectTransform, TopHudLayout.Hint);
 
+            // While the level waits for its first input (RunnerRun.WaitingForStart): "Drag to start" on touch screens,
+            // "Press A / D to start" with a keyboard; pulses gently, gone on the first steer.
+            var touchFirst = Application.isMobilePlatform || (Touchscreen.current != null && Keyboard.current == null);
+            var startText = touchFirst ? S("runner.start_drag", "Drag to start") : S("runner.start_press", "Press A / D to start");
+            _startHint = HookSkin.Outlined(SurvivalVisuals.Text(_hud, "StartHint", startText, 44, TextAnchor.MiddleCenter, SurvivalVisuals.Gold));
+            _startHint.fontStyle = FontStyle.Bold;
+            _startHint.raycastTarget = false;
+            Anchor(_startHint.rectTransform, 0f, 0.40f, 1f, 0.50f);
+            _startHint.gameObject.SetActive(false);
+
             // Hero HP: a corner panel, not a bar over the hero (Derek 2026-10-28); rows join as heroes join the squad.
             _heroPanel = HeroHpPanel.Build(_hud);
             _panelHeroes.Clear();
@@ -341,6 +354,34 @@ namespace Survival.Unity
             }
         }
 
+        private void TickStartHint(float dt)
+        {
+            if (_startHint == null || _run == null)
+            {
+                return;
+            }
+
+            var waiting = _run.WaitingForStart;
+            if (_startHint.gameObject.activeSelf != waiting)
+            {
+                _startHint.gameObject.SetActive(waiting);
+                _startPulse = 0f;
+            }
+
+            if (!waiting)
+            {
+                return;
+            }
+
+            // Gentle pulse: alpha 0.55..1 and scale 0.96..1.04, about one beat every 1.4 s (unscaled, so it pulses even paused).
+            _startPulse += Time.unscaledDeltaTime;
+            var k = 0.5f + (0.5f * Mathf.Sin(_startPulse * Mathf.PI * 2f / 1.4f));
+            var c = _startHint.color;
+            c.a = Mathf.Lerp(0.55f, 1f, k);
+            _startHint.color = c;
+            _startHint.rectTransform.localScale = Vector3.one * Mathf.Lerp(0.96f, 1.04f, k);
+        }
+
         private void TickHud(float dt)
         {
             if (_run == null)
@@ -349,6 +390,7 @@ namespace Survival.Unity
             }
 
             TickHeroPanel(dt);
+            TickStartHint(dt);
 
             if (_progressFill != null)
             {

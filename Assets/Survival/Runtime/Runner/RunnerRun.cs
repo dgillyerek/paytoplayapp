@@ -846,7 +846,32 @@ namespace Survival.Domain.Runner
         public float MaxSteer => Math.Max(0.5f, Level.HalfWidth - Hero.Unit.Radius);
 
         /// <summary>Steer the hero to lane position <paramref name="x"/> (metres from the centre line, clamped to the lane).</summary>
-        public void SteerTo(float x) => _steer = Clamp(x, -MaxSteer, MaxSteer);
+        /// <summary>
+        /// True while the level waits for the player's first input (Derek 2026-10-29: "don't start the level until the first
+        /// button is pressed or if on mobile until the units are dragged"). Off by default, so the balance sim and tests start
+        /// at once; the scene turns it on with <see cref="WaitForStart"/>. While waiting, <see cref="Step"/> does nothing: the
+        /// squad does not move, foes neither walk nor attack, and the clock stays at 0.
+        /// </summary>
+        public bool WaitingForStart { get; private set; }
+
+        /// <summary>Hold the run at its start until <see cref="Start"/> or the first steer.</summary>
+        public void WaitForStart()
+        {
+            if (Seconds <= 0f && !Over)
+            {
+                WaitingForStart = true;
+            }
+        }
+
+        /// <summary>End the start wait (also done by the first steer). Moves nothing by itself.</summary>
+        public void Start() => WaitingForStart = false;
+
+        /// <summary>Set the steer point. The first steer also starts a run waiting for its first input.</summary>
+        public void SteerTo(float x)
+        {
+            WaitingForStart = false;
+            _steer = Clamp(x, -MaxSteer, MaxSteer);
+        }
 
         public void SteerBy(float dx) => SteerTo(_steer + dx);
 
@@ -921,6 +946,11 @@ namespace Survival.Domain.Runner
         public IReadOnlyList<RunnerEvent> Step(float dt)
         {
             _events.Clear();
+            if (WaitingForStart)
+            {
+                return _events;
+            }
+
             while (dt > 1e-6f && !Over)
             {
                 var h = Math.Min(dt, RunnerRules.MaxStep);

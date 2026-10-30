@@ -155,6 +155,8 @@
   "runner.menu_title": "Runner: Walk & Fight",
   "runner.level.thornwood_road": "Thornwood Road",
   "runner.hint": "Drag or A / D to steer",
+  "runner.start_drag": "Drag to start",
+  "runner.start_press": "Press A / D to start",
   "runner.boss": "BOSS",
   "runner.boss_incoming": "Ironhowl blocks the road!",
   "runner.box.followers": "+{0}",
