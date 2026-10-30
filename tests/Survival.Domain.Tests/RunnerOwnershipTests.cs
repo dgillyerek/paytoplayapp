@@ -28,7 +28,7 @@ public class RunnerOwnershipTests
         for (var i = 0; i < 30 * 600 && !run.Over; i++)
         {
             var next = run.Level.Rows.FirstOrDefault(r => r.Box is { GivesUnits: true } && r.At > run.Distance);
-            run.SteerTo(next?.X ?? 0f);
+            run.SteerTo(ShotDodge.Steer(run, next?.X ?? 0f));
             run.Step(1f / 30f);
             foreach (var m in run.Squad)
             {
