@@ -71,6 +71,30 @@ namespace Survival.Domain.Campaign
             }
         }
 
+        private readonly HashSet<string> _trackClaimed = new(StringComparer.Ordinal);
+
+        /// <summary>Reward-track cells already claimed ("level:column"). Saved as "track_claimed".</summary>
+        public IReadOnlyCollection<string> TrackClaimed => _trackClaimed;
+
+        public bool IsTrackClaimed(string cell) => _trackClaimed.Contains(cell);
+
+        public void MarkTrackClaimed(string cell)
+        {
+            if (_trackClaimed.Add(cell))
+            {
+                Touch();
+            }
+        }
+
+        internal void RestoreTrackClaimed(IEnumerable<string> cells)
+        {
+            _trackClaimed.Clear();
+            foreach (var c in cells)
+            {
+                _trackClaimed.Add(c);
+            }
+        }
+
         /// <summary>Anything the save file holds changed (training, levels, battles, bounties).</summary>
         public event Action? Changed;
 

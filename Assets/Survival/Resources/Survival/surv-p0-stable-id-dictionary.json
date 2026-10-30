@@ -110,6 +110,9 @@
     "sku.power_t4",
     "sku.power_t5",
     "sku.power_t6",
+    "sku.track_premium",
+    "sku.track_royal",
+    "sku.track_royal_upgrade",
     "sku.speedup_bundle",
     "sku.starter_pack",
     "sku.pass_season"
@@ -125,7 +128,8 @@
   ],
   "stores": [
     "store.gem_shop",
-    "store.power_packs"
+    "store.power_packs",
+    "store.reward_track"
   ],
   "offers": [
     "offer.gems_s",
@@ -138,7 +142,10 @@
     "offer.power_t3",
     "offer.power_t4",
     "offer.power_t5",
-    "offer.power_t6"
+    "offer.power_t6",
+    "offer.track_premium",
+    "offer.track_royal",
+    "offer.track_royal_upgrade"
   ],
   "gifts": [
     "gift.scheduler.free",

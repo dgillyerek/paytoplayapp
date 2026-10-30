@@ -9,6 +9,9 @@
     { "sku": "sku.power_t3", "product_id": "com.paytoplay.fantasykingdoma.power_t3", "price_label": "$4.99" },
     { "sku": "sku.power_t4", "product_id": "com.paytoplay.fantasykingdoma.power_t4", "price_label": "$9.99" },
     { "sku": "sku.power_t5", "product_id": "com.paytoplay.fantasykingdoma.power_t5", "price_label": "$19.99" },
-    { "sku": "sku.power_t6", "product_id": "com.paytoplay.fantasykingdoma.power_t6", "price_label": "$39.99" }
+    { "sku": "sku.power_t6", "product_id": "com.paytoplay.fantasykingdoma.power_t6", "price_label": "$39.99" },
+    { "sku": "sku.track_premium", "product_id": "com.paytoplay.fantasykingdoma.track_premium", "price_label": "$2.99" },
+    { "sku": "sku.track_royal", "product_id": "com.paytoplay.fantasykingdoma.track_royal", "price_label": "$3.99" },
+    { "sku": "sku.track_royal_upgrade", "product_id": "com.paytoplay.fantasykingdoma.track_royal_upgrade", "price_label": "$0.99" }
   ]
 }
