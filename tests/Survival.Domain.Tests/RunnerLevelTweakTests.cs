@@ -18,7 +18,7 @@ public sealed class RunnerLevelTweakTests
         var c = Runner.Catalog();
         var p = c.Progression!;
         Assert.Equal(Rerolled, p.Tweaks.Where(kv => kv.Value.Layout != 0).Select(kv => kv.Key).OrderBy(k => k).ToArray());
-        Assert.Equal(RunnerLevelTweak.None, p.Tweak(7));
+        Assert.Equal(RunnerLevelTweak.None with { FoeHp = p.Tweak(7).FoeHp }, p.Tweak(7));
         // The free-pace foe_hp tune (Derek 2026-10-27) stays on; only the layout re-roll is taken off for the seed.
         var plain = p with { Tweaks = p.Tweaks.ToDictionary(kv => kv.Key, kv => kv.Value with { Layout = 0 }) };
         foreach (var n in Rerolled)
@@ -27,8 +27,8 @@ public sealed class RunnerLevelTweakTests
             Assert.Equal(RunnerLevelTweak.None with { Layout = tw.Layout, FoeHp = tw.FoeHp }, tw);
             Assert.NotEqual(0, tw.Layout);
             var tweaked = c.ByNumber(n);
-            var seed = RunnerProgression.Generate(c.Levels[0], plain, n, c.Units.ContainsKey);
-            Assert.Equal(seed.BoxCount, tweaked.BoxCount);
+            var seed = RunnerProgression.WithRunUp(RunnerProgression.Generate(RunnerProgression.WithRunUp(c.Levels[0], -c.FirstRunUp), plain, n, c.Units.ContainsKey), c.FirstRunUp);
+            Assert.True(seed.BoxCount == tweaked.BoxCount, $"L{n} boxes {seed.BoxCount} vs {tweaked.BoxCount}");
             Assert.Equal(seed.EnemyCount, tweaked.EnemyCount);
             Assert.Equal(seed.HazardCount, tweaked.HazardCount);
             Assert.Equal(seed.BarrierCount, tweaked.BarrierCount);

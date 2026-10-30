@@ -266,6 +266,24 @@ namespace Survival.Domain.Runner
         private static readonly string[] ShardHeroes = { "hero.lyra", "hero.rowan", "hero.oakenshield", "hero.sir_aldric" };
         private static readonly RunnerBoxKind[] PowerUps = { RunnerBoxKind.Weapon, RunnerBoxKind.Rate, RunnerBoxKind.Range, RunnerBoxKind.Followers, RunnerBoxKind.Heal, RunnerBoxKind.Weapon, RunnerBoxKind.Rate, RunnerBoxKind.Followers };
 
+        /// <summary><paramref name="level"/> with every row <paramref name="metres"/> further up the road and the road that much longer
+        /// (a negative <paramref name="metres"/> takes a run-up back off).</summary>
+        public static RunnerLevelDef WithRunUp(RunnerLevelDef level, float metres)
+        {
+            if (metres == 0f)
+            {
+                return level;
+            }
+
+            var rows = new List<RunnerRowDef>(level.Rows.Count);
+            foreach (var r in level.Rows)
+            {
+                rows.Add(r with { At = r.At + metres });
+            }
+
+            return level with { Length = level.Length + metres, Rows = rows };
+        }
+
         public static RunnerLevelDef Generate(RunnerLevelDef first, RunnerProgressionDef p, int number, Func<string, bool> hasUnit)
         {
             if (number < 2)

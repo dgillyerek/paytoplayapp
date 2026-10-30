@@ -471,6 +471,9 @@ namespace Survival.Domain.Runner
         /// <summary>The level generator's settings, when the file has a "progression" block.</summary>
         public RunnerProgressionDef? Progression { get; private set; }
 
+        /// <summary>Metres every level's rows were moved up the road by the pack's "first_run_up" (0 = none).</summary>
+        public float FirstRunUp { get; private set; }
+
         public RunnerUnitDef Unit(string id) =>
             _units.TryGetValue(id, out var u) ? u : throw new KeyNotFoundException("Runner unit '" + id + "' is not in " + FileName + ".");
 
@@ -636,7 +639,17 @@ namespace Survival.Domain.Runner
                 }
             }
 
-            return new RunnerCatalog(units, levels, allowMeleeHeroes) { Progression = progression };
+            // A little more run-up before each level's first items and enemies (Derek 2026-10-28: "give a little more distance
+            // before the first items in the level. but only the first items and enemies. everything else remains the same").
+            // Every row moves up the road by the same amount and the road grows by it, so only the empty start gets longer.
+            // Set by the pack's "first_run_up" (metres; 0 when absent, so hand-built test roads keep their exact places).
+            var runUp = Math.Max(0f, LayoutJson.OptNum(root, "first_run_up", 0f));
+            for (var i = 0; i < levels.Count; i++)
+            {
+                levels[i] = RunnerProgression.WithRunUp(levels[i], runUp);
+            }
+
+            return new RunnerCatalog(units, levels, allowMeleeHeroes) { Progression = progression, FirstRunUp = runUp };
         }
 
         private static RunnerRowDef ReadRow(JsonNode.Obj r)

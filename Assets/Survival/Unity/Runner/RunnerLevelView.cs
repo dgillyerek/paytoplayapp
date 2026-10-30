@@ -262,6 +262,8 @@ namespace Survival.Unity
             ClearActors();
             _attempt++;
             _run = new RunnerRun(_catalog, _level, _loadout);
+            // Frozen until the first steer (a key, or a drag on touch) or a mouse press: Derek 2026-10-29.
+            _run.WaitForStart();
             RunnerHitchLog.Reset();
             _peakFoes = _peakSquad = _peakShots = 0;
             _resultShown = false;
@@ -643,6 +645,15 @@ namespace Survival.Unity
             }
 
             _dragAccum += screenDx / Mathf.Max(1f, Screen.width) * DragMetresPerScreen;
+        }
+
+        /// <summary>Drag pad press: a mouse click starts a waiting run (a touch waits for its drag, which also steers).</summary>
+        internal void Press(bool touch)
+        {
+            if (_run != null && !_run.Over && !touch)
+            {
+                _run.Start();
+            }
         }
 
         private void Steered()
@@ -1713,9 +1724,8 @@ namespace Survival.Unity
     {
         internal RunnerLevelView? View;
 
-        public void OnPointerDown(PointerEventData eventData)
-        {
-        }
+        // uGUI gives the mouse buttons negative pointer ids and each touch its finger id (0 and up).
+        public void OnPointerDown(PointerEventData eventData) => View?.Press(eventData.pointerId >= 0);
 
         public void OnDrag(PointerEventData eventData) => View?.Drag(eventData.delta.x);
     }
