@@ -1451,7 +1451,7 @@ namespace Survival.Domain.Runner
             foreach (var b in _boxes)
             {
                 var dz = b.Z - m.Z;
-                if (b.Hp <= 0 || b.Def.Fixed || dz <= -1f || dz > m.Unit.Range + RunnerBox.Radius + m.Unit.Radius
+                if (b.Hp <= 0 || dz <= -1f || dz > m.Unit.Range + RunnerBox.Radius + m.Unit.Radius
                     || Math.Abs(b.X - m.X) > RunnerRules.MeleeHalfWidth + RunnerBox.Radius || dz >= best)
                 {
                     continue;
@@ -2322,16 +2322,6 @@ namespace Survival.Domain.Runner
             for (var i = _boxes.Count - 1; i >= 0; i--)
             {
                 var b = _boxes[i];
-                if (b.Def.Fixed && b.Z <= Hero.Z)
-                {
-                    // A fixed hero chest joins as the squad draws level with it, broken or not (see RunnerBoxDef.Fixed).
-                    _boxes.RemoveAt(i);
-                    BoxesBroken++;
-                    Emit(RunnerEventKind.BoxBroken, b.Id, 0, b.X, b.Z, b.Def.Count, true, true, b.Def.Unit);
-                    Claim(b);
-                    continue;
-                }
-
                 if (b.Z < Hero.Z - RunnerRules.PassBehind)
                 {
                     _boxes.RemoveAt(i);

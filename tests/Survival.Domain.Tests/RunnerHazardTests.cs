@@ -202,8 +202,9 @@ public sealed class RunnerHazardTests
             Assert.InRange((float)l.BoxCount / l.EnemyCount, 0.08f, 0.21f);
             Assert.True(i == 0 || (float)l.BoxCount / l.EnemyCount < (float)c.Levels[i - 1].BoxCount / c.Levels[i - 1].EnemyCount + 0.005f, $"L{l.Number} boxes per enemy");
             // Enemies walk 1.5x faster now and the squad is capped at 10, so each one is lighter (about 0.45x-0.8x the old total HP) and the
-            // total still climbs every level.
-            Assert.InRange(l.FoeHpTotal(c), old[i].Item3 * 0.4, old[i].Item3 * 1.0);
+            // total still climbs every level. Up to 1.6x on Levels 2-12 since the 6 m run-up (Oct 29): the squad gets free shots in
+            // before the first wave, so those levels carry more HP to keep main's difficulty.
+            Assert.InRange(l.FoeHpTotal(c), old[i].Item3 * 0.4, old[i].Item3 * 1.6);
             if (i > 0)
             {
                 Assert.True(l.FoeHpTotal(c) > c.Levels[i - 1].FoeHpTotal(c), $"L{l.Number} enemy HP total climbs");

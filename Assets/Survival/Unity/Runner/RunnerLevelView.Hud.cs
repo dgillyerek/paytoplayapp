@@ -467,17 +467,7 @@ namespace Survival.Unity
             var bar = new WorldBar { Root = root, Fill = fill, Number = number, OnBox = onBox, Boss = boss, Height = height, Group = group };
             if (onBox && _boxDefs.TryGetValue(id, out var def))
             {
-                if (def.Fixed)
-                {
-                    // A fixed hero chest joins by itself: no HP strip or number, only its join banner.
-                    back.gameObject.SetActive(false);
-                    number.gameObject.SetActive(false);
-                    bar.Reward = JoinTag(root, def);
-                }
-                else
-                {
-                    bar.Reward = RewardTag(root, def);
-                }
+                bar.Reward = RewardTag(root, def);
             }
 
             _bars[id] = bar;
@@ -657,33 +647,6 @@ namespace Survival.Unity
             var text = HookSkin.Outlined(SurvivalVisuals.Text(tag, "Text", label, 24, TextAnchor.MiddleCenter, RewardColor(def.Kind, SurvivalVisuals.Reward)));
             Anchor(text.rectTransform, textLeft, 0f, 0.96f, 1f);
             return tag;
-        }
-
-        /// <summary>
-        /// The banner over a fixed hero chest (<see cref="RunnerBoxDef.Fixed"/>): a Theme A plate with a gold trim, the
-        /// hero's portrait and "JOINS" / "+N JOIN", so it reads as a friend who steps in, not a box to shoot.
-        /// </summary>
-        private RectTransform JoinTag(RectTransform bar, RunnerBoxDef def)
-        {
-            var trim = HookSkin.Panel(bar, "JoinTrim", HookArtKeys.Plate, SurvivalVisuals.Gold, 0.4f).rectTransform;
-            trim.anchorMin = trim.anchorMax = new Vector2(0.5f, 1f);
-            trim.pivot = new Vector2(0.5f, 0f);
-            trim.sizeDelta = new Vector2(176f, 52f);
-            trim.anchoredPosition = new Vector2(0f, 20f);
-            var tag = HookSkin.Panel(trim, "Join", HookArtKeys.Plate, new Color(0.14f, 0.3f, 0.55f, 0.97f), 0.4f).rectTransform;
-            SurvivalVisuals.Stretch(tag);
-            tag.offsetMin = new Vector2(3f, 3f);
-            tag.offsetMax = new Vector2(-3f, -3f);
-            var roster = _catalog != null ? _catalog.Unit(def.Unit).Roster : def.Unit;
-            var portrait = HookSkin.Art(tag, "Portrait", RunnerArtKeys.Portrait(roster), SurvivalVisuals.Gold);
-            portrait.preserveAspect = true;
-            Anchor(portrait.rectTransform, 0.02f, 0.04f, 0.3f, 0.96f);
-            var label = def.Kind == RunnerBoxKind.Hero
-                ? Fmt("runner.box.joins", "JOINS")
-                : Fmt("runner.box.join_n", "+{0} JOIN", def.Count);
-            var text = HookSkin.Outlined(SurvivalVisuals.Text(tag, "Text", label, 24, TextAnchor.MiddleCenter, SurvivalVisuals.Gold));
-            Anchor(text.rectTransform, 0.3f, 0f, 0.98f, 1f);
-            return trim;
         }
 
         private void RemoveBar(int id)
