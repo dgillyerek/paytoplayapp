@@ -902,6 +902,9 @@ namespace Survival.Unity
                 // back, small on screen and mostly behind the front rows. The hero and every swing stay full rate.
                 rig.SetEvaluateEvery(!m.IsHero && !m.Attacking && RunnerFormation.RowOf(m.Slot) >= 4 ? 2 : 1);
                 rig.LeanWith(_run.Over ? 0f : m.VX);
+                // The sim only starts a take with a target in this member's own reach (Rowan's and Lyra's are long):
+                // nothing in reach and the rig walks like the walking scenes (RunnerCombatStance).
+                rig.SetInRange(m.Attacking && !_run.Over);
                 if (_run.Over && _run.Outcome == RunnerOutcome.Won)
                 {
                     rig.Rest();

@@ -52,6 +52,10 @@ namespace Survival.Unity
 
         /// <summary>Lyra's levelled staff and Rowan's drawn bow (<see cref="RunnerWeaponAim"/>); null for every other rig.</summary>
         private RunnerWeaponPose? _weapon;
+
+        /// <summary>Walk or attack (Derek 2026-10-29): the weapon aim shows only with something in this member's reach.</summary>
+        private readonly RunnerCombatStance _stance = new RunnerCombatStance();
+        private bool _inRange;
         private readonly List<FlickBone> _flickBones = new List<FlickBone>();
 
         /// <summary>Degrees of lean per m/s of sideways speed, and the most it ever leans.</summary>
@@ -584,6 +588,15 @@ namespace Survival.Unity
             return _play(pose);
         }
 
+        /// <summary>
+        /// Whether something (foe, crate or barrier) is in this member's striking reach this frame: the sim's attack take
+        /// is running. With nothing in reach the rig walks its world walk (weapon carried, not aimed) after a short hold.
+        /// </summary>
+        public void SetInRange(bool inRange) => _inRange = inRange;
+
+        /// <summary>The walk / attack stance, after its hysteresis.</summary>
+        public RunnerStance Stance => _stance.Stance;
+
         /// <summary>Walk unless already walking.</summary>
         public void Walk()
         {
@@ -837,7 +850,8 @@ namespace Survival.Unity
             }
 
             // After the host is placed: the weapon held at the enemy, straight down the road like the shots.
-            _weapon?.Tick(dt, Vector3.forward, Dead);
+            _stance.Step(_inRange, dt);
+            _weapon?.Tick(dt, Vector3.forward, Dead, _stance.Weight);
 
             var flash = _deathAge >= 0f ? 0f : LockedBattleHits.FlashWeight(_hitAge);
             if (flash > 0f)
@@ -1037,6 +1051,8 @@ namespace Survival.Unity
         {
             _flick?.Reset();
             _weapon?.Reset();
+            _stance.Reset();
+            _inRange = false;
             foreach (var b in _flickBones)
             {
                 b.Restore();
