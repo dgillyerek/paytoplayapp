@@ -106,7 +106,7 @@ public sealed class RunnerCapMeleeBossTests
             var most = 0;
             while (!run.Over && run.Seconds < 300f)
             {
-                run.SteerTo(Runner.AimLikeAPlayer(run));
+                run.SteerTo(RunnerBossQuakeTests.DodgingPlayer(run));
                 run.Step(1f / 30f);
                 most = Math.Max(most, run.Squad.Count);
             }

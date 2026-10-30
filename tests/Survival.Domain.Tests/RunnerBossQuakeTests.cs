@@ -39,7 +39,7 @@ public sealed class RunnerBossQuakeTests
             }
         }
 
-        return Runner.AimLikeAPlayer(run);
+        return ShotDodge.Steer(run, Runner.AimLikeAPlayer(run));
     }
 
     private sealed record Fight(RunnerRun Run, List<RunnerEvent> Events, List<(float At, RunnerEventKind Kind)> Moves);

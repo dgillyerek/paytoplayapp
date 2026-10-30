@@ -5,10 +5,10 @@
     "lyra": { "roster": "Lyra", "hero": "hero.lyra", "hp": 320, "damage": 51, "cycle": 0.76, "range": 19.5, "ranged": true, "shot_speed": 22, "radius": 0.45 },
     "rowan": { "roster": "Rowan", "hero": "hero.rowan", "hp": 1, "damage": 30, "cycle": 0.76, "range": 21, "ranged": true, "shot_speed": 26, "radius": 0.45 },
     "oakenshield": { "roster": "Oakenshield", "hero": "hero.oakenshield", "hp": 1, "damage": 47, "cycle": 0.76, "range": 17, "ranged": true, "shot_speed": 20, "radius": 0.5 },
-    "bonequill": { "roster": "Bonequill", "hp": 34, "damage": 5, "cycle": 2.2, "range": 18, "ranged": true, "shot_speed": 15, "speed": 1.65, "radius": 0.45, "scale": 1.4 },
+    "bonequill": { "roster": "Bonequill", "hp": 34, "damage": 13, "cycle": 2.2, "range": 18, "ranged": true, "shot_speed": 15, "speed": 1.65, "radius": 0.45, "scale": 1.4 },
     "nightfang": { "roster": "Nightfang", "hp": 40, "damage": 20, "cycle": 1.3, "range": 1.2, "ranged": false, "speed": 4.05, "radius": 0.6, "scale": 1.4 },
     "blightroot": { "roster": "Blightroot", "hp": 140, "damage": 35, "cycle": 1.7, "range": 1.5, "ranged": false, "speed": 1.1, "radius": 0.65, "scale": 1.9 },
-    "vespera": { "roster": "Vespera", "hp": 78, "damage": 7, "cycle": 2.0, "range": 19, "ranged": true, "shot_speed": 13.75, "speed": 1.45, "radius": 0.5, "scale": 1.4 },
+    "vespera": { "roster": "Vespera", "hp": 78, "damage": 13, "cycle": 2.0, "range": 19, "ranged": true, "shot_speed": 13.75, "speed": 1.45, "radius": 0.5, "scale": 1.4 },
     "ashwyrm": { "roster": "Ashwyrm", "hp": 265, "damage": 45, "cycle": 1.8, "range": 1.8, "ranged": false, "speed": 2.2, "radius": 0.9, "scale": 1.35 },
     "ironhowl": { "roster": "Ironhowl", "hp": 20000, "damage": 40, "cycle": 2.4, "range": 1.8, "ranged": false, "speed": 0, "radius": 0.67, "scale": 2.0 }
   },

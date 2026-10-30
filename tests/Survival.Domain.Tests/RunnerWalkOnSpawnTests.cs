@@ -18,7 +18,7 @@ public sealed class RunnerWalkOnSpawnTests
             var seen = 0;
             while (!run.Over && run.Seconds < 300f)
             {
-                run.SteerTo(Runner.AimLikeAPlayer(run));
+                run.SteerTo(RunnerBossQuakeTests.DodgingPlayer(run));
                 run.Step(1f / 30f);
                 for (var i = 0; i < run.Foes.Count; i++)
                 {

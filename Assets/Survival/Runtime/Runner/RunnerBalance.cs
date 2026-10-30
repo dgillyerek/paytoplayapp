@@ -357,7 +357,7 @@ namespace Survival.Domain.Runner
                 var u = c.Unit(r.Unit);
                 var boss = r.Kind == RunnerRowKind.Boss;
                 waveHp += r.Count * u.Hp * (boss ? level.BossHpMul : level.FoeHpMul);
-                waveDps += r.Count * (u.Cycle > 0 ? u.Damage * level.FoeDmgMul / u.Cycle : 0);
+                waveDps += r.Count * (u.Cycle > 0 ? (u.Ranged && !boss ? RunnerRules.RangedFoeHit((int)Math.Round(u.Damage * level.FoeDmgMul)) : u.Damage * level.FoeDmgMul) / u.Cycle : 0);
             }
 
             waves = Math.Max(1, waves);

@@ -54,7 +54,7 @@ public class RunnerFoeTakeTests
             var open = new Dictionary<int, (float At, float Speed)>();
             while (!run.Over && run.Seconds < 400f)
             {
-                run.SteerTo(Runner.AimLikeAPlayer(run));
+                run.SteerTo(RunnerBossQuakeTests.DodgingPlayer(run));
                 foreach (var e in run.Step(1f / 60f))
                 {
                     if (run.Member(e.Id) != null || run.Foes.FirstOrDefault(x => x.Id == e.Id) is not { } f || f.Plan.Release <= 0f)
