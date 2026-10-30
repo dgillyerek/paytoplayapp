@@ -53,6 +53,13 @@ namespace Survival.Domain.Runner
         /// </summary>
         public const int FollowerHp = 25;
 
+        /// <summary>
+        /// A ranged enemy's shot (Bonequill, Vespera) always kills a follower in exactly 2 hits (Derek 2026-10-29: "make it so
+        /// ranged attacks kill secondary units in 2 hits. they can be dodged"): the level-scaled damage clamped to
+        /// [ceil(FollowerHp / 2), FollowerHp - 1]. The hero takes the same hit.
+        /// </summary>
+        public static int RangedFoeHit(int scaled) => Math.Clamp(scaled, (FollowerHp + 1) / 2, FollowerHp - 1);
+
         /// <summary>Share of a trap's hero damage a follower takes (spikes 40 -> 16 of its 25 HP).</summary>
         public const float FollowerTrapShare = 0.4f;
 
@@ -402,6 +409,10 @@ namespace Survival.Domain.Runner
             Boss = boss;
             Hp = MaxHp = Math.Max(1, (int)Math.Round(unit.Hp * (hpMul > 0f ? hpMul : 1f)));
             Damage = (int)Math.Round(unit.Damage * (damageMul > 0f ? damageMul : 1f));
+            if (unit.Ranged && !boss)
+            {
+                Damage = RunnerRules.RangedFoeHit(Damage);
+            }
             // Walking from the moment it spawns (even the rows already in view when the run starts); the boss holds.
             Walking = !boss;
             Plan = RunnerAttackTiming.FoePlanFor(unit);
