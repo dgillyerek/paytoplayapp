@@ -44,6 +44,16 @@ namespace Survival.Unity
                 LoadPath(Path.Combine(packRoot, pair.Value.Replace('/', Path.DirectorySeparatorChar)), pair.Key);
             }
 
+            // Atlases: an "art" key ending in ".atlas" points at one PNG; its sibling .txt lists the sub-sprites,
+            // registered as "<key without atlas>" + name (e.g. theme_a.hook.track.cell_royal). One texture, one draw batch.
+            foreach (var pair in pack.Art)
+            {
+                if (pair.Key.EndsWith(AtlasSuffix, StringComparison.Ordinal))
+                {
+                    LoadAtlas(Path.Combine(packRoot, pair.Value.Replace('/', Path.DirectorySeparatorChar)), pair.Key.Substring(0, pair.Key.Length - "atlas".Length));
+                }
+            }
+
             // Painted art wins; the code-drawn kit in "art_fallback" only fills keys whose painted file is missing or unreadable.
             foreach (var pair in pack.ArtFallback)
             {
@@ -200,6 +210,64 @@ namespace Survival.Unity
             {
                 LoadPath(Path.Combine(packRoot, rel.Replace('/', Path.DirectorySeparatorChar)), spriteKey);
             }
+        }
+
+        public const string AtlasSuffix = ".atlas";
+
+        /// <summary>Slices a packed atlas PNG by its sibling "name x y w h l b r t" text file (pixel rects, top-left origin).</summary>
+        private static void LoadAtlas(string pngPath, string keyPrefix)
+        {
+            var full = Path.GetFullPath(pngPath);
+            if (!Textures.TryGetValue(full, out var tex) || tex == null)
+            {
+                return;
+            }
+
+            var listPath = Path.ChangeExtension(full, ".txt");
+            if (!PlayerAssets.FileExists(listPath))
+            {
+                return;
+            }
+
+            foreach (var raw in PlayerAssets.ReadAllLines(listPath))
+            {
+                var line = raw.Trim();
+                if (line.Length == 0 || line[0] == '#')
+                {
+                    continue;
+                }
+
+                var f = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (f.Length < 9 || !TryInts(f, out var v))
+                {
+                    continue;
+                }
+
+                var key = keyPrefix + f[0];
+                if (_sprites!.ContainsKey(key))
+                {
+                    continue;
+                }
+
+                var rect = new Rect(v[0], tex.height - v[1] - v[3], v[2], v[3]);
+                var sprite = Sprite.Create(tex, rect, new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, new Vector4(v[4], v[5], v[6], v[7]));
+                sprite.name = key;
+                _sprites[key] = sprite;
+            }
+        }
+
+        private static bool TryInts(string[] f, out int[] v)
+        {
+            v = new int[8];
+            for (var i = 0; i < 8; i++)
+            {
+                if (!int.TryParse(f[i + 1], System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out v[i]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private static void LoadPath(string path, string key, IReadOnlyDictionary<string, ArtSlice>? slices = null)

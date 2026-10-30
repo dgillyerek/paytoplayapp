@@ -41,6 +41,9 @@ namespace Survival.Domain.Theme
         public const string FxBurstRing = "theme_a.hook.fx.burst_ring";
         public const string FxConfetti = "theme_a.hook.fx.confetti";
 
+        /// <summary>Kingdom Path atlas sprite (pack.json "theme_a.hook.track.atlas"), e.g. Track("cell_royal").</summary>
+        public static string Track(string name) => Prefix + "track." + name;
+
         /// <summary>Resource icon key, e.g. res.soft -> theme_a.hook.icon.res.soft.</summary>
         public static string ForResource(string resourceId) => Prefix + "icon." + resourceId;
 
