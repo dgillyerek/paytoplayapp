@@ -87,6 +87,15 @@ namespace Survival.Unity
                 return img;
             }
 
+            // No painted icon: the procedural Theme A icon (tome, banner, hourglass, coin, wheat, gem, shard) before a glyph disc.
+            var drawn = Ornaments.IconFor(resourceId);
+            if (drawn != null)
+            {
+                var icon = SurvivalVisuals.Image(parent, name, Color.white, drawn);
+                icon.preserveAspect = true;
+                return icon;
+            }
+
             var disc = SurvivalVisuals.Circle(parent, name, fallback);
             var g = SurvivalVisuals.Text(disc.transform, "Glyph", glyph, 24, TextAnchor.MiddleCenter, SurvivalVisuals.Panel);
             SurvivalVisuals.Stretch(g.rectTransform);
