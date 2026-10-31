@@ -358,5 +358,20 @@
   "battle.tip.3": "Hero shards from battles unlock new heroes and add stars.",
   "battle.tip.4": "Losing still pays some gold, so try again!",
   "battle.tip.5": "Upgrade your Castle to unlock higher building levels.",
-  "battle.tip.6": "Clear a stage for the first time to earn bonus gems."
+  "battle.tip.6": "Clear a stage for the first time to earn bonus gems.",
+  "crusade.rail": "CRUSADE",
+  "crusade.title": "Crusade Banner",
+  "crusade.season": "Season {0} \u00b7 ends in {1}",
+  "crusade.xp": "{0} / {1} XP to tier {2}",
+  "crusade.maxed": "BANNER COMPLETE",
+  "crusade.tips": "Season XP: runner level +{0} \u00b7 upgrade +{1} \u00b7 quest +{2}",
+  "crusade.free": "FREE",
+  "crusade.royal": "ROYAL BANNER",
+  "crusade.owned": "\u2714 BANNER RAISED",
+  "crusade.buy": "UNLOCK {0}",
+  "crusade.page": "Tiers {0}-{1}",
+  "crusade.claim": "CLAIM",
+  "crusade.locked": "LOCKED",
+  "crusade.claimed": "Tier {0} reward!",
+  "crusade.bought": "Royal Banner raised! {0} rewards ready"
 }
