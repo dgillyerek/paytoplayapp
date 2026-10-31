@@ -204,7 +204,8 @@ public sealed class RunnerHazardTests
             // Enemies walk 1.5x faster now and the squad is capped at 10, so each one is lighter (about 0.45x-0.8x the old total HP) and the
             // total still climbs every level. Up to 1.6x on Levels 2-12 since the 6 m run-up (Oct 29): the squad gets free shots in
             // before the first wave, so those levels carry more HP to keep main's difficulty.
-            Assert.InRange(l.FoeHpTotal(c), old[i].Item3 * 0.4, old[i].Item3 * 1.6);
+            // Levels 1-20 then got 1.5x enemy HP (Derek 2026-10-29: the early levels were far too easy), so up to 2.4x there.
+            Assert.InRange(l.FoeHpTotal(c), old[i].Item3 * 0.4, old[i].Item3 * 1.6 * (l.Number <= 20 ? 1.5 : 1.0));
             if (i > 0)
             {
                 Assert.True(l.FoeHpTotal(c) > c.Levels[i - 1].FoeHpTotal(c), $"L{l.Number} enemy HP total climbs");

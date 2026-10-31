@@ -637,6 +637,14 @@ namespace Survival.Domain.Runner
                 {
                     levels.Add(RunnerProgression.Generate(levels[0], prog, n, have.Contains));
                 }
+
+                // Level 1 is hand-authored, so its "1" tweak is applied here, after the generated levels have copied its
+                // multipliers: it scales only Level 1's own enemy HP (Derek 2026-10-29: the early levels were far too easy).
+                var tw1 = prog.Tweak(1).FoeHp;
+                if (tw1 != 1f)
+                {
+                    levels[0] = levels[0] with { FoeHpMul = levels[0].FoeHpMul * tw1 };
+                }
             }
 
             // A little more run-up before each level's first items and enemies (Derek 2026-10-28: "give a little more distance
