@@ -23,7 +23,7 @@ namespace Survival.Unity
         private const int Cols = 8;
         private static Texture2D? _atlas;
         private static readonly Dictionary<string, Sprite> Sprites = new Dictionary<string, Sprite>();
-        private static readonly string[] Order = { "frame", "bevel", "grain", "ribbon", "shine", "gem", "star", "tome", "banner", "hourglass", "plate", "crest", "sparkle", "coin", "wheat", "shard", "gloss", "rivet", "flame" };
+        private static readonly string[] Order = { "frame", "bevel", "grain", "ribbon", "shine", "gem", "star", "tome", "banner", "hourglass", "plate", "crest", "sparkle", "coin", "wheat", "shard", "gloss", "rivet", "flame", "shade", "curl", "hammer", "glow" };
 
         /// <summary>Rarity tint for frames and crests (common .. legendary).</summary>
         public static Color Rarity(string? rarity) => (rarity ?? "").ToLowerInvariant() switch
@@ -132,7 +132,17 @@ namespace Survival.Unity
         /// outlined labels. Buttons also get a pressed state. Decorations sit behind the element's own children, never
         /// take raycasts, and leave size, layout and icon art untouched. Calling it twice is a no-op.
         /// </summary>
-        public static void Dress(Graphic target, Color trim, bool button = false, float rivet = 11f)
+        /// <summary>Deep amber shading for gold buttons (bottom), so light text pops.</summary>
+        public static readonly Color AmberFill = new Color(0.55f, 0.24f, 0.02f, 0.85f);
+
+        /// <summary>Deep shading for blue / green / red buttons (bottom).</summary>
+        public static readonly Color DeepFill = new Color(0.04f, 0.02f, 0.08f, 0.55f);
+
+        /// <summary>Inner panel colours for plain panels, banners and notices.</summary>
+        public static readonly Color Navy = new Color(0.06f, 0.08f, 0.20f, 0.94f);
+        public static readonly Color Burgundy = new Color(0.30f, 0.05f, 0.08f, 0.94f);
+
+        public static void Dress(Graphic target, Color trim, bool button = false, float rivet = 11f, Color? fill = null, Color? inset = null)
         {
             if (target == null || target.transform.Find("Ornate") != null)
             {
@@ -140,24 +150,58 @@ namespace Survival.Unity
             }
 
             var shadow = target.GetComponent<Shadow>() ?? target.gameObject.AddComponent<Shadow>();
-            shadow.effectColor = new Color(0f, 0f, 0f, 0.55f);
+            shadow.effectColor = new Color(0f, 0f, 0f, 0.6f);
             shadow.effectDistance = new Vector2(0f, -4f);
 
             var host = new GameObject("Ornate", typeof(RectTransform)).GetComponent<RectTransform>();
             host.SetParent(target.transform, false);
             SurvivalVisuals.Stretch(host);
             host.SetAsFirstSibling();
+
+            // Soft gold glow just outside the frame.
+            var glow = Add(host, "Glow", "glow", new Color(1f, 1f, 1f, 0.8f));
+            SurvivalVisuals.Stretch(glow.rectTransform);
+            glow.rectTransform.offsetMin = new Vector2(-10f, -10f);
+            glow.rectTransform.offsetMax = new Vector2(10f, 10f);
+
+            if (inset is { } deep)
+            {
+                // Plain panel / notice: a dark inner panel inside the gold frame, with its own thin trim line.
+                var inner = Add(host, "Inset", "plate", deep);
+                SurvivalVisuals.Stretch(inner.rectTransform);
+                inner.rectTransform.offsetMin = new Vector2(6f, 6f);
+                inner.rectTransform.offsetMax = new Vector2(-6f, -6f);
+            }
+            else
+            {
+                // Button / pill fill: deep at the bottom, bright at the top (amber -> gold on gold buttons).
+                var shade = Add(host, "Shade", "shade", fill ?? DeepFill);
+                SurvivalVisuals.Stretch(shade.rectTransform);
+            }
+
+            Grain(host, new Color(1f, 1f, 1f, 0.55f));
             var gloss = Add(host, "Gloss", "gloss", Color.white);
-            Stretch(gloss.rectTransform, 0.02f, 0.40f, 0.98f, 0.97f);
+            Stretch(gloss.rectTransform, 0.02f, 0.45f, 0.98f, 0.97f);
             Bevel(host, 0.9f);
             Frame(host, trim, 1f);
-            foreach (var (ax, ay) in new[] { (0f, 0f), (1f, 0f), (0f, 1f), (1f, 1f) })
+            var trimLine = Add(host, "Trim", "plate", Color.clear);
+            trimLine.fillCenter = false;
+            trimLine.color = new Color(trim.r, trim.g, trim.b, 0.55f);
+            SurvivalVisuals.Stretch(trimLine.rectTransform);
+            trimLine.rectTransform.offsetMin = new Vector2(9f, 9f);
+            trimLine.rectTransform.offsetMax = new Vector2(-9f, -9f);
+
+            // Filigree scroll corners instead of plain dots.
+            var size = rivet * 1.9f;
+            foreach (var (ax, ay, rot) in new[] { (0f, 0f, 0f), (1f, 0f, 90f), (1f, 1f, 180f), (0f, 1f, 270f) })
             {
-                var r = Add(host, "Rivet", "rivet", Color.white, Image.Type.Simple);
+                var r = Add(host, "Curl", "curl", Color.white, Image.Type.Simple);
                 var rt = r.rectTransform;
                 rt.anchorMin = rt.anchorMax = new Vector2(ax, ay);
-                rt.sizeDelta = new Vector2(rivet, rivet);
-                rt.anchoredPosition = new Vector2(ax < 0.5f ? rivet * 0.75f : -rivet * 0.75f, ay < 0.5f ? rivet * 0.75f : -rivet * 0.75f);
+                rt.sizeDelta = new Vector2(size, size);
+                rt.pivot = new Vector2(0f, 0f);
+                rt.localEulerAngles = new Vector3(0f, 0f, rot);
+                rt.anchoredPosition = new Vector2(ax < 0.5f ? 2f : -2f, ay < 0.5f ? 2f : -2f);
             }
 
             target.gameObject.AddComponent<OrnateLabels>();
@@ -167,21 +211,33 @@ namespace Survival.Unity
             }
         }
 
+        /// <summary>Dark translucent backing plate behind a label that sits over busy art.</summary>
+        public static Image Backing(Text text, float alpha = 0.62f)
+        {
+            var parent = text.transform.parent;
+            var existing = parent.Find(text.name + "_Backing");
+            if (existing != null)
+            {
+                return existing.GetComponent<Image>();
+            }
+
+            var plate = Add(parent, text.name + "_Backing", "plate", new Color(0.05f, 0.03f, 0.08f, alpha));
+            var src = text.rectTransform;
+            var rt = plate.rectTransform;
+            rt.anchorMin = src.anchorMin;
+            rt.anchorMax = src.anchorMax;
+            rt.pivot = src.pivot;
+            rt.offsetMin = src.offsetMin + new Vector2(-6f, -3f);
+            rt.offsetMax = src.offsetMax + new Vector2(6f, 3f);
+            rt.SetSiblingIndex(text.transform.GetSiblingIndex());
+            return plate;
+        }
+
         /// <summary>Embossed label: dark outline plus a soft drop shadow below it.</summary>
         public static Text Emboss(Text text)
         {
-            if (text.GetComponent<Outline>() == null)
-            {
-                HookSkin.Outlined(text, 1.6f);
-            }
-
-            if (text.GetComponents<Shadow>().Length < 2)
-            {
-                var s = text.gameObject.AddComponent<Shadow>();
-                s.effectColor = new Color(0f, 0f, 0f, 0.6f);
-                s.effectDistance = new Vector2(0f, -2f);
-            }
-
+            ContrastGuard.Fix(text);
+            text.fontStyle = FontStyle.Bold;
             return text;
         }
 
@@ -268,6 +324,8 @@ namespace Survival.Unity
                     "plate" => new Vector4(14, 14, 14, 14),
                     "ribbon" => new Vector4(24, 8, 24, 8),
                     "gloss" => new Vector4(14, 20, 14, 20),
+                    "shade" => new Vector4(10, 24, 10, 24),
+                    "glow" => new Vector4(24, 24, 24, 24),
                     _ => Vector4.zero,
                 };
                 var sp = Sprite.Create(_atlas, rect, new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, border);
@@ -454,6 +512,41 @@ namespace Survival.Unity
                     var l = 0.62f + (0.5f * y / n) + (spec * 0.4f);
                     return C(l, l * 0.86f, l * 0.55f, 1f);
                 }
+                case "shade":
+                {
+                    // Vertical fill gradient: full at the bottom, clear at the top (tinted amber on gold buttons).
+                    var t = Sat(1f - (y / n));
+                    return C(1f, 1f, 1f, t * t * Sat(e - 1.5f));
+                }
+                case "curl":
+                {
+                    // Corner filigree (drawn for the bottom-left corner; rotated for the others): an L of scrollwork
+                    // with a curl at each arm's end and a diamond in the corner.
+                    var arm = Math.Max(Band(y, 6f, 10f) * (x < 52f ? 1f : 0f), Band(x, 6f, 10f) * (y < 52f ? 1f : 0f));
+                    var c1 = Band((float)Math.Sqrt(((x - 52f) * (x - 52f)) + ((y - 16f) * (y - 16f))), 5f, 8.5f) * (y > 8f ? 1f : 0f);
+                    var c2 = Band((float)Math.Sqrt(((x - 16f) * (x - 16f)) + ((y - 52f) * (y - 52f))), 5f, 8.5f) * (x > 8f ? 1f : 0f);
+                    var dia = Sat(9f - (Math.Abs(x - 14f) + Math.Abs(y - 14f)));
+                    var a = Math.Max(Math.Max(arm, dia), Math.Max(c1, c2));
+                    if (a < 0.02f) return C(0, 0, 0, 0);
+                    var gem = Sat(4f - (Math.Abs(x - 14f) + Math.Abs(y - 14f)));
+                    return gem > 0.4f ? C(0.75f, 0.12f, 0.16f, 1f) : Metal(a, y, 1.08f);
+                }
+                case "hammer":
+                {
+                    // Builder's hammer: wooden handle on a diagonal, iron head.
+                    var u = (x + y) / 1.4142f; var v = (x - y) / 1.4142f;
+                    var handle = Math.Abs(v) < 3.5f && u > 12f && u < 66f;
+                    var head = Math.Abs(u - 62f) < 8f && Math.Abs(v) < 17f;
+                    if (head) { var l = 0.55f + (0.35f * y / n); return C(l, l, l * 1.05f, 1f); }
+                    if (handle) return C(0.55f, 0.33f, 0.15f, 1f);
+                    return C(0, 0, 0, 0);
+                }
+                case "glow":
+                {
+                    // Soft outer halo: bright just outside the element's edge, fading out.
+                    var t = Sat(e / 24f);
+                    return C(1f, 0.86f, 0.45f, Sat(t * (1f - t) * 4f) * 0.55f);
+                }
                 case "flame":
                 {
                     // Dark-purple threat flame: teardrop of violet with a pale core.
@@ -564,5 +657,49 @@ namespace Survival.Unity
         }
 
         private void OnDisable() => Release();
+    }
+
+    /// <summary>
+    /// Readability guard on every HUD canvas: any label drawn dark (the old "black on gold") is turned cream #FFF4D6,
+    /// and every label gets a thick near-black outline and drop shadow. Runs a few times a second so popups built later
+    /// and colours set at refresh time are caught too.
+    /// </summary>
+    public sealed class ContrastGuard : MonoBehaviour
+    {
+        private float _next;
+
+        public static void Fix(Text t)
+        {
+            var c = t.color;
+            if ((0.299f * c.r) + (0.587f * c.g) + (0.114f * c.b) < 0.55f)
+            {
+                t.color = new Color(HookSkin.Cream.r, HookSkin.Cream.g, HookSkin.Cream.b, c.a);
+            }
+
+            var o = t.GetComponent<Outline>();
+            if (o == null)
+            {
+                HookSkin.Outlined(t);
+            }
+            else if (Mathf.Abs(o.effectDistance.x) < 2f || o.effectColor.a < 0.85f)
+            {
+                o.effectColor = HookSkin.OutlineInk;
+                o.effectDistance = new Vector2(2f, -2f);
+            }
+        }
+
+        private void LateUpdate()
+        {
+            if (Time.unscaledTime < _next)
+            {
+                return;
+            }
+
+            _next = Time.unscaledTime + 0.25f;
+            foreach (var t in GetComponentsInChildren<Text>(false))
+            {
+                Fix(t);
+            }
+        }
     }
 }

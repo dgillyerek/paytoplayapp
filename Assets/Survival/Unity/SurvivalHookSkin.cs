@@ -12,10 +12,14 @@ namespace Survival.Unity
     /// </summary>
     internal static class HookSkin
     {
-        public static readonly Color Ink = new Color(0.20f, 0.11f, 0.03f, 1f);
-        public static readonly Color ParchmentInk = new Color(0.27f, 0.15f, 0.05f, 1f);
-        public static readonly Color ParchmentTitle = new Color(0.45f, 0.20f, 0.04f, 1f);
-        public static readonly Color DisabledTint = new Color(0.52f, 0.52f, 0.56f, 1f);
+        // Derek 2026-10-30: "black on gold is impossible". Text on any kit art is light cream with a thick dark outline;
+        // the old dark inks are kept as names only so every caller turns light.
+        public static readonly Color Cream = new Color(1f, 0.957f, 0.839f, 1f); // #FFF4D6
+        public static readonly Color OutlineInk = new Color(0.10f, 0.05f, 0.02f, 0.96f);
+        public static readonly Color Ink = Cream;
+        public static readonly Color ParchmentInk = Cream;
+        public static readonly Color ParchmentTitle = new Color(1f, 0.86f, 0.48f, 1f);
+        public static readonly Color DisabledTint = new Color(0.40f, 0.38f, 0.50f, 1f);
 
         public static bool Has(string key) => SurvivalArt.Get(key) != null;
 
@@ -26,7 +30,7 @@ namespace Survival.Unity
             if (sprite == null)
             {
                 var flat = SurvivalVisuals.Framed(parent, name, fallbackFill, SurvivalVisuals.GoldLine, 2f);
-                Ornaments.Dress(flat, Ornaments.Gold);
+                Ornaments.Dress(flat, Ornaments.Gold, inset: Ornaments.Navy);
                 return flat;
             }
 
@@ -110,7 +114,7 @@ namespace Survival.Unity
             var btn = SurvivalVisuals.Button(parent, name, fallback);
             var img = btn.GetComponent<Image>();
             TrySkin(img, key, borderScale);
-            Ornaments.Dress(img, Ornaments.Gold, button: true);
+            Ornaments.Dress(img, Ornaments.Gold, button: true, fill: key == HookArtKeys.ButtonGold ? Ornaments.AmberFill : Ornaments.DeepFill);
             var colors = btn.colors;
             colors.pressedColor = new Color(0.78f, 0.74f, 0.68f, 1f);
             btn.colors = colors;
@@ -137,8 +141,7 @@ namespace Survival.Unity
         }
 
         /// <summary>Ink colour that reads on a kit button (dark on gold, white on blue / green / red).</summary>
-        public static Color InkFor(string buttonKey) =>
-            buttonKey == HookArtKeys.ButtonGold && Has(buttonKey) ? Ink : Color.white;
+        public static Color InkFor(string buttonKey) => Cream;
 
         /// <summary>Gold-framed progress bar. The returned fill is a horizontal Filled image when art exists.</summary>
         public static Image Bar(Transform parent, string name, out Image fill)
@@ -201,13 +204,15 @@ namespace Survival.Unity
         }
 
         /// <summary>Readable game text: dark outline plus a soft drop shadow.</summary>
-        public static Text Outlined(Text text, float distance = 2f, float alpha = 0.9f)
+        public static Text Outlined(Text text, float distance = 2.2f, float alpha = 0.96f)
         {
-            var outline = text.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0.04f, 0.03f, 0.06f, alpha);
+            // Never thinner than 2px, near-black brown, plus a drop shadow below.
+            distance = Mathf.Max(2f, distance);
+            var outline = text.GetComponent<Outline>() ?? text.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(OutlineInk.r, OutlineInk.g, OutlineInk.b, Mathf.Max(0.9f, alpha));
             outline.effectDistance = new Vector2(distance, -distance);
             var shadow = text.gameObject.AddComponent<Shadow>();
-            shadow.effectColor = new Color(0f, 0f, 0f, alpha * 0.6f);
+            shadow.effectColor = new Color(0f, 0f, 0f, 0.7f);
             shadow.effectDistance = new Vector2(0f, -distance * 1.6f);
             return text;
         }
