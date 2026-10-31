@@ -358,5 +358,22 @@
   "battle.tip.3": "Hero shards from battles unlock new heroes and add stars.",
   "battle.tip.4": "Losing still pays some gold, so try again!",
   "battle.tip.5": "Upgrade your Castle to unlock higher building levels.",
-  "battle.tip.6": "Clear a stage for the first time to earn bonus gems."
+  "battle.tip.6": "Clear a stage for the first time to earn bonus gems.",
+  "trophy.rail": "TROPHIES",
+  "trophy.title": "Trophy Hall",
+  "trophy.sub": "Earn trophies as your kingdom grows \u00b7 {0} won",
+  "trophy.claim": "CLAIM",
+  "trophy.locked": "IN PROGRESS",
+  "trophy.complete": "ALL TROPHIES WON \u2714",
+  "trophy.won": "Trophy won: {0}",
+  "trophy.kind.building_upgrades.name": "Master Builder",
+  "trophy.kind.building_upgrades.desc": "Upgrade buildings {0} times",
+  "trophy.kind.hero_stars.name": "Star Forger",
+  "trophy.kind.hero_stars.desc": "Reach {0} stars on a hero",
+  "trophy.kind.runner_cleared.name": "Road Runner",
+  "trophy.kind.runner_cleared.desc": "Clear runner level {0}",
+  "trophy.kind.heroes_owned.name": "Royal Recruiter",
+  "trophy.kind.heroes_owned.desc": "Recruit {0} heroes",
+  "trophy.kind.battles_won.name": "Warlord",
+  "trophy.kind.battles_won.desc": "Win {0} battles"
 }
