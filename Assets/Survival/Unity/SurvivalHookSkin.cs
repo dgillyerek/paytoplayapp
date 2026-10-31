@@ -30,7 +30,7 @@ namespace Survival.Unity
             if (sprite == null)
             {
                 var flat = SurvivalVisuals.Framed(parent, name, fallbackFill, SurvivalVisuals.GoldLine, 2f);
-                Ornaments.Dress(flat, Ornaments.Gold, inset: Ornaments.Navy);
+                Ornaments.Dress(flat, Ornaments.Gold);
                 return flat;
             }
 
@@ -114,7 +114,7 @@ namespace Survival.Unity
             var btn = SurvivalVisuals.Button(parent, name, fallback);
             var img = btn.GetComponent<Image>();
             TrySkin(img, key, borderScale);
-            Ornaments.Dress(img, Ornaments.Gold, button: true, fill: key == HookArtKeys.ButtonGold ? Ornaments.AmberFill : Ornaments.DeepFill);
+            Ornaments.Dress(img, Ornaments.Gold, button: true);
             var colors = btn.colors;
             colors.pressedColor = new Color(0.78f, 0.74f, 0.68f, 1f);
             btn.colors = colors;

@@ -2352,57 +2352,12 @@ namespace Survival.Unity
             }
 
             var text = SurvivalVisuals.Text(_overlay, "Float", copy, size, TextAnchor.MiddleCenter, color);
-            var floatOutline = text.gameObject.AddComponent<Outline>();
-            floatOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);
-            floatOutline.effectDistance = new Vector2(2f, -2f);
+            HookSkin.Outlined(text, 2.4f);
+            text.fontStyle = FontStyle.Bold;
             StartCoroutine(Rise(text, at, 0.07f, 0.9f));
         }
 
-        /// <summary>
-        /// Notice card (e.g. "Builder busy"): deep navy inner panel in the ornate gold frame, filigree corners, a small
-        /// icon (hammer for builder notices), light outlined text. Rises and fades like the old float text.
-        /// </summary>
-        private void Toast(Vector2 at, string copy, Color color)
-        {
-            if (_overlay == null)
-            {
-                return;
-            }
-
-            var card = SurvivalVisuals.Image(_overlay, "Toast", new Color(0.55f, 0.40f, 0.12f, 1f));
-            card.raycastTarget = false;
-            Ornaments.Dress(card, Ornaments.Gold, rivet: 12f, inset: Ornaments.Navy);
-            var builder = copy == S("hook.queue_busy", "Builder busy") || copy.IndexOf("uild", System.StringComparison.OrdinalIgnoreCase) >= 0;
-            var icon = Ornaments.Icon(card.transform, "Icon", builder ? "hammer" : "star");
-            Box(icon.rectTransform, 0.05f, 0.14f, 0.20f, 0.86f);
-            var light = (0.299f * color.r) + (0.587f * color.g) + (0.114f * color.b) >= 0.55f ? color : HookSkin.Cream;
-            var text = HookSkin.Outlined(SurvivalVisuals.Text(card.transform, "T", copy, 26, TextAnchor.MiddleCenter, light), 2.4f);
-            text.fontStyle = FontStyle.Bold;
-            Box(text.rectTransform, 0.20f, 0.06f, 0.96f, 0.94f);
-            var group = card.gameObject.AddComponent<CanvasGroup>();
-            group.blocksRaycasts = false;
-            StartCoroutine(RiseCard(card.rectTransform, group, at, 0.06f, 1.3f));
-        }
-
-        private static IEnumerator RiseCard(RectTransform rt, CanvasGroup group, Vector2 at, float rise, float seconds)
-        {
-            var elapsed = 0f;
-            while (elapsed < seconds && rt != null)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                var u = Mathf.Clamp01(elapsed / seconds);
-                SurvivalVisuals.AnchorBox(rt, at.x, at.y + (rise * u), 0.52f, 0.07f);
-                var k = u < 0.12f ? Mathf.Lerp(0.7f, 1.08f, u / 0.12f) : Mathf.Lerp(1.08f, 1f, Mathf.Clamp01((u - 0.12f) / 0.2f));
-                rt.localScale = new Vector3(k, k, 1f);
-                group.alpha = u < 0.7f ? 1f : Mathf.Lerp(1f, 0f, (u - 0.7f) / 0.3f);
-                yield return null;
-            }
-
-            if (rt != null)
-            {
-                Destroy(rt.gameObject);
-            }
-        }
+        private void Toast(Vector2 at, string copy, Color color) => FloatText(at, copy, color, 26);
 
         private static IEnumerator Rise(Text text, Vector2 at, float rise, float seconds)
         {
