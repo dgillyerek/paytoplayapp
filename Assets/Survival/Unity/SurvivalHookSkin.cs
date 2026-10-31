@@ -19,7 +19,7 @@ namespace Survival.Unity
         public static readonly Color Ink = Cream;
         public static readonly Color ParchmentInk = Cream;
         public static readonly Color ParchmentTitle = new Color(1f, 0.86f, 0.48f, 1f);
-        public static readonly Color DisabledTint = new Color(0.40f, 0.38f, 0.50f, 1f);
+        public static readonly Color DisabledTint = new Color(0.52f, 0.52f, 0.56f, 1f);
 
         public static bool Has(string key) => SurvivalArt.Get(key) != null;
 
