@@ -133,8 +133,11 @@ namespace Survival.Unity
             Panel(_root, "TopBar", hud, "top_bar");
             var lord = SurvivalVisuals.Text(_root, "LordName", pack.StringOr("hud.player_name", ""), 28, TextAnchor.MiddleLeft, SurvivalVisuals.Cream);
             Place(lord.rectTransform, hud, "player_name");
+            lord.fontStyle = FontStyle.Bold;
+            Ornaments.Emboss(lord);
             var power = SurvivalVisuals.Text(_root, "Power", pack.StringOr("hud.player_power", ""), 18, TextAnchor.MiddleLeft, SurvivalVisuals.Mute);
             Place(power.rectTransform, hud, "player_power");
+            Ornaments.Emboss(power);
 
             Chip(_root, hud, ChipWallet.SoftChip, pack.StringOr("hud.chip.gold_label", ""));
             Chip(_root, hud, ChipWallet.WoodChip, pack.StringOr("hud.chip.wood_label", ""));
@@ -145,11 +148,13 @@ namespace Survival.Unity
             Place(vip.rectTransform, hud, "vip");
             var vipSkinned = HookSkin.TrySkin(vip, HookArtKeys.ButtonGold, 0.35f);
             var vipText = SurvivalVisuals.Text(vip.transform, "VipText", pack.StringOr("hud.vip", ""), 20, TextAnchor.MiddleCenter, vipSkinned ? HookSkin.Ink : SurvivalVisuals.Gold);
-            vipText.fontStyle = vipSkinned ? FontStyle.Bold : FontStyle.Normal;
+            vipText.fontStyle = FontStyle.Bold;
+            Ornaments.Dress(vip, Ornaments.Gold, rivet: 8f);
 
             var banner = SurvivalVisuals.Image(_root, "Banner", SurvivalVisuals.Panel);
             Place(banner.rectTransform, hud, "banner");
             HookSkin.TrySkin(banner, HookArtKeys.Header, 0.42f);
+            Ornaments.Dress(banner, Ornaments.Gold);
             _bannerText = SurvivalVisuals.Text(
                 banner.transform,
                 "BannerText",
@@ -170,12 +175,28 @@ namespace Survival.Unity
 
             var events = SurvivalVisuals.Image(_root, "Events", SurvivalVisuals.Panel);
             Place(events.rectTransform, hud, "events");
-            HookSkin.TrySkin(events, HookArtKeys.Panel, 0.5f);
-            SurvivalVisuals.Text(events.transform, "EventsText", pack.StringOr("hud.events_body", ""), 18, TextAnchor.UpperLeft, SurvivalVisuals.Cream);
+            if (!HookSkin.TrySkin(events, HookArtKeys.Panel, 0.5f))
+            {
+                // No painted panel: a deep royal card instead of the old flat blue block.
+                events.color = new Color(0.10f, 0.08f, 0.18f, 0.96f);
+            }
+
+            Ornaments.Grain(events.transform, new Color(1f, 1f, 1f, 0.6f));
+            Ornaments.Dress(events, Ornaments.Gold);
+            var threat = Ornaments.Icon(events.transform, "ThreatIcon", "flame");
+            var threatRt = threat.rectTransform;
+            threatRt.anchorMin = new Vector2(0.03f, 0.12f);
+            threatRt.anchorMax = new Vector2(0.24f, 0.88f);
+            threatRt.offsetMin = threatRt.offsetMax = Vector2.zero;
+            var eventsText = Ornaments.Emboss(SurvivalVisuals.Text(events.transform, "EventsText", pack.StringOr("hud.events_body", ""), 18, TextAnchor.MiddleLeft, SurvivalVisuals.Cream));
+            eventsText.rectTransform.anchorMin = new Vector2(0.27f, 0.06f);
+            eventsText.rectTransform.anchorMax = new Vector2(0.97f, 0.94f);
+            eventsText.rectTransform.offsetMin = eventsText.rectTransform.offsetMax = Vector2.zero;
 
             var hero = SurvivalVisuals.Image(_root, "HeroCard", SurvivalVisuals.Panel);
             Place(hero.rectTransform, hud, "hero_card");
             HookSkin.TrySkin(hero, HookArtKeys.Panel, 0.45f);
+            Ornaments.Dress(hero, Ornaments.Gold);
             var portrait = SurvivalVisuals.Image(hero.transform, "Portrait", Color.white, SurvivalArt.Get(SurvIds.ThemeAHeroKnight01));
             var prt = portrait.rectTransform;
             prt.anchorMin = new Vector2(0.04f, 0.08f);
@@ -412,12 +433,14 @@ namespace Survival.Unity
             var img = SurvivalVisuals.Image(root, name, SurvivalVisuals.Panel);
             Place(img.rectTransform, hud, key);
             HookSkin.TrySkin(img, HookArtKeys.Panel, 0.5f);
+            Ornaments.Dress(img, Ornaments.Gold);
         }
 
         private void Chip(RectTransform root, IReadOnlyDictionary<string, HudRect> hud, string key, string label)
         {
             var img = SurvivalVisuals.Image(root, key, SurvivalVisuals.PanelSoft);
             Place(img.rectTransform, hud, key);
+            Ornaments.Dress(img, Ornaments.Gold, rivet: 7f);
             var resourceId = ChipWallet.ResourceFor(key);
             if (HookSkin.Has(HookArtKeys.ForResource(resourceId)) && HookSkin.TrySkin(img, HookArtKeys.Chip, 0.45f))
             {

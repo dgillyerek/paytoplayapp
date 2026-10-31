@@ -338,6 +338,12 @@ namespace Survival.Unity
             var type = _placingType;
             CancelPlacement();
             var block = _hook.Build.Check(type, spotId);
+            if (block == BuildBlock.QueueBusy && _hook.TempBuilderOfferedForBuild(type, spotId))
+            {
+                OpenTempBuilder(null, type, spotId);
+                return;
+            }
+
             if (block != BuildBlock.None || _hook.Build.TryBuild(type, spotId) == null)
             {
                 var t = _hook.Build.Type(type);

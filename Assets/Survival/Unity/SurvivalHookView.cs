@@ -382,6 +382,13 @@ namespace Survival.Unity
             q.Count = SurvivalVisuals.Text(frame.transform, "Count", "", 16, TextAnchor.MiddleLeft, bodyInk);
             q.Count.fontStyle = FontStyle.Bold;
             Box(q.Count.rectTransform, 0.58f, 0.10f, 0.74f, 0.32f);
+            if (scroll)
+            {
+                // Light text over the painted parchment needs a dark backing to read.
+                Ornaments.Backing(q.Title);
+                Ornaments.Backing(q.Body);
+                Ornaments.Backing(q.Count);
+            }
 
             // Reward chest preview always sits on the scroll; it glows and hops once the step is done.
             var preview = HookSkin.Art(frame.transform, "ChestPreview", HookArtKeys.ChestClosed, ChestWood);
@@ -780,6 +787,12 @@ namespace Survival.Unity
                 return;
             }
 
+            if (_hook.TempBuilderOffered(plotId))
+            {
+                OpenTempBuilder(plotId);
+                return;
+            }
+
             var nextLevel = _hook.Base.Find(plotId)?.Next?.Level ?? 0;
             SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiDeny);
             Toast(NormCenterOf(card.Root), BlockLabel(block, nextLevel, S("hook.need_more", "Not enough resources")), Warn);
@@ -931,7 +944,7 @@ namespace Survival.Unity
                     return;
                 }
 
-                if (hook.Base.CheckUpgrade(plotId) == UpgradeBlock.None)
+                if (hook.Base.CheckUpgrade(plotId) == UpgradeBlock.None || hook.TempBuilderOffered(plotId))
                 {
                     CloseSheet();
                 }
@@ -1014,6 +1027,15 @@ namespace Survival.Unity
                     upText.text = BlockLabel(block, p.Next.Level, S("hook.upgrade", "Upgrade"));
                     HookSkin.SetButton(upImg, HookArtKeys.ButtonGold, ok ? SurvivalVisuals.MineFill : Disabled, true, 0.5f);
                     upText.color = ok ? HookSkin.InkFor(HookArtKeys.ButtonGold) : SurvivalVisuals.Cream;
+                }
+
+                if (TempBuilderLine() is { Length: > 0 } extra)
+                {
+                    next.text += "\n" + extra;
+                }
+                else if (timer == null && block == UpgradeBlock.QueueBusy && hook.TempBuilderOffered(plotId))
+                {
+                    upText.text = S("builder.temp.button", "Hire builder");
                 }
 
                 collect.gameObject.SetActive(p.CanCollect);
@@ -2330,9 +2352,8 @@ namespace Survival.Unity
             }
 
             var text = SurvivalVisuals.Text(_overlay, "Float", copy, size, TextAnchor.MiddleCenter, color);
-            var floatOutline = text.gameObject.AddComponent<Outline>();
-            floatOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);
-            floatOutline.effectDistance = new Vector2(2f, -2f);
+            HookSkin.Outlined(text, 2.4f);
+            text.fontStyle = FontStyle.Bold;
             StartCoroutine(Rise(text, at, 0.07f, 0.9f));
         }
 

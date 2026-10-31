@@ -96,12 +96,26 @@ namespace Survival.Domain.Clock
         {
             Clock = clock ?? throw new ArgumentNullException(nameof(clock));
             Rules = rules ?? throw new ArgumentNullException(nameof(rules));
-            Slots = Math.Max(1, slots);
+            BaseSlots = Math.Max(1, slots);
         }
 
         public IGameClock Clock { get; }
         public RushRules Rules { get; }
-        public int Slots { get; }
+        /// <summary>Permanent builders (catalog build slots).</summary>
+        public int BaseSlots { get; }
+
+        /// <summary>
+        /// Clock time (epoch seconds) the hired temporary builder leaves; 0 = never hired. While <see cref="Clock"/> is
+        /// before it there is one extra slot. A job the temporary builder started keeps running past the expiry and
+        /// finishes normally; only new jobs need a free slot.
+        /// </summary>
+        public double ExtraSlotUntil { get; set; }
+
+        public bool ExtraSlotActive => Clock.Now < ExtraSlotUntil;
+
+        public double ExtraSlotRemaining => Math.Max(0, ExtraSlotUntil - Clock.Now);
+
+        public int Slots => BaseSlots + (ExtraSlotActive ? 1 : 0);
         public IReadOnlyList<GameTimer> Active => _timers;
         public bool HasFreeSlot => _timers.Count < Slots;
 
@@ -134,7 +148,9 @@ namespace Survival.Domain.Clock
         /// <summary>Save restore: put a timer back exactly as it was (wall-clock start + duration), slots permitting.</summary>
         public bool Restore(string id, string targetId, double startedAt, double durationSeconds)
         {
-            if (!HasFreeSlot || Find(id) != null)
+            // A job the temporary builder started may still be running after it left: let it back in.
+            var cap = BaseSlots + (ExtraSlotUntil > 0 ? 1 : 0);
+            if (_timers.Count >= Math.Max(Slots, cap) || Find(id) != null)
             {
                 return false;
             }
