@@ -139,6 +139,7 @@ namespace Survival.Unity
             Campaign.Changed += MarkDirty;
             session.Chips.Wallet.Changed += (_, __, ___) => MarkDirty();
             Campaign.Roster.LevelledUp += OnLevelledUp;
+            Campaign.Roster.LevelledUp += (_, __) => Survival.Domain.Taps.ActivityFeed.Report(Survival.Domain.Taps.ActivityKinds.HeroLevel, 1);
             Campaign.Roster.Unlocked += OnUnlocked;
             Campaign.Roster.StarredUp += OnStarredUp;
             Campaign.Tick();
