@@ -358,5 +358,15 @@
   "battle.tip.3": "Hero shards from battles unlock new heroes and add stars.",
   "battle.tip.4": "Losing still pays some gold, so try again!",
   "battle.tip.5": "Upgrade your Castle to unlock higher building levels.",
-  "battle.tip.6": "Clear a stage for the first time to earn bonus gems."
+  "battle.tip.6": "Clear a stage for the first time to earn bonus gems.",
+  "daily.rail": "DAILY",
+  "daily.title": "Royal Daily Chest",
+  "daily.sub": "Return every day for a bigger gift. Day 7 is the Royal Chest!",
+  "daily.day": "DAY {0}",
+  "daily.day7": "DAY 7 \u00b7 ROYAL CHEST",
+  "daily.claim": "CLAIM FREE",
+  "daily.come_back": "COME BACK TOMORROW",
+  "daily.next_in": "Next gift in {0}",
+  "daily.claimed": "Day {0} gift claimed!",
+  "daily.big": "ROYAL CHEST!"
 }
