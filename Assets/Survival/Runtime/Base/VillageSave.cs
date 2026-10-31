@@ -78,7 +78,8 @@ namespace Survival.Domain.Base
                 sb.Append(",\"seconds\":").Append(t.DurationSeconds.ToString("R", CultureInfo.InvariantCulture)).Append('}');
             }
 
-            sb.Append("],\"pending\":[");
+            sb.Append("],\"temp_builder_until\":").Append(economy.Timers.ExtraSlotUntil.ToString("R", CultureInfo.InvariantCulture));
+            sb.Append(",\"pending\":[");
             first = true;
             foreach (var c in economy.Pending)
             {
@@ -185,6 +186,11 @@ namespace Survival.Domain.Base
                     var building = o.TryGet("building", out var bb) && bb is JsonNode.Bool bv && bv.Value;
                     build.Restore(id, type, spot, level, building);
                 }
+            }
+
+            if (root.TryGet("temp_builder_until", out var tb) && tb is JsonNode.Num tbn)
+            {
+                economy.Timers.ExtraSlotUntil = tbn.Value;
             }
 
             if (root.TryGet("timers", out var tm) && tm is JsonNode.Arr timers)

@@ -780,6 +780,12 @@ namespace Survival.Unity
                 return;
             }
 
+            if (_hook.TempBuilderOffered(plotId))
+            {
+                OpenTempBuilder(plotId);
+                return;
+            }
+
             var nextLevel = _hook.Base.Find(plotId)?.Next?.Level ?? 0;
             SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiDeny);
             Toast(NormCenterOf(card.Root), BlockLabel(block, nextLevel, S("hook.need_more", "Not enough resources")), Warn);
@@ -931,7 +937,7 @@ namespace Survival.Unity
                     return;
                 }
 
-                if (hook.Base.CheckUpgrade(plotId) == UpgradeBlock.None)
+                if (hook.Base.CheckUpgrade(plotId) == UpgradeBlock.None || hook.TempBuilderOffered(plotId))
                 {
                     CloseSheet();
                 }
@@ -1014,6 +1020,15 @@ namespace Survival.Unity
                     upText.text = BlockLabel(block, p.Next.Level, S("hook.upgrade", "Upgrade"));
                     HookSkin.SetButton(upImg, HookArtKeys.ButtonGold, ok ? SurvivalVisuals.MineFill : Disabled, true, 0.5f);
                     upText.color = ok ? HookSkin.InkFor(HookArtKeys.ButtonGold) : SurvivalVisuals.Cream;
+                }
+
+                if (TempBuilderLine() is { Length: > 0 } extra)
+                {
+                    next.text += "\n" + extra;
+                }
+                else if (timer == null && block == UpgradeBlock.QueueBusy && hook.TempBuilderOffered(plotId))
+                {
+                    upText.text = S("builder.temp.button", "Hire builder");
                 }
 
                 collect.gameObject.SetActive(p.CanCollect);

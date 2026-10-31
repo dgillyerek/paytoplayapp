@@ -25,11 +25,14 @@ namespace Survival.Unity
             var sprite = SurvivalArt.Get(key);
             if (sprite == null)
             {
-                return SurvivalVisuals.Framed(parent, name, fallbackFill, SurvivalVisuals.GoldLine, 2f);
+                var flat = SurvivalVisuals.Framed(parent, name, fallbackFill, SurvivalVisuals.GoldLine, 2f);
+                Ornaments.Dress(flat, Ornaments.Gold);
+                return flat;
             }
 
             var img = SurvivalVisuals.Image(parent, name, Color.white, sprite);
             ApplySliced(img, borderScale);
+            Ornaments.Dress(img, Ornaments.Gold);
             return img;
         }
 
@@ -107,6 +110,10 @@ namespace Survival.Unity
             var btn = SurvivalVisuals.Button(parent, name, fallback);
             var img = btn.GetComponent<Image>();
             TrySkin(img, key, borderScale);
+            Ornaments.Dress(img, Ornaments.Gold, button: true);
+            var colors = btn.colors;
+            colors.pressedColor = new Color(0.78f, 0.74f, 0.68f, 1f);
+            btn.colors = colors;
             return btn;
         }
 
