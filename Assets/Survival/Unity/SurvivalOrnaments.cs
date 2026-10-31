@@ -23,7 +23,7 @@ namespace Survival.Unity
         private const int Cols = 8;
         private static Texture2D? _atlas;
         private static readonly Dictionary<string, Sprite> Sprites = new Dictionary<string, Sprite>();
-        private static readonly string[] Order = { "frame", "bevel", "grain", "ribbon", "shine", "gem", "star", "tome", "banner", "hourglass", "plate", "crest", "sparkle", "coin", "wheat", "shard" };
+        private static readonly string[] Order = { "frame", "bevel", "grain", "ribbon", "shine", "gem", "star", "tome", "banner", "hourglass", "plate", "crest", "sparkle", "coin", "wheat", "shard", "gloss", "rivet", "flame" };
 
         /// <summary>Rarity tint for frames and crests (common .. legendary).</summary>
         public static Color Rarity(string? rarity) => (rarity ?? "").ToLowerInvariant() switch
@@ -126,6 +126,77 @@ namespace Survival.Unity
 
         public static Image Star(Transform parent, Color tint) => Add(parent, "Star", "star", tint, Image.Type.Simple);
 
+        /// <summary>
+        /// Ornate dressing for any HUD button, bar, banner, chip or panel (Derek 2026-10-30, "the buttons look basic"):
+        /// soft drop shadow, inner gloss highlight, bevel, gold filigree trim and four corner rivets, plus embossed
+        /// outlined labels. Buttons also get a pressed state. Decorations sit behind the element's own children, never
+        /// take raycasts, and leave size, layout and icon art untouched. Calling it twice is a no-op.
+        /// </summary>
+        public static void Dress(Graphic target, Color trim, bool button = false, float rivet = 11f)
+        {
+            if (target == null || target.transform.Find("Ornate") != null)
+            {
+                return;
+            }
+
+            var shadow = target.GetComponent<Shadow>() ?? target.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0f, 0f, 0f, 0.55f);
+            shadow.effectDistance = new Vector2(0f, -4f);
+
+            var host = new GameObject("Ornate", typeof(RectTransform)).GetComponent<RectTransform>();
+            host.SetParent(target.transform, false);
+            SurvivalVisuals.Stretch(host);
+            host.SetAsFirstSibling();
+            var gloss = Add(host, "Gloss", "gloss", Color.white);
+            Stretch(gloss.rectTransform, 0.02f, 0.40f, 0.98f, 0.97f);
+            Bevel(host, 0.9f);
+            Frame(host, trim, 1f);
+            foreach (var (ax, ay) in new[] { (0f, 0f), (1f, 0f), (0f, 1f), (1f, 1f) })
+            {
+                var r = Add(host, "Rivet", "rivet", Color.white, Image.Type.Simple);
+                var rt = r.rectTransform;
+                rt.anchorMin = rt.anchorMax = new Vector2(ax, ay);
+                rt.sizeDelta = new Vector2(rivet, rivet);
+                rt.anchoredPosition = new Vector2(ax < 0.5f ? rivet * 0.75f : -rivet * 0.75f, ay < 0.5f ? rivet * 0.75f : -rivet * 0.75f);
+            }
+
+            target.gameObject.AddComponent<OrnateLabels>();
+            if (button && target.GetComponent<PressFx>() == null)
+            {
+                target.gameObject.AddComponent<PressFx>();
+            }
+        }
+
+        /// <summary>Embossed label: light text, thick dark outline, drop shadow, bold.</summary>
+        public static Text Emboss(Text text)
+        {
+            ContrastGuard.Fix(text);
+            text.fontStyle = FontStyle.Bold;
+            return text;
+        }
+
+        /// <summary>Dark translucent backing plate behind a label that sits over busy art.</summary>
+        public static Image Backing(Text text, float alpha = 0.62f)
+        {
+            var parent = text.transform.parent;
+            var existing = parent.Find(text.name + "_Backing");
+            if (existing != null)
+            {
+                return existing.GetComponent<Image>();
+            }
+
+            var plate = Add(parent, text.name + "_Backing", "plate", new Color(0.05f, 0.03f, 0.08f, alpha));
+            var src = text.rectTransform;
+            var rt = plate.rectTransform;
+            rt.anchorMin = src.anchorMin;
+            rt.anchorMax = src.anchorMax;
+            rt.pivot = src.pivot;
+            rt.offsetMin = src.offsetMin + new Vector2(-6f, -3f);
+            rt.offsetMax = src.offsetMax + new Vector2(6f, 3f);
+            rt.SetSiblingIndex(text.transform.GetSiblingIndex());
+            return plate;
+        }
+
         public static Image Icon(Transform parent, string name, string sprite)
         {
             var img = Add(parent, name, sprite, Color.white, Image.Type.Simple);
@@ -208,6 +279,7 @@ namespace Survival.Unity
                     "bevel" => new Vector4(12, 12, 12, 12),
                     "plate" => new Vector4(14, 14, 14, 14),
                     "ribbon" => new Vector4(24, 8, 24, 8),
+                    "gloss" => new Vector4(14, 20, 14, 20),
                     _ => Vector4.zero,
                 };
                 var sp = Sprite.Create(_atlas, rect, new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, border);
@@ -377,6 +449,35 @@ namespace Survival.Unity
                     var l = x < 32 ? 1.1f : 0.75f;
                     return C(0.72f * l, 0.42f * l, 0.96f * l, Sat(30.5f - d));
                 }
+                case "gloss":
+                {
+                    // Glassy top highlight: bright near the top edge fading to clear by mid-height, rounded corners.
+                    var t = Sat((y - (n * 0.5f)) / (n * 0.5f));
+                    var round = Sat(e - 1.5f);
+                    return C(1f, 0.98f, 0.92f, t * t * 0.42f * round);
+                }
+                case "rivet":
+                {
+                    // Domed metal stud with a dark ring and a specular dot.
+                    var r = (float)Math.Sqrt(((x - 32f) * (x - 32f)) + ((y - 32f) * (y - 32f)));
+                    if (r > 26.5f) return C(0, 0, 0, 0);
+                    if (r > 22f) return C(0.12f, 0.07f, 0.03f, Sat(26.5f - r));
+                    var spec = Circle(x, y, 25f, 40f, 6f);
+                    var l = 0.62f + (0.5f * y / n) + (spec * 0.4f);
+                    return C(l, l * 0.86f, l * 0.55f, 1f);
+                }
+                case "flame":
+                {
+                    // Dark-purple threat flame: teardrop of violet with a pale core.
+                    var dy = y - 14f;
+                    var w = dy < 0 ? 0f : 20f * (float)Math.Sin(Math.Min(Math.PI, dy / 46f * Math.PI)) * (1f - (dy / 70f));
+                    var dx = Math.Abs(x - 32f + (2.5f * (float)Math.Sin(y * 0.18f)));
+                    var bowl = Circle(x, y, 32f, 22f, 15f);
+                    var a = Math.Max(Sat(w - dx + 0.5f), bowl);
+                    if (a < 0.02f) return C(0, 0, 0, 0);
+                    var core = Math.Max(Circle(x, y, 32f, 22f, 8f), Sat(w * 0.4f - dx));
+                    return C(0.45f + (0.5f * core), 0.15f + (0.6f * core), 0.75f + (0.2f * core), a);
+                }
                 case "sparkle":
                 {
                     var dx = Math.Abs(x - 32f); var dy = Math.Abs(y - 32f);
@@ -425,6 +526,98 @@ namespace Survival.Unity
                 var c = _g.color;
                 c.a = s;
                 _g.color = c;
+            }
+        }
+    }
+
+    /// <summary>Embosses every label under an ornate element once it is built (labels are often added after Dress).</summary>
+    public sealed class OrnateLabels : MonoBehaviour
+    {
+        private void Start()
+        {
+            foreach (var t in GetComponentsInChildren<Text>(true))
+            {
+                Ornaments.Emboss(t);
+            }
+        }
+    }
+
+    /// <summary>Pressed state for ornate buttons: sinks a little and darkens while held.</summary>
+    public sealed class PressFx : MonoBehaviour, UnityEngine.EventSystems.IPointerDownHandler, UnityEngine.EventSystems.IPointerUpHandler, UnityEngine.EventSystems.IPointerExitHandler
+    {
+        private Vector3 _scale = Vector3.one;
+        private bool _down;
+
+        public void OnPointerDown(UnityEngine.EventSystems.PointerEventData e)
+        {
+            if (_down) return;
+            _down = true;
+            _scale = transform.localScale;
+            transform.localScale = _scale * 0.94f;
+            var shadow = GetComponent<Shadow>();
+            if (shadow != null) shadow.effectDistance = new Vector2(0f, -1f);
+            var gloss = transform.Find("Ornate/Gloss");
+            if (gloss != null) gloss.gameObject.SetActive(false);
+        }
+
+        public void OnPointerUp(UnityEngine.EventSystems.PointerEventData e) => Release();
+
+        public void OnPointerExit(UnityEngine.EventSystems.PointerEventData e) => Release();
+
+        private void Release()
+        {
+            if (!_down) return;
+            _down = false;
+            transform.localScale = _scale;
+            var shadow = GetComponent<Shadow>();
+            if (shadow != null) shadow.effectDistance = new Vector2(0f, -4f);
+            var gloss = transform.Find("Ornate/Gloss");
+            if (gloss != null) gloss.gameObject.SetActive(true);
+        }
+
+        private void OnDisable() => Release();
+    }
+
+    /// <summary>
+    /// Readability guard on every HUD canvas (Derek 2026-10-30, "the text is hard to read"): any label drawn dark is
+    /// turned cream #FFF4D6, and every label gets a thick near-black outline and drop shadow. Runs a few times a second
+    /// so popups built later and colours set at refresh time are caught too.
+    /// </summary>
+    public sealed class ContrastGuard : MonoBehaviour
+    {
+        private float _next;
+
+        public static void Fix(Text t)
+        {
+            var c = t.color;
+            if ((0.299f * c.r) + (0.587f * c.g) + (0.114f * c.b) < 0.55f)
+            {
+                t.color = new Color(HookSkin.Cream.r, HookSkin.Cream.g, HookSkin.Cream.b, c.a);
+            }
+
+            var o = t.GetComponent<Outline>();
+            if (o == null)
+            {
+                HookSkin.Outlined(t);
+            }
+            else if (Mathf.Abs(o.effectDistance.x) < 2f || o.effectColor.a < 0.85f)
+            {
+                o.effectColor = HookSkin.OutlineInk;
+                o.effectDistance = new Vector2(2f, -2f);
+            }
+        }
+
+        private void LateUpdate()
+        {
+            if (Time.unscaledTime < _next)
+            {
+                return;
+            }
+
+            _next = Time.unscaledTime + 0.25f;
+            foreach (var t in GetComponentsInChildren<Text>(false))
+            {
+                Fix(t);
             }
         }
     }

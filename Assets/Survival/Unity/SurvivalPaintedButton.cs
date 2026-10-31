@@ -35,6 +35,7 @@ namespace Survival.Unity
                 framed.raycastTarget = true;
                 btn = framed.gameObject.AddComponent<Button>();
                 btn.targetGraphic = framed;
+                Ornaments.Dress(framed, Ornaments.Gold);
             }
 
             var rt = btn.GetComponent<RectTransform>();
@@ -52,6 +53,12 @@ namespace Survival.Unity
             text.rectTransform.offsetMax = Vector2.zero;
             btn.transition = Selectable.Transition.None;
             btn.gameObject.AddComponent<PressSquash>();
+            if (btn.GetComponent<PressFx>() is { } fx)
+            {
+                // PressSquash already gives the painted nav buttons their pressed state.
+                Object.Destroy(fx);
+            }
+
             return btn;
         }
 
