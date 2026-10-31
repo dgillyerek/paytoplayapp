@@ -135,6 +135,12 @@ namespace Survival.Domain.Runner
         /// </summary>
         public const float GateChargeSeconds = 1.2f;
 
+        /// <summary>
+        /// On a level without a boss, the finish moves up to this many metres past where the squad stands when the road
+        /// clears (last enemy down, nothing left ahead), so the level ends shortly after the last enemy (Derek 2026-10-30).
+        /// </summary>
+        public const float FinishTail = 4f;
+
         /// <summary>Boxes this far behind the hero are left behind (no box).</summary>
         public const float PassBehind = 1.2f;
 
@@ -753,6 +759,7 @@ namespace Survival.Domain.Runner
             Level = level;
             Hero = new RunnerMember(_nextId++, catalog.Unit(level.Hero), true, 0f, 0f, Loadout.For(level.Hero));
             ArenaLine = level.Length;
+            Finish = level.Length;
             foreach (var r in level.Rows)
             {
                 if (r.Kind == RunnerRowKind.Boss)
@@ -784,7 +791,10 @@ namespace Survival.Domain.Runner
         /// <summary>Metres walked; the hero stands at Z = Distance.</summary>
         public float Distance { get; private set; }
         public float Seconds { get; private set; }
-        public float Progress => Math.Min(1f, Distance / Level.Length);
+        public float Progress => Math.Min(1f, Distance / Finish);
+
+        /// <summary>Where the run ends on a level without a boss: the level's length, pulled in to <see cref="RunnerRules.FinishTail"/> m past the squad once the road clears.</summary>
+        public float Finish { get; private set; }
         public float SteerTarget => _steer;
 
         /// <summary>Squad-wide damage and attack speed multipliers from upgrade boxes.</summary>
@@ -833,7 +843,7 @@ namespace Survival.Domain.Runner
         public float ArenaLine { get; }
 
         /// <summary>How far the squad can walk: the arena line on a boss level, else the level's length.</summary>
-        public float RoadEnd => Math.Min(Level.Length, ArenaLine);
+        public float RoadEnd => Math.Min(Finish, ArenaLine);
 
         /// <summary>The level's enemy HP multiplier (progressive levels toughen the same units).</summary>
         public float FoeHpMul => Level.FoeHpMul;
@@ -994,7 +1004,8 @@ namespace Survival.Domain.Runner
             // than the walk.
             if (_charge == 0f && RoadClear())
             {
-                _charge = Math.Max(Level.Speed, (Level.Length - Distance) / RunnerRules.GateChargeSeconds);
+                Finish = Math.Min(Level.Length, Distance + RunnerRules.FinishTail);
+                _charge = Math.Max(Level.Speed, (Finish - Distance) / RunnerRules.GateChargeSeconds);
             }
 
             var pace = Pace;
@@ -2491,7 +2502,7 @@ namespace Survival.Domain.Runner
 
             var won = Level.HasBoss
                 ? _nextRow >= Level.Rows.Count && !_foes.Exists(f => f.Boss)
-                : Distance >= Level.Length - 1e-3f;
+                : Distance >= Finish - 1e-3f;
             if (won)
             {
                 Outcome = RunnerOutcome.Won;

@@ -401,7 +401,7 @@ namespace Survival.Unity
             if (_progressText != null && metres != _shownMetres)
             {
                 _shownMetres = metres;
-                _progressText.text = Num(metres) + " / " + Num(Mathf.RoundToInt(_run.Level.Length)) + " m";
+                _progressText.text = Num(metres) + " / " + Num(Mathf.RoundToInt(_run.Finish)) + " m";
             }
 
             if (_killsText != null && _run.Kills != _shownKills)
