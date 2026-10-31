@@ -141,6 +141,16 @@ namespace Survival.Domain.Runner
         /// </summary>
         public const float FinishTail = 4f;
 
+        /// <summary>
+        /// A barrier never falls to fewer than this many of the squad's hardest hits (Derek 2026-10-30: "the destructible
+        /// barriers need to take more than one hit to break... like the chests"): at spawn its HP is raised to this times
+        /// the strongest hit in the squad then, so trained or starred heroes and weapon crates can't one-shot it.
+        /// </summary>
+        public const int BarrierMinHits = 6;
+
+        /// <summary>The floor applies through this level; from L31 the barriers keep their tuned HP so the locked free pace past the wall is untouched.</summary>
+        public const int BarrierMinHitsThrough = 30;
+
         /// <summary>Boxes this far behind the hero are left behind (no box).</summary>
         public const float PassBehind = 1.2f;
 
@@ -635,13 +645,13 @@ namespace Survival.Domain.Runner
     /// </summary>
     public sealed class RunnerBarrier
     {
-        internal RunnerBarrier(int id, RunnerBarrierDef def, float x, float z)
+        internal RunnerBarrier(int id, RunnerBarrierDef def, float x, float z, int hp = 0)
         {
             Id = id;
             Def = def;
             X = x;
             Z = z;
-            Hp = def.Hp;
+            Hp = MaxHp = Math.Max(def.Hp, hp);
         }
 
         public int Id { get; }
@@ -650,7 +660,7 @@ namespace Survival.Domain.Runner
         public float X { get; }
         public float Z { get; }
         public int Hp { get; internal set; }
-        public int MaxHp => Def.Hp;
+        public int MaxHp { get; }
         public float HpFraction => MaxHp > 0 ? Math.Max(0f, Hp / (float)MaxHp) : 0f;
         public float HalfWidth => Def.Width * 0.5f;
         public float HalfDepth => RunnerRules.BarrierHalfDepth;
@@ -1063,7 +1073,7 @@ namespace Survival.Domain.Runner
                     {
                         var bd = row.Barrier!;
                         var half = Math.Min(bd.Width * 0.5f, Level.HalfWidth);
-                        var bar = new RunnerBarrier(_nextId++, bd, Clamp(row.X, -Level.HalfWidth + half, Level.HalfWidth - half), row.At);
+                        var bar = new RunnerBarrier(_nextId++, bd, Clamp(row.X, -Level.HalfWidth + half, Level.HalfWidth - half), row.At, Level.Number <= RunnerRules.BarrierMinHitsThrough ? RunnerRules.BarrierMinHits * StrongestHit() : 0);
                         _barriers.Add(bar);
                         Emit(RunnerEventKind.BarrierSpawned, bar.Id, 0, bar.X, bar.Z, bar.Hp, false, false, RunnerBarrierDef.Name(bd.Kind));
                         break;
@@ -2188,6 +2198,18 @@ namespace Survival.Domain.Runner
                 Kills++;
                 Emit(RunnerEventKind.FoeKilled, f.Id, by, f.X, f.Z, Kills, f.Boss, false, f.Unit.Id);
             }
+        }
+
+        /// <summary>The biggest single hit anyone in the squad lands right now (unit damage x trained boost x weapon upgrades).</summary>
+        private int StrongestHit()
+        {
+            var best = 0;
+            foreach (var m in _squad)
+            {
+                best = Math.Max(best, (int)Math.Round(m.Unit.Damage * m.Power * DamageMul));
+            }
+
+            return best;
         }
 
         private void DamageBarrier(RunnerBarrier b, int damage, int by)
