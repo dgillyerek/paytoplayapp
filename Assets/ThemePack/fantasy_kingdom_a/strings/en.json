@@ -83,6 +83,8 @@
   "hook.speedup.items": "Use speed-ups ({0} min)",
   "hook.speedup.free_hint": "Under 5 min left finishes free",
   "hook.close": "Close",
+  "well.explain": "Toss a coin and make a wish for gold, gems or speed-ups.",
+  "well.jackpot_odds": "JACKPOT  ·  {0}% chance",
   "well.button": "Well",
   "well.button.free": "Free wish!",
   "well.toss_free": "Make a wish  \u00b7  FREE",
