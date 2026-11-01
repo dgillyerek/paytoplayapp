@@ -367,7 +367,7 @@
   "trophy.complete": "ALL TROPHIES WON \u2714",
   "trophy.won": "Trophy won: {0}",
   "trophy.won_count": "{0} trophies won",
-  "trophy.explain": "Reach each goal to win a bronze, then silver, then gold trophy. Tap GO to work on it, CLAIM to collect.",
+  "trophy.explain": "Win bronze, then silver, then gold. Tap GO to play, CLAIM to collect.",
   "trophy.go": "GO \u25b6",
   "trophy.tier": "Tier {0} of {1} \u00b7 {2}",
   "trophy.tier.max": "All tiers won",

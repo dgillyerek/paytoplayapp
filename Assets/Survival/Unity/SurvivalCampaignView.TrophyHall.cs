@@ -201,10 +201,10 @@ namespace Survival.Unity
             won.raycastTarget = false;
             HookSkin.Fit(won, 14, 30);
             Box(won.rectTransform, 0.19f, 0.52f, 0.98f, 0.96f);
-            var sub = HookSkin.Outlined(SurvivalVisuals.Text(head.transform, "Sub", S("trophy.explain", "Reach each goal to win a bronze, then silver, then gold trophy. Tap GO to work on it, CLAIM to collect."), 18, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.1f);
+            var sub = HookSkin.Outlined(SurvivalVisuals.Text(head.transform, "Sub", S("trophy.explain", "Win bronze, then silver, then gold. Tap GO to play, CLAIM to collect."), 18, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.1f);
             sub.raycastTarget = false;
             HookSkin.Fit(sub, 11, 18);
-            Box(sub.rectTransform, 0.19f, 0.04f, 0.98f, 0.52f);
+            Box(sub.rectTransform, 0.19f, 0.04f, 0.95f, 0.52f);
 
             var kinds = hall.Kinds();
             const float top = 0.79f, bottom = 0.03f;
