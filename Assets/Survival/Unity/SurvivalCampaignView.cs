@@ -139,6 +139,7 @@ namespace Survival.Unity
             Campaign.Changed += MarkDirty;
             session.Chips.Wallet.Changed += (_, __, ___) => MarkDirty();
             Campaign.Roster.LevelledUp += OnLevelledUp;
+            Campaign.Roster.LevelledUp += (_, __) => Survival.Domain.Taps.ActivityFeed.Report(Survival.Domain.Taps.ActivityKinds.HeroLevel, 1);
             Campaign.Roster.Unlocked += OnUnlocked;
             Campaign.Roster.StarredUp += OnStarredUp;
             Campaign.Tick();
@@ -270,7 +271,7 @@ namespace Survival.Unity
             var nav = play.NavButton(BottomNav.Heroes);
             if (nav != null)
             {
-                _heroesBadge = Badge(nav, "CampaignBadge");
+                _heroesBadge = UpgradeBadge(nav, "CampaignBadge");
             }
 
             var card = FindDeep(root, "HeroCard");
@@ -370,6 +371,46 @@ namespace Survival.Unity
             SurvivalVisuals.Stretch(t.rectTransform);
             dot.gameObject.SetActive(false);
             return dot;
+        }
+
+        /// <summary>
+        /// Hero "upgrade ready" marker (Derek 2026-10-31: the red "!" dot read as an error): the painted gold-chevron
+        /// shield on the card's top-right corner, gently bobbing and pulsing. Falls back to the red dot if the art is missing.
+        /// </summary>
+        private Image UpgradeBadge(Transform parent, string name)
+        {
+            var sprite = SurvivalArt.Get(HookArtKeys.BadgeUpgrade);
+            if (sprite == null)
+            {
+                return Badge(parent, name);
+            }
+
+            var badge = SurvivalVisuals.Image(parent, name, Color.white, sprite);
+            badge.preserveAspect = true;
+            badge.raycastTarget = false;
+            var brt = badge.rectTransform;
+            brt.anchorMin = brt.anchorMax = new Vector2(0.90f, 0.86f);
+            brt.sizeDelta = new Vector2(44f, 44f);
+            badge.gameObject.SetActive(false);
+            StartCoroutine(Bob(brt));
+            return badge;
+        }
+
+        private static IEnumerator Bob(RectTransform rt)
+        {
+            var t = 0f;
+            while (rt != null)
+            {
+                if (rt.gameObject.activeInHierarchy)
+                {
+                    t += Time.unscaledDeltaTime;
+                    var k = 1f + 0.07f * Mathf.Sin(t * 4f);
+                    rt.localScale = new Vector3(k, k, 1f);
+                    rt.anchoredPosition = new Vector2(0f, 3f * Mathf.Sin(t * 4f));
+                }
+
+                yield return null;
+            }
         }
 
         private void RefreshBadges()
@@ -759,7 +800,7 @@ namespace Survival.Unity
             SurvivalVisuals.Stretch(lockText.rectTransform);
             var barFrame = HookSkin.Bar(frame, "Training", out var barFill);
             Box(barFrame.rectTransform, 0.06f, 0.19f, 0.94f, 0.29f);
-            var dot = Badge(rt, "Badge");
+            var dot = UpgradeBadge(rt, "Badge");
             Wire(btn, () =>
             {
                 _selected = def.Id;
