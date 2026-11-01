@@ -149,10 +149,10 @@ namespace Survival.Unity
             season.raycastTarget = false;
             HookSkin.Fit(season, 12, 24);
             Box(season.rectTransform, 0.17f, 0.56f, 0.98f, 0.96f);
-            var explain = HookSkin.Outlined(SurvivalVisuals.Text(head.transform, "Explain", S("crusade.explain", "Earn season XP to climb the tiers. Every tier gives a FREE reward; the Royal Banner adds a second reward."), 16, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.1f);
+            var explain = HookSkin.Outlined(SurvivalVisuals.Text(head.transform, "Explain", S("crusade.explain", "Earn season XP to climb tiers. Each tier gives a FREE reward; the Royal Banner adds one more."), 16, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.1f);
             explain.raycastTarget = false;
             HookSkin.Fit(explain, 10, 16);
-            Box(explain.rectTransform, 0.17f, 0.04f, 0.98f, 0.56f);
+            Box(explain.rectTransform, 0.17f, 0.04f, 0.95f, 0.56f);
             var sandbox = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Sandbox", S("store.sandbox", "SANDBOX \u00b7 no real charge"), 14, TextAnchor.MiddleCenter, Warn), 1.2f);
             Box(sandbox.rectTransform, 0f, 0.772f, 1f, 0.79f);
             BalanceBar.Inside(panel, Campaign.Wallet, CrusadeBalanceIds, 0.05f, 0.722f, 0.95f, 0.77f);
