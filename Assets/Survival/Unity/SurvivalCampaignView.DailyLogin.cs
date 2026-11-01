@@ -97,6 +97,12 @@ namespace Survival.Unity
             _dailyAutoShown = true;
             var daily = _daily;
             var panel = OpenSheet(DailyLoginSheetName, S("daily.title", "Royal Daily Chest"), 0.86f);
+            // One navy backdrop over the panel body so the art's grey-blue gradient band never shows (Derek 2026-10-31).
+            var backdrop = HookSkin.Panel(panel, "Backdrop", HookArtKeys.Plate, DailyNavyDeep, 0.8f);
+            backdrop.raycastTarget = false;
+            Box(backdrop.rectTransform, 0.02f, 0.012f, 0.98f, 0.925f);
+            Ornaments.Frame(backdrop.transform, Ornaments.Gold, 1.5f);
+
             var sub = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Sub", S("daily.sub", "Come back every day. Day 7 is the Royal Chest!"), 22, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
             sub.fontStyle = FontStyle.Bold;
             HookSkin.Fit(sub, 12, 22);
@@ -116,6 +122,10 @@ namespace Survival.Unity
 
             var claimLabel = SheetButton(panel, "Claim", HookArtKeys.ButtonGreen, FreeGreen, 0.12f, 0.025f, 0.88f, 0.105f, 34, out var claim);
             Ornaments.Dress(claim.targetGraphic, Ornaments.Gold, button: true);
+            // Cream text with a heavy dark outline, drawn above the button's gloss so it never reads as dark-on-green.
+            claimLabel.color = SurvivalVisuals.Cream;
+            HookSkin.Outlined(claimLabel, 3f);
+            claimLabel.transform.SetAsLastSibling();
             Wire(claim, () =>
             {
                 var day = daily.NextDay;
@@ -147,7 +157,7 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// One day card in the v1 ornate style (Derek 2026-10-31, "this screen is ugly"): warm wood plate dressed with gloss,
+        /// One day card in the v1 ornate style (Derek 2026-10-31, "this screen is ugly"): royal navy plate (v2, no brown) dressed with gloss,
         /// bevel, gold trim and rivets; a ribbon; painted art that grows richer toward day 7; big reward icons with cream
         /// outlined amounts. Claimed days dim behind a check, today glows with a TODAY tag, day 7 is the wide hero card.
         /// </summary>
@@ -157,7 +167,7 @@ namespace Survival.Unity
             var big = i == DailyLogin.Days - 1;
             var claimed = state == LoginDayState.Claimed;
             var ready = state == LoginDayState.Ready;
-            var fill = big ? new Color(0.38f, 0.16f, 0.36f, 1f) : ready ? new Color(0.47f, 0.31f, 0.12f, 1f) : new Color(0.36f, 0.23f, 0.12f, 1f);
+            var fill = big ? DailyRoyalPurple : ready ? DailyTodayBlue : DailyNavy;
             if (ready)
             {
                 var glow = HookSkin.Glow(panel, "Glow" + (i + 1), new Color(1f, 0.82f, 0.35f, 0.75f));
@@ -165,10 +175,16 @@ namespace Survival.Unity
                 Box(glow.rectTransform, x0 - 0.02f, y0 - 0.012f, x1 + 0.02f, y1 + 0.012f);
             }
 
-            var card = SurvivalVisuals.Image(panel, "Day" + (i + 1), fill);
+            // Royal navy plate with bevel, gloss and gold trim, like the Trophy Hall and Crystal Orb cards.
+            var card = HookSkin.Panel(panel, "Day" + (i + 1), HookArtKeys.Plate, fill, 0.7f);
             card.raycastTarget = false;
             Box(card.rectTransform, x0, y0, x1, y1);
+            Ornaments.Bevel(card.transform, 0.6f);
             Ornaments.Dress(card, Ornaments.Gold, rivet: 10f);
+            if (ready || big)
+            {
+                Ornaments.Frame(card.transform, ready ? new Color(1f, 0.86f, 0.40f, 1f) : Ornaments.Gold, ready ? 4f : 3f);
+            }
 
             var head = Ornaments.Ribbon(card.transform, big ? S("daily.day7", "DAY 7 \u00b7 ROYAL CHEST") : Fmt("daily.day", "DAY {0}", i + 1), big ? new Color(0.24f, 0.34f, 0.70f, 1f) : new Color(0.62f, 0.14f, 0.12f, 1f), out var ribbon);
             Box(ribbon.rectTransform, big ? 0.22f : 0.02f, big ? 0.84f : 0.86f, big ? 0.78f : 0.98f, big ? 1.06f : 1.04f);
@@ -215,11 +231,19 @@ namespace Survival.Unity
             {
                 var tag = FreeTag(card.transform, "Today");
                 tag.GetComponentInChildren<Text>().text = S("daily.today", "TODAY");
+                // Below the ribbon on the right, so it never collides with the DAY label.
+                tag.rectTransform.anchorMin = tag.rectTransform.anchorMax = new Vector2(0.80f, 0.78f);
+                tag.rectTransform.sizeDelta = new Vector2(92f, 32f);
                 tag.gameObject.SetActive(true);
                 Ornaments.Shine(card.rectTransform);
                 StartCoroutine(Breathe(card.rectTransform));
             }
         }
+
+        private static readonly Color DailyNavyDeep = new Color(0.07f, 0.10f, 0.24f, 1f);
+        private static readonly Color DailyNavy = new Color(0.12f, 0.17f, 0.36f, 1f);
+        private static readonly Color DailyTodayBlue = new Color(0.20f, 0.33f, 0.66f, 1f);
+        private static readonly Color DailyRoyalPurple = new Color(0.30f, 0.14f, 0.44f, 1f);
 
         /// <summary>A large painted reward icon with its amount in cream outlined text (no dark box behind it).</summary>
         private void RewardIcon(RectTransform card, KeyValuePair<string, int> reward, float x0, float y0, float x1, float y1, bool horizontal, bool dim)
