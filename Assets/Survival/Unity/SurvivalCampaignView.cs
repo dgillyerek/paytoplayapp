@@ -32,7 +32,7 @@ namespace Survival.Unity
     /// and hit reactions, then Play comes back with a VICTORY / DEFEAT result screen and the rewards (gold, food, shards,
     /// first-clear gems, bounty progress). Everything is saved to survival_save.json.
     /// </summary>
-    public sealed class SurvivalCampaignView : MonoBehaviour
+    public sealed partial class SurvivalCampaignView : MonoBehaviour
     {
         public const string BattleSceneName = "BattleLocked";
         private const int LoadingTipCount = 6;
@@ -145,6 +145,7 @@ namespace Survival.Unity
 
             _overlay = SurvivalVisuals.Canvas(transform, "SurvivalCampaignOverlay", 55);
             WireHeroesEntry(play, play.Root);
+            WireAllianceBag(play);
             BuildBattleEntry(play, play.Root, session.Pack.Hud);
             BuildHeroFree(play.Root, session.Pack.Hud);
             if (play.WorldView != null)
