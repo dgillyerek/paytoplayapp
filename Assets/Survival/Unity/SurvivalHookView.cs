@@ -159,6 +159,7 @@ namespace Survival.Unity
             play.MarchResolved += OnMarchResolved;
             _questWasComplete = _hook.Quests.IsComplete;
             RefreshAll();
+            RaiseHudBuilt(root);
         }
 
         private void OnDestroy()
