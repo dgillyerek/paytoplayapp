@@ -11,6 +11,7 @@ namespace Survival.Domain.Alliance
         None,
         SpeedUpTimer,
         OpenHeroes,
+        OpenRoad,
     }
 
     /// <summary>One bag row: the wallet resource, its count and its use.</summary>
@@ -18,7 +19,7 @@ namespace Survival.Domain.Alliance
 
     /// <summary>
     /// The Bag screen (Derek 2026-10-31): the player's items from the save (the wallet), with a Use button where a use
-    /// exists. Speed-ups go on the running timer that ends soonest; Hero Tomes open the Heroes screen where they are spent.
+    /// exists. Speed-ups go on the running timer that ends soonest; Hero Tomes open the Heroes screen and energy / runner boosts open the Road, where they are spent.
     /// Currencies (gold, gems, food...) live in the balance bar, not here.
     /// </summary>
     public static class BagContents
@@ -32,6 +33,7 @@ namespace Survival.Domain.Alliance
         {
             SurvIds.ResSpeedupM => BagUse.SpeedUpTimer,
             SurvIds.ResHeroXp => BagUse.OpenHeroes,
+            SurvIds.ResEnergy or SurvIds.ResRunnerBoost => BagUse.OpenRoad,
             _ => BagUse.None,
         };
 
@@ -55,7 +57,7 @@ namespace Survival.Domain.Alliance
             item.Count > 0 && item.Use switch
             {
                 BagUse.SpeedUpTimer => timerRunning,
-                BagUse.OpenHeroes => true,
+                BagUse.OpenHeroes or BagUse.OpenRoad => true,
                 _ => false,
             };
     }

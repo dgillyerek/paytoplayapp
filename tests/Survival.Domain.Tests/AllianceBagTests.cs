@@ -39,7 +39,10 @@ public class AllianceBagTests
         Assert.False(BagContents.CanUse(new BagItem(SurvIds.ResSpeedupM, 5, BagUse.SpeedUpTimer), timerRunning: false));
         Assert.False(BagContents.CanUse(new BagItem(SurvIds.ResSpeedupM, 0, BagUse.SpeedUpTimer), timerRunning: true));
         Assert.True(BagContents.CanUse(new BagItem(SurvIds.ResHeroXp, 1, BagUse.OpenHeroes), false));
-        Assert.Equal(BagUse.None, BagContents.UseOf(SurvIds.ResRunnerBoost));
+        Assert.Equal(BagUse.OpenRoad, BagContents.UseOf(SurvIds.ResRunnerBoost));
+        Assert.Equal(BagUse.OpenRoad, BagContents.UseOf(SurvIds.ResEnergy));
+        Assert.Equal(BagUse.None, BagContents.UseOf(SurvIds.ResAllianceGift));
+        Assert.True(BagContents.CanUse(new BagItem(SurvIds.ResEnergy, 3, BagUse.OpenRoad), false));
     }
 
     [Fact]
