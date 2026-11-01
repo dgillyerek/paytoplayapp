@@ -71,7 +71,15 @@ namespace Survival.Unity
 
         private void OpenAlliance(string tab)
         {
-            _alliance ??= AllianceOverview.Simulated();
+            EnsureAllianceNet();
+            var net = AllianceNet;
+            if (net is { Online: true, InAlliance: false })
+            {
+                OpenAllianceFind();
+                return;
+            }
+
+            _alliance = net is { InAlliance: true } ? AllianceOverview.From(net.Alliance!) : _alliance ?? AllianceOverview.Simulated();
             _allianceTab = tab;
             var a = _alliance;
             var panel = OpenScreen("AllianceScreen", S("alliance.title", "ALLIANCE"));
@@ -90,8 +98,25 @@ namespace Survival.Unity
             HookSkin.Fit(explain, 12, 19);
 
             var members = tab == AllianceOverview.TabMembers;
-            AllyTab(panel, "TabMembers", S("alliance.tab.members", "MEMBERS"), members, 0.05f, 0.49f, () => OpenAlliance(AllianceOverview.TabMembers));
-            AllyTab(panel, "TabHelp", S("alliance.tab.help", "HELP"), !members, 0.51f, 0.95f, () => OpenAlliance(AllianceOverview.TabHelp));
+            if (net is { InAlliance: true })
+            {
+                AllyTab(panel, "TabMembers", S("alliance.tab.members", "MEMBERS"), members, 0.03f, 0.25f, () => OpenAlliance(AllianceOverview.TabMembers));
+                AllyTab(panel, "TabChat", S("alliance.tab.chat", "CHAT"), tab == TabChat, 0.27f, 0.49f, () => OpenAlliance(TabChat));
+                AllyTab(panel, "TabHelp", S("alliance.tab.help", "HELP"), tab == AllianceOverview.TabHelp, 0.51f, 0.73f, () => OpenAlliance(AllianceOverview.TabHelp));
+                AllyTab(panel, "TabGifts", Fmt("alliance.tab.gifts", "GIFTS {0}", net.Gifts.Count == 0 ? "" : "(" + net.Gifts.Count + ")"), tab == TabGifts, 0.75f, 0.97f, () => OpenAlliance(TabGifts));
+                if (!members)
+                {
+                    DrawAllianceOnlineTab(panel, net, tab);
+                    AllianceCloseButton(panel);
+                    return;
+                }
+            }
+            else
+            {
+                AllyTab(panel, "TabMembers", S("alliance.tab.members", "MEMBERS"), members, 0.05f, 0.49f, () => OpenAlliance(AllianceOverview.TabMembers));
+                AllyTab(panel, "TabHelp", S("alliance.tab.help", "HELP"), !members, 0.51f, 0.95f, () => OpenAlliance(AllianceOverview.TabHelp));
+            }
+
             if (members)
             {
                 const float top = 0.675f, rowH = 0.057f;
@@ -129,7 +154,7 @@ namespace Survival.Unity
                 hand.raycastTarget = false;
                 Box(hand.rectTransform, 0.30f, 0.45f, 0.70f, 0.97f);
                 Label(help, "Title", S("alliance.help.title", "Guild Help"), 30, TextAnchor.MiddleCenter, SurvivalVisuals.Cream, 0.05f, 0.30f, 0.95f, 0.45f);
-                var body = Label(help, "Body", S("alliance.help.body", "Ask guildmates to speed up your upgrades, and help theirs for rewards. Coming soon."),
+                var body = Label(help, "Body", S("alliance.help.body", "Ask guildmates to speed up your upgrades, and help theirs for rewards. Connect to the internet to join a real alliance."),
                     21, TextAnchor.MiddleCenter, SurvivalVisuals.Cream, 0.07f, 0.04f, 0.93f, 0.30f);
                 HookSkin.Fit(body, 12, 21);
             }
