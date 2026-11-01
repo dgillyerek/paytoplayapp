@@ -84,6 +84,9 @@ namespace Survival.Unity
             return rt;
         }
 
+        /// <summary>Show a rail icon only while there is something to do in it (see RailActionable).</summary>
+        private void RailShown(string name, bool shown) => _play?.SetRailShown(RailPrefix + name, shown);
+
         /// <summary>Show the badge with a count (hidden at 0; "!" when count is negative).</summary>
         private static void RailBadge(Image? badge, Text? count, int n)
         {

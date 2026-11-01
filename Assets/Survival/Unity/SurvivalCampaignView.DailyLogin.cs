@@ -59,6 +59,7 @@ namespace Survival.Unity
             }
 
             RailBadge(_dailyBadge, _dailyBadgeCount, _daily.CanClaim ? 1 : 0);
+            RailShown(DailyLoginRailName, Survival.Domain.View.RailActionable.Daily(_daily.CanClaim));
             if (!_dailyAutoShown && _daily.CanClaim)
             {
                 _dailyAutoDelay -= 0.25f;

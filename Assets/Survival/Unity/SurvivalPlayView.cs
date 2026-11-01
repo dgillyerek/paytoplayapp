@@ -702,6 +702,9 @@ namespace Survival.Unity
                 return;
             }
 
+            // Only while an event is running (there is event text to show).
+            SetRailShown("rail.events", RailActionable.Events(body));
+
             var flame = Ornaments.Icon(_eventsRail.Icon, "Flame", "flame");
             SurvivalVisuals.Stretch(flame.rectTransform);
             flame.raycastTarget = false;

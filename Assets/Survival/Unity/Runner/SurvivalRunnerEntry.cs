@@ -54,6 +54,7 @@ namespace Survival.Unity
             if (rail != null)
             {
                 Button = rail.Root;
+                RefreshShown();
                 return;
             }
 
@@ -71,6 +72,20 @@ namespace Survival.Unity
             }
 
             btn.onClick.AddListener(OnRunnerTapped);
+        }
+
+        /// <summary>Runner icon shows only while a level is left to play (checked on build and on return to town).</summary>
+        private void RefreshShown()
+        {
+            if (_play == null)
+            {
+                return;
+            }
+
+            var unlocked = _campaign != null && _campaign.Campaign != null ? _campaign.Campaign.RunnerUnlocked : 1;
+            var (catalog, _) = LevelFor(unlocked);
+            var allBeaten = catalog != null && RunnerProgress.AllBeaten(unlocked, catalog.Levels.Count);
+            _play.SetRailShown(ButtonName, Survival.Domain.View.RailActionable.Runner(allBeaten));
         }
 
         /// <summary>The one entry point: open the next unbeaten runner level (beaten levels never open again).</summary>
@@ -306,6 +321,7 @@ namespace Survival.Unity
                 }
 
                 _busy = false;
+                RefreshShown();
             }
 
             Pay(RunnerHandoff.Take());

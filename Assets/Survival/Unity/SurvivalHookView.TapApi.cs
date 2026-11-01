@@ -118,6 +118,9 @@ namespace Survival.Unity
             return round.Button;
         }
 
+        /// <summary>Show a hook rail icon only while there is something to do in it (see RailActionable).</summary>
+        internal void TapRailShown(string name, bool shown) => _play?.SetRailShown(name, shown);
+
         /// <summary>Juice for a tapped HUD button: punch plus a ring.</summary>
         internal void TapPunch(RectTransform rt) => Juice(rt);
     }
