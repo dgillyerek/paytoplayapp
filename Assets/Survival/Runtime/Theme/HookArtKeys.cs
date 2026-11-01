@@ -26,6 +26,8 @@ namespace Survival.Domain.Theme
         public const string RibbonRed = "theme_a.hook.ui.ribbon_red";
         public const string RibbonBlue = "theme_a.hook.ui.ribbon_blue";
         public const string BadgeFree = "theme_a.hook.ui.badge_free";
+        /// <summary>Painted gold-chevron shield: a hero can level up, star up, unlock or finish training.</summary>
+        public const string BadgeUpgrade = "theme_a.hook.ui.badge_upgrade";
         public const string Header = "theme_a.hook.ui.header";
 
         public const string ChestClosed = "theme_a.hook.icon.chest_closed";
