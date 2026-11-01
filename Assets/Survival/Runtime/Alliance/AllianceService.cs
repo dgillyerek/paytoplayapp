@@ -201,6 +201,9 @@ namespace Survival.Domain.Alliance
             done?.Invoke(true);
         }
 
+        /// <summary>Authenticated call for sibling services (World map) that share this sign-in.</summary>
+        internal void Request(string method, string path, string? body, Action<JsonNode.Obj> ok, Action<bool>? fail) => Call(method, path, body, ok, fail);
+
         private void Call(string method, string path, string? body, Action<JsonNode.Obj> ok, Action<bool>? fail, bool auth = true)
         {
             if (auth && _token == null)
@@ -285,7 +288,7 @@ namespace Survival.Domain.Alliance
             return new AllianceInfo(Long(a, "id"), Str(a, "name"), Str(a, "tag"), Str(a, "banner"), Long(a, "leader_id"), Bool(a, "is_open"), Int(a, "max_members"), members);
         }
 
-        private static IEnumerable<JsonNode.Obj> Arr(JsonNode.Obj o, string key)
+        internal static IEnumerable<JsonNode.Obj> Arr(JsonNode.Obj o, string key)
         {
             if (o.Fields.TryGetValue(key, out var n) && n is JsonNode.Arr arr)
             {
@@ -299,12 +302,12 @@ namespace Survival.Domain.Alliance
             }
         }
 
-        private static string Str(JsonNode.Obj o, string key) => o.Fields.TryGetValue(key, out var n) && n is JsonNode.Str s ? s.Value : "";
+        internal static string Str(JsonNode.Obj o, string key) => o.Fields.TryGetValue(key, out var n) && n is JsonNode.Str s ? s.Value : "";
 
-        private static bool Bool(JsonNode.Obj o, string key) => o.Fields.TryGetValue(key, out var n) && n is JsonNode.Bool b && b.Value;
+        internal static bool Bool(JsonNode.Obj o, string key) => o.Fields.TryGetValue(key, out var n) && n is JsonNode.Bool b && b.Value;
 
         /// <summary>Postgres bigint ids and sums arrive as JSON strings; ints arrive as numbers. Accept both.</summary>
-        private static long Long(JsonNode.Obj o, string key)
+        internal static long Long(JsonNode.Obj o, string key)
         {
             if (!o.Fields.TryGetValue(key, out var n))
             {
@@ -319,6 +322,6 @@ namespace Survival.Domain.Alliance
             };
         }
 
-        private static int Int(JsonNode.Obj o, string key) => (int)Math.Max(int.MinValue, Math.Min(int.MaxValue, Long(o, key)));
+        internal static int Int(JsonNode.Obj o, string key) => (int)Math.Max(int.MinValue, Math.Min(int.MaxValue, Long(o, key)));
     }
 }
