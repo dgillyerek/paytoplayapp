@@ -1,0 +1,202 @@
+{
+  "track": "track.kingdom_path",
+  "title": "Kingdom Path",
+  "progress": "runner_cleared",
+  "premium_offer": "offer.track_premium",
+  "royal_offer": "offer.track_royal",
+  "upgrade_offer": "offer.track_royal_upgrade",
+  "rows": [
+    {
+      "level": 2,
+      "free": {
+        "res.soft": 200
+      },
+      "premium": {
+        "res.hard": 25
+      },
+      "royal": {
+        "res.runner_boost": 1
+      }
+    },
+    {
+      "level": 4,
+      "free": {
+        "res.food": 225
+      },
+      "premium": {
+        "res.hero_xp": 1
+      },
+      "royal": {
+        "shard:hero.rowan": 5
+      }
+    },
+    {
+      "level": 6,
+      "free": {
+        "res.soft": 400
+      },
+      "premium": {
+        "res.speedup_m": 15
+      },
+      "royal": {
+        "res.hard": 60
+      }
+    },
+    {
+      "level": 8,
+      "free": {
+        "res.food": 375
+      },
+      "premium": {
+        "res.hard": 40
+      },
+      "royal": {
+        "res.runner_boost": 1
+      }
+    },
+    {
+      "level": 10,
+      "free": {
+        "res.soft": 600
+      },
+      "premium": {
+        "res.hero_xp": 1
+      },
+      "royal": {
+        "shard:hero.lyra": 6
+      }
+    },
+    {
+      "level": 13,
+      "free": {
+        "res.food": 525
+      },
+      "premium": {
+        "res.speedup_m": 30
+      },
+      "royal": {
+        "res.hard": 90
+      }
+    },
+    {
+      "level": 16,
+      "free": {
+        "res.soft": 800
+      },
+      "premium": {
+        "res.hard": 55
+      },
+      "royal": {
+        "res.runner_boost": 1
+      }
+    },
+    {
+      "level": 19,
+      "free": {
+        "res.food": 675
+      },
+      "premium": {
+        "res.hero_xp": 2
+      },
+      "royal": {
+        "shard:hero.oakenshield": 7
+      }
+    },
+    {
+      "level": 22,
+      "free": {
+        "res.soft": 1000
+      },
+      "premium": {
+        "res.speedup_m": 45
+      },
+      "royal": {
+        "res.hard": 120
+      }
+    },
+    {
+      "level": 25,
+      "free": {
+        "res.food": 825
+      },
+      "premium": {
+        "res.hard": 70
+      },
+      "royal": {
+        "res.runner_boost": 2
+      }
+    },
+    {
+      "level": 28,
+      "free": {
+        "res.soft": 1200
+      },
+      "premium": {
+        "res.hero_xp": 3
+      },
+      "royal": {
+        "shard:hero.stormcrest": 8
+      }
+    },
+    {
+      "level": 31,
+      "free": {
+        "res.food": 975
+      },
+      "premium": {
+        "res.speedup_m": 45
+      },
+      "royal": {
+        "res.hard": 150
+      }
+    },
+    {
+      "level": 35,
+      "free": {
+        "res.soft": 1400
+      },
+      "premium": {
+        "res.hard": 85
+      },
+      "royal": {
+        "res.runner_boost": 2
+      }
+    },
+    {
+      "level": 40,
+      "free": {
+        "res.food": 1125
+      },
+      "premium": {
+        "res.hero_xp": 3
+      },
+      "royal": {
+        "shard:hero.emberfang": 9
+      }
+    },
+    {
+      "level": 45,
+      "free": {
+        "res.soft": 1600
+      },
+      "premium": {
+        "res.speedup_m": 60
+      },
+      "royal": {
+        "res.hard": 180
+      }
+    },
+    {
+      "level": 50,
+      "free": {
+        "res.food": 1275
+      },
+      "premium": {
+        "res.hard": 100
+      },
+      "royal": {
+        "res.runner_boost": 2
+      }
+    }
+  ]
+}

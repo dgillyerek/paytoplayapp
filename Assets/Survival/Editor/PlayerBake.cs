@@ -123,6 +123,19 @@ namespace Survival.Editor
                     assetPaths.Add(p);
                 }
 
+                // Theme sounds: SurvivalAudio loads them by path, often after the warm-up, so bake the whole folder.
+                if (Directory.Exists("Assets/" + PlayerBakeManifest.AudioDir))
+                {
+                    foreach (var file in Directory.GetFiles("Assets/" + PlayerBakeManifest.AudioDir, "*", SearchOption.AllDirectories))
+                    {
+                        var p = file.Replace('\\', '/');
+                        if (PlayerBakeManifest.IsAudioClip(p.Substring("Assets/".Length)) && AssetDatabase.LoadMainAssetAtPath(p) != null)
+                        {
+                            assetPaths.Add(p);
+                        }
+                    }
+                }
+
                 foreach (var kv in seen)
                 {
                     if (!kv.Value && kv.Key.StartsWith("Assets/", StringComparison.Ordinal) && !IsSkippedAsset(kv.Key) &&

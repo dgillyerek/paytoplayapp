@@ -81,6 +81,16 @@ namespace Survival.Domain.Campaign
             }
 
             w.EndArray();
+            w.Key("track_claimed");
+            w.BeginArray();
+            var claimed = new List<string>(s.TrackClaimed);
+            claimed.Sort(StringComparer.Ordinal);
+            foreach (var c in claimed)
+            {
+                w.Value(c);
+            }
+
+            w.EndArray();
             w.End();
             return w.ToString();
         }
@@ -162,6 +172,16 @@ namespace Survival.Domain.Campaign
             }
 
             s.RestoreBought(once);
+            var track = new List<string>();
+            foreach (var t in CampaignCatalog.Items(o, "track_claimed"))
+            {
+                if (t is JsonNode.Str ts)
+                {
+                    track.Add(ts.Value);
+                }
+            }
+
+            s.RestoreTrackClaimed(track);
             return true;
         }
     }

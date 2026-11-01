@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Survival.Domain.Audio;
 using Survival.Domain.Campaign;
 using Survival.Domain.Roster;
 using Survival.Domain.Theme;
@@ -22,12 +23,13 @@ namespace Survival.Unity
         private const float DefeatShrinkSeconds = 0.6f;
         private const float EndBannerSeconds = 2.2f;
 
-        private static readonly Color HeroFill = new Color(0.36f, 0.86f, 0.42f, 1f);
-        private static readonly Color VillainFill = new Color(0.92f, 0.30f, 0.32f, 1f);
 
         private BattleLineup? _config;
         private BattleCombat? _combat;
         private RectTransform? _hud;
+        private HeroHpPanel? _heroPanel;
+        private float _arenaRadius = BattleArena.MinArenaRadiusMetres;
+        private HeroHpPanel? _enemyPanel;
         private Text? _clock;
         private Text? _score;
         private Text? _banner;
@@ -74,25 +76,10 @@ namespace Survival.Unity
             _config = lineup;
             _combat = new BattleCombat(lineup);
 
-            // Lane widths from the widest body in each lane.
-            var widths = new float[Mathf.Max(1, lineup.LaneCount)];
-            var depth = new float[widths.Length];
-            for (var i = 0; i < widths.Length; i++)
-            {
-                var scale = 1f;
-                foreach (var lf in lineup.All)
-                {
-                    if (lf.Lane == i && TryRoster(lf.Fighter, out var d))
-                    {
-                        scale = Mathf.Max(scale, LockedBattleRoster.BattleScaleOf(d));
-                    }
-                }
-
-                widths[i] = BattleLaneLayout.LaneWidth(scale);
-                depth[i] = LockedBattleRoster.StartHalfGapMetres * (scale > 1.01f ? 1.4f : 1f);
-            }
-
-            var centres = BattleLaneLayout.Centres(widths);
+            // One open arena, no lanes (Derek 2026-10-28): each side starts in a shallow arc facing the other, slots as
+            // wide as each body; the lineup's lane order only sets who stands where.
+            var spawn = new List<(CombatUnit Unit, LockedBattleFighter Data)>();
+            var big = false;
             foreach (var unit in _combat.Units)
             {
                 if (!TryRoster(unit.Fighter.Fighter, out var data))
@@ -101,17 +88,38 @@ namespace Survival.Unity
                     continue;
                 }
 
-                var f = Spawn(data);
-                f.Unit = unit;
-                var lane = Mathf.Clamp(unit.Fighter.Lane, 0, centres.Length - 1);
-                var hero = unit.Side == CampaignSide.Hero;
-                f.StartPosition = new Vector3(centres[lane], 0f, hero ? -depth[lane] : depth[lane]);
-                f.StartRotation = Quaternion.Euler(0f, hero ? 0f : 180f, 0f);
-                f.Slot.SetPositionAndRotation(f.StartPosition, f.StartRotation);
-                f.LaneWidth = widths[lane];
-                f.BarHalfWidth = BattleHpBarLayout.HalfWidthOf(data.Name, data.DesignHeightMetres, f.BattleScale);
-                _fighters.Add(f);
+                big |= LockedBattleRoster.BattleScaleOf(data) > 1.01f;
+                spawn.Add((unit, data));
             }
+
+            spawn.Sort((a, b) => a.Unit.Fighter.Lane.CompareTo(b.Unit.Fighter.Lane));
+            var halfGap = LockedBattleRoster.StartHalfGapMetres * (big ? 1.4f : 1f);
+            var starts = new List<(float X, float Z)>();
+            foreach (var heroes in new[] { true, false })
+            {
+                var side = spawn.FindAll(e => (e.Unit.Side == CampaignSide.Hero) == heroes);
+                var halves = new List<float>();
+                foreach (var e in side)
+                {
+                    halves.Add(BattleHpBarLayout.HalfWidthOf(e.Data.Name, e.Data.DesignHeightMetres, LockedBattleRoster.BattleScaleOf(e.Data)));
+                }
+
+                var at = BattleArena.Starts(halves, halfGap, heroes);
+                for (var k = 0; k < side.Count; k++)
+                {
+                    var (unit, data) = side[k];
+                    var f = Spawn(data);
+                    f.Unit = unit;
+                    f.StartPosition = new Vector3(at[k].X, 0f, at[k].Z);
+                    f.StartRotation = Quaternion.Euler(0f, heroes ? 0f : 180f, 0f);
+                    f.Slot.SetPositionAndRotation(f.StartPosition, f.StartRotation);
+                    f.BarHalfWidth = BattleHpBarLayout.HalfWidthOf(data.Name, data.DesignHeightMetres, f.BattleScale);
+                    _fighters.Add(f);
+                    starts.Add(at[k]);
+                }
+            }
+
+            _arenaRadius = BattleArena.ArenaRadius(starts);
 
             foreach (var f in _fighters)
             {
@@ -119,12 +127,12 @@ namespace Survival.Unity
             }
 
             BuildLights();
-            BuildGround();
+            LockedBattleArena.Build(transform, _arenaRadius);
             _camera = gameObject.GetComponent<LockedBattleCamera>() ?? gameObject.AddComponent<LockedBattleCamera>();
-            _camera.SetField(FieldBounds());
+            _camera.SetField(FieldBounds(), autoOrbit: true);
             BuildConfiguredHud();
             Restart();
-            Debug.Log("Locked battle (configured): " + lineup.Stage.Name + ", " + lineup.Heroes.Count + " hero(es) vs " + lineup.Enemies.Count + " villain(s) in " + lineup.LaneCount + " lane(s).");
+            Debug.Log("Locked battle (configured): " + lineup.Stage.Name + ", " + lineup.Heroes.Count + " hero(es) vs " + lineup.Enemies.Count + " villain(s) in one open arena (radius " + _arenaRadius.ToString("0.0") + " m).");
             return true;
         }
 
@@ -160,7 +168,17 @@ namespace Survival.Unity
                 }
             }
 
-            var unit = _combat.NearestFoe(from.Unit, u => positions.TryGetValue(u.Uid, out var p) ? p : (0f, 0f));
+            var engaged = new Dictionary<int, int>();
+            foreach (var f in _fighters)
+            {
+                if (f != from && !f.Down && f.Target?.Unit != null)
+                {
+                    engaged.TryGetValue(f.Target.Unit.Uid, out var c);
+                    engaged[f.Target.Unit.Uid] = c + 1;
+                }
+            }
+
+            var unit = _combat.NearestFoe(from.Unit, u => positions.TryGetValue(u.Uid, out var p) ? p : (0f, 0f), u => engaged.TryGetValue(u.Uid, out var c) ? c : 0);
             if (unit == null)
             {
                 return null;
@@ -202,6 +220,7 @@ namespace Survival.Unity
 
         private void Defeat(Fighter f)
         {
+            SurvivalAudio.Play(AudioEventMap.BattleDefeat(SurvivalAudio.Config, f.Data.Name, OnHeroSide(f)));
             f.Down = true;
             f.DownAge = 0f;
             f.Phase = Phase.Hold;
@@ -232,7 +251,7 @@ namespace Survival.Unity
                 return;
             }
 
-            if (Distance(f, next) > f.Data.AttackRangeMetres + 0.3f)
+            if (Distance(f, next) > StopDistance(f, next) + 0.3f)
             {
                 f.RestForward = StrideForwardOf(f);
                 BeginWalk(f);
@@ -270,7 +289,7 @@ namespace Survival.Unity
 
             LockedBattleRotation.Locate(f.Data, f.PhaseTime, out var index, out var into);
             var attack = LockedBattleRotation.AttackAt(f.Data, index);
-            if (into < attack.Seconds || Distance(f, f.Target) <= f.Data.AttackRangeMetres + 0.6f)
+            if (into < attack.Seconds || Distance(f, f.Target) <= StopDistance(f, f.Target) + 0.6f)
             {
                 return false;
             }
@@ -339,6 +358,7 @@ namespace Survival.Unity
             {
                 _ended = true;
                 _endAge = 0f;
+                SurvivalAudio.Play(_combat.Outcome == BattleOutcome.Won ? AudioCues.JingleWin : AudioCues.JingleLose);
                 foreach (var f in _fighters)
                 {
                     if (!f.Down)
@@ -380,8 +400,23 @@ namespace Survival.Unity
             }
 
             var cam = Camera.main;
+            FollowSun(cam);
             foreach (var f in _fighters)
             {
+                if (f.Built && !f.Down)
+                {
+                    MeasureBody(f);
+                }
+
+                if (f.Unit != null && f.Unit.Side == CampaignSide.Hero)
+                {
+                    _heroPanel?.Set(f.Unit.Uid, f.Unit.Hp, f.Unit.MaxHp);
+                }
+                else if (f.Unit != null)
+                {
+                    _enemyPanel?.Set(f.Unit.Uid, f.Unit.Hp, f.Unit.MaxHp);
+                }
+
                 if (f.Down)
                 {
                     // Defeat: a short beat, then the body shrinks away into the ground (no death clip in the locked set).
@@ -413,6 +448,8 @@ namespace Survival.Unity
                 }
             }
 
+            _heroPanel?.Tick(Time.unscaledDeltaTime);
+            _enemyPanel?.Tick(Time.unscaledDeltaTime);
             foreach (var pop in _pops)
             {
                 if (cam == null || _hud == null)
@@ -441,7 +478,6 @@ namespace Survival.Unity
         /// </summary>
         private bool PlaceSideBar(Fighter f, Camera cam)
         {
-            MeasureBody(f);
             var side = f.Unit!.Side;
             var (right, forward) = BattleHpBarLayout.Offset(side, f.BarHalfWidth, f.BattleScale, f.LaneWidth);
             var (bottom, top) = BattleHpBarLayout.Span(f.Data.DesignHeightMetres, f.BattleScale);
@@ -475,8 +511,10 @@ namespace Survival.Unity
 
             f.BarMeasureAge += Time.unscaledDeltaTime;
             var axis = f.StartRotation * Vector3.right;
+            var ahead = f.StartRotation * Vector3.forward;
             var origin = f.Slot.position;
             var widest = 0f;
+            var deepest = 0f;
             foreach (var r in f.Host.GetComponentsInChildren<Renderer>(false))
             {
                 if (r is ParticleSystemRenderer || r is TrailRenderer || r is LineRenderer || !r.enabled)
@@ -489,12 +527,20 @@ namespace Survival.Unity
                 {
                     var corner = bb.center + Vector3.Scale(bb.extents, new Vector3((i & 1) == 0 ? -1f : 1f, (i & 2) == 0 ? -1f : 1f, (i & 4) == 0 ? -1f : 1f));
                     widest = Mathf.Max(widest, Mathf.Abs(Vector3.Dot(corner - origin, axis)));
+                    deepest = Mathf.Max(deepest, Mathf.Abs(Vector3.Dot(corner - origin, ahead)));
                 }
             }
 
             // An axis-aligned box overstates a turned body; cap the measurement at the lane so a bad bound can't push
             // the bar into the next lane (Offset moves any excess backwards instead).
             f.BarHalfWidth = Mathf.Max(f.BarHalfWidth, Mathf.Min(widest, f.LaneWidth));
+
+            // Front-to-back depth for the stand-off distance (BattleSpacing), from the start frame so a lunge or a turn
+            // does not count (measured during the opening hold only); capped against the roster estimate.
+            if (f.Phase == Phase.Hold)
+            {
+                f.HalfDepth = BattleSpacing.Measured(BattleSpacing.HalfDepthOf(f.Data.Name, f.Data.DesignHeightMetres, f.BattleScale), deepest);
+            }
         }
 
         private void PopDamage(Fighter target, int dmg, bool heavy)
@@ -525,19 +571,23 @@ namespace Survival.Unity
             _hud = canvas;
             var top = SurvivalVisuals.Image(canvas, "TopPlate", new Color(0.06f, 0.08f, 0.16f, 0.82f));
             HookSkin.TrySkin(top, HookArtKeys.Header, 0.42f);
-            Anchor(top.rectTransform, 0.10f, 0.925f, 0.90f, 0.990f);
-            var title = HookSkin.Outlined(SurvivalVisuals.Text(top.transform, "Caption", _config!.Stage.Name.ToUpperInvariant(), 32, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 2f);
+            // Same slim top row as the runner (Derek 2026-10-28): clock, small title banner, Retreat; the hero panel under it.
+            Anchor(top.rectTransform, TopHudLayout.BattleTitle.X0, TopHudLayout.BattleTitle.Y0, TopHudLayout.BattleTitle.X1, TopHudLayout.BattleTitle.Y1);
+            var title = HookSkin.Outlined(SurvivalVisuals.Text(top.transform, "Caption", _config!.Stage.Name.ToUpperInvariant(), 24, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 2f);
             title.fontStyle = FontStyle.Bold;
-            Anchor(title.rectTransform, 0.05f, 0.30f, 0.95f, 0.98f);
-            _score = HookSkin.Outlined(SurvivalVisuals.Text(top.transform, "Score", "", 20, TextAnchor.MiddleCenter, SurvivalVisuals.Gold), 1.5f);
-            Anchor(_score.rectTransform, 0.05f, 0.02f, 0.95f, 0.36f);
+            Anchor(title.rectTransform, 0.06f, 0.36f, 0.94f, 0.94f);
+            title.resizeTextForBestFit = true;
+            title.resizeTextMinSize = 14;
+            title.resizeTextMaxSize = 24;
+            _score = HookSkin.Outlined(SurvivalVisuals.Text(top.transform, "Score", "", 15, TextAnchor.MiddleCenter, SurvivalVisuals.Gold), 1.5f);
+            Anchor(_score.rectTransform, 0.06f, 0.06f, 0.94f, 0.40f);
 
-            _clock = HookSkin.Outlined(SurvivalVisuals.Text(canvas, "Clock", "", 30, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 2f);
-            Anchor(_clock.rectTransform, 0.02f, 0.86f, 0.22f, 0.915f);
+            _clock = HookSkin.Outlined(SurvivalVisuals.Text(canvas, "Clock", "", 28, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 2f);
+            Anchor(_clock.rectTransform, TopHudLayout.Clock.X0, TopHudLayout.Clock.Y0, TopHudLayout.Clock.X1, TopHudLayout.Clock.Y1);
 
             var retreat = HookSkin.Button(canvas, "LockedBattleRetreat", HookArtKeys.ButtonRed, new Color(0.45f, 0.12f, 0.12f, 0.94f), 0.5f);
-            Anchor(retreat.GetComponent<RectTransform>(), 0.74f, 0.862f, 0.97f, 0.914f);
-            var label = HookSkin.Outlined(SurvivalVisuals.Text(retreat.transform, "Label", "RETREAT", 24, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
+            Anchor(retreat.GetComponent<RectTransform>(), TopHudLayout.Retreat.X0, TopHudLayout.Retreat.Y0, TopHudLayout.Retreat.X1, TopHudLayout.Retreat.Y1);
+            var label = HookSkin.Outlined(SurvivalVisuals.Text(retreat.transform, "Label", "RETREAT", 20, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
             label.fontStyle = FontStyle.Bold;
             SurvivalVisuals.Stretch(label.rectTransform);
             retreat.onClick.AddListener(() => _combat?.Retreat());
@@ -547,35 +597,24 @@ namespace Survival.Unity
             Anchor(_banner.rectTransform, 0f, 0.55f, 1f, 0.68f);
             _banner.gameObject.SetActive(false);
 
-            var heroFrame = Rgb(CampaignArtKeys.HeroFrameRgb, 1f, Color.blue);
-            var villainFrame = Rgb(CampaignArtKeys.VillainFrameRgb, 1f, Color.magenta);
+            // Heroes: one row each in the top-left corner panel instead of a bar beside the body (Derek 2026-10-28).
+            _heroPanel = HeroHpPanel.Build(canvas);
             foreach (var f in _fighters)
             {
-                if (f.Unit == null)
+                if (f.Unit != null && f.Unit.Side == CampaignSide.Hero)
                 {
-                    continue;
+                    _heroPanel.Add(f.Unit.Uid, f.Data.Name, "Lv " + f.Unit.Fighter.Level, f.Unit.Fighter.PortraitKey);
                 }
+            }
 
-                var hero = f.Unit.Side == CampaignSide.Hero;
-                var bar = SurvivalVisuals.Image(canvas, f.Data.FileKey + "Hp", hero ? heroFrame : villainFrame).rectTransform;
-                bar.anchorMin = bar.anchorMax = new Vector2(0.5f, 0.5f);
-                bar.pivot = new Vector2(0.5f, 0f);
-                bar.sizeDelta = new Vector2(BattleHpBarLayout.WidthPx, BattleHpBarLayout.MinHeightPx);
-                var back = SurvivalVisuals.Image(bar, "Back", new Color(0.05f, 0.05f, 0.08f, 0.9f));
-                Anchor(back.rectTransform, 0f, 0f, 1f, 1f);
-                back.rectTransform.offsetMin = new Vector2(3f, 3f);
-                back.rectTransform.offsetMax = new Vector2(-3f, -3f);
-                var fill = SurvivalVisuals.Image(back.transform, "Fill", hero ? HeroFill : VillainFill);
-                Anchor(fill.rectTransform, 0f, 0f, 1f, 1f);
-                // Level tag on top of the vertical bar (the name would cross the lane).
-                var name = HookSkin.Outlined(SurvivalVisuals.Text(bar, "Name", "Lv " + f.Unit.Fighter.Level, 18, TextAnchor.LowerCenter, SurvivalVisuals.Cream), 1.5f);
-                var nrt = name.rectTransform;
-                nrt.anchorMin = nrt.anchorMax = new Vector2(0.5f, 1f);
-                nrt.pivot = new Vector2(0.5f, 0f);
-                nrt.sizeDelta = new Vector2(90f, 26f);
-                nrt.anchoredPosition = new Vector2(0f, 4f);
-                f.Bar = bar;
-                f.BarFill = fill;
+            // Enemies: the same rows mirrored into the top-right corner instead of world bars (Derek 2026-10-28).
+            _enemyPanel = HeroHpPanel.Build(canvas, right: true);
+            foreach (var f in _fighters)
+            {
+                if (f.Unit != null && f.Unit.Side != CampaignSide.Hero)
+                {
+                    _enemyPanel.Add(f.Unit.Uid, f.Data.Name, "Lv " + f.Unit.Fighter.Level, f.Unit.Fighter.PortraitKey);
+                }
             }
         }
     }

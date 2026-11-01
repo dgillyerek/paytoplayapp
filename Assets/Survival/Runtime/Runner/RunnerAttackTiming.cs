@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using Survival.Domain.Enemies;
 using Survival.Domain.Heroes;
 using Survival.Domain.Roster;
 
@@ -12,12 +13,19 @@ namespace Survival.Domain.Runner
     /// </summary>
     public readonly struct RunnerAttackClip
     {
-        public RunnerAttackClip(float clipSeconds, float releaseSeconds, string source)
+        public RunnerAttackClip(float clipSeconds, float releaseSeconds, string source, bool fixedSpeed = false)
         {
             ClipSeconds = clipSeconds;
             ReleaseSeconds = releaseSeconds;
             Source = source;
+            FixedSpeed = fixedSpeed;
         }
+
+        /// <summary>
+        /// True when the runner rig cannot change this take's playback rate (Blightroot's named battle clip): it plays as
+        /// authored and the hit lands on its contact frame at speed 1.
+        /// </summary>
+        public bool FixedSpeed { get; }
 
         public float ClipSeconds { get; }
         public float ReleaseSeconds { get; }
@@ -84,10 +92,57 @@ namespace Survival.Domain.Runner
                         SirAldricBattlePoses.AttackSeconds,
                         LockedBattleHits.SirAldricContactFrame / Fps,
                         "LockedBattleHits.SirAldricContactFrame f" + LockedBattleHits.SirAldricContactFrame);
+                case "Vespera":
+                    return new RunnerAttackClip(VesperaAttack.Spec.ClipSecondsFor, VesperaAttack.ReleaseFrame / Fps, "VesperaAttack.ReleaseFrame f" + VesperaAttack.ReleaseFrame);
+                case "Bonequill":
+                    return new RunnerAttackClip(BonequillAttack.Spec.ClipSecondsFor, BonequillAttack.ReleaseFrame / Fps, "BonequillAttack.ReleaseFrame f" + BonequillAttack.ReleaseFrame);
+                case "Nightfang":
+                    return new RunnerAttackClip(NightfangAttack.Spec.ClipSecondsFor, NightfangAttack.ReleaseFrame / Fps, "NightfangAttack.ReleaseFrame f" + NightfangAttack.ReleaseFrame);
+                case "Ashwyrm":
+                    return new RunnerAttackClip(AshwyrmAttack.Spec.ClipSecondsFor, AshwyrmAttack.ReleaseFrame / Fps, "AshwyrmAttack.ReleaseFrame f" + AshwyrmAttack.ReleaseFrame);
+                case "Blightroot":
+                    return new RunnerAttackClip(
+                        BlightrootBattlePoses.AttackSeconds,
+                        LockedBattleHits.BlightrootContactFrame / Fps,
+                        "LockedBattleHits.BlightrootContactFrame f" + LockedBattleHits.BlightrootContactFrame,
+                        fixedSpeed: true);
                 default:
                     return null;
             }
         }
+
+        /// <summary>
+        /// An enemy's attack cycle (Derek 2026-10-27: Vespera's bolt left before her hands pushed it out). The fire
+        /// interval stays the unit's own <see cref="RunnerUnitDef.Cycle"/> (same damage per second); only the phase moves:
+        /// the take starts <see cref="RunnerAttackPlan.Release"/> before the shot, which leaves on the take's release frame.
+        /// The take is played at the rate that makes take + the rig's built-in rest beat
+        /// (<see cref="BlenderRigAttackSpec.RestGapSeconds"/>) exactly one fire interval, so the self-cycling rig and the sim's
+        /// restarts land together and never drift. No clip: speed 1, release 0 (fires on the cycle start, as before).
+        /// </summary>
+        public static RunnerAttackPlan FoePlan(RunnerAttackClip? clip, float cycle)
+        {
+            var interval = Math.Max(cycle, 0.05f);
+            if (clip == null || clip.Value.ClipSeconds <= 0f)
+            {
+                return new RunnerAttackPlan(1f, interval, 0f, false);
+            }
+
+            var c = clip.Value;
+            if (c.FixedSpeed)
+            {
+                return new RunnerAttackPlan(1f, interval, Math.Min(c.ReleaseSeconds, interval * 0.95f), false);
+            }
+
+            var speed = (c.ClipSeconds + BlenderRigAttackSpec.RestGapSeconds) / interval;
+            var capped = speed > MaxSpeed + 1e-4f;
+            speed = Math.Min(Math.Max(speed, MinFoeSpeed), MaxSpeed);
+            return new RunnerAttackPlan(speed, interval, Math.Min(c.ReleaseSeconds / speed, interval * 0.95f), capped);
+        }
+
+        public static RunnerAttackPlan FoePlanFor(RunnerUnitDef unit) => FoePlan(ClipFor(unit.Roster), unit.Cycle);
+
+        /// <summary>Slowest an enemy take plays (a very slow fire interval rests longer rather than crawling).</summary>
+        public const float MinFoeSpeed = 0.5f;
 
         /// <summary>
         /// Speed the take up so one take == the asked-for <paramref name="cycle"/>; past <see cref="MaxSpeed"/> the speed is

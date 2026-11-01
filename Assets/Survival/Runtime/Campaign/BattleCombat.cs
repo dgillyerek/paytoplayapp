@@ -108,8 +108,15 @@ namespace Survival.Domain.Campaign
             return dmg;
         }
 
-        /// <summary>Nearest standing opponent from a position (x, z), ties to the same lane.</summary>
-        public CombatUnit? NearestFoe(CombatUnit from, Func<CombatUnit, (float x, float z)> position)
+        /// <summary>Extra metres a foe counts as farther for each fighter already on it, so an open arena spreads out.</summary>
+        public const float CrowdMetres = 1.5f;
+
+        /// <summary>
+        /// Opponent to go for from a position (x, z): the nearest standing foe, counting each fighter already engaged on
+        /// it (<paramref name="engaged"/>) as <see cref="CrowdMetres"/> farther, so with no lanes the fight spreads over
+        /// the foes instead of everyone piling on one. Ties go to the same start slot, then the lower id.
+        /// </summary>
+        public CombatUnit? NearestFoe(CombatUnit from, Func<CombatUnit, (float x, float z)> position, Func<CombatUnit, int>? engaged = null)
         {
             var (fx, fz) = position(from);
             CombatUnit? best = null;
@@ -122,8 +129,13 @@ namespace Survival.Domain.Campaign
                 }
 
                 var (ux, uz) = position(u);
-                var d = ((ux - fx) * (ux - fx)) + ((uz - fz) * (uz - fz));
-                if (best == null || d < bestD - 1e-4f || (Math.Abs(d - bestD) <= 1e-4f && u.Fighter.Lane == from.Fighter.Lane))
+                var d = (float)Math.Sqrt(((ux - fx) * (ux - fx)) + ((uz - fz) * (uz - fz)));
+                if (engaged != null)
+                {
+                    d += CrowdMetres * Math.Max(0, engaged(u));
+                }
+
+                if (best == null || d < bestD - 1e-4f || (Math.Abs(d - bestD) <= 1e-4f && u.Fighter.Lane == from.Fighter.Lane && best.Fighter.Lane != from.Fighter.Lane))
                 {
                     best = u;
                     bestD = d;
@@ -289,7 +301,10 @@ namespace Survival.Domain.Campaign
 
     public static class BattleRewards
     {
-        /// <summary>Win: the stage rewards, its hero shards and on the first clear its gems. Loss: a share of the gold only.</summary>
+        /// <summary>
+        /// Win: the stage rewards, its hero shards and on the first clear its gems. Loss: nothing at all (Derek 2026-10-28:
+        /// "there should be no bonuses when you are defeated in the battle"); <paramref name="lossGoldShare"/> is ignored.
+        /// </summary>
         public static RewardBundle For(StageDef stage, bool won, bool firstClear, double lossGoldShare)
         {
             var bundle = new RewardBundle { Won = won, FirstClear = won && firstClear };
@@ -312,15 +327,6 @@ namespace Survival.Domain.Campaign
                 bundle.ShardHero = stage.ShardHero;
                 bundle.Shards = stage.ShardHero.Length > 0 ? stage.Shards : 0;
             }
-            else if (stage.Rewards.TryGetValue("res.soft", out var gold))
-            {
-                var share = (int)Math.Round(gold * Math.Max(0, lossGoldShare) / 10.0, MidpointRounding.AwayFromZero) * 10;
-                if (share > 0)
-                {
-                    bundle.Resources["res.soft"] = share;
-                }
-            }
-
             return bundle;
         }
     }

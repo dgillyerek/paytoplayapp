@@ -5,8 +5,10 @@ using Survival.Domain.Runner;
 namespace Survival.Domain.Tests;
 
 /// <summary>
-/// Derek 2026-10-24: "just keep the heros body in firing position constantly. moving back and forth is wild." The runner's
-/// squad shooters hold one aim pose on the upper body (legs still walk), whatever the shots, hits or steering.
+/// Derek 2026-10-24: "just keep the heros body in firing position constantly. moving back and forth is wild." Then
+/// 2026-10-27: "not all heros have a firing animation in the runner. some of them are just walking". The squad shooters'
+/// bodies stay still (no hit step, flinch or lean), but every shot plays the hero's real attack take on the upper body
+/// over the walk, its release frame on the shot.
 /// </summary>
 public sealed class RunnerAimHoldTests
 {
@@ -16,10 +18,12 @@ public sealed class RunnerAimHoldTests
     [InlineData("Lyra", LyraAttack.ReleaseFrame)]
     [InlineData("Rowan", RowanAttack.ReleaseFrame)]
     [InlineData("Oakenshield", OakenshieldAttack.ReleaseFrame)]
-    public void Shooters_hold_the_frame_before_release_and_take_no_body_reaction(string roster, int release)
+    public void Shooters_play_their_take_per_shot_and_take_no_body_reaction(string roster, int release)
     {
         Assert.True(RunnerAimHold.Applies(roster));
-        Assert.Equal(release - 1, RunnerAimHold.HoldFrameFor(roster));
+        Assert.True(RunnerUpperBodyAttack.Applies(roster), "the take plays on the upper body; the legs keep walking");
+        Assert.Null(RunnerAimHold.HoldFrameFor(roster));
+        Assert.Equal(release - 1, RunnerAimHold.HeldFrameWas(roster));
         Assert.Equal(0f, RunnerAimHold.BodyReactionScale(roster));
         Assert.Equal(0f, RunnerAimHold.LeanScale(roster));
     }
@@ -36,115 +40,69 @@ public sealed class RunnerAimHoldTests
         Assert.Equal(1f, RunnerAimHold.LeanScale(roster));
     }
 
-    [Theory]
-    [InlineData("Lyra")]
-    [InlineData("Rowan")]
-    [InlineData("Oakenshield")]
-    public void Sustained_fire_keeps_the_upper_body_pose_and_root_still_across_shots(string roster)
+    /// <summary>
+    /// Every runner hero (a unit naming a campaign hero) resolves a real attack take with a release inside it, and in a run
+    /// each of its takes starts (AttackStarted) and releases its shot (Fired) one release-time later, once per take.
+    /// </summary>
+    [Fact]
+    public void Every_runner_hero_has_an_attack_take_with_a_release_and_fires_on_it()
     {
         var c = Runner.Catalog();
-        var hold = RunnerAimHold.HoldFrameFor(roster)!.Value;
-        var layer = new RunnerAimHoldLayer(hold);
+        var heroes = c.Units.Values.Where(u => u.HeroId.Length > 0).ToList();
+        Assert.Equal(new[] { "Lyra", "Oakenshield", "Rowan" }, heroes.Select(u => u.Roster).OrderBy(r => r).ToArray());
+        foreach (var u in heroes)
+        {
+            var clip = RunnerAttackTiming.ClipFor(u.Roster);
+            Assert.True(clip != null, u.Roster + " has no attack take");
+            Assert.True(clip!.Value.ClipSeconds > 0.2f, u.Roster + " take length");
+            Assert.InRange(clip.Value.ReleaseNormalized, 0.05f, 0.95f);
+            var plan = RunnerAttackTiming.PlanFor(u);
+            Assert.True(plan.Release > 0f && plan.Release < plan.Interval, u.Roster + " release inside the take");
+            Assert.Null(RunnerAimHold.HoldFrameFor(u.Roster));
+        }
+
         var run = new RunnerRun(c, c.Levels[2]);
-        var shots = 0;
-        var hits = 0;
-        var walkReturns = 0;
-        var speeds = new HashSet<float>();
-        var wasAttacking = false;
-        float? firstZ = null;
-        Quaternion? firstTurn = null;
-        var oldWeights = new List<float>();
-        var sinceTake = 10f;
-        var nudge = Vector3.Zero;
-        var lean = 0f;
+        var started = new Dictionary<int, float>();
+        var takes = 0;
+        var fired = 0;
         while (!run.Over && run.Seconds < 120f)
         {
             run.SteerTo(Runner.AimLikeAPlayer(run));
-            nudge *= 0.8f;
             foreach (var e in run.Step(Dt))
             {
-                if (e.Kind == RunnerEventKind.AttackStarted && e.Id == run.Hero.Id)
+                if (run.Member(e.Id) is not { } m || m.Unit.HeroId.Length == 0)
                 {
-                    layer.Play(RunnerAimHoldPose.Attack);
-                    shots++;
-                    speeds.Add(e.Amount);
-                    sinceTake = 0f;
+                    continue;
                 }
-                else if (e.Kind == RunnerEventKind.HeroHit)
+
+                if (e.Kind == RunnerEventKind.AttackStarted)
                 {
-                    // The rig's raw flinch (capped) pushes the body back; a held shooter shows none of it.
-                    hits++;
-                    nudge = new Vector3(0f, 0f, -RunnerHitNudge.MaxMetres);
+                    Assert.True(e.Amount > 0f, "the take plays at a positive speed");
+                    started[e.Id] = run.Seconds;
+                    takes++;
+                }
+                else if (e.Kind == RunnerEventKind.Fired && started.Remove(e.Id, out var at))
+                {
+                    fired++;
+                    Assert.InRange(run.Seconds - at, m.Cycle.Release - Dt - 1e-3f, m.Cycle.Release + Dt + 1e-3f);
                 }
             }
-
-            sinceTake += Dt;
-            var attacking = run.Hero.Attacking;
-            if (wasAttacking && !attacking)
-            {
-                walkReturns++;
-            }
-
-            wasAttacking = attacking;
-            layer.Play(attacking ? RunnerAimHoldPose.Attack : run.Halted ? RunnerAimHoldPose.Rest : RunnerAimHoldPose.Walk);
-            layer.SetLegsWalk(!run.Halted);
-
-            // Upper body: full weight on the one held frame, every frame of the run.
-            Assert.Equal(1f, layer.Weight);
-            Assert.Equal(hold, layer.Frame);
-
-            // The old per-shot take eased in from zero on each shot (what made the arms swing in and out).
-            oldWeights.Add(RunnerUpperBodyAttack.FadeIn(sinceTake));
-
-            // Root: hit nudge and steering roll scaled away for a shooter, so the host never moves forward / back.
-            lean = 7f * (float)System.Math.Sin(run.Seconds * 3f);
-            var applied = nudge * RunnerAimHold.BodyReactionScale(roster);
-            var roll = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, lean * RunnerAimHold.LeanScale(roster) * (float)System.Math.PI / 180f);
-            var host = RunnerRootPlacement.HostPosition(Vector3.Zero, applied, 0f, roll, Vector3.One, new Vector3(0f, 0.9f, 0f), new Vector3(0f, 0.9f, 0f), false);
-            firstZ ??= host.Z;
-            firstTurn ??= roll;
-            Assert.InRange(host.Z - firstZ.Value, -1e-5f, 1e-5f);
-            Assert.InRange(host.X, -1e-5f, 1e-5f);
-            Assert.True(Quaternion.Dot(roll, firstTurn.Value) > 0.99999f, "the held body never rolls");
         }
 
-        Assert.True(shots >= 10, "sustained fire: " + shots + " shots");
-        Assert.True(hits >= 0);
-        Assert.True(oldWeights.Min() < 0.5f, "the old path did blend per shot (so this test would catch it)");
+        Assert.True(takes >= 10, "takes " + takes);
+        Assert.True(fired >= takes - 12, $"fired {fired} of {takes}");
     }
 
     [Fact]
-    public void The_hold_is_built_once_and_never_restarted_by_shots_or_walk_returns()
-    {
-        var layer = new RunnerAimHoldLayer(13f);
-        Assert.Equal(0f, layer.Weight);
-        Assert.True(layer.Play(RunnerAimHoldPose.Walk), "first request builds the held take");
-        for (var i = 0; i < 50; i++)
-        {
-            Assert.False(layer.Play(i % 3 == 0 ? RunnerAimHoldPose.Walk : RunnerAimHoldPose.Attack));
-            Assert.Equal(1f, layer.Weight);
-            Assert.Equal(13f, layer.Frame);
-        }
-
-        Assert.False(layer.Play(RunnerAimHoldPose.Rest));
-        Assert.False(layer.LegsWalk);
-        Assert.Equal(1f, layer.Weight);
-        layer.Reset();
-        Assert.True(layer.Play(RunnerAimHoldPose.Attack));
-    }
-
-    [Fact]
-    public void The_rig_player_and_runner_rig_use_the_hold()
+    public void The_runner_rig_plays_the_take_and_keeps_the_body_still()
     {
         var root = Layouts.RepoRoot();
-        var player = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigPlayer.cs"));
-        Assert.Contains("return PlayAimHold(poseName, aimPose.Value);", player);
-        Assert.Contains("_takeFrame = _aim.Frame;", player);
-        Assert.Contains("return _aim.Weight;", player);
         var rig = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "Runner", "RunnerRig.cs"));
-        Assert.Equal(3, rig.Split("a.AimHoldFrame = a.UpperBodyAttack ? RunnerAimHold.HoldFrameFor(data.Name) : null;").Length - 1);
-        Assert.Contains("var w = _aimHeld ? 0f : _reaction.Weight(_hitAge);", rig);
-        Assert.Contains("_aimHeld ? 0f : _leanTarget", rig);
-        Assert.Contains("!Data.AttackCyclesItself && !_aimHeld", rig);
+        Assert.Equal(3, rig.Split("rig._steady = RunnerAimHold.Applies(data.Name);").Length - 1);
+        Assert.Equal(3, rig.Split("rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);").Length - 1);
+        Assert.Contains("var w = _steady ? 0f : _reaction.Weight(_hitAge);", rig);
+        Assert.Contains("_steady ? 0f : _leanTarget", rig);
+        var view = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "Runner", "RunnerLevelView.cs"));
+        Assert.Contains("m.StartTake(e.Amount);", view);
     }
 }

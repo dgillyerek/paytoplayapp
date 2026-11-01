@@ -52,6 +52,12 @@ namespace Survival.Unity
         private const float DragMetresPerScreen = 9.5f;
         private const float ShotHeight = 1.15f;
 
+        /// <summary>An enemy shot drawn from its hands eases onto its sim flight line over this long.</summary>
+        private const float ShotLaunchBlendSeconds = 0.25f;
+
+        /// <summary>Enemies whose attack take is playing ahead of its shot (AttackStarted seen, Fired not yet).</summary>
+        private readonly HashSet<int> _foeTakes = new HashSet<int>();
+
         [SerializeField] private string levelId = "";
 
         private ThemePackBinder? _pack;
@@ -96,6 +102,7 @@ namespace Survival.Unity
             ActorSceneLights.Suppressed = false;
             RunnerHitchLog.Loading(false);
             RunnerHitchLog.Describe(null);
+            SurvivalAudio.ReleaseMusic(this);
         }
 
         private IEnumerator Boot()
@@ -106,6 +113,7 @@ namespace Survival.Unity
             }
 
             _booted = true;
+            SurvivalAudio.RequestMusic(this, Survival.Domain.Audio.AudioCues.MusicRunner);
             var bootStart = System.Diagnostics.Stopwatch.GetTimestamp();
             var progress = RunnerBoot.Begin();
             RunnerHitchLog.Loading(true);
@@ -169,7 +177,8 @@ namespace Survival.Unity
                 pick = _catalog.ByNumber(RunnerProgress.Frontier(_unlocked, count) ?? count);
             }
 
-            _level = pick;
+            // Heroes not yet recruited in the Kingdom stay out of the runner (their chests hand out an owned hero).
+            _level = RunnerOwnership.Gate(_catalog, pick, _loadout);
             try
             {
                 // The level's plan runs on a worker thread while the scene below is built.
@@ -253,6 +262,8 @@ namespace Survival.Unity
             ClearActors();
             _attempt++;
             _run = new RunnerRun(_catalog, _level, _loadout);
+            // Frozen until the first steer (a key, or a drag on touch) or a mouse press: Derek 2026-10-29.
+            _run.WaitForStart();
             RunnerHitchLog.Reset();
             _peakFoes = _peakSquad = _peakShots = 0;
             _resultShown = false;
@@ -335,10 +346,12 @@ namespace Survival.Unity
             _actors.SetParent(_world, false);
             _members.Clear();
             _foes.Clear();
+            _foeTakes.Clear();
             _boxes.Clear();
             _boxDefs.Clear();
             _shots.Clear();
             _hazards.Clear();
+            ClearBarriers();
             _dying.Clear();
             _fx.Clear();
             ClearFloaters();
@@ -391,6 +404,7 @@ namespace Survival.Unity
             AnimateFoes();
             RunnerHitchLog.End(RunnerHitchLog.Section.Actors);
             AnimateHazards(dt);
+            AnimateBarriers(dt);
             AnimateSlamMark();
             AnimateQuakeMark();
             RunnerHitchLog.Begin(RunnerHitchLog.Section.Shots);
@@ -633,6 +647,15 @@ namespace Survival.Unity
             _dragAccum += screenDx / Mathf.Max(1f, Screen.width) * DragMetresPerScreen;
         }
 
+        /// <summary>Drag pad press: a mouse click starts a waiting run (a touch waits for its drag, which also steers).</summary>
+        internal void Press(bool touch)
+        {
+            if (_run != null && !_run.Over && !touch)
+            {
+                _run.Start();
+            }
+        }
+
         private void Steered()
         {
             if (!_steered)
@@ -665,8 +688,11 @@ namespace Survival.Unity
                         rig.Slot.rotation = Quaternion.identity;
                         rig.Walk();
                         _members[m.Id] = rig;
-                        // The lead and every follower: a sliver always shown while alive, so the followers' HP reads.
-                        AddSideBar(m.Id, true, rig, false);
+                        // The lead's sliver, always shown while alive; followers only with RunnerSideBar.SecondaryBars.
+                        if (RunnerSideBar.Shows(RunnerSideBar.SquadOwner(m.IsHero)))
+                        {
+                            AddSideBar(m.Id, true, rig, false);
+                        }
                     }
                 }
             }
@@ -696,7 +722,11 @@ namespace Survival.Unity
                         }
 
                         _foes[f.Id] = rig;
-                        AddSideBar(f.Id, false, rig, f.Boss, f.Unit.Scale);
+                        // The boss's bar; regular foes only with RunnerSideBar.SecondaryBars.
+                        if (RunnerSideBar.Shows(RunnerSideBar.FoeOwner(f.Boss)))
+                        {
+                            AddSideBar(f.Id, false, rig, f.Boss, f.Unit.Scale);
+                        }
                     }
                 }
             }
@@ -737,6 +767,7 @@ namespace Survival.Unity
             }
 
             SyncHazards();
+            SyncBarriers();
             RunnerHitchLog.Begin(RunnerHitchLog.Section.Shots);
             var shots = _run.Shots;
             _liveIds.Clear();
@@ -751,11 +782,25 @@ namespace Survival.Unity
                 }
 
                 var to = new Vector3(s.X, ShotHeight, s.Z);
+                if (view.LaunchLeft > 0f)
+                {
+                    // Leaves from the shooter's hands, easing onto its flight line over the first moment of flight.
+                    view.LaunchLeft = Mathf.Max(0f, view.LaunchLeft - Time.deltaTime);
+                    var k = view.LaunchLeft / ShotLaunchBlendSeconds;
+                    to += view.Launch * (k * k);
+                }
+
                 var dir = to - view.Root.position;
                 view.Root.position = to;
                 if (dir.sqrMagnitude > 1e-6f)
                 {
                     view.Root.rotation = Quaternion.LookRotation(dir.normalized, Vector3.up);
+                }
+
+                if (view.Kind == ShotKind.Bolt && view.Halo != null && _cam != null)
+                {
+                    // The halo is a camera-facing card.
+                    view.Halo.transform.rotation = _cam.transform.rotation;
                 }
             }
 
@@ -868,6 +913,9 @@ namespace Survival.Unity
                 // back, small on screen and mostly behind the front rows. The hero and every swing stay full rate.
                 rig.SetEvaluateEvery(!m.IsHero && !m.Attacking && RunnerFormation.RowOf(m.Slot) >= 4 ? 2 : 1);
                 rig.LeanWith(_run.Over ? 0f : m.VX);
+                // The sim only starts a take with a target in this member's own reach (Rowan's and Lyra's are long):
+                // nothing in reach and the rig walks like the walking scenes (RunnerCombatStance).
+                rig.SetInRange(m.Attacking && !_run.Over);
                 if (_run.Over && _run.Outcome == RunnerOutcome.Won)
                 {
                     rig.Rest();
@@ -916,9 +964,18 @@ namespace Survival.Unity
                     continue;
                 }
 
-                // Faces whoever it last went for (it turns round on a squad that walked past it), else the hero.
-                var at = (f.TargetId != 0 ? _run.Member(f.TargetId) : null) ?? _run.Hero;
-                rig.Face(new Vector3(at.X - f.X, 0f, at.Z - f.Z));
+                if (f.AimLocked)
+                {
+                    // A boss winding up or landing a telegraphed attack faces the danger zone locked at the warning, not
+                    // the hero: a hero who dodged sees him swing at the marked road (Derek 2026-10-27).
+                    rig.Face(new Vector3(f.AimX - f.X, 0f, f.AimZ - f.Z));
+                }
+                else
+                {
+                    // Faces whoever it last went for (it turns round on a squad that walked past it), else the hero.
+                    var at = (f.TargetId != 0 ? _run.Member(f.TargetId) : null) ?? _run.Hero;
+                    rig.Face(new Vector3(at.X - f.X, 0f, at.Z - f.Z));
+                }
                 if (f.Attacking)
                 {
                     continue;
@@ -956,6 +1013,7 @@ namespace Survival.Unity
 
         private void OnEvent(RunnerEvent e)
         {
+            SurvivalAudio.Runner(e);
             var at = new Vector3(e.X, 0f, e.Z);
             switch (e.Kind)
             {
@@ -965,6 +1023,13 @@ namespace Survival.Unity
                     if (_members.TryGetValue(e.Id, out var m))
                     {
                         m.StartTake(e.Amount);
+                    }
+                    else if (_foes.TryGetValue(e.Id, out var foe))
+                    {
+                        // Enemies too (Derek 2026-10-27): the take starts ahead of the shot at the speed that puts its
+                        // release frame (Vespera's hands' push) on the sim's Fired, and fills one fire interval.
+                        foe.StartTake(e.Amount);
+                        _foeTakes.Add(e.Id);
                     }
 
                     break;
@@ -989,7 +1054,11 @@ namespace Survival.Unity
                     }
                     else if (_foes.TryGetValue(e.Id, out var f))
                     {
-                        f.Attack();
+                        // Its take is already playing (AttackStarted): this is its release frame, not a new swing.
+                        if (!_foeTakes.Remove(e.Id))
+                        {
+                            f.Attack();
+                        }
                     }
 
                     break;
@@ -1118,6 +1187,17 @@ namespace Survival.Unity
 
                 case RunnerEventKind.HazardHit:
                     HazardStruck(e, at);
+                    break;
+
+                case RunnerEventKind.BarrierSpawned:
+                    break;
+
+                case RunnerEventKind.BarrierHit:
+                    BarrierStruck(e);
+                    break;
+
+                case RunnerEventKind.BarrierBroken:
+                    BarrierBroke(e);
                     break;
 
                 case RunnerEventKind.BossEngaged:
@@ -1406,6 +1486,13 @@ namespace Survival.Unity
             return view;
         }
 
+        private enum ShotKind
+        {
+            Bolt,
+            Arrow,
+            Thorn,
+        }
+
         /// <summary>A pooled shot (<see cref="TakeShot"/>): an arrow head and an orb head, one shown per look, and its trail.</summary>
         private sealed class ShotView
         {
@@ -1413,9 +1500,17 @@ namespace Survival.Unity
             public Renderer? Head;
             public Renderer? Arrow;
             public Renderer? Orb;
+            public Renderer? Thorn;
+            public Renderer? Halo;
+            public ShotKind Kind;
+            public bool Foe;
             public TrailRenderer? Trail;
             public string? Look;
             public float Fade;
+
+            /// <summary>Drawn offset from the sim position at launch (hands - flight line), eased out over <see cref="LaunchLeft"/>.</summary>
+            public Vector3 Launch;
+            public float LaunchLeft;
         }
 
         private string ShooterName(RunnerShot s)
@@ -1442,8 +1537,13 @@ namespace Survival.Unity
                     core = new Color(0.85f, 0.75f, 1f, 1f);
                     glow = new Color(0.55f, 0.4f, 1f, 0.9f);
                     return;
+                case "Vespera":
+                    core = new Color(1f, 0.6f, 0.9f, 1f);
+                    glow = new Color(0.85f, 0.2f, 0.65f, 0.9f);
+                    return;
                 case "Rowan":
-                    core = new Color(0.95f, 0.88f, 0.6f, 1f);
+                    // Rowan's fletching: green goose feathers.
+                    core = new Color(0.3f, 0.5f, 0.28f, 1f);
                     glow = new Color(1f, 0.85f, 0.4f, 0.7f);
                     return;
                 case "Oakenshield":
@@ -1451,6 +1551,7 @@ namespace Survival.Unity
                     glow = new Color(0.4f, 0.9f, 0.3f, 0.7f);
                     return;
                 case "Bonequill":
+                    // Bonequill's fletching: bone-white.
                     core = new Color(0.92f, 0.9f, 0.82f, 1f);
                     glow = new Color(0.6f, 0.95f, 0.7f, 0.7f);
                     return;
@@ -1623,9 +1724,8 @@ namespace Survival.Unity
     {
         internal RunnerLevelView? View;
 
-        public void OnPointerDown(PointerEventData eventData)
-        {
-        }
+        // uGUI gives the mouse buttons negative pointer ids and each touch its finger id (0 and up).
+        public void OnPointerDown(PointerEventData eventData) => View?.Press(eventData.pointerId >= 0);
 
         public void OnDrag(PointerEventData eventData) => View?.Drag(eventData.delta.x);
     }

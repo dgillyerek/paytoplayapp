@@ -26,20 +26,40 @@ namespace Survival.Domain.Theme
         public const string RibbonRed = "theme_a.hook.ui.ribbon_red";
         public const string RibbonBlue = "theme_a.hook.ui.ribbon_blue";
         public const string BadgeFree = "theme_a.hook.ui.badge_free";
+        /// <summary>Painted gold-chevron shield: a hero can level up, star up, unlock or finish training.</summary>
+        public const string BadgeUpgrade = "theme_a.hook.ui.badge_upgrade";
         public const string Header = "theme_a.hook.ui.header";
 
         public const string ChestClosed = "theme_a.hook.icon.chest_closed";
         public const string ChestOpen = "theme_a.hook.icon.chest_open";
         public const string Gift = "theme_a.hook.icon.gift";
+        public const string CrusadeBanner = "theme_a.hook.icon.crusade_banner";
+        public const string WantedPoster = "theme_a.hook.icon.wanted_poster";
+        public const string TavernBoard = "theme_a.hook.icon.tavern_board";
+        public const string TrophyBronze = "theme_a.hook.icon.trophy_bronze";
+        public const string TrophySilver = "theme_a.hook.icon.trophy_silver";
+        public const string TrophyGold = "theme_a.hook.icon.trophy_gold";
+        public const string OrbCrystal = "theme_a.hook.icon.orb_crystal";
+        public const string ChestMystery = "theme_a.hook.icon.chest_mystery";
         public const string GemsTier1 = "theme_a.hook.icon.gems_tier_1";
         public const string GemsTier2 = "theme_a.hook.icon.gems_tier_2";
         public const string GemsTier3 = "theme_a.hook.icon.gems_tier_3";
+        public const string MerchantCart = "theme_a.hook.icon.merchant_cart";
+        public const string GuildCrest = "theme_a.hook.icon.guild_crest";
+        public const string HelpHand = "theme_a.hook.icon.help_hand";
+        public const string WishingWell = "theme_a.hook.icon.wishing_well";
+        public const string HeroTome = "theme_a.hook.icon.hero_tome";
+        public const string WarBanner = "theme_a.hook.icon.war_banner";
+        public const string Energy = "theme_a.hook.icon.energy";
 
         public const string FxRays = "theme_a.hook.fx.rays";
         public const string FxGlow = "theme_a.hook.fx.glow";
         public const string FxSparkle = "theme_a.hook.fx.sparkle";
         public const string FxBurstRing = "theme_a.hook.fx.burst_ring";
         public const string FxConfetti = "theme_a.hook.fx.confetti";
+
+        /// <summary>Kingdom Path atlas sprite (pack.json "theme_a.hook.track.atlas"), e.g. Track("cell_royal").</summary>
+        public static string Track(string name) => Prefix + "track." + name;
 
         /// <summary>Resource icon key, e.g. res.soft -> theme_a.hook.icon.res.soft.</summary>
         public static string ForResource(string resourceId) => Prefix + "icon." + resourceId;

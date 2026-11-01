@@ -61,6 +61,9 @@ namespace Survival.Unity
         /// </summary>
         public System.Func<Matrix4x4>? LaunchFrame { get; set; }
 
+        /// <summary>Raised on the frame a flying track leaves (needs <see cref="LaunchFrame"/>); the battle plays the shot sound here.</summary>
+        public System.Action<AttackTrack>? Launched { get; set; }
+
         public BlenderRigAttackDriver(BlenderRigAttackSpec spec, string themePackDir, Transform actor)
         {
             _spec = spec;
@@ -263,7 +266,13 @@ namespace Survival.Unity
                 }
 
                 var key = track.Sample(frame);
+                var launching = track.Kind == AttackTrackKind.Projectile && LaunchFrame != null && !view.HasLaunch;
                 Place(view, key);
+                if (launching && view.HasLaunch)
+                {
+                    Launched?.Invoke(track);
+                }
+
                 if (_grip != null && string.Equals(track.ObjectName, _grip.ArrowTrack, System.StringComparison.Ordinal))
                 {
                     AimNockedArrow(view, frame);

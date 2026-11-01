@@ -16,6 +16,19 @@ namespace Survival.Unity
         private ClothSpringRig? _cloth;
         private GameObject? _cape;
 
+        /// <summary>Attack take playback rate (runner: one take per shot, paced to the enemy's fire interval); 1 in the battle.</summary>
+        public float AttackSpeed
+        {
+            get => _player?.AttackSpeed ?? 1f;
+            set
+            {
+                if (_player != null)
+                {
+                    _player.AttackSpeed = value;
+                }
+            }
+        }
+
         public bool Built => _player != null && _player.Built;
 
         /// <summary>Attack effects driver (arrow flight), for the locked battle's hit blocker.</summary>

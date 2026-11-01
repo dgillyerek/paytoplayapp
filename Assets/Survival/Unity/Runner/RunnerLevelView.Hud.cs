@@ -7,6 +7,7 @@ using Survival.Domain.Roster;
 using Survival.Domain.Runner;
 using Survival.Domain.Theme;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace Survival.Unity
@@ -24,6 +25,8 @@ namespace Survival.Unity
         private static readonly Color BattleVillainFill = new Color(0.92f, 0.30f, 0.32f, 1f);
 
         private RectTransform? _hud;
+        private HeroHpPanel? _heroPanel;
+        private readonly List<RunnerMember> _panelHeroes = new List<RunnerMember>();
         private RectTransform? _worldUi;
         private Image? _progressFill;
         private Text? _progressText;
@@ -31,6 +34,8 @@ namespace Survival.Unity
         private Text? _dmgChip;
         private Text? _spdChip;
         private Text? _hint;
+        private Text? _startHint;
+        private float _startPulse;
         private RectTransform? _result;
         private RectTransform? _levelList;
         private RectTransform? _banner;
@@ -84,6 +89,9 @@ namespace Survival.Unity
             public Text Number = null!;
             public bool OnBox;
             public bool Boss;
+
+            /// <summary>A breakable barrier's bar: always shown, like a box's, so you can judge whether to shoot it down.</summary>
+            public bool Barrier;
             public float Height;
             public RectTransform? Reward;
 
@@ -142,11 +150,13 @@ namespace Survival.Unity
 
             // Title plate + distance bar.
             var plate = HookSkin.Panel(_hud, "TitlePlate", HookArtKeys.Header, SurvivalVisuals.Panel, 0.6f);
-            Anchor(plate.rectTransform, 0.16f, 0.925f, 0.84f, 0.985f);
-            var title = HookSkin.Outlined(SurvivalVisuals.Text(plate.transform, "Title", LevelTitle(_level), 44, TextAnchor.MiddleCenter, SurvivalVisuals.Cream));
+            // A small title banner with the distance beside it on one top row (Derek 2026-10-28), the hero panel under it.
+            Anchor(plate.rectTransform, TopHudLayout.RunnerTitle);
+            var title = Fit(HookSkin.Outlined(SurvivalVisuals.Text(plate.transform, "Title", LevelTitle(_level), 30, TextAnchor.MiddleCenter, SurvivalVisuals.Cream)), 16, 30);
             SurvivalVisuals.Stretch(title.rectTransform);
+            Pad(title.rectTransform);
             var bar = HookSkin.Bar(_hud, "Progress", out var fill);
-            Anchor(bar.rectTransform, 0.14f, 0.885f, 0.80f, 0.915f);
+            Anchor(bar.rectTransform, TopHudLayout.Distance);
             _progressFill = fill;
             _progressText = HookSkin.Outlined(SurvivalVisuals.Text(bar.transform, "Metres", "", 24, TextAnchor.MiddleCenter, Color.white));
             SurvivalVisuals.Stretch(_progressText.rectTransform);
@@ -164,26 +174,27 @@ namespace Survival.Unity
                 // The boss is the 3D Ironhowl on the road; the bar's end only marks where he stands.
                 var face = HookSkin.Art(_hud, "BossMark", "theme_a.ui.icon_battle", FoeFill);
                 face.color = new Color(1f, 0.55f, 0.5f, 1f);
-                Anchor(face.rectTransform, 0.80f, 0.872f, 0.88f, 0.928f);
-                var tag = HookSkin.Outlined(SurvivalVisuals.Text(face.transform, "Boss", S("runner.boss", "BOSS"), 20, TextAnchor.UpperCenter, FoeFill));
-                tag.rectTransform.anchorMin = new Vector2(0f, -0.45f);
-                tag.rectTransform.anchorMax = new Vector2(1f, 0f);
+                Anchor(face.rectTransform, TopHudLayout.BossMark);
+                // The tag sits on the mark's lower half (the badge row is right under it).
+                var tag = HookSkin.Outlined(SurvivalVisuals.Text(face.transform, "Boss", S("runner.boss", "BOSS"), 14, TextAnchor.LowerCenter, FoeFill));
+                tag.rectTransform.anchorMin = new Vector2(-0.2f, -0.05f);
+                tag.rectTransform.anchorMax = new Vector2(1.2f, 0.4f);
                 tag.rectTransform.offsetMin = tag.rectTransform.offsetMax = Vector2.zero;
             }
 
             // Kills (crossed swords) and upgrade chips.
             var kills = HookSkin.Panel(_hud, "Kills", HookArtKeys.Chip, SurvivalVisuals.PanelSoft, 0.5f);
-            Anchor(kills.rectTransform, 0.70f, 0.835f, 0.97f, 0.875f);
+            Anchor(kills.rectTransform, TopHudLayout.Kills);
             var swords = HookSkin.Art(kills.transform, "Icon", "theme_a.ui.icon_battle", SurvivalVisuals.PinFight);
             Anchor(swords.rectTransform, 0.02f, -0.15f, 0.30f, 1.15f);
             _killsText = HookSkin.Outlined(SurvivalVisuals.Text(kills.transform, "Count", "0", 30, TextAnchor.MiddleCenter, Color.white));
             Anchor(_killsText.rectTransform, 0.30f, 0f, 0.98f, 1f);
-            _dmgChip = Chip("DmgChip", 0.03f, "theme_a.runner.crate_weapon");
-            _spdChip = Chip("SpdChip", 0.25f, "theme_a.runner.crate_speed");
+            _dmgChip = Chip("DmgChip", RunnerHudChips.DamageLeft, "theme_a.runner.crate_weapon");
+            _spdChip = Chip("SpdChip", RunnerHudChips.SpeedLeft, "theme_a.runner.crate_speed");
 
             // Leave (back to the village, or a fresh run on its own).
             var leave = HookSkin.Button(_hud, "Leave", HookArtKeys.ButtonRed, new Color(0.65f, 0.18f, 0.15f, 1f));
-            Anchor(leave.GetComponent<RectTransform>(), 0.015f, 0.93f, 0.14f, 0.98f);
+            Anchor(leave.GetComponent<RectTransform>(), TopHudLayout.Leave);
             leave.onClick.AddListener(Leave);
             var leaveText = Fit(HookSkin.Outlined(SurvivalVisuals.Text(leave.transform, "Label", S("runner.leave", "Leave"), 24, TextAnchor.MiddleCenter, Color.white)), 14, 24);
             Pad(leaveText.rectTransform);
@@ -192,11 +203,26 @@ namespace Survival.Unity
             // 10 cap stays; "Squad full!" is a pop-up at the lead now (RunnerPickupPopup), not a banner.
 
             _hint = HookSkin.Outlined(SurvivalVisuals.Text(_hud, "Hint", "⟵  " + S("runner.hint", "Drag or A / D to steer") + "  ⟶", 34, TextAnchor.MiddleCenter, SurvivalVisuals.Cream));
-            Anchor(_hint.rectTransform, 0f, 0.10f, 1f, 0.15f);
+            Anchor(_hint.rectTransform, TopHudLayout.Hint);
+
+            // While the level waits for its first input (RunnerRun.WaitingForStart): "Drag to start" on touch screens,
+            // "Press A / D to start" with a keyboard; pulses gently, gone on the first steer.
+            var touchFirst = Application.isMobilePlatform || (Touchscreen.current != null && Keyboard.current == null);
+            var startText = touchFirst ? S("runner.start_drag", "Drag to start") : S("runner.start_press", "Press A / D to start");
+            _startHint = HookSkin.Outlined(SurvivalVisuals.Text(_hud, "StartHint", startText, 44, TextAnchor.MiddleCenter, SurvivalVisuals.Gold));
+            _startHint.fontStyle = FontStyle.Bold;
+            _startHint.raycastTarget = false;
+            Anchor(_startHint.rectTransform, 0f, 0.40f, 1f, 0.50f);
+            _startHint.gameObject.SetActive(false);
+
+            // Hero HP: a corner panel, not a bar over the hero (Derek 2026-10-28); rows join as heroes join the squad.
+            _heroPanel = HeroHpPanel.Build(_hud);
+            _panelHeroes.Clear();
+            _panelTypes.Clear();
 
             var banner = HookSkin.Panel(_hud, "Banner", HookArtKeys.RibbonBlue, new Color(0.12f, 0.24f, 0.5f, 0.95f), 0.6f);
             _banner = banner.rectTransform;
-            Anchor(_banner, 0.08f, 0.70f, 0.92f, 0.765f);
+            Anchor(_banner, TopHudLayout.RunnerBanner.X0, TopHudLayout.RunnerBanner.Y0, TopHudLayout.RunnerBanner.X1, TopHudLayout.RunnerBanner.Y1);
             _bannerText = HookSkin.Outlined(SurvivalVisuals.Text(_banner, "Text", "", 40, TextAnchor.MiddleCenter, Color.white));
             SurvivalVisuals.Stretch(_bannerText.rectTransform);
             _banner.gameObject.SetActive(false);
@@ -212,8 +238,9 @@ namespace Survival.Unity
                 _freeFoeBars.Push(NewSideBar(false));
             }
 
-            // The lead and every follower carry a sliver (followers have HP now), pooled up front for a full squad.
-            for (var i = 0; i < RunnerRules.SquadCap; i++)
+            // Squad slivers only when the policy draws them (heroes are in the corner panel; followers off since #86).
+            var squadBars = RunnerSideBar.Shows(RunnerBarOwner.LeadHero) || RunnerSideBar.Shows(RunnerBarOwner.Follower);
+            for (var i = 0; squadBars && i < RunnerRules.SquadCap; i++)
             {
                 _freeHeroBars.Push(NewSideBar(true));
             }
@@ -224,14 +251,21 @@ namespace Survival.Unity
         private Text Chip(string name, float x, string iconKey)
         {
             var chip = HookSkin.Panel(_hud!, name, HookArtKeys.Chip, SurvivalVisuals.PanelSoft, 0.5f);
-            Anchor(chip.rectTransform, x, 0.835f, x + 0.2f, 0.875f);
+            // Wide enough for "+100% DMG" on a narrow phone, the text kept inside the badge's rim (Derek 2026-10-27: the
+            // badge text ran past its right edge); SetChip shrinks the type if a long label still does not fit.
+            Anchor(chip.rectTransform, x, TopHudLayout.BadgeY0, x + RunnerHudChips.Width, TopHudLayout.BadgeY1);
             var icon = HookSkin.Art(chip.transform, "Icon", iconKey, SurvivalVisuals.Gold);
-            Anchor(icon.rectTransform, 0.0f, -0.25f, 0.36f, 1.25f);
-            var t = HookSkin.Outlined(SurvivalVisuals.Text(chip.transform, "Value", "", 24, TextAnchor.MiddleCenter, Color.white));
-            Anchor(t.rectTransform, 0.34f, 0f, 1f, 1f);
+            Anchor(icon.rectTransform, 0.0f, -0.25f, RunnerHudChips.IconTo, 1.25f);
+            var t = HookSkin.Outlined(SurvivalVisuals.Text(chip.transform, "Value", "", RunnerHudChips.MaxFont, TextAnchor.MiddleCenter, Color.white));
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.verticalOverflow = VerticalWrapMode.Overflow;
+            t.resizeTextForBestFit = false;
+            Anchor(t.rectTransform, RunnerHudChips.TextFrom, 0.08f, RunnerHudChips.TextTo, 0.92f);
             chip.gameObject.SetActive(false);
             return t;
         }
+
+        private static void Anchor(RectTransform rt, TopHudLayout.Box b) => Anchor(rt, b.X0, b.Y0, b.X1, b.Y1);
 
         private static void Anchor(RectTransform rt, float x0, float y0, float x1, float y1)
         {
@@ -239,6 +273,77 @@ namespace Survival.Unity
             rt.anchorMax = new Vector2(x1, y1);
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
+        }
+
+        /// <summary>Corner hero rows: a row per hero who joined; one who left the squad (fell) reads 0 and dims.</summary>
+        private readonly List<RunnerSquadHp.TypeHp> _typeHp = new List<RunnerSquadHp.TypeHp>();
+        private readonly List<string> _panelTypes = new List<string>();
+        private static readonly string[] _typeTags = BuildTypeTags();
+
+        private static string[] BuildTypeTags()
+        {
+            var tags = new string[33];
+            for (var i = 0; i < tags.Length; i++)
+            {
+                tags[i] = "x" + i;
+            }
+
+            return tags;
+        }
+
+        /// <summary>Follower-type rows key below zero (heroes key by member id, which is never negative).</summary>
+        private static int TypeKey(int index) => -1 - index;
+
+        private void TickHeroPanel(float dt)
+        {
+            if (_heroPanel == null || _run == null)
+            {
+                return;
+            }
+
+            foreach (var m in _run.Squad)
+            {
+                if (m.IsHero && !_panelHeroes.Contains(m))
+                {
+                    _panelHeroes.Add(m);
+                    _heroPanel.Add(m.Id, m.Unit.Roster, string.Empty, RunnerArtKeys.Portrait(m.Unit.Roster));
+                }
+            }
+
+            foreach (var m in _panelHeroes)
+            {
+                var alive = _run.Member(m.Id) != null;
+                _heroPanel.Set(m.Id, alive ? m.Hp : 0, m.MaxHp);
+            }
+
+            // Followers: one summed row per unit type (Derek 2026-10-28). A type with nobody left stays, dimmed at 0.
+            RunnerSquadHp.ByType(_run.Squad, _typeHp);
+            foreach (var t in _typeHp)
+            {
+                if (!_panelTypes.Contains(t.Roster))
+                {
+                    _panelTypes.Add(t.Roster);
+                    _heroPanel.Add(TypeKey(_panelTypes.Count - 1), t.Roster, "x" + t.Count, RunnerArtKeys.Portrait(t.Roster), unit: true);
+                }
+            }
+
+            for (var i = 0; i < _panelTypes.Count; i++)
+            {
+                int count = 0, hp = 0, max = 0;
+                foreach (var t in _typeHp)
+                {
+                    if (t.Roster == _panelTypes[i])
+                    {
+                        (count, hp, max) = (t.Count, t.Hp, t.MaxHp);
+                    }
+                }
+
+                var key = TypeKey(i);
+                _heroPanel.SetTag(key, count < _typeTags.Length ? _typeTags[count] : "x" + count);
+                _heroPanel.Set(key, hp, max > 0 ? max : 1);
+            }
+
+            _heroPanel.Tick(dt);
         }
 
         private void ShowHint(bool on)
@@ -249,12 +354,43 @@ namespace Survival.Unity
             }
         }
 
+        private void TickStartHint(float dt)
+        {
+            if (_startHint == null || _run == null)
+            {
+                return;
+            }
+
+            var waiting = _run.WaitingForStart;
+            if (_startHint.gameObject.activeSelf != waiting)
+            {
+                _startHint.gameObject.SetActive(waiting);
+                _startPulse = 0f;
+            }
+
+            if (!waiting)
+            {
+                return;
+            }
+
+            // Gentle pulse: alpha 0.55..1 and scale 0.96..1.04, about one beat every 1.4 s (unscaled, so it pulses even paused).
+            _startPulse += Time.unscaledDeltaTime;
+            var k = 0.5f + (0.5f * Mathf.Sin(_startPulse * Mathf.PI * 2f / 1.4f));
+            var c = _startHint.color;
+            c.a = Mathf.Lerp(0.55f, 1f, k);
+            _startHint.color = c;
+            _startHint.rectTransform.localScale = Vector3.one * Mathf.Lerp(0.96f, 1.04f, k);
+        }
+
         private void TickHud(float dt)
         {
             if (_run == null)
             {
                 return;
             }
+
+            TickHeroPanel(dt);
+            TickStartHint(dt);
 
             if (_progressFill != null)
             {
@@ -265,7 +401,7 @@ namespace Survival.Unity
             if (_progressText != null && metres != _shownMetres)
             {
                 _shownMetres = metres;
-                _progressText.text = Num(metres) + " / " + Num(Mathf.RoundToInt(_run.Level.Length)) + " m";
+                _progressText.text = Num(metres) + " / " + Num(Mathf.RoundToInt(_run.Finish)) + " m";
             }
 
             if (_killsText != null && _run.Kills != _shownKills)
@@ -311,6 +447,18 @@ namespace Survival.Unity
             if (on)
             {
                 chip.text = Fmt(key, fallback, pct);
+                FitChip(chip);
+            }
+        }
+
+        /// <summary>The largest type (down to <see cref="RunnerHudChips.MinFont"/>) that keeps a chip's one-line label inside it.</summary>
+        private static void FitChip(Text chip)
+        {
+            var room = chip.rectTransform.rect.width;
+            chip.fontSize = RunnerHudChips.MaxFont;
+            while (room > 0f && chip.fontSize > RunnerHudChips.MinFont && chip.preferredWidth > room)
+            {
+                chip.fontSize--;
             }
         }
 
@@ -597,6 +745,19 @@ namespace Survival.Unity
                     hp = b.Hp;
                     // Boxes always show their bar (and HP number) until they break, so you can judge which to shoot.
                     bar.Group.alpha = RunnerSideBar.BoxAlpha(hp);
+                }
+                else if (bar.Barrier)
+                {
+                    var b = _run.Barrier(pair.Key);
+                    if (b == null)
+                    {
+                        continue;
+                    }
+
+                    at = new Vector3(b.X, bar.Height + 0.25f, b.Z);
+                    fraction = b.HpFraction;
+                    hp = b.Hp;
+                    bar.Group.alpha = 1f;
                 }
                 else if (bar.Side)
                 {
@@ -939,8 +1100,8 @@ namespace Survival.Unity
                 Anchor(v.rectTransform, 0.64f, y - 0.032f, 0.92f, y + 0.032f);
             }
 
-            // Rewards: gold always (kills + boxes), win gold and hero shards on a win.
-            var rewards = bundle.AsRows();
+            // Rewards on a win only (kills + boxes + win gold, hero shards); a defeat shows none, just Retry.
+            var rewards = result.Won ? bundle.AsRows() : new Dictionary<string, int>();
             var x = 0.5f - ((rewards.Count - 1) * 0.16f);
             foreach (var pair in rewards)
             {
@@ -953,7 +1114,7 @@ namespace Survival.Unity
                 x += 0.32f;
             }
 
-            if (!RunnerHandoff.FromPlay)
+            if (!RunnerHandoff.FromPlay && result.Won)
             {
                 var note = Fit(HookSkin.Outlined(SurvivalVisuals.Text(panel.transform, "Saved", saved ? S("runner.result.saved", "Rewards saved") : "Open from the village to keep rewards", 24, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f), 16, 24);
                 Anchor(note.rectTransform, 0.05f, 0.29f, 0.95f, 0.325f);

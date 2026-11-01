@@ -32,6 +32,30 @@ namespace Survival.Domain.Roster
 
         public static readonly string[] RawFileExtensions = { ".json", ".png", ".jpg", ".jpeg", ".txt" };
 
+        /// <summary>Theme sound folder (audio.json lists the cues): every clip here is baked as an imported AudioClip.</summary>
+        public const string AudioDir = "ThemePack/fantasy_kingdom_a/audio";
+
+        public static readonly string[] AudioExtensions = { ".ogg", ".wav" };
+
+        public static bool IsAudioClip(string assetsRelPath)
+        {
+            var p = assetsRelPath.Replace('\\', '/');
+            if (!p.StartsWith(AudioDir + "/", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            foreach (var ext in AudioExtensions)
+            {
+                if (p.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>Sir Aldric pilot paths (Survival.Unity SirAldricMeshyAnimateActor reads them; duplicated here so the domain test sees them).</summary>
         public const string SirAldricPilotDir = "ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot";
         public const string SirAldricWalkFbx = SirAldricPilotDir + "/SirAldric_body_holefixed_walk.fbx";

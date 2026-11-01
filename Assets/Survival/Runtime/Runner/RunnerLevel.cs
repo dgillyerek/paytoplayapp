@@ -36,7 +36,53 @@ namespace Survival.Domain.Runner
         Boss,
 
         /// <summary>A trap in the lane (spikes, a rolling log, a fire patch): steer round it; it cannot be shot.</summary>
-        Hazard
+        Hazard,
+
+        /// <summary>A breakable obstacle (palisade gate, stone wall, spiked barricade): shoot it down or steer round it; walking into it hurts.</summary>
+        Barrier
+    }
+
+    /// <summary>
+    /// Breakable road obstacles (Derek 2026-10-26: "some obstacles that can get destroyed but do damage if you don't avoid
+    /// them. maybe some type of gate or stone fence. something time period appropriate"). See <see cref="RunnerBarrierDef"/>.
+    /// </summary>
+    public enum RunnerBarrierKind
+    {
+        /// <summary>A wooden palisade gate: sharpened oak stakes on cross beams. Middling HP and bite.</summary>
+        Palisade,
+
+        /// <summary>A dry-stone field wall: the toughest to shoot down, a hard knock to run into.</summary>
+        StoneWall,
+
+        /// <summary>A cheval de frise: crossed sharpened stakes on a log. Quick to break, nasty to walk into.</summary>
+        Barricade
+    }
+
+    /// <summary>
+    /// A breakable obstacle: <see cref="Width"/> metres across the lane (centred on the row's x), <see cref="Hp"/> that the
+    /// squad's shots chip down, and <see cref="Damage"/> to every squad member it touches when the squad walks into it while
+    /// it still stands (the hero takes all of it, a follower a trap's share); that contact smashes it. A barrier as wide as
+    /// the road cannot be steered round: it has to be shot down (or walked through, at that price).
+    /// </summary>
+    public sealed record RunnerBarrierDef(RunnerBarrierKind Kind, float Width, int Hp, int Damage)
+    {
+        public static string Name(RunnerBarrierKind kind) => kind switch
+        {
+            RunnerBarrierKind.StoneWall => "stone_wall",
+            RunnerBarrierKind.Barricade => "barricade",
+            _ => "palisade"
+        };
+
+        public static RunnerBarrierKind Parse(string name) => name switch
+        {
+            "palisade" => RunnerBarrierKind.Palisade,
+            "stone_wall" => RunnerBarrierKind.StoneWall,
+            "barricade" => RunnerBarrierKind.Barricade,
+            _ => throw new FormatException("Runner barrier '" + name + "' is not palisade / stone_wall / barricade.")
+        };
+
+        /// <summary>True when it spans a road <paramref name="halfWidth"/> either side of the centre line (no way round).</summary>
+        public bool FullWidth(float halfWidth) => Width >= (2f * halfWidth) - 0.05f;
     }
 
     /// <summary>Lane traps. Each one shows a warning before it can hurt (see <see cref="RunnerHazardDef"/>).</summary>
@@ -114,6 +160,15 @@ namespace Survival.Domain.Runner
         /// <summary>The trap, on a <see cref="RunnerRowKind.Hazard"/> row.</summary>
         public RunnerHazardDef? Hazard { get; init; }
 
+        /// <summary>The obstacle, on a <see cref="RunnerRowKind.Barrier"/> row.</summary>
+        public RunnerBarrierDef? Barrier { get; init; }
+
+        /// <summary>
+        /// Part of a no-boss level's closing set piece (its trap gauntlet, fodder push and captain; see
+        /// RunnerProgression's Finale), beyond the archer line a boss level has as its guard.
+        /// </summary>
+        public bool Finale { get; init; }
+
         public float XOf(int index) => X + ((index - ((Count - 1) * 0.5f)) * Spread);
     }
 
@@ -144,6 +199,12 @@ namespace Survival.Domain.Runner
 
         /// <summary>Every enemy's (and the boss's) hit is its unit damage times this; 1 up to Level 12, then the ramp (see <see cref="RunnerProgression"/>).</summary>
         public float FoeDmgMul { get; init; } = 1f;
+
+        /// <summary>
+        /// Whether the squad runs for the finish once the road ahead is clear on a level without a boss (json
+        /// "gate_charge", off by default; the campaign's first level turns it on and the generated levels copy it).
+        /// </summary>
+        public bool GateCharge { get; init; }
 
         /// <summary>Boss HP on this level (0 without a boss).</summary>
         public int BossHp(RunnerCatalog catalog)
@@ -226,6 +287,35 @@ namespace Survival.Domain.Runner
                 foreach (var r in Rows)
                 {
                     n += r.Kind == RunnerRowKind.Hazard ? 1 : 0;
+                }
+
+                return n;
+            }
+        }
+
+        public int BarrierCount
+        {
+            get
+            {
+                var n = 0;
+                foreach (var r in Rows)
+                {
+                    n += r.Kind == RunnerRowKind.Barrier ? 1 : 0;
+                }
+
+                return n;
+            }
+        }
+
+        /// <summary>Barriers as wide as the road (shoot them down or walk through them).</summary>
+        public int FullWidthBarrierCount
+        {
+            get
+            {
+                var n = 0;
+                foreach (var r in Rows)
+                {
+                    n += r.Barrier != null && r.Barrier.FullWidth(HalfWidth) ? 1 : 0;
                 }
 
                 return n;
@@ -381,6 +471,9 @@ namespace Survival.Domain.Runner
         /// <summary>The level generator's settings, when the file has a "progression" block.</summary>
         public RunnerProgressionDef? Progression { get; private set; }
 
+        /// <summary>Metres every level's rows were moved up the road by the pack's "first_run_up" (0 = none).</summary>
+        public float FirstRunUp { get; private set; }
+
         public RunnerUnitDef Unit(string id) =>
             _units.TryGetValue(id, out var u) ? u : throw new KeyNotFoundException("Runner unit '" + id + "' is not in " + FileName + ".");
 
@@ -431,6 +524,13 @@ namespace Survival.Domain.Runner
                     if (row.Hazard == null || row.Hazard.Width <= 0f)
                     {
                         throw new FormatException(level.Id + ": hazard at " + row.At + " m needs a width > 0.");
+                    }
+                }
+                else if (row.Kind == RunnerRowKind.Barrier)
+                {
+                    if (row.Barrier == null || row.Barrier.Width <= 0f || row.Barrier.Hp <= 0)
+                    {
+                        throw new FormatException(level.Id + ": barrier at " + row.At + " m needs a width > 0 and hp > 0.");
                     }
                 }
                 else if (row.Kind == RunnerRowKind.Box)
@@ -516,7 +616,8 @@ namespace Survival.Domain.Runner
                     DisplayName = LayoutJson.OptStr(l, "name", LayoutJson.Str(l, "id")),
                     FoeHpMul = Math.Max(0.1f, LayoutJson.OptNum(l, "foe_hp_mul", 1f)),
                     BossHpMul = Math.Max(0.1f, LayoutJson.OptNum(l, "boss_hp_mul", 1f)),
-                    FoeDmgMul = Math.Max(0.1f, LayoutJson.OptNum(l, "foe_dmg_mul", 1f))
+                    FoeDmgMul = Math.Max(0.1f, LayoutJson.OptNum(l, "foe_dmg_mul", 1f)),
+                    GateCharge = LayoutJson.OptBool(l, "gate_charge", false)
                 });
             }
 
@@ -536,9 +637,27 @@ namespace Survival.Domain.Runner
                 {
                     levels.Add(RunnerProgression.Generate(levels[0], prog, n, have.Contains));
                 }
+
+                // Level 1 is hand-authored, so its "1" tweak is applied here, after the generated levels have copied its
+                // multipliers: it scales only Level 1's own enemy HP (Derek 2026-10-29: the early levels were far too easy).
+                var tw1 = prog.Tweak(1).FoeHp;
+                if (tw1 != 1f)
+                {
+                    levels[0] = levels[0] with { FoeHpMul = levels[0].FoeHpMul * tw1 };
+                }
             }
 
-            return new RunnerCatalog(units, levels, allowMeleeHeroes) { Progression = progression };
+            // A little more run-up before each level's first items and enemies (Derek 2026-10-28: "give a little more distance
+            // before the first items in the level. but only the first items and enemies. everything else remains the same").
+            // Every row moves up the road by the same amount and the road grows by it, so only the empty start gets longer.
+            // Set by the pack's "first_run_up" (metres; 0 when absent, so hand-built test roads keep their exact places).
+            var runUp = Math.Max(0f, LayoutJson.OptNum(root, "first_run_up", 0f));
+            for (var i = 0; i < levels.Count; i++)
+            {
+                levels[i] = RunnerProgression.WithRunUp(levels[i], runUp);
+            }
+
+            return new RunnerCatalog(units, levels, allowMeleeHeroes) { Progression = progression, FirstRunUp = runUp };
         }
 
         private static RunnerRowDef ReadRow(JsonNode.Obj r)
@@ -588,8 +707,15 @@ namespace Survival.Domain.Runner
                     return new RunnerRowDef(at, RunnerRowKind.Hazard, x, "", 1, 0f, null) { Hazard = hz };
                 }
 
+                case "barrier":
+                {
+                    var bk = RunnerBarrierDef.Parse(LayoutJson.OptStr(r, "barrier", "palisade"));
+                    var bd = new RunnerBarrierDef(bk, Math.Max(0.4f, LayoutJson.OptNum(r, "width", 3f)), Math.Max(1, LayoutJson.OptInt(r, "hp", 100)), Math.Max(0, LayoutJson.OptInt(r, "damage", 40)));
+                    return new RunnerRowDef(at, RunnerRowKind.Barrier, x, "", 1, 0f, null) { Barrier = bd };
+                }
+
                 default:
-                    throw new FormatException("Runner row kind '" + kindText + "' at " + at.ToString(CultureInfo.InvariantCulture) + " m is not enemy / box / boss / hazard.");
+                    throw new FormatException("Runner row kind '" + kindText + "' at " + at.ToString(CultureInfo.InvariantCulture) + " m is not enemy / box / boss / hazard / barrier.");
             }
         }
     }

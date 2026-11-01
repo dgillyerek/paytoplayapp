@@ -182,6 +182,7 @@ namespace Survival.Unity
                 return;
             }
 
+            BalanceBar.Above(panel, hook.Wallet, BalanceBarIds.Building);
             var refreshers = new List<System.Action>();
             const float top = 0.84f;
             const float rowH = 0.165f;
@@ -337,6 +338,12 @@ namespace Survival.Unity
             var type = _placingType;
             CancelPlacement();
             var block = _hook.Build.Check(type, spotId);
+            if (block == BuildBlock.QueueBusy && _hook.TempBuilderOfferedForBuild(type, spotId))
+            {
+                OpenTempBuilder(null, type, spotId);
+                return;
+            }
+
             if (block != BuildBlock.None || _hook.Build.TryBuild(type, spotId) == null)
             {
                 var t = _hook.Build.Type(type);
@@ -361,6 +368,7 @@ namespace Survival.Unity
             var card = BuildCard(village, host, plot);
             _cards[plot.Id] = card;
             var at = NormCenterOf(host);
+            SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UpgradeStart);
             StartCoroutine(Punch(host, 0.3f, 16));
             StartCoroutine(RingBurst(at, SurvivalVisuals.Reward, 0.3f));
             StartCoroutine(SparkBurst(at, SurvivalVisuals.Reward, 18, 0.1f));
@@ -372,6 +380,7 @@ namespace Survival.Unity
         /// <summary>A timer finished: a construction opens (Lv 1) or an upgrade levels up.</summary>
         private void Finished(PlotCard card, int level, bool wasBuild)
         {
+            SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.BuildComplete);
             if (!wasBuild)
             {
                 LevelUp(card, level);

@@ -1,3 +1,4 @@
+using Survival.Domain.Campaign;
 using Survival.Domain.View;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -103,10 +104,23 @@ namespace Survival.Unity
         private float _shakeMetres;
         private float _shakeAge = 1f;
 
+        /// <summary>
+        /// Slow fly-around (Derek 2026-10-28: "have the camera slowly fly around at like 30 degrees"): the yaw turns by
+        /// <see cref="BattleArena.OrbitDegreesPerSecond"/> on its own at <see cref="BattleArena.OrbitPitchDegrees"/>, at a
+        /// distance that fits the field from every side. A drag still steers; the turn carries on after it.
+        /// </summary>
+        public bool AutoOrbit { get; private set; }
+
         public void SetField(Bounds field)
         {
             _field = field;
             ResetView();
+        }
+
+        public void SetField(Bounds field, bool autoOrbit)
+        {
+            AutoOrbit = autoOrbit;
+            SetField(field);
         }
 
         /// <summary>Back to the default three-quarter framing of the whole field.</summary>
@@ -115,7 +129,23 @@ namespace Survival.Unity
             _yaw = DefaultYawDegrees;
             _pitch = DefaultPitchDegrees;
             _pivot = _field.center;
+            if (AutoOrbit)
+            {
+                _pitch = BattleArena.OrbitPitchDegrees;
+            }
+
             _distance = FitDistance(_yaw, _pitch);
+            if (AutoOrbit)
+            {
+                // Fit from every side of the turn, so no fighter leaves the frame as it goes round.
+                for (var a = 0f; a < 360f; a += 15f)
+                {
+                    _distance = Mathf.Max(_distance, FitDistance(a, _pitch));
+                }
+
+                _distance *= BattleArena.OrbitZoomFactor;
+            }
+
             _maxDistance = Mathf.Max(MinDistanceMetres * 2f, _distance * MaxDistanceFactor);
             _viewSet = false;
             Solve(0f);
@@ -160,6 +190,11 @@ namespace Survival.Unity
         {
             var dt = Mathf.Min(Time.unscaledDeltaTime, MaxStepSeconds);
             ReadPointer(out var orbitDrag, out var panDrag, out var notches);
+            if (AutoOrbit && !_orbiting)
+            {
+                _yaw += BattleArena.OrbitDegreesPerSecond * dt;
+            }
+
             if (orbitDrag.sqrMagnitude > 0f)
             {
                 _yaw += orbitDrag.x * OrbitDegreesPerPixel;

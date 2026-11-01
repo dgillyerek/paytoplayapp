@@ -99,6 +99,7 @@ namespace Survival.Unity
             scaler.referenceResolution = new Vector2(PlayHudLayout.ReferenceWidth, PlayHudLayout.ReferenceHeight);
             scaler.matchWidthOrHeight = 1f;
             go.AddComponent<GraphicRaycaster>();
+            go.AddComponent<ContrastGuard>();
             return go.GetComponent<RectTransform>();
         }
 
@@ -167,6 +168,7 @@ namespace Survival.Unity
             img.raycastTarget = true;
             var btn = img.gameObject.AddComponent<Button>();
             btn.targetGraphic = img;
+            btn.onClick.AddListener(SurvivalAudio.Tap);
             return btn;
         }
 

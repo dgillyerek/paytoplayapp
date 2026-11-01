@@ -314,6 +314,8 @@ namespace Survival.Domain.Runner
     {
         public static RunnerStrength Strength(RunnerCatalog c, RunnerLevelDef level, RunnerLoadout loadout)
         {
+            // The squad the player actually fields: chests naming an unowned hero hand out an owned one.
+            level = RunnerOwnership.Gate(c, level, loadout);
             var shape = RunnerSquadShape.Of(c, level);
             double dps0 = 0, dps = 0, hp0 = 0, hp = 0;
             void Add(string unitId, int count, bool lead)
@@ -355,7 +357,7 @@ namespace Survival.Domain.Runner
                 var u = c.Unit(r.Unit);
                 var boss = r.Kind == RunnerRowKind.Boss;
                 waveHp += r.Count * u.Hp * (boss ? level.BossHpMul : level.FoeHpMul);
-                waveDps += r.Count * (u.Cycle > 0 ? u.Damage * level.FoeDmgMul / u.Cycle : 0);
+                waveDps += r.Count * (u.Cycle > 0 ? (u.Ranged && !boss ? RunnerRules.RangedFoeHit((int)Math.Round(u.Damage * level.FoeDmgMul)) : u.Damage * level.FoeDmgMul) / u.Cycle : 0);
             }
 
             waves = Math.Max(1, waves);
@@ -488,7 +490,8 @@ namespace Survival.Domain.Runner
         public RunnerLoadout Loadout() => Loadout(_heroes, _banners);
 
         public RunnerLoadout Loadout(IReadOnlyDictionary<string, ModelHero> heroes) =>
-            RunnerLoadout.From(_src.Runner, _src.Campaign, id => heroes.TryGetValue(id, out var h) ? (h.Level, h.Stars) : null);
+            RunnerLoadout.From(_src.Runner, _src.Campaign, id => heroes.TryGetValue(id, out var h) ? (h.Level, h.Stars) : null)
+                .OwningOnly(heroes.Values.Where(h => h.Owned).Select(h => h.Id).ToList());
 
         public RunnerLoadout Loadout(IReadOnlyDictionary<string, ModelHero> heroes, int banners)
         {
@@ -595,7 +598,7 @@ namespace Survival.Domain.Runner
         private RunnerModelSnapshot Snap(int session) => new(
             session,
             _cleared,
-            _heroes.ToDictionary(h => h.Key, h => (h.Value.Level, h.Value.Stars)),
+            _heroes.Where(h => h.Value.Owned).ToDictionary(h => h.Key, h => (h.Value.Level, h.Value.Stars)),
             _gold,
             _food,
             _gems,

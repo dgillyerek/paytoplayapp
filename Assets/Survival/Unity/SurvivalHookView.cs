@@ -11,6 +11,7 @@ using Survival.Domain.Session;
 using Survival.Domain.Store;
 using Survival.Domain.Theme;
 using Survival.Domain.World;
+using Survival.Domain.View;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -158,6 +159,7 @@ namespace Survival.Unity
             play.MarchResolved += OnMarchResolved;
             _questWasComplete = _hook.Quests.IsComplete;
             RefreshAll();
+            RaiseHudBuilt(root);
         }
 
         private void OnDestroy()
@@ -381,6 +383,13 @@ namespace Survival.Unity
             q.Count = SurvivalVisuals.Text(frame.transform, "Count", "", 16, TextAnchor.MiddleLeft, bodyInk);
             q.Count.fontStyle = FontStyle.Bold;
             Box(q.Count.rectTransform, 0.58f, 0.10f, 0.74f, 0.32f);
+            if (scroll)
+            {
+                // Light text over the painted parchment needs a dark backing to read.
+                Ornaments.Backing(q.Title);
+                Ornaments.Backing(q.Body);
+                Ornaments.Backing(q.Count);
+            }
 
             // Reward chest preview always sits on the scroll; it glows and hops once the step is done.
             var preview = HookSkin.Art(frame.transform, "ChestPreview", HookArtKeys.ChestClosed, ChestWood);
@@ -734,6 +743,7 @@ namespace Survival.Unity
                 return;
             }
 
+            SurvivalAudio.Play(Survival.Domain.Audio.AudioEventMap.Collect(SurvivalAudio.Config, res));
             FloatText(from, "+" + ChipWallet.FormatGrouped(got) + " " + ResName(res), ResColor(res));
             StartCoroutine(SparkBurst(from, ResColor(res), 10, 0.05f));
             StartCoroutine(FlyReward(res, from, 6));
@@ -771,13 +781,21 @@ namespace Survival.Unity
             var block = _hook.Base.CheckUpgrade(plotId);
             if (block == UpgradeBlock.None && _hook.Base.TryStartUpgrade(plotId))
             {
+                SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UpgradeStart);
                 Toast(NormCenterOf(card.Root), S("hook.upgrading", "Upgrading"), SurvivalVisuals.PinBuild);
                 StartCoroutine(SparkBurst(NormCenterOf(card.Root), SurvivalVisuals.PinBuild, 10, 0.06f));
                 RefreshCards();
                 return;
             }
 
+            if (_hook.TempBuilderOffered(plotId))
+            {
+                OpenTempBuilder(plotId);
+                return;
+            }
+
             var nextLevel = _hook.Base.Find(plotId)?.Next?.Level ?? 0;
+            SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiDeny);
             Toast(NormCenterOf(card.Root), BlockLabel(block, nextLevel, S("hook.need_more", "Not enough resources")), Warn);
             StartCoroutine(Shake(card.Root));
         }
@@ -882,6 +900,7 @@ namespace Survival.Unity
                 return;
             }
 
+            BalanceBar.Above(panel, hook.Wallet, BalanceBarIds.Building);
             var isCastle = !LevelBadge.Shows(plot.Def);
             var art = SurvivalVisuals.Image(panel, "Building", Color.white);
             art.preserveAspect = true;
@@ -926,7 +945,7 @@ namespace Survival.Unity
                     return;
                 }
 
-                if (hook.Base.CheckUpgrade(plotId) == UpgradeBlock.None)
+                if (hook.Base.CheckUpgrade(plotId) == UpgradeBlock.None || hook.TempBuilderOffered(plotId))
                 {
                     CloseSheet();
                 }
@@ -1009,6 +1028,15 @@ namespace Survival.Unity
                     upText.text = BlockLabel(block, p.Next.Level, S("hook.upgrade", "Upgrade"));
                     HookSkin.SetButton(upImg, HookArtKeys.ButtonGold, ok ? SurvivalVisuals.MineFill : Disabled, true, 0.5f);
                     upText.color = ok ? HookSkin.InkFor(HookArtKeys.ButtonGold) : SurvivalVisuals.Cream;
+                }
+
+                if (TempBuilderLine() is { Length: > 0 } extra)
+                {
+                    next.text += "\n" + extra;
+                }
+                else if (timer == null && block == UpgradeBlock.QueueBusy && hook.TempBuilderOffered(plotId))
+                {
+                    upText.text = S("builder.temp.button", "Hire builder");
                 }
 
                 collect.gameObject.SetActive(p.CanCollect);
@@ -1151,6 +1179,7 @@ namespace Survival.Unity
 
             var hook = _hook;
             var timerId = BaseEconomy.UpgradeTimerId(plotId);
+            BalanceBar.Above(panel, hook.Wallet, BalanceBarIds.SpeedUp);
             var speedPlot = hook.Base.Find(plotId);
             var building = HookSkin.Art(panel, "Building", speedPlot != null ? BuildingVisual.For(speedPlot, Tiers).ArtKey : HookArtKeys.ForPlot(plotId), SurvivalVisuals.PinBuild);
             Box(building.rectTransform, 0.05f, 0.60f, 0.30f, 0.88f);
@@ -1203,7 +1232,7 @@ namespace Survival.Unity
 
                 var nowSec = hook.Clock.Now;
                 var left = timer.Remaining(nowSec);
-                var isFree = hook.Timers.Rules.IsFree(left);
+                var isFree = left > 0 && hook.Timers.Rules.IsFree(left, timer.TotalSeconds);
                 clock.text = TimerQueue.FormatClock(left);
                 clock.color = isFree ? FreeGreen : SurvivalVisuals.Reward;
                 HookSkin.SetBar(barFill, (float)timer.Progress(nowSec), isFree ? HookArtKeys.BarFillGreen : HookArtKeys.BarFillBlue, isFree ? FreeGreen : SurvivalVisuals.PinBuild);
@@ -1243,6 +1272,7 @@ namespace Survival.Unity
                 : _hook.Rush(plotId, out _);
             if (level <= 0)
             {
+                SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiDeny);
                 StartCoroutine(Shake(button));
                 Toast(NormCenterOf(button), S("hook.need_more", "Not enough resources"), Warn);
                 OpenShop();
@@ -1267,6 +1297,7 @@ namespace Survival.Unity
             }
 
             var panel = OpenSheet("GemShopSheet", 0.92f, 0.56f, S("store.gem_shop.title", "Gem Shop"));
+            SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiStoreOpen);
             if (panel == null)
             {
                 return;
@@ -1464,6 +1495,7 @@ namespace Survival.Unity
                     return;
                 }
 
+                SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiGift);
                 QueueCelebration(S("gift.claim.title", "Free Gift!"), new Dictionary<string, int> { [gift.Resource] = gift.Amount });
                 RefreshAll();
                 return;
@@ -1476,10 +1508,12 @@ namespace Survival.Unity
                 {
                     if (outcome.Ok)
                     {
+                        SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiPurchaseSuccess);
                         QueueCelebration(S(offer.Id + ".title", offer.Id), offer.Grants);
                     }
                     else
                     {
+                        SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiDeny);
                         Release(offer.Grants);
                         StartCoroutine(Shake(button));
                     }
@@ -1492,11 +1526,14 @@ namespace Survival.Unity
             Hold(offer.Grants);
             if (!_hook.Store.TryBuyWithCurrency(offer.Id))
             {
+                SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiDeny);
                 Release(offer.Grants);
                 StartCoroutine(Shake(button));
                 Toast(NormCenterOf(button), S("hook.need_more", "Not enough resources"), Warn);
                 return;
             }
+
+            SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiPurchaseSuccess);
 
             QueueCelebration(S(offer.Id + ".title", offer.Id), offer.Grants);
             RefreshAll();
@@ -2316,9 +2353,8 @@ namespace Survival.Unity
             }
 
             var text = SurvivalVisuals.Text(_overlay, "Float", copy, size, TextAnchor.MiddleCenter, color);
-            var floatOutline = text.gameObject.AddComponent<Outline>();
-            floatOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);
-            floatOutline.effectDistance = new Vector2(2f, -2f);
+            HookSkin.Outlined(text, 2.4f);
+            text.fontStyle = FontStyle.Bold;
             StartCoroutine(Rise(text, at, 0.07f, 0.9f));
         }
 

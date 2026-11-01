@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using Survival.Domain.Audio;
+using Survival.Domain.Campaign;
 using Survival.Domain.Enemies;
 using Survival.Domain.Heroes;
 using Survival.Domain.Roster;
@@ -30,6 +32,7 @@ namespace Survival.Unity
 
         private readonly List<Fighter> _fighters = new List<Fighter>();
         private LockedBattleCamera? _camera;
+        private Light? _sun;
         private bool _booted;
         private float _time;
 
@@ -119,6 +122,8 @@ namespace Survival.Unity
                 }
             }
 
+            SeparateBodies();
+
             // Configured battle (Play → Battle Setup → Fight): HP, defeats, retargeting, the end (no-op standalone).
             TickConfigured(dt);
         }
@@ -179,11 +184,11 @@ namespace Survival.Unity
             }
             else if (distance > 1e-4f)
             {
-                var step = LockedBattleRoster.ApproachStep(distance, f.Data.AttackRangeMetres, LockedBattleRoster.BattleWalkSpeedOf(f.Data), dt);
+                var step = LockedBattleRoster.ApproachStep(distance, StopDistance(f, target), LockedBattleRoster.BattleWalkSpeedOf(f.Data), dt);
                 f.Slot.position += (to / distance) * step;
             }
 
-            if (distance <= f.Data.AttackRangeMetres)
+            if (distance <= StopDistance(f, target))
             {
                 BeginAttack(f);
             }
@@ -232,6 +237,58 @@ namespace Survival.Unity
         /// Host offset for the attack playing now: the reach slide toward the defender, and for a
         /// leap (in place) the stride bone's own forward carry held back on the spot.
         /// </summary>
+        /// <summary>
+        /// Where this fighter stops walking at <paramref name="target"/>: its attack range, or further when the two
+        /// bodies are deeper than that (<see cref="BattleSpacing"/>), so melee fighters face off at striking distance.
+        /// </summary>
+        private static float StopDistance(Fighter f, Fighter target) =>
+            BattleSpacing.StopDistance(f.Data.AttackRangeMetres, f.HalfDepth, target.HalfDepth);
+
+        /// <summary>
+        /// Last guard after every fighter moved: two opposing bodies closer than their depths plus the contact gap are
+        /// pushed apart, half each (a fighter already down, or a leap in place, is not pushed).
+        /// </summary>
+        private void SeparateBodies()
+        {
+            // Open arena (no lanes, Derek 2026-10-28): every pair of standing bodies, allies included, not just a
+            // fighter and its target.
+            _sepFighters.Clear();
+            _sepPositions.Clear();
+            _sepHalf.Clear();
+            foreach (var f in _fighters)
+            {
+                if (!f.Built || f.Down)
+                {
+                    continue;
+                }
+
+                var p = VisualPosition(f);
+                _sepFighters.Add(f);
+                _sepPositions.Add((p.x, p.z));
+                _sepHalf.Add(f.HalfDepth);
+            }
+
+            var before = _sepPositions.ToArray();
+            if (BattleArena.Separate(_sepPositions, _sepHalf) <= 1e-4f)
+            {
+                return;
+            }
+
+            for (var i = 0; i < _sepFighters.Count; i++)
+            {
+                var dx = _sepPositions[i].X - before[i].X;
+                var dz = _sepPositions[i].Z - before[i].Z;
+                if ((dx * dx) + (dz * dz) > 1e-10f)
+                {
+                    _sepFighters[i].Slot.position += new Vector3(dx, 0f, dz);
+                }
+            }
+        }
+
+        private readonly List<Fighter> _sepFighters = new List<Fighter>();
+        private readonly List<(float X, float Z)> _sepPositions = new List<(float X, float Z)>();
+        private readonly List<float> _sepHalf = new List<float>();
+
         private static void UpdateAttackOffset(Fighter f, bool inClip, float secondsIntoAttack)
         {
             var attack = LockedBattleRotation.AttackAt(f.Data, f.AttackIndex);
@@ -248,6 +305,16 @@ namespace Survival.Unity
                 var carried = RawStride(f) - f.AttackRootStart;
                 offset.x -= carried.x;
                 offset.z -= carried.z;
+            }
+
+            // The reach slide stops at the defender's body (only the room the defender's own slide left).
+            var target = f.Target;
+            if (target != null && target.Built && offset.z > 0f)
+            {
+                var gap = target.Slot.position - f.Slot.position;
+                gap.y = 0f;
+                var otherSlide = target.Target == f ? Mathf.Max(0f, WalkOffset(target)) : 0f;
+                offset.z = BattleSpacing.ClampReach(offset.z, gap.magnitude, otherSlide, f.HalfDepth, target.HalfDepth);
             }
 
             f.AttackOffset = offset;
@@ -449,6 +516,7 @@ namespace Survival.Unity
             var from = bone != null ? bone.position : attacker.Slot.position + (Vector3.up * 1.4f);
             var to = ShotContact(attacker, attackIndex, hitIndex);
             LockedBattleImpact.SpawnFlight(from, to, attack.FlightFrames / (float)BlenderRigAttackSpec.FrameRate, attack.FlightLoftMetres, attacker.Core, attacker.Glow);
+            SurvivalAudio.Play(AudioEventMap.BattleLaunch(SurvivalAudio.Config, attacker.Data.Name));
         }
 
         /// <summary>Spawns the attacker's impact burst at the contact and starts the defender's reaction.</summary>
@@ -463,6 +531,7 @@ namespace Survival.Unity
             var travel = target.Slot.position - attacker.Slot.position;
             travel.y = 0f;
             LockedBattleImpact.Spawn(LockedBattleRotation.Impact(attacker.Data, attacker.Profile, attackIndex), contact, travel, attacker.Core, attacker.Glow, attacker.Edge, attacker.BattleScale);
+            PlayHitSound(attacker, target, attackIndex, LockedBattleRotation.Impact(attacker.Data, attacker.Profile, attackIndex));
             _camera?.Shake(LockedBattleRotation.ShakeMetres(attacker.Data, attacker.Profile, attackIndex));
             var away = target.Slot.InverseTransformDirection(travel);
             away.y = 0f;
@@ -658,8 +727,10 @@ namespace Survival.Unity
 
             // Fight from Battle Setup: the handed-off lineup (heroes vs villains per lane, stats from their levels);
             // nothing pending keeps the standalone demo below.
+            SurvivalAudio.RequestMusic(this, AudioCues.MusicBattle);
             if (BootConfigured())
             {
+                PlayBossSting();
                 return;
             }
 
@@ -687,6 +758,39 @@ namespace Survival.Unity
             _camera.SetField(FieldBounds());
             BuildHud();
             Restart();
+            PlayBossSting();
+        }
+
+        private void OnDestroy()
+        {
+            SurvivalAudio.ReleaseMusic(this);
+        }
+
+        // ---------- sound (presentation only) ----------
+
+        private void PlayBossSting()
+        {
+            foreach (var f in _fighters)
+            {
+                if (AudioEventMap.IsBoss(SurvivalAudio.Config, f.Data.Name))
+                {
+                    SurvivalAudio.Play(AudioCues.BossIncoming);
+                    return;
+                }
+            }
+        }
+
+        private static bool OnHeroSide(Fighter f) =>
+            f.Unit != null ? f.Unit.Side == CampaignSide.Hero : f.Data.Side == BattleSide.Hero;
+
+        private static void PlayHitSound(Fighter attacker, Fighter target, int attackIndex, BattleImpactKind impact)
+        {
+            var label = LockedBattleRotation.AttackAt(attacker.Data, attackIndex).Label;
+            SurvivalAudio.Play(AudioEventMap.BattleImpact(SurvivalAudio.Config, attacker.Data.Name, label, impact));
+            if (OnHeroSide(target))
+            {
+                SurvivalAudio.Play(AudioCues.HeroHurt);
+            }
         }
 
 
@@ -924,6 +1028,7 @@ namespace Survival.Unity
             // Battle-only size (2x for the two dragons): placement and scale, never the clips.
             f.BattleScale = LockedBattleRoster.BattleScaleOf(data);
             f.Scale *= f.BattleScale;
+            f.HalfDepth = BattleSpacing.HalfDepthOf(data.Name, data.DesignHeightMetres, f.BattleScale);
             host.transform.localScale = new Vector3(f.Scale, f.Scale, f.Scale);
             f.BaseLocal = new Vector3(0f, -bounds.min.y * f.Scale, 0f);
             host.transform.localPosition = f.BaseLocal;
@@ -1021,6 +1126,7 @@ namespace Survival.Unity
                     ProjectileHit(captured, from, to, out contact);
                 driver.Blocker = Block;
                 driver.Impact = (track, contact) => LandHit(captured, contact);
+                driver.Launched = track => SurvivalAudio.Play(AudioEventMap.BattleLaunch(SurvivalAudio.Config, captured.Data.Name));
                 // The host's own position: it carries the ground planting (and any reach slide), so a
                 // shot leaves the mouth or hand where the body is drawn.
                 driver.LaunchFrame = () => captured.Slot.localToWorldMatrix
@@ -1245,7 +1351,33 @@ namespace Survival.Unity
                 // Loaded additively over Play: keep the lights in the battle's own scene so they unload with it.
                 key.transform.SetParent(transform, true);
                 fillGo.transform.SetParent(transform, true);
+
+                // The open arena: one warm sun that follows the orbit (see BattleLight), bright trilight ambient
+                // instead of the grey flat ambient, and no second directional (mobile: one realtime directional).
+                Object.Destroy(fillGo);
+                RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+                RenderSettings.ambientSkyColor = Rgb(BattleLight.SkyAmbient);
+                RenderSettings.ambientEquatorColor = Rgb(BattleLight.EquatorAmbient);
+                RenderSettings.ambientGroundColor = Rgb(BattleLight.GroundAmbient);
+                light.intensity = BattleLight.SunIntensity;
+                light.color = Rgb(BattleLight.SunColour);
+                _sun = light;
             }
+        }
+
+        private static Color Rgb((float R, float G, float B) c) => new Color(c.R, c.G, c.B, 1f);
+
+        /// <summary>Keep the open-arena sun over the viewer's shoulder as the camera orbits, so no fighter is backlit.</summary>
+        private void FollowSun(Camera? cam)
+        {
+            if (_sun == null || cam == null)
+            {
+                return;
+            }
+
+            var f = cam.transform.forward;
+            var yaw = Mathf.Atan2(f.x, f.z) * Mathf.Rad2Deg;
+            _sun.transform.rotation = Quaternion.Euler(BattleLight.SunPitchDegrees, BattleLight.SunYawDegrees(yaw), 0f);
         }
 
         private static void DestroyNamed(string name)
@@ -1372,6 +1504,9 @@ namespace Survival.Unity
 
             /// <summary>Battle-only size on top of the design-height fit (<see cref="LockedBattleRoster.BattleScaleOf"/>).</summary>
             public float BattleScale { get; set; } = 1f;
+
+            /// <summary>Front-to-back half-depth of the body (metres, battle scale); see <see cref="BattleSpacing"/>.</summary>
+            public float HalfDepth { get; set; } = 0.36f;
             public Vector3 StartPosition { get; set; }
             public Quaternion StartRotation { get; set; }
             public Transform? StrideBone { get; set; }
