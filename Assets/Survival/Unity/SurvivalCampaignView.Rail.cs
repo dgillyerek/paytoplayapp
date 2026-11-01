@@ -101,6 +101,8 @@ namespace Survival.Unity
                 Juice(rt);
                 tap();
             });
+            // Join the shared side rail (HUD declutter); the Box above is only the no-rail fallback.
+            _play.RegisterRail(RailPrefix + name, top, rt);
             return rt;
         }
 
