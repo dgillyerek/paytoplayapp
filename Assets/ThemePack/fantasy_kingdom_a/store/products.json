@@ -4,6 +4,7 @@
     { "sku": "sku.hard_s", "product_id": "com.paytoplay.fantasykingdoma.hard_s", "price_label": "$0.99" },
     { "sku": "sku.hard_m", "product_id": "com.paytoplay.fantasykingdoma.hard_m", "price_label": "$4.99" },
     { "sku": "sku.starter_pack", "product_id": "com.paytoplay.fantasykingdoma.starter_pack", "price_label": "$1.99" },
+    { "sku": "sku.merchant_bundle", "product_id": "com.paytoplay.fantasykingdoma.merchant_bundle", "price_label": "$1.99" },
     { "sku": "sku.temp_builder", "product_id": "com.paytoplay.fantasykingdoma.temp_builder", "price_label": "$1.99" },
     { "sku": "sku.power_t1", "product_id": "com.paytoplay.fantasykingdoma.power_t1", "price_label": "$0.99" },
     { "sku": "sku.power_t2", "product_id": "com.paytoplay.fantasykingdoma.power_t2", "price_label": "$1.99" },
@@ -13,6 +14,7 @@
     { "sku": "sku.power_t6", "product_id": "com.paytoplay.fantasykingdoma.power_t6", "price_label": "$39.99" },
     { "sku": "sku.track_premium", "product_id": "com.paytoplay.fantasykingdoma.track_premium", "price_label": "$2.99" },
     { "sku": "sku.track_royal", "product_id": "com.paytoplay.fantasykingdoma.track_royal", "price_label": "$3.99" },
-    { "sku": "sku.track_royal_upgrade", "product_id": "com.paytoplay.fantasykingdoma.track_royal_upgrade", "price_label": "$0.99" }
+    { "sku": "sku.track_royal_upgrade", "product_id": "com.paytoplay.fantasykingdoma.track_royal_upgrade", "price_label": "$0.99" },
+    { "sku": "sku.pass_season", "product_id": "com.paytoplay.fantasykingdoma.pass_season", "price_label": "$9.99" }
   ]
 }
