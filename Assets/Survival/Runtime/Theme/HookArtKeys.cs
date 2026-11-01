@@ -33,6 +33,12 @@ namespace Survival.Domain.Theme
         public const string ChestClosed = "theme_a.hook.icon.chest_closed";
         public const string ChestOpen = "theme_a.hook.icon.chest_open";
         public const string Gift = "theme_a.hook.icon.gift";
+        public const string CrusadeBanner = "theme_a.hook.icon.crusade_banner";
+        public const string WantedPoster = "theme_a.hook.icon.wanted_poster";
+        public const string TavernBoard = "theme_a.hook.icon.tavern_board";
+        public const string TrophyBronze = "theme_a.hook.icon.trophy_bronze";
+        public const string TrophySilver = "theme_a.hook.icon.trophy_silver";
+        public const string TrophyGold = "theme_a.hook.icon.trophy_gold";
         public const string OrbCrystal = "theme_a.hook.icon.orb_crystal";
         public const string ChestMystery = "theme_a.hook.icon.chest_mystery";
         public const string GemsTier1 = "theme_a.hook.icon.gems_tier_1";
