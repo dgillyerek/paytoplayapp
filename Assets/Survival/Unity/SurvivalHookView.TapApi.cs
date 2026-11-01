@@ -107,53 +107,14 @@ namespace Survival.Unity
         /// </summary>
         internal Button TapHudButton(RectTransform root, string name, float yTop, string label, Color tint, out TapHudParts parts)
         {
-            const float x0 = 0.018f;
-            const float x1 = 0.168f;
-            const float h = 0.076f;
-            var frame = HookSkin.Panel(root, name, HookArtKeys.ButtonBlue, tint, 0.42f);
-            frame.raycastTarget = true;
-            var btn = frame.gameObject.AddComponent<Button>();
-            btn.targetGraphic = frame;
-            Box(frame.rectTransform, x0, 1f - yTop - h, x1, 1f - yTop);
-            Ornaments.Bevel(frame.transform, 0.8f);
-            Ornaments.Frame(frame.transform, Ornaments.Gold, 3f);
-            Ornaments.Shine(frame.rectTransform, 3.4f);
-
-            var icon = new GameObject("Icon", typeof(RectTransform)).GetComponent<RectTransform>();
-            icon.SetParent(frame.transform, false);
-            Box(icon, 0.12f, 0.30f, 0.88f, 0.98f);
-
-            var plate = HookSkin.Panel(frame.transform, "Plate", HookArtKeys.Chip, SurvivalVisuals.PanelSoft, 0.4f);
-            plate.raycastTarget = false;
-            Box(plate.rectTransform, -0.06f, -0.06f, 1.06f, 0.30f);
-            var text = HookSkin.Outlined(SurvivalVisuals.Text(plate.transform, "T", label, 15, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.4f);
-            text.fontStyle = FontStyle.Bold;
-            text.raycastTarget = false;
-            HookSkin.Fit(text, 9, 15);
-            SurvivalVisuals.Stretch(text.rectTransform);
-
-            var badgeSprite = SurvivalArt.Get(HookArtKeys.BadgeFree);
-            var badge = badgeSprite != null
-                ? SurvivalVisuals.Image(frame.transform, "FreeBadge", Color.white, badgeSprite)
-                : SurvivalVisuals.Image(frame.transform, "FreeBadge", TapFreeGreen);
-            badge.preserveAspect = true;
-            badge.raycastTarget = false;
-            Box(badge.rectTransform, 0.48f, 0.72f, 1.14f, 1.10f);
-            var badgeText = HookSkin.Outlined(SurvivalVisuals.Text(badge.transform, "T", S("hook.free", "FREE"), 14, TextAnchor.MiddleCenter, Color.white), 1.4f);
-            badgeText.fontStyle = FontStyle.Bold;
-            SurvivalVisuals.Stretch(badgeText.rectTransform);
-            badge.gameObject.SetActive(false);
-
-            var dot = SurvivalVisuals.Circle(frame.transform, "Dot", new Color(0.90f, 0.18f, 0.16f, 1f));
-            dot.raycastTarget = false;
-            Box(dot.rectTransform, 0.76f, 0.74f, 1.02f, 1.02f);
-            var dotText = HookSkin.Outlined(SurvivalVisuals.Text(dot.transform, "T", "!", 15, TextAnchor.MiddleCenter, Color.white), 1.2f);
-            dotText.fontStyle = FontStyle.Bold;
-            SurvivalVisuals.Stretch(dotText.rectTransform);
-            dot.gameObject.SetActive(false);
-
-            parts = new TapHudParts(frame.rectTransform, icon, text, badge, dot, dotText);
-            return btn;
+            // Round ornate icon. With a side rail it joins the rail (yTop is the order hint, so features keep
+            // their relative order); without one it sits on the left edge at yTop like before.
+            var round = SurvivalSideRail.Round(root, name, null, label, tint);
+            Box(round.Root, 0.018f, 1f - yTop - 0.076f, 0.168f, 1f - yTop);
+            _play?.RegisterRail(name, yTop, round.Root);
+            round.FreeText.text = S("hook.free", "FREE");
+            parts = new TapHudParts(round.Root, round.Icon, round.Label, round.Free, round.Dot, round.DotText);
+            return round.Button;
         }
 
         /// <summary>Juice for a tapped HUD button: punch plus a ring.</summary>

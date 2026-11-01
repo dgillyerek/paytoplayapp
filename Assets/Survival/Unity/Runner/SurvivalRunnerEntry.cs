@@ -49,6 +49,14 @@ namespace Survival.Unity
             _pack = pack;
             _hook = hook;
             _campaign = campaign;
+            // Decluttered HUD: the runner is the first, pinned icon on the side rail.
+            var rail = play.AddRailButton(ButtonName, -1f, RunnerArtKeys.EventIcon, pack.StringOr("runner.button", "Runner"), new Color(0.62f, 0.22f, 0.18f, 1f), OnRunnerTapped, pinned: true);
+            if (rail != null)
+            {
+                Button = rail.Root;
+                return;
+            }
+
             var btn = SurvivalPaintedButton.Create(play.Root, ButtonName, RunnerArtKeys.EventIcon, pack.StringOr("runner.button", "Runner"), out _, out _, 22);
             Button = btn.GetComponent<RectTransform>();
             if (pack.Hud.TryGetValue(Slot, out var slot))

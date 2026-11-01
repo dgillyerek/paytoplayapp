@@ -1246,7 +1246,7 @@ public sealed class RunnerTests
             Assert.True(pack.Strings.ContainsKey(key), key);
         }
 
-        Assert.True(pack.Hud.ContainsKey("runner_button"));
+        Assert.True(pack.Hud.ContainsKey("side_rail")); // the runner lives in the side rail
     }
 
     private static string RepoRoot()
