@@ -5,6 +5,7 @@ using Survival.Domain.Campaign;
 using Survival.Domain.Clock;
 using Survival.Domain.Economy;
 using Survival.Domain.Ids;
+using Survival.Domain.Theme;
 using Survival.Domain.Serialization;
 
 namespace Survival.Domain.DailyLogin
@@ -46,6 +47,14 @@ namespace Survival.Domain.DailyLogin
             new Dictionary<string, int> { [SurvIds.ResHard] = 40 },
             new Dictionary<string, int> { [SurvIds.ResHard] = 100, [SurvIds.ResSoft] = 30000, [SurvIds.ResSpeedupM] = 60, [SurvIds.ResHeroXp] = 2 }
         };
+
+        /// <summary>Painted art per day, richer toward day 7: gifts, then gems, chests, and the open Royal Chest.</summary>
+        public static readonly string[] DayArt =
+        {
+            HookArtKeys.Gift, HookArtKeys.Gift, HookArtKeys.GemsTier1, HookArtKeys.ChestClosed, HookArtKeys.GemsTier2, HookArtKeys.GemsTier3, HookArtKeys.ChestOpen,
+        };
+
+        public static string ArtKey(int dayIndex) => DayArt[Math.Max(0, Math.Min(DayArt.Length - 1, dayIndex))];
 
         public DailyLogin(IGameClock clock, double utcOffsetSeconds = 0, IReadOnlyList<IReadOnlyDictionary<string, int>>? rewards = null)
         {

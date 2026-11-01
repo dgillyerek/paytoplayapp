@@ -70,5 +70,14 @@ namespace Survival.Domain.Tests
             Assert.Equal(2, d2.NextDay);
             Assert.True(d2.SecondsUntilNext > 0 && d2.SecondsUntilNext <= Day);
         }
+
+        [Fact]
+        public void DayArtGrowsRicherTowardTheRoyalChest()
+        {
+            Assert.Equal(DailyLogin.DailyLogin.Days, DailyLogin.DailyLogin.DayArt.Length);
+            Assert.Equal(Survival.Domain.Theme.HookArtKeys.Gift, DailyLogin.DailyLogin.ArtKey(0));
+            Assert.Equal(Survival.Domain.Theme.HookArtKeys.ChestOpen, DailyLogin.DailyLogin.ArtKey(6));
+            Assert.Equal(Survival.Domain.Theme.HookArtKeys.ChestOpen, DailyLogin.DailyLogin.ArtKey(99));
+        }
     }
 }
