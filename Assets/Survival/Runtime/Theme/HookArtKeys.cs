@@ -26,11 +26,15 @@ namespace Survival.Domain.Theme
         public const string RibbonRed = "theme_a.hook.ui.ribbon_red";
         public const string RibbonBlue = "theme_a.hook.ui.ribbon_blue";
         public const string BadgeFree = "theme_a.hook.ui.badge_free";
+        /// <summary>Painted gold-chevron shield: a hero can level up, star up, unlock or finish training.</summary>
+        public const string BadgeUpgrade = "theme_a.hook.ui.badge_upgrade";
         public const string Header = "theme_a.hook.ui.header";
 
         public const string ChestClosed = "theme_a.hook.icon.chest_closed";
         public const string ChestOpen = "theme_a.hook.icon.chest_open";
         public const string Gift = "theme_a.hook.icon.gift";
+        public const string OrbCrystal = "theme_a.hook.icon.orb_crystal";
+        public const string ChestMystery = "theme_a.hook.icon.chest_mystery";
         public const string GemsTier1 = "theme_a.hook.icon.gems_tier_1";
         public const string GemsTier2 = "theme_a.hook.icon.gems_tier_2";
         public const string GemsTier3 = "theme_a.hook.icon.gems_tier_3";
