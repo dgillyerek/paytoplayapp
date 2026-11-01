@@ -117,6 +117,7 @@ namespace Survival.Unity
             }
 
             _button?.Show(_orb.State == OrbState.Glowing, _orb.State == OrbState.Complete);
+            _view.TapRailShown("CrystalOrbButton", Survival.Domain.View.RailActionable.Orb(_orb));
         }
 
         private void Refresh()

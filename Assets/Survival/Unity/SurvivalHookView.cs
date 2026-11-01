@@ -147,10 +147,10 @@ namespace Survival.Unity
             BuildBuildButton(root);
             BuildQuestTracker(root);
             BuildShopButton(root);
-            if (Application.isEditor || Debug.isDebugBuild)
-            {
-                BuildDebugButtons(root);
-            }
+#if DEVELOPMENT_BUILD
+            // G / T chips only in development player builds; the G / T keys still work in the editor.
+            BuildDebugButtons(root);
+#endif
 
             play.Fx?.SetAsLastSibling();
             _hook.Wallet.Changed += OnWalletChanged;
@@ -361,44 +361,39 @@ namespace Survival.Unity
                 return;
             }
 
-            var scroll = HookSkin.Has(HookArtKeys.Scroll);
-            var frame = HookSkin.Panel(root, "QuestTracker", HookArtKeys.Scroll, SurvivalVisuals.Panel, 0.8f);
+            // Slim strip under the top bar: chest | "Quest 1/3  Collect from Farm" over a thin bar | 0/3.
+            var frame = HookSkin.Panel(root, "QuestTracker", HookArtKeys.Panel, SurvivalVisuals.Panel, 0.35f);
             frame.raycastTarget = true;
             var btn = frame.gameObject.AddComponent<Button>();
             btn.targetGraphic = frame;
             SurvivalVisuals.Place(frame.rectTransform, questRect);
+            Ornaments.Frame(frame.transform, Ornaments.Gold, 2f);
+            Ornaments.Shine(frame.rectTransform, 4.2f);
 
-            var titleInk = scroll ? HookSkin.ParchmentTitle : SurvivalVisuals.Gold;
-            var bodyInk = scroll ? HookSkin.ParchmentInk : SurvivalVisuals.Cream;
             var q = new QuestTracker { Root = frame.rectTransform };
-            q.Title = SurvivalVisuals.Text(frame.transform, "Title", "", 17, TextAnchor.MiddleLeft, titleInk);
+            q.Title = HookSkin.Outlined(SurvivalVisuals.Text(frame.transform, "Title", "", 16, TextAnchor.MiddleLeft, SurvivalVisuals.Reward), 1.3f);
             q.Title.fontStyle = FontStyle.Bold;
-            Box(q.Title.rectTransform, 0.11f, 0.68f, 0.74f, 0.90f);
-            q.Body = SurvivalVisuals.Text(frame.transform, "Body", "", 17, TextAnchor.UpperLeft, bodyInk);
+            HookSkin.Fit(q.Title, 10, 16);
+            Box(q.Title.rectTransform, 0.12f, 0.42f, 0.36f, 0.96f);
+            q.Body = HookSkin.Outlined(SurvivalVisuals.Text(frame.transform, "Body", "", 16, TextAnchor.MiddleLeft, HookSkin.Cream), 1.3f);
             q.Body.horizontalOverflow = HorizontalWrapMode.Wrap;
-            Box(q.Body.rectTransform, 0.11f, 0.34f, 0.74f, 0.68f);
+            HookSkin.Fit(q.Body, 10, 16);
+            Box(q.Body.rectTransform, 0.36f, 0.42f, 0.84f, 0.96f);
             var bar = HookSkin.Bar(frame.transform, "Bar", out q.BarFill);
             q.BarBack = bar;
-            Box(bar.rectTransform, 0.10f, 0.13f, 0.56f, 0.30f);
-            q.Count = SurvivalVisuals.Text(frame.transform, "Count", "", 16, TextAnchor.MiddleLeft, bodyInk);
+            Box(bar.rectTransform, 0.12f, 0.12f, 0.72f, 0.38f);
+            q.Count = HookSkin.Outlined(SurvivalVisuals.Text(frame.transform, "Count", "", 16, TextAnchor.MiddleCenter, HookSkin.Cream), 1.3f);
             q.Count.fontStyle = FontStyle.Bold;
-            Box(q.Count.rectTransform, 0.58f, 0.10f, 0.74f, 0.32f);
-            if (scroll)
-            {
-                // Light text over the painted parchment needs a dark backing to read.
-                Ornaments.Backing(q.Title);
-                Ornaments.Backing(q.Body);
-                Ornaments.Backing(q.Count);
-            }
+            Box(q.Count.rectTransform, 0.72f, 0.04f, 0.86f, 0.50f);
 
-            // Reward chest preview always sits on the scroll; it glows and hops once the step is done.
+            // Reward chest sits at the left end; it glows and hops once the step is done.
             var preview = HookSkin.Art(frame.transform, "ChestPreview", HookArtKeys.ChestClosed, ChestWood);
-            Box(preview.rectTransform, 0.74f, 0.16f, 0.92f, 0.84f);
-            preview.color = new Color(1f, 1f, 1f, 0.55f);
+            Box(preview.rectTransform, 0.01f, 0.02f, 0.11f, 0.98f);
+            preview.color = new Color(1f, 1f, 1f, 0.75f);
             _questPreview = preview;
 
             var chestHost = SurvivalVisuals.Image(frame.transform, "Chest", new Color(0f, 0f, 0f, 0f));
-            Box(chestHost.rectTransform, 0.70f, 0.06f, 0.98f, 0.96f);
+            Box(chestHost.rectTransform, 0.86f, -0.20f, 1.0f, 1.20f);
             var chestGlow = HookSkin.Glow(chestHost.transform, "Glow", new Color(1f, 0.85f, 0.4f, 0.9f));
             Box(chestGlow.rectTransform, -0.35f, -0.35f, 1.35f, 1.35f);
             if (HookSkin.Has(HookArtKeys.ChestClosed))
@@ -411,8 +406,8 @@ namespace Survival.Unity
                 BuildChestArt(chestHost.rectTransform, out _);
             }
 
-            var claim = HookSkin.Outlined(SurvivalVisuals.Text(chestHost.transform, "Claim", S("hook.claim", "Claim"), 17, TextAnchor.LowerCenter, SurvivalVisuals.Reward));
-            Box(claim.rectTransform, -0.2f, -0.30f, 1.2f, 0.05f);
+            var claim = HookSkin.Outlined(SurvivalVisuals.Text(chestHost.transform, "Claim", S("hook.claim", "Claim"), 15, TextAnchor.UpperCenter, SurvivalVisuals.Reward));
+            Box(claim.rectTransform, -0.4f, -0.70f, 1.4f, 0.05f);
             q.Chest = chestHost.rectTransform;
             q.Chest.gameObject.SetActive(false);
 
@@ -427,37 +422,30 @@ namespace Survival.Unity
                 return;
             }
 
-            var frame = HookSkin.Panel(root, "GemShopButton", HookArtKeys.ButtonBlue, SurvivalVisuals.AttackFill, 0.42f);
-            frame.raycastTarget = true;
-            var btn = frame.gameObject.AddComponent<Button>();
-            btn.targetGraphic = frame;
-            SurvivalVisuals.Place(frame.rectTransform, shopRect);
-            var storeArt = SurvivalArt.Get(SurvIds.ThemeAStoreIcon);
-            var icon = storeArt != null
-                ? SurvivalVisuals.Image(frame.transform, "Icon", Color.white, storeArt)
-                : SurvivalVisuals.Circle(frame.transform, "Icon", ResColor(SurvIds.ResHard));
-            icon.preserveAspect = true;
-            Box(icon.rectTransform, -0.04f, -0.25f, 0.32f, 1.25f);
-            var label = HookSkin.Outlined(SurvivalVisuals.Text(frame.transform, "T", S("store.gem_shop.button", "Gem Shop"), 21, TextAnchor.MiddleLeft, SurvivalVisuals.Cream));
-            label.fontStyle = FontStyle.Bold;
-            Box(label.rectTransform, 0.31f, 0f, 1f, 1f);
-
-            _freeGlow = HookSkin.Glow(frame.transform, "FreeGlow", new Color(0.55f, 1f, 0.45f, 0.8f));
-            Box(_freeGlow.rectTransform, 0.60f, 0.05f, 1.16f, 1.80f);
-            var badgeSprite = SurvivalArt.Get(HookArtKeys.BadgeFree);
-            _freeBadge = badgeSprite != null
-                ? SurvivalVisuals.Image(frame.transform, "FreeBadge", Color.white, badgeSprite)
-                : SurvivalVisuals.Image(frame.transform, "FreeBadge", FreeGreen);
-            _freeBadge.preserveAspect = true;
-            Box(_freeBadge.rectTransform, 0.68f, 0.30f, 1.08f, 1.55f);
-            var badgeText = HookSkin.Outlined(SurvivalVisuals.Text(_freeBadge.transform, "T", S("hook.free", "FREE"), 17, TextAnchor.MiddleCenter, Color.white), 1.5f);
-            badgeText.fontStyle = FontStyle.Bold;
-            SurvivalVisuals.Stretch(badgeText.rectTransform);
+            // One round Shop icon on the right edge; the "+" on the gems chip opens the same shop.
+            var parts = SurvivalSideRail.Round(root, "GemShopButton", SurvIds.ThemeAStoreIcon, S("store.shop_short", "Shop"), new Color(0.20f, 0.42f, 0.78f, 1f));
+            SurvivalVisuals.Place(parts.Root, shopRect);
+            var ring = parts.Root.Find("DiscHost/Ring");
+            _freeGlow = HookSkin.Glow(ring != null ? ring : parts.Root, "FreeGlow", new Color(0.55f, 1f, 0.45f, 0.8f));
+            Box(_freeGlow.rectTransform, -0.25f, -0.25f, 1.25f, 1.25f);
+            _freeGlow.transform.SetAsFirstSibling();
+            _freeBadge = parts.Free;
+            parts.FreeText.text = S("hook.free", "FREE");
             _freeBadge.gameObject.SetActive(false);
             _freeGlow.gameObject.SetActive(false);
+            _shopButton = parts.Root;
+            Wire(parts.Button, OpenShop);
 
-            _shopButton = frame.rectTransform;
-            Wire(btn, OpenShop);
+            if (_pack.Hud.TryGetValue("gem_plus", out var plusRect))
+            {
+                var plus = HookSkin.Button(root, "GemPlus", HookArtKeys.ButtonGreen, FreeGreen, 0.3f);
+                SurvivalVisuals.Place(plus.GetComponent<RectTransform>(), plusRect);
+                Ornaments.Frame(plus.transform, Ornaments.Gold, 2f);
+                var t = HookSkin.Outlined(SurvivalVisuals.Text(plus.transform, "T", "+", 30, TextAnchor.MiddleCenter, HookSkin.Cream), 1.6f);
+                t.fontStyle = FontStyle.Bold;
+                SurvivalVisuals.Stretch(t.rectTransform);
+                Wire(plus, OpenShop);
+            }
         }
 
         private void BuildDebugButtons(RectTransform root)

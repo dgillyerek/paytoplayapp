@@ -58,6 +58,7 @@ namespace Survival.Unity
             if (_trophies != null)
             {
                 RailBadge(_trophyBadge, _trophyBadgeCount, _trophies.ReadyCount);
+                RailShown(TrophyHallRailName, Survival.Domain.View.RailActionable.Trophy(_trophies.ReadyCount));
             }
         }
 

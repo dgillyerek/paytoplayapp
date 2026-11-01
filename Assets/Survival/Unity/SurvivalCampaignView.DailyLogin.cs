@@ -46,7 +46,7 @@ namespace Survival.Unity
             }
 
             _daily.Changed += SaveDaily;
-            RailButton(0, DailyLoginRailName, "\u2756", S("daily.rail", "DAILY"), new Color(0.62f, 0.16f, 0.14f, 1f), OpenDailyLogin, out var badge, out var count);
+            RailButton(0, DailyLoginRailName, "\u2756", S("daily.rail", "DAILY"), new Color(0.62f, 0.16f, 0.14f, 1f), OpenDailyLogin, out var badge, out var count, HookArtKeys.ChestClosed);
             _dailyBadge = badge;
             _dailyBadgeCount = count;
         }
@@ -59,6 +59,7 @@ namespace Survival.Unity
             }
 
             RailBadge(_dailyBadge, _dailyBadgeCount, _daily.CanClaim ? 1 : 0);
+            RailShown(DailyLoginRailName, Survival.Domain.View.RailActionable.Daily(_daily.CanClaim));
             if (!_dailyAutoShown && _daily.CanClaim)
             {
                 _dailyAutoDelay -= 0.25f;

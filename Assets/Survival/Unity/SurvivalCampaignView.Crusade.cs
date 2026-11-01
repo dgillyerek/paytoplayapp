@@ -91,6 +91,7 @@ namespace Survival.Unity
             }
 
             RailBadge(_crusadeBadge, _crusadeBadgeCount, c.ReadyCount);
+            RailShown(CrusadeRailName, Survival.Domain.View.RailActionable.Crusade(c));
         }
 
         private void SaveCrusade()

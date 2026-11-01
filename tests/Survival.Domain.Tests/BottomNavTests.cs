@@ -76,7 +76,7 @@ public sealed class BottomNavTests
             Assert.True(pack.Strings.ContainsKey(id), id);
         }
 
-        foreach (var slot in new[] { "nav", "build_button", "debug_gift", "debug_skip", "view_toggle" })
+        foreach (var slot in new[] { "nav", "side_rail", "debug_gift", "debug_skip" })
         {
             Assert.True(pack.Hud.ContainsKey(slot), slot);
         }

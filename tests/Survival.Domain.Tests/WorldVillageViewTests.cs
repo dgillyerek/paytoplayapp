@@ -595,7 +595,7 @@ public sealed class WorldVillageArtTests
             Assert.True(pack.Strings.ContainsKey("world.camp." + t), t);
         }
 
-        foreach (var slot in new[] { "view_toggle", "map_card", "quest_tracker", "gem_shop", "nav" })
+        foreach (var slot in new[] { "side_rail", "map_card", "quest_tracker", "gem_shop", "gem_plus", "nav" })
         {
             Assert.True(pack.Hud.ContainsKey(slot), slot);
         }
