@@ -99,6 +99,7 @@ namespace Survival.Unity
             scaler.referenceResolution = new Vector2(PlayHudLayout.ReferenceWidth, PlayHudLayout.ReferenceHeight);
             scaler.matchWidthOrHeight = 1f;
             go.AddComponent<GraphicRaycaster>();
+            go.AddComponent<ContrastGuard>();
             return go.GetComponent<RectTransform>();
         }
 
