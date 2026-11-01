@@ -86,6 +86,44 @@ namespace Survival.Domain.Runner
     /// the hips and legs stay on the walk loop. Each take crossfades in and out over <see cref="CrossfadeSeconds"/>;
     /// its timing (and so its release frame) is untouched.
     /// </summary>
+    /// <summary>
+    /// Ranged enemies that walk in while they shoot (Derek 2026-10-31: "this character doesn't walk on the runner"). Their
+    /// fire cycle is shorter than the sim's Attacking window, so once they had fired they never left the attack pose and
+    /// slid down the road in the conjure / rest-gap stance. They play the take on the upper body (as the squad shooters)
+    /// with the legs on the walk loop while the sim moves them, and standing once they hold their range.
+    /// </summary>
+    public static class RunnerWalkingShooterFoes
+    {
+        public static readonly string[] Names = { "Vespera", "Bonequill" };
+
+        public static bool Applies(string rosterName) => Array.IndexOf(Names, rosterName) >= 0;
+
+        /// <summary>What a foe's body should show this frame.</summary>
+        public static RunnerFoeBody BodyFor(bool walking, bool attacking, bool inTake, bool layered)
+        {
+            if (attacking && layered)
+            {
+                return walking ? RunnerFoeBody.AttackWalking : RunnerFoeBody.AttackStanding;
+            }
+
+            if (attacking && !(walking && !inTake))
+            {
+                return RunnerFoeBody.Attack;
+            }
+
+            return walking ? RunnerFoeBody.Walk : RunnerFoeBody.Rest;
+        }
+    }
+
+    public enum RunnerFoeBody
+    {
+        Walk,
+        Rest,
+        Attack,
+        AttackWalking,
+        AttackStanding,
+    }
+
     public static class RunnerUpperBodyAttack
     {
         public const float CrossfadeSeconds = 0.1f;

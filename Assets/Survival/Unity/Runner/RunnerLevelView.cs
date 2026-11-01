@@ -976,18 +976,24 @@ namespace Survival.Unity
                     var at = (f.TargetId != 0 ? _run.Member(f.TargetId) : null) ?? _run.Hero;
                     rig.Face(new Vector3(at.X - f.X, 0f, at.Z - f.Z));
                 }
-                if (f.Attacking)
+                // Walking shooters (Vespera, Bonequill) keep their legs on the walk under the take; any other foe the sim is
+                // moving between swings walks instead of sliding in its attack / rest-gap pose.
+                switch (RunnerWalkingShooterFoes.BodyFor(f.Walking, f.Attacking, f.InTake, RunnerWalkingShooterFoes.Applies(rig.Data.Name)))
                 {
-                    continue;
-                }
-
-                if (f.Walking)
-                {
-                    rig.Walk();
-                }
-                else
-                {
-                    rig.Rest();
+                    case RunnerFoeBody.AttackWalking:
+                        rig.WalkUnderAttack(true);
+                        break;
+                    case RunnerFoeBody.AttackStanding:
+                        rig.WalkUnderAttack(false);
+                        break;
+                    case RunnerFoeBody.Attack:
+                        break;
+                    case RunnerFoeBody.Walk:
+                        rig.Walk();
+                        break;
+                    default:
+                        rig.Rest();
+                        break;
                 }
             }
         }
