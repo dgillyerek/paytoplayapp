@@ -86,6 +86,44 @@ namespace Survival.Domain.Runner
     /// the hips and legs stay on the walk loop. Each take crossfades in and out over <see cref="CrossfadeSeconds"/>;
     /// its timing (and so its release frame) is untouched.
     /// </summary>
+    /// <summary>
+    /// Ranged enemies that walk in while they shoot (Derek 2026-10-31: "this character doesn't walk on the runner"). Their
+    /// fire cycle is shorter than the sim's Attacking window, so once they had fired they never left the attack pose and
+    /// slid down the road in the conjure / rest-gap stance. They play the take on the upper body (as the squad shooters)
+    /// with the legs on the walk loop while the sim moves them, and standing once they hold their range.
+    /// </summary>
+    public static class RunnerWalkingShooterFoes
+    {
+        public static readonly string[] Names = { "Vespera", "Bonequill" };
+
+        public static bool Applies(string rosterName) => Array.IndexOf(Names, rosterName) >= 0;
+
+        /// <summary>What a foe's body should show this frame.</summary>
+        public static RunnerFoeBody BodyFor(bool walking, bool attacking, bool inTake, bool layered)
+        {
+            if (attacking && layered)
+            {
+                return walking ? RunnerFoeBody.AttackWalking : RunnerFoeBody.AttackStanding;
+            }
+
+            if (attacking && !(walking && !inTake))
+            {
+                return RunnerFoeBody.Attack;
+            }
+
+            return walking ? RunnerFoeBody.Walk : RunnerFoeBody.Rest;
+        }
+    }
+
+    public enum RunnerFoeBody
+    {
+        Walk,
+        Rest,
+        Attack,
+        AttackWalking,
+        AttackStanding,
+    }
+
     public static class RunnerUpperBodyAttack
     {
         public const float CrossfadeSeconds = 0.1f;
@@ -111,6 +149,11 @@ namespace Survival.Domain.Runner
             return u * u * (3f - (2f * u));
         }
 
+        /// <summary>How much of the take the upper body shows with the current take at <paramref name="take"/> and the fading one at <paramref name="prev"/>.</summary>
+        public static float CopyWeight(float take, float prev) => 1f - ((1f - Clamp01(take)) * (1f - Clamp01(prev)));
+
+        private static float Clamp01(float v) => v < 0f ? 0f : v > 1f ? 1f : v;
+
         /// <summary>Weight of a take <paramref name="age"/> seconds after it started.</summary>
         public static float FadeIn(float age) => Ease(age / CrossfadeSeconds);
 
@@ -121,6 +164,8 @@ namespace Survival.Domain.Runner
         /// True when the transform at <paramref name="path"/> (relative to the animator, '/'-separated) takes the attack.
         /// The hips, their ancestors and every hips branch other than the spine (the legs) stay on the walk; the spine
         /// and everything under it take the attack, as does a side branch beside the hips (a weapon bone).
+        /// A rig with no Hips bone (Vespera: Spine1 and the legs are roots under the armature object) passes the legs'
+        /// parent as the hips and its Spine* child as the spine (Derek 2026-10-31: "she still slides between firing").
         /// </summary>
         public static bool IsUpperBody(string path, string hipsPath, string spineName)
         {

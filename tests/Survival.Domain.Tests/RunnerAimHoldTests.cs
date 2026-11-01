@@ -99,7 +99,8 @@ public sealed class RunnerAimHoldTests
         var root = Layouts.RepoRoot();
         var rig = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "Runner", "RunnerRig.cs"));
         Assert.Equal(3, rig.Split("rig._steady = RunnerAimHold.Applies(data.Name);").Length - 1);
-        Assert.Equal(3, rig.Split("rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);").Length - 1);
+        // The three squad shooters plus the two walking shooter foes (Vespera, Bonequill).
+        Assert.Equal(5, rig.Split("rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);").Length - 1);
         Assert.Contains("var w = _steady ? 0f : _reaction.Weight(_hitAge);", rig);
         Assert.Contains("_steady ? 0f : _leanTarget", rig);
         var view = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "Runner", "RunnerLevelView.cs"));
