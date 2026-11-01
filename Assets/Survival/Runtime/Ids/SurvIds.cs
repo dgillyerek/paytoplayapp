@@ -151,6 +151,9 @@ namespace Survival.Domain.Ids
         public const string SkuPowerT6 = "sku.power_t6";
         public const string SkuSpeedupBundle = "sku.speedup_bundle";
         public const string SkuStarterPack = "sku.starter_pack";
+
+        /// <summary>$1.99: one extra builder for 12 hours (offered when every builder is busy).</summary>
+        public const string SkuTempBuilder = "sku.temp_builder";
         public const string SkuPassSeason = "sku.pass_season";
         public const string SkuTrackPremium = "sku.track_premium";
         public const string SkuTrackRoyal = "sku.track_royal";
