@@ -101,6 +101,7 @@
   "bounty.info": "Active {0}/{1}  \u00b7  new posters in {2}",
   "bounty.explain": "Accept up to {0} posters, do the task before time runs out, then claim the reward.",
   "bounty.go": "Go \u25b6",
+  "bounty.time_left": "{0} left",
   "bounty.wanted": "WANTED",
   "bounty.repost": "New posters now  \u00b7  {0} Gems",
   "bounty.too_many": "Finish an active bounty first",

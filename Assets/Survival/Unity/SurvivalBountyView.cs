@@ -395,7 +395,7 @@ namespace Survival.Unity
                         on = true;
                         break;
                     case BountyState.Active:
-                        status.text = _view.TapFmt2("bounty.active", "{0}/{1}", b.Progress, b.Target) + "   \u23f3 " + TimerQueue.FormatClock(b.EndsAt - now);
+                        status.text = _view.TapFmt2("bounty.active", "{0}/{1}", b.Progress, b.Target) + "  \u00b7  " + _view.TapFmt("bounty.time_left", "{0} left", TimerQueue.FormatClock(b.EndsAt - now));
                         btnText.text = _view.TapS("bounty.go", "Go \u25b6");
                         key = HookArtKeys.ButtonBlue;
                         on = true;
