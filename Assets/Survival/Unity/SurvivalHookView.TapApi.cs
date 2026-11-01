@@ -33,6 +33,7 @@ namespace Survival.Unity
         {
             WireTapFeed();
             HudBuilt?.Invoke(this, root);
+            _play?.AdoptRailButtons();
         }
 
         /// <summary>Harvest taps and building level-ups feed <see cref="ActivityFeed"/>.</summary>

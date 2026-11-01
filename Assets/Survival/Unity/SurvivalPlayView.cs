@@ -264,7 +264,45 @@ namespace Survival.Unity
             var runnerEntry = GetComponent<SurvivalRunnerEntry>() ?? gameObject.AddComponent<SurvivalRunnerEntry>();
             runnerEntry.Build(this, pack, hookOn ? GetComponent<SurvivalHookView>() : null, campaignView);
 
+            AdoptRailButtons();
+            StartCoroutine(AdoptRailButtonsNextFrame());
             ApplyScreen(1f);
+        }
+
+        /// <summary>Name prefix the engagement features (Daily Login, Trophy Hall, Crusade, Guild Help) give their rail buttons.</summary>
+        public const string LooseRailPrefix = "EngageRail_";
+
+        /// <summary>
+        /// Pull any rail-style button a feature placed straight on the HUD root (name starts with
+        /// <see cref="LooseRailPrefix"/>) into the side rail, keeping their top-to-bottom order. Safe to call often.
+        /// </summary>
+        public void AdoptRailButtons()
+        {
+            if (_rail == null || _root == null)
+            {
+                return;
+            }
+
+            var loose = new List<RectTransform>();
+            foreach (Transform child in _root)
+            {
+                if (child.name.StartsWith(LooseRailPrefix, StringComparison.Ordinal) && child is RectTransform rt && _rail.Button(child.name) == null)
+                {
+                    loose.Add(rt);
+                }
+            }
+
+            foreach (var rt in loose)
+            {
+                // Their old top edge (fraction from the top) is the order hint, same scale as TapHudButton's yTop.
+                _rail.Register(rt.name, 1f - rt.anchorMax.y, rt, false);
+            }
+        }
+
+        private IEnumerator AdoptRailButtonsNextFrame()
+        {
+            yield return null;
+            AdoptRailButtons();
         }
 
         private WorldLayout LoadWorld(string packRoot)
