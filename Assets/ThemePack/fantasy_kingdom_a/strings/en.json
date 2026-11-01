@@ -76,6 +76,7 @@
   "builder.temp.button": "Hire builder",
   "builder.temp.left": "Extra builder  {0}",
   "hook.need_more": "Not enough resources",
+  "merchant.explain": "A travelling trader with rare deals. Each offer can be bought once.",
   "merchant.button": "Merchant",
   "merchant.away_toast": "The merchant returns in {0}",
   "merchant.arrived": "A merchant caravan has arrived!",

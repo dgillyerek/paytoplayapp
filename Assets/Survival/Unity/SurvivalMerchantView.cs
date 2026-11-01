@@ -22,7 +22,8 @@ namespace Survival.Unity
     public sealed class SurvivalMerchantView : MonoBehaviour
     {
         private const float YTop = 0.480f;
-        private static readonly Color CardFill = new Color(0.16f, 0.12f, 0.22f, 0.96f);
+        private static readonly Color CardFill = new Color(0.11f, 0.17f, 0.38f, 1f);
+        private static readonly Color Caption = new Color(1f, 0.86f, 0.48f, 1f);
 
         private SurvivalHookView _view = null!;
         private HookSession _hook = null!;
@@ -165,9 +166,19 @@ namespace Survival.Unity
             return sb.ToString();
         }
 
+        private static string FirstKey(IReadOnlyDictionary<string, int> bag)
+        {
+            foreach (var kv in bag)
+            {
+                return kv.Key;
+            }
+
+            return "";
+        }
+
         private void OpenSheet()
         {
-            var panel = _view.TapOpenSheet("MerchantSheet", 0.90f, 0.60f, _view.TapS("merchant.title", "Wandering Merchant"));
+            var panel = _view.TapOpenSheet("MerchantSheet", 0.90f, 0.66f, _view.TapS("merchant.title", "Wandering Merchant"));
             if (panel == null)
             {
                 return;
@@ -175,21 +186,37 @@ namespace Survival.Unity
 
             var wallet = _hook.Wallet;
             BalanceBar.Above(panel, wallet, new[] { SurvIds.ResSoft, SurvIds.ResWood, SurvIds.ResFood, SurvIds.ResHard });
-            var leave = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Leaves", "", 19, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.4f);
-            SurvivalHookView.TapBox(leave.rectTransform, 0.04f, 0.81f, 0.96f, 0.87f);
+
+            // Hero art: the merchant's painted cart, what he is, and how long he stays.
+            var glow = HookSkin.Glow(panel, "CartGlow", new Color(1f, 0.78f, 0.42f, 0.55f));
+            SurvivalHookView.TapBox(glow.rectTransform, 0.00f, 0.72f, 0.32f, 0.90f);
+            var cart = HookSkin.Art(panel, "Cart", HookArtKeys.MerchantCart, new Color(0.85f, 0.68f, 0.30f, 1f));
+            cart.raycastTarget = false;
+            SurvivalHookView.TapBox(cart.rectTransform, 0.03f, 0.735f, 0.29f, 0.885f);
+            var explain = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Explain", _view.TapS("merchant.explain", "A travelling trader with rare deals. Each offer can be bought once."), 18, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.4f);
+            explain.fontStyle = FontStyle.Bold;
+            explain.horizontalOverflow = HorizontalWrapMode.Wrap;
+            HookSkin.Fit(explain, 11, 18);
+            SurvivalHookView.TapBox(explain.rectTransform, 0.31f, 0.815f, 0.97f, 0.88f);
+            var leave = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Leaves", "", 20, TextAnchor.MiddleLeft, Caption), 1.4f);
+            leave.fontStyle = FontStyle.Bold;
+            SurvivalHookView.TapBox(leave.rectTransform, 0.37f, 0.765f, 0.97f, 0.815f);
+            var hourglass = HookSkin.ResIcon(panel, "LeavesIcon", SurvIds.ResSpeedupM, Caption, "");
+            hourglass.raycastTarget = false;
+            SurvivalHookView.TapBox(hourglass.rectTransform, 0.31f, 0.762f, 0.36f, 0.818f);
             if (_hook.Store.Purchases.IsSandbox)
             {
                 var sandbox = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Sandbox", _view.TapS("store.sandbox", "SANDBOX \u00b7 no real charge"), 15, TextAnchor.MiddleCenter, SurvivalHookView.TapWarn), 1.5f);
-                SurvivalHookView.TapBox(sandbox.rectTransform, 0f, 0.775f, 1f, 0.81f);
+                SurvivalHookView.TapBox(sandbox.rectTransform, 0.31f, 0.735f, 0.97f, 0.765f);
             }
 
             var rows = new List<Action>();
             for (var i = 0; i < 3; i++)
             {
-                rows.Add(BuildRow(panel, i, 0.76f - i * 0.21f));
+                rows.Add(BuildRow(panel, i, 0.725f - i * 0.205f));
             }
 
-            var closeText = _view.TapSheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.33f, 0.03f, 0.67f, 0.10f, 19, out var close);
+            var closeText = _view.TapSheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.33f, 0.025f, 0.67f, 0.09f, 19, out var close);
             closeText.text = _view.TapS("hook.close", "Close");
             _view.TapWire(close, _view.TapCloseSheet);
             _view.TapSheetRefresh(() =>
@@ -204,16 +231,33 @@ namespace Survival.Unity
 
         private Action BuildRow(RectTransform panel, int index, float yTop)
         {
-            var card = HookSkin.Panel(panel, "Offer" + index, HookArtKeys.Panel, CardFill, 0.6f);
+            // Orb-style card: navy plate, bevel, gold frame; the reward's painted icon in a framed well on the left.
+            var card = HookSkin.Panel(panel, "Offer" + index, HookArtKeys.Plate, CardFill, 0.35f);
+            card.raycastTarget = false;
             SurvivalHookView.TapBox(card.rectTransform, 0.04f, yTop - 0.19f, 0.96f, yTop);
             var rt = card.rectTransform;
-            Ornaments.Frame(rt, new Color(0.85f, 0.68f, 0.30f, 1f));
-            var title = HookSkin.Outlined(SurvivalVisuals.Text(rt, "Title", "", 19, TextAnchor.MiddleLeft, SurvivalVisuals.Cream));
+            Ornaments.Bevel(rt, 0.7f);
+            Ornaments.Frame(rt, Ornaments.Gold, 2f);
+            var well = SurvivalVisuals.Image(rt, "Well", new Color(0.06f, 0.09f, 0.22f, 1f));
+            well.raycastTarget = false;
+            SurvivalHookView.TapBox(well.rectTransform, 0.02f, 0.08f, 0.21f, 0.92f);
+            Ornaments.Frame(well.rectTransform, Ornaments.Gold, 1.5f);
+            var reward = SurvivalVisuals.Image(well.rectTransform, "Reward", Color.white);
+            reward.raycastTarget = false;
+            reward.preserveAspect = true;
+            SurvivalHookView.TapBox(reward.rectTransform, 0.08f, 0.08f, 0.92f, 0.92f);
+            var freeBadge = SurvivalVisuals.Image(rt, "FreeBadge", Color.white, SurvivalArt.Get(HookArtKeys.BadgeFree));
+            freeBadge.raycastTarget = false;
+            freeBadge.preserveAspect = true;
+            SurvivalHookView.TapBox(freeBadge.rectTransform, -0.02f, 0.62f, 0.14f, 1.12f);
+            var title = HookSkin.Outlined(SurvivalVisuals.Text(rt, "Title", "", 21, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.5f);
             title.fontStyle = FontStyle.Bold;
-            SurvivalHookView.TapBox(title.rectTransform, 0.05f, 0.55f, 0.62f, 0.92f);
-            var gets = HookSkin.Fit(HookSkin.Outlined(SurvivalVisuals.Text(rt, "Gets", "", 17, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.4f), 11, 17);
-            SurvivalHookView.TapBox(gets.rectTransform, 0.05f, 0.08f, 0.62f, 0.55f);
-            var priceText = _view.TapSheetButton(rt, "Buy", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.64f, 0.16f, 0.96f, 0.84f, 17, out var buy);
+            HookSkin.Fit(title, 12, 21);
+            SurvivalHookView.TapBox(title.rectTransform, 0.24f, 0.55f, 0.63f, 0.92f);
+            var gets = HookSkin.Fit(HookSkin.Outlined(SurvivalVisuals.Text(rt, "Gets", "", 17, TextAnchor.MiddleLeft, Caption), 1.4f), 10, 17);
+            gets.fontStyle = FontStyle.Bold;
+            SurvivalHookView.TapBox(gets.rectTransform, 0.24f, 0.08f, 0.63f, 0.55f);
+            var priceText = _view.TapSheetButton(rt, "Buy", HookArtKeys.ButtonBlue, SurvivalVisuals.MineFill, 0.64f, 0.16f, 0.96f, 0.84f, 17, out var buy);
             HookSkin.Fit(priceText, 11, 17);
             var buyImg = buy.GetComponent<Image>();
             var buyRt = buy.GetComponent<RectTransform>();
@@ -233,6 +277,9 @@ namespace Survival.Unity
                 var deal = offer.Deal;
                 title.text = _view.TapS("merchant.deal." + deal.Id, deal.Id);
                 gets.text = Bag(deal.Grants);
+                reward.sprite = SurvivalArt.Get(HookArtKeys.ForResource(FirstKey(deal.Grants)));
+                reward.color = reward.sprite != null ? (offer.Bought ? new Color(1f, 1f, 1f, 0.45f) : Color.white) : new Color(0f, 0f, 0f, 0f);
+                freeBadge.gameObject.SetActive(offer.IsFree && !offer.Bought && freeBadge.sprite != null);
                 string key;
                 bool on;
                 if (offer.Bought)
@@ -259,7 +306,7 @@ namespace Survival.Unity
                 else
                 {
                     priceText.text = Bag(deal.Price);
-                    key = HookArtKeys.ButtonGold;
+                    key = HookArtKeys.ButtonBlue;
                     on = wallet.CanAfford(deal.Price);
                 }
 
