@@ -326,6 +326,11 @@ namespace Survival.Unity
             foreach (var r in runs)
             {
                 bundles.Add(r.Bundle);
+                Survival.Domain.Taps.ActivityFeed.Report(Survival.Domain.Taps.ActivityKinds.RunnerKills, r.Result.Kills);
+                if (r.Result.Won)
+                {
+                    Survival.Domain.Taps.ActivityFeed.Report(Survival.Domain.Taps.ActivityKinds.RunnerWin, 1);
+                }
             }
 
             var rows = RunnerRewards.Rows(bundles);
