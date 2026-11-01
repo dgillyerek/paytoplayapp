@@ -159,6 +159,8 @@ namespace Survival.Domain.Runner
         /// True when the transform at <paramref name="path"/> (relative to the animator, '/'-separated) takes the attack.
         /// The hips, their ancestors and every hips branch other than the spine (the legs) stay on the walk; the spine
         /// and everything under it take the attack, as does a side branch beside the hips (a weapon bone).
+        /// A rig with no Hips bone (Vespera: Spine1 and the legs are roots under the armature object) passes the legs'
+        /// parent as the hips and its Spine* child as the spine (Derek 2026-10-31: "she still slides between firing").
         /// </summary>
         public static bool IsUpperBody(string path, string hipsPath, string spineName)
         {

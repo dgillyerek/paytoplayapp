@@ -838,8 +838,23 @@ namespace Survival.Unity
                 }
             }
 
+            if (_hips == null)
+            {
+                // No Hips bone (Vespera's edited rig: Hips and Spine deleted, the legs and Spine1 are roots under the
+                // armature object, which carries Mixamo's hips motion): the legs' parent stands in for the hips.
+                foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                {
+                    if (t.name.EndsWith("LeftUpLeg", System.StringComparison.Ordinal) && t.parent != null && t.parent != root)
+                    {
+                        _hips = t.parent;
+                        break;
+                    }
+                }
+            }
+
             if (_hips != null)
             {
+                Transform? spineLike = null;
                 foreach (Transform child in _hips)
                 {
                     if (child.name.EndsWith("Spine", System.StringComparison.Ordinal))
@@ -847,7 +862,14 @@ namespace Survival.Unity
                         _spine = child;
                         break;
                     }
+
+                    if (spineLike == null && child.name.Contains("Spine"))
+                    {
+                        spineLike = child;
+                    }
                 }
+
+                _spine ??= spineLike;
             }
 
             if (_hips == null || _spine == null)
