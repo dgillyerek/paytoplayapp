@@ -149,6 +149,11 @@ namespace Survival.Domain.Runner
             return u * u * (3f - (2f * u));
         }
 
+        /// <summary>How much of the take the upper body shows with the current take at <paramref name="take"/> and the fading one at <paramref name="prev"/>.</summary>
+        public static float CopyWeight(float take, float prev) => 1f - ((1f - Clamp01(take)) * (1f - Clamp01(prev)));
+
+        private static float Clamp01(float v) => v < 0f ? 0f : v > 1f ? 1f : v;
+
         /// <summary>Weight of a take <paramref name="age"/> seconds after it started.</summary>
         public static float FadeIn(float age) => Ease(age / CrossfadeSeconds);
 

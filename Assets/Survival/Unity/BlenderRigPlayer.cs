@@ -58,6 +58,28 @@ namespace Survival.Unity
         private Transform? _hips;
         private Transform? _spine;
         private bool _maskTried;
+
+        /// <summary>
+        /// No Hips bone (Vespera): the legs' parent stands in for the hips. On such a rig the upper body is also copied from
+        /// the take after the mixer runs (<see cref="CopyUpperFromTake"/>), so the arms and hands play the cast exactly as
+        /// authored whether or not the runtime AvatarMask catches them (Derek 2026-10-31: "shes walking but she misses her
+        /// hands rotating around the ball").
+        /// </summary>
+        private bool _hipsStandIn;
+        private Transform[] _upperBones = System.Array.Empty<Transform>();
+        private Quaternion[] _upperRot = System.Array.Empty<Quaternion>();
+        private Vector3[] _upperPos = System.Array.Empty<Vector3>();
+        private Quaternion[] _upperPrevRot = System.Array.Empty<Quaternion>();
+        private Vector3[] _upperPrevPos = System.Array.Empty<Vector3>();
+        private Transform? _logHand;
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>
+        /// Dev only: log each frame's right-hand local rotation and attack-layer weight for rigs named here (e.g. "Vespera").
+        /// Set from code or the VESPERA_HANDS_LOG=1 environment variable.
+        /// </summary>
+        public static string LogUpperBodyFor = System.Environment.GetEnvironmentVariable("VESPERA_HANDS_LOG") == "1" ? "Vespera" : string.Empty;
+#endif
         private bool _wantWalkBase = true;
         private bool _baseIsWalk;
         private bool _baseLoop;
@@ -594,6 +616,77 @@ namespace Survival.Unity
             return _length > 0.05f ? Mathf.Min(seconds, _length - 0.0005f) : seconds;
         }
 
+        /// <summary>
+        /// Stand-in-hips rigs: pose the whole body on the take (and the fading previous take), keep its upper-body bones,
+        /// then evaluate the walk layers for the legs and put the upper body back at the take's weight. The legs never
+        /// leave the walk; the spine, arms, hands and fingers are the take's own keys.
+        /// </summary>
+        private void CopyUpperFromTake(float take, float prev)
+        {
+            if (_attackClip == null)
+            {
+                _graph.Evaluate(0f);
+                return;
+            }
+
+            if (!_calib.IsValid())
+            {
+                _calib = AnimationClipPlayable.Create(_graph, _attackClip);
+            }
+
+            _output.SetSourcePlayable(_calib);
+            if (prev > 0f)
+            {
+                _calib.SetTime(FrameSeconds(_prevFrame));
+                _graph.Evaluate(0f);
+                Snapshot(_upperPrevRot, _upperPrevPos);
+            }
+
+            if (take > 0f)
+            {
+                _calib.SetTime(FrameSeconds(_takeFrame));
+                _graph.Evaluate(0f);
+                Snapshot(_upperRot, _upperPos);
+            }
+
+            _output.SetSourcePlayable(_layers);
+            _graph.Evaluate(0f);
+            var w = RunnerUpperBodyAttack.CopyWeight(take, prev);
+            for (var i = 0; i < _upperBones.Length; i++)
+            {
+                Quaternion r;
+                Vector3 p;
+                if (take > 0f && prev > 0f)
+                {
+                    r = Quaternion.Slerp(_upperPrevRot[i], _upperRot[i], take);
+                    p = Vector3.Lerp(_upperPrevPos[i], _upperPos[i], take);
+                }
+                else if (take > 0f)
+                {
+                    r = _upperRot[i];
+                    p = _upperPos[i];
+                }
+                else
+                {
+                    r = _upperPrevRot[i];
+                    p = _upperPrevPos[i];
+                }
+
+                var b = _upperBones[i];
+                // Per-frame pose write after the graph evaluates (like the spine turn); never a rest-pose rewrite.
+                b.SetLocalPositionAndRotation(Vector3.Lerp(b.localPosition, p, w), Quaternion.Slerp(b.localRotation, r, w));
+            }
+        }
+
+        private void Snapshot(Quaternion[] rot, Vector3[] pos)
+        {
+            for (var i = 0; i < _upperBones.Length; i++)
+            {
+                rot[i] = _upperBones[i].localRotation;
+                pos[i] = _upperBones[i].localPosition;
+            }
+        }
+
         private void EvaluateLayers()
         {
             var take = TakeWeight();
@@ -616,8 +709,24 @@ namespace Survival.Unity
             _layers.SetInputWeight(0, 1f);
             _layers.SetInputWeight(1, prev);
             _layers.SetInputWeight(2, take);
-            _graph.Evaluate(0f);
+            if (_hipsStandIn && _upperBones.Length > 0 && (take > 0f || prev > 0f))
+            {
+                CopyUpperFromTake(take, prev);
+            }
+            else
+            {
+                _graph.Evaluate(0f);
+            }
+
             CarryHipsTurn(take, prev);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (_logHand != null && LogUpperBodyFor.Length > 0 && string.Equals(LogUpperBodyFor, _spec.Name, System.StringComparison.Ordinal))
+            {
+                Debug.Log(_spec.Name + " hands f" + Time.frameCount + " take " + take.ToString("0.00") + " prev " + prev.ToString("0.00")
+                    + " frame " + _takeFrame.ToString("0.0") + " base " + (_baseIsWalk ? "walk" : "stand")
+                    + " RightHand local " + _logHand.localEulerAngles.ToString("F1"));
+            }
+#endif
         }
 
         /// <summary>
@@ -847,6 +956,7 @@ namespace Survival.Unity
                     if (t.name.EndsWith("LeftUpLeg", System.StringComparison.Ordinal) && t.parent != null && t.parent != root)
                     {
                         _hips = t.parent;
+                        _hipsStandIn = true;
                         break;
                     }
                 }
@@ -892,6 +1002,40 @@ namespace Survival.Unity
             }
 
             _upperMask = mask;
+            if (_hipsStandIn)
+            {
+                var bones = new List<Transform>();
+                foreach (var t in root.GetComponentsInChildren<Transform>(true))
+                {
+                    if (t == root)
+                    {
+                        continue;
+                    }
+
+                    var path = t.name;
+                    for (var p = t.parent; p != null && p != root; p = p.parent)
+                    {
+                        path = p.name + "/" + path;
+                    }
+
+                    if (RunnerUpperBodyAttack.IsUpperBody(path, hipsPath, _spine.name))
+                    {
+                        bones.Add(t);
+                    }
+
+                    if (t.name.EndsWith("RightHand", System.StringComparison.Ordinal))
+                    {
+                        _logHand = t;
+                    }
+                }
+
+                _upperBones = bones.ToArray();
+                _upperRot = new Quaternion[_upperBones.Length];
+                _upperPos = new Vector3[_upperBones.Length];
+                _upperPrevRot = new Quaternion[_upperBones.Length];
+                _upperPrevPos = new Vector3[_upperBones.Length];
+            }
+
             return true;
         }
 
