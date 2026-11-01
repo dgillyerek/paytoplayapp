@@ -32,7 +32,7 @@ namespace Survival.Unity
     /// and hit reactions, then Play comes back with a VICTORY / DEFEAT result screen and the rewards (gold, food, shards,
     /// first-clear gems, bounty progress). Everything is saved to survival_save.json.
     /// </summary>
-    public sealed class SurvivalCampaignView : MonoBehaviour
+    public sealed partial class SurvivalCampaignView : MonoBehaviour
     {
         public const string BattleSceneName = "BattleLocked";
         private const int LoadingTipCount = 6;
