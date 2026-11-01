@@ -146,6 +146,7 @@ namespace Survival.Unity
 
             _overlay = SurvivalVisuals.Canvas(transform, "SurvivalCampaignOverlay", 55);
             WireHeroesEntry(play, play.Root);
+            WireAllianceBag(play);
             BuildBattleEntry(play, play.Root, session.Pack.Hud);
             BuildHeroFree(play.Root, session.Pack.Hud);
             if (play.WorldView != null)
