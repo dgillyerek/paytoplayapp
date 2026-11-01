@@ -31,6 +31,8 @@ namespace Survival.Domain.Theme
         public const string ChestClosed = "theme_a.hook.icon.chest_closed";
         public const string ChestOpen = "theme_a.hook.icon.chest_open";
         public const string Gift = "theme_a.hook.icon.gift";
+        public const string WantedPoster = "theme_a.hook.icon.wanted_poster";
+        public const string TavernBoard = "theme_a.hook.icon.tavern_board";
         public const string GemsTier1 = "theme_a.hook.icon.gems_tier_1";
         public const string GemsTier2 = "theme_a.hook.icon.gems_tier_2";
         public const string GemsTier3 = "theme_a.hook.icon.gems_tier_3";

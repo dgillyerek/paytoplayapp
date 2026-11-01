@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Text;
 using Survival.Domain.Clock;
 using Survival.Domain.Ids;
+using Survival.Domain.Runner;
 using Survival.Domain.Session;
 using Survival.Domain.Taps;
 using Survival.Domain.Theme;
+using Survival.Domain.View;
 using Survival.Domain.World;
 using UnityEngine;
 using UnityEngine.UI;
@@ -184,6 +186,15 @@ namespace Survival.Unity
             var wallet = _hook.Wallet;
             BalanceBar.Above(panel, wallet, new[] { SurvIds.ResHard });
 
+            // Tavern board header: the painted board with what to do here.
+            var board = HookSkin.Art(panel, "TavernBoard", HookArtKeys.TavernBoard, new Color(0.36f, 0.22f, 0.10f, 1f));
+            board.raycastTarget = false;
+            SurvivalHookView.TapBox(board.rectTransform, 0.03f, 0.84f, 0.97f, 0.975f);
+            var explain = HookSkin.Outlined(SurvivalVisuals.Text(board.transform, "Explain", _view.TapFmt("bounty.explain", "Accept up to {0} posters, do the task before time runs out, then claim the reward.", BountyConfig.Default.MaxActive), 18, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.4f);
+            explain.raycastTarget = false;
+            HookSkin.Fit(explain, 11, 18);
+            SurvivalHookView.TapBox(explain.rectTransform, 0.20f, 0.14f, 0.72f, 0.86f);
+
             var refresh = new List<Action>();
             for (var i = 0; i < BountyConfig.Default.Slots; i++)
             {
@@ -218,11 +229,37 @@ namespace Survival.Unity
                     r();
                 }
 
-                header.text = _view.TapFmt2("bounty.info", "Active {0}/2  \u00b7  new posters in {1}", _board.ActiveCount, TimerQueue.FormatClock(_board.SecondsUntilRefresh));
+                header.text = string.Format(_view.TapS("bounty.info", "Active {0}/{1}  \u00b7  new posters in {2}"), _board.ActiveCount, _board.Config.MaxActive, TimerQueue.FormatClock(_board.SecondsUntilRefresh));
                 buyText.text = _view.TapFmt("bounty.repost", "New posters now  \u00b7  {0} Gems", _board.Config.RefreshGems);
                 var can = wallet.CanAfford(SurvIds.ResHard, _board.Config.RefreshGems);
                 HookSkin.SetButton(buyImg, HookArtKeys.ButtonGold, can ? SurvivalVisuals.MineFill : SurvivalHookView.TapDisabled, can, 0.5f);
             });
+        }
+
+        private static string TargetArt(string kind) => kind switch
+        {
+            ActivityKinds.RunnerKills => BottomNav.IconBattle,
+            ActivityKinds.RunnerWin => RunnerArtKeys.EventIcon,
+            ActivityKinds.Harvest => HookArtKeys.ForResource(SurvIds.ResFood),
+            ActivityKinds.Upgrade => BottomNav.IconBuild,
+            _ => BottomNav.IconHeroes,
+        };
+
+        /// <summary>Takes the player to where the bounty's task is done.</summary>
+        private void GoDo(string kind)
+        {
+            _view.TapCloseSheet();
+            switch (kind)
+            {
+                case ActivityKinds.RunnerKills:
+                case ActivityKinds.RunnerWin:
+                    FindFirstObjectByType<SurvivalRunnerEntry>()?.OnRunnerTapped();
+                    break;
+                case ActivityKinds.HeroLevel:
+                    FindFirstObjectByType<SurvivalCampaignView>()?.OpenHeroes();
+                    break;
+                // Harvest and upgrades happen in the village behind the sheet.
+            }
         }
 
         private Action BuildPoster(RectTransform panel, int slot)
@@ -230,28 +267,40 @@ namespace Survival.Unity
             var col = slot % 2;
             var row = slot / 2;
             var x0 = 0.04f + col * 0.47f;
-            var y1 = 0.86f - row * 0.33f;
-            var card = HookSkin.Panel(panel, "Poster" + slot, HookArtKeys.Scroll, Parchment, 0.6f);
-            SurvivalHookView.TapBox(card.rectTransform, x0, y1 - 0.31f, x0 + 0.45f, y1);
+            var y1 = 0.825f - row * 0.31f;
+            var card = HookSkin.Art(panel, "Poster" + slot, HookArtKeys.WantedPoster, Parchment);
+            card.raycastTarget = false;
+            SurvivalHookView.TapBox(card.rectTransform, x0, y1 - 0.30f, x0 + 0.45f, y1);
             var rt = card.rectTransform;
             var star = Ornaments.Star(rt, new Color(1f, 0.82f, 0.25f, 1f));
-            SurvivalHookView.TapBox(star.rectTransform, 0.82f, 0.80f, 0.97f, 0.98f);
+            SurvivalHookView.TapBox(star.rectTransform, 0.78f, 0.80f, 0.95f, 0.96f);
 
             Text Line(string name, int size, float y0, float y1b, FontStyle style)
             {
                 var t = SurvivalVisuals.Text(rt, name, "", size, TextAnchor.MiddleCenter, Ink);
                 t.fontStyle = style;
-                SurvivalHookView.TapBox(t.rectTransform, 0.06f, y0, 0.94f, y1b);
+                t.raycastTarget = false;
+                HookSkin.Fit(t, 10, size);
+                SurvivalHookView.TapBox(t.rectTransform, 0.10f, y0, 0.90f, y1b);
                 return t;
             }
 
-            var giver = Line("Giver", 15, 0.80f, 0.95f, FontStyle.Italic);
-            var task = Line("Task", 18, 0.60f, 0.80f, FontStyle.Bold);
-            var reward = Line("Reward", 16, 0.45f, 0.60f, FontStyle.Normal);
+            var wanted = Line("Wanted", 20, 0.86f, 0.96f, FontStyle.Bold);
+            wanted.text = _view.TapS("bounty.wanted", "WANTED");
+            var target = HookSkin.Art(rt, "Target", BottomNav.IconBattle, Ink);
+            target.preserveAspect = true;
+            target.raycastTarget = false;
+            SurvivalHookView.TapBox(target.rectTransform, 0.32f, 0.64f, 0.68f, 0.86f);
+            var giver = Line("Giver", 14, 0.57f, 0.64f, FontStyle.Italic);
+            var task = Line("Task", 17, 0.47f, 0.57f, FontStyle.Bold);
+            var rewardRow = new GameObject("Reward", typeof(RectTransform)).GetComponent<RectTransform>();
+            rewardRow.SetParent(rt, false);
+            SurvivalHookView.TapBox(rewardRow, 0.12f, 0.385f, 0.88f, 0.47f);
+            var rewardKey = "";
             var bar = HookSkin.Bar(rt, "Bar", out var fill);
-            SurvivalHookView.TapBox(bar.rectTransform, 0.10f, 0.35f, 0.90f, 0.43f);
-            var status = Line("Status", 14, 0.25f, 0.35f, FontStyle.Normal);
-            var btnText = _view.TapSheetButton(rt, "Act", HookArtKeys.ButtonGreen, SurvivalHookView.TapFreeGreen, 0.12f, 0.04f, 0.88f, 0.24f, 16, out var btn);
+            SurvivalHookView.TapBox(bar.rectTransform, 0.12f, 0.30f, 0.88f, 0.38f);
+            var status = Line("Status", 13, 0.22f, 0.30f, FontStyle.Normal);
+            var btnText = _view.TapSheetButton(rt, "Act", HookArtKeys.ButtonGreen, SurvivalHookView.TapFreeGreen, 0.14f, 0.05f, 0.86f, 0.21f, 16, out var btn);
             var btnImg = btn.GetComponent<Image>();
             var btnRt = btn.GetComponent<RectTransform>();
             var wallet = _hook.Wallet;
@@ -279,6 +328,9 @@ namespace Survival.Unity
                         }
 
                         break;
+                    case BountyState.Active:
+                        GoDo(b.Kind);
+                        return;
                     case BountyState.Done:
                         var bag = _board.Claim(slot);
                         if (bag != null)
@@ -306,7 +358,30 @@ namespace Survival.Unity
                 star.gameObject.SetActive(b.Rare);
                 giver.text = _view.TapS("bounty.giver." + b.Giver, b.Giver) + (b.Rare ? "  \u00b7  " + _view.TapS("bounty.rare", "RARE") : "");
                 task.text = TaskText(b);
-                reward.text = RewardText(b.Reward);
+                target.sprite = SurvivalArt.Get(TargetArt(b.Kind)) ?? target.sprite;
+                var rk = RewardText(b.Reward);
+                if (rk != rewardKey)
+                {
+                    rewardKey = rk;
+                    for (var c = rewardRow.childCount - 1; c >= 0; c--)
+                    {
+                        Destroy(rewardRow.GetChild(c).gameObject);
+                    }
+
+                    var n = Math.Max(1, b.Reward.Count);
+                    var k = 0;
+                    foreach (var kv in b.Reward)
+                    {
+                        var cx = (float)k / n;
+                        var ic = HookSkin.ResIcon(rewardRow, "Ic" + k, kv.Key, SurvivalVisuals.MineFill, SurvivalHookView.TapResGlyph(kv.Key));
+                        ic.raycastTarget = false;
+                        SurvivalHookView.TapBox(ic.rectTransform, cx, 0f, cx + (0.38f / n), 1f);
+                        var amt = HookSkin.Outlined(SurvivalVisuals.Text(rewardRow, "N" + k, ChipWallet.FormatCompact(kv.Value), 15, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.2f);
+                        amt.raycastTarget = false;
+                        SurvivalHookView.TapBox(amt.rectTransform, cx + (0.38f / n), 0f, cx + (1f / n), 1f);
+                        k++;
+                    }
+                }
                 bar.gameObject.SetActive(state == BountyState.Active || state == BountyState.Done);
                 HookSkin.SetBar(fill, b.Fraction, state == BountyState.Done ? HookArtKeys.BarFillGreen : HookArtKeys.BarFillGold, SurvivalVisuals.MineFill);
                 string key;
@@ -321,9 +396,9 @@ namespace Survival.Unity
                         break;
                     case BountyState.Active:
                         status.text = _view.TapFmt2("bounty.active", "{0}/{1}", b.Progress, b.Target) + "   \u23f3 " + TimerQueue.FormatClock(b.EndsAt - now);
-                        btnText.text = _view.TapS("bounty.in_progress", "In progress");
+                        btnText.text = _view.TapS("bounty.go", "Go \u25b6");
                         key = HookArtKeys.ButtonBlue;
-                        on = false;
+                        on = true;
                         break;
                     case BountyState.Done:
                         status.text = _view.TapS("bounty.done", "Done!");
@@ -346,7 +421,8 @@ namespace Survival.Unity
                 }
 
                 HookSkin.SetButton(btnImg, key, on ? SurvivalVisuals.PinBuild : SurvivalHookView.TapDisabled, on, 0.5f);
-                btnText.color = HookSkin.InkFor(key);
+                btnText.color = SurvivalVisuals.Cream;
+                HookSkin.Outlined(btnText, 1.2f);
             };
         }
     }
