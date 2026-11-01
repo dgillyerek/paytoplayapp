@@ -361,6 +361,7 @@
   "battle.tip.6": "Clear a stage for the first time to earn bonus gems.",
   "crusade.rail": "CRUSADE",
   "crusade.title": "Crusade Banner",
+  "crusade.explain": "Earn season XP to climb the tiers. Every tier gives a FREE reward; the Royal Banner adds a second reward.",
   "crusade.season": "Season {0} \u00b7 ends in {1}",
   "crusade.xp": "{0} / {1} XP to tier {2}",
   "crusade.maxed": "BANNER COMPLETE",

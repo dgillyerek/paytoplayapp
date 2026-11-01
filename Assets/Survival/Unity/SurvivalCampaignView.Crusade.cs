@@ -134,42 +134,59 @@ namespace Survival.Unity
             _crusadePage = Mathf.Clamp(_crusadePage, 0, pages - 1);
             var panel = OpenSheet(CrusadeSheetName, S("crusade.title", "Crusade Banner"), 0.90f);
 
-            var season = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Season", "", 22, TextAnchor.MiddleCenter, SurvivalVisuals.Reward), 1.4f);
-            Box(season.rectTransform, 0.03f, 0.855f, 0.97f, 0.885f);
-            var sandbox = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Sandbox", S("store.sandbox", "SANDBOX \u00b7 no real charge"), 15, TextAnchor.MiddleCenter, Warn), 1.2f);
-            Box(sandbox.rectTransform, 0f, 0.835f, 1f, 0.855f);
-            BalanceBar.Inside(panel, Campaign.Wallet, CrusadeBalanceIds, 0.05f, 0.78f, 0.95f, 0.83f);
+            // Painted banner header: season, time left and what the pass is.
+            var head = HookSkin.Panel(panel, "CrusadeHead", HookArtKeys.Plate, new Color(0.30f, 0.10f, 0.12f, 1f), 0.8f);
+            head.raycastTarget = false;
+            Box(head.rectTransform, 0.03f, 0.79f, 0.97f, 0.905f);
+            Ornaments.Bevel(head.transform, 0.6f);
+            Ornaments.Frame(head.transform, Ornaments.Gold, 2f);
+            var flag = HookSkin.Art(head.transform, "Flag", HookArtKeys.CrusadeBanner, new Color(0.7f, 0.12f, 0.12f, 1f));
+            flag.preserveAspect = true;
+            flag.raycastTarget = false;
+            Box(flag.rectTransform, 0.01f, 0.03f, 0.15f, 0.97f);
+            var season = HookSkin.Outlined(SurvivalVisuals.Text(head.transform, "Season", "", 24, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.5f);
+            season.fontStyle = FontStyle.Bold;
+            season.raycastTarget = false;
+            HookSkin.Fit(season, 12, 24);
+            Box(season.rectTransform, 0.17f, 0.56f, 0.98f, 0.96f);
+            var explain = HookSkin.Outlined(SurvivalVisuals.Text(head.transform, "Explain", S("crusade.explain", "Earn season XP to climb the tiers. Every tier gives a FREE reward; the Royal Banner adds a second reward."), 16, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.1f);
+            explain.raycastTarget = false;
+            HookSkin.Fit(explain, 10, 16);
+            Box(explain.rectTransform, 0.17f, 0.04f, 0.98f, 0.56f);
+            var sandbox = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Sandbox", S("store.sandbox", "SANDBOX \u00b7 no real charge"), 14, TextAnchor.MiddleCenter, Warn), 1.2f);
+            Box(sandbox.rectTransform, 0f, 0.772f, 1f, 0.79f);
+            BalanceBar.Inside(panel, Campaign.Wallet, CrusadeBalanceIds, 0.05f, 0.722f, 0.95f, 0.77f);
 
-            // Season XP bar.
-            var tierCrest = SurvivalVisuals.Circle(panel, "TierCrest", RoyalBlue);
-            tierCrest.preserveAspect = true;
+            // Season XP: tier crest, a chunky bar, and where XP comes from.
+            var tierCrest = HookSkin.Panel(panel, "TierCrest", HookArtKeys.Plate, RoyalBlue, 0.6f);
             tierCrest.raycastTarget = false;
-            Box(tierCrest.rectTransform, 0.04f, 0.695f, 0.16f, 0.775f);
-            Ornaments.Sparkles(tierCrest.rectTransform, 2, Ornaments.Gold);
-            var tierNum = HookSkin.Outlined(SurvivalVisuals.Text(tierCrest.transform, "N", c.TierReached.ToString(), 30, TextAnchor.MiddleCenter, Color.white), 2f);
+            Box(tierCrest.rectTransform, 0.04f, 0.638f, 0.16f, 0.716f);
+            Ornaments.Bevel(tierCrest.transform, 0.6f);
+            Ornaments.Frame(tierCrest.transform, Ornaments.Gold, 2f);
+            var tierNum = HookSkin.Outlined(SurvivalVisuals.Text(tierCrest.transform, "N", c.TierReached.ToString(), 30, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 2f);
             tierNum.raycastTarget = false;
             SurvivalVisuals.Stretch(tierNum.rectTransform);
             var bar = HookSkin.Bar(panel, "XpBar", out var fill);
-            Box(bar.rectTransform, 0.18f, 0.712f, 0.96f, 0.758f);
+            Box(bar.rectTransform, 0.18f, 0.650f, 0.96f, 0.705f);
             HookSkin.SetBar(fill, (float)c.XpIntoTier / CrusadeBanner.XpPerTier, HookArtKeys.BarFillBlue, RoyalBlue);
-            var xp = HookSkin.Outlined(SurvivalVisuals.Text(bar.transform, "Xp", c.TierReached >= c.Tiers.Count ? S("crusade.maxed", "BANNER COMPLETE") : Fmt("crusade.xp", "{0} / {1} XP to tier {2}", c.XpIntoTier, CrusadeBanner.XpPerTier, c.TierReached + 1), 17, TextAnchor.MiddleCenter, Color.white), 1.2f);
+            var xp = HookSkin.Outlined(SurvivalVisuals.Text(bar.transform, "Xp", c.TierReached >= c.Tiers.Count ? S("crusade.maxed", "BANNER COMPLETE") : Fmt("crusade.xp", "{0} / {1} XP to tier {2}", c.XpIntoTier, CrusadeBanner.XpPerTier, c.TierReached + 1), 17, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.2f);
             xp.raycastTarget = false;
             SurvivalVisuals.Stretch(xp.rectTransform);
             var tips = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Tips", Fmt("crusade.tips", "Season XP: runner level +{0} \u00b7 upgrade +{1} \u00b7 quest +{2}", CrusadeBanner.XpFor(CrusadeXpSource.RunnerLevel), CrusadeBanner.XpFor(CrusadeXpSource.Upgrade), CrusadeBanner.XpFor(CrusadeXpSource.Quest)), 15, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.1f);
             tips.raycastTarget = false;
             HookSkin.Fit(tips, 10, 15);
-            Box(tips.rectTransform, 0.03f, 0.668f, 0.97f, 0.695f);
+            Box(tips.rectTransform, 0.03f, 0.612f, 0.97f, 0.638f);
 
             // Column heads: FREE, and ROYAL BANNER with its buy button.
             const float freeX0 = 0.17f, freeX1 = 0.55f, royX0 = 0.57f, royX1 = 0.96f;
             var freeHead = Ornaments.Ribbon(panel, S("crusade.free", "FREE"), new Color(0.18f, 0.50f, 0.24f, 1f), out var freeRib);
-            Box(freeRib.rectTransform, freeX0, 0.60f, freeX1, 0.66f);
+            Box(freeRib.rectTransform, freeX0, 0.555f, freeX1, 0.608f);
             freeHead.fontSize = 22;
             var royHead = Ornaments.Ribbon(panel, S("crusade.royal", "ROYAL BANNER"), new Color(0.50f, 0.18f, 0.60f, 1f), out var royRib);
-            Box(royRib.rectTransform, royX0, 0.60f, royX1, 0.66f);
+            Box(royRib.rectTransform, royX0, 0.555f, royX1, 0.608f);
             royHead.fontSize = 22;
 
-            var buyLabel = SheetButton(panel, "BuyRoyal", c.HasPremium ? HookArtKeys.ButtonBlue : HookArtKeys.ButtonGold, Ornaments.Gold, royX0 + 0.02f, 0.545f, royX1 - 0.02f, 0.598f, 22, out var buy);
+            var buyLabel = SheetButton(panel, "BuyRoyal", c.HasPremium ? HookArtKeys.ButtonBlue : HookArtKeys.ButtonGold, Ornaments.Gold, royX0 + 0.02f, 0.505f, royX1 - 0.02f, 0.553f, 22, out var buy);
             if (c.HasPremium)
             {
                 buyLabel.text = S("crusade.owned", "\u2714 BANNER RAISED");
@@ -187,8 +204,23 @@ namespace Survival.Unity
 
             // Five tiers per page.
             var first0 = _crusadePage * CrusadeRowsPerPage;
-            const float rowsTop = 0.535f, rowsBottom = 0.11f;
+            const float rowsTop = 0.50f, rowsBottom = 0.11f;
             var rh = (rowsTop - rowsBottom) / CrusadeRowsPerPage;
+
+            // Tier track: a rail behind the tier medallions, gold up to the tier reached.
+            var shown = Math.Min(CrusadeRowsPerPage, c.Tiers.Count - first0);
+            var trackBottom = rowsTop - (shown * rh) + (rh * 0.5f);
+            var rail = SurvivalVisuals.Image(panel, "TrackRail", new Color(0.18f, 0.20f, 0.30f, 1f));
+            rail.raycastTarget = false;
+            Box(rail.rectTransform, 0.085f, trackBottom, 0.105f, rowsTop - (rh * 0.5f));
+            Ornaments.Frame(rail.transform, Ornaments.Bronze, 1f);
+            var lit = Mathf.Clamp(c.TierReached - first0, 0, shown);
+            if (lit > 0)
+            {
+                var gold = SurvivalVisuals.Image(panel, "TrackLit", Ornaments.Gold);
+                gold.raycastTarget = false;
+                Box(gold.rectTransform, 0.088f, rowsTop - ((lit - 0.5f) * rh), 0.102f, rowsTop - (rh * 0.5f));
+            }
             for (var r = 0; r < CrusadeRowsPerPage && first0 + r < c.Tiers.Count; r++)
             {
                 var tier = c.Tiers[first0 + r];
@@ -198,8 +230,9 @@ namespace Survival.Unity
                 var num = SurvivalVisuals.Circle(panel, "Tier" + tier.Number, reached ? Ornaments.Gold : new Color(0.25f, 0.27f, 0.34f, 1f));
                 num.preserveAspect = true;
                 num.raycastTarget = false;
-                Box(num.rectTransform, 0.04f, y0 + 0.01f, 0.15f, y1 - 0.01f);
-                var nt = HookSkin.Outlined(SurvivalVisuals.Text(num.transform, "N", tier.Number.ToString(), 26, TextAnchor.MiddleCenter, reached ? HookSkin.Ink : SurvivalVisuals.Cream), 1.2f);
+                Box(num.rectTransform, 0.045f, y0 + 0.012f, 0.145f, y1 - 0.012f);
+                Ornaments.Frame(num.transform, reached ? Ornaments.Gold : Ornaments.Bronze, 2f);
+                var nt = HookSkin.Outlined(SurvivalVisuals.Text(num.transform, "N", tier.Number.ToString(), 26, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.8f);
                 nt.raycastTarget = false;
                 SurvivalVisuals.Stretch(nt.rectTransform);
                 CrusadeCell(panel, c, tier.Number, false, tier.Free, freeX0, y0, freeX1, y1);
@@ -237,11 +270,11 @@ namespace Survival.Unity
             var ready = c.CanClaim(tier, premium);
             var locked = premium && !c.HasPremium;
             var fill = ready ? new Color(0.22f, 0.40f, 0.22f, 1f) : premium ? new Color(0.28f, 0.14f, 0.34f, 1f) : new Color(0.14f, 0.20f, 0.32f, 1f);
-            var cell = SurvivalVisuals.Image(panel, (premium ? "Royal" : "Free") + tier, fill);
+            var cell = HookSkin.Panel(panel, (premium ? "Royal" : "Free") + tier, HookArtKeys.Plate, fill, 0.6f);
             cell.raycastTarget = false;
             Box(cell.rectTransform, x0, y0, x1, y1);
             Ornaments.Bevel(cell.transform, 0.5f);
-            Ornaments.Frame(cell.transform, premium ? new Color(0.86f, 0.42f, 1f, 1f) : Ornaments.Bronze, 2f);
+            Ornaments.Frame(cell.transform, ready ? new Color(0.55f, 0.95f, 0.45f, 1f) : Ornaments.Gold, 2f);
             PackChips(cell.rectTransform, new Dictionary<string, int>(reward), 0.03f, 0.08f, ready ? 0.62f : 0.80f, 0.92f);
 
             if (claimed)
@@ -257,6 +290,9 @@ namespace Survival.Unity
 
             if (locked)
             {
+                var veil = SurvivalVisuals.Image(cell.transform, "Veil", new Color(0f, 0f, 0f, 0.30f));
+                veil.raycastTarget = false;
+                SurvivalVisuals.Stretch(veil.rectTransform);
                 var lk = HookSkin.Outlined(SurvivalVisuals.Text(cell.transform, "Lock", S("crusade.locked", "LOCKED"), 16, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.2f);
                 lk.raycastTarget = false;
                 Box(lk.rectTransform, 0.80f, 0f, 1f, 1f);
