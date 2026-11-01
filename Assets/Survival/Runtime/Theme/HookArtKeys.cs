@@ -44,6 +44,13 @@ namespace Survival.Domain.Theme
         public const string GemsTier1 = "theme_a.hook.icon.gems_tier_1";
         public const string GemsTier2 = "theme_a.hook.icon.gems_tier_2";
         public const string GemsTier3 = "theme_a.hook.icon.gems_tier_3";
+        public const string MerchantCart = "theme_a.hook.icon.merchant_cart";
+        public const string GuildCrest = "theme_a.hook.icon.guild_crest";
+        public const string HelpHand = "theme_a.hook.icon.help_hand";
+        public const string WishingWell = "theme_a.hook.icon.wishing_well";
+        public const string HeroTome = "theme_a.hook.icon.hero_tome";
+        public const string WarBanner = "theme_a.hook.icon.war_banner";
+        public const string Energy = "theme_a.hook.icon.energy";
 
         public const string FxRays = "theme_a.hook.fx.rays";
         public const string FxGlow = "theme_a.hook.fx.glow";
