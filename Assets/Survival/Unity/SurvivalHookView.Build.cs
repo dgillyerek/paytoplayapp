@@ -20,6 +20,10 @@ namespace Survival.Unity
         private const float AutoPlaceSeconds = 10f;
 
         private RectTransform? _buildButton;
+        private bool _buildInNav;
+
+        /// <summary>Bottom-bar id of the Build button (decluttered HUD, no floating build_button slot).</summary>
+        public const string NavBuild = "nav.build";
         private RectTransform? _placeBar;
         private Text? _placeHint;
         private Text? _placeAutoText;
@@ -136,8 +140,24 @@ namespace Survival.Unity
 
         private void BuildBuildButton(RectTransform root)
         {
-            if (_pack == null || _play?.Village == null || !_pack.Hud.TryGetValue("build_button", out var slot))
+            if (_pack == null || _play?.Village == null)
             {
+                return;
+            }
+
+            if (!_pack.Hud.TryGetValue("build_button", out var slot))
+            {
+                // Build lives in the bottom bar, right after Heroes (Battle slides in ahead of it).
+                _buildButton = _play.AddNavButton(NavBuild, BottomNav.IconBuild, () =>
+                {
+                    if (_play.Screen.Current != PlayScreen.Village)
+                    {
+                        _play.ShowScreen(PlayScreen.Village);
+                    }
+
+                    OpenBuildMenu();
+                }, 1);
+                _buildInNav = _buildButton != null;
                 return;
             }
 
@@ -476,7 +496,7 @@ namespace Survival.Unity
         private void TickBuild()
         {
             var onVillage = _play != null && _play.Screen.Current == PlayScreen.Village && !_play.Screen.InTransition;
-            if (_buildButton != null)
+            if (_buildButton != null && !_buildInNav)
             {
                 var show = onVillage && _placingType == null;
                 if (_buildButton.gameObject.activeSelf != show)

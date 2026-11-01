@@ -66,7 +66,13 @@ namespace Survival.Unity
 
         partial void EngageTick_Guild()
         {
-            if (_guild == null || Time.unscaledTime < _guildNextTick)
+            if (_guild == null)
+            {
+                return;
+            }
+
+            RailShown(GuildRailName, Survival.Domain.View.RailActionable.Guild(_guild));
+            if (Time.unscaledTime < _guildNextTick)
             {
                 return;
             }

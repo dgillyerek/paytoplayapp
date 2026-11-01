@@ -95,6 +95,7 @@ namespace Survival.Unity
             _tick = 0.5f;
             var free = _well.FreeAvailable;
             _button.Show(free, false);
+            _view.TapRailShown("WishingWellButton", Survival.Domain.View.RailActionable.Well(free));
             _button.Label.text = free ? _view.TapS("well.button.free", "Free wish!") : _view.TapS("well.button", "Well");
         }
 

@@ -132,6 +132,7 @@ namespace Survival.Unity
 
             _wasHere = here;
             _button.Show(_merchant.HasFreeWaiting, here && !_merchant.HasFreeWaiting && AnyLeft());
+            _view.TapRailShown("MerchantButton", Survival.Domain.View.RailActionable.Merchant(_merchant));
             _button.Label.text = here
                 ? TimerQueue.FormatClock(_merchant.SecondsLeft)
                 : _view.TapS("merchant.button", "Merchant");
