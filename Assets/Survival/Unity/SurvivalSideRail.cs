@@ -150,6 +150,11 @@ namespace Survival.Unity
         /// One round ornate icon: gold ring, tinted bevelled disc with gloss, icon art, cream outlined label below,
         /// FREE badge and red dot on the rim. Stays round on any screen shape (aspect fitter).
         /// </summary>
+        internal static readonly Color RimGold = new Color(0.98f, 0.80f, 0.32f, 1f);
+        internal static readonly Color RimLight = new Color(1f, 0.95f, 0.70f, 1f);
+        internal static readonly Color RimShade = new Color(0.86f, 0.62f, 0.18f, 1f);
+        internal static readonly Color Navy = new Color(0.07f, 0.12f, 0.34f, 1f);
+
         public static RailButtonParts Round(Transform parent, string name, string? iconKey, string label, Color tint)
         {
             var root = SurvivalVisuals.Image(parent, name, new Color(1f, 1f, 1f, 0f));
@@ -162,18 +167,33 @@ namespace Survival.Unity
             var host = new GameObject("DiscHost", typeof(RectTransform)).GetComponent<RectTransform>();
             host.SetParent(root.transform, false);
             Box(host, 0.04f, 0.26f, 0.96f, 1f);
-            var ring = SurvivalVisuals.Circle(host, "Ring", Ornaments.Gold);
+            // Clean ornate rim: thin bright bevelled gold, rivets, gloss, on a deep royal navy disc. No brown.
+            var ring = SurvivalVisuals.Circle(host, "Ring", RimGold);
             ring.raycastTarget = false;
             var fit = ring.gameObject.AddComponent<AspectRatioFitter>();
             fit.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
             fit.aspectRatio = 1f;
-            var disc = SurvivalVisuals.Circle(ring.transform, "Disc", tint);
+            var hi = SurvivalVisuals.Ring(ring.transform, "RimHi", RimLight);
+            hi.raycastTarget = false;
+            SurvivalVisuals.Stretch(hi.rectTransform);
+            var disc = SurvivalVisuals.Circle(ring.transform, "Disc", Navy);
             disc.raycastTarget = false;
-            Box(disc.rectTransform, 0.08f, 0.08f, 0.92f, 0.92f);
-            Ornaments.Bevel(disc.transform, 0.7f);
-            var rim = SurvivalVisuals.Ring(ring.transform, "Rim", new Color(0.55f, 0.38f, 0.10f, 0.9f));
-            rim.raycastTarget = false;
-            SurvivalVisuals.Stretch(rim.rectTransform);
+            Box(disc.rectTransform, 0.055f, 0.055f, 0.945f, 0.945f);
+            var lip = SurvivalVisuals.Ring(disc.transform, "RimLip", RimShade);
+            lip.raycastTarget = false;
+            SurvivalVisuals.Stretch(lip.rectTransform);
+            var accent = SurvivalVisuals.Circle(disc.transform, "Accent", new Color(tint.r, tint.g, tint.b, 0.22f));
+            accent.raycastTarget = false;
+            Box(accent.rectTransform, 0.14f, 0.14f, 0.86f, 0.86f);
+            for (var i = 0; i < 4; i++)
+            {
+                var ang = (45f + (i * 90f)) * Mathf.Deg2Rad;
+                var cx = 0.5f + (0.475f * Mathf.Cos(ang));
+                var cy = 0.5f + (0.475f * Mathf.Sin(ang));
+                var rivet = SurvivalVisuals.Circle(ring.transform, "Rivet" + i, RimLight);
+                rivet.raycastTarget = false;
+                Box(rivet.rectTransform, cx - 0.035f, cy - 0.035f, cx + 0.035f, cy + 0.035f);
+            }
 
             var icon = new GameObject("Icon", typeof(RectTransform)).GetComponent<RectTransform>();
             icon.SetParent(disc.transform, false);
@@ -194,11 +214,12 @@ namespace Survival.Unity
             gloss.raycastTarget = false;
             Box(gloss.rectTransform, 0.18f, 0.55f, 0.82f, 0.94f);
 
-            var text = HookSkin.Outlined(SurvivalVisuals.Text(root.transform, "Label", label, 17, TextAnchor.MiddleCenter, HookSkin.Cream), 1.6f);
+            // Small cream label with a dark outline, same for every icon (names and timers).
+            var text = HookSkin.Outlined(SurvivalVisuals.Text(root.transform, "Label", label, 15, TextAnchor.MiddleCenter, HookSkin.Cream), 2f);
             text.fontStyle = FontStyle.Bold;
             text.raycastTarget = false;
-            HookSkin.Fit(text, 10, 17);
-            Box(text.rectTransform, -0.08f, 0f, 1.08f, 0.27f);
+            HookSkin.Fit(text, 10, 15);
+            Box(text.rectTransform, 0f, 0f, 1f, 0.24f);
 
             var badgeSprite = SurvivalArt.Get(HookArtKeys.BadgeFree);
             var badge = badgeSprite != null

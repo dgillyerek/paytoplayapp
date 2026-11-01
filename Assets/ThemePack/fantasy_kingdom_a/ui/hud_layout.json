@@ -126,9 +126,9 @@
     "y_top_max": 0.064
   },
   "side_rail": {
-    "x_min": 0.012,
+    "x_min": 0.006,
     "y_top_min": 0.13,
-    "x_max": 0.152,
+    "x_max": 0.13,
     "y_top_max": 0.62
   }
 }
