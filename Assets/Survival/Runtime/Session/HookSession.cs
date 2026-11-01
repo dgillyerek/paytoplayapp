@@ -111,6 +111,61 @@ namespace Survival.Domain.Session
             return Base.TryFinishUpgrade(plotId);
         }
 
+        /// <summary>How long a hired temporary builder stays (12 hours of real time).</summary>
+        public const double TempBuilderSeconds = 12 * 3600;
+
+        /// <summary>
+        /// Offer the $1.99 temporary builder: every builder is busy (the tap was blocked only by the queue) and no
+        /// temporary builder is on the job right now. Once it leaves it can be hired again.
+        /// </summary>
+        public bool TempBuilderOffered(string plotId) =>
+            !Timers.ExtraSlotActive && Base.CheckUpgrade(plotId) == UpgradeBlock.QueueBusy;
+
+        /// <summary>The same offer for a new building (Build) blocked only by busy builders.</summary>
+        public bool TempBuilderOfferedForBuild(string type, string? spotId = null) =>
+            !Timers.ExtraSlotActive && Build.Check(type, spotId) == BuildBlock.QueueBusy;
+
+        /// <summary>The temporary builder's store row (price label, product id), or null when the theme pack lacks it.</summary>
+        public ProductDef? TempBuilderProduct => Store.ProductFor(SurvIds.SkuTempBuilder);
+
+        /// <summary>
+        /// Buy the temporary builder through the (sandbox) purchase service: on success one extra builder for
+        /// <see cref="TempBuilderSeconds"/>. Refused while one is still hired.
+        /// </summary>
+        public void HireTempBuilder(Action<PurchaseOutcome> done)
+        {
+            var product = TempBuilderProduct;
+            if (product == null)
+            {
+                done(new PurchaseOutcome(false, "", "", "store.unknown_offer"));
+                return;
+            }
+
+            if (Timers.ExtraSlotActive)
+            {
+                done(new PurchaseOutcome(false, product.ProductId, "", "store.already_active"));
+                return;
+            }
+
+            Store.Purchases.Purchase(product.ProductId, outcome =>
+            {
+                if (outcome.Ok)
+                {
+                    Timers.ExtraSlotUntil = Clock.Now + TempBuilderSeconds;
+                }
+
+                done(outcome);
+            });
+        }
+
+        /// <summary>Hire the temporary builder, then start the upgrade that asked for it. Ok only when both happened.</summary>
+        public void HireTempBuilderAndUpgrade(string plotId, Action<bool> done) =>
+            HireTempBuilder(o => done(o.Ok && Base.TryStartUpgrade(plotId)));
+
+        /// <summary>Hire the temporary builder, then place the building that asked for it. Ok only when both happened.</summary>
+        public void HireTempBuilderAndBuild(string type, string? spotId, Action<BasePlot?> done) =>
+            HireTempBuilder(o => done(o.Ok ? Build.TryBuild(type, spotId) : null));
+
         /// <summary>Gem rush the plot's upgrade and level up. Returns the new level, or 0.</summary>
         public int Rush(string plotId, out int gemsSpent)
         {
