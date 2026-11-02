@@ -60,6 +60,8 @@ namespace Survival.Unity
         public static AllianceService? AllianceNet { get; private set; }
 
         private string _allianceSearch = "";
+        private Text? _allyChatLog;
+        private InputField? _allyChatInput;
         private Coroutine? _alliancePoll;
 
         private void EnsureAllianceNet()
@@ -113,7 +115,7 @@ namespace Survival.Unity
                 if (chatOpen)
                 {
                     var before = net.Chat.Count;
-                    net.PollChat(ok => { if (ok && net.Chat.Count != before) OpenAlliance(TabChat); });
+                    net.PollChat(ok => { if (ok && net.Chat.Count != before) RefreshAllianceChat(); });
                 }
 
                 slow += 4f;
@@ -160,6 +162,8 @@ namespace Survival.Unity
         {
             var net = AllianceNet!;
             var panel = OpenScreen("AllianceScreen", S("alliance.find.title", "FIND AN ALLIANCE"));
+            _allyPanel = null;
+            _allyContent = null;
             var crest = HookSkin.Art(panel, "Crest", HookArtKeys.GuildCrest, Ornaments.Gold);
             crest.raycastTarget = false;
             Box(crest.rectTransform, 0.36f, 0.80f, 0.64f, 0.94f);
@@ -245,9 +249,8 @@ namespace Survival.Unity
             AllianceError(panel);
         }
 
-        private void DrawAllianceChat(RectTransform panel, AllianceService net)
+        private static string AllianceChatText(SurvivalCampaignView v, AllianceService net)
         {
-            var card = OrnateCard(panel, "ChatCard", 0.04f, 0.19f, 0.96f, 0.67f, false);
             var lines = new StringBuilder();
             for (var i = Math.Max(0, net.Chat.Count - 14); i < net.Chat.Count; i++)
             {
@@ -255,24 +258,63 @@ namespace Survival.Unity
                 lines.Append("<b>").Append(m.Name).Append(":</b> ").Append(m.Body.Replace("<", "\u2039")).Append('\n');
             }
 
-            var log = Label(card, "Log", lines.Length == 0 ? S("alliance.chat.empty", "Say hello to your alliance!") : lines.ToString(), 19, TextAnchor.LowerLeft, SurvivalVisuals.Cream, 0.03f, 0.02f, 0.97f, 0.98f);
+            return lines.Length == 0 ? v.S("alliance.chat.empty", "Say hello to your alliance!") : lines.ToString();
+        }
+
+        /// <summary>New chat lines: update the log text in place so the input keeps its focus and half-typed text.</summary>
+        private void RefreshAllianceChat()
+        {
+            var net = AllianceNet;
+            if (net == null || !AllianceShellAlive() || _allianceTab != TabChat)
+            {
+                return;
+            }
+
+            if (_allyChatLog == null)
+            {
+                OpenAlliance(TabChat);
+                return;
+            }
+
+            var text = AllianceChatText(this, net);
+            if (_allyChatLog.text != text)
+            {
+                _allyChatLog.text = text;
+            }
+        }
+
+        private void DrawAllianceChat(RectTransform panel, AllianceService net)
+        {
+            var card = OrnateCard(panel, "ChatCard", 0.04f, 0.19f, 0.96f, 0.67f, false);
+            var log = Label(card, "Log", AllianceChatText(this, net), 19, TextAnchor.LowerLeft, SurvivalVisuals.Cream, 0.03f, 0.02f, 0.97f, 0.98f);
             log.supportRichText = true;
             log.horizontalOverflow = HorizontalWrapMode.Wrap;
             log.verticalOverflow = VerticalWrapMode.Truncate;
+            _allyChatLog = log;
 
             var input = AllianceInput(panel, "ChatInput", S("alliance.chat.hint", "Write a message"), 280, 0.04f, 0.12f, 0.74f, 0.18f);
+            _allyChatInput = input;
             var send = SheetButton(panel, "Send", HookArtKeys.ButtonGreen, SurvivalVisuals.MineFill, 0.76f, 0.12f, 0.96f, 0.18f, 22, out var sendBtn);
             send.text = S("alliance.chat.send", "SEND");
             Wire(sendBtn, () =>
             {
-                if (input.text.Trim().Length > 0)
+                var body = input.text.Trim();
+                if (body.Length > 0)
                 {
-                    net.SendChat(input.text.Trim(), _ => OpenAlliance(TabChat));
+                    net.SendChat(body, ok =>
+                    {
+                        if (ok && input != null && input.text.Trim() == body)
+                        {
+                            input.text = "";
+                        }
+
+                        RefreshAllianceChat();
+                    });
                 }
             });
             if (net.Chat.Count == 0)
             {
-                net.PollChat(ok => { if (ok && net.Chat.Count > 0) OpenAlliance(TabChat); });
+                net.PollChat(ok => { if (ok && net.Chat.Count > 0) RefreshAllianceChat(); });
             }
         }
 
