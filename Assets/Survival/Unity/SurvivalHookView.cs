@@ -477,6 +477,7 @@ namespace Survival.Unity
             RefreshQuest();
             RefreshShop();
             _sheetRefresh?.Invoke();
+            RefreshBuildBadge();
             SaveIfChanged();
         }
 

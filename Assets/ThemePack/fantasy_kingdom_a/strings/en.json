@@ -105,6 +105,8 @@
   "builder.temp.title": "All Builders Busy",
   "builder.temp.head": "Hire an extra builder",
   "builder.temp.body": "One more builder works for you for 12 hours. This job starts right away.",
+  "builder.offer.head": "Extra Builder",
+  "builder.offer.body": "Build two things at once for 12 hours",
   "builder.temp.buy": "Hire for 12h  \u00b7  {0}",
   "builder.temp.failed": "Purchase cancelled",
   "builder.temp.hired": "Extra builder hired for 12h!",
