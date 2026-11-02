@@ -158,6 +158,11 @@ namespace Survival.Unity
                     OpenBuildMenu();
                 }, 1);
                 _buildInNav = _buildButton != null;
+                if (_buildButton != null)
+                {
+                    _buildBadge = BuildUpgradeBadge(_buildButton);
+                }
+
                 return;
             }
 
@@ -168,7 +173,73 @@ namespace Survival.Unity
             Box(glow.rectTransform, -0.12f, -0.10f, 1.12f, 1.25f);
             glow.transform.SetAsFirstSibling();
             _buildButton = rt;
+            _buildBadge = BuildUpgradeBadge(rt);
             Wire(btn, OpenBuildMenu);
+        }
+
+        private Image? _buildBadge;
+        private float _buildBadgeTick;
+
+        /// <summary>
+        /// The heroes' painted upgrade badge (gold double arrow on a green shield, #119) on the Build button: same art,
+        /// corner and bob. Shown while anything can be built or upgraded with what the player has, builders busy or not.
+        /// </summary>
+        private Image? BuildUpgradeBadge(RectTransform parent)
+        {
+            var sprite = SurvivalArt.Get(HookArtKeys.BadgeUpgrade);
+            if (sprite == null)
+            {
+                return null;
+            }
+
+            var badge = SurvivalVisuals.Image(parent, "BuildBadge", Color.white, sprite);
+            badge.preserveAspect = true;
+            badge.raycastTarget = false;
+            var brt = badge.rectTransform;
+            brt.anchorMin = brt.anchorMax = new Vector2(0.90f, 0.86f);
+            brt.sizeDelta = new Vector2(44f, 44f);
+            badge.gameObject.SetActive(false);
+            StartCoroutine(BadgeBob(brt));
+            return badge;
+        }
+
+        private static System.Collections.IEnumerator BadgeBob(RectTransform rt)
+        {
+            var t = 0f;
+            while (rt != null)
+            {
+                if (rt.gameObject.activeInHierarchy)
+                {
+                    t += Time.unscaledDeltaTime;
+                    var k = 1f + 0.07f * Mathf.Sin(t * 4f);
+                    rt.localScale = new Vector3(k, k, 1f);
+                    rt.anchoredPosition = new Vector2(0f, 3f * Mathf.Sin(t * 4f));
+                }
+
+                yield return null;
+            }
+        }
+
+        /// <summary>Re-check the Build badge 4x a second (resources, build start / finish, back in town all show up here).</summary>
+        private void RefreshBuildBadge(bool now = false)
+        {
+            if (_buildBadge == null || _hook == null)
+            {
+                return;
+            }
+
+            _buildBadgeTick -= Time.unscaledDeltaTime;
+            if (!now && _buildBadgeTick > 0f)
+            {
+                return;
+            }
+
+            _buildBadgeTick = 0.25f;
+            var show = BuildReady.Any(_hook.Base, _hook.Build);
+            if (_buildBadge.gameObject.activeSelf != show)
+            {
+                _buildBadge.gameObject.SetActive(show);
+            }
         }
 
         private string BuildBlockText(BuildBlock block, BuildableDef t)
@@ -196,7 +267,8 @@ namespace Survival.Unity
             CancelPlacement();
             var hook = _hook;
             var types = hook.Build.Types;
-            var panel = OpenSheet("BuildSheet", 0.94f, 0.66f, S("build.title", "Build"));
+            var offer = BuildReady.ShowBuilderOffer(hook.Timers, hook.TempBuilderProduct != null);
+            var panel = OpenSheet("BuildSheet", 0.94f, offer ? 0.84f : 0.66f, S("build.title", "Build"));
             if (panel == null)
             {
                 return;
@@ -205,7 +277,9 @@ namespace Survival.Unity
             BalanceBar.Above(panel, hook.Wallet, BalanceBarIds.Building);
             var refreshers = new List<System.Action>();
             const float top = 0.84f;
-            const float rowH = 0.165f;
+            // Rows stop above the builder offer / spots line / Close, so nothing covers a building row.
+            var floor = offer ? 0.31f : 0.16f;
+            var rowH = Mathf.Min(0.165f, (top - floor) / Mathf.Max(1, types.Count));
             for (var i = 0; i < types.Count; i++)
             {
                 var t = types[i];
@@ -268,6 +342,11 @@ namespace Survival.Unity
                 free++;
             }
 
+            if (offer)
+            {
+                BuilderOfferCard(panel, hook);
+            }
+
             var spots = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Spots", "", 19, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.2f);
             Box(spots.rectTransform, 0.05f, 0.105f, 0.95f, 0.155f);
             var closeText = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.33f, 0.025f, 0.67f, 0.10f, 22, out var close);
@@ -282,6 +361,46 @@ namespace Survival.Unity
                 }
             };
             _sheetRefresh();
+        }
+
+        /// <summary>
+        /// "Hire an extra builder" card at the bottom of the Build menu (Derek 2026-11-01): shown while no extra builder
+        /// is hired. Painted builder icon, one line, green price button (cream text), sandbox note. Same $1.99 product.
+        /// </summary>
+        private void BuilderOfferCard(RectTransform panel, Survival.Domain.Session.HookSession hook)
+        {
+            var card = HookSkin.Panel(panel, "BuilderOffer", HookArtKeys.Plate, new Color(0.10f, 0.16f, 0.42f, 0.98f), 0.5f);
+            Ornaments.Dress(card, Ornaments.Gold, rivet: 7f);
+            Box(card.rectTransform, 0.04f, 0.165f, 0.96f, 0.30f);
+            var art = HookSkin.Art(card.transform, "Builder", BottomNav.IconBuild, SurvivalVisuals.PinBuild);
+            Box(art.rectTransform, 0.01f, 0.06f, 0.17f, 0.94f);
+            var head = HookSkin.Outlined(SurvivalVisuals.Text(card.transform, "Head", S("builder.offer.head", "Extra Builder"), 26, TextAnchor.MiddleLeft, HookSkin.Cream), 2f);
+            head.fontStyle = FontStyle.Bold;
+            Box(head.rectTransform, 0.19f, 0.52f, 0.66f, 0.92f);
+            var body = HookSkin.Outlined(SurvivalVisuals.Text(card.transform, "Body", S("builder.offer.body", "Build two things at once for 12 hours"), 18, TextAnchor.MiddleLeft, HookSkin.Cream), 1.5f);
+            HookSkin.Fit(body, 12, 18);
+            Box(body.rectTransform, 0.19f, 0.22f, 0.66f, 0.54f);
+            var sandbox = HookSkin.Outlined(SurvivalVisuals.Text(card.transform, "Sandbox", S("store.sandbox", "SANDBOX \u00b7 no real charge"), 12, TextAnchor.MiddleLeft, HookSkin.Cream), 1.2f);
+            Box(sandbox.rectTransform, 0.19f, 0.03f, 0.66f, 0.22f);
+            var price = hook.TempBuilderProduct?.PriceLabel ?? "$1.99";
+            var buyText = SheetButton((RectTransform)card.transform, "Buy", HookArtKeys.ButtonGreen, FreeGreen, 0.68f, 0.16f, 0.98f, 0.84f, 26, out var buy);
+            buyText.text = price;
+            buyText.color = HookSkin.Cream;
+            var buyRt = buy.GetComponent<RectTransform>();
+            Wire(buy, () => hook.HireTempBuilder(o =>
+            {
+                if (!o.Ok)
+                {
+                    SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiDeny);
+                    Toast(NormCenterOf(buyRt), S("builder.temp.failed", "Purchase cancelled"), Warn);
+                    return;
+                }
+
+                SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UpgradeStart);
+                Toast(new Vector2(0.5f, 0.55f), S("builder.temp.hired", "Extra builder hired for 12h!"), SurvivalVisuals.PinBuild);
+                OpenBuildMenu(); // reopen without the card
+                RefreshAll();
+            }));
         }
 
         // ---------- placement ----------

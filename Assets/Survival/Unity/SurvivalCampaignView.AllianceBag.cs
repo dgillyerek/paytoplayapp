@@ -69,6 +69,14 @@ namespace Survival.Unity
             _ => new Color(0.16f, 0.47f, 0.27f, 1f),
         };
 
+        // Shell built once per open (crest, name, tabs, Close); tab switches and network refreshes only swap the content
+        // container (Derek 2026-11-01: "the screen blinks or reloads ... just refresh the lower half").
+        private RectTransform? _allyPanel;
+        private RectTransform? _allyContent;
+        private bool _allyShellOnline;
+        private Text? _allyName, _allySub, _allyOnlineText;
+        private readonly System.Collections.Generic.Dictionary<string, (Image Img, Text Label)> _allyTabs = new();
+
         private void OpenAlliance(string tab)
         {
             EnsureAllianceNet();
@@ -81,8 +89,28 @@ namespace Survival.Unity
 
             _alliance = net is { InAlliance: true } ? AllianceOverview.From(net.Alliance!) : _alliance ?? AllianceOverview.Simulated();
             _allianceTab = tab;
-            var a = _alliance;
+            var online = net is { InAlliance: true };
+            if (!AllianceShellAlive() || _allyShellOnline != online)
+            {
+                BuildAllianceShell(online);
+            }
+
+            UpdateAllianceShell(net, tab);
+            RebuildAllianceContent(net, tab);
+        }
+
+        private bool AllianceShellAlive() =>
+            _screen != null && _screen.name == "AllianceScreen" && _allyPanel != null && _allyContent != null;
+
+        private void BuildAllianceShell(bool online)
+        {
+            var a = _alliance!;
             var panel = OpenScreen("AllianceScreen", S("alliance.title", "ALLIANCE"));
+            _allyPanel = panel;
+            _allyShellOnline = online;
+            _allyTabs.Clear();
+            _allyChatLog = null;
+            _allyChatInput = null;
 
             // Hero art: the painted guild crest with a soft royal glow, guild name and stats beside it.
             var glow = HookSkin.Glow(panel, "CrestGlow", AllyCrestGlow);
@@ -91,84 +119,154 @@ namespace Survival.Unity
             crest.raycastTarget = false;
             Box(crest.rectTransform, 0.05f, 0.765f, 0.37f, 0.93f);
             Ornaments.Sparkles(crest.rectTransform, 3, new Color(1f, 0.9f, 0.6f, 1f));
-            HookSkin.Fit(Label(panel, "Name", a.GuildName, 30, TextAnchor.MiddleLeft, SurvivalVisuals.Cream, 0.39f, 0.855f, 0.96f, 0.925f), 16, 30).horizontalOverflow = HorizontalWrapMode.Wrap;
-            Label(panel, "Sub", Fmt("alliance.summary2", "Level {0}  \u00b7  {1} members", a.Level, a.Members.Count), 20, TextAnchor.MiddleLeft, AllyCaption, 0.39f, 0.815f, 0.96f, 0.855f);
-            Label(panel, "Online", Fmt("alliance.online", "{0} online now", a.OnlineCount), 20, TextAnchor.MiddleLeft, AllyOnline, 0.39f, 0.775f, 0.96f, 0.815f);
+            _allyName = HookSkin.Fit(Label(panel, "Name", a.GuildName, 30, TextAnchor.MiddleLeft, SurvivalVisuals.Cream, 0.39f, 0.855f, 0.96f, 0.925f), 16, 30);
+            _allyName.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _allySub = Label(panel, "Sub", "", 20, TextAnchor.MiddleLeft, AllyCaption, 0.39f, 0.815f, 0.96f, 0.855f);
+            _allyOnlineText = Label(panel, "Online", "", 20, TextAnchor.MiddleLeft, AllyOnline, 0.39f, 0.775f, 0.96f, 0.815f);
             var explain = Label(panel, "Explain", S("alliance.explain", "Your guild. Guildmates help speed up your builds."), 19, TextAnchor.MiddleCenter, SurvivalVisuals.Cream, 0.04f, 0.735f, 0.96f, 0.772f);
             HookSkin.Fit(explain, 12, 19);
 
-            var members = tab == AllianceOverview.TabMembers;
-            if (net is { InAlliance: true })
+            if (online)
             {
-                AllyTab(panel, "TabMembers", S("alliance.tab.members", "MEMBERS"), members, 0.03f, 0.25f, () => OpenAlliance(AllianceOverview.TabMembers));
-                AllyTab(panel, "TabChat", S("alliance.tab.chat", "CHAT"), tab == TabChat, 0.27f, 0.49f, () => OpenAlliance(TabChat));
-                AllyTab(panel, "TabHelp", S("alliance.tab.help", "HELP"), tab == AllianceOverview.TabHelp, 0.51f, 0.73f, () => OpenAlliance(AllianceOverview.TabHelp));
-                AllyTab(panel, "TabGifts", Fmt("alliance.tab.gifts", "GIFTS {0}", net.Gifts.Count == 0 ? "" : "(" + net.Gifts.Count + ")"), tab == TabGifts, 0.75f, 0.97f, () => OpenAlliance(TabGifts));
-                if (!members)
-                {
-                    DrawAllianceOnlineTab(panel, net, tab);
-                    AllianceCloseButton(panel);
-                    return;
-                }
+                AllyTab(panel, "TabMembers", AllianceOverview.TabMembers, S("alliance.tab.members", "MEMBERS"), 0.03f, 0.25f);
+                AllyTab(panel, "TabChat", TabChat, S("alliance.tab.chat", "CHAT"), 0.27f, 0.49f);
+                AllyTab(panel, "TabHelp", AllianceOverview.TabHelp, S("alliance.tab.help", "HELP"), 0.51f, 0.73f);
+                AllyTab(panel, "TabGifts", TabGifts, S("alliance.tab.gifts_plain", "GIFTS"), 0.75f, 0.97f);
             }
             else
             {
-                AllyTab(panel, "TabMembers", S("alliance.tab.members", "MEMBERS"), members, 0.05f, 0.49f, () => OpenAlliance(AllianceOverview.TabMembers));
-                AllyTab(panel, "TabHelp", S("alliance.tab.help", "HELP"), !members, 0.51f, 0.95f, () => OpenAlliance(AllianceOverview.TabHelp));
+                AllyTab(panel, "TabMembers", AllianceOverview.TabMembers, S("alliance.tab.members", "MEMBERS"), 0.05f, 0.49f);
+                AllyTab(panel, "TabHelp", AllianceOverview.TabHelp, S("alliance.tab.help", "HELP"), 0.51f, 0.95f);
             }
 
-            if (members)
-            {
-                const float top = 0.675f, rowH = 0.057f;
-                for (var i = 0; i < a.Members.Count; i++)
-                {
-                    var m = a.Members[i];
-                    var y1 = top - i * rowH;
-                    var row = OrnateCard(panel, "Member_" + i, 0.04f, y1 - rowH + 0.005f, 0.96f, y1, m.Role == "leader");
-                    ArtSlot(row, "Portrait", "theme_a.hero.portrait." + AllyPortraits[i % AllyPortraits.Length], SurvivalVisuals.PanelSoft, 0.02f, 0.08f, 0.135f, 0.92f);
-                    var dot = SurvivalVisuals.Image(row, "Online", m.Online ? AllyOnline : new Color(0.45f, 0.45f, 0.45f, 1f));
-                    dot.raycastTarget = false;
-                    Box(dot.rectTransform, 0.115f, 0.08f, 0.145f, 0.32f);
-                    Ornaments.Frame(dot.transform, Ornaments.Gold, 1f);
-                    HookSkin.Fit(Label(row, "Name", m.Name, 24, TextAnchor.MiddleLeft, SurvivalVisuals.Cream, 0.165f, 0.48f, 0.66f, 0.96f), 14, 24);
-
-                    // Role badge: coloured pill, gold rim, cream outlined text.
-                    var badge = SurvivalVisuals.Image(row, "RoleBadge", RoleColor(m.Role));
-                    badge.raycastTarget = false;
-                    Box(badge.rectTransform, 0.165f, 0.08f, 0.38f, 0.44f);
-                    Ornaments.Bevel(badge.transform, 0.6f);
-                    Ornaments.Frame(badge.transform, Ornaments.Gold, 1f);
-                    var role = Label(badge.rectTransform, "Role", S("alliance.role." + m.Role, m.Role.ToUpperInvariant()), 15, TextAnchor.MiddleCenter, SurvivalVisuals.Cream, 0f, 0f, 1f, 1f);
-                    HookSkin.Fit(role, 9, 15);
-
-                    var banner = HookSkin.Art(row, "PowerIcon", HookArtKeys.WarBanner, Ornaments.Gold);
-                    banner.raycastTarget = false;
-                    Box(banner.rectTransform, 0.62f, 0.1f, 0.71f, 0.9f);
-                    Label(row, "Power", m.Power.ToString("N0"), 24, TextAnchor.MiddleRight, SurvivalVisuals.Cream, 0.70f, 0.1f, 0.97f, 0.9f);
-                }
-            }
-            else
-            {
-                var help = OrnateCard(panel, "HelpCard", 0.06f, 0.36f, 0.94f, 0.67f, true);
-                var hand = HookSkin.Art(help, "HelpHand", HookArtKeys.HelpHand, Ornaments.Gold);
-                hand.raycastTarget = false;
-                Box(hand.rectTransform, 0.30f, 0.45f, 0.70f, 0.97f);
-                Label(help, "Title", S("alliance.help.title", "Guild Help"), 30, TextAnchor.MiddleCenter, SurvivalVisuals.Cream, 0.05f, 0.30f, 0.95f, 0.45f);
-                var body = Label(help, "Body", S("alliance.help.body", "Ask guildmates to speed up your upgrades, and help theirs for rewards. Connect to the internet to join a real alliance."),
-                    21, TextAnchor.MiddleCenter, SurvivalVisuals.Cream, 0.07f, 0.04f, 0.93f, 0.30f);
-                HookSkin.Fit(body, 12, 21);
-            }
-
-            var close = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.30f, 0.025f, 0.70f, 0.082f, 26, out var closeBtn);
-            close.text = S("hook.close", "Close");
-            Wire(closeBtn, CloseScreen);
+            _allyContent = AllianceContentRoot(panel);
+            AllianceCloseButton(panel);
         }
 
-        private void AllyTab(RectTransform panel, string name, string label, bool on, float x0, float x1, Action tap)
+        private static RectTransform AllianceContentRoot(RectTransform panel)
         {
-            var text = SheetButton(panel, name, on ? HookArtKeys.ButtonGreen : HookArtKeys.ButtonBlue, on ? SurvivalVisuals.MineFill : SurvivalVisuals.PanelSoft, x0, 0.685f, x1, 0.728f, 24, out var btn);
+            var go = new GameObject("AllianceContent", typeof(RectTransform));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(panel, false);
+            SurvivalVisuals.Stretch(rt);
+            return rt;
+        }
+
+        /// <summary>Header numbers and tab highlight, changed in place (no rebuild).</summary>
+        private void UpdateAllianceShell(AllianceService? net, string tab)
+        {
+            var a = _alliance!;
+            SetIfChanged(_allyName, a.GuildName);
+            SetIfChanged(_allySub, Fmt("alliance.summary2", "Level {0}  \u00b7  {1} members", a.Level, a.Members.Count));
+            SetIfChanged(_allyOnlineText, Fmt("alliance.online", "{0} online now", a.OnlineCount));
+            foreach (var kv in _allyTabs)
+            {
+                var on = kv.Key == tab || (!_allyShellOnline && kv.Key == AllianceOverview.TabHelp && tab != AllianceOverview.TabMembers);
+                HookSkin.SetButton(kv.Value.Img, on ? HookArtKeys.ButtonGreen : HookArtKeys.ButtonBlue, on ? SurvivalVisuals.MineFill : SurvivalVisuals.PanelSoft, true);
+                if (kv.Key == TabGifts && net != null)
+                {
+                    SetIfChanged(kv.Value.Label, Fmt("alliance.tab.gifts", "GIFTS {0}", net.Gifts.Count == 0 ? "" : "(" + net.Gifts.Count + ")"));
+                }
+            }
+        }
+
+        private static void SetIfChanged(Text? t, string value)
+        {
+            if (t != null && t.text != value)
+            {
+                t.text = value;
+            }
+        }
+
+        /// <summary>
+        /// Builds the new tab content in a fresh container and drops the old one in the same frame, so the old rows stay
+        /// visible until the new ones exist (no empty frame, no pop-in).
+        /// </summary>
+        private void RebuildAllianceContent(AllianceService? net, string tab)
+        {
+            var panel = _allyPanel!;
+            var old = _allyContent;
+            var index = old != null ? old.GetSiblingIndex() : panel.childCount;
+            var content = AllianceContentRoot(panel);
+            content.SetSiblingIndex(index);
+            _allyContent = content;
+            _allyChatLog = null;
+            _allyChatInput = null;
+            if (old != null)
+            {
+                old.gameObject.SetActive(false);
+                Destroy(old.gameObject);
+            }
+
+            if (_allyShellOnline && net != null && tab != AllianceOverview.TabMembers)
+            {
+                DrawAllianceOnlineTab(content, net, tab);
+            }
+            else if (tab == AllianceOverview.TabMembers)
+            {
+                DrawAllianceMembers(content, _alliance!);
+            }
+            else
+            {
+                DrawAllianceOfflineHelp(content);
+            }
+        }
+
+        private void DrawAllianceMembers(RectTransform panel, AllianceOverview a)
+        {
+            const float top = 0.675f, rowH = 0.057f;
+            for (var i = 0; i < a.Members.Count; i++)
+            {
+                var m = a.Members[i];
+                var y1 = top - i * rowH;
+                var row = OrnateCard(panel, "Member_" + i, 0.04f, y1 - rowH + 0.005f, 0.96f, y1, m.Role == "leader");
+                ArtSlot(row, "Portrait", "theme_a.hero.portrait." + AllyPortraits[i % AllyPortraits.Length], SurvivalVisuals.PanelSoft, 0.02f, 0.08f, 0.135f, 0.92f);
+                var dot = SurvivalVisuals.Image(row, "Online", m.Online ? AllyOnline : new Color(0.45f, 0.45f, 0.45f, 1f));
+                dot.raycastTarget = false;
+                Box(dot.rectTransform, 0.115f, 0.08f, 0.145f, 0.32f);
+                Ornaments.Frame(dot.transform, Ornaments.Gold, 1f);
+                HookSkin.Fit(Label(row, "Name", m.Name, 24, TextAnchor.MiddleLeft, SurvivalVisuals.Cream, 0.165f, 0.48f, 0.66f, 0.96f), 14, 24);
+
+                // Role badge: coloured pill, gold rim, cream outlined text.
+                var badge = SurvivalVisuals.Image(row, "RoleBadge", RoleColor(m.Role));
+                badge.raycastTarget = false;
+                Box(badge.rectTransform, 0.165f, 0.08f, 0.38f, 0.44f);
+                Ornaments.Bevel(badge.transform, 0.6f);
+                Ornaments.Frame(badge.transform, Ornaments.Gold, 1f);
+                var role = Label(badge.rectTransform, "Role", S("alliance.role." + m.Role, m.Role.ToUpperInvariant()), 15, TextAnchor.MiddleCenter, SurvivalVisuals.Cream, 0f, 0f, 1f, 1f);
+                HookSkin.Fit(role, 9, 15);
+
+                var banner = HookSkin.Art(row, "PowerIcon", HookArtKeys.WarBanner, Ornaments.Gold);
+                banner.raycastTarget = false;
+                Box(banner.rectTransform, 0.62f, 0.1f, 0.71f, 0.9f);
+                Label(row, "Power", m.Power.ToString("N0"), 24, TextAnchor.MiddleRight, SurvivalVisuals.Cream, 0.70f, 0.1f, 0.97f, 0.9f);
+            }
+        }
+
+        private void DrawAllianceOfflineHelp(RectTransform panel)
+        {
+            var help = OrnateCard(panel, "HelpCard", 0.06f, 0.36f, 0.94f, 0.67f, true);
+            var hand = HookSkin.Art(help, "HelpHand", HookArtKeys.HelpHand, Ornaments.Gold);
+            hand.raycastTarget = false;
+            Box(hand.rectTransform, 0.30f, 0.45f, 0.70f, 0.97f);
+            Label(help, "Title", S("alliance.help.title", "Guild Help"), 30, TextAnchor.MiddleCenter, SurvivalVisuals.Cream, 0.05f, 0.30f, 0.95f, 0.45f);
+            var body = Label(help, "Body", S("alliance.help.body", "Ask guildmates to speed up your upgrades, and help theirs for rewards. Connect to the internet to join a real alliance."),
+                21, TextAnchor.MiddleCenter, SurvivalVisuals.Cream, 0.07f, 0.04f, 0.93f, 0.30f);
+            HookSkin.Fit(body, 12, 21);
+        }
+
+        private void AllyTab(RectTransform panel, string name, string tab, string label, float x0, float x1)
+        {
+            var text = SheetButton(panel, name, HookArtKeys.ButtonBlue, SurvivalVisuals.PanelSoft, x0, 0.685f, x1, 0.728f, 24, out var btn);
             text.text = label;
-            Wire(btn, tap);
+            Wire(btn, () =>
+            {
+                if (_allianceTab != tab)
+                {
+                    OpenAlliance(tab);
+                }
+            });
+            _allyTabs[tab] = (btn.GetComponent<Image>(), text);
         }
 
         private (string Button, string Hint) BagLine(BagItem item, Survival.Domain.Clock.GameTimer? running) => item.ResourceId switch
