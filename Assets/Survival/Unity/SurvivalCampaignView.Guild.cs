@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using Survival.Domain.Alliance;
 using System.Collections.Generic;
 using System.IO;
 using Survival.Domain.Clock;
@@ -32,8 +33,8 @@ namespace Survival.Unity
         /// <summary>Guild help (null until the Play HUD and the village are up).</summary>
         public GuildHelp? Guild => _guild;
 
-        /// <summary>Swap in a real guild server here; defaults to on-device guildmates.</summary>
-        public static Func<IGuildBackend> GuildBackendFactory = () => new SimulatedGuild();
+        /// <summary>The alliance server when reachable (falls back to on-device guildmates while offline or guildless).</summary>
+        public static Func<IGuildBackend> GuildBackendFactory = () => AllianceNet != null ? new OnlineGuild(AllianceNet) : new SimulatedGuild();
 
         public static string GuildHelpPath => Path.Combine(Application.persistentDataPath, GuildHelp.FileName);
 
@@ -45,6 +46,7 @@ namespace Survival.Unity
                 return;
             }
 
+            EnsureAllianceNet();
             _guild = new GuildHelp(GuildBackendFactory(), timers);
             try
             {

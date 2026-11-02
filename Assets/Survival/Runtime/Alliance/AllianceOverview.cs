@@ -64,5 +64,18 @@ namespace Survival.Domain.Alliance
             list.Sort((a, b) => b.Power.CompareTo(a.Power));
             return new AllianceOverview(guildName, 4, list);
         }
+
+        /// <summary>The real alliance from the server; members strongest first.</summary>
+        public static AllianceOverview From(AllianceInfo info)
+        {
+            var list = new List<Guildmate>();
+            foreach (var m in info.Members)
+            {
+                list.Add(new Guildmate(m.Name, m.RoleKey, m.Power, m.Online));
+            }
+
+            list.Sort((a, b) => b.Power.CompareTo(a.Power));
+            return new AllianceOverview("[" + info.Tag + "] " + info.Name, 1, list);
+        }
     }
 }
