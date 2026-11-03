@@ -66,6 +66,13 @@ namespace Survival.Unity
         /// hands rotating around the ball").
         /// </summary>
         private bool _hipsStandIn;
+
+        /// <summary>
+        /// The upper body is copied from the take after the mixer (<see cref="CopyUpperFromTake"/>): stand-in-hips rigs
+        /// (Vespera) and the walking shooters (Bonequill). The runtime AvatarMask left Bonequill's arms on the walk carry, so
+        /// in the runner he held the bow level at his waist instead of raising and drawing it (Derek 2026-11-02).
+        /// </summary>
+        private bool _copyUpper;
         private Transform[] _upperBones = System.Array.Empty<Transform>();
         private Quaternion[] _upperRot = System.Array.Empty<Quaternion>();
         private Vector3[] _upperPos = System.Array.Empty<Vector3>();
@@ -709,7 +716,7 @@ namespace Survival.Unity
             _layers.SetInputWeight(0, 1f);
             _layers.SetInputWeight(1, prev);
             _layers.SetInputWeight(2, take);
-            if (_hipsStandIn && _upperBones.Length > 0 && (take > 0f || prev > 0f))
+            if (_copyUpper && _upperBones.Length > 0 && (take > 0f || prev > 0f))
             {
                 CopyUpperFromTake(take, prev);
             }
@@ -1002,7 +1009,8 @@ namespace Survival.Unity
             }
 
             _upperMask = mask;
-            if (_hipsStandIn)
+            _copyUpper = RunnerUpperBodyAttack.CopiesTakeOverWalk(_spec.Name, _hipsStandIn);
+            if (_copyUpper)
             {
                 var bones = new List<Transform>();
                 foreach (var t in root.GetComponentsInChildren<Transform>(true))
