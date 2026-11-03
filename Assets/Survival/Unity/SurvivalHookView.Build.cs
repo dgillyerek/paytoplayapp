@@ -267,8 +267,7 @@ namespace Survival.Unity
             CancelPlacement();
             var hook = _hook;
             var types = hook.Build.Types;
-            var offer = BuildReady.ShowBuilderOffer(hook.Timers, hook.TempBuilderProduct != null);
-            var panel = OpenSheet("BuildSheet", 0.94f, offer ? 0.84f : 0.66f, S("build.title", "Build"));
+            var panel = OpenSheet("BuildSheet", 0.94f, 0.66f, S("build.title", "Build"));
             if (panel == null)
             {
                 return;
@@ -277,8 +276,8 @@ namespace Survival.Unity
             BalanceBar.Above(panel, hook.Wallet, BalanceBarIds.Building);
             var refreshers = new List<System.Action>();
             const float top = 0.84f;
-            // Rows stop above the builder offer / spots line / Close, so nothing covers a building row.
-            var floor = offer ? 0.31f : 0.16f;
+            // Rows stop above the spots line / Close, so nothing covers a building row.
+            var floor = 0.16f;
             var rowH = Mathf.Min(0.165f, (top - floor) / Mathf.Max(1, types.Count));
             for (var i = 0; i < types.Count; i++)
             {
@@ -306,15 +305,22 @@ namespace Survival.Unity
                 Wire(go, () =>
                 {
                     var block = hook.Build.Check(type);
-                    if (block == BuildBlock.None)
+                    var afford = hook.Wallet.CanAfford(hook.Build.CostOf(type));
+                    switch (BuildReady.Route(block, afford, hook.TempBuilderOfferedForBuild(type) && hook.TempBuilderProduct != null))
                     {
-                        CloseSheet();
-                        BeginPlacement(type);
-                        return;
+                        case BuildTap.Place:
+                            CloseSheet();
+                            BeginPlacement(type);
+                            return;
+                        case BuildTap.BuyBuilder:
+                            // No free builder: open the buy screen; buying starts this build on the next free spot.
+                            CloseSheet();
+                            OpenTempBuilder(null, type, null);
+                            return;
                     }
 
                     StartCoroutine(Shake(goRt));
-                    Toast(NormCenterOf(goRt), BuildBlockText(block, t), Warn);
+                    Toast(NormCenterOf(goRt), BuildBlockText(BuildReady.Shown(block, afford), t), Warn);
                 });
 
                 refreshers.Add(() =>
@@ -326,7 +332,8 @@ namespace Survival.Unity
                     var next = t.NextUnlockCastle(hq);
                     count.text = Fmt2("build.count", "Built {0}/{1}", built, max)
                         + (next is int n ? "   " + Fmt("build.more_at", "More at Castle Lv {0}", n) : "");
-                    var block = hook.Build.Check(type);
+                    // A builder-busy job looks like a free one; tapping it opens the buy-a-builder screen.
+                    var block = BuildReady.Shown(hook.Build.Check(type), hook.Wallet.CanAfford(hook.Build.CostOf(type)));
                     var ok = block == BuildBlock.None;
                     label.text = ok ? S("build.button", "Build") : BuildBlockText(block, t);
                     label.fontSize = ok ? 26 : 17;
@@ -340,11 +347,6 @@ namespace Survival.Unity
             foreach (var _ in hook.Build.FreeSpots)
             {
                 free++;
-            }
-
-            if (offer)
-            {
-                BuilderOfferCard(panel, hook);
             }
 
             var spots = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Spots", "", 19, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.2f);
@@ -361,46 +363,6 @@ namespace Survival.Unity
                 }
             };
             _sheetRefresh();
-        }
-
-        /// <summary>
-        /// "Hire an extra builder" card at the bottom of the Build menu (Derek 2026-11-01): shown while no extra builder
-        /// is hired. Painted builder icon, one line, green price button (cream text), sandbox note. Same $1.99 product.
-        /// </summary>
-        private void BuilderOfferCard(RectTransform panel, Survival.Domain.Session.HookSession hook)
-        {
-            var card = HookSkin.Panel(panel, "BuilderOffer", HookArtKeys.Plate, new Color(0.10f, 0.16f, 0.42f, 0.98f), 0.5f);
-            Ornaments.Dress(card, Ornaments.Gold, rivet: 7f);
-            Box(card.rectTransform, 0.04f, 0.165f, 0.96f, 0.30f);
-            var art = HookSkin.Art(card.transform, "Builder", BottomNav.IconBuild, SurvivalVisuals.PinBuild);
-            Box(art.rectTransform, 0.01f, 0.06f, 0.17f, 0.94f);
-            var head = HookSkin.Outlined(SurvivalVisuals.Text(card.transform, "Head", S("builder.offer.head", "Extra Builder"), 26, TextAnchor.MiddleLeft, HookSkin.Cream), 2f);
-            head.fontStyle = FontStyle.Bold;
-            Box(head.rectTransform, 0.19f, 0.52f, 0.66f, 0.92f);
-            var body = HookSkin.Outlined(SurvivalVisuals.Text(card.transform, "Body", S("builder.offer.body", "Build two things at once for 12 hours"), 18, TextAnchor.MiddleLeft, HookSkin.Cream), 1.5f);
-            HookSkin.Fit(body, 12, 18);
-            Box(body.rectTransform, 0.19f, 0.22f, 0.66f, 0.54f);
-            var sandbox = HookSkin.Outlined(SurvivalVisuals.Text(card.transform, "Sandbox", S("store.sandbox", "SANDBOX \u00b7 no real charge"), 12, TextAnchor.MiddleLeft, HookSkin.Cream), 1.2f);
-            Box(sandbox.rectTransform, 0.19f, 0.03f, 0.66f, 0.22f);
-            var price = hook.TempBuilderProduct?.PriceLabel ?? "$1.99";
-            var buyText = SheetButton((RectTransform)card.transform, "Buy", HookArtKeys.ButtonGreen, FreeGreen, 0.68f, 0.16f, 0.98f, 0.84f, 26, out var buy);
-            buyText.text = price;
-            buyText.color = HookSkin.Cream;
-            var buyRt = buy.GetComponent<RectTransform>();
-            Wire(buy, () => hook.HireTempBuilder(o =>
-            {
-                if (!o.Ok)
-                {
-                    SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UiDeny);
-                    Toast(NormCenterOf(buyRt), S("builder.temp.failed", "Purchase cancelled"), Warn);
-                    return;
-                }
-
-                SurvivalAudio.Play(Survival.Domain.Audio.AudioCues.UpgradeStart);
-                Toast(new Vector2(0.5f, 0.55f), S("builder.temp.hired", "Extra builder hired for 12h!"), SurvivalVisuals.PinBuild);
-                OpenBuildMenu(); // reopen without the card
-                RefreshAll();
-            }));
         }
 
         // ---------- placement ----------
