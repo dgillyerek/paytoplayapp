@@ -427,7 +427,7 @@ namespace Survival.Unity
 
             if (_heroesBadge != null)
             {
-                _heroesBadge.gameObject.SetActive(AnyHeroAction() || (Track != null && Track.ClaimableCount() > 0));
+                _heroesBadge.gameObject.SetActive(AnyHeroAction());
             }
 
             if (_heroFree != null)
@@ -662,6 +662,17 @@ namespace Survival.Unity
 
         // ---------- Heroes ----------
 
+        // Heroes screen pieces kept while it is open, so taps only swap what changed (Derek 2026-11-02: tapping a hero
+        // rebuilt the whole screen). Shell = panel, banner, balances, bottom buttons; body = tabs + cards + detail.
+        private Text? _heroesTitle;
+        private RectTransform? _heroesBody;
+        private RectTransform? _heroesDetail;
+        private RectTransform? _heroesDetailContent;
+        private bool _heroesShownFoes;
+        private readonly Dictionary<string, GameObject> _heroesGlows = new Dictionary<string, GameObject>(StringComparer.Ordinal);
+        private readonly List<Action> _heroesBodyRefreshers = new List<Action>();
+        private Action? _heroesDetailRefresh;
+
         public void OpenHeroes()
         {
             if (Campaign == null || _overlay == null)
@@ -669,9 +680,6 @@ namespace Survival.Unity
                 return;
             }
 
-            // The banner follows the tab: OpenHeroes runs on open and on every tab tap, so the title is rebuilt each time.
-            var panel = OpenScreen(HeroesScreenName, S(HeroesScreen.TitleKey(_foesTab), HeroesScreen.TitleFallback(_foesTab)));
-            var roster = Campaign.Roster;
             var defs = new List<CampaignHeroDef>(Campaign.Catalog.OnSide(_foesTab ? CampaignSide.Villain : CampaignSide.Hero));
             var sel = _selected.Length > 0 ? Campaign.Catalog.Hero(_selected) : null;
             if (sel == null || (sel.Side == CampaignSide.Villain) != _foesTab)
@@ -679,22 +687,48 @@ namespace Survival.Unity
                 _selected = defs.Count > 0 ? defs[0].Id : "";
             }
 
+            var open = _screen != null && _screen.name == HeroesScreenName && _heroesBody != null;
+            var step = HeroesScreen.Plan(open, _heroesShownFoes, _foesTab);
+            if (step == HeroesRebuild.Shell)
+            {
+                BuildHeroesShell();
+            }
+
+            if (step != HeroesRebuild.DetailOnly)
+            {
+                BuildHeroesBody(defs);
+            }
+            else
+            {
+                ShowHeroDetail();
+            }
+
+            _refresh?.Invoke();
+        }
+
+        /// <summary>Tap on a roster card: move the glow and swap the detail pane; nothing else is rebuilt.</summary>
+        private void SelectHero(string id)
+        {
+            _selected = id;
+            ShowHeroDetail();
+            _refresh?.Invoke();
+        }
+
+        private void BuildHeroesShell()
+        {
+            var panel = OpenScreen(HeroesScreenName, S(HeroesScreen.TitleKey(_foesTab), HeroesScreen.TitleFallback(_foesTab)));
+            _heroesTitle = panel.Find("Header")?.GetComponentInChildren<Text>(true);
+            var roster = Campaign!.Roster;
+
             // What you have, right where you spend it: gold + food (Level Up), gems / speed-ups (Rush), tomes.
             BalanceBar.Inside(panel, Campaign.Wallet, BalanceBarIds.Heroes, 0.035f, 0.893f, 0.965f, 0.940f);
-            Tab(panel, "TabHeroes", S("campaign.tab.heroes", "Heroes"), HeroesScreen.TabHighlighted(false, _foesTab), 0.04f, 0.27f, () => { _foesTab = false; _selected = ""; OpenHeroes(); });
-            Tab(panel, "TabFoes", S("campaign.tab.foes", "Foes"), HeroesScreen.TabHighlighted(true, _foesTab), 0.29f, 0.52f, () => { _foesTab = true; _selected = ""; OpenHeroes(); });
             var queue = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Queue", "", 22, TextAnchor.MiddleRight, SurvivalVisuals.Cream), 1.5f);
             Box(queue.rectTransform, 0.54f, 0.845f, 0.96f, 0.885f);
 
-            var refreshers = new List<Action>();
-            for (var i = 0; i < defs.Count && i < 6; i++)
-            {
-                var col = i % 3;
-                var row = i / 3;
-                var x0 = 0.035f + col * 0.315f;
-                var y1 = 0.837f - row * 0.204f;
-                refreshers.Add(HeroCard(panel, defs[i], x0, y1 - 0.195f, x0 + 0.30f, y1));
-            }
+            var body = new GameObject("HeroesBody", typeof(RectTransform)).GetComponent<RectTransform>();
+            body.SetParent(panel, false);
+            SurvivalVisuals.Stretch(body);
+            _heroesBody = body;
 
             var detail = SurvivalVisuals.Image(panel, "Detail", new Color(0f, 0f, 0f, 0.28f));
             HookSkin.TrySkin(detail, HookArtKeys.Plate, 0.45f);
@@ -702,11 +736,8 @@ namespace Survival.Unity
             Ornaments.Grain(detail.transform, new Color(1f, 1f, 1f, 0.8f));
             Ornaments.Bevel(detail.transform);
             Ornaments.Frame(detail.transform, Ornaments.Gold, 3f);
-            var def = Campaign.Catalog.Hero(_selected);
-            if (def != null)
-            {
-                refreshers.Add(def.Side == CampaignSide.Hero ? HeroDetail(detail.rectTransform, def) : FoeDetail(detail.rectTransform, def));
-            }
+            _heroesDetail = detail.rectTransform;
+            _heroesDetailContent = null;
 
             var closeX0 = 0.30f;
             var closeX1 = 0.70f;
@@ -714,35 +745,11 @@ namespace Survival.Unity
             {
                 closeX0 = 0.52f;
                 closeX1 = 0.92f;
-                var powerX1 = Track != null ? 0.335f : 0.48f;
+                var powerX1 = 0.48f;
                 var power = SheetButton(panel, "PowerUp", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.03f, 0.025f, powerX1, 0.082f, 24, out var powerBtn);
                 power.text = S("store.power_packs.button", "POWER UP");
                 FitButtonLabel(power, 26);
                 Wire(powerBtn, OpenPowerPacks);
-            }
-
-            if (Track != null)
-            {
-                var pathX0 = PowerPacks != null ? 0.35f : 0.03f;
-                var path = SheetButton(panel, "KingdomPath", HookArtKeys.ButtonBlue, HeroFrame, pathX0, 0.025f, pathX0 + 0.305f, 0.082f, 24, out var pathBtn);
-                path.text = S("reward_track.button", "KINGDOM PATH");
-                Wire(pathBtn, OpenRewardTrack);
-                var free = FreeTag(pathBtn.transform, "FreeBadge");
-                var freeRt = free.rectTransform;
-                refreshers.Add(() =>
-                {
-                    var show = Track.ClaimableCount() > 0;
-                    if (free.gameObject.activeSelf != show)
-                    {
-                        free.gameObject.SetActive(show);
-                        if (show)
-                        {
-                            StartCoroutine(Breathe(freeRt));
-                        }
-                    }
-                });
-                closeX0 = PowerPacks != null ? 0.67f : 0.35f;
-                closeX1 = 0.97f;
             }
 
             var close = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, closeX0, 0.025f, closeX1, 0.082f, 26, out var closeBtn);
@@ -752,13 +759,85 @@ namespace Survival.Unity
 
             _refresh = () =>
             {
+                if (_heroesBody == null)
+                {
+                    return;
+                }
+
                 queue.text = Fmt("campaign.training_slots", "Training {0}/{1}", roster.Training.Count, Campaign.Catalog.TrainingSlots);
-                foreach (var r in refreshers)
+                foreach (var r in _heroesBodyRefreshers)
                 {
                     r();
                 }
+
+                _heroesDetailRefresh?.Invoke();
             };
-            _refresh();
+        }
+
+        /// <summary>Tabs + roster cards for the shown side; on a tab switch only this and the detail pane are redrawn.</summary>
+        private void BuildHeroesBody(List<CampaignHeroDef> defs)
+        {
+            var body = _heroesBody!;
+            for (var c = body.childCount - 1; c >= 0; c--)
+            {
+                Destroy(body.GetChild(c).gameObject);
+            }
+
+            _heroesGlows.Clear();
+            _heroesBodyRefreshers.Clear();
+            _heroesShownFoes = _foesTab;
+            if (_heroesTitle != null)
+            {
+                // The banner follows the tab: same art and font, only the words change.
+                _heroesTitle.text = S(HeroesScreen.TitleKey(_foesTab), HeroesScreen.TitleFallback(_foesTab));
+            }
+
+            Tab(body, "TabHeroes", S("campaign.tab.heroes", "Heroes"), HeroesScreen.TabHighlighted(false, _foesTab), 0.04f, 0.27f, () => { if (_foesTab) { _foesTab = false; _selected = ""; OpenHeroes(); } });
+            Tab(body, "TabFoes", S("campaign.tab.foes", "Foes"), HeroesScreen.TabHighlighted(true, _foesTab), 0.29f, 0.52f, () => { if (!_foesTab) { _foesTab = true; _selected = ""; OpenHeroes(); } });
+
+            for (var i = 0; i < defs.Count && i < 6; i++)
+            {
+                var col = i % 3;
+                var row = i / 3;
+                var x0 = 0.035f + col * 0.315f;
+                var y1 = 0.837f - row * 0.204f;
+                _heroesBodyRefreshers.Add(HeroCard(body, defs[i], x0, y1 - 0.195f, x0 + 0.30f, y1));
+            }
+
+            ShowHeroDetail();
+        }
+
+        /// <summary>Moves the selection glow and redraws only the detail pane's contents (its plate and frame stay).</summary>
+        private void ShowHeroDetail()
+        {
+            foreach (var kv in _heroesGlows)
+            {
+                if (kv.Value != null)
+                {
+                    kv.Value.SetActive(string.Equals(kv.Key, _selected, StringComparison.Ordinal));
+                }
+            }
+
+            if (_heroesDetail == null)
+            {
+                return;
+            }
+
+            if (_heroesDetailContent != null)
+            {
+                Destroy(_heroesDetailContent.gameObject);
+            }
+
+            var content = new GameObject("DetailContent", typeof(RectTransform)).GetComponent<RectTransform>();
+            content.SetParent(_heroesDetail, false);
+            SurvivalVisuals.Stretch(content);
+            _heroesDetailContent = content;
+            _heroesDetailRefresh = null;
+            var def = Campaign!.Catalog.Hero(_selected);
+            if (def != null)
+            {
+                _heroesDetailRefresh = def.Side == CampaignSide.Hero ? HeroDetail(content, def) : FoeDetail(content, def);
+            }
         }
 
         private void Tab(RectTransform panel, string name, string label, bool on, float x0, float x1, Action tap)
@@ -778,10 +857,12 @@ namespace Survival.Unity
             btn.transition = Selectable.Transition.None;
             var rt = btn.GetComponent<RectTransform>();
             Box(rt, x0, y0, x1, y1);
-            if (string.Equals(def.Id, _selected, StringComparison.Ordinal))
             {
+                // Built for every card, shown only on the selected one, so a tap just moves it.
                 var glow = HookSkin.Glow(rt, "Glow", hero ? new Color(0.5f, 0.7f, 1f, 0.7f) : new Color(0.75f, 0.45f, 1f, 0.7f));
                 Box(glow.rectTransform, -0.08f, -0.06f, 1.08f, 1.06f);
+                glow.gameObject.SetActive(string.Equals(def.Id, _selected, StringComparison.Ordinal));
+                _heroesGlows[def.Id] = glow.gameObject;
             }
 
             var frame = Portrait(rt, def, 0f, 0.22f, 1f, 1f, out var art);
@@ -803,8 +884,7 @@ namespace Survival.Unity
             var dot = UpgradeBadge(rt, "Badge");
             Wire(btn, () =>
             {
-                _selected = def.Id;
-                OpenHeroes();
+                SelectHero(def.Id);
             });
 
             return () =>

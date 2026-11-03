@@ -54,7 +54,8 @@ namespace Survival.Domain.World.Online
         }
     }
 
-    public sealed record WorldClaim(int Claimed, IReadOnlyDictionary<string, int> Loot, int TroopsLostDefending);
+    /// <summary>Loot = what you won; Lost = what raiders took from your stores (positive numbers to take out of the wallet).</summary>
+    public sealed record WorldClaim(int Claimed, IReadOnlyDictionary<string, int> Loot, IReadOnlyDictionary<string, int> Lost, int TroopsLostDefending);
 
     /// <summary>
     /// Shared world map over the alliance sign-in. The server settles marches lazily, so every read here is
@@ -69,7 +70,11 @@ namespace Survival.Domain.World.Online
         public bool Online => _net.Online && Castle != null;
         public (int X, int Y)? Castle { get; private set; }
         public DateTime ShieldUntil { get; private set; }
+        /// <summary>Troops at home, as counted by the server (the server owns this number; the phone only shows it).</summary>
         public int Troops { get; private set; }
+
+        /// <summary>Most troops you can have (home + marching); wounded troops heal back toward it.</summary>
+        public int TroopCap { get; private set; }
         public int UnreadReports { get; private set; }
         public int MaxMarches { get; private set; } = 3;
         public int MaxRange { get; private set; } = 60;
@@ -82,9 +87,29 @@ namespace Survival.Domain.World.Online
 
         public bool Shielded(DateTime nowUtc) => ShieldUntil > nowUtc;
 
-        /// <summary>Tell the server how strong you are (garrison troops, hero power, total power).</summary>
-        public void SyncStrength(int power, int troops, int heroPower, Action<bool>? done = null) =>
-            _net.Request("POST", "/v1/profile", "{\"power\":" + Clamp(power) + ",\"troops\":" + Clamp(troops) + ",\"heroPower\":" + Clamp(heroPower) + "}", _ => done?.Invoke(true), done);
+        /// <summary>
+        /// Tell the server how strong you are and what sits in your stores (raiders loot from that). <paramref name="seedTroops"/>
+        /// only counts the very first time; after that the server owns the troop count and ignores it.
+        /// </summary>
+        public void SyncStrength(int power, int seedTroops, int heroPower, IReadOnlyDictionary<string, int>? stock = null, Action<bool>? done = null) =>
+            _net.Request("POST", "/v1/profile", ProfileBody(power, seedTroops, heroPower, stock), _ => done?.Invoke(true), done);
+
+        internal static string ProfileBody(int power, int seedTroops, int heroPower, IReadOnlyDictionary<string, int>? stock)
+        {
+            var body = "{\"power\":" + Clamp(power) + ",\"troops\":" + Clamp(seedTroops) + ",\"heroPower\":" + Clamp(heroPower);
+            if (stock != null)
+            {
+                var parts = new List<string>();
+                foreach (var kv in stock)
+                {
+                    parts.Add(Q(kv.Key) + ":" + Clamp(kv.Value));
+                }
+
+                body += ",\"stock\":{" + string.Join(",", parts) + "}";
+            }
+
+            return body + "}";
+        }
 
         public void RefreshMe(Action<bool>? done = null) => _net.Request("GET", "/v1/world/me", null, o =>
         {
@@ -95,6 +120,7 @@ namespace Survival.Domain.World.Online
 
             ShieldUntil = Time(o, "shieldUntil") ?? DateTime.MinValue;
             Troops = Int(o, "troops");
+            TroopCap = Int(o, "troopCap");
             UnreadReports = Int(o, "unreadReports");
             if (o.Fields.TryGetValue("rules", out var r) && r is JsonNode.Obj ro)
             {
@@ -120,8 +146,16 @@ namespace Survival.Domain.World.Online
             }, done);
 
         /// <summary>kind: gather (resource tile), camp (PvE camp) or attack (another lord's castle).</summary>
+        /// <remarks>
+        /// The troops leave home the moment the server accepts the march (shown here right away, then re-read from the
+        /// server). Asking for more than the server's count fails with bad_troops and nothing changes.
+        /// </remarks>
         public void SendMarch(string kind, int x, int y, int troops, Action<bool>? done = null) =>
-            _net.Request("POST", "/v1/world/march", "{\"kind\":" + Q(kind) + ",\"x\":" + x + ",\"y\":" + y + ",\"troops\":" + Clamp(troops) + "}", _ => RefreshMe(done), done);
+            _net.Request("POST", "/v1/world/march", "{\"kind\":" + Q(kind) + ",\"x\":" + x + ",\"y\":" + y + ",\"troops\":" + Clamp(troops) + "}", _ =>
+            {
+                Troops = Math.Max(0, Troops - troops);
+                RefreshMe(done);
+            }, done);
 
         public void Recall(long marchId, Action<bool>? done = null) =>
             _net.Request("POST", "/v1/world/recall", "{\"marchId\":" + marchId.ToString(CultureInfo.InvariantCulture) + "}", _ => RefreshMe(done), done);
@@ -143,10 +177,12 @@ namespace Survival.Domain.World.Online
         public void ClaimReports(Action<WorldClaim?>? done = null) => _net.Request("POST", "/v1/world/reports/claim", "{}", o =>
         {
             UnreadReports = 0;
-            var claim = new WorldClaim(Int(o, "claimed"), Loot(o, "loot"), Int(o, "troopsLostDefending"));
+            var claim = ReadClaim(o);
             Changed?.Invoke();
             done?.Invoke(claim);
         }, _ => done?.Invoke(null));
+
+        internal static WorldClaim ReadClaim(JsonNode.Obj o) => new(Int(o, "claimed"), Loot(o, "loot"), Loot(o, "lost"), Int(o, "troopsLostDefending"));
 
         internal static WorldSnapshot ReadSnapshot(JsonNode.Obj o)
         {
