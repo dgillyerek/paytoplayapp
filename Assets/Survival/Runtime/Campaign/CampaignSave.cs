@@ -91,6 +91,16 @@ namespace Survival.Domain.Campaign
             }
 
             w.EndArray();
+            w.Key("chapter_chests");
+            w.BeginArray();
+            var chests = new List<int>(s.ChestsClaimed);
+            chests.Sort();
+            foreach (var c in chests)
+            {
+                w.Value(c);
+            }
+
+            w.EndArray();
             w.End();
             return w.ToString();
         }
@@ -182,6 +192,16 @@ namespace Survival.Domain.Campaign
             }
 
             s.RestoreTrackClaimed(track);
+            var chests = new List<int>();
+            foreach (var c in CampaignCatalog.Items(o, "chapter_chests"))
+            {
+                if (c is JsonNode.Num cn)
+                {
+                    chests.Add((int)Math.Round(cn.Value));
+                }
+            }
+
+            s.RestoreChests(chests);
             return true;
         }
     }
@@ -232,6 +252,8 @@ namespace Survival.Domain.Campaign
             Key(key);
             Value(v);
         }
+
+        public void Value(int v) => Raw(v.ToString(CultureInfo.InvariantCulture));
 
         public void Value(string v)
         {
