@@ -39,5 +39,39 @@ namespace Survival.Domain.Base
 
         /// <summary>Show the "hire an extra builder" card in the Build menu: the product exists and none is hired now.</summary>
         public static bool ShowBuilderOffer(TimerQueue timers, bool productAvailable) => productAvailable && !timers.ExtraSlotActive;
+
+        /// <summary>
+        /// What a Build-menu row shows (Derek 2026-11-02): a job that only waits on a builder looks exactly like a free one.
+        /// Busy + unaffordable shows as Cost, since the builder check runs before the cost check.
+        /// </summary>
+        public static BuildBlock Shown(BuildBlock block, bool canAfford) =>
+            block == BuildBlock.QueueBusy ? (canAfford ? BuildBlock.None : BuildBlock.Cost) : block;
+
+        /// <summary>
+        /// Where a tap on a Build-menu row goes (Derek 2026-11-02): free builder starts placement; no free builder
+        /// opens the buy-a-builder screen (when it can be bought); anything else is refused with its reason.
+        /// </summary>
+        public static BuildTap Route(BuildBlock block, bool canAfford, bool builderOffered)
+        {
+            if (block == BuildBlock.None)
+            {
+                return BuildTap.Place;
+            }
+
+            if (block == BuildBlock.QueueBusy && canAfford && builderOffered)
+            {
+                return BuildTap.BuyBuilder;
+            }
+
+            return BuildTap.Refuse;
+        }
+    }
+
+    /// <summary>Result of tapping a Build-menu row.</summary>
+    public enum BuildTap
+    {
+        Place,
+        BuyBuilder,
+        Refuse,
     }
 }
