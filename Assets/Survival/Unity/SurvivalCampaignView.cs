@@ -427,7 +427,7 @@ namespace Survival.Unity
 
             if (_heroesBadge != null)
             {
-                _heroesBadge.gameObject.SetActive(AnyHeroAction() || (Track != null && Track.ClaimableCount() > 0));
+                _heroesBadge.gameObject.SetActive(AnyHeroAction());
             }
 
             if (_heroFree != null)
@@ -739,42 +739,17 @@ namespace Survival.Unity
             _heroesDetail = detail.rectTransform;
             _heroesDetailContent = null;
 
-            var shellRefreshers = new List<Action>();
             var closeX0 = 0.30f;
             var closeX1 = 0.70f;
             if (PowerPacks != null)
             {
                 closeX0 = 0.52f;
                 closeX1 = 0.92f;
-                var powerX1 = Track != null ? 0.335f : 0.48f;
+                var powerX1 = 0.48f;
                 var power = SheetButton(panel, "PowerUp", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.03f, 0.025f, powerX1, 0.082f, 24, out var powerBtn);
                 power.text = S("store.power_packs.button", "POWER UP");
                 FitButtonLabel(power, 26);
                 Wire(powerBtn, OpenPowerPacks);
-            }
-
-            if (Track != null)
-            {
-                var pathX0 = PowerPacks != null ? 0.35f : 0.03f;
-                var path = SheetButton(panel, "KingdomPath", HookArtKeys.ButtonBlue, HeroFrame, pathX0, 0.025f, pathX0 + 0.305f, 0.082f, 24, out var pathBtn);
-                path.text = S("reward_track.button", "KINGDOM PATH");
-                Wire(pathBtn, OpenRewardTrack);
-                var free = FreeTag(pathBtn.transform, "FreeBadge");
-                var freeRt = free.rectTransform;
-                shellRefreshers.Add(() =>
-                {
-                    var show = Track.ClaimableCount() > 0;
-                    if (free.gameObject.activeSelf != show)
-                    {
-                        free.gameObject.SetActive(show);
-                        if (show)
-                        {
-                            StartCoroutine(Breathe(freeRt));
-                        }
-                    }
-                });
-                closeX0 = PowerPacks != null ? 0.67f : 0.35f;
-                closeX1 = 0.97f;
             }
 
             var close = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, closeX0, 0.025f, closeX1, 0.082f, 26, out var closeBtn);
@@ -790,11 +765,6 @@ namespace Survival.Unity
                 }
 
                 queue.text = Fmt("campaign.training_slots", "Training {0}/{1}", roster.Training.Count, Campaign.Catalog.TrainingSlots);
-                foreach (var r in shellRefreshers)
-                {
-                    r();
-                }
-
                 foreach (var r in _heroesBodyRefreshers)
                 {
                     r();
