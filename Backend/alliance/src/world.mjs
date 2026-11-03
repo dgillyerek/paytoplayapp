@@ -7,6 +7,10 @@ export const WORLD = {
   secPerTile: 4, minMarchSec: 20, maxMarches: 3, newShieldHours: 24, defeatShieldHours: 4,
   gatherPerSecPer20Troops: 1, loadPerTroop: 10, nodeAmountPerLevel: 10000, nodeRespawnMin: 30, campRespawnMin: 15,
   campStrengthPerLevel: 600, defenderLossCap: 0.10, attackerLossCap: 0.25, gatherLossCap: 0.20,
+  // PvP loot: winners take this share of what sits above the protected amount, limited by what the survivors can carry.
+  lootShare: 0.20, protectedStock: 2000, lootKinds: ["food", "wood", "stone", "gold"],
+  // Server-owned troops: the cap comes from power, wounded troops heal back toward it over time.
+  troopCapMin: 100, troopsPerPower: 0.1, healPerHour: 0.10, seedMax: 100000,
 };
 
 // ---- pure rules (unit-tested in test/world.test.mjs) ----
@@ -36,6 +40,36 @@ export function positionAt(m, t) { // where a march is at time t (ms)
 }
 export const allianceColor = (aid) => Number(BigInt(aid) % 8n);
 export const gatherRate = (troops, level) => (troops / 20) * WORLD.gatherPerSecPer20Troops * (1 + 0.25 * (level - 1));
+
+/** Real PvP loot from the defender's stored resources: a capped share of the unprotected stock, limited by carry room. */
+export function lootFrom(stock, carry) {
+  const want = {}; let total = 0;
+  for (const k of WORLD.lootKinds) {
+    const have = Math.max(0, Math.floor(Number(stock?.[k]) || 0));
+    const v = Math.floor(Math.max(0, have - WORLD.protectedStock) * WORLD.lootShare);
+    if (v > 0) { want[k] = v; total += v; }
+  }
+  const room = Math.max(0, Math.floor(carry));
+  if (total <= room) return want;
+  const out = {}; const k2 = room / total;
+  for (const [k, v] of Object.entries(want)) { const t = Math.floor(v * k2); if (t > 0) out[k] = t; }
+  return out;
+}
+/** Stock minus what was taken (never below zero). */
+export function minusStock(stock, take) {
+  const out = { ...(stock || {}) };
+  for (const [k, v] of Object.entries(take || {})) out[k] = Math.max(0, (Math.floor(Number(out[k]) || 0)) - v);
+  return out;
+}
+export const troopCap = (power) => Math.max(WORLD.troopCapMin, Math.floor(Math.max(0, power) * WORLD.troopsPerPower));
+/** Troops at home after healing for ms milliseconds. Home + out on marches never heals past the cap. */
+export function healTroops(home, out, cap, ms) {
+  const room = cap - out - home;
+  if (room <= 0) return home;
+  return home + Math.min(room, Math.floor(cap * WORLD.healPerHour * Math.max(0, ms) / 3600000));
+}
+/** Is a send valid against the server's own count (the client's number is never trusted)? */
+export function canSend(troops, home) { return Number.isInteger(troops) && troops >= 1 && troops <= home; }
 
 // ---- settlement ----
 const sec = (t, s) => new Date(+t + s * 1000);
@@ -96,13 +130,16 @@ async function arrive(c, m, t) {
     return goHome(c, m, t, b.aLoss);
   }
   // attack a castle
-  const d = (await c.query("SELECT id, troops, hero_power, power, shield_until, castle_x, castle_y FROM players WHERE id=$1 FOR UPDATE", [m.target_player_id])).rows[0];
+  const d = (await c.query("SELECT id, troops, hero_power, power, shield_until, castle_x, castle_y, stock FROM players WHERE id=$1 FOR UPDATE", [m.target_player_id])).rows[0];
   if (!d || d.castle_x !== m.to_x || d.castle_y !== m.to_y) { await report(c, { player: m.player_id, march: m.id, kind: "bounced", ...at, my: m.troops }); return goHome(c, m, t); }
   if (d.shield_until > t) { await report(c, { player: m.player_id, march: m.id, kind: "shielded", opponent: d.id, ...at, my: m.troops }); return goHome(c, m, t); }
   const b = battle({ troops: m.troops, hero: m.hero_power }, { troops: d.troops, hero: d.hero_power }, `a${m.id}`, WORLD.defenderLossCap);
-  const loot = b.attackerWon ? { gold: Math.min(2000, 100 + Math.floor(d.power * 0.02)) } : {};
+  // Real loot: taken out of the defender's stored stock in this same transaction (the row is locked above).
+  const loot = b.attackerWon ? lootFrom(d.stock, Math.max(0, m.troops - b.aLoss) * WORLD.loadPerTroop) : {};
+  const lost = Object.fromEntries(Object.entries(loot).map(([k, v]) => [k, -v]));
+  if (Object.keys(loot).length) await c.query("UPDATE players SET stock=$2 WHERE id=$1", [d.id, JSON.stringify(minusStock(d.stock, loot))]);
   await report(c, { player: m.player_id, march: m.id, kind: b.attackerWon ? "attack_won" : "attack_lost", opponent: d.id, ...at, my: m.troops, myLoss: b.aLoss, their: d.troops, theirLoss: b.dLoss, loot });
-  await report(c, { player: d.id, march: m.id, kind: b.attackerWon ? "defend_lost" : "defend_won", opponent: m.player_id, ...at, my: d.troops, myLoss: b.dLoss, their: m.troops, theirLoss: b.aLoss });
+  await report(c, { player: d.id, march: m.id, kind: b.attackerWon ? "defend_lost" : "defend_won", opponent: m.player_id, ...at, my: d.troops, myLoss: b.dLoss, their: m.troops, theirLoss: b.aLoss, loot: lost });
   await c.query("UPDATE players SET troops=greatest(0,troops-$2), shield_until=CASE WHEN $3 THEN greatest(shield_until,$4) ELSE shield_until END WHERE id=$1",
     [d.id, b.dLoss, b.attackerWon, sec(t, WORLD.defeatShieldHours * 3600)]);
   return goHome(c, m, t, b.aLoss);
@@ -123,6 +160,8 @@ export async function settle(pool, now = new Date()) {
       else if (m.state === "gathering") await stopGathering(c, m, t);
       else {
         await c.query("UPDATE marches SET state='done' WHERE id=$1", [m.id]);
+        // survivors walk back into the castle (old marches sent before troops left home are skipped)
+        if (m.left_home && m.troops > 0) await c.query("UPDATE players SET troops=troops+$2 WHERE id=$1", [m.player_id, m.troops]);
         if (m.kind === "gather" && m.carried?.got > 0)
           await report(c, { player: m.player_id, march: m.id, kind: "gather_done", x: m.to_x, y: m.to_y, my: m.troops, loot: { [m.carried.kind]: m.carried.got } });
       }
@@ -162,15 +201,22 @@ const marchView = (m, t) => { const [x, y] = positionAt(m, t); return { id: m.id
 
 export function worldRoutes({ q, pool, err, json, limited, clean }) {
   const int = (v) => (Number.isFinite(Number(v)) ? Math.trunc(Number(v)) : NaN);
+  const heal = async (pid) => {
+    const r = (await q(`SELECT p.troops, p.power, p.troops_at, coalesce((SELECT sum(troops) FROM marches WHERE player_id=p.id AND state<>'done' AND left_home),0)::int out
+      FROM players p WHERE p.id=$1`, [pid])).rows[0];
+    if (!r) return;
+    const next = healTroops(r.troops, r.out, troopCap(r.power), Date.now() - +r.troops_at);
+    await q("UPDATE players SET troops=greatest(troops,$2), troops_at=now() WHERE id=$1", [pid, next]);
+  };
   const meWorld = async (pid) => (await q(`SELECT p.id, p.display_name name, p.power, p.troops, p.hero_power, p.castle_x x, p.castle_y y, p.shield_until, m.alliance_id
     FROM players p LEFT JOIN alliance_members m ON m.player_id=p.id WHERE p.id=$1`, [pid])).rows[0];
   return {
     "GET /v1/world/me": async (_r, _b, p) => {
-      await ensurePlaced(q, p.id); await settle(pool);
+      await ensurePlaced(q, p.id); await settle(pool); await heal(p.id);
       const w = await meWorld(p.id);
       const marches = (await q("SELECT * FROM marches WHERE player_id=$1 AND state<>'done' ORDER BY id", [p.id])).rows.map((m) => marchView(m, Date.now()));
       const unread = (await q("SELECT count(*)::int c FROM battle_reports WHERE player_id=$1 AND NOT claimed", [p.id])).rows[0].c;
-      return json({ castle: { x: w.x, y: w.y }, shieldUntil: w.shield_until, troops: w.troops, heroPower: w.hero_power, marches, unreadReports: unread, rules: WORLD });
+      return json({ castle: { x: w.x, y: w.y }, shieldUntil: w.shield_until, troops: w.troops, troopCap: troopCap(w.power), heroPower: w.hero_power, marches, unreadReports: unread, rules: WORLD });
     },
     "GET /v1/world/map": async (r, _b, p) => {
       await ensurePlaced(q, p.id); await settle(pool);
@@ -206,12 +252,12 @@ export function worldRoutes({ q, pool, err, json, limited, clean }) {
       const kind = clean(b.kind, 8), x = int(b.x), y = int(b.y), troops = int(b.troops);
       if (!["gather", "camp", "attack"].includes(kind)) return err("bad_kind");
       if (!(x >= 0 && y >= 0 && x < WORLD.size && y < WORLD.size)) return err("bad_target");
+      await heal(p.id);
       const w = await meWorld(p.id);
-      if (!(troops >= 1 && troops <= w.troops)) return err("bad_troops");
+      if (!canSend(troops, w.troops)) return err("bad_troops"); // checked against the server's own count
       const d = dist(w.x, w.y, x, y); if (d > WORLD.maxRange || d < 1) return err("out_of_range");
-      const busy = (await q("SELECT count(*)::int c, coalesce(sum(troops),0)::int t FROM marches WHERE player_id=$1 AND state<>'done'", [p.id])).rows[0];
+      const busy = (await q("SELECT count(*)::int c FROM marches WHERE player_id=$1 AND state<>'done'", [p.id])).rows[0];
       if (busy.c >= WORLD.maxMarches) return err("too_many_marches", 409);
-      if (busy.t + troops > w.troops) return err("bad_troops");
       let node = null, target = null;
       if (kind === "attack") {
         target = (await q("SELECT p.id, m.alliance_id FROM players p LEFT JOIN alliance_members m ON m.player_id=p.id WHERE p.placed AND p.castle_x=$1 AND p.castle_y=$2", [x, y])).rows[0];
@@ -222,8 +268,16 @@ export function worldRoutes({ q, pool, err, json, limited, clean }) {
         if (!node || (kind === "camp") !== (node.kind === "camp")) return err("no_node_there");
       }
       const now = new Date();
-      const { rows } = await q(`INSERT INTO marches(player_id,kind,from_x,from_y,to_x,to_y,node_id,target_player_id,troops,hero_power,start_at,arrive_at)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`, [p.id, kind, w.x, w.y, x, y, node?.id ?? null, target?.id ?? null, troops, w.hero_power, now, sec(now, travelSec(d))]);
+      // Troops leave home and the march is created in one transaction; the conditional UPDATE stops double-spends.
+      const c = await pool.connect(); let rows;
+      try {
+        await c.query("BEGIN");
+        const took = (await c.query("UPDATE players SET troops=troops-$2 WHERE id=$1 AND troops>=$2 RETURNING troops", [p.id, troops])).rowCount;
+        if (!took) { await c.query("ROLLBACK"); return err("bad_troops"); }
+        ({ rows } = await c.query(`INSERT INTO marches(player_id,kind,from_x,from_y,to_x,to_y,node_id,target_player_id,troops,hero_power,start_at,arrive_at,left_home)
+          VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,true) RETURNING *`, [p.id, kind, w.x, w.y, x, y, node?.id ?? null, target?.id ?? null, troops, w.hero_power, now, sec(now, travelSec(d))]));
+        await c.query("COMMIT");
+      } catch (e) { await c.query("ROLLBACK"); throw e; } finally { c.release(); }
       if (kind === "attack") await q("UPDATE players SET shield_until=least(shield_until, now()) WHERE id=$1", [p.id]); // attacking drops your own peace shield
       return json({ march: marchView(rows[0], Date.now()) }, 201);
     },
@@ -252,9 +306,13 @@ export function worldRoutes({ q, pool, err, json, limited, clean }) {
     "POST /v1/world/reports/claim": async (_r, _b, p) => {
       if (await limited(p.id, "write")) return err("rate_limited", 429);
       const { rows } = await q("UPDATE battle_reports SET claimed=true WHERE player_id=$1 AND NOT claimed RETURNING loot, kind, my_loss", [p.id]);
-      const total = {}; let troopsLost = 0;
-      for (const r of rows) { for (const [k, v] of Object.entries(r.loot || {})) total[k] = (total[k] || 0) + v; if (r.kind.startsWith("defend")) troopsLost += r.my_loss; }
-      return json({ claimed: rows.length, loot: total, troopsLostDefending: troopsLost });
+      const total = {}, lost = {}; let troopsLost = 0;
+      for (const r of rows) {
+        for (const [k, v] of Object.entries(r.loot || {})) { if (v > 0) total[k] = (total[k] || 0) + v; else if (v < 0) lost[k] = (lost[k] || 0) - v; }
+        if (r.kind.startsWith("defend")) troopsLost += r.my_loss;
+      }
+      // lost = what raiders took from your stores; the client takes it out of the wallet
+      return json({ claimed: rows.length, loot: total, lost, troopsLostDefending: troopsLost });
     },
   };
 }

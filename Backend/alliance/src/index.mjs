@@ -2,7 +2,7 @@
 import pg from "pg";
 import crypto from "node:crypto";
 import { attachDatabasePool } from "@neon/functions";
-import { worldRoutes, ensurePlaced } from "./world.mjs";
+import { worldRoutes, ensurePlaced, WORLD } from "./world.mjs";
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
 attachDatabasePool(pool);
@@ -56,8 +56,19 @@ const routes = {
   },
   "POST /v1/profile": async (_r, b, p) => {
     const name = clean(b.name, 20); const ok = (v) => (Number.isInteger(v) && v >= 0 && v < 1e9 ? v : null);
-    await q("UPDATE players SET display_name=coalesce(nullif($2,''),display_name), power=coalesce($3,power), troops=coalesce($4,troops), hero_power=coalesce($5,hero_power) WHERE id=$1",
-      [p.id, name, ok(b.power), ok(b.troops), ok(b.heroPower)]);
+    // Troops: the client may seed its garrison once (capped); after that the server owns the count and ignores this field.
+    const seed = ok(b.troops) == null ? null : Math.min(ok(b.troops), WORLD.seedMax);
+    await q(`UPDATE players SET display_name=coalesce(nullif($2,''),display_name), power=coalesce($3,power), hero_power=coalesce($5,hero_power),
+      troops=CASE WHEN NOT troops_seeded AND $4::int IS NOT NULL THEN $4::int ELSE troops END, troops_at=CASE WHEN NOT troops_seeded AND $4::int IS NOT NULL THEN now() ELSE troops_at END, troops_seeded=troops_seeded OR $4::int IS NOT NULL WHERE id=$1`,
+      [p.id, name, ok(b.power), seed, ok(b.heroPower)]);
+    // Stored resources (what PvP raiders can take). Unclaimed raid losses are taken off so a sync can't undo them.
+    if (b.stock && typeof b.stock === "object") {
+      const pending = (await q("SELECT loot FROM battle_reports WHERE player_id=$1 AND NOT claimed AND kind='defend_lost'", [p.id])).rows;
+      const stock = {};
+      for (const k of WORLD.lootKinds) { const v = ok(b.stock[k]); if (v != null) stock[k] = v; }
+      for (const r of pending) for (const [k, v] of Object.entries(r.loot || {})) if (v < 0 && k in stock) stock[k] = Math.max(0, stock[k] + v);
+      await q("UPDATE players SET stock=$2 WHERE id=$1", [p.id, JSON.stringify(stock)]);
+    }
     return json({ ok: true });
   },
   "GET /v1/me": async (_r, _b, p) => { const m = await membership(p.id); return json({ player: p, alliance: m ? await allianceView(m.alliance_id) : null, role: m?.role ?? 0 }); },
