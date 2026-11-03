@@ -107,6 +107,28 @@ namespace Survival.Domain.Runner
         /// <summary>The longest the squad needs to get the lead and every follower into the safe band from anywhere on the road (see the tests).</summary>
         public const float BossQuakeSteerSeconds = 1.2f;
 
+        /// <summary>
+        /// Ironhowl's opener (Derek 2026-11-03: he "takes a while to start attack"): from the moment he is on the road until
+        /// the squad reaches his arena line he tears up boulders and lobs them at the squad. Seconds from the lift (the landing
+        /// ring appears on the road) to the impact: long enough to read and step out of (<see cref="BossRockRadius"/> of road).
+        /// </summary>
+        public const float BossRockTelegraph = 1.1f;
+
+        /// <summary>Seconds into the lift the boulder leaves his hands (frame 17 of the ground pound, fists high over his head); the rest is its flight.</summary>
+        public const float BossRockRelease = 17f / 30f;
+
+        /// <summary>Seconds from one lift to the next (his ground-pound take is 1.73 s, so each throw plays out in full).</summary>
+        public const float BossRockEvery = 2.0f;
+
+        /// <summary>Seconds after he appears before the first lift.</summary>
+        public const float BossRockFirst = 0.3f;
+
+        /// <summary>Radius (metres) of road a boulder lands on.</summary>
+        public const float BossRockRadius = 1.4f;
+
+        /// <summary>A boulder's hit on each squad member it lands on, in boss hits (a quarter of his melee: chip damage that punishes standing still).</summary>
+        public const float BossRockDamage = 0.25f;
+
         /// <summary>Formation spacing between followers.</summary>
         public const float Spacing = 1.15f;
 
@@ -305,7 +327,16 @@ namespace Survival.Domain.Runner
         /// Walked into: Other 0, Amount = squad members it hurt, Big true (their hits follow as HeroHit / FollowerHit / FollowerLost).
         /// The scene's break sound hook keys on this event.
         /// </summary>
-        BarrierBroken
+        BarrierBroken,
+
+        /// <summary>
+        /// The boss lifts a boulder (<see cref="RunnerEvent.X"/>/<see cref="RunnerEvent.Z"/> = where it lands, Amount = seconds to
+        /// the impact): the scene plays his lift-and-throw and rings the landing spot.
+        /// </summary>
+        BossRockThrown,
+
+        /// <summary>The boulder lands (X/Z = the spot, Amount = squad members caught; their hits follow as HeroHit / FollowerHit / FollowerLost).</summary>
+        BossRockLanded
     }
 
     /// <summary>What the boss is winding up.</summary>
@@ -504,6 +535,21 @@ namespace Survival.Domain.Runner
 
         /// <summary>Quakes started so far.</summary>
         public int Quakes { get; internal set; }
+
+        /// <summary>Seconds until the boulder he lifted lands (0 = none in his hands or in the air).</summary>
+        public float RockLeft { get; internal set; }
+
+        /// <summary>Where the current boulder lands, locked at the lift (the scene's landing ring).</summary>
+        public float RockX { get; internal set; }
+
+        /// <inheritdoc cref="RockX"/>
+        public float RockZ { get; internal set; }
+
+        /// <summary>Seconds until the next lift.</summary>
+        public float RockClock { get; internal set; } = RunnerRules.BossRockFirst;
+
+        /// <summary>Boulders thrown so far.</summary>
+        public int Rocks { get; internal set; }
 
         /// <summary>Centre (x) of the current or last quake's safe band.</summary>
         public float QuakeSafeX { get; internal set; }
@@ -1543,6 +1589,12 @@ namespace Survival.Domain.Runner
 
                 if (f.Boss)
                 {
+                    BossRocks(f, dt);
+                    if (Over)
+                    {
+                        return;
+                    }
+
                     BossAttack(f, dt);
                     continue;
                 }
@@ -1813,6 +1865,90 @@ namespace Survival.Domain.Runner
             (f.AimX, f.AimZ) = SlamAim(f, Hero.X, Hero.Z);
             Emit(RunnerEventKind.BossWindup, f.Id, Hero.Id, f.X, f.Z, f.Windup, false, false, f.Unit.Id);
             Emit(RunnerEventKind.Fired, f.Id, Hero.Id, f.AimX, f.AimZ, 0, false, false, f.Unit.Id);
+        }
+
+        /// <summary>
+        /// A thrower boss's opener (<see cref="RunnerUnitDef.Throws"/>): while the squad walks up to his arena line he lifts a
+        /// boulder every <see cref="RunnerRules.BossRockEvery"/> seconds, aimed where the lead will be when it lands, and it
+        /// lands <see cref="RunnerRules.BossRockTelegraph"/> seconds later on everyone within <see cref="RunnerRules.BossRockRadius"/>.
+        /// Once the squad is in his reach he stops throwing (a boulder already up still lands) and fights with his slam and quake.
+        /// </summary>
+        private void BossRocks(RunnerFoe f, float dt)
+        {
+            if (!f.Unit.Throws)
+            {
+                return;
+            }
+
+            if (f.RockLeft > 0f)
+            {
+                f.RockLeft -= dt;
+                if (f.RockLeft <= 0f)
+                {
+                    f.RockLeft = 0f;
+                    RockLands(f);
+                }
+            }
+
+            if (f.Engaged || BossFight)
+            {
+                return;
+            }
+
+            f.RockClock -= dt;
+            if (f.RockClock > 0f || f.RockLeft > 0f)
+            {
+                return;
+            }
+
+            f.RockClock = RunnerRules.BossRockEvery;
+            f.RockLeft = RunnerRules.BossRockTelegraph;
+            (f.RockX, f.RockZ) = RockAim(Hero.X, Hero.Z, Halted ? 0f : Pace, ArenaLine, Level.HalfWidth);
+            f.Rocks++;
+            f.SinceAttack = 0f;
+            Emit(RunnerEventKind.BossRockThrown, f.Id, Hero.Id, f.RockX, f.RockZ, f.RockLeft, true, false, f.Unit.Id);
+        }
+
+        /// <summary>Where a boulder is aimed at its lift: the lead's lane, and where he will be when it lands (never past the arena line).</summary>
+        public static (float X, float Z) RockAim(float heroX, float heroZ, float pace, float arenaLine, float roadHalfWidth) =>
+            (Clamp(heroX, -roadHalfWidth, roadHalfWidth), Math.Min(heroZ + (pace * RunnerRules.BossRockTelegraph), arenaLine));
+
+        /// <summary>True when a body at (<paramref name="x"/>, <paramref name="z"/>) of <paramref name="radius"/> is under a boulder landing at (<paramref name="rx"/>, <paramref name="rz"/>).</summary>
+        public static bool RockCatches(float rx, float rz, float x, float z, float radius) =>
+            Sq(x - rx) + Sq(z - rz) <= Sq(RunnerRules.BossRockRadius + (radius * 0.5f));
+
+        private void RockLands(RunnerFoe f)
+        {
+            var damage = Math.Max(1, (int)Math.Round(f.Damage * RunnerRules.BossRockDamage));
+            var heroHit = false;
+            var victims = new List<RunnerMember>();
+            foreach (var m in _squad)
+            {
+                if (!RockCatches(f.RockX, f.RockZ, m.X, m.Z, m.Unit.Radius))
+                {
+                    continue;
+                }
+
+                if (m.IsHero)
+                {
+                    heroHit = true;
+                }
+                else
+                {
+                    victims.Add(m);
+                }
+            }
+
+            foreach (var v in victims)
+            {
+                HurtFollower(f, v, damage);
+            }
+
+            Emit(RunnerEventKind.BossRockLanded, f.Id, Hero.Id, f.RockX, f.RockZ, victims.Count + (heroHit ? 1 : 0), true, false, f.Unit.Id);
+            if (heroHit)
+            {
+                HurtHero(f, damage);
+            }
         }
 
         /// <summary>

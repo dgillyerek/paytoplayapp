@@ -407,6 +407,7 @@ namespace Survival.Unity
             AnimateBarriers(dt);
             AnimateSlamMark();
             AnimateQuakeMark();
+            AnimateRockMark();
             RunnerHitchLog.Begin(RunnerHitchLog.Section.Shots);
             TickShots(dt);
             TickFx(dt);
@@ -1191,6 +1192,14 @@ namespace Survival.Unity
                 case RunnerEventKind.BossQuake:
                     RunnerHitchLog.Transition("boss quake landed");
                     BossQuaked(e);
+                    break;
+
+                case RunnerEventKind.BossRockThrown:
+                    BossRockThrown(e);
+                    break;
+
+                case RunnerEventKind.BossRockLanded:
+                    BossRockLanded(e);
                     break;
 
                 case RunnerEventKind.HazardSpawned:

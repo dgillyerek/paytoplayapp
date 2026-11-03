@@ -44,6 +44,7 @@ namespace Survival.Unity
             _slamZone = Part(_slamRoot, PrimitiveType.Quad, "Zone", Vector3.zero, Vector3.one, Unlit(SlamZone), Quaternion.Euler(90f, 0f, 0f)).transform;
             _slamCharge = Part(_slamRoot, PrimitiveType.Quad, "Charge", new Vector3(0f, 0.004f, 0f), Vector3.one, Unlit(SlamCharge), Quaternion.Euler(90f, 0f, 0f)).transform;
             _slamRoot.gameObject.SetActive(false);
+            BuildRockMark();
         }
 
         /// <summary>He starts the slam: mark the road it will hit.</summary>

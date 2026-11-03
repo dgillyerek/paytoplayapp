@@ -134,6 +134,9 @@ namespace Survival.Domain.Runner
         /// is already multiplied by this, so the hit body, lane clamp and bars grow with the model.
         /// </summary>
         public float Scale { get; init; } = 1f;
+
+        /// <summary>A boss that lobs boulders at the squad while it walks up to him (JSON <c>"throws": true</c>; Ironhowl).</summary>
+        public bool Throws { get; init; }
     }
 
     public sealed record RunnerBoxDef(int Hp, RunnerBoxKind Kind, string Unit, int Count, float Amount)
@@ -580,7 +583,7 @@ namespace Survival.Domain.Runner
                         ranged,
                         LayoutJson.OptNum(u, "shot_speed", 16f),
                         Math.Max(0f, LayoutJson.OptNum(u, "speed", 0f)),
-                        Math.Max(0.1f, LayoutJson.OptNum(u, "radius", 0.45f)) * scale) { Scale = scale });
+                        Math.Max(0.1f, LayoutJson.OptNum(u, "radius", 0.45f)) * scale) { Scale = scale, Throws = LayoutJson.OptBool(u, "throws", false) });
                 }
             }
 
