@@ -15,17 +15,18 @@ namespace Survival.Unity
     /// Each character is one folder under art/preview_new_chars/: PREFIX_rig_rest.fbx (body + props), one FBX per clip,
     /// the atlas, and optionally PREFIX_cape.fbx + PREFIX_cape_1024.png + CAPE_ATTACH.md (cape_root under Spine2,
     /// 3 spring chains, capsule colliders read from the md table). Swap any file in place and replay.
-    /// Heroes (Seraphine, Kaelen) walk in from the left, villains (Vorgath, Malzareth) from the right, then trade attacks
-    /// with the existing battle impacts. Buttons (or keys 1-4) play one character's clip; T turns everyone around,
-    /// Q toggles the camera fly-around, A resumes auto, R walks them in again.
+    /// Derek: "nothing moves until their buttons are pressed. then they do the button movement until the next one.
+    /// seemless transition between each". Everyone starts in their spot frozen on idle frame 0. A clip button (or keys 1-4)
+    /// loops that clip for that character until another is pressed, crossfading from the current pose; attacks loop in
+    /// place and spawn an impact on each contact. T turns everyone around, Q toggles the camera fly-around, A is the
+    /// opt-in auto cycle, R freezes everyone back in their spots.
     /// </summary>
     [DefaultExecutionOrder(100)]
     public sealed class NewCharsPreview : MonoBehaviour
     {
         public const string FolderName = "preview_new_chars";
         private const string Dir = "Assets/ThemePack/fantasy_kingdom_a/art/" + FolderName + "/";
-        private const float WalkSpeed = 1.4f;
-        private const float StartX = 8f;
+        private const float Blend = 0.22f;
         private const float IdleGap = 1.2f;
         private const float HitAt = 0.5f;
 
@@ -72,6 +73,11 @@ namespace Survival.Unity
             public float IdleLeft;
             public bool Arrived;
             public float Height = 1.8f;
+            public bool Frozen = true;
+            public Transform[] Bones = System.Array.Empty<Transform>();
+            public Vector3[] FromPos = System.Array.Empty<Vector3>();
+            public Quaternion[] FromRot = System.Array.Empty<Quaternion>();
+            public float BlendLeft;
             public Unit? Target;
             public ClothSpringRig? Cloth;
             public Text? Now;
@@ -165,6 +171,19 @@ namespace Survival.Unity
             }
 
             LockedBattleGround.AddContactShadow(host, 0.8f, 0.6f);
+            // Body bones only (before the cape is attached): the crossfade snapshots these.
+            var bones = new List<Transform>();
+            foreach (var t in model.GetComponentsInChildren<Transform>(true))
+            {
+                if (t != model.transform)
+                {
+                    bones.Add(t);
+                }
+            }
+
+            u.Bones = bones.ToArray();
+            u.FromPos = new Vector3[u.Bones.Length];
+            u.FromRot = new Quaternion[u.Bones.Length];
             AttachCape(u, dir);
             return u;
         }
@@ -353,14 +372,31 @@ namespace Survival.Unity
 
         private void Restart()
         {
+            if (_orbit)
+            {
+                ToggleOrbit();
+            }
+
             foreach (var u in _units)
             {
                 var sign = u.Def.Hero ? -1f : 1f;
-                u.Host.position = new Vector3(sign * StartX, 0f, u.Def.Z);
-                u.Arrived = false;
-                u.Manual = false;
+                u.Host.position = new Vector3(sign * u.Def.StopX, 0f, u.Def.Z);
+                u.Arrived = true;
+                u.Manual = true;
+                u.Frozen = true;
+                u.BlendLeft = 0f;
                 u.NextAttack = 0;
-                Play(u, 1);
+                Play(u, 0);
+                u.BlendLeft = 0f;
+                if (u.Now != null) u.Now.text = "STILL";
+                Face(u);
+                var idle = u.Clips[0];
+                if (idle != null)
+                {
+                    idle.SampleAnimation(u.Model, 0f);
+                    HoldHips(u);
+                }
+
                 u.Cloth?.ResetToRest();
             }
 
@@ -369,6 +405,7 @@ namespace Survival.Unity
 
         private void Play(Unit u, int clip)
         {
+            Snapshot(u);
             u.Clip = Mathf.Clamp(clip, 0, u.Clips.Count - 1);
             u.Time = 0f;
             u.HitDone = false;
@@ -379,6 +416,31 @@ namespace Survival.Unity
         }
 
         private static bool Loops(Unit u) => u.Clip <= 1;
+
+        /// <summary>Captures the current pose so the next clip fades in from it (no snap).</summary>
+        private static void Snapshot(Unit u)
+        {
+            for (var i = 0; i < u.Bones.Length; i++)
+            {
+                u.FromPos[i] = u.Bones[i].localPosition;
+                u.FromRot[i] = u.Bones[i].localRotation;
+            }
+
+            u.BlendLeft = Blend;
+        }
+
+        private static void HoldHips(Unit u)
+        {
+            if (u.Hips == null)
+            {
+                return;
+            }
+
+            var local = u.Model.transform.InverseTransformPoint(u.Hips.position);
+            local.x = u.HipsRest.x;
+            local.z = u.HipsRest.z;
+            u.Hips.position = u.Model.transform.TransformPoint(local);
+        }
 
         private void Update()
         {
@@ -394,23 +456,16 @@ namespace Survival.Unity
         {
             var clip = u.Clips[u.Clip];
             var length = clip != null ? Mathf.Max(0.1f, clip.length) : 1f;
-            u.Time += dt;
-
-            if (!u.Arrived && !u.Manual)
+            Face(u);
+            if (u.Frozen)
             {
-                var sign = u.Def.Hero ? -1f : 1f;
-                var p = u.Host.position;
-                p.x = Mathf.MoveTowards(p.x, sign * u.Def.StopX, WalkSpeed * dt);
-                u.Host.position = p;
-                if (Mathf.Abs(p.x - (sign * u.Def.StopX)) < 0.01f)
-                {
-                    u.Arrived = true;
-                    u.IdleLeft = IdleGap * (u.Def.Hero ? 1f : 1.6f);
-                    Play(u, 0);
-                }
+                return; // Pose was set on Restart; nothing moves until a button.
             }
-            else if (!u.Manual)
+
+            u.Time += dt;
+            if (!u.Manual)
             {
+                // Opt-in auto: idle a moment, then one attack, back to idle.
                 if (u.Clip == 0)
                 {
                     u.IdleLeft -= dt;
@@ -427,7 +482,10 @@ namespace Survival.Unity
             }
             else if (!Loops(u) && u.Time >= length)
             {
-                Play(u, 0);
+                // Manual attack loops until the next button; blend the wrap so the end pose doesn't pop to the start.
+                Snapshot(u);
+                u.Time -= length;
+                u.HitDone = false;
             }
 
             if (u.Clip >= 2 && !u.HitDone && u.Time >= length * HitAt)
@@ -436,20 +494,26 @@ namespace Survival.Unity
                 Hit(u);
             }
 
-            Face(u);
             if (clip != null)
             {
                 var t = Loops(u) ? Mathf.Repeat(u.Time, length) : Mathf.Min(u.Time, length);
                 clip.SampleAnimation(u.Model, t);
             }
 
-            // In place: idle and walk keep the hips over the slot (the host does the walking).
-            if (u.Hips != null && Loops(u))
+            // In place for every clip: attacks too, so a looping attack never slides off and snaps back.
+            HoldHips(u);
+
+            if (u.BlendLeft > 0f)
             {
-                var local = u.Model.transform.InverseTransformPoint(u.Hips.position);
-                local.x = u.HipsRest.x;
-                local.z = u.HipsRest.z;
-                u.Hips.position = u.Model.transform.TransformPoint(local);
+                u.BlendLeft = Mathf.Max(0f, u.BlendLeft - dt);
+                var w = 1f - (u.BlendLeft / Blend);
+                w = w * w * (3f - (2f * w));
+                for (var i = 0; i < u.Bones.Length; i++)
+                {
+                    var bone = u.Bones[i];
+                    bone.localPosition = Vector3.Lerp(u.FromPos[i], bone.localPosition, w);
+                    bone.localRotation = Quaternion.Slerp(u.FromRot[i], bone.localRotation, w);
+                }
             }
         }
 
@@ -484,7 +548,6 @@ namespace Survival.Unity
             var impact = u.Def.Impacts[Mathf.Clamp(u.Clip - 2, 0, u.Def.Impacts.Length - 1)];
             var point = target.Host.position + (Vector3.up * target.Height * (impact == BattleImpactKind.GroundSlam ? 0.05f : 0.55f));
             LockedBattleImpact.Spawn(impact, point, target.Host.position - u.Host.position, u.Def.Core, u.Def.Glow, Color.white, 1f);
-            _camera?.Shake(0.01f);
         }
 
         private Unit? Nearest(Unit u)
@@ -538,6 +601,7 @@ namespace Survival.Unity
         {
             u.Manual = true;
             u.Arrived = true;
+            u.Frozen = false;
             Play(u, clip);
         }
 
@@ -548,6 +612,7 @@ namespace Survival.Unity
                 if (u.Manual)
                 {
                     u.Manual = false;
+                    u.Frozen = false;
                     Play(u, 0);
                     u.IdleLeft = IdleGap;
                 }
@@ -582,7 +647,7 @@ namespace Survival.Unity
                 var x1 = x0 + 0.2375f;
                 var name = HookSkin.Outlined(SurvivalVisuals.Text(canvas, u.Def.Prefix + "Name", (i + 1) + "  " + u.Def.Prefix, 22, TextAnchor.MiddleCenter, HookSkin.Cream));
                 HookSkin.Box(name.rectTransform, x0, 0.265f, x1, 0.30f);
-                u.Now = HookSkin.Outlined(SurvivalVisuals.Text(canvas, u.Def.Prefix + "Now", "WALK", 18, TextAnchor.MiddleCenter, HookSkin.Cream));
+                u.Now = HookSkin.Outlined(SurvivalVisuals.Text(canvas, u.Def.Prefix + "Now", "STILL", 18, TextAnchor.MiddleCenter, HookSkin.Cream));
                 HookSkin.Box(u.Now.rectTransform, x0, 0.235f, x1, 0.265f);
                 for (var c = 0; c < u.Clips.Count; c++)
                 {
