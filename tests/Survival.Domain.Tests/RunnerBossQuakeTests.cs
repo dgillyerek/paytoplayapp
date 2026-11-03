@@ -44,7 +44,7 @@ public sealed class RunnerBossQuakeTests
     }
 
     /// <summary>
-    /// Ironhowl's boulders: once the landing ring has been up for <paramref name="reaction"/> seconds, a lead standing in
+    /// Ironhowl's boulders: once the boulder has been in the air for <paramref name="reaction"/> seconds, a lead standing in
     /// (or at the edge of) it steers out sideways, to whichever side is nearer and on the road. Nothing is teleported: the
     /// squad's normal steer speed decides whether it makes it, and followers trailing behind can still be caught, so the
     /// real dodge rate comes out of the run rather than a flat number.
@@ -53,8 +53,10 @@ public sealed class RunnerBossQuakeTests
     /// otherwise the ring edge nearer to it, so stepping out of a boulder does not walk the lead into the road's traps.</param>
     public static float? RockDodge(RunnerRun run, float reaction = 0.3f, float? wanted = null)
     {
-        var boss = run.Foes.FirstOrDefault(f => f.Boss && f.Hp > 0 && f.RockLeft > 0f);
-        if (boss == null || RunnerRules.BossRockTelegraph - boss.RockLeft < reaction)
+        // No landing ring (Derek 2026-11-03): the player sees the rock leave his hands and, after the reaction time, steers
+        // off the lane it is flying down. While it is still in his hands its landing is not decided yet.
+        var boss = run.Foes.FirstOrDefault(f => f.Boss && f.Hp > 0 && f.RockLeft > 0f && !f.RockHeld);
+        if (boss == null || RunnerRules.BossRockFlight - boss.RockLeft < reaction)
         {
             return null;
         }
