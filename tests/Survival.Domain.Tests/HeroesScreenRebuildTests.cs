@@ -18,5 +18,14 @@ namespace Survival.Domain.Tests
         [InlineData(false, true)]
         [InlineData(true, false)]
         public void TabSwitchRedrawsBodyNotShell(bool shown, bool now) => Assert.Equal(HeroesRebuild.Body, HeroesScreen.Plan(true, shown, now));
+
+        [Fact]
+        public void StarRowDrawsOnFirstShow() => Assert.True(HeroesScreen.StarsNeedRedraw(-1, 0));
+
+        [Fact]
+        public void StarRowIgnoresTicksWithSameCount() => Assert.False(HeroesScreen.StarsNeedRedraw(2, 2));
+
+        [Fact]
+        public void StarRowRedrawsOnStarUp() => Assert.True(HeroesScreen.StarsNeedRedraw(2, 3));
     }
 }
