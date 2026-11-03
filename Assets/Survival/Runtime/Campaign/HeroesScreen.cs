@@ -35,6 +35,12 @@ namespace Survival.Domain.Campaign
 
             return shownFoes != foesTab ? HeroesRebuild.Body : HeroesRebuild.DetailOnly;
         }
+
+        /// <summary>
+        /// The star row is redrawn only when the shown count changes (Derek 2026-11-03: unearned stars flashed while
+        /// the screen's 0.25 s refresh kept touching them). <paramref name="shown"/> is -1 before the first draw.
+        /// </summary>
+        public static bool StarsNeedRedraw(int shown, int count) => shown != count;
     }
 
     public enum HeroesRebuild

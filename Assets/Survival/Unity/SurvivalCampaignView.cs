@@ -2838,7 +2838,18 @@ namespace Survival.Unity
             return frame.rectTransform;
         }
 
-        private static Text[] Stars(RectTransform parent, float x0, float y0, float x1, float y1)
+        /// <summary>
+        /// Five star images (sprite art, not a font glyph). The row is drawn once and only touched again when the
+        /// star count changes: the Heroes refresh runs every tick, and the old "\u2605" text glyphs flickered on the
+        /// dim unearned stars whenever the dynamic font atlas rebuilt under them (Derek 2026-11-03).
+        /// </summary>
+        private sealed class StarRow
+        {
+            public readonly Image[] Stars = new Image[5];
+            public int Shown = -1;
+        }
+
+        private static StarRow Stars(RectTransform parent, float x0, float y0, float x1, float y1)
         {
             var host = new GameObject("Stars", typeof(RectTransform)).GetComponent<RectTransform>();
             host.SetParent(parent, false);
@@ -2847,24 +2858,32 @@ namespace Survival.Unity
             plate.rectTransform.anchorMin = new Vector2(-0.04f, -0.08f);
             plate.rectTransform.anchorMax = new Vector2(1.04f, 1.08f);
             plate.rectTransform.offsetMin = plate.rectTransform.offsetMax = Vector2.zero;
-            var stars = new Text[5];
-            for (var i = 0; i < 5; i++)
+            var row = new StarRow();
+            for (var i = 0; i < row.Stars.Length; i++)
             {
-                var t = HookSkin.Outlined(SurvivalVisuals.Text(host, "Star" + i, "\u2605", 30, TextAnchor.MiddleCenter, StarOff), 1.5f);
-                t.raycastTarget = false;
-                HookSkin.Box(t.rectTransform, i / 5f, 0f, (i + 1) / 5f, 1f);
-                stars[i] = t;
+                var img = Ornaments.Star(host, StarOff);
+                img.name = "Star" + i;
+                img.raycastTarget = false;
+                img.preserveAspect = true;
+                HookSkin.Box(img.rectTransform, i / 5f + 0.02f, 0.08f, (i + 1) / 5f - 0.02f, 0.92f);
+                row.Stars[i] = img;
             }
 
-            return stars;
+            return row;
         }
 
-        private static void SetStars(Text[] stars, int count)
+        private static void SetStars(StarRow row, int count)
         {
-            for (var i = 0; i < stars.Length; i++)
+            if (!HeroesScreen.StarsNeedRedraw(row.Shown, count))
             {
-                stars[i].color = i < count ? StarOn : StarOff;
-                stars[i].gameObject.SetActive(count > 0);
+                return;
+            }
+
+            row.Shown = count;
+            for (var i = 0; i < row.Stars.Length; i++)
+            {
+                row.Stars[i].color = i < count ? StarOn : StarOff;
+                row.Stars[i].gameObject.SetActive(count > 0);
             }
         }
 
