@@ -523,9 +523,37 @@ namespace Survival.Unity
                 return false;
             }
 
+            if (!gameObject.activeInHierarchy)
+            {
+                // Switching to the world fades it in over a few frames, so it is still inactive here. Finish once it's shown.
+                _pendingFocus = id;
+                return true;
+            }
+
             Rig?.FocusOn(e.X, e.Y);
             OnTapEntity(id);
             return true;
+        }
+
+        private string? _pendingFocus;
+
+        private void OnEnable()
+        {
+            var id = _pendingFocus;
+            _pendingFocus = null;
+            if (id != null)
+            {
+                FocusEntity(id);
+            }
+        }
+
+        /// <summary>Cosmetic tweens only; skipped while the map is hidden (Unity can't run coroutines on an inactive object).</summary>
+        private void Juice(IEnumerator tween)
+        {
+            if (gameObject.activeInHierarchy)
+            {
+                StartCoroutine(tween);
+            }
         }
 
 
@@ -533,6 +561,7 @@ namespace Survival.Unity
         {
             _cardRefresh = null;
             _selectedId = null;
+            _pendingFocus = null;
             if (_card != null)
             {
                 _card.Root.gameObject.SetActive(false);
@@ -610,7 +639,8 @@ namespace Survival.Unity
                 }
             }
 
-            StartCoroutine(PopIn(c.Root));
+            c.Root.localScale = Vector3.one;
+            Juice(PopIn(c.Root));
         }
 
         private void OnTapEntity(string id)
@@ -624,7 +654,7 @@ namespace Survival.Unity
             _cardRefresh = null;
             if (_entities.TryGetValue(id, out var ev))
             {
-                StartCoroutine(Punch(ev.Root, 0.12f, 10));
+                Juice(Punch(ev.Root, 0.12f, 10));
             }
 
             var art = ArtFor(e);
@@ -907,7 +937,7 @@ namespace Survival.Unity
             var t = HookSkin.Outlined(SurvivalVisuals.Text(_fx, "Pop", copy, 40, TextAnchor.MiddleCenter, color), 2.5f);
             t.fontStyle = FontStyle.Bold;
             SurvivalVillageView.Point(t.rectTransform, at.X, at.Y + SizeFor(at) * 0.6f, 700f, 70f, 0.5f);
-            StartCoroutine(Rise(t));
+            Juice(Rise(t));
         }
 
         private IEnumerator Rise(Text t)
