@@ -33,8 +33,8 @@ public sealed class WorldMarchLoopTests
         var pin = Assert.Single(pack.Pins, p => p.NodeId == SurvIds.WorldNodeGather01);
         Assert.Equal(SurvIds.WorldNodeTypeGather, pin.NodeTypeId);
         Assert.Equal(SurvIds.ThemeANodeGatherQuarryMap, pin.ContentKey);
-        Assert.InRange(pin.PinX, 0.48f, 0.482f);
-        Assert.InRange(pin.PinYFromTop, 0.283f, 0.285f);
+        Assert.InRange(pin.PinX, 0.499f, 0.501f);
+        Assert.InRange(pin.PinYFromTop, 0.219f, 0.221f);
         Assert.InRange(pin.SpriteSize, 0.128f, 0.13f);
         Assert.Equal("Stone Quarry", pack.StringOr("inspect.gather.title", ""));
         Assert.Equal("Available", pack.StringOr("inspect.gather.available", ""));
