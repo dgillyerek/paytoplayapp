@@ -13,6 +13,12 @@ namespace Survival.Domain.View
     /// </summary>
     public static class RailActionable
     {
+        /// <summary>Kingdom Path: the free progression track, so it is always on the rail (compact); the FREE badge shows only with a reward to claim.</summary>
+        public static bool KingdomPath(int claimable) => true;
+
+        /// <summary>Kingdom Path FREE badge: at least one reached reward not claimed yet.</summary>
+        public static bool KingdomPathFree(int claimable) => claimable > 0;
+
         /// <summary>Daily chest: today's chest not claimed yet.</summary>
         public static bool Daily(bool canClaim) => canClaim;
 
