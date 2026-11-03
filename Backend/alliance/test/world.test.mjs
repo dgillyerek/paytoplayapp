@@ -20,3 +20,26 @@ test("march position interpolates", () => {
   assert.deepEqual(positionAt(m, 5000), [5, 0]); assert.deepEqual(positionAt(m, 99999), [10, 0]);
 });
 test("gather rate grows with level", () => assert.ok(gatherRate(1000, 2) > gatherRate(1000, 1)));
+
+// ---- server-owned troops and real loot ----
+import { lootFrom, minusStock, healTroops, troopCap, canSend } from "../src/world.mjs";
+test("sends are checked against the server's count, not the phone's", () => {
+  assert.ok(canSend(300, 300)); assert.ok(!canSend(301, 300)); assert.ok(!canSend(0, 300)); assert.ok(!canSend(1.5, 300));
+});
+test("loot is a share of unprotected stock only", () => {
+  assert.deepEqual(lootFrom({ food: 12000, wood: 1500, gold: 7000 }, 1e9), { food: 2000, gold: 1000 });
+  assert.deepEqual(lootFrom({}, 1e9), {}); assert.deepEqual(lootFrom({ food: 2000 }, 1e9), {});
+});
+test("loot never exceeds what survivors can carry", () => {
+  const l = lootFrom({ food: 102000, wood: 52000 }, 3000);
+  assert.ok(Object.values(l).reduce((a, b) => a + b, 0) <= 3000); assert.ok(l.food > l.wood);
+});
+test("taking loot leaves the defender with the rest, never negative", () => {
+  assert.deepEqual(minusStock({ food: 12000, gold: 50 }, { food: 2000, gold: 99 }), { food: 10000, gold: 0 });
+});
+test("troops heal toward the power cap, counting troops out marching", () => {
+  assert.equal(troopCap(0), WORLD.troopCapMin); assert.equal(troopCap(50000), 5000);
+  assert.equal(healTroops(1000, 0, 5000, 3600000), 1500);
+  assert.equal(healTroops(4000, 900, 5000, 10 * 3600000), 4100);
+  assert.equal(healTroops(4500, 900, 5000, 3600000), 4500);
+});
