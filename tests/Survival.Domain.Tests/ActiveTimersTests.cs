@@ -46,6 +46,18 @@ public class ActiveTimersTests
     }
 
     [Fact]
+    public void Busy_builders_lists_only_building_jobs_soonest_first_and_link_to_the_plot()
+    {
+        var c = new ManualClock(T0);
+        var q = Builders(c);
+        q.TryStart("other.timer.x", "x", 10, out _);
+        var rows = ActiveTimers.BusyBuilders(q.Active, T0);
+        Assert.Equal(new[] { "farm", "barracks" }, rows.ConvertAll(r => r.Target));
+        Assert.All(rows, r => Assert.Equal(TimerGoKind.Building, r.Go));
+        Assert.Empty(ActiveTimers.BusyBuilders(null, T0));
+    }
+
+    [Fact]
     public void Deep_link_per_kind()
     {
         Assert.Equal(TimerGoKind.Building, ActiveTimers.GoFor(TimerKind.Building));

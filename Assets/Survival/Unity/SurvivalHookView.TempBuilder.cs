@@ -25,7 +25,7 @@ namespace Survival.Unity
             }
 
             var hook = _hook;
-            var panel = OpenSheet("TempBuilderSheet", 0.84f, 0.40f, S("builder.temp.title", "All Builders Busy"));
+            var panel = OpenSheet("TempBuilderSheet", 0.84f, 0.52f, S("builder.temp.title", "All Builders Busy"));
             if (panel == null)
             {
                 return;
@@ -33,22 +33,27 @@ namespace Survival.Unity
 
             BalanceBar.Above(panel, hook.Wallet, BalanceBarIds.Building);
             var art = HookSkin.Art(panel, "Building", plotId != null && hook.Base.Find(plotId) is { } p ? BuildingVisual.For(p, Tiers).ArtKey : HookArtKeys.ForPlot(plotId ?? ""), SurvivalVisuals.PinBuild);
-            HookSkin.Box(art.rectTransform, 0.05f, 0.58f, 0.30f, 0.88f);
+            HookSkin.Box(art.rectTransform, 0.05f, 0.64f, 0.30f, 0.88f);
             var head = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Head", S("builder.temp.head", "Hire an extra builder"), 28, TextAnchor.MiddleLeft, HookSkin.Cream), 2f);
             head.fontStyle = FontStyle.Bold;
-            HookSkin.Box(head.rectTransform, 0.33f, 0.76f, 0.95f, 0.87f);
+            HookSkin.Box(head.rectTransform, 0.33f, 0.79f, 0.95f, 0.87f);
             var body = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Body", S("builder.temp.body", "One more builder works for you for 12 hours. This job starts right away."), 20, TextAnchor.UpperLeft, SurvivalVisuals.Cream), 1.5f);
-            HookSkin.Box(body.rectTransform, 0.33f, 0.56f, 0.95f, 0.75f);
+            HookSkin.Box(body.rectTransform, 0.33f, 0.63f, 0.95f, 0.78f);
 
             var price = hook.TempBuilderProduct?.PriceLabel ?? "$1.99";
-            var buyText = SheetButton(panel, "Buy", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.12f, 0.33f, 0.88f, 0.49f, 28, out var buy);
+            var buyText = SheetButton(panel, "Buy", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.12f, 0.49f, 0.88f, 0.61f, 28, out var buy);
             buyText.text = Fmt("builder.temp.buy", "Hire for 12h  \u00b7  {0}", price);
             buyText.color = HookSkin.Cream; // never dark text on gold
             var sandbox = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Sandbox", S("store.sandbox", "SANDBOX \u00b7 no real charge"), 15, TextAnchor.MiddleCenter, Warn), 1.5f);
-            HookSkin.Box(sandbox.rectTransform, 0f, 0.26f, 1f, 0.32f);
-            var closeText = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.33f, 0.05f, 0.67f, 0.16f, 20, out var close);
+            HookSkin.Box(sandbox.rectTransform, 0f, 0.44f, 1f, 0.485f);
+            var closeText = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.33f, 0.03f, 0.67f, 0.115f, 20, out var close);
             closeText.text = S("hook.close", "Close");
             var buyRt = buy.GetComponent<RectTransform>();
+            var busyHead = HookSkin.Outlined(SurvivalVisuals.Text(panel, "BusyHead", S("builder.busy.head", "Your builders are working on · tap to speed up"), 17, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.2f);
+            HookSkin.Box(busyHead.rectTransform, 0.05f, 0.39f, 0.95f, 0.435f);
+            var busyTick = BusyBuilderStrip(panel, 0.06f, 0.13f, 0.94f, 0.39f);
+            _sheetRefresh = busyTick;
+            busyTick();
 
             Wire(close, CloseSheet);
             Wire(buy, () =>
