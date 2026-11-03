@@ -235,14 +235,7 @@ namespace Survival.Unity
             return key;
         }
 
-        private static float SizeFor(WorldEntity e) => e.Kind switch
-        {
-            WorldEntityKind.PlayerVillage => 330f,
-            WorldEntityKind.RivalVillage or WorldEntityKind.AllyVillage => 270f,
-            WorldEntityKind.EnemyCamp => e.Type == "dragon" ? 330f : e.Level >= 10 ? 270f : 240f,
-            WorldEntityKind.ResourceNode => 220f,
-            _ => e.Type == SurvIds.WorldNodeTypeFight ? 320f : 260f
-        };
+        private static float SizeFor(WorldEntity e) => WorldSpacing.SizeFor(e);
 
         private string NameOf(WorldEntity e) => e.Kind switch
         {
@@ -266,7 +259,7 @@ namespace Survival.Unity
             var size = SizeFor(e);
             var art = HookSkin.Art(_entityLayer!, e.Id, ArtFor(e), LineFor(e));
             var rt = art.rectTransform;
-            SurvivalVillageView.Point(rt, e.X, e.Y, size, size, 0.28f);
+            SurvivalVillageView.Point(rt, e.X, e.Y, size, size, WorldSpacing.ArtPivotY);
             art.raycastTarget = true;
             if (art.sprite != null && art.sprite.texture != null && art.sprite.texture.isReadable)
             {
@@ -297,8 +290,10 @@ namespace Survival.Unity
                 _ => HookArtKeys.Chip
             };
             var plate = HookSkin.Panel(_labelLayer!, e.Id + "_plate", plateKey, SurvivalVisuals.PanelSoft, 0.38f);
-            var hasSub = SubOf(e).Length > 0;
-            SurvivalVillageView.Point(plate.rectTransform, e.X, e.Y - size * 0.30f, 290f, hasSub ? 78f : 52f, 1f);
+            var hasSub = WorldSpacing.HasSubLine(e);
+            SurvivalVillageView.Point(
+                plate.rectTransform, e.X, e.Y - size * WorldSpacing.PlateDrop, WorldSpacing.PlateWidth,
+                hasSub ? WorldSpacing.PlateHeightWithSub : WorldSpacing.PlateHeight, 1f);
             var ink = plateKey == HookArtKeys.ButtonGold ? HookSkin.Ink : SurvivalVisuals.Cream;
             var name = SurvivalVisuals.Text(plate.transform, "Name", NameOf(e), 24, TextAnchor.MiddleCenter, ink);
             name.fontStyle = FontStyle.Bold;
@@ -312,6 +307,16 @@ namespace Survival.Unity
             Box(sub.rectTransform, 0.04f, 0.04f, 0.96f, 0.5f);
             sub.gameObject.SetActive(hasSub);
             _labels.Add(plate.rectTransform);
+
+            // Tapping the name plate does exactly what tapping the building does (same handler, same punch on the
+            // building). A Button only takes clicks, so drags on the plate still fall through to the map rig.
+            plate.raycastTarget = true;
+            name.raycastTarget = false;
+            sub.raycastTarget = false;
+            var plateBtn = plate.gameObject.AddComponent<Button>();
+            plateBtn.targetGraphic = plate;
+            plateBtn.transition = Selectable.Transition.None;
+            plateBtn.onClick.AddListener(() => OnTapEntity(id));
 
             if (e.Kind == WorldEntityKind.PlayerVillage)
             {
@@ -341,7 +346,7 @@ namespace Survival.Unity
 
         private void OnMoved(MapCamera cam)
         {
-            var k = Mathf.Clamp(0.8f / cam.Zoom, 0.75f, 1.6f);
+            var k = WorldSpacing.PlateScale(cam.Zoom);
             foreach (var l in _labels)
             {
                 if (l != null)
