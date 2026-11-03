@@ -352,6 +352,16 @@ namespace Survival.Unity
             Wire(body, () => OnTapPlot(plotId));
             Wire(bubbleBtn, () => OnTapPlot(plotId));
             Wire(congratsBtn, () => OnTapPlot(plotId));
+            TapsLikePlot(card.Badge, plotId);
+            TapsLikePlot(card.Arrow, plotId);
+            TapsLikePlot(plate, plotId);
+            if (card.LevelBadge != null)
+            {
+                TapsLikePlot(card.LevelBadge, plotId);
+            }
+
+            // The timer root has no graphic of its own: its bar is the hit area.
+            TapsLikePlot(bar, plotId);
             return card;
         }
 
@@ -694,25 +704,32 @@ namespace Survival.Unity
                 return;
             }
 
-            if (_hook.Base.PendingFor(plotId) != null)
+            switch (PlotTap.Decide(_hook.Base, plotId))
             {
-                ClaimCongrats(card, plotId);
-                return;
+                case PlotTapAction.ClaimReward:
+                    ClaimCongrats(card, plotId);
+                    break;
+                case PlotTapAction.TimerAction:
+                    OnPlotAction(plotId);
+                    break;
+                case PlotTapAction.Collect:
+                    Collect(card, plot);
+                    break;
+                default:
+                    OpenBuilding(plotId);
+                    break;
             }
+        }
 
-            if (_hook.Base.IsUpgrading(plotId))
-            {
-                OnPlotAction(plotId);
-                return;
-            }
-
-            if (!plot.CanCollect)
-            {
-                OpenBuilding(plotId);
-                return;
-            }
-
-            Collect(card, plot);
+        /// <summary>Make a sign floating on a building (FREE badge, upgrade arrow, level shield, name plate, timer)
+        /// tappable; it does exactly what tapping the building does. A drag that starts on it still pans the map.</summary>
+        private void TapsLikePlot(Graphic sign, string plotId)
+        {
+            sign.raycastTarget = true;
+            var btn = sign.gameObject.GetComponent<Button>() ?? sign.gameObject.AddComponent<Button>();
+            btn.targetGraphic = sign;
+            btn.transition = Selectable.Transition.None;
+            Wire(btn, () => OnTapPlot(plotId));
         }
 
         private void Collect(PlotCard card, BasePlot plot)
