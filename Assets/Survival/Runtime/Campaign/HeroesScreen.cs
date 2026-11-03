@@ -20,5 +20,30 @@ namespace Survival.Domain.Campaign
 
         /// <summary>True when the tab (<paramref name="tabIsFoes"/>) is the selected one and so drawn highlighted.</summary>
         public static bool TabHighlighted(bool tabIsFoes, bool foesTab) => tabIsFoes == foesTab;
+
+        /// <summary>
+        /// How much of the screen to redraw (Derek 2026-11-02: tapping a hero blinked the whole screen). The shell
+        /// (panel, banner, balances, buttons) is built only when the screen is not already open; a tab switch redraws
+        /// the tabs, cards and detail; anything else (a hero tap, an unlock) only swaps the detail pane.
+        /// </summary>
+        public static HeroesRebuild Plan(bool screenOpen, bool shownFoes, bool foesTab)
+        {
+            if (!screenOpen)
+            {
+                return HeroesRebuild.Shell;
+            }
+
+            return shownFoes != foesTab ? HeroesRebuild.Body : HeroesRebuild.DetailOnly;
+        }
+    }
+
+    public enum HeroesRebuild
+    {
+        /// <summary>Open the screen from scratch.</summary>
+        Shell,
+        /// <summary>Keep the shell; redraw tabs, cards and detail.</summary>
+        Body,
+        /// <summary>Keep everything; move the glow and swap the detail pane.</summary>
+        DetailOnly,
     }
 }
