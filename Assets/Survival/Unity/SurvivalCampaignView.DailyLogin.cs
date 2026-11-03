@@ -101,13 +101,13 @@ namespace Survival.Unity
             // One navy backdrop over the panel body so the art's grey-blue gradient band never shows (Derek 2026-10-31).
             var backdrop = HookSkin.Panel(panel, "Backdrop", HookArtKeys.Plate, DailyNavyDeep, 0.8f);
             backdrop.raycastTarget = false;
-            Box(backdrop.rectTransform, 0.02f, 0.012f, 0.98f, 0.925f);
+            HookSkin.Box(backdrop.rectTransform, 0.02f, 0.012f, 0.98f, 0.925f);
             Ornaments.Frame(backdrop.transform, Ornaments.Gold, 1.5f);
 
             var sub = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Sub", S("daily.sub", "Come back every day. Day 7 is the Royal Chest!"), 22, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
             sub.fontStyle = FontStyle.Bold;
             HookSkin.Fit(sub, 12, 22);
-            Box(sub.rectTransform, 0.05f, 0.865f, 0.95f, 0.905f);
+            HookSkin.Box(sub.rectTransform, 0.05f, 0.865f, 0.95f, 0.905f);
 
             // Days 1-3 and 4-6 in two rows of three, the day-7 hero card across the bottom, then CLAIM: no dead space.
             const float gap = 0.022f;
@@ -173,13 +173,13 @@ namespace Survival.Unity
             {
                 var glow = HookSkin.Glow(panel, "Glow" + (i + 1), new Color(1f, 0.82f, 0.35f, 0.75f));
                 glow.raycastTarget = false;
-                Box(glow.rectTransform, x0 - 0.02f, y0 - 0.012f, x1 + 0.02f, y1 + 0.012f);
+                HookSkin.Box(glow.rectTransform, x0 - 0.02f, y0 - 0.012f, x1 + 0.02f, y1 + 0.012f);
             }
 
             // Royal navy plate with bevel, gloss and gold trim, like the Trophy Hall and Crystal Orb cards.
             var card = HookSkin.Panel(panel, "Day" + (i + 1), HookArtKeys.Plate, fill, 0.7f);
             card.raycastTarget = false;
-            Box(card.rectTransform, x0, y0, x1, y1);
+            HookSkin.Box(card.rectTransform, x0, y0, x1, y1);
             Ornaments.Bevel(card.transform, 0.6f);
             Ornaments.Dress(card, Ornaments.Gold, rivet: 10f);
             if (ready || big)
@@ -188,7 +188,7 @@ namespace Survival.Unity
             }
 
             var head = Ornaments.Ribbon(card.transform, big ? S("daily.day7", "DAY 7 \u00b7 ROYAL CHEST") : Fmt("daily.day", "DAY {0}", i + 1), big ? new Color(0.24f, 0.34f, 0.70f, 1f) : new Color(0.62f, 0.14f, 0.12f, 1f), out var ribbon);
-            Box(ribbon.rectTransform, big ? 0.22f : 0.02f, big ? 0.84f : 0.86f, big ? 0.78f : 0.98f, big ? 1.06f : 1.04f);
+            HookSkin.Box(ribbon.rectTransform, big ? 0.22f : 0.02f, big ? 0.84f : 0.86f, big ? 0.78f : 0.98f, big ? 1.06f : 1.04f);
             head.fontSize = big ? 22 : 19;
 
             var rewards = new List<KeyValuePair<string, int>>(daily.Rewards[i]);
@@ -197,7 +197,7 @@ namespace Survival.Unity
             art.preserveAspect = true;
             if (big)
             {
-                Box(art.rectTransform, 0.02f, 0.04f, 0.36f, 0.86f);
+                HookSkin.Box(art.rectTransform, 0.02f, 0.04f, 0.36f, 0.86f);
                 for (var k = 0; k < rewards.Count; k++)
                 {
                     var cx = 0.39f + ((k % 2) * 0.30f);
@@ -209,7 +209,7 @@ namespace Survival.Unity
             {
                 // Art grows with the day: day 1 is a small gift, day 6 a brimming chest.
                 var grow = 0.30f + (0.035f * i);
-                Box(art.rectTransform, 0.5f - (grow * 0.85f), 0.84f - grow - 0.02f, 0.5f + (grow * 0.85f), 0.84f);
+                HookSkin.Box(art.rectTransform, 0.5f - (grow * 0.85f), 0.84f - grow - 0.02f, 0.5f + (grow * 0.85f), 0.84f);
                 var n = Math.Max(1, rewards.Count);
                 for (var k = 0; k < rewards.Count; k++)
                 {
@@ -226,7 +226,7 @@ namespace Survival.Unity
                 SurvivalVisuals.Stretch(dim.rectTransform);
                 var tick = HookSkin.Outlined(SurvivalVisuals.Text(card.transform, "Tick", "\u2714", 64, TextAnchor.MiddleCenter, FreeGreen), 2.4f);
                 tick.raycastTarget = false;
-                Box(tick.rectTransform, 0f, 0.35f, 1f, 0.85f);
+                HookSkin.Box(tick.rectTransform, 0f, 0.35f, 1f, 0.85f);
             }
             else if (ready)
             {
@@ -259,14 +259,14 @@ namespace Survival.Unity
             if (horizontal)
             {
                 var mid = x0 + ((x1 - x0) * 0.42f);
-                Box(icon.rectTransform, x0, y0, mid, y1);
-                Box(amount.rectTransform, mid + 0.01f, y0, x1, y1);
+                HookSkin.Box(icon.rectTransform, x0, y0, mid, y1);
+                HookSkin.Box(amount.rectTransform, mid + 0.01f, y0, x1, y1);
             }
             else
             {
                 var mid = y0 + ((y1 - y0) * 0.38f);
-                Box(icon.rectTransform, x0, mid, x1, y1);
-                Box(amount.rectTransform, x0, y0, x1, mid);
+                HookSkin.Box(icon.rectTransform, x0, mid, x1, y1);
+                HookSkin.Box(amount.rectTransform, x0, y0, x1, mid);
             }
 
             if (dim)

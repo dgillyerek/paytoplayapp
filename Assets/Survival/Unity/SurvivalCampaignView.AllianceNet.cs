@@ -166,7 +166,7 @@ namespace Survival.Unity
             _allyContent = null;
             var crest = HookSkin.Art(panel, "Crest", HookArtKeys.GuildCrest, Ornaments.Gold);
             crest.raycastTarget = false;
-            Box(crest.rectTransform, 0.36f, 0.80f, 0.64f, 0.94f);
+            HookSkin.Box(crest.rectTransform, 0.36f, 0.80f, 0.64f, 0.94f);
             HookSkin.Fit(Label(panel, "Explain", S("alliance.find.explain", "Join an alliance to chat, help each other's builds and earn gifts."), 20, TextAnchor.MiddleCenter, SurvivalVisuals.Cream, 0.04f, 0.755f, 0.96f, 0.795f), 12, 20);
 
             var search = AllianceInput(panel, "Search", S("alliance.find.search_hint", "Search by name or tag"), 30, 0.04f, 0.69f, 0.70f, 0.745f);
@@ -187,7 +187,7 @@ namespace Survival.Unity
                 var row = OrnateCard(panel, "Listing_" + i, 0.04f, y1 - rowH + 0.006f, 0.96f, y1, l.Open);
                 var banner = HookSkin.Art(row, "Banner", HookArtKeys.WarBanner, Ornaments.Gold);
                 banner.raycastTarget = false;
-                Box(banner.rectTransform, 0.02f, 0.1f, 0.12f, 0.9f);
+                HookSkin.Box(banner.rectTransform, 0.02f, 0.1f, 0.12f, 0.9f);
                 HookSkin.Fit(Label(row, "Name", "[" + l.Tag + "] " + l.Name, 23, TextAnchor.MiddleLeft, SurvivalVisuals.Cream, 0.14f, 0.5f, 0.70f, 0.96f), 13, 23);
                 Label(row, "Info", Fmt("alliance.find.row", "{0}/{1} members  \u00b7  power {2:N0}", l.Members, l.MaxMembers, l.Power), 17, TextAnchor.MiddleLeft, AllyCaption, 0.14f, 0.05f, 0.70f, 0.5f);
                 var join = SheetButton(row, "Join", l.Open ? HookArtKeys.ButtonGreen : HookArtKeys.ButtonBlue, SurvivalVisuals.MineFill, 0.72f, 0.18f, 0.97f, 0.82f, 22, out var joinBtn);
@@ -335,7 +335,7 @@ namespace Survival.Unity
                 var row = OrnateCard(panel, "Req_" + r.Id, 0.04f, y1 - rowH + 0.006f, 0.96f, y1, !r.HelpedByMe);
                 var hand = HookSkin.Art(row, "Hand", HookArtKeys.HelpHand, Ornaments.Gold);
                 hand.raycastTarget = false;
-                Box(hand.rectTransform, 0.02f, 0.1f, 0.12f, 0.9f);
+                HookSkin.Box(hand.rectTransform, 0.02f, 0.1f, 0.12f, 0.9f);
                 var task = OnlineGuild.TaskOf(r.TaskKey);
                 HookSkin.Fit(Label(row, "Who", Fmt("alliance.help.row", "{0}: {1}", r.Name, S("build.type." + task, task)), 21, TextAnchor.MiddleLeft, SurvivalVisuals.Cream, 0.14f, 0.5f, 0.72f, 0.96f), 12, 21);
                 Label(row, "Count", Fmt("alliance.help.count", "{0}/{1} helps", r.Helps, r.MaxHelps), 17, TextAnchor.MiddleLeft, AllyCaption, 0.14f, 0.05f, 0.72f, 0.5f);
@@ -388,7 +388,7 @@ namespace Survival.Unity
             var card = OrnateCard(panel, "GiftCard", 0.08f, 0.30f, 0.92f, 0.61f, net.Gifts.Count > 0);
             var chest = HookSkin.Art(card, "Chest", HookArtKeys.ChestOpen, Ornaments.Gold);
             chest.raycastTarget = false;
-            Box(chest.rectTransform, 0.30f, 0.40f, 0.70f, 0.96f);
+            HookSkin.Box(chest.rectTransform, 0.30f, 0.40f, 0.70f, 0.96f);
             var total = 0;
             foreach (var g in net.Gifts)
             {

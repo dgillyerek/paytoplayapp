@@ -84,7 +84,7 @@ namespace Survival.Unity
 
         internal void TapWire(Button button, Action onTap) => Wire(button, onTap);
 
-        internal static void TapBox(RectTransform rt, float x0, float y0, float x1, float y1) => Box(rt, x0, y0, x1, y1);
+        internal static void TapBox(RectTransform rt, float x0, float y0, float x1, float y1) => HookSkin.Box(rt, x0, y0, x1, y1);
 
         internal void TapToast(RectTransform at, string copy, Color color) => Toast(NormCenterOf(at), copy, color);
 
@@ -111,7 +111,7 @@ namespace Survival.Unity
             // Round ornate icon. With a side rail it joins the rail (yTop is the order hint, so features keep
             // their relative order); without one it sits on the left edge at yTop like before.
             var round = SurvivalSideRail.Round(root, name, null, label, tint);
-            Box(round.Root, 0.018f, 1f - yTop - 0.076f, 0.168f, 1f - yTop);
+            HookSkin.Box(round.Root, 0.018f, 1f - yTop - 0.076f, 0.168f, 1f - yTop);
             _play?.RegisterRail(name, yTop, round.Root);
             round.FreeText.text = S("hook.free", "FREE");
             parts = new TapHudParts(round.Root, round.Icon, round.Label, round.Free, round.Dot, round.DotText);
