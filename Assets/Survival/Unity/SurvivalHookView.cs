@@ -943,6 +943,8 @@ namespace Survival.Unity
             closeText.text = S("hook.close", "Close");
             var upImg = up.GetComponent<Image>();
             var upRt = up.GetComponent<RectTransform>();
+            // Hire-builder mode: the busy builders' jobs, tappable (opens that building's speed-up / finish).
+            var busyTick = BusyBuilderStrip(panel, 0.06f, 0.25f, 0.94f, 0.445f);
 
             Wire(up, () =>
             {
@@ -1047,11 +1049,28 @@ namespace Survival.Unity
                     upText.text = S("builder.temp.button", "Hire builder");
                 }
 
+                var busy = timer == null && block == UpgradeBlock.QueueBusy;
+                ShowStrip(panel, busy);
+                if (busy)
+                {
+                    busyTick();
+                }
+
+                // Busy: strip takes the Upgrade slot; Hire builder (+ Collect) drop a row, Close to the bottom.
+                var cs = p.CanCollect;
+                SetBox(upRt, 0.06f, busy ? 0.135f : 0.24f, busy && cs ? 0.49f : 0.94f, busy ? 0.24f : 0.40f);
+                SetBox(collect.GetComponent<RectTransform>(), busy ? 0.51f : 0.06f, busy ? 0.135f : 0.12f, busy ? 0.94f : 0.49f, busy ? 0.24f : 0.225f);
                 collect.gameObject.SetActive(p.CanCollect);
                 collectText.text = Fmt("village.building.collect", "Collect +{0}", ChipWallet.FormatCompact(p.Collectable));
                 var closeRt = close.GetComponent<RectTransform>();
-                closeRt.anchorMin = new Vector2(p.CanCollect ? 0.51f : 0.25f, 0.12f);
-                closeRt.anchorMax = new Vector2(p.CanCollect ? 0.94f : 0.75f, 0.225f);
+                if (busy)
+                {
+                    SetBox(closeRt, 0.25f, 0.03f, 0.75f, 0.12f);
+                }
+                else
+                {
+                    SetBox(closeRt, p.CanCollect ? 0.51f : 0.25f, 0.12f, p.CanCollect ? 0.94f : 0.75f, 0.225f);
+                }
             };
             _sheetRefresh();
         }
@@ -1227,6 +1246,17 @@ namespace Survival.Unity
             HookSkin.Header(panel.rectTransform, title, Mathf.Min(widthPx * 0.82f, 700f), 118f, 34);
             StartCoroutine(HookSkin.PopIn(panel.rectTransform));
             return panel.rectTransform;
+        }
+
+        private static void SetBox(RectTransform rt, float x0, float y0, float x1, float y1)
+        {
+            var min = new Vector2(x0, y0);
+            var max = new Vector2(x1, y1);
+            if (rt.anchorMin != min || rt.anchorMax != max)
+            {
+                rt.anchorMin = min;
+                rt.anchorMax = max;
+            }
         }
 
         private void CloseSheet()
