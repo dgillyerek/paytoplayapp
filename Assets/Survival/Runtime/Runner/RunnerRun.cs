@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using Survival.Domain.Roster;
 
 namespace Survival.Domain.Runner
 {
@@ -353,7 +354,13 @@ namespace Survival.Domain.Runner
         BossRockLanded,
 
         /// <summary>The boulder leaves his hands (X/Z = where it lands, aimed now; Amount = seconds of flight).</summary>
-        BossRockReleased
+        BossRockReleased,
+
+        /// <summary>
+        /// One swing of the boss's slam lands (X/Z = where: the hero when it struck him, else the aimed road; Amount = squad
+        /// members it caught; Big = the hero was struck). Every swing of a multi-swing move fires one, on its own contact frame.
+        /// </summary>
+        BossSwingHit
     }
 
     /// <summary>What the boss is winding up.</summary>
@@ -552,6 +559,21 @@ namespace Survival.Domain.Runner
 
         /// <summary>Quakes started so far.</summary>
         public int Quakes { get; internal set; }
+
+        /// <summary>Slams started so far (picks each slam's move from his rotation).</summary>
+        public int Slams { get; internal set; }
+
+        /// <summary>Rotation index of the current or last slam's move (<see cref="LockedBattleRotation.AttackAt"/>); the scene plays that clip.</summary>
+        public int SlamSwing { get; internal set; } = -1;
+
+        /// <summary>Next swing of the current slam still to land (0 = none pending; the first lands at the windup's end).</summary>
+        internal int SlamNextHit { get; set; }
+
+        /// <summary>Seconds until <see cref="SlamNextHit"/> lands.</summary>
+        internal float SlamHitClock { get; set; }
+
+        /// <summary>True between a multi-swing slam's first swing and its last (more claws still coming).</summary>
+        public bool SlamSwinging => SlamNextHit > 0;
 
         /// <summary>Seconds until the boulder he lifted lands (0 = none in his hands or in the air).</summary>
         public float RockLeft { get; internal set; }
@@ -1835,6 +1857,19 @@ namespace Survival.Domain.Runner
         private void BossAttack(RunnerFoe f, float dt)
         {
             f.AimHold = Math.Max(0f, f.AimHold - dt);
+            if (f.SlamNextHit > 0)
+            {
+                // The rest of a multi-swing move: each swing lands on its own contact frame, on whoever is still in reach.
+                f.SlamHitClock -= dt;
+                if (f.SlamHitClock > 0f)
+                {
+                    return;
+                }
+
+                SlamSwingHit(f, f.SlamNextHit);
+                return;
+            }
+
             if (f.Windup > 0f)
             {
                 f.Windup -= dt;
@@ -1882,6 +1917,9 @@ namespace Survival.Domain.Runner
             f.Move = RunnerBossMove.Slam;
             f.Windup = f.WindupTotal = RunnerRules.BossWindup;
             f.Actions++;
+            var moves = BossMoves(f.Unit.Roster);
+            f.SlamSwing = moves == null ? -1 : f.Slams % LockedBattleRotation.Count(moves.Value);
+            f.Slams++;
             (f.AimX, f.AimZ) = SlamAim(f, Hero.X, Hero.Z);
             Emit(RunnerEventKind.BossWindup, f.Id, Hero.Id, f.X, f.Z, f.Windup, false, false, f.Unit.Id);
             Emit(RunnerEventKind.Fired, f.Id, Hero.Id, f.AimX, f.AimZ, 0, false, false, f.Unit.Id);
@@ -2083,8 +2121,84 @@ namespace Survival.Domain.Runner
             return (boss.X - half, boss.X + half, boss.Z - RunnerRules.BossSlamDepth, boss.Z);
         }
 
-        private void Slam(RunnerFoe f)
+        private void Slam(RunnerFoe f) => SlamSwingHit(f, 0);
+
+        /// <summary>The locked battle fighter whose attack rotation a boss of <paramref name="roster"/> plays (null: none, one swing).</summary>
+        public static LockedBattleFighter? BossMoves(string roster)
         {
+            foreach (var fighter in LockedBattleRoster.All)
+            {
+                if (string.Equals(fighter.Name, roster, StringComparison.OrdinalIgnoreCase))
+                {
+                    return LockedBattleRotation.Count(fighter) > 1 ? fighter : (LockedBattleFighter?)null;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>Swings in a boss slam's move (1 for a single strike; Ironhowl's claw combo lands 4).</summary>
+        public static int SlamSwings(RunnerFoe boss)
+        {
+            var moves = BossMoves(boss.Unit.Roster);
+            if (moves == null || boss.SlamSwing < 0)
+            {
+                return 1;
+            }
+
+            var n = LockedBattleRotation.HitCount(moves.Value, LockedBattleHits.ProfileOf(moves.Value.Name), boss.SlamSwing);
+            return Math.Max(1, n);
+        }
+
+        /// <summary>
+        /// Seconds from swing <paramref name="hit"/> - 1 to swing <paramref name="hit"/> of the boss's current move: the gap
+        /// between their contact frames in the clip.
+        /// </summary>
+        public static float SlamSwingGap(RunnerFoe boss, int hit)
+        {
+            var moves = BossMoves(boss.Unit.Roster);
+            if (moves == null || hit <= 0)
+            {
+                return 0f;
+            }
+
+            var profile = LockedBattleHits.ProfileOf(moves.Value.Name);
+            var a = LockedBattleRotation.HitFrame(moves.Value, profile, boss.SlamSwing, hit - 1);
+            var b = LockedBattleRotation.HitFrame(moves.Value, profile, boss.SlamSwing, hit);
+            return Math.Max(0f, (b - a) / (float)BlenderRigAttackSpec.FrameRate);
+        }
+
+        /// <summary>
+        /// Swing <paramref name="hit"/>'s share of a slam's <paramref name="total"/> damage over <paramref name="swings"/>
+        /// swings: an even split, the remainder on the first swings, so every swing landing adds up to one old single slam.
+        /// </summary>
+        public static int SlamSwingDamage(int total, int swings, int hit)
+        {
+            swings = Math.Max(1, swings);
+            var share = total / swings;
+            return share + (hit < total % swings ? 1 : 0);
+        }
+
+        /// <summary>
+        /// One swing of the slam: it lands on whoever stands in <see cref="SlamArea"/> now (a hero who has steered out since
+        /// the last swing is missed) for this swing's share of the slam's damage. Swing 0 is the slam (the scene drops the
+        /// road mark and shakes); every swing, the first included, also fires <see cref="RunnerEventKind.BossSwingHit"/>.
+        /// </summary>
+        private void SlamSwingHit(RunnerFoe f, int hit)
+        {
+            var swings = SlamSwings(f);
+            var damage = SlamSwingDamage(f.Damage, swings, hit);
+            if (hit + 1 < swings)
+            {
+                f.SlamNextHit = hit + 1;
+                f.SlamHitClock = (hit == 0 ? 0f : f.SlamHitClock) + SlamSwingGap(f, hit + 1);
+            }
+            else
+            {
+                f.SlamNextHit = 0;
+                f.SlamHitClock = 0f;
+            }
+
             var (minX, maxX, minZ, maxZ) = SlamArea(f);
             var caught = 0;
             var heroHit = false;
@@ -2105,10 +2219,13 @@ namespace Survival.Domain.Runner
                 }
             }
 
-            foreach (var v in victims)
+            if (damage > 0)
             {
-                HurtFollower(f, v, f.Damage);
-                caught++;
+                foreach (var v in victims)
+                {
+                    HurtFollower(f, v, damage);
+                    caught++;
+                }
             }
 
             if (heroHit)
@@ -2116,10 +2233,16 @@ namespace Survival.Domain.Runner
                 caught++;
             }
 
-            Emit(RunnerEventKind.BossSlam, f.Id, Hero.Id, f.AimX, f.AimZ, caught, true, false, f.Unit.Id);
-            if (heroHit)
+            if (hit == 0)
             {
-                HurtHero(f, f.Damage);
+                Emit(RunnerEventKind.BossSlam, f.Id, Hero.Id, f.AimX, f.AimZ, caught, true, false, f.Unit.Id);
+            }
+
+            var struck = heroHit && damage > 0;
+            Emit(RunnerEventKind.BossSwingHit, f.Id, Hero.Id, struck ? Hero.X : f.AimX, struck ? Hero.Z : f.AimZ, caught, struck, false, f.Unit.Id);
+            if (struck)
+            {
+                HurtHero(f, damage);
             }
         }
 
