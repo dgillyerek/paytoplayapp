@@ -48,6 +48,12 @@ namespace Survival.Domain.Guild
         int HelpsReceived(string timerId, double askedAt, double now);
     }
 
+    /// <summary>Optional: a backend that must be told when the player asks for help (the real alliance server).</summary>
+    public interface IGuildAskSink
+    {
+        void Asked(string timerId, double helpSeconds);
+    }
+
     /// <summary>
     /// Offline guildmates: every 30 minutes one of eight mates posts a request that stays open for 3 hours;
     /// the player's own requests get one help every 90 seconds, up to <see cref="GuildHelp.MaxIncoming"/>.
@@ -254,6 +260,11 @@ namespace Survival.Domain.Guild
             }
 
             _asks[timerId] = (Now, 0);
+            if (_backend is IGuildAskSink sink && Timers.Find(timerId) is { } t)
+            {
+                sink.Asked(timerId, HelpSeconds(t));
+            }
+
             Changed?.Invoke();
             return true;
         }
