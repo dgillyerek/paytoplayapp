@@ -2,6 +2,7 @@
 import pg from "pg";
 import crypto from "node:crypto";
 import { attachDatabasePool } from "@neon/functions";
+import { worldRoutes, ensurePlaced } from "./world.mjs";
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
 attachDatabasePool(pool);
@@ -48,12 +49,15 @@ const routes = {
     const name = clean(b.name, 20) || "Knight" + dh.slice(0, 4);
     const { rows } = await q(`INSERT INTO players(device_hash, token_hash, display_name, castle_x, castle_y) VALUES($1,$2,$3,$4,$5)
       ON CONFLICT (device_hash) DO UPDATE SET token_hash=EXCLUDED.token_hash, last_seen=now() RETURNING id, display_name, power, castle_x, castle_y`,
-      [dh, sha(token), name, crypto.randomInt(0, 2000), crypto.randomInt(0, 2000)]);
-    return json({ token, player: rows[0] });
+      [dh, sha(token), name, 0, 0]);
+    await ensurePlaced(q, rows[0].id);
+    const placed = (await q("SELECT id, display_name, power, castle_x, castle_y, shield_until FROM players WHERE id=$1", [rows[0].id])).rows[0];
+    return json({ token, player: placed });
   },
   "POST /v1/profile": async (_r, b, p) => {
-    const name = clean(b.name, 20); const power = Number.isInteger(b.power) && b.power >= 0 && b.power < 1e9 ? b.power : null;
-    await q("UPDATE players SET display_name=coalesce(nullif($2,''),display_name), power=coalesce($3,power) WHERE id=$1", [p.id, name, power]);
+    const name = clean(b.name, 20); const ok = (v) => (Number.isInteger(v) && v >= 0 && v < 1e9 ? v : null);
+    await q("UPDATE players SET display_name=coalesce(nullif($2,''),display_name), power=coalesce($3,power), troops=coalesce($4,troops), hero_power=coalesce($5,hero_power) WHERE id=$1",
+      [p.id, name, ok(b.power), ok(b.troops), ok(b.heroPower)]);
     return json({ ok: true });
   },
   "GET /v1/me": async (_r, _b, p) => { const m = await membership(p.id); return json({ player: p, alliance: m ? await allianceView(m.alliance_id) : null, role: m?.role ?? 0 }); },
@@ -166,6 +170,7 @@ const routes = {
     return json({ claimed: rows.length, gems: rows.reduce((s, r) => s + r.gems, 0) });
   },
 };
+Object.assign(routes, worldRoutes({ q, pool, err, json, limited, clean }));
 // Server-side gift sources: when a member's help request fills up, every helper gets a small thank-you gift.
 const giftOnFill = `INSERT INTO alliance_gifts(alliance_id,recipient_id,source,gems)
   SELECT h.alliance_id, g.helper_id, 'help_thanks', 2 FROM help_requests h JOIN help_given g ON g.request_id=h.id WHERE h.id=$1`;
