@@ -1065,6 +1065,11 @@ namespace Survival.Unity
                         {
                             f.Attack();
                         }
+
+                        if (_run?.Foe(e.Id) is { Unit: { Ranged: false, Roster: "Ashwyrm" } } wyrm)
+                        {
+                            AshwyrmBreath(new Vector3(wyrm.X, 0f, wyrm.Z), at);
+                        }
                     }
 
                     break;
@@ -1605,6 +1610,32 @@ namespace Survival.Unity
             public float Spin;
             public Color Color;
             public float Size;
+        }
+
+        /// <summary>
+        /// Ashwyrm's void-fire breath (Derek 2026-11-02: longer runner reach): his hit lands on the release frame from up to
+        /// 3.6 m out, so a stream of purple fire puffs flies from his snout to the target in <see cref="BreathSeconds"/>
+        /// and bursts there, so the hit visibly reaches whoever it lands on.
+        /// </summary>
+        private const float BreathSeconds = 0.18f;
+
+        private void AshwyrmBreath(Vector3 from, Vector3 to)
+        {
+            var mouth = from + (Vector3.up * 1.4f) + ((to - from).normalized * 0.9f);
+            var hit = to + (Vector3.up * 0.8f);
+            var span = hit - mouth;
+            var core = new Color(0.95f, 0.7f, 1f, 0.9f);
+            var rim = new Color(0.6f, 0.25f, 1f, 0.85f);
+            for (var i = 0; i < 5; i++)
+            {
+                // Staggered starts along the first part of the stream, all reaching the target as the hit lands.
+                var t = i * 0.12f;
+                var life = BreathSeconds * (1f - t);
+                AddFx(HookArtKeys.FxGlow, mouth + (span * t), 0.5f + (i * 0.12f), life, i % 2 == 0 ? rim : core, span * (1f - t) / Mathf.Max(0.01f, life), 1.2f, 0f);
+            }
+
+            AddFx(HookArtKeys.FxBurstRing, hit, 1.1f, 0.3f, rim, Vector3.zero, 1.6f, 0f);
+            AddFx(HookArtKeys.FxGlow, hit, 1f, 0.25f, core, Vector3.zero, 0.8f, 0f);
         }
 
         private void AddFx(string key, Vector3 at, float size, float life, Color color, Vector3 velocity, float grow, float spin)
