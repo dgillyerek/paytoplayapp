@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Survival.Editor
 {
-    /// <summary>Pins Editor Play/build to the Theme A survival entry (splash → Play) plus the Locked Battle. Grove Board stays in the list.
+    /// <summary>Pins Editor Play/build to the Theme A survival entry (splash → Play) plus the Locked Battle.
     /// The one-character demo scenes were removed 2026-10-19; their characters play in the Locked Battle.</summary>
     public static class FlavorBuildSettings
     {
@@ -14,7 +14,6 @@ namespace Survival.Editor
         private const string Play = "Assets/Survival/Scenes/Play.unity";
         private const string BattleLocked = "Assets/Survival/Scenes/BattleLocked.unity";
         private const string Runner = Survival.Unity.RunnerLevelView.ScenePath;
-        private const string GroveBoard = "Assets/Grove/Scenes/Board.unity";
 
         [MenuItem("Survival/Use Theme A Flavor (fantasy_kingdom_a)")]
         public static void UseThemeA()
@@ -27,8 +26,7 @@ namespace Survival.Editor
                 new EditorBuildSettingsScene(Splash, true),
                 new EditorBuildSettingsScene(Play, true),
                 new EditorBuildSettingsScene(BattleLocked, true),
-                new EditorBuildSettingsScene(Runner, true),
-                new EditorBuildSettingsScene(GroveBoard, true)
+                new EditorBuildSettingsScene(Runner, true)
             };
             Debug.Log("Survival flavor " + SurvIds.FlavorIdFantasyKingdomA + " → Splash then Play. Pack " + SurvIds.ThemeIdFantasyKingdomA);
         }
