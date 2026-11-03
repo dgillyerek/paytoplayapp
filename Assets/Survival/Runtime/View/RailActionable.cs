@@ -19,6 +19,9 @@ namespace Survival.Domain.View
         /// <summary>Kingdom Path FREE badge: at least one reached reward not claimed yet.</summary>
         public static bool KingdomPathFree(int claimable) => claimable > 0;
 
+        /// <summary>Active Timers (hourglass): at least one timer running or finished and waiting.</summary>
+        public static bool Timers(int count) => count > 0;
+
         /// <summary>Daily chest: today's chest not claimed yet.</summary>
         public static bool Daily(bool canClaim) => canClaim;
 
