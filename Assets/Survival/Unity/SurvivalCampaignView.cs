@@ -136,6 +136,7 @@ namespace Survival.Unity
             LoadSave();
             PowerPacks = LoadPowerPacks(session, Campaign);
             Track = LoadRewardTrack(session, Campaign);
+            Campaign.CastleLevel = () => _session?.Hook?.Base.HqLevel ?? 1;
             Campaign.Changed += MarkDirty;
             session.Chips.Wallet.Changed += (_, __, ___) => MarkDirty();
             Campaign.Roster.LevelledUp += OnLevelledUp;
@@ -1180,16 +1181,24 @@ namespace Survival.Unity
             SetStat(StatLine(d, "Hp", 0.69f), S("campaign.stat.hp", "HP"), st.Hp, 0);
             SetStat(StatLine(d, "Atk", 0.60f), S("campaign.stat.atk", "ATK"), st.Atk, 0);
             SetStat(StatLine(d, "Power", 0.51f), S("campaign.stat.power", "POWER"), st.Power, 0);
+            // Prologue stages by name, campaign chapters once each (126 stages would not fit).
             var seen = new List<string>();
             foreach (var s in Campaign.Catalog.Stages)
             {
                 foreach (var e in s.Enemies)
                 {
-                    if (e.HeroId == def.Id && !seen.Contains(s.Name))
+                    var label = s.InCampaign ? Fmt("campaign.foe.chapter", "Ch {0}", s.Chapter) : s.Name;
+                    if (e.HeroId == def.Id && !seen.Contains(label))
                     {
-                        seen.Add(s.Name);
+                        seen.Add(label);
                     }
                 }
+            }
+
+            if (seen.Count > 8)
+            {
+                seen.RemoveRange(7, seen.Count - 7);
+                seen.Add("\u2026");
             }
 
             var where = HookSkin.Outlined(SurvivalVisuals.Text(d, "Where", Fmt("campaign.foe.where", "Fights in: {0}", seen.Count > 0 ? string.Join(", ", seen) : S("campaign.foe.camps", "World camps")), 22, TextAnchor.UpperLeft, SurvivalVisuals.Cream), 1.2f);
@@ -2169,37 +2178,11 @@ namespace Survival.Unity
             }
             else
             {
-                var stages = Campaign.Catalog.Stages;
-                var w = 0.95f / Mathf.Max(1, stages.Count);
-                for (var i = 0; i < stages.Count; i++)
-                {
-                    var s = stages[i];
-                    var on = s.Id == stage.Id;
-                    var open = Campaign.IsUnlocked(s.Id);
-                    var key = on ? HookArtKeys.ButtonGold : HookArtKeys.ButtonBlue;
-                    var x0 = 0.025f + i * w;
-                    var label = SheetButton(panel, "Stage_" + s.Id, key, on ? SurvivalVisuals.MineFill : HeroFrame, x0 + 0.004f, 0.862f, x0 + w - 0.004f, 0.938f, 19, out var sb);
-                    label.text = (i + 1) + (Campaign.IsCleared(s.Id) ? " \u2713" : "") + "\n" + s.Name;
-                    label.color = on ? HookSkin.InkFor(HookArtKeys.ButtonGold) : open ? Color.white : SurvivalVisuals.Mute;
-                    if (!open)
-                    {
-                        sb.GetComponent<Image>().color = Disabled;
-                    }
-
-                    var target = s;
-                    var sbRt = sb.GetComponent<RectTransform>();
-                    Wire(sb, () =>
-                    {
-                        if (Campaign.IsUnlocked(target.Id))
-                        {
-                            OpenSetup(target);
-                        }
-                        else
-                        {
-                            _hook?.Say(sbRt, S("campaign.stage_locked", "Clear the stage before first"), Warn);
-                        }
-                    });
-                }
+                _stripChapter = stage.Chapter;
+                var strip = SurvivalVisuals.Image(panel, "StageStrip", new Color(0f, 0f, 0f, 0f)).rectTransform;
+                strip.GetComponent<Image>().raycastTarget = false;
+                Box(strip, 0f, 0.858f, 1f, 0.948f);
+                BuildStageStrip(strip, stage);
             }
 
             // Bounty strip.
@@ -2893,6 +2876,183 @@ namespace Survival.Unity
         {
             HookSkin.Fit(label, Mathf.Max(12, Mathf.RoundToInt(size * 0.5f)), size);
             HookSkin.PadLabel(label.rectTransform, 0.07f, 0.12f);
+        }
+
+        /// <summary>The chapter shown in the Battle setup's stage strip (0 = Prologue). The arrows change it without rebuilding the screen.</summary>
+        private int _stripChapter;
+
+        /// <summary>
+        /// Chapter header (\u25c0 name \u00b7 Castle gate \u25b6, chapter chest with a FREE badge) over that chapter's stage buttons.
+        /// Only <paramref name="strip"/> is rebuilt when the chapter changes; the lanes below stay as they are.
+        /// </summary>
+        private void BuildStageStrip(RectTransform strip, StageDef current)
+        {
+            if (Campaign == null)
+            {
+                return;
+            }
+
+            for (var i = strip.childCount - 1; i >= 0; i--)
+            {
+                Destroy(strip.GetChild(i).gameObject);
+            }
+
+            var cat = Campaign.Catalog;
+            var chapters = Campaign.ChapterCount;
+            var ch = Mathf.Clamp(_stripChapter, 0, chapters - 1);
+            var def = cat.Chapter(ch);
+            var stages = ch == 0 ? cat.PrologueStages : cat.StagesIn(ch);
+
+            // Header row.
+            var head = HookSkin.Panel(strip, "ChapterPlate", HookArtKeys.Plate, SurvivalVisuals.RowFill, 0.45f);
+            Box(head.rectTransform, 0.13f, 0.56f, 0.70f, 1f);
+            var cleared = 0;
+            foreach (var st in stages)
+            {
+                if (Campaign.IsCleared(st.Id))
+                {
+                    cleared++;
+                }
+            }
+
+            var title = ch == 0
+                ? Fmt("campaign.chapter.prologue", "Prologue  {0}/{1}", cleared, stages.Count)
+                : Fmt("campaign.chapter.title", "Ch {0} \u00b7 {1}  {2}/{3}", ch, def?.Name ?? "", cleared, stages.Count);
+            var t = HookSkin.Outlined(SurvivalVisuals.Text(head.transform, "T", title, 22, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.6f);
+            t.fontStyle = FontStyle.Bold;
+            SurvivalVisuals.Stretch(t.rectTransform);
+
+            void Arrow(string name, string glyph, float x0, float x1, int to)
+            {
+                var label = SheetButton(strip, name, HookArtKeys.ButtonBlue, HeroFrame, x0, 0.56f, x1, 1f, 26, out var btn);
+                label.text = glyph;
+                label.color = SurvivalVisuals.Cream;
+                var ok = to >= 0 && to < chapters;
+                if (!ok)
+                {
+                    btn.GetComponent<Image>().color = Disabled;
+                }
+
+                Wire(btn, () =>
+                {
+                    if (to >= 0 && to < Campaign.ChapterCount)
+                    {
+                        _stripChapter = to;
+                        BuildStageStrip(strip, current);
+                    }
+                });
+            }
+
+            Arrow("ChapterPrev", "\u25c0", 0.025f, 0.12f, ch - 1);
+            Arrow("ChapterNext", "\u25b6", 0.71f, 0.805f, ch + 1);
+
+            // Chapter chest: Claim (FREE) once every stage is cleared, otherwise the gate / progress.
+            var ready = ch > 0 && Campaign.ChestReady(ch);
+            var claimed = ch > 0 && !ready && Campaign.ChapterCleared(ch);
+            var chestText = SheetButton(strip, "ChapterChest", ready ? HookArtKeys.ButtonGreen : HookArtKeys.ButtonBlue, ready ? FreeGreen : HeroFrame, 0.815f, 0.56f, 0.975f, 1f, 18, out var chestBtn);
+            chestText.color = SurvivalVisuals.Cream;
+            chestText.text = ch == 0 ? "" : claimed ? "\u2713 " + S("campaign.chest.done", "Chest") : ready ? S("hook.claim", "Claim") : S("campaign.chest", "Chest");
+            if (ch == 0)
+            {
+                chestBtn.gameObject.SetActive(false);
+            }
+            else if (!ready)
+            {
+                chestBtn.GetComponent<Image>().color = Disabled;
+            }
+
+            if (ready)
+            {
+                var ribbon = SurvivalArt.Get(HookArtKeys.BadgeFree);
+                var free = ribbon != null ? SurvivalVisuals.Image(chestBtn.transform, "Free", Color.white, ribbon) : SurvivalVisuals.Image(chestBtn.transform, "Free", FreeGreen);
+                free.preserveAspect = true;
+                free.raycastTarget = false;
+                Box(free.rectTransform, 0.55f, 0.62f, 1.12f, 1.22f);
+                var ft = HookSkin.Outlined(SurvivalVisuals.Text(free.transform, "T", S("hook.free", "FREE"), 13, TextAnchor.MiddleCenter, Color.white), 1.4f);
+                ft.fontStyle = FontStyle.Bold;
+                ft.raycastTarget = false;
+                SurvivalVisuals.Stretch(ft.rectTransform);
+            }
+
+            var chestRt = chestBtn.GetComponent<RectTransform>();
+            Wire(chestBtn, () =>
+            {
+                if (!Campaign.ChestReady(ch))
+                {
+                    _hook?.Say(chestRt, S("campaign.chest.locked", "Clear every stage in this chapter to open its chest"), Warn);
+                    return;
+                }
+
+                var rows = new Dictionary<string, int>();
+                foreach (var pair in cat.Chapter(ch)!.Chest)
+                {
+                    rows[pair.Key] = pair.Value;
+                }
+
+                _hook?.Sparks(chestRt, FreeGreen, 14);
+                if (_hook != null)
+                {
+                    _hook.Celebrate(S("campaign.chest.title", "Chapter chest!"), rows, () => Campaign.ClaimChest(ch));
+                }
+                else
+                {
+                    Campaign.ClaimChest(ch);
+                }
+
+                SaveNow();
+                BuildStageStrip(strip, current);
+            });
+
+            // Stage buttons for this chapter.
+            var w = 0.95f / Mathf.Max(1, stages.Count);
+            for (var i = 0; i < stages.Count; i++)
+            {
+                var s = stages[i];
+                var on = s.Id == current.Id;
+                var lk = Campaign.Lock(s.Id);
+                var open = lk == StageLock.Open;
+                var key = s.Boss ? HookArtKeys.ButtonGold : HookArtKeys.ButtonBlue;
+                var x0 = 0.025f + i * w;
+                var label = SheetButton(strip, "Stage_" + s.Id, key, s.Boss ? SurvivalVisuals.MineFill : HeroFrame, x0 + 0.003f, 0f, x0 + w - 0.003f, on ? 0.54f : 0.50f, stages.Count > 6 ? 17 : 19, out var sb);
+                var num = ch == 0 ? (i + 1).ToString() : s.Number.ToString();
+                var mark = Campaign.IsCleared(s.Id) ? " \u2713" : lk == StageLock.Castle ? "\n\u2302" + cat.CastleGate(s) : "";
+                label.text = s.Boss ? (s.Number == cat.BattleCampaign?.StagesPerChapter ? "\u2620" : "\u2605") + num + mark : num + mark;
+                if (ch == 0)
+                {
+                    label.text += "\n" + s.Name;
+                }
+
+                label.color = open ? SurvivalVisuals.Cream : SurvivalVisuals.Mute;
+                if (on)
+                {
+                    var ring = SurvivalVisuals.Image(sb.transform, "Selected", new Color(1f, 0.86f, 0.35f, 0.9f));
+                    ring.raycastTarget = false;
+                    Box(ring.rectTransform, 0.08f, -0.10f, 0.92f, 0.0f);
+                }
+
+                if (!open)
+                {
+                    sb.GetComponent<Image>().color = Disabled;
+                }
+
+                var target = s;
+                var sbRt = sb.GetComponent<RectTransform>();
+                Wire(sb, () =>
+                {
+                    switch (Campaign.Lock(target.Id))
+                    {
+                        case StageLock.Open:
+                            OpenSetup(target);
+                            break;
+                        case StageLock.Castle:
+                            _hook?.Say(sbRt, Fmt("campaign.stage_castle", "Castle Lv {0} needed \u2014 upgrade it in town (speed-ups make it faster)", cat.CastleGate(target)), Warn);
+                            break;
+                        default:
+                            _hook?.Say(sbRt, S("campaign.stage_locked", "Clear the stage before first"), Warn);
+                            break;
+                    }
+                });
+            }
         }
 
         private static Text SheetButton(RectTransform parent, string name, string key, Color fallback, float x0, float y0, float x1, float y1, int size, out Button button)

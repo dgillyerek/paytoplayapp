@@ -403,6 +403,13 @@ namespace Survival.Domain.Runner
         public ModelHero Copy() => new(Id) { Owned = Owned, Level = Level, Stars = Stars, Shards = Shards, Training = Training };
     }
 
+    public enum BattleCampaignMode
+    {
+        Off = 0,
+        Observe = 1,
+        Grant = 2
+    }
+
     /// <summary>The model player at one moment.</summary>
     public sealed record RunnerModelSnapshot(
         int Session,
@@ -474,6 +481,80 @@ namespace Survival.Domain.Runner
 
         public LevelCurve Curve => _src.Campaign.Curve;
 
+        /// <summary>
+        /// How the battle campaign (campaign.json "battle_campaign") takes part: Off (default, the locked runner pace),
+        /// Observe (each day the player tries up to <see cref="CampaignAttemptsPerDay"/> next stages, cleared when the Castle
+        /// gate is met and the best three heroes' power is at least the stage's foe power; nothing is paid out) or Grant
+        /// (the same, and first-clear rewards are paid into the economy, to measure their pull on the runner pace).
+        /// </summary>
+        public BattleCampaignMode BattleCampaign { get; set; }
+
+        public int CampaignAttemptsPerDay { get; set; } = 3;
+
+        /// <summary>Each campaign first clear of the last <see cref="Run"/>: (day, 1-based campaign stage, Castle level, team power, foe power).</summary>
+        public List<(double Day, int Stage, int Castle, int TeamPower, int FoePower)> CampaignClears { get; } = new();
+
+        private int _campaignNext;
+
+        /// <summary>Best-three-heroes battle power now (the Battle setup's auto-fill picks the strongest).</summary>
+        public int TeamPower()
+        {
+            var powers = new List<int>();
+            foreach (var h in _heroes.Values)
+            {
+                if (h.Owned && _src.Campaign.Hero(h.Id) is { } def)
+                {
+                    powers.Add(HeroStats.Of(def, Curve, h.Level, h.Stars).Power);
+                }
+            }
+
+            powers.Sort((a, b) => b.CompareTo(a));
+            var sum = 0;
+            for (var i = 0; i < powers.Count && i < 3; i++)
+            {
+                sum += powers[i];
+            }
+
+            return sum;
+        }
+
+        private void CampaignDay(int k)
+        {
+            var stages = _src.Campaign.Stages.Where(st => st.InCampaign).ToList();
+            for (var a = 0; a < CampaignAttemptsPerDay && _campaignNext < stages.Count; a++)
+            {
+                var st = stages[_campaignNext];
+                if (_castle < _src.Campaign.CastleGate(st))
+                {
+                    return;
+                }
+
+                var foe = 0;
+                foreach (var e in st.Enemies)
+                {
+                    if (_src.Campaign.Hero(e.HeroId) is { } ed)
+                    {
+                        foe += HeroStats.Of(ed, Curve, e.Level, e.Stars).Power;
+                    }
+                }
+
+                var team = TeamPower();
+                if (team < foe)
+                {
+                    return;
+                }
+
+                _campaignNext++;
+                CampaignClears.Add(((k - 1) / (double)_def.SessionsPerDay, _campaignNext, _castle, team, foe));
+                if (BattleCampaign == BattleCampaignMode.Grant)
+                {
+                    Grant(st.Rewards);
+                    _gems += st.FirstClearGems;
+                    AddShards(st.ShardHero, st.Shards);
+                }
+            }
+        }
+
         /// <summary>The state at the end of every day of the last <see cref="Run"/> (index 0 = end of day 1).</summary>
         public List<RunnerModelSnapshot> Daily { get; } = new();
 
@@ -520,7 +601,7 @@ namespace Survival.Domain.Runner
             var atPace = new RunnerModelSnapshot?[count + 1];
             var cleared = new (int Session, RunnerModelSnapshot Snap)?[count + 1];
             var sessions = _def.MaxDays * _def.SessionsPerDay;
-            var stages = _src.Campaign.Stages.Where(s => s.CampId == null).ToList();
+            var stages = _src.Campaign.PrologueStages;
             var bounties = _src.Campaign.Bounties;
             _gems = _src.StartGems;
             for (var k = 1; k <= sessions; k++)
@@ -802,6 +883,12 @@ namespace Survival.Domain.Runner
             if (firstOfDay && day < bounties.Count)
             {
                 Grant(bounties[day].Rewards);
+            }
+
+            // The battle campaign after the prologue (Off by default: the locked pace never sees it).
+            if (firstOfDay && BattleCampaign != BattleCampaignMode.Off && day >= stages.Count)
+            {
+                CampaignDay(k);
             }
 
             // The profile's power packs (one-time on session 1, weekly ones spread over the week).
