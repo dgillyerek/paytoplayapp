@@ -2181,7 +2181,7 @@ namespace Survival.Unity
                 _stripChapter = stage.Chapter;
                 var strip = SurvivalVisuals.Image(panel, "StageStrip", new Color(0f, 0f, 0f, 0f)).rectTransform;
                 strip.GetComponent<Image>().raycastTarget = false;
-                Box(strip, 0f, 0.858f, 1f, 0.948f);
+                HookSkin.Box(strip, 0f, 0.858f, 1f, 0.948f);
                 BuildStageStrip(strip, stage);
             }
 
@@ -2905,7 +2905,7 @@ namespace Survival.Unity
 
             // Header row.
             var head = HookSkin.Panel(strip, "ChapterPlate", HookArtKeys.Plate, SurvivalVisuals.RowFill, 0.45f);
-            Box(head.rectTransform, 0.13f, 0.56f, 0.70f, 1f);
+            HookSkin.Box(head.rectTransform, 0.13f, 0.56f, 0.70f, 1f);
             var cleared = 0;
             foreach (var st in stages)
             {
@@ -2967,7 +2967,7 @@ namespace Survival.Unity
                 var free = ribbon != null ? SurvivalVisuals.Image(chestBtn.transform, "Free", Color.white, ribbon) : SurvivalVisuals.Image(chestBtn.transform, "Free", FreeGreen);
                 free.preserveAspect = true;
                 free.raycastTarget = false;
-                Box(free.rectTransform, 0.55f, 0.62f, 1.12f, 1.22f);
+                HookSkin.Box(free.rectTransform, 0.55f, 0.62f, 1.12f, 1.22f);
                 var ft = HookSkin.Outlined(SurvivalVisuals.Text(free.transform, "T", S("hook.free", "FREE"), 13, TextAnchor.MiddleCenter, Color.white), 1.4f);
                 ft.fontStyle = FontStyle.Bold;
                 ft.raycastTarget = false;
@@ -3027,7 +3027,7 @@ namespace Survival.Unity
                 {
                     var ring = SurvivalVisuals.Image(sb.transform, "Selected", new Color(1f, 0.86f, 0.35f, 0.9f));
                     ring.raycastTarget = false;
-                    Box(ring.rectTransform, 0.08f, -0.10f, 0.92f, 0.0f);
+                    HookSkin.Box(ring.rectTransform, 0.08f, -0.10f, 0.92f, 0.0f);
                 }
 
                 if (!open)
