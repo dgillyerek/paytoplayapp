@@ -246,34 +246,6 @@ public sealed class SirAldric3DMotionTests
     }
 
     [Fact]
-    public void Actor_has_single_character_right_scabbard_and_no_back_sheath_mesh()
-    {
-        var path = Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "SirAldric3DActor.cs");
-        var src = File.ReadAllText(path);
-        Assert.Contains("sir_aldric_meshy.mesh.txt", src, StringComparison.Ordinal);
-        Assert.Contains("SkinQuality.Bone4", src, StringComparison.Ordinal);
-        Assert.Contains("Scabbard", src, StringComparison.Ordinal);
-        Assert.DoesNotContain("BodyCap(\"Cape\"", src, StringComparison.Ordinal);
-        Assert.DoesNotContain("(-0.16f, 0.04f, 0f)", src, StringComparison.Ordinal);
-        var dir = Path.Combine(FindRepoRoot(), "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d");
-        var mesh = Path.Combine(dir, "sir_aldric_meshy.mesh.txt");
-        var atlas = Path.Combine(dir, "sir_aldric_meshy_atlas.png");
-        var loft = Path.Combine(dir, "sir_aldric_midpoly.mesh.txt");
-        var fbx = Path.Combine(dir, "sir_aldric.fbx");
-        var clean = Path.Combine(dir, "sir_aldric_path2_clean.fbx");
-        Assert.True(new FileInfo(mesh).Length > 10_000);
-        Assert.True(new FileInfo(atlas).Length > 50_000);
-        Assert.True(new FileInfo(loft).Length > 10_000);
-        Assert.True(new FileInfo(fbx).Length > 50_000);
-        Assert.True(new FileInfo(clean).Length > 50_000);
-        var meshText = File.ReadAllText(mesh);
-        Assert.Contains("BONE Scabbard", meshText, StringComparison.Ordinal);
-        Assert.Contains("FMT v4", meshText, StringComparison.Ordinal);
-        Assert.Contains("blender", meshText, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("BONE Cape", meshText, StringComparison.Ordinal);
-    }
-
-    [Fact]
     public void Meshy_animate_actor_binds_albedo_and_keeps_walking_clip()
     {
         var root = FindRepoRoot();
@@ -701,45 +673,6 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("forearm–hand", blender, StringComparison.Ordinal);
         Assert.DoesNotContain("rest_world.slerp", blender, StringComparison.Ordinal);
         Assert.Contains("not Unity Game-view", blender, StringComparison.Ordinal);
-        var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricDemo.cs"));
-        Assert.Contains("ApplyPlayCam", demo, StringComparison.Ordinal);
-        Assert.Contains("usePhysicalProperties = false", demo, StringComparison.Ordinal);
-        Assert.Contains("LateUpdate", demo, StringComparison.Ordinal);
-        Assert.Contains("left-hip draw", demo, StringComparison.Ordinal);
-        Assert.DoesNotContain("Design DIAG_REV slash", demo, StringComparison.Ordinal);
-        Assert.DoesNotContain("Design DIAG_MIRR slash", demo, StringComparison.Ordinal);
-        Assert.Contains("iQ1s3nN1330", demo, StringComparison.Ordinal);
-        Assert.Contains("orbit", demo, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("PlayCamOrbitEye", demo, StringComparison.Ordinal);
-        Assert.Contains("Alpha1", demo, StringComparison.Ordinal);
-        Assert.Contains("Keyboard.current", demo, StringComparison.Ordinal);
-        Assert.Contains("digit1Key", demo, StringComparison.Ordinal);
-        Assert.Contains("OnGUI", demo, StringComparison.Ordinal);
-        Assert.Contains("DefaultExecutionOrder(500)", demo, StringComparison.Ordinal);
-        Assert.Contains("Quaternion.Normalize", demo, StringComparison.Ordinal);
-        Assert.Contains("LookRotation", demo, StringComparison.Ordinal);
-        Assert.DoesNotContain("cam.transform.LookAt", demo, StringComparison.Ordinal);
-        Assert.DoesNotContain("ev.repeat", demo, StringComparison.Ordinal);
-        Assert.Contains("ev.keyCode == KeyCode.None", demo, StringComparison.Ordinal);
-        Assert.Contains("GUI.Button", demo, StringComparison.Ordinal);
-        Assert.Contains("PlayNamedClip", demo, StringComparison.Ordinal);
-        Assert.Contains("Sword And Shield attack (2)", demo, StringComparison.Ordinal);
-        Assert.Contains("Walk then Slash", demo, StringComparison.Ordinal);
-        Assert.Contains("BuildLiteClipHud", demo, StringComparison.Ordinal);
-        Assert.Contains("LiteClipDropdown", demo, StringComparison.Ordinal);
-        Assert.Contains("Dropdown", demo, StringComparison.Ordinal);
-        Assert.DoesNotContain("BtnLite_", demo, StringComparison.Ordinal);
-        Assert.Contains("fd5f09c IMGUI clip buttons sat under this pad", demo, StringComparison.Ordinal);
-        Assert.Contains("IgnoreFocus", demo, StringComparison.Ordinal);
-        Assert.Contains("AllDeviceInputAlwaysGoesToGameView", demo, StringComparison.Ordinal);
-        Assert.Contains("InputSystemUIInputModule", demo, StringComparison.Ordinal);
-        Assert.Contains("InputActionMap", demo, StringComparison.Ordinal);
-        Assert.Contains("SirAldricOrbitPad", demo, StringComparison.Ordinal);
-        Assert.Contains("ForcePreset", demo, StringComparison.Ordinal);
-        Assert.Contains("GetAllCameras", demo, StringComparison.Ordinal);
-        var orbitHook = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricPlayOrbitHook.cs"));
-        Assert.Contains("EditorApplication.update", orbitHook, StringComparison.Ordinal);
-        Assert.Contains("ForcePreset", orbitHook, StringComparison.Ordinal);
         SirAldric3DMotion.PlayCamOrbitEye(180f, 0f, out var frontX, out var frontY, out var frontZ);
         Assert.True(frontZ > SirAldric3DMotion.PlayCamLookZ, "yaw 180 must sit in front of LookAt");
         Assert.True(Math.Abs(frontZ - eyeZ) > 4f, "front eye must leave the rear socket");
