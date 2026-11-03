@@ -33,7 +33,15 @@ namespace Survival.Unity
         private WorldService? _world;
         private RectTransform? _onlineLayer;
         private float _onlinePoll;
-        private bool _strengthSent;
+        private float _stockSync;
+        private readonly List<RectTransform> _onlineLabels = new();
+        private int _sendTroops;
+        private RectTransform? _troopSlider;
+        private Slider? _troopSliderCtl;
+        private Text? _troopSliderText;
+
+        /// <summary>Cream #FFF4D6, the outlined text colour on ornate panels and gold.</summary>
+        private static readonly Color CreamText = new Color(1f, 0.957f, 0.839f, 1f);
         private RectTransform? _reportsScreen;
 
         public WorldService? World => _world;
@@ -60,11 +68,14 @@ namespace Survival.Unity
             }
 
             _onlinePoll = OnlinePollSeconds;
-            if (!_strengthSent && Sim != null)
+            _stockSync -= OnlinePollSeconds;
+            if (_stockSync <= 0f && Sim != null)
             {
-                _strengthSent = true;
+                // power + stored resources every minute (raiders loot real stock). The troop number only seeds a brand-new
+                // castle once; after that the server owns the count and the phone just shows it.
+                _stockSync = 60f;
                 var power = Sim.Player.Power;
-                _world.SyncStrength(power, Math.Max(100, power / 10), power / 100);
+                _world.SyncStrength(power, Math.Max(100, power / 10), power / 100, Stock());
             }
 
             _world.RefreshMe(ok =>
@@ -85,6 +96,22 @@ namespace Survival.Unity
             });
         }
 
+        private Dictionary<string, int>? Stock()
+        {
+            if (_session == null)
+            {
+                return null;
+            }
+
+            var d = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (var k in new[] { "food", "wood", "stone", "gold" })
+            {
+                d[k] = _session.Chips.Wallet.Get(ResourceFor(k));
+            }
+
+            return d;
+        }
+
         private WorldProjection Projection()
         {
             var c = _world!.Castle!.Value;
@@ -98,6 +125,13 @@ namespace Survival.Unity
                 Destroy(_onlineLayer.gameObject);
                 _onlineLayer = null;
             }
+
+            foreach (var l in _onlineLabels)
+            {
+                _labels.Remove(l);
+            }
+
+            _onlineLabels.Clear();
 
             if (_reportsButton != null && _world is not { Online: true })
             {
@@ -161,17 +195,7 @@ namespace Survival.Unity
                 Marker(proj, n.X, n.Y, key, n.IsCamp ? 150f : 130f, null, () => ShowOnlineTile(tile));
             }
 
-            foreach (var c in map.Castles)
-            {
-                if (c.Mine)
-                {
-                    continue; // the painted home village already sits here
-                }
-
-                var castle = c;
-                var label = string.IsNullOrEmpty(c.Tag) ? c.Name : "[" + c.Tag + "] " + c.Name;
-                Marker(proj, c.X, c.Y, WorldArtKeys.MapProp("castle"), 190f, label, () => ShowOnlineCastle(castle));
-            }
+            DrawOnlineCastles(map, proj);
 
             foreach (var m in map.Marches)
             {
@@ -199,6 +223,142 @@ namespace Survival.Unity
             }
         }
 
+        /// <summary>
+        /// Other lords' castles use the same spacing rule as the six map places (#130): each is nudged off its tile just
+        /// enough that no building or name plate overlaps another, and tapping the plate opens the same card as the castle.
+        /// </summary>
+        private void DrawOnlineCastles(WorldSnapshot map, WorldProjection proj)
+        {
+            var places = new List<WorldEntity>();
+            var byId = new Dictionary<string, WorldCastle>(StringComparer.Ordinal);
+            foreach (var c in map.Castles)
+            {
+                if (c.Mine)
+                {
+                    continue; // the painted home village already sits here
+                }
+
+                var (x, y) = proj.ToMap(c.X, c.Y);
+                var id = "online_" + c.Id.ToString(CultureInfo.InvariantCulture);
+                var label = string.IsNullOrEmpty(c.Tag) ? c.Name : "[" + c.Tag + "] " + c.Name;
+                places.Add(new WorldEntity(id, c.Ally ? WorldEntityKind.AllyVillage : WorldEntityKind.RivalVillage, "castle", label, 0, c.Power, 0, x, y));
+                byId[id] = c;
+            }
+
+            var fixedPlaces = Layout != null ? Layout.Entities : (IReadOnlyList<WorldEntity>)Array.Empty<WorldEntity>();
+            var k = Rig?.Camera != null ? WorldSpacing.PlateScale(Rig.Camera.Zoom) : 1f;
+            foreach (var e in WorldSpacing.Separate(places, fixedPlaces))
+            {
+                var castle = byId[e.Id];
+                Action open = () => ShowOnlineCastle(castle);
+                var size = WorldSpacing.SizeFor(e);
+                var art = HookSkin.Art(_onlineLayer!, e.Id, WorldArtKeys.MapProp("castle"), SurvivalVisuals.Gold);
+                SurvivalVillageView.Point(art.rectTransform, e.X, e.Y, size, size, WorldSpacing.ArtPivotY);
+                var btn = art.gameObject.AddComponent<Button>();
+                btn.transition = Selectable.Transition.None;
+                btn.onClick.AddListener(() => open());
+
+                var plate = HookSkin.Panel(_onlineLayer!, e.Id + "_plate", castle.Ally ? HookArtKeys.ButtonGreen : HookArtKeys.Chip, SurvivalVisuals.PanelSoft, 0.38f);
+                SurvivalVillageView.Point(plate.rectTransform, e.X, e.Y - size * WorldSpacing.PlateDrop, WorldSpacing.PlateWidth, WorldSpacing.PlateHeightWithSub, 1f);
+                plate.rectTransform.localScale = new Vector3(k, k, 1f);
+                var name = HookSkin.Outlined(SurvivalVisuals.Text(plate.transform, "Name", e.Name, 24, TextAnchor.MiddleCenter, CreamText), 1.5f);
+                name.fontStyle = FontStyle.Bold;
+                name.raycastTarget = false;
+                Fill(name.rectTransform, 0.04f, 0.45f, 0.96f, 1f);
+                var sub = HookSkin.Outlined(SurvivalVisuals.Text(plate.transform, "Sub", F("world.card.power", "Power {0}", ChipWallet.FormatCompact(e.Power)), 20, TextAnchor.MiddleCenter, SurvivalVisuals.Reward), 1.2f);
+                sub.raycastTarget = false;
+                Fill(sub.rectTransform, 0.04f, 0.04f, 0.96f, 0.5f);
+                plate.raycastTarget = true;
+                var plateBtn = plate.gameObject.AddComponent<Button>();
+                plateBtn.targetGraphic = plate;
+                plateBtn.transition = Selectable.Transition.None;
+                plateBtn.onClick.AddListener(() => open());
+                _labels.Add(plate.rectTransform);
+                _onlineLabels.Add(plate.rectTransform);
+            }
+        }
+
+        // ---------- troop slider (send card) ----------
+
+        /// <summary>
+        /// Ornate strip above the map card: "Send N of M at home" in cream, a gold bar slider from 1 to everything at home.
+        /// Only shown for a new march; recall and ally cards hide it.
+        /// </summary>
+        private void ShowTroopSlider(bool show)
+        {
+            if (!show || _card == null || _world == null)
+            {
+                if (_troopSlider != null)
+                {
+                    _troopSlider.gameObject.SetActive(false);
+                }
+
+                return;
+            }
+
+            if (_troopSlider == null)
+            {
+                var strip = HookSkin.Panel(_card.Root, "TroopSlider", HookArtKeys.Panel, SurvivalVisuals.InspectFill, 0.5f);
+                strip.raycastTarget = true;
+                _troopSlider = strip.rectTransform;
+                Fill(_troopSlider, 0f, 1.02f, 1f, 1.42f);
+                Ornaments.Frame(strip.transform, Ornaments.Gold, 1.5f);
+                _troopSliderText = HookSkin.Outlined(SurvivalVisuals.Text(strip.transform, "Count", "", 26, TextAnchor.MiddleCenter, CreamText), 1.8f);
+                _troopSliderText.fontStyle = FontStyle.Bold;
+                _troopSliderText.raycastTarget = false;
+                Fill(_troopSliderText.rectTransform, 0.04f, 0.56f, 0.96f, 0.96f);
+
+                var root = new GameObject("Slider", typeof(RectTransform)).GetComponent<RectTransform>();
+                root.SetParent(strip.transform, false);
+                Fill(root, 0.08f, 0.12f, 0.92f, 0.5f);
+                var frame = HookSkin.Panel(root, "Frame", HookArtKeys.BarFrame, SurvivalVisuals.RowFill, 0.4f);
+                SurvivalVisuals.Stretch(frame.rectTransform);
+                var area = new GameObject("FillArea", typeof(RectTransform)).GetComponent<RectTransform>();
+                area.SetParent(root, false);
+                Fill(area, 0.02f, 0.18f, 0.98f, 0.82f);
+                var fill = HookSkin.Panel(area, "Fill", HookArtKeys.BarFillGold, SurvivalVisuals.MineFill, 0.4f);
+                fill.raycastTarget = false;
+                var handleArea = new GameObject("HandleArea", typeof(RectTransform)).GetComponent<RectTransform>();
+                handleArea.SetParent(root, false);
+                Fill(handleArea, 0.02f, 0f, 0.98f, 1f);
+                var handle = HookSkin.Art(handleArea, "Handle", HookArtKeys.ButtonGold, SurvivalVisuals.Gold);
+                handle.rectTransform.sizeDelta = new Vector2(54f, 0f);
+                handle.rectTransform.anchorMin = new Vector2(0f, -0.25f);
+                handle.rectTransform.anchorMax = new Vector2(0f, 1.25f);
+
+                var ctl = root.gameObject.AddComponent<Slider>();
+                ctl.fillRect = fill.rectTransform;
+                ctl.handleRect = handle.rectTransform;
+                ctl.targetGraphic = handle;
+                ctl.direction = Slider.Direction.LeftToRight;
+                ctl.minValue = 0f;
+                ctl.maxValue = 1f;
+                ctl.onValueChanged.AddListener(v =>
+                {
+                    _sendTroops = MarchTroops.FromSlider(v, _world?.Troops ?? 0);
+                    UpdateTroopSliderText();
+                });
+                _troopSliderCtl = ctl;
+            }
+
+            _troopSlider.gameObject.SetActive(true);
+            var home = _world.Troops;
+            _sendTroops = MarchTroops.Start(home);
+            _troopSliderCtl!.interactable = home > 1;
+            _troopSliderCtl.value = MarchTroops.ToSlider(_sendTroops, home); // the listener maps it straight back to the same count
+            UpdateTroopSliderText();
+        }
+
+        private void UpdateTroopSliderText()
+        {
+            if (_troopSliderText != null && _world != null)
+            {
+                _troopSliderText.text = _world.Troops <= 0
+                    ? S("world.online.no_troops", "No troops at home")
+                    : F("world.online.send_count", "Send {0}  of  {1} at home", ChipWallet.FormatGrouped(_sendTroops), ChipWallet.FormatGrouped(_world.Troops));
+            }
+        }
+
         private string TroopsLine() => F("world.online.troops", "Troops at home {0}  \u00b7  Marches {1}/{2}",
             ChipWallet.FormatGrouped(_world!.Troops), _world.MyMarches.Count, _world.MaxMarches);
 
@@ -210,7 +370,8 @@ namespace Survival.Unity
                 ShowCard(WorldArtKeys.MapProp("camp"), F("world.card.camp", "Enemy camp \u00b7 Lv {0}", n.Level),
                     S("world.online.camp_explain", "Beat the camp to win Gold and hero XP."), TroopsLine(),
                     mine != null ? S("world.online.recall", "Recall") : S("world.action.attack", "Attack"),
-                    () => SendOrRecall(mine, "camp", n.X, n.Y));
+                    () => SendOrRecall(mine, "camp", n.X, n.Y), mine != null || _world!.Troops > 0);
+                ShowTroopSlider(mine == null);
                 return;
             }
 
@@ -219,7 +380,8 @@ namespace Survival.Unity
             ShowCard(WorldArtKeys.MapProp(n.Kind), F("world.online.field", "{0} field \u00b7 Lv {1}", S(n.Kind + ".name", n.Kind), n.Level),
                 who + "  \u00b7  " + ChipWallet.FormatGrouped(n.Amount) + " " + S("world.online.left", "left"), TroopsLine(),
                 mine != null ? S("world.online.recall", "Recall") : S("world.action.gather", "Gather"),
-                () => SendOrRecall(mine, "gather", n.X, n.Y), mine != null || !n.OccupiedByAlly);
+                () => SendOrRecall(mine, "gather", n.X, n.Y), mine != null || (!n.OccupiedByAlly && _world!.Troops > 0));
+            ShowTroopSlider(mine == null && !n.OccupiedByAlly);
         }
 
         private void ShowOnlineCastle(WorldCastle c)
@@ -228,7 +390,8 @@ namespace Survival.Unity
             ShowCard(WorldArtKeys.MapProp("castle"), c.Name, (c.Ally ? S("world.card.ally", "Guild ally") : S("world.card.rival", "Rival lord")) + "  \u00b7  " +
                 F("world.card.power", "Power {0}", ChipWallet.FormatGrouped(c.Power)),
                 shielded ? S("world.online.shielded", "Shielded: cannot be attacked right now") : TroopsLine(),
-                c.Ally ? null : S("world.action.attack", "Attack"), () => SendOrRecall(null, "attack", c.X, c.Y), !shielded);
+                c.Ally ? null : S("world.action.attack", "Attack"), () => SendOrRecall(null, "attack", c.X, c.Y), !shielded && _world!.Troops > 0);
+            ShowTroopSlider(!c.Ally && !shielded);
         }
 
         private WorldMarchInfo? FindMyMarch(int x, int y)
@@ -263,8 +426,15 @@ namespace Survival.Unity
                 return;
             }
 
-            // half the troops at home, at least one: the sheet always shows the balance first
-            _world.SendMarch(kind, x, y, Math.Max(1, _world.Troops / 2), after);
+            // what the slider says, kept inside 1..troops at home (the server checks it again against its own count)
+            var send = MarchTroops.Clamp(_sendTroops, _world.Troops);
+            if (!MarchTroops.CanSend(send, _world.Troops))
+            {
+                Pop(Sim!.Player, S("world.online.no_troops", "No troops at home"), SurvivalVisuals.Cream);
+                return;
+            }
+
+            _world.SendMarch(kind, x, y, send, after);
         }
 
         /// <summary>Battle reports with one Claim button that moves all unclaimed loot into the wallet.</summary>
@@ -303,7 +473,7 @@ namespace Survival.Unity
                 var loot = new List<string>();
                 foreach (var kv in r.Loot)
                 {
-                    loot.Add("+" + ChipWallet.FormatGrouped(kv.Value) + " " + S(kv.Key + ".name", kv.Key));
+                    loot.Add((kv.Value < 0 ? "-" : "+") + ChipWallet.FormatGrouped(Math.Abs(kv.Value)) + " " + S(kv.Key + ".name", kv.Key));
                 }
 
                 var head = S("world.reports." + r.Kind, r.Kind) + (string.IsNullOrEmpty(r.Opponent) ? "" : "  \u00b7  " + r.Opponent);
@@ -324,6 +494,14 @@ namespace Survival.Unity
                     {
                         Grant(kv.Key == "gold" ? ChipWallet.SoftChip : ChipWallet.ChipFor(ResourceFor(kv.Key)), kv.Value);
                     }
+
+                    // what raiders carried off your stores (the server already took it from your stock)
+                    foreach (var kv in c.Lost)
+                    {
+                        Take(kv.Key == "gold" ? ChipWallet.SoftChip : ChipWallet.ChipFor(ResourceFor(kv.Key)), kv.Value);
+                    }
+
+                    _stockSync = 0f;
                 }
 
                 if (_reportsScreen != null)

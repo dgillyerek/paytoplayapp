@@ -573,7 +573,7 @@ namespace Survival.Unity
             c.Action = HookSkin.Button(panel.transform, "Action", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.5f);
             c.ActionImg = c.Action.GetComponent<Image>();
             Box(c.ActionImg.rectTransform, 0.29f, 0.07f, 0.70f, 0.34f);
-            c.ActionText = HookSkin.Outlined(SurvivalVisuals.Text(c.Action.transform, "T", "", 28, TextAnchor.MiddleCenter, HookSkin.Ink), 1.5f);
+            c.ActionText = HookSkin.Outlined(SurvivalVisuals.Text(c.Action.transform, "T", "", 28, TextAnchor.MiddleCenter, new Color(1f, 0.957f, 0.839f, 1f)), 1.5f);
             c.ActionText.fontStyle = FontStyle.Bold;
             SurvivalVisuals.Stretch(c.ActionText.rectTransform);
             c.Close = HookSkin.Button(panel.transform, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.5f);
@@ -590,6 +590,7 @@ namespace Survival.Unity
         private void ShowCard(string? artKey, string title, string line1, string line2, string? action, Action? onAction, bool actionEnabled = true)
         {
             var c = EnsureCard();
+            ShowTroopSlider(false); // online send cards turn it back on right after
             c.Root.gameObject.SetActive(true);
             var sprite = artKey != null ? SurvivalArt.Get(artKey) : null;
             c.Icon.sprite = sprite ?? SurvivalArt.Circle();
@@ -866,6 +867,20 @@ namespace Survival.Unity
             }
 
             _session.Chips.Add(chipKey, amount);
+            if (_session.Hook == null)
+            {
+                _play?.RefreshChip(chipKey);
+            }
+        }
+
+        private void Take(string? chipKey, int amount)
+        {
+            if (_session == null || chipKey == null || amount <= 0)
+            {
+                return;
+            }
+
+            _session.Chips.Add(chipKey, -amount);
             if (_session.Hook == null)
             {
                 _play?.RefreshChip(chipKey);
