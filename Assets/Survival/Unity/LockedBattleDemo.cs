@@ -61,7 +61,7 @@ namespace Survival.Unity
                 }
 
                 f.Slot.SetPositionAndRotation(f.StartPosition, f.StartRotation);
-                f.Play(f.Data.RestPoseName);
+                f.Play(f.Data.IdlePoseName);
                 f.Phase = Phase.Hold;
                 f.PhaseTime = 0f;
                 f.PreviousPhaseTime = 0f;
@@ -375,7 +375,7 @@ namespace Survival.Unity
             else if (!on && f.AttackClipOn)
             {
                 f.AttackClipOn = false;
-                f.Play(f.Data.RestPoseName);
+                f.Play(f.Data.IdlePoseName);
             }
 
             UpdateAttackOffset(f, on, into);
