@@ -46,8 +46,8 @@ public sealed class CampaignCatalogTests
     public void Stages_use_villains_in_up_to_three_lanes_and_shards_of_buyable_heroes()
     {
         var catalog = Camp.Catalog();
-        Assert.Equal(6, catalog.Stages.Count);
-        foreach (var s in catalog.Stages)
+        Assert.Equal(6, catalog.PrologueStages.Count);
+        foreach (var s in catalog.PrologueStages)
         {
             Assert.InRange(s.Enemies.Count, 1, BattleSetup.MaxLanes);
             Assert.Equal(s.Enemies.Count, s.Enemies.Select(e => e.HeroId).Distinct().Count());

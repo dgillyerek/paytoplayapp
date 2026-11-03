@@ -11,6 +11,13 @@ namespace Survival.Domain.Campaign
     /// Heroes + battles slice of the Play session: the hero roster with training, stage progress, battle bounties,
     /// rewards and the save file. Shares the HUD wallet with the village.
     /// </summary>
+    public enum StageLock
+    {
+        Open = 0,
+        PreviousStage = 1,
+        Castle = 2
+    }
+
     public sealed class CampaignSession
     {
         private readonly HashSet<string> _cleared = new(StringComparer.Ordinal);
@@ -102,16 +109,106 @@ namespace Survival.Domain.Campaign
 
         public bool IsCleared(string stageId) => _cleared.Contains(stageId);
 
-        /// <summary>The first stage is open; each next one opens when the one before is cleared. Camps are always open.</summary>
-        public bool IsUnlocked(string stageId)
+        /// <summary>The village Castle level, for chapter gates. Unset (null) = no Castle gate (tests, the runner's own session).</summary>
+        public Func<int>? CastleLevel { get; set; }
+
+        /// <summary>
+        /// The first stage is open; each next one opens when the one before is cleared and, for a campaign chapter, the
+        /// Castle has reached the chapter's level. Camps are always open.
+        /// </summary>
+        public bool IsUnlocked(string stageId) => Lock(stageId) == StageLock.Open;
+
+        /// <summary>Why a stage is closed: the stage before is not cleared, or the Castle is too low for its chapter.</summary>
+        public StageLock Lock(string stageId)
         {
             if (stageId.StartsWith("camp:", StringComparison.Ordinal))
             {
-                return true;
+                return StageLock.Open;
             }
 
             var i = Catalog.StageIndex(stageId);
-            return i == 0 || (i > 0 && IsCleared(Catalog.Stages[i - 1].Id));
+            if (i < 0)
+            {
+                return StageLock.PreviousStage;
+            }
+
+            if (i > 0 && !IsCleared(Catalog.Stages[i - 1].Id))
+            {
+                return StageLock.PreviousStage;
+            }
+
+            return CastleLevel != null && CastleLevel() < Catalog.CastleGate(Catalog.Stages[i]) ? StageLock.Castle : StageLock.Open;
+        }
+
+        /// <summary>Chapter numbers in order: 0 (prologue) then every generated chapter.</summary>
+        public int ChapterCount => 1 + (Catalog.BattleCampaign?.Chapters.Count ?? 0);
+
+        public bool ChapterCleared(int chapter)
+        {
+            var stages = Catalog.StagesIn(chapter);
+            if (stages.Count == 0)
+            {
+                return false;
+            }
+
+            foreach (var s in stages)
+            {
+                if (!IsCleared(s.Id))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private readonly HashSet<int> _chests = new();
+
+        /// <summary>Chapter clear chests already claimed. Saved as "chapter_chests".</summary>
+        public IReadOnlyCollection<int> ChestsClaimed => _chests;
+
+        /// <summary>A chapter's chest is claimable (FREE badge) once every stage in it is cleared.</summary>
+        public bool ChestReady(int chapter) =>
+            Catalog.Chapter(chapter) is { } ch && ch.Chest.Count > 0 && !_chests.Contains(chapter) && ChapterCleared(chapter);
+
+        /// <summary>Any chapter chest waiting (for the Battle button / chapter tab FREE badge).</summary>
+        public bool AnyChestReady
+        {
+            get
+            {
+                for (var c = 1; c < ChapterCount; c++)
+                {
+                    if (ChestReady(c))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
+        public IReadOnlyDictionary<string, int>? ClaimChest(int chapter)
+        {
+            if (!ChestReady(chapter))
+            {
+                return null;
+            }
+
+            var chest = Catalog.Chapter(chapter)!.Chest;
+            Wallet.Grant(chest);
+            _chests.Add(chapter);
+            Changed?.Invoke();
+            return chest;
+        }
+
+        internal void RestoreChests(IEnumerable<int> chapters)
+        {
+            _chests.Clear();
+            foreach (var c in chapters)
+            {
+                _chests.Add(c);
+            }
         }
 
         /// <summary>First stage not yet cleared (the last one when all are).</summary>
@@ -153,7 +250,7 @@ namespace Survival.Domain.Campaign
         public RewardBundle ApplyResult(BattleReport result, StageDef stage)
         {
             var first = result.Won && !stage.Id.StartsWith("camp:", StringComparison.Ordinal) && !IsCleared(stage.Id);
-            var bundle = BattleRewards.For(stage, result.Won, first, Catalog.LossGoldShare);
+            var bundle = BattleRewards.For(stage, result.Won, first, Catalog.LossGoldShare, Catalog.BattleCampaign?.ReplayShare ?? 1.0);
             Wallet.Grant(bundle.Resources);
             if (bundle.Shards > 0)
             {

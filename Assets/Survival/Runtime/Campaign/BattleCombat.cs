@@ -305,16 +305,19 @@ namespace Survival.Domain.Campaign
         /// Win: the stage rewards, its hero shards and on the first clear its gems. Loss: nothing at all (Derek 2026-10-28:
         /// "there should be no bonuses when you are defeated in the battle"); <paramref name="lossGoldShare"/> is ignored.
         /// </summary>
-        public static RewardBundle For(StageDef stage, bool won, bool firstClear, double lossGoldShare)
+        /// <param name="replayShare">Share of the resources a campaign-chapter stage pays on a replay (no gems or shards then). Prologue stages always pay in full.</param>
+        public static RewardBundle For(StageDef stage, bool won, bool firstClear, double lossGoldShare, double replayShare = 1.0)
         {
+            var share = stage.InCampaign && !firstClear ? Math.Max(0, Math.Min(1, replayShare)) : 1.0;
             var bundle = new RewardBundle { Won = won, FirstClear = won && firstClear };
             if (won)
             {
                 foreach (var pair in stage.Rewards)
                 {
-                    if (pair.Value > 0)
+                    var v = (int)Math.Round(pair.Value * share);
+                    if (v > 0)
                     {
-                        bundle.Resources[pair.Key] = pair.Value;
+                        bundle.Resources[pair.Key] = v;
                     }
                 }
 
@@ -325,7 +328,7 @@ namespace Survival.Domain.Campaign
                 }
 
                 bundle.ShardHero = stage.ShardHero;
-                bundle.Shards = stage.ShardHero.Length > 0 ? stage.Shards : 0;
+                bundle.Shards = stage.ShardHero.Length > 0 && (firstClear || !stage.InCampaign) ? stage.Shards : 0;
             }
             return bundle;
         }
