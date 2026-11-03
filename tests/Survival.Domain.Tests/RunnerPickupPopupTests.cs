@@ -48,7 +48,7 @@ public sealed class RunnerPickupPopupTests
         Assert.False(RunnerPickupPopup.UsesBanner(RunnerBannerCause.BoxPickup));
         Assert.False(RunnerPickupPopup.UsesBanner(RunnerBannerCause.SquadFull));
         Assert.True(RunnerPickupPopup.UsesBanner(RunnerBannerCause.BossIncoming));
-        Assert.True(RunnerPickupPopup.UsesBanner(RunnerBannerCause.BossQuake));
+        Assert.False(RunnerPickupPopup.UsesBanner(RunnerBannerCause.BossQuake));
     }
 
     [Theory]
@@ -95,10 +95,11 @@ public sealed class RunnerPickupPopupTests
         Assert.DoesNotContain("Banner(Fmt(\"runner.squad_full\"", view);
         Assert.Contains("Banner(S(\"runner.boss_incoming\"", view);
         var quake = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "Runner", "RunnerLevelView.BossQuake.cs"));
-        Assert.Contains("Banner(S(\"runner.quake_banner\"", quake);
+        // The quake warning is a compact DODGE line under the HUD now, not the mid-screen banner.
+        Assert.DoesNotContain("Banner(S(\"runner.quake_banner\"", quake);
         var all = string.Join("\n", Directory.GetFiles(Path.Combine(root, "Assets", "Survival", "Unity", "Runner"), "RunnerLevelView*.cs").Select(File.ReadAllText));
-        // Only the two boss warnings still raise the banner.
-        Assert.Equal(2, CountBannerCalls(all));
+        // Only the boss-incoming warning still raises the banner.
+        Assert.Equal(1, CountBannerCalls(all));
     }
 
     private static int CountBannerCalls(string all) =>

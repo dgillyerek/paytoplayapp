@@ -120,6 +120,28 @@ namespace Survival.Domain.View
             return rows;
         }
 
+        /// <summary>
+        /// What each busy builder is working on (Derek 2026-11-03: in hire-builder mode "show the building that's going so we can
+        /// click on it"). Only building construction / upgrade timers, soonest finish first.
+        /// </summary>
+        public static List<TimerRow> BusyBuilders(IEnumerable<GameTimer>? builds, double now)
+        {
+            var rows = new List<TimerRow>();
+            if (builds != null)
+            {
+                foreach (var t in builds)
+                {
+                    if (t.Id.StartsWith(Survival.Domain.Base.BaseEconomy.UpgradeTimerId(""), StringComparison.Ordinal))
+                    {
+                        rows.Add(new TimerRow(t.Id, TimerKind.Building, t.TargetId, t.StartedAt, t.EndsAt));
+                    }
+                }
+            }
+
+            Sort(rows);
+            return rows;
+        }
+
         /// <summary>Soonest finish first; ties by id so the order never flickers.</summary>
         public static void Sort(List<TimerRow> rows) => rows.Sort((a, b) =>
         {

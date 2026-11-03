@@ -8,7 +8,7 @@ namespace Survival.Domain.Runner
     /// the way maybe make it just a quick pop-up from the chests where it's granted"). No screen banner: a small
     /// world-space pop-up (icon + short label such as "+25% DMG" or "+1 Lyra") rises from the box where it was granted
     /// and fades in under a second, above the road ahead of the squad, so it never covers the play area or the squad.
-    /// "Squad full" pays out the same way at the lead. The boss warnings (boss incoming, quake DODGE!) stay banners.
+    /// "Squad full" pays out the same way at the lead. Only the boss-incoming warning stays a banner; the quake DODGE is a compact line under the HUD.
     /// </summary>
     public static class RunnerPickupPopup
     {
@@ -62,7 +62,7 @@ namespace Survival.Domain.Runner
 
         /// <summary>Whether a runner event still shows the big screen banner: only the boss warnings do.</summary>
         public static bool UsesBanner(RunnerBannerCause cause) =>
-            cause == RunnerBannerCause.BossIncoming || cause == RunnerBannerCause.BossQuake;
+            cause == RunnerBannerCause.BossIncoming;
 
         public const string WeaponIcon = "theme_a.runner.crate_weapon";
         public const string SpeedIcon = "theme_a.runner.crate_speed";
