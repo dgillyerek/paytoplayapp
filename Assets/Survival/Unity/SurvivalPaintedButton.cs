@@ -41,14 +41,14 @@ namespace Survival.Unity
             var rt = btn.GetComponent<RectTransform>();
             icon = HookSkin.Art(rt, "Icon", iconKey, SurvivalVisuals.Gold);
             icon.raycastTarget = false;
-            icon.rectTransform.anchorMin = new Vector2(0.12f, 0.30f);
-            icon.rectTransform.anchorMax = new Vector2(0.88f, 1.14f);
+            icon.rectTransform.anchorMin = new Vector2(0.14f, 0.28f);
+            icon.rectTransform.anchorMax = new Vector2(0.86f, 1.00f);
             icon.rectTransform.offsetMin = Vector2.zero;
             icon.rectTransform.offsetMax = Vector2.zero;
             text = HookSkin.Outlined(SurvivalVisuals.Text(rt, "T", label, fontSize, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 2f);
             text.fontStyle = FontStyle.Bold;
             text.rectTransform.anchorMin = new Vector2(0f, 0.03f);
-            text.rectTransform.anchorMax = new Vector2(1f, 0.32f);
+            text.rectTransform.anchorMax = new Vector2(1f, 0.30f);
             text.rectTransform.offsetMin = Vector2.zero;
             text.rectTransform.offsetMax = Vector2.zero;
             btn.transition = Selectable.Transition.None;

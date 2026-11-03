@@ -150,9 +150,9 @@ namespace Survival.Unity
         /// One round ornate icon: gold ring, tinted bevelled disc with gloss, icon art, cream outlined label below,
         /// FREE badge and red dot on the rim. Stays round on any screen shape (aspect fitter).
         /// </summary>
-        internal static readonly Color RimGold = new Color(0.98f, 0.80f, 0.32f, 1f);
-        internal static readonly Color RimLight = new Color(1f, 0.95f, 0.70f, 1f);
-        internal static readonly Color RimShade = new Color(0.86f, 0.62f, 0.18f, 1f);
+        internal static readonly Color RimGold = new Color(0.56f, 0.45f, 0.26f, 0.92f);
+        internal static readonly Color RimLight = new Color(0.78f, 0.66f, 0.42f, 0.55f);
+        internal static readonly Color RimShade = new Color(0.40f, 0.32f, 0.20f, 0.70f);
         internal static readonly Color Navy = new Color(0.07f, 0.12f, 0.34f, 1f);
 
         public static RailButtonParts Round(Transform parent, string name, string? iconKey, string label, Color tint)
@@ -166,8 +166,8 @@ namespace Survival.Unity
 
             var host = new GameObject("DiscHost", typeof(RectTransform)).GetComponent<RectTransform>();
             host.SetParent(root.transform, false);
-            Box(host, 0.04f, 0.26f, 0.96f, 1f);
-            // Clean ornate rim: thin bright bevelled gold, rivets, gloss, on a deep royal navy disc. No brown.
+            Box(host, 0.12f, 0.27f, 0.88f, 0.97f);
+            // Soft ornate rim (Derek 2026-11-03: bright yellow clashed): thin muted antique-gold edge, faint rivets, gloss, on a deep royal navy disc.
             var ring = SurvivalVisuals.Circle(host, "Ring", RimGold);
             ring.raycastTarget = false;
             var fit = ring.gameObject.AddComponent<AspectRatioFitter>();
@@ -178,7 +178,7 @@ namespace Survival.Unity
             SurvivalVisuals.Stretch(hi.rectTransform);
             var disc = SurvivalVisuals.Circle(ring.transform, "Disc", Navy);
             disc.raycastTarget = false;
-            Box(disc.rectTransform, 0.055f, 0.055f, 0.945f, 0.945f);
+            Box(disc.rectTransform, 0.035f, 0.035f, 0.965f, 0.965f);
             var lip = SurvivalVisuals.Ring(disc.transform, "RimLip", RimShade);
             lip.raycastTarget = false;
             SurvivalVisuals.Stretch(lip.rectTransform);
@@ -188,11 +188,11 @@ namespace Survival.Unity
             for (var i = 0; i < 4; i++)
             {
                 var ang = (45f + (i * 90f)) * Mathf.Deg2Rad;
-                var cx = 0.5f + (0.475f * Mathf.Cos(ang));
-                var cy = 0.5f + (0.475f * Mathf.Sin(ang));
+                var cx = 0.5f + (0.483f * Mathf.Cos(ang));
+                var cy = 0.5f + (0.483f * Mathf.Sin(ang));
                 var rivet = SurvivalVisuals.Circle(ring.transform, "Rivet" + i, RimLight);
                 rivet.raycastTarget = false;
-                Box(rivet.rectTransform, cx - 0.035f, cy - 0.035f, cx + 0.035f, cy + 0.035f);
+                Box(rivet.rectTransform, cx - 0.022f, cy - 0.022f, cx + 0.022f, cy + 0.022f);
             }
 
             var icon = new GameObject("Icon", typeof(RectTransform)).GetComponent<RectTransform>();
@@ -219,7 +219,7 @@ namespace Survival.Unity
             text.fontStyle = FontStyle.Bold;
             text.raycastTarget = false;
             HookSkin.Fit(text, 10, 15);
-            Box(text.rectTransform, 0f, 0f, 1f, 0.24f);
+            Box(text.rectTransform, -0.1f, 0f, 1.1f, 0.25f);
 
             var badgeSprite = SurvivalArt.Get(HookArtKeys.BadgeFree);
             var badge = badgeSprite != null

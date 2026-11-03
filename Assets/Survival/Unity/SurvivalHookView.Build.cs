@@ -239,7 +239,7 @@ namespace Survival.Unity
             badge.preserveAspect = true;
             badge.raycastTarget = false;
             var brt = badge.rectTransform;
-            brt.anchorMin = brt.anchorMax = new Vector2(0.90f, 0.86f);
+            brt.anchorMin = brt.anchorMax = new Vector2(0.88f, 0.80f);
             brt.sizeDelta = new Vector2(44f, 44f);
             badge.gameObject.SetActive(false);
             StartCoroutine(BadgeBob(brt));
