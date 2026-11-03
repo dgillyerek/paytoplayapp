@@ -1063,7 +1063,7 @@ namespace Survival.Unity
                     else if (_foes.TryGetValue(e.Id, out var f))
                     {
                         // Its take is already playing (AttackStarted): this is its release frame, not a new swing.
-                        if (!_foeTakes.Remove(e.Id))
+                        if (!_foeTakes.Remove(e.Id) && !BossSlamTake(e.Id, f))
                         {
                             f.Attack();
                         }
@@ -1183,6 +1183,10 @@ namespace Survival.Unity
                 case RunnerEventKind.BossSlam:
                     RunnerHitchLog.Transition("boss slam landed");
                     BossSlammed(e);
+                    break;
+
+                case RunnerEventKind.BossSwingHit:
+                    BossSwingLanded(e);
                     break;
 
                 case RunnerEventKind.BossQuakeWindup:

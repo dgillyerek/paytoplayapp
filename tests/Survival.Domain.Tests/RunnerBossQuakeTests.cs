@@ -39,6 +39,12 @@ public sealed class RunnerBossQuakeTests
             }
         }
 
+        if (boss != null && boss.SlamSwinging)
+        {
+            // He is still swinging (claw combo): a player who stepped out of the slam's road stays out until he is done.
+            return run.Hero.X < 0f ? -2.9f : 2.9f;
+        }
+
         var steer = ShotDodge.Steer(run, Runner.AimLikeAPlayer(run));
         return RockDodge(run, reaction, steer) ?? steer;
     }

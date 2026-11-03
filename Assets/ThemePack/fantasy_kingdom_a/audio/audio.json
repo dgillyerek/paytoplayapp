@@ -93,6 +93,7 @@
     "BossEngaged": "sting.boss_incoming",
     "BossWindup": "sfx.boss.growl",
     "BossSlam": "sfx.boss.ground_pound",
+    "BossSwingHit": "sfx.boss.punch",
     "BossQuakeWindup": "sfx.boss.dodge_warning",
     "BossQuake": ["sfx.boss.quake_rumble", "sfx.boss.ground_pound"],
     "BossRockThrown": "sfx.boss.growl",
