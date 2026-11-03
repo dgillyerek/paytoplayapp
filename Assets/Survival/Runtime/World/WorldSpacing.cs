@@ -53,7 +53,12 @@ namespace Survival.Domain.World
 
         public static float PlateScale(float zoom) => Clamp(0.8f / zoom, PlateMinScale, PlateMaxScale);
 
-        public static float SizeFor(WorldEntity e) => e.Kind switch
+        /// <summary>Online map tiles (resource nodes, camps) are small unlabeled markers: empty name, no plate.</summary>
+        public static bool HasPlate(WorldEntity e) => e.Name.Length > 0;
+
+        public static float SizeFor(WorldEntity e) => !HasPlate(e)
+            ? (e.Kind == WorldEntityKind.EnemyCamp ? 150f : 130f)
+            : e.Kind switch
         {
             WorldEntityKind.PlayerVillage => 330f,
             WorldEntityKind.RivalVillage or WorldEntityKind.AllyVillage => 270f,
@@ -91,16 +96,16 @@ namespace Survival.Domain.World
             {
                 var a = entities[i];
                 var ab = Footprint(a);
-                var al = Plate(a, PlateMaxScale);
+                var al = HasPlate(a) ? Plate(a, PlateMaxScale) : (MapRect?)null;
                 for (var j = i + 1; j < entities.Count; j++)
                 {
                     var b = entities[j];
                     var bb = Footprint(b);
-                    var bl = Plate(b, PlateMaxScale);
+                    var bl = HasPlate(b) ? Plate(b, PlateMaxScale) : (MapRect?)null;
                     if (ab.Overlaps(bb, gap)) bad.Add(a.Id + " building / " + b.Id + " building");
-                    if (ab.Overlaps(bl, gap)) bad.Add(a.Id + " building / " + b.Id + " label");
-                    if (al.Overlaps(bb, gap)) bad.Add(a.Id + " label / " + b.Id + " building");
-                    if (al.Overlaps(bl, gap)) bad.Add(a.Id + " label / " + b.Id + " label");
+                    if (bl is { } blv && ab.Overlaps(blv, gap)) bad.Add(a.Id + " building / " + b.Id + " label");
+                    if (al is { } alv && alv.Overlaps(bb, gap)) bad.Add(a.Id + " label / " + b.Id + " building");
+                    if (al is { } alv2 && bl is { } blv2 && alv2.Overlaps(blv2, gap)) bad.Add(a.Id + " label / " + b.Id + " label");
                 }
             }
 
@@ -155,14 +160,24 @@ namespace Survival.Domain.World
                 }
             }
 
-            return list;
+            // An unlabeled tile marker boxed in with no clear spot is left off rather than drawn over a building or plate.
+            var kept = new List<WorldEntity>(list.Count);
+            foreach (var e in list)
+            {
+                if (HasPlate(e) || !Blocked(e, kept, fixedPlaces, gap))
+                {
+                    kept.Add(e);
+                }
+            }
+
+            return kept;
         }
 
         /// <summary>Smallest move of <paramref name="a"/> that clears every box pair with <paramref name="b"/> (0,0 when clear).</summary>
         private static (float Dx, float Dy) Push(WorldEntity a, WorldEntity b, float gap)
         {
-            var aBoxes = new[] { Footprint(a), Plate(a, PlateMaxScale) };
-            var bBoxes = new[] { Footprint(b), Plate(b, PlateMaxScale) };
+            var aBoxes = Boxes(a);
+            var bBoxes = Boxes(b);
             float bestX = 0f, bestY = 0f;
             foreach (var p in aBoxes)
             {
@@ -195,6 +210,26 @@ namespace Survival.Domain.World
 
             return (bestX, bestY);
         }
+
+        private static bool Blocked(WorldEntity e, List<WorldEntity> kept, IReadOnlyList<WorldEntity> fixedPlaces, float gap)
+        {
+            foreach (var o in kept)
+            {
+                var (dx, dy) = Push(e, o, gap);
+                if (dx != 0f || dy != 0f) return true;
+            }
+
+            foreach (var o in fixedPlaces)
+            {
+                var (dx, dy) = Push(e, o, gap);
+                if (dx != 0f || dy != 0f) return true;
+            }
+
+            return false;
+        }
+
+        private static MapRect[] Boxes(WorldEntity e) =>
+            HasPlate(e) ? new[] { Footprint(e), Plate(e, PlateMaxScale) } : new[] { Footprint(e) };
 
         private static float Clamp(float v, float lo, float hi) => v < lo ? lo : v > hi ? hi : v;
     }

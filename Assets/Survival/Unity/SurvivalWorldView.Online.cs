@@ -183,19 +183,7 @@ namespace Survival.Unity
                 SurvivalVillageView.Point(disc.rectTransform, x, y, d, d, 0.5f);
             }
 
-            foreach (var n in map.Tiles)
-            {
-                if (!map.Visible(n.X, n.Y))
-                {
-                    continue; // fog: the server already filters, this keeps stale tiles hidden too
-                }
-
-                var key = n.IsCamp ? WorldArtKeys.MapProp("camp") : WorldArtKeys.MapProp(n.Kind);
-                var tile = n;
-                Marker(proj, n.X, n.Y, key, n.IsCamp ? 150f : 130f, null, () => ShowOnlineTile(tile));
-            }
-
-            DrawOnlineCastles(map, proj);
+            DrawOnlineTilesAndCastles(map, proj);
 
             foreach (var m in map.Marches)
             {
@@ -206,30 +194,28 @@ namespace Survival.Unity
             }
         }
 
-        private void Marker(WorldProjection proj, int tx, int ty, string key, float size, string? label, Action onTap)
-        {
-            var (x, y) = proj.ToMap(tx, ty);
-            var img = HookSkin.Art(_onlineLayer!, "Tile_" + tx + "_" + ty, key, SurvivalVisuals.Gold);
-            SurvivalVillageView.Point(img.rectTransform, x, y, size, size, 0.3f);
-            var btn = img.gameObject.AddComponent<Button>();
-            btn.onClick.AddListener(() => onTap());
-            if (label != null)
-            {
-                // one short cream line per castle; nodes and camps stay unlabeled so the map stays clean
-                var t = HookSkin.Outlined(SurvivalVisuals.Text(_onlineLayer!, "Name", label, 24, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.6f);
-                t.fontStyle = FontStyle.Bold;
-                t.raycastTarget = false;
-                SurvivalVillageView.Point(t.rectTransform, x, y - size * 0.15f, 420f, 34f, 1f);
-            }
-        }
-
         /// <summary>
-        /// Other lords' castles use the same spacing rule as the six map places (#130): each is nudged off its tile just
+        /// Online tiles and other lords' castles use the same spacing rule as the six map places (#130): each is nudged off its tile just
         /// enough that no building or name plate overlaps another, and tapping the plate opens the same card as the castle.
         /// </summary>
-        private void DrawOnlineCastles(WorldSnapshot map, WorldProjection proj)
+        private void DrawOnlineTilesAndCastles(WorldSnapshot map, WorldProjection proj)
         {
             var places = new List<WorldEntity>();
+            var tiles = new Dictionary<string, WorldTile>(StringComparer.Ordinal);
+            foreach (var n in map.Tiles)
+            {
+                if (!map.Visible(n.X, n.Y))
+                {
+                    continue; // fog: the server already filters, this keeps stale tiles hidden too
+                }
+
+                var (x, y) = proj.ToMap(n.X, n.Y);
+                var id = "tile_" + n.Id.ToString(CultureInfo.InvariantCulture);
+                // empty name = unlabeled marker; spacing keeps it off every building and name plate
+                places.Add(new WorldEntity(id, n.IsCamp ? WorldEntityKind.EnemyCamp : WorldEntityKind.ResourceNode, n.Kind, "", n.Level, 0, n.Amount, x, y));
+                tiles[id] = n;
+            }
+
             var byId = new Dictionary<string, WorldCastle>(StringComparer.Ordinal);
             foreach (var c in map.Castles)
             {
@@ -249,10 +235,21 @@ namespace Survival.Unity
             var k = Rig?.Camera != null ? WorldSpacing.PlateScale(Rig.Camera.Zoom) : 1f;
             foreach (var e in WorldSpacing.Separate(places, fixedPlaces))
             {
+                if (tiles.TryGetValue(e.Id, out var tile))
+                {
+                    var ts = WorldSpacing.SizeFor(e);
+                    var img = HookSkin.Art(_onlineLayer!, e.Id, WorldArtKeys.OnlineTile(tile.Kind, tile.Level), SurvivalVisuals.Gold);
+                    SurvivalVillageView.Point(img.rectTransform, e.X, e.Y, ts, ts, WorldSpacing.ArtPivotY);
+                    var tb = img.gameObject.AddComponent<Button>();
+                    tb.transition = Selectable.Transition.None;
+                    tb.onClick.AddListener(() => ShowOnlineTile(tile));
+                    continue;
+                }
+
                 var castle = byId[e.Id];
                 Action open = () => ShowOnlineCastle(castle);
                 var size = WorldSpacing.SizeFor(e);
-                var art = HookSkin.Art(_onlineLayer!, e.Id, WorldArtKeys.MapProp("castle"), SurvivalVisuals.Gold);
+                var art = HookSkin.Art(_onlineLayer!, e.Id, WorldArtKeys.Village(castle.Ally ? WorldEntityKind.AllyVillage : WorldEntityKind.RivalVillage), SurvivalVisuals.Gold);
                 SurvivalVillageView.Point(art.rectTransform, e.X, e.Y, size, size, WorldSpacing.ArtPivotY);
                 var btn = art.gameObject.AddComponent<Button>();
                 btn.transition = Selectable.Transition.None;
@@ -367,7 +364,7 @@ namespace Survival.Unity
             var mine = FindMyMarch(n.X, n.Y);
             if (n.IsCamp)
             {
-                ShowCard(WorldArtKeys.MapProp("camp"), F("world.card.camp", "Enemy camp \u00b7 Lv {0}", n.Level),
+                ShowCard(WorldArtKeys.OnlineTile(n.Kind, n.Level), F("world.card.camp", "Enemy camp \u00b7 Lv {0}", n.Level),
                     S("world.online.camp_explain", "Beat the camp to win Gold and hero XP."), TroopsLine(),
                     mine != null ? S("world.online.recall", "Recall") : S("world.action.attack", "Attack"),
                     () => SendOrRecall(mine, "camp", n.X, n.Y), mine != null || _world!.Troops > 0);
@@ -377,7 +374,7 @@ namespace Survival.Unity
 
             var who = n.OccupiedByMe ? S("world.online.yours", "You are gathering here") : n.OccupiedByAlly ? S("world.online.ally_here", "An ally is gathering here")
                 : n.Occupier != 0 ? S("world.online.taken", "Occupied: winning the fight takes the field") : S("world.online.free", "Free to gather");
-            ShowCard(WorldArtKeys.MapProp(n.Kind), F("world.online.field", "{0} field \u00b7 Lv {1}", S(n.Kind + ".name", n.Kind), n.Level),
+            ShowCard(WorldArtKeys.OnlineTile(n.Kind, n.Level), F("world.online.field", "{0} field \u00b7 Lv {1}", S(n.Kind + ".name", n.Kind), n.Level),
                 who + "  \u00b7  " + ChipWallet.FormatGrouped(n.Amount) + " " + S("world.online.left", "left"), TroopsLine(),
                 mine != null ? S("world.online.recall", "Recall") : S("world.action.gather", "Gather"),
                 () => SendOrRecall(mine, "gather", n.X, n.Y), mine != null || (!n.OccupiedByAlly && _world!.Troops > 0));
@@ -387,7 +384,7 @@ namespace Survival.Unity
         private void ShowOnlineCastle(WorldCastle c)
         {
             var shielded = c.Shielded;
-            ShowCard(WorldArtKeys.MapProp("castle"), c.Name, (c.Ally ? S("world.card.ally", "Guild ally") : S("world.card.rival", "Rival lord")) + "  \u00b7  " +
+            ShowCard(WorldArtKeys.Village(c.Ally ? WorldEntityKind.AllyVillage : WorldEntityKind.RivalVillage), c.Name, (c.Ally ? S("world.card.ally", "Guild ally") : S("world.card.rival", "Rival lord")) + "  \u00b7  " +
                 F("world.card.power", "Power {0}", ChipWallet.FormatGrouped(c.Power)),
                 shielded ? S("world.online.shielded", "Shielded: cannot be attacked right now") : TroopsLine(),
                 c.Ally ? null : S("world.action.attack", "Attack"), () => SendOrRecall(null, "attack", c.X, c.Y), !shielded && _world!.Troops > 0);
