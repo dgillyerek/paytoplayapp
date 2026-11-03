@@ -447,6 +447,7 @@ namespace Survival.Unity
                 }
             }
 
+            FollowRockHands();
             RunnerHitchLog.End(RunnerHitchLog.Section.Late);
             RunnerHitchLog.Begin(RunnerHitchLog.Section.Camera);
             FollowCamera(dt);
@@ -1196,6 +1197,10 @@ namespace Survival.Unity
 
                 case RunnerEventKind.BossRockThrown:
                     BossRockThrown(e);
+                    break;
+
+                case RunnerEventKind.BossRockReleased:
+                    BossRockReleased(e);
                     break;
 
                 case RunnerEventKind.BossRockLanded:
