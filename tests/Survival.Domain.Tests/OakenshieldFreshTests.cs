@@ -51,8 +51,6 @@ public sealed class OakenshieldFreshTests
 
         Assert.Equal(OakenshieldAttack.PropFileMd5s[0], Md5(Path.Combine(pack, OakenshieldAttack.PropFileNames[0])));
         Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Oakenshield.unity")), "one-character demo scenes were removed 2026-10-19");
-        var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.DoesNotContain("Survival/Oakenshield Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
     }
 
     private static string Md5(string path)

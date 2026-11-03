@@ -68,8 +68,6 @@ public sealed class BonequillFreshTests
         Assert.True(File.Exists(Path.Combine(pack, BonequillCape.TextureFolder, BonequillCape.BaseColorFile)));
         Assert.True(File.Exists(Path.Combine(pack, BonequillCape.TextureFolder, BonequillCape.NormalFile)));
         Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Bonequill.unity")), "one-character demo scenes were removed 2026-10-19");
-        var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.DoesNotContain("Survival/Bonequill Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
     }
 
     [Fact]

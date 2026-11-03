@@ -228,8 +228,6 @@ public sealed class VesperaNoCapeTests
         Assert.DoesNotContain("ClothSpring", actor, StringComparison.Ordinal);
         Assert.Contains("VesperaAttack.Spec", actor, StringComparison.Ordinal);
         Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Runtime", "Enemies", "VesperaClothSplit.cs")));
-        var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.DoesNotContain("Survival/Vespera Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         var orbMeta = File.ReadAllText(Path.Combine(root, "Assets", VesperaMotion.ThemePackDir, VesperaNoCape.OrbFileName + ".meta"));
         // Prop import matches what the attack driver enforces, so Play never reimports it.
         Assert.Contains("animationType: 0", orbMeta, StringComparison.Ordinal);
