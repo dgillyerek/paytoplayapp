@@ -510,6 +510,20 @@ namespace Survival.Unity
 
         // ---------- taps + cards ----------
 
+        /// <summary>Quest bar "go": glide to a world entity (e.g. the gather quarry) and open its card. False when it isn't on the map.</summary>
+        public bool FocusEntity(string id)
+        {
+            if (Sim == null || !Sim.TryGet(id, out var e))
+            {
+                return false;
+            }
+
+            Rig?.FocusOn(e.X, e.Y);
+            OnTapEntity(id);
+            return true;
+        }
+
+
         public void CloseCard()
         {
             _cardRefresh = null;
