@@ -101,7 +101,38 @@ namespace Survival.Domain.World
 
             Player = layout.Player ?? throw new ArgumentException("Layout has no player village.", nameof(layout));
             Now = now;
-            foreach (var route in layout.Routes)
+            SeedMockColumns(now);
+            Tick(now);
+        }
+
+        /// <summary>
+        /// Scripted rival / ally columns. On when offline; the online world view turns them off and draws the
+        /// server's real marches instead, then back on if the connection drops.
+        /// </summary>
+        public bool MockColumns
+        {
+            get => _mockColumns;
+            set
+            {
+                if (value == _mockColumns)
+                {
+                    return;
+                }
+
+                _mockColumns = value;
+                _marches.RemoveAll(m => !m.IsPlayer);
+                if (value)
+                {
+                    SeedMockColumns(Now);
+                }
+            }
+        }
+
+        private bool _mockColumns = true;
+
+        private void SeedMockColumns(double now)
+        {
+            foreach (var route in Layout.Routes)
             {
                 if (!_byId.TryGetValue(route.OwnerId, out var owner) || !_byId.TryGetValue(route.TargetId, out var target))
                 {
@@ -113,8 +144,6 @@ namespace Survival.Domain.World
                 var offset = route.OffsetSeconds % (seconds * 2.0 + RestSeconds);
                 _marches.Add(new WorldMarch(++_serial, owner.Id, target.Id, false, MarchLeg.Outbound, "patrol", owner.X, owner.Y, target.X, target.Y, now - offset, seconds));
             }
-
-            Tick(now);
         }
 
         public WorldLayout Layout { get; }
@@ -267,6 +296,11 @@ namespace Survival.Domain.World
             }
 
             // Mock column: rest, then march the same route again.
+            if (!_mockColumns)
+            {
+                return;
+            }
+
             _marches.Add(new WorldMarch(m.Serial, m.OwnerId, m.TargetId, false, MarchLeg.Outbound, m.Tag, m.ToX, m.ToY, m.FromX, m.FromY, m.Arrival + RestSeconds, m.Duration));
         }
     }

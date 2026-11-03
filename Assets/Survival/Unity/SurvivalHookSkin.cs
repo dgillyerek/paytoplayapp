@@ -208,10 +208,31 @@ namespace Survival.Unity
         {
             // Never thinner than 2px, near-black brown, plus a drop shadow below.
             distance = Mathf.Max(2f, distance);
-            var outline = text.GetComponent<Outline>() ?? text.gameObject.AddComponent<Outline>();
+            // Idempotent: callers re-skin labels on every refresh (e.g. the Bounty Board button). Each Shadow doubles
+            // and each Outline quintuples the text mesh, so adding a new one per call blew past uGUI's 65000 vertices.
+            var outline = text.GetComponent<Outline>();
+            if (outline == null)
+            {
+                outline = text.gameObject.AddComponent<Outline>();
+            }
+
             outline.effectColor = new Color(OutlineInk.r, OutlineInk.g, OutlineInk.b, Mathf.Max(0.9f, alpha));
             outline.effectDistance = new Vector2(distance, -distance);
-            var shadow = text.gameObject.AddComponent<Shadow>();
+            Shadow shadow = null;
+            foreach (var sh in text.GetComponents<Shadow>())
+            {
+                if (sh.GetType() == typeof(Shadow))
+                {
+                    shadow = sh;
+                    break;
+                }
+            }
+
+            if (shadow == null)
+            {
+                shadow = text.gameObject.AddComponent<Shadow>();
+            }
+
             shadow.effectColor = new Color(0f, 0f, 0f, 0.7f);
             shadow.effectDistance = new Vector2(0f, -distance * 1.6f);
             return text;
