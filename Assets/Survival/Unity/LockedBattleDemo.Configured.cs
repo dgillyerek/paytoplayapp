@@ -273,7 +273,7 @@ namespace Survival.Unity
             f.PhaseTime = 0f;
             f.AttackClipOn = false;
             f.AttackOffset = Vector3.zero;
-            f.Play(f.Data.RestPoseName);
+            f.Play(f.Data.IdlePoseName);
         }
 
         /// <summary>
@@ -296,7 +296,7 @@ namespace Survival.Unity
 
             f.AttackClipOn = false;
             f.AttackOffset = Vector3.zero;
-            f.Play(f.Data.RestPoseName);
+            f.Play(f.Data.IdlePoseName);
             f.RestForward = StrideForwardOf(f);
             BeginWalk(f);
             return true;

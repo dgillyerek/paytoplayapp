@@ -91,9 +91,10 @@ namespace Survival.Domain.Roster
             return new[]
             {
                 new LockedBattleAttack("void-fire breath fireball", AshwyrmMotion.AttackPoseName, BlenderRigAttackSpec.ClipSeconds),
-                WingGust("void wing gust", AshwyrmMotion.FlapPoseName, AshwyrmMotion.FlapSeconds, AshwyrmGustBoneL, AshwyrmGustBoneR, AshwyrmGustFrames, 0.03f),
-                StompQuake("void stomp quake", AshwyrmMotion.WalkPoseName, AshwyrmStompBones, AshwyrmFootfallFrames, 0.05f)
+                WingGust("void wing gust", AshwyrmMotion.FlapPoseName, AshwyrmMotion.FlapSeconds, AshwyrmGustBoneL, AshwyrmGustBoneR, AshwyrmGustFrames, 0.03f)
             };
+            // The stomp quake is dropped (2026-11-02): it replayed the walk clip on the spot, so Ashwyrm looked like he was
+            // walking while standing still. He has no stationary stomp clip, so he alternates breath and gust.
         }
 
         public static LockedBattleAttack[] NightfangAttacks()

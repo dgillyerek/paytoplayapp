@@ -125,6 +125,15 @@ namespace Survival.Domain.Roster
 
         public const string RestPoseName = "rest";
 
+        /// <summary>
+        /// A standing idle for winged rigs (2026-11-02, Ashwyrm in the battle): the rig's own locked wing flap clip
+        /// (<see cref="ClipPoseName"/>), looped in place at <see cref="HoverIdleSpeed"/>, so the wings breathe slowly and the
+        /// legs never step. Not a new clip and not in <see cref="PoseNames"/>.
+        /// </summary>
+        public const string HoverIdlePoseName = "hover idle";
+
+        public const float HoverIdleSpeed = 0.4f;
+
         public bool PreferHumanoid => Avatar == BlenderRigAvatar.MixamoHumanoid;
 
         public string Title => Name.ToUpperInvariant();

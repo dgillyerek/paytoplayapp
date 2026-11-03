@@ -36,8 +36,10 @@ namespace Survival.Domain.Roster
             int lane,
             string actorClassName = "",
             float aimYawDegrees = 0f,
-            IReadOnlyList<LockedBattleAttack>? attacks = null)
+            IReadOnlyList<LockedBattleAttack>? attacks = null,
+            string idlePoseName = "")
         {
+            IdlePoseName = idlePoseName.Length > 0 ? idlePoseName : BlenderRigSpec.RestPoseName;
             Name = name;
             Side = side;
             MergedPr = mergedPr;
@@ -92,6 +94,10 @@ namespace Survival.Domain.Roster
         public string MergedPr { get; }
 
         public string RestPoseName => BlenderRigSpec.RestPoseName;
+
+        /// <summary>What the fighter plays whenever it stands still (opening hold, between attacks, waiting). Rest for everyone
+        /// but Ashwyrm, who hovers on a slow wing flap instead of freezing.</summary>
+        public string IdlePoseName { get; }
         public string WalkPoseName { get; }
         public string AttackPoseName { get; }
         public string AttackLabel { get; }
@@ -696,7 +702,8 @@ namespace Survival.Domain.Roster
             3,
             "",
             0f,
-            CreatureBattleAttacks.AshwyrmAttacks());
+            CreatureBattleAttacks.AshwyrmAttacks(),
+            BlenderRigSpec.HoverIdlePoseName);
 
         // Fifth lane (2026-10-15, Derek approved). Sir Aldric plays the Lite Sword And Shield Pack
         // idle and "Sword And Shield attack (4)" (an in-place thrust that starts and ends on the

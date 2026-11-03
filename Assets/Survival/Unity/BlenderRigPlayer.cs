@@ -116,6 +116,9 @@ namespace Survival.Unity
             _pose = BlenderRigSpec.RestPoseName;
         }
 
+        /// <summary>Looping clip rate: 1, or <see cref="BlenderRigSpec.HoverIdleSpeed"/> for the hover idle.</summary>
+        private float _loopSpeed = 1f;
+
         public bool Built => _ready;
         public string Pose => _pose;
 
@@ -297,6 +300,19 @@ namespace Survival.Unity
 
             StopAttack();
 
+            if (string.Equals(poseName, BlenderRigSpec.HoverIdlePoseName, System.StringComparison.Ordinal))
+            {
+                // The locked wing flap, slowed, in place: a breathing hover with no leg stepping.
+                if (!PlayClip(_spec.ClipFileName, _spec.ClipPoseName, _spec.ClipTakeName, _spec.ClipLastFrame))
+                {
+                    return false;
+                }
+
+                _loopSpeed = BlenderRigSpec.HoverIdleSpeed;
+                _pose = BlenderRigSpec.HoverIdlePoseName;
+                return true;
+            }
+
             if (string.Equals(poseName, BlenderRigSpec.RestPoseName, System.StringComparison.Ordinal))
             {
                 ShowRest();
@@ -357,7 +373,7 @@ namespace Survival.Unity
                 return;
             }
 
-            _time += Time.unscaledDeltaTime;
+            _time += Time.unscaledDeltaTime * _loopSpeed;
             if (_length > 0.05f)
             {
                 _time %= _length;
@@ -1233,6 +1249,7 @@ namespace Survival.Unity
             _playable.SetSpeed(1d);
             _length = clip.length;
             _time = 0f;
+            _loopSpeed = 1f;
             _loop = true;
             _pose = poseName;
             _graph.Evaluate(0f);

@@ -46,7 +46,7 @@ public sealed class LockedBattleRotationTests
     {
         foreach (var name in Creatures)
         {
-            Assert.Equal(3, LockedBattleRotation.Count(Fighter(name)));
+            Assert.Equal(name == "Ashwyrm" ? 2 : 3, LockedBattleRotation.Count(Fighter(name)));
         }
     }
 
@@ -55,7 +55,7 @@ public sealed class LockedBattleRotationTests
     {
         foreach (var f in LockedBattleRoster.All)
         {
-            var expected = f.Name == LockedBattleRoster.Ironhowl.Name ? 6 : 3;
+            var expected = f.Name == LockedBattleRoster.Ironhowl.Name ? 6 : f.Name == LockedBattleRoster.Ashwyrm.Name ? 2 : 3;
             Assert.True(LockedBattleRotation.Count(f) == expected, f.Name);
         }
     }
