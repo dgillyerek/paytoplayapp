@@ -20,7 +20,7 @@ namespace Survival.Unity
     /// <see cref="WorldSim"/>. Tapping anything opens a small info card with its action
     /// (Attack / Gather / Scout / Reinforce / the node's March loop / Enter Village).
     /// </summary>
-    public sealed class SurvivalWorldView : MonoBehaviour
+    public sealed partial class SurvivalWorldView : MonoBehaviour
     {
         private static readonly Color PlayerLine = new Color(0.45f, 0.76f, 1f, 0.95f);
         private static readonly Color AllyLine = new Color(0.52f, 0.95f, 0.52f, 0.9f);
@@ -364,6 +364,7 @@ namespace Survival.Unity
             }
 
             Sim.Tick(Now);
+            TickOnline();
             SyncMarches();
             AnimateSelection();
             _cardRefresh?.Invoke();

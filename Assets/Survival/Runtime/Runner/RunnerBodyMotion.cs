@@ -150,6 +150,13 @@ namespace Survival.Domain.Runner
         }
 
         /// <summary>How much of the take the upper body shows with the current take at <paramref name="take"/> and the fading one at <paramref name="prev"/>.</summary>
+        /// <summary>
+        /// Whether a rig's upper body is copied from the take's own keys after the layer mixer runs, rather than trusting the
+        /// runtime AvatarMask alone: rigs with no Hips bone (Vespera) and the walking-shooter foes (Bonequill: the mask left his
+        /// arms on the walk carry, bow level at the waist, Derek 2026-11-02). Rowan, Oakenshield and the others keep the mask.
+        /// </summary>
+        public static bool CopiesTakeOverWalk(string rosterName, bool hipsStandIn) => hipsStandIn || RunnerWalkingShooterFoes.Applies(rosterName);
+
         public static float CopyWeight(float take, float prev) => 1f - ((1f - Clamp01(take)) * (1f - Clamp01(prev)));
 
         private static float Clamp01(float v) => v < 0f ? 0f : v > 1f ? 1f : v;
