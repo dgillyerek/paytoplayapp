@@ -34,7 +34,7 @@ namespace Survival.Unity
         {
             var card = HookSkin.Panel(parent, name, HookArtKeys.Plate, new Color(0.11f, 0.17f, 0.38f, 1f), 0.35f);
             card.raycastTarget = false;
-            Box(card.rectTransform, x0, y0, x1, y1);
+            HookSkin.Box(card.rectTransform, x0, y0, x1, y1);
             Ornaments.Bevel(card.transform, lit ? 0.9f : 0.6f);
             Ornaments.Frame(card.transform, Ornaments.Gold, 2f);
             return card.rectTransform;
@@ -45,7 +45,7 @@ namespace Survival.Unity
             var t = HookSkin.Outlined(SurvivalVisuals.Text(parent, name, text, size, anchor, color), 1.5f);
             t.fontStyle = FontStyle.Bold;
             t.raycastTarget = false;
-            Box(t.rectTransform, x0, y0, x1, y1);
+            HookSkin.Box(t.rectTransform, x0, y0, x1, y1);
             return t;
         }
 
@@ -54,11 +54,11 @@ namespace Survival.Unity
         {
             var slot = SurvivalVisuals.Image(parent, name, new Color(0.06f, 0.09f, 0.22f, 1f));
             slot.raycastTarget = false;
-            Box(slot.rectTransform, x0, y0, x1, y1);
+            HookSkin.Box(slot.rectTransform, x0, y0, x1, y1);
             Ornaments.Frame(slot.transform, Ornaments.Gold, 1.5f);
             var art = HookSkin.Art(slot.transform, "Art", key, fallback);
             art.raycastTarget = false;
-            Box(art.rectTransform, 0.06f, 0.06f, 0.94f, 0.94f);
+            HookSkin.Box(art.rectTransform, 0.06f, 0.06f, 0.94f, 0.94f);
             return art;
         }
 
@@ -114,10 +114,10 @@ namespace Survival.Unity
 
             // Hero art: the painted guild crest with a soft royal glow, guild name and stats beside it.
             var glow = HookSkin.Glow(panel, "CrestGlow", AllyCrestGlow);
-            Box(glow.rectTransform, 0.00f, 0.74f, 0.42f, 0.95f);
+            HookSkin.Box(glow.rectTransform, 0.00f, 0.74f, 0.42f, 0.95f);
             var crest = HookSkin.Art(panel, "Crest", HookArtKeys.GuildCrest, Ornaments.Gold);
             crest.raycastTarget = false;
-            Box(crest.rectTransform, 0.05f, 0.765f, 0.37f, 0.93f);
+            HookSkin.Box(crest.rectTransform, 0.05f, 0.765f, 0.37f, 0.93f);
             Ornaments.Sparkles(crest.rectTransform, 3, new Color(1f, 0.9f, 0.6f, 1f));
             _allyName = HookSkin.Fit(Label(panel, "Name", a.GuildName, 30, TextAnchor.MiddleLeft, SurvivalVisuals.Cream, 0.39f, 0.855f, 0.96f, 0.925f), 16, 30);
             _allyName.horizontalOverflow = HorizontalWrapMode.Wrap;
@@ -223,14 +223,14 @@ namespace Survival.Unity
                 ArtSlot(row, "Portrait", "theme_a.hero.portrait." + AllyPortraits[i % AllyPortraits.Length], SurvivalVisuals.PanelSoft, 0.02f, 0.08f, 0.135f, 0.92f);
                 var dot = SurvivalVisuals.Image(row, "Online", m.Online ? AllyOnline : new Color(0.45f, 0.45f, 0.45f, 1f));
                 dot.raycastTarget = false;
-                Box(dot.rectTransform, 0.115f, 0.08f, 0.145f, 0.32f);
+                HookSkin.Box(dot.rectTransform, 0.115f, 0.08f, 0.145f, 0.32f);
                 Ornaments.Frame(dot.transform, Ornaments.Gold, 1f);
                 HookSkin.Fit(Label(row, "Name", m.Name, 24, TextAnchor.MiddleLeft, SurvivalVisuals.Cream, 0.165f, 0.48f, 0.66f, 0.96f), 14, 24);
 
                 // Role badge: coloured pill, gold rim, cream outlined text.
                 var badge = SurvivalVisuals.Image(row, "RoleBadge", RoleColor(m.Role));
                 badge.raycastTarget = false;
-                Box(badge.rectTransform, 0.165f, 0.08f, 0.38f, 0.44f);
+                HookSkin.Box(badge.rectTransform, 0.165f, 0.08f, 0.38f, 0.44f);
                 Ornaments.Bevel(badge.transform, 0.6f);
                 Ornaments.Frame(badge.transform, Ornaments.Gold, 1f);
                 var role = Label(badge.rectTransform, "Role", S("alliance.role." + m.Role, m.Role.ToUpperInvariant()), 15, TextAnchor.MiddleCenter, SurvivalVisuals.Cream, 0f, 0f, 1f, 1f);
@@ -238,7 +238,7 @@ namespace Survival.Unity
 
                 var banner = HookSkin.Art(row, "PowerIcon", HookArtKeys.WarBanner, Ornaments.Gold);
                 banner.raycastTarget = false;
-                Box(banner.rectTransform, 0.62f, 0.1f, 0.71f, 0.9f);
+                HookSkin.Box(banner.rectTransform, 0.62f, 0.1f, 0.71f, 0.9f);
                 Label(row, "Power", m.Power.ToString("N0"), 24, TextAnchor.MiddleRight, SurvivalVisuals.Cream, 0.70f, 0.1f, 0.97f, 0.9f);
             }
         }
@@ -248,7 +248,7 @@ namespace Survival.Unity
             var help = OrnateCard(panel, "HelpCard", 0.06f, 0.36f, 0.94f, 0.67f, true);
             var hand = HookSkin.Art(help, "HelpHand", HookArtKeys.HelpHand, Ornaments.Gold);
             hand.raycastTarget = false;
-            Box(hand.rectTransform, 0.30f, 0.45f, 0.70f, 0.97f);
+            HookSkin.Box(hand.rectTransform, 0.30f, 0.45f, 0.70f, 0.97f);
             Label(help, "Title", S("alliance.help.title", "Guild Help"), 30, TextAnchor.MiddleCenter, SurvivalVisuals.Cream, 0.05f, 0.30f, 0.95f, 0.45f);
             var body = Label(help, "Body", S("alliance.help.body", "Ask guildmates to speed up your upgrades, and help theirs for rewards. Connect to the internet to join a real alliance."),
                 21, TextAnchor.MiddleCenter, SurvivalVisuals.Cream, 0.07f, 0.04f, 0.93f, 0.30f);
@@ -298,10 +298,10 @@ namespace Survival.Unity
 
             // Hero art: the open treasure chest with a warm glow, and what this screen is for.
             var glow = HookSkin.Glow(panel, "ChestGlow", new Color(1f, 0.78f, 0.42f, 0.6f));
-            Box(glow.rectTransform, 0.25f, 0.74f, 0.75f, 0.95f);
+            HookSkin.Box(glow.rectTransform, 0.25f, 0.74f, 0.75f, 0.95f);
             var chest = HookSkin.Art(panel, "Chest", HookArtKeys.ChestOpen, Ornaments.Gold);
             chest.raycastTarget = false;
-            Box(chest.rectTransform, 0.32f, 0.77f, 0.68f, 0.93f);
+            HookSkin.Box(chest.rectTransform, 0.32f, 0.77f, 0.68f, 0.93f);
             Ornaments.Sparkles(chest.rectTransform, 4, new Color(1f, 0.92f, 0.6f, 1f));
             var explain = Label(panel, "Explain", S("bag.explain", "Everything you own. Tap a button to use it."), 20, TextAnchor.MiddleCenter, SurvivalVisuals.Cream, 0.04f, 0.725f, 0.96f, 0.765f);
             HookSkin.Fit(explain, 12, 20);

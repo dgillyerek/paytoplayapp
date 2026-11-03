@@ -66,7 +66,7 @@ namespace Survival.Unity
             var parts = SurvivalSideRail.Round(root, RailPrefix + name, iconKey, label, disc);
             var rt = parts.Root;
             var top = 0.300f + (slot * 0.078f);
-            Box(rt, 0.018f, 1f - (top + 0.070f), 0.150f, 1f - top);
+            HookSkin.Box(rt, 0.018f, 1f - (top + 0.070f), 0.150f, 1f - top);
             if (iconKey == null || parts.Icon.childCount == 0)
             {
                 var g = HookSkin.Outlined(SurvivalVisuals.Text(parts.Icon, "Glyph", glyph, 40, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 2f);

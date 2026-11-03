@@ -234,7 +234,7 @@ namespace Survival.Unity
 
             // Painted building fills its plot footprint; transparent pixels let drags and taps fall through to the map.
             var glow = HookSkin.Glow(host, "Glow", new Color(1f, 0.86f, 0.45f, 0f));
-            Box(glow.rectTransform, -0.1f, -0.05f, 1.1f, 1.05f);
+            HookSkin.Box(glow.rectTransform, -0.1f, -0.05f, 1.1f, 1.05f);
             var art = HookSkin.Art(host, "Building", visual.ArtKey, plot.Def.Produces != null ? ResColor(plot.Def.Produces) : SurvivalVisuals.PinBuild);
             SurvivalVisuals.Stretch(art.rectTransform);
             art.raycastTarget = true;
@@ -267,10 +267,10 @@ namespace Survival.Unity
                     ? SurvivalVisuals.Image(host, "LevelBadge", Color.white, badgeSprite)
                     : SurvivalVisuals.Circle(host, "LevelBadge", SurvivalVisuals.PinBuild);
                 card.LevelBadge.preserveAspect = true;
-                Box(card.LevelBadge.rectTransform, 0.0f, 0.62f, 0.26f, 0.92f);
+                HookSkin.Box(card.LevelBadge.rectTransform, 0.0f, 0.62f, 0.26f, 0.92f);
                 card.LevelText = HookSkin.Outlined(SurvivalVisuals.Text(card.LevelBadge.transform, "N", visual.BadgeText, 40, TextAnchor.MiddleCenter, Color.white), 2.5f);
                 card.LevelText.fontStyle = FontStyle.Bold;
-                Box(card.LevelText.rectTransform, 0f, 0.0f, 1f, 0.86f);
+                HookSkin.Box(card.LevelText.rectTransform, 0f, 0.0f, 1f, 0.86f);
             }
 
             // Upgrade timer under the plate.
@@ -282,10 +282,10 @@ namespace Survival.Unity
             timer.sizeDelta = new Vector2(280f, 64f);
             timer.anchoredPosition = new Vector2(0f, -60f);
             var bar = HookSkin.Bar(timer, "Bar", out card.BarFill);
-            Box(bar.rectTransform, 0f, 0f, 1f, 0.5f);
+            HookSkin.Box(bar.rectTransform, 0f, 0f, 1f, 0.5f);
             card.Status = HookSkin.Outlined(SurvivalVisuals.Text(timer, "Status", "", 22, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
             card.Status.fontStyle = FontStyle.Bold;
-            Box(card.Status.rectTransform, -0.2f, 0.45f, 1.2f, 1.1f);
+            HookSkin.Box(card.Status.rectTransform, -0.2f, 0.45f, 1.2f, 1.1f);
             card.TimerRoot = timer;
             village.RegisterLabel(timer);
 
@@ -295,18 +295,18 @@ namespace Survival.Unity
                 ? SurvivalVisuals.Image(host, "Bubble", Color.white, bubbleSprite)
                 : SurvivalVisuals.Circle(host, "Bubble", SurvivalVisuals.Cream);
             HookSkin.ApplySliced(card.Bubble, 0.4f);
-            Box(card.Bubble.rectTransform, 0.22f, 0.88f, 0.78f, 1.08f);
+            HookSkin.Box(card.Bubble.rectTransform, 0.22f, 0.88f, 0.78f, 1.08f);
             card.Bubble.raycastTarget = true;
             var bubbleBtn = card.Bubble.gameObject.AddComponent<Button>();
             bubbleBtn.targetGraphic = card.Bubble;
             if (plot.Def.Produces != null)
             {
                 var bubbleIcon = HookSkin.ResIcon(card.Bubble.transform, "Icon", plot.Def.Produces, ResColor(plot.Def.Produces), ResGlyph(plot.Def.Produces));
-                Box(bubbleIcon.rectTransform, -0.08f, -0.25f, 0.40f, 1.25f);
+                HookSkin.Box(bubbleIcon.rectTransform, -0.08f, -0.25f, 0.40f, 1.25f);
             }
 
             card.BubbleText = HookSkin.Outlined(SurvivalVisuals.Text(card.Bubble.transform, "T", "", 26, TextAnchor.MiddleCenter, bubbleSprite != null ? SurvivalVisuals.Reward : SurvivalVisuals.Panel), 1.5f);
-            Box(card.BubbleText.rectTransform, 0.32f, 0f, 1f, 1f);
+            HookSkin.Box(card.BubbleText.rectTransform, 0.32f, 0f, 1f, 1f);
             card.Bubble.gameObject.SetActive(false);
 
             var badgeFree = SurvivalArt.Get(HookArtKeys.BadgeFree);
@@ -314,36 +314,36 @@ namespace Survival.Unity
                 ? SurvivalVisuals.Image(host, "Badge", Color.white, badgeFree)
                 : SurvivalVisuals.Circle(host, "Badge", FreeGreen);
             card.Badge.preserveAspect = true;
-            Box(card.Badge.rectTransform, 0.72f, 0.66f, 1.0f, 0.98f);
+            HookSkin.Box(card.Badge.rectTransform, 0.72f, 0.66f, 1.0f, 0.98f);
             card.BadgeText = HookSkin.Outlined(SurvivalVisuals.Text(card.Badge.transform, "T", "", 22, TextAnchor.MiddleCenter, Color.white), 1.5f);
             SurvivalVisuals.Stretch(card.BadgeText.rectTransform);
             card.Badge.gameObject.SetActive(false);
 
             card.Arrow = HookSkin.Art(host, "UpgradeArrow", WorldArtKeys.IconUpgrade, FreeGreen);
-            Box(card.Arrow.rectTransform, 0.76f, 0.66f, 0.98f, 0.90f);
+            HookSkin.Box(card.Arrow.rectTransform, 0.76f, 0.66f, 0.98f, 0.90f);
             card.Arrow.gameObject.SetActive(false);
 
             // Under construction: a hammer bobs over the half-built (faded) building.
             card.Hammer = HookSkin.Art(host, "Hammer", Survival.Domain.View.BottomNav.IconBuild, SurvivalVisuals.Gold);
-            Box(card.Hammer.rectTransform, 0.34f, 0.62f, 0.66f, 0.98f);
+            HookSkin.Box(card.Hammer.rectTransform, 0.34f, 0.62f, 0.66f, 0.98f);
             card.Hammer.raycastTarget = false;
             card.Hammer.gameObject.SetActive(plot.UnderConstruction);
 
             // Congratulations bubble (gold pill + chest): the build / upgrade finished on its own; tap to collect.
             card.Congrats = HookSkin.Panel(host, "Congrats", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.4f);
             card.Congrats.raycastTarget = true;
-            Box(card.Congrats.rectTransform, 0.16f, 0.90f, 0.84f, 1.12f);
+            HookSkin.Box(card.Congrats.rectTransform, 0.16f, 0.90f, 0.84f, 1.12f);
             var congratsGlow = HookSkin.Glow(card.Congrats.transform, "Glow", new Color(1f, 0.86f, 0.4f, 0.75f));
             congratsGlow.raycastTarget = false;
-            Box(congratsGlow.rectTransform, -0.25f, -0.6f, 1.25f, 1.6f);
+            HookSkin.Box(congratsGlow.rectTransform, -0.25f, -0.6f, 1.25f, 1.6f);
             congratsGlow.transform.SetAsFirstSibling();
             var chest = HookSkin.Art(card.Congrats.transform, "Chest", HookArtKeys.ChestClosed, ChestWood);
             chest.raycastTarget = false;
-            Box(chest.rectTransform, -0.10f, -0.35f, 0.36f, 1.30f);
+            HookSkin.Box(chest.rectTransform, -0.10f, -0.35f, 0.36f, 1.30f);
             card.CongratsText = HookSkin.Outlined(SurvivalVisuals.Text(card.Congrats.transform, "T", "", 24, TextAnchor.MiddleCenter, HookSkin.InkFor(HookArtKeys.ButtonGold)), 1f);
             card.CongratsText.fontStyle = FontStyle.Bold;
             card.CongratsText.raycastTarget = false;
-            Box(card.CongratsText.rectTransform, 0.32f, 0f, 1f, 1f);
+            HookSkin.Box(card.CongratsText.rectTransform, 0.32f, 0f, 1f, 1f);
             var congratsBtn = card.Congrats.gameObject.AddComponent<Button>();
             congratsBtn.targetGraphic = card.Congrats;
             congratsBtn.transition = Selectable.Transition.None;
@@ -376,28 +376,28 @@ namespace Survival.Unity
             q.Title = HookSkin.Outlined(SurvivalVisuals.Text(frame.transform, "Title", "", 16, TextAnchor.MiddleLeft, SurvivalVisuals.Reward), 1.3f);
             q.Title.fontStyle = FontStyle.Bold;
             HookSkin.Fit(q.Title, 10, 16);
-            Box(q.Title.rectTransform, 0.12f, 0.42f, 0.36f, 0.96f);
+            HookSkin.Box(q.Title.rectTransform, 0.12f, 0.42f, 0.36f, 0.96f);
             q.Body = HookSkin.Outlined(SurvivalVisuals.Text(frame.transform, "Body", "", 16, TextAnchor.MiddleLeft, HookSkin.Cream), 1.3f);
             q.Body.horizontalOverflow = HorizontalWrapMode.Wrap;
             HookSkin.Fit(q.Body, 10, 16);
-            Box(q.Body.rectTransform, 0.36f, 0.42f, 0.84f, 0.96f);
+            HookSkin.Box(q.Body.rectTransform, 0.36f, 0.42f, 0.84f, 0.96f);
             var bar = HookSkin.Bar(frame.transform, "Bar", out q.BarFill);
             q.BarBack = bar;
-            Box(bar.rectTransform, 0.12f, 0.12f, 0.72f, 0.38f);
+            HookSkin.Box(bar.rectTransform, 0.12f, 0.12f, 0.72f, 0.38f);
             q.Count = HookSkin.Outlined(SurvivalVisuals.Text(frame.transform, "Count", "", 16, TextAnchor.MiddleCenter, HookSkin.Cream), 1.3f);
             q.Count.fontStyle = FontStyle.Bold;
-            Box(q.Count.rectTransform, 0.72f, 0.04f, 0.86f, 0.50f);
+            HookSkin.Box(q.Count.rectTransform, 0.72f, 0.04f, 0.86f, 0.50f);
 
             // Reward chest sits at the left end; it glows and hops once the step is done.
             var preview = HookSkin.Art(frame.transform, "ChestPreview", HookArtKeys.ChestClosed, ChestWood);
-            Box(preview.rectTransform, 0.01f, 0.02f, 0.11f, 0.98f);
+            HookSkin.Box(preview.rectTransform, 0.01f, 0.02f, 0.11f, 0.98f);
             preview.color = new Color(1f, 1f, 1f, 0.75f);
             _questPreview = preview;
 
             var chestHost = SurvivalVisuals.Image(frame.transform, "Chest", new Color(0f, 0f, 0f, 0f));
-            Box(chestHost.rectTransform, 0.86f, -0.20f, 1.0f, 1.20f);
+            HookSkin.Box(chestHost.rectTransform, 0.86f, -0.20f, 1.0f, 1.20f);
             var chestGlow = HookSkin.Glow(chestHost.transform, "Glow", new Color(1f, 0.85f, 0.4f, 0.9f));
-            Box(chestGlow.rectTransform, -0.35f, -0.35f, 1.35f, 1.35f);
+            HookSkin.Box(chestGlow.rectTransform, -0.35f, -0.35f, 1.35f, 1.35f);
             if (HookSkin.Has(HookArtKeys.ChestClosed))
             {
                 var chest = HookSkin.Art(chestHost.transform, "Art", HookArtKeys.ChestClosed, ChestWood);
@@ -409,7 +409,7 @@ namespace Survival.Unity
             }
 
             var claim = HookSkin.Outlined(SurvivalVisuals.Text(chestHost.transform, "Claim", S("hook.claim", "Claim"), 15, TextAnchor.UpperCenter, SurvivalVisuals.Reward));
-            Box(claim.rectTransform, -0.4f, -0.70f, 1.4f, 0.05f);
+            HookSkin.Box(claim.rectTransform, -0.4f, -0.70f, 1.4f, 0.05f);
             q.Chest = chestHost.rectTransform;
             q.Chest.gameObject.SetActive(false);
 
@@ -429,7 +429,7 @@ namespace Survival.Unity
             SurvivalVisuals.Place(parts.Root, shopRect);
             var ring = parts.Root.Find("DiscHost/Ring");
             _freeGlow = HookSkin.Glow(ring != null ? ring : parts.Root, "FreeGlow", new Color(0.55f, 1f, 0.45f, 0.8f));
-            Box(_freeGlow.rectTransform, -0.25f, -0.25f, 1.25f, 1.25f);
+            HookSkin.Box(_freeGlow.rectTransform, -0.25f, -0.25f, 1.25f, 1.25f);
             _freeGlow.transform.SetAsFirstSibling();
             _freeBadge = parts.Free;
             parts.FreeText.text = S("hook.free", "FREE");
@@ -895,29 +895,29 @@ namespace Survival.Unity
             var isCastle = !LevelBadge.Shows(plot.Def);
             var art = SurvivalVisuals.Image(panel, "Building", Color.white);
             art.preserveAspect = true;
-            Box(art.rectTransform, 0.04f, 0.47f, 0.38f, 0.88f);
+            HookSkin.Box(art.rectTransform, 0.04f, 0.47f, 0.38f, 0.88f);
             var badge = SurvivalVisuals.Image(panel, "Badge", Color.white, SurvivalArt.Get(LevelBadge.ArtKey) ?? SurvivalArt.Circle());
             badge.preserveAspect = true;
-            Box(badge.rectTransform, 0.02f, 0.74f, 0.13f, 0.88f);
+            HookSkin.Box(badge.rectTransform, 0.02f, 0.74f, 0.13f, 0.88f);
             var badgeText = HookSkin.Outlined(SurvivalVisuals.Text(badge.transform, "N", "", 34, TextAnchor.MiddleCenter, Color.white), 2f);
             badgeText.fontStyle = FontStyle.Bold;
-            Box(badgeText.rectTransform, 0f, 0f, 1f, 0.86f);
+            HookSkin.Box(badgeText.rectTransform, 0f, 0f, 1f, 0.86f);
 
             var level = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Level", "", 34, TextAnchor.MiddleLeft, SurvivalVisuals.Reward), 2f);
             level.fontStyle = FontStyle.Bold;
-            Box(level.rectTransform, 0.41f, 0.78f, 0.96f, 0.87f);
+            HookSkin.Box(level.rectTransform, 0.41f, 0.78f, 0.96f, 0.87f);
             var what = HookSkin.Outlined(SurvivalVisuals.Text(panel, "What", "", 23, TextAnchor.UpperLeft, SurvivalVisuals.Cream), 1.5f);
             what.horizontalOverflow = HorizontalWrapMode.Wrap;
-            Box(what.rectTransform, 0.41f, 0.62f, 0.96f, 0.77f);
+            HookSkin.Box(what.rectTransform, 0.41f, 0.62f, 0.96f, 0.77f);
             var next = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Next", "", 22, TextAnchor.UpperLeft, SurvivalVisuals.Cream), 1.5f);
             next.horizontalOverflow = HorizontalWrapMode.Wrap;
-            Box(next.rectTransform, 0.41f, 0.45f, 0.96f, 0.62f);
+            HookSkin.Box(next.rectTransform, 0.41f, 0.45f, 0.96f, 0.62f);
             Image? nextTier = null;
             if (isCastle)
             {
                 nextTier = SurvivalVisuals.Image(panel, "NextTier", new Color(1f, 1f, 1f, 0.9f));
                 nextTier.preserveAspect = true;
-                Box(nextTier.rectTransform, 0.80f, 0.42f, 0.97f, 0.62f);
+                HookSkin.Box(nextTier.rectTransform, 0.80f, 0.42f, 0.97f, 0.62f);
             }
 
             var upText = SheetButton(panel, "Upgrade", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.06f, 0.24f, 0.94f, 0.40f, 28, out var up);
@@ -1208,7 +1208,7 @@ namespace Survival.Unity
             SurvivalVisuals.AnchorBox(panel.rectTransform, 0.5f, 0.52f, width, height);
             var widthPx = width * 1080f;
             HookSkin.Header(panel.rectTransform, title, Mathf.Min(widthPx * 0.82f, 700f), 118f, 34);
-            StartCoroutine(PopIn(panel.rectTransform));
+            StartCoroutine(HookSkin.PopIn(panel.rectTransform));
             return panel.rectTransform;
         }
 
@@ -1225,7 +1225,7 @@ namespace Survival.Unity
         private Text SheetButton(RectTransform panel, string name, string key, Color fallback, float x0, float y0, float x1, float y1, int size, out Button button)
         {
             button = HookSkin.Button(panel, name, key, fallback, 0.5f);
-            Box(button.GetComponent<RectTransform>(), x0, y0, x1, y1);
+            HookSkin.Box(button.GetComponent<RectTransform>(), x0, y0, x1, y1);
             var label = HookSkin.Outlined(SurvivalVisuals.Text(button.transform, "T", "", size, TextAnchor.MiddleCenter, HookSkin.InkFor(key)), 1.5f);
             label.fontStyle = FontStyle.Bold;
             SurvivalVisuals.Stretch(label.rectTransform);
@@ -1250,25 +1250,25 @@ namespace Survival.Unity
             BalanceBar.Above(panel, hook.Wallet, BalanceBarIds.SpeedUp);
             var speedPlot = hook.Base.Find(plotId);
             var building = HookSkin.Art(panel, "Building", speedPlot != null ? BuildingVisual.For(speedPlot, Tiers).ArtKey : HookArtKeys.ForPlot(plotId), SurvivalVisuals.PinBuild);
-            Box(building.rectTransform, 0.05f, 0.60f, 0.30f, 0.88f);
+            HookSkin.Box(building.rectTransform, 0.05f, 0.60f, 0.30f, 0.88f);
             var plotName = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Plot", PlotName(plotId), 26, TextAnchor.MiddleLeft, SurvivalVisuals.Cream));
-            Box(plotName.rectTransform, 0.33f, 0.78f, 0.95f, 0.87f);
+            HookSkin.Box(plotName.rectTransform, 0.33f, 0.78f, 0.95f, 0.87f);
             var hourglass = HookSkin.ResIcon(panel, "Hourglass", SurvIds.ResSpeedupM, ResColor(SurvIds.ResSpeedupM), ResGlyph(SurvIds.ResSpeedupM));
-            Box(hourglass.rectTransform, 0.32f, 0.645f, 0.43f, 0.775f);
+            HookSkin.Box(hourglass.rectTransform, 0.32f, 0.645f, 0.43f, 0.775f);
             var clock = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Clock", "", 46, TextAnchor.MiddleLeft, SurvivalVisuals.Reward), 2.5f);
             clock.fontStyle = FontStyle.Bold;
-            Box(clock.rectTransform, 0.45f, 0.64f, 0.95f, 0.78f);
+            HookSkin.Box(clock.rectTransform, 0.45f, 0.64f, 0.95f, 0.78f);
             var bar = HookSkin.Bar(panel, "Bar", out var barFill);
-            Box(bar.rectTransform, 0.07f, 0.53f, 0.93f, 0.60f);
+            HookSkin.Box(bar.rectTransform, 0.07f, 0.53f, 0.93f, 0.60f);
 
             var rushText = SheetButton(panel, "Rush", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.08f, 0.35f, 0.92f, 0.50f, 26, out var rush);
             var gem = HookSkin.ResIcon(rush.transform, "Gem", SurvIds.ResHard, ResColor(SurvIds.ResHard), ResGlyph(SurvIds.ResHard));
-            Box(gem.rectTransform, 0.03f, 0.05f, 0.15f, 0.95f);
+            HookSkin.Box(gem.rectTransform, 0.03f, 0.05f, 0.15f, 0.95f);
             var itemsText = SheetButton(panel, "Items", HookArtKeys.ButtonBlue, SurvivalVisuals.PinBuild, 0.08f, 0.19f, 0.92f, 0.33f, 22, out var items);
             var itemIcon = HookSkin.ResIcon(items.transform, "Icon", SurvIds.ResSpeedupM, ResColor(SurvIds.ResSpeedupM), ResGlyph(SurvIds.ResSpeedupM));
-            Box(itemIcon.rectTransform, 0.03f, 0.05f, 0.15f, 0.95f);
+            HookSkin.Box(itemIcon.rectTransform, 0.03f, 0.05f, 0.15f, 0.95f);
             var hint = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Hint", S("hook.speedup.free_hint", "Under 5 min left finishes free"), 19, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
-            Box(hint.rectTransform, 0f, 0.115f, 1f, 0.18f);
+            HookSkin.Box(hint.rectTransform, 0f, 0.115f, 1f, 0.18f);
             var closeText = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.33f, 0.03f, 0.67f, 0.115f, 20, out var close);
             closeText.text = S("hook.close", "Close");
 
@@ -1373,13 +1373,13 @@ namespace Survival.Unity
 
             var hook = _hook;
             var balanceChip = HookSkin.Panel(panel, "BalanceChip", HookArtKeys.Chip, SurvivalVisuals.PanelSoft, 0.5f);
-            Box(balanceChip.rectTransform, 0.30f, 0.855f, 0.70f, 0.905f);
+            HookSkin.Box(balanceChip.rectTransform, 0.30f, 0.855f, 0.70f, 0.905f);
             var balanceIcon = HookSkin.ResIcon(balanceChip.transform, "Gem", SurvIds.ResHard, ResColor(SurvIds.ResHard), ResGlyph(SurvIds.ResHard));
-            Box(balanceIcon.rectTransform, 0.02f, -0.2f, 0.22f, 1.2f);
+            HookSkin.Box(balanceIcon.rectTransform, 0.02f, -0.2f, 0.22f, 1.2f);
             var balance = HookSkin.Outlined(SurvivalVisuals.Text(balanceChip.transform, "Balance", "", 22, TextAnchor.MiddleCenter, ResColor(SurvIds.ResHard)), 1.5f);
-            Box(balance.rectTransform, 0.20f, 0f, 0.98f, 1f);
+            HookSkin.Box(balance.rectTransform, 0.20f, 0f, 0.98f, 1f);
             var sandbox = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Sandbox", S("store.sandbox", "SANDBOX \u00b7 no real charge"), 15, TextAnchor.MiddleCenter, Warn), 1.5f);
-            Box(sandbox.rectTransform, 0f, 0.82f, 1f, 0.85f);
+            HookSkin.Box(sandbox.rectTransform, 0f, 0.82f, 1f, 0.85f);
 
             var refreshers = new List<Action>();
             var rows = store.Offers.Count;
@@ -1426,11 +1426,11 @@ namespace Survival.Unity
                 var halo = HookSkin.Glow(panel, "Halo_" + offer.Id, new Color(1f, 0.82f, 0.35f, 0.45f));
                 halo.preserveAspect = false;
                 var pad = (yMax - yMin) * 0.25f;
-                Box(halo.rectTransform, 0.0f, yMin - pad, 1.0f, yMax + pad);
+                HookSkin.Box(halo.rectTransform, 0.0f, yMin - pad, 1.0f, yMax + pad);
             }
 
             var row = HookSkin.Panel(panel, "Offer_" + offer.Id, HookArtKeys.Plate, SurvivalVisuals.RowFill, 0.45f);
-            Box(row.rectTransform, 0.04f, yMin, 0.96f, yMax);
+            HookSkin.Box(row.rectTransform, 0.04f, yMin, 0.96f, yMax);
 
             var iconRes = isFree ? SurvIds.ResSoft : FirstKey(offer.Grants) ?? SurvIds.ResHard;
             Image icon;
@@ -1453,13 +1453,13 @@ namespace Survival.Unity
                 icon = HookSkin.ResIcon(row.transform, "Icon", iconRes, ResColor(iconRes), ResGlyph(iconRes));
             }
 
-            Box(icon.rectTransform, 0.01f, -0.04f, 0.22f, 1.04f);
+            HookSkin.Box(icon.rectTransform, 0.01f, -0.04f, 0.22f, 1.04f);
 
             var name = HookSkin.Outlined(SurvivalVisuals.Text(row.transform, "Name", S(offer.Id + ".title", offer.Id), 24, TextAnchor.MiddleLeft, SurvivalVisuals.Cream));
             name.fontStyle = FontStyle.Bold;
-            Box(name.rectTransform, 0.24f, 0.50f, 0.64f, 0.92f);
+            HookSkin.Box(name.rectTransform, 0.24f, 0.50f, 0.64f, 0.92f);
             var sub = HookSkin.Outlined(SurvivalVisuals.Text(row.transform, "Sub", isFree ? "" : GrantLine(offer.Grants), 19, TextAnchor.MiddleLeft, isFree ? FreeGreen : ResColor(iconRes)), 1.5f);
-            Box(sub.rectTransform, 0.24f, 0.10f, 0.64f, 0.50f);
+            HookSkin.Box(sub.rectTransform, 0.24f, 0.10f, 0.64f, 0.50f);
 
             if (tagged)
             {
@@ -1467,10 +1467,10 @@ namespace Survival.Unity
                 var tag = ribbonSprite != null
                     ? SurvivalVisuals.Image(row.transform, "Tag", Color.white, ribbonSprite)
                     : SurvivalVisuals.Image(row.transform, "Tag", new Color(0.85f, 0.25f, 0.30f, 1f));
-                Box(tag.rectTransform, 0.24f, 0.72f, 0.76f, 1.24f);
+                HookSkin.Box(tag.rectTransform, 0.24f, 0.72f, 0.76f, 1.24f);
                 var tagText = HookSkin.Outlined(SurvivalVisuals.Text(tag.transform, "T", S("offer.tag." + offer.Tag, offer.Tag ?? ""), 18, TextAnchor.MiddleCenter, Color.white), 1.5f);
                 tagText.fontStyle = FontStyle.Bold;
-                Box(tagText.rectTransform, 0.15f, 0.30f, 0.85f, 0.95f);
+                HookSkin.Box(tagText.rectTransform, 0.15f, 0.30f, 0.85f, 0.95f);
             }
 
             var buyKey = isFree ? HookArtKeys.ButtonGreen : HookArtKeys.ButtonGold;
@@ -1481,7 +1481,7 @@ namespace Survival.Unity
             if (isFree)
             {
                 freeBadge = HookSkin.Art(buy.transform, "Badge", HookArtKeys.BadgeFree, FreeGreen);
-                Box(freeBadge.rectTransform, 0.76f, 0.40f, 1.14f, 1.45f);
+                HookSkin.Box(freeBadge.rectTransform, 0.76f, 0.40f, 1.14f, 1.45f);
                 var freeText = HookSkin.Outlined(SurvivalVisuals.Text(freeBadge.transform, "T", S("hook.free", "FREE"), 14, TextAnchor.MiddleCenter, Color.white), 1.5f);
                 freeText.fontStyle = FontStyle.Bold;
                 SurvivalVisuals.Stretch(freeText.rectTransform);
@@ -1750,7 +1750,7 @@ namespace Survival.Unity
             }
 
             var titleText = SurvivalVisuals.Text(titleHost, "Title", title, 50, TextAnchor.MiddleCenter, SurvivalVisuals.Reward);
-            Box(titleText.rectTransform, 0.12f, 0.22f, 0.88f, 0.98f);
+            HookSkin.Box(titleText.rectTransform, 0.12f, 0.22f, 0.88f, 0.98f);
             titleText.fontStyle = FontStyle.Bold;
             HookSkin.Outlined(titleText, 3f);
             titleHost.localScale = Vector3.zero;
@@ -1991,10 +1991,10 @@ namespace Survival.Unity
             }
 
             var icon = HookSkin.ResIcon(row, "Icon", res, ResColor(res), ResGlyph(res));
-            Box(icon.rectTransform, 0.02f, -0.35f, 0.24f, 1.35f);
+            HookSkin.Box(icon.rectTransform, 0.02f, -0.35f, 0.24f, 1.35f);
             var label = HookSkin.Outlined(SurvivalVisuals.Text(row, "T", "+" + ChipWallet.FormatGrouped(amount) + " " + ResName(res), 36, TextAnchor.MiddleLeft, SurvivalVisuals.Reward), 2.5f);
             label.fontStyle = FontStyle.Bold;
-            Box(label.rectTransform, 0.27f, 0f, 1f, 1f);
+            HookSkin.Box(label.rectTransform, 0.27f, 0f, 1f, 1f);
             row.localScale = Vector3.zero;
             return row;
         }
@@ -2003,16 +2003,16 @@ namespace Survival.Unity
         private static void BuildChestArt(RectTransform host, out RectTransform? lid)
         {
             var body = SurvivalVisuals.Image(host, "Body", ChestWood);
-            Box(body.rectTransform, 0.05f, 0f, 0.95f, 0.60f);
+            HookSkin.Box(body.rectTransform, 0.05f, 0f, 0.95f, 0.60f);
             var band = SurvivalVisuals.Image(body.transform, "Band", SurvivalVisuals.Gold);
-            Box(band.rectTransform, 0f, 0.62f, 1f, 0.74f);
+            HookSkin.Box(band.rectTransform, 0f, 0.62f, 1f, 0.74f);
             var lockImg = SurvivalVisuals.Image(body.transform, "Lock", SurvivalVisuals.Reward);
-            Box(lockImg.rectTransform, 0.42f, 0.40f, 0.58f, 0.86f);
+            HookSkin.Box(lockImg.rectTransform, 0.42f, 0.40f, 0.58f, 0.86f);
             var lidImg = SurvivalVisuals.Image(host, "Lid", ChestLid);
             lidImg.rectTransform.pivot = new Vector2(0f, 0f);
-            Box(lidImg.rectTransform, 0f, 0.58f, 1f, 0.92f);
+            HookSkin.Box(lidImg.rectTransform, 0f, 0.58f, 1f, 0.92f);
             var lidBand = SurvivalVisuals.Image(lidImg.transform, "Band", SurvivalVisuals.Gold);
-            Box(lidBand.rectTransform, 0f, 0f, 1f, 0.22f);
+            HookSkin.Box(lidBand.rectTransform, 0f, 0f, 1f, 0.22f);
             lid = lidImg.rectTransform;
         }
 
@@ -2466,23 +2466,6 @@ namespace Survival.Unity
             }
         }
 
-        private static IEnumerator PopIn(RectTransform rt)
-        {
-            const int frames = 12;
-            for (var i = 1; i <= frames; i++)
-            {
-                if (rt == null)
-                {
-                    yield break;
-                }
-
-                var u = i / (float)frames;
-                var k = u < 0.7f ? Mathf.Lerp(0.6f, 1.06f, u / 0.7f) : Mathf.Lerp(1.06f, 1f, (u - 0.7f) / 0.3f);
-                rt.localScale = new Vector3(k, k, 1f);
-                yield return null;
-            }
-        }
-
         private static IEnumerator Shake(RectTransform rt)
         {
             const int frames = 14;
@@ -2594,14 +2577,6 @@ namespace Survival.Unity
             }
 
             return new Vector2((local.x - rect.xMin) / rect.width, (local.y - rect.yMin) / rect.height);
-        }
-
-        private static void Box(RectTransform rt, float x0, float y0, float x1, float y1)
-        {
-            rt.anchorMin = new Vector2(x0, y0);
-            rt.anchorMax = new Vector2(x1, y1);
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
         }
 
         private static void SetBar(Image fill, float fraction, Color color)

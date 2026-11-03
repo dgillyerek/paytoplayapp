@@ -190,22 +190,22 @@ namespace Survival.Unity
             // Header: the painted gold cup, how many are won, and what this screen is for.
             var head = HookSkin.Panel(panel, "TrophyHead", HookArtKeys.Plate, new Color(0.16f, 0.20f, 0.36f, 1f), 0.8f);
             head.raycastTarget = false;
-            Box(head.rectTransform, 0.04f, 0.80f, 0.96f, 0.905f);
+            HookSkin.Box(head.rectTransform, 0.04f, 0.80f, 0.96f, 0.905f);
             Ornaments.Bevel(head.transform, 0.6f);
             Ornaments.Frame(head.transform, Ornaments.Gold, 2f);
             var cup = HookSkin.Art(head.transform, "Cup", HookArtKeys.TrophyGold, Ornaments.Gold);
             cup.preserveAspect = true;
             cup.raycastTarget = false;
-            Box(cup.rectTransform, 0.01f, 0.04f, 0.17f, 0.96f);
+            HookSkin.Box(cup.rectTransform, 0.01f, 0.04f, 0.17f, 0.96f);
             var won = HookSkin.Outlined(SurvivalVisuals.Text(head.transform, "Won", Fmt("trophy.won_count", "{0} trophies won", hall.ClaimedCount), 30, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.6f);
             won.fontStyle = FontStyle.Bold;
             won.raycastTarget = false;
             HookSkin.Fit(won, 14, 30);
-            Box(won.rectTransform, 0.19f, 0.52f, 0.98f, 0.96f);
+            HookSkin.Box(won.rectTransform, 0.19f, 0.52f, 0.98f, 0.96f);
             var sub = HookSkin.Outlined(SurvivalVisuals.Text(head.transform, "Sub", S("trophy.explain", "Win bronze, then silver, then gold. Tap GO to play, CLAIM to collect."), 18, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.1f);
             sub.raycastTarget = false;
             HookSkin.Fit(sub, 11, 18);
-            Box(sub.rectTransform, 0.19f, 0.04f, 0.95f, 0.52f);
+            HookSkin.Box(sub.rectTransform, 0.19f, 0.04f, 0.95f, 0.52f);
 
             var kinds = hall.Kinds();
             const float top = 0.79f, bottom = 0.03f;
@@ -226,7 +226,7 @@ namespace Survival.Unity
             var metal = TrophyMetal(tierIdx);
             var card = HookSkin.Panel(panel, "Trophy_" + kind, HookArtKeys.Plate, ready ? new Color(0.20f, 0.34f, 0.22f, 1f) : new Color(0.16f, 0.19f, 0.32f, 1f), 0.7f);
             card.raycastTarget = false;
-            Box(card.rectTransform, x0, y0, x1, y1);
+            HookSkin.Box(card.rectTransform, x0, y0, x1, y1);
             Ornaments.Bevel(card.transform, 0.6f);
             Ornaments.Frame(card.transform, ready ? new Color(0.55f, 0.95f, 0.45f, 1f) : Ornaments.Gold, 2f);
 
@@ -234,7 +234,7 @@ namespace Survival.Unity
             var art = HookSkin.Art(card.transform, "Cup", TrophyArtFor(tierIdx), metal);
             art.preserveAspect = true;
             art.raycastTarget = false;
-            Box(art.rectTransform, 0.01f, 0.06f, 0.15f, 0.94f);
+            HookSkin.Box(art.rectTransform, 0.01f, 0.06f, 0.15f, 0.94f);
             if (next != null && !ready)
             {
                 art.color = new Color(0.75f, 0.75f, 0.75f, 1f);
@@ -243,13 +243,13 @@ namespace Survival.Unity
             var badge = HookSkin.Art(card.transform, "Kind", TrophyIconFor(kind), metal);
             badge.preserveAspect = true;
             badge.raycastTarget = false;
-            Box(badge.rectTransform, 0.10f, 0.04f, 0.18f, 0.40f);
+            HookSkin.Box(badge.rectTransform, 0.10f, 0.04f, 0.18f, 0.40f);
 
             var name = HookSkin.Outlined(SurvivalVisuals.Text(card.transform, "Name", S("trophy.kind." + kind + ".name", kind), 24, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.4f);
             name.fontStyle = FontStyle.Bold;
             name.raycastTarget = false;
             HookSkin.Fit(name, 12, 24);
-            Box(name.rectTransform, 0.19f, 0.66f, 0.62f, 0.96f);
+            HookSkin.Box(name.rectTransform, 0.19f, 0.66f, 0.62f, 0.96f);
 
             var tierText = next == null
                 ? S("trophy.tier.max", "All tiers won")
@@ -258,13 +258,13 @@ namespace Survival.Unity
             tier.fontStyle = FontStyle.Bold;
             tier.raycastTarget = false;
             HookSkin.Fit(tier, 10, 17);
-            Box(tier.rectTransform, 0.19f, 0.46f, 0.62f, 0.68f);
+            HookSkin.Box(tier.rectTransform, 0.19f, 0.46f, 0.62f, 0.68f);
 
             if (next == null)
             {
                 var all = HookSkin.Outlined(SurvivalVisuals.Text(card.transform, "Done", S("trophy.complete", "ALL TROPHIES WON \u2714"), 24, TextAnchor.MiddleCenter, FreeGreen), 1.5f);
                 all.raycastTarget = false;
-                Box(all.rectTransform, 0.19f, 0.06f, 0.96f, 0.46f);
+                HookSkin.Box(all.rectTransform, 0.19f, 0.06f, 0.96f, 0.46f);
                 return;
             }
 
@@ -272,11 +272,11 @@ namespace Survival.Unity
             var desc = HookSkin.Outlined(SurvivalVisuals.Text(card.transform, "Desc", Fmt("trophy.kind." + kind + ".desc", "{0}", next.Target), 16, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.1f);
             desc.raycastTarget = false;
             HookSkin.Fit(desc, 10, 16);
-            Box(desc.rectTransform, 0.19f, 0.28f, 0.62f, 0.47f);
+            HookSkin.Box(desc.rectTransform, 0.19f, 0.28f, 0.62f, 0.47f);
 
             var bar = HookSkin.Bar(card.transform, "Bar", out var fill);
             bar.raycastTarget = false;
-            Box(bar.rectTransform, 0.19f, 0.05f, 0.62f, 0.28f);
+            HookSkin.Box(bar.rectTransform, 0.19f, 0.05f, 0.62f, 0.28f);
             HookSkin.SetBar(fill, next.Target <= 0 ? 1f : (float)cur / next.Target, ready ? HookArtKeys.BarFillGold : HookArtKeys.BarFillGreen, ready ? Ornaments.Gold : FreeGreen);
             var count = HookSkin.Outlined(SurvivalVisuals.Text(bar.transform, "N", Math.Min(cur, next.Target) + " / " + next.Target, 16, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.2f);
             count.raycastTarget = false;

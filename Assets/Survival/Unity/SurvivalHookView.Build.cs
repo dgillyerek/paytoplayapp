@@ -170,7 +170,7 @@ namespace Survival.Unity
             var rt = btn.GetComponent<RectTransform>();
             SurvivalVisuals.Place(rt, slot);
             var glow = HookSkin.Glow(rt, "Glow", new Color(1f, 0.85f, 0.4f, 0.35f));
-            Box(glow.rectTransform, -0.12f, -0.10f, 1.12f, 1.25f);
+            HookSkin.Box(glow.rectTransform, -0.12f, -0.10f, 1.12f, 1.25f);
             glow.transform.SetAsFirstSibling();
             _buildButton = rt;
             _buildBadge = BuildUpgradeBadge(rt);
@@ -285,18 +285,18 @@ namespace Survival.Unity
                 var y1 = top - i * rowH;
                 var y0 = y1 - rowH + 0.012f;
                 var row = HookSkin.Panel(panel, "Row_" + t.Type, HookArtKeys.Plate, SurvivalVisuals.RowFill, 0.5f);
-                Box(row.rectTransform, 0.04f, y0, 0.96f, y1);
+                HookSkin.Box(row.rectTransform, 0.04f, y0, 0.96f, y1);
                 var art = HookSkin.Art(row.transform, "Art", HookArtKeys.ForBuildType(t.Type), t.Produces != null ? ResColor(t.Produces) : SurvivalVisuals.PinBuild);
-                Box(art.rectTransform, 0.01f, 0.04f, 0.22f, 0.98f);
+                HookSkin.Box(art.rectTransform, 0.01f, 0.04f, 0.22f, 0.98f);
                 var name = HookSkin.Outlined(SurvivalVisuals.Text(row.transform, "Name", S("build.type." + t.Type, t.Type), 28, TextAnchor.MiddleLeft, SurvivalVisuals.Reward), 1.5f);
                 name.fontStyle = FontStyle.Bold;
-                Box(name.rectTransform, 0.24f, 0.62f, 0.68f, 0.94f);
+                HookSkin.Box(name.rectTransform, 0.24f, 0.62f, 0.68f, 0.94f);
                 var what = SurvivalVisuals.Text(row.transform, "What", S("build.desc." + t.Type, ""), 18, TextAnchor.MiddleLeft, SurvivalVisuals.Mute);
-                Box(what.rectTransform, 0.24f, 0.44f, 0.70f, 0.64f);
+                HookSkin.Box(what.rectTransform, 0.24f, 0.44f, 0.70f, 0.64f);
                 var cost = HookSkin.Outlined(SurvivalVisuals.Text(row.transform, "Cost", "", 19, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.2f);
-                Box(cost.rectTransform, 0.24f, 0.24f, 0.70f, 0.44f);
+                HookSkin.Box(cost.rectTransform, 0.24f, 0.24f, 0.70f, 0.44f);
                 var count = HookSkin.Outlined(SurvivalVisuals.Text(row.transform, "Count", "", 18, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.2f);
-                Box(count.rectTransform, 0.24f, 0.04f, 0.70f, 0.24f);
+                HookSkin.Box(count.rectTransform, 0.24f, 0.04f, 0.70f, 0.24f);
                 var label = SheetButton((RectTransform)row.transform, "Go", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.71f, 0.18f, 0.98f, 0.82f, 22, out var go);
                 label.horizontalOverflow = HorizontalWrapMode.Wrap;
                 var goImg = go.GetComponent<Image>();
@@ -350,7 +350,7 @@ namespace Survival.Unity
             }
 
             var spots = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Spots", "", 19, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.2f);
-            Box(spots.rectTransform, 0.05f, 0.105f, 0.95f, 0.155f);
+            HookSkin.Box(spots.rectTransform, 0.05f, 0.105f, 0.95f, 0.155f);
             var closeText = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.33f, 0.025f, 0.67f, 0.10f, 22, out var close);
             closeText.text = S("hook.close", "Close");
             Wire(close, CloseSheet);
@@ -388,10 +388,10 @@ namespace Survival.Unity
             {
                 var bar = HookSkin.Panel(_overlay, "PlaceBar", HookArtKeys.Panel, SurvivalVisuals.InspectFill, 0.6f);
                 bar.raycastTarget = true;
-                Box(bar.rectTransform, 0.03f, 0.115f, 0.97f, 0.235f);
+                HookSkin.Box(bar.rectTransform, 0.03f, 0.115f, 0.97f, 0.235f);
                 _placeHint = HookSkin.Outlined(SurvivalVisuals.Text(bar.transform, "Hint", "", 26, TextAnchor.MiddleCenter, SurvivalVisuals.Reward), 1.5f);
                 _placeHint.fontStyle = FontStyle.Bold;
-                Box(_placeHint.rectTransform, 0.03f, 0.56f, 0.97f, 0.94f);
+                HookSkin.Box(_placeHint.rectTransform, 0.03f, 0.56f, 0.97f, 0.94f);
                 _placeAutoText = SheetButton(bar.rectTransform, "Auto", HookArtKeys.ButtonGreen, FreeGreen, 0.05f, 0.10f, 0.60f, 0.54f, 22, out var auto);
                 var cancelText = SheetButton(bar.rectTransform, "Cancel", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.63f, 0.10f, 0.95f, 0.54f, 22, out var cancel);
                 cancelText.text = S("build.cancel", "Cancel");
@@ -406,7 +406,7 @@ namespace Survival.Unity
                 _placeHint.text = Fmt("build.place_hint", "Tap a glowing spot for your {0}", S("build.type." + type, type));
             }
 
-            StartCoroutine(PopIn(_placeBar));
+            StartCoroutine(HookSkin.PopIn(_placeBar));
             if (first != null)
             {
                 StartCoroutine(Punch(first, 0.2f, 12));

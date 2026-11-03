@@ -291,13 +291,13 @@ namespace Survival.Unity
             marker.SetParent(content, false);
             Point(marker, x, y, px, px * 0.75f, 0.5f);
             var glow = HookSkin.Glow(marker, "Glow", new Color(1f, 0.86f, 0.35f, 0.7f));
-            Box(glow.rectTransform, -0.18f, -0.25f, 1.18f, 1.25f);
+            HookSkin.Box(glow.rectTransform, -0.18f, -0.25f, 1.18f, 1.25f);
             var dirt = HookSkin.Art(marker, "Dirt", WorldArtKeys.PlotEmpty, new Color(0.45f, 0.33f, 0.2f, 0.9f));
-            Box(dirt.rectTransform, 0f, 0f, 1f, 1f);
+            HookSkin.Box(dirt.rectTransform, 0f, 0f, 1f, 1f);
             var hammer = HookSkin.Art(marker, "Hammer", BottomNav.IconBuild, SurvivalVisuals.Gold);
-            Box(hammer.rectTransform, 0.30f, 0.30f, 0.70f, 0.95f);
+            HookSkin.Box(hammer.rectTransform, 0.30f, 0.30f, 0.70f, 0.95f);
             var hit = SurvivalVisuals.Button(marker, "Hit", new Color(1f, 1f, 1f, 0f));
-            Box((RectTransform)hit.transform, -0.05f, -0.1f, 1.05f, 1.2f);
+            HookSkin.Box((RectTransform)hit.transform, -0.05f, -0.1f, 1.05f, 1.2f);
             var id = spot.Id;
             hit.onClick.AddListener(() =>
             {
@@ -383,12 +383,5 @@ namespace Survival.Unity
             rt.sizeDelta = new Vector2(w, h);
         }
 
-        private static void Box(RectTransform rt, float x0, float y0, float x1, float y1)
-        {
-            rt.anchorMin = new Vector2(x0, y0);
-            rt.anchorMax = new Vector2(x1, y1);
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-        }
     }
 }

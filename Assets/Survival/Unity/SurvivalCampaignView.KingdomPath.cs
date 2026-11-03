@@ -32,7 +32,7 @@ namespace Survival.Unity
                 var parts = SurvivalSideRail.Round(root, RailPrefix + KingdomPathRailName, null, S("reward_track.rail", "PATH"), new Color(0.20f, 0.42f, 0.70f, 1f));
                 var rt = parts.Root;
                 var top = 0.300f + (KingdomPathRailSlot * 0.078f);
-                Box(rt, 0.018f, 1f - (top + 0.070f), 0.150f, 1f - top);
+                HookSkin.Box(rt, 0.018f, 1f - (top + 0.070f), 0.150f, 1f - top);
                 var g = HookSkin.Outlined(SurvivalVisuals.Text(parts.Icon, "Glyph", "\u2691", 40, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 2f);
                 g.raycastTarget = false;
                 SurvivalVisuals.Stretch(g.rectTransform);

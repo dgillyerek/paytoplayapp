@@ -302,9 +302,9 @@ namespace Survival.Unity
                 HookSkin.Outlined(name, 1.5f);
             }
 
-            Box(name.rectTransform, 0.04f, hasSub ? 0.45f : 0f, 0.96f, 1f);
+            HookSkin.Box(name.rectTransform, 0.04f, hasSub ? 0.45f : 0f, 0.96f, 1f);
             var sub = HookSkin.Outlined(SurvivalVisuals.Text(plate.transform, "Sub", SubOf(e), 20, TextAnchor.MiddleCenter, plateKey == HookArtKeys.ButtonGold ? HookSkin.Ink : SurvivalVisuals.Reward), 1.2f);
-            Box(sub.rectTransform, 0.04f, 0.04f, 0.96f, 0.5f);
+            HookSkin.Box(sub.rectTransform, 0.04f, 0.04f, 0.96f, 0.5f);
             sub.gameObject.SetActive(hasSub);
             _labels.Add(plate.rectTransform);
 
@@ -321,7 +321,7 @@ namespace Survival.Unity
             if (e.Kind == WorldEntityKind.PlayerVillage)
             {
                 var you = HookSkin.Panel(plate.transform, "You", HookArtKeys.RibbonBlue, SurvivalVisuals.PinBuild, 0.3f);
-                Box(you.rectTransform, 0.22f, 0.98f, 0.78f, 1.62f);
+                HookSkin.Box(you.rectTransform, 0.22f, 0.98f, 0.78f, 1.62f);
                 var t = HookSkin.Outlined(SurvivalVisuals.Text(you.transform, "T", S("world.card.you", "Your village"), 20, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
                 t.fontStyle = FontStyle.Bold;
                 SurvivalVisuals.Stretch(t.rectTransform);
@@ -455,7 +455,7 @@ namespace Survival.Unity
             if (m.IsPlayer)
             {
                 var chip = HookSkin.Panel(art.transform, "Clock", HookArtKeys.Chip, SurvivalVisuals.PanelSoft, 0.3f);
-                Box(chip.rectTransform, 0.08f, 0.98f, 0.92f, 1.26f);
+                HookSkin.Box(chip.rectTransform, 0.08f, 0.98f, 0.92f, 1.26f);
                 view.Timer = HookSkin.Outlined(SurvivalVisuals.Text(chip.transform, "T", "", 22, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
                 view.Timer.fontStyle = FontStyle.Bold;
                 SurvivalVisuals.Stretch(view.Timer.rectTransform);
@@ -556,28 +556,28 @@ namespace Survival.Unity
             }
             else
             {
-                Box(panel.rectTransform, 0.03f, 0.235f, 0.97f, 0.415f);
+                HookSkin.Box(panel.rectTransform, 0.03f, 0.235f, 0.97f, 0.415f);
             }
 
             var c = new Card { Root = panel.rectTransform };
             c.Icon = SurvivalVisuals.Image(panel.transform, "Icon", Color.white);
             c.Icon.preserveAspect = true;
-            Box(c.Icon.rectTransform, 0.02f, 0.08f, 0.27f, 0.98f);
+            HookSkin.Box(c.Icon.rectTransform, 0.02f, 0.08f, 0.27f, 0.98f);
             c.Title = HookSkin.Outlined(SurvivalVisuals.Text(panel.transform, "Title", "", 34, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 2f);
             c.Title.fontStyle = FontStyle.Bold;
-            Box(c.Title.rectTransform, 0.29f, 0.70f, 0.88f, 0.94f);
+            HookSkin.Box(c.Title.rectTransform, 0.29f, 0.70f, 0.88f, 0.94f);
             c.Line1 = HookSkin.Outlined(SurvivalVisuals.Text(panel.transform, "Line1", "", 25, TextAnchor.MiddleLeft, SurvivalVisuals.Reward), 1.5f);
-            Box(c.Line1.rectTransform, 0.29f, 0.52f, 0.97f, 0.70f);
+            HookSkin.Box(c.Line1.rectTransform, 0.29f, 0.52f, 0.97f, 0.70f);
             c.Line2 = HookSkin.Outlined(SurvivalVisuals.Text(panel.transform, "Line2", "", 22, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.5f);
-            Box(c.Line2.rectTransform, 0.29f, 0.36f, 0.97f, 0.52f);
+            HookSkin.Box(c.Line2.rectTransform, 0.29f, 0.36f, 0.97f, 0.52f);
             c.Action = HookSkin.Button(panel.transform, "Action", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.5f);
             c.ActionImg = c.Action.GetComponent<Image>();
-            Box(c.ActionImg.rectTransform, 0.29f, 0.07f, 0.70f, 0.34f);
+            HookSkin.Box(c.ActionImg.rectTransform, 0.29f, 0.07f, 0.70f, 0.34f);
             c.ActionText = HookSkin.Outlined(SurvivalVisuals.Text(c.Action.transform, "T", "", 28, TextAnchor.MiddleCenter, new Color(1f, 0.957f, 0.839f, 1f)), 1.5f);
             c.ActionText.fontStyle = FontStyle.Bold;
             SurvivalVisuals.Stretch(c.ActionText.rectTransform);
             c.Close = HookSkin.Button(panel.transform, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.5f);
-            Box(c.Close.GetComponent<RectTransform>(), 0.72f, 0.07f, 0.97f, 0.34f);
+            HookSkin.Box(c.Close.GetComponent<RectTransform>(), 0.72f, 0.07f, 0.97f, 0.34f);
             var closeText = HookSkin.Outlined(SurvivalVisuals.Text(c.Close.transform, "T", S("world.action.close", "Close"), 26, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
             closeText.fontStyle = FontStyle.Bold;
             SurvivalVisuals.Stretch(closeText.rectTransform);
@@ -964,12 +964,5 @@ namespace Survival.Unity
             return (s / 60).ToString(CultureInfo.InvariantCulture) + ":" + (s % 60).ToString("00", CultureInfo.InvariantCulture);
         }
 
-        private static void Box(RectTransform rt, float x0, float y0, float x1, float y1)
-        {
-            rt.anchorMin = new Vector2(x0, y0);
-            rt.anchorMax = new Vector2(x1, y1);
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-        }
     }
 }
