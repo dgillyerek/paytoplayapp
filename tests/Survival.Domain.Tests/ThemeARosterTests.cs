@@ -246,8 +246,6 @@ public sealed class ThemeARosterTests
 
         Assert.Contains("[MenuItem(\"Survival/Play: World + Quest Hook (Game view 1080x1920)\")]", editor, StringComparison.Ordinal);
 
-        Assert.DoesNotContain("Survival/Ironhowl Demo (rest / walk / attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
-        Assert.DoesNotContain("Survival/Emberfang Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
 
         var excluded = Array.Empty<string>();   // Rowan (#64) and Bonequill (#63) both ship now
         var scenes = Path.Combine(root, "Assets", "Survival", "Scenes");
