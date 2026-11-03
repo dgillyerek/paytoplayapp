@@ -136,6 +136,49 @@ namespace Survival.Unity
             return type != null ? S("build.type." + type, type) : S("hook.plot." + plotId, plotId);
         }
 
+        /// <summary>Active Timers row label: "Barracks Lv 5" (the level being built or upgraded to).</summary>
+        public string TimerPlotLabel(string plotId)
+        {
+            var plot = _hook?.Base.Find(plotId);
+            if (plot == null)
+            {
+                return PlotName(plotId);
+            }
+
+            var lv = plot.UnderConstruction ? plot.Level : plot.Level + 1;
+            return PlotName(plotId) + "  " + Fmt("hook.level", "Lv {0}", lv);
+        }
+
+        /// <summary>Active Timers tap: show town, glide to the plot and open its panel (speed-up / claim while busy).</summary>
+        public void GoToPlot(string plotId)
+        {
+            var hook = _hook;
+            if (hook == null || hook.Base.Find(plotId) == null)
+            {
+                return;
+            }
+
+            _play?.ShowScreen(Survival.Domain.View.PlayScreen.Village);
+            if (_play?.Village?.Host(plotId) is RectTransform host)
+            {
+                _play.Village.Rig?.FocusOn(host.anchoredPosition.x, host.anchoredPosition.y);
+            }
+
+            if (_cards.TryGetValue(plotId, out var card))
+            {
+                StartCoroutine(Punch(card.Root, 0.14f, 10));
+            }
+
+            if (hook.Base.PendingFor(plotId) != null || hook.Base.IsUpgrading(plotId))
+            {
+                OnTapPlot(plotId);
+            }
+            else
+            {
+                OpenBuilding(plotId);
+            }
+        }
+
         // ---------- Build button + menu ----------
 
         private void BuildBuildButton(RectTransform root)

@@ -24,6 +24,7 @@ namespace Survival.Unity
         partial void EngageAttach_Guild();
         partial void EngageTick_Guild();
         partial void EngageTick_KingdomPath();
+        partial void EngageTick_Timers();
 
         private bool _engageAttached;
 
@@ -51,6 +52,7 @@ namespace Survival.Unity
             EngageTick_Crusade();
             EngageTick_Guild();
             EngageTick_KingdomPath();
+            EngageTick_Timers();
         }
 
         /// <summary>Is any campaign screen or sheet open (so a feature does not pop over it)?</summary>
