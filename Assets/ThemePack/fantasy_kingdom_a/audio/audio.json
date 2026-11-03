@@ -95,6 +95,8 @@
     "BossSlam": "sfx.boss.ground_pound",
     "BossQuakeWindup": "sfx.boss.dodge_warning",
     "BossQuake": ["sfx.boss.quake_rumble", "sfx.boss.ground_pound"],
+    "BossRockThrown": "sfx.boss.dodge_warning",
+    "BossRockLanded": "sfx.boss.ground_pound",
     "Won": "jingle.win",
     "Lost": ["sfx.hero.death", "jingle.lose"]
   },
