@@ -7,6 +7,7 @@ using Survival.Domain.Base;
 using Survival.Domain.Clock;
 using Survival.Domain.Gift;
 using Survival.Domain.Ids;
+using Survival.Domain.Quest;
 using Survival.Domain.Session;
 using Survival.Domain.Store;
 using Survival.Domain.Theme;
@@ -366,6 +367,7 @@ namespace Survival.Unity
             frame.raycastTarget = true;
             var btn = frame.gameObject.AddComponent<Button>();
             btn.targetGraphic = frame;
+            frame.gameObject.AddComponent<PressFx>(); // sinks a touch while held; tap goes where the quest is done
             SurvivalVisuals.Place(frame.rectTransform, questRect);
             Ornaments.Frame(frame.transform, Ornaments.Gold, 2f);
             Ornaments.Shine(frame.rectTransform, 4.2f);
@@ -1045,7 +1047,14 @@ namespace Survival.Unity
             }
 
             var step = _hook.Quests.Current;
-            if (step == null || !_hook.Quests.IsComplete)
+            var go = QuestDestination.For(_hook.Quests);
+            if (go.Kind != QuestGoKind.Claim)
+            {
+                GoToQuest(step, go);
+                return;
+            }
+
+            if (step == null)
             {
                 return;
             }
@@ -1061,6 +1070,76 @@ namespace Survival.Unity
             _questWasComplete = _hook.Quests.IsComplete;
             QueueCelebration(S("quest.claim.title", "Quest complete!"), rewards);
             RefreshQuest();
+        }
+
+        /// <summary>Quest bar tap on an unfinished step: go where its objective is done.</summary>
+        private void GoToQuest(QuestStepDef? step, QuestGo go)
+        {
+            if (_hook == null || step == null)
+            {
+                return;
+            }
+
+            switch (go.Kind)
+            {
+                case QuestGoKind.Building:
+                    GoToBuilding(step, go.Target);
+                    break;
+                case QuestGoKind.WorldNode:
+                    _play?.ShowScreen(PlayScreen.World);
+                    if (_play?.WorldView == null || !_play.WorldView.FocusEntity(go.Target))
+                    {
+                        Toast(new Vector2(0.5f, 0.55f), S("quest.go.world", "Find it on the world map"), SurvivalVisuals.PinBuild);
+                    }
+
+                    break;
+            }
+        }
+
+        private void GoToBuilding(QuestStepDef step, string buildingId)
+        {
+            var hook = _hook!;
+            var collect = string.Equals(step.Objective, SurvIds.QuestObjectiveCollect, StringComparison.Ordinal);
+            BasePlot? pick = null;
+            foreach (var plot in hook.Base.Plots)
+            {
+                if (!string.Equals(plot.Def.BuildingId, buildingId, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                // Collect: the one with something to collect; otherwise the first match.
+                if (pick == null || (collect && plot.CanCollect && !pick.CanCollect))
+                {
+                    pick = plot;
+                }
+            }
+
+            if (pick == null)
+            {
+                OpenBuildMenu();
+                return;
+            }
+
+            var id = pick.Def.Id;
+            _play?.ShowScreen(PlayScreen.Village);
+            if (_play?.Village?.Host(id) is RectTransform host)
+            {
+                _play.Village.Rig?.FocusOn(host.anchoredPosition.x, host.anchoredPosition.y);
+            }
+
+            if (_cards.TryGetValue(id, out var card))
+            {
+                StartCoroutine(Punch(card.Root, 0.14f, 10));
+            }
+            if (collect || hook.Base.PendingFor(id) != null || hook.Base.IsUpgrading(id))
+            {
+                OnTapPlot(id);
+            }
+            else
+            {
+                OpenBuilding(id);
+            }
         }
 
         private void OnMarchResolved(WorldMarchLoop loop, int yield)
