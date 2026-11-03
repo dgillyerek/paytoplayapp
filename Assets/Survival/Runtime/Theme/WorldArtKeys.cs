@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using Survival.Domain.Base;
 using Survival.Domain.View;
@@ -37,6 +38,13 @@ namespace Survival.Domain.Theme
         public static string Camp(string type) => "theme_a.world.camp." + type;
 
         public static string ResourceNode(string type) => "theme_a.world.node." + type;
+
+        /// <summary>
+        /// Art for an online map tile (server kinds: food, wood, stone, camp). Camps pick a painted camp by level band.
+        /// </summary>
+        public static string OnlineTile(string kind, int level) => kind == "camp"
+            ? Camp(CampTypes[Math.Min(CampTypes.Length - 1, Math.Max(0, (level - 1) / 3))])
+            : ResourceNode(kind);
 
         public static string MapProp(string type) => "theme_a.map.prop." + type;
 
