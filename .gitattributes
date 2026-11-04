@@ -1,1 +1,2 @@
 *.blend filter=lfs diff=lfs merge=lfs -text
+design/survival-theme-a-fantasy/heroes/anim/stormcrest/blender_rig/STORMCREST_blenderig.blend -filter -diff -merge binary
