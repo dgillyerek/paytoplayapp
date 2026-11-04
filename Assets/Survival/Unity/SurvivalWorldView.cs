@@ -401,11 +401,13 @@ namespace Survival.Unity
                 var (x, y) = m.Position(now);
                 var bob = Mathf.Sin(Time.unscaledTime * 9f + m.Serial) * 5f;
                 v.Marker.anchoredPosition = new Vector2(x, y + bob);
-                v.Marker.localScale = new Vector3(m.FacingLeft ? -1f : 1f, 1f, 1f);
+                // March art (march_player/march_rival.png) is drawn facing LEFT, so mirror it when heading right.
+                var flip = m.FacingLeft == MarchArtFacesLeft ? 1f : -1f;
+                v.Marker.localScale = new Vector3(flip, 1f, 1f);
                 if (v.Timer != null)
                 {
                     v.Timer.text = Clock(m.Remaining(now));
-                    v.Timer.rectTransform.localScale = new Vector3(m.FacingLeft ? -1f : 1f, 1f, 1f);
+                    v.Timer.rectTransform.localScale = new Vector3(flip, 1f, 1f); // undo the parent mirror so text reads
                 }
 
                 SurvivalVillageView.Strip(v.Path, new Vector2(x, y), new Vector2(m.ToX, m.ToY), 12f);
@@ -430,6 +432,9 @@ namespace Survival.Unity
                 _marches.Remove(serial);
             }
         }
+
+        /// <summary>Which way the march sprites are painted. Both march PNGs face left.</summary>
+        private const bool MarchArtFacesLeft = true;
 
         private MarchView MakeMarch(WorldMarch m)
         {
