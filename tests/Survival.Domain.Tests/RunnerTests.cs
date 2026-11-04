@@ -849,9 +849,11 @@ public sealed class RunnerTests
         while (!run.Over && run.Seconds < 200f)
         {
             run.SteerTo(RunnerBossQuakeTests.DodgingPlayer(run));
+            // Squad as it stood before the step too: a member can start a take and fall in the same step.
+            var before = run.Squad.Select(m => m.Id).ToHashSet();
             foreach (var e in run.Step(1f / 30f))
             {
-                if (e.Kind == RunnerEventKind.AttackStarted && run.Squad.Any(m => m.Id == e.Id))
+                if (e.Kind == RunnerEventKind.AttackStarted && (before.Contains(e.Id) || run.Squad.Any(m => m.Id == e.Id)))
                 {
                     starts[e.Id] = starts.GetValueOrDefault(e.Id) + 1;
                 }
