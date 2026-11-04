@@ -1,10 +1,7 @@
-# Vorgath Blender working files
+# Vorgath Blender file
 
-Blender 4.2.3. Exported game-ready FBX/atlas live in ../final/.
+One file: `VORGATH.blend` (Blender 4.2.3). It holds the rig, body, props and every animation clip as an Action (fake user + muted NLA track). No action assigned = rest pose.
 
-- `VORGATH_attack_slam.blend` — attack_slam (rig = skinned rig source, rig_rest = rest pose, cape = cape/cloth, attack_* = attack clip)
-- `VORGATH_attack_spit.blend` — attack_spit (rig = skinned rig source, rig_rest = rest pose, cape = cape/cloth, attack_* = attack clip)
-- `VORGATH_idle.blend` — idle (rig = skinned rig source, rig_rest = rest pose, cape = cape/cloth, attack_* = attack clip)
-- `VORGATH_rig.blend` — rig (rig = skinned rig source, rig_rest = rest pose, cape = cape/cloth, attack_* = attack clip)
-- `VORGATH_rig_rest.blend` — rig_rest (rig = skinned rig source, rig_rest = rest pose, cape = cape/cloth, attack_* = attack clip)
-- `VORGATH_walk.blend` — walk (rig = skinned rig source, rig_rest = rest pose, cape = cape/cloth, attack_* = attack clip)
+Actions (30 fps): idle (1-160), walk (1-44), attack_slam (1-112), attack_spit (1-163).
+
+Built from the game-ready exports in ../final/ (unchanged). Cape spring sim is not baked. Full object list, sources and import settings: `README_VORGATH_blend.md`.
