@@ -1,12 +1,9 @@
-# Kaelen Blender working files
+# Kaelen Blender file
 
-Blender 4.2.3. Exported game-ready FBX/atlas live in ../final/.
+One file: `KAELEN.blend` (Blender 4.2.3). It holds the rig, body, props, cape rig and cape and every animation clip as an Action (fake user + muted NLA track). No action assigned = rest pose.
 
-- `KAELEN_attack_dualslash.blend` — attack_dualslash (rig = skinned rig source, rig_rest = rest pose, cape = cape/cloth, attack_* = attack clip)
-- `KAELEN_cape.blend` — cape (rig = skinned rig source, rig_rest = rest pose, cape = cape/cloth, attack_* = attack clip)
-- `KAELEN_idle.blend` — idle (rig = skinned rig source, rig_rest = rest pose, cape = cape/cloth, attack_* = attack clip)
-- `KAELEN_rig.blend` — rig (rig = skinned rig source, rig_rest = rest pose, cape = cape/cloth, attack_* = attack clip)
-- `KAELEN_rig_rest.blend` — rig_rest (rig = skinned rig source, rig_rest = rest pose, cape = cape/cloth, attack_* = attack clip)
-- `KAELEN_walk.blend` — walk (rig = skinned rig source, rig_rest = rest pose, cape = cape/cloth, attack_* = attack clip)
+Actions (30 fps): idle (1-299), walk (1-36), attack_dualslash (1-110).
 
-See ../final/CAPE_ATTACH.md for Unity cape collider specs.
+Built from the game-ready exports in ../final/ (unchanged). Cape spring sim is not baked. Full object list, sources and import settings: `README_KAELEN_blend.md`.
+
+Unity cape collider specs: ../final/CAPE_ATTACH.md.
