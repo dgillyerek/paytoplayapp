@@ -303,6 +303,9 @@ namespace Survival.Unity
                 { "mixamorig:Spine2", "mixamorig:Neck" }, { "mixamorig:LeftUpLeg", "mixamorig:LeftLeg" }, { "mixamorig:RightUpLeg", "mixamorig:RightLeg" },
                 { "mixamorig:LeftLeg", "mixamorig:LeftFoot" }, { "mixamorig:RightLeg", "mixamorig:RightFoot" },
                 { "mixamorig:LeftFoot", "mixamorig:LeftToeBase" }, { "mixamorig:RightFoot", "mixamorig:RightToeBase" },
+                // v4: arm capsules (Kaelen) keep the cape from sinking into the body while the arms swing.
+                { "mixamorig:LeftArm", "mixamorig:LeftForeArm" }, { "mixamorig:RightArm", "mixamorig:RightForeArm" },
+                { "mixamorig:LeftForeArm", "mixamorig:LeftHand" }, { "mixamorig:RightForeArm", "mixamorig:RightHand" },
             };
             var list = new List<ClothColliderSpec>();
             foreach (var raw in notes.Split('\n'))

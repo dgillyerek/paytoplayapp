@@ -49,7 +49,15 @@ Spring roots: `cape_L_01`, `cape_C_01`, `cape_R_01`.
 | mixamorig:LeftFoot | 0.05 | 0.1 |
 | mixamorig:RightFoot | 0.05 | 0.1 |
 
-There are no arm colliders: arms may swing behind the back-only cape.
+## v4 (Nov 3): arm capsule colliders added (preview sim)
+Add these in Unity too; they stop the arms from showing through the cape during walk (walk cape-into-body: 78 frames, max 4.5 cm before -> 0 frames after).
+| bone | radius m | joint hit m |
+|---|---|---|
+| mixamorig:LeftArm | 0.08 | 0.0 |
+| mixamorig:RightArm | 0.08 | 0.0 |
+| mixamorig:LeftForeArm | 0.06 | 0.0 |
+| mixamorig:RightForeArm | 0.06 | 0.0 |
+Cape mesh, weights and attach are unchanged in v4 (KAELEN_cape.fbx not re-exported).
 
 ## Shape
 - Faces trimmed from the front: 9939. The cape is back-only/open at the front.
