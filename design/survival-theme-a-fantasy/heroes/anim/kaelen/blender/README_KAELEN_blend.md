@@ -84,3 +84,9 @@ Cape re-export vs final/KAELEN_cape.fbx: PASS (10 bones equal=True, rest diff 7.
  "path_mode": "AUTO"
 }
 ```
+## 2026-11-04: strict sword clearance (attack_dualslash re-keyed)
+- Check: full-res BVH of the evaluated body against each sword on every frame. The only excluded verts are the gripping hand's own (Arm.002 weight > 0.3). Nothing else is excluded: not the other arm, nor the gripping arm's own forearm or upper arm, legs, torso or cape. No grip sphere.
+- Re-key: the action is `attack_dualslash`, rebuilt from the clean pre-fix mocap. Each correction is held as one offset per segment and shared across Shoulder/Arm/Arm.001/Arm.002 (.1/.2/.3/.4, plus a wrist term). It eases in and out over 4 frames with smoothstep, so there are no single-frame keys. Most of the problem was the pommel, which sticks out about 9 cm past the fist, poking the own forearm and the thighs. The swords' f47/f53 tip positions stay within 10 cm. Peak-speed frames are unchanged (L f38, R f32).
+- Min clearance (strict, fresh RESTCLAMP cape sim): dualslash sword_L body 1.61 cm (f72, own wrist, non-palm), cape 5.58 cm (f37). Sword_R body 1.71 cm (f15, RightLeg), cape 2.34 cm (f57). Idle body 1.6 cm (f190, own wrist). Walk body 6.6 mm (f4, own wrist), cape 4.1 cm.
+- Blades cross each other (sword-on-sword) at f66 and f94.
+- Tools: /workspace/rigjob/ksk/k_sdump.py, k_solve.py, k_apply.py, weapfix_ks.py (final mode).

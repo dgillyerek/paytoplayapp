@@ -67,6 +67,9 @@ The body rig is now 20 bones. ForeArm, Hand, Hand-index, ToeBase and Toe_End are
 - Cape attach is unchanged. It parents to `mixamorig:Spine2`, whose rest head is still [0.0, 0.0034, 1.371]. KAELEN_cape.fbx was not re-exported (MD5 a58a559ab972a1588aaf58f87b5bcbf1).
 - Unity: `Assets/Survival/Unity/NewCharsPreview.cs` still maps capsules Foot→ToeBase and Arm→ForeArm→Hand by bone name. The ForeArm, Hand and ToeBase bones no longer exist, so that code has to change before those capsules will resolve. That change is not made here.
 
+- Cape sim settings for the re-keyed attack_dualslash check: `RESTCLAMP=1`, `ARMR=0.10`, `FARMR=0.08` (arm capsule radii used for the rest-distance clamp). Rim-rigid weights near the arms were tried and dropped: only 2 cape verts lie within 8 cm of the rest arms, so they had no effect.
+- Fresh sim of the re-keyed dual slash: no sword-into-cape penetration on any frame (min sword-to-cape 2.3 cm, f57). Cape into body still happens on 4 frames (f33 -5.2 cm, f56 -11.8 cm/137 verts, f57 -1.8 cm, f97 -0.3 cm), mostly the hands moving into the cape.
+
 ## Shape
 - Faces trimmed from the front: 9939. The cape is back-only/open at the front.
 - Pushed out from the body with a smooth offset field: target 4.5 cm, min rest clearance 0.035 m, median 0.098 m, 100% of verts ≥3 cm.
