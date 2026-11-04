@@ -117,14 +117,42 @@ namespace Survival.Domain.World
         /// any <paramref name="fixedPlaces"/> place, using the same sizes and gap as <see cref="Overlaps"/>. Each push is
         /// along the shorter way out, so castles stay as close to their real tile as the rule allows.
         /// </summary>
-        public static List<WorldEntity> Separate(IReadOnlyList<WorldEntity> movable, IReadOnlyList<WorldEntity> fixedPlaces, float gap = MinGap, int maxRounds = 200)
+        public static List<WorldEntity> Separate(
+            IReadOnlyList<WorldEntity> movable,
+            IReadOnlyList<WorldEntity> fixedPlaces,
+            float gap = MinGap,
+            int maxRounds = 200,
+            IReadOnlyList<MapRect>? obstacles = null,
+            MapRect? bounds = null)
         {
+            obstacles ??= Array.Empty<MapRect>();
             var list = new List<WorldEntity>(movable);
             for (var round = 0; round < maxRounds; round++)
             {
                 var moved = false;
                 for (var i = 0; i < list.Count; i++)
                 {
+                    // scenery first: step out of painted trees / rocks / props the shortest way, staying inside bounds
+                    foreach (var o in obstacles)
+                    {
+                        var (sx, sy) = PushOff(list[i], o, gap, bounds);
+                        if (sx != 0f || sy != 0f)
+                        {
+                            list[i] = list[i] with { X = list[i].X + sx, Y = list[i].Y + sy };
+                            moved = true;
+                        }
+                    }
+
+                    if (bounds is { } bb)
+                    {
+                        var (cx, cy) = Contain(list[i], bb);
+                        if (cx != 0f || cy != 0f)
+                        {
+                            list[i] = list[i] with { X = list[i].X + cx, Y = list[i].Y + cy };
+                            moved = true;
+                        }
+                    }
+
                     for (var j = 0; j < list.Count + fixedPlaces.Count; j++)
                     {
                         if (j == i)
@@ -164,7 +192,7 @@ namespace Survival.Domain.World
             var kept = new List<WorldEntity>(list.Count);
             foreach (var e in list)
             {
-                if (HasPlate(e) || !Blocked(e, kept, fixedPlaces, gap))
+                if (HasPlate(e) || (!Blocked(e, kept, fixedPlaces, gap) && SceneryHit(e, obstacles, 0f) == null))
                 {
                     kept.Add(e);
                 }
@@ -226,6 +254,143 @@ namespace Survival.Domain.World
             }
 
             return false;
+        }
+
+        /// <summary>The first scenery box the place's building or plate touches (null when clear).</summary>
+        public static MapRect? SceneryHit(WorldEntity e, IReadOnlyList<MapRect> scenery, float gap = 0f)
+        {
+            foreach (var box in Boxes(e))
+            {
+                foreach (var s in scenery)
+                {
+                    if (box.Overlaps(s, gap)) return s;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>Every place whose building or plate sits on scenery, as "id on scenery" strings. Empty when clean.</summary>
+        public static List<string> OnScenery(IReadOnlyList<WorldEntity> entities, IReadOnlyList<MapRect> scenery)
+        {
+            var bad = new List<string>();
+            foreach (var e in entities)
+            {
+                if (SceneryHit(e, scenery) is { } s)
+                {
+                    bad.Add(e.Id + " on scenery (" + s.X0 + "," + s.Y0 + ")-(" + s.X1 + "," + s.Y1 + ")");
+                }
+            }
+
+            return bad;
+        }
+
+        /// <summary>Share of the clearing decal's half-size (from its centre) that is fully opaque grass; the rest fades out.</summary>
+        public const float ClearingSolid = 0.6f;
+
+        /// <summary>
+        /// The soft grass clearing drawn under a place on the painted heart, so baked trees and rocks never show around its
+        /// building. Its solid core is an ellipse through the building footprint's corners; the fade runs beyond that.
+        /// The name plate is an opaque panel, so it hides whatever is under it and needs no clearing of its own.
+        /// </summary>
+        public static MapRect Clearing(WorldEntity e)
+        {
+            var f = Footprint(e);
+            var k = 1.4143f / ClearingSolid; // ellipse through the box corners = box * sqrt(2); the solid core is ClearingSolid of the decal
+            var cx = (f.X0 + f.X1) * 0.5f;
+            var cy = (f.Y0 + f.Y1) * 0.5f;
+            var hw = (f.X1 - f.X0) * 0.5f * k;
+            var hh = (f.Y1 - f.Y0) * 0.5f * k;
+            return new MapRect(cx - hw, cy - hh, cx + hw, cy + hh);
+        }
+
+        /// <summary>Drawn size (square) of a decorative map prop; the view draws it at this size.</summary>
+        public static float PropSize(WorldProp p) => (p.Type == "mountains" ? 440f : p.Type == "lake" ? 360f : 340f) * p.Scale;
+
+        /// <summary>Prop pivot: the prop position sits this far up from the bottom of its art.</summary>
+        public const float PropPivotY = 0.3f;
+
+        /// <summary>The visible part of a prop (painted art has soft transparent margins).</summary>
+        public static MapRect PropFootprint(WorldProp p)
+        {
+            var s = PropSize(p);
+            var hw = s * 0.4f;
+            var bottom = p.Y - s * PropPivotY + s * 0.1f;
+            return new MapRect(p.X - hw, bottom, p.X + hw, bottom + s * 0.8f);
+        }
+
+        /// <summary>Props left after dropping any whose footprint touches a place's building or plate.</summary>
+        public static List<WorldProp> ClearProps(IReadOnlyList<WorldProp> props, IReadOnlyList<WorldEntity> entities)
+        {
+            var kept = new List<WorldProp>(props.Count);
+            foreach (var p in props)
+            {
+                var f = PropFootprint(p);
+                var hit = false;
+                foreach (var e in entities)
+                {
+                    if (SceneryHit(e, new[] { f }, MinGap) != null)
+                    {
+                        hit = true;
+                        break;
+                    }
+                }
+
+                if (!hit) kept.Add(p);
+            }
+
+            return kept;
+        }
+
+        private static (float Dx, float Dy) PushOff(WorldEntity a, MapRect o, float gap, MapRect? bounds)
+        {
+            float bestX = 0f, bestY = 0f;
+            foreach (var p in Boxes(a))
+            {
+                if (!p.Overlaps(o, gap)) continue;
+                var cands = new[]
+                {
+                    (o.X1 + gap - p.X0 + 1f, 0f), (-(p.X1 + gap - o.X0 + 1f), 0f),
+                    (0f, o.Y1 + gap - p.Y0 + 1f), (0f, -(p.Y1 + gap - o.Y0 + 1f)),
+                };
+                float mx = 0f, my = 0f, best = float.MaxValue;
+                foreach (var (cx, cy) in cands)
+                {
+                    var len = Math.Abs(cx) + Math.Abs(cy);
+                    if (bounds is { } b)
+                    {
+                        var (ox, oy) = Contain(a with { X = a.X + cx, Y = a.Y + cy }, b);
+                        if (ox != 0f || oy != 0f) len += 100000f; // leaving the bounds is a last resort
+                    }
+
+                    if (len < best)
+                    {
+                        best = len;
+                        mx = cx;
+                        my = cy;
+                    }
+                }
+
+                if (Math.Abs(mx) > Math.Abs(bestX)) bestX = mx;
+                if (Math.Abs(my) > Math.Abs(bestY)) bestY = my;
+            }
+
+            return (bestX, bestY);
+        }
+
+        /// <summary>Move that pulls the place's building and plate back inside <paramref name="b"/>.</summary>
+        private static (float Dx, float Dy) Contain(WorldEntity a, MapRect b)
+        {
+            float dx = 0f, dy = 0f;
+            foreach (var p in Boxes(a))
+            {
+                if (p.X0 < b.X0) dx = Math.Max(dx, b.X0 - p.X0);
+                if (p.X1 > b.X1) dx = Math.Min(dx, b.X1 - p.X1);
+                if (p.Y0 < b.Y0) dy = Math.Max(dy, b.Y0 - p.Y0);
+                if (p.Y1 > b.Y1) dy = Math.Min(dy, b.Y1 - p.Y1);
+            }
+
+            return (dx, dy);
         }
 
         private static MapRect[] Boxes(WorldEntity e) =>

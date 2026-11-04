@@ -16,6 +16,9 @@ namespace Survival.Domain.Theme
         public const string MapTile = "theme_a.map.tile.meadow";
         public const string RoadTile = "theme_a.map.tile.dirt";
         public const string MapHeart = "theme_a.map.heart";
+
+        /// <summary>Soft grass clearing drawn under each place on the heart so its baked trees / rocks never show beneath it.</summary>
+        public const string MapClearing = "theme_a.map.clearing";
         public const string VillageLawn = "theme_a.village.tile.lawn";
         public const string PlotEmpty = "theme_a.village.plot_empty";
         public const string IconWorld = "theme_a.ui.icon_world";
@@ -66,7 +69,7 @@ namespace Survival.Domain.Theme
             {
                 var keys = new List<string>
                 {
-                    MapTile, RoadTile, MapHeart, VillageLawn, PlotEmpty, IconWorld, IconUpgrade, MarchPlayer, MarchRival,
+                    MapTile, RoadTile, MapHeart, MapClearing, VillageLawn, PlotEmpty, IconWorld, IconUpgrade, MarchPlayer, MarchRival,
                     LevelBadge.ArtKey,
                     BottomNav.BarArt, BottomNav.ButtonArt, BottomNav.IconHeroes, BottomNav.IconAlliance, BottomNav.IconBag,
                     BottomNav.IconBattle, BottomNav.IconBuild,

@@ -147,6 +147,17 @@ namespace Survival.Unity
                 Corner(h.rectTransform, layout.HeartX, layout.HeartY, layout.HeartWidth, layout.HeartHeight);
             }
 
+            // Each place on the painted heart stands in its own soft grass clearing, so the trees and rocks baked into
+            // the art never show under a building or its name plate.
+            _clearings = Layer(content, "Clearings", layout);
+            foreach (var e in layout.Entities)
+            {
+                if (layout.OnHeart(e))
+                {
+                    AddClearing(e);
+                }
+            }
+
             var player = layout.Player!;
             if (Sim.TryGet(SurvIds.WorldNodeHome01, out var home))
             {
@@ -171,8 +182,8 @@ namespace Survival.Unity
                 }
 
                 var img = HookSkin.Art(props, "Prop_" + p.Type, key, Color.white);
-                var size = (p.Type == "mountains" ? 440f : p.Type == "lake" ? 360f : 340f) * p.Scale;
-                SurvivalVillageView.Point(img.rectTransform, p.X, p.Y, size, size, 0.3f);
+                var size = WorldSpacing.PropSize(p);
+                SurvivalVillageView.Point(img.rectTransform, p.X, p.Y, size, size, WorldSpacing.PropPivotY);
             }
 
             _selection = SurvivalVisuals.Ring(_paths, "Selection", new Color(1f, 0.85f, 0.35f, 0f));
@@ -193,6 +204,23 @@ namespace Survival.Unity
             Rig.EmptyTap += CloseCard;
             OnMoved(cam);
             SyncMarches();
+        }
+
+        private RectTransform? _clearings;
+
+        /// <summary>Soft grass clearing under a place (see <see cref="WorldSpacing.Clearing"/>). Drawn under the roads and paths.</summary>
+        private void AddClearing(WorldEntity e, RectTransform? parent = null)
+        {
+            var layer = parent ?? _clearings;
+            if (layer == null || !HookSkin.Has(WorldArtKeys.MapClearing))
+            {
+                return;
+            }
+
+            var r = WorldSpacing.Clearing(e);
+            var img = HookSkin.Art(layer, "Clearing_" + e.Id, WorldArtKeys.MapClearing, Color.white);
+            img.raycastTarget = false;
+            Corner(img.rectTransform, r.X0, r.Y0, r.X1 - r.X0, r.Y1 - r.Y0);
         }
 
         private static RectTransform Layer(RectTransform content, string name, WorldLayout layout)

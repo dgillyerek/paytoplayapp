@@ -83,8 +83,25 @@ namespace Survival.Domain.World
             HeartHeight = heart.H;
             Entities = entities;
             Routes = routes;
-            Props = props;
+            // Decorative props never sit under a place or its name plate: any prop touching one is left off.
+            Props = WorldSpacing.ClearProps(props, entities);
         }
+
+        /// <summary>Footprints of every drawn prop: online tiles and castles are kept off these.</summary>
+        public List<MapRect> PropFootprints()
+        {
+            var list = new List<MapRect>(Props.Count);
+            foreach (var p in Props)
+            {
+                list.Add(WorldSpacing.PropFootprint(p));
+            }
+
+            return list;
+        }
+
+        /// <summary>True when the place stands on the painted heart art (which has trees and rocks baked in).</summary>
+        public bool OnHeart(WorldEntity e) =>
+            e.X >= HeartX && e.X <= HeartX + HeartWidth && e.Y >= HeartY && e.Y <= HeartY + HeartHeight;
 
         public float Width { get; }
         public float Height { get; }
