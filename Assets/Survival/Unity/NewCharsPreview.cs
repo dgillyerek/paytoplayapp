@@ -307,6 +307,19 @@ namespace Survival.Unity
                 { "mixamorig:LeftArm", "mixamorig:LeftForeArm" }, { "mixamorig:RightArm", "mixamorig:RightForeArm" },
                 { "mixamorig:LeftForeArm", "mixamorig:LeftHand" }, { "mixamorig:RightForeArm", "mixamorig:RightHand" },
             };
+            if (notes.Contains("mixamorig:LeftUpLeg.001"))
+            {
+                // Seraphine's 24-bone rig (Derek 2026-11-04): leg chain is UpLeg -> UpLeg.001 (was Leg) -> .002 (was Foot) -> .003 (was ToeBase).
+                // Keyed off her CAPE_ATTACH.md rows so the classic Mixamo tails above stay for Kaelen, Vorgath and Malzareth.
+                foreach (var side in new[] { "Left", "Right" })
+                {
+                    var up = "mixamorig:" + side + "UpLeg";
+                    tails[up] = up + ".001";
+                    tails[up + ".001"] = up + ".002";
+                    tails[up + ".002"] = up + ".003";
+                }
+            }
+
             var list = new List<ClothColliderSpec>();
             foreach (var raw in notes.Split('\n'))
             {
