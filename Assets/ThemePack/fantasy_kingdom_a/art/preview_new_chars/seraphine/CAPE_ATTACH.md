@@ -45,10 +45,10 @@ Spring roots: `cape_L_01`, `cape_C_01`, `cape_R_01`.
 | mixamorig:Spine2 | 0.069 | 0.0 |
 | mixamorig:LeftUpLeg | 0.102 | 0.1 |
 | mixamorig:RightUpLeg | 0.104 | 0.1 |
-| mixamorig:LeftLeg | 0.06 | 0.1 |
-| mixamorig:RightLeg | 0.06 | 0.1 |
-| mixamorig:LeftFoot | 0.05 | 0.1 |
-| mixamorig:RightFoot | 0.05 | 0.1 |
+| mixamorig:LeftUpLeg.001 | 0.06 | 0.1 |
+| mixamorig:RightUpLeg.001 | 0.06 | 0.1 |
+| mixamorig:LeftUpLeg.002 | 0.05 | 0.1 |
+| mixamorig:RightUpLeg.002 | 0.05 | 0.1 |
 
 Arm and wing colliders were added in v5. See below.
 
@@ -96,3 +96,13 @@ The rim rigid falloff was widened from 4/8 cm to 8/12 cm (fully rigid within 8 c
 ### Weapon clearance (v5b)
 In attack_throw, the spear no longer passes through the cape (full-res minimum is +0.09 cm). The fix uses small additive rotation keys on RightHand, RightForeArm and RightArm in `SERAPHINE_attack_throw.fbx` between f39 and f50, smoothed over ±2 frames.
 No spear collider is needed in Unity. A thin RightHand shaft capsule (r 0.03–0.05 m, f40–46) was tested and did not help, because the crossing verts are not on spring joints.
+
+## Derek 24-bone skeleton (2026-11-04)
+The body rig is now Derek's 24-bone skeleton. Leg bones were renamed. The capsule table above uses the new names:
+- LeftLeg → LeftUpLeg.001, LeftFoot → LeftUpLeg.002, LeftToeBase → LeftUpLeg.003 (same on the right).
+- Finger bones were removed. Fingers are weighted to the Hand bones.
+
+The cape FBX, the cape rig and the attach are unchanged. Spine2 still exists, and the Hips, Spine, Spine1, Spine2, UpLeg, arm and wing references keep their names.
+The radii were not re-measured. They are the old values on the matching segments.
+
+Unity follow-up (on HOLD until Derek approves): `Assets/Survival/Unity/NewCharsPreview.cs` lines 303–305 still list LeftLeg/LeftFoot/LeftToeBase capsule pairs. Those pairs are shared with other characters, so they were not edited.
