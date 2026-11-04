@@ -115,6 +115,9 @@ namespace Survival.Unity
 
             _camera = camGo.AddComponent<LockedBattleCamera>();
             _camera.SetField(new Bounds(new Vector3(0f, 1f, 0f), new Vector3(8f, 2.5f, 5f)), false);
+            // The menu saves an empty scene with only this component, so there is no EventSystem and the HUD buttons
+            // never receive clicks. Create it at runtime so already-generated scenes are repaired too.
+            SurvivalVisuals.EnsureEventSystem();
             BuildHud();
             Restart();
         }
