@@ -118,8 +118,16 @@ namespace Survival.Unity
             return new WorldProjection(c.X, c.Y, Sim!.Player.X, Sim.Player.Y, PixelsPerTile);
         }
 
+        private RectTransform? _onlineClearings;
+
         private void ClearOnline()
         {
+            if (_onlineClearings != null)
+            {
+                Destroy(_onlineClearings.gameObject);
+                _onlineClearings = null;
+            }
+
             if (_onlineLayer != null)
             {
                 Destroy(_onlineLayer.gameObject);
@@ -233,8 +241,22 @@ namespace Survival.Unity
 
             var fixedPlaces = Layout != null ? Layout.Entities : (IReadOnlyList<WorldEntity>)Array.Empty<WorldEntity>();
             var k = Rig?.Camera != null ? WorldSpacing.PlateScale(Rig.Camera.Zoom) : 1f;
-            foreach (var e in WorldSpacing.Separate(places, fixedPlaces))
+            if (_clearings != null)
             {
+                _onlineClearings = new GameObject("OnlineClearings", typeof(RectTransform)).GetComponent<RectTransform>();
+                _onlineClearings.SetParent(_clearings, false);
+                _onlineClearings.anchorMin = Vector2.zero;
+                _onlineClearings.anchorMax = Vector2.one;
+                _onlineClearings.offsetMin = _onlineClearings.offsetMax = Vector2.zero;
+            }
+
+            foreach (var e in WorldSpacing.Separate(places, fixedPlaces, obstacles: Layout?.PropFootprints()))
+            {
+                if (Layout != null && Layout.OnHeart(e))
+                {
+                    AddClearing(e, _onlineClearings);
+                }
+
                 if (tiles.TryGetValue(e.Id, out var tile))
                 {
                     var ts = WorldSpacing.SizeFor(e);

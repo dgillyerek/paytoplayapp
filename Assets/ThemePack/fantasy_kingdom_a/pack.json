@@ -112,6 +112,7 @@
     "theme_a.map.tile.meadow": "art/world/map/tile_meadow.png",
     "theme_a.map.tile.dirt": "art/world/map/tile_dirt.png",
     "theme_a.map.heart": "art/world/map/heart_feathered.png",
+    "theme_a.map.clearing": "art/world/map/clearing.png",
     "theme_a.map.prop.forest": "art/world/map/prop_forest.png",
     "theme_a.map.prop.mountains": "art/world/map/prop_mountains.png",
     "theme_a.map.prop.lake": "art/world/map/prop_lake.png",
