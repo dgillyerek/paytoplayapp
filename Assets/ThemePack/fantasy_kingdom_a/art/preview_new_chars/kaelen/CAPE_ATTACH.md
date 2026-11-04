@@ -80,3 +80,8 @@ No ToeBase child, so each Foot capsule runs along the Foot bone itself, head to 
 | mixamorig:RightFoot | 0.05 | 0.1 | 0.176 |
 
 `NewCharsPreview.cs` maps Arm → Arm.001 → Arm.002 when `mixamorig:LeftArm.001` rows are present (Kaelen only).
+
+## attack2_crossthrust (2026-11-04)
+- New clip KAELEN_attack2_crossthrust.fbx (1-80) uses the same cape attach and sim settings: `RESTCLAMP=1`, `ARMR=0.10`, `FARMR=0.08`.
+- Fresh sim result: 0 cape-body penetration frames (min 3.4 cm). Sword-to-cape min: L 34.5 cm, R 40.1 cm.
+- Unity: NewCharsPreview.cs does not reference this clip yet. That is flagged only; no code was changed.
