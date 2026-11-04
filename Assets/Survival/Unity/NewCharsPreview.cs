@@ -150,6 +150,8 @@ namespace Survival.Unity
                 u.Clips.Add(LoadClip(dir + def.Prefix + "_" + clipName + ".fbx"));
             }
 
+            // Vorgath's Derek rig (2026-11-04) has no Hips: spine "Bone"..."Bone.005", both shoulders and both UpLegs are separate roots.
+            // His clips only sway in place (<=14 cm), and pinning "Bone" alone would pull the torso off the legs, so he gets no hips hold.
             u.Hips = FindBone(model.transform, "mixamorig:Hips");
             if (u.Hips != null)
             {
@@ -320,6 +322,23 @@ namespace Survival.Unity
                 }
             }
 
+            if (notes.Contains("mixamorig:LeftArm.001"))
+            {
+                // Kaelen's 20-bone rig (Derek 2026-11-04): arm chain is Arm -> Arm.001 (was ForeArm) -> Arm.002 (was Hand).
+                foreach (var side in new[] { "Left", "Right" })
+                {
+                    var arm = "mixamorig:" + side + "Arm";
+                    tails[arm] = arm + ".001";
+                    tails[arm + ".001"] = arm + ".002";
+                }
+            }
+
+            if (notes.Contains("mixamorig:RightForeArm.001"))
+            {
+                // Malzareth's 20-bone rig (Derek 2026-11-04): RightForeArm.001 replaces RightHand.
+                tails["mixamorig:RightForeArm"] = "mixamorig:RightForeArm.001";
+            }
+
             var list = new List<ClothColliderSpec>();
             foreach (var raw in notes.Split('\n'))
             {
@@ -339,6 +358,16 @@ namespace Survival.Unity
                     !float.TryParse(cells[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var r) ||
                     !float.TryParse(cells[2].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var hit))
                 {
+                    continue;
+                }
+
+                if (cells.Length >= 4 && float.TryParse(cells[3].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var length))
+                {
+                    // 4th cell "bone length m": the rig has no child bone (Derek's 20-bone rigs dropped ToeBase), so the capsule
+                    // runs head -> tail along the bone's own axis.
+                    list.Add(new ClothColliderSpec(
+                        bone.Substring("mixamorig:".Length), ClothColliderKind.Capsule, bone, bone, r + hit, 0f, 0f,
+                        System.Numerics.Vector3.Zero, new System.Numerics.Vector3(0f, length, 0f)));
                     continue;
                 }
 
