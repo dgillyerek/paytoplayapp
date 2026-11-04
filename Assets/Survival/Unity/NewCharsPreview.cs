@@ -311,6 +311,11 @@ namespace Survival.Unity
             foreach (var raw in notes.Split('\n'))
             {
                 var cells = raw.Trim().Trim('|').Split('|');
+                if (TryWing(cells, list) || TryArmPair(cells, tails, list))
+                {
+                    continue;
+                }
+
                 if (cells.Length < 3)
                 {
                     continue;
@@ -333,6 +338,74 @@ namespace Survival.Unity
             }
 
             return list.ToArray();
+        }
+
+        /// <summary>
+        /// v5 arm rows "| mixamorig:LeftArm / RightArm (upper arm) | 0.08 |": one capsule per side, with the rest clamp
+        /// min(radius, bind clearance - 1 cm) so the _01 joints that overlap the arms at rest are not thrown into the wings.
+        /// </summary>
+        private static bool TryArmPair(string[] cells, Dictionary<string, string> tails, List<ClothColliderSpec> list)
+        {
+            if (cells.Length != 2 || !cells[0].Contains("/") ||
+                !float.TryParse(cells[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var r))
+            {
+                return false;
+            }
+
+            var parts = cells[0].Split('(')[0].Split('/');
+            var left = parts[0].Trim();
+            if (!left.StartsWith("mixamorig:Left", System.StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            var right = "mixamorig:" + parts[1].Trim();
+            foreach (var bone in new[] { left, right })
+            {
+                if (tails.TryGetValue(bone, out var tail))
+                {
+                    list.Add(new ClothColliderSpec(bone.Substring("mixamorig:".Length), ClothColliderKind.Capsule, bone, tail, r, 0f, 0.01f));
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>v5 wing rows "| L root | (x, y, z) | (x, y, z) | r |": rigid capsules in Spine2's local Design frame.</summary>
+        private static bool TryWing(string[] cells, List<ClothColliderSpec> list)
+        {
+            if (cells.Length != 4)
+            {
+                return false;
+            }
+
+            var name = cells[0].Trim();
+            if (!(name.StartsWith("L ", System.StringComparison.Ordinal) || name.StartsWith("R ", System.StringComparison.Ordinal)) ||
+                !TryVec(cells[1], out var a) || !TryVec(cells[2], out var b) ||
+                !float.TryParse(cells[3].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var r))
+            {
+                return false;
+            }
+
+            const string spine2 = "mixamorig:Spine2";
+            list.Add(new ClothColliderSpec("Wing " + name + " " + list.Count, ClothColliderKind.Capsule, spine2, spine2, r, 0f, 0f, a, b));
+            return true;
+        }
+
+        private static bool TryVec(string cell, out System.Numerics.Vector3 v)
+        {
+            v = default;
+            var p = cell.Trim().Trim('(', ')').Split(',');
+            if (p.Length != 3 ||
+                !float.TryParse(p[0].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var x) ||
+                !float.TryParse(p[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var y) ||
+                !float.TryParse(p[2].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var z))
+            {
+                return false;
+            }
+
+            v = new System.Numerics.Vector3(x, y, z);
+            return true;
         }
 
         private static void ApplyMaterial(GameObject go, Texture2D? tex, string name, bool twoSided)
