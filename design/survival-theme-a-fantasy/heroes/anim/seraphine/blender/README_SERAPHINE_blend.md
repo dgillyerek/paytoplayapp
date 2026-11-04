@@ -25,9 +25,9 @@ The spear arm keys on thrust and throw were corrected so the weapon has no cross
 ## Exports (repo `Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/`)
 - SERAPHINE_rig_rest.fbx: b7f82e5d0a5da49f45a4b3f7e2782173
 - SERAPHINE_idle.fbx: 456f46997ce91e91e2f9770a20bc444a
-- SERAPHINE_walk.fbx: 0392e6ce9b283797eb059a2963902d8d
+- SERAPHINE_walk.fbx: a5c327b19dbbc8fe3582296e4fc5d0c2
 - SERAPHINE_attack_thrust.fbx: c082d9b0bd8658f4932b244b066dc599
-- SERAPHINE_attack_throw.fbx: 638d4de8efc761e42e2eeac72b6e2a07
+- SERAPHINE_attack_throw.fbx: f4f9e6177b8e986ce2728a4da1d2238e
 - SERAPHINE_cape.fbx: 0f0c54f5fa0b4aebc24232907e68e684
 
 The cape FBX was not re-exported.

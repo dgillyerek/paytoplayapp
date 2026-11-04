@@ -103,6 +103,24 @@ The body rig is now Derek's 24-bone skeleton. Leg bones were renamed. The capsul
 - Finger bones were removed. Fingers are weighted to the Hand bones.
 
 The cape FBX, the cape rig and the attach are unchanged. Spine2 still exists, and the Hips, Spine, Spine1, Spine2, UpLeg, arm and wing references keep their names.
-The radii were not re-measured. They are the old values on the matching segments.
+Leg radii were re-measured on the new rig (75th percentile distance of verts weighted > 0.6 to each bone segment):
+
+| Bone | Old r (m) | New r (m) |
+|---|---|---|
+| LeftUpLeg | 0.102 | 0.108 |
+| RightUpLeg | 0.104 | 0.110 |
+| LeftUpLeg.001 (was LeftLeg) | 0.060 | 0.064 |
+| RightUpLeg.001 (was RightLeg) | 0.060 | 0.064 |
+| LeftUpLeg.002 (was LeftFoot) | 0.050 | 0.061 |
+| RightUpLeg.002 (was RightFoot) | 0.050 | 0.054 |
+
+Torso, arm (0.08 / 0.06) and wing capsules are unchanged.
+
+### Fresh spring sim on the 24-bone rig (2026-11-04)
+The cape was re-simulated for all four clips (v5 config: RESTCLAMP, WSEG 6, WPCT 100, WPAD 0.06).
+- Cape-vs-wing crossings: 0 frames on idle, walk, attack_thrust and attack_throw.
+- Weapon-vs-cape (full-res, every frame), minimum clearance: idle 2.2 cm, walk 8.5 cm, attack_thrust 13.8 cm, attack_throw 0.95 cm.
+- The first fresh sim had the spear crossing the cape at walk f17 and attack_throw f41. Both were fixed with small RightArm/RightForeArm/RightHand key corrections (walk f16–18, throw f40–46), and the cape was re-simulated. `SERAPHINE_walk.fbx` and `SERAPHINE_attack_throw.fbx` were re-exported.
+- Cape-into-body penetration is on the same level as the v5 baseline (thrust about 6.7 cm at the hair/arm, throw about 6 cm, idle under 0.5 cm, walk none).
 
 Unity follow-up (on HOLD until Derek approves): `Assets/Survival/Unity/NewCharsPreview.cs` lines 303–305 still list LeftLeg/LeftFoot/LeftToeBase capsule pairs. Those pairs are shared with other characters, so they were not edited.
