@@ -1,36 +1,36 @@
 # SERAPHINE.blend
 
-Built 2026-11-03 ~23:56 America/New_York, Blender 4.2.3 headless, from final/*.fbx (per-clip work blends not used). Geometry, weights and keys are the FBX data verbatim; cape spring sim NOT baked.
+Rebuilt on 2026-11-04 (America/New_York) in Blender 5.2.2 (file format 5.2) on Derek's 24-bone skeleton, branch seraphine-derek-edit @0af9324. Derek's bones are unchanged and nothing was added back.
 
-Base: final/SERAPHINE_rig_rest.fbx (MD5 313e22821981d2dc2f276e8641221e2a); cape: final/SERAPHINE_cape.fbx (MD5 0f0c54f5fa0b4aebc24232907e68e684).
+Bones (24, all `mixamorig:`): Hips, Spine, Spine1, Spine2, Neck, Head, HeadTop_End, Left/Right Shoulder, Arm, ForeArm, Hand, LeftUpLeg + LeftUpLeg.001/.002/.003, LeftToe_End (parented to LeftUpLeg; it carries no weights), RightUpLeg + RightUpLeg.001/.002/.003.
 
-No action assigned = rest pose. Each clip = Action with fake user + muted NLA track.
+Opens in OBJECT mode at rest pose, with no active action. Each clip is an action with a fake user and a muted NLA track.
 
-## Objects
-| object | type | parent | constraints |
-|---|---|---|---|
-| SERAPHINE_rig | ARMATURE | None |  |
-| SERAPHINE_spear | MESH | SERAPHINE_rig |  |
-| SERAPHINE_wing_B | MESH | SERAPHINE_rig |  |
-| SERAPHINE_body | MESH | SERAPHINE_rig |  |
-| SERAPHINE_wing_A | MESH | SERAPHINE_rig |  |
-| SERAPHINE_spear__attack_thrust | MESH | SERAPHINE_rig |  |
-| SERAPHINE_cape_rig | ARMATURE | None | follow_Spine2 |
-| SERAPHINE_cape | MESH | SERAPHINE_cape_rig |  |
-
-Cape rig is a separate armature (as in final/) with an object Child Of constraint `follow_Spine2` (inverse = Spine2 rest), so it follows the body in Blender and is at identity at rest; Unity attach per final/CAPE_ATTACH.md.
-
-Variant meshes (hidden; `__<action>` suffix) exist where a clip FBX ships different prop geometry; swap them in when exporting that action.
+## Weights
+- Body legs: the old leg weights on each side were redistributed along UpLeg→.001→.002→.003 by the closest segment. Joints are smoothstepped (knee ±5 cm, ankle ±3 cm, ball ±1.2 cm). Verts more than 1 cm below the ankle are limited to .002 and .003.
+- Finger groups were merged into the Hand bones. No vertex group points to a missing bone.
+- The spear and its variant are weighted 100% to RightHand. The wings are weighted to Spine2. The cape is a separate rig, `SERAPHINE_cape_rig`, with a Child Of `follow_Spine2` constraint, unchanged.
 
 ## Actions (30 fps)
-| action | source | MD5 | frames | variant meshes | re-export check |
-|---|---|---|---|---|---|
-| attack_throw | final/SERAPHINE_attack_throw.fbx | a2119e9cf535e6d6182ca74c36181306 | 1-67 |  | PASS: bones 33 equal=True, frames [1, 67], max pose diff 1.73e-05, max vert diff 3.0e-07, max weight diff 0 |
-| attack_thrust | final/SERAPHINE_attack_thrust.fbx | 4ad38d740a0ab1682f49ca7643a21843 | 1-72 | SERAPHINE_spear__attack_thrust | PASS: bones 33 equal=True, frames [1, 72], max pose diff 1.93e-05, max vert diff 4.8e-07, max weight diff 0 |
-| idle | final/SERAPHINE_idle.fbx | 3803a68c5d582aa484e391c5dca72030 | 1-299 |  | PASS: bones 33 equal=True, frames [1, 299], max pose diff 1.69e-05, max vert diff 3.0e-07, max weight diff 0 |
-| walk | final/SERAPHINE_walk.fbx | cf3a49a65d4c28c7d8f8fa183a784fd5 | 1-36 |  | PASS: bones 33 equal=True, frames [1, 36], max pose diff 2.06e-05, max vert diff 3.0e-07, max weight diff 0 |
+| action | frames | variant mesh |
+|---|---|---|
+| idle | 1-299 | |
+| walk | 1-36 | |
+| attack_thrust | 1-72 | SERAPHINE_spear__attack_thrust (swap it in as SERAPHINE_spear on export) |
+| attack_throw | 1-67 | |
 
-Cape re-export vs final/SERAPHINE_cape.fbx: PASS (10 bones equal=True, rest diff 2.4e-07, vert diff 1.8e-07, weight diff 0).
+Retarget: the upper body uses the rest-relative world transform from the old 33-bone clips. Legs use analytic 2-bone IK: the old ankle path drives the new ankle, and the old knee is the pole. Foot and toe rotations come from the old Foot and ToeBase. A floor pass lifts the ankle so no foot vert goes below z=0.
+The spear arm keys on thrust and throw were corrected so the weapon has no crossings (full-res check, weapfix5).
+
+## Exports (repo `Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/`)
+- SERAPHINE_rig_rest.fbx: b7f82e5d0a5da49f45a4b3f7e2782173
+- SERAPHINE_idle.fbx: 456f46997ce91e91e2f9770a20bc444a
+- SERAPHINE_walk.fbx: a5c327b19dbbc8fe3582296e4fc5d0c2
+- SERAPHINE_attack_thrust.fbx: c082d9b0bd8658f4932b244b066dc599
+- SERAPHINE_attack_throw.fbx: f4f9e6177b8e986ce2728a4da1d2238e
+- SERAPHINE_cape.fbx: 0f0c54f5fa0b4aebc24232907e68e684
+
+The cape FBX was not re-exported.
 
 ## Import settings
 ```
