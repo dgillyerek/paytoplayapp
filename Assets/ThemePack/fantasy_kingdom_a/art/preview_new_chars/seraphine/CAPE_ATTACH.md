@@ -43,12 +43,12 @@ Spring roots: `cape_L_01`, `cape_C_01`, `cape_R_01`.
 | mixamorig:Spine | 0.063 | 0.0 |
 | mixamorig:Spine1 | 0.074 | 0.0 |
 | mixamorig:Spine2 | 0.069 | 0.0 |
-| mixamorig:LeftUpLeg | 0.102 | 0.1 |
-| mixamorig:RightUpLeg | 0.104 | 0.1 |
-| mixamorig:LeftUpLeg.001 | 0.06 | 0.1 |
-| mixamorig:RightUpLeg.001 | 0.06 | 0.1 |
-| mixamorig:LeftUpLeg.002 | 0.05 | 0.1 |
-| mixamorig:RightUpLeg.002 | 0.05 | 0.1 |
+| mixamorig:LeftUpLeg | 0.108 | 0.1 |
+| mixamorig:RightUpLeg | 0.110 | 0.1 |
+| mixamorig:LeftUpLeg.001 | 0.064 | 0.1 |
+| mixamorig:RightUpLeg.001 | 0.064 | 0.1 |
+| mixamorig:LeftUpLeg.002 | 0.061 | 0.1 |
+| mixamorig:RightUpLeg.002 | 0.054 | 0.1 |
 
 Arm and wing colliders were added in v5. See below.
 
@@ -123,4 +123,4 @@ The cape was re-simulated for all four clips (v5 config: RESTCLAMP, WSEG 6, WPCT
 - The first fresh sim had the spear crossing the cape at walk f17 and attack_throw f41. Both were fixed with small RightArm/RightForeArm/RightHand key corrections (walk f16–18, throw f40–46), and the cape was re-simulated. `SERAPHINE_walk.fbx` and `SERAPHINE_attack_throw.fbx` were re-exported.
 - Cape-into-body penetration is on the same level as the v5 baseline (thrust about 6.7 cm at the hair/arm, throw about 6 cm, idle under 0.5 cm, walk none).
 
-Unity follow-up (on HOLD until Derek approves): `Assets/Survival/Unity/NewCharsPreview.cs` lines 303–305 still list LeftLeg/LeftFoot/LeftToeBase capsule pairs. Those pairs are shared with other characters, so they were not edited.
+Unity: `NewCharsPreview.cs` maps the UpLeg → .001 → .002 → .003 chain when these rows are present (Seraphine only); the capsule table above carries the re-measured radii.

@@ -43,12 +43,12 @@ Spring roots: `cape_L_01`, `cape_C_01`, `cape_R_01`.
 | mixamorig:Spine | 0.063 | 0.0 |
 | mixamorig:Spine1 | 0.074 | 0.0 |
 | mixamorig:Spine2 | 0.069 | 0.0 |
-| mixamorig:LeftUpLeg | 0.102 | 0.1 |
-| mixamorig:RightUpLeg | 0.104 | 0.1 |
-| mixamorig:LeftLeg | 0.06 | 0.1 |
-| mixamorig:RightLeg | 0.06 | 0.1 |
-| mixamorig:LeftFoot | 0.05 | 0.1 |
-| mixamorig:RightFoot | 0.05 | 0.1 |
+| mixamorig:LeftUpLeg | 0.108 | 0.1 |
+| mixamorig:RightUpLeg | 0.110 | 0.1 |
+| mixamorig:LeftUpLeg.001 | 0.064 | 0.1 |
+| mixamorig:RightUpLeg.001 | 0.064 | 0.1 |
+| mixamorig:LeftUpLeg.002 | 0.061 | 0.1 |
+| mixamorig:RightUpLeg.002 | 0.054 | 0.1 |
 
 Arm and wing colliders were added in v5. See below.
 
@@ -96,3 +96,31 @@ The rim rigid falloff was widened from 4/8 cm to 8/12 cm (fully rigid within 8 c
 ### Weapon clearance (v5b)
 In attack_throw, the spear no longer passes through the cape (full-res minimum is +0.09 cm). The fix uses small additive rotation keys on RightHand, RightForeArm and RightArm in `SERAPHINE_attack_throw.fbx` between f39 and f50, smoothed over ±2 frames.
 No spear collider is needed in Unity. A thin RightHand shaft capsule (r 0.03–0.05 m, f40–46) was tested and did not help, because the crossing verts are not on spring joints.
+
+## Derek 24-bone skeleton (2026-11-04)
+The body rig is now Derek's 24-bone skeleton. Leg bones were renamed. The capsule table above uses the new names:
+- LeftLeg → LeftUpLeg.001, LeftFoot → LeftUpLeg.002, LeftToeBase → LeftUpLeg.003 (same on the right).
+- Finger bones were removed. Fingers are weighted to the Hand bones.
+
+The cape FBX, the cape rig and the attach are unchanged. Spine2 still exists, and the Hips, Spine, Spine1, Spine2, UpLeg, arm and wing references keep their names.
+Leg radii were re-measured on the new rig (75th percentile distance of verts weighted > 0.6 to each bone segment):
+
+| Bone | Old r (m) | New r (m) |
+|---|---|---|
+| LeftUpLeg | 0.102 | 0.108 |
+| RightUpLeg | 0.104 | 0.110 |
+| LeftUpLeg.001 (was LeftLeg) | 0.060 | 0.064 |
+| RightUpLeg.001 (was RightLeg) | 0.060 | 0.064 |
+| LeftUpLeg.002 (was LeftFoot) | 0.050 | 0.061 |
+| RightUpLeg.002 (was RightFoot) | 0.050 | 0.054 |
+
+Torso, arm (0.08 / 0.06) and wing capsules are unchanged.
+
+### Fresh spring sim on the 24-bone rig (2026-11-04)
+The cape was re-simulated for all four clips (v5 config: RESTCLAMP, WSEG 6, WPCT 100, WPAD 0.06).
+- Cape-vs-wing crossings: 0 frames on idle, walk, attack_thrust and attack_throw.
+- Weapon-vs-cape (full-res, every frame), minimum clearance: idle 2.2 cm, walk 8.5 cm, attack_thrust 13.8 cm, attack_throw 0.95 cm.
+- The first fresh sim had the spear crossing the cape at walk f17 and attack_throw f41. Both were fixed with small RightArm/RightForeArm/RightHand key corrections (walk f16–18, throw f40–46), and the cape was re-simulated. `SERAPHINE_walk.fbx` and `SERAPHINE_attack_throw.fbx` were re-exported.
+- Cape-into-body penetration is on the same level as the v5 baseline (thrust about 6.7 cm at the hair/arm, throw about 6 cm, idle under 0.5 cm, walk none).
+
+Unity: `NewCharsPreview.cs` maps the UpLeg → .001 → .002 → .003 chain when these rows are present (Seraphine only); the capsule table above carries the re-measured radii.
