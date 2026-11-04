@@ -80,3 +80,9 @@ Deleted vs the old 33-bone rig: RightHand (its job is now RightForeArm.001), all
 - The cape is unchanged and still follows Spine2 (`follow_Spine2`). The cape spring sim is still NOT baked.
 - Layout: three fake-user actions on muted NLA tracks, no active action. The file opens in rest pose in OBJECT mode.
 - Scripts: /workspace/rigjob/msk/ (m_build, m_lhfix, m_weapfix, m_merge, m_export).
+
+## Polish pass (2026-11-04)
+- Foot plant (Vorgath method, m_plant.py): contacts locked + 2-bone IK re-solve. Per-contact real-mesh slip: walk L 2.44->0.00 cm, R 2.40->0.04; idle 10.4/10.6->0.12/0.03; attack 52.9/49.1->0.41/0.00 (attack feet held planted whole clip; large leg rotation deltas, RightLeg up to 43 deg). Floor min z 0.05-0.06 cm.
+- Walk arms eased forward/outward (m_armfix.py, <=9.4 deg L / 11.1 deg R): cape-into-body/arm 7.37 cm -> 0.60 cm.
+- Sword clearance: attack body 1.79 cm, walk 7.22 / cape 8.03 cm, idle 6.61 / 17.9 cm. Attack left hand to hilt unchanged at 2.58 cm (optional fix skipped).
+- Cape FBX unchanged.
