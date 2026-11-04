@@ -70,3 +70,19 @@ Cape re-export vs final/MALZARETH_cape.fbx: PASS (10 bones equal=True, rest diff
  "path_mode": "AUTO"
 }
 ```
+## 2026-11-04 rebuild on Derek's 20-bone skeleton (Blender 5.2.2)
+Derek's edited skeleton is kept exactly as he made it (no bones added, renamed or moved): mixamorig Hips, Spine, Spine1, Spine2, Neck, Head, Left/RightShoulder, Left/RightArm, Left/RightForeArm, LeftHand, RightForeArm.001, Left/RightUpLeg, Left/RightLeg, Left/RightFoot.
+Deleted vs the old 33-bone rig: RightHand (its job is now RightForeArm.001), all HandIndex finger bones, Left/RightToeBase, Toe_End, HeadTop_End.
+
+- Weights: arms and legs reprojected along each chain. Left fingers go to LeftHand, the right hand and fingers to RightForeArm.001, toes to Foot. The greatsword is 100% on RightForeArm.001. Body weight sums are 1.0. No vertex group names a missing bone.
+- Motion: idle 1-299, walk 1-36, attack_greatsword 1-56 re-keyed from the old clips by world-space bone deltas, with two-bone IK to the old wrist and ankle targets. The feet are fit to the old foot and toe verts (Kabsch), then floor-clamped to z >= 0.05 cm. The greatsword matches the old world pose exactly.
+- Clearance fixes (eased over at least +-3 frames, rotations spread across the chain): the attack's left support hand is moved off the blade. Its fingers have no bones now, so they can't curl round the grip. The greatsword is also kept clear of the right forearm (attack f32-33) and of the cape and right thigh (walk f19-29).
+- The cape is unchanged and still follows Spine2 (`follow_Spine2`). The cape spring sim is still NOT baked.
+- Layout: three fake-user actions on muted NLA tracks, no active action. The file opens in rest pose in OBJECT mode.
+- Scripts: /workspace/rigjob/msk/ (m_build, m_lhfix, m_weapfix, m_merge, m_export).
+
+## Polish pass (2026-11-04)
+- Foot plant (Vorgath method, m_plant.py): contacts locked + 2-bone IK re-solve. Per-contact real-mesh slip: walk L 2.44->0.00 cm, R 2.40->0.04; idle 10.4/10.6->0.12/0.03; attack 52.9/49.1->0.41/0.00 (attack feet held planted whole clip; large leg rotation deltas, RightLeg up to 43 deg). Floor min z 0.05-0.06 cm.
+- Walk arms eased forward/outward (m_armfix.py, <=9.4 deg L / 11.1 deg R): cape-into-body/arm 7.37 cm -> 0.60 cm.
+- Sword clearance: attack body 1.79 cm, walk 7.22 / cape 8.03 cm, idle 6.61 / 17.9 cm. Attack left hand to hilt unchanged at 2.58 cm (optional fix skipped).
+- Cape FBX unchanged.

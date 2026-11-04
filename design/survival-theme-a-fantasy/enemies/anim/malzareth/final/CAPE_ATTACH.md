@@ -43,15 +43,28 @@ Spring roots: `cape_L_01`, `cape_C_01`, `cape_R_01`.
 | mixamorig:Spine | 0.173 | 0.0 |
 | mixamorig:Spine1 | 0.195 | 0.0 |
 | mixamorig:Spine2 | 0.16 | 0.0 |
-| mixamorig:LeftUpLeg | 0.153 | 0.1 |
-| mixamorig:RightUpLeg | 0.148 | 0.1 |
-| mixamorig:LeftLeg | 0.088 | 0.1 |
-| mixamorig:RightLeg | 0.087 | 0.1 |
-| mixamorig:LeftFoot | 0.05 | 0.1 |
-| mixamorig:RightFoot | 0.05 | 0.1 |
+| mixamorig:LeftUpLeg | 0.158 | 0.1 |
+| mixamorig:RightUpLeg | 0.153 | 0.1 |
+| mixamorig:LeftLeg | 0.085 | 0.1 |
+| mixamorig:RightLeg | 0.086 | 0.1 |
 
 There are no arm colliders: arms may swing behind the back-only cape.
 
 ## Shape
 - Faces trimmed from the front: 5106. The cape is back-only/open at the front.
 - Pushed out from the body with a smooth offset field: target 4.5 cm, min rest clearance 0.032 m, median 0.097 m, 100% of verts ≥3 cm.
+
+## Derek 20-bone skeleton (2026-11-04)
+- Rig is now 20 mixamorig bones: no RightHand (the right hand and greatsword ride `mixamorig:RightForeArm.001`), no finger, ToeBase, Toe_End or HeadTop_End bones.
+- The Foot capsules have no ToeBase child any more. Use the Foot bone's own head to tail as the capsule.
+- Cape parent is still `mixamorig:Spine2` with the same rest head, so the attach is unchanged. Collider radii above were re-measured on the new weights.
+
+## Foot capsules on the 20-bone rig (2026-11-04)
+No ToeBase child, so each Foot capsule runs along the Foot bone itself, head to tail. The 4th column is the Foot bone length measured in the blend; `NewCharsPreview.cs` builds a bone-local capsule from it.
+
+| bone | radius m | joint hit m | bone length m |
+|---|---|---|---|
+| mixamorig:LeftFoot | 0.05 | 0.1 | 0.188 |
+| mixamorig:RightFoot | 0.05 | 0.1 | 0.189 |
+
+`NewCharsPreview.cs` maps RightForeArm → RightForeArm.001 when this file names `mixamorig:RightForeArm.001` (Malzareth only; he has no arm capsules today).
