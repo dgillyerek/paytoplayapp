@@ -76,6 +76,7 @@ namespace Survival.Unity
             public RectTransform Path = null!;
             public Image PathImg = null!;
             public Text? Timer;
+            public RectTransform? Chip;
             public MarchLeg Leg;
         }
 
@@ -399,13 +400,14 @@ namespace Survival.Unity
                 }
 
                 var (x, y) = m.Position(now);
-                var bob = Mathf.Sin(Time.unscaledTime * 9f + m.Serial) * 5f;
+                var bob = Mathf.Sin(Time.unscaledTime * MarchBobRate + m.Serial) * MarchBobHeight;
                 v.Marker.anchoredPosition = new Vector2(x, y + bob);
                 // March art (march_player/march_rival.png) is drawn facing LEFT, so mirror it when heading right.
                 var flip = m.FacingLeft == MarchArtFacesLeft ? 1f : -1f;
                 v.Marker.localScale = new Vector3(flip, 1f, 1f);
                 if (v.Timer != null)
                 {
+                    v.Chip!.anchoredPosition = new Vector2(0f, -bob); // hold the timer chip steady while the squad bobs
                     v.Timer.text = Clock(m.Remaining(now));
                     v.Timer.rectTransform.localScale = new Vector3(flip, 1f, 1f); // undo the parent mirror so text reads
                 }
@@ -436,6 +438,10 @@ namespace Survival.Unity
         /// <summary>Which way the march sprites are painted. Both march PNGs face left.</summary>
         private const bool MarchArtFacesLeft = true;
 
+        /// <summary>March squad step bob: gentle, steady march (was 5 px at 9 rad/s).</summary>
+        private const float MarchBobHeight = 1.7f;
+        private const float MarchBobRate = 7f;
+
         private MarchView MakeMarch(WorldMarch m)
         {
             var color = OwnerLine(m.OwnerId);
@@ -464,6 +470,7 @@ namespace Survival.Unity
                 view.Timer = HookSkin.Outlined(SurvivalVisuals.Text(chip.transform, "T", "", 22, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
                 view.Timer.fontStyle = FontStyle.Bold;
                 SurvivalVisuals.Stretch(view.Timer.rectTransform);
+                view.Chip = chip.rectTransform;
             }
 
             return view;
