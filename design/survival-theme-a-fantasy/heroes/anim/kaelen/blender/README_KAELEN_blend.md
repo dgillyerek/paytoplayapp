@@ -1,5 +1,18 @@
 # KAELEN.blend
 
+## 2026-11-04 rebuild on Derek's 20-bone skeleton (Blender 5.2.2)
+This rebuild uses Derek's skeleton from commit 19ebaba exactly as he made it, with no bones added back.
+- **Bones:** Hips, Spine, Spine1, Spine2, Neck, Head, Left/RightShoulder, Left/RightArm, Arm.001, Arm.002, Left/RightUpLeg, Left/RightLeg and Left/RightFoot, all with the `mixamorig:` prefix.
+- **Body weights:** re-projected onto the new chains. ForeArm became Arm.001, Hand and the fingers became Arm.002, and ToeBase/Toe_End became Foot. Smoothstep blends are 5 cm at the elbow and knee and 3 cm at the wrist and ankle. No vertex group points to a missing bone.
+- **Swords:** KAELEN_sword_L is 100% on LeftArm.002 and KAELEN_sword_R is 100% on RightArm.002.
+- **Clips:** re-keyed from the old 33-bone poses.
+  - Arms use 2-bone IK to the old wrist, and Arm.002 takes the old Hand rotation.
+  - Legs use 2-bone IK to the old ankle. The rigid Foot pitches about the ankle to stay above the floor, and gets 1 cm toe clearance in mid-swing on walk.
+  - Small Arm.002 quaternion keys were added on some walk and dual-slash frames to keep both swords off the body and the cape.
+- **Cape:** the cape rig is unchanged and still uses Child Of `follow_Spine2`.
+- **FBX MD5s:** KAELEN_rig_rest.fbx: 953166e6172f3962ca6da36906dd055b; KAELEN_idle.fbx: bf55016d29f800ee188934a70ddba430; KAELEN_walk.fbx: b74f1458503880be57cc3df60b68f3ee; KAELEN_attack_dualslash.fbx: aadcbec22fe8be115159a151a6d70db7. KAELEN_cape.fbx was not re-exported.
+- Sections below this one describe the 2026-11-03 build. Where they differ, the notes above win: the actions are now 20-bone, and the frame ranges are unchanged (attack_dualslash 1-110, idle 1-299, walk 1-36).
+
 Built 2026-11-03 ~23:56 America/New_York, Blender 4.2.3 headless, from final/*.fbx (per-clip work blends not used). Geometry, weights and keys are the FBX data verbatim; cape spring sim NOT baked.
 
 Base: final/KAELEN_rig_rest.fbx (MD5 24c10dc0150dfa7a12c9efea9014df79); cape: final/KAELEN_cape.fbx (MD5 a58a559ab972a1588aaf58f87b5bcbf1).

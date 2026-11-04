@@ -44,7 +44,7 @@ Spring roots: `cape_L_01`, `cape_C_01`, `cape_R_01`.
 | mixamorig:Spine1 | 0.156 | 0.0 |
 | mixamorig:LeftUpLeg | 0.115 | 0.1 |
 | mixamorig:RightUpLeg | 0.116 | 0.1 |
-| mixamorig:LeftLeg | 0.071 | 0.1 |
+| mixamorig:LeftLeg | 0.073 | 0.1 |
 | mixamorig:RightLeg | 0.071 | 0.1 |
 | mixamorig:LeftFoot | 0.05 | 0.1 |
 | mixamorig:RightFoot | 0.05 | 0.1 |
@@ -55,9 +55,17 @@ Add these in Unity too; they stop the arms from showing through the cape during 
 |---|---|---|
 | mixamorig:LeftArm | 0.08 | 0.0 |
 | mixamorig:RightArm | 0.08 | 0.0 |
-| mixamorig:LeftForeArm | 0.06 | 0.0 |
-| mixamorig:RightForeArm | 0.06 | 0.0 |
+| mixamorig:LeftArm.001 | 0.06 | 0.0 |
+| mixamorig:RightArm.001 | 0.06 | 0.0 |
 Cape mesh, weights and attach are unchanged in v4 (KAELEN_cape.fbx not re-exported).
+
+## 2026-11-04: Derek's 20-bone skeleton
+The body rig is now 20 bones. ForeArm, Hand, Hand-index, ToeBase and Toe_End are gone.
+- Renamed capsules: `mixamorig:LeftForeArm` became `mixamorig:LeftArm.001`, and `mixamorig:RightForeArm` became `mixamorig:RightArm.001`. Each capsule runs from Arm.001's head to Arm.002's head, and the radius stays 0.06.
+- Re-measured leg capsules on the new bones: LeftUpLeg 0.115, RightUpLeg 0.116, LeftLeg 0.073 (was 0.071), RightLeg 0.071.
+- Foot capsules (0.05) now run from the Foot head to the Foot tail. The Foot bone goes from the ankle to the toe tip. Before, they ran from Foot to ToeBase.
+- Cape attach is unchanged. It parents to `mixamorig:Spine2`, whose rest head is still [0.0, 0.0034, 1.371]. KAELEN_cape.fbx was not re-exported (MD5 a58a559ab972a1588aaf58f87b5bcbf1).
+- Unity: `Assets/Survival/Unity/NewCharsPreview.cs` still maps capsules Foot→ToeBase and Arm→ForeArm→Hand by bone name. The ForeArm, Hand and ToeBase bones no longer exist, so that code has to change before those capsules will resolve. That change is not made here.
 
 ## Shape
 - Faces trimmed from the front: 9939. The cape is back-only/open at the front.
