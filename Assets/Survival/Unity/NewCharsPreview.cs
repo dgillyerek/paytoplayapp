@@ -20,6 +20,8 @@ namespace Survival.Unity
     /// loops that clip for that character until another is pressed, crossfading from the current pose; attacks loop in
     /// place and spawn an impact on each contact. T turns everyone around, Q toggles the camera fly-around, A is the
     /// opt-in auto cycle, R freezes everyone back in their spots.
+    /// Vorgath's attack_spit also runs the mouth fire stream from the Design spit-fire note: a socket under Bone.004,
+    /// on from 1.733 s to 2.467 s, so the head sweep carries one continuous stream.
     /// </summary>
     [DefaultExecutionOrder(100)]
     public sealed class NewCharsPreview : MonoBehaviour
@@ -81,6 +83,11 @@ namespace Survival.Unity
             public Unit? Target;
             public ClothSpringRig? Cloth;
             public Text? Now;
+            public VorgathSpitStream? Spit;
+            public Transform? Socket;
+            public Vector3 SocketPos;
+            public Quaternion SocketRot;
+            public Vector3 SocketScale;
         }
 
         private readonly List<Unit> _units = new List<Unit>();
@@ -190,6 +197,11 @@ namespace Survival.Unity
             u.FromPos = new Vector3[u.Bones.Length];
             u.FromRot = new Quaternion[u.Bones.Length];
             AttachCape(u, dir);
+            if (def.Prefix == "VORGATH")
+            {
+                AttachMouthStream(u);
+            }
+
             return u;
         }
 
@@ -516,6 +528,7 @@ namespace Survival.Unity
                 {
                     idle.SampleAnimation(u.Model, 0f);
                     HoldHips(u);
+                    HoldSocket(u);
                 }
 
                 u.Cloth?.ResetToRest();
@@ -550,6 +563,114 @@ namespace Survival.Unity
             u.BlendLeft = Blend;
         }
 
+        /// <summary>
+        /// Mouth socket under Bone.004, then the spit-fire prefab on it. The reference FBX is the same rig plus the
+        /// empty; its imported local pose is copied and the reference instance is dropped. Not a bone, and not parented
+        /// before the crossfade snapshot, so the blend does not fight the stream.
+        /// </summary>
+        private void AttachMouthStream(Unit u)
+        {
+            var head = FindBone(u.Model.transform, "Bone.004");
+            if (head == null)
+            {
+                Debug.LogError("Vorgath spit: Bone.004 missing, mouth socket not created.");
+                return;
+            }
+
+            var socket = new GameObject("VORGATH_mouth_socket").transform;
+            socket.SetParent(head, false);
+            if (!CopyMouthSocket(socket))
+            {
+                Destroy(socket.gameObject);
+                return;
+            }
+
+            u.Socket = socket;
+            u.SocketPos = socket.localPosition;
+            u.SocketRot = socket.localRotation;
+            u.SocketScale = socket.localScale;
+            var prefab = PlayerAssets.Load<GameObject>(VorgathSpitStream.PrefabPath);
+            var go = prefab != null ? Instantiate(prefab, socket) : new GameObject("VORGATH_spit_fire_stream");
+            if (prefab == null)
+            {
+                go.transform.SetParent(socket, false);
+            }
+
+            go.name = "VORGATH_spit_fire_stream";
+            go.transform.localPosition = Vector3.zero;
+            go.transform.localRotation = Quaternion.identity;
+            go.transform.localScale = Vector3.one;
+            u.Spit = go.GetComponent<VorgathSpitStream>() ?? go.AddComponent<VorgathSpitStream>();
+            u.Spit.ApplyClipTime(-1f, 0f);
+        }
+
+        /// <summary>Copies localPosition and localRotation off the imported reference empty. Never the Blender bone-local numbers.</summary>
+        private static bool CopyMouthSocket(Transform dest)
+        {
+            var prefab = PlayerAssets.Load<GameObject>(Dir + "vorgath/VORGATH_mouth_socket_REF.fbx");
+            if (prefab == null)
+            {
+                Debug.LogError("Vorgath spit: missing " + Dir + "vorgath/VORGATH_mouth_socket_REF.fbx");
+                return false;
+            }
+
+            var probe = Instantiate(prefab);
+            probe.SetActive(false);
+            Transform? bone = null;
+            Transform? src = null;
+            foreach (var t in probe.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name == "Bone.004")
+                {
+                    bone = t;
+                }
+
+                if (t.name == "VORGATH_mouth_socket")
+                {
+                    src = t;
+                }
+            }
+
+            if (src == null || bone == null)
+            {
+                Debug.LogError("Vorgath spit: reference FBX has no Bone.004 / VORGATH_mouth_socket.");
+                Destroy(probe);
+                return false;
+            }
+
+            if (src.parent == bone)
+            {
+                dest.localPosition = src.localPosition;
+                dest.localRotation = src.localRotation;
+                dest.localScale = src.localScale;
+            }
+            else
+            {
+                // Same pose under Bone.004 if the importer inserted a node between the bone and the empty.
+                dest.localPosition = bone.InverseTransformPoint(src.position);
+                dest.localRotation = Quaternion.Inverse(bone.rotation) * src.rotation;
+                dest.localScale = Vector3.one;
+                var parentName = src.parent != null ? src.parent.name : "root";
+                Debug.LogWarning("Vorgath spit: mouth socket parent is " + parentName + ", rebaked into Bone.004 space.");
+            }
+
+            Debug.Log("Vorgath mouth socket copied from REF local pos " + dest.localPosition.ToString("F4") + " euler " + dest.localEulerAngles.ToString("F1"));
+            Destroy(probe);
+            return true;
+        }
+
+        private static void HoldSocket(Unit u)
+        {
+            if (u.Socket == null)
+            {
+                return;
+            }
+
+            u.Socket.localPosition = u.SocketPos;
+            u.Socket.localRotation = u.SocketRot;
+            u.Socket.localScale = u.SocketScale;
+        }
+
         private static void HoldHips(Unit u)
         {
             if (u.Hips == null)
@@ -580,6 +701,8 @@ namespace Survival.Unity
             Face(u);
             if (u.Frozen)
             {
+                HoldSocket(u);
+                u.Spit?.ApplyClipTime(-1f, 0f);
                 return; // Pose was set on Restart; nothing moves until a button.
             }
 
@@ -615,10 +738,11 @@ namespace Survival.Unity
                 Hit(u);
             }
 
+            var sample = 0f;
             if (clip != null)
             {
-                var t = Loops(u) ? Mathf.Repeat(u.Time, length) : Mathf.Min(u.Time, length);
-                clip.SampleAnimation(u.Model, t);
+                sample = Loops(u) ? Mathf.Repeat(u.Time, length) : Mathf.Min(u.Time, length);
+                clip.SampleAnimation(u.Model, sample);
             }
 
             // In place for every clip: attacks too, so a looping attack never slides off and snaps back.
@@ -635,6 +759,15 @@ namespace Survival.Unity
                     bone.localPosition = Vector3.Lerp(u.FromPos[i], bone.localPosition, w);
                     bone.localRotation = Quaternion.Slerp(u.FromRot[i], bone.localRotation, w);
                 }
+            }
+
+            // After the head pose (and the crossfade) so the stream leaves the mouth that is on screen.
+            // The socket is not one of the sampled bones; put its imported local pose back in case the clip sample touched it.
+            HoldSocket(u);
+            if (u.Spit != null)
+            {
+                var spit = u.Def.Clips[u.Clip] == "attack_spit";
+                u.Spit.ApplyClipTime(spit ? sample : -1f, dt);
             }
         }
 
