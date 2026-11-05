@@ -90,3 +90,14 @@ Cape re-export vs final/KAELEN_cape.fbx: PASS (10 bones equal=True, rest diff 7.
 - Min clearance (strict, fresh RESTCLAMP cape sim): dualslash sword_L body 1.61 cm (f72, own wrist, non-palm), cape 5.58 cm (f37). Sword_R body 1.71 cm (f15, RightLeg), cape 2.34 cm (f57). Idle body 1.6 cm (f190, own wrist). Walk body 6.6 mm (f4, own wrist), cape 4.1 cm.
 - Blades cross each other (sword-on-sword) at f66 and f94.
 - Tools: /workspace/rigjob/ksk/k_sdump.py, k_solve.py, k_apply.py, weapfix_ks.py (final mode).
+
+## 2026-11-04: new action attack2_crossthrust (FIX2)
+- Action `attack2_crossthrust`, 1-80 at 30 fps, fake user, on its own muted NLA track. The file still opens in rest pose with no active action. The skeleton is unchanged (20 bones), and idle, walk and attack_dualslash are bit-identical to main (max pose-matrix diff 0).
+- Beats: guard (f1) → right thrust (f17) → left thrust (f32) → both blades raised overhead (f46) → crossing X-cut down and across the front (f49-63) → recover to guard (f80). All keys are eased with no single-frame pops. The fastest wrist rotation is 42°/frame during the X-cut.
+- Feet stay locked (drift 0 mm). The forearm-to-sword angle is clamped to at least 56° so the pommel stays clear of the forearm.
+- Strict min clearance, measured on the re-imported FBX against a fresh RESTCLAMP cape sim (excluding only each gripping hand's Arm.002 verts):
+  - Sword_L: body 1.61 cm (f50, LeftArm.002), cape 34.5 cm.
+  - Sword_R: body 2.51 cm (f52, RightArm.001), cape 40.1 cm.
+  - Body/hands into cape: 0 frames (min 3.4 cm).
+  - The two blades touch each other at the X-cross (about 1 mm, f63). This is intended.
+- FBX: KAELEN_attack2_crossthrust.fbx, MD5 785e1c175cbb05a56c4709140ff818c6, take `KAELEN_rig|Scene` 1-80.
