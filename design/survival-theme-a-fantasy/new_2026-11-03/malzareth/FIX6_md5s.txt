@@ -1,0 +1,10 @@
+3e9778b521ba94ec56aeab7075a3f138  fbx/MALZARETH_attack2_overhead_cleave.fbx
+5393d5bb3a52d88958016ab69d1a6bc8  fbx/MALZARETH_attack_greatsword.fbx
+5627f80e07963aaa2ca59f8830f56a19  fbx/MALZARETH_cape.fbx
+e9cae1b304b950951ccd466ec7c8a583  fbx/MALZARETH_idle.fbx
+810cf93dea30f4aeeb85c074ee30d764  fbx/MALZARETH_rig_rest.fbx
+974de71a44b1896ccf193f7ee81319d2  fbx/MALZARETH_walk.fbx
+a4393cb8f8262ac9499fecd0649537b9  MALZARETH_FIX6.blend
+15826e9340b2f82ac71a6daf1afc3a8d  /workspace/design/survival-theme-a-fantasy/new_2026-11-03/malzareth/sheets/MALZARETH_FIX6_attack2_2H_SHEET.png
+adf874eaa824e32dcc1618a5ff03e2df  /workspace/design/survival-theme-a-fantasy/new_2026-11-03/malzareth/sheets/clips_fix6/MALZARETH_FIX6_attack2_2H_front.mp4
+28efb4eae919c480aa929b5b06909edb  /workspace/design/survival-theme-a-fantasy/new_2026-11-03/malzareth/sheets/clips_fix6/MALZARETH_FIX6_attack2_2H_side.mp4
