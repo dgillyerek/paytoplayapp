@@ -86,3 +86,26 @@ Deleted vs the old 33-bone rig: RightHand (its job is now RightForeArm.001), all
 - Walk arms eased forward/outward (m_armfix.py, <=9.4 deg L / 11.1 deg R): cape-into-body/arm 7.37 cm -> 0.60 cm.
 - Sword clearance: attack body 1.79 cm, walk 7.22 / cape 8.03 cm, idle 6.61 / 17.9 cm. Attack left hand to hilt unchanged at 2.58 cm (optional fix skipped).
 - Cape FBX unchanged.
+
+## FIX2 (2026-11-04, Blender 5.2.2)
+Skeleton unchanged: same 20 bones, names, parents, heads, tails and rolls. The bone-table hash matches the pre-FIX2 blend.
+Four fake-user actions sit on muted NLA tracks with no active action, so the file opens in rest pose.
+
+- **Cape (snugger):**
+  - Rest refit with capefit.py: shoulder hotspots, a 2.4 cm minimum rest gap, and a per-vertex push on the 22 vertices that came within 1.3 cm of the body in any clip's sim.
+  - Upper-cape local-min gap p5/50/95 is now 2.4/2.5/5.2 cm (was 2.18/5.7/7.53).
+  - Spring roots moved about 3-5 cm toward the body.
+  - Cape sim in the preview: torso hit radius 0, COLCLAMP off.
+- **attack_greatsword (knee):**
+  - Right-knee twist is spread over at least 3 frames.
+  - Max change per frame: RightLeg 43.1 -> 27.1 deg/f, RightUpLeg 30.0 -> 20.1 deg/f.
+  - Right-foot contact slip 0.80 -> 0.48 cm/f.
+  - The right foot steps out and plants on f16-34 by design.
+- **attack2_overhead_cleave (new, 1-69, one-handed):**
+  - Same overhead wind-up as before.
+  - The blade then comes down and out past the right hip and thigh. At f30-36 the tip is about 1.0 m to his right, 1.5 m in front and 0.25-0.3 m off the floor. It never crosses the torso.
+  - Returns to the ready stance by f69.
+  - Built by keying the hand path and solving the elbow analytically (restrike2.py), with the spine bend toward the stance scaled to 0.55. The left arm is eased out of the cape on f13-31.
+  - Feet stay planted (0 slip, 0 drift). Max leg change is 10.9 deg/f.
+- **Verified on the re-imported FBXs, every frame, full-res body:** see the table in CAPE_ATTACH.md (FIX2 section).
+- Scripts are in /workspace/rigjob/mf2/: knee2, capefit, f_capeanim, restrike2, nudge, merge2, export2, vfy.
