@@ -35,6 +35,29 @@ namespace Survival.Editor
             importer.importLights = false;
         }
 
+        private void OnPreprocessTexture()
+        {
+            if (assetImporter is not TextureImporter importer)
+            {
+                return;
+            }
+
+            var path = assetPath.Replace('\\', '/');
+            if (!path.EndsWith("/VORGATH_fire_stream_flipbook_4x4.png", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            // DEV_NOTE_VORGATH_spit_fire.md: Alpha Is Transparency, Wrap Clamp, no mipmaps, Max Size 1024.
+            importer.textureType = TextureImporterType.Default;
+            importer.alphaIsTransparency = true;
+            importer.mipmapEnabled = false;
+            importer.wrapMode = TextureWrapMode.Clamp;
+            importer.maxTextureSize = 1024;
+            importer.sRGBTexture = true;
+            importer.npotScale = TextureImporterNPOTScale.None;
+        }
+
         private void OnPreprocessAnimation()
         {
             if (assetImporter is not ModelImporter importer || !Ours(assetPath))
