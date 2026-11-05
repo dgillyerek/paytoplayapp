@@ -53,8 +53,8 @@ namespace Survival.Unity
                 new[] { BattleImpactKind.SwordSteel }, new Color(0.85f, 0.95f, 1f), new Color(0.5f, 0.8f, 1f)),
             new Def("vorgath", "VORGATH", false, -1.4f, 2.3f, new[] { "idle", "walk", "attack_slam", "attack_spit" },
                 new[] { BattleImpactKind.GroundSlam, BattleImpactKind.ArcaneConjure }, new Color(0.85f, 0.55f, 1f), new Color(0.45f, 0.1f, 0.7f)),
-            new Def("malzareth", "MALZARETH", false, 1.4f, 1.9f, new[] { "idle", "walk", "attack_greatsword" },
-                new[] { BattleImpactKind.VoidFireBreath }, new Color(0.8f, 0.5f, 1f), new Color(0.3f, 0.05f, 0.5f)),
+            new Def("malzareth", "MALZARETH", false, 1.4f, 1.9f, new[] { "idle", "walk", "attack_greatsword", "attack2_overhead_cleave" },
+                new[] { BattleImpactKind.VoidFireBreath, BattleImpactKind.SwordSteel }, new Color(0.8f, 0.5f, 1f), new Color(0.3f, 0.05f, 0.5f)),
         };
 
         private sealed class Unit

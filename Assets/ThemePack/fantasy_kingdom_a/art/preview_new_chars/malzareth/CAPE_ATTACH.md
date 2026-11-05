@@ -93,4 +93,4 @@ The cape mesh and spring-root bones are refit closer to the body. The Spine2 par
 | attack2_overhead_cleave | 69 | 0.97 cm (f24) | 2.14 cm | >15 cm | 6.8/7.6/7.6/10.9 |
 
 - **Remaining shortfall:** attack_greatsword and attack2 each have one collar vertex a little under 1 cm. Pushing those verts further made the spring sim unstable (walk went to -1.96 cm), so this refit is the limit before the drape loosens badly.
-- **Unity:** `NewCharsPreview.cs` is not changed in this commit. It needs to add the new clip `MALZARETH_attack2_overhead_cleave.fbx` and pick up the new cape FBX.
+- **Unity:** `NewCharsPreview.cs` plays `MALZARETH_attack2_overhead_cleave.fbx` as his 4th clip (button OVERHEAD_CLEAVE). The refit cape replaced `MALZARETH_cape.fbx` in place, so the preview loads it with no code change.
