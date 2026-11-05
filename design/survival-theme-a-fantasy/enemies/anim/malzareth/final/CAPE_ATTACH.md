@@ -68,3 +68,50 @@ No ToeBase child, so each Foot capsule runs along the Foot bone itself, head to 
 | mixamorig:RightFoot | 0.05 | 0.1 | 0.189 |
 
 `NewCharsPreview.cs` maps RightForeArm → RightForeArm.001 when this file names `mixamorig:RightForeArm.001` (Malzareth only; he has no arm capsules today).
+
+## FIX2 cape (2026-11-04)
+The cape mesh and spring-root bones are refit closer to the body. The Spine2 parent and attach are unchanged.
+
+- **Rest gap:** minimum 2.4 cm. Upper-cape local-min p5/50/95 is 2.4/2.5/5.2 cm (was 2.18/5.7/7.53). This supersedes the "Shape" numbers above.
+- **Spring-root moves (m, world):**
+
+| bone | move |
+|---|---|
+| cape_L_01 | (-0.024, -0.036, 0) |
+| cape_C_01 | (-0.007, -0.050, 0) |
+| cape_R_01 | (+0.022, -0.031, 0) |
+
+  The other chain bones follow by a similar amount.
+- **Colliders:** the capsule radii in the table above are unchanged. Torso joint hit stays 0.0 and no clamp is used: clamping pushed the cape into the body.
+- **Verified on the re-imported FBXs, every frame, full-res body mesh.** Only the gripping right hand's verts (RightForeArm.001 weight >= 0.05) are excluded from sword-to-body.
+
+| clip | frames | min cape-to-body | min sword-to-body | min sword-to-cape | max knee change (RLeg/RUpLeg/LLeg/LUpLeg deg/f) |
+|---|---|---|---|---|---|
+| idle | 299 | 1.12 cm | 6.35 cm | >15 cm | 0.9/0.4/1.6/0.5 |
+| walk | 36 | 1.08 cm | 6.90 cm | 7.9 cm | 19.1/8.4/16.8/6.9 |
+| attack_greatsword | 56 | 0.83 cm (f20) | 1.79 cm | >15 cm | 27.1/20.1/18.3/12.8 |
+| attack2_overhead_cleave | 69 | 0.97 cm (f24) | 2.14 cm | >15 cm | 6.8/7.6/7.6/10.9 |
+
+- **Remaining shortfall:** attack_greatsword and attack2 each have one collar vertex a little under 1 cm. Pushing those verts further made the spring sim unstable (walk went to -1.96 cm), so this refit is the limit before the drape loosens badly.
+- **Unity:** `NewCharsPreview.cs` plays `MALZARETH_attack2_overhead_cleave.fbx` as his 4th clip (button OVERHEAD_CLEAVE). The refit cape replaced `MALZARETH_cape.fbx` in place, so the preview loads it with no code change.
+
+## FIX3 attack2 — two-handed overhead (2026-11-05)
+Re-keyed `attack2_overhead_cleave` (1–69) as a two-handed overhead: both hands on the hilt (LH just below RH on the grip), eased wind-up above the head, straight-down centerline chop to a strong low stop, then recover. Same 20-bone Derek skeleton (hash unchanged). Right knee kept calm (≤6.8°/f); feet planted (0 slip / 0 drift).
+
+Verified on re-imported FBX every frame (grip hands excluded: `RightForeArm.001`, `LeftHand`):
+
+| check | min | frame |
+|---|---|---|
+| sword → body (excl. gripping hands + forearms) | 5.41 cm | f21 Head |
+| sword → body (excl. gripping hands only; forearm wrap expected) | grip-chain only | — |
+| cape → body | 1.41 cm | f51 |
+| sword → cape | >15 cm | all |
+| RightLeg max deg/f | 6.78 | — |
+| foot contact slip | 0 cm/f | — |
+
+Cape mesh/springs unchanged from FIX2; fresh spring sim on the new clip (`COLCLAMP=0`). Preview code: no new clip name — still `attack2_overhead_cleave`; no .cs changes.
+
+## FIX4 (2026-11-05, local only)
+attack2_overhead_cleave: 2H overhead with palms on hilt + blade vertical at peak.
+FBX reimport (excl hands+forearms): sword-body ≥5.35 cm, cape-body 1.41 cm @f47, R-knee ≤6.78°/f, 0 slip.
+Skeleton hash unchanged 972ead4ab70cefca. Greatsword bind nudged for RH palm-on-axis (all clips).
