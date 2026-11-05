@@ -101,3 +101,10 @@ Cape re-export vs final/KAELEN_cape.fbx: PASS (10 bones equal=True, rest diff 7.
   - Body/hands into cape: 0 frames (min 3.4 cm).
   - The two blades touch each other at the X-cross (about 1 mm, f63). This is intended.
 - FBX: KAELEN_attack2_crossthrust.fbx, MD5 785e1c175cbb05a56c4709140ff818c6, take `KAELEN_rig|Scene` 1-80.
+
+## FIX3 (2026-11-05, local — not pushed)
+- Grip: swords moved rigidly in Arm.002 space onto palm; finger verts curled around hilt (no finger bones on Derek's 20-bone rig). Asset fix — NewCharsPreview does not re-parent swords.
+- attack_dualslash re-authored (90f purposeful R then L arcs). attack2_crossthrust regenerated on new grip.
+- idle/walk retargeted to new grip with min-bend wrist roll + eased arm abduction.
+- Cape cs3 snug reshape + spring LEGHIT 0.08 / FOOTHIT 0.15 / STIFF 1.0.
+- Skeleton unchanged (20 bones).
