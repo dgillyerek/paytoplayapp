@@ -49,12 +49,12 @@ namespace Survival.Unity
         {
             new Def("seraphine", "SERAPHINE", true, 1.4f, 1.9f, new[] { "idle", "walk", "attack_thrust", "attack_throw" },
                 new[] { BattleImpactKind.SwordSteel, BattleImpactKind.StormCrackle }, new Color(1f, 0.95f, 0.7f), new Color(0.45f, 0.7f, 1f)),
-            new Def("kaelen", "KAELEN", true, -1.4f, 1.7f, new[] { "idle", "walk", "attack_dualslash" },
+            new Def("kaelen", "KAELEN", true, -1.4f, 1.7f, new[] { "idle", "walk", "attack_dualslash", "attack2_crossthrust" },
                 new[] { BattleImpactKind.SwordSteel }, new Color(0.85f, 0.95f, 1f), new Color(0.5f, 0.8f, 1f)),
             new Def("vorgath", "VORGATH", false, -1.4f, 2.3f, new[] { "idle", "walk", "attack_slam", "attack_spit" },
                 new[] { BattleImpactKind.GroundSlam, BattleImpactKind.ArcaneConjure }, new Color(0.85f, 0.55f, 1f), new Color(0.45f, 0.1f, 0.7f)),
-            new Def("malzareth", "MALZARETH", false, 1.4f, 1.9f, new[] { "idle", "walk", "attack_greatsword" },
-                new[] { BattleImpactKind.VoidFireBreath }, new Color(0.8f, 0.5f, 1f), new Color(0.3f, 0.05f, 0.5f)),
+            new Def("malzareth", "MALZARETH", false, 1.4f, 1.9f, new[] { "idle", "walk", "attack_greatsword", "attack2_overhead_cleave" },
+                new[] { BattleImpactKind.VoidFireBreath, BattleImpactKind.SwordSteel }, new Color(0.8f, 0.5f, 1f), new Color(0.3f, 0.05f, 0.5f)),
         };
 
         private sealed class Unit
@@ -532,7 +532,7 @@ namespace Survival.Unity
             u.HitDone = false;
             if (u.Now != null)
             {
-                u.Now.text = u.Def.Clips[u.Clip].Replace("attack_", "").ToUpperInvariant();
+                u.Now.text = u.Def.Clips[u.Clip].Replace("attack2_", "").Replace("attack_", "").ToUpperInvariant();
             }
         }
 
@@ -774,7 +774,7 @@ namespace Survival.Unity
                 {
                     var clip = c;
                     var y1 = 0.23f - (c * 0.055f);
-                    var label = u.Def.Clips[c].Replace("attack_", "").ToUpperInvariant() + (u.Clips[c] == null ? " (missing)" : "");
+                    var label = u.Def.Clips[c].Replace("attack2_", "").Replace("attack_", "").ToUpperInvariant() + (u.Clips[c] == null ? " (missing)" : "");
                     var key = c >= 2 ? HookArtKeys.ButtonRed : HookArtKeys.ButtonBlue;
                     var btn = HookSkin.Button(canvas, u.Def.Prefix + "_" + label, key, new Color(0.2f, 0.25f, 0.4f, 0.9f));
                     HookSkin.Box(btn.GetComponent<RectTransform>(), x0, y1 - 0.05f, x1, y1);

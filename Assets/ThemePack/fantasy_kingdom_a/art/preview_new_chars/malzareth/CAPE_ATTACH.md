@@ -68,3 +68,29 @@ No ToeBase child, so each Foot capsule runs along the Foot bone itself, head to 
 | mixamorig:RightFoot | 0.05 | 0.1 | 0.189 |
 
 `NewCharsPreview.cs` maps RightForeArm → RightForeArm.001 when this file names `mixamorig:RightForeArm.001` (Malzareth only; he has no arm capsules today).
+
+## FIX2 cape (2026-11-04)
+The cape mesh and spring-root bones are refit closer to the body. The Spine2 parent and attach are unchanged.
+
+- **Rest gap:** minimum 2.4 cm. Upper-cape local-min p5/50/95 is 2.4/2.5/5.2 cm (was 2.18/5.7/7.53). This supersedes the "Shape" numbers above.
+- **Spring-root moves (m, world):**
+
+| bone | move |
+|---|---|
+| cape_L_01 | (-0.024, -0.036, 0) |
+| cape_C_01 | (-0.007, -0.050, 0) |
+| cape_R_01 | (+0.022, -0.031, 0) |
+
+  The other chain bones follow by a similar amount.
+- **Colliders:** the capsule radii in the table above are unchanged. Torso joint hit stays 0.0 and no clamp is used: clamping pushed the cape into the body.
+- **Verified on the re-imported FBXs, every frame, full-res body mesh.** Only the gripping right hand's verts (RightForeArm.001 weight >= 0.05) are excluded from sword-to-body.
+
+| clip | frames | min cape-to-body | min sword-to-body | min sword-to-cape | max knee change (RLeg/RUpLeg/LLeg/LUpLeg deg/f) |
+|---|---|---|---|---|---|
+| idle | 299 | 1.12 cm | 6.35 cm | >15 cm | 0.9/0.4/1.6/0.5 |
+| walk | 36 | 1.08 cm | 6.90 cm | 7.9 cm | 19.1/8.4/16.8/6.9 |
+| attack_greatsword | 56 | 0.83 cm (f20) | 1.79 cm | >15 cm | 27.1/20.1/18.3/12.8 |
+| attack2_overhead_cleave | 69 | 0.97 cm (f24) | 2.14 cm | >15 cm | 6.8/7.6/7.6/10.9 |
+
+- **Remaining shortfall:** attack_greatsword and attack2 each have one collar vertex a little under 1 cm. Pushing those verts further made the spring sim unstable (walk went to -1.96 cm), so this refit is the limit before the drape loosens badly.
+- **Unity:** `NewCharsPreview.cs` plays `MALZARETH_attack2_overhead_cleave.fbx` as his 4th clip (button OVERHEAD_CLEAVE). The refit cape replaced `MALZARETH_cape.fbx` in place, so the preview loads it with no code change.
