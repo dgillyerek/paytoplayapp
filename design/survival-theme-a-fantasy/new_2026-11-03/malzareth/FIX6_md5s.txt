@@ -1,7 +1,6 @@
-85560d9bb0b65b3839d368a3d55c9d95  Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_attack2_overhead_cleave.fbx
-d2c99e6099f6ffc1a5bcbe46a92274fd  Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_rig_rest.fbx
-8ab29e8c0cc92f5a8992b3dd694414e9  Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_cape.fbx
-85560d9bb0b65b3839d368a3d55c9d95  design/survival-theme-a-fantasy/enemies/anim/malzareth/final/MALZARETH_attack2_overhead_cleave.fbx
-be984c43c82a7f7e0d57727da0f329b2  design/survival-theme-a-fantasy/new_2026-11-03/malzareth/sheets/MALZARETH_FIX6_attack2_2H_SHEET.png
-5eea1d12c651e7b0de28c047c379170b  design/survival-theme-a-fantasy/new_2026-11-03/malzareth/sheets/clips_fix6/MALZARETH_FIX6_attack2_2H_front.mp4
-22109d9c6b84518a4cc0594dda79b379  design/survival-theme-a-fantasy/new_2026-11-03/malzareth/sheets/clips_fix6/MALZARETH_FIX6_attack2_2H_side.mp4
+1f37ca59bfe389ba2c9d3aa67b14a39b  MALZARETH_attack2_overhead_cleave.fbx
+7c9cbfbe6b61c8ce4ab72d7dc2153f45  MALZARETH_attack_greatsword.fbx
+a253bb8fd2ef69e2e8d93a88eacf98cf  MALZARETH_cape.fbx
+5e0d1336305be4d6a3c3a4baf7cd2e68  MALZARETH_idle.fbx
+7a2ad35d3b3214701d289957e85bb55d  MALZARETH_rig_rest.fbx
+2f0edb140143328e1ce8c904c443e623  MALZARETH_walk.fbx
