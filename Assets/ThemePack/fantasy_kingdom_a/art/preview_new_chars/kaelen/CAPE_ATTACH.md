@@ -85,3 +85,9 @@ No ToeBase child, so each Foot capsule runs along the Foot bone itself, head to 
 - New clip KAELEN_attack2_crossthrust.fbx (1-80) uses the same cape attach and sim settings: `RESTCLAMP=1`, `ARMR=0.10`, `FARMR=0.08`.
 - Fresh sim result: 0 cape-body penetration frames (min 3.4 cm). Sword-to-cape min: L 34.5 cm, R 40.1 cm.
 - Unity: NewCharsPreview.cs plays it as Kaelen's 4th clip (button CROSSTHRUST), crossfading in from the current pose.
+
+## FIX3 preview spring settings (2026-11-05, verified 0 cape-body pen on reimported FBXs)
+- stiffness 1.0, drag 0.4, gravity 0.4, dt 1/30
+- LEGHIT 0.08 (UpLeg/Leg joint hit), FOOTHIT 0.15, torso hit 0.0
+- Arm capsules ARMR 0.10 / FARMR 0.08 (Arm / Arm.001). Arm.002 (hand) is NOT in the md tails dict — preview cannot collide the fist; walk uses eased arm abduction instead.
+- Cape mesh reshaped snug (cs3): upper median gap ~5.5cm; pin band z 1.02-1.18.

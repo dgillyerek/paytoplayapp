@@ -80,3 +80,9 @@ No ToeBase child, so each Foot capsule runs along the Foot bone itself, head to 
 | mixamorig:RightFoot | 0.05 | 0.1 | 0.176 |
 
 `NewCharsPreview.cs` maps Arm → Arm.001 → Arm.002 when `mixamorig:LeftArm.001` rows are present (Kaelen only).
+
+## FIX3 preview spring settings (2026-11-05, verified 0 cape-body pen on reimported FBXs)
+- stiffness 1.0, drag 0.4, gravity 0.4, dt 1/30
+- LEGHIT 0.08 (UpLeg/Leg joint hit), FOOTHIT 0.15, torso hit 0.0
+- Arm capsules ARMR 0.10 / FARMR 0.08 (Arm / Arm.001). Arm.002 (hand) is NOT in the md tails dict — preview cannot collide the fist; walk uses eased arm abduction instead.
+- Cape mesh reshaped snug (cs3): upper median gap ~5.5cm; pin band z 1.02-1.18.
