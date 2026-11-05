@@ -94,3 +94,24 @@ The cape mesh and spring-root bones are refit closer to the body. The Spine2 par
 
 - **Remaining shortfall:** attack_greatsword and attack2 each have one collar vertex a little under 1 cm. Pushing those verts further made the spring sim unstable (walk went to -1.96 cm), so this refit is the limit before the drape loosens badly.
 - **Unity:** `NewCharsPreview.cs` plays `MALZARETH_attack2_overhead_cleave.fbx` as his 4th clip (button OVERHEAD_CLEAVE). The refit cape replaced `MALZARETH_cape.fbx` in place, so the preview loads it with no code change.
+
+## FIX3 attack2 — two-handed overhead (2026-11-05)
+Re-keyed `attack2_overhead_cleave` (1–69) as a two-handed overhead: both hands on the hilt (LH just below RH on the grip), eased wind-up above the head, straight-down centerline chop to a strong low stop, then recover. Same 20-bone Derek skeleton (hash unchanged). Right knee kept calm (≤6.8°/f); feet planted (0 slip / 0 drift).
+
+Verified on re-imported FBX every frame (grip hands excluded: `RightForeArm.001`, `LeftHand`):
+
+| check | min | frame |
+|---|---|---|
+| sword → body (excl. gripping hands + forearms) | 5.41 cm | f21 Head |
+| sword → body (excl. gripping hands only; forearm wrap expected) | grip-chain only | — |
+| cape → body | 1.41 cm | f51 |
+| sword → cape | >15 cm | all |
+| RightLeg max deg/f | 6.78 | — |
+| foot contact slip | 0 cm/f | — |
+
+Cape mesh/springs unchanged from FIX2; fresh spring sim on the new clip (`COLCLAMP=0`). Preview code: no new clip name — still `attack2_overhead_cleave`; no .cs changes.
+
+## FIX4 (2026-11-05, local only)
+attack2_overhead_cleave: 2H overhead with palms on hilt + blade vertical at peak.
+FBX reimport (excl hands+forearms): sword-body ≥5.35 cm, cape-body 1.41 cm @f47, R-knee ≤6.78°/f, 0 slip.
+Skeleton hash unchanged 972ead4ab70cefca. Greatsword bind nudged for RH palm-on-axis (all clips).
