@@ -291,7 +291,10 @@ namespace Survival.Unity
 
                 tex.filterMode = FilterMode.Bilinear;
                 tex.wrapMode = TextureWrapMode.Clamp;
+#if UNITY_EDITOR
+                // Editor-only API; not available in player builds.
                 tex.alphaIsTransparency = true;
+#endif
                 tex.name = key;
                 Textures[full] = tex;
             }
