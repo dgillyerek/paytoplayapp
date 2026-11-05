@@ -109,3 +109,8 @@ Four fake-user actions sit on muted NLA tracks with no active action, so the fil
   - Feet stay planted (0 slip, 0 drift). Max leg change is 10.9 deg/f.
 - **Verified on the re-imported FBXs, every frame, full-res body:** see the table in CAPE_ATTACH.md (FIX2 section).
 - Scripts are in /workspace/rigjob/mf2/: knee2, capefit, f_capeanim, restrike2, nudge, merge2, export2, vfy.
+
+## FIX3 (2026-11-05)
+- `attack2_overhead_cleave` re-keyed as two-handed overhead straight-down cleave (both hands on hilt).
+- Skeleton unchanged (20 bones). Idle / walk / attack_greatsword / cape same as FIX2.
+- Clearance table in `final/CAPE_ATTACH.md` (FIX3 section).

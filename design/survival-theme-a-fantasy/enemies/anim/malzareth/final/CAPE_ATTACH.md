@@ -68,3 +68,19 @@ No ToeBase child, so each Foot capsule runs along the Foot bone itself, head to 
 | mixamorig:RightFoot | 0.05 | 0.1 | 0.189 |
 
 `NewCharsPreview.cs` maps RightForeArm → RightForeArm.001 when this file names `mixamorig:RightForeArm.001` (Malzareth only; he has no arm capsules today).
+
+## FIX3 attack2 — two-handed overhead (2026-11-05)
+Re-keyed `attack2_overhead_cleave` (1–69) as a two-handed overhead: both hands on the hilt (LH just below RH on the grip), eased wind-up above the head, straight-down centerline chop to a strong low stop, then recover. Same 20-bone Derek skeleton (hash unchanged). Right knee kept calm (≤6.8°/f); feet planted (0 slip / 0 drift).
+
+Verified on re-imported FBX every frame (grip hands excluded: `RightForeArm.001`, `LeftHand`):
+
+| check | min | frame |
+|---|---|---|
+| sword → body (excl. gripping hands + forearms) | 5.41 cm | f21 Head |
+| sword → body (excl. gripping hands only; forearm wrap expected) | grip-chain only | — |
+| cape → body | 1.41 cm | f51 |
+| sword → cape | >15 cm | all |
+| RightLeg max deg/f | 6.78 | — |
+| foot contact slip | 0 cm/f | — |
+
+Cape mesh/springs unchanged from FIX2; fresh spring sim on the new clip (`COLCLAMP=0`). Preview code: no new clip name — still `attack2_overhead_cleave`; no .cs changes.
