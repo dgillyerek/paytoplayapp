@@ -114,3 +114,15 @@ Four fake-user actions sit on muted NLA tracks with no active action, so the fil
 - `attack2_overhead_cleave` re-keyed as two-handed overhead straight-down cleave (both hands on hilt).
 - Skeleton unchanged (20 bones). Idle / walk / attack_greatsword / cape same as FIX2.
 - Clearance table in `final/CAPE_ATTACH.md` (FIX3 section).
+
+## FIX4 (2026-11-05, Blender 5.2.2) — local only, NOT pushed
+Derek: "the hands should be around the handle of the sword. or at least close enough. the blade should be perpidicular to the ground"
+
+- `attack2_overhead_cleave` re-keyed: both palms wrap the hilt (palm→grip-axis max R 0.02 cm / L 2.21 cm); peak blade within 4.9° of world vertical, centered over head (tipx ≤ 2.3 cm); straight-down chop in the vertical plane.
+- Greatsword bind nudged ~4.2 cm so the RH palm sits on the grip axis (shared across clips; skeleton unchanged — bone-table hash still 972ead4ab70cefca).
+- Raise arcs slightly char-right then centers for the 2H peak so the blade clears the left arm/head.
+- Clearance on re-imported FBX (HANDS=RightForeArm.001,LeftHand,LeftForeArm,RightForeArm): sword-body min 5.35 cm @ f43 LeftArm; cape-body 1.41 cm @ f47; sword-cape >15 cm; R-knee max 6.78 °/f; foot slip 0.
+- Forearms wrap the hilt for 2H (0 unsigned when included) — reported separately; gripping-hand verts excluded.
+- Cape: reused FIX2 mesh/springs; fresh sim TAG=_a COLCLAMP=0 WDIR=work_fix4.
+- Scripts: /workspace/rigjob/mf4/ (restrike4, sword_nudge, meas_grip, merge3, export3, sheet_mp4).
+- Sheet: design/.../malzareth/sheets/MALZARETH_FIX4_attack2_2H_SHEET.png (+ clips_fix4 MP4s). Local commit only.

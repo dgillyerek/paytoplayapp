@@ -110,3 +110,8 @@ Verified on re-imported FBX every frame (grip hands excluded: `RightForeArm.001`
 | foot contact slip | 0 cm/f | — |
 
 Cape mesh/springs unchanged from FIX2; fresh spring sim on the new clip (`COLCLAMP=0`). Preview code: no new clip name — still `attack2_overhead_cleave`; no .cs changes.
+
+## FIX4 (2026-11-05, local only)
+attack2_overhead_cleave: 2H overhead with palms on hilt + blade vertical at peak.
+FBX reimport (excl hands+forearms): sword-body ≥5.35 cm, cape-body 1.41 cm @f47, R-knee ≤6.78°/f, 0 slip.
+Skeleton hash unchanged 972ead4ab70cefca. Greatsword bind nudged for RH palm-on-axis (all clips).
