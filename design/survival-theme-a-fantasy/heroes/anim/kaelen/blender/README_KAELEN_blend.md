@@ -108,3 +108,8 @@ Cape re-export vs final/KAELEN_cape.fbx: PASS (10 bones equal=True, rest diff 7.
 - idle/walk retargeted to new grip with min-bend wrist roll + eased arm abduction.
 - Cape cs3 snug reshape + spring LEGHIT 0.08 / FOOTHIT 0.15 / STIFF 1.0.
 - Skeleton unchanged (20 bones).
+
+## FIX4 (2026-11-05, local — not pushed)
+- Cause: FIX3 ROLL=minbend about the curved blade wound ~±360° of hand twist about the forearm on dualslash (and ~25°/f spikes on crossthrust).
+- Fix: envelope-clamp hand twist about forearm Y to ±50° with ≤6.5°/frame on top of the FIX3 pose (quaternion-continuous). Blade path comes from arm/elbow; wrist no longer spins.
+- Walk/idle unchanged (already clean). Grip, cape, feet, skeleton unchanged. No .cs edits.
