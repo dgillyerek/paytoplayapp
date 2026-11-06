@@ -124,3 +124,7 @@ The cape was re-simulated for all four clips (v5 config: RESTCLAMP, WSEG 6, WPCT
 - Cape-into-body penetration is on the same level as the v5 baseline (thrust about 6.7 cm at the hair/arm, throw about 6 cm, idle under 0.5 cm, walk none).
 
 Unity: `NewCharsPreview.cs` maps the UpLeg → .001 → .002 → .003 chain when these rows are present (Seraphine only); the capsule table above carries the re-measured radii.
+
+
+## FIX4 review candidate (2026-11-06)
+The cape is masked conservatively at measured hair/body contacts: 3,763 of 11,773 faces (31.96%) are removed, plus unused vertices. This substantial geometry change requires visual approval. The cape rig, root/bind attachment, retained weights and UVs, and collider settings are unchanged. Fresh final-motion v5 spring and full-triangle checks report zero cape/body, cape/weapon and cape/wing intersection frames in idle, walk, thrust and throw. Desktop Unity spring playback still needs review. See DEV_NOTE_SERAPHINE_FIX4.md and the FIX4 rear contact sheet.

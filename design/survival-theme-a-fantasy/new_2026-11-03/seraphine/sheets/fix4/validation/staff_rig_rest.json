@@ -1,0 +1,29 @@
+{
+ "source": "/workspace/rigjob/sera_fix4/fbx/SERAPHINE_rig_rest.fbx",
+ "clip": "rig_rest",
+ "summary": {
+  "fps": 30,
+  "frames": 1,
+  "duration_s": 0.0,
+  "collision_frames": 0,
+  "nonhand_collision_frames": 0,
+  "min_cm": 0.10908354306593537,
+  "nonhand_min_cm": 5.132235214114189,
+  "wing_collision_frames": 0,
+  "wing_min_cm": 37.121567130088806,
+  "wrist_twist_maxdelta": 0,
+  "hand_world_maxstep": 0
+ },
+ "frames": {
+  "1": {
+   "overlap": {},
+   "min_cm": 0.10908354306593537,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132235214114189,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.121567130088806,
+   "hand_step_deg": 0,
+   "overlap_points": {}
+  }
+ }
+}

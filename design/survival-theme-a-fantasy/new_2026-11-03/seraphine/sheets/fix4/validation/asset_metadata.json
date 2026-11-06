@@ -1,0 +1,37 @@
+{
+  "body_bones": 24,
+  "bind_matrix_max_diff": 0.0,
+  "same_parents": true,
+  "body_mesh_vertex_max_diff": 0.0,
+  "base_meshes": {
+    "SERAPHINE_body": {
+      "verts": 43266,
+      "faces": 49999
+    },
+    "SERAPHINE_cape": {
+      "verts": 10977,
+      "faces": 11773
+    },
+    "SERAPHINE_spear": {
+      "verts": 15900,
+      "faces": 17999
+    }
+  },
+  "release_meshes": {
+    "SERAPHINE_body": {
+      "verts": 43266,
+      "faces": 49999
+    },
+    "SERAPHINE_cape": {
+      "verts": 8182,
+      "faces": 8010
+    },
+    "SERAPHINE_spear": {
+      "verts": 15900,
+      "faces": 17999
+    }
+  },
+  "cape_removed_faces": 3763,
+  "cape_original_faces": 11773,
+  "cape_removed_percent": 31.96296610889323
+}
