@@ -1,0 +1,24 @@
+{
+  "unchanged_non_arm_channel_hashes": {
+    "idle": "6dc87a19a0dab1418a9ef189ac1a0987d0ddd4106953a85ed01901a32b354867",
+    "walk": "4c53ea593ef2c7d313fe9c3c61ad69fd7179ed0910e0606eef2b08bcd8ee8aae",
+    "attack_dualslash": "34f198bb24c247cde526bc50937be9ecafffc24475e81f4c9272ebee91bf6ec9",
+    "attack2_crossthrust": "e19dc19f40779c1a44886b3dfb51a862f3ff126e41bc222ebd8232f7491c0525"
+  },
+  "excluded_bones": {
+    "idle": [],
+    "walk": [
+      "LeftShoulder",
+      "RightShoulder",
+      "LeftArm",
+      "RightArm"
+    ],
+    "attack_dualslash": [
+      "RightShoulder",
+      "RightArm"
+    ],
+    "attack2_crossthrust": [
+      "LeftArm"
+    ]
+  }
+}

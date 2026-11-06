@@ -1,0 +1,51 @@
+{
+  "KAELEN_FIX8_attack2_crossthrust_front.mp4": {
+    "width": 600,
+    "height": 800,
+    "r_frame_rate": "30/1",
+    "nb_frames": "48",
+    "duration": "1.600000"
+  },
+  "KAELEN_FIX8_attack2_crossthrust_side.mp4": {
+    "width": 600,
+    "height": 800,
+    "r_frame_rate": "30/1",
+    "nb_frames": "48",
+    "duration": "1.600000"
+  },
+  "KAELEN_FIX8_attack_dualslash_front.mp4": {
+    "width": 600,
+    "height": 800,
+    "r_frame_rate": "30/1",
+    "nb_frames": "58",
+    "duration": "1.933333"
+  },
+  "KAELEN_FIX8_attack_dualslash_side.mp4": {
+    "width": 600,
+    "height": 800,
+    "r_frame_rate": "30/1",
+    "nb_frames": "58",
+    "duration": "1.933333"
+  },
+  "KAELEN_FIX8_left_wrist_f34_48_quarter_speed.mp4": {
+    "width": 600,
+    "height": 600,
+    "r_frame_rate": "30/1",
+    "nb_frames": "60",
+    "duration": "2.000000"
+  },
+  "KAELEN_FIX8_walk_front.mp4": {
+    "width": 600,
+    "height": 800,
+    "r_frame_rate": "30/1",
+    "nb_frames": "36",
+    "duration": "1.200000"
+  },
+  "KAELEN_FIX8_walk_side.mp4": {
+    "width": 600,
+    "height": 800,
+    "r_frame_rate": "30/1",
+    "nb_frames": "36",
+    "duration": "1.200000"
+  }
+}
