@@ -269,15 +269,14 @@ if MODE == "stills":
     # 0.55 s is frame 17 at 30 fps with frame 1 at t = 0. Three views: straight
     # front, strict side, front three-quarter. White body, dark staff, floor grid.
     assign("thrust")
-    for f in (8, 14, 17, 22, 24, 28, 36, 46):
+    for f in (14, 18, 21, 24):
         scene.frame_set(f)
-        render_frame(cam_straight, os.path.join(OUT, f"still_thrust_f{f:02d}_straight.png"))
         render_frame(cam_side, os.path.join(OUT, f"still_thrust_f{f:02d}_side.png"))
         render_frame(cam_front, os.path.join(OUT, f"still_thrust_f{f:02d}_front.png"))
+        render_frame(cam_wrist, os.path.join(OUT, f"still_thrust_f{f:02d}_hands.png"))
     assign("throw")
-    for f in (12, 14, 16, 22, 24, 28, 34, 42, 52):
+    for f in (24, 27, 43, 44, 45):
         scene.frame_set(f)
-        render_frame(cam_straight, os.path.join(OUT, f"still_throw_f{f:02d}_straight.png"))
         render_frame(cam_side, os.path.join(OUT, f"still_throw_f{f:02d}_side.png"))
         render_frame(cam_front, os.path.join(OUT, f"still_throw_f{f:02d}_front.png"))
 else:

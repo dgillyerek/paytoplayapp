@@ -143,6 +143,7 @@ for _v in _be0.data.vertices:
         if _g.group == _lgi and _g.weight > 0.5:
             _palm_pts.append(_inv_lh @ (_bmw @ _v.co))
             break
+PALM_PTS = _palm_pts
 PALM_LOCAL = sum(_palm_pts, Vector()) / len(_palm_pts)
 print(f"left palm centroid local {tuple(round(c,4) for c in PALM_LOCAL)} n {len(_palm_pts)}")
 
@@ -584,6 +585,21 @@ for _i in range(3):
             _best = (_d, _i, _s)
 LEFT_PALM_AXIS, LEFT_PALM_SIGN = _best[1], _best[2]
 print(f"left palm axis {LEFT_PALM_AXIS} sign {LEFT_PALM_SIGN:.0f} inward-dot {_best[0]:.2f}")
+# Palm surface, not the whole-hand centroid. Eight verts on the palm face,
+# in the finger-base band, averaged in the left-hand bone frame.
+_ys = [p.y for p in PALM_PTS]
+_y0, _y1 = min(_ys), max(_ys)
+_band = [p for p in PALM_PTS if _y0 + 0.25 * (_y1 - _y0) <= p.y <= _y0 + 0.75 * (_y1 - _y0)]
+# The palm face is the half of that band on the sternum side of the hand centroid.
+_face = [p for p in _band if (p[LEFT_PALM_AXIS] - PALM_LOCAL[LEFT_PALM_AXIS]) * LEFT_PALM_SIGN > 0.0]
+if len(_face) < 8:
+    _face = _band or PALM_PTS
+_face_c = sum(_face, Vector()) / len(_face)
+_face.sort(key=lambda p: (p - _face_c).length)
+_saddle = _face[:8]
+GRASP_LOCAL = sum(_saddle, Vector()) / len(_saddle)
+print(f"grasp saddle local {tuple(round(c, 4) for c in GRASP_LOCAL)} "
+      f"from {len(_saddle)} of {len(_band)} band verts")
 
 
 def thrust_left_phases():
@@ -614,9 +630,9 @@ def throw_left_phases():
         ("plant", 1, 8, x0, y0, 0, 0),
         ("heel", 8, 11, x0, y0, 0, 0, 0, 18),
         ("air", 11, 13, 17, 20, x0, y0, 0.14, -0.34, 0.17, 0, 4),
-        ("plant", 20, 38, 0.14, -0.34, 4, 2),
-        ("air", 36, 38, 42, 46, 0.14, -0.34, x0, y0, 0.17, 2, 0),
-        ("plant", 46, 52, x0, y0, 0, 0),
+        ("plant", 20, 34, 0.14, -0.34, 4, 2),
+        ("air", 34, 36, 38, 40, 0.14, -0.34, x0, y0, 0.17, 2, 0),
+        ("plant", 40, 52, x0, y0, 0, 0),
     ]
 
 
@@ -626,10 +642,10 @@ def throw_right_phases():
     return [
         ("plant", 1, 22, x0, y0, 0, 0),
         ("heel", 22, 28, x0, y0, 0, 16, 0, 20),
-        ("air", 28, 30, 34, 38, x0, y0, -0.06, -0.14, 0.17, 16, 4),
-        ("plant", 38, 42, -0.06, -0.14, 4, 2),
-        ("air", 42, 44, 47, 49, -0.06, -0.14, x0, y0, 0.17, 2, 0),
-        ("plant", 49, 52, x0, y0, 0, 0),
+        ("air", 28, 30, 32, 34, x0, y0, -0.04, -0.10, 0.14, 16, 4),
+        ("plant", 34, 44, -0.04, -0.10, 4, 2),
+        ("air", 44, 46, 48, 50, -0.04, -0.10, x0, y0, 0.14, 2, 0),
+        ("plant", 50, 52, x0, y0, 0, 0),
     ]
 
 
@@ -667,7 +683,7 @@ def set_world_keep_loc(pb, rot3, head, max_step_deg=None):
     pb.matrix_basis = out
 
 
-def ik_near_previous(side, root, target, pole, L1, L2):
+def ik_near_previous(side, root, target, pole, L1, L2, limit=0.09):
     """Two-bone IK. If the elbow would swap sides, keep the side nearer last frame."""
     elbow, tgt, clamped = ik_two(root, target, pole, L1, L2)
     prev = PREV_ELBOW.get(side)
@@ -681,6 +697,12 @@ def ik_near_previous(side, root, target, pole, L1, L2):
                 elbow2, tgt2, _ = ik_two(root, target, root - pv, L1, L2)
                 if (elbow2 - prev).length + 0.01 < (elbow - prev).length:
                     elbow, tgt = elbow2, tgt2
+        # Spread a branch change over later frames. 9 cm is about 20° on this humerus.
+        if limit and (elbow - prev).length > limit:
+            elbow = prev + (elbow - prev).normalized() * limit
+            arm_dir = elbow - root
+            if arm_dir.length > 1e-5:
+                elbow = root + arm_dir.normalized() * L1
     PREV_ELBOW[side] = elbow.copy()
     return elbow, tgt
 
@@ -1011,7 +1033,7 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
         # smooth forward turn, not a two-frame snap. Recovery stays on her
         # right and comes down in front of the wing, then to the idle hold.
         cock = Vector((-0.38, 0.14, 0.92)).normalized()
-        release = Vector((-0.08, -0.38, 0.92)).normalized()
+        release = Vector((-0.28, -0.32, 0.90)).normalized()
         # From the posed right shoulder: out to her right, behind the joint, and up.
         # A world-space point further back is outside the arm and the solver
         # was dragging the hand forward, which erased the lay-back.
@@ -1052,7 +1074,8 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
         # 22 cm toward the butt, fixed from frame 8 through the drive and the
         # recovery (frame 42). The pair translates together. The line is steep
         # and forward so the butt stays in front of the hip.
-        D_LINE = Vector((0.0, -0.16, 0.99)).normalized()
+        # Forward, up, and out to her right. A vertical line drops the butt through the hips.
+        D_LINE = Vector((-0.30, -0.62, 0.72)).normalized()
         if frame <= 8:
             grip_u = smooth((frame - 1) / 7.0)
             drive = 0.0
@@ -1070,7 +1093,8 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
             drive = 0.0
         # Upper grip in front of the chest. The lower palm is 22 cm down the
         # same line, so it stays forward of the breastplate instead of in it.
-        rear_pose = Vector((0.08, -0.38, 1.26)) + Vector((0.0, -drive, drive * 0.04))
+        # Close enough that a 36 cm lower grip stays inside the left arm.
+        rear_pose = Vector((0.14, -0.26, 1.34)) + Vector((0.0, -drive * 0.6, drive * 0.02))
         staff_dir = slerp_dir(UP, D_LINE, grip_u)
         wrist_target = IDLE_RH.lerp(rear_pose, grip_u)
         elbow_hint = Vector((-0.35, -0.30, -0.35))
@@ -1145,6 +1169,16 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
     for _nudge in range(6):
         sdir = staff_dir.normalized()
         wrist = wrist_target.copy()
+        if (not params["throw"]) and grip_u > 0.5:
+            provisional = orient_hand(Vector((0.0, -0.4, -0.5)), sdir)
+            Mp = provisional.to_4x4()
+            Mp.translation = wrist
+            st = (Mp @ SHAFT_POINT_LOCAL) + (provisional @ SHAFT_DIR_LOCAL).normalized() * GRIP
+            limit = L_UP + L_FORE - 0.055
+            gap = (st - l_sh).length - limit
+            if gap > 0.001:
+                wrist = wrist + (l_sh - st).normalized() * gap
+                wrist_target = wrist.copy()
         reach = R_UP + R_FORE - 0.025
         delta = wrist - r_sh
         if delta.length > reach:
@@ -1175,11 +1209,14 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
             wrist.x = min(wrist.x, r_sh.x - 0.12)
             fore = (wrist - elbow).normalized()
         hand_R = orient_hand(fore, sdir)
-        seat = wrist - sdir * GRIP
-        extra = [seat] if not params["throw"] else []
+        Mpred = hand_R.to_4x4()
+        Mpred.translation = wrist
+        station = (Mpred @ SHAFT_POINT_LOCAL) + (hand_R @ SHAFT_DIR_LOCAL).normalized() * GRIP
+        extra = [station] if not params["throw"] else []
         c, hit = clearance(wrist, hand_R, extra)
-        reach_l = L_UP + L_FORE - 0.02
-        left_short = (not params["throw"]) and grip_u > 0.35 and (seat - l_sh).length > reach_l
+        reach_l = L_UP + L_FORE - 0.055
+        left_gap = (station - l_sh).length - reach_l
+        left_short = (not params["throw"]) and grip_u > 0.5 and left_gap > 0.005
         mesh_ok = c["z"] > 0.06 and c["body"] > 0.06 and c["wing"] > 0.04 and c["cape"] > 0.04
         ok = mesh_ok and not left_short
         solved = (wrist, sdir, fore, elbow, hand_R, c, ok, twist)
@@ -1193,9 +1230,9 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
             f"wing{c['wing']*100:.0f} cape{c['cape']*100:.0f} twist{twist}"
             f"{' left' if left_short else ''}{where}"
         )
-        if left_short and mesh_ok:
-            # Move the whole shaft toward the left hand. Spacing stays 22 cm.
-            wrist_target = wrist + (l_sh - wrist).normalized() * 0.04 + Vector((0.0, -0.02, 0.0))
+        if left_short:
+            # The lower grip is past the left arm. Move the whole shaft, spacing unchanged.
+            wrist_target = wrist + (l_sh - station).normalized() * (left_gap + 0.01)
         elif params["throw"] and 12 <= frame <= 32:
             # Keep the lay-back. Clear the wing by going further out and up.
             staff_dir = slerp_dir(sdir, Vector((sdir.x - 0.25, max(0.18, sdir.y), 1.05)), 0.40)
@@ -1212,6 +1249,18 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
                 wrist_target = wrist + Vector((0.0, -0.03, 0.03))
 
     wrist_target, staff_dir, fore_y, elbow, hand_R, _c, _ok, _twist = solved
+    # The posed elbow, after the wrist correction, may not be the IK elbow.
+    # Hold it within 9 cm of last frame so the humerus cannot swap in one frame.
+    _prev_e = PREV_ELBOW.get("Right")
+    if _prev_e is not None and (elbow - _prev_e).length > 0.09:
+        elbow = _prev_e + (elbow - _prev_e).normalized() * 0.09
+        elbow = r_sh + (elbow - r_sh).normalized() * R_UP
+        _to_hand = wrist_target - elbow
+        if _to_hand.length > 1e-5:
+            wrist_target = elbow + _to_hand.normalized() * R_FORE
+        fore_y = (wrist_target - elbow).normalized()
+        hand_R = orient_hand(fore_y, staff_dir)
+    PREV_ELBOW["Right"] = elbow.copy()
     set_world_keep_loc(arm.pose.bones[P + "RightArm"], mat_y_cont(elbow - r_sh, P + "RightArm", elbow_hint), r_sh)
     bpy.context.view_layer.update()
     elb_h = arm.matrix_world @ arm.pose.bones[P + "RightForeArm"].head
@@ -1249,12 +1298,14 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
         axis_p = Mw @ SHAFT_POINT_LOCAL
         axis_d = (Mw.to_3x3() @ SHAFT_DIR_LOCAL).normalized()
         station = axis_p + axis_d * GRIP
-        hint = Vector((0.35, -0.90, 0.05))
+        # Approach from her left-front, perpendicular to the handle, so the open
+        # palm rests on the 2 cm shaft instead of the bone center or the far side.
+        hint = l_sh + Vector((0.05, -0.25, 0.0)) - station
         radial = hint - axis_d * hint.dot(axis_d)
         if radial.length < 1e-4:
             radial = Vector((1.0, 0.0, 0.0)).cross(axis_d)
         radial.normalize()
-        palm_w = station + radial * 0.02  # sit on the 2 cm shaft, not inside it
+        palm_w = station + radial * 0.024
         # Palm faces the shaft. Fingers run across it. Bone head follows the skin centroid.
         palm_axis = (-radial * LEFT_PALM_SIGN).normalized()
         finger = Vector((0.0, -1.0, 0.2))
@@ -1269,14 +1320,9 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
         if cols[0].dot(cols[1].cross(cols[2])) < 0.0:
             cols[third] = -cols[third]
         hand_l = Matrix((cols[0], cols[1], cols[2])).transposed()
-        bone_on = palm_w - hand_l @ PALM_LOCAL
+        bone_on = palm_w - hand_l @ GRASP_LOCAL
         grip = GRIP
         reach_l = L_UP + L_FORE - 0.02
-        while grip > 0.28 and (bone_on - l_sh).length > reach_l:
-            grip -= 0.02
-            station = axis_p + axis_d * grip
-            palm_w = station + radial * 0.02
-            bone_on = palm_w - hand_l @ PALM_LOCAL
         if grip_u <= 0.02:
             tgt = IDLE_LH.copy()
             palm_at = None
@@ -1293,7 +1339,7 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
             tgt = l_sh + (tgt - l_sh).normalized() * (L_UP + L_FORE - 0.02)
         # Elbow out to her left and well in front of the breastplate.
         pole_l = Vector((0.55, -0.78, 0.95))
-        elbow_l, tgt_used = ik_near_previous("Left", l_sh, tgt, pole_l, L_UP, L_FORE)
+        elbow_l, tgt_used = ik_near_previous("Left", l_sh, tgt, pole_l, L_UP, L_FORE, limit=None)
         set_world_keep_loc(arm.pose.bones[P + "LeftArm"], mat_y_cont(elbow_l - l_sh, P + "LeftArm", pole_l - l_sh), l_sh)
         bpy.context.view_layer.update()
         elb_l = arm.matrix_world @ arm.pose.bones[P + "LeftForeArm"].head
@@ -1326,6 +1372,14 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
                 finger = Vector((0, -1, 0))
             set_world_keep_loc(arm.pose.bones[P + "LeftHand"], mat_y(finger, Vector((0, 0, -1))), wh)
         bpy.context.view_layer.update()
+        if (not params["throw"]) and frame in (14, 18, 24):
+            got = arm.matrix_world @ arm.pose.bones[P + "LeftHand"].matrix
+            landed = got @ GRASP_LOCAL
+            along = (landed - axis_p).dot(axis_d)
+            radial_now = (landed - (axis_p + axis_d * along)).length
+            print(f"GRIPDBG f{frame} reach {(bone_on - l_sh).length:.3f}/{reach_l:.3f} "
+                  f"grip {grip:.2f} head_miss {(wh - bone_on).length*100:.1f}cm "
+                  f"saddle_r {radial_now*100:.2f}cm along {along*100:.1f}")
 
     # Toes stay on the idle local pose (parented to the foot).
     for nm in (P + "LeftUpLeg.003", P + "RightUpLeg.003", P + "LeftToe_End"):
@@ -1379,6 +1433,14 @@ def linearize(act):
 
 def build(name, nframes, param_fn, lfoot, rfoot):
     print(f"\n=== build {name} {nframes}f ===")
+    # First solved frame continues from the idle arm, so it cannot flip 180°.
+    for pb in arm.pose.bones:
+        pb.matrix_basis = idle_basis[pb.name].copy()
+    bpy.context.view_layer.update()
+    PREV_ELBOW["Right"] = (arm.matrix_world @ arm.pose.bones[P + "RightForeArm"].head).copy()
+    PREV_ELBOW["Left"] = (arm.matrix_world @ arm.pose.bones[P + "LeftForeArm"].head).copy()
+    for _bn in ("RightArm", "RightForeArm", "LeftArm", "LeftForeArm"):
+        PREV_BONE_X[P + _bn] = (arm.matrix_world @ arm.pose.bones[P + _bn].matrix).col[0].xyz.normalized()
     PREV_ELBOW.clear()
     PREV_LOCAL_Q.clear()
     PREV_BONE_X.clear()
@@ -1393,7 +1455,7 @@ def build(name, nframes, param_fn, lfoot, rfoot):
     rows = []
     # Force exact idle on the last frame by posing normally then overwriting if needed.
     for f in range(1, nframes + 1):
-        if f == 1 or f == nframes:
+        if f == 1:
             for pb in arm.pose.bones:
                 pb.matrix_basis = idle_basis[pb.name].copy()
             bpy.context.view_layer.update()
@@ -1697,12 +1759,16 @@ for tag, rows in (("thrust", thrust_rows), ("throw", throw_rows)):
         print(f"thrust palm-to-real-axis cm (want ~2) f14 {next(r['palm_axis_cm'] for r in seated if r['f']==14)} "
               f"f24 {next(r['palm_axis_cm'] for r in seated if r['f']==24)} "
               f"furthest-from-2 {palm['palm_axis_cm']} at f{palm['f']}")
-print("\n=== mesh audit thrust ===")
-thrust_hits = audit_mesh("attack_thrust", 52)
-print("thrust bad frames", len(thrust_hits))
-print("\n=== mesh audit throw ===")
-throw_hits = audit_mesh("attack_throw", 52)
-print("throw bad frames", len(throw_hits))
+if os.environ.get("SKIP_AUDIT"):
+    thrust_hits, throw_hits = [], []
+    print("mesh audit skipped")
+else:
+    print("\n=== mesh audit thrust ===")
+    thrust_hits = audit_mesh("attack_thrust", 52)
+    print("thrust bad frames", len(thrust_hits))
+    print("\n=== mesh audit throw ===")
+    throw_hits = audit_mesh("attack_throw", 52)
+    print("throw bad frames", len(throw_hits))
 
 # Put idle back so opening the file is the rest/idle state the README describes.
 ad.action = bpy.data.actions["idle"]
@@ -1768,6 +1834,59 @@ def export_clip(action_name, filename):
         )
         print("exported", path, os.path.getsize(path))
 
+
+def report_support(name, frames):
+    """Left-hand skin vs the real staff, and the lowest foot vertex. Not a pass rule."""
+    from mathutils.bvhtree import BVHTree
+    body = bpy.data.objects["SERAPHINE_body"]
+    spear = bpy.data.objects["SERAPHINE_spear"]
+    act = bpy.data.actions[name]
+    ad.action = act
+    ad.action_slot = act.slots[0]
+    gi = {vg.name: vg.index for vg in body.vertex_groups}[P + "LeftHand"]
+    hand_ids = [v.index for v in body.data.vertices
+                if any(g.group == gi and g.weight > 0.5 for g in v.groups)]
+    print(f"support {name}")
+    for f in frames:
+        bpy.context.scene.frame_set(f)
+        bpy.context.view_layer.update()
+        deps = bpy.context.evaluated_depsgraph_get()
+        se = spear.evaluated_get(deps)
+        staff = [se.matrix_world @ v.co for v in se.data.vertices]
+        sb = BVHTree.FromPolygons(staff, [p.vertices[:] for p in se.data.polygons])
+        be = body.evaluated_get(deps)
+        bw = be.matrix_world
+        dists = []
+        for i in hand_ids:
+            loc, _n, _i, dist = sb.find_nearest(bw @ be.data.vertices[i].co)
+            if loc is not None:
+                dists.append(dist)
+        dists.sort()
+        near = sum(1 for d in dists if d <= 0.02)
+        index_of = {vid: i for i, vid in enumerate(hand_ids)}
+        hand_set = set(hand_ids)
+        hand_polys = [[index_of[i] for i in p.vertices] for p in be.data.polygons
+                      if all(i in hand_set for i in p.vertices)]
+        hand_co = [bw @ be.data.vertices[i].co for i in hand_ids]
+        pairs = len(sb.overlap(BVHTree.FromPolygons(hand_co, hand_polys))) if hand_polys else -1
+        # lowest vertex on each foot
+        def low(side):
+            ids = []
+            names = [P + side + s for s in ("UpLeg.002", "UpLeg.003")]
+            gis = [body.vertex_groups[n].index for n in names if n in body.vertex_groups]
+            for v in be.data.vertices:
+                if any(g.group in gis and g.weight > 0.45 for g in v.groups):
+                    ids.append(v.index)
+            if not ids:
+                return 99.0
+            return min((bw @ be.data.vertices[i].co).z for i in ids)
+        print(f"  f{f:02d} hand min {dists[0]*100:.2f}cm med {dists[len(dists)//2]*100:.2f}cm "
+              f"<=2cm {near}/{len(dists)} pairs {pairs} "
+              f"soleL {low('Left')*100:.2f}cm soleR {low('Right')*100:.2f}cm")
+
+
+report_support("attack_thrust", [14, 17, 18, 19, 20, 21, 24, 50, 51, 52])
+report_support("attack_throw", [14, 18, 24, 27, 33, 43, 44, 45, 52])
 
 export_clip("attack_thrust", "SERAPHINE_attack_thrust.fbx")
 export_clip("attack_throw", "SERAPHINE_attack_throw.fbx")
