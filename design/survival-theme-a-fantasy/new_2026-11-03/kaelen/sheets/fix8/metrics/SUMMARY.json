@@ -1,0 +1,467 @@
+{
+  "body_skeleton_fingerprint": "6212627f289a1abb",
+  "body_bones": 20,
+  "cape_skeleton_fingerprint": "41e5849c3e331ac1",
+  "cape_bones": 10,
+  "clips": {
+    "idle": {
+      "frames": 299,
+      "sword_sword_min_cm": 5.09,
+      "sword_sword_argmin_frame": 108.0,
+      "sword_samples": 1193,
+      "sword_sample_step_frames": 0.25,
+      "sword_body_min_cm": 3.37,
+      "limb_torso_head_other_arm_min_cm": 3.16,
+      "native_wrist_bend_left_deg": {
+        "min": 20.24,
+        "max": 20.24,
+        "maxdf": 0.0
+      },
+      "native_wrist_bend_right_deg": {
+        "min": 23.36,
+        "max": 23.36,
+        "maxdf": 0.0
+      },
+      "wrist_and_grip_summary": {
+        "nativebend_L": {
+          "min": 20.24,
+          "max": 20.24,
+          "maxdf": 0.0
+        },
+        "htw_L": {
+          "min": -0.0,
+          "max": 0.0,
+          "maxdf": 0.0
+        },
+        "hflex_L": {
+          "min": 12.0,
+          "max": 12.0,
+          "maxdf": 0.0
+        },
+        "fatw_L": {
+          "min": -5.92,
+          "max": 3.82,
+          "maxdf": 0.51
+        },
+        "palm_L": {
+          "min": 2.42,
+          "max": 2.42,
+          "maxdf": 0.0
+        },
+        "gap_L": {
+          "min": 0.15,
+          "max": 0.15,
+          "maxdf": 0.0
+        },
+        "nativebend_R": {
+          "min": 23.36,
+          "max": 23.36,
+          "maxdf": 0.0
+        },
+        "htw_R": {
+          "min": -0.0,
+          "max": 0.0,
+          "maxdf": 0.0
+        },
+        "hflex_R": {
+          "min": 12.0,
+          "max": 12.0,
+          "maxdf": 0.0
+        },
+        "fatw_R": {
+          "min": -2.42,
+          "max": 2.81,
+          "maxdf": 0.61
+        },
+        "palm_R": {
+          "min": 2.0,
+          "max": 2.0,
+          "maxdf": 0.0
+        },
+        "gap_R": {
+          "min": 0.15,
+          "max": 0.15,
+          "maxdf": 0.0
+        },
+        "frames": 299,
+        "bone_rate_max": {
+          "LeftArm": 1.47,
+          "RightShoulder": 1.26,
+          "RightArm": 1.25,
+          "LeftLeg": 1.17,
+          "LeftShoulder": 0.92,
+          "RightLeg": 0.86,
+          "LeftFoot": 0.66,
+          "LeftUpLeg": 0.65
+        }
+      },
+      "cape": {
+        "frames": 299,
+        "frames_with_body_penetration": 0,
+        "pen_frames": [],
+        "min_clearance_m": 0.0023748206440359354,
+        "max_pen_verts": 0,
+        "pen_sword_L_frames": 0,
+        "pen_sword_L_max_verts": 0,
+        "pen_sword_R_frames": 0,
+        "pen_sword_R_max_verts": 0
+      }
+    },
+    "walk": {
+      "frames": 36,
+      "sword_sword_min_cm": 10.59,
+      "sword_sword_argmin_frame": 10.0,
+      "sword_samples": 141,
+      "sword_sample_step_frames": 0.25,
+      "sword_body_min_cm": 4.66,
+      "limb_torso_head_other_arm_min_cm": 3.16,
+      "native_wrist_bend_left_deg": {
+        "min": 8.28,
+        "max": 8.28,
+        "maxdf": 0.0
+      },
+      "native_wrist_bend_right_deg": {
+        "min": 23.36,
+        "max": 23.36,
+        "maxdf": 0.0
+      },
+      "wrist_and_grip_summary": {
+        "nativebend_L": {
+          "min": 8.28,
+          "max": 8.28,
+          "maxdf": 0.0
+        },
+        "htw_L": {
+          "min": -0.0,
+          "max": 0.0,
+          "maxdf": 0.0
+        },
+        "hflex_L": {
+          "min": 0.0,
+          "max": 0.0,
+          "maxdf": 0.0
+        },
+        "fatw_L": {
+          "min": 6.2,
+          "max": 6.2,
+          "maxdf": 0.0
+        },
+        "palm_L": {
+          "min": 2.42,
+          "max": 2.42,
+          "maxdf": 0.0
+        },
+        "gap_L": {
+          "min": 0.15,
+          "max": 0.15,
+          "maxdf": 0.0
+        },
+        "nativebend_R": {
+          "min": 23.36,
+          "max": 23.36,
+          "maxdf": 0.0
+        },
+        "htw_R": {
+          "min": -0.0,
+          "max": 0.0,
+          "maxdf": 0.0
+        },
+        "hflex_R": {
+          "min": 12.0,
+          "max": 12.0,
+          "maxdf": 0.0
+        },
+        "fatw_R": {
+          "min": -10.26,
+          "max": -10.26,
+          "maxdf": 0.0
+        },
+        "palm_R": {
+          "min": 2.0,
+          "max": 2.0,
+          "maxdf": 0.0
+        },
+        "gap_R": {
+          "min": 0.15,
+          "max": 0.15,
+          "maxdf": 0.0
+        },
+        "frames": 36,
+        "bone_rate_max": {
+          "RightFoot": 67.58,
+          "LeftFoot": 41.25,
+          "LeftLeg": 17.99,
+          "RightLeg": 15.91,
+          "RightUpLeg": 8.53,
+          "LeftUpLeg": 6.91,
+          "Hips": 2.28,
+          "Spine": 2.16
+        }
+      },
+      "cape": {
+        "frames": 108,
+        "frames_with_body_penetration": 0,
+        "pen_frames": [],
+        "min_clearance_m": 0.004952755756676197,
+        "max_pen_verts": 0,
+        "pen_sword_L_frames": 0,
+        "pen_sword_L_max_verts": 0,
+        "pen_sword_R_frames": 0,
+        "pen_sword_R_max_verts": 0
+      }
+    },
+    "attack_dualslash": {
+      "frames": 58,
+      "sword_sword_min_cm": 6.44,
+      "sword_sword_argmin_frame": 37.1875,
+      "sword_samples": 913,
+      "sword_sample_step_frames": 0.0625,
+      "sword_body_min_cm": 4.66,
+      "limb_torso_head_other_arm_min_cm": 3.3,
+      "native_wrist_bend_left_deg": {
+        "min": 20.24,
+        "max": 20.24,
+        "maxdf": 0.0
+      },
+      "native_wrist_bend_right_deg": {
+        "min": 23.36,
+        "max": 23.36,
+        "maxdf": 0.0
+      },
+      "wrist_and_grip_summary": {
+        "nativebend_L": {
+          "min": 20.24,
+          "max": 20.24,
+          "maxdf": 0.0
+        },
+        "htw_L": {
+          "min": -0.0,
+          "max": 0.0,
+          "maxdf": 0.0
+        },
+        "hflex_L": {
+          "min": 12.0,
+          "max": 12.0,
+          "maxdf": 0.0
+        },
+        "fatw_L": {
+          "min": -75.0,
+          "max": 75.0,
+          "maxdf": 7.5
+        },
+        "palm_L": {
+          "min": 2.42,
+          "max": 2.42,
+          "maxdf": 0.0
+        },
+        "gap_L": {
+          "min": 0.15,
+          "max": 0.15,
+          "maxdf": 0.0
+        },
+        "nativebend_R": {
+          "min": 23.36,
+          "max": 23.36,
+          "maxdf": 0.0
+        },
+        "htw_R": {
+          "min": -0.0,
+          "max": 0.0,
+          "maxdf": 0.0
+        },
+        "hflex_R": {
+          "min": 12.0,
+          "max": 12.0,
+          "maxdf": 0.0
+        },
+        "fatw_R": {
+          "min": -14.14,
+          "max": 75.0,
+          "maxdf": 7.46
+        },
+        "palm_R": {
+          "min": 2.0,
+          "max": 2.0,
+          "maxdf": 0.0
+        },
+        "gap_R": {
+          "min": 0.15,
+          "max": 0.15,
+          "maxdf": 0.0
+        },
+        "frames": 58,
+        "bone_rate_max": {
+          "RightArm.001": 40.05,
+          "RightArm": 38.68,
+          "LeftArm.001": 27.04,
+          "LeftArm": 17.47,
+          "LeftFoot": 8.58,
+          "Hips": 8.49,
+          "LeftLeg": 8.26,
+          "RightFoot": 8.17
+        }
+      },
+      "cape": {
+        "frames": 116,
+        "frames_with_body_penetration": 0,
+        "pen_frames": [],
+        "min_clearance_m": 0.00291828322224319,
+        "max_pen_verts": 0,
+        "pen_sword_L_frames": 0,
+        "pen_sword_L_max_verts": 0,
+        "pen_sword_R_frames": 0,
+        "pen_sword_R_max_verts": 0
+      }
+    },
+    "attack2_crossthrust": {
+      "frames": 48,
+      "sword_sword_min_cm": 6.31,
+      "sword_sword_argmin_frame": 27.8125,
+      "sword_samples": 753,
+      "sword_sample_step_frames": 0.0625,
+      "sword_body_min_cm": 4.66,
+      "limb_torso_head_other_arm_min_cm": 2.47,
+      "native_wrist_bend_left_deg": {
+        "min": 8.28,
+        "max": 20.24,
+        "maxdf": 2.55
+      },
+      "native_wrist_bend_right_deg": {
+        "min": 23.36,
+        "max": 23.36,
+        "maxdf": 0.0
+      },
+      "wrist_and_grip_summary": {
+        "nativebend_L": {
+          "min": 8.28,
+          "max": 20.24,
+          "maxdf": 2.55
+        },
+        "htw_L": {
+          "min": -0.0,
+          "max": 0.0,
+          "maxdf": 0.0
+        },
+        "hflex_L": {
+          "min": 0.0,
+          "max": 12.0,
+          "maxdf": 2.55
+        },
+        "fatw_L": {
+          "min": 6.07,
+          "max": 70.0,
+          "maxdf": 7.0
+        },
+        "palm_L": {
+          "min": 2.42,
+          "max": 2.42,
+          "maxdf": 0.0
+        },
+        "gap_L": {
+          "min": 0.15,
+          "max": 0.15,
+          "maxdf": 0.0
+        },
+        "nativebend_R": {
+          "min": 23.36,
+          "max": 23.36,
+          "maxdf": 0.0
+        },
+        "htw_R": {
+          "min": -0.0,
+          "max": 0.0,
+          "maxdf": 0.0
+        },
+        "hflex_R": {
+          "min": 12.0,
+          "max": 12.0,
+          "maxdf": 0.0
+        },
+        "fatw_R": {
+          "min": -40.02,
+          "max": 70.0,
+          "maxdf": 7.0
+        },
+        "palm_R": {
+          "min": 2.0,
+          "max": 2.0,
+          "maxdf": 0.0
+        },
+        "gap_R": {
+          "min": 0.15,
+          "max": 0.15,
+          "maxdf": 0.0
+        },
+        "frames": 48,
+        "bone_rate_max": {
+          "RightArm": 37.35,
+          "LeftArm": 31.25,
+          "LeftArm.001": 28.38,
+          "RightArm.001": 25.02,
+          "LeftLeg": 3.54,
+          "RightLeg": 3.14,
+          "LeftShoulder": 2.68,
+          "RightShoulder": 2.68
+        }
+      },
+      "cape": {
+        "frames": 96,
+        "frames_with_body_penetration": 0,
+        "pen_frames": [],
+        "min_clearance_m": 0.004767992999404669,
+        "max_pen_verts": 0,
+        "pen_sword_L_frames": 0,
+        "pen_sword_L_max_verts": 0,
+        "pen_sword_R_frames": 0,
+        "pen_sword_R_max_verts": 0
+      }
+    }
+  },
+  "scope": "body checks on every integer animation frame; mesh sword-sword BVH overlaps + bidirectional nearest surfaces at 1/16 frame for attacks, 1/4 frame for idle/walk; finite sampling, not a continuous-time mathematical proof",
+  "mesh_and_weights": {
+    "mesh_weights_sha256": "dbdc9c02f5fd35b3c1da3b47c061b8d60b76a6a58e50ac5a9c74ad6463baa962",
+    "unchanged_action_hashes": {
+      "idle": "6dc87a19a0dab1418a9ef189ac1a0987d0ddd4106953a85ed01901a32b354867"
+    },
+    "quaternion_sign_repairs": {
+      "attack2_crossthrust": 0,
+      "attack_dualslash": 0,
+      "walk": 0
+    }
+  },
+  "native_skeleton_integrity": {
+    "native_bone_matrix_parent_sha256": "290273d8d378c26e88c2bf460a25de3c38706c94c03d7838c563aa6f60df5c38",
+    "bones": 20,
+    "source_equals_final": true
+  },
+  "unchanged_core_channels": {
+    "unchanged_non_arm_channel_hashes": {
+      "idle": "6dc87a19a0dab1418a9ef189ac1a0987d0ddd4106953a85ed01901a32b354867",
+      "walk": "4c53ea593ef2c7d313fe9c3c61ad69fd7179ed0910e0606eef2b08bcd8ee8aae",
+      "attack_dualslash": "34f198bb24c247cde526bc50937be9ecafffc24475e81f4c9272ebee91bf6ec9",
+      "attack2_crossthrust": "e19dc19f40779c1a44886b3dfb51a862f3ff126e41bc222ebd8232f7491c0525"
+    },
+    "excluded_bones": {
+      "idle": [],
+      "walk": [
+        "LeftShoulder",
+        "RightShoulder",
+        "LeftArm",
+        "RightArm"
+      ],
+      "attack_dualslash": [
+        "RightShoulder",
+        "RightArm"
+      ],
+      "attack2_crossthrust": [
+        "LeftArm"
+      ]
+    }
+  },
+  "cross_foot_slip_max_cm": 0.049,
+  "total_body_frames": 441,
+  "total_sword_samples": 3000,
+  "total_fresh_cape_simulated_frames": 619,
+  "final_portable_export_equivalence": "portable_fbx_equivalence.json",
+  "packed_texture_bytes_unchanged": "packed_texture_integrity.json"
+}
