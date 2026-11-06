@@ -1,0 +1,5082 @@
+{
+ "restd_arm": {
+  "cape_L_01|mixamorig:LeftArm": 0.032,
+  "cape_L_01|mixamorig:LeftForeArm": 0.142,
+  "cape_L_01|mixamorig:RightArm": 0.344,
+  "cape_L_01|mixamorig:RightForeArm": 0.473,
+  "cape_L_02|mixamorig:LeftArm": 0.248,
+  "cape_L_02|mixamorig:LeftForeArm": 0.239,
+  "cape_L_02|mixamorig:RightArm": 0.5,
+  "cape_L_02|mixamorig:RightForeArm": 0.511,
+  "cape_L_03|mixamorig:LeftArm": 0.574,
+  "cape_L_03|mixamorig:LeftForeArm": 0.475,
+  "cape_L_03|mixamorig:RightArm": 0.722,
+  "cape_L_03|mixamorig:RightForeArm": 0.713,
+  "cape_C_01|mixamorig:LeftArm": 0.187,
+  "cape_C_01|mixamorig:LeftForeArm": 0.313,
+  "cape_C_01|mixamorig:RightArm": 0.186,
+  "cape_C_01|mixamorig:RightForeArm": 0.315,
+  "cape_C_02|mixamorig:LeftArm": 0.374,
+  "cape_C_02|mixamorig:LeftForeArm": 0.374,
+  "cape_C_02|mixamorig:RightArm": 0.369,
+  "cape_C_02|mixamorig:RightForeArm": 0.369,
+  "cape_C_03|mixamorig:LeftArm": 0.641,
+  "cape_C_03|mixamorig:LeftForeArm": 0.596,
+  "cape_C_03|mixamorig:RightArm": 0.631,
+  "cape_C_03|mixamorig:RightForeArm": 0.597,
+  "cape_R_01|mixamorig:LeftArm": 0.346,
+  "cape_R_01|mixamorig:LeftForeArm": 0.471,
+  "cape_R_01|mixamorig:RightArm": 0.029,
+  "cape_R_01|mixamorig:RightForeArm": 0.144,
+  "cape_R_02|mixamorig:LeftArm": 0.504,
+  "cape_R_02|mixamorig:LeftForeArm": 0.514,
+  "cape_R_02|mixamorig:RightArm": 0.239,
+  "cape_R_02|mixamorig:RightForeArm": 0.234,
+  "cape_R_03|mixamorig:LeftArm": 0.731,
+  "cape_R_03|mixamorig:LeftForeArm": 0.716,
+  "cape_R_03|mixamorig:RightArm": 0.562,
+  "cape_R_03|mixamorig:RightForeArm": 0.475
+ },
+ "out": "idle",
+ "kind": "idle",
+ "spring": {
+  "stiffness": 1.0,
+  "drag": 0.4,
+  "gravity": 0.4,
+  "hit": 0.1,
+  "hit_torso": 0.0,
+  "stiff01": 1.0
+ },
+ "colliders": {
+  "mixamorig:Hips": 0.11,
+  "mixamorig:Spine": 0.063,
+  "mixamorig:Spine1": 0.074,
+  "mixamorig:Spine2": 0.069,
+  "mixamorig:LeftUpLeg": 0.108,
+  "mixamorig:LeftUpLeg.001": 0.064,
+  "mixamorig:LeftUpLeg.002": 0.061,
+  "mixamorig:RightUpLeg": 0.11,
+  "mixamorig:RightUpLeg.001": 0.064,
+  "mixamorig:RightUpLeg.002": 0.054,
+  "mixamorig:LeftArm": 0.08,
+  "mixamorig:LeftForeArm": 0.06,
+  "mixamorig:RightArm": 0.08,
+  "mixamorig:RightForeArm": 0.06
+ },
+ "wing_capsules": [
+  [
+   [
+    -0.09228960424661636,
+    -0.10274924337863922,
+    -0.23378482460975647
+   ],
+   [
+    -0.10185457766056061,
+    0.11286033689975739,
+    -0.21221067011356354
+   ],
+   0.05483908307511383
+  ],
+  [
+   [
+    -0.17701172828674316,
+    -0.004482424817979336,
+    -0.20072153210639954
+   ],
+   [
+    -0.03403323143720627,
+    0.005905390251427889,
+    -0.24114632606506348
+   ],
+   0.05483908307511383
+  ],
+  [
+   [
+    -0.6647080779075623,
+    -0.6031256318092346,
+    -0.2570926547050476
+   ],
+   [
+    -0.5735947489738464,
+    -0.6572811007499695,
+    -0.25465506315231323
+   ],
+   0.0720983186249643
+  ],
+  [
+   [
+    -0.6653808951377869,
+    -0.3864406943321228,
+    -0.24674980342388153
+   ],
+   [
+    -0.4802355468273163,
+    -0.4964863955974579,
+    -0.2417965829372406
+   ],
+   0.08505871418089972
+  ],
+  [
+   [
+    -0.6271616816520691,
+    -0.18855822086334229,
+    -0.23303493857383728
+   ],
+   [
+    -0.39231938123703003,
+    -0.32814261317253113,
+    -0.22675222158432007
+   ],
+   0.09999584850183207
+  ],
+  [
+   [
+    -0.5612102746963501,
+    -0.005058955401182175,
+    -0.22272077202796936
+   ],
+   [
+    -0.22126483917236328,
+    -0.20711389183998108,
+    -0.2136262059211731
+   ],
+   0.10764944068803635
+  ],
+  [
+   [
+    -0.4758554697036743,
+    0.17526890337467194,
+    -0.23146800696849823
+   ],
+   [
+    -0.06965319812297821,
+    -0.06616753339767456,
+    -0.22060087323188782
+   ],
+   0.10469810730391757
+  ],
+  [
+   [
+    -0.39140936732292175,
+    0.3139980137348175,
+    -0.23117968440055847
+   ],
+   [
+    -0.03684447333216667,
+    0.10325363278388977,
+    -0.2216940075159073
+   ],
+   0.09811845145264868
+  ],
+  [
+   [
+    0.10185451060533524,
+    0.11286025494337082,
+    -0.21221065521240234
+   ],
+   [
+    0.09228955209255219,
+    -0.10274923592805862,
+    -0.23378480970859528
+   ],
+   0.0548391277353229
+  ],
+  [
+   [
+    0.1770116239786148,
+    -0.004482408054172993,
+    -0.20072153210639954
+   ],
+   [
+    0.03403317928314209,
+    0.005905355792492628,
+    -0.24114634096622467
+   ],
+   0.0548391277353229
+  ],
+  [
+   [
+    0.5735946893692017,
+    -0.6572811007499695,
+    -0.25465503334999084
+   ],
+   [
+    0.6647080779075623,
+    -0.6031256318092346,
+    -0.25709259510040283
+   ],
+   0.07209832379398541
+  ],
+  [
+   [
+    0.4802354872226715,
+    -0.49648648500442505,
+    -0.2417965680360794
+   ],
+   [
+    0.6653808951377869,
+    -0.3864407241344452,
+    -0.24674975872039795
+   ],
+   0.08505870196849954
+  ],
+  [
+   [
+    0.39231938123703003,
+    -0.32814261317253113,
+    -0.2267521768808365
+   ],
+   [
+    0.6271616220474243,
+    -0.18855829536914825,
+    -0.2330349087715149
+   ],
+   0.09999585508193118
+  ],
+  [
+   [
+    0.2212647944688797,
+    -0.20711389183998108,
+    -0.2136262059211731
+   ],
+   [
+    0.5612102746963501,
+    -0.0050589037127792835,
+    -0.22272075712680817
+   ],
+   0.10764942449277673
+  ],
+  [
+   [
+    0.06965316087007523,
+    -0.06616748869419098,
+    -0.22060087323188782
+   ],
+   [
+    0.47585543990135193,
+    0.17526885867118835,
+    -0.23146799206733704
+   ],
+   0.10469810689572817
+  ],
+  [
+   [
+    0.0368444062769413,
+    0.10325359553098679,
+    -0.22169402241706848
+   ],
+   [
+    0.39140936732292175,
+    0.3139980733394623,
+    -0.23117965459823608
+   ],
+   0.09811845472045343
+  ]
+ ],
+ "per_frame": [
+  {
+   "min_clear": 0.019249459728598595,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 1,
+   "frame": 1
+  },
+  {
+   "min_clear": 0.019060900434851646,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 2,
+   "frame": 2
+  },
+  {
+   "min_clear": 0.018766149878501892,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 3,
+   "frame": 3
+  },
+  {
+   "min_clear": 0.01820101961493492,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 4,
+   "frame": 4
+  },
+  {
+   "min_clear": 0.017636151984333992,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 5,
+   "frame": 5
+  },
+  {
+   "min_clear": 0.017028149217367172,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 6,
+   "frame": 6
+  },
+  {
+   "min_clear": 0.01619216986000538,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 7,
+   "frame": 7
+  },
+  {
+   "min_clear": 0.015269572846591473,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 8,
+   "frame": 8
+  },
+  {
+   "min_clear": 0.01427506934851408,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 9,
+   "frame": 9
+  },
+  {
+   "min_clear": 0.013192295096814632,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 10,
+   "frame": 10
+  },
+  {
+   "min_clear": 0.012093215249478817,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 11,
+   "frame": 11
+  },
+  {
+   "min_clear": 0.011083044111728668,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 12,
+   "frame": 12
+  },
+  {
+   "min_clear": 0.01023518480360508,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 13,
+   "frame": 13
+  },
+  {
+   "min_clear": 0.009615456685423851,
+   "n_pen": 0,
+   "n_touch": 2,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 14,
+   "frame": 14
+  },
+  {
+   "min_clear": 0.009258156642317772,
+   "n_pen": 0,
+   "n_touch": 3,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 15,
+   "frame": 15
+  },
+  {
+   "min_clear": 0.009119227528572083,
+   "n_pen": 0,
+   "n_touch": 4,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 16,
+   "frame": 16
+  },
+  {
+   "min_clear": 0.009130163118243217,
+   "n_pen": 0,
+   "n_touch": 4,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 17,
+   "frame": 17
+  },
+  {
+   "min_clear": 0.009393558837473392,
+   "n_pen": 0,
+   "n_touch": 3,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 18,
+   "frame": 18
+  },
+  {
+   "min_clear": 0.009773225523531437,
+   "n_pen": 0,
+   "n_touch": 1,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 19,
+   "frame": 19
+  },
+  {
+   "min_clear": 0.010123868472874165,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 20,
+   "frame": 20
+  },
+  {
+   "min_clear": 0.010339849628508091,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 21,
+   "frame": 21
+  },
+  {
+   "min_clear": 0.010343802161514759,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 22,
+   "frame": 22
+  },
+  {
+   "min_clear": 0.010102594271302223,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 23,
+   "frame": 23
+  },
+  {
+   "min_clear": 0.00967936497181654,
+   "n_pen": 0,
+   "n_touch": 3,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 24,
+   "frame": 24
+  },
+  {
+   "min_clear": 0.009149638935923576,
+   "n_pen": 0,
+   "n_touch": 6,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 25,
+   "frame": 25
+  },
+  {
+   "min_clear": 0.008596491999924183,
+   "n_pen": 0,
+   "n_touch": 10,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 26,
+   "frame": 26
+  },
+  {
+   "min_clear": 0.008207535371184349,
+   "n_pen": 0,
+   "n_touch": 12,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 27,
+   "frame": 27
+  },
+  {
+   "min_clear": 0.008022118359804153,
+   "n_pen": 0,
+   "n_touch": 14,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 28,
+   "frame": 28
+  },
+  {
+   "min_clear": 0.008048869669437408,
+   "n_pen": 0,
+   "n_touch": 15,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 29,
+   "frame": 29
+  },
+  {
+   "min_clear": 0.008131674490869045,
+   "n_pen": 0,
+   "n_touch": 15,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 30,
+   "frame": 30
+  },
+  {
+   "min_clear": 0.008228154852986336,
+   "n_pen": 0,
+   "n_touch": 13,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 31,
+   "frame": 31
+  },
+  {
+   "min_clear": 0.008313463069498539,
+   "n_pen": 0,
+   "n_touch": 9,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 32,
+   "frame": 32
+  },
+  {
+   "min_clear": 0.008345327340066433,
+   "n_pen": 0,
+   "n_touch": 9,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 33,
+   "frame": 33
+  },
+  {
+   "min_clear": 0.008276977576315403,
+   "n_pen": 0,
+   "n_touch": 9,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 34,
+   "frame": 34
+  },
+  {
+   "min_clear": 0.008096851408481598,
+   "n_pen": 0,
+   "n_touch": 12,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 35,
+   "frame": 35
+  },
+  {
+   "min_clear": 0.007833839394152164,
+   "n_pen": 0,
+   "n_touch": 16,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 36,
+   "frame": 36
+  },
+  {
+   "min_clear": 0.0075495620258152485,
+   "n_pen": 0,
+   "n_touch": 17,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 37,
+   "frame": 37
+  },
+  {
+   "min_clear": 0.007316298317164183,
+   "n_pen": 0,
+   "n_touch": 21,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 38,
+   "frame": 38
+  },
+  {
+   "min_clear": 0.007188806775957346,
+   "n_pen": 0,
+   "n_touch": 24,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 39,
+   "frame": 39
+  },
+  {
+   "min_clear": 0.007188555784523487,
+   "n_pen": 0,
+   "n_touch": 24,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 40,
+   "frame": 40
+  },
+  {
+   "min_clear": 0.0073021636344492435,
+   "n_pen": 0,
+   "n_touch": 19,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 41,
+   "frame": 41
+  },
+  {
+   "min_clear": 0.007495814003050327,
+   "n_pen": 0,
+   "n_touch": 17,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 42,
+   "frame": 42
+  },
+  {
+   "min_clear": 0.007739164866507053,
+   "n_pen": 0,
+   "n_touch": 17,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 43,
+   "frame": 43
+  },
+  {
+   "min_clear": 0.008027915842831135,
+   "n_pen": 0,
+   "n_touch": 15,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 44,
+   "frame": 44
+  },
+  {
+   "min_clear": 0.008393660187721252,
+   "n_pen": 0,
+   "n_touch": 11,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 45,
+   "frame": 45
+  },
+  {
+   "min_clear": 0.008891995064914227,
+   "n_pen": 0,
+   "n_touch": 7,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 46,
+   "frame": 46
+  },
+  {
+   "min_clear": 0.009383131749927998,
+   "n_pen": 0,
+   "n_touch": 4,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 47,
+   "frame": 47
+  },
+  {
+   "min_clear": 0.010145194828510284,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 48,
+   "frame": 48
+  },
+  {
+   "min_clear": 0.011046433821320534,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 49,
+   "frame": 49
+  },
+  {
+   "min_clear": 0.012120960280299187,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 50,
+   "frame": 50
+  },
+  {
+   "min_clear": 0.013252940960228443,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 51,
+   "frame": 51
+  },
+  {
+   "min_clear": 0.014339042827486992,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 52,
+   "frame": 52
+  },
+  {
+   "min_clear": 0.015245982445776463,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 53,
+   "frame": 53
+  },
+  {
+   "min_clear": 0.01594102755188942,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 54,
+   "frame": 54
+  },
+  {
+   "min_clear": 0.016453906893730164,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 55,
+   "frame": 55
+  },
+  {
+   "min_clear": 0.016903458163142204,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 56,
+   "frame": 56
+  },
+  {
+   "min_clear": 0.017431728541851044,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 57,
+   "frame": 57
+  },
+  {
+   "min_clear": 0.018154265359044075,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 58,
+   "frame": 58
+  },
+  {
+   "min_clear": 0.019130157306790352,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 59,
+   "frame": 59
+  },
+  {
+   "min_clear": 0.02050194703042507,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 60,
+   "frame": 60
+  },
+  {
+   "min_clear": 0.02216579206287861,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 61,
+   "frame": 61
+  },
+  {
+   "min_clear": 0.023931456729769707,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 62,
+   "frame": 62
+  },
+  {
+   "min_clear": 0.025598298758268356,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 63,
+   "frame": 63
+  },
+  {
+   "min_clear": 0.027028122916817665,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 64,
+   "frame": 64
+  },
+  {
+   "min_clear": 0.028149494901299477,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 65,
+   "frame": 65
+  },
+  {
+   "min_clear": 0.029004588723182678,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 66,
+   "frame": 66
+  },
+  {
+   "min_clear": 0.029441049322485924,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 67,
+   "frame": 67
+  },
+  {
+   "min_clear": 0.029915615916252136,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 68,
+   "frame": 68
+  },
+  {
+   "min_clear": 0.03054935112595558,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 69,
+   "frame": 69
+  },
+  {
+   "min_clear": 0.031301099807024,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 70,
+   "frame": 70
+  },
+  {
+   "min_clear": 0.030184267088770866,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 71,
+   "frame": 71
+  },
+  {
+   "min_clear": 0.029018154367804527,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 72,
+   "frame": 72
+  },
+  {
+   "min_clear": 0.02787626162171364,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 73,
+   "frame": 73
+  },
+  {
+   "min_clear": 0.026823638007044792,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 74,
+   "frame": 74
+  },
+  {
+   "min_clear": 0.025870950892567635,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 75,
+   "frame": 75
+  },
+  {
+   "min_clear": 0.02498309500515461,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 76,
+   "frame": 76
+  },
+  {
+   "min_clear": 0.024108510464429855,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 77,
+   "frame": 77
+  },
+  {
+   "min_clear": 0.02321283333003521,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 78,
+   "frame": 78
+  },
+  {
+   "min_clear": 0.022298147901892662,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 79,
+   "frame": 79
+  },
+  {
+   "min_clear": 0.021399980410933495,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 80,
+   "frame": 80
+  },
+  {
+   "min_clear": 0.020574510097503662,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 81,
+   "frame": 81
+  },
+  {
+   "min_clear": 0.019886646419763565,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 82,
+   "frame": 82
+  },
+  {
+   "min_clear": 0.0193992480635643,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 83,
+   "frame": 83
+  },
+  {
+   "min_clear": 0.019158383831381798,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 84,
+   "frame": 84
+  },
+  {
+   "min_clear": 0.019177209585905075,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 85,
+   "frame": 85
+  },
+  {
+   "min_clear": 0.019430475309491158,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 86,
+   "frame": 86
+  },
+  {
+   "min_clear": 0.019865918904542923,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 87,
+   "frame": 87
+  },
+  {
+   "min_clear": 0.020426496863365173,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 88,
+   "frame": 88
+  },
+  {
+   "min_clear": 0.02106776274740696,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 89,
+   "frame": 89
+  },
+  {
+   "min_clear": 0.021766044199466705,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 90,
+   "frame": 90
+  },
+  {
+   "min_clear": 0.022519540041685104,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 91,
+   "frame": 91
+  },
+  {
+   "min_clear": 0.023641712963581085,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 92,
+   "frame": 92
+  },
+  {
+   "min_clear": 0.02458617277443409,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 93,
+   "frame": 93
+  },
+  {
+   "min_clear": 0.025654330849647522,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 94,
+   "frame": 94
+  },
+  {
+   "min_clear": 0.026842888444662094,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 95,
+   "frame": 95
+  },
+  {
+   "min_clear": 0.028126543387770653,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 96,
+   "frame": 96
+  },
+  {
+   "min_clear": 0.027677083387970924,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 97,
+   "frame": 97
+  },
+  {
+   "min_clear": 0.026582779362797737,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 98,
+   "frame": 98
+  },
+  {
+   "min_clear": 0.025092724710702896,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 99,
+   "frame": 99
+  },
+  {
+   "min_clear": 0.023892035707831383,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 100,
+   "frame": 100
+  },
+  {
+   "min_clear": 0.022777507081627846,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 101,
+   "frame": 101
+  },
+  {
+   "min_clear": 0.021871570497751236,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 102,
+   "frame": 102
+  },
+  {
+   "min_clear": 0.021222351118922234,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 103,
+   "frame": 103
+  },
+  {
+   "min_clear": 0.020614884793758392,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 104,
+   "frame": 104
+  },
+  {
+   "min_clear": 0.019336849451065063,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 105,
+   "frame": 105
+  },
+  {
+   "min_clear": 0.01834038645029068,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 106,
+   "frame": 106
+  },
+  {
+   "min_clear": 0.017633965238928795,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 107,
+   "frame": 107
+  },
+  {
+   "min_clear": 0.017153803259134293,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 108,
+   "frame": 108
+  },
+  {
+   "min_clear": 0.016842324286699295,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 109,
+   "frame": 109
+  },
+  {
+   "min_clear": 0.01666758768260479,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 110,
+   "frame": 110
+  },
+  {
+   "min_clear": 0.015454970300197601,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 111,
+   "frame": 111
+  },
+  {
+   "min_clear": 0.014176616445183754,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 112,
+   "frame": 112
+  },
+  {
+   "min_clear": 0.013002349995076656,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 113,
+   "frame": 113
+  },
+  {
+   "min_clear": 0.012010578997433186,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 114,
+   "frame": 114
+  },
+  {
+   "min_clear": 0.011263066902756691,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 115,
+   "frame": 115
+  },
+  {
+   "min_clear": 0.010809396393597126,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 116,
+   "frame": 116
+  },
+  {
+   "min_clear": 0.01071061659604311,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 117,
+   "frame": 117
+  },
+  {
+   "min_clear": 0.010970529168844223,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 118,
+   "frame": 118
+  },
+  {
+   "min_clear": 0.011582250706851482,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 119,
+   "frame": 119
+  },
+  {
+   "min_clear": 0.01250497531145811,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 120,
+   "frame": 120
+  },
+  {
+   "min_clear": 0.013659545220434666,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 121,
+   "frame": 121
+  },
+  {
+   "min_clear": 0.01497570239007473,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 122,
+   "frame": 122
+  },
+  {
+   "min_clear": 0.015634426847100258,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 123,
+   "frame": 123
+  },
+  {
+   "min_clear": 0.015217720530927181,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 124,
+   "frame": 124
+  },
+  {
+   "min_clear": 0.014974772930145264,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 125,
+   "frame": 125
+  },
+  {
+   "min_clear": 0.014990059658885002,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 126,
+   "frame": 126
+  },
+  {
+   "min_clear": 0.015258705243468285,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 127,
+   "frame": 127
+  },
+  {
+   "min_clear": 0.01573236472904682,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 128,
+   "frame": 128
+  },
+  {
+   "min_clear": 0.016243714839220047,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 129,
+   "frame": 129
+  },
+  {
+   "min_clear": 0.01640324480831623,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 130,
+   "frame": 130
+  },
+  {
+   "min_clear": 0.016234654933214188,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 131,
+   "frame": 131
+  },
+  {
+   "min_clear": 0.015908705070614815,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 132,
+   "frame": 132
+  },
+  {
+   "min_clear": 0.015523646026849747,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 133,
+   "frame": 133
+  },
+  {
+   "min_clear": 0.015159234404563904,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 134,
+   "frame": 134
+  },
+  {
+   "min_clear": 0.014989731833338737,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 135,
+   "frame": 135
+  },
+  {
+   "min_clear": 0.015147224999964237,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 136,
+   "frame": 136
+  },
+  {
+   "min_clear": 0.015638768672943115,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 137,
+   "frame": 137
+  },
+  {
+   "min_clear": 0.016284527257084846,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 138,
+   "frame": 138
+  },
+  {
+   "min_clear": 0.016960032284259796,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 139,
+   "frame": 139
+  },
+  {
+   "min_clear": 0.017449496313929558,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 140,
+   "frame": 140
+  },
+  {
+   "min_clear": 0.017659923061728477,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 141,
+   "frame": 141
+  },
+  {
+   "min_clear": 0.017688874155282974,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 142,
+   "frame": 142
+  },
+  {
+   "min_clear": 0.017634298652410507,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 143,
+   "frame": 143
+  },
+  {
+   "min_clear": 0.01775505021214485,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 144,
+   "frame": 144
+  },
+  {
+   "min_clear": 0.018168246373534203,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 145,
+   "frame": 145
+  },
+  {
+   "min_clear": 0.01887821964919567,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 146,
+   "frame": 146
+  },
+  {
+   "min_clear": 0.019883010536432266,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 147,
+   "frame": 147
+  },
+  {
+   "min_clear": 0.02091842144727707,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 148,
+   "frame": 148
+  },
+  {
+   "min_clear": 0.021874843165278435,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 149,
+   "frame": 149
+  },
+  {
+   "min_clear": 0.02193596214056015,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 150,
+   "frame": 150
+  },
+  {
+   "min_clear": 0.021418608725070953,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 151,
+   "frame": 151
+  },
+  {
+   "min_clear": 0.02087828330695629,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 152,
+   "frame": 152
+  },
+  {
+   "min_clear": 0.020269671455025673,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 153,
+   "frame": 153
+  },
+  {
+   "min_clear": 0.01962665095925331,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 154,
+   "frame": 154
+  },
+  {
+   "min_clear": 0.018728269264101982,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 155,
+   "frame": 155
+  },
+  {
+   "min_clear": 0.017944524064660072,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 156,
+   "frame": 156
+  },
+  {
+   "min_clear": 0.017397524788975716,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 157,
+   "frame": 157
+  },
+  {
+   "min_clear": 0.017051998525857925,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 158,
+   "frame": 158
+  },
+  {
+   "min_clear": 0.016833143308758736,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 159,
+   "frame": 159
+  },
+  {
+   "min_clear": 0.0166026521474123,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 160,
+   "frame": 160
+  },
+  {
+   "min_clear": 0.016350898891687393,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 161,
+   "frame": 161
+  },
+  {
+   "min_clear": 0.016053251922130585,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 162,
+   "frame": 162
+  },
+  {
+   "min_clear": 0.015731211751699448,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 163,
+   "frame": 163
+  },
+  {
+   "min_clear": 0.015487175434827805,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 164,
+   "frame": 164
+  },
+  {
+   "min_clear": 0.015364760532975197,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 165,
+   "frame": 165
+  },
+  {
+   "min_clear": 0.015104435384273529,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 166,
+   "frame": 166
+  },
+  {
+   "min_clear": 0.014655004255473614,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 167,
+   "frame": 167
+  },
+  {
+   "min_clear": 0.014288021251559258,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 168,
+   "frame": 168
+  },
+  {
+   "min_clear": 0.013915471732616425,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 169,
+   "frame": 169
+  },
+  {
+   "min_clear": 0.01345403678715229,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 170,
+   "frame": 170
+  },
+  {
+   "min_clear": 0.01285436749458313,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 171,
+   "frame": 171
+  },
+  {
+   "min_clear": 0.012156625278294086,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 172,
+   "frame": 172
+  },
+  {
+   "min_clear": 0.011473855935037136,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 173,
+   "frame": 173
+  },
+  {
+   "min_clear": 0.010950819589197636,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 174,
+   "frame": 174
+  },
+  {
+   "min_clear": 0.010722648352384567,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 175,
+   "frame": 175
+  },
+  {
+   "min_clear": 0.010888960212469101,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 176,
+   "frame": 176
+  },
+  {
+   "min_clear": 0.011476991698145866,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 177,
+   "frame": 177
+  },
+  {
+   "min_clear": 0.012441842816770077,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 178,
+   "frame": 178
+  },
+  {
+   "min_clear": 0.013695993460714817,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 179,
+   "frame": 179
+  },
+  {
+   "min_clear": 0.015142319723963737,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 180,
+   "frame": 180
+  },
+  {
+   "min_clear": 0.016708850860595703,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 181,
+   "frame": 181
+  },
+  {
+   "min_clear": 0.018354330211877823,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 182,
+   "frame": 182
+  },
+  {
+   "min_clear": 0.020033087581396103,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 183,
+   "frame": 183
+  },
+  {
+   "min_clear": 0.02168784849345684,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 184,
+   "frame": 184
+  },
+  {
+   "min_clear": 0.023211810737848282,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 185,
+   "frame": 185
+  },
+  {
+   "min_clear": 0.02459634095430374,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 186,
+   "frame": 186
+  },
+  {
+   "min_clear": 0.02592639997601509,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 187,
+   "frame": 187
+  },
+  {
+   "min_clear": 0.027205903083086014,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 188,
+   "frame": 188
+  },
+  {
+   "min_clear": 0.028300687670707703,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 189,
+   "frame": 189
+  },
+  {
+   "min_clear": 0.028965989127755165,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 190,
+   "frame": 190
+  },
+  {
+   "min_clear": 0.02968631498515606,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 191,
+   "frame": 191
+  },
+  {
+   "min_clear": 0.030487149953842163,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 192,
+   "frame": 192
+  },
+  {
+   "min_clear": 0.031437281519174576,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 193,
+   "frame": 193
+  },
+  {
+   "min_clear": 0.03251192718744278,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 194,
+   "frame": 194
+  },
+  {
+   "min_clear": 0.03365316987037659,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 195,
+   "frame": 195
+  },
+  {
+   "min_clear": 0.034783050417900085,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 196,
+   "frame": 196
+  },
+  {
+   "min_clear": 0.03545326367020607,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 197,
+   "frame": 197
+  },
+  {
+   "min_clear": 0.035017624497413635,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 198,
+   "frame": 198
+  },
+  {
+   "min_clear": 0.03459212929010391,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 199,
+   "frame": 199
+  },
+  {
+   "min_clear": 0.034141506999731064,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 200,
+   "frame": 200
+  },
+  {
+   "min_clear": 0.033625904470682144,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 201,
+   "frame": 201
+  },
+  {
+   "min_clear": 0.03300841152667999,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 202,
+   "frame": 202
+  },
+  {
+   "min_clear": 0.032276179641485214,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 203,
+   "frame": 203
+  },
+  {
+   "min_clear": 0.031428754329681396,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 204,
+   "frame": 204
+  },
+  {
+   "min_clear": 0.030395686626434326,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 205,
+   "frame": 205
+  },
+  {
+   "min_clear": 0.029320722445845604,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 206,
+   "frame": 206
+  },
+  {
+   "min_clear": 0.02816592901945114,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 207,
+   "frame": 207
+  },
+  {
+   "min_clear": 0.026952289044857025,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 208,
+   "frame": 208
+  },
+  {
+   "min_clear": 0.02570297382771969,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 209,
+   "frame": 209
+  },
+  {
+   "min_clear": 0.02445179969072342,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 210,
+   "frame": 210
+  },
+  {
+   "min_clear": 0.023249639198184013,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 211,
+   "frame": 211
+  },
+  {
+   "min_clear": 0.022531673312187195,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 212,
+   "frame": 212
+  },
+  {
+   "min_clear": 0.02173362299799919,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 213,
+   "frame": 213
+  },
+  {
+   "min_clear": 0.021226050332188606,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 214,
+   "frame": 214
+  },
+  {
+   "min_clear": 0.021066978573799133,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 215,
+   "frame": 215
+  },
+  {
+   "min_clear": 0.021307697519659996,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 216,
+   "frame": 216
+  },
+  {
+   "min_clear": 0.021975791081786156,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 217,
+   "frame": 217
+  },
+  {
+   "min_clear": 0.023068293929100037,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 218,
+   "frame": 218
+  },
+  {
+   "min_clear": 0.024503231048583984,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 219,
+   "frame": 219
+  },
+  {
+   "min_clear": 0.025922518223524094,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 220,
+   "frame": 220
+  },
+  {
+   "min_clear": 0.025929609313607216,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 221,
+   "frame": 221
+  },
+  {
+   "min_clear": 0.0259727593511343,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 222,
+   "frame": 222
+  },
+  {
+   "min_clear": 0.024793287739157677,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 223,
+   "frame": 223
+  },
+  {
+   "min_clear": 0.023096492514014244,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 224,
+   "frame": 224
+  },
+  {
+   "min_clear": 0.021410027518868446,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 225,
+   "frame": 225
+  },
+  {
+   "min_clear": 0.01964365318417549,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 226,
+   "frame": 226
+  },
+  {
+   "min_clear": 0.017734140157699585,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 227,
+   "frame": 227
+  },
+  {
+   "min_clear": 0.015698635950684547,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 228,
+   "frame": 228
+  },
+  {
+   "min_clear": 0.013630235567688942,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 229,
+   "frame": 229
+  },
+  {
+   "min_clear": 0.011689429171383381,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 230,
+   "frame": 230
+  },
+  {
+   "min_clear": 0.010035044513642788,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 231,
+   "frame": 231
+  },
+  {
+   "min_clear": 0.008784585632383823,
+   "n_pen": 0,
+   "n_touch": 8,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 232,
+   "frame": 232
+  },
+  {
+   "min_clear": 0.007979677058756351,
+   "n_pen": 0,
+   "n_touch": 12,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 233,
+   "frame": 233
+  },
+  {
+   "min_clear": 0.0075945560820400715,
+   "n_pen": 0,
+   "n_touch": 19,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 234,
+   "frame": 234
+  },
+  {
+   "min_clear": 0.007584364153444767,
+   "n_pen": 0,
+   "n_touch": 19,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 235,
+   "frame": 235
+  },
+  {
+   "min_clear": 0.007928784005343914,
+   "n_pen": 0,
+   "n_touch": 15,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 236,
+   "frame": 236
+  },
+  {
+   "min_clear": 0.008628136478364468,
+   "n_pen": 0,
+   "n_touch": 8,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 237,
+   "frame": 237
+  },
+  {
+   "min_clear": 0.009390264749526978,
+   "n_pen": 0,
+   "n_touch": 5,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 238,
+   "frame": 238
+  },
+  {
+   "min_clear": 0.010064980015158653,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 239,
+   "frame": 239
+  },
+  {
+   "min_clear": 0.010857353918254375,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 240,
+   "frame": 240
+  },
+  {
+   "min_clear": 0.011593782342970371,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 241,
+   "frame": 241
+  },
+  {
+   "min_clear": 0.012270784936845303,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 242,
+   "frame": 242
+  },
+  {
+   "min_clear": 0.0128848347812891,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 243,
+   "frame": 243
+  },
+  {
+   "min_clear": 0.013236197642982006,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 244,
+   "frame": 244
+  },
+  {
+   "min_clear": 0.013299956917762756,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 245,
+   "frame": 245
+  },
+  {
+   "min_clear": 0.013112872838973999,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 246,
+   "frame": 246
+  },
+  {
+   "min_clear": 0.012819867581129074,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 247,
+   "frame": 247
+  },
+  {
+   "min_clear": 0.012508196756243706,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 248,
+   "frame": 248
+  },
+  {
+   "min_clear": 0.012226428836584091,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 249,
+   "frame": 249
+  },
+  {
+   "min_clear": 0.011984080076217651,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 250,
+   "frame": 250
+  },
+  {
+   "min_clear": 0.011759084649384022,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 251,
+   "frame": 251
+  },
+  {
+   "min_clear": 0.01155778020620346,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 252,
+   "frame": 252
+  },
+  {
+   "min_clear": 0.011497174389660358,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 253,
+   "frame": 253
+  },
+  {
+   "min_clear": 0.011793875135481358,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 254,
+   "frame": 254
+  },
+  {
+   "min_clear": 0.012493020854890347,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 255,
+   "frame": 255
+  },
+  {
+   "min_clear": 0.013261019252240658,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 256,
+   "frame": 256
+  },
+  {
+   "min_clear": 0.014175458811223507,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 257,
+   "frame": 257
+  },
+  {
+   "min_clear": 0.014417008496820927,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 258,
+   "frame": 258
+  },
+  {
+   "min_clear": 0.015301372855901718,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 259,
+   "frame": 259
+  },
+  {
+   "min_clear": 0.016109740361571312,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 260,
+   "frame": 260
+  },
+  {
+   "min_clear": 0.01689162477850914,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 261,
+   "frame": 261
+  },
+  {
+   "min_clear": 0.01771058328449726,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 262,
+   "frame": 262
+  },
+  {
+   "min_clear": 0.01864360086619854,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 263,
+   "frame": 263
+  },
+  {
+   "min_clear": 0.019751038402318954,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 264,
+   "frame": 264
+  },
+  {
+   "min_clear": 0.021017059683799744,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 265,
+   "frame": 265
+  },
+  {
+   "min_clear": 0.022372504696249962,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 266,
+   "frame": 266
+  },
+  {
+   "min_clear": 0.023726550862193108,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 267,
+   "frame": 267
+  },
+  {
+   "min_clear": 0.023439886048436165,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 268,
+   "frame": 268
+  },
+  {
+   "min_clear": 0.022492095828056335,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 269,
+   "frame": 269
+  },
+  {
+   "min_clear": 0.021575426682829857,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 270,
+   "frame": 270
+  },
+  {
+   "min_clear": 0.020603444427251816,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 271,
+   "frame": 271
+  },
+  {
+   "min_clear": 0.019538063555955887,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 272,
+   "frame": 272
+  },
+  {
+   "min_clear": 0.018389785662293434,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 273,
+   "frame": 273
+  },
+  {
+   "min_clear": 0.017208563163876534,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 274,
+   "frame": 274
+  },
+  {
+   "min_clear": 0.016077542677521706,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 275,
+   "frame": 275
+  },
+  {
+   "min_clear": 0.015106025151908398,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 276,
+   "frame": 276
+  },
+  {
+   "min_clear": 0.01440370548516512,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 277,
+   "frame": 277
+  },
+  {
+   "min_clear": 0.014056868851184845,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 278,
+   "frame": 278
+  },
+  {
+   "min_clear": 0.014105862006545067,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 279,
+   "frame": 279
+  },
+  {
+   "min_clear": 0.01454164832830429,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 280,
+   "frame": 280
+  },
+  {
+   "min_clear": 0.015306733548641205,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 281,
+   "frame": 281
+  },
+  {
+   "min_clear": 0.016308458521962166,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 282,
+   "frame": 282
+  },
+  {
+   "min_clear": 0.01742158643901348,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 283,
+   "frame": 283
+  },
+  {
+   "min_clear": 0.018557287752628326,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 284,
+   "frame": 284
+  },
+  {
+   "min_clear": 0.019691305235028267,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 285,
+   "frame": 285
+  },
+  {
+   "min_clear": 0.02082606591284275,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 286,
+   "frame": 286
+  },
+  {
+   "min_clear": 0.02198445238173008,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 287,
+   "frame": 287
+  },
+  {
+   "min_clear": 0.02320435456931591,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 288,
+   "frame": 288
+  },
+  {
+   "min_clear": 0.024536075070500374,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 289,
+   "frame": 289
+  },
+  {
+   "min_clear": 0.0266915000975132,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 290,
+   "frame": 290
+  },
+  {
+   "min_clear": 0.028431883081793785,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 291,
+   "frame": 291
+  },
+  {
+   "min_clear": 0.029018478468060493,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 292,
+   "frame": 292
+  },
+  {
+   "min_clear": 0.02821914665400982,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 293,
+   "frame": 293
+  },
+  {
+   "min_clear": 0.027620213106274605,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 294,
+   "frame": 294
+  },
+  {
+   "min_clear": 0.02717428468167782,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 295,
+   "frame": 295
+  },
+  {
+   "min_clear": 0.026748964563012123,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 296,
+   "frame": 296
+  },
+  {
+   "min_clear": 0.025221969932317734,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 297,
+   "frame": 297
+  },
+  {
+   "min_clear": 0.022518884390592575,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 298,
+   "frame": 298
+  },
+  {
+   "min_clear": 0.01894952915608883,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_spear": 0,
+   "pen_wing_A": 0,
+   "pen_wing_B": 0,
+   "t": 299,
+   "frame": 299
+  }
+ ],
+ "pen_verts": {},
+ "pen_body_bones": {},
+ "pen_body_depth": {},
+ "wing_hit_verts5": [],
+ "T": 299,
+ "summary": {
+  "frames": 299,
+  "frames_with_body_penetration": 0,
+  "pen_frames": [],
+  "min_clearance_m": 0.007188555784523487,
+  "max_pen_verts": 0,
+  "pen_spear_frames": 0,
+  "pen_spear_max_verts": 0,
+  "pen_wing_A_frames": 0,
+  "pen_wing_A_max_verts": 0,
+  "pen_wing_B_frames": 0,
+  "pen_wing_B_max_verts": 0
+ },
+ "panels": [],
+ "wing_hit_cape_verts": []
+}

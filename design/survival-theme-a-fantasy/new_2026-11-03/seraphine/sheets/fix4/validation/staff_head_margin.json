@@ -1,0 +1,9 @@
+{
+ "note": "Staff vs head/neck/hair: zero triangle overlap and >=3.0 cm on every frame at final head pose; frames failing:",
+ "failing_frames": {
+  "idle": 0,
+  "walk": 0,
+  "attack_thrust": 0,
+  "attack_throw": 0
+ }
+}

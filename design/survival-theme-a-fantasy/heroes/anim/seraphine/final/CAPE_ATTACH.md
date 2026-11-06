@@ -126,5 +126,9 @@ The cape was re-simulated for all four clips (v5 config: RESTCLAMP, WSEG 6, WPCT
 Unity: `NewCharsPreview.cs` maps the UpLeg → .001 → .002 → .003 chain when these rows are present (Seraphine only); the capsule table above carries the re-measured radii.
 
 
-## FIX4 review candidate (2026-11-06)
-The cape is masked conservatively at measured hair/body contacts: 3,763 of 11,773 faces (31.96%) are removed, plus unused vertices. This substantial geometry change requires visual approval. The cape rig, root/bind attachment, retained weights and UVs, and collider settings are unchanged. Fresh final-motion v5 spring and full-triangle checks report zero cape/body, cape/weapon and cape/wing intersection frames in idle, walk, thrust and throw. Desktop Unity spring playback still needs review. See DEV_NOTE_SERAPHINE_FIX4.md and the FIX4 rear contact sheet.
+## FIX4 review candidate r2 (2026-11-06)
+The cape is the original main asset, unchanged: `SERAPHINE_cape.fbx` is byte-identical to main 259608d6. It has 10,977 vertices and 11,773 faces, and no faces are removed or masked. The rig, root/bind attachment, weights, UVs, texture and the collider table above are unchanged. No Unity code changed.
+
+Root cause of the old collar contacts: they were all against her rigid braid (hair weighted to HeadTop_End), never against the torso. The neck/head turned up to 66° relative to the chest in the attacks, which swung the braid through the Spine2-rigid upper cape and also through both wings and her own body. FIX4 r2 limits the head turn relative to the chest per frame. The head never exceeds ~10–12° in the attacks or ~9° in idle, smoothed and with no snapping. A small two-link elbow extension in attack_throw f14–40 keeps the staff >=3.7 cm off her crown, with hand world orientation unchanged.
+
+Fresh v5 spring simulation (same settings) with the full cape, final motion, and every-frame full-triangle checks: 0 cape/body (including hair), 0 cape/staff and 0 cape/wing intersections in idle, walk, thrust and throw. The back-ray check also reports 0 penetrations. Minimum cape-to-body clearance is idle 0.72 cm, walk 0.88 cm, thrust 0.86 cm and throw 1.00 cm. These are Blender spring results; Unity's runtime solver still needs an in-engine look.

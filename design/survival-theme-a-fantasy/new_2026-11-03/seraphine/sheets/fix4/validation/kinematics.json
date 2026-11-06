@@ -8,7 +8,7 @@
     "Left_forearm_world": 1.5394793889176228
   },
   "walk": {
-    "Right_wrist_full_relative": 0.44234687627084146,
+    "Right_wrist_full_relative": 0.44411272029512777,
     "Right_hand_world": 0.21670472016987377,
     "Right_forearm_world": 0.46139982236272425,
     "Left_wrist_full_relative": 6.135683155487984,
@@ -16,17 +16,17 @@
     "Left_forearm_world": 7.9966258245790796
   },
   "attack_thrust": {
-    "Right_wrist_full_relative": 1.0392827580479038,
-    "Right_hand_world": 6.005923221636081,
+    "Right_wrist_full_relative": 1.0400355729604862,
+    "Right_hand_world": 6.0057930211550286,
     "Right_forearm_world": 6.001227893468521,
     "Left_wrist_full_relative": 0,
     "Left_hand_world": 0.055952909680744456,
     "Left_forearm_world": 0.055952909680744456
   },
   "attack_throw": {
-    "Right_wrist_full_relative": 3.06296994531848,
-    "Right_hand_world": 7.377301836682759,
-    "Right_forearm_world": 7.509047648035842,
+    "Right_wrist_full_relative": 3.539355789689594,
+    "Right_hand_world": 7.377195968750623,
+    "Right_forearm_world": 7.239486548478473,
     "Left_wrist_full_relative": 0,
     "Left_hand_world": 0.055952909680744456,
     "Left_forearm_world": 0.055952909680744456

@@ -1,37 +1,13 @@
 {
-  "body_bones": 24,
-  "bind_matrix_max_diff": 0.0,
-  "same_parents": true,
-  "body_mesh_vertex_max_diff": 0.0,
-  "base_meshes": {
-    "SERAPHINE_body": {
-      "verts": 43266,
-      "faces": 49999
-    },
-    "SERAPHINE_cape": {
-      "verts": 10977,
-      "faces": 11773
-    },
-    "SERAPHINE_spear": {
-      "verts": 15900,
-      "faces": 17999
-    }
-  },
-  "release_meshes": {
-    "SERAPHINE_body": {
-      "verts": 43266,
-      "faces": 49999
-    },
-    "SERAPHINE_cape": {
-      "verts": 8182,
-      "faces": 8010
-    },
-    "SERAPHINE_spear": {
-      "verts": 15900,
-      "faces": 17999
-    }
-  },
-  "cape_removed_faces": 3763,
-  "cape_original_faces": 11773,
-  "cape_removed_percent": 31.96296610889323
+ "compared": "main 259608d6 SERAPHINE_rig_rest.fbx vs new SERAPHINE_rig_rest.fbx (FBX reimport)",
+ "bones": [
+  24,
+  24
+ ],
+ "bind_matrix_max_diff": 0.0,
+ "same_parents": true,
+ "body_vertices": 43266,
+ "body_vertex_max_diff_m": 0.0,
+ "body_weights_identical": true,
+ "cape": "SERAPHINE_cape.fbx restored byte-identical to main 259608d6 (sha256 in fbx_sha256.json as main_cape.fbx): 10,977 verts, 11,773 faces, 0 removed"
 }
