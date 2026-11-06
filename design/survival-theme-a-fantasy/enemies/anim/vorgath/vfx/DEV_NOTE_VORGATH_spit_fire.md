@@ -1,4 +1,4 @@
-# DEV NOTE: Vorgath spit fire stream (fix4)
+# DEV NOTE: Vorgath spit fire stream (FIX5)
 
 Design delivers the art, the socket numbers and the timing. **Dev has to wire the VFX hook in Unity.** Design made no `.cs` or Unity scene edits. The character FBXs still have the same 20 bones, and no socket bone was added.
 
@@ -25,17 +25,21 @@ For Animation Events, use two events: `FireStart` at 1.733 s and `FireStop` at 2
   2. Or, with the prefab at bind pose: create an empty child of `Bone.004`, set its world position from the model-space point above and its forward (+Z) from the direction above, then keep it parented.
 - Check: on spit f60 to f62 the socket gizmo should sit inside the open mouth, with +Z pointing out between the teeth.
 
-## 3. VFX asset: `vfx/VORGATH_fire_stream_flipbook_4x4.png` (FIX4 upgrade)
-- 1024x1024 RGBA. 4x4 = 16 frames, 256 px cells, read row by row from the top-left. It loops seamlessly, so play it at 20 to 30 fps (16 frames at 24 fps is about 0.67 s per loop). **Same layout/orientation/frame count as fix3** so it drops into the existing socket + `VorgathSpitStream` LineRenderer without code changes.
-- Cell layout: the **mouth end is at the left edge (U=0)** and the stream runs to the right (U=1). V=0.5 is the centerline. Alpha is soft with no hard cell borders.
-- **FIX4 paint (replaces the plain orange streaks Derek flagged):** layered real-flame structure — bright white-gold **core** near the mouth, turbulent orange **body**, red broken edges, soft **smoke** wisps toward the tip, and discrete flickering **ember** sparks. More vertical tongue/lobe detail so the stretched LineRenderer reads as fire, not a flat gradient ribbon.
-- Colors follow Theme A fantasy: core about #FFF7C7 to #FFDB66, body #FFA81F to #FF6B0D, edges #D9290A to #8C0A05, smoke toward dark charcoal.
-- **Suggested setup (pick one):**
-  - **Stretched mesh strip (recommended):** a quad strip or LineRenderer of 8 to 12 segments from the socket along socket +Z, about 2.6 m long, with a little droop (about -0.12·t² m) and clipped at the ground. Width runs from about 0.18 m at the mouth to about 0.9 m at the end. Map U along the length and V across it. Use the flipbook via `_MainTex` tiling (0.25, 0.25) with a frame offset, or a Flipbook node. Use Additive or Alpha-blend Premultiplied with the Particles/Unlit shader, and billboard it around the length axis (LineRenderer Alignment = View).
+## 3. VFX asset: `vfx/VORGATH_fire_stream_flipbook_4x4.png` (FIX5 upgrade)
+- 1024x1024 RGBA. 4x4 = 16 frames, 256 px cells, read row by row from the top-left. Soft-looped (periodic advection + 3-frame crossfade at wrap) so play it at 20 to 30 fps (16 frames at 24 fps is about 0.67 s per loop). **Same layout/orientation/frame count as fix3/fix4** so it drops into the existing socket + `VorgathSpitStream` LineRenderer without code changes.
+- Cell layout: the **mouth end is at the left edge (U=0)** and the stream runs to the right (U=1). V=0.5 is the centerline. Three-pixel transparent gutters on every cell edge. Alpha is soft with no hard cell borders.
+- **FIX5 paint (replaces FIX4 sprite fire Derek flagged as playful/basic):** authored offline with a **CPU volumetric thermal-emission ray marcher** (Python/NumPy/SciPy). This is **texture art**, not a Unity/VFX Graph fluid sim and not a recorded real-fire plate. Dense advected multiscale domain-warped density, thin hot flame sheets, cooler fringe, HDR blackbody-inspired color ramp tone-mapped to sRGB. Result: **vivid, relatively smooth bright yellow core** with a thick giant-fireball head (not small orange wisps).
+- Colors follow Theme A fantasy: core about #FFF7C7 to #FFE08A, body #FFD24A to #FF9A1F, edges #E85A10 to #8C0A05.
+- **Suggested setup (unchanged from FIX4 — pick one):**
+  - **Stretched mesh strip (recommended):** a quad strip or LineRenderer of 8 to 12 segments from the socket along socket +Z, about **2.6 m** long, with a little droop (about -0.12·t² m) and clipped at the ground. Width runs from about 0.18 m at the mouth to about 0.9 m at the end. Map U along the length and V across it. Use the flipbook via `_MainTex` tiling (0.25, 0.25) with a frame offset, or a Flipbook node. Use Additive or Alpha-blend Premultiplied with the Particles/Unlit shader, and billboard it around the length axis (LineRenderer Alignment = View).
   - **Particle System:** shape Cone (angle 6 to 8°, radius 0.05) at the socket. Start speed 6 to 8 m/s, lifetime 0.35 to 0.45 s, emission about 60 to 80/s. Renderer = Stretched Billboard (Speed Scale about 0.05 to 0.08, Length Scale 1 to 2). Texture Sheet Animation 4x4, cycles 1, random start frame. Size over lifetime grows from 0.25 to 1.0, and color over lifetime runs gold, orange, red, then fade.
   - Add an optional point light (orange, intensity 2 to 3, range 3 m) and a ground glow or scorch decal at the ray hit.
 - At phone size, keep the core bright and the stream at least about 40 px wide on screen.
 
 ## 4. Unity work Dev owns (not done by Design)
 - Create the socket child under `Bone.004` (above), add the fire VFX prefab under it, and toggle it with `FireStart`/`FireStop` events or the clip-time window in `NewCharsPreview` or the enemy controller. These are `.cs` edits, so Dev does them.
-- Add `VORGATH_fire_stream_flipbook_4x4.png` to Assets with the import settings Alpha Is Transparency, Wrap Clamp, no mipmaps or with a mip bias, and Max Size 1024.
+- Add `VORGATH_fire_stream_flipbook_4x4.png` to Assets with the import settings Alpha Is Transparency, Wrap Clamp, no mipmaps or with a mip bias, and Max Size 1024. **Existing `.meta` retained** on this drop-in (same GUID).
+
+## 5. What Design did NOT change in FIX5
+- No `.cs` / scene / skeleton / FBX / socket / FireStart-FireStop timing / stream length (2.6 m) / LineRenderer width curve edits.
+- Only the flipbook PNG (both design + Unity art paths) and this DEV note.
