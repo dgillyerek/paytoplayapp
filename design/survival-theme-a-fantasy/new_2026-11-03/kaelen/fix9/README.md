@@ -126,3 +126,20 @@ I looked at the imported clip, not Unity: front, left quarter, and a left-hand v
 - `sheets/cross_left/`
 
 Unity was not run. A Blender camera at yaw 135°, pitch 30°, and 54° fov (the locked-battle numbers) shows the same overhead from behind the body. It is not a Unity capture.
+
+## Grip axis, dual versus cross (no rest edit)
+
+The seated dual grip is the reference. `KAELEN_rig_rest.fbx` was not edited. The sword mesh was not translated.
+
+The grip cylinder lives in the hand bone at the same place on every clip: center about (2.6, 10.8, 11.9) cm in `Arm.002`, long axis `(0, 0.15, 0.99)`. That is 81.5° from the finger bone. The pommel is the end toward the wrist. Wrist and distal-forearm faces (forearm weight ≥ 0.25, not the fingertip mass) do not overlap the sword on either clip. The closest sword point on that test is the pommel.
+
+| clip | frame | side | hand height | blade vs fingers | blade vs forearm | pommel to wrist | guard to wrist |
+|---|---:|---|---:|---:|---:|---:|---:|
+| dual | 1, 16, 37 | L | 1.10 / 1.92 / 0.91 m | 81.5° | 61.3° | 3.83 cm | 3.07 cm |
+| dual | 1, 16, 37 | R | 1.07 / 1.93 / 0.94 m | 81.5° | 58.9° | 3.89 cm | 3.00 cm |
+| cross | 1, 20 | L | 1.04 / 1.94 m | 81.5° | 61.3° | 3.83 cm | 3.07 cm |
+| cross | 1, 20 | R | 1.14 / 1.95 m | 81.5° | 58.8° | 3.88 cm | 3.00 cm |
+| cross | 28 | L | 1.34 m | 81.5° | 73.3° | 3.52 cm | 2.76 cm |
+| cross | 28 | R | 1.54 m | 81.5° | 58.8° | 3.88 cm | 3.00 cm |
+
+At frame 20 the cross hand quaternion matches dual, so the blade-to-forearm angle matches (61° left, 59° right). The overhead pose makes that same grasp read horizontal in the world. Frame 28 eases only the left wrist from that grasp toward the rest bend. The blade-to-forearm angle opens from 61° to 73°, which is toward a right angle, not a reversed shaft, and the pommel stays 3.5 cm off the wrist faces (0 overlaps). A hand-bone rewrite would leave the accepted dual grasp. It was not applied. Unity was not run.
