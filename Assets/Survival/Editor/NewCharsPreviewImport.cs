@@ -43,12 +43,15 @@ namespace Survival.Editor
             }
 
             var path = assetPath.Replace('\\', '/');
-            if (!path.EndsWith("/VORGATH_fire_stream_flipbook_4x4.png", StringComparison.OrdinalIgnoreCase))
+            var flip = path.EndsWith("/VORGATH_fire_stream_flipbook_4x4.png", StringComparison.OrdinalIgnoreCase);
+            var strip = path.IndexOf("/vorgath/vfx/strips/VORGATH_fire_f", StringComparison.OrdinalIgnoreCase) >= 0
+                && path.EndsWith(".png", StringComparison.OrdinalIgnoreCase);
+            if (!flip && !strip)
             {
                 return;
             }
 
-            // DEV_NOTE_VORGATH_spit_fire.md: Alpha Is Transparency, Wrap Clamp, no mipmaps, Max Size 1024.
+            // Alpha is real transparency. Clamp, no mipmaps. Strips are 1024x256 and must not be rescaled.
             importer.textureType = TextureImporterType.Default;
             importer.alphaIsTransparency = true;
             importer.mipmapEnabled = false;
