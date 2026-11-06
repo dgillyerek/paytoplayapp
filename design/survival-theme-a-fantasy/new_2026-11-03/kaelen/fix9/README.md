@@ -68,3 +68,42 @@ blender --background --factory-startup \
 ```
 
 `k9_fix.py` writes `$KAELEN_FIX9_OUT/solve_report.json` and the solved blend. `k9_present.py` exports the two attack FBX files, re-imports them, and renders the sheets. Diagnosis-only (no writes to the pose) is `k9_diag.py`.
+
+
+## Dual slash reauthor (not a pass)
+
+The first FIX9 dual slash was rejected on the clips: at the start the right arm was already high while the left stayed at the hip (a tight diagonal), and the quarter-speed close-up showed the left palm open with the blade crossing it.
+
+This pass rewrites only `attack_dualslash` (still 58 frames). Both hands rise together (frame 16: right/left hands 1.94 m and 1.93 m, tips 2.66 m and 2.45 m; head top is 1.85 m), then both come down (frame 37: hands 0.94 m and 0.91 m, tips 0.54 m and 0.74 m). Sword–sword minimum 9.1 cm, sword–body 3.3 cm and 6.1 cm, no triangle overlaps. Forearm twist stays inside ±22° of the guard (span 44° right, 14° left).
+
+The palm socket is the hand bone, not a vertex edit. `KAELEN_sword_L` and `KAELEN_sword_R` have no object constraint. All 17059 vertices of each are weight 1 on `Arm.002`, which is the same bone as the fingers. The solver stores the sword axis in that bone at the guard pose and aims `hand_matrix * bind_axis` after that. It does not read deformed vertices to aim, and it does not write vertices. A second Child Of on the sword would move it twice, so none is added. Body and sword fingerprints match the source blend and the reimported clip (`KAELEN_body` `ff76c909c2e8e141`, sword L `39a435ece28975e9`, sword R `f49919f8acb6069b`).
+
+Unity's preview instantiates `KAELEN_rig_rest.fbx` and samples the clip onto it (`NewCharsPreview.SampleAnimation`). The socket that preview can see is the hand pose on that rest mesh. `KAELEN_rig_rest.fbx` was not replaced. Its sha256 is still `7ac5ea510f50ac0f96e28f5b6c000fa652cebe74935a49d9e3b916dbbd6946eb`. Re-import of the dual-slash FBX in Blender puts the hilt back on that bind point within 0.001 mm at frames 1, 16, 37, and 58. The hand-bone world rotation matches the blend within 0.06°.
+
+The pommel still sticks out past the heel of the hand, and at the low cut the crossguard sits against the wrist. That is the bind. Moving the sword mesh would change the rest asset the preview actually draws, so it was not done. These pictures are not a pass.
+
+`attack2_crossthrust.fbx` sha256 is still `a06eafb9d24df1a7da4382a09b5b037e335e0c221acb8bf0a2841015d538044e` in both the design final folder and the preview folder. Idle, walk, rest, and cape were not rewritten. Unity was not launched. The images below are Blender re-imports of the dual-slash FBX.
+
+The new pictures and clips are renders of the re-imported dual-slash FBX, not the previous before/after sheet:
+
+- `sheets/KAELEN_FIX9_DUALSLASH_FBX.png` — frames 15–17 (high) and 36–38 (low), front, side, and three-quarter, plus frames 1, 8, and 58.
+- `sheets/KAELEN_FIX9_DUALSLASH_GRIPS.png` — left and right hands, three consecutive frames at the high and at the low.
+- `clips/KAELEN_FIX9_dualslash_front.mp4`, `_side.mp4`, `_qright.mp4`, `_qright_quarter.mp4`.
+
+The old dual-slash front, close-up, and quarter-speed files were removed so they are not reused.
+
+```bash
+# On the blend that already contains the reviewed cross thrust. Rewrites dual slash only.
+export KAELEN_FIX9_OUT=/tmp/kaelen-dual
+blender --background --factory-startup \
+  design/survival-theme-a-fantasy/heroes/anim/kaelen/blender/KAELEN.blend \
+  --python design/survival-theme-a-fantasy/new_2026-11-03/kaelen/fix9/k9_dual_only.py
+export KAELEN_FIX9_BLEND="$KAELEN_FIX9_OUT/KAELEN_fix9b.blend"
+# Socket check only. KAELEN_FIX9_RENDER=1 also writes the frame pngs.
+KAELEN_FIX9_RENDER=0 blender --background --factory-startup \
+  --python design/survival-theme-a-fantasy/new_2026-11-03/kaelen/fix9/k9_dual_render.py
+```
+
+`k9_dual_render.py` exits if a sword or body vertex hash differs from the blend, or if the reimported hilt leaves the hand bone by more than 0.2 mm. It does not write `KAELEN_rig_rest.fbx`.
+
+This is not a FIX9 pass. Unity was not run.
