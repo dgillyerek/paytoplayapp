@@ -286,7 +286,7 @@ def thrust_params(f):
     # Chest comes through after the hips and turns the right shoulder forward,
     # which lays the shaft across the front of the armor for the left palm.
     sh_v = Track([
-        (1, 0), (8, 2), (18, 6), (22, -10), (26, -18), (36, -4), (52, 0),
+        (1, 0), (8, -6), (14, -14), (24, -20), (32, -8), (42, -2), (52, 0),
     ], [smooth, smooth, smooth, snap, ease_out, smooth]).at(f)
     hip_pitch = Track([
         (1, 0), (8, 6), (18, 8), (22, 10), (26, 22), (30, 10), (40, 2), (52, 0),
@@ -307,7 +307,7 @@ def thrust_params(f):
         (1, 0), (18, 3), (26, -2), (52, 0),
     ]).at(f)
     hip_drop = Track([
-        (1, 0), (8, 0.05), (18, 0.10), (26, 0.04), (30, 0.07), (40, 0.02), (52, 0),
+        (1, 0), (8, 0.06), (14, 0.10), (24, 0.12), (32, 0.06), (42, 0.02), (52, 0),
     ]).at(f)
     # Right hand, offsets from idle until the line is set, then absolute-ish.
     hand = VecTrack([
@@ -988,12 +988,16 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
         best = {"body": 99.0, "wing": 99.0, "cape": 99.0}
         hit = None
         skips = [wrist] + extra_skip
-        for p in STAFF_LOCAL[::5]:
+        # Collar and both decorative ends sit off the centerline, so the floor
+        # test uses every vertex. The distance test can stride.
+        for p in STAFF_LOCAL:
+            zmin = min(zmin, (M @ p).z)
+        for i, p in enumerate(STAFF_LOCAL):
+            if i % 5:
+                continue
             w = M @ p
             if any((w - s).length < 0.13 for s in skips):
                 continue
-            if w.z < zmin:
-                zmin = w.z
             for key, bvh in (("body", bvh_body), ("wing", bvh_wing_a), ("cape", bvh_cape)):
                 loc, _n, _i, dist = bvh.find_nearest(w)
                 if loc is not None and dist < best[key]:
@@ -1008,8 +1012,10 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
         best["z"] = zmin
         return best, hit
 
+    GRIP = 0.36  # left palm toward the tip, 28–50 cm along the handle from the right palm
+
     def orient_hand(fore, staff):
-        """Hand +X on the shaft. Fingers follow the forearm, so the wrist stays straight."""
+        """Hand +X on the shaft. Finger axis stays on the same side as the forearm, so the wrist cannot flip."""
         x = staff.normalized()
         y = fore - x * fore.dot(x)
         if y.length < 0.2:
@@ -1017,8 +1023,16 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
             if y.length < 1e-5:
                 y = x.cross(Vector((1.0, 0.0, 0.0)))
         y.normalize()
+        if y.dot(fore) < 0.0:
+            y = -y
         z = x.cross(y).normalized()
         return Matrix((x, y, z)).transposed()
+
+    def wrist_bend(fore, staff):
+        y = fore - staff * staff.dot(fore)
+        if y.length < 1e-5:
+            return 90.0
+        return math.degrees(y.normalized().angle(fore))
 
     solved = None
     for _nudge in range(6):
@@ -1028,33 +1042,33 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
         delta = wrist - r_sh
         if delta.length > reach:
             wrist = r_sh + delta.normalized() * reach
-        idle_x = IDLE_HAND_R.col[0].xyz.normalized()
-        prefer = (idle_x.rotation_difference(sdir).to_matrix() @ IDLE_HAND_R).col[1].xyz
-        prefer = prefer - sdir * prefer.dot(sdir)
-        if prefer.length < 1e-5:
-            prefer = sdir.cross(Vector((0.0, 0.0, 1.0)))
-        prefer.normalize()
-        best = None
-        # Small twists only. A bigger roll is what folded the wrist backwards.
-        for deg in range(-35, 36, 5):
-            fore = Matrix.Rotation(math.radians(deg), 3, sdir) @ prefer
+        # Ordinary two-bone arm. The elbow is a hinge. The staff is not an extra joint.
+        elbow, wrist, _clamped = ik_two(r_sh, wrist, r_sh + elbow_hint, R_UP, R_FORE)
+        fore = wrist - elbow
+        if fore.length < 1e-5:
+            fore = Vector((0.0, -1.0, 0.0))
+        fore = fore.normalized()
+        bend = wrist_bend(fore, sdir)
+        if bend < 15.0 or bend > 55.0:
+            off = elbow - wrist
+            off = off - sdir * off.dot(sdir)
+            if off.length < 1e-4:
+                off = sdir.cross(Vector((0.0, 0.0, 1.0)))
+            off.normalize()
+            fore = (math.cos(math.radians(65.0)) * sdir + math.sin(math.radians(65.0)) * off).normalized()
             elbow = wrist - fore * R_FORE
-            gap = abs((elbow - r_sh).length - R_UP)
-            cost = gap * 8.0 + abs(deg) / 35.0
-            if (elbow - (r_sh + elbow_hint)).length > 0.55:
-                cost += 0.25
-            if best is None or cost < best[0]:
-                best = (cost, fore, elbow, gap, abs(deg))
-        fore, elbow, gap, twist = best[1], best[2], best[3], best[4]
-        if gap > 0.025:
-            elbow = r_sh + (elbow - r_sh).normalized() * max(0.05, R_UP - 0.008)
-            wrist = elbow + fore * R_FORE
+            if (elbow - r_sh).length > R_UP - 0.005:
+                elbow = r_sh + (elbow - r_sh).normalized() * (R_UP - 0.008)
+                wrist = elbow + fore * R_FORE
+            fore = (wrist - elbow).normalized()
+            bend = wrist_bend(fore, sdir)
+        twist = int(round(bend))
         if params["throw"] and 12 <= frame <= 26:
-            # Do not let the elbow correction drag the cock back in front of the shoulder.
-            wrist.y = max(wrist.y, r_sh.y + 0.08)
-            wrist.x = min(wrist.x, r_sh.x - 0.16)
+            wrist.y = max(wrist.y, r_sh.y + 0.06)
+            wrist.x = min(wrist.x, r_sh.x - 0.12)
+            fore = (wrist - elbow).normalized()
         hand_R = orient_hand(fore, sdir)
-        seat = wrist - sdir * 0.22
+        seat = wrist - sdir * GRIP
         extra = [seat] if not params["throw"] else []
         c, hit = clearance(wrist, hand_R, extra)
         reach_l = L_UP + L_FORE - 0.02
@@ -1123,18 +1137,18 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
         palm_at = None
     else:
         onto = Vector((0.20, -0.95, 0.05)).normalized()
-        # Lower station, toward the butt. Twenty-two cm up the steep shaft
-        # puts this palm in the braid. Down the shaft it stays at the chest.
-        on_shaft = wrist_h - staff_dir_now * 0.22
-        via = Vector((0.30, -0.42, 1.02))
+        # Same shaft the right hand owns. 36 cm toward the butt, which keeps
+        # this palm at the chest instead of up in the braid. No side guard.
+        grip = GRIP
+        reach_l = L_UP + L_FORE - 0.02
+        while grip > 0.28 and (wrist_h - staff_dir_now * grip - l_sh).length > reach_l:
+            grip -= 0.02
+        on_shaft = wrist_h - staff_dir_now * grip
         if grip_u <= 0.02:
             tgt = IDLE_LH.copy()
             palm_at = None
-        elif grip_u < 0.45:
-            tgt = IDLE_LH.lerp(via, grip_u / 0.45)
-            palm_at = -onto
-        elif grip_u < 0.85:
-            tgt = via.lerp(on_shaft, (grip_u - 0.45) / 0.40)
+        elif grip_u < 1.0:
+            tgt = IDLE_LH.lerp(on_shaft, grip_u)
             palm_at = -onto
         else:
             tgt = on_shaft
