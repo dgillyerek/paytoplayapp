@@ -140,12 +140,17 @@ def make_cam(name, loc, scale):
 
 cam_front = make_cam("cam_front34", (1.85, -2.55, 1.25), ORTHO)
 cam_side = make_cam("cam_side", (-3.15, 0.0, 1.18), ORTHO)
-cam_close_f = make_cam("cam_close_front", (1.15, -1.55, 1.35), 1.45)
-cam_close_s = make_cam("cam_close_side", (-1.70, -0.15, 1.30), 1.45)
-# closeups look at the staff/hands, but the SCALE stays fixed across frames
-CLOSE_AT = Vector((-0.15, -0.25, 1.25))
-for c in (cam_close_f, cam_close_s):
-    look_at(c, CLOSE_AT)
+# Preview lens is 54°. The battle camera sits on a three-quarter at pitch 30.
+# Framed on Seraphine alone, from her front-right, high enough to keep feet and the
+# upright staff in frame. The camera does not move. Hips stay where HoldHips pins them.
+cam_preview = make_cam("cam_preview", (-1.55, -3.15, 1.95), ORTHO)
+cam_preview.data.type = "PERSP"
+cam_preview.data.sensor_fit = "VERTICAL"
+cam_preview.data.angle = math.radians(54)
+look_at(cam_preview, CENTER)
+# Wrist close-up, constant, from her right-front. Not a collision dodge camera.
+cam_wrist = make_cam("cam_wrist", (-1.15, -1.05, 1.45), 1.15)
+look_at(cam_wrist, Vector((-0.25, -0.25, 1.25)))
 
 
 def load_clip(filename):
@@ -259,15 +264,17 @@ def assign(key):
 
 if MODE == "stills":
     assign("thrust")
-    for f in (1, 8, 15, 20, 23):
+    for f in (12, 18, 22, 26, 32, 36):
         scene.frame_set(f)
         render_frame(cam_front, os.path.join(OUT, f"still_thrust_f{f:02d}_front.png"))
         render_frame(cam_side, os.path.join(OUT, f"still_thrust_f{f:02d}_side.png"))
+        render_frame(cam_preview, os.path.join(OUT, f"still_thrust_f{f:02d}_preview.png"))
     assign("throw")
-    for f in (1, 14, 18, 24, 28):
+    for f in (10, 14, 18, 24, 32, 40):
         scene.frame_set(f)
         render_frame(cam_front, os.path.join(OUT, f"still_throw_f{f:02d}_front.png"))
         render_frame(cam_side, os.path.join(OUT, f"still_throw_f{f:02d}_side.png"))
+        render_frame(cam_preview, os.path.join(OUT, f"still_throw_f{f:02d}_preview.png"))
 else:
     jobs = {
         "thrust": [1, 8, 12, 15, 17, 20, 23, 28, 34, 40],
@@ -280,11 +287,8 @@ else:
             scene.frame_set(f)
             render_frame(cam_front, os.path.join(OUT, f"{key}_front_{f:03d}.png"))
             render_frame(cam_side, os.path.join(OUT, f"{key}_side_{f:03d}.png"))
-            render_frame(cam_close_f, os.path.join(OUT, f"{key}_chand_{f:03d}.png"))
-            render_frame(cam_close_s, os.path.join(OUT, f"{key}_cside_{f:03d}.png"))
-            if f in keys:
-                # copies already named by frame; sheet builder reads these
-                pass
+            render_frame(cam_preview, os.path.join(OUT, f"{key}_preview_{f:03d}.png"))
+            render_frame(cam_wrist, os.path.join(OUT, f"{key}_wrist_{f:03d}.png"))
         print("rendered", key)
 
 # drop non-json bits

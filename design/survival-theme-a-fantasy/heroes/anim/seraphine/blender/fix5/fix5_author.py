@@ -100,6 +100,15 @@ projs = [axis.dot(v - rh_w.translation) for v in sverts]
 ORN_LEN = max(projs)  # meters from the hand head toward the ornament
 BUTT_LEN = -min(projs)
 print(f"staff ornament {ORN_LEN:.3f} m past hand, butt {BUTT_LEN:.3f} m, axis {tuple(round(c,3) for c in axis)}")
+IDLE_HAND_R = rh_w.to_3x3()
+IDLE_FORE_R = (arm.matrix_world @ arm.pose.bones[P + "RightForeArm"].matrix).to_3x3()
+# Every staff vertex in the right-hand bone frame. The posed hand carries the whole mesh.
+_inv_hand = rh_w.inverted()
+STAFF_LOCAL = [_inv_hand @ v for v in sverts]
+# The two geometric ends: extreme vertices along the hand's +X (ornament) and -X (butt).
+_proj = [p.x for p in STAFF_LOCAL]
+STAFF_ORN_LOCAL = STAFF_LOCAL[_proj.index(max(_proj))]
+STAFF_BUTT_LOCAL = STAFF_LOCAL[_proj.index(min(_proj))]
 
 # Which local euler on each clavicle raises / brings the arm forward.
 def _bone_delta(name, euler_tuple):
@@ -253,9 +262,15 @@ UP = Vector((-0.02, -0.05, 1.0))
 # Ornament slightly toward her left (positive X) so the short butt stays out
 # on her right instead of swinging back through the torso.
 # Thrust line ~38° above horizontal, forward.
-THRUST_LINE = Vector((0.08, -0.78, 0.60))
-# Cock: up and tipped back, not horizontal, butt falls in front of the right hip.
-COCK = Vector((0.08, 0.34, 0.94))
+# Ornament crosses the FRONT toward her left, so the left palm can meet the
+# shaft in front of the breastplate. The butt then falls out to her right,
+# in front of the wings, instead of back through them.
+# Steep enough that the butt drops in front of the hip, not back into the wings.
+# The left palm holds the lower station, toward the butt, at chest height.
+# Tip stays to HER right of the face so it does not cross the braid.
+THRUST_LINE = Vector((-0.16, -0.46, 0.86))
+# Over the throwing shoulder: up and back on HER right, not across the crown.
+COCK = Vector((-0.28, 0.42, 0.86))
 RELEASE = Vector((0.06, -0.75, 0.62))
 FOLLOW = Vector((0.10, -0.68, 0.62))
 
@@ -263,56 +278,60 @@ FOLLOW = Vector((0.10, -0.68, 0.62))
 # Converted to local Y (opposite sign) when applied.
 
 def thrust_params(f):
+    # Yaw stays small while both feet are still under her (f8-9 was a thigh cross).
+    # The big turn happens after the lead foot has stepped out.
     hip_v = Track([
-        (1, 0), (8, 22), (14, 26), (17, 8), (20, -6), (24, -2), (32, 0), (40, 0),
-    ], [smooth, smooth, ease_in, snap, ease_out, smooth, smooth]).at(f)
-    # Shoulder visual yaw lags the hips, then comes through on the snap.
+        (1, 0), (8, 6), (14, 10), (18, 32), (22, -8), (26, -4), (36, 0), (45, 0),
+    ], [smooth, smooth, smooth, ease_in, ease_out, smooth, smooth]).at(f)
+    # Chest comes through after the hips and turns the right shoulder forward,
+    # which lays the shaft across the front of the armor for the left palm.
     sh_v = Track([
-        (1, 0), (8, 6), (14, 8), (17, 10), (20, -4), (24, 0), (32, 0), (40, 0),
-    ], [smooth, smooth, smooth, snap, ease_out, smooth, smooth]).at(f)
+        (1, 0), (8, 2), (18, 6), (22, -10), (26, -18), (36, -4), (45, 0),
+    ], [smooth, smooth, smooth, snap, ease_out, smooth]).at(f)
     hip_pitch = Track([
-        (1, 0), (8, 10), (14, 12), (17, 14), (20, 24), (23, 12), (32, 2), (40, 0),
+        (1, 0), (8, 6), (18, 8), (22, 10), (26, 22), (30, 10), (40, 2), (45, 0),
     ], [smooth, smooth, smooth, snap, ease_out, smooth, smooth]).at(f)
     chest_pitch = Track([
-        (1, 0), (8, 4), (17, 6), (20, 12), (24, 4), (40, 0),
-    ], [smooth, smooth, snap, ease_out, smooth]).at(f)
+        (1, 0), (18, 4), (26, 12), (32, 4), (45, 0),
+    ]).at(f)
     hip_roll = Track([
-        (1, 0), (8, 10), (14, 6), (20, 0), (40, 0),
+        (1, 0), (8, 6), (18, 4), (26, 0), (45, 0),
     ]).at(f)
     lift = Track([
-        (1, 0), (12, 8), (16, 22), (20, 26), (26, 8), (36, 0), (40, 0),
-    ], [smooth, smooth, snap, ease_out, smooth, smooth]).at(f)
+        (1, 0), (16, 8), (22, 12), (26, 14), (34, 4), (45, 0),
+    ]).at(f)
     nod = Track([
-        (1, 0), (8, 6), (20, -4), (40, 0),
+        (1, 0), (8, 4), (26, -3), (45, 0),
     ]).at(f)  # + chin down
     head_yaw = Track([
-        (1, 0), (14, 4), (20, -3), (40, 0),
+        (1, 0), (18, 3), (26, -2), (45, 0),
     ]).at(f)
     hip_drop = Track([
-        (1, 0), (8, 0.09), (15, 0.12), (20, 0.05), (23, 0.09), (34, 0.02), (40, 0),
-    ], [smooth, smooth, snap, ease_out, smooth, smooth]).at(f)
+        (1, 0), (8, 0.05), (18, 0.10), (26, 0.04), (30, 0.07), (40, 0.02), (45, 0),
+    ]).at(f)
     # Right hand, offsets from idle until the line is set, then absolute-ish.
     hand = VecTrack([
         (1, IDLE_RH),
-        (8, IDLE_RH + Vector((-0.04, 0.02, -0.06))),    # load: hand stays right, staff still up
-        (14, Vector((-0.50, -0.18, 1.05))),             # chambered on the line, butt outside the hip
-        (17, Vector((-0.48, -0.30, 1.10))),
-        (20, Vector((-0.44, -0.52, 1.16))),             # snap: hand drives forward, still right of the chest
-        (23, Vector((-0.48, -0.36, 1.10))),             # recoil
-        (32, IDLE_RH + Vector((-0.03, 0.01, 0.02))),
-        (40, IDLE_RH),
+        (10, IDLE_RH + Vector((-0.03, 0.02, -0.02))),
+        (18, Vector((-0.16, -0.22, 1.16))),
+        (22, Vector((-0.12, -0.30, 1.22))),
+        (26, Vector((-0.08, -0.38, 1.26))),   # skinned grip, forward and up; left palm is lower on the shaft
+        (30, Vector((-0.14, -0.28, 1.18))),
+        (40, IDLE_RH + Vector((-0.02, 0.0, 0.02))),
+        (45, IDLE_RH),
     ], [smooth, smooth, smooth, snap, ease_out, smooth, smooth]).at(f)
     staff = DirTrack([
         (1, UP),
-        (8, Vector((-0.12, -0.02, 1.0))),               # still up, drifts right
-        (14, THRUST_LINE),
-        (23, THRUST_LINE),
-        (32, Vector((-0.16, -0.08, 1.0))),              # recover up the right side
-        (40, UP),
+        (10, Vector((0.0, -0.04, 1.0))),
+        (18, THRUST_LINE),
+        (30, THRUST_LINE),
+        (38, Vector((0.02, -0.06, 1.0))),
+        (45, UP),
     ], [smooth, smooth, linear, smooth, smooth]).at(f)
+    # Left arm is a counterbalance on HER left. It never reaches across to the staff.
     guide = Track([
-        (1, 0), (10, 0), (15, 1), (22, 1), (30, 0), (40, 0),
-    ], [smooth, smooth, linear, smooth, smooth]).at(f)
+        (1, 0), (12, 0), (18, 1), (30, 1), (38, 0), (45, 0),
+    ]).at(f)
     return dict(hip_v=hip_v, sh_v=sh_v, hip_pitch=hip_pitch, chest_pitch=chest_pitch,
                 hip_roll=hip_roll, lift=lift, nod=nod, head_yaw=head_yaw,
                 hip_drop=hip_drop, hand=hand, staff=staff, guide=guide, throw=False)
@@ -349,8 +368,8 @@ def throw_params(f):
     hand = VecTrack([
         (1, IDLE_RH),
         (8, IDLE_RH + Vector((-0.05, 0.00, 0.08))),
-        (14, Vector((-0.50, -0.08, 1.48))),   # right of the head, shoulder height
-        (18, Vector((-0.52, -0.04, 1.54))),   # still cocked while the hips whip
+        (14, Vector((-0.48, 0.08, 1.50))),    # cocked beside the right shoulder, slightly behind
+        (18, Vector((-0.50, 0.12, 1.56))),    # still there while the hips whip
         (22, Vector((-0.46, -0.28, 1.40))),
         (24, Vector((-0.40, -0.50, 1.26))),   # release, forward and still right of the chest
         (28, Vector((-0.44, -0.46, 1.16))),   # follow-through stays outside the torso
@@ -377,69 +396,201 @@ def throw_params(f):
                 hip_drop=hip_drop, hand=hand, staff=staff, guide=guide, throw=True)
 
 
-# Foot plans. XY changes only across a step phase (airborne). Plant phases hold XY.
-# (frame, x, y, yaw_deg, heel_m)  yaw + turns toes toward her left.
-THRUST_LFOOT = [
-    (1, IDLE_LF.x, IDLE_LF.y, 0, 0),
-    (6, IDLE_LF.x, IDLE_LF.y, 0, 0.0),
-    (9, IDLE_LF.x, IDLE_LF.y, 0, 0.045),  # heel lifts as the rear foot takes the load
-    (15, 0.12, -0.30, 6, 0),              # deep lead plant
-    (26, 0.12, -0.30, 4, 0),
-    (34, IDLE_LF.x, IDLE_LF.y, 0, 0),
-    (40, IDLE_LF.x, IDLE_LF.y, 0, 0),
-]
-THRUST_RFOOT = [
-    (1, IDLE_RF.x, IDLE_RF.y, 0, 0),
-    (8, IDLE_RF.x, IDLE_RF.y, 0, 0),
-    (14, IDLE_RF.x, IDLE_RF.y, -8, 0.02),
-    (20, IDLE_RF.x, IDLE_RF.y, 28, 0.07),   # rear pivot + heel up as hips drive
-    (26, IDLE_RF.x, IDLE_RF.y, 10, 0.02),
-    (34, IDLE_RF.x, IDLE_RF.y, 0, 0),
-    (40, IDLE_RF.x, IDLE_RF.y, 0, 0),
-]
-THROW_LFOOT = [
-    (1, IDLE_LF.x, IDLE_LF.y, 0, 0),
-    (7, IDLE_LF.x, IDLE_LF.y, 0, 0.03),     # heel lifts as weight goes to the right
-    (14, 0.14, -0.36, 4, 0),                # deep contralateral plant
-    (28, 0.14, -0.36, 2, 0),
-    (38, IDLE_LF.x, IDLE_LF.y, 0, 0),
-    (48, IDLE_LF.x, IDLE_LF.y, 0, 0),
-]
-THROW_RFOOT = [
-    (1, IDLE_RF.x, IDLE_RF.y, 0, 0),
-    (14, IDLE_RF.x, IDLE_RF.y, -6, 0.02),
-    (18, IDLE_RF.x, IDLE_RF.y, 18, 0.06),   # pivot under the hip whip
-    (20, IDLE_RF.x, IDLE_RF.y, 18, 0.06),
-    (28, -0.08, -0.20, 8, 0),               # trailing recovery step, forward
-    (36, -0.08, -0.20, 4, 0),
-    (46, IDLE_RF.x, IDLE_RF.y, 0, 0),
-    (48, IDLE_RF.x, IDLE_RF.y, 0, 0),
-]
+# Foot phases. Ankle XY changes only while the foot is fully in the air.
+# A heel-up keeps the toe contact fixed and orbits the ankle around it.
+# phase: ("plant", f0, f1, x, y, yaw0, yaw1)
+#        ("heel",  f0, f1, x, y, yaw0, yaw1, heel0_deg, heel1_deg)
+#        ("air",   f0, f_up, f_down, f1, x0, y0, x1, y1, lift, yaw0, yaw1)
+# air: [f0, f_up) lift in place, [f_up, f_down] travel at full height, (f_down, f1] lower in place.
 
 
-def foot_sample(keys, frame, plant_z, lift_h=0.12):
-    if frame <= keys[0][0]:
-        f, x, y, yaw, heel = keys[0]
-        return Vector((x, y, plant_z + heel)), yaw, 0.0
-    if frame >= keys[-1][0]:
-        f, x, y, yaw, heel = keys[-1]
-        return Vector((x, y, plant_z + heel)), yaw, 0.0
-    for i in range(len(keys) - 1):
-        f0, x0, y0, yaw0, h0 = keys[i]
-        f1, x1, y1, yaw1, h1 = keys[i + 1]
-        if frame <= f1:
-            t = 0 if f1 == f0 else (frame - f0) / (f1 - f0)
-            moving = math.hypot(x1 - x0, y1 - y0) > 0.02
-            te = smooth(t)
-            x = x0 + (x1 - x0) * te
-            y = y0 + (y1 - y0) * te
-            yaw = yaw0 + (yaw1 - yaw0) * te
-            heel = h0 + (h1 - h0) * te
-            arc = math.sin(math.pi * t) * lift_h if moving else 0.0
-            z = plant_z + heel + arc
-            return Vector((x, y, z)), yaw, arc
-    f, x, y, yaw, heel = keys[-1]
-    return Vector((x, y, plant_z + heel)), yaw, 0.0
+def _lerp(a, b, t):
+    return a + (b - a) * t
+
+
+def _phase_end(p):
+    return p[4] if p[0] == "air" else p[2]
+
+
+def sample_phases(phases, frame, plant_z, foot_info):
+    """Return ankle world, foot rotation 3x3, airborne flag, heel degrees."""
+    phase = phases[-1]
+    for p in phases:
+        if frame <= _phase_end(p):
+            phase = p
+            break
+    kind = phase[0]
+    idle_R = foot_info["rot"]
+    if kind == "plant":
+        _, f0, f1, x, y, yaw0, yaw1 = phase
+        t = 0 if f1 == f0 else max(0, min(1, (frame - f0) / (f1 - f0)))
+        yaw = _lerp(yaw0, yaw1, t)
+        R = Matrix.Rotation(math.radians(yaw), 3, "Z") @ idle_R
+        return Vector((x, y, plant_z)), R, False, 0.0
+    if kind == "heel":
+        _, f0, f1, x, y, yaw0, yaw1, h0, h1 = phase
+        t = 0 if f1 == f0 else max(0, min(1, (frame - f0) / (f1 - f0)))
+        yaw = _lerp(yaw0, yaw1, smooth(t))
+        heel = _lerp(h0, h1, smooth(t))
+        # (x, y) is where the ankle sits when the sole is flat. The toe contact
+        # is forward of that and stays fixed while the heel rises or the foot pivots.
+        toe = Vector((x, y, plant_z)) + idle_R @ foot_info["off"]
+        toe.z = foot_info["contact_z"]
+        ankle, R = orbit_ankle(foot_info, toe.x, toe.y, yaw, heel)
+        return ankle, R, False, heel
+    # air
+    _, f0, f_up, f_down, f1, x0, y0, x1, y1, lift, yaw0, yaw1 = phase
+    if frame <= f_up:
+        t = 0 if f_up == f0 else (frame - f0) / (f_up - f0)
+        z = plant_z + smooth(max(0, min(1, t))) * lift
+        x, y = x0, y0
+        yaw = yaw0
+    elif frame >= f_down:
+        t = 0 if f1 == f_down else (frame - f_down) / (f1 - f_down)
+        z = plant_z + (1 - smooth(max(0, min(1, t)))) * lift
+        x, y = x1, y1
+        yaw = yaw1
+    else:
+        t = 0 if f_down == f_up else (frame - f_up) / (f_down - f_up)
+        x = _lerp(x0, x1, smooth(t))
+        y = _lerp(y0, y1, smooth(t))
+        z = plant_z + lift
+        yaw = _lerp(yaw0, yaw1, t)
+    R = Matrix.Rotation(math.radians(yaw), 3, "Z") @ idle_R
+    return Vector((x, y, z)), R, True, 0.0
+
+
+def orbit_ankle(info, toe_x, toe_y, yaw_deg, heel_deg):
+    """Toe contact stays put. Ankle swings up onto the toe. Sign chosen once at init."""
+    contact = Vector((toe_x, toe_y, info["contact_z"]))
+    yaw = Matrix.Rotation(math.radians(yaw_deg), 3, "Z")
+    pitch = Matrix.Rotation(info["heel_sign"] * math.radians(heel_deg), 3, "X")
+    R = yaw @ pitch @ info["rot"]
+    ankle = contact - R @ info["off"]
+    return ankle, R
+
+
+# Filled after the idle pose is known.
+FOOT = {}
+
+
+def measure_feet():
+    """Toe contact and the ankle offset, plus which pitch sign actually raises the heel."""
+    body = bpy.data.objects["SERAPHINE_body"]
+    deps = bpy.context.evaluated_depsgraph_get()
+    be = body.evaluated_get(deps)
+    mw = be.matrix_world
+    idx = {vg.name: vg.index for vg in body.vertex_groups}
+
+    def weighted(names):
+        out = []
+        gis = [idx[n] for n in names if n in idx]
+        for v in be.data.vertices:
+            w = 0.0
+            for g in v.groups:
+                if g.group in gis:
+                    w += g.weight
+            if w > 0.45:
+                out.append(mw @ v.co)
+        return out
+
+    for side, plant in (("Left", IDLE_LF), ("Right", IDLE_RF)):
+        names = [P + side + "UpLeg.002", P + side + "UpLeg.003"]
+        vs = weighted(names)
+        if len(vs) < 20:
+            vs = weighted([P + side + "UpLeg.002"])
+        # Toe = the low verts that are farthest forward (-Y). Heel = low verts farthest back.
+        low = sorted(vs, key=lambda p: p.z)[: max(30, len(vs) // 5)]
+        toe_pt = min(low, key=lambda p: p.y)
+        heel_pt = max(low, key=lambda p: p.y)
+        rot = idle_world[P + side + "UpLeg.002"].to_3x3()
+        ankle = idle_head[P + side + "UpLeg.002"].copy()
+        off = rot.inverted() @ (Vector(toe_pt) - ankle)
+        info = {
+            "rot": rot,
+            "off": off,
+            "contact_z": float(toe_pt.z),
+            "heel_local": rot.inverted() @ (Vector(heel_pt) - ankle),
+            "heel_sign": -1.0,
+            "toe_rest": Vector(toe_pt),
+            "heel_rest": Vector(heel_pt),
+        }
+        # Pick the pitch sign that lifts the heel point.
+        best = None
+        for sign in (1.0, -1.0):
+            info["heel_sign"] = sign
+            ank, R = orbit_ankle(info, toe_pt.x, toe_pt.y, 0.0, 25.0)
+            heel_w = ank + R @ info["heel_local"]
+            if best is None or heel_w.z > best[0]:
+                best = (heel_w.z, sign, ank.z)
+        info["heel_sign"] = best[1]
+        FOOT[side] = info
+        print(f"foot {side} toe z {info['contact_z']:.3f} heel-sign {info['heel_sign']} "
+              f"ankle-at-25deg z {best[2]:.3f} heel z {best[0]:.3f}")
+
+
+measure_feet()
+
+# Which left-hand axis faces the sternum at idle. That is the palm side.
+_lh = arm.matrix_world @ arm.pose.bones[P + "LeftHand"].matrix
+_inward = Vector((0.0, -0.06, _lh.translation.z)) - _lh.translation
+if _inward.length < 1e-4:
+    _inward = Vector((-1.0, 0.0, 0.0))
+_inward.normalize()
+_best = None
+for _i in range(3):
+    for _s in (1.0, -1.0):
+        _d = (_lh.col[_i].xyz.normalized() * _s).dot(_inward)
+        if _best is None or _d > _best[0]:
+            _best = (_d, _i, _s)
+LEFT_PALM_AXIS, LEFT_PALM_SIGN = _best[1], _best[2]
+print(f"left palm axis {LEFT_PALM_AXIS} sign {LEFT_PALM_SIGN:.0f} inward-dot {_best[0]:.2f}")
+
+
+def thrust_left_phases():
+    x0, y0 = IDLE_LF.x, IDLE_LF.y
+    return [
+        ("plant", 1, 7, x0, y0, 0, 0),
+        ("heel", 7, 10, x0, y0, 0, 0, 0, 22),
+        ("air", 10, 12, 15, 18, x0, y0, 0.12, -0.30, 0.16, 0, 6),
+        ("plant", 18, 30, 0.12, -0.30, 6, 4),
+        ("air", 30, 32, 35, 38, 0.12, -0.30, x0, y0, 0.16, 4, 0),
+        ("plant", 38, 45, x0, y0, 0, 0),
+    ]
+
+
+def thrust_right_phases():
+    x0, y0 = IDLE_RF.x, IDLE_RF.y
+    return [
+        ("plant", 1, 16, x0, y0, 0, 0),
+        ("heel", 16, 22, x0, y0, 0, 32, 0, 28),   # toe planted, heel up, foot pivots with the hips
+        ("heel", 22, 28, x0, y0, 32, 0, 28, 0),
+        ("plant", 28, 45, x0, y0, 0, 0),
+    ]
+
+
+def throw_left_phases():
+    x0, y0 = IDLE_LF.x, IDLE_LF.y
+    return [
+        ("plant", 1, 6, x0, y0, 0, 0),
+        ("heel", 6, 8, x0, y0, 0, 0, 0, 18),
+        ("air", 8, 10, 13, 15, x0, y0, 0.14, -0.34, 0.16, 0, 4),
+        ("plant", 15, 30, 0.14, -0.34, 4, 2),
+        ("air", 30, 32, 35, 38, 0.14, -0.34, x0, y0, 0.16, 2, 0),
+        ("plant", 38, 46, x0, y0, 0, 0),
+    ]
+
+
+def throw_right_phases():
+    x0, y0 = IDLE_RF.x, IDLE_RF.y
+    return [
+        ("plant", 1, 16, x0, y0, 0, 0),
+        ("heel", 16, 22, x0, y0, 0, 20, 0, 24),
+        ("air", 22, 24, 27, 30, x0, y0, -0.10, -0.18, 0.15, 20, 6),
+        ("plant", 30, 36, -0.10, -0.18, 6, 4),
+        ("air", 36, 38, 42, 44, -0.10, -0.18, x0, y0, 0.15, 4, 0),
+        ("plant", 44, 46, x0, y0, 0, 0),
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -663,9 +814,11 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
     apply_local(arm.pose.bones[P + "Head"], nod * 0.55, hy * 0.45, 0.0)
     bpy.context.view_layer.update()
 
-    # Feet.
-    l_tgt, l_yaw, l_arc = foot_sample(foot_l_keys, frame, IDLE_LF.z, 0.13 if params["throw"] else 0.12)
-    r_tgt, r_yaw, r_arc = foot_sample(foot_r_keys, frame, IDLE_RF.z, 0.12)
+    # Feet. XY of a supporting foot does not change. A step lifts, travels, then plants.
+    l_tgt, l_rot, l_air, l_heel = sample_phases(foot_l_keys, frame, IDLE_LF.z, FOOT["Left"])
+    r_tgt, r_rot, r_air, r_heel = sample_phases(foot_r_keys, frame, IDLE_RF.z, FOOT["Right"])
+    l_arc = (l_tgt.z - IDLE_LF.z) if l_air else 0.0
+    r_arc = (r_tgt.z - IDLE_RF.z) if r_air else 0.0
 
     # Drop the pelvis further if a planted-or-reaching foot cannot be reached.
     for _try in range(8):
@@ -712,149 +865,231 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
     else:
         warnings.append(f"f{frame} reach still short")
 
-    def solve_leg(side, target, yaw, L1, L2):
+    def solve_leg(side, target, foot_rot, L1, L2):
         up = arm.pose.bones[P + side + "UpLeg"]
         shin = arm.pose.bones[P + side + "UpLeg.001"]
         foot = arm.pose.bones[P + side + "UpLeg.002"]
         joint = arm.matrix_world @ up.head
-        outward = 1.0 if side == "Left" else -1.0
+        outward = 0.55 if side == "Left" else -0.55
         flat = Vector((target.x - joint.x, target.y - joint.y, 0))
         if flat.length < 0.05:
             flat = Vector((0, -1, 0))
         flat.normalize()
-        yaw_r = Matrix.Rotation(math.radians(yaw), 3, "Z")
-        flat = yaw_r @ flat
-        pole_dir = (flat * 0.8 + Vector((outward, 0, 0)) * 0.35).normalized()
-        pole = joint + pole_dir * 0.7 + Vector((0, 0, 0.15))
+        # Knees track over the toes and stay apart. This is what kept the thighs
+        # crossed at the narrow load (f8-9) when the poles sat too close together.
+        pole_dir = (flat * 0.65 + Vector((outward, 0, 0))).normalized()
+        pole = joint + pole_dir * 0.75 + Vector((0, 0, 0.05))
         knee, tgt, clamped = ik_two(joint, target, pole, L1, L2)
         if clamped:
             warnings.append(f"f{frame} {side} leg clamped")
-        # thigh
-        z_hint = (pole - joint).cross((knee - joint))
-        # use pole as the direction the knee should bulge: local hinge
         set_world_keep_loc(up, mat_y(knee - joint, (pole - joint)), joint)
         bpy.context.view_layer.update()
         knee_h = arm.matrix_world @ shin.head
         set_world_keep_loc(shin, mat_y(tgt - knee_h, (pole - knee_h)), knee_h)
         bpy.context.view_layer.update()
-        # Foot: idle orientation, yawed, heel pitched so the toe stays down when the heel is up.
         ankle = arm.matrix_world @ foot.head
-        idle_f = idle_world[foot.name].to_3x3()
-        yaw_m = Matrix.Rotation(math.radians(yaw), 3, "Z")
-        # Heel up -> negative pitch around the foot's lateral (world X) tips the toe down
-        # relative to a lifted ankle. Scale pitch with the heel lift encoded in target.z over plant.
-        heel = max(0.0, target.z - (IDLE_LF.z if side == "Left" else IDLE_RF.z) - 0.02)
-        pitch = Matrix.Rotation(-heel * 4.5, 3, "X")
-        set_world_keep_loc(foot, yaw_m @ pitch @ idle_f, ankle)
+        set_world_keep_loc(foot, foot_rot, ankle)
         bpy.context.view_layer.update()
         return knee_angle(joint, arm.matrix_world @ shin.head, arm.matrix_world @ foot.head), tgt
 
-    lk, l_used = solve_leg("Left", l_tgt, l_yaw, L_LEG, L_SHIN)
-    rk, r_used = solve_leg("Right", r_tgt, r_yaw, R_LEG, R_SHIN)
+    lk, l_used = solve_leg("Left", l_tgt, l_rot, L_LEG, L_SHIN)
+    rk, r_used = solve_leg("Right", r_tgt, r_rot, R_LEG, R_SHIN)
 
-    # Arms.
+    # Right arm. The wrist keeps the idle hand-to-forearm relationship.
+    # Staff aim is the forearm twist that puts hand +X nearest the desired line.
+    # If that line would plant the butt in the floor, the line is steepened.
     r_sh = arm.matrix_world @ arm.pose.bones[P + "RightArm"].head
-    hand = params["hand"].copy()
-    # Keep the hand on the reachable side of the shoulder.
-    hand, _ht, hclamp = ik_two(r_sh, hand, r_sh + Vector((-0.3, 0.2, -0.5)), R_UP, R_FORE)
-    # ik_two returns the elbow when given those lengths; we only wanted the clamp of the target.
-    # Recompute target clamp properly:
-    delta = params["hand"] - r_sh
-    reach = R_UP + R_FORE - 0.015
+    wrist_target = params["hand"].copy()
+    staff_dir = params["staff"].normalized()
+    # During the thrust the shaft is the line between a chest-front left palm
+    # and the right hand, 30 cm further toward the tip. Both hands are in
+    # front of the armor; the butt drops beside the hip.
+    if not params["throw"] and params["guide"] > 0.55:
+        seat_goal = Vector((0.14, -0.32, 1.05))
+        staff_dir = Vector((-0.15, -0.55, 0.82)).normalized()
+        wrist_target = seat_goal + staff_dir * 0.30
+    delta = wrist_target - r_sh
+    reach = R_UP + R_FORE - 0.02
     if delta.length > reach:
-        hand = r_sh + delta.normalized() * reach
-        warnings.append(f"f{frame} right hand clamped {delta.length:.2f}->{reach:.2f}")
-    else:
-        hand = params["hand"].copy()
-
-    staff_dir, redirected = safest_direction(hand, params["staff"])
-    if redirected:
-        warnings.append(
-            f"f{frame} staff redirected elev {math.degrees(math.asin(max(-1, min(1, staff_dir.z)))):.0f} "
-            f"from {math.degrees(math.asin(max(-1, min(1, params['staff'].normalized().z)))):.0f}"
-        )
-    params["staff"] = staff_dir
-
+        wrist_target = r_sh + delta.normalized() * reach
     if params["throw"]:
-        # Cock: elbow high and back. Release: elbow down.
-        u = max(0.0, min(1.0, (frame - 14) / 10.0)) if frame >= 14 else 0.0
-        if frame < 14:
-            u = 0.0
-        pole = r_sh + Vector((-0.55, 0.40, 0.25)).lerp(Vector((-0.28, -0.10, -0.55)), max(0, min(1, (frame - 16) / 8)))
+        pole = r_sh + Vector((-0.50, 0.35, 0.15)).lerp(Vector((-0.30, -0.05, -0.45)), max(0, min(1, (frame - 16) / 10)))
     else:
-        pole = r_sh + Vector((-0.40, 0.20, -0.65))
-    elbow, hand_used, _ = ik_two(r_sh, hand, pole, R_UP, R_FORE)
-    upb = arm.pose.bones[P + "RightArm"]
-    set_world_keep_loc(upb, mat_y(elbow - r_sh, pole - r_sh), r_sh)
+        pole = r_sh + Vector((-0.35, 0.10, -0.55))
+
+    def hand_axes(direction, twist_deg):
+        x = direction.normalized()
+        ref = Vector((0, 0, 1)).cross(x)
+        if ref.length < 1e-4:
+            ref = Vector((1, 0, 0)).cross(x)
+        ref.normalize()
+        z = Matrix.Rotation(math.radians(twist_deg), 3, x) @ ref
+        y = z.cross(x).normalized()
+        z = x.cross(y).normalized()
+        return Matrix((x, y, z)).transposed()
+
+    def pose_right(direction):
+        best = None
+        for deg in range(0, 360, 8):
+            hand_R = hand_axes(direction, deg)
+            fore_R = hand_R @ IDLE_HAND_R.inverted() @ IDLE_FORE_R
+            fore_y = fore_R.col[1].xyz
+            if fore_y.length < 1e-6:
+                continue
+            fore_y = fore_y.normalized()
+            elbow = wrist_target - fore_y * R_FORE
+            gap = abs((elbow - r_sh).length - R_UP)
+            cost = gap + (elbow - pole).length * 0.25
+            if hand_R.col[2].z > 0.7:
+                cost += 0.5
+            if best is None or cost < best[0]:
+                best = (cost, hand_R, fore_R, elbow, fore_y)
+        return best
+
+    for _boost in range(5):
+        solved = pose_right(staff_dir)
+        hand_R, fore_R, elbow, fore_y = solved[1], solved[2], solved[3], solved[4]
+        M = hand_R.to_4x4()
+        M.translation = wrist_target
+        butt_z = (M @ STAFF_BUTT_LOCAL).z
+        orn_z = (M @ STAFF_ORN_LOCAL).z
+        # Full-mesh low point, not just the axis end. Thickness and the cap sit off the axis.
+        zmin = min(butt_z, orn_z)
+        for p in STAFF_LOCAL[::12]:
+            zmin = min(zmin, (M @ p).z)
+        if zmin >= 0.03:
+            break
+        staff_dir = slerp_dir(staff_dir, Vector((0.0, -0.04, 1.0)), 0.4)
+        warnings.append(f"f{frame} staff butt {zmin*100:.1f}cm, steepened")
+    # Pull the elbow onto the upper-arm length without changing the wrist angle.
+    elbow_dir = elbow - r_sh
+    if elbow_dir.length > 1e-5 and abs(elbow_dir.length - R_UP) > 0.01:
+        elbow = r_sh + elbow_dir.normalized() * min(R_UP - 0.005, elbow_dir.length)
+        wrist_target = elbow + fore_y * R_FORE
+    set_world_keep_loc(arm.pose.bones[P + "RightArm"], mat_y(elbow - r_sh, pole - r_sh), r_sh)
     bpy.context.view_layer.update()
     elb_h = arm.matrix_world @ arm.pose.bones[P + "RightForeArm"].head
-    fore_dir = (hand_used - elb_h)
-    if fore_dir.length < 1e-5:
-        fore_dir = Vector((0, -1, 0))
-    y_h, z_h, wrist_ang = best_hand_rot(params["staff"], fore_dir.normalized())
-    # Forearm shares the hinge (hand Z) and points at the wrist.
-    set_world_keep_loc(arm.pose.bones[P + "RightForeArm"], mat_y(fore_dir, z_h), elb_h)
+    set_world_keep_loc(arm.pose.bones[P + "RightForeArm"], fore_R, elb_h)
     bpy.context.view_layer.update()
     wrist_h = arm.matrix_world @ arm.pose.bones[P + "RightHand"].head
-    x_h = params["staff"].normalized()
-    y_h = z_h.cross(x_h).normalized()
-    z_h = x_h.cross(y_h).normalized()
-    hand_m = Matrix((x_h, y_h, z_h)).transposed()
-    set_world_keep_loc(arm.pose.bones[P + "RightHand"], hand_m, wrist_h)
+    set_world_keep_loc(arm.pose.bones[P + "RightHand"], hand_R, wrist_h)
     bpy.context.view_layer.update()
+    hy = hand_R.col[1].xyz.normalized()
+    fy = fore_R.col[1].xyz.normalized()
+    wrist_ang = math.degrees(hy.angle(fy))
 
-    # Left arm.
+    # The staff is skinned only to the right hand, so the left palm is a second
+    # grip that has to be posed onto the shaft. It floated before because the
+    # target sat off to the side, or on the far side of the chest, so the arm
+    # either missed the weapon or drove through the breastplate. The chest turn
+    # above lays the shaft across the front; the palm then meets that station.
     l_sh = arm.matrix_world @ arm.pose.bones[P + "LeftArm"].head
     g = max(0.0, min(1.0, params["guide"]))
+    staff_dir_now = (arm.matrix_world @ arm.pose.bones[P + "RightHand"].matrix).col[0].xyz.normalized()
+    # Station on the shaft, in front of the sternum, within the left arm's reach.
+    # Lower station, toward the butt. A point further up the rising shaft
+    # climbs into the braid; that is what put the forearm through the hair.
+    station = wrist_h - staff_dir_now * 0.28
+    approach = Vector((0.38, -0.16, 1.04))
     if params["throw"]:
-        # Balance arm: reaches forward-left, then pulls in. Not on the staff.
-        reach_pt = Vector((0.22, -0.48, 1.42))
-        pull_pt = Vector((0.10, -0.10, 1.05))
-        # guide 1 = reach, falling guide pulls in
-        tgt = reach_pt.lerp(pull_pt, max(0.0, min(1.0, (frame - 24) / 8.0))) if frame >= 20 else reach_pt
-        if frame < 12:
-            tgt = IDLE_LH.lerp(reach_pt, g)
+        # Counterbalance stays wide on her left. It does not cross the face
+        # and it does not drop onto the thigh.
+        wide = Vector((0.46, -0.18, 1.02))
+        low = Vector((0.38, -0.06, 0.98))
+        if frame <= 16:
+            tgt = IDLE_LH.lerp(wide, min(1.0, frame / 12.0))
+        elif frame <= 28:
+            tgt = wide
+        else:
+            tgt = wide.lerp(low, min(1.0, (frame - 28) / 8.0))
+            if frame > 40:
+                tgt = tgt.lerp(IDLE_LH, min(1.0, (frame - 40) / 8.0))
+        palm_at = None
     else:
-        # Forward hand on the shaft, chest height, just ahead of the rear grip.
-        # Kept off the axis so the open fingers do not stab the mesh.
-        staff_dir = params["staff"].normalized()
-        shaft_pt = wrist_h + staff_dir * 0.18
-        side = staff_dir.cross(Vector((0, 0, 1)))
-        if side.length < 1e-4:
-            side = Vector((1, 0, 0))
-        side.normalize()
-        if side.x < 0:
-            side = -side
-        tgt = shaft_pt + side * 0.08 + Vector((0, -0.02, -0.05))
-    tgt = IDLE_LH.lerp(tgt, g)
-    if g > 0.04:
+        if g < 0.4:
+            tgt = IDLE_LH.lerp(approach, g / 0.4 if g > 0 else 0.0)
+            palm_at = None
+        else:
+            # Bind only when the lower station is already in front of the
+            # armor and below the braid. Clamping it would pull the palm off the shaft.
+            safe = station.y < -0.18 and 0.92 < station.z < 1.20 and station.x > -0.25
+            if not safe:
+                tgt = approach
+                palm_at = None
+            else:
+                onto = staff_dir_now  # palm faces across the shaft, from the left-front
+                onto = Vector((0.55, -0.75, 0.15)).normalized()
+                tgt = station + onto * 0.04
+                palm_at = -onto
+                tgt = approach.lerp(tgt, (g - 0.4) / 0.6)
+    if (tgt - IDLE_LH).length > 0.03:
         delta = tgt - l_sh
-        reach = L_UP + L_FORE - 0.015
-        if delta.length > reach:
-            tgt = l_sh + delta.normalized() * reach
-        pole_l = l_sh + Vector((0.45, 0.05, -0.45))
+        if delta.length > L_UP + L_FORE - 0.02:
+            tgt = l_sh + delta.normalized() * (L_UP + L_FORE - 0.02)
+        # Elbow in front of the breastplate, out to her left. A pole near the
+        # ribs folds the forearm through the armor.
+        pole_l = Vector((0.32, -0.46, 1.12))
         elbow_l, tgt_used, _ = ik_two(l_sh, tgt, pole_l, L_UP, L_FORE)
         set_world_keep_loc(arm.pose.bones[P + "LeftArm"], mat_y(elbow_l - l_sh, pole_l - l_sh), l_sh)
         bpy.context.view_layer.update()
         elb_l = arm.matrix_world @ arm.pose.bones[P + "LeftForeArm"].head
-        set_world_keep_loc(arm.pose.bones[P + "LeftForeArm"], mat_y(tgt_used - elb_l, Vector((0, -0.2, -1))), elb_l)
+        set_world_keep_loc(arm.pose.bones[P + "LeftForeArm"], mat_y(tgt_used - elb_l, Vector((0.3, -0.2, -1))), elb_l)
         bpy.context.view_layer.update()
         wh = arm.matrix_world @ arm.pose.bones[P + "LeftHand"].head
-        finger = wh - elb_l
-        if finger.length < 1e-4:
-            finger = Vector((0, -1, 0))
-        # Fingers continue the forearm. Palm hint points at the shaft / the other wrist.
-        set_world_keep_loc(arm.pose.bones[P + "LeftHand"], mat_y(finger, wrist_h - wh), wh)
+        if palm_at is not None and g > 0.85:
+            # Palm axis toward the shaft, finger axis along it. Wrist bend stays modest
+            # because the forearm was solved to this wrist.
+            finger_dir = staff_dir_now - palm_at * staff_dir_now.dot(palm_at)
+            if finger_dir.length < 1e-4:
+                finger_dir = Vector((0, -1, 0))
+            finger_dir.normalize()
+            cols = [None, None, None]
+            cols[LEFT_PALM_AXIS] = palm_at * LEFT_PALM_SIGN
+            finger_axis = 1 if LEFT_PALM_AXIS != 1 else 0
+            cols[finger_axis] = finger_dir - cols[LEFT_PALM_AXIS] * finger_dir.dot(cols[LEFT_PALM_AXIS])
+            if cols[finger_axis].length < 1e-4:
+                cols[finger_axis] = Vector((0, 0, 1)).cross(cols[LEFT_PALM_AXIS])
+            cols[finger_axis].normalize()
+            third = 3 - LEFT_PALM_AXIS - finger_axis
+            cols[third] = cols[LEFT_PALM_AXIS].cross(cols[finger_axis])
+            # Keep a right-handed basis.
+            if cols[0].dot(cols[1].cross(cols[2])) < 0:
+                cols[third] = -cols[third]
+            hand_l = Matrix((cols[0], cols[1], cols[2])).transposed()
+            set_world_keep_loc(arm.pose.bones[P + "LeftHand"], hand_l, wh)
+        else:
+            finger = wh - elb_l
+            if finger.length < 1e-4:
+                finger = Vector((0, -1, 0))
+            set_world_keep_loc(arm.pose.bones[P + "LeftHand"], mat_y(finger, Vector((0, 0, -1))), wh)
         bpy.context.view_layer.update()
-        if g < 0.999:
-            # blend back toward idle so the return is the idle pose, not a second IK solution
-            for nm in (P + "LeftArm", P + "LeftForeArm", P + "LeftHand", P + "LeftShoulder"):
-                pb = arm.pose.bones[nm]
-                q = idle_basis[nm].to_quaternion().slerp(pb.matrix_basis.to_quaternion(), g)
-                M = q.to_matrix().to_4x4()
-                M.translation = idle_loc[nm]
-                pb.matrix_basis = M
-            bpy.context.view_layer.update()
+        # If the forearm segment enters the chest, the palm seat is not a real
+        # grip. Drop back to the forward-left guard instead of leaving the arm
+        # inside the breastplate.
+        if palm_at is not None:
+            a = arm.matrix_world @ arm.pose.bones[P + "LeftArm"].head
+            b = arm.matrix_world @ arm.pose.bones[P + "LeftHand"].head
+            inside = False
+            for u in (0.25, 0.45, 0.65, 0.85):
+                p = a.lerp(b, u)
+                core = Vector((0.0, -0.04, max(0.95, min(1.35, p.z))))
+                if (Vector((p.x, p.y, p.z)) - core).length < 0.15 and p.y > -0.20:
+                    inside = True
+                    break
+            if inside:
+                warnings.append(f"f{frame} left palm seat crossed the chest, held the guard")
+                elbow_l, tgt_used, _ = ik_two(l_sh, approach, pole_l, L_UP, L_FORE)
+                set_world_keep_loc(arm.pose.bones[P + "LeftArm"], mat_y(elbow_l - l_sh, pole_l - l_sh), l_sh)
+                bpy.context.view_layer.update()
+                elb_l = arm.matrix_world @ arm.pose.bones[P + "LeftForeArm"].head
+                set_world_keep_loc(arm.pose.bones[P + "LeftForeArm"], mat_y(approach - elb_l, Vector((0.3, -0.2, -1))), elb_l)
+                bpy.context.view_layer.update()
+                wh = arm.matrix_world @ arm.pose.bones[P + "LeftHand"].head
+                finger = wh - elb_l
+                if finger.length < 1e-4:
+                    finger = Vector((0, -1, 0))
+                set_world_keep_loc(arm.pose.bones[P + "LeftHand"], mat_y(finger, Vector((0, 0, -1))), wh)
+                bpy.context.view_layer.update()
 
     # Toes stay on the idle local pose (parented to the foot).
     for nm in (P + "LeftUpLeg.003", P + "RightUpLeg.003", P + "LeftToe_End"):
@@ -969,8 +1204,205 @@ def build(name, nframes, param_fn, lfoot, rfoot):
     return rows, warnings
 
 
-thrust_rows, thrust_warn = build("attack_thrust", 40, thrust_params, THRUST_LFOOT, THRUST_RFOOT)
-throw_rows, throw_warn = build("attack_throw", 48, throw_params, THROW_LFOOT, THROW_RFOOT)
+def audit_mesh(name, nframes):
+    """Real evaluated verts. Both staff ends, the whole staff, head, left arm, legs, ground."""
+    from mathutils.bvhtree import BVHTree
+    body = bpy.data.objects["SERAPHINE_body"]
+    spear = bpy.data.objects["SERAPHINE_spear"]
+    act = bpy.data.actions[name]
+    ad.action = act
+    ad.action_slot = act.slots[0]
+    groups = {vg.name: vg.index for vg in body.vertex_groups}
+
+    def ids(names, thresh=0.4):
+        gis = [groups[n] for n in names if n in groups]
+        out = []
+        for v in body.data.vertices:
+            for g in v.groups:
+                if g.group in gis and g.weight >= thresh:
+                    out.append(v.index)
+                    break
+        return out
+
+    Pfx = P
+    hair_i = ids([Pfx + "Head", Pfx + "HeadTop_End"])
+    torso_i = ids([Pfx + "Hips", Pfx + "Spine", Pfx + "Spine1", Pfx + "Spine2"])
+    lhand_i = ids([Pfx + "LeftHand"])
+    larm_i = ids([Pfx + "LeftArm", Pfx + "LeftForeArm", Pfx + "LeftHand"])
+    rleg_i = ids([Pfx + "RightUpLeg", Pfx + "RightUpLeg.001", Pfx + "RightUpLeg.002", Pfx + "RightUpLeg.003"])
+    lleg_i = ids([Pfx + "LeftUpLeg", Pfx + "LeftUpLeg.001", Pfx + "LeftUpLeg.002", Pfx + "LeftUpLeg.003"])
+    print(f"audit {name} regions hair {len(hair_i)} torso {len(torso_i)} lhand {len(lhand_i)} larm {len(larm_i)} lleg {len(lleg_i)} rleg {len(rleg_i)}")
+
+    def world_of(obj, indices=None):
+        deps = bpy.context.evaluated_depsgraph_get()
+        e = obj.evaluated_get(deps)
+        mw = e.matrix_world
+        if indices is None:
+            return [mw @ v.co for v in e.data.vertices]
+        return [mw @ e.data.vertices[i].co for i in indices]
+
+    def mindist(pts, bvh):
+        best = 1e9
+        inside = 0
+        for p in pts:
+            loc, normal, idx, dist = bvh.find_nearest(p)
+            if loc is None:
+                continue
+            if dist < best:
+                best = dist
+            if dist < 0.012 and normal is not None and (p - loc).dot(normal) < 0:
+                inside += 1
+        return best, inside
+
+    hits = []
+    for f in range(1, nframes + 1):
+        bpy.context.scene.frame_set(f)
+        bpy.context.view_layer.update()
+        staff = world_of(spear)
+        zmin = min(p.z for p in staff)
+        # Ends: farthest vertices along the hand +X axis.
+        hx = (arm.matrix_world @ arm.pose.bones[P + "RightHand"].matrix).col[0].xyz.normalized()
+        origin = arm.matrix_world @ arm.pose.bones[P + "RightHand"].head
+        projs = [(hx.dot(p - origin), p) for p in staff]
+        orn = max(projs, key=lambda t: t[0])[1]
+        butt = min(projs, key=lambda t: t[0])[1]
+        body_vs = world_of(body)
+        def take(indices):
+            return [body_vs[i] for i in indices]
+        hair, torso, lhand, larm, lleg, rleg = map(take, (hair_i, torso_i, lhand_i, larm_i, lleg_i, rleg_i))
+        bvh_torso = BVHTree.FromPolygons(torso, []) if False else None
+        # Point clouds: build a BVH from a triangulated dummy by using find via closest brute for small sets
+        # Torso/head are large. Use BVHTree.FromPolygons on the full body and filter by region of the nearest... 
+        # Faster: BVH of staff for body-region queries, and a body BVH for staff queries.
+        deps = bpy.context.evaluated_depsgraph_get()
+        be = body.evaluated_get(deps)
+        bm = be.matrix_world
+        bverts = [bm @ v.co for v in be.data.vertices]
+        bpolys = [p.vertices[:] for p in be.data.polygons]
+        body_bvh = BVHTree.FromPolygons(bverts, bpolys)
+        staff_bvh = BVHTree.FromPolygons(staff, [p.vertices[:] for p in spear.evaluated_get(deps).data.polygons])
+
+        def region_vs_bvh(indices, bvh):
+            best, inside = 1e9, 0
+            for i in indices:
+                p = bverts[i]
+                loc, normal, idx, dist = bvh.find_nearest(p)
+                if loc is None:
+                    continue
+                if dist < best:
+                    best = dist
+                if dist < 0.012 and normal is not None and (p - loc).dot(normal) < 0:
+                    inside += 1
+            return best, inside
+
+        staff_body, staff_in = mindist(staff, body_bvh)
+        hair_s, hair_in = region_vs_bvh(hair_i, staff_bvh)
+        larm_s, larm_in = region_vs_bvh(larm_i, staff_bvh)
+        # left arm vs torso: query left-arm verts against body but ignore hits that are the arm itself
+        # Use torso-only point BVH via FromPointCloud if available, else brute nearest on a subsample.
+        torso_bvh = BVHTree.FromPolygons(
+            [bverts[i] for i in torso_i],
+            [],
+        ) if False else None
+        # Polygons that are mostly torso: skip, use closest torso vertex (subsampled).
+        torso_pts = [bverts[i] for i in torso_i[::2]]
+        hair_pts = [bverts[i] for i in hair_i[::2]]
+        rleg_pts = [bverts[i] for i in rleg_i[::2]]
+        lleg_pts = [bverts[i] for i in lleg_i[::2]]
+
+        def cloud_min(src_idx, cloud):
+            best, near = 1e9, 0
+            for i in src_idx[::3]:
+                p = bverts[i]
+                d = min((p - c).length for c in cloud[::3]) if False else None
+            # KD-free: compare against a BVH built from the cloud as tiny edges is heavy.
+            # Use a coarse grid.
+            return _grid_min(src_idx, cloud)
+
+        row = {
+            "f": f,
+            "staff_zmin_cm": round(zmin * 100, 2),
+            "butt_z_cm": round(butt.z * 100, 2),
+            "orn_z_cm": round(orn.z * 100, 2),
+            "butt": [round(c, 3) for c in butt],
+            "staff_body_cm": round(staff_body * 100, 2),
+            "staff_body_in": staff_in,
+            "hair_staff_cm": round(hair_s * 100, 2),
+            "hair_in": hair_in,
+            "larm_staff_cm": round(larm_s * 100, 2),
+            "larm_staff_in": larm_in,
+        }
+        # limb vs limb with a 4cm voxel so a real intersection (dist < 1.5cm) is caught
+        def closest(src, dst, limit=0.04):
+            # dst bucketed
+            buckets = {}
+            for p in dst:
+                key = (int(p.x / 0.05), int(p.y / 0.05), int(p.z / 0.05))
+                buckets.setdefault(key, []).append(p)
+            best = 1e9
+            close = 0
+            for i in src:
+                p = bverts[i]
+                key = (int(p.x / 0.05), int(p.y / 0.05), int(p.z / 0.05))
+                for dx in (-1, 0, 1):
+                    for dy in (-1, 0, 1):
+                        for dz in (-1, 0, 1):
+                            for q in buckets.get((key[0] + dx, key[1] + dy, key[2] + dz), ()):
+                                d = (p - q).length
+                                if d < best:
+                                    best = d
+                                if d < limit:
+                                    close += 1
+            return best, close
+
+        lh_t, lh_tn = closest(lhand_i, torso_pts, 0.02)
+        la_t, la_tn = closest([i for i in larm_i if i not in set(lhand_i)], torso_pts, 0.025)
+        la_h, la_hn = closest(larm_i, hair_pts, 0.02)
+        lh_r, lh_rn = closest(lhand_i, rleg_pts, 0.02)
+        # Ignore the crotch, where the two thigh roots are supposed to meet.
+        lleg_low = [i for i in lleg_i[::2] if bverts[i].z < 0.72]
+        rleg_low = [p for p in rleg_pts if p.z < 0.72]
+        ll_r, ll_rn = closest(lleg_low, rleg_low, 0.02)
+        row.update({
+            "lhand_torso_cm": round(lh_t * 100, 2),
+            "lhand_torso_n": lh_tn,
+            "larm_torso_cm": round(la_t * 100, 2),
+            "larm_torso_n": la_tn,
+            "larm_head_cm": round(la_h * 100, 2),
+            "larm_head_n": la_hn,
+            "lhand_rleg_cm": round(lh_r * 100, 2),
+            "lhand_rleg_n": lh_rn,
+            "legs_cm": round(ll_r * 100, 2),
+            "legs_n": ll_rn,
+        })
+        bad = (
+            zmin < 0.01 or butt.z < 0.01 or orn.z < 0.01
+            or hair_in or staff_in > 30
+            or lh_tn > 8 or la_tn > 8 or la_hn > 4 or lh_rn > 8 or ll_rn > 12
+        )
+        if bad or f in (8, 9, 14, 15, 16, 17, 18, 19, 20, 21, 27, 30, 32, 34):
+            print(
+                f"  f{f:02d} zmin {row['staff_zmin_cm']:6.1f} butt {row['butt_z_cm']:6.1f} "
+                f"legs {row['legs_cm']:5.1f}/{row['legs_n']} "
+                f"LhT {row['lhand_torso_cm']:5.1f}/{row['lhand_torso_n']} "
+                f"LaT {row['larm_torso_cm']:5.1f}/{row['larm_torso_n']} "
+                f"LaH {row['larm_head_cm']:5.1f}/{row['larm_head_n']} "
+                f"LhR {row['lhand_rleg_cm']:5.1f}/{row['lhand_rleg_n']} "
+                f"hair {row['hair_staff_cm']:5.1f}"
+            )
+        if bad:
+            hits.append(row)
+    return hits
+
+
+thrust_rows, thrust_warn = build("attack_thrust", 45, thrust_params, thrust_left_phases(), thrust_right_phases())
+throw_rows, throw_warn = build("attack_throw", 46, throw_params, throw_left_phases(), throw_right_phases())
+print("\n=== mesh audit thrust ===")
+thrust_hits = audit_mesh("attack_thrust", 45)
+print("thrust bad frames", len(thrust_hits))
+print("\n=== mesh audit throw ===")
+throw_hits = audit_mesh("attack_throw", 46)
+print("throw bad frames", len(throw_hits))
 
 # Put idle back so opening the file is the rest/idle state the README describes.
 ad.action = bpy.data.actions["idle"]
