@@ -1,31 +1,31 @@
 {
   "design/survival-theme-a-fantasy/heroes/anim/kaelen/blender/KAELEN.blend": {
-    "sha256": "d95d6c9ac6896bca97505f50a8d0c4eb7d3f79355875144b46d2a2e21749f8fb",
+    "sha256": "c940ed63acf56ab0abc07abe6b21f43f91e44a37846a534d70e2c3f54fa6ab47",
     "bytes": 28651502
   },
   "design/survival-theme-a-fantasy/heroes/anim/kaelen/final/KAELEN_attack2_crossthrust.fbx": {
-    "sha256": "432d5f60504cc8d114ae159978e538340f233c283b0054172290629cc5096731",
-    "bytes": 5012076
+    "sha256": "655a49178a8ae1bbaa505144303ca896ec206adec66ab1d8ab128d9e33503f83",
+    "bytes": 5011388
   },
   "design/survival-theme-a-fantasy/heroes/anim/kaelen/final/KAELEN_attack_dualslash.fbx": {
-    "sha256": "0042da4a251d046deeaec26b6247b1c019c98935d227b1ba69cb43c7799427d0",
-    "bytes": 5024748
+    "sha256": "3bcfeeef6dae95ed3eb1496e6967b968eb77dda7750c5279d77b26af087ef5fa",
+    "bytes": 5024060
   },
   "design/survival-theme-a-fantasy/heroes/anim/kaelen/final/KAELEN_cape.fbx": {
-    "sha256": "6bf3ce68d7e32955d4ce1b17e725be0284798a6ffd54c4b879f679b3bfb0344a",
-    "bytes": 620284
+    "sha256": "f59cef6ff09d705e1bba64e3d4745f0270278f8079beaf9e70b801cb5b2137e1",
+    "bytes": 619612
   },
   "design/survival-theme-a-fantasy/heroes/anim/kaelen/final/KAELEN_idle.fbx": {
-    "sha256": "f81590c07918c414b429861f31c2efdefa32e2e7ae4713b954888eab8c9f3d8a",
-    "bytes": 5346412
+    "sha256": "808914fffd0cd2f0b13c1f1a6f63d58c734be8ff8ab099bb307242abd846536c",
+    "bytes": 5345740
   },
   "design/survival-theme-a-fantasy/heroes/anim/kaelen/final/KAELEN_rig_rest.fbx": {
-    "sha256": "547a19d6994501c5abc0da89ba2e942e60327095a3cdda8bda05db7312c64a98",
-    "bytes": 4833708
+    "sha256": "ad089e53ca93aec1923f0bee679a0ce284dbcd242edde45d51dda520a318e1df",
+    "bytes": 4833020
   },
   "design/survival-theme-a-fantasy/heroes/anim/kaelen/final/KAELEN_walk.fbx": {
-    "sha256": "7f80708ae8d54997e98434af5082d3d1c859a7041b9557afbfa17a892abbc360",
-    "bytes": 4993196
+    "sha256": "4a02aa3a86d03173c6fdd2fee54f2d92e855ee93047dd697fd7322f76bd6dfe0",
+    "bytes": 4992524
   },
   "design/survival-theme-a-fantasy/new_2026-11-03/kaelen/sheets/fix8/KAELEN_FIX8_SHEET.png": {
     "sha256": "2f3264e74c98e6210e232a75d702e6fcb31a8cc84b4da54872d0014622751ead",
@@ -40,8 +40,8 @@
     "bytes": 1824960
   },
   "design/survival-theme-a-fantasy/new_2026-11-03/kaelen/sheets/fix8/README.md": {
-    "sha256": "bb375d7bc288064b4849fb5fe0db2d44204b5b8f06e76f8311025edf57a17c7e",
-    "bytes": 6018
+    "sha256": "f7b62c59d4420ea0e7f55f9f7d07c5ae0a4361218328b6a37a028e3102d69983",
+    "bytes": 6507
   },
   "design/survival-theme-a-fantasy/new_2026-11-03/kaelen/sheets/fix8/clips/KAELEN_FIX8_attack2_crossthrust_front.mp4": {
     "sha256": "5c0cc035ffa5d0bfa264914dea4e7724eef7cf0e34fe7c2f71f804402e36d6ff",
@@ -72,8 +72,8 @@
     "bytes": 203898
   },
   "design/survival-theme-a-fantasy/new_2026-11-03/kaelen/sheets/fix8/metrics/SUMMARY.json": {
-    "sha256": "c0b57483466360f7e5110a0dcbddc711a6e56f063c0790f0adf4296be3d802c8",
-    "bytes": 11319
+    "sha256": "b30dd720a1e34e246bdb94dc8b876746239f8b3d8a3b7e006893de525812b43d",
+    "bytes": 11460
   },
   "design/survival-theme-a-fantasy/new_2026-11-03/kaelen/sheets/fix8/metrics/body_attack2_crossthrust.json": {
     "sha256": "87a52b80ab05df94e8c7a6f314ca2b330512f491d680388cef0adb3b09208eb8",
@@ -114,6 +114,14 @@
   "design/survival-theme-a-fantasy/new_2026-11-03/kaelen/sheets/fix8/metrics/native_bone_integrity.json": {
     "sha256": "eb5c4f74357308473469af6f89a69dc7f5825d1afda0638a667a8f35fdfae9cd",
     "bytes": 154
+  },
+  "design/survival-theme-a-fantasy/new_2026-11-03/kaelen/sheets/fix8/metrics/packed_texture_integrity.json": {
+    "sha256": "4bff69e58ec991232e41577093107421bdbbb524f85aba091e4e753083fb7671",
+    "bytes": 423
+  },
+  "design/survival-theme-a-fantasy/new_2026-11-03/kaelen/sheets/fix8/metrics/portable_fbx_equivalence.json": {
+    "sha256": "8ae0c3e8c886635d6320459025d548c6c8178a2d11f8f83730866d58ea7c5f35",
+    "bytes": 2770
   },
   "design/survival-theme-a-fantasy/new_2026-11-03/kaelen/sheets/fix8/metrics/sword_sweep_attack2_crossthrust.json": {
     "sha256": "aa446b04212f5cc5f8cebcfaf41939b3db4286130db3ded44b5d3e099a47ec22",

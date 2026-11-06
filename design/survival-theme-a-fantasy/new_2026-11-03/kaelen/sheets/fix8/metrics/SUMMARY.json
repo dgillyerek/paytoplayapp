@@ -461,5 +461,7 @@
   "cross_foot_slip_max_cm": 0.049,
   "total_body_frames": 441,
   "total_sword_samples": 3000,
-  "total_fresh_cape_simulated_frames": 619
+  "total_fresh_cape_simulated_frames": 619,
+  "final_portable_export_equivalence": "portable_fbx_equivalence.json",
+  "packed_texture_bytes_unchanged": "packed_texture_integrity.json"
 }

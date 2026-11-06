@@ -49,6 +49,8 @@ These are measured finite-sample checks, not a mathematical proof of every insta
 - `clips/`: six normal-speed front/side MP4s for cross thrust, dual slash and walk, plus a quarter-speed f34–48 left-wrist closeup.
 - `metrics/`: full per-frame body/wrist/grip reports, sword sweep samples, fresh cape results, native skeleton/core channel hashes and video probes. `SUMMARY.json` is the rollup.
 
+The final metadata pass also repairs inherited nested image paths: the authoring file uses `//../final/` paths with packed PNGs, and FBXs use portable texture basenames. All six final FBXs were re-imported with image search disabled; textures resolve from the shipped final folder, and full mesh/skeleton/animation fingerprints match the measured exports exactly. Packed PNG bytes match the unchanged shipped PNGs. See `portable_fbx_equivalence.json` and `packed_texture_integrity.json`.
+
 The previews use geometry-review colors (red swords and blue fresh-sim cape); original texture assets are unchanged. Cameras fit the complete deformed blade paths, not just the body.
 
 ## Authoring / exports
