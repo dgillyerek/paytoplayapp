@@ -288,6 +288,9 @@ else:
     for key, keys in jobs.items():
         assign(key)
         end = clips[key]["frames"][-1]["f"]
+        # Frame 1 is t = 0. Do not emit a frame 0.
+        scene.frame_start = 1
+        scene.frame_end = end
         for f in range(1, end + 1):
             scene.frame_set(f)
             render_frame(cam_front, os.path.join(OUT, f"{key}_front_{f:03d}.png"))

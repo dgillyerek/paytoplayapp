@@ -1,21 +1,13 @@
-# Seraphine FIX5 — hand contact correction, still a draft
+# Seraphine FIX5 — shaft axis correction, still a draft
 
-Branch `cursor/seraphine-fix5-attacks-d044`. Same PR. Not merged. Not Derek-ready. No independent video pass on this export yet.
+Not merged. Not Derek-ready. No claim that the clips pass.
 
-Resumed from the authored samples already in `/tmp/sera_fix5` and the script on this branch. No screenshot checkpoint file was on disk. The solver was not rewritten. One contact change: the left palm is 36 cm toward the butt on the shaft the right hand owns, and the right arm is a two-bone elbow instead of a forearm locked square to the staff.
+The bone +X line through the right-hand origin is parallel to the handle and 9.85 cm beside it. The left palm was being aimed at that line, so it never met the mesh. The handle is now fitted in the right-hand frame (14,406 verts, direction almost -X). The right hand is not moved off its bind: the staff stays skinned to it. The left palm center is placed on the fitted axis, 36 cm toward the butt, 2 cm off the centerline so it rests on the shaft instead of inside it.
 
-## What that does
+On this export the palm-center distance to that axis is 5.0 cm at thrust frame 14 and 1.7 cm at frame 24. Frame 24 is on the shaft. Frame 14 is still short of it. The open fingers are the bind pose; there are no finger bones.
 
-Thrust, 52 frames. From frame 8 through 42 the left palm stays on that line. Measured distance from the left hand to the shaft axis in that span is 0 to 4.6 cm. At frame 14 it is 3.5 cm and the wrist is 23°. At frame 24 it is on the axis and the wrist is 28°. The largest right-wrist angle in the thrust is 31°. The throw's largest is 53°. Neither crosses 70°, and the close-ups at those frames do not show the hand flipped back on itself. Fingers have no bones, so the palms do not wrap.
+Upper-arm steps are smaller than the 148° and 179° flips in d4edd793. Throw frame 27 is 72° and frame 33 is 78°. Those are still fast. The twist is carried forward from the previous frame instead of being rebuilt from a world hint each frame.
 
-Hips are not held at one height. At the thrust load the hip is about 10 cm under the idle height, which is the knee bend. Horizontal hip position stays on the idle mark, which is what HoldHips pins. The chest turns the right shoulder forward by frame 14 so the shaft sits in front of the armor.
+Throw windup is held higher and steeper so the shaft is not laid through the wing. The hip-clearance lift around the release is still in the pose. Feet still step and return. Rest skeleton was not edited.
 
-Floor test is every staff vertex, collar included, on a fresh FBX import. Thrust low point 46 cm. Throw low point 47 cm. No vertex under 1 cm. The blend playback and the FBX reload agree on that.
-
-## Still wrong
-
-Throw frame 28: the staff surface is 0.2 mm from a wing and touching the body. That is the shaft at the shoulder as the cock turns forward, not a floor hit. The side still shows the shaft in front of the torso. It is not a clean wing clearance.
-
-The thrust forearm is still close to the armor on some frames. The cape is the original mesh. 24 bones, bind matches the rest rig. No Unity playback.
-
-This is not a visual pass.
+Frame 1 of each clip is t = 0. Proof is front and side at full speed and at quarter speed, plus the hand close-ups at quarter speed, and a strip of frames 23–34.
