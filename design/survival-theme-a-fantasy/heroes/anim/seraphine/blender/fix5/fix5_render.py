@@ -38,7 +38,7 @@ scene.render.resolution_y = 720
 scene.render.resolution_percentage = 100
 scene.render.image_settings.file_format = "PNG"
 scene.render.film_transparent = False
-scene.display.shading.background_color = (0.16, 0.18, 0.22)
+scene.display.shading.background_color = (0.78, 0.79, 0.80)
 
 IMPORT = dict(
     global_scale=1.0,
@@ -75,10 +75,10 @@ rig = next(o for o in rest_objs if o.type == "ARMATURE")
 body = next(o for o in rest_objs if o.type == "MESH" and "spear" not in o.name.lower() and "wing" not in o.name.lower())
 spear = next(o for o in rest_objs if o.type == "MESH" and "spear" in o.name.lower())
 wings = [o for o in rest_objs if o.type == "MESH" and "wing" in o.name.lower()]
-paint(body, (0.93, 0.93, 0.93, 1))
-paint(spear, (0.15, 0.15, 0.15, 1))
+paint(body, (0.97, 0.97, 0.96, 1))
+paint(spear, (0.08, 0.08, 0.08, 1))
 for w in wings:
-    paint(w, (0.78, 0.80, 0.82, 1))
+    paint(w, (0.94, 0.95, 0.96, 1))
 
 # bind snapshot before any clip
 bind = {b.name: [round(x, 6) for row in b.matrix_local for x in row] for b in rig.data.bones}
@@ -89,7 +89,7 @@ cape_objs = do_import(os.path.join(ART, "SERAPHINE_cape.fbx"))
 print("CAPE", [(o.name, o.type) for o in cape_objs])
 cape_rig = next(o for o in cape_objs if o.type == "ARMATURE")
 cape_mesh = next(o for o in cape_objs if o.type == "MESH")
-paint(cape_mesh, (0.25, 0.32, 0.55, 1))
+paint(cape_mesh, (0.55, 0.62, 0.78, 1))
 # Same attach as the blend: cape rig child-of body Spine2, identity.
 cape_rig.constraints.clear()
 con = cape_rig.constraints.new("CHILD_OF")
@@ -111,11 +111,11 @@ for ix in range(-4, 4):
         tile = bpy.context.active_object
         tile.name = f"tile_{ix}_{iy}"
         if iy in (-1, 0) and ix in (-1, 0):
-            paint(tile, (0.85, 0.85, 0.88, 1))
+            paint(tile, (0.15, 0.15, 0.16, 1))
         elif (ix + iy) % 2 == 0:
-            paint(tile, (0.45, 0.46, 0.48, 1))
+            paint(tile, (0.42, 0.43, 0.45, 1))
         else:
-            paint(tile, (0.62, 0.63, 0.65, 1))
+            paint(tile, (0.58, 0.59, 0.61, 1))
 
 ORTHO = 3.35  # constant for every full-body view
 CENTER = Vector((0.0, -0.05, 1.12))
@@ -142,6 +142,7 @@ def make_cam(name, loc, scale):
 
 cam_front = make_cam("cam_front34", (1.85, -2.55, 1.25), ORTHO)
 cam_side = make_cam("cam_side", (-3.15, 0.0, 1.18), ORTHO)
+cam_straight = make_cam("cam_straight", (0.0, -3.6, 1.20), ORTHO)
 # Preview lens is 54°. The battle camera sits on a three-quarter at pitch 30.
 # Framed on Seraphine alone, from her front-right, high enough to keep feet and the
 # upright staff in frame. The camera does not move. Hips stay where HoldHips pins them.
@@ -265,18 +266,20 @@ def assign(key):
 
 
 if MODE == "stills":
+    # 0.55 s is frame 17 at 30 fps with frame 1 at t = 0. Three views: straight
+    # front, strict side, front three-quarter. White body, dark staff, floor grid.
     assign("thrust")
-    for f in (12, 18, 22, 26, 32, 36):
+    for f in (8, 12, 17, 22, 28, 36, 46):
         scene.frame_set(f)
-        render_frame(cam_front, os.path.join(OUT, f"still_thrust_f{f:02d}_front.png"))
+        render_frame(cam_straight, os.path.join(OUT, f"still_thrust_f{f:02d}_straight.png"))
         render_frame(cam_side, os.path.join(OUT, f"still_thrust_f{f:02d}_side.png"))
-        render_frame(cam_preview, os.path.join(OUT, f"still_thrust_f{f:02d}_preview.png"))
+        render_frame(cam_front, os.path.join(OUT, f"still_thrust_f{f:02d}_front.png"))
     assign("throw")
-    for f in (10, 14, 18, 24, 32, 40):
+    for f in (12, 16, 22, 28, 34, 42, 52):
         scene.frame_set(f)
-        render_frame(cam_front, os.path.join(OUT, f"still_throw_f{f:02d}_front.png"))
+        render_frame(cam_straight, os.path.join(OUT, f"still_throw_f{f:02d}_straight.png"))
         render_frame(cam_side, os.path.join(OUT, f"still_throw_f{f:02d}_side.png"))
-        render_frame(cam_preview, os.path.join(OUT, f"still_throw_f{f:02d}_preview.png"))
+        render_frame(cam_front, os.path.join(OUT, f"still_throw_f{f:02d}_front.png"))
 else:
     jobs = {
         "thrust": [1, 8, 12, 15, 17, 20, 23, 28, 34, 40],

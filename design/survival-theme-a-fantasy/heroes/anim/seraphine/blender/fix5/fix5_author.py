@@ -281,33 +281,33 @@ def thrust_params(f):
     # Yaw stays small while both feet are still under her (f8-9 was a thigh cross).
     # The big turn happens after the lead foot has stepped out.
     hip_v = Track([
-        (1, 0), (8, 6), (14, 10), (18, 32), (22, -8), (26, -4), (36, 0), (45, 0),
+        (1, 0), (8, 6), (14, 10), (18, 32), (22, -8), (26, -4), (36, 0), (52, 0),
     ], [smooth, smooth, smooth, ease_in, ease_out, smooth, smooth]).at(f)
     # Chest comes through after the hips and turns the right shoulder forward,
     # which lays the shaft across the front of the armor for the left palm.
     sh_v = Track([
-        (1, 0), (8, 2), (18, 6), (22, -10), (26, -18), (36, -4), (45, 0),
+        (1, 0), (8, 2), (18, 6), (22, -10), (26, -18), (36, -4), (52, 0),
     ], [smooth, smooth, smooth, snap, ease_out, smooth]).at(f)
     hip_pitch = Track([
-        (1, 0), (8, 6), (18, 8), (22, 10), (26, 22), (30, 10), (40, 2), (45, 0),
+        (1, 0), (8, 6), (18, 8), (22, 10), (26, 22), (30, 10), (40, 2), (52, 0),
     ], [smooth, smooth, smooth, snap, ease_out, smooth, smooth]).at(f)
     chest_pitch = Track([
-        (1, 0), (18, 4), (26, 12), (32, 4), (45, 0),
+        (1, 0), (18, 4), (26, 12), (32, 4), (52, 0),
     ]).at(f)
     hip_roll = Track([
-        (1, 0), (8, 6), (18, 4), (26, 0), (45, 0),
+        (1, 0), (8, 6), (18, 4), (26, 0), (52, 0),
     ]).at(f)
     lift = Track([
-        (1, 0), (16, 8), (22, 12), (26, 14), (34, 4), (45, 0),
+        (1, 0), (16, 8), (22, 12), (26, 14), (34, 4), (52, 0),
     ]).at(f)
     nod = Track([
-        (1, 0), (8, 4), (26, -3), (45, 0),
+        (1, 0), (8, 4), (26, -3), (52, 0),
     ]).at(f)  # + chin down
     head_yaw = Track([
-        (1, 0), (18, 3), (26, -2), (45, 0),
+        (1, 0), (18, 3), (26, -2), (52, 0),
     ]).at(f)
     hip_drop = Track([
-        (1, 0), (8, 0.05), (18, 0.10), (26, 0.04), (30, 0.07), (40, 0.02), (45, 0),
+        (1, 0), (8, 0.05), (18, 0.10), (26, 0.04), (30, 0.07), (40, 0.02), (52, 0),
     ]).at(f)
     # Right hand, offsets from idle until the line is set, then absolute-ish.
     hand = VecTrack([
@@ -318,7 +318,7 @@ def thrust_params(f):
         (26, Vector((-0.08, -0.38, 1.26))),   # skinned grip, forward and up; left palm is lower on the shaft
         (30, Vector((-0.14, -0.28, 1.18))),
         (40, IDLE_RH + Vector((-0.02, 0.0, 0.02))),
-        (45, IDLE_RH),
+        (52, IDLE_RH),
     ], [smooth, smooth, smooth, snap, ease_out, smooth, smooth]).at(f)
     staff = DirTrack([
         (1, UP),
@@ -326,12 +326,12 @@ def thrust_params(f):
         (18, THRUST_LINE),
         (30, THRUST_LINE),
         (38, Vector((0.02, -0.06, 1.0))),
-        (45, UP),
+        (52, UP),
     ], [smooth, smooth, linear, smooth, smooth]).at(f)
     # Left arm is a counterbalance on HER left. It never reaches across to the staff.
     # Seated from f8 through f36. The on and off ramps are 7 frames, not a hole in the middle.
     guide = Track([
-        (1, 0), (8, 1), (36, 1), (45, 0),
+        (1, 0), (8, 1), (36, 1), (52, 0),
     ], [smooth, linear, smooth]).at(f)
     return dict(hip_v=hip_v, sh_v=sh_v, hip_pitch=hip_pitch, chest_pitch=chest_pitch,
                 hip_roll=hip_roll, lift=lift, nod=nod, head_yaw=head_yaw,
@@ -340,31 +340,31 @@ def thrust_params(f):
 
 def throw_params(f):
     hip_v = Track([
-        (1, 0), (8, 16), (14, 32), (18, -6), (24, -8), (32, 0), (48, 0),
+        (1, 0), (12, 14), (20, 26), (28, -4), (36, -2), (46, 0), (54, 0),
     ], [smooth, smooth, ease_in, smooth, smooth, smooth]).at(f)
     sh_v = Track([
-        (1, 0), (8, 5), (14, 10), (18, 14), (22, 2), (24, -12), (30, -4), (40, 0), (48, 0),
-    ], [smooth, smooth, smooth, ease_in, snap, ease_out, smooth, smooth]).at(f)
+        (1, 0), (12, 6), (20, 12), (26, 8), (32, -8), (40, -2), (48, 0), (54, 0),
+    ], [smooth, smooth, smooth, ease_in, ease_out, smooth, smooth]).at(f)
     hip_pitch = Track([
-        (1, 0), (8, 6), (14, 8), (24, 16), (30, 22), (40, 4), (48, 0),
+        (1, 0), (8, 6), (14, 8), (24, 16), (30, 22), (40, 4), (54, 0),
     ]).at(f)
     chest_pitch = Track([
-        (1, 0), (14, 4), (24, 10), (30, 16), (48, 0),
+        (1, 0), (14, 4), (24, 10), (30, 16), (54, 0),
     ]).at(f)
     hip_roll = Track([
-        (1, 0), (8, 8), (14, 4), (24, -2), (48, 0),
+        (1, 0), (8, 8), (14, 4), (24, -2), (54, 0),
     ]).at(f)
     lift = Track([
-        (1, 0), (10, 12), (14, 26), (22, 24), (30, 8), (42, 0), (48, 0),
+        (1, 0), (10, 12), (14, 26), (22, 24), (30, 8), (42, 0), (54, 0),
     ]).at(f)
     nod = Track([
-        (1, 0), (14, -6), (24, 2), (48, 0),
+        (1, 0), (14, -6), (24, 2), (54, 0),
     ]).at(f)  # chin up slightly as the staff rises
     head_yaw = Track([
-        (1, 0), (14, 5), (24, -2), (48, 0),
+        (1, 0), (14, 5), (24, -2), (54, 0),
     ]).at(f)
     hip_drop = Track([
-        (1, 0), (8, 0.06), (14, 0.13), (18, 0.11), (24, 0.06), (32, 0.04), (48, 0),
+        (1, 0), (8, 0.06), (14, 0.13), (18, 0.11), (24, 0.06), (32, 0.04), (54, 0),
     ]).at(f)
     hand = VecTrack([
         (1, IDLE_RH),
@@ -375,7 +375,7 @@ def throw_params(f):
         (24, Vector((-0.36, -0.42, 1.22))),   # release, forward, still on her right
         (30, Vector((-0.42, -0.16, 1.16))),   # recovery stays on the right, clear of the left wing
         (36, IDLE_RH + Vector((-0.04, -0.02, 0.06))),
-        (48, IDLE_RH),
+        (54, IDLE_RH),
     ], [smooth, smooth, linear, ease_in, snap, ease_out, smooth, smooth]).at(f)
     staff = DirTrack([
         (1, UP),
@@ -386,11 +386,11 @@ def throw_params(f):
         (24, RELEASE),
         (28, FOLLOW),
         (36, Vector((-0.20, -0.06, 1.0))),
-        (48, UP),
+        (54, UP),
     ], [smooth, smooth, linear, ease_in, snap, ease_out, smooth, smooth]).at(f)
     # Left arm balance: 0 = idle, 1 = reaching forward, then pulls in.
     guide = Track([
-        (1, 0), (8, 0.3), (14, 1), (24, 1), (32, 0.2), (42, 0), (48, 0),
+        (1, 0), (8, 0.3), (14, 1), (24, 1), (32, 0.2), (42, 0), (54, 0),
     ]).at(f)
     return dict(hip_v=hip_v, sh_v=sh_v, hip_pitch=hip_pitch, chest_pitch=chest_pitch,
                 hip_roll=hip_roll, lift=lift, nod=nod, head_yaw=head_yaw,
@@ -551,47 +551,47 @@ print(f"left palm axis {LEFT_PALM_AXIS} sign {LEFT_PALM_SIGN:.0f} inward-dot {_b
 def thrust_left_phases():
     x0, y0 = IDLE_LF.x, IDLE_LF.y
     return [
-        ("plant", 1, 7, x0, y0, 0, 0),
-        ("heel", 7, 10, x0, y0, 0, 0, 0, 22),
-        ("air", 10, 12, 15, 18, x0, y0, 0.12, -0.30, 0.16, 0, 6),
-        ("plant", 18, 30, 0.12, -0.30, 6, 4),
-        ("air", 30, 32, 35, 38, 0.12, -0.30, x0, y0, 0.16, 4, 0),
-        ("plant", 38, 45, x0, y0, 0, 0),
+        ("plant", 1, 8, x0, y0, 0, 0),
+        ("heel", 8, 12, x0, y0, 0, 0, 0, 22),
+        ("air", 12, 14, 18, 22, x0, y0, 0.12, -0.32, 0.17, 0, 6),
+        ("plant", 22, 36, 0.12, -0.32, 6, 4),
+        ("air", 36, 38, 42, 46, 0.12, -0.32, x0, y0, 0.17, 4, 0),
+        ("plant", 46, 52, x0, y0, 0, 0),
     ]
 
 
 def thrust_right_phases():
     x0, y0 = IDLE_RF.x, IDLE_RF.y
     return [
-        ("plant", 1, 16, x0, y0, 0, 0),
-        ("heel", 16, 22, x0, y0, 0, 32, 0, 28),   # toe planted, heel up, foot pivots with the hips
-        ("heel", 22, 28, x0, y0, 32, 0, 28, 0),
-        ("plant", 28, 45, x0, y0, 0, 0),
+        ("plant", 1, 18, x0, y0, 0, 0),
+        ("heel", 18, 26, x0, y0, 0, 28, 0, 26),   # toe planted, heel up, foot pivots with the hips
+        ("heel", 26, 34, x0, y0, 28, 0, 26, 0),
+        ("plant", 34, 52, x0, y0, 0, 0),
     ]
 
 
 def throw_left_phases():
     x0, y0 = IDLE_LF.x, IDLE_LF.y
     return [
-        ("plant", 1, 6, x0, y0, 0, 0),
-        ("heel", 6, 8, x0, y0, 0, 0, 0, 18),
-        ("air", 8, 10, 13, 15, x0, y0, 0.14, -0.34, 0.16, 0, 4),
-        ("plant", 15, 30, 0.14, -0.34, 4, 2),
-        ("air", 30, 32, 35, 38, 0.14, -0.34, x0, y0, 0.16, 2, 0),
-        ("plant", 38, 46, x0, y0, 0, 0),
+        ("plant", 1, 8, x0, y0, 0, 0),
+        ("heel", 8, 11, x0, y0, 0, 0, 0, 18),
+        ("air", 11, 13, 17, 20, x0, y0, 0.14, -0.34, 0.17, 0, 4),
+        ("plant", 20, 38, 0.14, -0.34, 4, 2),
+        ("air", 38, 40, 44, 48, 0.14, -0.34, x0, y0, 0.17, 2, 0),
+        ("plant", 48, 54, x0, y0, 0, 0),
     ]
 
 
 def throw_right_phases():
     x0, y0 = IDLE_RF.x, IDLE_RF.y
-    # Short recovery step, then a held idle plant so the clip ends on the start mark.
+    # Recovery step after the release, then a held idle plant on the start mark.
     return [
-        ("plant", 1, 16, x0, y0, 0, 0),
-        ("heel", 16, 20, x0, y0, 0, 16, 0, 20),
-        ("air", 20, 22, 25, 28, x0, y0, -0.06, -0.14, 0.16, 16, 4),
-        ("plant", 28, 32, -0.06, -0.14, 4, 2),
-        ("air", 32, 34, 37, 40, -0.06, -0.14, x0, y0, 0.16, 2, 0),
-        ("plant", 40, 46, x0, y0, 0, 0),
+        ("plant", 1, 22, x0, y0, 0, 0),
+        ("heel", 22, 28, x0, y0, 0, 16, 0, 20),
+        ("air", 28, 30, 34, 38, x0, y0, -0.06, -0.14, 0.17, 16, 4),
+        ("plant", 38, 44, -0.06, -0.14, 4, 2),
+        ("air", 44, 46, 49, 52, -0.06, -0.14, x0, y0, 0.17, 2, 0),
+        ("plant", 52, 54, x0, y0, 0, 0),
     ]
 
 
@@ -906,54 +906,67 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
     l_sh = arm.matrix_world @ arm.pose.bones[P + "LeftArm"].head
     g = max(0.0, min(1.0, params["guide"]))
     if params["throw"]:
-        # Lift the hand out to her right first, staff still upright, then tilt.
-        # Tilting while the hand is still beside the ribs sweeps the butt
-        # through the body. The cock stays above the shoulder, outboard of the
-        # wing. The release stays steep so the butt drops in front of the cape.
-        # Tip over her right shoulder (back and outboard) then forward on the release.
-        # Outboard keeps the shaft off the wing; steep keeps the butt off the floor.
-        cock = Vector((-0.46, 0.30, 0.84)).normalized()
-        release = Vector((-0.12, -0.52, 0.85)).normalized()
-        cock_hand = Vector((-0.58, -0.06, 1.48))
-        release_hand = Vector((-0.34, -0.46, 1.44))
-        if frame <= 12:
-            u = smooth(max(0.0, min(1.0, (frame - 1) / 11.0)))
-            staff_dir = UP.copy()
-            wrist_target = IDLE_RH.lerp(cock_hand, u)
-        elif frame <= 18:
-            u = smooth((frame - 12) / 6.0)
+        # Motion target: the hand travels up and BEHIND the right shoulder,
+        # staff tilted up-and-back but outboard so the long head misses the
+        # wing. Wrist stays the straight across-the-palm grip. Release is a
+        # smooth forward turn, not a two-frame snap. Recovery stays on her
+        # right and comes down in front of the wing, then to the idle hold.
+        cock = Vector((-0.42, 0.36, 0.84)).normalized()
+        release = Vector((-0.08, -0.38, 0.92)).normalized()
+        # From the posed right shoulder: out to her right, behind the joint, and up.
+        # A world-space point further back is outside the arm and the solver
+        # was dragging the hand forward, which erased the lay-back.
+        cock_hand = r_sh + Vector((-0.30, 0.14, 0.18))
+        release_hand = r_sh + Vector((-0.10, -0.28, 0.16))
+        recover_hand = r_sh + Vector((-0.22, -0.06, 0.02))
+        if frame <= 16:
+            u = smooth((frame - 1) / 15.0)
             staff_dir = slerp_dir(UP, cock, u)
+            wrist_target = IDLE_RH.lerp(cock_hand, u)
+        elif frame <= 24:
+            staff_dir = cock.copy()
             wrist_target = cock_hand.copy()
-        elif frame <= 26:
-            u = smooth((frame - 18) / 8.0)
+        elif frame <= 34:
+            u = smooth((frame - 24) / 10.0)
             staff_dir = slerp_dir(cock, release, u)
             wrist_target = cock_hand.lerp(release_hand, u)
-        else:
-            u = smooth(min(1.0, (frame - 26) / 12.0))
+        elif frame <= 46:
+            u = smooth((frame - 34) / 12.0)
             staff_dir = slerp_dir(release, UP, u)
-            wrist_target = release_hand.lerp(IDLE_RH, u)
-        elbow_hint = Vector((-0.70, -0.05, 0.45)) if frame < 22 else Vector((-0.40, -0.45, 0.10))
+            wrist_target = release_hand.lerp(recover_hand, u)
+        else:
+            u = smooth(min(1.0, (frame - 46) / 8.0))
+            staff_dir = UP.copy()
+            wrist_target = recover_hand.lerp(IDLE_RH, u)
+        elbow_hint = Vector((-0.80, 0.20, 0.30)) if frame < 30 else Vector((-0.45, -0.20, 0.05))
         grip_u = 0.0
     else:
-        # Tip forward and up, a little to her right of the face. The rear grip
-        # sits near the center so the left palm can reach the shaft.
-        D = Vector((-0.14, -0.50, 0.85)).normalized()
-        rear = Vector((-0.22, -0.40, 1.22))
+        # Motion target: one shaft. Right palm is the upper grip. Left palm is
+        # 22 cm toward the butt, fixed from frame 8 through the drive and the
+        # recovery (frame 42). The pair translates together. The line is steep
+        # and forward so the butt stays in front of the hip.
+        D_LINE = Vector((0.0, -0.16, 0.99)).normalized()
         if frame <= 8:
-            grip_u = smooth(max(0.0, (frame - 1) / 7.0))
+            grip_u = smooth((frame - 1) / 7.0)
             drive = 0.0
-        elif frame <= 22:
+        elif frame <= 20:
             grip_u = 1.0
-            drive = smooth((frame - 8) / 10.0) * 0.06
-        elif frame <= 30:
+            drive = smooth((frame - 8) / 12.0) * 0.05
+        elif frame <= 32:
             grip_u = 1.0
-            drive = 0.06 * max(0.0, 1.0 - (frame - 22) / 8.0)
+            drive = 0.05 + smooth((frame - 20) / 12.0) * 0.10
+        elif frame <= 42:
+            grip_u = 1.0
+            drive = 0.15 * (1.0 - smooth((frame - 32) / 10.0))
         else:
-            grip_u = max(0.0, 1.0 - (frame - 30) / 8.0)
+            grip_u = max(0.0, 1.0 - smooth(min(1.0, (frame - 42) / 10.0)))
             drive = 0.0
-        staff_dir = slerp_dir(UP, D, grip_u)
-        wrist_target = IDLE_RH.lerp(rear + Vector((0.0, -drive, drive * 0.05)), grip_u)
-        elbow_hint = Vector((-0.45, -0.20, -0.35))
+        # Upper grip in front of the chest. The lower palm is 22 cm down the
+        # same line, so it stays forward of the breastplate instead of in it.
+        rear_pose = Vector((0.08, -0.38, 1.26)) + Vector((0.0, -drive, drive * 0.04))
+        staff_dir = slerp_dir(UP, D_LINE, grip_u)
+        wrist_target = IDLE_RH.lerp(rear_pose, grip_u)
+        elbow_hint = Vector((-0.35, -0.30, -0.35))
 
     deps = bpy.context.evaluated_depsgraph_get()
 
@@ -1036,8 +1049,12 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
         if gap > 0.025:
             elbow = r_sh + (elbow - r_sh).normalized() * max(0.05, R_UP - 0.008)
             wrist = elbow + fore * R_FORE
+        if params["throw"] and 12 <= frame <= 26:
+            # Do not let the elbow correction drag the cock back in front of the shoulder.
+            wrist.y = max(wrist.y, r_sh.y + 0.08)
+            wrist.x = min(wrist.x, r_sh.x - 0.16)
         hand_R = orient_hand(fore, sdir)
-        seat = wrist + sdir * 0.16
+        seat = wrist - sdir * 0.22
         extra = [seat] if not params["throw"] else []
         c, hit = clearance(wrist, hand_R, extra)
         reach_l = L_UP + L_FORE - 0.02
@@ -1056,18 +1073,22 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
             f"{' left' if left_short else ''}{where}"
         )
         if left_short and mesh_ok:
-            # The shaft is clear but the left palm cannot reach it.
-            wrist_target = wrist + (l_sh - wrist).normalized() * 0.045 + Vector((0.0, -0.01, 0.015))
+            # Move the whole shaft toward the left hand. Spacing stays 22 cm.
+            wrist_target = wrist + (l_sh - wrist).normalized() * 0.04 + Vector((0.0, -0.02, 0.0))
+        elif params["throw"] and 12 <= frame <= 32:
+            # Keep the lay-back. Clear the wing by going further out and up.
+            staff_dir = slerp_dir(sdir, Vector((sdir.x - 0.25, max(0.18, sdir.y), 1.05)), 0.40)
+            wrist_target = wrist + Vector((-0.025, 0.02, 0.02))
         else:
-            staff_dir = slerp_dir(sdir, Vector((min(sdir.x, 0.0) - 0.08, min(sdir.y, 0.0) * 0.4, 1.0)), 0.45)
+            staff_dir = slerp_dir(sdir, Vector((min(sdir.x, 0.0) - 0.05, sdir.y * 0.6, 1.0)), 0.4)
             if hit is not None and hit[0] < 0.04:
                 away = wrist - hit[1]
                 if away.length > 1e-4:
-                    wrist_target = wrist + away.normalized() * 0.04 + Vector((0.0, -0.01, 0.02))
+                    wrist_target = wrist + away.normalized() * 0.04 + Vector((0.0, -0.02, 0.02))
                 else:
                     wrist_target = wrist + Vector((0.0, -0.04, 0.04))
             else:
-                wrist_target = wrist + Vector((-0.015, -0.03, 0.03))
+                wrist_target = wrist + Vector((0.0, -0.03, 0.03))
 
     wrist_target, staff_dir, fore_y, elbow, hand_R, _c, _ok, _twist = solved
     set_world_keep_loc(arm.pose.bones[P + "RightArm"], mat_y(elbow - r_sh, elbow_hint), r_sh)
@@ -1087,54 +1108,43 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
     staff_dir_now = (arm.matrix_world @ arm.pose.bones[P + "RightHand"].matrix).col[0].xyz.normalized()
     wrist_ang = math.degrees(hand_R.col[1].xyz.normalized().angle(fy))
 
-    # Left hand. Thrust: a second palm on the same shaft, 24 cm toward the tip,
-    # slid along the line until the left arm can reach it. Throw: counterbalance
-    # wide on her left, never across the face and never down onto the thigh.
-    approach = Vector((0.34, -0.28, 1.08))
+    # Left hand. Thrust: the point 22 cm toward the tip on the SAME shaft the
+    # right hand just posed. It is not a guard and it is not retargeted for
+    # four frames. Throw: counterbalance wide on her left, in front, never
+    # across the face and never into the right wing.
     if params["throw"]:
-        wide = Vector((0.42, -0.32, 0.98))
-        if frame < 12:
-            tgt = IDLE_LH.lerp(wide, frame / 12.0)
-        elif frame < 30:
+        wide = Vector((0.40, -0.34, 0.98))
+        if frame <= 16:
+            tgt = IDLE_LH.lerp(wide, smooth(frame / 16.0))
+        elif frame <= 40:
             tgt = wide
         else:
-            tgt = wide.lerp(IDLE_LH, min(1.0, (frame - 30) / 12.0))
+            tgt = wide.lerp(IDLE_LH, smooth(min(1.0, (frame - 40) / 12.0)))
         palm_at = None
     else:
-        best_t = None
-        reach_l = L_UP + L_FORE - 0.02
-        head_p = arm.matrix_world @ arm.pose.bones[P + "Head"].head
-        # Chest-height station, in front of the sternum. Skip points that
-        # climb into the braid.
-        # Lower station, toward the butt. A point toward the rising tip
-        # puts the left forearm across the braid.
-        for t in (0.12, 0.18, 0.08, -0.08):
-            p = wrist_h + staff_dir_now * t
-            if (p - l_sh).length > reach_l:
-                continue
-            if p.z > 1.28 or (p - head_p).length < 0.28:
-                continue
-            best_t = t
-            break
-        onto = Vector((0.25, -0.90, 0.15)).normalized()
-        if best_t is None:
-            seat = Vector((0.12, -0.36, 1.16))
-            onto = None
-        else:
-            seat = wrist_h + staff_dir_now * best_t + onto * 0.03
-        if grip_u <= 0.05:
+        onto = Vector((0.20, -0.95, 0.05)).normalized()
+        # Lower station, toward the butt. Twenty-two cm up the steep shaft
+        # puts this palm in the braid. Down the shaft it stays at the chest.
+        on_shaft = wrist_h - staff_dir_now * 0.22
+        via = Vector((0.30, -0.42, 1.02))
+        if grip_u <= 0.02:
             tgt = IDLE_LH.copy()
             palm_at = None
-        elif grip_u < 1.0:
-            tgt = IDLE_LH.lerp(seat, grip_u)
-            palm_at = None if onto is None else -onto
+        elif grip_u < 0.45:
+            tgt = IDLE_LH.lerp(via, grip_u / 0.45)
+            palm_at = -onto
+        elif grip_u < 0.85:
+            tgt = via.lerp(on_shaft, (grip_u - 0.45) / 0.40)
+            palm_at = -onto
         else:
-            tgt = seat
-            palm_at = None if onto is None else -onto
+            tgt = on_shaft
+            palm_at = -onto
     if (tgt - IDLE_LH).length > 0.02:
-        if (tgt - l_sh).length > L_UP + L_FORE - 0.02:
+        # Thrust keeps the palm on the shaft even if the arm is straight.
+        # Throw may shorten a counterbalance that is past the arm.
+        if params["throw"] and (tgt - l_sh).length > L_UP + L_FORE - 0.02:
             tgt = l_sh + (tgt - l_sh).normalized() * (L_UP + L_FORE - 0.02)
-        pole_l = Vector((0.30, -0.48, 1.10))
+        pole_l = Vector((0.42, -0.58, 0.92))
         elbow_l, tgt_used, _ = ik_two(l_sh, tgt, pole_l, L_UP, L_FORE)
         set_world_keep_loc(arm.pose.bones[P + "LeftArm"], mat_y(elbow_l - l_sh, pole_l - l_sh), l_sh)
         bpy.context.view_layer.update()
@@ -1243,7 +1253,10 @@ def build(name, nframes, param_fn, lfoot, rfoot):
             info = pose_character(params, f, lfoot, rfoot, warnings)
         key_everything(f, prev)
         rh = arm.matrix_world @ arm.pose.bones[P + "RightHand"].head
+        lh = arm.matrix_world @ arm.pose.bones[P + "LeftHand"].head
         staff_dir = (arm.matrix_world @ arm.pose.bones[P + "RightHand"].matrix).col[0].xyz.normalized()
+        along = (lh - rh).dot(staff_dir)
+        radial = (lh - (rh + staff_dir * along)).length
         hip_e = arm.pose.bones[P + "Hips"].matrix_basis.to_euler("XYZ")
         rows.append({
             "f": f,
@@ -1259,6 +1272,7 @@ def build(name, nframes, param_fn, lfoot, rfoot):
             "staff_dir": [round(c, 3) for c in staff_dir],
             "staff_elev_deg": round(math.degrees(math.asin(max(-1, min(1, staff_dir.z)))), 1),
             "wrist_ang": round(info["wrist_ang"], 1),
+            "l_on_shaft_cm": round(radial * 100, 2),
         })
     linearize(act)
     # NLA
@@ -1488,13 +1502,33 @@ def audit_mesh(name, nframes):
     return hits
 
 
-thrust_rows, thrust_warn = build("attack_thrust", 45, thrust_params, thrust_left_phases(), thrust_right_phases())
-throw_rows, throw_warn = build("attack_throw", 46, throw_params, throw_left_phases(), throw_right_phases())
+thrust_rows, thrust_warn = build("attack_thrust", 52, thrust_params, thrust_left_phases(), thrust_right_phases())
+throw_rows, throw_warn = build("attack_throw", 54, throw_params, throw_left_phases(), throw_right_phases())
+
+
+def _both_air(rows, tag):
+    """Ankles both clearly up at once. A heel-up keeps the toe down, so it is not counted."""
+    bad = []
+    for r in rows:
+        # Air phases store a raised ankle. Heel-up also raises the ankle, so this
+        # only flags a large lift on BOTH feet, which a heel pivot does not do.
+        if r["l_foot"][2] > 0.28 and r["r_foot"][2] > 0.30:
+            bad.append(r["f"])
+    print(tag, "both-feet-high frames", bad)
+
+
+_both_air(thrust_rows, "thrust")
+_both_air(throw_rows, "throw")
+for tag, rows in (("thrust", thrust_rows), ("throw", throw_rows)):
+    seated = [r for r in rows if 8 <= r["f"] <= (42 if tag == "thrust" else 0)]
+    if tag == "thrust":
+        worst = max(seated, key=lambda r: r["l_on_shaft_cm"])
+        print(f"thrust left-to-shaft cm during seated grip: max {worst['l_on_shaft_cm']} at f{worst['f']}")
 print("\n=== mesh audit thrust ===")
-thrust_hits = audit_mesh("attack_thrust", 45)
+thrust_hits = audit_mesh("attack_thrust", 52)
 print("thrust bad frames", len(thrust_hits))
 print("\n=== mesh audit throw ===")
-throw_hits = audit_mesh("attack_throw", 46)
+throw_hits = audit_mesh("attack_throw", 54)
 print("throw bad frames", len(throw_hits))
 
 # Put idle back so opening the file is the rest/idle state the README describes.
