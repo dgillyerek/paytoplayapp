@@ -1,37 +1,44 @@
-# Seraphine FIX5 — palm saddle on the fitted shaft, still a draft
+# Seraphine FIX5 — shaft moved back out of the body, still a draft
 
 Not merged. Not Derek-ready. No claim that the clips pass.
 
-## What changed in this pass
+`37c62d0` put the palm on the staff by pulling the whole weapon toward the left shoulder. That cleared the hand gap and the double-float, and it drove the shaft through the torso, the hair, and the right leg. This pass takes that pull out.
 
-The left target is no longer the whole-hand centroid and no longer the bone-X line. Eight vertices at the middle of the palm face (finger-base band, sternum side of the centroid) are averaged in the left-hand bone frame. That saddle is placed 2.4 cm off the fitted handle axis, 36 cm toward the butt, on every thrust frame where the grip is on. The right hand is not moved off its bind. The staff stays skinned to it.
+The thrust shaft now sits in front of the shoulder line and moves with the chest. It is not walked into the sternum. The left palm stays on that same handle. Where 36 cm toward the butt is outside the arm, the palm slides toward the right hand along the shaft, down to about 12 cm. The shaft itself is not moved to buy the spacing.
 
-The station was out of the left arm (about 49 cm against a 44 cm reach), so the hand stopped short and the palm floated. The thrust line is now forward and up, and the whole shaft is shifted toward the left shoulder until that 36 cm station is inside the arm. The spacing is not shortened to fake a reach.
+The throw windup is out to her right and forward, not vertical beside the ear. The shaft stays leaned forward until the hand is home, so it does not hang through the right thigh on the way back.
 
-Throw recovery no longer lifts both feet together. Frames 43 and 44 have both soles on the floor (lowest skinned foot vertex about 0.10 cm and 0.12 cm). Frame 45 keeps the left sole down and lifts the right (about 7 cm).
+Upper-arm orientation is capped at 28° per frame from the idle pose, so the 67–72° single-frame swings are cut to that cap. Two left-arm steps at the end of the thrust are still over it: frame 50 is 35° and frame 52 is 40°.
 
-## Measured on the exported thrust FBX, rest mesh reimported
+## What the exported FBX measures
 
-Left-hand skin versus the staff surface. Nearest vertex, median, count within 2 cm, of 532 LeftHand vertices:
+Staff distance to head/neck, to hips/spine, and to the upper legs. These are the regions that were cut on `37c62d0`. Hand contact is separate.
 
-| frame | nearest | median | within 2 cm |
+Thrust, left-hand skin vs the staff (532 verts), then head / hip / leg:
+
+| frame | nearest | within 2 cm | head | hip | leg |
+|---:|---:|---:|---:|---:|---:|
+| 14 | 0.00 cm | 346 | 17.8 cm | 16.4 cm | 21.1 cm |
+| 17 | 0.01 cm | 312 | 18.6 cm | 16.7 cm | 10.6 cm |
+| 18 | 0.02 cm | 280 | 19.0 cm | 16.7 cm | 10.6 cm |
+| 21 | 0.01 cm | 239 | 17.6 cm | 18.0 cm | 5.4 cm |
+| 24 | 0.01 cm | 227 | 16.6 cm | 20.0 cm | 5.9 cm |
+| 27 | 0.01 cm | 165 | 15.5 cm | 21.9 cm | 9.8 cm |
+
+Frames 17–21 still touch the staff. The head and the hips are clear of it. The lead leg comes within about 5 cm of the butt at frames 21 and 36–40. That is not an intersection. It is the closest remaining body approach.
+
+Throw, same regions. The left hand is not on the staff in this action:
+
+| frame | head | hip | leg |
 |---:|---:|---:|---:|
-| 14 | 0.03 cm | 2.46 cm | 219 |
-| 17 | 0.02 cm | 2.43 cm | 227 |
-| 18 | 0.04 cm | 2.55 cm | 185 |
-| 19 | 0.01 cm | 2.42 cm | 227 |
-| 20 | 0.04 cm | 2.55 cm | 185 |
-| 21 | 0.01 cm | 2.42 cm | 225 |
-| 24 | 0.06 cm | 2.59 cm | 181 |
+| 24 | 35.2 cm | 25.4 cm | 22.5 cm |
+| 27 | 34.7 cm | 26.0 cm | 25.9 cm |
+| 28 | 34.4 cm | 25.9 cm | 27.1 cm |
+| 33 | 39.2 cm | 30.1 cm | 5.5 cm |
+| 49 | 38.7 cm | 34.0 cm | 22.7 cm |
 
-The saddle itself sits at 2.40 cm from the axis and 36.0 cm along it at frames 14, 18 and 24, and the hand bone reaches that target (0 cm miss). Frames 17–21 are no longer a complete miss. Frame 24 is no longer a shaft driven through the palm: the nearest skin is on the surface, not 0.13 cm from the axis.
+Frames 43 and 44 still have both soles down. Frame 45 lifts only the right foot.
 
-This is an open hand. There are no finger bones, so the fingers stay in the bind shape. A BVH leaf overlap of the hand triangles against the staff is 70 pairs at frame 14, 66 at 17, 45 at 18, and 38 at 24. That count is a bounding overlap, not a signed penetration depth. It is not zero.
+The open hand has no finger bones. Where it meets the staff, hand triangles overlap the shaft (about 40–124 pairs on the thrust samples). That is the hand, not the torso. The bone still stops about 5 cm short of the planned saddle on some of those frames, and the skin reaches anyway.
 
-## Still open
-
-Upper-arm steps are smaller than the old 148° and 179° flips, and they are not within 25°. Thrust right arm is about 70° into frame 2 and about 70° into frame 27. The left arm moves about 45° per frame through the drive. Throw right arm is about 70° into frame 2 and still about 64° into frame 27. The elbow is held to 9 cm from the previous frame on the right arm; the remaining step is orientation, and the left arm is not capped because capping it pulled the palm off the shaft.
-
-Throw staff-versus-body and pauldron-versus-hair were not re-counted on this export. Do not treat the foot plant or the palm table as a pass on those.
-
-Rest skeleton, idle, walk, cape mesh and weights were not edited.
+Both actions are frames 1–52. Rest, idle, walk, cape, and the 24-bone bind were not edited. Front/side clips at full speed and quarter speed were rendered from this export. The previous hand close-up videos were the old export and have been removed.

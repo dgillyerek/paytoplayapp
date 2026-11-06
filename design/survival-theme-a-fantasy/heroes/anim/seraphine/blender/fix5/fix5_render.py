@@ -279,6 +279,17 @@ if MODE == "stills":
         scene.frame_set(f)
         render_frame(cam_side, os.path.join(OUT, f"still_throw_f{f:02d}_side.png"))
         render_frame(cam_front, os.path.join(OUT, f"still_throw_f{f:02d}_front.png"))
+elif MODE == "clips":
+    for key in ("thrust", "throw"):
+        assign(key)
+        end = clips[key]["frames"][-1]["f"]
+        scene.frame_start = 1
+        scene.frame_end = end
+        for f in range(1, end + 1):
+            scene.frame_set(f)
+            render_frame(cam_front, os.path.join(OUT, f"{key}_front_{f:03d}.png"))
+            render_frame(cam_side, os.path.join(OUT, f"{key}_side_{f:03d}.png"))
+        print("rendered", key, end)
 else:
     jobs = {
         "thrust": [1, 8, 12, 15, 17, 20, 23, 28, 34, 40],
@@ -287,7 +298,6 @@ else:
     for key, keys in jobs.items():
         assign(key)
         end = clips[key]["frames"][-1]["f"]
-        # Frame 1 is t = 0. Do not emit a frame 0.
         scene.frame_start = 1
         scene.frame_end = end
         for f in range(1, end + 1):
