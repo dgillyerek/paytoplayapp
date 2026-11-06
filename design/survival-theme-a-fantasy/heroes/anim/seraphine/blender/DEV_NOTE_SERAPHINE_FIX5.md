@@ -1,4 +1,30 @@
-# Seraphine FIX5 — shaft moved back out of the body, still a draft
+# Seraphine FIX5 — left cuff cleared off the shaft, still a draft
+
+Not merged. Not Derek-ready. No claim that the clips pass.
+
+The independent check of `63b91499` left one real contact: the character's left forearm cuff through the thrust staff on frames 8–11 and 40–43. The right forearm had none. This pass only moves that wrist a few centimetres straight off the handle when the forearm is inside it, then re-solves the left arm. The right-hand socket, the throw, and the shaft path are unchanged.
+
+Left-forearm triangle pairs against the staff on the exported thrust, rest mesh:
+
+| frame | cuff pairs | hand verts within 2 cm | nearest hand |
+|---:|---:|---:|---:|
+| 8 | 0 | 179/532 | 0.00 cm |
+| 9 | 0 | 181/532 | 0.01 cm |
+| 10 | 0 | 182/532 | 0.02 cm |
+| 11 | 0 | 179/532 | 0.04 cm |
+| 17 | 0 | 110/532 | 0.03 cm |
+| 18 | 0 | 280/532 | 0.02 cm |
+| 21 | 0 | 238/532 | 0.01 cm |
+| 40 | 0 | 149/532 | 0.01 cm |
+| 41 | 0 | 160/532 | 0.02 cm |
+| 42 | 0 | 162/532 | 0.02 cm |
+| 43 | 0 | 136/532 | 0.03 cm |
+
+Neighbors 7, 12, 39, 44 and 46 are also 0 cuff pairs. Frame 17 still touches; the lift caught it because the forearm was within 3.2 cm of the axis even though it was not intersecting, so fewer hand verts sit inside 2 cm than before (110, was about 280). Frames 18 and 21 were not lifted.
+
+Head, hip and leg clearances on these frames match the previous export. Throw frames 1, 27, 43, 44 and 49 match it too, including both soles down at 43 and 44. Rest, idle, walk and cape were not edited. The left-arm step at frame 52 was left as it was; the motion read did not flag it.
+
+# Previous note — shaft moved back out of the body
 
 Not merged. Not Derek-ready. No claim that the clips pass.
 

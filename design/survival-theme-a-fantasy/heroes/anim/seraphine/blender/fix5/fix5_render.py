@@ -289,6 +289,8 @@ elif MODE == "clips":
             scene.frame_set(f)
             render_frame(cam_front, os.path.join(OUT, f"{key}_front_{f:03d}.png"))
             render_frame(cam_side, os.path.join(OUT, f"{key}_side_{f:03d}.png"))
+            if key == "thrust" and f in (8, 9, 10, 11, 17, 18, 40, 41, 42, 43):
+                render_frame(cam_wrist, os.path.join(OUT, f"{key}_cuff_{f:03d}.png"))
         print("rendered", key, end)
 else:
     jobs = {

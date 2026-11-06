@@ -146,6 +146,12 @@ for _v in _be0.data.vertices:
 PALM_PTS = _palm_pts
 PALM_LOCAL = sum(_palm_pts, Vector()) / len(_palm_pts)
 print(f"left palm centroid local {tuple(round(c,4) for c in PALM_LOCAL)} n {len(_palm_pts)}")
+_fgi = {vg.name: vg.index for vg in _body0.vertex_groups}[P + "LeftForeArm"]
+FOREARM_IDS = [
+    v.index for v in _body0.data.vertices
+    if any(g.group == _fgi and g.weight > 0.5 for g in v.groups)
+]
+print(f"left forearm verts {len(FOREARM_IDS)}")
 
 PREV_ELBOW = {}
 
@@ -1329,6 +1335,51 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
                 finger = Vector((0, -1, 0))
             set_world_keep_loc(arm.pose.bones[P + "LeftHand"], mat_y(finger, Vector((0, 0, -1))), wh)
         bpy.context.view_layer.update()
+        # Cuff verts sit on the wrist, so swinging the elbow does not
+        # lift them off the handle. When the forearm is inside the shaft,
+        # move the wrist a few centimetres straight off it and re-solve.
+        # Frames 17-21 are already clear and are left alone.
+        if not params["throw"]:
+            Mw = arm.matrix_world @ arm.pose.bones[P + "RightHand"].matrix
+            ap = Mw @ SHAFT_POINT_LOCAL
+            adir = (Mw.to_3x3() @ SHAFT_DIR_LOCAL).normalized()
+            deps = bpy.context.evaluated_depsgraph_get()
+            be = bpy.data.objects["SERAPHINE_body"].evaluated_get(deps)
+            bw = be.matrix_world
+            nearest = 99.0
+            for vi in FOREARM_IDS:
+                pt = bw @ be.data.vertices[vi].co
+                rel = pt - ap
+                radial = (rel - adir * rel.dot(adir)).length
+                if radial < nearest:
+                    nearest = radial
+            if nearest < 0.032:
+                handp = arm.matrix_world @ arm.pose.bones[P + "LeftHand"].head
+                away = handp - ap
+                away = away - adir * away.dot(adir)
+                if away.length < 1e-4:
+                    away = Vector((1.0, 0.0, 0.0))
+                away.normalize()
+                lifted = handp + away * (0.048 - nearest)
+                elbow_l, tgt_used = ik_near_previous(
+                    "Left", l_sh, lifted, pole_l, L_UP, L_FORE, limit=None)
+                set_world_keep_loc(
+                    arm.pose.bones[P + "LeftArm"],
+                    mat_y_cont(elbow_l - l_sh, P + "LeftArm", pole_l - l_sh),
+                    l_sh, max_step_deg=None)
+                bpy.context.view_layer.update()
+                elb_l = arm.matrix_world @ arm.pose.bones[P + "LeftForeArm"].head
+                set_world_keep_loc(
+                    arm.pose.bones[P + "LeftForeArm"],
+                    mat_y_cont(tgt_used - elb_l, P + "LeftForeArm", Vector((0.25, -0.3, -1))),
+                    elb_l)
+                bpy.context.view_layer.update()
+                wh = arm.matrix_world @ arm.pose.bones[P + "LeftHand"].head
+                if palm_at is not None:
+                    set_world_keep_loc(arm.pose.bones[P + "LeftHand"], hand_l, wh)
+                    bpy.context.view_layer.update()
+            if frame in (8, 9, 10, 11, 40, 41, 42, 43):
+                print(f"CUFFDBG f{frame} forearm-axis {nearest*100:.1f}cm")
         if (not params["throw"]) and frame in (14, 18, 24):
             got = arm.matrix_world @ arm.pose.bones[P + "LeftHand"].matrix
             landed = got @ GRASP_LOCAL
@@ -1828,6 +1879,12 @@ def report_support(name, frames):
                       if all(i in hand_set for i in p.vertices)]
         hand_co = [bw @ be.data.vertices[i].co for i in hand_ids]
         pairs = len(sb.overlap(BVHTree.FromPolygons(hand_co, hand_polys))) if hand_polys else -1
+        f_index = {vid: i for i, vid in enumerate(FOREARM_IDS)}
+        f_set = set(FOREARM_IDS)
+        f_polys = [[f_index[i] for i in p.vertices] for p in be.data.polygons
+                   if all(i in f_set for i in p.vertices)]
+        f_co = [bw @ be.data.vertices[i].co for i in FOREARM_IDS]
+        cuff_pairs = len(sb.overlap(BVHTree.FromPolygons(f_co, f_polys))) if f_polys else -1
         # lowest vertex on each foot
         def low(side):
             ids = []
@@ -1869,13 +1926,13 @@ def report_support(name, frames):
         hip_cm = region_cm([P + "Hips", P + "Spine", P + "Spine1", P + "Spine2"])
         leg_cm = region_cm([P + "RightUpLeg", P + "LeftUpLeg"])
         print(f"  f{f:02d} hand min {dists[0]*100:.2f}cm med {dists[len(dists)//2]*100:.2f}cm "
-              f"<=2cm {near}/{len(dists)} pairs {pairs} shaft {shaft_cm:.1f} "
+              f"<=2cm {near}/{len(dists)} pairs {pairs} cuff {cuff_pairs} shaft {shaft_cm:.1f} "
               f"head {head_cm:.1f} hip {hip_cm:.1f} leg {leg_cm:.1f}cm "
               f"soleL {low('Left')*100:.2f}cm soleR {low('Right')*100:.2f}cm")
 
 
-report_support("attack_thrust", [2, 14, 17, 18, 21, 24, 27, 36, 40])
-report_support("attack_throw", [2, 24, 27, 28, 33, 43, 44, 45, 49])
+report_support("attack_thrust", [7, 8, 9, 10, 11, 12, 17, 18, 21, 39, 40, 41, 42, 43, 44, 46])
+report_support("attack_throw", [1, 27, 43, 44, 49])
 
 export_clip("attack_thrust", "SERAPHINE_attack_thrust.fbx")
 export_clip("attack_throw", "SERAPHINE_attack_throw.fbx")
