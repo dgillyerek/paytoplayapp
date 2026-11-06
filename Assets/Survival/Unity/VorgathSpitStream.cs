@@ -43,8 +43,15 @@ namespace Survival.Unity
         private const float WidthMouth = 0.55f;
         private const float WidthEnd = 1.25f;
 
-        /// <summary>Stop 0.12 m above the ground so the flame tip is not sliced off.</summary>
-        private const float GroundY = 0.12f;
+        /// <summary>
+        /// World Y of the battle floor. The original stream used this same plane (then lifted the tip by 0.02).
+        /// Line points are world positions (<c>useWorldSpace</c>, origin is the socket world position), so a parent
+        /// scale or local axis does not turn this into a local offset.
+        /// </summary>
+        private const float GroundPlaneY = 0f;
+
+        /// <summary>World metres above <see cref="GroundPlaneY"/>. Tip stops at GroundPlaneY + 0.12.</summary>
+        private const float GroundClearance = 0.12f;
 
         private const int Segments = 10;
 
@@ -255,12 +262,13 @@ namespace Survival.Unity
                 var dist = shown * (i / (float)Segments);
                 var t = dist / StreamLength;
                 var p = origin + (forward * dist) + (Vector3.down * (Droop * t * t));
-                if (p.y <= GroundY)
+                var stopY = GroundPlaneY + GroundClearance;
+                if (p.y <= stopY)
                 {
                     var dy = prev.y - p.y;
-                    var u = dy > 1e-5f ? (prev.y - GroundY) / dy : 1f;
+                    var u = dy > 1e-5f ? (prev.y - stopY) / dy : 1f;
                     p = Vector3.Lerp(prev, p, Mathf.Clamp01(u));
-                    p.y = GroundY;
+                    p.y = stopY;
                     _points[count++] = p;
                     hit = true;
                     break;
@@ -294,7 +302,8 @@ namespace Survival.Unity
             var body = new Color(1f, 1f, 1f, intensity);
             _body.startColor = body;
             _body.endColor = body;
-            var core = new Color(1f, 0.92f, 0.75f, CoreAdd * intensity);
+            // One 0.55 factor, white multiply. A cream tint here would wash the strip's own core.
+            var core = new Color(1f, 1f, 1f, CoreAdd * intensity);
             _core.startColor = core;
             _core.endColor = core;
 
@@ -396,7 +405,16 @@ namespace Survival.Unity
             mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
             mat.SetOverrideTag("RenderType", "Transparent");
             mat.renderQueue = additive ? 3001 : 3000;
-            var tint = additive ? new Color(1f, 0.92f, 0.75f, CoreAdd) : Color.white;
+            // Identity scale. Particles/Unlit ignores _BaseMap_ST; a 0.25 window would still show the whole strip.
+            mat.SetTextureScale("_BaseMap", Vector2.one);
+            mat.SetTextureOffset("_BaseMap", Vector2.zero);
+            if (mat.HasProperty("_MainTex"))
+            {
+                mat.SetTextureScale("_MainTex", Vector2.one);
+                mat.SetTextureOffset("_MainTex", Vector2.zero);
+            }
+
+            var tint = Color.white;
             mat.SetColor(ColorId, tint);
             if (mat.HasProperty(ColorId2))
             {

@@ -41,29 +41,20 @@ For Animation Events, use two events: `FireStart` at 1.733 s and `FireStop` at 2
 
 The prefab and `ApplyClipTime` hook are unchanged. No new animation events.
 
-- Drop the eight authorised strips on `Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f00.png` … `f07.png`. The importer sets Alpha Is Transparency, Clamp, no mipmaps, NPOT none, max 1024. Mouth at the left edge of each strip.
+- Strips in this commit: `Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f00.png` … `f07.png`. Byte-identical to the uploaded `VORGATH_breath_strip_f00.png` … `f07.png` from `vorgath-fix6-art` `a864f42f` (that filename was the source name; the script loads `VORGATH_fire_f`). 1024×256 RGBA. Mouth at the left edge. Importer: alpha from the PNG, Alpha Is Transparency, uncompressed, Clamp, no mipmaps, NPOT none, max 1024. Not grayscale-to-alpha.
 - Body line: `Universal Render Pipeline/Particles/Unlit` only (no Sprites fallback), `_Blend` 0, `SrcAlpha` / `OneMinusSrcAlpha`, `_SURFACE_TYPE_TRANSPARENT`, flipbook keyword off. Vertex color alpha is the fade.
 - Core child `FireCore`: same shader and the same strip, `_Blend` 2 (`SrcAlpha` / `One`), vertex color alpha `0.55 × fade`.
-- Width 0.55 m at the mouth to 1.25 m at the tip. Length 2.6 m, droop `-0.12·(dist/2.6)²`. The polyline stops at **y = 0.12**.
+- Width 0.55 m at the mouth to 1.25 m at the tip. Length 2.6 m, droop `-0.12·(dist/2.6)²`. The tip stops at world `GroundPlaneY + 0.12` with `GroundPlaneY = 0` (the original floor). Points are world positions. The original tip was `0 + 0.02`.
 - Frame = `floor(timeOn × 24) mod 8`. The material texture is replaced. Scale and offset are never animated.
 - The FIX5 4×4 PNG stays in the project and is not assigned. If a strip file is missing the stream stays off. It does not fall back to that sheet.
 
-### Art not in this commit
-
-Checked local disk, this clone, and `origin`. Not present:
-
-- path `/workspace/wt_vorgath_fix6`
-- branch `vorgath-fix6-art`
-- commit `a864f42f`
-- `README_FIX6.md`, the strip generator, and `VORGATH_fire_f00.png` … `VORGATH_fire_f07.png` (1024×256, real alpha)
-
-Those are the files to reattach. A stand-in noise texture was generated here and then removed. It is not the art.
+`README_FIX6.md` and the strip generator were not in the upload that carried these eight PNGs, so they are not in this commit. The pixels are.
 
 ## 4. What Dev checks
 
-Open Survival → New Characters Preview, Vorgath, `attack_spit`, after the eight strips are in the folder above. One stream from the mouth for 1.733–2.467 s, texture changing, not a row of pellets.
+Open Survival → New Characters Preview, Vorgath, `attack_spit`. One stream from the mouth for 1.733–2.467 s, whole strip changing, not a row of pellets.
 
-**Unity is untested.** Unity `6000.3.6f1` is not installed. There is no GPU (`/dev/dri` is absent). Editor batchmode Play was not run, and Unity was not downloaded. A separate CPU rasterizer (FBX via ufbx, then a small C z-buffer) was used only as a layout check of the line on the spit mesh. That rasterizer is not Unity, and its pictures are not in this commit.
+**Unity UNRUN.** Unity `6000.3.6f1` is not installed. There is no GPU (`/dev/dri` is absent). Editor batchmode Play was not run, and Unity was not downloaded. An external CPU rasterizer (ufbx plus a C z-buffer) was used earlier on a different stand-in texture. That was not Unity, and those pictures are not in this commit.
 
 ## 5. What FIX6 did not change
 

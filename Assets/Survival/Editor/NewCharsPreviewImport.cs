@@ -51,9 +51,12 @@ namespace Survival.Editor
                 return;
             }
 
-            // Alpha is real transparency. Clamp, no mipmaps. Strips are 1024x256 and must not be rescaled.
+            // PNG alpha is the flame coverage. Do not rebuild it from grayscale, and do not compress it away.
             importer.textureType = TextureImporterType.Default;
+            importer.alphaSource = TextureImporterAlphaSource.FromInput;
             importer.alphaIsTransparency = true;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.crunchedCompression = false;
             importer.mipmapEnabled = false;
             importer.wrapMode = TextureWrapMode.Clamp;
             importer.maxTextureSize = 1024;
