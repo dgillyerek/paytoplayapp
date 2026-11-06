@@ -75,10 +75,10 @@ rig = next(o for o in rest_objs if o.type == "ARMATURE")
 body = next(o for o in rest_objs if o.type == "MESH" and "spear" not in o.name.lower() and "wing" not in o.name.lower())
 spear = next(o for o in rest_objs if o.type == "MESH" and "spear" in o.name.lower())
 wings = [o for o in rest_objs if o.type == "MESH" and "wing" in o.name.lower()]
-paint(body, (0.73, 0.64, 0.50, 1))
-paint(spear, (0.55, 0.40, 0.16, 1))
+paint(body, (0.93, 0.93, 0.93, 1))
+paint(spear, (0.15, 0.15, 0.15, 1))
 for w in wings:
-    paint(w, (0.90, 0.91, 0.88, 1))
+    paint(w, (0.78, 0.80, 0.82, 1))
 
 # bind snapshot before any clip
 bind = {b.name: [round(x, 6) for row in b.matrix_local for x in row] for b in rig.data.bones}
@@ -89,7 +89,7 @@ cape_objs = do_import(os.path.join(ART, "SERAPHINE_cape.fbx"))
 print("CAPE", [(o.name, o.type) for o in cape_objs])
 cape_rig = next(o for o in cape_objs if o.type == "ARMATURE")
 cape_mesh = next(o for o in cape_objs if o.type == "MESH")
-paint(cape_mesh, (0.13, 0.18, 0.40, 1))
+paint(cape_mesh, (0.25, 0.32, 0.55, 1))
 # Same attach as the blend: cape rig child-of body Spine2, identity.
 cape_rig.constraints.clear()
 con = cape_rig.constraints.new("CHILD_OF")
@@ -110,10 +110,12 @@ for ix in range(-4, 4):
         bpy.ops.mesh.primitive_plane_add(size=0.25, location=((ix + 0.5) * 0.25, (iy + 0.5) * 0.25, 0.0))
         tile = bpy.context.active_object
         tile.name = f"tile_{ix}_{iy}"
-        if (ix + iy) % 2 == 0:
-            paint(tile, (0.22, 0.24, 0.27, 1))
+        if iy in (-1, 0) and ix in (-1, 0):
+            paint(tile, (0.85, 0.85, 0.88, 1))
+        elif (ix + iy) % 2 == 0:
+            paint(tile, (0.45, 0.46, 0.48, 1))
         else:
-            paint(tile, (0.30, 0.32, 0.35, 1))
+            paint(tile, (0.62, 0.63, 0.65, 1))
 
 ORTHO = 3.35  # constant for every full-body view
 CENTER = Vector((0.0, -0.05, 1.12))

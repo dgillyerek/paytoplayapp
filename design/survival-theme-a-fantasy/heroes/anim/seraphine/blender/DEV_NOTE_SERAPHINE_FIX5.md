@@ -1,28 +1,27 @@
-# Seraphine FIX5 revision — same PR, not a pass
+# Seraphine FIX5 — throw review follow-up, still a draft
 
-Branch `cursor/seraphine-fix5-attacks-d044`. Revises the d579 candidate. Not merged. Unity was not run.
+Branch `cursor/seraphine-fix5-attacks-d044`. Same PR. Not merged. Not Derek-ready.
 
-## Why the left hand floated, and why it went through the breastplate
+The reviewed throw clip had three defects: the right wrist folded back on the wind-up, the staff tail cut the floor and the right wing/cape, and the two steps left her standing forward of the start. This pass replaces that wind-up and release.
 
-The staff mesh is weighted only to `RightHand`. The left hand is a separate bone, so a palm on the shaft is a pose, not a skin bind. On d579 the left-hand target was either held off the shaft or sent to the far side of the chest. From the left shoulder that line passes through the breastplate, which is what the mesh audit found (left forearm/breastplate f14–27, arm/braid f16–21). The way back to idle was a blend that swept the hand down through the right leg at f27. Pulling the arm out to the side avoids the armor and also leaves the palm off the weapon. That is the float.
+## What changed in the throw
 
-This revision turns the chest so the right shoulder comes forward after the hips, and sets the shaft as the line from a station in front of the sternum to the right hand 30 cm further toward the tip. The left palm aims at that station. When that reach would still put the forearm inside the chest (f17–20), the hand stays in a forward-left guard instead of being buried in the armor. On the strike frames the forearm is about 5 cm off the torso, with no intersection samples, and the staff stays about 22–30 cm off the hair. The butt of the full staff mesh stays about 40 cm off the ground. The earlier staff-to-body gap (no intersection, at least 3.3 cm) and the wing gaps are not spent to buy the grip.
+The spear is bound along the right hand's local +X, across the palm. The reviewed fold came from twisting the hand around that axis until the wrist bent back. The hand now keeps its fingers along the forearm, so the measured wrist angle stays about 2° for the whole clip.
 
-## What the motion is
+The ornament is 1.30 m past the hand and the butt is 0.80 m. Laying that length back over the shoulder at a low angle puts the head through the wing and the butt through the floor. The wind-up lifts the hand out to her right first, staff still upright, then tilts the head up and outboard of the wing instead of back through the feathers. The release turns the shaft forward and stays steep, so the butt drops in front of the hip rather than through the cape. On the clean reimport the throw staff stays at least 51 cm off the floor, about 24 cm off the wings, and about 30 cm off the cape.
 
-Hips X/Y stay on the idle mark. The preview pins hip X and Z, so the steps are the feet under that pelvis, not a root slide.
+Footwork is unchanged in kind: left step out, right heel up, then a lifted right recovery step. Both feet are back on the idle ankles by frame 40 and the last frame is the idle pose. Hips X/Y stay on the idle mark, which is what HoldHips pins.
 
-- Thrust, 45 frames, **1.50 s**. Load with a small hip turn while the feet are still together (the f8–10 thigh cross was the big yaw on a narrow stance). Left foot then lifts 16 cm, knee folds, and steps. The right heel rises by orbiting a fixed toe while the hips unwind, then the arms push. The lead foot lifts again, travels back in the air, and plants before the weight settles. Ends on the idle pose.
-- Throw, 46 frames, **1.53 s**. Left foot steps out. The staff cocks up and back on the right shoulder, not flat across the crown. The left arm stays wide on her left, below the braid, and comes back down that side instead of onto the thigh. Right wrist keeps the idle hand-to-forearm angle, **26.4°**, instead of the 71° bend.
+## What is still wrong
 
-## Still not a visual pass
+The thrust left forearm still crosses the upper chest on the strike. The staff itself stays off the wings, the cape, and the floor, and both feet return to the idle mark, but that arm is not a clean two-hand grip. The throw cock reads as up and out to her right; a deeper lay-back over the shoulder collides with the wing, so it is not in this pass. Fingers have no bones. The cape in the sheets is the original mesh parented to Spine2. Unity was not run.
 
-The thrust line stays steep, because a flat thrust puts the trailing end of this staff back through the wings. The left palm is not on the shaft for f17–20. The cape in the sheets is the original mesh parented to Spine2, not a new spring sim. Fingers have no bones. No Unity playback.
+This is not a visual pass.
 
-Proof, front three-quarter and strict side, camera locked:
+Proof, front three-quarter and strict side, camera locked, ortho scale 3.35:
 
 - `design/.../seraphine/sheets/fix5/SERAPHINE_FIX5_thrust_SHEET.png`
 - `design/.../seraphine/sheets/fix5/SERAPHINE_FIX5_throw_SHEET.png`
-- `SERAPHINE_FIX5_thrust_front_side.mp4` (1.50 s)
 - `SERAPHINE_FIX5_throw_front_side.mp4` (1.53 s)
-- `SERAPHINE_FIX5_{thrust,throw}_hands_quarter.mp4` wrist close-ups
+- `SERAPHINE_FIX5_thrust_front_side.mp4` (1.50 s)
+- `SERAPHINE_FIX5_{thrust,throw}_hands_quarter.mp4`
