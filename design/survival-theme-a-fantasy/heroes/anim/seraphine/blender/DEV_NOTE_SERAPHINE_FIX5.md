@@ -1,4 +1,16 @@
-# Seraphine FIX5 — left cuff cleared off the shaft, still a draft
+# Seraphine FIX5 — recovery bend and throw wrist, still a draft
+
+Not merged. Not Derek-ready. No claim that the clips pass.
+
+Two motion faults from the check of `cc66f3b9`, and nothing else.
+
+The thrust left wrist switched from the grip orientation to a straight line with the forearm when the grip blend crossed 0.4, so frame 47 was bent about 129° and frame 48 was at 0°. The arm then hung stiff and the last frame dropped the elbow. The hand rotation now blends back to the idle wrist across the whole release, and the elbow pole returns toward the idle elbow with it. Measured bend on the export: frame 46 is 160°, 47 is 142°, 48 is 114°, 49 is 96°, 50 is 69°, 51 is 54°, 52 is 35°. Twist around the hand's long axis is back to 0 at frame 52. There is no single-frame upper-arm step over 25° on that recovery.
+
+The throw right wrist was being re-rolled to chase the forearm, so the twist around the hand's long axis climbed to about 53° in the windup and the bend spiked in the first frames. The forearm now rolls so the staff, which stays fixed in the hand, points along the planned line, and the wrist joint stays at the idle pose. Measured bend is 26.4° and the twist is 0.0 on frames 3 through 17. Head, hip and leg distances at frames 14, 16, 27 and 49 stay in the same clear range as before. The solver still reports one staff sample about 2 cm from the body at frame 49; the region distances there are head 44 cm, hip 25 cm, leg 12 cm.
+
+Cuff pairs on the thrust samples, including 8–11, 17–21 and 40–43, are 0. Frame 17 still has 110 hand vertices within 2 cm of the staff, frame 18 has 286, frame 21 has 245. Rest, idle, walk, cape and the right-hand socket were not edited.
+
+# Previous note — left cuff cleared off the shaft, still a draft
 
 Not merged. Not Derek-ready. No claim that the clips pass.
 
