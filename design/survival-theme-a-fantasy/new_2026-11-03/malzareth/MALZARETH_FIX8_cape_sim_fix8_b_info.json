@@ -1,0 +1,3025 @@
+{
+ "restd_arm": {},
+ "out": "f2_attack2_overhead_cleave",
+ "kind": "attack",
+ "spring": {
+  "stiffness": 1.0,
+  "drag": 0.4,
+  "gravity": 0.4,
+  "hit": 0.1,
+  "hit_torso": 0.0,
+  "stiff01": 1.0
+ },
+ "colliders": {
+  "mixamorig:Hips": 0.279,
+  "mixamorig:Spine": 0.173,
+  "mixamorig:Spine1": 0.195,
+  "mixamorig:Spine2": 0.16,
+  "mixamorig:LeftUpLeg": 0.158,
+  "mixamorig:LeftLeg": 0.085,
+  "mixamorig:RightUpLeg": 0.153,
+  "mixamorig:RightLeg": 0.086,
+  "mixamorig:LeftFoot": 0.05,
+  "mixamorig:RightFoot": 0.05
+ },
+ "per_frame": [
+  {
+   "min_clear": 0.02564447559416294,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 1,
+   "frame": 1
+  },
+  {
+   "min_clear": 0.024532051756978035,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 2,
+   "frame": 2
+  },
+  {
+   "min_clear": 0.023813661187887192,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 3,
+   "frame": 3
+  },
+  {
+   "min_clear": 0.02324996329843998,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 4,
+   "frame": 4
+  },
+  {
+   "min_clear": 0.02295532077550888,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 5,
+   "frame": 5
+  },
+  {
+   "min_clear": 0.023317530751228333,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 6,
+   "frame": 6
+  },
+  {
+   "min_clear": 0.02409430220723152,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 7,
+   "frame": 7
+  },
+  {
+   "min_clear": 0.024980701506137848,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 8,
+   "frame": 8
+  },
+  {
+   "min_clear": 0.02713574469089508,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 9,
+   "frame": 9
+  },
+  {
+   "min_clear": 0.0287362989038229,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 10,
+   "frame": 10
+  },
+  {
+   "min_clear": 0.030379539355635643,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 11,
+   "frame": 11
+  },
+  {
+   "min_clear": 0.031994160264730453,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 12,
+   "frame": 12
+  },
+  {
+   "min_clear": 0.031910449266433716,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 13,
+   "frame": 13
+  },
+  {
+   "min_clear": 0.031854934990406036,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 14,
+   "frame": 14
+  },
+  {
+   "min_clear": 0.03187412768602371,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 15,
+   "frame": 15
+  },
+  {
+   "min_clear": 0.0319630466401577,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 16,
+   "frame": 16
+  },
+  {
+   "min_clear": 0.032106805592775345,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 17,
+   "frame": 17
+  },
+  {
+   "min_clear": 0.03230152651667595,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 18,
+   "frame": 18
+  },
+  {
+   "min_clear": 0.03258868679404259,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 19,
+   "frame": 19
+  },
+  {
+   "min_clear": 0.03292040526866913,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 20,
+   "frame": 20
+  },
+  {
+   "min_clear": 0.033122703433036804,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 21,
+   "frame": 21
+  },
+  {
+   "min_clear": 0.033141713589429855,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 22,
+   "frame": 22
+  },
+  {
+   "min_clear": 0.03299592062830925,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 23,
+   "frame": 23
+  },
+  {
+   "min_clear": 0.03287682309746742,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 24,
+   "frame": 24
+  },
+  {
+   "min_clear": 0.03272202983498573,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 25,
+   "frame": 25
+  },
+  {
+   "min_clear": 0.03252014145255089,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 26,
+   "frame": 26
+  },
+  {
+   "min_clear": 0.03245834633708,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 27,
+   "frame": 27
+  },
+  {
+   "min_clear": 0.03253067657351494,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 28,
+   "frame": 28
+  },
+  {
+   "min_clear": 0.03252079710364342,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 29,
+   "frame": 29
+  },
+  {
+   "min_clear": 0.032709620893001556,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 30,
+   "frame": 30
+  },
+  {
+   "min_clear": 0.03301573917269707,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 31,
+   "frame": 31
+  },
+  {
+   "min_clear": 0.033235177397727966,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 32,
+   "frame": 32
+  },
+  {
+   "min_clear": 0.03337240219116211,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 33,
+   "frame": 33
+  },
+  {
+   "min_clear": 0.0333244726061821,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 34,
+   "frame": 34
+  },
+  {
+   "min_clear": 0.03320305421948433,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 35,
+   "frame": 35
+  },
+  {
+   "min_clear": 0.03206219896674156,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 36,
+   "frame": 36
+  },
+  {
+   "min_clear": 0.02908443473279476,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 37,
+   "frame": 37
+  },
+  {
+   "min_clear": 0.026340555399656296,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 38,
+   "frame": 38
+  },
+  {
+   "min_clear": 0.023785574361681938,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 39,
+   "frame": 39
+  },
+  {
+   "min_clear": 0.020488528534770012,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 40,
+   "frame": 40
+  },
+  {
+   "min_clear": 0.01815587282180786,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 41,
+   "frame": 41
+  },
+  {
+   "min_clear": 0.017679007723927498,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 42,
+   "frame": 42
+  },
+  {
+   "min_clear": 0.017145544290542603,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 43,
+   "frame": 43
+  },
+  {
+   "min_clear": 0.01682240143418312,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 44,
+   "frame": 44
+  },
+  {
+   "min_clear": 0.01682785153388977,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 45,
+   "frame": 45
+  },
+  {
+   "min_clear": 0.016360880807042122,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 46,
+   "frame": 46
+  },
+  {
+   "min_clear": 0.014866975136101246,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 47,
+   "frame": 47
+  },
+  {
+   "min_clear": 0.01529234554618597,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 48,
+   "frame": 48
+  },
+  {
+   "min_clear": 0.015461998991668224,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 49,
+   "frame": 49
+  },
+  {
+   "min_clear": 0.01484281849116087,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 50,
+   "frame": 50
+  },
+  {
+   "min_clear": 0.014135735109448433,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 51,
+   "frame": 51
+  },
+  {
+   "min_clear": 0.015420157462358475,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 52,
+   "frame": 52
+  },
+  {
+   "min_clear": 0.016985444352030754,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 53,
+   "frame": 53
+  },
+  {
+   "min_clear": 0.017442502081394196,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 54,
+   "frame": 54
+  },
+  {
+   "min_clear": 0.017659906297922134,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 55,
+   "frame": 55
+  },
+  {
+   "min_clear": 0.019251778721809387,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 56,
+   "frame": 56
+  },
+  {
+   "min_clear": 0.0204534363001585,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 57,
+   "frame": 57
+  },
+  {
+   "min_clear": 0.021849364042282104,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 58,
+   "frame": 58
+  },
+  {
+   "min_clear": 0.02353651262819767,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 59,
+   "frame": 59
+  },
+  {
+   "min_clear": 0.024704407900571823,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 60,
+   "frame": 60
+  },
+  {
+   "min_clear": 0.025987466797232628,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 61,
+   "frame": 61
+  },
+  {
+   "min_clear": 0.02684914320707321,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 62,
+   "frame": 62
+  },
+  {
+   "min_clear": 0.02699345164000988,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 63,
+   "frame": 63
+  },
+  {
+   "min_clear": 0.02683676965534687,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 64,
+   "frame": 64
+  },
+  {
+   "min_clear": 0.025846974924206734,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 65,
+   "frame": 65
+  },
+  {
+   "min_clear": 0.026581229642033577,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 66,
+   "frame": 66
+  },
+  {
+   "min_clear": 0.027499817311763763,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 67,
+   "frame": 67
+  },
+  {
+   "min_clear": 0.026612121611833572,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 68,
+   "frame": 68
+  },
+  {
+   "min_clear": 0.02633627876639366,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 69,
+   "frame": 69
+  },
+  {
+   "min_clear": 0.02590993605554104,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 70,
+   "frame": 1
+  },
+  {
+   "min_clear": 0.024685239419341087,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 71,
+   "frame": 2
+  },
+  {
+   "min_clear": 0.023913389071822166,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 72,
+   "frame": 3
+  },
+  {
+   "min_clear": 0.023312585428357124,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 73,
+   "frame": 4
+  },
+  {
+   "min_clear": 0.02297389507293701,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 74,
+   "frame": 5
+  },
+  {
+   "min_clear": 0.023298518732190132,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 75,
+   "frame": 6
+  },
+  {
+   "min_clear": 0.02407849393785,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 76,
+   "frame": 7
+  },
+  {
+   "min_clear": 0.024951146915555,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 77,
+   "frame": 8
+  },
+  {
+   "min_clear": 0.027117034420371056,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 78,
+   "frame": 9
+  },
+  {
+   "min_clear": 0.02867135964334011,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 79,
+   "frame": 10
+  },
+  {
+   "min_clear": 0.03034082241356373,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 80,
+   "frame": 11
+  },
+  {
+   "min_clear": 0.031994979828596115,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 81,
+   "frame": 12
+  },
+  {
+   "min_clear": 0.03191017732024193,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 82,
+   "frame": 13
+  },
+  {
+   "min_clear": 0.03185471147298813,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 83,
+   "frame": 14
+  },
+  {
+   "min_clear": 0.03187413513660431,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 84,
+   "frame": 15
+  },
+  {
+   "min_clear": 0.03196323662996292,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 85,
+   "frame": 16
+  },
+  {
+   "min_clear": 0.03210706263780594,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 86,
+   "frame": 17
+  },
+  {
+   "min_clear": 0.03230194002389908,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 87,
+   "frame": 18
+  },
+  {
+   "min_clear": 0.03258933126926422,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 88,
+   "frame": 19
+  },
+  {
+   "min_clear": 0.03292103111743927,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 89,
+   "frame": 20
+  },
+  {
+   "min_clear": 0.03312329202890396,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 90,
+   "frame": 21
+  },
+  {
+   "min_clear": 0.03314225748181343,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 91,
+   "frame": 22
+  },
+  {
+   "min_clear": 0.03299640864133835,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 92,
+   "frame": 23
+  },
+  {
+   "min_clear": 0.032877229154109955,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 93,
+   "frame": 24
+  },
+  {
+   "min_clear": 0.03272230178117752,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 94,
+   "frame": 25
+  },
+  {
+   "min_clear": 0.032520342618227005,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 95,
+   "frame": 26
+  },
+  {
+   "min_clear": 0.03245842084288597,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 96,
+   "frame": 27
+  },
+  {
+   "min_clear": 0.03253079950809479,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 97,
+   "frame": 28
+  },
+  {
+   "min_clear": 0.03252086043357849,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 98,
+   "frame": 29
+  },
+  {
+   "min_clear": 0.03270965442061424,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 99,
+   "frame": 30
+  },
+  {
+   "min_clear": 0.03301576152443886,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 100,
+   "frame": 31
+  },
+  {
+   "min_clear": 0.03323516622185707,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 101,
+   "frame": 32
+  },
+  {
+   "min_clear": 0.03337239846587181,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 102,
+   "frame": 33
+  },
+  {
+   "min_clear": 0.0333244726061821,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 103,
+   "frame": 34
+  },
+  {
+   "min_clear": 0.03320293501019478,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 104,
+   "frame": 35
+  },
+  {
+   "min_clear": 0.032062236219644547,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 105,
+   "frame": 36
+  },
+  {
+   "min_clear": 0.029084378853440285,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 106,
+   "frame": 37
+  },
+  {
+   "min_clear": 0.026340516284108162,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 107,
+   "frame": 38
+  },
+  {
+   "min_clear": 0.02378549985587597,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 108,
+   "frame": 39
+  },
+  {
+   "min_clear": 0.020488517358899117,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 109,
+   "frame": 40
+  },
+  {
+   "min_clear": 0.01815580204129219,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 110,
+   "frame": 41
+  },
+  {
+   "min_clear": 0.017678987234830856,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 111,
+   "frame": 42
+  },
+  {
+   "min_clear": 0.017145531252026558,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 112,
+   "frame": 43
+  },
+  {
+   "min_clear": 0.016822367906570435,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 113,
+   "frame": 44
+  },
+  {
+   "min_clear": 0.016827832907438278,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 114,
+   "frame": 45
+  },
+  {
+   "min_clear": 0.01636086218059063,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 115,
+   "frame": 46
+  },
+  {
+   "min_clear": 0.01486695185303688,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 116,
+   "frame": 47
+  },
+  {
+   "min_clear": 0.015292278490960598,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 117,
+   "frame": 48
+  },
+  {
+   "min_clear": 0.01546198409050703,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 118,
+   "frame": 49
+  },
+  {
+   "min_clear": 0.014842752367258072,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 119,
+   "frame": 50
+  },
+  {
+   "min_clear": 0.014135675504803658,
+   "n_pen": 0,
+   "n_touch": 0,
+   "pen_z": [],
+   "pen_by_part": {
+    "leg": 0,
+    "torso": 0,
+    "arm": 0
+   },
+   "pen_greatsword": 0,
+   "t": 120,
+   "frame": 51
+  }
+ ],
+ "pen_verts": {},
+ "pen_body_bones": {},
+ "pen_body_depth": {},
+ "wing_hit_verts5": [],
+ "T": 120,
+ "summary": {
+  "frames": 120,
+  "frames_with_body_penetration": 0,
+  "pen_frames": [],
+  "min_clearance_m": 0.014135675504803658,
+  "max_pen_verts": 0,
+  "pen_greatsword_frames": 0,
+  "pen_greatsword_max_verts": 0
+ },
+ "mp4": "/workspace/design/survival-theme-a-fantasy/new_2026-11-03/malzareth/sheets/clips_fix8/MALZARETH_f2_attack2_overhead_cleave_cape_PREVIEW.mp4",
+ "panels": [
+  {
+   "png": "/workspace/design/survival-theme-a-fantasy/new_2026-11-03/malzareth/work_fix8/panels_fix8/f2_attack2_overhead_cleave_windup_34.png",
+   "label": "f2_attack2_overhead_cleave windup f22 34 (cape spring preview)",
+   "bones": [
+    [
+     "mixamorig:Hips",
+     [
+      0.5109826326370239,
+      0.3342125713825226
+     ],
+     [
+      0.5091413855552673,
+      0.3690935969352722
+     ]
+    ],
+    [
+     "mixamorig:Spine",
+     [
+      0.5104570984840393,
+      0.3657482862472534
+     ],
+     [
+      0.5075521469116211,
+      0.40086185932159424
+     ]
+    ],
+    [
+     "mixamorig:Spine1",
+     [
+      0.5075521469116211,
+      0.40086185932159424
+     ],
+     [
+      0.499427855014801,
+      0.4394424855709076
+     ]
+    ],
+    [
+     "mixamorig:Spine2",
+     [
+      0.499427855014801,
+      0.4394424855709076
+     ],
+     [
+      0.49246108531951904,
+      0.48521941900253296
+     ]
+    ],
+    [
+     "mixamorig:Neck",
+     [
+      0.4923475384712219,
+      0.4859655797481537
+     ],
+     [
+      0.49302181601524353,
+      0.4927522540092468
+     ]
+    ],
+    [
+     "mixamorig:Head",
+     [
+      0.4924478530883789,
+      0.49247637391090393
+     ],
+     [
+      0.5118992924690247,
+      0.5287889242172241
+     ]
+    ],
+    [
+     "mixamorig:LeftShoulder",
+     [
+      0.516419529914856,
+      0.477628618478775
+     ],
+     [
+      0.5444067120552063,
+      0.4909132421016693
+     ]
+    ],
+    [
+     "mixamorig:LeftArm",
+     [
+      0.5444067120552063,
+      0.4909132421016693
+     ],
+     [
+      0.5567973852157593,
+      0.5466974377632141
+     ]
+    ],
+    [
+     "mixamorig:LeftForeArm",
+     [
+      0.5567973852157593,
+      0.5466974377632141
+     ],
+     [
+      0.48375755548477173,
+      0.6079005002975464
+     ]
+    ],
+    [
+     "mixamorig:LeftHand",
+     [
+      0.48375755548477173,
+      0.6079005002975464
+     ],
+     [
+      0.45611563324928284,
+      0.6127028465270996
+     ]
+    ],
+    [
+     "mixamorig:RightShoulder",
+     [
+      0.4709585905075073,
+      0.4817076027393341
+     ],
+     [
+      0.42584869265556335,
+      0.4975399971008301
+     ]
+    ],
+    [
+     "mixamorig:RightArm",
+     [
+      0.42584869265556335,
+      0.4975399971008301
+     ],
+     [
+      0.3934711217880249,
+      0.5581895112991333
+     ]
+    ],
+    [
+     "mixamorig:RightForeArm",
+     [
+      0.3934711217880249,
+      0.5581895112991333
+     ],
+     [
+      0.43934446573257446,
+      0.5892797708511353
+     ]
+    ],
+    [
+     "mixamorig:RightForeArm.001",
+     [
+      0.43934446573257446,
+      0.5892797708511353
+     ],
+     [
+      0.4708295464515686,
+      0.588123619556427
+     ]
+    ],
+    [
+     "cape_L_01",
+     [
+      0.593011736869812,
+      0.4672161042690277
+     ],
+     [
+      0.6266804933547974,
+      0.3591887950897217
+     ]
+    ],
+    [
+     "cape_L_02",
+     [
+      0.6266804933547974,
+      0.3591887950897217
+     ],
+     [
+      0.6873201727867126,
+      0.25801125168800354
+     ]
+    ],
+    [
+     "cape_L_03",
+     [
+      0.6873201727867126,
+      0.25801125168800354
+     ],
+     [
+      0.7007102370262146,
+      0.14658623933792114
+     ]
+    ],
+    [
+     "cape_C_01",
+     [
+      0.5327971577644348,
+      0.47331514954566956
+     ],
+     [
+      0.6002148985862732,
+      0.3941158354282379
+     ]
+    ],
+    [
+     "cape_C_02",
+     [
+      0.6002148985862732,
+      0.3941158354282379
+     ],
+     [
+      0.6621851325035095,
+      0.29732048511505127
+     ]
+    ],
+    [
+     "cape_C_03",
+     [
+      0.6621851325035095,
+      0.29732048511505127
+     ],
+     [
+      0.704010009765625,
+      0.1901700794696808
+     ]
+    ],
+    [
+     "cape_R_01",
+     [
+      0.4730795919895172,
+      0.4817243814468384
+     ],
+     [
+      0.5113224983215332,
+      0.3809674382209778
+     ]
+    ],
+    [
+     "cape_R_02",
+     [
+      0.5113224983215332,
+      0.3809674382209778
+     ],
+     [
+      0.5538836121559143,
+      0.27897289395332336
+     ]
+    ],
+    [
+     "cape_R_03",
+     [
+      0.5538836121559143,
+      0.27897289395332336
+     ],
+     [
+      0.586703360080719,
+      0.17230315506458282
+     ]
+    ],
+    [
+     "mixamorig:LeftUpLeg",
+     [
+      0.5530332922935486,
+      0.3145664632320404
+     ],
+     [
+      0.582903265953064,
+      0.20462903380393982
+     ]
+    ],
+    [
+     "mixamorig:LeftLeg",
+     [
+      0.582903265953064,
+      0.20462903380393982
+     ],
+     [
+      0.6276617646217346,
+      0.0994085967540741
+     ]
+    ],
+    [
+     "mixamorig:LeftFoot",
+     [
+      0.6276617646217346,
+      0.0994085967540741
+     ],
+     [
+      0.5988723039627075,
+      0.0739973932504654
+     ]
+    ],
+    [
+     "mixamorig:RightUpLeg",
+     [
+      0.4720413386821747,
+      0.3206568956375122
+     ],
+     [
+      0.4618160128593445,
+      0.20891714096069336
+     ]
+    ],
+    [
+     "mixamorig:RightLeg",
+     [
+      0.4618160128593445,
+      0.20891714096069336
+     ],
+     [
+      0.5620898008346558,
+      0.09804167598485947
+     ]
+    ],
+    [
+     "mixamorig:RightFoot",
+     [
+      0.5620898008346558,
+      0.09804167598485947
+     ],
+     [
+      0.4965144395828247,
+      0.07974473387002945
+     ]
+    ]
+   ]
+  },
+  {
+   "png": "/workspace/design/survival-theme-a-fantasy/new_2026-11-03/malzareth/work_fix8/panels_fix8/f2_attack2_overhead_cleave_windup_rear.png",
+   "label": "f2_attack2_overhead_cleave windup f22 rear (cape spring preview)",
+   "bones": [
+    [
+     "mixamorig:Hips",
+     [
+      0.546747088432312,
+      0.30889615416526794
+     ],
+     [
+      0.5428228974342346,
+      0.34518393874168396
+     ]
+    ],
+    [
+     "mixamorig:Spine",
+     [
+      0.5439349412918091,
+      0.3404903709888458
+     ],
+     [
+      0.5391512513160706,
+      0.3782341778278351
+     ]
+    ],
+    [
+     "mixamorig:Spine1",
+     [
+      0.5391512513160706,
+      0.3782341778278351
+     ],
+     [
+      0.5357868075370789,
+      0.4218628406524658
+     ]
+    ],
+    [
+     "mixamorig:Spine2",
+     [
+      0.5357868075370789,
+      0.4218628406524658
+     ],
+     [
+      0.5356112122535706,
+      0.46950793266296387
+     ]
+    ],
+    [
+     "mixamorig:Neck",
+     [
+      0.5356083512306213,
+      0.47028452157974243
+     ],
+     [
+      0.534273624420166,
+      0.47699999809265137
+     ]
+    ],
+    [
+     "mixamorig:Head",
+     [
+      0.5341454744338989,
+      0.47720521688461304
+     ],
+     [
+      0.5111856460571289,
+      0.5121449828147888
+     ]
+    ],
+    [
+     "mixamorig:LeftShoulder",
+     [
+      0.5074124336242676,
+      0.46350979804992676
+     ],
+     [
+      0.46895286440849304,
+      0.4806089997291565
+     ]
+    ],
+    [
+     "mixamorig:LeftArm",
+     [
+      0.46895286440849304,
+      0.4806089997291565
+     ],
+     [
+      0.41577303409576416,
+      0.5569468140602112
+     ]
+    ],
+    [
+     "mixamorig:LeftForeArm",
+     [
+      0.41577303409576416,
+      0.5569468140602112
+     ],
+     [
+      0.48778560757637024,
+      0.6193782091140747
+     ]
+    ],
+    [
+     "mixamorig:LeftHand",
+     [
+      0.48778560757637024,
+      0.6193782091140747
+     ],
+     [
+      0.4904234707355499,
+      0.6408239603042603
+     ]
+    ],
+    [
+     "mixamorig:RightShoulder",
+     [
+      0.563826322555542,
+      0.46345189213752747
+     ],
+     [
+      0.6158338189125061,
+      0.4768497049808502
+     ]
+    ],
+    [
+     "mixamorig:RightArm",
+     [
+      0.6158338189125061,
+      0.4768497049808502
+     ],
+     [
+      0.6141419410705566,
+      0.5564043521881104
+     ]
+    ],
+    [
+     "mixamorig:RightForeArm",
+     [
+      0.6141419410705566,
+      0.5564043521881104
+     ],
+     [
+      0.531512439250946,
+      0.6050989627838135
+     ]
+    ],
+    [
+     "mixamorig:RightForeArm.001",
+     [
+      0.531512439250946,
+      0.6050989627838135
+     ],
+     [
+      0.4861041307449341,
+      0.6105658411979675
+     ]
+    ],
+    [
+     "cape_L_01",
+     [
+      0.4581386148929596,
+      0.4323836863040924
+     ],
+     [
+      0.4340507686138153,
+      0.32332155108451843
+     ]
+    ],
+    [
+     "cape_L_02",
+     [
+      0.4340507686138153,
+      0.32332155108451843
+     ],
+     [
+      0.38336417078971863,
+      0.2187839299440384
+     ]
+    ],
+    [
+     "cape_L_03",
+     [
+      0.38336417078971863,
+      0.2187839299440384
+     ],
+     [
+      0.3701978921890259,
+      0.11349557340145111
+     ]
+    ],
+    [
+     "cape_C_01",
+     [
+      0.534159779548645,
+      0.43216681480407715
+     ],
+     [
+      0.5132571458816528,
+      0.32549625635147095
+     ]
+    ],
+    [
+     "cape_C_02",
+     [
+      0.5132571458816528,
+      0.32549625635147095
+     ],
+     [
+      0.4747937321662903,
+      0.21671536564826965
+     ]
+    ],
+    [
+     "cape_C_03",
+     [
+      0.4747937321662903,
+      0.21671536564826965
+     ],
+     [
+      0.4375733435153961,
+      0.1110060065984726
+     ]
+    ],
+    [
+     "cape_R_01",
+     [
+      0.6141339540481567,
+      0.43136897683143616
+     ],
+     [
+      0.6030319333076477,
+      0.3181251287460327
+     ]
+    ],
+    [
+     "cape_R_02",
+     [
+      0.6030319333076477,
+      0.3181251287460327
+     ],
+     [
+      0.5820441842079163,
+      0.20685119926929474
+     ]
+    ],
+    [
+     "cape_R_03",
+     [
+      0.5820441842079163,
+      0.20685119926929474
+     ],
+     [
+      0.5626282095909119,
+      0.09678146988153458
+     ]
+    ],
+    [
+     "mixamorig:LeftUpLeg",
+     [
+      0.5068697333335876,
+      0.2865851819515228
+     ],
+     [
+      0.4593064486980438,
+      0.1925988793373108
+     ]
+    ],
+    [
+     "mixamorig:LeftLeg",
+     [
+      0.4593064486980438,
+      0.1925988793373108
+     ],
+     [
+      0.47242623567581177,
+      0.056032564491033554
+     ]
+    ],
+    [
+     "mixamorig:LeftFoot",
+     [
+      0.47242623567581177,
+      0.056032564491033554
+     ],
+     [
+      0.46259579062461853,
+      0.05756237730383873
+     ]
+    ],
+    [
+     "mixamorig:RightUpLeg",
+     [
+      0.5912360548973083,
+      0.2952210009098053
+     ],
+     [
+      0.5954490900039673,
+      0.19489558041095734
+     ]
+    ],
+    [
+     "mixamorig:RightLeg",
+     [
+      0.5954490900039673,
+      0.19489558041095734
+     ],
+     [
+      0.5154547691345215,
+      0.07253900170326233
+     ]
+    ],
+    [
+     "mixamorig:RightFoot",
+     [
+      0.5154547691345215,
+      0.07253900170326233
+     ],
+     [
+      0.5669215321540833,
+      0.06805117428302765
+     ]
+    ]
+   ]
+  },
+  {
+   "png": "/workspace/design/survival-theme-a-fantasy/new_2026-11-03/malzareth/work_fix8/panels_fix8/f2_attack2_overhead_cleave_impact_34.png",
+   "label": "f2_attack2_overhead_cleave impact f30 34 (cape spring preview)",
+   "bones": [
+    [
+     "mixamorig:Hips",
+     [
+      0.5134304761886597,
+      0.37795987725257874
+     ],
+     [
+      0.5093778967857361,
+      0.4205935299396515
+     ]
+    ],
+    [
+     "mixamorig:Spine",
+     [
+      0.5107312202453613,
+      0.4167177081108093
+     ],
+     [
+      0.5054745674133301,
+      0.45870986580848694
+     ]
+    ],
+    [
+     "mixamorig:Spine1",
+     [
+      0.5054745674133301,
+      0.45870986580848694
+     ],
+     [
+      0.5019068717956543,
+      0.5048510432243347
+     ]
+    ],
+    [
+     "mixamorig:Spine2",
+     [
+      0.5019068717956543,
+      0.5048510432243347
+     ],
+     [
+      0.5009279251098633,
+      0.5604100227355957
+     ]
+    ],
+    [
+     "mixamorig:Neck",
+     [
+      0.5009120106697083,
+      0.5613155961036682
+     ],
+     [
+      0.4994363486766815,
+      0.569952130317688
+     ]
+    ],
+    [
+     "mixamorig:Head",
+     [
+      0.49968862533569336,
+      0.5696613192558289
+     ],
+     [
+      0.4933682978153229,
+      0.622247040271759
+     ]
+    ],
+    [
+     "mixamorig:LeftShoulder",
+     [
+      0.5363209247589111,
+      0.554032027721405
+     ],
+     [
+      0.5909982323646545,
+      0.5592107176780701
+     ]
+    ],
+    [
+     "mixamorig:LeftArm",
+     [
+      0.5909982323646545,
+      0.5592107176780701
+     ],
+     [
+      0.5591951012611389,
+      0.5654789805412292
+     ]
+    ],
+    [
+     "mixamorig:LeftForeArm",
+     [
+      0.5591951012611389,
+      0.5654789805412292
+     ],
+     [
+      0.4299061894416809,
+      0.5494785308837891
+     ]
+    ],
+    [
+     "mixamorig:LeftHand",
+     [
+      0.4299061894416809,
+      0.5494785308837891
+     ],
+     [
+      0.40191397070884705,
+      0.5731461048126221
+     ]
+    ],
+    [
+     "mixamorig:RightShoulder",
+     [
+      0.465779572725296,
+      0.553428053855896
+     ],
+     [
+      0.39807620644569397,
+      0.5565924048423767
+     ]
+    ],
+    [
+     "mixamorig:RightArm",
+     [
+      0.39807620644569397,
+      0.5565924048423767
+     ],
+     [
+      0.27974289655685425,
+      0.5516387820243835
+     ]
+    ],
+    [
+     "mixamorig:RightForeArm",
+     [
+      0.27974289655685425,
+      0.5516387820243835
+     ],
+     [
+      0.38753196597099304,
+      0.5466815233230591
+     ]
+    ],
+    [
+     "mixamorig:RightForeArm.001",
+     [
+      0.38753196597099304,
+      0.5466815233230591
+     ],
+     [
+      0.4210146367549896,
+      0.5374580025672913
+     ]
+    ],
+    [
+     "cape_L_01",
+     [
+      0.5968859791755676,
+      0.5516573190689087
+     ],
+     [
+      0.6581900715827942,
+      0.41987141966819763
+     ]
+    ],
+    [
+     "cape_L_02",
+     [
+      0.6581900715827942,
+      0.41987141966819763
+     ],
+     [
+      0.7400098443031311,
+      0.29536211490631104
+     ]
+    ],
+    [
+     "cape_L_03",
+     [
+      0.7400098443031311,
+      0.29536211490631104
+     ],
+     [
+      0.7956681251525879,
+      0.16178813576698303
+     ]
+    ],
+    [
+     "cape_C_01",
+     [
+      0.5017722249031067,
+      0.5517464876174927
+     ],
+     [
+      0.585298478603363,
+      0.4685117304325104
+     ]
+    ],
+    [
+     "cape_C_02",
+     [
+      0.585298478603363,
+      0.4685117304325104
+     ],
+     [
+      0.679020345211029,
+      0.365740031003952
+     ]
+    ],
+    [
+     "cape_C_03",
+     [
+      0.679020345211029,
+      0.365740031003952
+     ],
+     [
+      0.7588752508163452,
+      0.24303622543811798
+     ]
+    ],
+    [
+     "cape_R_01",
+     [
+      0.4015255868434906,
+      0.5548530220985413
+     ],
+     [
+      0.46780291199684143,
+      0.4555628001689911
+     ]
+    ],
+    [
+     "cape_R_02",
+     [
+      0.46780291199684143,
+      0.4555628001689911
+     ],
+     [
+      0.5303974747657776,
+      0.3399142622947693
+     ]
+    ],
+    [
+     "cape_R_03",
+     [
+      0.5303974747657776,
+      0.3399142622947693
+     ],
+     [
+      0.5857715606689453,
+      0.21229976415634155
+     ]
+    ],
+    [
+     "mixamorig:LeftUpLeg",
+     [
+      0.5687222480773926,
+      0.356683611869812
+     ],
+     [
+      0.566838800907135,
+      0.22054706513881683
+     ]
+    ],
+    [
+     "mixamorig:LeftLeg",
+     [
+      0.566838800907135,
+      0.22054706513881683
+     ],
+     [
+      0.6711989641189575,
+      0.11555588245391846
+     ]
+    ],
+    [
+     "mixamorig:LeftFoot",
+     [
+      0.6711989641189575,
+      0.11555588245391846
+     ],
+     [
+      0.63520747423172,
+      0.08378788828849792
+     ]
+    ],
+    [
+     "mixamorig:RightUpLeg",
+     [
+      0.4631451964378357,
+      0.35890859365463257
+     ],
+     [
+      0.42357930541038513,
+      0.22223491966724396
+     ]
+    ],
+    [
+     "mixamorig:RightLeg",
+     [
+      0.42357930541038513,
+      0.22223491966724396
+     ],
+     [
+      0.5892238020896912,
+      0.1138468012213707
+     ]
+    ],
+    [
+     "mixamorig:RightFoot",
+     [
+      0.5892238020896912,
+      0.1138468012213707
+     ],
+     [
+      0.5072445273399353,
+      0.09097283333539963
+     ]
+    ]
+   ]
+  },
+  {
+   "png": "/workspace/design/survival-theme-a-fantasy/new_2026-11-03/malzareth/work_fix8/panels_fix8/f2_attack2_overhead_cleave_impact_rear.png",
+   "label": "f2_attack2_overhead_cleave impact f30 rear (cape spring preview)",
+   "bones": [
+    [
+     "mixamorig:Hips",
+     [
+      0.5907337665557861,
+      0.321392685174942
+     ],
+     [
+      0.5855454802513123,
+      0.36719468235969543
+     ]
+    ],
+    [
+     "mixamorig:Spine",
+     [
+      0.5874382257461548,
+      0.3615030348300934
+     ],
+     [
+      0.5799446702003479,
+      0.4089183807373047
+     ]
+    ],
+    [
+     "mixamorig:Spine1",
+     [
+      0.5799446702003479,
+      0.4089183807373047
+     ],
+     [
+      0.5667526721954346,
+      0.4625591039657593
+     ]
+    ],
+    [
+     "mixamorig:Spine2",
+     [
+      0.5667526721954346,
+      0.4625591039657593
+     ],
+     [
+      0.5560762286186218,
+      0.5217458605766296
+     ]
+    ],
+    [
+     "mixamorig:Neck",
+     [
+      0.5559021830558777,
+      0.5227105617523193
+     ],
+     [
+      0.5567305684089661,
+      0.5312825441360474
+     ]
+    ],
+    [
+     "mixamorig:Head",
+     [
+      0.5556750297546387,
+      0.5314844846725464
+     ],
+     [
+      0.5663018822669983,
+      0.5784838795661926
+     ]
+    ],
+    [
+     "mixamorig:LeftShoulder",
+     [
+      0.5288247466087341,
+      0.5086289644241333
+     ],
+     [
+      0.4849989712238312,
+      0.5034917593002319
+     ]
+    ],
+    [
+     "mixamorig:LeftArm",
+     [
+      0.4849989712238312,
+      0.5034917593002319
+     ],
+     [
+      0.43503478169441223,
+      0.5611774921417236
+     ]
+    ],
+    [
+     "mixamorig:LeftForeArm",
+     [
+      0.43503478169441223,
+      0.5611774921417236
+     ],
+     [
+      0.5260462760925293,
+      0.5775027275085449
+     ]
+    ],
+    [
+     "mixamorig:LeftHand",
+     [
+      0.5260462760925293,
+      0.5775027275085449
+     ],
+     [
+      0.5284452438354492,
+      0.616992712020874
+     ]
+    ],
+    [
+     "mixamorig:RightShoulder",
+     [
+      0.5868472456932068,
+      0.520043671131134
+     ],
+     [
+      0.637775719165802,
+      0.5374068021774292
+     ]
+    ],
+    [
+     "mixamorig:RightArm",
+     [
+      0.637775719165802,
+      0.5374068021774292
+     ],
+     [
+      0.7071646451950073,
+      0.569904088973999
+     ]
+    ],
+    [
+     "mixamorig:RightForeArm",
+     [
+      0.7071646451950073,
+      0.569904088973999
+     ],
+     [
+      0.5773135423660278,
+      0.5720725655555725
+     ]
+    ],
+    [
+     "mixamorig:RightForeArm.001",
+     [
+      0.5773135423660278,
+      0.5720725655555725
+     ],
+     [
+      0.5226841568946838,
+      0.5742673873901367
+     ]
+    ],
+    [
+     "cape_L_01",
+     [
+      0.5257300734519958,
+      0.46763136982917786
+     ],
+     [
+      0.4731620252132416,
+      0.335136353969574
+     ]
+    ],
+    [
+     "cape_L_02",
+     [
+      0.4731620252132416,
+      0.335136353969574
+     ],
+     [
+      0.40229323506355286,
+      0.20683962106704712
+     ]
+    ],
+    [
+     "cape_L_03",
+     [
+      0.40229323506355286,
+      0.20683962106704712
+     ],
+     [
+      0.34169498085975647,
+      0.08135716617107391
+     ]
+    ],
+    [
+     "cape_C_01",
+     [
+      0.6052458882331848,
+      0.48308661580085754
+     ],
+     [
+      0.5939182639122009,
+      0.35598471760749817
+     ]
+    ],
+    [
+     "cape_C_02",
+     [
+      0.5939182639122009,
+      0.35598471760749817
+     ],
+     [
+      0.5506336688995361,
+      0.22323094308376312
+     ]
+    ],
+    [
+     "cape_C_03",
+     [
+      0.5506336688995361,
+      0.22323094308376312
+     ],
+     [
+      0.4923121929168701,
+      0.0902932658791542
+     ]
+    ],
+    [
+     "cape_R_01",
+     [
+      0.6934973001480103,
+      0.49948662519454956
+     ],
+     [
+      0.690793514251709,
+      0.3636740744113922
+     ]
+    ],
+    [
+     "cape_R_02",
+     [
+      0.690793514251709,
+      0.3636740744113922
+     ],
+     [
+      0.6727826595306396,
+      0.22435109317302704
+     ]
+    ],
+    [
+     "cape_R_03",
+     [
+      0.6727826595306396,
+      0.22435109317302704
+     ],
+     [
+      0.6433521509170532,
+      0.0856349766254425
+     ]
+    ],
+    [
+     "mixamorig:LeftUpLeg",
+     [
+      0.5433990955352783,
+      0.29321280121803284
+     ],
+     [
+      0.5020641684532166,
+      0.19221681356430054
+     ]
+    ],
+    [
+     "mixamorig:LeftLeg",
+     [
+      0.5020641684532166,
+      0.19221681356430054
+     ],
+     [
+      0.48573699593544006,
+      0.033805783838033676
+     ]
+    ],
+    [
+     "mixamorig:LeftFoot",
+     [
+      0.48573699593544006,
+      0.033805783838033676
+     ],
+     [
+      0.47344744205474854,
+      0.03571833670139313
+     ]
+    ],
+    [
+     "mixamorig:RightUpLeg",
+     [
+      0.6446687579154968,
+      0.3044282793998718
+     ],
+     [
+      0.6701114773750305,
+      0.1875109076499939
+     ]
+    ],
+    [
+     "mixamorig:RightLeg",
+     [
+      0.6701114773750305,
+      0.1875109076499939
+     ],
+     [
+      0.5395293831825256,
+      0.05444125458598137
+     ]
+    ],
+    [
+     "mixamorig:RightFoot",
+     [
+      0.5395293831825256,
+      0.05444125458598137
+     ],
+     [
+      0.6038708090782166,
+      0.04883066937327385
+     ]
+    ]
+   ]
+  }
+ ],
+ "wing_hit_cape_verts": []
+}
