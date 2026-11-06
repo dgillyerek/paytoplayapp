@@ -107,3 +107,22 @@ KAELEN_FIX9_RENDER=0 blender --background --factory-startup \
 `k9_dual_render.py` exits if a sword or body vertex hash differs from the blend, or if the reimported hilt leaves the hand bone by more than 0.2 mm. It does not write `KAELEN_rig_rest.fbx`.
 
 This is not a FIX9 pass. Unity was not run.
+
+## Cross thrust left grip (inspected, not rebound)
+
+The cross-thrust file was not changed. Preview sha256 is still `a06eafb9d24df1a7da4382a09b5b037e335e0c221acb8bf0a2841015d538044e`. `KAELEN_rig_rest.fbx` is still `7ac5ea510f50ac0f96e28f5b6c000fa652cebe74935a49d9e3b916dbbd6946eb`, the same bytes as main `02b3660e`.
+
+`NewCharsPreview` instantiates `KAELEN_rig_rest.fbx` and calls `AnimationClip.SampleAnimation` on that instance. `LoadClip` keeps the clip and drops the mesh inside the attack FBX. There is no separate sword prefab. On the imported rest file each sword is parented to the armature as an object, has an Armature modifier, has no constraint, and all 17059 vertices are weight 1 on `Arm.002`. That is one bind. A Child Of was not added.
+
+On that rest mesh plus the current clip, the left hilt stays at 2.19 cm, 7.84 cm, −1.56 cm in `LeftArm.002` at frames 1, 8, 14, 18, 20, 22, 28, 36, and 48. The same point is on the base `02b3660e` cross clip, on dual slash, on idle, and on walk. The nearest sword vertex is 0.16 cm from a hand vertex (Arm.002 weight ≥ 0.5). The hand bone's location channel is 0. The earlier 4–6 cm sword–body figure excluded those hand faces, so it is not the grip distance.
+
+At frame 20 the left hand quaternion matches the base clip. From frame 28 the current clip eases that hand to the rest bend (8.28° between forearm and hand); the base clip stays at 20.24°. The sword does not leave the hand either way, because the fingers and the sword are the same bone. The shoulder fix is the upper-arm path already in `a06e…`. Those arm matrices were not edited again.
+
+I looked at the imported clip, not Unity: front, left quarter, and a left-hand view with the right sword hidden, including frames 20 and 28. The fingers stay on the handle. The pommel still passes the heel. That is the shared bind, so the sword mesh was not moved and body weights were not changed. Existing cross-thrust and dual-slash clips were left in place.
+
+- `clips/KAELEN_FIX9_crossthrust_inspect_front.mp4`
+- `clips/KAELEN_FIX9_crossthrust_inspect_lquarter.mp4`
+- `clips/KAELEN_FIX9_crossthrust_inspect_lhand.mp4`
+- `sheets/cross_left/`
+
+Unity was not run. A Blender camera at yaw 135°, pitch 30°, and 54° fov (the locked-battle numbers) shows the same overhead from behind the body. It is not a Unity capture.
