@@ -1,4 +1,16 @@
-# Seraphine FIX5 — recovery bend and throw wrist, still a draft
+# Seraphine FIX5 — premise test, then the path was relaxed
+
+Not merged. Not Derek-ready. No claim that the clips pass.
+
+Premise that the last several fixes shared: keep the prescribed staff direction and hand path, and recover a natural joint by redistributing wrist or forearm rotation. Tested on the `2cc18df8` export against frame 1 as the idle control, on the locked bind.
+
+The test rejects it for the throw. With the forearm roll held at the idle relationship to the upper arm, and the wrist held at the idle joint, the staff direction misses the authored line by 71° at frame 3 and 92–99° through frames 14–19. Putting the staff on that line is what rolled the forearm about 59° and twisted the shoulder. The windup hand still travels out and forward. The staff now follows an idle wrist and an idle forearm roll instead of the old line. Measured forearm roll on the new export is about 11–14° through frames 14–19, wrist bend stays 26.4°, wrist twist stays 0. The elbow angle holds at 142° across frames 15, 19 and 22. It eases to 129° by frame 25 as the release starts. Head, hip and leg at frame 16 are 43 cm, 41 cm and 30 cm.
+
+The thrust release is a different failure of the same premise. The grip pose and the idle pose are each inside a normal wrist. The world-quaternion blend between them is not: bend went 126° → 146° → 160° and the twist flipped sign between frames 44 and 46. The blend is now in the forearm's local frame, and once the grip is releasing the bend is held to 70° or less. Measured bend is 43°, 37° and 29° on frames 44, 45 and 46. Forearm roll stays near -30°, the same neighborhood as the held grip, so the fold was not moved into the forearm. Cuff pairs on the sampled frames including 17, 18, 40 and 44 are 0. Frame 17 still has 110 hand vertices within 2 cm of the staff, frame 18 has 286.
+
+Rest, idle, walk, cape and the right-hand socket were not edited.
+
+# Previous note — recovery bend and throw wrist, still a draft
 
 Not merged. Not Derek-ready. No claim that the clips pass.
 
