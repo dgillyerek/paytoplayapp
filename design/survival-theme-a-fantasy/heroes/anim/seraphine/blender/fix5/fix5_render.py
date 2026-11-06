@@ -289,11 +289,10 @@ elif MODE == "clips":
             scene.frame_set(f)
             render_frame(cam_front, os.path.join(OUT, f"{key}_front_{f:03d}.png"))
             render_frame(cam_side, os.path.join(OUT, f"{key}_side_{f:03d}.png"))
-            if key == "thrust" and f in (8, 17, 18, 40, 43, 44, 45, 46, 47, 48, 50, 52):
-                render_frame(cam_wrist, os.path.join(OUT, f"{key}_cuff_{f:03d}.png"))
-            if key == "throw" and f in (14, 15, 16, 17, 18, 19, 22, 25):
-                render_frame(cam_side, os.path.join(OUT, f"{key}_phase_{f:03d}.png"))
-                render_frame(cam_wrist, os.path.join(OUT, f"{key}_wrist_{f:03d}.png"))
+            if key == "thrust" and 42 <= f <= 49:
+                render_frame(cam_wrist, os.path.join(OUT, f"{key}_rel_{f:03d}.png"))
+            if key == "throw" and (22 <= f <= 28 or 44 <= f <= 52):
+                render_frame(cam_side, os.path.join(OUT, f"{key}_proof_{f:03d}.png"))
         print("rendered", key, end)
 else:
     jobs = {

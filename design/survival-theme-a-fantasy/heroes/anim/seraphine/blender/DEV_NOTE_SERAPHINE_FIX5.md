@@ -1,4 +1,18 @@
-# Seraphine FIX5 — premise test, then the path was relaxed
+# Seraphine FIX5 — release, elbow, and the thigh return
+
+Not merged. Not Derek-ready. No claim that the clips pass.
+
+Checked on every frame of both exports, rest skin, not a sample.
+
+The thrust release no longer clamps the wrist on the first frame off the shaft. The grip orientation is stored at frame 42 and eases toward the idle wrist in the forearm frame. Bend from frame 40 through 52: 104, 104, 104, 99, 86, 66, 43, then 35 held. No 56° step and no rebound. Forearm roll is not asked to absorb it.
+
+The throw elbow no longer drops 12° in one frame. Frames 20–30 read 142, 142, 142, 142, 138, 136, 136, 136, 137, 142, 142. The dip is about 7°, spread from frame 23 to 28.
+
+The return no longer aims at the idle hand. That line put the staff through the right thigh (188 pairs at frame 48 on the previous export) and, once the hand arrived, through the hip. From frame 48 the hand holds high and to her right. Every frame of both clips has 0 staff pairs against the non-hand body, either cuff, the right leg, and the wings. The clip does not end on the exact idle hand.
+
+Palm contact at frames 17 and 18 is unchanged (110 and 286 hand vertices within 2 cm). Rest, idle, walk, cape and the right-hand socket were not edited.
+
+# Previous note — premise test, then the path was relaxed
 
 Not merged. Not Derek-ready. No claim that the clips pass.
 

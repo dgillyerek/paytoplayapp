@@ -106,6 +106,7 @@ IDLE_FORE_L = (arm.matrix_world @ arm.pose.bones[P + "LeftForeArm"].matrix).to_3
 IDLE_ELBOW_L = (arm.matrix_world @ arm.pose.bones[P + "LeftForeArm"].head).copy()
 IDLE_FORE_R = (arm.matrix_world @ arm.pose.bones[P + "RightForeArm"].matrix).to_3x3()
 IDLE_ARM_R = (arm.matrix_world @ arm.pose.bones[P + "RightArm"].matrix).to_3x3()
+IDLE_RSH = (arm.matrix_world @ arm.pose.bones[P + "RightArm"].head).copy()
 # Every staff vertex in the right-hand bone frame. The posed hand carries the whole mesh.
 _inv_hand = rh_w.inverted()
 STAFF_LOCAL = [_inv_hand @ v for v in sverts]
@@ -158,6 +159,8 @@ FOREARM_IDS = [
 print(f"left forearm verts {len(FOREARM_IDS)}")
 
 PREV_ELBOW = {}
+PREV_FLEX = {}
+GRIP_LOCAL_Q = {}
 
 # Which local euler on each clavicle raises / brings the arm forward.
 def _bone_delta(name, euler_tuple):
@@ -901,6 +904,12 @@ def clavicle_euler(side, lift_deg, fwd_deg):
 
 
 def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
+    # The throw's chest is still pitched at the end of the clip, and the staff
+    # then hangs through the right thigh. Settle the torso on the way home.
+    if params.get("throw") and frame >= 40:
+        settle = smooth(min(1.0, (frame - 40) / 8.0))
+        for k in ("hip_v", "sh_v", "hip_pitch", "chest_pitch", "hip_roll", "lift", "nod", "head_yaw", "hip_drop"):
+            params[k] *= (1.0 - settle)
     for pb in arm.pose.bones:
         pb.matrix_basis = idle_basis[pb.name].copy()
 
@@ -1053,19 +1062,32 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
             u = smooth((frame - 1) / 17.0)
             staff_dir = slerp_dir(UP, cock, u)
             wrist_target = IDLE_RH.lerp(cock_hand, u)
-        elif frame <= 26:
+        elif frame <= 22:
             staff_dir = cock.copy()
             wrist_target = cock_hand.copy()
-        elif frame <= 36:
-            u = smooth((frame - 26) / 10.0)
+        elif frame <= 30:
+            # The elbow was held straight through frame 24 and then folded
+            # in one frame. Open the arm across 22-30 instead.
+            u = smooth((frame - 22) / 8.0)
             staff_dir = slerp_dir(cock, release, u)
             wrist_target = cock_hand.lerp(release_hand, u)
+        elif frame <= 42:
+            u = smooth((frame - 30) / 12.0)
+            staff_dir = slerp_dir(release, Vector((-0.45, -0.15, 0.88)).normalized(), u)
+            out_hand = r_sh + Vector((-0.40, -0.12, 0.16))
+            wrist_target = release_hand.lerp(out_hand, u)
+        elif frame <= 48:
+            # High and to her right. The butt stays outside the thigh.
+            u = smooth((frame - 42) / 6.0)
+            staff_dir = Vector((-0.62, -0.02, 0.78)).normalized()
+            low = r_sh + Vector((-0.42, -0.08, 0.24))
+            high = r_sh + Vector((-0.58, 0.04, 0.42))
+            wrist_target = low.lerp(high, u)
         else:
-            # Stay leaned forward until the hand is home. Vertical too early
-            # hangs the shaft through the right thigh.
-            u = smooth(min(1.0, (frame - 36) / 14.0))
-            staff_dir = slerp_dir(release, UP, u)
-            wrist_target = release_hand.lerp(IDLE_RH, u)
+            # The clear pose is high and to her right. Continuing in to the
+            # shoulder puts the staff through the thigh and the hip.
+            staff_dir = Vector((-0.62, -0.02, 0.78)).normalized()
+            wrist_target = r_sh + Vector((-0.58, 0.04, 0.42))
         elbow_hint = Vector((-0.70, -0.40, 0.20))
         grip_u = 0.0
     else:
@@ -1203,6 +1225,35 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
         else:
             pole_r = r_sh + elbow_hint
         elbow, wrist = ik_near_previous("Right", r_sh, wrist, pole_r, R_UP, R_FORE)
+        if params["throw"] and 20 <= frame <= 32:
+            _prev_e = PREV_ELBOW.get("Right")
+            if _prev_e is not None:
+                def _flex(e, w):
+                    v1 = (r_sh - e)
+                    v2 = (w - e)
+                    if v1.length < 1e-6 or v2.length < 1e-6:
+                        return 0.0
+                    return math.degrees(v1.angle(v2))
+                prev_ang = PREV_FLEX.get("R", _flex(_prev_e, wrist))
+                ang = _flex(elbow, wrist)
+                if abs(ang - prev_ang) > 4.0:
+                    lo, hi = 0.0, 1.0
+                    best = _prev_e.copy()
+                    _away = wrist - _prev_e
+                    best_w = _prev_e + _away.normalized() * R_FORE if _away.length > 1e-6 else wrist.copy()
+                    for _ in range(10):
+                        mid = 0.5 * (lo + hi)
+                        e = _prev_e.lerp(elbow, mid)
+                        e = r_sh + (e - r_sh).normalized() * R_UP
+                        direction = wrist - e
+                        w = e + direction.normalized() * R_FORE if direction.length > 1e-6 else wrist
+                        a = _flex(e, w)
+                        if abs(a - prev_ang) > 4.0:
+                            hi = mid
+                        else:
+                            lo = mid
+                            best, best_w = e, w
+                    elbow, wrist = best, best_w
         fore = wrist - elbow
         if fore.length < 1e-5:
             fore = Vector((0.0, -1.0, 0.0))
@@ -1231,8 +1282,12 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
             f"wing{c['wing']*100:.0f} cape{c['cape']*100:.0f} twist{twist}"
             f"{where}"
         )
-        # One step out to her right and forward. Never toward the chest.
-        wrist_target = wrist + Vector((-0.03, -0.04, 0.02))
+        # One step out to her right. On the way home, up as well, so the
+        # shaft is not walked forward across the right thigh.
+        if params["throw"] and frame >= 40:
+            pass
+        else:
+            wrist_target = wrist + Vector((-0.03, -0.04, 0.02))
         staff_dir = slerp_dir(sdir, Vector((sdir.x - 0.12, sdir.y - 0.08, max(sdir.z, 0.7))), 0.35)
 
     wrist_target, staff_dir, fore_y, elbow, hand_R, _c, _ok, _twist = solved
@@ -1253,10 +1308,12 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
         else:
             hand_R = orient_hand(fore_y, staff_dir)
     PREV_ELBOW["Right"] = elbow.copy()
-    set_world_keep_loc(arm.pose.bones[P + "RightArm"], mat_y_cont(elbow - r_sh, P + "RightArm", elbow_hint), r_sh, max_step_deg=28.0)
+    arm_cap = 6.0 if params["throw"] and 22 <= frame <= 28 else 28.0
+    set_world_keep_loc(arm.pose.bones[P + "RightArm"], mat_y_cont(elbow - r_sh, P + "RightArm", elbow_hint), r_sh, max_step_deg=arm_cap)
     bpy.context.view_layer.update()
     elb_h = arm.matrix_world @ arm.pose.bones[P + "RightForeArm"].head
-    set_world_keep_loc(arm.pose.bones[P + "RightForeArm"], mat_y_cont(wrist_target - elb_h, P + "RightForeArm", staff_dir), elb_h)
+    fore_cap = 6.0 if params["throw"] and 22 <= frame <= 28 else None
+    set_world_keep_loc(arm.pose.bones[P + "RightForeArm"], mat_y_cont(wrist_target - elb_h, P + "RightForeArm", staff_dir), elb_h, max_step_deg=fore_cap)
     bpy.context.view_layer.update()
     wrist_h = arm.matrix_world @ arm.pose.bones[P + "RightHand"].head
     elb_h = arm.matrix_world @ arm.pose.bones[P + "RightForeArm"].head
@@ -1382,22 +1439,26 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
         wh = arm.matrix_world @ arm.pose.bones[P + "LeftHand"].head
 
         def left_hand_world(fore_R):
-            # Joint-local blend. A world slerp from the grip to idle folds
-            # the wrist through about 160° around frames 44-46.
+            # The grip orientation stays while the hand is on the shaft.
+            # After frame 42 the wrist joint eases toward idle in the forearm
+            # frame. A bend clamp at the first releasing frame jumped 104° to 48°.
             idle_local = IDLE_FORE_L.inverted() @ IDLE_HAND_L
-            grip_local = fore_R.inverted() @ hand_l
-            q0 = idle_local.to_quaternion()
-            q1 = grip_local.to_quaternion()
-            if q0.dot(q1) < 0.0:
-                q1 = -q1
-            u = max(0.0, min(1.0, grip_u))
-            q = q0.slerp(q1, u)
-            if u < 0.98:
-                for _ in range(6):
-                    bend = math.degrees(Vector((0.0, 1.0, 0.0)).angle(q.to_matrix().col[1].xyz))
-                    if bend <= 70.0:
-                        break
-                    q = q0.slerp(q, 0.55)
+            q_idle = idle_local.to_quaternion()
+            if frame <= 42:
+                q = (fore_R.inverted() @ hand_l).to_quaternion()
+                if q_idle.dot(q) < 0.0:
+                    q = -q
+                GRIP_LOCAL_Q["L"] = q.copy()
+            else:
+                q_grip = GRIP_LOCAL_Q.get("L", q_idle)
+                if q_grip.dot(q_idle) < 0.0:
+                    q_idle = -q_idle
+                t = smooth(min(1.0, (frame - 42) / 8.0))
+                q = q_grip.slerp(q_idle, t)
+                bend = math.degrees(Vector((0.0, 1.0, 0.0)).angle(q.to_matrix().col[1].xyz))
+                # The joint arc dips past idle and comes back. Hold idle once it arrives.
+                if t > 0.8 or bend < 32.0:
+                    q = q_idle.copy()
             return fore_R @ q.to_matrix().to_3x3()
 
         if palm_at is not None and not params["throw"]:
@@ -1485,6 +1546,12 @@ def pose_character(params, frame, foot_l_keys, foot_r_keys, warnings):
         arm.pose.bones[nm].matrix_basis = idle_basis[nm].copy()
 
     bpy.context.view_layer.update()
+    if params["throw"]:
+        _up = arm.matrix_world @ arm.pose.bones[P + "RightArm"].head
+        _el = arm.matrix_world @ arm.pose.bones[P + "RightForeArm"].head
+        _wr = arm.matrix_world @ arm.pose.bones[P + "RightHand"].head
+        if (_up - _el).length > 1e-6 and (_wr - _el).length > 1e-6:
+            PREV_FLEX["R"] = math.degrees((_up - _el).angle(_wr - _el))
     if (params["throw"] and frame in (3, 5, 14, 15, 16, 17, 18, 19, 22, 25)) or (
             (not params["throw"]) and frame in (44, 45, 46, 47, 48, 50, 52)):
         fore_m = (arm.matrix_world @ arm.pose.bones[P + ("Right" if params["throw"] else "Left") + "ForeArm"].matrix).to_3x3()
@@ -1558,6 +1625,8 @@ def build(name, nframes, param_fn, lfoot, rfoot):
     for pb in arm.pose.bones:
         pb.matrix_basis = idle_basis[pb.name].copy()
     bpy.context.view_layer.update()
+    GRIP_LOCAL_Q.clear()
+    PREV_FLEX.clear()
     PREV_ELBOW["Right"] = (arm.matrix_world @ arm.pose.bones[P + "RightForeArm"].head).copy()
     PREV_ELBOW["Left"] = (arm.matrix_world @ arm.pose.bones[P + "LeftForeArm"].head).copy()
     for _bn in ("RightArm", "RightForeArm", "LeftArm", "LeftForeArm"):
