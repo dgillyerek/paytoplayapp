@@ -1,4 +1,4 @@
-# DEV NOTE: Vorgath spit fire stream (fix3)
+# DEV NOTE: Vorgath spit fire stream (fix4)
 
 Design delivers the art, the socket numbers and the timing. **Dev has to wire the VFX hook in Unity.** Design made no `.cs` or Unity scene edits. The character FBXs still have the same 20 bones, and no socket bone was added.
 
@@ -25,10 +25,11 @@ For Animation Events, use two events: `FireStart` at 1.733 s and `FireStop` at 2
   2. Or, with the prefab at bind pose: create an empty child of `Bone.004`, set its world position from the model-space point above and its forward (+Z) from the direction above, then keep it parented.
 - Check: on spit f60 to f62 the socket gizmo should sit inside the open mouth, with +Z pointing out between the teeth.
 
-## 3. VFX asset: `vfx/VORGATH_fire_stream_flipbook_4x4.png`
-- 1024x1024 RGBA. 4x4 = 16 frames, 256 px cells, read row by row from the top-left. It loops seamlessly, so play it at 20 to 30 fps (16 frames at 24 fps is about 0.67 s per loop).
-- Cell layout: the **mouth end is at the left edge (U=0)** and the stream runs to the right (U=1). V=0.5 is the centerline. It is narrow and white-gold hot near the mouth, with an orange body and red, broken-up edges and tail. The alpha is soft, with no hard cell borders.
-- Colors follow Theme A fantasy: core about #FFF7C7 to #FFDB66, body #FFA81F to #FF6B0D, edges #D9290A to #8C0A05.
+## 3. VFX asset: `vfx/VORGATH_fire_stream_flipbook_4x4.png` (FIX4 upgrade)
+- 1024x1024 RGBA. 4x4 = 16 frames, 256 px cells, read row by row from the top-left. It loops seamlessly, so play it at 20 to 30 fps (16 frames at 24 fps is about 0.67 s per loop). **Same layout/orientation/frame count as fix3** so it drops into the existing socket + `VorgathSpitStream` LineRenderer without code changes.
+- Cell layout: the **mouth end is at the left edge (U=0)** and the stream runs to the right (U=1). V=0.5 is the centerline. Alpha is soft with no hard cell borders.
+- **FIX4 paint (replaces the plain orange streaks Derek flagged):** layered real-flame structure — bright white-gold **core** near the mouth, turbulent orange **body**, red broken edges, soft **smoke** wisps toward the tip, and discrete flickering **ember** sparks. More vertical tongue/lobe detail so the stretched LineRenderer reads as fire, not a flat gradient ribbon.
+- Colors follow Theme A fantasy: core about #FFF7C7 to #FFDB66, body #FFA81F to #FF6B0D, edges #D9290A to #8C0A05, smoke toward dark charcoal.
 - **Suggested setup (pick one):**
   - **Stretched mesh strip (recommended):** a quad strip or LineRenderer of 8 to 12 segments from the socket along socket +Z, about 2.6 m long, with a little droop (about -0.12·t² m) and clipped at the ground. Width runs from about 0.18 m at the mouth to about 0.9 m at the end. Map U along the length and V across it. Use the flipbook via `_MainTex` tiling (0.25, 0.25) with a frame offset, or a Flipbook node. Use Additive or Alpha-blend Premultiplied with the Particles/Unlit shader, and billboard it around the length axis (LineRenderer Alignment = View).
   - **Particle System:** shape Cone (angle 6 to 8°, radius 0.05) at the socket. Start speed 6 to 8 m/s, lifetime 0.35 to 0.45 s, emission about 60 to 80/s. Renderer = Stretched Billboard (Speed Scale about 0.05 to 0.08, Length Scale 1 to 2). Texture Sheet Animation 4x4, cycles 1, random start frame. Size over lifetime grows from 0.25 to 1.0, and color over lifetime runs gold, orange, red, then fade.
