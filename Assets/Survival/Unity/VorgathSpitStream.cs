@@ -5,17 +5,29 @@ using UnityEngine.Rendering;
 namespace Survival.Unity
 {
     /// <summary>
-    /// Vorgath's spit fire stream (design/survival-theme-a-fantasy/enemies/anim/vorgath/vfx/DEV_NOTE_VORGATH_spit_fire.md).
-    /// A single stretched strip along the parent socket's +Z, about 2.6 m, with a slight world-down droop, clipped at the
-    /// ground. The 4x4 flipbook loops while the stream is up. One strip stays on for the whole window so the head sweep
-    /// carries it; it is not a burst of particles. Drop the prefab under <c>VORGATH_mouth_socket</c> and call
-    /// <see cref="ApplyClipTime"/> with the spit clip time. New Characters Preview samples clips without an Animator, so
-    /// animation events would not fire there; the clip-time window is the FireStart (1.733 s) / FireStop (2.467 s) hook.
+    /// Vorgath spit stream. URP 17 Particles/Unlit samples the mesh UV and ignores <c>_BaseMap</c> scale and offset
+    /// (<c>UnityBuildTexture2DStructNoScaleNoTexelSize</c>), so a 4x4 flipbook window never selects a cell: Stretch
+    /// shows the entire sheet, sixteen yellow-white slugs. These eight strips are each one whole flame. Playback
+    /// swaps the texture. It does not animate tiling. Body is alpha blend so the red/orange folds stay; a child line
+    /// adds the same strip at 0.55. Socket, droop, length and FireStart/FireStop are unchanged.
     /// </summary>
     public sealed class VorgathSpitStream : MonoBehaviour
     {
         public const string PrefabPath = "Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/VORGATH_spit_fire_stream.prefab";
+
+        /// <summary>FIX5 4x4 sheet. Not assigned. Stretching it is the pellet row.</summary>
         public const string FlipbookPath = "Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/VORGATH_fire_stream_flipbook_4x4.png";
+
+        public const string StripFolder = "Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/";
+
+        /// <summary>The only shader. A Sprites fallback would hide the URP UV bug instead of fixing it.</summary>
+        public const string ShaderName = "Universal Render Pipeline/Particles/Unlit";
+
+        public const int StripFrames = 8;
+        public const float FramesPerSecond = 24f;
+
+        /// <summary>Additive core strength. Below this the hot pixels flood white.</summary>
+        public const float CoreAdd = 0.55f;
 
         /// <summary>FireStart. Spit clip frame 53 at 30 fps: (53-1)/30.</summary>
         public const float FireStartSeconds = 1.733f;
@@ -28,29 +40,45 @@ namespace Survival.Unity
 
         private const float StreamLength = 2.6f;
         private const float Droop = 0.12f;
-        private const float WidthMouth = 0.18f;
-        private const float WidthEnd = 0.9f;
-        private const float GroundY = 0f;
+        private const float WidthMouth = 0.55f;
+        private const float WidthEnd = 1.25f;
+
+        /// <summary>
+        /// World Y of the battle floor. The original stream used this same plane (then lifted the tip by 0.02).
+        /// Line points are world positions (<c>useWorldSpace</c>, origin is the socket world position), so a parent
+        /// scale or local axis does not turn this into a local offset.
+        /// </summary>
+        private const float GroundPlaneY = 0f;
+
+        /// <summary>World metres above <see cref="GroundPlaneY"/>. Tip stops at GroundPlaneY + 0.12.</summary>
+        private const float GroundClearance = 0.12f;
+
         private const int Segments = 10;
-        private const int Frames = 16;
-        private const float FramesPerSecond = 24f;
-        private const float Cell = 0.25f;
 
-        private static readonly Vector2 CellScale = new Vector2(Cell, Cell);
-        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        private static readonly int BaseMapId = Shader.PropertyToID("_BaseMap");
+        private static readonly int ColorId = Shader.PropertyToID("_BaseColor");
+        private static readonly int ColorId2 = Shader.PropertyToID("_Color");
 
-        private LineRenderer? _line;
+        private LineRenderer? _body;
+        private LineRenderer? _core;
         private Light? _light;
         private GameObject? _glow;
-        private Material? _streamMat;
+        private Material? _bodyMat;
+        private Material? _coreMat;
         private Material? _glowMat;
-        private Texture2D? _flipbook;
+        private readonly Texture2D[] _strips = new Texture2D[StripFrames];
         private readonly Vector3[] _points = new Vector3[Segments + 1];
         private readonly AnimationCurve _width = new AnimationCurve(
             new Keyframe(0f, WidthMouth, 0f, WidthEnd - WidthMouth),
             new Keyframe(1f, WidthEnd, WidthEnd - WidthMouth, 0f));
         private float _flip;
+        private int _shownFrame = -1;
         private bool _built;
+
+        public static string StripPath(int frame)
+        {
+            return StripFolder + "VORGATH_fire_f" + frame.ToString("00") + ".png";
+        }
 
         /// <summary>0 outside the spit window, otherwise the smoothed fade (1 while both ramps are done).</summary>
         public static float Intensity(float clipSeconds)
@@ -74,7 +102,6 @@ namespace Survival.Unity
             Ensure();
             if (transform.parent != null)
             {
-                // Stay on the socket. SampleAnimation must not walk the light off the mouth.
                 transform.localPosition = Vector3.zero;
                 transform.localRotation = Quaternion.identity;
                 transform.localScale = Vector3.one;
@@ -87,7 +114,7 @@ namespace Survival.Unity
                 return;
             }
 
-            _flip = Mathf.Repeat(_flip + (Mathf.Max(0f, deltaTime) * FramesPerSecond), Frames);
+            _flip = Mathf.Repeat(_flip + (Mathf.Max(0f, deltaTime) * FramesPerSecond), StripFrames);
             Draw(intensity);
         }
 
@@ -95,9 +122,14 @@ namespace Survival.Unity
 
         private void OnDestroy()
         {
-            if (_streamMat != null)
+            if (_bodyMat != null)
             {
-                Destroy(_streamMat);
+                Destroy(_bodyMat);
+            }
+
+            if (_coreMat != null)
+            {
+                Destroy(_coreMat);
             }
 
             if (_glowMat != null)
@@ -114,43 +146,45 @@ namespace Survival.Unity
             }
 
             _built = true;
-            var loaded = PlayerAssets.Load<Texture2D>(FlipbookPath);
-            if (loaded == null)
+            var shader = Shader.Find(ShaderName);
+            if (shader == null)
             {
-                Debug.LogError("Vorgath spit: flipbook missing at " + FlipbookPath);
-                loaded = Texture2D.whiteTexture;
-            }
-            else
-            {
-                loaded.wrapMode = TextureWrapMode.Clamp;
-                loaded.filterMode = FilterMode.Bilinear;
+                Debug.LogError("Vorgath spit: " + ShaderName + " is missing. No sprite fallback — that would not match the URP UV path.");
+                return;
             }
 
-            _flipbook = loaded;
-            _streamMat = FireMaterial(loaded);
-            if (_streamMat == null)
+            var missing = false;
+            for (var i = 0; i < StripFrames; i++)
+            {
+                var tex = PlayerAssets.Load<Texture2D>(StripPath(i));
+                if (tex == null)
+                {
+                    Debug.LogError("Vorgath spit: strip missing at " + StripPath(i));
+                    missing = true;
+                    continue;
+                }
+
+                tex.wrapMode = TextureWrapMode.Clamp;
+                tex.filterMode = FilterMode.Bilinear;
+                _strips[i] = tex;
+            }
+
+            if (missing)
             {
                 return;
             }
 
-            _line = gameObject.AddComponent<LineRenderer>();
-            _line.useWorldSpace = true;
-            _line.loop = false;
-            _line.positionCount = 0;
-            _line.widthMultiplier = 1f;
-            _line.widthCurve = _width;
-            _line.numCornerVertices = 2;
-            _line.numCapVertices = 0;
-            _line.alignment = LineAlignment.View;
-            _line.textureMode = LineTextureMode.Stretch;
-            _line.sharedMaterial = _streamMat;
-            _line.shadowCastingMode = ShadowCastingMode.Off;
-            _line.receiveShadows = false;
-            _line.enabled = false;
+            _bodyMat = MakeMaterial(shader, false);
+            _coreMat = MakeMaterial(shader, true);
+            _body = MakeLine("FireBody", _bodyMat);
+            var coreGo = new GameObject("FireCore");
+            coreGo.transform.SetParent(transform, false);
+            _core = coreGo.AddComponent<LineRenderer>();
+            SetupLine(_core, _coreMat);
 
             _light = gameObject.AddComponent<Light>();
             _light.type = LightType.Point;
-            _light.color = new Color(1f, 0.416f, 0.051f, 1f);
+            _light.color = new Color(1f, 0.42f, 0.08f, 1f);
             _light.range = 3f;
             _light.intensity = 0f;
             _light.shadows = LightShadows.None;
@@ -173,9 +207,35 @@ namespace Survival.Unity
             _glow.SetActive(false);
         }
 
+        private LineRenderer MakeLine(string name, Material material)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(transform, false);
+            var line = go.AddComponent<LineRenderer>();
+            SetupLine(line, material);
+            return line;
+        }
+
+        private void SetupLine(LineRenderer line, Material material)
+        {
+            line.useWorldSpace = true;
+            line.loop = false;
+            line.positionCount = 0;
+            line.widthMultiplier = 1f;
+            line.widthCurve = _width;
+            line.numCornerVertices = 2;
+            line.numCapVertices = 0;
+            line.alignment = LineAlignment.View;
+            line.textureMode = LineTextureMode.Stretch;
+            line.sharedMaterial = material;
+            line.shadowCastingMode = ShadowCastingMode.Off;
+            line.receiveShadows = false;
+            line.enabled = false;
+        }
+
         private void Draw(float intensity)
         {
-            if (_line == null || _streamMat == null)
+            if (_body == null || _core == null || _bodyMat == null || _coreMat == null)
             {
                 return;
             }
@@ -202,12 +262,13 @@ namespace Survival.Unity
                 var dist = shown * (i / (float)Segments);
                 var t = dist / StreamLength;
                 var p = origin + (forward * dist) + (Vector3.down * (Droop * t * t));
-                if (p.y <= GroundY)
+                var stopY = GroundPlaneY + GroundClearance;
+                if (p.y <= stopY)
                 {
                     var dy = prev.y - p.y;
-                    var u = dy > 1e-5f ? (prev.y - GroundY) / dy : 1f;
+                    var u = dy > 1e-5f ? (prev.y - stopY) / dy : 1f;
                     p = Vector3.Lerp(prev, p, Mathf.Clamp01(u));
-                    p.y = GroundY + 0.02f;
+                    p.y = stopY;
                     _points[count++] = p;
                     hit = true;
                     break;
@@ -217,28 +278,39 @@ namespace Survival.Unity
                 prev = p;
             }
 
-            _line.enabled = true;
-            _line.positionCount = count;
-            for (var i = 0; i < count; i++)
-            {
-                _line.SetPosition(i, _points[i]);
-            }
-
             var reached = count >= 2 ? Vector3.Distance(origin, _points[count - 1]) : 0f;
             var tip = Mathf.Lerp(WidthMouth, WidthEnd, Mathf.Clamp01(reached / StreamLength));
             var slope = tip - WidthMouth;
             _width.MoveKey(0, new Keyframe(0f, WidthMouth, 0f, slope));
             _width.MoveKey(1, new Keyframe(1f, tip, slope, 0f));
-            _line.widthCurve = _width;
-            var color = new Color(1f, 1f, 1f, intensity);
-            _line.startColor = color;
-            _line.endColor = color;
-            SetFrame();
+            ApplyLine(_body, count);
+            ApplyLine(_core, count);
+            var frame = (int)_flip % StripFrames;
+            if (frame < 0)
+            {
+                frame += StripFrames;
+            }
+
+            if (frame != _shownFrame)
+            {
+                _shownFrame = frame;
+                var tex = _strips[frame];
+                Assign(_bodyMat, tex);
+                Assign(_coreMat, tex);
+            }
+
+            var body = new Color(1f, 1f, 1f, intensity);
+            _body.startColor = body;
+            _body.endColor = body;
+            // One 0.55 factor, white multiply. A cream tint here would wash the strip's own core.
+            var core = new Color(1f, 1f, 1f, CoreAdd * intensity);
+            _core.startColor = core;
+            _core.endColor = core;
 
             if (_light != null)
             {
                 _light.enabled = true;
-                _light.intensity = 2.5f * intensity;
+                _light.intensity = 2.2f * intensity;
             }
 
             if (_glow != null && _glowMat != null)
@@ -251,25 +323,53 @@ namespace Survival.Unity
                 {
                     _glow.SetActive(true);
                     _glow.transform.SetPositionAndRotation(_points[count - 1], Quaternion.Euler(90f, 0f, 0f));
-                    var size = Mathf.Lerp(0.35f, 1.15f, intensity);
+                    var size = Mathf.Lerp(0.28f, 0.7f, intensity);
                     var denom = Mathf.Abs(transform.lossyScale.x) > 1e-4f ? transform.lossyScale.x : 1f;
                     var local = size / denom;
                     _glow.transform.localScale = new Vector3(local, local, 1f);
-                    var glow = new Color(1f, 0.5f, 0.12f, 0.85f * intensity);
+                    var glow = new Color(0.85f, 0.28f, 0.05f, 0.45f * intensity);
                     _glowMat.color = glow;
-                    if (_glowMat.HasProperty(BaseColorId))
+                    if (_glowMat.HasProperty(ColorId))
                     {
-                        _glowMat.SetColor(BaseColorId, glow);
+                        _glowMat.SetColor(ColorId, glow);
                     }
                 }
             }
         }
 
+        private void ApplyLine(LineRenderer line, int count)
+        {
+            line.enabled = true;
+            line.positionCount = count;
+            line.widthCurve = _width;
+            for (var i = 0; i < count; i++)
+            {
+                line.SetPosition(i, _points[i]);
+            }
+        }
+
+        /// <summary>Whole strip on <c>_BaseMap</c>. Scale and offset stay at identity; this shader ignores them.</summary>
+        private static void Assign(Material mat, Texture tex)
+        {
+            mat.SetTexture(BaseMapId, tex);
+            if (mat.HasProperty("_MainTex"))
+            {
+                mat.SetTexture("_MainTex", tex);
+            }
+
+            mat.mainTexture = tex;
+        }
+
         private void Hide()
         {
-            if (_line != null)
+            if (_body != null)
             {
-                _line.enabled = false;
+                _body.enabled = false;
+            }
+
+            if (_core != null)
+            {
+                _core.enabled = false;
             }
 
             if (_light != null)
@@ -284,92 +384,51 @@ namespace Survival.Unity
             }
         }
 
-        private void SetFrame()
+        private static Material MakeMaterial(Shader shader, bool additive)
         {
-            if (_streamMat == null || _flipbook == Texture2D.whiteTexture)
+            var mat = new Material(shader) { name = additive ? "VorgathSpitCore" : "VorgathSpitBody" };
+            mat.SetFloat("_Surface", 1f);
+            mat.SetFloat("_Blend", additive ? 2f : 0f);
+            mat.SetFloat("_BlendOp", (float)BlendOp.Add);
+            mat.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
+            mat.SetFloat("_DstBlend", additive ? (float)BlendMode.One : (float)BlendMode.OneMinusSrcAlpha);
+            mat.SetFloat("_SrcBlendAlpha", (float)BlendMode.One);
+            mat.SetFloat("_DstBlendAlpha", additive ? (float)BlendMode.One : (float)BlendMode.OneMinusSrcAlpha);
+            mat.SetFloat("_ZWrite", 0f);
+            mat.SetFloat("_Cull", (float)CullMode.Off);
+            mat.SetFloat("_AlphaClip", 0f);
+            mat.SetFloat("_FlipbookBlending", 0f);
+            mat.DisableKeyword("_FLIPBOOKBLENDING_ON");
+            mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            mat.DisableKeyword("_ALPHAMODULATE_ON");
+            mat.DisableKeyword("_ALPHATEST_ON");
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.SetOverrideTag("RenderType", "Transparent");
+            mat.renderQueue = additive ? 3001 : 3000;
+            // Identity scale. Particles/Unlit ignores _BaseMap_ST; a 0.25 window would still show the whole strip.
+            mat.SetTextureScale("_BaseMap", Vector2.one);
+            mat.SetTextureOffset("_BaseMap", Vector2.zero);
+            if (mat.HasProperty("_MainTex"))
             {
-                return;
+                mat.SetTextureScale("_MainTex", Vector2.one);
+                mat.SetTextureOffset("_MainTex", Vector2.zero);
             }
 
-            var frame = ((int)_flip) % Frames;
-            if (frame < 0)
+            var tint = Color.white;
+            mat.SetColor(ColorId, tint);
+            if (mat.HasProperty(ColorId2))
             {
-                frame += Frames;
+                mat.SetColor(ColorId2, tint);
             }
 
-            var col = frame % 4;
-            var rowFromTop = frame / 4;
-            var offset = new Vector2(col * Cell, (3 - rowFromTop) * Cell);
-            SetSheet("_BaseMap", offset);
-            SetSheet("_MainTex", offset);
-        }
-
-        private void SetSheet(string property, Vector2 offset)
-        {
-            if (_streamMat != null && _streamMat.HasProperty(property))
-            {
-                _streamMat.SetTextureScale(property, CellScale);
-                _streamMat.SetTextureOffset(property, offset);
-            }
+            mat.color = tint;
+            return mat;
         }
 
         private static float Smooth01(float t)
         {
             t = Mathf.Clamp01(t);
             return t * t * (3f - (2f * t));
-        }
-
-        /// <summary>Same additive Particles/Unlit setup as the other Theme A attack fire, with this flipbook on it.</summary>
-        private static Material? FireMaterial(Texture tex)
-        {
-            var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit")
-                ?? Shader.Find("Particles/Standard Unlit")
-                ?? Shader.Find("Sprites/Default")
-                ?? Shader.Find("Unlit/Color");
-            if (shader == null)
-            {
-                Debug.LogError("Vorgath spit: no unlit shader for the fire stream.");
-                return null;
-            }
-
-            var mat = new Material(shader) { name = "VorgathSpitFire" };
-            if (mat.HasProperty("_BaseMap"))
-            {
-                mat.SetTexture("_BaseMap", tex);
-            }
-
-            if (mat.HasProperty("_MainTex"))
-            {
-                mat.SetTexture("_MainTex", tex);
-            }
-
-            mat.mainTexture = tex;
-            if (mat.HasProperty(BaseColorId))
-            {
-                mat.SetColor(BaseColorId, Color.white);
-            }
-
-            mat.color = Color.white;
-            SetFloat(mat, "_Surface", 1f);
-            SetFloat(mat, "_Blend", 2f);
-            SetFloat(mat, "_SrcBlend", (float)BlendMode.SrcAlpha);
-            SetFloat(mat, "_DstBlend", (float)BlendMode.One);
-            SetFloat(mat, "_SrcBlendAlpha", (float)BlendMode.One);
-            SetFloat(mat, "_DstBlendAlpha", (float)BlendMode.One);
-            SetFloat(mat, "_ZWrite", 0f);
-            SetFloat(mat, "_Cull", (float)CullMode.Off);
-            mat.SetOverrideTag("RenderType", "Transparent");
-            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
-            mat.renderQueue = 3003;
-            return mat;
-        }
-
-        private static void SetFloat(Material mat, string name, float value)
-        {
-            if (mat.HasProperty(name))
-            {
-                mat.SetFloat(name, value);
-            }
         }
     }
 }
