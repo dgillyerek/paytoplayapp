@@ -339,11 +339,14 @@ namespace Survival.Unity
                 _hook.Store.Purchases.Purchase(product.ProductId, outcome =>
                 {
                     _buying = false;
-                    if (outcome.Ok && _merchant.MarkBought(index))
+                    var sandbox = _hook.Store.Purchases.IsSandbox;
+                    if (outcome.Unlocks(sandbox) && _merchant.MarkBought(index))
                     {
+                        // Live store: credit only what the server granted; the sandbox keeps the local deal grants.
+                        var grants = outcome.WalletGrants(deal.Grants, sandbox);
                         Save();
                         _view.TapCloseSheet();
-                        _view.Celebrate(_view.TapS("merchant.thanks", "Pleasure doing business!"), deal.Grants, () => wallet.Grant(deal.Grants));
+                        _view.Celebrate(_view.TapS("merchant.thanks", "Pleasure doing business!"), grants, () => wallet.Grant(grants));
                     }
                     else if (!outcome.Ok)
                     {

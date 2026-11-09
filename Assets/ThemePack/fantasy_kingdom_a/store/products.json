@@ -1,4 +1,5 @@
 {
+  "_prices": "PLACEHOLDER PRICES pending Derek. price_label is only the offline/sandbox fallback; on device the store's localized price is shown. Final prices are set per product in Play Console (and App Store Connect).",
   "store": "sandbox",
   "products": [
     { "sku": "sku.hard_s", "product_id": "com.paytoplay.fantasykingdoma.hard_s", "price_label": "$0.99" },

@@ -109,11 +109,11 @@ namespace Survival.Unity
             SurvivalArt.EnsureLoaded(flavor, pack);
             var catalogDir = ResolveCatalogDir();
             var catalog = CatalogLoader.LoadFromDirectory(catalogDir, PlayerAssets.ReadAllText);
-            Session = TryLoadHookSession(flavor, pack, catalog, catalogDir) ?? new SurvivalSession(flavor, pack, catalog);
+            Session = TryLoadHookSession(this, flavor, pack, catalog, catalogDir) ?? new SurvivalSession(flavor, pack, catalog);
         }
 
-        /// <summary>World + quest hook slice: base_economy / quests / gifts / stores + Theme A store/products.json. Sandbox store only.</summary>
-        private static SurvivalSession? TryLoadHookSession(AppFlavorConfig flavor, ThemePackBinder pack, SurvivalCatalog catalog, string catalogDir)
+        /// <summary>World + quest hook slice: base_economy / quests / gifts / stores + Theme A store/products.json. Purchases: Iap.SurvivalPurchases (sandbox in Editor / dev builds, live on release Android).</summary>
+        private static SurvivalSession? TryLoadHookSession(MonoBehaviour runner, AppFlavorConfig flavor, ThemePackBinder pack, SurvivalCatalog catalog, string catalogDir)
         {
             if (!PlayerAssets.FileExists(Path.Combine(catalogDir, HookCatalogLoader.BaseEconomyFileName)))
             {
@@ -127,15 +127,24 @@ namespace Survival.Unity
                 var products = PlayerAssets.FileExists(productsPath)
                     ? HookCatalogLoader.ParseProducts(PlayerAssets.ReadAllText(productsPath))
                     : new Dictionary<string, ProductDef>();
-                return new SurvivalSession(
+                // Live billing on release Android builds (server-validated); the free sandbox only in the Editor / dev builds.
+                var purchases = Iap.SurvivalPurchases.Create(runner, SurvivalArt.ResolvePackRoot(flavor), products);
+                var session = new SurvivalSession(
                     flavor,
                     pack,
                     catalog,
                     hook,
                     products,
                     new WallClock(),
-                    new SandboxPurchaseService(),
+                    purchases,
                     Environment.TickCount);
+                if (purchases is Survival.Domain.Iap.PurchaseService live && session.Hook != null)
+                {
+                    var hookSession = session.Hook;
+                    live.Unsolicited += outcome => hookSession.ApplyUnsolicitedPurchase(outcome);
+                }
+
+                return session;
             }
             catch (Exception ex)
             {

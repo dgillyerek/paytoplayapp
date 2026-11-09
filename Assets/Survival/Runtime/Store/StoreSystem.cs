@@ -30,7 +30,33 @@ namespace Survival.Domain.Store
     /// <summary>Theme-pack product row: sku.* → store product id + display price.</summary>
     public sealed record ProductDef(string Sku, string ProductId, string PriceLabel);
 
-    public sealed record PurchaseOutcome(bool Ok, string ProductId, string Receipt, string? Error);
+    /// <summary>
+    /// Result of one real-money purchase. With a live store (<see cref="ISkuPurchaseService.IsSandbox"/> false) Ok is only
+    /// ever true once the backend has validated the receipt (Verified), and Grants / Entitlements are exactly what the
+    /// server's reply said; the client never grants from its own tables. Grants is empty when this purchase was already
+    /// applied on this device (a re-delivered transaction).
+    /// </summary>
+    public sealed record PurchaseOutcome(
+        bool Ok,
+        string ProductId,
+        string Receipt,
+        string? Error,
+        IReadOnlyDictionary<string, int>? Grants = null,
+        IReadOnlyList<string>? Entitlements = null,
+        bool Verified = false)
+    {
+        public static readonly IReadOnlyDictionary<string, int> NoGrants = new Dictionary<string, int>();
+
+        /// <summary>
+        /// What the wallet should receive for this outcome: the server's grants when verified, the local offer grants
+        /// only for the sandbox service (dev builds, nothing charged), otherwise nothing.
+        /// </summary>
+        public IReadOnlyDictionary<string, int> WalletGrants(IReadOnlyDictionary<string, int> sandboxFallback, bool sandbox) =>
+            !Ok ? NoGrants : Verified ? Grants ?? NoGrants : sandbox ? sandboxFallback : NoGrants;
+
+        /// <summary>True when the outcome may unlock something: sandbox success, or a server-verified success.</summary>
+        public bool Unlocks(bool sandbox) => Ok && (Verified || sandbox);
+    }
 
     public interface ISkuPurchaseService
     {
@@ -145,13 +171,32 @@ namespace Survival.Domain.Store
 
             Purchases.Purchase(product.ProductId, outcome =>
             {
-                if (outcome.Ok)
+                // Live store: only the server's grants (outcome.Grants). Sandbox: the local offer, as before.
+                var sandbox = Purchases.IsSandbox;
+                if (outcome.Ok && !outcome.Unlocks(sandbox))
                 {
-                    Wallet.Grant(offer.Grants);
+                    done(outcome with { Ok = false, Error = outcome.Error ?? "iap.unverified" });
+                    return;
                 }
 
+                Wallet.Grant(outcome.WalletGrants(offer.Grants, sandbox));
                 done(outcome);
             });
+        }
+
+        /// <summary>
+        /// A server-verified purchase that arrived with no buy call waiting (an approved Ask-to-Buy / Play pending
+        /// payment, or a transaction re-delivered after a crash). Credits the server's grants. Returns false when unverified.
+        /// </summary>
+        public bool ApplyServerGrant(PurchaseOutcome outcome)
+        {
+            if (!outcome.Ok || !outcome.Verified)
+            {
+                return false;
+            }
+
+            Wallet.Grant(outcome.Grants ?? PurchaseOutcome.NoGrants);
+            return true;
         }
     }
 }
