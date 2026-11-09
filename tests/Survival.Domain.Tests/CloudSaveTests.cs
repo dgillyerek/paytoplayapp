@@ -136,6 +136,70 @@ namespace Survival.Domain.Tests
             Assert.Equal(2, doc.Quests[SurvIds.QuestChainStarter].Progress);
         }
 
+
+        [Fact]
+        public void Ftue_step_round_trips_in_document()
+        {
+            var doc = new CloudSaveDocument { FtueStepId = SurvIds.FtueStepFirstMarch };
+            var round = CloudSaveDocument.Parse(doc.Write());
+            Assert.NotNull(round);
+            Assert.Equal(SurvIds.FtueStepFirstMarch, round!.FtueStepId);
+
+            var merged = CloudSaveMerge.Merge(
+                new CloudSaveDocument { FtueStepId = SurvIds.FtueStepBoot },
+                new CloudSaveDocument { FtueStepId = SurvIds.FtueStepFirstBattle });
+            Assert.Equal(SurvIds.FtueStepFirstBattle, merged.FtueStepId);
+        }
+
+        [Fact]
+        public void World_gather_regenAt_round_trips_in_document()
+        {
+            var doc = new CloudSaveDocument();
+            doc.Gather["theme_a.node.gather_quarry"] = new CloudSaveDocument.GatherStock
+            {
+                Available = 4200,
+                UpdatedAt = 50,
+                RegenAt = 9999.5,
+            };
+            var round = CloudSaveDocument.Parse(doc.Write());
+            Assert.NotNull(round);
+            var g = round!.Gather["theme_a.node.gather_quarry"];
+            Assert.Equal(4200, g.Available);
+            Assert.Equal(50, g.UpdatedAt);
+            Assert.Equal(9999.5, g.RegenAt);
+
+            var a = new CloudSaveDocument();
+            a.Gather["theme_a.node.gather_quarry"] = new CloudSaveDocument.GatherStock { Available = 100, RegenAt = 10 };
+            var b = new CloudSaveDocument();
+            b.Gather["theme_a.node.gather_quarry"] = new CloudSaveDocument.GatherStock { Available = 80, RegenAt = 20 };
+            var m = CloudSaveMerge.Merge(a, b);
+            Assert.Equal(80, m.Gather["theme_a.node.gather_quarry"].Available);
+            Assert.Equal(20, m.Gather["theme_a.node.gather_quarry"].RegenAt);
+        }
+
+        [Fact]
+        public void Quest_index_survives_deep_into_a_32_step_chain()
+        {
+            var steps = new QuestStepDef[32];
+            for (var i = 0; i < 32; i++)
+            {
+                steps[i] = new QuestStepDef("q" + i, SurvIds.QuestObjectiveCollect, "b1", 1, new Dictionary<string, int>());
+            }
+
+            var chain = new QuestChainDef(SurvIds.QuestChainStarter, steps);
+            var quests = new QuestSystem(chain);
+            quests.Restore(31, 0);
+            Assert.Equal(31, quests.Index);
+
+            var doc = new CloudSaveDocument();
+            QuestProgressSave.FillDocument(doc, chain.Id, quests);
+            var round = CloudSaveDocument.Parse(doc.Write());
+            var fresh = new QuestSystem(chain);
+            QuestProgressSave.ApplyDocument(round!, chain.Id, fresh);
+            Assert.Equal(31, fresh.Index);
+            Assert.Equal(0, fresh.Progress);
+        }
+
         private sealed class FakeTransport : ICloudSaveTransport
         {
             private readonly Action<Action<CloudSaveServerState?, string?>> _get;

@@ -10,7 +10,7 @@ Local-first account saves on the Neon `alliance` Function (`GET`/`PUT /v1/save`)
 - Campaign, village (incl. producer stock)
 - **Quests by chain id** (`quest.chain.starter` → `{index,progress}`) — works with the 3-step chain and the 32-step Theme A chain on PR #202
 - FTUE step id
-- **World gather remaining stock** (Quarry): `WorldMarchLoop.Available` was catalog-only and reset every launch; now `world.gather[nodeId].{available,updatedAt,regenAt?}`
+- **World gather remaining stock** (Quarry): `WorldMarchLoop.Available` was catalog-only and reset every launch; now `world.gather[nodeId].{available,updatedAt,regenAt?}` — `RegenAt` is optional (unix seconds); catalog has no live refill yet but the field round-trips for a future regen clock
 - IAP applied hashes + grant ledger (refund clawback via RTDN)
 
 ## Kids / COPPA

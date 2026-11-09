@@ -41,6 +41,10 @@ namespace Survival.Domain.CloudSave
                 sb.Append(Q(loop.NodeId)).Append(":{\"available\":")
                     .Append(loop.Available.ToString(CultureInfo.InvariantCulture));
                 sb.Append(",\"updatedAt\":").Append(nowSeconds.ToString("R", CultureInfo.InvariantCulture));
+                if (loop.RegenAt is double regen && regen > 0)
+                {
+                    sb.Append(",\"regenAt\":").Append(regen.ToString("R", CultureInfo.InvariantCulture));
+                }
                 sb.Append('}');
             }
 
@@ -83,6 +87,15 @@ namespace Survival.Domain.CloudSave
                     {
                         loop.RestoreAvailable((int)n.Value);
                     }
+
+                    if (entry.TryGet("regenAt", out var rn) && rn is JsonNode.Num rnum && rnum.Value > 0)
+                    {
+                        loop.RestoreRegenAt(rnum.Value);
+                    }
+                    else
+                    {
+                        loop.RestoreRegenAt(null);
+                    }
                 }
 
                 return true;
@@ -107,6 +120,7 @@ namespace Survival.Domain.CloudSave
                 {
                     Available = loop.Available,
                     UpdatedAt = nowSeconds,
+                    RegenAt = loop.RegenAt,
                 };
             }
         }
@@ -121,6 +135,7 @@ namespace Survival.Domain.CloudSave
                 }
 
                 loop.RestoreAvailable(kv.Value.Available);
+                loop.RestoreRegenAt(kv.Value.RegenAt);
             }
         }
 

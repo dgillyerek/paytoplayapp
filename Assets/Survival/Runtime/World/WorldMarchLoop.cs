@@ -108,6 +108,8 @@ namespace Survival.Domain.World
         public string EnergyActionId { get; }
         public string ChipKey { get; }
         public bool ConsumeYieldFromStock { get; }
+        /// <summary>Optional unix seconds when stock fully refills. Null = no regen scheduled (catalog has no live regen yet).</summary>
+        public double? RegenAt { get; private set; }
         public bool MarchPending { get; private set; }
         public string? FromNodeId { get; private set; }
 
@@ -115,6 +117,12 @@ namespace Survival.Domain.World
         public void RestoreAvailable(int available)
         {
             Available = available < 0 ? 0 : available;
+        }
+
+        /// <summary>Restore optional regen clock from a save (null/≤0 clears).</summary>
+        public void RestoreRegenAt(double? regenAt)
+        {
+            RegenAt = regenAt is double t && t > 0 ? t : null;
         }
 
         public bool TryBegin(EnergySystem energy, string fromNodeId, out MarchResolveResult result)
