@@ -44,7 +44,7 @@
     "stages_per_chapter": 10, "boss_every": 5,
     "level_start": 8, "level_end": 50, "level_curve": 1.3, "stars_end": 5, "boss_levels": 2, "two_lane_stages": 4,
     "villain_order": ["foe.nightfang", "foe.ironhowl", "foe.bonequill", "foe.blightroot", "foe.vespera", "foe.ashwyrm"], "start_pool": 3,
-    "gold_start": 2000, "reward_growth": 1.04, "food_share": 0.4, "wood_share": 1.2, "stone_share": 1.2,
+    "gold_start": 1850, "reward_growth": 1.04, "food_share": 0.4, "wood_share": 1.2, "stone_share": 1.2,
     "first_gems": 20, "boss_gems": 60, "boss_shards": 4, "boss_speedup_m": 15, "replay_share": 0.25,
     "chapters": [
       { "name": "Frostmarch", "castle": 3, "boss": "foe.ironhowl", "shard_hero": "hero.oakenshield", "chest": { "res.soft": 40000, "res.hard": 50, "res.speedup_m": 30 } },
