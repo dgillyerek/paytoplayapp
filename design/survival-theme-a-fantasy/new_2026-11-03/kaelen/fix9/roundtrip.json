@@ -1,0 +1,29 @@
+{
+  "roundtrip": {
+    "attack2_crossthrust": {
+      "max_hand_offset_m": 7.520171840959891e-06,
+      "max_length_err_m": 4.0858313965497217e-07,
+      "worst": [
+        "attack2_crossthrust",
+        14,
+        "R",
+        1e-05,
+        0.69259,
+        0.0
+      ]
+    },
+    "attack_dualslash": {
+      "max_hand_offset_m": 1.4827216978795228e-06,
+      "max_length_err_m": 4.921040156480316e-07,
+      "worst": [
+        "attack_dualslash",
+        1,
+        "R",
+        0.0,
+        0.66994,
+        0.0
+      ]
+    }
+  },
+  "worst_frame": 22
+}
