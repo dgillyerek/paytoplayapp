@@ -1,0 +1,23 @@
+UNCHANGED (must match main)
+3c1ce62a97e0ea08a6afbaa0a2b17e42  Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_idle.fbx
+037726993d603ef836cce64b78f542cc  Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_walk.fbx
+a6b81fbd9721bbf32373131e321922b8  Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_attack_greatsword.fbx
+01733353af78d956faf9870c853bb87f  Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_attack2_overhead_cleave.fbx
+dfaeb1247e56aca6f70a176ddd7780b8  Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_rig_rest.fbx
+7b63494b25ec49ff11836505a5c9be21  Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_cape.fbx
+bed9e9ec79a0bd0cfd419db204cc3c4c  Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_atlas_2048.png
+964b18f1f9f5dca220e793e902802c0d  Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_cape_1024.png
+3c1ce62a97e0ea08a6afbaa0a2b17e42  design/survival-theme-a-fantasy/enemies/anim/malzareth/final/MALZARETH_idle.fbx
+037726993d603ef836cce64b78f542cc  design/survival-theme-a-fantasy/enemies/anim/malzareth/final/MALZARETH_walk.fbx
+a6b81fbd9721bbf32373131e321922b8  design/survival-theme-a-fantasy/enemies/anim/malzareth/final/MALZARETH_attack_greatsword.fbx
+01733353af78d956faf9870c853bb87f  design/survival-theme-a-fantasy/enemies/anim/malzareth/final/MALZARETH_attack2_overhead_cleave.fbx
+dfaeb1247e56aca6f70a176ddd7780b8  design/survival-theme-a-fantasy/enemies/anim/malzareth/final/MALZARETH_rig_rest.fbx
+7b63494b25ec49ff11836505a5c9be21  design/survival-theme-a-fantasy/enemies/anim/malzareth/final/MALZARETH_cape.fbx
+bed9e9ec79a0bd0cfd419db204cc3c4c  design/survival-theme-a-fantasy/enemies/anim/malzareth/final/MALZARETH_atlas_2048.png
+964b18f1f9f5dca220e793e902802c0d  design/survival-theme-a-fantasy/enemies/anim/malzareth/final/MALZARETH_cape_1024.png
+4c91119f89dad53cd89a46a7dd6631ee  design/survival-theme-a-fantasy/new_2026-11-03/malzareth/MALZARETH_FIX9.blend
+
+NEW
+c3a1ea348948b5c8d5776534f6e37b49  Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_dying.fbx
+c3a1ea348948b5c8d5776534f6e37b49  design/survival-theme-a-fantasy/enemies/anim/malzareth/final/MALZARETH_dying.fbx
+0426de29382484457ba9d767d82b5f57  design/survival-theme-a-fantasy/new_2026-11-03/malzareth/MALZARETH_dying.blend

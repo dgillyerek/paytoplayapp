@@ -18,7 +18,7 @@ namespace Survival.Unity
     /// Derek: "nothing moves until their buttons are pressed. then they do the button movement until the next one.
     /// seemless transition between each". Everyone starts in their spot frozen on idle frame 0. A clip button (or keys 1-4)
     /// loops that clip for that character until another is pressed, crossfading from the current pose; attacks loop in
-    /// place and spawn an impact on each contact. T turns everyone around, Q toggles the camera fly-around, A is the
+    /// place and spawn an impact on each contact. Malzareth's dying clip plays once and holds the lie. T turns everyone around, Q toggles the camera fly-around, A is the
     /// opt-in auto cycle, R freezes everyone back in their spots.
     /// Vorgath's attack_spit also runs the mouth fire stream from the Design spit-fire note: a socket under Bone.004,
     /// on from 1.733 s to 2.467 s, so the head sweep carries one continuous stream.
@@ -55,7 +55,7 @@ namespace Survival.Unity
                 new[] { BattleImpactKind.SwordSteel }, new Color(0.85f, 0.95f, 1f), new Color(0.5f, 0.8f, 1f)),
             new Def("vorgath", "VORGATH", false, -1.4f, 2.3f, new[] { "idle", "walk", "attack_slam", "attack_spit" },
                 new[] { BattleImpactKind.GroundSlam, BattleImpactKind.ArcaneConjure }, new Color(0.85f, 0.55f, 1f), new Color(0.45f, 0.1f, 0.7f)),
-            new Def("malzareth", "MALZARETH", false, 1.4f, 1.9f, new[] { "idle", "walk", "attack_greatsword", "attack2_overhead_cleave" },
+            new Def("malzareth", "MALZARETH", false, 1.4f, 1.9f, new[] { "idle", "walk", "attack_greatsword", "attack2_overhead_cleave", "dying" },
                 new[] { BattleImpactKind.VoidFireBreath, BattleImpactKind.SwordSteel }, new Color(0.8f, 0.5f, 1f), new Color(0.3f, 0.05f, 0.5f)),
         };
 
@@ -551,6 +551,43 @@ namespace Survival.Unity
 
         private static bool Loops(Unit u) => u.Clip <= 1;
 
+        /// <summary>Dying plays once and holds the last frame. It is not an attack.</summary>
+        private static bool OneShot(Unit u) => u.Def.Clips[u.Clip] == "dying";
+
+        private static int NextAttackClip(Unit u)
+        {
+            var attacks = 0;
+            for (var i = 2; i < u.Clips.Count; i++)
+            {
+                if (u.Def.Clips[i] != "dying")
+                {
+                    attacks++;
+                }
+            }
+
+            if (attacks == 0)
+            {
+                return 2;
+            }
+
+            var pick = u.NextAttack++ % attacks;
+            var seen = 0;
+            for (var i = 2; i < u.Clips.Count; i++)
+            {
+                if (u.Def.Clips[i] == "dying")
+                {
+                    continue;
+                }
+
+                if (seen++ == pick)
+                {
+                    return i;
+                }
+            }
+
+            return 2;
+        }
+
         /// <summary>Captures the current pose so the next clip fades in from it (no snap).</summary>
         private static void Snapshot(Unit u)
         {
@@ -715,7 +752,7 @@ namespace Survival.Unity
                     u.IdleLeft -= dt;
                     if (u.IdleLeft <= 0f && u.Clips.Count > 2)
                     {
-                        Play(u, 2 + (u.NextAttack++ % (u.Clips.Count - 2)));
+                        Play(u, NextAttackClip(u));
                     }
                 }
                 else if (u.Clip >= 2 && u.Time >= length)
@@ -726,13 +763,21 @@ namespace Survival.Unity
             }
             else if (!Loops(u) && u.Time >= length)
             {
-                // Manual attack loops until the next button; blend the wrap so the end pose doesn't pop to the start.
-                Snapshot(u);
-                u.Time -= length;
-                u.HitDone = false;
+                if (OneShot(u))
+                {
+                    // Death holds the lying pose. It does not wrap back to the start.
+                    u.Time = length;
+                }
+                else
+                {
+                    // Manual attack loops until the next button; blend the wrap so the end pose doesn't pop to the start.
+                    Snapshot(u);
+                    u.Time -= length;
+                    u.HitDone = false;
+                }
             }
 
-            if (u.Clip >= 2 && !u.HitDone && u.Time >= length * HitAt)
+            if (u.Clip >= 2 && !OneShot(u) && !u.HitDone && u.Time >= length * HitAt)
             {
                 u.HitDone = true;
                 Hit(u);
@@ -745,8 +790,12 @@ namespace Survival.Unity
                 clip.SampleAnimation(u.Model, sample);
             }
 
-            // In place for every clip: attacks too, so a looping attack never slides off and snaps back.
-            HoldHips(u);
+            // In place for every clip except a death fall: attacks too, so a looping attack never slides off and snaps back.
+            // Dying keeps the hips translation so the knee drop and the lie travel with him.
+            if (!OneShot(u))
+            {
+                HoldHips(u);
+            }
 
             if (u.BlendLeft > 0f)
             {
@@ -903,15 +952,21 @@ namespace Survival.Unity
                 HookSkin.Box(name.rectTransform, x0, 0.265f, x1, 0.30f);
                 u.Now = HookSkin.Outlined(SurvivalVisuals.Text(canvas, u.Def.Prefix + "Now", "STILL", 18, TextAnchor.MiddleCenter, HookSkin.Cream));
                 HookSkin.Box(u.Now.rectTransform, x0, 0.235f, x1, 0.265f);
-                for (var c = 0; c < u.Clips.Count; c++)
+                var clipCount = u.Clips.Count;
+                var top = 0.228f;
+                var bottom = 0.012f;
+                var gap = clipCount > 4 ? 0.004f : 0.005f;
+                var height = (top - bottom - (gap * (clipCount - 1))) / clipCount;
+                var font = clipCount > 4 ? 16 : 20;
+                for (var c = 0; c < clipCount; c++)
                 {
                     var clip = c;
-                    var y1 = 0.23f - (c * 0.055f);
+                    var y1 = top - (c * (height + gap));
                     var label = u.Def.Clips[c].Replace("attack2_", "").Replace("attack_", "").ToUpperInvariant() + (u.Clips[c] == null ? " (missing)" : "");
                     var key = c >= 2 ? HookArtKeys.ButtonRed : HookArtKeys.ButtonBlue;
                     var btn = HookSkin.Button(canvas, u.Def.Prefix + "_" + label, key, new Color(0.2f, 0.25f, 0.4f, 0.9f));
-                    HookSkin.Box(btn.GetComponent<RectTransform>(), x0, y1 - 0.05f, x1, y1);
-                    var text = HookSkin.Outlined(SurvivalVisuals.Text(btn.transform, "Label", label, 20, TextAnchor.MiddleCenter, HookSkin.Cream));
+                    HookSkin.Box(btn.GetComponent<RectTransform>(), x0, y1 - height, x1, y1);
+                    var text = HookSkin.Outlined(SurvivalVisuals.Text(btn.transform, "Label", label, font, TextAnchor.MiddleCenter, HookSkin.Cream));
                     SurvivalVisuals.Stretch(text.rectTransform);
                     btn.onClick.AddListener(() => Tap(u, clip));
                 }
