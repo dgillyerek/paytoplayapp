@@ -8,6 +8,7 @@ using Survival.Domain.Flavor;
 using Survival.Domain.Session;
 using Survival.Domain.Store;
 using Survival.Domain.Theme;
+using Survival.Unity.Kids;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -71,7 +72,7 @@ namespace Survival.Unity
             if (skipSplash)
             {
                 LoadSession();
-                ShowPlay();
+                AfterAgeGate(ShowPlay);
                 return;
             }
 
@@ -98,7 +99,22 @@ namespace Survival.Unity
                 yield return null;
             }
 
-            AdvanceFromSplash();
+            AfterAgeGate(AdvanceFromSplash);
+        }
+
+        /// <summary>
+        /// Families neutral age gate (kids/child_safety.json): asked once per install before play. Until it is answered the
+        /// child-safety policy is child mode, so nothing that collects data or sells runs first.
+        /// </summary>
+        private void AfterAgeGate(Action next)
+        {
+            if (!KidSafety.NeedsAgeGate)
+            {
+                next();
+                return;
+            }
+
+            AgeGateScreen.Show(transform, next);
         }
 
         private void LoadSession() =>
@@ -107,6 +123,8 @@ namespace Survival.Unity
         private void LoadSession(AppFlavorConfig flavor, ThemePackBinder pack)
         {
             SurvivalArt.EnsureLoaded(flavor, pack);
+            KidSafety.Load(flavor);
+            KidUi.Strings = pack.StringOr;
             var catalogDir = ResolveCatalogDir();
             var catalog = CatalogLoader.LoadFromDirectory(catalogDir, PlayerAssets.ReadAllText);
             Session = TryLoadHookSession(this, flavor, pack, catalog, catalogDir) ?? new SurvivalSession(flavor, pack, catalog);
