@@ -76,6 +76,8 @@ namespace Survival.Unity.Kids
         {
             if (Store.Save(band))
             {
+                // Mirror the band to the account (players.age_band, IAP #201) once signed in; never a birth date.
+                Iap.SurvivalPurchases.SetAgeBand(AgeBand);
                 Changed?.Invoke();
             }
         }
