@@ -69,11 +69,13 @@ export function pgIapRepo(pool) {
     },
     async revoke(store, token, state) {
       return tx(pool, async (q) => {
-        const p = (await q("UPDATE iap_purchases SET state=$3, updated_at=now() WHERE store=$1 AND purchase_token=$2 RETURNING id", [store, token, state])).rows[0];
+        const p = (await q("UPDATE iap_purchases SET state=$3, updated_at=now() WHERE store=$1 AND purchase_token=$2 RETURNING id, player_id", [store, token, state])).rows[0];
         if (!p) return { found: false };
+        // Sum purchase-kind grants for clawback (restore grants are empty). First non-revoked row wins.
+        const g = (await q("SELECT grants FROM iap_grants WHERE purchase_id=$1 AND kind='purchase' ORDER BY id LIMIT 1", [p.id])).rows[0];
         await q("UPDATE iap_grants SET revoked_at=now() WHERE purchase_id=$1 AND revoked_at IS NULL", [p.id]);
         await q("UPDATE player_entitlements SET revoked_at=now() WHERE purchase_id=$1 AND revoked_at IS NULL", [p.id]);
-        return { found: true, purchaseId: Number(p.id) };
+        return { found: true, purchaseId: Number(p.id), playerId: Number(p.player_id), grants: g?.grants || {} };
       });
     },
     async cancelPending(store, token) {

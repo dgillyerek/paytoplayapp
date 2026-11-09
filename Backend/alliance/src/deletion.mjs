@@ -21,6 +21,8 @@ export const DELETE_STEPS = [
   ["UPDATE chat_reports SET reported_player_id=NULL, body_snapshot='[deleted]' WHERE reported_player_id=$1"],
   ["DELETE FROM chat_blocks WHERE blocker_id=$1 OR blocked_id=$1"],
   ["DELETE FROM player_entitlements WHERE player_id=$1"],
+  ["DELETE FROM save_clawbacks WHERE player_id=$1"],
+  ["DELETE FROM player_saves WHERE player_id=$1"],
   ["DELETE FROM rate_hits WHERE player_id=$1"],
 ];
 

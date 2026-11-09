@@ -111,6 +111,12 @@ namespace Survival.Domain.World
         public bool MarchPending { get; private set; }
         public string? FromNodeId { get; private set; }
 
+        /// <summary>Restore remaining stock from a save (clamped at 0). Does not clear a pending march.</summary>
+        public void RestoreAvailable(int available)
+        {
+            Available = available < 0 ? 0 : available;
+        }
+
         public bool TryBegin(EnergySystem energy, string fromNodeId, out MarchResolveResult result)
         {
             result = MarchResolveResult.Fail;

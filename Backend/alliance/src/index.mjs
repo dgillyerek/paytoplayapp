@@ -7,6 +7,8 @@ import { createIap, googleVerifier, appStoreVerifier, DEFAULT_PACKAGE, AGE_BANDS
 import { pgIapRepo } from "./iap_repo.mjs";
 import { googlePlayClient } from "./googleplay.mjs";
 import { appStoreClient } from "./appstore.mjs";
+import { createSave } from "./save.mjs";
+import { pgSaveRepo } from "./save_repo.mjs";
 import { safetyRoutes } from "./safety.mjs";
 import { deletionRoutes } from "./deletion.mjs";
 
@@ -191,6 +193,9 @@ Object.assign(routes, worldRoutes({ q, pool, err, json, limited, clean }));
 
 // Purchases (iap.mjs). Secrets come only from env: GOOGLE_PLAY_SERVICE_ACCOUNT_JSON, IAP_RTDN_PUSH_TOKEN.
 const PKG = process.env.GOOGLE_PLAY_PACKAGE_NAME || DEFAULT_PACKAGE;
+const saveRepo = pgSaveRepo(pool);
+const ageBandOf = async (p) => (await q("SELECT age_band FROM players WHERE id=$1", [p.id])).rows[0]?.age_band ?? "unknown";
+const saves = createSave({ repo: saveRepo, ageBandOf });
 const iap = createIap({
   repo: pgIapRepo(pool),
   verifiers: {
@@ -199,22 +204,26 @@ const iap = createIap({
   },
   packageName: PKG,
   rtdnToken: process.env.IAP_RTDN_PUSH_TOKEN || "",
+  onRevoked: (info) => saves.onPurchaseRevoked(info),
 });
 const asResponse = (r) => json(r.body, r.status);
 Object.assign(routes, {
   "POST /v1/iap/validate": async (_r, b, p) => (await limited(p.id, "write")) ? err("rate_limited", 429) : asResponse(await iap.validate(p, b)),
   "GET /v1/iap/entitlements": async (_r, _b, p) => asResponse(await iap.entitlements(p)),
   // Account age band (COPPA / Play Families). The only age data kept; the client's purchase gate reads it.
-  "GET /v1/account": async (_r, _b, p) => json({ id: p.id, ageBand: (await q("SELECT age_band FROM players WHERE id=$1", [p.id])).rows[0]?.age_band ?? "unknown" }),
+  "GET /v1/account": async (_r, _b, p) => json({ id: p.id, ageBand: await ageBandOf(p), cloudSaveConsentAt: await saveRepo.getConsent(p.id) }),
   "POST /v1/account/age_band": async (_r, b, p) => {
     if (!AGE_BANDS.includes(b.ageBand)) return err("bad_age_band");
     await q("UPDATE players SET age_band=$2 WHERE id=$1", [p.id, b.ageBand]);
     return json({ ok: true, ageBand: b.ageBand });
   },
+  // Cloud saves (local-first on the client). Blob is game progress only — no PII.
+  "GET /v1/save": async (_r, _b, p) => asResponse(await saves.get(p)),
+  "PUT /v1/save": async (_r, b, p) => (await limited(p.id, "write")) ? err("rate_limited", 429) : asResponse(await saves.put(p, b)),
 });
 // Child safety (safety.mjs): chat mode / presets / report / block, restricted names, sticky under13. Wraps routes above.
 Object.assign(routes, safetyRoutes({ q, err, json, clean, limited, routes }));
-// In-app account deletion (deletion.mjs): scrubs the player and removes their data.
+// In-app account deletion (deletion.mjs): scrubs the player and removes their data (incl. player_saves / save_clawbacks).
 Object.assign(routes, deletionRoutes({ pool, err, json, limited }));
 // Server-side gift sources: when a member's help request fills up, every helper gets a small thank-you gift.
 const giftOnFill = `INSERT INTO alliance_gifts(alliance_id,recipient_id,source,gems)
@@ -230,8 +239,8 @@ export default {
     const h = rtdn ? null : routes[key]; if (!h && !rtdn) return err("not_found", 404);
     try {
       let body = {};
-      const maxBody = key.startsWith("POST /v1/iap/") ? 16384 : 4096; // App Store JWS + Pub/Sub envelopes are bigger
-      if (req.method === "POST") { const t = await req.text(); if (t.length > maxBody) return err("too_large", 413); body = t ? JSON.parse(t) : {}; }
+      const maxBody = key === "PUT /v1/save" ? 220000 : key.startsWith("POST /v1/iap/") ? 16384 : 4096; // App Store JWS + Pub/Sub envelopes are bigger
+      if (req.method === "POST" || req.method === "PUT") { const t = await req.text(); if (t.length > maxBody) return err("too_large", 413); body = t ? JSON.parse(t) : {}; }
       if (rtdn) return asResponse(await iap.rtdn(url, body));
       if (key === "POST /v1/signin") return await h(req, body);
       const p = await me(req); if (!p) return err("unauthorized", 401);

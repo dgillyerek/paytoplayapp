@@ -64,7 +64,7 @@ const granted = (item, rec) => reply(200, { status: "granted", sku: item.sku, pr
  * The purchase service, independent of HTTP and Postgres. repo: see iap_repo.mjs (pg) / test/memory_repo.mjs.
  * verifiers: { google_play, app_store } async ({ productId, purchaseToken, signedTransaction, transactionId }) → result.
  */
-export function createIap({ repo, verifiers, catalog = buildCatalog(), packageName = DEFAULT_PACKAGE, rtdnToken = "", log = console }) {
+export function createIap({ repo, verifiers, catalog = buildCatalog(), packageName = DEFAULT_PACKAGE, rtdnToken = "", onRevoked = null, log = console }) {
   async function validate(player, b) {
     const store = STORES.includes(b?.store) ? b.store : null;
     const productId = str(b?.productId, 200);
@@ -131,7 +131,9 @@ export function createIap({ repo, verifiers, catalog = buildCatalog(), packageNa
     if (voided && token) {
       // refundType 1 = full refund, 2 = quantity-based partial. Either way the token's grants and entitlements are revoked.
       const r = await repo.revoke("google_play", token, voided.refundType ? "refunded" : "voided");
-      result = { ok: true, revoked: r.found };
+      let clawback = null;
+      if (r.found && onRevoked) clawback = await onRevoked({ playerId: r.playerId, purchaseId: r.purchaseId, grants: r.grants || {} });
+      result = { ok: true, revoked: r.found, clawback };
     } else if (one && one.notificationType === 2 && token) { // ONE_TIME_PRODUCT_CANCELED: a pending purchase was cancelled
       await repo.cancelPending("google_play", token);
     } // PURCHASED (1): the device re-delivers it and validates; test notifications need nothing.

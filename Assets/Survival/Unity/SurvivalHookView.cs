@@ -8,6 +8,7 @@ using Survival.Domain.Clock;
 using Survival.Domain.Gift;
 using Survival.Domain.Ids;
 using Survival.Domain.Quest;
+using Survival.Domain.CloudSave;
 using Survival.Domain.Session;
 using Survival.Domain.Store;
 using Survival.Domain.Theme;
@@ -1098,6 +1099,8 @@ namespace Survival.Unity
 
             Hold(step.Rewards);
             var rewards = _hook.Quests.Claim(_hook.Wallet);
+            PlayerPrefs.SetString(QuestProgressSave.PrefsKey, QuestProgressSave.Capture(_hook.Catalog.StarterChain.Id, _hook.Quests));
+            PlayerPrefs.Save();
             if (rewards == null)
             {
                 Release(step.Rewards);
