@@ -22,6 +22,209 @@
         "target": "building.hq",
         "count": 2,
         "rewards": { "res.hard": 20, "res.soft": 1000 }
+      },
+      {
+        "id": "quest.free.collect_5",
+        "objective": "quest.objective.collect",
+        "target": "building.economy",
+        "count": 5,
+        "rewards": { "res.wood": 300, "res.stone": 200 }
+      },
+      {
+        "id": "quest.free.economy_lv2",
+        "objective": "quest.objective.reach_level",
+        "target": "building.economy",
+        "count": 2,
+        "rewards": { "res.wood": 400, "res.speedup_m": 5 }
+      },
+      {
+        "id": "quest.free.forge_lv2",
+        "objective": "quest.objective.reach_level",
+        "target": "building.workshop",
+        "count": 2,
+        "rewards": { "res.stone": 600 }
+      },
+      {
+        "id": "quest.free.hq_3",
+        "objective": "quest.objective.reach_level",
+        "target": "building.hq",
+        "count": 3,
+        "rewards": { "res.wood": 800, "res.stone": 900 }
+      },
+      {
+        "id": "quest.free.gather_2",
+        "objective": "quest.objective.gather",
+        "target": "world.node.gather_01",
+        "count": 2,
+        "rewards": { "res.stone": 800, "res.speedup_m": 5 }
+      },
+      {
+        "id": "quest.free.collect_10",
+        "objective": "quest.objective.collect",
+        "target": "building.economy",
+        "count": 10,
+        "rewards": { "res.wood": 800 }
+      },
+      {
+        "id": "quest.free.economy_lv3",
+        "objective": "quest.objective.reach_level",
+        "target": "building.economy",
+        "count": 3,
+        "rewards": { "res.wood": 1000, "res.stone": 800 }
+      },
+      {
+        "id": "quest.free.hq_4",
+        "objective": "quest.objective.reach_level",
+        "target": "building.hq",
+        "count": 4,
+        "rewards": { "res.wood": 1500, "res.stone": 1800 }
+      },
+      {
+        "id": "quest.free.forge_lv3",
+        "objective": "quest.objective.reach_level",
+        "target": "building.workshop",
+        "count": 3,
+        "rewards": { "res.stone": 1500, "res.speedup_m": 10 }
+      },
+      {
+        "id": "quest.free.collect_20",
+        "objective": "quest.objective.collect",
+        "target": "building.economy",
+        "count": 20,
+        "rewards": { "res.wood": 1500 }
+      },
+      {
+        "id": "quest.free.hq_5",
+        "objective": "quest.objective.reach_level",
+        "target": "building.hq",
+        "count": 5,
+        "rewards": { "res.wood": 2000, "res.stone": 2500 }
+      },
+      {
+        "id": "quest.free.economy_lv4",
+        "objective": "quest.objective.reach_level",
+        "target": "building.economy",
+        "count": 4,
+        "rewards": { "res.wood": 2000, "res.stone": 1500 }
+      },
+      {
+        "id": "quest.free.gather_3",
+        "objective": "quest.objective.gather",
+        "target": "world.node.gather_01",
+        "count": 3,
+        "rewards": { "res.stone": 2000, "res.speedup_m": 10 }
+      },
+      {
+        "id": "quest.free.hq_6",
+        "objective": "quest.objective.reach_level",
+        "target": "building.hq",
+        "count": 6,
+        "rewards": { "res.wood": 3000, "res.stone": 3500 }
+      },
+      {
+        "id": "quest.free.forge_lv4",
+        "objective": "quest.objective.reach_level",
+        "target": "building.workshop",
+        "count": 4,
+        "rewards": { "res.stone": 3000 }
+      },
+      {
+        "id": "quest.free.collect_40",
+        "objective": "quest.objective.collect",
+        "target": "building.economy",
+        "count": 40,
+        "rewards": { "res.wood": 3000 }
+      },
+      {
+        "id": "quest.free.hq_7",
+        "objective": "quest.objective.reach_level",
+        "target": "building.hq",
+        "count": 7,
+        "rewards": { "res.wood": 4500, "res.stone": 5500 }
+      },
+      {
+        "id": "quest.free.economy_lv5",
+        "objective": "quest.objective.reach_level",
+        "target": "building.economy",
+        "count": 5,
+        "rewards": { "res.wood": 4000, "res.stone": 3000, "res.speedup_m": 15 }
+      },
+      {
+        "id": "quest.free.collect_60",
+        "objective": "quest.objective.collect",
+        "target": "building.economy",
+        "count": 60,
+        "rewards": { "res.wood": 4000 }
+      },
+      {
+        "id": "quest.free.hq_8",
+        "objective": "quest.objective.reach_level",
+        "target": "building.hq",
+        "count": 8,
+        "rewards": { "res.wood": 6500, "res.stone": 8000 }
+      },
+      {
+        "id": "quest.free.forge_lv5",
+        "objective": "quest.objective.reach_level",
+        "target": "building.workshop",
+        "count": 5,
+        "rewards": { "res.stone": 5000, "res.speedup_m": 15 }
+      },
+      {
+        "id": "quest.free.economy_lv6",
+        "objective": "quest.objective.reach_level",
+        "target": "building.economy",
+        "count": 6,
+        "rewards": { "res.wood": 6000, "res.stone": 4500 }
+      },
+      {
+        "id": "quest.free.gather_3b",
+        "objective": "quest.objective.gather",
+        "target": "world.node.gather_01",
+        "count": 3,
+        "rewards": { "res.stone": 6000, "res.speedup_m": 15 }
+      },
+      {
+        "id": "quest.free.collect_100",
+        "objective": "quest.objective.collect",
+        "target": "building.economy",
+        "count": 100,
+        "rewards": { "res.wood": 7500 }
+      },
+      {
+        "id": "quest.free.hq_9",
+        "objective": "quest.objective.reach_level",
+        "target": "building.hq",
+        "count": 9,
+        "rewards": { "res.wood": 9000, "res.stone": 11000 }
+      },
+      {
+        "id": "quest.free.forge_lv6",
+        "objective": "quest.objective.reach_level",
+        "target": "building.workshop",
+        "count": 6,
+        "rewards": { "res.stone": 7500, "res.speedup_m": 20 }
+      },
+      {
+        "id": "quest.free.collect_150",
+        "objective": "quest.objective.collect",
+        "target": "building.economy",
+        "count": 150,
+        "rewards": { "res.wood": 10000 }
+      },
+      {
+        "id": "quest.free.hq_10",
+        "objective": "quest.objective.reach_level",
+        "target": "building.hq",
+        "count": 10,
+        "rewards": { "res.wood": 12500, "res.stone": 15000 }
+      },
+      {
+        "id": "quest.free.collect_250",
+        "objective": "quest.objective.collect",
+        "target": "building.economy",
+        "count": 250,
+        "rewards": { "res.wood": 15000, "res.stone": 15000 }
       }
     ]
   }
