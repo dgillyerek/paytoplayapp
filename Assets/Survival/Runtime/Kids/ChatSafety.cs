@@ -83,5 +83,13 @@ namespace Survival.Domain.Kids
         public static bool IsSafeName(string name) => Regex.IsMatch(name ?? "", "^[A-Z][a-z]+ [A-Z][a-z]+ [0-9]{3}$");
 
         public static string ChatModeId(ChatMode m) => m == ChatMode.Free ? "free" : m == ChatMode.Presets ? "presets" : "off";
+
+        public static ChatMode? ParseChatMode(string? id) => id switch
+        {
+            "off" => ChatMode.Off,
+            "presets" => ChatMode.Presets,
+            "free" => ChatMode.Free,
+            _ => null,
+        };
     }
 }

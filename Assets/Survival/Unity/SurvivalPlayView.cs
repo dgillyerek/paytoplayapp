@@ -143,13 +143,12 @@ namespace Survival.Unity
             lord.fontStyle = FontStyle.Bold;
             Ornaments.Emboss(lord);
             HookSkin.Fit(lord, 14, 26);
-            // Privacy and account (account deletion): tap the player name. Placeholder entry until a settings screen exists.
-            lord.raycastTarget = true;
-            lord.gameObject.AddComponent<Button>().onClick.AddListener(Kids.AccountScreen.Show);
             var power = SurvivalVisuals.Text(_root, "Power", pack.StringOr("hud.player_power", ""), 18, TextAnchor.MiddleLeft, SurvivalVisuals.Mute);
             Place(power.rectTransform, hud, "player_power");
             Ornaments.Emboss(power);
             HookSkin.Fit(power, 11, 17);
+
+            BuildSettingsButton(_root, hud);
 
             Chip(_root, hud, ChipWallet.SoftChip, pack.StringOr("hud.chip.gold_label", ""));
             Chip(_root, hud, ChipWallet.WoodChip, pack.StringOr("hud.chip.wood_label", ""));
@@ -783,6 +782,18 @@ namespace Survival.Unity
                     }
                 }
             });
+        }
+
+        /// <summary>HUD gear: opens Settings (Privacy and account). Slot "settings" in ui/hud_layout.json; a top-bar default otherwise.</summary>
+        private static void BuildSettingsButton(RectTransform root, IReadOnlyDictionary<string, HudRect> hud)
+        {
+            var gear = HookSkin.Button(root, "SettingsButton", HookArtKeys.ButtonBlue, SurvivalVisuals.PinBuild);
+            var rt = gear.GetComponent<RectTransform>();
+            SurvivalVisuals.Place(rt, hud.TryGetValue("settings", out var r) ? r : HudRect.FromDesign(0.25f, 0.02f, 0.292f, 0.066f));
+            var glyph = HookSkin.Outlined(SurvivalVisuals.Text(gear.transform, "Glyph", "\u2699", 30, TextAnchor.MiddleCenter, HookSkin.Cream), 1.5f);
+            SurvivalVisuals.Stretch(glyph.rectTransform);
+            HookSkin.Fit(glyph, 16, 30);
+            gear.onClick.AddListener(Kids.SettingsScreen.Show);
         }
 
         private static void Place(RectTransform rt, IReadOnlyDictionary<string, HudRect> hud, string key)

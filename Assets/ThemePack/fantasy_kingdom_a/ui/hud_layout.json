@@ -8,14 +8,20 @@
   "player_name": {
     "x_min": 0.03,
     "y_top_min": 0.016,
-    "x_max": 0.29,
+    "x_max": 0.245,
     "y_top_max": 0.042
   },
   "player_power": {
     "x_min": 0.03,
     "y_top_min": 0.042,
-    "x_max": 0.29,
+    "x_max": 0.245,
     "y_top_max": 0.068
+  },
+  "settings": {
+    "x_min": 0.25,
+    "y_top_min": 0.02,
+    "x_max": 0.292,
+    "y_top_max": 0.066
   },
   "res_soft": {
     "x_min": 0.295,

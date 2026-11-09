@@ -30,6 +30,7 @@ namespace Survival.Unity.Kids
         private static ChildSafetyConfig? _config;
         private static AgeGateStore? _store;
         private static ITelemetrySink? _telemetry;
+        private static ChatPreference? _chat;
         private static IParentalConsentProvider _consent = NoConsentProvider.Instance;
 
         public static ChildSafetyConfig Config => _config ?? Load(AppFlavorConfig.FantasyKingdomA);
@@ -37,7 +38,17 @@ namespace Survival.Unity.Kids
         public static AgeGateStore Store => _store ??= new AgeGateStore(new PlayerPrefsKidStorage());
 
         /// <summary>Rebuilt on each read: cheap, and always reflects the latest answer.</summary>
-        public static ChildSafetyPolicy Policy => new ChildSafetyPolicy(Config, Store.Load());
+        public static ChildSafetyPolicy Policy => new ChildSafetyPolicy(Config, Store.Load(), Chat.Load());
+
+        /// <summary>The Settings chat choice; the policy clamps it (a child never gets free chat).</summary>
+        public static ChatPreference Chat => _chat ??= new ChatPreference(new PlayerPrefsKidStorage());
+
+        /// <summary>Settings: save the chat choice and tell listeners (the guild view and the server mirror).</summary>
+        public static void SetChat(ChatMode mode)
+        {
+            Chat.Save(mode);
+            Changed?.Invoke();
+        }
 
         public static bool IsChild => Policy.IsChild;
 
@@ -116,6 +127,7 @@ namespace Survival.Unity.Kids
         public static void ClearForAccountDeletion()
         {
             Store.Clear();
+            Chat.Clear();
             _consent.Revoke();
             Changed?.Invoke();
         }
