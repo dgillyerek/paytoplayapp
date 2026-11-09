@@ -14,6 +14,7 @@ using Survival.Domain.Theme;
 using Survival.Domain.World;
 using Survival.Domain.View;
 using UnityEngine;
+using Survival.Unity.Kids;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
@@ -1466,7 +1467,7 @@ namespace Survival.Unity
         private Action BuildOfferRow(RectTransform panel, OfferDef offer, float yMin, float yMax, string? tierKey)
         {
             var isFree = string.Equals(offer.Kind, OfferKinds.Free, StringComparison.Ordinal);
-            var tagged = !string.IsNullOrEmpty(offer.Tag);
+            var tagged = Survival.Domain.Kids.NoPressure.ShowSalesTag(KidSafety.Policy, offer.Tag); // none in child mode
             if (tagged)
             {
                 // Warm halo behind the BEST VALUE row.

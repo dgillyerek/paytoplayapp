@@ -14,6 +14,7 @@ using Survival.Domain.Theme;
 using Survival.Domain.View;
 using Survival.Domain.World;
 using UnityEngine;
+using Survival.Unity.Kids;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -1367,7 +1368,8 @@ namespace Survival.Unity
             {
                 var r = rows[i];
                 var y1 = top - (i * h);
-                var tag = r.Offer.Tag ?? "";
+                // Child mode: no BEST VALUE / POPULAR / ONE TIME ribbons or sparkles (Families: no pressure to buy).
+                var tag = Survival.Domain.Kids.NoPressure.ShowSalesTag(KidSafety.Policy, r.Offer.Tag) ? r.Offer.Tag ?? "" : "";
                 var hot = tag == "popular" || tag == "best_value";
                 var accent = tag == "best_value" ? SurvivalVisuals.MineFill : tag == "popular" ? HeroGlow : FreeGreen;
                 if (hot)

@@ -125,6 +125,7 @@ namespace Survival.Unity
             SurvivalArt.EnsureLoaded(flavor, pack);
             KidSafety.Load(flavor);
             KidUi.Strings = pack.StringOr;
+            KidSafety.InstallPurchaseConsent();
             var catalogDir = ResolveCatalogDir();
             var catalog = CatalogLoader.LoadFromDirectory(catalogDir, PlayerAssets.ReadAllText);
             Session = TryLoadHookSession(this, flavor, pack, catalog, catalogDir) ?? new SurvivalSession(flavor, pack, catalog);
@@ -147,6 +148,12 @@ namespace Survival.Unity
                     : new Dictionary<string, ProductDef>();
                 // Live billing on release Android builds (server-validated); the free sandbox only in the Editor / dev builds.
                 var purchases = Iap.SurvivalPurchases.Create(runner, SurvivalArt.ResolvePackRoot(flavor), products);
+                if (purchases.IsSandbox)
+                {
+                    // Child mode in the Editor / dev builds: same age-band + parental gate as the live service (#201).
+                    purchases = new Survival.Domain.Kids.GatedPurchaseService(purchases, new Survival.Domain.Iap.AgeBandPurchaseGate(() => KidSafety.AgeBand, new Iap.DeferredConsent(), Iap.SurvivalPurchases.AllowUnknownAge));
+                }
+
                 var session = new SurvivalSession(
                     flavor,
                     pack,

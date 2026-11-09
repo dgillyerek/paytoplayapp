@@ -72,6 +72,18 @@ namespace Survival.Unity.Kids
             return _config;
         }
 
+        /// <summary>
+        /// Plugs the parental gate into the IAP branch's purchase gate (#201 AgeBandPurchaseGate asks it for every under-13
+        /// purchase): child.iap decides blocked / parental_gate / allowed, plus the optional daily cap.
+        /// </summary>
+        public static void InstallPurchaseConsent()
+        {
+            if (Iap.SurvivalPurchases.ParentalConsent is not ParentalGateConsent)
+            {
+                Iap.SurvivalPurchases.ParentalConsent = new ParentalGateConsent(() => Policy, new ParentalGateScreen.Gate(), new ChildPurchaseCounter(new PlayerPrefsKidStorage()));
+            }
+        }
+
         public static void SaveAnswer(AgeBandDef band)
         {
             if (Store.Save(band))

@@ -4,10 +4,12 @@ using System.Collections;
 using System.Text;
 using Survival.Domain.Alliance;
 using Survival.Domain.Ids;
+using Survival.Domain.Kids;
 using Survival.Domain.Theme;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using Survival.Unity.Kids;
 
 namespace Survival.Unity
 {
@@ -59,6 +61,9 @@ namespace Survival.Unity
         /// <summary>Shared alliance client (null until the view starts, or when the API is switched off).</summary>
         public static AllianceService? AllianceNet { get; private set; }
 
+        /// <summary>Report / block and the server chat mode on the same sign-in (Kids, COPPA / Families).</summary>
+        public static AllianceSafetyClient? AllianceSafety { get; private set; }
+
         private string _allianceSearch = "";
         private Text? _allyChatLog;
         private InputField? _allyChatInput;
@@ -86,11 +91,19 @@ namespace Survival.Unity
             }
 
             AllianceNet = new AllianceService(new UnityAllianceTransport(this, api));
+            AllianceSafety = new AllianceSafetyClient(AllianceNet);
             AllianceNet.Changed += () => _session?.Alliance?.Apply(AllianceNet);
-            AllianceNet.SignIn(device, S("alliance.default_name", "Survivor"), ok =>
+            // Restricted (child / unknown age) players never send a typed name: a generated one, e.g. "Swift Ranger 417".
+            var policy = KidSafety.Policy;
+            var safeName = ChatSafety.SafeName(device);
+            var name = ChatSafety.CanTypeName(policy) ? S("alliance.default_name", "Survivor") : safeName;
+            AllianceNet.SignIn(device, name, ok =>
             {
                 if (ok)
                 {
+                    // Age band first (the server's restricted flag reads it), then the chat mode / safe name.
+                    var band = Survival.Domain.Iap.AgeBands.Id(KidSafety.AgeBand);
+                    AllianceNet.SetAgeBand(band, _ => AllianceSafety?.ApplyPolicy(KidSafety.Policy, safeName));
                     AllianceNet.RefreshHelp();
                     AllianceNet.RefreshGifts();
                 }
@@ -204,7 +217,23 @@ namespace Survival.Unity
                 Label(panel, "Empty", S("alliance.find.empty", "Tap SEARCH to see alliances."), 20, TextAnchor.MiddleCenter, AllyCaption, 0.04f, 0.50f, 0.96f, 0.56f);
             }
 
-            // Found your own: name + 2-4 letter tag.
+            // Found your own: name + 2-4 letter tag. Not for child mode (a typed alliance name is free text other players see).
+            if (KidSafety.Policy.CanCreateAlliance)
+            {
+                DrawAllianceCreate(panel);
+            }
+
+            AllianceError(panel);
+            AllianceCloseButton(panel);
+            if (net.Listings.Count == 0 && net.LastError == null)
+            {
+                net.Search("", ok => { if (ok && net.Listings.Count > 0 && GameObject.Find("AllianceScreen") != null) OpenAllianceFind(); });
+            }
+        }
+
+        private void DrawAllianceCreate(RectTransform panel)
+        {
+            var net = AllianceNet!;
             var create = OrnateCard(panel, "CreateCard", 0.04f, 0.12f, 0.96f, 0.215f, true);
             Label(create, "Title", S("alliance.create.title", "Found your own"), 20, TextAnchor.MiddleLeft, SurvivalVisuals.Cream, 0.03f, 0.62f, 0.96f, 0.98f);
             var name = AllianceInput(create, "Name", S("alliance.create.name", "Alliance name"), 24, 0.03f, 0.08f, 0.50f, 0.6f);
@@ -222,13 +251,6 @@ namespace Survival.Unity
                     OpenAllianceFind();
                 }
             }));
-
-            AllianceError(panel);
-            AllianceCloseButton(panel);
-            if (net.Listings.Count == 0 && net.LastError == null)
-            {
-                net.Search("", ok => { if (ok && net.Listings.Count > 0 && GameObject.Find("AllianceScreen") != null) OpenAllianceFind(); });
-            }
         }
 
         private void DrawAllianceOnlineTab(RectTransform panel, AllianceService net, string tab)
@@ -249,13 +271,34 @@ namespace Survival.Unity
             AllianceError(panel);
         }
 
+        private string? PresetText(string id)
+        {
+            foreach (var p in KidSafety.Config.ChatPresets)
+            {
+                if (p.Id == id)
+                {
+                    return S("kids.chat.preset." + id, p.Text);
+                }
+            }
+
+            return null;
+        }
+
         private static string AllianceChatText(SurvivalCampaignView v, AllianceService net)
         {
             var lines = new StringBuilder();
+            var policy = KidSafety.Policy;
+            var blocked = AllianceSafety?.Blocked ?? new System.Collections.Generic.HashSet<long>();
             for (var i = Math.Max(0, net.Chat.Count - 14); i < net.Chat.Count; i++)
             {
                 var m = net.Chat[i];
-                lines.Append("<b>").Append(m.Name).Append(":</b> ").Append(m.Body.Replace("<", "\u2039")).Append('\n');
+                var body = ChatSafety.Visible(policy, m.PlayerId, m.Body, blocked, v.PresetText);
+                if (body == null)
+                {
+                    continue;
+                }
+
+                lines.Append("<b>").Append(m.Name).Append(":</b> ").Append(body.Replace("<", "\u2039")).Append('\n');
             }
 
             return lines.Length == 0 ? v.S("alliance.chat.empty", "Say hello to your alliance!") : lines.ToString();
@@ -285,6 +328,21 @@ namespace Survival.Unity
 
         private void DrawAllianceChat(RectTransform panel, AllianceService net)
         {
+            var policy = KidSafety.Policy;
+            if (!ChatSafety.CanRead(policy))
+            {
+                // Child mode, chat off (child_safety.json child.chat): nothing is shown or sent. Neutral copy, no upsell.
+                var off = OrnateCard(panel, "ChatOff", 0.04f, 0.40f, 0.96f, 0.55f, false);
+                HookSkin.Fit(Label(off, "Text", S("kids.chat.off", "Chat is turned off. You can still help your alliance and send gifts."), 21, TextAnchor.MiddleCenter, SurvivalVisuals.Cream, 0.04f, 0.05f, 0.96f, 0.95f), 12, 21);
+                return;
+            }
+
+            if (!ChatSafety.CanSendFreeText(policy))
+            {
+                DrawAlliancePresetChat(panel, net);
+                return;
+            }
+
             var card = OrnateCard(panel, "ChatCard", 0.04f, 0.19f, 0.96f, 0.67f, false);
             var log = Label(card, "Log", AllianceChatText(this, net), 19, TextAnchor.LowerLeft, SurvivalVisuals.Cream, 0.03f, 0.02f, 0.97f, 0.98f);
             log.supportRichText = true;
@@ -292,9 +350,10 @@ namespace Survival.Unity
             log.verticalOverflow = VerticalWrapMode.Truncate;
             _allyChatLog = log;
 
-            var input = AllianceInput(panel, "ChatInput", S("alliance.chat.hint", "Write a message"), 280, 0.04f, 0.12f, 0.74f, 0.18f);
+            var input = AllianceInput(panel, "ChatInput", S("alliance.chat.hint", "Write a message"), 280, 0.04f, 0.12f, 0.56f, 0.18f);
             _allyChatInput = input;
-            var send = SheetButton(panel, "Send", HookArtKeys.ButtonGreen, SurvivalVisuals.MineFill, 0.76f, 0.12f, 0.96f, 0.18f, 22, out var sendBtn);
+            ChatSafetyButton(panel, 0.78f, 0.96f);
+            var send = SheetButton(panel, "Send", HookArtKeys.ButtonGreen, SurvivalVisuals.MineFill, 0.58f, 0.12f, 0.76f, 0.18f, 22, out var sendBtn);
             send.text = S("alliance.chat.send", "SEND");
             Wire(sendBtn, () =>
             {
@@ -316,6 +375,103 @@ namespace Survival.Unity
             {
                 net.PollChat(ok => { if (ok && net.Chat.Count > 0) RefreshAllianceChat(); });
             }
+        }
+
+        /// <summary>Presets-only chat (child mode): fixed phrases as buttons, no text box. The server only accepts preset ids.</summary>
+        private void DrawAlliancePresetChat(RectTransform panel, AllianceService net)
+        {
+            var card = OrnateCard(panel, "ChatCard", 0.04f, 0.28f, 0.96f, 0.67f, false);
+            var log = Label(card, "Log", AllianceChatText(this, net), 19, TextAnchor.LowerLeft, SurvivalVisuals.Cream, 0.03f, 0.02f, 0.97f, 0.98f);
+            log.supportRichText = true;
+            log.horizontalOverflow = HorizontalWrapMode.Wrap;
+            log.verticalOverflow = VerticalWrapMode.Truncate;
+            _allyChatLog = log;
+            _allyChatInput = null;
+
+            var presets = KidSafety.Config.ChatPresets;
+            for (var i = 0; i < Math.Min(8, presets.Count); i++)
+            {
+                var p = presets[i];
+                var x0 = 0.04f + i % 4 * 0.23f;
+                var y1 = i < 4 ? 0.272f : 0.232f;
+                var b = SheetButton(panel, "Preset_" + p.Id, HookArtKeys.ButtonBlue, SurvivalVisuals.PinBuild, x0, y1 - 0.036f, x0 + 0.22f, y1, 16, out var btn);
+                b.text = S("kids.chat.preset." + p.Id, p.Text);
+                HookSkin.Fit(b, 10, 16);
+                var id = p.Id;
+                Wire(btn, () => AllianceSafety?.SendPreset(id, _ => RefreshAllianceChat()));
+            }
+
+            ChatSafetyButton(panel, 0.30f, 0.70f);
+            if (net.Chat.Count == 0)
+            {
+                net.PollChat(ok => { if (ok && net.Chat.Count > 0) RefreshAllianceChat(); });
+            }
+        }
+
+        private void ChatSafetyButton(RectTransform panel, float x0, float x1)
+        {
+            var t = SheetButton(panel, "ChatSafety", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, x0, 0.12f, x1, 0.18f, 18, out var btn);
+            t.text = S("kids.chat.report_block", "Report / Block");
+            HookSkin.Fit(t, 10, 18);
+            Wire(btn, OpenChatSafety);
+        }
+
+        /// <summary>Report or block anyone from the last messages. Blocked players' messages are hidden (server and client).</summary>
+        private void OpenChatSafety()
+        {
+            var net = AllianceNet;
+            var safety = AllianceSafety;
+            if (net == null || safety == null)
+            {
+                return;
+            }
+
+            var panel = OpenScreen("AllianceScreen", S("kids.chat.safety.title", "REPORT OR BLOCK"));
+            Label(panel, "Explain", S("kids.chat.safety.explain", "If someone is mean or asks for personal info, report or block them. A grown-up can help too."), 19, TextAnchor.MiddleCenter, SurvivalVisuals.Cream, 0.04f, 0.80f, 0.96f, 0.86f);
+            var shown = 0;
+            const float top = 0.78f, rowH = 0.085f;
+            for (var i = net.Chat.Count - 1; i >= 0 && shown < 7; i--)
+            {
+                var m = net.Chat[i];
+                if (m.PlayerId == net.PlayerId)
+                {
+                    continue;
+                }
+
+                var y1 = top - shown++ * rowH;
+                var row = OrnateCard(panel, "Msg_" + m.Id, 0.04f, y1 - rowH + 0.006f, 0.96f, y1, false);
+                var isBlocked = safety.Blocked.Contains(m.PlayerId);
+                var text = isBlocked ? S("kids.chat.safety.blocked", "(blocked)") : ChatSafety.Visible(KidSafety.Policy, m.PlayerId, m.Body, safety.Blocked, PresetText) ?? "\u2026";
+                HookSkin.Fit(Label(row, "Line", m.Name + ": " + text.Replace("<", "\u2039"), 18, TextAnchor.MiddleLeft, SurvivalVisuals.Cream, 0.03f, 0.05f, 0.56f, 0.95f), 10, 18);
+                var rep = SheetButton(row, "Report", HookArtKeys.ButtonBlue, SurvivalVisuals.PinBuild, 0.58f, 0.15f, 0.77f, 0.85f, 16, out var repBtn);
+                rep.text = S("kids.chat.report", "REPORT");
+                var blk = SheetButton(row, "Block", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.78f, 0.15f, 0.97f, 0.85f, 16, out var blkBtn);
+                blk.text = isBlocked ? S("kids.chat.unblock", "UNBLOCK") : S("kids.chat.block", "BLOCK");
+                var msgId = m.Id;
+                var who = m.PlayerId;
+                Wire(repBtn, () => safety.Report(msgId, "other", ok => { rep.text = ok ? S("kids.chat.reported", "SENT") : rep.text; }));
+                Wire(blkBtn, () =>
+                {
+                    if (safety.Blocked.Contains(who))
+                    {
+                        safety.Unblock(who, _ => OpenChatSafety());
+                    }
+                    else
+                    {
+                        safety.Block(who, _ => OpenChatSafety());
+                    }
+                });
+            }
+
+            if (shown == 0)
+            {
+                Label(panel, "Empty", S("kids.chat.safety.empty", "No messages from others yet."), 20, TextAnchor.MiddleCenter, AllyCaption, 0.04f, 0.50f, 0.96f, 0.56f);
+            }
+
+            var back = SheetButton(panel, "Back", HookArtKeys.ButtonBlue, SurvivalVisuals.PinBuild, 0.30f, 0.10f, 0.70f, 0.16f, 22, out var backBtn);
+            back.text = S("kids.chat.safety.back", "Back to chat");
+            Wire(backBtn, () => OpenAlliance(TabChat));
+            AllianceCloseButton(panel);
         }
 
         private void DrawAllianceHelp(RectTransform panel, AllianceService net)
