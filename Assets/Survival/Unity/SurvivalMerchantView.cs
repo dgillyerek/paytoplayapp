@@ -9,6 +9,7 @@ using Survival.Domain.Taps;
 using Survival.Domain.Theme;
 using Survival.Domain.World;
 using UnityEngine;
+using Survival.Unity.Kids;
 using UnityEngine.UI;
 
 namespace Survival.Unity
@@ -222,7 +223,10 @@ namespace Survival.Unity
             _view.TapWire(close, _view.TapCloseSheet);
             _view.TapSheetRefresh(() =>
             {
-                leave.text = _view.TapFmt("merchant.leaves", "Packing up in {0}", TimerQueue.FormatClock(_merchant.SecondsLeft));
+                // Child mode: no "leaves in" countdown next to a real-money deal (Families: no fake urgency).
+                leave.text = Survival.Domain.Kids.NoPressure.ShowOfferCountdown(KidSafety.Policy)
+                    ? _view.TapFmt("merchant.leaves", "Packing up in {0}", TimerQueue.FormatClock(_merchant.SecondsLeft))
+                    : "";
                 foreach (var r in rows)
                 {
                     r();
@@ -297,6 +301,13 @@ namespace Survival.Unity
                     var s = 1f + 0.05f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 6f));
                     buyRt.localScale = new Vector3(s, s, 1f);
                 }
+                else if (deal.Kind == MerchantDealKinds.Sku && !Survival.Domain.Kids.NoPressure.ShowTimedOrPromptedSku(KidSafety.Policy))
+                {
+                    // Child mode: the merchant's timed real-money deal is not sold; packs stay in the Store behind the parental gate.
+                    priceText.text = _view.TapS("kids.merchant.sku_store", "In the Store");
+                    key = HookArtKeys.ButtonBlue;
+                    on = false;
+                }
                 else if (deal.Kind == MerchantDealKinds.Sku)
                 {
                     var product = _hook.Store.ProductFor(deal.Sku);
@@ -329,7 +340,7 @@ namespace Survival.Unity
             if (deal.Kind == MerchantDealKinds.Sku)
             {
                 var product = _hook.Store.ProductFor(deal.Sku);
-                if (product == null)
+                if (product == null || !Survival.Domain.Kids.NoPressure.ShowTimedOrPromptedSku(KidSafety.Policy))
                 {
                     _view.TapShake(button);
                     return;

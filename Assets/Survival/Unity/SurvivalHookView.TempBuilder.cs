@@ -5,6 +5,7 @@ using Survival.Domain.Ids;
 using Survival.Domain.Theme;
 using Survival.Domain.View;
 using UnityEngine;
+using Survival.Unity.Kids;
 using UnityEngine.UI;
 
 namespace Survival.Unity
@@ -46,6 +47,13 @@ namespace Survival.Unity
             buyText.color = HookSkin.Cream; // never dark text on gold
             var sandbox = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Sandbox", S("store.sandbox", "SANDBOX \u00b7 no real charge"), 15, TextAnchor.MiddleCenter, Warn), 1.5f);
             HookSkin.Box(sandbox.rectTransform, 0f, 0.44f, 1f, 0.485f);
+            if (!Survival.Domain.Kids.NoPressure.ShowTimedOrPromptedSku(KidSafety.Policy))
+            {
+                // Child mode: no "hire for $1.99" pop-up offer when blocked; the sheet just shows the busy builders.
+                buy.gameObject.SetActive(false);
+                sandbox.gameObject.SetActive(false);
+            }
+
             var closeText = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.33f, 0.03f, 0.67f, 0.115f, 20, out var close);
             closeText.text = S("hook.close", "Close");
             var buyRt = buy.GetComponent<RectTransform>();
