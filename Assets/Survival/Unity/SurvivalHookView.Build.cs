@@ -1,6 +1,9 @@
 #nullable enable
 using System.Collections.Generic;
 using Survival.Domain.Base;
+using Survival.Domain.CloudSave;
+using Survival.Domain.Ids;
+using Survival.Unity.CloudSave;
 using Survival.Domain.Clock;
 using Survival.Domain.Theme;
 using Survival.Domain.View;
@@ -79,6 +82,13 @@ namespace Survival.Unity
             }
 
             VillageSave.Apply(PlayerPrefs.GetString(VillageSave.PrefsKey, ""), _hook.Base, _hook.Build);
+            var chainId = _hook.Catalog.StarterChain.Id;
+            QuestProgressSave.Apply(PlayerPrefs.GetString(QuestProgressSave.PrefsKey, ""), chainId, _hook.Quests);
+            if (_play?.Session != null)
+            {
+                FtueProgressSave.Apply(PlayerPrefs.GetString(FtueProgressSave.PrefsKey, ""), _play.Session.Ftue);
+                WorldGatherSave.Apply(PlayerPrefs.GetString(WorldGatherSave.PrefsKey, ""), _play.Session.World);
+            }
 
             // Timers that ran out while the game was closed finish now, before the buildings are drawn; their
             // congratulations bubbles wait on the buildings.
@@ -108,6 +118,26 @@ namespace Survival.Unity
         {
             _lastSave = null;
             SaveIfChanged();
+            SaveProgressLocals();
+        }
+
+        private void SaveProgressLocals()
+        {
+            if (_hook == null)
+            {
+                return;
+            }
+
+            var chainId = _hook.Catalog.StarterChain.Id;
+            PlayerPrefs.SetString(QuestProgressSave.PrefsKey, QuestProgressSave.Capture(chainId, _hook.Quests));
+            if (_play?.Session != null)
+            {
+                PlayerPrefs.SetString(FtueProgressSave.PrefsKey, FtueProgressSave.Capture(_play.Session.Ftue));
+                var now = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                PlayerPrefs.SetString(WorldGatherSave.PrefsKey, WorldGatherSave.Capture(_play.Session.World, now));
+            }
+
+            PlayerPrefs.Save();
         }
 
         private void OnApplicationPause(bool paused)
@@ -115,6 +145,14 @@ namespace Survival.Unity
             if (paused)
             {
                 SaveVillage();
+                if (_play?.Session != null)
+                {
+                    SurvivalCloudSave.OnPause(_play.Session);
+                }
+            }
+            else if (_play?.Session != null)
+            {
+                SurvivalCloudSave.OnResume(_play.Session);
             }
         }
 

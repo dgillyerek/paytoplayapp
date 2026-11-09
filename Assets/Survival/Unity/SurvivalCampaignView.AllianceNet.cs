@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Text;
 using Survival.Domain.Alliance;
+using Survival.Unity.CloudSave;
 using Survival.Domain.Ids;
 using Survival.Domain.Kids;
 using Survival.Domain.Theme;
@@ -120,6 +121,10 @@ namespace Survival.Unity
                     AllianceNet.SetAgeBand(band, _ => AllianceSafety?.ApplyPolicy(KidSafety.Policy, safeName));
                     AllianceNet.RefreshHelp();
                     AllianceNet.RefreshGifts();
+                    if (_session != null)
+                    {
+                        SurvivalCloudSave.Bind(_session, AllianceNet);
+                    }
                 }
             });
             _alliancePoll ??= StartCoroutine(AlliancePoll());

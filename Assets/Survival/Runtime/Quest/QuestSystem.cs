@@ -85,6 +85,27 @@ namespace Survival.Domain.Quest
             return step.Rewards;
         }
 
+        /// <summary>
+        /// Restore progress for this chain (cloud / local save). Index is clamped to the chain length;
+        /// reach-level steps may still bump Progress via <see cref="SeedProgress"/>.
+        /// </summary>
+        public void Restore(int index, int progress)
+        {
+            if (index < 0)
+            {
+                index = 0;
+            }
+
+            if (index > Chain.Steps.Count)
+            {
+                index = Chain.Steps.Count;
+            }
+
+            Index = index;
+            Progress = progress < 0 ? 0 : progress;
+            SeedProgress();
+        }
+
         /// <summary>A reach-level step that is already met starts complete.</summary>
         private void SeedProgress()
         {

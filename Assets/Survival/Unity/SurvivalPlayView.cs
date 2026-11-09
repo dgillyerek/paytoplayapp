@@ -10,6 +10,8 @@ using Survival.Domain.Session;
 using Survival.Domain.Theme;
 using Survival.Domain.View;
 using Survival.Domain.World;
+using Survival.Domain.CloudSave;
+using Survival.Unity.CloudSave;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -91,6 +93,13 @@ namespace Survival.Unity
         public void RaiseMarchResolved(WorldMarchLoop loop, int yield)
         {
             RefreshChip(loop.ChipKey);
+            if (Session != null && loop.ConsumeYieldFromStock)
+            {
+                var now = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                PlayerPrefs.SetString(WorldGatherSave.PrefsKey, WorldGatherSave.Capture(Session.World, now));
+                PlayerPrefs.Save();
+            }
+
             MarchResolved?.Invoke(loop, yield);
         }
 
@@ -343,6 +352,7 @@ namespace Survival.Unity
 
         private void Update()
         {
+            if (Session != null) SurvivalCloudSave.Tick(Session, Time.unscaledDeltaTime);
             // Marches keep moving (and paying out) while the player is in the village.
             WorldView?.TickSim();
             if (!Screen.InTransition && _shownFor == Screen.Current)

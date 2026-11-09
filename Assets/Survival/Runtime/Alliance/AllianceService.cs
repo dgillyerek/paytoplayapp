@@ -91,6 +91,52 @@ namespace Survival.Domain.Alliance
                 Fire(done);
             }, done);
 
+        /// <summary>Last HTTP response body (for cloud-save blob extraction).</summary>
+        public string? LastRawBody { get; private set; }
+
+        /// <summary>Cloud save GET /v1/save. done(version, blobJson or null, consentAt, ageBand, error).</summary>
+        public void GetSave(Action<long, string?, string?, string, string?> done) =>
+            Call("GET", "/v1/save", null, o =>
+            {
+                var version = Long(o, "version");
+                var blob = SliceJsonObject(LastRawBody, "blob");
+                if (blob == null && o.Fields.TryGetValue("blob", out var bn) && bn is JsonNode.Null)
+                {
+                    blob = null;
+                }
+
+                var consent = o.Fields.TryGetValue("consentAt", out var c) && c is JsonNode.Str cs ? cs.Value : null;
+                if (consent == null && o.Fields.TryGetValue("consentAt", out var cn) && cn is JsonNode.Null)
+                {
+                    consent = null;
+                }
+
+                var band = Str(o, "ageBand");
+                if (!string.IsNullOrEmpty(band))
+                {
+                    AgeBand = band;
+                }
+
+                done(version, blob, consent, string.IsNullOrEmpty(AgeBand) ? "unknown" : AgeBand, null);
+            }, _ => done(0, null, null, AgeBand, LastError));
+
+        /// <summary>Cloud save PUT /v1/save. <paramref name="blobJson"/> is the document object JSON.</summary>
+        public void PutSave(long baseVersion, string blobJson, bool consentGranted, Action<long, string?, bool, string?, string?> done)
+        {
+            var body = "{\"baseVersion\":" + baseVersion.ToString(CultureInfo.InvariantCulture)
+                + ",\"blob\":" + blobJson
+                + (consentGranted ? ",\"consentGranted\":true" : "")
+                + "}";
+            Call("PUT", "/v1/save", body, o =>
+            {
+                var version = Long(o, "version");
+                var merged = Bool(o, "merged");
+                var consent = o.Fields.TryGetValue("consentAt", out var c) && c is JsonNode.Str cs ? cs.Value : null;
+                var blob = SliceJsonObject(LastRawBody, "blob");
+                done(version, blob, merged, consent, null);
+            }, _ => done(0, null, false, null, LastError));
+        }
+
         public void RefreshMe(Action<bool>? done = null) => Call("GET", "/v1/me", null, o =>
         {
             Alliance = o.Fields.TryGetValue("alliance", out var a) && a is JsonNode.Obj ao ? ReadAlliance(ao) : null;
@@ -235,6 +281,7 @@ namespace Survival.Domain.Alliance
 
             _http.Send(method, path, body, auth ? _token : null, (status, text) =>
             {
+                LastRawBody = text;
                 JsonNode.Obj? obj = null;
                 try
                 {
@@ -343,5 +390,96 @@ namespace Survival.Domain.Alliance
         }
 
         internal static int Int(JsonNode.Obj o, string key) => (int)Math.Max(int.MinValue, Math.Min(int.MaxValue, Long(o, key)));
+        /// <summary>Extract a top-level JSON object value by key from a raw response body.</summary>
+        internal static string? SliceJsonObject(string? json, string key)
+        {
+            if (string.IsNullOrEmpty(json))
+            {
+                return null;
+            }
+
+            var needle = "\"" + key + "\"";
+            var i = json.IndexOf(needle, StringComparison.Ordinal);
+            if (i < 0)
+            {
+                return null;
+            }
+
+            i += needle.Length;
+            while (i < json.Length && char.IsWhiteSpace(json[i]))
+            {
+                i++;
+            }
+
+            if (i >= json.Length || json[i] != ':')
+            {
+                return null;
+            }
+
+            i++;
+            while (i < json.Length && char.IsWhiteSpace(json[i]))
+            {
+                i++;
+            }
+
+            if (i >= json.Length)
+            {
+                return null;
+            }
+
+            if (json[i] == 'n') // null
+            {
+                return null;
+            }
+
+            if (json[i] != '{')
+            {
+                return null;
+            }
+
+            var start = i;
+            var depth = 0;
+            for (var j = i; j < json.Length; j++)
+            {
+                var c = json[j];
+                if (c == '"')
+                {
+                    j++;
+                    while (j < json.Length)
+                    {
+                        if (json[j] == '\\')
+                        {
+                            j += 2;
+                            continue;
+                        }
+
+                        if (json[j] == '"')
+                        {
+                            break;
+                        }
+
+                        j++;
+                    }
+
+                    continue;
+                }
+
+                if (c == '{')
+                {
+                    depth++;
+                }
+                else if (c == '}')
+                {
+                    depth--;
+                    if (depth == 0)
+                    {
+                        return json.Substring(start, j - start + 1);
+                    }
+                }
+            }
+
+            return null;
+        }
+
     }
 }
