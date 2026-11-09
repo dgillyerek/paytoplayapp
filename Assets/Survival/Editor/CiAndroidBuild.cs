@@ -11,15 +11,21 @@ using UnityEngine;
 namespace Survival.Editor
 {
     /// <summary>
-    /// Headless Android APK build for GitHub Actions (.github/workflows/android-build.yml, game-ci/unity-builder
-    /// <c>buildMethod: Survival.Editor.CiAndroidBuild.Build</c>). Same steps as Survival/Player Build/Build Android
-    /// Development APK (switch to Android, bake player assets, verify the bake, IL2CPP ARM64 APK), but reads the output
-    /// path, version and signing key from the command line and exits with a non-zero code on any failure so CI goes red.
+    /// Headless Android build for GitHub Actions (.github/workflows/android-build.yml, game-ci/unity-builder
+    /// <c>buildMethod: Survival.Editor.CiAndroidBuild.Build</c>). Applies the store flavor through
+    /// <see cref="FlavorBuildSettings.TryApplyFlavor"/> (product name, company, bundle id, scenes, icons, IL2CPP, ARM64,
+    /// target API), bakes and verifies the player assets, then builds a signed Play Store .aab (or a phone-install .apk),
+    /// and exits with a non-zero code on any failure so CI goes red.
     /// </summary>
     /// <remarks>
     /// Arguments (game-ci passes the first group itself): -customBuildPath, -buildVersion, -androidVersionCode,
-    /// -androidKeystoreName (relative to the project root), -androidKeystorePass, -androidKeyaliasName,
-    /// -androidKeyaliasPass. Extra: -requireKeystore (fail rather than sign with Unity's debug key), -developmentBuild.
+    /// -androidExportType (androidAppBundle = .aab, androidPackage = .apk), -androidKeystoreName (relative to the project
+    /// root), -androidKeystorePass, -androidKeyaliasName, -androidKeyaliasPass. Extra: -flavor (default fantasy_kingdom_a),
+    /// -requireKeystore (fail rather than sign with Unity's debug key), -developmentBuild.
+    /// Each signing value falls back to the environment variable of the same name in upper snake case
+    /// (ANDROID_KEYSTORE_NAME, ANDROID_KEYSTORE_PASS, ANDROID_KEYALIAS_NAME, ANDROID_KEYALIAS_PASS), so a local command-line
+    /// build can sign without putting a password on the command line. Nothing secret is written to ProjectSettings: the
+    /// keystore settings are cleared again after the build.
     /// </remarks>
     public static class CiAndroidBuild
     {
@@ -61,17 +67,49 @@ namespace Survival.Editor
         private static string Arg(Dictionary<string, string> args, string name) =>
             args.TryGetValue(name, out var v) ? v.Trim() : "";
 
+        private static string ArgOrEnv(Dictionary<string, string> args, string name, string env)
+        {
+            var v = Arg(args, name);
+            return v.Length > 0 ? v : (Environment.GetEnvironmentVariable(env) ?? "").Trim();
+        }
+
         private static int Run(Dictionary<string, string> args)
         {
+            try
+            {
+                return RunBuild(args);
+            }
+            finally
+            {
+                // Keep the signing key out of ProjectSettings if the editor saves after this (local runs).
+                PlayerSettings.Android.useCustomKeystore = false;
+                PlayerSettings.Android.keystoreName = "";
+                PlayerSettings.Android.keystorePass = "";
+                PlayerSettings.Android.keyaliasName = "";
+                PlayerSettings.Android.keyaliasPass = "";
+            }
+        }
+
+        private static int RunBuild(Dictionary<string, string> args)
+        {
+            var exportType = Arg(args, "androidExportType");
+            var appBundle = exportType.Length == 0 || exportType == "androidAppBundle";
+            if (!appBundle && exportType != "androidPackage")
+            {
+                Debug.LogError("Survival CI Android build: unsupported -androidExportType '" + exportType + "' (androidAppBundle or androidPackage).");
+                return 7;
+            }
+
+            var extension = appBundle ? ".aab" : ".apk";
             var output = Arg(args, "customBuildPath");
             if (output.Length == 0)
             {
-                output = PlayerBuildMenu.AndroidApkPath;
+                output = appBundle ? Path.ChangeExtension(PlayerBuildMenu.AndroidApkPath, ".aab") : PlayerBuildMenu.AndroidApkPath;
             }
 
-            if (!output.EndsWith(".apk", StringComparison.OrdinalIgnoreCase))
+            if (!output.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
             {
-                output += ".apk";
+                output += extension;
             }
 
             if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android &&
@@ -79,6 +117,25 @@ namespace Survival.Editor
             {
                 Debug.LogError("Survival CI Android build: could not switch to Android (is Android Build Support in this editor image?).");
                 return 2;
+            }
+
+            var flavor = Arg(args, "flavor");
+            if (flavor.Length == 0)
+            {
+                flavor = FlavorBuildSettings.ThemeAFlavorId;
+            }
+
+            if (!FlavorBuildSettings.TryApplyFlavor(flavor))
+            {
+                Debug.LogError("Survival CI Android build: unknown -flavor '" + flavor + "'.");
+                return 8;
+            }
+
+            var iconProblems = FlavorBuildSettings.MissingAndroidIcons();
+            if (iconProblems.Count > 0)
+            {
+                Debug.LogError("Survival CI Android build: Android icon slots without art:\n" + string.Join("\n", iconProblems));
+                return 9;
             }
 
             if (!PlayerBake.Bake(out var summary))
@@ -94,9 +151,11 @@ namespace Survival.Editor
                 return 3;
             }
 
+            // The flavor already set these; set again so nothing between there and here (bake) can change them.
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
-            EditorUserBuildSettings.buildAppBundle = false;
+            PlayerSettings.Android.targetSdkVersion = FlavorBuildSettings.PlayTargetSdk;
+            EditorUserBuildSettings.buildAppBundle = appBundle;
             EditorUserBuildSettings.exportAsGoogleAndroidProject = false;
 
             var version = Arg(args, "buildVersion");
@@ -110,14 +169,14 @@ namespace Survival.Editor
                 PlayerSettings.Android.bundleVersionCode = versionCode;
             }
 
-            var keystore = Arg(args, "androidKeystoreName");
+            var keystore = ArgOrEnv(args, "androidKeystoreName", "ANDROID_KEYSTORE_NAME");
             if (keystore.Length > 0 && File.Exists(keystore))
             {
                 PlayerSettings.Android.useCustomKeystore = true;
                 PlayerSettings.Android.keystoreName = Path.GetFullPath(keystore);
-                PlayerSettings.Android.keystorePass = Arg(args, "androidKeystorePass");
-                PlayerSettings.Android.keyaliasName = Arg(args, "androidKeyaliasName");
-                PlayerSettings.Android.keyaliasPass = Arg(args, "androidKeyaliasPass");
+                PlayerSettings.Android.keystorePass = ArgOrEnv(args, "androidKeystorePass", "ANDROID_KEYSTORE_PASS");
+                PlayerSettings.Android.keyaliasName = ArgOrEnv(args, "androidKeyaliasName", "ANDROID_KEYALIAS_NAME");
+                PlayerSettings.Android.keyaliasPass = ArgOrEnv(args, "androidKeyaliasPass", "ANDROID_KEYALIAS_PASS");
             }
             else if (args.ContainsKey("requireKeystore"))
             {
@@ -139,6 +198,13 @@ namespace Survival.Editor
             }
 
             var development = args.ContainsKey("developmentBuild");
+            if (development && appBundle)
+            {
+                Debug.LogError("Survival CI Android build: a development build cannot go to Google Play; use -androidExportType androidPackage.");
+                return 7;
+            }
+
+            var bundleId = PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
             EditorUserBuildSettings.development = development;
             var dir = Path.GetDirectoryName(output);
             if (!string.IsNullOrEmpty(dir))
@@ -146,8 +212,9 @@ namespace Survival.Editor
                 Directory.CreateDirectory(dir);
             }
 
-            Debug.Log("Survival CI Android build: " + scenes.Length + " scene(s), version " + PlayerSettings.bundleVersion +
+            Debug.Log("Survival CI Android build: " + PlayerSettings.productName + " (" + bundleId + "), " + scenes.Length + " scene(s), version " + PlayerSettings.bundleVersion +
                       " (" + PlayerSettings.Android.bundleVersionCode + "), " + (development ? "development" : "release") +
+                      " " + (appBundle ? "AAB" : "APK") + ", target API " + (int)PlayerSettings.Android.targetSdkVersion +
                       ", signed with " + (PlayerSettings.Android.useCustomKeystore ? "the CI key" : "the debug key") + " -> " + output);
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {

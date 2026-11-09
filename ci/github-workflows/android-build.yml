@@ -1,0 +1,257 @@
+# Builds Theme A (Kingdom Defense, com.paytoplay.fantasykingdoma) for Android in the cloud:
+# - a signed release .aab for Google Play (every push to main, and Run workflow with format "aab"), kept as a run artifact;
+# - a signed .apk for installing straight from a phone (PRs labelled phone-build, and Run workflow with format "apk"),
+#   published to a rolling GitHub prerelease.
+# IL2CPP, ARM64, target API 36, flavor applied by Assets/Survival/Editor/FlavorBuildSettings.cs.
+# Setup: docs/android-release-builds.md (Play) and docs/android-phone-builds.md (phone installs).
+# Lives at .github/workflows/android-build.yml (a staged copy may sit in ci/github-workflows/ until it is moved there).
+name: Android build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to build
+        required: true
+        default: main
+      format:
+        description: "aab = signed release bundle for Google Play; apk = phone-install build"
+        type: choice
+        options: [aab, apk]
+        default: aab
+      development:
+        description: Development build (apk only; on-screen "Development Build" label, slower, more logging)
+        type: boolean
+        default: false
+  pull_request:
+    types: [opened, labeled, synchronize, reopened]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-build-${{ github.event.pull_request.head.ref || inputs.branch || github.ref_name }}-${{ github.event_name == 'pull_request' && 'apk' || inputs.format || 'aab' }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    # PRs build only when labelled "phone-build" (and only from this repo; forks do not get secrets).
+    if: >-
+      github.event_name != 'pull_request' ||
+      (contains(github.event.pull_request.labels.*.name, 'phone-build') &&
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      BRANCH: ${{ github.event.pull_request.head.ref || inputs.branch || github.ref_name }}
+      # PRs (phone-build label) make a phone APK; main and Run workflow default to the Play Store bundle.
+      FORMAT: ${{ github.event_name == 'pull_request' && 'apk' || inputs.format || 'aab' }}
+      FLAVOR: fantasy_kingdom_a
+    steps:
+      - name: Check secrets
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          ANDROID_KEYALIAS_NAME: ${{ secrets.ANDROID_KEYALIAS_NAME }}
+          ANDROID_KEYALIAS_PASS: ${{ secrets.ANDROID_KEYALIAS_PASS }}
+        run: |
+          missing=()
+          for name in UNITY_EMAIL UNITY_PASSWORD ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASS ANDROID_KEYALIAS_NAME ANDROID_KEYALIAS_PASS; do
+            [ -n "${!name}" ] || missing+=("$name")
+          done
+          [ -n "$UNITY_LICENSE" ] || [ -n "$UNITY_SERIAL" ] || missing+=("UNITY_LICENSE (Personal) or UNITY_SERIAL (Plus/Pro)")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing repo secrets: ${missing[*]}. See docs/android-release-builds.md."
+            exit 1
+          fi
+          if [ "$FORMAT" = "aab" ] && [ "${{ inputs.development }}" = "true" ]; then
+            echo "::error::A development build cannot be an aab for Google Play. Pick format apk."
+            exit 1
+          fi
+
+      - name: Name this build
+        id: meta
+        env:
+          # versionCode = offset + run number, so it rises on every run. Raise ANDROID_VERSION_CODE_OFFSET (repo variable)
+          # above the last uploaded code if this workflow is ever renamed or recreated (run numbers restart at 1).
+          VERSION_CODE_OFFSET: ${{ vars.ANDROID_VERSION_CODE_OFFSET || '0' }}
+          VERSION_NAME_PREFIX: ${{ vars.ANDROID_VERSION_NAME_PREFIX || '0.1' }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          slug=$(printf '%s' "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9.]+/-/g; s/^-+|-+$//g' | cut -c1-40)
+          version_code=$((VERSION_CODE_OFFSET + RUN_NUMBER))
+          if [ "$slug" = "main" ]; then
+            tag=android-latest; stable=paytoplayapp-latest.apk
+          else
+            tag="android-$slug"; stable="paytoplayapp-$slug-latest.apk"
+          fi
+          {
+            echo "slug=$slug"
+            echo "tag=$tag"
+            echo "stable=$stable"
+            echo "version_code=$version_code"
+            echo "version=$VERSION_NAME_PREFIX.$RUN_NUMBER"
+          } >> "$GITHUB_OUTPUT"
+
+      # The Unity editor image (~9 GB) plus this repo (~3.5 GB) and its Library do not fit the runner's default free space.
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: true
+          swap-storage: false
+
+      - name: Check out ${{ env.BRANCH }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || inputs.branch || github.sha }}
+          fetch-depth: 1
+          lfs: false
+
+      - name: Record commit
+        id: commit
+        run: |
+          sha=$(git rev-parse HEAD)
+          {
+            echo "sha=$sha"
+            echo "short=${sha:0:7}"
+            echo "name=kingdomdefense-${{ steps.meta.outputs.slug }}-${sha:0:7}-${{ steps.meta.outputs.version_code }}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Restore Unity Library cache
+        uses: actions/cache/restore@v4
+        with:
+          path: Library
+          key: Library-Android-${{ hashFiles('Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}-${{ steps.commit.outputs.sha }}
+          restore-keys: |
+            Library-Android-${{ hashFiles('Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}-
+            Library-Android-
+
+      - name: Build ${{ env.FORMAT }}
+        uses: game-ci/unity-builder@v5
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          targetPlatform: Android
+          buildMethod: Survival.Editor.CiAndroidBuild.Build
+          buildName: ${{ steps.commit.outputs.name }}
+          buildsPath: build
+          androidExportType: ${{ env.FORMAT == 'aab' && 'androidAppBundle' || 'androidPackage' }}
+          androidTargetSdkVersion: AndroidApiLevel36
+          versioning: Custom
+          version: ${{ steps.meta.outputs.version }}
+          androidVersionCode: ${{ steps.meta.outputs.version_code }}
+          androidKeystoreName: ci.keystore
+          androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          androidKeyaliasName: ${{ secrets.ANDROID_KEYALIAS_NAME }}
+          androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
+          customParameters: -requireKeystore -flavor ${{ env.FLAVOR }} ${{ inputs.development && '-developmentBuild' || '' }}
+
+      # Only main saves the cache, so branch builds start from main's Library without evicting it.
+      - name: Save Unity Library cache
+        if: success() && steps.meta.outputs.slug == 'main'
+        uses: actions/cache/save@v4
+        with:
+          path: Library
+          key: Library-Android-${{ hashFiles('Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}-${{ steps.commit.outputs.sha }}
+
+      - name: Upload the Play Store bundle
+        if: env.FORMAT == 'aab'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.commit.outputs.name }}-aab
+          path: build/Android/${{ steps.commit.outputs.name }}.aab
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Summarise the Play Store bundle
+        if: env.FORMAT == 'aab'
+        env:
+          NAME: ${{ steps.commit.outputs.name }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          VERSION_CODE: ${{ steps.meta.outputs.version_code }}
+        run: |
+          set -euo pipefail
+          aab="build/Android/$NAME.aab"
+          [ -f "$aab" ] || { echo "::error::No AAB at $aab"; ls -la build/Android || true; exit 1; }
+          {
+            echo "### Google Play bundle"
+            echo ""
+            echo "Kingdom Defense (com.paytoplay.fantasykingdoma) $VERSION, versionCode $VERSION_CODE, $(du -h "$aab" | cut -f1)."
+            echo "Download \`$NAME-aab\` from this run's Artifacts and upload it in Play Console (Testing or Production > Create new release)."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish to the ${{ steps.meta.outputs.tag }} prerelease
+        if: env.FORMAT == 'apk'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ steps.meta.outputs.tag }}
+          STABLE: ${{ steps.meta.outputs.stable }}
+          NAME: ${{ steps.commit.outputs.name }}
+          SHA: ${{ steps.commit.outputs.sha }}
+          SHORT: ${{ steps.commit.outputs.short }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          apk="build/Android/$NAME.apk"
+          ls -la build/Android
+          [ -f "$apk" ] || { echo "::error::No APK at $apk"; exit 1; }
+          mkdir -p publish
+          cp "$apk" "publish/$NAME.apk"
+          cp "$apk" "publish/$STABLE"
+          base="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/download/$TAG"
+          cat > notes.md <<NOTES
+          Phone build of **$BRANCH** at commit \`$SHORT\` (version $VERSION, build ${{ github.run_number }}), built $(date -u '+%Y-%m-%d %H:%M UTC').
+
+          **Install on Android:** open this link on the phone and tap the downloaded file:
+          $base/$STABLE
+
+          This page always holds the newest build of \`$BRANCH\`. That link stays the same; this exact build is also attached as \`$NAME.apk\`.
+          First time only: allow your browser to install unknown apps. Build log: $RUN_URL
+          NOTES
+          title="Android: $BRANCH ($SHORT, build ${{ github.run_number }})"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            # Point the rolling tag at this commit, then swap in the new files.
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/$TAG" -f sha="$SHA" -F force=true >/dev/null
+            gh release edit "$TAG" --prerelease --title "$title" --notes-file notes.md
+          else
+            gh release create "$TAG" --prerelease --target "$SHA" --title "$title" --notes-file notes.md
+          fi
+          gh release upload "$TAG" "publish/$STABLE" "publish/$NAME.apk" --clobber
+          gh release view "$TAG" --json assets --jq '.assets[].name' | while read -r asset; do
+            if [ "$asset" != "$STABLE" ] && [ "$asset" != "$NAME.apk" ]; then
+              gh release delete-asset "$TAG" "$asset" -y
+            fi
+          done
+          {
+            echo "### Install on your phone"
+            echo ""
+            echo "$base/$STABLE"
+            echo ""
+            echo "Release page: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$TAG"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the APK as a workflow artifact too
+        if: env.FORMAT == 'apk'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.commit.outputs.name }}
+          path: build/Android/${{ steps.commit.outputs.name }}.apk
+          retention-days: 14
+          if-no-files-found: warn

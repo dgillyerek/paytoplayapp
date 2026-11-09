@@ -58,7 +58,6 @@ InitTestScene*.unity*
 *.csproj
 *.sln
 *.slnx
-!/tests/Grove.Domain.Tests/Grove.Domain.Tests.csproj
 !/tests/Survival.Domain.Tests/Survival.Domain.Tests.csproj
 
 # Headless test output

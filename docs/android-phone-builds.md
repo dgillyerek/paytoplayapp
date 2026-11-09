@@ -1,13 +1,13 @@
 # Android phone builds
 
-GitHub builds the Survival game as an Android APK in the cloud (`.github/workflows/android-build.yml`). You can install
-the result straight from your phone, with no computer and no USB cable.
+GitHub builds Kingdom Defense as an Android APK in the cloud (`.github/workflows/android-build.yml`). You can install
+the result straight from your phone, with no computer and no USB cable. (The same workflow makes the signed `.aab` for
+Google Play; see `docs/android-release-builds.md`.)
 
 ## When a build runs
 
-- **Every push to `main`** (including merging a PR). The result goes to the `android-latest` prerelease.
-- **Any branch, on demand:** on GitHub open **Actions → Android phone build → Run workflow**, type the branch name, and
-  press **Run workflow**. This works in a phone browser too (use "Desktop site" if the button is hidden).
+- **Any branch, on demand:** on GitHub open **Actions → Android build → Run workflow**, type the branch name, pick
+  format **apk**, and press **Run workflow**. For `main` the result goes to the `android-latest` prerelease. This works in a phone browser too (use "Desktop site" if the button is hidden).
 - **A pull request labelled `phone-build`:** add the label (this works in the GitHub phone app). The PR then rebuilds
   on every new commit until you remove the label.
 
@@ -57,14 +57,16 @@ Do this even if a license already shows. Then open the file and copy all of it:
 
 Details: https://game.ci/docs/github/activation
 
-Then run the workflow once (Actions → Android phone build → Run workflow, branch `main`). After that, every push to
-`main` builds by itself.
+Then run the workflow once (Actions → Android build → Run workflow, branch `main`, format **apk**). Pushes to `main`
+build the Play Store `.aab` by themselves; phone APKs come from Run workflow or the `phone-build` label.
 
 ## Good to know
 
 - The repo is public, so anyone with the link can download the APKs.
 - Builds are release builds by default. Tick **Development build** in Run workflow when you want the Unity development
   overlay and extra logging.
-- The build runs `Survival.Editor.CiAndroidBuild.Build`. It does the same as **Survival/Player Build/Build Android
-  Development APK**: it bakes the player assets, refuses a stale bake, and builds an IL2CPP ARM64 APK.
+- The build runs `Survival.Editor.CiAndroidBuild.Build`. It applies the Theme A flavor (same as **Survival/Use Theme A
+  Flavor**), bakes the player assets, refuses a stale bake, and builds an IL2CPP ARM64 APK targeting API 36.
+- The app id is now `com.paytoplay.fantasykingdoma` (it was `com.grove.paytoplayapp`), so the first build from this
+  change installs as a new app next to any older phone build. Uninstall the old one.
 - Each run is also kept for 14 days as a zipped workflow artifact. On a phone, use the release link instead.
