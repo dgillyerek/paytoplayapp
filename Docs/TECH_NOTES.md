@@ -3,7 +3,7 @@
 ## Stack
 
 - Unity **6.3 LTS** (`ProjectSettings/ProjectVersion.txt` → `6000.3.6f1`)
-- **URP 17.3.0** (`Packages/manifest.json`), pipeline asset `Assets/Settings/URP/GroveURP.asset`
+- **URP 17.3.0** (`Packages/manifest.json`), pipeline asset `Assets/Settings/URP/KingdomURP.asset`
 - Color space: Linear (inherited from the 6.3 URP baseline)
 - Scripting: IL2CPP on iOS; Android min API **26** (8.0); iOS **15.0**
 - Input: **Both** Input Manager + Input System (`activeInputHandler: 2`) so Editor Play mouse-drag works
@@ -26,4 +26,4 @@ Play Mode builds the HUD at runtime (no extra scene wiring). Input Manager + Inp
 
 ## URP
 
-GraphicsSettings and QualitySettings both reference `GroveURP.asset` (guid `7b7fd9122c28c4d15b667c7040e3b3fd`). Global URP settings: `UniversalRenderPipelineGlobalSettings.asset`. First editor open may regenerate package lock and shader cache.
+GraphicsSettings and QualitySettings both reference `KingdomURP.asset` (guid `7b7fd9122c28c4d15b667c7040e3b3fd`). Global URP settings: `UniversalRenderPipelineGlobalSettings.asset`. First editor open may regenerate package lock and shader cache.

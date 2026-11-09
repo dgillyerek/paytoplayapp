@@ -12,7 +12,7 @@ The finished scaffold was first built in a token-scoped mint (`derek-gilbert/tmp
 
 - Expect URP/shader compile on first open.
 - `Library/`, `Logs/`, `UserSettings/` are gitignored.
-- If Graphics Settings lose the URP asset, assign `Assets/Settings/URP/GroveURP.asset` to Scriptable Render Pipeline Settings **and** the Default quality level.
+- If Graphics Settings lose the URP asset, assign `Assets/Settings/URP/KingdomURP.asset` to Scriptable Render Pipeline Settings **and** the Default quality level.
 
 ## Tests vs Unity
 
