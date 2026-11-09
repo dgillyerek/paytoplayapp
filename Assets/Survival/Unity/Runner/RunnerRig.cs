@@ -104,20 +104,12 @@ namespace Survival.Unity
         /// Ironhowl swings through his whole battle rotation in the runner, not only the claw swipe (Derek 2026-10-24:
         /// "he just punches"). The others keep their one attack take.
         /// </summary>
-        public bool RotatesAttacks => Data.Name == LockedBattleRoster.Ironhowl.Name && LockedBattleRotation.Count(Data) > 1;
+        public bool RotatesAttacks =>
+            (Data.Name == LockedBattleRoster.Ironhowl.Name || Data.Name == LockedBattleRoster.Vorgath.Name)
+            && LockedBattleRotation.Count(Data) > 1;
 
-        public static LockedBattleFighter? Find(string rosterName)
-        {
-            foreach (var f in LockedBattleRoster.All)
-            {
-                if (string.Equals(f.Name, rosterName, System.StringComparison.Ordinal))
-                {
-                    return f;
-                }
-            }
-
-            return null;
-        }
+        public static LockedBattleFighter? Find(string rosterName) =>
+            LockedBattleRoster.TryFind(rosterName, out var fighter) ? fighter : (LockedBattleFighter?)null;
 
         /// <summary>Spawn <paramref name="rosterName"/> under <paramref name="parent"/>, <paramref name="extraScale"/> x its battle size.</summary>
         public static RunnerRig? Spawn(string rosterName, Transform parent, string name, float extraScale = 1f)
@@ -168,6 +160,16 @@ namespace Survival.Unity
                         var a = host.AddComponent<IronhowlActor>();
                         a.Build();
                         rig.Bind(a.PlayPose, () => a.Pose);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
+                    }
+
+                    case "Vorgath":
+                    {
+                        var a = host.AddComponent<VorgathActor>();
+                        a.Build();
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
                         built = a.Built;
                         measured = a.VisibleBounds;
                         break;
@@ -662,6 +664,9 @@ namespace Survival.Unity
         /// One named attack take from its first frame (the boss quake's ground pound). A later <see cref="Attack"/>
         /// waits for most of it before the next swing.
         /// </summary>
+        /// <summary>Playback rate of the current attack take (1 in the battle; the runner lines a contact frame up with a telegraph).</summary>
+        public void SetAttackSpeed(float speed) => _attackSpeed?.Invoke(speed);
+
         public void Swing(string pose, float seconds)
         {
             if (Dead)

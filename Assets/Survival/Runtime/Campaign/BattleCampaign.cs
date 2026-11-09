@@ -61,6 +61,15 @@ namespace Survival.Domain.Campaign
 
         public bool IsBoss(int n) => BossEvery > 0 && n % BossEvery == 0;
 
+        /// <summary>Campaign id of the milestone end boss (Vorgath). Not part of the regular villain pool.</summary>
+        public const string VorgathId = "foe.vorgath";
+
+        /// <summary>
+        /// Chapter finales are already bosses (<see cref="BossEvery"/> is 5 and a chapter is 10 stages, so stage 10 is
+        /// the named Boss, stage 5 an Elite). Vorgath takes that finale. Elites keep the chapter's own villain.
+        /// </summary>
+        public bool IsFinaleBoss(int n) => IsBoss(n) && StagesPerChapter > 0 && n % StagesPerChapter == 0;
+
         public int Lanes(int n) => n <= TwoLaneStages ? 2 : 3;
 
         public int Gold(int n) => Round(GoldStart * Math.Pow(RewardGrowth, n - 1) * (IsBoss(n) ? 2 : 1));
@@ -103,6 +112,8 @@ namespace Survival.Domain.Campaign
             var level = FoeLevel(n);
             var stars = FoeStars(n);
             var boss = IsBoss(n);
+            var finale = IsFinaleBoss(n);
+            var bossId = finale ? VorgathId : ch.Boss;
             var lanes = Lanes(n);
             // Rotate through the chapter's pool (never the boss twice), topping up from the full villain order if the pool is short.
             var picks = new List<string>();
@@ -110,7 +121,7 @@ namespace Survival.Domain.Campaign
             for (var i = 0; picks.Count < lanes && i < pool.Count; i++)
             {
                 var id = pool[(start + i) % pool.Count];
-                if (!(boss && id == ch.Boss))
+                if (!(boss && id == bossId))
                 {
                     picks.Add(id);
                 }
@@ -123,7 +134,7 @@ namespace Survival.Domain.Campaign
                     break;
                 }
 
-                if (!picks.Contains(id) && !(boss && id == ch.Boss))
+                if (!picks.Contains(id) && !(boss && id == bossId))
                 {
                     picks.Add(id);
                 }
@@ -131,17 +142,42 @@ namespace Survival.Domain.Campaign
 
             if (boss)
             {
-                picks.Insert(Math.Min(1, picks.Count), ch.Boss);
+                picks.Insert(Math.Min(1, picks.Count), bossId);
             }
 
             lanes = Math.Min(lanes, picks.Count);
+            // The chapter's villain still stands beside Vorgath on a finale, inside the lanes that actually fight.
+            if (finale && ch.Boss.Length > 0 && ch.Boss != bossId)
+            {
+                var kept = false;
+                for (var i = 0; i < lanes; i++)
+                {
+                    if (picks[i] == ch.Boss)
+                    {
+                        kept = true;
+                        break;
+                    }
+                }
+
+                if (!kept)
+                {
+                    for (var i = lanes - 1; i >= 0; i--)
+                    {
+                        if (picks[i] != bossId)
+                        {
+                            picks[i] = ch.Boss;
+                            break;
+                        }
+                    }
+                }
+            }
 
             var enemies = new List<StageEnemyDef>();
             for (var i = 0; i < lanes; i++)
             {
-                if (boss && picks[i] == ch.Boss)
+                if (boss && picks[i] == bossId)
                 {
-                    enemies.Add(new StageEnemyDef(ch.Boss, level + BossLevels, Math.Min(StarsEnd, stars + 1)));
+                    enemies.Add(new StageEnemyDef(bossId, level + BossLevels, Math.Min(StarsEnd, stars + 1)));
                 }
                 else
                 {

@@ -246,7 +246,7 @@ public sealed class RunnerTests
         var names = LockedBattleRoster.All.ToDictionary(f => f.Name, f => f.Side);
         foreach (var u in c.Units.Values)
         {
-            Assert.True(names.ContainsKey(u.Roster), u.Id + " roster " + u.Roster);
+            Assert.True(LockedBattleRoster.TryFind(u.Roster, out _), u.Id + " roster " + u.Roster);
         }
 
         Assert.Equal(BattleSide.Hero, names[c.Unit(level.Hero).Roster]);
@@ -1086,8 +1086,11 @@ public sealed class RunnerTests
         Assert.Contains(c.Levels[^1].Rows, r => r.Unit == "vespera");
         Assert.Contains(c.Levels[^1].Rows, r => r.Unit == "ashwyrm");
         Assert.DoesNotContain(c.First.Rows, r => r.Unit == "vespera" || r.Unit == "ashwyrm");
-        var names = LockedBattleRoster.All.ToDictionary(f => f.Name, f => f.Side);
-        Assert.All(c.Levels.SelectMany(l => l.Rows).Where(r => r.Kind is RunnerRowKind.Enemy or RunnerRowKind.Boss), r => Assert.Equal(BattleSide.Villain, names[c.Unit(r.Unit).Roster]));
+        Assert.All(c.Levels.SelectMany(l => l.Rows).Where(r => r.Kind is RunnerRowKind.Enemy or RunnerRowKind.Boss), r =>
+        {
+            Assert.True(LockedBattleRoster.TryFind(c.Unit(r.Unit).Roster, out var fighter), r.Unit);
+            Assert.Equal(BattleSide.Villain, fighter.Side);
+        });
 
         // Same seed, same levels.
         var again = Runner.Catalog();

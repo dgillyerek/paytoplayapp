@@ -22,7 +22,8 @@
     { "id": "foe.bonequill", "fighter": "Bonequill", "side": "villain", "rarity": "rare", "role": "bone archer", "hp": 700, "atk": 82, "hp_per_level": 82, "atk_per_level": 10, "portrait": "theme_a.hero.portrait.bonequill" },
     { "id": "foe.blightroot", "fighter": "Blightroot", "side": "villain", "rarity": "epic", "role": "blight treant", "hp": 1150, "atk": 80, "hp_per_level": 130, "atk_per_level": 10, "portrait": "theme_a.hero.portrait.blightroot" },
     { "id": "foe.vespera", "fighter": "Vespera", "side": "villain", "rarity": "epic", "role": "dark witch", "hp": 860, "atk": 100, "hp_per_level": 98, "atk_per_level": 12, "portrait": "theme_a.hero.portrait.vespera" },
-    { "id": "foe.ashwyrm", "fighter": "Ashwyrm", "side": "villain", "rarity": "legendary", "role": "ash dragon", "hp": 1600, "atk": 118, "hp_per_level": 180, "atk_per_level": 15, "portrait": "theme_a.hero.portrait.ashwyrm" }
+    { "id": "foe.ashwyrm", "fighter": "Ashwyrm", "side": "villain", "rarity": "legendary", "role": "ash dragon", "hp": 1600, "atk": 118, "hp_per_level": 180, "atk_per_level": 15, "portrait": "theme_a.hero.portrait.ashwyrm" },
+    { "id": "foe.vorgath", "fighter": "Vorgath", "side": "villain", "rarity": "legendary", "role": "fire wyrm", "hp": 1600, "atk": 118, "hp_per_level": 180, "atk_per_level": 15, "portrait": "theme_a.hero.portrait.vorgath" }
   ],
   "stages": [
     { "id": "stage.1", "name": "Wolf Den", "enemies": [ { "id": "foe.nightfang", "level": 1 } ],

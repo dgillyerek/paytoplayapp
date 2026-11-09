@@ -239,6 +239,13 @@ namespace Survival.Domain.Roster
                         new[] { "neck", "head" },
                         None,
                         new[] { "tail_01", "tail_02" });
+                case "Vorgath":
+                    // The root "Bone" carries the legs, so the flinch stays on the neck and snout.
+                    return new LockedBattleReactionRig(
+                        None,
+                        new[] { "Bone.003", "Bone.004" },
+                        None,
+                        None);
                 default:
                     return Mixamo;
             }

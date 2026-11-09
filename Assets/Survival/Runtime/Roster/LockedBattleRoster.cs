@@ -885,6 +885,38 @@ namespace Survival.Domain.Roster
                 0.35f)
         };
 
+        /// <summary>
+        /// Vorgath stands taller than the humanoid bosses (battle scale on top of a 2.2 m design height) but he is not
+        /// a seventh lane of the locked demo. Configured campaign fights and the runner spawn him by name.
+        /// </summary>
+        public const float VorgathBattleScale = 1.35f;
+
+        /// <summary>
+        /// Vorgath's rotation: the authored ground slam, then the fire spit. Both clips are his own. The slam's hands
+        /// hit on frame 52; the spit peaks on frame 60, inside the mouth-fire window.
+        /// </summary>
+        public static readonly LockedBattleAttack[] VorgathAttacks = CreatureBattleAttacks.VorgathAttacks();
+
+        public static readonly LockedBattleFighter Vorgath = new LockedBattleFighter(
+            "Vorgath",
+            BattleSide.Villain,
+            "preview_new_chars",
+            VorgathMotion.WalkPoseName,
+            VorgathMotion.SlamPoseName,
+            "ground slam",
+            2.20f,
+            1.05f,
+            0f,
+            string.Empty,
+            2.4f,
+            VorgathMotion.SlamSeconds,
+            false,
+            6,
+            "",
+            0f,
+            VorgathAttacks,
+            VorgathMotion.IdlePoseName);
+
         public static readonly LockedBattleFighter Bonequill = new LockedBattleFighter(
             "Bonequill",
             BattleSide.Villain,
@@ -903,6 +935,30 @@ namespace Survival.Domain.Roster
             "",
             0f,
             BonequillAttacks);
+
+        /// <summary>
+        /// A fighter by name: the twelve demo lanes, or Vorgath (a boss outside that lineup).
+        /// </summary>
+        public static bool TryFind(string name, out LockedBattleFighter fighter)
+        {
+            foreach (var f in All)
+            {
+                if (string.Equals(f.Name, name, StringComparison.Ordinal))
+                {
+                    fighter = f;
+                    return true;
+                }
+            }
+
+            if (string.Equals(Vorgath.Name, name, StringComparison.Ordinal))
+            {
+                fighter = Vorgath;
+                return true;
+            }
+
+            fighter = default;
+            return false;
+        }
 
         public static IReadOnlyList<LockedBattleFighter> All { get; } = new[]
         {
@@ -973,6 +1029,8 @@ namespace Survival.Domain.Roster
                     return EmberfangBattleScale;
                 case "Ashwyrm":
                     return AshwyrmBattleScale;
+                case "Vorgath":
+                    return VorgathBattleScale;
                 default:
                     return 1f;
             }

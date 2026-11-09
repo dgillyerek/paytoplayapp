@@ -48,6 +48,8 @@ namespace Survival.Domain.Campaign
                     return 0.805f * s;
                 case "Emberfang":
                     return 0.615f * s;
+                case "Vorgath":
+                    return 0.72f * s;
                 default:
                     return EstimatedHalfWidth(designHeightMetres, s, false);
             }

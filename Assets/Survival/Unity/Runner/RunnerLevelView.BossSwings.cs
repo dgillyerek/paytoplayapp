@@ -1,4 +1,5 @@
 #nullable enable
+using Survival.Domain.Enemies;
 using Survival.Domain.Roster;
 using Survival.Domain.Runner;
 using Survival.Domain.Theme;
@@ -21,6 +22,18 @@ namespace Survival.Unity
             if (boss == null || !boss.Boss || boss.SlamSwing < 0 || !rig.RotatesAttacks)
             {
                 return false;
+            }
+
+            if (rig.Data.Name == LockedBattleRoster.Vorgath.Name)
+            {
+                // His two clips, alternating. The slam is sped so its floor contact lands on the shared telegraph.
+                var slam = boss.SlamSwing % 2 == 0;
+                var speed = slam ? VorgathMotion.SlamContactSeconds / Mathf.Max(0.05f, RunnerRules.BossWindup) : 1f;
+                rig.SetAttackSpeed(speed);
+                rig.Swing(
+                    slam ? VorgathMotion.SlamPoseName : VorgathMotion.SpitPoseName,
+                    slam ? VorgathMotion.SlamSeconds : VorgathMotion.SpitSeconds);
+                return true;
             }
 
             var move = LockedBattleRotation.AttackAt(rig.Data, boss.SlamSwing % LockedBattleRotation.Count(rig.Data));

@@ -171,7 +171,7 @@ namespace Survival.Unity
                     }
                 }
 
-                // The boss is the 3D Ironhowl on the road; the bar's end only marks where he stands.
+                // The boss is the 3D fighter on the road (Ironhowl, or Vorgath on milestone levels); the bar's end only marks where he stands.
                 var face = HookSkin.Art(_hud, "BossMark", "theme_a.ui.icon_battle", FoeFill);
                 face.color = new Color(1f, 0.55f, 0.5f, 1f);
                 Anchor(face.rectTransform, TopHudLayout.BossMark);

@@ -897,6 +897,14 @@ namespace Survival.Unity
                     break;
                 }
 
+                case "Vorgath":
+                {
+                    var actor = host.AddComponent<VorgathActor>();
+                    actor.Build();
+                    f.Bind(actor.PlayPose, () => actor.Pose, actor.Built, actor.VisibleBounds);
+                    break;
+                }
+
                 case "Ironhowl":
                 {
                     var actor = host.AddComponent<IronhowlActor>();
@@ -1168,6 +1176,11 @@ namespace Survival.Unity
                     core = new Color(0.90f, 0.70f, 1f, 1f);
                     glow = new Color(0.58f, 0.22f, 0.86f, 0.85f);
                     edge = new Color(0.26f, 0.08f, 0.38f, 0.55f);
+                    return;
+                case "Vorgath":
+                    core = new Color(1f, 0.72f, 0.35f, 1f);
+                    glow = new Color(0.85f, 0.28f, 0.12f, 0.85f);
+                    edge = new Color(0.45f, 0.10f, 0.55f, 0.55f);
                     return;
             }
 

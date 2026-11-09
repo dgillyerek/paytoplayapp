@@ -28,7 +28,7 @@ public sealed class RunnerLoadingTests
         // The last level brings out every foe type: capped at five faces, the boss still among them (last).
         var last = RunnerLoading.Into(c, c.Levels[^1], "x", "y", "z");
         Assert.Equal(RunnerLoading.MaxFaces, last.EnemyPortraits.Count);
-        Assert.Equal("theme_a.hero.portrait.ironhowl", last.EnemyPortraits[^1]);
+        Assert.Equal("theme_a.hero.portrait.vorgath", last.EnemyPortraits[^1]);
     }
 
     [Fact]

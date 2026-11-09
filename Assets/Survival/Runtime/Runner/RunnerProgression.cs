@@ -71,6 +71,15 @@ namespace Survival.Domain.Runner
         /// <summary>Whether Level <paramref name="number"/> ends on the boss.</summary>
         public bool IsBossLevel(int number) => BossEvery <= 1 || (number >= 1 && number % BossEvery == 0);
 
+        /// <summary>
+        /// Milestone bosses inside the existing boss cadence. <see cref="BossEvery"/> is 5, so Levels 5, 10, 15, ...
+        /// already end on a boss. Every 10th of those (L10, L20, L30, L40, L50) is Vorgath; the others stay Ironhowl.
+        /// </summary>
+        public const int MilestoneEvery = 10;
+
+        /// <summary>Whether Level <paramref name="number"/>'s boss is the milestone end boss (Vorgath).</summary>
+        public bool IsMilestoneBossLevel(int number) => IsBossLevel(number) && number >= MilestoneEvery && number % MilestoneEvery == 0;
+
         /// <summary>The t (level - 1) the enemy and box counts use: it stops growing at the ramp's count cap.</summary>
         public int CountT(int number) => Math.Max(0, Math.Min(number, Ramp?.CountCap ?? int.MaxValue) - 1);
     }
@@ -294,7 +303,7 @@ namespace Survival.Domain.Runner
             var t = number - 1;
             var ramp = p.Ramp;
             var length = (float)Math.Round(Math.Min(first.Length + (p.LengthStep * t), ramp?.LengthCap ?? float.MaxValue));
-            var rows = Rows(p, number, length, first.HalfWidth, p.IsBossLevel(number) ? BossUnit(first) : null, hasUnit);
+            var rows = Rows(p, number, length, first.HalfWidth, p.IsBossLevel(number) ? BossUnit(first, p.IsMilestoneBossLevel(number)) : null, hasUnit);
             if (!p.IsBossLevel(number))
             {
                 // No boss: the finish gate stands just past the finale, not where the boss section would end.
@@ -1295,8 +1304,17 @@ namespace Survival.Domain.Runner
             _ => PalisadeDamage + (PalisadeDamageStep * t)
         };
 
-        private static string BossUnit(RunnerLevelDef first)
+        /// <summary>
+        /// The boss row's unit. Milestone levels (every 10th, which are already boss levels) are Vorgath. The other
+        /// boss levels keep Level 1's boss, which is Ironhowl.
+        /// </summary>
+        private static string BossUnit(RunnerLevelDef first, bool milestone)
         {
+            if (milestone)
+            {
+                return "vorgath";
+            }
+
             foreach (var r in first.Rows)
             {
                 if (r.Kind == RunnerRowKind.Boss)

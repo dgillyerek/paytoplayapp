@@ -240,11 +240,26 @@ namespace Survival.Unity
                     var wobble = 1f + (0.05f * p * Mathf.Sin(t * 38f));
                     _quakeRig.Slot.localScale = new Vector3(wobble, up, wobble);
 
-                    // Ironhowl: start the ground pound so its contact frame lands with the quake.
-                    if (!_quakePounded && _quakeRig.RotatesAttacks && t >= _quakeLength - (IronhowlMotion.Attack4ContactFrame / IronhowlMotion.FrameRate))
+                    // Start the signature clip so its hit lands with the quake: Ironhowl's pound, Vorgath's spit fire.
+                    if (!_quakePounded && _quakeRig.RotatesAttacks)
                     {
-                        _quakePounded = true;
-                        _quakeRig.Swing(IronhowlMotion.Attack4PoseName, IronhowlMotion.Attack4LastFrame / IronhowlMotion.FrameRate);
+                        var vorgath = _quakeRig.Data.Name == "Vorgath";
+                        var lead = vorgath
+                            ? VorgathMotion.SpitFireStartSeconds
+                            : IronhowlMotion.Attack4ContactFrame / IronhowlMotion.FrameRate;
+                        if (t >= _quakeLength - lead)
+                        {
+                            _quakePounded = true;
+                            if (vorgath)
+                            {
+                                _quakeRig.SetAttackSpeed(1f);
+                                _quakeRig.Swing(VorgathMotion.SpitPoseName, VorgathMotion.SpitSeconds);
+                            }
+                            else
+                            {
+                                _quakeRig.Swing(IronhowlMotion.Attack4PoseName, IronhowlMotion.Attack4LastFrame / IronhowlMotion.FrameRate);
+                            }
+                        }
                     }
                 }
 

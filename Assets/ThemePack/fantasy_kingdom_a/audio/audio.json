@@ -131,7 +131,7 @@
     "StompQuake": "sfx.boss.ground_pound",
     "ClawWave": "sfx.enemy.hit"
   },
-  "battle_bosses": ["Ironhowl"],
+  "battle_bosses": ["Ironhowl", "Vorgath"],
   "battle_shots": {
     "Lyra": "sfx.shot.lyra",
     "Rowan": "sfx.shot.rowan",
@@ -148,7 +148,9 @@
     "overhead smash": "sfx.boss.ground_pound",
     "ground pound": "sfx.boss.ground_pound",
     "backhand sweep": "sfx.boss.sweep",
-    "shoulder charge": "sfx.boss.charge"
+    "shoulder charge": "sfx.boss.charge",
+    "ground slam": "sfx.boss.ground_pound",
+    "fire spit": "sfx.boss.charge"
   },
   "economy_collect": {
     "food": "eco.collect.food",

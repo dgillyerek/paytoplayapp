@@ -179,5 +179,37 @@ namespace Survival.Domain.Roster
                 },
                 QuakeFlightFrames);
         }
+
+        /// <summary>
+        /// Vorgath's two authored clips (slam, then spit). Contact frames are the blend file's: hands on the floor at
+        /// slam frame 52, the spit lunge peaking at frame 60 while the mouth fire is already on (frame 53). No extra
+        /// clip is invented and the fire stream stays the existing prefab.
+        /// </summary>
+        public static LockedBattleAttack[] VorgathAttacks()
+        {
+            return new[]
+            {
+                new LockedBattleAttack(
+                    "ground slam",
+                    VorgathMotion.SlamPoseName,
+                    VorgathMotion.SlamSeconds,
+                    VorgathMotion.SlamContactFrame,
+                    VorgathMotion.SlamStrikeBone,
+                    0.09f,
+                    false,
+                    default,
+                    BattleImpactKind.GroundSlam),
+                new LockedBattleAttack(
+                    "fire spit",
+                    VorgathMotion.SpitPoseName,
+                    VorgathMotion.SpitSeconds,
+                    VorgathMotion.SpitPeakFrame,
+                    VorgathMotion.SnoutBone,
+                    0.08f,
+                    false,
+                    default,
+                    BattleImpactKind.VoidFireBreath)
+            };
+        }
     }
 }

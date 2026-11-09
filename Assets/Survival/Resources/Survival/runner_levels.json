@@ -10,7 +10,8 @@
     "blightroot": { "roster": "Blightroot", "hp": 420, "damage": 35, "cycle": 1.7, "range": 1.5, "ranged": false, "speed": 1.1, "radius": 0.65, "scale": 1.9 },
     "vespera": { "roster": "Vespera", "hp": 78, "damage": 13, "cycle": 2.0, "range": 19, "ranged": true, "shot_speed": 13.75, "speed": 1.45, "radius": 0.5, "scale": 1.4 },
     "ashwyrm": { "roster": "Ashwyrm", "hp": 265, "damage": 45, "cycle": 1.8, "range": 3.6, "ranged": false, "speed": 2.2, "radius": 0.9, "scale": 1.35 },
-    "ironhowl": { "roster": "Ironhowl", "hp": 20000, "damage": 40, "cycle": 2.4, "range": 1.8, "ranged": false, "speed": 0, "radius": 0.67, "scale": 2.0, "throws": true }
+    "ironhowl": { "roster": "Ironhowl", "hp": 20000, "damage": 40, "cycle": 2.4, "range": 1.8, "ranged": false, "speed": 0, "radius": 0.67, "scale": 2.0, "throws": true },
+    "vorgath": { "roster": "Vorgath", "hp": 20000, "damage": 40, "cycle": 2.4, "range": 1.8, "ranged": false, "speed": 0, "radius": 0.67, "scale": 2.0, "throws": true }
   },
   "progression": {
     "count": 50,
@@ -22,7 +23,7 @@
     "box_hp_step": 0.15,
     "reward_step": 0.3,
     "boss_every": 5,
-    "_boss_doc": "A big boss (Ironhowl) only ends Levels 5, 10, 15, ... 50; the other levels end on the last wave and the finish line.",
+    "_boss_doc": "A big boss only ends Levels 5, 10, 15, ... 50. Every 10th (L10, L20, L30, L40, L50) is Vorgath; the other boss levels stay Ironhowl. The rest end on the last wave and the finish line. Vorgath's runner numbers match Ironhowl's so the free-pace sim does not move; he reads larger from his battle scale.",
     "_ramp_doc": "Levels past from (12) stop getting longer past length_cap and stop adding enemies / boxes past count_cap; instead every level multiplies enemy HP, enemy damage and boss HP by the growth, and every level past wall_from (30) by the steeper wall growth. Balanced by tests/Survival.Domain.Tests/RunnerBalanceTests.cs (see docs/runner_balance.md): a free player with normal upgrades clears 1-30, 31-50 need bought upgrades.",
     "ramp": { "from": 12, "wall_from": 30, "count_cap": 20, "length_cap": 330, "speed_cap": 2.3, "foe_hp_growth": 1.112, "foe_dmg_growth": 1.067, "boss_hp_growth": 1.115, "wall_hp_growth": 1.026, "wall_dmg_growth": 1.0125, "wall_boss_growth": 1.016, "wall_step_hp": 1.35, "wall_step_dmg": 1.12 },
     "level_tweaks": {

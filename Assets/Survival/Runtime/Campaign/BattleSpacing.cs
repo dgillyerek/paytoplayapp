@@ -43,6 +43,7 @@ namespace Survival.Domain.Campaign
                 case "Emberfang":
                 case "Ashwyrm":
                 case "Stormcrest":
+                case "Vorgath":
                     return designHeightMetres * 0.55f * s;
                 default:
                     return Math.Max(0.05f, designHeightMetres) * 0.2f * s;
