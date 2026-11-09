@@ -1,0 +1,4844 @@
+{
+  "notes": [
+    "Blender reimport of the exported FBX. Not a Unity Game view.",
+    "Unity was not available headless, so no Game-view capture.",
+    "NewCharsPreview instances SERAPHINE_rig_rest.fbx and only samples bone curves. rig_rest is byte-identical to main, so the curled grip (a bind-mesh edit on the clip FBXs) does not appear in that scene.",
+    "The throw spear is an unparented rigid mesh in SERAPHINE_attack_throw.fbx so it can leave the hand. The preview's skinned spear stays on the right hand.",
+    "Walk bone heads match the shipped walk to 3.7e-6 m. Skeleton heads/tails match rig_rest to 8.2e-7 m. The historical digest d5611ac70629687b was not reproduced by the hash function used here; the positional match is the check.",
+    "Cape in the plates is rigidly carried on Spine2, not Unity's spring. Triangle tests against that posed cape are 0.",
+    "Right-hand fingers have no bones. The curl is a bind-mesh rotation of RightHand-weighted vertices, max 12.4 cm. Weights are unchanged."
+  ],
+  "skeleton": {
+    "names_and_parents_match_rig_rest": true,
+    "max_head_plus_tail_delta_m_vs_rig_rest": 8.206453897796086e-07,
+    "hash_pre_export_import_of_rig_rest": "1e1d7bea0a97d967",
+    "hash_reimported_exports": "3e8355430c5494a4",
+    "historical_audit_hash_not_reproduced": "d5611ac70629687b"
+  },
+  "walk_motion_vs_shipped_max_bone_head_m": 3.6897152758937265e-06,
+  "clips": {
+    "walk": {
+      "frames": [
+        1,
+        36
+      ],
+      "intersections": {
+        "staff_body_max": 0,
+        "staff_wing_max": 0,
+        "staff_cape_max": 0,
+        "wing_body_max": 0
+      },
+      "gap_r_cm_min": 0.117,
+      "gap_l_cm_min": 65.23,
+      "max_joint_deg_per_frame": 37.99,
+      "max_joint_bone": "mixamorig:LeftUpLeg.003",
+      "max_joint_frame": 30,
+      "max_planted_foot_slide_cm": 4.92,
+      "staff_zmin_cm": 35.74,
+      "per_frame": [
+        {
+          "f": 1,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 68.821,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 0.0,
+          "max_joint_bone": "",
+          "feet": {
+            "Left": {
+              "sole_cm": 1.95,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.0555,
+                0.0145
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.13,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.0583,
+                0.0585
+              ]
+            }
+          },
+          "staff_zmin_cm": 42.58
+        },
+        {
+          "f": 2,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 68.612,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 12.79,
+          "max_joint_bone": "mixamorig:LeftUpLeg.003",
+          "feet": {
+            "Left": {
+              "sole_cm": 2.22,
+              "planted": true,
+              "slide_cm": 8.399,
+              "xy": [
+                0.052,
+                -0.0694
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.4,
+              "planted": true,
+              "slide_cm": 4.389,
+              "xy": [
+                -0.0559,
+                0.1023
+              ]
+            }
+          },
+          "staff_zmin_cm": 42.6
+        },
+        {
+          "f": 3,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 68.662,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 12.81,
+          "max_joint_bone": "mixamorig:LeftUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 3.63,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.0501,
+                -0.1538
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.44,
+              "planted": true,
+              "slide_cm": 4.448,
+              "xy": [
+                -0.0522,
+                0.1466
+              ]
+            }
+          },
+          "staff_zmin_cm": 42.13
+        },
+        {
+          "f": 4,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 69.038,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 12.96,
+          "max_joint_bone": "mixamorig:LeftUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 2.38,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.0505,
+                -0.2346
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.6,
+              "planted": true,
+              "slide_cm": 4.422,
+              "xy": [
+                -0.0507,
+                0.1908
+              ]
+            }
+          },
+          "staff_zmin_cm": 41.19
+        },
+        {
+          "f": 5,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 69.697,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 12.36,
+          "max_joint_bone": "mixamorig:LeftUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 2.28,
+              "planted": true,
+              "slide_cm": 7.48,
+              "xy": [
+                0.0523,
+                -0.3094
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.67,
+              "planted": true,
+              "slide_cm": 4.042,
+              "xy": [
+                -0.0518,
+                0.2312
+              ]
+            }
+          },
+          "staff_zmin_cm": 39.1
+        },
+        {
+          "f": 6,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 70.335,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 10.22,
+          "max_joint_bone": "mixamorig:LeftUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 3.82,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.0544,
+                -0.3676
+              ]
+            },
+            "Right": {
+              "sole_cm": 1.25,
+              "planted": true,
+              "slide_cm": 3.881,
+              "xy": [
+                -0.0538,
+                0.27
+              ]
+            }
+          },
+          "staff_zmin_cm": 37.7
+        },
+        {
+          "f": 7,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 70.675,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 7.04,
+          "max_joint_bone": "mixamorig:LeftUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 4.9,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.054,
+                -0.398
+              ]
+            },
+            "Right": {
+              "sole_cm": 2.38,
+              "planted": true,
+              "slide_cm": 3.315,
+              "xy": [
+                -0.0585,
+                0.3028
+              ]
+            }
+          },
+          "staff_zmin_cm": 36.8
+        },
+        {
+          "f": 8,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 70.474,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 8.8,
+          "max_joint_bone": "mixamorig:RightUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 3.56,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.0495,
+                -0.3935
+              ]
+            },
+            "Right": {
+              "sole_cm": 3.83,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.0654,
+                0.3291
+              ]
+            }
+          },
+          "staff_zmin_cm": 36.22
+        },
+        {
+          "f": 9,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 69.758,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 13.11,
+          "max_joint_bone": "mixamorig:LeftUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 1.37,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.0369,
+                -0.3732
+              ]
+            },
+            "Right": {
+              "sole_cm": 5.67,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.071,
+                0.3476
+              ]
+            }
+          },
+          "staff_zmin_cm": 35.95
+        },
+        {
+          "f": 10,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 68.949,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 13.07,
+          "max_joint_bone": "mixamorig:RightUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.12,
+              "planted": true,
+              "slide_cm": 2.17,
+              "xy": [
+                0.0314,
+                -0.3522
+              ]
+            },
+            "Right": {
+              "sole_cm": 7.5,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.0763,
+                0.3565
+              ]
+            }
+          },
+          "staff_zmin_cm": 36.0
+        },
+        {
+          "f": 11,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 68.046,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 17.13,
+          "max_joint_bone": "mixamorig:RightUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.12,
+              "planted": true,
+              "slide_cm": 2.966,
+              "xy": [
+                0.0335,
+                -0.3226
+              ]
+            },
+            "Right": {
+              "sole_cm": 8.9,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.0793,
+                0.3543
+              ]
+            }
+          },
+          "staff_zmin_cm": 35.97
+        },
+        {
+          "f": 12,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 67.062,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 13.52,
+          "max_joint_bone": "mixamorig:RightUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.12,
+              "planted": true,
+              "slide_cm": 3.928,
+              "xy": [
+                0.0352,
+                -0.2834
+              ]
+            },
+            "Right": {
+              "sole_cm": 8.03,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.0775,
+                0.3427
+              ]
+            }
+          },
+          "staff_zmin_cm": 36.2
+        },
+        {
+          "f": 13,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 66.168,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 23.62,
+          "max_joint_bone": "mixamorig:RightUpLeg.003",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.12,
+              "planted": true,
+              "slide_cm": 4.341,
+              "xy": [
+                0.0357,
+                -0.24
+              ]
+            },
+            "Right": {
+              "sole_cm": 4.87,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.078,
+                0.2994
+              ]
+            }
+          },
+          "staff_zmin_cm": 36.82
+        },
+        {
+          "f": 14,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 65.505,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 9.78,
+          "max_joint_bone": "mixamorig:RightUpLeg",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.12,
+              "planted": true,
+              "slide_cm": 4.58,
+              "xy": [
+                0.0354,
+                -0.1942
+              ]
+            },
+            "Right": {
+              "sole_cm": 3.86,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.0768,
+                0.2448
+              ]
+            }
+          },
+          "staff_zmin_cm": 37.61
+        },
+        {
+          "f": 15,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 65.23,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 8.62,
+          "max_joint_bone": "mixamorig:LeftHand",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.12,
+              "planted": true,
+              "slide_cm": 4.767,
+              "xy": [
+                0.035,
+                -0.1465
+              ]
+            },
+            "Right": {
+              "sole_cm": 3.55,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.0761,
+                0.1843
+              ]
+            }
+          },
+          "staff_zmin_cm": 38.58
+        },
+        {
+          "f": 16,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 65.272,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 10.25,
+          "max_joint_bone": "mixamorig:RightUpLeg.003",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.07,
+              "planted": true,
+              "slide_cm": 4.726,
+              "xy": [
+                0.0346,
+                -0.0993
+              ]
+            },
+            "Right": {
+              "sole_cm": 3.26,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.0756,
+                0.1196
+              ]
+            }
+          },
+          "staff_zmin_cm": 39.55
+        },
+        {
+          "f": 17,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 65.4,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 10.6,
+          "max_joint_bone": "mixamorig:RightUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.32,
+              "planted": true,
+              "slide_cm": 4.724,
+              "xy": [
+                0.0343,
+                -0.052
+              ]
+            },
+            "Right": {
+              "sole_cm": 2.98,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.0755,
+                0.0517
+              ]
+            }
+          },
+          "staff_zmin_cm": 40.27
+        },
+        {
+          "f": 18,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 65.56,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 11.06,
+          "max_joint_bone": "mixamorig:RightUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.52,
+              "planted": true,
+              "slide_cm": 4.728,
+              "xy": [
+                0.0344,
+                -0.0047
+              ]
+            },
+            "Right": {
+              "sole_cm": 2.16,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.0759,
+                -0.0188
+              ]
+            }
+          },
+          "staff_zmin_cm": 40.56
+        },
+        {
+          "f": 19,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 65.747,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 11.69,
+          "max_joint_bone": "mixamorig:RightUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.68,
+              "planted": true,
+              "slide_cm": 4.697,
+              "xy": [
+                0.0345,
+                0.0422
+              ]
+            },
+            "Right": {
+              "sole_cm": 1.66,
+              "planted": true,
+              "slide_cm": 7.091,
+              "xy": [
+                -0.0777,
+                -0.0897
+              ]
+            }
+          },
+          "staff_zmin_cm": 40.53
+        },
+        {
+          "f": 20,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 65.933,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 11.42,
+          "max_joint_bone": "mixamorig:RightUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.79,
+              "planted": true,
+              "slide_cm": 4.703,
+              "xy": [
+                0.0345,
+                0.0892
+              ]
+            },
+            "Right": {
+              "sole_cm": 2.6,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.0802,
+                -0.1615
+              ]
+            }
+          },
+          "staff_zmin_cm": 40.19
+        },
+        {
+          "f": 21,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 66.177,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 11.62,
+          "max_joint_bone": "mixamorig:RightUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.87,
+              "planted": true,
+              "slide_cm": 4.688,
+              "xy": [
+                0.0347,
+                0.1361
+              ]
+            },
+            "Right": {
+              "sole_cm": 1.4,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.0822,
+                -0.2314
+              ]
+            }
+          },
+          "staff_zmin_cm": 39.56
+        },
+        {
+          "f": 22,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 66.425,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 8.3,
+          "max_joint_bone": "mixamorig:RightUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.94,
+              "planted": true,
+              "slide_cm": 4.664,
+              "xy": [
+                0.0348,
+                0.1828
+              ]
+            },
+            "Right": {
+              "sole_cm": 1.34,
+              "planted": true,
+              "slide_cm": 4.206,
+              "xy": [
+                -0.0842,
+                -0.2734
+              ]
+            }
+          },
+          "staff_zmin_cm": 38.71
+        },
+        {
+          "f": 23,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 66.645,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 15.21,
+          "max_joint_bone": "mixamorig:RightUpLeg.003",
+          "feet": {
+            "Left": {
+              "sole_cm": 1.07,
+              "planted": true,
+              "slide_cm": 4.574,
+              "xy": [
+                0.0348,
+                0.2285
+              ]
+            },
+            "Right": {
+              "sole_cm": 4.17,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.0846,
+                -0.3475
+              ]
+            }
+          },
+          "staff_zmin_cm": 37.78
+        },
+        {
+          "f": 24,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 66.734,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 8.06,
+          "max_joint_bone": "mixamorig:RightUpLeg.003",
+          "feet": {
+            "Left": {
+              "sole_cm": 1.27,
+              "planted": true,
+              "slide_cm": 4.374,
+              "xy": [
+                0.0349,
+                0.2722
+              ]
+            },
+            "Right": {
+              "sole_cm": 5.37,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.0797,
+                -0.3695
+              ]
+            }
+          },
+          "staff_zmin_cm": 36.9
+        },
+        {
+          "f": 25,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 66.671,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 4.32,
+          "max_joint_bone": "mixamorig:LeftUpLeg.001",
+          "feet": {
+            "Left": {
+              "sole_cm": 1.6,
+              "planted": true,
+              "slide_cm": 3.976,
+              "xy": [
+                0.0352,
+                0.312
+              ]
+            },
+            "Right": {
+              "sole_cm": 4.46,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.0766,
+                -0.3702
+              ]
+            }
+          },
+          "staff_zmin_cm": 36.18
+        },
+        {
+          "f": 26,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 66.54,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 8.37,
+          "max_joint_bone": "mixamorig:RightUpLeg.003",
+          "feet": {
+            "Left": {
+              "sole_cm": 2.13,
+              "planted": true,
+              "slide_cm": 3.444,
+              "xy": [
+                0.0361,
+                0.3464
+              ]
+            },
+            "Right": {
+              "sole_cm": 1.89,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.0652,
+                -0.3486
+              ]
+            }
+          },
+          "staff_zmin_cm": 35.74
+        },
+        {
+          "f": 27,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 66.361,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 12.55,
+          "max_joint_bone": "mixamorig:RightUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 3.09,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.0378,
+                0.3704
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.1,
+              "planted": true,
+              "slide_cm": 2.756,
+              "xy": [
+                -0.0501,
+                -0.3256
+              ]
+            }
+          },
+          "staff_zmin_cm": 35.82
+        },
+        {
+          "f": 28,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 66.249,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 16.46,
+          "max_joint_bone": "mixamorig:LeftUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 4.35,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.0392,
+                0.376
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.12,
+              "planted": true,
+              "slide_cm": 2.375,
+              "xy": [
+                -0.0498,
+                -0.3018
+              ]
+            }
+          },
+          "staff_zmin_cm": 36.06
+        },
+        {
+          "f": 29,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 66.484,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 22.91,
+          "max_joint_bone": "mixamorig:LeftUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 5.53,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.0514,
+                0.3603
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.12,
+              "planted": true,
+              "slide_cm": 3.343,
+              "xy": [
+                -0.054,
+                -0.2687
+              ]
+            }
+          },
+          "staff_zmin_cm": 36.42
+        },
+        {
+          "f": 30,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 66.95,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 37.99,
+          "max_joint_bone": "mixamorig:LeftUpLeg.003",
+          "feet": {
+            "Left": {
+              "sole_cm": 4.49,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.0548,
+                0.3388
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.12,
+              "planted": true,
+              "slide_cm": 4.094,
+              "xy": [
+                -0.0554,
+                -0.2278
+              ]
+            }
+          },
+          "staff_zmin_cm": 37.11
+        },
+        {
+          "f": 31,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.117,
+          "gap_l_cm": 67.366,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 28.38,
+          "max_joint_bone": "mixamorig:LeftUpLeg.003",
+          "feet": {
+            "Left": {
+              "sole_cm": 6.26,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.0545,
+                0.3017
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.12,
+              "planted": true,
+              "slide_cm": 4.521,
+              "xy": [
+                -0.0554,
+                -0.1825
+              ]
+            }
+          },
+          "staff_zmin_cm": 38.24
+        },
+        {
+          "f": 32,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 67.776,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 7.91,
+          "max_joint_bone": "mixamorig:LeftUpLeg",
+          "feet": {
+            "Left": {
+              "sole_cm": 7.0,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.0532,
+                0.2527
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.12,
+              "planted": true,
+              "slide_cm": 4.652,
+              "xy": [
+                -0.0554,
+                -0.136
+              ]
+            }
+          },
+          "staff_zmin_cm": 39.48
+        },
+        {
+          "f": 33,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 68.237,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 8.26,
+          "max_joint_bone": "mixamorig:LeftUpLeg.003",
+          "feet": {
+            "Left": {
+              "sole_cm": 6.15,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.0532,
+                0.1988
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.12,
+              "planted": true,
+              "slide_cm": 4.733,
+              "xy": [
+                -0.0551,
+                -0.0887
+              ]
+            }
+          },
+          "staff_zmin_cm": 40.66
+        },
+        {
+          "f": 34,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 68.511,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 11.89,
+          "max_joint_bone": "mixamorig:LeftToe_End",
+          "feet": {
+            "Left": {
+              "sole_cm": 4.39,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.0553,
+                0.1429
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.12,
+              "planted": true,
+              "slide_cm": 4.81,
+              "xy": [
+                -0.0544,
+                -0.0406
+              ]
+            }
+          },
+          "staff_zmin_cm": 41.63
+        },
+        {
+          "f": 35,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 68.738,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 13.41,
+          "max_joint_bone": "mixamorig:LeftToe_End",
+          "feet": {
+            "Left": {
+              "sole_cm": 3.09,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.0586,
+                0.081
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.12,
+              "planted": true,
+              "slide_cm": 4.918,
+              "xy": [
+                -0.054,
+                0.0086
+              ]
+            }
+          },
+          "staff_zmin_cm": 42.35
+        },
+        {
+          "f": 36,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 68.822,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 12.69,
+          "max_joint_bone": "mixamorig:LeftUpLeg.002",
+          "feet": {
+            "Left": {
+              "sole_cm": 1.95,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.0604,
+                0.0118
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.13,
+              "planted": true,
+              "slide_cm": 4.721,
+              "xy": [
+                -0.0534,
+                0.0558
+              ]
+            }
+          },
+          "staff_zmin_cm": 42.58
+        }
+      ]
+    },
+    "thrust": {
+      "frames": [
+        1,
+        48
+      ],
+      "intersections": {
+        "staff_body_max": 0,
+        "staff_wing_max": 0,
+        "staff_cape_max": 0,
+        "wing_body_max": 0
+      },
+      "gap_r_cm_min": 0.146,
+      "gap_l_cm_min": 0.176,
+      "max_joint_deg_per_frame": 35.6,
+      "max_joint_bone": "mixamorig:LeftForeArm",
+      "max_joint_frame": 2,
+      "max_planted_foot_slide_cm": 0,
+      "staff_zmin_cm": 28.12,
+      "per_frame": [
+        {
+          "f": 1,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.156,
+          "gap_l_cm": 0.176,
+          "close_r_2cm": 38,
+          "close_l_2cm": 25,
+          "max_joint_deg": 0.0,
+          "max_joint_bone": "",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 28.12
+        },
+        {
+          "f": 2,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.175,
+          "gap_l_cm": 1.133,
+          "close_r_2cm": 38,
+          "close_l_2cm": 16,
+          "max_joint_deg": 35.6,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 32.78
+        },
+        {
+          "f": 3,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.177,
+          "gap_l_cm": 1.101,
+          "close_r_2cm": 38,
+          "close_l_2cm": 17,
+          "max_joint_deg": 3.04,
+          "max_joint_bone": "mixamorig:Hips",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 32.53
+        },
+        {
+          "f": 4,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.181,
+          "gap_l_cm": 1.039,
+          "close_r_2cm": 38,
+          "close_l_2cm": 19,
+          "max_joint_deg": 3.2,
+          "max_joint_bone": "mixamorig:Hips",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 32.17
+        },
+        {
+          "f": 5,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.185,
+          "gap_l_cm": 0.984,
+          "close_r_2cm": 38,
+          "close_l_2cm": 19,
+          "max_joint_deg": 3.8,
+          "max_joint_bone": "mixamorig:Hips",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 31.76
+        },
+        {
+          "f": 6,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.17,
+          "gap_l_cm": 0.936,
+          "close_r_2cm": 38,
+          "close_l_2cm": 20,
+          "max_joint_deg": 15.18,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 32.52
+        },
+        {
+          "f": 7,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.174,
+          "gap_l_cm": 0.798,
+          "close_r_2cm": 38,
+          "close_l_2cm": 33,
+          "max_joint_deg": 3.81,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 32.13
+        },
+        {
+          "f": 8,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.178,
+          "gap_l_cm": 0.75,
+          "close_r_2cm": 38,
+          "close_l_2cm": 39,
+          "max_joint_deg": 3.33,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 31.81
+        },
+        {
+          "f": 9,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.18,
+          "gap_l_cm": 0.756,
+          "close_r_2cm": 38,
+          "close_l_2cm": 38,
+          "max_joint_deg": 2.36,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 31.59
+        },
+        {
+          "f": 10,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.181,
+          "gap_l_cm": 0.754,
+          "close_r_2cm": 38,
+          "close_l_2cm": 40,
+          "max_joint_deg": 0.89,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 31.51
+        },
+        {
+          "f": 11,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.179,
+          "gap_l_cm": 0.753,
+          "close_r_2cm": 38,
+          "close_l_2cm": 40,
+          "max_joint_deg": 2.67,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 31.76
+        },
+        {
+          "f": 12,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.171,
+          "gap_l_cm": 0.898,
+          "close_r_2cm": 38,
+          "close_l_2cm": 24,
+          "max_joint_deg": 6.84,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 32.45
+        },
+        {
+          "f": 13,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.18,
+          "gap_l_cm": 0.995,
+          "close_r_2cm": 38,
+          "close_l_2cm": 19,
+          "max_joint_deg": 12.87,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 32.28
+        },
+        {
+          "f": 14,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.17,
+          "gap_l_cm": 1.213,
+          "close_r_2cm": 38,
+          "close_l_2cm": 16,
+          "max_joint_deg": 8.92,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 33.52
+        },
+        {
+          "f": 15,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.16,
+          "gap_l_cm": 1.236,
+          "close_r_2cm": 39,
+          "close_l_2cm": 24,
+          "max_joint_deg": 8.52,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 34.83
+        },
+        {
+          "f": 16,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.153,
+          "gap_l_cm": 1.09,
+          "close_r_2cm": 40,
+          "close_l_2cm": 25,
+          "max_joint_deg": 7.17,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 36.02
+        },
+        {
+          "f": 17,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.148,
+          "gap_l_cm": 0.955,
+          "close_r_2cm": 40,
+          "close_l_2cm": 26,
+          "max_joint_deg": 5.03,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 36.89
+        },
+        {
+          "f": 18,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.146,
+          "gap_l_cm": 0.911,
+          "close_r_2cm": 40,
+          "close_l_2cm": 26,
+          "max_joint_deg": 1.92,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 37.22
+        },
+        {
+          "f": 19,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.146,
+          "gap_l_cm": 0.92,
+          "close_r_2cm": 40,
+          "close_l_2cm": 26,
+          "max_joint_deg": 0.49,
+          "max_joint_bone": "mixamorig:Hips",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 37.13
+        },
+        {
+          "f": 20,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.147,
+          "gap_l_cm": 0.945,
+          "close_r_2cm": 40,
+          "close_l_2cm": 26,
+          "max_joint_deg": 1.3,
+          "max_joint_bone": "mixamorig:Hips",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 36.88
+        },
+        {
+          "f": 21,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.149,
+          "gap_l_cm": 0.983,
+          "close_r_2cm": 40,
+          "close_l_2cm": 26,
+          "max_joint_deg": 1.83,
+          "max_joint_bone": "mixamorig:Hips",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 36.53
+        },
+        {
+          "f": 22,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.151,
+          "gap_l_cm": 1.03,
+          "close_r_2cm": 40,
+          "close_l_2cm": 26,
+          "max_joint_deg": 2.1,
+          "max_joint_bone": "mixamorig:Hips",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 36.13
+        },
+        {
+          "f": 23,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.153,
+          "gap_l_cm": 1.083,
+          "close_r_2cm": 40,
+          "close_l_2cm": 26,
+          "max_joint_deg": 2.1,
+          "max_joint_bone": "mixamorig:Hips",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 35.74
+        },
+        {
+          "f": 24,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.154,
+          "gap_l_cm": 1.108,
+          "close_r_2cm": 40,
+          "close_l_2cm": 26,
+          "max_joint_deg": 1.84,
+          "max_joint_bone": "mixamorig:Hips",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 35.39
+        },
+        {
+          "f": 25,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.155,
+          "gap_l_cm": 1.128,
+          "close_r_2cm": 39,
+          "close_l_2cm": 25,
+          "max_joint_deg": 1.3,
+          "max_joint_bone": "mixamorig:Hips",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 35.15
+        },
+        {
+          "f": 26,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.156,
+          "gap_l_cm": 1.137,
+          "close_r_2cm": 39,
+          "close_l_2cm": 25,
+          "max_joint_deg": 0.49,
+          "max_joint_bone": "mixamorig:Hips",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 35.06
+        },
+        {
+          "f": 27,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.156,
+          "gap_l_cm": 1.138,
+          "close_r_2cm": 39,
+          "close_l_2cm": 25,
+          "max_joint_deg": 0.15,
+          "max_joint_bone": "mixamorig:LeftToe_End",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 35.05
+        },
+        {
+          "f": 28,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.156,
+          "gap_l_cm": 1.143,
+          "close_r_2cm": 39,
+          "close_l_2cm": 25,
+          "max_joint_deg": 0.3,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 35.01
+        },
+        {
+          "f": 29,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.157,
+          "gap_l_cm": 1.15,
+          "close_r_2cm": 39,
+          "close_l_2cm": 25,
+          "max_joint_deg": 0.47,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 34.95
+        },
+        {
+          "f": 30,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.157,
+          "gap_l_cm": 1.159,
+          "close_r_2cm": 39,
+          "close_l_2cm": 25,
+          "max_joint_deg": 0.62,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 34.86
+        },
+        {
+          "f": 31,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.158,
+          "gap_l_cm": 1.171,
+          "close_r_2cm": 39,
+          "close_l_2cm": 25,
+          "max_joint_deg": 0.76,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 34.76
+        },
+        {
+          "f": 32,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.159,
+          "gap_l_cm": 1.185,
+          "close_r_2cm": 39,
+          "close_l_2cm": 25,
+          "max_joint_deg": 0.87,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 34.65
+        },
+        {
+          "f": 33,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.16,
+          "gap_l_cm": 1.2,
+          "close_r_2cm": 39,
+          "close_l_2cm": 25,
+          "max_joint_deg": 0.97,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 34.52
+        },
+        {
+          "f": 34,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.161,
+          "gap_l_cm": 1.216,
+          "close_r_2cm": 39,
+          "close_l_2cm": 25,
+          "max_joint_deg": 1.04,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 34.38
+        },
+        {
+          "f": 35,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.162,
+          "gap_l_cm": 1.233,
+          "close_r_2cm": 38,
+          "close_l_2cm": 24,
+          "max_joint_deg": 1.1,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 34.24
+        },
+        {
+          "f": 36,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.163,
+          "gap_l_cm": 1.252,
+          "close_r_2cm": 38,
+          "close_l_2cm": 23,
+          "max_joint_deg": 1.13,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 34.09
+        },
+        {
+          "f": 37,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.164,
+          "gap_l_cm": 1.271,
+          "close_r_2cm": 38,
+          "close_l_2cm": 23,
+          "max_joint_deg": 1.15,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 33.94
+        },
+        {
+          "f": 38,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.165,
+          "gap_l_cm": 1.281,
+          "close_r_2cm": 38,
+          "close_l_2cm": 22,
+          "max_joint_deg": 1.14,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 33.79
+        },
+        {
+          "f": 39,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.166,
+          "gap_l_cm": 1.28,
+          "close_r_2cm": 38,
+          "close_l_2cm": 21,
+          "max_joint_deg": 1.12,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 33.65
+        },
+        {
+          "f": 40,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.167,
+          "gap_l_cm": 1.282,
+          "close_r_2cm": 38,
+          "close_l_2cm": 20,
+          "max_joint_deg": 1.08,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 33.51
+        },
+        {
+          "f": 41,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.168,
+          "gap_l_cm": 1.286,
+          "close_r_2cm": 38,
+          "close_l_2cm": 19,
+          "max_joint_deg": 1.02,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 33.38
+        },
+        {
+          "f": 42,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.169,
+          "gap_l_cm": 1.291,
+          "close_r_2cm": 38,
+          "close_l_2cm": 18,
+          "max_joint_deg": 0.94,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 33.26
+        },
+        {
+          "f": 43,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.17,
+          "gap_l_cm": 1.284,
+          "close_r_2cm": 38,
+          "close_l_2cm": 16,
+          "max_joint_deg": 0.84,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 33.15
+        },
+        {
+          "f": 44,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.171,
+          "gap_l_cm": 1.269,
+          "close_r_2cm": 38,
+          "close_l_2cm": 16,
+          "max_joint_deg": 0.73,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 33.06
+        },
+        {
+          "f": 45,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.172,
+          "gap_l_cm": 1.102,
+          "close_r_2cm": 38,
+          "close_l_2cm": 18,
+          "max_joint_deg": 8.57,
+          "max_joint_bone": "mixamorig:LeftArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 32.98
+        },
+        {
+          "f": 46,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.172,
+          "gap_l_cm": 1.109,
+          "close_r_2cm": 38,
+          "close_l_2cm": 18,
+          "max_joint_deg": 0.48,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 32.92
+        },
+        {
+          "f": 47,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.173,
+          "gap_l_cm": 1.115,
+          "close_r_2cm": 38,
+          "close_l_2cm": 16,
+          "max_joint_deg": 0.3,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 32.89
+        },
+        {
+          "f": 48,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.173,
+          "gap_l_cm": 1.117,
+          "close_r_2cm": 38,
+          "close_l_2cm": 16,
+          "max_joint_deg": 0.14,
+          "max_joint_bone": "mixamorig:LeftToe_End",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.06
+              ]
+            }
+          },
+          "staff_zmin_cm": 32.88
+        }
+      ]
+    },
+    "throw": {
+      "frames": [
+        1,
+        56
+      ],
+      "intersections": {
+        "staff_body_max": 0,
+        "staff_wing_max": 0,
+        "staff_cape_max": 0,
+        "wing_body_max": 0
+      },
+      "gap_r_cm_min": 0.118,
+      "gap_l_cm_min": 32.348,
+      "max_joint_deg_per_frame": 43.01,
+      "max_joint_bone": "mixamorig:RightHand",
+      "max_joint_frame": 52,
+      "max_planted_foot_slide_cm": 0,
+      "staff_zmin_cm": 44.28,
+      "per_frame": [
+        {
+          "f": 1,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.124,
+          "gap_l_cm": 59.211,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 0.0,
+          "max_joint_bone": "",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.1,
+                -0.06
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 44.28
+        },
+        {
+          "f": 2,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.125,
+          "gap_l_cm": 59.24,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 3.66,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.1,
+                -0.06
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 44.81
+        },
+        {
+          "f": 3,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.127,
+          "gap_l_cm": 59.32,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 7.86,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.1,
+                -0.06
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 46.28
+        },
+        {
+          "f": 4,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.136,
+          "gap_l_cm": 55.036,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 12.22,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.1,
+                -0.06
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 47.0
+        },
+        {
+          "f": 5,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.139,
+          "gap_l_cm": 55.168,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 11.9,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.1,
+                -0.06
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 49.8
+        },
+        {
+          "f": 6,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.137,
+          "gap_l_cm": 55.339,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 10.73,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.1,
+                -0.06
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 52.99
+        },
+        {
+          "f": 7,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.133,
+          "gap_l_cm": 55.326,
+          "close_r_2cm": 40,
+          "close_l_2cm": 0,
+          "max_joint_deg": 9.9,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.1,
+                -0.06
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 56.35
+        },
+        {
+          "f": 8,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.128,
+          "gap_l_cm": 55.077,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 9.25,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.1,
+                -0.06
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 59.68
+        },
+        {
+          "f": 9,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.124,
+          "gap_l_cm": 55.068,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 22.0,
+          "max_joint_bone": "mixamorig:LeftUpLeg.003",
+          "feet": {
+            "Left": {
+              "sole_cm": 2.74,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.1009,
+                -0.0703
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 62.72
+        },
+        {
+          "f": 10,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.12,
+          "gap_l_cm": 55.213,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 7.54,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 2.74,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.1031,
+                -0.0975
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 65.22
+        },
+        {
+          "f": 11,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 55.422,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 5.64,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 2.74,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.1063,
+                -0.1359
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 66.92
+        },
+        {
+          "f": 12,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 55.522,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 5.9,
+          "max_joint_bone": "mixamorig:LeftUpLeg.001",
+          "feet": {
+            "Left": {
+              "sole_cm": 2.74,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.11,
+                -0.18
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 67.54
+        },
+        {
+          "f": 13,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 54.987,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 5.46,
+          "max_joint_bone": "mixamorig:LeftUpLeg.001",
+          "feet": {
+            "Left": {
+              "sole_cm": 2.74,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.1137,
+                -0.2241
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 67.25
+        },
+        {
+          "f": 14,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 53.514,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 4.16,
+          "max_joint_bone": "mixamorig:LeftUpLeg.001",
+          "feet": {
+            "Left": {
+              "sole_cm": 2.74,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.1169,
+                -0.2625
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 66.49
+        },
+        {
+          "f": 15,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 51.29,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 3.4,
+          "max_joint_bone": "mixamorig:Hips",
+          "feet": {
+            "Left": {
+              "sole_cm": 2.74,
+              "planted": false,
+              "slide_cm": 0.0,
+              "xy": [
+                0.1191,
+                -0.2897
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 65.46
+        },
+        {
+          "f": 16,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 48.508,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 22.0,
+          "max_joint_bone": "mixamorig:LeftUpLeg.003",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 64.35
+        },
+        {
+          "f": 17,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 45.369,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 4.49,
+          "max_joint_bone": "mixamorig:Hips",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 63.32
+        },
+        {
+          "f": 18,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 42.09,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 4.49,
+          "max_joint_bone": "mixamorig:Hips",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 62.48
+        },
+        {
+          "f": 19,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 38.925,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 4.13,
+          "max_joint_bone": "mixamorig:Hips",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 61.87
+        },
+        {
+          "f": 20,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.118,
+          "gap_l_cm": 36.184,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 6.25,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 61.49
+        },
+        {
+          "f": 21,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.119,
+          "gap_l_cm": 34.09,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 4.72,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 61.28
+        },
+        {
+          "f": 22,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.119,
+          "gap_l_cm": 32.864,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 3.06,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 61.22
+        },
+        {
+          "f": 23,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 3.777,
+          "gap_l_cm": 32.348,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 4.62,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 62.03
+        },
+        {
+          "f": 24,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 13.996,
+          "gap_l_cm": 33.839,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 9.37,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 64.28
+        },
+        {
+          "f": 25,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 29.623,
+          "gap_l_cm": 40.419,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 12.94,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 67.75
+        },
+        {
+          "f": 26,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 50.585,
+          "gap_l_cm": 52.775,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 31.02,
+          "max_joint_bone": "mixamorig:RightHand",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 72.18
+        },
+        {
+          "f": 27,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 72.482,
+          "gap_l_cm": 70.474,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 17.53,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 77.34
+        },
+        {
+          "f": 28,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 97.828,
+          "gap_l_cm": 92.383,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 15.47,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 82.98
+        },
+        {
+          "f": 29,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 126.354,
+          "gap_l_cm": 117.593,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 11.78,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 88.86
+        },
+        {
+          "f": 30,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 155.394,
+          "gap_l_cm": 144.616,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 11.04,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 94.74
+        },
+        {
+          "f": 31,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 182.491,
+          "gap_l_cm": 171.542,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 7.89,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 100.38
+        },
+        {
+          "f": 32,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 206.472,
+          "gap_l_cm": 196.486,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 4.36,
+          "max_joint_bone": "mixamorig:LeftArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 105.54
+        },
+        {
+          "f": 33,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 226.67,
+          "gap_l_cm": 218.255,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 4.14,
+          "max_joint_bone": "mixamorig:LeftArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 109.97
+        },
+        {
+          "f": 34,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 242.635,
+          "gap_l_cm": 235.756,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 3.81,
+          "max_joint_bone": "mixamorig:LeftForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 113.43
+        },
+        {
+          "f": 35,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 253.193,
+          "gap_l_cm": 247.724,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 4.45,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 115.69
+        },
+        {
+          "f": 36,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 257.191,
+          "gap_l_cm": 252.985,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 5.68,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 116.5
+        },
+        {
+          "f": 37,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 255.109,
+          "gap_l_cm": 252.283,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 6.64,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 117.75
+        },
+        {
+          "f": 38,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 248.75,
+          "gap_l_cm": 248.052,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 7.49,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 121.23
+        },
+        {
+          "f": 39,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 239.146,
+          "gap_l_cm": 241.471,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 8.38,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 126.3
+        },
+        {
+          "f": 40,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 226.885,
+          "gap_l_cm": 233.019,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 9.42,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 131.79
+        },
+        {
+          "f": 41,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 211.327,
+          "gap_l_cm": 221.985,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 10.61,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 136.05
+        },
+        {
+          "f": 42,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 190.578,
+          "gap_l_cm": 206.283,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 11.67,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 137.23
+        },
+        {
+          "f": 43,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 162.607,
+          "gap_l_cm": 183.365,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 11.89,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 133.9
+        },
+        {
+          "f": 44,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 126.978,
+          "gap_l_cm": 152.496,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 10.71,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 125.62
+        },
+        {
+          "f": 45,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 86.249,
+          "gap_l_cm": 116.176,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 9.09,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 113.24
+        },
+        {
+          "f": 46,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 47.032,
+          "gap_l_cm": 79.615,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 3.21,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 98.6
+        },
+        {
+          "f": 47,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 21.915,
+          "gap_l_cm": 53.299,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 1.1,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 84.07
+        },
+        {
+          "f": 48,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 20.923,
+          "gap_l_cm": 57.784,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 1.08,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 84.56
+        },
+        {
+          "f": 49,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 19.241,
+          "gap_l_cm": 56.841,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 1.56,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 81.99
+        },
+        {
+          "f": 50,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 17.125,
+          "gap_l_cm": 54.107,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 1.96,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 78.71
+        },
+        {
+          "f": 51,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 17.082,
+          "gap_l_cm": 54.281,
+          "close_r_2cm": 0,
+          "close_l_2cm": 0,
+          "max_joint_deg": 2.22,
+          "max_joint_bone": "mixamorig:RightArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 78.59
+        },
+        {
+          "f": 52,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.131,
+          "gap_l_cm": 59.39,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 43.01,
+          "max_joint_bone": "mixamorig:RightHand",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 44.53
+        },
+        {
+          "f": 53,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.13,
+          "gap_l_cm": 59.902,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 2.1,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 44.53
+        },
+        {
+          "f": 54,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.129,
+          "gap_l_cm": 60.313,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 1.93,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 44.53
+        },
+        {
+          "f": 55,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.129,
+          "gap_l_cm": 60.587,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 1.43,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 44.53
+        },
+        {
+          "f": 56,
+          "staff_body": 0,
+          "staff_wing": 0,
+          "staff_cape": 0,
+          "wing_body": 0,
+          "gap_r_cm": 0.129,
+          "gap_l_cm": 60.686,
+          "close_r_2cm": 41,
+          "close_l_2cm": 0,
+          "max_joint_deg": 0.56,
+          "max_joint_bone": "mixamorig:RightForeArm",
+          "feet": {
+            "Left": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                0.12,
+                -0.3
+              ]
+            },
+            "Right": {
+              "sole_cm": 0.8,
+              "planted": true,
+              "slide_cm": 0.0,
+              "xy": [
+                -0.1,
+                0.08
+              ]
+            }
+          },
+          "staff_zmin_cm": 44.53
+        }
+      ]
+    }
+  }
+}
