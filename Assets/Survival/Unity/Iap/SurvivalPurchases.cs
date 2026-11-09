@@ -32,15 +32,12 @@ namespace Survival.Unity.Iap
         /// </summary>
         public static bool AllowUnknownAge { get; set; }
 
-        /// <summary>The account's age band: the server's answer when signed in, else the last one saved on this device.</summary>
-        public static AgeBand CurrentAgeBand
-        {
-            get
-            {
-                var server = SurvivalCampaignView.AllianceNet?.AgeBand;
-                return AgeBands.Parse(server != null && server != AgeBands.Unknown ? server : PlayerPrefs.GetString(AgeBandPref, AgeBands.Unknown));
-            }
-        }
+        /// <summary>
+        /// The age band from the first-launch neutral age gate (Kids.KidSafety, signed on-device record). That answer is the
+        /// only source: the server copy and the plain "account.age_band" pref are written from it but never read back, so
+        /// neither can lift a child to 13plus. Unanswered, edited or removed answers read as Unknown (blocked).
+        /// </summary>
+        public static AgeBand CurrentAgeBand => Kids.KidSafety.AgeBand;
 
         /// <summary>Hook for the (future) age screen: saves the band on the device and on the account. Only the band, never a birth date.</summary>
         public static void SetAgeBand(AgeBand band)

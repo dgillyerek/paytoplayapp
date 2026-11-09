@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "_doc": "Kingdom Defense child safety (COPPA / Google Play Families, mixed audience). Every open Derek decision is a value here; defaults are the safe choice. Read by Survival.Domain.Kids.ChildSafetyConfig. Not legal advice: counsel reviews before ship.",
+
+  "_age_bands_doc": "DEREK DECISION: age bands. Ordered by max_age (inclusive); the last band has no max_age. child=true bands get the 'child' rules. e.g. 6-8 / 9-12 / 13+ = [{id:'6to8',max_age:8,child:true},{id:'9to12',max_age:12,child:true},{id:'13plus',child:false}].",
+  "age_bands": [
+    { "id": "under13", "max_age": 12, "child": true },
+    { "id": "13plus", "child": false }
+  ],
+  "age_gate": { "oldest_birth_year_span": 100 },
+
+  "_child_doc": "Rules for child bands and for anyone whose age is not known yet. Floors the code enforces whatever this says: advertising_id false, personalization false, chat never 'free'. DEREK DECISIONS: chat (off|presets), iap (parental_gate|blocked|allowed), iap_max_per_day (null = no cap), analytics/crash_reporting (off|limited) once a vendor is picked.",
+  "child": {
+    "advertising_id": false,
+    "personalization": false,
+    "analytics": "off",
+    "crash_reporting": "off",
+    "chat": "off",
+    "iap": "parental_gate",
+    "iap_max_per_day": null,
+    "online_sign_in": "consent_required",
+    "cloud_save": "consent_required",
+    "no_pressure": true,
+    "can_create_alliance": false
+  },
+  "adult": {
+    "advertising_id": false,
+    "personalization": false,
+    "analytics": "off",
+    "crash_reporting": "off",
+    "chat": "free",
+    "iap": "allowed",
+    "iap_max_per_day": null,
+    "online_sign_in": "allowed",
+    "cloud_save": "allowed",
+    "no_pressure": false,
+    "can_create_alliance": true
+  },
+
+  "_ads_doc": "No ads in soft launch (recommended). If ads ever ship: enabled=true AND each SDK+version copied from Google's Families Self-Certified Ads SDK list (source_url) with verified_on set to the date checked. AdsSdkGuard refuses anything else, for every player.",
+  "ads": {
+    "enabled": false,
+    "source_url": "https://support.google.com/googleplay/android-developer/answer/12955712",
+    "verified_on": null,
+    "families_self_certified": []
+  },
+
+  "_telemetry_doc": "DEREK DECISION: analytics / crash vendor. 'none' = nothing is sent for anyone (no-op sink). Note: Google's Self-Certified program is for ADS SDKs only; an analytics vendor needs its own child-directed ToS + config review.",
+  "telemetry": { "analytics_vendor": "none", "crash_vendor": "none" },
+
+  "_chat_presets_doc": "Preset phrases for chat 'presets' mode. Sent as the id only (server stores [[p:<id>]]), so no free text, links or personal info can travel. Localize via strings key kids.chat.preset.<id>.",
+  "chat_presets": [
+    { "id": "hello", "text": "Hello!" },
+    { "id": "gg", "text": "Good game!" },
+    { "id": "thanks", "text": "Thank you!" },
+    { "id": "help_please", "text": "Can you help my build?" },
+    { "id": "helped", "text": "I helped you!" },
+    { "id": "lets_go", "text": "Let's go!" },
+    { "id": "nice", "text": "Nice castle!" },
+    { "id": "bye", "text": "See you later!" }
+  ],
+
+  "parental_gate": { "max_failures": 3, "lockout_seconds": 60 },
+
+  "_account_doc": "DEREK SUPPLIES: hosted web deletion page (Play Console Data safety 'delete account URL') and the support contact. Placeholders until then.",
+  "account": {
+    "web_deletion_url": "https://example.com/kingdom-defense/delete-account",
+    "support_email": "[CONTACT EMAIL]"
+  }
+}
