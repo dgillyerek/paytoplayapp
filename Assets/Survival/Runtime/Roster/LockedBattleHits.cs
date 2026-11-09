@@ -1,4 +1,5 @@
 using System;
+using Survival.Domain.Enemies;
 
 namespace Survival.Domain.Roster
 {
@@ -407,6 +408,24 @@ namespace Survival.Domain.Roster
             0.02f);
 
         /// <summary>Lane 6 villain archer. Body box fits the 1.80 m rest mesh; the cape adds a little at the back.</summary>
+        /// <summary>
+        /// Vorgath's body box fits a long snout and a tall shoulder line. The slam is melee (hands, frame 52); the spit
+        /// is also a contact on the snout so the battle lands it on the lunge rather than as a free projectile.
+        /// </summary>
+        public static readonly LockedBattleHitProfile Vorgath = new LockedBattleHitProfile(
+            "Vorgath",
+            BattleImpactKind.GroundSlam,
+            false,
+            VorgathMotion.SlamContactFrame,
+            VorgathMotion.SlamStrikeBone,
+            new BattleHitBox(0.55f, 0.95f, 0.70f, 2.05f),
+            0.06f,
+            5f,
+            1f,
+            0.55f,
+            0.35f,
+            0.05f);
+
         public static readonly LockedBattleHitProfile Bonequill = new LockedBattleHitProfile(
             "Bonequill",
             BattleImpactKind.BoneShard,
@@ -449,6 +468,8 @@ namespace Survival.Domain.Roster
                     return Rowan;
                 case "Bonequill":
                     return Bonequill;
+                case "Vorgath":
+                    return Vorgath;
                 default:
                     throw new ArgumentException("No locked battle hit profile for " + name, nameof(name));
             }

@@ -1231,7 +1231,7 @@ namespace Survival.Unity
 
                 case RunnerEventKind.BossEngaged:
                     RunnerHitchLog.Transition("boss engaged");
-                    Banner(S("runner.boss_incoming", "Ironhowl blocks the road!"), new Color(1f, 0.45f, 0.35f, 1f));
+                    Banner(BossEntranceLine(), new Color(1f, 0.45f, 0.35f, 1f));
                     Shake(0.35f);
                     break;
 
@@ -1252,6 +1252,24 @@ namespace Survival.Unity
                     Shake(0.6f);
                     break;
             }
+        }
+
+        /// <summary>The banner when the squad reaches the boss. Vorgath on milestone levels, Ironhowl on the others.</summary>
+        private string BossEntranceLine()
+        {
+            if (_run != null)
+            {
+                var foes = _run.Foes;
+                for (var i = 0; i < foes.Count; i++)
+                {
+                    if (foes[i].Boss && foes[i].Unit.Roster == "Vorgath")
+                    {
+                        return S("runner.boss_incoming_vorgath", "Vorgath blocks the road!");
+                    }
+                }
+            }
+
+            return S("runner.boss_incoming", "Ironhowl blocks the road!");
         }
 
         private void Shake(float amount) => _shake = Mathf.Max(_shake, amount);

@@ -136,20 +136,8 @@ namespace Survival.Unity
             return true;
         }
 
-        private static bool TryRoster(string name, out LockedBattleFighter fighter)
-        {
-            foreach (var f in LockedBattleRoster.All)
-            {
-                if (string.Equals(f.Name, name, System.StringComparison.Ordinal))
-                {
-                    fighter = f;
-                    return true;
-                }
-            }
-
-            fighter = default;
-            return false;
-        }
+        private static bool TryRoster(string name, out LockedBattleFighter fighter) =>
+            LockedBattleRoster.TryFind(name, out fighter);
 
         private Fighter? NearestFoe(Fighter from)
         {

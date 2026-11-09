@@ -2123,18 +2123,24 @@ namespace Survival.Domain.Runner
 
         private void Slam(RunnerFoe f) => SlamSwingHit(f, 0);
 
-        /// <summary>The locked battle fighter whose attack rotation a boss of <paramref name="roster"/> plays (null: none, one swing).</summary>
+        /// <summary>
+        /// The locked battle fighter whose attack rotation a boss of <paramref name="roster"/> plays (null: none, one swing).
+        /// Vorgath plays his own slam and spit on screen, but his damage windows stay on Ironhowl's rotation: the same
+        /// swing count and the same gaps, so swapping the milestone boss does not move the free-pace sim.
+        /// </summary>
         public static LockedBattleFighter? BossMoves(string roster)
         {
-            foreach (var fighter in LockedBattleRoster.All)
+            if (string.Equals(roster, LockedBattleRoster.Vorgath.Name, StringComparison.OrdinalIgnoreCase))
             {
-                if (string.Equals(fighter.Name, roster, StringComparison.OrdinalIgnoreCase))
-                {
-                    return LockedBattleRotation.Count(fighter) > 1 ? fighter : (LockedBattleFighter?)null;
-                }
+                roster = LockedBattleRoster.Ironhowl.Name;
             }
 
-            return null;
+            if (!LockedBattleRoster.TryFind(roster, out var fighter))
+            {
+                return null;
+            }
+
+            return LockedBattleRotation.Count(fighter) > 1 ? fighter : (LockedBattleFighter?)null;
         }
 
         /// <summary>Swings in a boss slam's move (1 for a single strike; Ironhowl's claw combo lands 4).</summary>

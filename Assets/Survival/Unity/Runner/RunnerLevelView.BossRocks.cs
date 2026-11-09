@@ -85,7 +85,13 @@ namespace Survival.Unity
                 return;
             }
 
-            if (_rockRig.RotatesAttacks)
+            if (_rockRig.Data.Name == "Vorgath")
+            {
+                // Same throw clock as Ironhowl (the sim's chip damage). The body spits fire instead of lifting a boulder.
+                _rockRig.SetAttackSpeed(1f);
+                _rockRig.Swing(VorgathMotion.SpitPoseName, VorgathMotion.SpitSeconds);
+            }
+            else if (_rockRig.RotatesAttacks)
             {
                 _rockRig.Swing(IronhowlMotion.Attack4PoseName, IronhowlMotion.Attack4LastFrame / IronhowlMotion.FrameRate);
             }
@@ -171,7 +177,8 @@ namespace Survival.Unity
                 return;
             }
 
-            if (!_rockGrabbed && t >= RunnerRules.BossRockGrab)
+            var vorgath = _rockRig.Data.Name == "Vorgath";
+            if (!vorgath && !_rockGrabbed && t >= RunnerRules.BossRockGrab)
             {
                 // His fists hit the road: the boulder tears out of it, in his hands from this frame.
                 _rockGrabbed = true;
@@ -184,7 +191,7 @@ namespace Survival.Unity
                 SpawnPebbles(ground + (Vector3.up * 0.4f * _rockScale));
             }
 
-            if (!_rockWound && t >= RunnerRules.BossRockWindupAt)
+            if (!vorgath && !_rockWound && t >= RunnerRules.BossRockWindupAt)
             {
                 // Rock in hand, up into the overhead smash; its throw frame is the release.
                 _rockWound = true;

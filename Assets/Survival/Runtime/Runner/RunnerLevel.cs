@@ -374,19 +374,7 @@ namespace Survival.Domain.Runner
         /// <summary>True when at least one of the roster fighter's attacks is a projectile (an unknown name is judged by its unit flag alone).</summary>
         public static bool IsRangedFighter(string roster)
         {
-            var found = false;
-            var fighter = LockedBattleRoster.All.Count > 0 ? LockedBattleRoster.All[0] : default;
-            foreach (var f in LockedBattleRoster.All)
-            {
-                if (string.Equals(f.Name, roster, StringComparison.OrdinalIgnoreCase))
-                {
-                    fighter = f;
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found)
+            if (!LockedBattleRoster.TryFind(roster, out var fighter))
             {
                 return true;
             }

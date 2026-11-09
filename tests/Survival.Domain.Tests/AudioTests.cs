@@ -224,7 +224,7 @@ public class AudioTests
         var cfg = Config;
         var names = LockedBattleRoster.All.Select(f => f.Name).ToHashSet();
         Assert.All(cfg.BattleShots.Keys, n => Assert.Contains(n, names));
-        Assert.All(cfg.BattleBosses, n => Assert.Contains(n, names));
+        Assert.All(cfg.BattleBosses, n => Assert.True(LockedBattleRoster.TryFind(n, out _), n));
         Assert.Equal("sfx.shot.lyra", AudioEventMap.BattleLaunch(cfg, "Lyra"));
         Assert.Equal("sfx.shot.rowan", AudioEventMap.BattleLaunch(cfg, "Rowan"));
         Assert.Equal("sfx.shot.oakenshield", AudioEventMap.BattleLaunch(cfg, "Oakenshield"));

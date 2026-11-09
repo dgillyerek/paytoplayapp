@@ -21,12 +21,12 @@ public sealed class CampaignCatalogTests
     public void Every_battle_character_is_a_BattleLocked_roster_fighter_on_its_own_side()
     {
         var catalog = Camp.Catalog();
-        Assert.Equal(LockedBattleRoster.All.Count, catalog.Heroes.Count);
-        foreach (var f in LockedBattleRoster.All)
+        // The twelve demo fighters, plus Vorgath (a boss outside that lineup).
+        Assert.Equal(LockedBattleRoster.All.Count + 1, catalog.Heroes.Count);
+        foreach (var h in catalog.Heroes)
         {
-            var def = catalog.ByFighter(f.Name);
-            Assert.NotNull(def);
-            Assert.Equal(f.Side == BattleSide.Hero ? CampaignSide.Hero : CampaignSide.Villain, def!.Side);
+            Assert.True(LockedBattleRoster.TryFind(h.Fighter, out var f), h.Id);
+            Assert.Equal(f.Side == BattleSide.Hero ? CampaignSide.Hero : CampaignSide.Villain, h.Side);
         }
     }
 
