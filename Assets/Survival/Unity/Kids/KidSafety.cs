@@ -50,12 +50,18 @@ namespace Survival.Unity.Kids
         public static event Action? Changed;
 
         /// <summary>
-        /// The only telemetry door. The analytics / crash work replaces the vendor with <see cref="SetVendorSink"/>; the policy
-        /// wrapper still drops or strips per audience, and with telemetry.*_vendor = "none" nothing is ever sent.
+        /// Low-level telemetry door (kids PolicyTelemetry). Prefer <c>Survival.Unity.Analytics.SurvivalAnalytics</c> for funnel
+        /// events — it adds the hard under-13 / unknown age gate and the funnel schema. Vendor SDKs plug in via
+        /// <see cref="SetVendorSink"/>; with telemetry.*_vendor = "none" nothing is ever sent.
         /// </summary>
         public static ITelemetrySink Telemetry => _telemetry ??= new PolicyTelemetry(NoOpTelemetrySink.Instance, () => Policy);
 
-        public static void SetVendorSink(ITelemetrySink vendor) => _telemetry = new PolicyTelemetry(vendor, () => Policy);
+        public static void SetVendorSink(ITelemetrySink vendor)
+        {
+            _telemetry = new PolicyTelemetry(vendor ?? NoOpTelemetrySink.Instance, () => Policy);
+            // Force SurvivalAnalytics to rebuild so the new sink is picked up.
+            Survival.Unity.Analytics.SurvivalAnalytics.ResetForTests();
+        }
 
         /// <summary>
         /// Verifiable parental consent hook. Default: <see cref="NoConsentProvider"/> (never granted), so with
