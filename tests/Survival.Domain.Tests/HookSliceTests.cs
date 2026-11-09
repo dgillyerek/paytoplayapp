@@ -339,8 +339,9 @@ public sealed class StarterQuestTests
         var gems = hook.Wallet.Get(SurvIds.ResHard);
         q.Claim(hook.Wallet);
         Assert.Equal(gems + 20, hook.Wallet.Get(SurvIds.ResHard));
-        Assert.True(q.ChainDone);
-        Assert.Null(q.Current);
+        // Phase A free chain continues past the 3 starter steps (32 total).
+        Assert.False(q.ChainDone);
+        Assert.Equal(SurvIds.QuestFreeCollect5, q.Current!.Id);
     }
 
     [Fact]

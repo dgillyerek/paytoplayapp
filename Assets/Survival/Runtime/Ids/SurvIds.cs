@@ -198,6 +198,35 @@ namespace Survival.Domain.Ids
         public const string QuestStarterCollect = "quest.starter.collect";
         public const string QuestStarterGather = "quest.starter.gather";
         public const string QuestStarterUpgradeHq = "quest.starter.upgrade_hq";
+        public const string QuestFreeCollect5 = "quest.free.collect_5";
+        public const string QuestFreeEconomyLv2 = "quest.free.economy_lv2";
+        public const string QuestFreeForgeLv2 = "quest.free.forge_lv2";
+        public const string QuestFreeHq3 = "quest.free.hq_3";
+        public const string QuestFreeGather2 = "quest.free.gather_2";
+        public const string QuestFreeCollect10 = "quest.free.collect_10";
+        public const string QuestFreeEconomyLv3 = "quest.free.economy_lv3";
+        public const string QuestFreeHq4 = "quest.free.hq_4";
+        public const string QuestFreeForgeLv3 = "quest.free.forge_lv3";
+        public const string QuestFreeCollect20 = "quest.free.collect_20";
+        public const string QuestFreeHq5 = "quest.free.hq_5";
+        public const string QuestFreeEconomyLv4 = "quest.free.economy_lv4";
+        public const string QuestFreeGather3 = "quest.free.gather_3";
+        public const string QuestFreeHq6 = "quest.free.hq_6";
+        public const string QuestFreeForgeLv4 = "quest.free.forge_lv4";
+        public const string QuestFreeCollect40 = "quest.free.collect_40";
+        public const string QuestFreeHq7 = "quest.free.hq_7";
+        public const string QuestFreeEconomyLv5 = "quest.free.economy_lv5";
+        public const string QuestFreeCollect60 = "quest.free.collect_60";
+        public const string QuestFreeHq8 = "quest.free.hq_8";
+        public const string QuestFreeForgeLv5 = "quest.free.forge_lv5";
+        public const string QuestFreeEconomyLv6 = "quest.free.economy_lv6";
+        public const string QuestFreeGather3b = "quest.free.gather_3b";
+        public const string QuestFreeCollect100 = "quest.free.collect_100";
+        public const string QuestFreeHq9 = "quest.free.hq_9";
+        public const string QuestFreeForgeLv6 = "quest.free.forge_lv6";
+        public const string QuestFreeCollect150 = "quest.free.collect_150";
+        public const string QuestFreeHq10 = "quest.free.hq_10";
+        public const string QuestFreeCollect250 = "quest.free.collect_250";
         public const string QuestObjectiveCollect = "quest.objective.collect";
         public const string QuestObjectiveGather = "quest.objective.gather";
         public const string QuestObjectiveReachLevel = "quest.objective.reach_level";
@@ -237,7 +266,17 @@ namespace Survival.Domain.Ids
 
         public static readonly IReadOnlyList<string> QuestStepsStarter = new[]
         {
-            QuestStarterCollect, QuestStarterGather, QuestStarterUpgradeHq
+            QuestStarterCollect, QuestStarterGather, QuestStarterUpgradeHq,
+            QuestFreeCollect5, QuestFreeEconomyLv2, QuestFreeForgeLv2,
+            QuestFreeHq3, QuestFreeGather2, QuestFreeCollect10,
+            QuestFreeEconomyLv3, QuestFreeHq4, QuestFreeForgeLv3,
+            QuestFreeCollect20, QuestFreeHq5, QuestFreeEconomyLv4,
+            QuestFreeGather3, QuestFreeHq6, QuestFreeForgeLv4,
+            QuestFreeCollect40, QuestFreeHq7, QuestFreeEconomyLv5,
+            QuestFreeCollect60, QuestFreeHq8, QuestFreeForgeLv5,
+            QuestFreeEconomyLv6, QuestFreeGather3b, QuestFreeCollect100,
+            QuestFreeHq9, QuestFreeForgeLv6, QuestFreeCollect150,
+            QuestFreeHq10, QuestFreeCollect250
         };
 
         public static readonly IReadOnlyList<string> Stores = new[] { StoreGemShop, StorePowerPacks, StoreRewardTrack };
