@@ -1,0 +1,25 @@
+{
+ "note": "Rigid braid (HeadTop_End-weighted hair below z 1.40 rest) vs non-head body and both wings, full-triangle overlap, every frame",
+ "clips": {
+  "idle": {
+   "frames_checked": 299,
+   "braid_through_body_frames": 0,
+   "braid_through_wing_frames": 0
+  },
+  "walk": {
+   "frames_checked": 36,
+   "braid_through_body_frames": 0,
+   "braid_through_wing_frames": 0
+  },
+  "attack_thrust": {
+   "frames_checked": 143,
+   "braid_through_body_frames": 0,
+   "braid_through_wing_frames": 0
+  },
+  "attack_throw": {
+   "frames_checked": 133,
+   "braid_through_body_frames": 0,
+   "braid_through_wing_frames": 0
+  }
+ }
+}

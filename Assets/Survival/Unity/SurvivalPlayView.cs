@@ -40,6 +40,13 @@ namespace Survival.Unity
         private Image? _toggleIcon;
         private Text? _toggleText;
         private RectTransform? _toggleButton;
+        private SurvivalSideRail? _rail;
+        private RailButtonParts? _eventsRail;
+        private RectTransform? _eventsTip;
+        private bool _toggleKeepsShape;
+
+        /// <summary>Bottom-bar id of the World / Village switch.</summary>
+        public const string NavWorld = "nav.world";
         private PlayScreen _shownFor = (PlayScreen)(-1);
 
         /// <summary>Raised after a march lands and its yield is in the wallet: (loop, yield).</summary>
@@ -135,9 +142,11 @@ namespace Survival.Unity
             Place(lord.rectTransform, hud, "player_name");
             lord.fontStyle = FontStyle.Bold;
             Ornaments.Emboss(lord);
+            HookSkin.Fit(lord, 14, 26);
             var power = SurvivalVisuals.Text(_root, "Power", pack.StringOr("hud.player_power", ""), 18, TextAnchor.MiddleLeft, SurvivalVisuals.Mute);
             Place(power.rectTransform, hud, "player_power");
             Ornaments.Emboss(power);
+            HookSkin.Fit(power, 11, 17);
 
             Chip(_root, hud, ChipWallet.SoftChip, pack.StringOr("hud.chip.gold_label", ""));
             Chip(_root, hud, ChipWallet.WoodChip, pack.StringOr("hud.chip.wood_label", ""));
@@ -146,22 +155,33 @@ namespace Survival.Unity
 
             var vip = SurvivalVisuals.Image(_root, "Vip", SurvivalVisuals.Panel);
             Place(vip.rectTransform, hud, "vip");
-            var vipSkinned = HookSkin.TrySkin(vip, HookArtKeys.ButtonGold, 0.35f);
-            var vipText = SurvivalVisuals.Text(vip.transform, "VipText", pack.StringOr("hud.vip", ""), 20, TextAnchor.MiddleCenter, vipSkinned ? HookSkin.Ink : SurvivalVisuals.Gold);
+            HookSkin.TrySkin(vip, HookArtKeys.ButtonRed, 0.35f);
+            var vipText = HookSkin.Outlined(SurvivalVisuals.Text(vip.transform, "VipText", pack.StringOr("hud.vip", ""), 20, TextAnchor.MiddleCenter, HookSkin.Cream), 1.6f);
             vipText.fontStyle = FontStyle.Bold;
+            HookSkin.Fit(vipText, 12, 20);
             Ornaments.Dress(vip, Ornaments.Gold, rivet: 8f);
 
-            var banner = SurvivalVisuals.Image(_root, "Banner", SurvivalVisuals.Panel);
-            Place(banner.rectTransform, hud, "banner");
-            HookSkin.TrySkin(banner, HookArtKeys.Header, 0.42f);
-            Ornaments.Dress(banner, Ornaments.Gold);
-            _bannerText = SurvivalVisuals.Text(
-                banner.transform,
-                "BannerText",
-                pack.StringOr(SurvIds.ThemeAMapLabel, pack.StringOr("hud.banner", "")),
-                22,
-                TextAnchor.MiddleCenter,
-                SurvivalVisuals.Cream);
+            // Packs without a banner slot (the decluttered HUD) skip the big title strip entirely.
+            if (hud.ContainsKey("banner"))
+            {
+                var banner = SurvivalVisuals.Image(_root, "Banner", SurvivalVisuals.Panel);
+                Place(banner.rectTransform, hud, "banner");
+                HookSkin.TrySkin(banner, HookArtKeys.Header, 0.42f);
+                Ornaments.Dress(banner, Ornaments.Gold);
+                _bannerText = SurvivalVisuals.Text(
+                    banner.transform,
+                    "BannerText",
+                    pack.StringOr(SurvIds.ThemeAMapLabel, pack.StringOr("hud.banner", "")),
+                    22,
+                    TextAnchor.MiddleCenter,
+                    SurvivalVisuals.Cream);
+            }
+
+            // Side rail: timed / event features stack here as small round icons (see RegisterRail / AddRailButton).
+            if (hud.TryGetValue("side_rail", out var railSlot))
+            {
+                _rail = new SurvivalSideRail(_root, railSlot, (k, f) => pack.StringOr(k, f));
+            }
 
             // Hook slice: the live quest tracker takes the static queues mock's slot.
             if (!hookOn)
@@ -173,25 +193,32 @@ namespace Survival.Unity
                 StretchPad(queues.transform.Find("QueuesText") as RectTransform);
             }
 
-            var events = SurvivalVisuals.Image(_root, "Events", SurvivalVisuals.Panel);
-            Place(events.rectTransform, hud, "events");
-            if (!HookSkin.TrySkin(events, HookArtKeys.Panel, 0.5f))
+            if (_rail != null && !hud.ContainsKey("events"))
             {
-                // No painted panel: a deep royal card instead of the old flat blue block.
-                events.color = new Color(0.10f, 0.08f, 0.18f, 0.96f);
+                BuildEventsRail(pack);
             }
+            else
+            {
+                var events = SurvivalVisuals.Image(_root, "Events", SurvivalVisuals.Panel);
+                Place(events.rectTransform, hud, "events");
+                if (!HookSkin.TrySkin(events, HookArtKeys.Panel, 0.5f))
+                {
+                    // No painted panel: a deep royal card instead of the old flat blue block.
+                    events.color = new Color(0.10f, 0.08f, 0.18f, 0.96f);
+                }
 
-            Ornaments.Grain(events.transform, new Color(1f, 1f, 1f, 0.6f));
-            Ornaments.Dress(events, Ornaments.Gold);
-            var threat = Ornaments.Icon(events.transform, "ThreatIcon", "flame");
-            var threatRt = threat.rectTransform;
-            threatRt.anchorMin = new Vector2(0.03f, 0.12f);
-            threatRt.anchorMax = new Vector2(0.24f, 0.88f);
-            threatRt.offsetMin = threatRt.offsetMax = Vector2.zero;
-            var eventsText = Ornaments.Emboss(SurvivalVisuals.Text(events.transform, "EventsText", pack.StringOr("hud.events_body", ""), 18, TextAnchor.MiddleLeft, SurvivalVisuals.Cream));
-            eventsText.rectTransform.anchorMin = new Vector2(0.27f, 0.06f);
-            eventsText.rectTransform.anchorMax = new Vector2(0.97f, 0.94f);
-            eventsText.rectTransform.offsetMin = eventsText.rectTransform.offsetMax = Vector2.zero;
+                Ornaments.Grain(events.transform, new Color(1f, 1f, 1f, 0.6f));
+                Ornaments.Dress(events, Ornaments.Gold);
+                var threat = Ornaments.Icon(events.transform, "ThreatIcon", "flame");
+                var threatRt = threat.rectTransform;
+                threatRt.anchorMin = new Vector2(0.03f, 0.12f);
+                threatRt.anchorMax = new Vector2(0.24f, 0.88f);
+                threatRt.offsetMin = threatRt.offsetMax = Vector2.zero;
+                var eventsText = Ornaments.Emboss(SurvivalVisuals.Text(events.transform, "EventsText", pack.StringOr("hud.events_body", ""), 18, TextAnchor.MiddleLeft, SurvivalVisuals.Cream));
+                eventsText.rectTransform.anchorMin = new Vector2(0.27f, 0.06f);
+                eventsText.rectTransform.anchorMax = new Vector2(0.97f, 0.94f);
+                eventsText.rectTransform.offsetMin = eventsText.rectTransform.offsetMax = Vector2.zero;
+            }
 
             var hero = SurvivalVisuals.Image(_root, "HeroCard", SurvivalVisuals.Panel);
             Place(hero.rectTransform, hud, "hero_card");
@@ -217,6 +244,7 @@ namespace Survival.Unity
             heroStatus.rectTransform.anchorMax = new Vector2(0.98f, 0.48f);
             heroStatus.rectTransform.offsetMin = Vector2.zero;
             heroStatus.rectTransform.offsetMax = Vector2.zero;
+            MakeCollapsible(hero, prt);
 
             Nav(_root, hud, pack);
             BuildToggle(_root, hud, pack);
@@ -236,7 +264,45 @@ namespace Survival.Unity
             var runnerEntry = GetComponent<SurvivalRunnerEntry>() ?? gameObject.AddComponent<SurvivalRunnerEntry>();
             runnerEntry.Build(this, pack, hookOn ? GetComponent<SurvivalHookView>() : null, campaignView);
 
+            AdoptRailButtons();
+            StartCoroutine(AdoptRailButtonsNextFrame());
             ApplyScreen(1f);
+        }
+
+        /// <summary>Name prefix the engagement features (Daily Login, Trophy Hall, Crusade, Guild Help) give their rail buttons.</summary>
+        public const string LooseRailPrefix = "EngageRail_";
+
+        /// <summary>
+        /// Pull any rail-style button a feature placed straight on the HUD root (name starts with
+        /// <see cref="LooseRailPrefix"/>) into the side rail, keeping their top-to-bottom order. Safe to call often.
+        /// </summary>
+        public void AdoptRailButtons()
+        {
+            if (_rail == null || _root == null)
+            {
+                return;
+            }
+
+            var loose = new List<RectTransform>();
+            foreach (Transform child in _root)
+            {
+                if (child.name.StartsWith(LooseRailPrefix, StringComparison.Ordinal) && child is RectTransform rt && _rail.Button(child.name) == null)
+                {
+                    loose.Add(rt);
+                }
+            }
+
+            foreach (var rt in loose)
+            {
+                // Their old top edge (fraction from the top) is the order hint, same scale as TapHudButton's yTop.
+                _rail.Register(rt.name, 1f - rt.anchorMax.y, rt, false);
+            }
+        }
+
+        private IEnumerator AdoptRailButtonsNextFrame()
+        {
+            yield return null;
+            AdoptRailButtons();
         }
 
         private WorldLayout LoadWorld(string packRoot)
@@ -337,7 +403,7 @@ namespace Survival.Unity
                 _toggleIcon.color = sprite != null ? Color.white : SurvivalVisuals.Gold;
             }
 
-            if (_toggleButton != null)
+            if (_toggleButton != null && !_toggleKeepsShape)
             {
                 _toggleButton.gameObject.SetActive(Village != null);
             }
@@ -378,6 +444,21 @@ namespace Survival.Unity
         {
             if (!hud.TryGetValue("view_toggle", out var slot))
             {
+                // Decluttered HUD: World / Village is the last bottom-bar slot; its icon and label still flip.
+                if (Village == null)
+                {
+                    return;
+                }
+
+                var nav = AddNavButton(NavWorld, WorldArtKeys.IconWorld, () => Screen.Toggle());
+                if (nav != null)
+                {
+                    _toggleButton = nav;
+                    _toggleIcon = nav.Find("Icon")?.GetComponent<Image>() ?? nav.GetComponentInChildren<Image>();
+                    _toggleText = nav.GetComponentInChildren<Text>();
+                    _toggleKeepsShape = true;
+                }
+
                 return;
             }
 
@@ -452,6 +533,7 @@ namespace Survival.Unity
                 icon.rectTransform.offsetMax = Vector2.zero;
                 var count = HookSkin.Outlined(SurvivalVisuals.Text(img.transform, "V", ChipWallet.FormatCompact(Session!.Chips.Get(key)), 21, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
                 count.fontStyle = FontStyle.Bold;
+                HookSkin.Fit(count, 12, 21);
                 count.rectTransform.anchorMin = new Vector2(0.36f, 0f);
                 count.rectTransform.anchorMax = new Vector2(0.96f, 1f);
                 count.rectTransform.offsetMin = Vector2.zero;
@@ -576,6 +658,128 @@ namespace Survival.Unity
             {
                 _navButtons.Remove(id);
             }
+        }
+
+        // ---------- side rail (timed / event features) ----------
+
+        /// <summary>Side-rail model (order, More fold), or null when the pack has no <c>side_rail</c> slot.</summary>
+        public SideRail? RailModel => _rail?.Model;
+
+        /// <summary>
+        /// Put a button the feature built itself into the side rail. Lower <paramref name="order"/> sits higher;
+        /// pinned entries never fold behind More. Returns false (button untouched) when the pack has no rail.
+        /// </summary>
+        public bool RegisterRail(string id, float order, RectTransform button, bool pinned = false) =>
+            _rail != null && _rail.Register(id, order, button, pinned);
+
+        /// <summary>Build a standard round rail icon (ornate ring, icon art, label, FREE badge, red dot) and register it.</summary>
+        public RailButtonParts? AddRailButton(string id, float order, string? iconKey, string label, Color tint, Action onTap, bool pinned = false)
+        {
+            if (_rail == null)
+            {
+                return null;
+            }
+
+            var parts = SurvivalSideRail.Round(_rail.Root, "Rail_" + id, iconKey, label, tint);
+            parts.Button.onClick.AddListener(() => onTap());
+            _rail.Register(id, order, parts.Root, pinned);
+            return parts;
+        }
+
+        /// <summary>Show or hide a rail entry without removing it (feature not available right now).</summary>
+        public void SetRailShown(string id, bool shown) => _rail?.Model.SetShown(id, shown);
+
+        public void RemoveRail(string id) => _rail?.Unregister(id);
+
+        public RectTransform? RailButton(string id) => _rail?.Button(id);
+
+        private void BuildEventsRail(ThemePackBinder pack)
+        {
+            var body = pack.StringOr("hud.events_body", "");
+            _eventsRail = AddRailButton("rail.events", 0.10f, null, pack.StringOr("rail.events", "Events"), new Color(0.45f, 0.20f, 0.62f, 1f), ToggleEventsTip);
+            if (_eventsRail == null)
+            {
+                return;
+            }
+
+            // Only while an event is running (there is event text to show).
+            SetRailShown("rail.events", RailActionable.Events(body));
+
+            var flame = Ornaments.Icon(_eventsRail.Icon, "Flame", "flame");
+            SurvivalVisuals.Stretch(flame.rectTransform);
+            flame.raycastTarget = false;
+
+            // The last line of the events body is the countdown ("Ends 1h 27m"): it becomes the rail label.
+            var lines = body.Split('\n');
+            if (lines.Length > 0 && lines[lines.Length - 1].StartsWith("Ends ", StringComparison.Ordinal))
+            {
+                _eventsRail.SetLabel(lines[lines.Length - 1].Substring(5));
+            }
+
+            // Tap opens a small card beside the rail with the full text.
+            var tip = SurvivalVisuals.Image(_rail!.Root, "EventsTip", SurvivalVisuals.Panel);
+            HookSkin.TrySkin(tip, HookArtKeys.Panel, 0.45f);
+            Ornaments.Dress(tip, Ornaments.Gold, rivet: 7f);
+            var text = Ornaments.Emboss(SurvivalVisuals.Text(tip.transform, "T", body, 18, TextAnchor.MiddleLeft, HookSkin.Cream));
+            StretchPad(text.rectTransform);
+            tip.rectTransform.anchorMin = new Vector2(1.08f, 0.68f);
+            tip.rectTransform.anchorMax = new Vector2(3.2f, 0.84f);
+            tip.rectTransform.offsetMin = tip.rectTransform.offsetMax = Vector2.zero;
+            tip.gameObject.SetActive(false);
+            _eventsTip = tip.rectTransform;
+        }
+
+        private void ToggleEventsTip()
+        {
+            if (_eventsTip == null)
+            {
+                return;
+            }
+
+            var on = !_eventsTip.gameObject.activeSelf;
+            _eventsTip.gameObject.SetActive(on);
+            if (on && _eventsRail != null)
+            {
+                // Sit beside the icon wherever the rail put it.
+                var a = _eventsRail.Root.anchorMin;
+                var b = _eventsRail.Root.anchorMax;
+                _eventsTip.anchorMin = new Vector2(b.x + 0.08f, a.y + (b.y - a.y) * 0.2f);
+                _eventsTip.anchorMax = new Vector2(b.x + 2.2f, b.y);
+                _eventsTip.SetAsLastSibling();
+                StartCoroutine(Punch(_eventsRail.Root, 0.14f, 8));
+            }
+        }
+
+        /// <summary>The march / hero card folds to just the portrait on tap, and back.</summary>
+        private void MakeCollapsible(Image card, RectTransform portrait)
+        {
+            card.raycastTarget = true;
+            var btn = card.gameObject.AddComponent<Button>();
+            btn.targetGraphic = card;
+            btn.transition = Selectable.Transition.None;
+            var rt = card.rectTransform;
+            var fullMax = rt.anchorMax.x;
+            var min = rt.anchorMin.x;
+            var chevron = HookSkin.Outlined(SurvivalVisuals.Text(card.transform, "Chevron", "\u2039", 28, TextAnchor.MiddleCenter, HookSkin.Cream), 1.4f);
+            chevron.raycastTarget = false;
+            chevron.rectTransform.anchorMin = new Vector2(0.88f, 0f);
+            chevron.rectTransform.anchorMax = new Vector2(1f, 1f);
+            chevron.rectTransform.offsetMin = chevron.rectTransform.offsetMax = Vector2.zero;
+            var collapsed = false;
+            btn.onClick.AddListener(() =>
+            {
+                collapsed = !collapsed;
+                rt.anchorMax = new Vector2(collapsed ? min + (fullMax - min) * 0.34f : fullMax, rt.anchorMax.y);
+                portrait.anchorMax = new Vector2(collapsed ? 0.82f : 0.28f, portrait.anchorMax.y);
+                chevron.text = collapsed ? "\u203A" : "\u2039";
+                foreach (Transform child in card.transform)
+                {
+                    if (child.name == "HeroName" || child.name == "HeroStatus")
+                    {
+                        child.gameObject.SetActive(!collapsed);
+                    }
+                }
+            });
         }
 
         private static void Place(RectTransform rt, IReadOnlyDictionary<string, HudRect> hud, string key)

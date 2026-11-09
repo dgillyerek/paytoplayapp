@@ -73,17 +73,17 @@ namespace Survival.Unity
                 var x1 = (i + 1) / (float)n - gap * 0.5f;
                 var plate = HookSkin.Panel(go.transform, "Pill_" + id, HookArtKeys.Chip, new Color(0.10f, 0.07f, 0.05f, 0.92f), 0.4f);
                 plate.raycastTarget = false;
-                Box(plate.rectTransform, x0, 0f, x1, 1f);
+                HookSkin.Box(plate.rectTransform, x0, 0f, x1, 1f);
                 Ornaments.Bevel(plate.transform, 0.7f);
                 Ornaments.Frame(plate.transform, Ornaments.Gold, 1f);
                 var icon = HookSkin.ResIcon(plate.transform, "Icon", id, SurvivalVisuals.Reward, "\u2726");
                 icon.raycastTarget = false;
-                Box(icon.rectTransform, 0.03f, -0.12f, 0.33f, 1.12f);
+                HookSkin.Box(icon.rectTransform, 0.03f, -0.12f, 0.33f, 1.12f);
                 var amount = HookSkin.Outlined(SurvivalVisuals.Text(plate.transform, "Amount", "", 26, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
                 amount.fontStyle = FontStyle.Bold;
                 amount.raycastTarget = false;
                 HookSkin.Fit(amount, 14, 26);
-                Box(amount.rectTransform, 0.33f, 0.06f, 0.96f, 0.94f);
+                HookSkin.Box(amount.rectTransform, 0.33f, 0.06f, 0.96f, 0.94f);
                 bar._pills.Add(new Pill { Id = id, Amount = amount, Rect = plate.rectTransform });
             }
 
@@ -135,12 +135,5 @@ namespace Survival.Unity
             }
         }
 
-        private static void Box(RectTransform rt, float x0, float y0, float x1, float y1)
-        {
-            rt.anchorMin = new Vector2(x0, y0);
-            rt.anchorMax = new Vector2(x1, y1);
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-        }
     }
 }

@@ -1,0 +1,6 @@
+1f37ca59bfe389ba2c9d3aa67b14a39b  MALZARETH_attack2_overhead_cleave.fbx
+7c9cbfbe6b61c8ce4ab72d7dc2153f45  MALZARETH_attack_greatsword.fbx
+a253bb8fd2ef69e2e8d93a88eacf98cf  MALZARETH_cape.fbx
+5e0d1336305be4d6a3c3a4baf7cd2e68  MALZARETH_idle.fbx
+7a2ad35d3b3214701d289957e85bb55d  MALZARETH_rig_rest.fbx
+2f0edb140143328e1ce8c904c443e623  MALZARETH_walk.fbx

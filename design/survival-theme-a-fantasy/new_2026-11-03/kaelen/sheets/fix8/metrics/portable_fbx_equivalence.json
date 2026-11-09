@@ -1,0 +1,92 @@
+{
+  "rig_rest": {
+    "measured_mesh_skeleton_animation_fingerprint": "15e8e1f9f6b8b2e9c51ff33f5a4889f007d1478ec24929a42320144a440ff11e",
+    "matches_measured_export": true,
+    "images": [
+      {
+        "name": "KAELEN_atlas",
+        "filepath": "/workspace/wt_kaelen_fix8/design/survival-theme-a-fantasy/heroes/anim/kaelen/final/KAELEN_atlas_2048.png",
+        "exists": true,
+        "size": [
+          2048,
+          2048
+        ]
+      }
+    ]
+  },
+  "idle": {
+    "measured_mesh_skeleton_animation_fingerprint": "85bfddc4e6ac829c1653edee74b9c0af464cca88e7f9183bd79f24f66a6a51c6",
+    "matches_measured_export": true,
+    "images": [
+      {
+        "name": "KAELEN_atlas",
+        "filepath": "/workspace/wt_kaelen_fix8/design/survival-theme-a-fantasy/heroes/anim/kaelen/final/KAELEN_atlas_2048.png",
+        "exists": true,
+        "size": [
+          2048,
+          2048
+        ]
+      }
+    ]
+  },
+  "walk": {
+    "measured_mesh_skeleton_animation_fingerprint": "9f1166c67905da477b7aa8ceb81f0ef2c0f11ecaa0a12abdd6b78380c898e688",
+    "matches_measured_export": true,
+    "images": [
+      {
+        "name": "KAELEN_atlas",
+        "filepath": "/workspace/wt_kaelen_fix8/design/survival-theme-a-fantasy/heroes/anim/kaelen/final/KAELEN_atlas_2048.png",
+        "exists": true,
+        "size": [
+          2048,
+          2048
+        ]
+      }
+    ]
+  },
+  "attack_dualslash": {
+    "measured_mesh_skeleton_animation_fingerprint": "a8b4d0025d94d9cee9af4c69a03f5dfd6072a961f8f015ff35d6b4835cd15d83",
+    "matches_measured_export": true,
+    "images": [
+      {
+        "name": "KAELEN_atlas",
+        "filepath": "/workspace/wt_kaelen_fix8/design/survival-theme-a-fantasy/heroes/anim/kaelen/final/KAELEN_atlas_2048.png",
+        "exists": true,
+        "size": [
+          2048,
+          2048
+        ]
+      }
+    ]
+  },
+  "attack2_crossthrust": {
+    "measured_mesh_skeleton_animation_fingerprint": "e22fd265f7329f903fb987d1ceac029f8f58becb9b8a56051e8173dcae8a2307",
+    "matches_measured_export": true,
+    "images": [
+      {
+        "name": "KAELEN_atlas",
+        "filepath": "/workspace/wt_kaelen_fix8/design/survival-theme-a-fantasy/heroes/anim/kaelen/final/KAELEN_atlas_2048.png",
+        "exists": true,
+        "size": [
+          2048,
+          2048
+        ]
+      }
+    ]
+  },
+  "cape": {
+    "measured_mesh_skeleton_animation_fingerprint": "781cf5194c8a00fa498b45698fb11b99e9f44bf737fe23a04498b3fe8f6cd26a",
+    "matches_measured_export": true,
+    "images": [
+      {
+        "name": "KAELEN_cape_1024.png",
+        "filepath": "/workspace/wt_kaelen_fix8/design/survival-theme-a-fantasy/heroes/anim/kaelen/final/KAELEN_cape_1024.png",
+        "exists": true,
+        "size": [
+          1024,
+          1024
+        ]
+      }
+    ]
+  }
+}

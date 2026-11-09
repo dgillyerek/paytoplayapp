@@ -1,0 +1,12 @@
+{
+  "KAELEN_atlas": {
+    "relative_path": "//../final/KAELEN_atlas_2048.png",
+    "packed_png_sha256": "4ba7c22450314c2104973c4bd65caf23bdd7999e95d8094cfd0e94c55e4bda0b",
+    "matches_shipped_png": true
+  },
+  "KAELEN_cape_1024.png": {
+    "relative_path": "//../final/KAELEN_cape_1024.png",
+    "packed_png_sha256": "386adcb74f8f9ace27e16999306bfe2154876d7458fb38fb7489f667fd9f7bac",
+    "matches_shipped_png": true
+  }
+}

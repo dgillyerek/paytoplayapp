@@ -1,0 +1,3009 @@
+{
+ "source": "/workspace/rigjob/sera_fix5/work/SERAPHINE_FIX5_LIFT.blend",
+ "clip": "idle",
+ "summary": {
+  "fps": 30,
+  "frames": 299,
+  "duration_s": 9.933333333333334,
+  "collision_frames": 0,
+  "nonhand_collision_frames": 0,
+  "min_cm": 0.10904783848673105,
+  "nonhand_min_cm": 5.131489410996437,
+  "wing_collision_frames": 0,
+  "wing_min_cm": 31.100493669509888,
+  "wrist_twist_maxdelta": 2.6475479368630162e-05,
+  "hand_world_maxstep": 0
+ },
+ "frames": {
+  "1": {
+   "overlap": {},
+   "min_cm": 0.10907524265348911,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132245272397995,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.121620774269104,
+   "hand_step_deg": 0,
+   "overlap_points": {}
+  },
+  "2": {
+   "overlap": {},
+   "min_cm": 0.10907106334343553,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132171884179115,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.24333643913269,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "3": {
+   "overlap": {},
+   "min_cm": 0.10906999232247472,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1321130245924,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.31660842895508,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "4": {
+   "overlap": {},
+   "min_cm": 0.10907243704423308,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132050439715385,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.30858862400055,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "5": {
+   "overlap": {},
+   "min_cm": 0.10906567331403494,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131994932889938,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.29526996612549,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "6": {
+   "overlap": {},
+   "min_cm": 0.10906711686402559,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1319364458322525,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.28426694869995,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "7": {
+   "overlap": {},
+   "min_cm": 0.1090605859644711,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131882801651955,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.283775210380554,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "8": {
+   "overlap": {},
+   "min_cm": 0.10906228562816978,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131832882761955,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.29948103427887,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "9": {
+   "overlap": {},
+   "min_cm": 0.10906237876042724,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131778866052628,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.33343482017517,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "10": {
+   "overlap": {},
+   "min_cm": 0.10906049283221364,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131744593381882,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.38517463207245,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "11": {
+   "overlap": {},
+   "min_cm": 0.10905979434028268,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131706967949867,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.453001737594604,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "12": {
+   "overlap": {},
+   "min_cm": 0.10906060924753547,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1316652446985245,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.535080313682556,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "13": {
+   "overlap": {},
+   "min_cm": 0.10905833914875984,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131633952260017,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.62987554073334,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "14": {
+   "overlap": {},
+   "min_cm": 0.10905854869633913,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.13160340487957,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.73614466190338,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "15": {
+   "overlap": {},
+   "min_cm": 0.10905942181125283,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1315788179636,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.85257935523987,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "16": {
+   "overlap": {},
+   "min_cm": 0.10905785020440817,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131556838750839,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.97717094421387,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "17": {
+   "overlap": {},
+   "min_cm": 0.10905340313911438,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131537467241287,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.10626268386841,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "18": {
+   "overlap": {},
+   "min_cm": 0.10905186645686626,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131521075963974,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.23417127132416,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "19": {
+   "overlap": {},
+   "min_cm": 0.10905449744313955,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131502449512482,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.35429549217224,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "20": {
+   "overlap": {},
+   "min_cm": 0.10905300732702017,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131496489048004,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.46147954463959,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "21": {
+   "overlap": {},
+   "min_cm": 0.10905093513429165,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131492018699646,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.553473353385925,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "22": {
+   "overlap": {},
+   "min_cm": 0.10905135422945023,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131489410996437,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.630422949790955,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "23": {
+   "overlap": {},
+   "min_cm": 0.10905670933425426,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131493881344795,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.69341015815735,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "24": {
+   "overlap": {},
+   "min_cm": 0.10905119124799967,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1314979791641235,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.74340057373047,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "25": {
+   "overlap": {},
+   "min_cm": 0.10905229719355702,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131503939628601,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.78134787082672,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "26": {
+   "overlap": {},
+   "min_cm": 0.10904783848673105,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131525918841362,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.8073205947876,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "27": {
+   "overlap": {},
+   "min_cm": 0.10905414819717407,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1315367221832275,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.81872892379761,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "28": {
+   "overlap": {},
+   "min_cm": 0.10905282106250525,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.13155460357666,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.8106495141983,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "29": {
+   "overlap": {},
+   "min_cm": 0.10905171511694789,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131577327847481,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.77885639667511,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "30": {
+   "overlap": {},
+   "min_cm": 0.1090554054826498,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131610110402107,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.723307847976685,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "31": {
+   "overlap": {},
+   "min_cm": 0.10905909584835172,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131633207201958,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.649389147758484,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "32": {
+   "overlap": {},
+   "min_cm": 0.10905740782618523,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1316771656274796,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.56607973575592,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "33": {
+   "overlap": {},
+   "min_cm": 0.10906197130680084,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131712555885315,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.48174214363098,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "34": {
+   "overlap": {},
+   "min_cm": 0.10906258830800653,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131747201085091,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.40162754058838,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "35": {
+   "overlap": {},
+   "min_cm": 0.10906222742050886,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131788179278374,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.326749205589294,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "36": {
+   "overlap": {},
+   "min_cm": 0.10906123789027333,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131833627820015,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.255104422569275,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "37": {
+   "overlap": {},
+   "min_cm": 0.10906503302976489,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131887272000313,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.183051347732544,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "38": {
+   "overlap": {},
+   "min_cm": 0.10906325187534094,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1319364458322525,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.10721933841705,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "39": {
+   "overlap": {},
+   "min_cm": 0.10906705865636468,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.131994187831879,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.026392459869385,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "40": {
+   "overlap": {},
+   "min_cm": 0.1090743811801076,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132055655121803,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.94298768043518,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "41": {
+   "overlap": {},
+   "min_cm": 0.10907344985753298,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132115259766579,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.862226366996765,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "42": {
+   "overlap": {},
+   "min_cm": 0.10907482355833054,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1321860402822495,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.79013752937317,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "43": {
+   "overlap": {},
+   "min_cm": 0.10907970136031508,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1322560757398605,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.73128092288971,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "44": {
+   "overlap": {},
+   "min_cm": 0.10907732648774981,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132319405674934,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.68762648105621,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "45": {
+   "overlap": {},
+   "min_cm": 0.10908450931310654,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132394656538963,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.65888512134552,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "46": {
+   "overlap": {},
+   "min_cm": 0.10908114491030574,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1324766129255295,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.64391243457794,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "47": {
+   "overlap": {},
+   "min_cm": 0.10908752446994185,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132556706666946,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.64162361621857,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "48": {
+   "overlap": {},
+   "min_cm": 0.10908665135502815,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132642388343811,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.64985203742981,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "49": {
+   "overlap": {},
+   "min_cm": 0.10908992262557149,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132726952433586,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.664055824279785,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "50": {
+   "overlap": {},
+   "min_cm": 0.10909484699368477,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132815986871719,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.677326798439026,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "51": {
+   "overlap": {},
+   "min_cm": 0.1090981182642281,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132905766367912,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.68341243267059,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "52": {
+   "overlap": {},
+   "min_cm": 0.10909726843237877,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.133005976676941,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.679824233055115,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "53": {
+   "overlap": {},
+   "min_cm": 0.10910304263234138,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.133092403411865,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.667712569236755,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "54": {
+   "overlap": {},
+   "min_cm": 0.10910615092143416,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.133203417062759,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.64883279800415,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "55": {
+   "overlap": {},
+   "min_cm": 0.10911275167018175,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.133301392197609,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.62294948101044,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "56": {
+   "overlap": {},
+   "min_cm": 0.10911356657743454,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.133415013551712,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.58841156959534,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "57": {
+   "overlap": {},
+   "min_cm": 0.1091152080334723,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.133520066738129,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.54515051841736,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "58": {
+   "overlap": {},
+   "min_cm": 0.10912329889833927,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.133627727627754,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.498077750205994,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "59": {
+   "overlap": {},
+   "min_cm": 0.10912263533100486,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.133732780814171,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.45766580104828,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "60": {
+   "overlap": {},
+   "min_cm": 0.1091300742700696,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.133853852748871,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.43552267551422,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "61": {
+   "overlap": {},
+   "min_cm": 0.10913072619587183,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.133970454335213,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.43887543678284,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "62": {
+   "overlap": {},
+   "min_cm": 0.10913568548858166,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.134088173508644,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.46581971645355,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "63": {
+   "overlap": {},
+   "min_cm": 0.1091373385861516,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1342107355594635,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.50459849834442,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "64": {
+   "overlap": {},
+   "min_cm": 0.10913981823250651,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.134331062436104,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.53672540187836,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "65": {
+   "overlap": {},
+   "min_cm": 0.1091489102691412,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.13446107506752,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.54362165927887,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "66": {
+   "overlap": {},
+   "min_cm": 0.10915057500824332,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.134585127234459,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.51267194747925,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "67": {
+   "overlap": {},
+   "min_cm": 0.10915553430095315,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.134710296988487,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.42267191410065,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "68": {
+   "overlap": {},
+   "min_cm": 0.10916049359366298,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.134841799736023,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.254032492637634,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "69": {
+   "overlap": {},
+   "min_cm": 0.10916132014244795,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.134976282715797,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.04282343387604,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "70": {
+   "overlap": {},
+   "min_cm": 0.10916793253272772,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.135113373398781,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.80521845817566,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "71": {
+   "overlap": {},
+   "min_cm": 0.1091712387278676,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.135243013501167,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.554211378097534,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "72": {
+   "overlap": {},
+   "min_cm": 0.10917289182543755,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1353879272937775,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.29306256771088,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "73": {
+   "overlap": {},
+   "min_cm": 0.10918115731328726,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.135521292686462,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.013856530189514,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "74": {
+   "overlap": {},
+   "min_cm": 0.10918776970356703,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.135666951537132,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.68408489227295,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "75": {
+   "overlap": {},
+   "min_cm": 0.10918527841567993,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.135801807045937,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.2471649646759,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "76": {
+   "overlap": {},
+   "min_cm": 0.10919271735474467,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.135941505432129,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.766897559165955,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "77": {
+   "overlap": {},
+   "min_cm": 0.10919850319623947,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.136087164282799,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.260132908821106,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "78": {
+   "overlap": {},
+   "min_cm": 0.10920263594016433,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.136232823133469,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.75771343708038,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "79": {
+   "overlap": {},
+   "min_cm": 0.10920263594016433,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.136384069919586,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.295613527297974,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "80": {
+   "overlap": {},
+   "min_cm": 0.10920859640464187,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.136522650718689,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.903021574020386,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "81": {
+   "overlap": {},
+   "min_cm": 0.10921520879492164,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.136671662330627,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.59227275848389,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "82": {
+   "overlap": {},
+   "min_cm": 0.10922264773398638,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.136827006936073,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.36164152622223,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "83": {
+   "overlap": {},
+   "min_cm": 0.10922430083155632,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.136966332793236,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.202860713005066,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "84": {
+   "overlap": {},
+   "min_cm": 0.10922679211944342,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1371220499277115,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.10979104042053,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "85": {
+   "overlap": {},
+   "min_cm": 0.10923506924882531,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.13727031648159,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.08134174346924,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "86": {
+   "overlap": {},
+   "min_cm": 0.10924434754997492,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.137430876493454,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.11703300476074,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "87": {
+   "overlap": {},
+   "min_cm": 0.10924766538664699,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.137565732002258,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.21361041069031,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "88": {
+   "overlap": {},
+   "min_cm": 0.10924107627943158,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.137725546956062,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.36364424228668,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "89": {
+   "overlap": {},
+   "min_cm": 0.109257607255131,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.137879401445389,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.556796073913574,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "90": {
+   "overlap": {},
+   "min_cm": 0.10925681563094258,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.138039588928223,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.783737778663635,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "91": {
+   "overlap": {},
+   "min_cm": 0.10926363756880164,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.138178169727325,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.03913772106171,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "92": {
+   "overlap": {},
+   "min_cm": 0.10926597751677036,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.138326063752174,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.321914076805115,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "93": {
+   "overlap": {},
+   "min_cm": 0.10927115799859166,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.138489976525307,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.63453149795532,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "94": {
+   "overlap": {},
+   "min_cm": 0.10927387047559023,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.138636752963066,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.98192822933197,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "95": {
+   "overlap": {},
+   "min_cm": 0.1092813559807837,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.138793587684631,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.36838686466217,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "96": {
+   "overlap": {},
+   "min_cm": 0.10928389383479953,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.138940364122391,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.79413986206055,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "97": {
+   "overlap": {},
+   "min_cm": 0.10928662959486246,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.139096826314926,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.25221049785614,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "98": {
+   "overlap": {},
+   "min_cm": 0.10929745621979237,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1392387598752975,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.728055238723755,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "99": {
+   "overlap": {},
+   "min_cm": 0.1093016704544425,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.139387026429176,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.20297014713287,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "100": {
+   "overlap": {},
+   "min_cm": 0.10930096032097936,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.139553174376488,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.66001260280609,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "101": {
+   "overlap": {},
+   "min_cm": 0.10931032011285424,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.139699205756187,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.086573243141174,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "102": {
+   "overlap": {},
+   "min_cm": 0.10931623401120305,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.139848217368126,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.47422397136688,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "103": {
+   "overlap": {},
+   "min_cm": 0.10931637370958924,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.139995366334915,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.81733810901642,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "104": {
+   "overlap": {},
+   "min_cm": 0.10931920260190964,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.140144005417824,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.11241090297699,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "105": {
+   "overlap": {},
+   "min_cm": 0.10932512814179063,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.140306055545807,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.26040029525757,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "106": {
+   "overlap": {},
+   "min_cm": 0.10933274170383811,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.140442028641701,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.365352153778076,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "107": {
+   "overlap": {},
+   "min_cm": 0.10933394078165293,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1405977457761765,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.4335994720459,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "108": {
+   "overlap": {},
+   "min_cm": 0.1093374565243721,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.140732601284981,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.46437931060791,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "109": {
+   "overlap": {},
+   "min_cm": 0.10933950543403625,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1408786326646805,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.45773637294769,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "110": {
+   "overlap": {},
+   "min_cm": 0.10934799211099744,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.141016840934753,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.41444253921509,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "111": {
+   "overlap": {},
+   "min_cm": 0.10935174068436027,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.141168460249901,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.33743929862976,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "112": {
+   "overlap": {},
+   "min_cm": 0.10936107719317079,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.141308903694153,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.23387026786804,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "113": {
+   "overlap": {},
+   "min_cm": 0.1093597267754376,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.141433700919151,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.11590075492859,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "114": {
+   "overlap": {},
+   "min_cm": 0.10936352191492915,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.14158234000206,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.99765706062317,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "115": {
+   "overlap": {},
+   "min_cm": 0.10936983162537217,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.141718313097954,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.88990676403046,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "116": {
+   "overlap": {},
+   "min_cm": 0.10937429033219814,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.141863599419594,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.794625759124756,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "117": {
+   "overlap": {},
+   "min_cm": 0.10937551269307733,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.14199323952198,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.709057331085205,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "118": {
+   "overlap": {},
+   "min_cm": 0.10937999468296766,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.142125487327576,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.58648335933685,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "119": {
+   "overlap": {},
+   "min_cm": 0.10938061168417335,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.142257735133171,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.460967898368835,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "120": {
+   "overlap": {},
+   "min_cm": 0.10938680497929454,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.142385512590408,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.34356760978699,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "121": {
+   "overlap": {},
+   "min_cm": 0.10938828345388174,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.142514780163765,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.23626434803009,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "122": {
+   "overlap": {},
+   "min_cm": 0.1093963859602809,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.142638459801674,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.13805079460144,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "123": {
+   "overlap": {},
+   "min_cm": 0.10939131025224924,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.14276921749115,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.04305589199066,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "124": {
+   "overlap": {},
+   "min_cm": 0.10940481442958117,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.14288917183876,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.94084286689758,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "125": {
+   "overlap": {},
+   "min_cm": 0.1094057341106236,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.143013969063759,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.82053089141846,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "126": {
+   "overlap": {},
+   "min_cm": 0.1094096340239048,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.143128335475922,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.67699694633484,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "127": {
+   "overlap": {},
+   "min_cm": 0.10941270738840103,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.143255740404129,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.513686180114746,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "128": {
+   "overlap": {},
+   "min_cm": 0.10941665386781096,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.143358930945396,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.33710443973541,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "129": {
+   "overlap": {},
+   "min_cm": 0.10942403459921479,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.143478512763977,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.14898920059204,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "130": {
+   "overlap": {},
+   "min_cm": 0.10942653752863407,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.143584683537483,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.94246804714203,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "131": {
+   "overlap": {},
+   "min_cm": 0.10942884255200624,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.143700912594795,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.706350207328796,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "132": {
+   "overlap": {},
+   "min_cm": 0.10942647932097316,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.143796280026436,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.436245799064636,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "133": {
+   "overlap": {},
+   "min_cm": 0.109431566670537,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1439110189676285,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.13760566711426,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "134": {
+   "overlap": {},
+   "min_cm": 0.10943583911284804,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144013464450836,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.82433259487152,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "135": {
+   "overlap": {},
+   "min_cm": 0.10943332454189658,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144113302230835,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.54409837722778,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "136": {
+   "overlap": {},
+   "min_cm": 0.10944233508780599,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144213885068893,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.31447744369507,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "137": {
+   "overlap": {},
+   "min_cm": 0.10943516390398145,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144304409623146,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.13311541080475,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "138": {
+   "overlap": {},
+   "min_cm": 0.10944507084786892,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144405364990234,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.965954184532166,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "139": {
+   "overlap": {},
+   "min_cm": 0.10944943642243743,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144490674138069,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.788543939590454,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "140": {
+   "overlap": {},
+   "min_cm": 0.10944459354504943,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144578590989113,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.579570055007935,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "141": {
+   "overlap": {},
+   "min_cm": 0.10945316171273589,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144670605659485,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.33769738674164,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "142": {
+   "overlap": {},
+   "min_cm": 0.10945100802928209,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1447466015815735,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.080655336380005,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "143": {
+   "overlap": {},
+   "min_cm": 0.10945632820948958,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144823342561722,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.837483286857605,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "144": {
+   "overlap": {},
+   "min_cm": 0.10945815593004227,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144904926419258,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.63906538486481,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "145": {
+   "overlap": {},
+   "min_cm": 0.10945936664938927,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144988000392914,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.51010179519653,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "146": {
+   "overlap": {},
+   "min_cm": 0.10946209076792002,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145055800676346,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.46253728866577,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "147": {
+   "overlap": {},
+   "min_cm": 0.10946729453280568,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145136266946793,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.49431252479553,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "148": {
+   "overlap": {},
+   "min_cm": 0.10946771362796426,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145196616649628,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.59429931640625,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "149": {
+   "overlap": {},
+   "min_cm": 0.10946637485176325,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145256221294403,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.75180459022522,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "150": {
+   "overlap": {},
+   "min_cm": 0.10946769034489989,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145319923758507,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.96303749084473,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "151": {
+   "overlap": {},
+   "min_cm": 0.10946989059448242,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145388841629028,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.2312285900116,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "152": {
+   "overlap": {},
+   "min_cm": 0.10947104310616851,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145444720983505,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.56301784515381,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "153": {
+   "overlap": {},
+   "min_cm": 0.1094748848117888,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145504325628281,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.962807059288025,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "154": {
+   "overlap": {},
+   "min_cm": 0.10947693372145295,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145551264286041,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.42966938018799,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "155": {
+   "overlap": {},
+   "min_cm": 0.10947751579806209,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145594105124474,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.95752513408661,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "156": {
+   "overlap": {},
+   "min_cm": 0.1094781095162034,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145641043782234,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.5366587638855,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "157": {
+   "overlap": {},
+   "min_cm": 0.10947765549644828,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145689100027084,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.155447363853455,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "158": {
+   "overlap": {},
+   "min_cm": 0.10947892442345619,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145736411213875,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.802247166633606,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "159": {
+   "overlap": {},
+   "min_cm": 0.10948374401777983,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145774409174919,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.32014000415802,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "160": {
+   "overlap": {},
+   "min_cm": 0.10948091512545943,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145802721381187,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.81701326370239,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "161": {
+   "overlap": {},
+   "min_cm": 0.10948404669761658,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.14584444463253,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.32152187824249,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "162": {
+   "overlap": {},
+   "min_cm": 0.10948061244562268,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145874619483948,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.835546374320984,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "163": {
+   "overlap": {},
+   "min_cm": 0.10948686394840479,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145891383290291,
+   "wing_overlap": 0,
+   "wing_min_cm": 39.361220598220825,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "164": {
+   "overlap": {},
+   "min_cm": 0.10948347626253963,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145914480090141,
+   "wing_overlap": 0,
+   "wing_min_cm": 39.896705746650696,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "165": {
+   "overlap": {},
+   "min_cm": 0.10948560666292906,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1459431648254395,
+   "wing_overlap": 0,
+   "wing_min_cm": 40.43225944042206,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "166": {
+   "overlap": {},
+   "min_cm": 0.10948688723146915,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145950615406036,
+   "wing_overlap": 0,
+   "wing_min_cm": 40.94078838825226,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "167": {
+   "overlap": {},
+   "min_cm": 0.10948599083349109,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145968496799469,
+   "wing_overlap": 0,
+   "wing_min_cm": 41.37130677700043,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "168": {
+   "overlap": {},
+   "min_cm": 0.10948487324640155,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145980045199394,
+   "wing_overlap": 0,
+   "wing_min_cm": 41.746750473976135,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "169": {
+   "overlap": {},
+   "min_cm": 0.10948643321171403,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145992711186409,
+   "wing_overlap": 0,
+   "wing_min_cm": 42.05096960067749,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "170": {
+   "overlap": {},
+   "min_cm": 0.1094869221560657,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145999789237976,
+   "wing_overlap": 0,
+   "wing_min_cm": 42.27766990661621,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "171": {
+   "overlap": {},
+   "min_cm": 0.10948764393106103,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.146000906825066,
+   "wing_overlap": 0,
+   "wing_min_cm": 42.430850863456726,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "172": {
+   "overlap": {},
+   "min_cm": 0.10949168354272842,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.146002769470215,
+   "wing_overlap": 0,
+   "wing_min_cm": 42.521703243255615,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "173": {
+   "overlap": {},
+   "min_cm": 0.10948695708066225,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145997926592827,
+   "wing_overlap": 0,
+   "wing_min_cm": 42.56307780742645,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "174": {
+   "overlap": {},
+   "min_cm": 0.1094910316169262,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145987495779991,
+   "wing_overlap": 0,
+   "wing_min_cm": 42.563724517822266,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "175": {
+   "overlap": {},
+   "min_cm": 0.10948680574074388,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145981162786484,
+   "wing_overlap": 0,
+   "wing_min_cm": 42.52478778362274,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "176": {
+   "overlap": {},
+   "min_cm": 0.10948893614113331,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145968869328499,
+   "wing_overlap": 0,
+   "wing_min_cm": 42.440539598464966,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "177": {
+   "overlap": {},
+   "min_cm": 0.1094869221560657,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145953595638275,
+   "wing_overlap": 0,
+   "wing_min_cm": 42.3033207654953,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "178": {
+   "overlap": {},
+   "min_cm": 0.10948757408186793,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145926401019096,
+   "wing_overlap": 0,
+   "wing_min_cm": 42.07109808921814,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "179": {
+   "overlap": {},
+   "min_cm": 0.10948646813631058,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.14591671526432,
+   "wing_overlap": 0,
+   "wing_min_cm": 41.77112579345703,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "180": {
+   "overlap": {},
+   "min_cm": 0.10948714334517717,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145886912941933,
+   "wing_overlap": 0,
+   "wing_min_cm": 41.424429416656494,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "181": {
+   "overlap": {},
+   "min_cm": 0.10948673589155078,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145865306258202,
+   "wing_overlap": 0,
+   "wing_min_cm": 41.051170229911804,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "182": {
+   "overlap": {},
+   "min_cm": 0.1094832899980247,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145830288529396,
+   "wing_overlap": 0,
+   "wing_min_cm": 40.675339102745056,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "183": {
+   "overlap": {},
+   "min_cm": 0.10947873815894127,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145807564258575,
+   "wing_overlap": 0,
+   "wing_min_cm": 40.31972885131836,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "184": {
+   "overlap": {},
+   "min_cm": 0.10948077542707324,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145763233304024,
+   "wing_overlap": 0,
+   "wing_min_cm": 40.000152587890625,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "185": {
+   "overlap": {},
+   "min_cm": 0.10947779519483447,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1457274705171585,
+   "wing_overlap": 0,
+   "wing_min_cm": 39.72195088863373,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "186": {
+   "overlap": {},
+   "min_cm": 0.10947680566459894,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145686119794846,
+   "wing_overlap": 0,
+   "wing_min_cm": 39.480578899383545,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "187": {
+   "overlap": {},
+   "min_cm": 0.10947892442345619,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145648121833801,
+   "wing_overlap": 0,
+   "wing_min_cm": 39.2645388841629,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "188": {
+   "overlap": {},
+   "min_cm": 0.10947509435936809,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145587399601936,
+   "wing_overlap": 0,
+   "wing_min_cm": 39.05957639217377,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "189": {
+   "overlap": {},
+   "min_cm": 0.10947543196380138,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145549029111862,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.853251934051514,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "190": {
+   "overlap": {},
+   "min_cm": 0.10947645641863346,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145489424467087,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.64031136035919,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "191": {
+   "overlap": {},
+   "min_cm": 0.10947264963760972,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145430937409401,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.424885272979736,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "192": {
+   "overlap": {},
+   "min_cm": 0.10947393020614982,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145381391048431,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.218021392822266,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "193": {
+   "overlap": {},
+   "min_cm": 0.10946993716061115,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145310610532761,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.031819462776184,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "194": {
+   "overlap": {},
+   "min_cm": 0.10947276605293155,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145248398184776,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.87355720996857,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "195": {
+   "overlap": {},
+   "min_cm": 0.10946220718324184,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145176500082016,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.668949365615845,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "196": {
+   "overlap": {},
+   "min_cm": 0.10945823742076755,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145107954740524,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.463927268981934,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "197": {
+   "overlap": {},
+   "min_cm": 0.10946477996185422,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.145039409399033,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.23454177379608,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "198": {
+   "overlap": {},
+   "min_cm": 0.10945906396955252,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144961178302765,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.991024017333984,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "199": {
+   "overlap": {},
+   "min_cm": 0.10945992544293404,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144893378019333,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.72952353954315,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "200": {
+   "overlap": {},
+   "min_cm": 0.10945270769298077,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144805833697319,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.45854294300079,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "201": {
+   "overlap": {},
+   "min_cm": 0.10945332469418645,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144724994897842,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.19536757469177,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "202": {
+   "overlap": {},
+   "min_cm": 0.10944943642243743,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144640430808067,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.96082031726837,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "203": {
+   "overlap": {},
+   "min_cm": 0.1094419858418405,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1445528864860535,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.75347661972046,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "204": {
+   "overlap": {},
+   "min_cm": 0.10944504756480455,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144457146525383,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.557082295417786,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "205": {
+   "overlap": {},
+   "min_cm": 0.10944724781438708,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.14436848461628,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.39691865444183,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "206": {
+   "overlap": {},
+   "min_cm": 0.10943717788904905,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144275352358818,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.25589406490326,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "207": {
+   "overlap": {},
+   "min_cm": 0.109437620267272,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144180357456207,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.12181341648102,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "208": {
+   "overlap": {},
+   "min_cm": 0.1094332430511713,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.144081264734268,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.991925954818726,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "209": {
+   "overlap": {},
+   "min_cm": 0.10943281231448054,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.143975093960762,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.86982882022858,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "210": {
+   "overlap": {},
+   "min_cm": 0.10942668886855245,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.143868550658226,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.76008176803589,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "211": {
+   "overlap": {},
+   "min_cm": 0.10942538501694798,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.143764987587929,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.66786742210388,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "212": {
+   "overlap": {},
+   "min_cm": 0.10942977387458086,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.143649131059647,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.6002459526062,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "213": {
+   "overlap": {},
+   "min_cm": 0.10942101944237947,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.143540725111961,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.56784188747406,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "214": {
+   "overlap": {},
+   "min_cm": 0.10941883083432913,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.143434554338455,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.58293974399567,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "215": {
+   "overlap": {},
+   "min_cm": 0.10940833017230034,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.143319442868233,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.65600311756134,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "216": {
+   "overlap": {},
+   "min_cm": 0.10940462816506624,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.143190175294876,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.79117751121521,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "217": {
+   "overlap": {},
+   "min_cm": 0.10940551292151213,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.143075808882713,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.98309850692749,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "218": {
+   "overlap": {},
+   "min_cm": 0.10940702632069588,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.142955854535103,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.21617650985718,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "219": {
+   "overlap": {},
+   "min_cm": 0.10939325438812375,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1428284496068954,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.46770215034485,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "220": {
+   "overlap": {},
+   "min_cm": 0.10939325438812375,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.142710357904434,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.714441537857056,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "221": {
+   "overlap": {},
+   "min_cm": 0.10939212515950203,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.142586305737495,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.93920171260834,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "222": {
+   "overlap": {},
+   "min_cm": 0.10938885388895869,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.142451077699661,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.13412082195282,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "223": {
+   "overlap": {},
+   "min_cm": 0.10938141494989395,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.142325162887573,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.30015552043915,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "224": {
+   "overlap": {},
+   "min_cm": 0.10937877232208848,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.142192915081978,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.44564747810364,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "225": {
+   "overlap": {},
+   "min_cm": 0.10937502374872565,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.142052471637726,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.58463656902313,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "226": {
+   "overlap": {},
+   "min_cm": 0.10937544284388423,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.141917243599892,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.732807755470276,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "227": {
+   "overlap": {},
+   "min_cm": 0.10937018087133765,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.141784995794296,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.90253794193268,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "228": {
+   "overlap": {},
+   "min_cm": 0.10936316102743149,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.14165461063385,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.09735870361328,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "229": {
+   "overlap": {},
+   "min_cm": 0.10935789905488491,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.14150969684124,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.31260895729065,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "230": {
+   "overlap": {},
+   "min_cm": 0.10935263708233833,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1413606852293015,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.54039704799652,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "231": {
+   "overlap": {},
+   "min_cm": 0.10934449965134263,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.141221359372139,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.775787711143494,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "232": {
+   "overlap": {},
+   "min_cm": 0.10935392929241061,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.141083523631096,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.02129626274109,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "233": {
+   "overlap": {},
+   "min_cm": 0.10933922603726387,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.140933394432068,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.178807497024536,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "234": {
+   "overlap": {},
+   "min_cm": 0.10934184538200498,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.140788480639458,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.332399725914,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "235": {
+   "overlap": {},
+   "min_cm": 0.1093322061933577,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.140640959143639,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.508474826812744,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "236": {
+   "overlap": {},
+   "min_cm": 0.10932825971394777,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.14049120247364,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.70872259140015,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "237": {
+   "overlap": {},
+   "min_cm": 0.10932714212685823,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.140349268913269,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.92781734466553,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "238": {
+   "overlap": {},
+   "min_cm": 0.10931688593700528,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.140199884772301,
+   "wing_overlap": 0,
+   "wing_min_cm": 39.15349245071411,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "239": {
+   "overlap": {},
+   "min_cm": 0.10931094875559211,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.140047520399094,
+   "wing_overlap": 0,
+   "wing_min_cm": 39.3682986497879,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "240": {
+   "overlap": {},
+   "min_cm": 0.10931490687653422,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.139901861548424,
+   "wing_overlap": 0,
+   "wing_min_cm": 39.55289125442505,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "241": {
+   "overlap": {},
+   "min_cm": 0.10930898133665323,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.139751359820366,
+   "wing_overlap": 0,
+   "wing_min_cm": 39.69044387340546,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "242": {
+   "overlap": {},
+   "min_cm": 0.10930836433544755,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.139591172337532,
+   "wing_overlap": 0,
+   "wing_min_cm": 39.77064788341522,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "243": {
+   "overlap": {},
+   "min_cm": 0.10929919080808759,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1394496113061905,
+   "wing_overlap": 0,
+   "wing_min_cm": 39.79119658470154,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "244": {
+   "overlap": {},
+   "min_cm": 0.10929636191576719,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.139288306236267,
+   "wing_overlap": 0,
+   "wing_min_cm": 39.75552320480347,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "245": {
+   "overlap": {},
+   "min_cm": 0.10929352138191462,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.139133706688881,
+   "wing_overlap": 0,
+   "wing_min_cm": 39.66927528381348,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "246": {
+   "overlap": {},
+   "min_cm": 0.10928919073194265,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.138983577489853,
+   "wing_overlap": 0,
+   "wing_min_cm": 39.53791558742523,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "247": {
+   "overlap": {},
+   "min_cm": 0.10927654802799225,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.138832703232765,
+   "wing_overlap": 0,
+   "wing_min_cm": 39.36600089073181,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "248": {
+   "overlap": {},
+   "min_cm": 0.10927373077720404,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.13867512345314,
+   "wing_overlap": 0,
+   "wing_min_cm": 39.15800154209137,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "249": {
+   "overlap": {},
+   "min_cm": 0.10927425464615226,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.138511583209038,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.9199435710907,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "250": {
+   "overlap": {},
+   "min_cm": 0.10926820104941726,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.138367787003517,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.65933120250702,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "251": {
+   "overlap": {},
+   "min_cm": 0.10926389368250966,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.138211697340012,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.38434815406799,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "252": {
+   "overlap": {},
+   "min_cm": 0.10926728136837482,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.138051137328148,
+   "wing_overlap": 0,
+   "wing_min_cm": 38.10345530509949,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "253": {
+   "overlap": {},
+   "min_cm": 0.10925293900072575,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.137906223535538,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.82435953617096,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "254": {
+   "overlap": {},
+   "min_cm": 0.10925175156444311,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.137750878930092,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.553563714027405,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "255": {
+   "overlap": {},
+   "min_cm": 0.1092485967092216,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.137600377202034,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.29480504989624,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "256": {
+   "overlap": {},
+   "min_cm": 0.10923427762463689,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.137438327074051,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.0479553937912,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "257": {
+   "overlap": {},
+   "min_cm": 0.10923113441094756,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.13729564845562,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.80892884731293,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "258": {
+   "overlap": {},
+   "min_cm": 0.10923482477664948,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.137147009372711,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.57273352146149,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "259": {
+   "overlap": {},
+   "min_cm": 0.10922513902187347,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1369886845350266,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.33590638637543,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "260": {
+   "overlap": {},
+   "min_cm": 0.10922030778601766,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.136838927865028,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.096712946891785,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "261": {
+   "overlap": {},
+   "min_cm": 0.10921594221144915,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.136698856949806,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.80171763896942,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "262": {
+   "overlap": {},
+   "min_cm": 0.10920766508206725,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.13654351234436,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.38745641708374,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "263": {
+   "overlap": {},
+   "min_cm": 0.1092046033591032,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.136394500732422,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.973305463790894,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "264": {
+   "overlap": {},
+   "min_cm": 0.10920489439740777,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1362499594688416,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.57517623901367,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "265": {
+   "overlap": {},
+   "min_cm": 0.10919752530753613,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.136104300618172,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.213343262672424,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "266": {
+   "overlap": {},
+   "min_cm": 0.10919697815552354,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1359593868255615,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.90433192253113,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "267": {
+   "overlap": {},
+   "min_cm": 0.10918964399024844,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.135812982916832,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.652982115745544,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "268": {
+   "overlap": {},
+   "min_cm": 0.10919022606685758,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.135674774646759,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.448609709739685,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "269": {
+   "overlap": {},
+   "min_cm": 0.10918205371126533,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.135529115796089,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.26876163482666,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "270": {
+   "overlap": {},
+   "min_cm": 0.10917562758550048,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.135386809706688,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.08904767036438,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "271": {
+   "overlap": {},
+   "min_cm": 0.10917256586253643,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.135250464081764,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.89080858230591,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "272": {
+   "overlap": {},
+   "min_cm": 0.10916531318798661,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.13511635363102,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.66478478908539,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "273": {
+   "overlap": {},
+   "min_cm": 0.1091622980311513,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.134980008006096,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.41040110588074,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "274": {
+   "overlap": {},
+   "min_cm": 0.1091533456929028,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.13484850525856,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.13529586791992,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "275": {
+   "overlap": {},
+   "min_cm": 0.10915694292634726,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.134720727801323,
+   "wing_overlap": 0,
+   "wing_min_cm": 31.85412287712097,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "276": {
+   "overlap": {},
+   "min_cm": 0.1091471640393138,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.134587362408638,
+   "wing_overlap": 0,
+   "wing_min_cm": 31.587007641792297,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "277": {
+   "overlap": {},
+   "min_cm": 0.10914886370301247,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1344651728868484,
+   "wing_overlap": 0,
+   "wing_min_cm": 31.357112526893616,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "278": {
+   "overlap": {},
+   "min_cm": 0.1091461512260139,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.134328827261925,
+   "wing_overlap": 0,
+   "wing_min_cm": 31.188097596168518,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "279": {
+   "overlap": {},
+   "min_cm": 0.10913729202002287,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1342155784368515,
+   "wing_overlap": 0,
+   "wing_min_cm": 31.100493669509888,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "280": {
+   "overlap": {},
+   "min_cm": 0.10913418373093009,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.134084075689316,
+   "wing_overlap": 0,
+   "wing_min_cm": 31.10787272453308,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "281": {
+   "overlap": {},
+   "min_cm": 0.10912873549386859,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.133967101573944,
+   "wing_overlap": 0,
+   "wing_min_cm": 31.214308738708496,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "282": {
+   "overlap": {},
+   "min_cm": 0.10913138976320624,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.133851617574692,
+   "wing_overlap": 0,
+   "wing_min_cm": 31.41489028930664,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "283": {
+   "overlap": {},
+   "min_cm": 0.10912090074270964,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1337432116270065,
+   "wing_overlap": 0,
+   "wing_min_cm": 31.697529554367065,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "284": {
+   "overlap": {},
+   "min_cm": 0.10912209982052445,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1336172968149185,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.02638030052185,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "285": {
+   "overlap": {},
+   "min_cm": 0.10911909630522132,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.133519321680069,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.3404461145401,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "286": {
+   "overlap": {},
+   "min_cm": 0.10911375284194946,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.133405700325966,
+   "wing_overlap": 0,
+   "wing_min_cm": 32.67936408519745,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "287": {
+   "overlap": {},
+   "min_cm": 0.10910907294601202,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.133301019668579,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.02565515041351,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "288": {
+   "overlap": {},
+   "min_cm": 0.10910441633313894,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1332026720047,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.366236090660095,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "289": {
+   "overlap": {},
+   "min_cm": 0.10909828124567866,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.133093893527985,
+   "wing_overlap": 0,
+   "wing_min_cm": 33.69757533073425,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "290": {
+   "overlap": {},
+   "min_cm": 0.1090993988327682,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.1329925656318665,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.02848839759827,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "291": {
+   "overlap": {},
+   "min_cm": 0.10909853735938668,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132901296019554,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.37550961971283,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "292": {
+   "overlap": {},
+   "min_cm": 0.10909619741141796,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.13281486928463,
+   "wing_overlap": 0,
+   "wing_min_cm": 34.7530871629715,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "293": {
+   "overlap": {},
+   "min_cm": 0.109091866761446,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132721364498138,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.16463041305542,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "294": {
+   "overlap": {},
+   "min_cm": 0.1090897829271853,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132628604769707,
+   "wing_overlap": 0,
+   "wing_min_cm": 35.60371994972229,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "295": {
+   "overlap": {},
+   "min_cm": 0.10908548720180988,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132553353905678,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.05690598487854,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "296": {
+   "overlap": {},
+   "min_cm": 0.10908344993367791,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132471024990082,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.46072447299957,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "297": {
+   "overlap": {},
+   "min_cm": 0.1090781413950026,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132384970784187,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.75369322299957,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "298": {
+   "overlap": {},
+   "min_cm": 0.10907807154580951,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132322758436203,
+   "wing_overlap": 0,
+   "wing_min_cm": 36.9579941034317,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  },
+  "299": {
+   "overlap": {},
+   "min_cm": 0.10907631367444992,
+   "nearest": "RightHand",
+   "nonhand_min_cm": 5.132242664694786,
+   "wing_overlap": 0,
+   "wing_min_cm": 37.121617794036865,
+   "hand_step_deg": 0.0,
+   "overlap_points": {}
+  }
+ }
+}

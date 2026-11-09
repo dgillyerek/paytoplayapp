@@ -1,0 +1,13 @@
+{
+ "compared": "main 259608d6 SERAPHINE_rig_rest.fbx vs new SERAPHINE_rig_rest.fbx (FBX reimport)",
+ "bones": [
+  24,
+  24
+ ],
+ "bind_matrix_max_diff": 0.0,
+ "same_parents": true,
+ "body_vertices": 43266,
+ "body_vertex_max_diff_m": 0.0,
+ "body_weights_identical": true,
+ "cape": "SERAPHINE_cape.fbx restored byte-identical to main 259608d6 (sha256 in fbx_sha256.json as main_cape.fbx): 10,977 verts, 11,773 faces, 0 removed"
+}

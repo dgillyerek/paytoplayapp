@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using Survival.Domain.Alliance;
 using System.Collections.Generic;
 using System.IO;
 using Survival.Domain.Clock;
@@ -32,8 +33,8 @@ namespace Survival.Unity
         /// <summary>Guild help (null until the Play HUD and the village are up).</summary>
         public GuildHelp? Guild => _guild;
 
-        /// <summary>Swap in a real guild server here; defaults to on-device guildmates.</summary>
-        public static Func<IGuildBackend> GuildBackendFactory = () => new SimulatedGuild();
+        /// <summary>The alliance server when reachable (falls back to on-device guildmates while offline or guildless).</summary>
+        public static Func<IGuildBackend> GuildBackendFactory = () => AllianceNet != null ? new OnlineGuild(AllianceNet) : new SimulatedGuild();
 
         public static string GuildHelpPath => Path.Combine(Application.persistentDataPath, GuildHelp.FileName);
 
@@ -45,6 +46,7 @@ namespace Survival.Unity
                 return;
             }
 
+            EnsureAllianceNet();
             _guild = new GuildHelp(GuildBackendFactory(), timers);
             try
             {
@@ -66,7 +68,13 @@ namespace Survival.Unity
 
         partial void EngageTick_Guild()
         {
-            if (_guild == null || Time.unscaledTime < _guildNextTick)
+            if (_guild == null)
+            {
+                return;
+            }
+
+            RailShown(GuildRailName, Survival.Domain.View.RailActionable.Guild(_guild));
+            if (Time.unscaledTime < _guildNextTick)
             {
                 return;
             }
@@ -115,21 +123,21 @@ namespace Survival.Unity
 
             // Hero art: guild crest on the left, the helping hand on the right, the explanation and balances between.
             var crestGlow = HookSkin.Glow(panel, "CrestGlow", new Color(0.35f, 0.55f, 1f, 0.7f));
-            Box(crestGlow.rectTransform, 0.00f, 0.78f, 0.26f, 0.94f);
+            HookSkin.Box(crestGlow.rectTransform, 0.00f, 0.78f, 0.26f, 0.94f);
             GuildArt(panel, "Crest", HookArtKeys.GuildCrest, 0.03f, 0.795f, 0.23f, 0.925f);
             var handGlow = HookSkin.Glow(panel, "HandGlow", new Color(0.45f, 0.95f, 0.5f, 0.6f));
-            Box(handGlow.rectTransform, 0.74f, 0.78f, 1.00f, 0.94f);
+            HookSkin.Box(handGlow.rectTransform, 0.74f, 0.78f, 1.00f, 0.94f);
             GuildArt(panel, "Hand", HookArtKeys.HelpHand, 0.77f, 0.795f, 0.97f, 0.925f);
             var sub = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Sub", S("guild.explain", "Guildmates speed up your upgrades. Help theirs to earn gold."), 20, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.4f);
             sub.fontStyle = FontStyle.Bold;
             sub.horizontalOverflow = HorizontalWrapMode.Wrap;
             HookSkin.Fit(sub, 12, 20);
-            Box(sub.rectTransform, 0.24f, 0.85f, 0.76f, 0.915f);
+            HookSkin.Box(sub.rectTransform, 0.24f, 0.85f, 0.76f, 0.915f);
             BalanceBar.Inside(panel, Campaign.Wallet, GuildBalanceIds, 0.25f, 0.80f, 0.75f, 0.845f);
 
             // Your builds: ask the guild for help.
             var mineHead = Ornaments.Ribbon(panel, S("guild.mine", "YOUR BUILDS"), RoyalBlue, out var mineRib);
-            Box(mineRib.rectTransform, 0.20f, 0.74f, 0.80f, 0.79f);
+            HookSkin.Box(mineRib.rectTransform, 0.20f, 0.74f, 0.80f, 0.79f);
             mineHead.fontSize = 22;
             var timers = new List<GameTimer>(g.Timers.Active);
             var timerTexts = new List<(Text Label, GameTimer T)>();
@@ -137,7 +145,7 @@ namespace Survival.Unity
             {
                 var none = HookSkin.Outlined(SurvivalVisuals.Text(panel, "NoBuilds", S("guild.none", "Start an upgrade, then ask your guild to speed it up."), 18, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.1f);
                 HookSkin.Fit(none, 11, 18);
-                Box(none.rectTransform, 0.06f, 0.64f, 0.94f, 0.73f);
+                HookSkin.Box(none.rectTransform, 0.06f, 0.64f, 0.94f, 0.73f);
             }
 
             const float myTop = 0.735f, myH = 0.065f;
@@ -152,11 +160,11 @@ namespace Survival.Unity
                 name.fontStyle = FontStyle.Bold;
                 name.raycastTarget = false;
                 HookSkin.Fit(name, 12, 22);
-                Box(name.rectTransform, 0.135f, 0.50f, 0.64f, 0.96f);
+                HookSkin.Box(name.rectTransform, 0.135f, 0.50f, 0.64f, 0.96f);
                 var info = HookSkin.Outlined(SurvivalVisuals.Text(card.transform, "Info", "", 17, TextAnchor.MiddleLeft, SurvivalVisuals.Reward), 1.1f);
                 info.raycastTarget = false;
                 HookSkin.Fit(info, 10, 17);
-                Box(info.rectTransform, 0.135f, 0.04f, 0.64f, 0.50f);
+                HookSkin.Box(info.rectTransform, 0.135f, 0.04f, 0.64f, 0.50f);
                 timerTexts.Add((info, t));
 
                 var label = SheetButton(card.rectTransform, "Ask", g.CanAsk(t.Id) ? HookArtKeys.ButtonGreen : HookArtKeys.ButtonBlue, FreeGreen, 0.66f, 0.10f, 0.96f, 0.90f, 22, out var ask);
@@ -182,7 +190,7 @@ namespace Survival.Unity
 
             // Guildmates' requests.
             var reqHead = Ornaments.Ribbon(panel, S("guild.theirs", "GUILDMATES NEED HELP"), new Color(0.16f, 0.48f, 0.36f, 1f), out var reqRib);
-            Box(reqRib.rectTransform, 0.04f, 0.54f, 0.62f, 0.59f);
+            HookSkin.Box(reqRib.rectTransform, 0.04f, 0.54f, 0.62f, 0.59f);
             reqHead.fontSize = 20;
             var allLabel = SheetButton(panel, "HelpAll", HookArtKeys.ButtonGreen, FreeGreen, 0.64f, 0.535f, 0.96f, 0.595f, 22, out var all);
             allLabel.text = S("guild.help_all", "HELP ALL");
@@ -216,16 +224,16 @@ namespace Survival.Unity
                 who.fontStyle = FontStyle.Bold;
                 who.raycastTarget = false;
                 HookSkin.Fit(who, 11, 20);
-                Box(who.rectTransform, 0.135f, 0.52f, 0.40f, 0.96f);
+                HookSkin.Box(who.rectTransform, 0.135f, 0.52f, 0.40f, 0.96f);
                 var task = HookSkin.Outlined(SurvivalVisuals.Text(card.transform, "Task", S("guild.task." + r.Task, r.Task), 16, TextAnchor.MiddleLeft, SurvivalVisuals.Reward), 1.1f);
                 task.raycastTarget = false;
                 HookSkin.Fit(task, 10, 16);
-                Box(task.rectTransform, 0.135f, 0.06f, 0.40f, 0.50f);
+                HookSkin.Box(task.rectTransform, 0.135f, 0.06f, 0.40f, 0.50f);
 
                 var helps = r.Helps + (mine ? 1 : 0);
                 var bar = HookSkin.Bar(card.transform, "Bar", out var fill);
                 bar.raycastTarget = false;
-                Box(bar.rectTransform, 0.42f, 0.22f, 0.67f, 0.78f);
+                HookSkin.Box(bar.rectTransform, 0.42f, 0.22f, 0.67f, 0.78f);
                 HookSkin.SetBar(fill, Mathf.Clamp01((float)helps / r.MaxHelps), HookArtKeys.BarFillGreen, FreeGreen);
                 var n = HookSkin.Outlined(SurvivalVisuals.Text(bar.transform, "N", Math.Min(helps, r.MaxHelps) + " / " + r.MaxHelps, 15, TextAnchor.MiddleCenter, Color.white), 1.1f);
                 n.raycastTarget = false;
@@ -247,11 +255,11 @@ namespace Survival.Unity
             }
 
             var coin = HookSkin.ResIcon(panel, "LeftCoin", SurvIds.ResSoft, Ornaments.Gold, "G");
-            Box(coin.rectTransform, 0.05f, 0.03f, 0.11f, 0.078f);
+            HookSkin.Box(coin.rectTransform, 0.05f, 0.03f, 0.11f, 0.078f);
             var left = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Left", Fmt("guild.left", "+{0} gold per help \u00b7 {1} rewarded helps left today", GuildHelp.GoldPerHelp, g.RewardsLeftToday), 16, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.1f);
             left.raycastTarget = false;
             HookSkin.Fit(left, 10, 16);
-            Box(left.rectTransform, 0.12f, 0.03f, 0.96f, 0.075f);
+            HookSkin.Box(left.rectTransform, 0.12f, 0.03f, 0.96f, 0.075f);
 
             void Refresh()
             {
@@ -284,7 +292,7 @@ namespace Survival.Unity
         {
             var art = HookSkin.Art(parent, name, key, Ornaments.Gold);
             art.raycastTarget = false;
-            Box(art.rectTransform, x0, y0, x1, y1);
+            HookSkin.Box(art.rectTransform, x0, y0, x1, y1);
         }
 
         /// <summary>Painted art (portrait or icon) in a gold-framed dark well at the left of a card.</summary>
@@ -292,7 +300,7 @@ namespace Survival.Unity
         {
             var slot = SurvivalVisuals.Image(card, name, new Color(0.06f, 0.09f, 0.22f, 1f));
             slot.raycastTarget = false;
-            Box(slot.rectTransform, x0, y0, x1, y1);
+            HookSkin.Box(slot.rectTransform, x0, y0, x1, y1);
             slot.gameObject.AddComponent<AspectRatioFitter>().aspectMode = AspectRatioFitter.AspectMode.HeightControlsWidth;
             Ornaments.Frame(slot.transform, Ornaments.Gold, 1.5f);
             GuildArt(slot.rectTransform, "Art", key, 0.06f, 0.06f, 0.94f, 0.94f);
@@ -303,7 +311,7 @@ namespace Survival.Unity
         {
             var card = HookSkin.Panel(panel, name, HookArtKeys.Plate, fill, 0.35f);
             card.raycastTarget = false;
-            Box(card.rectTransform, 0.04f, y0, 0.96f, y1);
+            HookSkin.Box(card.rectTransform, 0.04f, y0, 0.96f, y1);
             Ornaments.Bevel(card.transform, 0.7f);
             Ornaments.Frame(card.transform, frame, 2f);
             return card;

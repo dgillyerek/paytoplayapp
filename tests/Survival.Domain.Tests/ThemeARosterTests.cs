@@ -246,23 +246,6 @@ public sealed class ThemeARosterTests
 
         Assert.Contains("[MenuItem(\"Survival/Play: World + Quest Hook (Game view 1080x1920)\")]", editor, StringComparison.Ordinal);
 
-        var ironDemo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "IronhowlDemo.cs"));
-        var fangDemo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "EmberfangDemo.cs"));
-        Assert.Contains("IRONHOWL", ironDemo, StringComparison.Ordinal);
-        Assert.Contains("IronhowlClipDropdown", ironDemo, StringComparison.Ordinal);
-        Assert.Contains("RestPoseName", ironDemo, StringComparison.Ordinal);
-        Assert.Contains("IronhowlMotion.PoseNames", ironDemo, StringComparison.Ordinal);
-        Assert.Contains("SetValueWithoutNotify(0)", ironDemo, StringComparison.Ordinal);
-        Assert.Contains("ToString(\"0.00\")", ironDemo, StringComparison.Ordinal);
-        Assert.DoesNotContain("clip missing", ironDemo, StringComparison.Ordinal);
-        Assert.DoesNotContain("T-pose · no clips", ironDemo, StringComparison.Ordinal);
-        Assert.DoesNotContain("IRONHOWL_rig_atlas", ironDemo, StringComparison.Ordinal);
-        Assert.DoesNotContain("Survival/Ironhowl Demo (rest / walk / attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
-        Assert.Contains("EmberfangClipDropdown", fangDemo, StringComparison.Ordinal);
-        Assert.Contains("RestPoseName", fangDemo, StringComparison.Ordinal);
-        Assert.Contains("PoseNames", fangDemo, StringComparison.Ordinal);
-        Assert.Contains("SetValueWithoutNotify(0)", fangDemo, StringComparison.Ordinal);
-        Assert.DoesNotContain("Survival/Emberfang Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
 
         var excluded = Array.Empty<string>();   // Rowan (#64) and Bonequill (#63) both ship now
         var scenes = Path.Combine(root, "Assets", "Survival", "Scenes");

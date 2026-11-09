@@ -125,6 +125,7 @@ namespace Survival.Unity
             var ready = _board.ReadyCount;
             var fresh = _board.ActiveCount == 0 && HasOffer();
             _button?.Show(false, ready > 0 || fresh);
+            _view.TapRailShown("BountyBoardButton", Survival.Domain.View.RailActionable.Bounty(_board));
             if (_button != null)
             {
                 _button.DotText.text = ready > 0 ? ready.ToString() : "!";

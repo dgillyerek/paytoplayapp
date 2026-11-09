@@ -48,6 +48,10 @@ namespace Survival.Unity
             public ClothColliderSpec Spec { get; }
             public Transform Head { get; }
             public Transform Tail { get; }
+
+            /// <summary>Head-local endpoints for Spec.LocalA/LocalB capsules, resolved once at bind.</summary>
+            public Vector3? HeadLocalA { get; set; }
+            public Vector3? HeadLocalB { get; set; }
         }
 
         private readonly List<Chain> _chains = new List<Chain>();
@@ -149,6 +153,7 @@ namespace Survival.Unity
                 chain.TailLocal = MeasureTailLocal(chain);
             }
 
+            ResolveLocalColliders(actor);
             _colliderFrame = new ClothCollider[_colliders.Count];
             ReadColliders();
             foreach (var chain in _chains)
@@ -253,18 +258,49 @@ namespace Survival.Unity
             chain.Targets[chain.Bones.Length] = ToN(last.TransformPoint(chain.TailLocal));
         }
 
+        /// <summary>
+        /// Design local frame on the head bone: y = bone axis, z = character forward, x = character right.
+        /// Resolved at bind (rest pose) into head-local points so the capsule rides the bone rigidly.
+        /// </summary>
+        private void ResolveLocalColliders(Transform actor)
+        {
+            foreach (var c in _colliders)
+            {
+                if (c.Spec.LocalA == null || c.Spec.LocalB == null)
+                {
+                    continue;
+                }
+
+                var up = c.Head.up;
+                var fwd = Vector3.ProjectOnPlane(actor.forward, up).normalized;
+                var right = Vector3.Cross(up, fwd);
+                Vector3 Local(System.Numerics.Vector3 d) =>
+                    c.Head.InverseTransformPoint(c.Head.position + ((right * d.X) + (up * d.Y) + (fwd * d.Z)) * _designToWorld);
+                c.HeadLocalA = Local(c.Spec.LocalA.Value);
+                c.HeadLocalB = Local(c.Spec.LocalB.Value);
+            }
+        }
+
         private void ReadColliders()
         {
             for (var i = 0; i < _colliders.Count; i++)
             {
                 var c = _colliders[i];
                 var radius = c.Spec.RadiusMetres * _designToWorld;
+                var margin = c.Spec.RestMarginMetres * _designToWorld;
+                if (c.HeadLocalA != null && c.HeadLocalB != null)
+                {
+                    _colliderFrame[i] = new ClothCollider(
+                        ToN(c.Head.TransformPoint(c.HeadLocalA.Value)), ToN(c.Head.TransformPoint(c.HeadLocalB.Value)), radius, margin);
+                    continue;
+                }
+
                 var tail = c.Spec.Kind == ClothColliderKind.Sphere ? c.Head.position : c.Tail.position;
                 if (c.Spec.Kind == ClothColliderKind.Capsule && c.Spec.ExtendMetres > 0f)
                 {
                     tail += c.Tail.up * (c.Spec.ExtendMetres * _designToWorld);
                 }
-                _colliderFrame[i] = new ClothCollider(ToN(c.Head.position), ToN(tail), radius);
+                _colliderFrame[i] = new ClothCollider(ToN(c.Head.position), ToN(tail), radius, margin);
             }
         }
 

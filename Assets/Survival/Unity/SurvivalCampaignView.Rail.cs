@@ -23,6 +23,8 @@ namespace Survival.Unity
         partial void EngageTick_Crusade();
         partial void EngageAttach_Guild();
         partial void EngageTick_Guild();
+        partial void EngageTick_KingdomPath();
+        partial void EngageTick_Timers();
 
         private bool _engageAttached;
 
@@ -49,6 +51,8 @@ namespace Survival.Unity
             EngageTick_Trophy();
             EngageTick_Crusade();
             EngageTick_Guild();
+            EngageTick_KingdomPath();
+            EngageTick_Timers();
         }
 
         /// <summary>Is any campaign screen or sheet open (so a feature does not pop over it)?</summary>
@@ -58,51 +62,34 @@ namespace Survival.Unity
         /// A rail button: slot 0 is the top of the left rail (under the quest tracker), each next slot below it.
         /// Gold filigree frame on a royal disc, a big glyph, a ribbon label and a red count badge.
         /// </summary>
-        private RectTransform RailButton(int slot, string name, string glyph, string label, Color disc, Action tap, out Image badge, out Text badgeCount)
+        private RectTransform RailButton(int slot, string name, string glyph, string label, Color disc, Action tap, out Image badge, out Text badgeCount, string? iconKey = null)
         {
             var root = _play!.Root!;
-            var btn = SurvivalVisuals.Button(root, RailPrefix + name, new Color(1f, 1f, 1f, 0f));
-            btn.transition = Selectable.Transition.None;
-            var rt = btn.GetComponent<RectTransform>();
+            var parts = SurvivalSideRail.Round(root, RailPrefix + name, iconKey, label, disc);
+            var rt = parts.Root;
             var top = 0.300f + (slot * 0.078f);
-            Box(rt, 0.018f, 1f - (top + 0.070f), 0.150f, 1f - top);
+            HookSkin.Box(rt, 0.018f, 1f - (top + 0.070f), 0.150f, 1f - top);
+            if (iconKey == null || parts.Icon.childCount == 0)
+            {
+                var g = HookSkin.Outlined(SurvivalVisuals.Text(parts.Icon, "Glyph", glyph, 40, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 2f);
+                g.raycastTarget = false;
+                SurvivalVisuals.Stretch(g.rectTransform);
+            }
 
-            var glow = HookSkin.Glow(btn.transform, "Glow", new Color(disc.r, disc.g, disc.b, 0.45f));
-            Box(glow.rectTransform, -0.18f, -0.12f, 1.18f, 1.22f);
-            var ring = SurvivalVisuals.Circle(btn.transform, "GoldRing", Ornaments.Gold);
-            ring.preserveAspect = true;
-            ring.raycastTarget = false;
-            Box(ring.rectTransform, 0.06f, 0.18f, 0.94f, 1.04f);
-            var face = SurvivalVisuals.Circle(btn.transform, "Disc", disc);
-            Box(face.rectTransform, 0.12f, 0.24f, 0.88f, 0.98f);
-            face.preserveAspect = true;
-            Ornaments.Sparkles(face.rectTransform, 3, Ornaments.Gold);
-            var g = HookSkin.Outlined(SurvivalVisuals.Text(face.transform, "Glyph", glyph, 44, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 2f);
-            g.raycastTarget = false;
-            SurvivalVisuals.Stretch(g.rectTransform);
-
-            var ribbonText = Ornaments.Ribbon(btn.transform, label, new Color(0.55f, 0.12f, 0.12f, 1f), out var ribbon);
-            Box(ribbon.rectTransform, -0.10f, -0.02f, 1.10f, 0.30f);
-            ribbonText.fontSize = 18;
-            HookSkin.Fit(ribbonText, 10, 18);
-
-            badge = SurvivalVisuals.Circle(btn.transform, "Badge", new Color(0.90f, 0.18f, 0.20f, 1f));
-            badge.rectTransform.anchorMin = badge.rectTransform.anchorMax = new Vector2(0.86f, 0.90f);
-            badge.rectTransform.sizeDelta = new Vector2(34f, 34f);
-            badge.raycastTarget = false;
-            badgeCount = HookSkin.Outlined(SurvivalVisuals.Text(badge.transform, "T", "!", 22, TextAnchor.MiddleCenter, Color.white), 1.2f);
-            badgeCount.fontStyle = FontStyle.Bold;
-            badgeCount.raycastTarget = false;
-            SurvivalVisuals.Stretch(badgeCount.rectTransform);
-            badge.gameObject.SetActive(false);
-
-            btn.onClick.AddListener(() =>
+            badge = parts.Dot;
+            badgeCount = parts.DotText;
+            parts.Button.onClick.AddListener(() =>
             {
                 Juice(rt);
                 tap();
             });
+            // Join the shared side rail (HUD declutter); the Box above is only the no-rail fallback.
+            _play.RegisterRail(RailPrefix + name, top, rt);
             return rt;
         }
+
+        /// <summary>Show a rail icon only while there is something to do in it (see RailActionable).</summary>
+        private void RailShown(string name, bool shown) => _play?.SetRailShown(RailPrefix + name, shown);
 
         /// <summary>Show the badge with a count (hidden at 0; "!" when count is negative).</summary>
         private static void RailBadge(Image? badge, Text? count, int n)

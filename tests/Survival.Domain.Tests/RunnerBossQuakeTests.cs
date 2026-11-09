@@ -39,7 +39,46 @@ public sealed class RunnerBossQuakeTests
             }
         }
 
-        return ShotDodge.Steer(run, Runner.AimLikeAPlayer(run));
+        if (boss != null && boss.SlamSwinging)
+        {
+            // He is still swinging (claw combo): a player who stepped out of the slam's road stays out until he is done.
+            return run.Hero.X < 0f ? -2.9f : 2.9f;
+        }
+
+        var steer = ShotDodge.Steer(run, Runner.AimLikeAPlayer(run));
+        return RockDodge(run, reaction, steer) ?? steer;
+    }
+
+    /// <summary>
+    /// Ironhowl's boulders: once the boulder has been in the air for <paramref name="reaction"/> seconds, a lead standing in
+    /// (or at the edge of) it steers out sideways, to whichever side is nearer and on the road. Nothing is teleported: the
+    /// squad's normal steer speed decides whether it makes it, and followers trailing behind can still be caught, so the
+    /// real dodge rate comes out of the run rather than a flat number.
+    /// </summary>
+    /// <param name="wanted">Where the player was going anyway (dodging shots and traps): kept if it already clears the ring,
+    /// otherwise the ring edge nearer to it, so stepping out of a boulder does not walk the lead into the road's traps.</param>
+    public static float? RockDodge(RunnerRun run, float reaction = 0.3f, float? wanted = null)
+    {
+        // No landing ring (Derek 2026-11-03): the player sees the rock leave his hands and, after the reaction time, steers
+        // off the lane it is flying down. While it is still in his hands its landing is not decided yet.
+        var boss = run.Foes.FirstOrDefault(f => f.Boss && f.Hp > 0 && f.RockLeft > 0f && !f.RockHeld);
+        if (boss == null || RunnerRules.BossRockFlight - boss.RockLeft < reaction)
+        {
+            return null;
+        }
+
+        var clear = RunnerRules.BossRockRadius + run.Hero.Unit.Radius + 0.4f;
+        var toward = wanted ?? run.Hero.X;
+        if (Math.Abs(toward - boss.RockX) >= clear && Math.Abs(run.Hero.X - boss.RockX) >= clear)
+        {
+            return null;
+        }
+
+        var max = run.MaxSteer;
+        var right = boss.RockX + clear;
+        var left = boss.RockX - clear;
+        var goRight = right <= max && (toward - boss.RockX >= 0f || left < -max);
+        return Math.Clamp(goRight ? right : left, -max, max);
     }
 
     private sealed record Fight(RunnerRun Run, List<RunnerEvent> Events, List<(float At, RunnerEventKind Kind)> Moves);

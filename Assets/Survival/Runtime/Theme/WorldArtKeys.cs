@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using Survival.Domain.Base;
 using Survival.Domain.View;
@@ -15,6 +16,9 @@ namespace Survival.Domain.Theme
         public const string MapTile = "theme_a.map.tile.meadow";
         public const string RoadTile = "theme_a.map.tile.dirt";
         public const string MapHeart = "theme_a.map.heart";
+
+        /// <summary>Soft grass clearing drawn under each place on the heart so its baked trees / rocks never show beneath it.</summary>
+        public const string MapClearing = "theme_a.map.clearing";
         public const string VillageLawn = "theme_a.village.tile.lawn";
         public const string PlotEmpty = "theme_a.village.plot_empty";
         public const string IconWorld = "theme_a.ui.icon_world";
@@ -38,6 +42,13 @@ namespace Survival.Domain.Theme
 
         public static string ResourceNode(string type) => "theme_a.world.node." + type;
 
+        /// <summary>
+        /// Art for an online map tile (server kinds: food, wood, stone, camp). Camps pick a painted camp by level band.
+        /// </summary>
+        public static string OnlineTile(string kind, int level) => kind == "camp"
+            ? Camp(CampTypes[Math.Min(CampTypes.Length - 1, Math.Max(0, (level - 1) / 3))])
+            : ResourceNode(kind);
+
         public static string MapProp(string type) => "theme_a.map.prop." + type;
 
         /// <summary>Village props first look for a village-specific key, then fall back to the map prop.</summary>
@@ -58,7 +69,7 @@ namespace Survival.Domain.Theme
             {
                 var keys = new List<string>
                 {
-                    MapTile, RoadTile, MapHeart, VillageLawn, PlotEmpty, IconWorld, IconUpgrade, MarchPlayer, MarchRival,
+                    MapTile, RoadTile, MapHeart, MapClearing, VillageLawn, PlotEmpty, IconWorld, IconUpgrade, MarchPlayer, MarchRival,
                     LevelBadge.ArtKey,
                     BottomNav.BarArt, BottomNav.ButtonArt, BottomNav.IconHeroes, BottomNav.IconAlliance, BottomNav.IconBag,
                     BottomNav.IconBattle, BottomNav.IconBuild,

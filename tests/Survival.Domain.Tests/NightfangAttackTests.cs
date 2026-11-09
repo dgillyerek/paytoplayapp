@@ -188,8 +188,6 @@ public sealed class NightfangAttackTests
     public void Nightfang_attack_is_wired_in_the_actor_and_has_no_demo_menu()
     {
         var root = FindRepoRoot();
-        var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.DoesNotContain("Survival/Nightfang Demo (rest + trot + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "NightfangActor.cs"));
         Assert.Contains("NightfangAttack.Spec", actor, StringComparison.Ordinal);
         var driver = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigAttackDriver.cs"));

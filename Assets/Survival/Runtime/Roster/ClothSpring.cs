@@ -84,8 +84,20 @@ namespace Survival.Domain.Roster
     /// <summary>Leg/hip collider from the NOTE.md suggestions. Capsule runs from Bone's head to TailBone's head.</summary>
     public sealed class ClothColliderSpec
     {
-        public ClothColliderSpec(string name, ClothColliderKind kind, string bone, string tailBone, float radiusMetres, float extendMetres = 0f)
+        public ClothColliderSpec(
+            string name,
+            ClothColliderKind kind,
+            string bone,
+            string tailBone,
+            float radiusMetres,
+            float extendMetres = 0f,
+            float restMarginMetres = 0f,
+            Vector3? localA = null,
+            Vector3? localB = null)
         {
+            RestMarginMetres = restMarginMetres;
+            LocalA = localA;
+            LocalB = localB;
             ExtendMetres = extendMetres;
             Name = name;
             Kind = kind;
@@ -102,6 +114,16 @@ namespace Survival.Domain.Roster
 
         /// <summary>Capsule tail pushed past TailBone along its bone axis (local +Y) by this many Design metres (hands: wrist to fingertips).</summary>
         public float ExtendMetres { get; }
+
+        /// <summary>Rest clamp: per joint the allowed clearance is at most (bind-pose clearance - this). 0 = old behaviour.</summary>
+        public float RestMarginMetres { get; }
+
+        /// <summary>
+        /// Optional rigid capsule in Bone's local Design frame (metres; x = character right, y = bone axis, z = forward).
+        /// When set, the capsule runs LocalA→LocalB on Bone instead of Bone→TailBone (Seraphine wing capsules on Spine2).
+        /// </summary>
+        public Vector3? LocalA { get; }
+        public Vector3? LocalB { get; }
     }
 
     /// <summary>
@@ -274,8 +296,9 @@ namespace Survival.Domain.Roster
     /// <summary>Collider in world space for one solver step. Sphere when A == B.</summary>
     public readonly struct ClothCollider
     {
-        public ClothCollider(Vector3 a, Vector3 b, float radius)
+        public ClothCollider(Vector3 a, Vector3 b, float radius, float restMargin = 0f)
         {
+            RestMargin = restMargin;
             A = a;
             B = b;
             Radius = radius;
@@ -284,6 +307,9 @@ namespace Survival.Domain.Roster
         public Vector3 A { get; }
         public Vector3 B { get; }
         public float Radius { get; }
+
+        /// <summary>World-units margin subtracted from bind-pose clearance (CAPE_ATTACH v5 arm rest clamp).</summary>
+        public float RestMargin { get; }
     }
 
     /// <summary>
@@ -370,7 +396,7 @@ namespace Survival.Domain.Roster
                 {
                     var c = restColliders[j];
                     var rest = SegmentSegmentDistance(restTargets[i], restTargets[i + 1], c.A, c.B, out _, out _);
-                    _allowed[i, j] = Math.Max(0f, Math.Min(c.Radius + radius, rest));
+                    _allowed[i, j] = Math.Max(0f, Math.Min(c.Radius + radius, rest - c.RestMargin));
                 }
             }
 
@@ -438,7 +464,7 @@ namespace Survival.Domain.Roster
                 {
                     var from = _lastColliders[j];
                     var to = colliders[j];
-                    _stepColliders[j] = new ClothCollider(Vector3.Lerp(from.A, to.A, a), Vector3.Lerp(from.B, to.B, a), to.Radius);
+                    _stepColliders[j] = new ClothCollider(Vector3.Lerp(from.A, to.A, a), Vector3.Lerp(from.B, to.B, a), to.Radius, to.RestMargin);
                 }
 
                 _p[0] = _stepTarget[0];

@@ -1,3 +1,4 @@
+using System.Collections;
 #nullable enable
 using Survival.Domain.Theme;
 using UnityEngine;
@@ -208,10 +209,31 @@ namespace Survival.Unity
         {
             // Never thinner than 2px, near-black brown, plus a drop shadow below.
             distance = Mathf.Max(2f, distance);
-            var outline = text.GetComponent<Outline>() ?? text.gameObject.AddComponent<Outline>();
+            // Idempotent: callers re-skin labels on every refresh (e.g. the Bounty Board button). Each Shadow doubles
+            // and each Outline quintuples the text mesh, so adding a new one per call blew past uGUI's 65000 vertices.
+            var outline = text.GetComponent<Outline>();
+            if (outline == null)
+            {
+                outline = text.gameObject.AddComponent<Outline>();
+            }
+
             outline.effectColor = new Color(OutlineInk.r, OutlineInk.g, OutlineInk.b, Mathf.Max(0.9f, alpha));
             outline.effectDistance = new Vector2(distance, -distance);
-            var shadow = text.gameObject.AddComponent<Shadow>();
+            Shadow shadow = null;
+            foreach (var sh in text.GetComponents<Shadow>())
+            {
+                if (sh.GetType() == typeof(Shadow))
+                {
+                    shadow = sh;
+                    break;
+                }
+            }
+
+            if (shadow == null)
+            {
+                shadow = text.gameObject.AddComponent<Shadow>();
+            }
+
             shadow.effectColor = new Color(0f, 0f, 0f, 0.7f);
             shadow.effectDistance = new Vector2(0f, -distance * 1.6f);
             return text;
@@ -277,5 +299,30 @@ namespace Survival.Unity
             img.preserveAspect = true;
             return img;
         }
-    }
+    
+        public static void Box(RectTransform rt, float x0, float y0, float x1, float y1)
+        {
+            rt.anchorMin = new Vector2(x0, y0);
+            rt.anchorMax = new Vector2(x1, y1);
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+        }
+
+        public static IEnumerator PopIn(RectTransform rt)
+        {
+            const int frames = 12;
+            for (var i = 1; i <= frames; i++)
+            {
+                if (rt == null)
+                {
+                    yield break;
+                }
+
+                var u = i / (float)frames;
+                var k = u < 0.7f ? Mathf.Lerp(0.6f, 1.06f, u / 0.7f) : Mathf.Lerp(1.06f, 1f, (u - 0.7f) / 0.3f);
+                rt.localScale = new Vector3(k, k, 1f);
+                yield return null;
+            }
+        }
+}
 }

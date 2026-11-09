@@ -218,7 +218,9 @@ namespace Survival.Unity
                     {
                         var a = host.AddComponent<VesperaActor>();
                         a.Build();
-                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
+                        // A ranged foe shoots while it walks in: the take on the upper body, the legs keep walking.
+                        a.UpperBodyAttack = RunnerWalkingShooterFoes.Applies(data.Name);
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
@@ -255,7 +257,9 @@ namespace Survival.Unity
                     {
                         var a = host.AddComponent<BonequillActor>();
                         a.Build();
-                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
+                        // A ranged foe shoots while it walks in: the take on the upper body, the legs keep walking.
+                        a.UpperBodyAttack = RunnerWalkingShooterFoes.Applies(data.Name);
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;

@@ -47,7 +47,14 @@ namespace Survival.Domain.Campaign
         string ShardHero,
         int Shards,
         int FirstClearGems,
-        string? CampId = null);
+        string? CampId = null,
+        int Chapter = 0,
+        int Number = 0,
+        bool Boss = false)
+    {
+        /// <summary>A generated battle-campaign stage (chapter 1+); the hand-made prologue stages are chapter 0.</summary>
+        public bool InCampaign => Chapter > 0;
+    }
 
     public sealed record CampEncounterDef(string Type, IReadOnlyList<string> Enemies, string ShardHero, int Shards);
 
@@ -104,8 +111,10 @@ namespace Survival.Domain.Campaign
             LevelCurve curve,
             int trainingSlots = 2,
             double lossGoldShare = 0.25,
-            double battleTimeoutSeconds = 120)
+            double battleTimeoutSeconds = 120,
+            BattleCampaignDef? battleCampaign = null)
         {
+            BattleCampaign = battleCampaign;
             Heroes = heroes;
             Stages = stages;
             Camps = camps;
@@ -133,6 +142,33 @@ namespace Survival.Domain.Campaign
         public int TrainingSlots { get; }
         public double LossGoldShare { get; }
         public double BattleTimeoutSeconds { get; }
+
+        /// <summary>The generated chapters (null when campaign.json has no "battle_campaign"). Its stages follow the prologue in <see cref="Stages"/>.</summary>
+        public BattleCampaignDef? BattleCampaign { get; }
+
+        public ChapterDef? Chapter(int number) =>
+            BattleCampaign != null && number >= 1 && number <= BattleCampaign.Chapters.Count ? BattleCampaign.Chapters[number - 1] : null;
+
+        /// <summary>Castle level a stage needs (1 for the prologue and camps).</summary>
+        public int CastleGate(StageDef stage) => Chapter(stage.Chapter)?.CastleLevel ?? 1;
+
+        /// <summary>The stages of one chapter in order (chapter 0 = the hand-made prologue).</summary>
+        public List<StageDef> StagesIn(int chapter)
+        {
+            var list = new List<StageDef>();
+            foreach (var s in Stages)
+            {
+                if (s.Chapter == chapter && s.CampId == null)
+                {
+                    list.Add(s);
+                }
+            }
+
+            return list;
+        }
+
+        /// <summary>The prologue's stages only: the economy model's one-a-day stage income reads these.</summary>
+        public List<StageDef> PrologueStages => StagesIn(0);
 
         public IEnumerable<CampaignHeroDef> OnSide(CampaignSide side)
         {
@@ -271,6 +307,12 @@ namespace Survival.Domain.Campaign
                 stages.Add(new StageDef(Str(s, "id"), Str(s, "name", Str(s, "id")), enemies, Map(s, "rewards"), Str(s, "shard_hero", ""), Int(s, "shards", 0), Int(s, "first_gems", 0)));
             }
 
+            var battleCampaign = BattleCampaignDef.Parse(root);
+            if (battleCampaign != null)
+            {
+                stages.AddRange(battleCampaign.Generate());
+            }
+
             var camps = new Dictionary<string, CampEncounterDef>(StringComparer.Ordinal);
             if (root.TryGet("camps", out var cn) && cn is JsonNode.Obj co)
             {
@@ -311,7 +353,8 @@ namespace Survival.Domain.Campaign
                 curve,
                 Int(root, "training_slots", 2),
                 Num(root, "loss_gold_share", 0.25),
-                Num(root, "battle_timeout_seconds", 120));
+                Num(root, "battle_timeout_seconds", 120),
+                battleCampaign);
         }
 
         internal static IEnumerable<JsonNode> Items(JsonNode.Obj o, string key) =>

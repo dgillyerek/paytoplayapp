@@ -19,9 +19,10 @@ namespace Survival.Unity
     /// </summary>
     public sealed partial class RunnerLevelView
     {
-        private static readonly Color QuakeZone = new Color(1f, 0.1f, 0.06f, 0.34f);
-        private static readonly Color QuakeCharge = new Color(0.9f, 0.08f, 0.05f, 0.62f);
-        private static readonly Color QuakeSafe = new Color(0.25f, 1f, 0.45f, 0.38f);
+        private static readonly Color Cream = new Color(1f, 0.957f, 0.839f, 1f);
+        private static readonly Color QuakeZone = new Color(1f, 0.1f, 0.06f, 0.16f);
+        private static readonly Color QuakeCharge = new Color(0.9f, 0.08f, 0.05f, 0.24f);
+        private static readonly Color QuakeSafe = new Color(0.25f, 1f, 0.45f, 0.2f);
         private static readonly Color QuakeEdge = new Color(1f, 0.08f, 0.05f, 0f);
 
         private Transform? _quakeRoot;
@@ -50,6 +51,7 @@ namespace Survival.Unity
         private Image? _quakeFlash;
         private Text? _dodgeText;
         private Text? _dodgeArrow;
+        private Text? _dodgeSub;
         private string _dodgeLeft = "";
         private string _dodgeRight = "";
         private float _quakeFlashAge = 9f;
@@ -93,7 +95,7 @@ namespace Survival.Unity
             _quakeHud.SetParent(_hud, false);
             SurvivalVisuals.Stretch(_quakeHud);
             // x0,y0,x1,y1 of the strips: bottom, top, left, right.
-            var spans = new[] { new Vector4(0f, 0f, 1f, 0.07f), new Vector4(0f, 0.93f, 1f, 1f), new Vector4(0f, 0f, 0.05f, 1f), new Vector4(0.95f, 0f, 1f, 1f) };
+            var spans = new[] { new Vector4(0f, 0f, 1f, 0.025f), new Vector4(0f, 0.975f, 1f, 1f), new Vector4(0f, 0f, 0.018f, 1f), new Vector4(0.982f, 0f, 1f, 1f) };
             for (var i = 0; i < 4; i++)
             {
                 var img = SurvivalVisuals.Image(_quakeHud, "Edge" + i, QuakeEdge);
@@ -105,12 +107,16 @@ namespace Survival.Unity
             _quakeFlash = SurvivalVisuals.Image(_quakeHud, "Flash", new Color(1f, 1f, 1f, 0f));
             _quakeFlash.raycastTarget = false;
             SurvivalVisuals.Stretch(_quakeFlash.rectTransform);
-            _dodgeText = HookSkin.Outlined(SurvivalVisuals.Text(_quakeHud, "Dodge", S("runner.quake_dodge", "DODGE!"), 96, TextAnchor.MiddleCenter, new Color(1f, 0.25f, 0.18f, 1f)));
+            _dodgeText = HookSkin.Outlined(SurvivalVisuals.Text(_quakeHud, "Dodge", S("runner.quake_dodge", "DODGE"), 52, TextAnchor.MiddleCenter, Cream));
             _dodgeText.raycastTarget = false;
-            Anchor(_dodgeText.rectTransform, 0f, 0.56f, 1f, 0.68f);
-            _dodgeArrow = HookSkin.Outlined(SurvivalVisuals.Text(_quakeHud, "DodgeArrow", "", 54, TextAnchor.MiddleCenter, new Color(0.55f, 1f, 0.6f, 1f)));
+            // Compact, just under the top HUD (chips end near 0.84), not across the middle of the road.
+            Anchor(_dodgeText.rectTransform, 0f, 0.775f, 1f, 0.825f);
+            _dodgeSub = HookSkin.Outlined(SurvivalVisuals.Text(_quakeHud, "DodgeSub", S("runner.quake_banner_short", "Quake incoming"), 24, TextAnchor.MiddleCenter, Cream), 1.2f);
+            _dodgeSub.raycastTarget = false;
+            Anchor(_dodgeSub.rectTransform, 0f, 0.75f, 1f, 0.778f);
+            _dodgeArrow = HookSkin.Outlined(SurvivalVisuals.Text(_quakeHud, "DodgeArrow", "", 32, TextAnchor.MiddleCenter, new Color(0.7f, 1f, 0.72f, 1f)));
             _dodgeArrow.raycastTarget = false;
-            Anchor(_dodgeArrow.rectTransform, 0f, 0.48f, 1f, 0.57f);
+            Anchor(_dodgeArrow.rectTransform, 0f, 0.71f, 1f, 0.75f);
             _quakeHud.gameObject.SetActive(false);
             _quakeFlashAge = 9f;
         }
@@ -166,7 +172,7 @@ namespace Survival.Unity
 
             _quakeRig = _foes.TryGetValue(boss.Id, out var rig) ? rig : null;
             _quakePounded = false;
-            Banner(S("runner.quake_banner", "Ironhowl is winding up a quake!"), new Color(1f, 0.3f, 0.2f, 1f));
+            // No mid-screen banner any more: the compact DODGE line under the HUD carries the warning.
             Shake(0.25f);
             AnimateQuakeMark();
         }
@@ -251,7 +257,7 @@ namespace Survival.Unity
                 {
                     // Pulse faster as it nears: 3 Hz at first, 9 Hz at the end.
                     var pulse = 0.5f + (0.5f * Mathf.Sin(t * Mathf.Lerp(18f, 56f, p)));
-                    var edge = new Color(1f, 0.08f, 0.05f, Mathf.Lerp(0.25f, 0.6f, pulse) * Mathf.Lerp(0.7f, 1f, p));
+                    var edge = new Color(1f, 0.08f, 0.05f, Mathf.Lerp(0.03f, 0.14f, pulse) * p);
                     for (var i = 0; i < _quakeEdges.Length; i++)
                     {
                         var img = _quakeEdges[i];
@@ -263,7 +269,7 @@ namespace Survival.Unity
 
                     if (_dodgeText != null)
                     {
-                        _dodgeText.rectTransform.localScale = Vector3.one * (1f + (0.12f * pulse));
+                        _dodgeText.rectTransform.localScale = Vector3.one * (1f + (0.05f * pulse));
                     }
                 }
             }
@@ -277,7 +283,7 @@ namespace Survival.Unity
                 _quakeFlashAge += dt;
                 if (_quakeFlash != null)
                 {
-                    var a = Mathf.Clamp01(1f - (_quakeFlashAge / 0.45f)) * 0.55f;
+                    var a = Mathf.Clamp01(1f - (_quakeFlashAge / 0.45f)) * 0.25f;
                     _quakeFlash.color = new Color(1f, 0.95f, 0.85f, a);
                 }
 

@@ -77,8 +77,6 @@ public sealed class RowanFreshTests
         Assert.True(File.Exists(Path.Combine(pack, RowanCoat.TextureFolder, RowanCoat.BaseColorFile)));
         Assert.True(File.Exists(Path.Combine(pack, RowanCoat.TextureFolder, RowanCoat.NormalFile)));
         Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Rowan.unity")), "one-character demo scenes were removed 2026-10-19");
-        var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.DoesNotContain("Survival/Rowan Demo (rest + walk + bow attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using Survival.Domain.Roster;
 
 namespace Survival.Domain.Runner
 {
@@ -106,6 +107,42 @@ namespace Survival.Domain.Runner
 
         /// <summary>The longest the squad needs to get the lead and every follower into the safe band from anywhere on the road (see the tests).</summary>
         public const float BossQuakeSteerSeconds = 1.2f;
+
+        /// <summary>
+        /// Ironhowl's opener (Derek 2026-11-03: he "takes a while to start attack"): from the moment he is on the road until
+        /// the squad reaches his arena line he tears up boulders and throws them at the squad. Derek's review (same day): he
+        /// must really pick the rock up, throw every 3 s, the rock flies a touch slower, and there is no landing ring: the
+        /// squad reads the pickup and the throw, and steers off the lane the rock flies down.
+        /// One throw, from <see cref="RunnerEventKind.BossRockThrown"/>: his ground pound (attack4) bends him down, his fists reach
+        /// the road at <see cref="BossRockGrab"/> and rip the rock out; he rises with it, and from <see cref="BossRockWindupAt"/>
+        /// his overhead smash (attack2) swings it up and forward, letting go at <see cref="BossRockRelease"/>
+        /// (<see cref="RunnerEventKind.BossRockReleased"/>, aim locked then); it lands <see cref="BossRockFlight"/> later.
+        /// </summary>
+        public const float BossRockGrab = Enemies.IronhowlMotion.Attack4ContactFrame / Enemies.IronhowlMotion.FrameRate;
+
+        /// <summary>Seconds into the throw the overhead-smash swing starts (frame 40 of the ground pound: he is most of the way back up).</summary>
+        public const float BossRockWindupAt = 40f / Enemies.IronhowlMotion.FrameRate;
+
+        /// <summary>Frame of the overhead smash the rock leaves his hands: arms coming over and forward, just before the smash's contact (28).</summary>
+        public const int BossRockReleaseFrame = 24;
+
+        /// <summary>Seconds from the pickup's start to the release.</summary>
+        public const float BossRockRelease = BossRockWindupAt + (BossRockReleaseFrame / Enemies.IronhowlMotion.FrameRate);
+
+        /// <summary>Seconds of flight from his hands to the road: 18% longer than the first version's 0.53 s (Derek: "just slightly slower").</summary>
+        public const float BossRockFlight = 0.63f;
+
+        /// <summary>Seconds from one pickup to the next (Derek: 3 s). A throw plays out in <see cref="BossRockRelease"/> + flight = 2.8 s.</summary>
+        public const float BossRockEvery = 3.0f;
+
+        /// <summary>Seconds after he appears before the first pickup.</summary>
+        public const float BossRockFirst = 0.3f;
+
+        /// <summary>Radius (metres) of road a boulder lands on.</summary>
+        public const float BossRockRadius = 1.4f;
+
+        /// <summary>A boulder's hit on each squad member it lands on, in boss hits (a quarter of his melee: chip damage that punishes standing still).</summary>
+        public const float BossRockDamage = 0.25f;
 
         /// <summary>Formation spacing between followers.</summary>
         public const float Spacing = 1.15f;
@@ -305,7 +342,25 @@ namespace Survival.Domain.Runner
         /// Walked into: Other 0, Amount = squad members it hurt, Big true (their hits follow as HeroHit / FollowerHit / FollowerLost).
         /// The scene's break sound hook keys on this event.
         /// </summary>
-        BarrierBroken
+        BarrierBroken,
+
+        /// <summary>
+        /// The boss bends to pick up a boulder (X/Z = his spot, Amount = seconds to the release): the scene plays his pickup and
+        /// throw, the rock appearing in his hands at <see cref="RunnerRules.BossRockGrab"/>. No landing mark (Derek 2026-11-03).
+        /// </summary>
+        BossRockThrown,
+
+        /// <summary>The boulder lands (X/Z = the spot, Amount = squad members caught; their hits follow as HeroHit / FollowerHit / FollowerLost).</summary>
+        BossRockLanded,
+
+        /// <summary>The boulder leaves his hands (X/Z = where it lands, aimed now; Amount = seconds of flight).</summary>
+        BossRockReleased,
+
+        /// <summary>
+        /// One swing of the boss's slam lands (X/Z = where: the hero when it struck him, else the aimed road; Amount = squad
+        /// members it caught; Big = the hero was struck). Every swing of a multi-swing move fires one, on its own contact frame.
+        /// </summary>
+        BossSwingHit
     }
 
     /// <summary>What the boss is winding up.</summary>
@@ -504,6 +559,39 @@ namespace Survival.Domain.Runner
 
         /// <summary>Quakes started so far.</summary>
         public int Quakes { get; internal set; }
+
+        /// <summary>Slams started so far (picks each slam's move from his rotation).</summary>
+        public int Slams { get; internal set; }
+
+        /// <summary>Rotation index of the current or last slam's move (<see cref="LockedBattleRotation.AttackAt"/>); the scene plays that clip.</summary>
+        public int SlamSwing { get; internal set; } = -1;
+
+        /// <summary>Next swing of the current slam still to land (0 = none pending; the first lands at the windup's end).</summary>
+        internal int SlamNextHit { get; set; }
+
+        /// <summary>Seconds until <see cref="SlamNextHit"/> lands.</summary>
+        internal float SlamHitClock { get; set; }
+
+        /// <summary>True between a multi-swing slam's first swing and its last (more claws still coming).</summary>
+        public bool SlamSwinging => SlamNextHit > 0;
+
+        /// <summary>Seconds until the boulder he lifted lands (0 = none in his hands or in the air).</summary>
+        public float RockLeft { get; internal set; }
+
+        /// <summary>Where the current boulder lands, locked at the release (<see cref="RunnerEventKind.BossRockReleased"/>).</summary>
+        public float RockX { get; internal set; }
+
+        /// <inheritdoc cref="RockX"/>
+        public float RockZ { get; internal set; }
+
+        /// <summary>Seconds until the next lift.</summary>
+        public float RockClock { get; internal set; } = RunnerRules.BossRockFirst;
+
+        /// <summary>True while the current boulder is still in his hands (picked up, not yet thrown).</summary>
+        public bool RockHeld => RockLeft > RunnerRules.BossRockFlight;
+
+        /// <summary>Boulders thrown so far.</summary>
+        public int Rocks { get; internal set; }
 
         /// <summary>Centre (x) of the current or last quake's safe band.</summary>
         public float QuakeSafeX { get; internal set; }
@@ -1543,6 +1631,12 @@ namespace Survival.Domain.Runner
 
                 if (f.Boss)
                 {
+                    BossRocks(f, dt);
+                    if (Over)
+                    {
+                        return;
+                    }
+
                     BossAttack(f, dt);
                     continue;
                 }
@@ -1763,6 +1857,19 @@ namespace Survival.Domain.Runner
         private void BossAttack(RunnerFoe f, float dt)
         {
             f.AimHold = Math.Max(0f, f.AimHold - dt);
+            if (f.SlamNextHit > 0)
+            {
+                // The rest of a multi-swing move: each swing lands on its own contact frame, on whoever is still in reach.
+                f.SlamHitClock -= dt;
+                if (f.SlamHitClock > 0f)
+                {
+                    return;
+                }
+
+                SlamSwingHit(f, f.SlamNextHit);
+                return;
+            }
+
             if (f.Windup > 0f)
             {
                 f.Windup -= dt;
@@ -1810,9 +1917,103 @@ namespace Survival.Domain.Runner
             f.Move = RunnerBossMove.Slam;
             f.Windup = f.WindupTotal = RunnerRules.BossWindup;
             f.Actions++;
+            var moves = BossMoves(f.Unit.Roster);
+            f.SlamSwing = moves == null ? -1 : f.Slams % LockedBattleRotation.Count(moves.Value);
+            f.Slams++;
             (f.AimX, f.AimZ) = SlamAim(f, Hero.X, Hero.Z);
             Emit(RunnerEventKind.BossWindup, f.Id, Hero.Id, f.X, f.Z, f.Windup, false, false, f.Unit.Id);
             Emit(RunnerEventKind.Fired, f.Id, Hero.Id, f.AimX, f.AimZ, 0, false, false, f.Unit.Id);
+        }
+
+        /// <summary>
+        /// A thrower boss's opener (<see cref="RunnerUnitDef.Throws"/>): while the squad walks up to his arena line he picks up a
+        /// boulder every <see cref="RunnerRules.BossRockEvery"/> seconds, throws it at <see cref="RunnerRules.BossRockRelease"/>
+        /// (aimed then, where the lead will be when it lands) and it lands <see cref="RunnerRules.BossRockFlight"/> later on
+        /// everyone within <see cref="RunnerRules.BossRockRadius"/>. Once the squad is in his reach he stops picking up new ones
+        /// (one already in his hands is still thrown) and fights with his slam and quake.
+        /// </summary>
+        private void BossRocks(RunnerFoe f, float dt)
+        {
+            if (!f.Unit.Throws)
+            {
+                return;
+            }
+
+            if (f.RockLeft > 0f)
+            {
+                var held = f.RockHeld;
+                f.RockLeft -= dt;
+                if (held && !f.RockHeld)
+                {
+                    (f.RockX, f.RockZ) = RockAim(Hero.X, Hero.Z, Halted ? 0f : Pace, ArenaLine, Level.HalfWidth);
+                    Emit(RunnerEventKind.BossRockReleased, f.Id, Hero.Id, f.RockX, f.RockZ, Math.Max(0f, f.RockLeft), true, false, f.Unit.Id);
+                }
+
+                if (f.RockLeft <= 0f)
+                {
+                    f.RockLeft = 0f;
+                    RockLands(f);
+                }
+            }
+
+            if (f.Engaged || BossFight)
+            {
+                return;
+            }
+
+            f.RockClock -= dt;
+            if (f.RockClock > 0f || f.RockLeft > 0f)
+            {
+                return;
+            }
+
+            f.RockClock = RunnerRules.BossRockEvery;
+            f.RockLeft = RunnerRules.BossRockRelease + RunnerRules.BossRockFlight;
+            f.Rocks++;
+            f.SinceAttack = 0f;
+            Emit(RunnerEventKind.BossRockThrown, f.Id, Hero.Id, f.X, f.Z, RunnerRules.BossRockRelease, true, false, f.Unit.Id);
+        }
+
+        /// <summary>Where a boulder is aimed at its release: the lead's lane, and where he will be when it lands (never past the arena line).</summary>
+        public static (float X, float Z) RockAim(float heroX, float heroZ, float pace, float arenaLine, float roadHalfWidth) =>
+            (Clamp(heroX, -roadHalfWidth, roadHalfWidth), Math.Min(heroZ + (pace * RunnerRules.BossRockFlight), arenaLine));
+
+        /// <summary>True when a body at (<paramref name="x"/>, <paramref name="z"/>) of <paramref name="radius"/> is under a boulder landing at (<paramref name="rx"/>, <paramref name="rz"/>).</summary>
+        public static bool RockCatches(float rx, float rz, float x, float z, float radius) =>
+            Sq(x - rx) + Sq(z - rz) <= Sq(RunnerRules.BossRockRadius + (radius * 0.5f));
+
+        private void RockLands(RunnerFoe f)
+        {
+            var damage = Math.Max(1, (int)Math.Round(f.Damage * RunnerRules.BossRockDamage));
+            var heroHit = false;
+            var victims = new List<RunnerMember>();
+            foreach (var m in _squad)
+            {
+                if (!RockCatches(f.RockX, f.RockZ, m.X, m.Z, m.Unit.Radius))
+                {
+                    continue;
+                }
+
+                if (m.IsHero)
+                {
+                    heroHit = true;
+                }
+                else
+                {
+                    victims.Add(m);
+                }
+            }
+
+            foreach (var v in victims)
+            {
+                HurtFollower(f, v, damage);
+            }
+
+            Emit(RunnerEventKind.BossRockLanded, f.Id, Hero.Id, f.RockX, f.RockZ, victims.Count + (heroHit ? 1 : 0), true, false, f.Unit.Id);
+            if (heroHit)
+            {
+                HurtHero(f, damage);
+            }
         }
 
         /// <summary>
@@ -1920,8 +2121,84 @@ namespace Survival.Domain.Runner
             return (boss.X - half, boss.X + half, boss.Z - RunnerRules.BossSlamDepth, boss.Z);
         }
 
-        private void Slam(RunnerFoe f)
+        private void Slam(RunnerFoe f) => SlamSwingHit(f, 0);
+
+        /// <summary>The locked battle fighter whose attack rotation a boss of <paramref name="roster"/> plays (null: none, one swing).</summary>
+        public static LockedBattleFighter? BossMoves(string roster)
         {
+            foreach (var fighter in LockedBattleRoster.All)
+            {
+                if (string.Equals(fighter.Name, roster, StringComparison.OrdinalIgnoreCase))
+                {
+                    return LockedBattleRotation.Count(fighter) > 1 ? fighter : (LockedBattleFighter?)null;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>Swings in a boss slam's move (1 for a single strike; Ironhowl's claw combo lands 4).</summary>
+        public static int SlamSwings(RunnerFoe boss)
+        {
+            var moves = BossMoves(boss.Unit.Roster);
+            if (moves == null || boss.SlamSwing < 0)
+            {
+                return 1;
+            }
+
+            var n = LockedBattleRotation.HitCount(moves.Value, LockedBattleHits.ProfileOf(moves.Value.Name), boss.SlamSwing);
+            return Math.Max(1, n);
+        }
+
+        /// <summary>
+        /// Seconds from swing <paramref name="hit"/> - 1 to swing <paramref name="hit"/> of the boss's current move: the gap
+        /// between their contact frames in the clip.
+        /// </summary>
+        public static float SlamSwingGap(RunnerFoe boss, int hit)
+        {
+            var moves = BossMoves(boss.Unit.Roster);
+            if (moves == null || hit <= 0)
+            {
+                return 0f;
+            }
+
+            var profile = LockedBattleHits.ProfileOf(moves.Value.Name);
+            var a = LockedBattleRotation.HitFrame(moves.Value, profile, boss.SlamSwing, hit - 1);
+            var b = LockedBattleRotation.HitFrame(moves.Value, profile, boss.SlamSwing, hit);
+            return Math.Max(0f, (b - a) / (float)BlenderRigAttackSpec.FrameRate);
+        }
+
+        /// <summary>
+        /// Swing <paramref name="hit"/>'s share of a slam's <paramref name="total"/> damage over <paramref name="swings"/>
+        /// swings: an even split, the remainder on the first swings, so every swing landing adds up to one old single slam.
+        /// </summary>
+        public static int SlamSwingDamage(int total, int swings, int hit)
+        {
+            swings = Math.Max(1, swings);
+            var share = total / swings;
+            return share + (hit < total % swings ? 1 : 0);
+        }
+
+        /// <summary>
+        /// One swing of the slam: it lands on whoever stands in <see cref="SlamArea"/> now (a hero who has steered out since
+        /// the last swing is missed) for this swing's share of the slam's damage. Swing 0 is the slam (the scene drops the
+        /// road mark and shakes); every swing, the first included, also fires <see cref="RunnerEventKind.BossSwingHit"/>.
+        /// </summary>
+        private void SlamSwingHit(RunnerFoe f, int hit)
+        {
+            var swings = SlamSwings(f);
+            var damage = SlamSwingDamage(f.Damage, swings, hit);
+            if (hit + 1 < swings)
+            {
+                f.SlamNextHit = hit + 1;
+                f.SlamHitClock = (hit == 0 ? 0f : f.SlamHitClock) + SlamSwingGap(f, hit + 1);
+            }
+            else
+            {
+                f.SlamNextHit = 0;
+                f.SlamHitClock = 0f;
+            }
+
             var (minX, maxX, minZ, maxZ) = SlamArea(f);
             var caught = 0;
             var heroHit = false;
@@ -1942,10 +2219,13 @@ namespace Survival.Domain.Runner
                 }
             }
 
-            foreach (var v in victims)
+            if (damage > 0)
             {
-                HurtFollower(f, v, f.Damage);
-                caught++;
+                foreach (var v in victims)
+                {
+                    HurtFollower(f, v, damage);
+                    caught++;
+                }
             }
 
             if (heroHit)
@@ -1953,10 +2233,16 @@ namespace Survival.Domain.Runner
                 caught++;
             }
 
-            Emit(RunnerEventKind.BossSlam, f.Id, Hero.Id, f.AimX, f.AimZ, caught, true, false, f.Unit.Id);
-            if (heroHit)
+            if (hit == 0)
             {
-                HurtHero(f, f.Damage);
+                Emit(RunnerEventKind.BossSlam, f.Id, Hero.Id, f.AimX, f.AimZ, caught, true, false, f.Unit.Id);
+            }
+
+            var struck = heroHit && damage > 0;
+            Emit(RunnerEventKind.BossSwingHit, f.Id, Hero.Id, struck ? Hero.X : f.AimX, struck ? Hero.Z : f.AimZ, caught, struck, false, f.Unit.Id);
+            if (struck)
+            {
+                HurtHero(f, damage);
             }
         }
 

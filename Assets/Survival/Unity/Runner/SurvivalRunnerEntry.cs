@@ -49,6 +49,15 @@ namespace Survival.Unity
             _pack = pack;
             _hook = hook;
             _campaign = campaign;
+            // Decluttered HUD: the runner is the first, pinned icon on the side rail.
+            var rail = play.AddRailButton(ButtonName, -1f, RunnerArtKeys.EventIcon, pack.StringOr("runner.button", "Runner"), new Color(0.62f, 0.22f, 0.18f, 1f), OnRunnerTapped, pinned: true);
+            if (rail != null)
+            {
+                Button = rail.Root;
+                RefreshShown();
+                return;
+            }
+
             var btn = SurvivalPaintedButton.Create(play.Root, ButtonName, RunnerArtKeys.EventIcon, pack.StringOr("runner.button", "Runner"), out _, out _, 22);
             Button = btn.GetComponent<RectTransform>();
             if (pack.Hud.TryGetValue(Slot, out var slot))
@@ -63,6 +72,20 @@ namespace Survival.Unity
             }
 
             btn.onClick.AddListener(OnRunnerTapped);
+        }
+
+        /// <summary>Runner icon shows only while a level is left to play (checked on build and on return to town).</summary>
+        private void RefreshShown()
+        {
+            if (_play == null)
+            {
+                return;
+            }
+
+            var unlocked = _campaign != null && _campaign.Campaign != null ? _campaign.Campaign.RunnerUnlocked : 1;
+            var (catalog, _) = LevelFor(unlocked);
+            var allBeaten = catalog != null && RunnerProgress.AllBeaten(unlocked, catalog.Levels.Count);
+            _play.SetRailShown(ButtonName, Survival.Domain.View.RailActionable.Runner(allBeaten));
         }
 
         /// <summary>The one entry point: open the next unbeaten runner level (beaten levels never open again).</summary>
@@ -298,6 +321,7 @@ namespace Survival.Unity
                 }
 
                 _busy = false;
+                RefreshShown();
             }
 
             Pay(RunnerHandoff.Take());

@@ -20,6 +20,10 @@ namespace Survival.Unity
         private const float AutoPlaceSeconds = 10f;
 
         private RectTransform? _buildButton;
+        private bool _buildInNav;
+
+        /// <summary>Bottom-bar id of the Build button (decluttered HUD, no floating build_button slot).</summary>
+        public const string NavBuild = "nav.build";
         private RectTransform? _placeBar;
         private Text? _placeHint;
         private Text? _placeAutoText;
@@ -132,12 +136,76 @@ namespace Survival.Unity
             return type != null ? S("build.type." + type, type) : S("hook.plot." + plotId, plotId);
         }
 
+        /// <summary>Active Timers row label: "Barracks Lv 5" (the level being built or upgraded to).</summary>
+        public string TimerPlotLabel(string plotId)
+        {
+            var plot = _hook?.Base.Find(plotId);
+            if (plot == null)
+            {
+                return PlotName(plotId);
+            }
+
+            var lv = plot.UnderConstruction ? plot.Level : plot.Level + 1;
+            return PlotName(plotId) + "  " + Fmt("hook.level", "Lv {0}", lv);
+        }
+
+        /// <summary>Active Timers tap: show town, glide to the plot and open its panel (speed-up / claim while busy).</summary>
+        public void GoToPlot(string plotId)
+        {
+            var hook = _hook;
+            if (hook == null || hook.Base.Find(plotId) == null)
+            {
+                return;
+            }
+
+            _play?.ShowScreen(Survival.Domain.View.PlayScreen.Village);
+            if (_play?.Village?.Host(plotId) is RectTransform host)
+            {
+                _play.Village.Rig?.FocusOn(host.anchoredPosition.x, host.anchoredPosition.y);
+            }
+
+            if (_cards.TryGetValue(plotId, out var card))
+            {
+                StartCoroutine(Punch(card.Root, 0.14f, 10));
+            }
+
+            if (hook.Base.PendingFor(plotId) != null || hook.Base.IsUpgrading(plotId))
+            {
+                OnTapPlot(plotId);
+            }
+            else
+            {
+                OpenBuilding(plotId);
+            }
+        }
+
         // ---------- Build button + menu ----------
 
         private void BuildBuildButton(RectTransform root)
         {
-            if (_pack == null || _play?.Village == null || !_pack.Hud.TryGetValue("build_button", out var slot))
+            if (_pack == null || _play?.Village == null)
             {
+                return;
+            }
+
+            if (!_pack.Hud.TryGetValue("build_button", out var slot))
+            {
+                // Build lives in the bottom bar, right after Heroes (Battle slides in ahead of it).
+                _buildButton = _play.AddNavButton(NavBuild, BottomNav.IconBuild, () =>
+                {
+                    if (_play.Screen.Current != PlayScreen.Village)
+                    {
+                        _play.ShowScreen(PlayScreen.Village);
+                    }
+
+                    OpenBuildMenu();
+                }, 1);
+                _buildInNav = _buildButton != null;
+                if (_buildButton != null)
+                {
+                    _buildBadge = BuildUpgradeBadge(_buildButton);
+                }
+
                 return;
             }
 
@@ -145,10 +213,76 @@ namespace Survival.Unity
             var rt = btn.GetComponent<RectTransform>();
             SurvivalVisuals.Place(rt, slot);
             var glow = HookSkin.Glow(rt, "Glow", new Color(1f, 0.85f, 0.4f, 0.35f));
-            Box(glow.rectTransform, -0.12f, -0.10f, 1.12f, 1.25f);
+            HookSkin.Box(glow.rectTransform, -0.12f, -0.10f, 1.12f, 1.25f);
             glow.transform.SetAsFirstSibling();
             _buildButton = rt;
+            _buildBadge = BuildUpgradeBadge(rt);
             Wire(btn, OpenBuildMenu);
+        }
+
+        private Image? _buildBadge;
+        private float _buildBadgeTick;
+
+        /// <summary>
+        /// The heroes' painted upgrade badge (gold double arrow on a green shield, #119) on the Build button: same art,
+        /// corner and bob. Shown while anything can be built or upgraded with what the player has, builders busy or not.
+        /// </summary>
+        private Image? BuildUpgradeBadge(RectTransform parent)
+        {
+            var sprite = SurvivalArt.Get(HookArtKeys.BadgeUpgrade);
+            if (sprite == null)
+            {
+                return null;
+            }
+
+            var badge = SurvivalVisuals.Image(parent, "BuildBadge", Color.white, sprite);
+            badge.preserveAspect = true;
+            badge.raycastTarget = false;
+            var brt = badge.rectTransform;
+            brt.anchorMin = brt.anchorMax = new Vector2(0.88f, 0.80f);
+            brt.sizeDelta = new Vector2(44f, 44f);
+            badge.gameObject.SetActive(false);
+            StartCoroutine(BadgeBob(brt));
+            return badge;
+        }
+
+        private static System.Collections.IEnumerator BadgeBob(RectTransform rt)
+        {
+            var t = 0f;
+            while (rt != null)
+            {
+                if (rt.gameObject.activeInHierarchy)
+                {
+                    t += Time.unscaledDeltaTime;
+                    var k = 1f + 0.07f * Mathf.Sin(t * 4f);
+                    rt.localScale = new Vector3(k, k, 1f);
+                    rt.anchoredPosition = new Vector2(0f, 3f * Mathf.Sin(t * 4f));
+                }
+
+                yield return null;
+            }
+        }
+
+        /// <summary>Re-check the Build badge 4x a second (resources, build start / finish, back in town all show up here).</summary>
+        private void RefreshBuildBadge(bool now = false)
+        {
+            if (_buildBadge == null || _hook == null)
+            {
+                return;
+            }
+
+            _buildBadgeTick -= Time.unscaledDeltaTime;
+            if (!now && _buildBadgeTick > 0f)
+            {
+                return;
+            }
+
+            _buildBadgeTick = 0.25f;
+            var show = BuildReady.Any(_hook.Base, _hook.Build);
+            if (_buildBadge.gameObject.activeSelf != show)
+            {
+                _buildBadge.gameObject.SetActive(show);
+            }
         }
 
         private string BuildBlockText(BuildBlock block, BuildableDef t)
@@ -185,25 +319,27 @@ namespace Survival.Unity
             BalanceBar.Above(panel, hook.Wallet, BalanceBarIds.Building);
             var refreshers = new List<System.Action>();
             const float top = 0.84f;
-            const float rowH = 0.165f;
+            // Rows stop above the spots line / Close, so nothing covers a building row.
+            var floor = 0.16f;
+            var rowH = Mathf.Min(0.165f, (top - floor) / Mathf.Max(1, types.Count));
             for (var i = 0; i < types.Count; i++)
             {
                 var t = types[i];
                 var y1 = top - i * rowH;
                 var y0 = y1 - rowH + 0.012f;
                 var row = HookSkin.Panel(panel, "Row_" + t.Type, HookArtKeys.Plate, SurvivalVisuals.RowFill, 0.5f);
-                Box(row.rectTransform, 0.04f, y0, 0.96f, y1);
+                HookSkin.Box(row.rectTransform, 0.04f, y0, 0.96f, y1);
                 var art = HookSkin.Art(row.transform, "Art", HookArtKeys.ForBuildType(t.Type), t.Produces != null ? ResColor(t.Produces) : SurvivalVisuals.PinBuild);
-                Box(art.rectTransform, 0.01f, 0.04f, 0.22f, 0.98f);
+                HookSkin.Box(art.rectTransform, 0.01f, 0.04f, 0.22f, 0.98f);
                 var name = HookSkin.Outlined(SurvivalVisuals.Text(row.transform, "Name", S("build.type." + t.Type, t.Type), 28, TextAnchor.MiddleLeft, SurvivalVisuals.Reward), 1.5f);
                 name.fontStyle = FontStyle.Bold;
-                Box(name.rectTransform, 0.24f, 0.62f, 0.68f, 0.94f);
+                HookSkin.Box(name.rectTransform, 0.24f, 0.62f, 0.68f, 0.94f);
                 var what = SurvivalVisuals.Text(row.transform, "What", S("build.desc." + t.Type, ""), 18, TextAnchor.MiddleLeft, SurvivalVisuals.Mute);
-                Box(what.rectTransform, 0.24f, 0.44f, 0.70f, 0.64f);
+                HookSkin.Box(what.rectTransform, 0.24f, 0.44f, 0.70f, 0.64f);
                 var cost = HookSkin.Outlined(SurvivalVisuals.Text(row.transform, "Cost", "", 19, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.2f);
-                Box(cost.rectTransform, 0.24f, 0.24f, 0.70f, 0.44f);
+                HookSkin.Box(cost.rectTransform, 0.24f, 0.24f, 0.70f, 0.44f);
                 var count = HookSkin.Outlined(SurvivalVisuals.Text(row.transform, "Count", "", 18, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.2f);
-                Box(count.rectTransform, 0.24f, 0.04f, 0.70f, 0.24f);
+                HookSkin.Box(count.rectTransform, 0.24f, 0.04f, 0.70f, 0.24f);
                 var label = SheetButton((RectTransform)row.transform, "Go", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.71f, 0.18f, 0.98f, 0.82f, 22, out var go);
                 label.horizontalOverflow = HorizontalWrapMode.Wrap;
                 var goImg = go.GetComponent<Image>();
@@ -212,15 +348,22 @@ namespace Survival.Unity
                 Wire(go, () =>
                 {
                     var block = hook.Build.Check(type);
-                    if (block == BuildBlock.None)
+                    var afford = hook.Wallet.CanAfford(hook.Build.CostOf(type));
+                    switch (BuildReady.Route(block, afford, hook.TempBuilderOfferedForBuild(type) && hook.TempBuilderProduct != null))
                     {
-                        CloseSheet();
-                        BeginPlacement(type);
-                        return;
+                        case BuildTap.Place:
+                            CloseSheet();
+                            BeginPlacement(type);
+                            return;
+                        case BuildTap.BuyBuilder:
+                            // No free builder: open the buy screen; buying starts this build on the next free spot.
+                            CloseSheet();
+                            OpenTempBuilder(null, type, null);
+                            return;
                     }
 
                     StartCoroutine(Shake(goRt));
-                    Toast(NormCenterOf(goRt), BuildBlockText(block, t), Warn);
+                    Toast(NormCenterOf(goRt), BuildBlockText(BuildReady.Shown(block, afford), t), Warn);
                 });
 
                 refreshers.Add(() =>
@@ -232,7 +375,8 @@ namespace Survival.Unity
                     var next = t.NextUnlockCastle(hq);
                     count.text = Fmt2("build.count", "Built {0}/{1}", built, max)
                         + (next is int n ? "   " + Fmt("build.more_at", "More at Castle Lv {0}", n) : "");
-                    var block = hook.Build.Check(type);
+                    // A builder-busy job looks like a free one; tapping it opens the buy-a-builder screen.
+                    var block = BuildReady.Shown(hook.Build.Check(type), hook.Wallet.CanAfford(hook.Build.CostOf(type)));
                     var ok = block == BuildBlock.None;
                     label.text = ok ? S("build.button", "Build") : BuildBlockText(block, t);
                     label.fontSize = ok ? 26 : 17;
@@ -249,7 +393,7 @@ namespace Survival.Unity
             }
 
             var spots = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Spots", "", 19, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.2f);
-            Box(spots.rectTransform, 0.05f, 0.105f, 0.95f, 0.155f);
+            HookSkin.Box(spots.rectTransform, 0.05f, 0.105f, 0.95f, 0.155f);
             var closeText = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.33f, 0.025f, 0.67f, 0.10f, 22, out var close);
             closeText.text = S("hook.close", "Close");
             Wire(close, CloseSheet);
@@ -287,10 +431,10 @@ namespace Survival.Unity
             {
                 var bar = HookSkin.Panel(_overlay, "PlaceBar", HookArtKeys.Panel, SurvivalVisuals.InspectFill, 0.6f);
                 bar.raycastTarget = true;
-                Box(bar.rectTransform, 0.03f, 0.115f, 0.97f, 0.235f);
+                HookSkin.Box(bar.rectTransform, 0.03f, 0.115f, 0.97f, 0.235f);
                 _placeHint = HookSkin.Outlined(SurvivalVisuals.Text(bar.transform, "Hint", "", 26, TextAnchor.MiddleCenter, SurvivalVisuals.Reward), 1.5f);
                 _placeHint.fontStyle = FontStyle.Bold;
-                Box(_placeHint.rectTransform, 0.03f, 0.56f, 0.97f, 0.94f);
+                HookSkin.Box(_placeHint.rectTransform, 0.03f, 0.56f, 0.97f, 0.94f);
                 _placeAutoText = SheetButton(bar.rectTransform, "Auto", HookArtKeys.ButtonGreen, FreeGreen, 0.05f, 0.10f, 0.60f, 0.54f, 22, out var auto);
                 var cancelText = SheetButton(bar.rectTransform, "Cancel", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.63f, 0.10f, 0.95f, 0.54f, 22, out var cancel);
                 cancelText.text = S("build.cancel", "Cancel");
@@ -305,7 +449,7 @@ namespace Survival.Unity
                 _placeHint.text = Fmt("build.place_hint", "Tap a glowing spot for your {0}", S("build.type." + type, type));
             }
 
-            StartCoroutine(PopIn(_placeBar));
+            StartCoroutine(HookSkin.PopIn(_placeBar));
             if (first != null)
             {
                 StartCoroutine(Punch(first, 0.2f, 12));
@@ -476,7 +620,7 @@ namespace Survival.Unity
         private void TickBuild()
         {
             var onVillage = _play != null && _play.Screen.Current == PlayScreen.Village && !_play.Screen.InTransition;
-            if (_buildButton != null)
+            if (_buildButton != null && !_buildInNav)
             {
                 var show = onVillage && _placingType == null;
                 if (_buildButton.gameObject.activeSelf != show)

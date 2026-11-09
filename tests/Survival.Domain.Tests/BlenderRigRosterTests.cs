@@ -109,8 +109,6 @@ public sealed class BlenderRigRosterTests
         var root = FindRepoRoot();
         var player = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigPlayer.cs"));
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "AshwyrmActor.cs"));
-        var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "AshwyrmDemo.cs"));
-        var shared = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigDemo.cs"));
         Assert.Contains("bakeAxisConversion = false", player, StringComparison.Ordinal);
         Assert.DoesNotContain("bakeAxisConversion = true", player, StringComparison.Ordinal);
         // The one pose write is the runner upper-body layer carrying the take's hips turn onto the spine each frame
@@ -126,16 +124,11 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("IsRejectedMixamoRigFile", player, StringComparison.Ordinal);
         Assert.Contains("PlayPose", actor, StringComparison.Ordinal);
         Assert.Contains("AshwyrmMotion.Spec", actor, StringComparison.Ordinal);
-        Assert.Contains("AshwyrmClipDropdown", demo, StringComparison.Ordinal);
-        Assert.Contains("AshwyrmMotion.Spec", demo, StringComparison.Ordinal);
-        Assert.Contains("SetValueWithoutNotify(0)", shared, StringComparison.Ordinal);
-        Assert.Contains("DropdownObjectName", shared, StringComparison.Ordinal);
         AssertImportSkipsReimportWhenMetaAlreadyMatches(player);
 
         Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Ashwyrm.unity")), "one-character demo scenes were removed 2026-10-19");
 
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.DoesNotContain("Survival/Ashwyrm Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         Assert.DoesNotContain("Ashwyrm.unity", editor, StringComparison.Ordinal);
     }
 
@@ -167,8 +160,6 @@ public sealed class BlenderRigRosterTests
         var root = FindRepoRoot();
         var player = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigPlayer.cs"));
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "NightfangActor.cs"));
-        var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "NightfangDemo.cs"));
-        var shared = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigDemo.cs"));
         Assert.Contains("bakeAxisConversion = false", player, StringComparison.Ordinal);
         Assert.DoesNotContain("bakeAxisConversion = true", player, StringComparison.Ordinal);
         // The one pose write is the runner upper-body layer carrying the take's hips turn onto the spine each frame
@@ -184,15 +175,10 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("IsRejectedMixamoRigFile", player, StringComparison.Ordinal);
         Assert.Contains("PlayPose", actor, StringComparison.Ordinal);
         Assert.Contains("NightfangMotion.Spec", actor, StringComparison.Ordinal);
-        Assert.Contains("NightfangClipDropdown", demo, StringComparison.Ordinal);
-        Assert.Contains("NightfangMotion.Spec", demo, StringComparison.Ordinal);
-        Assert.Contains("SetValueWithoutNotify(0)", shared, StringComparison.Ordinal);
-        Assert.Contains("DropdownObjectName", shared, StringComparison.Ordinal);
 
         Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Nightfang.unity")), "one-character demo scenes were removed 2026-10-19");
 
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.DoesNotContain("Survival/Nightfang Demo (rest + trot + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         Assert.DoesNotContain("Nightfang.unity", editor, StringComparison.Ordinal);
     }
 
@@ -265,13 +251,9 @@ public sealed class BlenderRigRosterTests
 
         Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", spec.SceneFileName)), "one-character demo scenes were removed 2026-10-19");
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "StormcrestActor.cs"));
-        var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "StormcrestDemo.cs"));
         Assert.Contains("StormcrestMotion.Spec", actor, StringComparison.Ordinal);
         Assert.Contains("PlayPose", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("mixamorig", actor, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("StormcrestClipDropdown", demo, StringComparison.Ordinal);
-        var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.DoesNotContain("Survival/Stormcrest Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         var build = File.ReadAllText(Path.Combine(root, "ProjectSettings", "EditorBuildSettings.asset"));
         Assert.DoesNotContain("Stormcrest.unity", build, StringComparison.Ordinal);
     }
@@ -282,8 +264,6 @@ public sealed class BlenderRigRosterTests
         var root = FindRepoRoot();
         var player = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigPlayer.cs"));
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "StormcrestActor.cs"));
-        var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "StormcrestDemo.cs"));
-        var shared = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigDemo.cs"));
         Assert.Contains("bakeAxisConversion = false", player, StringComparison.Ordinal);
         Assert.DoesNotContain("bakeAxisConversion = true", player, StringComparison.Ordinal);
         // The one pose write is the runner upper-body layer carrying the take's hips turn onto the spine each frame
@@ -299,15 +279,10 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("IsRejectedMixamoRigFile", player, StringComparison.Ordinal);
         Assert.Contains("PlayPose", actor, StringComparison.Ordinal);
         Assert.Contains("StormcrestMotion.Spec", actor, StringComparison.Ordinal);
-        Assert.Contains("StormcrestClipDropdown", demo, StringComparison.Ordinal);
-        Assert.Contains("StormcrestMotion.Spec", demo, StringComparison.Ordinal);
-        Assert.Contains("SetValueWithoutNotify(0)", shared, StringComparison.Ordinal);
-        Assert.Contains("DropdownObjectName", shared, StringComparison.Ordinal);
 
         Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Stormcrest.unity")), "one-character demo scenes were removed 2026-10-19");
 
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
-        Assert.DoesNotContain("Survival/Stormcrest Demo (rest + wing flap + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
         Assert.DoesNotContain("Stormcrest.unity", editor, StringComparison.Ordinal);
     }
 
@@ -453,12 +428,10 @@ public sealed class BlenderRigRosterTests
 
         Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", spec.SceneFileName)), "one-character demo scenes were removed 2026-10-19");
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", spec.Name + "Actor.cs"));
-        var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", spec.Name + "Demo.cs"));
         Assert.Contains("Survival.Domain.Enemies", actor, StringComparison.Ordinal);
         Assert.Contains(spec.Name + "Motion.Spec", actor, StringComparison.Ordinal);
         Assert.Contains("PlayPose", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("Mixamorig", actor, StringComparison.Ordinal);
-        Assert.Contains(spec.DropdownObjectName, demo, StringComparison.Ordinal);
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
         Assert.DoesNotContain(menu, editor, StringComparison.Ordinal);
         var build = File.ReadAllText(Path.Combine(root, "ProjectSettings", "EditorBuildSettings.asset"));

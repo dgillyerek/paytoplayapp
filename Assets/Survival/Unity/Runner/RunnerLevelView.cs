@@ -407,6 +407,7 @@ namespace Survival.Unity
             AnimateBarriers(dt);
             AnimateSlamMark();
             AnimateQuakeMark();
+            AnimateRockMark();
             RunnerHitchLog.Begin(RunnerHitchLog.Section.Shots);
             TickShots(dt);
             TickFx(dt);
@@ -446,6 +447,7 @@ namespace Survival.Unity
                 }
             }
 
+            FollowRockHands();
             RunnerHitchLog.End(RunnerHitchLog.Section.Late);
             RunnerHitchLog.Begin(RunnerHitchLog.Section.Camera);
             FollowCamera(dt);
@@ -976,18 +978,24 @@ namespace Survival.Unity
                     var at = (f.TargetId != 0 ? _run.Member(f.TargetId) : null) ?? _run.Hero;
                     rig.Face(new Vector3(at.X - f.X, 0f, at.Z - f.Z));
                 }
-                if (f.Attacking)
+                // Walking shooters (Vespera, Bonequill) keep their legs on the walk under the take; any other foe the sim is
+                // moving between swings walks instead of sliding in its attack / rest-gap pose.
+                switch (RunnerWalkingShooterFoes.BodyFor(f.Walking, f.Attacking, f.InTake, RunnerWalkingShooterFoes.Applies(rig.Data.Name)))
                 {
-                    continue;
-                }
-
-                if (f.Walking)
-                {
-                    rig.Walk();
-                }
-                else
-                {
-                    rig.Rest();
+                    case RunnerFoeBody.AttackWalking:
+                        rig.WalkUnderAttack(true);
+                        break;
+                    case RunnerFoeBody.AttackStanding:
+                        rig.WalkUnderAttack(false);
+                        break;
+                    case RunnerFoeBody.Attack:
+                        break;
+                    case RunnerFoeBody.Walk:
+                        rig.Walk();
+                        break;
+                    default:
+                        rig.Rest();
+                        break;
                 }
             }
         }
@@ -1055,9 +1063,14 @@ namespace Survival.Unity
                     else if (_foes.TryGetValue(e.Id, out var f))
                     {
                         // Its take is already playing (AttackStarted): this is its release frame, not a new swing.
-                        if (!_foeTakes.Remove(e.Id))
+                        if (!_foeTakes.Remove(e.Id) && !BossSlamTake(e.Id, f))
                         {
                             f.Attack();
+                        }
+
+                        if (_run?.Foe(e.Id) is { Unit: { Ranged: false, Roster: "Ashwyrm" } } wyrm)
+                        {
+                            AshwyrmBreath(new Vector3(wyrm.X, 0f, wyrm.Z), at);
                         }
                     }
 
@@ -1172,6 +1185,10 @@ namespace Survival.Unity
                     BossSlammed(e);
                     break;
 
+                case RunnerEventKind.BossSwingHit:
+                    BossSwingLanded(e);
+                    break;
+
                 case RunnerEventKind.BossQuakeWindup:
                     RunnerHitchLog.Transition("boss quake telegraph");
                     BossQuakeWindup(e);
@@ -1180,6 +1197,18 @@ namespace Survival.Unity
                 case RunnerEventKind.BossQuake:
                     RunnerHitchLog.Transition("boss quake landed");
                     BossQuaked(e);
+                    break;
+
+                case RunnerEventKind.BossRockThrown:
+                    BossRockThrown(e);
+                    break;
+
+                case RunnerEventKind.BossRockReleased:
+                    BossRockReleased(e);
+                    break;
+
+                case RunnerEventKind.BossRockLanded:
+                    BossRockLanded(e);
                     break;
 
                 case RunnerEventKind.HazardSpawned:
@@ -1599,6 +1628,32 @@ namespace Survival.Unity
             public float Spin;
             public Color Color;
             public float Size;
+        }
+
+        /// <summary>
+        /// Ashwyrm's void-fire breath (Derek 2026-11-02: longer runner reach): his hit lands on the release frame from up to
+        /// 3.6 m out, so a stream of purple fire puffs flies from his snout to the target in <see cref="BreathSeconds"/>
+        /// and bursts there, so the hit visibly reaches whoever it lands on.
+        /// </summary>
+        private const float BreathSeconds = 0.18f;
+
+        private void AshwyrmBreath(Vector3 from, Vector3 to)
+        {
+            var mouth = from + (Vector3.up * 1.4f) + ((to - from).normalized * 0.9f);
+            var hit = to + (Vector3.up * 0.8f);
+            var span = hit - mouth;
+            var core = new Color(0.95f, 0.7f, 1f, 0.9f);
+            var rim = new Color(0.6f, 0.25f, 1f, 0.85f);
+            for (var i = 0; i < 5; i++)
+            {
+                // Staggered starts along the first part of the stream, all reaching the target as the hit lands.
+                var t = i * 0.12f;
+                var life = BreathSeconds * (1f - t);
+                AddFx(HookArtKeys.FxGlow, mouth + (span * t), 0.5f + (i * 0.12f), life, i % 2 == 0 ? rim : core, span * (1f - t) / Mathf.Max(0.01f, life), 1.2f, 0f);
+            }
+
+            AddFx(HookArtKeys.FxBurstRing, hit, 1.1f, 0.3f, rim, Vector3.zero, 1.6f, 0f);
+            AddFx(HookArtKeys.FxGlow, hit, 1f, 0.25f, core, Vector3.zero, 0.8f, 0f);
         }
 
         private void AddFx(string key, Vector3 at, float size, float life, Color color, Vector3 velocity, float grow, float spin)

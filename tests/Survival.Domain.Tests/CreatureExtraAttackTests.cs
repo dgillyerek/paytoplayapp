@@ -211,7 +211,8 @@ public sealed class CreatureExtraAttackTests
         foreach (var name in Creatures)
         {
             var f = Fighter(name);
-            Assert.Equal(3, LockedBattleRotation.Count(f));
+            var n = name == "Ashwyrm" ? 2 : 3; // Ashwyrm's walk-clip stomp was dropped (2026-11-02): breath, gust.
+            Assert.Equal(n, LockedBattleRotation.Count(f));
             var first = LockedBattleRotation.AttackAt(f, 0);
             Assert.Equal(BlenderRigAttackSpec.PoseName, first.PoseName);
             Assert.Equal(f.AttackPoseName, first.PoseName);
@@ -229,8 +230,8 @@ public sealed class CreatureExtraAttackTests
             for (var i = 0; i < 4; i++)
             {
                 Assert.True(LockedBattleRotation.Locate(f, at + 0.01f, out var index, out _));
-                Assert.Equal(i % 3, index);
-                at += LockedBattleRotation.CycleSeconds(f, i % 3);
+                Assert.Equal(i % n, index);
+                at += LockedBattleRotation.CycleSeconds(f, i % n);
             }
         }
     }
@@ -243,7 +244,7 @@ public sealed class CreatureExtraAttackTests
             var f = Fighter(name);
             var profile = LockedBattleHits.ProfileOf(f.Name);
             var labels = new HashSet<string>();
-            for (var i = 0; i < 3; i++)
+            for (var i = 0; i < LockedBattleRotation.Count(f); i++)
             {
                 var a = LockedBattleRotation.AttackAt(f, i);
                 Assert.Contains(a.PoseName, PoseNames(name));
@@ -280,7 +281,10 @@ public sealed class CreatureExtraAttackTests
         {
             var f = Fighter(name);
             Assert.NotEqual(BlenderRigAttackSpec.PoseName, LockedBattleRotation.AttackAt(f, 1).PoseName);
-            Assert.NotEqual(BlenderRigAttackSpec.PoseName, LockedBattleRotation.AttackAt(f, 2).PoseName);
+            for (var i = 1; i < LockedBattleRotation.Count(f); i++)
+            {
+                Assert.NotEqual(BlenderRigAttackSpec.PoseName, LockedBattleRotation.AttackAt(f, i).PoseName);
+            }
         }
     }
 
@@ -292,14 +296,14 @@ public sealed class CreatureExtraAttackTests
             var f = Fighter(name);
             var profile = LockedBattleHits.ProfileOf(f.Name);
             var kinds = new HashSet<BattleImpactKind>();
-            for (var i = 0; i < 3; i++)
+            for (var i = 0; i < LockedBattleRotation.Count(f); i++)
             {
                 Assert.True(kinds.Add(LockedBattleRotation.Impact(f, profile, i)), name + " attack " + (i + 1));
             }
         }
 
         Assert.Equal(BattleImpactKind.WingGust, LockedBattleRotation.Impact(LockedBattleRoster.Emberfang, LockedBattleHits.Emberfang, 1));
-        Assert.Equal(BattleImpactKind.StompQuake, LockedBattleRotation.Impact(LockedBattleRoster.Ashwyrm, LockedBattleHits.Ashwyrm, 2));
+        Assert.Equal(BattleImpactKind.WingGust, LockedBattleRotation.Impact(LockedBattleRoster.Ashwyrm, LockedBattleHits.Ashwyrm, 1));
         Assert.Equal(BattleImpactKind.VillainShadowLash, LockedBattleRotation.Impact(LockedBattleRoster.Nightfang, LockedBattleHits.Nightfang, 1));
         Assert.Equal(BattleImpactKind.ClawWave, LockedBattleRotation.Impact(LockedBattleRoster.Nightfang, LockedBattleHits.Nightfang, 2));
     }
@@ -350,7 +354,6 @@ public sealed class CreatureExtraAttackTests
     [Theory]
     [InlineData("Emberfang")]
     [InlineData("Stormcrest")]
-    [InlineData("Ashwyrm")]
     public void Stomp_cracks_leave_the_foot_as_it_comes_down_in_two_walk_loops(string name)
     {
         var f = Fighter(name);
@@ -444,7 +447,7 @@ public sealed class CreatureExtraAttackTests
         // Their extra attacks reach across the duel gap by streak (gust, crack), never by walking up to each other.
         foreach (var f in new[] { LockedBattleRoster.Emberfang, LockedBattleRoster.Ashwyrm })
         {
-            for (var i = 1; i < 3; i++)
+            for (var i = 1; i < LockedBattleRotation.Count(f); i++)
             {
                 var a = LockedBattleRotation.AttackAt(f, i);
                 Assert.True(a.FlightFrames > 0, f.Name);
