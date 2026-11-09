@@ -43,14 +43,20 @@ namespace Survival.Editor
             }
 
             var path = assetPath.Replace('\\', '/');
-            if (!path.EndsWith("/VORGATH_fire_stream_flipbook_4x4.png", StringComparison.OrdinalIgnoreCase))
+            var flip = path.EndsWith("/VORGATH_fire_stream_flipbook_4x4.png", StringComparison.OrdinalIgnoreCase);
+            var strip = path.IndexOf("/vorgath/vfx/strips/VORGATH_fire_f", StringComparison.OrdinalIgnoreCase) >= 0
+                && path.EndsWith(".png", StringComparison.OrdinalIgnoreCase);
+            if (!flip && !strip)
             {
                 return;
             }
 
-            // DEV_NOTE_VORGATH_spit_fire.md: Alpha Is Transparency, Wrap Clamp, no mipmaps, Max Size 1024.
+            // PNG alpha is the flame coverage. Do not rebuild it from grayscale, and do not compress it away.
             importer.textureType = TextureImporterType.Default;
+            importer.alphaSource = TextureImporterAlphaSource.FromInput;
             importer.alphaIsTransparency = true;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.crunchedCompression = false;
             importer.mipmapEnabled = false;
             importer.wrapMode = TextureWrapMode.Clamp;
             importer.maxTextureSize = 1024;

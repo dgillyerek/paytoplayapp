@@ -1,6 +1,18 @@
-# DEV NOTE: Vorgath spit fire stream (FIX5)
+# DEV NOTE: Vorgath spit fire stream (FIX6)
 
-Design delivers the art, the socket numbers and the timing. **Dev has to wire the VFX hook in Unity.** Design made no `.cs` or Unity scene edits. The character FBXs still have the same 20 bones, and no socket bone was added.
+The mouth socket, FireStart / FireStop, and the spit clip are unchanged. FIX6 replaces the stream itself. Body, skeleton, slam, and cape are not touched.
+
+## What the screenshot actually was
+
+On main `02b3660e` the preview does **not** run a ParticleSystem. `VorgathSpitStream` built one `LineRenderer` with `Segments = 10` (evenly spaced) and `Universal Render Pipeline/Particles/Unlit`.
+
+That shader samples `_BaseMap` with `UnityBuildTexture2DStructNoScaleNoTexelSize`, so it **ignores** material scale and offset. `SetFrame()` wrote scale `(0.25, 0.25)` and a cell offset every frame, and that window never reached the sampler. The GPU sampled the line's mesh UVs against the **whole** FIX5 4×4 sheet.
+
+Measured on that sheet (all 16 cells): one rounded slug per cell, opaque-core mean RGB about `(254, 253, 197)`, **0%** orange and **0%** red inside alpha > 200, and a clear gutter. Additive blending plus a white vertex color keeps that core clipped. The only spacing in the effect is the 10 line segments. The polyline stops at the ground, so a pitched stream that hits inside 2.6 m keeps about 8 of them. That count moves as the length ramps and as the head sweep changes the hit. That is the row of 7 or 8 pellets. It is not an emission rate.
+
+`textureMode` is `Stretch`, so mesh U runs 0 at the mouth to 1 at the tip. Because the shader ignores the 0.25 window, that stretch showed the **entire** 16-cell sheet: a 4×4 of gapped yellow-white slugs, then additive white. `SetFrame` animated nothing.
+
+FIX6 keeps that exact shader (`Universal Render Pipeline/Particles/Unlit`, no Sprites fallback) and does not animate scale or offset. Each of eight strips is one 1024×256 flame. Playback swaps the whole texture at 24 fps.
 
 ## 1. When the stream is on (`VORGATH_attack_spit.fbx`, 163 frames, 30 fps)
 The window comes from the mouth opening: the angle between the jaw (`Bone.005`) and the snout (`Bone.004`) is 58° at rest. It rises from f52, holds at +25° from f57 to f67, and is back to rest by f77.
@@ -25,21 +37,26 @@ For Animation Events, use two events: `FireStart` at 1.733 s and `FireStop` at 2
   2. Or, with the prefab at bind pose: create an empty child of `Bone.004`, set its world position from the model-space point above and its forward (+Z) from the direction above, then keep it parented.
 - Check: on spit f60 to f62 the socket gizmo should sit inside the open mouth, with +Z pointing out between the teeth.
 
-## 3. VFX asset: `vfx/VORGATH_fire_stream_flipbook_4x4.png` (FIX5 upgrade)
-- 1024x1024 RGBA. 4x4 = 16 frames, 256 px cells, read row by row from the top-left. Soft-looped (periodic advection + 3-frame crossfade at wrap) so play it at 20 to 30 fps (16 frames at 24 fps is about 0.67 s per loop). **Same layout/orientation/frame count as fix3/fix4** so it drops into the existing socket + `VorgathSpitStream` LineRenderer without code changes.
-- Cell layout: the **mouth end is at the left edge (U=0)** and the stream runs to the right (U=1). V=0.5 is the centerline. Three-pixel transparent gutters on every cell edge. Alpha is soft with no hard cell borders.
-- **FIX5 paint (replaces FIX4 sprite fire Derek flagged as playful/basic):** authored offline with a **CPU volumetric thermal-emission ray marcher** (Python/NumPy/SciPy). This is **texture art**, not a Unity/VFX Graph fluid sim and not a recorded real-fire plate. Dense advected multiscale domain-warped density, thin hot flame sheets, cooler fringe, HDR blackbody-inspired color ramp tone-mapped to sRGB. Result: **vivid, relatively smooth bright yellow core** with a thick giant-fireball head (not small orange wisps).
-- Colors follow Theme A fantasy: core about #FFF7C7 to #FFE08A, body #FFD24A to #FF9A1F, edges #E85A10 to #8C0A05.
-- **Suggested setup (unchanged from FIX4 — pick one):**
-  - **Stretched mesh strip (recommended):** a quad strip or LineRenderer of 8 to 12 segments from the socket along socket +Z, about **2.6 m** long, with a little droop (about -0.12·t² m) and clipped at the ground. Width runs from about 0.18 m at the mouth to about 0.9 m at the end. Map U along the length and V across it. Use the flipbook via `_MainTex` tiling (0.25, 0.25) with a frame offset, or a Flipbook node. Use Additive or Alpha-blend Premultiplied with the Particles/Unlit shader, and billboard it around the length axis (LineRenderer Alignment = View).
-  - **Particle System:** shape Cone (angle 6 to 8°, radius 0.05) at the socket. Start speed 6 to 8 m/s, lifetime 0.35 to 0.45 s, emission about 60 to 80/s. Renderer = Stretched Billboard (Speed Scale about 0.05 to 0.08, Length Scale 1 to 2). Texture Sheet Animation 4x4, cycles 1, random start frame. Size over lifetime grows from 0.25 to 1.0, and color over lifetime runs gold, orange, red, then fade.
-  - Add an optional point light (orange, intensity 2 to 3, range 3 m) and a ground glow or scorch decal at the ray hit.
-- At phone size, keep the core bright and the stream at least about 40 px wide on screen.
+## 3. VFX (FIX6): eight whole strips on the same Particles/Unlit line
 
-## 4. Unity work Dev owns (not done by Design)
-- Create the socket child under `Bone.004` (above), add the fire VFX prefab under it, and toggle it with `FireStart`/`FireStop` events or the clip-time window in `NewCharsPreview` or the enemy controller. These are `.cs` edits, so Dev does them.
-- Add `VORGATH_fire_stream_flipbook_4x4.png` to Assets with the import settings Alpha Is Transparency, Wrap Clamp, no mipmaps or with a mip bias, and Max Size 1024. **Existing `.meta` retained** on this drop-in (same GUID).
+The prefab and `ApplyClipTime` hook are unchanged. No new animation events.
 
-## 5. What Design did NOT change in FIX5
-- No `.cs` / scene / skeleton / FBX / socket / FireStart-FireStop timing / stream length (2.6 m) / LineRenderer width curve edits.
-- Only the flipbook PNG (both design + Unity art paths) and this DEV note.
+- Strips in this commit: `Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f00.png` … `f07.png`. Byte-identical to the uploaded `VORGATH_breath_strip_f00.png` … `f07.png` from `vorgath-fix6-art` `a864f42f` (that filename was the source name; the script loads `VORGATH_fire_f`). 1024×256 RGBA. Mouth at the left edge. Importer: alpha from the PNG, Alpha Is Transparency, uncompressed, Clamp, no mipmaps, NPOT none, max 1024. Not grayscale-to-alpha.
+- Body line: `Universal Render Pipeline/Particles/Unlit` only (no Sprites fallback), `_Blend` 0, `SrcAlpha` / `OneMinusSrcAlpha`, `_SURFACE_TYPE_TRANSPARENT`, flipbook keyword off. Vertex color alpha is the fade.
+- Core child `FireCore`: same shader and the same strip, `_Blend` 2 (`SrcAlpha` / `One`), vertex color alpha `0.55 × fade`.
+- Width 0.55 m at the mouth to 1.25 m at the tip. Length 2.6 m, droop `-0.12·(dist/2.6)²`. The tip stops at world `GroundPlaneY + 0.12` with `GroundPlaneY = 0` (the original floor). Points are world positions. The original tip was `0 + 0.02`.
+- Frame = `floor(timeOn × 24) mod 8`. The material texture is replaced. Scale and offset are never animated.
+- The FIX5 4×4 PNG stays in the project and is not assigned. If a strip file is missing the stream stays off. It does not fall back to that sheet.
+
+`README_FIX6.md` and the strip generator were not in the upload that carried these eight PNGs, so they are not in this commit. The pixels are.
+
+## 4. What Dev checks
+
+Open Survival → New Characters Preview, Vorgath, `attack_spit`. One stream from the mouth for 1.733–2.467 s, whole strip changing, not a row of pellets.
+
+**Unity UNRUN.** Unity `6000.3.6f1` is not installed. There is no GPU (`/dev/dri` is absent). Editor batchmode Play was not run, and Unity was not downloaded. An external CPU rasterizer (ufbx plus a C z-buffer) was used earlier on a different stand-in texture. That was not Unity, and those pictures are not in this commit.
+
+## 5. What FIX6 did not change
+
+- No skeleton, FBX, slam, cape, mouth-socket numbers, FireStart/FireStop, droop, or length.
+- `NewCharsPreview` still calls `ApplyClipTime`. No other character.
