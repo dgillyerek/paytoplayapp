@@ -149,13 +149,37 @@ namespace Survival.Domain.Session
 
             Store.Purchases.Purchase(product.ProductId, outcome =>
             {
-                if (outcome.Ok)
+                // Live store: Ok means the server validated the receipt and granted the hire.
+                if (!outcome.Unlocks(Store.Purchases.IsSandbox))
                 {
-                    Timers.ExtraSlotUntil = Clock.Now + TempBuilderSeconds;
+                    done(outcome.Ok ? outcome with { Ok = false, Error = outcome.Error ?? "iap.unverified" } : outcome);
+                    return;
                 }
 
+                Timers.ExtraSlotUntil = Clock.Now + TempBuilderSeconds;
                 done(outcome);
             });
+        }
+
+        /// <summary>
+        /// A server-verified purchase that arrived with no buy call waiting (approved deferred payment, or a re-delivery
+        /// after a crash): credit the server's wallet grants, and hire the temporary builder when that was the product.
+        /// Track / crusade unlocks restore from the server's entitlements instead. False when unverified.
+        /// </summary>
+        public bool ApplyUnsolicitedPurchase(PurchaseOutcome outcome)
+        {
+            if (!Store.ApplyServerGrant(outcome))
+            {
+                return false;
+            }
+
+            var builder = TempBuilderProduct;
+            if (builder != null && string.Equals(outcome.ProductId, builder.ProductId, StringComparison.Ordinal) && !Timers.ExtraSlotActive)
+            {
+                Timers.ExtraSlotUntil = Clock.Now + TempBuilderSeconds;
+            }
+
+            return true;
         }
 
         /// <summary>Hire the temporary builder, then start the upgrade that asked for it. Ok only when both happened.</summary>

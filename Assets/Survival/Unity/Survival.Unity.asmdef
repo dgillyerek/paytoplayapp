@@ -4,7 +4,8 @@
     "references": [
         "Survival.Domain",
         "UnityEngine.UI",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Unity.Purchasing"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -13,6 +14,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.purchasing",
+            "expression": "5.4.0",
+            "define": "SURVIVAL_UNITY_IAP"
+        }
+    ],
     "noEngineReferences": false
 }

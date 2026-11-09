@@ -57,6 +57,15 @@ namespace Survival.Domain.Alliance
         public string? LastError { get; private set; }
         public bool InAlliance => Online && Alliance != null;
 
+        /// <summary>
+        /// The signed-in bearer token (null until SignIn succeeds). Shared with the purchase verifier so both use the one
+        /// player account: signing in twice would rotate the token and log the other client out.
+        /// </summary>
+        public string? SessionToken => _token;
+
+        /// <summary>The transport this client sends with (shared by the purchase verifier).</summary>
+        public IAllianceTransport Transport => _http;
+
         /// <summary>Fires after any answer changes the cached state.</summary>
         public event Action? Changed;
 
@@ -70,6 +79,17 @@ namespace Survival.Domain.Alliance
                 Online = true;
                 RefreshMe(done);
             }, done, auth: false);
+
+        /// <summary>Account age band ("under13" | "13plus" | "unknown"; Survival.Domain.Iap.AgeBands). Last value the server confirmed.</summary>
+        public string AgeBand { get; private set; } = "unknown";
+
+        /// <summary>Store the account's age band on the server (COPPA / Play Families). Only the band is sent, never a birth date.</summary>
+        public void SetAgeBand(string ageBand, Action<bool>? done = null) =>
+            Call("POST", "/v1/account/age_band", Body("ageBand", ageBand), o =>
+            {
+                AgeBand = Str(o, "ageBand");
+                Fire(done);
+            }, done);
 
         public void RefreshMe(Action<bool>? done = null) => Call("GET", "/v1/me", null, o =>
         {

@@ -3,6 +3,10 @@ import pg from "pg";
 import crypto from "node:crypto";
 import { attachDatabasePool } from "@neon/functions";
 import { worldRoutes, ensurePlaced, WORLD } from "./world.mjs";
+import { createIap, googleVerifier, appStoreVerifier, DEFAULT_PACKAGE, AGE_BANDS } from "./iap.mjs";
+import { pgIapRepo } from "./iap_repo.mjs";
+import { googlePlayClient } from "./googleplay.mjs";
+import { appStoreClient } from "./appstore.mjs";
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
 attachDatabasePool(pool);
@@ -182,6 +186,30 @@ const routes = {
   },
 };
 Object.assign(routes, worldRoutes({ q, pool, err, json, limited, clean }));
+
+// Purchases (iap.mjs). Secrets come only from env: GOOGLE_PLAY_SERVICE_ACCOUNT_JSON, IAP_RTDN_PUSH_TOKEN.
+const PKG = process.env.GOOGLE_PLAY_PACKAGE_NAME || DEFAULT_PACKAGE;
+const iap = createIap({
+  repo: pgIapRepo(pool),
+  verifiers: {
+    google_play: googleVerifier(googlePlayClient({ serviceAccountJson: process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }), PKG),
+    app_store: appStoreVerifier(appStoreClient(process.env)),
+  },
+  packageName: PKG,
+  rtdnToken: process.env.IAP_RTDN_PUSH_TOKEN || "",
+});
+const asResponse = (r) => json(r.body, r.status);
+Object.assign(routes, {
+  "POST /v1/iap/validate": async (_r, b, p) => (await limited(p.id, "write")) ? err("rate_limited", 429) : asResponse(await iap.validate(p, b)),
+  "GET /v1/iap/entitlements": async (_r, _b, p) => asResponse(await iap.entitlements(p)),
+  // Account age band (COPPA / Play Families). The only age data kept; the client's purchase gate reads it.
+  "GET /v1/account": async (_r, _b, p) => json({ id: p.id, ageBand: (await q("SELECT age_band FROM players WHERE id=$1", [p.id])).rows[0]?.age_band ?? "unknown" }),
+  "POST /v1/account/age_band": async (_r, b, p) => {
+    if (!AGE_BANDS.includes(b.ageBand)) return err("bad_age_band");
+    await q("UPDATE players SET age_band=$2 WHERE id=$1", [p.id, b.ageBand]);
+    return json({ ok: true, ageBand: b.ageBand });
+  },
+});
 // Server-side gift sources: when a member's help request fills up, every helper gets a small thank-you gift.
 const giftOnFill = `INSERT INTO alliance_gifts(alliance_id,recipient_id,source,gems)
   SELECT h.alliance_id, g.helper_id, 'help_thanks', 2 FROM help_requests h JOIN help_given g ON g.request_id=h.id WHERE h.id=$1`;
@@ -192,10 +220,13 @@ export default {
     const url = new URL(req.url);
     const key = req.method + " " + url.pathname.replace(/\/$/, "");
     if (key === "GET /v1/health") return json({ ok: true, rules: RULES });
-    const h = routes[key]; if (!h) return err("not_found", 404);
+    const rtdn = key === "POST /v1/iap/rtdn"; // Pub/Sub push: no player token, authenticated by ?token= instead
+    const h = rtdn ? null : routes[key]; if (!h && !rtdn) return err("not_found", 404);
     try {
       let body = {};
-      if (req.method === "POST") { const t = await req.text(); if (t.length > 4096) return err("too_large", 413); body = t ? JSON.parse(t) : {}; }
+      const maxBody = key.startsWith("POST /v1/iap/") ? 16384 : 4096; // App Store JWS + Pub/Sub envelopes are bigger
+      if (req.method === "POST") { const t = await req.text(); if (t.length > maxBody) return err("too_large", 413); body = t ? JSON.parse(t) : {}; }
+      if (rtdn) return asResponse(await iap.rtdn(url, body));
       if (key === "POST /v1/signin") return await h(req, body);
       const p = await me(req); if (!p) return err("unauthorized", 401);
       if (req.method === "GET" && await limited(p.id, "read")) return err("rate_limited", 429);

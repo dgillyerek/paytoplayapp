@@ -1,0 +1,21 @@
+{
+  "_doc": "Server-side grant table for real-money purchases (Backend/alliance/src/iap.mjs reads this file; the client never grants from it). One row per sku in products.json. type: consumable (consumed after the server confirms; can be bought again) or non_consumable (acknowledged once; restorable from the server by account). grants are wallet resources and must equal the matching sku offer in Resources/Survival/stores.json (merchant_bundle: MerchantConfig.Default bundle_caravan). entitlements are unlock flags the server keeps per account. IapRewardCatalogTests keeps this file in step with stores.json and products.json.",
+  "package_name": "com.paytoplay.fantasykingdoma",
+  "rewards": [
+    { "sku": "sku.hard_s", "type": "consumable", "grants": { "res.hard": 80 } },
+    { "sku": "sku.hard_m", "type": "consumable", "grants": { "res.hard": 500 } },
+    { "sku": "sku.starter_pack", "type": "consumable", "grants": { "res.hard": 300, "res.hero_xp": 2, "res.speedup_m": 30 } },
+    { "sku": "sku.merchant_bundle", "type": "consumable", "grants": { "res.hard": 150, "res.soft": 12000, "res.speedup_m": 60 } },
+    { "sku": "sku.temp_builder", "type": "consumable", "grants": {}, "entitlements": ["ent.temp_builder"] },
+    { "sku": "sku.power_t1", "type": "consumable", "grants": { "res.hard": 50, "res.runner_boost": 1 } },
+    { "sku": "sku.power_t2", "type": "consumable", "grants": { "res.hard": 100, "res.runner_boost": 1, "res.soft": 15000, "res.speedup_m": 60 } },
+    { "sku": "sku.power_t3", "type": "consumable", "grants": { "res.hero_xp": 2, "res.runner_boost": 1, "res.speedup_m": 60, "res.soft": 25000, "res.food": 10000 } },
+    { "sku": "sku.power_t4", "type": "consumable", "grants": { "res.hero_xp": 3, "res.runner_boost": 2, "res.speedup_m": 300, "res.soft": 100000, "res.food": 50000 } },
+    { "sku": "sku.power_t5", "type": "consumable", "grants": { "res.hero_xp": 6, "res.runner_boost": 3, "res.speedup_m": 960, "res.soft": 300000, "res.food": 100000 } },
+    { "sku": "sku.power_t6", "type": "consumable", "grants": { "res.hero_xp": 10, "res.runner_boost": 6, "res.speedup_m": 2000, "res.soft": 1000000, "res.food": 500000 } },
+    { "sku": "sku.track_premium", "type": "non_consumable", "grants": {}, "entitlements": ["ent.track_premium"] },
+    { "sku": "sku.track_royal", "type": "non_consumable", "grants": {}, "entitlements": ["ent.track_royal"] },
+    { "sku": "sku.track_royal_upgrade", "type": "non_consumable", "grants": {}, "entitlements": ["ent.track_royal"] },
+    { "sku": "sku.pass_season", "type": "consumable", "grants": {}, "entitlements": ["ent.crusade_royal"] }
+  ]
+}
