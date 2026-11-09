@@ -30,13 +30,25 @@ namespace Survival.Unity.Kids
         private static ChildSafetyConfig? _config;
         private static AgeGateStore? _store;
         private static ITelemetrySink? _telemetry;
+        private static ChatPreference? _chat;
+        private static IParentalConsentProvider _consent = NoConsentProvider.Instance;
 
         public static ChildSafetyConfig Config => _config ?? Load(AppFlavorConfig.FantasyKingdomA);
 
         public static AgeGateStore Store => _store ??= new AgeGateStore(new PlayerPrefsKidStorage());
 
         /// <summary>Rebuilt on each read: cheap, and always reflects the latest answer.</summary>
-        public static ChildSafetyPolicy Policy => new ChildSafetyPolicy(Config, Store.Load());
+        public static ChildSafetyPolicy Policy => new ChildSafetyPolicy(Config, Store.Load(), Chat.Load());
+
+        /// <summary>The Settings chat choice; the policy clamps it (a child never gets free chat).</summary>
+        public static ChatPreference Chat => _chat ??= new ChatPreference(new PlayerPrefsKidStorage());
+
+        /// <summary>Settings: save the chat choice and tell listeners (the guild view and the server mirror).</summary>
+        public static void SetChat(ChatMode mode)
+        {
+            Chat.Save(mode);
+            Changed?.Invoke();
+        }
 
         public static bool IsChild => Policy.IsChild;
 
@@ -55,6 +67,23 @@ namespace Survival.Unity.Kids
         public static ITelemetrySink Telemetry => _telemetry ??= new PolicyTelemetry(NoOpTelemetrySink.Instance, () => Policy);
 
         public static void SetVendorSink(ITelemetrySink vendor) => _telemetry = new PolicyTelemetry(vendor, () => Policy);
+
+        /// <summary>
+        /// Verifiable parental consent hook. Default: <see cref="NoConsentProvider"/> (never granted), so with
+        /// child.online_sign_in / child.cloud_save = consent_required an under-13 / unknown-age player stays offline.
+        /// The chosen VPC method or vendor plugs in here.
+        /// </summary>
+        public static IParentalConsentProvider Consent
+        {
+            get => _consent;
+            set => _consent = value ?? NoConsentProvider.Instance;
+        }
+
+        /// <summary>Ask before alliance / world sign-in.</summary>
+        public static bool AllowsOnlineSignIn => ConsentGate.Allows(Policy, _consent, ConsentPurpose.OnlineSignIn);
+
+        /// <summary>Ask before any cloud save upload or download (the cloud-save work calls this).</summary>
+        public static bool AllowsCloudSave => ConsentGate.Allows(Policy, _consent, ConsentPurpose.CloudSave);
 
         public static ChildSafetyConfig Load(AppFlavorConfig flavor)
         {
@@ -98,6 +127,8 @@ namespace Survival.Unity.Kids
         public static void ClearForAccountDeletion()
         {
             Store.Clear();
+            Chat.Clear();
+            _consent.Revoke();
             Changed?.Invoke();
         }
     }

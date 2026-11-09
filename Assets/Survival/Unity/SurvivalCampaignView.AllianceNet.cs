@@ -56,13 +56,20 @@ namespace Survival.Unity
         /// <summary>Public URL of the alliance Neon Function. Not a secret; override with PlayerPrefs "alliance.api" ("" = offline).</summary>
         public const string DefaultAllianceApi = "https://br-summer-firefly-b8or37b8-alliance.compute.c-14.us-east-1.aws.neon.tech";
 
-        private const string DeviceIdPref = "alliance.device";
+        internal const string DeviceIdPref = "alliance.device";
 
         /// <summary>Shared alliance client (null until the view starts, or when the API is switched off).</summary>
         public static AllianceService? AllianceNet { get; private set; }
 
         /// <summary>Report / block and the server chat mode on the same sign-in (Kids, COPPA / Families).</summary>
         public static AllianceSafetyClient? AllianceSafety { get; private set; }
+
+        /// <summary>Account deletion: drop the signed-in session so nothing more is sent until the app restarts.</summary>
+        public static void ForgetAllianceNet()
+        {
+            AllianceNet = null;
+            AllianceSafety = null;
+        }
 
         private string _allianceSearch = "";
         private Text? _allyChatLog;
@@ -78,6 +85,13 @@ namespace Survival.Unity
 
             var api = PlayerPrefs.GetString("alliance.api", DefaultAllianceApi);
             if (string.IsNullOrWhiteSpace(api))
+            {
+                return;
+            }
+
+            // Sign-in sends a persistent device id: for under-13 / unknown age it waits for verifiable parental consent
+            // (KidSafety.Consent; the default provider never grants it). Until then the guild runs offline (SimulatedGuild).
+            if (!KidSafety.AllowsOnlineSignIn)
             {
                 return;
             }

@@ -8,6 +8,7 @@ import { pgIapRepo } from "./iap_repo.mjs";
 import { googlePlayClient } from "./googleplay.mjs";
 import { appStoreClient } from "./appstore.mjs";
 import { safetyRoutes } from "./safety.mjs";
+import { deletionRoutes } from "./deletion.mjs";
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
 attachDatabasePool(pool);
@@ -213,6 +214,8 @@ Object.assign(routes, {
 });
 // Child safety (safety.mjs): chat mode / presets / report / block, restricted names, sticky under13. Wraps routes above.
 Object.assign(routes, safetyRoutes({ q, err, json, clean, limited, routes }));
+// In-app account deletion (deletion.mjs): scrubs the player and removes their data.
+Object.assign(routes, deletionRoutes({ pool, err, json, limited }));
 // Server-side gift sources: when a member's help request fills up, every helper gets a small thank-you gift.
 const giftOnFill = `INSERT INTO alliance_gifts(alliance_id,recipient_id,source,gems)
   SELECT h.alliance_id, g.helper_id, 'help_thanks', 2 FROM help_requests h JOIN help_given g ON g.request_id=h.id WHERE h.id=$1`;

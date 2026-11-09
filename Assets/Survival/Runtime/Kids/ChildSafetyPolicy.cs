@@ -10,7 +10,8 @@ namespace Survival.Domain.Kids
     /// </summary>
     public sealed class ChildSafetyPolicy
     {
-        public ChildSafetyPolicy(ChildSafetyConfig config, AgeGateState state)
+        /// <param name="chatChoice">The player's (or, for a child, the parent's) Settings choice; clamped to <see cref="ChatMax"/>.</param>
+        public ChildSafetyPolicy(ChildSafetyConfig config, AgeGateState state, ChatMode? chatChoice = null)
         {
             Config = config;
             State = state;
@@ -26,7 +27,13 @@ namespace Survival.Domain.Kids
                     Chat = r.Chat == ChatMode.Free ? ChatMode.Presets : r.Chat,
                 }
                 : r;
+            ChatMax = IsChild ? (config.ChildChatMax == ChatMode.Free ? ChatMode.Presets : config.ChildChatMax) : ChatMode.Free;
+            var chat = chatChoice ?? Rules.Chat;
+            Rules = Rules with { Chat = chat > ChatMax ? ChatMax : chat };
         }
+
+        /// <summary>The most chat this player can have: 13+ free; child per child.chat_max (presets by default, never free).</summary>
+        public ChatMode ChatMax { get; }
 
         public ChildSafetyConfig Config { get; }
         public AgeGateState State { get; }

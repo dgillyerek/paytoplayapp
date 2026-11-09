@@ -16,6 +16,7 @@
     "analytics": "off",
     "crash_reporting": "off",
     "chat": "off",
+    "chat_max": "presets",
     "iap": "parental_gate",
     "iap_max_per_day": null,
     "online_sign_in": "consent_required",
@@ -63,6 +64,12 @@
   "parental_gate": { "max_failures": 3, "lockout_seconds": 60 },
 
   "_account_doc": "DEREK SUPPLIES: hosted web deletion page (Play Console Data safety 'delete account URL') and the support contact. Placeholders until then.",
+  "_legal_doc": "DEREK SUPPLIES: hosted privacy policy and terms of service URLs (Play listing + Settings links). Placeholders until then.",
+  "legal": {
+    "privacy_policy_url": "https://example.com/kingdom-defense/privacy",
+    "terms_url": "https://example.com/kingdom-defense/terms"
+  },
+
   "account": {
     "web_deletion_url": "https://example.com/kingdom-defense/delete-account",
     "support_email": "[CONTACT EMAIL]"

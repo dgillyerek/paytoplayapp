@@ -79,7 +79,10 @@ namespace Survival.Domain.Kids
         string WebDeletionUrl,
         string SupportEmail,
         int ParentalGateMaxFailures,
-        int ParentalGateLockoutSeconds)
+        int ParentalGateLockoutSeconds,
+        ChatMode ChildChatMax = ChatMode.Presets,
+        string PrivacyPolicyUrl = "",
+        string TermsUrl = "")
     {
         public const string FileName = "child_safety.json";
         public const string VendorNone = "none";
@@ -196,6 +199,7 @@ namespace Survival.Domain.Kids
             var telemetry = Obj(root, "telemetry");
             var account = Obj(root, "account");
             var gate = Obj(root, "parental_gate");
+            var legal = Obj(root, "legal");
             return new ChildSafetyConfig(
                 Int(root, "schema_version", 1),
                 bands,
@@ -209,7 +213,10 @@ namespace Survival.Domain.Kids
                 Str(account, "web_deletion_url", ""),
                 Str(account, "support_email", ""),
                 Int(gate, "max_failures", d.ParentalGateMaxFailures),
-                Int(gate, "lockout_seconds", d.ParentalGateLockoutSeconds));
+                Int(gate, "lockout_seconds", d.ParentalGateLockoutSeconds),
+                ParseChildChatMax(Obj(root, "child")),
+                Str(legal, "privacy_policy_url", ""),
+                Str(legal, "terms_url", ""));
         }
 
         private static void ValidateBands(List<AgeBandDef> bands)
@@ -251,6 +258,13 @@ namespace Survival.Domain.Kids
                 Enum(o, "cloud_save", d.CloudSave),
                 Bool(o, "no_pressure", d.NoPressure),
                 Bool(o, "can_create_alliance", d.CanCreateAlliance));
+
+        /// <summary>child.chat_max: the most a parent may turn chat on to in Settings. Never free for children.</summary>
+        private static ChatMode ParseChildChatMax(JsonNode.Obj? child)
+        {
+            var max = child == null ? ChatMode.Presets : Enum(child, "chat_max", ChatMode.Presets);
+            return max == ChatMode.Free ? ChatMode.Presets : max;
+        }
 
         private static T Enum<T>(JsonNode.Obj o, string key, T fallback)
             where T : struct, System.Enum
