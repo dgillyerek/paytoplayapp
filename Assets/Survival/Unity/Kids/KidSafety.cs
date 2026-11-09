@@ -30,6 +30,7 @@ namespace Survival.Unity.Kids
         private static ChildSafetyConfig? _config;
         private static AgeGateStore? _store;
         private static ITelemetrySink? _telemetry;
+        private static IParentalConsentProvider _consent = NoConsentProvider.Instance;
 
         public static ChildSafetyConfig Config => _config ?? Load(AppFlavorConfig.FantasyKingdomA);
 
@@ -55,6 +56,23 @@ namespace Survival.Unity.Kids
         public static ITelemetrySink Telemetry => _telemetry ??= new PolicyTelemetry(NoOpTelemetrySink.Instance, () => Policy);
 
         public static void SetVendorSink(ITelemetrySink vendor) => _telemetry = new PolicyTelemetry(vendor, () => Policy);
+
+        /// <summary>
+        /// Verifiable parental consent hook. Default: <see cref="NoConsentProvider"/> (never granted), so with
+        /// child.online_sign_in / child.cloud_save = consent_required an under-13 / unknown-age player stays offline.
+        /// The chosen VPC method or vendor plugs in here.
+        /// </summary>
+        public static IParentalConsentProvider Consent
+        {
+            get => _consent;
+            set => _consent = value ?? NoConsentProvider.Instance;
+        }
+
+        /// <summary>Ask before alliance / world sign-in.</summary>
+        public static bool AllowsOnlineSignIn => ConsentGate.Allows(Policy, _consent, ConsentPurpose.OnlineSignIn);
+
+        /// <summary>Ask before any cloud save upload or download (the cloud-save work calls this).</summary>
+        public static bool AllowsCloudSave => ConsentGate.Allows(Policy, _consent, ConsentPurpose.CloudSave);
 
         public static ChildSafetyConfig Load(AppFlavorConfig flavor)
         {
@@ -98,6 +116,7 @@ namespace Survival.Unity.Kids
         public static void ClearForAccountDeletion()
         {
             Store.Clear();
+            _consent.Revoke();
             Changed?.Invoke();
         }
     }

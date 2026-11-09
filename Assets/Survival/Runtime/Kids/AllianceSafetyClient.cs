@@ -55,6 +55,10 @@ namespace Survival.Domain.Kids
             done?.Invoke(true);
         }, done);
 
+        /// <summary>Scrubs this account on the server (Backend/alliance/src/deletion.mjs). done(false) when not confirmed.</summary>
+        public void DeleteAccount(Action<bool> done) =>
+            _net.Request("POST", "/v1/account/delete", "{\"confirm\":\"delete\"}", o => done(AllianceService.Bool(o, "deleted")), done);
+
         public void SendPreset(string presetId, Action<bool>? done = null) => _net.SendChat(ChatSafety.EncodePreset(presetId), done);
 
         /// <summary>Report reasons offered in the UI (stored as-is by the server).</summary>

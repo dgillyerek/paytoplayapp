@@ -143,6 +143,9 @@ namespace Survival.Unity
             lord.fontStyle = FontStyle.Bold;
             Ornaments.Emboss(lord);
             HookSkin.Fit(lord, 14, 26);
+            // Privacy and account (account deletion): tap the player name. Placeholder entry until a settings screen exists.
+            lord.raycastTarget = true;
+            lord.gameObject.AddComponent<Button>().onClick.AddListener(Kids.AccountScreen.Show);
             var power = SurvivalVisuals.Text(_root, "Power", pack.StringOr("hud.player_power", ""), 18, TextAnchor.MiddleLeft, SurvivalVisuals.Mute);
             Place(power.rectTransform, hud, "player_power");
             Ornaments.Emboss(power);
