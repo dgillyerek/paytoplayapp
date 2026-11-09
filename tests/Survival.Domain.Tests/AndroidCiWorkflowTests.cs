@@ -73,6 +73,48 @@ public sealed class AndroidCiWorkflowTests
     }
 
     [Fact]
+    public void Families_app_removes_the_advertising_id_permission_and_ships_no_ad_sdk()
+    {
+        var src = File.ReadAllText(Path.Combine(Root, "Assets", "Survival", "Editor", "AndroidFamiliesManifest.cs"));
+        Assert.Contains("IPostGenerateGradleAndroidProject", src, StringComparison.Ordinal);
+        Assert.Contains("\"com.google.android.gms.permission.AD_ID\"", src, StringComparison.Ordinal);
+        Assert.Contains("entry.SetAttribute(\"node\", ToolsNs, \"remove\")", src, StringComparison.Ordinal);
+        Assert.Contains("\"launcher\", \"src\", \"main\", \"AndroidManifest.xml\"", src, StringComparison.Ordinal);
+        Assert.True(File.Exists(Path.Combine(Root, "Assets", "Survival", "Editor", "AndroidFamiliesManifest.cs.meta")));
+
+        var wf = Workflow;
+        Assert.Contains("bundletool.jar dump manifest", wf, StringComparison.Ordinal);
+        Assert.Contains("if grep -q 'com.google.android.gms.permission.AD_ID' merged-manifest.xml; then", wf, StringComparison.Ordinal);
+
+        // No ad or ad-ID SDKs: packages, Unity Ads/Analytics service toggles, and any committed manifest asking for AD_ID.
+        var packages = File.ReadAllText(Path.Combine(Root, "Packages", "manifest.json"));
+        foreach (var banned in new[] { "com.unity.ads", "com.unity.services.analytics", "com.unity.analytics", "com.unity.purchasing.ads",
+                                       "com.google.ads", "play-services-ads", "com.unity.services.mediation", "com.unity.services.levelplay", "ironsource", "applovin" })
+        {
+            Assert.DoesNotContain(banned, packages, StringComparison.OrdinalIgnoreCase);
+        }
+
+        var connect = File.ReadAllText(Path.Combine(Root, "ProjectSettings", "UnityConnectSettings.asset"));
+        Assert.Matches(@"UnityAdsSettings:\n    m_Enabled: 0\n", connect);
+        Assert.Matches(@"UnityAnalyticsSettings:\n    m_Enabled: 0\n", connect);
+        var plugins = Path.Combine(Root, "Assets", "Plugins");
+        if (Directory.Exists(plugins))
+        {
+            foreach (var f in Directory.GetFiles(plugins, "*.*", SearchOption.AllDirectories)
+                         .Where(f => f.EndsWith(".xml", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".aar", StringComparison.OrdinalIgnoreCase) ||
+                                     f.EndsWith(".jar", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".androidlib", StringComparison.OrdinalIgnoreCase)))
+            {
+                Assert.DoesNotContain("play-services-ads", Path.GetFileName(f), StringComparison.OrdinalIgnoreCase);
+                if (f.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+                {
+                    var xml = File.ReadAllText(f);
+                    Assert.False(xml.Contains("permission.AD_ID", StringComparison.Ordinal) && !xml.Contains("tools:node=\"remove\"", StringComparison.Ordinal), f);
+                }
+            }
+        }
+    }
+
+    [Fact]
     public void Ci_build_applies_the_flavor_and_builds_il2cpp_arm64_for_the_play_target_api()
     {
         var ci = File.ReadAllText(Path.Combine(Root, "Assets", "Survival", "Editor", "CiAndroidBuild.cs"));

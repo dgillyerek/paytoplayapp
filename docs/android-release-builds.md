@@ -76,3 +76,37 @@ committed under `Assets/ThemePack/fantasy_kingdom_a/art/store/`:
   picture. A layered source (castle on transparency + sky) from Design would give a true adaptive icon.
 
 iOS icon slots are still empty (iOS is not in scope yet).
+
+## Families / COPPA (audience includes children under 13)
+
+Soft launch: Canada, the Philippines, Australia, New Zealand.
+
+In the build:
+
+- No ad SDKs and no advertising-ID SDKs (guarded by `AndroidCiWorkflowTests`). Unity Ads, Unity Analytics and Unity
+  crash reporting are off in `UnityConnectSettings`.
+- `Assets/Survival/Editor/AndroidFamiliesManifest.cs` adds
+  `<uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>` to the generated
+  launcher and unityLibrary manifests, so no later dependency can bring the permission back through manifest merging.
+  The workflow dumps the built `.aab` manifest with bundletool and fails if `AD_ID` appears, the package is not
+  `com.paytoplay.fantasykingdoma`, or targetSdkVersion is not 36.
+- Any analytics or crash SDK added later (workstream 4) must be Families-self-certified, run without the advertising
+  ID, and be declared in Data safety.
+
+In Play Console (Derek):
+
+1. **App content → Target audience and content**: tick the age groups including under 13 (e.g. 5–8, 9–12, 13–15, 16–17,
+   18+ as intended). Including under-13 puts the app under the Families policy. Answer the "appeal to children"
+   questions truthfully.
+2. **Families policy declaration**: accept the Families policy requirements (and the Teacher Approved opt-in, if
+   wanted). Only Families-self-certified SDKs may be used; none are in the app today.
+3. **Privacy policy URL** (required for any under-13 audience): a public page covering children's data, COPPA, and
+   for the launch countries PIPEDA (Canada), the Philippine Data Privacy Act, the Australian Privacy Act and the NZ
+   Privacy Act 2020.
+4. **Data safety form**: declare exactly what is collected. Today: no advertising ID, no ads. Account and cloud-save
+   data, purchase history and analytics events from workstreams 2–4 must be declared when those land.
+5. **Ads declaration**: "No, my app does not contain ads".
+6. **Content rating (IARC questionnaire)** and **Advertising ID declaration**: say the app does not use the advertising
+   ID.
+7. In-app purchases with a child audience: purchase flows must suit children (clear prices, no misleading prompts);
+   Play reviews this for Families apps.

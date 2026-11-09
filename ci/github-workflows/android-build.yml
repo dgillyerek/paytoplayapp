@@ -169,6 +169,25 @@ jobs:
           path: Library
           key: Library-Android-${{ hashFiles('Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}-${{ steps.commit.outputs.sha }}
 
+      # Families policy / COPPA: the audience includes children under 13, so the shipped manifest must not ask for the
+      # advertising ID. AndroidFamiliesManifest.cs marks AD_ID tools:node="remove"; this checks the merged result.
+      - name: Check the bundle manifest (no AD_ID, target API 36)
+        if: env.FORMAT == 'aab'
+        env:
+          NAME: ${{ steps.commit.outputs.name }}
+          BUNDLETOOL_VERSION: 1.18.3
+        run: |
+          set -euo pipefail
+          curl -fsSL -o bundletool.jar "https://github.com/google/bundletool/releases/download/$BUNDLETOOL_VERSION/bundletool-all-$BUNDLETOOL_VERSION.jar"
+          java -jar bundletool.jar dump manifest --bundle "build/Android/$NAME.aab" > merged-manifest.xml
+          grep -E 'package=|targetSdkVersion|uses-permission' merged-manifest.xml || true
+          if grep -q 'com.google.android.gms.permission.AD_ID' merged-manifest.xml; then
+            echo "::error::The bundle declares com.google.android.gms.permission.AD_ID. Theme A is a Families (under-13) app."
+            exit 1
+          fi
+          grep -q 'package="com.paytoplay.fantasykingdoma"' merged-manifest.xml || { echo "::error::Wrong package name"; exit 1; }
+          grep -q 'android:targetSdkVersion="36"' merged-manifest.xml || { echo "::error::targetSdkVersion is not 36"; exit 1; }
+
       - name: Upload the Play Store bundle
         if: env.FORMAT == 'aab'
         uses: actions/upload-artifact@v4
