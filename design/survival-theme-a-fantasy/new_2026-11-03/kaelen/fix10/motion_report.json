@@ -1,0 +1,24 @@
+[
+  {
+    "action": "attack_dualslash",
+    "kind": "dual",
+    "frames": 58,
+    "overlap_frames": [],
+    "min_clearance_cm": {
+      "swordL_body_cm": 5.09,
+      "swordR_body_cm": 5.02,
+      "sword_sword_cm": 3.09
+    }
+  },
+  {
+    "action": "attack2_crossthrust",
+    "kind": "cross",
+    "frames": 48,
+    "overlap_frames": [],
+    "min_clearance_cm": {
+      "swordL_body_cm": 6.05,
+      "swordR_body_cm": 4.95,
+      "sword_sword_cm": 3.02
+    }
+  }
+]

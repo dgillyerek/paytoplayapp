@@ -49,14 +49,14 @@ namespace Survival.Unity
 
         private static readonly Def[] Defs =
         {
-            new Def("seraphine", "SERAPHINE", true, 1.4f, 1.9f, new[] { "idle", "walk", "attack_thrust", "attack_throw" },
-                new[] { BattleImpactKind.SwordSteel, BattleImpactKind.StormCrackle }, new Color(1f, 0.95f, 0.7f), new Color(0.45f, 0.7f, 1f)),
+            new Def("seraphine", "SERAPHINE", true, 1.4f, 1.9f, new[] { "idle", "walk", "attack_standing_melee", "attack_thrust_slash" },
+                new[] { BattleImpactKind.SwordSteel, BattleImpactKind.SwordSteel }, new Color(1f, 0.95f, 0.7f), new Color(0.45f, 0.7f, 1f)),
             new Def("kaelen", "KAELEN", true, -1.4f, 1.7f, new[] { "idle", "walk", "attack_dualslash", "attack2_crossthrust" },
                 new[] { BattleImpactKind.SwordSteel }, new Color(0.85f, 0.95f, 1f), new Color(0.5f, 0.8f, 1f)),
-            new Def("vorgath", "VORGATH", false, -1.4f, 2.3f, new[] { "idle", "walk", "attack_slam", "attack_spit" },
+            new Def("vorgath", "VORGATH", false, -1.4f, 2.3f, new[] { "idle", "walk", "attack_slam", "attack_spit", "dying" },
                 new[] { BattleImpactKind.GroundSlam, BattleImpactKind.ArcaneConjure }, new Color(0.85f, 0.55f, 1f), new Color(0.45f, 0.1f, 0.7f)),
-            new Def("malzareth", "MALZARETH", false, 1.4f, 1.9f, new[] { "idle", "walk", "attack_greatsword", "attack2_overhead_cleave", "dying" },
-                new[] { BattleImpactKind.VoidFireBreath, BattleImpactKind.SwordSteel }, new Color(0.8f, 0.5f, 1f), new Color(0.3f, 0.05f, 0.5f)),
+            new Def("malzareth", "MALZARETH", false, 1.4f, 1.9f, new[] { "idle", "walk", "attack_greatsword", "attack_great_sword_casting", "attack_standing_melee", "dying" },
+                new[] { BattleImpactKind.VoidFireBreath, BattleImpactKind.SwordSteel, BattleImpactKind.SwordSteel }, new Color(0.8f, 0.5f, 1f), new Color(0.3f, 0.05f, 0.5f)),
         };
 
         private sealed class Unit

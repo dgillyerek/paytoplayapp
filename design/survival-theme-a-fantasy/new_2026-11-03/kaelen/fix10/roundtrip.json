@@ -1,0 +1,26 @@
+{
+  "attack_dualslash": {
+    "max_hand_offset_m": 3.6956081447752043e-06,
+    "max_length_err_m": 2.937658546420252e-07,
+    "worst": [
+      "attack_dualslash",
+      6,
+      "R",
+      0.0,
+      0.57209,
+      0.0
+    ]
+  },
+  "attack2_crossthrust": {
+    "max_hand_offset_m": 2.182702234220571e-06,
+    "max_length_err_m": 4.519922791601516e-07,
+    "worst": [
+      "attack2_crossthrust",
+      14,
+      "R",
+      0.0,
+      0.68966,
+      0.0
+    ]
+  }
+}

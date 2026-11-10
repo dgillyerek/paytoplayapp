@@ -43,8 +43,6 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 100
-  crunchedCompression: 0
-  textureCompression: 0
   spriteMode: 0
   spriteExtrude: 1
   spriteMeshType: 1
@@ -61,9 +59,9 @@ TextureImporter:
   singleChannelComponent: 0
   flipbookRows: 1
   flipbookColumns: 1
-  maxTextureSizeSet: 1
-  compressionQualitySet: 1
-  textureFormatSet: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
   ignorePngGamma: 0
   applyGammaDecoding: 0
   swizzle: 50462976
@@ -82,10 +80,24 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 1024
+    resizeAlgorithm: 0
+    textureFormat: 4
+    textureCompression: 0
+    compressionQuality: 100
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites: []
     outline: []
+    customData: 
     physicsShape: []
     bones: []
     spriteID: 
@@ -95,9 +107,12 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
     nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
-  userData: Byte copy of VORGATH_breath_strip_f02 from vorgath-fix6-art a864f42f. RGBA uncompressed. Alpha from PNG.
+  userData: Byte copy of VORGATH_breath_strip_f02 from vorgath-fix6-art a864f42f.
+    RGBA uncompressed. Alpha from PNG.
   assetBundleName: 
   assetBundleVariant: 
