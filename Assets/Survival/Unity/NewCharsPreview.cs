@@ -55,7 +55,7 @@ namespace Survival.Unity
                 new[] { BattleImpactKind.SwordSteel }, new Color(0.85f, 0.95f, 1f), new Color(0.5f, 0.8f, 1f)),
             new Def("vorgath", "VORGATH", false, -1.4f, 2.3f, new[] { "idle", "walk", "attack_slam", "attack_spit" },
                 new[] { BattleImpactKind.GroundSlam, BattleImpactKind.ArcaneConjure }, new Color(0.85f, 0.55f, 1f), new Color(0.45f, 0.1f, 0.7f)),
-            new Def("malzareth", "MALZARETH", false, 1.4f, 1.9f, new[] { "idle", "walk", "attack_greatsword", "attack2_overhead_cleave", "dying" },
+            new Def("malzareth", "MALZARETH", false, 1.4f, 1.9f, new[] { "idle", "walk", "attack_greatsword", "attack2_overhead_cleave", "dying", "great_sword_casting" },
                 new[] { BattleImpactKind.VoidFireBreath, BattleImpactKind.SwordSteel }, new Color(0.8f, 0.5f, 1f), new Color(0.3f, 0.05f, 0.5f)),
         };
 
@@ -554,12 +554,15 @@ namespace Survival.Unity
         /// <summary>Dying plays once and holds the last frame. It is not an attack.</summary>
         private static bool OneShot(Unit u) => u.Def.Clips[u.Clip] == "dying";
 
+        /// <summary>The raw spell cast is a review clip. It is not one of the attacks.</summary>
+        private static bool ReviewOnly(string clip) => clip == "dying" || clip == "great_sword_casting";
+
         private static int NextAttackClip(Unit u)
         {
             var attacks = 0;
             for (var i = 2; i < u.Clips.Count; i++)
             {
-                if (u.Def.Clips[i] != "dying")
+                if (!ReviewOnly(u.Def.Clips[i]))
                 {
                     attacks++;
                 }
@@ -574,7 +577,7 @@ namespace Survival.Unity
             var seen = 0;
             for (var i = 2; i < u.Clips.Count; i++)
             {
-                if (u.Def.Clips[i] == "dying")
+                if (ReviewOnly(u.Def.Clips[i]))
                 {
                     continue;
                 }
@@ -777,7 +780,7 @@ namespace Survival.Unity
                 }
             }
 
-            if (u.Clip >= 2 && !OneShot(u) && !u.HitDone && u.Time >= length * HitAt)
+            if (u.Clip >= 2 && !ReviewOnly(u.Def.Clips[u.Clip]) && !u.HitDone && u.Time >= length * HitAt)
             {
                 u.HitDone = true;
                 Hit(u);
