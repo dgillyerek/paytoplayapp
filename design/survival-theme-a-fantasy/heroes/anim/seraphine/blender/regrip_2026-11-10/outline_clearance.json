@@ -1,0 +1,75 @@
+{
+  "method": "Signed distance between convex-hull outlines. Positive is a gap, negative is overlap. Items are the whole body (torso, head, legs), both wings together, each arm, and the whole staff. The gripping right hand is not part of the arm outline. Measured every frame on the reimported attack FBX sampled onto SERAPHINE_rig_rest, the way NewCharsPreview builds her.",
+  "unit_tests_m": [
+    {
+      "name": "sep cubes",
+      "got": 1.9997497077321222,
+      "exp": 2.0
+    },
+    {
+      "name": "touch cubes",
+      "got": -0.00025028685797723354,
+      "exp": 0.0
+    },
+    {
+      "name": "overlap 0.2",
+      "got": -0.20025028606791534,
+      "exp": -0.2
+    },
+    {
+      "name": "diag sep",
+      "got": 1.4140598517575385,
+      "exp": 1.4142135623730951
+    }
+  ],
+  "clips": {
+    "standing_melee": {
+      "frames": [
+        1,
+        73
+      ],
+      "minimum_m": {
+        "body": {
+          "dist": 0.1089,
+          "frame": 41
+        },
+        "wings": {
+          "dist": 0.2524,
+          "frame": 23
+        },
+        "right_arm": {
+          "dist": 0.0025,
+          "frame": 43
+        },
+        "left_arm": {
+          "dist": 0.3871,
+          "frame": 42
+        }
+      }
+    },
+    "thrust_slash": {
+      "frames": [
+        1,
+        91
+      ],
+      "minimum_m": {
+        "body": {
+          "dist": 0.1398,
+          "frame": 52
+        },
+        "wings": {
+          "dist": 0.2279,
+          "frame": 28
+        },
+        "right_arm": {
+          "dist": 0.0025,
+          "frame": 49
+        },
+        "left_arm": {
+          "dist": 0.4187,
+          "frame": 53
+        }
+      }
+    }
+  }
+}
