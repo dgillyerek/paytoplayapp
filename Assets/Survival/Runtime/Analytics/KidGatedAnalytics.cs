@@ -67,7 +67,7 @@ namespace Survival.Domain.Analytics
             var kept = new Dictionary<string, string>(StringComparer.Ordinal);
             foreach (var kv in props)
             {
-                if (PolicyTelemetry.LimitedProps.Contains(kv.Key))
+                if (System.Linq.Enumerable.Contains(PolicyTelemetry.LimitedProps, kv.Key))
                 {
                     kept[kv.Key] = kv.Value;
                 }
