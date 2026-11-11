@@ -1,0 +1,576 @@
+{
+  "retarget": {
+    "source": "design/survival-theme-a-fantasy/heroes/anim/seraphine/attacks_20261109/mixamo_armada.fbx",
+    "source_note": "Mixamo motion-only FBX, creator timestamp 2026-11-10 02:22:37, FBX SDK 2020.2. Action name Armature|mixamo.com|Layer0. File text does not contain the word Armada. 50 frames, scene range 0-49 at 30 fps, standard mixamorig including index fingers and toes. No skin.",
+    "clip": "Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/SERAPHINE_attack_armada.fbx",
+    "frames_compared": 50,
+    "frame_map": "source frame 0 lines up with clip frame 1",
+    "bind_matrix_max_abs_diff": 0.0,
+    "rotation_global_max_deg": 0.1583,
+    "rotation_mean_of_mean_deg": 0.010385000000000002,
+    "per_bone_deg": {
+      "mixamorig:Hips": {
+        "max_deg": 0.056,
+        "mean_deg": 0.0035,
+        "worst_frame": 23
+      },
+      "mixamorig:Spine": {
+        "max_deg": 0.056,
+        "mean_deg": 0.0054,
+        "worst_frame": 5
+      },
+      "mixamorig:Spine1": {
+        "max_deg": 0.0396,
+        "mean_deg": 0.0024,
+        "worst_frame": 3
+      },
+      "mixamorig:Spine2": {
+        "max_deg": 0.056,
+        "mean_deg": 0.0059,
+        "worst_frame": 18
+      },
+      "mixamorig:Neck": {
+        "max_deg": 0.0396,
+        "mean_deg": 0.0008,
+        "worst_frame": 26
+      },
+      "mixamorig:Head": {
+        "max_deg": 0.056,
+        "mean_deg": 0.0027,
+        "worst_frame": 30
+      },
+      "mixamorig:LeftShoulder": {
+        "max_deg": 0.056,
+        "mean_deg": 0.007,
+        "worst_frame": 7
+      },
+      "mixamorig:LeftArm": {
+        "max_deg": 0.056,
+        "mean_deg": 0.0097,
+        "worst_frame": 10
+      },
+      "mixamorig:LeftForeArm": {
+        "max_deg": 0.0791,
+        "mean_deg": 0.0151,
+        "worst_frame": 21
+      },
+      "mixamorig:LeftHand": {
+        "max_deg": 0.0791,
+        "mean_deg": 0.0216,
+        "worst_frame": 49
+      },
+      "mixamorig:RightShoulder": {
+        "max_deg": 0.056,
+        "mean_deg": 0.0196,
+        "worst_frame": 3
+      },
+      "mixamorig:RightArm": {
+        "max_deg": 0.0,
+        "mean_deg": 0.0,
+        "worst_frame": 1
+      },
+      "mixamorig:RightForeArm": {
+        "max_deg": 0.0685,
+        "mean_deg": 0.0103,
+        "worst_frame": 46
+      },
+      "mixamorig:RightHand": {
+        "max_deg": 0.0396,
+        "mean_deg": 0.0008,
+        "worst_frame": 25
+      },
+      "mixamorig:LeftUpLeg": {
+        "max_deg": 0.0969,
+        "mean_deg": 0.0186,
+        "worst_frame": 30
+      },
+      "mixamorig:LeftUpLeg.001": {
+        "max_deg": 0.1251,
+        "mean_deg": 0.0123,
+        "worst_frame": 25
+      },
+      "mixamorig:LeftUpLeg.002": {
+        "max_deg": 0.1119,
+        "mean_deg": 0.0354,
+        "worst_frame": 22
+      },
+      "mixamorig:RightUpLeg": {
+        "max_deg": 0.1583,
+        "mean_deg": 0.011,
+        "worst_frame": 26
+      },
+      "mixamorig:RightUpLeg.001": {
+        "max_deg": 0.0969,
+        "mean_deg": 0.0104,
+        "worst_frame": 38
+      },
+      "mixamorig:RightUpLeg.002": {
+        "max_deg": 0.1251,
+        "mean_deg": 0.0152,
+        "worst_frame": 38
+      }
+    },
+    "hip_vertical_max_abs_error_m": 0.0071,
+    "hip_horizontal_note": "Source hips travel about 1.35 m in X and -1.35 m in Y over the clip. The retarget removes that end-to-end drift and keeps the sway around the line, scaled by hip height. Target horizontal span is 0.21 m in X and 0.48 m in Y, and the end sits 3 cm from the start. Preview HoldHips then pins horizontal hips anyway."
+  },
+  "unit_tests_m": [
+    {
+      "name": "sep cubes",
+      "got": 2.0,
+      "exp": 2.0,
+      "err": 0.0
+    },
+    {
+      "name": "touch cubes",
+      "got": 0.0,
+      "exp": 0.0,
+      "err": 0.0
+    },
+    {
+      "name": "overlap 0.2",
+      "got": -0.19999999999999996,
+      "exp": -0.2,
+      "err": 5.551115123125783e-17
+    },
+    {
+      "name": "diag sep",
+      "got": 1.4142133152814922,
+      "exp": 1.4142135623730951,
+      "err": 2.4709160295621757e-07
+    }
+  ],
+  "outline_minimum_m": {
+    "armada": {
+      "body": {
+        "dist": -0.42018,
+        "frame": 49
+      },
+      "wings": {
+        "dist": -0.43097,
+        "frame": 33
+      },
+      "right_arm": {
+        "dist": -0.0816,
+        "frame": 30
+      },
+      "left_arm": {
+        "dist": -0.14495,
+        "frame": 42
+      },
+      "right_hand": {
+        "dist": -0.0411,
+        "frame": 6
+      }
+    },
+    "thrust_slash": {
+      "body": {
+        "dist": -0.41263,
+        "frame": 78
+      },
+      "wings": {
+        "dist": -0.44934,
+        "frame": 13
+      },
+      "right_arm": {
+        "dist": 0.00443,
+        "frame": 40
+      },
+      "left_arm": {
+        "dist": -0.10004,
+        "frame": 43
+      },
+      "right_hand": {
+        "dist": -0.04189,
+        "frame": 49
+      }
+    }
+  },
+  "triangle_overlap_polygon_pairs_armada": [
+    {
+      "frame": 1,
+      "body": 578,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 2,
+      "body": 578,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 3,
+      "body": 556,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 4,
+      "body": 573,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 5,
+      "body": 548,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 6,
+      "body": 502,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 7,
+      "body": 550,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 8,
+      "body": 535,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 9,
+      "body": 720,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 10,
+      "body": 733,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 11,
+      "body": 396,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 12,
+      "body": 352,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 13,
+      "body": 382,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 14,
+      "body": 501,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 15,
+      "body": 478,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 16,
+      "body": 566,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 17,
+      "body": 838,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 18,
+      "body": 845,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 19,
+      "body": 654,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 20,
+      "body": 553,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 21,
+      "body": 444,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 22,
+      "body": 557,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 23,
+      "body": 431,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 24,
+      "body": 173,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 25,
+      "body": 597,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 26,
+      "body": 637,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 27,
+      "body": 458,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 28,
+      "body": 283,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 30,
+      "body": 0,
+      "wings": 0,
+      "right_arm": 37,
+      "left_arm": 0
+    },
+    {
+      "frame": 31,
+      "body": 297,
+      "wings": 0,
+      "right_arm": 47,
+      "left_arm": 0
+    },
+    {
+      "frame": 32,
+      "body": 226,
+      "wings": 0,
+      "right_arm": 46,
+      "left_arm": 0
+    },
+    {
+      "frame": 33,
+      "body": 204,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 34,
+      "body": 281,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 35,
+      "body": 459,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 36,
+      "body": 901,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 37,
+      "body": 255,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 40,
+      "body": 0,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 41,
+      "body": 0,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 96
+    },
+    {
+      "frame": 42,
+      "body": 0,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 167
+    },
+    {
+      "frame": 43,
+      "body": 0,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 260
+    },
+    {
+      "frame": 44,
+      "body": 0,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 41
+    },
+    {
+      "frame": 45,
+      "body": 0,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    },
+    {
+      "frame": 50,
+      "body": 147,
+      "wings": 0,
+      "right_arm": 0,
+      "left_arm": 0
+    }
+  ],
+  "outline_summary": {
+    "armada": {
+      "body": {
+        "min_m": -0.42018,
+        "min_frame": 49,
+        "frames_below_minus_0.5cm": 47,
+        "n": 50
+      },
+      "wings": {
+        "min_m": -0.43097,
+        "min_frame": 33,
+        "frames_below_minus_0.5cm": 6,
+        "n": 50
+      },
+      "right_arm": {
+        "min_m": -0.0816,
+        "min_frame": 30,
+        "frames_below_minus_0.5cm": 30,
+        "n": 50
+      },
+      "left_arm": {
+        "min_m": -0.14495,
+        "min_frame": 42,
+        "frames_below_minus_0.5cm": 9,
+        "n": 50
+      },
+      "right_hand": {
+        "min_m": -0.0411,
+        "min_frame": 6,
+        "frames_below_minus_0.5cm": 50,
+        "n": 50
+      }
+    },
+    "thrust_slash": {
+      "body": {
+        "min_m": -0.41263,
+        "min_frame": 78,
+        "frames_below_minus_0.5cm": 61,
+        "n": 91
+      },
+      "wings": {
+        "min_m": -0.44934,
+        "min_frame": 13,
+        "frames_below_minus_0.5cm": 63,
+        "n": 91
+      },
+      "right_arm": {
+        "min_m": 0.00443,
+        "min_frame": 40,
+        "frames_below_minus_0.5cm": 0,
+        "n": 91
+      },
+      "left_arm": {
+        "min_m": -0.10004,
+        "min_frame": 43,
+        "frames_below_minus_0.5cm": 7,
+        "n": 91
+      },
+      "right_hand": {
+        "min_m": -0.04189,
+        "min_frame": 49,
+        "frames_below_minus_0.5cm": 91,
+        "n": 91
+      }
+    }
+  },
+  "grip": {
+    "spear_parent": "armature",
+    "spear_local_translation_m": [
+      0,
+      0,
+      0
+    ],
+    "spear_verts": 15900,
+    "spear_weight": "all dominant weight 1 on mixamorig:RightHand",
+    "length_m": 2.1,
+    "shaft_radius_m": 0.02,
+    "ornament_radius_max_m": 0.153,
+    "nearest_hand_vertex_to_axis_m": 0.0215,
+    "hand_centroid_to_axis_m": 0.0752,
+    "palm_to_axis_cm_armada_range": [
+      7.52,
+      7.67
+    ]
+  }
+}

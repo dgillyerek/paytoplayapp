@@ -49,7 +49,7 @@ namespace Survival.Unity
 
         private static readonly Def[] Defs =
         {
-            new Def("seraphine", "SERAPHINE", true, 1.4f, 1.9f, new[] { "idle", "walk", "attack_standing_melee", "attack_thrust_slash" },
+            new Def("seraphine", "SERAPHINE", true, 1.4f, 1.9f, new[] { "idle", "walk", "attack_armada", "attack_thrust_slash" },
                 new[] { BattleImpactKind.SwordSteel, BattleImpactKind.SwordSteel }, new Color(1f, 0.95f, 0.7f), new Color(0.45f, 0.7f, 1f)),
             new Def("kaelen", "KAELEN", true, -1.4f, 1.7f, new[] { "idle", "walk", "attack_dualslash", "attack2_inwardslash" },
                 new[] { BattleImpactKind.SwordSteel }, new Color(0.85f, 0.95f, 1f), new Color(0.5f, 0.8f, 1f)),
