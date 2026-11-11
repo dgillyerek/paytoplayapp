@@ -12,7 +12,7 @@ namespace Survival.Unity
     /// <summary>
     /// Review-only battle preview of the four Design characters of 2026-11-03 (Derek: "put the 4 new characters in a
     /// simple battle scene so I can see them"). Not in the roster, shop, campaign or runner, and deals no damage.
-    /// Each character is one folder under art/preview_new_chars/: PREFIX_rig_rest.fbx (the body), one FBX per clip,
+    /// Each character is one folder under art/preview_new_chars/: PREFIX_rig_rest.fbx (body + props), one FBX per clip,
     /// the atlas, and optionally PREFIX_cape.fbx + PREFIX_cape_1024.png + CAPE_ATTACH.md (cape_root under Spine2,
     /// 3 spring chains, capsule colliders read from the md table). Swap any file in place and replay.
     /// Derek: "nothing moves until their buttons are pressed. then they do the button movement until the next one.
@@ -51,7 +51,7 @@ namespace Survival.Unity
         {
             new Def("seraphine", "SERAPHINE", true, 1.4f, 1.9f, new[] { "idle", "walk", "attack_armada", "attack_thrust_slash" },
                 new[] { BattleImpactKind.SwordSteel, BattleImpactKind.SwordSteel }, new Color(1f, 0.95f, 0.7f), new Color(0.45f, 0.7f, 1f)),
-            new Def("kaelen", "KAELEN", true, -1.4f, 1.7f, new[] { "idle", "walk", "attack_dualslash", "attack2_inwardslash" },
+            new Def("kaelen", "KAELEN", true, -1.4f, 1.7f, new[] { "idle", "walk", "attack_dualslash", "attack2_crossthrust" },
                 new[] { BattleImpactKind.SwordSteel }, new Color(0.85f, 0.95f, 1f), new Color(0.5f, 0.8f, 1f)),
             new Def("vorgath", "VORGATH", false, -1.4f, 2.3f, new[] { "idle", "walk", "attack_slam", "attack_spit", "dying" },
                 new[] { BattleImpactKind.GroundSlam, BattleImpactKind.ArcaneConjure }, new Color(0.85f, 0.55f, 1f), new Color(0.45f, 0.1f, 0.7f)),
@@ -88,15 +88,11 @@ namespace Survival.Unity
             public Vector3 SocketPos;
             public Quaternion SocketRot;
             public Vector3 SocketScale;
-            // Kaelen's swords are separate prop FBXs. The grip is the imported local pose under the hand bone.
-            public readonly List<Transform> Grips = new List<Transform>();
-            public readonly List<Vector3> GripPos = new List<Vector3>();
-            public readonly List<Quaternion> GripRot = new List<Quaternion>();
-            public readonly List<Vector3> GripScale = new List<Vector3>();
-            // Inward slash only. Same props, turned so the blade points along the cut instead of at the ground.
-            public readonly List<Vector3> AltPos = new List<Vector3>();
-            public readonly List<Quaternion> AltRot = new List<Quaternion>();
-            public readonly List<Vector3> AltScale = new List<Vector3>();
+            public Transform? Staff;
+            public Transform? StaffHand;
+            public Transform? StaffMount;
+            public float StaffLinear;
+            public float StaffLeaveTime;
         }
 
         private readonly List<Unit> _units = new List<Unit>();
@@ -206,20 +202,10 @@ namespace Survival.Unity
             u.FromPos = new Vector3[u.Bones.Length];
             u.FromRot = new Quaternion[u.Bones.Length];
             AttachCape(u, dir);
+            AttachSeraphineStaff(u);
             if (def.Prefix == "VORGATH")
             {
                 AttachMouthStream(u);
-            }
-
-            if (def.Prefix == "KAELEN")
-            {
-                // Separate sword props, parented to the hand bones at the imported grip. Not a skinned weapon
-                // and not a BakeMesh copy: the body FBX has no sword mesh.
-                AttachHandProp(u, dir, "KAELEN_sword_L.fbx", "mixamorig:LeftArm.002", "KAELEN_sword_L");
-                AttachHandProp(u, dir, "KAELEN_sword_R.fbx", "mixamorig:RightArm.002", "KAELEN_sword_R");
-                // Attack2 only. Idle, walk, and dualslash keep the passed slash grip.
-                ReadAltGrip(u, dir, "KAELEN_sword_L_inward.fbx", "mixamorig:LeftArm.002", "KAELEN_sword_L");
-                ReadAltGrip(u, dir, "KAELEN_sword_R_inward.fbx", "mixamorig:RightArm.002", "KAELEN_sword_R");
             }
 
             return u;
@@ -549,7 +535,9 @@ namespace Survival.Unity
                     idle.SampleAnimation(u.Model, 0f);
                     HoldHips(u);
                     HoldSocket(u);
-                    HoldGrips(u);
+                    u.StaffLinear = 0f;
+                    u.StaffLeaveTime = 0f;
+                    PlaceSeraphineStaff(u, 0f);
                 }
 
                 u.Cloth?.ResetToRest();
@@ -729,170 +717,6 @@ namespace Survival.Unity
             u.Socket.localScale = u.SocketScale;
         }
 
-        /// <summary>
-        /// Sword prop parented to a hand bone. The local pose is copied off the imported prop FBX
-        /// (the same bone, with the mesh parented to it) so Unity's axis conversion is already in the numbers.
-        /// </summary>
-        private void AttachHandProp(Unit u, string dir, string file, string boneName, string meshName)
-        {
-            var hand = FindBone(u.Model.transform, boneName);
-            if (hand == null)
-            {
-                Debug.LogError(u.Def.Prefix + " prop: " + boneName + " missing.");
-                return;
-            }
-
-            var prefab = PlayerAssets.Load<GameObject>(dir + file);
-            if (prefab == null)
-            {
-                Debug.LogError(u.Def.Prefix + " prop missing: " + dir + file);
-                return;
-            }
-
-            var probe = Instantiate(prefab);
-            probe.SetActive(false);
-            Transform? srcHand = null;
-            Transform? srcMesh = null;
-            foreach (var t in probe.GetComponentsInChildren<Transform>(true))
-            {
-                if (t.name == boneName)
-                {
-                    srcHand = t;
-                }
-
-                if (t.name == meshName)
-                {
-                    srcMesh = t;
-                }
-            }
-
-            if (srcHand == null || srcMesh == null)
-            {
-                Debug.LogError(u.Def.Prefix + " prop " + file + " has no " + boneName + " / " + meshName + ".");
-                Destroy(probe);
-                return;
-            }
-
-            Vector3 pos;
-            Quaternion rot;
-            var scale = srcMesh.localScale;
-            if (srcMesh.parent == srcHand)
-            {
-                pos = srcMesh.localPosition;
-                rot = srcMesh.localRotation;
-            }
-            else
-            {
-                pos = srcHand.InverseTransformPoint(srcMesh.position);
-                rot = Quaternion.Inverse(srcHand.rotation) * srcMesh.rotation;
-                var parentName = srcMesh.parent != null ? srcMesh.parent.name : "root";
-                Debug.LogWarning(u.Def.Prefix + " prop parent is " + parentName + ", rebaked into " + boneName + ".");
-            }
-
-            var sword = Instantiate(srcMesh.gameObject, hand);
-            sword.name = meshName;
-            sword.SetActive(true);
-            sword.transform.localPosition = pos;
-            sword.transform.localRotation = rot;
-            sword.transform.localScale = scale;
-            foreach (var a in sword.GetComponentsInChildren<Animator>(true))
-            {
-                Destroy(a);
-            }
-
-            ApplyMaterial(sword, PlayerAssets.Load<Texture2D>(dir + u.Def.Prefix + "_atlas_2048.png"), meshName, false);
-            u.Grips.Add(sword.transform);
-            u.GripPos.Add(pos);
-            u.GripRot.Add(rot);
-            u.GripScale.Add(scale);
-            Debug.Log(u.Def.Prefix + " " + meshName + " on " + boneName + " local pos " + pos.ToString("F4") + " euler " + rot.eulerAngles.ToString("F1"));
-            Destroy(probe);
-        }
-
-        /// <summary>
-        /// Local pose of a sword under its hand, read the same way AttachHandProp does. Does not spawn a mesh.
-        /// Used for the inward-slash aim only.
-        /// </summary>
-        private bool ReadAltGrip(Unit u, string dir, string file, string boneName, string meshName)
-        {
-            var prefab = PlayerAssets.Load<GameObject>(dir + file);
-            if (prefab == null)
-            {
-                Debug.LogWarning(u.Def.Prefix + " inward grip missing: " + dir + file);
-                return false;
-            }
-
-            var probe = Instantiate(prefab);
-            probe.SetActive(false);
-            Transform? srcHand = null;
-            Transform? srcMesh = null;
-            foreach (var t in probe.GetComponentsInChildren<Transform>(true))
-            {
-                if (t.name == boneName)
-                {
-                    srcHand = t;
-                }
-
-                if (t.name == meshName)
-                {
-                    srcMesh = t;
-                }
-            }
-
-            if (srcHand == null || srcMesh == null)
-            {
-                Debug.LogWarning(u.Def.Prefix + " inward grip " + file + " has no " + boneName + " / " + meshName + ".");
-                Destroy(probe);
-                return false;
-            }
-
-            Vector3 pos;
-            Quaternion rot;
-            var scale = srcMesh.localScale;
-            if (srcMesh.parent == srcHand)
-            {
-                pos = srcMesh.localPosition;
-                rot = srcMesh.localRotation;
-            }
-            else
-            {
-                pos = srcHand.InverseTransformPoint(srcMesh.position);
-                rot = Quaternion.Inverse(srcHand.rotation) * srcMesh.rotation;
-            }
-
-            u.AltPos.Add(pos);
-            u.AltRot.Add(rot);
-            u.AltScale.Add(scale);
-            Destroy(probe);
-            return true;
-        }
-
-        private static void HoldGrips(Unit u)
-        {
-            var inward = u.AltPos.Count == u.Grips.Count && u.Def.Clips[u.Clip] == "attack2_inwardslash";
-            for (var i = 0; i < u.Grips.Count; i++)
-            {
-                var grip = u.Grips[i];
-                if (grip == null)
-                {
-                    continue;
-                }
-
-                if (inward)
-                {
-                    grip.localPosition = u.AltPos[i];
-                    grip.localRotation = u.AltRot[i];
-                    grip.localScale = u.AltScale[i];
-                }
-                else
-                {
-                    grip.localPosition = u.GripPos[i];
-                    grip.localRotation = u.GripRot[i];
-                    grip.localScale = u.GripScale[i];
-                }
-            }
-        }
-
         private static void HoldHips(Unit u)
         {
             if (u.Hips == null)
@@ -916,6 +740,141 @@ namespace Survival.Unity
             }
         }
 
+        // Seraphine's spear is skinned entirely to RightHand. Armada keeps that hand motion and
+        // moves a rigid copy of the spear from the hand onto a mount under Spine2. The mount
+        // numbers are Spine2-local, measured on the imported FBX (the same axes a child of the
+        // bone uses). Stow is 0.20 s. The return waits 0.14 s, so the hand is back on the idle
+        // grip before the spear arrives, then takes 0.20 s. Mid-blend the spear swings 0.60 m
+        // along the spine's local -Z (behind her) so the shaft clears the wings.
+        private const float StaffStowSeconds = 0.20f;
+        private const float StaffReturnDelay = 0.14f;
+        private const float StaffReturnSeconds = 0.20f;
+        private const float StaffArcMetres = 0.60f;
+        private const string StaffMountBone = "mixamorig:Spine2";
+        private static readonly Vector3 StaffMountLocalPosition = new Vector3(-0.185664f, -0.488309f, -0.501672f);
+        private static readonly Quaternion StaffMountLocalRotation = new Quaternion(-0.014996f, 0.008718f, 0.500424f, 0.865607f);
+
+        private static void AttachSeraphineStaff(Unit u)
+        {
+            if (u.Def.Prefix != "SERAPHINE")
+            {
+                return;
+            }
+
+            SkinnedMeshRenderer? skin = null;
+            foreach (var candidate in u.Model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                if (candidate.name.IndexOf("spear", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    skin = candidate;
+                    break;
+                }
+            }
+
+            var hand = FindBone(u.Model.transform, "mixamorig:RightHand");
+            var spine = FindBone(u.Model.transform, StaffMountBone);
+            if (skin == null || hand == null || spine == null)
+            {
+                Debug.LogError("Seraphine staff: spear, RightHand or Spine2 missing. The spear stays skinned to the hand.");
+                return;
+            }
+
+            var baked = new Mesh();
+            skin.BakeMesh(baked);
+            var toHand = hand.worldToLocalMatrix * skin.transform.localToWorldMatrix;
+            var verts = baked.vertices;
+            var normals = baked.normals;
+            for (var i = 0; i < verts.Length; i++)
+            {
+                verts[i] = toHand.MultiplyPoint3x4(verts[i]);
+            }
+
+            for (var i = 0; i < normals.Length; i++)
+            {
+                normals[i] = toHand.MultiplyVector(normals[i]);
+            }
+
+            baked.vertices = verts;
+            baked.normals = normals;
+            baked.RecalculateBounds();
+            skin.enabled = false;
+
+            var handSocket = new GameObject("SERAPHINE_staff_hand").transform;
+            handSocket.SetParent(hand, false);
+            var mount = new GameObject("SERAPHINE_staff_back").transform;
+            mount.SetParent(spine, false);
+            mount.localPosition = StaffMountLocalPosition;
+            mount.localRotation = StaffMountLocalRotation;
+            mount.localScale = Vector3.one;
+
+            var go = new GameObject("SERAPHINE_staff_rigid");
+            go.AddComponent<MeshFilter>().sharedMesh = baked;
+            var renderer = go.AddComponent<MeshRenderer>();
+            renderer.sharedMaterials = skin.sharedMaterials;
+            go.transform.SetParent(handSocket, false);
+            go.transform.localPosition = Vector3.zero;
+            go.transform.localRotation = Quaternion.identity;
+            go.transform.localScale = Vector3.one;
+
+            u.Staff = go.transform;
+            u.StaffHand = handSocket;
+            u.StaffMount = mount;
+        }
+
+        /// <summary>
+        /// 0 is the RightHand socket, 1 is the Spine2 mount. Called after the pose crossfade.
+        /// </summary>
+        private static void PlaceSeraphineStaff(Unit u, float dt)
+        {
+            if (u.Staff == null || u.StaffHand == null || u.StaffMount == null)
+            {
+                return;
+            }
+
+            var armada = u.Def.Clips[u.Clip] == "attack_armada";
+            if (armada)
+            {
+                u.StaffLeaveTime = 0f;
+                u.StaffLinear = Mathf.MoveTowards(u.StaffLinear, 1f, dt / StaffStowSeconds);
+            }
+            else if (u.StaffLinear > 0f)
+            {
+                u.StaffLeaveTime += dt;
+                if (u.StaffLeaveTime >= StaffReturnDelay)
+                {
+                    u.StaffLinear = Mathf.MoveTowards(u.StaffLinear, 0f, dt / StaffReturnSeconds);
+                }
+            }
+
+            var w = u.StaffLinear;
+            w = w * w * (3f - (2f * w));
+            if (w <= 0.0001f)
+            {
+                u.Staff.SetParent(u.StaffHand, false);
+                u.Staff.localPosition = Vector3.zero;
+                u.Staff.localRotation = Quaternion.identity;
+                u.Staff.localScale = Vector3.one;
+                return;
+            }
+
+            if (w >= 0.9999f)
+            {
+                u.Staff.SetParent(u.StaffMount, false);
+                u.Staff.localPosition = Vector3.zero;
+                u.Staff.localRotation = Quaternion.identity;
+                u.Staff.localScale = Vector3.one;
+                return;
+            }
+
+            var pos = Vector3.Lerp(u.StaffHand.position, u.StaffMount.position, w);
+            var rot = Quaternion.Slerp(u.StaffHand.rotation, u.StaffMount.rotation, w);
+            var back = u.StaffMount.parent != null ? u.StaffMount.parent.TransformDirection(Vector3.back) : Vector3.back;
+            pos += back * (Mathf.Sin(Mathf.PI * w) * StaffArcMetres);
+            u.Staff.SetParent(u.Model.transform, true);
+            u.Staff.SetPositionAndRotation(pos, rot);
+            u.Staff.localScale = Vector3.one;
+        }
+
         private void Tick(Unit u, float dt)
         {
             var clip = u.Clips[u.Clip];
@@ -924,7 +883,7 @@ namespace Survival.Unity
             if (u.Frozen)
             {
                 HoldSocket(u);
-                HoldGrips(u);
+                PlaceSeraphineStaff(u, 0f);
                 u.Spit?.ApplyClipTime(-1f, 0f);
                 return; // Pose was set on Restart; nothing moves until a button.
             }
@@ -999,7 +958,7 @@ namespace Survival.Unity
             // After the head pose (and the crossfade) so the stream leaves the mouth that is on screen.
             // The socket is not one of the sampled bones; put its imported local pose back in case the clip sample touched it.
             HoldSocket(u);
-            HoldGrips(u);
+            PlaceSeraphineStaff(u, dt);
             if (u.Spit != null)
             {
                 var spit = u.Def.Clips[u.Clip] == "attack_spit";

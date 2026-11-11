@@ -1,6 +1,6 @@
 # Seraphine Armada on the preview, 2026-11-10
 
-Slot 1 in New Characters Preview is `attack_armada`. The clip file that was already on disk is reused. Slot 2 is still `attack_thrust_slash`, byte-identical to main. `SERAPHINE_rig_rest.fbx`, idle, walk, and the cape are byte-identical to main. The spear mesh was not moved.
+Slot 1 in New Characters Preview is `attack_armada`. The clip's bone curves are unchanged. During Armada the preview lifts the spear off the right hand and seats it on a mount under `mixamorig:Spine2`. Idle, walk, and thrust slash keep the original hand grip. `SERAPHINE_rig_rest.fbx`, the cape, and every clip file are byte-identical to the previous commit on this branch.
 
 Unity is not available headless here. Plates are Blender. `NewCharsPreview` instances `SERAPHINE_rig_rest.fbx` and samples the clip. These renders do the same thing, then pin horizontal hips the way `HoldHips` does. The words "BLENDER — not Unity" are composited on the frames. Workbench did not draw a text object.
 
@@ -21,40 +21,51 @@ Vertical hip motion matches within 7 mm. The source hips travel about 1.35 m in 
 
 The preview FBX and the design-folder copy differ by the FBX timestamp only (3 bytes).
 
-## Why the spear was not moved
+## Staff stow (Unity)
+
+`NewCharsPreview.AttachSeraphineStaff` bakes the spear with `SkinnedMeshRenderer.BakeMesh` (the FBX mesh is not readable) into RightHand space, hides the skinned renderer, and shows a rigid copy. `SERAPHINE_staff_hand` is a child of `mixamorig:RightHand` with an identity local pose, so the copy matches the skinned spear (measured error 0.000 mm on idle and walk, 0.001 mm on thrust slash frame 1). `SERAPHINE_staff_back` is a child of `mixamorig:Spine2`:
+
+- local position `(-0.185664, -0.488309, -0.501672)` m
+- local rotation quaternion xyzw `(-0.014996, 0.008718, 0.500424, 0.865607)`
+
+`PlaceSeraphineStaff`, called after the pose crossfade in `Tick`, moves a linear weight to 1 over 0.20 s while `attack_armada` plays and, after a 0.14 s wait, back to 0 over 0.20 s on any other clip. The shown weight is `w*w*(3-2*w)`. The rigid spear's world pose is the lerp/slerp of the two sockets, plus `sin(pi * w) * 0.60` m along the spine bone's local -Z, so the shaft swings behind her instead of through the wings. At 0 and at 1 that extra offset is zero and the spear is parented to the socket, so on the mount it does not move relative to Spine2.
+
+The diagonal sits behind the cape, between the wing roots, ornament up over her left shoulder and butt down past the right hip. Closer to the cape, the ornament meets the wings.
+
+## Why a hand grip cannot clear Armada
 
 `NewCharsPreview` does not special-case the spear. On `SERAPHINE_rig_rest` it is a separate mesh, parented to the armature at identity, and all 15,900 vertices are weight 1 on `mixamorig:RightHand`. The open hand has no finger bones and lives in that same rest file, which stays unchanged.
 
 The shaft is 2.10 m long, about 2.0 cm in radius, with an ornament about 15 cm across near one end. The nearest hand vertex is 2.15 cm from the shaft axis, so the shaft surface touches the open hand. The hand-vertex centroid is 7.5 cm off the axis, because the open hand extends away from the shaft. That distance is constant in the hand, so it does not drift during the clip.
 
-A different constant aim does not clear the body outline. On frame 1 the grip point is 12.9 cm inside the convex hull of torso, head, and legs, and every one of the 509 right-hand vertices is inside that hull (the outermost is still 10.0 cm inside). The best spear direction through that grip is still −18.3 cm on frame 1. Frames 1–22 are the same kind of miss. Moving the spear in the rest file would also move it in idle, walk, and thrust slash, and would not put frame 1 outside the hull.
+Holding the spear in the Armada hand cannot clear the body outline. On frame 1 that grip point is 12.9 cm inside the convex hull of torso, head, and legs. The stow takes the spear off the hand instead of editing the kick.
 
-Pushing the hand out of the hull and re-aiming the spear would be a new arm animation. That was not done. The kick stays the Mixamo retarget.
+## Outline clearance with the stow
 
-## Outline clearance
+Signed distance between convex hulls. Positive is a gap. The right hand is not part of the body or the right arm. The sequence is the preview timeline: idle, the 0.20 s stow while the pose crossfades into Armada, all 50 Armada frames with the spear on the mount, then the return to idle. Cape is the bound cape, parented to Spine2 the way the preview attaches it (the spring is not re-simulated).
 
-Signed distance between convex hulls. Positive is a gap. The right hand is not part of the body or the right arm. Unit cubes at 2.00 m, touching, overlapping by 0.20 m, and separated on a diagonal matched to 0.001 mm. Full table is `measurements.json`.
+| Pair | Minimum | Where |
+|---|---:|---|
+| staff–body | 16.5 cm | stow t = 0.77 s (spear on the mount, during the kick) |
+| staff–wings | 5.6 cm | return t = 0.30 s |
+| staff–right arm | 0.08 cm | return t = 0.33 s (spear back in the idle hand) |
+| staff–left arm | 39.7 cm | return t = 0.13 s |
+| staff–cape | 19.2 cm | stow t = 0.40 s |
 
-| Clip | Pair | Minimum | Frame | Frames under −0.5 cm |
-|---|---|---:|---:|---:|
-| armada | staff–body | −42.0 cm | 49 | 47 / 50 |
-| armada | staff–wings | −43.1 cm | 33 | 6 / 50 |
-| armada | staff–right arm | −8.2 cm | 30 | 30 / 50 |
-| armada | staff–left arm | −14.5 cm | 42 | 9 / 50 |
-| thrust slash (unchanged) | staff–body | −41.3 cm | 78 | 61 / 91 |
-| thrust slash | staff–wings | −44.9 cm | 13 | 63 / 91 |
-| thrust slash | staff–right arm | +0.44 cm | 40 | 0 / 91 |
-| thrust slash | staff–left arm | −10.0 cm | 43 | 7 / 91 |
+The 0.08 cm right-arm gap is the original open-hand grip against the forearm, after the spear has arrived home. While the spear is on the mount the right-arm gap stays above 40 cm. No pair goes negative.
 
-The right hand overlaps the spear by about 4 cm. That is the open hand against the shaft, and it is not in the table above.
+In-hand check, rigid copy versus the skinned spear: idle 0.000 mm, walk 0.000 mm, thrust slash frame 1 0.001 mm.
 
-Triangle pairs, Armada only: the spear intersects body polygons on 36 of 50 frames (578 pairs at frame 1). Wing polygon intersections: 0. Right-arm polygons: frames 30–32. Left-arm polygons: frames 41–44.
+## Visual verdict
 
-## Visual verdicts
+Clips are `clips/SERAPHINE_stow_front.mp4`, `SERAPHINE_stow_side.mp4`, `SERAPHINE_stow_preview.mp4`, each also at half speed. The combined preview film is `clips/SERAPHINE_armada_stow_preview.mp4` (2.67 s, preview camera, idle, stow, the kick, and the return).
 
-Playback is in `clips/`. Grip stills are in `grips/`.
+- **attack_armada with the stow — PASS.** The kick is still the spin. Once the blend finishes, the spear stays diagonal on the back and moves with the torso, not with the arm. It sits behind the cape, ornament up past the left shoulder, butt down past the right hip, clear of both wings. The stow and the return are smooth travels. The return swings out behind her and comes within 5.6 cm of the wing outline; the side plate at that moment shows the shaft in front of the body, not inside the wing.
+- **idle, walk, thrust slash — unchanged.** The rigid spear matches the skinned one. Thrust slash still carries the spear in the hand, which is the previous clip, not this mount.
 
-- **attack_armada — FAIL.** The body motion is a spinning kick: she turns and throws one leg. Front, side, and the preview camera all show the shaft through the hips and thighs on the windup and again as the leg comes down, and through the raised leg at the kick. The right hand stays open. The shaft touches that hand and continues through the pelvis. A small foot slide shows as the kick settles. Wing polygon intersections were 0. The wing outline still overlaps, and the blade reads as crossing the wing in the playback.
-- **attack_thrust_slash — FAIL.** Unchanged from main. At frame 1 the spear is horizontal through the hip, with the head sticking out of the right hip on the side view and the shaft crossing the wing on the front view. The hand stays open. The sweep then carries the spear through the torso. This clip was not edited.
+## Residual
 
-PR #213's reauthored attacks were not used. The outline pairs (whole spear, whole body, both wings, each arm, gripping hand left out) are the same check that PR asked for. The measurement was rebuilt for this clip.
+- The mount is about 19 cm behind the cape. Tighter to the cloth, the ornament meets the wings.
+- The 0.60 m back-swing is visible. It is what keeps the shaft out of the wings on the way.
+- The cape gap is against the bound cape. The preview spring can still drift; 19 cm is the margin it has.
+- Desktop Unity was not run. The Blender playback uses these same numbers.
