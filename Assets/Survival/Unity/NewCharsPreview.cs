@@ -96,6 +96,10 @@ namespace Survival.Unity
             public Vector3[] ScalePinValues = System.Array.Empty<Vector3>();
             public Quaternion[] RotationPinValues = System.Array.Empty<Quaternion>();
             public Transform? Staff;
+            // Thrust slash plays this copy from its own clip, in character-root space.
+            // It is not parented to the hand, so the bayonet wrist roll cannot flip it.
+            public GameObject? StaffLunge;
+            public AnimationClip? StaffLungeClip;
         }
 
         private readonly List<Unit> _units = new List<Unit>();
@@ -234,7 +238,7 @@ namespace Survival.Unity
                     continue;
                 }
 
-                if (t.name.StartsWith("cape_", System.StringComparison.Ordinal) || t.name == "SERAPHINE_staff")
+                if (t.name.StartsWith("cape_", System.StringComparison.Ordinal) || t.name.StartsWith("SERAPHINE_staff", System.StringComparison.Ordinal))
                 {
                     continue;
                 }
@@ -808,18 +812,15 @@ namespace Survival.Unity
             }
         }
 
-        // Seraphine's spear is a separate prop, not skinned into the body. It is a child of
-        // mixamorig:RightHand. Idle, walk, and Armada slide 1.01 m along local −Z so the hand
-        // is at mid-shaft, identity rotation. Thrust slash uses a fixed aim that points the
-        // staff along the lunge, about 8° above the ground, still at mid-shaft. The rig
-        // imports at scale 100, so a 1 m child offset is about 100 m in the world. Offsets
-        // are divided by the hand's lossy scale.
+        // Seraphine's spear is a separate prop, not skinned into the body. Idle, walk, and
+        // Armada parent it to mixamorig:RightHand and slide 1.01 m along local −Z (identity
+        // rotation). The rig imports at scale 100, so that metre offset is divided by the
+        // hand's lossy scale. Thrust slash does not use that grip. A second copy plays
+        // SERAPHINE_staff_thrust.fbx in character-root space, one pose per frame, so the
+        // point stays toward the enemy and does not inherit the hand's roll.
         private const string StaffFile = "SERAPHINE_staff.fbx";
+        private const string StaffThrustFile = "SERAPHINE_staff_thrust.fbx";
         private const float StaffMidMetres = 1.01f;
-        // Thrust slash only. Maps the staff's +Z onto the hand-space aim (0.720, 0.165, -0.674)
-        // so the point leads the lunge, about 8° above the ground. Mid-shaft, same 1.01 m slide.
-        private static readonly Quaternion StaffThrustAim = new Quaternion(-0.204022f, 0.891890f, 0f, 0.403618f);
-        private static readonly Vector3 StaffThrustMidMetres = new Vector3(-0.727166f, -0.166341f, 0.680926f);
 
         private void AttachSeraphineStaff(Unit u, string dir)
         {
@@ -844,19 +845,63 @@ namespace Survival.Unity
             }
 
             u.Staff = staff.transform;
+            var atlas = PlayerAssets.Load<Texture2D>(dir + u.Def.Prefix + "_atlas_2048.png");
+            ApplyMaterial(staff, atlas, u.Def.Prefix + "_staff", false);
+
+            var lungePrefab = PlayerAssets.Load<GameObject>(dir + StaffThrustFile);
+            u.StaffLungeClip = LoadClip(dir + StaffThrustFile);
+            if (lungePrefab != null && u.StaffLungeClip != null)
+            {
+                var lunge = Instantiate(lungePrefab, u.Model.transform);
+                lunge.name = "SERAPHINE_staff_lunge";
+                foreach (var a in lunge.GetComponentsInChildren<Animator>(true))
+                {
+                    Destroy(a);
+                }
+
+                u.StaffLunge = lunge;
+                ApplyMaterial(lunge, atlas, u.Def.Prefix + "_staff_lunge", false);
+                SetRenderers(lunge, false);
+            }
+
             ApplyStaffGrip(u);
-            ApplyMaterial(staff, PlayerAssets.Load<Texture2D>(dir + u.Def.Prefix + "_atlas_2048.png"), u.Def.Prefix + "_staff", false);
         }
 
         /// <summary>
-        /// Mid-shaft on every clip. Idle, walk, and Armada keep the identity grip. Thrust slash
-        /// uses the lunge aim. Metres are divided by the hand's lossy scale.
+        /// Idle, walk, and Armada keep the in-hand mid-shaft grip. Thrust slash hides that
+        /// copy and plays the staff clip on the character root instead.
         /// </summary>
         private static void ApplyStaffGrip(Unit u)
         {
             if (u.Staff == null)
             {
                 return;
+            }
+
+            var thrust = u.Def.Clips[u.Clip] == "attack_thrust_slash" && u.StaffLunge != null && u.StaffLungeClip != null;
+            SetRenderers(u.Staff.gameObject, !thrust);
+            if (u.StaffLunge != null)
+            {
+                SetRenderers(u.StaffLunge, thrust);
+            }
+
+            if (thrust)
+            {
+                var body = u.Clips[u.Clip];
+                var time = body != null && body.length > 1e-4f
+                    ? Mathf.Min(u.Time, body.length) / body.length * u.StaffLungeClip.length
+                    : 0f;
+                u.StaffLungeClip.SampleAnimation(u.StaffLunge, time);
+                return;
+            }
+
+            if (u.Staff.parent == null || u.Staff.parent.name != "mixamorig:RightHand")
+            {
+                var hand = FindBone(u.Model.transform, "mixamorig:RightHand");
+                if (hand != null)
+                {
+                    u.Staff.SetParent(hand, false);
+                }
             }
 
             var scale = u.Staff.parent != null ? u.Staff.parent.lossyScale.x : 1f;
@@ -866,19 +911,17 @@ namespace Survival.Unity
             }
 
             var unit = 1f / scale;
-            var clip = u.Def.Clips[u.Clip];
-            if (clip == "attack_thrust_slash")
-            {
-                u.Staff.localPosition = StaffThrustMidMetres * unit;
-                u.Staff.localRotation = StaffThrustAim;
-            }
-            else
-            {
-                u.Staff.localPosition = new Vector3(0f, 0f, -StaffMidMetres) * unit;
-                u.Staff.localRotation = Quaternion.identity;
-            }
-
+            u.Staff.localPosition = new Vector3(0f, 0f, -StaffMidMetres) * unit;
+            u.Staff.localRotation = Quaternion.identity;
             u.Staff.localScale = Vector3.one;
+        }
+
+        private static void SetRenderers(GameObject go, bool enabled)
+        {
+            foreach (var renderer in go.GetComponentsInChildren<Renderer>(true))
+            {
+                renderer.enabled = enabled;
+            }
         }
 
         private void Tick(Unit u, float dt)
