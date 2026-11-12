@@ -88,11 +88,6 @@ namespace Survival.Unity
             public Vector3 SocketPos;
             public Quaternion SocketRot;
             public Vector3 SocketScale;
-            public Transform? Staff;
-            public Transform? StaffHand;
-            public Transform? StaffMount;
-            public float StaffLinear;
-            public float StaffLeaveTime;
         }
 
         private readonly List<Unit> _units = new List<Unit>();
@@ -202,7 +197,7 @@ namespace Survival.Unity
             u.FromPos = new Vector3[u.Bones.Length];
             u.FromRot = new Quaternion[u.Bones.Length];
             AttachCape(u, dir);
-            AttachSeraphineStaff(u);
+            AttachSeraphineStaff(u, dir);
             if (def.Prefix == "VORGATH")
             {
                 AttachMouthStream(u);
@@ -535,9 +530,6 @@ namespace Survival.Unity
                     idle.SampleAnimation(u.Model, 0f);
                     HoldHips(u);
                     HoldSocket(u);
-                    u.StaffLinear = 0f;
-                    u.StaffLeaveTime = 0f;
-                    PlaceSeraphineStaff(u, 0f);
                 }
 
                 u.Cloth?.ResetToRest();
@@ -740,139 +732,41 @@ namespace Survival.Unity
             }
         }
 
-        // Seraphine's spear is skinned entirely to RightHand. Armada keeps that hand motion and
-        // moves a rigid copy of the spear from the hand onto a mount under Spine2. The mount
-        // numbers are Spine2-local, measured on the imported FBX (the same axes a child of the
-        // bone uses). Stow is 0.20 s. The return waits 0.14 s, so the hand is back on the idle
-        // grip before the spear arrives, then takes 0.20 s. Mid-blend the spear swings 0.60 m
-        // along the spine's local -Z (behind her) so the shaft clears the wings.
-        private const float StaffStowSeconds = 0.20f;
-        private const float StaffReturnDelay = 0.14f;
-        private const float StaffReturnSeconds = 0.20f;
-        private const float StaffArcMetres = 0.60f;
-        private const string StaffMountBone = "mixamorig:Spine2";
-        private static readonly Vector3 StaffMountLocalPosition = new Vector3(-0.185664f, -0.488309f, -0.501672f);
-        private static readonly Quaternion StaffMountLocalRotation = new Quaternion(-0.014996f, 0.008718f, 0.500424f, 0.865607f);
+        // Seraphine's spear is a separate prop, not skinned into the body. It is a child of
+        // mixamorig:RightHand at one fixed grip for idle, walk, and both attacks. The prop
+        // mesh is authored in that bone's axes: the point runs along local +Z, and the shaft
+        // sits against the palm (about 6.4 cm along local -X, 5.5 cm toward the fingers).
+        // The local pose is identity. Same pattern as SirAldric_PILOT_sword on RightHand.
+        private const string StaffFile = "SERAPHINE_staff.fbx";
+        private static readonly Vector3 StaffGripLocalPosition = Vector3.zero;
+        private static readonly Quaternion StaffGripLocalRotation = Quaternion.identity;
 
-        private static void AttachSeraphineStaff(Unit u)
+        private void AttachSeraphineStaff(Unit u, string dir)
         {
             if (u.Def.Prefix != "SERAPHINE")
             {
                 return;
             }
 
-            SkinnedMeshRenderer? skin = null;
-            foreach (var candidate in u.Model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
-            {
-                if (candidate.name.IndexOf("spear", System.StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    skin = candidate;
-                    break;
-                }
-            }
-
             var hand = FindBone(u.Model.transform, "mixamorig:RightHand");
-            var spine = FindBone(u.Model.transform, StaffMountBone);
-            if (skin == null || hand == null || spine == null)
+            var prefab = PlayerAssets.Load<GameObject>(dir + StaffFile);
+            if (hand == null || prefab == null)
             {
-                Debug.LogError("Seraphine staff: spear, RightHand or Spine2 missing. The spear stays skinned to the hand.");
+                Debug.LogError("Seraphine staff: RightHand or " + dir + StaffFile + " missing.");
                 return;
             }
 
-            var baked = new Mesh();
-            skin.BakeMesh(baked);
-            var toHand = hand.worldToLocalMatrix * skin.transform.localToWorldMatrix;
-            var verts = baked.vertices;
-            var normals = baked.normals;
-            for (var i = 0; i < verts.Length; i++)
+            var staff = Instantiate(prefab, hand);
+            staff.name = "SERAPHINE_staff";
+            foreach (var a in staff.GetComponentsInChildren<Animator>(true))
             {
-                verts[i] = toHand.MultiplyPoint3x4(verts[i]);
+                Destroy(a);
             }
 
-            for (var i = 0; i < normals.Length; i++)
-            {
-                normals[i] = toHand.MultiplyVector(normals[i]);
-            }
-
-            baked.vertices = verts;
-            baked.normals = normals;
-            baked.RecalculateBounds();
-            skin.enabled = false;
-
-            var handSocket = new GameObject("SERAPHINE_staff_hand").transform;
-            handSocket.SetParent(hand, false);
-            var mount = new GameObject("SERAPHINE_staff_back").transform;
-            mount.SetParent(spine, false);
-            mount.localPosition = StaffMountLocalPosition;
-            mount.localRotation = StaffMountLocalRotation;
-            mount.localScale = Vector3.one;
-
-            var go = new GameObject("SERAPHINE_staff_rigid");
-            go.AddComponent<MeshFilter>().sharedMesh = baked;
-            var renderer = go.AddComponent<MeshRenderer>();
-            renderer.sharedMaterials = skin.sharedMaterials;
-            go.transform.SetParent(handSocket, false);
-            go.transform.localPosition = Vector3.zero;
-            go.transform.localRotation = Quaternion.identity;
-            go.transform.localScale = Vector3.one;
-
-            u.Staff = go.transform;
-            u.StaffHand = handSocket;
-            u.StaffMount = mount;
-        }
-
-        /// <summary>
-        /// 0 is the RightHand socket, 1 is the Spine2 mount. Called after the pose crossfade.
-        /// </summary>
-        private static void PlaceSeraphineStaff(Unit u, float dt)
-        {
-            if (u.Staff == null || u.StaffHand == null || u.StaffMount == null)
-            {
-                return;
-            }
-
-            var armada = u.Def.Clips[u.Clip] == "attack_armada";
-            if (armada)
-            {
-                u.StaffLeaveTime = 0f;
-                u.StaffLinear = Mathf.MoveTowards(u.StaffLinear, 1f, dt / StaffStowSeconds);
-            }
-            else if (u.StaffLinear > 0f)
-            {
-                u.StaffLeaveTime += dt;
-                if (u.StaffLeaveTime >= StaffReturnDelay)
-                {
-                    u.StaffLinear = Mathf.MoveTowards(u.StaffLinear, 0f, dt / StaffReturnSeconds);
-                }
-            }
-
-            var w = u.StaffLinear;
-            w = w * w * (3f - (2f * w));
-            if (w <= 0.0001f)
-            {
-                u.Staff.SetParent(u.StaffHand, false);
-                u.Staff.localPosition = Vector3.zero;
-                u.Staff.localRotation = Quaternion.identity;
-                u.Staff.localScale = Vector3.one;
-                return;
-            }
-
-            if (w >= 0.9999f)
-            {
-                u.Staff.SetParent(u.StaffMount, false);
-                u.Staff.localPosition = Vector3.zero;
-                u.Staff.localRotation = Quaternion.identity;
-                u.Staff.localScale = Vector3.one;
-                return;
-            }
-
-            var pos = Vector3.Lerp(u.StaffHand.position, u.StaffMount.position, w);
-            var rot = Quaternion.Slerp(u.StaffHand.rotation, u.StaffMount.rotation, w);
-            var back = u.StaffMount.parent != null ? u.StaffMount.parent.TransformDirection(Vector3.back) : Vector3.back;
-            pos += back * (Mathf.Sin(Mathf.PI * w) * StaffArcMetres);
-            u.Staff.SetParent(u.Model.transform, true);
-            u.Staff.SetPositionAndRotation(pos, rot);
-            u.Staff.localScale = Vector3.one;
+            staff.transform.localPosition = StaffGripLocalPosition;
+            staff.transform.localRotation = StaffGripLocalRotation;
+            staff.transform.localScale = Vector3.one;
+            ApplyMaterial(staff, PlayerAssets.Load<Texture2D>(dir + u.Def.Prefix + "_atlas_2048.png"), u.Def.Prefix + "_staff", false);
         }
 
         private void Tick(Unit u, float dt)
@@ -883,7 +777,6 @@ namespace Survival.Unity
             if (u.Frozen)
             {
                 HoldSocket(u);
-                PlaceSeraphineStaff(u, 0f);
                 u.Spit?.ApplyClipTime(-1f, 0f);
                 return; // Pose was set on Restart; nothing moves until a button.
             }
@@ -958,7 +851,6 @@ namespace Survival.Unity
             // After the head pose (and the crossfade) so the stream leaves the mouth that is on screen.
             // The socket is not one of the sampled bones; put its imported local pose back in case the clip sample touched it.
             HoldSocket(u);
-            PlaceSeraphineStaff(u, dt);
             if (u.Spit != null)
             {
                 var spit = u.Def.Clips[u.Clip] == "attack_spit";

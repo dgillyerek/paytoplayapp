@@ -1,71 +1,47 @@
-# Seraphine Armada on the preview, 2026-11-10
+# Seraphine's staff stays in her hand, 2026-11-12
 
-Slot 1 in New Characters Preview is `attack_armada`. The clip's bone curves are unchanged. During Armada the preview lifts the spear off the right hand and seats it on a mount under `mixamorig:Spine2`. Idle, walk, and thrust slash keep the original hand grip. `SERAPHINE_rig_rest.fbx`, the cape, and every clip file are byte-identical to the previous commit on this branch.
+Slot 1 in New Characters Preview is `attack_armada`. Slot 2 is `attack_thrust_slash`. The spear is a separate prop, `SERAPHINE_staff.fbx`, parented to `mixamorig:RightHand` for idle, walk, and both attacks. It is not skinned into the body, and it is not stowed on the back.
 
-Unity is not available headless here. Plates are Blender. `NewCharsPreview` instances `SERAPHINE_rig_rest.fbx` and samples the clip. These renders do the same thing, then pin horizontal hips the way `HoldHips` does. The words "BLENDER — not Unity" are composited on the frames. Workbench did not draw a text object.
+The right arm holds one pose relative to the chest: the hand sits about 26 cm out to her right, 18 cm forward, and 20 cm above the shoulder, and the staff rises at 74° with a 30° turn toward her right. The ornament is the far end. The shaft lies against the palm. The rest of the skeleton is the previous clip. Hips, head, left hand, and left leg match the previous files with 0.0 cm of drift on every measured frame.
 
-## How close the clip is to the Mixamo file
+Unity was not run. The plates are Blender, labeled "BLENDER — not Unity".
 
-Source: `design/survival-theme-a-fantasy/heroes/anim/seraphine/attacks_20261109/mixamo_armada.fbx`.
+## Unity change
 
-Motion-only FBX, no skin, FBX SDK 2020.2, written 2026-11-10 02:22:37. Action name `Armature|mixamo.com|Layer0`. The file text does not contain "Armada". 50 frames at 30 fps (source frames 0–49). Standard mixamorig, including index fingers and toes. The note next to the download says: without skin, FBX for Unity, 30 fps, keyframe reduction none, and In Place was not in the dialog. No character name and no Arm-Space setting are stored in the file. A second download is not required. This file is the source the clip was built from.
+File: `Assets/Survival/Unity/NewCharsPreview.cs`
 
-Compared after one FBX import, source frame 0 against clip frame 1, for the 20 bones the retarget maps (shin `UpLeg.001`, foot `UpLeg.002`). Bind matrices of those bones match the rest rig (max absolute difference 0). World rotation relative to each rig's own rest:
+`AttachSeraphineStaff`, called from `Spawn` after the cape:
 
-- Worst bone: `RightUpLeg`, 0.158° at frame 26.
-- Mean of the per-bone means: 0.010°.
-- `RightArm` stays under 0.001°.
-- `RightHand` max 0.040°.
+- Loads `SERAPHINE_staff.fbx`.
+- Instantiates it as a child of `mixamorig:RightHand`.
+- Local position 0, local rotation identity, local scale 1.
+- Destroys any Animator on the prop and applies the body atlas.
 
-Vertical hip motion matches within 7 mm. The source hips travel about 1.35 m in X and −1.35 m in Y and do not return. The clip removes that straight drift and keeps the sway (about 0.21 m in X and 0.48 m in Y). The preview then pins horizontal hips anyway.
+The mesh is already in the hand bone's axes, so there is no extra grip offset and no per-clip blend. `PlaceSeraphineStaff`, the hidden skinned renderer, and the Spine2 back mount are gone. The same object stays in the hand for every clip.
 
-The preview FBX and the design-folder copy differ by the FBX timestamp only (3 bytes).
+`SERAPHINE_rig_rest.fbx` no longer contains the skinned spear. The 24-bone skeleton, the cape, the clip names, and the existing `.meta` GUIDs are unchanged. `SERAPHINE_staff.fbx.meta` is new. `bakeAxisConversion` is 0, the same as the rest rig, so the prop's hand-space vertices are not given a second axis bake.
 
-## Staff stow (Unity)
+## Clearance
 
-`NewCharsPreview.AttachSeraphineStaff` bakes the spear with `SkinnedMeshRenderer.BakeMesh` (the FBX mesh is not readable) into RightHand space, hides the skinned renderer, and shows a rigid copy. `SERAPHINE_staff_hand` is a child of `mixamorig:RightHand` with an identity local pose, so the copy matches the skinned spear (measured error 0.000 mm on idle and walk, 0.001 mm on thrust slash frame 1). `SERAPHINE_staff_back` is a child of `mixamorig:Spine2`:
+Signed distance between convex hulls, full vertex support, 480 directions. Positive is a gap. The right hand is reported on its own row because the shaft is meant to sit against the palm. The right-arm row is the shoulder, upper arm, and forearm. The cape is the bound cape parented to Spine2.
 
-- local position `(-0.185664, -0.488309, -0.501672)` m
-- local rotation quaternion xyzw `(-0.014996, 0.008718, 0.500424, 0.865607)`
+| Clip | Body | Wings | Cape | Left arm | Right arm | Right hand |
+|---|---:|---:|---:|---:|---:|---:|
+| idle | 34.8 cm | 35.7 cm | 57.4 cm | 58.4 cm | 4.9 cm | 0.7 cm |
+| walk | 36.0 cm | 34.1 cm | 53.6 cm | 56.9 cm | 4.9 cm | 0.8 cm |
+| attack_armada | 26.1 cm | 29.6 cm | 49.9 cm | 38.0 cm | 4.9 cm | 0.7 cm |
+| attack_thrust_slash | 25.6 cm | 31.0 cm | 53.9 cm | 45.1 cm | 4.9 cm | 0.7 cm |
 
-`PlaceSeraphineStaff`, called after the pose crossfade in `Tick`, moves a linear weight to 1 over 0.20 s while `attack_armada` plays and, after a 0.14 s wait, back to 0 over 0.20 s on any other clip. The shown weight is `w*w*(3-2*w)`. The rigid spear's world pose is the lerp/slerp of the two sockets, plus `sin(pi * w) * 0.60` m along the spine bone's local -Z, so the shaft swings behind her instead of through the wings. At 0 and at 1 that extra offset is zero and the spear is parented to the socket, so on the mount it does not move relative to Spine2.
+Nothing goes negative. The tightest body gap is thrust slash, 25.6 cm. The tightest wing gap is Armada, 29.6 cm.
 
-The diagonal sits behind the cape, between the wing roots, ornament up over her left shoulder and butt down past the right hip. Closer to the cape, the ornament meets the wings.
+## Films
 
-## Why a hand grip cannot clear Armada
+Front, side, and the preview camera (yaw 135°, pitch 30°, 54° vertical FOV). Idle is the first two seconds of the cycle. Walk, Armada, and thrust slash are the whole clip. The camera follows the hips so the spin stays in frame; the preview itself pins horizontal hips.
 
-`NewCharsPreview` does not special-case the spear. On `SERAPHINE_rig_rest` it is a separate mesh, parented to the armature at identity, and all 15,900 vertices are weight 1 on `mixamorig:RightHand`. The open hand has no finger bones and lives in that same rest file, which stays unchanged.
-
-The shaft is 2.10 m long, about 2.0 cm in radius, with an ornament about 15 cm across near one end. The nearest hand vertex is 2.15 cm from the shaft axis, so the shaft surface touches the open hand. The hand-vertex centroid is 7.5 cm off the axis, because the open hand extends away from the shaft. That distance is constant in the hand, so it does not drift during the clip.
-
-Holding the spear in the Armada hand cannot clear the body outline. On frame 1 that grip point is 12.9 cm inside the convex hull of torso, head, and legs. The stow takes the spear off the hand instead of editing the kick.
-
-## Outline clearance with the stow
-
-Signed distance between convex hulls. Positive is a gap. The right hand is not part of the body or the right arm. The sequence is the preview timeline: idle, the 0.20 s stow while the pose crossfades into Armada, all 50 Armada frames with the spear on the mount, then the return to idle. Cape is the bound cape, parented to Spine2 the way the preview attaches it (the spring is not re-simulated).
-
-| Pair | Minimum | Where |
-|---|---:|---|
-| staff–body | 16.5 cm | stow t = 0.77 s (spear on the mount, during the kick) |
-| staff–wings | 5.6 cm | return t = 0.30 s |
-| staff–right arm | 0.08 cm | return t = 0.33 s (spear back in the idle hand) |
-| staff–left arm | 39.7 cm | return t = 0.13 s |
-| staff–cape | 19.2 cm | stow t = 0.40 s |
-
-The 0.08 cm right-arm gap is the original open-hand grip against the forearm, after the spear has arrived home. While the spear is on the mount the right-arm gap stays above 40 cm. No pair goes negative.
-
-In-hand check, rigid copy versus the skinned spear: idle 0.000 mm, walk 0.000 mm, thrust slash frame 1 0.001 mm.
-
-## Visual verdict
-
-Clips are `clips/SERAPHINE_stow_front.mp4`, `SERAPHINE_stow_side.mp4`, `SERAPHINE_stow_preview.mp4`, each also at half speed. The combined preview film is `clips/SERAPHINE_armada_stow_preview.mp4` (2.67 s, preview camera, idle, stow, the kick, and the return).
-
-- **attack_armada with the stow — PASS.** The kick is still the spin. Once the blend finishes, the spear stays diagonal on the back and moves with the torso, not with the arm. It sits behind the cape, ornament up past the left shoulder, butt down past the right hip, clear of both wings. The stow and the return are smooth travels. The return swings out behind her and comes within 5.6 cm of the wing outline; the side plate at that moment shows the shaft in front of the body, not inside the wing.
-- **idle, walk, thrust slash — unchanged.** The rigid spear matches the skinned one. Thrust slash still carries the spear in the hand, which is the previous clip, not this mount.
+`design/survival-theme-a-fantasy/heroes/anim/seraphine/blender/armada_2026-11-10/clips/SERAPHINE_staff_preview.mp4`
 
 ## Residual
 
-- The mount is about 19 cm behind the cape. Tighter to the cloth, the ornament meets the wings.
-- The 0.60 m back-swing is visible. It is what keeps the shaft out of the wings on the way.
-- The cape gap is against the bound cape. The preview spring can still drift; 19 cm is the margin it has.
-- Desktop Unity was not run. The Blender playback uses these same numbers.
+- The hand has no finger bones, so the fingers stay open. The shaft clears the hand outline by 0.7 cm. It reads as resting against the palm, not as a closed fist.
+- The right arm does not swing with the kick or the thrust. It keeps the raised hold so the staff stays clear. The legs, spine, left arm, wings, and cape are the original motion.
+- Desktop Unity was not run. This is not a Game-view pass.
