@@ -23,7 +23,7 @@ File: `Assets/Survival/Unity/NewCharsPreview.cs`
 - Local position 0, local rotation identity, local scale 1.
 - Destroys any Animator on the prop and applies the body atlas.
 
-The mesh is already in the hand bone's axes, so there is no extra grip offset and no per-clip blend. `PlaceSeraphineStaff`, the hidden skinned renderer, and the Spine2 back mount are gone. The same object stays in the hand for every clip.
+Idle and walk keep local position 0 and identity rotation, the end grip. `ApplyStaffGrip` runs after each sample. Armada sets local position `(0, 0, -1.01)` so the hand is at mid-shaft. Thrust slash uses local position `(0, 0.427, -0.915)` and local Euler `(25, 0, 0)`, the same mid-shaft slide plus 25° about local X, which drops the shaft from about 55° above the ground to about 41°. Body motion is unchanged. Films: `clips/SERAPHINE_attacks_mid_front.mp4`, `SERAPHINE_attacks_mid_side.mp4`, `SERAPHINE_attacks_mid_preview.mp4`, labeled BLENDER — not Unity.
 
 `SERAPHINE_rig_rest.fbx` no longer contains the skinned spear. The 24-bone skeleton, the cape, the clip names, and the existing `.meta` GUIDs are unchanged. `SERAPHINE_staff.fbx.meta` is new. `bakeAxisConversion` is 0, the same as the rest rig, so the prop's hand-space vertices are not given a second axis bake.
 

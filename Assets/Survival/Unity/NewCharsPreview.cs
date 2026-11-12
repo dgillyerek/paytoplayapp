@@ -95,6 +95,7 @@ namespace Survival.Unity
             public Transform[] ScalePins = System.Array.Empty<Transform>();
             public Vector3[] ScalePinValues = System.Array.Empty<Vector3>();
             public Quaternion[] RotationPinValues = System.Array.Empty<Quaternion>();
+            public Transform? Staff;
         }
 
         private readonly List<Unit> _units = new List<Unit>();
@@ -233,7 +234,7 @@ namespace Survival.Unity
                     continue;
                 }
 
-                if (t.name.StartsWith("cape_", System.StringComparison.Ordinal))
+                if (t.name.StartsWith("cape_", System.StringComparison.Ordinal) || t.name == "SERAPHINE_staff")
                 {
                     continue;
                 }
@@ -595,6 +596,7 @@ namespace Survival.Unity
                 {
                     idle.SampleAnimation(u.Model, 0f);
                     RestoreScales(u);
+                    ApplyStaffGrip(u);
                     HoldHips(u);
                     HoldSocket(u);
                 }
@@ -800,13 +802,17 @@ namespace Survival.Unity
         }
 
         // Seraphine's spear is a separate prop, not skinned into the body. It is a child of
-        // mixamorig:RightHand at one fixed grip for idle, walk, and both attacks. The prop
-        // mesh is authored in that bone's axes: the point runs along local +Z, and the shaft
-        // sits against the palm (about 6.4 cm along local -X, 5.5 cm toward the fingers).
-        // The local pose is identity. Same pattern as SirAldric_PILOT_sword on RightHand.
+        // mixamorig:RightHand. The mesh is in that bone's axes: the point runs along local +Z
+        // (butt at -0.04 m, tip at +2.06 m), shaft against the palm. Idle and walk keep the
+        // end grip (identity). Armada and thrust slash slide it 1.01 m along -Z so the hand
+        // is at mid-shaft. Thrust slash also pitches +25° about local X, which drops the
+        // shaft from about 55° above the ground to about 41°.
         private const string StaffFile = "SERAPHINE_staff.fbx";
-        private static readonly Vector3 StaffGripLocalPosition = Vector3.zero;
-        private static readonly Quaternion StaffGripLocalRotation = Quaternion.identity;
+        private const float StaffMidMetres = 1.01f;
+        private static readonly Vector3 StaffEndGrip = Vector3.zero;
+        private static readonly Vector3 StaffArmadaMid = new Vector3(0f, 0f, -StaffMidMetres);
+        private static readonly Quaternion StaffThrustPitch = Quaternion.Euler(25f, 0f, 0f);
+        private static readonly Vector3 StaffThrustMid = new Vector3(0f, 0.4268f, -0.9154f);
 
         private void AttachSeraphineStaff(Unit u, string dir)
         {
@@ -830,10 +836,37 @@ namespace Survival.Unity
                 Destroy(a);
             }
 
-            staff.transform.localPosition = StaffGripLocalPosition;
-            staff.transform.localRotation = StaffGripLocalRotation;
-            staff.transform.localScale = Vector3.one;
+            u.Staff = staff.transform;
+            ApplyStaffGrip(u);
             ApplyMaterial(staff, PlayerAssets.Load<Texture2D>(dir + u.Def.Prefix + "_atlas_2048.png"), u.Def.Prefix + "_staff", false);
+        }
+
+        /// <summary>Idle and walk keep the end grip. The two attacks hold the middle of the shaft.</summary>
+        private static void ApplyStaffGrip(Unit u)
+        {
+            if (u.Staff == null)
+            {
+                return;
+            }
+
+            var clip = u.Def.Clips[u.Clip];
+            if (clip == "attack_armada")
+            {
+                u.Staff.localPosition = StaffArmadaMid;
+                u.Staff.localRotation = Quaternion.identity;
+            }
+            else if (clip == "attack_thrust_slash")
+            {
+                u.Staff.localPosition = StaffThrustMid;
+                u.Staff.localRotation = StaffThrustPitch;
+            }
+            else
+            {
+                u.Staff.localPosition = StaffEndGrip;
+                u.Staff.localRotation = Quaternion.identity;
+            }
+
+            u.Staff.localScale = Vector3.one;
         }
 
         private void Tick(Unit u, float dt)
@@ -844,6 +877,7 @@ namespace Survival.Unity
             if (u.Frozen)
             {
                 HoldSocket(u);
+                ApplyStaffGrip(u);
                 u.Spit?.ApplyClipTime(-1f, 0f);
                 return; // Pose was set on Restart; nothing moves until a button.
             }
@@ -894,6 +928,7 @@ namespace Survival.Unity
                 sample = Loops(u) ? Mathf.Repeat(u.Time, length) : Mathf.Min(u.Time, length);
                 clip.SampleAnimation(u.Model, sample);
                 RestoreScales(u);
+                ApplyStaffGrip(u);
             }
 
             // In place for every clip except a death fall: attacks too, so a looping attack never slides off and snaps back.
