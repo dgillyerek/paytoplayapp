@@ -93,6 +93,10 @@ namespace Survival.Unity
             public readonly List<Vector3> GripPos = new List<Vector3>();
             public readonly List<Quaternion> GripRot = new List<Quaternion>();
             public readonly List<Vector3> GripScale = new List<Vector3>();
+            // Stab grip only. Same props, turned so the blade leaves the front of the fist. Idle, walk, and dualslash keep GripPos.
+            public readonly List<Vector3> StabPos = new List<Vector3>();
+            public readonly List<Quaternion> StabRot = new List<Quaternion>();
+            public readonly List<Vector3> StabScale = new List<Vector3>();
         }
 
         private readonly List<Unit> _units = new List<Unit>();
@@ -213,6 +217,9 @@ namespace Survival.Unity
                 // and not a BakeMesh copy: the body FBX has no sword mesh.
                 AttachHandProp(u, dir, "KAELEN_sword_L.fbx", "mixamorig:LeftArm.002", "KAELEN_sword_L");
                 AttachHandProp(u, dir, "KAELEN_sword_R.fbx", "mixamorig:RightArm.002", "KAELEN_sword_R");
+                // Attack2 only: blade out the front of the fist. The passed slash grip stays on the other clips.
+                ReadStabGrip(u, dir, "KAELEN_sword_L_stab.fbx", "mixamorig:LeftArm.002", "KAELEN_sword_L");
+                ReadStabGrip(u, dir, "KAELEN_sword_R_stab.fbx", "mixamorig:RightArm.002", "KAELEN_sword_R");
             }
 
             return u;
@@ -802,8 +809,67 @@ namespace Survival.Unity
             Destroy(probe);
         }
 
+        /// <summary>
+        /// Local pose of a sword prop under its hand bone, read from an FBX the same way AttachHandProp does.
+        /// Does not spawn a mesh. Used for the attack2 stab grip only.
+        /// </summary>
+        private bool ReadStabGrip(Unit u, string dir, string file, string boneName, string meshName)
+        {
+            var prefab = PlayerAssets.Load<GameObject>(dir + file);
+            if (prefab == null)
+            {
+                Debug.LogWarning(u.Def.Prefix + " stab grip missing: " + dir + file);
+                return false;
+            }
+
+            var probe = Instantiate(prefab);
+            probe.SetActive(false);
+            Transform? srcHand = null;
+            Transform? srcMesh = null;
+            foreach (var t in probe.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name == boneName)
+                {
+                    srcHand = t;
+                }
+
+                if (t.name == meshName)
+                {
+                    srcMesh = t;
+                }
+            }
+
+            if (srcHand == null || srcMesh == null)
+            {
+                Debug.LogWarning(u.Def.Prefix + " stab grip " + file + " has no " + boneName + " / " + meshName + ".");
+                Destroy(probe);
+                return false;
+            }
+
+            Vector3 pos;
+            Quaternion rot;
+            var scale = srcMesh.localScale;
+            if (srcMesh.parent == srcHand)
+            {
+                pos = srcMesh.localPosition;
+                rot = srcMesh.localRotation;
+            }
+            else
+            {
+                pos = srcHand.InverseTransformPoint(srcMesh.position);
+                rot = Quaternion.Inverse(srcHand.rotation) * srcMesh.rotation;
+            }
+
+            u.StabPos.Add(pos);
+            u.StabRot.Add(rot);
+            u.StabScale.Add(scale);
+            Destroy(probe);
+            return true;
+        }
+
         private static void HoldGrips(Unit u)
         {
+            var stab = u.StabPos.Count == u.Grips.Count && u.Def.Clips[u.Clip] == "attack2_crossthrust";
             for (var i = 0; i < u.Grips.Count; i++)
             {
                 var grip = u.Grips[i];
@@ -812,9 +878,18 @@ namespace Survival.Unity
                     continue;
                 }
 
-                grip.localPosition = u.GripPos[i];
-                grip.localRotation = u.GripRot[i];
-                grip.localScale = u.GripScale[i];
+                if (stab)
+                {
+                    grip.localPosition = u.StabPos[i];
+                    grip.localRotation = u.StabRot[i];
+                    grip.localScale = u.StabScale[i];
+                }
+                else
+                {
+                    grip.localPosition = u.GripPos[i];
+                    grip.localRotation = u.GripRot[i];
+                    grip.localScale = u.GripScale[i];
+                }
             }
         }
 
