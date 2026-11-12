@@ -8,7 +8,7 @@ Unity was not run for the plates. They are Blender, labeled "BLENDER — not Uni
 
 ## Why she vanished in Game view
 
-The contact shadow is parented to the host, not the mesh. `SampleAnimation` was then setting `SERAPHINE_rig.localScale` from the imported 100 down to 1, because these clips were armature-only and Unity compensated that root scale track. A scale-100 rig driven to scale 1 is about 2 cm tall, so the body, wings, cape, and staff all sit inside the shadow. `NewCharsPreview` now puts those imported scales back after every sample. `SERAPHINE_rig_rest.fbx` is the previous file with the spear nodes removed, not a Blender re-export of the body. The skinned body that file produces is 1.79 m tall.
+The contact shadow is parented to the host, not the mesh. These clips are armature-only. Each one has a constant root track on `SERAPHINE_rig`: rotation X −90° and scale 100. That −90° is the Blender Z-up conversion; the rest file's rig node is the same rotation and has no root animation. Unity compensates an armature-only root track, so `SampleAnimation` was writing scale 1 and rotation 0 over the imported scale 100 and rotation −90°. Full size, she lay on her back in the idle pose. `RestoreScales` puts both the imported scale and the imported rotation back after every sample. Bone rotations still come from the clip, so idle, walk, Armada, and thrust slash still play. The preview starts frozen on idle until a clip button, same as the other three. `SERAPHINE_rig_rest.fbx` is the previous file with the spear nodes removed. The skinned body is 1.79 m tall.
 
 ## Unity change
 

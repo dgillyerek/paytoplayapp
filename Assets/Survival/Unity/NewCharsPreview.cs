@@ -88,10 +88,13 @@ namespace Survival.Unity
             public Vector3 SocketPos;
             public Quaternion SocketRot;
             public Vector3 SocketScale;
-            // Rig and mesh transforms imported at scale 100. An armature-only clip's root
-            // scale track is compensated to 1 and SampleAnimation would shrink her to ~2 cm.
+            // Rig and mesh nodes carry the Blender axis conversion: local scale 100 and
+            // local rotation -90° on X. An armature-only clip compensates those root tracks
+            // to scale 1 and rotation 0, so SampleAnimation shrinks her and lays her on her back.
+            // Bone rotations stay on the clip.
             public Transform[] ScalePins = System.Array.Empty<Transform>();
             public Vector3[] ScalePinValues = System.Array.Empty<Vector3>();
+            public Quaternion[] RotationPinValues = System.Array.Empty<Quaternion>();
         }
 
         private readonly List<Unit> _units = new List<Unit>();
@@ -212,7 +215,8 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Remember the imported local scale of the rig root and the mesh nodes. Bone scales are left to the clip.
+        /// Remember the imported local scale and rotation of the rig root and the mesh nodes.
+        /// Bone rotations stay with the clip.
         /// </summary>
         private static void CaptureScales(Unit u)
         {
@@ -239,13 +243,17 @@ namespace Survival.Unity
 
             u.ScalePins = pins.ToArray();
             u.ScalePinValues = new Vector3[pins.Count];
+            u.RotationPinValues = new Quaternion[pins.Count];
             for (var i = 0; i < pins.Count; i++)
             {
                 u.ScalePinValues[i] = pins[i].localScale;
+                u.RotationPinValues[i] = pins[i].localRotation;
             }
         }
 
-        /// <summary>Put the rig and mesh scales back after a clip sample. See <see cref="Unit.ScalePins"/>.</summary>
+        /// <summary>
+        /// Put the rig and mesh scale and rotation back after a clip sample. See <see cref="Unit.ScalePins"/>.
+        /// </summary>
         private static void RestoreScales(Unit u)
         {
             if (u.Def.Prefix != "SERAPHINE")
@@ -259,6 +267,7 @@ namespace Survival.Unity
                 if (t != null)
                 {
                     t.localScale = u.ScalePinValues[i];
+                    t.localRotation = u.RotationPinValues[i];
                 }
             }
         }
