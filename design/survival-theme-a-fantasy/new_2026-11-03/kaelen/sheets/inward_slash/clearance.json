@@ -12,12 +12,13 @@
   "meta_guid": "431d1bb065d3b8b4abac0089afb6fe07",
   "grip": "The passed slash props KAELEN_sword_L.fbx and KAELEN_sword_R.fbx. The stab props are not used.",
   "cleanup": "Faithful retarget, then two clearance passes. Where a blade passed through the body, the upper arm was swung on one local axis by the smallest angle that cleared that frame (left up to about 45 degrees, right mostly under 35). Hands and the slash grip were not re-aimed.",
-  "unity_change": "NewCharsPreview clip slot attack2_crossthrust is now attack2_inwardslash. HoldGrips no longer switches to the stab pose; every Kaelen clip, including this one, keeps the slash grip. Idle, walk, and attack_dualslash are unchanged.",
+  "unity_change": "HoldGrips reads KAELEN_sword_L_inward.fbx and KAELEN_sword_R_inward.fbx and applies that local pose only when the clip is attack2_inwardslash. KAELEN_sword_L.fbx and KAELEN_sword_R.fbx are unchanged. Idle, walk, and attack_dualslash are unchanged.",
   "enemy_axis": "Blender -Y is Unity model +Z, which LookRotation(Vector3.right) turns onto world +X, toward Vorgath.",
   "inside_samples_total": 15,
   "ground_min_m": -0.0019,
   "ground_max_m": 0.0023,
-  "dualslash_sha256_unchanged": "c27757ceef0828cf5beb9f8ad486736b288d1fdff8f569e000270d055807a7b1"
+  "dualslash_sha256_unchanged": "c27757ceef0828cf5beb9f8ad486736b288d1fdff8f569e000270d055807a7b1",
+  "aim": "Attack2 only. The passed slash props are unchanged. KAELEN_sword_L_inward.fbx turns the left blade onto hand +Y. KAELEN_sword_R_inward.fbx turns the right blade onto hand -Y. HoldGrips uses that pose only while the clip is attack2_inwardslash, so the blades sit along the cut instead of hanging at the ground. Idle, walk, and dualslash keep the original grip."
  },
  "rows": [
   {
