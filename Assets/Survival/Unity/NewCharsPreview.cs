@@ -12,7 +12,7 @@ namespace Survival.Unity
     /// <summary>
     /// Review-only battle preview of the four Design characters of 2026-11-03 (Derek: "put the 4 new characters in a
     /// simple battle scene so I can see them"). Not in the roster, shop, campaign or runner, and deals no damage.
-    /// Each character is one folder under art/preview_new_chars/: PREFIX_rig_rest.fbx (body + props), one FBX per clip,
+    /// Each character is one folder under art/preview_new_chars/: PREFIX_rig_rest.fbx (the body), one FBX per clip,
     /// the atlas, and optionally PREFIX_cape.fbx + PREFIX_cape_1024.png + CAPE_ATTACH.md (cape_root under Spine2,
     /// 3 spring chains, capsule colliders read from the md table). Swap any file in place and replay.
     /// Derek: "nothing moves until their buttons are pressed. then they do the button movement until the next one.
@@ -88,6 +88,11 @@ namespace Survival.Unity
             public Vector3 SocketPos;
             public Quaternion SocketRot;
             public Vector3 SocketScale;
+            // Kaelen's swords are separate prop FBXs. The grip is the imported local pose under the hand bone.
+            public readonly List<Transform> Grips = new List<Transform>();
+            public readonly List<Vector3> GripPos = new List<Vector3>();
+            public readonly List<Quaternion> GripRot = new List<Quaternion>();
+            public readonly List<Vector3> GripScale = new List<Vector3>();
         }
 
         private readonly List<Unit> _units = new List<Unit>();
@@ -200,6 +205,14 @@ namespace Survival.Unity
             if (def.Prefix == "VORGATH")
             {
                 AttachMouthStream(u);
+            }
+
+            if (def.Prefix == "KAELEN")
+            {
+                // Separate sword props, parented to the hand bones at the imported grip. Not a skinned weapon
+                // and not a BakeMesh copy: the body FBX has no sword mesh.
+                AttachHandProp(u, dir, "KAELEN_sword_L.fbx", "mixamorig:LeftArm.002", "KAELEN_sword_L");
+                AttachHandProp(u, dir, "KAELEN_sword_R.fbx", "mixamorig:RightArm.002", "KAELEN_sword_R");
             }
 
             return u;
@@ -529,6 +542,7 @@ namespace Survival.Unity
                     idle.SampleAnimation(u.Model, 0f);
                     HoldHips(u);
                     HoldSocket(u);
+                    HoldGrips(u);
                 }
 
                 u.Cloth?.ResetToRest();
@@ -708,6 +722,102 @@ namespace Survival.Unity
             u.Socket.localScale = u.SocketScale;
         }
 
+        /// <summary>
+        /// Sword prop parented to a hand bone. The local pose is copied off the imported prop FBX
+        /// (the same bone, with the mesh parented to it) so Unity's axis conversion is already in the numbers.
+        /// </summary>
+        private void AttachHandProp(Unit u, string dir, string file, string boneName, string meshName)
+        {
+            var hand = FindBone(u.Model.transform, boneName);
+            if (hand == null)
+            {
+                Debug.LogError(u.Def.Prefix + " prop: " + boneName + " missing.");
+                return;
+            }
+
+            var prefab = PlayerAssets.Load<GameObject>(dir + file);
+            if (prefab == null)
+            {
+                Debug.LogError(u.Def.Prefix + " prop missing: " + dir + file);
+                return;
+            }
+
+            var probe = Instantiate(prefab);
+            probe.SetActive(false);
+            Transform? srcHand = null;
+            Transform? srcMesh = null;
+            foreach (var t in probe.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name == boneName)
+                {
+                    srcHand = t;
+                }
+
+                if (t.name == meshName)
+                {
+                    srcMesh = t;
+                }
+            }
+
+            if (srcHand == null || srcMesh == null)
+            {
+                Debug.LogError(u.Def.Prefix + " prop " + file + " has no " + boneName + " / " + meshName + ".");
+                Destroy(probe);
+                return;
+            }
+
+            Vector3 pos;
+            Quaternion rot;
+            var scale = srcMesh.localScale;
+            if (srcMesh.parent == srcHand)
+            {
+                pos = srcMesh.localPosition;
+                rot = srcMesh.localRotation;
+            }
+            else
+            {
+                pos = srcHand.InverseTransformPoint(srcMesh.position);
+                rot = Quaternion.Inverse(srcHand.rotation) * srcMesh.rotation;
+                var parentName = srcMesh.parent != null ? srcMesh.parent.name : "root";
+                Debug.LogWarning(u.Def.Prefix + " prop parent is " + parentName + ", rebaked into " + boneName + ".");
+            }
+
+            var sword = Instantiate(srcMesh.gameObject, hand);
+            sword.name = meshName;
+            sword.SetActive(true);
+            sword.transform.localPosition = pos;
+            sword.transform.localRotation = rot;
+            sword.transform.localScale = scale;
+            foreach (var a in sword.GetComponentsInChildren<Animator>(true))
+            {
+                Destroy(a);
+            }
+
+            ApplyMaterial(sword, PlayerAssets.Load<Texture2D>(dir + u.Def.Prefix + "_atlas_2048.png"), meshName, false);
+            u.Grips.Add(sword.transform);
+            u.GripPos.Add(pos);
+            u.GripRot.Add(rot);
+            u.GripScale.Add(scale);
+            Debug.Log(u.Def.Prefix + " " + meshName + " on " + boneName + " local pos " + pos.ToString("F4") + " euler " + rot.eulerAngles.ToString("F1"));
+            Destroy(probe);
+        }
+
+        private static void HoldGrips(Unit u)
+        {
+            for (var i = 0; i < u.Grips.Count; i++)
+            {
+                var grip = u.Grips[i];
+                if (grip == null)
+                {
+                    continue;
+                }
+
+                grip.localPosition = u.GripPos[i];
+                grip.localRotation = u.GripRot[i];
+                grip.localScale = u.GripScale[i];
+            }
+        }
+
         private static void HoldHips(Unit u)
         {
             if (u.Hips == null)
@@ -739,6 +849,7 @@ namespace Survival.Unity
             if (u.Frozen)
             {
                 HoldSocket(u);
+                HoldGrips(u);
                 u.Spit?.ApplyClipTime(-1f, 0f);
                 return; // Pose was set on Restart; nothing moves until a button.
             }
@@ -813,6 +924,7 @@ namespace Survival.Unity
             // After the head pose (and the crossfade) so the stream leaves the mouth that is on screen.
             // The socket is not one of the sampled bones; put its imported local pose back in case the clip sample touched it.
             HoldSocket(u);
+            HoldGrips(u);
             if (u.Spit != null)
             {
                 var spit = u.Def.Clips[u.Clip] == "attack_spit";
