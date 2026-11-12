@@ -4,7 +4,11 @@ Slot 1 in New Characters Preview is `attack_armada`. Slot 2 is `attack_thrust_sl
 
 The right arm holds one pose relative to the chest: the hand sits about 26 cm out to her right, 18 cm forward, and 20 cm above the shoulder, and the staff rises at 74° with a 30° turn toward her right. The ornament is the far end. The shaft lies against the palm. The rest of the skeleton is the previous clip. Hips, head, left hand, and left leg match the previous files with 0.0 cm of drift on every measured frame.
 
-Unity was not run. The plates are Blender, labeled "BLENDER — not Unity".
+Unity was not run for the plates. They are Blender, labeled "BLENDER — not Unity".
+
+## Why she vanished in Game view
+
+The contact shadow is parented to the host, not the mesh. `SampleAnimation` was then setting `SERAPHINE_rig.localScale` from the imported 100 down to 1, because these clips were armature-only and Unity compensated that root scale track. A scale-100 rig driven to scale 1 is about 2 cm tall, so the body, wings, cape, and staff all sit inside the shadow. `NewCharsPreview` now puts those imported scales back after every sample. `SERAPHINE_rig_rest.fbx` is the previous file with the spear nodes removed, not a Blender re-export of the body. The skinned body that file produces is 1.79 m tall.
 
 ## Unity change
 

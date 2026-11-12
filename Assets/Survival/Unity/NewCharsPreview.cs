@@ -88,6 +88,10 @@ namespace Survival.Unity
             public Vector3 SocketPos;
             public Quaternion SocketRot;
             public Vector3 SocketScale;
+            // Rig and mesh transforms imported at scale 100. An armature-only clip's root
+            // scale track is compensated to 1 and SampleAnimation would shrink her to ~2 cm.
+            public Transform[] ScalePins = System.Array.Empty<Transform>();
+            public Vector3[] ScalePinValues = System.Array.Empty<Vector3>();
         }
 
         private readonly List<Unit> _units = new List<Unit>();
@@ -203,7 +207,60 @@ namespace Survival.Unity
                 AttachMouthStream(u);
             }
 
+            CaptureScales(u);
             return u;
+        }
+
+        /// <summary>
+        /// Remember the imported local scale of the rig root and the mesh nodes. Bone scales are left to the clip.
+        /// </summary>
+        private static void CaptureScales(Unit u)
+        {
+            if (u.Def.Prefix != "SERAPHINE")
+            {
+                return;
+            }
+
+            var pins = new List<Transform>();
+            foreach (var t in u.Model.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name.StartsWith("mixamorig:", System.StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (t.name.StartsWith("cape_", System.StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                pins.Add(t);
+            }
+
+            u.ScalePins = pins.ToArray();
+            u.ScalePinValues = new Vector3[pins.Count];
+            for (var i = 0; i < pins.Count; i++)
+            {
+                u.ScalePinValues[i] = pins[i].localScale;
+            }
+        }
+
+        /// <summary>Put the rig and mesh scales back after a clip sample. See <see cref="Unit.ScalePins"/>.</summary>
+        private static void RestoreScales(Unit u)
+        {
+            if (u.Def.Prefix != "SERAPHINE")
+            {
+                return;
+            }
+
+            for (var i = 0; i < u.ScalePins.Length; i++)
+            {
+                var t = u.ScalePins[i];
+                if (t != null)
+                {
+                    t.localScale = u.ScalePinValues[i];
+                }
+            }
         }
 
         private static AnimationClip? LoadClip(string path)
@@ -528,6 +585,7 @@ namespace Survival.Unity
                 if (idle != null)
                 {
                     idle.SampleAnimation(u.Model, 0f);
+                    RestoreScales(u);
                     HoldHips(u);
                     HoldSocket(u);
                 }
@@ -826,6 +884,7 @@ namespace Survival.Unity
             {
                 sample = Loops(u) ? Mathf.Repeat(u.Time, length) : Mathf.Min(u.Time, length);
                 clip.SampleAnimation(u.Model, sample);
+                RestoreScales(u);
             }
 
             // In place for every clip except a death fall: attacks too, so a looping attack never slides off and snaps back.
