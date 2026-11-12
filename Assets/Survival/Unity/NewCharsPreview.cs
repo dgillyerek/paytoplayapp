@@ -787,7 +787,14 @@ namespace Survival.Unity
 
             var local = u.Model.transform.InverseTransformPoint(u.Hips.position);
             local.x = u.HipsRest.x;
-            local.z = u.HipsRest.z;
+            // Thrust slash steps toward the enemy. That travel is model +Z, which is the
+            // host's forward. Leave it. Pin it on every other clip so a looping attack
+            // cannot walk her off the mark. Lateral X stays pinned on the lunge too.
+            if (u.Def.Clips[u.Clip] != "attack_thrust_slash")
+            {
+                local.z = u.HipsRest.z;
+            }
+
             u.Hips.position = u.Model.transform.TransformPoint(local);
         }
 
@@ -802,16 +809,17 @@ namespace Survival.Unity
         }
 
         // Seraphine's spear is a separate prop, not skinned into the body. It is a child of
-        // mixamorig:RightHand. The mesh point runs along that bone's local +Z (butt −0.04 m,
-        // tip +2.06 m). The hand sits at mid-shaft on every clip: slide 1.01 m along local −Z.
-        // Thrust slash also pitches +25° about local X (shaft from ~55° above the ground to ~41°).
-        // The rig imports at scale 100, so a 1.01 m child offset is ~100 m in the world and the
-        // prop leaves the camera. Offsets are divided by the hand's lossy scale, same as
-        // Sir Aldric's sword grip.
+        // mixamorig:RightHand. Idle, walk, and Armada slide 1.01 m along local −Z so the hand
+        // is at mid-shaft, identity rotation. Thrust slash uses a fixed aim that points the
+        // staff along the lunge, about 8° above the ground, still at mid-shaft. The rig
+        // imports at scale 100, so a 1 m child offset is about 100 m in the world. Offsets
+        // are divided by the hand's lossy scale.
         private const string StaffFile = "SERAPHINE_staff.fbx";
         private const float StaffMidMetres = 1.01f;
-        private static readonly Quaternion StaffThrustPitch = Quaternion.Euler(25f, 0f, 0f);
-        private static readonly Vector3 StaffThrustMidMetres = new Vector3(0f, 0.4268f, -0.9154f);
+        // Thrust slash only. Maps the staff's +Z onto the hand-space aim (0.720, 0.165, -0.674)
+        // so the point leads the lunge, about 8° above the ground. Mid-shaft, same 1.01 m slide.
+        private static readonly Quaternion StaffThrustAim = new Quaternion(-0.204022f, 0.891890f, 0f, 0.403618f);
+        private static readonly Vector3 StaffThrustMidMetres = new Vector3(-0.727166f, -0.166341f, 0.680926f);
 
         private void AttachSeraphineStaff(Unit u, string dir)
         {
@@ -841,8 +849,8 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Mid-shaft on every clip. Thrust slash adds the groundward pitch. Metres are converted
-        /// into the hand bone's local units so a scale-100 rig does not throw the prop off screen.
+        /// Mid-shaft on every clip. Idle, walk, and Armada keep the identity grip. Thrust slash
+        /// uses the lunge aim. Metres are divided by the hand's lossy scale.
         /// </summary>
         private static void ApplyStaffGrip(Unit u)
         {
@@ -862,7 +870,7 @@ namespace Survival.Unity
             if (clip == "attack_thrust_slash")
             {
                 u.Staff.localPosition = StaffThrustMidMetres * unit;
-                u.Staff.localRotation = StaffThrustPitch;
+                u.Staff.localRotation = StaffThrustAim;
             }
             else
             {
