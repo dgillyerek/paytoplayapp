@@ -31,11 +31,11 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: attack2_crossthrust
+      name: attack2_inwardslash
       takeName: Scene
       internalID: -623603649343465320
       firstFrame: 1
-      lastFrame: 93
+      lastFrame: 67
       wrapMode: 0
       orientationOffsetY: 0
       level: 0

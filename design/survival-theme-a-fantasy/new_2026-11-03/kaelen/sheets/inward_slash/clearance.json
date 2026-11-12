@@ -1,0 +1,962 @@
+{
+ "summary": {
+  "clip": "attack2_inwardslash",
+  "replaces": "attack2_crossthrust (Mixamo Static Double Dagger Stab With Outward Grip). That stab is no longer the second attack.",
+  "mixamo_prompt": "Stable Sword Inward Slash",
+  "mixamo_description": "Inward Slashing With A Sword Standing Stable",
+  "mixamo_file": "Stable_Sword_Inward_Slash.fbx",
+  "mixamo_motion_id": "c9c72f80-b96c-11e4-a802-0aaa78deedf9",
+  "mixamo_md5": "f68fdc50c4f01bda41822805ffc47c68",
+  "frames": 67,
+  "lastFrame": 67,
+  "meta_guid": "431d1bb065d3b8b4abac0089afb6fe07",
+  "grip": "The passed slash props KAELEN_sword_L.fbx and KAELEN_sword_R.fbx. The stab props are not used.",
+  "cleanup": "Faithful retarget, then two clearance passes. Where a blade passed through the body, the upper arm was swung on one local axis by the smallest angle that cleared that frame (left up to about 45 degrees, right mostly under 35). Hands and the slash grip were not re-aimed.",
+  "unity_change": "NewCharsPreview clip slot attack2_crossthrust is now attack2_inwardslash. HoldGrips no longer switches to the stab pose; every Kaelen clip, including this one, keeps the slash grip. Idle, walk, and attack_dualslash are unchanged.",
+  "enemy_axis": "Blender -Y is Unity model +Z, which LookRotation(Vector3.right) turns onto world +X, toward Vorgath.",
+  "inside_samples_total": 15,
+  "ground_min_m": -0.0019,
+  "ground_max_m": 0.0023,
+  "dualslash_sha256_unchanged": "c27757ceef0828cf5beb9f8ad486736b288d1fdff8f569e000270d055807a7b1"
+ },
+ "rows": [
+  {
+   "frame": 1,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.931,
+   "ground_m": 0.0
+  },
+  {
+   "frame": 1,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.399,
+   "ground_m": 0.0
+  },
+  {
+   "frame": 2,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.934,
+   "ground_m": 0.0
+  },
+  {
+   "frame": 2,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.378,
+   "ground_m": 0.0
+  },
+  {
+   "frame": 3,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.881,
+   "ground_m": -0.0002
+  },
+  {
+   "frame": 3,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.369,
+   "ground_m": -0.0002
+  },
+  {
+   "frame": 4,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.716,
+   "ground_m": -0.0008
+  },
+  {
+   "frame": 4,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.386,
+   "ground_m": -0.0008
+  },
+  {
+   "frame": 5,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.45,
+   "ground_m": -0.0019
+  },
+  {
+   "frame": 5,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.442,
+   "ground_m": -0.0019
+  },
+  {
+   "frame": 6,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.226,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 6,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.555,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 7,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.093,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 7,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.713,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 8,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.006,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 8,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.872,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 9,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.11,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 9,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.977,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 10,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.242,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 10,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.996,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 11,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.376,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 11,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.924,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 12,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.499,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 12,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.745,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 13,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.596,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 13,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.465,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 14,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.673,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 14,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.179,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 15,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.733,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 15,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.079,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 16,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.77,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 16,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.34,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 17,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.771,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 17,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.608,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 18,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.792,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 18,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.817,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 19,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.835,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 19,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.947,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 20,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.888,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 20,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 1.0,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 21,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.939,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 21,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.929,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 22,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.956,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 22,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.847,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 23,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.97,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 23,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.738,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 24,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.982,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 24,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.604,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 25,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.994,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 25,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.451,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 26,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 1.0,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 26,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.286,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 27,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 1.0,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 27,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.121,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 28,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.999,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 28,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.016,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 29,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.794,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 29,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.285,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 30,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.986,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 30,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.475,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 31,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.984,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 31,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.531,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 32,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.977,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 32,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.511,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 33,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 1.0,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 33,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.494,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 34,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.921,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 34,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.981,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 35,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.463,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 35,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.96,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 36,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.044,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 36,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.986,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 37,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.711,
+   "ground_m": -0.0003
+  },
+  {
+   "frame": 37,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.203,
+   "ground_m": -0.0003
+  },
+  {
+   "frame": 38,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.967,
+   "ground_m": -0.0004
+  },
+  {
+   "frame": 38,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.487,
+   "ground_m": -0.0004
+  },
+  {
+   "frame": 39,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.992,
+   "ground_m": -0.0007
+  },
+  {
+   "frame": 39,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.399,
+   "ground_m": -0.0007
+  },
+  {
+   "frame": 40,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.589,
+   "ground_m": -0.0007
+  },
+  {
+   "frame": 40,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.013,
+   "ground_m": -0.0007
+  },
+  {
+   "frame": 41,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.053,
+   "ground_m": -0.0006
+  },
+  {
+   "frame": 41,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.187,
+   "ground_m": -0.0006
+  },
+  {
+   "frame": 42,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.314,
+   "ground_m": -0.0005
+  },
+  {
+   "frame": 42,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.001,
+   "ground_m": -0.0005
+  },
+  {
+   "frame": 43,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.383,
+   "ground_m": -0.0004
+  },
+  {
+   "frame": 43,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.236,
+   "ground_m": -0.0004
+  },
+  {
+   "frame": 44,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.503,
+   "ground_m": -0.0003
+  },
+  {
+   "frame": 44,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.43,
+   "ground_m": -0.0003
+  },
+  {
+   "frame": 45,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.613,
+   "ground_m": -0.0002
+  },
+  {
+   "frame": 45,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.944,
+   "ground_m": -0.0002
+  },
+  {
+   "frame": 46,
+   "side": "L",
+   "inside_samples": 4,
+   "blade_heading_dot_enemy": 0.705,
+   "ground_m": -0.0003
+  },
+  {
+   "frame": 46,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.979,
+   "ground_m": -0.0003
+  },
+  {
+   "frame": 47,
+   "side": "L",
+   "inside_samples": 4,
+   "blade_heading_dot_enemy": 0.769,
+   "ground_m": -0.0002
+  },
+  {
+   "frame": 47,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.99,
+   "ground_m": -0.0002
+  },
+  {
+   "frame": 48,
+   "side": "L",
+   "inside_samples": 4,
+   "blade_heading_dot_enemy": 0.818,
+   "ground_m": -0.0002
+  },
+  {
+   "frame": 48,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.992,
+   "ground_m": -0.0002
+  },
+  {
+   "frame": 49,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.906,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 49,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.874,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 50,
+   "side": "L",
+   "inside_samples": 3,
+   "blade_heading_dot_enemy": 0.985,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 50,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.922,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 51,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.995,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 51,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.918,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 52,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.946,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 52,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.883,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 53,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.834,
+   "ground_m": -0.001
+  },
+  {
+   "frame": 53,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.825,
+   "ground_m": -0.001
+  },
+  {
+   "frame": 54,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.548,
+   "ground_m": 0.0023
+  },
+  {
+   "frame": 54,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.742,
+   "ground_m": 0.0023
+  },
+  {
+   "frame": 55,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.072,
+   "ground_m": -0.0004
+  },
+  {
+   "frame": 55,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.625,
+   "ground_m": -0.0004
+  },
+  {
+   "frame": 56,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.528,
+   "ground_m": -0.0005
+  },
+  {
+   "frame": 56,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.471,
+   "ground_m": -0.0005
+  },
+  {
+   "frame": 57,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.701,
+   "ground_m": 0.0002
+  },
+  {
+   "frame": 57,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.276,
+   "ground_m": 0.0002
+  },
+  {
+   "frame": 58,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.766,
+   "ground_m": 0.0005
+  },
+  {
+   "frame": 58,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": 0.061,
+   "ground_m": 0.0005
+  },
+  {
+   "frame": 59,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.804,
+   "ground_m": 0.0009
+  },
+  {
+   "frame": 59,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.115,
+   "ground_m": 0.0009
+  },
+  {
+   "frame": 60,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.846,
+   "ground_m": 0.0009
+  },
+  {
+   "frame": 60,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.241,
+   "ground_m": 0.0009
+  },
+  {
+   "frame": 61,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.891,
+   "ground_m": 0.0008
+  },
+  {
+   "frame": 61,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.331,
+   "ground_m": 0.0008
+  },
+  {
+   "frame": 62,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.921,
+   "ground_m": 0.0006
+  },
+  {
+   "frame": 62,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.392,
+   "ground_m": 0.0006
+  },
+  {
+   "frame": 63,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.928,
+   "ground_m": 0.0004
+  },
+  {
+   "frame": 63,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.433,
+   "ground_m": 0.0004
+  },
+  {
+   "frame": 64,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.924,
+   "ground_m": 0.0003
+  },
+  {
+   "frame": 64,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.449,
+   "ground_m": 0.0003
+  },
+  {
+   "frame": 65,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.917,
+   "ground_m": 0.0001
+  },
+  {
+   "frame": 65,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.438,
+   "ground_m": 0.0001
+  },
+  {
+   "frame": 66,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.918,
+   "ground_m": 0.0
+  },
+  {
+   "frame": 66,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.421,
+   "ground_m": 0.0
+  },
+  {
+   "frame": 67,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.931,
+   "ground_m": 0.0
+  },
+  {
+   "frame": 67,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_heading_dot_enemy": -0.399,
+   "ground_m": 0.0
+  }
+ ]
+}
