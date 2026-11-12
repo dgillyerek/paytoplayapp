@@ -802,17 +802,16 @@ namespace Survival.Unity
         }
 
         // Seraphine's spear is a separate prop, not skinned into the body. It is a child of
-        // mixamorig:RightHand. The mesh is in that bone's axes: the point runs along local +Z
-        // (butt at -0.04 m, tip at +2.06 m), shaft against the palm. Idle and walk keep the
-        // end grip (identity). Armada and thrust slash slide it 1.01 m along -Z so the hand
-        // is at mid-shaft. Thrust slash also pitches +25° about local X, which drops the
-        // shaft from about 55° above the ground to about 41°.
+        // mixamorig:RightHand. The mesh point runs along that bone's local +Z (butt −0.04 m,
+        // tip +2.06 m). The hand sits at mid-shaft on every clip: slide 1.01 m along local −Z.
+        // Thrust slash also pitches +25° about local X (shaft from ~55° above the ground to ~41°).
+        // The rig imports at scale 100, so a 1.01 m child offset is ~100 m in the world and the
+        // prop leaves the camera. Offsets are divided by the hand's lossy scale, same as
+        // Sir Aldric's sword grip.
         private const string StaffFile = "SERAPHINE_staff.fbx";
         private const float StaffMidMetres = 1.01f;
-        private static readonly Vector3 StaffEndGrip = Vector3.zero;
-        private static readonly Vector3 StaffArmadaMid = new Vector3(0f, 0f, -StaffMidMetres);
         private static readonly Quaternion StaffThrustPitch = Quaternion.Euler(25f, 0f, 0f);
-        private static readonly Vector3 StaffThrustMid = new Vector3(0f, 0.4268f, -0.9154f);
+        private static readonly Vector3 StaffThrustMidMetres = new Vector3(0f, 0.4268f, -0.9154f);
 
         private void AttachSeraphineStaff(Unit u, string dir)
         {
@@ -841,7 +840,10 @@ namespace Survival.Unity
             ApplyMaterial(staff, PlayerAssets.Load<Texture2D>(dir + u.Def.Prefix + "_atlas_2048.png"), u.Def.Prefix + "_staff", false);
         }
 
-        /// <summary>Idle and walk keep the end grip. The two attacks hold the middle of the shaft.</summary>
+        /// <summary>
+        /// Mid-shaft on every clip. Thrust slash adds the groundward pitch. Metres are converted
+        /// into the hand bone's local units so a scale-100 rig does not throw the prop off screen.
+        /// </summary>
         private static void ApplyStaffGrip(Unit u)
         {
             if (u.Staff == null)
@@ -849,20 +851,22 @@ namespace Survival.Unity
                 return;
             }
 
-            var clip = u.Def.Clips[u.Clip];
-            if (clip == "attack_armada")
+            var scale = u.Staff.parent != null ? u.Staff.parent.lossyScale.x : 1f;
+            if (Mathf.Abs(scale) < 1e-4f)
             {
-                u.Staff.localPosition = StaffArmadaMid;
-                u.Staff.localRotation = Quaternion.identity;
+                scale = 1f;
             }
-            else if (clip == "attack_thrust_slash")
+
+            var unit = 1f / scale;
+            var clip = u.Def.Clips[u.Clip];
+            if (clip == "attack_thrust_slash")
             {
-                u.Staff.localPosition = StaffThrustMid;
+                u.Staff.localPosition = StaffThrustMidMetres * unit;
                 u.Staff.localRotation = StaffThrustPitch;
             }
             else
             {
-                u.Staff.localPosition = StaffEndGrip;
+                u.Staff.localPosition = new Vector3(0f, 0f, -StaffMidMetres) * unit;
                 u.Staff.localRotation = Quaternion.identity;
             }
 

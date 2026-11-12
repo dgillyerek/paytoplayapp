@@ -20,10 +20,10 @@ File: `Assets/Survival/Unity/NewCharsPreview.cs`
 
 - Loads `SERAPHINE_staff.fbx`.
 - Instantiates it as a child of `mixamorig:RightHand`.
-- Local position 0, local rotation identity, local scale 1.
 - Destroys any Animator on the prop and applies the body atlas.
+- `ApplyStaffGrip` sets the local pose after every sample. Local scale stays 1.
 
-Idle and walk keep local position 0 and identity rotation, the end grip. `ApplyStaffGrip` runs after each sample. Armada sets local position `(0, 0, -1.01)` so the hand is at mid-shaft. Thrust slash uses local position `(0, 0.427, -0.915)` and local Euler `(25, 0, 0)`, the same mid-shaft slide plus 25° about local X, which drops the shaft from about 55° above the ground to about 41°. Body motion is unchanged. Films: `clips/SERAPHINE_attacks_mid_front.mp4`, `SERAPHINE_attacks_mid_side.mp4`, `SERAPHINE_attacks_mid_preview.mp4`, labeled BLENDER — not Unity.
+Every clip holds mid-shaft. The rig imports at scale 100, so a 1.01 m local offset is about 100 m in the world and the prop leaves the camera. `ApplyStaffGrip` divides the metre offset by the hand's lossy scale. Idle, walk, and Armada use local `(0, 0, -1.01)` in metres. Thrust slash uses `(0, 0.427, -0.915)` and Euler `(25, 0, 0)`. Films: `clips/SERAPHINE_mid_front.mp4`, `SERAPHINE_mid_side.mp4`, `SERAPHINE_mid_preview.mp4`, labeled BLENDER — not Unity.
 
 `SERAPHINE_rig_rest.fbx` no longer contains the skinned spear. The 24-bone skeleton, the cape, the clip names, and the existing `.meta` GUIDs are unchanged. `SERAPHINE_staff.fbx.meta` is new. `bakeAxisConversion` is 0, the same as the rest rig, so the prop's hand-space vertices are not given a second axis bake.
 
@@ -42,9 +42,11 @@ Nothing goes negative. The tightest body gap is thrust slash, 25.6 cm. The tight
 
 ## Films
 
-Front, side, and the preview camera (yaw 135°, pitch 30°, 54° vertical FOV). Idle is the first two seconds of the cycle. Walk, Armada, and thrust slash are the whole clip. The camera follows the hips so the spin stays in frame; the preview itself pins horizontal hips.
+Front, side, and the preview camera (yaw 135°, pitch 30°, 54° vertical FOV). Idle is the first 45 frames. Walk, Armada, and thrust slash are the whole clip, in that order, all at mid-shaft. The camera follows the hips so the spin stays in frame. Plates are Blender, labeled "BLENDER — not Unity".
 
-`design/survival-theme-a-fantasy/heroes/anim/seraphine/blender/armada_2026-11-10/clips/SERAPHINE_staff_preview.mp4`
+`design/survival-theme-a-fantasy/heroes/anim/seraphine/blender/armada_2026-11-10/clips/SERAPHINE_mid_preview.mp4`
+
+The clearance table above is the end-grip measurement from before this slide. The mid-shaft move is along the staff, 1.01 m toward the butt. The new plates are the check for that pose.
 
 ## Residual
 
