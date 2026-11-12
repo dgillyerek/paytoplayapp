@@ -1,0 +1,1379 @@
+{
+ "summary": {
+  "clip": "attack2_crossthrust",
+  "source_title": "Static Double Dagger Stab With Outward Grip",
+  "source_motion_id": "c9c69305-b96c-11e4-a802-0aaa78deedf9",
+  "source_file": "Mixamo library export Double_Dagger_Stab.fbx (animation_motion), take Armature|mixamo.com|Layer0",
+  "source_md5": "901b2cb6c688a4386a184e4fee2bf818",
+  "source_frames": 93,
+  "source_note": "Mixamo's API returned 403 Api Key required, so the clip was not re-downloaded through a logged-in session. The file is the official Mixamo FBX of this exact title on the uniform mixamorig skeleton (Y-bot upper-arm length 0.274 m). It is not a different animation. Character Arm-Space was not widened.",
+  "retarget": "ForeArm maps to Arm.001 and Hand to Arm.002, same as PR #215. Kaelen's arm rest is about 57 degrees below Y-bot's T-pose, so a raw rest-delta (which reproduces Dual Weapon Combo exactly, where the binds match) does not reproduce this guard. The shipped pose copies each Mixamo bone's world orientation onto Kaelen. Bone lengths stay Kaelen's. Net ground drift removed. Frames that would sink the feet were lifted.",
+  "unity_change": "none",
+  "grip": "Unchanged. KAELEN_sword_L/R stay bone-parented to mixamorig:LeftArm.002 and mixamorig:RightArm.002. Parent error at rest is 0. The blade stays on the hand's local Z (dot 0.97), the grip Derek passed on Dual Weapon Combo. Handle samples sit about 8 cm from the hand head.",
+  "arm_offsets_deg_local_x": {
+   "R": {
+    "9": -10,
+    "10": -20,
+    "11": -30,
+    "12": -30,
+    "13": -40,
+    "14": -30,
+    "71": -10,
+    "72": -40,
+    "73": -40,
+    "74": -30,
+    "75": -20,
+    "76": -20,
+    "77": -20,
+    "78": -10
+   },
+   "L": {
+    "15": -50,
+    "17": -40,
+    "18": -40,
+    "19": -30,
+    "20": -40,
+    "21": 10,
+    "22": 10,
+    "23": 10,
+    "24": 5
+   }
+  },
+  "arm_offset_note": "Upper-arm local X only, on the frames where the long swords entered the body. Neighboring frames keep the same sign so the arm does not snap. Shoulders, forearms, and hands are the Mixamo pose.",
+  "frames": 93,
+  "fbx_take": "Scene",
+  "meta_lastFrame": 93,
+  "meta_guid": "431d1bb065d3b8b4abac0089afb6fe07",
+  "ground_min_m": -0.0019,
+  "ground_max_m": 0.0136,
+  "passed": "93-frame Mixamo stab on the 20-bone rig. Swords are the existing hand props, not skinned into the body. Feet stay within -1.9 mm to +13.6 mm of the floor. Side views show the thrusts leaving the hands toward the character's front, not flipped toward the camera. Handles stay in the palms.",
+  "fail": [
+   {
+    "frame": 16,
+    "side": "L",
+    "inside_samples": 2,
+    "blade_clear_m": 0.1179,
+    "ground_m": 0.0067
+   },
+   {
+    "frame": 20,
+    "side": "R",
+    "inside_samples": 9,
+    "blade_clear_m": 0.1123,
+    "ground_m": 0.0073
+   },
+   {
+    "frame": 21,
+    "side": "L",
+    "inside_samples": 10,
+    "blade_clear_m": 0.1991,
+    "ground_m": 0.0078
+   }
+  ],
+  "fail_note": "Three frames flag a few inside samples (frame 16 left 2, frame 20 right 9, frame 21 left 10). On those frames the nearest blade sample is 11.8 cm, 11.2 cm, and 19.9 cm from the body surface, so this is not a blade buried in the torso. Side views of frames 20 and 21 show the swords beside the hip during the turn."
+ },
+ "rows": [
+  {
+   "frame": 1,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0
+  },
+  {
+   "frame": 1,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": 0.0
+  },
+  {
+   "frame": 2,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 2,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 3,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": -0.0002
+  },
+  {
+   "frame": 3,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0002
+  },
+  {
+   "frame": 4,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": -0.0003
+  },
+  {
+   "frame": 4,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0003
+  },
+  {
+   "frame": 5,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": -0.0004
+  },
+  {
+   "frame": 5,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0004
+  },
+  {
+   "frame": 6,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": -0.0004
+  },
+  {
+   "frame": 6,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0004
+  },
+  {
+   "frame": 7,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 7,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 8,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0008
+  },
+  {
+   "frame": 8,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2003,
+   "ground_m": 0.0008
+  },
+  {
+   "frame": 9,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0018
+  },
+  {
+   "frame": 9,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1914,
+   "ground_m": 0.0018
+  },
+  {
+   "frame": 10,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0024
+  },
+  {
+   "frame": 10,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1697,
+   "ground_m": 0.0024
+  },
+  {
+   "frame": 11,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0031
+  },
+  {
+   "frame": 11,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1421,
+   "ground_m": 0.0031
+  },
+  {
+   "frame": 12,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0041
+  },
+  {
+   "frame": 12,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0396,
+   "ground_m": 0.0041
+  },
+  {
+   "frame": 13,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0052
+  },
+  {
+   "frame": 13,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0763,
+   "ground_m": 0.0052
+  },
+  {
+   "frame": 14,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2057,
+   "ground_m": 0.0061
+  },
+  {
+   "frame": 14,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0264,
+   "ground_m": 0.0061
+  },
+  {
+   "frame": 15,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0065
+  },
+  {
+   "frame": 15,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": 0.0065
+  },
+  {
+   "frame": 16,
+   "side": "L",
+   "inside_samples": 2,
+   "blade_clear_m": 0.1179,
+   "ground_m": 0.0067
+  },
+  {
+   "frame": 16,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0066,
+   "ground_m": 0.0067
+  },
+  {
+   "frame": 17,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.007
+  },
+  {
+   "frame": 17,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2212,
+   "ground_m": 0.007
+  },
+  {
+   "frame": 18,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0068
+  },
+  {
+   "frame": 18,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": 0.0068
+  },
+  {
+   "frame": 19,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0068
+  },
+  {
+   "frame": 19,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1501,
+   "ground_m": 0.0068
+  },
+  {
+   "frame": 20,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0073
+  },
+  {
+   "frame": 20,
+   "side": "R",
+   "inside_samples": 9,
+   "blade_clear_m": 0.1123,
+   "ground_m": 0.0073
+  },
+  {
+   "frame": 21,
+   "side": "L",
+   "inside_samples": 10,
+   "blade_clear_m": 0.1991,
+   "ground_m": 0.0078
+  },
+  {
+   "frame": 21,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1222,
+   "ground_m": 0.0078
+  },
+  {
+   "frame": 22,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1554,
+   "ground_m": 0.0074
+  },
+  {
+   "frame": 22,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1672,
+   "ground_m": 0.0074
+  },
+  {
+   "frame": 23,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1194,
+   "ground_m": 0.0061
+  },
+  {
+   "frame": 23,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": 0.0061
+  },
+  {
+   "frame": 24,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0663,
+   "ground_m": 0.0042
+  },
+  {
+   "frame": 24,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": 0.0042
+  },
+  {
+   "frame": 25,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0486,
+   "ground_m": 0.0017
+  },
+  {
+   "frame": 25,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": 0.0017
+  },
+  {
+   "frame": 26,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0728,
+   "ground_m": -0.0005
+  },
+  {
+   "frame": 26,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0005
+  },
+  {
+   "frame": 27,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0942,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 27,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 28,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.109,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 28,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1374,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 29,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1145,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 29,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1119,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 30,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.11,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 30,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1144,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 31,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1137,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 31,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0929,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 32,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1279,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 32,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1341,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 33,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1282,
+   "ground_m": -0.0019
+  },
+  {
+   "frame": 33,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1888,
+   "ground_m": -0.0019
+  },
+  {
+   "frame": 34,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1055,
+   "ground_m": 0.0004
+  },
+  {
+   "frame": 34,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1871,
+   "ground_m": 0.0004
+  },
+  {
+   "frame": 35,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1301,
+   "ground_m": 0.0022
+  },
+  {
+   "frame": 35,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1529,
+   "ground_m": 0.0022
+  },
+  {
+   "frame": 36,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1419,
+   "ground_m": 0.0039
+  },
+  {
+   "frame": 36,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1328,
+   "ground_m": 0.0039
+  },
+  {
+   "frame": 37,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1352,
+   "ground_m": 0.0055
+  },
+  {
+   "frame": 37,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0681,
+   "ground_m": 0.0055
+  },
+  {
+   "frame": 38,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.133,
+   "ground_m": 0.0075
+  },
+  {
+   "frame": 38,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0345,
+   "ground_m": 0.0075
+  },
+  {
+   "frame": 39,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1185,
+   "ground_m": 0.0094
+  },
+  {
+   "frame": 39,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0651,
+   "ground_m": 0.0094
+  },
+  {
+   "frame": 40,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1234,
+   "ground_m": 0.0108
+  },
+  {
+   "frame": 40,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1081,
+   "ground_m": 0.0108
+  },
+  {
+   "frame": 41,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1486,
+   "ground_m": 0.0119
+  },
+  {
+   "frame": 41,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1337,
+   "ground_m": 0.0119
+  },
+  {
+   "frame": 42,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1587,
+   "ground_m": 0.0128
+  },
+  {
+   "frame": 42,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1369,
+   "ground_m": 0.0128
+  },
+  {
+   "frame": 43,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1555,
+   "ground_m": 0.0134
+  },
+  {
+   "frame": 43,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1292,
+   "ground_m": 0.0134
+  },
+  {
+   "frame": 44,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1508,
+   "ground_m": 0.0136
+  },
+  {
+   "frame": 44,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1182,
+   "ground_m": 0.0136
+  },
+  {
+   "frame": 45,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1529,
+   "ground_m": 0.0134
+  },
+  {
+   "frame": 45,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1103,
+   "ground_m": 0.0134
+  },
+  {
+   "frame": 46,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1633,
+   "ground_m": 0.0129
+  },
+  {
+   "frame": 46,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1059,
+   "ground_m": 0.0129
+  },
+  {
+   "frame": 47,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1787,
+   "ground_m": 0.0116
+  },
+  {
+   "frame": 47,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1046,
+   "ground_m": 0.0116
+  },
+  {
+   "frame": 48,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1934,
+   "ground_m": 0.0092
+  },
+  {
+   "frame": 48,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0988,
+   "ground_m": 0.0092
+  },
+  {
+   "frame": 49,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2059,
+   "ground_m": 0.0056
+  },
+  {
+   "frame": 49,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0828,
+   "ground_m": 0.0056
+  },
+  {
+   "frame": 50,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2195,
+   "ground_m": 0.0013
+  },
+  {
+   "frame": 50,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0665,
+   "ground_m": 0.0013
+  },
+  {
+   "frame": 51,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 51,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0644,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 52,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 52,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0873,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 53,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 53,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1278,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 54,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 54,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1851,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 55,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.208,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 55,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2083,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 56,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1673,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 56,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1979,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 57,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1407,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 57,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2145,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 58,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1409,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 58,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 59,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1582,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 59,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 60,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1685,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 60,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 61,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1741,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 61,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 62,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1683,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 62,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 63,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1476,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 63,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 64,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1245,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 64,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 65,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1007,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 65,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 66,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0801,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 66,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 67,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0776,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 67,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 68,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1048,
+   "ground_m": -0.0013
+  },
+  {
+   "frame": 68,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1961,
+   "ground_m": -0.0013
+  },
+  {
+   "frame": 69,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1387,
+   "ground_m": -0.0012
+  },
+  {
+   "frame": 69,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1369,
+   "ground_m": -0.0012
+  },
+  {
+   "frame": 70,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1871,
+   "ground_m": -0.0008
+  },
+  {
+   "frame": 70,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0458,
+   "ground_m": -0.0008
+  },
+  {
+   "frame": 71,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": -0.0004
+  },
+  {
+   "frame": 71,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0475,
+   "ground_m": -0.0004
+  },
+  {
+   "frame": 72,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0001
+  },
+  {
+   "frame": 72,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1698,
+   "ground_m": 0.0001
+  },
+  {
+   "frame": 73,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0012
+  },
+  {
+   "frame": 73,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.201,
+   "ground_m": 0.0012
+  },
+  {
+   "frame": 74,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0029
+  },
+  {
+   "frame": 74,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0832,
+   "ground_m": 0.0029
+  },
+  {
+   "frame": 75,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.004
+  },
+  {
+   "frame": 75,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.005,
+   "ground_m": 0.004
+  },
+  {
+   "frame": 76,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0038
+  },
+  {
+   "frame": 76,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.0868,
+   "ground_m": 0.0038
+  },
+  {
+   "frame": 77,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.003
+  },
+  {
+   "frame": 77,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1858,
+   "ground_m": 0.003
+  },
+  {
+   "frame": 78,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0024
+  },
+  {
+   "frame": 78,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1864,
+   "ground_m": 0.0024
+  },
+  {
+   "frame": 79,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0019
+  },
+  {
+   "frame": 79,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1793,
+   "ground_m": 0.0019
+  },
+  {
+   "frame": 80,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0014
+  },
+  {
+   "frame": 80,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.1941,
+   "ground_m": 0.0014
+  },
+  {
+   "frame": 81,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0009
+  },
+  {
+   "frame": 81,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2053,
+   "ground_m": 0.0009
+  },
+  {
+   "frame": 82,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0006
+  },
+  {
+   "frame": 82,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2135,
+   "ground_m": 0.0006
+  },
+  {
+   "frame": 83,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0003
+  },
+  {
+   "frame": 83,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2221,
+   "ground_m": 0.0003
+  },
+  {
+   "frame": 84,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0001
+  },
+  {
+   "frame": 84,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": 0.0001
+  },
+  {
+   "frame": 85,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 85,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0
+  },
+  {
+   "frame": 86,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 86,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 87,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": -0.0002
+  },
+  {
+   "frame": 87,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0002
+  },
+  {
+   "frame": 88,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 88,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 89,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 89,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": -0.0001
+  },
+  {
+   "frame": 90,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0001
+  },
+  {
+   "frame": 90,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": 0.0001
+  },
+  {
+   "frame": 91,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0001
+  },
+  {
+   "frame": 91,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": 0.0001
+  },
+  {
+   "frame": 92,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0001
+  },
+  {
+   "frame": 92,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": 0.0001
+  },
+  {
+   "frame": 93,
+   "side": "L",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2256,
+   "ground_m": 0.0
+  },
+  {
+   "frame": 93,
+   "side": "R",
+   "inside_samples": 0,
+   "blade_clear_m": 0.2237,
+   "ground_m": 0.0
+  }
+ ]
+}
