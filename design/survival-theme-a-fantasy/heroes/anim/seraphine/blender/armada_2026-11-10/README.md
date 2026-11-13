@@ -23,7 +23,7 @@ File: `Assets/Survival/Unity/NewCharsPreview.cs`
 - Destroys any Animator on the prop and applies the body atlas.
 - `ApplyStaffGrip` sets the local pose after every sample. Local scale stays 1.
 
-Idle, walk, and Armada are unchanged. The staff tip on `e2652cc7` still reversed up to 9 cm between frames because its position keys were noisy. The hips now stay on one cosine and do not drift sideways, which is what `HoldHips` leaves in Unity, and the staff keeps a fixed offset from those hips. Its aim is unchanged. Films: `clips/SERAPHINE_lunge_front.mp4`, `SERAPHINE_lunge_side.mp4`, `SERAPHINE_lunge_preview.mp4`, labeled BLENDER — not Unity.
+Idle, walk, and Armada are unchanged: the staff stays on the right hand at mid-shaft. Thrust slash does not sample a staff clip. After `HoldHips` and the pose blend, `PlaceThrustStaff` lays the same mesh through the two hand bones, rear hand 10 cm up the shaft, tip toward the enemy. The body holds a side-on stance for the whole thrust and the hips travel 0.62 m forward on one cosine and back once. A staff track parented to the model was what left the hands off the shaft in Unity, because `HoldHips` moves the hands and does not move that track. Films: `clips/SERAPHINE_lunge_front.mp4`, `SERAPHINE_lunge_side.mp4`, `SERAPHINE_lunge_top.mp4`, `SERAPHINE_lunge_preview.mp4`, labeled BLENDER — not Unity.
 
 `SERAPHINE_rig_rest.fbx` no longer contains the skinned spear. The 24-bone skeleton, the cape, the clip names, and the existing `.meta` GUIDs are unchanged. `SERAPHINE_staff.fbx.meta` is new. `bakeAxisConversion` is 0, the same as the rest rig, so the prop's hand-space vertices are not given a second axis bake.
 
@@ -46,14 +46,14 @@ Front, side, and the preview camera (yaw 135°, pitch 30°, 54° vertical FOV). 
 
 `design/survival-theme-a-fantasy/heroes/anim/seraphine/blender/armada_2026-11-10/clips/SERAPHINE_mid_preview.mp4`
 
-Thrust slash after the two-hand lunge, with a short Armada check first. Labeled BLENDER — not Unity.
+Thrust slash, side-on, staff placed through the hands. The camera stays put so the 0.62 m lunge reads. Top view shows the turned shoulders. Labeled BLENDER — not Unity.
 
-`design/survival-theme-a-fantasy/heroes/anim/seraphine/blender/armada_2026-11-10/clips/SERAPHINE_lunge_preview.mp4`
+`design/survival-theme-a-fantasy/heroes/anim/seraphine/blender/armada_2026-11-10/clips/SERAPHINE_lunge_top.mp4`
 
 The clearance table above is the end-grip measurement from before the mid-shaft slide. It is not the lunge.
 
 ## Residual
 
 - The hand has no finger bones, so the fingers stay open. The shaft clears the hand outline by 0.7 cm. It reads as resting against the palm, not as a closed fist.
-- Armada keeps the raised right-arm hold. Thrust slash does not: both hands are on the staff and the body lunges. The legs, spine, and left arm of that clip come from Mixamo Bayonet Stab, with the wrists posed so the prop stays on the shaft.
+- Armada keeps the raised right-arm hold. Thrust slash turns the torso side-on, both wrists sit on the shaft, and the hips lunge 0.62 m toward the enemy and return once. The closest the staff mesh comes to the torso is 5.5 cm; the wings are farther. The hand has no finger bones, so the grip is the wrist on the shaft.
 - Desktop Unity was not run. This is not a Game-view pass.
