@@ -1222,10 +1222,29 @@ namespace Survival.Unity
             _thrustLogFrame = Time.frameCount;
             var leftCm = Vector3.ProjectOnPlane(left.position - origin, axis).magnitude * 100f;
             var rightCm = Vector3.ProjectOnPlane(right.position - origin, axis).magnitude * 100f;
+            var chest = FindBodyBone(u.Model.transform, "mixamorig:Spine2");
+            var ahead = "";
+            if (chest != null)
+            {
+                var enemy = u.Model.transform.forward;
+                enemy.y = 0f;
+                if (enemy.sqrMagnitude > 1e-6f)
+                {
+                    enemy.Normalize();
+                }
+
+                // Cross(up, enemy) is her left on this rig: the left shoulder sits on that side.
+                var herLeft = Vector3.Cross(Vector3.up, enemy);
+                var fromChest = handsMid - chest.position;
+                ahead = " inFront " + Vector3.Dot(fromChest, enemy).ToString("0.00") +
+                        " m onLeft " + Vector3.Dot(fromChest, herLeft).ToString("0.00") + " m";
+            }
+
             Debug.Log(
                 "Seraphine thrust frame " + Time.frameCount +
                 " wrist-to-shaft L " + leftCm.ToString("0.0") + " cm R " + rightCm.ToString("0.0") +
-                " cm parent " + (staff.parent != null ? staff.parent.name : "none") +
+                " cm" + ahead +
+                " parent " + (staff.parent != null ? staff.parent.name : "none") +
                 " staffLossy " + staff.lossyScale.x.ToString("0.0") +
                 " handLossy " + right.lossyScale.x.ToString("0.0"));
         }

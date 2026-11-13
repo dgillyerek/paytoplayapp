@@ -46,7 +46,7 @@ Front, side, and the preview camera (yaw 135°, pitch 30°, 54° vertical FOV). 
 
 `design/survival-theme-a-fantasy/heroes/anim/seraphine/blender/armada_2026-11-10/clips/SERAPHINE_mid_preview.mp4`
 
-Thrust slash. Head faces the enemy, feet stay planted, both hands at mid-shaft, arms push and return. Labeled BLENDER — not Unity.
+Thrust slash. Head faces the enemy, feet stay planted, staff in front of the chest on her left. Labeled BLENDER — not Unity. The behind view looks along the thrust.
 
 `design/survival-theme-a-fantasy/heroes/anim/seraphine/blender/armada_2026-11-10/clips/SERAPHINE_lunge_top.mp4`
 
