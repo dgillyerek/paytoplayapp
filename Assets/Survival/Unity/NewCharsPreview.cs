@@ -1107,10 +1107,11 @@ namespace Survival.Unity
 
         /// <summary>
         /// Thrust only. The rear hand is the one farther from the enemy. The shaft centerline
-        /// passes through both hands, the rear hand sits 10 cm up the shaft from the mesh
-        /// origin, and the tip points at the other hand (toward the enemy). World scale matches
-        /// the Armada grip, which is the hand's lossy scale with the mesh at local scale 1.
-        /// The centerline sits 6.35 cm / 5.58 cm off the mesh origin in its local X / Y.
+        /// passes through both wrists, the midpoint of the two wrists sits on the middle of the
+        /// shaft, and the tip points at the forward hand (toward the enemy). The wrists are
+        /// authored about 21 cm either side of that middle. World scale matches the Armada grip,
+        /// which is the hand's lossy scale with the mesh at local scale 1. The centerline sits
+        /// 6.35 cm / 5.58 cm off the mesh origin in its local X / Y.
         /// </summary>
         private static void PlaceThrustStaff(Unit u)
         {
@@ -1162,11 +1163,13 @@ namespace Survival.Unity
             }
 
             // Mesh centerline of SERAPHINE_staff, metres, in the staff's local axes.
+            // StaffMidMetres is the geometric middle. Centering it on the wrists puts
+            // about a metre of shaft behind the hands and a metre in front.
             var center = new Vector3(-0.0635f, 0.0558f, 0f);
-            const float grip = 0.10f;
+            var handsMid = (back.position + front.position) * 0.5f;
             staff.localScale = Vector3.one * (handScale / parentScale);
             staff.rotation = rot;
-            staff.position = back.position - (rot * (center + (Vector3.forward * grip)));
+            staff.position = handsMid - (rot * (center + (Vector3.forward * StaffMidMetres)));
         }
 
         private static void SetRenderers(GameObject go, bool enabled)
