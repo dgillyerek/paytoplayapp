@@ -105,10 +105,6 @@ namespace Survival.Unity
             public Vector3[] ScalePinValues = System.Array.Empty<Vector3>();
             public Quaternion[] RotationPinValues = System.Array.Empty<Quaternion>();
             public Transform? Staff;
-            // Thrust slash plays this copy from its own clip, in character-root space.
-            // It is not parented to the hand, so the bayonet wrist roll cannot flip it.
-            public GameObject? StaffLunge;
-            public AnimationClip? StaffLungeClip;
         }
 
         private readonly List<Unit> _units = new List<Unit>();
@@ -976,8 +972,8 @@ namespace Survival.Unity
 
             var local = u.Model.transform.InverseTransformPoint(u.Hips.position);
             local.x = u.HipsRest.x;
-            // Thrust slash steps toward the enemy. That travel is model +Z, which is the
-            // host's forward. Leave it. Pin it on every other clip so a looping attack
+            // The thrust lunge travels in model +Z, the host's forward. Leave that free
+            // or the step is cancelled. Pin it on every other clip so a looping attack
             // cannot walk her off the mark. Lateral X stays pinned on the lunge too.
             if (u.Def.Clips[u.Clip] != "attack_thrust_slash")
             {
@@ -985,18 +981,6 @@ namespace Survival.Unity
             }
 
             u.Hips.position = u.Model.transform.TransformPoint(local);
-        }
-
-        private void OnEnable()
-        {
-            UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering += BeforeCamera;
-            Camera.onPreRender += BeforeCameraBuiltIn;
-        }
-
-        private void OnDisable()
-        {
-            UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering -= BeforeCamera;
-            Camera.onPreRender -= BeforeCameraBuiltIn;
         }
 
         private void Update()
@@ -1009,46 +993,14 @@ namespace Survival.Unity
             }
         }
 
-        // ClothSpringRig moves the cape in LateUpdate, and the battle camera places itself
-        // even later. The staff has to be laid through the wrists after both, on the pose
-        // the camera actually draws. Update was too early: the prop was parented to the
-        // model origin and the picture was taken afterwards.
-        private void LateUpdate()
-        {
-            PlaceThrustStaffs();
-        }
-
-        private void BeforeCamera(UnityEngine.Rendering.ScriptableRenderContext context, Camera camera)
-        {
-            _ = context;
-            _ = camera;
-            PlaceThrustStaffs();
-        }
-
-        private void BeforeCameraBuiltIn(Camera camera)
-        {
-            _ = camera;
-            PlaceThrustStaffs();
-        }
-
-        private void PlaceThrustStaffs()
-        {
-            foreach (var u in _units)
-            {
-                PlaceThrustStaff(u);
-            }
-        }
-
-        // Seraphine's spear is a separate prop, not skinned into the body. Idle, walk, and
-        // Armada parent it to mixamorig:RightHand and slide 1.01 m along local −Z (identity
-        // rotation). The rig imports at scale 100, so that metre offset is divided by the
-        // hand's lossy scale. Thrust slash uses the same mesh, but the pose is not a second
-        // animation: after HoldHips and the clip blend, the shaft is laid through the two
-        // hands with the tip toward the enemy. A baked staff track parented to the model
-        // stayed put while HoldHips moved the hands, which is why the hands left the shaft.
+        // Seraphine's spear is a separate prop, not skinned into the body. Every clip,
+        // including the thrust, parents it to mixamorig:RightHand. The mesh +Z is the tip.
+        // Idle, walk, and Armada hold the geometric middle (1.01 m). The thrust holds a
+        // point a little behind that middle, so more of the shaft is in front of the hand.
+        // The rig imports at scale 100, so the metre offset is divided by the hand's lossy scale.
         private const string StaffFile = "SERAPHINE_staff.fbx";
-        private const string StaffThrustFile = "SERAPHINE_staff_thrust.fbx";
         private const float StaffMidMetres = 1.01f;
+        private const float StaffThrustGripMetres = 0.82f;
 
         private void AttachSeraphineStaff(Unit u, string dir)
         {
@@ -1075,54 +1027,18 @@ namespace Survival.Unity
             u.Staff = staff.transform;
             var atlas = PlayerAssets.Load<Texture2D>(dir + u.Def.Prefix + "_atlas_2048.png");
             ApplyMaterial(staff, atlas, u.Def.Prefix + "_staff", false);
-
-            var lungePrefab = PlayerAssets.Load<GameObject>(dir + StaffThrustFile);
-            u.StaffLungeClip = LoadClip(dir + StaffThrustFile);
-            if (lungePrefab != null && u.StaffLungeClip != null)
-            {
-                var lunge = Instantiate(lungePrefab, u.Model.transform);
-                lunge.name = "SERAPHINE_staff_lunge";
-                foreach (var a in lunge.GetComponentsInChildren<Animator>(true))
-                {
-                    Destroy(a);
-                }
-
-                u.StaffLunge = lunge;
-                ApplyMaterial(lunge, atlas, u.Def.Prefix + "_staff_lunge", false);
-                // This copy is the old baked thrust track. Leaving it active draws a second
-                // staff across her body that PlaceThrustStaff never moves.
-                lunge.SetActive(false);
-            }
-
             ApplyStaffGrip(u);
         }
 
         /// <summary>
-        /// Idle, walk, and Armada keep the in-hand mid-shaft grip. Thrust slash hides that
-        /// copy and shows the model-parented one, which <see cref="PlaceThrustStaff"/> poses
-        /// from the hands after the hips are pinned and the blend has moved the bones.
+        /// Every clip keeps the staff on the right hand. The thrust uses a fixed grip a
+        /// little behind the middle; the other clips use the middle. The hand's local +Z
+        /// is the tip, the same axis idle and walk already use.
         /// </summary>
         private static void ApplyStaffGrip(Unit u)
         {
             if (u.Staff == null)
             {
-                return;
-            }
-
-            var thrust = u.Def.Clips[u.Clip] == "attack_thrust_slash";
-            SetRenderers(u.Staff.gameObject, true);
-            if (u.StaffLunge != null && u.StaffLunge.activeSelf)
-            {
-                u.StaffLunge.SetActive(false);
-            }
-
-            if (thrust)
-            {
-                if (u.Staff.parent != u.Model.transform)
-                {
-                    u.Staff.SetParent(u.Model.transform, false);
-                }
-
                 return;
             }
 
@@ -1142,122 +1058,12 @@ namespace Survival.Unity
             }
 
             var unit = 1f / scale;
-            u.Staff.localPosition = new Vector3(0f, 0f, -StaffMidMetres) * unit;
+            var grip = u.Def.Clips[u.Clip] == "attack_thrust_slash" ? StaffThrustGripMetres : StaffMidMetres;
+            u.Staff.localPosition = new Vector3(0f, 0f, -grip) * unit;
             u.Staff.localRotation = Quaternion.identity;
             u.Staff.localScale = Vector3.one;
         }
 
-        /// <summary>
-        /// Thrust only. The rear hand is the one farther from the enemy. The shaft centerline
-        /// passes through both wrists, the midpoint of the two wrists sits on the middle of the
-        /// shaft, and the tip points at the forward hand (toward the enemy). The wrists are
-        /// authored about 21 cm either side of that middle. World scale matches the Armada grip,
-        /// which is the hand's lossy scale with the mesh at local scale 1. The centerline sits
-        /// 6.35 cm / 5.58 cm off the mesh origin in its local X / Y.
-        /// </summary>
-        private static void PlaceThrustStaff(Unit u)
-        {
-            if (u.Staff == null || u.Def.Clips[u.Clip] != "attack_thrust_slash")
-            {
-                return;
-            }
-
-            var right = FindBodyBone(u.Model.transform, "mixamorig:RightHand");
-            var left = FindBodyBone(u.Model.transform, "mixamorig:LeftHand");
-            if (right == null || left == null)
-            {
-                return;
-            }
-
-            var forward = u.Model.transform.forward;
-            forward.y = 0f;
-            if (forward.sqrMagnitude < 1e-6f)
-            {
-                forward = Vector3.forward;
-            }
-
-            var back = Vector3.Dot(left.position, forward) <= Vector3.Dot(right.position, forward) ? left : right;
-            var front = back == left ? right : left;
-            var dir = front.position - back.position;
-            if (dir.sqrMagnitude < 1e-8f)
-            {
-                dir = forward;
-            }
-
-            dir.Normalize();
-            if (Mathf.Abs(Vector3.Dot(dir, Vector3.up)) > 0.999f)
-            {
-                dir = forward.normalized;
-            }
-
-            var rot = Quaternion.LookRotation(dir, Vector3.up);
-            var staff = u.Staff;
-            var parentScale = staff.parent != null ? Mathf.Abs(staff.parent.lossyScale.x) : 1f;
-            if (parentScale < 1e-4f)
-            {
-                parentScale = 1f;
-            }
-
-            var handScale = Mathf.Abs(right.lossyScale.x);
-            if (handScale < 1e-4f)
-            {
-                handScale = parentScale;
-            }
-
-            // Mesh centerline of SERAPHINE_staff, metres, in the staff's local axes.
-            // StaffMidMetres is the geometric middle. Centering it on the wrists puts
-            // about a metre of shaft behind the hands and a metre in front.
-            var center = new Vector3(-0.0635f, 0.0558f, 0f);
-            var handsMid = (back.position + front.position) * 0.5f;
-            staff.localScale = Vector3.one * (handScale / parentScale);
-            staff.rotation = rot;
-            staff.position = handsMid - (rot * (center + (Vector3.forward * StaffMidMetres)));
-            var axis = staff.rotation * Vector3.forward;
-            var origin = staff.position + (staff.rotation * center);
-            if (Time.frameCount == _thrustLogFrame)
-            {
-                return;
-            }
-
-            _thrustLogFrame = Time.frameCount;
-            var leftCm = Vector3.ProjectOnPlane(left.position - origin, axis).magnitude * 100f;
-            var rightCm = Vector3.ProjectOnPlane(right.position - origin, axis).magnitude * 100f;
-            var chest = FindBodyBone(u.Model.transform, "mixamorig:Spine2");
-            var ahead = "";
-            if (chest != null)
-            {
-                var enemy = u.Model.transform.forward;
-                enemy.y = 0f;
-                if (enemy.sqrMagnitude > 1e-6f)
-                {
-                    enemy.Normalize();
-                }
-
-                // Cross(up, enemy) is her left on this rig: the left shoulder sits on that side.
-                var herLeft = Vector3.Cross(Vector3.up, enemy);
-                var fromChest = handsMid - chest.position;
-                ahead = " inFront " + Vector3.Dot(fromChest, enemy).ToString("0.00") +
-                        " m onLeft " + Vector3.Dot(fromChest, herLeft).ToString("0.00") + " m";
-            }
-
-            Debug.Log(
-                "Seraphine thrust frame " + Time.frameCount +
-                " wrist-to-shaft L " + leftCm.ToString("0.0") + " cm R " + rightCm.ToString("0.0") +
-                " cm" + ahead +
-                " parent " + (staff.parent != null ? staff.parent.name : "none") +
-                " staffLossy " + staff.lossyScale.x.ToString("0.0") +
-                " handLossy " + right.lossyScale.x.ToString("0.0"));
-        }
-
-        private static int _thrustLogFrame = -1;
-
-        private static void SetRenderers(GameObject go, bool enabled)
-        {
-            foreach (var renderer in go.GetComponentsInChildren<Renderer>(true))
-            {
-                renderer.enabled = enabled;
-            }
-        }
 
         private void Tick(Unit u, float dt)
         {
@@ -1548,34 +1354,6 @@ namespace Survival.Unity
             return null;
         }
 
-        // The displayed hands, not a transform inside the staff prop.
-        private static Transform? FindBodyBone(Transform root, string name)
-        {
-            foreach (var t in root.GetComponentsInChildren<Transform>(true))
-            {
-                if (t.name != name || UnderStaff(t))
-                {
-                    continue;
-                }
-
-                return t;
-            }
-
-            return null;
-        }
-
-        private static bool UnderStaff(Transform t)
-        {
-            for (var p = t; p != null; p = p.parent)
-            {
-                if (p.name.StartsWith("SERAPHINE_staff", System.StringComparison.Ordinal))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
 
         private static Bounds BoundsOf(GameObject go)
         {

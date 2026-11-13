@@ -23,7 +23,7 @@ File: `Assets/Survival/Unity/NewCharsPreview.cs`
 - Destroys any Animator on the prop and applies the body atlas.
 - `ApplyStaffGrip` sets the local pose after every sample. Local scale stays 1.
 
-Idle, walk, and Armada are unchanged: the staff stays on the right hand at mid-shaft. Thrust slash lays that same prop through the two wrists in LateUpdate and again just before the camera draws, with the middle of the shaft on the midpoint of the hands. Her head faces the enemy. The hips stay put and the arms push the staff forward about 0.49 m, then back. The old baked staff copy stays inactive. Films: `clips/SERAPHINE_lunge_front.mp4`, `SERAPHINE_lunge_side.mp4`, `SERAPHINE_lunge_top.mp4`, labeled BLENDER — not Unity.
+Idle, walk, and Armada are unchanged: the staff stays on the right hand at mid-shaft. The thrust uses that same hand parent and a fixed grip 0.82 m up the shaft, so the tip follows the right hand. It is a one-handed lunge: the left hand stays at the hip, the hips step forward, and she returns. Films: `clips/SERAPHINE_lunge_side.mp4`, labeled BLENDER — not Unity.
 
 `SERAPHINE_rig_rest.fbx` no longer contains the skinned spear. The 24-bone skeleton, the cape, the clip names, and the existing `.meta` GUIDs are unchanged. `SERAPHINE_staff.fbx.meta` is new. `bakeAxisConversion` is 0, the same as the rest rig, so the prop's hand-space vertices are not given a second axis bake.
 
