@@ -1000,7 +1000,7 @@ namespace Survival.Unity
         // The rig imports at scale 100, so the metre offset is divided by the hand's lossy scale.
         private const string StaffFile = "SERAPHINE_staff.fbx";
         private const float StaffMidMetres = 1.01f;
-        private const float StaffThrustGripMetres = 0.82f;
+        private const float StaffThrustGripMetres = 0.42f;
 
         private void AttachSeraphineStaff(Unit u, string dir)
         {
