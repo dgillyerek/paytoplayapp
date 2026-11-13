@@ -51,7 +51,7 @@ namespace Survival.Unity
         {
             new Def("seraphine", "SERAPHINE", true, 1.4f, 1.9f, new[] { "idle", "walk", "attack_standing_melee", "attack_thrust_slash" },
                 new[] { BattleImpactKind.SwordSteel, BattleImpactKind.SwordSteel }, new Color(1f, 0.95f, 0.7f), new Color(0.45f, 0.7f, 1f)),
-            new Def("kaelen", "KAELEN", true, -1.4f, 1.7f, new[] { "idle", "walk", "attack_dualslash", "attack2_crossthrust" },
+            new Def("kaelen", "KAELEN", true, -1.4f, 1.7f, new[] { "idle", "walk", "attack_dualslash", "attack2_inwardslash" },
                 new[] { BattleImpactKind.SwordSteel }, new Color(0.85f, 0.95f, 1f), new Color(0.5f, 0.8f, 1f)),
             new Def("vorgath", "VORGATH", false, -1.4f, 2.3f, new[] { "idle", "walk", "attack_slam", "attack_spit", "dying" },
                 new[] { BattleImpactKind.GroundSlam, BattleImpactKind.ArcaneConjure }, new Color(0.85f, 0.55f, 1f), new Color(0.45f, 0.1f, 0.7f)),
@@ -93,6 +93,10 @@ namespace Survival.Unity
             public readonly List<Vector3> GripPos = new List<Vector3>();
             public readonly List<Quaternion> GripRot = new List<Quaternion>();
             public readonly List<Vector3> GripScale = new List<Vector3>();
+            // Inward slash only. Same props, turned so the blade points along the cut instead of at the ground.
+            public readonly List<Vector3> AltPos = new List<Vector3>();
+            public readonly List<Quaternion> AltRot = new List<Quaternion>();
+            public readonly List<Vector3> AltScale = new List<Vector3>();
         }
 
         private readonly List<Unit> _units = new List<Unit>();
@@ -213,6 +217,9 @@ namespace Survival.Unity
                 // and not a BakeMesh copy: the body FBX has no sword mesh.
                 AttachHandProp(u, dir, "KAELEN_sword_L.fbx", "mixamorig:LeftArm.002", "KAELEN_sword_L");
                 AttachHandProp(u, dir, "KAELEN_sword_R.fbx", "mixamorig:RightArm.002", "KAELEN_sword_R");
+                // Attack2 only. Idle, walk, and dualslash keep the passed slash grip.
+                ReadAltGrip(u, dir, "KAELEN_sword_L_inward.fbx", "mixamorig:LeftArm.002", "KAELEN_sword_L");
+                ReadAltGrip(u, dir, "KAELEN_sword_R_inward.fbx", "mixamorig:RightArm.002", "KAELEN_sword_R");
             }
 
             return u;
@@ -802,8 +809,67 @@ namespace Survival.Unity
             Destroy(probe);
         }
 
+        /// <summary>
+        /// Local pose of a sword under its hand, read the same way AttachHandProp does. Does not spawn a mesh.
+        /// Used for the inward-slash aim only.
+        /// </summary>
+        private bool ReadAltGrip(Unit u, string dir, string file, string boneName, string meshName)
+        {
+            var prefab = PlayerAssets.Load<GameObject>(dir + file);
+            if (prefab == null)
+            {
+                Debug.LogWarning(u.Def.Prefix + " inward grip missing: " + dir + file);
+                return false;
+            }
+
+            var probe = Instantiate(prefab);
+            probe.SetActive(false);
+            Transform? srcHand = null;
+            Transform? srcMesh = null;
+            foreach (var t in probe.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name == boneName)
+                {
+                    srcHand = t;
+                }
+
+                if (t.name == meshName)
+                {
+                    srcMesh = t;
+                }
+            }
+
+            if (srcHand == null || srcMesh == null)
+            {
+                Debug.LogWarning(u.Def.Prefix + " inward grip " + file + " has no " + boneName + " / " + meshName + ".");
+                Destroy(probe);
+                return false;
+            }
+
+            Vector3 pos;
+            Quaternion rot;
+            var scale = srcMesh.localScale;
+            if (srcMesh.parent == srcHand)
+            {
+                pos = srcMesh.localPosition;
+                rot = srcMesh.localRotation;
+            }
+            else
+            {
+                pos = srcHand.InverseTransformPoint(srcMesh.position);
+                rot = Quaternion.Inverse(srcHand.rotation) * srcMesh.rotation;
+            }
+
+            u.AltPos.Add(pos);
+            u.AltRot.Add(rot);
+            u.AltScale.Add(scale);
+            Destroy(probe);
+            return true;
+        }
+
         private static void HoldGrips(Unit u)
         {
+            var inward = u.AltPos.Count == u.Grips.Count && u.Def.Clips[u.Clip] == "attack2_inwardslash";
             for (var i = 0; i < u.Grips.Count; i++)
             {
                 var grip = u.Grips[i];
@@ -812,9 +878,18 @@ namespace Survival.Unity
                     continue;
                 }
 
-                grip.localPosition = u.GripPos[i];
-                grip.localRotation = u.GripRot[i];
-                grip.localScale = u.GripScale[i];
+                if (inward)
+                {
+                    grip.localPosition = u.AltPos[i];
+                    grip.localRotation = u.AltRot[i];
+                    grip.localScale = u.AltScale[i];
+                }
+                else
+                {
+                    grip.localPosition = u.GripPos[i];
+                    grip.localRotation = u.GripRot[i];
+                    grip.localScale = u.GripScale[i];
+                }
             }
         }
 
