@@ -987,6 +987,18 @@ namespace Survival.Unity
             u.Hips.position = u.Model.transform.TransformPoint(local);
         }
 
+        private void OnEnable()
+        {
+            UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering += BeforeCamera;
+            Camera.onPreRender += BeforeCameraBuiltIn;
+        }
+
+        private void OnDisable()
+        {
+            UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering -= BeforeCamera;
+            Camera.onPreRender -= BeforeCameraBuiltIn;
+        }
+
         private void Update()
         {
             Keys();
@@ -994,6 +1006,36 @@ namespace Survival.Unity
             foreach (var u in _units)
             {
                 Tick(u, dt);
+            }
+        }
+
+        // ClothSpringRig moves the cape in LateUpdate, and the battle camera places itself
+        // even later. The staff has to be laid through the wrists after both, on the pose
+        // the camera actually draws. Update was too early: the prop was parented to the
+        // model origin and the picture was taken afterwards.
+        private void LateUpdate()
+        {
+            PlaceThrustStaffs();
+        }
+
+        private void BeforeCamera(UnityEngine.Rendering.ScriptableRenderContext context, Camera camera)
+        {
+            _ = context;
+            _ = camera;
+            PlaceThrustStaffs();
+        }
+
+        private void BeforeCameraBuiltIn(Camera camera)
+        {
+            _ = camera;
+            PlaceThrustStaffs();
+        }
+
+        private void PlaceThrustStaffs()
+        {
+            foreach (var u in _units)
+            {
+                PlaceThrustStaff(u);
             }
         }
 
@@ -1047,7 +1089,9 @@ namespace Survival.Unity
 
                 u.StaffLunge = lunge;
                 ApplyMaterial(lunge, atlas, u.Def.Prefix + "_staff_lunge", false);
-                SetRenderers(lunge, false);
+                // This copy is the old baked thrust track. Leaving it active draws a second
+                // staff across her body that PlaceThrustStaff never moves.
+                lunge.SetActive(false);
             }
 
             ApplyStaffGrip(u);
@@ -1067,11 +1111,9 @@ namespace Survival.Unity
 
             var thrust = u.Def.Clips[u.Clip] == "attack_thrust_slash";
             SetRenderers(u.Staff.gameObject, true);
-            if (u.StaffLunge != null)
+            if (u.StaffLunge != null && u.StaffLunge.activeSelf)
             {
-                // The thrust clip is no longer sampled. One mesh, the Armada prop, is posed
-                // from the hands so a second imported track cannot drift off them.
-                SetRenderers(u.StaffLunge, false);
+                u.StaffLunge.SetActive(false);
             }
 
             if (thrust)
@@ -1120,8 +1162,8 @@ namespace Survival.Unity
                 return;
             }
 
-            var right = FindBone(u.Model.transform, "mixamorig:RightHand");
-            var left = FindBone(u.Model.transform, "mixamorig:LeftHand");
+            var right = FindBodyBone(u.Model.transform, "mixamorig:RightHand");
+            var left = FindBodyBone(u.Model.transform, "mixamorig:LeftHand");
             if (right == null || left == null)
             {
                 return;
@@ -1170,7 +1212,25 @@ namespace Survival.Unity
             staff.localScale = Vector3.one * (handScale / parentScale);
             staff.rotation = rot;
             staff.position = handsMid - (rot * (center + (Vector3.forward * StaffMidMetres)));
+            var axis = staff.rotation * Vector3.forward;
+            var origin = staff.position + (staff.rotation * center);
+            if (Time.frameCount == _thrustLogFrame)
+            {
+                return;
+            }
+
+            _thrustLogFrame = Time.frameCount;
+            var leftCm = Vector3.ProjectOnPlane(left.position - origin, axis).magnitude * 100f;
+            var rightCm = Vector3.ProjectOnPlane(right.position - origin, axis).magnitude * 100f;
+            Debug.Log(
+                "Seraphine thrust frame " + Time.frameCount +
+                " wrist-to-shaft L " + leftCm.ToString("0.0") + " cm R " + rightCm.ToString("0.0") +
+                " cm parent " + (staff.parent != null ? staff.parent.name : "none") +
+                " staffLossy " + staff.lossyScale.x.ToString("0.0") +
+                " handLossy " + right.lossyScale.x.ToString("0.0"));
         }
+
+        private static int _thrustLogFrame = -1;
 
         private static void SetRenderers(GameObject go, bool enabled)
         {
@@ -1267,10 +1327,6 @@ namespace Survival.Unity
             // The socket is not one of the sampled bones; put its imported local pose back in case the clip sample touched it.
             HoldSocket(u);
             HoldGrips(u);
-            if (u.Def.Clips[u.Clip] == "attack_thrust_slash")
-            {
-                PlaceThrustStaff(u);
-            }
 
             if (u.Spit != null)
             {
@@ -1471,6 +1527,35 @@ namespace Survival.Unity
             }
 
             return null;
+        }
+
+        // The displayed hands, not a transform inside the staff prop.
+        private static Transform? FindBodyBone(Transform root, string name)
+        {
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name != name || UnderStaff(t))
+                {
+                    continue;
+                }
+
+                return t;
+            }
+
+            return null;
+        }
+
+        private static bool UnderStaff(Transform t)
+        {
+            for (var p = t; p != null; p = p.parent)
+            {
+                if (p.name.StartsWith("SERAPHINE_staff", System.StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static Bounds BoundsOf(GameObject go)
