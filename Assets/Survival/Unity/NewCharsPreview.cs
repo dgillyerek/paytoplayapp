@@ -49,7 +49,7 @@ namespace Survival.Unity
 
         private static readonly Def[] Defs =
         {
-            new Def("seraphine", "SERAPHINE", true, 1.4f, 1.9f, new[] { "idle", "walk", "attack_standing_melee", "attack_thrust_slash" },
+            new Def("seraphine", "SERAPHINE", true, 1.4f, 1.9f, new[] { "idle", "walk", "attack_armada", "attack_thrust_slash" },
                 new[] { BattleImpactKind.SwordSteel, BattleImpactKind.SwordSteel }, new Color(1f, 0.95f, 0.7f), new Color(0.45f, 0.7f, 1f)),
             new Def("kaelen", "KAELEN", true, -1.4f, 1.7f, new[] { "idle", "walk", "attack_dualslash", "attack2_inwardslash" },
                 new[] { BattleImpactKind.SwordSteel }, new Color(0.85f, 0.95f, 1f), new Color(0.5f, 0.8f, 1f)),
@@ -97,6 +97,14 @@ namespace Survival.Unity
             public readonly List<Vector3> AltPos = new List<Vector3>();
             public readonly List<Quaternion> AltRot = new List<Quaternion>();
             public readonly List<Vector3> AltScale = new List<Vector3>();
+            // Rig and mesh nodes carry the Blender axis conversion: local scale 100 and
+            // local rotation -90° on X. An armature-only clip compensates those root tracks
+            // to scale 1 and rotation 0, so SampleAnimation shrinks her and lays her on her back.
+            // Bone rotations stay on the clip.
+            public Transform[] ScalePins = System.Array.Empty<Transform>();
+            public Vector3[] ScalePinValues = System.Array.Empty<Vector3>();
+            public Quaternion[] RotationPinValues = System.Array.Empty<Quaternion>();
+            public Transform? Staff;
         }
 
         private readonly List<Unit> _units = new List<Unit>();
@@ -206,6 +214,7 @@ namespace Survival.Unity
             u.FromPos = new Vector3[u.Bones.Length];
             u.FromRot = new Quaternion[u.Bones.Length];
             AttachCape(u, dir);
+            AttachSeraphineStaff(u, dir);
             if (def.Prefix == "VORGATH")
             {
                 AttachMouthStream(u);
@@ -222,7 +231,66 @@ namespace Survival.Unity
                 ReadAltGrip(u, dir, "KAELEN_sword_R_inward.fbx", "mixamorig:RightArm.002", "KAELEN_sword_R");
             }
 
+            CaptureScales(u);
             return u;
+        }
+
+        /// <summary>
+        /// Remember the imported local scale and rotation of the rig root and the mesh nodes.
+        /// Bone rotations stay with the clip.
+        /// </summary>
+        private static void CaptureScales(Unit u)
+        {
+            if (u.Def.Prefix != "SERAPHINE")
+            {
+                return;
+            }
+
+            var pins = new List<Transform>();
+            foreach (var t in u.Model.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name.StartsWith("mixamorig:", System.StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (t.name.StartsWith("cape_", System.StringComparison.Ordinal) || t.name.StartsWith("SERAPHINE_staff", System.StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                pins.Add(t);
+            }
+
+            u.ScalePins = pins.ToArray();
+            u.ScalePinValues = new Vector3[pins.Count];
+            u.RotationPinValues = new Quaternion[pins.Count];
+            for (var i = 0; i < pins.Count; i++)
+            {
+                u.ScalePinValues[i] = pins[i].localScale;
+                u.RotationPinValues[i] = pins[i].localRotation;
+            }
+        }
+
+        /// <summary>
+        /// Put the rig and mesh scale and rotation back after a clip sample. See <see cref="Unit.ScalePins"/>.
+        /// </summary>
+        private static void RestoreScales(Unit u)
+        {
+            if (u.Def.Prefix != "SERAPHINE")
+            {
+                return;
+            }
+
+            for (var i = 0; i < u.ScalePins.Length; i++)
+            {
+                var t = u.ScalePins[i];
+                if (t != null)
+                {
+                    t.localScale = u.ScalePinValues[i];
+                    t.localRotation = u.RotationPinValues[i];
+                }
+            }
         }
 
         private static AnimationClip? LoadClip(string path)
@@ -547,6 +615,8 @@ namespace Survival.Unity
                 if (idle != null)
                 {
                     idle.SampleAnimation(u.Model, 0f);
+                    RestoreScales(u);
+                    ApplyStaffGrip(u);
                     HoldHips(u);
                     HoldSocket(u);
                     HoldGrips(u);
@@ -902,7 +972,14 @@ namespace Survival.Unity
 
             var local = u.Model.transform.InverseTransformPoint(u.Hips.position);
             local.x = u.HipsRest.x;
-            local.z = u.HipsRest.z;
+            // The thrust lunge travels in model +Z, the host's forward. Leave that free
+            // or the step is cancelled. Pin it on every other clip so a looping attack
+            // cannot walk her off the mark. Lateral X stays pinned on the lunge too.
+            if (u.Def.Clips[u.Clip] != "attack_thrust_slash")
+            {
+                local.z = u.HipsRest.z;
+            }
+
             u.Hips.position = u.Model.transform.TransformPoint(local);
         }
 
@@ -916,6 +993,78 @@ namespace Survival.Unity
             }
         }
 
+        // Seraphine's spear is a separate prop, not skinned into the body. Every clip,
+        // including the thrust, parents it to mixamorig:RightHand. The mesh +Z is the tip.
+        // Idle, walk, and Armada hold the geometric middle (1.01 m). The thrust holds a
+        // point a little behind that middle, so more of the shaft is in front of the hand.
+        // The rig imports at scale 100, so the metre offset is divided by the hand's lossy scale.
+        private const string StaffFile = "SERAPHINE_staff.fbx";
+        private const float StaffMidMetres = 1.01f;
+        private const float StaffThrustGripMetres = 0.42f;
+
+        private void AttachSeraphineStaff(Unit u, string dir)
+        {
+            if (u.Def.Prefix != "SERAPHINE")
+            {
+                return;
+            }
+
+            var hand = FindBone(u.Model.transform, "mixamorig:RightHand");
+            var prefab = PlayerAssets.Load<GameObject>(dir + StaffFile);
+            if (hand == null || prefab == null)
+            {
+                Debug.LogError("Seraphine staff: RightHand or " + dir + StaffFile + " missing.");
+                return;
+            }
+
+            var staff = Instantiate(prefab, hand);
+            staff.name = "SERAPHINE_staff";
+            foreach (var a in staff.GetComponentsInChildren<Animator>(true))
+            {
+                Destroy(a);
+            }
+
+            u.Staff = staff.transform;
+            var atlas = PlayerAssets.Load<Texture2D>(dir + u.Def.Prefix + "_atlas_2048.png");
+            ApplyMaterial(staff, atlas, u.Def.Prefix + "_staff", false);
+            ApplyStaffGrip(u);
+        }
+
+        /// <summary>
+        /// Every clip keeps the staff on the right hand. The thrust uses a fixed grip a
+        /// little behind the middle; the other clips use the middle. The hand's local +Z
+        /// is the tip, the same axis idle and walk already use.
+        /// </summary>
+        private static void ApplyStaffGrip(Unit u)
+        {
+            if (u.Staff == null)
+            {
+                return;
+            }
+
+            if (u.Staff.parent == null || u.Staff.parent.name != "mixamorig:RightHand")
+            {
+                var hand = FindBone(u.Model.transform, "mixamorig:RightHand");
+                if (hand != null)
+                {
+                    u.Staff.SetParent(hand, false);
+                }
+            }
+
+            var scale = u.Staff.parent != null ? u.Staff.parent.lossyScale.x : 1f;
+            if (Mathf.Abs(scale) < 1e-4f)
+            {
+                scale = 1f;
+            }
+
+            var unit = 1f / scale;
+            var grip = u.Def.Clips[u.Clip] == "attack_thrust_slash" ? StaffThrustGripMetres : StaffMidMetres;
+            u.Staff.localPosition = new Vector3(0f, 0f, -grip) * unit;
+            u.Staff.localRotation = Quaternion.identity;
+            u.Staff.localScale = Vector3.one;
+        }
+
+
         private void Tick(Unit u, float dt)
         {
             var clip = u.Clips[u.Clip];
@@ -924,6 +1073,7 @@ namespace Survival.Unity
             if (u.Frozen)
             {
                 HoldSocket(u);
+                ApplyStaffGrip(u);
                 HoldGrips(u);
                 u.Spit?.ApplyClipTime(-1f, 0f);
                 return; // Pose was set on Restart; nothing moves until a button.
@@ -974,6 +1124,8 @@ namespace Survival.Unity
             {
                 sample = Loops(u) ? Mathf.Repeat(u.Time, length) : Mathf.Min(u.Time, length);
                 clip.SampleAnimation(u.Model, sample);
+                RestoreScales(u);
+                ApplyStaffGrip(u);
             }
 
             // In place for every clip except a death fall: attacks too, so a looping attack never slides off and snaps back.
@@ -1000,6 +1152,7 @@ namespace Survival.Unity
             // The socket is not one of the sampled bones; put its imported local pose back in case the clip sample touched it.
             HoldSocket(u);
             HoldGrips(u);
+
             if (u.Spit != null)
             {
                 var spit = u.Def.Clips[u.Clip] == "attack_spit";
@@ -1200,6 +1353,7 @@ namespace Survival.Unity
 
             return null;
         }
+
 
         private static Bounds BoundsOf(GameObject go)
         {
