@@ -23,7 +23,7 @@ File: `Assets/Survival/Unity/NewCharsPreview.cs`
 - Destroys any Animator on the prop and applies the body atlas.
 - `ApplyStaffGrip` sets the local pose after every sample. Local scale stays 1.
 
-Idle, walk, and Armada are unchanged. Thrust slash keeps the Bayonet Stab legs. The rock was the chest pitch: it leaned forward, back, forward to 42°, then yanked to 13°. Hip travel and chest pitch now share one cosine over frames 8–84, peaking at 0.36 m and 38° with no second reversal. The staff shifts with the hips; its aim is unchanged. `HoldHips` is unchanged. Films: `clips/SERAPHINE_lunge_front.mp4`, `SERAPHINE_lunge_side.mp4`, `SERAPHINE_lunge_preview.mp4`, labeled BLENDER — not Unity.
+Idle, walk, and Armada are unchanged. The staff tip on `e2652cc7` still reversed up to 9 cm between frames because its position keys were noisy. The hips now stay on one cosine and do not drift sideways, which is what `HoldHips` leaves in Unity, and the staff keeps a fixed offset from those hips. Its aim is unchanged. Films: `clips/SERAPHINE_lunge_front.mp4`, `SERAPHINE_lunge_side.mp4`, `SERAPHINE_lunge_preview.mp4`, labeled BLENDER — not Unity.
 
 `SERAPHINE_rig_rest.fbx` no longer contains the skinned spear. The 24-bone skeleton, the cape, the clip names, and the existing `.meta` GUIDs are unchanged. `SERAPHINE_staff.fbx.meta` is new. `bakeAxisConversion` is 0, the same as the rest rig, so the prop's hand-space vertices are not given a second axis bake.
 
