@@ -1001,6 +1001,17 @@ namespace Survival.Unity
         private const string StaffFile = "SERAPHINE_staff.fbx";
         private const float StaffMidMetres = 1.01f;
         private const float StaffThrustGripMetres = 0.42f;
+        // Thrust grip. The staff mesh is not centred on its own pivot: the shaft's centre
+        // line sits (-0.0635, 0.0547) m off it in the FBX's x/y, and the shaft is 2 cm in
+        // radius. For the thrust the shaft lies on the right palm, 3.0 cm out from the palm
+        // side of the hand bone and 6.0 cm along the fingers, and crosses the palm on a
+        // 35 degree diagonal (a hammer grip) so the wrist stays in line with the forearm.
+        // The tip leaves the thumb side, the same way round as idle. These numbers are
+        // printed by author_thrust_lunge.py ("UNITY thrust staff ..."); change them there
+        // (PALM_DEPTH, FINGER_REACH, RIGHT_TILT, STAFF_GRIP) and copy the new line here.
+        // X is in Unity's mirrored hand space, where the right palm faces +X.
+        private static readonly Vector3 StaffThrustLocalMetres = new Vector3(-0.0335f, -0.2257f, -0.3127f);
+        private const float StaffThrustTiltDegrees = -35f;
 
         private void AttachSeraphineStaff(Unit u, string dir)
         {
@@ -1032,8 +1043,10 @@ namespace Survival.Unity
 
         /// <summary>
         /// Every clip keeps the staff on the right hand. The thrust uses a fixed grip a
-        /// little behind the middle; the other clips use the middle. The hand's local +Z
-        /// is the tip, the same axis idle and walk already use.
+        /// little behind the middle; the other clips use the middle. Every clip points
+        /// the tip along the hand's local +Z (out of the thumb side), so her thumbs
+        /// point up the shaft. The thrust also shifts and tilts the staff so the shaft
+        /// lies diagonally on her palm (see StaffThrustLocalMetres).
         /// </summary>
         private static void ApplyStaffGrip(Unit u)
         {
@@ -1058,9 +1071,13 @@ namespace Survival.Unity
             }
 
             var unit = 1f / scale;
-            var grip = u.Def.Clips[u.Clip] == "attack_thrust_slash" ? StaffThrustGripMetres : StaffMidMetres;
-            u.Staff.localPosition = new Vector3(0f, 0f, -grip) * unit;
-            u.Staff.localRotation = Quaternion.identity;
+            var thrust = u.Def.Clips[u.Clip] == "attack_thrust_slash";
+            u.Staff.localPosition = thrust
+                ? StaffThrustLocalMetres * unit
+                : new Vector3(0f, 0f, -StaffMidMetres) * unit;
+            u.Staff.localRotation = thrust
+                ? Quaternion.Euler(StaffThrustTiltDegrees, 0f, 0f)
+                : Quaternion.identity;
             u.Staff.localScale = Vector3.one;
         }
 
