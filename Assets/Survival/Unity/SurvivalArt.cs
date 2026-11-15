@@ -23,6 +23,17 @@ namespace Survival.Unity
         private static Sprite? _ring;
         private static Sprite? _bleed;
 
+        /// <summary>
+        /// Forget the loaded sprites and textures so the next <see cref="EnsureLoaded"/> reads them again, after an
+        /// over-the-air content update overlaid new art (Ota.OtaBoot). Nothing is destroyed: the splash keeps its sprite.
+        /// </summary>
+        public static void ResetForContentUpdate()
+        {
+            _sprites = null;
+            _slices = null;
+            Textures.Clear();
+        }
+
         public static void EnsureLoaded(AppFlavorConfig flavor, ThemePackBinder pack)
         {
             if (_sprites != null)

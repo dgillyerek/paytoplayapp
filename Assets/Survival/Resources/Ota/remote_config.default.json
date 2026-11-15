@@ -1,0 +1,26 @@
+{
+  "_doc": "Baked default remote config (schema in Docs/OTA.md). Used when the CDN is unset or unreachable and nothing is cached. content_version empty = only content baked into the build.",
+  "schema": "paytoplay.remote_config",
+  "schema_version": 1,
+  "config_version": 1,
+  "app_id": "com.paytoplay.fantasykingdoma",
+  "content_version": "",
+  "content_api": 1,
+  "min_supported_version": {
+    "android": "0.1.0",
+    "ios": "0.1.0"
+  },
+  "store_links": {
+    "android": "https://play.google.com/store/apps/details?id=com.paytoplay.fantasykingdoma",
+    "ios": "https://apps.apple.com/app/id0000000000"
+  },
+  "feature_flags": {
+    "ota_content": true
+  },
+  "events": [],
+  "store_offers": [],
+  "balance": {
+    "patches": {},
+    "free_pace_check": null
+  }
+}

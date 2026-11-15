@@ -1,0 +1,143 @@
+#nullable enable
+#if SURVIVAL_ADDRESSABLES
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Survival.Domain.Ota;
+using Survival.Unity;
+using UnityEditor;
+using UnityEditor.AddressableAssets.Build;
+using UnityEditor.AddressableAssets.Settings;
+using UnityEngine;
+
+namespace Survival.Editor.Ota
+{
+    /// <summary>
+    /// Builds an over-the-air content drop (Docs/OTA.md):
+    /// 1. bakes the player assets (<see cref="PlayerBake"/>) so the drop has exactly what the build would carry;
+    /// 2. splits the baked registry into one <see cref="PlayerAssetRegistry"/> per <see cref="OtaContentGroup"/>
+    ///    (Assets/Survival/OtaBake, git-ignored) and makes each an Addressable ("ota/characters", label "ota") in its
+    ///    remote group, so a bundle carries the registry plus every model, clip, texture and raw-JSON TextAsset it lists;
+    /// 3. runs the Addressables content build into ServerData/[BuildTarget] (remote catalog + bundles) and writes
+    ///    content_manifest.json beside it. scripts/ota/publish_content.sh uploads that folder to content/[BuildTarget]/&lt;version&gt;.
+    /// CI: <c>-executeMethod Survival.Editor.Ota.OtaContentBuild.BuildFromCommandLine -buildTarget Android -contentVersion 2026.11.15-1</c>.
+    /// Content only: bundles never carry code, and new content may only use component types the shipped app already has
+    /// (otherwise raise min_supported_version and ship a store build).
+    /// </summary>
+    public static class OtaContentBuild
+    {
+        public const string OtaBakeDir = "Assets/Survival/OtaBake";
+
+        [MenuItem("Survival/OTA/Build Content (active build target)")]
+        public static void BuildMenu()
+        {
+            var ok = Build(DefaultVersion(), out var summary);
+            EditorUtility.DisplayDialog(ok ? "Survival OTA content built" : "Survival OTA content build failed", summary, "OK");
+        }
+
+        public static void BuildFromCommandLine()
+        {
+            var code = 1;
+            try
+            {
+                var args = CiAndroidBuild.ParseArgs(Environment.GetCommandLineArgs());
+                var version = args.TryGetValue("contentVersion", out var v) && v.Length > 0 ? v : DefaultVersion();
+                code = Build(version, out var summary) ? 0 : 1;
+                Debug.Log("Survival OTA content build: " + summary);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Survival OTA content build crashed: " + e);
+            }
+
+            EditorApplication.Exit(code);
+        }
+
+        public static string DefaultVersion() => DateTime.UtcNow.ToString("yyyy.MM.dd-HHmm");
+
+        public static bool Build(string contentVersion, out string summary)
+        {
+            if (!PlayerBake.Bake(out var bake))
+            {
+                summary = "Player bake had problems:\n" + bake;
+                return false;
+            }
+
+            var counts = PrepareGroups();
+            AddressableAssetSettings.CleanPlayerContent();
+            AddressableAssetSettings.BuildPlayerContent(out AddressablesPlayerBuildResult result);
+            if (!string.IsNullOrEmpty(result.Error))
+            {
+                summary = "Addressables build failed: " + result.Error;
+                return false;
+            }
+
+            var target = EditorUserBuildSettings.activeBuildTarget.ToString();
+            var outDir = Path.Combine("ServerData", target);
+            Directory.CreateDirectory(outDir);
+            var files = Directory.GetFiles(outDir, "*", SearchOption.TopDirectoryOnly).Select(Path.GetFileName).OrderBy(f => f, StringComparer.Ordinal).ToList();
+            var manifest = "{\n  \"content_version\": \"" + contentVersion + "\",\n  \"build_target\": \"" + target + "\",\n  \"content_api\": 1,\n" +
+                           "  \"unity\": \"" + Application.unityVersion + "\",\n  \"built_at\": \"" + DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ") + "\",\n" +
+                           "  \"groups\": {" + string.Join(",", counts.Select(c => "\"" + c.Key + "\": " + c.Value)) + "},\n" +
+                           "  \"files\": [" + string.Join(",", files.Select(f => "\"" + f + "\"")) + "]\n}\n";
+            File.WriteAllText(Path.Combine(outDir, "content_manifest.json"), manifest);
+            summary = "Content " + contentVersion + " for " + target + ": " + string.Join(", ", counts.Select(c => c.Key + " " + c.Value)) + " entries, " + files.Count +
+                      " files in " + outDir + ". Publish with scripts/ota/publish_content.sh " + target + " " + contentVersion + ".";
+            return true;
+        }
+
+        /// <summary>Split the baked registry into the four OTA registries and register them as Addressables. Returns entries per group.</summary>
+        public static Dictionary<string, int> PrepareGroups()
+        {
+            var settings = OtaAddressablesSetup.Ensure();
+            var baked = AssetDatabase.LoadAssetAtPath<PlayerAssetRegistry>(PlayerBake.RegistryPath) ??
+                        throw new InvalidOperationException("No player bake at " + PlayerBake.RegistryPath + "; run Survival/Player Build/Bake Player Assets.");
+            Directory.CreateDirectory(OtaBakeDir);
+            var byGroup = OtaContentGroups.All.ToDictionary(g => g, _ => ScriptableObject.CreateInstance<PlayerAssetRegistry>());
+            foreach (var e in baked.Assets)
+            {
+                byGroup[OtaContentGroups.Classify(e.Path, rawFile: false)].Assets.Add(new PlayerAssetRegistry.AssetEntry { Path = e.Path, Main = e.Main, Subs = e.Subs });
+            }
+
+            foreach (var f in baked.Files)
+            {
+                var reg = byGroup[OtaContentGroups.Classify(f.Path, rawFile: true)];
+                reg.Files.Add(new PlayerAssetRegistry.FileEntry { Path = f.Path, Data = f.Data });
+                for (var dir = Path.GetDirectoryName(f.Path)?.Replace('\\', '/'); !string.IsNullOrEmpty(dir) && dir != "Assets"; dir = Path.GetDirectoryName(dir)?.Replace('\\', '/'))
+                {
+                    if (!reg.Directories.Contains(dir!))
+                    {
+                        reg.Directories.Add(dir!);
+                    }
+                }
+            }
+
+            var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (var kv in byGroup)
+            {
+                var reg = kv.Value;
+                reg.Stamp = baked.Stamp;
+                reg.BakedAt = baked.BakedAt;
+                reg.UnityVersion = baked.UnityVersion;
+                var path = OtaBakeDir + "/" + kv.Key.ToString().ToLowerInvariant() + ".asset";
+                if (File.Exists(path))
+                {
+                    AssetDatabase.DeleteAsset(path);
+                }
+
+                AssetDatabase.CreateAsset(reg, path);
+                var group = settings.FindGroup(OtaContentGroups.GroupName(kv.Key));
+                var entry = settings.CreateOrMoveEntry(AssetDatabase.AssetPathToGUID(path), group, false, false);
+                entry.address = OtaContentGroups.Address(kv.Key);
+                entry.SetLabel(OtaContentGroups.Label, true, true, false);
+                counts[kv.Key.ToString()] = reg.Assets.Count + reg.Files.Count;
+            }
+
+            EditorUtility.SetDirty(settings);
+            AssetDatabase.SaveAssets();
+            return counts;
+        }
+    }
+}
+#endif
