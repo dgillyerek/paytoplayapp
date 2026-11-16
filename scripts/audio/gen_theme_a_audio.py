@@ -542,6 +542,7 @@ def jingle_lose():
 def sfx():
     S = {}
     # heroes
+    # sfx_lyra_shot is owned by scripts/audio/gen_lyra_magic_shot.py (in RECORDED; do not revive this thud recipe).
     blast = osc(sweep(900, 2400, 0.12)) * env_exp(0.12, 0.05) * 0.4
     shimmer = hp(noise(0.35), 3000) * env_exp(0.35, 0.09) * 0.3 + 0.25 * modes([2100, 3150, 4720], [0.12, 0.09, 0.06], [1, 0.7, 0.5], 0.35)
     S["sfx_lyra_shot"] = mix(at(0, thump(150, 42, 0.4, 0.09) * 1.2), at(0, burst(0.25, 0.04, None, 1800) * 0.9), at(0, blast), at(0.01, shimmer))
@@ -634,8 +635,9 @@ def sfx():
 
 # ---------------------------------------------------------------- write
 
-# Sounds replaced by CC0 recordings (scripts/audio/medieval_runner/, see LICENSES.md). This script must not
-# overwrite them; it now only owns the power-up and pickup files (sfx_powerup, sfx_pickup_pop).
+# Sounds replaced by CC0 recordings (scripts/audio/medieval_runner/, see LICENSES.md), plus Lyra's shot
+# (scripts/audio/gen_lyra_magic_shot.py). This script must not overwrite them; it now only owns the
+# power-up and pickup files (sfx_powerup, sfx_pickup_pop).
 RECORDED = {
     "amb_village_loop", "mus_battle_loop", "ui_tap", "ui_deny", "ui_store_open", "ui_gift_celebrate",
     "purchase_success", "collect_food", "collect_gold", "collect_resource", "build_complete", "upgrade_start",

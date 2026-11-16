@@ -13,8 +13,9 @@ def out(name, y, rms=-16, peak=-1.0, grit=0.0, hp=60):
 
 # --- squad shots ---
 out('sfx_rowan_shot.ogg', mix([(s(M+'English Longbow Shoot.wav',0.45),0,1.0),(s(M+'Scythian Recurve Arrow Pass.wav',0.5),0.05,0.55)]), -17)
-out('sfx_lyra_shot.ogg', mix([(s(M+'Spear Swing.wav',0.55,rate=0.75),0,0.9),(s(R+'spell_01.ogg',0.6,rate=0.8),0.02,0.5),
-    (lowpass(s('boulder_drop_0.ogg',0.7,rate=0.5,fade=0.3),180),0.04,1.4)]), -17, grit=0.3)
+# Lyra's shot is procedural now (bright arcane bolt). Do not rebuild it from the
+# spear-swing + boulder mix; that read as a thud. See scripts/audio/gen_lyra_magic_shot.py
+print('sfx_lyra_shot.ogg skipped (procedural: scripts/audio/gen_lyra_magic_shot.py)')
 out('sfx_oakenshield_throw.ogg', mix([(s(M+'Spear Swing.wav',0.45),0,1.0),(s(M+'Crossbow Bolt Pass.wav',0.45,rate=0.8),0.06,0.4)]), -17)
 out('sfx_enemy_projectile.ogg', mix([(s(M+'Crossbow Shoot.wav',0.45),0,1.0),(s(M+'Crossbow Bolt Passby.wav',0.4),0.05,0.4)]), -18)
 # --- hits / deaths ---
