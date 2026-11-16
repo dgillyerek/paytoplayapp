@@ -167,7 +167,7 @@ namespace Survival.Editor
         /// boxes down for followers and upgrades, beat Ironhowl at the end. Also reachable from Play's Runner button, which
         /// needs the scene in Build Settings; this entry adds it when missing.
         /// </summary>
-        [MenuItem("Survival/Runner: Walk & Fight")]
+        [MenuItem("Survival/Runner: Walk and Fight")]
         public static void OpenRunner()
         {
             if (!UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
