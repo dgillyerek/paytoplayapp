@@ -320,6 +320,7 @@
   "runner.defeat": "DEFEAT",
   "runner.retry": "Retry",
   "runner.continue": "Continue",
+  "runner.village": "Village",
   "runner.leave": "Leave",
   "runner.result.kills": "Enemies defeated",
   "runner.result.boxes": "Boxes broken",
