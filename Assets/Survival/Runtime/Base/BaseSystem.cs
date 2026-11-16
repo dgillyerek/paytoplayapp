@@ -30,10 +30,5 @@ namespace Survival.Domain.Base
 
         public IReadOnlyList<BuildingDef> Buildings { get; }
         public IReadOnlyList<BuildQueueItem> Queue => _queue;
-
-        public void EnqueueBuild(string buildingId, int seconds)
-        {
-            _queue.Add(new BuildQueueItem(SurvIds.BaseQueueBuild, buildingId, seconds));
-        }
     }
 }

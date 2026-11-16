@@ -194,8 +194,6 @@ namespace Survival.Domain.Roster
         public ClothColliderSpec[] Colliders { get; }
         public string[] ClothBoneNames { get; }
 
-        public bool IsClothBone(string boneName) => _cloth.Contains(boneName);
-
         /// <summary>Leaf name of a Unity transform path ("a/b/skirt_F_01" -> "skirt_F_01").</summary>
         public static string Leaf(string path)
         {
@@ -212,85 +210,6 @@ namespace Survival.Domain.Roster
             new ClothColliderSpec("RightShin", ClothColliderKind.Capsule, "mixamorig:RightLeg", "mixamorig:RightFoot", shin),
             new ClothColliderSpec("Hips", ClothColliderKind.Sphere, "mixamorig:Hips", "mixamorig:Hips", hips)
         };
-    }
-
-    /// <summary>
-    /// By-name humanoid mapping for the 22 mixamorig body bones (Unity HumanTrait names).
-    /// Used to reject an auto-generated avatar that mapped a cloth bone or the wrong body bone.
-    /// </summary>
-    public static class MixamoHumanMap
-    {
-        /// <summary>Human bones that must map to exactly this mixamorig bone.</summary>
-        public static readonly KeyValuePair<string, string>[] Required =
-        {
-            Pair("Hips", "mixamorig:Hips"),
-            Pair("Spine", "mixamorig:Spine"),
-            Pair("Neck", "mixamorig:Neck"),
-            Pair("Head", "mixamorig:Head"),
-            Pair("LeftUpperArm", "mixamorig:LeftArm"),
-            Pair("LeftLowerArm", "mixamorig:LeftForeArm"),
-            Pair("LeftHand", "mixamorig:LeftHand"),
-            Pair("RightUpperArm", "mixamorig:RightArm"),
-            Pair("RightLowerArm", "mixamorig:RightForeArm"),
-            Pair("RightHand", "mixamorig:RightHand"),
-            Pair("LeftUpperLeg", "mixamorig:LeftUpLeg"),
-            Pair("LeftLowerLeg", "mixamorig:LeftLeg"),
-            Pair("LeftFoot", "mixamorig:LeftFoot"),
-            Pair("RightUpperLeg", "mixamorig:RightUpLeg"),
-            Pair("RightLowerLeg", "mixamorig:RightLeg"),
-            Pair("RightFoot", "mixamorig:RightFoot")
-        };
-
-        /// <summary>Optional human bones: when mapped, they must map to one of these mixamorig bones.</summary>
-        public static readonly KeyValuePair<string, string[]>[] Optional =
-        {
-            new KeyValuePair<string, string[]>("Chest", new[] { "mixamorig:Spine1", "mixamorig:Spine2" }),
-            new KeyValuePair<string, string[]>("UpperChest", new[] { "mixamorig:Spine2" }),
-            new KeyValuePair<string, string[]>("LeftShoulder", new[] { "mixamorig:LeftShoulder" }),
-            new KeyValuePair<string, string[]>("RightShoulder", new[] { "mixamorig:RightShoulder" }),
-            new KeyValuePair<string, string[]>("LeftToes", new[] { "mixamorig:LeftToeBase" }),
-            new KeyValuePair<string, string[]>("RightToes", new[] { "mixamorig:RightToeBase" })
-        };
-
-        /// <summary>Returns null when the (humanName, boneName) mapping is a correct by-name mixamorig mapping.</summary>
-        public static string? Validate(IEnumerable<KeyValuePair<string, string>> human, Func<string, bool> isClothBone)
-        {
-            var seen = new Dictionary<string, string>(StringComparer.Ordinal);
-            foreach (var pair in human)
-            {
-                if (isClothBone(pair.Value))
-                {
-                    return "cloth bone " + pair.Value + " mapped as human " + pair.Key;
-                }
-
-                seen[pair.Key] = pair.Value;
-            }
-
-            foreach (var req in Required)
-            {
-                if (!seen.TryGetValue(req.Key, out var bone))
-                {
-                    return "human " + req.Key + " not mapped";
-                }
-
-                if (!string.Equals(bone, req.Value, StringComparison.Ordinal))
-                {
-                    return "human " + req.Key + " mapped to " + bone + ", want " + req.Value;
-                }
-            }
-
-            foreach (var opt in Optional)
-            {
-                if (seen.TryGetValue(opt.Key, out var bone) && Array.IndexOf(opt.Value, bone) < 0)
-                {
-                    return "human " + opt.Key + " mapped to " + bone;
-                }
-            }
-
-            return null;
-        }
-
-        private static KeyValuePair<string, string> Pair(string human, string bone) => new KeyValuePair<string, string>(human, bone);
     }
 
     /// <summary>Collider in world space for one solver step. Sphere when A == B.</summary>

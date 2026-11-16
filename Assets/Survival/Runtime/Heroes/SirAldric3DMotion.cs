@@ -530,16 +530,6 @@ namespace Survival.Domain.Heroes
         public const float PlayCamOrbitPitchMax = 35f;
 
         /// <summary>
-        /// Character-space grip offset (right, up, forward) after FaceWorldTop.
-        /// </summary>
-        public static void HipSheathGripLocal(out float right, out float up, out float forward)
-        {
-            right = HipSheathOutboard;
-            up = HipSheathUp;
-            forward = -HipSheathBack;
-        }
-
-        /// <summary>
         /// Character-space blade aim (right, up, forward). Dominant down + outboard.
         /// No world-left. No world-back. Unity bake blade is local +Y.
         /// </summary>

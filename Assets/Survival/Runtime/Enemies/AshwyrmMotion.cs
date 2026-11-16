@@ -53,7 +53,7 @@ namespace Survival.Domain.Enemies
         };
 
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(
-            "Ashwyrm",
+            FighterNames.Ashwyrm,
             ThemePackDir,
             RestFileName,
             RejectedMixamoFileName,

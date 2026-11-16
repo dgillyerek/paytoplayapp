@@ -81,7 +81,7 @@ namespace Survival.Domain.Enemies
         };
 
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(
-            "Vespera",
+            FighterNames.Vespera,
             ThemePackDir,
             RestFileName,
             RejectedMixamoFileName,

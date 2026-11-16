@@ -9,7 +9,7 @@ namespace Survival.Domain.Tests;
 /// </summary>
 public sealed class ThemeAProjectSettingsTests
 {
-    private static readonly string Root = FindRepoRoot();
+    private static readonly string Root = TestRepo.Root;
     private static string Settings => File.ReadAllText(Path.Combine(Root, "ProjectSettings", "ProjectSettings.asset"));
 
     private static JsonElement Flavor =>
@@ -116,16 +116,5 @@ public sealed class ThemeAProjectSettingsTests
         var b = File.ReadAllBytes(path);
         int Be(int o) => (b[o] << 24) | (b[o + 1] << 16) | (b[o + 2] << 8) | b[o + 3];
         return (Be(16), Be(20));
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "ProjectSettings", "ProjectVersion.txt")))
-        {
-            dir = dir.Parent;
-        }
-
-        return dir?.FullName ?? throw new InvalidOperationException("repo root not found");
     }
 }

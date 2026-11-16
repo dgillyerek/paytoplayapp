@@ -11,7 +11,7 @@ public sealed class VesperaNoCapeTests
     [Fact]
     public void Vespera_themepack_rest_walk_attack_are_the_nocape_fbxs()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var pack = Path.Combine(root, "Assets", VesperaMotion.ThemePackDir);
         var design = Path.Combine(root, VesperaNoCape.DesignDir.Replace('/', Path.DirectorySeparatorChar));
         var pairs = new[]
@@ -77,9 +77,9 @@ public sealed class VesperaNoCapeTests
             Assert.Contains(bone, VesperaMotion.BoneNames);
         }
 
-        var design = Path.Combine(FindRepoRoot(), VesperaNoCape.DesignDir.Replace('/', Path.DirectorySeparatorChar));
-        var work = Path.Combine(FindRepoRoot(), VesperaNoCape.OrbWorkDir.Replace('/', Path.DirectorySeparatorChar));
-        var handWork = Path.Combine(FindRepoRoot(), VesperaNoCape.HandWorkDir.Replace('/', Path.DirectorySeparatorChar));
+        var design = Path.Combine(TestRepo.Root, VesperaNoCape.DesignDir.Replace('/', Path.DirectorySeparatorChar));
+        var work = Path.Combine(TestRepo.Root, VesperaNoCape.OrbWorkDir.Replace('/', Path.DirectorySeparatorChar));
+        var handWork = Path.Combine(TestRepo.Root, VesperaNoCape.HandWorkDir.Replace('/', Path.DirectorySeparatorChar));
         using var ex = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "export.json")));
         var exported = ex.RootElement.GetProperty("bones").EnumerateArray().Select(b => b.GetString()).ToArray();
         Assert.Equal(VesperaMotion.BoneNames, exported);
@@ -119,7 +119,7 @@ public sealed class VesperaNoCapeTests
     [Fact]
     public void Vespera_right_hand_is_free_of_the_skirt_and_the_attack_goes_around_her()
     {
-        var work = Path.Combine(FindRepoRoot(), VesperaNoCape.HandWorkDir.Replace('/', Path.DirectorySeparatorChar));
+        var work = Path.Combine(TestRepo.Root, VesperaNoCape.HandWorkDir.Replace('/', Path.DirectorySeparatorChar));
 
         // Cut: the faces joining the right forearm/hand to the skirt/belt/hip were deleted, and the hand is closed.
         using var cut = JsonDocument.Parse(File.ReadAllText(Path.Combine(work, "cut.json")));
@@ -140,8 +140,8 @@ public sealed class VesperaNoCapeTests
         // 2026-10-11 rave conjure (attack from work/rave_20261011; walk/gait unchanged from work/orb_20261011): BOTH hand + forearm pieces never intersect the body (hair excluded) between the bind-pose ends,
         // the hands + lower forearms keep >= 3 cm from f2 to f34 (2.5 cm at f35, the last frame before the bind pose),
         // the hands never pass through each other, and the hands never touch her hair.
-        var orbWork = Path.Combine(FindRepoRoot(), VesperaNoCape.OrbWorkDir.Replace('/', Path.DirectorySeparatorChar));
-        var raveWork = Path.Combine(FindRepoRoot(), VesperaNoCape.SlowWorkDir.Replace('/', Path.DirectorySeparatorChar));   // 2026-10-12 slow conjure, f0-36
+        var orbWork = Path.Combine(TestRepo.Root, VesperaNoCape.OrbWorkDir.Replace('/', Path.DirectorySeparatorChar));
+        var raveWork = Path.Combine(TestRepo.Root, VesperaNoCape.SlowWorkDir.Replace('/', Path.DirectorySeparatorChar));   // 2026-10-12 slow conjure, f0-36
         using var clr = JsonDocument.Parse(File.ReadAllText(Path.Combine(raveWork, "clear_attack.json")));
         var frames = clr.RootElement.EnumerateArray().ToArray();
         Assert.Equal(VesperaAttack.LastFrame + 1, frames.Length);
@@ -222,11 +222,11 @@ public sealed class VesperaNoCapeTests
     [Fact]
     public void Vespera_actor_has_no_cloth_springs_and_no_demo_menu()
     {
-        var root = FindRepoRoot();
-        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "VesperaActor.cs"));
+        var root = TestRepo.Root;
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigActor.cs"));
         Assert.DoesNotContain("ClothSplit", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("ClothSpring", actor, StringComparison.Ordinal);
-        Assert.Contains("VesperaAttack.Spec", actor, StringComparison.Ordinal);
+        BlenderRigCastTests.AssertCast("Vespera", VesperaMotion.Spec, VesperaAttack.Spec);
         Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Runtime", "Enemies", "VesperaClothSplit.cs")));
         var orbMeta = File.ReadAllText(Path.Combine(root, "Assets", VesperaMotion.ThemePackDir, VesperaNoCape.OrbFileName + ".meta"));
         // Prop import matches what the attack driver enforces, so Play never reimports it.
@@ -248,21 +248,5 @@ public sealed class VesperaNoCapeTests
         using var md5 = MD5.Create();
         using var stream = File.OpenRead(path);
         return Convert.ToHexString(md5.ComputeHash(stream)).ToLowerInvariant();
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (Directory.Exists(Path.Combine(dir.FullName, "Assets")) && Directory.Exists(Path.Combine(dir.FullName, "tests")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new InvalidOperationException("Repo root not found.");
     }
 }

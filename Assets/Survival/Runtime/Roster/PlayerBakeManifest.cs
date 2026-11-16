@@ -182,7 +182,7 @@ namespace Survival.Domain.Roster
         {
             switch (name)
             {
-                case "Emberfang":
+                case FighterNames.Emberfang:
                 {
                     var d = EmberfangMotion.ThemePackDir;
                     var a = new List<string>
@@ -199,7 +199,7 @@ namespace Survival.Domain.Roster
                     AddTracks(a, d, EmberfangAttack.Spec);
                     return new Fighter(name, d, Dedup(a), Array.Empty<string>());
                 }
-                case "Ironhowl":
+                case FighterNames.Ironhowl:
                 {
                     var d = IronhowlMotion.ThemePackDir;
                     var a = new List<string>
@@ -217,7 +217,7 @@ namespace Survival.Domain.Roster
                     };
                     return new Fighter(name, d, Dedup(a), Array.Empty<string>());
                 }
-                case "Blightroot":
+                case FighterNames.Blightroot:
                 {
                     var d = BlightrootMotion.ThemePackDir;
                     var a = new List<string>
@@ -234,7 +234,7 @@ namespace Survival.Domain.Roster
 
                     return new Fighter(name, d, Dedup(a), Array.Empty<string>());
                 }
-                case "Sir Aldric":
+                case FighterNames.SirAldric:
                 {
                     var a = new List<string>
                     {
@@ -306,12 +306,12 @@ namespace Survival.Domain.Roster
 
             switch (name)
             {
-                case "Rowan":
+                case FighterNames.Rowan:
                     assets.Add(spec.ThemePackDir + "/" + RowanCoat.FileName);
                     assets.Add(spec.ThemePackDir + "/" + RowanCoat.TextureFolder + "/" + RowanCoat.BaseColorFile);
                     assets.Add(spec.ThemePackDir + "/" + RowanCoat.TextureFolder + "/" + RowanCoat.NormalFile);
                     break;
-                case "Bonequill":
+                case FighterNames.Bonequill:
                     assets.Add(spec.ThemePackDir + "/" + BonequillCape.FileName);
                     assets.Add(spec.ThemePackDir + "/" + BonequillCape.TextureFolder + "/" + BonequillCape.BaseColorFile);
                     assets.Add(spec.ThemePackDir + "/" + BonequillCape.TextureFolder + "/" + BonequillCape.NormalFile);
@@ -321,45 +321,48 @@ namespace Survival.Domain.Roster
             return new Fighter(name, spec.ThemePackDir, Dedup(assets), Array.Empty<string>());
         }
 
+        // The plain rigs come from the shared cast table; Rowan and Bonequill have their own actors but the same spec shape.
         private static BlenderRigSpec? SpecFor(string name)
         {
+            if (BlenderRigCast.TryFind(name, out var cast))
+            {
+                return cast.Motion;
+            }
+
             switch (name)
             {
-                case "Stormcrest": return StormcrestMotion.Spec;
-                case "Nightfang": return NightfangMotion.Spec;
-                case "Lyra": return LyraMotion.Spec;
-                case "Oakenshield": return OakenshieldMotion.Spec;
-                case "Vespera": return VesperaMotion.Spec;
-                case "Ashwyrm": return AshwyrmMotion.Spec;
-                case "Rowan": return RowanMotion.Spec;
-                case "Bonequill": return BonequillMotion.Spec;
+                case FighterNames.Rowan: return RowanMotion.Spec;
+                case FighterNames.Bonequill: return BonequillMotion.Spec;
                 default: return null;
             }
         }
 
         private static BlenderRigAttackSpec? AttackFor(string name)
         {
+            if (BlenderRigCast.TryFind(name, out var cast))
+            {
+                return cast.Attack;
+            }
+
             switch (name)
             {
-                case "Stormcrest": return StormcrestAttack.Spec;
-                case "Nightfang": return NightfangAttack.Spec;
-                case "Lyra": return LyraAttack.Spec;
-                case "Oakenshield": return OakenshieldAttack.Spec;
-                case "Vespera": return VesperaAttack.Spec;
-                case "Ashwyrm": return AshwyrmAttack.Spec;
-                case "Rowan": return RowanAttack.Spec;
-                case "Bonequill": return BonequillAttack.Spec;
+                case FighterNames.Rowan: return RowanAttack.Spec;
+                case FighterNames.Bonequill: return BonequillAttack.Spec;
                 default: return null;
             }
         }
 
         private static BlenderRigIdlePropSpec[] IdlePropsFor(string name)
         {
+            if (BlenderRigCast.TryFind(name, out var cast))
+            {
+                return cast.IdleProps ?? Array.Empty<BlenderRigIdlePropSpec>();
+            }
+
             switch (name)
             {
-                case "Lyra": return LyraMotion.IdleProps;
-                case "Rowan": return RowanAttack.IdleProps;
-                case "Bonequill": return BonequillAttack.IdleProps;
+                case FighterNames.Rowan: return RowanAttack.IdleProps;
+                case FighterNames.Bonequill: return BonequillAttack.IdleProps;
                 default: return Array.Empty<BlenderRigIdlePropSpec>();
             }
         }

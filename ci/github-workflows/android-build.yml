@@ -3,7 +3,7 @@
 # - a signed .apk for installing straight from a phone (PRs labelled phone-build, and Run workflow with format "apk"),
 #   published to a rolling GitHub prerelease.
 # IL2CPP, ARM64, target API 36, flavor applied by Assets/Survival/Editor/FlavorBuildSettings.cs.
-# Setup: docs/android-release-builds.md (Play) and docs/android-phone-builds.md (phone installs).
+# Setup: Docs/android-release-builds.md (Play) and Docs/android-phone-builds.md (phone installs).
 # Lives at .github/workflows/android-build.yml (a staged copy may sit in ci/github-workflows/ until it is moved there).
 name: Android build
 
@@ -67,7 +67,7 @@ jobs:
           done
           [ -n "$UNITY_LICENSE" ] || [ -n "$UNITY_SERIAL" ] || missing+=("UNITY_LICENSE (Personal) or UNITY_SERIAL (Plus/Pro)")
           if [ ${#missing[@]} -gt 0 ]; then
-            echo "::error::Missing repo secrets: ${missing[*]}. See docs/android-release-builds.md."
+            echo "::error::Missing repo secrets: ${missing[*]}. See Docs/android-release-builds.md."
             exit 1
           fi
           if [ "$FORMAT" = "aab" ] && [ "${{ inputs.development }}" = "true" ]; then

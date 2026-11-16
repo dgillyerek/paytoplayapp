@@ -76,28 +76,6 @@ namespace Survival.Domain.Roster
             forward = p * (reach < 0f ? 0f : reach);
         }
 
-        public static float AngleFromForwardDegrees(float dx, float dy, float dz)
-        {
-            var len = Math.Sqrt((dx * dx) + (dy * dy) + (dz * dz));
-            if (len < 1e-8)
-            {
-                return 0f;
-            }
-
-            var dot = dz / len;
-            if (dot > 1.0)
-            {
-                dot = 1.0;
-            }
-
-            if (dot < -1.0)
-            {
-                dot = -1.0;
-            }
-
-            return (float)(Math.Acos(dot) * (180.0 / Math.PI));
-        }
-
         /// <summary>
         /// Largest angle between a claw's step and the actor forward, sampled across the
         /// visible lifetime. <paramref name="actorYawDegrees"/> turns the actor so a

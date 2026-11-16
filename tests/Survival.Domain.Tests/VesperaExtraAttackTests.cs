@@ -12,7 +12,7 @@ public sealed class VesperaExtraAttackTests
     [Fact]
     public void Shadow_lash_and_hex_rain_are_baked_mixamo_clips_on_her_no_cape_rig()
     {
-        var root = ArcherExtraAttackTests.FindRepoRoot();
+        var root = TestRepo.Root;
         var design = Path.Combine(root, VesperaMotion.DesignMixamoAttacksDir);
         var sums = File.ReadAllText(Path.Combine(design, "CHECKSUMS.md5"));
         foreach (var (file, md5, pose, last) in new[]

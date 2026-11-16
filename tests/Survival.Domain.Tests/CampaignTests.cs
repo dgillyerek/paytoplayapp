@@ -497,7 +497,10 @@ public sealed class CampaignRewardsAndSaveTests
             Assert.True(strings.TryGetProperty(h.Id + ".name", out _), h.Id + ".name");
         }
 
-        var view = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SurvivalCampaignView.cs"));
+        // The campaign view and the screens split out of it (Battle flow, Kingdom Path).
+        var unity = Path.Combine(root, "Assets", "Survival", "Unity");
+        var view = string.Concat(new[] { "SurvivalCampaignView.cs", "BattleFlowScreen.cs", "RewardTrackScreen.cs" }
+            .Select(f => File.ReadAllText(Path.Combine(unity, f))));
         foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(view, "(?:S|Fmt)\\(\"(campaign\\.[^\"]+)\""))
         {
             Assert.True(strings.TryGetProperty(m.Groups[1].Value, out _), m.Groups[1].Value);

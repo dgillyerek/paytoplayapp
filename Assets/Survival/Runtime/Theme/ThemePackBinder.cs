@@ -6,8 +6,6 @@ using Survival.Domain.Serialization;
 
 namespace Survival.Domain.Theme
 {
-    public sealed record ThemeArtBinding(string ContentKey, string RelativePath);
-
     /// <summary>9-slice border in source pixels.</summary>
     public sealed record ArtSlice(float Left, float Bottom, float Right, float Top);
 

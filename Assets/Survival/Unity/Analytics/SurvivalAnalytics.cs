@@ -32,35 +32,6 @@ namespace Survival.Unity.Analytics
             _crash = null;
         }
 
-        /// <summary>Call once after boot (and after age-gate may have been answered). Emits first_open / d1 / d7 markers.</summary>
-        public static void OnSessionStart(double nowUnixSeconds)
-        {
-            // first_open: only once per install, local prefs (no device id).
-            if (!PlayerPrefs.HasKey(PrefsFirstOpenAt))
-            {
-                PlayerPrefs.SetString(PrefsFirstOpenAt, ((long)nowUnixSeconds).ToString());
-                PlayerPrefs.Save();
-                Analytics.Track(FunnelEvents.FirstOpen);
-            }
-            else if (long.TryParse(PlayerPrefs.GetString(PrefsFirstOpenAt, "0"), out var first))
-            {
-                var days = (nowUnixSeconds - first) / 86400.0;
-                if (days >= 1 && PlayerPrefs.GetInt(PrefsReturnD1, 0) == 0)
-                {
-                    PlayerPrefs.SetInt(PrefsReturnD1, 1);
-                    PlayerPrefs.Save();
-                    Analytics.Track(FunnelEvents.ReturnD1);
-                }
-
-                if (days >= 7 && PlayerPrefs.GetInt(PrefsReturnD7, 0) == 0)
-                {
-                    PlayerPrefs.SetInt(PrefsReturnD7, 1);
-                    PlayerPrefs.Save();
-                    Analytics.Track(FunnelEvents.ReturnD7);
-                }
-            }
-        }
-
         public static void AgeGateShown() => Analytics.Track(FunnelEvents.AgeGateShown);
 
         public static void AgeGateCompleted(AgeBand band) =>
@@ -103,8 +74,6 @@ namespace Survival.Unity.Analytics
                 [FunnelEvents.PropSku] = sku,
                 [FunnelEvents.PropReason] = reason,
             });
-
-        public static void ReportCrash(Exception error) => Crash.Report(error);
 
         private static IAnalytics BuildAnalytics()
         {

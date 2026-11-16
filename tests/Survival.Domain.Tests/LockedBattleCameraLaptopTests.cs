@@ -9,7 +9,7 @@ public sealed class LockedBattleCameraLaptopTests
     [Fact]
     public void Shift_left_drag_and_keys_pan_inside_the_same_field_margin()
     {
-        var camera = File.ReadAllText(Path.Combine(ArcherExtraAttackTests.FindRepoRoot(), "Assets", "Survival", "Unity", "LockedBattleCamera.cs"));
+        var camera = File.ReadAllText(Path.Combine(TestRepo.Root, "Assets", "Survival", "Unity", "LockedBattleCamera.cs"));
         // unchanged mouse controls
         Assert.Contains("middleButton", camera, StringComparison.Ordinal);
         Assert.Contains("mouse.scroll", camera, StringComparison.Ordinal);

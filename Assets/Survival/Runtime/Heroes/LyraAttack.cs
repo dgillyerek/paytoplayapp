@@ -28,7 +28,7 @@ namespace Survival.Domain.Heroes
         };
 
         public static readonly BlenderRigAttackSpec Spec = new BlenderRigAttackSpec(
-            "Lyra",
+            FighterNames.Lyra,
             FileName,
             FileMd5,
             DesignDir,

@@ -36,7 +36,6 @@ namespace Survival.Unity
     public sealed partial class SurvivalCampaignView : MonoBehaviour
     {
         public const string BattleSceneName = "BattleLocked";
-        private const int LoadingTipCount = 6;
         public const string BattleButtonName = "BattleButton";
         public const string HeroesScreenName = "HeroesScreen";
         public const string SetupScreenName = "BattleSetupScreen";
@@ -49,28 +48,28 @@ namespace Survival.Unity
 
         private const float TickSeconds = 0.25f;
         private const float SaveDelaySeconds = 1.5f;
-        private const float PanelAspect = 1037f / 1766f;
+        internal const float PanelAspect = 1037f / 1766f;
 
         private static readonly Color Dim = new Color(0.02f, 0.03f, 0.05f, 0.82f);
-        private static readonly Color HeroFrame = Rgb(CampaignArtKeys.HeroFrameRgb);
-        private static readonly Color VillainFrame = Rgb(CampaignArtKeys.VillainFrameRgb);
-        private static readonly Color HeroGlow = new Color(0.40f, 0.62f, 1f, 1f);
-        private static readonly Color VillainGlow = new Color(0.72f, 0.42f, 1f, 1f);
-        private static readonly Color Disabled = new Color(0.30f, 0.31f, 0.34f, 1f);
-        private static readonly Color FreeGreen = new Color(0.30f, 0.82f, 0.38f, 1f);
+        internal static readonly Color HeroFrame = Rgb(CampaignArtKeys.HeroFrameRgb);
+        internal static readonly Color VillainFrame = Rgb(CampaignArtKeys.VillainFrameRgb);
+        internal static readonly Color HeroGlow = new Color(0.40f, 0.62f, 1f, 1f);
+        internal static readonly Color VillainGlow = new Color(0.72f, 0.42f, 1f, 1f);
+        internal static readonly Color Disabled = new Color(0.30f, 0.31f, 0.34f, 1f);
+        internal static readonly Color FreeGreen = new Color(0.30f, 0.82f, 0.38f, 1f);
         private static readonly Color ShortRed = new Color(1f, 0.30f, 0.26f, 1f);
-        private static readonly Color Warn = new Color(1f, 0.55f, 0.45f, 1f);
+        internal static readonly Color Warn = new Color(1f, 0.55f, 0.45f, 1f);
         private static readonly Color StarOn = new Color(1f, 0.82f, 0.25f, 1f);
         private static readonly Color StarOff = new Color(0.35f, 0.33f, 0.30f, 0.9f);
-        private static readonly Color ShardPurple = new Color(0.72f, 0.52f, 1f, 1f);
+        internal static readonly Color ShardPurple = new Color(0.72f, 0.52f, 1f, 1f);
 
         private SurvivalPlayView? _play;
-        private SurvivalSession? _session;
-        private SurvivalHookView? _hook;
-        private RectTransform? _overlay;
-        private GameObject? _screen;
+        internal SurvivalSession? _session;
+        internal SurvivalHookView? _hook;
+        internal RectTransform? _overlay;
+        internal GameObject? _screen;
         private GameObject? _sheet;
-        private Action? _refresh;
+        internal Action? _refresh;
         private Action? _sheetRefresh;
         private Image? _battleBadge;
         private Image? _heroesBadge;
@@ -80,13 +79,11 @@ namespace Survival.Unity
         private bool _bulkFree;
         private float _tick;
         private float _saveIn = -1f;
-        private bool _inBattle;
-        private int _battleTrips;
-        private bool _foesTab;
+        internal bool _inBattle;
+        internal bool _foesTab;
         private string _selected = "";
-        private BattleSetup? _setup;
-        private readonly List<string> _lastLineupHeroes = new List<string>();
-        private readonly List<(string Title, Dictionary<string, int> Rows)> _deferred = new List<(string, Dictionary<string, int>)>();
+        internal BattleSetup? _setup;
+        internal readonly List<(string Title, Dictionary<string, int> Rows)> _deferred = new List<(string, Dictionary<string, int>)>();
 
         public CampaignSession? Campaign { get; private set; }
 
@@ -96,7 +93,7 @@ namespace Survival.Unity
         /// <summary>The Kingdom Path reward track (reward_track.json + store.reward_track); null when the file or the hook store is missing.</summary>
         public RewardTrack? Track { get; private set; }
 
-        private int _trackPage = -1;
+        private RewardTrackScreen? _rewardTrack;
 
         public static string SavePath => Path.Combine(Application.persistentDataPath, CampaignSave.FileName);
 
@@ -351,7 +348,7 @@ namespace Survival.Unity
             StartCoroutine(Breathe(rt));
         }
 
-        private static IEnumerator Breathe(RectTransform rt)
+        internal static IEnumerator Breathe(RectTransform rt)
         {
             var t = 0f;
             while (rt != null)
@@ -415,7 +412,7 @@ namespace Survival.Unity
             }
         }
 
-        private void RefreshBadges()
+        internal void RefreshBadges()
         {
             if (Campaign == null)
             {
@@ -595,7 +592,7 @@ namespace Survival.Unity
             SaveNow();
         }
 
-        private void Celebrate(string title, Dictionary<string, int> rows)
+        internal void Celebrate(string title, Dictionary<string, int> rows)
         {
             if (_inBattle)
             {
@@ -608,7 +605,7 @@ namespace Survival.Unity
 
         // ---------- screens ----------
 
-        private RectTransform OpenScreen(string name, string title)
+        internal RectTransform OpenScreen(string name, string title)
         {
             CloseSheet();
             CloseScreen();
@@ -636,7 +633,7 @@ namespace Survival.Unity
             }
         }
 
-        private RectTransform OpenSheet(string name, string title, float height)
+        internal RectTransform OpenSheet(string name, string title, float height)
         {
             CloseSheet();
             var dim = SurvivalVisuals.Button(_overlay!, name, Dim);
@@ -652,7 +649,7 @@ namespace Survival.Unity
             return panel.rectTransform;
         }
 
-        private void CloseSheet()
+        internal void CloseSheet()
         {
             _sheetRefresh = null;
             if (_sheet != null)
@@ -1500,609 +1497,9 @@ namespace Survival.Unity
             return pill;
         }
 
-        private const int TrackRowsPerPage = 6;
-
-        /// <summary>
-        /// The Kingdom Path sheet: three columns per milestone (FREE, PREMIUM $2.99, ROYAL $3.99 which opens both paid
-        /// columns; a Premium owner sees the $0.99 upgrade). Reached cells pulse CLAIM, locked ones show a lock and the price,
-        /// buying late opens every reached row. Sandbox purchases only (no real billing in this build).
-        /// </summary>
-        public void OpenRewardTrack()
-        {
-            if (Campaign == null || Track == null || _overlay == null)
-            {
-                return;
-            }
-
-            var track = Track;
-            var rows = track.Catalog.Rows;
-            var pages = Mathf.Max(1, (rows.Count + TrackRowsPerPage - 1) / TrackRowsPerPage);
-            if (_trackPage < 0)
-            {
-                var next = 0;
-                while (next < rows.Count && track.Progress >= rows[next].Level)
-                {
-                    next++;
-                }
-
-                _trackPage = Mathf.Clamp((next == 0 ? 0 : next - 1) / TrackRowsPerPage, 0, pages - 1);
-            }
-
-            _trackPage = Mathf.Clamp(_trackPage, 0, pages - 1);
-            var panel = OpenSheet(RewardTrackSheetName, S("reward_track.title", track.Catalog.Title), 0.90f);
-            var progress = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Progress", Fmt("reward_track.progress", "Runner levels beaten: {0}", track.Progress), 20, TextAnchor.MiddleCenter, SurvivalVisuals.Reward), 1.5f);
-            HookSkin.Box(progress.rectTransform, 0.03f, 0.85f, 0.97f, 0.88f);
-            var sandbox = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Sandbox", S("store.sandbox", "SANDBOX \u00b7 no real charge"), 16, TextAnchor.MiddleCenter, Warn), 1.5f);
-            HookSkin.Box(sandbox.rectTransform, 0f, 0.828f, 1f, 0.85f);
-
-            // Header: the three column titles; the paid ones carry their buy button.
-            var colX = new[] { 0.17f, 0.445f, 0.72f };
-            const float colW = 0.265f;
-            TrackBackdrop(panel, colX, colW);
-            HeaderCell(panel, "HeadFree", colX[0], colW, S("reward_track.free", "FREE"), FreeGreen, null, null, null);
-            HeaderCell(panel, "HeadPremium", colX[1], colW, S("reward_track.premium", "PREMIUM"), SurvivalVisuals.Gold,
-                track.PremiumOfferNow is { } p ? track.PriceLabel(p) : null, track.Owns(TrackColumn.Premium) ? S("reward_track.owned", "OWNED") : null,
-                () => BuyTrack(track.BuyPremium, S("reward_track.premium", "PREMIUM")));
-            HeaderCell(panel, "HeadRoyal", colX[2], colW, S("reward_track.royal", "ROYAL"), RoyalBlue,
-                track.RoyalOfferNow is { } r ? track.PriceLabel(r) + (track.Tier == TrackTier.Premium ? " " + S("reward_track.upgrade", "UPGRADE") : "") : null,
-                track.Owns(TrackColumn.Royal) ? S("reward_track.owned", "OWNED") : null,
-                () => BuyTrack(track.BuyRoyal, S("reward_track.royal", "ROYAL")));
-            var pitch = track.Tier == TrackTier.None ? S("reward_track.pitch_royal", "Royal opens PREMIUM + ROYAL") : "";
-            var pitchText = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Pitch", pitch, 15, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.2f);
-            HookSkin.Box(pitchText.rectTransform, colX[1], 0.675f, colX[2] + colW, 0.70f);
-
-            var top = 0.67f;
-            var h = (top - 0.17f) / TrackRowsPerPage;
-            TrackSpine(panel, track, rows, top, h);
-            for (var i = 0; i < TrackRowsPerPage; i++)
-            {
-                var idx = (_trackPage * TrackRowsPerPage) + i;
-                if (idx >= rows.Count)
-                {
-                    break;
-                }
-
-                var row = rows[idx];
-                var y1 = top - (i * h);
-                var reached = track.Progress >= row.Level;
-                var plate = TrackMedallion(panel, row.Level, reached, 0.03f, y1 - h + 0.006f, 0.165f, y1);
-                var lvl = HookSkin.Outlined(SurvivalVisuals.Text(plate, "L", Fmt("reward_track.level", "LV\n{0}", row.Level), 22, TextAnchor.MiddleCenter, reached ? SurvivalVisuals.Gold : SurvivalVisuals.Mute), 1.5f);
-                lvl.fontStyle = FontStyle.Bold;
-                lvl.raycastTarget = false;
-                SurvivalVisuals.Stretch(lvl.rectTransform);
-                for (var c = 0; c < 3; c++)
-                {
-                    TrackCell(panel, track, row, (TrackColumn)c, colX[c], y1 - h + 0.006f, colX[c] + colW, y1);
-                }
-            }
-
-            var prev = SheetButton(panel, "Prev", HookArtKeys.ButtonBlue, HeroFrame, 0.03f, 0.10f, 0.20f, 0.155f, 22, out var prevBtn);
-            prev.text = "\u25C0";
-            Wire(prevBtn, () =>
-            {
-                _trackPage = Mathf.Max(0, _trackPage - 1);
-                OpenRewardTrack();
-            });
-            var pageText = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Page", (_trackPage + 1) + " / " + pages, 18, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.2f);
-            HookSkin.Box(pageText.rectTransform, 0.20f, 0.10f, 0.30f, 0.155f);
-            var nextB = SheetButton(panel, "Next", HookArtKeys.ButtonBlue, HeroFrame, 0.30f, 0.10f, 0.47f, 0.155f, 22, out var nextBtn);
-            nextB.text = "\u25B6";
-            Wire(nextBtn, () =>
-            {
-                _trackPage = Mathf.Min(pages - 1, _trackPage + 1);
-                OpenRewardTrack();
-            });
-            var n = track.ClaimableCount();
-            var all = SheetButton(panel, "ClaimAll", n > 0 ? HookArtKeys.ButtonGreen : HookArtKeys.ButtonBlue, n > 0 ? FreeGreen : Disabled, 0.50f, 0.10f, 0.97f, 0.155f, 22, out var allBtn);
-            all.text = n > 0 ? Fmt("reward_track.claim_all", "CLAIM ALL ({0})", n) : S("reward_track.nothing", "Nothing to claim");
-            if (n > 0)
-            {
-                StartCoroutine(Breathe(allBtn.GetComponent<RectTransform>()));
-            }
-
-            Wire(allBtn, () =>
-            {
-                var got = track.ClaimAll();
-                if (got.Count > 0)
-                {
-                    Celebrate(S("reward_track.claimed", "Rewards claimed!"), TrackRewards(got));
-                    SaveNow();
-                }
-
-                OpenRewardTrack();
-                _refresh?.Invoke();
-            });
-
-            var close = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.30f, 0.02f, 0.70f, 0.085f, 24, out var closeBtn);
-            close.text = S("hook.close", "Close");
-            Wire(closeBtn, () =>
-            {
-                _trackPage = -1;
-                CloseSheet();
-            });
-
-            // Gold filigree over the whole sheet, last so it sits on top (no raycasts).
-            var frame = TrackDeco(panel, "GoldFrame", "frame_gold", 0f, 0f, 1f, 1f, Color.white, 0.55f);
-            if (frame == null)
-            {
-                Ornaments.Frame(panel, Ornaments.Gold, 4f);
-            }
-        }
-
-        private static readonly Color RoyalBlue = new Color(0.20f, 0.36f, 0.85f, 1f);
-
-        private static readonly string[] TrackColArt = { "free", "premium", "royal" };
-
-        private static Color TrackRarity(TrackColumn col) => col switch
-        {
-            TrackColumn.Royal => new Color(0.86f, 0.42f, 1f, 1f),
-            TrackColumn.Premium => new Color(0.40f, 0.70f, 1f, 1f),
-            _ => new Color(1f, 0.86f, 0.62f, 1f)
-        };
-
-        /// <summary>Atlas sprite on a box (sliced when the atlas gives a border); null when the pack has no atlas.</summary>
-        private static Image? TrackDeco(Transform parent, string name, string art, float x0, float y0, float x1, float y1, Color tint, float borderScale = 0.5f)
-        {
-            var sprite = SurvivalArt.Get(HookArtKeys.Track(art));
-            if (sprite == null)
-            {
-                return null;
-            }
-
-            var img = SurvivalVisuals.Image(parent, name, tint, sprite);
-            img.raycastTarget = false;
-            HookSkin.ApplySliced(img, borderScale);
-            HookSkin.Box(img.rectTransform, x0, y0, x1, y1);
-            return img;
-        }
-
-        /// <summary>Atlas sprite of a fixed reference size centred on an anchor point.</summary>
-        private static Image? TrackSprite(Transform parent, string name, string art, float ax, float ay, float w, float h, Color tint)
-        {
-            var sprite = SurvivalArt.Get(HookArtKeys.Track(art));
-            if (sprite == null)
-            {
-                return null;
-            }
-
-            var img = SurvivalVisuals.Image(parent, name, tint, sprite);
-            img.raycastTarget = false;
-            img.preserveAspect = true;
-            img.rectTransform.anchorMin = img.rectTransform.anchorMax = new Vector2(ax, ay);
-            img.rectTransform.sizeDelta = new Vector2(w, h);
-            return img;
-        }
-
-        /// <summary>Parchment sheet, stone milestone lane, column skins and the crowned crest over the title.</summary>
-        private void TrackBackdrop(RectTransform panel, float[] colX, float colW)
-        {
-            var parchment = TrackDeco(panel, "Parchment", "parchment", 0.012f, 0.008f, 0.988f, 0.992f, Color.white);
-            if (parchment != null)
-            {
-                parchment.rectTransform.SetSiblingIndex(0);
-            }
-            else
-            {
-                Ornaments.Grain(panel, new Color(1f, 0.92f, 0.75f, 0.25f)).rectTransform.SetSiblingIndex(0);
-            }
-
-            TrackDeco(panel, "StoneLane", "stone", 0.025f, 0.165f, 0.165f, 0.675f, new Color(1f, 1f, 1f, 0.92f));
-            for (var c = 0; c < 3; c++)
-            {
-                TrackDeco(panel, "Column_" + TrackColArt[c], "col_" + TrackColArt[c], colX[c] - 0.006f, 0.165f, colX[c] + colW - 0.004f, 0.832f, new Color(1f, 1f, 1f, 0.95f), 0.5f);
-            }
-
-            var crest = TrackSprite(panel, "KingdomCrest", "crest_kingdom", 0.5f, 1f, 150f, 150f, Color.white);
-            if (crest != null)
-            {
-                crest.rectTransform.anchoredPosition = new Vector2(0f, 62f);
-                var glow = HookSkin.Glow(crest.transform, "Glow", new Color(1f, 0.82f, 0.4f, 0.55f));
-                glow.raycastTarget = false;
-                glow.rectTransform.SetAsFirstSibling();
-                SurvivalVisuals.Stretch(glow.rectTransform);
-                glow.rectTransform.offsetMin = new Vector2(-40f, -40f);
-                glow.rectTransform.offsetMax = new Vector2(40f, 40f);
-            }
-        }
-
-        /// <summary>The road the milestones sit on: a dim stone path, gold-lit up to the player's progress.</summary>
-        private void TrackSpine(RectTransform panel, RewardTrack track, IReadOnlyList<TrackRow> rows, float top, float h)
-        {
-            const float x0 = 0.072f;
-            const float x1 = 0.123f;
-            var first = _trackPage * TrackRowsPerPage;
-            var shown = Mathf.Min(TrackRowsPerPage, rows.Count - first);
-            if (shown <= 0)
-            {
-                return;
-            }
-
-            var yTop = top - (h * 0.5f);
-            var yBot = top - ((shown - 0.5f) * h);
-            TrackDeco(panel, "Road", "road", x0, yBot, x1, yTop, new Color(0.62f, 0.60f, 0.58f, 1f));
-            var lit = 0;
-            while (lit < shown && track.Progress >= rows[first + lit].Level)
-            {
-                lit++;
-            }
-
-            if (lit > 0)
-            {
-                var litBot = lit >= shown ? yBot : top - ((lit - 0.5f) * h);
-                TrackDeco(panel, "RoadLit", "road", x0, litBot, x1, yTop, new Color(1f, 0.86f, 0.42f, 1f));
-            }
-        }
-
-        /// <summary>Level medallion (gold when reached, iron when not); returns the host for the level text.</summary>
-        private RectTransform TrackMedallion(RectTransform panel, int level, bool reached, float x0, float y0, float x1, float y1)
-        {
-            var host = new GameObject("Milestone_" + level, typeof(RectTransform)).GetComponent<RectTransform>();
-            host.SetParent(panel, false);
-            HookSkin.Box(host, x0, y0, x1, y1);
-            var med = TrackSprite(host, "Medallion", reached ? "medallion_on" : "medallion_off", 0.5f, 0.5f, 118f, 118f, Color.white);
-            if (med == null)
-            {
-                var plate = HookSkin.Panel(host, "Plate", HookArtKeys.Plate, reached ? SurvivalVisuals.RowFill : HeroFrame, 0.45f);
-                plate.raycastTarget = false;
-                SurvivalVisuals.Stretch(plate.rectTransform);
-                return host;
-            }
-
-            if (reached)
-            {
-                var glow = HookSkin.Glow(host, "Glow", new Color(1f, 0.80f, 0.35f, 0.5f));
-                glow.raycastTarget = false;
-                glow.rectTransform.anchorMin = glow.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-                glow.rectTransform.sizeDelta = new Vector2(170f, 170f);
-                glow.rectTransform.SetAsFirstSibling();
-            }
-
-            return med.rectTransform;
-        }
-
-        private void HeaderCell(RectTransform panel, string name, float x0, float w, string title, Color color, string? price, string? owned, Action? buy)
-        {
-            var col = name == "HeadRoyal" ? 2 : name == "HeadPremium" ? 1 : 0;
-            var head = HookSkin.Panel(panel, name, HookArtKeys.Plate, new Color(color.r * 0.45f, color.g * 0.45f, color.b * 0.45f, 1f), 0.45f);
-            HookSkin.Box(head.rectTransform, x0, 0.705f, x0 + w - 0.01f, 0.825f);
-            if (SurvivalArt.Get(HookArtKeys.Track("cell_" + TrackColArt[col])) is { } skin)
-            {
-                head.sprite = skin;
-                head.color = Color.white;
-                HookSkin.ApplySliced(head, 0.5f);
-            }
-
-            // Column ribbon with the title, and its crest (the Royal one is crowned).
-            var ribbon = TrackDeco(head.transform, "Ribbon", col == 2 ? "ribbon_crimson" : col == 1 ? "ribbon_blue" : "ribbon_stone", -0.06f, 0.50f, 1.06f, 1.02f, Color.white, 0.4f);
-            var crest = TrackSprite(head.transform, "Crest", "crest_" + TrackColArt[col], 0.06f, 0.78f, 62f, 62f, Color.white);
-            if (col == 2 && crest != null)
-            {
-                Ornaments.Sparkles(crest.rectTransform, 3, new Color(1f, 0.9f, 0.6f, 1f));
-            }
-
-            var t = HookSkin.Outlined(SurvivalVisuals.Text(ribbon != null ? ribbon.transform : head.transform, "T", title, 24, TextAnchor.MiddleCenter, ribbon != null ? SurvivalVisuals.Cream : color), 2f);
-            t.fontStyle = FontStyle.Bold;
-            t.raycastTarget = false;
-            if (ribbon != null)
-            {
-                HookSkin.Box(t.rectTransform, 0.12f, 0.12f, 0.88f, 0.92f);
-            }
-            else
-            {
-                HookSkin.Box(t.rectTransform, 0f, 0.52f, 1f, 1f);
-            }
-
-            if (price != null && buy != null)
-            {
-                var label = SheetButton((RectTransform)head.transform, "Buy", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.06f, 0.06f, 0.94f, 0.50f, 20, out var btn);
-                label.text = price;
-                Wire(btn, buy);
-                Ornaments.Shine(btn.GetComponent<RectTransform>(), 3.2f);
-            }
-            else
-            {
-                var sub = HookSkin.Outlined(SurvivalVisuals.Text(head.transform, "Sub", owned ?? S("reward_track.everyone", "EVERYONE"), 18, TextAnchor.MiddleCenter, owned != null ? FreeGreen : SurvivalVisuals.Cream), 1.5f);
-                sub.fontStyle = FontStyle.Bold;
-                HookSkin.Box(sub.rectTransform, 0f, 0.06f, 1f, 0.50f);
-            }
-        }
-
-        private void TrackCell(RectTransform panel, RewardTrack track, TrackRow row, TrackColumn col, float x0, float y0, float x1, float y1)
-        {
-            var state = track.State(row, col);
-            var fill = state switch
-            {
-                TrackCellState.Claimable => new Color(0.16f, 0.42f, 0.20f, 1f),
-                TrackCellState.Claimed => new Color(0.16f, 0.17f, 0.20f, 1f),
-                TrackCellState.Locked => new Color(0.12f, 0.14f, 0.24f, 1f),
-                _ => SurvivalVisuals.RowFill
-            };
-            var cell = HookSkin.Panel(panel, "Cell_" + row.Level + "_" + col, HookArtKeys.Plate, fill, 0.45f);
-            HookSkin.Box(cell.rectTransform, x0 + 0.004f, y0 + 0.003f, x1 - 0.014f, y1 - 0.003f);
-            var art = state == TrackCellState.Claimed ? "cell_claimed" : "cell_" + TrackColArt[(int)col];
-            if (SurvivalArt.Get(HookArtKeys.Track(art)) is { } skin)
-            {
-                cell.sprite = skin;
-                cell.color = state == TrackCellState.Locked ? new Color(0.62f, 0.62f, 0.68f, 1f) : Color.white;
-                HookSkin.ApplySliced(cell, 0.45f);
-            }
-            else if (state == TrackCellState.Claimed || state == TrackCellState.Locked)
-            {
-                cell.color = new Color(cell.color.r * 0.75f, cell.color.g * 0.75f, cell.color.b * 0.75f, 1f);
-            }
-
-            var crt = cell.rectTransform;
-            TrackRewardIcons(crt, row.Rewards(col), col, state);
-
-            switch (state)
-            {
-                case TrackCellState.Claimable:
-                {
-                    // Claimables shine: rarity glow pulse, light sweep, twinkles.
-                    Ornaments.Shine(crt, 2.4f);
-                    Ornaments.Sparkles(crt, 4, new Color(1f, 0.95f, 0.7f, 1f));
-                    var label = SheetButton(crt, "Claim", HookArtKeys.ButtonGreen, FreeGreen, 0.10f, 0.05f, 0.90f, 0.40f, 18, out var btn);
-                    label.text = S("reward_track.claim", "CLAIM");
-                    var rt = btn.GetComponent<RectTransform>();
-                    StartCoroutine(Breathe(rt));
-                    var level = row.Level;
-                    Wire(btn, () =>
-                    {
-                        if (track.Claim(level, col) is { } got)
-                        {
-                            Juice(rt);
-                            ClaimBurst(crt, TrackRarity(col));
-                            Celebrate(Fmt("reward_track.cell_claimed", "Level {0} reward!", level), TrackRewards(got));
-                            SaveNow();
-                        }
-
-                        OpenRewardTrack();
-                        _refresh?.Invoke();
-                    });
-                    break;
-                }
-
-                case TrackCellState.Locked:
-                {
-                    // Chained shut with a padlock until the column is bought.
-                    var veil = SurvivalVisuals.Image(crt, "Veil", new Color(0.03f, 0.04f, 0.10f, 0.30f));
-                    veil.raycastTarget = false;
-                    SurvivalVisuals.Stretch(veil.rectTransform);
-                    TrackDeco(crt, "Chains", "chains", 0.02f, 0.30f, 0.98f, 0.98f, new Color(1f, 1f, 1f, 0.9f));
-                    TrackSprite(crt, "Padlock", "padlock", 0.87f, 0.80f, 40f, 40f, Color.white);
-                    var offer = col == TrackColumn.Premium ? track.PremiumOfferNow ?? track.RoyalOfferNow : track.RoyalOfferNow;
-                    var label = SheetButton(crt, "Unlock", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.10f, 0.05f, 0.90f, 0.40f, 17, out var btn);
-                    label.text = S("reward_track.unlock", "UNLOCK") + " " + (offer != null ? track.PriceLabel(offer) : "");
-                    Wire(btn, () => BuyTrack(col == TrackColumn.Premium && track.PremiumOfferNow != null ? track.BuyPremium : track.BuyRoyal,
-                        col == TrackColumn.Premium ? S("reward_track.premium", "PREMIUM") : S("reward_track.royal", "ROYAL")));
-                    break;
-                }
-
-                default:
-                {
-                    if (state == TrackCellState.Claimed)
-                    {
-                        TrackSprite(crt, "Check", "check", 0.86f, 0.80f, 34f, 34f, Color.white);
-                    }
-
-                    var mark = HookSkin.Outlined(SurvivalVisuals.Text(crt, "State",
-                        state == TrackCellState.Claimed ? S("reward_track.done", "CLAIMED") : Fmt("reward_track.at", "at LV {0}", row.Level),
-                        16, TextAnchor.MiddleCenter, state == TrackCellState.Claimed ? FreeGreen : SurvivalVisuals.Mute), 1.2f);
-                    mark.fontStyle = FontStyle.Bold;
-                    mark.raycastTarget = false;
-                    HookSkin.Box(mark.rectTransform, 0.03f, 0.05f, 0.97f, 0.40f);
-                    break;
-                }
-            }
-        }
-
-        /// <summary>Atlas sprite name for a reward id (painted/procedural ResIcon is the fallback).</summary>
-        private static string? TrackIconArt(string id) => id switch
-        {
-            "res.soft" => "icon_coin",
-            "res.food" => "icon_wheat",
-            "res.hard" => "icon_gem",
-            "res.hero_xp" => "icon_tome",
-            "res.runner_boost" => "icon_banner",
-            "res.speedup_m" => "icon_hourglass",
-            _ => null
-        };
-
-        /// <summary>Up to two reward icons with rarity glow and a compact amount; hero shards show the hero's face in a crystal.</summary>
-        private void TrackRewardIcons(RectTransform cell, IReadOnlyDictionary<string, int> grants, TrackColumn col, TrackCellState state)
-        {
-            var n = Mathf.Min(2, grants.Count);
-            var i = 0;
-            var dim = state == TrackCellState.Claimed ? new Color(0.6f, 0.6f, 0.6f, 0.8f) : Color.white;
-            foreach (var pair in grants)
-            {
-                if (i >= n)
-                {
-                    break;
-                }
-
-                var cx = n == 1 ? 0.5f : (i == 0 ? 0.28f : 0.72f);
-                var slot = new GameObject("Reward" + i, typeof(RectTransform)).GetComponent<RectTransform>();
-                slot.SetParent(cell, false);
-                HookSkin.Box(slot, cx - 0.22f, 0.40f, cx + 0.22f, 0.97f);
-                if (state != TrackCellState.Claimed)
-                {
-                    var rarity = TrackRarity(col);
-                    var glow = HookSkin.Glow(slot, "Glow", new Color(rarity.r, rarity.g, rarity.b, state == TrackCellState.Claimable ? 0.85f : 0.45f));
-                    glow.raycastTarget = false;
-                    glow.rectTransform.anchorMin = glow.rectTransform.anchorMax = new Vector2(0.5f, 0.56f);
-                    glow.rectTransform.sizeDelta = new Vector2(96f, 96f);
-                    if (state == TrackCellState.Claimable)
-                    {
-                        StartCoroutine(Breathe(glow.rectTransform));
-                    }
-                }
-
-                var shard = pair.Key.StartsWith(RewardTrackCatalog.ShardPrefix, StringComparison.Ordinal) ? pair.Key.Substring(RewardTrackCatalog.ShardPrefix.Length) : null;
-                Image? icon;
-                if (shard != null)
-                {
-                    icon = TrackShard(slot, shard, dim);
-                }
-                else if (TrackIconArt(pair.Key) is { } artName && TrackSprite(slot, "Icon", artName, 0.5f, 0.58f, 58f, 58f, dim) is { } atlasIcon)
-                {
-                    icon = atlasIcon;
-                }
-                else
-                {
-                    icon = HookSkin.ResIcon(slot, "Icon", pair.Key, SurvivalVisuals.Gold, "+");
-                    icon.raycastTarget = false;
-                    icon.rectTransform.anchorMin = icon.rectTransform.anchorMax = new Vector2(0.5f, 0.58f);
-                    icon.rectTransform.sizeDelta = new Vector2(54f, 54f);
-                }
-
-                var amount = HookSkin.Outlined(SurvivalVisuals.Text(slot, "Amount", "x" + ChipWallet.FormatCompact(pair.Value), 17, TextAnchor.MiddleCenter,
-                    state == TrackCellState.Claimed ? SurvivalVisuals.Mute : SurvivalVisuals.Reward), 1.4f);
-                amount.fontStyle = FontStyle.Bold;
-                amount.raycastTarget = false;
-                HookSkin.Box(amount.rectTransform, -0.2f, 0f, 1.2f, 0.30f);
-                i++;
-            }
-
-            if (grants.Count > n)
-            {
-                var more = HookSkin.Outlined(SurvivalVisuals.Text(cell, "More", "+" + (grants.Count - n), 14, TextAnchor.UpperRight, SurvivalVisuals.Cream), 1.2f);
-                more.raycastTarget = false;
-                HookSkin.Box(more.rectTransform, 0.6f, 0.80f, 0.95f, 0.97f);
-            }
-        }
-
-        /// <summary>Hero shard: the hero's portrait masked into a crystal frame.</summary>
-        private Image? TrackShard(RectTransform slot, string heroId, Color tint)
-        {
-            var mask = TrackSprite(slot, "ShardFace", "shard_mask", 0.5f, 0.58f, 60f, 60f, Color.white);
-            if (mask == null)
-            {
-                return HookSkin.ResIcon(slot, "Icon", "shard." + heroId, SurvivalVisuals.Gold, "+");
-            }
-
-            mask.gameObject.AddComponent<Mask>().showMaskGraphic = false;
-            var def = Campaign?.Catalog.Hero(heroId);
-            if (def != null && SurvivalArt.Get(def.PortraitKey) is { } face)
-            {
-                var img = SurvivalVisuals.Image(mask.transform, "Face", tint, face);
-                img.raycastTarget = false;
-                img.preserveAspect = true;
-                SurvivalVisuals.Stretch(img.rectTransform);
-            }
-
-            return TrackSprite(slot, "ShardFrame", "shard_frame", 0.5f, 0.58f, 60f, 60f, tint);
-        }
-
-        /// <summary>Claim celebration on the overlay: rotating light rays, a ring of sparkles, all fading out.</summary>
-        private void ClaimBurst(RectTransform cell, Color tint)
-        {
-            if (_overlay == null || SurvivalArt.Get(HookArtKeys.Track("burst")) is not { } rays)
-            {
-                return;
-            }
-
-            var host = new GameObject("TrackClaimBurst", typeof(RectTransform)).GetComponent<RectTransform>();
-            host.SetParent(_overlay, false);
-            host.position = cell.position;
-            host.sizeDelta = new Vector2(10f, 10f);
-            var burst = SurvivalVisuals.Image(host, "Rays", new Color(tint.r, tint.g, tint.b, 0.9f), rays);
-            burst.raycastTarget = false;
-            burst.rectTransform.sizeDelta = new Vector2(320f, 320f);
-            var sparks = new List<RectTransform>();
-            for (var k = 0; k < 8 && SurvivalArt.Get(HookArtKeys.Track("sparkle")) is { } sp; k++)
-            {
-                var s = SurvivalVisuals.Image(host, "Spark" + k, Color.white, sp);
-                s.raycastTarget = false;
-                s.rectTransform.sizeDelta = new Vector2(34f, 34f);
-                sparks.Add(s.rectTransform);
-            }
-
-            StartCoroutine(BurstRoutine(host, burst, sparks));
-        }
-
-        private static IEnumerator BurstRoutine(RectTransform host, Image burst, List<RectTransform> sparks)
-        {
-            const float dur = 0.9f;
-            var t = 0f;
-            while (host != null && t < dur)
-            {
-                t += Time.unscaledDeltaTime;
-                var u = Mathf.Clamp01(t / dur);
-                var ease = 1f - ((1f - u) * (1f - u));
-                burst.rectTransform.localScale = Vector3.one * Mathf.Lerp(0.3f, 1.3f, ease);
-                burst.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -120f * u);
-                var c = burst.color;
-                burst.color = new Color(c.r, c.g, c.b, 0.9f * (1f - u));
-                for (var k = 0; k < sparks.Count; k++)
-                {
-                    var a = (k / (float)sparks.Count * Mathf.PI * 2f) + u;
-                    sparks[k].anchoredPosition = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * (40f + 150f * ease);
-                    sparks[k].localScale = Vector3.one * (1f - (u * 0.7f));
-                }
-
-                yield return null;
-            }
-
-            if (host != null)
-            {
-                Destroy(host.gameObject);
-            }
-        }
-
-        private void BuyTrack(Action<Action<PurchaseOutcome>> buy, string name)
-        {
-            if (Track == null)
-            {
-                return;
-            }
-
-            var opened = Track.LockedReached(TrackColumn.Premium) + Track.LockedReached(TrackColumn.Royal);
-            buy(outcome =>
-            {
-                if (outcome.Ok)
-                {
-                    var now = Track.LockedReached(TrackColumn.Premium) + Track.LockedReached(TrackColumn.Royal);
-                    Celebrate(Fmt("reward_track.bought", "{0} unlocked! {1} rewards ready", name, Mathf.Max(0, opened - now)), new Dictionary<string, int>());
-                    SaveNow();
-                    OpenRewardTrack();
-                    _refresh?.Invoke();
-                }
-                else
-                {
-                    _hook?.Say(_overlay!, S("store.power_packs.failed", "Purchase failed"), Warn);
-                }
-            });
-        }
-
-        /// <summary>Wallet rewards as they are; "shard:&lt;hero&gt;" as "&lt;Hero&gt; Shards".</summary>
-        private Dictionary<string, int> TrackRewards(IReadOnlyDictionary<string, int> got)
-        {
-            var rows = new Dictionary<string, int>();
-            foreach (var g in got)
-            {
-                var key = g.Key.StartsWith(RewardTrackCatalog.ShardPrefix, StringComparison.Ordinal)
-                    ? HeroName(g.Key.Substring(RewardTrackCatalog.ShardPrefix.Length)) + " " + S("reward_track.shards", "Shards")
-                    : g.Key;
-                rows[key] = (rows.TryGetValue(key, out var v) ? v : 0) + g.Value;
-            }
-
-            return rows;
-        }
-
-        private string TrackLine(IReadOnlyDictionary<string, int> grants)
-        {
-            var parts = new List<string>();
-            foreach (var pair in grants)
-            {
-                var name = pair.Key.StartsWith(RewardTrackCatalog.ShardPrefix, StringComparison.Ordinal)
-                    ? HeroName(pair.Key.Substring(RewardTrackCatalog.ShardPrefix.Length)) + " " + S("reward_track.shards", "Shards")
-                    : S(pair.Key + ".name", pair.Key);
-                parts.Add("+" + ChipWallet.FormatCompact(pair.Value) + " " + name);
-            }
-
-            return string.Join("\n", parts);
-        }
+        internal static readonly Color RoyalBlue = new Color(0.20f, 0.36f, 0.85f, 1f);
+        /// <summary>The Kingdom Path sheet (<see cref="RewardTrackScreen"/>).</summary>
+        public void OpenRewardTrack() => (_rewardTrack ??= new RewardTrackScreen(this)).Open();
 
         /// <summary>Reward chips (icon + amount) in up to two rows across the box, nothing clipped.</summary>
         private void PackChips(RectTransform parent, IReadOnlyDictionary<string, int> grants, float x0, float y0, float x1, float y1)
@@ -2156,630 +1553,10 @@ namespace Survival.Unity
             return hrs.ToString(CultureInfo.InvariantCulture) + "h" + (m > 0 ? m.ToString(CultureInfo.InvariantCulture) + "m" : "");
         }
 
-        // ---------- Battle Setup ----------
+        private BattleFlowScreen? _battleFlow;
 
-        public void OpenSetup(StageDef? stage)
-        {
-            if (Campaign == null || _overlay == null || stage == null || _inBattle)
-            {
-                return;
-            }
-
-            var panel = OpenScreen(SetupScreenName, S("campaign.setup.title", "BATTLE"));
-            var setup = Campaign.Setup(stage);
-            _setup = setup;
-
-            // Stage strip, or the World camp's name plate.
-            if (stage.CampId != null)
-            {
-                var plate = HookSkin.Panel(panel, "CampPlate", HookArtKeys.Plate, SurvivalVisuals.RowFill, 0.45f);
-                HookSkin.Box(plate.rectTransform, 0.06f, 0.865f, 0.94f, 0.935f);
-                var t = HookSkin.Outlined(SurvivalVisuals.Text(plate.transform, "T", Fmt("campaign.setup.camp", "World camp: {0}", stage.Name), 28, TextAnchor.MiddleCenter, SurvivalVisuals.Reward), 1.5f);
-                t.fontStyle = FontStyle.Bold;
-                SurvivalVisuals.Stretch(t.rectTransform);
-            }
-            else
-            {
-                _stripChapter = stage.Chapter;
-                var strip = SurvivalVisuals.Image(panel, "StageStrip", new Color(0f, 0f, 0f, 0f)).rectTransform;
-                strip.GetComponent<Image>().raycastTarget = false;
-                HookSkin.Box(strip, 0f, 0.858f, 1f, 0.948f);
-                BuildStageStrip(strip, stage);
-            }
-
-            // Bounty strip.
-            var bounty = HookSkin.Panel(panel, "Bounty", HookArtKeys.Plate, SurvivalVisuals.RowFill, 0.45f);
-            HookSkin.Box(bounty.rectTransform, 0.04f, 0.795f, 0.96f, 0.852f);
-            var bountyText = HookSkin.Outlined(SurvivalVisuals.Text(bounty.transform, "T", "", 22, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.5f);
-            HookSkin.Box(bountyText.rectTransform, 0.03f, 0f, 0.72f, 1f);
-            var claimText = SheetButton(bounty.rectTransform, "Claim", HookArtKeys.ButtonGreen, FreeGreen, 0.74f, 0.1f, 0.99f, 0.9f, 20, out var claimBtn);
-            claimText.text = S("hook.claim", "Claim");
-            var claimRt = claimBtn.GetComponent<RectTransform>();
-            Wire(claimBtn, () =>
-            {
-                var b = Campaign.CurrentBounty;
-                if (b == null || !Campaign.BountyReady)
-                {
-                    return;
-                }
-
-                var rows = new Dictionary<string, int>();
-                foreach (var pair in b.Rewards)
-                {
-                    rows[pair.Key] = pair.Value;
-                }
-
-                _hook?.Sparks(claimRt, FreeGreen, 14);
-                if (_hook != null)
-                {
-                    _hook.Celebrate(S("campaign.bounty_done", "Bounty complete!"), rows, () => Campaign.ClaimBounty());
-                }
-                else
-                {
-                    Campaign.ClaimBounty();
-                }
-
-                SaveNow();
-                _refresh?.Invoke();
-            });
-
-            // Lanes: villains on top, heroes below.
-            var n = setup.LaneCount;
-            var refreshers = new List<Action>();
-            var vs = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Vs", "VS", 56, TextAnchor.MiddleCenter, SurvivalVisuals.Reward), 3f);
-            vs.fontStyle = FontStyle.Bold;
-            HookSkin.Box(vs.rectTransform, 0.3f, 0.528f, 0.7f, 0.578f);
-            for (var lane = 0; lane < n; lane++)
-            {
-                var cx = 0.5f + (lane - ((n - 1) * 0.5f)) * 0.315f;
-                var x0 = cx - 0.135f;
-                var x1 = cx + 0.135f;
-                var enemy = setup.EnemyAt(lane);
-                var edef = enemy != null ? Campaign.Catalog.Hero(enemy.HeroId) : null;
-                if (edef != null && enemy != null)
-                {
-                    Portrait(panel, edef, x0, 0.62f, x1, 0.62f + 0.27f * PanelAspect, out _);
-                    var es = setup.EnemyStats(lane);
-                    var el = HookSkin.Outlined(SurvivalVisuals.Text(panel, "EnemyLabel" + lane, HeroName(edef.Id) + "  Lv " + enemy.Level + "\n\u2694 " + ChipWallet.FormatGrouped(es.Power), 21, TextAnchor.UpperCenter, new Color(1f, 0.78f, 0.82f, 1f)), 1.5f);
-                    HookSkin.Box(el.rectTransform, x0 - 0.02f, 0.578f, x1 + 0.02f, 0.62f);
-                }
-
-                var laneTag = HookSkin.Outlined(SurvivalVisuals.Text(panel, "LaneTag" + lane, Fmt("campaign.lane", "LANE {0}", lane + 1), 18, TextAnchor.MiddleCenter, SurvivalVisuals.Mute), 1.2f);
-                HookSkin.Box(laneTag.rectTransform, x0, 0.515f, x1, 0.535f);
-                refreshers.Add(HeroSlot(panel, lane, x0, x1));
-            }
-
-            // Power comparison.
-            var mine = HookSkin.Outlined(SurvivalVisuals.Text(panel, "MyPower", "", 26, TextAnchor.MiddleLeft, HeroGlow), 1.5f);
-            mine.fontStyle = FontStyle.Bold;
-            HookSkin.Box(mine.rectTransform, 0.05f, 0.262f, 0.42f, 0.312f);
-            var theirs = HookSkin.Outlined(SurvivalVisuals.Text(panel, "EnemyPower", "", 26, TextAnchor.MiddleRight, VillainGlow), 1.5f);
-            theirs.fontStyle = FontStyle.Bold;
-            HookSkin.Box(theirs.rectTransform, 0.58f, 0.262f, 0.95f, 0.312f);
-            var odds = SurvivalVisuals.Image(panel, "Odds", FreeGreen);
-            HookSkin.Box(odds.rectTransform, 0.40f, 0.266f, 0.60f, 0.308f);
-            var oddsText = HookSkin.Outlined(SurvivalVisuals.Text(odds.transform, "T", "", 22, TextAnchor.MiddleCenter, Color.white), 1.5f);
-            oddsText.fontStyle = FontStyle.Bold;
-            SurvivalVisuals.Stretch(oddsText.rectTransform);
-            var balance = SurvivalVisuals.Image(panel, "Balance", VillainFrame);
-            HookSkin.Box(balance.rectTransform, 0.05f, 0.246f, 0.95f, 0.258f);
-            var balanceFill = SurvivalVisuals.Image(balance.transform, "Fill", HeroGlow);
-
-            // Hero pool.
-            var poolLabel = HookSkin.Outlined(SurvivalVisuals.Text(panel, "PoolLabel", S("campaign.pool", "YOUR HEROES \u00b7 tap to place"), 20, TextAnchor.MiddleLeft, SurvivalVisuals.Cream), 1.2f);
-            HookSkin.Box(poolLabel.rectTransform, 0.05f, 0.205f, 0.70f, 0.235f);
-            var autoText = SheetButton(panel, "Auto", HookArtKeys.ButtonBlue, HeroFrame, 0.74f, 0.200f, 0.95f, 0.240f, 20, out var autoBtn);
-            autoText.text = S("campaign.auto", "AUTO");
-            Wire(autoBtn, () => setup.AutoFill());
-            var owned = new List<string>(Campaign.Roster.OwnedIds());
-            for (var i = 0; i < owned.Count && i < 6; i++)
-            {
-                var px = 0.04f + i * 0.155f;
-                refreshers.Add(PoolCard(panel, owned[i], px, 0.10f, px + 0.145f, 0.10f + 0.145f * PanelAspect));
-            }
-
-            var close = SheetButton(panel, "Close", HookArtKeys.ButtonRed, SurvivalVisuals.PanelSoft, 0.04f, 0.022f, 0.32f, 0.085f, 24, out var closeBtn);
-            close.text = S("hook.close", "Close");
-            Wire(closeBtn, CloseScreen);
-            var fightText = SheetButton(panel, "Fight", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, 0.36f, 0.018f, 0.96f, 0.090f, 40, out var fightBtn);
-            fightText.text = S("campaign.fight", "FIGHT!");
-            var fightImg = fightBtn.GetComponent<Image>();
-            var fightRt = fightBtn.GetComponent<RectTransform>();
-            Wire(fightBtn, () =>
-            {
-                var check = setup.CanFight;
-                if (check != SetupCheck.Ok)
-                {
-                    _hook?.Say(fightRt, check == SetupCheck.NoHeroes ? S("campaign.need_heroes", "Place at least one hero") : S("campaign.stage_locked", "Clear the stage before first"), Warn);
-                    return;
-                }
-
-                StartCoroutine(RunBattle(setup.Build()));
-            });
-
-            _refresh = () =>
-            {
-                var b = Campaign.CurrentBounty;
-                bountyText.text = b == null
-                    ? S("campaign.bounty_all", "All bounties claimed!")
-                    : Fmt("campaign.bounty", "BOUNTY: {0}  {1}/{2}", BountyName(b), Campaign.BountyProgress(b), b.Count);
-                claimBtn.gameObject.SetActive(Campaign.BountyReady);
-                mine.text = Fmt("campaign.my_power", "YOU \u2694 {0}", ChipWallet.FormatGrouped(setup.HeroPower));
-                theirs.text = Fmt("campaign.enemy_power", "{0} \u2694 FOES", ChipWallet.FormatGrouped(setup.EnemyPower));
-                var o = setup.Odds;
-                oddsText.text = OddsName(o);
-                odds.color = OddsColor(o);
-                var total = Mathf.Max(1, setup.HeroPower + setup.EnemyPower);
-                HookSkin.Box(balanceFill.rectTransform, 0f, 0f, setup.HeroPower / (float)total, 1f);
-                var ok = setup.CanFight == SetupCheck.Ok;
-                HookSkin.SetButton(fightImg, HookArtKeys.ButtonGold, ok ? SurvivalVisuals.MineFill : Disabled, ok, 0.5f);
-                fightText.color = ok ? HookSkin.InkFor(HookArtKeys.ButtonGold) : SurvivalVisuals.Cream;
-                foreach (var r in refreshers)
-                {
-                    r();
-                }
-            };
-            setup.Changed += () =>
-            {
-                if (ReferenceEquals(_setup, setup))
-                {
-                    _refresh?.Invoke();
-                }
-            };
-            _refresh();
-        }
-
-        /// <summary>One hero lane slot: the placed hero's framed portrait (tap to take it out) or an empty "+" slot.</summary>
-        private Action HeroSlot(RectTransform panel, int lane, float x0, float x1)
-        {
-            var y0 = 0.345f;
-            var y1 = y0 + 0.27f * PanelAspect;
-            var btn = SurvivalVisuals.Button(panel, "Lane" + lane, new Color(1f, 1f, 1f, 0f));
-            btn.transition = Selectable.Transition.None;
-            var rt = btn.GetComponent<RectTransform>();
-            HookSkin.Box(rt, x0, y0, x1, y1);
-            var empty = SurvivalVisuals.Image(rt, "Empty", new Color(HeroFrame.r, HeroFrame.g, HeroFrame.b, 0.55f));
-            SurvivalVisuals.Stretch(empty.rectTransform);
-            var ring = SurvivalVisuals.Image(empty.transform, "Line", new Color(HeroGlow.r, HeroGlow.g, HeroGlow.b, 0.35f));
-            SurvivalVisuals.Stretch(ring.rectTransform);
-            ring.rectTransform.offsetMin = new Vector2(8f, 8f);
-            ring.rectTransform.offsetMax = new Vector2(-8f, -8f);
-            var plus = HookSkin.Outlined(SurvivalVisuals.Text(empty.transform, "T", "+\n" + S("campaign.slot_empty", "Tap a hero"), 26, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
-            SurvivalVisuals.Stretch(plus.rectTransform);
-            var label = HookSkin.Outlined(SurvivalVisuals.Text(panel, "HeroLabel" + lane, "", 21, TextAnchor.UpperCenter, new Color(0.78f, 0.88f, 1f, 1f)), 1.5f);
-            HookSkin.Box(label.rectTransform, x0 - 0.02f, 0.30f, x1 + 0.02f, y0);
-            RectTransform? shown = null;
-            var shownId = "";
-            Wire(btn, () =>
-            {
-                if (_setup != null && _setup.HeroAt(lane) != null)
-                {
-                    _setup.Clear(lane);
-                }
-            });
-
-            return () =>
-            {
-                var id = _setup?.HeroAt(lane) ?? "";
-                if (id != shownId)
-                {
-                    if (shown != null)
-                    {
-                        Destroy(shown.gameObject);
-                        shown = null;
-                    }
-
-                    shownId = id;
-                    var def = id.Length > 0 ? Campaign!.Catalog.Hero(id) : null;
-                    if (def != null)
-                    {
-                        shown = Portrait(rt, def, 0f, 0f, 1f, 1f, out var art);
-                        art.raycastTarget = false;
-                        StartCoroutine(HookSkin.PopIn(shown));
-                        _hook?.Sparks(rt, HeroGlow, 8);
-                    }
-                }
-
-                empty.gameObject.SetActive(id.Length == 0);
-                if (id.Length > 0)
-                {
-                    var p = Campaign!.Roster.Get(id)!;
-                    label.text = HeroName(id) + "  Lv " + p.Level + "\n\u2694 " + ChipWallet.FormatGrouped(Campaign.Roster.Stats(id).Power);
-                }
-                else
-                {
-                    label.text = "";
-                }
-            };
-        }
-
-        private Action PoolCard(RectTransform panel, string heroId, float x0, float y0, float x1, float y1)
-        {
-            var def = Campaign!.Catalog.Hero(heroId)!;
-            var btn = SurvivalVisuals.Button(panel, "Pool_" + heroId, new Color(1f, 1f, 1f, 0f));
-            btn.transition = Selectable.Transition.None;
-            var rt = btn.GetComponent<RectTransform>();
-            HookSkin.Box(rt, x0, y0, x1, y1);
-            Portrait(rt, def, 0f, 0f, 1f, 1f, out var art);
-            var tag = SurvivalVisuals.Circle(rt, "Lane", SurvivalVisuals.MineFill);
-            tag.rectTransform.anchorMin = tag.rectTransform.anchorMax = new Vector2(0.84f, 0.84f);
-            tag.rectTransform.sizeDelta = new Vector2(44f, 44f);
-            var tagText = SurvivalVisuals.Text(tag.transform, "T", "", 24, TextAnchor.MiddleCenter, HookSkin.InkFor(HookArtKeys.ButtonGold));
-            tagText.fontStyle = FontStyle.Bold;
-            SurvivalVisuals.Stretch(tagText.rectTransform);
-            var lv = HookSkin.Outlined(SurvivalVisuals.Text(rt, "Lv", "", 18, TextAnchor.LowerCenter, SurvivalVisuals.Cream), 1.5f);
-            HookSkin.Box(lv.rectTransform, 0f, 0.02f, 1f, 0.3f);
-            Wire(btn, () => _setup?.Toggle(heroId));
-            return () =>
-            {
-                var lane = _setup?.LaneOf(heroId) ?? -1;
-                tag.gameObject.SetActive(lane >= 0);
-                tagText.text = (lane + 1).ToString(CultureInfo.InvariantCulture);
-                art.color = lane >= 0 ? new Color(0.55f, 0.55f, 0.6f, 1f) : Color.white;
-                lv.text = "Lv " + (Campaign.Roster.Get(heroId)?.Level ?? 1);
-            };
-        }
-
-        // ---------- the battle round trip ----------
-
-        private IEnumerator RunBattle(BattleLineup lineup)
-        {
-            if (_inBattle || Campaign == null)
-            {
-                yield break;
-            }
-
-            if (!Application.CanStreamedLevelBeLoaded(BattleSceneName))
-            {
-                Debug.LogWarning("Battle: scene '" + BattleSceneName + "' is not in Build Settings.");
-                if (_screen != null && _screen.transform is RectTransform screenRt)
-                {
-                    _hook?.Say(screenRt, S("campaign.no_scene", "BattleLocked scene missing from Build Settings"), Warn);
-                }
-
-                yield break;
-            }
-
-            _inBattle = true;
-            _lastLineupHeroes.Clear();
-            foreach (var h in lineup.Heroes)
-            {
-                _lastLineupHeroes.Add(h.CharacterId);
-            }
-
-            SaveNow();
-            CloseSheet();
-            CloseScreen();
-            var stage = lineup.Stage;
-            var playScene = gameObject.scene;
-            _battleTrips++;
-
-            // Root cause of "Display 1 No cameras rendering": Play's cameras went off before BattleLocked's camera
-            // existed (the additive load spans several frames), and on the way back BattleLocked's camera was
-            // unloaded before Play's came back on. The loading screen's floor camera lives outside both scenes and
-            // renders the whole time; Play is only hidden once the screen covers the view, and the screen only
-            // fades once the destination camera has drawn a frame.
-            var into = BattleLoadingScreen.Show(BattleLoadingInfo.Into(lineup, S("battle.loading.into", "To battle!"), LoadingTip(stage.Id)), S("battle.loading.vs", "VS"));
-            yield return into.WaitCovered();
-            var hidden = HidePlay(playScene);
-            var render = RenderState.Capture();
-            BattleReport? report = null;
-            void OnDone(BattleReport r) => report = r;
-            BattleHandoff.Completed += OnDone;
-            BattleHandoff.Begin(lineup);
-            var load = SceneManager.LoadSceneAsync(BattleSceneName, LoadSceneMode.Additive);
-            while (load != null && !load.isDone)
-            {
-                into.Progress(load.progress);
-                yield return null;
-            }
-
-            into.Progress(1f);
-            var battle = SceneManager.GetSceneByName(BattleSceneName);
-            if (battle.IsValid() && battle.isLoaded)
-            {
-                SceneManager.SetActiveScene(battle);
-                into.RevealOnFirstFrameOf(battle);
-            }
-            else
-            {
-                // Load failed: bring Play straight back under the screen.
-                render.Restore();
-                ShowPlay(hidden);
-                into.RevealOnFirstFrameOf(playScene);
-            }
-
-            while (report == null && battle.IsValid() && battle.isLoaded)
-            {
-                yield return null;
-            }
-
-            BattleHandoff.Completed -= OnDone;
-            var finished = report ?? BattleHandoff.Result;
-            var back = BattleLoadingScreen.Show(BattleLoadingInfo.Back(ReturnHeadline(finished), stage.Name, LoadingTip(stage.Id)), S("battle.loading.vs", "VS"));
-            yield return back.WaitCovered();
-            if (playScene.IsValid())
-            {
-                SceneManager.SetActiveScene(playScene);
-            }
-
-            if (battle.IsValid() && battle.isLoaded)
-            {
-                var unload = SceneManager.UnloadSceneAsync(battle);
-                while (unload != null && !unload.isDone)
-                {
-                    back.Progress(unload.progress);
-                    yield return null;
-                }
-            }
-
-            back.Progress(1f);
-            render.Restore();
-            ShowPlay(hidden);
-            back.RevealOnFirstFrameOf(playScene);
-            var taken = BattleHandoff.TakeResult();
-            _inBattle = false;
-            var result = report ?? taken ?? new BattleReport(stage.Id, stage.CampId, false, 0, 0, 0, false, true);
-            ShowResult(result, stage);
-            foreach (var (title, rows) in _deferred)
-            {
-                _hook?.Celebrate(title, rows);
-            }
-
-            _deferred.Clear();
-        }
-
-        private string LoadingTip(string stageId)
-        {
-            var tips = new List<string>();
-            for (var i = 1; i <= LoadingTipCount; i++)
-            {
-                var t = S("battle.tip." + i, "");
-                if (t.Length > 0)
-                {
-                    tips.Add(t);
-                }
-            }
-
-            if (tips.Count == 0)
-            {
-                tips.Add("Level up heroes in the Heroes screen to raise their power.");
-            }
-
-            return BattleTransition.Tip(tips, BattleTransition.StableSeed(stageId) + _battleTrips);
-        }
-
-        private string ReturnHeadline(BattleReport? r) =>
-            r == null ? S("battle.loading.back", "Back to the village")
-            : r.Retreated ? S("battle.loading.retreat", "Retreat!")
-            : r.Won ? S("battle.loading.victory", "Victory!")
-            : S("battle.loading.defeat", "Defeat");
-
-        /// <summary>Play stays loaded (village, world and timers keep running); its canvases, cameras and listeners switch off.</summary>
-        private static List<Behaviour> HidePlay(Scene scene)
-        {
-            var hidden = new List<Behaviour>();
-            if (!scene.IsValid())
-            {
-                return hidden;
-            }
-
-            foreach (var root in scene.GetRootGameObjects())
-            {
-                foreach (var c in root.GetComponentsInChildren<Canvas>(false))
-                {
-                    if (c.enabled && c.isRootCanvas)
-                    {
-                        c.enabled = false;
-                        hidden.Add(c);
-                    }
-                }
-
-                foreach (var cam in root.GetComponentsInChildren<Camera>(false))
-                {
-                    if (cam.enabled)
-                    {
-                        cam.enabled = false;
-                        hidden.Add(cam);
-                    }
-                }
-
-                foreach (var ear in root.GetComponentsInChildren<AudioListener>(false))
-                {
-                    if (ear.enabled)
-                    {
-                        ear.enabled = false;
-                        hidden.Add(ear);
-                    }
-                }
-            }
-
-            return hidden;
-        }
-
-        private static void ShowPlay(List<Behaviour> hidden)
-        {
-            foreach (var b in hidden)
-            {
-                if (b != null)
-                {
-                    b.enabled = true;
-                }
-            }
-        }
-
-        /// <summary>The battle sets ambient light and fog at boot; put Play's back afterwards.</summary>
-        private sealed class RenderState
-        {
-            private UnityEngine.Rendering.AmbientMode _ambientMode;
-            private Color _ambient;
-            private bool _fog;
-            private FogMode _fogMode;
-            private Color _fogColor;
-            private float _fogStart;
-            private float _fogEnd;
-            private float _fogDensity;
-            private Material? _skybox;
-
-            public static RenderState Capture() => new RenderState
-            {
-                _ambientMode = RenderSettings.ambientMode,
-                _ambient = RenderSettings.ambientLight,
-                _fog = RenderSettings.fog,
-                _fogMode = RenderSettings.fogMode,
-                _fogColor = RenderSettings.fogColor,
-                _fogStart = RenderSettings.fogStartDistance,
-                _fogEnd = RenderSettings.fogEndDistance,
-                _fogDensity = RenderSettings.fogDensity,
-                _skybox = RenderSettings.skybox
-            };
-
-            public void Restore()
-            {
-                RenderSettings.ambientMode = _ambientMode;
-                RenderSettings.ambientLight = _ambient;
-                RenderSettings.fog = _fog;
-                RenderSettings.fogMode = _fogMode;
-                RenderSettings.fogColor = _fogColor;
-                RenderSettings.fogStartDistance = _fogStart;
-                RenderSettings.fogEndDistance = _fogEnd;
-                RenderSettings.fogDensity = _fogDensity;
-                RenderSettings.skybox = _skybox;
-            }
-        }
-
-        // ---------- result ----------
-
-        private void ShowResult(BattleReport result, StageDef stage)
-        {
-            if (Campaign == null || _overlay == null)
-            {
-                return;
-            }
-
-            var firstClear = result.Won && stage.CampId == null && !Campaign.IsCleared(stage.Id);
-            var preview = BattleRewards.For(stage, result.Won, firstClear, Campaign.Catalog.LossGoldShare).AsRows();
-            _hook?.HoldChips(preview);
-            var bundle = Campaign.ApplyResult(result, stage);
-            var rows = bundle.AsRows();
-            if (result.Won)
-            {
-                _session?.Hook?.Quests.Report("quest.objective.win_battle", stage.Id, 1);
-            }
-
-            SaveNow();
-
-            var panel = OpenScreen(ResultScreenName, result.Won ? S("campaign.victory", "VICTORY!") : S("campaign.defeat", "DEFEAT"));
-            var glow = HookSkin.Glow(panel, "Glow", result.Won ? new Color(1f, 0.85f, 0.4f, 0.5f) : new Color(0.6f, 0.3f, 0.3f, 0.35f));
-            HookSkin.Box(glow.rectTransform, 0.1f, 0.62f, 0.9f, 0.95f);
-            for (var i = 0; i < _lastLineupHeroes.Count; i++)
-            {
-                var def = Campaign.Catalog.Hero(_lastLineupHeroes[i]);
-                if (def == null)
-                {
-                    continue;
-                }
-
-                var cx = 0.5f + (i - ((_lastLineupHeroes.Count - 1) * 0.5f)) * 0.27f;
-                Portrait(panel, def, cx - 0.12f, 0.70f, cx + 0.12f, 0.70f + 0.24f * PanelAspect, out var art);
-                if (!result.Won)
-                {
-                    art.color = new Color(0.6f, 0.6f, 0.65f, 1f);
-                }
-            }
-
-            var title = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Stage", stage.Name, 34, TextAnchor.MiddleCenter, SurvivalVisuals.Reward), 2f);
-            title.fontStyle = FontStyle.Bold;
-            HookSkin.Box(title.rectTransform, 0.05f, 0.635f, 0.95f, 0.685f);
-            var extra = (result.TimedOut ? "  \u00b7  " + S("campaign.timeout", "time up") : "") + (result.Retreated ? "  \u00b7  " + S("campaign.retreated", "retreated") : "");
-            var summary = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Summary", Fmt("campaign.summary", "Foes defeated {0}  \u00b7  Heroes standing {1}  \u00b7  {2}", result.EnemiesDefeated, result.HeroesStanding, TimerQueue.FormatClock(result.Seconds)) + extra, 22, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
-            HookSkin.Box(summary.rectTransform, 0.03f, 0.595f, 0.97f, 0.635f);
-            if (bundle.FirstClear)
-            {
-                var first = SurvivalVisuals.Image(panel, "FirstClear", new Color(0.85f, 0.25f, 0.30f, 1f));
-                HookSkin.TrySkin(first, HookArtKeys.RibbonRed, 0.5f);
-                HookSkin.Box(first.rectTransform, 0.28f, 0.545f, 0.72f, 0.592f);
-                var ft = HookSkin.Outlined(SurvivalVisuals.Text(first.transform, "T", S("campaign.first_clear", "FIRST CLEAR!"), 24, TextAnchor.MiddleCenter, Color.white), 1.5f);
-                ft.fontStyle = FontStyle.Bold;
-                HookSkin.Box(ft.rectTransform, 0.1f, 0.2f, 0.9f, 0.95f);
-            }
-
-            var y = 0.53f;
-            foreach (var pair in rows)
-            {
-                var row = HookSkin.Panel(panel, "Reward_" + pair.Key, HookArtKeys.Chip, SurvivalVisuals.RowFill, 0.6f);
-                HookSkin.Box(row.rectTransform, 0.22f, y - 0.05f, 0.78f, y);
-                var icon = HookSkin.ResIcon(row.transform, "Icon", pair.Key, ShardPurple, "\u2726");
-                HookSkin.Box(icon.rectTransform, 0.02f, -0.3f, 0.2f, 1.3f);
-                var t = HookSkin.Outlined(SurvivalVisuals.Text(row.transform, "T", "+" + ChipWallet.FormatGrouped(pair.Value) + "  " + RowName(pair.Key), 26, TextAnchor.MiddleLeft, SurvivalVisuals.Reward), 1.5f);
-                t.fontStyle = FontStyle.Bold;
-                HookSkin.Box(t.rectTransform, 0.24f, 0f, 1f, 1f);
-                y -= 0.058f;
-            }
-
-            if (rows.Count == 0)
-            {
-                var none = HookSkin.Outlined(SurvivalVisuals.Text(panel, "NoRewards", S("campaign.no_rewards", "No rewards this time"), 24, TextAnchor.MiddleCenter, SurvivalVisuals.Mute), 1.5f);
-                HookSkin.Box(none.rectTransform, 0.1f, y - 0.05f, 0.9f, y);
-                y -= 0.058f;
-            }
-
-            var b = Campaign.CurrentBounty;
-            if (b != null)
-            {
-                var ready = Campaign.BountyReady;
-                var bl = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Bounty", Fmt("campaign.bounty", "BOUNTY: {0}  {1}/{2}", BountyName(b), Campaign.BountyProgress(b), b.Count) + (ready ? "  \u2714 " + S("campaign.bounty_ready", "claim it in Battle") : ""), 22, TextAnchor.MiddleCenter, ready ? FreeGreen : SurvivalVisuals.Cream), 1.5f);
-                HookSkin.Box(bl.rectTransform, 0.04f, y - 0.045f, 0.96f, y);
-            }
-
-            if (!result.Won)
-            {
-                var tip = HookSkin.Outlined(SurvivalVisuals.Text(panel, "Tip", S("campaign.tip", "Train and star up your heroes, then try again!"), 22, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.5f);
-                HookSkin.Box(tip.rectTransform, 0.04f, 0.19f, 0.96f, 0.23f);
-            }
-
-            var celebrateTitle = result.Won ? S("campaign.victory", "VICTORY!") : S("campaign.defeat", "DEFEAT");
-            var collect = SheetButton(panel, "Collect", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill, result.Won ? 0.25f : 0.52f, 0.06f, result.Won ? 0.75f : 0.96f, 0.15f, 34, out var collectBtn);
-            collect.text = result.Won ? S("campaign.collect", "COLLECT") : S("campaign.continue", "CONTINUE");
-            FitButtonLabel(collect, 34);
-            Wire(collectBtn, () =>
-            {
-                CloseScreen();
-                CelebrateOrRelease(celebrateTitle, rows);
-            });
-            if (!result.Won)
-            {
-                var up = SheetButton(panel, "Upgrade", HookArtKeys.ButtonBlue, HeroFrame, 0.04f, 0.06f, 0.48f, 0.15f, 28, out var upBtn);
-                up.text = S("campaign.upgrade", "UPGRADE HEROES");
-                FitButtonLabel(up, 28);
-                Wire(upBtn, () =>
-                {
-                    CelebrateOrRelease(celebrateTitle, rows);
-                    _foesTab = false;
-                    OpenHeroes();
-                });
-            }
-
-            RefreshBadges();
-        }
-
-        /// <summary>Rewards are already in the wallet (the chips were held); the celebration counts them up.</summary>
-        private void CelebrateOrRelease(string title, Dictionary<string, int> rows)
-        {
-            if (_hook == null)
-            {
-                return;
-            }
-
-            if (rows.Count > 0)
-            {
-                _hook.Celebrate(title, rows);
-            }
-            else
-            {
-                _hook.ReleaseChips(rows);
-            }
-        }
+        /// <summary>Battle Setup for <paramref name="stage"/>, then the battle and its result (<see cref="BattleFlowScreen"/>).</summary>
+        public void OpenSetup(StageDef? stage) => (_battleFlow ??= new BattleFlowScreen(this)).OpenSetup(stage);
 
         // ---------- widgets ----------
 
@@ -2787,7 +1564,7 @@ namespace Survival.Unity
         /// Framed portrait: Sir Aldric blue (#1b3060) for heroes, purple for villains, a gold inner line and the painted
         /// portrait from the pack, or a code-drawn fallback (tinted plate with initials).
         /// </summary>
-        private RectTransform Portrait(RectTransform parent, CampaignHeroDef def, float x0, float y0, float x1, float y1, out Image art)
+        internal RectTransform Portrait(RectTransform parent, CampaignHeroDef def, float x0, float y0, float x1, float y1, out Image art)
         {
             var hero = def.Side == CampaignSide.Hero;
             var frame = SurvivalVisuals.Image(parent, "Portrait_" + def.Id, hero ? HeroFrame : VillainFrame);
@@ -2893,190 +1670,13 @@ namespace Survival.Unity
         /// Shrink a sheet button's label to fit inside the painted rim (best fit, never above its design size), so long
         /// labels like "UPGRADE HEROES" don't spill past a half-width button on narrow phones.
         /// </summary>
-        private static void FitButtonLabel(Text label, int size)
+        internal static void FitButtonLabel(Text label, int size)
         {
             HookSkin.Fit(label, Mathf.Max(12, Mathf.RoundToInt(size * 0.5f)), size);
             HookSkin.PadLabel(label.rectTransform, 0.07f, 0.12f);
         }
 
-        /// <summary>The chapter shown in the Battle setup's stage strip (0 = Prologue). The arrows change it without rebuilding the screen.</summary>
-        private int _stripChapter;
-
-        /// <summary>
-        /// Chapter header (\u25c0 name \u00b7 Castle gate \u25b6, chapter chest with a FREE badge) over that chapter's stage buttons.
-        /// Only <paramref name="strip"/> is rebuilt when the chapter changes; the lanes below stay as they are.
-        /// </summary>
-        private void BuildStageStrip(RectTransform strip, StageDef current)
-        {
-            if (Campaign == null)
-            {
-                return;
-            }
-
-            for (var i = strip.childCount - 1; i >= 0; i--)
-            {
-                Destroy(strip.GetChild(i).gameObject);
-            }
-
-            var cat = Campaign.Catalog;
-            var chapters = Campaign.ChapterCount;
-            var ch = Mathf.Clamp(_stripChapter, 0, chapters - 1);
-            var def = cat.Chapter(ch);
-            var stages = ch == 0 ? cat.PrologueStages : cat.StagesIn(ch);
-
-            // Header row.
-            var head = HookSkin.Panel(strip, "ChapterPlate", HookArtKeys.Plate, SurvivalVisuals.RowFill, 0.45f);
-            HookSkin.Box(head.rectTransform, 0.13f, 0.56f, 0.70f, 1f);
-            var cleared = 0;
-            foreach (var st in stages)
-            {
-                if (Campaign.IsCleared(st.Id))
-                {
-                    cleared++;
-                }
-            }
-
-            var title = ch == 0
-                ? Fmt("campaign.chapter.prologue", "Prologue  {0}/{1}", cleared, stages.Count)
-                : Fmt("campaign.chapter.title", "Ch {0} \u00b7 {1}  {2}/{3}", ch, def?.Name ?? "", cleared, stages.Count);
-            var t = HookSkin.Outlined(SurvivalVisuals.Text(head.transform, "T", title, 22, TextAnchor.MiddleCenter, SurvivalVisuals.Cream), 1.6f);
-            t.fontStyle = FontStyle.Bold;
-            SurvivalVisuals.Stretch(t.rectTransform);
-
-            void Arrow(string name, string glyph, float x0, float x1, int to)
-            {
-                var label = SheetButton(strip, name, HookArtKeys.ButtonBlue, HeroFrame, x0, 0.56f, x1, 1f, 26, out var btn);
-                label.text = glyph;
-                label.color = SurvivalVisuals.Cream;
-                var ok = to >= 0 && to < chapters;
-                if (!ok)
-                {
-                    btn.GetComponent<Image>().color = Disabled;
-                }
-
-                Wire(btn, () =>
-                {
-                    if (to >= 0 && to < Campaign.ChapterCount)
-                    {
-                        _stripChapter = to;
-                        BuildStageStrip(strip, current);
-                    }
-                });
-            }
-
-            Arrow("ChapterPrev", "\u25c0", 0.025f, 0.12f, ch - 1);
-            Arrow("ChapterNext", "\u25b6", 0.71f, 0.805f, ch + 1);
-
-            // Chapter chest: Claim (FREE) once every stage is cleared, otherwise the gate / progress.
-            var ready = ch > 0 && Campaign.ChestReady(ch);
-            var claimed = ch > 0 && !ready && Campaign.ChapterCleared(ch);
-            var chestText = SheetButton(strip, "ChapterChest", ready ? HookArtKeys.ButtonGreen : HookArtKeys.ButtonBlue, ready ? FreeGreen : HeroFrame, 0.815f, 0.56f, 0.975f, 1f, 18, out var chestBtn);
-            chestText.color = SurvivalVisuals.Cream;
-            chestText.text = ch == 0 ? "" : claimed ? "\u2713 " + S("campaign.chest.done", "Chest") : ready ? S("hook.claim", "Claim") : S("campaign.chest", "Chest");
-            if (ch == 0)
-            {
-                chestBtn.gameObject.SetActive(false);
-            }
-            else if (!ready)
-            {
-                chestBtn.GetComponent<Image>().color = Disabled;
-            }
-
-            if (ready)
-            {
-                var ribbon = SurvivalArt.Get(HookArtKeys.BadgeFree);
-                var free = ribbon != null ? SurvivalVisuals.Image(chestBtn.transform, "Free", Color.white, ribbon) : SurvivalVisuals.Image(chestBtn.transform, "Free", FreeGreen);
-                free.preserveAspect = true;
-                free.raycastTarget = false;
-                HookSkin.Box(free.rectTransform, 0.55f, 0.62f, 1.12f, 1.22f);
-                var ft = HookSkin.Outlined(SurvivalVisuals.Text(free.transform, "T", S("hook.free", "FREE"), 13, TextAnchor.MiddleCenter, Color.white), 1.4f);
-                ft.fontStyle = FontStyle.Bold;
-                ft.raycastTarget = false;
-                SurvivalVisuals.Stretch(ft.rectTransform);
-            }
-
-            var chestRt = chestBtn.GetComponent<RectTransform>();
-            Wire(chestBtn, () =>
-            {
-                if (!Campaign.ChestReady(ch))
-                {
-                    _hook?.Say(chestRt, S("campaign.chest.locked", "Clear every stage in this chapter to open its chest"), Warn);
-                    return;
-                }
-
-                var rows = new Dictionary<string, int>();
-                foreach (var pair in cat.Chapter(ch)!.Chest)
-                {
-                    rows[pair.Key] = pair.Value;
-                }
-
-                _hook?.Sparks(chestRt, FreeGreen, 14);
-                if (_hook != null)
-                {
-                    _hook.Celebrate(S("campaign.chest.title", "Chapter chest!"), rows, () => Campaign.ClaimChest(ch));
-                }
-                else
-                {
-                    Campaign.ClaimChest(ch);
-                }
-
-                SaveNow();
-                BuildStageStrip(strip, current);
-            });
-
-            // Stage buttons for this chapter.
-            var w = 0.95f / Mathf.Max(1, stages.Count);
-            for (var i = 0; i < stages.Count; i++)
-            {
-                var s = stages[i];
-                var on = s.Id == current.Id;
-                var lk = Campaign.Lock(s.Id);
-                var open = lk == StageLock.Open;
-                var key = s.Boss ? HookArtKeys.ButtonGold : HookArtKeys.ButtonBlue;
-                var x0 = 0.025f + i * w;
-                var label = SheetButton(strip, "Stage_" + s.Id, key, s.Boss ? SurvivalVisuals.MineFill : HeroFrame, x0 + 0.003f, 0f, x0 + w - 0.003f, on ? 0.54f : 0.50f, stages.Count > 6 ? 17 : 19, out var sb);
-                var num = ch == 0 ? (i + 1).ToString() : s.Number.ToString();
-                var mark = Campaign.IsCleared(s.Id) ? " \u2713" : lk == StageLock.Castle ? "\n\u2302" + cat.CastleGate(s) : "";
-                label.text = s.Boss ? (s.Number == cat.BattleCampaign?.StagesPerChapter ? "\u2620" : "\u2605") + num + mark : num + mark;
-                if (ch == 0)
-                {
-                    label.text += "\n" + s.Name;
-                }
-
-                label.color = open ? SurvivalVisuals.Cream : SurvivalVisuals.Mute;
-                if (on)
-                {
-                    var ring = SurvivalVisuals.Image(sb.transform, "Selected", new Color(1f, 0.86f, 0.35f, 0.9f));
-                    ring.raycastTarget = false;
-                    HookSkin.Box(ring.rectTransform, 0.08f, -0.10f, 0.92f, 0.0f);
-                }
-
-                if (!open)
-                {
-                    sb.GetComponent<Image>().color = Disabled;
-                }
-
-                var target = s;
-                var sbRt = sb.GetComponent<RectTransform>();
-                Wire(sb, () =>
-                {
-                    switch (Campaign.Lock(target.Id))
-                    {
-                        case StageLock.Open:
-                            OpenSetup(target);
-                            break;
-                        case StageLock.Castle:
-                            _hook?.Say(sbRt, Fmt("campaign.stage_castle", "Castle Lv {0} needed \u2014 upgrade it in town (speed-ups make it faster)", cat.CastleGate(target)), Warn);
-                            break;
-                        default:
-                            _hook?.Say(sbRt, S("campaign.stage_locked", "Clear the stage before first"), Warn);
-                            break;
-                    }
-                });
-            }
-        }
-
-        private static Text SheetButton(RectTransform parent, string name, string key, Color fallback, float x0, float y0, float x1, float y1, int size, out Button button)
+        internal static Text SheetButton(RectTransform parent, string name, string key, Color fallback, float x0, float y0, float x1, float y1, int size, out Button button)
         {
             button = HookSkin.Button(parent, name, key, fallback, 0.5f);
             HookSkin.Box(button.GetComponent<RectTransform>(), x0, y0, x1, y1);
@@ -3087,7 +1687,7 @@ namespace Survival.Unity
             return label;
         }
 
-        private void Wire(Button button, Action onTap)
+        internal void Wire(Button button, Action onTap)
         {
             button.onClick.AddListener(() =>
             {
@@ -3100,7 +1700,7 @@ namespace Survival.Unity
             });
         }
 
-        private void Juice(RectTransform rt)
+        internal void Juice(RectTransform rt)
         {
             if (_hook != null)
             {
@@ -3129,7 +1729,7 @@ namespace Survival.Unity
             return parts.Length > 1 ? parts[0].Substring(0, 1) + parts[parts.Length - 1].Substring(0, 1) : name.Substring(0, Math.Min(2, name.Length));
         }
 
-        private static string Title(string s) => string.IsNullOrEmpty(s) ? "" : char.ToUpperInvariant(s[0]) + s.Substring(1);
+        internal static string Title(string s) => string.IsNullOrEmpty(s) ? "" : char.ToUpperInvariant(s[0]) + s.Substring(1);
 
         private static Color RarityColor(string rarity) => rarity switch
         {
@@ -3138,43 +1738,14 @@ namespace Survival.Unity
             _ => new Color(0.55f, 0.78f, 1f, 1f)
         };
 
-        private string OddsName(BattleOdds o) => o switch
-        {
-            BattleOdds.Easy => S("campaign.odds.easy", "EASY"),
-            BattleOdds.Even => S("campaign.odds.even", "EVEN"),
-            BattleOdds.Hard => S("campaign.odds.hard", "HARD"),
-            _ => S("campaign.odds.very_hard", "VERY HARD")
-        };
-
-        private static Color OddsColor(BattleOdds o) => o switch
-        {
-            BattleOdds.Easy => new Color(0.30f, 0.78f, 0.38f, 1f),
-            BattleOdds.Even => new Color(0.86f, 0.68f, 0.22f, 1f),
-            BattleOdds.Hard => new Color(0.90f, 0.42f, 0.22f, 1f),
-            _ => new Color(0.80f, 0.20f, 0.24f, 1f)
-        };
-
-        private string BountyName(BountyDef b) => b.Kind switch
-        {
-            "win" => Fmt("campaign.bounty.win", "Win {0} battles", b.Count),
-            "clear" => Fmt("campaign.bounty.clear", "Clear {0}", Campaign?.Catalog.Stage(b.Target)?.Name ?? b.Target),
-            "hero_level" => Fmt("campaign.bounty.level", "Train a hero to Lv {0}", b.Count),
-            _ => b.Id
-        };
-
-        private string RowName(string key) =>
-            key.StartsWith("shard.", StringComparison.Ordinal)
-                ? Fmt("campaign.shards_of", "{0} shards", HeroName(key.Substring(6)))
-                : S(key + ".name", key);
-
-        private string HeroName(string id)
+        internal string HeroName(string id)
         {
             var def = Campaign?.Catalog.Hero(id);
             return S(id + ".name", def != null ? def.Fighter : id);
         }
 
-        private string S(string key, string fallback) => _session != null ? _session.Pack.StringOr(key, fallback) : fallback;
+        internal string S(string key, string fallback) => _session != null ? _session.Pack.StringOr(key, fallback) : fallback;
 
-        private string Fmt(string key, string fallback, params object[] args) => string.Format(CultureInfo.InvariantCulture, S(key, fallback), args);
+        internal string Fmt(string key, string fallback, params object[] args) => string.Format(CultureInfo.InvariantCulture, S(key, fallback), args);
     }
 }

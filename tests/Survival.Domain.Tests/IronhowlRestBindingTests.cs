@@ -13,7 +13,7 @@ public sealed class IronhowlRestBindingTests
     [Fact]
     public void Rest_animated_node_paths_match_walk_and_the_arms_are_not_the_t_pose()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var walkPack = Path.Combine(root, "Assets", IronhowlMotion.WalkThemePackRel);
         var walkPaths = AnimatedPaths(File.ReadAllBytes(walkPack));
         Assert.DoesNotContain(walkPaths, p => p.Contains("Armature", StringComparison.Ordinal));
@@ -150,22 +150,6 @@ public sealed class IronhowlRestBindingTests
     {
         var name = models[id];
         return parent.TryGetValue(id, out var par) ? PathOf(par, models, parent) + "/" + name : name;
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "Assets", "ThemePack", "fantasy_kingdom_a", "pack.json")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("repo root");
     }
 
     internal sealed class Fbx

@@ -81,26 +81,26 @@ namespace Survival.Domain.Runner
         {
             switch (roster)
             {
-                case "Lyra":
+                case FighterNames.Lyra:
                     return new RunnerAttackClip(LyraAttack.Spec.ClipSecondsFor, LyraAttack.ReleaseFrame / Fps, "LyraAttack.ReleaseFrame f" + LyraAttack.ReleaseFrame);
-                case "Rowan":
+                case FighterNames.Rowan:
                     return new RunnerAttackClip(RowanAttack.Spec.ClipSecondsFor, RowanAttack.ReleaseFrame / Fps, "RowanAttack.ReleaseFrame f" + RowanAttack.ReleaseFrame);
-                case "Oakenshield":
+                case FighterNames.Oakenshield:
                     return new RunnerAttackClip(OakenshieldAttack.Spec.ClipSecondsFor, OakenshieldAttack.ReleaseFrame / Fps, "OakenshieldAttack.ReleaseFrame f" + OakenshieldAttack.ReleaseFrame);
-                case "Sir Aldric":
+                case FighterNames.SirAldric:
                     return new RunnerAttackClip(
                         SirAldricBattlePoses.AttackSeconds,
                         LockedBattleHits.SirAldricContactFrame / Fps,
                         "LockedBattleHits.SirAldricContactFrame f" + LockedBattleHits.SirAldricContactFrame);
-                case "Vespera":
+                case FighterNames.Vespera:
                     return new RunnerAttackClip(VesperaAttack.Spec.ClipSecondsFor, VesperaAttack.ReleaseFrame / Fps, "VesperaAttack.ReleaseFrame f" + VesperaAttack.ReleaseFrame);
-                case "Bonequill":
+                case FighterNames.Bonequill:
                     return new RunnerAttackClip(BonequillAttack.Spec.ClipSecondsFor, BonequillAttack.ReleaseFrame / Fps, "BonequillAttack.ReleaseFrame f" + BonequillAttack.ReleaseFrame);
-                case "Nightfang":
+                case FighterNames.Nightfang:
                     return new RunnerAttackClip(NightfangAttack.Spec.ClipSecondsFor, NightfangAttack.ReleaseFrame / Fps, "NightfangAttack.ReleaseFrame f" + NightfangAttack.ReleaseFrame);
-                case "Ashwyrm":
+                case FighterNames.Ashwyrm:
                     return new RunnerAttackClip(AshwyrmAttack.Spec.ClipSecondsFor, AshwyrmAttack.ReleaseFrame / Fps, "AshwyrmAttack.ReleaseFrame f" + AshwyrmAttack.ReleaseFrame);
-                case "Blightroot":
+                case FighterNames.Blightroot:
                     return new RunnerAttackClip(
                         BlightrootBattlePoses.AttackSeconds,
                         LockedBattleHits.BlightrootContactFrame / Fps,

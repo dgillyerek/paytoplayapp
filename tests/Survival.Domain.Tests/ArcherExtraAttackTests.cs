@@ -19,7 +19,7 @@ public sealed class ArcherExtraAttackTests
             RowanMotion.Attack2FileName, RowanMotion.Attack2Md5, RowanMotion.Attack2LastFrame, RowanMotion.Attack2BowShots);
         AssertExtraClip(RowanMotion.Spec, RowanMotion.ThemePackDir, RowanMotion.DesignMixamoAttacksDir, RowanMotion.Attack3PoseName,
             RowanMotion.Attack3FileName, RowanMotion.Attack3Md5, RowanMotion.Attack3LastFrame, RowanMotion.Attack3BowShots);
-        var sums = File.ReadAllText(Path.Combine(FindRepoRoot(), RowanMotion.DesignMixamoAttacksDir, "CHECKSUMS.md5"));
+        var sums = File.ReadAllText(Path.Combine(TestRepo.Root, RowanMotion.DesignMixamoAttacksDir, "CHECKSUMS.md5"));
         Assert.Contains("7c18cbd67933dae68ebaee6b2931630b  ROWAN_mixamo_standing_draw_arrow.fbx", sums, StringComparison.Ordinal);
         Assert.Contains("ecc0ca95c858ee1083294ba57614d994  ROWAN_mixamo_standing_aim_recoil.fbx", sums, StringComparison.Ordinal);
         Assert.Contains("6bf0a7e22a2a3dffe5e8d7707bf11ca4  ROWAN_mixamo_standing_aim_overdraw.fbx", sums, StringComparison.Ordinal);
@@ -104,7 +104,7 @@ public sealed class ArcherExtraAttackTests
             BonequillMotion.Attack2FileName, BonequillMotion.Attack2Md5, BonequillMotion.Attack2LastFrame, BonequillMotion.Attack2BowShots);
         AssertExtraClip(BonequillMotion.Spec, BonequillMotion.ThemePackDir, BonequillMotion.DesignMixamoAttacksDir, BonequillMotion.Attack3PoseName,
             BonequillMotion.Attack3FileName, BonequillMotion.Attack3Md5, BonequillMotion.Attack3LastFrame, BonequillMotion.Attack3BowShots);
-        var sums = File.ReadAllText(Path.Combine(FindRepoRoot(), BonequillMotion.DesignMixamoAttacksDir, "CHECKSUMS.md5"));
+        var sums = File.ReadAllText(Path.Combine(TestRepo.Root, BonequillMotion.DesignMixamoAttacksDir, "CHECKSUMS.md5"));
         Assert.Contains("67c1411ced096fa3f00bccea26647f2c  BONEQUILL_mixamo_standing_draw_arrow.fbx", sums, StringComparison.Ordinal);
         Assert.Contains("061909498f1487dd6fa9218297326633  BONEQUILL_mixamo_standing_aim_overdraw.fbx", sums, StringComparison.Ordinal);
         Assert.Equal("b3fd5c3208bc3f2992a1293fcd77ef0c", BonequillAttack.FileMd5);
@@ -157,7 +157,7 @@ public sealed class ArcherExtraAttackTests
 
     internal static void AssertExtraClip(BlenderRigSpec spec, string themePackDir, string designDir, string pose, string file, string md5, int lastFrame, BlenderBowShots shots)
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var clip = spec.ExtraClips.Single(c => c.PoseName == pose);
         Assert.Equal(file, clip.FileName);
         Assert.Equal("Scene", clip.TakeName);
@@ -185,21 +185,5 @@ public sealed class ArcherExtraAttackTests
         using var md5 = MD5.Create();
         using var stream = File.OpenRead(path);
         return Convert.ToHexString(md5.ComputeHash(stream)).ToLowerInvariant();
-    }
-
-    internal static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (Directory.Exists(Path.Combine(dir.FullName, "Assets")) && Directory.Exists(Path.Combine(dir.FullName, "tests")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new InvalidOperationException("Repo root not found.");
     }
 }

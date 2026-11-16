@@ -11,18 +11,17 @@
 ## Architecture
 
 ```
-Unity MonoBehaviours  →  Grove.Domain (no engine refs)
-BoardView / DragMergeController / PrototypeHud
-MergeSession / BoardGrid / CatalogLoader / GardenCrate / EnergyWallet / OrderBoard
+Survival.Unity (MonoBehaviours, views, actors)  →  Survival.Domain (no engine refs)
+Survival.Editor (menus, importers, builds)
 ```
 
-Keep **all merge / crate / energy / order math** in `Grove.Domain`. Unity code animates, draws greybox quads, and calls `TryDrag` / `TryTap` / `TryDeliver`.
-
-Play Mode builds the HUD at runtime (no extra scene wiring). Input Manager + Input System are both enabled (`activeInputHandler: 2`) so Editor mouse drag works.
+Keep game rules (economy, campaign, runner, battle math) in `Assets/Survival/Runtime` (`Survival.Domain`). Unity code
+draws, animates and forwards input.
 
 ## Tests
 
-`dotnet test tests/Grove.Domain.Tests` compiles `Assets/Grove/Runtime/**/*.cs` directly. Do not put `UnityEngine` types in Runtime.
+`dotnet test tests/Survival.Domain.Tests` compiles `Assets/Survival/Runtime/**/*.cs` directly. Do not put `UnityEngine`
+types in Runtime.
 
 ## URP
 

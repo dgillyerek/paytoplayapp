@@ -1,5 +1,5 @@
 {
-  "_doc": "Power-up pack ladder (store.power_packs in stores.json holds each pack's sku and grants; the theme pack's store/products.json maps the sku to its store product id and price label). This file adds what the store does not know: the reference USD price of each tier (for the value maths only; the shown price is the theme's price_label), one-time offers, the gem-equivalent rates behind the '+X% value' labels, and what a War Banner charge does in the runner. tests/Survival.Domain.Tests/PowerPackTests.cs, docs/runner_balance.md.",
+  "_doc": "Power-up pack ladder (store.power_packs in stores.json holds each pack's sku and grants; the theme pack's store/products.json maps the sku to its store product id and price label). This file adds what the store does not know: the reference USD price of each tier (for the value maths only; the shown price is the theme's price_label), one-time offers, the gem-equivalent rates behind the '+X% value' labels, and what a War Banner charge does in the runner. tests/Survival.Domain.Tests/PowerPackTests.cs, Docs/runner_balance.md.",
   "store": "store.power_packs",
   "baseline": "offer.power_t1",
   "value_rates": {

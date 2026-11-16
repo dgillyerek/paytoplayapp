@@ -148,7 +148,7 @@ namespace Survival.Domain.Heroes
         };
 
         public static readonly ClothSplitSpec Spec = new ClothSplitSpec(
-            "Rowan",
+            FighterNames.Rowan,
             RowanMotion.DesignDir,
             RowanMotion.BoneCount,
             SplitHeightMetres,

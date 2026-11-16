@@ -8,7 +8,7 @@ namespace Survival.Domain.Tests;
 /// </summary>
 public sealed class AndroidCiWorkflowTests
 {
-    private static readonly string Root = FindRepoRoot();
+    private static readonly string Root = TestRepo.Root;
     private static readonly string Live = Path.Combine(Root, ".github", "workflows", "android-build.yml");
 
     // Staged copy: the bot's GitHub login cannot push .github/workflows (no "workflow" scope), so the workflow waits here
@@ -126,16 +126,5 @@ public sealed class AndroidCiWorkflowTests
         var flavor = File.ReadAllText(Path.Combine(Root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
         Assert.Contains("PlayTargetSdk = AndroidSdkVersions.AndroidApiLevel36", flavor, StringComparison.Ordinal);
         Assert.Contains("PlayerSettings.Android.targetSdkVersion = PlayTargetSdk", flavor, StringComparison.Ordinal);
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "ProjectSettings", "ProjectVersion.txt")))
-        {
-            dir = dir.Parent;
-        }
-
-        return dir?.FullName ?? throw new InvalidOperationException("repo root not found");
     }
 }

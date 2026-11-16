@@ -65,23 +65,12 @@ public sealed class GlTfMetalRoughTests
     [Fact]
     public void Player_packs_the_metal_rough_map_instead_of_binding_it_raw()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var player = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigPlayer.cs"));
         Assert.Contains("GlTfMetalRough.ToUrp", player, StringComparison.Ordinal);
         Assert.Contains("linear: true, readable: true", player, StringComparison.Ordinal);
         Assert.Contains("_METALLICSPECGLOSSMAP", player, StringComparison.Ordinal);
         Assert.Contains("GlTfMetalRough.FallbackSmoothness", player, StringComparison.Ordinal);
         Assert.DoesNotContain("SetTexture(\"_MetallicGlossMap\", metal)", player, StringComparison.Ordinal);
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, "Assets")))
-        {
-            dir = dir.Parent;
-        }
-
-        return dir?.FullName ?? throw new InvalidOperationException("repo root not found");
     }
 }

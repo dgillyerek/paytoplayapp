@@ -29,7 +29,7 @@ namespace Survival.Domain.Enemies
         };
 
         public static readonly BlenderRigAttackSpec Spec = new BlenderRigAttackSpec(
-            "Nightfang",
+            FighterNames.Nightfang,
             FileName,
             FileMd5,
             DesignDir,

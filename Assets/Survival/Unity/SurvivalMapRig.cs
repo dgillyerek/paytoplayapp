@@ -67,13 +67,6 @@ namespace Survival.Unity
             _velocity = Vector2.zero;
         }
 
-        public void JumpTo(float worldX, float worldY)
-        {
-            _focusTarget = null;
-            Camera?.CenterOn(worldX, worldY);
-            Apply();
-        }
-
         // ---------- pointer ----------
 
         public void OnBeginDrag(PointerEventData eventData)

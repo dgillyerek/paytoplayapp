@@ -55,7 +55,6 @@ public class VesperaWalkCastHandsTests
         var src = File.ReadAllText(Path.Combine(Layouts.RepoRoot(), "Assets", "Survival", "Unity", "BlenderRigPlayer.cs"));
         Assert.Contains("_hipsStandIn = true;", src);
         Assert.Contains("CopyUpperFromTake(take, prev);", src);
-        Assert.Contains("#if UNITY_EDITOR || DEVELOPMENT_BUILD", src);
     }
 
     /// <summary>

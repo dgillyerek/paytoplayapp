@@ -33,7 +33,7 @@ public sealed class StormcrestAttackTests
     [Fact]
     public void Stormcrest_attack_fbx_props_and_design_sot_match_design_md5()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var pack = Path.Combine(root, "Assets", StormcrestMotion.ThemePackDir);
         var design = Path.Combine(root, StormcrestAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
         Assert.Equal("9bae7b662f48a1c1eec33fafc0fed6d2", StormcrestAttack.FileMd5);
@@ -148,9 +148,9 @@ public sealed class StormcrestAttackTests
     [Fact]
     public void Stormcrest_attack_is_wired_in_the_actor_and_has_no_demo_menu()
     {
-        var root = FindRepoRoot();
-        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "StormcrestActor.cs"));
-        Assert.Contains("StormcrestAttack.Spec", actor, StringComparison.Ordinal);
+        var root = TestRepo.Root;
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigActor.cs"));
+        BlenderRigCastTests.AssertCast("Stormcrest", StormcrestMotion.Spec, StormcrestAttack.Spec);
         var driver = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigAttackDriver.cs"));
         Assert.Contains("ParticleSystem", driver, StringComparison.Ordinal);
         Assert.Contains("TrailRenderer", driver, StringComparison.Ordinal);
@@ -162,21 +162,5 @@ public sealed class StormcrestAttackTests
         using var md5 = MD5.Create();
         using var stream = File.OpenRead(path);
         return Convert.ToHexString(md5.ComputeHash(stream)).ToLowerInvariant();
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (Directory.Exists(Path.Combine(dir.FullName, "Assets")) && Directory.Exists(Path.Combine(dir.FullName, "tests")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new InvalidOperationException("Repo root not found.");
     }
 }

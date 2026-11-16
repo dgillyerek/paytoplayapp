@@ -82,7 +82,7 @@ namespace Survival.Domain.Enemies
         };
 
         public static readonly BlenderRigAttackSpec Spec = new BlenderRigAttackSpec(
-            "Bonequill",
+            FighterNames.Bonequill,
             FileName,
             FileMd5,
             DesignDir,

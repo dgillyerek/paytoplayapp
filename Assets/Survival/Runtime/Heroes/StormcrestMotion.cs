@@ -95,7 +95,7 @@ namespace Survival.Domain.Heroes
         };
 
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(
-            "Stormcrest",
+            FighterNames.Stormcrest,
             ThemePackDir,
             RestFileName,
             RejectedMixamoFileName,

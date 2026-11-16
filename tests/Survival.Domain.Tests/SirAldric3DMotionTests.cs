@@ -135,7 +135,7 @@ public sealed class SirAldric3DMotionTests
     [Fact]
     public void Gait_bar_refs_are_on_disk()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var dir = Path.Combine(
             root,
             "design",
@@ -230,7 +230,7 @@ public sealed class SirAldric3DMotionTests
     [Fact]
     public void Look_targets_00_01_02_are_on_disk()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var dir = Path.Combine(
             root,
             "design",
@@ -248,7 +248,7 @@ public sealed class SirAldric3DMotionTests
     [Fact]
     public void Meshy_animate_actor_binds_albedo_and_keeps_walking_clip()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var actor = Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs");
         var src = File.ReadAllText(actor);
         Assert.Contains("SetTexture(\"_BaseMap\"", src, StringComparison.Ordinal);
@@ -265,7 +265,7 @@ public sealed class SirAldric3DMotionTests
     [Fact]
     public void Pilot_mixamo_sep_walk_slash_are_sot_and_clipsword_is_not()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
         Assert.Contains("SirAldric_body_holefixed_walk.fbx", actor, StringComparison.Ordinal);
         Assert.Contains("SirAldric_body_holefixed_slash.fbx", actor, StringComparison.Ordinal);
@@ -883,7 +883,7 @@ public sealed class SirAldric3DMotionTests
     [Fact]
     public void Lite_sword_shield_pack_is_exact_mixamo_names_on_slash_avatar()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         Assert.Equal(17, SirAldric3DMotion.LiteSwordShieldClipCount);
         Assert.Equal(17, SirAldric3DMotion.LiteSwordShieldClips.Length);
         Assert.Equal(
@@ -960,7 +960,7 @@ public sealed class SirAldric3DMotionTests
 
     private static string SirAldricMeshyAnimateActorPath()
     {
-        var actor = File.ReadAllText(Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
+        var actor = File.ReadAllText(Path.Combine(TestRepo.Root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
         const string needle = "ThemePackAttackFbx = \"";
         var i = actor.IndexOf(needle, StringComparison.Ordinal);
         Assert.True(i >= 0);
@@ -972,26 +972,10 @@ public sealed class SirAldric3DMotionTests
     [Fact]
     public void Play_placeholder_locked_rear_png_still_exists()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var packPng = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "SIR_ALDRIC_REAR_MASTER_LOCKED.png");
         Assert.True(File.Exists(packPng));
         Assert.True(new FileInfo(packPng).Length > 100_000);
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "Assets", "ThemePack", "fantasy_kingdom_a", "pack.json")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("repo root");
     }
 
     private static float[] ReadJsonVec3(string json, string key)

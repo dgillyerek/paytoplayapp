@@ -701,8 +701,6 @@ namespace Survival.Unity
         /// <summary>Show or hide a rail entry without removing it (feature not available right now).</summary>
         public void SetRailShown(string id, bool shown) => _rail?.Model.SetShown(id, shown);
 
-        public void RemoveRail(string id) => _rail?.Unregister(id);
-
         public RectTransform? RailButton(string id) => _rail?.Button(id);
 
         private void BuildEventsRail(ThemePackBinder pack)

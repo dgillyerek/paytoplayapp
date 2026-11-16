@@ -151,7 +151,7 @@ public sealed class LockedBattleDragonScaleTests
     [Fact]
     public void Battle_code_scales_the_body_its_boxes_impacts_and_shadow_but_not_the_clips()
     {
-        var root = ArcherExtraAttackTests.FindRepoRoot();
+        var root = TestRepo.Root;
         string Unity(string file) => File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", file));
         var demo = Unity("LockedBattleDemo.cs");
         Assert.Contains("f.Scale *= f.BattleScale;", demo, StringComparison.Ordinal);
@@ -165,7 +165,7 @@ public sealed class LockedBattleDragonScaleTests
         var impact = Unity("LockedBattleImpact.cs");
         Assert.Contains("main.startSize = new ParticleSystem.MinMaxCurve(sizeMin * _size, sizeMax * _size);", impact, StringComparison.Ordinal);
         Assert.Contains("light.range = range * _size;", impact, StringComparison.Ordinal);
-        foreach (var actor in new[] { "EmberfangActor.cs", "AshwyrmActor.cs" })
+        foreach (var actor in new[] { "EmberfangActor.cs", "BlenderRigActor.cs" })
         {
             Assert.DoesNotContain("BattleScale", Unity(actor), StringComparison.Ordinal);
         }

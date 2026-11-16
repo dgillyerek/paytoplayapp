@@ -220,7 +220,7 @@ public sealed class LockedBattleRotationTests
         Assert.DoesNotContain("mutant", IronhowlMotion.Attack4FileName, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("mutant", IronhowlMotion.Attack5FileName, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("mutant", IronhowlMotion.Attack6FileName, StringComparison.OrdinalIgnoreCase);
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         Assert.Empty(Directory.GetFiles(Path.Combine(root, "Assets", IronhowlMotion.ThemePackDir), "*mutant*"));
 
         // Mixamo offered no In Place: the battle holds the hips' travel on the spot for both.
@@ -254,7 +254,7 @@ public sealed class LockedBattleRotationTests
     [Fact]
     public void Ironhowl_mixamo_attack_files_match_the_downloads_and_are_pinned_generic()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         foreach (var (file, md5, pose, last) in new[]
         {
             (IronhowlMotion.Attack2FileName, IronhowlMotion.Attack2Md5, IronhowlMotion.Attack2PoseName, IronhowlMotion.Attack2LastFrame),
@@ -290,7 +290,7 @@ public sealed class LockedBattleRotationTests
     [Fact]
     public void Battle_demo_plays_the_rotation_pose_and_lands_per_attack_hits()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "LockedBattleDemo.cs"));
         Assert.Contains("LockedBattleRotation.MeleeHitCrossed(f.Data, f.Profile", demo, StringComparison.Ordinal);
         Assert.Contains("LockedBattleRotation.AttackAt(f.Data, index).PoseName", demo, StringComparison.Ordinal);
@@ -298,16 +298,5 @@ public sealed class LockedBattleRotationTests
         Assert.Contains("f.BaseLocal + f.AttackOffset", demo, StringComparison.Ordinal);
         var blight = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlightrootActor.cs"));
         Assert.Contains("BlightrootBattlePoses.IsAttack(pose)", blight, StringComparison.Ordinal);
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, "Assets", "Survival")))
-        {
-            dir = dir.Parent;
-        }
-
-        return dir?.FullName ?? throw new DirectoryNotFoundException("repo root");
     }
 }

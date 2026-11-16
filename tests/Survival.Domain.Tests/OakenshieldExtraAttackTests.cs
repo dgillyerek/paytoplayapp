@@ -13,7 +13,7 @@ public sealed class OakenshieldExtraAttackTests
     [Fact]
     public void Root_snare_is_a_baked_mixamo_clip_on_her_rig_and_the_approved_attack_is_untouched()
     {
-        var root = ArcherExtraAttackTests.FindRepoRoot();
+        var root = TestRepo.Root;
         var design = Path.Combine(root, OakenshieldMotion.DesignMixamoAttacksDir);
         var pack = Path.Combine(root, "Assets", OakenshieldMotion.ThemePackDir, OakenshieldMotion.Attack3FileName);
         var md5 = OakenshieldMotion.Attack3Md5;
@@ -70,7 +70,7 @@ public sealed class OakenshieldExtraAttackTests
     [Fact]
     public void Spear_thrust_is_a_baked_mixamo_clip_and_the_spear_turns_in_her_grip_into_the_two_hand_line_at_the_reach()
     {
-        var root = ArcherExtraAttackTests.FindRepoRoot();
+        var root = TestRepo.Root;
         var design = Path.Combine(root, OakenshieldMotion.DesignMixamoAttacksDir);
         var pack = Path.Combine(root, "Assets", OakenshieldMotion.ThemePackDir, OakenshieldMotion.Attack2FileName);
         var md5 = OakenshieldMotion.Attack2Md5;

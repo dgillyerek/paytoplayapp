@@ -7,7 +7,7 @@ public sealed class LockedBattleGroundTests
     [Fact]
     public void Ground_textures_sit_next_to_the_world_terrain_and_are_wired_into_the_battle()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var assets = Path.Combine(root, "Assets");
         Assert.True(File.Exists(Path.Combine(assets, LockedBattleGroundSpec.MapDir, LockedBattleGroundSpec.WorldTerrainFileName)));
         foreach (var rel in new[] { LockedBattleGroundSpec.GrassTileRel, LockedBattleGroundSpec.DirtTrackRel })
@@ -53,21 +53,5 @@ public sealed class LockedBattleGroundTests
 
         Assert.InRange(LockedBattleGroundSpec.ContactShadowAlpha, 0.3f, 0.7f);
         Assert.True(LockedBattleGroundSpec.ContactShadowMinMetres < LockedBattleGroundSpec.ContactShadowMaxMetres);
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "Assets", "ThemePack", "fantasy_kingdom_a", "pack.json")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("repo root");
     }
 }

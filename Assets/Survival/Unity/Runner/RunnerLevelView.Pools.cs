@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Survival.Domain.Runner;
 using Survival.Domain.Theme;
 using UnityEngine;
+using Survival.Domain.Roster;
 
 namespace Survival.Unity
 {
@@ -26,7 +27,7 @@ namespace Survival.Unity
         /// <summary>Traps of one kind and width kept ready (each level has a handful at most).</summary>
         private const int HazardPrewarmCap = 6;
 
-        private static readonly string[] ShotLooks = { "Lyra", "Rowan", "Oakenshield", "Bonequill", "Vespera", "" };
+        private static readonly string[] ShotLooks = { FighterNames.Lyra, FighterNames.Rowan, FighterNames.Oakenshield, FighterNames.Bonequill, FighterNames.Vespera, "" };
 
         private RunnerRigPool? _pool;
 
@@ -212,8 +213,8 @@ namespace Survival.Unity
         /// <summary>Arrow-shooters fly a real arrow; Oakenshield throws a thorn; everyone else casts a glowing bolt.</summary>
         private static ShotKind KindOf(string look) => look switch
         {
-            "Rowan" or "Bonequill" => ShotKind.Arrow,
-            "Oakenshield" => ShotKind.Thorn,
+            FighterNames.Rowan or FighterNames.Bonequill => ShotKind.Arrow,
+            FighterNames.Oakenshield => ShotKind.Thorn,
             _ => ShotKind.Bolt,
         };
 

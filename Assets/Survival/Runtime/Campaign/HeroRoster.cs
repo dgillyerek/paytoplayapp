@@ -156,13 +156,6 @@ namespace Survival.Domain.Campaign
             return def == null ? default : HeroStats.Of(def, Catalog.Curve, (p?.Level ?? 1) + 1, p?.Stars ?? 1);
         }
 
-        public HeroStats NextStarStats(string heroId)
-        {
-            var def = Catalog.Hero(heroId);
-            var p = Get(heroId);
-            return def == null ? default : HeroStats.Of(def, Catalog.Curve, p?.Level ?? 1, (p?.Stars ?? 1) + 1);
-        }
-
         public int LevelCap(string heroId) => Catalog.Curve.LevelCap(Get(heroId)?.Stars ?? 1);
 
         public IReadOnlyDictionary<string, int> LevelUpCost(string heroId)

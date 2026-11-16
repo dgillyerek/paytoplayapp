@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using Survival.Domain.Roster;
 
 namespace Survival.Domain.Campaign
 {
@@ -34,16 +35,16 @@ namespace Survival.Domain.Campaign
             var s = Math.Max(0.01f, battleScale);
             switch (fighterName)
             {
-                case "Blightroot":
+                case FighterNames.Blightroot:
                     return 0.62f * s;
-                case "Ironhowl":
+                case FighterNames.Ironhowl:
                     return 0.75f * s;
-                case "Nightfang":
+                case FighterNames.Nightfang:
                     return 0.6f * s;
-                case "Emberfang":
-                case "Ashwyrm":
-                case "Stormcrest":
-                case "Vorgath":
+                case FighterNames.Emberfang:
+                case FighterNames.Ashwyrm:
+                case FighterNames.Stormcrest:
+                case FighterNames.Vorgath:
                     return designHeightMetres * 0.55f * s;
                 default:
                     return Math.Max(0.05f, designHeightMetres) * 0.2f * s;

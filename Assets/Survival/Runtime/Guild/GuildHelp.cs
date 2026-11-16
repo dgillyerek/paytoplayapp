@@ -269,27 +269,6 @@ namespace Survival.Domain.Guild
             return true;
         }
 
-        /// <summary>Ask for help on every running timer. Returns how many asked.</summary>
-        public int AskAll()
-        {
-            var n = 0;
-            foreach (var t in new List<GameTimer>(Timers.Active))
-            {
-                if (CanAsk(t.Id))
-                {
-                    _asks[t.Id] = (Now, 0);
-                    n++;
-                }
-            }
-
-            if (n > 0)
-            {
-                Changed?.Invoke();
-            }
-
-            return n;
-        }
-
         /// <summary>Apply guild helps that have arrived to the player's timers. Returns how many helps landed.</summary>
         public int Tick()
         {

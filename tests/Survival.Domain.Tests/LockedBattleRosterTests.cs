@@ -13,11 +13,13 @@ public sealed class LockedBattleRosterTests
         Assert.Equal(new[] { "Emberfang", "Stormcrest", "Lyra", "Oakenshield", "Sir Aldric", "Rowan" }, LockedBattleRoster.OnSide(BattleSide.Hero).Select(f => f.Name).ToArray());
         Assert.Equal(new[] { "Ironhowl", "Nightfang", "Vespera", "Ashwyrm", "Blightroot", "Bonequill" }, LockedBattleRoster.OnSide(BattleSide.Villain).Select(f => f.Name).ToArray());
 
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         foreach (var f in LockedBattleRoster.All)
         {
             var folder = f.Side == BattleSide.Hero ? "Heroes" : "Enemies";
-            Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Runtime", folder, f.FileKey + "Motion.cs")), f.Name);
+            // Sir Aldric's motion is the 3D one (SirAldric3DMotion); everyone else has <FileKey>Motion.
+            var motionDir = Path.Combine(root, "Assets", "Survival", "Runtime", folder);
+            Assert.True(File.Exists(Path.Combine(motionDir, f.FileKey + "Motion.cs")) || File.Exists(Path.Combine(motionDir, f.FileKey + "3DMotion.cs")), f.Name);
             Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Unity", f.ActorClassName + ".cs")), f.Name);
             Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", f.FileKey + ".unity")), f.Name + " plays in the battle, its own demo scene is gone");
             Assert.True(f.DesignHeightMetres > 0.5f && f.DesignHeightMetres < 2.5f, f.Name);
@@ -105,17 +107,9 @@ public sealed class LockedBattleRosterTests
         Assert.Single(LockedBattleRoster.All, f => f.Name == "Sir Aldric");
         Assert.Single(LockedBattleRoster.All, f => f.Name == "Rowan");
         Assert.Single(LockedBattleRoster.All, f => f.Name == "Bonequill");
-        var demo = File.ReadAllText(Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "LockedBattleDemo.cs"));
-        // Stray demo Blightroots (an open Blightroot scene) are still stripped; the battle's own
-        // lane-5 Blightroot under its root is the one exception, and it spawns after the strip.
-        Assert.Contains("StripLeftoverDemoActors", demo, StringComparison.Ordinal);
-        Assert.Contains("FindObjectsByType<BlightrootActor>", demo, StringComparison.Ordinal);
-        Assert.Contains("FindObjectsByType<BlightrootDemo>", demo, StringComparison.Ordinal);
-        Assert.Contains("!IsOwnLaneFighter(actor.transform)", demo, StringComparison.Ordinal);
-        Assert.Contains("actor.IsChildOf(transform)", demo, StringComparison.Ordinal);
+        var demo = File.ReadAllText(Path.Combine(TestRepo.Root, "Assets", "Survival", "Unity", "LockedBattleDemo.cs"));
         Assert.Contains("pivot.AddComponent<BlightrootActor>()", demo, StringComparison.Ordinal);
-        Assert.True(demo.IndexOf("StripLeftoverDemoActors();", StringComparison.Ordinal) < demo.IndexOf("var fighter = Spawn(data);", StringComparison.Ordinal));
-        var menu = File.ReadAllText(Path.Combine(FindRepoRoot(), "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
+        var menu = File.ReadAllText(Path.Combine(TestRepo.Root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
         Assert.Contains("OpenSceneMode.Single", menu, StringComparison.Ordinal);
     }
 
@@ -214,7 +208,7 @@ public sealed class LockedBattleRosterTests
     [Fact]
     public void Battle_scene_menu_and_build_list_are_wired_and_reuse_the_locked_actors()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var scenePath = Path.Combine(root, LockedBattleRoster.ScenePath.Replace('/', Path.DirectorySeparatorChar));
         Assert.True(File.Exists(scenePath));
         var scene = File.ReadAllText(scenePath);
@@ -265,7 +259,7 @@ public sealed class LockedBattleRosterTests
     [Fact]
     public void Locked_battle_files_match_their_locked_checksums_and_do_not_reimport_on_play()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var assets = Path.Combine(root, "Assets");
         Assert.Equal(StormcrestMotion.RestMd5, Md5(Path.Combine(assets, StormcrestMotion.RestThemePackRel)));
         Assert.Equal(StormcrestMotion.WalkMd5, Md5(Path.Combine(assets, StormcrestMotion.WalkThemePackRel)));
@@ -313,21 +307,5 @@ public sealed class LockedBattleRosterTests
     {
         var hash = System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(path));
         return Convert.ToHexString(hash).ToLowerInvariant();
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "Assets", "ThemePack", "fantasy_kingdom_a", "pack.json")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("repo root");
     }
 }

@@ -30,7 +30,7 @@ public sealed class PlayerBuildTests
     [Fact]
     public void Every_manifest_asset_and_raw_file_exists_under_Assets()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var missing = new List<string>();
         foreach (var fighter in PlayerBakeManifest.All)
         {
@@ -68,7 +68,7 @@ public sealed class PlayerBuildTests
     [Fact]
     public void Runtime_read_metal_rough_textures_are_importer_readable()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var checkedCount = 0;
         foreach (var rel in PlayerBakeManifest.AllAssets().Where(IsTexture))
         {
@@ -89,7 +89,7 @@ public sealed class PlayerBuildTests
     [Fact]
     public void Sir_Aldric_manifest_paths_match_the_actor()
     {
-        var actor = File.ReadAllText(Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
+        var actor = File.ReadAllText(Path.Combine(TestRepo.Root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
         foreach (var path in new[]
                  {
                      PlayerBakeManifest.SirAldricWalkFbx, PlayerBakeManifest.SirAldricAttackFbx,
@@ -105,7 +105,7 @@ public sealed class PlayerBuildTests
     [Fact]
     public void Raw_file_roots_exist_and_exclude_model_folders()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         foreach (var dir in PlayerBakeManifest.RawFileRoots.Concat(PlayerBakeManifest.RawFileExcludedDirs))
         {
             Assert.True(Directory.Exists(Path.Combine(root, "Assets", dir)), dir);
@@ -122,7 +122,7 @@ public sealed class PlayerBuildTests
     [InlineData("Assets/Survival/Runtime/Survival.Domain.asmdef")]
     public void Runtime_asmdefs_have_no_editor_references(string relPath)
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var path = Path.Combine(root, relPath.Replace('/', Path.DirectorySeparatorChar));
         if (!File.Exists(path))
         {
@@ -152,7 +152,7 @@ public sealed class PlayerBuildTests
     [InlineData("Assets/Survival/Runtime")]
     public void Runtime_code_only_touches_UnityEditor_inside_UNITY_EDITOR_blocks(string relDir)
     {
-        var dir = Path.Combine(FindRepoRoot(), relDir.Replace('/', Path.DirectorySeparatorChar));
+        var dir = Path.Combine(TestRepo.Root, relDir.Replace('/', Path.DirectorySeparatorChar));
         var hits = new List<string>();
         foreach (var file in Directory.GetFiles(dir, "*.cs", SearchOption.AllDirectories))
         {
@@ -202,7 +202,7 @@ public sealed class PlayerBuildTests
     [Fact]
     public void Bake_output_is_gitignored_and_link_xml_preserves_runtime_assemblies()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var ignore = File.ReadAllText(Path.Combine(root, ".gitignore"));
         Assert.Contains("ssets/Survival/PlayerBake/", ignore, StringComparison.Ordinal);
         var link = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "link.xml"));
@@ -349,21 +349,5 @@ public sealed class PlayerBuildTests
         }
 
         return Or();
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (Directory.Exists(Path.Combine(dir.FullName, "Assets")) && Directory.Exists(Path.Combine(dir.FullName, "tests")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new InvalidOperationException("Repo root not found.");
     }
 }

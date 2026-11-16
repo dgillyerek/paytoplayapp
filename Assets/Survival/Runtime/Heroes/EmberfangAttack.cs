@@ -28,7 +28,7 @@ namespace Survival.Domain.Heroes
         };
 
         public static readonly BlenderRigAttackSpec Spec = new BlenderRigAttackSpec(
-            "Emberfang",
+            FighterNames.Emberfang,
             FileName,
             FileMd5,
             DesignDir,

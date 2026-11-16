@@ -151,7 +151,7 @@ namespace Survival.Unity
                 if (purchases.IsSandbox)
                 {
                     // Child mode in the Editor / dev builds: same age-band + parental gate as the live service (#201).
-                    purchases = new Survival.Domain.Kids.GatedPurchaseService(purchases, new Survival.Domain.Iap.AgeBandPurchaseGate(() => KidSafety.AgeBand, new Iap.DeferredConsent(), Iap.SurvivalPurchases.AllowUnknownAge));
+                    purchases = new Survival.Domain.Kids.GatedPurchaseService(purchases, Iap.SurvivalPurchases.AgeGate());
                 }
 
                 var session = new SurvivalSession(

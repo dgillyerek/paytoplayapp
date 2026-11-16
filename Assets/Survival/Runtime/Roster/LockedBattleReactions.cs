@@ -215,31 +215,31 @@ namespace Survival.Domain.Roster
         {
             switch (fighter.Name)
             {
-                case "Emberfang":
+                case FighterNames.Emberfang:
                     return new LockedBattleReactionRig(
                         None,
                         new[] { "neck_01", "neck_02", "neck_03", "head" },
                         new[] { "wing_root.L", "wing_root.R" },
                         new[] { "tail_01", "tail_02", "tail_03" });
-                case "Stormcrest":
+                case FighterNames.Stormcrest:
                     return new LockedBattleReactionRig(
                         None,
                         new[] { "neck", "neck_02", "head" },
                         new[] { "wing_arm.L", "wing_arm.R" },
                         new[] { "tail_01", "tail_02" });
-                case "Ashwyrm":
+                case FighterNames.Ashwyrm:
                     return new LockedBattleReactionRig(
                         None,
                         None,
                         new[] { "wing_root.L", "wing_root.R" },
                         new[] { "tail_01", "tail_02", "tail_03" });
-                case "Nightfang":
+                case FighterNames.Nightfang:
                     return new LockedBattleReactionRig(
                         None,
                         new[] { "neck", "head" },
                         None,
                         new[] { "tail_01", "tail_02" });
-                case "Vorgath":
+                case FighterNames.Vorgath:
                     // The root "Bone" carries the legs, so the flinch stays on the neck and snout.
                     return new LockedBattleReactionRig(
                         None,

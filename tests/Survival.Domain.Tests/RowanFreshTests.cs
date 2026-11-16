@@ -35,7 +35,7 @@ public sealed class RowanFreshTests
     [Fact]
     public void ThemePack_and_design_files_match_and_import_generic()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var pack = Path.Combine(root, "Assets", RowanMotion.ThemePackDir);
         var design = Path.Combine(root, RowanMotion.DesignDir, "export");
         foreach (var (file, md5, clip) in new[]
@@ -109,7 +109,7 @@ public sealed class RowanFreshTests
     [Fact]
     public void Attack_arms_never_enter_chest_or_coat_and_bow_never_enters_the_gripping_hand()
     {
-        var work = Path.Combine(FindRepoRoot(), RowanMotion.DesignDir, "work", "apose_20261014");
+        var work = Path.Combine(TestRepo.Root, RowanMotion.DesignDir, "work", "apose_20261014");
         foreach (var file in new[] { "pen.json", "pen_rest_walk.json" })
         {
             using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(work, file)));
@@ -175,21 +175,5 @@ public sealed class RowanFreshTests
     {
         var hash = System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(path));
         return Convert.ToHexString(hash).ToLowerInvariant();
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "Assets", "ThemePack", "fantasy_kingdom_a", "pack.json")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("repo root");
     }
 }

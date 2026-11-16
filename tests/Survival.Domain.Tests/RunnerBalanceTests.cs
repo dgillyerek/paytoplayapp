@@ -16,7 +16,7 @@ namespace Survival.Domain.Tests;
 /// And Golden/runner_balance.json pins the curve: any baseline change (unit stats, box counts, upgrade costs, rewards,
 /// the ramp) that moves a level's power ratio more than 10%, or the free wall more than 2 levels, fails with a diff.
 /// Regenerate after a deliberate change: UPDATE_GOLDEN=1 dotnet test tests/Survival.Domain.Tests --filter RunnerBalance
-/// (docs/runner_balance.md).
+/// (Docs/runner_balance.md).
 /// </summary>
 public sealed class RunnerBalanceTests
 {

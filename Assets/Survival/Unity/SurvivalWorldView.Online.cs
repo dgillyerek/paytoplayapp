@@ -48,7 +48,7 @@ namespace Survival.Unity
 
         private void TickOnline()
         {
-            var net = SurvivalCampaignView.AllianceNet;
+            var net = AllianceClient.Net;
             if (net == null || !net.Online)
             {
                 if (Sim != null && !Sim.MockColumns)

@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using Survival.Domain.Roster;
 
 namespace Survival.Domain.Campaign
 {
@@ -42,13 +43,13 @@ namespace Survival.Domain.Campaign
             var s = Math.Max(0.01f, battleScale);
             switch (fighterName)
             {
-                case "Stormcrest":
+                case FighterNames.Stormcrest:
                     return 1.09f * s;
-                case "Ashwyrm":
+                case FighterNames.Ashwyrm:
                     return 0.805f * s;
-                case "Emberfang":
+                case FighterNames.Emberfang:
                     return 0.615f * s;
-                case "Vorgath":
+                case FighterNames.Vorgath:
                     return 0.72f * s;
                 default:
                     return EstimatedHalfWidth(designHeightMetres, s, false);

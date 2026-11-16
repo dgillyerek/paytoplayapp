@@ -852,47 +852,7 @@ namespace Survival.Unity
         // Discarded 7958283 held-pose robot bake. Mixer plays Mixamo DIAG.
 
 
-        private Transform? EnsureLeftHipSocket()
-        {
-            if (_hips == null)
-            {
-                return null;
-            }
-
-            if (_leftHipSocket == null)
-            {
-                var go = new GameObject("LeftHipDrawSocket");
-                _leftHipSocket = go.transform;
-            }
-
-            if (_leftHipSocket.parent != _hips)
-            {
-                _leftHipSocket.SetParent(_hips, false);
-            }
-
-            var hip = _leftUpLeg != null ? _leftUpLeg.position : _hips.position;
-            _leftHipSocket.position = hip + CharacterLeft() * 0.10f + Vector3.up * 0.08f + Vector3.back * 0.03f;
-            return _leftHipSocket;
-        }
-
         private static Vector3 CharacterLeft() => Vector3.left;
-
-        private void AimHeldSwordWorld(Vector3 worldAxis)
-        {
-            if (_heldSword == null || worldAxis.sqrMagnitude < 1e-8f)
-            {
-                return;
-            }
-
-            var blade = _heldSword.rotation * BladeLocalAxis();
-            if (blade.sqrMagnitude < 1e-8f)
-            {
-                return;
-            }
-
-            _heldSword.rotation = Quaternion.Normalize(
-                Quaternion.FromToRotation(blade.normalized, worldAxis.normalized) * _heldSword.rotation);
-        }
 
         /// <summary>
         /// Walk (Derek 0fc0930): sword in the right hand, tip along the hanging arm.
@@ -907,27 +867,6 @@ namespace Survival.Unity
 
             BindSwordTo(_rightHand, strikeGrip: true);
             SnapHeldSwordToArmAxis(Vector3.zero);
-        }
-
-        private Transform? EnsureHipSheathSocket()
-        {
-            if (_hips == null)
-            {
-                return null;
-            }
-
-            if (_sheathSocket == null)
-            {
-                var go = new GameObject("HipSheathSocket");
-                _sheathSocket = go.transform;
-                _sheathSocket.SetParent(_hips, false);
-            }
-            else if (_sheathSocket.parent != _hips)
-            {
-                _sheathSocket.SetParent(_hips, false);
-            }
-
-            return _sheathSocket;
         }
 
         /// <summary>
@@ -1146,29 +1085,6 @@ namespace Survival.Unity
             }
 
             return bestAxis;
-        }
-
-        public string PhaseLabel(float timeSeconds)
-        {
-            if (_namedClipActive && !string.IsNullOrEmpty(_namedClipExactName))
-            {
-                return "LITE  ·  " + _namedClipExactName + "  ·  slash avatar";
-            }
-
-            var walkLen = _walkLength > 0.05f ? _walkLength : 1f;
-            var walkBlock = walkLen * SirAldric3DMotion.WalkCyclesBeforeAttack;
-            var slashLen = _attackReady ? Mathf.Max(_attackLength, 0.01f) : 0f;
-            var loop = walkBlock + slashLen;
-            var t = loop > 0.05f ? timeSeconds % loop : timeSeconds;
-            _ = WalkToAttackBlendSeconds;
-            // Leftover strike labels unused: 1_Draw_LeftHipPocket /
-            // 2_Raise_AboveHeadRight / 3_Strike_Forward / 4_Strike_DownToFoot.
-            if (_attackReady && t >= walkBlock)
-            {
-                return "SLASH  ·  Sword And Shield Slash  ·  own avatar";
-            }
-
-            return "WALK  ·  toward TOP  ·  RH grip";
         }
 
         private void OnDestroy()

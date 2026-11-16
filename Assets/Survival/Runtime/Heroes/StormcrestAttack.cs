@@ -29,7 +29,7 @@ namespace Survival.Domain.Heroes
         };
 
         public static readonly BlenderRigAttackSpec Spec = new BlenderRigAttackSpec(
-            "Stormcrest",
+            FighterNames.Stormcrest,
             FileName,
             FileMd5,
             DesignDir,
