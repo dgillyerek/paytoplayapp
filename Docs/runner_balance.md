@@ -427,6 +427,23 @@ These are in `runner_balance.json`, `power_packs.json` and `stores.json`.
   The failure message is a readable per-level diff (old → new, % change) that also lists the biggest within-tolerance moves. Sensitivity tests confirm that lyra damage ×1.3 and halving the hero gold share both trip it.
 - `Writes_the_balance_table_and_csv` prints the full table and writes `runner_balance.csv` next to the test binaries (`tests/Survival.Domain.Tests/bin/Debug/net8.0/`).
 
+### Easier opening (Nov 16, 2026)
+
+Derek: "level 2 in the runner is almost impossible to beat without upgrading the units. lets make the first few levels a little easier". Only `level_tweaks` foe_hp on Levels 1-12 changed (enemy counts, rewards, boxes, the ramp and Levels 13-50 are untouched). Required power (the least squad power a dodging sim player wins with; an untrained squad is 1.0):
+
+| Level | before | after |
+|---|---|---|
+| 1 | 0.54 | 0.41 |
+| 2 | 1.06 | 0.58 |
+| 3 | 1.06 | 0.57 |
+| 4 | 0.84 | 0.66 |
+| 5 (boss) | 1.06 | 0.91 |
+| 6 | 1.13 | 0.89 |
+| 7 | 1.02 | 0.82 |
+| 8 | 1.22 | 0.96 |
+
+Levels 9 and 11 also drop under 1.0; L10 is 1.03 (was 1.39) and L12 stays at 1.14. Free pace unchanged: wall L31, L31 day 13, L50 day 828.67.
+
 ### Regenerating the golden (after an intended change)
 
 ```
