@@ -431,21 +431,20 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("d3e5f7a90b2c4d6e8f1a3c5d7e9f2468", File.ReadAllText(attackController), StringComparison.Ordinal);
         Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldric_AttackEdit.md")));
         var editNote = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldric_AttackEdit.md"));
-        Assert.Contains("Window → Animation → Animation", editNote, StringComparison.Ordinal);
-        Assert.Contains("mixamorig:RightArm", editNote, StringComparison.Ordinal);
-        Assert.Contains("SirAldricAttackEditKnight", editNote, StringComparison.Ordinal);
-        Assert.Contains("Preview", editNote, StringComparison.Ordinal);
-        Assert.Contains("Lock", editNote, StringComparison.Ordinal);
-        var extract = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricEditableAttackClip.cs"));
-        Assert.Contains("EnsureEditableAttackClip", extract, StringComparison.Ordinal);
-        Assert.Contains("Ping strike path markers", extract, StringComparison.Ordinal);
-        Assert.Contains("1_Draw_LeftHipPocket", extract, StringComparison.Ordinal);
-        Assert.Contains("Spawn knight for Animation-window edit", extract, StringComparison.Ordinal);
-        Assert.Contains("runtimeAnimatorController", extract, StringComparison.Ordinal);
-        Assert.Contains("EnsureAttackController", extract, StringComparison.Ordinal);
-        Assert.Contains("LoadAllAssetsAtPath", extract, StringComparison.Ordinal);
-        Assert.Contains("applyRootMotion = false", extract, StringComparison.Ordinal);
-        Assert.DoesNotContain("if (avatar != null && !avatar.isHuman)", extract, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_DIAG_InwardSlash", editNote, StringComparison.Ordinal);
+        Assert.DoesNotContain("Survival → Sir Aldric", editNote, StringComparison.Ordinal);
+        Assert.DoesNotContain("SirAldricAttackEditKnight", editNote, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricEditableAttackClip.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricEditableAttackClip.cs.meta")));
+        var flavor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
+        Assert.DoesNotContain("Import locked Sir Aldric rear master", flavor, StringComparison.Ordinal);
+        Assert.DoesNotContain("ImportLockedRearMaster", flavor, StringComparison.Ordinal);
+        foreach (var editorFile in Directory.GetFiles(Path.Combine(root, "Assets", "Survival", "Editor"), "*.cs"))
+        {
+            var editorSrc = File.ReadAllText(editorFile);
+            Assert.DoesNotContain("[MenuItem(\"Survival/Sir Aldric/", editorSrc, StringComparison.Ordinal);
+            Assert.DoesNotContain("[MenuItem(\"Survival/Import locked Sir Aldric rear master\")]", editorSrc, StringComparison.Ordinal);
+        }
 
         var pilot = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "pilot");
         Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_body_holefixed_mid280k.fbx")).Length > 1_000_000);
