@@ -13,6 +13,7 @@ namespace Survival.Unity
         private const string AssetRoot = "Assets/";
 
         private GameObject? _model;
+        private SkinnedMeshRenderer[] _shaped = System.Array.Empty<SkinnedMeshRenderer>();
         private AnimationClip? _idle;
         private AnimationClip? _walk;
         private AnimationClip? _slam;
@@ -45,6 +46,7 @@ namespace Survival.Unity
 
             _model = Instantiate(prefab, transform);
             _model.name = "VorgathRig";
+            _shaped = BlendShapeReset.Find(_model);
             foreach (var animator in _model.GetComponentsInChildren<Animator>(true))
             {
                 Destroy(animator);
@@ -121,6 +123,7 @@ namespace Survival.Unity
         {
             if (_model != null && clip != null)
             {
+                BlendShapeReset.Zero(_shaped);
                 clip.SampleAnimation(_model, time);
             }
         }
