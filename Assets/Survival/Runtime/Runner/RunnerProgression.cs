@@ -458,7 +458,7 @@ namespace Survival.Domain.Runner
 
                 var backCount = beat > 0 ? W(opening ? 1 : 2 + (int)Math.Round(tc * along * 0.25f)) : 0;
                 var hasHeavy = beat % 3 == 2 || (t >= 6 && beat % 3 == 0 && beat > 0);
-                var heavy = number >= 7 && hasUnit("ashwyrm") && beat % 2 == 0 ? "ashwyrm" : "blightroot";
+                var heavy = number >= 7 && hasUnit("ashwyrm") && beat % 2 == 0 ? "ashwyrm" : OddHeavy(number, beat, hasUnit);
                 var heavyCount = W(1 + (int)Math.Round(tc * along / 5f));
 
                 // Where this beat's things stand: offsets from the beat start (scaled by k) and lanes, by set piece.
@@ -1303,6 +1303,16 @@ namespace Survival.Domain.Runner
             RunnerBarrierKind.Barricade => BarricadeDamage + (BarricadeDamageStep * t),
             _ => PalisadeDamage + (PalisadeDamageStep * t)
         };
+
+        /// <summary>First level whose odd-beat heavy anchor can be Malzareth (after Vorgath's first milestone).</summary>
+        public const int MalzarethFrom = 11;
+
+        /// <summary>
+        /// The heavy anchor on a beat Ashwyrm doesn't take: Blightroot, or from <see cref="MalzarethFrom"/> Malzareth on
+        /// one beat in four. Malzareth's runner unit has Blightroot's numbers, so the swap is a new face, not a harder wave.
+        /// </summary>
+        internal static string OddHeavy(int number, int beat, Func<string, bool> hasUnit) =>
+            number >= MalzarethFrom && beat % 4 == 1 && hasUnit("malzareth") ? "malzareth" : "blightroot";
 
         /// <summary>
         /// The boss row's unit. Milestone levels (every 10th, which are already boss levels) are Vorgath. The other
