@@ -49,13 +49,17 @@ def settle(t):
 # Key poses. elev: blade angle above forward horizontal (160 = 70 degrees past
 # vertical, tip behind). fist: right fist on the handle, armature space.
 # lean: forward bend of the spine. drop: how far the hips sink.
-GUARD = dict(elev=35.0, fist=Vector((-0.04, -0.40, 1.12)), lean=0.0, drop=0.0, back=0.0)
-TOP = dict(elev=158.0, fist=Vector((-0.03, -0.33, 2.04)), lean=math.radians(-10.0), drop=0.0, back=0.0)
-COCKED = dict(elev=164.0, fist=Vector((-0.03, -0.31, 2.05)), lean=math.radians(-12.0), drop=0.02, back=0.0)
-LOW = dict(elev=-24.0, fist=Vector((-0.03, -0.40, 0.95)), lean=math.radians(40.0), drop=0.22, back=0.07)
-SETTLED = dict(elev=-27.0, fist=Vector((-0.03, -0.40, 0.94)), lean=math.radians(41.5), drop=0.235, back=0.075)
+# bend: elbow bend in degrees (right, left); the arms extend nearly straight on the chop.
+GUARD = dict(elev=35.0, fist=Vector((-0.04, -0.40, 1.12)), lean=0.0, drop=0.0, back=0.0, bend=(42.0, 55.0))
+TOP = dict(elev=158.0, fist=Vector((-0.03, -0.33, 2.04)), lean=math.radians(-24.0), drop=0.0, back=-0.05, bend=(66.0, 45.0))
+COCKED = dict(elev=164.0, fist=Vector((-0.03, -0.31, 2.05)), lean=math.radians(-26.0), drop=0.02, back=-0.055, bend=(66.0, 45.0))
+LOW = dict(elev=-24.0, fist=Vector((-0.03, -0.40, 0.95)), lean=math.radians(40.0), drop=0.22, back=0.07, bend=(18.0, 18.0))
+SETTLED = dict(elev=-27.0, fist=Vector((-0.03, -0.40, 0.94)), lean=math.radians(41.5), drop=0.235, back=0.075, bend=(18.0, 18.0))
 
 # (frames, from, to, easing, forward bulge of the fist path)
+# Share of the wind-up by which the back lean is complete.
+WINDUP_LEAN_LEAD = 0.4
+
 SEGMENTS = [
     (15, GUARD, TOP, windup, 0.10),     # wind-up, slower
     (5, TOP, COCKED, ease, 0.0),        # keeps creeping back, then a beat
@@ -65,6 +69,7 @@ SEGMENTS = [
 ]
 TOTAL = sum(s[0] for s in SEGMENTS) + 1
 HEAD_KEEP = 0.55  # share of the spine lean the head undoes so he keeps looking ahead
+HEAD_KEEP_BACK = 0.2
 
 # Sword handle in RightForeArm.001 local space: blade along +X, handle offset along Y and Z.
 HANDLE_Y = 0.13
@@ -74,6 +79,9 @@ LEFT_GRIP_X = -0.12
 POMMEL_X = -0.24
 TIP_X = 1.30
 CROWN_UP = 0.30
+# Elbows are held to the planned bend with this weight; the sword axis tip stays above TIP_GROUND.
+BEND_W = float(os.environ.get("MALZ_BEND_W", "20.0"))
+TIP_GROUND = float(os.environ.get("MALZ_TIP_GROUND", "0.14"))
 CROWN_CLEAR = float(os.environ.get("MALZ_CROWN_CLEAR", "0.26"))
 
 MAP = {
@@ -109,6 +117,11 @@ def sample(frame):
             t = curve(i / frames)
             fist = a["fist"].lerp(b["fist"], t) + Vector((0.0, -bulge * math.sin(math.pi * t), 0.0))
             out = {k: a[k] + (b[k] - a[k]) * t for k in ("elev", "lean", "drop", "back")}
+            out["bend"] = tuple(math.radians(x + (y - x) * t) for x, y in zip(a["bend"], b["bend"]))
+            if a is GUARD and b is TOP:
+                # The upper body rocks back first, ahead of the sword.
+                lead = ease(min(1.0, (i / frames) / WINDUP_LEAN_LEAD))
+                out["lean"] = a["lean"] + (b["lean"] - a["lean"]) * lead
             out["fist"] = fist
             return out
         i -= frames
@@ -286,8 +299,10 @@ def main():
                 rotations[name] = Quaternion((1.0, 0.0, 0.0), lean * spine_share[name]) @ base[name]
             elif name in upper_body:
                 rotations[name] = Quaternion((1.0, 0.0, 0.0), lean) @ base[name]
-        rotations["mixamorig:Neck"] = Quaternion((1.0, 0.0, 0.0), lean * (1.0 - HEAD_KEEP * 0.4)) @ base["mixamorig:Neck"]
-        rotations["mixamorig:Head"] = Quaternion((1.0, 0.0, 0.0), lean * (1.0 - HEAD_KEEP)) @ base["mixamorig:Head"]
+        # Leaning forward he keeps looking ahead; leaning back his head mostly goes with the chest.
+        keep = HEAD_KEEP if lean > 0.0 else HEAD_KEEP_BACK
+        rotations["mixamorig:Neck"] = Quaternion((1.0, 0.0, 0.0), lean * (1.0 - keep * 0.4)) @ base["mixamorig:Neck"]
+        rotations["mixamorig:Head"] = Quaternion((1.0, 0.0, 0.0), lean * (1.0 - keep)) @ base["mixamorig:Head"]
 
         r_wrist = fist - hand_y * HANDLE_Y - side * HANDLE_Z
         l_fist = fist + blade * LEFT_GRIP_X
@@ -372,11 +387,26 @@ def main():
             t = max(0.0, min(1.0, (crown - a).dot(ab) / ab.length_squared))
             return (crown - (a + ab * t)).length
 
+        def elbow_bend(sd, wrist):
+            u = lens[sd["upper"]]
+            fl = lens[sd["fore"]]
+            d = min((wrist - sd["shoulder"]).length, u + fl)
+            c = max(-1.0, min(1.0, (u * u + fl * fl - d * d) / (2.0 * u * fl)))
+            return math.pi - math.acos(c)
+
+        def tip_z(offset):
+            return (fist + offset + blade * TIP_X).z
+
+        bend_goal = s["bend"]
+
         def cost(v):
             offset = Vector((v[0], v[1], v[2]))
             total = 1.5 * offset.length + 0.4 * (v[3] * v[3] + v[4] * v[4])
             total += 40.0 * max(0.0, CROWN_CLEAR - crown_gap(offset))
-            total += 1.0 * sum((a - b) ** 2 for a, b in zip(v, x_prev))
+            total += 40.0 * max(0.0, TIP_GROUND - tip_z(offset))
+            for sd, wrist, goal in zip(sides, wrists_for(offset), bend_goal):
+                total += BEND_W * (elbow_bend(sd, wrist) - goal) ** 2
+            total += 4.0 * sum((a - b) ** 2 for a, b in zip(v, x_prev))
             for sd, wrist, theta, lock in zip(sides, wrists_for(offset), (v[3], v[4]), locks):
                 _f, _u, err, reached = solve_arm(sd, wrist, theta, lock)
                 total += err
@@ -385,7 +415,7 @@ def main():
             return total
 
         x_prev = list(x_best)
-        key = (round(elev, 6), tuple(round(c, 6) for c in fist), round(lean, 6), round(s["drop"], 6))
+        key = (round(elev, 6), tuple(round(c, 6) for c in fist), round(lean, 6), round(s["drop"], 6), tuple(round(x, 6) for x in bend_goal))
         if key != last_key:
             # Held poses reuse the last solve so the hands don't jitter.
             x_best = nelder_mead(cost, x_best, [0.03, 0.03, 0.03, 0.3, 0.3], 500)
@@ -398,7 +428,8 @@ def main():
             rotations[sd["upper"]] = u_q
             errs.append(math.degrees(err))
             ok = ok and reached
-        drift.append((frame, offset.length, errs + [crown_gap(offset)]))
+        bends = [math.degrees(elbow_bend(sd, w)) for sd, w in zip(sides, wrists_for(offset))]
+        drift.append((frame, offset.length, errs + [crown_gap(offset), bends[0], bends[1], tip_z(offset)]))
 
         bases, built = basis_from(arm, names, rotations, hips_head)
         for name in names:
@@ -421,7 +452,7 @@ def main():
     scene.render.fps = 30
     print("UNREACHED", unreached, "TOTAL", TOTAL)
     for frame, moved, errs in drift:
-        print("DRIFT f%02d fist moved %.3f wrist off R %.1f L %.1f deg crown gap %.3f" % (frame, moved, errs[0], errs[1], errs[2]))
+        print("DRIFT f%02d fist moved %.3f wrist off R %.1f L %.1f deg crown gap %.3f elbows R %.0f L %.0f tip %.3f" % (frame, moved, errs[0], errs[1], errs[2], errs[3], errs[4], errs[5]))
 
     for obj in bpy.data.objects:
         if obj.type == "MESH" and "__" in obj.name:
