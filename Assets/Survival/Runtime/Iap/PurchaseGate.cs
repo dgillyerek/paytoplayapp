@@ -58,7 +58,8 @@ namespace Survival.Domain.Iap
     }
 
     /// <summary>
-    /// The age-band gate: 13plus buys; under13 needs parental consent first; unknown is blocked unless
+    /// The age-band gate: 13plus buys (both audiences); under13 needs parental consent first in Families mode and is declined
+    /// in 13+ mode; unknown is blocked unless
     /// <c>allowUnknown</c> is set. Blocked-by-default for unknown is deliberate: Product has not yet said an unknown age
     /// may buy, and a Families app must assume a child until told otherwise.
     /// </summary>
@@ -67,12 +68,18 @@ namespace Survival.Domain.Iap
         private readonly Func<AgeBand> _band;
         private readonly IParentalConsent _consent;
         private readonly bool _allowUnknown;
+        private readonly Func<bool> _consentFlow;
 
-        public AgeBandPurchaseGate(Func<AgeBand> band, IParentalConsent? consent = null, bool allowUnknown = false)
+        /// <param name="consentFlow">
+        /// Read at ask time. True (Families audience, and the default for older callers): under13 goes through the parental
+        /// consent step. False (13+ audience): under13 is declined with <c>iap.audience_13plus</c> and consent is never asked.
+        /// </param>
+        public AgeBandPurchaseGate(Func<AgeBand> band, IParentalConsent? consent = null, bool allowUnknown = false, Func<bool>? consentFlow = null)
         {
             _band = band ?? throw new ArgumentNullException(nameof(band));
             _consent = consent ?? new NoParentalConsent();
             _allowUnknown = allowUnknown;
+            _consentFlow = consentFlow ?? (() => true);
         }
 
         /// <summary>The safe default: unknown age, no consent flow → every purchase blocked.</summary>
@@ -86,6 +93,12 @@ namespace Survival.Domain.Iap
                     done(true, null);
                     return;
                 case AgeBand.Under13:
+                    if (!_consentFlow())
+                    {
+                        done(false, "iap.audience_13plus");
+                        return;
+                    }
+
                     _consent.Request(productId, ok => done(ok, ok ? null : "iap.consent_required"));
                     return;
                 default:

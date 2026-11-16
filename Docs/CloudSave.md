@@ -13,7 +13,11 @@ Local-first account saves on the Neon `alliance` Function (`GET`/`PUT /v1/save`)
 - **World gather remaining stock** (Quarry): `WorldMarchLoop.Available` was catalog-only and reset every launch; now `world.gather[nodeId].{available,updatedAt,regenAt?}` — `RegenAt` is optional (unix seconds); catalog has no live refill yet but the field round-trips for a future regen clock
 - IAP applied hashes + grant ledger (refund clawback via RTDN)
 
-## Kids / COPPA
+## Audience (13+ default)
+- **teen_plus** (soft launch): 13plus players sync normally. under13 accounts are blocked from play; the server answers `403 audience_13plus_only` on `PUT /v1/save`, and the client's `KidSafety.AllowsCloudSave` is false (the consent flow is off). See `Docs/kids-audience.md`.
+- **families**: the rules below apply unchanged.
+
+## Kids / COPPA (Families mode)
 - Blob has no personal info (server rejects email/name/ad id keys)
 - Keyed only by `players.id`
 - **Reuses #205** `KidSafety.AllowsCloudSave` / `ConsentPurpose.CloudSave` — no parallel consent type

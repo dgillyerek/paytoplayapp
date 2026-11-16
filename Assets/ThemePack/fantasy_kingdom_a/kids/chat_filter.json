@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "_doc": "Guild free-text chat filter (13+ chat). Used by the client (Survival.Domain.Kids.ChatFilter, display) and the server (Backend/alliance/src/moderation.mjs, authoritative on send). Words are matched as whole words after lower-casing, simple leetspeak folding (0>o 1>i 3>e 4>a 5>s 7>t @>a $>s) and repeated-letter collapsing, then masked with '*'. Every masked or refused message is copied to the server moderation queue (chat_reports, source='filter'). DEREK / MODERATION OWNER: replace or extend this starter list with a vetted multilingual list (English, Filipino/Tagalog, French for Quebec) or a vendor before launch.",
+  "block_links": true,
+  "block_contact_info": true,
+  "words": [
+    "fuck", "fucker", "fucking", "motherfucker", "shit", "bullshit", "bitch", "cunt", "asshole", "arsehole",
+    "dick", "dickhead", "cock", "pussy", "bastard", "slut", "whore", "wanker", "twat", "prick",
+    "fag", "faggot", "nigger", "nigga", "retard", "kys", "rape", "rapist",
+    "putangina", "puta", "gago", "tangina", "bobo", "ulol", "tarantado", "pakyu",
+    "merde", "putain", "connard", "salope", "tabarnak"
+  ]
+}

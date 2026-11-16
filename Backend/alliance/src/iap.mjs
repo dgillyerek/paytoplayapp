@@ -6,6 +6,7 @@ import productsJson from "../../../Assets/ThemePack/fantasy_kingdom_a/store/prod
 import rewardsJson from "../../../Assets/ThemePack/fantasy_kingdom_a/store/iap_rewards.json" with { type: "json" };
 import { GooglePlayError } from "./googleplay.mjs";
 import { AppStoreNotEnabled } from "./appstore.mjs";
+import { FAMILIES, blockedByAudience } from "./audience.mjs";
 
 export const DEFAULT_PACKAGE = "com.paytoplay.fantasykingdoma";
 export const STORES = ["google_play", "app_store"];
@@ -64,8 +65,12 @@ const granted = (item, rec) => reply(200, { status: "granted", sku: item.sku, pr
  * The purchase service, independent of HTTP and Postgres. repo: see iap_repo.mjs (pg) / test/memory_repo.mjs.
  * verifiers: { google_play, app_store } async ({ productId, purchaseToken, signedTransaction, transactionId }) → result.
  */
-export function createIap({ repo, verifiers, catalog = buildCatalog(), packageName = DEFAULT_PACKAGE, rtdnToken = "", onRevoked = null, log = console }) {
+export function createIap({ repo, verifiers, catalog = buildCatalog(), packageName = DEFAULT_PACKAGE, rtdnToken = "", onRevoked = null, log = console,
+  audience = FAMILIES, ageBandOf = null }) {
   async function validate(player, b) {
+    // teen_plus (13+ audience): an account marked under13 cannot buy. 13plus and unknown are not blocked here (the client's
+    // age gate runs before any purchase; Families keeps its previous behavior: gating is the client's parental gate).
+    if (ageBandOf && blockedByAudience(audience, await ageBandOf(player))) return reply(403, { error: "audience_13plus_only" });
     const store = STORES.includes(b?.store) ? b.store : null;
     const productId = str(b?.productId, 200);
     if (!store || !productId) return reply(400, { error: "bad_request" });

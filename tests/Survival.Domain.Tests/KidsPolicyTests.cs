@@ -39,7 +39,7 @@ public sealed class KidsPolicyTests
     [InlineData("a_band_removed_from_config")]
     public void Unknown_unanswered_or_child_bands_get_child_rules(string? band)
     {
-        var p = KidsFiles.Policy(KidsFiles.Shipped(), band);
+        var p = KidsFiles.FamiliesPolicy(KidsFiles.Shipped(), band);
         Assert.True(p.IsChild);
         Assert.False(p.AdvertisingIdAllowed);
         Assert.False(p.PersonalizationAllowed);
@@ -52,7 +52,7 @@ public sealed class KidsPolicyTests
     [Fact]
     public void Thirteen_plus_gets_adult_rules()
     {
-        var p = KidsFiles.Policy(KidsFiles.Shipped(), "13plus");
+        var p = KidsFiles.FamiliesPolicy(KidsFiles.Shipped(), "13plus");
         Assert.False(p.IsChild);
         Assert.Equal(ChatMode.Free, p.Chat);
         Assert.Equal(IapMode.Allowed, p.Iap);
@@ -64,15 +64,15 @@ public sealed class KidsPolicyTests
     public void Age_band_maps_to_the_IAP_branch_enum()
     {
         var c = KidsFiles.Shipped();
-        Assert.Equal(AgeBand.Unknown, KidsFiles.Policy(c, null).AgeBand);
-        Assert.Equal(AgeBand.Under13, KidsFiles.Policy(c, "under13").AgeBand);
+        Assert.Equal(AgeBand.Unknown, KidsFiles.FamiliesPolicy(c, null).AgeBand);
+        Assert.Equal(AgeBand.Under13, KidsFiles.FamiliesPolicy(c, "under13").AgeBand);
     }
 
     [Fact]
     public void Config_cannot_lift_the_child_floors()
     {
         var json = "{\"child\":{\"advertising_id\":true,\"personalization\":true,\"chat\":\"free\"}}";
-        var p = KidsFiles.Policy(ChildSafetyConfig.Parse(json), "under13");
+        var p = KidsFiles.FamiliesPolicy(ChildSafetyConfig.Parse(json), "under13");
         Assert.False(p.AdvertisingIdAllowed);
         Assert.False(p.PersonalizationAllowed);
         Assert.Equal(ChatMode.Presets, p.Chat);
@@ -82,7 +82,7 @@ public sealed class KidsPolicyTests
     public void No_vendor_means_no_telemetry_for_anyone_even_if_rules_allow_it()
     {
         var json = "{\"adult\":{\"analytics\":\"full\",\"crash_reporting\":\"full\"},\"telemetry\":{\"analytics_vendor\":\"none\",\"crash_vendor\":\"none\"}}";
-        var p = KidsFiles.Policy(ChildSafetyConfig.Parse(json), "13plus");
+        var p = KidsFiles.FamiliesPolicy(ChildSafetyConfig.Parse(json), "13plus");
         Assert.Equal(TelemetryMode.Off, p.Analytics);
         Assert.Equal(TelemetryMode.Off, p.CrashReporting);
     }
@@ -110,7 +110,7 @@ public sealed class KidsPolicyTests
     public void Default_telemetry_is_a_no_op()
     {
         var sink = new RecordingSink();
-        var t = new PolicyTelemetry(sink, () => KidsFiles.Policy(KidsFiles.Shipped(), "13plus"));
+        var t = new PolicyTelemetry(sink, () => KidsFiles.FamiliesPolicy(KidsFiles.Shipped(), "13plus"));
         t.Event("ftue_step", new Dictionary<string, string> { ["step"] = "1" });
         t.Crash(new InvalidOperationException("x"));
         Assert.Empty(sink.Events);
@@ -121,10 +121,10 @@ public sealed class KidsPolicyTests
     public void Child_off_sends_nothing_and_limited_strips_ids_and_messages()
     {
         var sink = new RecordingSink();
-        new PolicyTelemetry(sink, () => KidsFiles.Policy(WithVendor("off"), "under13")).Event("e", null);
+        new PolicyTelemetry(sink, () => KidsFiles.FamiliesPolicy(WithVendor("off"), "under13")).Event("e", null);
         Assert.Empty(sink.Events);
 
-        var limited = new PolicyTelemetry(sink, () => KidsFiles.Policy(WithVendor("limited"), "under13"));
+        var limited = new PolicyTelemetry(sink, () => KidsFiles.FamiliesPolicy(WithVendor("limited"), "under13"));
         limited.Event("level_up", new Dictionary<string, string> { ["level"] = "5", ["player_id"] = "123", ["name"] = "Sam" });
         limited.Crash(new InvalidOperationException("typed by Sam"));
         var props = Assert.Single(sink.Events).Props!;
@@ -139,7 +139,7 @@ public sealed class KidsPolicyTests
         var sink = new RecordingSink();
         var c = WithVendor("off");
         string? band = null;
-        var t = new PolicyTelemetry(sink, () => KidsFiles.Policy(c, band));
+        var t = new PolicyTelemetry(sink, () => KidsFiles.FamiliesPolicy(c, band));
         t.Event("before", null);
         band = "13plus";
         t.Event("after", null);

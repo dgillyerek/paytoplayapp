@@ -1,6 +1,9 @@
 {
   "schema_version": 1,
-  "_doc": "Kingdom Defense child safety (COPPA / Google Play Families, mixed audience). Every open Derek decision is a value here; defaults are the safe choice. Read by Survival.Domain.Kids.ChildSafetyConfig. Not legal advice: counsel reviews before ship.",
+  "_doc": "Kingdom Defense child safety. Every open Derek decision is a value here; defaults are the safe choice. Read by Survival.Domain.Kids.ChildSafetyConfig. Not legal advice: counsel reviews before ship.",
+
+  "_audience_doc": "DEREK DECISION (2026-11-16): the audience switch. 'teen_plus' = 13+ soft launch: neutral age screen, under-13 answer blocks play and deletes collected data, parental consent off, 13+ gets the 'adult' rules (IAP, free-text chat with filter/report/block, telemetry once a vendor is picked). 'families' = Google Play Families mixed audience: under-13 / unknown get the 'child' rules and the consent flow. Flipping to 'families' also needs: Play Families enrollment, Families-capable vendors, a consent method plugged into KidSafety.Consent, and the server AUDIENCE_MODE=families (see Docs/kids-audience.md).",
+  "audience_mode": "teen_plus",
 
   "_age_bands_doc": "DEREK DECISION: age bands. Ordered by max_age (inclusive); the last band has no max_age. child=true bands get the 'child' rules. e.g. 6-8 / 9-12 / 13+ = [{id:'6to8',max_age:8,child:true},{id:'9to12',max_age:12,child:true},{id:'13plus',child:false}].",
   "age_bands": [
@@ -27,8 +30,8 @@
   "adult": {
     "advertising_id": false,
     "personalization": false,
-    "analytics": "off",
-    "crash_reporting": "off",
+    "analytics": "full",
+    "crash_reporting": "full",
     "chat": "free",
     "iap": "allowed",
     "iap_max_per_day": null,

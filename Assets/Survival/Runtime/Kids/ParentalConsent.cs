@@ -84,6 +84,12 @@ namespace Survival.Domain.Kids
                 case ConsentMode.Blocked:
                     return ConsentDecision.Blocked;
                 default:
+                    // 13+ audience: the consent flow is off, so "consent required" means "not for this player".
+                    if (!policy.ConsentFlowEnabled)
+                    {
+                        return ConsentDecision.Blocked;
+                    }
+
                     return provider.Status(purpose) == ConsentStatus.Granted ? ConsentDecision.Allowed : ConsentDecision.NeedsConsent;
             }
         }

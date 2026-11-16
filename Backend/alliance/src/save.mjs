@@ -231,7 +231,7 @@ export function clawbackBlob(blob, grants) {
  * Save service. repo: { get, put, setConsent, getConsent, clawback }.
  * ageBandOf(player) → 'under13'|'13plus'|'unknown'.
  */
-export function createSave({ repo, ageBandOf, log = console }) {
+export function createSave({ repo, ageBandOf, log = console, audience = "families" }) {
   const reply = (status, body) => ({ status, body });
 
   async function get(player) {
@@ -254,6 +254,8 @@ export function createSave({ repo, ageBandOf, log = console }) {
     if (blob.schema != null && blob.schema !== SAVE_SCHEMA) return reply(400, { error: "bad_schema" });
 
     const band = await ageBandOf(player);
+    // teen_plus (13+ audience): under13 accounts are blocked outright; the parental-consent path is Families-only.
+    if (audience === "teen_plus" && band === "under13") return reply(403, { error: "audience_13plus_only" });
     let consentAt = await repo.getConsent(player.id);
     if (band === "under13") {
       if (body.consentGranted === true && !consentAt) {

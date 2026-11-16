@@ -14,6 +14,18 @@ namespace Survival.Domain.Kids
         Full,
     }
 
+    /// <summary>
+    /// Who the app is for. TeenPlus (the 13+ soft launch): the neutral age screen still runs, an under-13 answer blocks
+    /// play and deletes what was collected, the parental-consent flow is off, and 13+ players get the adult rules.
+    /// Families (Google Play Families, mixed audience): under-13 / unknown get the child rules and the consent flow.
+    /// The child code stays in the build either way; flipping back is <c>audience_mode: "families"</c> plus a store update.
+    /// </summary>
+    public enum AudienceMode
+    {
+        TeenPlus,
+        Families,
+    }
+
     /// <summary>Guild chat level. Presets = only fixed phrases from the theme pack (no free text, links or personal info).</summary>
     public enum ChatMode
     {
@@ -82,13 +94,17 @@ namespace Survival.Domain.Kids
         int ParentalGateLockoutSeconds,
         ChatMode ChildChatMax = ChatMode.Presets,
         string PrivacyPolicyUrl = "",
-        string TermsUrl = "")
+        string TermsUrl = "",
+        AudienceMode Audience = AudienceMode.TeenPlus)
     {
         public const string FileName = "child_safety.json";
         public const string VendorNone = "none";
 
+        /// <summary>Families mode: under-13 players play with the child rules and the parental-consent flow is on.</summary>
+        public bool IsFamilies => Audience == AudienceMode.Families;
+
         /// <summary>
-        /// The safe defaults used when the pack file is missing or unreadable: under-13 / 13+, child chat off, child IAP behind
+        /// The safe defaults used when the pack file is missing or unreadable: 13+ audience (under-13 blocked), under-13 / 13+, child chat off, child IAP behind
         /// the parental gate, child sign-in and cloud save need parental consent, no ads, no analytics or crash vendor.
         /// </summary>
         public static ChildSafetyConfig Default { get; } = new(
@@ -96,7 +112,7 @@ namespace Survival.Domain.Kids
             new[] { new AgeBandDef("under13", 12, true), new AgeBandDef("13plus", null, false) },
             100,
             new AudienceRules(false, false, TelemetryMode.Off, TelemetryMode.Off, ChatMode.Off, IapMode.ParentalGate, null, ConsentMode.ConsentRequired, ConsentMode.ConsentRequired, true, false),
-            new AudienceRules(false, false, TelemetryMode.Off, TelemetryMode.Off, ChatMode.Free, IapMode.Allowed, null, ConsentMode.Allowed, ConsentMode.Allowed, false, true),
+            new AudienceRules(false, false, TelemetryMode.Full, TelemetryMode.Full, ChatMode.Free, IapMode.Allowed, null, ConsentMode.Allowed, ConsentMode.Allowed, false, true),
             new AdsConfig(false, Array.Empty<CertifiedAdsSdk>(), "https://support.google.com/googleplay/android-developer/answer/12955712", null),
             VendorNone,
             VendorNone,
@@ -216,7 +232,8 @@ namespace Survival.Domain.Kids
                 Int(gate, "lockout_seconds", d.ParentalGateLockoutSeconds),
                 ParseChildChatMax(Obj(root, "child")),
                 Str(legal, "privacy_policy_url", ""),
-                Str(legal, "terms_url", ""));
+                Str(legal, "terms_url", ""),
+                Enum(root, "audience_mode", AudienceMode.TeenPlus));
         }
 
         private static void ValidateBands(List<AgeBandDef> bands)

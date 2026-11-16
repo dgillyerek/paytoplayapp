@@ -7,6 +7,8 @@ namespace Survival.Domain.Kids
     /// What this player may do right now, from the pack config and the stored age answer. Unknown, unanswered, tampered or
     /// unrecognised bands are child mode (a Families app assumes a child until told otherwise). Some rules are floors the
     /// config cannot lift for children: no advertising id, no personalization, no free-text chat.
+    /// In <see cref="AudienceMode.TeenPlus"/> an answered child band (or a tampered answer) is <see cref="IsBlocked"/>:
+    /// no play, and every data-collecting rule is shut (no chat, sign-in, cloud save, purchases or telemetry).
     /// </summary>
     public sealed class ChildSafetyPolicy
     {
@@ -27,10 +29,37 @@ namespace Survival.Domain.Kids
                     Chat = r.Chat == ChatMode.Free ? ChatMode.Presets : r.Chat,
                 }
                 : r;
-            ChatMax = IsChild ? (config.ChildChatMax == ChatMode.Free ? ChatMode.Presets : config.ChildChatMax) : ChatMode.Free;
+            IsBlocked = !config.IsFamilies && (state.Status == AgeGateStatus.Tampered || (state.Status == AgeGateStatus.Answered && IsChild));
+            if (IsBlocked)
+            {
+                Rules = Rules with
+                {
+                    Analytics = TelemetryMode.Off,
+                    CrashReporting = TelemetryMode.Off,
+                    Chat = ChatMode.Off,
+                    Iap = IapMode.Blocked,
+                    OnlineSignIn = ConsentMode.Blocked,
+                    CloudSave = ConsentMode.Blocked,
+                    CanCreateAlliance = false,
+                };
+            }
+
+            ChatMax = IsBlocked ? ChatMode.Off : IsChild ? (config.ChildChatMax == ChatMode.Free ? ChatMode.Presets : config.ChildChatMax) : ChatMode.Free;
             var chat = chatChoice ?? Rules.Chat;
             Rules = Rules with { Chat = chat > ChatMax ? ChatMax : chat };
         }
+
+        /// <summary>The audience switch from the pack (child_safety.json audience_mode).</summary>
+        public AudienceMode Audience => Config.Audience;
+
+        /// <summary>13+ audience and this player answered under 13 (or edited the stored answer): play is blocked.</summary>
+        public bool IsBlocked { get; }
+
+        /// <summary>
+        /// The parental-consent flow (IParentalConsentProvider / IParentalConsent) is live only in Families mode. In 13+ mode
+        /// the hook stays in the build but consent_required features are simply blocked for anyone not 13+.
+        /// </summary>
+        public bool ConsentFlowEnabled => Config.IsFamilies;
 
         /// <summary>The most chat this player can have: 13+ free; child per child.chat_max (presets by default, never free).</summary>
         public ChatMode ChatMax { get; }

@@ -67,6 +67,7 @@ namespace Survival.Domain.Kids
             {
                 ConsentMode.Allowed => ConsentView.NotNeeded,
                 ConsentMode.Blocked => ConsentView.Unavailable,
+                _ when !policy.ConsentFlowEnabled => ConsentView.Unavailable,
                 _ => consent.Status(ConsentPurpose.OnlineSignIn) switch
                 {
                     ConsentStatus.Granted => ConsentView.Granted,
@@ -75,11 +76,17 @@ namespace Survival.Domain.Kids
                     _ => ConsentView.Needed,
                 },
             };
-            CanRequestConsent = policy.Rules.OnlineSignIn == ConsentMode.ConsentRequired && Consent != ConsentView.Granted
+            CanRequestConsent = policy.ConsentFlowEnabled && policy.Rules.OnlineSignIn == ConsentMode.ConsentRequired && Consent != ConsentView.Granted
                 && consent.Method != NoConsentProvider.Instance.Method;
         }
 
         public ChildSafetyPolicy Policy { get; }
+
+        /// <summary>Families mode only: the parental-consent row. In 13+ mode it is hidden (the hook stays in the code).</summary>
+        public bool ShowConsent => Policy.ConsentFlowEnabled;
+
+        /// <summary>13+ mode: "Update my age" (lower only; an under-13 correction blocks play and deletes the data).</summary>
+        public bool CanCorrectAge => !Policy.ConsentFlowEnabled && !Policy.IsBlocked;
 
         /// <summary>Band id for the read-only row ("under13", "13plus", or "unknown" before the gate / after tampering).</summary>
         public string AgeBandKey { get; }

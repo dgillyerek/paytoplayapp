@@ -6,9 +6,9 @@ namespace Survival.Domain.Tests;
 
 public sealed class KidsChatIapTests
 {
-    private static ChildSafetyPolicy Child(string json = "{}") => KidsFiles.Policy(ChildSafetyConfig.Parse(json), "under13");
+    private static ChildSafetyPolicy Child(string json = "{}") => KidsFiles.FamiliesPolicy(ChildSafetyConfig.Parse(json), "under13");
 
-    private static ChildSafetyPolicy Adult => KidsFiles.Policy(KidsFiles.Shipped(), "13plus");
+    private static ChildSafetyPolicy Adult => KidsFiles.FamiliesPolicy(KidsFiles.Shipped(), "13plus");
 
     private sealed class FakeGate : IParentalGate
     {

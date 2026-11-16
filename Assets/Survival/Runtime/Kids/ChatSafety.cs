@@ -32,6 +32,9 @@ namespace Survival.Domain.Kids
             return m.Success;
         }
 
+        /// <summary>The 13+ free-text filter (kids/chat_filter.json), loaded by KidSafety. Free-text bodies are shown masked.</summary>
+        public static ChatFilter Filter { get; set; } = ChatFilter.None;
+
         public static bool CanRead(ChildSafetyPolicy p) => p.Chat != ChatMode.Off;
 
         public static bool CanSendFreeText(ChildSafetyPolicy p) => p.Chat == ChatMode.Free;
@@ -57,7 +60,7 @@ namespace Survival.Domain.Kids
                 return presetText(id);
             }
 
-            return p.Chat == ChatMode.Free ? body : null;
+            return p.Chat == ChatMode.Free ? Filter.Apply(body).Text : null;
         }
 
         private static readonly string[] Adjectives = { "Brave", "Swift", "Bold", "Clever", "Mighty", "Noble", "Quiet", "Lucky", "Bright", "Steady" };

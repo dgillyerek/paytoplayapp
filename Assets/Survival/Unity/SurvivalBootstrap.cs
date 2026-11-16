@@ -103,18 +103,26 @@ namespace Survival.Unity
         }
 
         /// <summary>
-        /// Families neutral age gate (kids/child_safety.json): asked once per install before play. Until it is answered the
-        /// child-safety policy is child mode, so nothing that collects data or sells runs first.
+        /// Neutral age gate (kids/child_safety.json): asked once per install before play. Until it is answered the
+        /// child-safety policy is child mode, so nothing that collects data or sells runs first. 13+ audience: an under-13
+        /// answer shows the block screen instead of the game; Families: child mode.
         /// </summary>
         private void AfterAgeGate(Action next)
         {
-            if (!KidSafety.NeedsAgeGate)
+            if (KidSafety.NeedsAgeGate)
             {
-                next();
+                AgeGateScreen.Show(transform, () => AfterAgeGate(next));
                 return;
             }
 
-            AgeGateScreen.Show(transform, next);
+            // 13+ audience: an under-13 (or edited) answer never reaches the game. The block screen deletes collected data.
+            if (KidSafety.IsBlocked)
+            {
+                AudienceBlockScreen.Show(transform);
+                return;
+            }
+
+            next();
         }
 
         private void LoadSession() =>

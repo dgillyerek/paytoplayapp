@@ -33,7 +33,9 @@ namespace Survival.Unity.Iap
         public const bool AllowUnknownAge = false;
 
         /// <summary>The age-band + parental-consent gate every purchase service uses (live and the dev sandbox).</summary>
-        public static AgeBandPurchaseGate AgeGate() => new AgeBandPurchaseGate(() => CurrentAgeBand, new DeferredConsent(), AllowUnknownAge);
+        /// 13+ audience (child_safety.json audience_mode teen_plus): 13plus buys, under13 is declined with no consent step.
+        /// Families: under13 goes through the parental gate as before.
+        public static AgeBandPurchaseGate AgeGate() => new AgeBandPurchaseGate(() => CurrentAgeBand, new DeferredConsent(), AllowUnknownAge, () => Kids.KidSafety.Config.IsFamilies);
 
         /// <summary>
         /// The age band from the first-launch neutral age gate (Kids.KidSafety, signed on-device record). That answer is the
