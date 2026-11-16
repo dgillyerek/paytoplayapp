@@ -1120,8 +1120,9 @@ namespace Survival.Unity
                 Anchor(note.rectTransform, 0.05f, 0.29f, 0.95f, 0.325f);
             }
 
-            // Two rows so no label is squeezed: the way on (Next level / Continue, green) on top, Levels / Retry (blue)
-            // below. Retry only after a loss: a won level is beaten for good (no going back). A lone button in a row runs wider; labels best-fit inside padded buttons.
+            // Top row: the way on (Next level, green) and Retry after a loss (blue). Bottom row: Village (green), back
+            // to the village. A won level is beaten for good (no going back). No Levels button at the end of a run (Derek
+            // 2026-11-16); it stays only as the exit when the runner was opened outside Play (no village to return to).
             var primary = new List<(string Name, string Label, string Key, UnityEngine.Events.UnityAction Act)>();
             var next = OpenNext;
             if (result.Won && next != null)
@@ -1130,18 +1131,19 @@ namespace Survival.Unity
                 primary.Add(("Next", S("runner.next", "Next level"), HookArtKeys.ButtonGreen, () => PlayLevel(n)));
             }
 
-            if (RunnerHandoff.FromPlay)
-            {
-                primary.Add(("Continue", S("runner.continue", "Continue"), HookArtKeys.ButtonGreen, Leave));
-            }
-
-            var secondary = new List<(string Name, string Label, string Key, UnityEngine.Events.UnityAction Act)>
-            {
-                ("Levels", S("runner.levels", "Levels"), HookArtKeys.ButtonBlue, ShowLevelList)
-            };
             if (_catalog != null && RunnerProgress.CanRetry(_unlocked, result.Number, result.Won, _catalog.Levels.Count))
             {
-                secondary.Add(("Retry", S("runner.retry", "Retry"), HookArtKeys.ButtonBlue, Retry));
+                primary.Add(("Retry", S("runner.retry", "Retry"), HookArtKeys.ButtonBlue, Retry));
+            }
+
+            var secondary = new List<(string Name, string Label, string Key, UnityEngine.Events.UnityAction Act)>();
+            if (RunnerHandoff.FromPlay)
+            {
+                secondary.Add(("Village", S("runner.village", "Village"), HookArtKeys.ButtonGreen, Leave));
+            }
+            else
+            {
+                secondary.Add(("Levels", S("runner.levels", "Levels"), HookArtKeys.ButtonBlue, ShowLevelList));
             }
             ButtonRow(panel.transform, primary, 0.165f, 0.28f);
             ButtonRow(panel.transform, secondary, primary.Count > 0 ? 0.035f : 0.165f, primary.Count > 0 ? 0.15f : 0.28f);
