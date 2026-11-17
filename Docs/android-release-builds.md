@@ -57,9 +57,12 @@ finishes. For a local command-line build the same values can come from environme
    set by the first upload and can never change: `com.paytoplay.fantasykingdoma`.
 3. **Play App Signing**: keep the default (Google-generated app signing key). The CI keystore above is the upload key.
 4. Store listing art. Present: hi-res icon 512×512 at `store-listing/fantasy_kingdom_a/play_store_icon_512.png`
-   (Direction-5 store icon, Derek PASS 2026-09-15). **Missing**: feature graphic 1024×500, at least 2 phone
-   screenshots (portrait 1080×1920 works), short and full description, privacy policy URL, content rating
-   questionnaire, Data safety form, target audience, ads declaration.
+   (Direction-5 store icon, Derek PASS 2026-09-15). Legal and support (paste into the listing and Data safety form):
+   website https://brightmoatstudios.com/, privacy https://brightmoatstudios.com/privacy.html, terms
+   https://brightmoatstudios.com/terms.html, account deletion https://brightmoatstudios.com/delete.html, support
+   support@brightmoatstudios.com. **Missing**: feature graphic 1024×500, at least 2 phone screenshots (portrait
+   1080×1920 works), short and full description, content rating questionnaire, Data safety form, target audience,
+   ads declaration.
 5. Before the first production release on a new personal developer account, Play requires a closed test with at least
    12 testers for 14 days.
 
@@ -100,9 +103,10 @@ In Play Console (Derek):
    questions truthfully.
 2. **Families policy declaration**: accept the Families policy requirements (and the Teacher Approved opt-in, if
    wanted). Only Families-self-certified SDKs may be used; none are in the app today.
-3. **Privacy policy URL** (required for any under-13 audience): a public page covering children's data, COPPA, and
-   for the launch countries PIPEDA (Canada), the Philippine Data Privacy Act, the Australian Privacy Act and the NZ
-   Privacy Act 2020.
+3. **Privacy policy URL** (required for any under-13 audience): https://brightmoatstudios.com/privacy.html. The
+   page must cover children's data, COPPA, and for the launch countries PIPEDA (Canada), the Philippine Data Privacy
+   Act, the Australian Privacy Act and the NZ Privacy Act 2020. Account deletion URL for Data safety:
+   https://brightmoatstudios.com/delete.html. Support: support@brightmoatstudios.com.
 4. **Data safety form**: declare exactly what is collected. Today: no advertising ID, no ads. Account and cloud-save
    data, purchase history and analytics events from workstreams 2–4 must be declared when those land.
 5. **Ads declaration**: "No, my app does not contain ads".
