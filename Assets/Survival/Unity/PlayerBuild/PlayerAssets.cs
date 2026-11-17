@@ -211,21 +211,21 @@ namespace Survival.Unity
             var overlay = OverlayAsset(assetPath);
             if (overlay != null)
             {
-                var all = new List<Object>(overlay.Subs.Length + 1);
+                var overlayAll = new List<Object>(overlay.Subs.Length + 1);
                 if (overlay.Main != null)
                 {
-                    all.Add(overlay.Main);
+                    overlayAll.Add(overlay.Main);
                 }
 
                 foreach (var sub in overlay.Subs)
                 {
                     if (sub != null)
                     {
-                        all.Add(sub);
+                        overlayAll.Add(sub);
                     }
                 }
 
-                return all.ToArray();
+                return overlayAll.ToArray();
             }
 
 #if UNITY_EDITOR
