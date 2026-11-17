@@ -1,0 +1,147 @@
+# Over-the-air content for Theme A (Kingdom Defense, com.paytoplay.fantasykingdoma). Docs/OTA.md.
+# Run workflow:
+#   - content: builds the Addressables OTA groups (characters, animations, art, theme pack) for Android and uploads
+#     ServerData/Android to the bucket at content/Android/<content_version>/ (immutable, never overwritten);
+#   - config (optional): validates the remote config file in the repo, runs the free-pace sim on its balance patches
+#     (stamps free_pace_check), and publishes it to config/<platform>/remote_config.json. Phones switch on next launch.
+# Nothing here ships code: bundles carry assets and data only.
+# Lives at .github/workflows/ota-content.yml (staged in ci/github-workflows/ until it is moved there; see README.md).
+name: OTA content
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to build content from
+        required: true
+        default: main
+      content_version:
+        description: "New content folder name, e.g. 2026.11.20-1 (letters, digits, . _ -)"
+        required: true
+      build_content:
+        description: Build and upload Addressables content
+        type: boolean
+        default: true
+      publish_config:
+        description: Also publish the remote config file below (go live)
+        type: boolean
+        default: false
+      config_path:
+        description: Remote config to publish (its content_version should be the one above)
+        default: ota/remote_config.json
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ota-content
+  cancel-in-progress: false
+
+jobs:
+  content:
+    if: inputs.build_content
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Check secrets
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+          OTA_S3_ACCESS_KEY_ID: ${{ secrets.OTA_S3_ACCESS_KEY_ID }}
+          OTA_S3_SECRET_ACCESS_KEY: ${{ secrets.OTA_S3_SECRET_ACCESS_KEY }}
+          OTA_S3_BUCKET: ${{ secrets.OTA_S3_BUCKET }}
+          OTA_S3_ENDPOINT: ${{ secrets.OTA_S3_ENDPOINT }}
+          OTA_S3_REGION: nyc3
+          VERSION: ${{ inputs.content_version }}
+        run: |
+          missing=()
+          for name in UNITY_EMAIL UNITY_PASSWORD OTA_S3_ACCESS_KEY_ID OTA_S3_SECRET_ACCESS_KEY OTA_S3_BUCKET OTA_S3_ENDPOINT; do
+            [ -n "${!name}" ] || missing+=("$name")
+          done
+          [ -n "$UNITY_LICENSE" ] || [ -n "$UNITY_SERIAL" ] || missing+=("UNITY_LICENSE (Personal) or UNITY_SERIAL (Plus/Pro)")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing repo secrets: ${missing[*]}. See Docs/OTA.md."
+            exit 1
+          fi
+          [[ "$VERSION" =~ ^[A-Za-z0-9._-]{1,64}$ && "$VERSION" != *..* ]] || { echo "::error::content_version must be 1-64 of [A-Za-z0-9._-]"; exit 1; }
+
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: true
+          android: false
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: true
+          swap-storage: false
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 1
+          lfs: false
+
+      - name: Restore Unity Library cache
+        uses: actions/cache/restore@v4
+        with:
+          path: Library
+          key: Library-Android-${{ hashFiles('Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}-ota
+          restore-keys: |
+            Library-Android-${{ hashFiles('Packages/packages-lock.json', 'ProjectSettings/ProjectVersion.txt') }}-
+            Library-Android-
+
+      - name: Build Addressables content (Android)
+        uses: game-ci/unity-builder@v5
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          targetPlatform: Android
+          buildMethod: Survival.Editor.Ota.OtaContentBuild.BuildFromCommandLine
+          customParameters: -contentVersion ${{ inputs.content_version }}
+
+      - name: Upload content to the bucket
+        env:
+          OTA_S3_ACCESS_KEY_ID: ${{ secrets.OTA_S3_ACCESS_KEY_ID }}
+          OTA_S3_SECRET_ACCESS_KEY: ${{ secrets.OTA_S3_SECRET_ACCESS_KEY }}
+          OTA_S3_BUCKET: ${{ secrets.OTA_S3_BUCKET }}
+          OTA_S3_ENDPOINT: ${{ secrets.OTA_S3_ENDPOINT }}
+          OTA_S3_REGION: nyc3
+        run: |
+          sudo chown -R "$(id -u):$(id -g)" ServerData || true
+          scripts/ota/publish_content.sh Android "${{ inputs.content_version }}"
+
+      - name: Keep the content build as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ota-content-Android-${{ inputs.content_version }}
+          path: ServerData/Android
+          retention-days: 30
+
+  config:
+    if: ${{ always() && inputs.publish_config && (needs.content.result == 'success' || needs.content.result == 'skipped') }}
+    needs: content
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 1
+          lfs: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Check (free-pace sim) and publish the remote config
+        env:
+          OTA_S3_ACCESS_KEY_ID: ${{ secrets.OTA_S3_ACCESS_KEY_ID }}
+          OTA_S3_SECRET_ACCESS_KEY: ${{ secrets.OTA_S3_SECRET_ACCESS_KEY }}
+          OTA_S3_BUCKET: ${{ secrets.OTA_S3_BUCKET }}
+          OTA_S3_ENDPOINT: ${{ secrets.OTA_S3_ENDPOINT }}
+          OTA_S3_REGION: nyc3
+        run: scripts/ota/publish_config.sh "${{ inputs.config_path }}"

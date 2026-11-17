@@ -1,0 +1,148 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 468a46d0ae32c3544b7d98094e6448a9, type: 3}
+  m_Name: AddressableAssetSettings
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetSettings
+  m_DefaultGroup: 7cf5506953b460943a82946daffacbc6
+  m_currentHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_DisableWriteTypeTree: 0
+  m_OptimizeCatalogSize: 0
+  m_BuildRemoteCatalog: 1
+  m_CatalogRequestsTimeout: 8
+  m_DisableCatalogUpdateOnStart: 1
+  m_InternalIdNamingMode: 0
+  m_InternalBundleIdMode: 1
+  m_AssetLoadMode: 0
+  m_BundledAssetProviderType:
+    m_AssemblyName: Unity.ResourceManager, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    m_ClassName: UnityEngine.ResourceManagement.ResourceProviders.BundledAssetProvider
+  m_AssetBundleProviderType:
+    m_AssemblyName: Unity.ResourceManager, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    m_ClassName: UnityEngine.ResourceManagement.ResourceProviders.AssetBundleProvider
+  m_IgnoreUnsupportedFilesInBuild: 0
+  m_UniqueBundleIds: 0
+  m_EnableJsonCatalog: 0
+  m_NonRecursiveBuilding: 1
+  m_AllowNestedBundleFolders: 0
+  m_CCDEnabled: 0
+  m_maxConcurrentWebRequests: 3
+  m_UseUWRForLocalBundles: 0
+  m_BundleTimeout: 0
+  m_BundleRetryCount: 0
+  m_BundleRedirectLimit: -1
+  m_SharedBundleSettings: 0
+  m_SharedBundleSettingsCustomGroupIndex: 0
+  m_simulatedLoadDelay: 0.1
+  m_ContiguousBundles: 1
+  m_StripUnityVersionFromBundleBuild: 0
+  m_DisableVisibleSubAssetRepresentations: 0
+  m_BuiltInBundleNaming: 0
+  mBuiltInBundleCustomNaming: 
+  m_MonoScriptBundleNaming: 0
+  m_CheckForContentUpdateRestrictionsOption: 0
+  m_MonoScriptBundleCustomNaming: 
+  m_RemoteCatalogBuildPath:
+    m_Id: e44799e7e0924e9428fd050c296b80e3
+  m_RemoteCatalogLoadPath:
+    m_Id: 4bd1cf3fde9ca9647ba129f9f01bfe52
+  m_ContentStateBuildPathProfileVariableName: 
+  m_CustomContentStateBuildPath: 
+  m_ContentStateBuildPath: 
+  m_BuildAddressablesWithPlayerBuild: 1
+  m_overridePlayerVersion: ota
+  m_GroupAssets:
+  - {fileID: 11400000, guid: 51ed21b8ea7912a4699c713de3a80fee, type: 2}
+  - {fileID: 11400000, guid: 330d33e5066c7724fa0b45324d38a4ed, type: 2}
+  - {fileID: 11400000, guid: ee9aa17d245b6eb48be5a48d297a5789, type: 2}
+  - {fileID: 11400000, guid: 13090c4ffe78a4b4695d7195886517ee, type: 2}
+  - {fileID: 11400000, guid: 5895a652e21e8a04e93f02b76da1e5ef, type: 2}
+  m_BuildSettings:
+    m_LogResourceManagerExceptions: 1
+    m_BundleBuildPath: Temp/com.unity.addressables/AssetBundles
+  m_ProfileSettings:
+    m_Profiles:
+    - m_InheritedParent: 
+      m_Id: d7c6e69e428fc9c42933a8f34858ace8
+      m_ProfileName: Default
+      m_Values:
+      - m_Id: 15e785f185c12e34186f0a1c07b25dc5
+        m_Value: '[UnityEditor.EditorUserBuildSettings.activeBuildTarget]'
+      - m_Id: 25c146aac6df40e4b829e8e263de849c
+        m_Value: '[UnityEngine.AddressableAssets.Addressables.BuildPath]/[BuildTarget]'
+      - m_Id: 4bd1cf3fde9ca9647ba129f9f01bfe52
+        m_Value: https://{Survival.Unity.Ota.OtaHost.CdnHost}/content/[BuildTarget]/{Survival.Unity.Ota.OtaHost.ContentVersion}
+      - m_Id: 8f4f7a2e5268e3b4294be2aae25c0f02
+        m_Value: '{UnityEngine.AddressableAssets.Addressables.RuntimePath}/[BuildTarget]'
+      - m_Id: e44799e7e0924e9428fd050c296b80e3
+        m_Value: 'ServerData/[BuildTarget]'
+    m_ProfileEntryNames:
+    - m_Id: 15e785f185c12e34186f0a1c07b25dc5
+      m_Name: BuildTarget
+      m_InlineUsage: 0
+    - m_Id: 25c146aac6df40e4b829e8e263de849c
+      m_Name: Local.BuildPath
+      m_InlineUsage: 0
+    - m_Id: 4bd1cf3fde9ca9647ba129f9f01bfe52
+      m_Name: Remote.LoadPath
+      m_InlineUsage: 0
+    - m_Id: 8f4f7a2e5268e3b4294be2aae25c0f02
+      m_Name: Local.LoadPath
+      m_InlineUsage: 0
+    - m_Id: e44799e7e0924e9428fd050c296b80e3
+      m_Name: Remote.BuildPath
+      m_InlineUsage: 0
+    m_ProfileVersion: 1
+  m_LabelTable:
+    m_LabelNames:
+    - default
+    - ota
+    - char-ashwyrm
+    - char-blightroot
+    - char-bonequill
+    - char-ironhowl
+    - char-nightfang
+    - char-vespera
+    - char-emberfang
+    - char-lyra
+    - char-oakenshield
+    - char-siraldric
+    - char-rowan
+    - char-stormcrest
+    - char-kaelen
+    - char-malzareth
+    - char-seraphine
+    - char-vorgath
+    - shared
+    - art-battle
+    - art-heroes
+    - art-hook
+    - art-map
+    - art-runner
+    - art-splash
+    - art-store
+    - art-world-nodes
+    - art-world
+  m_SchemaTemplates: []
+  m_GroupTemplateObjects:
+  - {fileID: 11400000, guid: d32791e8a2ce68e4c9262afae8594345, type: 2}
+  m_InitializationObjects: []
+  m_CertificateHandlerType:
+    m_AssemblyName: 
+    m_ClassName: 
+  m_ActivePlayerDataBuilderIndex: 2
+  m_DataBuilders:
+  - {fileID: 11400000, guid: 57ae90b14afe17c43a5a00f13c21c583, type: 2}
+  - {fileID: 11400000, guid: 54a53e770ea91e643879b074e1213e5a, type: 2}
+  - {fileID: 11400000, guid: 299a83d81eb6d6d4c8ff074654860d6d, type: 2}
+  m_ActiveProfileId: d7c6e69e428fc9c42933a8f34858ace8

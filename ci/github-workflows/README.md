@@ -1,7 +1,8 @@
-# Workflow waiting to go live
+# Workflows waiting to go live
 
 `android-build.yml` here is the finished GitHub Actions workflow for Android builds (signed Play Store `.aab`, plus the
-phone-install `.apk`). It lives here, not in `.github/workflows/`, only because the bot's GitHub login does not have
+phone-install `.apk`). `ota-content.yml` builds and uploads over-the-air content and publishes the remote config
+(Docs/OTA.md); move it to `.github/workflows/ota-content.yml` the same way. It lives here, not in `.github/workflows/`, only because the bot's GitHub login does not have
 the `workflow` permission, and GitHub refuses any push that touches `.github/workflows/` without it.
 
 To switch it on, either:

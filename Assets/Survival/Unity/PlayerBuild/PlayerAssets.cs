@@ -27,6 +27,98 @@ namespace Survival.Unity
 
         private static PlayerAssetRegistry? _registry;
         private static bool _registryTried;
+        private static IReadOnlyList<PlayerAssetRegistry> _overlays = Array.Empty<PlayerAssetRegistry>();
+
+        /// <summary>
+        /// Over-the-air content (Ota.OtaContentUpdater): registries loaded from downloaded Addressables bundles. Consulted
+        /// before the baked registry (and before AssetDatabase in the Editor), so a published content update replaces
+        /// what the build carries path by path; anything they lack falls through to the bundled copy.
+        /// </summary>
+        public static void SetOverlays(IReadOnlyList<PlayerAssetRegistry>? overlays)
+        {
+            _overlays = overlays ?? Array.Empty<PlayerAssetRegistry>();
+            Missing.Clear();
+        }
+
+        public static int OverlayCount => _overlays.Count;
+
+        /// <summary>
+        /// Rewrites raw text as it is read: (path, text) to text. Set by Ota.OtaBoot to the remote balance patches the
+        /// free-pace guard accepted; null = files as baked.
+        /// </summary>
+        public static Func<string, string, string>? TextFilter { get; set; }
+
+        private static PlayerAssetRegistry.AssetEntry? OverlayAsset(string path)
+        {
+            if (_overlays.Count == 0)
+            {
+                return null;
+            }
+
+            var n = Normalize(path);
+            foreach (var o in _overlays)
+            {
+                var e = o != null ? o.FindAsset(n) : null;
+                if (e != null)
+                {
+                    return e;
+                }
+            }
+
+            return null;
+        }
+
+        private static TextAsset? OverlayFile(string path)
+        {
+            if (_overlays.Count == 0)
+            {
+                return null;
+            }
+
+            var n = Normalize(path);
+            foreach (var o in _overlays)
+            {
+                var t = o != null ? o.FindFile(n) : null;
+                if (t != null)
+                {
+                    return t;
+                }
+            }
+
+            return null;
+        }
+
+        private static bool OverlayDirectory(string path)
+        {
+            var n = Normalize(path).TrimEnd('/');
+            foreach (var o in _overlays)
+            {
+                if (o != null && o.HasDirectory(n))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static T? FromEntry<T>(PlayerAssetRegistry.AssetEntry entry) where T : Object
+        {
+            if (entry.Main is T main)
+            {
+                return main;
+            }
+
+            foreach (var sub in entry.Subs)
+            {
+                if (sub is T t)
+                {
+                    return t;
+                }
+            }
+
+            return null;
+        }
         private static readonly HashSet<string> Missing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
@@ -71,6 +163,16 @@ namespace Survival.Unity
 
         public static T? Load<T>(string assetPath) where T : Object
         {
+            var overlay = OverlayAsset(assetPath);
+            if (overlay != null)
+            {
+                var hit = FromEntry<T>(overlay);
+                if (hit != null)
+                {
+                    return hit;
+                }
+            }
+
 #if UNITY_EDITOR
             var asset = AssetDatabase.LoadAssetAtPath<T>(assetPath);
             if (asset != null)
@@ -106,6 +208,26 @@ namespace Survival.Unity
 
         public static Object[] LoadAll(string assetPath)
         {
+            var overlay = OverlayAsset(assetPath);
+            if (overlay != null)
+            {
+                var overlayAll = new List<Object>(overlay.Subs.Length + 1);
+                if (overlay.Main != null)
+                {
+                    overlayAll.Add(overlay.Main);
+                }
+
+                foreach (var sub in overlay.Subs)
+                {
+                    if (sub != null)
+                    {
+                        overlayAll.Add(sub);
+                    }
+                }
+
+                return overlayAll.ToArray();
+            }
+
 #if UNITY_EDITOR
             var all = AssetDatabase.LoadAllAssetsAtPath(assetPath);
             if (all != null && all.Length > 0)
@@ -144,6 +266,11 @@ namespace Survival.Unity
         /// Editor, a baked asset entry in a player.</summary>
         public static bool AssetFileExists(string assetPath)
         {
+            if (OverlayAsset(assetPath) != null)
+            {
+                return true;
+            }
+
 #if UNITY_EDITOR
             var ok = File.Exists(assetPath);
             if (ok)
@@ -159,6 +286,11 @@ namespace Survival.Unity
 
         public static bool FileExists(string path)
         {
+            if (OverlayFile(path) != null)
+            {
+                return true;
+            }
+
 #if UNITY_EDITOR
             var ok = File.Exists(path);
             if (ok)
@@ -174,6 +306,11 @@ namespace Survival.Unity
 
         public static bool DirectoryExists(string path)
         {
+            if (_overlays.Count > 0 && OverlayDirectory(path))
+            {
+                return true;
+            }
+
 #if UNITY_EDITOR
             return Directory.Exists(path);
 #else
@@ -183,6 +320,12 @@ namespace Survival.Unity
 
         public static byte[] ReadAllBytes(string path)
         {
+            var overlay = OverlayFile(path);
+            if (overlay != null)
+            {
+                return overlay.bytes;
+            }
+
 #if UNITY_EDITOR
             var bytes = File.ReadAllBytes(path);
             Note(path, true);
@@ -201,6 +344,19 @@ namespace Survival.Unity
 
         public static string ReadAllText(string path)
         {
+            var text = ReadAllTextRaw(path);
+            var filter = TextFilter;
+            return filter != null ? filter(path, text) : text;
+        }
+
+        private static string ReadAllTextRaw(string path)
+        {
+            var overlay = OverlayFile(path);
+            if (overlay != null)
+            {
+                return DecodeUtf8(overlay.bytes);
+            }
+
 #if UNITY_EDITOR
             var text = File.ReadAllText(path);
             Note(path, true);

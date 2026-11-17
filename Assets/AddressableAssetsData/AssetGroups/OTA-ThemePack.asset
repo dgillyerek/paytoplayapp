@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: OTA-ThemePack
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: OTA-ThemePack
+  m_GUID: 7cf5506953b460943a82946daffacbc6
+  m_SerializeEntries:
+  - m_GUID: 7a24cf07fc59ac6438756fd5b7ef34b5
+    m_Address: ota/themepack
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ota
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: fc7adbccfd936954e965d0d75c590c52, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 317cfe9f1fe18d24ea353c3779639818, type: 2}
+    - {fileID: 11400000, guid: 915f9aa7b78a05d42a83e73bd685dc68, type: 2}

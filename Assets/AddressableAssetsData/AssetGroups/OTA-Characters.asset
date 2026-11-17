@@ -1,0 +1,881 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: OTA-Characters
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: OTA-Characters
+  m_GUID: 6e919fe3d382ddd45b595114f6c611ea
+  m_SerializeEntries:
+  - m_GUID: 00a6702e13c44af8b41ee221651e25e6
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/lyra/LYRA_blenderig.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-lyra
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 03b36bee98214c32900799c8baca216c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/vespera/VESPERA_blenderig_attack3_hex_rain.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vespera
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 069028d04416464e8094f86831e5c97b
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/oakenshield/OAKENSHIELD_blenderig_attack3_root_snare.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-oakenshield
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 07d7edc2b5dd50e4183a4eb623c69563
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/SERAPHINE_cape.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-seraphine
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 08c8237806d74210bfedc68b20627f65
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ironhowl/IRONHOWL_rig_shoulder_charge.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ironhowl
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0f05dc8818c1240499a763b7f5018c01
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_idle.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-malzareth
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 11a0e7c34b5d4e6f8a9b0c1d2e3f4a50
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ironhowl/IRONHOWL_rig.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ironhowl
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 131643e3da74473bac01b9c16ff99ab3
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sir_aldric_attack2_diagonal_slash.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 13f28fd30b0c48418b9752ac61ad6793
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/SERAPHINE_staff.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-seraphine
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 166bf360efe94f9a947b5a122968bb57
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sir_aldric_attack3_shield_bash.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 16b8a47b4f1242c79560862e308649a6
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/emberfang/EMBERFANG_blenderig_attack.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-emberfang
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1856dbb0fc284a6e95178418c4d40756
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/lyra/LYRA_blenderig_walk.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-lyra
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1ad0f5a27cb84abea2597b60c5778cc2
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/bonequill/BONEQUILL_bow.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-bonequill
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1e9899cb1c9f6a74e8f5338c6b8fb68f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/SERAPHINE_attack_throw.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-seraphine
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 221f75365db24fe18cd7c5344d6fc36e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2332dc4178806afaf2dee0dd88bbdb67
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sheath_sword_1.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2475c39842e7c90aa3160791d708f2fe
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_attack_(4).fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 27003aacf2f86a047bcb533d05f2a17f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/SERAPHINE_attack_standing_melee.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-seraphine
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2774e1c1ce49d7b41ba17ee70a6f83bf
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/VORGATH_idle.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 290782e86540d9c745ea81f5d525171b
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_block_(2).fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2b6506a3cd6b4b5d9ccee37d35dbb010
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/VORGATH_spit_fire_stream.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2bcec50bb90a67ff57d69b7403c612e4
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_strafe_(2).fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2e8564c787cc63a8de46b2acfb5287bd
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_run.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3161fd669e0b441cb3553b3c3d725ed2
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/rowan/ROWAN_blenderig_attack3_volley.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-rowan
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 33b0f45a248f26f429853f7ff00dcf31
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/SERAPHINE_attack_rise.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-seraphine
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 33c2a9e56d7f40819c0d2e3f40516272
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/emberfang/EMBERFANG_dragonrig.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-emberfang
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 346daaf72b1c4e95a5845f704ba17b4a
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_block.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 37cef71e7bd241fe9a804d7340b9b745
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_sword_L_stab.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-kaelen
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3b6478cc231ca074eb193024738bc16c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/SERAPHINE_attack_thrust_slash.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-seraphine
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3c0742a95459461699a3fbc1ff38f271
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/lyra/LYRA_blenderig_attack2_staff_sweep.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-lyra
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3c27eba41d4f42d9b1f6285fc1ce22a5
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/stormcrest/STORMCREST_blenderig.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-stormcrest
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 431d1bb065d3b8b4abac0089afb6fe07
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_attack2_inwardslash.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-kaelen
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 44ff955aacd64191989cbd4615eabdd8
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/nightfang/NIGHTFANG_blenderig.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-nightfang
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 44ffa0a6c77c5084ca2d1594e6603d0a
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_attack_greatsword.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-malzareth
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 484184b16a3d4451aaa627295665cfb0
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/vespera/VESPERA_blenderig.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vespera
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4873cd2e5a5041fe8d540f63e82f8bf9
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/lyra/LYRA_staff.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-lyra
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 48f594dba36cf1d4c86830d20b1fe74d
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_rig_rest.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-malzareth
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4af0d8431cfd45358793a937a717b025
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/bonequill/BONEQUILL_cape.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-bonequill
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5199742f990abef588d2103203216f50
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_attack.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 55e4c1078f9152a31e2f405162738494
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/emberfang/EMBERFANG_dragonrig_wingflap.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-emberfang
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5aa6b8ea69793e440bb3898633014504
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_rig_rest.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-kaelen
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5c00c5f9ccd008a4a9b1f2df16cc87cf
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/SERAPHINE_attack_armada.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-seraphine
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5e77f46eb7c06bb97333c95da49594fc
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_block_idle.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5f463a18a63d4f78a8d6bf645d513bd7
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_sword_R_inward.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-kaelen
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 62da08fc64fc0c1b7b624539f7899091
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_strafe.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6393e6127c6c425ab6637c023693e47e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/oakenshield/OAKENSHIELD_blenderig.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-oakenshield
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 646bf009fa626ac49a81dcb54bc6dd35
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_attack_standing_melee.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-malzareth
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 69122d73dd82403da7480a7985c1d24a
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/vespera/VESPERA_blenderig_attack.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vespera
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 699e887236664d2469637d69dd82c9d5
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_attack_great_sword_casting.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-malzareth
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 69afb72fa34b42789c6caca3b44c914d
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/bonequill/BONEQUILL_bonearrow_purple_fletch.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-bonequill
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6a4cc1edd81cd4a44a04a7980ba8d17d
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_attack_dualslash.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-kaelen
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6a8de29c7367d2541993a444be89f5bd
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_dying.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-malzareth
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6b0dc361bd294bc0bfd6739cd67fbdd8
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/lyra/LYRA_staff_rest.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-lyra
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6b6d97a3eecf95a8ca28a4e4ff949486
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_turn_(2).fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6bbc37cde7f6494a803a4aa5886070f3
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/vespera/VESPERA_orb.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vespera
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6cf3e9e48c0740c2897176b7c12ecf6c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/vespera/VESPERA_blenderig_walk.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vespera
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6e1bc2f49c1444d680dab45842409149
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/lyra/LYRA_blenderig_attack3_arcane_nova.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-lyra
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 701dea98e0fa4b6e97a91bd027c4c80f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/bonequill/BONEQUILL_blenderig_attack.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-bonequill
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 73c4d1325039412cbf2da4071d1d2d25
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/nightfang/NIGHTFANG_blenderig_trot.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-nightfang
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 749c463056416beff1b1966a7e056e69
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/draw_sword_1.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 76f7df0e944db6d4e808d0486ab89716
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_walk.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-malzareth
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 78e17dbc86a3445db45ad0032f6567f1
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/stormcrest/STORMCREST_blenderig_wingflap.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-stormcrest
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7b3e1c94a6d84f2e8c0b5a71d4e96f28
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/emberfang/EMBERFANG_dragonrig_walk.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-emberfang
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7ca3176048724e52a27cf788968eb3e5
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/vespera/VESPERA_blenderig_attack2_shadow_lash.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vespera
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7e92bd32787041b7a380d339225548b0
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_sword.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7f4609ea4d22ff41962433e086ad879b
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_attack_(2).fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 868faf9f7fd41ef44ac0e4127c82179e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_walk.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-kaelen
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 87209ab0bd6951a40bc22e1c107e6ef7
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/SERAPHINE_rig_rest.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-seraphine
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8a5a2ff0f8274b4b9107796c5d2cf694
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ironhowl/IRONHOWL_mixamo_standing_melee_combo_attack_v2.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ironhowl
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8fc65b1d7646abe49822c669d05402a4
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_attack2_overhead_cleave.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-malzareth
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 90b62362fcd6428fae12628a2536b639
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/stormcrest/STORMCREST_blenderig_attack.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-stormcrest
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9983853127144943865e29b67bb85eb0
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_cape.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 99a4f523c65c8528270085339386ef5c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_idle.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9c3ef039989f4c2798e552b60ddc87ee
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/nightfang/NIGHTFANG_blenderig_attack.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-nightfang
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9e396d35d6a64b2da8d9933fb59957a0
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/rowan/ROWAN_blenderig_attack2_double_shot.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-rowan
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a0211b00940af7248afec9272fc8e5a5
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_cape.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-kaelen
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a04a22fc11b672f60f661d5f5ee60c74
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_run_(2).fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a1352a40559d4a768defa41cc3a72d40
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ironhowl/IRONHOWL_rig_backhand_sweep.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ironhowl
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a28f16d241811b84db86528f02d448c4
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/VORGATH_rig_rest.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a557146671e84cd69205d1333e87fea3
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ashwyrm/ASHWYRM_blenderig_walk.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ashwyrm
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a6758b5c2b5b43b49e5261a3aa552c27
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/oakenshield/OAKENSHIELD_blenderig_attack2_spear_thrust.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-oakenshield
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a6c16271ea4a416a98644a775193c155
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ashwyrm/ASHWYRM_blenderig_wingflap.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ashwyrm
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a6fc826f818a81748b1e657cf54b35f5
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/VORGATH_attack_spit.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a7c3e91b4d6f4802b1e05a9c3d7f2e18
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ironhowl/IRONHOWL_rig_rest.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ironhowl
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a9580ab9e4b9466ca565572598a6632a
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/bonequill/BONEQUILL_blenderig.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-bonequill
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a9a3a7933b7997c47ab580b7733ddb75
+    m_Address: ota/characters
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ota
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aa7cef4487e14915aeb75b09dc1c33d3
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/oakenshield/OAKENSHIELD_blenderig_attack.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-oakenshield
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ab11e700d0a14c0e9f2b6d5a8c3e1f40
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/Blightroot_Dual_Weapon_Combo.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e0000c0ffee11aa01aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_mutant_right_turn_90.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e0001c0ffee11aa02aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_mutant_jumping.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e0002c0ffee11aa03aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_mutant_jumping_(2).fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e0003c0ffee11aa04aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_mutant_walking.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e0004c0ffee11aa05aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_mutant_swiping.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e0005c0ffee11aa06aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_mutant_run.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e0006c0ffee11aa07aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_mutant_dying.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e0007c0ffee11aa08aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_mutant_idle.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e0008c0ffee11aa09aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_mutant_breathing_idle.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e0009c0ffee11aa10aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_mutant_right_turn_45.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e000ac0ffee11aa11aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_mutant_idle_(2).fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e000bc0ffee11aa12aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_mutant_right_turn_45_(2).fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e000cc0ffee11aa13aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_mutant_left_turn_45.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e000dc0ffee11aa14aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_left_turn_45.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e000ec0ffee11aa15aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_mutant_flexing_muscles.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e000fc0ffee11aa16aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_jump_attack.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e0010c0ffee11aa17aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_mutant_jump_attack.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e0011c0ffee11aa18aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_mutant_punch.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19e0012c0ffee11aa19aabbccddeeff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/creature_pack/Blightroot_mutant_roaring.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b35c87852733faa47b55bb7b70cc5317
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_cape.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-malzareth
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b37dc5f8228c4b5d89b2eaa767fba87c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/stormcrest/STORMCREST_blenderig_walk.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-stormcrest
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b62224d1f033466e82948817e4e55620
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ashwyrm/ASHWYRM_blenderig.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ashwyrm
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b8d40a2c5e7f4913c2f16b0d4e803f29
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ironhowl/IRONHOWL_rig_walk.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ironhowl
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b8d7e0b1877a6e741b04a384ff4a3677
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/SERAPHINE_idle.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-seraphine
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b946105bbd174050aab1c93f2832d69e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/lyra/LYRA_blenderig_attack.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-lyra
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b9a99f734ee64649a22816775eec09dc
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/rowan/ROWAN_coat.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-rowan
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bb73dedde3994e258869da5ce68e27e8
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_sword_L.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-kaelen
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bc24be9161048c04287ce2fa8914f0cc
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/SERAPHINE_attack_thrust.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-seraphine
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: be358517df6940069a512a8b0bbf5b32
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/rowan/ROWAN_blenderig_walk.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-rowan
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c454efe2493843e59d891824f4a710c0
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_sword_R_stab.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-kaelen
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c4b095fd8cf24ea687df9b4819f105e9
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/bonequill/BONEQUILL_blenderig_attack3_bone_volley.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-bonequill
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c7862d0eff41450b87c9b4379663a06d
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/rowan/ROWAN_blenderig.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-rowan
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c9e51b3d6f805024d3027c1e5f91403a
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ironhowl/IRONHOWL_rig_attack.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ironhowl
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cecddbdd40aa46e4a8e9d4fb09dc65f3
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_sword_R.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-kaelen
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d01d7ac49d74913428119c5bafc5601e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/VORGATH_attack_slam.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d23ac2dad1b6463785016db91bc1a857
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/oakenshield/OAKENSHIELD_thornspear.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-oakenshield
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d473cdb325504afba461f5a85d84f4b7
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/rowan/ROWAN_arrow.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-rowan
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d4e8a1c39f7b4e21a6c0d8b5e2f14790
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d58e139d86194d60958f7b0a4f98fb09
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/oakenshield/OAKENSHIELD_blenderig_walk.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-oakenshield
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: da75668a78531da4f962fd20dfefe86b
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/SERAPHINE_walk.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-seraphine
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: db639131ac93469e896e415e5da9953c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/bonequill/BONEQUILL_blenderig_walk.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-bonequill
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dcf05297e4b5a3dd5c9f837a359f2ca6
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_turn.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dd03c01a108e3bf48bd02ef6e6a482ee
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_idle.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-kaelen
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: de68daae58e31094da84a8671158ac7c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/VORGATH_mouth_socket_REF.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: df63ea1eb40046c29f26cba192c4274d
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ashwyrm/ASHWYRM_blenderig_attack.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ashwyrm
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: df895f14e3294761b3c90ff42056954b
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ironhowl/IRONHOWL_rig_ground_pound.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ironhowl
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e3f27c7f95b54f66927bf5c7e3a91299
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/rowan/ROWAN_blenderig_attack.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-rowan
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f0409b697aa243698a0a95f3846df557
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/bonequill/BONEQUILL_blenderig_attack2_rapid_quiver_shot.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-bonequill
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f122992fe9bef8e429357005ea6bda6f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/VORGATH_walk.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f18ee9fb479e271265fc8d54832aff5c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_attack_(3).fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f32dd5ca9715cf269a929cce4ac4c0a0
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_death.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-siraldric
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f51e22cbd8d64aa6b1a41e559a811863
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_sword_L_inward.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-kaelen
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f54d33e9fb164bb8a5fa3d437434ce5e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ironhowl/IRONHOWL_mixamo_standing_melee_attack_downward.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ironhowl
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f5ca390138404fd47a94f75f05d2a8a2
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/VORGATH_dying.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f990309d711b44e6bb43eebdf22788ec
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/rowan/ROWAN_bow.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-rowan
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: fc7adbccfd936954e965d0d75c590c52, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 0376eb4fa67c2824e9c2d196b4bdb491, type: 2}
+    - {fileID: 11400000, guid: 88848be8b2bcaf24398ae502e143d863, type: 2}

@@ -151,6 +151,11 @@ namespace Survival.Editor
                 return 3;
             }
 
+#if SURVIVAL_ADDRESSABLES
+            // Over-the-air content (Docs/OTA.md): the player's Addressables catalog must list the four remote OTA groups.
+            Ota.OtaContentBuild.PrepareGroups();
+#endif
+
             // The flavor already set these; set again so nothing between there and here (bake) can change them.
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;

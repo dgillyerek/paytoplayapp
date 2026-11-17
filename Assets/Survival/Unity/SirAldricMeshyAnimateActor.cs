@@ -430,7 +430,9 @@ namespace Survival.Unity
         private void CacheLiteSwordShieldClips()
         {
             _liteClips.Clear();
-            foreach (var entry in System.Linq.Enumerable.Concat(SirAldric3DMotion.LiteSwordShieldClips, SirAldric3DMotion.BattleExtraClips))
+            // Only the clips the game plays; PlayNamedClip still loads any other lite clip on demand (editor review).
+            // Caching all 17 made every Play session record them and the bake ship 15 unused body-mesh FBXs.
+            foreach (var entry in PlayerBakeManifest.SirAldricShippedLiteClips)
             {
                 var clip = LoadLiteNamedClip(entry);
                 if (clip == null)
