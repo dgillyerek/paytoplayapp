@@ -1,4 +1,4 @@
-# Builds Theme A (Kingdom Defense, com.paytoplay.fantasykingdoma) for Android in the cloud:
+# Builds Theme A (Kingdom Defense, com.brightmoatstudios.kingdomdefense) for Android in the cloud:
 # - a signed release .aab for Google Play (every push to main, and Run workflow with format "aab"), kept as a run artifact;
 # - a signed .apk for installing straight from a phone (PRs labelled phone-build, and Run workflow with format "apk"),
 #   published to a rolling GitHub prerelease.
@@ -185,7 +185,7 @@ jobs:
             echo "::error::The bundle declares com.google.android.gms.permission.AD_ID. Theme A is a Families (under-13) app."
             exit 1
           fi
-          grep -q 'package="com.paytoplay.fantasykingdoma"' merged-manifest.xml || { echo "::error::Wrong package name"; exit 1; }
+          grep -q 'package="com.brightmoatstudios.kingdomdefense"' merged-manifest.xml || { echo "::error::Wrong package name"; exit 1; }
           grep -q 'android:targetSdkVersion="36"' merged-manifest.xml || { echo "::error::targetSdkVersion is not 36"; exit 1; }
 
       - name: Upload the Play Store bundle
@@ -210,7 +210,7 @@ jobs:
           {
             echo "### Google Play bundle"
             echo ""
-            echo "Kingdom Defense (com.paytoplay.fantasykingdoma) $VERSION, versionCode $VERSION_CODE, $(du -h "$aab" | cut -f1)."
+            echo "Kingdom Defense (com.brightmoatstudios.kingdomdefense) $VERSION, versionCode $VERSION_CODE, $(du -h "$aab" | cut -f1)."
             echo "Download \`$NAME-aab\` from this run's Artifacts and upload it in Play Console (Testing or Production > Create new release)."
           } >> "$GITHUB_STEP_SUMMARY"
 

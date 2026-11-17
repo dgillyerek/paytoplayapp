@@ -1,4 +1,4 @@
-# Over-the-air content for Theme A (Kingdom Defense, com.paytoplay.fantasykingdoma). Docs/OTA.md.
+# Over-the-air content for Theme A (Kingdom Defense, com.brightmoatstudios.kingdomdefense). Docs/OTA.md.
 # Run workflow:
 #   - content: builds the Addressables OTA groups (characters, animations, art, theme pack) for Android and uploads
 #     ServerData/Android to the bucket at content/Android/<content_version>/ (immutable, never overwritten);

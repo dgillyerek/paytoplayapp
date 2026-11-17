@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS iap_purchases (
   id bigserial PRIMARY KEY,
   player_id bigint NOT NULL REFERENCES players(id),           -- account that first redeemed the purchase
   store text NOT NULL CHECK (store IN ('google_play', 'app_store')),
-  product_id text NOT NULL,                                    -- store product id (com.paytoplay.fantasykingdoma.*)
+  product_id text NOT NULL,                                    -- store product id (com.brightmoatstudios.kingdomdefense.*)
   sku text NOT NULL,                                           -- theme-pack sku (sku.*)
   purchase_token text NOT NULL,                                -- Play purchase token / App Store originalTransactionId
   order_id text,                                               -- Play orderId (GPA.*) / App Store transactionId

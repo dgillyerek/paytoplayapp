@@ -63,7 +63,7 @@ public sealed class PowerPackTests
         {
             Assert.Equal(OfferKinds.Sku, r.Offer.Kind);
             Assert.True(products.TryGetValue(r.Offer.Sku!, out var p), r.Offer.Sku);
-            Assert.StartsWith("com.paytoplay.fantasykingdoma.", p!.ProductId);
+            Assert.StartsWith("com.brightmoatstudios.kingdomdefense.", p!.ProductId);
             Assert.Equal("$" + r.Pack.Usd.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture), p.PriceLabel);
         }
 

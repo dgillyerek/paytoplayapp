@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 namespace Survival.Domain.Tests;
 
 /// <summary>
-/// The committed Unity ProjectSettings ship as Theme A (Kingdom Defense, com.paytoplay.fantasykingdoma) with its icons,
+/// The committed Unity ProjectSettings ship as Theme A (Kingdom Defense, com.brightmoatstudios.kingdomdefense) with its icons,
 /// and the flavor build code agrees with flavor.json. Project Grove is discontinued; no Grove identity may come back.
 /// </summary>
 public sealed class ThemeAProjectSettingsTests
@@ -22,7 +22,7 @@ public sealed class ThemeAProjectSettingsTests
         Assert.Contains("  companyName: Brightmoat Studios LLC\n", s, StringComparison.Ordinal);
         Assert.Contains("  productName: " + Flavor.GetProperty("flavor.app_name").GetString() + "\n", s, StringComparison.Ordinal);
         var id = Flavor.GetProperty("flavor.bundle_id").GetString();
-        Assert.Equal("com.paytoplay.fantasykingdoma", id);
+        Assert.Equal("com.brightmoatstudios.kingdomdefense", id);
         Assert.Contains("    Android: " + id + "\n", s, StringComparison.Ordinal);
         Assert.Contains("    Standalone: " + id + "\n", s, StringComparison.Ordinal);
         Assert.Contains("    iPhone: " + id + "\n", s, StringComparison.Ordinal);

@@ -33,7 +33,7 @@ test("pg save repo: put, conflict merge, consent, clawback", opts, async () => {
     // Need a purchase row for FK on clawback — insert minimal if 004 tables exist
     const purchase = await pool.query(
       `INSERT INTO iap_purchases(player_id, store, product_id, sku, purchase_token, consumable, state)
-       VALUES($1,'google_play','com.paytoplay.fantasykingdoma.hard_m','sku.hard_m',$2,true,'granted') RETURNING id`,
+       VALUES($1,'google_play','com.brightmoatstudios.kingdomdefense.hard_m','sku.hard_m',$2,true,'granted') RETURNING id`,
       [playerId, "savetest-tok-" + run],
     );
     const purchaseId = Number(purchase.rows[0].id);

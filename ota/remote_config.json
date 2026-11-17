@@ -3,7 +3,7 @@
   "schema": "paytoplay.remote_config",
   "schema_version": 1,
   "config_version": 1,
-  "app_id": "com.paytoplay.fantasykingdoma",
+  "app_id": "com.brightmoatstudios.kingdomdefense",
   "content_version": "",
   "content_api": 1,
   "min_supported_version": {
@@ -11,7 +11,7 @@
     "ios": "0.1.0"
   },
   "store_links": {
-    "android": "https://play.google.com/store/apps/details?id=com.paytoplay.fantasykingdoma",
+    "android": "https://play.google.com/store/apps/details?id=com.brightmoatstudios.kingdomdefense",
     "ios": "https://apps.apple.com/app/id0000000000"
   },
   "feature_flags": {

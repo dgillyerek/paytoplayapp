@@ -7,7 +7,7 @@ import { appStoreClient } from "../src/appstore.mjs";
 import { appStoreVerifier } from "../src/iap.mjs";
 import { memoryIapRepo } from "./memory_repo.mjs";
 
-const PKG = "com.paytoplay.fantasykingdoma";
+const PKG = "com.brightmoatstudios.kingdomdefense";
 const GEMS_M = PKG + ".hard_m", TRACK = PKG + ".track_royal", POWER6 = PKG + ".power_t6";
 const pack = (f) => JSON.parse(readFileSync(new URL("../../../Assets/ThemePack/fantasy_kingdom_a/store/" + f, import.meta.url), "utf8"));
 const stores = JSON.parse(readFileSync(new URL("../../../Assets/Survival/Resources/Survival/stores.json", import.meta.url), "utf8"));

@@ -54,7 +54,7 @@ public sealed class KidsChatIapTests
     private static bool? Ask(IPurchaseGate gate)
     {
         bool? result = null;
-        gate.Check("com.paytoplay.fantasykingdoma.gems_m", (ok, _) => result = ok);
+        gate.Check("com.brightmoatstudios.kingdomdefense.gems_m", (ok, _) => result = ok);
         return result;
     }
 

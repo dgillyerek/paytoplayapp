@@ -42,7 +42,7 @@ public sealed class RewardTrackTests
         Assert.Equal("$2.99", track.PriceLabel(SurvIds.OfferTrackPremium));
         Assert.Equal("$3.99", track.PriceLabel(SurvIds.OfferTrackRoyal));
         Assert.Equal("$0.99", track.PriceLabel(SurvIds.OfferTrackRoyalUpgrade));
-        Assert.Equal("com.paytoplay.fantasykingdoma.track_royal", track.Store.ProductFor(SurvIds.SkuTrackRoyal)!.ProductId);
+        Assert.Equal("com.brightmoatstudios.kingdomdefense.track_royal", track.Store.ProductFor(SurvIds.SkuTrackRoyal)!.ProductId);
         Assert.True(track.Store.Purchases.IsSandbox);
     }
 
@@ -86,7 +86,7 @@ public sealed class RewardTrackTests
         Assert.Equal(5, track.LockedReached(TrackColumn.Premium));
         Assert.True(Buy(track.BuyPremium).Ok);
         Assert.Equal(TrackTier.Premium, track.Tier);
-        Assert.Equal(new[] { "com.paytoplay.fantasykingdoma.track_premium" }, sandbox.History);
+        Assert.Equal(new[] { "com.brightmoatstudios.kingdomdefense.track_premium" }, sandbox.History);
         Assert.Equal(5, track.ClaimableCount(TrackColumn.Premium));
         Assert.Equal(0, track.ClaimableCount(TrackColumn.Royal));
         Assert.Equal(TrackCellState.Upcoming, track.State(track.Catalog.Rows[5], TrackColumn.Premium));
@@ -100,7 +100,7 @@ public sealed class RewardTrackTests
         campaign.UnlockRunner(track.Catalog.Rows[2].Level + 1);
         Assert.True(Buy(track.BuyRoyal).Ok);
         Assert.Equal(TrackTier.Royal, track.Tier);
-        Assert.Equal(new[] { "com.paytoplay.fantasykingdoma.track_royal" }, sandbox.History);
+        Assert.Equal(new[] { "com.brightmoatstudios.kingdomdefense.track_royal" }, sandbox.History);
         Assert.Equal(3, track.ClaimableCount(TrackColumn.Premium));
         Assert.Equal(3, track.ClaimableCount(TrackColumn.Royal));
         Assert.Null(track.PremiumOfferNow);
@@ -117,7 +117,7 @@ public sealed class RewardTrackTests
         Assert.Equal(SurvIds.OfferTrackRoyalUpgrade, track.RoyalOfferNow);
         Assert.True(Buy(track.BuyRoyal).Ok);
         Assert.Equal(TrackTier.Royal, track.Tier);
-        Assert.Equal(new[] { "com.paytoplay.fantasykingdoma.track_premium", "com.paytoplay.fantasykingdoma.track_royal_upgrade" }, sandbox.History);
+        Assert.Equal(new[] { "com.brightmoatstudios.kingdomdefense.track_premium", "com.brightmoatstudios.kingdomdefense.track_royal_upgrade" }, sandbox.History);
     }
 
     [Fact]

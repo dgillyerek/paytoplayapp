@@ -14,7 +14,7 @@ namespace Survival.Domain.Tests;
 /// </summary>
 public sealed class RemoteBalancePaceTests
 {
-    private const string AppId = "com.paytoplay.fantasykingdoma";
+    private const string AppId = "com.brightmoatstudios.kingdomdefense";
 
     private static (int Wall, Dictionary<int, double?> Days, List<string> Off) Simulate(RemoteConfig config)
     {
