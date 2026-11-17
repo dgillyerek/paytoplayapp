@@ -112,7 +112,7 @@ public sealed class HookIdTests
         foreach (var offer in Hook.Catalog().Stores.SelectMany(s => s.Offers).Where(o => o.Kind == OfferKinds.Sku))
         {
             Assert.True(products.TryGetValue(offer.Sku!, out var p));
-            Assert.StartsWith("com.paytoplay.fantasykingdoma.", p!.ProductId);
+            Assert.StartsWith("com.brightmoatstudios.kingdomdefense.", p!.ProductId);
             Assert.NotEmpty(p.PriceLabel);
         }
     }
@@ -488,7 +488,7 @@ public sealed class SandboxStoreTests
         PurchaseOutcome? got = null;
         hook.Store.BuySku(SurvIds.OfferGemsS, o => got = o);
         Assert.True(got!.Ok);
-        Assert.Equal("com.paytoplay.fantasykingdoma.hard_s", got.ProductId);
+        Assert.Equal("com.brightmoatstudios.kingdomdefense.hard_s", got.ProductId);
         Assert.Equal(130, hook.Wallet.Get(SurvIds.ResHard));
         hook.Store.BuySku(SurvIds.OfferGemsM, o => got = o);
         Assert.Equal(630, hook.Wallet.Get(SurvIds.ResHard));

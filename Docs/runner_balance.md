@@ -275,7 +275,7 @@ The "before" numbers come from the model on main just before this change. They d
 
 Derek: *"there should be things that allow a substantial power up. like a 39.99 price. and everything in between"*.
 
-The packs are the `store.power_packs` offers in `stores.json`. Their SKUs are in `iap.json`, and the store product IDs are in the theme's `products.json` (`com.paytoplay.fantasykingdoma.*`). Value rates and the War Banner boost are in `power_packs.json`. The code is `Assets/Survival/Runtime/Store/PowerPacks.cs` (`PowerPackCatalog`, `PowerPackShop`, `RunnerBanner`). **All contents and value rates are invented (`_invented`); Derek's call.**
+The packs are the `store.power_packs` offers in `stores.json`. Their SKUs are in `iap.json`, and the store product IDs are in the theme's `products.json` (`com.brightmoatstudios.kingdomdefense.*`). Value rates and the War Banner boost are in `power_packs.json`. The code is `Assets/Survival/Runtime/Store/PowerPacks.cs` (`PowerPackCatalog`, `PowerPackShop`, `RunnerBanner`). **All contents and value rates are invented (`_invented`); Derek's call.**
 
 | Offer | Price | Contents | Value* | Value / $ | Label |
 |---|---|---|---|---|---|

@@ -7,7 +7,7 @@ namespace Survival.Domain.Tests;
 /// <summary>Over-the-air content updates (Docs/OTA.md): remote config schema, min-version gate, config choice, balance guard, content groups.</summary>
 public sealed class OtaTests
 {
-    private const string AppId = "com.paytoplay.fantasykingdoma";
+    private const string AppId = "com.brightmoatstudios.kingdomdefense";
 
     internal static string OtaDir => Path.Combine(AppContext.BaseDirectory, "Ota");
 
@@ -73,10 +73,10 @@ public sealed class OtaTests
     [Theory]
     [InlineData("\"config_version\": 1,", "\"config_version\": 1, \"surprise\": true,", "unknown key")]
     [InlineData("\"schema_version\": 1,", "\"schema_version\": 2,", "schema_version")]
-    [InlineData("\"app_id\": \"com.paytoplay.fantasykingdoma\"", "\"app_id\": \"com.other.app\"", "app_id")]
+    [InlineData("\"app_id\": \"com.brightmoatstudios.kingdomdefense\"", "\"app_id\": \"com.other.app\"", "app_id")]
     [InlineData("\"content_version\": \"\"", "\"content_version\": \"../../etc\"", "content_version")]
     [InlineData("\"content_version\": \"\"", "\"content_version\": \"a/b\"", "content_version")]
-    [InlineData("https://play.google.com/store/apps/details?id=com.paytoplay.fantasykingdoma", "http://play.google.com/x", "https")]
+    [InlineData("https://play.google.com/store/apps/details?id=com.brightmoatstudios.kingdomdefense", "http://play.google.com/x", "https")]
     [InlineData("\"android\": \"0.1.0\"", "\"android\": \"latest\"", "min_supported_version")]
     [InlineData("\"patches\": {}", "\"patches\": { \"runner_balance.json\": { \"pace\": { \"sessions_per_day\": 9 } } }", "not a patchable")]
     [InlineData("\"patches\": {}", "\"patches\": { \"heroes.json\": {} }", "not a patchable")]

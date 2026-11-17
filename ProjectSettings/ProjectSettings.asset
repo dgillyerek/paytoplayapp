@@ -166,9 +166,9 @@ PlayerSettings:
   androidMaxAspectRatio: 2.1
   androidMinAspectRatio: 1
   applicationIdentifier:
-    Android: com.paytoplay.fantasykingdoma
-    Standalone: com.paytoplay.fantasykingdoma
-    iPhone: com.paytoplay.fantasykingdoma
+    Android: com.brightmoatstudios.kingdomdefense
+    Standalone: com.brightmoatstudios.kingdomdefense
+    iPhone: com.brightmoatstudios.kingdomdefense
   buildNumber:
     Standalone: 0
     VisionOS: 0

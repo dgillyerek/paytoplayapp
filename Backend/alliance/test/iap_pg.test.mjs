@@ -20,7 +20,7 @@ test("pg repo: idempotent grant, other-account refusal, restore, refund", opts, 
     }
     const [a, b] = players;
     const repo = pgIapRepo(pool);
-    const row = (playerId, token, consumable, extra = {}) => ({ playerId, store: "google_play", productId: "com.paytoplay.fantasykingdoma.hard_m", sku: "sku.hard_m", token,
+    const row = (playerId, token, consumable, extra = {}) => ({ playerId, store: "google_play", productId: "com.brightmoatstudios.kingdomdefense.hard_m", sku: "sku.hard_m", token,
       orderId: "GPA.t", consumable, purchasedAt: new Date().toISOString(), payload: { purchaseState: 0 }, grants: { "res.hard": 500 }, entitlements: [], ...extra });
 
     const tok = "iaptest-" + run + "-c";
@@ -31,7 +31,7 @@ test("pg repo: idempotent grant, other-account refusal, restore, refund", opts, 
     assert.equal((await repo.recordGrant(row(b, tok, true))).outcome, "other_player");
 
     const nc = "iaptest-" + run + "-nc";
-    const ent = { productId: "com.paytoplay.fantasykingdoma.track_royal", sku: "sku.track_royal", grants: {}, entitlements: ["ent.track_royal"] };
+    const ent = { productId: "com.brightmoatstudios.kingdomdefense.track_royal", sku: "sku.track_royal", grants: {}, entitlements: ["ent.track_royal"] };
     assert.equal((await repo.recordGrant(row(a, nc, false, ent))).outcome, "new");
     const restored = await repo.recordGrant(row(b, nc, false, ent));
     assert.equal(restored.outcome, "restored");

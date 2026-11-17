@@ -67,6 +67,6 @@ build the Play Store `.aab` by themselves; phone APKs come from Run workflow or 
   overlay and extra logging.
 - The build runs `Survival.Editor.CiAndroidBuild.Build`. It applies the Theme A flavor (same as **Survival/Use Theme A
   Flavor**), bakes the player assets, refuses a stale bake, and builds an IL2CPP ARM64 APK targeting API 36.
-- The app id is now `com.paytoplay.fantasykingdoma` (it was `com.grove.paytoplayapp`), so the first build from this
+- The app id is now `com.brightmoatstudios.kingdomdefense` (it was `com.paytoplay.fantasykingdoma`, and before that `com.grove.paytoplayapp`), so the first build from this
   change installs as a new app next to any older phone build. Uninstall the old one.
 - Each run is also kept for 14 days as a zipped workflow artifact. On a phone, use the release link instead.
