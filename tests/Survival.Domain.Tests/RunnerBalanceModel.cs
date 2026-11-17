@@ -67,17 +67,19 @@ public sealed class BalanceReport
     /// <summary>The last level the profile ever clears within the modelled years.</summary>
     public int Furthest(string profile) => Rows[profile].LastOrDefault(r => r.ClearedSession != null)?.Level ?? 0;
 
-    public static RunnerBalanceSources Sources(RunnerCatalog runner)
+    /// <param name="read">Catalog file name to its text (default: the shipped file); remote balance patches go in here.</param>
+    public static RunnerBalanceSources Sources(RunnerCatalog runner, Func<string, string>? read = null)
     {
         var dir = TestPaths.CatalogDir;
+        read ??= name => File.ReadAllText(Path.Combine(dir, name));
         return new RunnerBalanceSources(
-            CampaignCatalog.Parse(File.ReadAllText(Path.Combine(dir, CampaignCatalog.FileName))),
+            CampaignCatalog.Parse(read(CampaignCatalog.FileName)),
             runner,
-            File.ReadAllText(Path.Combine(dir, "base_economy.json")),
-            File.ReadAllText(Path.Combine(dir, "gifts.json")),
-            File.ReadAllText(Path.Combine(dir, "quests.json")),
-            File.ReadAllText(Path.Combine(dir, "stores.json")),
-            File.ReadAllText(Path.Combine(dir, "power_packs.json")));
+            read("base_economy.json"),
+            read("gifts.json"),
+            read("quests.json"),
+            read("stores.json"),
+            read("power_packs.json"));
     }
 
     public static RunnerBalanceDef LoadDef() => RunnerBalanceDef.Parse(File.ReadAllText(Path.Combine(TestPaths.CatalogDir, RunnerBalanceDef.FileName)));
@@ -158,7 +160,8 @@ public sealed class BalanceReport
     }
 
     /// <param name="requiredScale">Reuse a required curve (same catalog) instead of re-simming it, e.g. to try an economy change.</param>
-    public static BalanceReport Build(RunnerCatalog? catalog = null, RunnerBalanceDef? def = null, double[]? requiredScale = null)
+    /// <param name="read">Catalog file name to its text for the economy sources (see <see cref="Sources"/>).</param>
+    public static BalanceReport Build(RunnerCatalog? catalog = null, RunnerBalanceDef? def = null, double[]? requiredScale = null, Func<string, string>? read = null)
     {
         var c = catalog ?? Tests.Runner.Catalog();
         var d = def ?? LoadDef();
@@ -169,7 +172,7 @@ public sealed class BalanceReport
             Parallel.For(1, n + 1, i => req[i] = FindRequiredScale(c, c.ByNumber(i)));
         }
         var reqPower = Enumerable.Range(0, n + 1).Select(i => i == 0 ? 0 : req[i] * req[i]).ToArray();
-        var src = Sources(c);
+        var src = Sources(c, read);
         var byDay = new Dictionary<string, List<(int, double, string, double)>>();
         var rows = new Dictionary<string, List<BalanceRow>>();
         var timelines = new Dictionary<string, List<RunnerLevelOutcome>>();

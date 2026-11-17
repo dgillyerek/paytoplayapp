@@ -19,5 +19,8 @@ namespace Survival.Domain.Roster
         public const string Blightroot = "Blightroot";
         public const string Bonequill = "Bonequill";
         public const string Vorgath = "Vorgath";
+        public const string Seraphine = "Seraphine";
+        public const string Kaelen = "Kaelen";
+        public const string Malzareth = "Malzareth";
     }
 }

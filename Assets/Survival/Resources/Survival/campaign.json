@@ -17,13 +17,16 @@
     { "id": "hero.oakenshield", "fighter": "Oakenshield", "side": "hero", "rarity": "epic", "role": "frost spirit", "hp": 1000, "atk": 92, "hp_per_level": 118, "atk_per_level": 11, "owned": false, "level": 1, "stars": 1, "gems": 300, "shards": 30, "portrait": "theme_a.hero.portrait.oakenshield" },
     { "id": "hero.stormcrest", "fighter": "Stormcrest", "side": "hero", "rarity": "epic", "role": "griffin", "hp": 1250, "atk": 104, "hp_per_level": 140, "atk_per_level": 13, "owned": false, "level": 1, "stars": 1, "gems": 600, "shards": 50, "portrait": "theme_a.hero.portrait.stormcrest" },
     { "id": "hero.emberfang", "fighter": "Emberfang", "side": "hero", "rarity": "legendary", "role": "dragon", "hp": 1700, "atk": 128, "hp_per_level": 190, "atk_per_level": 16, "owned": false, "level": 1, "stars": 1, "gems": 1200, "shards": 80, "portrait": "theme_a.hero.portrait.emberfang" },
+    { "id": "hero.seraphine", "fighter": "Seraphine", "side": "hero", "rarity": "epic", "role": "lancer", "hp": 1050, "atk": 96, "hp_per_level": 122, "atk_per_level": 12, "owned": false, "level": 1, "stars": 1, "gems": 450, "shards": 40, "portrait": "theme_a.hero.portrait.seraphine" },
+    { "id": "hero.kaelen", "fighter": "Kaelen", "side": "hero", "rarity": "epic", "role": "dual blades", "hp": 940, "atk": 104, "hp_per_level": 108, "atk_per_level": 13, "owned": false, "level": 1, "stars": 1, "gems": 450, "shards": 40, "portrait": "theme_a.hero.portrait.kaelen" },
     { "id": "foe.nightfang", "fighter": "Nightfang", "side": "villain", "rarity": "rare", "role": "dire wolf", "hp": 780, "atk": 74, "hp_per_level": 90, "atk_per_level": 9, "portrait": "theme_a.hero.portrait.nightfang" },
     { "id": "foe.ironhowl", "fighter": "Ironhowl", "side": "villain", "rarity": "rare", "role": "warlord", "hp": 980, "atk": 70, "hp_per_level": 115, "atk_per_level": 8, "portrait": "theme_a.hero.portrait.ironhowl" },
     { "id": "foe.bonequill", "fighter": "Bonequill", "side": "villain", "rarity": "rare", "role": "bone archer", "hp": 700, "atk": 82, "hp_per_level": 82, "atk_per_level": 10, "portrait": "theme_a.hero.portrait.bonequill" },
     { "id": "foe.blightroot", "fighter": "Blightroot", "side": "villain", "rarity": "epic", "role": "blight treant", "hp": 1150, "atk": 80, "hp_per_level": 130, "atk_per_level": 10, "portrait": "theme_a.hero.portrait.blightroot" },
     { "id": "foe.vespera", "fighter": "Vespera", "side": "villain", "rarity": "epic", "role": "dark witch", "hp": 860, "atk": 100, "hp_per_level": 98, "atk_per_level": 12, "portrait": "theme_a.hero.portrait.vespera" },
     { "id": "foe.ashwyrm", "fighter": "Ashwyrm", "side": "villain", "rarity": "legendary", "role": "ash dragon", "hp": 1600, "atk": 118, "hp_per_level": 180, "atk_per_level": 15, "portrait": "theme_a.hero.portrait.ashwyrm" },
-    { "id": "foe.vorgath", "fighter": "Vorgath", "side": "villain", "rarity": "legendary", "role": "fire wyrm", "hp": 1600, "atk": 118, "hp_per_level": 180, "atk_per_level": 15, "portrait": "theme_a.hero.portrait.vorgath" }
+    { "id": "foe.vorgath", "fighter": "Vorgath", "side": "villain", "rarity": "legendary", "role": "fire wyrm", "hp": 1600, "atk": 118, "hp_per_level": 180, "atk_per_level": 15, "portrait": "theme_a.hero.portrait.vorgath" },
+    { "id": "foe.malzareth", "fighter": "Malzareth", "side": "villain", "rarity": "epic", "role": "greatsword knight", "hp": 860, "atk": 100, "hp_per_level": 98, "atk_per_level": 12, "portrait": "theme_a.hero.portrait.malzareth" }
   ],
   "stages": [
     { "id": "stage.1", "name": "Wolf Den", "enemies": [ { "id": "foe.nightfang", "level": 1 } ],
@@ -50,13 +53,13 @@
       { "name": "Frostmarch", "castle": 3, "boss": "foe.ironhowl", "shard_hero": "hero.oakenshield", "chest": { "res.soft": 40000, "res.hard": 50, "res.speedup_m": 30 } },
       { "name": "Ironwood", "castle": 4, "boss": "foe.bonequill", "shard_hero": "hero.oakenshield", "chest": { "res.soft": 62000, "res.hard": 75, "res.speedup_m": 45 } },
       { "name": "Bonefields", "castle": 5, "boss": "foe.blightroot", "shard_hero": "hero.stormcrest", "chest": { "res.soft": 96000, "res.hard": 100, "res.speedup_m": 60 } },
-      { "name": "Rotmire", "castle": 6, "boss": "foe.vespera", "shard_hero": "hero.stormcrest", "chest": { "res.soft": 149000, "res.hard": 125, "res.speedup_m": 75 } },
+      { "name": "Rotmire", "castle": 6, "boss": "foe.vespera", "shard_hero": "hero.seraphine", "chest": { "res.soft": 149000, "res.hard": 125, "res.speedup_m": 75 } },
       { "name": "Hexen Vale", "castle": 7, "boss": "foe.ashwyrm", "shard_hero": "hero.emberfang", "chest": { "res.soft": 231000, "res.hard": 150, "res.speedup_m": 90 } },
       { "name": "Cinder Pass", "castle": 8, "boss": "foe.ashwyrm", "shard_hero": "hero.emberfang", "chest": { "res.soft": 358000, "res.hard": 175, "res.speedup_m": 105 } },
       { "name": "Wyrmspire", "castle": 9, "boss": "foe.vespera", "shard_hero": "hero.oakenshield", "chest": { "res.soft": 555000, "res.hard": 200, "res.speedup_m": 120 } },
       { "name": "Gloomhold", "castle": 10, "boss": "foe.blightroot", "shard_hero": "hero.oakenshield", "chest": { "res.soft": 860000, "res.hard": 225, "res.speedup_m": 135 } },
       { "name": "Ashen Wastes", "castle": 12, "boss": "foe.ashwyrm", "shard_hero": "hero.stormcrest", "chest": { "res.soft": 1333000, "res.hard": 250, "res.speedup_m": 150 } },
-      { "name": "Duskcrown", "castle": 14, "boss": "foe.vespera", "shard_hero": "hero.stormcrest", "chest": { "res.soft": 2066000, "res.hard": 275, "res.speedup_m": 165 } },
+      { "name": "Duskcrown", "castle": 14, "boss": "foe.malzareth", "shard_hero": "hero.kaelen", "chest": { "res.soft": 2066000, "res.hard": 275, "res.speedup_m": 165 } },
       { "name": "Shatterpeak", "castle": 16, "boss": "foe.ironhowl", "shard_hero": "hero.emberfang", "chest": { "res.soft": 3202000, "res.hard": 300, "res.speedup_m": 180 } },
       { "name": "Throne of Ash", "castle": 18, "boss": "foe.ashwyrm", "shard_hero": "hero.emberfang", "chest": { "res.soft": 4963000, "res.hard": 325, "res.speedup_m": 195 } }
     ]
@@ -65,7 +68,8 @@
     "goblin": { "enemies": ["foe.nightfang", "foe.ironhowl"], "shard_hero": "hero.oakenshield", "shards": 4 },
     "bandit": { "enemies": ["foe.ironhowl", "foe.bonequill", "foe.nightfang"], "shard_hero": "hero.oakenshield", "shards": 5 },
     "undead": { "enemies": ["foe.bonequill", "foe.blightroot", "foe.vespera"], "shard_hero": "hero.stormcrest", "shards": 6 },
-    "dragon": { "enemies": ["foe.ashwyrm", "foe.vespera", "foe.blightroot"], "shard_hero": "hero.emberfang", "shards": 10 }
+    "dragon": { "enemies": ["foe.ashwyrm", "foe.vespera", "foe.blightroot"], "shard_hero": "hero.emberfang", "shards": 10 },
+    "malzareth": { "enemies": ["foe.malzareth", "foe.bonequill", "foe.nightfang"], "shard_hero": "hero.kaelen", "shards": 6 }
   },
   "bounties": [
     { "id": "bounty.win_1", "kind": "win", "count": 1, "rewards": { "res.hard": 25, "res.soft": 1000 } },

@@ -1,6 +1,6 @@
 {
   "_doc": "Server-side grant table for real-money purchases (Backend/alliance/src/iap.mjs reads this file; the client never grants from it). One row per sku in products.json. type: consumable (consumed after the server confirms; can be bought again) or non_consumable (acknowledged once; restorable from the server by account). grants are wallet resources and must equal the matching sku offer in Resources/Survival/stores.json (merchant_bundle: MerchantConfig.Default bundle_caravan). entitlements are unlock flags the server keeps per account. IapRewardCatalogTests keeps this file in step with stores.json and products.json.",
-  "package_name": "com.paytoplay.fantasykingdoma",
+  "package_name": "com.brightmoatstudios.kingdomdefense",
   "rewards": [
     { "sku": "sku.hard_s", "type": "consumable", "grants": { "res.hard": 80 } },
     { "sku": "sku.hard_m", "type": "consumable", "grants": { "res.hard": 500 } },

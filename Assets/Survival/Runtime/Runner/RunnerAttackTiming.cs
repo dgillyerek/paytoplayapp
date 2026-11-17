@@ -106,6 +106,16 @@ namespace Survival.Domain.Runner
                         LockedBattleHits.BlightrootContactFrame / Fps,
                         "LockedBattleHits.BlightrootContactFrame f" + LockedBattleHits.BlightrootContactFrame,
                         fixedSpeed: true);
+                case FighterNames.Malzareth:
+                case FighterNames.Seraphine:
+                case FighterNames.Kaelen:
+                {
+                    // The preview_new_chars characters: attack 1's measured length and contact (NewCharMotion).
+                    NewCharMotion.TryFind(roster, out var spec);
+                    var a = spec.Primary;
+                    return new RunnerAttackClip(a.Seconds, a.ContactSeconds, "NewCharMotion." + spec.Name + " " + a.Pose + " f" + a.ContactFrame);
+                }
+
                 default:
                     return null;
             }

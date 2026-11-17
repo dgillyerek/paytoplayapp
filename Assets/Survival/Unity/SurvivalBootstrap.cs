@@ -9,6 +9,7 @@ using Survival.Domain.Session;
 using Survival.Domain.Store;
 using Survival.Domain.Theme;
 using Survival.Unity.Kids;
+using Survival.Unity.Ota;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -25,6 +26,8 @@ namespace Survival.Unity
         private bool _booted;
         private GameObject? _splashRoot;
         private Text? _loadingText;
+        private Image? _progressFill;
+        private Text? _progressLabel;
         private string _loadingStem = "Loading";
         private float _splashStart;
 
@@ -85,6 +88,36 @@ namespace Survival.Unity
             var pack = LoadPack(flavor);
             ShowSplash(pack);
             _splashStart = Time.realtimeSinceStartup;
+            KidUi.Strings = pack.StringOr;
+
+            // Over-the-air step (Docs/OTA.md): remote config, minimum version, guarded balance patches, content download.
+            OtaBootResult? ota = null;
+            yield return OtaBoot.Run(flavor.BundleId, SetProgress, r => ota = r);
+            if (ota != null && ota.Update == Survival.Domain.Ota.UpdateRequirement.Required)
+            {
+                _loadingText = null;
+                UpdateRequiredScreen.Show(ota.StoreUrl);
+                yield break;
+            }
+
+            if (ota != null && ota.ContentChanged)
+            {
+                try
+                {
+                    SurvivalArt.ResetForContentUpdate();
+                    pack = LoadPack(flavor);
+                }
+                catch (Exception ex)
+                {
+                    // A broken content update must not stop the game: drop the overlays and go on with bundled content.
+                    Debug.LogException(ex);
+                    PlayerAssets.SetOverlays(null);
+                    PlayerAssets.TextFilter = null;
+                    SurvivalArt.ResetForContentUpdate();
+                    pack = LoadPack(flavor);
+                }
+            }
+
             try
             {
                 LoadSession(flavor, pack);
@@ -245,6 +278,42 @@ namespace Survival.Unity
                 TextAnchor.MiddleCenter,
                 new Color(0.64f, 0.60f, 0.54f, 1f));
             SurvivalVisuals.Stretch(_loadingText.rectTransform);
+
+            // OTA progress bar just above the loading line: config check, catalog check, download (by bytes), unpack.
+            var track = SurvivalVisuals.Image(img.transform, "OtaProgress", new Color(47f / 255f, 34f / 255f, 25f / 255f, 0.85f));
+            var trt = track.rectTransform;
+            trt.anchorMin = new Vector2(0.20f, 0.122f);
+            trt.anchorMax = new Vector2(0.80f, 0.134f);
+            trt.offsetMin = Vector2.zero;
+            trt.offsetMax = Vector2.zero;
+            track.raycastTarget = false;
+            _progressFill = SurvivalVisuals.Image(track.transform, "Fill", new Color(0.93f, 0.74f, 0.32f, 1f));
+            var frt = _progressFill.rectTransform;
+            frt.anchorMin = Vector2.zero;
+            frt.anchorMax = new Vector2(0f, 1f);
+            frt.offsetMin = Vector2.zero;
+            frt.offsetMax = Vector2.zero;
+            _progressFill.raycastTarget = false;
+            _progressLabel = SurvivalVisuals.Text(img.transform, "OtaLabel", "", 18, TextAnchor.MiddleCenter, new Color(0.64f, 0.60f, 0.54f, 1f));
+            var lrt = _progressLabel.rectTransform;
+            lrt.anchorMin = new Vector2(0.15f, 0.136f);
+            lrt.anchorMax = new Vector2(0.85f, 0.160f);
+            lrt.offsetMin = Vector2.zero;
+            lrt.offsetMax = Vector2.zero;
+        }
+
+        /// <summary>OTA boot progress on the splash: bar 0..1 and a status line ("Downloading new content 3.2 / 12.5 MB").</summary>
+        private void SetProgress(float bar, string label)
+        {
+            if (_progressFill != null)
+            {
+                _progressFill.rectTransform.anchorMax = new Vector2(Mathf.Clamp01(bar), 1f);
+            }
+
+            if (_progressLabel != null)
+            {
+                _progressLabel.text = bar >= 1f ? "" : label;
+            }
         }
 
         private void AdvanceFromSplash()

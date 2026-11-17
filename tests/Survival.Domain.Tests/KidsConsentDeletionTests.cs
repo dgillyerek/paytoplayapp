@@ -71,7 +71,7 @@ public sealed class KidsConsentDeletionTests
     public void Shipped_config_has_a_web_deletion_url()
     {
         var url = KidsFiles.Shipped().WebDeletionUrl;
-        Assert.StartsWith("https://", url);
+        Assert.Equal("https://brightmoatstudios.com/delete.html", url);
     }
 
     [Fact]

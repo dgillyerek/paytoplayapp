@@ -87,8 +87,8 @@ internal sealed class FakeVerifier : IReceiptVerifier
 
 public sealed class IapPurchaseServiceTests
 {
-    private const string GemsM = "com.paytoplay.fantasykingdoma.hard_m";
-    private const string Track = "com.paytoplay.fantasykingdoma.track_royal";
+    private const string GemsM = "com.brightmoatstudios.kingdomdefense.hard_m";
+    private const string Track = "com.brightmoatstudios.kingdomdefense.track_royal";
 
     private static (PurchaseService Svc, FakePlatformStore Store, FakeVerifier Server, MemoryAppliedPurchases Ledger) Make()
     {
@@ -108,7 +108,7 @@ public sealed class IapPurchaseServiceTests
         Assert.Equal(Hook.Products().Count, store.Products.Count);
         Assert.Equal(IapProductType.Consumable, store.Products.Single(p => p.ProductId == GemsM).Type);
         Assert.Equal(IapProductType.NonConsumable, store.Products.Single(p => p.ProductId == Track).Type);
-        Assert.All(store.Products, p => Assert.StartsWith("com.paytoplay.fantasykingdoma.", p.ProductId));
+        Assert.All(store.Products, p => Assert.StartsWith("com.brightmoatstudios.kingdomdefense.", p.ProductId));
     }
 
     [Fact]
@@ -255,7 +255,7 @@ public sealed class IapPurchaseServiceTests
 
 public sealed class IapStoreGrantTests
 {
-    private const string GemsM = "com.paytoplay.fantasykingdoma.hard_m";
+    private const string GemsM = "com.brightmoatstudios.kingdomdefense.hard_m";
 
     /// <summary>A live service that says Ok with whatever the test wants (verified or not).</summary>
     private sealed class ScriptedLive : ISkuPurchaseService
@@ -348,7 +348,7 @@ public sealed class IapStoreGrantTests
         Assert.False(hook.ApplyUnsolicitedPurchase(new PurchaseOutcome(true, "x", "", null, new Dictionary<string, int> { [SurvIds.ResHard] = 9 })));
         Assert.Equal(start, wallet.Get(SurvIds.ResHard));
 
-        Assert.True(hook.ApplyUnsolicitedPurchase(new PurchaseOutcome(true, "com.paytoplay.fantasykingdoma.power_t1", "", null, new Dictionary<string, int> { [SurvIds.ResHard] = 50 }, null, true)));
+        Assert.True(hook.ApplyUnsolicitedPurchase(new PurchaseOutcome(true, "com.brightmoatstudios.kingdomdefense.power_t1", "", null, new Dictionary<string, int> { [SurvIds.ResHard] = 50 }, null, true)));
         Assert.Equal(start + 50, wallet.Get(SurvIds.ResHard));
         Assert.False(hook.Timers.ExtraSlotActive);
 
@@ -360,7 +360,7 @@ public sealed class IapStoreGrantTests
 /// <summary>COPPA / Play Families: purchases are gated by the account's age band before they reach the store.</summary>
 public sealed class IapPurchaseGateTests
 {
-    private const string GemsM = "com.paytoplay.fantasykingdoma.hard_m";
+    private const string GemsM = "com.brightmoatstudios.kingdomdefense.hard_m";
 
     private sealed class Consent : IParentalConsent
     {
@@ -477,7 +477,7 @@ public sealed class IapServerVerifierTests
         }
     }
 
-    private static readonly StoreTransaction Tx = new(IapStore.GooglePlay, "com.paytoplay.fantasykingdoma.hard_m", "t1", "tok\"1", "GPA.1");
+    private static readonly StoreTransaction Tx = new(IapStore.GooglePlay, "com.brightmoatstudios.kingdomdefense.hard_m", "t1", "tok\"1", "GPA.1");
 
     [Fact]
     public void Posts_the_store_token_with_the_shared_bearer_token()
@@ -534,7 +534,7 @@ public sealed class IapRewardCatalogTests
         var rewards = Rewards();
         var products = Hook.Products();
         Assert.Equal(products.Keys.OrderBy(k => k), rewards.Rewards.Select(r => r.Sku).OrderBy(k => k));
-        Assert.Equal("com.paytoplay.fantasykingdoma", rewards.PackageName);
+        Assert.Equal("com.brightmoatstudios.kingdomdefense", rewards.PackageName);
         Assert.All(products.Values, p => Assert.StartsWith(rewards.PackageName + ".", p.ProductId));
     }
 

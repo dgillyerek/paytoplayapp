@@ -51,7 +51,7 @@ Live base URL (main branch function): `https://br-summer-firefly-b8or37b8-allian
 | `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | yes (Android) | The GCP service-account key JSON, raw or base64. Store it as a **secret**. It is never committed. If it is missing, validate returns `503 verify_unavailable`. |
 | `AUDIENCE_MODE` | optional | `teen_plus` (default, 13+ launch) or `families`. See `Docs/kids-audience.md`. |
 | `MODERATION_TOKEN` | optional | At least 24 chars. Turns on `GET /v1/mod/queue` and `POST /v1/mod/resolve` (chat moderation queue). |
-| `GOOGLE_PLAY_PACKAGE_NAME` | optional | Defaults to `com.paytoplay.fantasykingdoma`, from `iap_rewards.json`. |
+| `GOOGLE_PLAY_PACKAGE_NAME` | optional | Defaults to `com.brightmoatstudios.kingdomdefense`, from `iap_rewards.json`. |
 | `IAP_RTDN_PUSH_TOKEN` | yes (for RTDN) | A long random string. It goes in the Pub/Sub push URL. If it is unset, RTDN replies 401. |
 | `DATABASE_URL` | existing | Unchanged. |
 | `APP_STORE_ISSUER_ID`, `APP_STORE_KEY_ID`, `APP_STORE_PRIVATE_KEY`, `APP_STORE_BUNDLE_ID` | later (iOS) | Reserved. `appstore.mjs` is a stub. |
@@ -59,7 +59,7 @@ Live base URL (main branch function): `https://br-summer-firefly-b8or37b8-allian
 
 ## What Derek must provide
 1. **Play Console in-app products** (one-time, "managed") with exactly these IDs:
-   - `com.paytoplay.fantasykingdoma.` followed by `hard_s`, `hard_m`, `starter_pack`, `merchant_bundle`, `temp_builder`, `power_t1`…`power_t6`, `track_premium`, `track_royal`, `track_royal_upgrade` or `pass_season`.
+   - `com.brightmoatstudios.kingdomdefense.` followed by `hard_s`, `hard_m`, `starter_pack`, `merchant_bundle`, `temp_builder`, `power_t1`…`power_t6`, `track_premium`, `track_royal`, `track_royal_upgrade` or `pass_season`.
    - Consumable vs non-consumable is decided in code (`iap_rewards.json`). In Play, all of them are one-time products.
 2. **Final prices** for each product, per soft-launch country (CA, PH, AU, NZ). `products.json` is marked `"_prices": "PLACEHOLDER…"`. The UI shows the store's localized price once the product exists.
 3. **GCP service account**

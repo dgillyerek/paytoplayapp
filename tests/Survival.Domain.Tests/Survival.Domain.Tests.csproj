@@ -20,6 +20,7 @@
     <None Include="..\..\Assets\ThemePack\fantasy_kingdom_a\ui\hud_layout.json" Link="Pack\ui\hud_layout.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\Assets\ThemePack\fantasy_kingdom_a\store\products.json" Link="Pack\store\products.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\Assets\ThemePack\fantasy_kingdom_a\store\iap_rewards.json" Link="Pack\store\iap_rewards.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Assets\Survival\Resources\Ota\*.json" Link="Ota\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\Assets\AppFlavor\fantasy_kingdom_a\flavor.json" Link="Flavor\flavor.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>

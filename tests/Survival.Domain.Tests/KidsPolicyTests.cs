@@ -22,7 +22,7 @@ public sealed class KidsPolicyTests
         Assert.Equal(ChildSafetyConfig.VendorNone, c.AnalyticsVendor);
         Assert.Equal(ChildSafetyConfig.VendorNone, c.CrashVendor);
         Assert.NotEmpty(c.ChatPresets);
-        Assert.StartsWith("https://", c.WebDeletionUrl);
+        Assert.Equal("https://brightmoatstudios.com/delete.html", c.WebDeletionUrl);
     }
 
     [Fact]

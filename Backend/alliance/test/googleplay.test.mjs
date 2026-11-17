@@ -33,12 +33,12 @@ test("assertion is an RS256 JWT for the androidpublisher scope, verifiable with 
 test("products.get hits the right URL with the bearer token, and the token is cached", async () => {
   const f = fakeFetch(ok);
   const g = googlePlayClient({ serviceAccountJson: JSON.stringify(SA), fetchImpl: f, now: () => 1_000_000 });
-  const p = await g.getProductPurchase("com.paytoplay.fantasykingdoma", "com.paytoplay.fantasykingdoma.hard_m", "tok/+=");
-  await g.getProductPurchase("com.paytoplay.fantasykingdoma", "com.paytoplay.fantasykingdoma.hard_m", "tok2");
+  const p = await g.getProductPurchase("com.brightmoatstudios.kingdomdefense", "com.brightmoatstudios.kingdomdefense.hard_m", "tok/+=");
+  await g.getProductPurchase("com.brightmoatstudios.kingdomdefense", "com.brightmoatstudios.kingdomdefense.hard_m", "tok2");
   assert.equal(p.orderId, "GPA.9");
   assert.equal(f.calls.filter((c) => c.url.includes("oauth2")).length, 1);
   const get = f.calls[1];
-  assert.equal(get.url, "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/com.paytoplay.fantasykingdoma/purchases/products/com.paytoplay.fantasykingdoma.hard_m/tokens/tok%2F%2B%3D");
+  assert.equal(get.url, "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/com.brightmoatstudios.kingdomdefense/purchases/products/com.brightmoatstudios.kingdomdefense.hard_m/tokens/tok%2F%2B%3D");
   assert.equal(get.init.headers.authorization, "Bearer at-1");
 });
 test("acknowledge POSTs to :acknowledge", async () => {

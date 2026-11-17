@@ -47,7 +47,7 @@ namespace Survival.Domain.Crusade
         public const string OfferId = "offer.crusade_premium";
         public const string Sku = SurvIds.SkuPassSeason;
         public const string FallbackPrice = "$9.99";
-        public const string FallbackProductId = "com.paytoplay.fantasykingdoma.pass_season";
+        public const string FallbackProductId = "com.brightmoatstudios.kingdomdefense.pass_season";
 
         public const int TierCount = 20;
         public const int XpPerTier = 250;

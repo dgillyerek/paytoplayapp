@@ -440,6 +440,30 @@ namespace Survival.Domain.Roster
             0.45f,
             0.02f);
 
+        /// <summary>Seraphine's spear: steel flash on the armada and thrust contact (<see cref="NewCharMotion.Seraphine"/>).</summary>
+        public static readonly LockedBattleHitProfile Seraphine = NewCharProfile(NewCharMotion.Seraphine, 0.04f, 3.5f, 0.03f);
+
+        /// <summary>Kaelen's two swords: steel flash on the dual and inward slash contacts.</summary>
+        public static readonly LockedBattleHitProfile Kaelen = NewCharProfile(NewCharMotion.Kaelen, 0.04f, 3.5f, 0.03f);
+
+        /// <summary>Malzareth's greatsword: a heavier body (less knock-back) and a harder shake on his hits.</summary>
+        public static readonly LockedBattleHitProfile Malzareth = NewCharProfile(NewCharMotion.Malzareth, 0.03f, 2.5f, 0.05f);
+
+        private static LockedBattleHitProfile NewCharProfile(NewCharSpec spec, float recoilMetres, float recoilDegrees, float shakeMetres) =>
+            new LockedBattleHitProfile(
+                spec.Name,
+                spec.Primary.Impact,
+                false,
+                spec.Primary.ContactFrame,
+                spec.StrikeBone,
+                spec.Box,
+                recoilMetres,
+                recoilDegrees,
+                1f,
+                0.45f,
+                0.40f,
+                shakeMetres);
+
         public static LockedBattleHitProfile ProfileOf(string name)
         {
             switch (name)
@@ -470,6 +494,12 @@ namespace Survival.Domain.Roster
                     return Bonequill;
                 case FighterNames.Vorgath:
                     return Vorgath;
+                case FighterNames.Seraphine:
+                    return Seraphine;
+                case FighterNames.Kaelen:
+                    return Kaelen;
+                case FighterNames.Malzareth:
+                    return Malzareth;
                 default:
                     throw new ArgumentException("No locked battle hit profile for " + name, nameof(name));
             }

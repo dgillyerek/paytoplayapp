@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Survival.Domain.Heroes;
 using Survival.Domain.Roster;
 
 namespace Survival.Domain.Tests;
@@ -84,6 +85,44 @@ public sealed class PlayerBuildTests
         }
 
         Assert.True(checkedCount >= 10, "expected the metal/rough maps of every PBR fighter, saw " + checkedCount);
+    }
+
+    [Fact]
+    public void Sir_Aldric_bake_carries_only_the_lite_clips_the_game_plays()
+    {
+        var aldric = PlayerBakeManifest.For(FighterNames.SirAldric)!;
+        var played = new[]
+        {
+            SirAldricBattlePoses.RestClip, SirAldricBattlePoses.AttackClip, SirAldricBattlePoses.Attack2Clip, SirAldricBattlePoses.Attack3Clip
+        };
+        Assert.Equal(played, PlayerBakeManifest.SirAldricShippedLiteClips.Select(c => c.ExactName).ToArray());
+        foreach (var clip in PlayerBakeManifest.SirAldricShippedLiteClips)
+        {
+            Assert.Contains(clip.ThemePackRel, aldric.Assets);
+            Assert.False(PlayerBakeManifest.IsExcludedFromBake("Assets/" + clip.ThemePackRel));
+        }
+
+        var lite = aldric.Assets.Where(a => a.Contains("/lite_sword_shield/", StringComparison.Ordinal)).ToList();
+        Assert.Equal(4, lite.Count);
+        foreach (var unused in SirAldric3DMotion.LiteSwordShieldClips.Where(c => !played.Contains(c.ExactName)))
+        {
+            Assert.DoesNotContain(unused.ThemePackRel, aldric.Assets);
+            Assert.True(PlayerBakeManifest.IsExcludedFromBake("Assets/" + unused.ThemePackRel), unused.ThemePackRel);
+        }
+
+        // Retired pilot exports stay in the repo for editor review but never ship.
+        Assert.True(PlayerBakeManifest.IsExcludedFromBake("Assets/" + PlayerBakeManifest.SirAldricPilotDir + "/SirAldric_body_holefixed_slash_Stable_Sword_Inward_Slash_DIAG.fbx"));
+        Assert.True(PlayerBakeManifest.IsExcludedFromBake(PlayerBakeManifest.SirAldricPilotDir + "/SirAldric_body_holefixed_mid280k.fbx"));
+        foreach (var keep in aldric.Assets.Concat(aldric.RawFiles))
+        {
+            Assert.False(PlayerBakeManifest.IsExcludedFromBake("Assets/" + keep), keep);
+        }
+
+        Assert.False(PlayerBakeManifest.IsExcludedFromBake("Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/lyra/LYRA_rest.fbx"));
+        var bake = File.ReadAllText(Path.Combine(TestRepo.Root, "Assets", "Survival", "Editor", "PlayerBake.cs"));
+        Assert.Equal(2, Regex.Matches(bake, "PlayerBakeManifest\\.IsExcludedFromBake\\(kv\\.Key\\)").Count);
+        var actor = File.ReadAllText(Path.Combine(TestRepo.Root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
+        Assert.Contains("foreach (var entry in PlayerBakeManifest.SirAldricShippedLiteClips)", actor, StringComparison.Ordinal);
     }
 
     [Fact]

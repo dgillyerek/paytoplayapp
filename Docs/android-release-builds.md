@@ -1,6 +1,6 @@
 # Android release builds (Google Play)
 
-`.github/workflows/android-build.yml` builds **Kingdom Defense** (`com.paytoplay.fantasykingdoma`, Theme A flavor
+`.github/workflows/android-build.yml` builds **Kingdom Defense** (`com.brightmoatstudios.kingdomdefense`, Theme A flavor
 `fantasy_kingdom_a`) as a signed Android App Bundle (`.aab`) for Google Play.
 
 ## What a build is
@@ -8,7 +8,7 @@
 | | |
 | --- | --- |
 | Trigger | every push to `main`; or **Actions → Android build → Run workflow** with format `aab` on any branch |
-| Flavor | `-flavor fantasy_kingdom_a` → `FlavorBuildSettings.TryApplyFlavor` (same as menu **Survival/Use Theme A Flavor**): product name, company `PayToPlay`, bundle id, scenes, icons |
+| Flavor | `-flavor fantasy_kingdom_a` → `FlavorBuildSettings.TryApplyFlavor` (same as menu **Survival/Use Theme A Flavor**): product name, company `Brightmoat Studios LLC`, bundle id, scenes, icons |
 | Scripting | IL2CPP, ARM64 only |
 | Target API | 36 (Android 16), required by Google Play for new apps and updates since 2026-08-31. Min API 26 |
 | Signing | the upload key from repo secrets `ANDROID_KEYSTORE_BASE64` / `ANDROID_KEYSTORE_PASS` / `ANDROID_KEYALIAS_NAME` / `ANDROID_KEYALIAS_PASS`. The build fails rather than fall back to Unity's debug key |
@@ -54,12 +54,15 @@ finishes. For a local command-line build the same values can come from environme
 
 1. A Google Play developer account (one-time US$25).
 2. **Create app**: name *Kingdom Defense*, default language, Game, Free, accept the declarations. The package name is
-   set by the first upload and can never change: `com.paytoplay.fantasykingdoma`.
+   set by the first upload and can never change: `com.brightmoatstudios.kingdomdefense`.
 3. **Play App Signing**: keep the default (Google-generated app signing key). The CI keystore above is the upload key.
 4. Store listing art. Present: hi-res icon 512×512 at `store-listing/fantasy_kingdom_a/play_store_icon_512.png`
-   (Direction-5 store icon, Derek PASS 2026-09-15). **Missing**: feature graphic 1024×500, at least 2 phone
-   screenshots (portrait 1080×1920 works), short and full description, privacy policy URL, content rating
-   questionnaire, Data safety form, target audience, ads declaration.
+   (Direction-5 store icon, Derek PASS 2026-09-15). Legal and support (paste into the listing and Data safety form):
+   website https://brightmoatstudios.com/, privacy https://brightmoatstudios.com/privacy.html, terms
+   https://brightmoatstudios.com/terms.html, account deletion https://brightmoatstudios.com/delete.html, support
+   support@brightmoatstudios.com. **Missing**: feature graphic 1024×500, at least 2 phone screenshots (portrait
+   1080×1920 works), short and full description, content rating questionnaire, Data safety form, target audience,
+   ads declaration.
 5. Before the first production release on a new personal developer account, Play requires a closed test with at least
    12 testers for 14 days.
 
@@ -89,7 +92,7 @@ In the build:
   `<uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>` to the generated
   launcher and unityLibrary manifests, so no later dependency can bring the permission back through manifest merging.
   The workflow dumps the built `.aab` manifest with bundletool and fails if `AD_ID` appears, the package is not
-  `com.paytoplay.fantasykingdoma`, or targetSdkVersion is not 36.
+  `com.brightmoatstudios.kingdomdefense`, or targetSdkVersion is not 36.
 - Any analytics or crash SDK added later (workstream 4) must be Families-self-certified, run without the advertising
   ID, and be declared in Data safety.
 
@@ -100,9 +103,10 @@ In Play Console (Derek):
    questions truthfully.
 2. **Families policy declaration**: accept the Families policy requirements (and the Teacher Approved opt-in, if
    wanted). Only Families-self-certified SDKs may be used; none are in the app today.
-3. **Privacy policy URL** (required for any under-13 audience): a public page covering children's data, COPPA, and
-   for the launch countries PIPEDA (Canada), the Philippine Data Privacy Act, the Australian Privacy Act and the NZ
-   Privacy Act 2020.
+3. **Privacy policy URL** (required for any under-13 audience): https://brightmoatstudios.com/privacy.html. The
+   page must cover children's data, COPPA, and for the launch countries PIPEDA (Canada), the Philippine Data Privacy
+   Act, the Australian Privacy Act and the NZ Privacy Act 2020. Account deletion URL for Data safety:
+   https://brightmoatstudios.com/delete.html. Support: support@brightmoatstudios.com.
 4. **Data safety form**: declare exactly what is collected. Today: no advertising ID, no ads. Account and cloud-save
    data, purchase history and analytics events from workstreams 2–4 must be declared when those land.
 5. **Ads declaration**: "No, my app does not contain ads".

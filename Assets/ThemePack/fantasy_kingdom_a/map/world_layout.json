@@ -37,7 +37,9 @@
     { "id": "camp.bandit_02", "type": "bandit", "level": 7, "x": 0.92, "y": 0.25, "power": 11800, "reward": 2800 },
     { "id": "camp.undead_01", "type": "undead", "level": 9, "x": 0.68, "y": 0.2, "power": 16400, "reward": 3600 },
     { "id": "camp.undead_02", "type": "undead", "level": 12, "x": 0.08, "y": 0.77, "power": 24500, "reward": 5200 },
-    { "id": "camp.dragon_01", "type": "dragon", "level": 20, "x": 0.36, "y": 0.82, "power": 61000, "reward": 12000 }
+    { "id": "camp.dragon_01", "type": "dragon", "level": 20, "x": 0.36, "y": 0.82, "power": 61000, "reward": 12000 },
+    { "id": "camp.malzareth_01", "type": "malzareth", "level": 10, "x": 0.57, "y": 0.15, "power": 19000, "reward": 4000 },
+    { "id": "camp.malzareth_02", "type": "malzareth", "level": 15, "x": 0.16, "y": 0.52, "power": 36000, "reward": 7500 }
   ],
   "resources": [
     { "id": "res.gold_01", "type": "gold", "x": 0.31, "y": 0.11, "amount": 12000 },

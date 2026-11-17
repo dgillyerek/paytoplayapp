@@ -8,7 +8,7 @@ import { GooglePlayError } from "./googleplay.mjs";
 import { AppStoreNotEnabled } from "./appstore.mjs";
 import { FAMILIES, blockedByAudience } from "./audience.mjs";
 
-export const DEFAULT_PACKAGE = "com.paytoplay.fantasykingdoma";
+export const DEFAULT_PACKAGE = "com.brightmoatstudios.kingdomdefense";
 export const STORES = ["google_play", "app_store"];
 
 /** productId → { sku, productId, consumable, grants, entitlements }. Throws when a product has no reward row (or vice versa). */

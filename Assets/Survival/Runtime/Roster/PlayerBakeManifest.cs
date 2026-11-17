@@ -71,6 +71,75 @@ namespace Survival.Domain.Roster
             SirAldricTextureDir + "/Meshy_AI_Lionheart_Sentinel_0929004215_texture_roughness.png"
         };
 
+        /// <summary>
+        /// The lite-avatar clips the shipping game plays for Sir Aldric (<see cref="SirAldricBattlePoses.ClipFor"/>): rest
+        /// "Sword And Shield idle" (also the lite body FBX), attack "Sword And Shield attack (4)", and the two battle extras.
+        /// The other 15 clips of the Lite Sword And Shield Pack are editor review only; each FBX carries a full copy of the
+        /// body mesh (about 10 MB in a bundle), so they stay out of the APK and OTA bundles.
+        /// </summary>
+        public static IReadOnlyList<SirAldric3DMotion.LiteSwordShieldClip> SirAldricShippedLiteClips => _sirAldricShipped ??= BuildSirAldricShipped();
+
+        private static IReadOnlyList<SirAldric3DMotion.LiteSwordShieldClip>? _sirAldricShipped;
+
+        private static IReadOnlyList<SirAldric3DMotion.LiteSwordShieldClip> BuildSirAldricShipped()
+        {
+            var list = new List<SirAldric3DMotion.LiteSwordShieldClip>();
+            foreach (var pose in new[] { SirAldricBattlePoses.Rest, SirAldricBattlePoses.Attack, SirAldricBattlePoses.Attack2, SirAldricBattlePoses.Attack3 })
+            {
+                if (!SirAldric3DMotion.TryLiteSwordShield(SirAldricBattlePoses.ClipFor(pose), out var clip))
+                {
+                    throw new InvalidOperationException("PlayerBakeManifest: Sir Aldric battle clip not in the lite table: " + SirAldricBattlePoses.ClipFor(pose));
+                }
+
+                list.Add(clip);
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// True for files under Sir Aldric's model folder that the player bake must not carry even when an Editor Play
+        /// session loaded them (the seen log): anything there that is not in his manifest entry, i.e. the editor-review
+        /// lite clips and the retired DIAG / MILD / mid280k pilot exports. Paths are relative to Assets/.
+        /// </summary>
+        public static bool IsExcludedFromBake(string assetsRelPath)
+        {
+            var p = (assetsRelPath ?? "").Replace('\\', '/');
+            if (p.StartsWith("Assets/", StringComparison.Ordinal))
+            {
+                p = p.Substring("Assets/".Length);
+            }
+
+            if (!p.StartsWith(SirAldricPilotDir + "/", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var aldric = For(FighterNames.SirAldric);
+            if (aldric == null)
+            {
+                return false;
+            }
+
+            foreach (var a in aldric.Assets)
+            {
+                if (string.Equals(a, p, StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+            }
+
+            foreach (var r in aldric.RawFiles)
+            {
+                if (string.Equals(r, p, StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         public sealed class Fighter
         {
             public Fighter(string name, string modelDir, IReadOnlyList<string> assets, IReadOnlyList<string> rawFiles)
@@ -244,12 +313,8 @@ namespace Survival.Domain.Roster
                         SirAldricCapeFbx,
                         SirAldric3DMotion.LiteSwordShieldThemePackDir + "/" + SirAldric3DMotion.LiteSwordShieldBodyFile
                     };
-                    foreach (var clip in SirAldric3DMotion.LiteSwordShieldClips)
-                    {
-                        a.Add(clip.ThemePackRel);
-                    }
-
-                    foreach (var clip in SirAldric3DMotion.BattleExtraClips)
+                    // Only the clips the game plays (rest, attack, attack2, attack3), not the whole 17-clip review pack.
+                    foreach (var clip in SirAldricShippedLiteClips)
                     {
                         a.Add(clip.ThemePackRel);
                     }

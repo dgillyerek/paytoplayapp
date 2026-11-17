@@ -164,6 +164,19 @@ namespace Survival.Unity
                         break;
                     }
 
+                    case FighterNames.Seraphine:
+                    case FighterNames.Kaelen:
+                    case FighterNames.Malzareth:
+                    {
+                        // preview_new_chars characters (Malzareth is a runner heavy; the two heroes are melee, off the squad).
+                        var a = host.AddComponent<NewCharActor>();
+                        a.Build(data.Name);
+                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
+                        break;
+                    }
+
                     case FighterNames.Rowan:
                     {
                         var a = host.AddComponent<RowanActor>();

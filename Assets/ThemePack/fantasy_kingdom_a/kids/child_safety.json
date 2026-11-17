@@ -66,15 +66,15 @@
 
   "parental_gate": { "max_failures": 3, "lockout_seconds": 60 },
 
-  "_account_doc": "DEREK SUPPLIES: hosted web deletion page (Play Console Data safety 'delete account URL') and the support contact. Placeholders until then.",
-  "_legal_doc": "DEREK SUPPLIES: hosted privacy policy and terms of service URLs (Play listing + Settings links). Placeholders until then.",
+  "_account_doc": "Play Console Data safety delete-account URL and the support contact. Studio site: https://brightmoatstudios.com/",
+  "_legal_doc": "Hosted privacy policy and terms of service URLs (Play listing + Settings links).",
   "legal": {
-    "privacy_policy_url": "https://example.com/kingdom-defense/privacy",
-    "terms_url": "https://example.com/kingdom-defense/terms"
+    "privacy_policy_url": "https://brightmoatstudios.com/privacy.html",
+    "terms_url": "https://brightmoatstudios.com/terms.html"
   },
 
   "account": {
-    "web_deletion_url": "https://example.com/kingdom-defense/delete-account",
-    "support_email": "[CONTACT EMAIL]"
+    "web_deletion_url": "https://brightmoatstudios.com/delete.html",
+    "support_email": "support@brightmoatstudios.com"
   }
 }

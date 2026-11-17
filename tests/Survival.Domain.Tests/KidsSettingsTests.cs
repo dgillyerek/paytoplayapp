@@ -108,8 +108,9 @@ public sealed class KidsSettingsTests
     public void Shipped_config_has_privacy_and_terms_links()
     {
         var c = KidsFiles.Shipped();
-        Assert.StartsWith("https://", c.PrivacyPolicyUrl);
-        Assert.StartsWith("https://", c.TermsUrl);
+        Assert.Equal("https://brightmoatstudios.com/privacy.html", c.PrivacyPolicyUrl);
+        Assert.Equal("https://brightmoatstudios.com/terms.html", c.TermsUrl);
+        Assert.Equal("support@brightmoatstudios.com", c.SupportEmail);
         Assert.Equal("", ChildSafetyConfig.Default.PrivacyPolicyUrl);
     }
 

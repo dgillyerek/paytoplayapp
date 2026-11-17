@@ -19,7 +19,7 @@ namespace Survival.Domain.Flavor
             SurvIds.ThemeIdFantasyKingdomA,
             SurvIds.SystemsApi,
             "ThemePack/fantasy_kingdom_a",
-            "com.paytoplay.fantasykingdoma",
+            "com.brightmoatstudios.kingdomdefense",
             "Kingdom Defense",
             "art/store/flavor_icon.png",
             "art/splash/THEME_A_SPLASH_KEEP_1080x1920.png");

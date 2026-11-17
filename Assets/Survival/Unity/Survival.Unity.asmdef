@@ -5,7 +5,9 @@
         "Survival.Domain",
         "UnityEngine.UI",
         "Unity.InputSystem",
-        "Unity.Purchasing"
+        "Unity.Purchasing",
+        "Unity.Addressables",
+        "Unity.ResourceManager"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -19,6 +21,11 @@
             "name": "com.unity.purchasing",
             "expression": "5.4.0",
             "define": "SURVIVAL_UNITY_IAP"
+        },
+        {
+            "name": "com.unity.addressables",
+            "expression": "2.0.0",
+            "define": "SURVIVAL_ADDRESSABLES"
         }
     ],
     "noEngineReferences": false
