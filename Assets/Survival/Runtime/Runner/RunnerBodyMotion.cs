@@ -94,7 +94,7 @@ namespace Survival.Domain.Runner
     /// </summary>
     public static class RunnerWalkingShooterFoes
     {
-        public static readonly string[] Names = { "Vespera", "Bonequill" };
+        public static readonly string[] Names = { FighterNames.Vespera, FighterNames.Bonequill };
 
         public static bool Applies(string rosterName) => Array.IndexOf(Names, rosterName) >= 0;
 
@@ -129,7 +129,7 @@ namespace Survival.Domain.Runner
         public const float CrossfadeSeconds = 0.1f;
 
         /// <summary>Roster names that play the layered attack in the runner.</summary>
-        public static readonly string[] Shooters = { "Lyra", "Rowan", "Oakenshield" };
+        public static readonly string[] Shooters = { FighterNames.Lyra, FighterNames.Rowan, FighterNames.Oakenshield };
 
         public static bool Applies(string rosterName) => Array.IndexOf(Shooters, rosterName) >= 0;
 
@@ -224,9 +224,9 @@ namespace Survival.Domain.Runner
         /// <summary>The frame the 2026-10-24 hold froze on (one before release), kept so a later hold can come back as a switch.</summary>
         public static float? HeldFrameWas(string rosterName) => rosterName switch
         {
-            "Lyra" => LyraAttack.ReleaseFrame - 1,
-            "Rowan" => RowanAttack.ReleaseFrame - 1,
-            "Oakenshield" => OakenshieldAttack.ReleaseFrame - 1,
+            FighterNames.Lyra => LyraAttack.ReleaseFrame - 1,
+            FighterNames.Rowan => RowanAttack.ReleaseFrame - 1,
+            FighterNames.Oakenshield => OakenshieldAttack.ReleaseFrame - 1,
             _ => null,
         };
 
@@ -373,18 +373,18 @@ namespace Survival.Domain.Runner
         /// <summary>The kicked bones (parent before child) for a roster, or an empty list for one that does not kick.</summary>
         public static RunnerShotFlickBone[] BonesFor(string rosterName) => rosterName switch
         {
-            "Lyra" => Lyra,
-            "Rowan" => Rowan,
-            "Oakenshield" => Oakenshield,
+            FighterNames.Lyra => Lyra,
+            FighterNames.Rowan => Rowan,
+            FighterNames.Oakenshield => Oakenshield,
             _ => Array.Empty<RunnerShotFlickBone>(),
         };
 
         /// <summary>How long one recoil lasts, shot to back on the hold (the snap plus about 0.3 s of ease back).</summary>
         public static float SecondsFor(string rosterName) => rosterName switch
         {
-            "Lyra" => 0.35f,
-            "Rowan" => 0.32f,
-            "Oakenshield" => 0.3f,
+            FighterNames.Lyra => 0.35f,
+            FighterNames.Rowan => 0.32f,
+            FighterNames.Oakenshield => 0.3f,
             _ => 0f,
         };
 

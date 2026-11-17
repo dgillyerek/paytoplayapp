@@ -18,7 +18,7 @@ public class BonequillBowGripUnityTests
 {
     private static JsonElement Grip()
     {
-        var p = Path.Combine(FindRepoRoot(), BonequillMotion.DesignDir, "work", "grip_unity.json");
+        var p = Path.Combine(TestRepo.Root, BonequillMotion.DesignDir, "work", "grip_unity.json");
         return JsonDocument.Parse(File.ReadAllText(p)).RootElement;
     }
 
@@ -89,7 +89,7 @@ public class BonequillBowGripUnityTests
     [Fact]
     public void Finger_curl_is_keyed_in_the_walk_and_attack_FBX_and_rest_shows_the_keyed_carry()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var pack = Path.Combine(root, "Assets", BonequillMotion.ThemePackDir);
         foreach (var fbx in new[] { "BONEQUILL_blenderig_walk.fbx", "BONEQUILL_blenderig_attack.fbx" })
         {
@@ -116,7 +116,7 @@ public class BonequillBowGripUnityTests
     [InlineData("attack")]
     public void Bowstring_rests_on_the_inner_forearm_and_keeps_1cm_from_body_cloak_and_legs(string clip)
     {
-        var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(FindRepoRoot(), BonequillMotion.DesignDir, "work", "string_clearance.json"))).RootElement;
+        var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(TestRepo.Root, BonequillMotion.DesignDir, "work", "string_clearance.json"))).RootElement;
         var grip = BonequillAttack.BowGrip;
         Assert.Equal(doc.GetProperty("roll_rest_deg").GetDouble(), grip.RollRestDeg, 3);
         Assert.Equal(doc.GetProperty("roll_draw_deg").GetDouble(), grip.RollDrawDeg, 3);
@@ -174,21 +174,5 @@ public class BonequillBowGripUnityTests
         float x = q[0], y = q[1], z = q[2], w = q[3];
         float tx = 2 * (y * v[2] - z * v[1]), ty = 2 * (z * v[0] - x * v[2]), tz = 2 * (x * v[1] - y * v[0]);
         return new[] { v[0] + w * tx + (y * tz - z * ty), v[1] + w * ty + (z * tx - x * tz), v[2] + w * tz + (x * ty - y * tx) };
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "Assets", "ThemePack", "fantasy_kingdom_a", "pack.json")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("repo root");
     }
 }

@@ -98,9 +98,11 @@ public sealed class RunnerAimHoldTests
     {
         var root = Layouts.RepoRoot();
         var rig = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "Runner", "RunnerRig.cs"));
-        Assert.Equal(3, rig.Split("rig._steady = RunnerAimHold.Applies(data.Name);").Length - 1);
-        // The three squad shooters plus the two walking shooter foes (Vespera, Bonequill).
-        Assert.Equal(5, rig.Split("rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);").Length - 1);
+        // Rowan's own case, and the shared Blender-rig path for Lyra and Oakenshield.
+        Assert.Equal(2, rig.Split("rig._steady = RunnerAimHold.Applies(data.Name);").Length - 1);
+        // Rowan and Bonequill bind directly; the shared path binds the shooters (Lyra, Oakenshield, Vespera) the same way.
+        Assert.Equal(2, rig.Split("rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);").Length - 1);
+        Assert.Contains("shooter || walkingShooterFoe ? a.SetWalkUnderAttack", rig);
         Assert.Contains("var w = _steady ? 0f : _reaction.Weight(_hitAge);", rig);
         Assert.Contains("_steady ? 0f : _leanTarget", rig);
         var view = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "Runner", "RunnerLevelView.cs"));

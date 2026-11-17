@@ -103,7 +103,7 @@ namespace Survival.Domain.Heroes
         };
 
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(
-            "Oakenshield",
+            FighterNames.Oakenshield,
             ThemePackDir,
             RestFileName,
             RejectedMixamoFileName,

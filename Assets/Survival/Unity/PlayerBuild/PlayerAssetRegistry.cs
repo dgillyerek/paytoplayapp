@@ -77,13 +77,6 @@ namespace Survival.Unity
             return _dirs!.Contains(path);
         }
 
-        public void ClearIndex()
-        {
-            _assets = null;
-            _files = null;
-            _dirs = null;
-        }
-
         private void Index()
         {
             if (_assets != null)

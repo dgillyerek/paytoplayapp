@@ -17,7 +17,7 @@ namespace Survival.Domain.Tests;
 /// </summary>
 public class RowanBowGripUnityTests
 {
-    private static string Work => Path.Combine(FindRepoRoot(), RowanMotion.DesignDir, "work", "apose_20261014");
+    private static string Work => Path.Combine(TestRepo.Root, RowanMotion.DesignDir, "work", "apose_20261014");
 
     private static JsonElement Json(string name) => JsonDocument.Parse(File.ReadAllText(Path.Combine(Work, name))).RootElement;
 
@@ -179,7 +179,7 @@ public class RowanBowGripUnityTests
     [Fact]
     public void Finger_curl_is_keyed_and_rest_shows_the_keyed_carry_with_the_bow_on_the_hand_bone()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var pack = Path.Combine(root, "Assets", RowanMotion.ThemePackDir);
         foreach (var fbx in new[] { RowanMotion.WalkFileName, RowanAttack.FileName })
         {
@@ -248,21 +248,5 @@ public class RowanBowGripUnityTests
         float x = q[0], y = q[1], z = q[2], w = q[3];
         float tx = 2 * (y * v[2] - z * v[1]), ty = 2 * (z * v[0] - x * v[2]), tz = 2 * (x * v[1] - y * v[0]);
         return new[] { v[0] + w * tx + (y * tz - z * ty), v[1] + w * ty + (z * tx - x * tz), v[2] + w * tz + (x * ty - y * tx) };
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "Assets", "ThemePack", "fantasy_kingdom_a", "pack.json")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("repo root");
     }
 }

@@ -14,9 +14,3 @@ Lite Sword And Shield Pack (17) plays on that same slash avatar. Derek calls `Pl
 Sword on slash = identity parent on this FBX `mixamorig:RightHand`. No blade pitch. No shield prop. Leftover `SirAldric_DIAG_InwardSlash.anim` unused at Play (clip **name must stay `SirAldric_DIAG_InwardSlash`** if you open it — Attack as clip.name does not match).
 
 The `7958283` held-pose robot clip is discarded. Leftover AimArmAlong / MixamoDiagPlaybackU / MixamoDiagStrikeBladeLocal / ReachRightArmToward unused.
-
-## Animation window (optional leftover)
-
-1. Open any scene (the standalone `SirAldric.unity` demo was removed 2026-10-19), e.g. an empty scene.
-2. **Survival → Sir Aldric → Spawn knight for Animation-window edit**.
-3. **Window → Animation → Animation**. Select root **`SirAldricAttackEditKnight`** → **Lock** → **Preview** → scrub `mixamorig:RightArm` / `mixamorig:RightHand`.

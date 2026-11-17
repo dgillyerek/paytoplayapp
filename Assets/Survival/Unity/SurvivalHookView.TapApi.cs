@@ -63,8 +63,6 @@ namespace Survival.Unity
 
         internal string TapResName(string resourceId) => ResName(resourceId);
 
-        internal static Color TapResColor(string resourceId) => ResColor(resourceId);
-
         internal static string TapResGlyph(string resourceId) => ResGlyph(resourceId);
 
         internal RectTransform? TapOpenSheet(string name, float width, float height, string title) => OpenSheet(name, width, height, title);
@@ -88,8 +86,6 @@ namespace Survival.Unity
 
         internal void TapToast(RectTransform at, string copy, Color color) => Toast(NormCenterOf(at), copy, color);
 
-        internal void TapRise(RectTransform at, string copy, Color color) => FloatText(NormCenterOf(at), copy, color);
-
         internal void TapShake(RectTransform rt) => StartCoroutine(Shake(rt));
 
         internal void TapBurst(RectTransform at, Color color, int count = 14)
@@ -98,9 +94,6 @@ namespace Survival.Unity
             StartCoroutine(SparkBurst(c, color, count, 0.07f));
             StartCoroutine(RingBurst(c, color, 0.16f));
         }
-
-        /// <summary>Pop of resource icons flying from <paramref name="from"/> to the HUD chips.</summary>
-        internal void TapFly(RectTransform from, string resourceId, int coins = 6) => StartCoroutine(FlyReward(resourceId, NormCenterOf(from), coins));
 
         /// <summary>
         /// Round HUD button on the left edge (bottom-up anchors): gold filigree, bevel, shine, an icon slot, a label

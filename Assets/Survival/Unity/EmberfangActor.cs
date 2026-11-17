@@ -467,7 +467,7 @@ namespace Survival.Unity
                 "emberfang_normal.png",
                 "emberfang_metallic.png",
                 "emberfang_roughness.png",
-                "Emberfang",
+                FighterNames.Emberfang,
                 preferEmbeddedBaseAndNormal: true);
         }
 

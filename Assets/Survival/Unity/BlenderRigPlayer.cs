@@ -78,15 +78,7 @@ namespace Survival.Unity
         private Vector3[] _upperPos = System.Array.Empty<Vector3>();
         private Quaternion[] _upperPrevRot = System.Array.Empty<Quaternion>();
         private Vector3[] _upperPrevPos = System.Array.Empty<Vector3>();
-        private Transform? _logHand;
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-        /// <summary>
-        /// Dev only: log each frame's right-hand local rotation and attack-layer weight for rigs named here (e.g. "Vespera").
-        /// Set from code or the VESPERA_HANDS_LOG=1 environment variable.
-        /// </summary>
-        public static string LogUpperBodyFor = System.Environment.GetEnvironmentVariable("VESPERA_HANDS_LOG") == "1" ? "Vespera" : string.Empty;
-#endif
         private bool _wantWalkBase = true;
         private bool _baseIsWalk;
         private bool _baseLoop;
@@ -742,14 +734,6 @@ namespace Survival.Unity
             }
 
             CarryHipsTurn(take, prev);
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            if (_logHand != null && LogUpperBodyFor.Length > 0 && string.Equals(LogUpperBodyFor, _spec.Name, System.StringComparison.Ordinal))
-            {
-                Debug.Log(_spec.Name + " hands f" + Time.frameCount + " take " + take.ToString("0.00") + " prev " + prev.ToString("0.00")
-                    + " frame " + _takeFrame.ToString("0.0") + " base " + (_baseIsWalk ? "walk" : "stand")
-                    + " RightHand local " + _logHand.localEulerAngles.ToString("F1"));
-            }
-#endif
         }
 
         /// <summary>
@@ -1045,11 +1029,6 @@ namespace Survival.Unity
                     if (RunnerUpperBodyAttack.IsUpperBody(path, hipsPath, _spine.name))
                     {
                         bones.Add(t);
-                    }
-
-                    if (t.name.EndsWith("RightHand", System.StringComparison.Ordinal))
-                    {
-                        _logHand = t;
                     }
                 }
 

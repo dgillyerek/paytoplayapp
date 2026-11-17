@@ -127,9 +127,6 @@ namespace Survival.Unity.CloudSave
 
         public static void OnPause(SurvivalSession? session) => Push(session);
 
-        /// <summary>Call after a successful IAP grant so currencies sync before a refund clawback can race.</summary>
-        public static void AfterPurchase(SurvivalSession? session) => Push(session);
-
         public static void Push(SurvivalSession? session)
         {
             if (_sync == null || session == null)

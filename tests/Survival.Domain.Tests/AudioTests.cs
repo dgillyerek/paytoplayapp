@@ -11,7 +11,7 @@ public class AudioTests
 {
     private const string PackRel = "Assets/ThemePack/fantasy_kingdom_a";
 
-    private static readonly string Root = FindRepoRoot();
+    private static readonly string Root = TestRepo.Root;
 
     private static string PackDir => Path.Combine(Root, PackRel);
 
@@ -385,21 +385,5 @@ public class AudioTests
         Assert.True(PlayerBakeManifest.IsAudioClip(PlayerBakeManifest.AudioDir + "/ui_tap.ogg"));
         Assert.False(PlayerBakeManifest.IsAudioClip(PlayerBakeManifest.AudioDir + "/audio.json"));
         Assert.True(PlayerBakeManifest.IsRawFile(PlayerBakeManifest.AudioDir + "/audio.json"));
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (Directory.Exists(Path.Combine(dir.FullName, "Assets")) && Directory.Exists(Path.Combine(dir.FullName, "tests")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new InvalidOperationException("Repo root not found.");
     }
 }

@@ -50,7 +50,7 @@ namespace Survival.Domain.Enemies
         };
 
         public static readonly BlenderRigAttackSpec Spec = new BlenderRigAttackSpec(
-            "Vespera",
+            FighterNames.Vespera,
             FileName,
             FileMd5,
             DesignDir,

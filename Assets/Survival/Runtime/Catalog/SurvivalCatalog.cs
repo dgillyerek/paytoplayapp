@@ -23,8 +23,6 @@ namespace Survival.Domain.Catalog
         int YieldPerAction = 0,
         int MarchSeconds = 0);
 
-    public sealed record QueueRow(string QueueId, string ActionId, string TargetNodeId, int RemainingSeconds);
-
     public sealed record EventDef(string TypeId);
 
     public sealed record SkuDef(string Id);

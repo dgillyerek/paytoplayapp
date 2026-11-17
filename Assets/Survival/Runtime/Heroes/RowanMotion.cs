@@ -131,7 +131,7 @@ namespace Survival.Domain.Heroes
         public static BlenderRigIdlePropSpec[] IdleProps => RowanAttack.IdleProps;
 
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(
-            "Rowan",
+            FighterNames.Rowan,
             ThemePackDir,
             RestFileName,
             RejectedMixamoFileName,

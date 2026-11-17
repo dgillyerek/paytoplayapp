@@ -1,6 +1,6 @@
 # Survival core (white-label F2P) — Theme A first flavor
 
-**Not Grove.** Shared systems live under `Assets/Survival/` (`survival_core_v1`). Theme A is a baked store flavor, not an in-app skin.
+Shared systems live under `Assets/Survival/` (`survival_core_v1`). Theme A is a baked store flavor, not an in-app skin.
 
 | Piece | Path |
 | --- | --- |
@@ -28,7 +28,7 @@ The one-character demo scenes (Sir Aldric, Lyra, Rowan, Oakenshield, Vespera, Bo
 
 Locked battle (heroes vs villains): menu **Survival → Locked Battle (heroes vs villains, Game view 1080x1920)** or open **`Assets/Survival/Scenes/BattleLocked.unity`**, Game view **1080×1920**, Play. Six lanes, one matchup each, left to right from behind the heroes: Sir Aldric vs Blightroot, Lyra vs Vespera, Oakenshield vs Ironhowl, Stormcrest vs Nightfang, Emberfang vs Ashwyrm (the two dragons at 2x battle size, duelling fireball to fireball) and Rowan vs Bonequill. Heroes start at the bottom, villains at the top. Each walks in on its locked walk (Nightfang trots), stops at its attack range, and loops its locked attack with a short rest. Hits land with an impact per attacker (Emberfang fire burst, Stormcrest lightning crackle, Nightfang shadow claw rake, Ironhowl claw sparks and dust, Lyra staff light, Oakenshield leaves and earth, Vespera purple conjure, Ashwyrm void-fire breath with a smoke gust): every flying attack (fireball, storm bolt, arcane bolt, thorn spear, shadow orb, void fireball) stops on the target body, the claws land on their contact frame (Nightfang f14, Ironhowl f11). The defender flinches back a few cm (skipped while it is mid-attack) and flashes. Ground: tiled world-map grass with a worn dirt track down each lane, soft contact shadows under every fighter, and a hazy green horizon with distance fog (`LockedBattleGround`, `LockedBattleGroundSpec`). Hits: `LockedBattleHits`. The dropdown switches rear / three-quarter / front / side cameras (keys 1–4); **RESTART** runs it again. Roster: `Survival.Domain.Roster.LockedBattleRoster`. HOLD merge until Derek Game-view PASS.
 
-Menu **Survival → Use Theme A Flavor (fantasy_kingdom_a)** puts Splash then Play first in Editor Build Settings (Grove `Board` stays listed).
+Menu **Survival → Use Theme A Flavor (fantasy_kingdom_a)** puts Splash then Play first in Editor Build Settings.
 
 Visual / playable: Design phone Game-view re-gate before merge. Do not self-merge.
 

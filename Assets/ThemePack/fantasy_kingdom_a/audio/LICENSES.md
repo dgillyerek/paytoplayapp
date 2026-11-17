@@ -3,18 +3,19 @@
 This pack mixes two kinds of files. **Every file is CC0 1.0 / public domain; none needs attribution and none is
 non-commercial-only.**
 
-1. **CC0 recordings (everything except the two below):** village, UI, economy, battle, runner, boss and music files
+1. **CC0 recordings (everything except the three procedural files below):** village, UI, economy, battle, runner, boss and music files
    built from real recordings published as CC0 by Kenney (kenney.nl) and creators on OpenGameArt.org. Each row below names the pack,
    its page URL and the source clips. The license field on each page was checked to be CC0 on 2026-10-27.
    Rebuild: download the packs into a folder, then `AUDIO_SRC=<folder> python3 scripts/audio/medieval_runner/build.py`
    and `.../build_music.py`, `.../build_hub.py`, `.../build_loops.py` (trim, layer, high-pass, loudness-normalize, Ogg Vorbis via ffmpeg/libvorbis).
-2. **Procedural (original):** only `sfx_powerup.ogg` and `sfx_pickup_pop.ogg`, synthesized by
-   `scripts/audio/gen_theme_a_audio.py` (numpy + scipy, fixed seed 20261026). That script skips the recorded files
-   (its `RECORDED` set) so it cannot overwrite them.
+2. **Procedural (original):** `sfx_powerup.ogg` and `sfx_pickup_pop.ogg`, synthesized by
+   `scripts/audio/gen_theme_a_audio.py` (numpy + scipy, fixed seed 20261026); and `sfx_lyra_shot.ogg`, synthesized by
+   `scripts/audio/gen_lyra_magic_shot.py` (numpy + scipy, fixed seed 20261116). `gen_theme_a_audio.py` skips the
+   recorded files and Lyra's shot (its `RECORDED` set) so it cannot overwrite them.
 
 - **License:** CC0 1.0 Universal (public domain dedication), https://creativecommons.org/publicdomain/zero/1.0/
 - **Commercial use:** allowed, no attribution required (credit to the creators below is appreciated, not required).
-- **Assembled by:** Grok Bot for Derek Gilbert, 2026-10-26 (procedural) and 2026-10-27 (recordings).
+- **Assembled by:** Grok Bot for Derek Gilbert, 2026-10-26 (procedural), 2026-10-27 (recordings), 2026-11-16 (Lyra magic shot).
 
 Rules for adding sounds to this pack: only CC0 / public-domain or procedurally generated files. Never CC-BY, CC-BY-NC
 or "attribution required" assets. Add a row below with the file's source URL and license. Cue ids and which game
@@ -58,7 +59,7 @@ events play them live in `audio.json` (white-label: another theme pack ships its
 | `sfx_ironhowl_growl.ogg` | `sfx.boss.growl` | CC0 recording(s), trimmed/mixed/normalized: rubberduck "80 CC0 creature SFX #2" https://opengameart.org/content/80-cc0-creture-sfx-2 (roar_04) + rubberduck "80 CC0 creature SFX" https://opengameart.org/content/80-cc0-creature-sfx (grunt_01) | CC0 1.0 |
 | `sfx_ironhowl_punch.ogg` | `sfx.boss.punch` | CC0 recording(s), trimmed/mixed/normalized: Kenney "Impact Sounds" https://kenney.nl/assets/impact-sounds (impactPunch_heavy_001, impactPlate_heavy_001) + rubberduck "80 CC0 creature SFX #2" https://opengameart.org/content/80-cc0-creture-sfx-2 (attack_02) | CC0 1.0 |
 | `sfx_ironhowl_sweep.ogg` | `sfx.boss.sweep` | CC0 recording(s), trimmed/mixed/normalized: Still North Media "Medieval Sound Effects: Weapon Textures" https://opengameart.org/content/medieval-sound-effects-weapon-textures (Axe Swing, pitched down) + rubberduck "80 CC0 creature SFX #2" https://opengameart.org/content/80-cc0-creture-sfx-2 (attack_04) + Kenney "Impact Sounds" https://kenney.nl/assets/impact-sounds (impactPunch_heavy_004) | CC0 1.0 |
-| `sfx_lyra_shot.ogg` | `sfx.shot.lyra` | CC0 recording(s), trimmed/mixed/normalized: Still North Media "Medieval Sound Effects: Weapon Textures" https://opengameart.org/content/medieval-sound-effects-weapon-textures (Spear Swing, pitched down) + rubberduck "80 CC0 RPG SFX" https://opengameart.org/content/80-cc0-rpg-sfx (spell_01) + themightyglider "Moving Boulder" https://opengameart.org/content/moving-boulder (low rumble) | CC0 1.0 |
+| `sfx_lyra_shot.ogg` | `sfx.shot.lyra` | Procedural (original): `scripts/audio/gen_lyra_magic_shot.py` (numpy + scipy, fixed seed 20261116). Bright bell/chime partials, upward pitch sweep, airy whoosh, light high-passed reverb tail. Replaced the 2026-10-27 CC0 mix (pitched-down Spear Swing + spell_01 + boulder rumble) that read as a physical thud. | CC0 1.0 |
 | `sfx_magic_impact.ogg` | `sfx.impact.magic` | CC0 recording(s), trimmed/mixed/normalized: rubberduck "80 CC0 RPG SFX" https://opengameart.org/content/80-cc0-rpg-sfx (spell_02, spell_fire_01) + themightyglider "Moving Boulder" https://opengameart.org/content/moving-boulder | CC0 1.0 |
 | `sfx_oakenshield_throw.ogg` | `sfx.shot.oakenshield` | CC0 recording(s), trimmed/mixed/normalized: Still North Media "Medieval Sound Effects: Weapon Textures" https://opengameart.org/content/medieval-sound-effects-weapon-textures (Spear Swing, Crossbow Bolt Pass) | CC0 1.0 |
 | `sfx_pickup_pop.ogg` | `sfx.pickup.pop` | Procedural (original) | CC0 1.0 |

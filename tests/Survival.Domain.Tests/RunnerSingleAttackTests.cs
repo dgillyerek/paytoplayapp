@@ -111,11 +111,12 @@ public sealed class RunnerSingleAttackTests
         Assert.Contains("track.Kind == AttackTrackKind.Projectile && !ProjectilesEnabled", driver);
 
         var rig = RepoFile("Assets/Survival/Unity/Runner/RunnerRig.cs");
-        foreach (var actor in new[] { "Lyra", "Oakenshield", "Rowan" })
+        // Lyra and Oakenshield spawn through the shared BlenderRigActor; Rowan has its own actor.
+        foreach (var actor in new[] { "BlenderRigActor", "RowanActor" })
         {
-            var idx = rig.IndexOf("AddComponent<" + actor + "Actor>", StringComparison.Ordinal);
-            Assert.True(idx >= 0, actor + " actor is built in RunnerRig");
-            Assert.Contains("OwnShotsOff(a.AttackDriver)", rig.Substring(idx, 700));
+            var idx = rig.IndexOf("AddComponent<" + actor + ">", StringComparison.Ordinal);
+            Assert.True(idx >= 0, actor + " is built in RunnerRig");
+            Assert.Contains("OwnShotsOff(a.AttackDriver)", rig.Substring(idx, 2000));
         }
     }
 }

@@ -14,7 +14,7 @@ namespace Survival.Domain.Tests;
 /// grants what it lists into the campaign wallet through the sandbox purchase service, value per dollar climbs with the
 /// price (the $39.99 King's Treasury about 2x the $0.99 rung), the one-time starter stays bought across a save, Hero Tomes
 /// and War Banners do what the store says, and in the balance model one $39.99 pack moves a player stuck at the free wall
-/// several levels on (docs/runner_balance.md, /workspace/runner/iap_ladder.md).
+/// several levels on (Docs/runner_balance.md, /workspace/runner/iap_ladder.md).
 /// </summary>
 public sealed class PowerPackTests
 {

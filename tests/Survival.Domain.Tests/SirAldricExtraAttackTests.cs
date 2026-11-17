@@ -14,7 +14,7 @@ public sealed class SirAldricExtraAttackTests
     [Fact]
     public void Slash_and_bash_are_lite_avatar_bakes_outside_the_17_clip_pack()
     {
-        var root = ArcherExtraAttackTests.FindRepoRoot();
+        var root = TestRepo.Root;
         var sums = File.ReadAllText(Path.Combine(root, Design, "CHECKSUMS.md5"));
         Assert.Equal(17, SirAldric3DMotion.LiteSwordShieldClips.Length);
         Assert.Equal(2, SirAldric3DMotion.BattleExtraClips.Length);

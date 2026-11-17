@@ -29,7 +29,7 @@ namespace Survival.Domain.Enemies
         };
 
         public static readonly BlenderRigAttackSpec Spec = new BlenderRigAttackSpec(
-            "Ashwyrm",
+            FighterNames.Ashwyrm,
             FileName,
             FileMd5,
             DesignDir,

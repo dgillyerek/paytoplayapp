@@ -78,7 +78,7 @@ public sealed class LockedBattleLaneFiveTests
     [Fact]
     public void Each_fighter_has_its_own_impact_burst_in_its_colours_matching_the_existing_style()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var impact = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "LockedBattleImpact.cs"));
         Assert.Contains("case BattleImpactKind.SwordSteel:", impact, StringComparison.Ordinal);
         Assert.Contains("case BattleImpactKind.BlightRot:", impact, StringComparison.Ordinal);
@@ -91,7 +91,7 @@ public sealed class LockedBattleLaneFiveTests
         Assert.Equal(96f / 255f, LockedBattleHits.SirAldricBlueRgb[2], 4);
         var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "LockedBattleDemo.cs"));
         Assert.Contains("LockedBattleHits.SirAldricBlueRgb", demo, StringComparison.Ordinal);
-        Assert.Contains("case \"Blightroot\":", demo, StringComparison.Ordinal);
+        Assert.Contains("case FighterNames.Blightroot:", demo, StringComparison.Ordinal);
         Assert.Contains("LockedBattleImpact.Spawn(LockedBattleRotation.Impact(attacker.Data, attacker.Profile, attackIndex)", demo, StringComparison.Ordinal);
 
         // Every impact kind is distinct per fighter.
@@ -102,7 +102,7 @@ public sealed class LockedBattleLaneFiveTests
     [Fact]
     public void Cloth_rule_no_loose_cloth_on_either_lane_five_fighter()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var aldric = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
         // The soft cape exists as a leftover helper but is never attached: tight plate only.
         Assert.Contains("private static void AttachSoftCape(GameObject root)", aldric, StringComparison.Ordinal);
@@ -118,7 +118,7 @@ public sealed class LockedBattleLaneFiveTests
     [Fact]
     public void Lane_five_actors_play_battle_poses_without_touching_the_battle_host_transform()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "LockedBattleDemo.cs"));
         Assert.Contains("actor.PlayBattlePose(SirAldricBattlePoses.Walk)", demo, StringComparison.Ordinal);
         Assert.Contains("f.Bind(actor.PlayBattlePose, () => actor.BattlePose", demo, StringComparison.Ordinal);
@@ -140,21 +140,5 @@ public sealed class LockedBattleLaneFiveTests
 
         var ground = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "LockedBattleGround.cs"));
         Assert.Contains("lane < LockedBattleRoster.LaneCount", ground, StringComparison.Ordinal);
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "Assets", "ThemePack", "fantasy_kingdom_a", "pack.json")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("repo root");
     }
 }

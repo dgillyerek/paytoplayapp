@@ -175,28 +175,6 @@ namespace Survival.Unity
             return text;
         }
 
-        /// <summary>Dark translucent backing plate behind a label that sits over busy art.</summary>
-        public static Image Backing(Text text, float alpha = 0.62f)
-        {
-            var parent = text.transform.parent;
-            var existing = parent.Find(text.name + "_Backing");
-            if (existing != null)
-            {
-                return existing.GetComponent<Image>();
-            }
-
-            var plate = Add(parent, text.name + "_Backing", "plate", new Color(0.05f, 0.03f, 0.08f, alpha));
-            var src = text.rectTransform;
-            var rt = plate.rectTransform;
-            rt.anchorMin = src.anchorMin;
-            rt.anchorMax = src.anchorMax;
-            rt.pivot = src.pivot;
-            rt.offsetMin = src.offsetMin + new Vector2(-6f, -3f);
-            rt.offsetMax = src.offsetMax + new Vector2(6f, 3f);
-            rt.SetSiblingIndex(text.transform.GetSiblingIndex());
-            return plate;
-        }
-
         public static Image Icon(Transform parent, string name, string sprite)
         {
             var img = Add(parent, name, sprite, Color.white, Image.Type.Simple);

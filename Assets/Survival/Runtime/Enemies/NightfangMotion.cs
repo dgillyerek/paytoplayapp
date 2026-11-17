@@ -47,7 +47,7 @@ namespace Survival.Domain.Enemies
         };
 
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(
-            "Nightfang",
+            FighterNames.Nightfang,
             ThemePackDir,
             RestFileName,
             RejectedMixamoFileName,

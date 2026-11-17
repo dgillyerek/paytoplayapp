@@ -32,7 +32,7 @@ public sealed class AshwyrmAttackTests
     [Fact]
     public void Ashwyrm_attack_fbx_props_and_design_sot_match_design_md5()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var pack = Path.Combine(root, "Assets", AshwyrmMotion.ThemePackDir);
         var design = Path.Combine(root, AshwyrmAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
         Assert.Equal("9dc8b9a2d2083290b6a369129a6469b3", AshwyrmAttack.FileMd5);
@@ -143,9 +143,9 @@ public sealed class AshwyrmAttackTests
     [Fact]
     public void Ashwyrm_attack_is_wired_in_the_actor_and_has_no_demo_menu()
     {
-        var root = FindRepoRoot();
-        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "AshwyrmActor.cs"));
-        Assert.Contains("AshwyrmAttack.Spec", actor, StringComparison.Ordinal);
+        var root = TestRepo.Root;
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigActor.cs"));
+        BlenderRigCastTests.AssertCast("Ashwyrm", AshwyrmMotion.Spec, AshwyrmAttack.Spec);
         var driver = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigAttackDriver.cs"));
         Assert.Contains("ParticleSystem", driver, StringComparison.Ordinal);
         Assert.Contains("TrailRenderer", driver, StringComparison.Ordinal);
@@ -157,21 +157,5 @@ public sealed class AshwyrmAttackTests
         using var md5 = MD5.Create();
         using var stream = File.OpenRead(path);
         return Convert.ToHexString(md5.ComputeHash(stream)).ToLowerInvariant();
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (Directory.Exists(Path.Combine(dir.FullName, "Assets")) && Directory.Exists(Path.Combine(dir.FullName, "tests")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new InvalidOperationException("Repo root not found.");
     }
 }

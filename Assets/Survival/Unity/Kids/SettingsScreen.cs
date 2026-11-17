@@ -132,7 +132,7 @@ namespace Survival.Unity.Kids
             {
                 KidSafety.SetChat(to);
                 // Mirror to the account; the server clamps again (a child is never free).
-                SurvivalCampaignView.AllianceSafety?.ApplyPolicy(KidSafety.Policy, ChatSafety.SafeName(PlayerPrefs.GetString(SurvivalCampaignView.DeviceIdPref, "")));
+                AllianceClient.Safety?.ApplyPolicy(KidSafety.Policy, ChatSafety.SafeName(PlayerPrefs.GetString(SurvivalCampaignView.DeviceIdPref, "")));
                 if (_card != null)
                 {
                     Menu(_card);
@@ -171,14 +171,14 @@ namespace Survival.Unity.Kids
         {
             Clear();
             KidUi.Label(_card, "Working", KidUi.S("kids.account.working", "Deleting\u2026"), 26, 0.06f, 0.40f, 0.94f, 0.60f);
-            var safety = SurvivalCampaignView.AllianceSafety;
+            var safety = AllianceClient.Safety;
             // Ever signed in (a device id exists) means there is a server account: it must be deleted first. Not signed in
             // right now (offline) is a server failure, so nothing local is wiped and the account is never orphaned.
             new AccountDeletion(
                 () => PlayerPrefs.HasKey(SurvivalCampaignView.DeviceIdPref),
                 done =>
                 {
-                    if (safety == null || string.IsNullOrEmpty(SurvivalCampaignView.AllianceNet?.SessionToken))
+                    if (safety == null || string.IsNullOrEmpty(AllianceClient.SessionToken))
                     {
                         done(false);
                         return;
@@ -212,7 +212,7 @@ namespace Survival.Unity.Kids
         public static void WipeDevice()
         {
             KidSafety.ClearForAccountDeletion();
-            SurvivalCampaignView.ForgetAllianceNet();
+            AllianceClient.Forget();
             PlayerPrefs.DeleteAll();
             PlayerPrefs.Save();
             foreach (var dir in new[] { Application.persistentDataPath, Application.temporaryCachePath })

@@ -4,6 +4,7 @@ using UnityEngine.Animations;
 using UnityEngine.Playables;
 #if UNITY_EDITOR
 using UnityEditor;
+using Survival.Domain.Roster;
 #endif
 
 namespace Survival.Unity
@@ -550,7 +551,7 @@ namespace Survival.Unity
                 IronhowlMotion.NormalFileName,
                 IronhowlMotion.MetallicFileName,
                 IronhowlMotion.RoughnessFileName,
-                "Ironhowl",
+                FighterNames.Ironhowl,
                 preferEmbeddedBaseAndNormal: false);
         }
 

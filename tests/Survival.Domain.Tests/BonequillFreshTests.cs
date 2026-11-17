@@ -28,7 +28,7 @@ public sealed class BonequillFreshTests
     [Fact]
     public void ThemePack_and_design_files_match_and_import_generic()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var pack = Path.Combine(root, "Assets", BonequillMotion.ThemePackDir);
         var design = Path.Combine(root, BonequillMotion.DesignDir, "export");
         foreach (var (file, md5, clip) in new[]
@@ -104,21 +104,5 @@ public sealed class BonequillFreshTests
     {
         var hash = System.Security.Cryptography.MD5.HashData(File.ReadAllBytes(path));
         return Convert.ToHexString(hash).ToLowerInvariant();
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "Assets", "ThemePack", "fantasy_kingdom_a", "pack.json")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("repo root");
     }
 }

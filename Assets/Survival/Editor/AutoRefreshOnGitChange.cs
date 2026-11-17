@@ -10,7 +10,7 @@ namespace Survival.Editor
     /// Editor-only: after a git checkout/pull/reset moves HEAD to another commit, refresh the AssetDatabase (and
     /// recompile if scripts changed) without the user having to click back into Unity. A FileSystemWatcher on .git
     /// flags changes; a 2 s EditorApplication.update poll of the HEAD sha is the fallback. The refresh fires once,
-    /// 1.5 s after the last change, and waits while playing, compiling or importing. See docs/unity_auto_refresh.md.
+    /// 1.5 s after the last change, and waits while playing, compiling or importing. See Docs/unity_auto_refresh.md.
     /// </summary>
     [InitializeOnLoad]
     static class AutoRefreshOnGitChange

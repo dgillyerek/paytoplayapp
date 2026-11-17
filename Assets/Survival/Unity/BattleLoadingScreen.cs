@@ -108,14 +108,6 @@ namespace Survival.Unity
             }
         }
 
-        public IEnumerator WaitDone()
-        {
-            while (this != null && !_t.Done)
-            {
-                yield return null;
-            }
-        }
-
         private void OnEnable()
         {
             RenderPipelineManager.endCameraRendering += OnEndCameraSrp;

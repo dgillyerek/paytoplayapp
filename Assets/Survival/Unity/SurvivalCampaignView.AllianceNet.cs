@@ -54,23 +54,12 @@ namespace Survival.Unity
         public const string TabChat = "chat";
         public const string TabGifts = "gifts";
 
-        /// <summary>Public URL of the alliance Neon Function. Not a secret; override with PlayerPrefs "alliance.api" ("" = offline).</summary>
-        public const string DefaultAllianceApi = "https://br-summer-firefly-b8or37b8-alliance.compute.c-14.us-east-1.aws.neon.tech";
-
         internal const string DeviceIdPref = "alliance.device";
 
-        /// <summary>Shared alliance client (null until the view starts, or when the API is switched off).</summary>
-        public static AllianceService? AllianceNet { get; private set; }
+        /// <summary>Shared alliance client (see <see cref="AllianceClient"/>).</summary>
+        private static AllianceService? AllianceNet => AllianceClient.Net;
 
-        /// <summary>Report / block and the server chat mode on the same sign-in (Kids, COPPA / Families).</summary>
-        public static AllianceSafetyClient? AllianceSafety { get; private set; }
-
-        /// <summary>Account deletion: drop the signed-in session so nothing more is sent until the app restarts.</summary>
-        public static void ForgetAllianceNet()
-        {
-            AllianceNet = null;
-            AllianceSafety = null;
-        }
+        private static AllianceSafetyClient? AllianceSafety => AllianceClient.Safety;
 
         private string _allianceSearch = "";
         private Text? _allyChatLog;
@@ -84,8 +73,8 @@ namespace Survival.Unity
                 return;
             }
 
-            var api = PlayerPrefs.GetString("alliance.api", DefaultAllianceApi);
-            if (string.IsNullOrWhiteSpace(api))
+            var api = AllianceClient.ApiUrl;
+            if (api.Length == 0)
             {
                 return;
             }
@@ -105,25 +94,24 @@ namespace Survival.Unity
                 PlayerPrefs.Save();
             }
 
-            AllianceNet = new AllianceService(new UnityAllianceTransport(this, api));
-            AllianceSafety = new AllianceSafetyClient(AllianceNet);
-            AllianceNet.Changed += () => _session?.Alliance?.Apply(AllianceNet);
+            var net = AllianceClient.Connect(this, api);
+            net.Changed += () => _session?.Alliance?.Apply(net);
             // Restricted (child / unknown age) players never send a typed name: a generated one, e.g. "Swift Ranger 417".
             var policy = KidSafety.Policy;
             var safeName = ChatSafety.SafeName(device);
             var name = ChatSafety.CanTypeName(policy) ? S("alliance.default_name", "Survivor") : safeName;
-            AllianceNet.SignIn(device, name, ok =>
+            net.SignIn(device, name, ok =>
             {
                 if (ok)
                 {
                     // Age band first (the server's restricted flag reads it), then the chat mode / safe name.
                     var band = Survival.Domain.Iap.AgeBands.Id(KidSafety.AgeBand);
-                    AllianceNet.SetAgeBand(band, _ => AllianceSafety?.ApplyPolicy(KidSafety.Policy, safeName));
-                    AllianceNet.RefreshHelp();
-                    AllianceNet.RefreshGifts();
+                    net.SetAgeBand(band, _ => AllianceSafety?.ApplyPolicy(KidSafety.Policy, safeName));
+                    net.RefreshHelp();
+                    net.RefreshGifts();
                     if (_session != null)
                     {
-                        SurvivalCloudSave.Bind(_session, AllianceNet);
+                        SurvivalCloudSave.Bind(_session, net);
                     }
                 }
             });

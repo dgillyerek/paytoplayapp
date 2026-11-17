@@ -135,7 +135,7 @@ public sealed class SirAldric3DMotionTests
     [Fact]
     public void Gait_bar_refs_are_on_disk()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var dir = Path.Combine(
             root,
             "design",
@@ -230,7 +230,7 @@ public sealed class SirAldric3DMotionTests
     [Fact]
     public void Look_targets_00_01_02_are_on_disk()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var dir = Path.Combine(
             root,
             "design",
@@ -248,7 +248,7 @@ public sealed class SirAldric3DMotionTests
     [Fact]
     public void Meshy_animate_actor_binds_albedo_and_keeps_walking_clip()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var actor = Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs");
         var src = File.ReadAllText(actor);
         Assert.Contains("SetTexture(\"_BaseMap\"", src, StringComparison.Ordinal);
@@ -265,7 +265,7 @@ public sealed class SirAldric3DMotionTests
     [Fact]
     public void Pilot_mixamo_sep_walk_slash_are_sot_and_clipsword_is_not()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
         Assert.Contains("SirAldric_body_holefixed_walk.fbx", actor, StringComparison.Ordinal);
         Assert.Contains("SirAldric_body_holefixed_slash.fbx", actor, StringComparison.Ordinal);
@@ -431,21 +431,20 @@ public sealed class SirAldric3DMotionTests
         Assert.Contains("d3e5f7a90b2c4d6e8f1a3c5d7e9f2468", File.ReadAllText(attackController), StringComparison.Ordinal);
         Assert.True(File.Exists(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldric_AttackEdit.md")));
         var editNote = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "SirAldric_AttackEdit.md"));
-        Assert.Contains("Window → Animation → Animation", editNote, StringComparison.Ordinal);
-        Assert.Contains("mixamorig:RightArm", editNote, StringComparison.Ordinal);
-        Assert.Contains("SirAldricAttackEditKnight", editNote, StringComparison.Ordinal);
-        Assert.Contains("Preview", editNote, StringComparison.Ordinal);
-        Assert.Contains("Lock", editNote, StringComparison.Ordinal);
-        var extract = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricEditableAttackClip.cs"));
-        Assert.Contains("EnsureEditableAttackClip", extract, StringComparison.Ordinal);
-        Assert.Contains("Ping strike path markers", extract, StringComparison.Ordinal);
-        Assert.Contains("1_Draw_LeftHipPocket", extract, StringComparison.Ordinal);
-        Assert.Contains("Spawn knight for Animation-window edit", extract, StringComparison.Ordinal);
-        Assert.Contains("runtimeAnimatorController", extract, StringComparison.Ordinal);
-        Assert.Contains("EnsureAttackController", extract, StringComparison.Ordinal);
-        Assert.Contains("LoadAllAssetsAtPath", extract, StringComparison.Ordinal);
-        Assert.Contains("applyRootMotion = false", extract, StringComparison.Ordinal);
-        Assert.DoesNotContain("if (avatar != null && !avatar.isHuman)", extract, StringComparison.Ordinal);
+        Assert.Contains("SirAldric_DIAG_InwardSlash", editNote, StringComparison.Ordinal);
+        Assert.DoesNotContain("Survival → Sir Aldric", editNote, StringComparison.Ordinal);
+        Assert.DoesNotContain("SirAldricAttackEditKnight", editNote, StringComparison.Ordinal);
+        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricEditableAttackClip.cs")));
+        Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Editor", "SirAldricEditableAttackClip.cs.meta")));
+        var flavor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
+        Assert.DoesNotContain("Import locked Sir Aldric rear master", flavor, StringComparison.Ordinal);
+        Assert.DoesNotContain("ImportLockedRearMaster", flavor, StringComparison.Ordinal);
+        foreach (var editorFile in Directory.GetFiles(Path.Combine(root, "Assets", "Survival", "Editor"), "*.cs"))
+        {
+            var editorSrc = File.ReadAllText(editorFile);
+            Assert.DoesNotContain("[MenuItem(\"Survival/Sir Aldric/", editorSrc, StringComparison.Ordinal);
+            Assert.DoesNotContain("[MenuItem(\"Survival/Import locked Sir Aldric rear master\")]", editorSrc, StringComparison.Ordinal);
+        }
 
         var pilot = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "3d", "pilot");
         Assert.True(new FileInfo(Path.Combine(pilot, "SirAldric_body_holefixed_mid280k.fbx")).Length > 1_000_000);
@@ -883,7 +882,7 @@ public sealed class SirAldric3DMotionTests
     [Fact]
     public void Lite_sword_shield_pack_is_exact_mixamo_names_on_slash_avatar()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         Assert.Equal(17, SirAldric3DMotion.LiteSwordShieldClipCount);
         Assert.Equal(17, SirAldric3DMotion.LiteSwordShieldClips.Length);
         Assert.Equal(
@@ -960,7 +959,7 @@ public sealed class SirAldric3DMotionTests
 
     private static string SirAldricMeshyAnimateActorPath()
     {
-        var actor = File.ReadAllText(Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
+        var actor = File.ReadAllText(Path.Combine(TestRepo.Root, "Assets", "Survival", "Unity", "SirAldricMeshyAnimateActor.cs"));
         const string needle = "ThemePackAttackFbx = \"";
         var i = actor.IndexOf(needle, StringComparison.Ordinal);
         Assert.True(i >= 0);
@@ -972,26 +971,10 @@ public sealed class SirAldric3DMotionTests
     [Fact]
     public void Play_placeholder_locked_rear_png_still_exists()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var packPng = Path.Combine(root, "Assets", "ThemePack", "fantasy_kingdom_a", "art", "heroes", "SIR_ALDRIC_REAR_MASTER_LOCKED.png");
         Assert.True(File.Exists(packPng));
         Assert.True(new FileInfo(packPng).Length > 100_000);
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "Assets", "ThemePack", "fantasy_kingdom_a", "pack.json")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("repo root");
     }
 
     private static float[] ReadJsonVec3(string json, string key)

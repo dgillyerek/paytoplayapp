@@ -370,14 +370,6 @@ namespace Survival.Domain.Runner
         public static RunnerLoadout Uniform(RunnerCatalog c, double scale) =>
             new(c.Units.Values.Where(u => u.HeroId.Length > 0).ToDictionary(u => u.Id, _ => new RunnerUnitBoost((float)scale, (float)scale)));
 
-        /// <summary><paramref name="loadout"/> with every boost multiplied by <paramref name="k"/>.</summary>
-        public static RunnerLoadout Scaled(RunnerCatalog c, RunnerLoadout loadout, double k) =>
-            new(c.Units.Values.Where(u => u.HeroId.Length > 0).ToDictionary(u => u.Id, u =>
-            {
-                var b = loadout.For(u.Id);
-                return new RunnerUnitBoost((float)(b.DamageMul * k), (float)(b.HpMul * k));
-            }));
-
         /// <summary>Gold of a clean win of <paramref name="level"/>: every enemy and box, plus the win gold (the real reward formula).</summary>
         public static int WinGold(RunnerLevelDef level)
         {

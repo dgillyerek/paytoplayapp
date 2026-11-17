@@ -8,7 +8,7 @@ namespace Survival.Domain.Tests;
 /// </summary>
 public sealed class AndroidCiTests
 {
-    private static readonly string Root = FindRepoRoot();
+    private static readonly string Root = TestRepo.Root;
 
     [Fact]
     public void Editor_version_has_a_matching_android_ci_image_tag_format()
@@ -43,16 +43,5 @@ public sealed class AndroidCiTests
         }
 
         Assert.Empty(found);
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "ProjectSettings", "ProjectVersion.txt")))
-        {
-            dir = dir.Parent;
-        }
-
-        return dir?.FullName ?? throw new InvalidOperationException("repo root not found");
     }
 }

@@ -31,7 +31,7 @@ public sealed class NightfangAttackTests
     [Fact]
     public void Nightfang_attack_fbx_props_and_design_sot_match_design_md5()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var pack = Path.Combine(root, "Assets", NightfangMotion.ThemePackDir);
         var design = Path.Combine(root, NightfangAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
         Assert.Equal("f87f9b0b05cd8a8f229491b88a2fb5b4", NightfangAttack.FileMd5);
@@ -161,7 +161,7 @@ public sealed class NightfangAttackTests
         Assert.Equal(0f, midX);
         Assert.Equal(0f, midY);
 
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var driver = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigAttackDriver.cs"));
         Assert.Contains("AttackEmission.StraightAheadTip", driver, StringComparison.Ordinal);
         Assert.Contains("_actor.rotation", driver, StringComparison.Ordinal);
@@ -187,9 +187,9 @@ public sealed class NightfangAttackTests
     [Fact]
     public void Nightfang_attack_is_wired_in_the_actor_and_has_no_demo_menu()
     {
-        var root = FindRepoRoot();
-        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "NightfangActor.cs"));
-        Assert.Contains("NightfangAttack.Spec", actor, StringComparison.Ordinal);
+        var root = TestRepo.Root;
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigActor.cs"));
+        BlenderRigCastTests.AssertCast("Nightfang", NightfangMotion.Spec, NightfangAttack.Spec);
         var driver = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigAttackDriver.cs"));
         Assert.Contains("ParticleSystem", driver, StringComparison.Ordinal);
         Assert.Contains("TrailRenderer", driver, StringComparison.Ordinal);
@@ -201,21 +201,5 @@ public sealed class NightfangAttackTests
         using var md5 = MD5.Create();
         using var stream = File.OpenRead(path);
         return Convert.ToHexString(md5.ComputeHash(stream)).ToLowerInvariant();
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (Directory.Exists(Path.Combine(dir.FullName, "Assets")) && Directory.Exists(Path.Combine(dir.FullName, "tests")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new InvalidOperationException("Repo root not found.");
     }
 }

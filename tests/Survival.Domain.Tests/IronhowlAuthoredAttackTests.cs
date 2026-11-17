@@ -23,7 +23,7 @@ public sealed class IronhowlAuthoredAttackTests
     [Fact]
     public void Authored_attacks_bind_like_the_mixamo_clips_and_are_pinned_generic()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var smash = IronhowlRestBindingTests.AnimatedPaths(File.ReadAllBytes(Path.Combine(root, "Assets", IronhowlMotion.Attack2ThemePackRel)));
         var walk = IronhowlRestBindingTests.AnimatedPaths(File.ReadAllBytes(Path.Combine(root, "Assets", IronhowlMotion.WalkThemePackRel)));
         var walkBones = walk.Select(p => p.Split('|')[0]).ToHashSet(StringComparer.Ordinal);
@@ -100,16 +100,5 @@ public sealed class IronhowlAuthoredAttackTests
         using var md5 = System.Security.Cryptography.MD5.Create();
         using var stream = File.OpenRead(path);
         return Convert.ToHexString(md5.ComputeHash(stream)).ToLowerInvariant();
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, "Assets", "Survival")))
-        {
-            dir = dir.Parent;
-        }
-
-        return dir?.FullName ?? throw new DirectoryNotFoundException("repo root");
     }
 }

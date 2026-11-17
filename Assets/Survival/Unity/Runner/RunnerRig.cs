@@ -133,7 +133,7 @@ namespace Survival.Unity
             {
                 switch (data.Name)
                 {
-                    case "Emberfang":
+                    case FighterNames.Emberfang:
                     {
                         var a = host.AddComponent<EmberfangActor>();
                         a.Build();
@@ -144,18 +144,7 @@ namespace Survival.Unity
                         break;
                     }
 
-                    case "Stormcrest":
-                    {
-                        var a = host.AddComponent<StormcrestActor>();
-                        a.Build();
-                        rig.Bind(a.PlayPose, () => a.Pose);
-                        rig.OwnShotsOff(a.AttackDriver);
-                        built = a.Built;
-                        measured = a.VisibleBounds;
-                        break;
-                    }
-
-                    case "Ironhowl":
+                    case FighterNames.Ironhowl:
                     {
                         var a = host.AddComponent<IronhowlActor>();
                         a.Build();
@@ -165,7 +154,7 @@ namespace Survival.Unity
                         break;
                     }
 
-                    case "Vorgath":
+                    case FighterNames.Vorgath:
                     {
                         var a = host.AddComponent<VorgathActor>();
                         a.Build();
@@ -175,72 +164,7 @@ namespace Survival.Unity
                         break;
                     }
 
-                    case "Nightfang":
-                    {
-                        var a = host.AddComponent<NightfangActor>();
-                        a.Build();
-                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
-                        rig.OwnShotsOff(a.AttackDriver);
-                        built = a.Built;
-                        measured = a.VisibleBounds;
-                        break;
-                    }
-
-                    case "Lyra":
-                    {
-                        var a = host.AddComponent<LyraActor>();
-                        a.Build();
-                        a.UpperBodyAttack = RunnerUpperBodyAttack.Applies(data.Name);
-                        a.AimHoldFrame = a.UpperBodyAttack ? RunnerAimHold.HoldFrameFor(data.Name) : null;
-                        rig._aimHeld = a.AimHoldFrame != null;
-                        rig._steady = RunnerAimHold.Applies(data.Name);
-                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
-                        rig.OwnShotsOff(a.AttackDriver);
-                        built = a.Built;
-                        measured = a.VisibleBounds;
-                        break;
-                    }
-
-                    case "Oakenshield":
-                    {
-                        var a = host.AddComponent<OakenshieldActor>();
-                        a.Build();
-                        a.UpperBodyAttack = RunnerUpperBodyAttack.Applies(data.Name);
-                        a.AimHoldFrame = a.UpperBodyAttack ? RunnerAimHold.HoldFrameFor(data.Name) : null;
-                        rig._aimHeld = a.AimHoldFrame != null;
-                        rig._steady = RunnerAimHold.Applies(data.Name);
-                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
-                        rig.OwnShotsOff(a.AttackDriver);
-                        built = a.Built;
-                        measured = a.VisibleBounds;
-                        break;
-                    }
-
-                    case "Vespera":
-                    {
-                        var a = host.AddComponent<VesperaActor>();
-                        a.Build();
-                        // A ranged foe shoots while it walks in: the take on the upper body, the legs keep walking.
-                        a.UpperBodyAttack = RunnerWalkingShooterFoes.Applies(data.Name);
-                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
-                        rig.OwnShotsOff(a.AttackDriver);
-                        built = a.Built;
-                        measured = a.VisibleBounds;
-                        break;
-                    }
-
-                    case "Ashwyrm":
-                    {
-                        var a = host.AddComponent<AshwyrmActor>();
-                        a.Build();
-                        rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
-                        rig.OwnShotsOff(a.AttackDriver);
-                        built = a.Built;
-                        measured = a.VisibleBounds;
-                        break;
-                    }
-
-                    case "Rowan":
+                    case FighterNames.Rowan:
                     {
                         var a = host.AddComponent<RowanActor>();
                         a.Build();
@@ -255,7 +179,7 @@ namespace Survival.Unity
                         break;
                     }
 
-                    case "Bonequill":
+                    case FighterNames.Bonequill:
                     {
                         var a = host.AddComponent<BonequillActor>();
                         a.Build();
@@ -268,7 +192,7 @@ namespace Survival.Unity
                         break;
                     }
 
-                    case "Sir Aldric":
+                    case FighterNames.SirAldric:
                     {
                         // Same as the battle: the pilot actor tunes the global ambient for its own scene; keep ours.
                         var reflections = RenderSettings.reflectionIntensity;
@@ -290,7 +214,7 @@ namespace Survival.Unity
                         break;
                     }
 
-                    case "Blightroot":
+                    case FighterNames.Blightroot:
                     {
                         // Own pivot, as in the battle: its stand-up turn and foot plant write that transform.
                         var pivot = new GameObject("BlightrootPivot");
@@ -309,8 +233,42 @@ namespace Survival.Unity
                     }
 
                     default:
-                        Debug.LogError("Runner: no actor for " + data.Name);
+                    {
+                        // Every plain Blender-rig fighter (Lyra, Oakenshield, Stormcrest, Vespera, Nightfang, Ashwyrm).
+                        if (!BlenderRigCast.TryFind(data.Name, out var cast))
+                        {
+                            Debug.LogError("Runner: no actor for " + data.Name);
+                            break;
+                        }
+
+                        var a = host.AddComponent<BlenderRigActor>();
+                        a.Build(cast);
+                        var shooter = RunnerUpperBodyAttack.Applies(data.Name);
+                        var walkingShooterFoe = RunnerWalkingShooterFoes.Applies(data.Name);
+                        if (shooter)
+                        {
+                            // Squad shooters fire on the upper body over the walk.
+                            a.UpperBodyAttack = true;
+                            a.AimHoldFrame = RunnerAimHold.HoldFrameFor(data.Name);
+                            rig._aimHeld = a.AimHoldFrame != null;
+                            rig._steady = RunnerAimHold.Applies(data.Name);
+                        }
+                        else if (walkingShooterFoe)
+                        {
+                            // A ranged foe shoots while it walks in: the take on the upper body, the legs keep walking.
+                            a.UpperBodyAttack = true;
+                        }
+
+                        rig.Bind(
+                            a.PlayPose,
+                            () => a.Pose,
+                            cast.RunnerPacedAttack ? v => a.AttackSpeed = v : (System.Action<float>?)null,
+                            shooter || walkingShooterFoe ? a.SetWalkUnderAttack : (System.Action<bool>?)null);
+                        rig.OwnShotsOff(a.AttackDriver);
+                        built = a.Built;
+                        measured = a.VisibleBounds;
                         break;
+                    }
                 }
             }
             catch (System.Exception ex)

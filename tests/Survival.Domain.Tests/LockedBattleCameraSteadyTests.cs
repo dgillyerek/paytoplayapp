@@ -7,7 +7,7 @@ namespace Survival.Domain.Tests;
 public sealed class LockedBattleCameraSteadyTests
 {
     private static string Unity(string file) =>
-        File.ReadAllText(Path.Combine(ArcherExtraAttackTests.FindRepoRoot(), "Assets", "Survival", "Unity", file));
+        File.ReadAllText(Path.Combine(TestRepo.Root, "Assets", "Survival", "Unity", file));
 
     [Fact]
     public void Camera_eases_to_its_target_and_holds_still_without_input()

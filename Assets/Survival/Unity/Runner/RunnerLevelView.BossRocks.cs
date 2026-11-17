@@ -3,6 +3,7 @@ using Survival.Domain.Runner;
 using Survival.Domain.Theme;
 using Survival.Domain.Enemies;
 using UnityEngine;
+using Survival.Domain.Roster;
 
 namespace Survival.Unity
 {
@@ -85,7 +86,7 @@ namespace Survival.Unity
                 return;
             }
 
-            if (_rockRig.Data.Name == "Vorgath")
+            if (_rockRig.Data.Name == FighterNames.Vorgath)
             {
                 // Same throw clock as Ironhowl (the sim's chip damage). The body spits fire instead of lifting a boulder.
                 _rockRig.SetAttackSpeed(1f);
@@ -177,7 +178,7 @@ namespace Survival.Unity
                 return;
             }
 
-            var vorgath = _rockRig.Data.Name == "Vorgath";
+            var vorgath = _rockRig.Data.Name == FighterNames.Vorgath;
             if (!vorgath && !_rockGrabbed && t >= RunnerRules.BossRockGrab)
             {
                 // His fists hit the road: the boulder tears out of it, in his hands from this frame.

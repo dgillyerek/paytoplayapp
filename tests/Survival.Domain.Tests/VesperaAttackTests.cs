@@ -32,7 +32,7 @@ public sealed class VesperaAttackTests
     [Fact]
     public void Vespera_attack_fbx_props_and_design_sot_match_design_md5()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var pack = Path.Combine(root, "Assets", VesperaMotion.ThemePackDir);
         var design = Path.Combine(root, VesperaAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
         // ThemePack attack is the Design no-cape pack (blender_rig_nocape_20261009); attack_20261007 keeps the original.
@@ -199,9 +199,9 @@ public sealed class VesperaAttackTests
     [Fact]
     public void Vespera_attack_is_wired_in_the_actor_and_has_no_demo_menu()
     {
-        var root = FindRepoRoot();
-        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "VesperaActor.cs"));
-        Assert.Contains("VesperaAttack.Spec", actor, StringComparison.Ordinal);
+        var root = TestRepo.Root;
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigActor.cs"));
+        BlenderRigCastTests.AssertCast("Vespera", VesperaMotion.Spec, VesperaAttack.Spec);
         var driver = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigAttackDriver.cs"));
         Assert.Contains("ParticleSystem", driver, StringComparison.Ordinal);
         Assert.Contains("TrailRenderer", driver, StringComparison.Ordinal);
@@ -213,21 +213,5 @@ public sealed class VesperaAttackTests
         using var md5 = MD5.Create();
         using var stream = File.OpenRead(path);
         return Convert.ToHexString(md5.ComputeHash(stream)).ToLowerInvariant();
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (Directory.Exists(Path.Combine(dir.FullName, "Assets")) && Directory.Exists(Path.Combine(dir.FullName, "tests")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new InvalidOperationException("Repo root not found.");
     }
 }

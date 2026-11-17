@@ -75,7 +75,7 @@ namespace Survival.Domain.Heroes
         };
 
         public static readonly BlenderRigAttackSpec Spec = new BlenderRigAttackSpec(
-            "Rowan",
+            FighterNames.Rowan,
             FileName,
             FileMd5,
             DesignDir,

@@ -33,7 +33,7 @@ public sealed class LyraAttackTests
     [Fact]
     public void Lyra_attacks_2_and_3_are_retargeted_mixamo_bakes_on_her_rig_wired_into_the_battle_rotation()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var pack = Path.Combine(root, "Assets", LyraMotion.ThemePackDir);
         var design = Path.Combine(root, LyraMotion.DesignMixamoAttacksDir.Replace('/', Path.DirectorySeparatorChar));
         var sums = File.ReadAllText(Path.Combine(design, "CHECKSUMS.md5"));
@@ -86,7 +86,7 @@ public sealed class LyraAttackTests
     [Fact]
     public void Lyra_attack_fbx_props_and_design_sot_match_design_md5()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var pack = Path.Combine(root, "Assets", LyraMotion.ThemePackDir);
         var design = Path.Combine(root, LyraAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
         Assert.Equal("ab3e887dde3d8a142278ff8972e641e8", LyraAttack.FileMd5);
@@ -220,11 +220,11 @@ public sealed class LyraAttackTests
     [Fact]
     public void Lyra_attack_is_wired_in_the_actor_and_has_no_demo_menu()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
         Assert.DoesNotContain("Survival/Lyra Demo (rest + walk + attack, Game view 1080x1920)", editor, StringComparison.Ordinal);
-        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "LyraActor.cs"));
-        Assert.Contains("LyraAttack.Spec", actor, StringComparison.Ordinal);
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigActor.cs"));
+        BlenderRigCastTests.AssertCast("Lyra", LyraMotion.Spec, LyraAttack.Spec);
         var driver = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigAttackDriver.cs"));
         Assert.Contains("ParticleSystem", driver, StringComparison.Ordinal);
         Assert.Contains("TrailRenderer", driver, StringComparison.Ordinal);
@@ -236,21 +236,5 @@ public sealed class LyraAttackTests
         using var md5 = MD5.Create();
         using var stream = File.OpenRead(path);
         return Convert.ToHexString(md5.ComputeHash(stream)).ToLowerInvariant();
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (Directory.Exists(Path.Combine(dir.FullName, "Assets")) && Directory.Exists(Path.Combine(dir.FullName, "tests")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new InvalidOperationException("Repo root not found.");
     }
 }

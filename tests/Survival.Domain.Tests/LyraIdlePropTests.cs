@@ -27,7 +27,7 @@ public sealed class LyraIdlePropTests
         Assert.InRange(len, 0.999, 1.001);
         Assert.All(prop.PropExtent, e => Assert.True(e > 0f));
 
-        using var meta = JsonDocument.Parse(File.ReadAllText(Path.Combine(FindRepoRoot(), PropsDir, "LYRA_staff_meta.json")));
+        using var meta = JsonDocument.Parse(File.ReadAllText(Path.Combine(TestRepo.Root, PropsDir, "LYRA_staff_meta.json")));
         Assert.Equal(prop.Bone, meta.RootElement.GetProperty("parent_bone").GetString());
 
         var track = prop.ToTrack();
@@ -42,7 +42,7 @@ public sealed class LyraIdlePropTests
     public void Lyra_idle_prop_rest_matches_design_rest_world_in_unity_axes()
     {
         var prop = LyraMotion.IdleProps[0];
-        using var meta = JsonDocument.Parse(File.ReadAllText(Path.Combine(FindRepoRoot(), PropsDir, "LYRA_staff_meta.json")));
+        using var meta = JsonDocument.Parse(File.ReadAllText(Path.Combine(TestRepo.Root, PropsDir, "LYRA_staff_meta.json")));
         var rows = meta.RootElement.GetProperty("rest_world_blender");
         var m = new double[3, 4];
         for (var r = 0; r < 3; r++)
@@ -83,7 +83,7 @@ public sealed class LyraIdlePropTests
     [Fact]
     public void Lyra_idle_prop_file_matches_design_props_md5()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var prop = LyraMotion.IdleProps[0];
         Assert.Equal("69872fb5cf0f1a515b0e17ca884bccc1", prop.PropFileMd5);
         Assert.Equal(prop.PropFileMd5, Md5(Path.Combine(root, "Assets", LyraMotion.ThemePackDir, prop.PropFileName)));
@@ -118,7 +118,7 @@ public sealed class LyraIdlePropTests
             Assert.Equal(idle.DesignRest[i], new[] { held.Frames[0].X, held.Frames[0].Y, held.Frames[0].Z }[i], 4);
         }
 
-        var driver = File.ReadAllText(Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "BlenderRigAttackDriver.cs"));
+        var driver = File.ReadAllText(Path.Combine(TestRepo.Root, "Assets", "Survival", "Unity", "BlenderRigAttackDriver.cs"));
         Assert.Contains("IdleStandIn(track.ObjectName)", driver);
         Assert.Contains("if (!visible && view.StandsInForAttack)", driver);
     }
@@ -126,9 +126,9 @@ public sealed class LyraIdlePropTests
     [Fact]
     public void Lyra_idle_prop_is_bound_on_the_bone_and_hidden_during_attack()
     {
-        var unity = Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity");
-        var actor = File.ReadAllText(Path.Combine(unity, "LyraActor.cs"));
-        Assert.Contains("LyraMotion.IdleProps", actor);
+        var unity = Path.Combine(TestRepo.Root, "Assets", "Survival", "Unity");
+        var actor = File.ReadAllText(Path.Combine(unity, "BlenderRigActor.cs"));
+        Assert.Same(LyraMotion.IdleProps, BlenderRigCastTests.AssertCast("Lyra", LyraMotion.Spec).IdleProps);
 
         var player = File.ReadAllText(Path.Combine(unity, "BlenderRigPlayer.cs"));
         Assert.Contains("_attack.BindIdleProps(_idleProps)", player);
@@ -223,21 +223,5 @@ public sealed class LyraIdlePropTests
         using var md5 = MD5.Create();
         using var stream = File.OpenRead(path);
         return Convert.ToHexString(md5.ComputeHash(stream)).ToLowerInvariant();
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (Directory.Exists(Path.Combine(dir.FullName, "Assets")) && Directory.Exists(Path.Combine(dir.FullName, "tests")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new InvalidOperationException("Repo root not found.");
     }
 }

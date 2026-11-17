@@ -172,9 +172,6 @@ namespace Survival.Domain.Alliance
 
         public void Leave(Action<bool>? done = null) => Call("POST", "/v1/alliances/leave", "{}", _ => RefreshMe(done), done);
 
-        public void SetRole(long playerId, int role, Action<bool>? done = null) =>
-            Call("POST", "/v1/alliances/role", "{\"playerId\":" + playerId + ",\"role\":" + role + "}", _ => RefreshMe(done), done);
-
         /// <summary>Poll for new chat lines (call every few seconds while the chat tab is open).</summary>
         public void PollChat(Action<bool>? done = null) => Call("GET", "/v1/chat?after=" + _lastChatId, null, o =>
         {

@@ -8,7 +8,7 @@ namespace Survival.Domain.Tests;
 public sealed class LockedBattleGroundingTests
 {
     private static string Unity(string file) =>
-        File.ReadAllText(Path.Combine(ArcherExtraAttackTests.FindRepoRoot(), "Assets", "Survival", "Unity", file));
+        File.ReadAllText(Path.Combine(TestRepo.Root, "Assets", "Survival", "Unity", file));
 
     [Fact]
     public void Every_fighter_is_planted_on_the_ground_by_the_host_only()

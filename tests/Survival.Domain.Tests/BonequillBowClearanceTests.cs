@@ -17,7 +17,7 @@ public sealed class BonequillBowClearanceTests
     [Fact]
     public void Bow_clears_body_and_cloak_on_every_frame_and_half_frame()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, BonequillMotion.DesignDir, "work", "bow_clearance.json")));
         var r = doc.RootElement;
 
@@ -46,7 +46,7 @@ public sealed class BonequillBowClearanceTests
     [Fact]
     public void Bow_hand_is_a_closed_grip_on_finger_bones_without_stretch()
     {
-        using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(FindRepoRoot(), BonequillMotion.DesignDir, "work", "bow_clearance.json")));
+        using var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(TestRepo.Root, BonequillMotion.DesignDir, "work", "bow_clearance.json")));
         var g = doc.RootElement.GetProperty("grip");
         Assert.True(Math.Abs(g.GetProperty("finger_len_change_pct").GetDouble()) <= 3.0, "finger length must stay within 3% of the Meshy hand");
         Assert.True(g.GetProperty("hole_radius").GetDouble() >= 0.0255, "grip hole must clear the 2.4 cm bow grip");
@@ -61,22 +61,11 @@ public sealed class BonequillBowClearanceTests
     [Fact]
     public void Idle_bow_is_bound_to_the_hand_in_the_keyed_attack_pose_not_the_bind_pose()
     {
-        var src = File.ReadAllText(Path.Combine(FindRepoRoot(), "Assets", "Survival", "Unity", "BlenderRigPlayer.cs"));
+        var src = File.ReadAllText(Path.Combine(TestRepo.Root, "Assets", "Survival", "Unity", "BlenderRigPlayer.cs"));
         int bind = src.IndexOf("_attack.BindIdleProps(_idleProps)", StringComparison.Ordinal);
         int sample = src.LastIndexOf("SampleAttackFrame(BlenderRigAttackSpec.FirstFrame)", bind, StringComparison.Ordinal);
         Assert.True(bind > 0 && sample > 0 && src.IndexOf("BindIdlePropsAtAttackRest", StringComparison.Ordinal) > 0,
             "idle props must be bound after the attack clip is sampled at frame 0, or the bow floats beside the palm");
         Assert.Equal(1, System.Text.RegularExpressions.Regex.Matches(src, @"_attack\.BindIdleProps\(").Count);
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "Assets", "ThemePack", "fantasy_kingdom_a", "pack.json")))
-        {
-            dir = dir.Parent;
-        }
-
-        return dir?.FullName ?? throw new DirectoryNotFoundException("repo root");
     }
 }

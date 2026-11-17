@@ -138,8 +138,6 @@ namespace Survival.Domain.Roster
 
         public string Title => Name.ToUpperInvariant();
 
-        public string DropdownObjectName => Name + "ClipDropdown";
-
         public string SceneFileName => Name + ".unity";
 
         public string RestThemePackRel => ThemePackDir + "/" + RestFileName;

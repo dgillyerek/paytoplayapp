@@ -1068,7 +1068,7 @@ namespace Survival.Unity
                             f.Attack();
                         }
 
-                        if (_run?.Foe(e.Id) is { Unit: { Ranged: false, Roster: "Ashwyrm" } } wyrm)
+                        if (_run?.Foe(e.Id) is { Unit: { Ranged: false, Roster: FighterNames.Ashwyrm } } wyrm)
                         {
                             AshwyrmBreath(new Vector3(wyrm.X, 0f, wyrm.Z), at);
                         }
@@ -1262,7 +1262,7 @@ namespace Survival.Unity
                 var foes = _run.Foes;
                 for (var i = 0; i < foes.Count; i++)
                 {
-                    if (foes[i].Boss && foes[i].Unit.Roster == "Vorgath")
+                    if (foes[i].Boss && foes[i].Unit.Roster == FighterNames.Vorgath)
                     {
                         return S("runner.boss_incoming_vorgath", "Vorgath blocks the road!");
                     }
@@ -1570,7 +1570,7 @@ namespace Survival.Unity
             if (s.ByFoe)
             {
                 // The shooter may be dead already; the shot keeps its look.
-                return _foes.TryGetValue(s.Shooter, out var rig) ? rig.Data.Name : "Bonequill";
+                return _foes.TryGetValue(s.Shooter, out var rig) ? rig.Data.Name : FighterNames.Bonequill;
             }
 
             return _run.Member(s.Shooter)?.Unit.Roster ?? "";
@@ -1580,24 +1580,24 @@ namespace Survival.Unity
         {
             switch (name)
             {
-                case "Lyra":
+                case FighterNames.Lyra:
                     core = new Color(0.85f, 0.75f, 1f, 1f);
                     glow = new Color(0.55f, 0.4f, 1f, 0.9f);
                     return;
-                case "Vespera":
+                case FighterNames.Vespera:
                     core = new Color(1f, 0.6f, 0.9f, 1f);
                     glow = new Color(0.85f, 0.2f, 0.65f, 0.9f);
                     return;
-                case "Rowan":
+                case FighterNames.Rowan:
                     // Rowan's fletching: green goose feathers.
                     core = new Color(0.3f, 0.5f, 0.28f, 1f);
                     glow = new Color(1f, 0.85f, 0.4f, 0.7f);
                     return;
-                case "Oakenshield":
+                case FighterNames.Oakenshield:
                     core = new Color(0.55f, 0.85f, 0.35f, 1f);
                     glow = new Color(0.4f, 0.9f, 0.3f, 0.7f);
                     return;
-                case "Bonequill":
+                case FighterNames.Bonequill:
                     // Bonequill's fletching: bone-white.
                     core = new Color(0.92f, 0.9f, 0.82f, 1f);
                     glow = new Color(0.6f, 0.95f, 0.7f, 0.7f);
@@ -1801,19 +1801,5 @@ namespace Survival.Unity
         public void OnPointerDown(PointerEventData eventData) => View?.Press(eventData.pointerId >= 0);
 
         public void OnDrag(PointerEventData eventData) => View?.Drag(eventData.delta.x);
-    }
-
-    public sealed class RunnerAutoDestroy : MonoBehaviour
-    {
-        public float Seconds = 0.3f;
-
-        private void Update()
-        {
-            Seconds -= Time.deltaTime;
-            if (Seconds <= 0f)
-            {
-                Destroy(gameObject);
-            }
-        }
     }
 }

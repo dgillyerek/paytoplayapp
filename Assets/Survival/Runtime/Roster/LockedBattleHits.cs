@@ -242,7 +242,7 @@ namespace Survival.Domain.Roster
         public static readonly float[] SirAldricBlueRgb = { 27f / 255f, 48f / 255f, 96f / 255f };
 
         public static readonly LockedBattleHitProfile Emberfang = new LockedBattleHitProfile(
-            "Emberfang",
+            FighterNames.Emberfang,
             BattleImpactKind.FireBurst,
             true,
             -1,
@@ -256,7 +256,7 @@ namespace Survival.Domain.Roster
             0.025f);
 
         public static readonly LockedBattleHitProfile Stormcrest = new LockedBattleHitProfile(
-            "Stormcrest",
+            FighterNames.Stormcrest,
             BattleImpactKind.StormCrackle,
             true,
             -1,
@@ -270,7 +270,7 @@ namespace Survival.Domain.Roster
             0.045f);
 
         public static readonly LockedBattleHitProfile Nightfang = new LockedBattleHitProfile(
-            "Nightfang",
+            FighterNames.Nightfang,
             BattleImpactKind.ShadowRake,
             false,
             NightfangContactFrame,
@@ -284,7 +284,7 @@ namespace Survival.Domain.Roster
             0f);
 
         public static readonly LockedBattleHitProfile Ironhowl = new LockedBattleHitProfile(
-            "Ironhowl",
+            FighterNames.Ironhowl,
             BattleImpactKind.IronClaw,
             false,
             IronhowlContactFrame,
@@ -304,7 +304,7 @@ namespace Survival.Domain.Roster
         /// human-height spear, so Emberfang's low fireball (about 0.6 m up) bursts on the chest, not in the air.
         /// </summary>
         public static readonly LockedBattleHitProfile Ashwyrm = new LockedBattleHitProfile(
-            "Ashwyrm",
+            FighterNames.Ashwyrm,
             BattleImpactKind.VoidFireBreath,
             true,
             -1,
@@ -318,7 +318,7 @@ namespace Survival.Domain.Roster
             0.035f);
 
         public static readonly LockedBattleHitProfile Vespera = new LockedBattleHitProfile(
-            "Vespera",
+            FighterNames.Vespera,
             BattleImpactKind.ArcaneConjure,
             true,
             -1,
@@ -332,7 +332,7 @@ namespace Survival.Domain.Roster
             0.025f);
 
         public static readonly LockedBattleHitProfile Lyra = new LockedBattleHitProfile(
-            "Lyra",
+            FighterNames.Lyra,
             BattleImpactKind.StaffLight,
             true,
             -1,
@@ -346,7 +346,7 @@ namespace Survival.Domain.Roster
             0.02f);
 
         public static readonly LockedBattleHitProfile Oakenshield = new LockedBattleHitProfile(
-            "Oakenshield",
+            FighterNames.Oakenshield,
             BattleImpactKind.LeafEarth,
             true,
             -1,
@@ -364,7 +364,7 @@ namespace Survival.Domain.Roster
         /// (tight plate, no cape: the soft cape is never attached, so no loose cloth to clip).
         /// </summary>
         public static readonly LockedBattleHitProfile SirAldric = new LockedBattleHitProfile(
-            "Sir Aldric",
+            FighterNames.SirAldric,
             BattleImpactKind.SwordSteel,
             false,
             SirAldricContactFrame,
@@ -379,7 +379,7 @@ namespace Survival.Domain.Roster
 
         /// <summary>Lane 5 villain. Body box fits the 1.90 m trunk and antlers with arms down at idle.</summary>
         public static readonly LockedBattleHitProfile Blightroot = new LockedBattleHitProfile(
-            "Blightroot",
+            FighterNames.Blightroot,
             BattleImpactKind.BlightRot,
             false,
             BlightrootContactFrame,
@@ -394,7 +394,7 @@ namespace Survival.Domain.Roster
 
         /// <summary>Lane 6 hero archer. Body box fits the 1.80 m rest mesh without the A-pose arms or coat tails.</summary>
         public static readonly LockedBattleHitProfile Rowan = new LockedBattleHitProfile(
-            "Rowan",
+            FighterNames.Rowan,
             BattleImpactKind.RangerArrow,
             true,
             -1,
@@ -413,7 +413,7 @@ namespace Survival.Domain.Roster
         /// is also a contact on the snout so the battle lands it on the lunge rather than as a free projectile.
         /// </summary>
         public static readonly LockedBattleHitProfile Vorgath = new LockedBattleHitProfile(
-            "Vorgath",
+            FighterNames.Vorgath,
             BattleImpactKind.GroundSlam,
             false,
             VorgathMotion.SlamContactFrame,
@@ -427,7 +427,7 @@ namespace Survival.Domain.Roster
             0.05f);
 
         public static readonly LockedBattleHitProfile Bonequill = new LockedBattleHitProfile(
-            "Bonequill",
+            FighterNames.Bonequill,
             BattleImpactKind.BoneShard,
             true,
             -1,
@@ -444,31 +444,31 @@ namespace Survival.Domain.Roster
         {
             switch (name)
             {
-                case "Emberfang":
+                case FighterNames.Emberfang:
                     return Emberfang;
-                case "Stormcrest":
+                case FighterNames.Stormcrest:
                     return Stormcrest;
-                case "Nightfang":
+                case FighterNames.Nightfang:
                     return Nightfang;
-                case "Ironhowl":
+                case FighterNames.Ironhowl:
                     return Ironhowl;
-                case "Ashwyrm":
+                case FighterNames.Ashwyrm:
                     return Ashwyrm;
-                case "Vespera":
+                case FighterNames.Vespera:
                     return Vespera;
-                case "Lyra":
+                case FighterNames.Lyra:
                     return Lyra;
-                case "Oakenshield":
+                case FighterNames.Oakenshield:
                     return Oakenshield;
-                case "Sir Aldric":
+                case FighterNames.SirAldric:
                     return SirAldric;
-                case "Blightroot":
+                case FighterNames.Blightroot:
                     return Blightroot;
-                case "Rowan":
+                case FighterNames.Rowan:
                     return Rowan;
-                case "Bonequill":
+                case FighterNames.Bonequill:
                     return Bonequill;
-                case "Vorgath":
+                case FighterNames.Vorgath:
                     return Vorgath;
                 default:
                     throw new ArgumentException("No locked battle hit profile for " + name, nameof(name));

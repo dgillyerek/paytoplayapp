@@ -163,9 +163,6 @@ namespace Survival.Domain.View
         public (float X, float Y) WorldToScreen(float worldX, float worldY) =>
             ((worldX - CenterX) * Zoom, (worldY - CenterY) * Zoom);
 
-        public bool IsVisible(float worldX, float worldY, float margin = 0f) =>
-            worldX >= Left - margin && worldX <= Right + margin && worldY >= Bottom - margin && worldY <= Top + margin;
-
         private void Clamp()
         {
             CenterX = ClampAxis(CenterX, ViewWidth / Zoom, WorldWidth);

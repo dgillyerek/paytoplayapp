@@ -183,19 +183,6 @@ namespace Survival.Domain.Campaign
 
         public CampaignHeroDef? Hero(string id) => _byId.TryGetValue(id, out var h) ? h : null;
 
-        public CampaignHeroDef? ByFighter(string fighterName)
-        {
-            foreach (var h in Heroes)
-            {
-                if (string.Equals(h.Fighter, fighterName, StringComparison.Ordinal))
-                {
-                    return h;
-                }
-            }
-
-            return null;
-        }
-
         public StageDef? Stage(string id) => _stages.TryGetValue(id, out var s) ? s : null;
 
         public int StageIndex(string id)

@@ -717,11 +717,6 @@ namespace Survival.Unity
                 return;
             }
 
-            // Multi-scene Editor hierarchy: a prior Blightroot (or any) demo left open alongside
-            // BattleLocked would otherwise keep playing in Game view. Strip every stray Blightroot
-            // demo actor before we spawn the ten roster fighters. The lane-5 Blightroot this
-            // battle spawns under its own root is exempt.
-            StripLeftoverDemoActors();
             _booted = true;
             SurvivalVisuals.EnsureEventSystem();
 
@@ -795,37 +790,6 @@ namespace Survival.Unity
 
 
         /// <summary>
-        /// Destroys leftover Survival demo actors from other scenes still loaded in the Editor
-        /// (Blightroot in particular: its demo scene is often left open next to BattleLocked).
-        /// Lane 5 exception: a BlightrootActor under this battle's own root is the roster
-        /// Blightroot and is kept. Roster fighters spawn under this transform after this runs.
-        /// </summary>
-        private void StripLeftoverDemoActors()
-        {
-            foreach (var actor in Object.FindObjectsByType<BlightrootActor>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            {
-                if (actor != null && !IsOwnLaneFighter(actor.transform))
-                {
-                    Object.Destroy(actor.gameObject);
-                }
-            }
-
-            foreach (var demo in Object.FindObjectsByType<BlightrootDemo>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            {
-                if (demo != null)
-                {
-                    Object.Destroy(demo.gameObject);
-                }
-            }
-        }
-
-        /// <summary>True for an actor this battle spawned itself (the lane-5 Blightroot).</summary>
-        private bool IsOwnLaneFighter(Transform actor)
-        {
-            return actor.IsChildOf(transform);
-        }
-
-        /// <summary>
         /// Bounds of the visible body renderers in the host frame. Only used for the two lane-5
         /// actors, which have no VisibleBounds of their own. The host sits at the origin,
         /// unrotated and unscaled, when this runs.
@@ -879,7 +843,7 @@ namespace Survival.Unity
             BlenderRigAttackDriver? driver = null;
             switch (data.Name)
             {
-                case "Emberfang":
+                case FighterNames.Emberfang:
                 {
                     var actor = host.AddComponent<EmberfangActor>();
                     actor.Build();
@@ -888,16 +852,7 @@ namespace Survival.Unity
                     break;
                 }
 
-                case "Stormcrest":
-                {
-                    var actor = host.AddComponent<StormcrestActor>();
-                    actor.Build();
-                    f.Bind(actor.PlayPose, () => actor.Pose, actor.Built, actor.VisibleBounds);
-                    driver = actor.AttackDriver;
-                    break;
-                }
-
-                case "Vorgath":
+                case FighterNames.Vorgath:
                 {
                     var actor = host.AddComponent<VorgathActor>();
                     actor.Build();
@@ -905,7 +860,7 @@ namespace Survival.Unity
                     break;
                 }
 
-                case "Ironhowl":
+                case FighterNames.Ironhowl:
                 {
                     var actor = host.AddComponent<IronhowlActor>();
                     actor.Build();
@@ -913,52 +868,7 @@ namespace Survival.Unity
                     break;
                 }
 
-                case "Nightfang":
-                {
-                    var actor = host.AddComponent<NightfangActor>();
-                    actor.Build();
-                    f.Bind(actor.PlayPose, () => actor.Pose, actor.Built, actor.VisibleBounds);
-                    driver = actor.AttackDriver;
-                    break;
-                }
-
-                case "Lyra":
-                {
-                    var actor = host.AddComponent<LyraActor>();
-                    actor.Build();
-                    f.Bind(actor.PlayPose, () => actor.Pose, actor.Built, actor.VisibleBounds);
-                    driver = actor.AttackDriver;
-                    break;
-                }
-
-                case "Oakenshield":
-                {
-                    var actor = host.AddComponent<OakenshieldActor>();
-                    actor.Build();
-                    f.Bind(actor.PlayPose, () => actor.Pose, actor.Built, actor.VisibleBounds);
-                    driver = actor.AttackDriver;
-                    break;
-                }
-
-                case "Vespera":
-                {
-                    var actor = host.AddComponent<VesperaActor>();
-                    actor.Build();
-                    f.Bind(actor.PlayPose, () => actor.Pose, actor.Built, actor.VisibleBounds);
-                    driver = actor.AttackDriver;
-                    break;
-                }
-
-                case "Ashwyrm":
-                {
-                    var actor = host.AddComponent<AshwyrmActor>();
-                    actor.Build();
-                    f.Bind(actor.PlayPose, () => actor.Pose, actor.Built, actor.VisibleBounds);
-                    driver = actor.AttackDriver;
-                    break;
-                }
-
-                case "Sir Aldric":
+                case FighterNames.SirAldric:
                 {
                     // The pilot actor tunes the global ambient and reflections for its own
                     // scene; keep the battle's.
@@ -981,7 +891,7 @@ namespace Survival.Unity
                     break;
                 }
 
-                case "Blightroot":
+                case FighterNames.Blightroot:
                 {
                     // Own pivot: the actor's stand-up turn and foot plant write its transform,
                     // and the host's transform belongs to the body scale and the hit flinch.
@@ -1000,7 +910,7 @@ namespace Survival.Unity
                     break;
                 }
 
-                case "Rowan":
+                case FighterNames.Rowan:
                 {
                     var actor = host.AddComponent<RowanActor>();
                     actor.Build();
@@ -1009,7 +919,7 @@ namespace Survival.Unity
                     break;
                 }
 
-                case "Bonequill":
+                case FighterNames.Bonequill:
                 {
                     var actor = host.AddComponent<BonequillActor>();
                     actor.Build();
@@ -1019,8 +929,20 @@ namespace Survival.Unity
                 }
 
                 default:
-                    Debug.LogError("Locked battle has no actor for " + data.Name);
+                {
+                    // Every plain Blender-rig fighter (Lyra, Oakenshield, Stormcrest, Vespera, Nightfang, Ashwyrm).
+                    if (!BlenderRigCast.TryFind(data.Name, out var cast))
+                    {
+                        Debug.LogError("Locked battle has no actor for " + data.Name);
+                        break;
+                    }
+
+                    var actor = host.AddComponent<BlenderRigActor>();
+                    actor.Build(cast);
+                    f.Bind(actor.PlayPose, () => actor.Pose, actor.Built, actor.VisibleBounds);
+                    driver = actor.AttackDriver;
                     break;
+                }
             }
 
             if (!f.Built)
@@ -1162,7 +1084,7 @@ namespace Survival.Unity
         {
             switch (name)
             {
-                case "Sir Aldric":
+                case FighterNames.SirAldric:
                 {
                     // Steel white core, bright blue glow, Sir Aldric's #1b3060 blue at the edge.
                     var blue = LockedBattleHits.SirAldricBlueRgb;
@@ -1172,12 +1094,12 @@ namespace Survival.Unity
                     return;
                 }
 
-                case "Blightroot":
+                case FighterNames.Blightroot:
                     core = new Color(0.90f, 0.70f, 1f, 1f);
                     glow = new Color(0.58f, 0.22f, 0.86f, 0.85f);
                     edge = new Color(0.26f, 0.08f, 0.38f, 0.55f);
                     return;
-                case "Vorgath":
+                case FighterNames.Vorgath:
                     core = new Color(1f, 0.72f, 0.35f, 1f);
                     glow = new Color(0.85f, 0.28f, 0.12f, 0.85f);
                     edge = new Color(0.45f, 0.10f, 0.55f, 0.55f);
@@ -1187,32 +1109,32 @@ namespace Survival.Unity
             BlenderRigAttackSpec? spec = null;
             switch (name)
             {
-                case "Emberfang":
+                case FighterNames.Emberfang:
                     spec = EmberfangAttack.Spec;
                     break;
-                case "Stormcrest":
+                case FighterNames.Stormcrest:
                     spec = StormcrestAttack.Spec;
                     break;
-                case "Nightfang":
+                case FighterNames.Nightfang:
                     spec = NightfangAttack.Spec;
                     break;
-                case "Lyra":
+                case FighterNames.Lyra:
                     spec = LyraAttack.Spec;
                     break;
-                case "Oakenshield":
+                case FighterNames.Oakenshield:
                     spec = OakenshieldAttack.Spec;
                     break;
-                case "Vespera":
+                case FighterNames.Vespera:
                     spec = VesperaAttack.Spec;
                     break;
-                case "Ashwyrm":
+                case FighterNames.Ashwyrm:
                     spec = AshwyrmAttack.Spec;
                     break;
-                case "Rowan":
-                case "Bonequill":
+                case FighterNames.Rowan:
+                case FighterNames.Bonequill:
                 {
                     // Archers: the arrow mesh track carries no colours, so take the arrow trail's.
-                    var archer = name == "Rowan" ? RowanAttack.Spec : BonequillAttack.Spec;
+                    var archer = name == FighterNames.Rowan ? RowanAttack.Spec : BonequillAttack.Spec;
                     foreach (var trail in archer.Tracks)
                     {
                         if (trail.Kind == AttackTrackKind.Projectile && trail.CoreRgb != null && trail.CoreRgb.Length >= 3)

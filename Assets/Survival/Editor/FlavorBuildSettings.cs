@@ -1,4 +1,3 @@
-using System.IO;
 using System.Linq;
 using Survival.Domain.Ids;
 using UnityEditor;
@@ -168,7 +167,7 @@ namespace Survival.Editor
         /// boxes down for followers and upgrades, beat Ironhowl at the end. Also reachable from Play's Runner button, which
         /// needs the scene in Build Settings; this entry adds it when missing.
         /// </summary>
-        [MenuItem("Survival/Runner: Walk & Fight")]
+        [MenuItem("Survival/Runner: Walk and Fight")]
         public static void OpenRunner()
         {
             if (!UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
@@ -194,30 +193,6 @@ namespace Survival.Editor
 
             scenes.Add(new EditorBuildSettingsScene(path, true));
             EditorBuildSettings.scenes = scenes.ToArray();
-        }
-
-        [MenuItem("Survival/Import locked Sir Aldric rear master")]
-        public static void ImportLockedRearMaster()
-        {
-            var repo = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
-            var drop = Path.Combine(repo, "design", "survival-theme-a-fantasy", "heroes", "anim", "sir_aldric", "UNITY_DROP_LOCKED");
-            var dest = Path.Combine(Application.dataPath, "ThemePack", "fantasy_kingdom_a", "art", "heroes");
-            Directory.CreateDirectory(dest);
-            var names = new[] { "SIR_ALDRIC_REAR_MASTER_LOCKED.png", "SIR_ALDRIC_REAR_MASTER_LOCKED_512.png" };
-            foreach (var name in names)
-            {
-                var from = Path.Combine(drop, name);
-                if (!File.Exists(from))
-                {
-                    Debug.LogError("Missing locked drop " + from);
-                    continue;
-                }
-
-                File.Copy(from, Path.Combine(dest, name), overwrite: true);
-            }
-
-            AssetDatabase.Refresh();
-            Debug.Log("Imported squared-up Sir Aldric rear master from UNITY_DROP_LOCKED.");
         }
     }
 }

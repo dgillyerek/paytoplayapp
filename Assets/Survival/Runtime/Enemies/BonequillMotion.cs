@@ -120,7 +120,7 @@ namespace Survival.Domain.Enemies
         };
 
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(
-            "Bonequill",
+            FighterNames.Bonequill,
             ThemePackDir,
             RestFileName,
             RejectedMixamoFileName,

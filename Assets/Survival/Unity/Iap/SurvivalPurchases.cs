@@ -30,7 +30,10 @@ namespace Survival.Unity.Iap
         /// Unknown age may buy only when Product's spec says so. It has not, so this stays false: with no age screen yet,
         /// live purchases are blocked until the player's band is set to 13plus (or under13 with consent).
         /// </summary>
-        public static bool AllowUnknownAge { get; set; }
+        public const bool AllowUnknownAge = false;
+
+        /// <summary>The age-band + parental-consent gate every purchase service uses (live and the dev sandbox).</summary>
+        public static AgeBandPurchaseGate AgeGate() => new AgeBandPurchaseGate(() => CurrentAgeBand, new DeferredConsent(), AllowUnknownAge);
 
         /// <summary>
         /// The age band from the first-launch neutral age gate (Kids.KidSafety, signed on-device record). That answer is the
@@ -44,7 +47,7 @@ namespace Survival.Unity.Iap
         {
             PlayerPrefs.SetString(AgeBandPref, AgeBands.Id(band));
             PlayerPrefs.Save();
-            SurvivalCampaignView.AllianceNet?.SetAgeBand(AgeBands.Id(band));
+            AllianceClient.Net?.SetAgeBand(AgeBands.Id(band));
         }
 
         /// <summary>The live service when this build uses one (for Restore buttons and the localized price).</summary>
@@ -83,16 +86,13 @@ namespace Survival.Unity.Iap
                     return new DisabledPurchaseService("iap.no_reward_table");
                 }
 
-                var api = PlayerPrefs.GetString("alliance.api", SurvivalCampaignView.DefaultAllianceApi);
-                if (string.IsNullOrWhiteSpace(api))
-                {
-                    api = SurvivalCampaignView.DefaultAllianceApi;
-                }
+                // Purchases always validate on the server, even when the alliance itself is switched off.
+                var api = AllianceClient.ApiUrl.Length > 0 ? AllianceClient.ApiUrl : AllianceClient.DefaultApi;
 
                 // Same account as the alliance client: reuse its bearer token, never sign in a second time.
-                var verifier = new ServerReceiptVerifier(new UnityAllianceTransport(runner, api), () => SurvivalCampaignView.AllianceNet?.SessionToken);
+                var verifier = new ServerReceiptVerifier(new UnityAllianceTransport(runner, api), () => AllianceClient.SessionToken);
                 var live = new PurchaseService(new UnityIapStore(), verifier, new PlayerPrefsAppliedPurchases(), rewards.ProductsFor(products.Values),
-                    new AgeBandPurchaseGate(() => CurrentAgeBand, new DeferredConsent(), AllowUnknownAge));
+                    AgeGate());
                 live.Initialize();
                 runner.StartCoroutine(RetryUnverified(live));
                 Live = live;
@@ -114,7 +114,7 @@ namespace Survival.Unity.Iap
             while (true)
             {
                 yield return new WaitForSecondsRealtime(15f);
-                if (live.UnverifiedCount > 0 && !string.IsNullOrEmpty(SurvivalCampaignView.AllianceNet?.SessionToken))
+                if (live.UnverifiedCount > 0 && !string.IsNullOrEmpty(AllianceClient.SessionToken))
                 {
                     live.RetryUnverified();
                 }

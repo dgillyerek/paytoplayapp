@@ -24,7 +24,7 @@ public sealed class BonequillCapeSettleTests
     [Fact]
     public void Cape_settles_smoothly_within_half_a_second_of_the_shot()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var path = Path.Combine(root, BonequillMotion.DesignDir, "work", "cape_attack_sim.json");
         using var doc = JsonDocument.Parse(File.ReadAllText(path));
         var samples = doc.RootElement.GetProperty("samples").EnumerateArray().ToArray();
@@ -104,16 +104,5 @@ public sealed class BonequillCapeSettleTests
 
             return new ClothCollider(head, tail, c.RadiusMetres);
         }).ToArray();
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null && !File.Exists(Path.Combine(dir.FullName, "Assets", "ThemePack", "fantasy_kingdom_a", "pack.json")))
-        {
-            dir = dir.Parent;
-        }
-
-        return dir?.FullName ?? throw new DirectoryNotFoundException("repo root");
     }
 }

@@ -184,21 +184,6 @@ namespace Survival.Domain.TrophyHall
             return null;
         }
 
-        /// <summary>Order for the list: ready first, then in progress, claimed last (stable within each group).</summary>
-        public List<TrophyDef> Sorted()
-        {
-            var list = new List<TrophyDef>(Trophies);
-            var rank = new Dictionary<string, int>();
-            for (var i = 0; i < list.Count; i++)
-            {
-                var t = list[i];
-                rank[t.Id] = ((IsReady(t) ? 0 : IsClaimed(t.Id) ? 2 : 1) * 1000) + i;
-            }
-
-            list.Sort((a, b) => rank[a.Id].CompareTo(rank[b.Id]));
-            return list;
-        }
-
         public string Save()
         {
             var w = new JsonWriter();

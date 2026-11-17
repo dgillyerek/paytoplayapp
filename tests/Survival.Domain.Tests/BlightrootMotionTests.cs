@@ -99,7 +99,7 @@ public sealed class BlightrootMotionTests
     [Fact]
     public void Files_match_catalog_md5_and_mixamo_take()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var body = Path.Combine(root, "Assets", BlightrootMotion.BodyThemePackRel);
         Assert.True(File.Exists(body));
         Assert.Equal(BlightrootMotion.BodyMd5, Md5(body));
@@ -137,9 +137,8 @@ public sealed class BlightrootMotionTests
     [Fact]
     public void Actor_plays_named_clips_on_the_skinned_body_and_rejects_empty_takes()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlightrootActor.cs"));
-        var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlightrootDemo.cs"));
         Assert.Contains("BlightrootDualWeaponCombo", actor, StringComparison.Ordinal);
         Assert.Contains("ThemePackBody", actor, StringComparison.Ordinal);
         Assert.Contains("PlayNamedClip", actor, StringComparison.Ordinal);
@@ -194,18 +193,6 @@ public sealed class BlightrootMotionTests
         Assert.DoesNotContain("SetSpeed(-", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("\"Scene\"", actor, StringComparison.Ordinal);
 
-        Assert.Contains("BlightrootClipDropdown", demo, StringComparison.Ordinal);
-        Assert.Contains("BlightrootMotion.Clips", demo, StringComparison.Ordinal);
-        Assert.Contains("ExactName", demo, StringComparison.Ordinal);
-        Assert.Contains("ApplyPlayCam", demo, StringComparison.Ordinal);
-        Assert.Contains("PlayCamFovDegrees", demo, StringComparison.Ordinal);
-        Assert.Contains("BlightrootMotion.GroundY", demo, StringComparison.Ordinal);
-        Assert.Contains("PlayCamOrbitEye", demo, StringComparison.Ordinal);
-        Assert.Contains("TickOrbit", demo, StringComparison.Ordinal);
-        Assert.Contains("1 Front", demo, StringComparison.Ordinal);
-        Assert.Contains("2 3/4", demo, StringComparison.Ordinal);
-        Assert.Contains("3 Rear", demo, StringComparison.Ordinal);
-        Assert.DoesNotContain("BtnClip_", demo, StringComparison.Ordinal);
 
         Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Blightroot.unity")), "one-character demo scenes were removed 2026-10-19");
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
@@ -238,21 +225,5 @@ public sealed class BlightrootMotionTests
         }
 
         return new string(chars);
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "Assets", "ThemePack", "fantasy_kingdom_a", "pack.json")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("repo root");
     }
 }

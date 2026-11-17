@@ -111,7 +111,7 @@ namespace Survival.Domain.Heroes
         };
 
         public static readonly BlenderRigSpec Spec = new BlenderRigSpec(
-            "Lyra",
+            FighterNames.Lyra,
             ThemePackDir,
             RestFileName,
             RejectedMixamoFileName,

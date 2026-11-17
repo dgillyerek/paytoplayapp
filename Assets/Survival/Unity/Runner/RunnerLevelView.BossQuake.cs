@@ -4,6 +4,7 @@ using Survival.Domain.Runner;
 using Survival.Domain.Theme;
 using UnityEngine;
 using UnityEngine.UI;
+using Survival.Domain.Roster;
 
 namespace Survival.Unity
 {
@@ -243,7 +244,7 @@ namespace Survival.Unity
                     // Start the signature clip so its hit lands with the quake: Ironhowl's pound, Vorgath's spit fire.
                     if (!_quakePounded && _quakeRig.RotatesAttacks)
                     {
-                        var vorgath = _quakeRig.Data.Name == "Vorgath";
+                        var vorgath = _quakeRig.Data.Name == FighterNames.Vorgath;
                         var lead = vorgath
                             ? VorgathMotion.SpitFireStartSeconds
                             : IronhowlMotion.Attack4ContactFrame / IronhowlMotion.FrameRate;

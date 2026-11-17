@@ -58,7 +58,7 @@ public sealed class BlenderRigRosterTests
             "11f3e71f3fc54d8baee7d5ea145bd473",
             "Survival/Ashwyrm Demo (rest + wing flap + walk + attack, Game view 1080x1920)");
 
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var rest = File.ReadAllBytes(Path.Combine(root, "Assets", AshwyrmMotion.RestThemePackRel));
         var flap = File.ReadAllBytes(Path.Combine(root, "Assets", AshwyrmMotion.FlapThemePackRel));
         foreach (var bone in AshwyrmMotion.BoneNames)
@@ -98,17 +98,14 @@ public sealed class BlenderRigRosterTests
         var player = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigPlayer.cs"));
         Assert.Contains("ExtraClips", player, StringComparison.Ordinal);
         Assert.Contains("AnimationClipPlayable.Create", player, StringComparison.Ordinal);
-        var demo = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigDemo.cs"));
-        Assert.Contains("spec.PoseNames", demo, StringComparison.Ordinal);
-        Assert.Contains("PlayNamedPose", demo, StringComparison.Ordinal);
     }
 
     [Fact]
     public void Player_binds_embedded_maps_and_does_not_rewrite_the_rig()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var player = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigPlayer.cs"));
-        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "AshwyrmActor.cs"));
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigActor.cs"));
         Assert.Contains("bakeAxisConversion = false", player, StringComparison.Ordinal);
         Assert.DoesNotContain("bakeAxisConversion = true", player, StringComparison.Ordinal);
         // The one pose write is the runner upper-body layer carrying the take's hips turn onto the spine each frame
@@ -123,7 +120,7 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("_BumpMap", player, StringComparison.Ordinal);
         Assert.Contains("IsRejectedMixamoRigFile", player, StringComparison.Ordinal);
         Assert.Contains("PlayPose", actor, StringComparison.Ordinal);
-        Assert.Contains("AshwyrmMotion.Spec", actor, StringComparison.Ordinal);
+        BlenderRigCastTests.AssertCast("Ashwyrm", AshwyrmMotion.Spec);
         AssertImportSkipsReimportWhenMetaAlreadyMatches(player);
 
         Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Ashwyrm.unity")), "one-character demo scenes were removed 2026-10-19");
@@ -157,9 +154,9 @@ public sealed class BlenderRigRosterTests
     [Fact]
     public void Nightfang_player_binds_embedded_maps_and_does_not_rewrite_the_rig()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var player = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigPlayer.cs"));
-        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "NightfangActor.cs"));
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigActor.cs"));
         Assert.Contains("bakeAxisConversion = false", player, StringComparison.Ordinal);
         Assert.DoesNotContain("bakeAxisConversion = true", player, StringComparison.Ordinal);
         // The one pose write is the runner upper-body layer carrying the take's hips turn onto the spine each frame
@@ -174,7 +171,7 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("_BumpMap", player, StringComparison.Ordinal);
         Assert.Contains("IsRejectedMixamoRigFile", player, StringComparison.Ordinal);
         Assert.Contains("PlayPose", actor, StringComparison.Ordinal);
-        Assert.Contains("NightfangMotion.Spec", actor, StringComparison.Ordinal);
+        BlenderRigCastTests.AssertCast("Nightfang", NightfangMotion.Spec);
 
         Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Nightfang.unity")), "one-character demo scenes were removed 2026-10-19");
 
@@ -213,7 +210,7 @@ public sealed class BlenderRigRosterTests
         Assert.True(BlenderRigSpec.IsRejectedMixamoRigFile(spec.RejectedMixamoFileName));
         Assert.Contains(spec, BlenderRigRoster.All);
 
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var rest = Path.Combine(root, "Assets", spec.RestThemePackRel);
         var flap = Path.Combine(root, "Assets", spec.ClipThemePackRel);
         var walk = Path.Combine(root, "Assets", spec.ThemePackDir, StormcrestMotion.WalkFileName);
@@ -250,8 +247,8 @@ public sealed class BlenderRigRosterTests
         AssertGenericClipMeta(attack + ".meta", expectClip: true, poseName: "attack");
 
         Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", spec.SceneFileName)), "one-character demo scenes were removed 2026-10-19");
-        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "StormcrestActor.cs"));
-        Assert.Contains("StormcrestMotion.Spec", actor, StringComparison.Ordinal);
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigActor.cs"));
+        BlenderRigCastTests.AssertCast("Stormcrest", StormcrestMotion.Spec);
         Assert.Contains("PlayPose", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("mixamorig", actor, StringComparison.OrdinalIgnoreCase);
         var build = File.ReadAllText(Path.Combine(root, "ProjectSettings", "EditorBuildSettings.asset"));
@@ -261,9 +258,9 @@ public sealed class BlenderRigRosterTests
     [Fact]
     public void Stormcrest_player_binds_embedded_maps_and_does_not_rewrite_the_rig()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var player = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigPlayer.cs"));
-        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "StormcrestActor.cs"));
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigActor.cs"));
         Assert.Contains("bakeAxisConversion = false", player, StringComparison.Ordinal);
         Assert.DoesNotContain("bakeAxisConversion = true", player, StringComparison.Ordinal);
         // The one pose write is the runner upper-body layer carrying the take's hips turn onto the spine each frame
@@ -278,7 +275,7 @@ public sealed class BlenderRigRosterTests
         Assert.Contains("_BumpMap", player, StringComparison.Ordinal);
         Assert.Contains("IsRejectedMixamoRigFile", player, StringComparison.Ordinal);
         Assert.Contains("PlayPose", actor, StringComparison.Ordinal);
-        Assert.Contains("StormcrestMotion.Spec", actor, StringComparison.Ordinal);
+        BlenderRigCastTests.AssertCast("Stormcrest", StormcrestMotion.Spec);
 
         Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", "Stormcrest.unity")), "one-character demo scenes were removed 2026-10-19");
 
@@ -312,7 +309,7 @@ public sealed class BlenderRigRosterTests
     [Fact]
     public void Ashwyrm_saved_import_settings_already_match_so_play_mode_does_not_reimport()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var spec = AshwyrmMotion.Spec;
         var restMeta = File.ReadAllText(Path.Combine(root, "Assets", spec.RestThemePackRel) + ".meta");
         Assert.False(BlenderRigImportMeta.NeedsReimport(restMeta, spec.PreferHumanoid, false, string.Empty, string.Empty, 0));
@@ -387,7 +384,7 @@ public sealed class BlenderRigRosterTests
         Assert.Contains(spec, BlenderRigRoster.All);
         Assert.Contains(distinctiveBone, spec.BoneNames);
 
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var rest = Path.Combine(root, "Assets", spec.RestThemePackRel);
         var clip = Path.Combine(root, "Assets", spec.ClipThemePackRel);
         var rejected = Path.Combine(root, "Assets", spec.ThemePackDir, spec.RejectedMixamoFileName);
@@ -427,9 +424,8 @@ public sealed class BlenderRigRosterTests
         Assert.DoesNotContain("mixamo.com", clipMeta, StringComparison.Ordinal);
 
         Assert.False(File.Exists(Path.Combine(root, "Assets", "Survival", "Scenes", spec.SceneFileName)), "one-character demo scenes were removed 2026-10-19");
-        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", spec.Name + "Actor.cs"));
-        Assert.Contains("Survival.Domain.Enemies", actor, StringComparison.Ordinal);
-        Assert.Contains(spec.Name + "Motion.Spec", actor, StringComparison.Ordinal);
+        var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigActor.cs"));
+        BlenderRigCastTests.AssertCast(spec.Name, spec);
         Assert.Contains("PlayPose", actor, StringComparison.Ordinal);
         Assert.DoesNotContain("Mixamorig", actor, StringComparison.Ordinal);
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
@@ -469,21 +465,5 @@ public sealed class BlenderRigRosterTests
         }
 
         return false;
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "Assets", "ThemePack", "fantasy_kingdom_a", "pack.json")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("repo root");
     }
 }

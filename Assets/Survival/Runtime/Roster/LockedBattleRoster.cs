@@ -55,7 +55,9 @@ namespace Survival.Domain.Roster
             AttackCyclesItself = attackCyclesItself;
             Lane = lane;
             AimYawDegrees = aimYawDegrees;
-            ActorClassName = actorClassName.Length > 0 ? actorClassName : FileKeyOf(name) + "Actor";
+            ActorClassName = actorClassName.Length > 0 ? actorClassName
+                : BlenderRigCast.IsCast(name) ? BlenderRigCast.ActorClassName
+                : FileKeyOf(name) + "Actor";
             Attacks = attacks != null && attacks.Count > 0
                 ? attacks
                 : new[] { new LockedBattleAttack(attackLabel, attackPoseName, attackSeconds) };
@@ -452,7 +454,7 @@ namespace Survival.Domain.Roster
         };
 
         public static readonly LockedBattleFighter Emberfang = new LockedBattleFighter(
-            "Emberfang",
+            FighterNames.Emberfang,
             BattleSide.Hero,
             "#49",
             EmberfangMotion.WalkPoseName,
@@ -471,7 +473,7 @@ namespace Survival.Domain.Roster
             CreatureBattleAttacks.EmberfangAttacks());
 
         public static readonly LockedBattleFighter Stormcrest = new LockedBattleFighter(
-            "Stormcrest",
+            FighterNames.Stormcrest,
             BattleSide.Hero,
             "#53",
             StormcrestMotion.WalkPoseName,
@@ -490,7 +492,7 @@ namespace Survival.Domain.Roster
             CreatureBattleAttacks.StormcrestAttacks());
 
         public static readonly LockedBattleFighter Ironhowl = new LockedBattleFighter(
-            "Ironhowl",
+            FighterNames.Ironhowl,
             BattleSide.Villain,
             "ccd19f8",
             IronhowlMotion.WalkPoseName,
@@ -509,7 +511,7 @@ namespace Survival.Domain.Roster
             IronhowlAttacks);
 
         public static readonly LockedBattleFighter Nightfang = new LockedBattleFighter(
-            "Nightfang",
+            FighterNames.Nightfang,
             BattleSide.Villain,
             "#52",
             NightfangMotion.TrotPoseName,
@@ -562,7 +564,7 @@ namespace Survival.Domain.Roster
         };
 
         public static readonly LockedBattleFighter Lyra = new LockedBattleFighter(
-            "Lyra",
+            FighterNames.Lyra,
             BattleSide.Hero,
             "#59",
             LyraMotion.WalkPoseName,
@@ -611,7 +613,7 @@ namespace Survival.Domain.Roster
         };
 
         public static readonly LockedBattleFighter Oakenshield = new LockedBattleFighter(
-            "Oakenshield",
+            FighterNames.Oakenshield,
             BattleSide.Hero,
             "#60",
             OakenshieldMotion.WalkPoseName,
@@ -667,7 +669,7 @@ namespace Survival.Domain.Roster
         };
 
         public static readonly LockedBattleFighter Vespera = new LockedBattleFighter(
-            "Vespera",
+            FighterNames.Vespera,
             BattleSide.Villain,
             "#58",
             VesperaMotion.WalkPoseName,
@@ -686,7 +688,7 @@ namespace Survival.Domain.Roster
             VesperaAttacks);
 
         public static readonly LockedBattleFighter Ashwyrm = new LockedBattleFighter(
-            "Ashwyrm",
+            FighterNames.Ashwyrm,
             BattleSide.Villain,
             "#56",
             AshwyrmMotion.WalkPoseName,
@@ -745,7 +747,7 @@ namespace Survival.Domain.Roster
         };
 
         public static readonly LockedBattleFighter SirAldric = new LockedBattleFighter(
-            "Sir Aldric",
+            FighterNames.SirAldric,
             BattleSide.Hero,
             "lane 5 (Derek 2026-10-15)",
             SirAldricBattlePoses.Walk,
@@ -764,7 +766,7 @@ namespace Survival.Domain.Roster
             SirAldricAttacks);
 
         public static readonly LockedBattleFighter Blightroot = new LockedBattleFighter(
-            "Blightroot",
+            FighterNames.Blightroot,
             BattleSide.Villain,
             "lane 5 (Derek 2026-10-15)",
             BlightrootBattlePoses.Walk,
@@ -828,7 +830,7 @@ namespace Survival.Domain.Roster
         };
 
         public static readonly LockedBattleFighter Rowan = new LockedBattleFighter(
-            "Rowan",
+            FighterNames.Rowan,
             BattleSide.Hero,
             "#64",
             RowanMotion.WalkPoseName,
@@ -898,7 +900,7 @@ namespace Survival.Domain.Roster
         public static readonly LockedBattleAttack[] VorgathAttacks = CreatureBattleAttacks.VorgathAttacks();
 
         public static readonly LockedBattleFighter Vorgath = new LockedBattleFighter(
-            "Vorgath",
+            FighterNames.Vorgath,
             BattleSide.Villain,
             "preview_new_chars",
             VorgathMotion.WalkPoseName,
@@ -918,7 +920,7 @@ namespace Survival.Domain.Roster
             VorgathMotion.IdlePoseName);
 
         public static readonly LockedBattleFighter Bonequill = new LockedBattleFighter(
-            "Bonequill",
+            FighterNames.Bonequill,
             BattleSide.Villain,
             "#63",
             BonequillMotion.WalkPoseName,
@@ -1025,11 +1027,11 @@ namespace Survival.Domain.Roster
         {
             switch (fighter.Name)
             {
-                case "Emberfang":
+                case FighterNames.Emberfang:
                     return EmberfangBattleScale;
-                case "Ashwyrm":
+                case FighterNames.Ashwyrm:
                     return AshwyrmBattleScale;
-                case "Vorgath":
+                case FighterNames.Vorgath:
                     return VorgathBattleScale;
                 default:
                     return 1f;

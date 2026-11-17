@@ -154,7 +154,7 @@ namespace Survival.Domain.Enemies
         };
 
         public static readonly ClothSplitSpec Spec = new ClothSplitSpec(
-            "Bonequill",
+            FighterNames.Bonequill,
             BonequillMotion.DesignDir,
             BonequillMotion.BoneCount,
             1.30f,

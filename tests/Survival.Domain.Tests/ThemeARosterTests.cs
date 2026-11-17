@@ -83,7 +83,7 @@ public sealed class ThemeARosterTests
         Assert.DoesNotContain("ExactName", source, StringComparison.Ordinal);
         Assert.DoesNotContain("BlenderRigSpec", source, StringComparison.Ordinal);
 
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var body = Path.Combine(root, "Assets", IronhowlMotion.BodyThemePackRel);
         Assert.Equal(IronhowlMotion.BodyMd5, Md5(body));
         Assert.True(ContainsAscii(body, "mixamo.com"));
@@ -131,7 +131,7 @@ public sealed class ThemeARosterTests
     [Fact]
     public void Rig_files_match_the_handoff_and_skip_the_mixamo_dragon()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var iron = Path.Combine(root, "Assets", IronhowlMotion.BodyThemePackRel);
         var rest = Path.Combine(root, "Assets", EmberfangMotion.RestThemePackRel);
         var flap = Path.Combine(root, "Assets", EmberfangMotion.FlapThemePackRel);
@@ -189,7 +189,7 @@ public sealed class ThemeARosterTests
     [Fact]
     public void Actors_do_not_invent_textures_or_rewrite_the_rig()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var iron = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "IronhowlActor.cs"));
         var fang = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "EmberfangActor.cs"));
         Assert.DoesNotContain("Ironhowl_meshy_look", iron, StringComparison.Ordinal);
@@ -220,7 +220,7 @@ public sealed class ThemeARosterTests
     [Fact]
     public void One_character_demo_scenes_are_gone_and_only_the_battle_and_play_remain()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var editor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
         var build = File.ReadAllText(Path.Combine(root, "ProjectSettings", "EditorBuildSettings.asset"));
         // 2026-10-19 (Derek): the per-character review scenes and their Survival menu entries are removed; the characters
@@ -260,7 +260,7 @@ public sealed class ThemeARosterTests
     [Fact]
     public void Ironhowl_paint_maps_bind_without_a_packed_orm_or_the_look_jpeg()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var ironDir = Path.Combine(root, "Assets", IronhowlMotion.ThemePackDir);
         foreach (var file in new[]
         {
@@ -298,7 +298,7 @@ public sealed class ThemeARosterTests
     [Fact]
     public void Emberfang_paint_maps_bind_without_a_packed_orm()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var fangDir = Path.Combine(root, "Assets", EmberfangMotion.ThemePackDir);
         foreach (var file in new[]
         {
@@ -342,7 +342,7 @@ public sealed class ThemeARosterTests
 
     private static string MotionPath(string folder, string file)
     {
-        return Path.Combine(FindRepoRoot(), "Assets", "Survival", "Runtime", folder, file);
+        return Path.Combine(TestRepo.Root, "Assets", "Survival", "Runtime", folder, file);
     }
 
     private static bool ContainsAscii(string path, string needle)
@@ -368,21 +368,5 @@ public sealed class ThemeARosterTests
         }
 
         return false;
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "Assets", "ThemePack", "fantasy_kingdom_a", "pack.json")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new DirectoryNotFoundException("repo root");
     }
 }

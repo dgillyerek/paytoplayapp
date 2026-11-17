@@ -64,6 +64,7 @@ namespace Survival.Unity
             public Def Def = null!;
             public Transform Host = null!;
             public GameObject Model = null!;
+            public SkinnedMeshRenderer[] Shaped = System.Array.Empty<SkinnedMeshRenderer>();
             public Transform? Hips;
             public Vector3 HipsRest;
             public readonly List<AnimationClip?> Clips = new List<AnimationClip?>();
@@ -168,7 +169,7 @@ namespace Survival.Unity
             }
 
             ApplyMaterial(model, PlayerAssets.Load<Texture2D>(dir + def.Prefix + "_atlas_2048.png"), def.Prefix + "_atlas", false);
-            var u = new Unit { Def = def, Host = host, Model = model };
+            var u = new Unit { Def = def, Host = host, Model = model, Shaped = BlendShapeReset.Find(model) };
             foreach (var clipName in def.Clips)
             {
                 u.Clips.Add(LoadClip(dir + def.Prefix + "_" + clipName + ".fbx"));
@@ -1140,6 +1141,7 @@ namespace Survival.Unity
             if (clip != null)
             {
                 sample = Loops(u) ? Mathf.Repeat(u.Time, length) : Mathf.Min(u.Time, length);
+                BlendShapeReset.Zero(u.Shaped);
                 clip.SampleAnimation(u.Model, sample);
                 RestoreScales(u);
                 ApplyStaffGrip(u);

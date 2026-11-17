@@ -31,7 +31,7 @@ public sealed class EmberfangAttackTests
     [Fact]
     public void Emberfang_attack_fbx_props_and_design_sot_match_design_md5()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var pack = Path.Combine(root, "Assets", EmberfangMotion.ThemePackDir);
         var design = Path.Combine(root, EmberfangAttack.DesignDir.Replace('/', Path.DirectorySeparatorChar));
         Assert.Equal("e832baf41cd41e2c54a50de4af1dbb89", EmberfangAttack.FileMd5);
@@ -142,7 +142,7 @@ public sealed class EmberfangAttackTests
     [Fact]
     public void Emberfang_attack_is_wired_in_the_actor_and_has_no_demo_menu()
     {
-        var root = FindRepoRoot();
+        var root = TestRepo.Root;
         var actor = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "EmberfangActor.cs"));
         Assert.Contains("EmberfangAttack.Spec", actor, StringComparison.Ordinal);
         var driver = File.ReadAllText(Path.Combine(root, "Assets", "Survival", "Unity", "BlenderRigAttackDriver.cs"));
@@ -156,21 +156,5 @@ public sealed class EmberfangAttackTests
         using var md5 = MD5.Create();
         using var stream = File.OpenRead(path);
         return Convert.ToHexString(md5.ComputeHash(stream)).ToLowerInvariant();
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir != null)
-        {
-            if (Directory.Exists(Path.Combine(dir.FullName, "Assets")) && Directory.Exists(Path.Combine(dir.FullName, "tests")))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new InvalidOperationException("Repo root not found.");
     }
 }
