@@ -66,6 +66,13 @@ namespace Survival.Editor.Ota
                 return false;
             }
 
+            if (activeTarget != BuildTarget.Android && activeTarget != BuildTarget.iOS)
+            {
+                summary = "OTA content is built per phone platform, but the active build target is " + activeTarget + ". " +
+                          "Open File > Build Profiles, pick Android, click Switch Platform, then build again.";
+                return false;
+            }
+
             if (!PlayerBake.Bake(out var bake))
             {
                 summary = "Player bake had problems:\n" + bake;
