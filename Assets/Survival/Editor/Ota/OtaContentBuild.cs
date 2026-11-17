@@ -58,6 +58,14 @@ namespace Survival.Editor.Ota
 
         public static bool Build(string contentVersion, out string summary)
         {
+            var activeTarget = EditorUserBuildSettings.activeBuildTarget;
+            if (!BuildPipeline.IsBuildTargetSupported(BuildPipeline.GetBuildTargetGroup(activeTarget), activeTarget))
+            {
+                summary = "The active build target (" + activeTarget + ") isn't installed in this Unity Editor. Add its Build Support module in Unity Hub " +
+                          "(Installs > 6000.3 > Add modules > Android Build Support with OpenJDK and SDK/NDK), restart Unity, then build again.";
+                return false;
+            }
+
             if (!PlayerBake.Bake(out var bake))
             {
                 summary = "Player bake had problems:\n" + bake;
