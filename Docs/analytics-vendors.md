@@ -1,6 +1,10 @@
-# Analytics & crash vendors (Families / COPPA)
+# Analytics & crash vendors
 
 **Status: HOLD — Derek picks the vendor + accounts before any SDK package is added.**
+
+**Audience update (2026-11-16):** the soft launch is **13+** (`audience_mode: "teen_plus"`; see `Docs/kids-audience.md`). Analytics and crash reporting are **allowed for 13+ players** through the same vendor-agnostic `IAnalytics` / `ICrashReporter` and `KidGated*` wrappers. `child_safety.json` `adult.analytics` / `adult.crash_reporting` are now `full`, so a 13+ player is tracked once `telemetry.analytics_vendor` / `crash_vendor` names a vendor. Today they are still `"none"`, so the no-op sink sends nothing. Under-13 players are blocked from play and never send. Unknown age (before the age screen) never sends. Product's checklist asks us to **prefer Families-capable vendors** so a later flip back to Families is cheap; the evaluation below still applies. `AndroidFamiliesManifest` keeps stripping `AD_ID` in both modes. That can be revisited only if a 13+ ads or attribution SDK is ever added. A minimal `age_gate_blocked` event for blocked attempts is **not** sent; add it only if counsel agrees it isn't child PII.
+
+The rest of this page was written for the Families audience and stays the reference for that mode and for vendor choice.
 
 This app’s soft-launch audience includes children under 13 (Canada, Philippines, Australia, New Zealand) and must follow [Google Play Families Policies](https://support.google.com/googleplay/android-developer/answer/9893335) and [Families data practices](https://support.google.com/googleplay/android-developer/answer/11043825). Code today ships a vendor-agnostic `IAnalytics` / `ICrashReporter` with a no-op sink, hard-gated off for **under-13 and unknown age** (`KidGatedAnalytics` / `KidGatedCrashReporter`). `child_safety.json` keeps `telemetry.*_vendor = "none"` and child analytics/crash = `off`.
 

@@ -24,6 +24,7 @@ namespace Survival.Unity.Kids
         private Text? _error;
         private KidUi.Btn? _continue;
         private Action? _done;
+        private Action<bool>? _corrected;
 
         /// <summary>Shows the gate over everything; <paramref name="done"/> runs once the answer is saved.</summary>
         public static void Show(Transform parent, Action done)
@@ -33,6 +34,23 @@ namespace Survival.Unity.Kids
             var screen = root.gameObject.AddComponent<AgeGateScreen>();
             screen._done = done;
             screen.Build(card);
+        }
+
+        /// <summary>
+        /// 13+ audience, Settings "Update my age": the same neutral question. An answer under 13 lowers the stored band
+        /// (never raises it); <paramref name="corrected"/> gets true when play is now blocked. A 13+ answer changes nothing.
+        /// </summary>
+        public static void ShowCorrection(Action<bool> corrected)
+        {
+            var card = KidUi.Modal(null!, "AgeCorrectCanvas", 650, 0.05f, 0.14f, 0.95f, 0.86f, out var root);
+            var screen = root.gameObject.AddComponent<AgeGateScreen>();
+            screen._corrected = corrected;
+            screen.Build(card);
+            KidUi.Button(card, "Cancel", KidUi.S("kids.account.back_menu", "Back"), HookArtKeys.ButtonBlue, SurvivalVisuals.PinBuild, 22, 0.78f, 0.03f, 0.96f, 0.12f, () =>
+            {
+                Destroy(screen.gameObject);
+                corrected(false);
+            });
         }
 
         private void Build(RectTransform card)
@@ -140,7 +158,18 @@ namespace Survival.Unity.Kids
                 return;
             }
 
-            KidSafety.SaveAnswer(AgeGate.Classify(Year!.Value, _month!.Value, today, config));
+            var band = AgeGate.Classify(Year!.Value, _month!.Value, today, config);
+            var corrected = _corrected;
+            if (corrected != null)
+            {
+                _corrected = null;
+                var blocked = band.Child && KidSafety.LowerAge(band);
+                Destroy(gameObject);
+                corrected(blocked);
+                return;
+            }
+
+            KidSafety.SaveAnswer(band);
             _year.Clear();
             _month = null;
             var done = _done;

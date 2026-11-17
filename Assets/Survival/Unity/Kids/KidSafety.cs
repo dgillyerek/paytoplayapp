@@ -52,6 +52,9 @@ namespace Survival.Unity.Kids
 
         public static bool IsChild => Policy.IsChild;
 
+        /// <summary>13+ audience and the stored answer is under 13 (or was edited): play is blocked (AudienceBlockScreen).</summary>
+        public static bool IsBlocked => Policy.IsBlocked;
+
         /// <summary>For the IAP branch's AgeBandPurchaseGate / SurvivalPurchases.CurrentAgeBand.</summary>
         public static AgeBand AgeBand => Policy.AgeBand;
 
@@ -104,6 +107,17 @@ namespace Survival.Unity.Kids
                 _config = ChildSafetyConfig.Default;
             }
 
+            var filterPath = Path.Combine(SurvivalArt.ResolvePackRoot(flavor), "kids", ChatFilter.FileName);
+            try
+            {
+                ChatSafety.Filter = PlayerAssets.FileExists(filterPath) ? ChatFilter.Parse(PlayerAssets.ReadAllText(filterPath)) : ChatFilter.None;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                ChatSafety.Filter = ChatFilter.None;
+            }
+
             return _config;
         }
 
@@ -123,9 +137,32 @@ namespace Survival.Unity.Kids
         {
             if (Store.Save(band))
             {
-                // Mirror the band to the account (players.age_band, IAP #201) once signed in; never a birth date.
-                Iap.SurvivalPurchases.SetAgeBand(AgeBand);
+                Mirror();
                 Changed?.Invoke();
+            }
+        }
+
+        /// <summary>13+ audience, Settings "Update my age": an under-13 correction (never a raise). True when play is now blocked.</summary>
+        public static bool LowerAge(AgeBandDef band)
+        {
+            if (Config.IsFamilies || !Store.Lower(band, Config))
+            {
+                return false;
+            }
+
+            Changed?.Invoke();
+            return IsBlocked;
+        }
+
+        /// <summary>
+        /// Mirror the band to the account (players.age_band, IAP #201) once signed in; never a birth date. A blocked (13+
+        /// audience, under 13) player is not mirrored here: AudienceBlockScreen deletes the account instead.
+        /// </summary>
+        private static void Mirror()
+        {
+            if (!IsBlocked)
+            {
+                Iap.SurvivalPurchases.SetAgeBand(AgeBand);
             }
         }
 

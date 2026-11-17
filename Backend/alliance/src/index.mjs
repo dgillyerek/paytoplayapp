@@ -10,7 +10,9 @@ import { appStoreClient } from "./appstore.mjs";
 import { createSave } from "./save.mjs";
 import { pgSaveRepo } from "./save_repo.mjs";
 import { safetyRoutes } from "./safety.mjs";
-import { deletionRoutes } from "./deletion.mjs";
+import { deletionRoutes, deletePlayer } from "./deletion.mjs";
+import { audienceMode, blockedByAudience } from "./audience.mjs";
+import { moderationRoutes, moderatorAuthorized } from "./moderation.mjs";
 import { allianceRoutes, RULES } from "./alliance.mjs";
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
@@ -85,9 +87,11 @@ Object.assign(routes, worldRoutes({ q, pool, err, json, limited, clean }));
 
 // Purchases (iap.mjs). Secrets come only from env: GOOGLE_PLAY_SERVICE_ACCOUNT_JSON, IAP_RTDN_PUSH_TOKEN.
 const PKG = process.env.GOOGLE_PLAY_PACKAGE_NAME || DEFAULT_PACKAGE;
+// Audience switch (audience.mjs): AUDIENCE_MODE=teen_plus (default) | families. Mirrors child_safety.json audience_mode.
+const AUDIENCE = audienceMode(process.env);
 const saveRepo = pgSaveRepo(pool);
 const ageBandOf = async (p) => (await q("SELECT age_band FROM players WHERE id=$1", [p.id])).rows[0]?.age_band ?? "unknown";
-const saves = createSave({ repo: saveRepo, ageBandOf });
+const saves = createSave({ repo: saveRepo, ageBandOf, audience: AUDIENCE });
 const iap = createIap({
   repo: pgIapRepo(pool),
   verifiers: {
@@ -97,15 +101,24 @@ const iap = createIap({
   packageName: PKG,
   rtdnToken: process.env.IAP_RTDN_PUSH_TOKEN || "",
   onRevoked: (info) => saves.onPurchaseRevoked(info),
+  audience: AUDIENCE,
+  ageBandOf,
 });
 const asResponse = (r) => json(r.body, r.status);
 Object.assign(routes, {
   "POST /v1/iap/validate": async (_r, b, p) => (await limited(p.id, "write")) ? err("rate_limited", 429) : asResponse(await iap.validate(p, b)),
   "GET /v1/iap/entitlements": async (_r, _b, p) => asResponse(await iap.entitlements(p)),
   // Account age band (COPPA / Play Families). The only age data kept; the client's purchase gate reads it.
-  "GET /v1/account": async (_r, _b, p) => json({ id: p.id, ageBand: await ageBandOf(p), cloudSaveConsentAt: await saveRepo.getConsent(p.id) }),
+  "GET /v1/account": async (_r, _b, p) => json({ id: p.id, ageBand: await ageBandOf(p), cloudSaveConsentAt: await saveRepo.getConsent(p.id), audienceMode: AUDIENCE }),
   "POST /v1/account/age_band": async (_r, b, p) => {
     if (!AGE_BANDS.includes(b.ageBand)) return err("bad_age_band");
+    if (blockedByAudience(AUDIENCE, b.ageBand)) {
+      // teen_plus: identified as under 13 (age screen or correction). Delete what was collected by mistake, keep only the
+      // under13 marker on the scrubbed row so the block holds (Product checklist A2). The session token stops working.
+      await deletePlayer(pool, p.id);
+      await q("UPDATE players SET age_band='under13' WHERE id=$1", [p.id]);
+      return json({ ok: true, ageBand: "under13", deleted: true });
+    }
     await q("UPDATE players SET age_band=$2 WHERE id=$1", [p.id, b.ageBand]);
     return json({ ok: true, ageBand: b.ageBand });
   },
@@ -114,15 +127,23 @@ Object.assign(routes, {
   "PUT /v1/save": async (_r, b, p) => (await limited(p.id, "write")) ? err("rate_limited", 429) : asResponse(await saves.put(p, b)),
 });
 // Child safety (safety.mjs): chat mode / presets / report / block, restricted names, sticky under13. Wraps routes above.
-Object.assign(routes, safetyRoutes({ q, err, json, clean, limited, routes }));
+Object.assign(routes, safetyRoutes({ q, err, json, clean, limited, routes, audience: AUDIENCE }));
 // In-app account deletion (deletion.mjs): scrubs the player and removes their data (incl. player_saves / save_clawbacks).
 Object.assign(routes, deletionRoutes({ pool, err, json, limited }));
+// Chat moderation queue (moderation.mjs, schema 008): moderator token, not a player token.
+const modRoutes = moderationRoutes({ q, err, json });
 export default {
   async fetch(req) {
     if (req.method === "OPTIONS") return json({});
     const url = new URL(req.url);
     const key = req.method + " " + url.pathname.replace(/\/$/, "");
-    if (key === "GET /v1/health") return json({ ok: true, rules: RULES });
+    if (key === "GET /v1/health") return json({ ok: true, rules: RULES, audienceMode: AUDIENCE });
+    if (modRoutes[key]) {
+      if (!moderatorAuthorized(req, process.env.MODERATION_TOKEN || "")) return err("unauthorized", 401);
+      let mb = {};
+      try { if (req.method === "POST") { const t = await req.text(); if (t.length > 4096) return err("too_large", 413); mb = t ? JSON.parse(t) : {}; } return await modRoutes[key](req, mb); }
+      catch (e) { console.error(e); return err(e instanceof SyntaxError ? "bad_json" : "server_error", e instanceof SyntaxError ? 400 : 500); }
+    }
     const rtdn = key === "POST /v1/iap/rtdn"; // Pub/Sub push: no player token, authenticated by ?token= instead
     const h = rtdn ? null : routes[key]; if (!h && !rtdn) return err("not_found", 404);
     try {

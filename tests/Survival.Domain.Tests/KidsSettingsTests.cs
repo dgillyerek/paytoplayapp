@@ -16,7 +16,7 @@ public sealed class KidsSettingsTests
     }
 
     private static ChildSafetyPolicy Policy(string? band, ChatMode? choice = null) =>
-        new(KidsFiles.Shipped(), band == null ? new AgeGateState(AgeGateStatus.Fresh, null) : new AgeGateState(AgeGateStatus.Answered, band), choice);
+        new(KidsFiles.Families(KidsFiles.Shipped()), band == null ? new AgeGateState(AgeGateStatus.Fresh, null) : new AgeGateState(AgeGateStatus.Answered, band), choice);
 
     [Fact]
     public void A_child_can_choose_off_or_presets_but_never_free()
@@ -56,10 +56,10 @@ public sealed class KidsSettingsTests
     {
         var json = File.ReadAllText(KidsFiles.ConfigPath).Replace("\"chat_max\": \"presets\"", "\"chat_max\": \"off\"");
         var c = ChildSafetyConfig.Parse(json);
-        var p = new ChildSafetyPolicy(c, new AgeGateState(AgeGateStatus.Answered, "under13"), ChatMode.Presets);
+        var p = new ChildSafetyPolicy(KidsFiles.Families(c), new AgeGateState(AgeGateStatus.Answered, "under13"), ChatMode.Presets);
         Assert.Equal(ChatMode.Off, p.Chat);
         Assert.Equal(new[] { ChatMode.Off }, new PrivacySettings(p, NoConsentProvider.Instance).ChatChoices);
-        var free = ChildSafetyConfig.Parse(File.ReadAllText(KidsFiles.ConfigPath).Replace("\"chat_max\": \"presets\"", "\"chat_max\": \"free\""));
+        var free = KidsFiles.Families(ChildSafetyConfig.Parse(File.ReadAllText(KidsFiles.ConfigPath).Replace("\"chat_max\": \"presets\"", "\"chat_max\": \"free\"")));
         Assert.Equal(ChatMode.Presets, free.ChildChatMax);
     }
 

@@ -100,11 +100,32 @@ namespace Survival.Domain.Kids
                 return false;
             }
 
+            Write(band);
+            return true;
+        }
+
+        private void Write(AgeBandDef band)
+        {
             var salt = EnsureSalt();
             var payload = Version + ";" + band.Id + ";" + (band.Child ? "1" : "0") + ";" + ((long)(_now() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds).ToString(CultureInfo.InvariantCulture);
             _storage.Set(RecordKey, payload + ";" + Sign(salt, payload));
             _storage.Delete(PendingKey);
             _storage.Save();
+        }
+
+        /// <summary>
+        /// Age correction (13+ audience, Settings "Update my age"): an answered 13+ band may be lowered to a child band, never
+        /// raised. False when the new band is not a child band or the stored answer is missing / tampered / already a child.
+        /// </summary>
+        public bool Lower(AgeBandDef band, ChildSafetyConfig config)
+        {
+            var now = Load();
+            if (!band.Child || now.Status != AgeGateStatus.Answered || config.Band(now.BandId) is not { Child: false })
+            {
+                return false;
+            }
+
+            Write(band);
             return true;
         }
 

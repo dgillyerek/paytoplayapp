@@ -12,7 +12,8 @@ namespace Survival.Unity.Kids
     /// <list type="bullet">
     /// <item>age group (read-only; set once by the age gate, reset only by deleting the account),</item>
     /// <item>guild chat (off / ready-made messages / free; children never see free, and turning chat on needs a grown-up),</item>
-    /// <item>parental consent status for online play (and "Ask a grown-up" once a consent method is plugged in),</item>
+    /// <item>Families audience: parental consent status for online play (and "Ask a grown-up" once a consent method is plugged
+    /// in); 13+ audience: "Update my age" instead (lower only; under 13 blocks play and deletes the data),</item>
     /// <item>privacy policy and terms links (child_safety.json legal.*; behind the parental gate in child mode),</item>
     /// <item>delete account (Play account-deletion policy, COPPA 312.6): parental gate in child mode, a confirm step for
     /// 13+, the server first and then the device; plus the web deletion page as a fallback.</item>
@@ -51,7 +52,7 @@ namespace Survival.Unity.Kids
         {
             "under13" => KidUi.S("kids.settings.age.under13", "Under 13"),
             "13plus" => KidUi.S("kids.settings.age.13plus", "13 and over"),
-            _ => KidUi.S("kids.settings.age.unknown", "Not set (child settings apply)"),
+            _ => KidUi.S("kids.settings.age.unknown", "Not set"),
         };
 
         private static string ConsentLabel(ConsentView c) => c switch
@@ -74,7 +75,7 @@ namespace Survival.Unity.Kids
             KidUi.Label(card, "Section", KidUi.S("kids.settings.privacy", "Privacy and account"), 26, 0.05f, 0.83f, 0.95f, 0.875f, SurvivalVisuals.Reward);
 
             KidUi.Label(card, "Age", KidUi.S("kids.settings.age", "Age group") + ": " + AgeLabel(s.AgeBandKey), 22, 0.05f, 0.775f, 0.95f, 0.82f, null, TextAnchor.MiddleLeft);
-            KidUi.Label(card, "AgeNote", KidUi.S("kids.settings.age_note", "Set when you first played. Deleting your account resets it."), 16, 0.05f, 0.745f, 0.95f, 0.775f, SurvivalVisuals.Mute, TextAnchor.MiddleLeft);
+            KidUi.Label(card, "AgeNote", (s.CanCorrectAge ? KidUi.S("kids.settings.age_note_teen", "Set when you first played.") : KidUi.S("kids.settings.age_note", "Set when you first played. Deleting your account resets it.")), 16, 0.05f, 0.745f, 0.95f, 0.775f, SurvivalVisuals.Mute, TextAnchor.MiddleLeft);
 
             KidUi.Label(card, "Chat", KidUi.S("kids.settings.chat", "Guild chat") + ": " + ChatLabel(s.Chat), 22, 0.05f, 0.69f, 0.95f, 0.735f, null, TextAnchor.MiddleLeft);
             var n = s.ChatChoices.Count;
@@ -91,8 +92,18 @@ namespace Survival.Unity.Kids
                 KidUi.Label(card, "ChatNote", KidUi.S("kids.settings.chat_note", "Under 13: no typing, only ready-made messages. A grown-up turns chat on."), 16, 0.05f, 0.58f, 0.95f, 0.612f, SurvivalVisuals.Mute, TextAnchor.MiddleLeft);
             }
 
-            KidUi.Label(card, "Consent", KidUi.S("kids.settings.consent", "Parental consent") + ": " + ConsentLabel(s.Consent), 20, 0.05f, 0.50f, 0.95f, 0.575f, null, TextAnchor.MiddleLeft);
-            if (s.CanRequestConsent)
+            if (s.CanCorrectAge)
+            {
+                // 13+ audience: the parental-consent row is hidden (the hook stays in code). Age correction: lower only.
+                KidUi.Button(card, "AgeFix", KidUi.S("kids.settings.age_fix", "Update my age"), HookArtKeys.ButtonBlue, SurvivalVisuals.PinBuild, 20, 0.25f, 0.47f, 0.75f, 0.545f, CorrectAge);
+            }
+
+            if (s.ShowConsent)
+            {
+                KidUi.Label(card, "Consent", KidUi.S("kids.settings.consent", "Parental consent") + ": " + ConsentLabel(s.Consent), 20, 0.05f, 0.50f, 0.95f, 0.575f, null, TextAnchor.MiddleLeft);
+            }
+
+            if (s.ShowConsent && s.CanRequestConsent)
             {
                 KidUi.Button(card, "AskConsent", KidUi.S("kids.settings.consent_ask", "Ask a grown-up"), HookArtKeys.ButtonBlue, SurvivalVisuals.PinBuild, 20, 0.25f, 0.44f, 0.75f, 0.495f,
                     () => Guarded(s.Policy.IsChild, "consent", () => KidSafety.Consent.Request(ConsentPurpose.OnlineSignIn, _ => Menu(_card))));
@@ -110,6 +121,18 @@ namespace Survival.Unity.Kids
 
             KidUi.Button(card, "Close", KidUi.S("kids.account.close", "Close"), HookArtKeys.ButtonGreen, SurvivalVisuals.MineFill, 24, 0.30f, 0.03f, 0.70f, 0.11f, Close);
         }
+
+        private void CorrectAge() => AgeGateScreen.ShowCorrection(blocked =>
+        {
+            if (!blocked)
+            {
+                return;
+            }
+
+            // Now under 13 in a 13+ game: close Settings and block play; the block screen deletes the collected data.
+            Close();
+            AudienceBlockScreen.Show(null);
+        });
 
         private static void Link(RectTransform card, string name, string label, string url, bool needsParent, float x0, float x1)
         {

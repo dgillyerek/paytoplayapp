@@ -25,9 +25,9 @@ public sealed class KidsConsentDeletionTests
     public void Default_provider_keeps_children_and_unknown_age_offline(ConsentPurpose purpose)
     {
         var c = KidsFiles.Shipped();
-        Assert.Equal(ConsentDecision.NeedsConsent, ConsentGate.Decide(KidsFiles.Policy(c, "under13"), NoConsentProvider.Instance, purpose));
-        Assert.Equal(ConsentDecision.NeedsConsent, ConsentGate.Decide(KidsFiles.Policy(c, null), NoConsentProvider.Instance, purpose));
-        Assert.Equal(ConsentDecision.Allowed, ConsentGate.Decide(KidsFiles.Policy(c, "13plus"), NoConsentProvider.Instance, purpose));
+        Assert.Equal(ConsentDecision.NeedsConsent, ConsentGate.Decide(KidsFiles.FamiliesPolicy(c, "under13"), NoConsentProvider.Instance, purpose));
+        Assert.Equal(ConsentDecision.NeedsConsent, ConsentGate.Decide(KidsFiles.FamiliesPolicy(c, null), NoConsentProvider.Instance, purpose));
+        Assert.Equal(ConsentDecision.Allowed, ConsentGate.Decide(KidsFiles.FamiliesPolicy(c, "13plus"), NoConsentProvider.Instance, purpose));
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public sealed class KidsConsentDeletionTests
     [InlineData(ConsentStatus.Denied, ConsentDecision.NeedsConsent)]
     public void Only_granted_consent_lets_a_child_sign_in(ConsentStatus status, ConsentDecision expected)
     {
-        var p = KidsFiles.Policy(KidsFiles.Shipped(), "under13");
+        var p = KidsFiles.FamiliesPolicy(KidsFiles.Shipped(), "under13");
         Assert.Equal(expected, ConsentGate.Decide(p, new FixedConsent(status), ConsentPurpose.OnlineSignIn));
     }
 
@@ -53,14 +53,14 @@ public sealed class KidsConsentDeletionTests
     public void Blocked_mode_ignores_consent()
     {
         var json = File.ReadAllText(KidsFiles.ConfigPath).Replace("\"online_sign_in\": \"consent_required\"", "\"online_sign_in\": \"blocked\"");
-        var p = KidsFiles.Policy(ChildSafetyConfig.Parse(json), "under13");
+        var p = KidsFiles.FamiliesPolicy(ChildSafetyConfig.Parse(json), "under13");
         Assert.Equal(ConsentDecision.Blocked, ConsentGate.Decide(p, new FixedConsent(ConsentStatus.Granted), ConsentPurpose.OnlineSignIn));
     }
 
     [Fact]
     public void Revoked_consent_closes_the_gate_again()
     {
-        var p = KidsFiles.Policy(KidsFiles.Shipped(), "under13");
+        var p = KidsFiles.FamiliesPolicy(KidsFiles.Shipped(), "under13");
         var consent = new FixedConsent(ConsentStatus.Granted);
         Assert.True(ConsentGate.Allows(p, consent, ConsentPurpose.CloudSave));
         consent.Revoke();

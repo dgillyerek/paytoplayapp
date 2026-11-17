@@ -38,4 +38,9 @@ internal static class KidsFiles
 
     public static ChildSafetyPolicy Policy(ChildSafetyConfig config, string? band) =>
         new(config, band == null ? new AgeGateState(AgeGateStatus.Fresh, null) : new AgeGateState(AgeGateStatus.Answered, band));
+
+    /// <summary>The same config with the audience switch on Families (the mixed-audience behavior the kids tests pin).</summary>
+    public static ChildSafetyConfig Families(ChildSafetyConfig config) => config with { Audience = AudienceMode.Families };
+
+    public static ChildSafetyPolicy FamiliesPolicy(ChildSafetyConfig config, string? band) => Policy(Families(config), band);
 }

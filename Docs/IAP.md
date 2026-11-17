@@ -34,8 +34,8 @@
 |---|---|---|
 | POST | `/v1/iap/validate` | Body `{store:"google_play"\|"app_store", productId, purchaseToken, orderId?}`. Replies (all 200 unless a code is shown):<br>• `granted`, with `grants`, `entitlements`, `fresh`, `restored`, `purchaseId`<br>• `pending`<br>• `rejected`, with one of `invalid_token`, `cancelled`, `product_mismatch`, `already_consumed`, `refunded`, `voided`<br>• `400` for `bad_request` or `unknown_product`<br>• `409 owned_by_other_account`<br>• `501 app_store_not_enabled`<br>• `503 verify_unavailable` |
 | GET | `/v1/iap/entitlements` | Active, non-revoked entitlements for this account. |
-| GET | `/v1/account` | `{id, ageBand}`. |
-| POST | `/v1/account/age_band` | `{ageBand}`, one of `under13`, `13plus`, `unknown`. |
+| GET | `/v1/account` | `{id, ageBand, cloudSaveConsentAt, audienceMode}`. |
+| POST | `/v1/account/age_band` | `{ageBand}`, one of `under13`, `13plus`, `unknown`. In `teen_plus`, `under13` deletes the account's data and keeps only the under-13 marker (`{deleted:true}`). |
 | POST | `/v1/iap/rtdn?token=$IAP_RTDN_PUSH_TOKEN` | **No bearer.** Pub/Sub push. The token is compared in constant time. |
 
 Live base URL (main branch function): `https://br-summer-firefly-b8or37b8-alliance.compute.c-14.us-east-1.aws.neon.tech`. **It does not have these routes until the function is redeployed and 004 is applied to main.**
@@ -49,6 +49,8 @@ Live base URL (main branch function): `https://br-summer-firefly-b8or37b8-allian
 | Name | Required | What |
 |---|---|---|
 | `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | yes (Android) | The GCP service-account key JSON, raw or base64. Store it as a **secret**. It is never committed. If it is missing, validate returns `503 verify_unavailable`. |
+| `AUDIENCE_MODE` | optional | `teen_plus` (default, 13+ launch) or `families`. See `Docs/kids-audience.md`. |
+| `MODERATION_TOKEN` | optional | At least 24 chars. Turns on `GET /v1/mod/queue` and `POST /v1/mod/resolve` (chat moderation queue). |
 | `GOOGLE_PLAY_PACKAGE_NAME` | optional | Defaults to `com.brightmoatstudios.kingdomdefense`, from `iap_rewards.json`. |
 | `IAP_RTDN_PUSH_TOKEN` | yes (for RTDN) | A long random string. It goes in the Pub/Sub push URL. If it is unset, RTDN replies 401. |
 | `DATABASE_URL` | existing | Unchanged. |
@@ -76,8 +78,13 @@ Live base URL (main branch function): `https://br-summer-firefly-b8or37b8-allian
 7. **Product spec for Families** (see below): the parental-consent flow and the policy for unknown ages.
 8. **Re-run the player bake**, so `iap_rewards.json` ships. `ThemePack/fantasy_kingdom_a` is already in the bake roots.
 
-## Families / COPPA
-The Theme A audience includes children under 13 (Google Play Families policy, COPPA). The soft launch is in CA, PH, AU and NZ.
+## Audience: 13+ (default) and Families
+**Since 2026-11-16 the soft launch is 13+** (`audience_mode: "teen_plus"` in `child_safety.json`, `AUDIENCE_MODE=teen_plus` on the server). The full two-mode table is in `Docs/kids-audience.md`. For purchases:
+- **teen_plus:** a verified 13plus player (from the neutral age screen) buys normally. under13 is blocked from play entirely, so purchases never happen. If one is attempted anyway, the client declines with `iap.audience_13plus` (no consent step) and the server answers `403 audience_13plus_only`. Unknown is declined only before the age screen is answered.
+- **families:** everything below applies unchanged.
+
+### Families / COPPA (switched off; kept for a later flip)
+In Families mode the Theme A audience includes children under 13 (Google Play Families policy, COPPA).
 - **No ad ID or device identifiers.**
   - The IAP path sends only the bearer token, product id, purchase token and order id. These are what Play Billing validation needs.
   - The account is the existing `players` row. It is keyed by an app-generated random GUID (sha256-hashed on the server), not by a hardware id.
@@ -88,7 +95,7 @@ The Theme A audience includes children under 13 (Google Play Families policy, CO
   - `13plus` → allowed.
   - `under13` → `IParentalConsent`. The UI is a **stub** (`NoParentalConsent` always declines, failure `iap.consent_required`) until Product sends the requirements. Plug the real flow in with `SurvivalPurchases.ParentalConsent = …`.
   - `unknown` → **blocked by default** (`iap.age_unknown`). Product hasn't said that unknown may default to allow, so it doesn't. `SurvivalPurchases.AllowUnknownAge` is the switch.
-  - **Result:** release builds can't make live purchases until an age screen sets the band. That is intentional.
+  - **Result:** release builds can't make live purchases until the age screen sets the band. That is intentional. The age screen shipped in #203 (`AgeGateScreen`), so a 13+ answer unlocks purchases in both modes.
 - **Open privacy item (existing feature):** the alliance `display_name` is free text and could be PII for children. It is not part of this PR, and Product should review it.
 
 ## Accounts (shared with workstream 3, cloud saves)
