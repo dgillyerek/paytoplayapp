@@ -139,6 +139,7 @@ namespace Survival.Editor
                 foreach (var kv in seen)
                 {
                     if (!kv.Value && kv.Key.StartsWith("Assets/", StringComparison.Ordinal) && !IsSkippedAsset(kv.Key) &&
+                        !PlayerBakeManifest.IsExcludedFromBake(kv.Key) &&
                         !kv.Key.StartsWith(OutDir + "/", StringComparison.OrdinalIgnoreCase) &&
                         AssetDatabase.LoadMainAssetAtPath(kv.Key) != null)
                     {
@@ -149,7 +150,8 @@ namespace Survival.Editor
                 var rawPaths = new SortedSet<string>(ExpectedRawFiles(), StringComparer.OrdinalIgnoreCase);
                 foreach (var kv in seen)
                 {
-                    if (kv.Value && kv.Key.StartsWith("Assets/", StringComparison.Ordinal) && !IsSkippedRaw(kv.Key) && File.Exists(kv.Key))
+                    if (kv.Value && kv.Key.StartsWith("Assets/", StringComparison.Ordinal) && !IsSkippedRaw(kv.Key) &&
+                        !PlayerBakeManifest.IsExcludedFromBake(kv.Key) && File.Exists(kv.Key))
                     {
                         rawPaths.Add(kv.Key);
                     }

@@ -61,7 +61,7 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sir_aldric_attack2_diagonal_slash.fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 13f28fd30b0c48418b9752ac61ad6793
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/SERAPHINE_staff.fbx
@@ -73,7 +73,7 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sir_aldric_attack3_shield_bash.fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 16b8a47b4f1242c79560862e308649a6
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/emberfang/EMBERFANG_blenderig_attack.fbx
@@ -103,19 +103,19 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_walk.fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2332dc4178806afaf2dee0dd88bbdb67
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sheath_sword_1.fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2475c39842e7c90aa3160791d708f2fe
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_attack_(4).fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 27003aacf2f86a047bcb533d05f2a17f
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/SERAPHINE_attack_standing_melee.fbx
@@ -133,7 +133,7 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_block_(2).fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2b6506a3cd6b4b5d9ccee37d35dbb010
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/VORGATH_spit_fire_stream.prefab
@@ -145,13 +145,13 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_strafe_(2).fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2e8564c787cc63a8de46b2acfb5287bd
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_run.fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3161fd669e0b441cb3553b3c3d725ed2
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/rowan/ROWAN_blenderig_attack3_volley.fbx
@@ -175,7 +175,7 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_block.fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 37cef71e7bd241fe9a804d7340b9b745
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_sword_L_stab.fbx
@@ -247,7 +247,7 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_attack.fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 55e4c1078f9152a31e2f405162738494
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/emberfang/EMBERFANG_dragonrig_wingflap.fbx
@@ -271,7 +271,7 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_block_idle.fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5f463a18a63d4f78a8d6bf645d513bd7
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_sword_R_inward.fbx
@@ -283,7 +283,7 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_strafe.fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6393e6127c6c425ab6637c023693e47e
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/oakenshield/OAKENSHIELD_blenderig.fbx
@@ -337,7 +337,7 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_turn_(2).fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6bbc37cde7f6494a803a4aa5886070f3
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/vespera/VESPERA_orb.fbx
@@ -373,7 +373,7 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/draw_sword_1.fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 76f7df0e944db6d4e808d0486ab89716
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_walk.fbx
@@ -403,13 +403,13 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_sword.fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7f4609ea4d22ff41962433e086ad879b
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_attack_(2).fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 868faf9f7fd41ef44ac0e4127c82179e
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_walk.fbx
@@ -445,13 +445,13 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_PILOT_cape.fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 99a4f523c65c8528270085339386ef5c
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_idle.fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9c3ef039989f4c2798e552b60ddc87ee
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/nightfang/NIGHTFANG_blenderig_attack.fbx
@@ -475,7 +475,7 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_run_(2).fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a1352a40559d4a768defa41cc3a72d40
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ironhowl/IRONHOWL_rig_backhand_sweep.fbx
@@ -769,7 +769,7 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/SirAldric_body_holefixed_slash_SWORD_SHIELD_ATTACK.fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d58e139d86194d60958f7b0a4f98fb09
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/oakenshield/OAKENSHIELD_blenderig_walk.fbx
@@ -793,7 +793,7 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_turn.fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dd03c01a108e3bf48bd02ef6e6a482ee
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_idle.fbx
@@ -841,13 +841,13 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_attack_(3).fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f32dd5ca9715cf269a929cce4ac4c0a0
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_death.fbx
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f51e22cbd8d64aa6b1a41e559a811863
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_sword_L_inward.fbx

@@ -217,7 +217,7 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture.png
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1dcc93bb375e78947b3bc4a914de1e6e
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/portraits/portrait_vespera.png
@@ -391,7 +391,7 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture_metallic.png
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 331ae5f38636c5e47bc46bd53413d2ce
     m_Address: ota/art
@@ -409,7 +409,7 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture.png
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 341fad82f5724704eb2e0b1f9c73a848
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/trophy_bronze.png
@@ -541,7 +541,7 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture_roughness.png
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 41c65066b0ae55840b5dfc52dfbf3511
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/map/THEME_A_BATTLE_GRASS_TILE_512.png
@@ -1117,7 +1117,7 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture_roughness.png
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 97c226a3a39d7ef47a5cc9d6ff0ec03e
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/gift.png
@@ -1279,7 +1279,7 @@ MonoBehaviour:
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture_metallic.png
     m_ReadOnly: 0
     m_SerializedLabels:
-    - char-pilot
+    - char-siraldric
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b84e8eb5596f85b49ad7428f75c711a1
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/fx/confetti.png

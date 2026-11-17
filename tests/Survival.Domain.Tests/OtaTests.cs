@@ -286,6 +286,8 @@ public sealed class OtaTests
     [InlineData("Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ashwyrm/ashwyrm_rest.fbx", "char-ashwyrm")]
     [InlineData("Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/kaelen.png", "char-kaelen")]
     [InlineData("Assets/ArtSource/Characters/Lyra/lyra_attack.anim", "char-lyra")]
+    [InlineData("Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/lite_sword_shield/sword_and_shield_idle.fbx", "char-siraldric")]
+    [InlineData("Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture.png", "char-siraldric")]
     [InlineData("Assets/ThemePack/fantasy_kingdom_a/art/store/flavor_icon.png", "art-store")]
     [InlineData("Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/Materials/shared.mat", "art-heroes")]
     [InlineData("Assets/ArtSource/Rowan/rowan.fbx", "shared")]

@@ -84,7 +84,7 @@ namespace Survival.Domain.Ota
             var lower = (assetPath ?? "").Replace('\\', '/').ToLowerInvariant();
             if (TryFolderAfter(lower, "/art/heroes/3d/", out var hero) && !IsSharedFolder(hero))
             {
-                return "char-" + SanitizeLabel(hero);
+                return "char-" + SanitizeLabel(CharacterForFolder(hero));
             }
 
             if (TryFolderAfter(lower, "/art/enemies/3d/", out var enemy) && !IsSharedFolder(enemy))
@@ -164,6 +164,13 @@ namespace Survival.Domain.Ota
             folder = lowerPath.Substring(start, end - start);
             return folder.Length > 0 && folder.IndexOf('.') < 0;
         }
+
+        /// <summary>Hero model folders whose name is not the character's: Sir Aldric's live model still sits in heroes/3d/pilot.</summary>
+        private static string CharacterForFolder(string folder) => folder == "pilot" ? "siraldric" : folder;
+
+        /// <summary>True for labels <see cref="PackLabel"/> produces (char-*, art-*, shared), so a re-run can drop a stale one.</summary>
+        public static bool IsPackLabel(string label) =>
+            label != null && (label == "shared" || label.StartsWith("char-", StringComparison.Ordinal) || label.StartsWith("art-", StringComparison.Ordinal));
 
         private static bool IsSharedFolder(string name) =>
             name == "materials" || name == "textures" || name == "shared" || name == "common" ||

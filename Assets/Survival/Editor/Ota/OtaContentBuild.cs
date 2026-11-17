@@ -167,6 +167,24 @@ namespace Survival.Editor.Ota
         }
 
         /// <summary>
+        /// Exactly one pack label per entry: PackTogetherByLabel bundles by the whole label set, so a stale label left from an
+        /// earlier run (char-pilot before it became char-siraldric) would split the character into an odd extra bundle.
+        /// </summary>
+        private static void SetPackLabel(AddressableAssetEntry entry, string packLabel)
+        {
+            entry.SetLabel(OtaContentGroups.Label, false, true, false);
+            foreach (var old in entry.labels.ToList())
+            {
+                if (old != packLabel && OtaContentGroups.IsPackLabel(old))
+                {
+                    entry.SetLabel(old, false, true, false);
+                }
+            }
+
+            entry.SetLabel(packLabel, true, true, false);
+        }
+
+        /// <summary>
         /// Registers each baked asset as its own Addressable entry labelled by <see cref="OtaContentGroups.PackLabel"/>
         /// so PackTogetherByLabel emits one bundle per character (or art area). Entries do not get the "ota" label;
         /// only the four registries do, so LoadAssetsAsync&lt;PlayerAssetRegistry&gt;("ota") still returns just those.
@@ -196,8 +214,7 @@ namespace Survival.Editor.Ota
                 keep.Add(guid);
                 var packed = settings.CreateOrMoveEntry(guid, group, false, false);
                 packed.address = bakedAsset.Path;
-                packed.SetLabel(OtaContentGroups.Label, false, true, false);
-                packed.SetLabel(OtaContentGroups.PackLabel(bakedAsset.Path), true, true, false);
+                SetPackLabel(packed, OtaContentGroups.PackLabel(bakedAsset.Path));
             }
 
             foreach (var bakedFile in reg.Files)
@@ -222,8 +239,7 @@ namespace Survival.Editor.Ota
                 keep.Add(guid);
                 var packed = settings.CreateOrMoveEntry(guid, group, false, false);
                 packed.address = bakedFile.Path;
-                packed.SetLabel(OtaContentGroups.Label, false, true, false);
-                packed.SetLabel(OtaContentGroups.PackLabel(bakedFile.Path), true, true, false);
+                SetPackLabel(packed, OtaContentGroups.PackLabel(bakedFile.Path));
             }
 
             var stale = new List<AddressableAssetEntry>();
