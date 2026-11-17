@@ -21,8 +21,8 @@ public sealed class CampaignCatalogTests
     public void Every_battle_character_is_a_BattleLocked_roster_fighter_on_its_own_side()
     {
         var catalog = Camp.Catalog();
-        // The twelve demo fighters, plus Vorgath (a boss outside that lineup).
-        Assert.Equal(LockedBattleRoster.All.Count + 1, catalog.Heroes.Count);
+        // The twelve demo fighters, plus the extras outside that lineup (Vorgath, Seraphine, Kaelen, Malzareth).
+        Assert.Equal(LockedBattleRoster.All.Count + LockedBattleRoster.Extras.Count, catalog.Heroes.Count);
         foreach (var h in catalog.Heroes)
         {
             Assert.True(LockedBattleRoster.TryFind(h.Fighter, out var f), h.Id);
@@ -483,7 +483,7 @@ public sealed class CampaignRewardsAndSaveTests
         Assert.StartsWith("{\"version\":1,", json);
         Assert.Contains("\"hero.sir_aldric\":{\"owned\":true,\"level\":1,\"stars\":1,\"shards\":0}", json);
         using var doc = System.Text.Json.JsonDocument.Parse(json);
-        Assert.Equal(6, doc.RootElement.GetProperty("heroes").EnumerateObject().Count());
+        Assert.Equal(Camp.Catalog().Heroes.Count(h => h.Side == CampaignSide.Hero), doc.RootElement.GetProperty("heroes").EnumerateObject().Count());
     }
 
     [Fact]

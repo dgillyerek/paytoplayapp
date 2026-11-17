@@ -308,10 +308,13 @@ namespace Survival.Editor
             try
             {
                 var i = 0;
-                foreach (var fighter in LockedBattleRoster.All)
+                // The twelve demo lanes plus the fighters outside them (Vorgath, Seraphine, Kaelen, Malzareth), which the
+                // campaign, world camps and runner spawn by name.
+                var fighters = LockedBattleRoster.All.Concat(LockedBattleRoster.Extras).ToList();
+                foreach (var fighter in fighters)
                 {
                     EditorUtility.DisplayProgressBar("Survival player bake", "Warming " + fighter.Name,
-                        0.05f + (0.3f * i++ / Math.Max(1, LockedBattleRoster.All.Count)));
+                        0.05f + (0.3f * i++ / Math.Max(1, fighters.Count)));
                     try
                     {
                         var rig = RunnerRig.Spawn(fighter.Name, root.transform, "Warm_" + fighter.Name);

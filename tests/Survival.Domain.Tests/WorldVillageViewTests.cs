@@ -418,7 +418,7 @@ public sealed class WorldSimTests
         var layout = Layouts.WorldWithNodes();
         Assert.NotNull(layout.Player);
         Assert.True(layout.Entities.Count(e => e.Kind is WorldEntityKind.RivalVillage or WorldEntityKind.AllyVillage) >= 8);
-        Assert.Equal(WorldArtKeys.CampTypes.OrderBy(x => x), layout.Entities.Where(e => e.Kind == WorldEntityKind.EnemyCamp).Select(e => e.Type).Distinct().OrderBy(x => x));
+        Assert.Equal(WorldArtKeys.CampTypes.Concat(WorldArtKeys.MapOnlyCampTypes).OrderBy(x => x), layout.Entities.Where(e => e.Kind == WorldEntityKind.EnemyCamp).Select(e => e.Type).Distinct().OrderBy(x => x));
         Assert.True(layout.Entities.Count(e => e.Kind == WorldEntityKind.EnemyCamp) >= 6);
         Assert.True(layout.Entities.Select(e => e.Level).Where(l => l > 0).Distinct().Count() >= 6, "camps of different levels");
         Assert.Equal(WorldArtKeys.ResourceTypes.OrderBy(x => x), layout.Entities.Where(e => e.Kind == WorldEntityKind.ResourceNode).Select(e => e.Type).Distinct().OrderBy(x => x));
@@ -590,7 +590,7 @@ public sealed class WorldVillageArtTests
             Assert.True(pack.Strings.ContainsKey(key), key);
         }
 
-        foreach (var t in WorldArtKeys.CampTypes)
+        foreach (var t in WorldArtKeys.CampTypes.Concat(WorldArtKeys.MapOnlyCampTypes))
         {
             Assert.True(pack.Strings.ContainsKey("world.camp." + t), t);
         }

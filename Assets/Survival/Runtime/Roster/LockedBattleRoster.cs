@@ -919,6 +919,57 @@ namespace Survival.Domain.Roster
             VorgathAttacks,
             VorgathMotion.IdlePoseName);
 
+        /// <summary>
+        /// The Design characters of 2026-11-03 that join the game outside the twelve demo lanes, like Vorgath:
+        /// Seraphine and Kaelen (heroes) and Malzareth (villain). Configured campaign fights, world camps and (Malzareth)
+        /// the runner spawn them by name. Their clips, frames and hit bones are <see cref="NewCharMotion"/>; one actor
+        /// (NewCharActor) plays all three from preview_new_chars.
+        /// </summary>
+        public static readonly LockedBattleFighter Seraphine = FromNewChar(NewCharMotion.Seraphine);
+
+        public static readonly LockedBattleFighter Kaelen = FromNewChar(NewCharMotion.Kaelen);
+
+        public static readonly LockedBattleFighter Malzareth = FromNewChar(NewCharMotion.Malzareth);
+
+        /// <summary>The battle rotation of a <see cref="NewCharSpec"/>: each authored attack clip at its measured contact frame.</summary>
+        public static LockedBattleAttack[] NewCharAttacks(NewCharSpec spec)
+        {
+            var list = new LockedBattleAttack[spec.Attacks.Count];
+            for (var i = 0; i < list.Length; i++)
+            {
+                var a = spec.Attacks[i];
+                list[i] = new LockedBattleAttack(a.Label, a.Pose, a.Seconds, a.ContactFrame, spec.StrikeBone, -1f, false, default, a.Impact);
+            }
+
+            return list;
+        }
+
+        private static LockedBattleFighter FromNewChar(NewCharSpec spec) => new LockedBattleFighter(
+            spec.Name,
+            spec.Side,
+            "preview_new_chars",
+            NewCharMotion.WalkPoseName,
+            spec.Primary.Pose,
+            spec.Primary.Label,
+            spec.DesignHeightMetres,
+            spec.WalkSpeedMetresPerSecond,
+            0f,
+            string.Empty,
+            spec.AttackRangeMetres,
+            spec.Primary.Seconds,
+            false,
+            6,
+            NewCharActorClassName,
+            0f,
+            NewCharAttacks(spec),
+            NewCharMotion.IdlePoseName);
+
+        /// <summary>The one actor class that plays every <see cref="NewCharMotion"/> character.</summary>
+        public const string NewCharActorClassName = "NewCharActor";
+
+        /// <summary>Fighters outside the twelve demo lanes: Vorgath, Seraphine, Kaelen, Malzareth.</summary>
+        public static IReadOnlyList<LockedBattleFighter> Extras => new[] { Vorgath, Seraphine, Kaelen, Malzareth };
+
         public static readonly LockedBattleFighter Bonequill = new LockedBattleFighter(
             FighterNames.Bonequill,
             BattleSide.Villain,
@@ -939,7 +990,7 @@ namespace Survival.Domain.Roster
             BonequillAttacks);
 
         /// <summary>
-        /// A fighter by name: the twelve demo lanes, or Vorgath (a boss outside that lineup).
+        /// A fighter by name: the twelve demo lanes, or one of the <see cref="Extras"/> outside that lineup (Vorgath, Seraphine, Kaelen, Malzareth).
         /// </summary>
         public static bool TryFind(string name, out LockedBattleFighter fighter)
         {
@@ -952,10 +1003,13 @@ namespace Survival.Domain.Roster
                 }
             }
 
-            if (string.Equals(Vorgath.Name, name, StringComparison.Ordinal))
+            foreach (var f in Extras)
             {
-                fighter = Vorgath;
-                return true;
+                if (string.Equals(f.Name, name, StringComparison.Ordinal))
+                {
+                    fighter = f;
+                    return true;
+                }
             }
 
             fighter = default;

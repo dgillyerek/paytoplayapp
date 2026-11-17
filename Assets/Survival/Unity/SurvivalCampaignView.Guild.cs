@@ -274,7 +274,7 @@ namespace Survival.Unity
             _sheetRefresh = Refresh;
         }
 
-        private static readonly string[] MatePortraits = { "sir_aldric", "rowan", "oakenshield", "stormcrest", "emberfang", "ironhowl", "nightfang", "vespera", "ashwyrm", "blightroot", "bonequill" };
+        private static readonly string[] MatePortraits = { "sir_aldric", "rowan", "oakenshield", "stormcrest", "emberfang", "ironhowl", "nightfang", "vespera", "ashwyrm", "blightroot", "bonequill", "seraphine", "kaelen" };
 
         /// <summary>A stable hero portrait per guildmate name, so the same mate always has the same face.</summary>
         private static string MatePortrait(string mate)

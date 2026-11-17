@@ -27,12 +27,12 @@ namespace Survival.Unity
     public sealed class NewCharsPreview : MonoBehaviour
     {
         public const string FolderName = "preview_new_chars";
-        private const string Dir = "Assets/ThemePack/fantasy_kingdom_a/art/" + FolderName + "/";
-        private const float Blend = 0.22f;
+        internal const string Dir = "Assets/ThemePack/fantasy_kingdom_a/art/" + FolderName + "/";
+        internal const float Blend = 0.22f;
         private const float IdleGap = 1.2f;
         private const float HitAt = 0.5f;
 
-        private sealed class Def
+        internal sealed class Def
         {
             public Def(string folder, string prefix, bool hero, float z, float stopX, string[] clips, BattleImpactKind[] impacts, Color core, Color glow)
             {
@@ -59,7 +59,7 @@ namespace Survival.Unity
                 new[] { BattleImpactKind.VoidFireBreath, BattleImpactKind.SwordSteel, BattleImpactKind.SwordSteel }, new Color(0.8f, 0.5f, 1f), new Color(0.3f, 0.05f, 0.5f)),
         };
 
-        private sealed class Unit
+        internal sealed class Unit
         {
             public Def Def = null!;
             public Transform Host = null!;
@@ -151,16 +151,33 @@ namespace Survival.Unity
 
         private Unit? Spawn(Def def)
         {
+            var host = new GameObject(def.Prefix + "_Preview").transform;
+            host.SetParent(transform, false);
+            var u = BuildUnit(def, host);
+            if (u == null)
+            {
+                Destroy(host.gameObject);
+                return null;
+            }
+
+            LockedBattleGround.AddContactShadow(host, 0.8f, 0.6f);
+            return u;
+        }
+
+        /// <summary>
+        /// Body, clips, atlas, cape springs and props of one character under <paramref name="host"/>, feet on the host's
+        /// ground. Shared with <see cref="NewCharActor"/>, which plays the same characters in the battle and the runner.
+        /// </summary>
+        internal static Unit? BuildUnit(Def def, Transform host)
+        {
             var dir = Dir + def.Folder + "/";
             var prefab = PlayerAssets.Load<GameObject>(dir + def.Prefix + "_rig_rest.fbx");
             if (prefab == null)
             {
-                Debug.LogError("New characters preview: missing " + dir + def.Prefix + "_rig_rest.fbx");
+                Debug.LogError("New characters: missing " + dir + def.Prefix + "_rig_rest.fbx");
                 return null;
             }
 
-            var host = new GameObject(def.Prefix + "_Preview").transform;
-            host.SetParent(transform, false);
             var model = Instantiate(prefab, host);
             model.name = def.Prefix;
             foreach (var a in model.GetComponentsInChildren<Animator>(true))
@@ -200,7 +217,6 @@ namespace Survival.Unity
                 u.HipsRest = model.transform.InverseTransformPoint(u.Hips.position);
             }
 
-            LockedBattleGround.AddContactShadow(host, 0.8f, 0.6f);
             // Body bones only (before the cape is attached): the crossfade snapshots these.
             var bones = new List<Transform>();
             foreach (var t in model.GetComponentsInChildren<Transform>(true))
@@ -276,7 +292,7 @@ namespace Survival.Unity
         /// <summary>
         /// Put the rig and mesh scale and rotation back after a clip sample. See <see cref="Unit.ScalePins"/>.
         /// </summary>
-        private static void RestoreScales(Unit u)
+        internal static void RestoreScales(Unit u)
         {
             if (u.Def.Prefix != "SERAPHINE")
             {
@@ -294,7 +310,7 @@ namespace Survival.Unity
             }
         }
 
-        private static AnimationClip? LoadClip(string path)
+        internal static AnimationClip? LoadClip(string path)
         {
             foreach (var o in PlayerAssets.LoadAll(path))
             {
@@ -308,7 +324,7 @@ namespace Survival.Unity
             return null;
         }
 
-        private void AttachCape(Unit u, string dir)
+        private static void AttachCape(Unit u, string dir)
         {
             var prefab = PlayerAssets.Load<GameObject>(dir + u.Def.Prefix + "_cape.fbx");
             if (prefab == null)
@@ -644,7 +660,7 @@ namespace Survival.Unity
         private static bool Loops(Unit u) => u.Clip <= 1;
 
         /// <summary>Dying plays once and holds the last frame. It is not an attack.</summary>
-        private static bool OneShot(Unit u) => u.Def.Clips[u.Clip] == "dying";
+        internal static bool OneShot(Unit u) => u.Def.Clips[u.Clip] == "dying";
 
         private static int NextAttackClip(Unit u)
         {
@@ -681,7 +697,7 @@ namespace Survival.Unity
         }
 
         /// <summary>Captures the current pose so the next clip fades in from it (no snap).</summary>
-        private static void Snapshot(Unit u)
+        internal static void Snapshot(Unit u)
         {
             for (var i = 0; i < u.Bones.Length; i++)
             {
@@ -697,7 +713,7 @@ namespace Survival.Unity
         /// empty; its imported local pose is copied and the reference instance is dropped. Not a bone, and not parented
         /// before the crossfade snapshot, so the blend does not fight the stream.
         /// </summary>
-        private void AttachMouthStream(Unit u)
+        private static void AttachMouthStream(Unit u)
         {
             var head = FindBone(u.Model.transform, "Bone.004");
             if (head == null)
@@ -788,7 +804,7 @@ namespace Survival.Unity
             return true;
         }
 
-        private static void HoldSocket(Unit u)
+        internal static void HoldSocket(Unit u)
         {
             if (u.Socket == null)
             {
@@ -804,7 +820,7 @@ namespace Survival.Unity
         /// Sword prop parented to a hand bone. The local pose is copied off the imported prop FBX
         /// (the same bone, with the mesh parented to it) so Unity's axis conversion is already in the numbers.
         /// </summary>
-        private void AttachHandProp(Unit u, string dir, string file, string boneName, string meshName)
+        private static void AttachHandProp(Unit u, string dir, string file, string boneName, string meshName)
         {
             var hand = FindBone(u.Model.transform, boneName);
             if (hand == null)
@@ -884,7 +900,7 @@ namespace Survival.Unity
         /// Local pose of a sword under its hand, read the same way AttachHandProp does. Does not spawn a mesh.
         /// Used for the inward-slash aim only.
         /// </summary>
-        private bool ReadAltGrip(Unit u, string dir, string file, string boneName, string meshName)
+        private static bool ReadAltGrip(Unit u, string dir, string file, string boneName, string meshName)
         {
             var prefab = PlayerAssets.Load<GameObject>(dir + file);
             if (prefab == null)
@@ -938,7 +954,7 @@ namespace Survival.Unity
             return true;
         }
 
-        private static void HoldGrips(Unit u)
+        internal static void HoldGrips(Unit u)
         {
             var inward = u.AltPos.Count == u.Grips.Count && u.Def.Clips[u.Clip] == "attack2_inwardslash";
             for (var i = 0; i < u.Grips.Count; i++)
@@ -964,7 +980,7 @@ namespace Survival.Unity
             }
         }
 
-        private static void HoldHips(Unit u)
+        internal static void HoldHips(Unit u)
         {
             if (u.Hips == null)
             {
@@ -1014,7 +1030,7 @@ namespace Survival.Unity
         private static readonly Vector3 StaffThrustLocalMetres = new Vector3(-0.0335f, -0.2257f, -0.3127f);
         private const float StaffThrustTiltDegrees = -35f;
 
-        private void AttachSeraphineStaff(Unit u, string dir)
+        private static void AttachSeraphineStaff(Unit u, string dir)
         {
             if (u.Def.Prefix != "SERAPHINE")
             {
@@ -1049,7 +1065,7 @@ namespace Survival.Unity
         /// point up the shaft. The thrust also shifts and tilts the staff so the shaft
         /// lies diagonally on her palm (see StaffThrustLocalMetres).
         /// </summary>
-        private static void ApplyStaffGrip(Unit u)
+        internal static void ApplyStaffGrip(Unit u)
         {
             if (u.Staff == null)
             {

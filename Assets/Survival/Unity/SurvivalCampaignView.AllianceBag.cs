@@ -27,7 +27,7 @@ namespace Survival.Unity
         private static readonly Color AllyCaption = new Color(1f, 0.86f, 0.48f, 1f);
         private static readonly Color AllyCrestGlow = new Color(0.35f, 0.55f, 1f, 0.75f);
         private static readonly Color AllyOnline = new Color(0.45f, 0.9f, 0.45f, 1f);
-        private static readonly string[] AllyPortraits = { "sir_aldric", "rowan", "oakenshield", "stormcrest", "emberfang", "ironhowl", "nightfang", "vespera", "ashwyrm", "blightroot", "bonequill" };
+        private static readonly string[] AllyPortraits = { "sir_aldric", "rowan", "oakenshield", "stormcrest", "emberfang", "ironhowl", "nightfang", "vespera", "ashwyrm", "blightroot", "bonequill", "seraphine", "kaelen" };
 
         /// <summary>Orb-style card: navy plate, bevel, gold frame, gold rivets in the corners.</summary>
         private RectTransform OrnateCard(RectTransform parent, string name, float x0, float y0, float x1, float y1, bool lit)

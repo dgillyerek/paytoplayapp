@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Survival.Domain.Base;
 using Survival.Domain.View;
 using Survival.Domain.World;
@@ -27,6 +28,12 @@ namespace Survival.Domain.Theme
         public const string MarchRival = "theme_a.world.march.rival";
 
         public static readonly string[] CampTypes = { "goblin", "bandit", "undead", "dragon" };
+
+        /// <summary>
+        /// Camp types the shipped map places by hand but online tiles never pick (they are not a level band in
+        /// <see cref="OnlineTile"/>): Malzareth's camp.
+        /// </summary>
+        public static readonly string[] MapOnlyCampTypes = { "malzareth" };
         public static readonly string[] ResourceTypes = { "gold", "wood", "food", "stone" };
         public static readonly string[] MapProps = { "forest", "mountains", "lake" };
         public static readonly string[] VillageProps = { "bushes", "rocks", "field", "tree" };
@@ -75,7 +82,7 @@ namespace Survival.Domain.Theme
                     BottomNav.IconBattle, BottomNav.IconBuild,
                     Village(WorldEntityKind.PlayerVillage), Village(WorldEntityKind.RivalVillage), Village(WorldEntityKind.AllyVillage)
                 };
-                foreach (var t in CampTypes)
+                foreach (var t in CampTypes.Concat(MapOnlyCampTypes))
                 {
                     keys.Add(Camp(t));
                 }
