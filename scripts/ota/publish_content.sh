@@ -22,9 +22,11 @@ if ota_s3 ls "$dest/" >/dev/null 2>&1 && [ -n "$(ota_s3 ls "$dest/" || true)" ];
 fi
 
 # Bundles have hashed names: cache for a year. Catalog / hash / manifest: one minute (they are re-read at boot).
-ota_s3 cp "$src/" "$dest/" --recursive --exclude "catalog*" --exclude "content_manifest.json" \
+# Spaces listing is private, so every object is uploaded ACL public-read (ota_s3_put).
+ota_s3_put cp "$src/" "$dest/" --recursive --exclude "catalog*" --exclude "content_manifest.json" \
   --cache-control "public, max-age=31536000, immutable" --no-progress
-ota_s3 cp "$src/" "$dest/" --recursive --exclude "*" --include "catalog*" --include "content_manifest.json" \
+ota_s3_put cp "$src/" "$dest/" --recursive --exclude "*" --include "catalog*" --include "content_manifest.json" \
   --cache-control "public, max-age=60" --no-progress
 echo "Published content $version for $target to $dest."
 echo "Go live: set \"content_version\": \"$version\" in the remote config and run scripts/ota/publish_config.sh."
+echo "Then flush the Spaces CDN so edges drop any previous catalog: doctl compute cdn flush <cdn-id> --files /content/$target/$version/*"

@@ -38,11 +38,13 @@ for platform in "${platforms[@]}"; do
     fi
   fi
 
-  ota_s3 cp "$config" "$OTA_BUCKET_URL/config/$platform/history/config_v$new_version.json" --content-type application/json --cache-control "public, max-age=31536000" --no-progress
-  ota_s3 cp "$config" "$OTA_BUCKET_URL/$live_key" --content-type application/json --cache-control "public, max-age=60" --no-progress
+  ota_s3_put cp "$config" "$OTA_BUCKET_URL/config/$platform/history/config_v$new_version.json" --content-type application/json --cache-control "public, max-age=31536000" --no-progress
+  ota_s3_put cp "$config" "$OTA_BUCKET_URL/$live_key" --content-type application/json --cache-control "public, max-age=60" --no-progress
   echo "Published config v$new_version for $platform (content_version ${content_version/-/(bundled)})."
 done
 
 if [ "${OTA_S3_ENDPOINT:-}" = "aws" ] && [ -n "${OTA_CLOUDFRONT_DISTRIBUTION_ID:-}" ]; then
   aws cloudfront create-invalidation --distribution-id "$OTA_CLOUDFRONT_DISTRIBUTION_ID" --paths "/config/*" >/dev/null
+elif [ "${OTA_S3_ENDPOINT:-}" != "aws" ]; then
+  echo "Flush the Spaces CDN so edges drop the previous live config: doctl compute cdn flush <cdn-id> --files /config/*"
 fi

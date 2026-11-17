@@ -112,8 +112,9 @@ the same patch. Do not edit the targets.
 2. Build the content: either use **Survival/OTA/Build Content (active build target)** in the Editor, or (preferred) run
    the GitHub workflow **OTA content** (`ota-content.yml`) with a new `content_version`, e.g. `2026.11.20-1`. The workflow
    builds Android content and uploads it to `content/Android/<content_version>/`. Locally, run
-   `scripts/ota/publish_content.sh Android 2026.11.20-1` with the `OTA_R2_*` variables set. Content folders are immutable
-   and are never overwritten.
+   `scripts/ota/publish_content.sh Android 2026.11.20-1` with the `OTA_S3_*` variables set. Content folders are immutable
+   and are never overwritten. After a catalog upload, flush the Spaces CDN (see Hosting below) so edges drop any previous
+   catalog immediately instead of waiting out `max-age=60`.
 3. Go live: in `ota/remote_config.json`, set `content_version` to the new folder and raise `config_version`. Then
    either run the workflow with `publish_config` ticked, or run `scripts/ota/publish_config.sh ota/remote_config.json`
    locally. That script runs the free-pace check, refuses a non-increasing `config_version`, checks that the content
@@ -142,7 +143,8 @@ To roll back, re-point and re-publish. Nothing is deleted.
 
 | Situation | Result |
 | --- | --- |
-| `cdn_host` empty (this PR's default) | No network at all. Baked content and baked config are used, and the game plays exactly as before. |
+| `cdn_host` empty | No network at all. Baked content and baked config are used, and the game plays exactly as before. |
+| `cdn_host` set, baked `content_version` empty (this PR's default host is `ota.brightmoatstudios.com`) | Config is fetched at boot. Content stays bundled until a remote config with a `content_version` is published. A DNS miss or timeout falls back to the last-good, then baked, config. |
 | Offline, no cache | Baked config and bundled content. |
 | Offline, earlier download cached | Cached config, cached catalog, cached bundles. The OTA content still shows (the download size is 0, so it loads from the device). |
 | Config 404, timeout, invalid, or older than cached | Cached, then baked, config. Logged. |
@@ -158,18 +160,45 @@ To roll back, re-point and re-publish. Nothing is deleted.
   the OTA sources for identifiers, header writes, reflection and script runtimes.
 * No analytics, crash or third-party SDK is added. Play `app-update` declares no permissions and no AD_ID.
   `AndroidFamiliesManifest` AD_ID stripping is unchanged, and the CI bundle check still runs.
-* On the CDN, turn off anything that sets cookies or fingerprints visitors on the OTA domain. On Cloudflare that means
-  Bot Fight Mode, Browser Integrity Check, and Web Analytics / RUM injection. Keep logs at the default and do not use
-  them for user analytics.
+* On the CDN, turn off anything that sets cookies or fingerprints visitors on the OTA domain. Do not enable DigitalOcean
+  or other analytics, RUM, or cookie injection on `ota.brightmoatstudios.com`. Keep logs at the default and do not use
+  them for user analytics. Public file listing on the Space stays off; only objects uploaded with `ACL public-read` are
+  fetchable.
 * The update screen's store link sits behind the existing parental gate in child mode (Apple Kids and Families: no link
   out of the app without a grown-up). Play's in-app update UI is Play's own and needs no link.
 
-## Hosting choice: Cloudflare R2 + public custom domain
+## Hosting: DigitalOcean Spaces (nyc3) + public CDN domain
 
-R2 is S3-compatible and has **no egress fees**. That matters because every content drop is downloaded by every phone.
-Its built-in CDN is reached through a public custom domain, and the scripts use the standard AWS CLI against the R2
-endpoint. The alternative is AWS S3 + CloudFront: set `OTA_S3_ENDPOINT=aws` and use an IAM key with the same secret
-names, plus optionally `OTA_CLOUDFRONT_DISTRIBUTION_ID` for config invalidation. Egress is billed per GB there.
+OTA files live in the DigitalOcean Space **`kingdomdefense-ota`** in **nyc3**. The scripts use the standard AWS CLI
+against the S3-compatible endpoint `https://nyc3.digitaloceanspaces.com`. Phones load over HTTPS from the managed CDN
+host **`ota.brightmoatstudios.com`**, baked as `cdn_host` in `Assets/Survival/Resources/Ota/ota_settings.json` (no
+scheme, no path). The load path is `https://<cdn_host>/content/[BuildTarget]/{contentVersion}` and the remote config is
+`https://<cdn_host>/config/<platform>/remote_config.json`.
+
+**DNS fallback.** The domain's nameservers were moved to DigitalOcean, so `ota.brightmoatstudios.com` may take up to
+about a day to resolve everywhere. Until it does, the same public objects are also at
+`https://kingdomdefense-ota.nyc3.cdn.digitaloceanspaces.com/...`. Do not bake that fallback host into a store build;
+it is only for checks and temporary test builds. After DNS has settled, keep `cdn_host` on `ota.brightmoatstudios.com`.
+
+**Public-read uploads.** The bucket's file listing is restricted (anonymous `List` is off). Every object must be
+uploaded with `ACL public-read` so phones can GET it over the CDN. `scripts/ota/_env.sh` adds `--acl public-read` on
+Spaces uploads. Cache-Control is `public, max-age=31536000, immutable` for hashed bundles and history copies, and
+`public, max-age=60` for catalogs, `.hash` files, `content_manifest.json`, and the live remote config.
+
+**CDN cache purge.** After publishing a new catalog or a live config, flush the Spaces CDN so edges drop the previous
+files immediately instead of waiting out the 60-second max-age:
+
+```
+doctl compute cdn list
+doctl compute cdn flush <cdn-id> --files /content/Android/<content_version>/* /config/*
+```
+
+`publish_content.sh` and `publish_config.sh` print a reminder with the paths just uploaded. A full flush (`doctl
+compute cdn flush <cdn-id>` with no `--files`) is fine if the id is handy and the Space only holds OTA objects.
+
+The alternative is AWS S3 + CloudFront: set `OTA_S3_ENDPOINT=aws` and use an IAM key with the same secret names, plus
+optionally `OTA_CLOUDFRONT_DISTRIBUTION_ID` for config invalidation. Egress is billed per GB there. That path does not
+add a public-read ACL.
 
 Bucket layout:
 
@@ -181,23 +210,27 @@ content/Android/<content_version>/catalog_ota.{bin|json,hash}, *.bundle, content
 content/iOS/<content_version>/...
 ```
 
-## What Derek must provide
+## What is already set up, and what is still needed
 
-1. **Cloudflare account** (free plan is fine) with **R2 enabled**. R2 needs a payment method on file; the free tier
-   covers 10 GB storage, and egress is free.
-2. **An R2 bucket**, e.g. `kingdomdefense-ota`, with location hint near the soft-launch markets (APAC/ENAM).
-3. **A custom domain on Cloudflare**, connected to the bucket (R2 › bucket › Settings › Custom Domains), e.g.
-   `ota.<your-domain>`. Do not use the `r2.dev` URL in production, because it is rate-limited. Turn off Bot Fight Mode,
-   Browser Integrity Check and Web Analytics on that host, per the kid-safety notes. Then put the host name in
-   `Assets/Survival/Resources/Ota/ota_settings.json` → `"cdn_host": "ota.<your-domain>"` (no `https://`). That needs a
-   store build.
-4. **An R2 API token** scoped to **Object Read & Write on that bucket only**, added as **GitHub repo secrets**:
-   - `OTA_R2_ACCOUNT_ID`: the Cloudflare account id
-   - `OTA_R2_ACCESS_KEY_ID`: the token's Access Key ID
-   - `OTA_R2_SECRET_ACCESS_KEY`: the token's Secret Access Key
-   - `OTA_R2_BUCKET`: the bucket name
+Already in place (Nov 16, 2026):
 
-   The existing `UNITY_EMAIL`, `UNITY_PASSWORD` and `UNITY_LICENSE`/`UNITY_SERIAL` secrets are reused.
+1. **DigitalOcean Space** `kingdomdefense-ota` in **nyc3**, S3 endpoint `https://nyc3.digitaloceanspaces.com`.
+2. **CDN host** `ota.brightmoatstudios.com` (managed Let's Encrypt cert), baked as `cdn_host` in
+   `Assets/Survival/Resources/Ota/ota_settings.json`. Fallback while DNS propagates:
+   `kingdomdefense-ota.nyc3.cdn.digitaloceanspaces.com`.
+3. **GitHub repo secrets**, from a Spaces key limited to that bucket (read/write/delete):
+   - `OTA_S3_ACCESS_KEY_ID`
+   - `OTA_S3_SECRET_ACCESS_KEY`
+   - `OTA_S3_BUCKET`
+   - `OTA_S3_ENDPOINT`
+
+   The existing `UNITY_EMAIL` and `UNITY_PASSWORD` secrets are reused.
+
+Still needed:
+
+4. **A Unity license secret** (`UNITY_LICENSE` for Personal, or `UNITY_SERIAL` for Plus/Pro) so the OTA content
+   workflow can build Addressables in CI. Until that is set, content can be built on a machine with the Editor and
+   uploaded with `scripts/ota/publish_content.sh`.
 5. **The workflow switched on.** Copy `ci/github-workflows/ota-content.yml` to `.github/workflows/ota-content.yml` (see
    `ci/github-workflows/README.md`), or approve `gh auth refresh -s workflow` for the bot.
 6. **Play Console (in-app updates).** In-app updates only work for installs **from Google Play** (any track, including
@@ -216,6 +249,6 @@ check these in the Editor:
 
 1. Open the project and let Unity resolve `com.unity.addressables` (updates `Packages/packages-lock.json`).
 2. Run **Survival/OTA/Set Up Addressables** and commit `Assets/AddressableAssetsData`.
-3. Run **Survival/OTA/Build Content**, serve `ServerData/` locally or upload it, set `cdn_host`, and check the splash
-   progress bar, offline fallback, and a min-version block.
+3. Run **Survival/OTA/Build Content**, upload it (or serve `ServerData/` locally), and check the splash progress bar,
+   offline fallback, and a min-version block. `cdn_host` is already set to `ota.brightmoatstudios.com`.
 4. Build an `.aab` and confirm the Gradle hook added `app-update` and the AD_ID check still passes.

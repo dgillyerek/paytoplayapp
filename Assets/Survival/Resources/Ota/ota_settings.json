@@ -1,6 +1,6 @@
 {
-  "_doc": "Over-the-air settings baked into the build (Docs/OTA.md). cdn_host empty = OTA off: no network, baked content and Resources/Ota/remote_config.default.json only. Set cdn_host to the CDN custom domain (host name only, e.g. ota.kingdomdefense.example) before a release build.",
-  "cdn_host": "",
+  "_doc": "Over-the-air settings baked into the build (Docs/OTA.md). cdn_host empty = OTA off: no network, baked content and Resources/Ota/remote_config.default.json only. Host is the DigitalOcean Spaces CDN (ota.brightmoatstudios.com). Path layout is content/[platform]/{contentVersion} and config/{platform}/remote_config.json.",
+  "cdn_host": "ota.brightmoatstudios.com",
   "config_path": "config/{platform}/remote_config.json",
   "content_api": 1,
   "config_timeout_seconds": 5,

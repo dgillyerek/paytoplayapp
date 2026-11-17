@@ -49,14 +49,15 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
-          OTA_R2_ACCOUNT_ID: ${{ secrets.OTA_R2_ACCOUNT_ID }}
-          OTA_R2_ACCESS_KEY_ID: ${{ secrets.OTA_R2_ACCESS_KEY_ID }}
-          OTA_R2_SECRET_ACCESS_KEY: ${{ secrets.OTA_R2_SECRET_ACCESS_KEY }}
-          OTA_R2_BUCKET: ${{ secrets.OTA_R2_BUCKET }}
+          OTA_S3_ACCESS_KEY_ID: ${{ secrets.OTA_S3_ACCESS_KEY_ID }}
+          OTA_S3_SECRET_ACCESS_KEY: ${{ secrets.OTA_S3_SECRET_ACCESS_KEY }}
+          OTA_S3_BUCKET: ${{ secrets.OTA_S3_BUCKET }}
+          OTA_S3_ENDPOINT: ${{ secrets.OTA_S3_ENDPOINT }}
+          OTA_S3_REGION: nyc3
           VERSION: ${{ inputs.content_version }}
         run: |
           missing=()
-          for name in UNITY_EMAIL UNITY_PASSWORD OTA_R2_ACCOUNT_ID OTA_R2_ACCESS_KEY_ID OTA_R2_SECRET_ACCESS_KEY OTA_R2_BUCKET; do
+          for name in UNITY_EMAIL UNITY_PASSWORD OTA_S3_ACCESS_KEY_ID OTA_S3_SECRET_ACCESS_KEY OTA_S3_BUCKET OTA_S3_ENDPOINT; do
             [ -n "${!name}" ] || missing+=("$name")
           done
           [ -n "$UNITY_LICENSE" ] || [ -n "$UNITY_SERIAL" ] || missing+=("UNITY_LICENSE (Personal) or UNITY_SERIAL (Plus/Pro)")
@@ -106,10 +107,11 @@ jobs:
 
       - name: Upload content to the bucket
         env:
-          OTA_R2_ACCOUNT_ID: ${{ secrets.OTA_R2_ACCOUNT_ID }}
-          OTA_R2_ACCESS_KEY_ID: ${{ secrets.OTA_R2_ACCESS_KEY_ID }}
-          OTA_R2_SECRET_ACCESS_KEY: ${{ secrets.OTA_R2_SECRET_ACCESS_KEY }}
-          OTA_R2_BUCKET: ${{ secrets.OTA_R2_BUCKET }}
+          OTA_S3_ACCESS_KEY_ID: ${{ secrets.OTA_S3_ACCESS_KEY_ID }}
+          OTA_S3_SECRET_ACCESS_KEY: ${{ secrets.OTA_S3_SECRET_ACCESS_KEY }}
+          OTA_S3_BUCKET: ${{ secrets.OTA_S3_BUCKET }}
+          OTA_S3_ENDPOINT: ${{ secrets.OTA_S3_ENDPOINT }}
+          OTA_S3_REGION: nyc3
         run: |
           sudo chown -R "$(id -u):$(id -g)" ServerData || true
           scripts/ota/publish_content.sh Android "${{ inputs.content_version }}"
@@ -137,8 +139,9 @@ jobs:
           dotnet-version: 8.0.x
       - name: Check (free-pace sim) and publish the remote config
         env:
-          OTA_R2_ACCOUNT_ID: ${{ secrets.OTA_R2_ACCOUNT_ID }}
-          OTA_R2_ACCESS_KEY_ID: ${{ secrets.OTA_R2_ACCESS_KEY_ID }}
-          OTA_R2_SECRET_ACCESS_KEY: ${{ secrets.OTA_R2_SECRET_ACCESS_KEY }}
-          OTA_R2_BUCKET: ${{ secrets.OTA_R2_BUCKET }}
+          OTA_S3_ACCESS_KEY_ID: ${{ secrets.OTA_S3_ACCESS_KEY_ID }}
+          OTA_S3_SECRET_ACCESS_KEY: ${{ secrets.OTA_S3_SECRET_ACCESS_KEY }}
+          OTA_S3_BUCKET: ${{ secrets.OTA_S3_BUCKET }}
+          OTA_S3_ENDPOINT: ${{ secrets.OTA_S3_ENDPOINT }}
+          OTA_S3_REGION: nyc3
         run: scripts/ota/publish_config.sh "${{ inputs.config_path }}"

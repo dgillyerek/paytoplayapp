@@ -57,10 +57,12 @@ public sealed class OtaTests
     }
 
     [Fact]
-    public void The_baked_settings_leave_ota_off_so_the_game_runs_on_bundled_content()
+    public void The_baked_settings_point_at_the_spaces_cdn_and_keep_bundled_content_until_a_version_is_published()
     {
         var s = OtaSettings.Parse(File.ReadAllText(Path.Combine(OtaDir, "ota_settings.json")));
-        Assert.False(s.Enabled);
+        Assert.True(s.Enabled);
+        Assert.Equal("ota.brightmoatstudios.com", s.CdnHost);
+        Assert.Equal("https://ota.brightmoatstudios.com/config/android/remote_config.json", s.ConfigUrl("android"));
         Assert.False(OtaBootProgress.WantsRemoteContent(s, RemoteConfigParser.Parse(Baked, AppId).Config!));
         var on = OtaSettings.Parse("{\"cdn_host\": \"https://ota.example.com/\"}");
         Assert.Equal("ota.example.com", on.CdnHost);
@@ -330,10 +332,13 @@ public sealed class OtaTests
         Assert.Contains("\"com.unity.addressables\": \"2.10.3\"", manifest);
         var live = Path.Combine(RepoRoot, ".github", "workflows", "ota-content.yml");
         var wf = File.ReadAllText(File.Exists(live) ? live : Path.Combine(RepoRoot, "ci", "github-workflows", "ota-content.yml"));
-        foreach (var secret in new[] { "OTA_R2_ACCOUNT_ID", "OTA_R2_ACCESS_KEY_ID", "OTA_R2_SECRET_ACCESS_KEY", "OTA_R2_BUCKET" })
+        foreach (var secret in new[] { "OTA_S3_ACCESS_KEY_ID", "OTA_S3_SECRET_ACCESS_KEY", "OTA_S3_BUCKET", "OTA_S3_ENDPOINT" })
         {
             Assert.Contains("secrets." + secret, wf);
         }
+
+        Assert.DoesNotContain("OTA_R2_", wf);
+        Assert.Contains("OTA_S3_REGION: nyc3", wf);
 
         Assert.Contains("Survival.Editor.Ota.OtaContentBuild.BuildFromCommandLine", wf);
         Assert.True(File.Exists(Path.Combine(RepoRoot, "scripts", "ota", "publish_content.sh")));
