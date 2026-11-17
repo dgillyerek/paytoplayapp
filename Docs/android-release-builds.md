@@ -8,7 +8,7 @@
 | | |
 | --- | --- |
 | Trigger | every push to `main`; or **Actions → Android build → Run workflow** with format `aab` on any branch |
-| Flavor | `-flavor fantasy_kingdom_a` → `FlavorBuildSettings.TryApplyFlavor` (same as menu **Survival/Use Theme A Flavor**): product name, company `PayToPlay`, bundle id, scenes, icons |
+| Flavor | `-flavor fantasy_kingdom_a` → `FlavorBuildSettings.TryApplyFlavor` (same as menu **Survival/Use Theme A Flavor**): product name, company `Brightmoat Studios LLC`, bundle id, scenes, icons |
 | Scripting | IL2CPP, ARM64 only |
 | Target API | 36 (Android 16), required by Google Play for new apps and updates since 2026-08-31. Min API 26 |
 | Signing | the upload key from repo secrets `ANDROID_KEYSTORE_BASE64` / `ANDROID_KEYSTORE_PASS` / `ANDROID_KEYALIAS_NAME` / `ANDROID_KEYALIAS_PASS`. The build fails rather than fall back to Unity's debug key |

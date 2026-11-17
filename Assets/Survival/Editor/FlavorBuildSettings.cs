@@ -18,7 +18,7 @@ namespace Survival.Editor
         /// <summary>Theme A store identity. Must match Assets/AppFlavor/fantasy_kingdom_a/flavor.json (guarded by a test).</summary>
         public const string ThemeAFlavorId = "fantasy_kingdom_a";
         public const string ThemeAProductName = "Kingdom Defense";
-        public const string ThemeACompanyName = "PayToPlay";
+        public const string ThemeACompanyName = "Brightmoat Studios LLC";
         public const string ThemeABundleId = "com.paytoplay.fantasykingdoma";
 
         /// <summary>Google Play has required new apps and updates to target Android 16 (API 36) since 2026-08-31.</summary>
@@ -57,6 +57,7 @@ namespace Survival.Editor
         {
             PlayerSettings.productName = ThemeAProductName;
             PlayerSettings.companyName = ThemeACompanyName;
+            // Bundle IDs stay com.paytoplay.fantasykingdoma and must be set explicitly so Unity does not derive them from companyName.
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, ThemeABundleId);
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.iOS, ThemeABundleId);
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Standalone, ThemeABundleId);

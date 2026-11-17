@@ -19,12 +19,14 @@ public sealed class ThemeAProjectSettingsTests
     public void Project_settings_carry_the_theme_a_store_identity()
     {
         var s = Settings;
-        Assert.Contains("  companyName: PayToPlay\n", s, StringComparison.Ordinal);
+        Assert.Contains("  companyName: Brightmoat Studios LLC\n", s, StringComparison.Ordinal);
         Assert.Contains("  productName: " + Flavor.GetProperty("flavor.app_name").GetString() + "\n", s, StringComparison.Ordinal);
         var id = Flavor.GetProperty("flavor.bundle_id").GetString();
         Assert.Equal("com.paytoplay.fantasykingdoma", id);
         Assert.Contains("    Android: " + id + "\n", s, StringComparison.Ordinal);
+        Assert.Contains("    Standalone: " + id + "\n", s, StringComparison.Ordinal);
         Assert.Contains("    iPhone: " + id + "\n", s, StringComparison.Ordinal);
+        Assert.Contains("  overrideDefaultApplicationIdentifier: 1\n", s, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -47,8 +49,11 @@ public sealed class ThemeAProjectSettingsTests
         var src = File.ReadAllText(Path.Combine(Root, "Assets", "Survival", "Editor", "FlavorBuildSettings.cs"));
         Assert.Contains("ThemeAProductName = \"" + Flavor.GetProperty("flavor.app_name").GetString() + "\"", src, StringComparison.Ordinal);
         Assert.Contains("ThemeABundleId = \"" + Flavor.GetProperty("flavor.bundle_id").GetString() + "\"", src, StringComparison.Ordinal);
-        Assert.Contains("ThemeACompanyName = \"PayToPlay\"", src, StringComparison.Ordinal);
+        Assert.Contains("ThemeACompanyName = \"Brightmoat Studios LLC\"", src, StringComparison.Ordinal);
         Assert.Contains("PlayerSettings.companyName = ThemeACompanyName", src, StringComparison.Ordinal);
+        Assert.Contains("SetApplicationIdentifier(NamedBuildTarget.Android, ThemeABundleId)", src, StringComparison.Ordinal);
+        Assert.Contains("SetApplicationIdentifier(NamedBuildTarget.iOS, ThemeABundleId)", src, StringComparison.Ordinal);
+        Assert.Contains("SetApplicationIdentifier(NamedBuildTarget.Standalone, ThemeABundleId)", src, StringComparison.Ordinal);
     }
 
     [Fact]
