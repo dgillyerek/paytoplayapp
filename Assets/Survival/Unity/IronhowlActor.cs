@@ -1,10 +1,10 @@
 using Survival.Domain.Enemies;
+using Survival.Domain.Roster;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
 #if UNITY_EDITOR
 using UnityEditor;
-using Survival.Domain.Roster;
 #endif
 
 namespace Survival.Unity
