@@ -80,6 +80,13 @@ namespace Survival.Editor.Ota
             }
 
             var counts = PrepareGroups();
+            // Start from an empty ServerData/[target] so stale bundles from earlier builds never get uploaded.
+            var staleDir = Path.Combine("ServerData", activeTarget.ToString());
+            if (Directory.Exists(staleDir))
+            {
+                Directory.Delete(staleDir, true);
+            }
+
             AddressableAssetSettings.CleanPlayerContent();
             AddressableAssetSettings.BuildPlayerContent(out AddressablesPlayerBuildResult result);
             if (!string.IsNullOrEmpty(result.Error))
@@ -91,7 +98,7 @@ namespace Survival.Editor.Ota
             var target = EditorUserBuildSettings.activeBuildTarget.ToString();
             var outDir = Path.Combine("ServerData", target);
             Directory.CreateDirectory(outDir);
-            var files = Directory.GetFiles(outDir, "*", SearchOption.TopDirectoryOnly).Select(Path.GetFileName).OrderBy(f => f, StringComparer.Ordinal).ToList();
+            var files = Directory.GetFiles(outDir, "*", SearchOption.TopDirectoryOnly).Select(Path.GetFileName).Where(f => f != "content_manifest.json").OrderBy(f => f, StringComparer.Ordinal).ToList();
             var manifest = "{\n  \"content_version\": \"" + contentVersion + "\",\n  \"build_target\": \"" + target + "\",\n  \"content_api\": 1,\n" +
                            "  \"unity\": \"" + Application.unityVersion + "\",\n  \"built_at\": \"" + DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ") + "\",\n" +
                            "  \"groups\": {" + string.Join(",", counts.Select(c => "\"" + c.Key + "\": " + c.Value)) + "},\n" +

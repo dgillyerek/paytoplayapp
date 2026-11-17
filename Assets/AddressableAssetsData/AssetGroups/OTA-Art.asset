@@ -1,0 +1,1793 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: OTA-Art
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: OTA-Art
+  m_GUID: d386b9cb2eb9c8648b611267c85da30b
+  m_SerializeEntries:
+  - m_GUID: 00f23d3214491f2488e97e9edec28efb
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/ui/scroll_parchment.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 01460c74ff494ffbafac9a9508f4397c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/build_complete.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 01a97d2d902ccd44ab061b136bb8c710
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv08.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 020c81e07d4a25f47b81625a44707423
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/buildings/farm.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0284841875944261a4278728be9c76cd
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_ironhowl_sweep.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 054903aaf1b3edd4ab2a6af59366a143
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/village_player.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 05626c406cc24b13b841dc4fdb8de44b
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_barrier_stone_break.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0580f07221df49c78463da9b077d4d88
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_boss_dodge_warning.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 06518f7f7dd0430e80ef3fee7c5c8ede
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/emberfang/emberfang_roughness.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-emberfang
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 065e3fd280f87c34d96abbb8eb6ae10e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/icons/chest_open.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 07ea76d0e69a4404f9713f4f85874676
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/fx/rays.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 08e25c41f61a839e307251c4daf68e55
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f04.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 08eea9c972f290d4e90eaa75c80d0fef
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/wanted_poster.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0952e88d0d9c4ea4947b86fa679ff38b
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/ui_gift_celebrate.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0b656238e1030b14798c42ef72ab896f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/store/flavor_icon.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-store
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0bb5e3024a3d58c479b15e653e7575b3
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/heart_feathered.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0c2362e219d946ffb004e13a1402e15d
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/amb_village_loop.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1085aa6d19cb2ea45a886c8ff31cea4d
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/prop_mountains.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 108a36105f7e5b44895419f844d6db57
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/speedup.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 118bca8216c78bf40b51d179d8cfbfa5
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/ui/button_green.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 14735b178675403e9154ba7f349f15a2
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_ironhowl_ground_pound.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1568390defe74f2bbd4ca57e1ab06421
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/vespera/VESPERA_blenderig.fbm/VESPERA_normal_2.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vespera
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 160df0efacbf3d54784cab3e3d7cc7ba
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f03.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 16a55543ca84c9142b123903e0a0c104
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/ui/ribbon_red.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 173a5a6cf5ed48ae9b266cb82bb6d277
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_hero_hurt.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 177ea253b68b4466ae3b04d18d4130fa
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_magic_impact.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 184bfde6863293f40a7b794cc10d9395
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/ui/icon_world.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1967ea6a66db08f44a017c3896ed3626
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/portraits/portrait_bonequill.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-heroes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 19c5e0fe0bd049b9a67116d5e565885c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_enemy_death.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 19d910813fb142d98e97ef3a9fb64bf4
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_hazard_fire.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 19f36d52072b94af418362d5eb079f66
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f05.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1cf2560ffbea62f44ae832306123c164
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv17.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1d83c06317c6b9a44be6460f00864b32
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/battle/crossed_swords.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-battle
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1dad31f8f4b04da3b109a0f7381cd73f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-pilot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1dcc93bb375e78947b3bc4a914de1e6e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/portraits/portrait_vespera.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-heroes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1dddeb96a1894ab2b53d0f4878cfc684
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_barrier_wood_break.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1f832579dec56f944b28b18fe10327eb
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/store/flavor_icon_adaptive_background.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-store
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2097bd76c4339b849a97b34dd719ddbd
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/icons/gem.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 20ba7331583f9fc4595c5253837b3a75
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_atlas_2048.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-malzareth
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 21453363863aefa4abefc345d7aeaa99
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/village_ally.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 22d85ae247fcad848a47dd93178f3a7c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/ui/nav_button.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 23aefd180c3c4b51a396addaa0c8cd88
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_ironhowl_growl.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 23bc0a34f304e4548b0e8016641ae72d
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_atlas_2048.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-malzareth
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 261855e8af08f2b46aea45a80be7546f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/ui/button_gold.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 28aab88d00bd69442bf2575c68812b61
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/ui/button_blue.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2917166ab4f999942ac7caaf3b67bf0f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_cape_1024.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-kaelen
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 29214b6531cd4d8f8d45b70616a6ec60
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/oakenshield/OAKENSHIELD_blenderig.fbm/OAKENSHIELD_fresh_normal_2.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-oakenshield
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 29c0509453e2b7e41b679dc870f5de5c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/wishing_well.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2a047e63183ca5b0529473e6fc18a077
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f06.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2a578637668c06b47bf1ed657f437af2
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/VORGATH_atlas_2048.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2b6794461ccb4744d8b16d48e646cd3c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/gems_tier_3.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2ba9a6a81899449d8e1699cf3bd7653b
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/stormcrest/STORMCREST_blenderig.fbm/STORMCREST_normal_2.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-stormcrest
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2d502c68081bd4e458dd3c8f2f9668f8
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world-nodes/01_home_cottage.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world-nodes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2d8c54af1c7b0c94e96abeb31c528505
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/node_wood.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2ed324d6fafd91c47b50df36b39f71ed
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/plot_empty.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2f7003d583c9460db4789a3e9f20cbba
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_boss_quake_rumble.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 30a776c94a63e4d4099992d81de111c5
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f04.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 30bf89bbdd777224d84df61953987c86
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/trophy_silver.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 30d99f0b36d41db428ea2a3c17da0df9
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/ui/bar_fill_green.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 30ec0be3c7d24814a13c6d106febcccd
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/emberfang/emberfang_metallic.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-emberfang
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 30eda8d7552ed424a9837ca662cede24
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/ui/THEME_A_PLAY_REFERENCE_MOCK_LOCKED_1080x1920.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3216bc47b0a5da64285c93f9f1acc3b3
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/map/THEME_A_WORLD_TERRAIN_PLAIN_1080x1920.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-map
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3229064465bc495f91535879425acb87
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture_metallic.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-pilot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 331ae5f38636c5e47bc46bd53413d2ce
+    m_Address: ota/art
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ota
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 33c8d59858ac4442b53ff2487e48270e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/bonequill/BONEQUILL_cape.fbm/BONEQUILL_cape_normal_2.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-bonequill
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 33e5e1bbb46a5ad41a70a6ae303ce7e3
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-pilot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 341fad82f5724704eb2e0b1f9c73a848
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/trophy_bronze.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 34eec9a8add808a4f901876f9167bdc0
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/trophy_gold.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3561caceb76722f4984ea1283fe52161
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/SIR_ALDRIC_REAR_MASTER_LOCKED_512.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-heroes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 36bcf1d59fe8464da29d179dd46b2d33
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/emberfang/emberfang_basecolor.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-emberfang
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 39448d0f2754f9a4b875511126e72fc6
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/SERAPHINE_atlas_2048.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-seraphine
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 39d5cf1c882a6fc469d647fd5a0a9eb6
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/portraits/portrait_blightroot.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-heroes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 39f008ad27e86534a91ec8058764894d
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/chest_mystery.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3a05f283cfe1459698ae28a0a4092c5b
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/bonequill/BONEQUILL_cape.fbm/BONEQUILL_cape_basecolor_0.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-bonequill
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3a40d26b426022942a91d3e9522b54ab
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/hero_shard.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3ad14441f76945438caa94a3c450bcdb
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/bonequill/BONEQUILL_blenderig.fbm/BONEQUILL_fresh_basecolor_0.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-bonequill
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3b158f74294db6c163a584f70d29b188
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f07.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3c86a37659a84ff4ababc59241a87018
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/ui/scroll_parchment.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3d33891239a6e884ab588771b2570014
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/icons/gems_tier_2.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3d41c0b2beb9e204285688e7df38dd6c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/portraits/portrait_emberfang.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-heroes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3d4a16c32ed74f84ba086491c89f4926
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/ui/badge_free.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3e30b0bf04664432bd8febc3cbfafb9f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_ironhowl_punch.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3e4b60ca4b91ace42ba9609cafc250dc
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/food.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3e93385d172e41d883f8ba5ac7373ae0
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/bonequill/BONEQUILL_blenderig.fbm/BONEQUILL_fresh_metal_rough_1.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-bonequill
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3f6910a495cd497c8f1b62be667bc5e2
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/bonequill/BONEQUILL_blenderig.fbm/BONEQUILL_fresh_normal_2.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-bonequill
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3f971e7fb98946c79f8ccbf04135d2b6
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/lyra/LYRA_blenderig.fbm/LYRA_tighten_basecolor_0.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-lyra
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 40e4abb8213c48b187e2915266b96761
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/collect_resource.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 416484a3542641c469b6e7b283d52cbd
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture_roughness.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-pilot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 41c65066b0ae55840b5dfc52dfbf3511
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/map/THEME_A_BATTLE_GRASS_TILE_512.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-map
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 42b4340c7f19ba54a840eb5be90e522c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f05.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 42b9b81a85614e17b49264b873840802
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/oakenshield/OAKENSHIELD_blenderig.fbm/OAKENSHIELD_fresh_metal_rough_1.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-oakenshield
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 44494d01b3582db4fa941540ad7075e6
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/march_rival.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 449439f0b6875dc439b6fc9ec3f621b0
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/icons/wood.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 467bcdd5ed9c18f4d86b72d98bd8d80f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/fx/burst_ring.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 47495b7870470cd449cfd528e9c87241
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world-nodes/02_gather_quarry.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world-nodes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 47d1c2dc3814cc14a94f616dce6c2a2f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/ui/button_green.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4898b76418c148dea552a13b80925d48
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/rowan/ROWAN_blenderig.fbm/ROWAN_fresh_metal_rough_1.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-rowan
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 499c17fb12b723f4bacd7caf7c092a6b
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/icons/gems_tier_1.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4a89f740da7b4c22ac02f2318433cd32
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/upgrade_start.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4aa99e502357b034ba09566070b5814f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv10.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4c57d7be8e23e5349a148a9be35aba3a
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/prop_bushes.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4ccec74d19bb02047955d4211ad9fee8
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/portraits/portrait_stormcrest.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-heroes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4eed9ed7817eccd429966fafca77d120
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/village_rival.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 50b1c9235c72f9549b32a8b6045a42e0
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv05.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 520c47bc30366174b8e7d36eebe0aced
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/ui/plate_navy.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 52867067ca4d54e46854b4ed6fd415fd
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/ui/header_banner.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 52a4936ce985f4d418e200d7e93e6b96
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/ui/panel_navy.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5345b48c979e4f0d88be8a1fa81fa4a5
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/nightfang/NIGHTFANG_blenderig.fbm/NIGHTFANG_basecolor_0.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-nightfang
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5374a70b86b63944fb51fbf819ec4675
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/VORGATH_fire_stream_flipbook_4x4.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 53e6546fd2aa5db4c9d0c604ee1e81d7
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/ui/bar_fill_gold.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 54eb68fa8becd524fab17ac54e918ebd
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/runner/crate_weapon.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-runner
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5503820cca520b84f96ed537f1747f31
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/help_hand.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5549ef500aebd4b439d85c138d13372e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/crusade_banner.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5593967d898c4b98b7f16eba66cd7cd4
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/VORGATH_fire_stream_flipbook_4x4.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 57a5e89caca137a42928445b3668ae9b
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world-nodes/02_gather_quarry_map.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world-nodes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5996b5865b1f13643b1061dc7ab0c3d1
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/ui/level_badge.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5a28f60393564bdb94321d44a90f4f13
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/lyra/LYRA_blenderig.fbm/LYRA_tighten_metal_rough_1.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-lyra
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5a63fb709c6a4eab96aa926ade3ac8a1
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ashwyrm/ASHWYRM_blenderig.fbm/ASHWYRM_basecolor_0.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ashwyrm
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5ab13a123de3bb443b8630a6d56a7097
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/ui/badge_upgrade.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5d9bd14ee5ffc7d4d8759db44af0188a
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/gems_tier_1.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5e7ba14c0b89fc24c8e8cd91dfa96dc7
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/SERAPHINE_cape_1024.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-seraphine
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5ea5b0c41d167804f87e6dc1526b2a75
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/icons/gold.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5fa3f238837d2774d8dbf5add7496eef
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/icons/gift.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 61465cb8d8ab47ea93a5c6d7e29780aa
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_pickup_pop.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 61bd8f890d974584aa35f9b759ddf9ec
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv04.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 61c36d91757c1d04a8411c80797d63f7
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/icons/stone.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 624a7399ee19224469c3c0fdbe0a2bf4
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/portraits/portrait_ironhowl.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-heroes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 62ab583455bf4744a0d710f3adc4cb32
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/rowan/ROWAN_blenderig.fbm/ROWAN_fresh_basecolor_0.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-rowan
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 63dc83cdbc9dc4446b82f293a59934ec
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_cape_1024.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-malzareth
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 645ec6f9a037c3348944df6424a1b762
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/camp_bandit.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 64b3baa3aa9f44e4988bc09b22f5c1b3
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/CAPE_ATTACH.md
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-kaelen
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 659226a65ccf4de8bb175725ec772653
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ironhowl/ironhowl_roughness.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ironhowl
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 67091b0d56bf4c1c81d2539d98048ecf
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_barrier_spike_hit.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 67b140ad314c4b4a82511da3ce559544
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/ui_store_open.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 67dee5e88e704a56a2affa15652b1e5f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_hazard_log.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 691436b70b46afa42bb851741a8c63df
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/runner/runner_icon.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-runner
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 69629edc8e50d6f4f8f46c76f566cf72
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/wood.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6a3b4f912a9285e46a5a9a03427f12c3
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_cape_1024.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-kaelen
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6b69b3cbbeb7a2f48937ed4178d7ab49
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv11.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6e6f886072fae5f44a6b07c1c9b79198
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/node_food.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6e777ad021669f246aa913011deb40fe
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv12.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 71152c0cc48640949a341073ccb0ae7a
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/camp_dragon.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7158ebc2d2594b4ba4a60a4e81cdd7fe
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/ui_tap.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 72bea43acb7740f4803979a541a00072
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_enemy_projectile.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 737aee8ceb69d6341aab8950784bff90
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/war_banner.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7384d2640a66aa7449c5a25d89fb9c8e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f00.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 73e0482f2fe8b7b458dd034c9daf3fbe
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/buildings/castle.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7428b54abc426094c8d00d7d6394185a
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/CAPE_ATTACH.md
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-malzareth
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7443d60624fb45546a9ecb3fb1658e2e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/ui/button_red.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 74eb222910536fb4ca07106b85efd53f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/gems_tier_2.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 76287cb440cd9024c88205dae5ed099b
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv15.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 78c5c9e7a7f48be4684cfd160f86acce
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/icons/food.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7a36ea037b4ab9e43a2f1107a7d90841
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/fx/rays.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7aa877a3f276df14683be0ce5948c5e3
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv16.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7d8a26a2b4848944b9064adb3cd1cb4c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/portraits/portrait_rowan.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-heroes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7da2de140c436004b976a20eecfe57d5
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv13.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7f1e28a7c557137429a43182b6671e25
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/battle/loading_backdrop.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-battle
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7f50b06122c3dfb46bb4659e70a20643
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/malzareth/MALZARETH_cape_1024.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-malzareth
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7fb4ecb4ed432ed4fa98b8293843bc16
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/ui/ribbon_blue.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 80f5e9b03da24a54ca5a24406d5ade5e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/buildings/quarry.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8288852b75efd3349b6df4420432c3c1
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/ui/icon_alliance.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 83e12d3420021ba49b68cb2cba05adef
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv14.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 83f8f8c569bbb9a44951008e12463e95
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/node_gold.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 843501e2ef253e14b9cb4a043e513e4f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/theme_a_hero_knight_01.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-heroes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8575b837962f48746b0ff6958e4595cd
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/merchant_cart.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 863259a07ec440eb9cf94fde263bbe65
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_arrow_hit.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 86cbb7b335564dce9217cc87a99e8723
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/purchase_success.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 88bd8edfef029804dad4efb0bf691964
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/buildings/forge.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 88cd82ec0522b2f4a824da4221b42d82
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/SERAPHINE_atlas_2048.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-seraphine
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8913741fe9ae81f43813fadd0585e718
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv03.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8b0f49c9089f40e6b2aaa1fa025be4ad
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_hero_death.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8b5de9e2604f470ca326af7470e2f4af
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/Blightroot_normal.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8cf8776e4918a1848b865faba8d5a754
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/guild_crest.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8d3f6335a0386344f95258a7dacd3f79
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv20.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8d79ddfb71ba0c243876b98f6d8eb096
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/ui/badge_free.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8da5448a19fcd5a4f9b64712d4f3008d
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/prop_rocks.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8dc83f9255daa28468db7f0628297d88
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/ui/ribbon_blue.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8f107af74815e44478dafee5f424b188
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/chest_closed.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 903349a7a27a8784e916949b61c21196
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv06.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 90e10b209be04f17ac68aac37d53ccff
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/collect_food.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9114bd6e1bf0b5b41ba2745f09cf02a4
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/prop_lake.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 95b7775b3168b0547b368c72d128049f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/camp_goblin.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 95d73f2d50498ee40a0bdfe9c400dcee
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/ui/button_blue.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 969b821e1a2a4362b029eb6cece4b149
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture_roughness.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-pilot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 97c226a3a39d7ef47a5cc9d6ff0ec03e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/gift.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9a68140b19a84e589618576359013a5a
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_oakenshield_throw.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9bf49e2afecb4e04ca8cb5ad4966897e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/march_player.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9c5b6c52b1d0ca94c8a3f3bf6aac60cb
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f02.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9ca905b5eb1c4da4a74358852400ca93
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/rowan/ROWAN_blenderig.fbm/ROWAN_fresh_normal_2.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-rowan
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9dcbec96a22128c4d8df496bd4a71370
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/prop_tree.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9f1ff7f61de74d22a3c4667c5a9e299a
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ashwyrm/ASHWYRM_blenderig.fbm/ASHWYRM_normal_2.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ashwyrm
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a12a42fb534e49da9516f534b7382060
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/lyra/LYRA_blenderig.fbm/LYRA_tighten_normal_2.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-lyra
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a4aec0ba26704134a1250bf8646b7a2f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_follower_down.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a85e23547675e394dba41b2184c66b23
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_atlas_2048.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-kaelen
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: adba2691f66dc51468329523b4484142
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/orb_crystal.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aeaed592c4404d018e7e3d702fa296b9
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_powerup.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: afb99c52b0b147589dae0c7247bd0a55
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/rowan/ROWAN_coat.fbm/ROWAN_coat_basecolor_0.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-rowan
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b053a10299d52664fb5353054ac9ed2c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/camp_undead.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b0e2ac462b27e9a48967dd75d4fcf08f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/ui/ribbon_red.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b100f3001eef83e438b8a188c36aa2b1
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world-nodes/04_guild_fort.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world-nodes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b11ef2bb1db144d3b565b464633c0b67
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_follower_join.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b15b737afbc9ab94d8b5998498e75f90
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/tile_meadow.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b15ccc62beca13946b25a0c724eaa91e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/ui/bar_frame.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b23daa5a0feaeef49a5dc5c5da08d569
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/ui/button_gold.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b2605e3f99c5d9b41a6e6f1378600d0e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/runner/crate_speed.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-runner
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b326d4377da7ce440b8c1f6436d01376
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/ui/bar_fill_blue.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b3461c42b01aae74baf7db51908d45d5
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv01.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b3c9f5db140dad749a5e2e66c47f2923
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/portraits/portrait_nightfang.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-heroes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b40794dea3d78cb43a5b233ec57a164e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/store/flavor_icon_round.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-store
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b6fd9e2a3946414ba388c469d506f1a1
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/nightfang/NIGHTFANG_blenderig.fbm/NIGHTFANG_normal_2.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-nightfang
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b7302c41c4b9d364f9efa3600e6843c5
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/pilot/mixamo_tex/Meshy_AI_Lionheart_Sentinel_0929004215_texture_metallic.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-pilot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b84e8eb5596f85b49ad7428f75c711a1
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/fx/confetti.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b928e723b944474bbd600789218780f1
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/emberfang/emberfang_normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-emberfang
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b9c69819d1ea462b8a5f33ff6e644513
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/jingle_win.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b9d7c5336cf7dc944b652ee2b7cc5750
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/track/track_atlas.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ba80239a9de34228a013f3b4c03dc53a
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_enemy_hit.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bb2a6d0dad2f4ce292d647cfa3446420
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_ironhowl_charge.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bf18d8e452be44b8aa940fa7362af333
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/jingle_lose.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bf98aa9a8d10479dae64803f08ef9104
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/rowan/ROWAN_coat.fbm/ROWAN_coat_normal_2.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-rowan
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bfaa86aabf0f9b34182129a746fb05f6
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv02.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c05c304345100304f926649b6c9a815a
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/icons/gems_tier_3.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c0a3764c9d5548f4b818435493ef79ef
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sting_boss_incoming.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c1939d77bdd2b9b4987b86d9237b7e71
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/SIR_ALDRIC_REAR_MASTER_LOCKED.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-heroes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c281021ac352f5e4e9339ab1fb371c49
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f06.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c32e53a7619efd4459bbf8256141ed52
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/ui/button_red.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c34af37a4779a034fa9341ba1235e2fc
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/fx/glow.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c427108466ac4a03ac460c07766e4a9f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/oakenshield/OAKENSHIELD_blenderig.fbm/OAKENSHIELD_fresh_basecolor_0.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-oakenshield
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c43b6fc458c0b694c8a73c837937eb2a
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv07.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c4a402c8404bce548814b6fad990fb18
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/prop_forest.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c4a81e07b2d64f5a9c3e1d80f6b24a11
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f00.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c5efe4de0a7c6f1448a9f4de36d96785
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world-nodes/05_fight_dark_keep.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world-nodes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c6eac6baa6964f741a62fcc1502b5e35
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world-nodes/03_build_outpost.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world-nodes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c9f8f5d6dd79207498b5ee4059c8f5f2
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f07.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ca6566fd6f3845e5aae5fa969c29c400
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_crate_hit.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cb0f9ba3ef3dc8b4ab6a996bd3254597
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/ui/icon_battle.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cc931fc1b87ea4b46b68bbc4f804b2bf
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/portraits/portrait_ashwyrm.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-heroes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cd86de04622b2664091658cad85f6d6e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/prop_field.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ce7d6a905a6478740b6a765f1264fb9a
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/portraits/portrait_sir_aldric.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-heroes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ce7e6c0907494f38859bcd7bdb82e8f8
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_barrier_stone_hit.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ce928438c62a75048a51a0c144adb071
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/ui/nav_bar.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ced8d3c171d340f1817c6910a8bc961c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_enemy_death_big.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cf73129ce0ed8f449b6a5a8cdb8a7cd5
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/portraits/portrait_lyra.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-heroes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d03d62e4c1c843209941262349f34f94
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/Blightroot_basecolor.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d0952b7a8a84aed49b3349283dc78048
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/ui/header_banner.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d13cbd5dfbd0b0243bac604461f21ac0
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/map/THEME_A_BATTLE_DIRT_TRACK_256x512.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-map
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d22d6312279840509a2967a53823548b
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_barrier_wood_hit.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d2e260e2efd8ae24780a67cd61580be1
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/clearing.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d2f0e2e0ddfa38a4abce89f380fb1d6b
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/chest_open.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d36fef747d3f2ce4aa73906a4a824ad0
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/buildings/lumber_mill.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d4db5530a00b479ab0587efa4b78f617
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/blightroot/Blightroot_metallicRoughness.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-blightroot
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d5b92f18c3e7506b0d4f2e91a7c35b22
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f01.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d5cdd617849b728448d1c3ca239c691e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/tile_dirt.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d6a2bbf730f2da54b9bc7bf5ddf7baf8
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/ui/chip_frame.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d8e7f0181c9241d2a55dc18c81a02fcd
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_lyra_shot.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d9b6ba77ae2e5b540a802965c6c04211
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/ui/icon_bag.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: da22c753d0a36cd4c80cbb2a86689e9c
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/SERAPHINE_cape_1024.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-seraphine
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: da7816f166330a34d897729f959c474f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/icons/chest_closed.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dc66bcdaf074924438a0bb51b6c7715b
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/seraphine/CAPE_ATTACH.md
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-seraphine
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dc954591f88e45faa64dca7d2d2a3cd9
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_barrier_spike_break.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: df9187f4b1ad42b8a3ece23dd257ab55
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/mus_runner_march_loop.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e209d5d476ee456b81da5584e36a051f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_rowan_shot.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e21c88babfb245a1b9fed85758c90ab8
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/collect_gold.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e41a00989b0158146b31c3a3f598c60e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/gem.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e427fa94e6cc4e46956b8c49f7ff659f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ironhowl/ironhowl_metallic.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ironhowl
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e52d5c72bbd22cf46b91399b040b2681
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/energy.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e6c03a29d4f8617c1e503fa2b8d46c33
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f02.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e87a863118f3e3449b980195e9f3514f
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/splash/THEME_A_SPLASH_KEEP_1080x1920.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-splash
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e9244e03552580d46b5bc8ce1fd71fb4
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/ui/icon_upgrade.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eb71bcf9df0017c4898949aa8fc002bf
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/icons/speedup.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ec62839a893569a439429f06e77f80fe
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/fx/sparkle.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ed53ced540ed4ada88ef6fbafe914eae
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_sword_hit.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ed79ffd2defaa65409adcf21fcfec7af
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/ui/icon_build.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ee58bdc15e45a184cb280d0ee72d2594
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/gold.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: efe16ff3960b46448aa6f6461fec5c94
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv18.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f05b6e77a5eb4d1aa2c2e17c0abaa242
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ironhowl/ironhowl_basecolor.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ironhowl
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f0c79d8b31f8258409d32e696a6160c6
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/hero_tome.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f19701a8eb33480dadaccb98739970b1
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/vespera/VESPERA_blenderig.fbm/VESPERA_basecolor_0.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vespera
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f271297b0f13a12479cac4558819f9a8
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/stone.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f2a277841237c3a4582ee18cdb82e61a
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/painted/icons/tavern_board.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f370588a000d4d28a17b7ff576ac0b5a
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/stormcrest/STORMCREST_blenderig.fbm/STORMCREST_basecolor_0.jpg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-stormcrest
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f3ee085ba4dc433a9d4b2ddf45921387
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_hazard_spikes.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f3f9ff2f15e641a4894ef2301a2b8192
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/tile_lawn.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f44689f8878af704894464af566b674e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world-nodes/06_explore_ruins.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world-nodes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f4fe2a6537ff0324a8e0ec2ae9d96ad9
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv19.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f64c97474355b004da6f09cc76296e46
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f01.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f7aa42db52e24712a989118c2e641f2a
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/ui_deny.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f7d14b30e509728d2f6140b3c9e57d44
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/vorgath/vfx/strips/VORGATH_fire_f03.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-vorgath
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f7fcd82277982fd4f97c13dd605b505e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/hook/ui/panel_navy.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-hook
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f8d51be9cfabf4949a4cdd16d1ac2f18
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/store/flavor_icon_adaptive_foreground.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-store
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f93c28b4d8e2423bacd58243b7e3e5f2
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ironhowl/ironhowl_normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-ironhowl
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fe6ad3d4c1a767042985c3a7b621c865
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/heroes/portraits/portrait_oakenshield.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-heroes
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: feb044ed2b9f2b14d81ab0cdbf3576db
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/village/castle_lv09.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ff488d596058011449ee2ecc2dc3201e
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/ui/icon_heroes.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - art-world
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ff63204af1994ca7b44738ee386a4f2b
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/mus_battle_loop.ogg
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - shared
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ff84ee2808778f04c80ff3522a266bce
+    m_Address: Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/KAELEN_atlas_2048.png
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - char-kaelen
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: fc7adbccfd936954e965d0d75c590c52, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 3c90ba59e6ab47440b5c5fb7edd5885d, type: 2}
+    - {fileID: 11400000, guid: 529c72d3eb1362f4393a8a9edd3fca73, type: 2}
