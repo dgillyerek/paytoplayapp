@@ -28,7 +28,17 @@ Splash (SurvivalBootstrap) ──► OtaBoot.Run ──► LoadPack / LoadSessio
   `PlayerAssets` by `Assets/...` path, backed in a phone by the baked `PlayerAssetRegistry` in Resources. OTA content
   is four more registries (`OTA-Characters`, `OTA-Animations`, `OTA-Art`, `OTA-ThemePack`) shipped in remote Addressables
   bundles. `PlayerAssets` checks them first and falls through to the baked registry, so an update replaces assets path by
-  path and anything it lacks comes from the build. The grouping rule is `OtaContentGroups.Classify` (tested).
+  path and anything it lacks comes from the build. The grouping rule is `OtaContentGroups.Classify` (tested): type wins
+  over the `Assets/ThemePack/` prefix, so a character or texture update does not re-download the whole pack.
+  Animation clips, controllers, override controllers and anim folders go to Animations; models, prefabs, materials and
+  meshes go to Characters; textures and images go to Art; only config and data (raw JSON/text, including catalogs under
+  ThemePack, AppFlavor and Resources/Survival) go to ThemePack. Audio and other non-config leftovers go to Art.
+* **Bundle packing.** `OTA-ThemePack` stays packed together (it is small config). `OTA-Characters`, `OTA-Animations` and
+  `OTA-Art` use Addressables PackTogetherByLabel. The content build registers each baked asset as its own Addressable
+  entry with a pack label from `OtaContentGroups.PackLabel` (`char-lyra`, `art-store`, `shared`, …), so changing one
+  character only invalidates that character's bundle. The four registries keep the `ota` label and are loaded as a set;
+  individual assets are not labelled `ota`. Re-run **Survival/OTA/Set Up Addressables** and **Build Content** after this
+  change so the groups pick up PackTogetherByLabel and the new classification.
 * **Load path.** The Addressables profile sets `Remote.LoadPath =
   https://{Survival.Unity.Ota.OtaHost.CdnHost}/content/[BuildTarget]/{Survival.Unity.Ota.OtaHost.ContentVersion}`.
   Curly braces are evaluated on the phone: the host comes from `Assets/Survival/Resources/Ota/ota_settings.json` and the

@@ -263,16 +263,75 @@ public sealed class OtaTests
 
     [Theory]
     [InlineData("Assets/ThemePack/fantasy_kingdom_a/pack.json", true, OtaContentGroup.ThemePack)]
-    [InlineData("Assets/ThemePack/fantasy_kingdom_a/art/store/flavor_icon.png", false, OtaContentGroup.ThemePack)]
+    [InlineData("Assets/ThemePack/fantasy_kingdom_a/art/store/flavor_icon.png", false, OtaContentGroup.Art)]
+    [InlineData("Assets/ThemePack/fantasy_kingdom_a/art/store/flavor_icon.png", true, OtaContentGroup.Art)]
+    [InlineData("Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/lyra/LYRA_blenderig.fbx", false, OtaContentGroup.Characters)]
+    [InlineData("Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/lyra/lyra_attack.anim", false, OtaContentGroup.Animations)]
+    [InlineData("Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/lyra/lyra_basecolor.png", false, OtaContentGroup.Art)]
+    [InlineData("Assets/ThemePack/fantasy_kingdom_a/strings/en.json", true, OtaContentGroup.ThemePack)]
     [InlineData("Assets/Survival/Resources/Survival/runner_levels.json", true, OtaContentGroup.ThemePack)]
     [InlineData("Assets/ArtSource/Characters/Lyra/lyra_attack.anim", false, OtaContentGroup.Animations)]
     [InlineData("Assets/Survival/Unity/Anims/walk.controller", false, OtaContentGroup.Animations)]
     [InlineData("Assets/ArtSource/Rowan/rowan.fbx", false, OtaContentGroup.Characters)]
     [InlineData("Assets/ArtSource/fx/spark.png", false, OtaContentGroup.Art)]
     [InlineData("Assets/ArtSource/Rowan/rowan.fbx", true, OtaContentGroup.Art)]
+    [InlineData("Assets/ThemePack/fantasy_kingdom_a/audio/ui_click.ogg", false, OtaContentGroup.Art)]
     public void Baked_paths_land_in_a_fixed_content_group(string path, bool raw, OtaContentGroup group)
     {
         Assert.Equal(group, OtaContentGroups.Classify(path, raw));
+    }
+
+    [Theory]
+    [InlineData("Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/lyra/LYRA_blenderig.fbx", "char-lyra")]
+    [InlineData("Assets/ThemePack/fantasy_kingdom_a/art/enemies/3d/ashwyrm/ashwyrm_rest.fbx", "char-ashwyrm")]
+    [InlineData("Assets/ThemePack/fantasy_kingdom_a/art/preview_new_chars/kaelen/kaelen.png", "char-kaelen")]
+    [InlineData("Assets/ArtSource/Characters/Lyra/lyra_attack.anim", "char-lyra")]
+    [InlineData("Assets/ThemePack/fantasy_kingdom_a/art/store/flavor_icon.png", "art-store")]
+    [InlineData("Assets/ThemePack/fantasy_kingdom_a/art/heroes/3d/Materials/shared.mat", "art-heroes")]
+    [InlineData("Assets/ArtSource/Rowan/rowan.fbx", "shared")]
+    [InlineData("Assets/ThemePack/fantasy_kingdom_a/pack.json", "shared")]
+    public void Pack_labels_group_one_character_or_art_area(string path, string label)
+    {
+        Assert.Equal(label, OtaContentGroups.PackLabel(path));
+        Assert.NotEqual(OtaContentGroups.Label, label);
+        Assert.True(OtaContentGroups.PacksByLabel(OtaContentGroup.Characters));
+        Assert.True(OtaContentGroups.PacksByLabel(OtaContentGroup.Art));
+        Assert.False(OtaContentGroups.PacksByLabel(OtaContentGroup.ThemePack));
+    }
+
+    [Fact]
+    public void Theme_pack_models_and_images_are_not_dumped_into_the_theme_pack_group()
+    {
+        var root = Path.Combine(RepoRoot, "Assets", "ThemePack");
+        Assert.True(Directory.Exists(root), root);
+        var misplaced = new List<string>();
+        foreach (var file in Directory.GetFiles(root, "*", SearchOption.AllDirectories))
+        {
+            if (file.EndsWith(".meta", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var rel = Path.GetRelativePath(RepoRoot, file).Replace('\\', '/');
+            if (!rel.StartsWith("Assets/", StringComparison.OrdinalIgnoreCase))
+            {
+                rel = "Assets/" + rel.Replace('\\', '/');
+            }
+
+            var lower = rel.ToLowerInvariant();
+            var raw = lower.EndsWith(".json") || lower.EndsWith(".txt") || lower.EndsWith(".png") || lower.EndsWith(".jpg") || lower.EndsWith(".jpeg");
+            var group = OtaContentGroups.Classify(rel, raw);
+            var wrong = (lower.EndsWith(".fbx") || lower.EndsWith(".prefab") || lower.EndsWith(".mat") || lower.EndsWith(".mesh")) && group != OtaContentGroup.Characters
+                        || (lower.EndsWith(".anim") || lower.EndsWith(".controller") || lower.EndsWith(".overridecontroller")) && group != OtaContentGroup.Animations
+                        || (lower.EndsWith(".png") || lower.EndsWith(".jpg") || lower.EndsWith(".jpeg")) && group != OtaContentGroup.Art
+                        || (lower.EndsWith(".json") || lower.EndsWith(".txt")) && group != OtaContentGroup.ThemePack;
+            if (wrong)
+            {
+                misplaced.Add(rel + " -> " + group);
+            }
+        }
+
+        Assert.True(misplaced.Count == 0, "ThemePack files must follow type grouping:\n" + string.Join("\n", misplaced.Take(20)));
     }
 
     [Fact]

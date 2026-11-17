@@ -14,8 +14,9 @@ namespace Survival.Editor.Ota
     /// <summary>
     /// Idempotent Addressables setup for over-the-air content (Docs/OTA.md). Creates or repairs:
     /// <list type="bullet">
-    /// <item>the four remote groups OTA-Characters / OTA-Animations / OTA-Art / OTA-ThemePack (packed together per group,
-    /// LZ4, hashed bundle names, CRC checked, cached on the device, not static, so a full content build replaces them);</item>
+    /// <item>the four remote groups OTA-Characters / OTA-Animations / OTA-Art / OTA-ThemePack (LZ4, hashed bundle names,
+    /// CRC checked, cached on the device, not static). Characters, Animations and Art use PackTogetherByLabel so one
+    /// character's assets share a bundle; ThemePack (config) stays packed together;</item>
     /// <item>profile values Remote.BuildPath = ServerData/[BuildTarget] and Remote.LoadPath =
     /// https://{Survival.Unity.Ota.OtaHost.CdnHost}/content/[BuildTarget]/{Survival.Unity.Ota.OtaHost.ContentVersion}
     /// (curly = evaluated on the phone, so the host and content version are swappable without a rebuild);</item>
@@ -77,7 +78,7 @@ namespace Survival.Editor.Ota
             AddressableAssetGroup? themePack = null;
             foreach (var g in OtaContentGroups.All)
             {
-                var group = EnsureGroup(settings, OtaContentGroups.GroupName(g));
+                var group = EnsureGroup(settings, OtaContentGroups.GroupName(g), OtaContentGroups.PacksByLabel(g));
                 if (g == OtaContentGroup.ThemePack)
                 {
                     themePack = group;
@@ -95,14 +96,16 @@ namespace Survival.Editor.Ota
             return settings;
         }
 
-        private static AddressableAssetGroup EnsureGroup(AddressableAssetSettings settings, string name)
+        private static AddressableAssetGroup EnsureGroup(AddressableAssetSettings settings, string name, bool packByLabel)
         {
             var group = settings.FindGroup(name) ??
                         settings.CreateGroup(name, false, false, true, null, typeof(BundledAssetGroupSchema), typeof(ContentUpdateGroupSchema));
             var bundled = group.GetSchema<BundledAssetGroupSchema>() ?? group.AddSchema<BundledAssetGroupSchema>();
             bundled.BuildPath.SetVariableByName(settings, AddressableAssetSettings.kRemoteBuildPath);
             bundled.LoadPath.SetVariableByName(settings, AddressableAssetSettings.kRemoteLoadPath);
-            bundled.BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackTogether;
+            bundled.BundleMode = packByLabel
+                ? BundledAssetGroupSchema.BundlePackingMode.PackTogetherByLabel
+                : BundledAssetGroupSchema.BundlePackingMode.PackTogether;
             bundled.BundleNaming = BundledAssetGroupSchema.BundleNamingStyle.AppendHash;
             bundled.Compression = BundledAssetGroupSchema.BundleCompressionMode.LZ4;
             bundled.UseAssetBundleCache = true;

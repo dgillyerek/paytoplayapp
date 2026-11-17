@@ -9,16 +9,16 @@ namespace Survival.Domain.Ota
     /// <summary>The four remote Addressables groups over-the-air content ships in.</summary>
     public enum OtaContentGroup
     {
-        /// <summary>Hero / villain models, meshes, avatars, materials (Assets/ArtSource, roster rigs).</summary>
+        /// <summary>Hero / villain models, meshes, avatars, materials (ThemePack 3d folders and ArtSource rigs).</summary>
         Characters,
 
-        /// <summary>Animation clips and controllers.</summary>
+        /// <summary>Animation clips, controllers and override controllers (including paths under anim folders).</summary>
         Animations,
 
-        /// <summary>Textures, sprites, VFX, audio and any other art not in the theme pack.</summary>
+        /// <summary>Textures, sprites, VFX, audio and other non-config art, including images under ThemePack.</summary>
         Art,
 
-        /// <summary>Everything under Assets/ThemePack/fantasy_kingdom_a (pack.json, strings, map, UI, store art) plus the catalog JSON.</summary>
+        /// <summary>Config and data only: raw JSON/text and catalogs under ThemePack, AppFlavor and Resources/Survival.</summary>
         ThemePack
     }
 
@@ -38,34 +38,154 @@ namespace Survival.Domain.Ota
         /// <summary>Address of the group's registry asset ("ota/characters").</summary>
         public static string Address(OtaContentGroup g) => "ota/" + g.ToString().ToLowerInvariant();
 
-        /// <summary>Which group a baked "Assets/..." path ships in. Deterministic so a content build is reproducible.</summary>
+        /// <summary>
+        /// Which group a baked "Assets/..." path ships in. Deterministic so a content build is reproducible.
+        /// Type wins over the ThemePack / AppFlavor folder prefix, so a character or texture update does not
+        /// re-download the whole pack.
+        /// </summary>
         public static OtaContentGroup Classify(string assetPath, bool rawFile)
         {
-            var p = (assetPath ?? "").Replace('\\', '/');
-            var lower = p.ToLowerInvariant();
-            if (lower.StartsWith("assets/themepack/", StringComparison.Ordinal) || lower.StartsWith("assets/appflavor/", StringComparison.Ordinal) ||
-                lower.StartsWith("assets/survival/resources/survival/", StringComparison.Ordinal))
-            {
-                return OtaContentGroup.ThemePack;
-            }
-
-            if (lower.EndsWith(".anim", StringComparison.Ordinal) || lower.EndsWith(".controller", StringComparison.Ordinal) ||
-                lower.EndsWith(".overridecontroller", StringComparison.Ordinal) || lower.Contains("/anims/") || lower.Contains("/animations/") ||
-                lower.Contains("/clips/"))
+            var lower = (assetPath ?? "").Replace('\\', '/').ToLowerInvariant();
+            if (IsAnimation(lower))
             {
                 return OtaContentGroup.Animations;
             }
 
-            if (!rawFile && (lower.EndsWith(".fbx", StringComparison.Ordinal) || lower.EndsWith(".glb", StringComparison.Ordinal) ||
-                             lower.EndsWith(".gltf", StringComparison.Ordinal) || lower.EndsWith(".prefab", StringComparison.Ordinal) ||
-                             lower.EndsWith(".mat", StringComparison.Ordinal) || lower.EndsWith(".mesh", StringComparison.Ordinal) ||
-                             lower.Contains("/characters/") || lower.Contains("/rigs/")))
+            if (!rawFile && IsModel(lower))
             {
                 return OtaContentGroup.Characters;
             }
 
+            if (IsImage(lower))
+            {
+                return OtaContentGroup.Art;
+            }
+
+            if (IsConfigData(lower))
+            {
+                return OtaContentGroup.ThemePack;
+            }
+
             return OtaContentGroup.Art;
         }
+
+        /// <summary>
+        /// Whether this group's Addressables packing should split by <see cref="PackLabel"/> so one character's
+        /// bundle can update without re-downloading the rest. ThemePack is small config and stays packed together.
+        /// </summary>
+        public static bool PacksByLabel(OtaContentGroup g) => g != OtaContentGroup.ThemePack;
+
+        /// <summary>
+        /// Addressables label used with PackTogetherByLabel. One character's models or textures share a label
+        /// (char-lyra, art-store, shared, …). Never returns the registry label <see cref="Label"/>.
+        /// </summary>
+        public static string PackLabel(string assetPath)
+        {
+            var lower = (assetPath ?? "").Replace('\\', '/').ToLowerInvariant();
+            if (TryFolderAfter(lower, "/art/heroes/3d/", out var hero) && !IsSharedFolder(hero))
+            {
+                return "char-" + SanitizeLabel(hero);
+            }
+
+            if (TryFolderAfter(lower, "/art/enemies/3d/", out var enemy) && !IsSharedFolder(enemy))
+            {
+                return "char-" + SanitizeLabel(enemy);
+            }
+
+            if (TryFolderAfter(lower, "/art/preview_new_chars/", out var preview) && !IsSharedFolder(preview))
+            {
+                return "char-" + SanitizeLabel(preview);
+            }
+
+            if (TryFolderAfter(lower, "/characters/", out var character) && !IsSharedFolder(character))
+            {
+                return "char-" + SanitizeLabel(character);
+            }
+
+            if (TryFolderAfter(lower, "/rigs/", out var rig) && !IsSharedFolder(rig))
+            {
+                return "char-" + SanitizeLabel(rig);
+            }
+
+            if (TryFolderAfter(lower, "/art/", out var area) && area.Length > 0)
+            {
+                return "art-" + SanitizeLabel(area);
+            }
+
+            return "shared";
+        }
+
+        private static bool IsAnimation(string lower) =>
+            EndsWith(lower, ".anim") || EndsWith(lower, ".controller") || EndsWith(lower, ".overridecontroller") ||
+            lower.Contains("/anims/") || lower.Contains("/animations/") || lower.Contains("/clips/") || lower.Contains("/anim/");
+
+        private static bool IsModel(string lower) =>
+            EndsWith(lower, ".fbx") || EndsWith(lower, ".glb") || EndsWith(lower, ".gltf") || EndsWith(lower, ".prefab") ||
+            EndsWith(lower, ".mat") || EndsWith(lower, ".mesh") || lower.Contains("/characters/") || lower.Contains("/rigs/");
+
+        private static bool IsImage(string lower) =>
+            EndsWith(lower, ".png") || EndsWith(lower, ".jpg") || EndsWith(lower, ".jpeg") || EndsWith(lower, ".tga") ||
+            EndsWith(lower, ".tif") || EndsWith(lower, ".tiff") || EndsWith(lower, ".psd") || EndsWith(lower, ".psb") ||
+            EndsWith(lower, ".gif") || EndsWith(lower, ".exr") || EndsWith(lower, ".hdr") || EndsWith(lower, ".bmp") ||
+            EndsWith(lower, ".webp") || EndsWith(lower, ".spriteatlas");
+
+        private static bool IsConfigData(string lower) =>
+            EndsWith(lower, ".json") || EndsWith(lower, ".txt") || EndsWith(lower, ".bytes") || EndsWith(lower, ".csv") ||
+            EndsWith(lower, ".xml") || EndsWith(lower, ".yaml") || EndsWith(lower, ".yml");
+
+        private static bool EndsWith(string lower, string ext) => lower.EndsWith(ext, StringComparison.Ordinal);
+
+        private static bool TryFolderAfter(string lowerPath, string marker, out string folder)
+        {
+            folder = "";
+            var startMarker = lowerPath.IndexOf(marker, StringComparison.Ordinal);
+            if (startMarker < 0)
+            {
+                return false;
+            }
+
+            var start = startMarker + marker.Length;
+            if (start >= lowerPath.Length)
+            {
+                return false;
+            }
+
+            var end = lowerPath.IndexOf('/', start);
+            if (end < 0)
+            {
+                end = lowerPath.Length;
+            }
+
+            if (end <= start)
+            {
+                return false;
+            }
+
+            folder = lowerPath.Substring(start, end - start);
+            return folder.Length > 0 && folder.IndexOf('.') < 0;
+        }
+
+        private static bool IsSharedFolder(string name) =>
+            name == "materials" || name == "textures" || name == "shared" || name == "common" ||
+            name == "anims" || name == "animations" || name == "clips" || name == "mesh" || name == "meshes";
+
+        private static string SanitizeLabel(string name)
+        {
+            var chars = name.ToCharArray();
+            for (var i = 0; i < chars.Length; i++)
+            {
+                var c = chars[i];
+                if (c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '-' || c == '_')
+                {
+                    continue;
+                }
+
+                chars[i] = '-';
+            }
+
+            return new string(chars);
+        }
+
     }
 
     /// <summary>

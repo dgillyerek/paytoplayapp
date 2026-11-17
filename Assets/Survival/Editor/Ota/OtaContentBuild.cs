@@ -135,23 +135,103 @@ namespace Survival.Editor.Ota
                 reg.Stamp = baked.Stamp;
                 reg.BakedAt = baked.BakedAt;
                 reg.UnityVersion = baked.UnityVersion;
-                var path = OtaBakeDir + "/" + kv.Key.ToString().ToLowerInvariant() + ".asset";
-                if (File.Exists(path))
+                var registryPath = OtaBakeDir + "/" + kv.Key.ToString().ToLowerInvariant() + ".asset";
+                if (File.Exists(registryPath))
                 {
-                    AssetDatabase.DeleteAsset(path);
+                    AssetDatabase.DeleteAsset(registryPath);
                 }
 
-                AssetDatabase.CreateAsset(reg, path);
+                AssetDatabase.CreateAsset(reg, registryPath);
                 var group = settings.FindGroup(OtaContentGroups.GroupName(kv.Key));
-                var entry = settings.CreateOrMoveEntry(AssetDatabase.AssetPathToGUID(path), group, false, false);
-                entry.address = OtaContentGroups.Address(kv.Key);
-                entry.SetLabel(OtaContentGroups.Label, true, true, false);
+                var registryEntry = settings.CreateOrMoveEntry(AssetDatabase.AssetPathToGUID(registryPath), group, false, false);
+                registryEntry.address = OtaContentGroups.Address(kv.Key);
+                registryEntry.SetLabel(OtaContentGroups.Label, true, true, false);
+                if (OtaContentGroups.PacksByLabel(kv.Key))
+                {
+                    RegisterPackedEntries(settings, group, registryPath, reg);
+                }
+
                 counts[kv.Key.ToString()] = reg.Assets.Count + reg.Files.Count;
             }
 
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
             return counts;
+        }
+
+        /// <summary>
+        /// Registers each baked asset as its own Addressable entry labelled by <see cref="OtaContentGroups.PackLabel"/>
+        /// so PackTogetherByLabel emits one bundle per character (or art area). Entries do not get the "ota" label;
+        /// only the four registries do, so LoadAssetsAsync&lt;PlayerAssetRegistry&gt;("ota") still returns just those.
+        /// </summary>
+        private static void RegisterPackedEntries(AddressableAssetSettings settings, AddressableAssetGroup group, string registryPath, PlayerAssetRegistry reg)
+        {
+            var keep = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { AssetDatabase.AssetPathToGUID(registryPath) };
+            foreach (var bakedAsset in reg.Assets)
+            {
+                if (bakedAsset?.Main == null)
+                {
+                    continue;
+                }
+
+                var sourcePath = AssetDatabase.GetAssetPath(bakedAsset.Main);
+                if (string.IsNullOrEmpty(sourcePath))
+                {
+                    continue;
+                }
+
+                var guid = AssetDatabase.AssetPathToGUID(sourcePath);
+                if (string.IsNullOrEmpty(guid))
+                {
+                    continue;
+                }
+
+                keep.Add(guid);
+                var packed = settings.CreateOrMoveEntry(guid, group, false, false);
+                packed.address = bakedAsset.Path;
+                packed.SetLabel(OtaContentGroups.Label, false, true, false);
+                packed.SetLabel(OtaContentGroups.PackLabel(bakedAsset.Path), true, true, false);
+            }
+
+            foreach (var bakedFile in reg.Files)
+            {
+                if (bakedFile?.Data == null)
+                {
+                    continue;
+                }
+
+                var sourcePath = AssetDatabase.GetAssetPath(bakedFile.Data);
+                if (string.IsNullOrEmpty(sourcePath))
+                {
+                    continue;
+                }
+
+                var guid = AssetDatabase.AssetPathToGUID(sourcePath);
+                if (string.IsNullOrEmpty(guid))
+                {
+                    continue;
+                }
+
+                keep.Add(guid);
+                var packed = settings.CreateOrMoveEntry(guid, group, false, false);
+                packed.address = bakedFile.Path;
+                packed.SetLabel(OtaContentGroups.Label, false, true, false);
+                packed.SetLabel(OtaContentGroups.PackLabel(bakedFile.Path), true, true, false);
+            }
+
+            var stale = new List<AddressableAssetEntry>();
+            foreach (var existing in group.entries)
+            {
+                if (!keep.Contains(existing.guid))
+                {
+                    stale.Add(existing);
+                }
+            }
+
+            foreach (var existing in stale)
+            {
+                settings.RemoveAssetEntry(existing.guid);
+            }
         }
     }
 }
