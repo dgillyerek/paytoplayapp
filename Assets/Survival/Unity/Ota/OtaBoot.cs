@@ -9,17 +9,17 @@ namespace Survival.Unity.Ota
     /// <summary>What the OTA boot decided; <see cref="SurvivalBootstrap"/> acts on it.</summary>
     public sealed class OtaBootResult
     {
-        public RemoteConfig Config { get; init; } = null!;
+        public RemoteConfig Config { get; set; } = null!;
 
-        public RemoteConfigSource Source { get; init; }
+        public RemoteConfigSource Source { get; set; }
 
-        public UpdateRequirement Update { get; init; }
+        public UpdateRequirement Update { get; set; }
 
-        public string StoreUrl { get; init; } = "";
+        public string StoreUrl { get; set; } = "";
 
-        public OtaContentOutcome Content { get; init; }
+        public OtaContentOutcome Content { get; set; }
 
-        public FreePaceVerdict Balance { get; init; }
+        public FreePaceVerdict Balance { get; set; }
 
         /// <summary>True when anything PlayerAssets serves changed (overlays or balance patches): reload pack and art.</summary>
         public bool ContentChanged => Content == OtaContentOutcome.Overlaid || Balance == FreePaceVerdict.Accepted;
