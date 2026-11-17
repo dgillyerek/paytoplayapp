@@ -8,7 +8,7 @@ import { appStoreClient } from "../src/appstore.mjs";
 import { memorySaveRepo } from "./memory_save_repo.mjs";
 import { memoryIapRepo } from "./memory_repo.mjs";
 
-const PKG = "com.paytoplay.fantasykingdoma";
+const PKG = "com.brightmoatstudios.kingdomdefense";
 const quiet = { error() {}, warn() {}, info() {} };
 
 test("AUDIENCE_MODE defaults to teen_plus; families is opt-in; junk falls back to teen_plus", () => {
