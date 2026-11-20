@@ -14,6 +14,7 @@ namespace Survival.Domain.Audio
     {
         private readonly Dictionary<string, List<double>> _endsByCue = new Dictionary<string, List<double>>(StringComparer.Ordinal);
         private readonly Dictionary<string, double> _lastStart = new Dictionary<string, double>(StringComparer.Ordinal);
+        private readonly Dictionary<string, int> _lastVariant = new Dictionary<string, int>(StringComparer.Ordinal);
         private readonly Random _rng;
 
         public AudioVoiceLimiter(int seed = 1)
@@ -72,10 +73,45 @@ namespace Survival.Domain.Audio
             return true;
         }
 
+        /// <summary>
+        /// Round-robin pick for a start: a random variant of <paramref name="cue"/>'s <see cref="AudioCueDef.Files"/>, never
+        /// the one it played last (when it has more than one), plus the start's gain scale 1 - jitter .. 1.
+        /// </summary>
+        public int NextVariant(AudioCueDef cue, out float gainScale)
+        {
+            gainScale = 1f;
+            if (cue == null)
+            {
+                return 0;
+            }
+
+            if (cue.VolumeJitter > 0f)
+            {
+                gainScale = 1f - (float)(_rng.NextDouble() * cue.VolumeJitter);
+            }
+
+            var n = cue.Files.Count;
+            if (n <= 1)
+            {
+                return 0;
+            }
+
+            var pick = _rng.Next(n);
+            if (_lastVariant.TryGetValue(cue.Id, out var last) && pick == last)
+            {
+                // Skip the repeat: shift to one of the other n - 1, uniformly.
+                pick = (pick + 1 + _rng.Next(n - 1)) % n;
+            }
+
+            _lastVariant[cue.Id] = pick;
+            return pick;
+        }
+
         public void Reset()
         {
             _endsByCue.Clear();
             _lastStart.Clear();
+            _lastVariant.Clear();
         }
     }
 }

@@ -26,10 +26,40 @@ namespace Survival.Domain.Audio
 
         private static readonly IReadOnlyList<string> None = Array.Empty<string>();
 
-        public static IReadOnlyList<string> Runner(ThemeAudioConfig config, RunnerEvent e)
+        public static IReadOnlyList<string> Runner(ThemeAudioConfig config, RunnerEvent e) => Runner(config, e, "", "");
+
+        /// <summary>
+        /// Cues for a runner event. <paramref name="attackerUnit"/> is the unit id of whoever landed a Hit (the squad member
+        /// <see cref="RunnerEvent.Other"/>) and <paramref name="victimUnit"/> the unit id of the enemy it landed on; the view
+        /// passes them because the Hit event itself carries neither. A Hit plays the attacker's weapon impact (falling back
+        /// to the generic "Hit" cue) plus the enemy's own hurt sound; a kill plays the enemy's own death sound.
+        /// </summary>
+        public static IReadOnlyList<string> Runner(ThemeAudioConfig config, RunnerEvent e, string attackerUnit, string victimUnit)
         {
             switch (e.Kind)
             {
+                case RunnerEventKind.Hit when !e.OnBox:
+                {
+                    var cues = new List<string>(2);
+                    if (config.RunnerImpacts.TryGetValue(attackerUnit ?? "", out var impact))
+                    {
+                        cues.Add(impact);
+                    }
+                    else
+                    {
+                        cues.AddRange(Lookup(config, "Hit", ""));
+                    }
+
+                    if (config.RunnerFoeHurt.TryGetValue(victimUnit ?? "", out var hurt))
+                    {
+                        cues.Add(hurt);
+                    }
+
+                    return cues;
+                }
+
+                case RunnerEventKind.FoeKilled when !e.Big && config.RunnerFoeDeath.TryGetValue(e.Unit ?? "", out var death):
+                    return new[] { death };
                 case RunnerEventKind.Fired:
                     return config.RunnerShots.TryGetValue(e.Unit ?? "", out var shot) ? new[] { shot } : None;
                 case RunnerEventKind.HazardHit:
