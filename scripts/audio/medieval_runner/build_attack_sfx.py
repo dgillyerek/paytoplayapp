@@ -744,14 +744,28 @@ def death_bonequill(rng, i):
     return tail(place(layers), rng, wet=0.14, seconds=0.6, decay=0.2)
 
 
+def falling_cry(rng, dur, f_from, f_to, formants=((750, 1.0), (1150, 0.6), (2700, 0.25))):
+    """A woman's eerie, breathy cry falling away: a voiced 'aah' whose pitch sinks, with breath and a waver."""
+    n = n_(dur)
+    t = np.arange(n) / SR
+    f = f_from * (f_to / f_from) ** (t / dur) * (1 + 0.012 * np.sin(2 * np.pi * 5.5 * t))
+    ph = 2 * np.pi * np.cumsum(f) / SR
+    src_wave = sum(np.sin(k * ph) / k for k in range(1, 12))
+    breath = rng.standard_normal(n) * 0.6
+    exc = src_wave + breath
+    y = sum(a * bp(exc, fc * 0.85, fc * 1.15) for fc, a in formants)
+    y *= env_ad(n, 0.04, dur * 0.35, hold=dur * 0.15)
+    return _norm(y)
+
+
 def death_vespera(rng, i):
-    # Shadow sorceress fades: a falling eerie cry, a wind swirl, a distant chapel bell. No electronic shimmer.
-    vox = src(pick([C1 + 'weird_02.ogg', C1 + 'weird_04.ogg', C2 + 'weird_08.ogg'], i), 0.6, rate=0.9)
-    swirl = wind_gust(i, 0.6, rate=0.9)
-    air = whoosh(rng, 0.7, 2200, 300, q=1.0, peak_at=0.3)
-    bell = hp(chapel_bell(i, 0.65, rate=pick([0.85, 0.8, 0.9], i)), 250)
+    # Shadow sorceress fades: a falling eerie cry, a dark wind swirling her away, a low chant
+    # underneath, a long hall tail. No bell or gong.
+    cry = falling_cry(rng, 0.7, pick([620, 680, 580], i), pick([240, 260, 220], i))
+    swirl = whoosh(rng, 0.75, 1800, 300, q=0.9, peak_at=0.35)
+    gust = whoosh(rng, 0.6, 500, 1500, q=0.8, peak_at=0.5)
     chant = choir(rng, 0.7, pick([87, 98, 82], i), n_voices=5, swell=0.15)
-    y = place([(bp(vox, 250, 4500), 0, -2), (swirl, 0.02, -8), (air, 0.02, -10), (bell, 0.1, -12), (chant, 0.05, -12)])
+    y = place([(cry, 0, -2), (swirl, 0.02, -8), (gust, 0.05, -12), (chant, 0.05, -13)])
     return tail(y, rng, wet=0.32, seconds=1.1, decay=0.35, damp=4500)
 
 
