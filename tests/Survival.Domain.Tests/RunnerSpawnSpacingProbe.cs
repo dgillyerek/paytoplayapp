@@ -156,23 +156,38 @@ public sealed class RunnerSpawnSpacingProbe
     }
 }
 
-public sealed class RunnerRequiredProbe
+public sealed class RunnerSpawnSpacingTests
 {
-    [Fact]
-    public void Required()
-    {
-        var spec = Environment.GetEnvironmentVariable("REQ_LEVELS");
-        if (string.IsNullOrEmpty(spec))
-        {
-            return;
-        }
+    /// <summary>Longest wait, in seconds of walking, between one enemy reaching the squad and the next (main: 5.7-9.1 s).</summary>
+    public const double MaxGapSeconds = 7.0;
 
-        var other = Environment.GetEnvironmentVariable("RUNNER_LEVELS_JSON");
-        var c = string.IsNullOrEmpty(other) ? Tests.Runner.Catalog() : RunnerCatalog.Parse(File.ReadAllText(other));
-        var levels = spec == "all" ? Enumerable.Range(1, c.Levels.Count).ToArray() : spec.Split(',').Select(int.Parse).ToArray();
-        var req = new double[levels.Length];
-        Parallel.For(0, levels.Length, i => { var s = BalanceReport.FindRequiredScale(c, c.ByNumber(levels[i])); req[i] = s * s; });
-        File.WriteAllText(Environment.GetEnvironmentVariable("REQ_OUT") ?? "/tmp/req.txt",
-            string.Join("\n", levels.Select((n, i) => n.ToString(CultureInfo.InvariantCulture) + " " + req[i].ToString("0.####", CultureInfo.InvariantCulture))) + "\n");
+    /// <summary>Most enemies reaching the squad inside any 2 s (main: 7-27).</summary>
+    public const int MaxClump = 22;
+
+    [Fact]
+    public void Generated_levels_have_no_long_lulls_or_big_clumps()
+    {
+        var c = Runner.Catalog();
+        for (var n = 2; n <= c.Levels.Count; n++)
+        {
+            var level = c.ByNumber(n);
+            var s = RunnerSpawnSpacing.Arrivals(c, level).Select(z => z / level.Speed).ToList();
+            var maxGap = 0.0;
+            var clump = 1;
+            var lo = 0;
+            for (var i = 1; i < s.Count; i++)
+            {
+                maxGap = Math.Max(maxGap, s[i] - s[i - 1]);
+                while (s[i] - s[lo] > RunnerSpawnSpacing.ClumpSeconds)
+                {
+                    lo++;
+                }
+
+                clump = Math.Max(clump, i - lo + 1);
+            }
+
+            Assert.True(maxGap <= MaxGapSeconds, $"L{n}: {maxGap:0.0} s between enemies");
+            Assert.True(clump <= MaxClump, $"L{n}: {clump} enemies inside 2 s");
+        }
     }
 }

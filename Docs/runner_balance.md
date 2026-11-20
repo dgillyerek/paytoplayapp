@@ -403,7 +403,7 @@ These are in `runner_balance.json`, `power_packs.json` and `stores.json`.
 - The stream ends one step short of the closing set piece. The boss guard and the finale are not spread, and the same units, lanes and order are kept. Level 1 (the authored tutorial road) is unchanged.
 - `RunnerBalance.Strength` counts one analytic "wave" per 13 m of enemy road when there are no gaps between beats.
 
-**Pace held:** the free pace is unchanged (RunnerFreePaceTests: wall L31, L50 day ~829). It was re-fitted per level with `level_tweaks` `foe_hp` (and a layout re-roll on L14, L20, L24, L25, L28 where the spread roll was much harder than main at any reasonable HP) so each level's required power stays within a few % of main. Enemy counts, gold and rewards are unchanged.
+**Pace held:** the free pace is unchanged (RunnerFreePaceTests: wall L31, L50 day ~829). It was re-fitted per level with `level_tweaks` `foe_hp` and `layout` (a re-roll where no HP fit the spread roll; the response to HP is step-like, so each level was grid-searched) so each level's required power matches main: within ±2% on every level except L9 (+2.2%). `RunnerSpawnSpacingTests` keeps the longest wait between enemies and the biggest 2 s clump in check on every generated level. Enemy counts, gold and rewards are unchanged.
 
 **Measure it:** `RunnerSpawnSpacingProbe` (tests/Survival.Domain.Tests/RunnerSpawnSpacingProbe.cs) writes `runner_spawn_spacing.txt`. Set `RUNNER_LEVELS_JSON` to compare another runner_levels.json with the same code.
 
