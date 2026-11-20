@@ -754,6 +754,10 @@ namespace Survival.Domain.Runner
                 done += c;
             }
 
+            // The level's first enemy still meets the squad exactly where it used to, so a road that opened on a wave still does
+            // (the smoothing would otherwise slide it a few metres on, past the first pickup).
+            at[0] = a0;
+
             // The stream ends one even step short of where the closing set piece meets the squad (the stream's tail is drawn
             // in to it, never pushed past it).
             var end = closing - Lead(closingUnit) - ((closing - a0) / (ordered.Count + 1));
@@ -773,7 +777,7 @@ namespace Survival.Domain.Runner
                 var gapPrev = i > 0 ? at[i] - at[i - 1] : float.MaxValue;
                 var gapNext = i + 1 < ordered.Count ? at[i + 1] - at[i] : float.MaxValue;
                 var step = Math.Min(gapPrev, gapNext);
-                var jitter = step < float.MaxValue ? (float)((rnd.NextDouble() * 2.0) - 1.0) * spread.Jitter * step : 0f;
+                var jitter = i > 0 && step < float.MaxValue ? (float)((rnd.NextDouble() * 2.0) - 1.0) * spread.Jitter * step : 0f;
                 var z = (float)Math.Round(at[i] + jitter + Lead(r.Unit), 2);
                 rows.Add(r with { At = z, Count = c, Spread = c > 1 ? r.Spread : 0f });
             }
