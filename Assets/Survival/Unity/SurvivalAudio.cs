@@ -88,6 +88,20 @@ namespace Survival.Unity
             Play(AudioEventMap.Runner(Config, e));
         }
 
+        /// <summary>
+        /// A runner event with who landed it and on whom (unit ids, "" when unknown): a Hit plays that hero's weapon impact
+        /// and that enemy's hurt sound, see <see cref="AudioEventMap.Runner(ThemeAudioConfig, RunnerEvent, string, string)"/>.
+        /// </summary>
+        public static void Runner(RunnerEvent e, string attackerUnit, string victimUnit)
+        {
+            if (Ensure() == null)
+            {
+                return;
+            }
+
+            Play(AudioEventMap.Runner(Config, e, attackerUnit, victimUnit));
+        }
+
         /// <summary><paramref name="owner"/> wants <paramref name="cue"/> as the music until it calls <see cref="ReleaseMusic"/>.</summary>
         public static void RequestMusic(object owner, string cue)
         {
@@ -196,29 +210,34 @@ namespace Survival.Unity
             }
         }
 
-        private AudioClip? Clip(AudioCueDef cue)
+        private AudioClip? Clip(AudioCueDef cue) => Clip(cue, 0);
+
+        /// <summary>Variant <paramref name="variant"/> of a cue's clip (round-robin files), loaded once and cached.</summary>
+        private AudioClip? Clip(AudioCueDef cue, int variant)
         {
-            if (_clips.TryGetValue(cue.Id, out var cached))
+            var key = variant == 0 ? cue.Id : cue.Id + "#" + variant;
+            if (_clips.TryGetValue(key, out var cached))
             {
                 return cached;
             }
 
+            var path = ThemeAudioConfig.FilePath(_configPath, cue, variant);
             AudioClip? clip = null;
             try
             {
-                clip = PlayerAssets.Load<AudioClip>(ThemeAudioConfig.FilePath(_configPath, cue));
+                clip = PlayerAssets.Load<AudioClip>(path);
             }
             catch (Exception ex)
             {
-                Debug.LogWarning("SurvivalAudio: " + cue.File + ": " + ex.Message);
+                Debug.LogWarning("SurvivalAudio: " + path + ": " + ex.Message);
             }
 
             if (clip == null)
             {
-                Debug.LogWarning("SurvivalAudio: clip not found for " + cue.Id + " (" + cue.File + ")");
+                Debug.LogWarning("SurvivalAudio: clip not found for " + cue.Id + " (" + path + ")");
             }
 
-            _clips[cue.Id] = clip;
+            _clips[key] = clip;
             return clip;
         }
 
@@ -235,7 +254,8 @@ namespace Survival.Unity
                 return;
             }
 
-            var clip = Clip(cue);
+            var variant = _limiter.NextVariant(cue, out var gainScale);
+            var clip = Clip(cue, variant) ?? Clip(cue, 0);
             if (clip == null)
             {
                 return;
@@ -253,7 +273,7 @@ namespace Survival.Unity
             }
 
             src.clip = clip;
-            src.volume = gain;
+            src.volume = gain * gainScale;
             src.pitch = pitch;
             src.loop = false;
             src.Play();
