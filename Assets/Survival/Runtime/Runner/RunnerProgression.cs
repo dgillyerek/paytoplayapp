@@ -101,11 +101,39 @@ namespace Survival.Domain.Runner
     /// </summary>
     public sealed record RunnerSpreadDef(int Pack, float Jitter, int From, float Window)
     {
-        internal static RunnerSpreadDef Read(JsonNode.Obj o) => new(
-            Math.Max(1, LayoutJson.OptInt(o, "pack", 3)),
-            Math.Max(0f, Math.Min(0.45f, LayoutJson.OptNum(o, "jitter", 0.25f))),
-            Math.Max(2, LayoutJson.OptInt(o, "from", 2)),
-            Math.Max(1f, LayoutJson.OptNum(o, "window", RunnerProgression.BeatMetres)));
+        /// <summary>
+        /// Levels up to this one (0: none) use <see cref="EarlyPack"/> / <see cref="EarlyWindow"/> instead (Derek 2026-11-20:
+        /// the opening levels clump and lull too, but must stay gentle for a first-time player): a milder spread that keeps
+        /// a little of each beat together, so a new player still meets small groups with a breather between them.
+        /// </summary>
+        public int EarlyUntil { get; init; }
+
+        public int EarlyPack { get; init; } = 2;
+
+        public float EarlyWindow { get; init; } = 10f;
+
+        internal static RunnerSpreadDef Read(JsonNode.Obj o)
+        {
+            var s = new RunnerSpreadDef(
+                Math.Max(1, LayoutJson.OptInt(o, "pack", 3)),
+                Math.Max(0f, Math.Min(0.45f, LayoutJson.OptNum(o, "jitter", 0.25f))),
+                Math.Max(1, LayoutJson.OptInt(o, "from", 2)),
+                Math.Max(1f, LayoutJson.OptNum(o, "window", RunnerProgression.BeatMetres)));
+            if (o.TryGet("early", out var en) && en is JsonNode.Obj eo)
+            {
+                s = s with
+                {
+                    EarlyUntil = Math.Max(0, LayoutJson.OptInt(eo, "until", 0)),
+                    EarlyPack = Math.Max(1, LayoutJson.OptInt(eo, "pack", 2)),
+                    EarlyWindow = Math.Max(1f, LayoutJson.OptNum(eo, "window", 10f))
+                };
+            }
+
+            return s;
+        }
+
+        /// <summary>The spread Level <paramref name="number"/> uses (the early pack / window on Levels 1-<see cref="EarlyUntil"/>).</summary>
+        public RunnerSpreadDef For(int number) => number <= EarlyUntil ? this with { Pack = EarlyPack, Window = EarlyWindow } : this;
 
         /// <summary>Metres ahead of the hero a foe counts as in the fight (about the squad's reach); arrival is timed to this line.</summary>
         public const float FightLine = 18f;
@@ -645,7 +673,7 @@ namespace Survival.Domain.Runner
             {
                 // The closing set piece's front: the boss guard's archer line, or the finale's fodder push.
                 var (closingAt, closingUnit) = bossUnit != null ? (bossAt - 7f, "bonequill") : (bossAt - FinaleBack + 3f, "nightfang");
-                SpreadWaves(rows, p.Spread, closingAt, closingUnit, speed, unitSpeed ?? (_ => 0f), new Random(unchecked(p.Seed + (number * 15485863) + 3)));
+                SpreadWaves(rows, p.Spread.For(number), closingAt, closingUnit, speed, unitSpeed ?? (_ => 0f), new Random(unchecked(p.Seed + (number * 15485863) + 3)));
             }
 
             if (bossUnit != null)
@@ -664,6 +692,22 @@ namespace Survival.Domain.Runner
             StandOffWalls(rows, halfWidth);
             rows.Sort((a, b) => a.At.CompareTo(b.At));
             return rows;
+        }
+
+        /// <summary>
+        /// Spreads the hand-authored Level 1 the same way (when the progression's spread starts at 1): its enemy rows become a
+        /// stream that ends one even step short of the finish line, the other rows stay where they are.
+        /// </summary>
+        public static RunnerLevelDef SpreadAuthored(RunnerLevelDef level, RunnerProgressionDef p, Func<string, float> unitSpeed)
+        {
+            if (p.Spread == null || p.Spread.From > level.Number || level.Speed <= 0f || level.Rows.Any(r => r.Kind == RunnerRowKind.Boss))
+            {
+                return level;
+            }
+
+            var rows = level.Rows.ToList();
+            SpreadWaves(rows, p.Spread.For(level.Number), level.Length, "bonequill", level.Speed, unitSpeed, new Random(unchecked(p.Seed + (level.Number * 15485863) + 3)));
+            return level with { Rows = rows.OrderBy(r => r.At).ToList() };
         }
 
         /// <summary>
