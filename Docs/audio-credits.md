@@ -48,7 +48,7 @@ work, released with the project.
 |---|---|---|---|---|
 | `sfx_atk_lyra_cast_01..04.ogg` | `sfx.shot.lyra` | Lyra medieval spell cast | robe rustle + gathering rumble + torch-like flare + deep launch thump + crackling sparks + rush of air + stone-hall tail | Original synthesis (numpy/scipy), CC0 |
 | `sfx_atk_rowan_bow_01..04.ogg` | `sfx.shot.rowan` | Rowan longbow shot | faint draw creak + dull string thwack against the bow + quick arrow fwip + receding hiss + short room tail | Original synthesis (numpy/scipy), no recordings, CC0 |
-| `sfx_atk_oakenshield_throw_01..04.ogg` | `sfx.shot.oakenshield` | Oakenshield thorn-spear throw | bark-armour creak + wind-up + deep heavy haft whoosh + body push + receding whoosh + tail | Original synthesis (numpy/scipy), no recordings, CC0 |
+| `sfx_atk_oakenshield_throw_01..04.ogg` | `sfx.shot.oakenshield` | Oakenshield thorn-spear throw | bark-armour strain creaks + heavy body stamp + wooden haft knock + short low push of air + tail | Original synthesis (numpy/scipy), no recordings, CC0 |
 | `sfx_atk_aldric_swing_01..04.ogg` | `sfx.shot.sir_aldric` | Sir Aldric longsword swing (runner melee) | cloth + mail rattle + weighty blade swing + low body whoosh + tail | Original synthesis (numpy/scipy), no recordings, CC0 |
 | `sfx_atk_kaelen_dual_01..04.ogg` | `sfx.shot.kaelen` | Kaelen dual-blade swing (runner melee) | cloth + two thin fast swishes ~90 ms apart, second higher, each with a brief steel edge + tail | Original synthesis (numpy/scipy), no recordings, CC0 |
 | `sfx_atk_seraphine_thrust_01..03.ogg` | `sfx.shot.seraphine` | Seraphine spear thrust (runner melee) | wing downbeat + cloth + haft knock + sharp spear thrust whoosh + steel tip glint + tail | Original synthesis (numpy/scipy), no recordings, CC0 |

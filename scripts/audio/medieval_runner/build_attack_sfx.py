@@ -450,16 +450,20 @@ def rowan_bow(rng, i):
 
 
 def oaken_throw(rng, i):
-    # Heavy thorn spear hurled: bark-armour creak, a big wind-up, then a deep heavy whoosh as the
-    # haft leaves the hand, with a solid body push behind it.
-    creak = wood_knock(rng, pick([180, 200, 165, 190], i), 0.18)
+    # Heavy thorn spear hurled: bark armour creaking under the strain, a heavy body heave and stamp,
+    # the wooden haft knocking as it leaves the hand, and only a short, low push of air.
+    # Weight and wood carry it, not whoosh.
+    strain = wood_knock(rng, pick([150, 170, 140, 160], i), 0.2)
+    creak2 = wood_knock(rng, pick([230, 250, 215, 240], i), 0.12)
     rustle = cloth_rustle(rng, 0.14)
-    windup = whoosh(rng, 0.18, 200, 600, q=1.0, peak_at=0.9)
-    heave = whoosh(rng, 0.5, 260, 1500, q=1.1, peak_at=0.3)
-    push = thump(rng, f_hi=110, f_lo=48, dur=0.25, tau=0.07)
-    away = whoosh(rng, 0.4, 1400, 450, q=1.4, peak_at=0.15)
-    y = place([(rustle, 0, -14), (creak, 0.0, -10), (windup, 0.0, -12), (heave, 0.12, -2), (push, 0.16, -8), (away, 0.3, -10)])
-    return tail(y, rng, wet=0.15, seconds=0.7, decay=0.22)
+    stamp = thump(rng, f_hi=pick([120, 130, 112, 125], i), f_lo=45, dur=0.3, tau=0.08)
+    grunt_body = lp(rng.standard_normal(n_(0.22)), 300, 4) * env_ad(n_(0.22), 0.01, 0.06)
+    haft = wood_knock(rng, pick([360, 400, 340, 380], i), 0.09)
+    air = whoosh(rng, 0.2, 220, 900, q=1.0, peak_at=0.4)
+    rel = 0.13
+    y = place([(rustle, 0, -14), (strain, 0.0, -7), (creak2, 0.06, -12), (stamp, rel, -1), (_norm(grunt_body), rel, -6),
+               (haft, rel + 0.02, -6), (air, rel, -14)])
+    return tail(y, rng, wet=0.14, seconds=0.6, decay=0.2)
 
 
 def aldric_swing(rng, i):
