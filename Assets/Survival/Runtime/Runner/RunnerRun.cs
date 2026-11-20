@@ -394,7 +394,7 @@ namespace Survival.Domain.Runner
                         for (var i = 0; i < row.Count; i++)
                         {
                             var x = Clamp(row.XOf(i), -Level.HalfWidth + unit.Radius, Level.HalfWidth - unit.Radius);
-                            var foe = new RunnerFoe(_nextId++, unit, x, row.At, boss, boss ? Level.BossHpMul : Level.FoeHpMul, Level.FoeDmgMul);
+                            var foe = new RunnerFoe(_nextId++, unit, x, row.At, boss, boss ? Level.BossHpMul : Level.FoeHpMul, Level.FoeDmgMul, Level.CrowdCut);
                             // Stagger the first swing so a pack does not attack in one beat.
                             foe.Cooldown = unit.Cycle * (0.35f + (0.2f * (i % 3)));
                             _foes.Add(foe);
@@ -1484,7 +1484,10 @@ namespace Survival.Domain.Runner
             HurtFollower(f, m, damage);
         }
 
-        private void HurtFollower(RunnerFoe f, RunnerMember victim, int damage) => HurtFollower(f.Id, victim, damage);
+        // On a crowd level a hit that started from f.Damage (side hits, splashes) lands on a follower in proportion to
+        // f.FollowerDamage; with no crowd FollowerDamage == Damage and the hit is unchanged.
+        private void HurtFollower(RunnerFoe f, RunnerMember victim, int damage) =>
+            HurtFollower(f.Id, victim, f.FollowerDamage == f.Damage || f.Damage <= 0 ? damage : Math.Max(1, (int)Math.Round(damage * (double)f.FollowerDamage / f.Damage)));
 
         /// <summary>Every hit on a follower (contact, shots, traps, the boss) comes off its HP; it falls only at 0.</summary>
         private void HurtFollower(int source, RunnerMember victim, int damage)

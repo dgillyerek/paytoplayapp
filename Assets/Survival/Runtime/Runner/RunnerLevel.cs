@@ -207,6 +207,13 @@ namespace Survival.Domain.Runner
         public float FoeDmgMul { get; init; } = 1f;
 
         /// <summary>
+        /// The crowd's damage cut (<see cref="RunnerSpreadDef.CrowdDmg"/>, already in <see cref="FoeDmgMul"/>; 1 = no crowd). A
+        /// non-boss enemy's hit on a follower is <see cref="RunnerRules.CrowdFollowerHit"/>: today's hit, capped at a follower's
+        /// HP, times this, so the cut also stretches the archers' 2-hit and the melee 1-hit kills (Derek 2026-11-20).
+        /// </summary>
+        public float CrowdCut { get; init; } = 1f;
+
+        /// <summary>
         /// Whether the squad runs for the finish once the road ahead is clear on a level without a boss (json
         /// "gate_charge", off by default; the campaign's first level turns it on and the generated levels copy it).
         /// </summary>
@@ -665,7 +672,7 @@ namespace Survival.Domain.Runner
             {
                 for (var i = 0; i < levels.Count; i++)
                 {
-                    levels[i] = levels[i] with { FoeHpMul = levels[i].FoeHpMul * crowd.CrowdHp, FoeDmgMul = levels[i].FoeDmgMul * crowd.CrowdDmg };
+                    levels[i] = levels[i] with { FoeHpMul = levels[i].FoeHpMul * crowd.CrowdHp, FoeDmgMul = levels[i].FoeDmgMul * crowd.CrowdDmg, CrowdCut = crowd.CrowdDmg };
                 }
             }
 

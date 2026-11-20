@@ -61,6 +61,15 @@ namespace Survival.Domain.Runner
         /// </summary>
         public static int RangedFoeHit(int scaled) => Math.Clamp(scaled, (FollowerHp + 1) / 2, FollowerHp - 1);
 
+        /// <summary>
+        /// A crowd enemy's hit on a follower: <paramref name="hit"/> is what the hit would be without the crowd (ranged ones
+        /// already clamped by <see cref="RangedFoeHit"/>); it is capped at <see cref="FollowerHp"/> and times
+        /// <paramref name="cut"/>, at least 1. At cut 0.6 a 1-hit melee kill takes 2 hits and a 2-hit archer kill 2-4.
+        /// cut 1 (no crowd) returns <paramref name="hit"/> unchanged.
+        /// </summary>
+        public static int CrowdFollowerHit(int hit, float cut) =>
+            cut >= 1f ? hit : Math.Max(1, (int)Math.Round(Math.Min(hit, FollowerHp) * (double)cut));
+
         /// <summary>Share of a trap's hero damage a follower takes (spikes 40 -> 16 of its 25 HP).</summary>
         public const float FollowerTrapShare = 0.4f;
 
