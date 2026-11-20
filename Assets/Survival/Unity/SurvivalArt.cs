@@ -29,6 +29,8 @@ namespace Survival.Unity
         /// </summary>
         public static void ResetForContentUpdate()
         {
+            _pending?.Dispose();
+            _pending = null;
             _sprites = null;
             _slices = null;
             Textures.Clear();
@@ -36,23 +38,115 @@ namespace Survival.Unity
 
         public static void EnsureLoaded(AppFlavorConfig flavor, ThemePackBinder pack)
         {
+            if (_pending != null)
+            {
+                // A spread load (EnsureLoadedSpread) is still going: finish it now.
+                Drain();
+                return;
+            }
+
             if (_sprites != null)
             {
                 return;
             }
 
+            _pending = LoadSteps(flavor, pack).GetEnumerator();
+            Drain();
+        }
+
+        /// <summary>
+        /// <see cref="EnsureLoaded"/> spread over frames (about 12 ms of decoding per frame) so a loading screen keeps
+        /// animating while the pack PNGs are read; progress 0..1 by file count.
+        /// </summary>
+        public static System.Collections.IEnumerator EnsureLoadedSpread(AppFlavorConfig flavor, ThemePackBinder pack, Action<float>? progress = null)
+        {
+            if (_sprites != null && _pending == null)
+            {
+                progress?.Invoke(1f);
+                yield break;
+            }
+
+            if (_pending == null)
+            {
+                _pending = LoadSteps(flavor, pack).GetEnumerator();
+            }
+
+            var total = Math.Max(1, 1 + pack.Art.Count * 2 + pack.ArtFallback.Count);
+            var done = 0;
+            var sliceStart = Time.realtimeSinceStartup;
+            while (_pending != null)
+            {
+                bool more;
+                try
+                {
+                    more = _pending.MoveNext();
+                }
+                catch (Exception)
+                {
+                    _pending.Dispose();
+                    _pending = null;
+                    throw;
+                }
+
+                if (!more)
+                {
+                    _pending.Dispose();
+                    _pending = null;
+                    break;
+                }
+
+                done++;
+                if (Time.realtimeSinceStartup - sliceStart > 0.012f)
+                {
+                    progress?.Invoke(Mathf.Clamp01(done / (float)total));
+                    yield return null;
+                    sliceStart = Time.realtimeSinceStartup;
+                }
+            }
+
+            progress?.Invoke(1f);
+        }
+
+        private static IEnumerator<bool>? _pending;
+
+        private static void Drain()
+        {
+            var steps = _pending;
+            if (steps == null)
+            {
+                return;
+            }
+
+            try
+            {
+                while (steps.MoveNext())
+                {
+                }
+            }
+            finally
+            {
+                steps.Dispose();
+                _pending = null;
+            }
+        }
+
+        private static IEnumerable<bool> LoadSteps(AppFlavorConfig flavor, ThemePackBinder pack)
+        {
             _sprites = new Dictionary<string, Sprite>(StringComparer.Ordinal);
             _slices = pack.ArtSlices;
             var packRoot = ResolvePackRoot(flavor);
             TryLoad(packRoot, pack, SurvIds.FlavorSplash, SplashKey);
+            yield return true;
             if (pack.Art.TryGetValue("map.terrain", out var terrainRel))
             {
                 LoadPath(Path.Combine(packRoot, terrainRel.Replace('/', Path.DirectorySeparatorChar)), TerrainKey);
+                yield return true;
             }
 
             foreach (var pair in pack.Art)
             {
                 LoadPath(Path.Combine(packRoot, pair.Value.Replace('/', Path.DirectorySeparatorChar)), pair.Key);
+                yield return true;
             }
 
             // Atlases: an "art" key ending in ".atlas" points at one PNG; its sibling .txt lists the sub-sprites,
@@ -62,6 +156,7 @@ namespace Survival.Unity
                 if (pair.Key.EndsWith(AtlasSuffix, StringComparison.Ordinal))
                 {
                     LoadAtlas(Path.Combine(packRoot, pair.Value.Replace('/', Path.DirectorySeparatorChar)), pair.Key.Substring(0, pair.Key.Length - "atlas".Length));
+                    yield return true;
                 }
             }
 
@@ -69,6 +164,7 @@ namespace Survival.Unity
             foreach (var pair in pack.ArtFallback)
             {
                 LoadPath(Path.Combine(packRoot, pair.Value.Replace('/', Path.DirectorySeparatorChar)), pair.Key, pack.ArtFallbackSlices);
+                yield return true;
             }
         }
 
