@@ -21,6 +21,12 @@ namespace Survival.Unity
     {
         [SerializeField] private bool skipSplash;
 
+        /// <summary>
+        /// The keep splash art as a plain scene reference (Splash.unity), so the very first frame after the Unity logo can
+        /// show it without touching the player asset bake. Null = old path (read the art through the bake first).
+        /// </summary>
+        [SerializeField] private Texture2D? bootSplash;
+
         public SurvivalSession Session { get; private set; } = null!;
 
         private bool _booted;
@@ -85,14 +91,39 @@ namespace Survival.Unity
         private IEnumerator SplashThenPlay()
         {
             var flavor = AppFlavorConfig.FantasyKingdomA;
-            var pack = LoadPack(flavor);
-            ShowSplash(pack);
-            _splashStart = Time.realtimeSinceStartup;
+            ThemePackBinder pack;
+            var bootSprite = BootSprite(bootSplash);
+            Action<float, string> otaProgress = SetProgress;
+            if (bootSprite != null)
+            {
+                // Cold start: the first frame must not wait on the player asset bake. Its Resources.Load pulls every baked
+                // model, clip, texture and sound in one synchronous call (seconds on a phone, black screen). Show the
+                // splash from the scene reference first, then load the bake asynchronously behind the progress bar.
+                var priority = Application.backgroundLoadingPriority;
+                Application.backgroundLoadingPriority = UnityEngine.ThreadPriority.High;
+                ShowSplash(bootSprite, "Loading");
+                _splashStart = Time.realtimeSinceStartup;
+                yield return null;
+                yield return PlayerAssets.PreloadRegistry(p => SetProgress(p * 0.4f, ""));
+                pack = LoadPack(flavor);
+                _loadingStem = pack.StringOr("flavor.splash.loading", "Loading");
+                yield return SurvivalArt.EnsureLoadedSpread(flavor, pack, p => SetProgress(0.4f + p * 0.1f, ""));
+                Application.backgroundLoadingPriority = priority;
+                otaProgress = (bar, label) => SetProgress(0.5f + Mathf.Clamp01(bar) * 0.5f, label);
+            }
+            else
+            {
+                pack = LoadPack(flavor);
+                SurvivalArt.EnsureLoaded(flavor, pack);
+                ShowSplash(SurvivalArt.Get("splash") ?? SurvivalArt.Get("flavor.splash"), pack.StringOr("flavor.splash.loading", "Loading"));
+                _splashStart = Time.realtimeSinceStartup;
+            }
+
             KidUi.Strings = pack.StringOr;
 
             // Over-the-air step (Docs/OTA.md): remote config, minimum version, guarded balance patches, content download.
             OtaBootResult? ota = null;
-            yield return OtaBoot.Run(flavor.BundleId, SetProgress, r => ota = r);
+            yield return OtaBoot.Run(flavor.BundleId, otaProgress, r => ota = r);
             if (ota != null && ota.Update == Survival.Domain.Ota.UpdateRequirement.Required)
             {
                 _loadingText = null;
@@ -229,21 +260,69 @@ namespace Survival.Unity
                 PlayerAssets.ReadAllText(Path.Combine(packRoot, "ui", "hud_layout.json")));
         }
 
-        private void ShowSplash(ThemePackBinder pack)
+        /// <summary>A sprite over the scene-referenced splash texture (cheap: no decode, no bake read). Null when unset.</summary>
+        private static Sprite? BootSprite(Texture2D? tex)
+        {
+            if (tex == null || tex.width < 2 || tex.height < 2)
+            {
+                return null;
+            }
+
+            var sprite = Sprite.Create(tex, new Rect(0f, 0f, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect);
+            sprite.name = "survival_boot_splash";
+            return sprite;
+        }
+
+        /// <summary>Top-centre sky colour of the keep art; the known value when the texture cannot be read.</summary>
+        private static Color SkyOf(Sprite? keepSprite)
+        {
+            var fallback = new Color(0.09f, 0.39f, 0.70f);
+            if (keepSprite == null || keepSprite.texture == null || !keepSprite.texture.isReadable)
+            {
+                return fallback;
+            }
+
+            try
+            {
+                return keepSprite.texture.GetPixel(keepSprite.texture.width / 2, keepSprite.texture.height - 1);
+            }
+            catch (Exception)
+            {
+                return fallback;
+            }
+        }
+
+        private static Sprite BleedOf(Sprite? keepSprite)
+        {
+            if (keepSprite == null || keepSprite.texture == null || !keepSprite.texture.isReadable)
+            {
+                return SurvivalArt.White();
+            }
+
+            try
+            {
+                return SurvivalArt.EdgeBleed(keepSprite);
+            }
+            catch (Exception)
+            {
+                return SurvivalArt.White();
+            }
+        }
+
+        private void ShowSplash(Sprite? keepSprite, string loadingStem)
         {
             SurvivalVisuals.EnsureEventSystem();
             var root = SurvivalVisuals.Canvas(transform, "SurvivalSplashCanvas", 80);
             _splashRoot = root.gameObject;
-            _loadingStem = pack.StringOr("flavor.splash.loading", "Loading");
+            _loadingStem = loadingStem;
 
-            SurvivalArt.EnsureLoaded(AppFlavorConfig.FantasyKingdomA, pack);
-            var keepSprite = SurvivalArt.Get("splash") ?? SurvivalArt.Get("flavor.splash");
-            var bleed = SurvivalVisuals.Image(root, "Bleed", Color.white, SurvivalArt.EdgeBleed(keepSprite));
+            var sky = SkyOf(keepSprite);
+            var bleedSprite = BleedOf(keepSprite);
+            var bleed = SurvivalVisuals.Image(root, "Bleed", bleedSprite == SurvivalArt.White() ? sky : Color.white, bleedSprite);
             SurvivalVisuals.Stretch(bleed.rectTransform);
             bleed.preserveAspect = false;
             bleed.raycastTarget = false;
 
-            var sky = keepSprite != null ? keepSprite.texture.GetPixel(keepSprite.texture.width / 2, keepSprite.texture.height - 1) : new Color(0.09f, 0.39f, 0.70f);
             if (Camera.main != null)
             {
                 Camera.main.backgroundColor = sky;
@@ -319,16 +398,17 @@ namespace Survival.Unity
         private void AdvanceFromSplash()
         {
             _loadingText = null;
+            if (SceneExists("Play"))
+            {
+                // Keep the splash up until the Play scene replaces this one, so the hand-off never shows an empty frame.
+                SceneManager.LoadScene("Play");
+                return;
+            }
+
             if (_splashRoot != null)
             {
                 Destroy(_splashRoot);
                 _splashRoot = null;
-            }
-
-            if (SceneExists("Play"))
-            {
-                SceneManager.LoadScene("Play");
-                return;
             }
 
             ShowPlay();
