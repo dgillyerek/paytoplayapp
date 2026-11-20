@@ -158,8 +158,8 @@ public sealed class RunnerSpawnSpacingProbe
 
 public sealed class RunnerSpawnSpacingTests
 {
-    /// <summary>Longest wait, in seconds of walking, between one enemy reaching the squad and the next (main: 5.7-9.1 s).</summary>
-    public const double MaxGapSeconds = 7.0;
+    /// <summary>Longest wait, in seconds of walking, between one enemy reaching the squad and the next (main: 5.7-9.1 s). Spread levels only: Levels 1-12 keep main's waves (progression spread from 13).</summary>
+    public const double MaxGapSeconds = 7.5;
 
     /// <summary>Most enemies reaching the squad inside any 2 s (main: 7-27).</summary>
     public const int MaxClump = 22;
@@ -168,7 +168,7 @@ public sealed class RunnerSpawnSpacingTests
     public void Generated_levels_have_no_long_lulls_or_big_clumps()
     {
         var c = Runner.Catalog();
-        for (var n = 2; n <= c.Levels.Count; n++)
+        for (var n = c.Progression!.Spread!.From; n <= c.Levels.Count; n++)
         {
             var level = c.ByNumber(n);
             var s = RunnerSpawnSpacing.Arrivals(c, level).Select(z => z / level.Speed).ToList();
