@@ -112,6 +112,9 @@ namespace Survival.Domain.Runner
 
         public float EarlyWindow { get; init; } = 10f;
 
+        /// <summary>The early window on Level 1 alone (the authored tutorial road, 0: <see cref="EarlyWindow"/>).</summary>
+        public float FirstWindow { get; init; }
+
         internal static RunnerSpreadDef Read(JsonNode.Obj o)
         {
             var s = new RunnerSpreadDef(
@@ -125,7 +128,8 @@ namespace Survival.Domain.Runner
                 {
                     EarlyUntil = Math.Max(0, LayoutJson.OptInt(eo, "until", 0)),
                     EarlyPack = Math.Max(1, LayoutJson.OptInt(eo, "pack", 2)),
-                    EarlyWindow = Math.Max(1f, LayoutJson.OptNum(eo, "window", 10f))
+                    EarlyWindow = Math.Max(1f, LayoutJson.OptNum(eo, "window", 10f)),
+                    FirstWindow = Math.Max(0f, LayoutJson.OptNum(eo, "first_window", 0f))
                 };
             }
 
@@ -133,7 +137,7 @@ namespace Survival.Domain.Runner
         }
 
         /// <summary>The spread Level <paramref name="number"/> uses (the early pack / window on Levels 1-<see cref="EarlyUntil"/>).</summary>
-        public RunnerSpreadDef For(int number) => number <= EarlyUntil ? this with { Pack = EarlyPack, Window = EarlyWindow } : this;
+        public RunnerSpreadDef For(int number) => number <= EarlyUntil ? this with { Pack = EarlyPack, Window = number == 1 && FirstWindow > 0f ? FirstWindow : EarlyWindow } : this;
 
         /// <summary>Metres ahead of the hero a foe counts as in the fight (about the squad's reach); arrival is timed to this line.</summary>
         public const float FightLine = 18f;
