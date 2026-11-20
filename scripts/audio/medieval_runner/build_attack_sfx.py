@@ -531,24 +531,22 @@ def stormcrest_bolt(rng, i):
 # ================================================================ IMPACTS (where the hero's hit lands)
 
 def impact_arcane(rng, i):
-    # Lyra's bolt bursts: body hit, chapel bell, ice crackle, choir, earth rumble — no sparkle grains.
-    hit = src(pick([K + 'impactSoft_medium_000.ogg', K + 'impactSoft_medium_002.ogg', K + 'impactSoft_medium_004.ogg'], i), 0.15)
-    body = thump(rng, 160, 60, 0.2, 0.05)
-    bell = hp(chapel_bell(i, 0.55, rate=pick([1.15, 1.22, 1.1, 1.28], i)), 300)
-    ice = ice_crackle(i, 0.3, rate=pick([1.2, 1.3, 1.15, 1.25], i))
-    chant = choir(rng, 0.55, pick([196.0, 220.0, 174.6, 207.6], i), n_voices=4, swell=0.08)
-    earth = rumble(rng, 0.45, 130)
-    gust = whoosh(rng, 0.2, 2500, 700, q=1.2, peak_at=0.15)
+    # A spell bursting on its target, the counterpart of Lyra's cast: a dull body hit, a flame-like
+    # burst of released magic, crackling sparks scattering, and a puff of air. No bell, gong, choir
+    # or other ringing tone.
+    hit = thump(rng, f_hi=pick([170, 185, 160, 178], i), f_lo=60, dur=0.2, tau=0.045)
+    smack = bp(rng.standard_normal(n_(0.05)), 250, 2500) * env_ad(n_(0.05), 0.001, 0.01)
+    burst = flare(rng, pick([0.32, 0.36, 0.3, 0.34], i))
+    sparks = ember_crackle(rng, 0.35, density=pick([170, 200, 150, 185], i), fc=(900, 6000), tau=0.12)
+    puff = whoosh(rng, 0.25, 2200, 600, q=1.0, peak_at=0.1)
     y = place([
-        (hit, 0, -8),
-        (body, 0, -8),
-        (gust, 0, -12),
-        (bell, 0.01, -7),
-        (ice, 0.01, -14),
-        (chant, 0.02, -12),
-        (earth, 0.0, -13),
+        (hit, 0, -3),
+        (_norm(smack), 0, -6),
+        (burst, 0.005, -3),
+        (sparks, 0.01, -12),
+        (puff, 0.0, -11),
     ])
-    return tail(y, rng, wet=0.30, seconds=1.1, decay=0.33, damp=5000)
+    return tail(sat(_norm(y), 0.2), rng, wet=0.16, seconds=0.7, decay=0.22, damp=5000)
 
 
 def impact_arrow(rng, i):
