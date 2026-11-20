@@ -199,7 +199,9 @@ public sealed class RunnerHazardTests
             Assert.True(l.EnemyCount >= 2 * old[i].Item1, $"L{l.Number} enemies {l.EnemyCount}");
             // Boxes were cut about 40% (Derek 2026-10-23: "theres too many upgrades to enimies"): about one box for every 5 enemies on
             // Level 1, falling to about one for every 10 on Level 12, while the count itself still climbs.
-            Assert.InRange((float)l.BoxCount / l.EnemyCount, 0.08f, 0.21f);
+            // The crowd (Derek 2026-11-20: "more enemies", about 1.47x on every level) adds enemies, not boxes, so the floor of
+            // one box per 12.5 enemies is divided by it: the same boxes, more enemies.
+            Assert.InRange((float)l.BoxCount / l.EnemyCount, 0.08f / (c.Progression?.Spread?.Crowd ?? 1f), 0.21f);
             Assert.True(i == 0 || (float)l.BoxCount / l.EnemyCount < (float)c.Levels[i - 1].BoxCount / c.Levels[i - 1].EnemyCount + 0.005f, $"L{l.Number} boxes per enemy");
             // Enemies walk 1.5x faster now and the squad is capped at 10, so each one is lighter (about 0.45x-0.8x the old total HP) and the
             // total still climbs every level. Up to 1.6x on Levels 2-12 since the 6 m run-up (Oct 29): the squad gets free shots in
