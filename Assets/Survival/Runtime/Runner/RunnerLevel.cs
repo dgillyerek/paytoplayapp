@@ -619,14 +619,16 @@ namespace Survival.Domain.Runner
                 var prog = RunnerProgressionDef.Read(po);
                 progression = prog;
                 var have = new HashSet<string>(StringComparer.Ordinal);
+                var walk = new Dictionary<string, float>(StringComparer.Ordinal);
                 foreach (var u in units)
                 {
                     have.Add(u.Id);
+                    walk[u.Id] = u.Speed;
                 }
 
                 for (var n = levels.Count + 1; n <= prog.Count; n++)
                 {
-                    levels.Add(RunnerProgression.Generate(levels[0], prog, n, have.Contains));
+                    levels.Add(RunnerProgression.Generate(levels[0], prog, n, have.Contains, id => walk.TryGetValue(id, out var v) ? v : 0f));
                 }
 
                 // Level 1 is hand-authored, so its "1" tweak is applied here, after the generated levels have copied its

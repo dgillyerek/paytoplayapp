@@ -49,7 +49,8 @@ namespace Survival.Domain.Runner
             {
                 Ramp = o.TryGet("ramp", out var rn) && rn is JsonNode.Obj ro ? RunnerRampDef.Read(ro) : null,
                 BossEvery = Math.Max(1, LayoutJson.OptInt(o, "boss_every", 1)),
-                Tweaks = RunnerLevelTweak.ReadAll(o)
+                Tweaks = RunnerLevelTweak.ReadAll(o),
+                Spread = o.TryGet("spread", out var sn) && sn is JsonNode.Obj so ? RunnerSpreadDef.Read(so) : null
             };
         }
 
@@ -61,6 +62,9 @@ namespace Survival.Domain.Runner
 
         /// <summary>The late-game ramp (levels past <see cref="RunnerRampDef.From"/>), or null for the plain linear steps.</summary>
         public RunnerRampDef? Ramp { get; init; }
+
+        /// <summary>How a generated level's waves are spread down the road (<see cref="RunnerSpreadDef"/>), or null to keep each beat's wave together.</summary>
+        public RunnerSpreadDef? Spread { get; init; }
 
         /// <summary>
         /// A big boss stands at the end of every <see cref="BossEvery"/>th level only (Derek 2026-10-26: "there should only
@@ -82,6 +86,29 @@ namespace Survival.Domain.Runner
 
         /// <summary>The t (level - 1) the enemy and box counts use: it stops growing at the ramp's count cap.</summary>
         public int CountT(int number) => Math.Max(0, Math.Min(number, Ramp?.CountCap ?? int.MaxValue) - 1);
+    }
+
+    /// <summary>
+    /// runner_levels.json "progression" "spread" (Derek 2026-11-20: "too much downtime ... enemies come in big clumps that
+    /// die too easily, then a long lull with nothing happening"). Each beat's wave used to stand within a few metres (front
+    /// line, second line, heavy, skirmishers), so the whole wave reached the squad in one or two seconds and the road was empty
+    /// until the next beat. With a spread, every wave row before the boss guard / finale is cut into packs of at most
+    /// <see cref="Pack"/> and the packs are laid out so they reach the squad at an even rhythm from the level's first enemy to
+    /// its last (same order, same units, same lanes, same HP; each pack moved by <see cref="Jitter"/> of a step at most so it
+    /// does not tick like a metronome). Packs only move later (into the lull after their clump, <see cref="Window"/> metres
+    /// at most), never ahead of where they used to meet the squad, so a level's opening still lets the squad take its first chests. Arrival allows for the pack's walk speed: a wolf pack stands further up the road than
+    /// an archer pack meant to arrive at the same moment. The set-piece moments (boss guard, finale) stay where they were.
+    /// </summary>
+    public sealed record RunnerSpreadDef(int Pack, float Jitter, int From, float Window)
+    {
+        internal static RunnerSpreadDef Read(JsonNode.Obj o) => new(
+            Math.Max(1, LayoutJson.OptInt(o, "pack", 3)),
+            Math.Max(0f, Math.Min(0.45f, LayoutJson.OptNum(o, "jitter", 0.25f))),
+            Math.Max(2, LayoutJson.OptInt(o, "from", 2)),
+            Math.Max(1f, LayoutJson.OptNum(o, "window", RunnerProgression.BeatMetres)));
+
+        /// <summary>Metres ahead of the hero a foe counts as in the fight (about the squad's reach); arrival is timed to this line.</summary>
+        public const float FightLine = 18f;
     }
 
     /// <summary>
@@ -293,7 +320,7 @@ namespace Survival.Domain.Runner
             return level with { Length = level.Length + metres, Rows = rows };
         }
 
-        public static RunnerLevelDef Generate(RunnerLevelDef first, RunnerProgressionDef p, int number, Func<string, bool> hasUnit)
+        public static RunnerLevelDef Generate(RunnerLevelDef first, RunnerProgressionDef p, int number, Func<string, bool> hasUnit, Func<string, float>? unitSpeed = null)
         {
             if (number < 2)
             {
@@ -303,7 +330,8 @@ namespace Survival.Domain.Runner
             var t = number - 1;
             var ramp = p.Ramp;
             var length = (float)Math.Round(Math.Min(first.Length + (p.LengthStep * t), ramp?.LengthCap ?? float.MaxValue));
-            var rows = Rows(p, number, length, first.HalfWidth, p.IsBossLevel(number) ? BossUnit(first, p.IsMilestoneBossLevel(number)) : null, hasUnit);
+            var speed = Math.Min(first.Speed + (p.SpeedStep * t), Math.Max(first.Speed, ramp?.SpeedCap ?? float.MaxValue));
+            var rows = Rows(p, number, length, first.HalfWidth, p.IsBossLevel(number) ? BossUnit(first, p.IsMilestoneBossLevel(number)) : null, hasUnit, speed, unitSpeed);
             if (!p.IsBossLevel(number))
             {
                 // No boss: the finish gate stands just past the finale, not where the boss section would end.
@@ -324,7 +352,7 @@ namespace Survival.Domain.Runner
                 "runner.level." + slug,
                 first.Hero,
                 length,
-                Math.Min(first.Speed + (p.SpeedStep * t), Math.Max(first.Speed, ramp?.SpeedCap ?? float.MaxValue)),
+                speed,
                 first.HalfWidth,
                 first.MaxFollowers,
                 rows,
@@ -343,7 +371,7 @@ namespace Survival.Domain.Runner
         /// The spawn rows of level <paramref name="number"/> on a <paramref name="length"/> m road: the boss row last when
         /// <paramref name="bossUnit"/> is set, otherwise the road ends on the last wave and the finish line.
         /// </summary>
-        public static List<RunnerRowDef> Rows(RunnerProgressionDef p, int number, float length, float halfWidth, string? bossUnit, Func<string, bool> hasUnit)
+        public static List<RunnerRowDef> Rows(RunnerProgressionDef p, int number, float length, float halfWidth, string? bossUnit, Func<string, bool> hasUnit, float speed = 0f, Func<string, float>? unitSpeed = null)
         {
             var t = Math.Max(0, number - 1);
             // Enemy / box counts stop growing at the ramp's count cap (the road stops growing too); HP and damage carry on.
@@ -611,6 +639,15 @@ namespace Survival.Domain.Runner
                 side = -side;
             }
 
+            // Spread the beats' waves into a steady stream (runner_levels.json "spread"), before the closing set piece goes in:
+            // the boss guard and the finale stay the set pieces they are.
+            if (p.Spread != null && number >= p.Spread.From && speed > 0f)
+            {
+                // The closing set piece's front: the boss guard's archer line, or the finale's fodder push.
+                var (closingAt, closingUnit) = bossUnit != null ? (bossAt - 7f, "bonequill") : (bossAt - FinaleBack + 3f, "nightfang");
+                SpreadWaves(rows, p.Spread, closingAt, closingUnit, speed, unitSpeed ?? (_ => 0f), new Random(unchecked(p.Seed + (number * 15485863) + 3)));
+            }
+
             if (bossUnit != null)
             {
                 // The boss's guard: a line of archers, longer with the level, then the boss.
@@ -627,6 +664,119 @@ namespace Survival.Domain.Runner
             StandOffWalls(rows, halfWidth);
             rows.Sort((a, b) => a.At.CompareTo(b.At));
             return rows;
+        }
+
+        /// <summary>
+        /// Spreads every wave row of the road (the closing set piece is not in yet) into a steady stream that runs up to the
+        /// closing set piece, whose front (<paramref name="closingUnit"/>) stands at <paramref name="closing"/>; see <see cref="RunnerSpreadDef"/>.
+        /// </summary>
+        private static void SpreadWaves(List<RunnerRowDef> rows, RunnerSpreadDef spread, float closing, string closingUnit, float speed, Func<string, float> unitSpeed, Random rnd)
+        {
+            // How much earlier than its row a pack walking at v meets the fight line, in road metres (squad walks at speed).
+            float Lead(string unit) => RunnerSpreadDef.FightLine * speed / (speed + Math.Max(0f, unitSpeed(unit)));
+
+            var packs = new List<(float Arrive, RunnerRowDef Row, int Count)>();
+            for (var i = rows.Count - 1; i >= 0; i--)
+            {
+                var r = rows[i];
+                if (r.Kind != RunnerRowKind.Enemy)
+                {
+                    continue;
+                }
+
+                rows.RemoveAt(i);
+                var n = Math.Max(1, r.Count);
+                var parts = (n + spread.Pack - 1) / spread.Pack;
+                var left = n;
+                for (var k = 0; k < parts; k++)
+                {
+                    var c = (left + (parts - k - 1)) / (parts - k);
+                    left -= c;
+                    packs.Add((r.At - Lead(r.Unit), r, c));
+                }
+            }
+
+            if (packs.Count == 0)
+            {
+                return;
+            }
+
+            // Same encounter order as before (stable on ties: the order the beat put them in).
+            var ordered = packs.Select((x, i) => (x, i)).OrderBy(q => q.x.Arrive).ThenByDescending(q => q.i).Select(q => q.x).ToList();
+            var a0 = ordered[0].Arrive;
+            var a1 = ordered[ordered.Count - 1].Arrive + spread.Window;
+
+            // Smooth the arrivals forward over one window: each enemy's weight is spread evenly over the Window metres from
+            // where it arrived, and the packs are laid at even shares of that smoothed road. A beat's clump fills the empty
+            // road after it, so the action is steady, while no enemy reaches the squad sooner than before: the opening still
+            // gives the squad its first chests before the bigger waves, and the level keeps its build-up (later beats still
+            // bring more enemies per metre than early ones).
+            const float cell = 0.1f;
+            var cells = (int)Math.Ceiling((a1 - a0) / cell) + 1;
+            var mass = new double[cells];
+            foreach (var (arrive, _, c) in ordered)
+            {
+                var i0 = (int)((arrive - a0) / cell);
+                var i1 = Math.Min(cells - 1, (int)((arrive + spread.Window - a0) / cell));
+                for (var i = i0; i <= i1; i++)
+                {
+                    mass[i] += c / (double)(i1 - i0 + 1);
+                }
+            }
+
+            var cum = new double[cells + 1];
+            for (var i = 0; i < cells; i++)
+            {
+                cum[i + 1] = cum[i] + mass[i];
+            }
+
+            var total = cum[cells];
+            float Place(double share)
+            {
+                var target = share * total;
+                var j = Array.BinarySearch(cum, target);
+                if (j < 0)
+                {
+                    j = ~j;
+                }
+
+                j = Math.Max(1, Math.Min(cells, j));
+                var f = mass[j - 1] > 0 ? (target - cum[j - 1]) / mass[j - 1] : 0;
+                return a0 + (float)((j - 1 + Math.Max(0, Math.Min(1, f))) * cell);
+            }
+
+            var done = 0.0;
+            var at = new float[ordered.Count];
+            for (var i = 0; i < ordered.Count; i++)
+            {
+                var c = ordered[i].Count;
+                at[i] = Place((done + (c * 0.5)) / total);
+                done += c;
+            }
+
+            // The stream ends one even step short of where the closing set piece meets the squad (the stream's tail is drawn
+            // in to it, never pushed past it).
+            var end = closing - Lead(closingUnit) - ((closing - a0) / (ordered.Count + 1));
+            var first = at[0];
+            var last = at[ordered.Count - 1];
+            if (last > end && last > first && end > first)
+            {
+                for (var i = 0; i < ordered.Count; i++)
+                {
+                    at[i] = first + ((at[i] - first) * (end - first) / (last - first));
+                }
+            }
+
+            for (var i = 0; i < ordered.Count; i++)
+            {
+                var (_, r, c) = ordered[i];
+                var gapPrev = i > 0 ? at[i] - at[i - 1] : float.MaxValue;
+                var gapNext = i + 1 < ordered.Count ? at[i + 1] - at[i] : float.MaxValue;
+                var step = Math.Min(gapPrev, gapNext);
+                var jitter = step < float.MaxValue ? (float)((rnd.NextDouble() * 2.0) - 1.0) * spread.Jitter * step : 0f;
+                var z = (float)Math.Round(at[i] + jitter + Lead(r.Unit), 2);
+                rows.Add(r with { At = z, Count = c, Spread = c > 1 ? r.Spread : 0f });
+            }
         }
 
         /// <summary>

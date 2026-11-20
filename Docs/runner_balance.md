@@ -392,6 +392,21 @@ These are in `runner_balance.json`, `power_packs.json` and `stores.json`.
 - The analytic kill-time passes overrun-time around L25 and the player still wins; boxes, followers and dodging absorb it.
 - The model is not verified in Unity; it is the domain sim only.
 
+## Steady waves: spawn spreading (Nov 20, 2026)
+
+**Why (Derek):** "too much downtime: enemies come in big clumps that die too easily, then a long lull with nothing happening." Each beat put its whole wave (front line, second line, heavy, skirmishers) within about 4 m, so 7-23 enemies reached the squad inside 2 s and then nothing came for up to 9 s.
+
+**What changed:**
+- `progression.spread` in runner_levels.json (`RunnerSpreadDef`, applied in `RunnerProgression.SpreadWaves`) is `{ pack: 1, jitter: 0.25, window: 20, from: 2 }`. From Level 2 on, every wave row is cut into packs of 1, and the packs are re-timed so they reach the squad as a steady stream.
+- The re-timing is a forward smoothing. Each enemy's arrival (its row, less the ground it walks itself while the squad closes 18 m, so a wolf stands further up the road than an archer meant to arrive with it) is spread over the 20 m after it, and the packs sit at even shares of that.
+- Enemies only move later, into the lull after their clump. The opening still gives the squad its first chests before the bigger waves, and a level's build-up stays (spreading over the whole road instead made levels up to 2.7x harder, because late waves landed before the chests).
+- The stream ends one step short of the closing set piece. The boss guard and the finale are not spread, and the same units, lanes and order are kept. Level 1 (the authored tutorial road) is unchanged.
+- `RunnerBalance.Strength` counts one analytic "wave" per 13 m of enemy road when there are no gaps between beats.
+
+**Pace held:** the free pace is unchanged (RunnerFreePaceTests: wall L31, L50 day ~829). It was re-fitted per level with `level_tweaks` `foe_hp` (and a layout re-roll on L14, L20, L24, L25, L28 where the spread roll was much harder than main at any reasonable HP) so each level's required power stays within a few % of main. Enemy counts, gold and rewards are unchanged.
+
+**Measure it:** `RunnerSpawnSpacingProbe` (tests/Survival.Domain.Tests/RunnerSpawnSpacingProbe.cs) writes `runner_spawn_spacing.txt`. Set `RUNNER_LEVELS_JSON` to compare another runner_levels.json with the same code.
+
 ## The tests (`tests/Survival.Domain.Tests/RunnerBalanceTests.cs`)
 
 - `The_first_12_levels_still_need_no_upgrades` checks that L1–12 need scale ≤ 1.
