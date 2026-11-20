@@ -142,7 +142,7 @@ public sealed class RunnerSpawnSpacingProbe
         // RUNNER_LEVELS_JSON: measure another runner_levels.json (e.g. main's, for a before / after) with today's code.
         var other = Environment.GetEnvironmentVariable("RUNNER_LEVELS_JSON");
         var r = string.IsNullOrEmpty(other) ? BalanceReport.Get() : BalanceReport.Build(RunnerCatalog.Parse(File.ReadAllText(other)));
-        var t = RunnerSpawnSpacing.Table(r, new[] { 1, 2, 3, 5, 8, 10, 15, 20, 25, 31, 40, 50 });
+        var t = RunnerSpawnSpacing.Table(r, new[] { 1, 2, 3, 5, 8, 10, 13, 15, 20, 25, 31, 40, 50 });
         var sb = new StringBuilder(t).AppendLine("level required_power free_ratio free_cleared_day");
         for (var n = 1; n <= r.Levels; n++)
         {
