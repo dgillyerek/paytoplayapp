@@ -1,8 +1,13 @@
 """Runner / battle attack SFX for Theme A (fantasy_kingdom_a): layered, round-robin variants.
 
-Every sound = swing/whoosh + impact (flesh, armour, wood or magic, by weapon) + short tail (convolution reverb with a
-synthesized room impulse). Layers are CC0 recordings (see LICENSES.md / Docs/audio-credits.md) plus original synthesis
-(numpy/scipy: swept-band noise whooshes, inharmonic metal partials, arcane shimmer, thumps, crackles).
+Every sound is built for a medieval fantasy kingdom: steel, wood, leather, cloth, bowstrings,
+creature voices, and organic magic (fire, wind, ice, chapel bells, low choir, earth rumble).
+No synthesized electronic, sci-fi, laser, zap, beep, or rising-whine layers.
+
+Layers are CC0 recordings (see LICENSES.md / Docs/audio-credits.md) plus original
+acoustic-sounding synthesis (numpy/scipy: swept-band noise whooshes, ringing metal
+partials, low choir formants, body thumps, ember crackle, a synthesized stone-hall
+convolution tail).
 
 Rebuild:  AUDIO_SRC=<folder with the CC0 packs unpacked as x_*/kenney_*> python3 build_attack_sfx.py [out_dir]
 Fixed seeds, so a rebuild with the same packs gives the same files. Output: mono 44.1 kHz Ogg Vorbis, peak <= -3 dBFS.
@@ -22,6 +27,8 @@ M = 'x_medieval/'; K = 'kenney_impact-sounds/Audio/'; KR = 'kenney_rpg-audio/Aud
 C1 = 'x_80-CC0-creature-SFX_0/'; C2 = 'x_80-CC0-creature-sfx-2/'; R = 'x_80-CC0-RPG-SFX_0/'
 B = 'x_sfx_breaking_and_falling/'; W = 'x_100-CC0-wood-metal-SFX/'; SC = 'x_sword_clash_-_starninjas_0/'
 SN = 'x_sword_-_starninjas_1/sword - StarNinjas/'; TS = 'x_weapons-apparel/sfx/'
+WG = 'x_wings_flap_large/'; ICE = 'x_ice_shatters/'; WN = 'x_wind/'
+FIRE = 'fire-1.wav'; THUNDER = 'rain-thunder.ogg'; WINDSHORT = 'short wind sound.wav'
 
 PEAK_DB = -4.6  # sample peak before Vorbis; the encoded file decodes with a true peak <= -3 dBFS
 _cache = {}
@@ -80,7 +87,7 @@ def fade_out(x, sec=0.03):
     return x
 
 
-# ---------------------------------------------------------------- synthesis
+# ---------------------------------------------------------------- synthesis (acoustic-sounding only)
 
 def whoosh(rng, dur, f_from, f_to, q=1.6, peak_at=0.6, bright=1.0):
     """Swept band-pass noise with a swell-and-release envelope: the air of a swing or a passing projectile."""
@@ -102,7 +109,7 @@ def whoosh(rng, dur, f_from, f_to, q=1.6, peak_at=0.6, bright=1.0):
 
 
 def partials(rng, f0, ratios, decays, amps, dur, detune=0.003, beat=0.0):
-    """Inharmonic struck partials (a blade or plate ringing): each sine decays on its own tau, slightly detuned pairs beat."""
+    """Struck metal ringing (a blade or plate): each sine decays on its own tau, slightly detuned pairs beat."""
     n = n_(dur)
     t = np.arange(n) / SR
     y = np.zeros(n)
@@ -127,42 +134,42 @@ def thump(rng, f_hi=130, f_lo=45, dur=0.22, tau=0.07):
     return y / (np.abs(y).max() + 1e-9)
 
 
-def click(rng, dur=0.012, fc=3500):
+def rumble(rng, dur=0.7, fc=140):
+    """Earthy / thunder roll: dark noise with a slow natural flutter, no buzz or tone."""
     n = n_(dur)
-    y = rng.standard_normal(n) * np.exp(-np.arange(n) / (n / 5))
-    y = bp(y, fc * 0.5, min(fc * 2.0, SR / 2 - 100))
+    y = lp(rng.standard_normal(n), fc, 4)
+    flutter = lp(np.abs(rng.standard_normal(n)), 8, 2)
+    flutter = 0.35 + 0.65 * flutter / (np.abs(flutter).max() + 1e-9)
+    y = y * flutter * env_ad(n, 0.04, dur * 0.4, hold=0.05)
     return y / (np.abs(y).max() + 1e-9)
 
 
-def shimmer(rng, dur, base, up=1.5, n_par=7, sparkle=0.5, tremolo=11.0):
-    """Arcane shimmer: a cluster of bell-like sines gliding up, tremolo, plus scattered high grains (sparkles)."""
+def choir(rng, dur, f0, n_voices=5, swell=0.22):
+    """Low chapel choir / chant swell: clustered vowel-like harmonics, slow rise, no sparkle or pitch glide."""
     n = n_(dur)
     t = np.arange(n) / SR
     y = np.zeros(n)
-    ratios = [1, 1.5, 2.0, 2.52, 3.0, 4.0, 5.04, 6.0][:n_par]
-    glide = up ** (t / dur)
-    for i, r in enumerate(ratios):
-        f = base * r * (1 + rng.uniform(-0.004, 0.004))
-        ph = 2 * np.pi * np.cumsum(f * glide) / SR
-        y += (0.8 ** i) * np.sin(ph + rng.uniform(0, 6.28)) * np.exp(-t / (dur * (0.5 + 0.4 * rng.random())))
-    y *= 0.75 + 0.25 * np.sin(2 * np.pi * tremolo * t)
-    if sparkle:
-        sp = np.zeros(n)
-        for _ in range(int(28 * dur * 4)):
-            i = rng.integers(0, max(1, n - n_(0.03)))
-            g = n_(rng.uniform(0.008, 0.025))
-            f = rng.uniform(2500, 7500)
-            tt = np.arange(g) / SR
-            sp[i:i + g] += np.sin(2 * np.pi * f * tt) * np.hanning(g) * rng.uniform(0.3, 1.0)
-        y = y / (np.abs(y).max() + 1e-9) + sparkle * sp * np.exp(-t / (dur * 0.7)) / (np.abs(sp).max() + 1e-9)
+    # "oh"/"ah" vowel: strong 1st and 2nd, weaker higher harmonics, dark top
+    formants = [(1.0, 1.0), (2.0, 0.55), (3.0, 0.28), (4.05, 0.12)]
+    for _ in range(n_voices):
+        fv = f0 * (1 + rng.uniform(-0.016, 0.016))
+        ph = rng.uniform(0, 2 * np.pi)
+        # shallow human vibrato (~5 Hz, 0.3 %), not an electronic LFO
+        vib = 1 + 0.003 * np.sin(2 * np.pi * (4.6 + rng.uniform(-0.5, 0.5)) * t + ph)
+        inst = np.zeros(n)
+        for r, a in formants:
+            inst += a * np.sin(2 * np.pi * fv * r * np.cumsum(vib) / SR + ph)
+        y += inst
+    env = env_ad(n, swell, dur * 0.5, hold=dur * 0.12)
+    y = lp(y * env, 2800, 4)
     return y / (np.abs(y).max() + 1e-9)
 
 
-def crackle(rng, dur, density=900, fc=(1500, 9000), tau=None):
-    """Electric / fire crackle: a sparse random impulse train through a band, decaying."""
+def ember_crackle(rng, dur, density=90, fc=(400, 3500), tau=0.3):
+    """Fireplace ember pops: sparse, mid-band, not a dense electric spark train."""
     n = n_(dur)
     imp = (rng.random(n) < density / SR) * rng.standard_normal(n) * 4
-    y = bp(imp + 0.05 * rng.standard_normal(n), fc[0], min(fc[1], SR / 2 - 100))
+    y = bp(imp + 0.03 * rng.standard_normal(n), fc[0], min(fc[1], SR / 2 - 100))
     if tau:
         y *= np.exp(-np.arange(n) / SR / tau)
     return y / (np.abs(y).max() + 1e-9)
@@ -250,143 +257,260 @@ def pick(lst, i):
     return lst[i % len(lst)]
 
 
+# Shared recorded slices
+
+# Thunder cracks in WuxiaScrub's rain-thunder.ogg (the rain bed is ~20 dB quieter).
+THUNDER_AT = [21.25, 23.85, 25.35, 28.85]
+# Three flaps in AntumDeluge's large-wings file.
+WING_AT = [0.00, 1.05, 2.10]
+# Fireplace slices in AntumDeluge fire-1.wav.
+FIRE_AT = [0.15, 0.7, 1.3, 1.9]
+
+
+def thunder_crack(i, dur=0.85, rate=1.0):
+    return src(THUNDER, dur=dur, rate=rate, start=pick(THUNDER_AT, i), fade=0.15, db=-8)
+
+
+def wing_flap(i, dur=0.42, rate=1.0):
+    return src(WG + 'wings_flap_large.ogg', dur=dur, rate=rate, start=pick(WING_AT, i), fade=0.08, db=-12)
+
+
+def wind_gust(i, dur=0.55, rate=1.0):
+    # Prefer the short recorded gusts; Wind3 is already brief.
+    path, start = pick([
+        (WN + 'Wind3.ogg', 0.05),
+        (WN + 'Wind.ogg', 0.4),
+        (WN + 'Wind2.ogg', 0.8),
+        (WINDSHORT, 0.3),
+    ], i)
+    return src(path, dur=dur, rate=rate, start=start, fade=0.1, db=-18)
+
+
+def fire_bed(i, dur=0.55, rate=1.0):
+    return src(FIRE, dur=dur, rate=rate, start=pick(FIRE_AT, i), fade=0.1, db=-20)
+
+
+def chapel_bell(i, dur=0.55, rate=1.25):
+    return src(pick([
+        K + 'impactBell_heavy_000.ogg',
+        K + 'impactBell_heavy_001.ogg',
+        K + 'impactBell_heavy_002.ogg',
+        K + 'impactBell_heavy_003.ogg',
+        K + 'impactBell_heavy_004.ogg',
+    ], i), dur=dur, rate=rate, fade=0.12)
+
+
+def ice_crackle(i, dur=0.35, rate=1.15):
+    return src(pick([
+        ICE + 'LedasLuzta.ogg',
+        ICE + 'LedasLuzta2.ogg',
+        ICE + 'LedasLuzta33.ogg',
+        ICE + 'LedasLuzta4.ogg',
+        ICE + 'LedasLuzta5.ogg',
+    ], i), dur=dur, rate=rate, fade=0.08)
+
+
 # ================================================================ HERO ATTACKS (the swing / shot)
 
 def lyra_cast(rng, i):
-    # Staff thrust + arcane bolt leaving: short staff swish, a bright gliding chime, sparkle, a soft low 'whum'.
+    # Staff thrust + organic arcane bolt: wood swish, wind gust, chapel bell, low choir, earth rumble.
     sw = src(M + 'Spear Swing.wav', 0.35, rate=pick([1.25, 1.35, 1.18, 1.3], i))
-    air = whoosh(rng, 0.32, 900, 4200, q=1.4, peak_at=0.35)
-    chime = shimmer(rng, 0.55, base=pick([660, 740, 698, 784], i), up=1.6, sparkle=0.6)
-    whum = thump(rng, 220, 110, 0.25, 0.08)
-    y = place([(sw, 0, -8), (air, 0.0, -10), (chime, 0.03, -4), (whum, 0.02, -12)])
-    return tail(y, rng, wet=0.30, seconds=1.0, decay=0.32, damp=7000)
+    air = whoosh(rng, 0.35, 500, 2800, q=1.3, peak_at=0.4)
+    gust = wind_gust(i, 0.5, rate=pick([1.05, 0.95, 1.1, 1.0], i))
+    bell = hp(chapel_bell(i, 0.6, rate=pick([1.2, 1.28, 1.15, 1.32], i)), 350)
+    chant = choir(rng, 0.7, pick([146.8, 164.8, 174.6, 196.0], i), n_voices=5, swell=0.18)
+    earth = rumble(rng, 0.55, 110)
+    y = place([
+        (sw, 0, -7),
+        (air, 0.0, -11),
+        (gust, 0.02, -8),
+        (bell, 0.05, -9),
+        (chant, 0.04, -10),
+        (earth, 0.03, -14),
+    ])
+    return tail(y, rng, wet=0.28, seconds=1.0, decay=0.34, damp=5000)
 
 
 def rowan_bow(rng, i):
-    # Longbow: string release + arrow passing away + a low string thrum.
+    # Longbow: leather, string release, arrow passing away, a low string thrum.
+    leather = src(pick([
+        TS + 'quiver-leather-squeeze-01.wav',
+        TS + 'quiver-leather-squeeze-04.wav',
+        TS + 'quiver-leather-squeeze-07.wav',
+        TS + 'quiver-leather-squeeze-10.wav',
+    ], i), 0.18, rate=1.05)
     shot = src(pick([M + 'English Longbow Shoot.wav', M + 'Scythian Recurve Shoot.wav'], i), 0.4, rate=pick([1.0, 1.04, 0.97, 1.02], i))
     pas = src(pick([M + 'Scythian Recurve Arrow Pass.wav', M + 'Crossbow Bolt Pass.wav', M + 'Scythian Recurve Arrow Passby.wav'], i), 0.45, rate=1.1)
     thrum = partials(rng, pick([98, 104, 92, 110], i), [1, 2, 3, 4.02], [0.09, 0.06, 0.04, 0.03], [1, 0.5, 0.3, 0.15], 0.3)
     air = whoosh(rng, 0.3, 2500, 900, q=2.0, peak_at=0.15)
-    y = place([(shot, 0, 0), (thrum, 0.004, -12), (pas, 0.05, -7), (air, 0.03, -15)])
+    y = place([(leather, 0, -16), (shot, 0.02, 0), (thrum, 0.024, -12), (pas, 0.07, -7), (air, 0.05, -15)])
     return tail(y, rng, wet=0.14, seconds=0.7, decay=0.22)
 
 
 def oaken_throw(rng, i):
-    # Heavy thorn spear hurled: deep swing, a wooden creak as the arm loads, leaves/cloth flutter.
+    # Heavy thorn spear hurled: wood creak, leather/cloth, deep spear swing, air whoosh.
     sw = src(M + 'Spear Swing.wav', 0.5, rate=pick([0.82, 0.9, 0.86, 0.94], i))
     creak = src(pick([KR + 'creak1.ogg', KR + 'creak2.ogg', KR + 'creak3.ogg'], i), 0.25, rate=1.2)
     cloth = src(pick([KR + 'cloth1.ogg', KR + 'cloth3.ogg', KR + 'cloth4.ogg'], i), 0.25)
+    leather = src(pick([
+        TS + 'sheath-squeeze-01.wav',
+        TS + 'sheath-squeeze-03.wav',
+        TS + 'sheath-squeeze-05.wav',
+        KR + 'dropLeather.ogg',
+    ], i), 0.2)
     air = whoosh(rng, 0.45, 300, 1600, q=1.2, peak_at=0.5)
-    y = place([(creak, 0, -14), (cloth, 0.0, -12), (sw, 0.04, -1), (air, 0.05, -8)])
+    y = place([(creak, 0, -14), (cloth, 0.0, -12), (leather, 0.0, -16), (sw, 0.04, -1), (air, 0.05, -8)])
     return tail(y, rng, wet=0.16, seconds=0.8, decay=0.25)
 
 
 def aldric_swing(rng, i):
-    # Knight's longsword: a full sabre swing with a steel 'shing' as the blade turns.
+    # Knight's longsword: cloth and mail rattle, a full blade swing, steel shing from a recorded clash.
     sw = src(pick([M + 'Sabre Swing.wav', M + 'Katana Swing.wav', M + 'Seax Swing.wav'], i), 0.4, rate=pick([0.92, 0.96, 0.9, 1.0], i))
-    shing = partials(rng, pick([1850, 2100, 1960, 2240], i), [1, 2.32, 3.87], [0.09, 0.05, 0.03], [0.6, 0.35, 0.2], 0.25, beat=0.004)
+    cloth = src(pick([KR + 'cloth1.ogg', KR + 'cloth3.ogg', KR + 'clothBelt.ogg', KR + 'cloth4.ogg'], i), 0.22)
+    mail = src(pick([
+        K + 'impactPlate_light_000.ogg',
+        K + 'impactPlate_light_002.ogg',
+        R + 'chain_01.ogg',
+        TS + 'belt-buckle-02.wav',
+    ], i), 0.18, rate=1.15)
+    shing = src(pick([
+        SC + 'sword_clash.1.ogg',
+        TS + 'sword-knife-clash-05.wav',
+        TS + 'seax-unsheathe-01.wav',
+        SC + 'sword_clash.3.ogg',
+    ], i), 0.22, rate=1.1)
     air = whoosh(rng, 0.32, 600, 2600, q=1.5, peak_at=0.55)
-    y = place([(sw, 0, 0), (air, 0.0, -8), (hp(shing, 1200), 0.02, -20)])
+    y = place([(cloth, 0, -14), (mail, 0.01, -16), (sw, 0.02, 0), (air, 0.02, -8), (hp(shing, 800), 0.05, -14)])
     return tail(y, rng, wet=0.13, seconds=0.6, decay=0.2)
 
 
 def kaelen_dual(rng, i):
-    # Two blades: a quick left-right pair of light swishes, the second higher and a beat later.
+    # Two blades: a quick left-right pair of light swishes, cloth, the second higher and a beat later.
     a = src(pick([M + 'Katana Swing.wav', M + 'Dagger Swing.wav', M + 'Seax Swing.wav'], i), 0.28, rate=1.12)
     b = src(pick([M + 'Dagger Swing.wav', M + 'Katana Swing.wav', M + 'Sabre Swing.wav', M + 'Dagger Swing.wav'], i), 0.28, rate=1.3)
+    cloth = src(pick([KR + 'cloth2.ogg', KR + 'cloth4.ogg', KR + 'cloth1.ogg'], i), 0.2)
     air1 = whoosh(rng, 0.2, 1500, 5000, q=1.8, peak_at=0.5)
     air2 = whoosh(rng, 0.2, 2000, 6500, q=1.8, peak_at=0.5)
     gap = pick([0.085, 0.1, 0.09, 0.11], i)
-    y = place([(a, 0, 0), (air1, 0, -9), (b, gap, -1), (air2, gap, -9)])
+    y = place([(cloth, 0, -16), (a, 0, 0), (air1, 0, -9), (b, gap, -1), (air2, gap, -9)])
     return tail(y, rng, wet=0.12, seconds=0.55, decay=0.18)
 
 
 def seraphine_thrust(rng, i):
-    # Winged spear-maiden's thrust: short sharp forward whoosh, a light metallic 'tsing', a wing flutter.
+    # Winged spear-maiden's thrust: recorded wing flap, sharp spear swish, forward whoosh, light steel.
+    flap = wing_flap(i, 0.4, rate=pick([1.25, 1.35, 1.2, 1.3], i))
     sw = src(M + 'Spear Swing.wav', 0.3, rate=pick([1.45, 1.55, 1.5, 1.6], i))
-    air = whoosh(rng, 0.2, 1200, 6000, q=2.2, peak_at=0.7)
-    tsing = partials(rng, pick([2600, 2900, 2750], i), [1, 2.71, 4.4], [0.07, 0.04, 0.02], [0.7, 0.3, 0.15], 0.2, beat=0.005)
-    wing = whoosh(rng, 0.25, 400, 900, q=0.9, peak_at=0.3)
-    y = place([(wing, 0, -14), (sw, 0.03, 0), (air, 0.03, -8), (hp(tsing, 1500), 0.09, -18)])
-    return tail(y, rng, wet=0.15, seconds=0.6, decay=0.2, damp=6500)
+    air = whoosh(rng, 0.2, 1200, 5000, q=2.2, peak_at=0.7)
+    steel = src(pick([
+        TS + 'sword-knife-clash-11.wav',
+        TS + 'seax-unsheathe-02.wav',
+        SN + 'sword.2.ogg',
+    ], i), 0.16, rate=1.25)
+    y = place([(flap, 0, -10), (sw, 0.04, 0), (air, 0.04, -8), (hp(steel, 900), 0.1, -16)])
+    return tail(y, rng, wet=0.15, seconds=0.6, decay=0.2, damp=5500)
 
 
 def emberfang_fire(rng, i):
-    # Dragon fireball: a breathy intake, then a roaring fire whoosh with crackles.
+    # Dragon fireball: a breathy intake, recorded fire whoosh and crackle, a roaring fire bed.
     breath = src(pick([C1 + 'breath.ogg', C2 + 'breath_02.ogg'], i), 0.3, rate=0.75)
     fire = src(pick([R + 'spell_fire_01.ogg', R + 'spell_fire_02.ogg', R + 'spell_fire_04.ogg', R + 'spell_fire_05.ogg'], i), 0.6)
+    bed = fire_bed(i, 0.6, rate=pick([1.0, 0.95, 1.05], i))
     roar = fire_roar(rng, 0.55)
-    cr = crackle(rng, 0.5, 500, (1500, 8000), tau=0.2)
-    y = place([(breath, 0, -16), (fire, 0.05, -2), (roar, 0.06, -7), (cr, 0.1, -20)])
+    cr = ember_crackle(rng, 0.5, 80, (400, 3500), tau=0.25)
+    y = place([(breath, 0, -16), (fire, 0.05, -2), (bed, 0.06, -8), (roar, 0.06, -8), (cr, 0.1, -18)])
     return tail(y, rng, wet=0.18, seconds=0.9, decay=0.28)
 
 
 def stormcrest_bolt(rng, i):
-    # Storm bolt: electric zap with a rising whine, sharp crackle, thunder rumble under.
-    n = n_(0.4)
-    t = np.arange(n) / SR
-    zap = np.sign(np.sin(2 * np.pi * np.cumsum(pick([180, 210, 160, 240], i) * (1 + 6 * t)) / SR))
-    zap = lp(zap, 5000) * env_ad(n, 0.003, 0.08)
-    cr = crackle(rng, 0.35, 1800, (2000, 12000), tau=0.09)
-    rumble = lp(rng.standard_normal(n_(0.6)), 180) * env_ad(n_(0.6), 0.04, 0.2)
-    air = whoosh(rng, 0.3, 3000, 900, q=1.2, peak_at=0.2)
-    y = place([(zap, 0, -12), (cr, 0, -4), (rumble / (np.abs(rumble).max() + 1e-9), 0.03, -8), (air, 0, -12)])
-    return tail(y, rng, wet=0.22, seconds=1.0, decay=0.3)
+    # Storm bolt: wind gust, natural thunder crack, earth rumble, a low chant — no zap or electric whine.
+    gust = wind_gust(i, 0.55, rate=pick([1.1, 1.0, 0.95], i))
+    air = whoosh(rng, 0.35, 1800, 500, q=1.1, peak_at=0.25)
+    crack = thunder_crack(i, dur=0.8, rate=pick([1.05, 1.0, 0.97], i))
+    roll = rumble(rng, 0.7, 120)
+    chant = choir(rng, 0.65, pick([110, 98, 123], i), n_voices=4, swell=0.12)
+    y = place([
+        (gust, 0, -6),
+        (air, 0, -12),
+        (crack, 0.04, -1),
+        (roll, 0.05, -8),
+        (chant, 0.02, -14),
+    ])
+    return tail(y, rng, wet=0.22, seconds=1.0, decay=0.32, damp=4000)
 
 
 # ================================================================ IMPACTS (where the hero's hit lands)
 
 def impact_arcane(rng, i):
-    # Lyra's bolt bursts: bright magic pop, falling bell partials, low body, sparkle tail.
-    burst = whoosh(rng, 0.12, 6000, 1500, q=1.0, peak_at=0.05)
-    bell = partials(rng, pick([880, 990, 932, 1046], i), [1, 2.0, 2.76, 5.4], [0.18, 0.12, 0.07, 0.04], [1, 0.5, 0.4, 0.2], 0.5)
-    sp = shimmer(rng, 0.45, base=pick([1320, 1480, 1397], i), up=0.7, n_par=4, sparkle=0.8)
-    body = thump(rng, 160, 60, 0.2, 0.05)
+    # Lyra's bolt bursts: body hit, chapel bell, ice crackle, choir, earth rumble — no sparkle grains.
     hit = src(pick([K + 'impactSoft_medium_000.ogg', K + 'impactSoft_medium_002.ogg', K + 'impactSoft_medium_004.ogg'], i), 0.15)
-    y = place([(burst, 0, -6), (hit, 0, -10), (body, 0, -8), (bell, 0.004, -7), (sp, 0.02, -12)])
-    return tail(y, rng, wet=0.32, seconds=1.1, decay=0.33, damp=7500)
+    body = thump(rng, 160, 60, 0.2, 0.05)
+    bell = hp(chapel_bell(i, 0.55, rate=pick([1.15, 1.22, 1.1, 1.28], i)), 300)
+    ice = ice_crackle(i, 0.3, rate=pick([1.2, 1.3, 1.15, 1.25], i))
+    chant = choir(rng, 0.55, pick([196.0, 220.0, 174.6, 207.6], i), n_voices=4, swell=0.08)
+    earth = rumble(rng, 0.45, 130)
+    gust = whoosh(rng, 0.2, 2500, 700, q=1.2, peak_at=0.15)
+    y = place([
+        (hit, 0, -8),
+        (body, 0, -8),
+        (gust, 0, -12),
+        (bell, 0.01, -7),
+        (ice, 0.01, -14),
+        (chant, 0.02, -12),
+        (earth, 0.0, -13),
+    ])
+    return tail(y, rng, wet=0.30, seconds=1.1, decay=0.33, damp=5000)
 
 
 def impact_arrow(rng, i):
-    # Arrow into flesh/hide: a tight thunk, a wooden shaft quiver, a little body.
+    # Arrow into flesh/hide: a tight thunk, a wooden shaft knock, a little body, faint shaft quiver.
     thk = src(pick([K + 'impactPunch_medium_000.ogg', K + 'impactPunch_medium_002.ogg', K + 'impactPunch_medium_003.ogg', K + 'impactPunch_medium_004.ogg'], i), 0.18, rate=1.15)
     wood = src(pick([K + 'impactWood_light_001.ogg', K + 'impactWood_light_003.ogg', K + 'impactWood_light_004.ogg'], i), 0.15, rate=1.2)
+    fletch = src(pick([
+        TS + 'arrow-feathers-01.wav',
+        TS + 'arrow-feathers-02.wav',
+        TS + 'arrow-feathers-03.wav',
+    ], i), 0.12, rate=1.1)
     quiver = partials(rng, pick([310, 280, 340], i), [1, 2.9], [0.06, 0.03], [1, 0.4], 0.18)
     quiver *= 1 + 0.6 * np.sin(2 * np.pi * 38 * np.arange(len(quiver)) / SR)
-    y = place([(thk, 0, 0), (wood, 0.0, -7), (quiver, 0.01, -20), (thump(rng, 140, 60, 0.15, 0.04), 0, -10)])
+    y = place([(thk, 0, 0), (wood, 0.0, -7), (fletch, 0.0, -16), (quiver, 0.01, -22), (thump(rng, 140, 60, 0.15, 0.04), 0, -10)])
     return tail(y, rng, wet=0.10, seconds=0.5, decay=0.15)
 
 
 def impact_spear(rng, i):
-    # Oakenshield's thorn spear lands: heavy wood-and-earth thud, splinters, leafy debris.
+    # Oakenshield's thorn spear lands: heavy wood-and-earth thud, shield-like wood knock, stone debris.
     hv = src(pick([K + 'impactWood_heavy_000.ogg', K + 'impactWood_heavy_002.ogg', K + 'impactWood_heavy_003.ogg', K + 'impactWood_heavy_004.ogg'], i), 0.3, rate=0.92)
     soft = src(pick([K + 'impactSoft_heavy_000.ogg', K + 'impactSoft_heavy_002.ogg', K + 'impactSoft_heavy_003.ogg'], i), 0.25)
+    knock = src(pick([K + 'impactWood_medium_000.ogg', K + 'impactWood_medium_002.ogg', K + 'impactWood_medium_004.ogg'], i), 0.2, rate=1.05)
     deb = src(pick([R + 'stones_01.ogg', R + 'stones_02.ogg', R + 'stones_03.ogg'], i), 0.35)
     leaves = whoosh(rng, 0.3, 3000, 1500, q=0.8, peak_at=0.1)
-    y = place([(hv, 0, 0), (soft, 0, -4), (thump(rng, 110, 40, 0.28, 0.09), 0, -5), (deb, 0.03, -16), (leaves, 0.02, -20)])
+    y = place([(hv, 0, 0), (soft, 0, -4), (knock, 0.01, -8), (thump(rng, 110, 40, 0.28, 0.09), 0, -5), (deb, 0.03, -16), (leaves, 0.02, -20)])
     return tail(y, rng, wet=0.14, seconds=0.7, decay=0.22)
 
 
 def impact_sword(rng, i):
-    # Longsword on armour: steel clash, plate clank, a ringing tail.
+    # Longsword on armour: steel clash, plate clank, flesh under, a ringing recorded blade tail.
     clash = src(pick([SC + 'sword_clash.1.ogg', SC + 'sword_clash.3.ogg', SC + 'sword_clash.5.ogg', SC + 'sword_clash.7.ogg'], i), 0.35)
     plate = src(pick([K + 'impactPlate_medium_000.ogg', K + 'impactPlate_medium_002.ogg', K + 'impactPlate_medium_003.ogg'], i), 0.25)
-    ring = partials(rng, pick([1240, 1390, 1310, 1170], i), [1, 2.32, 4.25, 6.63], [0.25, 0.14, 0.08, 0.05], [1, 0.6, 0.35, 0.2], 0.6, beat=0.003)
+    ring = src(pick([
+        TS + 'sword-knife-clash-15.wav',
+        TS + 'sword-knife-clash-22.wav',
+        TS + 'sword-knife-clash-30.wav',
+        SC + 'sword_clash.5.ogg',
+    ], i), 0.4, rate=0.95)
     flesh = src(pick([K + 'impactPunch_heavy_000.ogg', K + 'impactPunch_heavy_002.ogg'], i), 0.15)
-    y = place([(clash, 0, -1), (plate, 0, -6), (flesh, 0, -10), (hp(ring, 800), 0.004, -15)])
+    y = place([(clash, 0, -1), (plate, 0, -6), (flesh, 0, -10), (hp(ring, 600), 0.01, -12)])
     return tail(y, rng, wet=0.16, seconds=0.8, decay=0.25)
 
 
 def impact_dual(rng, i):
-    # Kaelen's two blades connect: two quick slices with a light steel tick each.
+    # Kaelen's two blades connect: two quick slices with a light recorded steel tick each.
     s1 = src(pick([KR + 'knifeSlice.ogg', KR + 'knifeSlice2.ogg', R + 'blade_01.ogg'], i), 0.2)
     s2 = src(pick([R + 'blade_02.ogg', KR + 'knifeSlice.ogg', R + 'blade_03.ogg', KR + 'knifeSlice2.ogg'], i), 0.2, rate=1.12)
-    t1 = partials(rng, 2300, [1, 2.4], [0.05, 0.03], [1, 0.4], 0.15)
-    t2 = partials(rng, 2650, [1, 2.4], [0.05, 0.03], [1, 0.4], 0.15)
+    t1 = src(pick([TS + 'sword-knife-clash-02.wav', TS + 'sword-knife-clash-08.wav', TS + 'sword-knife-clash-18.wav'], i), 0.12, rate=1.2)
+    t2 = src(pick([TS + 'sword-knife-clash-09.wav', TS + 'sword-knife-clash-19.wav', TS + 'sword-knife-clash-25.wav'], i), 0.12, rate=1.28)
     p = src(pick([K + 'impactPunch_medium_001.ogg', K + 'impactPunch_medium_003.ogg'], i), 0.12, rate=1.2)
     gap = pick([0.07, 0.085, 0.075, 0.09], i)
-    y = place([(s1, 0, 0), (p, 0, -9), (hp(t1, 1500), 0.003, -18), (s2, gap, -1), (hp(t2, 1500), gap + 0.003, -18), (p, gap, -12)])
+    y = place([(s1, 0, 0), (p, 0, -9), (hp(t1, 1000), 0.003, -14), (s2, gap, -1), (hp(t2, 1000), gap + 0.003, -14), (p, gap, -12)])
     return tail(y, rng, wet=0.12, seconds=0.55, decay=0.17)
 
 
@@ -394,26 +518,44 @@ def impact_pierce(rng, i):
     # Seraphine's spear pierces: a sharp stab, a short steel scrape, a tight body thud.
     stab = src(pick([SN + 'sword.2.ogg', SN + 'sword.4.ogg', SN + 'sword.6.ogg', SN + 'sword.8.ogg'], i), 0.25)
     punch = src(pick([K + 'impactPunch_medium_000.ogg', K + 'impactPunch_medium_002.ogg', K + 'impactPunch_medium_004.ogg'], i), 0.15)
-    ring = partials(rng, pick([1700, 1900, 1800], i), [1, 2.71], [0.12, 0.06], [1, 0.4], 0.35, beat=0.004)
-    y = place([(stab, 0, -1), (punch, 0, -5), (thump(rng, 150, 55, 0.18, 0.05), 0, -9), (hp(ring, 1000), 0.01, -18)])
-    return tail(y, rng, wet=0.14, seconds=0.6, decay=0.2, damp=6500)
+    scrape = src(pick([
+        TS + 'sword-table-leg-scrape-01.wav',
+        TS + 'sword-table-leg-scrape-02.wav',
+        TS + 'sword-table-leg-scrape-03.wav',
+        TS + 'seax-unsheathe-03.wav',
+    ], i), 0.18, rate=1.15)
+    y = place([(stab, 0, -1), (punch, 0, -5), (thump(rng, 150, 55, 0.18, 0.05), 0, -9), (hp(scrape, 700), 0.01, -14)])
+    return tail(y, rng, wet=0.14, seconds=0.6, decay=0.2, damp=5500)
 
 
 def impact_fire(rng, i):
-    # Fireball bursts: a thump, a fire flare, embers crackling away.
+    # Fireball bursts: a thump, recorded fire flare and crackle, a roaring fire bed.
     fl = src(pick([R + 'spell_fire_03.ogg', R + 'spell_fire_06.ogg', R + 'spell_fire_07.ogg'], i), 0.45)
-    y = place([(thump(rng, 120, 45, 0.3, 0.09), 0, -3), (fire_roar(rng, 0.4, 150, 1800), 0, -5), (fl, 0, -4), (crackle(rng, 0.6, 400, (1500, 9000), tau=0.25), 0.05, -16)])
+    bed = fire_bed(i, 0.55, rate=pick([1.05, 0.98, 1.1], i))
+    y = place([
+        (thump(rng, 120, 45, 0.3, 0.09), 0, -3),
+        (fire_roar(rng, 0.4, 150, 1800), 0, -6),
+        (fl, 0, -4),
+        (bed, 0.02, -7),
+        (ember_crackle(rng, 0.55, 70, (400, 3200), tau=0.28), 0.05, -16),
+    ])
     return tail(y, rng, wet=0.2, seconds=0.9, decay=0.3)
 
 
 def impact_storm(rng, i):
-    # Lightning strike: a hard crack, buzzing arc, thunder roll.
-    n = n_(0.7)
-    crack = crackle(rng, 0.12, 6000, (1000, 14000), tau=0.025)
-    buzz = crackle(rng, 0.4, 1200, (2500, 9000), tau=0.12)
-    roll = lp(rng.standard_normal(n), 140) * env_ad(n, 0.03, 0.25)
-    y = place([(crack, 0, 0), (thump(rng, 160, 50, 0.25, 0.07), 0, -4), (buzz, 0.01, -10), (roll / (np.abs(roll).max() + 1e-9), 0.02, -5)])
-    return tail(y, rng, wet=0.25, seconds=1.1, decay=0.35)
+    # Lightning strike as weather, not electricity: a thunder crack, earth rumble, wind, a little ice hail.
+    crack = thunder_crack(i, dur=0.7, rate=pick([1.08, 1.02, 1.12], i))
+    roll = rumble(rng, 0.7, 110)
+    gust = wind_gust(i, 0.45, rate=1.15)
+    hail = ice_crackle(i, 0.28, rate=1.2)
+    y = place([
+        (crack, 0, 0),
+        (thump(rng, 160, 50, 0.25, 0.07), 0, -5),
+        (roll, 0.02, -6),
+        (gust, 0.0, -10),
+        (hail, 0.02, -16),
+    ])
+    return tail(y, rng, wet=0.24, seconds=1.1, decay=0.35, damp=4000)
 
 
 # ================================================================ ENEMY HURT (the enemy's own reaction, quieter layer)
@@ -446,12 +588,13 @@ def hurt_bonequill(rng, i):
 
 
 def hurt_vespera(rng, i):
-    # Shadow sorceress: a ghostly hiss and a dark ripple.
-    hiss = whoosh(rng, 0.3, 5000, 1800, q=1.2, peak_at=0.15)
+    # Shadow sorceress: a recorded eerie voice, a wind-cloth swirl, a dark low chant. No electronic ripple.
     vox = src(pick([C1 + 'weird_01.ogg', C1 + 'weird_03.ogg', C2 + 'weird_07.ogg'], i), 0.3, rate=1.15)
-    rip = shimmer(rng, 0.3, base=pick([330, 311, 349], i), up=0.6, n_par=4, sparkle=0.0, tremolo=24)
-    y = place([(hiss, 0, -4), (bp(vox, 400, 5000), 0, -6), (rip, 0, -10)])
-    return tail(y, rng, wet=0.3, seconds=0.8, decay=0.25)
+    gust = wind_gust(i, 0.4, rate=1.2)
+    cloth = src(pick([KR + 'cloth3.ogg', KR + 'cloth1.ogg', KR + 'cloth4.ogg'], i), 0.2)
+    chant = choir(rng, 0.4, pick([98, 87, 110], i), n_voices=4, swell=0.08)
+    y = place([(gust, 0, -8), (cloth, 0, -14), (bp(vox, 300, 4500), 0, -4), (chant, 0.02, -12)])
+    return tail(y, rng, wet=0.28, seconds=0.8, decay=0.25, damp=4500)
 
 
 def hurt_blightroot(rng, i):
@@ -463,18 +606,20 @@ def hurt_blightroot(rng, i):
 
 
 def hurt_ashwyrm(rng, i):
-    # Void-fire wyrm: a scaly thud and a short snarl.
+    # Void-fire wyrm: a scaly thud, a short snarl, a heavy wing beat.
     sn = src(pick([C1 + 'roar_01.ogg', C1 + 'roar_02.ogg', C2 + 'monster_10.ogg', C1 + 'monster_03.ogg'], i), 0.35, rate=0.7)
     sc = src(pick([K + 'impactPlank_medium_000.ogg', K + 'impactPlank_medium_002.ogg', K + 'impactPlank_medium_004.ogg'], i), 0.15, rate=0.8)
-    y = place([(sc, 0, 0), (thump(rng, 90, 38, 0.25, 0.08), 0, -4), (lp(sn, 3500), 0.02, -6)])
+    flap = wing_flap(i, 0.4, rate=pick([0.75, 0.7, 0.8], i))
+    y = place([(sc, 0, 0), (thump(rng, 90, 38, 0.25, 0.08), 0, -4), (lp(sn, 3500), 0.02, -6), (flap, 0.0, -12)])
     return tail(y, rng, wet=0.14, seconds=0.6, decay=0.2)
 
 
 def hurt_malzareth(rng, i):
-    # Armoured warlord: a plate clank and a gruff grunt.
+    # Armoured warlord: a plate clank, mail rattle, a gruff grunt.
     pl = src(pick([K + 'impactPlate_heavy_000.ogg', K + 'impactPlate_heavy_002.ogg', K + 'impactPlate_heavy_004.ogg'], i), 0.25)
+    mail = src(pick([R + 'chain_01.ogg', R + 'chain_02.ogg', R + 'chain_03.ogg'], i), 0.2)
     gr = src(pick([C2 + 'human_01.ogg', C2 + 'human_03.ogg', C2 + 'human_05.ogg'], i), 0.3, rate=0.78)
-    y = place([(pl, 0, 0), (thump(rng, 110, 45, 0.2, 0.06), 0, -6), (lp(gr, 3000), 0.02, -8)])
+    y = place([(pl, 0, 0), (mail, 0.01, -14), (thump(rng, 110, 45, 0.2, 0.06), 0, -6), (lp(gr, 3000), 0.02, -8)])
     return tail(y, rng, wet=0.12, seconds=0.55, decay=0.17)
 
 
@@ -493,7 +638,7 @@ def death_generic(rng, i):
 
 def death_nightfang(rng, i):
     yelp = src(pick([C1 + 'hurt_01.ogg', C1 + 'hurt_03.ogg', C1 + 'howl.ogg', C1 + 'hurt_02.ogg'], i), 0.45, rate=pick([1.05, 1.0, 1.15, 0.95], i))
-    smoke = whoosh(rng, 0.45, 2500, 500, q=0.8, peak_at=0.2)
+    smoke = whoosh(rng, 0.45, 1800, 400, q=0.8, peak_at=0.2)
     y = place([(bp(yelp, 250, 6000), 0, 0), (body_fall(rng, i), 0.2, -3), (smoke, 0.15, -14)])
     return tail(y, rng, wet=0.16, seconds=0.8, decay=0.24)
 
@@ -512,12 +657,14 @@ def death_bonequill(rng, i):
 
 
 def death_vespera(rng, i):
-    # Shadow sorceress dissolves: a falling ghostly cry, a dark swirl, fading shimmer.
+    # Shadow sorceress fades: a falling eerie cry, a wind swirl, a distant chapel bell. No electronic shimmer.
     vox = src(pick([C1 + 'weird_02.ogg', C1 + 'weird_04.ogg', C2 + 'weird_08.ogg'], i), 0.6, rate=0.9)
-    swirl = whoosh(rng, 0.7, 4000, 300, q=1.0, peak_at=0.3)
-    sh = shimmer(rng, 0.7, base=pick([523, 494, 554], i), up=0.5, n_par=5, sparkle=0.5)
-    y = place([(bp(vox, 300, 5000), 0, -2), (swirl, 0.02, -6), (sh, 0.08, -10)])
-    return tail(y, rng, wet=0.35, seconds=1.1, decay=0.33)
+    swirl = wind_gust(i, 0.6, rate=0.9)
+    air = whoosh(rng, 0.7, 2200, 300, q=1.0, peak_at=0.3)
+    bell = hp(chapel_bell(i, 0.65, rate=pick([0.85, 0.8, 0.9], i)), 250)
+    chant = choir(rng, 0.7, pick([87, 98, 82], i), n_voices=5, swell=0.15)
+    y = place([(bp(vox, 250, 4500), 0, -2), (swirl, 0.02, -8), (air, 0.02, -10), (bell, 0.1, -12), (chant, 0.05, -12)])
+    return tail(y, rng, wet=0.32, seconds=1.1, decay=0.35, damp=4500)
 
 
 def death_blightroot(rng, i):
@@ -529,10 +676,11 @@ def death_blightroot(rng, i):
 
 
 def death_ashwyrm(rng, i):
-    # Wyrm's death roar and a heavy crash, embers hiss out.
+    # Wyrm's death roar, a heavy wing collapse, a crash, fire dying out.
     roar = src(pick([C2 + 'roar_04.ogg', C2 + 'roar_05.ogg', C2 + 'roar_06.ogg'], i), 0.6, rate=0.72)
-    hiss = fire_roar(rng, 0.5, 1500, 7000)
-    y = place([(lp(roar, 4000), 0, 0), (body_fall(rng, i, True), 0.32, -1), (hiss, 0.35, -16)])
+    flap = wing_flap(i, 0.5, rate=pick([0.65, 0.7, 0.6], i))
+    bed = fire_bed(i, 0.5, rate=0.85)
+    y = place([(lp(roar, 4000), 0, 0), (flap, 0.08, -8), (body_fall(rng, i, True), 0.32, -1), (bed, 0.35, -12)])
     return tail(y, rng, wet=0.2, seconds=1.0, decay=0.3)
 
 
