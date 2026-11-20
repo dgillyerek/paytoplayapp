@@ -243,7 +243,7 @@ def finish(name, y, rms_db=-18.0, max_len=1.2, hp_fc=55):
     print(f'{name:34s} {len(y)/SR:5.2f}s peak {LEVEL[name][0]:6.1f} dBFS  active rms {LEVEL[name][1]:6.1f}')
 
 
-MAX_LEN = {'sfx_atk': 0.9, 'sfx_imp': 0.8, 'sfx_hurt': 0.6, 'sfx_die': 1.1}
+MAX_LEN = {'sfx_atk_lyra': 0.75, 'sfx_atk': 0.9, 'sfx_imp': 0.8, 'sfx_hurt': 0.6, 'sfx_die': 1.1}
 
 
 def variants(base, count, fn, seed, **kw):
@@ -312,23 +312,62 @@ def ice_crackle(i, dur=0.35, rate=1.15):
 
 # ================================================================ HERO ATTACKS (the swing / shot)
 
+def cloth_rustle(rng, dur=0.12):
+    """Robe and sleeve rustle: a quick cluster of soft, mid-band noise scuffs."""
+    n = n_(dur)
+    y = np.zeros(n)
+    for _ in range(5):
+        k = n_(rng.uniform(0.015, 0.035))
+        s = rng.integers(0, max(1, n - k))
+        y[s:s + k] += bp(rng.standard_normal(k), 700, 4500) * np.hanning(k) * rng.uniform(0.4, 1.0)
+    return y / (np.abs(y).max() + 1e-9)
+
+
+def gather_rumble(rng, dur, fc_from=90, fc_to=420):
+    """Power drawn into the staff: dark rumble that swells and brightens up to the release."""
+    n = n_(dur)
+    x = rng.standard_normal(n)
+    lo, hi = lp(x, fc_from, 2), lp(x, fc_to, 2)
+    ramp = np.linspace(0, 1, n) ** 1.5
+    y = (lo * (1 - ramp) + hi * ramp) * ramp ** 1.2
+    return y / (np.abs(y).max() + 1e-9)
+
+
+def flare(rng, dur=0.4):
+    """Spell igniting: a torch-like 'fwoosh' with a hard front, flame flutter, quick fall-off."""
+    n = n_(dur)
+    t = np.arange(n) / SR
+    body = bp(rng.standard_normal(n), 250, 3800)
+    flutter = lp(rng.standard_normal(n), 30, 2)
+    flutter = 0.55 + 0.45 * flutter / (np.abs(flutter).max() + 1e-9)
+    e = np.clip(t / 0.008, 0, 1) * np.exp(-t / 0.11)
+    y = body * flutter * e
+    return y / (np.abs(y).max() + 1e-9)
+
+
 def lyra_cast(rng, i):
-    # Staff thrust + organic arcane bolt: wood swish, wind gust, chapel bell, low choir, earth rumble.
-    sw = src(M + 'Spear Swing.wav', 0.35, rate=pick([1.25, 1.35, 1.18, 1.3], i))
-    air = whoosh(rng, 0.35, 500, 2800, q=1.3, peak_at=0.4)
-    gust = wind_gust(i, 0.5, rate=pick([1.05, 0.95, 1.1, 1.0], i))
-    bell = hp(chapel_bell(i, 0.6, rate=pick([1.2, 1.28, 1.15, 1.32], i)), 350)
-    chant = choir(rng, 0.7, pick([146.8, 164.8, 174.6, 196.0], i), n_voices=5, swell=0.18)
-    earth = rumble(rng, 0.55, 110)
+    # Medieval sorceress's spell: robe rustle and a rumble as power gathers in the staff, then the
+    # spell ignites in a torch-like flare over a deep launch thump, with crackling sparks and a rush of
+    # air carrying it away, in a stone hall. Organic textures only: no voices, chimes or bells.
+    rel = pick([0.11, 0.12, 0.1, 0.115], i)  # the moment the spell leaves the staff
+    rustle = cloth_rustle(rng, 0.12)
+    gather = gather_rumble(rng, rel + 0.01)
+    ignite = flare(rng, 0.4)
+    boom = thump(rng, f_hi=pick([95, 105, 88, 100], i), f_lo=42, dur=0.35, tau=0.11)
+    weight = lp(rng.standard_normal(n_(0.3)), 260, 4) * env_ad(n_(0.3), 0.005, 0.08)
+    weight /= np.abs(weight).max() + 1e-9
+    sparks = ember_crackle(rng, 0.45, density=pick([140, 170, 120, 155], i), fc=(900, 6000), tau=0.16)
+    rush = whoosh(rng, 0.45, 1800, 450, q=0.9, peak_at=0.1)
     y = place([
-        (sw, 0, -7),
-        (air, 0.0, -11),
-        (gust, 0.02, -8),
-        (bell, 0.05, -9),
-        (chant, 0.04, -10),
-        (earth, 0.03, -14),
+        (rustle, 0.0, -14),
+        (gather, 0.0, -10),
+        (boom, rel, -4),
+        (weight, rel, -8),
+        (ignite, rel, -2),
+        (sparks, rel + 0.01, -13),
+        (rush, rel + 0.02, -8),
     ])
-    return tail(y, rng, wet=0.28, seconds=1.0, decay=0.34, damp=5000)
+    return tail(sat(y / (np.abs(y).max() + 1e-9), 0.25), rng, wet=0.2, seconds=0.9, decay=0.26, damp=5000)
 
 
 def rowan_bow(rng, i):
