@@ -142,7 +142,7 @@ public sealed class RunnerSpawnSpacingProbe
         // RUNNER_LEVELS_JSON: measure another runner_levels.json (e.g. main's, for a before / after) with today's code.
         var other = Environment.GetEnvironmentVariable("RUNNER_LEVELS_JSON");
         var r = string.IsNullOrEmpty(other) ? BalanceReport.Get() : BalanceReport.Build(RunnerCatalog.Parse(File.ReadAllText(other)));
-        var t = RunnerSpawnSpacing.Table(r, new[] { 1, 2, 3, 5, 8, 10, 13, 15, 20, 25, 31, 40, 50 });
+        var t = RunnerSpawnSpacing.Table(r, new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 20, 25, 31, 40, 50 });
         var sb = new StringBuilder(t).AppendLine("level required_power free_ratio free_cleared_day");
         for (var n = 1; n <= r.Levels; n++)
         {
@@ -158,36 +158,52 @@ public sealed class RunnerSpawnSpacingProbe
 
 public sealed class RunnerSpawnSpacingTests
 {
-    /// <summary>Longest wait, in seconds of walking, between one enemy reaching the squad and the next (main: 5.7-9.1 s). Spread levels only: Levels 1-12 keep main's waves (progression spread from 13).</summary>
+    /// <summary>Longest wait, in seconds of walking, between one enemy reaching the squad and the next on Levels 13+ (main: 5.7-9.1 s).</summary>
     public const double MaxGapSeconds = 7.5;
 
-    /// <summary>Most enemies reaching the squad inside any 2 s (main: 7-27).</summary>
+    /// <summary>Most enemies reaching the squad inside any 2 s on Levels 13+ (main: 16-27; the no-boss finale's push and archer line is the 22).</summary>
     public const int MaxClump = 22;
+
+    /// <summary>Levels 1-12 (the milder early spread, progression spread "early"): longest wait between enemies (main: 6.5-9.1 s).</summary>
+    public const double EarlyMaxGapSeconds = 7.0;
+
+    /// <summary>Levels 1-12: most enemies inside any 2 s (main: 7-18).</summary>
+    public const int EarlyMaxClump = 15;
+
+    private static (double MaxGap, int Clump) Spacing(RunnerCatalog c, int n)
+    {
+        var level = c.ByNumber(n);
+        var s = RunnerSpawnSpacing.Arrivals(c, level).Select(z => z / level.Speed).ToList();
+        var maxGap = 0.0;
+        var clump = 1;
+        var lo = 0;
+        for (var i = 1; i < s.Count; i++)
+        {
+            maxGap = Math.Max(maxGap, s[i] - s[i - 1]);
+            while (s[i] - s[lo] > RunnerSpawnSpacing.ClumpSeconds)
+            {
+                lo++;
+            }
+
+            clump = Math.Max(clump, i - lo + 1);
+        }
+
+        return (maxGap, clump);
+    }
 
     [Fact]
     public void Generated_levels_have_no_long_lulls_or_big_clumps()
     {
         var c = Runner.Catalog();
-        for (var n = c.Progression!.Spread!.From; n <= c.Levels.Count; n++)
+        var spread = c.Progression!.Spread!;
+        Assert.Equal(1, spread.From);
+        Assert.Equal(12, spread.EarlyUntil);
+        for (var n = 1; n <= c.Levels.Count; n++)
         {
-            var level = c.ByNumber(n);
-            var s = RunnerSpawnSpacing.Arrivals(c, level).Select(z => z / level.Speed).ToList();
-            var maxGap = 0.0;
-            var clump = 1;
-            var lo = 0;
-            for (var i = 1; i < s.Count; i++)
-            {
-                maxGap = Math.Max(maxGap, s[i] - s[i - 1]);
-                while (s[i] - s[lo] > RunnerSpawnSpacing.ClumpSeconds)
-                {
-                    lo++;
-                }
-
-                clump = Math.Max(clump, i - lo + 1);
-            }
-
-            Assert.True(maxGap <= MaxGapSeconds, $"L{n}: {maxGap:0.0} s between enemies");
-            Assert.True(clump <= MaxClump, $"L{n}: {clump} enemies inside 2 s");
+            var (maxGap, clump) = Spacing(c, n);
+            var early = n <= spread.EarlyUntil;
+            Assert.True(maxGap <= (early ? EarlyMaxGapSeconds : MaxGapSeconds), $"L{n}: {maxGap:0.0} s between enemies");
+            Assert.True(clump <= (early ? EarlyMaxClump : MaxClump), $"L{n}: {clump} enemies inside 2 s");
         }
     }
 }

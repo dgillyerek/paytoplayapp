@@ -633,6 +633,7 @@ namespace Survival.Domain.Runner
 
                 // Level 1 is hand-authored, so its "1" tweak is applied here, after the generated levels have copied its
                 // multipliers: it scales only Level 1's own enemy HP (Derek 2026-10-29: the early levels were far too easy).
+                levels[0] = RunnerProgression.SpreadAuthored(levels[0], prog, id => walk.TryGetValue(id, out var v) ? v : 0f);
                 var tw1 = prog.Tweak(1).FoeHp;
                 if (tw1 != 1f)
                 {
