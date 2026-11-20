@@ -165,10 +165,10 @@ public sealed class RunnerSpawnSpacingTests
     public const int MaxClump = 22;
 
     /// <summary>Levels 1-12 (the milder early spread, progression spread "early"): longest wait between enemies (main: 6.5-9.1 s).</summary>
-    public const double EarlyMaxGapSeconds = 99.0;
+    public const double EarlyMaxGapSeconds = 7.0;
 
     /// <summary>Levels 1-12: most enemies inside any 2 s (main: 7-18).</summary>
-    public const int EarlyMaxClump = 999;
+    public const int EarlyMaxClump = 15;
 
     private static (double MaxGap, int Clump) Spacing(RunnerCatalog c, int n)
     {
