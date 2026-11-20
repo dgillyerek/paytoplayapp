@@ -172,6 +172,9 @@ namespace Survival.Domain.Runner
         /// </summary>
         public bool Finale { get; init; }
 
+        /// <summary>An enemy the progression's crowd added to its wave (RunnerSpreadDef.Crowd); paid from the wave's own kill gold.</summary>
+        public bool Extra { get; init; }
+
         public float XOf(int index) => X + ((index - ((Count - 1) * 0.5f)) * Spread);
     }
 
@@ -265,6 +268,21 @@ namespace Survival.Domain.Runner
                 }
 
                 return false;
+            }
+        }
+
+        /// <summary>Enemies the progression's crowd added (rows marked <see cref="RunnerRowDef.Extra"/>).</summary>
+        public int ExtraEnemies
+        {
+            get
+            {
+                var n = 0;
+                foreach (var r in Rows)
+                {
+                    n += r.Kind == RunnerRowKind.Enemy && r.Extra ? r.Count : 0;
+                }
+
+                return n;
             }
         }
 
@@ -638,6 +656,16 @@ namespace Survival.Domain.Runner
                 if (tw1 != 1f)
                 {
                     levels[0] = levels[0] with { FoeHpMul = levels[0].FoeHpMul * tw1 };
+                }
+            }
+
+            // The crowd's lighter enemies (Derek 2026-11-20: "more enemies"): every level's enemy HP and damage are paid down
+            // after the levels are generated, so the generated levels still copy Level 1's own multipliers.
+            if (progression?.Spread is { } crowd && (crowd.CrowdHp != 1f || crowd.CrowdDmg != 1f))
+            {
+                for (var i = 0; i < levels.Count; i++)
+                {
+                    levels[i] = levels[i] with { FoeHpMul = levels[i].FoeHpMul * crowd.CrowdHp, FoeDmgMul = levels[i].FoeDmgMul * crowd.CrowdDmg };
                 }
             }
 

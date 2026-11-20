@@ -112,6 +112,26 @@ namespace Survival.Domain.Runner
 
         public float EarlyWindow { get; init; } = 10f;
 
+        /// <summary>
+        /// Derek 2026-11-20 ("more enemies"): every stream wave carries this many times its enemies (at least; the extra ones
+        /// are rows marked <see cref="RunnerRowDef.Extra"/>, spread into the stream like the rest). The closing set piece
+        /// (boss guard, finale) keeps its size. 1 = off.
+        /// </summary>
+        public float Crowd { get; init; } = 1f;
+
+        /// <summary>Every level's enemy HP is multiplied by this to pay for <see cref="Crowd"/> (bosses unchanged).</summary>
+        public float CrowdHp { get; init; } = 1f;
+
+        /// <summary>Every level's enemy damage is multiplied by this to pay for <see cref="Crowd"/>.</summary>
+        public float CrowdDmg { get; init; } = 1f;
+
+        /// <summary>
+        /// Units whose rows never get <see cref="Crowd"/> copies (json "crowd.skip"); their share goes to the next eligible row.
+        /// Archers: a ranged hit on a follower is clamped to a 2-hit kill whatever <see cref="CrowdDmg"/> says
+        /// (<see cref="RunnerRules.RangedFoeHit"/>), so extra archers cost followers that no stat cut pays back.
+        /// </summary>
+        public IReadOnlyList<string> CrowdSkip { get; init; } = Array.Empty<string>();
+
         /// <summary>The early window on Level 1 alone (the authored tutorial road, 0: <see cref="EarlyWindow"/>).</summary>
         public float FirstWindow { get; init; }
 
@@ -131,6 +151,20 @@ namespace Survival.Domain.Runner
                     EarlyWindow = Math.Max(1f, LayoutJson.OptNum(eo, "window", 10f)),
                     FirstWindow = Math.Max(0f, LayoutJson.OptNum(eo, "first_window", 0f))
                 };
+            }
+
+            if (o.TryGet("crowd", out var cn) && cn is JsonNode.Obj co)
+            {
+                s = s with
+                {
+                    Crowd = Math.Max(1f, LayoutJson.OptNum(co, "count", 1f)),
+                    CrowdHp = Math.Max(0.1f, LayoutJson.OptNum(co, "foe_hp", 1f)),
+                    CrowdDmg = Math.Max(0.1f, LayoutJson.OptNum(co, "foe_dmg", 1f))
+                };
+                if (co.TryGet("skip", out var sk) && sk is JsonNode.Arr sa)
+                {
+                    s = s with { CrowdSkip = sa.Items.OfType<JsonNode.Str>().Select(x => x.Value).ToArray() };
+                }
             }
 
             return s;
@@ -724,6 +758,22 @@ namespace Survival.Domain.Runner
             float Lead(string unit) => RunnerSpreadDef.FightLine * speed / (speed + Math.Max(0f, unitSpeed(unit)));
 
             var packs = new List<(float Arrive, RunnerRowDef Row, int Count)>();
+            void Split(RunnerRowDef r, int n)
+            {
+                var parts = (n + spread.Pack - 1) / spread.Pack;
+                var left = n;
+                for (var k = 0; k < parts; k++)
+                {
+                    var c = (left + (parts - k - 1)) / (parts - k);
+                    left -= c;
+                    packs.Add((r.At - Lead(r.Unit), r, c));
+                }
+            }
+
+            // The crowd: each wave row grows to its share of ceil(stream x Crowd) enemies (a running total, so the level as
+            // a whole carries at least Crowd times its enemies and the extra ones follow the waves they came with).
+            var seen = 0;
+            var made = 0;
             for (var i = rows.Count - 1; i >= 0; i--)
             {
                 var r = rows[i];
@@ -734,13 +784,14 @@ namespace Survival.Domain.Runner
 
                 rows.RemoveAt(i);
                 var n = Math.Max(1, r.Count);
-                var parts = (n + spread.Pack - 1) / spread.Pack;
-                var left = n;
-                for (var k = 0; k < parts; k++)
+                seen += n;
+                var want = spread.Crowd > 1f ? (int)Math.Ceiling((seen * (double)spread.Crowd) - 1e-6) : seen;
+                var extra = spread.CrowdSkip.Contains(r.Unit) ? 0 : Math.Max(0, want - made - n);
+                made += n + extra;
+                Split(r, n);
+                if (extra > 0)
                 {
-                    var c = (left + (parts - k - 1)) / (parts - k);
-                    left -= c;
-                    packs.Add((r.At - Lead(r.Unit), r, c));
+                    Split(r with { Extra = true }, extra);
                 }
             }
 
