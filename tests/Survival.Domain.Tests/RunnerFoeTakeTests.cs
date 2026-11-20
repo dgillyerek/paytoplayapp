@@ -85,7 +85,8 @@ public class RunnerFoeTakeTests
         }
 
         Assert.True(timed > 1000, "timed shots " + timed);
-        // Most land within 50 ms of the hands' push frame (the rest: the squad stepped out of reach mid take).
-        Assert.True(onFrame >= timed * 0.8f, $"{onFrame}/{timed} shots on the release frame");
+        // Most land within 50 ms of the hands' push frame (the rest: the squad stepped out of reach mid take; with the waves
+        // spread down the road (Nov 20) more archers start a take as the dodging squad sidesteps, about 75%, was over 80%).
+        Assert.True(onFrame >= timed * 0.7f, $"{onFrame}/{timed} shots on the release frame");
     }
 }

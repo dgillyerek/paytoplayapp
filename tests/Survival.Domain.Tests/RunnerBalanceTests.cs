@@ -147,8 +147,10 @@ public sealed class RunnerBalanceTests
         Assert.All(rows.Take(20), x => Assert.True(x.TimeToKill < x.TimeToOverrun, $"free L{x.Level} ttk {x.TimeToKill:0.0} tto {x.TimeToOverrun:0.0}"));
         // Past the wall the boss levels (every 5th) are where a wave outlasts the squad by far: the analytic TTK only counts
         // enemy and boss HP, so the levels between them (no boss since Derek 2026-10-26: "only be a big boss every 5 levels")
-        // press through traps and barriers instead, which the sim gates above already measure.
-        Assert.All(rows.Skip(FreeEasyUntil).Where(x => R.Runner.ByNumber(x.Level).HasBoss), x => Assert.True(x.TimeToKill > 2 * x.TimeToOverrun, $"free L{x.Level} ttk {x.TimeToKill:0.0} tto {x.TimeToOverrun:0.0}"));
+        // press through traps and barriers instead, which the sim gates above already measure. Since the waves are spread down
+        // the road (progression "spread", Nov 20) the analytic TTK/TTO counts one wave per 13 m beat, which lowers the boss
+        // levels' ratio (L35 1.5x, L40 1.7x, L45 2.0x) at the same required power, so the bar is 1.25x (was 2x).
+        Assert.All(rows.Skip(FreeEasyUntil).Where(x => R.Runner.ByNumber(x.Level).HasBoss), x => Assert.True(x.TimeToKill > 1.25 * x.TimeToOverrun, $"free L{x.Level} ttk {x.TimeToKill:0.0} tto {x.TimeToOverrun:0.0}"));
     }
 
     [Fact]
