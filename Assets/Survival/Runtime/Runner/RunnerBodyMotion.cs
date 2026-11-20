@@ -41,6 +41,60 @@ namespace Survival.Domain.Runner
     }
 
     /// <summary>
+    /// How fast a runner foe's walk loop plays (Derek 2026-11-19, phone test of the 11-19 APK: the wolf "stays in its idle
+    /// pose with its feet not moving while it comes at me"). The sim moves each foe at its runner_levels.json speed, but
+    /// the view played every walk loop at 1x, the rate the battle authored it for (the battle walks a body at its clip's own
+    /// foot travel, <see cref="LockedBattleRoster.BattleWalkSpeedOf"/>). Nightfang comes in at 4.05 m/s while its 1 s trot
+    /// at 1.4x size covers 0.63 m/s, so the body travelled 6.4x the ground its feet stepped over and read as an idle pose
+    /// gliding down the road (the same in the Editor; nothing was device-only). The loop now runs at ground speed over
+    /// clip speed, held between <see cref="MinRate"/> and <see cref="MaxRate"/> so a far-off clip neither strobes nor
+    /// freezes. Only the view changes: the sim, its speeds and the locked free pace are untouched.
+    /// </summary>
+    public static class RunnerWalkCadence
+    {
+        /// <summary>Slowest walk loop (a foe the sim moves slower than its clip steps).</summary>
+        public const float MinRate = 0.5f;
+
+        /// <summary>
+        /// Fastest walk loop: three 1 s trot cycles a second is a flat-out stride; past that the legs strobe. A foe faster
+        /// than this still slides by the rest (Nightfang: 4.05 / (0.63 x 3) = 2.1x), which only a run / gallop clip fixes.
+        /// </summary>
+        public const float MaxRate = 3f;
+
+        /// <summary>
+        /// Ground speed (m/s) a fighter's walk loop shows at 1x in the runner at <paramref name="runnerScale"/> x its battle
+        /// size; 0 for a root-carrying walk (Blightroot, Ironhowl: the stride hold already pins it) or no measured walk.
+        /// </summary>
+        public static float ClipGroundSpeed(LockedBattleFighter fighter, float runnerScale) =>
+            fighter.WalkCarriesRoot ? 0f : LockedBattleRoster.BattleWalkSpeedOf(fighter) * (runnerScale > 0f ? runnerScale : 1f);
+
+        /// <summary>Walk loop rate for a body the sim moves at <paramref name="groundSpeed"/> m/s; 1 when either speed is unknown.</summary>
+        public static float Rate(float groundSpeed, float clipGroundSpeed)
+        {
+            if (groundSpeed <= 1e-4f || clipGroundSpeed <= 1e-4f)
+            {
+                return 1f;
+            }
+
+            var r = groundSpeed / clipGroundSpeed;
+            return r < MinRate ? MinRate : r > MaxRate ? MaxRate : r;
+        }
+
+        /// <summary>
+        /// The sim's ground speed for a walking foe: its unit speed walking in, and at most the squad's pace while it chases
+        /// a squad that walked past it (RunnerRun.MoveFoes).
+        /// </summary>
+        public static float FoeGroundSpeed(float unitSpeed, bool chasing, float levelSpeed) =>
+            chasing ? Math.Min(unitSpeed, levelSpeed) : unitSpeed;
+
+        /// <summary>Walk loop rate for a foe of <paramref name="unit"/> (1 for a roster name the battle does not know).</summary>
+        public static float ForFoe(RunnerUnitDef unit, bool chasing = false, float levelSpeed = float.MaxValue) =>
+            LockedBattleRoster.TryFind(unit.Roster, out var fighter)
+                ? Rate(FoeGroundSpeed(unit.Speed, chasing, levelSpeed), ClipGroundSpeed(fighter, unit.Scale))
+                : 1f;
+    }
+
+    /// <summary>
     /// Where a runner rig's host sits in its slot (Derek 2026-10-23: "blightroot when shot still bounces way back").
     /// The body turns (hit lean, death tip) about its pivot: the rest place of the stride bone (Blightroot's hips) or,
     /// for a rig without one, its mid height. The pivot stays where the sim puts the slot, give or take the hit

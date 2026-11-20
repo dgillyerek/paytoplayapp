@@ -72,6 +72,10 @@ namespace Survival.Unity
         private System.Action<float>? _attackSpeed;
         private System.Action<bool>? _walkUnderAttack;
 
+        /// <summary>The actor's walk loop rate (<see cref="RunnerWalkCadence"/>), or null for an actor without one.</summary>
+        private System.Action<float>? _walkRate;
+        private float _walkRateNow = 1f;
+
         /// <summary>The bone a root-carrying walk moves (Blightroot); null for a rig whose clips stay in place.</summary>
         private Transform? _strideBone;
 
@@ -172,6 +176,7 @@ namespace Survival.Unity
                         var a = host.AddComponent<NewCharActor>();
                         a.Build(data.Name);
                         rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v);
+                        rig._walkRate = v => a.WalkRate = v;
                         built = a.Built;
                         measured = a.VisibleBounds;
                         break;
@@ -199,6 +204,7 @@ namespace Survival.Unity
                         // A ranged foe shoots while it walks in: the take on the upper body, the legs keep walking.
                         a.UpperBodyAttack = RunnerWalkingShooterFoes.Applies(data.Name);
                         rig.Bind(a.PlayPose, () => a.Pose, v => a.AttackSpeed = v, a.SetWalkUnderAttack);
+                        rig._walkRate = v => a.WalkRate = v;
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
@@ -277,6 +283,7 @@ namespace Survival.Unity
                             () => a.Pose,
                             cast.RunnerPacedAttack ? v => a.AttackSpeed = v : (System.Action<float>?)null,
                             shooter || walkingShooterFoe ? a.SetWalkUnderAttack : (System.Action<bool>?)null);
+                        rig._walkRate = v => a.WalkRate = v;
                         rig.OwnShotsOff(a.AttackDriver);
                         built = a.Built;
                         measured = a.VisibleBounds;
@@ -573,6 +580,22 @@ namespace Survival.Unity
 
         /// <summary>The walk / attack stance, after its hysteresis.</summary>
         public RunnerStance Stance => _stance.Stance;
+
+        /// <summary>
+        /// Walk loop rate (Derek 2026-11-19: the wolf glided in its idle pose): the runner foes' sim ground speed over
+        /// their clip's (<see cref="RunnerWalkCadence"/>); 1 for the squad and in the battle. No-op for an actor without
+        /// a walk rate (Sir Aldric, Blightroot, Ironhowl, Vorgath, Emberfang, Rowan).
+        /// </summary>
+        public void SetWalkRate(float rate)
+        {
+            if (_walkRate == null || Mathf.Abs(rate - _walkRateNow) < 1e-3f)
+            {
+                return;
+            }
+
+            _walkRateNow = rate;
+            _walkRate(rate);
+        }
 
         /// <summary>Walk unless already walking.</summary>
         public void Walk()
@@ -1045,6 +1068,7 @@ namespace Survival.Unity
             _lean = 0f;
             _leanTarget = 0f;
             _attackStarted = -99f;
+            SetWalkRate(1f);
             _reaction = LockedBattleReactions.Flinch;
             _away = Vector3.back;
             Host.localPosition = _baseLocal;
