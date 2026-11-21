@@ -132,6 +132,9 @@ namespace Survival.Domain.Runner
         /// </summary>
         public IReadOnlyList<string> CrowdSkip { get; init; } = Array.Empty<string>();
 
+        /// <summary>Outer lanes and side entries (json "spread.lanes"; null: off). See <see cref="RunnerLanesDef"/>.</summary>
+        public RunnerLanesDef? Lanes { get; init; }
+
         /// <summary>The early window on Level 1 alone (the authored tutorial road, 0: <see cref="EarlyWindow"/>).</summary>
         public float FirstWindow { get; init; }
 
@@ -167,6 +170,11 @@ namespace Survival.Domain.Runner
                 }
             }
 
+            if (o.TryGet("lanes", out var ln) && ln is JsonNode.Obj lo)
+            {
+                s = s with { Lanes = RunnerLanesDef.Read(lo) };
+            }
+
             return s;
         }
 
@@ -175,6 +183,68 @@ namespace Survival.Domain.Runner
 
         /// <summary>Metres ahead of the hero a foe counts as in the fight (about the squad's reach); arrival is timed to this line.</summary>
         public const float FightLine = 18f;
+    }
+
+    /// <summary>
+    /// runner_levels.json "progression" "spread" "lanes" (Derek 2026-11-20: "more enemies need to come from the outside of the
+    /// lanes and stay there. a lot of times you can just stay in the center without moving. the same for powerups"; "the
+    /// wolves for example move to the center too quickly"; "some enemies can spawn in from the side ... they should come in
+    /// with enough time to kill"). After the stream is laid out, an even <see cref="Outer"/> share of its enemy packs move to
+    /// an outer lane (<see cref="OuterX"/> m from the centre, left or right by a roll) and hold it (no drift toward the hero);
+    /// <see cref="Side"/> of all stream packs (taken from the outer ones, <see cref="SideUnits"/> only) instead walk in from
+    /// beyond the road edge onto that outer lane, fast enough that they are on the road at least <see cref="SideMinSeconds"/>
+    /// before they reach the squad. An even <see cref="Crates"/> share of the power-up crates move to the outer lanes
+    /// (<see cref="CrateX"/>). Enemies left inside drift toward the hero at <see cref="Seek"/> (per unit, else
+    /// <see cref="RunnerRules.EnemySeek"/>). Its own random stream, so nothing else about a level's roll changes.
+    /// </summary>
+    public sealed record RunnerLanesDef(float Outer, float OuterX, float Side, float SideOut, float SideSpeed, float SideMinSeconds, float Crates, float CrateX)
+    {
+        public IReadOnlyList<string> SideUnits { get; init; } = Array.Empty<string>();
+
+        public IReadOnlyDictionary<string, float> Seek { get; init; } = new Dictionary<string, float>();
+
+        /// <summary>From this level on (1: every level).</summary>
+        public int From { get; init; } = 1;
+
+        /// <summary>Metres from the squad a foe attacks from (melee reach plus bodies), for the side-entry timing.</summary>
+        public const float ContactMetres = 2.5f;
+
+        internal static RunnerLanesDef Read(JsonNode.Obj o)
+        {
+            float Share(string k) => Math.Max(0f, Math.Min(1f, LayoutJson.OptNum(o, k, 0f)));
+            var l = new RunnerLanesDef(
+                Share("outer"),
+                Math.Max(0f, LayoutJson.OptNum(o, "outer_x", 3f)),
+                Share("side"),
+                Math.Max(0.5f, LayoutJson.OptNum(o, "side_out", 2f)),
+                Math.Max(0.5f, LayoutJson.OptNum(o, "side_speed", 2.5f)),
+                Math.Max(0f, LayoutJson.OptNum(o, "side_min_s", 3f)),
+                Share("crates"),
+                Math.Max(0f, LayoutJson.OptNum(o, "crate_x", 3.2f)))
+            {
+                From = Math.Max(1, LayoutJson.OptInt(o, "from", 1))
+            };
+            if (o.TryGet("side_units", out var su) && su is JsonNode.Arr sa)
+            {
+                l = l with { SideUnits = sa.Items.OfType<JsonNode.Str>().Select(x => x.Value).ToArray() };
+            }
+
+            if (o.TryGet("seek", out var sk) && sk is JsonNode.Obj so)
+            {
+                var d = new Dictionary<string, float>();
+                foreach (var kv in so.Fields)
+                {
+                    if (!kv.Key.StartsWith("_", StringComparison.Ordinal) && kv.Value is JsonNode.Num n)
+                    {
+                        d[kv.Key] = Math.Max(0f, (float)n.Value);
+                    }
+                }
+
+                l = l with { Seek = d };
+            }
+
+            return l;
+        }
     }
 
     /// <summary>
@@ -712,6 +782,7 @@ namespace Survival.Domain.Runner
                 // The closing set piece's front: the boss guard's archer line, or the finale's fodder push.
                 var (closingAt, closingUnit) = bossUnit != null ? (bossAt - 7f, "bonequill") : (bossAt - FinaleBack + 3f, "nightfang");
                 SpreadWaves(rows, p.Spread.For(number), closingAt, closingUnit, speed, unitSpeed ?? (_ => 0f), new Random(unchecked(p.Seed + (number * 15485863) + 3)));
+                ApplyLanes(rows, p.Spread.Lanes, number, halfWidth, speed, unitSpeed ?? (_ => 0f), new Random(unchecked(p.Seed + (number * 7919) + 17)));
             }
 
             if (bossUnit != null)
@@ -745,6 +816,7 @@ namespace Survival.Domain.Runner
 
             var rows = level.Rows.ToList();
             SpreadWaves(rows, p.Spread.For(level.Number), level.Length, "bonequill", level.Speed, unitSpeed, new Random(unchecked(p.Seed + (level.Number * 15485863) + 3)));
+            ApplyLanes(rows, p.Spread.Lanes, level.Number, level.HalfWidth, level.Speed, unitSpeed, new Random(unchecked(p.Seed + (level.Number * 7919) + 17)));
             return level with { Rows = rows.OrderBy(r => r.At).ToList() };
         }
 
@@ -879,6 +951,89 @@ namespace Survival.Domain.Runner
                 var jitter = i > 0 && step < float.MaxValue ? (float)((rnd.NextDouble() * 2.0) - 1.0) * spread.Jitter * step : 0f;
                 var z = (float)Math.Round(at[i] + jitter + Lead(r.Unit), 2);
                 rows.Add(r with { At = z, Count = c, Spread = c > 1 ? r.Spread : 0f });
+            }
+        }
+
+        /// <summary>
+        /// Moves an even share of the stream's enemy packs and power-up crates to the outer lanes, and walks some of those packs
+        /// in from beyond the road edge (see <see cref="RunnerLanesDef"/>). Only rows already in (the stream and the beats'
+        /// boxes; the closing set piece goes in later). Rolls on <paramref name="rnd"/> alone.
+        /// </summary>
+        internal static void ApplyLanes(List<RunnerRowDef> rows, RunnerLanesDef? lanes, int number, float halfWidth, float speed, Func<string, float> unitSpeed, Random rnd)
+        {
+            if (lanes == null || number < lanes.From)
+            {
+                return;
+            }
+
+            // Every k-th pick of an even share, from a rolled offset: floor((k + 1) s + u) > floor(k s + u).
+            static bool Pick(int k, double share, double u) => Math.Floor(((k + 1) * share) + u) > Math.Floor((k * share) + u);
+
+            var foes = Enumerable.Range(0, rows.Count).Where(i => rows[i].Kind == RunnerRowKind.Enemy && !rows[i].Finale).OrderBy(i => rows[i].At).ThenBy(i => i).ToList();
+            var u = rnd.NextDouble();
+            var sideShare = lanes.Outer > 0f ? Math.Min(1.0, lanes.Side / (double)lanes.Outer) : 0.0;
+            var us = rnd.NextDouble();
+            var sideK = 0;
+            var lastSign = rnd.Next(2) == 0 ? -1f : 1f;
+            for (var k = 0; k < foes.Count; k++)
+            {
+                var i = foes[k];
+                var r = rows[i];
+                if (!Pick(k, lanes.Outer, u))
+                {
+                    if (lanes.Seek.TryGetValue(r.Unit, out var seek))
+                    {
+                        rows[i] = r with { Seek = seek };
+                    }
+
+                    continue;
+                }
+
+                // Mostly alternating sides, so the player has to cross the road; now and then the same side twice.
+                var sign = rnd.NextDouble() < 0.7 ? -lastSign : lastSign;
+                lastSign = sign;
+                var span = r.Count > 1 ? (r.Count - 1) * r.Spread * 0.5f : 0f;
+                var x = sign * Math.Max(0f, Math.Min(lanes.OuterX, halfWidth - 0.7f) - span);
+                var row = r with { X = (float)Math.Round(x, 2), Seek = 0f };
+                if (lanes.SideUnits.Contains(r.Unit))
+                {
+                    if (Pick(sideK++, sideShare, us))
+                    {
+                        // Walks in from SideOut beyond the edge; fast enough to be on the road SideMinSeconds before it can hit.
+                        var closing = speed + Math.Max(0f, unitSpeed(r.Unit));
+                        var gap = Math.Min(r.At, RunnerRules.SpawnAhead) - RunnerLanesDef.ContactMetres;
+                        var total = closing > 0f ? gap / closing : 0f;
+                        var room = total - lanes.SideMinSeconds;
+                        var v = room > 0f ? Math.Max(lanes.SideSpeed, lanes.SideOut / room) : float.MaxValue;
+                        if (v <= lanes.SideSpeed * 3f)
+                        {
+                            row = row with { EnterX = sign * (halfWidth + lanes.SideOut), EnterSpeed = (float)Math.Round(v, 2) };
+                        }
+                    }
+                }
+
+                rows[i] = row;
+            }
+
+            var crates = Enumerable.Range(0, rows.Count).Where(i => rows[i].Kind == RunnerRowKind.Box && rows[i].Box is { GivesUnits: false } && !rows[i].Finale).OrderBy(i => rows[i].At).ThenBy(i => i).ToList();
+            var uc = rnd.NextDouble();
+            var edge = Math.Min(lanes.CrateX, halfWidth - RunnerBox.Radius);
+            for (var k = 0; k < crates.Count; k++)
+            {
+                var i = crates[k];
+                var r = rows[i];
+                if (!Pick(k, lanes.Crates, uc))
+                {
+                    continue;
+                }
+
+                // Out on its own side (it stays on the side it was rolled for, so it does not land on the chest it rode with).
+                var sign = r.X < 0f ? -1f : r.X > 0f ? 1f : (rnd.Next(2) == 0 ? -1f : 1f);
+                var x = sign * edge;
+                if (!BoxBlocked(rows, r.At, x, halfWidth, r))
+                {
+                    rows[i] = r with { X = (float)Math.Round(x, 2) };
+                }
             }
         }
 
