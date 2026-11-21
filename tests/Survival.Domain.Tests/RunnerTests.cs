@@ -993,7 +993,9 @@ public sealed class RunnerTests
         var level = Runner.Catalog().First;
         var bundle = RunnerRewards.For(level, new RunnerResult(level.Id, true, 10, 5, 0, 8, 6, level.Length, 120));
         RunnerRewards.Grant(bundle, campaign);
-        Assert.Equal(gold + 1500 + 200 + 200, wallet.Get(SurvIds.ResSoft));
+        // Kill gold is shared on a crowd level (RunnerRewards): 10 kills x 20 x (enemies - extras + 1) / (enemies + 1).
+        var killGold = (int)Math.Round(10.0 * 20 * (level.EnemyCount + 1 - level.ExtraEnemies) / (level.EnemyCount + 1));
+        Assert.Equal(gold + 1500 + killGold + 200, wallet.Get(SurvIds.ResSoft));
         Assert.Equal(shards + 10, campaign.Roster.Get("hero.lyra")!.Shards);
         var json = campaign.Save();
         var again = new CampaignSession(catalog, new Wallet(), new ManualClock(1000));
