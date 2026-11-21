@@ -136,5 +136,11 @@
     "y_top_min": 0.13,
     "x_max": 0.13,
     "y_top_max": 0.545
+  },
+  "world_reports": {
+    "x_min": 0.855,
+    "y_top_min": 0.415,
+    "x_max": 0.985,
+    "y_top_max": 0.468
   }
 }

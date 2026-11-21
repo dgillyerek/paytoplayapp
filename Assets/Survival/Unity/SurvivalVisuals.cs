@@ -98,6 +98,8 @@ namespace Survival.Unity
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(PlayHudLayout.ReferenceWidth, PlayHudLayout.ReferenceHeight);
             scaler.matchWidthOrHeight = 1f;
+            // Taller than 9:16: match the width and keep each HUD box at its 9:16 shape inside the safe area.
+            go.AddComponent<HudAspectFit>();
             go.AddComponent<GraphicRaycaster>();
             go.AddComponent<ContrastGuard>();
             return go.GetComponent<RectTransform>();

@@ -105,10 +105,12 @@ namespace Survival.Unity
 
             cam.orthographic = false;
             cam.usePhysicalProperties = false;
-            cam.fieldOfView = PortraitGameView.FovDegrees;
+            // The screen's own aspect (forcing 9:16 squashed the picture on any other screen) with the 9:16 horizontal
+            // view held on a taller phone: units keep their size and shape, the extra height is more field.
+            cam.ResetAspect();
+            cam.fieldOfView = AspectFit.VerticalFovDegrees(PortraitGameView.FovDegrees, cam.aspect);
             cam.nearClipPlane = PortraitGameView.Near;
             cam.farClipPlane = PortraitGameView.Far;
-            cam.aspect = PortraitGameView.Width / PortraitGameView.Height;
             cam.backgroundColor = new Color(0.07f, 0.09f, 0.06f, 1f);
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.transform.position = eye;

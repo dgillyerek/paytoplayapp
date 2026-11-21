@@ -16,6 +16,19 @@ namespace Survival.Unity
         /// <summary>The cast this actor was built from, or null before <see cref="Build"/>.</summary>
         public BlenderRigCast? Cast { get; private set; }
 
+        /// <summary>Walk loop playback rate (see <see cref="BlenderRigPlayer.WalkRate"/>); 1 in the battle.</summary>
+        public float WalkRate
+        {
+            get => _player?.WalkRate ?? 1f;
+            set
+            {
+                if (_player != null)
+                {
+                    _player.WalkRate = value;
+                }
+            }
+        }
+
         /// <summary>Attack take playback rate (runner: one take per shot); 1 in the battle.</summary>
         public float AttackSpeed
         {

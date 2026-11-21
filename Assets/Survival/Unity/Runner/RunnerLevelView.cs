@@ -978,6 +978,11 @@ namespace Survival.Unity
                     var at = (f.TargetId != 0 ? _run.Member(f.TargetId) : null) ?? _run.Hero;
                     rig.Face(new Vector3(at.X - f.X, 0f, at.Z - f.Z));
                 }
+                // The walk loop steps at the speed the sim moves it (Derek 2026-11-19: Nightfang glided in its idle pose at
+                // 6.4x its trot's ground speed). View only: the sim's speeds and the locked pace are untouched.
+                rig.SetWalkRate(RunnerWalkCadence.Rate(
+                    RunnerWalkCadence.FoeGroundSpeed(f.Unit.Speed, f.Passed, _run.Level.Speed),
+                    RunnerWalkCadence.ClipGroundSpeed(rig.Data, f.Unit.Scale)));
                 // Far enemies still walking in sample their loop every other frame (RunnerFoeLod; view only).
                 rig.SetEvaluateEvery(RunnerFoeLod.EvaluateEvery(f.Z - _run.Hero.Z, f.Attacking, f.Boss));
                 // Walking shooters (Vespera, Bonequill) keep their legs on the walk under the take; any other foe the sim is
@@ -1320,7 +1325,8 @@ namespace Survival.Unity
 
             _cam.clearFlags = CameraClearFlags.SolidColor;
             _cam.backgroundColor = LockedBattleGround.Horizon;
-            _cam.fieldOfView = RunnerFraming.FieldOfViewDegrees;
+            // Same horizontal view as the 9:16 Game view on any phone; a taller screen adds road under the squad.
+            CameraAspectFit.Attach(_cam, RunnerFraming.FieldOfViewDegrees, RunnerFraming.ExtraViewBelow);
             _cam.nearClipPlane = 0.2f;
             _cam.farClipPlane = 120f;
             _cam.enabled = true;

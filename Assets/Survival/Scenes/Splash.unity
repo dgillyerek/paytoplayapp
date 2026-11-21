@@ -156,7 +156,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.45, g: 0.70, b: 0.88, a: 1}
+  m_BackGroundColor: {r: 0.09019608, g: 0.3882353, b: 0.69411767, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -302,6 +302,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Survival.Unity::Survival.Unity.SurvivalBootstrap
   skipSplash: 0
+  bootSplash: {fileID: 2800000, guid: b75c5e4e675b5d6ca3239cfa0ae8bddc, type: 3}
 --- !u!114 &900000004
 MonoBehaviour:
   m_ObjectHideFlags: 0

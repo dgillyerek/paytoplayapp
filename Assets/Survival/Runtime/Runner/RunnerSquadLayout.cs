@@ -53,6 +53,14 @@ namespace Survival.Domain.Runner
         public const float CameraLookHeight = 0.9f;
         public const float FieldOfViewDegrees = 52f;
 
+        /// <summary>
+        /// Share of a tall phone's extra view that goes under the authored 9:16 frame (see <see cref="View.AspectFit"/>).
+        /// 1: the top of the shot (title row, horizon, the road ahead) sits exactly as on the 9:16 Game view and the extra
+        /// height is road under the squad, where the thumb steers; 0 would keep the back row on the bottom spot and add
+        /// it all as sky above the horizon instead (a quarter of a 19.5:9 screen).
+        /// </summary>
+        public const float ExtraViewBelow = 1f;
+
         /// <summary>One formation row (see <see cref="RunnerFormation.Offset"/>).</summary>
         public const float RowMetres = RunnerRules.Spacing * 0.95f;
 
@@ -95,13 +103,17 @@ namespace Survival.Domain.Runner
         }
 
         /// <summary>Road place (metres from the focus, - = behind) where the bottom edge of the shot meets the ground.</summary>
-        public static float BottomGroundFromFocus(bool boss)
+        public static float BottomGroundFromFocus(bool boss) => BottomGroundFromFocus(boss, View.AspectFit.ReferenceAspect);
+
+        /// <summary>The same on a screen <paramref name="aspect"/> wide-per-tall (the camera's <see cref="View.AspectFit"/> frustum).</summary>
+        public static float BottomGroundFromFocus(bool boss, float aspect)
         {
             var height = CameraHeight + (boss ? 0.8f : 0f);
             var back = CameraBack + (boss ? 1.4f : 0f);
             var lookHeight = CameraLookHeight + (boss ? 0.6f : 0f);
             var pitch = Math.Atan2(height - lookHeight, back + CameraLookAhead);
-            var down = pitch + (FieldOfViewDegrees * 0.5 * Math.PI / 180.0);
+            var frustum = View.AspectFit.Fit(FieldOfViewDegrees, aspect, ExtraViewBelow);
+            var down = pitch + Math.Atan(-frustum.Bottom);
             return (float)(-back + (height / Math.Tan(down)));
         }
     }

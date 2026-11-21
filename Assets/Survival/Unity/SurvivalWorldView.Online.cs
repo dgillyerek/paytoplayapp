@@ -150,14 +150,32 @@ namespace Survival.Unity
 
         private Button? _reportsButton;
 
-        /// <summary>Painted scroll button (top right) with the unread count; opens the reports screen.</summary>
+        /// <summary>The reports button's slot: the right column under the battle button (hud slot <c>world_reports</c>).</summary>
+        public const string ReportsSlot = "world_reports";
+
+        /// <summary>Painted scroll button (right column) with the unread count; opens the reports screen.</summary>
         private void EnsureReportsButton()
         {
             if (_reportsButton == null)
             {
                 _reportsButton = HookSkin.Button((RectTransform)transform, "WorldReportsButton", HookArtKeys.ButtonGold, SurvivalVisuals.MineFill);
-                Fill((RectTransform)_reportsButton.transform, 0.78f, 0.80f, 0.97f, 0.86f);
-                Line((RectTransform)_reportsButton.transform, "", 22, 0f, 1f, SurvivalVisuals.Cream);
+                var rt = (RectTransform)_reportsButton.transform;
+                // It used to sit at (0.78-0.97, 0.80-0.86), right under the round gem Shop (gem_shop), which hid it
+                // (Derek 2026-11-20, Pixel 7 Pro). Its own slot in the right column, under the battle button, now.
+                if (_session != null && _session.Pack.Hud.TryGetValue(ReportsSlot, out var slot))
+                {
+                    SurvivalVisuals.Place(rt, slot);
+                }
+                else
+                {
+                    Fill(rt, 0.855f, 1f - 0.468f, 0.985f, 1f - 0.415f);
+                }
+
+                Line(rt, "", 22, 0f, 1f, SurvivalVisuals.Cream);
+                var label = _reportsButton.GetComponentInChildren<Text>();
+                label.resizeTextForBestFit = true;
+                label.resizeTextMinSize = 12;
+                label.resizeTextMaxSize = 22;
                 _reportsButton.onClick.AddListener(OpenReports);
             }
 

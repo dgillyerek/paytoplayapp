@@ -16,6 +16,19 @@ namespace Survival.Unity
         private ClothSpringRig? _cloth;
         private GameObject? _cape;
 
+        /// <summary>Walk loop playback rate (see <see cref="BlenderRigPlayer.WalkRate"/>); 1 in the battle.</summary>
+        public float WalkRate
+        {
+            get => _player?.WalkRate ?? 1f;
+            set
+            {
+                if (_player != null)
+                {
+                    _player.WalkRate = value;
+                }
+            }
+        }
+
         /// <summary>Attack take playback rate (runner: one take per shot, paced to the enemy's fire interval); 1 in the battle.</summary>
         public float AttackSpeed
         {
