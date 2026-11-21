@@ -64,6 +64,8 @@ namespace Survival.Unity
             var safeGo = new GameObject("HeroHpSafeArea", typeof(RectTransform));
             safeGo.transform.SetParent(canvas, false);
             var safe = (RectTransform)safeGo.transform;
+            // It follows Screen.safeArea itself; HudAspectFit must not inset it twice.
+            safeGo.AddComponent<HudFitIgnore>();
             var group = safeGo.AddComponent<CanvasGroup>();
             group.blocksRaycasts = false;
             group.interactable = false;
@@ -289,11 +291,11 @@ namespace Survival.Unity
             _panel.gameObject.SetActive(n + u > 0);
             var width = HeroHpPanelLayout.Width(_safe.rect.width);
             _panel.sizeDelta = new Vector2(width, HeroHpPanelLayout.Height(n, u));
-            // Under the HUD's top row (TopHudLayout.PanelTop), measured from the safe area's top edge.
+            // Under the HUD's top row (TopHudLayout.PanelTop), measured from the safe area's top edge. HudAspectFit hangs
+            // the top row from the safe top on the 9:16 frame, so the panel does the same (no inset to take back off).
             var canvas = _safe.parent as RectTransform;
-            var canvasHeight = canvas != null ? canvas.rect.height : 1920f;
-            var inset = canvasHeight * (1f - _safe.anchorMax.y);
-            _panel.anchoredPosition = new Vector2(_right ? -HeroHpPanelLayout.Margin : HeroHpPanelLayout.Margin, -HeroHpPanelLayout.TopOffset(canvasHeight, inset));
+            var frameHeight = canvas != null ? HudAspectFit.FrameHeight(canvas) : 1920f;
+            _panel.anchoredPosition = new Vector2(_right ? -HeroHpPanelLayout.Margin : HeroHpPanelLayout.Margin, -HeroHpPanelLayout.TopOffset(frameHeight, 0f));
             int hi = 0, ui = 0;
             foreach (var row in _rows)
             {

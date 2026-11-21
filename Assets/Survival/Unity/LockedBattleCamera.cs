@@ -435,7 +435,8 @@ namespace Survival.Unity
         private void Pan(Vector2 pixels)
         {
             var screenHeight = Mathf.Max(Screen.height, 1);
-            var metresPerPixel = 2f * _distance * Mathf.Tan(PortraitGameView.FovDegrees * 0.5f * Mathf.Deg2Rad) / screenHeight;
+            var fov = AspectFit.VerticalFovDegrees(PortraitGameView.FovDegrees, Mathf.Max(Screen.width, 1) / (float)screenHeight);
+            var metresPerPixel = 2f * _distance * Mathf.Tan(fov * 0.5f * Mathf.Deg2Rad) / screenHeight;
             Slide(-pixels * metresPerPixel);
         }
 
@@ -600,10 +601,12 @@ namespace Survival.Unity
 
             cam.orthographic = false;
             cam.usePhysicalProperties = false;
-            cam.fieldOfView = PortraitGameView.FovDegrees;
+            // The screen's own aspect (forcing 9:16 squashed the picture on any other screen) with the 9:16 horizontal
+            // view held on a taller phone: units keep their size and shape, the extra height is more field.
+            cam.ResetAspect();
+            cam.fieldOfView = AspectFit.VerticalFovDegrees(PortraitGameView.FovDegrees, cam.aspect);
             cam.nearClipPlane = PortraitGameView.Near;
             cam.farClipPlane = PortraitGameView.Far;
-            cam.aspect = PortraitGameView.Width / PortraitGameView.Height;
             cam.backgroundColor = LockedBattleGround.Horizon;
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.transform.SetPositionAndRotation(_eye + _shakeOffset, _rotation);
