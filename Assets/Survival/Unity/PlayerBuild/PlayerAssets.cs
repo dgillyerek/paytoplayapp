@@ -392,6 +392,46 @@ namespace Survival.Unity
         }
 
         /// <summary>The baked registry, or null in the Editor before a bake / in a player built without one.</summary>
+        /// <summary>
+        /// Player builds: load the baked registry with Resources.LoadAsync so its dependencies (every baked model, clip,
+        /// texture and sound) stream in on the loading thread while the splash keeps drawing, instead of one synchronous
+        /// Resources.Load on the first read (a black screen of several seconds on a phone). Progress 0..1. The Editor reads
+        /// AssetDatabase, so it returns at once there. Safe to skip: <see cref="Registry"/> still loads on demand.
+        /// </summary>
+        public static System.Collections.IEnumerator PreloadRegistry(Action<float>? progress = null)
+        {
+#if UNITY_EDITOR
+            progress?.Invoke(1f);
+            yield break;
+#else
+            if (_registry != null || _registryTried)
+            {
+                progress?.Invoke(1f);
+                yield break;
+            }
+
+            var request = Resources.LoadAsync<PlayerAssetRegistry>(PlayerAssetRegistry.ResourcesName);
+            while (!request.isDone)
+            {
+                progress?.Invoke(request.progress);
+                yield return null;
+            }
+
+            if (!_registryTried)
+            {
+                _registryTried = true;
+                _registry = request.asset as PlayerAssetRegistry;
+                if (_registry == null)
+                {
+                    Debug.LogError("Survival player asset bake missing (Resources/" + PlayerAssetRegistry.ResourcesName +
+                                   "). Run Survival/Player Build/Bake Player Assets in the Editor and rebuild.");
+                }
+            }
+
+            progress?.Invoke(1f);
+#endif
+        }
+
         public static PlayerAssetRegistry? Registry()
         {
             if (_registry == null && !_registryTried)
