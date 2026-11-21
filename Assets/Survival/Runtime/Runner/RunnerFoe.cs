@@ -47,6 +47,9 @@ namespace Survival.Domain.Runner
 
         /// <summary>The current take's playback speed and its release time (normally <see cref="Plan"/>'s; see AttackStarted).</summary>
         public float TakeSpeed { get; internal set; } = 1f;
+
+        /// <summary>Seconds since its last take started (a take's own clip time is this times <see cref="TakeSpeed"/>).</summary>
+        public float TakeAge { get; internal set; } = 99f;
         public float TakeRelease { get; internal set; }
 
         /// <summary>The barrier the current take batters (0 = the take is at the squad).</summary>
