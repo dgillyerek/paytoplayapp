@@ -38,7 +38,7 @@ namespace Survival.Unity
             {
                 _timersRailBuilt = true;
                 var root = _play!.Root!;
-                var parts = SurvivalSideRail.Round(root, RailPrefix + TimersRailName, null, S("timers.rail", "TIMERS"), new Color(0.38f, 0.26f, 0.62f, 1f));
+                var parts = SurvivalSideRail.Round(root, RailPrefix + TimersRailName, null, S("timers.rail", "UPGRADES"), new Color(0.38f, 0.26f, 0.62f, 1f));
                 var rt = parts.Root;
                 HookSkin.Box(rt, 0.018f, 1f - (TimersRailTop + 0.070f), 0.150f, 1f - TimersRailTop);
                 var icon = HookSkin.ResIcon(parts.Icon, "Hourglass", SurvIds.ResSpeedupM, SurvivalVisuals.Reward, "\u231b");
@@ -78,7 +78,7 @@ namespace Survival.Unity
                 return;
             }
 
-            var panel = OpenSheet(TimersSheetName, S("timers.title", "Active Timers"), 0.74f);
+            var panel = OpenSheet(TimersSheetName, S("timers.title", "Upgrades"), 0.74f);
             var listGo = new GameObject("List", typeof(RectTransform));
             listGo.transform.SetParent(panel, false);
             _timersList = (RectTransform)listGo.transform;
