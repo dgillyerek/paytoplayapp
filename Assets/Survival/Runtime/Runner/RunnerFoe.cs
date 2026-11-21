@@ -7,7 +7,7 @@ namespace Survival.Domain.Runner
 {
     public sealed class RunnerFoe
     {
-        internal RunnerFoe(int id, RunnerUnitDef unit, float x, float z, bool boss, float hpMul = 1f, float damageMul = 1f)
+        internal RunnerFoe(int id, RunnerUnitDef unit, float x, float z, bool boss, float hpMul = 1f, float damageMul = 1f, float crowdCut = 1f)
         {
             Id = id;
             Unit = unit;
@@ -21,10 +21,20 @@ namespace Survival.Domain.Runner
             {
                 Damage = RunnerRules.RangedFoeHit(Damage);
             }
+
+            FollowerDamage = Damage;
+            if (crowdCut < 1f && !boss)
+            {
+                var plain = (int)Math.Round(unit.Damage * (damageMul > 0f ? damageMul : 1f) / crowdCut);
+                FollowerDamage = RunnerRules.CrowdFollowerHit(unit.Ranged ? RunnerRules.RangedFoeHit(plain) : plain, crowdCut);
+            }
             // Walking from the moment it spawns (even the rows already in view when the run starts); the boss holds.
             Walking = !boss;
             Plan = RunnerAttackTiming.FoePlanFor(unit);
         }
+
+        /// <summary>Its hit on a follower: <see cref="Damage"/>, or on a crowd level <see cref="RunnerRules.CrowdFollowerHit"/>.</summary>
+        public int FollowerDamage { get; }
 
         /// <summary>Its attack take: the shot or hit leaves <see cref="RunnerAttackPlan.Release"/> into it, one take per fire interval.</summary>
         public RunnerAttackPlan Plan { get; }
@@ -37,6 +47,9 @@ namespace Survival.Domain.Runner
 
         /// <summary>The current take's playback speed and its release time (normally <see cref="Plan"/>'s; see AttackStarted).</summary>
         public float TakeSpeed { get; internal set; } = 1f;
+
+        /// <summary>Seconds since its last take started (a take's own clip time is this times <see cref="TakeSpeed"/>).</summary>
+        public float TakeAge { get; internal set; } = 99f;
         public float TakeRelease { get; internal set; }
 
         /// <summary>The barrier the current take batters (0 = the take is at the squad).</summary>

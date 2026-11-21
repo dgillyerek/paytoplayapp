@@ -394,7 +394,7 @@ namespace Survival.Domain.Runner
                         for (var i = 0; i < row.Count; i++)
                         {
                             var x = Clamp(row.XOf(i), -Level.HalfWidth + unit.Radius, Level.HalfWidth - unit.Radius);
-                            var foe = new RunnerFoe(_nextId++, unit, x, row.At, boss, boss ? Level.BossHpMul : Level.FoeHpMul, Level.FoeDmgMul);
+                            var foe = new RunnerFoe(_nextId++, unit, x, row.At, boss, boss ? Level.BossHpMul : Level.FoeHpMul, Level.FoeDmgMul, Level.CrowdCut);
                             // Stagger the first swing so a pack does not attack in one beat.
                             foe.Cooldown = unit.Cycle * (0.35f + (0.2f * (i % 3)));
                             _foes.Add(foe);
@@ -835,6 +835,7 @@ namespace Survival.Domain.Runner
             {
                 var f = _foes[i];
                 f.SinceAttack += dt;
+                f.TakeAge += dt;
                 if (f.Hp <= 0)
                 {
                     continue;
@@ -928,7 +929,7 @@ namespace Survival.Domain.Runner
                 // either way down the road (a foe the squad has walked past shoots after it): enemies aim, heroes fire straight.
                 if (wall != null)
                 {
-                    if (f.Cooldown <= f.Plan.Release)
+                    if (f.Cooldown <= f.Plan.Release && !TakeStillWindingUp(f))
                     {
                         StartFoeTake(f, wall.Id, wall.Id, wall.X, wall.Z, Math.Max(f.Cooldown, 0f));
                         if (f.Cooldown <= 0f)
@@ -959,6 +960,12 @@ namespace Survival.Domain.Runner
                     continue;
                 }
 
+                // The last take still winding up is not restarted (TakeStillWindingUp).
+                if (TakeStillWindingUp(f) && !(f.Cooldown <= 0f && slack <= 0f))
+                {
+                    continue;
+                }
+
                 // Seconds until it lets go: the cooldown, or the moment its target walks into reach, whichever is later.
                 var lead = Math.Max(f.Cooldown, slack > 0f && closing > 1e-4f ? slack / closing : 0f);
                 StartFoeTake(f, 0, target.Id, target.X, target.Z, lead);
@@ -983,12 +990,20 @@ namespace Survival.Domain.Runner
         /// its release time and played at the speed that puts its release frame on that moment, <paramref name="lead"/>
         /// seconds from now (normally the plan's own speed). A unit with no take of its own releases on the spot.
         /// </summary>
+        /// <summary>
+        /// Its last take has not reached its release frame yet: the shot left early (the target walked into reach, or a
+        /// barrier stopped it, sooner than the take was paced for). The next take waits for that frame (it then starts later
+        /// and plays faster, so the shot still leaves on time); only a shot due this very tick cuts it short.
+        /// </summary>
+        private static bool TakeStillWindingUp(RunnerFoe f) => f.TakeAge * f.TakeSpeed < f.Plan.Release * f.Plan.Speed && f.Cooldown > 0f;
+
         private void StartFoeTake(RunnerFoe f, int wallId, int targetId, float x, float z, float lead)
         {
             f.SinceAttack = 0f;
             f.TargetId = targetId;
             f.TakeWall = wallId;
             f.TakeClock = 0f;
+            f.TakeAge = 0f;
             if (f.Plan.Release <= 0f)
             {
                 // No take of its own: it acts on the spot when due (the caller releases it).
@@ -1484,7 +1499,10 @@ namespace Survival.Domain.Runner
             HurtFollower(f, m, damage);
         }
 
-        private void HurtFollower(RunnerFoe f, RunnerMember victim, int damage) => HurtFollower(f.Id, victim, damage);
+        // On a crowd level a hit that started from f.Damage (side hits, splashes) lands on a follower in proportion to
+        // f.FollowerDamage; with no crowd FollowerDamage == Damage and the hit is unchanged.
+        private void HurtFollower(RunnerFoe f, RunnerMember victim, int damage) =>
+            HurtFollower(f.Id, victim, f.FollowerDamage == f.Damage || f.Damage <= 0 ? damage : Math.Max(1, (int)Math.Round(damage * (double)f.FollowerDamage / f.Damage)));
 
         /// <summary>Every hit on a follower (contact, shots, traps, the boss) comes off its HP; it falls only at 0.</summary>
         private void HurtFollower(int source, RunnerMember victim, int damage)

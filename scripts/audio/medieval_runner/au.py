@@ -52,4 +52,10 @@ def norm_rms(y, rms_db=-16, peak_db=-1.0):
     return (y*g).astype(np.float32)
 def write(y, path, q=5):
     ch=y.shape[1]
+    import shutil
+    if not shutil.which('ffmpeg'):
+        # No ffmpeg (e.g. a Windows box): libsndfile's Vorbis encoder, quality mapped from ffmpeg's -q:a 0..10.
+        import soundfile as sf
+        sf.write(path, y.astype(np.float32), SR, format='OGG', subtype='VORBIS', compression_level=1-q/10)
+        return
     subprocess.run(['ffmpeg','-v','error','-y','-f','f32le','-ar',str(SR),'-ac',str(ch),'-i','-','-c:a','libvorbis','-q:a',str(q),path],input=y.astype(np.float32).tobytes(),check=True)

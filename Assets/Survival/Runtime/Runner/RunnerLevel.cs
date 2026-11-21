@@ -172,6 +172,9 @@ namespace Survival.Domain.Runner
         /// </summary>
         public bool Finale { get; init; }
 
+        /// <summary>An enemy the progression's crowd added to its wave (RunnerSpreadDef.Crowd); paid from the wave's own kill gold.</summary>
+        public bool Extra { get; init; }
+
         public float XOf(int index) => X + ((index - ((Count - 1) * 0.5f)) * Spread);
     }
 
@@ -202,6 +205,13 @@ namespace Survival.Domain.Runner
 
         /// <summary>Every enemy's (and the boss's) hit is its unit damage times this; 1 up to Level 12, then the ramp (see <see cref="RunnerProgression"/>).</summary>
         public float FoeDmgMul { get; init; } = 1f;
+
+        /// <summary>
+        /// The crowd's damage cut (<see cref="RunnerSpreadDef.CrowdDmg"/>, already in <see cref="FoeDmgMul"/>; 1 = no crowd). A
+        /// non-boss enemy's hit on a follower is <see cref="RunnerRules.CrowdFollowerHit"/>: today's hit, capped at a follower's
+        /// HP, times this, so the cut also stretches the archers' 2-hit and the melee 1-hit kills (Derek 2026-11-20).
+        /// </summary>
+        public float CrowdCut { get; init; } = 1f;
 
         /// <summary>
         /// Whether the squad runs for the finish once the road ahead is clear on a level without a boss (json
@@ -265,6 +275,21 @@ namespace Survival.Domain.Runner
                 }
 
                 return false;
+            }
+        }
+
+        /// <summary>Enemies the progression's crowd added (rows marked <see cref="RunnerRowDef.Extra"/>).</summary>
+        public int ExtraEnemies
+        {
+            get
+            {
+                var n = 0;
+                foreach (var r in Rows)
+                {
+                    n += r.Kind == RunnerRowKind.Enemy && r.Extra ? r.Count : 0;
+                }
+
+                return n;
             }
         }
 
@@ -638,6 +663,16 @@ namespace Survival.Domain.Runner
                 if (tw1 != 1f)
                 {
                     levels[0] = levels[0] with { FoeHpMul = levels[0].FoeHpMul * tw1 };
+                }
+            }
+
+            // The crowd's lighter enemies (Derek 2026-11-20: "more enemies"): every level's enemy HP and damage are paid down
+            // after the levels are generated, so the generated levels still copy Level 1's own multipliers.
+            if (progression?.Spread is { } crowd && (crowd.CrowdHp != 1f || crowd.CrowdDmg != 1f))
+            {
+                for (var i = 0; i < levels.Count; i++)
+                {
+                    levels[i] = levels[i] with { FoeHpMul = levels[i].FoeHpMul * crowd.CrowdHp, FoeDmgMul = levels[i].FoeDmgMul * crowd.CrowdDmg, CrowdCut = crowd.CrowdDmg };
                 }
             }
 
