@@ -14,10 +14,18 @@ public sealed class RunnerRangedTwoHitTests
         {
             foreach (var u in new[] { "bonequill", "vespera" })
             {
-                var foe = new RunnerFoe(1, c.Unit(u), 0f, 0f, false, level.FoeHpMul, level.FoeDmgMul);
-                if (foe.Damage >= RunnerRules.FollowerHp || foe.Damage * 2 < RunnerRules.FollowerHp)
+                // Without the crowd the hit itself is the 2-hit kill; with it (Derek 2026-11-20, more and lighter enemies) the
+                // follower takes the crowd's share of that 2-hit hit (RunnerCrowdFollowerHitTests), so 2 to 1/cut x 2 hits.
+                var plain = new RunnerFoe(1, c.Unit(u), 0f, 0f, false, level.FoeHpMul, level.FoeDmgMul / level.CrowdCut);
+                if (plain.Damage >= RunnerRules.FollowerHp || plain.Damage * 2 < RunnerRules.FollowerHp)
                 {
-                    off.Add($"L{level.Number} {u}: {foe.Damage}");
+                    off.Add($"L{level.Number} {u}: {plain.Damage}");
+                }
+
+                var foe = new RunnerFoe(1, c.Unit(u), 0f, 0f, false, level.FoeHpMul, level.FoeDmgMul, level.CrowdCut);
+                if (foe.FollowerDamage != RunnerRules.CrowdFollowerHit(plain.Damage, level.CrowdCut))
+                {
+                    off.Add($"L{level.Number} {u}: follower hit {foe.FollowerDamage}");
                 }
             }
         }

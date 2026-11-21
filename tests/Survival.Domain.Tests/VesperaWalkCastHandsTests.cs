@@ -115,7 +115,11 @@ public class VesperaWalkCastHandsTests
 
         Assert.True(takes >= 20, "takes " + takes);
         Assert.Equal(0, cut);
-        Assert.All(speeds, s => Assert.InRange(s, 0.5f, 1.0f));
+        // Nearly every take plays at 0.5x-1x. A shot the sim did not see coming (its reach estimate jumps in one frame) starts its
+        // take late and plays it fast, up to the 2.5x cap; that is the shared foe-take rule (Bonequill, about 7% of takes on main
+        // d409df28) and Vespera met it too once the runner spread its waves into a steady stream (Derek 2026-11-20).
+        Assert.True(speeds.Count(s => s >= 0.5f && s <= 1.0f) >= speeds.Count * 0.9, $"{speeds.Count(s => s > 1.0f)}/{speeds.Count} takes sped up");
+        Assert.All(speeds, s => Assert.InRange(s, 0.5f, RunnerAttackTiming.MaxSpeed));
         // f4-f26 at the median speed: about 0.86 s on screen.
         var median = speeds.OrderBy(s => s).ElementAt(speeds.Count / 2);
         Assert.InRange(22f / 30f / median, 0.7f, 1.5f);

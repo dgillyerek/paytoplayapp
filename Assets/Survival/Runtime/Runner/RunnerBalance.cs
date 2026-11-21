@@ -340,6 +340,7 @@ namespace Survival.Domain.Runner
             double waveHp = 0, waveDps = 0;
             var waves = 0;
             var last = float.MinValue;
+            var firstAt = float.MaxValue;
             foreach (var r in level.Rows)
             {
                 if (r.Kind != RunnerRowKind.Enemy && r.Kind != RunnerRowKind.Boss)
@@ -354,13 +355,15 @@ namespace Survival.Domain.Runner
                 }
 
                 last = r.At;
+                firstAt = Math.Min(firstAt, r.At);
                 var u = c.Unit(r.Unit);
                 var boss = r.Kind == RunnerRowKind.Boss;
                 waveHp += r.Count * u.Hp * (boss ? level.BossHpMul : level.FoeHpMul);
                 waveDps += r.Count * (u.Cycle > 0 ? (u.Ranged && !boss ? RunnerRules.RangedFoeHit((int)Math.Round(u.Damage * level.FoeDmgMul)) : u.Damage * level.FoeDmgMul) / u.Cycle : 0);
             }
 
-            waves = Math.Max(1, waves);
+            // A spread road (RunnerSpreadDef) has no gaps between beats any more: count one wave per beat of road instead.
+            waves = Math.Max(1, Math.Max(waves, last > firstAt ? (int)Math.Round((last - firstAt) / RunnerProgression.BeatMetres) : 0));
             var ttk = squadDps > 0 ? waveHp / waves / squadDps : double.PositiveInfinity;
             var tto = waveDps > 0 ? hp / (waveDps / waves) : double.PositiveInfinity;
             return new RunnerStrength(dps0 > 0 ? dps / dps0 : 1, hp0 > 0 ? hp / hp0 : 1, squadDps, hp, ttk, tto);

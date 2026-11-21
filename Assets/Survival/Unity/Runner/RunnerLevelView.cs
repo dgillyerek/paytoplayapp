@@ -983,6 +983,8 @@ namespace Survival.Unity
                 rig.SetWalkRate(RunnerWalkCadence.Rate(
                     RunnerWalkCadence.FoeGroundSpeed(f.Unit.Speed, f.Passed, _run.Level.Speed),
                     RunnerWalkCadence.ClipGroundSpeed(rig.Data, f.Unit.Scale)));
+                // Far enemies still walking in sample their loop every other frame (RunnerFoeLod; view only).
+                rig.SetEvaluateEvery(RunnerFoeLod.EvaluateEvery(f.Z - _run.Hero.Z, f.Attacking, f.Boss));
                 // Walking shooters (Vespera, Bonequill) keep their legs on the walk under the take; any other foe the sim is
                 // moving between swings walks instead of sliding in its attack / rest-gap pose.
                 switch (RunnerWalkingShooterFoes.BodyFor(f.Walking, f.Attacking, f.InTake, RunnerWalkingShooterFoes.Applies(rig.Data.Name)))

@@ -21,7 +21,13 @@ namespace Survival.Domain.Runner
             }
 
             var r = level.Rewards;
-            var gold = (result.Kills * r.GoldPerKill) + (result.BoxesBroken * r.GoldPerBox) + r.WinGold;
+            // The crowd's extra enemies share their wave's kill gold (Derek 2026-11-20: more enemies, same income): a clean
+            // win pays exactly what it paid before the crowd, and each kill pays that share.
+            var paid = level.EnemyCount + 1;
+            var killGold = level.ExtraEnemies > 0
+                ? (int)Math.Round((double)result.Kills * r.GoldPerKill * (paid - level.ExtraEnemies) / paid)
+                : result.Kills * r.GoldPerKill;
+            var gold = killGold + (result.BoxesBroken * r.GoldPerBox) + r.WinGold;
             if (gold > 0)
             {
                 bundle.Resources[SurvIds.ResSoft] = gold;

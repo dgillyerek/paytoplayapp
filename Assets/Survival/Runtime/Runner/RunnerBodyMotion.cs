@@ -144,6 +144,21 @@ namespace Survival.Domain.Runner
     /// its timing (and so its release frame) is untouched.
     /// </summary>
     /// <summary>
+    /// How often an enemy rig samples its walk / rest loop (Derek 2026-11-20: about 1.4x the enemies on the road, so up to
+    /// ~70 skinned enemy rigs at once). An enemy still walking in, further ahead of the hero than the fight line, is small
+    /// on screen and only looping: it samples every other frame, as the squad's back rows do. Bosses, attacking enemies and
+    /// everything near the squad stay full rate. View only: the sim never reads it.
+    /// </summary>
+    public static class RunnerFoeLod
+    {
+        /// <summary>Metres ahead of the hero past which a walking enemy samples at half rate.</summary>
+        public const float FarAhead = RunnerSpreadDef.FightLine;
+
+        public static int EvaluateEvery(float aheadOfHero, bool attacking, bool boss) =>
+            boss || attacking || aheadOfHero <= FarAhead ? 1 : 2;
+    }
+
+    /// <summary>
     /// Ranged enemies that walk in while they shoot (Derek 2026-10-31: "this character doesn't walk on the runner"). Their
     /// fire cycle is shorter than the sim's Attacking window, so once they had fired they never left the attack pose and
     /// slid down the road in the conjure / rest-gap stance. They play the take on the upper body (as the squad shooters)
