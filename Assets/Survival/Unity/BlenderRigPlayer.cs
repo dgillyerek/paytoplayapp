@@ -146,6 +146,12 @@ namespace Survival.Unity
         public float AttackSpeed { get; set; } = 1f;
 
         /// <summary>
+        /// Walk loop playback rate (runner foes: ground speed over clip speed, <see cref="Survival.Domain.Runner.RunnerWalkCadence"/>);
+        /// 1 in the battle. Only the spec's walk clip, full body or as the legs' base under an upper-body take.
+        /// </summary>
+        public float WalkRate { get; set; } = 1f;
+
+        /// <summary>
         /// Runner only (the battle leaves it off): the attack take plays on the upper body (spine down, see
         /// <see cref="RunnerUpperBodyAttack"/>) over the walk loop, which keeps going, so the take's hips step does not
         /// show. Each take crossfades in over the last one, and out when the pose goes back to the walk; the take's own
@@ -365,7 +371,8 @@ namespace Survival.Unity
                 return;
             }
 
-            _time += Time.unscaledDeltaTime * _loopSpeed;
+            var walking = string.Equals(_pose, _spec.ClipPoseName, System.StringComparison.Ordinal);
+            _time += Time.unscaledDeltaTime * _loopSpeed * (walking ? WalkRate : 1f);
             if (_length > 0.05f)
             {
                 _time %= _length;
@@ -542,7 +549,7 @@ namespace Survival.Unity
             var dt = Time.unscaledDeltaTime;
             if (_base.IsValid() && _baseLoop)
             {
-                _baseTime += dt;
+                _baseTime += dt * (_baseIsWalk ? WalkRate : 1f);
                 if (_baseLength > 0.05f)
                 {
                     _baseTime %= _baseLength;

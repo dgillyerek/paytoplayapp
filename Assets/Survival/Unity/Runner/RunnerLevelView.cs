@@ -978,6 +978,11 @@ namespace Survival.Unity
                     var at = (f.TargetId != 0 ? _run.Member(f.TargetId) : null) ?? _run.Hero;
                     rig.Face(new Vector3(at.X - f.X, 0f, at.Z - f.Z));
                 }
+                // The walk loop steps at the speed the sim moves it (Derek 2026-11-19: Nightfang glided in its idle pose at
+                // 6.4x its trot's ground speed). View only: the sim's speeds and the locked pace are untouched.
+                rig.SetWalkRate(RunnerWalkCadence.Rate(
+                    RunnerWalkCadence.FoeGroundSpeed(f.Unit.Speed, f.Passed, _run.Level.Speed),
+                    RunnerWalkCadence.ClipGroundSpeed(rig.Data, f.Unit.Scale)));
                 // Walking shooters (Vespera, Bonequill) keep their legs on the walk under the take; any other foe the sim is
                 // moving between swings walks instead of sliding in its attack / rest-gap pose.
                 switch (RunnerWalkingShooterFoes.BodyFor(f.Walking, f.Attacking, f.InTake, RunnerWalkingShooterFoes.Applies(rig.Data.Name)))

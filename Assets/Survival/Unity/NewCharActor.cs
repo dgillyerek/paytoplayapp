@@ -24,6 +24,9 @@ namespace Survival.Unity
         /// <summary>Attack take rate. 1 in the battle; the runner sets it so the contact lands on its release.</summary>
         public float AttackSpeed { get; set; } = 1f;
 
+        /// <summary>Walk loop playback rate (runner foes, <see cref="Survival.Domain.Runner.RunnerWalkCadence"/>); 1 in the battle.</summary>
+        public float WalkRate { get; set; } = 1f;
+
         public bool Built { get; private set; }
         public string Pose => _pose;
         public Bounds VisibleBounds => _bounds;
@@ -149,7 +152,8 @@ namespace Survival.Unity
             }
 
             var dt = Time.deltaTime;
-            u.Time += dt * (_loop ? 1f : Mathf.Max(0.05f, AttackSpeed));
+            var walkLoop = _loop && string.Equals(_pose, NewCharMotion.WalkPoseName, System.StringComparison.Ordinal);
+            u.Time += dt * (_loop ? (walkLoop ? Mathf.Max(0.05f, WalkRate) : 1f) : Mathf.Max(0.05f, AttackSpeed));
             var clip = u.Clips[u.Clip];
             var length = clip != null ? Mathf.Max(0.05f, clip.length) : 1f;
             Sample(_loop ? Mathf.Repeat(u.Time, length) : Mathf.Min(u.Time, length));
