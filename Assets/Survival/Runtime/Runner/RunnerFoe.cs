@@ -78,6 +78,15 @@ namespace Survival.Domain.Runner
         /// <summary>The line it would walk with nothing in the way (its spawn lane, drifting toward its target); it steps back onto it once past an obstacle.</summary>
         internal float LaneX { get; set; }
 
+        /// <summary>How fast (m/s) it drifts sideways toward the hero once close (RunnerRowDef.Seek; 0 holds its lane).</summary>
+        public float Seek { get; internal set; } = RunnerRules.EnemySeek;
+
+        /// <summary>Walking in from beyond the road edge (a side entry) toward <see cref="LaneX"/>, at <see cref="EnterSpeed"/> m/s sideways.</summary>
+        public bool Entering { get; internal set; }
+
+        /// <inheritdoc cref="Entering"/>
+        public float EnterSpeed { get; internal set; }
+
         /// <summary>Held up behind a trap or barrier it cannot get round yet (or one that spans the road).</summary>
         public bool Blocked { get; internal set; }
 

@@ -418,6 +418,18 @@ Derek: about 40% more enemies on every level, each with less HP and damage, so a
 
 **Measure it:** `RunnerSpawnSpacingProbe` (tests/Survival.Domain.Tests/RunnerSpawnSpacingProbe.cs) writes `runner_spawn_spacing.txt`. Set `RUNNER_LEVELS_JSON` to compare another runner_levels.json with the same code.
 
+## Outer lanes and side entries (Nov 20, 2026)
+
+Derek: "more enemies need to come from the outside of the lanes and stay there. a lot of times you can just stay in the center without moving. the same for powerups"; "the wolves for example move to the center too quickly"; "some enemies can spawn in from the side ... they should come in with enough time to kill".
+
+- `progression.spread.lanes` (`RunnerLanesDef`, applied by `RunnerProgression.ApplyLanes` after the stream is laid out, on its own random stream so nothing else about a level's roll moves). Knobs: `outer` 0.4 (an even share of the stream's enemy packs stand on an outer lane, `outer_x` 3.0 m from the centre, sides mostly alternating), `side` 0.15 (share of all stream packs, taken from the outer ones and `side_units`, that walk in from `side_out` 2 m beyond the road edge at `side_speed` 2.5 m/s or faster), `side_min_s` 3.0 (a side entry is on the road at least this long before it can hit the squad; the generator speeds its walk-in up to make it, or leaves it an ordinary outer-lane enemy), `crates` 0.35 (an even share of the power-up crates move out to `crate_x` 3.2 m), `seek` (per-unit sideways drift toward the hero for the enemies left inside: `nightfang` 0.2 m/s, was 0.55 for everyone).
+- **Outer-lane enemies hold their lane**: `RunnerRowDef.Seek` 0, so their line never drifts toward the hero (they still step round traps and barriers and chase once passed). Inner wolves drift at 0.2 m/s instead of 0.55, so they no longer cut to the centre.
+- **Side entries** (`RunnerRowDef.EnterX` / `EnterSpeed`, `RunnerFoe.Entering`): appear off the road, walk in diagonally onto their outer lane while coming down the road, and do not fight until they are on it.
+- `level_tweaks` `lanes` (default 0) re-rolls a level's lane picks; used on a few levels where the first roll moved the required power in a way HP could not pay back.
+- **Pace held**: `level_tweaks` `foe_hp` re-fitted per level against the #231 required power (`RunnerFreePaceTests`: wall L31, L31 day 13, L46 day 489, L50 day 828.67). Levels more than 2% off are listed in PR (tune/runner-outer-lanes); L3, L5, L6, L9 sit above their best fit (L5 +34%) so total enemy HP on Levels 1-12 still climbs every level and stays at least 0.4x the old total (RunnerHazardTests).
+- Side entries do not attack while walking in; archers among them shoot from range about 2 s after reaching the road. Outer crates came out at 25% of power-up crates (knob 35%: crates that would stand against a trap stay put).
+- **Proof** (`RunnerOuterLanesTests`): a player who parks in the middle and only leaves it for chests and crates (`CentreParker`) loses most levels the moving sim player wins at the free pace's strength.
+
 ## The tests (`tests/Survival.Domain.Tests/RunnerBalanceTests.cs`)
 
 - `The_first_12_levels_still_need_no_upgrades` checks that L1–12 need scale ≤ 1.

@@ -395,6 +395,19 @@ namespace Survival.Domain.Runner
                         {
                             var x = Clamp(row.XOf(i), -Level.HalfWidth + unit.Radius, Level.HalfWidth - unit.Radius);
                             var foe = new RunnerFoe(_nextId++, unit, x, row.At, boss, boss ? Level.BossHpMul : Level.FoeHpMul, Level.FoeDmgMul, Level.CrowdCut);
+                            if (row.Seek >= 0f)
+                            {
+                                foe.Seek = row.Seek;
+                            }
+
+                            if (row.EnterX != 0f && row.EnterSpeed > 0f && !boss)
+                            {
+                                // A side entry: appears off the road at the edge it comes in from, then walks in onto its lane.
+                                foe.X = row.EnterX + (x - row.X);
+                                foe.Entering = true;
+                                foe.EnterSpeed = row.EnterSpeed;
+                            }
+
                             // Stagger the first swing so a pack does not attack in one beat.
                             foe.Cooldown = unit.Cycle * (0.35f + (0.2f * (i % 3)));
                             _foes.Add(foe);
@@ -440,6 +453,23 @@ namespace Survival.Domain.Runner
                 {
                     // Once the hero is past, it has a moment to turn, chase and hit the rows going by; then it gives up.
                     f.ChaseLeft -= dt;
+                }
+
+                if (f.Entering)
+                {
+                    // A side entry walks in from beyond the edge onto its lane while it comes down the road; it does not fight
+                    // until it is on the road.
+                    f.Engaged = false;
+                    f.Walking = true;
+                    f.X += Clamp(f.LaneX - f.X, -f.EnterSpeed * dt, f.EnterSpeed * dt);
+                    f.Z -= f.Unit.Speed * dt;
+                    if (Math.Abs(f.LaneX - f.X) < 1e-3f)
+                    {
+                        f.X = f.LaneX;
+                        f.Entering = false;
+                    }
+
+                    continue;
                 }
 
                 if (f.Unit.Speed <= 0f || near == null || f.Engaged)
@@ -496,7 +526,7 @@ namespace Survival.Domain.Runner
             var oldX = f.X;
 
             // The line it would hold with the road clear: the usual slow drift toward its target.
-            f.LaneX = Clamp(f.LaneX + Clamp(seekX - f.LaneX, -RunnerRules.EnemySeek * dt, RunnerRules.EnemySeek * dt), minX, maxX);
+            f.LaneX = Clamp(f.LaneX + Clamp(seekX - f.LaneX, -f.Seek * dt, f.Seek * dt), minX, maxX);
 
             if (ObstacleUnder(f.X, f.Z, body, out var ox, out var ohw))
             {
@@ -842,6 +872,13 @@ namespace Survival.Domain.Runner
                 }
 
                 f.Cooldown -= dt;
+                if (f.Entering)
+                {
+                    // A side entry still walking in from beyond the edge does not attack until it is on the road.
+                    f.InTake = false;
+                    continue;
+                }
+
                 var target = NearestMember(f.X, f.Z, out var dist);
                 if (target == null || (f.Passed && f.ChaseLeft <= 0f))
                 {

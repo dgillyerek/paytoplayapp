@@ -291,7 +291,13 @@ public sealed class RunnerEveryoneAttacksTests
                     }
 
                     var m = run.Member(e.Id);
-                    Assert.NotNull(m);
+                    if (m == null)
+                    {
+                        // Joined and was killed in the same frame (a pack on the chest's lane): it was lost, not never made.
+                        Assert.Contains(batch, h => h.Kind == RunnerEventKind.FollowerLost && h.Id == e.Id);
+                        continue;
+                    }
+
                     Assert.False(m!.IsHero);
                     Assert.Equal(RunnerRules.FollowerHp, m.MaxHp);
                     // Full 25, less anything that hit it later in the same frame it joined.
