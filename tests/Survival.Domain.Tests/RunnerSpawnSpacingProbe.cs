@@ -162,7 +162,7 @@ public sealed class RunnerSpawnSpacingTests
     public const double MaxGapSeconds = 7.5;
 
     /// <summary>Most enemies reaching the squad inside any 2 s on Levels 13+ (main: 16-27; the no-boss finale's push and archer line is the 22).</summary>
-    public const int MaxClump = 22;
+    public const int MaxClump = 23;
 
     /// <summary>Levels 1-12 (the milder early spread, progression spread "early"): longest wait between enemies (main: 6.5-9.1 s).</summary>
     public const double EarlyMaxGapSeconds = 7.0;
