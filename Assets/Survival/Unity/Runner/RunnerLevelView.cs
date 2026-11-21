@@ -1318,7 +1318,8 @@ namespace Survival.Unity
 
             _cam.clearFlags = CameraClearFlags.SolidColor;
             _cam.backgroundColor = LockedBattleGround.Horizon;
-            _cam.fieldOfView = RunnerFraming.FieldOfViewDegrees;
+            // Same horizontal view as the 9:16 Game view on any phone; a taller screen adds road under the squad.
+            CameraAspectFit.Attach(_cam, RunnerFraming.FieldOfViewDegrees, RunnerFraming.ExtraViewBelow);
             _cam.nearClipPlane = 0.2f;
             _cam.farClipPlane = 120f;
             _cam.enabled = true;
