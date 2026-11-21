@@ -6,7 +6,8 @@ namespace Survival.Domain.Tests;
 /// <summary>
 /// Derek 2026-11-19 (phone, test-apk-20261119): the wolf (Nightfang) "stays in its idle pose with its feet not moving while
 /// it comes at me". The sim walks it in at 4.05 m/s and the view played its 0.63 m/s trot at 1x, so it glided. The runner now
-/// plays each foe's walk loop at the sim's ground speed over the clip's own, within a band.
+/// plays each foe's walk loop at the sim's ground speed over the clip's own, within a band. The cap is 2x
+/// (Derek 2026-11-20: the wolf's legs at 3x were "a little fast" and the front paws shuffled).
 /// </summary>
 public sealed class RunnerWalkCadenceTests
 {
@@ -63,7 +64,8 @@ public sealed class RunnerWalkCadenceTests
         var clip = RunnerWalkCadence.ClipGroundSpeed(fighter, wolf.Scale);
         Assert.Equal(1.7f, RunnerWalkCadence.FoeGroundSpeed(wolf.Speed, chasing: true, levelSpeed: 1.7f));
         Assert.Equal(wolf.Speed, RunnerWalkCadence.FoeGroundSpeed(wolf.Speed, chasing: false, levelSpeed: 1.7f));
-        Assert.Equal(1.7f / clip, RunnerWalkCadence.ForFoe(wolf, chasing: true, levelSpeed: 1.7f), 3);
+        // 1.7 / 0.63 is ~2.7x, past the 2x readable cap on this trot, so a chase is held at MaxRate too.
+        Assert.Equal(RunnerWalkCadence.MaxRate, RunnerWalkCadence.ForFoe(wolf, chasing: true, levelSpeed: 1.7f));
     }
 
     [Fact]

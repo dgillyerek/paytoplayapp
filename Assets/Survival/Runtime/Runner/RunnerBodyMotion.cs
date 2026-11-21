@@ -56,10 +56,13 @@ namespace Survival.Domain.Runner
         public const float MinRate = 0.5f;
 
         /// <summary>
-        /// Fastest walk loop: three 1 s trot cycles a second is a flat-out stride; past that the legs strobe. A foe faster
-        /// than this still slides by the rest (Nightfang: 4.05 / (0.63 x 3) = 2.1x), which only a run / gallop clip fixes.
+        /// Fastest walk loop. Nightfang's 1 s trot at 1.4x covers 0.63 m/s (paw stance is even shorter, ~0.28 m), so
+        /// planting at 4.05 m/s would need 6.4x–10x and the legs strobe. The first pass capped at 3x; Derek (2026-11-20)
+        /// found that a little fast, and the front paws shuffled (the trot lifts the left front paw only 5 cm, 5% of
+        /// body height, and the right front paw 0.7 cm). 2x is the readable ceiling for this clip; the remaining slide
+        /// (Nightfang: 4.05 / (0.63 x 2) = 3.2x) only a run / gallop with real front-paw lift fixes.
         /// </summary>
-        public const float MaxRate = 3f;
+        public const float MaxRate = 2f;
 
         /// <summary>
         /// Ground speed (m/s) a fighter's walk loop shows at 1x in the runner at <paramref name="runnerScale"/> x its battle
