@@ -1000,7 +1000,7 @@ public sealed class RunnerTests
         var json = campaign.Save();
         var again = new CampaignSession(catalog, new Wallet(), new ManualClock(1000));
         Assert.True(again.Load(json));
-        Assert.Equal(gold + 1900, again.Wallet.Get(SurvIds.ResSoft));
+        Assert.Equal(gold + 1500 + killGold + 200, again.Wallet.Get(SurvIds.ResSoft));
         Assert.Equal(shards + 10, again.Roster.Get("hero.lyra")!.Shards);
     }
 
