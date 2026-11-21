@@ -1021,9 +1021,26 @@ namespace Survival.Unity
 
         // ---------- events → juice ----------
 
+        /// <summary>
+        /// The event's sound. A Hit carries neither who landed it nor on what, so look both up (the squad member's unit for
+        /// its weapon impact, the enemy's unit for its own hurt sound); everything else plays straight from the event.
+        /// </summary>
+        private void PlayEventSound(RunnerEvent e)
+        {
+            if (e.Kind != RunnerEventKind.Hit || e.OnBox || _run == null)
+            {
+                SurvivalAudio.Runner(e);
+                return;
+            }
+
+            var attacker = _run.Member(e.Other)?.Unit.Id ?? "";
+            var victim = _run.Foe(e.Id)?.Unit.Id ?? "";
+            SurvivalAudio.Runner(e, attacker, victim);
+        }
+
         private void OnEvent(RunnerEvent e)
         {
-            SurvivalAudio.Runner(e);
+            PlayEventSound(e);
             var at = new Vector3(e.X, 0f, e.Z);
             switch (e.Kind)
             {

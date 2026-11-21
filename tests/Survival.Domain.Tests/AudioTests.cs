@@ -66,11 +66,14 @@ public class AudioTests
         var dir = Path.GetDirectoryName(Path.Combine(PackDir, ConfigRel))!;
         foreach (var cue in cfg.Cues.Values)
         {
-            var file = Path.Combine(dir, cue.File);
-            Assert.True(File.Exists(file), cue.Id + " -> missing " + cue.File);
-            Assert.True(File.Exists(file + ".meta"), cue.Id + " -> missing meta for " + cue.File);
-            Assert.EndsWith(".ogg", cue.File);
-            Assert.True(new FileInfo(file).Length < 400_000, cue.File + " is larger than expected");
+            foreach (var name in cue.Files)
+            {
+                var file = Path.Combine(dir, name);
+                Assert.True(File.Exists(file), cue.Id + " -> missing " + name);
+                Assert.True(File.Exists(file + ".meta"), cue.Id + " -> missing meta for " + name);
+                Assert.EndsWith(".ogg", name);
+                Assert.True(new FileInfo(file).Length < 400_000, name + " is larger than expected");
+            }
         }
     }
 
@@ -78,7 +81,7 @@ public class AudioTests
     public void Every_audio_file_is_used_and_licensed()
     {
         var dir = Path.Combine(PackDir, "audio");
-        var used = Config.Cues.Values.Select(c => c.File).ToHashSet();
+        var used = Config.Cues.Values.SelectMany(c => c.Files).ToHashSet();
         var licenses = File.ReadAllText(Path.Combine(dir, "LICENSES.md"));
         Assert.Contains("CC0", licenses);
         foreach (var f in Directory.GetFiles(dir, "*.ogg"))
@@ -188,6 +191,92 @@ public class AudioTests
         Assert.Equal(AudioCues.EnemyDeathBig, AudioEventMap.Runner(cfg, new RunnerEvent(RunnerEventKind.FoeKilled, 1, 0, 0f, 0f, 0f, true)).Single());
         Assert.Contains(AudioCues.JingleLose, AudioEventMap.Runner(cfg, new RunnerEvent(RunnerEventKind.Lost, 0, 0, 0f, 0f, 0f, false)));
         Assert.Contains(AudioCues.JingleWin, AudioEventMap.Runner(cfg, new RunnerEvent(RunnerEventKind.Won, 0, 0, 0f, 0f, 0f, false)));
+    }
+
+    [Fact]
+    public void Runner_hits_play_the_attackers_weapon_and_the_enemys_own_hurt()
+    {
+        var cfg = Config;
+        var hit = new RunnerEvent(RunnerEventKind.Hit, 1, 2, 0f, 0f, 1f, false);
+        IReadOnlyList<string> Hit(string attacker, string victim) => AudioEventMap.Runner(cfg, hit, attacker, victim);
+
+        // Every squad hero's hit lands with its own weapon, and no two heroes share one.
+        var heroes = new[] { "lyra", "rowan", "oakenshield", "sir_aldric", "kaelen", "seraphine" };
+        var impacts = heroes.Select(h => Hit(h, "").Single()).ToList();
+        Assert.Equal(heroes.Length, impacts.Distinct().Count());
+        Assert.Equal("sfx.impact.arrow", Hit("rowan", "")[0]);
+        Assert.Equal("sfx.impact.magic", Hit("Lyra", "")[0]);
+
+        // Unknown attacker: the generic flesh hit. A known enemy adds its own hurt layer.
+        Assert.Equal(new[] { "sfx.enemy.hit" }, Hit("", ""));
+        Assert.Equal(new[] { "sfx.impact.sword", "sfx.enemy.hurt.malzareth" }, Hit("sir_aldric", "malzareth"));
+        Assert.Equal("sfx.crate.hit", AudioEventMap.Runner(cfg, new RunnerEvent(RunnerEventKind.Hit, 1, 2, 0f, 0f, 1f, false, true), "rowan", "").Single());
+    }
+
+    [Fact]
+    public void Runner_enemies_die_with_their_own_sound_and_bosses_keep_the_big_one()
+    {
+        var cfg = Config;
+        string Death(string unit, bool big) => AudioEventMap.Runner(cfg, new RunnerEvent(RunnerEventKind.FoeKilled, 1, 0, 0f, 0f, 0f, big, false, unit)).Single();
+        foreach (var e in new[] { "nightfang", "bonequill", "vespera", "blightroot", "ashwyrm", "malzareth" })
+        {
+            Assert.Equal("sfx.enemy.death." + e, Death(e, false));
+            Assert.True(cfg.RunnerFoeHurt.ContainsKey(e), e + " has no hurt sound");
+        }
+
+        Assert.Equal(AudioCues.EnemyDeath, Death("goblin", false));
+        Assert.Equal(AudioCues.EnemyDeathBig, Death("ironhowl", true));
+    }
+
+    [Fact]
+    public void Runner_hero_attacks_each_sound_different_and_vary_round_robin()
+    {
+        var cfg = Config;
+        string Shot(string unit) => AudioEventMap.Runner(cfg, new RunnerEvent(RunnerEventKind.Fired, 1, 0, 0f, 0f, 0f, false, false, unit)).Single();
+        var heroes = new[] { "lyra", "rowan", "oakenshield", "sir_aldric", "kaelen", "seraphine" };
+        Assert.Equal(heroes.Length, heroes.Select(Shot).Distinct().Count());
+        foreach (var id in heroes.Select(Shot).Concat(cfg.RunnerImpacts.Values).Concat(cfg.RunnerFoeDeath.Values).Concat(new[] { "sfx.enemy.hit", "sfx.enemy.death" }))
+        {
+            Assert.True(cfg.TryCue(id, out var cue), id);
+            Assert.True(cue.Files.Count >= 3, id + " needs 3+ round-robin variants");
+            Assert.True(cue.PitchJitter > 0f && cue.VolumeJitter > 0f, id + " needs pitch and volume randomization");
+        }
+    }
+
+    [Fact]
+    public void Round_robin_never_repeats_back_to_back_and_covers_every_variant()
+    {
+        var cue = new AudioCueDef("rr", new[] { "a.ogg", "b.ogg", "c.ogg" }, AudioBus.Sfx, false, 1f, 4, 0f, 0f, 0.2f);
+        var lim = new AudioVoiceLimiter(7);
+        var seen = new int[3];
+        var last = -1;
+        for (var i = 0; i < 300; i++)
+        {
+            var v = lim.NextVariant(cue, out var gain);
+            Assert.InRange(v, 0, 2);
+            Assert.NotEqual(last, v);
+            Assert.InRange(gain, 0.8f - 1e-6f, 1f);
+            seen[v]++;
+            last = v;
+        }
+
+        Assert.All(seen, n => Assert.True(n > 60));
+        var single = new AudioCueDef("one", "one.ogg", AudioBus.Sfx, false, 1f, 4, 0f, 0f);
+        Assert.Equal(0, lim.NextVariant(single, out var g1));
+        Assert.Equal(1f, g1);
+    }
+
+    [Fact]
+    public void Cue_files_list_parses_and_paths_pick_the_variant()
+    {
+        var cfg = ThemeAudioConfig.Parse("{\"cues\":{\"x\":{\"files\":[\"x_01.ogg\",\"x_02.ogg\"],\"volume_jitter\":0.1}}}");
+        Assert.True(cfg.TryCue("x", out var x));
+        Assert.Equal(new[] { "x_01.ogg", "x_02.ogg" }, x.Files);
+        Assert.Equal("x_01.ogg", x.File);
+        Assert.Equal(0.1f, x.VolumeJitter, 3);
+        Assert.Equal("a/x_02.ogg", ThemeAudioConfig.FilePath("a/audio.json", x, 1));
+        Assert.Equal("a/x_02.ogg", ThemeAudioConfig.FilePath("a/audio.json", x, 9));
+        Assert.Throws<FormatException>(() => ThemeAudioConfig.Parse("{\"cues\":{\"y\":{\"files\":[]}}}"));
     }
 
     [Fact]

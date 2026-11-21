@@ -165,12 +165,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - shared
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 177ea253b68b4466ae3b04d18d4130fa
-    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_magic_impact.ogg
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - shared
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 184bfde6863293f40a7b794cc10d9395
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/ui/icon_world.png
     m_ReadOnly: 0
@@ -182,12 +176,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - art-heroes
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 19c5e0fe0bd049b9a67116d5e565885c
-    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_enemy_death.ogg
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - shared
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 19d910813fb142d98e97ef3a9fb64bf4
     m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_hazard_fire.ogg
@@ -1005,12 +993,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - art-hook
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 863259a07ec440eb9cf94fde263bbe65
-    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_arrow_hit.ogg
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - shared
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 86cbb7b335564dce9217cc87a99e8723
     m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/purchase_success.ogg
     m_ReadOnly: 0
@@ -1124,12 +1106,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - art-hook
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9a68140b19a84e589618576359013a5a
-    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_oakenshield_throw.ogg
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - shared
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9bf49e2afecb4e04ca8cb5ad4966897e
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/map/march_player.png
@@ -1304,12 +1280,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - art-hook
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ba80239a9de34228a013f3b4c03dc53a
-    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_enemy_hit.ogg
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - shared
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bb2a6d0dad2f4ce292d647cfa3446420
     m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_ironhowl_charge.ogg
@@ -1533,12 +1503,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - art-hook
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d8e7f0181c9241d2a55dc18c81a02fcd
-    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_lyra_shot.ogg
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - shared
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d9b6ba77ae2e5b540a802965c6c04211
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/ui/icon_bag.png
     m_ReadOnly: 0
@@ -1571,12 +1535,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: df9187f4b1ad42b8a3ece23dd257ab55
     m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/mus_runner_march_loop.ogg
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - shared
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e209d5d476ee456b81da5584e36a051f
-    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_rowan_shot.ogg
     m_ReadOnly: 0
     m_SerializedLabels:
     - shared
@@ -1634,12 +1592,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - art-hook
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ed53ced540ed4ada88ef6fbafe914eae
-    m_Address: Assets/ThemePack/fantasy_kingdom_a/audio/sfx_sword_hit.ogg
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - shared
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ed79ffd2defaa65409adcf21fcfec7af
     m_Address: Assets/ThemePack/fantasy_kingdom_a/art/world/ui/icon_build.png
