@@ -24,7 +24,7 @@ public sealed class RunnerLevelTweakTests
         foreach (var n in Rerolled)
         {
             var tw = p.Tweak(n);
-            Assert.Equal(RunnerLevelTweak.None with { Layout = tw.Layout, FoeHp = tw.FoeHp }, tw);
+            Assert.Equal(RunnerLevelTweak.None with { Layout = tw.Layout, FoeHp = tw.FoeHp, Lanes = tw.Lanes }, tw);
             Assert.NotEqual(0, tw.Layout);
             var tweaked = c.ByNumber(n);
             var seed = RunnerProgression.WithRunUp(RunnerProgression.Generate(RunnerProgression.WithRunUp(c.Levels[0] with { FoeHpMul = c.Levels[0].FoeHpMul / p.Tweak(1).FoeHp }, -c.FirstRunUp), plain, n, c.Units.ContainsKey, id => c.Units[id].Speed), c.FirstRunUp);

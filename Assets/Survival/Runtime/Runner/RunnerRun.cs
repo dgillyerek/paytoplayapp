@@ -872,6 +872,13 @@ namespace Survival.Domain.Runner
                 }
 
                 f.Cooldown -= dt;
+                if (f.Entering)
+                {
+                    // A side entry still walking in from beyond the edge does not attack until it is on the road.
+                    f.InTake = false;
+                    continue;
+                }
+
                 var target = NearestMember(f.X, f.Z, out var dist);
                 if (target == null || (f.Passed && f.ChaseLeft <= 0f))
                 {

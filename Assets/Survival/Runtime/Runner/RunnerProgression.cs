@@ -260,6 +260,9 @@ namespace Survival.Domain.Runner
     {
         public static readonly RunnerLevelTweak None = new();
 
+        /// <summary>"lanes" (default 0): re-rolls which packs and crates go to the outer lanes and which side (RunnerLanesDef).</summary>
+        public int Lanes { get; init; }
+
         internal static Dictionary<int, RunnerLevelTweak> ReadAll(JsonNode.Obj progression)
         {
             var all = new Dictionary<int, RunnerLevelTweak>();
@@ -281,7 +284,10 @@ namespace Survival.Domain.Runner
                         Math.Max(0.1f, LayoutJson.OptNum(o, "wave", 1f)),
                         Math.Max(0.1f, LayoutJson.OptNum(o, "foe_hp", 1f)),
                         Math.Max(0.1f, LayoutJson.OptNum(o, "barrier_hp", 1f)),
-                        (int)Math.Round(LayoutJson.OptNum(o, "layout", 0f)));
+                        (int)Math.Round(LayoutJson.OptNum(o, "layout", 0f)))
+                    {
+                        Lanes = (int)Math.Round(LayoutJson.OptNum(o, "lanes", 0f))
+                    };
                 }
             }
 
@@ -782,7 +788,7 @@ namespace Survival.Domain.Runner
                 // The closing set piece's front: the boss guard's archer line, or the finale's fodder push.
                 var (closingAt, closingUnit) = bossUnit != null ? (bossAt - 7f, "bonequill") : (bossAt - FinaleBack + 3f, "nightfang");
                 SpreadWaves(rows, p.Spread.For(number), closingAt, closingUnit, speed, unitSpeed ?? (_ => 0f), new Random(unchecked(p.Seed + (number * 15485863) + 3)));
-                ApplyLanes(rows, p.Spread.Lanes, number, halfWidth, speed, unitSpeed ?? (_ => 0f), new Random(unchecked(p.Seed + (number * 7919) + 17)));
+                ApplyLanes(rows, p.Spread.Lanes, number, halfWidth, speed, unitSpeed ?? (_ => 0f), new Random(unchecked(p.Seed + (number * 7919) + 17 + (p.Tweak(number).Lanes * 104729))));
             }
 
             if (bossUnit != null)
@@ -816,7 +822,7 @@ namespace Survival.Domain.Runner
 
             var rows = level.Rows.ToList();
             SpreadWaves(rows, p.Spread.For(level.Number), level.Length, "bonequill", level.Speed, unitSpeed, new Random(unchecked(p.Seed + (level.Number * 15485863) + 3)));
-            ApplyLanes(rows, p.Spread.Lanes, level.Number, level.HalfWidth, level.Speed, unitSpeed, new Random(unchecked(p.Seed + (level.Number * 7919) + 17)));
+            ApplyLanes(rows, p.Spread.Lanes, level.Number, level.HalfWidth, level.Speed, unitSpeed, new Random(unchecked(p.Seed + (level.Number * 7919) + 17 + (p.Tweak(level.Number).Lanes * 104729))));
             return level with { Rows = rows.OrderBy(r => r.At).ToList() };
         }
 
