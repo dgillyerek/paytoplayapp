@@ -87,6 +87,10 @@ namespace Survival.Domain.Runner
         /// <inheritdoc cref="Entering"/>
         public float EnterSpeed { get; internal set; }
 
+        /// <summary>Its velocity (m/s, x across and z along the road) while walking on from the side, for the scene to face
+        /// and step it along its diagonal; (0, 0) once it is on its lane.</summary>
+        public (float X, float Z) EnterVelocity => Entering ? (Math.Sign(LaneX - X) * EnterSpeed, -Unit.Speed) : (0f, 0f);
+
         /// <summary>Held up behind a trap or barrier it cannot get round yet (or one that spans the road).</summary>
         public bool Blocked { get; internal set; }
 
