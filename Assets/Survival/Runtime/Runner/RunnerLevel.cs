@@ -175,6 +175,22 @@ namespace Survival.Domain.Runner
         /// <summary>An enemy the progression's crowd added to its wave (RunnerSpreadDef.Crowd); paid from the wave's own kill gold.</summary>
         public bool Extra { get; init; }
 
+        /// <summary>
+        /// How fast (m/s) its enemies drift sideways toward the hero once close (RunnerSpreadDef.Lanes; Derek 2026-11-20: "the
+        /// wolves for example move to the center too quickly"). Below 0: <see cref="RunnerRules.EnemySeek"/>. 0 holds its lane.
+        /// </summary>
+        public float Seek { get; init; } = -1f;
+
+        /// <summary>
+        /// A side entry (Derek 2026-11-20: "some enemies can spawn in from the side"): its enemies appear this far off the road's
+        /// centre (beyond the edge) and walk in sideways at <see cref="EnterSpeed"/> onto <see cref="X"/>, then on down their lane.
+        /// 0: an ordinary row that appears on the road.
+        /// </summary>
+        public float EnterX { get; init; }
+
+        /// <inheritdoc cref="EnterX"/>
+        public float EnterSpeed { get; init; }
+
         public float XOf(int index) => X + ((index - ((Count - 1) * 0.5f)) * Spread);
     }
 
