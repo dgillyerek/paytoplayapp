@@ -53,6 +53,9 @@ namespace Survival.Domain.Runner
         private readonly RunnerCatalog _catalog;
         private readonly List<RunnerMember> _squad = new();
         private readonly List<RunnerFoe> _foes = new();
+
+        /// <summary>Side entries walking down the road unseen until they reach their <see cref="RunnerRowDef.EnterAhead"/>.</summary>
+        private readonly List<(RunnerFoe Foe, float Ahead)> _pending = new();
         private readonly List<RunnerBox> _boxes = new();
         private readonly List<RunnerShot> _shots = new();
         private readonly List<RunnerHazard> _hazards = new();
@@ -293,6 +296,11 @@ namespace Survival.Domain.Runner
         {
             Seconds += dt;
             MoveSquad(dt);
+            foreach (var (f, _) in _pending)
+            {
+                f.Z -= f.Unit.Speed * dt;
+            }
+
             SpawnRows();
             MoveFoes(dt);
             SquadAttacks(dt);
@@ -354,6 +362,19 @@ namespace Survival.Domain.Runner
 
         private void SpawnRows()
         {
+            // Side entries walking down the road unseen (their own pace, so they reach the squad when they always would
+            // have) step on from the side once the squad is close enough.
+            for (var i = _pending.Count - 1; i >= 0; i--)
+            {
+                var (f, ahead) = _pending[i];
+                if (f.Z - Distance <= ahead)
+                {
+                    _pending.RemoveAt(i);
+                    _foes.Add(f);
+                    Emit(RunnerEventKind.FoeSpawned, f.Id, 0, f.X, f.Z, f.Hp, false, false, f.Unit.Id);
+                }
+            }
+
             while (_nextRow < Level.Rows.Count && Level.Rows[_nextRow].At - Distance <= RunnerRules.SpawnAhead)
             {
                 var row = Level.Rows[_nextRow++];
@@ -410,6 +431,13 @@ namespace Survival.Domain.Runner
 
                             // Stagger the first swing so a pack does not attack in one beat.
                             foe.Cooldown = unit.Cycle * (0.35f + (0.2f * (i % 3)));
+                            if (foe.Entering && row.EnterAhead > 0f && foe.Z - Distance > row.EnterAhead)
+                            {
+                                // Deeper down the lane: it walks on from the side once the squad is EnterAhead m away.
+                                _pending.Add((foe, row.EnterAhead));
+                                continue;
+                            }
+
                             _foes.Add(foe);
                             Emit(RunnerEventKind.FoeSpawned, foe.Id, 0, foe.X, foe.Z, foe.Hp, false, false, unit.Id);
                         }
@@ -1933,6 +1961,7 @@ namespace Survival.Domain.Runner
             && !Level.HasBoss
             && _nextRow >= Level.Rows.Count
             && _foes.Count == 0
+            && _pending.Count == 0
             && !_boxes.Exists(b => b.Z > Hero.Z)
             && !_hazards.Exists(h => h.Z > Hero.Z - 1f)
             && !_barriers.Exists(b => b.Z > Hero.Z - 1f);

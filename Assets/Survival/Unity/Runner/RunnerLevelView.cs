@@ -38,7 +38,7 @@ namespace Survival.Unity
         // Heights, look-ahead and the one-row push live in RunnerFraming (Survival.Domain) so the tests frame the same shot.
         private const float CameraHeight = RunnerFraming.CameraHeight;
         private const float CameraBack = RunnerFraming.CameraBack;
-        private const float CameraSide = -1.2f;
+        private const float CameraSide = RunnerFraming.CameraSide;
         // Looks further down the road since the squad's reach grew to ~20 m (Update 4): the foes it shoots stay in shot.
         private const float CameraLookAhead = RunnerFraming.CameraLookAhead;
         private const float CameraLookHeight = RunnerFraming.CameraLookHeight;
@@ -972,6 +972,12 @@ namespace Survival.Unity
                     // the hero: a hero who dodged sees him swing at the marked road (Derek 2026-10-27).
                     rig.Face(new Vector3(f.AimX - f.X, 0f, f.AimZ - f.Z));
                 }
+                else if (f.Entering)
+                {
+                    // A side entry walking on from the grass faces the way it walks (diagonally onto its lane).
+                    var (vx, vz) = f.EnterVelocity;
+                    rig.Face(new Vector3(vx, 0f, vz));
+                }
                 else
                 {
                     // Faces whoever it last went for (it turns round on a squad that walked past it), else the hero.
@@ -980,8 +986,9 @@ namespace Survival.Unity
                 }
                 // The walk loop steps at the speed the sim moves it (Derek 2026-11-19: Nightfang glided in its idle pose at
                 // 6.4x its trot's ground speed). View only: the sim's speeds and the locked pace are untouched.
+                var (evx, evz) = f.EnterVelocity;
                 rig.SetWalkRate(RunnerWalkCadence.Rate(
-                    RunnerWalkCadence.FoeGroundSpeed(f.Unit.Speed, f.Passed, _run.Level.Speed),
+                    f.Entering ? Mathf.Sqrt((evx * evx) + (evz * evz)) : RunnerWalkCadence.FoeGroundSpeed(f.Unit.Speed, f.Passed, _run.Level.Speed),
                     RunnerWalkCadence.ClipGroundSpeed(rig.Data, f.Unit.Scale)));
                 // Far enemies still walking in sample their loop every other frame (RunnerFoeLod; view only).
                 rig.SetEvaluateEvery(RunnerFoeLod.EvaluateEvery(f.Z - _run.Hero.Z, f.Attacking, f.Boss));

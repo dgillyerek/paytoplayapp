@@ -53,6 +53,30 @@ namespace Survival.Domain.Runner
         public const float CameraLookHeight = 0.9f;
         public const float FieldOfViewDegrees = 52f;
 
+        /// <summary>The camera sits this far left of the squad's line (the scene's offset).</summary>
+        public const float CameraSide = -1.2f;
+
+        /// <summary>
+        /// Where a ground point <paramref name="x"/> across and <paramref name="ahead"/> m up the road from the camera's
+        /// focus lands across the authored 9:16 frame (-1 left edge, +1 right edge; no shake, no boss pull-back). Used to
+        /// keep side entries walking on inside the shot (Derek 2026-11-22).
+        /// </summary>
+        public static float ScreenX(float x, float ahead)
+        {
+            double cx = CameraSide, cy = CameraHeight, cz = -CameraBack;
+            double fx = -cx, fy = CameraLookHeight - cy, fz = CameraLookAhead - cz;
+            var fl = Math.Sqrt((fx * fx) + (fy * fy) + (fz * fz));
+            fx /= fl; fy /= fl; fz /= fl;
+            // right = up x forward
+            double rx = fz, rz = -fx;
+            var rl = Math.Sqrt((rx * rx) + (rz * rz));
+            rx /= rl; rz /= rl;
+            double px = x - cx, py = -cy, pz = ahead - cz;
+            var depth = (px * fx) + (py * fy) + (pz * fz);
+            var halfW = Math.Tan(FieldOfViewDegrees * Math.PI / 360.0) * View.AspectFit.ReferenceAspect;
+            return (float)(((px * rx) + (pz * rz)) / depth / halfW);
+        }
+
         /// <summary>
         /// Share of a tall phone's extra view that goes under the authored 9:16 frame (see <see cref="View.AspectFit"/>).
         /// 1: the top of the shot (title row, horizon, the road ahead) sits exactly as on the 9:16 Game view and the extra

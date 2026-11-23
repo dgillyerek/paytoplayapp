@@ -191,6 +191,13 @@ namespace Survival.Domain.Runner
         /// <inheritdoc cref="EnterX"/>
         public float EnterSpeed { get; init; }
 
+        /// <summary>
+        /// A side entry's depth (Derek 2026-11-22: "some random to come from the sides up to 2/3rds of the way down the lane"):
+        /// metres ahead of the squad it walks on from the side. Until then it walks down the road unseen, so it still reaches
+        /// the squad when it would have. 0: it appears when its row comes into view (<see cref="RunnerRules.SpawnAhead"/>).
+        /// </summary>
+        public float EnterAhead { get; init; }
+
         public float XOf(int index) => X + ((index - ((Count - 1) * 0.5f)) * Spread);
     }
 

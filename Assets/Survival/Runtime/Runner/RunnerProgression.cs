@@ -201,6 +201,12 @@ namespace Survival.Domain.Runner
     {
         public IReadOnlyList<string> SideUnits { get; init; } = Array.Empty<string>();
 
+        /// <summary>Share of side entries that still walk on at the far end of the lane (json "side_far").</summary>
+        public float SideFar { get; init; } = 1f;
+
+        /// <summary>The rest walk on from a random depth up to this share of the way from the far end toward the squad (json "side_depth").</summary>
+        public float SideDepth { get; init; }
+
         public IReadOnlyDictionary<string, float> Seek { get; init; } = new Dictionary<string, float>();
 
         /// <summary>From this level on (1: every level).</summary>
@@ -222,7 +228,9 @@ namespace Survival.Domain.Runner
                 Share("crates"),
                 Math.Max(0f, LayoutJson.OptNum(o, "crate_x", 3.2f)))
             {
-                From = Math.Max(1, LayoutJson.OptInt(o, "from", 1))
+                From = Math.Max(1, LayoutJson.OptInt(o, "from", 1)),
+                SideFar = Math.Max(0f, Math.Min(1f, LayoutJson.OptNum(o, "side_far", 1f))),
+                SideDepth = Math.Min(0.9f, Share("side_depth"))
             };
             if (o.TryGet("side_units", out var su) && su is JsonNode.Arr sa)
             {
@@ -981,6 +989,7 @@ namespace Survival.Domain.Runner
             var us = rnd.NextDouble();
             var sideK = 0;
             var lastSign = rnd.Next(2) == 0 ? -1f : 1f;
+            var depthRnd = new Random(unchecked((number * 48611) + 5));
             for (var k = 0; k < foes.Count; k++)
             {
                 var i = foes[k];
@@ -1005,15 +1014,26 @@ namespace Survival.Domain.Runner
                 {
                     if (Pick(sideK++, sideShare, us))
                     {
-                        // Walks in from SideOut beyond the edge; fast enough to be on the road SideMinSeconds before it can hit.
+                        // Walks in from SideOut beyond the edge, at a random depth down the lane (SideFar of them from the
+                        // far end, the rest up to SideDepth of the way toward the squad); fast enough to reach its lane
+                        // SideMinSeconds before it can hit. Too close for that: it comes in further up the lane.
+                        var dr = depthRnd.NextDouble();
+                        var du = depthRnd.NextDouble();
                         var closing = speed + Math.Max(0f, unitSpeed(r.Unit));
-                        var gap = Math.Min(r.At, RunnerRules.SpawnAhead) - RunnerLanesDef.ContactMetres;
-                        var total = closing > 0f ? gap / closing : 0f;
-                        var room = total - lanes.SideMinSeconds;
-                        var v = room > 0f ? Math.Max(lanes.SideSpeed, lanes.SideOut / room) : float.MaxValue;
-                        if (v <= lanes.SideSpeed * 3f)
+                        var gap0 = Math.Min(r.At, RunnerRules.SpawnAhead);
+                        var lateral = lanes.SideOut + (halfWidth - Math.Abs(x));
+                        var depth = dr < lanes.SideFar ? 0f : (float)(du * lanes.SideDepth);
+                        for (; depth > -1e-3f; depth -= 0.05f)
                         {
-                            row = row with { EnterX = sign * (halfWidth + lanes.SideOut), EnterSpeed = (float)Math.Round(v, 2) };
+                            var d = Math.Max(0f, depth);
+                            var ahead = gap0 * (1f - d);
+                            var room = (closing > 0f ? (ahead - RunnerLanesDef.ContactMetres) / closing : 0f) - lanes.SideMinSeconds;
+                            var v = room > 0f ? Math.Max(lanes.SideSpeed, lateral / room) : float.MaxValue;
+                            if (v <= lanes.SideSpeed * 3f)
+                            {
+                                row = row with { EnterX = sign * (halfWidth + lanes.SideOut), EnterSpeed = (float)Math.Round(v, 2), EnterAhead = d > 0f ? (float)Math.Round(ahead, 2) : 0f };
+                                break;
+                            }
                         }
                     }
                 }
