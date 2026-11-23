@@ -1,3 +1,4 @@
+#nullable enable annotations
 using System;
 using System.Collections.Generic;
 using Survival.Domain.Ids;
@@ -76,14 +77,22 @@ namespace Survival.Domain.Theme
 
         public bool TryArt(string contentKey, out string relativePath) => Art.TryGetValue(contentKey, out relativePath!);
 
-        public static ThemePackBinder Parse(string packJson, string stringsJson, string pinsJson, string hudJson)
+        public static ThemePackBinder Parse(string packJson, string stringsJson, string pinsJson, string hudJson) =>
+            Parse(packJson, stringsJson, pinsJson, hudJson, null);
+
+        /// <summary>
+        /// As <see cref="Parse(string,string,string,string)"/>, with a locale strings file laid over the English one:
+        /// every non-empty value in <paramref name="localeStringsJson"/> replaces the English value of the same key,
+        /// and keys it lacks stay English. Null or empty means English only.
+        /// </summary>
+        public static ThemePackBinder Parse(string packJson, string stringsJson, string pinsJson, string hudJson, string? localeStringsJson)
         {
             var pack = RequireObj(JsonRead.Parse(packJson), "pack");
             var themeId = ReqString(pack, "theme_id");
             var packId = pack.TryGet("id", out var idNode) && idNode is JsonNode.Str idStr ? idStr.Value : themeId;
             var systemsApi = ReqString(pack, "systems_api");
             var displayName = pack.TryGet("display_name", out var dn) && dn is JsonNode.Str dns ? dns.Value : "";
-            var strings = ReadStringMap(stringsJson);
+            var strings = MergeStrings(stringsJson, localeStringsJson);
             var art = ReadArtMap(pack, "art");
             var pins = ReadPins(pinsJson);
             var hud = ReadHud(hudJson);
@@ -123,6 +132,26 @@ namespace Survival.Domain.Theme
                 }
 
                 map[pair.Key] = new ArtSlice(v[0], v[1], v[2], v[3]);
+            }
+
+            return map;
+        }
+
+        /// <summary>English strings with a locale's non-empty values laid over them.</summary>
+        public static IReadOnlyDictionary<string, string> MergeStrings(string baseJson, string? overlayJson)
+        {
+            var map = (Dictionary<string, string>)ReadStringMap(baseJson);
+            if (string.IsNullOrWhiteSpace(overlayJson))
+            {
+                return map;
+            }
+
+            foreach (var pair in ReadStringMap(overlayJson!))
+            {
+                if (!string.IsNullOrEmpty(pair.Value))
+                {
+                    map[pair.Key] = pair.Value;
+                }
             }
 
             return map;

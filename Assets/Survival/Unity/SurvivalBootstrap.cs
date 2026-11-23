@@ -257,7 +257,8 @@ namespace Survival.Unity
                 PlayerAssets.ReadAllText(Path.Combine(packRoot, "pack.json")),
                 PlayerAssets.ReadAllText(Path.Combine(packRoot, "strings", "en.json")),
                 PlayerAssets.ReadAllText(Path.Combine(packRoot, "map", "node_pins.json")),
-                PlayerAssets.ReadAllText(Path.Combine(packRoot, "ui", "hud_layout.json")));
+                PlayerAssets.ReadAllText(Path.Combine(packRoot, "ui", "hud_layout.json")),
+                SurvivalLocale.OverlayJson(packRoot));
         }
 
         /// <summary>A sprite over the scene-referenced splash texture (cheap: no decode, no bake read). Null when unset.</summary>

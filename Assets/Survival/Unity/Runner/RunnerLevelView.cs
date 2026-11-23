@@ -219,7 +219,8 @@ namespace Survival.Unity
                     PlayerAssets.ReadAllText(Path.Combine(root, "pack.json")),
                     PlayerAssets.ReadAllText(Path.Combine(root, "strings", "en.json")),
                     PlayerAssets.ReadAllText(Path.Combine(root, "map", "node_pins.json")),
-                    PlayerAssets.ReadAllText(Path.Combine(root, "ui", "hud_layout.json")));
+                    PlayerAssets.ReadAllText(Path.Combine(root, "ui", "hud_layout.json")),
+                    SurvivalLocale.OverlayJson(root));
             }
             catch (Exception ex)
             {

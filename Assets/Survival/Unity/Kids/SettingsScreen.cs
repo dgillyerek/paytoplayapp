@@ -2,8 +2,10 @@
 using System;
 using System.IO;
 using Survival.Domain.Kids;
+using Survival.Domain.Localization;
 using Survival.Domain.Theme;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Survival.Unity.Kids
 {
@@ -72,7 +74,9 @@ namespace Survival.Unity.Kids
             var s = new PrivacySettings(KidSafety.Policy, KidSafety.Consent);
             var c = KidSafety.Config;
             HookSkin.Header(card, KidUi.S("kids.settings.title", "Settings"), 520f, 96f, 32);
-            KidUi.Label(card, "Section", KidUi.S("kids.settings.privacy", "Privacy and account"), 26, 0.05f, 0.83f, 0.95f, 0.875f, SurvivalVisuals.Reward);
+            KidUi.Label(card, "Section", KidUi.S("kids.settings.privacy", "Privacy and account"), 26, 0.05f, 0.83f, 0.55f, 0.875f, SurvivalVisuals.Reward);
+            var lang = Locales.Find(SurvivalLocale.Current)?.NativeName ?? "English";
+            KidUi.Button(card, "Language", lang + "  ▸", HookArtKeys.ButtonBlue, SurvivalVisuals.PinBuild, 20, 0.57f, 0.83f, 0.95f, 0.88f, () => LanguageMenu());
 
             KidUi.Label(card, "Age", KidUi.S("kids.settings.age", "Age group") + ": " + AgeLabel(s.AgeBandKey), 22, 0.05f, 0.775f, 0.95f, 0.82f, null, TextAnchor.MiddleLeft);
             KidUi.Label(card, "AgeNote", (s.CanCorrectAge ? KidUi.S("kids.settings.age_note_teen", "Set when you first played.") : KidUi.S("kids.settings.age_note", "Set when you first played. Deleting your account resets it.")), 16, 0.05f, 0.745f, 0.95f, 0.775f, SurvivalVisuals.Mute, TextAnchor.MiddleLeft);
@@ -120,6 +124,53 @@ namespace Survival.Unity.Kids
             }
 
             KidUi.Button(card, "Close", KidUi.S("kids.account.close", "Close"), HookArtKeys.ButtonGreen, SurvivalVisuals.MineFill, 24, 0.30f, 0.03f, 0.70f, 0.11f, Close);
+        }
+
+        /// <summary>Language list: "device language" plus every shipped locale, each in its own language.</summary>
+        private void LanguageMenu()
+        {
+            Clear();
+            HookSkin.Header(_card, KidUi.S("settings.language.title", "Language"), 520f, 96f, 32);
+            var saved = SurvivalLocale.Saved;
+            var device = Locales.Find(Locales.Resolve(null, Application.systemLanguage.ToString()))?.NativeName ?? "English";
+            var followDevice = string.IsNullOrEmpty(saved);
+            KidUi.Button(_card, "LangDevice", KidUi.S("settings.language.device", "Device language") + " (" + device + ")",
+                followDevice ? HookArtKeys.ButtonGreen : HookArtKeys.ButtonBlue, followDevice ? SurvivalVisuals.MineFill : SurvivalVisuals.PinBuild,
+                20, 0.10f, 0.80f, 0.90f, 0.86f, () => Switch(""));
+
+            const float top = 0.78f, rowH = 0.066f;
+            for (var i = 0; i < Locales.All.Count; i++)
+            {
+                var l = Locales.All[i];
+                var y1 = top - (i / 2) * rowH;
+                var x0 = i % 2 == 0 ? 0.05f : 0.51f;
+                var on = !followDevice && string.Equals(saved, l.Code, StringComparison.OrdinalIgnoreCase);
+                var code = l.Code;
+                KidUi.Button(_card, "Lang_" + code, l.NativeName, on ? HookArtKeys.ButtonGreen : HookArtKeys.ButtonBlue, on ? SurvivalVisuals.MineFill : SurvivalVisuals.PinBuild,
+                    18, x0, y1 - rowH + 0.008f, x0 + 0.44f, y1, () => Switch(code));
+            }
+
+            KidUi.Button(_card, "Back", KidUi.S("kids.account.back_menu", "Back"), HookArtKeys.ButtonGreen, SurvivalVisuals.MineFill, 24, 0.30f, 0.03f, 0.70f, 0.11f, () => Menu(_card));
+        }
+
+        /// <summary>Saves the choice and reloads the scene so every screen rebuilds in the new language.</summary>
+        private void Switch(string code)
+        {
+            var before = SurvivalLocale.Current;
+            SurvivalLocale.Choose(code);
+            if (SurvivalLocale.Current == before)
+            {
+                Menu(_card);
+                return;
+            }
+
+            var campaign = FindAnyObjectByType<SurvivalCampaignView>();
+            if (campaign != null)
+            {
+                campaign.SaveNow();
+            }
+
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
 
         private void CorrectAge() => AgeGateScreen.ShowCorrection(blocked =>

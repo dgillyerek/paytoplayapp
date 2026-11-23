@@ -46,7 +46,22 @@ namespace Survival.Unity
                                     "Arial Bold",
                                     "Liberation Sans",
                                     "DejaVu Sans",
-                                    "Arial"
+                                    "Arial",
+                                    // Fallbacks for glyphs the Latin fonts lack (Japanese, Korean, Chinese): the first
+                                    // name found draws, the rest fill in missing characters. Android, iOS, Windows, macOS.
+                                    "Noto Sans CJK JP",
+                                    "Noto Sans CJK KR",
+                                    "Noto Sans CJK SC",
+                                    "Noto Sans CJK TC",
+                                    "Droid Sans Fallback",
+                                    "Hiragino Sans",
+                                    "Apple SD Gothic Neo",
+                                    "PingFang SC",
+                                    "PingFang TC",
+                                    "Yu Gothic UI",
+                                    "Malgun Gothic",
+                                    "Microsoft YaHei",
+                                    "Microsoft JhengHei"
                                 },
                                 32)
                             ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf")
