@@ -1578,11 +1578,12 @@ namespace Survival.Unity
             var sprite = SurvivalArt.Get(def.PortraitKey);
             if (sprite != null)
             {
-                // Crop to fill, never squash, and clip to the gold. Nightfang's ears sit on the top
-                // edge of a square painting, so any leak past the trim shows as a head poking out of
-                // the box on the Foes pane. Parent the window onto the canvas first, then add the
-                // mask — a clipper enabled off-canvas can miss the Canvas clip list. Stencil Mask
-                // plus RectMask2D so cover-sized art cannot paint over the filigree.
+                // Crop to fill, never squash, and clip to the gold. Parent the window onto the
+                // canvas first, then add the mask — a clipper enabled off-canvas can miss the
+                // Canvas clip list. Stencil Mask plus RectMask2D so cover-sized art cannot paint
+                // over the filigree. PortraitCoverFit then shifts the crop toward a per-portrait
+                // focus (Nightfang's eyes sit left of centre in the 512 PNG, so a centre crop
+                // cut his snout off in the narrower detail box).
                 var windowGo = new GameObject("Window", typeof(RectTransform));
                 var window = windowGo.GetComponent<RectTransform>();
                 window.SetParent(trim.transform, false);
@@ -1599,9 +1600,9 @@ namespace Survival.Unity
                 art = SurvivalVisuals.Image(window, "Art", Color.white, sprite);
                 art.raycastTarget = false;
                 art.maskable = true;
-                var fit = art.gameObject.AddComponent<AspectRatioFitter>();
-                fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
-                fit.aspectRatio = sprite.rect.height > 0 ? sprite.rect.width / sprite.rect.height : 1f;
+                var fit = art.gameObject.AddComponent<PortraitCoverFit>();
+                fit.Aspect = sprite.rect.height > 0 ? sprite.rect.width / sprite.rect.height : 1f;
+                PortraitFocus.Of(def.PortraitKey, def.Id, out fit.FocusX, out fit.FocusY);
             }
             else
             {
