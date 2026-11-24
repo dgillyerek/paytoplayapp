@@ -1562,7 +1562,7 @@ namespace Survival.Unity
 
         /// <summary>
         /// Framed portrait: Sir Aldric blue (#1b3060) for heroes, purple for villains, a gold inner line and the painted
-        /// portrait from the pack, or a code-drawn fallback (tinted plate with initials).
+        /// portrait from the pack cropped and clipped inside the trim, or a code-drawn fallback (tinted plate with initials).
         /// </summary>
         internal RectTransform Portrait(RectTransform parent, CampaignHeroDef def, float x0, float y0, float x1, float y1, out Image art)
         {
@@ -1576,25 +1576,37 @@ namespace Survival.Unity
             trim.rectTransform.offsetMin = new Vector2(6f, 6f);
             trim.rectTransform.offsetMax = new Vector2(-6f, -6f);
             var sprite = SurvivalArt.Get(def.PortraitKey);
-            art = sprite != null
-                ? SurvivalVisuals.Image(trim.transform, "Art", Color.white, sprite)
-                : SurvivalVisuals.Image(trim.transform, "Art", hero ? new Color(0.22f, 0.36f, 0.66f, 1f) : new Color(0.36f, 0.18f, 0.48f, 1f));
-            art.raycastTarget = false;
             if (sprite != null)
             {
-                // Crop to fill, never squash: the art keeps its aspect and envelopes a clipped window inside the trim.
-                var window = new GameObject("Window", typeof(RectTransform), typeof(RectMask2D)).GetComponent<RectTransform>();
+                // Crop to fill, never squash, and clip to the gold. Nightfang's ears sit on the top
+                // edge of a square painting, so any leak past the trim shows as a head poking out of
+                // the box on the Foes pane. Parent the window onto the canvas first, then add the
+                // mask — a clipper enabled off-canvas can miss the Canvas clip list. Stencil Mask
+                // plus RectMask2D so cover-sized art cannot paint over the filigree.
+                var windowGo = new GameObject("Window", typeof(RectTransform));
+                var window = windowGo.GetComponent<RectTransform>();
                 window.SetParent(trim.transform, false);
                 SurvivalVisuals.Stretch(window);
                 window.offsetMin = new Vector2(3f, 3f);
                 window.offsetMax = new Vector2(-3f, -3f);
-                art.rectTransform.SetParent(window, false);
+                var hole = windowGo.AddComponent<Image>();
+                hole.sprite = SurvivalArt.White();
+                hole.color = Color.white;
+                hole.raycastTarget = false;
+                windowGo.AddComponent<RectMask2D>();
+                var mask = windowGo.AddComponent<Mask>();
+                mask.showMaskGraphic = false;
+                art = SurvivalVisuals.Image(window, "Art", Color.white, sprite);
+                art.raycastTarget = false;
+                art.maskable = true;
                 var fit = art.gameObject.AddComponent<AspectRatioFitter>();
                 fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
                 fit.aspectRatio = sprite.rect.height > 0 ? sprite.rect.width / sprite.rect.height : 1f;
             }
             else
             {
+                art = SurvivalVisuals.Image(trim.transform, "Art", hero ? new Color(0.22f, 0.36f, 0.66f, 1f) : new Color(0.36f, 0.18f, 0.48f, 1f));
+                art.raycastTarget = false;
                 SurvivalVisuals.Stretch(art.rectTransform);
                 art.rectTransform.offsetMin = new Vector2(3f, 3f);
                 art.rectTransform.offsetMax = new Vector2(-3f, -3f);
